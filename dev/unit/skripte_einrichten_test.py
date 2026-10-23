@@ -90,3 +90,53 @@ _, calls = run(([], []), (["script.casora_restart_toggle"], ["script.casora_rest
 msg = calls[0][2]["message"]
 assert "!include scripts.yaml" not in msg and "Protokoll" in msg, msg
 print("ok written but not created")
+
+
+# _ensure_scripts: write, reload, check; put scripts.yaml back only when HA did not load it and the include is missing.
+def ensure(config_text, scripts_text, created_after_reload):
+    d = tempfile.mkdtemp()
+    with open(os.path.join(d, "configuration.yaml"), "w", encoding="utf-8") as f:
+        f.write(config_text)
+    if scripts_text is not None:
+        with open(os.path.join(d, "scripts.yaml"), "w", encoding="utf-8") as f:
+            f.write(scripts_text)
+    states = {}
+
+    async def call(domain, service, data=None, blocking=False):
+        if (domain, service) == ("script", "reload") and created_after_reload:
+            states["script.casora_x"] = object()
+
+    async def job(fn, *a):
+        return fn(*a)
+
+    hass = SimpleNamespace(config=SimpleNamespace(config_dir=d), services=SimpleNamespace(async_call=call),
+                           states=SimpleNamespace(get=lambda e: states.get(e)), async_add_executor_job=job)
+    real = helfer._exists
+    helfer._exists = lambda h, e: False
+    try:
+        res = asyncio.run(helfer._ensure_scripts(hass, {"script": {"casora_x": {"sequence": []}}}))
+    finally:
+        helfer._exists = real
+    path = os.path.join(d, "scripts.yaml")
+    return res, (open(path, encoding="utf-8").read() if os.path.exists(path) else None)
+
+
+# Include line in a form the check does not know, HA loads it anyway: created, nothing put back.
+res, text = ensure("script: !include scripts.yaml\u00a0\n", "", True)
+assert res == (["script.casora_x"], [], True), res
+assert "casora_x:" in text
+print("ok unknown include form: written and created")
+
+# Not loaded and no include line: failed, scripts.yaml exactly as before.
+res, text = ensure("default_config:\n", "# mine\nfoo:\n  sequence: []\n", False)
+assert res == ([], ["script.casora_x"], False), res
+assert text == "# mine\nfoo:\n  sequence: []\n", text
+res, text = ensure("default_config:\n", None, False)
+assert text is None, "file that did not exist is removed again"
+print("ok not loaded: scripts.yaml put back")
+
+# Include line there but HA does not create it: kept for the log, and not written twice next time.
+res, text = ensure("script: !include scripts.yaml\n", "casora_x:\n  sequence: []\n", False)
+assert res == ([], ["script.casora_x"], True), res
+assert text.count("casora_x:") == 1, text
+print("ok no duplicate keys")

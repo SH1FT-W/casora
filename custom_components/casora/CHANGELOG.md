@@ -8,6 +8,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ### Fixed
 - **Doorbell: talking (#23, preliminary fix):** While you listen and talk at the same time, you now hear the doorbell through the talk connection itself, so the sound no longer drops when talking starts. After “End” the player comes back with sound. The microphone no longer adjusts its level automatically, which made the volume jump mid-sentence.
+- **Helper scripts not created:** Casora no longer relies on reading the `script: !include scripts.yaml` line in configuration.yaml. It writes its four scripts, reloads scripts and checks whether Home Assistant created them; only if not, and the line really is missing, it puts scripts.yaml back as it was. Keys already in scripts.yaml are not written twice.
 
 ## 26.10.55 – 23.10.2026
 

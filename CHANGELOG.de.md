@@ -8,6 +8,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ### Behoben
 - **Klingel: Sprechen (#23, Vorab-Fix):** Wer mithört und spricht, hört die Klingel jetzt über die Sprechverbindung selbst, der Ton bricht beim Sprechen nicht mehr weg. Nach „Beenden“ kommt der Player mit Ton zurück. Das Mikrofon regelt seine Lautstärke nicht mehr selbst, die mitten im Satz schwankte.
+- **Helfer-Skripte nicht angelegt:** Casora verlässt sich nicht mehr darauf, die Zeile `script: !include scripts.yaml` in der configuration.yaml zu erkennen. Es trägt seine vier Skripte ein, lädt die Skripte neu und prüft, ob Home Assistant sie angelegt hat; nur wenn nicht und die Zeile wirklich fehlt, stellt es scripts.yaml wieder her. Schon vorhandene Einträge schreibt es nicht doppelt.
 
 ## 26.10.55 – 23.10.2026
 

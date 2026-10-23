@@ -20,6 +20,7 @@ Der Dienst casora.einrichten wiederholt das Ganze und meldet, was fehlt.
 
 from __future__ import annotations
 
+import contextlib
 import inspect
 import logging
 import os
@@ -152,15 +153,24 @@ def _scripts_file_ok(config_dir: str) -> bool:
     return re.search(r"^script:[ \t]*!include[ \t]+['\"]?scripts\.yaml['\"]?[ \t]*(#.*)?$", text.lstrip("\ufeff"), re.M) is not None
 
 
-def _append_scripts(config_dir: str, scripts: dict) -> None:
+def _append_scripts(config_dir: str, scripts: dict) -> tuple[bool, str] | None:
     """Hängt Skripte an scripts.yaml an – ohne den Rest neu zu schreiben, damit
-    Kommentare und !secret-Verweise des Nutzers erhalten bleiben."""
+    Kommentare und !secret-Verweise des Nutzers erhalten bleiben.
+
+    Keys already at the top level of the file are not written again (no duplicates after a failed try).
+    Returns (file existed, old content) for _restore_scripts, or None when nothing was written."""
     path = os.path.join(config_dir, "scripts.yaml")
     try:
         with open(path, encoding="utf-8") as f:
-            old = f.read()
+            raw = f.read()
+        existed = True
     except FileNotFoundError:
-        old = ""
+        raw, existed = "", False
+    scripts = {k: v for k, v in scripts.items()
+               if not re.search(rf"^{re.escape(k)}:", raw, re.M)}
+    if not scripts:
+        return None
+    old = raw
     if old.strip() in ("", "{}"):
         old = ""
     elif not old.endswith("\n"):
@@ -170,20 +180,48 @@ def _append_scripts(config_dir: str, scripts: dict) -> None:
     with open(tmp, "w", encoding="utf-8") as f:
         f.write(body)
     os.replace(tmp, path)
+    return existed, raw
+
+
+def _restore_scripts(config_dir: str, before: tuple[bool, str]) -> None:
+    """Puts scripts.yaml back as it was before _append_scripts."""
+    path = os.path.join(config_dir, "scripts.yaml")
+    existed, raw = before
+    if not existed:
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(path)
+        return
+    tmp = path + ".casora.tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(raw)
+    os.replace(tmp, path)
 
 
 async def _ensure_scripts(hass: HomeAssistant, spec: dict) -> tuple[list[str], list[str], bool]:
-    """Returns (created, failed, include_ok). include_ok False: configuration.yaml does not load scripts.yaml."""
+    """Returns (created, failed, include_ok). include_ok False: configuration.yaml does not load scripts.yaml.
+
+    Forum 23.10.2026: the include line was not recognised although it was there, so nothing was written.
+    The check of configuration.yaml is only a hint now: Casora writes the scripts, reloads and looks
+    whether HA created them. If not and the include line is missing, scripts.yaml is put back."""
     wanted = spec.get("script") or {}
     missing = {k: v for k, v in wanted.items() if not _exists(hass, f"script.{k}")}
     if not missing:
         return [], [], True
     ids = [f"script.{k}" for k in missing]
-    if not await hass.async_add_executor_job(_scripts_file_ok, hass.config.config_dir):
+    cfg = hass.config.config_dir
+    include_ok = await hass.async_add_executor_job(_scripts_file_ok, cfg)
+    before = await hass.async_add_executor_job(_append_scripts, cfg, missing)
+    try:
+        await hass.services.async_call("script", "reload", blocking=True)
+    except Exception:  # noqa: BLE001 – a broken script elsewhere: the check below tells
+        _LOGGER.warning("Casora: script.reload fehlgeschlagen", exc_info=True)
+    failed = [i for i in ids if hass.states.get(i) is None]
+    created = [i for i in ids if i not in failed]
+    if failed and not include_ok and not created:
+        if before is not None:
+            await hass.async_add_executor_job(_restore_scripts, cfg, before)
         return [], ids, False
-    await hass.async_add_executor_job(_append_scripts, hass.config.config_dir, missing)
-    await hass.services.async_call("script", "reload", blocking=True)
-    return ids, [i for i in ids if hass.states.get(i) is None], True
+    return created, failed, True
 
 
 # ── Theme ────────────────────────────────────────────────────────────────────
