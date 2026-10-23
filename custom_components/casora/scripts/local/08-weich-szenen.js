@@ -83,7 +83,7 @@
     variables = variables || {};
     var ids = SC.list(states, hass, variables) || [];
     SC.prefetch(ids, states);
-    var room = variables.room_name && variables.room_name !== 'Home' && variables.room_name !== 'Zuhause' ? variables.room_name : null;
+    var room = variables.room_name && variables.room_name !== 'Home' && variables.room_name !== 'Zuhause' && variables.room_name !== 'Casa' ? variables.room_name : null;
     var V = { ids: ids, room: room, trans: Number(variables.scene_transition != null ? variables.scene_transition : 4) };
     var cj = JSON.stringify(V);
     var sec = function (p) { return '[[[ return window._casoraScenesSoft ? window._casoraScenesSoft.sec(' + JSON.stringify(p) + ', ' + cj + ', states) : ""; ]]]'; };

@@ -210,7 +210,12 @@ async def _ensure_scripts(hass: HomeAssistant, spec: dict) -> tuple[list[str], l
     ids = [f"script.{k}" for k in missing]
     cfg = hass.config.config_dir
     include_ok = await hass.async_add_executor_job(_scripts_file_ok, cfg)
-    before = await hass.async_add_executor_job(_append_scripts, cfg, missing)
+    try:
+        before = await hass.async_add_executor_job(_append_scripts, cfg, missing)
+    except OSError:
+        # scripts.yaml not writable (read-only config, single-file mount): the notice names the scripts.
+        _LOGGER.warning("Casora: scripts.yaml nicht beschreibbar", exc_info=True)
+        return [], ids, include_ok
     try:
         await hass.services.async_call("script", "reload", blocking=True)
     except Exception:  # noqa: BLE001 – a broken script elsewhere: the check below tells
@@ -219,7 +224,10 @@ async def _ensure_scripts(hass: HomeAssistant, spec: dict) -> tuple[list[str], l
     created = [i for i in ids if i not in failed]
     if failed and not include_ok and not created:
         if before is not None:
-            await hass.async_add_executor_job(_restore_scripts, cfg, before)
+            try:
+                await hass.async_add_executor_job(_restore_scripts, cfg, before)
+            except OSError:
+                _LOGGER.warning("Casora: scripts.yaml nicht zurückgesetzt", exc_info=True)
         return [], ids, False
     return created, failed, True
 

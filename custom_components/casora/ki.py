@@ -427,9 +427,11 @@ def model_rank(domain: str, model: str | None) -> tuple[int, str]:
             return 200 + int(v * 10), name
         return 0, name.strip() or model or "Claude"
     if base_m.startswith("gpt") or domain == "openai_conversation":
-        v = _ver(base_m)
+        # Only the GPT version right after "gpt-" counts: gpt-oss:20b is a small open model, not GPT-20.
+        gm = re.match(r"gpt-?(\d)(?:\.(\d))?(?!\d)", base_m)
+        v = (int(gm.group(1)) + (int(gm.group(2)) / 10 if gm.group(2) else 0)) if gm else 0.0
         name = ((model or "").rsplit("/", 1)[-1] or "ChatGPT").replace("gpt", "GPT")
-        if v >= 5 and not re.search(r"mini|nano", m):
+        if v >= 5 and not re.search(r"mini|nano|oss", m):
             return 150 + int(v * 10), name
         return 0, name
     if "gemini" in m or domain == "google_generative_ai_conversation":

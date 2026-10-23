@@ -21,6 +21,10 @@ assert ki.model_rank("open_router", "openai/gpt-5")[0] > 0
 assert ki.model_rank("open_router", "openai/gpt-5-mini")[0] == 0
 assert ki.model_rank("open_router", "anthropic/claude-sonnet-4")[0] == 0
 assert ki.model_rank("anthropic", "claude-sonnet-4-5")[0] == 245
+# Review 23.10.2026: gpt-oss is a small open model; its "20b"/"120b" is no GPT version.
+assert ki.model_rank("ollama", "gpt-oss:20b")[0] == 0
+assert ki.model_rank("open_router", "openai/gpt-oss-120b")[0] == 0
+assert ki.model_rank("openai_conversation", "gpt-5")[0] == 200
 print("ok model_rank with vendor prefix")
 
 ent = SimpleNamespace(platform="open_router", config_entry_id="ce1", config_subentry_id="sub1")

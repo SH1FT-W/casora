@@ -37,7 +37,7 @@ for a in "$@"; do
     --andere-version) OTHER_VER=1 ;;
     --patch) PATCH="--patch" ;;
     --beta) BETA=1 ;;
-    -h|--help) sed -n '2,23p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,/^set -eu/p' "$0" | sed '$d'; exit 0 ;;
     -*) echo "Unbekannte Option: $a" >&2; exit 2 ;;
     *) VER="${a#v}" ;;
   esac
