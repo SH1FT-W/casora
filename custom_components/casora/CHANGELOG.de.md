@@ -4,6 +4,13 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.57 – 23.10.2026
+
+### Behoben
+- **Energie auf Zuhause (#44):** Der Hausverbrauch ist nie ein Spitzen-, Mittel- oder Zeitraumwert (z. B. „Netzbezugs-Spitze heute“, „Grundlast“, „Überschuss letzte Stunde“ einer PV-Auswertung) und nie die Erzeugung eines Wechselrichters: SMA nennt seine aktuelle Erzeugung „Grid power“, Casora behandelt sie jetzt als Solar. Ein Stromzähler ohne Umlaut in der Entitäts-ID (`stromzahler`) wird erkannt. Ein Haussensor, den Casora selbst gewählt hat und der nicht mehr passt, wird beim Öffnen des Studios neu gewählt. Wird der Haussensor im Studio gelöscht, zeigt Zuhause die Summe der Räume, statt das Badge auszublenden.
+- **Energie-Popup „Woher kommt der Strom“:** SMA „Grid power“ zählt als Solar, der SMA-Energiezähler als Netz, ein Stromzähler (`stromzahler`) als Netz.
+- **Klingel: Sprechen (#23):** Der Ton der Sprechverbindung wird nur genutzt, solange dort wirklich Ton ankommt, sonst bleibt der Player hörbar (26.10.56 wurde still, wenn die Sprechverbindung keinen Ton brachte). In der Browser-Konsole stehen Zeilen mit `casora klingel` zur Diagnose.
+
 ## 26.10.56 – 23.10.2026
 
 ### Behoben

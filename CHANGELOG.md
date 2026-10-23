@@ -4,6 +4,13 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.57 – 23.10.2026
+
+### Fixed
+- **Energy on Home (#44):** The house consumption is never a peak, average or period value (e.g. "grid import peak today", "base load", "surplus last hour" of a PV statistics integration), nor a PV inverter's output: SMA names its current generation "Grid power", Casora now treats it as solar. An electricity meter whose entity ID has no umlaut (`stromzahler`) is recognised. A house sensor Casora picked itself that no longer qualifies is picked again when the Studio opens. Clearing the house sensor in the Studio now shows the sum of the rooms instead of hiding the badge.
+- **Energy popup “Where the power comes from”:** SMA “Grid power” counts as solar, the SMA energy meter as grid, an electricity meter (`stromzahler`) as grid.
+- **Doorbell: talking (#23):** The talk connection's sound is only used while sound really arrives there; otherwise you keep hearing the player (26.10.56 went silent when the talk connection carried no sound). The browser console shows lines starting with `casora klingel` for diagnosis.
+
 ## 26.10.56 – 23.10.2026
 
 ### Fixed
