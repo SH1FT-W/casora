@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.56 – 23.10.2026
+
+### Behoben
+- **Klingel: Sprechen (#23, Vorab-Fix):** Wer mithört und spricht, hört die Klingel jetzt über die Sprechverbindung selbst, der Ton bricht beim Sprechen nicht mehr weg. Nach „Beenden“ kommt der Player mit Ton zurück. Das Mikrofon regelt seine Lautstärke nicht mehr selbst, die mitten im Satz schwankte.
+
 ## 26.10.55 – 23.10.2026
 
 ### Behoben

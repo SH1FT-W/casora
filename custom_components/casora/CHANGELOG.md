@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.56 – 23.10.2026
+
+### Fixed
+- **Doorbell: talking (#23, preliminary fix):** While you listen and talk at the same time, you now hear the doorbell through the talk connection itself, so the sound no longer drops when talking starts. After “End” the player comes back with sound. The microphone no longer adjusts its level automatically, which made the volume jump mid-sentence.
+
 ## 26.10.55 – 23.10.2026
 
 ### Fixed
