@@ -53,7 +53,16 @@ def german(part: str) -> bool:
 CODEISH = re.compile(r"^[a-z_$][\w.\-/#:%]*$|^[\w.\-/#:%]*[_./#:%][\w.\-/#:%]*$|[{};=]|=>|\bfunction\b|\breturn\b|^mdi:|^\.|\$\{|^<|>$|\bvar\(--|[\w-]\(|^[+),:?|\-]|[(,]$| \+ |%[0-9A-F]{2}|\b(px|ms|deg|fr|vh|vw|dvh)\b|^[a-z]+(-[a-z]+)+\b|^casora[ :-]|\b(the|is|was|has|not|got|with|and)\b")
 
 
+# Strings first (so "//" in a URL stays), then comments: a quote in a comment is no text users see.
+TOKENS = re.compile(r"'(?:[^'\\\n]|\\.)*'|\"(?:[^\"\\\n]|\\.)*\"|`(?:[^`\\]|\\.)*`|/\*[\s\S]*?\*/|//[^\n]*")
+
+
+def strip_comments(js: str) -> str:
+    return TOKENS.sub(lambda m: m.group(0) if m.group(0)[0] in "'\"`" else " ", js)
+
+
 def literals(js: str):
+    js = strip_comments(js)
     for m in LIT.finditer(js):
         s = next(g for g in m.groups() if g is not None)
         s = re.sub(r"\\u([0-9a-fA-F]{4})", lambda m: chr(int(m.group(1), 16)), s)
