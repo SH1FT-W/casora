@@ -2,7 +2,7 @@
 // @parallel: ui
 // Gewünscht (07.10.2026): Das Energie-Popup zeigt die größten Verbraucher (bis 5, nach Watt) auch
 // ohne Zuordnung im Studio – Casora sucht sie selbst. Erwartet im Casora-Look (Desktop 1600×1000,
-// hell): Abschnitt „Verbraucher“ mit 1–5 Zeilen, absteigend nach Leistung, ohne den Haus-Sensor der
+// hell): Abschnitt „Verbraucher“ (automatische Liste seit #44: „Top N Verbraucher“) mit 1–5 Zeilen, absteigend nach Leistung, ohne den Haus-Sensor der
 // Kachel; sind Verbraucher zugeordnet, stehen genau diese (höchstens 5) drin.
 import { open, casoraDashboards, dashboard, fakeStates, check, need, finish } from './lib.mjs';
 
@@ -41,7 +41,7 @@ await need('Energie-Kachel nach dem Unterschieben', at);
 await page.mouse.click(at.x, at.y);
 await page.waitForTimeout(3500);
 const res = await page.evaluate(() => {
-  const lbl = window.__pierce('*').find((e) => e.children.length === 0 && /^verbraucher$/i.test((e.textContent || '').trim()) && e.getBoundingClientRect().width > 0);
+  const lbl = window.__pierce('*').find((e) => e.children.length === 0 && /^(top \d+ )?verbraucher$/i.test((e.textContent || '').trim()) && e.getBoundingClientRect().width > 0);
   if (!lbl) return { label: false };
   // Zeilen unter der Überschrift in derselben Spalte, bis zur nächsten Überschrift.
   const L = lbl.getBoundingClientRect();
