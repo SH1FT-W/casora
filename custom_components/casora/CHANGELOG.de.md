@@ -14,6 +14,10 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Miele-Geschirrspüler** werden erkannt.
 
 ### Behoben
+- **Später hinzugekommene Lampen** in Home Assistant erscheinen jetzt auch im Beleuchtungs-Badge des Raums.
+- **Erste Einrichtung:** Wer eine Klingel oder Kaffeemaschine hat, bekommt in „Was soll aufs Dashboard?“ die passende Kachel angeboten.
+- **„Neu beginnen“:** Der Filter für Status-LEDs wirft keine echten LED-Streifen mehr raus.
+- **Studio-Vorschau:** Ein Raum nur mit Thermostat bekommt kein Klima-Badge mehr.
 - **Kaffee-Kachel:** Beim Anlegen werden nur echte Kaffeemaschinen vorgeschlagen (auch De'Longhi und Krups), keine Thermometer oder Steckdosen.
 - **Klingel-Diagnose (#23):** Beim Sprechen schreibt die Browser-Konsole alle 2 Sekunden Pegel und Datenmenge von Klingel und Mikrofon.
 - **Home Connect aus HACS:** Waschmaschinen, Trockner und Geschirrspüler von Home Connect Alt (ekutner) wurden nie erkannt, Home Connect Local (homeconnect_ws) wird jetzt getrennt mit eigenen Schlüsseln erkannt.

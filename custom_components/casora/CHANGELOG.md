@@ -14,6 +14,10 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Miele dishwashers** are recognised.
 
 ### Fixed
+- **Lights added later** in Home Assistant now also appear on the room's Lights badge.
+- **First setup:** If you have a doorbell or a coffee machine, “What should go on the dashboard?” offers the matching tile.
+- **“Start fresh”:** the filter for status LEDs no longer removes real LED strips.
+- **Studio preview:** a room with only a thermostat no longer gets a Climate badge.
 - **Coffee tile:** When adding it, only real coffee machines are suggested (also De'Longhi and Krups), no thermometers or plugs.
 - **Doorbell diagnostics (#23):** While talking, the browser console logs the level and data of doorbell and microphone every 2 seconds.
 - **Home Connect from HACS:** Washers, dryers and dishwashers of Home Connect Alt (ekutner) were never recognised, Home Connect Local (homeconnect_ws) is now recognised separately with its own keys.

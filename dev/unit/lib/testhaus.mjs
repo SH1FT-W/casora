@@ -41,7 +41,7 @@ export async function loadPanel() {
   const info = console.info;
   console.info = noop;
   globalThis.document = stub();
-  new Function(fix(read('custom_components/casora/scripts/local/00-finden.js')))();
+  new Function(fix(read('custom_components/casora/scripts/local/00-finder.js')))();
   new Function(fix(read('custom_components/casora/panel/casora-panel-types.js')))();
   new Function(fix(read('custom_components/casora/panel/casora-panel.js')))();
   if (!Panel) throw new Error('panel class not defined');
