@@ -394,8 +394,8 @@
       socMin: v.entity_soc_min, socMax: v.entity_soc_max,
     };
     var has = function (id) { return !!(id && states[id]); };
-    // 06.10.2026: Raum ohne eigenen Sensor – Summe der Geräte oben, darunter jeder Summand mit
-    // seinem Wert; übersprungene (nicht erreichbar, keine Leistung, hinter Messsteckdose) markiert.
+    // 06.10.2026: room without a sensor of its own: the sum of the devices on top, below each
+    // summand with its value; skipped ones (unreachable, no power, behind a metering plug) marked.
     var parts = !ctx.powerId && window._casoraPowerSum && Array.isArray(v.power_entities) && v.power_entities.some(Boolean)
       ? { energy_entities: v.power_entities.filter(Boolean), energy_parent: v.power_parent || null } : null;
     if (parts) { C.sum = parts; C.icons = v.power_icons || null; }
@@ -408,8 +408,8 @@
     if (parts) f.top = { card: secCard(sumIds, call('_casoraSoftEnergy', 'parts', C), states) };
     else if (typeof fl.top === 'string' && fl.top) f.top = UI.label('Verbraucher') + fl.top;
     else if (ctx.powerId && window._casoraAutoConsumers) {
-      // 07.10.2026: keine Verbraucher zugeordnet – Casora sucht die größten selbst (bis 5 nach
-      // Leistung). Popup eines Raums (Sensor mit Bereich, kein Haus-Sensor): nur dieser Bereich.
+      // 07.10.2026: no consumers assigned, Casora finds the largest itself (up to 5 by power).
+      // Popup of a room (sensor with an area, not a house sensor): only that area.
       C.auto = { exclude: [C.home, C.solar, C.grid, C.charge, C.discharge, C.output, C.export, C.loadTarget]
         .concat(C.pv).filter(Boolean), area: autoArea(ctx, v), max: 5 };
       var cand = window._casoraAutoConsumers(ctx.hass, states, C.auto);
@@ -598,8 +598,8 @@
     return html;
   };
 
-  // Bereich für die automatischen Verbraucher: der Raum des Popups (room_name = Bereichsname) oder
-  // der Bereich des Leistungssensors, wenn er keiner fürs ganze Haus ist; sonst das ganze Haus.
+  // Area for the automatic consumers: the room of the popup (room_name = area name) or the area
+  // of the power sensor if it is not one for the whole house; else the whole house.
   var HOUSE_NAME = /haus|house|home|wohnung|zuhause|gesamt|total|netz|grid|verbrauch|consumption|energie|energy/i;
   var autoArea = function (ctx, v) {
     var h = ctx.hass || {}, areas = h.areas || {}, norm = function (x) { return String(x || '').trim().toLowerCase(); };
@@ -612,8 +612,8 @@
     return a && !HOUSE_NAME.test(nm) ? a : null;
   };
   E.autoArea = autoArea;
-  // Wer sieht das? Admins sehen alles; sonst nur, was die Dashboard-Konfiguration nicht verbirgt –
-  // solange sie noch lädt, nichts (sie ist meist schon vom Dashboard-Start da).
+  // „Wer sieht das?“: admins see everything; others only what the dashboard config does not hide,
+  // nothing while it still loads (it is mostly there from the dashboard start).
   var autoVisible = function (ids) {
     var now = window.casoraVisibleIdsNow ? window.casoraVisibleIdsNow(ids) : ids;
     if (now) return now;

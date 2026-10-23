@@ -118,11 +118,11 @@ window._casoraSceneRepaint = function () {
     });
   }, 'lovelace_updated').catch(function () { window._casoraSceneWatch = false; });
 })();
-/* Leistung fürs Energie-Badge, wenn die Badge selbst keinen Sensor bekommt (03.10.2026):
-   Handy-Badge-Reihe und Räume, in denen Energie nur über Verbrauch/Kosten/Geräte an ist,
-   zeigten nur „Energie“ ohne Wert und waren dadurch niedriger. Reihenfolge: die
-   Energie-Kachel (casora_energy) der aktuellen Ansicht – dieselbe Zahl wie dort –, auf Home
-   bzw. am Handy sonst der Hausverbrauch wie beim Einrichten (hausbedarf → gesamt → Netz). */
+/* Power for the energy badge when the badge itself gets no sensor (03.10.2026): the phone's
+   badge row and rooms where energy is on only through usage/cost/devices showed just „Energie“
+   without a value and were lower for it. Order: the energy tile (casora_energy) of the current
+   view, the same number as there; on Home or on the phone else the house consumption as in the
+   setup (hausbedarf, then gesamt, then grid). */
 window._casoraHousePower = function () {
   try {
     var ha = document.querySelector('home-assistant');
@@ -156,7 +156,7 @@ window._casoraHousePower = function () {
     }
     var hit = (window._casoraHPTiles || []).find(isPower);
     if (hit) return hit;
-    // Hausverbrauch nur für Home (erste Ansicht) bzw. das Handy (eine Ansicht), nicht für Räume.
+    // House consumption only for Home (first view) or the phone (one view), not for rooms.
     if (cfg && vi !== 0 && views.length > 1) return null;
     var c = window._casoraHPGuess;
     if (c && Date.now() - c.t < 60000 && (c.id === null || isPower(c.id))) return c.id;

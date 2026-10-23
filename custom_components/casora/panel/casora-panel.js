@@ -2622,21 +2622,21 @@ function energySubsAuto(rooms) {
   return !(rooms || []).slice(1).some((r) => r && r.variables && r.variables.energy_cost_month);
 }
 
-// 03.10.2026: Energie-Badge in jedem Raum, in dem Strom gemessen wird (Leistungssensor
-// im HA-Bereich, auch eine Steckdose, auch bei 0 W); ohne Messung keine. Neue Dashboards und
-// der Umzug tragen sie über casoraBasis.fillBadges ein, bestehende ergänzt das Studio beim
-// Laden (Vorschau sofort, im Dashboard ab dem nächsten Speichern). show_energy: false bleibt.
-// casora_energy_auto: von Casora eingetragen – wer den Sensor danach entfernt, bekommt ihn
-// nicht wieder (seit 06.10.2026 über energy_exclude, siehe unten).
+// 03.10.2026: energy badge in every room where power is measured (power sensor in the HA area,
+// also a plug, also at 0 W); none without a measurement. New dashboards and the migration enter
+// it via casoraBasis.fillBadges, existing ones the Studio adds on load (preview at once, in the
+// dashboard from the next save). show_energy: false stays.
+// casora_energy_auto: entered by Casora; whoever removes the sensor afterwards does not get it
+// back (since 06.10.2026 via energy_exclude, see below).
 const ENERGY_VAR = /^energy_(power_entity|entities|entity_\d+|usage_today|usage_month|cost_today|cost_month)$/;
 function fillRoomEnergy(hass, rooms) {
   const B = typeof window !== "undefined" && window.casoraBasis;
   if (!B || !B.fillBadges || !hass) return 0;
-  // 06.10.2026: Liste je Raum (energy_entities). Das Altfeld energy_power_entity wird zur Liste
-  // mit einem Eintrag. casora_energy_auto: 2 = Automatik ergänzt neue Sensoren, nimmt nie
-  // etwas weg und lässt Ausgeschlossene (energy_exclude) draußen. true = bis 1.0.11 automatisch
-  // eingetragen: unverändert → neu gewählt (alle Geräte, je Gerät alle Messungen); von Hand
-  // verändert → bleibt, wie es ist (casora_energy_auto: false).
+  // 06.10.2026: list per room (energy_entities). The old field energy_power_entity becomes a list
+  // with one entry. casora_energy_auto: 2 = the automatic adds new sensors, never takes anything
+  // away and leaves excluded ones (energy_exclude) out. true = entered automatically up to 1.0.11:
+  // unchanged → picked anew (all devices, all measurements per device); changed by hand → stays
+  // as it is (casora_energy_auto: false).
   const arr = (v) => (Array.isArray(v) ? v.filter(Boolean) : []);
   const same = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
   const devOf = (id) => ((hass.entities || {})[id] || {}).device_id || null;
@@ -2652,7 +2652,7 @@ function fillRoomEnergy(hass, rooms) {
     const auto = pr ? (pr.whole ? [pr.whole] : pr.list) : [];
     let next = null;
     if (V.casora_energy_auto === 2) {
-      // Neu Hinzugekommenes ergänzen – nie einen Raumsensor zu den Geräten (doppelt).
+      // Add what is new, never a room sensor to the devices (it would count twice).
       if (pr && (!pr.whole || !has.length)) next = (has.length ? has : (alt ? [alt] : [])).concat(auto);
     } else if (V.casora_energy_auto && !pr) {
       if (!has.length) next = [alt];
@@ -2662,8 +2662,8 @@ function fillRoomEnergy(hass, rooms) {
       if (untouched && auto.length) { next = auto; V.casora_energy_auto = 2; }
       else { V.casora_energy_auto = false; if (!has.length) next = [alt]; }
     } else if (!has.length) {
-      // Altfall vor 1.0.3 ohne Markierung (04.10.2026): der Sensor gehört zu einem Gerät im
-      // Bereich, und dort messen weitere Geräte – dann zählen alle (je Gerät nach device_id).
+      // Old case before 1.0.3 without a marker (04.10.2026): the sensor belongs to a device in the
+      // area, and further devices measure there: then all of them count (per device by device_id).
       const own = devOf(alt);
       if (!V.casora_energy_sum && pr && !pr.whole && own && pr.list.some((id) => devOf(id) === own)
         && pr.list.some((id) => devOf(id) !== own)) { next = pr.list; V.casora_energy_sum = true; }
