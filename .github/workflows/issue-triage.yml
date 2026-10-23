@@ -79,11 +79,19 @@ jobs:
                hinterlasse einen kurzen, freundlichen Kommentar mit
                Verweis auf das Original-Issue (#Nummer).
 
-            5. Falls es ein Bug-Report ist, dem wichtige Infos fehlen
-               (keine Reproduktionsschritte, keine Versionsangabe),
-               hinterlasse einen kurzen, hoeflichen Kommentar, der den
-               Autor um die fehlenden Details bittet. Schreibe den
-               Kommentar auf Englisch.
+            5. Falls es ein Bug-Report ist und das Issue noch KEINE
+               Casora-Diagnose enthaelt (Block, der mit "Casora" und
+               einer Versionsnummer beginnt und Zeilen wie "entities:"
+               hat), bitte den Autor in EINEM kurzen Kommentar, sie
+               einzufuegen: im Studio oben rechts das Menue, dann
+               Help, dann Copy diagnostics, und den Text ins Issue
+               kopieren. Frag zusaetzlich NUR nach dem, was danach noch
+               fehlt und was die Diagnose nicht enthaelt (z. B. ein
+               Screenshot, die betroffene Entitaet oder die genauen
+               Schritte). Frag NIE nach etwas, das schon im Issue steht
+               (Version, Geraet, Bilder). Enthaelt das Issue die Diagnose
+               und ist der Fehler verstaendlich beschrieben, frag gar
+               nichts nach. Schreibe den Kommentar auf Englisch.
 
             6. Falls du noch keinen Kommentar hinterlassen hast,
                hinterlasse eine kurze, freundliche Bestaetigung
