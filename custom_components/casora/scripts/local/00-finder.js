@@ -669,37 +669,47 @@ window.casoraPriceKwh = function (v) {
   };
   // Security row on Home (#39): the house's doors (kind 'door', every contact but windows) or windows
   // ('window') as a sub-badge of their own, with merged sensors as their combined sensor. Empty in a room,
-  // for contacts hidden by „Wer sieht das?“, and when the badge lists doors or windows itself (no twins).
+  // for contacts hidden by „Wer sieht das?“, and when the badge lists that kind itself (no twins).
   // where: the card (home view?) or 'home'; v.place wins as in casora_badge_security_group.
-  var NOT_CONTACT = /^(motion|occupancy|presence)$/;
-  // A badge asks once per style; one look at the contacts per state change is enough.
+  var OWN_KIND = { door: 'door', garage_door: 'door', opening: 'door', window: 'window' };
+  // A badge asks several times per render. Keyed by the hass object: button-card hands its templates a
+  // new one per update (its states are a proxy that stays the same for the card's life, so not those).
   var ccMemo = typeof WeakMap === 'function' ? new WeakMap() : null;
   var contactsOnce = function (hass) {
-    var S = hass && hass.states;
-    if (!ccMemo || !S) return contacts(hass);
-    if (!ccMemo.has(S)) ccMemo.set(S, contacts(hass));
-    return ccMemo.get(S);
+    if (!ccMemo || !hass || typeof hass !== 'object') return contacts(hass);
+    if (!ccMemo.has(hass)) ccMemo.set(hass, contacts(hass));
+    return ccMemo.get(hass);
   };
+  // Kinds of door/window the badge lists itself (security_entity_1…8): contacts, or groups of them.
+  // Other binary sensors (smoke, leak, motion …), missing ones and ones this user does not see do not count.
+  function ownKinds(S, v, sees) {
+    var out = {};
+    var kindOf = function (x) { return OWN_KIND[String(((S[x] || {}).attributes || {}).device_class || '')]; };
+    for (var i = 1; i <= 8; i++) {
+      var x = v['security_entity_' + i];
+      if (typeof x !== 'string' || x.indexOf('binary_sensor.') !== 0 || !S[x] || !sees(x)) continue;
+      var m = (S[x].attributes || {}).entity_id;
+      if (Array.isArray(m) && m.length) m.forEach(function (y) { var k = kindOf(y); if (k) out[k] = true; });
+      else if (kindOf(x)) out[kindOf(x)] = true;
+    }
+    return out;
+  }
   window.casoraHouseContactsOf = function (hass, v, kind, user, where) {
     v = v || {};
     var S = (hass && hass.states) || {};
     var home = v.place ? v.place === 'home' : where === 'home'
       || (!!where && typeof where === 'object' && typeof window.casoraOnHomeView === 'function' && window.casoraOnHomeView(where) === true);
     if (!home) return [];
-    var own = [v.doors_entity, v.windows_entity];
-    for (var i = 1; i <= 8; i++) own.push(v['security_entity_' + i]);
-    if (own.some(function (x) {
-      return typeof x === 'string' && x.indexOf('binary_sensor.') === 0
-        && !NOT_CONTACT.test(String(((S[x] || {}).attributes || {}).device_class || ''));
-    })) return [];
     var sees = function (x) { return typeof window.casoraSeesEntity !== 'function' || window.casoraSeesEntity(x, user, v); };
+    var want = kind === 'window' ? 'window' : 'door';
+    if (ownKinds(S, v, sees)[want]) return [];
     var cc = contactsOnce(hass), out = [];
     cc.groups.forEach(function (g) {
       (g.members || []).forEach(function (x) {
         if (cc.excl.indexOf(x) >= 0 || !sees(x)) return;
         var win = String(((S[x] || {}).attributes || {}).device_class || '') === 'window';
         var id = cc.sub[x] || x;
-        if (win === (kind === 'window') && out.indexOf(id) < 0) out.push(id);
+        if (win === (want === 'window') && out.indexOf(id) < 0) out.push(id);
       });
     });
     return out;

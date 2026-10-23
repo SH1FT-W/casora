@@ -60,7 +60,7 @@ def _tx(s):
     # On the phone the room pages sit in the home view: without the card, casoraHasSec does not count
     # the house's doors and windows there and casoraHouseContactsOf lists none (Home only, #39).
     body = body.replace("casoraHasSec(variables,user,this)", "casoraHasSec(variables,user)")
-    body = body.replace(",user,this)", ",user)")
+    body = re.sub(r"(casoraHouseContactsOf\(hass,variables,'(?:door|window)',user),this\)", r"\1)", body)
     body = re.sub(r"(?<![\w.$])variables(?![\w$])", "_rv", body)
     return "[[[ " + RV + body.lstrip(" ")
 

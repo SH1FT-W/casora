@@ -158,7 +158,30 @@ assert.equal(of({ security_entity_1: 'alarm_control_panel.home', security_entity
   'alarm or motion in a slot: still the house');
 sb.casoraSeesEntity = cw.casoraSeesEntity;
 assert.deepEqual(of({ casora_entity_users: { 'binary_sensor.garage': ['b'] } }, 'door', 'home'), ['binary_sensor.door_a'], 'Who sees this');
+// An own entry this user does not see suppresses nothing for him.
+assert.equal(of({ security_entity_1: 'binary_sensor.door_a', casora_entity_users: { 'binary_sensor.door_a': ['b'] } }, 'door', 'home').length, 1,
+  'hidden own door: the house (minus the hidden one)');
 delete sb.casoraSeesEntity;
+// Only doors/windows (or groups of them) count as own entries, per kind; other or missing sensors do not.
+hs.states['binary_sensor.smoke'] = st('off', 'smoke');
+assert.equal(of({ security_cameras: ['camera.a'], security_entity_1: 'binary_sensor.smoke' }, 'door', 'home').length, 2, 'smoke in a slot: still the house');
+assert.equal(of({ security_entity_1: 'binary_sensor.gone' }, 'door', 'home').length, 2, 'missing sensor in a slot: still the house');
+assert.equal(of({ security_entity_1: 'binary_sensor.door_a' }, 'window', 'home').length, 3, 'own door: the windows stay');
+assert.deepEqual(of({ security_entity_1: 'binary_sensor.door_a' }, 'door', 'home'), [], 'own door: no door twins');
+assert.equal(of({ security_entity_2: 'binary_sensor.doors_group' }, 'window', 'home').length, 3, 'own door group: the windows stay');
+delete hs.states['binary_sensor.smoke'];
+
+// button-card hands its templates a states proxy that lives as long as the card, and a new hass object per
+// update: a contact added later must show up (the cache must not key on that proxy).
+{
+  let live = { ...hs.states };
+  const px = new Proxy({}, { get: (t, n) => live[n], has: (t, n) => n in live, ownKeys: () => Object.keys(live),
+    getOwnPropertyDescriptor: (t, n) => ({ value: live[n], enumerable: true, configurable: true }) });
+  const ph = () => ({ ...hs, states: px });
+  assert.equal(sb.casoraHouseContactsOf(ph(), {}, 'window', { id: 'a' }, 'home').length, 3);
+  live = { ...live, 'binary_sensor.win_new': st('on', 'window') };
+  assert.ok(sb.casoraHouseContactsOf(ph(), {}, 'window', { id: 'a' }, 'home').includes('binary_sensor.win_new'), 'proxy: new window listed');
+}
 
 // One state for the list: open while one is open, tilted only when every open one is tilted.
 const one = (ids, kind) => sb.casoraContactsEntity(hs, null, { contacts: ids, contacts_kind: kind, label: 'x' });
