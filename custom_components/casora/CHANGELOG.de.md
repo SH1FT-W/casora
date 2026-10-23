@@ -4,6 +4,20 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.58 – 24.10.2026
+
+### Neu
+- **Energie aus den Energie-Einstellungen von Home Assistant:** Wer im HA-Energie-Dashboard Leistungssensoren für Netz, Solar und Akku eingetragen hat, bekommt sie jetzt zuerst im Energie-Badge auf Zuhause: nur Netz ergibt diesen Sensor, mit Solar oder Akku ist der Hausverbrauch Netz + Solar + Akku. Das Popup zeigt „Woher kommt der Strom“ mit Netz, Solar und Akku, die Energie-Popups nutzen diese Sensoren auch ohne Unter-Badges. Ein Wechselrichter, der nachts schläft, zählt als 0 W. Die Suche über Namen ist nur noch der Rückfall; ein selbst gewählter Sensor wird nie ersetzt.
+- **Diagnose kopieren:** Studio → ⋯ → Hilfe → „Diagnose kopieren …“ sammelt Zahlen, Versionen und Integrationen (keine Namen von Geräten, Räumen oder Personen) für ein GitHub-Issue, „Problem melden“ öffnet ein neues Issue mit einem Feld dafür.
+- **Miele-Geschirrspüler** werden erkannt.
+
+### Behoben
+- **Home Connect aus HACS:** Waschmaschinen, Trockner und Geschirrspüler von Home Connect Alt (ekutner) wurden nie erkannt, Home Connect Local (homeconnect_ws) wird jetzt getrennt mit eigenen Schlüsseln erkannt.
+- **Geschirrspüler-Vorschläge:** Das Studio schlägt einen Backofen oder eine Kaffeemaschine von Home Connect nicht mehr als Geschirrspüler vor, in jeder Sprache.
+- **Zweite Kartenkamera eines Saugroboters** (z. B. `…_map_2`) wird nicht mehr als Überwachungskamera vorgeschlagen.
+- **Studio-Felder finden, was die Karte findet:** Geschirrspüler, Waschmaschine/Trockner (z. B. SmartThings, Miele), Saugroboter und 3D-Drucker nutzen im Studio dieselbe Erkennung wie ihre Karten.
+- **Live-Aktivitäten für Dreame- und Ecovacs-Saugroboter** bekommen Fläche, Dauer und Fortschritt.
+
 ## 26.10.57 – 23.10.2026
 
 ### Behoben

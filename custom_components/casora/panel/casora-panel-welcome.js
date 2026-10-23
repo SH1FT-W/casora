@@ -27,9 +27,9 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Energie auf Zuhause", n0: "Ohne Haussensor zeigt Zuhause die Summe der Räume statt eines einzelnen Geräts. Studio einmal öffnen und speichern.",
-      n1t: "Türen und Fenster", n1: "Auf Zuhause stehen Türen und Fenster jetzt auch neben Kamera, Schloss oder Alarm in der Sicherheits-Reihe.",
-      n2t: "Geschirrspüler", n2: "Mit Home Connect aus Home Assistant stimmen Restzeit, Programm und Tür.",
+      n0t: "Energie aus Home Assistant", n0: "Netz, Solar und Akku aus den Energie-Einstellungen von Home Assistant: Zuhause zeigt den echten Hausverbrauch und woher der Strom kommt.",
+      n1t: "Diagnose kopieren", n1: "Unter ⋯ → Hilfe sammelt Casora Versionen und Integrationen für einen Fehlerbericht, ohne Namen.",
+      n2t: "Geräte besser erkannt", n2: "Home Connect aus HACS, Miele-Spüler und Saugroboter-Werte werden jetzt erkannt, Backöfen nicht mehr als Spüler vorgeschlagen.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -39,9 +39,9 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Energy on Home", n0: "Without a house sensor, Home shows the sum of the rooms instead of a single device. Open the Studio once and save.",
-      n1t: "Doors and windows", n1: "On Home, doors and windows now also show next to a camera, lock or alarm in the security row.",
-      n2t: "Dishwasher", n2: "With Home Connect from Home Assistant, time remaining, program and door are right.",
+      n0t: "Energy from Home Assistant", n0: "Grid, solar and battery from Home Assistant's energy settings: Home shows the real house consumption and where the power comes from.",
+      n1t: "Copy diagnostics", n1: "Under ⋯ → Help, Casora collects versions and integrations for a bug report, without names.",
+      n2t: "Devices recognised better", n2: "Home Connect from HACS, Miele dishwashers and vacuum values are recognised now, ovens are no longer suggested as dishwashers.",
     },
   };
 
@@ -55,7 +55,7 @@
   /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
     ["mdi:home-lightning-bolt-outline", "n0t", "n0"],
-    ["mdi:door-open", "n1t", "n1"],
+    ["mdi:clipboard-text-outline", "n1t", "n1"],
     ["mdi:dishwasher", "n2t", "n2"],
   ];
 

@@ -4,6 +4,20 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.58 – 24.10.2026
+
+### Added
+- **Energy from Home Assistant's energy settings:** If you entered power sensors for grid, solar and battery in Home Assistant's energy dashboard, the energy badge on Home now uses them first: with the grid alone that sensor, with solar or a battery the house consumption as grid + solar + battery. Its popup shows “Where the power comes from” with grid, solar and battery, and the energy popups use these sensors even without sub-badges. An inverter asleep at night counts as 0 W. Name guessing is only the fallback now; a sensor you picked yourself is never replaced.
+- **Copy diagnostics:** Studio → ⋯ → Help → “Copy diagnostics…” collects counts, versions and integrations (no names of devices, rooms or people) for a GitHub issue, and “Report a problem” opens a new issue with a field for it.
+- **Miele dishwashers** are recognised.
+
+### Fixed
+- **Home Connect from HACS:** Washers, dryers and dishwashers of Home Connect Alt (ekutner) were never recognised, Home Connect Local (homeconnect_ws) is now recognised separately with its own keys.
+- **Dishwasher suggestions:** The Studio no longer suggests a Home Connect oven or coffee machine as a dishwasher, in any language.
+- **Second map camera of a vacuum** (e.g. `…_map_2`) is no longer suggested as a security camera.
+- **Studio fields find what the card finds:** Dishwasher, washer/dryer (e.g. SmartThings, Miele), vacuum and 3D printer fields in the Studio now use the same recognition as their cards.
+- **Live activities for Dreame and Ecovacs vacuums** get area, duration and progress.
+
 ## 26.10.57 – 23.10.2026
 
 ### Fixed
