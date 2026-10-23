@@ -440,6 +440,28 @@ states['camera.carport_sub'].state = 'idle';
   lv = live(vid(null, [{ kind: 'video' }, { kind: 'audio' }])); lv._muted = true; lv._mountedMuted = false;
   lv._toggleSound();
   assert.equal(lv._mounts, 0, 'audio track present: only unmute');
+  // #23 (talk): while the talk connection plays the doorbell, the player's video is silent but HA's player keeps
+  // its audio track; ending talk while listening mounts the player fresh with sound and drops the talk audio.
+  lv = live(vid(null, [{ kind: 'video' }, { kind: 'audio' }])); lv._muted = false; lv._mountedMuted = false;
+  const ear = { muted: true, removed: false, pause() {}, remove() { this.removed = true; } };
+  lv._t = { state: 'on', hearing: true, ear, mic: { getTracks: () => [] } };
+  lv._applyAudio();
+  assert.equal(lv._video().muted, true, 'talking: player video silent');
+  assert.equal(lv._card.muted, false, 'talking: HA player keeps its audio track');
+  assert.equal(ear.muted, false, 'talking: doorbell heard through the talk connection');
+  lv._talkStop(true);
+  assert.equal(lv._t, null);
+  assert.ok(ear.removed, 'talk audio removed');
+  assert.equal(lv._mounts, 1, 'listening again: player mounted fresh');
+  // Not listening: talk audio stays muted, no remount afterwards.
+  lv = live(vid(null, [{ kind: 'video' }, { kind: 'audio' }])); lv._muted = true;
+  const ear2 = { muted: false, pause() {}, remove() {} };
+  lv._t = { state: 'on', hearing: true, ear: ear2 };
+  lv._applyAudio();
+  assert.equal(ear2.muted, true, 'not listening: talk audio muted');
+  lv._talkStop(true);
+  assert.equal(lv._mounts, 0, 'not listening: no remount');
+  assert.match(src('24-klingel.js'), /autoGainControl: false/, 'microphone without automatic gain');
   delete globalThis.addEventListener; delete globalThis.removeEventListener;
 }
 console.log('klingel: ok');

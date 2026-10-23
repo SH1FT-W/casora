@@ -975,6 +975,10 @@
     };
     P._applyAudio = function () {
       var want = this._muted !== false;
+      // #23: while the talk connection plays the doorbell, the player's video stays silent (no double sound); HA's
+      // player itself stays unmuted so it keeps its audio track.
+      var ear = this._t && this._t.hearing ? this._t.ear : null;
+      if (ear && ear.muted !== want) ear.muted = want;
       if (this._native && this._card && this._card.muted !== want) {
         this._card.muted = want;
         // HA rebuilds its player muted and drops the audio track: the next "listen" has to mount a new one.
@@ -982,6 +986,7 @@
       }
       var v = this._video();
       if (!v) return;
+      if (ear) { if (!v.muted) v.muted = true; return; }
       if (v.muted !== want) v.muted = want;
       if (!want) {
         if (v.hasAttribute('muted')) v.removeAttribute('muted');
@@ -1229,7 +1234,8 @@
       }).then(function (conf) {
         if (!conf || self._t !== t) return null;
         t.conf = conf;
-        return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false })
+        // #23: no automatic gain, it pumped the level up and down mid-sentence.
+        return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: false }, video: false })
           .catch(function (e) { fail('Mikrofon: ' + (e && e.name), e && /NotAllowed|Security/.test(e.name) ? 'Kein Zugriff aufs Mikrofon – im Browser erlauben' : null); return null; });
       }).then(function (mic) {
         if (!mic) return null;
@@ -1241,6 +1247,22 @@
         // Nur die Tonspur – das Bild läuft schon im Player; ein zweiter Video-Empfang kostete Bandbreite.
         pc.addTransceiver(mic.getAudioTracks()[0], { direction: 'sendrecv', streams: [mic] });
         if (t.conf && t.conf.dataChannel) { try { pc.createDataChannel(t.conf.dataChannel); } catch (e) { /* ohne */ } }
+        // #23: while talking, hear the doorbell through this connection. Opening the back channel can restart the
+        // doorbell's stream and take the sound out of the player; the talk connection carries it the whole time.
+        pc.ontrack = function (ev) {
+          if (self._t !== t || t.ear || !ev.track || ev.track.kind !== 'audio') return;
+          var a = t.ear = document.createElement('audio');
+          a.autoplay = true;
+          a.setAttribute('playsinline', '');
+          a.style.display = 'none';
+          a.muted = self._muted !== false;
+          a.srcObject = (ev.streams && ev.streams[0]) || new MediaStream([ev.track]);
+          try { self._root.appendChild(a); } catch (e) { /* without */ }
+          var on = function () { if (self._t !== t) return; t.hearing = true; self._applyAudio(); };
+          var p = a.play();
+          // Browser refuses: the player's own sound stays.
+          if (p && p.then) p.then(on, function () {}); else on();
+        };
         pc.onicecandidate = function (ev) {
           if (!ev.candidate || self._t !== t) return;
           var cand = ev.candidate.toJSON ? ev.candidate.toJSON() : ev.candidate;
@@ -1297,6 +1319,13 @@
       if (t.mic) t.mic.getTracks().forEach(function (x) { try { x.stop(); } catch (e) { /* schon aus */ } });
       if (t.pc) { try { t.pc.getSenders().forEach(function (s) { if (s.track) s.track.stop(); }); } catch (e) { /* zu */ } try { t.pc.close(); } catch (e) { /* zu */ } }
       if (t.unsub) { var u = t.unsub; Promise.resolve(u).then(function (fn) { try { if (typeof fn === 'function') fn(); } catch (e) { /* zu */ } }); }
+      if (t.ear) { try { t.ear.pause(); t.ear.srcObject = null; t.ear.remove(); } catch (e) { /* gone */ } }
+      // #23: back to the player while listening: mount it fresh with sound, in case the stream restarted meanwhile.
+      if (t.hearing && this._muted === false && this._native && this.isConnected && this._v && !this._v.dead) {
+        this._teardown();
+        this._mount(this._stream);
+      }
+      this._applyAudio();
       if (!quiet && window.casoraHaptic) window.casoraHaptic('light');
       this._paint();
     };
