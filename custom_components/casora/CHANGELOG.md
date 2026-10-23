@@ -4,6 +4,15 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.55 – 23.10.2026
+
+### Fixed
+- **Energy on Home (#44):** Home no longer shows a single device's or room's "total" power sensor as the house consumption. Without a real house sensor (house consumption, grid or meter) Home shows the sum of the rooms, the same values as the room badges, and follows the rooms when they change. A sensor you picked yourself is never replaced. Existing dashboards: open the Studio once and save to correct a wrong pick. The automatic list in the popup is now called “Top 5 consumers”.
+- **Security on Home (#39):** Next to cameras, locks or an alarm in the badge, the sub-row now also shows “Doors” and “Windows” with the house's doors and windows; a tap opens the list. Only the kind the badge lists itself is left out, smoke or leak sensors in the badge no longer hide them, and new contacts show up without reloading.
+- **Dishwasher with Home Connect from Home Assistant (#48):** Time remaining is calculated from the finish time (was “33:46 h left”). Active and selected program, door, progress and cancel are found automatically; in the Studio the program (select) and door (sensor) can be picked by hand. Program names are readable.
+- **AI via OpenRouter or Ollama:** AI tasks of these integrations are recognised (model stored differently, vendor in front), so AI features and AI tile types work with them.
+- **Setup notice for helper scripts:** The notice disappears once all helpers and scripts exist and only mentions the `script: !include scripts.yaml` line when it is really missing.
+
 ## 26.10.54 – 22.10.2026
 
 ### Fixed

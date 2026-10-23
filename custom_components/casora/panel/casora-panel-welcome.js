@@ -27,7 +27,9 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Player in der Studio-Vorschau", n0: "Die Vorschau zeigt an der Welle immer den Player des Dashboards. Läuft nichts, fehlen Welle und Player wie im Dashboard.",
+      n0t: "Energie auf Zuhause", n0: "Ohne Haussensor zeigt Zuhause die Summe der Räume statt eines einzelnen Geräts. Studio einmal öffnen und speichern.",
+      n1t: "Türen und Fenster", n1: "Auf Zuhause stehen Türen und Fenster jetzt auch neben Kamera, Schloss oder Alarm in der Sicherheits-Reihe.",
+      n2t: "Geschirrspüler", n2: "Mit Home Connect aus Home Assistant stimmen Restzeit, Programm und Tür.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -37,7 +39,9 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Player in the Studio preview", n0: "The preview always shows the dashboard's player at the wave. With nothing playing, wave and player are gone, as on the dashboard.",
+      n0t: "Energy on Home", n0: "Without a house sensor, Home shows the sum of the rooms instead of a single device. Open the Studio once and save.",
+      n1t: "Doors and windows", n1: "On Home, doors and windows now also show next to a camera, lock or alarm in the security row.",
+      n2t: "Dishwasher", n2: "With Home Connect from Home Assistant, time remaining, program and door are right.",
     },
   };
 
@@ -50,7 +54,9 @@
 
   /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
-    ["mdi:play-box-multiple-outline", "n0t", "n0"],
+    ["mdi:home-lightning-bolt-outline", "n0t", "n0"],
+    ["mdi:door-open", "n1t", "n1"],
+    ["mdi:dishwasher", "n2t", "n2"],
   ];
 
   // Decide on load - before the Studio writes its own casora.* keys.
