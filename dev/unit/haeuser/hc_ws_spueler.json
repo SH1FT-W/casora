@@ -330,6 +330,11 @@
     "start": "button.testspueler_start",
     "stop": "button.testspueler_abbrechen"
    }
+  },
+  "studio_main": {
+   "casora_dishwasher": [
+    "sensor.testspueler_betriebszustand"
+   ]
   }
  }
 }

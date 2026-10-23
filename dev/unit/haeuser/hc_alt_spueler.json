@@ -254,6 +254,11 @@
     "start": "button.siemens_sn658x06te_68a40e000003_start_pause",
     "stop": "button.siemens_sn658x06te_68a40e000003_stop"
    }
+  },
+  "studio_main": {
+   "casora_dishwasher": [
+    "sensor.siemens_sn658x06te_68a40e000003_bsh_common_status_operationstate"
+   ]
   }
  }
 }
