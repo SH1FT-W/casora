@@ -22,7 +22,7 @@ const hass = {
 };
 const window = {};
 globalThis.document = { querySelector: (s) => (s === 'home-assistant' ? { hass } : null) };
-new Function('window', 'document', read('custom_components/casora/scripts/local/00-finden.js'))(window, globalThis.document);
+new Function('window', 'document', read('custom_components/casora/scripts/local/00-finder.js'))(window, globalThis.document);
 assert.ok(window.casoraDevice && window.casoraDevice.map, 'finder');
 
 const geraete = read('custom_components/casora/scripts/local/02-devices.js');

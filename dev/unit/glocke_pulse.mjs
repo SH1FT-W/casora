@@ -17,7 +17,7 @@ const basis = fs.readFileSync(new URL('local/01-basis.js', root), 'utf8');
 const bs = basis.indexOf('(function () {\n  if (window._casoraNotifyLocal) return;');
 assert.ok(bs > 0, 'Mitteilungs-Erweiterung (01-basis) gefunden');
 const basisMod = basis.slice(bs, basis.indexOf('\n})();', bs) + 6);
-const finden = fs.readFileSync(new URL('local/00-finden.js', root), 'utf8');
+const finden = fs.readFileSync(new URL('local/00-finder.js', root), 'utf8');
 const pulse = fs.readFileSync(new URL('local/14-pulse.js', root), 'utf8');
 
 const MIN = 60000;
@@ -68,7 +68,7 @@ new Function(mod)();
 new Function(finden)();
 new Function(basisMod)();
 new Function(pulse)();
-window._casoraLocalLoaded = ['00-finden.js', '01-basis.js', '14-pulse.js'];
+window._casoraLocalLoaded = ['00-finder.js', '01-basis.js', '14-pulse.js'];
 
 const N = window._casoraNotify;
 const rows = async () => (await N.refresh(), N.rows);

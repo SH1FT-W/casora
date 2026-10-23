@@ -12,7 +12,7 @@ const root = new URL('../../', import.meta.url);
 const read = (p) => fs.readFileSync(new URL(p, root), 'utf8');
 const T = JSON.parse(read('dashboards/casora/button_card_templates.json'));
 const body = (s) => s.replace(/^\s*\[\[\[/, '').replace(/\]\]\]\s*$/, '');
-const FIND = read('custom_components/casora/scripts/local/00-finden.js');
+const FIND = read('custom_components/casora/scripts/local/00-finder.js');
 
 const NOW = Date.parse('2026-10-05T16:40:00Z');
 const realNow = Date.now;
@@ -53,7 +53,7 @@ const document = {
 };
 const localStorage = { getItem: (k) => store[k] || null, setItem: (k, v) => { store[k] = v; } };
 
-// casoraDevice (00-finden.js) mit lastOn.
+// casoraDevice (00-finder.js) mit lastOn.
 const a = FIND.indexOf('(function () {\n  if (window.casoraDevice) return;');
 const b = FIND.indexOf('\n})();', a);
 new Function('window', 'document', FIND.slice(a, b + 6))(window, document);

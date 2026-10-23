@@ -4,7 +4,7 @@
 // Casora-Einstellung notify.exclude (casora/settings/*, window.CASORA_SETTINGS) – gilt für alle
 // Dashboards, Desktop und Handy. Die Glocke (casora-core.js, excludes) lässt diese Entitäten aus,
 // auch im Zähler. Zur Auswahl stehen nur Entitäten, die überhaupt melden können
-// (window.casoraNotifySources aus scripts/local/00-finden.js) – nach Raum, mit Suche, Meldungsart
+// (window.casoraNotifySources aus scripts/local/00-finder.js) – nach Raum, mit Suche, Meldungsart
 // und ob sie gerade melden. Eigener Abschnitt unter dem Bereich „Benachrichtigungen“.
 (function () {
   const W = window;
@@ -199,7 +199,7 @@
     if (P.__casoraGlocke) return;
     P.__casoraGlocke = true;
     // Gleicher Finder wie im Dashboard; im Studio sonst erst über casora-panel-types.js geladen.
-    if (!W.casoraNotifySources) import("/casora_scripts/local/00-finden.js").catch(() => {});
+    if (!W.casoraNotifySources) import("/casora_scripts/local/00-finder.js").catch(() => {});
 
     P._casoraBellExclude = function (host, S, render) {
       const hass = this._hass || {};

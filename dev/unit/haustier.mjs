@@ -9,7 +9,7 @@ globalThis.document = { querySelector: () => null, addEventListener: () => {} };
 globalThis.addEventListener = () => {};
 globalThis.setTimeout = () => 0;
 const load = (p) => new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/' + p, import.meta.url), 'utf8'))();
-load('00-finden.js');
+load('00-finder.js');
 load('15-person.js');
 load('26-haustier.js');
 const P = window._casoraPet;

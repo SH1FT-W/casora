@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: allein   (startet HA neu)
-// @deckt: custom_components/casora/scripts/local/00-finden.js
+// @deckt: custom_components/casora/scripts/local/00-finder.js
 // Issue #11 im echten HA (bisher nur Unit-Test): Eine Automation schaltet den Status-Schalter einer
 // Szene (input_boolean, einziger Eintrag der Szene) statt der Szene selbst. scene.*.state bleibt
 // Tage alt. Erwartet: Szenen-Badge und Szenen-Zeile (chipHtml) zeigen „vor N Min.“ ab dem letzten off → on

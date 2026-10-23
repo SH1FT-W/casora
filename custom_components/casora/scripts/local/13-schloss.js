@@ -55,7 +55,7 @@
   var WORD = { locked: 'Verriegelt', unlocked: 'Entriegelt', locking: 'Wird verriegelt …', unlocking: 'Wird entriegelt …',
     jammed: 'Klemmt', open: 'Geöffnet', opening: 'Wird geöffnet …', unavailable: 'Offline', unknown: 'Unbekannt' };
   L.word = function (s) { return WORD[s] || (s ? s.charAt(0).toUpperCase() + s.slice(1) : WORD.unknown); };
-  // Stufe wie Kachel/Badge (casoraSecurityLevel); ohne 00-finden.js dieselbe Regel in kurz.
+  // Stufe wie Kachel/Badge (casoraSecurityLevel); ohne 00-finder.js dieselbe Regel in kurz.
   var level = function (id, s) {
     var h = hass();
     if (window.casoraSecurityLevel && h && h.states[id]) return window.casoraSecurityLevel(h, [id]);

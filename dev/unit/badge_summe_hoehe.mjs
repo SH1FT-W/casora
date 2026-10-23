@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
-const src = read('custom_components/casora/scripts/local/00-finden.js');
+const src = read('custom_components/casora/scripts/local/00-finder.js');
 const window = {};
 try { vm.runInNewContext(src, { window, document: { addEventListener() {}, querySelector() { return null; } }, console, setTimeout, clearTimeout }); } catch (e) { /* Rest des Moduls braucht HA */ }
 assert.equal(typeof window.casoraSecuritySummary, 'function', 'casoraSecuritySummary geladen');

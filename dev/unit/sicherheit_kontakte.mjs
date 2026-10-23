@@ -73,7 +73,7 @@ assert.equal(seen && seen.doors + seen.windows, 0, 'room without entries: nothin
 // 4. Follow-up #39: on a tablet/desktop (casora_room) the security badge on Home stayed hidden without
 // entries of its own; casoraHasSec only looked at entries. Now the card says where it sits: on the
 // home view the house's doors and windows are enough, in a room still only its entries.
-const finden = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finden.js', import.meta.url), 'utf8');
+const finden = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8');
 const sandbox = { CASORA_SETTINGS: { notify: { contact_merged: { 'binary_sensor.door_a': ['binary_sensor.door_a', 'binary_sensor.win_b'] } } } };
 new Function('window', 'document', 'customElements', finden)(sandbox, { querySelector: () => null },
   { whenDefined: () => new Promise(() => {}), get: () => null });

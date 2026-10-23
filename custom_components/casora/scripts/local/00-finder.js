@@ -1,19 +1,18 @@
-// ── Geräte-Finder (Casora, 26.09.2026) ──────────────────────────────────────
-// Popups sollen ihre Entitäten selbst finden, statt feste IDs oder deutsche
-// Namensmuster zu brauchen. Grundlage sind zwei sprachunabhängige Angaben aus
-// HAs Registry, die im Browser als hass.entities / hass.devices ankommen:
-//   • device_id  – welche Entitäten zu einem Gerät gehören (inkl. Unter-Geräten
-//                  über via_device, z. B. AMS am Drucker)
-//   • translation_key – fester Schlüssel der Integration („print_status“), gleich
-//                  in jeder Sprache und egal, wie der Nutzer die Entität benannt hat
-// Für Geräte ohne Schlüssel (z. B. Zigbee-Steckdosen) hilft device_class.
-// Fest eingestellte Variablen im Dashboard haben immer Vorrang – der Finder füllt
-// nur Lücken.
+// ── Device finder (Casora, 26.09.2026) ──────────────────────────────────────
+// Popups find their entities themselves instead of needing fixed ids or German
+// name patterns. It rests on two language-independent facts from HA's registry,
+// which reach the browser as hass.entities / hass.devices:
+//   • device_id  – which entities belong to a device (including sub-devices
+//                  via via_device, e.g. an AMS on a printer)
+//   • translation_key – the integration's fixed key („print_status“), the same
+//                  in every language and whatever the user named the entity
+// Devices without keys (e.g. Zigbee plugs) are helped by device_class.
+// Variables set in the dashboard always win – the finder only fills gaps.
 
-// Strompreis für Kosten in Geräte-Popups (1.0.3): 1) Kartenvariable price_kwh, 2) der Preis aus
-// den Casora-Einstellungen (Außenwerte & Strompreis), 3) der Netzbezug aus HAs Energie-Dashboard
-// (fester Preis oder live der Zustand der Preis-Entität, CASORA_PRICE_ENTITY). 2) und 3) kommen mit
-// casora/settings/get (casora-local.js). Ohne alles null: dann zeigen die Popups keine Kosten.
+// Electricity price for costs in device popups (1.0.3): 1) card variable price_kwh, 2) the price from
+// the Casora settings (outdoor values & electricity price), 3) grid import from HA's energy dashboard
+// (fixed price or live the state of the price entity, CASORA_PRICE_ENTITY). 2) and 3) come with
+// casora/settings/get (casora-local.js). Without any of them null: the popups then show no costs.
 window.casoraPriceKwh = function (v) {
   var ok = function (p) { return typeof p === 'number' && isFinite(p) && p >= 0 ? p : null; };
   if (v != null && v !== '') return ok(Number(v));
@@ -45,7 +44,7 @@ window.casoraPriceKwh = function (v) {
     return typeof window.casoraIsPlant === 'function' ? window.casoraIsPlant(hass, id) : String(id).indexOf('plant.') === 0;
   }
 
-  // Gerät einer Entität (oder die Geräte-ID selbst).
+  // Device of an entity (or the device id itself).
   function deviceOf(hass, anchor) {
     if (!anchor) return null;
     if (devs(hass)[anchor]) return anchor;
@@ -53,7 +52,7 @@ window.casoraPriceKwh = function (v) {
     return (e && e.device_id) || null;
   }
 
-  // Geräte-IDs: das Gerät selbst und alle, die über via_device daran hängen.
+  // Device ids: the device itself and every one hanging off it via via_device.
   function family(hass, devId) {
     var out = [devId], D = devs(hass);
     Object.keys(D).forEach(function (id) {
@@ -62,7 +61,7 @@ window.casoraPriceKwh = function (v) {
     return out;
   }
 
-  // Alle Entitäten des Geräts (mit Unter-Geräten), in stabiler Reihenfolge.
+  // Every entity of the device (with sub-devices), in a stable order.
   function entities(hass, anchor, opts) {
     var devId = deviceOf(hass, anchor);
     if (!devId) return [];
@@ -79,7 +78,7 @@ window.casoraPriceKwh = function (v) {
     });
   }
 
-  // Erste Entität mit einem der Schlüssel (optional nur in einer Domain).
+  // First entity with one of the keys (optionally only in one domain).
   function pick(list, spec) {
     var keys = [].concat(spec.keys || []);
     for (var k = 0; k < keys.length; k++) {
@@ -97,7 +96,7 @@ window.casoraPriceKwh = function (v) {
     return null;
   }
 
-  // Mehrere Felder auf einmal: spec = {feld: {keys:[…], domain:'sensor', all:true}}
+  // Several fields at once: spec = {field: {keys:[…], domain:'sensor', all:true}}
   function map(hass, anchor, spec, opts) {
     var list = entities(hass, anchor, opts);
     var out = {};
@@ -115,8 +114,8 @@ window.casoraPriceKwh = function (v) {
     return out;
   }
 
-  // Zwischenstecker zu einem Gerät: eigenes Gerät im selben Bereich, dessen Name
-  // mit dem Gerätenamen beginnt („Drucker“ → „Drucker Steckdose“) und das schaltet und misst.
+  // Smart plug of a device: a device of its own in the same area whose name starts
+  // with the device name („Drucker“ → „Drucker Steckdose“) and that switches and measures.
   function companionPlug(hass, anchor) {
     var devId = deviceOf(hass, anchor);
     var D = devs(hass);
@@ -130,14 +129,14 @@ window.casoraPriceKwh = function (v) {
       if (!d || fam.indexOf(id) >= 0) return false;
       if (me.area_id && d.area_id && d.area_id !== me.area_id) return false;
       var n = String(d.name_by_user || d.name || '').trim().toLowerCase();
-      // „Drucker Steckdose“ zu „Drucker“ – oder umgekehrt „Sauger“ zu „Sauger Modell …“.
+      // „Drucker Steckdose“ for „Drucker“ – or the other way round „Sauger“ for „Sauger Modell …“.
       return n !== myName && (n.indexOf(myName) === 0 || (n.length >= 4 && myName.indexOf(n + ' ') === 0));
     });
     for (var c = 0; c < cands.length; c++) {
       var list = entities(hass, cands[c], { children: false });
       var sw = list.filter(function (e) { return e.domain === 'switch' && !e.category; })[0];
       var power = pick(list, { dc: 'power', domain: 'sensor' });
-      // Ein Zwischenstecker misst – sonst ist es z. B. die Station des Saugroboters.
+      // A smart plug measures – otherwise it is e.g. the robot vacuum's dock.
       if (power) {
         return {
           device_id: cands[c],
@@ -145,7 +144,7 @@ window.casoraPriceKwh = function (v) {
           power: power,
           voltage: pick(list, { dc: 'voltage', domain: 'sensor' }),
           current: pick(list, { dc: 'current', domain: 'sensor' }),
-          // Gesamtzähler: der Energie-Sensor ohne Zusatz wie _today/_month.
+          // Total meter: the energy sensor without a suffix like _today/_month.
           energy: (list.filter(function (e) {
             return e.dc === 'energy' && e.domain === 'sensor' && !/_(today|yesterday|month|week|year)$/.test(e.entity_id);
           })[0] || {}).entity_id || null,
@@ -155,8 +154,8 @@ window.casoraPriceKwh = function (v) {
     return null;
   }
 
-  // Geräte gleichen Herstellers im selben Bereich, deren Name mit dem Gerätenamen
-  // beginnt (Station „Sauger Dock“ zum Roboter „Sauger“).
+  // Devices of the same maker in the same area whose name starts with the device
+  // name (dock „Sauger Dock“ for the robot „Sauger“).
   function siblings(hass, anchor) {
     var devId = deviceOf(hass, anchor), D = devs(hass), me = devId && D[devId];
     if (!me) return [];
@@ -170,8 +169,8 @@ window.casoraPriceKwh = function (v) {
     });
   }
 
-  // Erste Entität einer Integration mit diesem Schlüssel – für Geräte, die es im Haus
-  // nur einmal gibt (Solarspeicher …). Zwischengespeichert je Registry-Stand.
+  // First entity of an integration with this key – for devices the house has only
+  // once (solar battery …). Cached per registry version.
   var keyCache = { reg: null, map: {} };
   var DISTINCT = { anker_solix: 'charging_status_desc' };
   function byKey(hass, platform, key, domain) {
@@ -186,9 +185,9 @@ window.casoraPriceKwh = function (v) {
       var hit = Object.keys(R).filter(function (eid) {
         return ok(eid, R[eid]) && (!platform || R[eid].platform === platform);
       }).sort()[0] || null;
-      // Plattform passt nicht (umbenannt, Test-HA …): Gerät über einen eindeutigen
-      // Schlüssel der Integration finden und nur dort suchen – „temperature“ o. ä.
-      // gibt es sonst bei vielen Geräten.
+      // Platform does not match (renamed, test HA …): find the device by a unique key
+      // of the integration and search only there – „temperature“ and the like exist
+      // on many devices otherwise.
       if (!hit && platform && DISTINCT[platform]) {
         var anchor = Object.keys(R).filter(function (eid) {
           return R[eid] && R[eid].device_id && R[eid].translation_key === DISTINCT[platform] && S[eid];
@@ -314,8 +313,8 @@ window.casoraPriceKwh = function (v) {
       var tint = 'rgba(' + r + ',' + g + ',' + b + ',0.25)';
       if (weich && !word) {
         color = 'var(--casora-waste-' + (kind ? kind[2] : 'other') + ', ' + (kind ? kind[3] : '#DE8A4E') + ')';
-        // Kachel am Abholtag: voller Tonnenkreis mit hellem Symbol wie die Weich-Symbole
-        // (casora_trash setzt dazu --casora-icon-off-ink auf --casora-waste-glyph).
+        // Tile on pickup day: full bin circle with a light glyph like the Soft glyphs
+        // (casora_trash sets --casora-icon-off-ink to --casora-waste-glyph for it).
         tint = color;
       }
       return {
@@ -329,10 +328,10 @@ window.casoraPriceKwh = function (v) {
     var months = V.trash_duty_months || cfg.duty_months || null;
     if (Array.isArray(months) && !months.length) months = null;
     var dutyEnt = V.trash_duty_entity || cfg.duty_entity || null;
-    // Dienst: null = kein Dienstplan (Kachel immer aktiv), sonst true/false.
+    // Duty: null = no duty roster (tile always active), otherwise true/false.
     var duty = null;
     if (dutyEnt && S[dutyEnt]) duty = S[dutyEnt].state === 'on';
-    // Leere Liste = Dienstplan ausgeschaltet (oben auf null gesetzt): wie ohne Plan.
+    // Empty list = roster switched off (set to null above): as without a roster.
     else if (months) duty = months.indexOf(new Date().getMonth() + 1) > -1;
     var sorted = bins.filter(function (b) { return b.days != null; }).sort(function (a, b) { return a.days - b.days; });
     var days = sorted.length ? sorted[0].days : null;
@@ -347,9 +346,9 @@ window.casoraPriceKwh = function (v) {
     };
   }
 
-  // Abholtermine je Tonne ab heute (wie im Abfall-Popup): Datums-Attribute der Sensoren
-  // plus die Einträge aus dem Abfall-Kalender, den die Kachel vorlädt (_casoraTrashCal).
-  // Ergebnis: [{ bin, dates: [Date …] }] in der Reihenfolge von W.bins.
+  // Pickup dates per bin from today (as in the waste popup): the sensors' date attributes
+  // plus the entries of the waste calendar the tile preloads (_casoraTrashCal).
+  // Result: [{ bin, dates: [Date …] }] in the order of W.bins.
   function wasteDates(hass, W) {
     var S = (hass && hass.states) || {};
     if (!W) return [];
@@ -369,16 +368,16 @@ window.casoraPriceKwh = function (v) {
       });
       var dates = Object.keys(set).map(function (k) { var d = new Date(k + 'T00:00:00'); return isNaN(d) ? null : d; })
         .filter(function (d) { return d && d >= today; }).sort(function (x, y) { return x - y; });
-      // Nur der Countdown bekannt (keine Datums-Attribute): Termin daraus.
+      // Only the countdown is known (no date attributes): the date from it.
       if (!dates.length && b.days != null) { var d1 = new Date(today); d1.setDate(d1.getDate() + b.days); dates = [d1]; }
       return { bin: b, dates: dates };
     });
   }
 
-  // Abfall-Quelle nicht erreichbar (04.10.2026): Abfallkalender und/oder alle Tonnen-Sensoren
-  // stehen auf unavailable/unknown und es liegt kein einziger Termin vor (z. B. lehnt der Server
-  // des Entsorgers die Verbindung ab). Dann { source: Name der Quelle oder null }, sonst null.
-  // Sind nur einzelne Sensoren weg, aber Termine da, bleibt alles wie bisher.
+  // Waste source unreachable (04.10.2026): the waste calendar and/or every bin sensor is
+  // unavailable/unknown and there is not a single date (e.g. the collector's server refuses
+  // the connection). Then { source: name of the source or null }, otherwise null.
+  // If only single sensors are gone but dates are there, everything stays as before.
   function wasteDown(hass, W) {
     var S = (hass && hass.states) || {};
     if (!W || (!W.calendar && !W.bins.length)) return null;
@@ -386,7 +385,7 @@ window.casoraPriceKwh = function (v) {
     var calDown = !!(W.calendar && bad(W.calendar));
     var binsDown = W.bins.length > 0 && W.bins.every(function (b) { return !b.cal && bad(b.id); });
     if (!calDown && !binsDown) return null;
-    // Kalender da, aber noch nicht geladen: erst abwarten, nicht vorschnell „nicht erreichbar“.
+    // Calendar there but not loaded yet: wait first, no hasty „unreachable“.
     var TC = window._casoraTrashCal;
     if (W.calendar && !calDown && !(TC && TC.id === W.calendar)) return null;
     if (wasteDates(hass, W).some(function (x) { return x.dates.length; })) return null;
@@ -396,8 +395,8 @@ window.casoraPriceKwh = function (v) {
     return { source: name || null };
   }
 
-  // Zählerstand einer Entität um Mitternacht (aus dem Verlauf, einmal pro Tag je
-  // Entität). Gibt null zurück, solange die Abfrage läuft.
+  // Meter reading of an entity at midnight (from history, once a day per entity).
+  // Returns null while the query runs.
   var dayCache = {};
   function dayStart(eid) {
     var d0 = new Date(); d0.setHours(0, 0, 0, 0);
@@ -406,7 +405,7 @@ window.casoraPriceKwh = function (v) {
     dayCache[key] = null;
     var ha = document.querySelector('home-assistant'), hass = ha && ha.hass;
     if (!hass || !hass.callApi) { delete dayCache[key]; return null; }
-    // Erster Wert des Tages (Stand um Mitternacht, sonst der früheste von heute).
+    // First value of the day (reading at midnight, otherwise the earliest of today).
     hass.callApi('GET', 'history/period/' + d0.toISOString() + '?filter_entity_id=' + eid
       + '&minimal_response&no_attributes')
       .then(function (r) {
@@ -418,8 +417,8 @@ window.casoraPriceKwh = function (v) {
     return null;
   }
 
-  // Summe der Stunden, in denen die Entitäten „on“ waren (letzte `days` Tage).
-  // Aus dem Verlauf, 30 Min. gemerkt; null, solange die Abfrage läuft.
+  // Sum of the hours the entities were „on“ (last `days` days).
+  // From history, kept for 30 min; null while the query runs.
   var onCache = {};
   function onHours(eids, days) {
     eids = (eids || []).filter(Boolean).sort();
@@ -432,7 +431,7 @@ window.casoraPriceKwh = function (v) {
     var ha = document.querySelector('home-assistant'), hass = ha && ha.hass;
     if (!hass || !hass.callApi) { delete onCache[key]; return null; }
     var start = new Date(Date.now() - days * 86400000), now = Date.now();
-    // end_time immer mitgeben: ohne liefert HA nur den ersten Tag ab start.
+    // Always pass end_time: without it HA returns only the first day from start.
     hass.callApi('GET', 'history/period/' + start.toISOString() + '?filter_entity_id=' + eids.join(',')
       + '&end_time=' + encodeURIComponent(new Date(now).toISOString()) + '&minimal_response&no_attributes')
       .then(function (r) {
@@ -450,10 +449,10 @@ window.casoraPriceKwh = function (v) {
     return onCache[key].v;
   }
 
-  // Letzter Wechsel off → on einer Entität (z. B. Status-Schalter einer Szene, #11), als ms.
-  // last_changed taugt nicht: Es springt bei jedem HA-Neustart. Darum aus dem Verlauf (30 Tage),
-  // je Entität einmal; neu erst, wenn sich ihr Zustand ändert (live off → on ohne Abfrage).
-  // null, solange die Abfrage läuft oder es keinen Wechsel gibt. done() nach dem Laden.
+  // Last change off → on of an entity (e.g. a scene's status switch, #11), in ms.
+  // last_changed is no good: it jumps on every HA restart. Hence from history (30 days),
+  // once per entity; again only when its state changes (live off → on without a query).
+  // null while the query runs or when there is no change. done() after loading.
   var lastOnCache = {};
   function lastOn(eid, st, done) {
     if (!eid || !st) return null;
@@ -464,14 +463,14 @@ window.casoraPriceKwh = function (v) {
       lastOnCache[eid] = { lc: lc, state: 'on', v: Date.parse(lc) || hit.v };
       return lastOnCache[eid].v;
     }
-    /* Ausschalten oder Neustart (on → on mit neuem last_changed): bekannter Wert bleibt, keine Abfrage. */
+    /* Switched off or restart (on → on with a new last_changed): the known value stays, no query. */
     if (hit && (st.state !== 'on' || hit.state === 'on')) { hit.lc = lc; hit.state = st.state; return hit.v; }
     var ha = document.querySelector('home-assistant'), hass = ha && ha.hass;
     if (!hass || !hass.callApi) return hit ? hit.v : null;
     var keep = hit ? hit.v : null;
     lastOnCache[eid] = { lc: lc, state: st.state, v: keep, busy: true };
     var start = new Date(Date.now() - 30 * 86400000);
-    // end_time immer mitgeben: ohne liefert HA nur den ersten Tag ab start (also nichts aus den letzten 29 Tagen).
+    // Always pass end_time: without it HA returns only the first day from start (so nothing of the last 29 days).
     hass.callApi('GET', 'history/period/' + start.toISOString() + '?filter_entity_id=' + eid
       + '&end_time=' + encodeURIComponent(new Date().toISOString()) + '&minimal_response&no_attributes')
       .then(function (r) {
@@ -480,13 +479,13 @@ window.casoraPriceKwh = function (v) {
           if (list[i].state === 'on' && list[i - 1].state === 'off') v = Date.parse(list[i].last_changed) || null;
         }
         lastOnCache[eid] = { lc: lc, state: st.state, v: v != null ? v : keep };
-        if (typeof done === 'function') { try { done(); } catch (e) { /* egal */ } }
+        if (typeof done === 'function') { try { done(); } catch (e) { /* ignore */ } }
       }).catch(function () { lastOnCache[eid] = { lc: lc, state: st.state, v: keep }; });
     return keep;
   }
 
-  // Dienst für KI-Knöpfe: eigenes Skript des Nutzers (alte Casora-Pakete), sonst
-  // Casoras Dienst aus der Integration (ki.py).
+  // Service for AI buttons: the user's own script (old Casora packages), otherwise
+  // Casora's service from the integration (ki.py).
   var KI_SVC = {
     casora_update_ki_pruefen: 'update_pruefen', casora_update_ki_bestaetigen: 'update_bestaetigen',
     casora_heizungs_coach: 'heizungs_coach', casora_energie_coach: 'energie_coach', casora_lueftungs_coach: 'lueftungs_coach',
@@ -500,7 +499,7 @@ window.casoraPriceKwh = function (v) {
     return { domain: 'casora', service: KI_SVC[script], data: data || {} };
   };
 
-  // Erste Entität mit diesem translation_key (für Integrationen, die es nur einmal gibt).
+  // First entity with this translation_key (for integrations that exist only once).
   function keyAny(hass, key, domain) {
     var R = reg(hass), S = (hass && hass.states) || {};
     return Object.keys(R).filter(function (eid) {
@@ -508,19 +507,19 @@ window.casoraPriceKwh = function (v) {
     }).sort()[0] || null;
   }
 
-  // Eigene Einstellungen des Nutzers (Studio → „Persönliches“, früher /config/www/casora/einstellungen.js).
+  // The user's own settings (Studio → „Persönliches“, formerly /config/www/casora/einstellungen.js).
   function settings(key) {
     var all = window.CASORA_SETTINGS || {};
     return key ? (all[key] || {}) : all;
   }
   window.casoraSettings = settings;
 
-  // ── Netzwerk: Router, Access Points, Switches, WLANs, Latenz (27.09.2026) ────
-  // Herstellerneutral (UniFi, FRITZ!Box, TP-Link, ASUS, Netgear, MikroTik,
-  // OpenWrt …): Geräte aus Netzwerk-Integrationen bzw. von Netzwerk-Herstellern,
-  // die Rollen je Entität über translation_key, Geräteklasse, Einheit und Namen.
-  // Ergebnis in der Form der Popup-Variablen network_devices / wlan_entities /
-  // latency_entities – feste Variablen im Dashboard haben weiter Vorrang.
+  // ── Network: routers, access points, switches, WLANs, latency (27.09.2026) ────
+  // Maker-neutral (UniFi, FRITZ!Box, TP-Link, ASUS, Netgear, MikroTik,
+  // OpenWrt …): devices from network integrations or network makers, the
+  // roles per entity from translation_key, device class, unit and name.
+  // Result shaped like the popup variables network_devices / wlan_entities /
+  // latency_entities – fixed variables in the dashboard still win.
   var NET_PLATFORM = /^(unifi|fritz|tplink_omada|tplink_deco|tplink_router|asuswrt|netgear|mikrotik|luci|openwrt|ubus|keenetic_ndms2|synology_srm|huawei_lte|vodafone_station|freebox|bbox|sfr_box|eero|linksys_smart|zyxel|draytek|glinet|omada)$/;
   var NET_MAKER = /ubiquiti|\bavm\b|fritz|tp-?link|netgear|asus|mikrotik|linksys|zyxel|draytek|eero|gl\.?inet|keenetic|huawei|openwrt|synology/i;
   var NET_ROLE = {
@@ -564,8 +563,8 @@ window.casoraPriceKwh = function (v) {
         var n = x.name.replace(label, '').replace(/\b(wan|latency|latenz|ping)\b/gi, '').replace(/\s+/g, ' ').trim();
         out.latency.push([x.entity_id, n || label]);
       });
-      // Ein WLAN als eigenes Gerät (UniFi) – oder WLAN-Schalter am Router (FRITZ!Box, TP-Link …).
-      // Verwaiste Einträge (unavailable) sind kein WLAN – ein abgeschaltetes steht auf off.
+      // A WLAN as a device of its own (UniFi) – or WLAN switches on the router (FRITZ!Box, TP-Link …).
+      // Orphaned entries (unavailable) are no WLAN – a switched-off one is off.
       var wl = list.filter(function (x) { return NET_ROLE.wlan(x) && (netDev[devId] || x.key === 'wlan_control') && x.state !== 'unavailable'; }), wc = first('wlanClients');
       wl.forEach(function (x) {
         var n = wc || wl.length === 1 ? label : x.name.replace(label, '').replace(/^[\s:–-]+/, '').trim() || x.name;
@@ -576,9 +575,9 @@ window.casoraPriceKwh = function (v) {
         label: label, state: first('state') || first('online'), clients: first('clients'), cpu: first('cpu'),
         mem: first('mem'), temp: first('temp'), uptime: first('uptime'), restart: first('restart'), update: first('update'),
       };
-      // Nur echte Netzwerkgeräte. Aus einer Netzwerk-Integration reicht Neustart + Laufzeit/Update
-      // (FRITZ!Box); nur über den Hersteller erkannte Geräte brauchen Clients, CPU oder RAM –
-      // TP-Link-/AVM-Steckdosen haben auch Neustart und Update.
+      // Real network devices only. From a network integration restart + uptime/update is enough
+      // (FRITZ!Box); devices detected only by their maker need clients, CPU or RAM –
+      // TP-Link/AVM plugs have restart and update too.
       var strong = d.clients || d.cpu || d.mem || (d.state && first('state')) || lat.length;
       if (!(strong || (netDev[devId] && d.restart && (d.uptime || d.update)))) return;
       var model = (dev.model || '') + ' ' + label;
@@ -587,17 +586,17 @@ window.casoraPriceKwh = function (v) {
       Object.keys(d).forEach(function (k) { if (d[k] == null) delete d[k]; });
       out.devices.push(d);
     });
-    // Router zuerst, dann Access Points, dann Switches.
+    // Routers first, then access points, then switches.
     var rank = { network: 0, mesh: 1, access_point: 2 };
     out.devices.sort(function (a, b) { return rank[a.icon] - rank[b.icon]; });
     return out;
   }
 
-  // ── Türen/Fenster für Sicherheits- und Kontakt-Popups (27.09.2026) ────────────
-  // Eigene Gruppen-Helfer aus den Einstellungen (contacts.groups: [{id, label}]),
-  // sonst alle Kontaktsensoren nach Geräteklasse. notify.contact_merged fasst
-  // Kombi-Sensoren zusammen: erster Einzelsensor → Kombi, die übrigen fallen weg.
-  // Fahrzeuge (Auto, eBike): Geräte mit Kilometerstand, Reichweite, Tank oder Reifendruck.
+  // ── Doors/windows for security and contact popups (27.09.2026) ────────────
+  // Own group helpers from the settings (contacts.groups: [{id, label}]),
+  // otherwise every contact sensor by device class. notify.contact_merged merges
+  // combined sensors: first single sensor → combined, the others drop out.
+  // Vehicles (car, e-bike): devices with odometer, range, tank or tyre pressure.
   var VEHICLE = /odometer|kilometerstand|mileage|fuel|tank|reichweite|range|reifendruck|tire_pressure|tyre_pressure/i;
   function vehicleDevs(hass) {
     var R = reg(hass), out = {};
@@ -629,16 +628,16 @@ window.casoraPriceKwh = function (v) {
           var st = S[id], e = R[id];
           if (e && (e.hidden || e.entity_category || e.platform === 'group' || (e.device_id && cars[e.device_id]))) return false;
           if (Array.isArray(st.attributes.entity_id)) return false;
-          // Gerätetüren (Spüler, Kühlschrank, Ofen …) und Briefkasten sind keine Haustüren/Fenster.
+          // Appliance doors (dishwasher, fridge, oven …) and the mailbox are no house doors/windows.
           if (APPLIANCE_DOOR.test(id + ' ' + (st.attributes.friendly_name || ''))) return false;
           return dcs.indexOf(st.attributes.device_class) >= 0;
         }).sort();
       };
       groups = [{ label: 'Türen', members: pick(['door', 'garage_door']) }, { label: 'Fenster', members: pick(['window']) }];
     }
-    // Ohne eingetragenen Kombi-Sensor: Kontakt + Kippsensor (+ Kombi) derselben Tür
-    // erkennen (casoraOpenings) – der Kombi-Sensor vertritt die Einzelsensoren, sonst
-    // bleibt der Kontakt stehen und zeigt über tilt[Kontakt] die Kipp-Stellung.
+    // Without a configured combined sensor: detect contact + tilt sensor (+ combined) of the
+    // same door (casoraOpenings) – the combined sensor stands for the single sensors, otherwise
+    // the contact stays and shows the tilt position via tilt[contact].
     var tilt = {};
     var all = [];
     groups.forEach(function (g) { (g.members || []).forEach(function (x) { if (all.indexOf(x) < 0) all.push(x); }); });
@@ -646,7 +645,7 @@ window.casoraPriceKwh = function (v) {
       var combos = Object.keys(S).filter(function (id) { return id.indexOf('binary_sensor.') === 0 && isCombo(hass, id); });
       openings(hass, all.concat(combos)).forEach(function (u) {
         if (u.ids.length < 2 || u.ids.some(function (x) { return sub[x] || excl.indexOf(x) >= 0; })) return;
-        // Wie notify.contact_merged: der Kontakt wird zum Kombi-Sensor, der Kippsensor fällt weg.
+        // As notify.contact_merged: the contact becomes the combined sensor, the tilt sensor drops out.
         var raw = u.ids.filter(function (x) { return x !== u.main; });
         var head = u.combo ? (raw.filter(function (x) { return !isTiltSensor(hass, x); })[0] || raw[0]) : null;
         raw.forEach(function (x) {
@@ -728,19 +727,19 @@ window.casoraPriceKwh = function (v) {
     };
   };
 
-  // ── Öffnungen: Kontakt, Kippsensor und Kombi-Sensor = eine Tür/ein Fenster (30.09.2026) ──
-  // Manche Türen/Fenster haben zwei Sensoren (Kontakt für offen/zu, Kippsensor für
-  // „gekippt“), oft dazu einen Kombi-Sensor (Vorlage: an = offen oder gekippt, Attribut
-  // tilt: true beim Kippen). Eine Öffnung zählt überall nur einmal:
-  //   • Kombi-Sensor = Attribut „tilt“ vorhanden oder „kombi/combined“ in Kennung/Name
-  //   • Kippsensor   = „kipp/tilt“ in Kennung/Name (und kein Kombi-Sensor)
-  //   • zusammen gehören Sensoren desselben Geräts oder – im selben/ohne Bereich – mit
-  //     gleichem Namenskern ohne „Kontakt/Kippsensor/Kombi“ (terrassentur_kombi ↔
+  // ── Openings: contact, tilt sensor and combined sensor = one door/window (30.09.2026) ──
+  // Some doors/windows have two sensors (contact for open/closed, tilt sensor for
+  // „tilted“), often plus a combined sensor (template: on = open or tilted, attribute
+  // tilt: true when tilted). An opening counts only once everywhere:
+  //   • combined sensor = attribute „tilt“ present or „kombi/combined“ in id/name
+  //   • tilt sensor     = „kipp/tilt“ in id/name (and no combined sensor)
+  //   • sensors belong together when on the same device or – in the same/no area – with
+  //     the same name core without „Kontakt/Kippsensor/Kombi“ (terrassentur_kombi ↔
   //     kontaktsensor_terrassentur_contact ↔ kontaktsensor_terrassentur_kippsensor_contact).
-  // Rückgabe je Öffnung { main, tilt, ids, combo, kind: 'door'|'window', state:
-  // 'open'|'tilted'|'closed'|'dead' }. Nur Kontakt-artige binary_sensor zählen (Tür,
-  // Fenster, Garagentor, Öffnung oder ohne Klasse) – Bewegung, Rauch … bleiben draußen.
-  // Gleiche Logik im Studio: casora-panel-basis.js (openings), Test: dev/unit/oeffnungen.mjs.
+  // Returns per opening { main, tilt, ids, combo, kind: 'door'|'window', state:
+  // 'open'|'tilted'|'closed'|'dead' }. Only contact-like binary_sensors count (door,
+  // window, garage door, opening or no class) – motion, smoke … stay out.
+  // Same logic in the Studio: casora-panel-basis.js (openings), test: dev/unit/oeffnungen.mjs.
   var OPEN_STOP = /^(kontaktsensor|kontakt|contact|sensor|binary|state|status|zustand|open|offen|opening|oeffnung|ofnung)$|kipp|tilt|kombi|combined|combo/;
   function openAttrs(hass, id) { var s = hass && hass.states && hass.states[id]; return (s && s.attributes) || {}; }
   function openLabel(hass, id) { return id + ' ' + (openAttrs(hass, id).friendly_name || ''); }
@@ -775,7 +774,7 @@ window.casoraPriceKwh = function (v) {
         || sameBase(openTokens(openAttrs(hass, x).friendly_name), openTokens(openAttrs(hass, y).friendly_name));
     };
     var used = {}, units = [];
-    // 1) Kippsensor + Kontakt
+    // 1) Tilt sensor + contact
     list.forEach(function (t) {
       if (!isTiltSensor(hass, t)) return;
       var c = list.filter(function (x) { return !used[x] && x !== t && !isCombo(hass, x) && !isTiltSensor(hass, x) && same(t, x); })[0];
@@ -783,13 +782,13 @@ window.casoraPriceKwh = function (v) {
       u.ids.forEach(function (x) { used[x] = true; });
       units.push(u);
     });
-    // 2) übrige Kontakte einzeln
+    // 2) remaining contacts one by one
     list.forEach(function (x) {
       if (used[x] || isCombo(hass, x)) return;
       used[x] = true;
       units.push({ main: x, tilt: null, ids: [x], combo: false });
     });
-    // 3) Kombi-Sensor schluckt die Öffnungen, zu denen er passt
+    // 3) a combined sensor swallows the openings it matches
     list.filter(function (k) { return isCombo(hass, k); }).forEach(function (k) {
       var mine = units.filter(function (u) { return !u.combo && u.ids.some(function (x) { return same(k, x); }); });
       var ids = [k];
@@ -814,14 +813,14 @@ window.casoraPriceKwh = function (v) {
   }
   window.casoraOpenings = openings;
 
-  // Sensoren, die nur technisch device_class door/opening/window tragen, aber keine Tür und kein
-  // Fenster sind (03.10.2026): Tankerkönig legt je Tankstelle „Status“ (geöffnet/geschlossen) mit
-  // device_class door an – die Glocke meldete „… ist offen“. Erkennt Plattformen aus der Liste,
-  // Sensoren mit Ortsangabe (Tankstelle, Geschäft: latitude/longitude), Diagnose-Entitäten und
-  // Fahrzeuge (Türen, Fenster, Klappen eines Autos sind keine Öffnungen der Wohnung).
+  // Sensors that only technically carry device_class door/opening/window but are no door and no
+  // window (03.10.2026): Tankerkönig creates a „Status“ (open/closed) per petrol station with
+  // device_class door – the bell reported „… ist offen“. Detects platforms from the list,
+  // sensors with a location (petrol station, shop: latitude/longitude), diagnostic entities and
+  // vehicles (a car's doors, windows and flaps are no openings of the home).
   var NOT_OPENING_PLATFORMS = ['tankerkoenig'];
-  // Fahrzeug: Gerät mit Kilometerstand bzw. device_tracker und eigenen Tür-/Fenstersensoren
-  // (E-Bikes haben keine Türen). Zwischengespeichert je Registry-Stand.
+  // Vehicle: a device with an odometer or device_tracker and door/window sensors of its own
+  // (e-bikes have no doors). Cached per registry version.
   var VEHICLE_KEYS = /^(mileage|odometer|total_mileage|odometer_km)$/;
   var vehCache = { reg: null, dev: {} };
   function isVehicle(hass, id) {
@@ -852,13 +851,13 @@ window.casoraPriceKwh = function (v) {
   }
   window.casoraNotAnOpening = notAnOpening;
 
-  // ── Glocke: welche Entitäten überhaupt einen Eintrag erzeugen können (1.1.2) ────
-  // Für die Ausnahmeliste „Nicht melden“ im Studio (casora-panel-glocke.js). Dieselben Quellen,
-  // die die Glocke prüft (casora-core.js watched/standing, 01-basis.js Erweiterung) – ohne die
-  // Schalter je Dashboard, die Liste gilt für alle. o: { appliances: [ids], notify: Einstellungen
+  // ── Bell: which entities can create an entry at all (1.1.2) ────
+  // For the exception list „Nicht melden“ in the Studio (casora-panel-glocke.js). The same sources
+  // the bell checks (casora-core.js watched/standing, 01-basis.js extension) – without the
+  // switches per dashboard, the list applies to all. o: { appliances: [ids], notify: settings
   // notify (mail, warn_prefix, appliance_care), battery, open_minutes, co2 }.
-  // Rückgabe [{ entity, kinds: ['window', …], active }]; active = meldet gerade (Dauerzustände).
-  // Test: dev/unit/glocke_ausnahmen.mjs (gleicht mit den echten Glocken-Zeilen ab).
+  // Returns [{ entity, kinds: ['window', …], active }]; active = reporting right now (standing states).
+  // Test: dev/unit/glocke_ausnahmen.mjs (compares with the real bell rows).
   var NOTIFY_SAFETY = { moisture: 'water', smoke: 'smoke', gas: 'gas', carbon_monoxide: 'co', safety: 'safety' };
   function notifySources(hass, o) {
     o = o || {};
@@ -899,7 +898,7 @@ window.casoraPriceKwh = function (v) {
       if (dom === 'binary_sensor' && NOTIFY_SAFETY[dc]) add(id, NOTIFY_SAFETY[dc], s === 'on');
       if (dom === 'binary_sensor' && /^(door|window|garage_door|opening)$/.test(dc) && !notAnOpening(hass, id)) {
         var nm = String(a.friendly_name || '').toLowerCase();
-        // Offen seit: wie die Glocke (casora-core.js openSince) mit dem Merkwert der Integration.
+        // Open since: as the bell (casora-core.js openSince) with the integration's remembered value.
         var since = Date.parse(st.last_changed || '');
         var memo = S['sensor.casora_media_paused'];
         var seen = memo && memo.attributes && memo.attributes.contacts && memo.attributes.contacts[id];
@@ -917,14 +916,14 @@ window.casoraPriceKwh = function (v) {
     });
     appl.forEach(function (id) { if (S[id]) add(id, 'appliance', false); });
     if (n.mail && S[n.mail]) add(n.mail, 'mail', false);
-    // Pulse (14-pulse.js): je überwachtem Gerät sein Status-Sensor; meldet bei prüfen/ausgefallen.
+    // Pulse (14-pulse.js): per watched device its status sensor; reports on check/failed.
     var PL = window._casoraPulse;
     if (PL && typeof PL.scan === 'function' && PL.installed(hass)) {
       try {
         PL.scan(hass, S).list.forEach(function (d) {
           add(d.statusId, 'pulse', (d.status === 'failed' || d.status === 'check') && !d.snoozed);
         });
-      } catch (e) { /* ohne Pulse-Zeilen */ }
+      } catch (e) { /* without Pulse rows */ }
     }
     care.forEach(function (x) {
       if (x && x[1] && S[x[1]]) add(x[1], 'care', !!(x[0] && S[x[0]] && S[x[0]].state === 'on'));
@@ -933,15 +932,15 @@ window.casoraPriceKwh = function (v) {
   }
   window.casoraNotifySources = notifySources;
 
-  // ── Sicherheit: Stufe je Gerät/Gruppe (Farbsystem Sicherheit, 03.10.2026) ───────
-  // 'ok' = in Ordnung, 'warn' = Hinweis, 'alarm' = Gefahr. Die Sicherheits-Badges färben
-  // ihren Symbolkreis über --casora-security-<stufe>-color (Weich: Sand / Orange / Rot);
-  // ohne diese Theme-Variablen (Standard, Glas) bleiben ihre bisherigen Farben.
-  //   ok    verriegelt, geschlossen, Alarm scharf, Kamera online
-  //   warn  entriegelt, offen, gekippt, Alarm unscharf, Gerät offline/nicht verfügbar
-  //   alarm Alarm ausgelöst, Schloss klemmt (jammed), offen/entriegelt bei Abwesenheit
-  // Abwesend: eine Alarmanlage ist „abwesend“/„Urlaub“ scharf, oder es gibt Personen und
-  // alle mit bekanntem Zustand sind weg (unbekannte Personen zählen nicht als abwesend).
+  // ── Security: level per device/group (security colour system, 03.10.2026) ───────
+  // 'ok' = fine, 'warn' = notice, 'alarm' = danger. The security badges colour their
+  // icon circle via --casora-security-<level>-color (Soft: sand / orange / red);
+  // without these theme variables (Standard, Glass) they keep their previous colours.
+  //   ok    locked, closed, alarm armed, camera online
+  //   warn  unlocked, open, tilted, alarm disarmed, device offline/unavailable
+  //   alarm alarm triggered, lock jammed, open/unlocked while away
+  // Away: an alarm panel is armed „away“/„vacation“, or there are persons and all with
+  // a known state are gone (unknown persons do not count as away).
   var awayMemo = typeof WeakMap === 'function' ? new WeakMap() : null;
   function securityAway(hass) {
     var S = hass && hass.states;
@@ -965,7 +964,7 @@ window.casoraPriceKwh = function (v) {
     var S = (hass && hass.states) || {};
     var away = null;
     var isAway = function () { if (away === null) away = securityAway(hass); return away; };
-    // Gruppen-Helfer über ihre Mitglieder (wie casora_badge_security_group).
+    // Group helpers via their members (as casora_badge_security_group).
     var flat = [];
     [].concat(ids || []).forEach(function (id) {
       if (typeof id !== 'string' || id.indexOf('.') < 0) return;
@@ -982,9 +981,9 @@ window.casoraPriceKwh = function (v) {
       var s = String(e.state || '').toLowerCase(), dom = id.split('.')[0];
       var dc = String(a.device_class || '').toLowerCase();
       var dead = !s || s === 'unknown' || s === 'unavailable'
-        /* Kamera meldet „bereit“, liefert aber kein Bild (z. B. Proxy) – wie offline (04.10.2026). */
+        /* Camera reports „ready“ but delivers no picture (e.g. proxy) – like offline (04.10.2026). */
         || (dom === 'camera' && !!(window._casoraCamDead || {})[id])
-        /* Kamera-Kachel mit „Status von: …“ (casora-core.js casoraCamOffline, 1.1.1). */
+        /* Camera tile with „Status von: …“ (casora-core.js casoraCamOffline, 1.1.1). */
         || (dom === 'camera' && !!(window.casoraCamOffline && window.casoraCamOffline(id, S)));
       if (dom === 'binary_sensor') {
         if (dc === 'motion' || dc === 'occupancy' || dc === 'presence') { if (s === 'on' && isAway()) up('alarm'); }
@@ -999,7 +998,7 @@ window.casoraPriceKwh = function (v) {
         if (['garage', 'gate', 'door'].indexOf(dc) >= 0 && (s === 'open' || s === 'opening')) up(isAway() ? 'alarm' : 'warn');
       }
     });
-    // Türen/Fenster: Kontakt + Kippsensor (+ Kombi-Sensor) sind eine Öffnung.
+    // Doors/windows: contact + tilt sensor (+ combined sensor) are one opening.
     if (contacts.length) openings(hass, contacts).forEach(function (u) {
       if (u.state === 'open') up(isAway() ? 'alarm' : 'warn');
       else if (u.state === 'tilted' || u.state === 'dead') up('warn');
@@ -1009,12 +1008,12 @@ window.casoraPriceKwh = function (v) {
   window.casoraSecurityAway = securityAway;
   window.casoraSecurityLevel = securityLevel;
 
-  // ── Sicherheit: ein Wort und eine Farbe je Zustand (Weich, 05.10.2026) ────────
-  // Kachel, Badges, Popups und Mitteilungen sagen im Weich-Look für denselben Zustand
-  // dasselbe Wort und nehmen dieselbe Stufenfarbe. null = kein eigenes Wort (Aufrufer
-  // behält seinen Text). Standard/Glas fragen diese Helfer nicht ab.
-  // Freundliche Wörter statt „Scharf · Bypass“ (05.10.2026): aktiv/aus; Bypass heißt wieder „Bypass“ (06.10.2026)
-  // (einzelne Sensoren sind ausgenommen), Abwesend heißt „Abwesend“ (05.10.2026, vorher „Unterwegs“).
+  // ── Security: one word and one colour per state (Soft, 05.10.2026) ────────
+  // In the Soft look tile, badges, popups and notifications say the same word for the same
+  // state and take the same level colour. null = no word of its own (the caller keeps its
+  // text). Standard/Glass do not ask these helpers.
+  // Friendly words instead of „Scharf · Bypass“ (05.10.2026): active/off; bypass is „Bypass“ again (06.10.2026)
+  // (single sensors are excluded), away is „Abwesend“ (05.10.2026, formerly „Unterwegs“).
   var ALARM_MODE = { armed_home: 'Zuhause', armed_away: 'Abwesend', armed_night: 'Nacht',
     armed_vacation: 'Urlaub', armed_custom_bypass: 'Bypass' };
   var SEC_WORD = {
@@ -1028,19 +1027,19 @@ window.casoraPriceKwh = function (v) {
     return (SEC_WORD[dom] || {})[st] || null;
   };
   window.casoraSecurityAlarmMode = function (s) { return ALARM_MODE[String(s || '').toLowerCase()] || null; };
-  // Stufenfarbe als CSS-Wert; fallback = bisherige Farbe (Standard/Glas setzen die Variable nicht).
+  // Level colour as a CSS value; fallback = previous colour (Standard/Glass do not set the variable).
   window.casoraSecurityColor = function (lv, fallback) {
     return 'var(--casora-security-' + (lv || 'ok') + '-color' + (fallback ? ', ' + fallback : '') + ')';
   };
 
-  // ── Unterzeile des Sicherheits-Sammelbadges (Weich/Nebel, 06.10.2026) ─────────
-  // sec = Zählung aus casora_badge_security_group (triggered, disarmed, locks, doors, gates,
+  // ── Sub-line of the security group badge (Soft/Fog, 06.10.2026) ─────────
+  // sec = count from casora_badge_security_group (triggered, disarmed, locks, doors, gates,
   // windows, windowsTilted, doorsTilted, lockDead, camDead, insecure, problem).
-  // o.summary: 'short' (Standard) = kleine Symbole mit Zahl, 'detailed' = Liste in Worten.
-  // o.alarmState: Zustand der Alarmanlage (für „Aktiv · Abwesend“).
-  // Rückgabe { text, html }: text ist immer die Liste in Worten (auch für Tooltip/Vorlese-Text),
-  // html nur bei 'short' mit Meldungen, sonst null.
-  // Reihenfolge nach Wichtigkeit: Alarm aus, Tür, Tor, Schloss, Fenster offen, gekippt, offline.
+  // o.summary: 'short' (default) = small icons with a number, 'detailed' = list in words.
+  // o.alarmState: state of the alarm panel (for „Aktiv · Abwesend“).
+  // Returns { text, html }: text is always the list in words (also for tooltip/screen reader),
+  // html only for 'short' with findings, otherwise null.
+  // Order by importance: alarm off, door, gate, lock, window open, tilted, offline.
   window.casoraSecuritySummary = function (sec, o) {
     var S = sec || {};
     o = o || {};
@@ -1050,7 +1049,7 @@ window.casoraPriceKwh = function (v) {
       var al = String(o.alarmState || '').toLowerCase();
       return { text: ALARM_MODE[al] ? 'Aktiv · ' + ALARM_MODE[al] : 'Alles sicher', html: null };
     }
-    // [Wort, Symbol, Zahl, offline?]; Wörter mit Zahl stehen in phrases/en.json.
+    // [word, icon, number, offline?]; words with a number are in phrases/en.json.
     var L = [];
     if (S.disarmed) L.push(['Alarm aus', null, 0]);
     if (S.doors) L.push([n(S.doors, 'Tür offen', 'Türen offen'), 'door-open', S.doors]);
@@ -1063,9 +1062,9 @@ window.casoraPriceKwh = function (v) {
     if (S.camDead) L.push([n(S.camDead, 'Kamera offline', 'Kameras offline'), 'camera', S.camDead, true]);
     var text = L.map(function (x) { return x[0]; }).join(' · ');
     if (o.summary === 'detailed') return { text: text, html: null };
-    // Kurz: ein Symbol je Meldung; „gekippt“ hat ein eigenes Symbol, offline ist durchgestrichen.
-    // Tooltip und Vorlese-Text sagen, was gemeint ist („2 Fenster offen“) – Attribute übersetzt
-    // casora-i18n.js nicht von selbst, daher hier casoraTr.
+    // Short: one icon per finding; „gekippt“ has an icon of its own, offline is struck through.
+    // Tooltip and screen-reader text say what is meant („2 Fenster offen“) – casora-i18n.js does
+    // not translate attributes by itself, hence casoraTr here.
     var tr = function (t) { return typeof window.casoraTr === 'function' ? window.casoraTr(t) : t; };
     var att = function (t) { return String(t).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); };
     var url = function (k) { return typeof window.casoraIconUrl === 'function' ? window.casoraIconUrl(k) : '/casora_assets/icons/' + k + '.svg'; };
@@ -1079,18 +1078,18 @@ window.casoraPriceKwh = function (v) {
         + (x[3] ? '<span style="position:absolute;left:-12%;top:50%;width:124%;height:1.6px;margin-top:-0.8px;border-radius:1px;background:currentColor;transform:rotate(-45deg)"></span>' : '')
         + '</span><span aria-hidden="true" style="font-variant-numeric:tabular-nums;font-weight:700">' + x[2] + '</span></span>';
     });
-    // Höhe = Zeilenhöhe der Badge-Unterzeile (.badge-sub line-height 1.2): mit 1.25em war das
-    // Sicherheits-Badge 0,6 px höher als alle anderen Badges (Feinschliff 1.3, d-kacheln).
+    // Height = line height of the badge sub-line (.badge-sub line-height 1.2): with 1.25em the
+    // security badge was 0.6 px taller than every other badge (polish 1.3, d-kacheln).
     return { text: text, html: '<span class="cs-sum" style="display:inline-flex;align-items:center;gap:9px;height:1.2em;line-height:1;vertical-align:top">' + items.join('') + '</span>' };
   };
 
-  // ── Sicherheits-Sammelbadge: Kurzform nur, wenn die Reihe nicht passt (1.3) ─────
-  // Hemma 2/1: Die Vorlage liefert lange und kurze Zeile („3 Schlösser offen · …“ / „3 offen · 3 offline“);
-  // hier wird gemessen, ob die Badge-Reihe mit der langen Zeile in die Breite passt. Klasse
-  // casora-sec-kurz am Badge zeigt die kurze. Gemessen, nicht nach Gerät; bei Größenänderung neu.
+  // ── Security group badge: short form only when the row does not fit (1.3) ─────
+  // Hemma 2/1: the template delivers a long and a short line („3 Schlösser offen · …“ / „3 offen · 3 offline“);
+  // here we measure whether the badge row fits the width with the long line. The class
+  // casora-sec-kurz on the badge shows the short one. Measured, not by device; again on resize.
   window.casoraSecFit = function (card) {
     if (!card || !card.isConnected) return;
-    // Reihe = nächster Vorfahr mit weiteren Badges; Rand = nächster Vorfahr, der abschneidet oder scrollt.
+    // Row = nearest ancestor with more badges; edge = nearest ancestor that clips or scrolls.
     var row = null, clip = null, n = card.parentNode || card.host, guard = 0;
     while (n && guard++ < 40) {
       if (n.nodeType === 1) {
@@ -1119,20 +1118,20 @@ window.casoraPriceKwh = function (v) {
     }
   };
 
-  // ── Kurz oder ausführlich? (07.10.2026) ───────────────────────────────────────
-  // Einstellung security_summary je Raum: '' bzw. 'auto' (Standard) = auf der Startseite kurz
-  // (Symbole mit Zahl), in Räumen ausgeschrieben – dort gibt es meist nur ein Fenster, eine Tür;
-  // 'short' = immer kurz, 'detailed' = immer ausführlich. place: 'home' | 'room' (unbekannt = Raum).
+  // ── Short or detailed? (07.10.2026) ───────────────────────────────────────
+  // Setting security_summary per room: '' or 'auto' (default) = short on the home page
+  // (icons with a number), spelled out in rooms – there is mostly just one window, one door;
+  // 'short' = always short, 'detailed' = always detailed. place: 'home' | 'room' (unknown = room).
   window.casoraSecurityMode = function (summary, place) {
     var s = String(summary || '').toLowerCase();
     if (s === 'short' || s === 'detailed') return s;
     return place === 'home' ? 'short' : 'detailed';
   };
 
-  // Steht el (Karte im Dashboard) auf der Startseite? Wie isHomeRoom im Studio: die Ansicht mit
-  // Pfad „home“, sonst die erste. Sucht die umgebende Ansicht (hui-view: index + lovelace –
-  // layout-cards wie grid-layout haben beides auch, dort ist index der Kartenplatz);
-  // true/false, null wenn keine gefunden (z. B. außerhalb eines Dashboards).
+  // Is el (a card in the dashboard) on the home page? As isHomeRoom in the Studio: the view with
+  // path „home“, otherwise the first. Looks for the surrounding view (hui-view: index + lovelace –
+  // layout cards like grid-layout have both too, there index is the card slot);
+  // true/false, null if none is found (e.g. outside a dashboard).
   var VIEW_TAG = /^hui-([a-z]+-)?view$/;
   window.casoraOnHomeView = function (el) {
     var n = el, guard = 0;
@@ -1149,13 +1148,13 @@ window.casoraPriceKwh = function (v) {
     return null;
   };
 
-  // ── Außensensor nach Geräteklasse (Wetter-Popup, 27.09.2026) ──────────────────
-  // „outdoor/außen“ im Namen oder ein Außenbereich; Luftdruck ist ohnehin draußen gleich.
+  // ── Outdoor sensor by device class (weather popup, 27.09.2026) ──────────────────
+  // „outdoor/außen“ in the name or an outdoor area; air pressure is the same outside anyway.
   var OUTDOOR = /outdoor|aussen|außen|outside|exterior|draussen|draußen|garten|terrasse|balkon|garden|terrace|balcony/i;
   // Derived values share the device class with the real reading (issue #28: the dew point sorted before the
   // temperature). They only count when nothing else is there.
   var DERIVED = /dew|taupunkt|roc[ií]o|feels|gef[üu]hlt|apparent|sensaci[oó]n|heat_?index|hitze_?index|wind_?chill|(^|[_ ])(min|max|minimum|maximum)([_ ]|$)/i;
-  // Keine Außenluft: Pflanzen-, Boden-, Wasser- und Fahrzeugsensoren.
+  // No outdoor air: plant, soil, water and vehicle sensors.
   var NOT_AIR = /boden|soil|reifen|tire|tyre|wasser|water|pool|aquarium|teich|pond|akku|battery|motor|engine|kühl|coolant/i;
   function outdoor(hass, dcs) {
     var S = (hass && hass.states) || {}, R = reg(hass), A = (hass && hass.areas) || {}, D = devs(hass);
@@ -1185,18 +1184,18 @@ window.casoraPriceKwh = function (v) {
     return dcs.join(' ').indexOf('pressure') >= 0 ? cand[0] || null : null;
   }
 
-  // ── Saugroboter-Karte (07.10.2026) ───────────────────────────────────────────
-  // Bild- oder Kamera-Entität am Roboter (oder an seiner Station), die eine Karte ist:
-  // Roborock legt je Stockwerk ein image.* an (Name = Kartenname, ohne Schlüssel),
-  // Dreame/Valetudo/Map Extractor eine camera.*_map. Erkannt über Plattform, Schlüssel
-  // oder ID (map|karte), nie über Raumnamen. Aktive Karte zuerst (select mit
-  // Schlüssel selected_map nennt ihren Namen), dann erreichbare, sonst die erste.
+  // ── Robot vacuum map (07.10.2026) ───────────────────────────────────────────
+  // Image or camera entity on the robot (or its dock) that is a map:
+  // Roborock creates an image.* per floor (name = map name, without a key),
+  // Dreame/Valetudo/Map Extractor a camera.*_map. Detected by platform, key
+  // or id (map|karte), never by room names. Active map first (a select with the
+  // key selected_map names it), then reachable ones, otherwise the first.
   var MAP_RE = /(^|_)(map|maps|karte|karten)(_|$)/;
   function vacuumMap(hass, anchor) {
     var S = (hass && hass.states) || {}, R = reg(hass);
     if (!anchor) return null;
     var list = deviceOf(hass, anchor) ? entities(hass, anchor, { siblings: true }) : [];
-    // Gerät mit Kartenwahl (select, Schlüssel selected_map): jedes Bild daran ist eine Karte.
+    // Device with a map choice (select, key selected_map): every image on it is a map.
     var mapDev = {};
     list.forEach(function (e) { if (e.domain === 'select' && e.key === 'selected_map') mapDev[e.device_id] = true; });
     var isMap = function (e) {
@@ -1206,7 +1205,7 @@ window.casoraPriceKwh = function (v) {
       return MAP_RE.test(String(e.key || '')) || MAP_RE.test(e.entity_id.split('.')[1]);
     };
     var maps = list.filter(function (e) { return S[e.entity_id] && isMap(e); }).map(function (e) { return e.entity_id; });
-    // Ohne Geräte-Zuordnung (z. B. Map Extractor): camera./image.<roboter>_map.
+    // Without a device (e.g. Map Extractor): camera./image.<robot>_map.
     if (!maps.length) {
       var base = String(anchor).split('.')[1] || '';
       maps = ['image.' + base + '_map', 'camera.' + base + '_map'].filter(function (id) { return base && S[id]; });
@@ -1227,7 +1226,7 @@ window.casoraPriceKwh = function (v) {
     };
     return maps.slice().sort(function (a, b) { return score(a) - score(b); })[0];
   }
-  // Fest eingetragene Karte, solange es sie gibt; sonst (leer oder gelöscht) die gefundene.
+  // The configured map while it exists; otherwise (empty or deleted) the detected one.
   function vacuumMapFor(hass, anchor, chosen) {
     var S = (hass && hass.states) || {};
     if (chosen && S[chosen]) return chosen;
@@ -1242,13 +1241,13 @@ window.casoraPriceKwh = function (v) {
   };
 })();
 
-// ── Kameras-Kachel ohne Auswahl (27.09.2026) ─────────────────────────────────
-// variables.cameras leer: alle Kameras im Haus – ohne Saugroboter-Karten und
-// Drucker-Kameras (Geräte mit Sauger bzw. Druckstatus), die sind keine Überwachung.
+// ── Cameras tile without a choice (27.09.2026) ─────────────────────────────────
+// variables.cameras empty: every camera in the house – without robot vacuum maps and
+// printer cameras (devices with a vacuum or print status), those are no surveillance.
 (function () {
   if (window._casoraCams) return;
-  // 30.09.2026: auch eine gewählte Liste ohne Karten (Saugroboter-Karte u. ä.);
-  // nicht erreichbare Kameras stehen am Ende (das Popup zeigt sie als offline).
+  // 30.09.2026: a chosen list without maps too (robot vacuum map and the like);
+  // unreachable cameras go last (the popup shows them as offline).
   window._casoraCams = function (variables, entity, hass) {
     var H = hass || (document.querySelector('home-assistant') || {}).hass || {};
     var S = H.states || {}, R = H.entities || {};
@@ -1259,7 +1258,7 @@ window.casoraPriceKwh = function (v) {
       if (id.indexOf('vacuum.') === 0) vac[e.device_id] = true;
       if (id.indexOf('vacuum.') === 0 || /^(print_status|stage)$/.test(e.translation_key || '')) skip[e.device_id] = true;
     });
-    // Karte = Name endet auf _map/karte oder Kamera eines Saugroboters; auto = auch Drucker-Kameras.
+    // Map = name ends in _map/karte or a robot vacuum's camera; auto = printer cameras too.
     var isMap = function (id, auto) {
       var e = R[id];
       if (/(_map|karte)(_\d+)?$/.test(id)) return true;
@@ -1283,14 +1282,14 @@ window.casoraPriceKwh = function (v) {
   };
 })();
 
-// ── Waschmaschine und Trockner: woher die Werte kommen (03.10.2026) ──────────
-// Vorrang: 1. die offizielle Integration des Herstellers (Home Connect, Miele,
-// SmartThings, LG ThinQ, Whirlpool, hOn/Electrolux u. ä.), 2. WashData
-// (ha_washdata, lernt Programme am Zwischenstecker), 3. nur der Zwischenstecker.
-// Erkannt wird über die Plattform der Entität und ihren translation_key, nie über
-// Namen oder IDs. Ohne Plattform (Testhaus) reicht die Schlüssel-Kombination.
-// Genutzt von der Kachel/dem Popup (02-devices.js) und vom Studio (Assistent,
-// Kachel hinzufügen): dort per import geladen (panel/casora-panel-types.js).
+// ── Washer and dryer: where the values come from (03.10.2026) ──────────
+// Priority: 1. the maker's official integration (Home Connect, Miele,
+// SmartThings, LG ThinQ, Whirlpool, hOn/Electrolux and the like), 2. WashData
+// (ha_washdata, learns programmes on the smart plug), 3. the smart plug only.
+// Detected by the entity's platform and its translation_key, never by names
+// or ids. Without a platform (test house) the key combination is enough.
+// Used by the tile/popup (02-devices.js) and by the Studio (assistant,
+// add tile): loaded there via import (panel/casora-panel-types.js).
 (function () {
   if (window.casoraLaundryFind) return;
 
@@ -1311,7 +1310,7 @@ window.casoraPriceKwh = function (v) {
     return out.map(function (o) { return String(o || '').toLowerCase(); });
   };
   var model = function (hass, devId) { var d = devs(hass)[devId] || {}; return String(d.model || '') + ' ' + String(d.model_id || ''); };
-  /* Home Connect: Waschen/Trocknen steht im Programmschlüssel (laundry_care_washer_… / laundry_care_dryer_…). */
+  /* Home Connect: washing/drying is in the programme key (laundry_care_washer_… / laundry_care_dryer_…). */
   var hcRole = function (progKeys) {
     return function (hass, list) {
       var o = opts(hass, list, progKeys).join(' ');
@@ -1321,8 +1320,8 @@ window.casoraPriceKwh = function (v) {
     };
   };
 
-  // need: alle Schlüssel nötig, any: einer davon – nur wenn die Plattform nicht passt (Testhaus).
-  // role(hass, list, devId) → 'washer' | 'dryer' | null (null = kein Wäschegerät, z. B. Backofen).
+  // need: every key required, any: one of them – only when the platform does not match (test house).
+  // role(hass, list, devId) → 'washer' | 'dryer' | null (null = no laundry appliance, e.g. an oven).
   var SOURCES = [
     { id: 'home_connect', rank: 0, platforms: ['home_connect'], need: ['operation_state'],
       any: ['program_progress', 'active_program', 'selected_program', 'program_finish_time'],
@@ -1331,7 +1330,7 @@ window.casoraPriceKwh = function (v) {
         select: k('selected_program', 'select'), remaining: k('program_finish_time'), progress: k('program_progress'),
         door: k('door'), pause: k('pause_program', 'button'), resume: k('resume_program', 'button'),
         stop: k('stop_program', 'button') } },
-    /* Home Connect Alt / Home Connect WS (HACS): eigene Schlüssel mit Präfix. */
+    /* Home Connect Alt / Home Connect WS (HACS): keys of their own with a prefix. */
     { id: 'home_connect_alt', rank: 0, platforms: ['home_connect_alt', 'homeconnect_ws'], need: ['sensor_operation_state'],
       any: ['sensor_active_program', 'select_program', 'sensor_program_progress'],
       role: hcRole(['sensor_active_program', 'select_program', 'sensor_selected_program']),
@@ -1358,21 +1357,21 @@ window.casoraPriceKwh = function (v) {
       fields: { state: k(['washer_machine_state', 'dryer_machine_state']), phase: k(['washer_job_state', 'dryer_job_state']),
         program: k(['washer_mode', 'dryer_mode']), remaining: k('completion_time'), door: k('door', 'binary_sensor'),
         pause: k('pause', 'button'), resume: k('resume', 'button'), stop: k('stop', 'button') } },
-    /* LG ThinQ: Waschmaschine und Trockner haben dieselben Schlüssel; die Geräteart steht im Modell („… (DRYER)“). */
+    /* LG ThinQ: washer and dryer have the same keys; the appliance type is in the model („… (DRYER)“). */
     { id: 'lg_thinq', rank: 0, platforms: ['lg_thinq'], need: ['current_state', 'cycle_count'], any: ['remain', 'total'],
       role: function (hass, list, devId) {
         if (!has(list, 'cycle_count')) return null;
         return /dryer/i.test(model(hass, devId)) && !/wash/i.test(model(hass, devId)) ? 'dryer' : 'washer';
       },
       fields: { state: k('current_state'), remaining: k('remain'), elapsed: k('running'), total: k('total'), count: k('cycle_count') } },
-    /* WashData vor Whirlpool: beide nennen den Zustand „washer_state“, nur WashData hat Fortschritt, Programmwahl usw. */
+    /* WashData before Whirlpool: both call the state „washer_state“, only WashData has progress, programme choice etc. */
     { id: 'washdata', rank: 1, platforms: ['ha_washdata'], need: ['washer_state'],
       any: ['cycle_progress', 'time_remaining', 'program_select', 'mark_unloaded', 'cycle_count', 'current_phase'],
       role: function (hass, list) {
         var st = list.filter(function (e) { return e.key === 'washer_state' && e.domain === 'sensor'; })[0];
         var a = (st && sts(hass)[st.entity_id] && sts(hass)[st.entity_id].attributes) || {};
         var icon = String(a.icon || (reg(hass)[st ? st.entity_id : ''] || {}).icon || '');
-        // WashData überwacht auch Geschirrspüler, Heißluftfritteusen und Pumpen – das Symbol sagt, was es ist.
+        // WashData also watches dishwashers, air fryers and pumps – the icon says what it is.
         if (/dishwasher|pot-steam|water-pump|pump/.test(icon)) return null;
         return /tumble-dryer|dryer/.test(icon) ? 'dryer' : 'washer';
       },
@@ -1388,12 +1387,12 @@ window.casoraPriceKwh = function (v) {
         return has(list, 'dryer_state') ? 'dryer' : null;
       },
       fields: { state: k(['washer_state', 'dryer_state']), remaining: k('end_time') } },
-    /* Weitere Hersteller-Integrationen aus HACS (Haier/Candy hOn, Electrolux/AEG, LG SmartThinQ):
-       nur über die Plattform, Felder über übliche Schlüssel. */
+    /* Further maker integrations from HACS (Haier/Candy hOn, Electrolux/AEG, LG SmartThinQ):
+       by platform only, fields by the usual keys. */
     { id: 'other', rank: 0, platforms: ['hon', 'electrolux_status', 'electrolux', 'smartthinq_sensors', 'candy', 'haier'],
       need: null, any: [],
       role: function (hass, list, devId) {
-        // Schlüssel der Integration (programs_wm / programs_td …) und Modell, keine Namen.
+        // The integration's keys (programs_wm / programs_td …) and model, no names.
         var t = list.map(function (e) { return e.key || ''; }).join(' ') + ' ' + model(hass, devId);
         if (/wash|(^|[_ ])wm($|[_ ])|spin/i.test(t)) return 'washer';
         return /dryer|tumble|(^|[_ ])td($|[_ ])|dry_level/i.test(t) ? 'dryer' : null;
@@ -1429,7 +1428,7 @@ window.casoraPriceKwh = function (v) {
   function matches(src, lst) {
     if (lst.some(function (e) { return src.platforms.indexOf(e.platform) >= 0; })) return 'platform';
     if (!src.need) return null;
-    // Ein Gerät einer anderen bekannten Quelle ist es nicht (Whirlpool-Schlüssel an einem WashData-Gerät …).
+    // A device of another known source it is not (Whirlpool keys on a WashData device …).
     var known = SOURCES.some(function (o) { return o !== src && lst.some(function (e) { return o.platforms.indexOf(e.platform) >= 0; }); });
     if (known) return null;
     var ok = src.need.every(function (key) { return has(lst, key); })
@@ -1437,7 +1436,7 @@ window.casoraPriceKwh = function (v) {
     return ok ? 'keys' : null;
   }
 
-  // Ein Gerät einordnen: { device, source, rank, role, state, f: {program, …}, entry } oder null.
+  // Classify a device: { device, source, rank, role, state, f: {program, …}, entry } or null.
   function classify(hass, devId) {
     if (!devId) return null;
     var lst = list(hass, devId);
@@ -1465,7 +1464,7 @@ window.casoraPriceKwh = function (v) {
   function deviceOf(hass, eid) { var e = reg(hass)[eid]; return (e && e.device_id) || null; }
   function areaOfDev(hass, devId) { var d = devs(hass)[devId]; return (d && d.area_id) || null; }
 
-  // Zwischenstecker ohne Geräte-Integration: schaltet (switch) und misst (Leistung in W).
+  // Smart plug without an appliance integration: switches (switch) and measures (power in W).
   function plugOf(hass, devId) {
     var lst = list(hass, devId), S = sts(hass);
     var dc = function (e) { return ((S[e.entity_id] || {}).attributes || {}).device_class; };
@@ -1478,7 +1477,7 @@ window.casoraPriceKwh = function (v) {
              f: { plug: sw ? sw.entity_id : null, power: pw.entity_id }, entry: null };
   }
 
-  // Für die Kachel: Quelle des Geräts hinter der Haupt-Entität (oder der Stecker selbst).
+  // For the tile: source of the device behind the main entity (or the plug itself).
   function forEntity(hass, eid) {
     var devId = deviceOf(hass, eid);
     var c = classify(hass, devId);
@@ -1491,8 +1490,8 @@ window.casoraPriceKwh = function (v) {
     return null;
   }
 
-  // Alle Wäschegeräte im Haus; je Bereich und Art gewinnt die beste Quelle
-  // (offiziell vor WashData). Geräte ohne Bereich bleiben alle drin.
+  // Every laundry appliance in the house; per area and kind the best source wins
+  // (official before WashData). Devices without an area all stay in.
   function all(hass, role) {
     var D = devs(hass);
     var out = [];
@@ -1514,7 +1513,7 @@ window.casoraPriceKwh = function (v) {
     });
   }
 
-  // Letzte Wahl: Zwischenstecker in einem Bereich (nur wenn dort kein Wäschegerät erkannt ist).
+  // Last resort: smart plugs in an area (only when no laundry appliance is detected there).
   function plugs(hass, areaId) {
     var D = devs(hass);
     return Object.keys(D).filter(function (id) {
@@ -1525,21 +1524,21 @@ window.casoraPriceKwh = function (v) {
   window.casoraLaundryFind = { classify: classify, forEntity: forEntity, all: all, plugs: plugs, sources: SOURCES };
 })();
 
-// ── Assist-Vorschläge aus dem eigenen Haus (D-ASSIST, 06.10.2026) ────────────
-// Früher feste Sätze je Tageszeit („Wie warm ist das Aquarium?“) – in einem anderen Haus
-// liefen sie ins Leere. Jetzt Bausteine, die nur erscheinen, wenn es passende Geräte gibt;
-// Raumnamen kommen aus den HA-Bereichen. Reihenfolge: erst was gerade zu tun ist (Fenster/Tür
-// offen, entriegelt, Licht an), dann die Tageszeit, dann Allgemeines. Kein Zufall – gleiche
-// Lage, gleiche Vorschläge. Sätze auf Deutsch; Englisch über phrases/en.json (casoraTr).
+// ── Assist suggestions from the own house (D-ASSIST, 06.10.2026) ────────────
+// Formerly fixed sentences per time of day („Wie warm ist das Aquarium?“) – in another house
+// they led nowhere. Now building blocks that only appear when there are matching devices;
+// room names come from the HA areas. Order: first what needs doing right now (window/door
+// open, unlocked, light on), then the time of day, then general ones. No randomness – same
+// situation, same suggestions. Sentences in German; English via phrases/en.json (casoraTr).
 //   casoraAssistIdeas(hass, { hour, max }) → [{ q, icon, tone }]
 //   casoraAssistIdeas.slot(hour)            → 'morgen' | 'tag' | 'abend' | 'nacht'
-// tone: light | security | climate | energy | media | general (Farbe des Symbolkreises).
+// tone: light | security | climate | energy | media | general (colour of the icon circle).
 // Test: dev/unit/assist_vorschlaege.mjs
 (function () {
   if (window.casoraAssistIdeas) return;
   var OUTSIDE = /outdoor|aussen|außen|outside|draussen|draußen|garten|terrasse|balkon|garden|terrace|balcony/i;
   function slot(h) { return h >= 5 && h < 10 ? 'morgen' : h >= 10 && h < 17 ? 'tag' : h >= 17 && h < 22 ? 'abend' : 'nacht'; }
-  // „im Wohnzimmer“, aber „in der Küche“: weibliche Raumwörter am ersten Wort erkennen.
+  // „im Wohnzimmer“ but „in der Küche“: detect feminine room words by the first word.
   function inRoom(name) {
     var w = String(name || '').trim().split(/\s+/)[0].toLowerCase();
     var fem = /(e|ung|ei|heit|keit|ion|tät|kammer|statt|halle)$/.test(w);
@@ -1551,7 +1550,7 @@ window.casoraPriceKwh = function (v) {
     var hour = o.hour != null ? o.hour : new Date().getHours();
     var max = o.max || 4;
     var dead = function (s) { return !s || s.state === 'unavailable' || s.state === 'unknown'; };
-    // Sichtbare Entitäten einer Domäne (ohne versteckte, Diagnose- und Konfig-Entitäten)
+    // Visible entities of a domain (without hidden, diagnostic and config entities)
     var ids = Object.keys(S).filter(function (id) {
       var e = R[id];
       return !(e && (e.hidden || e.hidden_by || e.entity_category || e.disabled_by));
@@ -1585,7 +1584,7 @@ window.casoraPriceKwh = function (v) {
     var weather = dom('weather').filter(function (id) { return !dead(S[id]); });
     var shopping = dom('todo').filter(function (id) { return /shopping|einkauf/i.test(id + ' ' + (attr(id).friendly_name || '')); });
 
-    // Räume nach Gewicht (Lichter, Klima, Medien, Jalousien) – der Hauptraum zuerst, bei Gleichstand nach Name.
+    // Rooms by weight (lights, climate, media, blinds) – the main room first, ties by name.
     var weight = {};
     lights.concat(dom('climate'), media, covers).forEach(function (id) { var a = areaOf(id); if (a) weight[a] = (weight[a] || 0) + 1; });
     var rank = function (list) {
@@ -1636,21 +1635,21 @@ window.casoraPriceKwh = function (v) {
     var dim = dimRoom ? { q: 'Dimme das Licht ' + inRoom(A[dimRoom].name), icon: 'mdi:lightbulb-on-50', tone: 'light' } : null;
     var night = slot(hour) === 'nacht';
 
-    // 1) Handlungsbedarf
+    // 1) Needs action
     var now = [];
     if (windows.some(isOn)) now.push(Q.windows);
     if (unlocked.length) now.push(Q.locked);
     if (doors.some(isOn)) now.push(Q.doors);
     if (lightsOn.length) now.push(night ? Q.allOff : Q.lightsOn);
     if (night && alarms.some(function (id) { return S[id].state === 'disarmed'; })) now.push(Q.arm);
-    // 2) Tageszeit
+    // 2) Time of day
     var part = {
       morgen: [weather.length && Q.weather, wasteSoon && Q.waste, covers.length && covers.every(function (id) { return S[id].state === 'closed'; }) && Q.coversUp, warm],
       tag: [power.length && Q.power, washerRuns && Q.washer, vacuums.some(function (id) { return S[id].state === 'docked'; }) && Q.vacuum, warm],
       abend: [covers.some(function (id) { return S[id].state === 'open'; }) && Q.coversDown, media.some(function (id) { return S[id].state === 'playing'; }) && Q.playing, dim, windows.length && Q.windows],
       nacht: [locks.length && Q.locked, windows.length && Q.windows, alarms.some(function (id) { return S[id].state === 'disarmed'; }) && Q.arm],
     }[slot(hour)];
-    // 3) Allgemein (nur was es im Haus gibt)
+    // 3) General (only what the house has)
     var general = [warm, weather.length && Q.weather, locks.length && Q.locked, windows.length && Q.windows,
       shopping.length && Q.shopping, lights.length && Q.lightsOn, power.length && Q.power, dim];
     var out = [], seen = {};

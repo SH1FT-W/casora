@@ -1164,7 +1164,7 @@
 // ── Washer / dryer (casora_laundry) ─────────────────────────────────
 // Sources (03.10.2026): first the manufacturer's official integration (Home Connect,
 // Miele, SmartThings, LG ThinQ, Whirlpool …), else WashData (ha_washdata), else only the
-// smart plug – window.casoraLaundryFind in 00-finden.js. Tile status and popup
+// smart plug – window.casoraLaundryFind in 00-finder.js. Tile status and popup
 // live here (update-safe); the templates only call window._casoraLaundry.tile() /
 // .popup(). Loaded via WS: consumption today/week/month (recorder statistics),
 // last cycles + maintenance (WashData).

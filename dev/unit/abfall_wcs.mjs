@@ -1,4 +1,4 @@
-// Issue #27: Waste Collection Schedule (WCS) on HA 2026.4+. Loads the real finder (00-finden.js), the
+// Issue #27: Waste Collection Schedule (WCS) on HA 2026.4+. Loads the real finder (00-finder.js), the
 // casora_trash tile expression, the Studio panel (_boolSwitch, _entMeta), the Studio settings
 // (casora-panel-personal.js) and the tile types (casora-panel-types.js).
 //   - bin names without the place (friendly name "<device> <entity>", device renamed or not)
@@ -39,7 +39,7 @@ globalThis.requestAnimationFrame = () => 0;
 globalThis.fetch = () => Promise.reject(new Error('offline'));
 window.casoraStateFit = (t) => t;
 
-new Function(read('custom_components/casora/scripts/local/00-finden.js'))();
+new Function(read('custom_components/casora/scripts/local/00-finder.js'))();
 const D = window.casoraDevice;
 const T = JSON.parse(read('dashboards/casora/button_card_templates.json'));
 const body = (s) => s.trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');

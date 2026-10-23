@@ -53,7 +53,7 @@
 
   // Öffnungen: Kontakt, Kippsensor und Kombi-Sensor derselben Tür/desselben Fensters
   // gehören zusammen (30.09.2026). Dieselbe Regel wie window.casoraOpenings in
-  // scripts/local/00-finden.js (dort ausführlich beschrieben) – beide prüft
+  // scripts/local/00-finder.js (dort ausführlich beschrieben) – beide prüft
   // dev/unit/oeffnungen.mjs gegeneinander.
   const OPEN_STOP = /^(kontaktsensor|kontakt|contact|sensor|binary|state|status|zustand|open|offen|opening|oeffnung|ofnung)$|kipp|tilt|kombi|combined|combo/;
   const openAttrs = (hass, id) => ((((hass || {}).states || {})[id]) || {}).attributes || {};

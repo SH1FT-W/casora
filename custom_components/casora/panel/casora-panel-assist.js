@@ -56,7 +56,7 @@
     return used;
   }
 
-  // Entitäten eines Geräts – über den Geräte-Finder (scripts/local/00-finden.js),
+  // Entitäten eines Geräts – über den Geräte-Finder (scripts/local/00-finder.js),
   // der im Panel aber nicht immer geladen ist; dann direkt aus der Registry.
   function devEntities(hass, id) {
     if (window.casoraDevice) return window.casoraDevice.entities(hass, id, { children: false });
@@ -89,7 +89,7 @@
       return an ? rooms.find((r) => norm(r.name) === an) || null : null;
     };
     const out = [];
-    // Waschmaschine/Trockner über den gemeinsamen Finder (scripts/local/00-finden.js):
+    // Waschmaschine/Trockner über den gemeinsamen Finder (scripts/local/00-finder.js):
     // offizielle Hersteller-Integration vor WashData, je Bereich nur die beste Quelle.
     const LF = window.casoraLaundryFind;
     const laundry = new Map(LF ? LF.all(hass).map((c) => [c.device, c]) : []);
@@ -128,7 +128,7 @@
         if (hit) { type = s.type; entity = hit.entity_id; reason = byKey ? "key" : "name"; break; }
       }
       // Saugroboter-Karten und Drucker-Kameras sind keine Überwachungskameras
-      // (dieselbe Regel wie window._casoraCams in scripts/local/00-finden.js).
+      // (dieselbe Regel wie window._casoraCams in scripts/local/00-finder.js).
       const noCam = list.some((x) => x.domain === "vacuum" || /^(print_status|stage)$/.test(x.key || ""));
       const isCam = (x) => x.domain === "camera" && !noCam && !/(_map|karte)$/.test(x.entity_id);
       if (!type) {

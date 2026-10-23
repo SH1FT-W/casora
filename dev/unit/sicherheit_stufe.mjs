@@ -1,4 +1,4 @@
-// Farbsystem Sicherheit (03.10.2026): window.casoraSecurityLevel (00-finden.js) liefert je
+// Farbsystem Sicherheit (03.10.2026): window.casoraSecurityLevel (00-finder.js) liefert je
 // Gerät/Gruppe die Stufe ok (Weich: Grün) / warn (Orange) / alarm (Rot); die große
 // Sicherheit-Badge nimmt den schlimmsten Zustand. Gemeldet: alle Symbolkreise rot, auch sichere.
 //   node dev/unit/sicherheit_stufe.mjs
@@ -9,7 +9,7 @@ globalThis.window = globalThis;
 globalThis.document = { querySelector: () => null };
 globalThis.customElements = { whenDefined: () => new Promise(() => {}), get: () => null };
 const src = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
-new Function(src('custom_components/casora/scripts/local/00-finden.js'))();
+new Function(src('custom_components/casora/scripts/local/00-finder.js'))();
 
 const lvl = window.casoraSecurityLevel;
 function house(over = {}) {

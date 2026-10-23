@@ -772,7 +772,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     var ha = function () { return document.querySelector('home-assistant'); };
     var A = window._casoraAssist = {
       msgs: [], convId: null, busy: false,
-      /* Vorschläge aus dem eigenen Haus (D-ASSIST, 06.10.2026): casoraAssistIdeas (00-finden.js) nimmt
+      /* Vorschläge aus dem eigenen Haus (D-ASSIST, 06.10.2026): casoraAssistIdeas (00-finder.js) nimmt
          nur Fragen zu Geräten, die es gibt – erst was zu tun ist, dann Tageszeit, dann Allgemeines.
          Handy 4, Desktop 6. Gewählt beim Öffnen des Popups. */
       suggest: function () {

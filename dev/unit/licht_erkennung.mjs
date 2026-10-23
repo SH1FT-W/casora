@@ -10,7 +10,7 @@ globalThis.document = { querySelector: () => null, addEventListener() {}, head: 
 globalThis.addEventListener = () => {};
 globalThis.customElements = { whenDefined: () => new Promise(() => {}), get: () => null, define() {} };
 const src = (p) => fs.readFileSync(new URL('../../custom_components/casora/' + p, import.meta.url), 'utf8');
-new Function(src('scripts/local/00-finden.js'))();
+new Function(src('scripts/local/00-finder.js'))();
 new Function(src('panel/casora-panel-assist.js'))();
 
 const hass = { states: {}, entities: {}, devices: {}, areas: { wz: { area_id: 'wz', name: 'Wohnzimmer' }, ku: { area_id: 'ku', name: 'Küche' }, bu: { area_id: 'bu', name: 'Büro' } } };

@@ -1,6 +1,6 @@
 // Türen/Fenster mit zwei Sensoren (Kontakt + Kippsensor) und Kombi-Sensor: eine Öffnung
 // zählt einmal, „gekippt“ kommt vom Kippsensor bzw. vom tilt-Attribut des Kombi-Sensors.
-// Prüft die Laufzeit (window.casoraOpenings, 00-finden.js), die Studio-Fassung
+// Prüft die Laufzeit (window.casoraOpenings, 00-finder.js), die Studio-Fassung
 // (casoraBasis.openings, casora-panel-basis.js), das Sicherheits-Badge (Text wie im
 // Produktiv-Dashboard) und das Befüllen der Badges im Studio.
 //   node dev/unit/oeffnungen.mjs
@@ -11,7 +11,7 @@ globalThis.window = globalThis;
 globalThis.document = { querySelector: () => null };
 globalThis.customElements = { whenDefined: () => new Promise(() => {}), get: () => null };
 const src = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
-new Function(src('custom_components/casora/scripts/local/00-finden.js'))();
+new Function(src('custom_components/casora/scripts/local/00-finder.js'))();
 window.__casoraPanelInternals = { TILE_TYPES: [], clone: (x) => JSON.parse(JSON.stringify(x)) };
 new Function(src('custom_components/casora/panel/casora-panel-basis.js'))();
 

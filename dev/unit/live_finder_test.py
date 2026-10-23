@@ -5,7 +5,7 @@
 1) Erkennung über Plattform + translation_key (erfundene Geräte): WashData Waschmaschine/Trockner/Geschirrspüler
    (Symbol), Home Connect Waschmaschine (Programmschlüssel), Home Connect WS Geschirrspüler (dishcare), Miele,
    Saugroboter (vacuum-Domäne), Bambu-Drucker (print_status); Backofen und Steckdose sind keine Live-Geräte.
-2) Gleichstand mit dem Dashboard-Finder: die SOURCES aus scripts/local/00-finden.js (per node ausgelesen) müssen
+2) Gleichstand mit dem Dashboard-Finder: die SOURCES aus scripts/local/00-finder.js (per node ausgelesen) müssen
    in Reihenfolge, Plattformen, need/any und Feldern mit live_finder.SOURCES übereinstimmen.
 """
 
@@ -125,7 +125,7 @@ console.log(JSON.stringify(LF.sources.map((s) => ({ id: s.id, platforms: s.platf
 """
 node = os.environ.get("NODE", "node")
 try:
-    out = subprocess.run([node, "-e", JS, os.path.join(ROOT, "custom_components/casora/scripts/local/00-finden.js")],
+    out = subprocess.run([node, "-e", JS, os.path.join(ROOT, "custom_components/casora/scripts/local/00-finder.js")],
                          capture_output=True, text=True, check=True).stdout
     js_sources = json.loads(out)
 except Exception as err:  # noqa: BLE001

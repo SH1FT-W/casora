@@ -647,8 +647,8 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
 
 // Editor helpers for Casora tiles: device finder as placeholder and "Complete with AI".
 (() => {
-  // The same finder as on the dashboard (scripts/local/00-finden.js) – no DOM, registry only.
-  if (!window.casoraDevice) import("/casora_scripts/local/00-finden.js").catch(() => {});
+  // The same finder as on the dashboard (scripts/local/00-finder.js) – no DOM, registry only.
+  if (!window.casoraDevice) import("/casora_scripts/local/00-finder.js").catch(() => {});
   // Dashboard translation (German → user language) for texts the preview takes over from the
   // dashboard scripts (e.g. security subline "Alles sicher", 07.10.2026).
   if (!window.casoraTr) import("/casora_scripts/casora-i18n.js").catch(() => {});

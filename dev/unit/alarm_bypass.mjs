@@ -18,7 +18,7 @@ for (const name of ['casora_badge_security', 'casora_popup_alarm']) {
 }
 const chips = JSON.stringify(T.casora_mobile_sensor_chips);
 assert.ok(chips.includes('"label":"Bypass"'), 'Handy-Chips: Modus „Bypass“');
-assert.ok(read('custom_components/casora/scripts/local/00-finden.js').includes("armed_custom_bypass: 'Bypass'"));
+assert.ok(read('custom_components/casora/scripts/local/00-finder.js').includes("armed_custom_bypass: 'Bypass'"));
 assert.ok(read('custom_components/casora/scripts/casora-core.js').includes("armed_custom_bypass: 'Alarm scharf – Bypass'"));
 assert.ok(read('custom_components/casora/scripts/local/01-basis.js').includes("armed_custom_bypass: 'Bypass' };"));
 console.log('ok alarm_bypass');

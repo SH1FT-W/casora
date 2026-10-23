@@ -1,4 +1,4 @@
-// Waschmaschine/Trockner: woher die Werte kommen (casoraLaundryFind in 00-finden.js).
+// Waschmaschine/Trockner: woher die Werte kommen (casoraLaundryFind in 00-finder.js).
 // Reihenfolge: Hersteller-Integration > WashData > nur Zwischenstecker – erkannt über
 // Plattform und translation_key, nie über Namen. Dazu Assistent und Kachel-Zustand.
 //   node dev/unit/waesche_quelle.mjs
@@ -10,7 +10,7 @@ globalThis.document = { querySelector: () => null, addEventListener() {}, head: 
 globalThis.addEventListener = () => {};
 globalThis.customElements = { whenDefined: () => new Promise(() => {}), get: () => null, define() {} };
 const src = (p) => fs.readFileSync(new URL('../../custom_components/casora/' + p, import.meta.url), 'utf8');
-new Function(src('scripts/local/00-finden.js'))();
+new Function(src('scripts/local/00-finder.js'))();
 new Function(src('panel/casora-panel-assist.js'))();
 const LF = window.casoraLaundryFind;
 assert.ok(LF, 'casoraLaundryFind fehlt');
