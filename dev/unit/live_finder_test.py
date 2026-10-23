@@ -281,5 +281,12 @@ if tables is not None:
     for (d, ents), js in zip(PRINTER_CASES, tables["isPrinter"]):
         check(f"{d}: is_printer as casoraDevice.isPrinter", js == lf.is_printer(ents), (js, lf.is_printer(ents)))
 
+# A "stage" sensor without a print status on a dishwasher: still a dishwasher (review 23.10.2026, JS does the same).
+hcs = [E("sensor.hcs_op", "operation_state", "home_connect"), E("select.hcs_prog", "active_program", "home_connect"),
+       E("sensor.hcs_stage", "stage", "home_connect")]
+st("select.hcs_prog", "dishcare_dishwasher_program_eco_50", options=["dishcare_dishwasher_program_eco_50"])
+f = lf.classify("hcs", hcs, S.get)
+check("stage without print status hides no dishwasher", f is not None and f.kind == "dishwasher", f)
+
 print("\nALL OK" if not fails else f"\n{len(fails)} FAILED")
 sys.exit(1 if fails else 0)

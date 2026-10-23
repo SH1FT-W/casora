@@ -316,8 +316,10 @@ def classify(device_id: str, ents: list[Ent], states: Callable[[str], Any], mode
         return Found(device_id, "vacuum", "vacuum", GRADE_GOOD, f, model=model)
     if is_printer(ents):
         f = {n: _pick(ents, s) for n, s in PRINTER_FIELDS.items()}
-        # Without a print status there is no state to follow; a printer is never a laundry device either.
-        return Found(device_id, "printer", "bambu_lab", GRADE_UNTESTED, f, model=model) if f["state"] else None
+        # Without a print status there is no state to follow: then the laundry sources decide, as in JS
+        # (a "stage" sensor alone must not hide a washer or dishwasher).
+        if f["state"]:
+            return Found(device_id, "printer", "bambu_lab", GRADE_UNTESTED, f, model=model)
     for src in SOURCES:
         how = _matches(src, ents)
         if not how:
