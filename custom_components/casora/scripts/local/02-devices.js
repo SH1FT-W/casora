@@ -2100,8 +2100,34 @@
     [/_wasserheizung_verkalkt$/, 'Wasserheizung verkalkt', 'mdi:water-boiler-alert', 'binary_sensor_waterheatercalcified'],
     [/_programm_abgebrochen$/, 'Programm abgebrochen', 'mdi:cancel', 'binary_sensor_program_aborted'],
   ];
-  var progName = function (p) { return p ? (PROG[p] ? PROG[p][0] : p) : null; };
+  // Home Connect in HA core writes the program ids with underscores (…_eco_50, …_machine_care), the older
+  // integration without (…_eco50): compare without them.
+  var PROG_N = {};
+  Object.keys(PROG).forEach(function (k) { PROG_N[k.replace(/_/g, '')] = PROG[k]; });
+  var progOf = function (p) { return p ? PROG[p] || PROG_N[String(p).replace(/_/g, '')] || null : null; };
+  // Unknown program: the name HA translates for the select (sel), else the id without its prefix.
+  var progName = function (p, sel) {
+    if (!p) return null;
+    var k = progOf(p);
+    if (k) return k[0];
+    try {
+      var h = sel && document.querySelector('home-assistant');
+      var t = h && h.hass && typeof h.hass.formatEntityState === 'function' ? h.hass.formatEntityState(sel, p) : null;
+      if (t && t !== p) return t;
+    } catch (x) { /* raw */ }
+    var r = String(p).replace(/^dishcare_dishwasher_program_/, '').replace(/_/g, ' ');
+    return r.charAt(0).toUpperCase() + r.slice(1);
+  };
+  var progIcon = function (p) { return (progOf(p) || [0, 'mdi:dishwasher'])[1]; };
+  // Door: binary_sensor (on = open) or the enum sensor of Home Connect in HA core (open/closed/locked).
+  var isOpen = function (states, e) { var s = e && states[e] && states[e].state; return s === 'on' || s === 'open'; };
   var minutes = function (states, e) {
+    var st = e && states[e];
+    // Finish time (Home Connect in HA core: program_finish_time, timestamp): minutes until then.
+    if (st && ((st.attributes || {}).device_class === 'timestamp' || /^\d{4}-\d\d-\d\dT/.test(String(st.state)))) {
+      var t = Date.parse(st.state);
+      return isNaN(t) ? null : (t - Date.now()) / 60000;
+    }
     var n = U.num(states, e);
     if (n == null) return null;
     var u = ((states[e] || {}).attributes || {}).unit_of_measurement;
@@ -2115,6 +2141,18 @@
     var devOf = function (eid) { return reg[eid] && reg[eid].device_id; };
     // Neighbour entity on the same device: first via the integration's language-independent
     // translation_key, else via the (German) name suffix.
+    // Only via translation_key (Home Connect in HA core), no name fallback.
+    var byKey = function (eid, dom, key) {
+      var dev = devOf(eid), hit = null;
+      if (!dev) return null;
+      Object.keys(reg).forEach(function (k) {
+        var e = reg[k];
+        if (hit || e.device_id !== dev || !states[e.entity_id] || e.translation_key !== key) return;
+        if (e.entity_id.indexOf(dom + '.') !== 0) return;
+        hit = e.entity_id;
+      });
+      return hit;
+    };
     var sib = function (eid, re, dom, unit, key) {
       var dev = devOf(eid);
       if (!dev) return null;
@@ -2147,16 +2185,17 @@
     return {
       st: st, dish: true, name: V.room_name || 'Geschirrspüler', entry: null, dryer: false,
       price: window.casoraPriceKwh ? window.casoraPriceKwh(V.price_kwh) : null, color: V.chart_color || '#00C3D0',
-      program: V.entity_program || sib(st, /_aktives_programm$/, 'sensor', null, 'sensor_active_program'),
-      sel: sib(st, /_ausgewahltes_programm$/, 'select', null, 'select_program'),
+      program: V.entity_program || sib(st, /_aktives_programm$/, 'sensor', null, 'sensor_active_program') || byKey(st, 'select', 'active_program'),
+      sel: sib(st, /_ausgewahltes_programm$/, 'select', null, 'select_program') || byKey(st, 'select', 'selected_program'),
       phase: V.entity_phase || sib(st, /_programmphase$/, 'sensor', null, 'sensor_program_phase'),
-      progress: V.appliance_progress || sib(st, /_programmfortschritt$/, 'sensor', null, 'sensor_program_progress'),
-      remaining: V.appliance_remaining || sib(st, /_verbleibende_programmlaufzeit$/, 'sensor', null, 'sensor_remaining_program_time'),
+      progress: V.appliance_progress || sib(st, /_programmfortschritt$/, 'sensor', null, 'sensor_program_progress') || byKey(st, 'sensor', 'program_progress'),
+      remaining: V.appliance_remaining || sib(st, /_verbleibende_programmlaufzeit$/, 'sensor', null, 'sensor_remaining_program_time')
+        || byKey(st, 'sensor', 'program_finish_time'),
       energyEst: V.entity_energy_est || sib(st, /_energieverbrauch_schatzung$/, 'sensor', null, 'sensor_energy_forecast'),
       waterEst: V.entity_water_est || sib(st, /_wasserverbrauch_schatzung$/, 'sensor', null, 'sensor_water_forecast'),
       salt: V.entity_salt || sib(st, /_salz$/, 'sensor', null, 'sensor_salt'),
       rinse: V.entity_rinse_aid || sib(st, /_klarspuler$/, 'sensor', null, 'sensor_rinse_aid'),
-      door: V.entity_door || sib(st, /_tur$/, 'binary_sensor', null, 'binary_sensor_door_state'),
+      door: V.entity_door || sib(st, /_tur$/, 'binary_sensor', null, 'binary_sensor_door_state') || byKey(st, 'sensor', 'door'),
       care: sib(st, /_maschinenpflege_erinnerung$/, 'sensor', null, 'sensor_machine_care_reminder'),
       starts: sib(st, /_startanzahl$/, 'sensor', null, 'sensor_count_started'),
       conn: sib(st, /_verbindung$/, 'binary_sensor', null, 'connection'),
@@ -2174,7 +2213,7 @@
              [V.sw_speed || sib(st, /_speed_on_demand$/, 'switch', null, 'switch_speed_on_demand'), 'Schneller fertig', 'mdi:clock-fast'],
              [V.sw_silence || sib(st, /_silence_on_demand$/, 'switch', null, 'switch_silence_on_demand'), 'Leiser', 'mdi:volume-low']].filter(function (o) { return o[0]; }),
       start: V.btn_start || sib(st, /_start$/, 'button', null, 'button_start_program'),
-      stop: V.btn_stop || sib(st, /_abbrechen$/, 'button', null, 'button_abort_program'),
+      stop: V.btn_stop || sib(st, /_abbrechen$/, 'button', null, 'button_abort_program') || byKey(st, 'button', 'stop_program'),
       plug: plug,
       power: plug ? sib(plug, null, 'sensor', 'W') : V.entity_power || null,
       volt: plug ? sib(plug, null, 'sensor', 'V') : null,
@@ -2224,10 +2263,10 @@
     var raw = String((states[c.st] || {}).state || '');
     var d = L.data[c.st] || {};
     var rem = minutes(states, c.remaining);
-    var doorOpen = c.door && states[c.door] && states[c.door].state === 'on';
+    var doorOpen = isOpen(states, c.door);
 
     if (kind === 'd_hero') {
-      var prog = progName(U.str(states, c.program)) || progName(U.str(states, c.sel));
+      var prog = progName(U.str(states, c.program), states[c.program]) || progName(U.str(states, c.sel), states[c.sel]);
       var ph = PHASE[U.str(states, c.phase)] || null;
       var sub = [], value = s[0], unit = null, tone = s[1];
       if (active && rem != null && rem > 0) {
@@ -2244,7 +2283,7 @@
         if (lc) sub.push('seit ' + U.clock(new Date(lc)) + ' Uhr');
         tone = 'good';
       } else {
-        if (prog) sub.push(prog + (rem ? ' · ca. ' + U.dur(rem) : ''));
+        if (prog) sub.push(prog + (rem > 0 ? ' · ca. ' + U.dur(rem) : ''));
         tone = null;
       }
       if (doorOpen) sub.push('Tür offen');
@@ -2288,7 +2327,7 @@
       var phn = PHASE[U.str(states, c.phase)];
       if (phn) rows.push({ icon: 'mdi:water-sync', iconTone: 'accent', label: 'Phase', value: phn });
       var pr = U.str(states, c.program);
-      rows.push({ icon: (PROG[pr] || [0, 'mdi:dishwasher'])[1], iconTone: 'accent', label: 'Programm', value: progName(pr) || '—' });
+      rows.push({ icon: progIcon(pr), iconTone: 'accent', label: 'Programm', value: progName(pr, states[c.program]) || '—' });
       [[c.energyEst, 'Energiebedarf', 'mdi:lightning-bolt-outline'], [c.waterEst, 'Wasserbedarf', 'mdi:water-outline']].forEach(function (x) {
         var n = U.num(states, x[0]);
         if (n != null) rows.push({ icon: x[2], iconTone: 'accent', label: x[1], sub: 'Prognose für dieses Programm', value: Math.round(n) + ' %', bar: n / 100, barTone: 'good' });
@@ -2308,16 +2347,16 @@
         if (!sel) return '';
         return (window._casoraHH ? window._casoraHH.sel : String)(window._casoraSelRows(UI.group(((sel.attributes || {}).options || []).map(function (o) {
           var on = sel.state === o;
-          return { icon: (PROG[o] || [0, 'mdi:dishwasher'])[1], iconTone: on ? 'accent' : DIM, label: progName(o),
+          return { icon: progIcon(o), iconTone: on ? 'accent' : DIM, label: progName(o, sel),
             svc: on ? null : { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.sel } } };
-        }), 'Programm'), progName(sel.state)));
+        }), 'Programm'), progName(sel.state, sel)));
       }
       if (sel) {
         out += (window._casoraHH ? window._casoraHH.sel : String)(window._casoraSelRows(UI.group(((sel.attributes || {}).options || []).map(function (o) {
           var on = sel.state === o;
-          return { icon: (PROG[o] || [0, 'mdi:dishwasher'])[1], iconTone: on ? 'accent' : DIM, label: progName(o),
+          return { icon: progIcon(o), iconTone: on ? 'accent' : DIM, label: progName(o, sel),
             svc: on ? null : { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.sel } } };
-        }), 'Programm'), progName(sel.state)));
+        }), 'Programm'), progName(sel.state, sel)));
       }
       var remote = c.remote && states[c.remote] ? states[c.remote].state : null;
       var startOk = c.start && states[c.start] && states[c.start].state !== 'unavailable';
@@ -2341,7 +2380,7 @@
       }
       if (startOk) {
         var why = remote === 'monitoring' ? 'Fernstart am Gerät nicht erlaubt' : doorOpen ? 'Tür ist offen' : null;
-        var sp = progName(U.str(states, c.sel));
+        var sp = progName(U.str(states, c.sel), states[c.sel]);
         out += (out ? '<div style="height:18px"></div>' : '') + UI.group([{ icon: 'mdi:play', iconTone: why ? DIM : 'good', label: delay ? 'Zeitversetzt starten' : 'Jetzt starten',
           sub: why || [sp, delay ? 'startet in ' + U.dur(delay / 60) : null].filter(Boolean).join(' · '),
           svc: why ? null : { domain: 'button', service: 'press', target: { entity_id: c.start } }, confirm: why ? null : 'Starten' }], null);
