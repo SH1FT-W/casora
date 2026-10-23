@@ -19,7 +19,7 @@
   const clone = (x) => JSON.parse(JSON.stringify(x || {}));
 
   const KIND_LABEL = { washer: "Washing machine", dryer: "Dryer", dishwasher: "Dishwasher", vacuum: "Robot vacuum", printer: "3D printer" };
-  const SOURCE_LABEL = { home_connect: "Home Connect", home_connect_alt: "Home Connect (HACS)", miele: "Miele", smartthings: "SmartThings",
+  const SOURCE_LABEL = { home_connect: "Home Connect", home_connect_alt: "Home Connect Alt", homeconnect_ws: "Home Connect Local", miele: "Miele", smartthings: "SmartThings",
     lg_thinq: "LG ThinQ", washdata: "WashData", whirlpool: "Whirlpool", other: "Manufacturer app", vacuum: "Vacuum", bambu_lab: "Bambu Lab" };
   const GRADE_LABEL = { "sehr gut": "Verified", ungetestet: "Untested" };
   const PHASE_LABEL = { run: "Running", delay: "Starts later", pause: "Paused", attn: "Attention needed", done: "Done", error: "Error",

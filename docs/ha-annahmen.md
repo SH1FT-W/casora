@@ -47,7 +47,7 @@ Plattform-Basisklassen (siehe `dev/casora_mock/entity.py`), und die Annahmen unt
 | Home Connect (HA-Kern): Backofen, Kaffeevollautomat und Geschirrspüler melden alle `operation_state`; nur die Programm-Optionen (`dishcare_…`, `cooking_oven_…`, `consumer_products_coffee_maker_…`) sagen, was das Gerät ist | `00-finder.js` `casoraLaundryFind.dishwashers` (Rolle aus `SOURCES`), Studio neue Kachel (`casora-panel.js` `TILE_MAIN_FIND.casora_dishwasher`) und Assistent (`casora-panel-assist.js`) | `dev/unit/haeuser.mjs` (`kueche_spueler_ofen_kaffee_es.json`), `dev/unit/live_finder_test.py` (Backofen) |
 | Miele (HA-Kern) beim Geschirrspüler: `status`, `program_id`, `program_phase`, `remaining_time`/`finish`, Knöpfe `start`/`stop`, Tür als `binary_sensor` mit `device_class: door` ohne `translation_key`; nur der Spüler hat `salt_level`/`rinse_aid_level`/`power_disk_level` (Rolle, Prozent, nicht als Füllstand gezeigt) | `00-finder.js` `SOURCES` `miele` (`role`, `dish`), `live_finder.py` `_miele_role` | `dev/unit/dishwasher_sources.mjs`, `dev/unit/live_finder_test.py`; Schlüssel in `ha_annahmen_test.py` (`KEYS`) |
 | Gerät-Registry im Frontend (`hass.devices[id].model`, `name`) und `device_class` der Nachbar-Sensoren (`energy`, `voltage`, `power_factor`, `frequency`) unterscheiden eine Messklemme von einer Steckdose (#44) | `panel/casora-panel-basis.js` `meterDevice`, `scripts/local/01-basis.js` `_casoraHousePower` | `dev/unit/house_power.mjs` (Fall 8b) |
-| Energie-Einstellungen über `energy/get_prefs` (Fehler `not_found`, solange nichts eingerichtet ist): `energy_sources` vom Typ `grid`, `solar`, `battery` tragen ihren Leistungssensor in `stat_rate` (Netz und Akku zusätzlich `power_config`; bei `stat_rate_inverted` bzw. `stat_rate_from`/`stat_rate_to` schreibt HA seinen eigenen Template-Sensor in `stat_rate`; altes Netz-Format `power: [{stat_rate}]`). Vorzeichen: Netz positiv = Bezug, Akku positiv = Entladen, Solar positiv, also Haus = Netz + Solar + Akku (#44) | `scripts/local/00-finder.js` `casoraEnergyPrefs`/`casoraEnergyHouse`, `panel/casora-panel-basis.js` `prefsHouse`, `panel/casora-panel.js` `prefsHomePower`, `scripts/local/01-basis.js` `_casoraHousePowerIds`, `scripts/local/20-energie-fokus.js` `detect` | `dev/unit/ha_annahmen_test.py` (Typen, Schema und `stat_rate`-Erzeugung gegen das installierte HA), `dev/unit/house_power.mjs` (Fälle 12, 13), `dev/unit/energie_fokus.mjs` |
+| Energie-Einstellungen über `energy/get_prefs` (Fehler `not_found`, solange nichts eingerichtet ist): `energy_sources` vom Typ `grid`, `solar`, `battery` tragen ihren Leistungssensor in `stat_rate` (Netz und Akku zusätzlich `power_config`; bei `stat_rate_inverted` bzw. `stat_rate_from`/`stat_rate_to` schreibt HA seinen eigenen Template-Sensor in `stat_rate`; altes Netz-Format `power: [{stat_rate}]`). Vorzeichen: Netz positiv = Bezug, Akku positiv = Entladen, Solar positiv, also Haus = Netz + Solar + Akku (#44). Ein Solar- oder Akku-Sensor daraus, der `unavailable`/`unknown` ist, gilt als schlafender Wechselrichter (0 W) | `scripts/local/00-finder.js` `casoraEnergyPrefs`/`casoraEnergyHouse`, `panel/casora-panel-basis.js` `prefsHouse`, `panel/casora-panel.js` `prefsHomePower`, `scripts/local/01-basis.js` `_casoraHousePowerIds`, `scripts/local/20-energie-fokus.js` `detect`/`peers`/Kopf, `scripts/local/05-weich-mehr.js` Kopf und „Woher kommt der Strom“ | `dev/unit/ha_annahmen_test.py` (Typen, Schema und `stat_rate`-Erzeugung gegen das installierte HA), `dev/unit/house_power.mjs` (Fälle 12–14), `dev/unit/energie_fokus.mjs`, `dev/unit/haeuser/energie_prefs_netz_solar_akku.json` |
 | Kamera-WebRTC über `camera/webrtc/offer` (go2rtc): die Antwort auf ein Angebot mit Mikrofonspur (`sendrecv`) liefert auch die Tonspur der Kamera zurück; `ha-camera-stream` baut seinen Player bei `muted` ohne Tonspur neu (#23) | `scripts/local/24-klingel.js` `P._talk` (`ontrack`), `P._applyAudio`, `P._talkStop` | `dev/unit/klingel.mjs` (Attrappen; echte Klingel nicht im Test) |
 | KI-Aufgaben (`ai_task.*`): das Modell steht im Unterzugang der Integration unter `chat_model` (Anthropic, OpenAI, Google) bzw. `model` (OpenRouter, Ollama); OpenRouter mit Anbieter davor (`anthropic/claude-sonnet-4.5`) | `ki.py` `ai_models`, `model_rank` | `dev/unit/ki_modell_gateway_test.py` (Attrappe; Schlüssel von Hand gegen `homeassistant/components/open_router` 2026.10 geprüft) |
 | In HA versteckte Entitäten tragen in `hass.entities` `hidden: true` (Anzeige-Eintrag; `hidden_by` nur zur Sicherheit mitgeprüft); HAs eigener Kalender blendet sie aus, Casoras Kalender-Automatik ebenso (#38) | `scripts/local/06-kalender.js` `autoCals` | `dev/unit/kalender_versteckt.mjs` (Attrappe) |
@@ -77,6 +77,29 @@ Nicht im Kern-Paket prüfbar (HACS), Casora liest `platform`/`translation_key`:
 `waste_collection_schedule`, `frigate`, `ha_washdata`, `home_connect_alt`/`homeconnect_ws`, `bambu_lab`,
 `anker_solix`, `pulse`, `teamtracker`, `bosch_ebike`, `powercalc`, `browser_mod`, `hacs`, Kaffee-Integrationen
 (De'Longhi, Jura, Melitta), Auto-Integrationen.
+
+Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCES`, `live_finder.py`, Zustand/Programm
+`02-devices.js`, `live_activity.py`; Tests `dev/unit/dishwasher_sources.mjs`, `dev/unit/live_finder_test.py`,
+`dev/unit/live_activity_test.py`, Häuser `dev/unit/haeuser/hc_*.json`), Stand 23.10.2026:
+
+- `home_connect_alt` (ekutner/home-connect-hass 1.5.0-b1, Commit f74cffd): `translation_key` nur allgemein –
+  `statuses`/`settings` (sensor.py `StatusSensor`/`SettingsSensor`), `options`/`programs` (sensor.py, select.py),
+  Knöpfe `start_program`/`pause_program`/`resume_program` je Zustand und `stop_program` (button.py
+  `StartButton`/`StopButton`), Schalter und Binärsensoren ohne. Die Entitäts-ID setzt die Integration selbst:
+  `<domain>.<haid>_<Home-Connect-Schlüssel klein, Punkte als _>` (common.py `EntityBase.__init__`/`unique_id`;
+  Programme `…_active_program`/`…_selected_program`, Auswahl `…_programs`, Knöpfe `…_start_pause`/`…_stop`).
+  Casora liest deshalb das Ende der Entitäts-ID (nur auf dieser Plattform; `hass.entities` hat keine `unique_id`).
+  Gerätetyp: Symbol der Programm-Entitäten (const.py `DEVICE_ICON_MAP`), sonst Programmschlüssel
+  (`LaundryCare.Washer.Program.…`). Zustand im Modus „local“ als Schlüssel `BSH.Common.EnumType.OperationState.Run`,
+  im Modus „server“ als Text der Cloud (dann ohne Läuft-Erkennung); Restzeit als Zeitpunkt (const.py
+  `RemainingProgramTime` `class: timestamp`), Tür als Binärsensor `door`.
+- `homeconnect_ws` (chris-mc1/homeconnect_local_hass, Commit f91fd4b): `translation_key` = Schlüssel der
+  Beschreibung (entity.py), z. B. `sensor_operation_state`, `sensor_active_program`, `select_program`,
+  `sensor_remaining_program_time` (Dauer), `binary_sensor_door_state`, `button_abort_program`
+  (entity_descriptions/common.py), Spüler `sensor_program_phase`, `sensor_salt`, `sensor_rinse_aid`,
+  `switch_extra_dry_option` (dishcare.py), Wäsche `sensor_laundry_process_phase`/`sensor_dryer_process_phase`
+  (laundry_care.py). Entitäts-IDs aus den übersetzten Namen (`has_entity_name`), daher die deutschen Endungen in
+  `casoraLaundryFind.dishNames` (translations/de.json).
 
 Bekannt wacklig (Stand 2026.10.1, nicht im Test, weil es Rückfälle bzw. HACS-Schlüssel sind):
 

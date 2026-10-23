@@ -1,0 +1,259 @@
+{
+ "quelle": "Home Connect Alt (HACS, ekutner/home-connect-hass 1.5.0-b1), Geschirrspüler im Übersetzungsmodus „server“ (Zustände und Programme als Text der Cloud), bereit mit gewähltem Programm; nach den Quelldateien, erfunden",
+ "areas": {
+  "kueche": {
+   "area_id": "kueche",
+   "name": "Küche"
+  }
+ },
+ "devices": {
+  "d_gs": {
+   "id": "d_gs",
+   "name": "Geschirrspüler",
+   "manufacturer": "Siemens",
+   "model": "SN658X06TE",
+   "area_id": "kueche"
+  }
+ },
+ "entities": {
+  "sensor.siemens_sn658x06te_68a40e000003_bsh_common_status_operationstate": {
+   "entity_id": "sensor.siemens_sn658x06te_68a40e000003_bsh_common_status_operationstate",
+   "device_id": "d_gs",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "statuses"
+  },
+  "sensor.siemens_sn658x06te_68a40e000003_selected_program": {
+   "entity_id": "sensor.siemens_sn658x06te_68a40e000003_selected_program",
+   "device_id": "d_gs",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "programs"
+  },
+  "select.siemens_sn658x06te_68a40e000003_programs": {
+   "entity_id": "select.siemens_sn658x06te_68a40e000003_programs",
+   "device_id": "d_gs",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "programs"
+  },
+  "sensor.siemens_sn658x06te_68a40e000003_bsh_common_option_remainingprogramtime": {
+   "entity_id": "sensor.siemens_sn658x06te_68a40e000003_bsh_common_option_remainingprogramtime",
+   "device_id": "d_gs",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "options"
+  },
+  "sensor.siemens_sn658x06te_68a40e000003_bsh_common_option_energyforecast": {
+   "entity_id": "sensor.siemens_sn658x06te_68a40e000003_bsh_common_option_energyforecast",
+   "device_id": "d_gs",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "options"
+  },
+  "sensor.siemens_sn658x06te_68a40e000003_bsh_common_option_waterforecast": {
+   "entity_id": "sensor.siemens_sn658x06te_68a40e000003_bsh_common_option_waterforecast",
+   "device_id": "d_gs",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "options"
+  },
+  "switch.siemens_sn658x06te_68a40e000003_dishcare_dishwasher_option_halfload": {
+   "entity_id": "switch.siemens_sn658x06te_68a40e000003_dishcare_dishwasher_option_halfload",
+   "device_id": "d_gs",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": null
+  },
+  "switch.siemens_sn658x06te_68a40e000003_dishcare_dishwasher_option_extradry": {
+   "entity_id": "switch.siemens_sn658x06te_68a40e000003_dishcare_dishwasher_option_extradry",
+   "device_id": "d_gs",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": null
+  },
+  "switch.siemens_sn658x06te_68a40e000003_dishcare_dishwasher_option_variospeedplus": {
+   "entity_id": "switch.siemens_sn658x06te_68a40e000003_dishcare_dishwasher_option_variospeedplus",
+   "device_id": "d_gs",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": null
+  },
+  "switch.siemens_sn658x06te_68a40e000003_bsh_common_setting_powerstate": {
+   "entity_id": "switch.siemens_sn658x06te_68a40e000003_bsh_common_setting_powerstate",
+   "device_id": "d_gs",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": null
+  },
+  "binary_sensor.siemens_sn658x06te_68a40e000003_bsh_common_status_doorstate": {
+   "entity_id": "binary_sensor.siemens_sn658x06te_68a40e000003_bsh_common_status_doorstate",
+   "device_id": "d_gs",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": null
+  },
+  "binary_sensor.siemens_sn658x06te_68a40e000003_connected": {
+   "entity_id": "binary_sensor.siemens_sn658x06te_68a40e000003_connected",
+   "device_id": "d_gs",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": null
+  },
+  "button.siemens_sn658x06te_68a40e000003_start_pause": {
+   "entity_id": "button.siemens_sn658x06te_68a40e000003_start_pause",
+   "device_id": "d_gs",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "start_program"
+  },
+  "button.siemens_sn658x06te_68a40e000003_stop": {
+   "entity_id": "button.siemens_sn658x06te_68a40e000003_stop",
+   "device_id": "d_gs",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "stop_program"
+  }
+ },
+ "states": {
+  "sensor.siemens_sn658x06te_68a40e000003_bsh_common_status_operationstate": {
+   "entity_id": "sensor.siemens_sn658x06te_68a40e000003_bsh_common_status_operationstate",
+   "state": "Bereit",
+   "attributes": {
+    "device_class": "home_connect_alt__status",
+    "friendly_name": "Siemens Geschirrspüler - Betriebszustand"
+   }
+  },
+  "sensor.siemens_sn658x06te_68a40e000003_selected_program": {
+   "entity_id": "sensor.siemens_sn658x06te_68a40e000003_selected_program",
+   "state": "Eco 50°",
+   "attributes": {
+    "device_class": "home_connect_alt__programs",
+    "icon": "mdi:dishwasher",
+    "friendly_name": "Siemens Geschirrspüler - Selected Program"
+   }
+  },
+  "select.siemens_sn658x06te_68a40e000003_programs": {
+   "entity_id": "select.siemens_sn658x06te_68a40e000003_programs",
+   "state": "Eco 50°",
+   "attributes": {
+    "options": [
+     "Eco 50°",
+     "Auto 45-65°",
+     "Schnell 45°",
+     "Vorspülen"
+    ],
+    "icon": "mdi:dishwasher",
+    "friendly_name": "Siemens Geschirrspüler - Programs"
+   }
+  },
+  "sensor.siemens_sn658x06te_68a40e000003_bsh_common_option_remainingprogramtime": {
+   "entity_id": "sensor.siemens_sn658x06te_68a40e000003_bsh_common_option_remainingprogramtime",
+   "state": "2026-10-23T15:10:00+00:00",
+   "attributes": {
+    "device_class": "timestamp",
+    "friendly_name": "Siemens Geschirrspüler - Restlaufzeit"
+   }
+  },
+  "sensor.siemens_sn658x06te_68a40e000003_bsh_common_option_energyforecast": {
+   "entity_id": "sensor.siemens_sn658x06te_68a40e000003_bsh_common_option_energyforecast",
+   "state": "70",
+   "attributes": {
+    "unit_of_measurement": "%",
+    "friendly_name": "Siemens Geschirrspüler - Energieprognose"
+   }
+  },
+  "sensor.siemens_sn658x06te_68a40e000003_bsh_common_option_waterforecast": {
+   "entity_id": "sensor.siemens_sn658x06te_68a40e000003_bsh_common_option_waterforecast",
+   "state": "60",
+   "attributes": {
+    "unit_of_measurement": "%",
+    "friendly_name": "Siemens Geschirrspüler - Wasserprognose"
+   }
+  },
+  "switch.siemens_sn658x06te_68a40e000003_dishcare_dishwasher_option_halfload": {
+   "entity_id": "switch.siemens_sn658x06te_68a40e000003_dishcare_dishwasher_option_halfload",
+   "state": "off",
+   "attributes": {
+    "friendly_name": "Siemens Geschirrspüler - Halbe Beladung"
+   }
+  },
+  "switch.siemens_sn658x06te_68a40e000003_dishcare_dishwasher_option_extradry": {
+   "entity_id": "switch.siemens_sn658x06te_68a40e000003_dishcare_dishwasher_option_extradry",
+   "state": "on",
+   "attributes": {
+    "friendly_name": "Siemens Geschirrspüler - Extra Trocken"
+   }
+  },
+  "switch.siemens_sn658x06te_68a40e000003_dishcare_dishwasher_option_variospeedplus": {
+   "entity_id": "switch.siemens_sn658x06te_68a40e000003_dishcare_dishwasher_option_variospeedplus",
+   "state": "off",
+   "attributes": {
+    "friendly_name": "Siemens Geschirrspüler - varioSpeed Plus"
+   }
+  },
+  "switch.siemens_sn658x06te_68a40e000003_bsh_common_setting_powerstate": {
+   "entity_id": "switch.siemens_sn658x06te_68a40e000003_bsh_common_setting_powerstate",
+   "state": "on",
+   "attributes": {
+    "friendly_name": "Siemens Geschirrspüler - Ein/Aus"
+   }
+  },
+  "binary_sensor.siemens_sn658x06te_68a40e000003_bsh_common_status_doorstate": {
+   "entity_id": "binary_sensor.siemens_sn658x06te_68a40e000003_bsh_common_status_doorstate",
+   "state": "off",
+   "attributes": {
+    "device_class": "door",
+    "friendly_name": "Siemens Geschirrspüler - Tür"
+   }
+  },
+  "binary_sensor.siemens_sn658x06te_68a40e000003_connected": {
+   "entity_id": "binary_sensor.siemens_sn658x06te_68a40e000003_connected",
+   "state": "on",
+   "attributes": {
+    "device_class": "connectivity",
+    "friendly_name": "Siemens Geschirrspüler - Connected"
+   }
+  },
+  "button.siemens_sn658x06te_68a40e000003_start_pause": {
+   "entity_id": "button.siemens_sn658x06te_68a40e000003_start_pause",
+   "state": "unknown",
+   "attributes": {
+    "icon": "mdi:play",
+    "friendly_name": "Siemens Geschirrspüler - Start"
+   }
+  },
+  "button.siemens_sn658x06te_68a40e000003_stop": {
+   "entity_id": "button.siemens_sn658x06te_68a40e000003_stop",
+   "state": "unknown",
+   "attributes": {
+    "icon": "mdi:stop",
+    "friendly_name": "Siemens Geschirrspüler - Stop"
+   }
+  }
+ },
+ "expect": {
+  "laundry": [
+   {
+    "entity": "sensor.siemens_sn658x06te_68a40e000003_bsh_common_status_operationstate",
+    "role": "dishwasher",
+    "source": "home_connect_alt"
+   }
+  ],
+  "dishwasher": {
+   "entity": "sensor.siemens_sn658x06te_68a40e000003_bsh_common_status_operationstate",
+   "fields": {
+    "program": null,
+    "sel": "select.siemens_sn658x06te_68a40e000003_programs",
+    "remaining": "sensor.siemens_sn658x06te_68a40e000003_bsh_common_option_remainingprogramtime",
+    "energyEst": "sensor.siemens_sn658x06te_68a40e000003_bsh_common_option_energyforecast",
+    "waterEst": "sensor.siemens_sn658x06te_68a40e000003_bsh_common_option_waterforecast",
+    "door": "binary_sensor.siemens_sn658x06te_68a40e000003_bsh_common_status_doorstate",
+    "conn": "binary_sensor.siemens_sn658x06te_68a40e000003_connected",
+    "power_sw": "switch.siemens_sn658x06te_68a40e000003_bsh_common_setting_powerstate",
+    "start": "button.siemens_sn658x06te_68a40e000003_start_pause",
+    "stop": "button.siemens_sn658x06te_68a40e000003_stop"
+   }
+  }
+ }
+}

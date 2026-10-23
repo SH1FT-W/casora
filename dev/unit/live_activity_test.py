@@ -49,7 +49,7 @@ def washer(dev="d-washer"):
 
 
 def dish(dev="d-dish"):
-    return Found(dev, "dishwasher", "home_connect_alt", "sehr gut", {"state": "sensor.g_state", "program": "sensor.g_prog", "phase": "sensor.g_phase",
+    return Found(dev, "dishwasher", "homeconnect_ws", "sehr gut", {"state": "sensor.g_state", "program": "sensor.g_prog", "phase": "sensor.g_phase",
                                                                    "progress": "sensor.g_pct", "remaining": "sensor.g_rem", "start_in": "sensor.g_start"},
                  name="Geschirrspüler Test")
 
@@ -143,6 +143,14 @@ d = la.build_payload(s, "dishwasher", "G", "t", "/", False)["data"]
 check("Eingriff: rot, relevance 0.8", s.phase == "attn" and d["notification_icon_color"] == la.COLOR["attn"] and d["relevance_score"] == 0.8, d)
 check("Programmname aus Schlüssel", la.program_name("laundry_care_washer_program_delicates_silk", 1) == "Delicates"
       and la.program_name("laundry_care_dryer_program_towels", 0) == "Towels" and la.program_name("Baumwolle 40", 0) == "Baumwolle 40")
+# Home Connect Local (laundrycare_…) and Home Connect Alt (the Home Connect key with dots, translation mode local)
+check("Program name Home Connect Local/Alt", la.program_name("laundrycare_washer_program_cotton", 0) == "Cotton"
+      and la.program_name("LaundryCare.Washer.Program.Cotton", 0) == "Cotton"
+      and la.program_name("Dishcare.Dishwasher.Program.Eco50", 0) == "Eco 50°", la.program_name("LaundryCare.Washer.Program.Cotton", 0))
+alt = Found("d-alt", "dishwasher", "home_connect_alt", "ungetestet", {"state": "sensor.a_state", "program": "sensor.a_prog"}, name="G")
+st("sensor.a_state", "BSH.Common.EnumType.OperationState.Run"); st("sensor.a_prog", "Dishcare.Dishwasher.Program.Eco50")
+s = la.snapshot(alt, S.get, NOW, 0)
+check("Home Connect Alt: state as the Home Connect key", s.phase == "run" and s.program == "Eco 50°", s)
 
 # Robot vacuum: room as main value, done on docking with area/duration, stays
 st("vacuum.v", "cleaning"); st("sensor.v_status", "segment_cleaning"); st("sensor.v_room", "Küche"); st("sensor.v_pct", "40")

@@ -121,6 +121,23 @@
    "sensor.zaehler_leistung": "grid",
    "sensor.wechselrichter_ac_leistung": "solar",
    "sensor.speicher_leistung": "battery"
+  },
+  "energy_peers": {
+   "grid": "sensor.zaehler_leistung",
+   "solar": "sensor.wechselrichter_ac_leistung",
+   "battery": "sensor.speicher_leistung"
+  },
+  "energy_night": {
+   "states": {
+    "sensor.wechselrichter_ac_leistung": "unavailable",
+    "sensor.zaehler_leistung": "400",
+    "sensor.speicher_leistung": "300"
+   },
+   "home": "700 W",
+   "focus": {
+    "solar": "0 W",
+    "grid": "400 W"
+   }
   }
  },
  "energy_prefs": {

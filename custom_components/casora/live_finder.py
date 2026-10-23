@@ -63,6 +63,24 @@ def k(keys: str | list[str], domain: str = "sensor") -> dict[str, Any]:
     return {"keys": [keys] if isinstance(keys, str) else list(keys), "domain": domain}
 
 
+# Home Connect Alt (HACS) fixes its entity_ids as <domain>.<haid>_<Home Connect key>, with generic translation_keys:
+# these fields match the end of the entity_id, only on these platforms (as hk/tailHit in the JS).
+TAIL_PLATFORMS = ("home_connect_alt",)
+
+
+def hk(tails: str | list[str], domain: str = "sensor", keys: str | list[str] | None = None) -> dict[str, Any]:
+    spec = k(keys or [], domain)
+    spec["tail"] = [tails] if isinstance(tails, str) else list(tails)
+    return spec
+
+
+def _tail_hit(e: Ent, tails: list[str]) -> bool:
+    if e.platform not in TAIL_PLATFORMS:
+        return False
+    obj = e.entity_id.partition(".")[2]
+    return any(obj == t or obj.endswith("_" + t) for t in tails)
+
+
 def _has(ents: list[Ent], key: str, domain: str | None = None) -> bool:
     return any(e.key == key and (not domain or e.domain == domain) for e in ents)
 
@@ -95,6 +113,35 @@ def _hc_role(prog_keys: list[str]):
         return None
 
     return role
+
+
+def _alt_role(states, ents: list[Ent], model: str) -> str | None:
+    """Home Connect Alt: the program entities' icon is the appliance type, else program keys or option ids."""
+    progs = [e for e in ents if e.key == "programs" or _tail_hit(e, ["active_program", "selected_program", "programs"])]
+    icons = []
+    for e in progs:
+        st = states(e.entity_id)
+        icons.append(str(((st.attributes if st else {}) or {}).get("icon") or e.icon or ""))
+    icon = " ".join(icons)
+    if "tumble-dryer" in icon:
+        return "dryer"
+    if "washing-machine" in icon:
+        return "washer"
+    if "dishwasher" in icon:
+        return "dishwasher"
+    if re.search(r"coffee|stove|fridge|robot|hvac", icon):
+        return None
+    texts = [_opts(states, progs, ["programs"])]
+    for e in progs:
+        st = states(e.entity_id)
+        texts.append(str(getattr(st, "state", "") or "").lower())
+    texts += [e.entity_id for e in ents if e.platform in TAIL_PLATFORMS]
+    o = " ".join(texts)
+    if re.search(r"laundry_?care[._]washer", o):
+        return "washer"
+    if re.search(r"laundry_?care[._]dryer", o):
+        return "dryer"
+    return "dishwasher" if re.search(r"dishcare[._]dishwasher", o) else None
 
 
 def _miele_role(states, ents, model):
@@ -152,7 +199,14 @@ SOURCES: list[dict[str, Any]] = [
                 "select": k("selected_program", "select"), "remaining": k("program_finish_time"), "progress": k("program_progress"),
                 "door": k("door"), "pause": k("pause_program", "button"), "resume": k("resume_program", "button"),
                 "stop": k("stop_program", "button")}},
-    {"id": "home_connect_alt", "grade": GRADE_GOOD, "platforms": ["home_connect_alt", "homeconnect_ws"], "need": ["sensor_operation_state"],
+    {"id": "home_connect_alt", "grade": GRADE_UNTESTED, "platforms": ["home_connect_alt"], "need": None, "any": [],
+     "role": _alt_role,
+     "fields": {"state": hk("bsh_common_status_operationstate"), "program": hk(["active_program", "selected_program"]),
+                "select": hk("programs", "select"), "remaining": hk("bsh_common_option_remainingprogramtime"),
+                "progress": hk("bsh_common_option_programprogress"), "door": hk("bsh_common_status_doorstate", "binary_sensor"),
+                "stop": hk("stop", "button", "stop_program"), "pause": hk("start_pause", "button"),
+                "resume": hk("start_pause", "button")}},
+    {"id": "homeconnect_ws", "grade": GRADE_GOOD, "platforms": ["homeconnect_ws"], "need": ["sensor_operation_state"],
      "any": ["sensor_active_program", "select_program", "sensor_program_progress"],
      "role": _hc_role(["sensor_active_program", "select_program", "sensor_selected_program"]),
      "fields": {"state": k("sensor_operation_state"), "program": k(["sensor_active_program", "sensor_selected_program"]),
@@ -229,6 +283,10 @@ def _pick(ents: list[Ent], spec: dict[str, Any]) -> str | None:
     for key in spec["keys"]:
         for e in ents:
             if e.key == key and e.domain == spec["domain"]:
+                return e.entity_id
+    for tail in spec.get("tail") or []:
+        for e in ents:
+            if e.domain == spec["domain"] and _tail_hit(e, [tail]):
                 return e.entity_id
     return None
 

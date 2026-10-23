@@ -1,5 +1,6 @@
 // Dishwasher fields from the shared source table (00-finder.js casoraLaundryFind, `dish` per source), after #48:
-// the dishwasher kept its own key lists and missed what the washer already knew. Home Connect Alt by platform,
+// the dishwasher kept its own key lists and missed what the washer already knew. Home Connect Local (homeconnect_ws)
+// and Home Connect Alt (ekutner, entity_id ends) by platform,
 // card variables first, key before the German name, Miele (door by device class), roles (laundry lists stay
 // without dishwashers) and the Studio fields (find.dish) naming only fields the table knows.
 // All entities invented.   node dev/unit/dishwasher_sources.mjs
@@ -40,8 +41,8 @@ const merge = (...hs) => hs.reduce((a, h) => ({ entities: { ...a.entities, ...h.
   devices: { ...a.devices, ...h.devices } }), { entities: {}, states: {}, devices: {} });
 const resolve = (h, st, V = {}) => D.resolve({ entity_id: st }, V, h.states, h);
 
-// ── 1) Source home_connect_alt (HACS, sensor_* keys as in Home Connect WS) by platform, English ids: keys only ──
-const alt = house('alt', 'home_connect_alt', [
+// ── 1) Source homeconnect_ws (HACS Home Connect Local, sensor_* keys) by platform, English ids: keys only ──
+const alt = house('alt', 'homeconnect_ws', [
   ['sensor', 'state', 'sensor_operation_state'], ['sensor', 'program', 'sensor_active_program'],
   ['select', 'choice', 'select_program', { options: ['Dishcare.Dishwasher.Program.Eco50'] }], ['sensor', 'phase', 'sensor_program_phase'],
   ['sensor', 'pct', 'sensor_program_progress'], ['sensor', 'left', 'sensor_remaining_program_time'],
@@ -58,13 +59,58 @@ const want = { program: 'sensor.alt_program', sel: 'select.alt_choice', phase: '
   rinse: 'sensor.alt_rinse', door: 'binary_sensor.alt_door', conn: 'binary_sensor.alt_online', remote: 'select.alt_remote',
   startIn: 'number.alt_delay', power_sw: 'switch.alt_power', filterCheck: 'binary_sensor.alt_filter', start: 'button.alt_go',
   stop: 'button.alt_abort' };
-Object.entries(want).forEach(([k, v]) => assert.equal(c[k], v, 'Alt: ' + k));
+Object.entries(want).forEach(([k, v]) => assert.equal(c[k], v, 'WS: ' + k));
 assert.deepEqual(c.opts.map((o) => o[0]), ['switch.alt_extra', 'switch.alt_silence'], 'Alt: option switches');
 assert.deepEqual(c.probs.map((p) => p[0]), ['binary_sensor.alt_aqua'], 'Alt: problem sensors');
 assert.equal(c.light, null, 'Alt: missing field stays empty');
 assert.deepEqual(D.todo(c, alt.states).map((t) => t[0]), ['AquaStop ausgelöst', 'Salz nachfüllen'], 'Alt: todo from the found sensors');
-assert.equal(LF.dish(alt, 'sensor.alt_state').source, 'home_connect_alt', 'Alt: source by platform');
-console.log('ok Home Connect Alt');
+assert.equal(LF.dish(alt, 'sensor.alt_state').source, 'homeconnect_ws', 'WS: source by platform');
+console.log('ok Home Connect Local');
+
+// ── 1b) Home Connect Alt (ekutner/home-connect-hass): generic keys, entity_ids <domain>.<haid>_<Home Connect key> ──
+{
+  const ha = 'siemens_sn658x06te_68a40e000000';
+  const E = (dom, key, tk, state, attrs) => [dom + '.' + ha + '_' + key, tk, state, attrs || {}];
+  const list = [
+    E('sensor', 'bsh_common_status_operationstate', 'statuses', 'BSH.Common.EnumType.OperationState.Run'),
+    E('sensor', 'active_program', 'programs', 'Dishcare.Dishwasher.Program.Eco50', { icon: 'mdi:dishwasher' }),
+    E('select', 'programs', 'programs', 'Dishcare.Dishwasher.Program.Eco50', { options: ['Dishcare.Dishwasher.Program.Eco50'], icon: 'mdi:dishwasher' }),
+    E('sensor', 'bsh_common_option_programprogress', 'options', '40', { unit_of_measurement: '%' }),
+    E('sensor', 'bsh_common_option_remainingprogramtime', 'options', '2026-10-23T12:00:00+00:00', { device_class: 'timestamp' }),
+    E('sensor', 'bsh_common_option_energyforecast', 'options', '60', { unit_of_measurement: '%' }),
+    E('binary_sensor', 'bsh_common_status_doorstate', null, 'off', { device_class: 'door' }),
+    E('binary_sensor', 'connected', null, 'on', { device_class: 'connectivity' }),
+    E('switch', 'bsh_common_setting_powerstate', null, 'on'),
+    E('switch', 'dishcare_dishwasher_option_extradry', null, 'off'),
+    E('switch', 'dishcare_dishwasher_option_halfload', null, 'off'),
+    E('button', 'start_pause', 'pause_program', 'unknown'), E('button', 'stop', 'stop_program', 'unknown'),
+  ];
+  const h = { entities: {}, states: {}, devices: { ek: { name: 'Geschirrspüler' } } };
+  list.forEach(([id, tk, state, attrs]) => {
+    h.entities[id] = { entity_id: id, device_id: 'ek', platform: 'home_connect_alt', translation_key: tk };
+    h.states[id] = { state, attributes: attrs };
+  });
+  const st = 'sensor.' + ha + '_bsh_common_status_operationstate';
+  const cl = LF.classify(h, 'ek', ['dishwasher']);
+  assert.equal(cl && cl.role, 'dishwasher', 'Alt: role by the program icon');
+  assert.equal(cl.source, 'home_connect_alt');
+  assert.equal(cl.state, st, 'Alt: state by the entity_id end');
+  const c2 = resolve(h, st);
+  const w2 = { program: 'sensor.' + ha + '_active_program', sel: 'select.' + ha + '_programs',
+    progress: 'sensor.' + ha + '_bsh_common_option_programprogress', remaining: 'sensor.' + ha + '_bsh_common_option_remainingprogramtime',
+    energyEst: 'sensor.' + ha + '_bsh_common_option_energyforecast', door: 'binary_sensor.' + ha + '_bsh_common_status_doorstate',
+    conn: 'binary_sensor.' + ha + '_connected', power_sw: 'switch.' + ha + '_bsh_common_setting_powerstate',
+    start: 'button.' + ha + '_start_pause', stop: 'button.' + ha + '_stop' };
+  Object.entries(w2).forEach(([k, v]) => assert.equal(c2[k], v, 'Alt: ' + k));
+  assert.deepEqual(c2.opts.map((o) => o[0]), ['switch.' + ha + '_dishcare_dishwasher_option_extradry',
+    'switch.' + ha + '_dishcare_dishwasher_option_halfload'], 'Alt: option switches');
+  assert.equal(globalThis._casoraLaundry.state(h.states, st)[0], 'Läuft', 'Alt: Home Connect key as state');
+  // The same entity_id ends on another platform are not Home Connect Alt's.
+  const other = JSON.parse(JSON.stringify(h));
+  Object.values(other.entities).forEach((e) => { e.platform = 'template'; });
+  assert.equal(LF.classify(other, 'ek', ['dishwasher']), null, 'entity_id ends only on home_connect_alt');
+  console.log('ok Home Connect Alt');
+}
 
 // ── 2) Card variables win ──
 c = resolve(alt, 'sensor.alt_state', { entity_program: 'sensor.mine', entity_door: 'sensor.my_door', btn_stop: 'button.my_stop',
@@ -77,7 +123,7 @@ assert.equal(c.opts[0][0], 'switch.my_extra');
 console.log('ok variables first');
 
 // ── 3) German entity-id suffix only as a last resort ──
-const old = house('old', 'home_connect_alt', [
+const old = house('old', 'homeconnect_ws', [
   ['sensor', 'betriebszustand', null], ['sensor', 'salz', null], ['sensor', 'klarspuler', null],
   ['sensor', 'neu_salz_key', 'sensor_salt'],
 ]);

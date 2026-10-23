@@ -1,4 +1,4 @@
-// Sub-Badge-Popups (20-energie-fokus.js): Art je Sub-Badge und Anlage aus allen Badges.
+// Sub-badge popups (20-energie-fokus.js): kind per sub-badge and the system from all badges.
 import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
@@ -34,18 +34,18 @@ const V = {
   energy_entity_4: 'sensor.sb_netz', energy_entity_5: 'sensor.sb_soc',
 };
 
-// Erkennung über den Schlüssel der Integration
+// Detection by the integration's key
 assert.deepEqual([1, 2, 3, 4, 5].map((n) => F.detect(hass, V, n)), ['solar', 'battery', 'home', 'grid', 'battery']);
-// Ohne Schlüssel: Gerätetyp bzw. Name/Etikett; unbekannt → einfaches Popup
+// Without a key: device class or name/label; unknown → plain popup
 const bare = { states, entities: {} };
 assert.equal(F.detect(bare, V, 5), 'battery');
 assert.equal(F.detect(bare, { energy_entity_1: 'sensor.leistung_x', energy_label_1: 'Netz' }, 1), 'grid');
 assert.equal(F.detect(bare, { energy_entity_1: 'sensor.leistung_x' }, 1), null);
-// Studio-Feld gewinnt; „simple“ = altes Popup
+// The Studio field wins; "simple" = the old popup
 assert.equal(F.detect(hass, { ...V, energy_popup_focus_1: 'home' }, 1), 'home');
 assert.equal(F.detect(hass, { ...V, energy_popup_focus_1: 'simple' }, 1), null);
 
-// Anlage aus allen Sub-Badges
+// The system from all sub-badges
 const P = F.peers(hass, V);
 assert.equal(P.solar.power, 'sensor.sb_solar');
 assert.equal(P.solar.today, 'sensor.ertrag_heute');
@@ -54,7 +54,7 @@ assert.equal(P.battery.soc, 'sensor.sb_soc');
 assert.equal(P.home.power, 'sensor.sb_haus');
 assert.equal(P.grid.power, 'sensor.sb_netz');
 assert.equal(P.grid.costToday, 'sensor.kosten_heute');
-// Namen sind nur Rückfall, als ganze Wörter und nur bei Leistung/Prozent (Code-Review 15.10.).
+// Names are only a fallback, as whole words and only for power/percent (code review 15.10.).
 {
   const S2 = { ...states, 'sensor.k': st(80, 'W', 'power', 'Kühlschrank Verbrauch'), 'sensor.n': st(40, 'W', 'power', 'Netzwerkschrank'),
     'sensor.hs': st(30, 'W', 'power', 'Homeserver Power'), 'sensor.ws': st(2, 'kW', 'power', 'Warmwasserspeicher'),
@@ -82,7 +82,7 @@ assert.equal(P.grid.costToday, 'sensor.kosten_heute');
   assert.equal(d4('sensor.stp_8000tl_20_grid_power'), 'solar', 'SMA grid power = inverter output');
   assert.equal(d4('sensor.sma_metering_power_absorbed'), 'grid', 'SMA metering = grid');
   assert.equal(d4('sensor.stromzahler_emh_power_curr'), 'grid', 'stromzahler = grid');
-  // Eigener Sensor ist Hauptwert: zweites Solar-Badge zeigt seinen Wert, nicht den des ersten.
+  // The own sensor is the main value: a second solar badge shows its value, not the first one's.
   const C = F.model({ states: S2, entities: {} }, 'solar', F.peers(hass, V), 'sensor.pv2');
   assert.equal(C.solar, 'sensor.pv2');
 }
@@ -111,6 +111,36 @@ assert.equal(P.grid.costToday, 'sensor.kosten_heute');
   assert.equal(d5('sensor.leistung_x'), null, 'not in the settings: rules as before');
   // The export meter for the grid popup comes from the same settings.
   assert.equal(F.peers(h5, {}).grid.exportTotal, 'sensor.einspeisung_gesamt');
+  // Without sub-badges the system comes from the settings too: one sensor per role. Two solar sources: none
+  // (one alone would be half the solar power), the Anker key fills in as before.
+  const P5 = F.peers(h5, {});
+  assert.equal(P5.grid.power, 'sensor.stromzahler_emh_power_curr', 'peers: grid from the settings');
+  assert.equal(P5.battery.power, 'sensor.speicher_leistung', 'peers: battery from the settings');
+  assert.equal(P5.solar.power, 'sensor.sb_solar', 'peers: two solar sources in the settings, the Anker key');
+  // A sub-badge and a Studio field still win over the settings.
+  assert.equal(F.peers(h5, { energy_entity_1: 'sensor.sb_akku' }).battery.power, 'sensor.sb_akku', 'sub-badge wins');
+  assert.equal(F.peers(h5, { energy_entity_1: 'sensor.sb_soc', energy_popup_power_1: 'sensor.sb_akku' }).battery.power,
+    'sensor.sb_akku', 'Studio field wins');
+}
+
+// #44 night: a solar or battery sensor of the settings that is unavailable is an inverter asleep (0 W) in the
+// popup hero; one outside the settings still shows no value.
+{
+  win._casoraUI = { hero: (o) => o };
+  const S6 = { ...states, 'sensor.pv_ac': st('unavailable', 'W', 'power', 'PV AC'), 'sensor.akku_p': st('unknown', 'W', 'power', 'Akku P'),
+    'sensor.zaehler_p': st(400, 'W', 'power', 'Zähler P'), 'sensor.fremd_pv': st('unavailable', 'W', 'power', 'Balkon PV') };
+  const h6 = { states: S6, entities: {}, callWS: async () => ({ energy_sources: [
+    { type: 'grid', stat_rate: 'sensor.zaehler_p' }, { type: 'solar', stat_rate: 'sensor.pv_ac' },
+    { type: 'battery', stat_rate: 'sensor.akku_p' }] }) };
+  await win.casoraEnergyPrefs.load(h6, true);
+  const P6 = F.peers(h6, {});
+  assert.deepEqual([P6.grid.power, P6.solar.power, P6.battery.power], ['sensor.zaehler_p', 'sensor.pv_ac', 'sensor.akku_p']);
+  const solarHero = F.sec('hero', F.model(h6, 'solar', P6, null), S6, h6);
+  assert.equal(solarHero.value, '0 W', 'sleeping inverter: 0 W');
+  assert.match(solarHero.sub, /Liefert gerade nichts/);
+  assert.equal(F.sec('hero', F.model(h6, 'battery', P6, null), S6, h6).value, '0 W', 'sleeping battery: 0 W');
+  const other = F.model(h6, 'solar', { ...P6, solar: { power: 'sensor.fremd_pv' } }, null);
+  assert.equal(F.sec('hero', other, S6, h6).value, '—', 'not in the settings: no value');
 }
 
 console.log('ok energie_fokus');

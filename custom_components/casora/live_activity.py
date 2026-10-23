@@ -137,7 +137,11 @@ PROGRAM = {
     "laundry_care_dryer_program_cotton": ("Baumwolle", "Cotton"), "laundry_care_dryer_program_synthetic": ("Pflegeleicht", "Synthetics"),
     "laundry_care_dryer_program_mix": ("Mix", "Mix"),
 }
-PROGRAM_PREFIX = re.compile(r"^(laundry_care_(washer|dryer)_program_|dishcare_dishwasher_program_)")
+# HA core: laundry_care_washer_program_…; Home Connect Local: laundrycare_washer_program_…; Home Connect Alt: the
+# Home Connect key with dots (LaundryCare.Washer.Program.Cotton), compared with the dots as underscores.
+PROGRAM_PREFIX = re.compile(r"^(laundry_?care_(washer|dryer|washerdryer)_program_|dishcare_dishwasher_program_)")
+# Home Connect Alt (HACS): the operation state as the Home Connect key (BSH.Common.EnumType.OperationState.Run).
+OPERATION_STATE_PREFIX = "bsh.common.enumtype.operationstate."
 
 # Robot vacuum: status sensor (Roborock) → text; while cleaning, the room is the main value.
 VAC_CLEANING = {"cleaning", "segment_cleaning", "zoned_cleaning", "spot_cleaning", "robot_status_mopping", "segment_mopping",
@@ -284,6 +288,8 @@ def _clean(st) -> str:
 
 def program_name(raw: str, lang: int) -> str:
     key = raw.strip().lower()
+    if re.fullmatch(r"(laundrycare|dishcare)(\.[a-z0-9]+)+", key):
+        key = key.replace(".", "_")
     if key in PROGRAM:
         return PROGRAM[key][lang]
     if key in NOPROG:
@@ -318,7 +324,7 @@ def snapshot(found: Found, get: Callable[[str], Any], now: datetime, lang: int, 
 def _snap_appliance(found: Found, g, now: datetime, lang: int) -> Snap:
     if _gone(g("state")):
         return Snap(phase="gone")
-    raw = str(getattr(g("state"), "state", "") or "").lower()
+    raw = str(getattr(g("state"), "state", "") or "").lower().removeprefix(OPERATION_STATE_PREFIX)
     ph = STATE_PHASE.get(raw, "off")
     s = Snap(phase=ph, tentative=raw == "starting")
     if ph == "off":

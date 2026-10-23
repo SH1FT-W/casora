@@ -1,0 +1,290 @@
+{
+ "quelle": "Home Connect Alt (HACS, ekutner/home-connect-hass 1.5.0-b1), Waschmaschine im Übersetzungsmodus „local“ und Kaffeevollautomat; Entitäten nach common.py/sensor.py/select.py/button.py/binary_sensor.py/const.py, erfunden",
+ "areas": {
+  "bad": {
+   "area_id": "bad",
+   "name": "Bad"
+  },
+  "kueche": {
+   "area_id": "kueche",
+   "name": "Küche"
+  }
+ },
+ "devices": {
+  "d_wm": {
+   "id": "d_wm",
+   "name": "Waschmaschine",
+   "manufacturer": "Bosch",
+   "model": "WAV28K00",
+   "area_id": "bad"
+  },
+  "d_km": {
+   "id": "d_km",
+   "name": "Kaffeevollautomat",
+   "manufacturer": "Siemens",
+   "model": "TI9575X1DE",
+   "area_id": "kueche"
+  },
+  "d_hc": {
+   "id": "d_hc",
+   "name": "Home Connect Service",
+   "manufacturer": "BSH",
+   "area_id": null
+  }
+ },
+ "entities": {
+  "sensor.bosch_wav28k00_68a40e000001_bsh_common_status_operationstate": {
+   "entity_id": "sensor.bosch_wav28k00_68a40e000001_bsh_common_status_operationstate",
+   "device_id": "d_wm",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "statuses"
+  },
+  "sensor.bosch_wav28k00_68a40e000001_active_program": {
+   "entity_id": "sensor.bosch_wav28k00_68a40e000001_active_program",
+   "device_id": "d_wm",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "programs"
+  },
+  "sensor.bosch_wav28k00_68a40e000001_selected_program": {
+   "entity_id": "sensor.bosch_wav28k00_68a40e000001_selected_program",
+   "device_id": "d_wm",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "programs"
+  },
+  "select.bosch_wav28k00_68a40e000001_programs": {
+   "entity_id": "select.bosch_wav28k00_68a40e000001_programs",
+   "device_id": "d_wm",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "programs"
+  },
+  "sensor.bosch_wav28k00_68a40e000001_bsh_common_option_remainingprogramtime": {
+   "entity_id": "sensor.bosch_wav28k00_68a40e000001_bsh_common_option_remainingprogramtime",
+   "device_id": "d_wm",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "options"
+  },
+  "sensor.bosch_wav28k00_68a40e000001_bsh_common_option_programprogress": {
+   "entity_id": "sensor.bosch_wav28k00_68a40e000001_bsh_common_option_programprogress",
+   "device_id": "d_wm",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "options"
+  },
+  "select.bosch_wav28k00_68a40e000001_laundrycare_washer_option_temperature": {
+   "entity_id": "select.bosch_wav28k00_68a40e000001_laundrycare_washer_option_temperature",
+   "device_id": "d_wm",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "options"
+  },
+  "binary_sensor.bosch_wav28k00_68a40e000001_bsh_common_status_doorstate": {
+   "entity_id": "binary_sensor.bosch_wav28k00_68a40e000001_bsh_common_status_doorstate",
+   "device_id": "d_wm",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": null
+  },
+  "binary_sensor.bosch_wav28k00_68a40e000001_connected": {
+   "entity_id": "binary_sensor.bosch_wav28k00_68a40e000001_connected",
+   "device_id": "d_wm",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": null
+  },
+  "button.bosch_wav28k00_68a40e000001_start_pause": {
+   "entity_id": "button.bosch_wav28k00_68a40e000001_start_pause",
+   "device_id": "d_wm",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "pause_program"
+  },
+  "button.bosch_wav28k00_68a40e000001_stop": {
+   "entity_id": "button.bosch_wav28k00_68a40e000001_stop",
+   "device_id": "d_wm",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "stop_program"
+  },
+  "sensor.siemens_ti9575x1de_68a40e000002_bsh_common_status_operationstate": {
+   "entity_id": "sensor.siemens_ti9575x1de_68a40e000002_bsh_common_status_operationstate",
+   "device_id": "d_km",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "statuses"
+  },
+  "select.siemens_ti9575x1de_68a40e000002_programs": {
+   "entity_id": "select.siemens_ti9575x1de_68a40e000002_programs",
+   "device_id": "d_km",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "programs"
+  },
+  "sensor.homeconnect_status": {
+   "entity_id": "sensor.homeconnect_status",
+   "device_id": "d_hc",
+   "area_id": null,
+   "platform": "home_connect_alt",
+   "translation_key": "homeconnect_status"
+  }
+ },
+ "states": {
+  "sensor.bosch_wav28k00_68a40e000001_bsh_common_status_operationstate": {
+   "entity_id": "sensor.bosch_wav28k00_68a40e000001_bsh_common_status_operationstate",
+   "state": "BSH.Common.EnumType.OperationState.Run",
+   "attributes": {
+    "device_class": "home_connect_alt__status",
+    "icon": "mdi:gauge-full",
+    "friendly_name": "Bosch Waschmaschine - Operation State"
+   }
+  },
+  "sensor.bosch_wav28k00_68a40e000001_active_program": {
+   "entity_id": "sensor.bosch_wav28k00_68a40e000001_active_program",
+   "state": "LaundryCare.Washer.Program.Cotton",
+   "attributes": {
+    "device_class": "home_connect_alt__programs",
+    "icon": "mdi:washing-machine",
+    "friendly_name": "Bosch Waschmaschine - Active Program"
+   }
+  },
+  "sensor.bosch_wav28k00_68a40e000001_selected_program": {
+   "entity_id": "sensor.bosch_wav28k00_68a40e000001_selected_program",
+   "state": "LaundryCare.Washer.Program.Cotton",
+   "attributes": {
+    "device_class": "home_connect_alt__programs",
+    "icon": "mdi:washing-machine",
+    "friendly_name": "Bosch Waschmaschine - Selected Program"
+   }
+  },
+  "select.bosch_wav28k00_68a40e000001_programs": {
+   "entity_id": "select.bosch_wav28k00_68a40e000001_programs",
+   "state": "LaundryCare.Washer.Program.Cotton",
+   "attributes": {
+    "options": [
+     "LaundryCare.Washer.Program.Cotton",
+     "LaundryCare.Washer.Program.EasyCare",
+     "LaundryCare.Washer.Program.Mix"
+    ],
+    "icon": "mdi:washing-machine",
+    "friendly_name": "Bosch Waschmaschine - Programs"
+   }
+  },
+  "sensor.bosch_wav28k00_68a40e000001_bsh_common_option_remainingprogramtime": {
+   "entity_id": "sensor.bosch_wav28k00_68a40e000001_bsh_common_option_remainingprogramtime",
+   "state": "2026-10-23T13:05:00+00:00",
+   "attributes": {
+    "device_class": "timestamp",
+    "icon": "mdi:office-building-cog",
+    "friendly_name": "Bosch Waschmaschine - Remaining program time"
+   }
+  },
+  "sensor.bosch_wav28k00_68a40e000001_bsh_common_option_programprogress": {
+   "entity_id": "sensor.bosch_wav28k00_68a40e000001_bsh_common_option_programprogress",
+   "state": "35",
+   "attributes": {
+    "unit_of_measurement": "%",
+    "device_class": "home_connect_alt__options",
+    "friendly_name": "Bosch Waschmaschine - Program progress"
+   }
+  },
+  "select.bosch_wav28k00_68a40e000001_laundrycare_washer_option_temperature": {
+   "entity_id": "select.bosch_wav28k00_68a40e000001_laundrycare_washer_option_temperature",
+   "state": "LaundryCare.Washer.EnumType.Temperature.GC40",
+   "attributes": {
+    "options": [
+     "LaundryCare.Washer.EnumType.Temperature.GC30",
+     "LaundryCare.Washer.EnumType.Temperature.GC40"
+    ],
+    "friendly_name": "Bosch Waschmaschine - Temperature"
+   }
+  },
+  "binary_sensor.bosch_wav28k00_68a40e000001_bsh_common_status_doorstate": {
+   "entity_id": "binary_sensor.bosch_wav28k00_68a40e000001_bsh_common_status_doorstate",
+   "state": "off",
+   "attributes": {
+    "device_class": "door",
+    "friendly_name": "Bosch Waschmaschine - Door State"
+   }
+  },
+  "binary_sensor.bosch_wav28k00_68a40e000001_connected": {
+   "entity_id": "binary_sensor.bosch_wav28k00_68a40e000001_connected",
+   "state": "on",
+   "attributes": {
+    "device_class": "connectivity",
+    "friendly_name": "Bosch Waschmaschine - Connected"
+   }
+  },
+  "button.bosch_wav28k00_68a40e000001_start_pause": {
+   "entity_id": "button.bosch_wav28k00_68a40e000001_start_pause",
+   "state": "unknown",
+   "attributes": {
+    "icon": "mdi:pause",
+    "friendly_name": "Bosch Waschmaschine - Pause"
+   }
+  },
+  "button.bosch_wav28k00_68a40e000001_stop": {
+   "entity_id": "button.bosch_wav28k00_68a40e000001_stop",
+   "state": "unknown",
+   "attributes": {
+    "icon": "mdi:stop",
+    "friendly_name": "Bosch Waschmaschine - Stop"
+   }
+  },
+  "sensor.siemens_ti9575x1de_68a40e000002_bsh_common_status_operationstate": {
+   "entity_id": "sensor.siemens_ti9575x1de_68a40e000002_bsh_common_status_operationstate",
+   "state": "BSH.Common.EnumType.OperationState.Ready",
+   "attributes": {
+    "device_class": "home_connect_alt__status",
+    "friendly_name": "Siemens Kaffeevollautomat - Operation State"
+   }
+  },
+  "select.siemens_ti9575x1de_68a40e000002_programs": {
+   "entity_id": "select.siemens_ti9575x1de_68a40e000002_programs",
+   "state": "unknown",
+   "attributes": {
+    "options": [
+     "ConsumerProducts.CoffeeMaker.Program.Beverage.Espresso",
+     "ConsumerProducts.CoffeeMaker.Program.Beverage.Cappuccino"
+    ],
+    "icon": "mdi:coffee-maker",
+    "friendly_name": "Siemens Kaffeevollautomat - Programs"
+   }
+  },
+  "sensor.homeconnect_status": {
+   "entity_id": "sensor.homeconnect_status",
+   "state": "READY",
+   "attributes": {
+    "friendly_name": "Home Connect Service Status"
+   }
+  }
+ },
+ "expect": {
+  "laundry": [
+   {
+    "entity": "sensor.bosch_wav28k00_68a40e000001_bsh_common_status_operationstate",
+    "role": "washer",
+    "source": "home_connect_alt",
+    "state_text": "Läuft",
+    "fields": {
+     "state": "sensor.bosch_wav28k00_68a40e000001_bsh_common_status_operationstate",
+     "program": "sensor.bosch_wav28k00_68a40e000001_active_program",
+     "select": "select.bosch_wav28k00_68a40e000001_programs",
+     "remaining": "sensor.bosch_wav28k00_68a40e000001_bsh_common_option_remainingprogramtime",
+     "progress": "sensor.bosch_wav28k00_68a40e000001_bsh_common_option_programprogress",
+     "door": "binary_sensor.bosch_wav28k00_68a40e000001_bsh_common_status_doorstate",
+     "pause": "button.bosch_wav28k00_68a40e000001_start_pause",
+     "resume": "button.bosch_wav28k00_68a40e000001_start_pause",
+     "stop": "button.bosch_wav28k00_68a40e000001_stop"
+    }
+   }
+  ],
+  "not_laundry": [
+   "sensor.siemens_ti9575x1de_68a40e000002_bsh_common_status_operationstate",
+   "sensor.homeconnect_status"
+  ]
+ }
+}
