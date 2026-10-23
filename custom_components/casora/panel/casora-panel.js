@@ -2725,6 +2725,17 @@ function fixHomePower(hass, rooms) {
   const B = typeof window !== "undefined" && window.casoraBasis;
   const V = rooms && rooms[0] && rooms[0].variables;
   if (!B || !B.wrongHousePower || !B.oldHouseTotal || !hass || !V || V.show_energy === false || !V.energy_power_entity) return false;
+  // Casora's own pick that the house search no longer takes (a peak or period value such as "Netzbezugs-Spitze
+  // heute", Westerloer in #44): pick again, else the rooms' sum. Only while the marker says Casora chose it.
+  if (V.casora_energy_auto === "house" && B.housePowerOk && hass.states && hass.states[V.energy_power_entity]
+    && !B.housePowerOk(hass, V.energy_power_entity)) {
+    const again = B.housePower(hass);
+    if (again) { V.energy_power_entity = again; return true; }
+    delete V.energy_power_entity;
+    V.casora_energy_auto = 2;
+    fillHomeEnergy(hass, rooms);
+    return true;
+  }
   if (V.casora_energy_auto !== undefined) return false;
   if (Array.isArray(V.energy_entities) && V.energy_entities.some(Boolean)) return false;
   const id = V.energy_power_entity;
@@ -2749,6 +2760,9 @@ function fixHomePower(hass, rooms) {
 function homeEnergyEdit(V, key, value) {
   if (!V || !/^energy_(power_entity|entities|exclude)$/.test(key)) return;
   if (key === "energy_power_entity" && value && V.casora_energy_auto === 2) delete V.energy_entities;
+  // House sensor cleared without a list of one's own: Home sums the rooms again (it used to hide the badge).
+  const ownList = V.casora_energy_auto !== 2 && Array.isArray(V.energy_entities) && V.energy_entities.some(Boolean);
+  if (key === "energy_power_entity" && !value && !ownList) { V.casora_energy_auto = 2; return; }
   V.casora_energy_auto = false;
 }
 
@@ -17746,6 +17760,8 @@ class CasoraPanel extends HTMLElement {
           if (value === undefined || value === "" || (Array.isArray(value) && !value.length)) delete r.variables[key];
           else r.variables[key] = value;
         });
+        // The house sensor was cleared: fill the rooms' sum right away (homeEnergyEdit set the marker).
+        if (key === "energy_power_entity" && !value) fillHomeEnergy(this._hass, this._state.compact.rooms);
         this._mirrorToPair(key, value, rooms);
       };
 

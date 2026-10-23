@@ -411,7 +411,10 @@
   // #44: a "total" of a device, in an area or named after one ("Wohnzimmer Gesamt") is that
   // device's or room's total, never the house.
   const HOUSE_POWER = [/hausbedarf|hausverbrauch|haus.?leistung|house.?(power|consumption)|home.?(power|consumption)/i,
-    /gesamt|total/i, /netzbezug|grid|smart.?meter|stromz(ä|ae)hler/i];
+    /gesamt|total/i, /netzbezug|grid|smart.?meter|stromz(ä|ae|a)hler/i];
+  // #44 (Westerloer): a peak, average or period value is no live house consumption ("Netzbezugs-Spitze heute",
+  // "Grundlast", "Überschuss letzte Stunde" of a PV statistics integration).
+  const NOT_LIVE = /spitze|peak|maxim|minim|(^|[_\s.])(max|min)([_\s.]|$)|mittel|durchschnitt|average|\bavg|_avg|mean|heute|today|gestern|yesterday|stunde|hour|woche|week|monat|month|jahr|year|grundlast|base.?load|prognose|forecast|vorhersage|(ü|ue)berschuss|surplus/i;
   const HOUSE_AREA = /^(haus|house|home|zuhause|wohnung)$/;
   const houseLabel = (S, id) => id + " " + (((S[id] || {}).attributes || {}).friendly_name || "");
   // Words of a name, umlauts both ways (friendly name "Küche", entity ID "kuche"/"kueche").
@@ -430,11 +433,17 @@
     return hit ? hit.name : null;
   }
   // Power sensors that may be the house: device class power, a number, no diagnostic entity.
-  const housePowers = (hass) => {
+  const anyPowers = (hass) => {
     const S = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
     return Object.keys(S).filter((id) => id.startsWith("sensor.") && ((S[id].attributes || {}).device_class) === "power"
       && Number.isFinite(parseFloat(S[id].state)) && !((R[id] || {}).entity_category));
   };
+  const housePowers = (hass) => {
+    const S = (hass && hass.states) || {};
+    return anyPowers(hass).filter((id) => !NOT_LIVE.test(houseLabel(S, id)));
+  };
+  // May this sensor be the house at all (live power, no peak or period value)?
+  const housePowerOk = (hass, id) => housePowers(hass).includes(id);
   // A meter, not a consumer: its "total" is the house, wherever the device sits. Phase sensors on the
   // device (three phase clamp), or a single phase meter: nothing to switch on the device (a plug has
   // a switch) and returned/exported energy, voltage with power factor or frequency, or a meter model.
@@ -468,7 +477,7 @@
   // The rule before #44, only where it differs: the first "total" when nothing matched stage 1.
   // fixHomePower touches a Home sensor only when it is exactly this pick.
   function oldHouseTotal(hass) {
-    const S = (hass && hass.states) || {}, powers = housePowers(hass);
+    const S = (hass && hass.states) || {}, powers = anyPowers(hass);
     if (powers.some((p) => HOUSE_POWER[0].test(houseLabel(S, p)))) return null;
     return powers.find((p) => HOUSE_POWER[1].test(houseLabel(S, p))) || null;
   }
@@ -647,7 +656,7 @@
       any: (room.powersAny || []).slice() };
   }
 
-  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, openings, isCombo };
+  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, openings, isCombo };
 
   // KI kostet: Casora schätzt vor dem ersten Einsatz grob, was es über den API-Schlüssel
   // kostet (Zeichen → Token, Listenpreise je Modellfamilie in USD pro 1 Mio. Token) und fragt nach.

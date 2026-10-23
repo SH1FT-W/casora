@@ -305,4 +305,49 @@ const ROOM_IDS = ['sensor.fernseher_power', 'sensor.stehlampe_power', 'sensor.ku
   assert.equal(X.casora_energy_auto, 2, 'other fields: still automatic');
 }
 
+// 11. Westerloer (#44): a PV statistics integration's peak/period values are no house consumption; the meter's
+//     entity ID writes "stromzahler" without umlaut. Casora's own pick of such a value is picked again; clearing
+//     the house sensor in the Studio gives the rooms' sum instead of hiding the badge.
+{
+  const { h, ent, dev } = house();
+  delete h.states['sensor.wohnzimmer_gesamtleistung'];
+  delete h.states['sensor.pumpe_total_power'];
+  dev('d_pv', null, 'PV-Anlage');
+  ent('sensor.pv_netzbezugs_spitze_heute', { dev: 'd_pv', name: 'Netzbezugs-Spitze heute', state: '1700' });
+  ent('sensor.pv_grundlast', { dev: 'd_pv', name: 'Grundlast', state: '300' });
+  ent('sensor.pv_uberschuss_letzte_stunde', { dev: 'd_pv', name: 'Überschuss letzte Stunde', state: '-100' });
+  same(h, null, 'peak and period values are not the house');
+  dev('d_ir', null, 'Tasmota');
+  ent('sensor.stromzahler_emh_power_curr', { dev: 'd_ir', name: 'Wirkleistung (W)', state: '424' });
+  same(h, 'sensor.stromzahler_emh_power_curr', 'meter without umlaut in the entity ID');
+  assert.equal(B.housePowerOk(h, 'sensor.pv_netzbezugs_spitze_heute'), false);
+  // Casora picked the peak (marker "house"): picked again on the next Studio load.
+  const rooms = () => [{ name: 'Home', path: 'home', variables: { energy_power_entity: 'sensor.pv_netzbezugs_spitze_heute', casora_energy_auto: 'house' } },
+    { name: 'Wohnzimmer', path: 'wohnzimmer', variables: { energy_entities: ['sensor.fernseher_power', 'sensor.stehlampe_power'] } },
+    { name: 'Küche', path: 'kuche', variables: { energy_entities: ['sensor.kuhlschrank_power'] } }];
+  let r = rooms();
+  assert.equal(fixHomePower(h, r), true);
+  assert.equal(r[0].variables.energy_power_entity, 'sensor.stromzahler_emh_power_curr', 'own pick replaced by the meter');
+  // Without the meter: the rooms' sum.
+  delete h.states['sensor.stromzahler_emh_power_curr'];
+  r = rooms();
+  assert.equal(fixHomePower(h, r), true);
+  assert.equal(r[0].variables.energy_power_entity, undefined);
+  assert.deepEqual(sorted(r[0].variables.energy_entities), sorted(['sensor.fernseher_power', 'sensor.stehlampe_power', 'sensor.kuhlschrank_power']));
+  // The user's own choice of the same peak stays.
+  r = rooms(); r[0].variables.casora_energy_auto = false;
+  assert.equal(fixHomePower(h, r), false);
+  // Clearing the house sensor in the Studio: marker 2, the sum follows the rooms.
+  r = rooms(); r[0].variables.casora_energy_auto = false;
+  homeEnergyEdit(r[0].variables, 'energy_power_entity', undefined);
+  delete r[0].variables.energy_power_entity;
+  assert.equal(r[0].variables.casora_energy_auto, 2, 'cleared: Casora sums again');
+  assert.equal(fillHomeEnergy(h, r), 1);
+  assert.equal(r[0].variables.energy_entities.length, 3, 'sum of the rooms after clearing');
+  // A hand-made list stays the user's.
+  r = rooms(); r[0].variables.casora_energy_auto = false; r[0].variables.energy_entities = ['sensor.fernseher_power'];
+  homeEnergyEdit(r[0].variables, 'energy_power_entity', undefined);
+  assert.equal(r[0].variables.casora_energy_auto, false, 'own list: stays the user\'s');
+}
+
 console.log('house_power: ok');
