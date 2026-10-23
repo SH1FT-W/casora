@@ -118,11 +118,11 @@ window._casoraSceneRepaint = function () {
     });
   }, 'lovelace_updated').catch(function () { window._casoraSceneWatch = false; });
 })();
-/* Leistung fürs Energie-Badge, wenn die Badge selbst keinen Sensor bekommt (03.10.2026):
-   Handy-Badge-Reihe und Räume, in denen Energie nur über Verbrauch/Kosten/Geräte an ist,
-   zeigten nur „Energie“ ohne Wert und waren dadurch niedriger. Reihenfolge: die
-   Energie-Kachel (casora_energy) der aktuellen Ansicht – dieselbe Zahl wie dort –, auf Home
-   bzw. am Handy sonst der Hausverbrauch wie beim Einrichten (hausbedarf → gesamt → Netz). */
+/* Power for the energy badge when the badge itself gets no sensor (03.10.2026): the phone's
+   badge row and rooms where energy is on only through usage/cost/devices showed just „Energie“
+   without a value and were lower for it. Order: the energy tile (casora_energy) of the current
+   view, the same number as there; on Home or on the phone else the house consumption as in the
+   setup (hausbedarf, then gesamt, then grid). */
 window._casoraHousePower = function () {
   try {
     var ha = document.querySelector('home-assistant');
@@ -156,7 +156,7 @@ window._casoraHousePower = function () {
     }
     var hit = (window._casoraHPTiles || []).find(isPower);
     if (hit) return hit;
-    // Hausverbrauch nur für Home (erste Ansicht) bzw. das Handy (eine Ansicht), nicht für Räume.
+    // House consumption only for Home (first view) or the phone (one view), not for rooms.
     if (cfg && vi !== 0 && views.length > 1) return null;
     var c = window._casoraHPGuess;
     if (c && Date.now() - c.t < 60000 && (c.id === null || isPower(c.id))) return c.id;
@@ -167,8 +167,38 @@ window._casoraHousePower = function () {
         && isFinite(parseFloat(S[id].state)) && !((R[id] || {}).entity_category);
     });
     var id = null;
+    /* #44: a "total" of a device, in an area or named after one is the total of that device or
+       room, never the house (same rule as housePower in panel/casora-panel-basis.js). */
+    var A = hass.areas || {};
+    var words = function (t) {
+      var l = String(t || '').toLowerCase();
+      return [l.replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss'),
+        l.replace(/ä/g, 'a').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ß/g, 'ss')]
+        .map(function (x) { return ' ' + x.replace(/[^a-z0-9]+/g, ' ').trim() + ' '; });
+    };
+    /* A meter with phase sensors on its device: its "total" is the house (phaseMeter there). */
+    var phaseMeter = function (p) {
+      var dev = (R[p] || {}).device_id;
+      return !!dev && Object.keys(R).some(function (x) {
+        return x !== p && R[x] && R[x].device_id === dev && x.indexOf('sensor.') === 0
+          && /phase|(^|[_\s])l[123]([_\s]|$)/i.test(x + ' ' + (((S[x] || {}).attributes || {}).friendly_name || ''));
+      });
+    };
+    var owned = function (p) {
+      var e = R[p];
+      if (phaseMeter(p)) return false;
+      if (e && (e.device_id || e.area_id)) return true;
+      var label = words(p + ' ' + ((S[p].attributes || {}).friendly_name || ''));
+      return Object.keys(A).some(function (k) {
+        var n = A[k] && A[k].name;
+        if (!n || /^(haus|house|home|zuhause|wohnung)$/.test(words(n)[0].trim())) return false;
+        return words(n).some(function (w) { return w.trim() && label.some(function (x) { return x.indexOf(w) >= 0; }); });
+      });
+    };
     for (var i = 0; i < HOUSE.length && !id; i++) {
-      id = powers.find(function (p) { return HOUSE[i].test(p + ' ' + ((S[p].attributes || {}).friendly_name || '')); }) || null;
+      id = powers.find(function (p) {
+        return HOUSE[i].test(p + ' ' + ((S[p].attributes || {}).friendly_name || '')) && !(i === 1 && owned(p));
+      }) || null;
     }
     window._casoraHPGuess = { t: Date.now(), id: id };
     return id;
