@@ -11,6 +11,11 @@
 #   tools/release.sh 26.10.31 --same-whats-new   WHATS_NEW darf wie beim letzten Release sein
 #   tools/release.sh 26.10.32 --andere-version   Version weicht bewusst von tools/next-version ab
 #   tools/release.sh 26.10.32 --patch   echter Notfall-Hotfix: Patch-Gate (dev/qa/gate.sh --patch) zugelassen
+#   tools/release.sh --beta [--publish] Beta für Tester: nächste Nummer mit bK (26.10.58b1, b2 …), Vorabversion auf
+#                                       GitHub (HACS „Beta-Versionen“, Studio → Updates → Beta-Versionen). Patch-Gate
+#                                       reicht; Pflicht nur .qa/release-notes-<version>.md (englisch, von Hand);
+#                                       kein CHANGELOG/WHATS_NEW/Website. Gepusht wird nur der Tag, main nicht –
+#                                       die Website zeigt weiter die stabile Version. Betas zählen nicht als Nummer.
 #                                       – nie automatisch, Standard bleibt das volle Gate
 #
 # Prüft: Version im Schema YY.M.N und = tools/next-version, sauberer Arbeitsstand, .qa/gate-<HEAD>.json
@@ -24,13 +29,14 @@ set -eu
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO"
 
-VER=""; PUBLISH=0; SAME_WN=0; OTHER_VER=0; PATCH=""
+VER=""; PUBLISH=0; SAME_WN=0; OTHER_VER=0; PATCH=""; BETA=0
 for a in "$@"; do
   case "$a" in
     --publish) PUBLISH=1 ;;
     --same-whats-new) SAME_WN=1 ;;
     --andere-version) OTHER_VER=1 ;;
     --patch) PATCH="--patch" ;;
+    --beta) BETA=1 ;;
     -h|--help) sed -n '2,23p' "$0"; exit 0 ;;
     -*) echo "Unbekannte Option: $a" >&2; exit 2 ;;
     *) VER="${a#v}" ;;
@@ -42,10 +48,19 @@ ok() { echo "✓ $*"; }
 
 # 0) Version: Kalender-Schema YY.M.N, Vorschlag aus tools/next-version (zählt die GitHub-Releases des Monats)
 NEXT="$(tools/next-version)" || fail "tools/next-version fehlgeschlagen"
-if [ -z "$VER" ]; then
+if [ $BETA = 1 ]; then
+  # Beta: bK hinter der nächsten Nummer, K = höchste schon vergebene Beta dieser Nummer + 1.
+  git fetch -q --tags origin 2>/dev/null || true
+  K=$(git tag -l "v${NEXT}b*" | sed -n "s/^v${NEXT}b\([0-9][0-9]*\)$/\1/p" | sort -n | tail -1)
+  WANT="${NEXT}b$(( ${K:-0} + 1 ))"
+  [ -z "$VER" ] && VER="$WANT"
+  [ "$VER" = "$WANT" ] || fail "Beta-Version $VER ≠ $WANT (nächste Beta)"
+  ok "Beta $VER (stabil folgt $NEXT)"
+elif [ -z "$VER" ]; then
   VER="$NEXT"
   echo "Version von tools/next-version: $VER"
 fi
+if [ $BETA = 0 ]; then
 echo "$VER" | grep -Eq '^[0-9]{2}\.([1-9]|1[0-2])\.[1-9][0-9]*$' \
   || { echo "Version muss YY.M.N sein (z. B. $NEXT): $VER" >&2; exit 2; }
 if [ "$VER" != "$NEXT" ]; then
@@ -53,11 +68,16 @@ if [ "$VER" != "$NEXT" ]; then
   echo "! Version $VER weicht von tools/next-version ($NEXT) ab (--andere-version)"
 fi
 ok "Version $VER"
+fi
 TAG="v$VER"
 
 # 1) Gate (inkl. sauberem Arbeitsstand; Kalender-Versionen brauchen das volle Gate, Patch-Gate nur mit --patch)
 [ -n "$PATCH" ] && echo "! --patch: Notfall-Hotfix, Patch-Gate wird angenommen"
-MSG="$(python3 tools/qa_gate.py --version "$VER" $PATCH)" || fail "$MSG"
+if [ $BETA = 1 ]; then
+  MSG="$(python3 tools/qa_gate.py --version "$NEXT" --patch)" || fail "$MSG"
+else
+  MSG="$(python3 tools/qa_gate.py --version "$VER" $PATCH)" || fail "$MSG"
+fi
 ok "$MSG"
 
 # 2) CHANGELOG in der Integration aktuell
@@ -68,6 +88,27 @@ ok "CHANGELOG in der Integration aktuell"
 MV="$(python3 -c 'import json;print(json.load(open("custom_components/casora/manifest.json"))["version"])')"
 [ "$MV" = "$VER" ] || fail "manifest.json hat Version $MV, nicht $VER"
 ok "manifest.json: $MV"
+
+if [ $BETA = 1 ]; then
+  git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && fail "Tag $TAG gibt es schon"
+  NOTES=".qa/release-notes-$VER.md"
+  [ -s "$NOTES" ] || fail "Beta-Notizen fehlen: $NOTES (englisch, kurz: was testen)"
+  ok "Beta-Notizen: $NOTES"
+  echo
+  echo "Beta $TAG – Befehle:"
+  echo "  git tag -a $TAG -m $TAG"
+  echo "  git push origin $TAG"
+  echo "  gh release create $TAG --prerelease --title $TAG --notes-file $NOTES"
+  if [ $PUBLISH = 1 ]; then
+    git tag -a "$TAG" -m "$TAG"
+    git push origin "$TAG"
+    gh release create "$TAG" --prerelease --title "$TAG" --notes-file "$NOTES"
+    ok "Beta $TAG veröffentlicht (Vorabversion)"
+  else
+    echo "(nichts ausgeführt – mit --publish ausführen)"
+  fi
+  exit 0
+fi
 
 # 3b) Website: statischer Fallback der Versionszeile (docs/index.html liest live aus manifest.json, der Text ist die Reserve)
 WV="$(grep -o 'id="casora-version">Version [0-9.]*' docs/index.html | grep -o '[0-9][0-9.]*$')"

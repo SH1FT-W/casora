@@ -713,10 +713,12 @@ footer .fine { flex-basis: 100%; }
   // Versionszeile: manifest.json aus dem Repo (ohne API-Limit), sonst das letzte GitHub-Release; der Text oben ist der Fallback.
   (function () {
     var el = document.getElementById('casora-version');
+    // Only stable versions (a beta like 26.10.58b1 is for testers).
+    function stable(v) { return /^\d+\.\d+\.\d+$/.test(String(v || '')); }
     function show(v) { if (v && el) el.textContent = 'Version ' + v; }
     fetch('https://raw.githubusercontent.com/SH1FT-W/casora/main/custom_components/casora/manifest.json', { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) { if (j && j.version) show(String(j.version)); else throw 0; })
+      .then(function (j) { if (j && stable(j.version)) show(String(j.version)); else throw 0; })
       .catch(function () {
         fetch('https://api.github.com/repos/SH1FT-W/casora/releases/latest')
           .then(function (r) { return r.ok ? r.json() : null; })

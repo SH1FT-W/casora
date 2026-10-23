@@ -37,6 +37,9 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
   im Monat; jedes Release ist die nächste Nummer (kein Patch/Minor mehr). Nächste Nummer: `tools/next-version`,
   `tools/release.sh` schlägt sie vor und prüft sie. Release-Gate standardmäßig voll (`dev/qa/gate.sh --voll`);
   Patch-Gate nur bewusst für echte Notfall-Hotfixes (`dev/qa/gate.sh --patch` + `tools/release.sh --patch`), nie automatisch.
+- Betas für Tester (Fix auf Verdacht, Gerät nicht nachstellbar): `tools/release.sh --beta --publish` – nächste Nummer mit
+  `bK` (26.10.58b1), Vorabversion, Patch-Gate reicht, nur `.qa/release-notes-<version>.md` (englisch) nötig, manifest auf die
+  Beta-Nummer. Betas zählen nicht als Release-Nummer; das stabile Release danach bündelt und bekommt das volle Gate.
 
 ## Nicht anfassen
 - Version (`manifest.json`), `CHANGELOG*.md`, „Neu“-Popup (`casora-panel-welcome.js`, WHATS_NEW),
