@@ -2074,7 +2074,7 @@
 })();
 
 
-// ── Dishwasher (casora_dishwasher: Home Connect + smart plug) ─────────
+// ── Dishwasher (casora_dishwasher: Home Connect, Miele + smart plug) ─────────
 // Uses the building blocks of window._casoraLaundry (consumption, plug, loading).
 (function () {
   if (window._casoraDish || !window._casoraLaundry) return;
@@ -2092,13 +2092,14 @@
   var PHASE = { prerinse: 'Vorspülen', mainwash: 'Hauptspülen', finalrinse: 'Klarspülen', drying: 'Trocknen' };
   var LEVEL = { full: ['Voll', null, 1], nearly_empty: ['Fast leer', 'warn', 0.25], empty: ['Leer', 'bad', 0] };
   var REMOTE = { monitoring: 'Nur Anzeige', manualremotestart: 'Einmalig erlaubt', permanentremotestart: 'Immer erlaubt' };
+  // Problem sensors: field of the finder's dish table (00-finder.js), text, icon.
   var PROBLEMS = [
-    [/_aquastop_aufgetreten$/, 'AquaStop ausgelöst', 'mdi:water-alert', 'binary_sensor_aqua_stop'],
-    [/_ablaufpumpe_blockiert$/, 'Ablaufpumpe blockiert', 'mdi:pump-off', 'binary_sensor_drainpumpblocked'],
-    [/_abpumpen_nicht_moglich$/, 'Abpumpen nicht möglich', 'mdi:pump-off', 'binary_sensor_drainingnotpossible'],
-    [/_niedriger_wasserdruck$/, 'Niedriger Wasserdruck', 'mdi:water-minus', 'binary_sensor_low_water_pressure'],
-    [/_wasserheizung_verkalkt$/, 'Wasserheizung verkalkt', 'mdi:water-boiler-alert', 'binary_sensor_waterheatercalcified'],
-    [/_programm_abgebrochen$/, 'Programm abgebrochen', 'mdi:cancel', 'binary_sensor_program_aborted'],
+    ['aquaStop', 'AquaStop ausgelöst', 'mdi:water-alert'],
+    ['drainBlocked', 'Ablaufpumpe blockiert', 'mdi:pump-off'],
+    ['drainImpossible', 'Abpumpen nicht möglich', 'mdi:pump-off'],
+    ['lowPressure', 'Niedriger Wasserdruck', 'mdi:water-minus'],
+    ['calcified', 'Wasserheizung verkalkt', 'mdi:water-boiler-alert'],
+    ['aborted', 'Programm abgebrochen', 'mdi:cancel'],
   ];
   // Home Connect in HA core writes the program ids with underscores (…_eco_50, …_machine_care), the older
   // integration without (…_eco50): compare without them.
@@ -2138,41 +2139,19 @@
     V = V || {};
     var reg = (hass && hass.entities) || {};
     var st = V.appliance_state || (entity && entity.entity_id);
-    var devOf = function (eid) { return reg[eid] && reg[eid].device_id; };
-    // Neighbour entity on the same device: first via the integration's language-independent
-    // translation_key, else via the (German) name suffix.
-    // Only via translation_key (Home Connect in HA core), no name fallback.
-    var byKey = function (eid, dom, key) {
-      var dev = devOf(eid), hit = null;
+    // Fields from the shared source table (00-finder.js casoraLaundryFind.dish): Home Connect from HA core,
+    // Home Connect Alt/WS, Miele; the German name suffix only as a last resort. Card variables win.
+    var LF = window.casoraLaundryFind;
+    var F = (LF && LF.dish && st) ? LF.dish({ entities: reg, states: states }, st).f : {};
+    // Plug readings by unit on the plug's device.
+    var onPlug = function (eid, unit) {
+      var dev = reg[eid] && reg[eid].device_id, hit = null;
       if (!dev) return null;
       Object.keys(reg).forEach(function (k) {
         var e = reg[k];
-        if (hit || e.device_id !== dev || !states[e.entity_id] || e.translation_key !== key) return;
-        if (e.entity_id.indexOf(dom + '.') !== 0) return;
-        hit = e.entity_id;
-      });
-      return hit;
-    };
-    var sib = function (eid, re, dom, unit, key) {
-      var dev = devOf(eid);
-      if (!dev) return null;
-      var hit = null;
-      if (key) {
-        Object.keys(reg).forEach(function (k) {
-          var e = reg[k];
-          if (hit || e.device_id !== dev || !states[e.entity_id] || e.translation_key !== key) return;
-          if (dom && e.entity_id.indexOf(dom + '.') !== 0) return;
-          hit = e.entity_id;
-        });
-        if (hit) return hit;
-      }
-      Object.keys(reg).forEach(function (k) {
-        var e = reg[k];
-        if (hit || e.device_id !== dev || !states[e.entity_id]) return;
-        if (dom && e.entity_id.indexOf(dom + '.') !== 0) return;
+        if (hit || e.device_id !== dev || !states[e.entity_id] || e.entity_id.indexOf('sensor.') !== 0) return;
         if (e.platform === 'powercalc') return;
-        if (re && !re.test(e.entity_id)) return;
-        if (unit && (states[e.entity_id].attributes || {}).unit_of_measurement !== unit) return;
+        if ((states[e.entity_id].attributes || {}).unit_of_measurement !== unit) return;
         hit = e.entity_id;
       });
       return hit;
@@ -2181,44 +2160,43 @@
     var plugF = (!V.plug_entity && CD) ? (CD.companionPlug(hass, st) || {}) : {};
     var plug = V.plug_entity || plugF.switch || null;
     var probs = [];
-    PROBLEMS.forEach(function (p) { var id = sib(st, p[0], 'binary_sensor', null, p[3]); if (id) probs.push([id, p[1], p[2]]); });
+    PROBLEMS.forEach(function (p) { if (F[p[0]]) probs.push([F[p[0]], p[1], p[2]]); });
     return {
       st: st, dish: true, name: V.room_name || 'Geschirrspüler', entry: null, dryer: false,
       price: window.casoraPriceKwh ? window.casoraPriceKwh(V.price_kwh) : null, color: V.chart_color || '#00C3D0',
-      program: V.entity_program || sib(st, /_aktives_programm$/, 'sensor', null, 'sensor_active_program') || byKey(st, 'select', 'active_program'),
-      sel: sib(st, /_ausgewahltes_programm$/, 'select', null, 'select_program') || byKey(st, 'select', 'selected_program'),
-      phase: V.entity_phase || sib(st, /_programmphase$/, 'sensor', null, 'sensor_program_phase'),
-      progress: V.appliance_progress || sib(st, /_programmfortschritt$/, 'sensor', null, 'sensor_program_progress') || byKey(st, 'sensor', 'program_progress'),
-      remaining: V.appliance_remaining || sib(st, /_verbleibende_programmlaufzeit$/, 'sensor', null, 'sensor_remaining_program_time')
-        || byKey(st, 'sensor', 'program_finish_time'),
-      energyEst: V.entity_energy_est || sib(st, /_energieverbrauch_schatzung$/, 'sensor', null, 'sensor_energy_forecast'),
-      waterEst: V.entity_water_est || sib(st, /_wasserverbrauch_schatzung$/, 'sensor', null, 'sensor_water_forecast'),
-      salt: V.entity_salt || sib(st, /_salz$/, 'sensor', null, 'sensor_salt'),
-      rinse: V.entity_rinse_aid || sib(st, /_klarspuler$/, 'sensor', null, 'sensor_rinse_aid'),
-      door: V.entity_door || sib(st, /_tur$/, 'binary_sensor', null, 'binary_sensor_door_state') || byKey(st, 'sensor', 'door'),
-      care: sib(st, /_maschinenpflege_erinnerung$/, 'sensor', null, 'sensor_machine_care_reminder'),
-      starts: sib(st, /_startanzahl$/, 'sensor', null, 'sensor_count_started'),
-      conn: sib(st, /_verbindung$/, 'binary_sensor', null, 'connection'),
-      remote: sib(st, /_fernbedienung$/, 'select', null, 'select_remote_control_level'),
-      startIn: sib(st, /_start_in$/, 'number', null, 'number_start_in'),
-      power_sw: sib(st, /_einschalter$/, 'switch', null, 'switch_power_state'),
-      light: sib(st, /_info_licht$/, 'switch', null, 'switch_info_light'),
-      smartFilter: sib(st, /_smarte_filterreinigung$/, 'binary_sensor', null, 'binary_sensor_smartfiltercleaningreminder'),
-      filterCheck: V.entity_filter || sib(st, /_filtersystem_prufen$/, 'binary_sensor', null, 'binary_sensor_checkfiltersystem'),
-      machineCare: sib(st, /_maschinenreinigung$/, 'binary_sensor', null, 'binary_sensor_machinecarereminder'),
-      machineFilter: sib(st, /_maschinenreinigung_filter$/, 'binary_sensor', null, 'binary_sensor_machinecareandfiltercleaningreminder'),
+      program: V.entity_program || F.program || null,
+      sel: F.sel || null,
+      phase: V.entity_phase || F.phase || null,
+      progress: V.appliance_progress || F.progress || null,
+      remaining: V.appliance_remaining || F.remaining || null,
+      energyEst: V.entity_energy_est || F.energyEst || null,
+      waterEst: V.entity_water_est || F.waterEst || null,
+      salt: V.entity_salt || F.salt || null,
+      rinse: V.entity_rinse_aid || F.rinse || null,
+      door: V.entity_door || F.door || null,
+      care: F.care || null,
+      starts: F.starts || null,
+      conn: F.conn || null,
+      remote: F.remote || null,
+      startIn: F.startIn || null,
+      power_sw: F.power_sw || null,
+      light: F.light || null,
+      smartFilter: F.smartFilter || null,
+      filterCheck: V.entity_filter || F.filterCheck || null,
+      machineCare: F.machineCare || null,
+      machineFilter: F.machineFilter || null,
       probs: probs,
-      opts: [[V.sw_extra_dry || sib(st, /_extra_trocken$/, 'switch', null, 'switch_extra_dry'), 'Extra Trocken', 'mdi:weather-sunny'],
-             [V.sw_half_load || sib(st, /_halbe_ladung$/, 'switch', null, 'switch_half_load'), 'Halbe Ladung', 'mdi:circle-half-full'],
-             [V.sw_speed || sib(st, /_speed_on_demand$/, 'switch', null, 'switch_speed_on_demand'), 'Schneller fertig', 'mdi:clock-fast'],
-             [V.sw_silence || sib(st, /_silence_on_demand$/, 'switch', null, 'switch_silence_on_demand'), 'Leiser', 'mdi:volume-low']].filter(function (o) { return o[0]; }),
-      start: V.btn_start || sib(st, /_start$/, 'button', null, 'button_start_program'),
-      stop: V.btn_stop || sib(st, /_abbrechen$/, 'button', null, 'button_abort_program') || byKey(st, 'button', 'stop_program'),
+      opts: [[V.sw_extra_dry || F.extraDry, 'Extra Trocken', 'mdi:weather-sunny'],
+             [V.sw_half_load || F.halfLoad, 'Halbe Ladung', 'mdi:circle-half-full'],
+             [V.sw_speed || F.speed, 'Schneller fertig', 'mdi:clock-fast'],
+             [V.sw_silence || F.silence, 'Leiser', 'mdi:volume-low']].filter(function (o) { return o[0]; }),
+      start: V.btn_start || F.start || null,
+      stop: V.btn_stop || F.stop || null,
       plug: plug,
-      power: plug ? sib(plug, null, 'sensor', 'W') : V.entity_power || null,
-      volt: plug ? sib(plug, null, 'sensor', 'V') : null,
-      amp: plug ? sib(plug, null, 'sensor', 'A') : null,
-      energy: (plug && sib(plug, null, 'sensor', 'kWh')) || V.entity_energy || null,
+      power: plug ? onPlug(plug, 'W') : V.entity_power || null,
+      volt: plug ? onPlug(plug, 'V') : null,
+      amp: plug ? onPlug(plug, 'A') : null,
+      energy: (plug && onPlug(plug, 'kWh')) || V.entity_energy || null,
       lock: null,
     };
   };
@@ -3364,37 +3342,7 @@
     ['onboard_dirty_water_tank_time_left', 'Schmutzwassertank (Roboter)', 'mdi:cup-water', null, 'reset_onboard_dirty_water_tank', [], []],
   ];
 
-  /* Roborock's translation_keys first, then those of other integrations with the same meaning: Dreame (HACS,
-     Tasshack), Ecovacs and iRobot Roomba (HA core). Settings that only look alike (Dreame's auto drying, auto
-     dust collecting, self clean) stay out – the popup would treat them as "do it now". */
-  var VFIND = {
-    status: { keys: ['status'], domain: 'sensor' }, room: { keys: ['current_room'], domain: 'sensor' },
-    progress: { keys: ['clean_percent', 'cleaning_progress'], domain: 'sensor' },
-    area: { keys: ['cleaning_area', 'cleaned_area', 'stats_area'], domain: 'sensor' },
-    battery: { dc: 'battery', domain: 'sensor' }, charging: { dc: 'battery_charging', domain: 'binary_sensor' },
-    time: { keys: ['cleaning_time', 'stats_time'], domain: 'sensor' }, dnd: { keys: ['dnd_switch', 'dnd'], domain: 'switch' },
-    dndStart: { keys: ['dnd_start_time', 'dnd_start'], domain: 'time' }, dndEnd: { keys: ['dnd_end_time', 'dnd_end'], domain: 'time' },
-    drying: { keys: ['mop_drying'], domain: 'switch' }, dryLeft: { keys: ['mop_drying_remaining_time', 'drying_left'], domain: 'sensor' },
-    empty: { keys: ['dust_emptying'], domain: 'switch' }, wash: { keys: ['mop_washing'], domain: 'switch' },
-    cleanMode: { keys: ['cleaning_mode', 'work_mode'], domain: 'select' },
-    mopInt: { keys: ['mop_intensity', 'water_volume', 'water_amount'], domain: 'select' },
-    mopMode: { keys: ['mop_mode', 'mop_pad_humidity'], domain: 'select' },
-    emptyMode: { keys: ['dust_collection_mode', 'auto_empty_mode', 'auto_empty'], domain: 'select' },
-    lock: { keys: ['child_lock'], domain: 'switch' }, volume: { keys: ['volume'], domain: 'number' },
-    // 'error': Dreame (Tasshack) – its error sensor's translation_key; the state is a code like forward_suffocate (issue #33).
-    err: { keys: ['vacuum_error', 'error'], domain: 'sensor' }, dockErr: { keys: ['dock_error'], domain: 'sensor' },
-    water: { keys: ['water_shortage'], domain: 'binary_sensor' }, dirty: { keys: ['dirty_box_full'], domain: 'binary_sensor' },
-    clean: { keys: ['clean_box_empty'], domain: 'binary_sensor' }, mopOn: { keys: ['mop_attached'], domain: 'binary_sensor' },
-    // Dreame's station and tanks: enum sensors where Roborock has binary sensors (issue #33).
-    cleanTank: { keys: ['clean_water_tank_status'], domain: 'sensor' }, lowWater: { keys: ['low_water_warning'], domain: 'sensor' },
-    dirtyTank: { keys: ['dirty_water_tank_status'], domain: 'sensor' }, dustBag: { keys: ['dust_bag_status'], domain: 'sensor' },
-    detergent: { keys: ['detergent_status'], domain: 'sensor' },
-    boxOn: { keys: ['water_box_attached'], domain: 'binary_sensor' }, lastStart: { keys: ['last_clean_start', 'last_mission'], domain: 'sensor' },
-    lastEnd: { keys: ['last_clean_end', 'cleaning_history'], domain: 'sensor' },
-    total: { keys: ['total_cleaning_count', 'cleaning_count', 'total_stats_cleanings', 'total_missions'], domain: 'sensor' },
-    totalTime: { keys: ['total_cleaning_time', 'total_stats_time'], domain: 'sensor' },
-    totalArea: { keys: ['total_cleaning_area', 'total_cleaned_area', 'total_stats_area'], domain: 'sensor' },
-  };
+  /* Fields of the device finder: casoraDevice.vacuumFields (00-finder.js), shared with the Studio fields. */
   var VOWN = { status: 'entity_status', room: 'entity_room', progress: 'entity_progress', area: 'entity_area',
     battery: 'entity_battery', dnd: 'entity_dnd', drying: 'entity_drying' };
 
@@ -3421,6 +3369,7 @@
        (robot + station as sibling device). Fixed variables win. */
     var CD = window.casoraDevice;
     if (CD && id && hass) {
+      var VFIND = CD.vacuumFields || {};
       var F = CD.map(hass, id, VFIND, { siblings: true });
       /* Map: the configured one while it exists; empty or deleted → search on the device (07.10.2026). */
       if (CD.vacuumMapFor) c.map = CD.vacuumMapFor(hass, id, VV.entity_map) || null;

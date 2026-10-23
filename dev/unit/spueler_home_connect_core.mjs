@@ -6,16 +6,19 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
 const src = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/02-devices.js', import.meta.url), 'utf8');
+const finder = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8');
 globalThis.window = globalThis;
 globalThis.document = { querySelector: () => null, addEventListener() {}, head: { appendChild() {} }, createElement: () => ({ style: {} }) };
 globalThis.addEventListener = () => {};
 globalThis.customElements = { whenDefined: () => new Promise(() => {}), get: () => null, define() {} };
-const block = (start) => {
-  const a = src.indexOf(start);
-  const b = src.indexOf('\n})();', a);
+const block = (start, from = src) => {
+  const a = from.indexOf(start);
+  const b = from.indexOf('\n})();', a);
   assert.ok(a > 0 && b > a, 'block found: ' + start);
-  new Function(src.slice(a, b + 6))();
+  new Function(from.slice(a, b + 6))();
 };
+// The dishwasher takes its fields from the shared source table (casoraLaundryFind.dish).
+block('(function () {\n  if (window.casoraLaundryFind) return;', finder);
 block('(function () {\n  if (window._casoraLaundry) return;');
 block('(function () {\n  if (window._casoraDish || !window._casoraLaundry) return;');
 const D = globalThis._casoraDish;
