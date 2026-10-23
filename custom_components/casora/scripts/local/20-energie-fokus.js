@@ -109,8 +109,8 @@
     if (!id || !states[id]) return null;
     var reg = ((hass && hass.entities) || {})[id];
     if (reg && TK[reg.translation_key]) return TK[reg.translation_key];
-    // #44: SMA names the inverter's output "Grid power" (no translation_key): that is the solar power,
-    // the SMA energy meter's "Metering power" is the grid.
+    // #44: SMA calls the inverter's output grid_power (no translation_key): that is the solar power,
+    // the SMA energy meter's metering_power is the grid.
     if (reg && reg.platform === 'sma') {
       var sl = id + ' ' + ((states[id].attributes || {}).friendly_name || '');
       if (/metering.?power/i.test(sl)) return 'grid';
