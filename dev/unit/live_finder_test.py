@@ -3,10 +3,11 @@
   uv run --python 3.14 --with homeassistant python dev/unit/live_finder_test.py
 
 1) Detection by platform + translation_key (invented devices): WashData washer/dryer/dishwasher (icon),
-   Home Connect washer (program key), Home Connect WS dishwasher (dishcare), Miele washer and dishwasher,
+   Home Connect washer (program key), Home Connect WS dishwasher (dishcare), Home Connect Alt washer/dishwasher
+   (entity_id ends, program icon or key; its coffee maker is none), Miele washer and dishwasher,
    robot vacuum (vacuum domain), Bambu printer (print_status); oven and smart plug are no live devices.
 2) Parity with the dashboard finder: the SOURCES of scripts/local/00-finder.js (read via node) must match
-   live_finder.SOURCES in order, platforms, need/any and fields.
+   live_finder.SOURCES in order, platforms, need/any and fields (keys, domain, entity_id ends).
 3) Same roles: the laundry/dishwasher devices of 1) through the JS classify() give the same kind.
 """
 
@@ -106,7 +107,7 @@ ws = [E("sensor.ws_state", "sensor_operation_state"), E("sensor.ws_prog", "senso
       E("sensor.ws_rem", "sensor_remaining_program_time"), E("sensor.ws_salt", "sensor_salt"), E("sensor.ws_start", "sensor_start_in")]
 st("sensor.ws_prog", "dishcare_dishwasher_program_eco50", options=["dishcare_dishwasher_program_eco50"])
 f = lf.classify("d7", ws, S.get)
-check("Home Connect WS dishwasher by keys", f and f.kind == "dishwasher" and f.source == "home_connect_alt" and f.how == "keys", f)
+check("Home Connect WS dishwasher by keys", f and f.kind == "dishwasher" and f.source == "homeconnect_ws" and f.how == "keys", f)
 snap("d7", ws)
 check("Home Connect WS fields incl. start delay", f and f.fields["phase"] == "sensor.ws_phase" and f.fields["start_in"] == "sensor.ws_start", f and f.fields)
 for key in ("sensor_laundry_process_phase", "sensor_dryer_process_phase"):
@@ -115,6 +116,36 @@ for key in ("sensor_laundry_process_phase", "sensor_dryer_process_phase"):
     st("sensor.wsw_prog", "laundrycare_washer_program_cotton")
     f = lf.classify("d7b", wsw, S.get)
     check("Home Connect WS phase via " + key, f and f.fields.get("phase") == "sensor.wsw_phase", f and f.fields)
+
+# Home Connect Alt (ekutner): generic translation_keys, entity_ids <domain>.<haid>_<Home Connect key> (common.py)
+HA = "bosch_wav28k00_68a40e000001"
+alt = [E(f"sensor.{HA}_bsh_common_status_operationstate", "statuses", "home_connect_alt"),
+       E(f"sensor.{HA}_active_program", "programs", "home_connect_alt", "mdi:washing-machine"),
+       E(f"select.{HA}_programs", "programs", "home_connect_alt"),
+       E(f"sensor.{HA}_bsh_common_option_programprogress", "options", "home_connect_alt"),
+       E(f"sensor.{HA}_bsh_common_option_remainingprogramtime", "options", "home_connect_alt"),
+       E(f"binary_sensor.{HA}_bsh_common_status_doorstate", None, "home_connect_alt"),
+       E(f"button.{HA}_start_pause", "start_program", "home_connect_alt"), E(f"button.{HA}_stop", "stop_program", "home_connect_alt")]
+st(f"sensor.{HA}_bsh_common_status_operationstate", "BSH.Common.EnumType.OperationState.Run")
+f = lf.classify("d7c", alt, S.get)
+check("Home Connect Alt washer by the program icon", f and f.kind == "washer" and f.source == "home_connect_alt" and f.how == "platform", f)
+check("Home Connect Alt fields by the entity_id end", f and f.fields["state"] == f"sensor.{HA}_bsh_common_status_operationstate"
+      and f.fields["program"] == f"sensor.{HA}_active_program" and f.fields["select"] == f"select.{HA}_programs"
+      and f.fields["remaining"] == f"sensor.{HA}_bsh_common_option_remainingprogramtime"
+      and f.fields["door"] == f"binary_sensor.{HA}_bsh_common_status_doorstate"
+      and f.fields["pause"] == f"button.{HA}_start_pause" and f.fields["stop"] == f"button.{HA}_stop", f and f.fields)
+snap("d7c", alt)
+# Without the icon: the program keys (translation mode local)
+alt_dw = [E(f"sensor.{HA}x_bsh_common_status_operationstate", "statuses", "home_connect_alt"),
+          E(f"select.{HA}x_programs", "programs", "home_connect_alt")]
+st(f"select.{HA}x_programs", "Dishcare.Dishwasher.Program.Eco50", options=["Dishcare.Dishwasher.Program.Eco50"])
+f = lf.classify("d7d", alt_dw, S.get)
+check("Home Connect Alt dishwasher by the program key", f and f.kind == "dishwasher", f)
+snap("d7d", alt_dw)
+alt_cm = [E(f"sensor.{HA}y_bsh_common_status_operationstate", "statuses", "home_connect_alt"),
+          E(f"select.{HA}y_programs", "programs", "home_connect_alt", "mdi:coffee-maker")]
+check("Home Connect Alt coffee maker is no live device", lf.classify("d7e", alt_cm, S.get) is None)
+snap("d7e", alt_cm)
 
 miele = [E("sensor.m_state", "status", "miele"), E("sensor.m_spin", "spin_speed", "miele"), E("sensor.m_rem", "remaining_time", "miele")]
 f = lf.classify("d8", miele, S.get)
@@ -154,7 +185,8 @@ try { new Function('window', 'document', src)(win, { createElement: () => ({ sty
 const LF = win.casoraLaundryFind;
 if (!LF) { console.error('casoraLaundryFind missing'); process.exit(2); }
 console.log(JSON.stringify(LF.sources.map((s) => ({ id: s.id, platforms: s.platforms, need: s.need, any: s.any,
-  fields: Object.fromEntries(Object.entries(s.fields).map(([k, v]) => [k, { keys: v.keys, domain: v.domain }])) }))));
+  fields: Object.fromEntries(Object.entries(s.fields).map(([k, v]) => [k, Object.assign({ keys: v.keys, domain: v.domain },
+    v.tail ? { tail: v.tail } : {})])) }))));
 """
 node = os.environ.get("NODE", "node")
 try:

@@ -81,6 +81,22 @@ for (const f of files) {
   }
   for (const id of X.plants || []) { assert.ok(window.casoraIsPlant(hass, id), at('plant ' + id)); checks++; }
   for (const id of X.not_plants || []) { assert.ok(!window.casoraIsPlant(hass, id), at('no plant ' + id)); checks++; }
+  // Washer, dryer, dishwasher: the device behind the entity by the shared source table (casoraLaundryFind).
+  for (const L of X.laundry || []) {
+    const dev = (H.entities[L.entity] || {}).device_id;
+    const c = window.casoraLaundryFind.classify(hass, dev, ['washer', 'dryer', 'dishwasher']);
+    assert.ok(c, at('laundry device of ' + L.entity));
+    assert.equal(c.role, L.role, at('laundry role ' + L.entity));
+    assert.equal(c.source, L.source, at('laundry source ' + L.entity));
+    checks += 3;
+    for (const [k, want] of Object.entries(L.fields || {})) { assert.equal(c.f[k] || null, want, at('laundry ' + k)); checks++; }
+    if (L.state_text) { assert.equal(window._casoraLaundry.state(H.states, c.state)[0], L.state_text, at('laundry state text')); checks++; }
+  }
+  for (const id of X.not_laundry || []) {
+    assert.equal(window.casoraLaundryFind.classify(hass, (H.entities[id] || {}).device_id, ['washer', 'dryer', 'dishwasher']), null,
+      at('no laundry device: ' + id));
+    checks++;
+  }
   if (X.dishwasher) {
     const c = window._casoraDish.resolve({ entity_id: X.dishwasher.entity }, {}, H.states, hass);
     for (const [k, want] of Object.entries(X.dishwasher.fields || {})) { assert.equal(c[k], want, at('dishwasher ' + k)); checks++; }

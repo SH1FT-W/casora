@@ -76,6 +76,29 @@ Nicht im Kern-Paket prüfbar (HACS), Casora liest `platform`/`translation_key`:
 `anker_solix`, `pulse`, `teamtracker`, `bosch_ebike`, `powercalc`, `browser_mod`, `hacs`, Kaffee-Integrationen
 (De'Longhi, Jura, Melitta), Auto-Integrationen.
 
+Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCES`, `live_finder.py`, Zustand/Programm
+`02-devices.js`, `live_activity.py`; Tests `dev/unit/dishwasher_sources.mjs`, `dev/unit/live_finder_test.py`,
+`dev/unit/live_activity_test.py`, Häuser `dev/unit/haeuser/hc_*.json`), Stand 23.10.2026:
+
+- `home_connect_alt` (ekutner/home-connect-hass 1.5.0-b1, Commit f74cffd): `translation_key` nur allgemein –
+  `statuses`/`settings` (sensor.py `StatusSensor`/`SettingsSensor`), `options`/`programs` (sensor.py, select.py),
+  Knöpfe `start_program`/`pause_program`/`resume_program` je Zustand und `stop_program` (button.py
+  `StartButton`/`StopButton`), Schalter und Binärsensoren ohne. Die Entitäts-ID setzt die Integration selbst:
+  `<domain>.<haid>_<Home-Connect-Schlüssel klein, Punkte als _>` (common.py `EntityBase.__init__`/`unique_id`;
+  Programme `…_active_program`/`…_selected_program`, Auswahl `…_programs`, Knöpfe `…_start_pause`/`…_stop`).
+  Casora liest deshalb das Ende der Entitäts-ID (nur auf dieser Plattform; `hass.entities` hat keine `unique_id`).
+  Gerätetyp: Symbol der Programm-Entitäten (const.py `DEVICE_ICON_MAP`), sonst Programmschlüssel
+  (`LaundryCare.Washer.Program.…`). Zustand im Modus „local“ als Schlüssel `BSH.Common.EnumType.OperationState.Run`,
+  im Modus „server“ als Text der Cloud (dann ohne Läuft-Erkennung); Restzeit als Zeitpunkt (const.py
+  `RemainingProgramTime` `class: timestamp`), Tür als Binärsensor `door`.
+- `homeconnect_ws` (chris-mc1/homeconnect_local_hass, Commit f91fd4b): `translation_key` = Schlüssel der
+  Beschreibung (entity.py), z. B. `sensor_operation_state`, `sensor_active_program`, `select_program`,
+  `sensor_remaining_program_time` (Dauer), `binary_sensor_door_state`, `button_abort_program`
+  (entity_descriptions/common.py), Spüler `sensor_program_phase`, `sensor_salt`, `sensor_rinse_aid`,
+  `switch_extra_dry_option` (dishcare.py), Wäsche `sensor_laundry_process_phase`/`sensor_dryer_process_phase`
+  (laundry_care.py). Entitäts-IDs aus den übersetzten Namen (`has_entity_name`), daher die deutschen Endungen in
+  `casoraLaundryFind.dishNames` (translations/de.json).
+
 Bekannt wacklig (Stand 2026.10.1, nicht im Test, weil es Rückfälle bzw. HACS-Schlüssel sind):
 
 - `reolink`: Kamera `clear`, `fluent`, `balanced` und Auswahl `day_night` gibt es im Kern nicht (nur Rückfall).

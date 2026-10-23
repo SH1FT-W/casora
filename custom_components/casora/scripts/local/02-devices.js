@@ -602,7 +602,7 @@
   add('hero', `[[[
     const c = ${_c};
     const n = parseFloat(states[c.temp]?.state);
-    /* Unter der Temperatur steht, was los ist (alle Gründe, Schwerstes zuerst), sonst der Temperaturstatus. */
+    /* Below the temperature: what is going on (every reason, most serious first), else the temperature status. */
     const ev = window._casoraAqEval ? window._casoraAqEval(states[c.temp], c.V, states, hass) : { level: 0, reasons: [] };
     /* Mit Soll-Bereich aus dem Studio steht er im Kopf („Soll-Bereich 24–26 °C“). */
     const u = (states[c.temp]?.attributes?.unit_of_measurement) || '°C';
@@ -613,7 +613,7 @@
       : 'Temperatur im Normalbereich';
     return window._casoraUI.hero({
       value: isNaN(n) ? '—' : n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
-      unit: (states[c.temp]?.attributes?.unit_of_measurement) || '°C', /* Einheit des Fühlers (°C/°F) */
+      unit: (states[c.temp]?.attributes?.unit_of_measurement) || '°C', /* the probe's unit (°C/°F) */
       sub: ev.level ? ev.reasons.join(' · ') : okText,
       subTone: ev.level === 2 ? 'bad' : ev.level === 1 ? 'warn' : 'good',
       center: true,
@@ -697,7 +697,7 @@
     const num = (e) => { if (!e || !states[e]) return null; const n = parseFloat(states[e].state); return isNaN(n) ? null : n; };
     const sum = (key) => {
       let t = 0, n = 0; const miss = [];
-      /* Geräte hinter einer gemessenen Steckdose (sub: true) sind dort schon enthalten. */
+      /* Devices behind a metered plug (sub: true) are already counted there. */
       c.devs.forEach((d) => { if (d.sub) return; const v = num(d[key]); if (v == null) miss.push(d.label); else { t += v; n++; } });
       return { t: t, n: n, miss: miss };
     };
@@ -721,7 +721,7 @@
     if (c.leak && states[c.leak]) {
       const ls = states[c.leak].state;
       const wet = ls === 'on';
-      /* unknown wie unavailable (wie Kachel/Kopf „Lecksensor offline“): nicht „Trocken“ melden */
+      /* unknown like unavailable (as tile and head, which say the leak sensor is offline): never report dry */
       const off = ls === 'unavailable' || ls === 'unknown';
       const b = c.leakBat ? parseFloat(states[c.leakBat]?.state) : NaN;
       rows.push({ icon: 'mdi:water-alert', iconTone: wet ? 'bad' : off ? 'warn' : 'good', label: 'Lecksensor',
@@ -743,7 +743,7 @@
     const f = (n) => n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     const rows = c.dose.map((d, i) => {
       const t = num(d.today), g = num(d.total), v = num(d.vol);
-      /* Ohne gewählte Zähler (dosing_today/dosing_total) fällt der Teil weg. */
+      /* Without chosen counters (dosing_today/dosing_total) the part is left out. */
       const sub = [d.today ? 'Heute ' + (t == null ? '—' : f(t)) + ' ml' : null, d.total ? 'gesamt ' + (g == null ? '—' : f(g)) + ' ml' : null]
         .filter(Boolean).join(' · ');
       return { icon: 'mdi:beaker-outline', label: c.labels[i] || ('Kanal ' + d.n),
@@ -1172,7 +1172,7 @@
   if (window._casoraLaundry) return;
   var L = window._casoraLaundry = { data: {}, busy: {} };
 
-  // [Text, Ton, aktiv, Art] – Art: off | idle | delay | run | pause | attn | done | clean | error
+  // [text, tone, active, kind] – kind: off | idle | delay | run | pause | attn | done | clean | error
   var STATE = {
     /* WashData */
     off: ['Aus', null, false, 'off'], idle: ['Bereit', 'good', false, 'idle'], starting: ['Startet', 'accent', true, 'run'],
@@ -1283,7 +1283,7 @@
     var st = e && states[e];
     if (!st || NOPROG[String(st.state).toLowerCase()]) return null;
     var h = HASS();
-    try { if (h && typeof h.formatEntityState === 'function') return h.formatEntityState(st); } catch (x) { /* roh */ }
+    try { if (h && typeof h.formatEntityState === 'function') return h.formatEntityState(st); } catch (x) { /* raw */ }
     return st.state;
   };
   /* Minutes from a duration (s/min/h) or a point in time (until then, with past: since then). */
@@ -1315,7 +1315,8 @@
   /* Machine state: [text, tone, active, kind]. Plug only: power > 5 W = running. */
   L.state = function (states, id) {
     var st = states[id];
-    var raw = String((st && st.state) || 'unknown').toLowerCase();
+    // Home Connect Alt (HACS) reports the Home Connect key: BSH.Common.EnumType.OperationState.Run → run.
+    var raw = String((st && st.state) || 'unknown').toLowerCase().replace(/^bsh\.common\.enumtype\.operationstate\./, '');
     var a = (st && st.attributes) || {};
     if (st && raw !== 'unavailable' && /^sensor\./.test(id) && a.device_class === 'power') {
       var w = parseFloat(st.state);
@@ -1325,7 +1326,7 @@
     if (raw === 'paused' && a.cycle_anomaly === 'stalled') return STALLED;
     if (STATE[raw]) return STATE[raw];
     var h = HASS(), txt = raw;
-    try { if (st && h && typeof h.formatEntityState === 'function') txt = h.formatEntityState(st); } catch (x) { /* roh */ }
+    try { if (st && h && typeof h.formatEntityState === 'function') txt = h.formatEntityState(st); } catch (x) { /* raw */ }
     return [txt, null, false, 'other'];
   };
 
@@ -2102,10 +2103,11 @@
     ['aborted', 'Programm abgebrochen', 'mdi:cancel'],
   ];
   // Home Connect in HA core writes the program ids with underscores (…_eco_50, …_machine_care), the older
-  // integration without (…_eco50): compare without them.
+  // integration without (…_eco50), Home Connect Alt (HACS) the Home Connect key (Dishcare.Dishwasher.Program.Eco50):
+  // compare in lower case without underscores and dots.
   var PROG_N = {};
   Object.keys(PROG).forEach(function (k) { PROG_N[k.replace(/_/g, '')] = PROG[k]; });
-  var progOf = function (p) { return p ? PROG[p] || PROG_N[String(p).replace(/_/g, '')] || null : null; };
+  var progOf = function (p) { return p ? PROG[p] || PROG_N[String(p).toLowerCase().replace(/[_.]/g, '')] || null : null; };
   // Unknown program: the name HA translates for the select (sel), else the id without its prefix.
   var progName = function (p, sel) {
     if (!p) return null;
@@ -2116,7 +2118,7 @@
       var t = h && h.hass && typeof h.hass.formatEntityState === 'function' ? h.hass.formatEntityState(sel, p) : null;
       if (t && t !== p) return t;
     } catch (x) { /* raw */ }
-    var r = String(p).replace(/^dishcare_dishwasher_program_/, '').replace(/_/g, ' ');
+    var r = String(p).replace(/^dishcare[_.]dishwasher[_.]program[_.]/i, '').replace(/_/g, ' ');
     return r.charAt(0).toUpperCase() + r.slice(1);
   };
   var progIcon = function (p) { return (progOf(p) || [0, 'mdi:dishwasher'])[1]; };
@@ -2238,7 +2240,7 @@
     if (!UI) return '';
     var s = L.state(states, c.st);
     var active = s[2];
-    var raw = String((states[c.st] || {}).state || '');
+    var raw = String((states[c.st] || {}).state || '').toLowerCase().replace(/^bsh\.common\.enumtype\.operationstate\./, '');
     var d = L.data[c.st] || {};
     var rem = minutes(states, c.remaining);
     var doorOpen = isOpen(states, c.door);

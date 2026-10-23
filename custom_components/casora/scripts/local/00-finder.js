@@ -1464,6 +1464,37 @@ window.casoraPriceKwh = function (v) {
   };
   // Dishwasher fields (02-devices.js _casoraDish): same keys on every device of that source.
   var bk = function (key) { return k(key, 'binary_sensor'); };
+  // Home Connect Alt (HACS, ekutner/home-connect-hass) gives its entities generic translation_keys (statuses,
+  // options, programs, settings or none) but fixes every entity_id itself: <domain>.<haid>_<Home Connect key in
+  // lower case, dots as underscores> (common.py EntityBase), e.g. sensor.<haid>_bsh_common_status_operationstate,
+  // sensor.<haid>_active_program, select.<haid>_programs, button.<haid>_start_pause. The frontend's registry has
+  // no unique_id, so these fields match the end of the entity_id, and only on that platform (TAIL_PLATFORMS).
+  var TAIL_PLATFORMS = ['home_connect_alt'];
+  var hk = function (tails, domain, keys) { return { keys: [].concat(keys || []), domain: domain || 'sensor', tail: [].concat(tails) }; };
+  var tailHit = function (e, tails) {
+    if (TAIL_PLATFORMS.indexOf(e.platform) < 0) return false;
+    var obj = String(e.entity_id).split('.')[1] || '';
+    return tails.some(function (t) { return obj === t || obj.slice(-(t.length + 1)) === '_' + t; });
+  };
+  // Home Connect Alt: the program sensors and the program select carry the appliance type as their icon
+  // (const.py DEVICE_ICON_MAP); else the program keys (translation mode "local") or the option entities' ids
+  // (…_laundrycare_washer_option_temperature, …_dishcare_dishwasher_option_extradry). A coffee maker or oven: none.
+  var altRole = function (hass, list) {
+    var progs = list.filter(function (e) { return e.key === 'programs' || tailHit(e, ['active_program', 'selected_program', 'programs']); });
+    var icon = progs.map(function (e) {
+      var a = (sts(hass)[e.entity_id] || {}).attributes || {};
+      return String(a.icon || (reg(hass)[e.entity_id] || {}).icon || '');
+    }).join(' ');
+    if (/tumble-dryer/.test(icon)) return 'dryer';
+    if (/washing-machine/.test(icon)) return 'washer';
+    if (/dishwasher/.test(icon)) return 'dishwasher';
+    if (/coffee|stove|fridge|robot|hvac/.test(icon)) return null;
+    var o = opts(hass, progs, ['programs']).concat(progs.map(function (e) { var st = sts(hass)[e.entity_id]; return String((st && st.state) || '').toLowerCase(); }))
+      .concat(list.filter(function (e) { return TAIL_PLATFORMS.indexOf(e.platform) > -1; }).map(function (e) { return e.entity_id; })).join(' ');
+    if (/laundry_?care[._]washer/.test(o)) return 'washer';
+    if (/laundry_?care[._]dryer/.test(o)) return 'dryer';
+    return /dishcare[._]dishwasher/.test(o) ? 'dishwasher' : null;
+  };
 
   // need: every key required, any: one of them – only when the platform does not match (test house).
   // role(hass, list, devId) → 'washer' | 'dryer' | 'dishwasher' | null (null = none of them, e.g. an oven).
@@ -1479,8 +1510,29 @@ window.casoraPriceKwh = function (v) {
       // HA core has no start button (the active_program select starts) and reports the finish time.
       dish: { program: k('active_program', 'select'), sel: k('selected_program', 'select'), progress: k('program_progress'),
         remaining: k('program_finish_time'), door: k('door'), stop: k('stop_program', 'button') } },
-    /* Home Connect Alt / Home Connect WS (HACS): keys of their own with a prefix. */
-    { id: 'home_connect_alt', rank: 0, platforms: ['home_connect_alt', 'homeconnect_ws'], need: ['sensor_operation_state'],
+    /* Home Connect Alt (HACS, ekutner/home-connect-hass): by platform only (its keys are generic), fields by the
+       end of the entity_id (hk above). Operation state and programs are Home Connect keys
+       (BSH.Common.EnumType.OperationState.Run, LaundryCare.Washer.Program.Cotton) or, in translation mode "server",
+       the cloud's texts; the remaining time is a timestamp (const.py: class timestamp); one button starts, pauses
+       and resumes (button.py StartButton, translation_key by state), so pause and resume are that button. */
+    { id: 'home_connect_alt', rank: 0, platforms: ['home_connect_alt'], need: null, any: [],
+      role: altRole,
+      fields: { state: hk('bsh_common_status_operationstate'), program: hk(['active_program', 'selected_program']),
+        select: hk('programs', 'select'), remaining: hk('bsh_common_option_remainingprogramtime'),
+        progress: hk('bsh_common_option_programprogress'), door: hk('bsh_common_status_doorstate', 'binary_sensor'),
+        stop: hk('stop', 'button', 'stop_program'), pause: hk('start_pause', 'button'), resume: hk('start_pause', 'button') },
+      dish: { program: hk('active_program'), sel: hk('programs', 'select'), progress: hk('bsh_common_option_programprogress'),
+        remaining: hk('bsh_common_option_remainingprogramtime'), energyEst: hk('bsh_common_option_energyforecast'),
+        waterEst: hk('bsh_common_option_waterforecast'),
+        door: { keys: [], domain: 'binary_sensor', tail: ['bsh_common_status_doorstate'], dc: 'door' },
+        conn: hk('connected', 'binary_sensor'), power_sw: hk('bsh_common_setting_powerstate', 'switch'),
+        extraDry: hk('dishcare_dishwasher_option_extradry', 'switch'), halfLoad: hk('dishcare_dishwasher_option_halfload', 'switch'),
+        speed: hk('dishcare_dishwasher_option_variospeedplus', 'switch'),
+        silence: hk('dishcare_dishwasher_option_silenceondemand', 'switch'),
+        start: hk('start_pause', 'button'), stop: hk('stop', 'button', 'stop_program') } },
+    /* Home Connect Local (HACS, chris-mc1/homeconnect_local_hass, platform homeconnect_ws): translation_key = the
+       entity description's key (entity.py), e.g. sensor_operation_state; entity_ids follow the (translated) names. */
+    { id: 'homeconnect_ws', rank: 0, platforms: ['homeconnect_ws'], need: ['sensor_operation_state'],
       any: ['sensor_active_program', 'select_program', 'sensor_program_progress'],
       role: hcRole(['sensor_active_program', 'select_program', 'sensor_selected_program']),
       fields: { state: k('sensor_operation_state'), program: k(['sensor_active_program', 'sensor_selected_program']),
@@ -1493,14 +1545,16 @@ window.casoraPriceKwh = function (v) {
         progress: k('sensor_program_progress'), remaining: k('sensor_remaining_program_time'),
         energyEst: k('sensor_energy_forecast'), waterEst: k('sensor_water_forecast'), salt: k('sensor_salt'),
         rinse: k('sensor_rinse_aid'), door: { keys: ['binary_sensor_door_state'], domain: 'binary_sensor', dc: 'door' },
-        care: k('sensor_machine_care_reminder'), starts: k('sensor_count_started'), conn: bk('connection'),
+        care: k(['sensor_machinecare_remaining_runs', 'sensor_machine_care_reminder']), starts: k('sensor_count_started'),
+        conn: bk('connection'),
         remote: k('select_remote_control_level', 'select'), startIn: k('number_start_in', 'number'),
         power_sw: k('switch_power_state', 'switch'), light: k('switch_info_light', 'switch'),
         smartFilter: bk('binary_sensor_smartfiltercleaningreminder'), filterCheck: bk('binary_sensor_checkfiltersystem'),
         machineCare: bk('binary_sensor_machinecarereminder'),
         machineFilter: bk('binary_sensor_machinecareandfiltercleaningreminder'),
-        extraDry: k('switch_extra_dry', 'switch'), halfLoad: k('switch_half_load', 'switch'),
-        speed: k('switch_speed_on_demand', 'switch'), silence: k('switch_silence_on_demand', 'switch'),
+        // Per-program options first (dishcare.py), the settings of the same name are off by default.
+        extraDry: k(['switch_extra_dry_option', 'switch_extra_dry'], 'switch'), halfLoad: k('switch_half_load', 'switch'),
+        speed: k(['switch_vario_speed_plus', 'switch_speed_on_demand'], 'switch'), silence: k('switch_silence_on_demand', 'switch'),
         start: k('button_start_program', 'button'), stop: k('button_abort_program', 'button'),
         aquaStop: bk('binary_sensor_aqua_stop'), drainBlocked: bk('binary_sensor_drainpumpblocked'),
         drainImpossible: bk('binary_sensor_drainingnotpossible'), lowPressure: bk('binary_sensor_low_water_pressure'),
@@ -1591,6 +1645,14 @@ window.casoraPriceKwh = function (v) {
     for (var i = 0; i < keys.length; i++) {
       for (var j = 0; j < lst.length; j++) {
         if (lst[j].key === keys[i] && lst[j].domain === spec.domain) return lst[j].entity_id;
+      }
+    }
+    // End of the entity_id (Home Connect Alt, hk): in the order of the tails.
+    if (spec.tail) {
+      for (var t = 0; t < spec.tail.length; t++) {
+        for (var q = 0; q < lst.length; q++) {
+          if (lst[q].domain === spec.domain && tailHit(lst[q], [spec.tail[t]])) return lst[q].entity_id;
+        }
       }
     }
     // Device class (dish door: Miele's door has no key): visible entities only.
@@ -1701,8 +1763,8 @@ window.casoraPriceKwh = function (v) {
     }).map(function (id) { return plugOf(hass, id); }).filter(Boolean);
   }
 
-  // Dishwasher: German entity-id suffixes (Home Connect Alt in German), only when no key and no device class
-  // matches – older installs without translation_key. [pattern, domain]
+  // Dishwasher: German entity-id suffixes (Home Connect Local, homeconnect_ws, names from its translations/de.json),
+  // only when no key and no device class matches – older installs without translation_key. [pattern, domain]
   var DISH_NAMES = {
     program: [/_aktives_programm$/, 'sensor'], sel: [/_ausgewahltes_programm$/, 'select'], phase: [/_programmphase$/, 'sensor'],
     progress: [/_programmfortschritt$/, 'sensor'], remaining: [/_verbleibende_programmlaufzeit$/, 'sensor'],

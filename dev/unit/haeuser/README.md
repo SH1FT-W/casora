@@ -19,6 +19,10 @@ Felder von `expect` (alle optional):
 - `house_list`: stattdessen Liste auf Zuhause (Summe), z. B. aus den Energie-Einstellungen
 - `plants`: Entitäten, die Pflanzen sind; `not_plants`: die es nicht sind
 - `dishwasher`: `{ "entity": Betriebszustand, "fields": { remaining, program, sel, door, progress, stop } }`
+- `laundry`: Liste `{ "entity", "role": "washer" | "dryer" | "dishwasher", "source", "fields": { state, program, … },
+  "state_text": "Läuft" }` – Gerät hinter der Entität über die gemeinsame Quellen-Tabelle (`casoraLaundryFind.classify`),
+  `fields` wie dort (`null` = keins), `state_text` der Zustandstext der Karte
+- `not_laundry`: Entitäten, deren Gerät keine Wasch-, Trocken- oder Spülmaschine ist (Kaffeevollautomat, Dienst)
 - `energy_roles`: `{ entity_id: "solar" | "grid" | "battery" | "home" | null }` für das Popup „Woher kommt der Strom“
 - `energy_peers`: `{ grid, solar, battery }` – Leistungssensor je Teil der Anlage, den die Energie-Popups ohne
   Sub-Badges nehmen (`peers`), `null` = keiner

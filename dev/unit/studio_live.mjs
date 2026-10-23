@@ -16,8 +16,10 @@ const M = win.__casoraStudioLive;
 assert.ok(M && M.deviceSub && M.cleanDevices && M.draftOf && M.logLine, 'Bausteine fehlen');
 
 // Subline: kind · source · grade (· state), translated
-assert.equal(M.deviceSub({ kind: 'dishwasher', source: 'home_connect_alt', grade: 'sehr gut', phase: 'off' }),
-  'Geschirrspüler · Home Connect (HACS) · Geprüft');
+assert.equal(M.deviceSub({ kind: 'dishwasher', source: 'homeconnect_ws', grade: 'sehr gut', phase: 'off' }),
+  'Geschirrspüler · Home Connect Local · Geprüft');
+assert.equal(M.deviceSub({ kind: 'washer', source: 'home_connect_alt', grade: 'ungetestet', phase: null }),
+  'Waschmaschine · Home Connect Alt · Ungetestet');
 assert.equal(M.deviceSub({ kind: 'washer', source: 'washdata', grade: 'sehr gut', phase: 'run' }), 'Waschmaschine · WashData · Geprüft · Läuft');
 assert.equal(M.deviceSub({ kind: 'printer', source: 'bambu_lab', grade: 'ungetestet', phase: null }), '3D-Drucker · Bambu Lab · Ungetestet');
 
