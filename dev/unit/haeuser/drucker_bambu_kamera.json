@@ -1,0 +1,373 @@
+{
+ "quelle": "Erfunden: Bambu-Lab-Drucker (HACS) mit Kamera, Kammerlicht und AMS als Untergerät, Saugroboter mit Kartenkamera, eine Überwachungskamera – Drucker- und Kartenkameras gehören nicht in die Kamera-Kachel",
+ "areas": {
+  "werkstatt": {
+   "area_id": "werkstatt",
+   "name": "Werkstatt"
+  },
+  "flur": {
+   "area_id": "flur",
+   "name": "Flur"
+  },
+  "einfahrt": {
+   "area_id": "einfahrt",
+   "name": "Einfahrt"
+  }
+ },
+ "devices": {
+  "d_pr": {
+   "id": "d_pr",
+   "name": "Werkbank P1S",
+   "area_id": "werkstatt",
+   "manufacturer": "Bambu Lab",
+   "model": "P1S"
+  },
+  "d_ams": {
+   "id": "d_ams",
+   "name": "Werkbank P1S AMS 1",
+   "area_id": "werkstatt",
+   "manufacturer": "Bambu Lab",
+   "model": "AMS",
+   "via_device_id": "d_pr"
+  },
+  "d_vac": {
+   "id": "d_vac",
+   "name": "Flitzer",
+   "area_id": "flur",
+   "manufacturer": "Dreame",
+   "model": "X40"
+  },
+  "d_cam": {
+   "id": "d_cam",
+   "name": "Torkamera",
+   "area_id": "einfahrt",
+   "manufacturer": "Reolink",
+   "model": "RLC-810A"
+  }
+ },
+ "entities": {
+  "sensor.werkbank_p1s_druckstatus": {
+   "entity_id": "sensor.werkbank_p1s_druckstatus",
+   "device_id": "d_pr",
+   "area_id": null,
+   "platform": "bambu_lab",
+   "translation_key": "print_status"
+  },
+  "sensor.werkbank_p1s_aktueller_schritt": {
+   "entity_id": "sensor.werkbank_p1s_aktueller_schritt",
+   "device_id": "d_pr",
+   "area_id": null,
+   "platform": "bambu_lab",
+   "translation_key": "stage"
+  },
+  "sensor.werkbank_p1s_druckfortschritt": {
+   "entity_id": "sensor.werkbank_p1s_druckfortschritt",
+   "device_id": "d_pr",
+   "area_id": null,
+   "platform": "bambu_lab",
+   "translation_key": "print_progress"
+  },
+  "sensor.werkbank_p1s_restzeit": {
+   "entity_id": "sensor.werkbank_p1s_restzeit",
+   "device_id": "d_pr",
+   "area_id": null,
+   "platform": "bambu_lab",
+   "translation_key": "remaining_time"
+  },
+  "sensor.werkbank_p1s_aufgabe": {
+   "entity_id": "sensor.werkbank_p1s_aufgabe",
+   "device_id": "d_pr",
+   "area_id": null,
+   "platform": "bambu_lab",
+   "translation_key": "subtask_name"
+  },
+  "sensor.werkbank_p1s_aktuelle_schicht": {
+   "entity_id": "sensor.werkbank_p1s_aktuelle_schicht",
+   "device_id": "d_pr",
+   "area_id": null,
+   "platform": "bambu_lab",
+   "translation_key": "current_layer"
+  },
+  "sensor.werkbank_p1s_dusentemperatur": {
+   "entity_id": "sensor.werkbank_p1s_dusentemperatur",
+   "device_id": "d_pr",
+   "area_id": null,
+   "platform": "bambu_lab",
+   "translation_key": "nozzle_temp"
+  },
+  "camera.werkbank_p1s_kamera": {
+   "entity_id": "camera.werkbank_p1s_kamera",
+   "device_id": "d_pr",
+   "area_id": null,
+   "platform": "bambu_lab",
+   "translation_key": "camera"
+  },
+  "light.werkbank_p1s_kammerbeleuchtung": {
+   "entity_id": "light.werkbank_p1s_kammerbeleuchtung",
+   "device_id": "d_pr",
+   "area_id": null,
+   "platform": "bambu_lab",
+   "translation_key": "chamber_light"
+  },
+  "button.werkbank_p1s_pause": {
+   "entity_id": "button.werkbank_p1s_pause",
+   "device_id": "d_pr",
+   "area_id": null,
+   "platform": "bambu_lab",
+   "translation_key": "pause"
+  },
+  "image.werkbank_p1s_titelbild": {
+   "entity_id": "image.werkbank_p1s_titelbild",
+   "device_id": "d_pr",
+   "area_id": null,
+   "platform": "bambu_lab",
+   "translation_key": "cover_image"
+  },
+  "sensor.werkbank_p1s_ams_1_fach_1": {
+   "entity_id": "sensor.werkbank_p1s_ams_1_fach_1",
+   "device_id": "d_ams",
+   "area_id": null,
+   "platform": "bambu_lab",
+   "translation_key": "tray"
+  },
+  "sensor.werkbank_p1s_ams_1_luftfeuchtigkeit": {
+   "entity_id": "sensor.werkbank_p1s_ams_1_luftfeuchtigkeit",
+   "device_id": "d_ams",
+   "area_id": null,
+   "platform": "bambu_lab",
+   "translation_key": "humidity_index"
+  },
+  "vacuum.flitzer": {
+   "entity_id": "vacuum.flitzer",
+   "device_id": "d_vac",
+   "area_id": null,
+   "platform": "dreame_vacuum",
+   "translation_key": null
+  },
+  "camera.flitzer_map": {
+   "entity_id": "camera.flitzer_map",
+   "device_id": "d_vac",
+   "area_id": null,
+   "platform": "dreame_vacuum",
+   "translation_key": null
+  },
+  "sensor.flitzer_status": {
+   "entity_id": "sensor.flitzer_status",
+   "device_id": "d_vac",
+   "area_id": null,
+   "platform": "dreame_vacuum",
+   "translation_key": "status"
+  },
+  "camera.torkamera_fluent": {
+   "entity_id": "camera.torkamera_fluent",
+   "device_id": "d_cam",
+   "area_id": null,
+   "platform": "reolink",
+   "translation_key": "fluent"
+  },
+  "binary_sensor.torkamera_person": {
+   "entity_id": "binary_sensor.torkamera_person",
+   "device_id": "d_cam",
+   "area_id": null,
+   "platform": "reolink",
+   "translation_key": "person"
+  }
+ },
+ "states": {
+  "sensor.werkbank_p1s_druckstatus": {
+   "entity_id": "sensor.werkbank_p1s_druckstatus",
+   "state": "running",
+   "attributes": {
+    "device_class": "enum",
+    "friendly_name": "Werkbank P1S Druckstatus"
+   }
+  },
+  "sensor.werkbank_p1s_aktueller_schritt": {
+   "entity_id": "sensor.werkbank_p1s_aktueller_schritt",
+   "state": "printing",
+   "attributes": {
+    "device_class": "enum",
+    "friendly_name": "Werkbank P1S Aktueller Schritt"
+   }
+  },
+  "sensor.werkbank_p1s_druckfortschritt": {
+   "entity_id": "sensor.werkbank_p1s_druckfortschritt",
+   "state": "42",
+   "attributes": {
+    "unit_of_measurement": "%",
+    "friendly_name": "Werkbank P1S Druckfortschritt"
+   }
+  },
+  "sensor.werkbank_p1s_restzeit": {
+   "entity_id": "sensor.werkbank_p1s_restzeit",
+   "state": "1.5",
+   "attributes": {
+    "unit_of_measurement": "h",
+    "device_class": "duration",
+    "friendly_name": "Werkbank P1S Restzeit"
+   }
+  },
+  "sensor.werkbank_p1s_aufgabe": {
+   "entity_id": "sensor.werkbank_p1s_aufgabe",
+   "state": "Halter_v2",
+   "attributes": {
+    "friendly_name": "Werkbank P1S Aufgabe"
+   }
+  },
+  "sensor.werkbank_p1s_aktuelle_schicht": {
+   "entity_id": "sensor.werkbank_p1s_aktuelle_schicht",
+   "state": "57",
+   "attributes": {
+    "friendly_name": "Werkbank P1S Aktuelle Schicht"
+   }
+  },
+  "sensor.werkbank_p1s_dusentemperatur": {
+   "entity_id": "sensor.werkbank_p1s_dusentemperatur",
+   "state": "220",
+   "attributes": {
+    "device_class": "temperature",
+    "unit_of_measurement": "°C",
+    "friendly_name": "Werkbank P1S Düsentemperatur"
+   }
+  },
+  "camera.werkbank_p1s_kamera": {
+   "entity_id": "camera.werkbank_p1s_kamera",
+   "state": "idle",
+   "attributes": {
+    "friendly_name": "Werkbank P1S Kamera"
+   }
+  },
+  "light.werkbank_p1s_kammerbeleuchtung": {
+   "entity_id": "light.werkbank_p1s_kammerbeleuchtung",
+   "state": "on",
+   "attributes": {
+    "friendly_name": "Werkbank P1S Kammerbeleuchtung"
+   }
+  },
+  "button.werkbank_p1s_pause": {
+   "entity_id": "button.werkbank_p1s_pause",
+   "state": "unknown",
+   "attributes": {
+    "friendly_name": "Werkbank P1S Pause"
+   }
+  },
+  "image.werkbank_p1s_titelbild": {
+   "entity_id": "image.werkbank_p1s_titelbild",
+   "state": "2099-01-01T10:00:00+00:00",
+   "attributes": {
+    "friendly_name": "Werkbank P1S Titelbild"
+   }
+  },
+  "sensor.werkbank_p1s_ams_1_fach_1": {
+   "entity_id": "sensor.werkbank_p1s_ams_1_fach_1",
+   "state": "PLA",
+   "attributes": {
+    "friendly_name": "Werkbank P1S AMS 1 Fach 1"
+   }
+  },
+  "sensor.werkbank_p1s_ams_1_luftfeuchtigkeit": {
+   "entity_id": "sensor.werkbank_p1s_ams_1_luftfeuchtigkeit",
+   "state": "2",
+   "attributes": {
+    "friendly_name": "Werkbank P1S AMS 1 Luftfeuchtigkeit"
+   }
+  },
+  "vacuum.flitzer": {
+   "entity_id": "vacuum.flitzer",
+   "state": "docked",
+   "attributes": {
+    "friendly_name": "Flitzer"
+   }
+  },
+  "camera.flitzer_map": {
+   "entity_id": "camera.flitzer_map",
+   "state": "idle",
+   "attributes": {
+    "friendly_name": "Flitzer Map"
+   }
+  },
+  "sensor.flitzer_status": {
+   "entity_id": "sensor.flitzer_status",
+   "state": "charging",
+   "attributes": {
+    "friendly_name": "Flitzer Status"
+   }
+  },
+  "camera.torkamera_fluent": {
+   "entity_id": "camera.torkamera_fluent",
+   "state": "idle",
+   "attributes": {
+    "friendly_name": "Torkamera Fluent"
+   }
+  },
+  "binary_sensor.torkamera_person": {
+   "entity_id": "binary_sensor.torkamera_person",
+   "state": "off",
+   "attributes": {
+    "device_class": "motion",
+    "friendly_name": "Torkamera Person"
+   }
+  }
+ },
+ "expect": {
+  "studio_main": {
+   "casora_3d_printer": [
+    "sensor.werkbank_p1s_druckstatus"
+   ]
+  },
+  "studio_fields": {
+   "casora_3d_printer": {
+    "entity": "sensor.werkbank_p1s_druckstatus",
+    "fields": {
+     "entity_state": "sensor.werkbank_p1s_aktueller_schritt",
+     "entity_progress": "sensor.werkbank_p1s_druckfortschritt",
+     "entity_task_name": "sensor.werkbank_p1s_aufgabe",
+     "entity_layer": "sensor.werkbank_p1s_aktuelle_schicht",
+     "entity_nozzle_temp": "sensor.werkbank_p1s_dusentemperatur",
+     "entity_camera": "camera.werkbank_p1s_kamera",
+     "entity_light": "light.werkbank_p1s_kammerbeleuchtung",
+     "btn_pause": "button.werkbank_p1s_pause",
+     "btn_stop": null
+    }
+   }
+  },
+  "assist": {
+   "casora_3d_printer": [
+    "sensor.werkbank_p1s_druckstatus"
+   ],
+   "casora_camera": [
+    "camera.torkamera_fluent"
+   ],
+   "vacuum": [
+    "vacuum.flitzer"
+   ]
+  },
+  "printer": {
+   "entity": "sensor.werkbank_p1s_druckstatus",
+   "fields": {
+    "status": "sensor.werkbank_p1s_druckstatus",
+    "st": "sensor.werkbank_p1s_aktueller_schritt",
+    "progress": "sensor.werkbank_p1s_druckfortschritt",
+    "remaining": "sensor.werkbank_p1s_restzeit",
+    "task": "sensor.werkbank_p1s_aufgabe",
+    "cam": "camera.werkbank_p1s_kamera",
+    "light": "light.werkbank_p1s_kammerbeleuchtung",
+    "pause": "button.werkbank_p1s_pause"
+   }
+  },
+  "cameras": [
+   "camera.torkamera_fluent"
+  ],
+  "cameras_chosen": {
+   "pick": [
+    "camera.werkbank_p1s_kamera",
+    "camera.flitzer_map",
+    "camera.torkamera_fluent"
+   ],
+   "want": [
+    "camera.werkbank_p1s_kamera",
+    "camera.torkamera_fluent"
+   ]
+  }
+ }
+}

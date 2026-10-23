@@ -1,0 +1,434 @@
+{
+ "quelle": "Erfunden nach #48 (Home Connect aus HA-Kern, spanische Namen): Geschirrspüler, Backofen und Kaffeevollautomat melden alle operation_state – nur der Spüler ist einer",
+ "areas": {
+  "cocina": {
+   "area_id": "cocina",
+   "name": "Cocina"
+  }
+ },
+ "devices": {
+  "d_lv": {
+   "id": "d_lv",
+   "name": "Lavavajillas",
+   "area_id": "cocina",
+   "manufacturer": "Bosch",
+   "model": "SMV4HCX00E"
+  },
+  "d_ho": {
+   "id": "d_ho",
+   "name": "Horno",
+   "area_id": "cocina",
+   "manufacturer": "Bosch",
+   "model": "HBG7000B1"
+  },
+  "d_ca": {
+   "id": "d_ca",
+   "name": "Cafetera",
+   "area_id": "cocina",
+   "manufacturer": "Siemens",
+   "model": "TI9500X1DE"
+  }
+ },
+ "entities": {
+  "sensor.lavavajillas_estado_de_funcionamiento": {
+   "entity_id": "sensor.lavavajillas_estado_de_funcionamiento",
+   "device_id": "d_lv",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "operation_state"
+  },
+  "sensor.lavavajillas_hora_de_finalizacion_del_programa": {
+   "entity_id": "sensor.lavavajillas_hora_de_finalizacion_del_programa",
+   "device_id": "d_lv",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "program_finish_time"
+  },
+  "sensor.lavavajillas_progreso_del_programa": {
+   "entity_id": "sensor.lavavajillas_progreso_del_programa",
+   "device_id": "d_lv",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "program_progress"
+  },
+  "select.lavavajillas_programa_activo": {
+   "entity_id": "select.lavavajillas_programa_activo",
+   "device_id": "d_lv",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "active_program"
+  },
+  "select.lavavajillas_programa_seleccionado": {
+   "entity_id": "select.lavavajillas_programa_seleccionado",
+   "device_id": "d_lv",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "selected_program"
+  },
+  "sensor.lavavajillas_puerta": {
+   "entity_id": "sensor.lavavajillas_puerta",
+   "device_id": "d_lv",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "door"
+  },
+  "button.lavavajillas_detener_programa": {
+   "entity_id": "button.lavavajillas_detener_programa",
+   "device_id": "d_lv",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "stop_program"
+  },
+  "switch.lavavajillas_encendido": {
+   "entity_id": "switch.lavavajillas_encendido",
+   "device_id": "d_lv",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "power"
+  },
+  "sensor.horno_estado_de_funcionamiento": {
+   "entity_id": "sensor.horno_estado_de_funcionamiento",
+   "device_id": "d_ho",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "operation_state"
+  },
+  "sensor.horno_hora_de_finalizacion_del_programa": {
+   "entity_id": "sensor.horno_hora_de_finalizacion_del_programa",
+   "device_id": "d_ho",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "program_finish_time"
+  },
+  "sensor.horno_progreso_del_programa": {
+   "entity_id": "sensor.horno_progreso_del_programa",
+   "device_id": "d_ho",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "program_progress"
+  },
+  "select.horno_programa_activo": {
+   "entity_id": "select.horno_programa_activo",
+   "device_id": "d_ho",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "active_program"
+  },
+  "select.horno_programa_seleccionado": {
+   "entity_id": "select.horno_programa_seleccionado",
+   "device_id": "d_ho",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "selected_program"
+  },
+  "sensor.horno_puerta": {
+   "entity_id": "sensor.horno_puerta",
+   "device_id": "d_ho",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "door"
+  },
+  "sensor.horno_temperatura_actual_de_la_cavidad": {
+   "entity_id": "sensor.horno_temperatura_actual_de_la_cavidad",
+   "device_id": "d_ho",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "oven_current_cavity_temperature"
+  },
+  "button.horno_detener_programa": {
+   "entity_id": "button.horno_detener_programa",
+   "device_id": "d_ho",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "stop_program"
+  },
+  "switch.horno_encendido": {
+   "entity_id": "switch.horno_encendido",
+   "device_id": "d_ho",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "power"
+  },
+  "sensor.cafetera_estado_de_funcionamiento": {
+   "entity_id": "sensor.cafetera_estado_de_funcionamiento",
+   "device_id": "d_ca",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "operation_state"
+  },
+  "sensor.cafetera_progreso_del_programa": {
+   "entity_id": "sensor.cafetera_progreso_del_programa",
+   "device_id": "d_ca",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "program_progress"
+  },
+  "select.cafetera_programa_activo": {
+   "entity_id": "select.cafetera_programa_activo",
+   "device_id": "d_ca",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "active_program"
+  },
+  "select.cafetera_programa_seleccionado": {
+   "entity_id": "select.cafetera_programa_seleccionado",
+   "device_id": "d_ca",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "selected_program"
+  },
+  "sensor.cafetera_contador_de_cafe": {
+   "entity_id": "sensor.cafetera_contador_de_cafe",
+   "device_id": "d_ca",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "coffee_counter"
+  },
+  "switch.cafetera_encendido": {
+   "entity_id": "switch.cafetera_encendido",
+   "device_id": "d_ca",
+   "area_id": null,
+   "platform": "home_connect",
+   "translation_key": "power"
+  }
+ },
+ "states": {
+  "sensor.lavavajillas_estado_de_funcionamiento": {
+   "entity_id": "sensor.lavavajillas_estado_de_funcionamiento",
+   "state": "ready",
+   "attributes": {
+    "device_class": "enum",
+    "friendly_name": "Lavavajillas Estado de funcionamiento"
+   }
+  },
+  "sensor.lavavajillas_hora_de_finalizacion_del_programa": {
+   "entity_id": "sensor.lavavajillas_hora_de_finalizacion_del_programa",
+   "state": "unknown",
+   "attributes": {
+    "device_class": "timestamp",
+    "friendly_name": "Lavavajillas Hora de finalización del programa"
+   }
+  },
+  "sensor.lavavajillas_progreso_del_programa": {
+   "entity_id": "sensor.lavavajillas_progreso_del_programa",
+   "state": "unknown",
+   "attributes": {
+    "unit_of_measurement": "%",
+    "friendly_name": "Lavavajillas Progreso del programa"
+   }
+  },
+  "select.lavavajillas_programa_activo": {
+   "entity_id": "select.lavavajillas_programa_activo",
+   "state": "unknown",
+   "attributes": {
+    "options": [
+     "dishcare_dishwasher_program_eco_50",
+     "dishcare_dishwasher_program_auto_2",
+     "dishcare_dishwasher_program_quick_45"
+    ],
+    "friendly_name": "Lavavajillas Programa activo"
+   }
+  },
+  "select.lavavajillas_programa_seleccionado": {
+   "entity_id": "select.lavavajillas_programa_seleccionado",
+   "state": "dishcare_dishwasher_program_eco_50",
+   "attributes": {
+    "options": [
+     "dishcare_dishwasher_program_eco_50",
+     "dishcare_dishwasher_program_auto_2",
+     "dishcare_dishwasher_program_quick_45"
+    ],
+    "friendly_name": "Lavavajillas Programa seleccionado"
+   }
+  },
+  "sensor.lavavajillas_puerta": {
+   "entity_id": "sensor.lavavajillas_puerta",
+   "state": "closed",
+   "attributes": {
+    "device_class": "enum",
+    "options": [
+     "closed",
+     "locked",
+     "open"
+    ],
+    "friendly_name": "Lavavajillas Puerta"
+   }
+  },
+  "button.lavavajillas_detener_programa": {
+   "entity_id": "button.lavavajillas_detener_programa",
+   "state": "unknown",
+   "attributes": {
+    "friendly_name": "Lavavajillas Detener programa"
+   }
+  },
+  "switch.lavavajillas_encendido": {
+   "entity_id": "switch.lavavajillas_encendido",
+   "state": "on",
+   "attributes": {
+    "friendly_name": "Lavavajillas Encendido"
+   }
+  },
+  "sensor.horno_estado_de_funcionamiento": {
+   "entity_id": "sensor.horno_estado_de_funcionamiento",
+   "state": "run",
+   "attributes": {
+    "device_class": "enum",
+    "friendly_name": "Horno Estado de funcionamiento"
+   }
+  },
+  "sensor.horno_hora_de_finalizacion_del_programa": {
+   "entity_id": "sensor.horno_hora_de_finalizacion_del_programa",
+   "state": "2099-01-01T19:30:00+00:00",
+   "attributes": {
+    "device_class": "timestamp",
+    "friendly_name": "Horno Hora de finalización del programa"
+   }
+  },
+  "sensor.horno_progreso_del_programa": {
+   "entity_id": "sensor.horno_progreso_del_programa",
+   "state": "35",
+   "attributes": {
+    "unit_of_measurement": "%",
+    "friendly_name": "Horno Progreso del programa"
+   }
+  },
+  "select.horno_programa_activo": {
+   "entity_id": "select.horno_programa_activo",
+   "state": "cooking_oven_program_heating_mode_hot_air",
+   "attributes": {
+    "options": [
+     "cooking_oven_program_heating_mode_hot_air",
+     "cooking_oven_program_heating_mode_top_bottom_heating",
+     "cooking_oven_program_heating_mode_pizza_setting"
+    ],
+    "friendly_name": "Horno Programa activo"
+   }
+  },
+  "select.horno_programa_seleccionado": {
+   "entity_id": "select.horno_programa_seleccionado",
+   "state": "cooking_oven_program_heating_mode_hot_air",
+   "attributes": {
+    "options": [
+     "cooking_oven_program_heating_mode_hot_air",
+     "cooking_oven_program_heating_mode_top_bottom_heating",
+     "cooking_oven_program_heating_mode_pizza_setting"
+    ],
+    "friendly_name": "Horno Programa seleccionado"
+   }
+  },
+  "sensor.horno_puerta": {
+   "entity_id": "sensor.horno_puerta",
+   "state": "closed",
+   "attributes": {
+    "device_class": "enum",
+    "options": [
+     "closed",
+     "locked",
+     "open"
+    ],
+    "friendly_name": "Horno Puerta"
+   }
+  },
+  "sensor.horno_temperatura_actual_de_la_cavidad": {
+   "entity_id": "sensor.horno_temperatura_actual_de_la_cavidad",
+   "state": "180",
+   "attributes": {
+    "device_class": "temperature",
+    "unit_of_measurement": "°C",
+    "friendly_name": "Horno Temperatura actual de la cavidad"
+   }
+  },
+  "button.horno_detener_programa": {
+   "entity_id": "button.horno_detener_programa",
+   "state": "unknown",
+   "attributes": {
+    "friendly_name": "Horno Detener programa"
+   }
+  },
+  "switch.horno_encendido": {
+   "entity_id": "switch.horno_encendido",
+   "state": "on",
+   "attributes": {
+    "friendly_name": "Horno Encendido"
+   }
+  },
+  "sensor.cafetera_estado_de_funcionamiento": {
+   "entity_id": "sensor.cafetera_estado_de_funcionamiento",
+   "state": "ready",
+   "attributes": {
+    "device_class": "enum",
+    "friendly_name": "Cafetera Estado de funcionamiento"
+   }
+  },
+  "sensor.cafetera_progreso_del_programa": {
+   "entity_id": "sensor.cafetera_progreso_del_programa",
+   "state": "unknown",
+   "attributes": {
+    "unit_of_measurement": "%",
+    "friendly_name": "Cafetera Progreso del programa"
+   }
+  },
+  "select.cafetera_programa_activo": {
+   "entity_id": "select.cafetera_programa_activo",
+   "state": "unknown",
+   "attributes": {
+    "options": [
+     "consumer_products_coffee_maker_program_beverage_espresso",
+     "consumer_products_coffee_maker_program_beverage_coffee",
+     "consumer_products_coffee_maker_program_beverage_cappuccino"
+    ],
+    "friendly_name": "Cafetera Programa activo"
+   }
+  },
+  "select.cafetera_programa_seleccionado": {
+   "entity_id": "select.cafetera_programa_seleccionado",
+   "state": "consumer_products_coffee_maker_program_beverage_espresso",
+   "attributes": {
+    "options": [
+     "consumer_products_coffee_maker_program_beverage_espresso",
+     "consumer_products_coffee_maker_program_beverage_coffee",
+     "consumer_products_coffee_maker_program_beverage_cappuccino"
+    ],
+    "friendly_name": "Cafetera Programa seleccionado"
+   }
+  },
+  "sensor.cafetera_contador_de_cafe": {
+   "entity_id": "sensor.cafetera_contador_de_cafe",
+   "state": "812",
+   "attributes": {
+    "state_class": "total_increasing",
+    "friendly_name": "Cafetera Contador de café"
+   }
+  },
+  "switch.cafetera_encendido": {
+   "entity_id": "switch.cafetera_encendido",
+   "state": "on",
+   "attributes": {
+    "friendly_name": "Cafetera Encendido"
+   }
+  }
+ },
+ "expect": {
+  "studio_main": {
+   "casora_dishwasher": [
+    "sensor.lavavajillas_estado_de_funcionamiento"
+   ]
+  },
+  "assist": {
+   "casora_dishwasher": [
+    "sensor.lavavajillas_estado_de_funcionamiento"
+   ]
+  },
+  "dishwasher": {
+   "entity": "sensor.lavavajillas_estado_de_funcionamiento",
+   "fields": {
+    "remaining": "sensor.lavavajillas_hora_de_finalizacion_del_programa",
+    "program": "select.lavavajillas_programa_activo",
+    "sel": "select.lavavajillas_programa_seleccionado",
+    "door": "sensor.lavavajillas_puerta",
+    "progress": "sensor.lavavajillas_progreso_del_programa",
+    "stop": "button.lavavajillas_detener_programa"
+   }
+  }
+ }
+}

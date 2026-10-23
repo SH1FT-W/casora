@@ -1,6 +1,6 @@
 // Pflanzenmonitor Plus: a plant is a status sensor (platform pflanzenmonitor_plus, translation_key status) instead of
 // Plant Monitor's plant.*, with the same state (ok/problem) and attributes. Everywhere Casora knows a plant it has to
-// know both alike: the shared helper (casora-core.js casoraIsPlant, Studio isPlantEntity), the bell (plant problems,
+// know both alike: the shared helper (00-finder.js casoraIsPlant, used by casora-core.js and the Studio's isPlantEntity), the bell (plant problems,
 // CO2 of a plant's own sensor left out), the finder (bell sources, outdoor sensor not on a plant), the plant doctor
 // in the popup (plant over the reading's device), the plant popup template (readings and limits of a Plus plant) and
 // the Studio (plant tile picker, plant sensors, tile name, import suggestion). Plant Monitor stays as it was.
@@ -102,7 +102,10 @@ window.casoraSecurityIcon = () => 'door-open';
 window.CASORA_SETTINGS = { notify: {} };
 
 const core = read('custom_components/casora/scripts/casora-core.js');
-new Function(slice(core, '// Is this entity a plant?', '\n};\n'))();
+// The single plant check lives in 00-finder.js; casora-core.js only uses it.
+const finderSrc = read('custom_components/casora/scripts/local/00-finder.js');
+new Function(slice(finderSrc, '// ── Is this entity a plant?', '\n};\n'))();
+assert.ok(!/window\.casoraIsPlant\s*=[^=]/.test(core), 'casora-core.js has no plant check of its own');
 
 // ── The helper ─────────────────────────────────────────────────────────────────
 {
@@ -250,6 +253,15 @@ window._casoraLocalLoaded = ['00-finder.js'];
   ['plant.farn', 'sensor.palme', 'sensor.kaktus'].forEach((id) => assert.ok(I.isPlantEntity(hass, id), 'plant: ' + id));
   ['sensor.palme_bodenfeuchtigkeit', 'sensor.router_status', 'number.palme_max_bodenfeuchtigkeit']
     .forEach((id) => assert.ok(!I.isPlantEntity(hass, id), 'no plant: ' + id));
+  {
+    // The Studio asks the shared helper; before 00-finder.js has arrived only plant.* counts.
+    const shared = window.casoraIsPlant;
+    window.casoraIsPlant = (h, id) => id === 'sensor.only_shared';
+    assert.ok(I.isPlantEntity(hass, 'sensor.only_shared') && !I.isPlantEntity(hass, 'sensor.palme'), 'Studio uses casoraIsPlant');
+    delete window.casoraIsPlant;
+    assert.ok(I.isPlantEntity(hass, 'plant.farn') && !I.isPlantEntity(hass, 'sensor.palme'), 'Studio fallback: plant.* only');
+    window.casoraIsPlant = shared;
+  }
 
   const p = Object.create(P);
   p._hass = hass;

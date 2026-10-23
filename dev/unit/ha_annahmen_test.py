@@ -322,6 +322,8 @@ KEYS = [
                        "clean_box_empty", "mop_attached", "water_box_attached", "reset_main_brush_consumable",
                        "reset_side_brush_consumable", "reset_air_filter_consumable", "reset_sensor_consumable"],
      "00-finder.js vacuumFields/vacuumMap, 02-devices.js V.resolve"),
+    ("ecovacs", "sensor", ["stats_area", "stats_time", "error", "total_stats_area", "total_stats_time", "total_stats_cleanings"],
+     "00-finder.js casoraDevice.vacuumFields (fallback keys), live_finder.py VACUUM_FIELDS"),
     ("home_connect", "*", ["operation_state", "program_progress", "program_finish_time", "door", "active_program",
                            "selected_program", "pause_program", "resume_program", "stop_program",
                            "bean_amount", "coffee_temperature", "fill_quantity"],

@@ -7,19 +7,8 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
   try { window.dispatchEvent(new CustomEvent('haptic', { detail: kind || 'light' })); } catch (e) { /* egal */ }
 };
 
-// Is this entity a plant? Plant Monitor (HACS, domain plant) has plant.*; Pflanzenmonitor Plus has one
-// status sensor per plant instead (platform pflanzenmonitor_plus, translation_key status) with the same
-// state (ok/problem) and attributes (problems, <m>_status, species). Every plant check in the dashboard
-// goes through here. hass is optional (default: the one on <home-assistant>).
-window.CASORA_PLANT_PLUS = 'pflanzenmonitor_plus';
-window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
-  id = String(id || '');
-  if (id.indexOf('plant.') === 0) return true;
-  if (id.indexOf('sensor.') !== 0) return false;
-  if (!hass) { try { var ha = document.querySelector('home-assistant'); hass = ha && ha.hass; } catch (e) { hass = null; } }
-  var e = hass && hass.entities && hass.entities[id];
-  return !!e && e.platform === window.CASORA_PLANT_PLUS && e.translation_key === 'status';
-};
+// Is this entity a plant? window.casoraIsPlant lives in scripts/local/00-finder.js (shared with the Studio);
+// callers here that may run before it has loaded fall back to plant.* only.
 
 // Casora Studio „Wer sieht das?“ (06.10.2026): Badges und Räume nur für bestimmte HA-Benutzer.
 // casoraSeen(vars, badge, user, wert) – liefert false, wenn die Badge für diesen Benutzer
@@ -10496,8 +10485,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var KEY = 'casora_notify_read_v1';
   var COUNT_IN_BADGE = true;
 
-  // Plant (plant.* or a Pflanzenmonitor Plus status sensor): window.casoraIsPlant at the top of this
-  // file; without it (module loaded on its own) only plant.*, as before.
+  // Plant (plant.* or a Pflanzenmonitor Plus status sensor): window.casoraIsPlant (00-finder.js);
+  // until that has loaded (the bell waits for the local modules) only plant.*.
   function isPlant(hass, id) {
     return typeof window.casoraIsPlant === 'function' ? window.casoraIsPlant(hass, id) : id.indexOf('plant.') === 0;
   }
@@ -10752,18 +10741,24 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     return null;
   }
 
-  // Zugehörige Sensoren: Saugroboter-Popup (translation_keys, Station als Geschwister-Gerät),
-  // sonst gleiches Gerät oder gleicher Entitäts-Präfix.
+  // The robot's sensors: the vacuum popup (02-devices.js _casoraVac: the card's field table, the dock as a
+  // sibling device); without that module the same table directly (casoraDevice.vacuumFields, 00-finder.js).
+  // Last: sensors the table does not know (no translation_key, e.g. MQTT) by entity id on the same device or
+  // with the robot's prefix.
   function vacSide(hass, id) {
     var S = hass.states || {};
     var out = { status: null, progress: null, lastEnd: null };
+    var VC = window._casoraVac, CD = window.casoraDevice;
     try {
-      var VC = window._casoraVac;
       if (VC && VC.resolve && S[id]) {
         var c = VC.resolve(S[id], {}, S, hass);
         out.status = c.status || null; out.progress = c.progress || null; out.lastEnd = c.lastEnd || null;
+      } else if (CD && CD.vacuumFields && CD.map && S[id]) {
+        var VF = CD.vacuumFields;
+        var F = CD.map(hass, id, { status: VF.status, progress: VF.progress, lastEnd: VF.lastEnd }, { siblings: true });
+        ['status', 'progress', 'lastEnd'].forEach(function (k) { if (F[k] && S[F[k]]) out[k] = F[k]; });
       }
-    } catch (e) { /* Rückfall unten */ }
+    } catch (e) { /* by name below */ }
     if (out.status && out.progress && out.lastEnd) return out;
     var reg = hass.entities || {};
     var dev = reg[id] && reg[id].device_id;

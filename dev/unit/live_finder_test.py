@@ -8,6 +8,9 @@
 2) Parity with the dashboard finder: the SOURCES of scripts/local/00-finder.js (read via node) must match
    live_finder.SOURCES in order, platforms, need/any and fields.
 3) Same roles: the laundry/dishwasher devices of 1) through the JS classify() give the same kind.
+4) Robot vacuum and 3D printer: VACUUM_FIELDS/PRINTER_FIELDS have the keys of the card's tables
+   (casoraDevice.vacuumFields/printerFields), PRINTER_KEYS are casoraDevice.printerKeys, and is_printer answers
+   like casoraDevice.isPrinter for the devices of 1).
 """
 
 from __future__ import annotations
@@ -135,11 +138,27 @@ check("Robot vacuum by vacuum domain", f and f.kind == "vacuum" and f.fields["st
 check("Robot vacuum: status/remaining_time not read as laundry", f and f.source == "vacuum")
 bare = [E("vacuum.v2", None, "dreame")]
 check("Robot vacuum without neighbours", lf.classify("d10", bare, S.get).kind == "vacuum")
+# Ecovacs (HA core): the card's fallback keys; stats_time is seconds natively, the unit says how to read it.
+eco = [E("vacuum.v3", None, "ecovacs"), E("sensor.v3_area", "stats_area", "ecovacs"), E("sensor.v3_time", "stats_time", "ecovacs"),
+       E("sensor.v3_err", "error", "ecovacs")]
+f = lf.classify("d10b", eco, S.get)
+check("Ecovacs vacuum: area, time and error by the card's keys", f and f.fields["area"] == "sensor.v3_area"
+      and f.fields["time"] == "sensor.v3_time" and f.fields["error"] == "sensor.v3_err", f and f.fields)
+dre = [E("vacuum.v4", None, "dreame"), E("sensor.v4_pct", "cleaning_progress", "dreame"), E("sensor.v4_area", "cleaned_area", "dreame")]
+f = lf.classify("d10c", dre, S.get)
+check("Dreame vacuum: progress and area by the card's keys", f and f.fields["progress"] == "sensor.v4_pct"
+      and f.fields["area"] == "sensor.v4_area", f and f.fields)
 
 pr = [E("sensor.pr_state", "print_status", "bambu_lab"), E("sensor.pr_stage", "stage", "bambu_lab"),
       E("sensor.pr_pct", "print_progress", "bambu_lab"), E("sensor.pr_task", "subtask_name", "bambu_lab")]
 f = lf.classify("d11", pr, S.get)
 check("Bambu printer", f and f.kind == "printer" and f.fields["stage"] == "sensor.pr_stage" and f.grade == lf.GRADE_UNTESTED, f)
+check("is_printer: print status", lf.is_printer(pr))
+stage_only = [E("sensor.ps_stage", "stage", "bambu_lab"), E("sensor.ps_rem", "remaining_time", "bambu_lab")]
+check("is_printer: stage alone", lf.is_printer(stage_only))
+check("printer without print status: no live device (and never laundry)", lf.classify("d11b", stage_only, S.get) is None)
+check("is_printer: a stage switch is no printer", not lf.is_printer([E("switch.x_stage", "stage")]))
+check("is_printer: washer is no printer", not lf.is_printer(wd))
 
 plug = [E("switch.plug", None, "shelly"), E("sensor.plug_power", None, "shelly")]
 check("Smart plug is no live device", lf.classify("d12", plug, S.get) is None)
@@ -195,6 +214,40 @@ except Exception as err:  # noqa: BLE001
 if js_roles is not None:
     for c, role in zip(ROLE_CASES, js_roles):
         check(f"{c['dev']}: JS role as in Python ({c['kind']})", role == c["kind"], (role, c["kind"]))
+
+# ── 4) Vacuum and printer tables like the cards ─────────────────────────
+JS_TABLES = r"""
+const fs = require('fs');
+const src = fs.readFileSync(process.argv[1], 'utf8');
+const win = {};
+try { new Function('window', 'document', src)(win, { createElement: () => ({ style: {} }) }); } catch (e) { /* other modules */ }
+const CD = win.casoraDevice;
+const devs = JSON.parse(fs.readFileSync(0, 'utf8'));
+const keys = (t) => Object.fromEntries(Object.entries(t).map(([k, v]) => [k, { keys: v.keys || [], domain: v.domain }]));
+console.log(JSON.stringify({ vac: keys(CD.vacuumFields), print: keys(CD.printerFields), printerKeys: CD.printerKeys,
+  isPrinter: devs.map((d) => CD.isPrinter({ entities: d.entities, devices: { [d.dev]: {} }, states: {} }, d.dev)) }));
+"""
+PRINTER_CASES = [("p1", pr), ("p2", stage_only), ("p3", [E("switch.x_stage", "stage")]), ("p4", wd), ("p5", vac)]
+try:
+    out = subprocess.run([node, "-e", JS_TABLES, os.path.join(ROOT, "custom_components/casora/scripts/local/00-finder.js")],
+                         input=json.dumps([{"dev": d, "entities": {e.entity_id: {"entity_id": e.entity_id, "device_id": d,
+                                                                               "translation_key": e.key} for e in ents}}
+                                           for d, ents in PRINTER_CASES]),
+                         capture_output=True, text=True, check=True).stdout
+    tables = json.loads(out)
+except Exception as err:  # noqa: BLE001
+    tables = None
+    check("JS vacuum/printer tables readable", False, err)
+if tables is not None:
+    for name, js_name in lf.VACUUM_JS.items():
+        check(f"vacuum {name}: keys as casoraDevice.vacuumFields.{js_name}", tables["vac"].get(js_name) == lf.VACUUM_FIELDS[name],
+              (tables["vac"].get(js_name), lf.VACUUM_FIELDS[name]))
+    for name, js_name in lf.PRINTER_JS.items():
+        check(f"printer {name}: keys as casoraDevice.printerFields.{js_name}", tables["print"].get(js_name) == lf.PRINTER_FIELDS[name],
+              (tables["print"].get(js_name), lf.PRINTER_FIELDS[name]))
+    check("printer keys as casoraDevice.printerKeys", tables["printerKeys"] == lf.PRINTER_KEYS, (tables["printerKeys"], lf.PRINTER_KEYS))
+    for (d, ents), js in zip(PRINTER_CASES, tables["isPrinter"]):
+        check(f"{d}: is_printer as casoraDevice.isPrinter", js == lf.is_printer(ents), (js, lf.is_printer(ents)))
 
 print("\nALL OK" if not fails else f"\n{len(fails)} FAILED")
 sys.exit(1 if fails else 0)

@@ -29,10 +29,10 @@ def check(label, ok, info=None):
         fails += 1
 
 
-def entry(eid, platform, unique_id, device_id, area_id=None):
+def entry(eid, platform, unique_id, device_id, area_id=None, translation_key=None):
     return SimpleNamespace(entity_id=eid, domain=eid.split(".")[0], platform=platform, unique_id=unique_id,
                            device_id=device_id, area_id=area_id, entity_category=None, disabled_by=None,
-                           hidden_by=None)
+                           hidden_by=None, translation_key=translation_key)
 
 
 class Reg:
@@ -73,14 +73,15 @@ def st(eid, state, **attrs):
 REG = Reg([
     entry("plant.fern", "plant", "pm-1", "dev_pm"),
     entry("sensor.fern_humidity", "plant", "pm-1-current-humidity", "dev_pm"),
-    entry("sensor.palm", "pflanzenmonitor_plus", "palm-status", "dev_plus"),
-    entry("sensor.palm_luftfeuchtigkeit", "pflanzenmonitor_plus", "palm-current-humidity", "dev_plus"),
+    entry("sensor.palm", "pflanzenmonitor_plus", "palm-status", "dev_plus", translation_key="status"),
+    entry("sensor.palm_luftfeuchtigkeit", "pflanzenmonitor_plus", "palm-current-humidity", "dev_plus",
+          translation_key="humidity"),
     entry("sensor.palm_co2", "pflanzenmonitor_plus", "palm-current-co2", "dev_plus"),
     entry("number.palm_max_bodenfeuchtigkeit", "pflanzenmonitor_plus", "palm-max-moisture", "dev_plus"),
     # Plus entities that are not a plant's status: a learning sensor on a device of its own.
     entry("sensor.palm_giessen_in", "pflanzenmonitor_plus", "palm_next_watering", "dev_learn"),
     # Another integration's sensor whose unique_id happens to end in "-status".
-    entry("sensor.router_status", "router_x", "abc-status", "dev_router"),
+    entry("sensor.router_status", "router_x", "abc-status", "dev_router", translation_key="status"),
     entry("sensor.raum_feuchte", "zigbee", "z-1", "dev_room"),
     entry("sensor.raum_co2", "zigbee", "z-2", "dev_room"),
 ])
@@ -121,6 +122,32 @@ check("find_rooms: one room", len(rooms) == 1, rooms)
 r = rooms[0] if rooms else {}
 check("find_rooms: only the room's humidity", r.get("rh") == ["sensor.raum_feuchte"], r)
 check("find_rooms: only the room's CO2", r.get("co2") == ["sensor.raum_co2"], r)
+
+# Same rule as the dashboard and the Studio: window.casoraIsPlant (00-finder.js), run through node over the
+# registry entries above (the browser registry has platform and translation_key, no unique_id).
+JS = r"""
+const fs = require('fs');
+const src = fs.readFileSync(process.argv[1], 'utf8');
+const win = {};
+try { new Function('window', 'document', src)(win, { querySelector: () => null, createElement: () => ({ style: {} }) }); } catch (e) { /* other modules */ }
+const ents = JSON.parse(fs.readFileSync(0, 'utf8'));
+const hass = { entities: ents, states: {} };
+console.log(JSON.stringify(Object.keys(ents).map((id) => !!win.casoraIsPlant(hass, id))));
+"""
+try:
+    import json
+    import subprocess
+    ents = {e.entity_id: {"platform": e.platform, "translation_key": e.translation_key} for e in REG.entities.values()}
+    out = subprocess.run([os.environ.get("NODE", "node"), "-e", JS,
+                          os.path.join(ROOT, "custom_components/casora/scripts/local/00-finder.js")],
+                         input=json.dumps(ents), capture_output=True, text=True, check=True).stdout
+    js = dict(zip(ents, json.loads(out)))
+except Exception as err:  # noqa: BLE001
+    js = None
+    check("JS casoraIsPlant readable", False, err)
+if js is not None:
+    for eid, e in REG.entities.items():
+        check(f"{eid}: same answer as casoraIsPlant", js[eid] == ki.is_plant(e), (js[eid], ki.is_plant(e)))
 
 print("alle ok" if not fails else f"{fails} Fehler")
 sys.exit(1 if fails else 0)

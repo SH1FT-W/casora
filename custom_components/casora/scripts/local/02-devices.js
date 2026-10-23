@@ -2649,31 +2649,8 @@
     return 'rgb(' + c.map(function (v) { return Math.round(v * k); }).join(',') + ')';
   };
 
-  // Printer entities: fixed variable → device finder (translation_key, language-independent).
-  var FIND = {
-    status: { keys: ['print_status'], domain: 'sensor' }, stage: { keys: ['stage'], domain: 'sensor' },
-    progress: { keys: ['print_progress'], domain: 'sensor' }, remaining: { keys: ['remaining_time'], domain: 'sensor' },
-    layer: { keys: ['current_layer'], domain: 'sensor' }, layers: { keys: ['total_layers'], domain: 'sensor' },
-    task: { keys: ['subtask_name'], domain: 'sensor' }, start: { keys: ['start_time'], domain: 'sensor' },
-    end: { keys: ['end_time'], domain: 'sensor' }, weight: { keys: ['print_weight'], domain: 'sensor' },
-    length: { keys: ['print_length'], domain: 'sensor' },
-    noz: { keys: ['nozzle_temp'], domain: 'sensor' }, nozT: { keys: ['target_nozzle_temp'], domain: 'sensor' },
-    bed: { keys: ['bed_temp'], domain: 'sensor' }, bedT: { keys: ['target_bed_temp'], domain: 'sensor' },
-    slots: { keys: ['tray'], domain: 'sensor', all: true }, ext: { keys: ['external_spool'], domain: 'sensor' },
-    activeSlot: { keys: ['active_tray'], domain: 'sensor' },
-    amsHum: { keys: ['humidity'], domain: 'sensor' }, amsIdx: { keys: ['humidity_index'], domain: 'sensor' },
-    amsTemp: { keys: ['ams_temp'], domain: 'sensor' },
-    speedSel: { keys: ['printing_speed'], domain: 'select' }, speed: { keys: ['speed_profile'], domain: 'sensor' },
-    auxFan: { keys: ['aux_fan'], domain: 'fan' }, coolFan: { keys: ['cooling_fan'], domain: 'fan' },
-    chamberFan: { keys: ['chamber_fan'], domain: 'fan' },
-    usage: { keys: ['total_usage_hours'], domain: 'sensor' }, nozSize: { keys: ['nozzle_diameter'], domain: 'sensor' },
-    nozType: { keys: ['nozzle_type'], domain: 'sensor' }, plate: { keys: ['print_bed_type'], domain: 'sensor' },
-    fw: { keys: ['firmware_update'], domain: 'update' }, online: { keys: ['online'], domain: 'binary_sensor' },
-    hms: { keys: ['hms_errors'], domain: 'binary_sensor' }, err: { keys: ['print_error'], domain: 'binary_sensor' },
-    cam: { keys: ['camera'], domain: 'camera' }, camSw: { keys: ['camera'], domain: 'switch' },
-    light: { keys: ['chamber_light'], domain: 'light' },
-    pause: { keys: ['pause'], domain: 'button' }, resume: { keys: ['resume'], domain: 'button' }, stop: { keys: ['stop'], domain: 'button' },
-  };
+  // Printer entities: fixed variable → device finder (translation_key, language-independent). The field table is
+  // casoraDevice.printerFields (00-finder.js), shared with the Studio fields (find.print) and the new-tile finder.
 
   /* Printer name without an own value (printer_name): the device's name in HA (renamed by the
      user first), else „3D-Drucker“. The template used to say „Bambu P1S“ fixed. */
@@ -2696,14 +2673,15 @@
     var CD = window.casoraDevice;
     var anchor = [st, entity && entity.entity_id].filter(function (x) { return x && CD && CD.deviceOf(hass, x); })[0];
     // Tile on a template helper without a device: find the printer
-    // in the home by its status key.
+    // in the home by its status key (casoraDevice.printerKeys: print status or stage).
+    var PK = (CD && CD.printerKeys) || [];
     if (!anchor && CD && hass && hass.entities) {
       anchor = Object.keys(hass.entities).filter(function (k) {
         var e = hass.entities[k];
-        return e && e.device_id && (e.translation_key === 'print_status' || e.translation_key === 'stage') && states[k];
+        return e && e.device_id && PK.indexOf(e.translation_key) >= 0 && states[k];
       }).sort()[0];
     }
-    var F = (anchor && CD) ? CD.map(hass, anchor, FIND) : {};
+    var F = (anchor && CD) ? CD.map(hass, anchor, CD.printerFields || {}) : {};
     var plugF = (anchor && CD) ? (CD.companionPlug(hass, anchor) || {}) : {};
     var f = function (varName, key) { return V[varName] || F[key] || null; };
     var fanList = [[f('_', 'auxFan'), 'Bauteillüfter'],

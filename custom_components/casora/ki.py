@@ -241,15 +241,22 @@ def _area_id(hass: HomeAssistant, entity_id: str) -> str | None:
     return None
 
 
-# Pflanzenmonitor Plus: one status sensor per plant (unique_id "<plant>-status") instead of plant.*.
+# Pflanzenmonitor Plus: one status sensor per plant (translation_key "status", unique_id "<plant>-status")
+# instead of plant.*.
 PLANT_PLUS = "pflanzenmonitor_plus"
 
 
 def is_plant(entry: er.RegistryEntry) -> bool:
-    """A plant: Plant Monitor's plant.* or the status sensor of Pflanzenmonitor Plus."""
+    """A plant: Plant Monitor's plant.* or the status sensor of Pflanzenmonitor Plus.
+
+    Same rule as window.casoraIsPlant (scripts/local/00-finder.js): platform + translation_key "status";
+    the unique_id suffix stays as a second sign (the browser registry has no unique_id).
+    """
     if entry.domain == "plant":
         return True
-    return entry.domain == "sensor" and entry.platform == PLANT_PLUS and str(entry.unique_id).endswith("-status")
+    if entry.domain != "sensor" or entry.platform != PLANT_PLUS:
+        return False
+    return getattr(entry, "translation_key", None) == "status" or str(entry.unique_id).endswith("-status")
 
 
 def plant_devices(reg: er.EntityRegistry) -> set[str]:

@@ -14,8 +14,40 @@ globalThis.customElements = { whenDefined: () => new Promise(() => {}), get: () 
 globalThis.addEventListener = () => {};
 globalThis.location = { pathname: '/casora/home' };
 
-// Shared finder: energy settings loader (casoraEnergyPrefs) and device lookups.
+// Shared finder: energy settings loader (casoraEnergyPrefs), device lookups and the plant check (casoraIsPlant).
 new Function(src('custom_components/casora/scripts/local/00-finder.js'))();
+// Studio: the real panel class (new-tile finder, field placeholders) and the assistant, loaded with a stub DOM;
+// the globals go back afterwards.
+const studio = (() => {
+  const names = ['document', 'customElements', 'setTimeout', 'requestAnimationFrame', 'matchMedia', 'fetch', 'HTMLElement',
+    'innerWidth', 'innerHeight', 'localStorage'];
+  const keep = Object.fromEntries(names.map((n) => [n, Object.getOwnPropertyDescriptor(globalThis, n)]));
+  const noop = () => {};
+  let Panel = null;
+  const stub = () => new Proxy(function () {}, { get: (t, k) => (k === Symbol.toPrimitive ? () => '' : stub()), apply: () => stub(), construct: () => stub() });
+  const set = (n, v) => Object.defineProperty(globalThis, n, { value: v, configurable: true, writable: true });
+  set('document', stub());
+  set('customElements', { get: () => Panel, define: (n, c) => { Panel = c; }, whenDefined: () => new Promise(noop) });
+  set('setTimeout', () => 0);
+  set('requestAnimationFrame', () => 0);
+  set('matchMedia', (q) => ({ matches: /reduced-motion/.test(q), addEventListener: noop }));
+  set('fetch', () => Promise.reject(new Error('offline')));
+  set('HTMLElement', class {});
+  set('innerWidth', 1400);
+  set('innerHeight', 900);
+  set('localStorage', { getItem: () => null, setItem: noop, removeItem: noop });
+  const fix = (s) => s.replace(/import\.meta\.url/g, '"http://x/casora-panel.js?v=0"');
+  const info = console.info;
+  console.info = noop;
+  new Function(fix(src('custom_components/casora/panel/casora-panel-types.js')))();
+  new Function(fix(src('custom_components/casora/panel/casora-panel.js')))();
+  new Function(src('custom_components/casora/panel/casora-panel-assist.js'))();
+  console.info = info;
+  names.forEach((n) => { if (keep[n]) Object.defineProperty(globalThis, n, keep[n]); else delete globalThis[n]; });
+  assert.ok(Panel, 'panel class');
+  return { P: Panel.prototype, I: window.__casoraPanelInternals };
+})();
+const typeOf = (id) => { const t = studio.I.TILE_TYPES.find((x) => x.id === id); assert.ok(t, 'tile type ' + id); return t; };
 // Studio: house sensor.
 window.__casoraPanelInternals = { TILE_TYPES: [], clone: (x) => JSON.parse(JSON.stringify(x)) };
 new Function(src('custom_components/casora/panel/casora-panel-basis.js'))();
@@ -24,11 +56,7 @@ const B = window.casoraBasis;
 const basis = src('custom_components/casora/scripts/local/01-basis.js');
 const b0 = basis.indexOf('window._casoraHousePowerIds = function');
 new Function(basis.slice(b0, basis.indexOf('\nwindow._casoraRoomNames', b0)))();
-// Shared plant check (top of casora-core.js).
-const core = src('custom_components/casora/scripts/casora-core.js');
-const p0 = core.indexOf('window.CASORA_PLANT_PLUS');
-new Function(core.slice(p0, core.indexOf('\n};', core.indexOf('window.casoraIsPlant', p0)) + 3))();
-// Laundry and dishwasher blocks of 02-devices.js.
+// Laundry, dishwasher and 3D printer blocks of 02-devices.js.
 const dv = src('custom_components/casora/scripts/local/02-devices.js');
 const block = (start) => {
   const a = dv.indexOf(start), b = dv.indexOf('\n})();', a);
@@ -37,6 +65,7 @@ const block = (start) => {
 };
 block('(function () {\n  if (window._casoraLaundry) return;');
 block('(function () {\n  if (window._casoraDish || !window._casoraLaundry) return;');
+block('(function () {\n  if (window._casoraPrint || !window._casoraLaundry) return;');
 // Energy flow popup roles.
 new Function(src('custom_components/casora/scripts/local/20-energie-fokus.js'))();
 const F = window._casoraEnergyFocus;
@@ -71,6 +100,40 @@ for (const f of files) {
   if (X.dishwasher) {
     const c = window._casoraDish.resolve({ entity_id: X.dishwasher.entity }, {}, H.states, hass);
     for (const [k, want] of Object.entries(X.dishwasher.fields || {})) { assert.equal(c[k], want, at('dishwasher ' + k)); checks++; }
+  }
+  // Studio: main entity of a new tile, field placeholders, the assistant.
+  const home = { path: 'home', name: 'Home', tiles: [], variables: {} };
+  const panel = () => { const p = Object.create(studio.P); p._hass = hass; p._state = { compact: { rooms: [home] } }; return p; };
+  for (const [tid, want] of Object.entries(X.studio_main || {})) {
+    const got = studio.P._tileCandidates.call(panel(), typeOf(tid), home).map((c) => c.id);
+    assert.deepEqual(got, want, at('new tile ' + tid));
+    checks++;
+  }
+  for (const [tid, spec] of Object.entries(X.studio_fields || {})) {
+    const type = typeOf(tid), tile = { entity: spec.entity, variables: {} };
+    for (const [key, want] of Object.entries(spec.fields || {})) {
+      const fld = (type.fields || []).find((x) => x.key === key);
+      assert.ok(fld && fld.find, at(tid + ' field ' + key + ' has a finder'));
+      assert.equal(window.casoraFieldEntity(fld, tile, hass), want, at(tid + ' field ' + key));
+      checks++;
+    }
+  }
+  if (X.assist) {
+    const rooms = [home].concat(Object.values(H.areas || {}).map((a) => ({ path: a.area_id, name: a.name, tiles: [], variables: {} })));
+    const sug = window.casoraAssist.suggest(hass, rooms, studio.I.TILE_TYPES);
+    for (const [tid, want] of Object.entries(X.assist)) {
+      assert.deepEqual(sug.filter((x) => x.type === tid).map((x) => x.entity).sort(), [...want].sort(), at('assistant ' + tid));
+      checks++;
+    }
+  }
+  if (X.printer) {
+    const c = window._casoraPrint.resolve({ entity_id: X.printer.entity }, {}, H.states, hass);
+    for (const [k, want] of Object.entries(X.printer.fields || {})) { assert.equal(c[k], want, at('printer ' + k)); checks++; }
+  }
+  if (X.cameras) { assert.deepEqual(window._casoraCams({}, null, hass), X.cameras, at('cameras tile')); checks++; }
+  if (X.cameras_chosen) {
+    assert.deepEqual(window._casoraCams({ cameras: X.cameras_chosen.pick }, null, hass), X.cameras_chosen.want, at('cameras tile, chosen'));
+    checks++;
   }
   for (const [id, want] of Object.entries(X.energy_roles || {})) {
     assert.equal(F.detect(hass, { energy_entity_1: id }, 1), want, at('energy role ' + id));
