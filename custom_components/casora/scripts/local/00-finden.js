@@ -668,6 +668,65 @@ window.casoraPriceKwh = function (v) {
     });
     return out;
   };
+  // Security row on Home (#39): the house's doors (kind 'door', every contact but windows) or windows
+  // ('window') as a sub-badge of their own, with merged sensors as their combined sensor. Empty in a room,
+  // for contacts hidden by „Wer sieht das?“, and when the badge lists doors or windows itself (no twins).
+  // where: the card (home view?) or 'home'; v.place wins as in casora_badge_security_group.
+  var NOT_CONTACT = /^(motion|occupancy|presence)$/;
+  // A badge asks once per style; one look at the contacts per state change is enough.
+  var ccMemo = typeof WeakMap === 'function' ? new WeakMap() : null;
+  var contactsOnce = function (hass) {
+    var S = hass && hass.states;
+    if (!ccMemo || !S) return contacts(hass);
+    if (!ccMemo.has(S)) ccMemo.set(S, contacts(hass));
+    return ccMemo.get(S);
+  };
+  window.casoraHouseContactsOf = function (hass, v, kind, user, where) {
+    v = v || {};
+    var S = (hass && hass.states) || {};
+    var home = v.place ? v.place === 'home' : where === 'home'
+      || (!!where && typeof where === 'object' && typeof window.casoraOnHomeView === 'function' && window.casoraOnHomeView(where) === true);
+    if (!home) return [];
+    var own = [v.doors_entity, v.windows_entity];
+    for (var i = 1; i <= 8; i++) own.push(v['security_entity_' + i]);
+    if (own.some(function (x) {
+      return typeof x === 'string' && x.indexOf('binary_sensor.') === 0
+        && !NOT_CONTACT.test(String(((S[x] || {}).attributes || {}).device_class || ''));
+    })) return [];
+    var sees = function (x) { return typeof window.casoraSeesEntity !== 'function' || window.casoraSeesEntity(x, user, v); };
+    var cc = contactsOnce(hass), out = [];
+    cc.groups.forEach(function (g) {
+      (g.members || []).forEach(function (x) {
+        if (cc.excl.indexOf(x) >= 0 || !sees(x)) return;
+        var win = String(((S[x] || {}).attributes || {}).device_class || '') === 'window';
+        var id = cc.sub[x] || x;
+        if (win === (kind === 'window') && out.indexOf(id) < 0) out.push(id);
+      });
+    });
+    return out;
+  };
+  // One state for such a list (variables.contacts of casora_badge_contact_group): on while one is open,
+  // tilt when every open one is only tilted, unavailable when none reports. Shaped like a group helper.
+  window.casoraContactsEntity = function (hass, entity, v) {
+    var ids = v && Array.isArray(v.contacts) ? v.contacts.filter(Boolean) : [];
+    if (!ids.length) return entity;
+    var S = (hass && hass.states) || {}, tilt = contactsOnce(hass).tilt || {};
+    var open = 0, tilted = 0, live = 0;
+    ids.forEach(function (id) {
+      var e = S[id] || {}, s = String(e.state || '').toLowerCase();
+      var t = !!tilt[id] && String((S[tilt[id]] || {}).state || '') === 'on';
+      if (s && s !== 'unknown' && s !== 'unavailable') live++;
+      if (s === 'on' || s === 'open' || s === 'opening' || t) {
+        open++;
+        if ((e.attributes || {}).tilt === true || t) tilted++;
+      }
+    });
+    return {
+      entity_id: ids[0], state: open ? 'on' : live ? 'off' : 'unavailable',
+      attributes: { device_class: v.contacts_kind === 'window' ? 'window' : 'door', friendly_name: v.label || '',
+        tilt: open > 0 && tilted === open, entity_id: ids.slice() },
+    };
+  };
 
   // ── Öffnungen: Kontakt, Kippsensor und Kombi-Sensor = eine Tür/ein Fenster (30.09.2026) ──
   // Manche Türen/Fenster haben zwei Sensoren (Kontakt für offen/zu, Kippsensor für

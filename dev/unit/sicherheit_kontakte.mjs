@@ -129,4 +129,86 @@ const panel = fs.readFileSync(new URL('../../custom_components/casora/panel/caso
 assert.ok(panel.includes('secEntities.concat(house)') && panel.includes('window.casoraHouseContacts(this._hass).filter(sees)'),
   'Studio preview counts the house on Home');
 assert.ok(panel.includes('"On the home page every door and window in the house counts automatically ("'), 'Studio editor hint');
+
+// 5. Follow-up #39: with a camera in the security badge on Home, a tap opened the row, and the row had
+// only „Kamera“: the house's doors and windows were counted but nowhere listed. Now they get a sub-badge
+// each („Türen“, „Fenster“) as long as the badge lists no doors or windows itself.
+const sb = { CASORA_SETTINGS: { notify: { contact_merged: { 'binary_sensor.win_c_combo': ['binary_sensor.win_c', 'binary_sensor.win_c_tilt'] } } } };
+new Function('window', 'document', 'customElements', finden)(sb, { querySelector: () => null },
+  { whenDefined: () => new Promise(() => {}), get: () => null });
+const hs = { states: {
+  'binary_sensor.door_a': st('off', 'door'), 'binary_sensor.garage': st('off', 'garage_door'),
+  'binary_sensor.win_a': st('on', 'window'), 'binary_sensor.win_c': st('off', 'window'),
+  'binary_sensor.win_c_combo': st('on', 'window', { tilt: true }), 'binary_sensor.win_c_tilt': st('on', 'window'),
+  'binary_sensor.win_d': st('off', 'window'), 'binary_sensor.motion': st('on', 'motion'), 'binary_sensor.doors_group': st('off', 'door', { entity_id: ['binary_sensor.door_a'] }),
+}, entities: {}, devices: {}, areas: {} };
+const of = (v, kind, where) => sb.casoraHouseContactsOf(hs, v, kind, { id: 'a' }, where);
+assert.deepEqual(of({ security_cameras: ['camera.a'] }, 'door', 'home'), ['binary_sensor.door_a', 'binary_sensor.garage'], 'Home with a camera: doors');
+assert.deepEqual(of({}, 'window', 'home'), ['binary_sensor.win_a', 'binary_sensor.win_c_combo', 'binary_sensor.win_d'], 'windows, merged sensor as its combined one');
+assert.deepEqual(of({}, 'door', null), [], 'no place: nothing');
+assert.deepEqual(of({ place: 'room' }, 'door', 'home'), [], 'place room wins');
+let homeView = true;
+sb.casoraOnHomeView = () => homeView;
+assert.equal(of({}, 'door', {}).length, 2, 'card on the home view');
+homeView = false;
+assert.deepEqual(of({}, 'door', {}), [], 'card in a room');
+assert.deepEqual(of({ security_entity_2: 'binary_sensor.doors_group' }, 'door', 'home'), [], 'own doors: no twin');
+assert.deepEqual(of({ security_entity_4: 'binary_sensor.win_a' }, 'window', 'home'), [], 'one own window: no twin');
+assert.equal(of({ security_entity_1: 'alarm_control_panel.home', security_entity_4: 'binary_sensor.motion' }, 'door', 'home').length, 2,
+  'alarm or motion in a slot: still the house');
+sb.casoraSeesEntity = cw.casoraSeesEntity;
+assert.deepEqual(of({ casora_entity_users: { 'binary_sensor.garage': ['b'] } }, 'door', 'home'), ['binary_sensor.door_a'], 'Who sees this');
+delete sb.casoraSeesEntity;
+
+// One state for the list: open while one is open, tilted only when every open one is tilted.
+const one = (ids, kind) => sb.casoraContactsEntity(hs, null, { contacts: ids, contacts_kind: kind, label: 'x' });
+assert.equal(sb.casoraContactsEntity(hs, 'E', {}), 'E', 'no list: the entity as before');
+assert.equal(one(['binary_sensor.door_a', 'binary_sensor.garage'], 'door').state, 'off');
+assert.equal(one(['binary_sensor.win_a', 'binary_sensor.win_c_combo'], 'window').state, 'on');
+assert.equal(one(['binary_sensor.win_a', 'binary_sensor.win_c_combo'], 'window').attributes.tilt, false, 'one open, one tilted: open');
+assert.equal(one(['binary_sensor.win_c_combo'], 'window').attributes.tilt, true, 'only tilted');
+assert.equal(one(['binary_sensor.gone'], 'door').state, 'unavailable');
+assert.deepEqual(one(['binary_sensor.win_a'], 'window').attributes.entity_id, ['binary_sensor.win_a'], 'shaped like a group');
+
+// The badge reads that state: title, word, shown at all.
+const B = T.casora_badge_contact_group;
+window.casoraContactsEntity = sb.casoraContactsEntity;
+window.casoraIconUrl = (n) => n;
+const bv = (ids, kind, label) => ({ contacts: ids, contacts_kind: kind, label, enabled: true });
+const winVars = bv(['binary_sensor.win_d', 'binary_sensor.win_a', 'binary_sensor.win_c_combo'], 'window', 'Fenster');
+const first = { entity_id: 'binary_sensor.win_d', ...hs.states['binary_sensor.win_d'] };
+const bname = fn(B.name)(hs.states, first, {}, hs, winVars);
+assert.ok(bname.includes('>Fenster<') && bname.includes('>Geöffnet<'), 'Fenster · Geöffnet (one open, not the first only)');
+const dname = fn(B.name)(hs.states, { entity_id: 'binary_sensor.door_a', ...hs.states['binary_sensor.door_a'] }, {}, hs,
+  bv(['binary_sensor.door_a', 'binary_sensor.garage'], 'door', 'Türen'));
+assert.ok(dname.includes('>Türen<') && dname.includes('>Geschlossen<'), 'Türen · Geschlossen');
+assert.ok(fn(B.extra_styles)(hs.states, first, {}, hs, winVars).includes("url('window-open')"), 'window glyph, open');
+const shown = B.styles.card.find((x) => x.display).display;
+assert.equal(fn(shown)(hs.states, first, {}, hs, winVars), 'inline-grid', 'shown');
+assert.equal(fn(shown)(hs.states, undefined, {}, hs, bv([], 'door', 'Türen')), 'none', 'empty list: hidden');
+
+// Its popup: only these contacts, titled by kind, never the first contact's own page.
+const P = T.casora_popup_contacts.tap_action.casora_popup;
+assert.equal(fn(P.route)(hs.states, first, {}, hs, winVars), '', 'list: no single page');
+assert.equal(fn(P.title)(hs.states, first, {}, hs, winVars), 'Fenster');
+assert.equal(fn(P.title)(hs.states, first, {}, hs, { ...winVars, contacts_kind: 'door' }), 'Türen');
+rows.length = 0;
+window._casoraStd = (ui) => ui;
+window.casoraContacts = () => ({ groups: [{ label: 'Türen', members: ['binary_sensor.door_a', 'binary_sensor.garage'] },
+  { label: 'Fenster', members: ['binary_sensor.win_a', 'binary_sensor.win_c'] }], sub: { 'binary_sensor.win_c': 'binary_sensor.win_c_combo' }, excl: [] });
+fn(P.content)(hs.states, first, {}, hs, winVars);
+assert.deepEqual(rows.sort(), ['binary_sensor.win_a', 'binary_sensor.win_c_combo'], 'popup: the windows only');
+
+// Where they sit: the security row on Home (wide and phone) and the inline row; phone room pages never.
+const autoOf = (cards) => cards.filter((c) => JSON.stringify(c).includes('casoraHouseContactsOf'));
+const bs = autoOf(T.casora_room.custom_fields.badges_security.card.cards);
+assert.deepEqual(bs.map((c) => [c.variables.contacts_kind, c.variables.label]), [['door', 'Türen'], ['window', 'Fenster']], 'wide row');
+assert.ok(bs.every((c) => c.variables.contacts.includes(",user,this)")), 'wide row: the card says where it sits');
+const inl = autoOf(T.casora_room.custom_fields.badges.card.cards);
+assert.ok(inl.length === 2 && inl.every((c) => c.variables.inline === true && c.variables.enabled.includes('show_security_inline')), 'inline row');
+const ph = autoOf(T.casora_mobile_sensor_chips.custom_fields.security_row.card.cards);
+assert.ok(ph.length === 2 && ph.every((c) => c.variables.contacts.includes(",user,'home')")), 'phone Home row');
+const phRooms = autoOf([...T.casora_mobile_sensor_chips.custom_fields.rooms_row.card.cards,
+  ...T.casora_mobile_sensor_chips.custom_fields.room_sub_security.card.cards]);
+assert.ok(phRooms.length === 4 && phRooms.every((c) => c.variables.contacts.includes(",user)")), 'phone room pages: no place, no house');
 console.log('ok sicherheit_kontakte');
