@@ -473,6 +473,13 @@ states['camera.carport_sub'].state = 'idle';
   const stats = (b) => ({ getStats: () => Promise.resolve(new Map([['a', { type: 'inbound-rtp', kind: 'audio', bytesReceived: b }], ['v', { type: 'inbound-rtp', kind: 'video', bytesReceived: 9e9 }]])) });
   assert.equal(await KL.audioIn(stats(1234)), 1234, 'audio bytes only');
   assert.equal(await KL.audioIn(null), null);
+  // #23 diagnostics: levels and bytes in both directions.
+  const both = { getStats: () => Promise.resolve(new Map([
+    ['i', { type: 'inbound-rtp', kind: 'audio', bytesReceived: 4983, audioLevel: 0.0123 }],
+    ['o', { type: 'outbound-rtp', kind: 'audio', bytesSent: 3100 }],
+    ['m', { type: 'media-source', kind: 'audio', audioLevel: 0.2 }]])) };
+  assert.deepEqual(KL.levelLine(await KL.audioStats(both)), { klingel_bytes: 4983, klingel_pegel: 0.012, mikro_bytes: 3100, mikro_pegel: 0.2 });
+  assert.deepEqual(KL.levelLine(await KL.audioStats(null)), { klingel_bytes: null, klingel_pegel: null, mikro_bytes: null, mikro_pegel: null });
   delete globalThis.addEventListener; delete globalThis.removeEventListener;
 }
 console.log('klingel: ok');

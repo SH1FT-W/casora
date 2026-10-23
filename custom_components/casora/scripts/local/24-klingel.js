@@ -775,16 +775,32 @@
     return false;
   };
   // #23: audio bytes received on a connection (inbound-rtp), null when unknown.
-  KL.audioIn = function (pc) {
-    if (!pc || typeof pc.getStats !== 'function') return Promise.resolve(null);
+  // #23 diagnostics: audio of a talk connection – bytes and level received from the doorbell, bytes sent and level
+  // of the microphone (levels 0…1, null when the browser does not report them).
+  KL.audioStats = function (pc) {
+    var out = { inBytes: null, inLevel: null, outBytes: null, micLevel: null };
+    if (!pc || typeof pc.getStats !== 'function') return Promise.resolve(out);
+    var audio = function (r) { return r.kind === 'audio' || r.mediaType === 'audio'; };
     return pc.getStats().then(function (rep) {
-      var n = null;
       rep.forEach(function (r) {
-        if (r && r.type === 'inbound-rtp' && (r.kind === 'audio' || r.mediaType === 'audio')) n = (n || 0) + (Number(r.bytesReceived) || 0);
+        if (!r) return;
+        if (r.type === 'inbound-rtp' && audio(r)) {
+          out.inBytes = (out.inBytes || 0) + (Number(r.bytesReceived) || 0);
+          if (r.audioLevel != null) out.inLevel = Number(r.audioLevel);
+        } else if (r.type === 'outbound-rtp' && audio(r)) {
+          out.outBytes = (out.outBytes || 0) + (Number(r.bytesSent) || 0);
+        } else if (r.type === 'media-source' && audio(r) && r.audioLevel != null) {
+          out.micLevel = Number(r.audioLevel);
+        }
       });
-      return n;
-    }, function () { return null; });
+      return out;
+    }, function () { return out; });
   };
+  KL.levelLine = function (a) {
+    var r = function (x) { return x == null ? null : Math.round(x * 1000) / 1000; };
+    return { klingel_bytes: a.inBytes, klingel_pegel: r(a.inLevel), mikro_bytes: a.outBytes, mikro_pegel: r(a.micLevel) };
+  };
+  KL.audioIn = function (pc) { return KL.audioStats(pc).then(function (a) { return a.inBytes; }); };
   // Is sound flowing? Growing bytes = yes; no growth for 2.5 s = no (back to the player's sound).
   KL.flowStep = function (t, bytes, now) {
     if (bytes != null && bytes > (t.lastBytes || 0)) { t.lastBytes = bytes; t.lastFlow = now; }
@@ -1278,15 +1294,21 @@
           // own sound stays (#23, 26.10.56 muted the player as soon as the talk connection stood, silent or not).
           var on = function () {
             if (self._t !== t || t.flowT) return;
+            t.hearing = false;
+            var tick = 0;
             t.flowT = setInterval(function () {
               if (self._t !== t) return;
-              KL.audioIn(pc).then(function (bytes) {
+              KL.audioStats(pc).then(function (a) {
                 if (self._t !== t) return;
-                var flowing = KL.flowStep(t, bytes, Date.now());
+                var flowing = KL.flowStep(t, a.inBytes, Date.now());
                 if (flowing !== t.hearing) {
                   t.hearing = flowing;
-                  try { console.info('casora klingel: Ton über die Sprechverbindung', flowing ? 'an' : 'aus', bytes); } catch (e) { /* quiet */ }
+                  try { console.info('casora klingel: Ton über die Sprechverbindung', flowing ? 'an' : 'aus', a.inBytes); } catch (e) { /* quiet */ }
                   self._applyAudio();
+                }
+                // Every 2 s: is it real sound or silence, and does the microphone send?
+                if (++tick % 2 === 0) {
+                  try { console.info('casora klingel: Pegel', JSON.stringify(KL.levelLine(a))); } catch (e) { /* quiet */ }
                 }
               });
             }, 1000);
