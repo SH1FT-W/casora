@@ -2696,6 +2696,41 @@ function fillRoomEnergy(hass, rooms) {
   return n + up;
 }
 
+// #44: Home without a house sensor counts the rooms (casoraBasis.roomPowerIds). With
+// casora_energy_auto 2 the Studio adds on load what the rooms gained; it never takes anything
+// away and leaves energy_exclude out. Runs after fillRoomEnergy, quietly like it.
+function fillHomeEnergy(hass, rooms) {
+  const B = typeof window !== "undefined" && window.casoraBasis;
+  const V = rooms && rooms[0] && rooms[0].variables;
+  if (!B || !B.roomPowerIds || !V || V.show_energy === false || V.casora_energy_auto !== 2 || V.energy_power_entity) return 0;
+  const arr = (v) => (Array.isArray(v) ? v.filter(Boolean) : []);
+  const has = arr(V.energy_entities), ex = arr(V.energy_exclude);
+  const next = has.concat(B.roomPowerIds(rooms.slice(1).map((r) => r && r.path !== "home" && r.variables))
+    .filter((id) => !has.includes(id) && !ex.includes(id)));
+  if (next.length === has.length) return 0;
+  V.energy_entities = next;
+  return 1;
+}
+
+// #44: a Home sensor that only the old rule picked (a device's "total" in one of the rooms,
+// casoraBasis.wrongHousePower) becomes the house sensor, else the sum of the rooms. Returns
+// whether Home changed; the Studio shows that as unsaved, so saving once fixes the dashboard.
+function fixHomePower(hass, rooms) {
+  const B = typeof window !== "undefined" && window.casoraBasis;
+  const V = rooms && rooms[0] && rooms[0].variables;
+  if (!B || !B.wrongHousePower || !hass || !V || V.show_energy === false || !V.energy_power_entity) return false;
+  if (Array.isArray(V.energy_entities) && V.energy_entities.some(Boolean)) return false;
+  const others = rooms.slice(1).filter((r) => r && r.path !== "home");
+  if (!B.wrongHousePower(hass, V.energy_power_entity, others.map((r) => r.name))) return false;
+  const pick = B.housePower(hass);
+  if (pick) { V.energy_power_entity = pick; return true; }
+  delete V.energy_power_entity;
+  const ex = Array.isArray(V.energy_exclude) ? V.energy_exclude : [];
+  const ids = B.roomPowerIds(others.map((r) => r.variables)).filter((id) => !ex.includes(id));
+  if (ids.length) { V.energy_entities = ids; V.casora_energy_auto = 2; }
+  return true;
+}
+
 function deriveEnergyRooms(rooms) {
   const list = rooms || [];
   const home = list[0];
@@ -15224,6 +15259,7 @@ class CasoraPanel extends HTMLElement {
       if (this._state.surface !== "mobile" && !this._saveBlocked) {
         const nE = fillRoomEnergy(this._hass, this._state.compact.rooms);
         if (nE) this._log(`energy: ${nE} room(s) with a power sensor got the energy badge`, "ok");
+        if (fillHomeEnergy(this._hass, this._state.compact.rooms)) this._log("energy: Home sum got the rooms' new sensors", "ok");
       }
       this._exitFlow();
       this._paintDashes();
@@ -15234,6 +15270,11 @@ class CasoraPanel extends HTMLElement {
       if (!this._saveBlocked && this._pair && this._pair.safe !== false) { try { this._phoneState(); } catch (e) { /* Vorschau zeigt es */ } }
       this._clean = this._print();
       this._resetUndo(false);
+      // After _clean on purpose: the fix shows as unsaved, one save corrects the dashboard (#44).
+      if (this._state.surface !== "mobile" && !this._saveBlocked && fixHomePower(this._hass, this._state.compact.rooms)) {
+        this._log("energy: Home showed one device's total, now the house sensor or the sum of the rooms", "ok");
+        this._markDirty();
+      }
       this._draftOff = false;
       this._draftSkip = null;
       this._renderTabs();

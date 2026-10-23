@@ -2336,6 +2336,10 @@
    "Yesterday {1}"
   ],
   [
+   "^Top (\\d+) Verbraucher$",
+   "Top {1} consumers"
+  ],
+  [
    "^(\\d+) Probleme$",
    "{1} problems"
   ],

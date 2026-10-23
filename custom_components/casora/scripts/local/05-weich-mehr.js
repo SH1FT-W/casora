@@ -679,7 +679,8 @@
           sub: pct > 0 && pct <= 100 ? pct + ' % des aktuellen Verbrauchs' : null,
           value: x.w < 10 ? (Math.round(x.w * 10) / 10).toLocaleString(LANG(hass)) + ' W' : fW(x.w, hass) };
       });
-      return arows2.length ? UI.label('Verbraucher') + UI.group(arows2) : '';
+      /* #44: "Top N" says the list is the largest ones, not every consumer adding up to the total. */
+      return arows2.length ? UI.label(arows2.length > 1 ? 'Top ' + arows2.length + ' Verbraucher' : 'Verbraucher') + UI.group(arows2) : '';
     }
     if (part === 'parts' && C.sum && window._casoraPowerSum) {
       var R = window._casoraPowerSum(C.sum, states);
