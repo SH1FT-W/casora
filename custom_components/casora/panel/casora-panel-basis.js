@@ -563,11 +563,16 @@
       return added;
     });
     // #44: the plan covers every HA area; Home sums only the rooms filled with it, as their
-    // badges count them.
+    // badges count them (none measuring: no sum).
     const hi = list.findIndex((t) => t && t.home && t.vars);
-    if (hi >= 0 && res[hi].includes("energy") && Array.isArray(list[hi].vars.energy_entities)) {
-      const ids = roomPowerIds(list.filter((t) => t && !t.home && t.vars).map((t) => t.vars));
-      if (ids.length) list[hi].vars.energy_entities = ids;
+    const others = list.filter((t) => t && !t.home && t.vars);
+    if (hi >= 0 && others.length && res[hi].includes("energy") && Array.isArray(list[hi].vars.energy_entities)) {
+      const H = list[hi].vars, ids = roomPowerIds(others.map((t) => t.vars));
+      if (ids.length) H.energy_entities = ids;
+      else {
+        delete H.energy_entities; delete H.casora_energy_auto;
+        res[hi] = res[hi].filter((c) => c !== "energy");
+      }
     }
     return res;
   }

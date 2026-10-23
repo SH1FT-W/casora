@@ -105,6 +105,12 @@ const ROOM_IDS = ['sensor.fernseher_power', 'sensor.stehlampe_power', 'sensor.ku
     'Home = rooms, no basement pump');
   assert.deepEqual(sorted(t[0].vars.energy_entities), sorted(ROOM_IDS));
   assert.equal(t[0].vars.casora_energy_auto, 2);
+  // Rooms without any power sensor: no sum of other areas on Home.
+  const t2 = [{ name: 'Home', home: true, vars: {} }, { name: 'Wohnzimmer', vars: { show_energy: false } }];
+  const got = B.fillBadges(h, t2);
+  assert.equal(t2[0].vars.energy_entities, undefined, 'no sum without measuring rooms');
+  assert.equal(t2[0].vars.casora_energy_auto, undefined);
+  assert.ok(!got[0].includes('energy'));
 }
 
 // 5. Existing dashboard with the room-named total on Home: one save fixes it.
@@ -127,6 +133,10 @@ const ROOM_IDS = ['sensor.fernseher_power', 'sensor.stehlampe_power', 'sensor.ku
   assert.equal(fixHomePower(h, r2), true);
   assert.equal(r2[0].variables.energy_power_entity, 'sensor.total_consumption');
   assert.equal(r2[0].variables.energy_entities, undefined);
+  assert.equal(fillHomeEnergy(h, r2), 0, 'house sensor: no sum');
+  // Picked again by hand afterwards: stays.
+  r2[0].variables.energy_power_entity = 'sensor.wohnzimmer_gesamtleistung';
+  assert.equal(fixHomePower(h, r2), false, 'hand pick after the fix stays');
 }
 
 // 6. What stays: a three phase meter's total, a sensor outside the dashboard's rooms, a room

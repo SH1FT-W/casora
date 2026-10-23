@@ -169,7 +169,7 @@ window._casoraHousePower = function () {
     var id = null;
     /* #44: a "total" of a device, in an area or named after one is the total of that device or
        room, never the house (same rule as housePower in panel/casora-panel-basis.js). */
-    var A = hass.areas || {}, D = hass.devices || {};
+    var A = hass.areas || {};
     var words = function (t) {
       var l = String(t || '').toLowerCase();
       return [l.replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss'),
@@ -178,7 +178,7 @@ window._casoraHousePower = function () {
     };
     var owned = function (p) {
       var e = R[p];
-      if (e && (e.device_id || e.area_id || (D[e.device_id] || {}).area_id)) return true;
+      if (e && (e.device_id || e.area_id)) return true;
       var label = words(p + ' ' + ((S[p].attributes || {}).friendly_name || ''));
       return Object.keys(A).some(function (k) {
         var n = A[k] && A[k].name;

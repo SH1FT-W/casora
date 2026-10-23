@@ -2713,21 +2713,24 @@ function fillHomeEnergy(hass, rooms) {
 }
 
 // #44: a Home sensor that only the old rule picked (a device's "total" in one of the rooms,
-// casoraBasis.wrongHousePower) becomes the house sensor, else the sum of the rooms. Returns
-// whether Home changed; the Studio shows that as unsaved, so saving once fixes the dashboard.
+// casoraBasis.wrongHousePower) becomes the house sensor, else the sum of the rooms. Once:
+// casora_energy_auto 2 marks it, so a sensor picked by hand afterwards stays. Returns whether
+// Home changed; the Studio shows that as unsaved, so saving once fixes the dashboard.
 function fixHomePower(hass, rooms) {
   const B = typeof window !== "undefined" && window.casoraBasis;
   const V = rooms && rooms[0] && rooms[0].variables;
   if (!B || !B.wrongHousePower || !hass || !V || V.show_energy === false || !V.energy_power_entity) return false;
+  if (V.casora_energy_auto !== undefined) return false;
   if (Array.isArray(V.energy_entities) && V.energy_entities.some(Boolean)) return false;
   const others = rooms.slice(1).filter((r) => r && r.path !== "home");
   if (!B.wrongHousePower(hass, V.energy_power_entity, others.map((r) => r.name))) return false;
   const pick = B.housePower(hass);
+  V.casora_energy_auto = 2;
   if (pick) { V.energy_power_entity = pick; return true; }
   delete V.energy_power_entity;
   const ex = Array.isArray(V.energy_exclude) ? V.energy_exclude : [];
   const ids = B.roomPowerIds(others.map((r) => r.variables)).filter((id) => !ex.includes(id));
-  if (ids.length) { V.energy_entities = ids; V.casora_energy_auto = 2; }
+  if (ids.length) V.energy_entities = ids;
   return true;
 }
 
