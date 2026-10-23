@@ -122,11 +122,14 @@ window._casoraSceneRepaint = function () {
    badge row and rooms where energy is on only through usage/cost/devices showed just „Energie“
    without a value and were lower for it. Order: the energy tile (casora_energy) of the current
    view, the same number as there; on Home or on the phone else the house consumption as in the
-   setup (hausbedarf, then gesamt, then grid). */
-window._casoraHousePower = function () {
+   setup (hausbedarf, then gesamt, then grid).
+   #44: HA's own energy settings come before the names (window.casoraEnergyHouse, 00-finder.js): the grid
+   alone is one sensor, with solar or battery the house is the sum of them. _casoraHousePowerIds gives the
+   sensors ([] none, one, or the settings' sum); _casoraHousePower the one sensor, null for a sum. */
+window._casoraHousePowerIds = function () {
   try {
     var ha = document.querySelector('home-assistant');
-    var hass = ha && ha.hass; if (!hass) return null;
+    var hass = ha && ha.hass; if (!hass) return [];
     var S = hass.states || {}, R = hass.entities || {};
     var isPower = function (id) {
       var s = id && S[id]; if (!s) return false;
@@ -155,11 +158,13 @@ window._casoraHousePower = function () {
       window._casoraHPCfg = cfg; window._casoraHPKey = key; window._casoraHPTiles = tiles;
     }
     var hit = (window._casoraHPTiles || []).find(isPower);
-    if (hit) return hit;
+    if (hit) return [hit];
     // House consumption only for Home (first view) or the phone (one view), not for rooms.
-    if (cfg && vi !== 0 && views.length > 1) return null;
+    if (cfg && vi !== 0 && views.length > 1) return [];
+    var EH = window.casoraEnergyHouse ? window.casoraEnergyHouse(hass) : null;
+    if (EH) return EH.ids.slice();
     var c = window._casoraHPGuess;
-    if (c && Date.now() - c.t < 60000 && (c.id === null || isPower(c.id))) return c.id;
+    if (c && Date.now() - c.t < 60000 && (c.id === null || isPower(c.id))) return c.id ? [c.id] : [];
     var HOUSE = [/hausbedarf|hausverbrauch|haus.?leistung|house.?(power|consumption)|home.?(power|consumption)/i,
       /gesamt|total/i, /netzbezug|grid|smart.?meter|stromz(ä|ae|a)hler/i];
     /* #44: no peak, average or period value, no PV inverter output (NOT_LIVE, inverterOut in panel/casora-panel-basis.js). */
@@ -221,8 +226,12 @@ window._casoraHousePower = function () {
       }) || null;
     }
     window._casoraHPGuess = { t: Date.now(), id: id };
-    return id;
-  } catch (e) { return null; }
+    return id ? [id] : [];
+  } catch (e) { return []; }
+};
+window._casoraHousePower = function () {
+  var ids = window._casoraHousePowerIds();
+  return ids.length === 1 ? ids[0] : null;
 };
 window._casoraRoomNames = function () {
   try {

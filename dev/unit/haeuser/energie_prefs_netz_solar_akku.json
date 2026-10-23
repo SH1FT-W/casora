@@ -1,0 +1,152 @@
+{
+ "quelle": "Energie-Einstellungen mit Netz, Solar und Akku (Qualitätsrunde A, 23.10.2026), erfunden nach HA 2026.10",
+ "areas": {
+  "ke": {
+   "area_id": "ke",
+   "name": "Keller"
+  },
+  "wz": {
+   "area_id": "wz",
+   "name": "Wohnzimmer"
+  }
+ },
+ "devices": {
+  "d_wr": {
+   "id": "d_wr",
+   "name": "Wechselrichter",
+   "area_id": "ke"
+  },
+  "d_zr": {
+   "id": "d_zr",
+   "name": "Zähler",
+   "area_id": "ke"
+  },
+  "d_sp": {
+   "id": "d_sp",
+   "name": "Speicher",
+   "area_id": "ke"
+  },
+  "d_tv": {
+   "id": "d_tv",
+   "name": "Fernseher",
+   "area_id": "wz"
+  }
+ },
+ "entities": {
+  "sensor.zaehler_leistung": {
+   "entity_id": "sensor.zaehler_leistung",
+   "device_id": "d_zr",
+   "area_id": null,
+   "platform": "shelly"
+  },
+  "sensor.wechselrichter_ac_leistung": {
+   "entity_id": "sensor.wechselrichter_ac_leistung",
+   "device_id": "d_wr",
+   "area_id": null,
+   "platform": "fronius"
+  },
+  "sensor.speicher_leistung": {
+   "entity_id": "sensor.speicher_leistung",
+   "device_id": "d_sp",
+   "area_id": null,
+   "platform": "modbus"
+  },
+  "sensor.hausverbrauch_steckdose": {
+   "entity_id": "sensor.hausverbrauch_steckdose",
+   "device_id": "d_tv",
+   "area_id": null,
+   "platform": "shelly"
+  },
+  "sensor.fernseher_total_power": {
+   "entity_id": "sensor.fernseher_total_power",
+   "device_id": "d_tv",
+   "area_id": null,
+   "platform": "shelly"
+  }
+ },
+ "states": {
+  "sensor.zaehler_leistung": {
+   "entity_id": "sensor.zaehler_leistung",
+   "state": "-350",
+   "attributes": {
+    "device_class": "power",
+    "unit_of_measurement": "W",
+    "friendly_name": "Zähler Leistung"
+   }
+  },
+  "sensor.wechselrichter_ac_leistung": {
+   "entity_id": "sensor.wechselrichter_ac_leistung",
+   "state": "2.4",
+   "attributes": {
+    "device_class": "power",
+    "unit_of_measurement": "kW",
+    "friendly_name": "Wechselrichter AC-Leistung"
+   }
+  },
+  "sensor.speicher_leistung": {
+   "entity_id": "sensor.speicher_leistung",
+   "state": "-600",
+   "attributes": {
+    "device_class": "power",
+    "unit_of_measurement": "W",
+    "friendly_name": "Speicher Leistung"
+   }
+  },
+  "sensor.hausverbrauch_steckdose": {
+   "entity_id": "sensor.hausverbrauch_steckdose",
+   "state": "40",
+   "attributes": {
+    "device_class": "power",
+    "unit_of_measurement": "W",
+    "friendly_name": "Hausverbrauch Steckdose"
+   }
+  },
+  "sensor.fernseher_total_power": {
+   "entity_id": "sensor.fernseher_total_power",
+   "state": "60",
+   "attributes": {
+    "device_class": "power",
+    "unit_of_measurement": "W",
+    "friendly_name": "Fernseher Total power"
+   }
+  }
+ },
+ "expect": {
+  "house_list": [
+   "sensor.zaehler_leistung",
+   "sensor.wechselrichter_ac_leistung",
+   "sensor.speicher_leistung"
+  ],
+  "energy_roles": {
+   "sensor.zaehler_leistung": "grid",
+   "sensor.wechselrichter_ac_leistung": "solar",
+   "sensor.speicher_leistung": "battery"
+  }
+ },
+ "energy_prefs": {
+  "energy_sources": [
+   {
+    "type": "grid",
+    "stat_energy_from": "sensor.zaehler_bezug",
+    "stat_energy_to": "sensor.zaehler_einspeisung",
+    "stat_rate": "sensor.zaehler_leistung",
+    "cost_adjustment_day": 0
+   },
+   {
+    "type": "solar",
+    "stat_energy_from": "sensor.wechselrichter_ertrag",
+    "stat_rate": "sensor.wechselrichter_ac_leistung"
+   },
+   {
+    "type": "battery",
+    "stat_energy_from": "sensor.speicher_entladen",
+    "stat_energy_to": "sensor.speicher_laden",
+    "stat_rate": "sensor.speicher_leistung",
+    "power_config": {
+     "stat_rate": "sensor.speicher_leistung"
+    }
+   }
+  ],
+  "device_consumption": []
+ }
+}

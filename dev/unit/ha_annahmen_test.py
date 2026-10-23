@@ -410,6 +410,45 @@ class Frontend(unittest.TestCase):
         self.assertEqual({k: found.get(k) for k in want}, want)
 
 
+class EnergyPrefs(unittest.TestCase):
+    """Energy settings (#44). Casora: scripts/local/00-finder.js casoraEnergyHouse takes the house from
+    energy/get_prefs: grid, solar and battery sources carry their power sensor in stat_rate (power_config for grid
+    and battery), and HA writes the sensor to use into stat_rate (also its own template sensor for an inverted or a
+    two sensor power_config). Legacy grid format power: [{ stat_rate }] is still read."""
+
+    def test_source_types(self):
+        import typing
+        from homeassistant.components.energy import data
+        keys = lambda t: set(typing.get_type_hints(t))  # noqa: E731
+        self.assertLessEqual({"stat_rate", "power_config"}, keys(data.GridSourceType))
+        self.assertIn("stat_rate", keys(data.SolarSourceType))
+        self.assertLessEqual({"stat_rate", "power_config"}, keys(data.BatterySourceType))
+        self.assertLessEqual({"stat_rate", "stat_rate_inverted", "stat_rate_from", "stat_rate_to"}, keys(data.PowerConfig))
+        self.assertLessEqual({"stat_rate", "power_config"}, keys(data.GridPowerSourceType))
+
+    def test_schemas_and_stat_rate(self):
+        from homeassistant.components.energy import data
+        grid = data.GRID_SOURCE_SCHEMA({
+            "type": "grid", "stat_energy_from": "sensor.bezug", "stat_energy_to": None,
+            "stat_cost": None, "entity_energy_price": None, "number_energy_price": None,
+            "stat_compensation": None, "entity_energy_price_export": None, "number_energy_price_export": None,
+            "power_config": {"stat_rate_inverted": "sensor.zaehler_leistung"}, "cost_adjustment_day": 0,
+        })
+        self.assertEqual(grid["power_config"], {"stat_rate_inverted": "sensor.zaehler_leistung"})
+        solar = data.SOLAR_SOURCE_SCHEMA({"type": "solar", "stat_energy_from": "sensor.ertrag", "stat_rate": "sensor.pv_leistung"})
+        self.assertEqual(solar["stat_rate"], "sensor.pv_leistung")
+        battery = data.BATTERY_SOURCE_SCHEMA({
+            "type": "battery", "stat_energy_from": "sensor.aus", "stat_energy_to": "sensor.ein",
+            "power_config": {"stat_rate_from": "sensor.entladen", "stat_rate_to": "sensor.laden"},
+        })
+        self.assertIn("stat_rate_from", battery["power_config"])
+        gen = lambda kind, cfg: f"sensor.generated_{kind}_power"  # noqa: E731
+        mgr = data.EnergyManager.__new__(data.EnergyManager)
+        self.assertEqual(mgr._process_grid_power(dict(grid), gen)["stat_rate"], "sensor.generated_grid_power")
+        self.assertEqual(mgr._process_grid_power({**grid, "power_config": {"stat_rate": "sensor.netz"}}, gen)["stat_rate"], "sensor.netz")
+        self.assertEqual(mgr._process_battery_power(dict(battery), gen)["stat_rate"], "sensor.generated_battery_power")
+
+
 if __name__ == "__main__":
     print(f"HA {HA_VERSION}", flush=True)
     ok = unittest.main(verbosity=2, exit=False).result.wasSuccessful()

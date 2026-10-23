@@ -5,6 +5,8 @@
 //   (casoraBasis.housePower) and the dashboard (window._casoraHousePower, 01-basis.js) pick the same.
 // - Without a house sensor Home gets the rooms' sensors as energy_entities (setup and fillBadges),
 //   only the rooms on the dashboard, energy_exclude left out.
+// - HA's energy settings (energy/get_prefs) come first: the grid power sensor alone is Home's sensor, with solar and
+//   battery the three are Home's list and their sum is the house (prefsHomePower switches what Casora chose).
 // - Existing dashboards: a Home sensor only the old rule picked becomes the house sensor or the
 //   sum (fixHomePower), only exactly the old rule's pick on an unmarked Home; a phase meter, a
 //   sensor outside the rooms, a room's only sensor or any choice stays. fillHomeEnergy keeps
@@ -20,14 +22,19 @@ globalThis.customElements = { whenDefined: () => new Promise(() => {}), get: () 
 globalThis.location = { pathname: '/casora/home' };
 const src = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
 window.__casoraPanelInternals = { TILE_TYPES: [], clone: (x) => JSON.parse(JSON.stringify(x)) };
+// HA's energy settings (00-finder.js) and the sum the badge uses (casora-core.js _casoraPowerSum).
+new Function(src('custom_components/casora/scripts/local/00-finder.js'))();
+const core = src('custom_components/casora/scripts/casora-core.js');
+const c0 = core.indexOf('if (window._casoraPowerSum) return;');
+new Function(core.slice(core.lastIndexOf('(function () {', c0), core.indexOf('})();', c0) + 5))();
 new Function(src('custom_components/casora/panel/casora-panel-basis.js'))();
 const panel = src('custom_components/casora/panel/casora-panel.js');
 const from = panel.indexOf('const ENERGY_VAR = ');
-const { fillRoomEnergy, fillHomeEnergy, fixHomePower, homeEnergyEdit } = new Function(panel.slice(from, panel.indexOf('\nfunction deriveEnergyRooms(', from))
-  + '\nreturn { fillRoomEnergy, fillHomeEnergy, fixHomePower, homeEnergyEdit };')();
+const { fillRoomEnergy, fillHomeEnergy, fixHomePower, prefsHomePower, homeEnergyEdit } = new Function(panel.slice(from, panel.indexOf('\nfunction deriveEnergyRooms(', from))
+  + '\nreturn { fillRoomEnergy, fillHomeEnergy, fixHomePower, prefsHomePower, homeEnergyEdit };')();
 const basis = src('custom_components/casora/scripts/local/01-basis.js');
-const b0 = basis.indexOf('window._casoraHousePower = function');
-new Function(basis.slice(b0, basis.indexOf('\n};', b0) + 3))();
+const b0 = basis.indexOf('window._casoraHousePowerIds = function');
+new Function(basis.slice(b0, basis.indexOf('\nwindow._casoraRoomNames', b0)))();
 const B = window.casoraBasis;
 const dashPick = (h) => { current = h; delete window._casoraHPGuess; return window._casoraHousePower(); };
 const same = (h, want, msg) => {
@@ -357,6 +364,164 @@ const ROOM_IDS = ['sensor.fernseher_power', 'sensor.stehlampe_power', 'sensor.ku
   r = rooms(); r[0].variables.casora_energy_auto = false; r[0].variables.energy_entities = ['sensor.fernseher_power'];
   homeEnergyEdit(r[0].variables, 'energy_power_entity', undefined);
   assert.equal(r[0].variables.casora_energy_auto, false, 'own list: stays the user\'s');
+}
+
+// 12. HA's energy settings come before the names (#44). The grid alone: Home's sensor in the Studio and on the
+//     dashboard; with solar and battery the three are a list whose sum is the house (HA's signs: grid import,
+//     battery discharge and solar positive).
+const prefsLoad = async (h, prefs) => {
+  h.callWS = async () => { if (prefs instanceof Error) throw prefs; return prefs; };
+  await window.casoraEnergyPrefs.load(h, true);
+};
+const notFound = Object.assign(new Error('No prefs'), { code: 'not_found' });
+const homeOf = (h) => { const p = planOf(h); return B.tilesOf(p, h).vars[p.rooms[0].name]; };
+const sumOf = (h, ids) => window._casoraPowerSum({ energy_entities: ids }, h.states).sum;
+function solarHouse() {
+  const s = house();
+  s.dev('d_m', null, 'Lesekopf');
+  s.ent('sensor.zaehler_wirkleistung', { dev: 'd_m', name: 'Wirkleistung', state: '-300' });
+  // HA's own template sensors for an inverted or a two sensor power_config.
+  s.ent('sensor.energy_grid_power', { name: 'Grid power', state: '-300' });
+  s.ent('sensor.wechselrichter_ac_power', { name: 'Wechselrichter AC power', state: '2.4' });
+  s.h.states['sensor.wechselrichter_ac_power'].attributes.unit_of_measurement = 'kW';
+  s.ent('sensor.energy_battery_power', { name: 'Battery power', state: '-500' });
+  s.ent('sensor.hausverbrauch', { name: 'Hausverbrauch', state: '1600' });
+  return s;
+}
+const GRID_ONLY = { energy_sources: [{ type: 'grid', stat_energy_from: 'sensor.bezug', stat_energy_to: null,
+  power_config: { stat_rate: 'sensor.zaehler_wirkleistung' }, stat_rate: 'sensor.zaehler_wirkleistung', cost_adjustment_day: 0 }] };
+const FULL = { energy_sources: [
+  { type: 'grid', stat_energy_from: 'sensor.bezug', stat_energy_to: 'sensor.einspeisung',
+    power_config: { stat_rate_inverted: 'sensor.zaehler_wirkleistung' }, stat_rate: 'sensor.energy_grid_power', cost_adjustment_day: 0 },
+  { type: 'solar', stat_energy_from: 'sensor.pv_ertrag', stat_rate: 'sensor.wechselrichter_ac_power', config_entry_solar_forecast: null },
+  { type: 'battery', stat_energy_from: 'sensor.akku_aus', stat_energy_to: 'sensor.akku_ein',
+    power_config: { stat_rate_from: 'sensor.akku_entladen', stat_rate_to: 'sensor.akku_laden' }, stat_rate: 'sensor.energy_battery_power' }] };
+const FULL_IDS = ['sensor.energy_grid_power', 'sensor.wechselrichter_ac_power', 'sensor.energy_battery_power'];
+{
+  const { h } = solarHouse();
+  await prefsLoad(h, GRID_ONLY);
+  let home = homeOf(h);
+  assert.equal(home.energy_power_entity, 'sensor.zaehler_wirkleistung', 'grid alone: Home\'s sensor, before "Hausverbrauch"');
+  assert.equal(home.energy_entities, undefined);
+  assert.equal(home.casora_energy_auto, 'prefs');
+  assert.equal(dashPick(h), 'sensor.zaehler_wirkleistung', 'dashboard: the same sensor');
+  // Grid, solar (kW) and battery: the list, its sum is the house.
+  await prefsLoad(h, FULL);
+  home = homeOf(h);
+  assert.equal(home.energy_power_entity, undefined);
+  assert.deepEqual(home.energy_entities, FULL_IDS);
+  assert.equal(home.casora_energy_auto, 'prefs');
+  assert.equal(sumOf(h, home.energy_entities), 1600, '-300 + 2400 - 500 = the house');
+  current = h; delete window._casoraHPGuess;
+  assert.deepEqual(window._casoraHousePowerIds(), FULL_IDS, 'dashboard: the same list');
+  assert.equal(window._casoraHousePower(), null, 'a sum is no single sensor');
+  // fillBadges (blank start): the settings' list stays, no rooms' sum over it.
+  const t = [{ name: 'Home', home: true, vars: {} }, { name: 'Wohnzimmer', vars: {} }, { name: 'Küche', vars: {} }];
+  B.fillBadges(h, t);
+  assert.deepEqual(t[0].vars.energy_entities, FULL_IDS);
+  assert.equal(t[0].vars.casora_energy_auto, 'prefs');
+  // Legacy grid format (flow_from, power: [{ stat_rate }]) works the same.
+  await prefsLoad(h, { energy_sources: [{ type: 'grid', flow_from: [{ stat_energy_from: 'sensor.bezug' }], flow_to: [],
+    power: [{ stat_rate: 'sensor.zaehler_wirkleistung' }], cost_adjustment_day: 0 }] });
+  assert.equal(homeOf(h).energy_power_entity, 'sensor.zaehler_wirkleistung', 'legacy format');
+  // Incomplete settings are no house: solar without a power sensor (the sum would miss it), no grid power, or the
+  // grid sensor missing in HA. Then the names decide as before.
+  for (const [msg, prefs] of [
+    ['solar without power', { energy_sources: [GRID_ONLY.energy_sources[0], { type: 'solar', stat_energy_from: 'sensor.pv_ertrag' }] }],
+    ['no grid power', { energy_sources: [{ type: 'grid', stat_energy_from: 'sensor.bezug' }, FULL.energy_sources[1]] }],
+    ['grid sensor gone', { energy_sources: [{ type: 'grid', stat_rate: 'sensor.weg' }] }]]) {
+    await prefsLoad(h, prefs);
+    assert.equal(B.prefsHouse(h), null, msg);
+    assert.equal(homeOf(h).energy_power_entity, 'sensor.hausverbrauch', msg + ': names decide');
+    assert.equal(dashPick(h), 'sensor.hausverbrauch', msg + ': dashboard too');
+  }
+  // An inverter that is unavailable at night still counts as the settings' solar sensor.
+  await prefsLoad(h, FULL);
+  h.states['sensor.wechselrichter_ac_power'].state = 'unavailable';
+  assert.deepEqual(B.prefsHouse(h).ids, FULL_IDS, 'unavailable at night: still the house list');
+  h.states['sensor.wechselrichter_ac_power'].state = '2.4';
+  // No energy settings at all (HA answers not_found): the name rules, unchanged.
+  await prefsLoad(h, notFound);
+  assert.equal(B.prefsHouse(h), null);
+  same(h, 'sensor.hausverbrauch', 'no settings');
+  assert.equal(homeOf(h).casora_energy_auto, 'house');
+}
+
+// 13. Existing dashboards: what Casora chose follows the settings, a user's choice never.
+{
+  const { h } = solarHouse();
+  delete h.states['sensor.hausverbrauch'];
+  await prefsLoad(h, FULL);
+  const rooms = (V) => [{ name: 'Home', path: 'home', variables: V },
+    { name: 'Wohnzimmer', path: 'wohnzimmer', variables: { energy_entities: ['sensor.fernseher_power', 'sensor.stehlampe_power'] } },
+    { name: 'Küche', path: 'kueche', variables: { energy_entities: ['sensor.kuhlschrank_power'] } }];
+  // Casora's rooms' sum (2), its house pick ("house"), the old rule's unmarked pick: switched.
+  for (const V of [{ energy_entities: ROOM_IDS.slice(), casora_energy_auto: 2 },
+    { energy_power_entity: 'sensor.zaehler_wirkleistung', casora_energy_auto: 'house' },
+    { energy_power_entity: 'sensor.wohnzimmer_gesamtleistung' }]) {
+    const r = rooms(V);
+    assert.equal(prefsHomePower(h, r), true, JSON.stringify(V));
+    assert.deepEqual(r[0].variables.energy_entities, FULL_IDS);
+    assert.equal(r[0].variables.energy_power_entity, undefined);
+    assert.equal(r[0].variables.casora_energy_auto, 'prefs');
+    assert.equal(prefsHomePower(h, r), false, 'runs once');
+    assert.equal(fillHomeEnergy(h, r), 0, 'no rooms\' sum over the settings');
+    assert.equal(fixHomePower(h, r), false, 'the old fix leaves it alone');
+  }
+  // The user's choice stays: marker false, an unmarked sensor that is not the old pick, energy switched off.
+  for (const V of [{ energy_power_entity: 'sensor.kuhlschrank_power', casora_energy_auto: false },
+    { energy_entities: ['sensor.fernseher_power'], casora_energy_auto: false },
+    { energy_power_entity: 'sensor.kuhlschrank_power' },
+    { energy_entities: ROOM_IDS.slice(), casora_energy_auto: 2, show_energy: false }]) {
+    const r = rooms(Object.assign({}, V));
+    assert.equal(prefsHomePower(h, r), false, JSON.stringify(V));
+    assert.deepEqual(r[0].variables, V);
+  }
+  // Settings changed (battery removed): the list follows; without any power in them, back to the name rules, else
+  // the rooms' sum.
+  let r = rooms({ energy_entities: FULL_IDS.slice(), casora_energy_auto: 'prefs' });
+  await prefsLoad(h, { energy_sources: FULL.energy_sources.slice(0, 2) });
+  assert.equal(prefsHomePower(h, r), true);
+  assert.deepEqual(r[0].variables.energy_entities, FULL_IDS.slice(0, 2));
+  await prefsLoad(h, { energy_sources: [{ type: 'grid', stat_energy_from: 'sensor.bezug' }] });
+  assert.equal(prefsHomePower(h, r), true);
+  assert.equal(r[0].variables.energy_power_entity, 'sensor.energy_grid_power', 'name rules: "Grid power"');
+  assert.equal(r[0].variables.energy_entities, undefined);
+  assert.equal(r[0].variables.casora_energy_auto, 'house');
+  const grid = h.states['sensor.energy_grid_power'];
+  delete h.states['sensor.energy_grid_power'];
+  r = rooms({ energy_entities: FULL_IDS.slice(), casora_energy_auto: 'prefs' });
+  assert.equal(prefsHomePower(h, r), true);
+  assert.equal(r[0].variables.casora_energy_auto, 2);
+  assert.deepEqual(sorted(r[0].variables.energy_entities), sorted(ROOM_IDS), 'rooms\' sum again');
+  h.states['sensor.energy_grid_power'] = grid;
+  // Settings that only lack a sensor for now (not loaded yet in HA): the list stays.
+  const r2 = rooms({ energy_entities: FULL_IDS.slice(), casora_energy_auto: 'prefs' });
+  await prefsLoad(h, FULL);
+  const bat = h.states['sensor.energy_battery_power'];
+  delete h.states['sensor.energy_battery_power'];
+  assert.equal(prefsHomePower(h, r2), false);
+  assert.deepEqual(r2[0].variables.energy_entities, FULL_IDS);
+  h.states['sensor.energy_battery_power'] = bat;
+  // The user edits the list: theirs from now on.
+  homeEnergyEdit(r2[0].variables, 'energy_entities', FULL_IDS.slice(0, 1));
+  assert.equal(r2[0].variables.casora_energy_auto, false);
+  assert.equal(prefsHomePower(h, r2), false);
+  // The user clears the settings' grid sensor: the rooms' sum, the grid sensor does not come back.
+  await prefsLoad(h, GRID_ONLY);
+  const r3 = rooms({ energy_power_entity: 'sensor.zaehler_wirkleistung', casora_energy_auto: 'prefs' });
+  homeEnergyEdit(r3[0].variables, 'energy_power_entity', undefined);
+  delete r3[0].variables.energy_power_entity;
+  assert.equal(r3[0].variables.casora_energy_auto, 2);
+  assert.equal(fillHomeEnergy(h, r3), 1);
+  assert.equal(prefsHomePower(h, r3), false, 'cleared by the user: stays off');
+  assert.deepEqual(sorted(r3[0].variables.energy_entities), sorted(ROOM_IDS));
+  // A house sensor entered over the settings' list replaces the list.
+  const W = { energy_entities: FULL_IDS.slice(), casora_energy_auto: 'prefs' };
+  homeEnergyEdit(W, 'energy_power_entity', 'sensor.kuhlschrank_power');
+  assert.equal(W.energy_entities, undefined);
+  assert.equal(W.casora_energy_auto, false);
+  await prefsLoad(h, notFound);
 }
 
 console.log('house_power: ok');

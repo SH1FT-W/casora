@@ -14,14 +14,16 @@ globalThis.customElements = { whenDefined: () => new Promise(() => {}), get: () 
 globalThis.addEventListener = () => {};
 globalThis.location = { pathname: '/casora/home' };
 
+// Shared finder: energy settings loader (casoraEnergyPrefs) and device lookups.
+new Function(src('custom_components/casora/scripts/local/00-finder.js'))();
 // Studio: house sensor.
 window.__casoraPanelInternals = { TILE_TYPES: [], clone: (x) => JSON.parse(JSON.stringify(x)) };
 new Function(src('custom_components/casora/panel/casora-panel-basis.js'))();
 const B = window.casoraBasis;
 // Dashboard: the same pick for badges without their own sensor.
 const basis = src('custom_components/casora/scripts/local/01-basis.js');
-const b0 = basis.indexOf('window._casoraHousePower = function');
-new Function(basis.slice(b0, basis.indexOf('\n};', b0) + 3))();
+const b0 = basis.indexOf('window._casoraHousePowerIds = function');
+new Function(basis.slice(b0, basis.indexOf('\nwindow._casoraRoomNames', b0)))();
 // Shared plant check (top of casora-core.js).
 const core = src('custom_components/casora/scripts/casora-core.js');
 const p0 = core.indexOf('window.CASORA_PLANT_PLUS');
@@ -50,7 +52,14 @@ for (const f of files) {
   const X = H.expect || {};
   const at = (what) => f + ': ' + what;
   current = hass;
-  if (window.casoraEnergyPrefsSet) window.casoraEnergyPrefsSet(H.energy_prefs || null);
+  await window.casoraEnergyPrefs.load(hass, true);
+  if ('house_list' in X) {
+    const h = window.casoraEnergyHouse(hass);
+    assert.deepEqual(h ? h.ids : null, X.house_list, at('house list from the energy settings'));
+    delete window._casoraHPGuess;
+    assert.deepEqual(window._casoraHousePowerIds(), X.house_list, at('house list (dashboard)'));
+    checks += 2;
+  }
   if ('house_power' in X) {
     assert.equal(B.housePower(hass), X.house_power, at('house sensor (Studio)'));
     delete window._casoraHPGuess;
