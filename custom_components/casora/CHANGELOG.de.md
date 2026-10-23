@@ -9,7 +9,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ### Neu
 - **Casora auf Spanisch:** Dashboard, Studio und Einrichtung gibt es auf Spanisch (die Sprache folgt Home Assistant).
 - **Warum gewählt:** Im Studio steht unter einem Wert, den Casora selbst gewählt hat, jetzt der Grund, z. B. „Automatisch gewählt: der Name enthält ‚Hausbedarf‘“, „aus dem Energie-Dashboard“ oder „Automatisch gefunden am selben Gerät (Home Connect)“. So fällt eine falsche Wahl sofort auf.
-- **Energie aus den Energie-Einstellungen von Home Assistant:** Wer im HA-Energie-Dashboard Leistungssensoren für Netz, Solar und Akku eingetragen hat, bekommt sie jetzt zuerst im Energie-Badge auf Zuhause: nur Netz ergibt diesen Sensor, mit Solar oder Akku ist der Hausverbrauch Netz + Solar + Akku. Das Popup zeigt „Woher kommt der Strom“ mit Netz, Solar und Akku, die Energie-Popups nutzen diese Sensoren auch ohne Unter-Badges. Ein Wechselrichter, der nachts schläft, zählt als 0 W. Die Suche über Namen ist nur noch der Rückfall; ein selbst gewählter Sensor wird nie ersetzt.
+- **Energie aus dem Energie-Dashboard von Home Assistant:** Wer dort Leistungssensoren für Netz, Solar und Akku eingetragen hat, bekommt sie jetzt zuerst im Energie-Badge auf Zuhause. Mit nur dem Netz zeigt es diesen Sensor, mit Solar oder Akku den Hausverbrauch als Netz + Solar + Akku. Das Popup zeigt „Woher kommt der Strom“ mit Netz, Solar und Akku, die Energie-Popups nutzen diese Sensoren auch ohne Unter-Badges. Ein Wechselrichter, der nachts schläft, zählt als 0 W. Nur wenn dort nichts eingetragen ist, sucht Casora weiter nach Namen. Ein selbst gewählter Sensor wird nie ersetzt.
 - **Diagnose kopieren:** Studio → ⋯ → Hilfe → „Diagnose kopieren …“ sammelt Zahlen, Versionen und Integrationen (keine Namen von Geräten, Räumen oder Personen) für ein GitHub-Issue, „Problem melden“ öffnet ein neues Issue mit einem Feld dafür.
 - **Miele-Geschirrspüler** werden erkannt.
 
@@ -19,11 +19,11 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **„Neu beginnen“:** Der Filter für Status-LEDs wirft keine echten LED-Streifen mehr raus.
 - **Studio-Vorschau:** Ein Raum nur mit Thermostat bekommt kein Klima-Badge mehr.
 - **Kaffee-Kachel:** Beim Anlegen werden nur echte Kaffeemaschinen vorgeschlagen (auch De'Longhi und Krups), keine Thermometer oder Steckdosen.
-- **Klingel-Diagnose (#23):** Beim Sprechen schreibt die Browser-Konsole alle 2 Sekunden Pegel und Datenmenge von Klingel und Mikrofon.
-- **Home Connect aus HACS:** Waschmaschinen, Trockner und Geschirrspüler von Home Connect Alt (ekutner) wurden nie erkannt, Home Connect Local (homeconnect_ws) wird jetzt getrennt mit eigenen Schlüsseln erkannt.
+- **Klingel (#23):** mehr Angaben zur Fehlersuche beim Sprechen (in der Browser-Konsole).
+- **Home Connect aus HACS:** Waschmaschinen, Trockner und Geschirrspüler von Home Connect Alt wurden nie erkannt. Home Connect Alt und Home Connect Local werden jetzt erkannt.
 - **Geschirrspüler-Vorschläge:** Das Studio schlägt einen Backofen oder eine Kaffeemaschine von Home Connect nicht mehr als Geschirrspüler vor, in jeder Sprache.
-- **Zweite Kartenkamera eines Saugroboters** (z. B. `…_map_2`) wird nicht mehr als Überwachungskamera vorgeschlagen.
-- **Studio-Felder finden, was die Karte findet:** Geschirrspüler, Waschmaschine/Trockner (z. B. SmartThings, Miele), Saugroboter und 3D-Drucker nutzen im Studio dieselbe Erkennung wie ihre Karten.
+- **Die zweite Kartenansicht eines Saugroboters** wird nicht mehr als Überwachungskamera vorgeschlagen.
+- **Studio-Felder finden, was die Kachel findet:** Geschirrspüler, Waschmaschine/Trockner (z. B. SmartThings, Miele), Saugroboter und 3D-Drucker nutzen im Studio dieselbe Erkennung wie ihre Kacheln.
 - **Live-Aktivitäten für Dreame- und Ecovacs-Saugroboter** bekommen Fläche, Dauer und Fortschritt.
 
 ## 26.10.57 – 23.10.2026

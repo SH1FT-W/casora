@@ -9,9 +9,9 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ### New
 - **Casora in Spanish:** dashboard, Studio and setup are available in Spanish (the language follows Home Assistant).
 - **Why it was picked:** In the Studio, a value Casora chose by itself now says why underneath, e.g. “Chosen automatically: the name contains ‘Hausbedarf’.”, “from the Energy dashboard” or “Found automatically on the same device (Home Connect)”, so a wrong pick is easy to spot.
-- **Energy from Home Assistant's energy settings:** If you entered power sensors for grid, solar and battery in Home Assistant's energy dashboard, the energy badge on Home now uses them first: with the grid alone that sensor, with solar or a battery the house consumption as grid + solar + battery. Its popup shows “Where the power comes from” with grid, solar and battery, and the energy popups use these sensors even without sub-badges. An inverter asleep at night counts as 0 W. Name guessing is only the fallback now; a sensor you picked yourself is never replaced.
+- **Energy from Home Assistant's Energy dashboard:** If you entered power sensors for grid, solar and battery in Home Assistant's Energy dashboard, the energy badge on Home now uses them first. With the grid alone it shows that sensor; with solar or a battery it shows the house consumption as grid + solar + battery. Its popup shows “Where the power comes from” with grid, solar and battery, and the energy popups use these sensors even without sub-badges. An inverter asleep at night counts as 0 W. Only if nothing is entered there does Casora still look for sensors by name. A sensor you picked yourself is never replaced.
 - **Copy diagnostics:** Studio → ⋯ → Help → “Copy diagnostics…” collects counts, versions and integrations (no names of devices, rooms or people) for a GitHub issue, and “Report a problem” opens a new issue with a field for it.
-- **Miele dishwashers** are recognised.
+- **Miele dishwashers** are detected.
 
 ### Fixed
 - **Lights added later** in Home Assistant now also appear on the room's Lights badge.
@@ -19,11 +19,11 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **“Start fresh”:** the filter for status LEDs no longer removes real LED strips.
 - **Studio preview:** a room with only a thermostat no longer gets a Climate badge.
 - **Coffee tile:** When adding it, only real coffee machines are suggested (also De'Longhi and Krups), no thermometers or plugs.
-- **Doorbell diagnostics (#23):** While talking, the browser console logs the level and data of doorbell and microphone every 2 seconds.
-- **Home Connect from HACS:** Washers, dryers and dishwashers of Home Connect Alt (ekutner) were never recognised, Home Connect Local (homeconnect_ws) is now recognised separately with its own keys.
+- **Doorbell (#23):** more details for troubleshooting talking (in the browser console).
+- **Home Connect from HACS:** Washers, dryers and dishwashers of Home Connect Alt were never detected. Home Connect Alt and Home Connect Local are detected now.
 - **Dishwasher suggestions:** The Studio no longer suggests a Home Connect oven or coffee machine as a dishwasher, in any language.
-- **Second map camera of a vacuum** (e.g. `…_map_2`) is no longer suggested as a security camera.
-- **Studio fields find what the card finds:** Dishwasher, washer/dryer (e.g. SmartThings, Miele), vacuum and 3D printer fields in the Studio now use the same recognition as their cards.
+- **A vacuum's second map camera** is no longer suggested as a security camera.
+- **Studio fields find what the tile finds:** Dishwasher, washer/dryer (e.g. SmartThings, Miele), vacuum and 3D printer fields in the Studio now use the same detection as their tiles.
 - **Live activities for Dreame and Ecovacs vacuums** get area, duration and progress.
 
 ## 26.10.57 – 23.10.2026

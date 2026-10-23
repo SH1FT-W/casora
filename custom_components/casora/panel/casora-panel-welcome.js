@@ -27,9 +27,9 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Energie aus Home Assistant", n0: "Netz, Solar und Akku aus den Energie-Einstellungen von Home Assistant: Zuhause zeigt den echten Hausverbrauch und woher der Strom kommt.",
-      n1t: "Diagnose kopieren", n1: "Unter ⋯ → Hilfe sammelt Casora Versionen und Integrationen für einen Fehlerbericht, ohne Namen.",
-      n2t: "Geräte besser erkannt", n2: "Home Connect aus HACS, Miele-Spüler und Saugroboter-Werte werden jetzt erkannt, Backöfen nicht mehr als Spüler vorgeschlagen.",
+      n0t: "Energie aus Home Assistant", n0: "Netz, Solar und Akku aus dem Energie-Dashboard von Home Assistant: Zuhause zeigt den echten Hausverbrauch und woher der Strom kommt.",
+      n1t: "Diagnose kopieren", n1: "Unter ⋯ → Hilfe sammelt Casora Versionen und Integrationen für eine Problemmeldung, ohne Namen von Geräten, Räumen oder Personen.",
+      n2t: "Geräte besser erkannt", n2: "Home Connect aus HACS, Miele-Geschirrspüler und mehr Saugroboter-Werte werden jetzt erkannt. Backöfen werden nicht mehr als Geschirrspüler vorgeschlagen.",
       n3t: "Warum gewählt", n3: "Im Studio steht unter automatisch gewählten Werten jetzt der Grund, z. B. „aus dem Energie-Dashboard“.",
     },
     en: {
@@ -40,9 +40,9 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Energy from Home Assistant", n0: "Grid, solar and battery from Home Assistant's energy settings: Home shows the real house consumption and where the power comes from.",
-      n1t: "Copy diagnostics", n1: "Under ⋯ → Help, Casora collects versions and integrations for a bug report, without names.",
-      n2t: "Devices recognised better", n2: "Home Connect from HACS, Miele dishwashers and vacuum values are recognised now, ovens are no longer suggested as dishwashers.",
+      n0t: "Energy from Home Assistant", n0: "Grid, solar and battery from Home Assistant's Energy dashboard: Home shows the real house consumption and where the power comes from.",
+      n1t: "Copy diagnostics", n1: "Under ⋯ → Help, Casora collects versions and integrations for a problem report, without names of devices, rooms or people.",
+      n2t: "Better device detection", n2: "Home Connect from HACS, Miele dishwashers and more vacuum values are detected now. Ovens are no longer suggested as dishwashers.",
       n3t: "Why it was picked", n3: "In the Studio, values Casora picked itself now show the reason, e.g. “from the Energy dashboard”.",
     },
     // Spanish: same keys as en (dev/unit/welcome_es.mjs); a missing key falls back to English.
@@ -54,10 +54,10 @@
       w1t: "Habitación por habitación", w1: "Diseña tu panel con los dispositivos que ya tienes en Home Assistant.",
       w2t: "Asistente de dispositivos", w2: "Casora propone las tarjetas adecuadas para cada habitación y las añade por ti.",
       w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
-      n0t: "Energía desde Home Assistant", n0: "Red, solar y batería de los ajustes de energía de Home Assistant: Casa muestra el consumo real y de dónde viene la electricidad.",
+      n0t: "Energía desde Home Assistant", n0: "Red, solar y batería del panel de Energía de Home Assistant: Casa muestra el consumo real y de dónde viene la electricidad.",
       n1t: "Copiar diagnóstico", n1: "En ⋯ → Ayuda, Casora reúne versiones e integraciones para un informe de error, sin nombres.",
       n2t: "Dispositivos mejor reconocidos", n2: "Home Connect de HACS, lavavajillas Miele y los valores del robot aspirador se reconocen ahora; los hornos ya no se proponen como lavavajillas.",
-      n3t: "Por qué se eligió", n3: "En el Studio, los valores que Casora eligió solo muestran ahora el motivo, p. ej. «del panel de Energía».",
+      n3t: "Por qué se eligió", n3: "En el Studio, los valores que Casora elige automáticamente muestran ahora el motivo, p. ej. “del panel de Energía de Home Assistant”.",
     },
   };
   // Texts for a language: its own, English for anything it does not have (yet).
