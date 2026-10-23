@@ -223,6 +223,56 @@ const ROOM_IDS = ['sensor.fernseher_power', 'sensor.stehlampe_power', 'sensor.ku
   assert.equal(r[0].variables.energy_power_entity, 'sensor.klemme_total_power');
 }
 
+// 8b. Single phase meter without phase sensors (Shelly EM style): nothing to switch on the device plus
+//     returned energy, voltage with power factor, or a meter model. Its total is the house sensor and
+//     never a summand of the sum on Home. A plug named "Total" (it has a switch) stays a consumer.
+{
+  const extra = (h, eid, dc, name) => {
+    h.entities[eid] = { entity_id: eid, device_id: h.entities['sensor.klemme_total_power'] ? 'd_em' : null, area_id: null, platform: 'zha' };
+    h.states[eid] = { entity_id: eid, state: '1', attributes: { device_class: dc, friendly_name: name } };
+  };
+  const clamp = () => {
+    const s = house();
+    s.dev('d_em', 'ke', 'Messklemme');
+    s.ent('sensor.klemme_total_power', { dev: 'd_em', name: 'Klemme Total power', state: '700' });
+    return s;
+  };
+  const rooms = ['Wohnzimmer', 'Küche', 'Keller'];
+  const check = (s, msg) => {
+    same(s.h, 'sensor.klemme_total_power', msg + ': house sensor');
+    const p = B.plan(s.h, rooms, Object.assign({}, B.DEFAULTS));
+    const home = B.tilesOf(p, s.h).vars[p.rooms[0].name];
+    assert.equal(home.energy_power_entity, 'sensor.klemme_total_power', msg + ': on Home');
+    assert.deepEqual(B.homeSumIds(s.h, [{ energy_power_entity: 'sensor.klemme_total_power' }, { energy_entities: ['sensor.fernseher_power'] }]),
+      ['sensor.fernseher_power'], msg + ': no summand');
+  };
+  let s = clamp();
+  extra(s.h, 'sensor.klemme_energy_returned', 'energy', 'Klemme Energy returned');
+  check(s, 'returned energy');
+  s = clamp();
+  extra(s.h, 'sensor.klemme_voltage', 'voltage', 'Klemme Voltage');
+  extra(s.h, 'sensor.klemme_power_factor', 'power_factor', 'Klemme Power factor');
+  check(s, 'voltage + power factor');
+  s = clamp();
+  s.h.devices.d_em.model = 'Shelly EM';
+  check(s, 'meter model');
+  const kp = B.plan(s.h, rooms, Object.assign({}, B.DEFAULTS));
+  const keller = B.tilesOf(kp, s.h).vars['Keller'];
+  assert.ok(keller, 'Keller room vars');
+  assert.notEqual(keller.energy_power_entity, 'sensor.klemme_total_power', 'meter is not the Keller room\'s own power');
+  assert.ok(!(keller.energy_entities || []).includes('sensor.klemme_total_power'), 'meter is no Keller summand');
+  // The same sensors on a plug (switch on the device): a consumer, no house sensor, a summand.
+  s = clamp();
+  extra(s.h, 'sensor.klemme_voltage', 'voltage', 'Klemme Voltage');
+  extra(s.h, 'sensor.klemme_power_factor', 'power_factor', 'Klemme Power factor');
+  extra(s.h, 'switch.klemme', 'outlet', 'Klemme');
+  s.h.devices.d_em.model = 'Smart Plug';
+  delete s.h.states['sensor.wohnzimmer_gesamtleistung'];
+  delete s.h.states['sensor.pumpe_total_power'];
+  same(s.h, null, 'plug named Total');
+  assert.deepEqual(B.homeSumIds(s.h, [{ energy_power_entity: 'sensor.klemme_total_power' }]), ['sensor.klemme_total_power'], 'plug is a summand');
+}
+
 // 9. A choice is never overwritten: only exactly the old rule's pick on an unmarked Home.
 {
   const { h, ent } = house();

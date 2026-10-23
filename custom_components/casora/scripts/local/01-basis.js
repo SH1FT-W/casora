@@ -176,13 +176,24 @@ window._casoraHousePower = function () {
         l.replace(/ä/g, 'a').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ß/g, 'ss')]
         .map(function (x) { return ' ' + x.replace(/[^a-z0-9]+/g, ' ').trim() + ' '; });
     };
-    /* A meter with phase sensors on its device: its "total" is the house (phaseMeter there). */
+    /* A meter, not a consumer: its "total" is the house (meterDevice in panel/casora-panel-basis.js). */
+    var D = hass.devices || {};
+    var lbl = function (x) { return x + ' ' + (((S[x] || {}).attributes || {}).friendly_name || ''); };
+    var dcOf = function (x) { return ((S[x] || {}).attributes || {}).device_class; };
     var phaseMeter = function (p) {
       var dev = (R[p] || {}).device_id;
-      return !!dev && Object.keys(R).some(function (x) {
-        return x !== p && R[x] && R[x].device_id === dev && x.indexOf('sensor.') === 0
-          && /phase|(^|[_\s])l[123]([_\s]|$)/i.test(x + ' ' + (((S[x] || {}).attributes || {}).friendly_name || ''));
-      });
+      if (!dev) return false;
+      var sibs = Object.keys(R).filter(function (x) { return x !== p && R[x] && R[x].device_id === dev; });
+      if (sibs.some(function (x) { return x.indexOf('sensor.') === 0 && /phase|(^|[_\s])l[123]([_\s]|$)/i.test(lbl(x)); })) return true;
+      if (sibs.some(function (x) { return /^(switch|light|fan|climate|media_player|cover|valve|humidifier|vacuum|lock|water_heater)\./.test(x); })) return false;
+      if (sibs.some(function (x) {
+        return dcOf(x) === 'energy' && /returned|export|einspeis|r(ü|ue)ckspeis|zur(ü|ue)ck|feed.?in|produced/i.test(lbl(x) + ' ' + ((R[x] || {}).translation_key || ''));
+      })) return true;
+      if (sibs.some(function (x) { return dcOf(x) === 'voltage'; })
+        && sibs.some(function (x) { return dcOf(x) === 'power_factor' || dcOf(x) === 'frequency'; })) return true;
+      var d = D[dev] || {};
+      return /(^|[^a-z])(3?em|pro ?3?em|energy ?meter|power ?meter|stromz(ä|ae)hler|z(ä|ae)hler|meter|clamp|zange|powct|pzem|sdm\d*|eastron|iammeter|emporia|ct ?clamp)([^a-z]|$)/i
+        .test([d.model, d.name, d.name_by_user].filter(Boolean).join(' '));
     };
     var owned = function (p) {
       var e = R[p];

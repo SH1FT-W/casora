@@ -313,7 +313,8 @@
       if (!e || e.hidden || e.entity_category || e.disabled_by || norm(areaName(id)) !== norm(room.name)) return false;
       const dev = D[e.device_id] || {};
       const label = [id, (S[id].attributes || {}).friendly_name].join(" ");
-      if (NOT_ROOM.test(label) || NOT_ROOM_POWER.test(label)) return false;
+      // A house meter in the room (houseMeter: grid, house, a meter's total) measures the house, not the room.
+      if (NOT_ROOM.test(label) || NOT_ROOM_POWER.test(label) || houseMeter(hass, id)) return false;
       return !e.device_id || norm(dev.name_by_user || dev.name) === norm(room.name) || ROOM_POWER.test(label);
     }) || null;
     // 03.10.2026: energy badge in every room where power is measured, also through a plug or a
@@ -341,7 +342,7 @@
       if (!e || e.hidden || e.entity_category || e.disabled_by || norm(powerArea(id)) !== norm(room.name)) return false;
       const dev = D[e.device_id] || {};
       const label = [id, (S[id].attributes || {}).friendly_name, dev.name_by_user, dev.name].join(" ");
-      return !NOT_ROOM_POWER.test(label) && !NOT_ELECTRIC.test(label);
+      return !NOT_ROOM_POWER.test(label) && !NOT_ELECTRIC.test(label) && !houseMeter(hass, id);
     });
     const POWER_STAT = /mittel|durchschnitt|average|\bavg|_avg|mean|maxim|minim|(^|[_\s.])(max|min)([_\s]|$)|peak|spitze/i;
     const DEVICE_TOTAL = /device.?power|total.?power|power.?total|ger(ä|ae)t.?(leistung|gesamt)|gesamt.?leistung/i;
@@ -434,21 +435,32 @@
     return Object.keys(S).filter((id) => id.startsWith("sensor.") && ((S[id].attributes || {}).device_class) === "power"
       && Number.isFinite(parseFloat(S[id].state)) && !((R[id] || {}).entity_category));
   };
-  // A meter with phase sensors on its device (three phase, e.g. a clamp meter): its "total" is
-  // the house, wherever the device sits.
+  // A meter, not a consumer: its "total" is the house, wherever the device sits. Phase sensors on the
+  // device (three phase clamp), or a single phase meter: nothing to switch on the device (a plug has
+  // a switch) and returned/exported energy, voltage with power factor or frequency, or a meter model.
   const PHASE = /phase|(^|[_\s])l[123]([_\s]|$)/i;
-  function phaseMeter(hass, id) {
-    const S = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
+  const RETURNED = /returned|export|einspeis|r(ü|ue)ckspeis|zur(ü|ue)ck|feed.?in|produced/i;
+  const METER_MODEL = /(^|[^a-z])(3?em|pro ?3?em|energy ?meter|power ?meter|stromz(ä|ae)hler|z(ä|ae)hler|meter|clamp|zange|powct|pzem|sdm\d*|eastron|iammeter|emporia|ct ?clamp)([^a-z]|$)/i;
+  const SWITCHING = /^(switch|light|fan|climate|media_player|cover|valve|humidifier|vacuum|lock|water_heater)\./;
+  function meterDevice(hass, id) {
+    const S = (hass && hass.states) || {}, R = (hass && hass.entities) || {}, D = (hass && hass.devices) || {};
     const dev = (R[id] || {}).device_id;
-    return !!dev && Object.keys(R).some((x) => x !== id && R[x] && R[x].device_id === dev && x.startsWith("sensor.")
-      && PHASE.test(houseLabel(S, x)));
+    if (!dev) return false;
+    const sibs = Object.keys(R).filter((x) => x !== id && R[x] && R[x].device_id === dev);
+    if (sibs.some((x) => x.startsWith("sensor.") && PHASE.test(houseLabel(S, x)))) return true;
+    if (sibs.some((x) => SWITCHING.test(x))) return false;
+    const dc = (x) => ((S[x] || {}).attributes || {}).device_class;
+    if (sibs.some((x) => dc(x) === "energy" && RETURNED.test(houseLabel(S, x) + " " + ((R[x] || {}).translation_key || "")))) return true;
+    if (sibs.some((x) => dc(x) === "voltage") && sibs.some((x) => dc(x) === "power_factor" || dc(x) === "frequency")) return true;
+    const d = D[dev] || {};
+    return METER_MODEL.test([d.model, d.name, d.name_by_user].filter(Boolean).join(" "));
   }
   function housePower(hass) {
     const S = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
     const powers = housePowers(hass);
     for (let i = 0; i < HOUSE_POWER.length; i++) {
       const id = powers.find((p) => HOUSE_POWER[i].test(houseLabel(S, p))
-        && !(i === 1 && ((R[p] || {}).device_id || roomOfPower(hass, p)) && !phaseMeter(hass, p)));
+        && !(i === 1 && ((R[p] || {}).device_id || roomOfPower(hass, p)) && !meterDevice(hass, p)));
       if (id) return id;
     }
     return null;
@@ -464,7 +476,7 @@
   // of the rooms' sum on Home, it would count twice.
   function houseMeter(hass, id) {
     const label = houseLabel((hass && hass.states) || {}, id);
-    return HOUSE_POWER[0].test(label) || HOUSE_POWER[2].test(label) || (HOUSE_POWER[1].test(label) && phaseMeter(hass, id));
+    return HOUSE_POWER[0].test(label) || HOUSE_POWER[2].test(label) || (HOUSE_POWER[1].test(label) && meterDevice(hass, id));
   }
 
   // A Home sensor only the rule before #44 picked: "total" in its name and nothing else that
@@ -476,7 +488,7 @@
     if (!S[id] || !HOUSE_POWER[1].test(label) || HOUSE_POWER[0].test(label) || HOUSE_POWER[2].test(label)) return false;
     const room = roomOfPower(hass, id);
     if (!room || !(rooms || []).some((n) => norm(n) === norm(room))) return false;
-    return !phaseMeter(hass, id);
+    return !meterDevice(hass, id);
   }
 
   // Badges per room from what is ticked: lights, climate, media, security.
