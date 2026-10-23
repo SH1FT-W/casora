@@ -29,6 +29,101 @@ window.casoraPriceKwh = function (v) {
   return ok(window.CASORA_PRICE_KWH);
 };
 
+// HA's own energy settings (energy/get_prefs), one cached load for the dashboard and the Studio (#44). Here, not in
+// casora-core.js: the Studio loads this file too (casora-panel-types.js), never casora-core.js.
+//   casoraEnergyPrefs(hass)       – the prefs or null (not loaded yet, or the call failed); starts a load, at most
+//                                   every few minutes. casoraEnergyPrefs.load(hass, force) → Promise of the same.
+//   casoraEnergyPowers(hass, p)   – { grid, solar, battery }: power sensors of the settings that exist in hass.states.
+//   casoraEnergyHouse(hass, p)    – the house from them, or null: { ids, power, grid, solar, battery }. HA's signs:
+//                                   grid positive = import, battery positive = discharge, solar positive, so the house
+//                                   is their sum. Only with a grid power sensor and one for every solar and battery
+//                                   source (without one the sum would miss it). power: the one sensor when it is the
+//                                   grid alone, else null (the house is the sum of ids).
+//   casoraEnergySources(hass, ids) – ids by role when they are all such sensors (with the grid), else null: a list
+//                                   that is the house from the settings, not consumers.
+(function () {
+  if (window.casoraEnergyPrefs) return;
+  var AGE = 5 * 60 * 1000;
+  var cache = null, at = 0, busy = null;
+  var load = function (hass, force) {
+    if (busy) return busy;
+    if (!hass || typeof hass.callWS !== 'function') return Promise.resolve(cache);
+    if (!force && at && Date.now() - at < AGE) return Promise.resolve(cache);
+    busy = hass.callWS({ type: 'energy/get_prefs' }).then(function (p) {
+      cache = p && typeof p === 'object' ? p : {};
+    }, function (e) {
+      // Energy never set up: HA answers with the error code not_found. Anything else keeps what was there.
+      if (e && e.code === 'not_found') cache = {};
+    }).then(function () { at = Date.now(); busy = null; return cache; });
+    return busy;
+  };
+  window.casoraEnergyPrefs = function (hass) { load(hass); return cache; };
+  window.casoraEnergyPrefs.load = load;
+  // Load once early, so the first energy popup already knows the settings (a list that is the house).
+  (function kick(n) {
+    var ha = typeof document !== 'undefined' && document.querySelector ? document.querySelector('home-assistant') : null;
+    if (ha && ha.hass && typeof ha.hass.callWS === 'function') { load(ha.hass); return; }
+    if (n >= 20 || typeof setTimeout !== 'function') return;
+    var t = setTimeout(function () { kick(n + 1); }, 1500);
+    if (t && t.unref) t.unref();
+  })(0);
+
+  var ROLES = ['grid', 'solar', 'battery'];
+  // HA writes the sensor to use into stat_rate (also a template sensor it makes for an inverted or a two sensor
+  // power_config); power_config.stat_rate is the same sensor. The legacy grid format had power: [{ stat_rate }].
+  var rate = function (x) { return (x && (x.stat_rate || (x.power_config && x.power_config.stat_rate))) || null; };
+  var sources = function (prefs) {
+    return ((prefs && prefs.energy_sources) || []).filter(function (s) { return s && ROLES.indexOf(s.type) > -1; });
+  };
+  var ratesOf = function (s) {
+    var out = [rate(s)];
+    if (s.type === 'grid' && Array.isArray(s.power)) s.power.forEach(function (x) { out.push(rate(x)); });
+    return out.filter(function (id) { return typeof id === 'string' && id; });
+  };
+  // A sensor that exists: with a number now, or a power sensor that is just unavailable (an inverter at night).
+  var exists = function (S, id) {
+    var s = S[id];
+    if (!s) return false;
+    var a = s.attributes || {};
+    return isFinite(parseFloat(s.state)) || a.device_class === 'power' || /^[mkMG]?W$/.test(String(a.unit_of_measurement || ''));
+  };
+  window.casoraEnergyPowers = function (hass, prefs) {
+    var p = prefs !== undefined ? prefs : window.casoraEnergyPrefs(hass);
+    var S = (hass && hass.states) || {}, out = { grid: [], solar: [], battery: [] };
+    sources(p).forEach(function (s) {
+      ratesOf(s).forEach(function (id) { if (exists(S, id) && out[s.type].indexOf(id) < 0) out[s.type].push(id); });
+    });
+    return out;
+  };
+  window.casoraEnergyHouse = function (hass, prefs) {
+    var p = prefs !== undefined ? prefs : window.casoraEnergyPrefs(hass);
+    var src = sources(p), S = (hass && hass.states) || {};
+    if (!src.length) return null;
+    var pw = window.casoraEnergyPowers(hass, p);
+    if (!pw.grid.length) return null;
+    var whole = src.every(function (s) {
+      // Grid entries without power are fine: HA split one meter with two tariffs into two entries, the power on one.
+      if (s.type === 'grid') return true;
+      return ratesOf(s).some(function (id) { return exists(S, id); });
+    });
+    if (!whole) return null;
+    var ids = pw.grid.concat(pw.solar, pw.battery);
+    return { ids: ids, power: ids.length === 1 ? ids[0] : null, grid: pw.grid, solar: pw.solar, battery: pw.battery };
+  };
+  window.casoraEnergySources = function (hass, ids) {
+    var list = (Array.isArray(ids) ? ids : []).filter(Boolean);
+    if (!list.length) return null;
+    var pw = window.casoraEnergyPowers(hass);
+    var out = { grid: [], solar: [], battery: [] };
+    var all = list.every(function (id) {
+      var r = ROLES.filter(function (k) { return pw[k].indexOf(id) > -1; })[0];
+      if (r && out[r].indexOf(id) < 0) out[r].push(id);
+      return !!r;
+    });
+    return all && out.grid.length ? out : null;
+  };
+})();
+
 (function () {
   if (window.casoraDevice) return;
 

@@ -2754,12 +2754,58 @@ function fixHomePower(hass, rooms) {
   return true;
 }
 
+// #44: HA's own energy settings know the house: the grid alone, or grid, solar and battery as a sum
+// (casoraBasis.prefsHouse). A Home that Casora filled (marker "house", 2 or "prefs", or unmarked with exactly the
+// old rule's pick) takes them; "prefs" follows when the settings change and goes back to the name rules or the
+// rooms' sum once they hold no power at all. A user's choice (marker false) is never touched. Runs where
+// fixHomePower runs, after the Studio waited for the settings. Returns whether Home changed.
+function prefsHomePower(hass, rooms) {
+  const B = typeof window !== "undefined" && window.casoraBasis;
+  const V = rooms && rooms[0] && rooms[0].variables;
+  if (!B || !B.prefsHouse || !B.prefsHomeVars || !hass || !V || V.show_energy === false) return false;
+  const m = V.casora_energy_auto;
+  const arr = (v) => (Array.isArray(v) ? v.filter(Boolean) : []);
+  const ours = m === "house" || m === 2 || m === "prefs"
+    || (m === undefined && !!V.energy_power_entity && !arr(V.energy_entities).length && B.oldHouseTotal && B.oldHouseTotal(hass) === V.energy_power_entity);
+  if (!ours) return false;
+  const ph = B.prefsHouse(hass);
+  if (ph && ph.ids.some((id) => arr(V.energy_exclude).includes(id))) return false;
+  if (!ph) {
+    // Settings loaded and without any power sensor: back to what Casora picks without them.
+    const P = window.casoraEnergyPrefs ? window.casoraEnergyPrefs(hass) : null;
+    const rated = P && (P.energy_sources || []).some((x) => x && /^(grid|solar|battery)$/.test(x.type)
+      && (x.stat_rate || (x.power_config && x.power_config.stat_rate) || (Array.isArray(x.power) && x.power.length)));
+    if (m !== "prefs" || !P || rated) return false;
+    delete V.energy_power_entity; delete V.energy_entities;
+    const again = B.housePower && B.housePower(hass);
+    if (again) { V.energy_power_entity = again; V.casora_energy_auto = "house"; return true; }
+    V.casora_energy_auto = 2;
+    fillHomeEnergy(hass, rooms);
+    return true;
+  }
+  const want = B.prefsHomeVars(ph);
+  const sameList = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+  if (m === "prefs" && (V.energy_power_entity || null) === (want.energy_power_entity || null)
+    && sameList(arr(V.energy_entities), want.energy_entities || [])) return false;
+  delete V.energy_power_entity; delete V.energy_entities;
+  Object.assign(V, want);
+  V.casora_energy_auto = "prefs";
+  return true;
+}
+
 // #44: the user edits Home's energy sensors: from now on they are the user's (marker false, no
 // automatic changes). A house sensor entered over Casora's automatic sum replaces the sum, so the
 // Studio preview (sensor first) and the dashboard (list first) show the same number.
 function homeEnergyEdit(V, key, value) {
   if (!V || !/^energy_(power_entity|entities|exclude)$/.test(key)) return;
-  if (key === "energy_power_entity" && value && V.casora_energy_auto === 2) delete V.energy_entities;
+  const auto = V.casora_energy_auto === 2 || V.casora_energy_auto === "prefs";
+  if (key === "energy_power_entity" && value && auto) delete V.energy_entities;
+  // The grid sensor from HA's energy settings cleared: it stays off Home (energy_exclude, prefsHomePower
+  // respects it), Home sums the rooms like after clearing any other house sensor.
+  if (key === "energy_power_entity" && !value && V.casora_energy_auto === "prefs" && V.energy_power_entity) {
+    const ex = Array.isArray(V.energy_exclude) ? V.energy_exclude.filter(Boolean) : [];
+    if (!ex.includes(V.energy_power_entity)) V.energy_exclude = ex.concat(V.energy_power_entity);
+  }
   // House sensor cleared without a list of one's own: Home sums the rooms again (it used to hide the badge).
   const ownList = V.casora_energy_auto !== 2 && Array.isArray(V.energy_entities) && V.energy_entities.some(Boolean);
   if (key === "energy_power_entity" && !value && !ownList) { V.casora_energy_auto = 2; return; }
@@ -13935,6 +13981,7 @@ class CasoraPanel extends HTMLElement {
         rooms.forEach((r) => { r.tiles = tiles[r.name] || []; Object.assign(r.variables, vars[r.name] || {}); });
       } else if (window.casoraBasis && window.casoraBasis.fillBadges) {
         // Leer begonnen: keine Kacheln, aber jeder Raum bekommt seine Badges aus seinem HA-Bereich.
+        if (window.casoraBasis.energyPrefsReady) await window.casoraBasis.energyPrefsReady(this._hass);
         try { window.casoraBasis.fillBadges(this._hass, rooms.map((r, i) => ({ name: r.name, home: i === 0, vars: r.variables }))); }
         catch (e) { this._log("room badges skipped: " + e.message, "warn"); }
       }
@@ -15291,6 +15338,11 @@ class CasoraPanel extends HTMLElement {
         seedScenePrefs(this._state.compact.rooms, [cfg, this._pair && this._pair.mobile]);
       }
       seedKiosk(this._state.compact.rooms, cfg);
+      // #44: HA's energy settings decide the house on Home; wait for them once (a failed call leaves the names).
+      if (this._state.surface !== "mobile" && !this._saveBlocked && window.casoraBasis && window.casoraBasis.energyPrefsReady) {
+        await window.casoraBasis.energyPrefsReady(this._hass);
+        if (stale()) return;
+      }
       if (this._state.surface !== "mobile" && !this._saveBlocked) {
         const nE = fillRoomEnergy(this._hass, this._state.compact.rooms);
         if (nE) this._log(`energy: ${nE} room(s) with a power sensor got the energy badge`, "ok");
@@ -15306,7 +15358,10 @@ class CasoraPanel extends HTMLElement {
       this._clean = this._print();
       this._resetUndo(false);
       // After _clean on purpose: the fix shows as unsaved, one save corrects the dashboard (#44).
-      if (this._state.surface !== "mobile" && !this._saveBlocked && fixHomePower(this._hass, this._state.compact.rooms)) {
+      if (this._state.surface !== "mobile" && !this._saveBlocked && prefsHomePower(this._hass, this._state.compact.rooms)) {
+        this._log("energy: Home now follows Home Assistant's energy settings", "ok");
+        this._markDirty();
+      } else if (this._state.surface !== "mobile" && !this._saveBlocked && fixHomePower(this._hass, this._state.compact.rooms)) {
         this._log("energy: Home showed one device's total, now the house sensor or the sum of the rooms", "ok");
         this._markDirty();
       }

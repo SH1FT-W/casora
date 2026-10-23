@@ -482,6 +482,25 @@
     }
     return null;
   }
+  // #44: the house from HA's own energy settings comes before any name rule (window.casoraEnergyHouse in
+  // scripts/local/00-finder.js): { ids, power } or null. The Studio waits for the load once (energyPrefsReady).
+  const prefsHouse = (hass) => {
+    try { return typeof window.casoraEnergyHouse === "function" ? window.casoraEnergyHouse(hass) : null; } catch (e) { return null; }
+  };
+  // Load the energy settings before plan, fillBadges and the Home fixes run; never blocks longer than a few
+  // seconds, a failed call leaves the name rules.
+  async function energyPrefsReady(hass, ms) {
+    try {
+      if (!window.casoraEnergyPrefs) await import("/casora_scripts/local/00-finder.js");
+      if (!window.casoraEnergyPrefs || !hass) return null;
+      return await Promise.race([window.casoraEnergyPrefs.load(hass, true), new Promise((r) => setTimeout(() => r(null), ms || 4000))]);
+    } catch (e) { return null; }
+  }
+  // The Home energy fields from the settings: the grid alone as the sensor, else the sum as the list.
+  function prefsHomeVars(ph) {
+    return ph.power ? { energy_power_entity: ph.power } : { energy_entities: ph.ids.slice() };
+  }
+
   // The rule before #44, only where it differs: the first "total" when nothing matched stage 1.
   // fixHomePower touches a Home sensor only when it is exactly this pick.
   function oldHouseTotal(hass) {
@@ -548,8 +567,11 @@
     // Without a house sensor Home counts the rooms, the same sensors as their energy badges
     // (#44). casora_energy_auto 2: the Studio adds what the rooms gain later (fillHomeEnergy).
     // casora_energy_auto "house": the Studio picked the house sensor, not the user.
+    // casora_energy_auto "prefs": from HA's energy settings (grid, plus solar and battery as a sum).
     const sum = [...new Set(all.power)].filter((id) => !houseMeter(hass, id));
-    if (p.housePower) { h.energy_power_entity = p.housePower; h.casora_energy_auto = "house"; }
+    const ph = prefsHouse(hass);
+    if (ph) { Object.assign(h, prefsHomeVars(ph)); h.casora_energy_auto = "prefs"; }
+    else if (p.housePower) { h.energy_power_entity = p.housePower; h.casora_energy_auto = "house"; }
     else if (sum.length) { h.energy_entities = sum; h.casora_energy_auto = 2; }
     put(h, "media_player_", [...new Set(all.media)], 10);
     if (all.lock.length) h.security_locks = [...new Set(all.lock)];
@@ -586,12 +608,13 @@
     const list = [].concat(targets || []);
     if (!hass || !list.length) return list.map(() => []);
     let vars = {}, p = null;
-    if (fillMemo && fillMemo.hass === hass) ({ vars, p } = fillMemo);
+    const pk = window.casoraEnergyPrefs ? window.casoraEnergyPrefs(hass) : null;
+    if (fillMemo && fillMemo.hass === hass && fillMemo.pk === pk) ({ vars, p } = fillMemo);
     else try {
       const areas = Object.values(hass.areas || {}).map((x) => x && x.name).filter(Boolean);
       p = plan(hass, areas, Object.assign({}, DEFAULTS));
       vars = badgesOf(hass, p);
-      fillMemo = { hass, vars, p };
+      fillMemo = { hass, vars, p, pk };
     } catch (e) { return list.map(() => []); }
     const set = (v) => v != null && v !== "" && !(Array.isArray(v) && !v.length);
     const res = list.map((t) => {
@@ -621,7 +644,8 @@
     // badges count them (none measuring: no sum).
     const hi = list.findIndex((t) => t && t.home && t.vars);
     const others = list.filter((t) => t && !t.home && t.vars);
-    if (hi >= 0 && others.length && res[hi].includes("energy") && Array.isArray(list[hi].vars.energy_entities)) {
+    if (hi >= 0 && others.length && res[hi].includes("energy") && Array.isArray(list[hi].vars.energy_entities)
+      && list[hi].vars.casora_energy_auto !== "prefs") {
       const H = list[hi].vars, ids = homeSumIds(hass, others.map((t) => t.vars));
       if (ids.length) H.energy_entities = ids;
       else {
@@ -664,7 +688,7 @@
       any: (room.powersAny || []).slice() };
   }
 
-  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, openings, isCombo };
+  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo };
 
   // KI kostet: Casora schätzt vor dem ersten Einsatz grob, was es über den API-Schlüssel
   // kostet (Zeichen → Token, Listenpreise je Modellfamilie in USD pro 1 Mio. Token) und fragt nach.
@@ -847,6 +871,7 @@
       s.box.classList.add("casora-uwide", "casora-bwide");
       const note = el("div", "bs-foot", s.body, o.pick === "ai" ? "AI is sorting your devices…" : "");
       const r = await rules(this._hass);
+      await energyPrefsReady(this._hass);
       let p = plan(this._hass, o.picked, r);
       if (o.pick === "ai") {
         note.classList.add("ai");

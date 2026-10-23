@@ -87,4 +87,30 @@ assert.equal(P.grid.costToday, 'sensor.kosten_heute');
   assert.equal(C.solar, 'sensor.pv2');
 }
 
+// #44: a power sensor of HA's energy settings has its role from there, before keys and names; the Studio field still
+// wins. The settings come from the shared cached load (window.casoraEnergyPrefs, 00-finder.js).
+{
+  vm.runInContext(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8'), ctx);
+  const S5 = { ...states, 'sensor.stp_8000tl_20_grid_power': st(2400, 'W', 'power', 'STP 8000TL-20 Grid power'),
+    'sensor.stromzahler_emh_power_curr': st(424, 'W', 'power', 'Wirkleistung (W)'),
+    'sensor.speicher_leistung': st(-200, 'W', 'power', 'Speicher Leistung') };
+  const h5 = { states: S5, entities: { ...entities, 'sensor.stp_8000tl_20_grid_power': { platform: 'sma' } },
+    callWS: async () => ({ energy_sources: [
+      { type: 'grid', stat_energy_from: 'sensor.bezug', stat_energy_to: 'sensor.einspeisung_gesamt', stat_rate: 'sensor.stromzahler_emh_power_curr' },
+      { type: 'solar', stat_energy_from: 'sensor.ertrag', stat_rate: 'sensor.stp_8000tl_20_grid_power' },
+      { type: 'battery', stat_energy_from: 'sensor.a', stat_energy_to: 'sensor.b', power_config: { stat_rate: 'sensor.speicher_leistung' } },
+      // The Anker key says grid; the settings say solar.
+      { type: 'solar', stat_energy_from: 'sensor.c', stat_rate: 'sensor.sb_netz' }] }) };
+  await win.casoraEnergyPrefs.load(h5, true);
+  const d5 = (id, extra) => F.detect(h5, { energy_entity_1: id, ...(extra || {}) }, 1);
+  assert.equal(d5('sensor.stromzahler_emh_power_curr'), 'grid', 'settings: grid');
+  assert.equal(d5('sensor.stp_8000tl_20_grid_power'), 'solar', 'settings: solar');
+  assert.equal(d5('sensor.speicher_leistung'), 'battery', 'settings: battery, no name hint');
+  assert.equal(d5('sensor.sb_netz'), 'solar', 'settings before the integration key');
+  assert.equal(d5('sensor.sb_netz', { energy_popup_focus_1: 'home' }), 'home', 'Studio field wins');
+  assert.equal(d5('sensor.leistung_x'), null, 'not in the settings: rules as before');
+  // The export meter for the grid popup comes from the same settings.
+  assert.equal(F.peers(h5, {}).grid.exportTotal, 'sensor.einspeisung_gesamt');
+}
+
 console.log('ok energie_fokus');

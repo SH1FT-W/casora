@@ -80,17 +80,12 @@
     return window.casoraDevice && window.casoraDevice.byKey ? window.casoraDevice.byKey(hass, platform, k, domain) : null;
   };
 
-  // HA-Energie-Einstellungen (Zähler für Einspeisung u. ä.) – einmal geholt, danach aus dem Speicher.
-  var prefs = null, prefsAsked = false;
-  var loadPrefs = function (hass) {
-    if (prefsAsked || !hass || typeof hass.callWS !== 'function') return;
-    prefsAsked = true;
-    hass.callWS({ type: 'energy/get_prefs' }).then(function (p) { prefs = p || {}; }, function () { prefs = {}; });
-  };
-  var gridPref = function (k) {
+  // HA's energy settings (export meter and the like): the shared cached load (window.casoraEnergyPrefs, 00-finder.js).
+  var prefsOf = function (hass) { return window.casoraEnergyPrefs ? window.casoraEnergyPrefs(hass) : null; };
+  var gridPref = function (prefs, k) {
     var src = ((prefs && prefs.energy_sources) || []).filter(function (s) { return s && s.type === 'grid'; })[0];
     if (!src) return null;
-    // HA 2025.x: flow_from/flow_to als Listen; neuer: direkt am Eintrag.
+    // Legacy format: flow_from/flow_to as lists; newer: right on the entry.
     if (src[k]) return src[k];
     var list = k === 'stat_energy_to' ? src.flow_to : src.flow_from;
     return (list && list[0] && list[0][k]) || null;
@@ -107,6 +102,10 @@
     if (FOCI.indexOf(o) > -1) return o;
     var states = (hass && hass.states) || {};
     if (!id || !states[id]) return null;
+    // #44: a power sensor of HA's energy settings has its role there, before keys and names.
+    var pw = window.casoraEnergyPowers ? window.casoraEnergyPowers(hass) : null;
+    var role = pw && ['grid', 'solar', 'battery'].filter(function (r) { return pw[r].indexOf(id) > -1; })[0];
+    if (role) return role;
     var reg = ((hass && hass.entities) || {})[id];
     if (reg && TK[reg.translation_key]) return TK[reg.translation_key];
     // #44: SMA calls the inverter's output grid_power (no translation_key): that is the solar power,
@@ -127,7 +126,7 @@
   function peers(hass, V) {
     V = V || {};
     var states = (hass && hass.states) || {};
-    loadPrefs(hass);
+    var prefs = prefsOf(hass);
     var P = { solar: {}, battery: {}, home: {}, grid: {} };
     for (var n = 1; n <= 6; n++) {
       var id = V['energy_entity_' + n];
@@ -156,7 +155,7 @@
     P.battery.power = P.battery.power || key(hass, 'anker_solix', 'battery_power_signed', 'sensor');
     P.battery.soc = P.battery.soc || key(hass, 'anker_solix', 'state_of_charge', 'sensor');
     P.grid.power = P.grid.power || key(hass, 'anker_solix', 'grid_power_signed', 'sensor');
-    P.grid.exportTotal = gridPref('stat_energy_to');
+    P.grid.exportTotal = gridPref(prefs, 'stat_energy_to');
     return P;
   }
 

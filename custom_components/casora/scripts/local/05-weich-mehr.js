@@ -405,7 +405,18 @@
     if (ctx.metricCard) f.metric = { card: chartCard(ctx.metricCard) };
     var fl = ctx.fields || {}, autoTop = null;
     if (typeof fl.use === 'string' && fl.use) f.use = UI.label('Verbrauch') + fl.use;
-    if (parts) f.top = { card: secCard(sumIds, call('_casoraSoftEnergy', 'parts', C), states) };
+    // #44: Home's list is the house from HA's energy settings: grid, solar and battery as such, then the
+    // largest consumers as with a house sensor (the parts are no consumers).
+    var srcs = parts && window.casoraEnergySources ? window.casoraEnergySources(ctx.hass, sumIds) : null;
+    if (srcs) {
+      C.sources = srcs;
+      var cand0 = { ids: [] };
+      if (window._casoraAutoConsumers) {
+        C.auto = { exclude: sumIds.concat(C.solar, C.grid).filter(Boolean), area: null, max: 5 };
+        cand0 = window._casoraAutoConsumers(ctx.hass, states, C.auto);
+      }
+      f.top = { card: secCard(sumIds.concat(cand0.ids.slice(0, 60)), call('_casoraSoftEnergy', 'sources', C), states) };
+    } else if (parts) f.top = { card: secCard(sumIds, call('_casoraSoftEnergy', 'parts', C), states) };
     else if (typeof fl.top === 'string' && fl.top) f.top = UI.label('Verbraucher') + fl.top;
     else if (ctx.powerId && window._casoraAutoConsumers) {
       // 07.10.2026: no consumers assigned, Casora finds the largest itself (up to 5 by power).
@@ -665,9 +676,29 @@
       }
       return heroH;
     }
+    if (part === 'sources' && C.sources) {
+      // Signs as in HA: grid below 0 is feed-in, battery above 0 discharges, below 0 charges.
+      var ROLE = [['grid', 'Netz', 'mdi:transmission-tower'], ['solar', 'Solar', 'mdi:solar-power-variant'],
+        ['battery', 'Akku', 'mdi:home-battery-outline']];
+      var srows = [];
+      ROLE.forEach(function (r) {
+        (C.sources[r[0]] || []).forEach(function (id) {
+          var w = watt(states, id);
+          var how = w == null ? 'Nicht erreichbar' : r[0] === 'grid' && w < -FLOW_ON ? 'Einspeisung'
+            : r[0] === 'battery' && w > FLOW_ON ? 'Entlädt' : r[0] === 'battery' && w < -FLOW_ON ? 'Lädt' : null;
+          srows.push({ entity: id, icon: r[2], label: r[1], sub: how, value: fW(w == null ? null : Math.abs(w), hass) });
+        });
+      });
+      var autoHtml = C.auto ? E.sec('auto', C, states, hass) : '';
+      return (srows.length ? UI.label('Woher kommt der Strom') + UI.group(srows) : '') + autoHtml;
+    }
     if (part === 'auto' && C.auto && window._casoraAutoConsumers) {
       var A = window._casoraAutoConsumers(hass, states, Object.assign({}, C.auto, { visible: autoVisible }));
       var home = watt(states, C.home);
+      if (home == null && C.sum && window._casoraPowerSum) {
+        var RH = window._casoraPowerSum(C.sum, states);
+        home = isFinite(RH.sum) ? RH.sum : null;
+      }
       var anm = function (id) {
         var a = (states[id] && states[id].attributes) || {};
         var t = String(a.friendly_name || (hass && hass.entities && hass.entities[id] && hass.entities[id].name) || id);
