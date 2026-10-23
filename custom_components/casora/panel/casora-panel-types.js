@@ -8,7 +8,8 @@
 // Field specs as in the panel (key/label/domains/advanced/group …). In addition:
 //   find – where Casora finds the entity itself when the field stays empty
 //          ({keys, domain, dc} on the device of the tile entity, {plug} = smart plug,
-//          {dish: field} = the dishwasher card's lookup, casoraLaundryFind.dish in 00-finder.js).
+//          {dish: field} = the dishwasher card's lookup, casoraLaundryFind.dish in 00-finder.js,
+//          {vac: field} = the vacuum card's table, casoraDevice.vacuumFields).
 //          The Studio shows the match as a placeholder ("Auto: …"); the
 //          AI helper only fills what the finder does not find.
 const ICON = { key: "icon", label: "Icon", type: "icon" };
@@ -685,6 +686,11 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     try {
       // The finder's own search (e.g. vacuum card: vacuumMap).
       if (f.find.fn) return (typeof CD[f.find.fn] === "function" && CD[f.find.fn](hass, tile.entity)) || null;
+      // Robot vacuum: the card's field table, robot and dock (siblings) like the card.
+      if (f.find.vac) {
+        const spec = (CD.vacuumFields || {})[f.find.vac];
+        return spec ? CD.map(hass, tile.entity, { x: spec }, { siblings: true }).x || null : null;
+      }
       // Dishwasher: the same lookup as the card (keys per integration from the shared table).
       if (f.find.dish) {
         const LF = window.casoraLaundryFind;

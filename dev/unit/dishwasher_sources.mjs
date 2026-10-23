@@ -40,7 +40,7 @@ const merge = (...hs) => hs.reduce((a, h) => ({ entities: { ...a.entities, ...h.
   devices: { ...a.devices, ...h.devices } }), { entities: {}, states: {}, devices: {} });
 const resolve = (h, st, V = {}) => D.resolve({ entity_id: st }, V, h.states, h);
 
-// ── 1) Home Connect Alt (HACS) by platform, English entity ids: only the keys can find them ──
+// ── 1) Source home_connect_alt (HACS, sensor_* keys as in Home Connect WS) by platform, English ids: keys only ──
 const alt = house('alt', 'home_connect_alt', [
   ['sensor', 'state', 'sensor_operation_state'], ['sensor', 'program', 'sensor_active_program'],
   ['select', 'choice', 'select_program', { options: ['Dishcare.Dishwasher.Program.Eco50'] }], ['sensor', 'phase', 'sensor_program_phase'],

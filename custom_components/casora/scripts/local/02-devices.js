@@ -3342,37 +3342,7 @@
     ['onboard_dirty_water_tank_time_left', 'Schmutzwassertank (Roboter)', 'mdi:cup-water', null, 'reset_onboard_dirty_water_tank', [], []],
   ];
 
-  /* Roborock's translation_keys first, then those of other integrations with the same meaning: Dreame (HACS,
-     Tasshack), Ecovacs and iRobot Roomba (HA core). Settings that only look alike (Dreame's auto drying, auto
-     dust collecting, self clean) stay out – the popup would treat them as "do it now". */
-  var VFIND = {
-    status: { keys: ['status'], domain: 'sensor' }, room: { keys: ['current_room'], domain: 'sensor' },
-    progress: { keys: ['clean_percent', 'cleaning_progress'], domain: 'sensor' },
-    area: { keys: ['cleaning_area', 'cleaned_area', 'stats_area'], domain: 'sensor' },
-    battery: { dc: 'battery', domain: 'sensor' }, charging: { dc: 'battery_charging', domain: 'binary_sensor' },
-    time: { keys: ['cleaning_time', 'stats_time'], domain: 'sensor' }, dnd: { keys: ['dnd_switch', 'dnd'], domain: 'switch' },
-    dndStart: { keys: ['dnd_start_time', 'dnd_start'], domain: 'time' }, dndEnd: { keys: ['dnd_end_time', 'dnd_end'], domain: 'time' },
-    drying: { keys: ['mop_drying'], domain: 'switch' }, dryLeft: { keys: ['mop_drying_remaining_time', 'drying_left'], domain: 'sensor' },
-    empty: { keys: ['dust_emptying'], domain: 'switch' }, wash: { keys: ['mop_washing'], domain: 'switch' },
-    cleanMode: { keys: ['cleaning_mode', 'work_mode'], domain: 'select' },
-    mopInt: { keys: ['mop_intensity', 'water_volume', 'water_amount'], domain: 'select' },
-    mopMode: { keys: ['mop_mode', 'mop_pad_humidity'], domain: 'select' },
-    emptyMode: { keys: ['dust_collection_mode', 'auto_empty_mode', 'auto_empty'], domain: 'select' },
-    lock: { keys: ['child_lock'], domain: 'switch' }, volume: { keys: ['volume'], domain: 'number' },
-    // 'error': Dreame (Tasshack) – its error sensor's translation_key; the state is a code like forward_suffocate (issue #33).
-    err: { keys: ['vacuum_error', 'error'], domain: 'sensor' }, dockErr: { keys: ['dock_error'], domain: 'sensor' },
-    water: { keys: ['water_shortage'], domain: 'binary_sensor' }, dirty: { keys: ['dirty_box_full'], domain: 'binary_sensor' },
-    clean: { keys: ['clean_box_empty'], domain: 'binary_sensor' }, mopOn: { keys: ['mop_attached'], domain: 'binary_sensor' },
-    // Dreame's station and tanks: enum sensors where Roborock has binary sensors (issue #33).
-    cleanTank: { keys: ['clean_water_tank_status'], domain: 'sensor' }, lowWater: { keys: ['low_water_warning'], domain: 'sensor' },
-    dirtyTank: { keys: ['dirty_water_tank_status'], domain: 'sensor' }, dustBag: { keys: ['dust_bag_status'], domain: 'sensor' },
-    detergent: { keys: ['detergent_status'], domain: 'sensor' },
-    boxOn: { keys: ['water_box_attached'], domain: 'binary_sensor' }, lastStart: { keys: ['last_clean_start', 'last_mission'], domain: 'sensor' },
-    lastEnd: { keys: ['last_clean_end', 'cleaning_history'], domain: 'sensor' },
-    total: { keys: ['total_cleaning_count', 'cleaning_count', 'total_stats_cleanings', 'total_missions'], domain: 'sensor' },
-    totalTime: { keys: ['total_cleaning_time', 'total_stats_time'], domain: 'sensor' },
-    totalArea: { keys: ['total_cleaning_area', 'total_cleaned_area', 'total_stats_area'], domain: 'sensor' },
-  };
+  /* Fields of the device finder: casoraDevice.vacuumFields (00-finder.js), shared with the Studio fields. */
   var VOWN = { status: 'entity_status', room: 'entity_room', progress: 'entity_progress', area: 'entity_area',
     battery: 'entity_battery', dnd: 'entity_dnd', drying: 'entity_drying' };
 
@@ -3399,6 +3369,7 @@
        (robot + station as sibling device). Fixed variables win. */
     var CD = window.casoraDevice;
     if (CD && id && hass) {
+      var VFIND = CD.vacuumFields || {};
       var F = CD.map(hass, id, VFIND, { siblings: true });
       /* Map: the configured one while it exists; empty or deleted → search on the device (07.10.2026). */
       if (CD.vacuumMapFor) c.map = CD.vacuumMapFor(hass, id, VV.entity_map) || null;
