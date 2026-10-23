@@ -177,7 +177,7 @@ class RegistryDisplay(HATest):
 
         Wire keys: ei, pl, di, ai, tk, ec (index into entity_categories), hb, en, dp, lb, ic.
         Casora: entity_category/hidden in casora-panel-basis.js (room lists), casora-panel.js listCategory(),
-        scripts/casora-core.js; translation_key/platform in scripts/local/00-finden.js (casoraDevice, byKey,
+        scripts/casora-core.js; translation_key/platform in scripts/local/00-finder.js (casoraDevice, byKey,
         casoraLaundryFind), 26-haustier.js, 24-klingel.js; area_id/device_id everywhere (rooms);
         display_precision in dashboards/casora/button_card_templates.json. Red: a key was renamed or dropped."""
         area = ar.async_get(self.hass).async_get_or_create("Kitchen")
@@ -250,7 +250,7 @@ class FriendlyName(HATest):
     async def test_device_name_in_front(self):
         """friendly_name = device name (name_by_user first) + " " + entity name; device name alone without one.
 
-        Casora: scripts/local/00-finden.js wasteLabel() strips the device name in front of bin sensors (issue #27,
+        Casora: scripts/local/00-finder.js wasteLabel() strips the device name in front of bin sensors (issue #27,
         Waste Collection Schedule), many popups strip the device name from row labels. Red: labels double up
         or lose words."""
         S = sensor_cls(_attr_name="Battery", _attr_device_info=self.on_device())
@@ -269,7 +269,7 @@ class FriendlyName(HATest):
     async def test_user_name_without_device(self):
         """An entity name the user gave stands alone, without the device in front.
 
-        Casora: wasteLabel() (00-finden.js) leaves such names as they are. Red: user names get the device back."""
+        Casora: wasteLabel() (00-finder.js) leaves such names as they are. Red: user names get the device back."""
         S = sensor_cls(_attr_name="Battery", _attr_device_info=self.on_device())
         st, entry = await self.add("sensor", S())
         er.async_get(self.hass).async_update_entity(entry.entity_id, name="Paper bin")
@@ -316,30 +316,30 @@ KEYS = [
                             "total_cleaning_time", "total_cleaning_area", "mop_drying_remaining_time",
                             "main_brush_time_left", "side_brush_time_left", "filter_time_left", "sensor_time_left",
                             "strainer_time_left"],
-     "scripts/local/02-geraete.js V.resolve, casora-panel.js (Studio), live_finder.py VACUUM_FIELDS"),
+     "scripts/local/02-devices.js V.resolve, casora-panel.js (Studio), live_finder.py VACUUM_FIELDS"),
     ("roborock", "*", ["dnd_switch", "dnd_start_time", "dnd_end_time", "cleaning_mode", "mop_intensity", "mop_mode",
                        "dust_collection_mode", "selected_map", "volume", "water_shortage", "dirty_box_full",
                        "clean_box_empty", "mop_attached", "water_box_attached", "reset_main_brush_consumable",
                        "reset_side_brush_consumable", "reset_air_filter_consumable", "reset_sensor_consumable"],
-     "02-geraete.js V.resolve, 00-finden.js vacuumMap"),
+     "02-devices.js V.resolve, 00-finder.js vacuumMap"),
     ("home_connect", "*", ["operation_state", "program_progress", "program_finish_time", "door", "active_program",
                            "selected_program", "pause_program", "resume_program", "stop_program",
                            "bean_amount", "coffee_temperature", "fill_quantity"],
-     "00-finden.js casoraLaundryFind.SOURCES, live_finder.py, 25-kaffee.js"),
+     "00-finder.js casoraLaundryFind.SOURCES, 02-devices.js _casoraDish, live_finder.py, 25-kaffee.js"),
     ("miele", "*", ["status", "program_id", "program_phase", "drying_step", "remaining_time", "finish", "elapsed_time",
                     "start", "energy_consumption", "spin_speed", "twin_dos_1_level", "pause", "stop"],
-     "00-finden.js casoraLaundryFind.SOURCES, live_finder.py"),
+     "00-finder.js casoraLaundryFind.SOURCES, live_finder.py"),
     ("smartthings", "*", ["washer_machine_state", "dryer_machine_state", "washer_job_state", "dryer_job_state",
                           "washer_mode", "dryer_mode", "completion_time", "pause", "resume", "stop"],
-     "00-finden.js casoraLaundryFind.SOURCES, live_finder.py"),
+     "00-finder.js casoraLaundryFind.SOURCES, live_finder.py"),
     ("lg_thinq", "*", ["current_state", "cycle_count", "remain", "total", "running"],
-     "00-finden.js casoraLaundryFind.SOURCES, live_finder.py"),
-    ("whirlpool", "*", ["washer_state", "dryer_state", "end_time"], "00-finden.js casoraLaundryFind.SOURCES, live_finder.py"),
+     "00-finder.js casoraLaundryFind.SOURCES, live_finder.py"),
+    ("whirlpool", "*", ["washer_state", "dryer_state", "end_time"], "00-finder.js casoraLaundryFind.SOURCES, live_finder.py"),
     ("cookidoo", "*", ["meal_plan", "ingredient_list", "additional_item_list"], "03-popups.js _casoraRecipe, ki.py"),
     ("backup", "sensor", ["last_successful_automatic_backup", "next_scheduled_automatic_backup",
                           "last_attempted_automatic_backup", "backup_manager_state"], "03-popups.js (backup row)"),
     ("proximity", "sensor", ["dist_to_zone", "dir_of_travel"], "15-person.js"),
-    ("unifi", "*", ["device_state", "wlan_clients", "wan_latency", "device_clients", "wlan_control"], "00-finden.js network"),
+    ("unifi", "*", ["device_state", "wlan_clients", "wan_latency", "device_clients", "wlan_control"], "00-finder.js network"),
     ("lamarzocco", "*", ["brew_active", "start_backflush", "total_coffees_made", "main"], "25-kaffee.js K.roles"),
 ]
 
