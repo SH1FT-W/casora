@@ -53,7 +53,8 @@ window.casoraPriceKwh = function (v) {
       cache = p && typeof p === 'object' ? p : {};
     }, function (e) {
       // Energy never set up: HA answers with the error code not_found. Anything else keeps what was there.
-      if (e && e.code === 'not_found') cache = {};
+      // Energy integration not loaded at all (unknown_command): the same, instead of asking again every few minutes.
+      if (e && (e.code === 'not_found' || e.code === 'unknown_command')) cache = {};
     }).then(function () { at = Date.now(); busy = null; return cache; });
     return busy;
   };

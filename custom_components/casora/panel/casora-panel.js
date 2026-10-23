@@ -2767,7 +2767,7 @@ function prefsHomePower(hass, rooms) {
   const arr = (v) => (Array.isArray(v) ? v.filter(Boolean) : []);
   const ours = m === "house" || m === 2 || m === "prefs"
     || (m === undefined && !!V.energy_power_entity && !arr(V.energy_entities).length && B.oldHouseTotal && B.oldHouseTotal(hass) === V.energy_power_entity);
-  if (!ours) return false;
+  if (!ours || V.casora_energy_rooms) return false;
   const ph = B.prefsHouse(hass);
   if (ph && ph.ids.some((id) => arr(V.energy_exclude).includes(id))) return false;
   if (!ph) {
@@ -2808,7 +2808,9 @@ function homeEnergyEdit(V, key, value) {
   }
   // House sensor cleared without a list of one's own: Home sums the rooms again (it used to hide the badge).
   const ownList = V.casora_energy_auto !== 2 && Array.isArray(V.energy_entities) && V.energy_entities.some(Boolean);
-  if (key === "energy_power_entity" && !value && !ownList) { V.casora_energy_auto = 2; return; }
+  // The user chose the rooms' sum (casora_energy_rooms): energy settings never replace it (prefsHomePower).
+  if (key === "energy_power_entity" && !value && !ownList) { V.casora_energy_auto = 2; V.casora_energy_rooms = true; return; }
+  if (key === "energy_power_entity" && value) delete V.casora_energy_rooms;
   V.casora_energy_auto = false;
 }
 

@@ -472,7 +472,9 @@ const FULL_IDS = ['sensor.energy_grid_power', 'sensor.wechselrichter_ac_power', 
   for (const V of [{ energy_power_entity: 'sensor.kuhlschrank_power', casora_energy_auto: false },
     { energy_entities: ['sensor.fernseher_power'], casora_energy_auto: false },
     { energy_power_entity: 'sensor.kuhlschrank_power' },
-    { energy_entities: ROOM_IDS.slice(), casora_energy_auto: 2, show_energy: false }]) {
+    { energy_entities: ROOM_IDS.slice(), casora_energy_auto: 2, show_energy: false },
+    // The user cleared the house sensor and chose the rooms' sum (review 23.10.2026).
+    { energy_entities: ROOM_IDS.slice(), casora_energy_auto: 2, casora_energy_rooms: true }]) {
     const r = rooms(Object.assign({}, V));
     assert.equal(prefsHomePower(h, r), false, JSON.stringify(V));
     assert.deepEqual(r[0].variables, V);

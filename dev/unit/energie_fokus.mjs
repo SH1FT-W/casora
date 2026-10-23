@@ -143,4 +143,17 @@ assert.equal(P.grid.costToday, 'sensor.kosten_heute');
   assert.equal(F.sec('hero', other, S6, h6).value, '—', 'not in the settings: no value');
 }
 
+// Review 23.10.2026: HA's battery power is positive while discharging – the hero must say "Entlädt", not "Lädt".
+{
+  win._casoraUI = { hero: (o) => o };
+  const S7 = { ...states, 'sensor.zaehler_p': st(400, 'W', 'power', 'Zähler P'), 'sensor.akku_p': st(500, 'W', 'power', 'Akku P') };
+  const h7 = { states: S7, entities: {}, callWS: async () => ({ energy_sources: [
+    { type: 'grid', stat_rate: 'sensor.zaehler_p' }, { type: 'battery', stat_rate: 'sensor.akku_p' }] }) };
+  await win.casoraEnergyPrefs.load(h7, true);
+  const P7 = F.peers(h7, {});
+  assert.match(F.sec('hero', F.model(h7, 'battery', P7, null), S7, h7).sub, /Entlädt/, 'positive HA battery = discharging');
+  S7['sensor.akku_p'] = st(-300, 'W', 'power', 'Akku P');
+  assert.match(F.sec('hero', F.model(h7, 'battery', P7, null), S7, h7).sub, /Lädt/, 'negative HA battery = charging');
+}
+
 console.log('ok energie_fokus');

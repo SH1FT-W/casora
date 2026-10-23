@@ -178,6 +178,8 @@
     var pw = window.casoraEnergyPowers ? window.casoraEnergyPowers(hass) : null;
     return {
       focus: focus, self: self || null, asleep: pw ? pw.solar.concat(pw.battery) : [],
+      // HA's battery power is positive while discharging; the hero reads positive as charging (Anker): flip it.
+      battSign: pw && P.battery.power && pw.battery.indexOf(P.battery.power) > -1 ? -1 : 1,
       solar: P.solar.power || null, solarToday: P.solar.today || null, solarMonth: P.solar.month || null,
       soc: P.battery.soc || null, batt: P.battery.power || null, battToday: P.battery.today || null, battMonth: P.battery.month || null,
       home: P.home.power || null, today: P.home.today || null, month: P.home.month || null,
@@ -220,6 +222,7 @@
         if (st) bits.push('heute ' + st);
       } else if (C.focus === 'battery') {
         var soc = num(states, C.soc), chg = watt(states, C.charge), dis = watt(states, C.discharge), bp = sleepy(C.batt);
+        if (bp != null && C.battSign === -1) bp = -bp;
         value = soc != null ? Math.round(soc) + ' %' : fW(bp, hass);
         var lade = chg != null ? chg : (bp != null && bp > 0 ? bp : 0), ent = dis != null ? dis : (bp != null && bp < 0 ? -bp : 0);
         var raw = C.state && states[C.state] ? states[C.state].state : null;
