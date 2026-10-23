@@ -1,0 +1,162 @@
+{
+ "quelle": "#47 (Pflanzenmonitor Plus, 23.10.2026), anonymisiert",
+ "areas": {
+  "wz": {
+   "area_id": "wz",
+   "name": "Wohnzimmer"
+  }
+ },
+ "devices": {
+  "d_monstera": {
+   "id": "d_monstera",
+   "name": "Monstera",
+   "area_id": "wz"
+  },
+  "d_gummibaum": {
+   "id": "d_gummibaum",
+   "name": "Gummibaum",
+   "area_id": "wz"
+  },
+  "d_luft": {
+   "id": "d_luft",
+   "name": "Luftsensor",
+   "area_id": "wz"
+  }
+ },
+ "entities": {
+  "sensor.monstera": {
+   "entity_id": "sensor.monstera",
+   "device_id": "d_monstera",
+   "area_id": null,
+   "platform": "pflanzenmonitor_plus",
+   "translation_key": "status"
+  },
+  "sensor.monstera_co2": {
+   "entity_id": "sensor.monstera_co2",
+   "device_id": "d_monstera",
+   "area_id": null,
+   "platform": "pflanzenmonitor_plus",
+   "translation_key": "co2"
+  },
+  "sensor.monstera_bodenfeuchte": {
+   "entity_id": "sensor.monstera_bodenfeuchte",
+   "device_id": "d_monstera",
+   "area_id": null,
+   "platform": "pflanzenmonitor_plus",
+   "translation_key": "moisture"
+  },
+  "sensor.gummibaum": {
+   "entity_id": "sensor.gummibaum",
+   "device_id": "d_gummibaum",
+   "area_id": null,
+   "platform": "pflanzenmonitor_plus",
+   "translation_key": "status"
+  },
+  "sensor.gummibaum_co2": {
+   "entity_id": "sensor.gummibaum_co2",
+   "device_id": "d_gummibaum",
+   "area_id": null,
+   "platform": "pflanzenmonitor_plus",
+   "translation_key": "co2"
+  },
+  "sensor.gummibaum_bodenfeuchte": {
+   "entity_id": "sensor.gummibaum_bodenfeuchte",
+   "device_id": "d_gummibaum",
+   "area_id": null,
+   "platform": "pflanzenmonitor_plus",
+   "translation_key": "moisture"
+  },
+  "sensor.wohnzimmer_co2": {
+   "entity_id": "sensor.wohnzimmer_co2",
+   "device_id": "d_luft",
+   "area_id": null,
+   "platform": "zha"
+  }
+ },
+ "states": {
+  "sensor.monstera": {
+   "entity_id": "sensor.monstera",
+   "state": "problem",
+   "attributes": {
+    "options": [
+     "ok",
+     "problem"
+    ],
+    "species": "monstera",
+    "moisture_status": "Low",
+    "device_class": "enum",
+    "friendly_name": "Monstera"
+   }
+  },
+  "sensor.monstera_co2": {
+   "entity_id": "sensor.monstera_co2",
+   "state": "900",
+   "attributes": {
+    "device_class": "carbon_dioxide",
+    "unit_of_measurement": "ppm",
+    "friendly_name": "Monstera CO2"
+   }
+  },
+  "sensor.monstera_bodenfeuchte": {
+   "entity_id": "sensor.monstera_bodenfeuchte",
+   "state": "12",
+   "attributes": {
+    "device_class": "moisture",
+    "unit_of_measurement": "%",
+    "friendly_name": "Monstera Bodenfeuchte"
+   }
+  },
+  "sensor.gummibaum": {
+   "entity_id": "sensor.gummibaum",
+   "state": "ok",
+   "attributes": {
+    "options": [
+     "ok",
+     "problem"
+    ],
+    "species": "gummibaum",
+    "moisture_status": "Low",
+    "device_class": "enum",
+    "friendly_name": "Gummibaum"
+   }
+  },
+  "sensor.gummibaum_co2": {
+   "entity_id": "sensor.gummibaum_co2",
+   "state": "900",
+   "attributes": {
+    "device_class": "carbon_dioxide",
+    "unit_of_measurement": "ppm",
+    "friendly_name": "Gummibaum CO2"
+   }
+  },
+  "sensor.gummibaum_bodenfeuchte": {
+   "entity_id": "sensor.gummibaum_bodenfeuchte",
+   "state": "12",
+   "attributes": {
+    "device_class": "moisture",
+    "unit_of_measurement": "%",
+    "friendly_name": "Gummibaum Bodenfeuchte"
+   }
+  },
+  "sensor.wohnzimmer_co2": {
+   "entity_id": "sensor.wohnzimmer_co2",
+   "state": "900",
+   "attributes": {
+    "device_class": "carbon_dioxide",
+    "unit_of_measurement": "ppm",
+    "friendly_name": "Wohnzimmer CO2"
+   }
+  }
+ },
+ "expect": {
+  "plants": [
+   "sensor.monstera",
+   "sensor.gummibaum"
+  ],
+  "not_plants": [
+   "sensor.monstera_co2",
+   "sensor.monstera_bodenfeuchte",
+   "sensor.wohnzimmer_co2"
+  ]
+ }
+}

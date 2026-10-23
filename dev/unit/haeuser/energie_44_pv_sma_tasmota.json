@@ -1,0 +1,203 @@
+{
+ "quelle": "#44 (Energie auf Zuhause, 23.10.2026), anonymisiert",
+ "areas": {
+  "wz": {
+   "area_id": "wz",
+   "name": "Wohnzimmer"
+  },
+  "ku": {
+   "area_id": "ku",
+   "name": "Küche"
+  },
+  "hwr": {
+   "area_id": "hwr",
+   "name": "Hauswirtschaftsraum"
+  }
+ },
+ "devices": {
+  "d_pv": {
+   "id": "d_pv",
+   "name": "PV-Anlage",
+   "area_id": null
+  },
+  "d_ir": {
+   "id": "d_ir",
+   "name": "Tasmota",
+   "area_id": "hwr"
+  },
+  "d_sma": {
+   "id": "d_sma",
+   "name": "STP 8000TL-20",
+   "area_id": "hwr",
+   "model": "STP 8000TL-20"
+  },
+  "d_tv": {
+   "id": "d_tv",
+   "name": "Fernseher",
+   "area_id": "wz"
+  }
+ },
+ "entities": {
+  "sensor.pv_anlage_grundlast": {
+   "entity_id": "sensor.pv_anlage_grundlast",
+   "device_id": "d_pv",
+   "area_id": null,
+   "platform": "eedc"
+  },
+  "sensor.pv_anlage_netzbezugs_spitze_heute": {
+   "entity_id": "sensor.pv_anlage_netzbezugs_spitze_heute",
+   "device_id": "d_pv",
+   "area_id": null,
+   "platform": "eedc"
+  },
+  "sensor.pv_anlage_uberschuss_letzte_stunde": {
+   "entity_id": "sensor.pv_anlage_uberschuss_letzte_stunde",
+   "device_id": "d_pv",
+   "area_id": null,
+   "platform": "eedc"
+  },
+  "sensor.stromzahler_emh_power_curr": {
+   "entity_id": "sensor.stromzahler_emh_power_curr",
+   "device_id": "d_ir",
+   "area_id": null,
+   "platform": "tasmota"
+  },
+  "sensor.stromzahler_emh_total_in_wh": {
+   "entity_id": "sensor.stromzahler_emh_total_in_wh",
+   "device_id": "d_ir",
+   "area_id": null,
+   "platform": "tasmota"
+  },
+  "sensor.stromzahler_emh_total_out_wh": {
+   "entity_id": "sensor.stromzahler_emh_total_out_wh",
+   "device_id": "d_ir",
+   "area_id": null,
+   "platform": "tasmota"
+  },
+  "sensor.stp_8000tl_20_grid_power": {
+   "entity_id": "sensor.stp_8000tl_20_grid_power",
+   "device_id": "d_sma",
+   "area_id": null,
+   "platform": "sma"
+  },
+  "sensor.stp_8000tl_20_daily_yield": {
+   "entity_id": "sensor.stp_8000tl_20_daily_yield",
+   "device_id": "d_sma",
+   "area_id": null,
+   "platform": "sma"
+  },
+  "sensor.fernseher_leistung": {
+   "entity_id": "sensor.fernseher_leistung",
+   "device_id": "d_tv",
+   "area_id": null,
+   "platform": "shelly"
+  },
+  "switch.fernseher": {
+   "entity_id": "switch.fernseher",
+   "device_id": "d_tv",
+   "area_id": null,
+   "platform": "shelly"
+  }
+ },
+ "states": {
+  "sensor.pv_anlage_grundlast": {
+   "entity_id": "sensor.pv_anlage_grundlast",
+   "state": "0.30",
+   "attributes": {
+    "device_class": "power",
+    "unit_of_measurement": "kW",
+    "friendly_name": "Grundlast"
+   }
+  },
+  "sensor.pv_anlage_netzbezugs_spitze_heute": {
+   "entity_id": "sensor.pv_anlage_netzbezugs_spitze_heute",
+   "state": "1.70",
+   "attributes": {
+    "device_class": "power",
+    "unit_of_measurement": "kW",
+    "friendly_name": "Netzbezugs-Spitze heute"
+   }
+  },
+  "sensor.pv_anlage_uberschuss_letzte_stunde": {
+   "entity_id": "sensor.pv_anlage_uberschuss_letzte_stunde",
+   "state": "-0.10",
+   "attributes": {
+    "device_class": "power",
+    "unit_of_measurement": "kW",
+    "friendly_name": "Überschuss letzte Stunde"
+   }
+  },
+  "sensor.stromzahler_emh_power_curr": {
+   "entity_id": "sensor.stromzahler_emh_power_curr",
+   "state": "424",
+   "attributes": {
+    "state_class": "measurement",
+    "device_class": "power",
+    "unit_of_measurement": "W",
+    "friendly_name": "Wirkleistung (W)"
+   }
+  },
+  "sensor.stromzahler_emh_total_in_wh": {
+   "entity_id": "sensor.stromzahler_emh_total_in_wh",
+   "state": "12345678",
+   "attributes": {
+    "state_class": "total_increasing",
+    "device_class": "energy",
+    "unit_of_measurement": "Wh",
+    "friendly_name": "Gesamtbezug"
+   }
+  },
+  "sensor.stromzahler_emh_total_out_wh": {
+   "entity_id": "sensor.stromzahler_emh_total_out_wh",
+   "state": "2345678",
+   "attributes": {
+    "state_class": "total_increasing",
+    "device_class": "energy",
+    "unit_of_measurement": "Wh",
+    "friendly_name": "Gesamteinspeisung"
+   }
+  },
+  "sensor.stp_8000tl_20_grid_power": {
+   "entity_id": "sensor.stp_8000tl_20_grid_power",
+   "state": "2400",
+   "attributes": {
+    "state_class": "measurement",
+    "device_class": "power",
+    "unit_of_measurement": "W",
+    "friendly_name": "STP 8000TL-20 Grid power"
+   }
+  },
+  "sensor.stp_8000tl_20_daily_yield": {
+   "entity_id": "sensor.stp_8000tl_20_daily_yield",
+   "state": "9100",
+   "attributes": {
+    "device_class": "energy",
+    "unit_of_measurement": "Wh",
+    "friendly_name": "STP 8000TL-20 Daily yield"
+   }
+  },
+  "sensor.fernseher_leistung": {
+   "entity_id": "sensor.fernseher_leistung",
+   "state": "2",
+   "attributes": {
+    "device_class": "power",
+    "unit_of_measurement": "W",
+    "friendly_name": "Fernseher Leistung"
+   }
+  },
+  "switch.fernseher": {
+   "entity_id": "switch.fernseher",
+   "state": "on",
+   "attributes": {
+    "friendly_name": "Fernseher"
+   }
+  }
+ },
+ "expect": {
+  "house_power": "sensor.stromzahler_emh_power_curr",
+  "energy_roles": {
+   "sensor.stp_8000tl_20_grid_power": "solar",
+   "sensor.stromzahler_emh_power_curr": "grid"
+  }
+ }
+}
