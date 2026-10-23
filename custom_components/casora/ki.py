@@ -405,11 +405,13 @@ def _ver(text: str) -> float:
 def model_rank(domain: str, model: str | None) -> tuple[int, str]:
     """(Rang, Anzeigename). Rang 0 = zu schwach oder unbekannt; höher = stärker."""
     m = (model or "").lower()
+    # OpenRouter and similar gateways name the model with its vendor in front ("anthropic/claude-sonnet-4.5").
+    base_m = m.rsplit("/", 1)[-1]
     if domain == "casora_mock":
         return 1, "Casora Test-KI"
     if "claude" in m or domain == "anthropic":
         fam = next((f for f in ("opus", "fable", "sonnet", "haiku") if f in m), "")
-        rest = m.replace("claude", "").replace(fam, "")
+        rest = base_m.replace("claude", "").replace(fam, "")
         v = _ver(rest)
         name = "Claude " + fam.capitalize() + (" " + (f"{v:g}") if v else "")
         if fam == "fable" or (fam == "opus" and (v >= 4 or not v)):  # Fable: jede Fassung
@@ -417,9 +419,9 @@ def model_rank(domain: str, model: str | None) -> tuple[int, str]:
         if fam == "sonnet" and v >= 4.5:
             return 200 + int(v * 10), name
         return 0, name.strip() or model or "Claude"
-    if m.startswith("gpt") or domain == "openai_conversation":
-        v = _ver(m)
-        name = (model or "ChatGPT").replace("gpt", "GPT")
+    if base_m.startswith("gpt") or domain == "openai_conversation":
+        v = _ver(base_m)
+        name = ((model or "").rsplit("/", 1)[-1] or "ChatGPT").replace("gpt", "GPT")
         if v >= 5 and not re.search(r"mini|nano", m):
             return 150 + int(v * 10), name
         return 0, name
@@ -447,7 +449,8 @@ def ai_models(hass: HomeAssistant) -> list[dict]:
             ce = hass.config_entries.async_get_entry(ent.config_entry_id)
             sub = ce.subentries.get(ent.config_subentry_id) if ce and ent.config_subentry_id else None
             data = dict(sub.data) if sub else dict(ce.options) if ce else {}
-            model = data.get("chat_model")
+            # chat_model: Anthropic/OpenAI/Google; model: OpenRouter, Ollama.
+            model = data.get("chat_model") or data.get("model")
             if not model and domain in _INTEGRATION_CONST:
                 try:
                     const = importlib.import_module(_INTEGRATION_CONST[domain])
