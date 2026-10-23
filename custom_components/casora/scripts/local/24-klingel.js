@@ -774,6 +774,22 @@
     }
     return false;
   };
+  // #23: audio bytes received on a connection (inbound-rtp), null when unknown.
+  KL.audioIn = function (pc) {
+    if (!pc || typeof pc.getStats !== 'function') return Promise.resolve(null);
+    return pc.getStats().then(function (rep) {
+      var n = null;
+      rep.forEach(function (r) {
+        if (r && r.type === 'inbound-rtp' && (r.kind === 'audio' || r.mediaType === 'audio')) n = (n || 0) + (Number(r.bytesReceived) || 0);
+      });
+      return n;
+    }, function () { return null; });
+  };
+  // Is sound flowing? Growing bytes = yes; no growth for 2.5 s = no (back to the player's sound).
+  KL.flowStep = function (t, bytes, now) {
+    if (bytes != null && bytes > (t.lastBytes || 0)) { t.lastBytes = bytes; t.lastFlow = now; }
+    return !!(t.lastFlow && now - t.lastFlow < 2500);
+  };
   // Kandidat aus HAs WebRTC-Antwort (go2rtc: nur Text bzw. ohne sdpMid) → RTCIceCandidateInit.
   KL.candidate = function (x) {
     if (typeof x === 'string') return { candidate: x, sdpMid: '0' };
@@ -1258,7 +1274,23 @@
           a.muted = self._muted !== false;
           a.srcObject = (ev.streams && ev.streams[0]) || new MediaStream([ev.track]);
           try { self._root.appendChild(a); } catch (e) { /* without */ }
-          var on = function () { if (self._t !== t) return; t.hearing = true; self._applyAudio(); };
+          // Only while sound really arrives on the talk connection (bytes received grow): otherwise the player's
+          // own sound stays (#23, 26.10.56 muted the player as soon as the talk connection stood, silent or not).
+          var on = function () {
+            if (self._t !== t || t.flowT) return;
+            t.flowT = setInterval(function () {
+              if (self._t !== t) return;
+              KL.audioIn(pc).then(function (bytes) {
+                if (self._t !== t) return;
+                var flowing = KL.flowStep(t, bytes, Date.now());
+                if (flowing !== t.hearing) {
+                  t.hearing = flowing;
+                  try { console.info('casora klingel: Ton über die Sprechverbindung', flowing ? 'an' : 'aus', bytes); } catch (e) { /* quiet */ }
+                  self._applyAudio();
+                }
+              });
+            }, 1000);
+          };
           var p = a.play();
           // Browser refuses: the player's own sound stays.
           if (p && p.then) p.then(on, function () {}); else on();
@@ -1272,6 +1304,7 @@
         pc.onconnectionstatechange = function () {
           if (self._t !== t) return;
           var cs = pc.connectionState;
+          try { console.info('casora klingel: Sprechen', cs); } catch (e) { /* quiet */ }
           if (cs === 'connected' && t.state !== 'on') {
             t.state = 'on';
             clearTimeout(t.timer);
@@ -1316,6 +1349,7 @@
       if (!t) return;
       this._t = null;
       clearTimeout(t.timer);
+      if (t.flowT) clearInterval(t.flowT);
       if (t.mic) t.mic.getTracks().forEach(function (x) { try { x.stop(); } catch (e) { /* schon aus */ } });
       if (t.pc) { try { t.pc.getSenders().forEach(function (s) { if (s.track) s.track.stop(); }); } catch (e) { /* zu */ } try { t.pc.close(); } catch (e) { /* zu */ } }
       if (t.unsub) { var u = t.unsub; Promise.resolve(u).then(function (fn) { try { if (typeof fn === 'function') fn(); } catch (e) { /* zu */ } }); }

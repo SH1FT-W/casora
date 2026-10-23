@@ -462,6 +462,17 @@ states['camera.carport_sub'].state = 'idle';
   lv._talkStop(true);
   assert.equal(lv._mounts, 0, 'not listening: no remount');
   assert.match(src('24-klingel.js'), /autoGainControl: false/, 'microphone without automatic gain');
+  // 26.10.56 follow-up: the talk connection takes over only while its sound really flows.
+  const ft = {};
+  assert.equal(KL.flowStep(ft, 0, 1000), false, 'no bytes yet: player keeps the sound');
+  assert.equal(KL.flowStep(ft, 500, 2000), true, 'bytes growing: talk connection');
+  assert.equal(KL.flowStep(ft, 500, 3000), true, 'one quiet second: stays');
+  assert.equal(KL.flowStep(ft, 500, 4600), false, 'no growth for 2.5 s: back to the player');
+  assert.equal(KL.flowStep(ft, 900, 5000), true, 'flows again');
+  assert.equal(KL.flowStep({}, null, 1000), false, 'stats unknown: player');
+  const stats = (b) => ({ getStats: () => Promise.resolve(new Map([['a', { type: 'inbound-rtp', kind: 'audio', bytesReceived: b }], ['v', { type: 'inbound-rtp', kind: 'video', bytesReceived: 9e9 }]])) });
+  assert.equal(await KL.audioIn(stats(1234)), 1234, 'audio bytes only');
+  assert.equal(await KL.audioIn(null), null);
   delete globalThis.addEventListener; delete globalThis.removeEventListener;
 }
 console.log('klingel: ok');
