@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-title-dark.png" />
-  <img src="docs/images/readme-title-light.png" alt="Casora: Your home. At ease. The home view on a desktop with a house photo, weather, status badges and device tiles." />
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-title-dark.webp" />
+  <img src="docs/images/readme-title-light.webp" alt="Casora: Your home. At ease. The home view on a desktop with a house photo, weather, status badges and device tiles." />
 </picture>
 
 <p>A calm, photo-backed dashboard that sets itself up.<br/>
@@ -25,10 +25,12 @@ Shape the rest room by room in a visual studio. No YAML.</p>
 
 Community cards come with every Casora release and wait in the Studio until you add them, so your tile list stays short.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-new-dark.png" />
-  <img src="docs/images/readme-cards-new-light.png" alt="Frigate camera (26.10.31): live view with what Frigate detected last, alerts and detections with clip, download, share and favourite, the recordings of the last days with a timeline. Reolink doorbell (26.10.31): live picture that says when someone rang, listen in, send a quick reply, sound the siren and see who rang lately. Coffee machine (26.10.31): ready, heating up or brewing with progress, and what the machine needs, start drinks from the popup, for Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco or a smart plug. Robot lawn mower (1.5.0): mowing, parked or trapped, the battery as a ring, to station, mow and park, and the mowing time of the last 7 days, extra details for Gardena." />
-</picture>
+<!-- cards:new -->
+<table>
+<tr><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/cctv-dark.svg"><img src="docs/images/icons/cctv-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Frigate camera</b> <code>26.10.31</code><br>Live view with what Frigate detected last. Alerts and detections with clip, download, share and favourite, the recordings of the last days with a timeline.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/doorbell-video-dark.svg"><img src="docs/images/icons/doorbell-video-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Reolink doorbell</b> <code>26.10.31</code><br>Live picture that says when someone rang. Listen in, send a quick reply, sound the siren and see who rang lately.</td></tr>
+<tr><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/coffee-maker-outline-dark.svg"><img src="docs/images/icons/coffee-maker-outline-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Coffee machine</b> <code>26.10.31</code><br>Ready, heating up or brewing with progress, and what the machine needs. Start drinks from the popup. Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco or a smart plug.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/robot-mower-outline-dark.svg"><img src="docs/images/icons/robot-mower-outline-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Robot lawn mower</b> <code>1.5.0</code><br>Mowing, parked or trapped, the battery as a ring, to station, mow and park, and the mowing time of the last 7 days. Extra details for Gardena.</td></tr>
+</table>
+<!-- /cards:new -->
 
 And a new look: **Casora Glas** <sub>26.10.31</sub>, frosted glass over your room photos, light and dark, next to Casora and Casora Nebel. In performance mode the glass turns opaque.
 
@@ -65,10 +67,11 @@ Every screen gets a layout made for it. Not a shrunken copy.
   </picture>
 </p>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-layouts-dark.png" />
-  <img src="docs/images/readme-cards-layouts-light.png" alt="Desktop: room by room, a full photo of each room with its devices right below and every room one tap away. Wall tablet: made for the hallway, large tiles readable from across the room, a look that stays calm all day. Phone: your favourites first, a navigation bar under your thumb, tiles can grow while something is going on and shrink again after." />
-</picture>
+<!-- cards:layouts -->
+<table>
+<tr><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/monitor-dark.svg"><img src="docs/images/icons/monitor-light.svg" width="26" height="26" alt=""></picture></td><td width="29%" valign="top"><b>Desktop</b><br>Room by room. A full photo of each room, with its devices right below and every room one tap away.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/tablet-dark.svg"><img src="docs/images/icons/tablet-light.svg" width="26" height="26" alt=""></picture></td><td width="29%" valign="top"><b>Wall tablet</b><br>Made for the hallway. Large tiles, readable from across the room, and a look that stays calm all day.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/cellphone-dark.svg"><img src="docs/images/icons/cellphone-light.svg" width="26" height="26" alt=""></picture></td><td width="29%" valign="top"><b>Phone</b><br>Your favourites first, a navigation bar under your thumb. Tiles can grow while something is going on and shrink again after.</td></tr>
+</table>
+<!-- /cards:layouts -->
 
 <br/>
 
@@ -94,10 +97,12 @@ Lights, climate, energy, locks, blinds, media, cameras, plants, washers and drye
   <br/><sub><b>Energy at a glance.</b> Power right now, where it comes from, how the solar power splits between home, battery and grid, and which devices use the most.</sub>
 </p>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-popups-dark.png" />
-  <img src="docs/images/readme-cards-popups-light.png" alt="Room climate: temperature and humidity of every room, with a day of readings. Every wash: washer and dryer with their program, time left and energy. Fuel: when to refuel, and where it is cheapest right now. Plants: what a plant needs, in plain words." />
-</picture>
+<!-- cards:popups -->
+<table>
+<tr><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/thermometer-dark.svg"><img src="docs/images/icons/thermometer-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Room climate</b><br>Temperature and humidity of every room, with a day of readings.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/washing-machine-dark.svg"><img src="docs/images/icons/washing-machine-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Every wash</b><br>Washer and dryer with their program, time left and energy.</td></tr>
+<tr><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/gas-station-outline-dark.svg"><img src="docs/images/icons/gas-station-outline-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Fuel</b><br>When to refuel, and where it is cheapest right now.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/sprout-outline-dark.svg"><img src="docs/images/icons/sprout-outline-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Plants</b><br>What a plant needs, in plain words.</td></tr>
+</table>
+<!-- /cards:popups -->
 
 <br/>
 
@@ -107,10 +112,12 @@ Lights, climate, energy, locks, blinds, media, cameras, plants, washers and drye
 
 The everyday actions should not need a popup. Press and hold any tile and a small menu opens right at the tile, a bottom sheet on the phone, a right-click on the desktop.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-hold-dark.png" />
-  <img src="docs/images/readme-cards-hold-light.png" alt="The quick menu: the main action on top (turn off, unlock, pause), below it brightness and colour, position, temperature, volume, then history, device and Edit tile. Timers: turn off in 30 minutes or on for 2 hours, the tile shows a ring that empties over time, timers survive a restart and step aside when you switch by hand. It stays in Casora: a reading opens its chart with 24 hours, 7 or 30 days, a window contact shows when it was open, each with a back arrow instead of Home Assistant's dialog. Ask first, then switch: any tile can ask before it switches, unlock, Open door and the alarm always ask, when you arm the alarm Casora names open windows and doors." />
-</picture>
+<!-- cards:hold -->
+<table>
+<tr><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/gesture-tap-hold-dark.svg"><img src="docs/images/icons/gesture-tap-hold-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>The quick menu</b><br>The main action on top: turn off, unlock, pause. Below it brightness and colour, position, temperature, volume. Then history, device and Edit tile.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/timer-outline-dark.svg"><img src="docs/images/icons/timer-outline-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Timers</b><br>Turn off in 30 minutes or on for 2 hours. The tile shows a ring that empties over time. Timers survive a restart and step aside when you switch by hand.</td></tr>
+<tr><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/arrow-left-dark.svg"><img src="docs/images/icons/arrow-left-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>It stays in Casora</b><br>A reading opens its chart with 24 hours, 7 or 30 days. A window contact shows when it was open. Each with a back arrow, not Home Assistant's dialog.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/help-circle-outline-dark.svg"><img src="docs/images/icons/help-circle-outline-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Ask first, then switch</b><br>Any tile can ask before it switches. Unlock, Open door and the alarm always ask. When you arm the alarm, Casora names open windows and doors.</td></tr>
+</table>
+<!-- /cards:hold -->
 
 <br/>
 
@@ -120,10 +127,14 @@ The everyday actions should not need a popup. Press and hold any tile and a smal
 
 Casora picks the right tile and popup for each device on its own, with the integrations you already have.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-tiles-dark.png" />
-  <img src="docs/images/readme-cards-tiles-light.png" alt="Every home: lights and light groups, switches, scenes, blinds and covers, locks, thermostats and room climate, fans, air purifiers, humidifiers, media players, cameras and doorbells. Safety: alarm system, doors and windows, smoke, water and gas sensors, official warnings. Energy and house: energy with solar and home battery, batteries of all devices, network, updates, waste collection, calendar, Pulse. Appliances: washing machine, dryer, dishwasher, robot vacuum, 3D printer. On the road: car with fuel prices nearby, e-bike. Hobbies: plants, aquariums, football, game activity (PlayStation, Steam, Discord), recipe of the week. Community cards: Frigate camera, Reolink doorbell, coffee machine, robot lawn mower, they wait in the Studio until you add them. Your own: any Home Assistant card as a custom tile." />
-</picture>
+<!-- cards:tiles -->
+<table>
+<tr><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/home-outline-dark.svg"><img src="docs/images/icons/home-outline-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Every home</b><br>Lights and light groups, switches, scenes, blinds and covers, locks, thermostats and room climate, fans, air purifiers, humidifiers, media players, cameras and doorbells.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/shield-home-outline-dark.svg"><img src="docs/images/icons/shield-home-outline-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Safety</b><br>Alarm system, doors and windows, smoke, water and gas sensors, official warnings.</td></tr>
+<tr><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/lightning-bolt-outline-dark.svg"><img src="docs/images/icons/lightning-bolt-outline-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Energy and house</b><br>Energy with solar and home battery, batteries of all devices, network, updates, waste collection, calendar, Pulse.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/washing-machine-dark.svg"><img src="docs/images/icons/washing-machine-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Appliances</b><br>Washing machine, dryer, dishwasher, robot vacuum, 3D printer.</td></tr>
+<tr><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/car-outline-dark.svg"><img src="docs/images/icons/car-outline-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>On the road</b><br>Car with fuel prices nearby, e-bike.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/flower-outline-dark.svg"><img src="docs/images/icons/flower-outline-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Hobbies</b><br>Plants, aquariums, football, game activity (PlayStation, Steam, Discord), recipe of the week.</td></tr>
+<tr><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/account-group-outline-dark.svg"><img src="docs/images/icons/account-group-outline-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Community cards</b><br>Frigate camera, Reolink doorbell, coffee machine, robot lawn mower. They wait in the Studio until you add them.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/puzzle-outline-dark.svg"><img src="docs/images/icons/puzzle-outline-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Your own</b><br>Any Home Assistant card as a custom tile.</td></tr>
+</table>
+<!-- /cards:tiles -->
 
 ### Community cards
 
@@ -172,10 +183,12 @@ A visual editor in the Home Assistant sidebar. Rooms, tiles, badges and popups, 
   <br/><sub><b>Assistants for the tedious part.</b> Place new devices, move from Hemma, go back to any version.</sub>
 </p>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-studio-dark.png" />
-  <img src="docs/images/readme-cards-studio-light.png" alt="See it before you save: switch the preview between desktop, tablet and phone, nothing is written until you click Save, and a draft survives a reload. Go back in time: every save becomes a version, preview any earlier one and restore it with a click. New devices find their place: the device assistant spots what is new in your home and suggests the room and the tile, you decide. Hold is configurable: under Controls, Tiles, Hold on tiles picks what press and hold does, quick menu, popup or Home Assistant dialog, for all tiles or one." />
-</picture>
+<!-- cards:studio -->
+<table>
+<tr><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/eye-outline-dark.svg"><img src="docs/images/icons/eye-outline-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>See it before you save</b><br>Switch the preview between desktop, tablet and phone. Nothing is written until you click Save, and a draft survives a reload.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/history-dark.svg"><img src="docs/images/icons/history-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Go back in time</b><br>Every save becomes a version. Preview any earlier one and restore it with a click. Nothing is ever lost.</td></tr>
+<tr><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/auto-fix-dark.svg"><img src="docs/images/icons/auto-fix-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>New devices find their place</b><br>The device assistant spots what is new in your home and suggests the room and the tile. You decide.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/tune-dark.svg"><img src="docs/images/icons/tune-light.svg" width="26" height="26" alt=""></picture></td><td width="46%" valign="top"><b>Hold is configurable</b><br>Under Controls, Tiles, Hold on tiles picks what press and hold does: quick menu, popup or Home Assistant dialog, for all tiles or one.</td></tr>
+</table>
+<!-- /cards:studio -->
 
 <br/>
 
@@ -185,10 +198,11 @@ A visual editor in the Home Assistant sidebar. Rooms, tiles, badges and popups, 
 
 Warm linen, generous corners and gentle shadows, set in Inter. All three designs come in light and dark and follow Home Assistant's theme mode.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-looks-dark.png" />
-  <img src="docs/images/readme-cards-looks-light.png" alt="Casora: the default, warm linen and sand, large corners, soft shadows. Casora Nebel: the same calm design in cool grey with a petrol accent. Casora Glas: frosted glass over your room photos, in performance mode the glass turns opaque for older tablets." />
-</picture>
+<!-- cards:looks -->
+<table>
+<tr><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/palette-outline-dark.svg"><img src="docs/images/icons/palette-outline-light.svg" width="26" height="26" alt=""></picture></td><td width="29%" valign="top"><b>Casora</b><br>The default. Warm linen and sand, large corners, soft shadows.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/weather-fog-dark.svg"><img src="docs/images/icons/weather-fog-light.svg" width="26" height="26" alt=""></picture></td><td width="29%" valign="top"><b>Casora Nebel</b><br>The same calm design in cool grey with a petrol accent.</td><td width="34" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/blur-dark.svg"><img src="docs/images/icons/blur-light.svg" width="26" height="26" alt=""></picture></td><td width="29%" valign="top"><b>Casora Glas</b><br>Frosted glass over your room photos. In performance mode the glass turns opaque for older tablets.</td></tr>
+</table>
+<!-- /cards:looks -->
 
 <details>
 <summary><b>The three designs in pictures</b></summary>
