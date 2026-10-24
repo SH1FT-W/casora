@@ -219,6 +219,32 @@
           "description": "Entität"
         }
       }
+    },
+    "ai_generate": {
+      "name": "Mit KI erzeugen",
+      "description": "Wie KI-Aufgabe: Daten erzeugen, nimmt ohne gewählte KI aber die erste KI-Aufgabe. Für Casoras KI-Abläufe.",
+      "fields": {
+        "task_name": {
+          "name": "Aufgabenname",
+          "description": "Name der Aufgabe."
+        },
+        "instructions": {
+          "name": "Anweisungen",
+          "description": "Was die KI tun soll."
+        },
+        "entity_id": {
+          "name": "KI-Aufgabe",
+          "description": "Leer: die bevorzugte KI-Aufgabe aus den Einstellungen, sonst die erste."
+        },
+        "structure": {
+          "name": "Struktur",
+          "description": "Felder der Antwort."
+        },
+        "attachments": {
+          "name": "Anhänge",
+          "description": "Bilder und andere Medien."
+        }
+      }
     }
   },
   "entity": {

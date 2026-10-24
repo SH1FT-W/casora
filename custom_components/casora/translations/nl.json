@@ -219,6 +219,32 @@
           "description": "Entiteit"
         }
       }
+    },
+    "ai_generate": {
+      "name": "Genereren met AI",
+      "description": "Zoals AI-taak: data genereren, maar zonder gekozen AI de eerste AI-taak. Voor de AI-flows van Casora.",
+      "fields": {
+        "task_name": {
+          "name": "Taaknaam",
+          "description": "Naam van de taak."
+        },
+        "instructions": {
+          "name": "Instructies",
+          "description": "Wat de AI moet doen."
+        },
+        "entity_id": {
+          "name": "AI-taak",
+          "description": "Leeg: de voorkeurs-AI-taak uit Instellingen, anders de eerste."
+        },
+        "structure": {
+          "name": "Structuur",
+          "description": "Velden van het antwoord."
+        },
+        "attachments": {
+          "name": "Bijlagen",
+          "description": "Afbeeldingen en andere media."
+        }
+      }
     }
   },
   "entity": {

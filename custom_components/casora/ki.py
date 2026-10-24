@@ -36,7 +36,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
+from homeassistant.core import Context, HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import config_validation as cv
@@ -517,6 +517,38 @@ def _preference(model: str | None, rank: int) -> int:
     return rank + (1000 if "sonnet" in str(model or "").lower() else 0)
 
 
+def _first_ai_task(hass: HomeAssistant) -> str | None:
+    """First AI task that can generate data (state attribute supported_features, bit 1), else the first one."""
+    ids = sorted(hass.states.async_entity_ids("ai_task"))
+    able = [e for e in ids if int((getattr(hass.states.get(e), "attributes", None) or {}).get("supported_features") or 0) & 1]
+    return (able or ids or [None])[0]
+
+
+async def generate(hass: HomeAssistant, data: dict[str, Any], ent: str | None) -> dict:
+    """ai_task.generate_data (public service) with Casora's choice of AI task.
+
+    ent given: that one. Without: entity_id stays out and HA's preferred AI task answers; if HA has
+    none ("no preferred entity set"), the first suitable AI task, as Casora did before.
+    """
+    if not ent and not hass.states.async_entity_ids("ai_task"):
+        raise HomeAssistantError(NO_AI)
+    payload = {k: v for k, v in data.items() if k != "entity_id" and v not in (None, "", [])}
+    if ent:
+        payload["entity_id"] = ent
+
+    async def call(p: dict) -> Any:
+        return await hass.services.async_call("ai_task", "generate_data", p, blocking=True, return_response=True)
+
+    try:
+        resp = await call(payload)
+    except HomeAssistantError as err:
+        first = _first_ai_task(hass)
+        if ent or not first or "preferred" not in str(err):
+            raise
+        resp = await call({**payload, "entity_id": first})
+    return dict(resp or {})
+
+
 async def ask_ai(hass: HomeAssistant, entry: ConfigEntry, task: str, instructions: str,
                  structure: dict, web: bool = False, attachments: list | None = None,
                  entity: str | None = None) -> dict | None:
@@ -525,24 +557,31 @@ async def ask_ai(hass: HomeAssistant, entry: ConfigEntry, task: str, instruction
     if not ent and not hass.states.async_entity_ids("ai_task"):
         raise ValueError(NO_AI)
     data: dict[str, Any] = {"task_name": task, "instructions": instructions, "structure": structure}
-    if ent:
-        data["entity_id"] = ent
     if attachments:
         data["attachments"] = attachments
-
-    async def call(payload: dict) -> Any:
-        return await hass.services.async_call("ai_task", "generate_data", payload, blocking=True, return_response=True)
-
-    try:
-        resp = await call(data)
-    except HomeAssistantError as err:
-        # No AI chosen and none preferred in HA: the first AI task, as Casora did before.
-        ids = sorted(hass.states.async_entity_ids("ai_task"))
-        if ent or not ids or "preferred" not in str(err):
-            raise
-        resp = await call({**data, "entity_id": ids[0]})
-    result = (resp or {}).get("data")
+    result = (await generate(hass, data, ent)).get("data")
     return result if isinstance(result, dict) else None
+
+
+# Service casora.ai_generate for the flows in ki/*.yaml: same fields as ai_task.generate_data, but
+# entity_id may be empty; the choice and the fallback are those of generate() above.
+AI_GENERATE_SCHEMA = vol.Schema({
+    vol.Required("task_name"): cv.string,
+    vol.Required("instructions"): cv.string,
+    vol.Optional("entity_id"): vol.Any(None, "", cv.entity_id),
+    vol.Optional("structure"): vol.Any(None, dict),
+    vol.Optional("attachments"): vol.Any(None, list),
+})
+
+
+def register_ai_generate(hass: HomeAssistant) -> None:
+    """Register casora.ai_generate (returns the answer of ai_task.generate_data)."""
+
+    async def handle(call: ServiceCall) -> dict:
+        return await generate(hass, dict(call.data), call.data.get("entity_id") or None)
+
+    hass.services.async_register(DOMAIN, "ai_generate", handle, schema=AI_GENERATE_SCHEMA,
+                                 supports_response=SupportsResponse.ONLY)
 
 
 COACH_STRUCTURE = {
@@ -1138,6 +1177,7 @@ class KiRunner:
         ]
         for name, fn, schema in reg:
             hass.services.async_register(DOMAIN, name, fn, schema=schema)
+        register_ai_generate(hass)
 
         # Erst nach dem Start: dann ist klar, ob alte Paket-Sensoren noch geliefert werden (is_external).
         if hass.is_running:
@@ -1184,7 +1224,7 @@ class KiRunner:
             u()
         for name in ("energie_coach", "heizungs_coach", "lueftungs_coach", "kamera_beschreiben",
                      "pflanzen_doktor", "aquarium_doktor", "ebike_check", "update_pruefen", "update_bestaetigen",
-                     "rezept_neu", "rezept_auf_liste"):
+                     "rezept_neu", "rezept_auf_liste", "ai_generate"):
             self.hass.services.async_remove(DOMAIN, name)
 
     def _bg(self, coro) -> None:

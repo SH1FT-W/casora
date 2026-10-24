@@ -219,6 +219,32 @@
           "description": "Entité"
         }
       }
+    },
+    "ai_generate": {
+      "name": "Générer avec l'IA",
+      "description": "Comme Tâche IA : générer des données, mais sans IA choisie prend la première tâche IA. Pour les flux IA de Casora.",
+      "fields": {
+        "task_name": {
+          "name": "Nom de la tâche",
+          "description": "Nom de la tâche."
+        },
+        "instructions": {
+          "name": "Instructions",
+          "description": "Ce que l'IA doit faire."
+        },
+        "entity_id": {
+          "name": "Tâche IA",
+          "description": "Vide : la tâche IA préférée des Paramètres, sinon la première."
+        },
+        "structure": {
+          "name": "Structure",
+          "description": "Champs de la réponse."
+        },
+        "attachments": {
+          "name": "Pièces jointes",
+          "description": "Images et autres médias."
+        }
+      }
     }
   },
   "entity": {

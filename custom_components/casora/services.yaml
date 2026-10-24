@@ -98,3 +98,24 @@ cancel_timer:
       required: true
       selector:
         entity:
+ai_generate:
+  fields:
+    task_name:
+      required: true
+      selector:
+        text:
+    instructions:
+      required: true
+      selector:
+        text:
+          multiline: true
+    entity_id:
+      selector:
+        entity:
+          domain: ai_task
+    structure:
+      selector:
+        object:
+    attachments:
+      selector:
+        object:

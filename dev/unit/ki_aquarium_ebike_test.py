@@ -73,7 +73,7 @@ class Services:
     def __init__(self):
         self.reg = {}
 
-    def async_register(self, domain, name, fn, schema=None):
+    def async_register(self, domain, name, fn, schema=None, supports_response=None):
         self.reg[name] = schema
 
     def async_remove(self, domain, name):

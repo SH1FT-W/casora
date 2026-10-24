@@ -111,6 +111,11 @@ class HAReality(unittest.TestCase):
         """ki.ask_ai retries with the first AI task on exactly this error (no choice, no HA preference)."""
         self.assertIn("no preferred entity set", self.read("ai_task", "task.py"))
 
+    def test_generate_data_feature_bit(self):
+        """ki._first_ai_task picks AI tasks with supported_features bit 1 (public state attribute)."""
+        from homeassistant.components.ai_task import AITaskEntityFeature
+        self.assertEqual(int(AITaskEntityFeature.GENERATE_DATA), 1)
+
     def test_generate_data_entity_optional(self):
         self.assertRegex(self.read("ai_task", "services.py"), r"Optional\(ATTR_ENTITY_ID\)")
 
@@ -153,7 +158,7 @@ class Real(unittest.IsolatedAsyncioTestCase):
             entry_type=dr.DeviceEntryType.SERVICE)
         ent = er.async_get(self.hass).async_get_or_create("ai_task", platform, uid, device_id=dev.id,
                                                           config_entry=ce, suggested_object_id=uid)
-        self.hass.states.async_set(ent.entity_id, "unknown", {"friendly_name": name})
+        self.hass.states.async_set(ent.entity_id, "unknown", {"friendly_name": name, "supported_features": 1})
         return ent.entity_id
 
     def opts(self, **kw):
@@ -242,23 +247,64 @@ class Real(unittest.IsolatedAsyncioTestCase):
             await ki.ask_ai(self.hass, self.casora, "T", "I", {})
         self.assertFalse(ki.ai_available(self.hass, self.casora))
 
-    async def test_yaml_flow_entity_optional(self):
-        """ki/rezept.yaml through HA's script engine: entity_id only when Casora has one."""
+    async def run_flow(self, name: str, variables: dict) -> list:
+        """A ki/*.yaml flow through HA's script engine with Casora's service casora.ai_generate."""
         from homeassistant.helpers.script import Script
 
+        ki.register_ai_generate(self.hass)
+        fired = []
+        self.hass.bus.async_listen("casora_recipe_result", lambda ev: fired.append(dict(ev.data)))
         seqs = await ki._load_sequences(self.hass)
-        script = Script(self.hass, seqs["rezept"], "test", "casora", script_mode="parallel")
-        self.preferred = "ai_task.b"
-        base = {"weather_entity": "", "idea_sensor": "", "cookidoo": False, "hinweise": "", "sprache": "Deutsch"}
-        for ent in (None, "ai_task.chosen"):
-            await script.async_run(run_variables={**base, "ai_web_entity": ent}, context=None)
-            await self.hass.async_block_till_done()
-            call = self.calls[-1]
-            self.assertEqual(call.get("entity_id"), ent)
-            self.assertEqual(call["task_name"], "Casora Rezept der Woche")
-            self.assertIn("Antworte auf Deutsch", call["instructions"])
-            self.assertIn("ingredients", call["structure"])
+        script = Script(self.hass, seqs[name], "test", "casora", script_mode="parallel")
+        await script.async_run(run_variables=variables, context=None)
+        await self.hass.async_block_till_done()
+        return fired
 
+    BASE = {"weather_entity": "", "idea_sensor": "", "cookidoo": False, "hinweise": "", "sprache": "Deutsch"}
+
+    async def test_yaml_flow_chosen(self):
+        self.ai_task("anthropic", "a")
+        b = self.ai_task("anthropic", "b")
+        fired = await self.run_flow("rezept", {**self.BASE, "ai_web_entity": b})
+        self.assertEqual([c.get("entity_id") for c in self.calls], [b])
+        call = self.calls[-1]
+        self.assertEqual(call["task_name"], "Casora Rezept der Woche")
+        self.assertIn("Antworte auf Deutsch", call["instructions"])
+        self.assertIn("ingredients", call["structure"])
+        self.assertEqual(fired[-1]["status"], "done")
+        self.assertEqual(fired[-1]["result"]["name"], "Suppe")
+
+    async def test_yaml_flow_preferred(self):
+        """No AI chosen in Casora: entity_id stays out, HA's preferred AI task answers."""
+        self.ai_task("anthropic", "a")
+        self.ai_task("anthropic", "b")
+        self.preferred = "ai_task.b"
+        fired = await self.run_flow("rezept", {**self.BASE, "ai_web_entity": None})
+        self.assertEqual([c.get("entity_id") for c in self.calls], [None])
+        self.assertEqual(fired[-1]["status"], "done")
+
+    async def test_yaml_flow_no_preference_first_ai_task(self):
+        """Neither Casora nor HA name an AI: the first suitable AI task, as before (not an error)."""
+        weak = self.ai_task("anthropic", "a0_no_data")
+        self.hass.states.async_set(weak, "unknown", {"supported_features": 0})  # cannot generate data
+        a = self.ai_task("anthropic", "b1")
+        self.ai_task("anthropic", "c2")
+        fired = await self.run_flow("rezept", {**self.BASE, "ai_web_entity": None})
+        self.assertEqual([c.get("entity_id") for c in self.calls], [None, a])
+        self.assertEqual(fired[-1]["status"], "done")
+
+    async def test_yaml_flow_without_ai(self):
+        fired = await self.run_flow("rezept", {**self.BASE, "ai_web_entity": None})
+        self.assertEqual(self.calls, [])
+        self.assertEqual(fired[-1]["status"], "error")
+
+    def test_flows_use_casora_service(self):
+        """Every AI call in ki/*.yaml goes through casora.ai_generate (same fallback as ask_ai)."""
+        base = os.path.join(PKG, "ki")
+        for name in os.listdir(base):
+            if name.endswith(".yaml"):
+                src = _read(os.path.join(base, name))
+                self.assertNotIn("action: ai_task.generate_data", src, name)
 
 if __name__ == "__main__":
     unittest.main(verbosity=1)

@@ -59,58 +59,57 @@
       {% else %}- kein Raumsensor
 
       {% endfor %}'
-- variables:
-    ai_data:
-      task_name: Casora Pflanzen-Doktor {{ state_attr(plant, 'friendly_name') }}
-      instructions: 'Du bist ein erfahrener Pflanzenpfleger. Prüfe die Messdaten dieser Zimmer- bzw. Terrassenpflanze und gib
-        einen konkreten Pflegetipp. Antworte auf {{ sprache | default(''Deutsch'') }}, knapp.
-
-
-        {{ kontext }}
-
-
-        Berücksichtige die Art (aus dem Namen), die Jahreszeit, Standort (drinnen/draußen) und Trends (z. B. Boden trocknet
-        schnell aus, Licht).
-
-        Licht bewerte vor allem über die Raumhelligkeit der Präsenzmelder (Tagesmaximum und -mittel in Lux), ergänzend über
-        die Beleuchtungsstärke am Pflanzensensor. Der Melder hängt nicht direkt an der Pflanze, gib die Lichteinschätzung daher
-        als Tendenz an.
-
-        WICHTIG: DLI (Tageslichtsumme) ist bei diesen Sensoren unzuverlässig. Du darfst DLI als Info erwähnen, er ist aber KEIN
-        Kriterium: DLI darf den zustand nicht verschlechtern und kein Grund für beobachten/handeln oder einen Tipp sein. Die
-        Grenzwerte der Integration sind Standardwerte und können für die Art unpassend sein – bewerte nach Art, nicht blind
-        nach Grenzwerten.
-
-        zustand: gut, beobachten oder handeln.
-
-        fazit: ein Satz. punkte: 2–4 Beobachtungen mit Zahlen. tipps: 1–3 konkrete Pflegetipps (gießen wann/wie viel, Standort,
-        Düngen, Überwintern).'
-      structure:
-        zustand:
-          required: true
-          selector:
-            select:
-              options:
-              - gut
-              - beobachten
-              - handeln
-        fazit:
-          required: true
-          selector:
-            text: {}
-        punkte:
-          selector:
-            text:
-              multiple: true
-        tipps:
-          selector:
-            text:
-              multiple: true
-- action: ai_task.generate_data
+# casora.ai_generate calls ai_task.generate_data; empty entity_id: HA's preferred AI task, else the first (ki.py generate).
+- action: casora.ai_generate
   continue_on_error: true
   response_variable: r
-  # No AI chosen in Casora: entity_id stays out, HA's preferred AI task answers.
-  data: '{{ dict(ai_data, entity_id=ai_entity) if ai_entity else ai_data }}'
+  data:
+    entity_id: '{{ ai_entity }}'
+    task_name: Casora Pflanzen-Doktor {{ state_attr(plant, 'friendly_name') }}
+    instructions: 'Du bist ein erfahrener Pflanzenpfleger. Prüfe die Messdaten dieser Zimmer- bzw. Terrassenpflanze und gib
+      einen konkreten Pflegetipp. Antworte auf {{ sprache | default(''Deutsch'') }}, knapp.
+
+
+      {{ kontext }}
+
+
+      Berücksichtige die Art (aus dem Namen), die Jahreszeit, Standort (drinnen/draußen) und Trends (z. B. Boden trocknet
+      schnell aus, Licht).
+
+      Licht bewerte vor allem über die Raumhelligkeit der Präsenzmelder (Tagesmaximum und -mittel in Lux), ergänzend über
+      die Beleuchtungsstärke am Pflanzensensor. Der Melder hängt nicht direkt an der Pflanze, gib die Lichteinschätzung daher
+      als Tendenz an.
+
+      WICHTIG: DLI (Tageslichtsumme) ist bei diesen Sensoren unzuverlässig. Du darfst DLI als Info erwähnen, er ist aber KEIN
+      Kriterium: DLI darf den zustand nicht verschlechtern und kein Grund für beobachten/handeln oder einen Tipp sein. Die
+      Grenzwerte der Integration sind Standardwerte und können für die Art unpassend sein – bewerte nach Art, nicht blind
+      nach Grenzwerten.
+
+      zustand: gut, beobachten oder handeln.
+
+      fazit: ein Satz. punkte: 2–4 Beobachtungen mit Zahlen. tipps: 1–3 konkrete Pflegetipps (gießen wann/wie viel, Standort,
+      Düngen, Überwintern).'
+    structure:
+      zustand:
+        required: true
+        selector:
+          select:
+            options:
+            - gut
+            - beobachten
+            - handeln
+      fazit:
+        required: true
+        selector:
+          text: {}
+      punkte:
+        selector:
+          text:
+            multiple: true
+      tipps:
+        selector:
+          text:
+            multiple: true
 - if:
   - condition: template
     value_template: '{{ r is defined and r.data is defined and r.data is mapping }}'
