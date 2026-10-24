@@ -2632,3 +2632,109 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     },
   });
 })();
+
+// ── Velair: schedules for climates (community card, issue #32) ─────────────────────────────────────────────
+// Velair (HACS, cgonfer/velair, domain velair) is a scheduler, not a device: one service device "Velair" with a few
+// entities that plans the climate entities of other integrations. Casora detects it ONLY by the platform velair in
+// the entity registry (hass.entities). Schedules are no entities: Velair's public WebSocket API sends them
+// (velair/get_schedule, velair/subscribe_updates – what its own panel and card use, docs/developer/api.md); writes go
+// through Velair's services. Never Velair's hass.data/runtime_data.
+//   casoraVelairFind.SOURCE             – the one table: platform, translation_keys, WS commands, services, weekdays
+//   casoraVelairFind.present(hass)      – Velair is installed (an entity with platform velair)
+//   casoraVelairFind.entities(hass)     – Velair's own entities by role { auto, mode, status, next, zones: [] }
+//   casoraVelairFind.data()             – the last schedule response (null until loaded)
+//   casoraVelairFind.load(hass, force)  – Promise of the response; subscribes once for live updates
+//   casoraVelairFind.managed(hass, id)  – true/false from the data; before it arrives Velair's zone sensors as a hint, else null
+//   casoraVelairFind.climates(hass)     – climate ids Velair manages (data, else the zone-sensor hint)
+//   casoraVelairFind.onChange(fn)       – fn(data) after every update
+(function () {
+  if (window.casoraVelairFind) return;
+  var SOURCE = {
+    id: 'velair', platforms: ['velair'],
+    // translation_key → role (custom_components/velair: switch.py, select.py, sensor.py)
+    keys: {
+      'switch': { automatic_scheduling: 'auto' },
+      select: { mode: 'mode' },
+      sensor: { scheduler_status: 'status', next_climate_event: 'next', zone_control: 'zoneControl',
+        zone_active_target_temperature: 'zoneTarget', zone_override_state: 'zoneOverride' },
+    },
+    ws: { read: 'velair/get_schedule', subscribe: 'velair/subscribe_updates' },
+    services: { setDay: 'set_daily_schedule', copyDay: 'copy_day_schedule', clearDay: 'clear_schedule',
+      pause: 'pause_zone', resume: 'resume_zone', resumeAuto: 'resume_automatic_control', boost: 'boost', cancelBoost: 'cancel_boost' },
+    weekdays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+  };
+  var reg = function (hass) { return (hass && hass.entities) || {}; };
+  var isVelair = function (e) { return !!e && SOURCE.platforms.indexOf(e.platform) >= 0; };
+  var present = function (hass) {
+    var R = reg(hass);
+    for (var k in R) { if (isVelair(R[k])) return true; }
+    return false;
+  };
+  var entities = function (hass) {
+    var R = reg(hass), out = { zones: [] };
+    Object.keys(R).sort().forEach(function (eid) {
+      var e = R[eid];
+      if (!isVelair(e) || e.disabled_by) return;
+      var role = (SOURCE.keys[eid.split('.')[0]] || {})[e.translation_key];
+      if (!role) return;
+      if (/^zone/.test(role)) out.zones.push({ entity_id: eid, role: role });
+      else if (!out[role]) out[role] = eid;
+    });
+    return out;
+  };
+  var cache = null, at = 0, busy = null, unsub = null, subbing = false, fns = [];
+  var tell = function () { fns.slice().forEach(function (fn) { try { fn(cache); } catch (e) { /* the listener's own problem */ } }); };
+  var keep = function (d) { if (d && typeof d === 'object' && d.zones) { cache = d; at = Date.now(); tell(); } return cache; };
+  var subscribe = function (hass) {
+    if (unsub || subbing || !hass || !hass.connection || typeof hass.connection.subscribeMessage !== 'function') return;
+    subbing = true;
+    Promise.resolve(hass.connection.subscribeMessage(function (ev) {
+      if (ev && ev.loaded === false) { cache = null; tell(); return; }
+      keep(ev && ev.schedule);
+    }, { type: SOURCE.ws.subscribe })).then(function (u) { unsub = u; }, function () { /* without it: reads only */ })
+      .then(function () { subbing = false; });
+  };
+  var load = function (hass, force) {
+    if (!hass || typeof hass.callWS !== 'function' || !present(hass)) return Promise.resolve(cache);
+    subscribe(hass);
+    if (busy) return busy;
+    if (!force && cache && Date.now() - at < 60000) return Promise.resolve(cache);
+    busy = hass.callWS({ type: SOURCE.ws.read }).then(keep, function () { return cache; })
+      .then(function (d) { busy = null; return d; });
+    return busy;
+  };
+  // Before the data arrives the zone sensors give it away: the control sensor is named after the climate
+  // (sensor.velair_control_<object id>), the target sensor carries entity_id while a block is active.
+  var hinted = function (hass) {
+    var S = (hass && hass.states) || {}, out = [];
+    entities(hass).zones.forEach(function (z) {
+      var a = (S[z.entity_id] || {}).attributes || {};
+      if (z.role === 'zoneTarget' && typeof a.entity_id === 'string' && /^climate\./.test(a.entity_id)) out.push(a.entity_id);
+      var m = z.role === 'zoneControl' && /^sensor\.velair_control_(.+)$/.exec(z.entity_id);
+      if (m && S['climate.' + m[1]]) out.push('climate.' + m[1]);
+    });
+    return out.filter(function (x, i) { return out.indexOf(x) === i; });
+  };
+  var climates = function (hass) {
+    if (cache && Array.isArray(cache.configured_entities)) return cache.configured_entities.slice();
+    return present(hass) ? hinted(hass) : [];
+  };
+  var managed = function (hass, id) {
+    if (!id || !present(hass)) return false;
+    if (cache && Array.isArray(cache.configured_entities)) return cache.configured_entities.indexOf(id) >= 0;
+    load(hass);
+    return hinted(hass).indexOf(id) >= 0 ? true : null;
+  };
+  window.casoraVelairFind = { SOURCE: SOURCE, present: present, entities: entities, load: load, managed: managed, climates: climates,
+    data: function () { return cache; }, onChange: function (fn) { if (typeof fn === 'function') fns.push(fn); },
+    // Unit tests: a response as Velair sends it.
+    _seed: function (d) { cache = null; keep(d); } };
+  // Load early when Velair is there, so the first popup already has the week.
+  (function kick(n) {
+    var ha = typeof document !== 'undefined' && document.querySelector ? document.querySelector('home-assistant') : null;
+    if (ha && ha.hass && ha.hass.entities) { if (present(ha.hass)) load(ha.hass); return; }
+    if (n >= 20 || typeof setTimeout !== 'function') return;
+    var t = setTimeout(function () { kick(n + 1); }, 1500);
+    if (t && t.unref) t.unref();
+  })(0);
+})();

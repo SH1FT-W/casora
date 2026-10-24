@@ -13,6 +13,7 @@ const TEST_DEVICES = {
   casora_frigate: ['frigate_testhof'], // frigate.py
   casora_reolink_doorbell: ['testklingel'], // klingel.py
   casora_chart: ['testserver'], // testserver.py: System-Monitor-like CPU load, memory, temperature
+  casora_velair: ['testklimaanlage'], // velair.py: air conditioner planned by Velair (zone sensors under the platform velair)
 };
 
 const hass = testhaus();

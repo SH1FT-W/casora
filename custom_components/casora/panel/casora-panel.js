@@ -572,6 +572,7 @@ function badgeOrderOf(saved) {
 
 const FILTER_CATEGORIES = {
   casora_thermostat: "climate",
+  casora_velair: "climate",
   casora_air_purifier: "climate",
   // Wie CASORA_FILTER_CATEGORIES (casora-core.js): Jalousien gehören zu keinem Badge-Filter.
   casora_cover: "unfiltered",
@@ -4955,6 +4956,10 @@ const TILE_MAIN_FIND = {
   casora_coffee: { coffee: true },
   // Fridge: the main entity of every fridge the shared finder knows (casoraFridgeFind.all in scripts/local/00-finder.js –
   // Liebherr, Home Connect, a device named like a fridge); any temperature sensor would be guesswork.
+  // Velair (community card #32): the climates Velair plans (casoraVelairFind – its schedule response, before that its
+  // zone sensors) – a climate Velair does not plan has no schedule to show.
+  casora_velair: { domain: "climate",
+    match: (h, id) => !!(window.casoraVelairFind && window.casoraVelairFind.climates(h).indexOf(id) >= 0) },
   casora_fridge: { match: (h, id) => !!(window.casoraFridgeFind && window.casoraFridgeFind.all(h).some((f) => f.anchor === id)) },
   // Devices plain to see: every lawn mower (regular device card), every Frigate camera (only Frigate sets
   // device_class "camera"; Birdseye is no single camera, as 23-frigate.js), the live camera of a Reolink doorbell

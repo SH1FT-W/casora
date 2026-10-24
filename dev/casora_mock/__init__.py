@@ -88,6 +88,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     kamerabild_setup(hass, mock)
     from .coffee import setup as coffee_setup
     coffee_setup(hass, mock)
+    # Velair's WebSocket commands and services for the test air conditioner (velair.py).
+    if any(e.get("registry_platform") == "velair" for e in fixture["entities"]):
+        from .velair import setup as velair_setup
+        velair_setup(hass, mock)
     from .live import setup as live_setup
     live_setup(hass, mock)
     mock.track_derived()
@@ -142,8 +146,9 @@ class CasoraMock:
             if domain in ("input_boolean", "input_select", "input_number", "input_text",
                           "input_datetime", "sun", "automation"):
                 continue  # echte Helfer/Kern-Entitäten, siehe configuration.yaml
+            # registry_platform: another integration's entity (Velair, velair.py) – state written directly, no object.
             entry = ents.async_get_or_create(
-                domain, DOMAIN, e.get("unique_id") or e["entity_id"],
+                domain, e.get("registry_platform") or DOMAIN, e.get("unique_id") or e["entity_id"],
                 suggested_object_id=object_id,
                 config_entry=self.entry,
                 device_id=dev_ids.get(e.get("device")),
@@ -180,7 +185,7 @@ class CasoraMock:
             self.store[eid] = [e["state"], dict(e["attributes"])]
             if eid in self.objs:
                 self.objs[eid].async_write_ha_state()
-            elif eid.split(".")[0] not in PLATFORMS:
+            elif eid.split(".")[0] not in PLATFORMS or e.get("registry_platform"):
                 self.hass.states.async_set(eid, e["state"], dict(e["attributes"]))
 
     def set(self, eid: str, state: str | None = None, **attrs) -> None:

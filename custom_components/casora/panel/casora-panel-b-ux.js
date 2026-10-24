@@ -83,7 +83,8 @@
     media: "fernseher tv musik lautsprecher speaker", lock: "schloss tür tuer lock", vacuum: "sauger staubsauger saugroboter vacuum",
     casora_switch: "schalter steckdose switch plug", fan: "ventilator lüfter fan", casora_camera: "kamera camera", casora_alarm: "alarm sicherheit",
     casora_coffee: "kaffee kaffeemaschine vollautomat espresso coffee", casora_pet: "haustier hund katze tracker tractive pet dog cat",
-    casora_chart: "diagramm chart verlauf graph statistik cpu prozessor server system monitor" };
+    casora_chart: "diagramm chart verlauf graph statistik cpu prozessor server system monitor",
+    casora_velair: "velair zeitplan klima klimaanlage heizung thermostat schedule climate" };
   function typeFor(entity, typeIds, suggested) {
     if (suggested && typeIds.has(suggested)) return suggested;
     const t = BY_DOMAIN[String(entity || "").split(".")[0]];
@@ -685,6 +686,8 @@
       if (typeIds.has("casora_chart")) Object.keys(S).forEach((id) => {
         if (id.startsWith("sensor.") && (R[id] || {}).translation_key === "processor_use") push(id, "", "casora_chart");
       });
+      // Velair (community card #32, when added): every climate Velair plans as this card instead of the plain thermostat.
+      if (typeIds.has("casora_velair") && W.casoraVelairFind) W.casoraVelairFind.climates(h).forEach((id) => push(id, "", "casora_velair"));
       sugg.forEach((x) => push(x.entity, x.name, x.type));
       Object.keys(S).forEach((id) => { if (ADD_DOMAINS.indexOf(id.split(".")[0]) >= 0) push(id, "", byEntity.has(id) ? byEntity.get(id).type : null); });
       // Buttons and switches of a device that already has its own card (lawn mower, coffee machine, pet with the tracker

@@ -2409,7 +2409,56 @@
   "Wähle im Studio einen Temperatursensor oder Sollwert des Kühlschranks.": "Pick a temperature sensor or setpoint of the fridge in the Studio.",
   "SuperCool": "SuperCool",
   "SuperFrost": "SuperFrost",
-  "Super": "Super"
+  "Super": "Super",
+  "Vom Vortag": "From the day before",
+  "Mo": "Mon",
+  "Di": "Tue",
+  "Mi": "Wed",
+  "Do": "Thu",
+  "Fr": "Fri",
+  "Sa": "Sat",
+  "So": "Sun",
+  "Heizen/Kühlen": "Heat/Cool",
+  "Horizontal": "Horizontal",
+  "Vertikal": "Vertical",
+  "Beide": "Both",
+  "Verteilt": "Diffuse",
+  "Fokus": "Focus",
+  "Lamellen": "Swing",
+  "Voreinstellung": "Preset",
+  "Schlafen": "Sleep",
+  "Löschen": "Delete",
+  "Speichern": "Save",
+  "Speichert …": "Saving…",
+  "Speichern hat nicht geklappt": "Saving didn't work",
+  "Uhrzeit ungültig": "Invalid time",
+  "Zu dieser Uhrzeit gibt es schon ein Zeitfenster": "There is already a time slot at this time",
+  "Beginn": "Start",
+  "Oben": "Upper",
+  "Unten": "Lower",
+  "Nur Modus": "Mode only",
+  "Neues Zeitfenster": "New time slot",
+  "Zeitfenster bearbeiten": "Edit time slot",
+  "Zeitfenster hinzufügen": "Add time slot",
+  "Zeitfenster löschen?": "Delete time slot?",
+  "Noch kein Zeitplan": "No schedule yet",
+  "Lege das erste Zeitfenster an": "Add the first time slot",
+  "Zeitplan aus": "Schedule off",
+  "Zeitplan pausiert": "Schedule paused",
+  "Manuell eingestellt": "Set manually",
+  "Der Zeitplan wartet, bis du fortsetzt": "The schedule waits until you resume",
+  "Extern gesteuert": "Controlled externally",
+  "Alle Zeitpläne warten": "All schedules are waiting",
+  "Velair": "Velair",
+  "Velair pausiert": "Velair paused",
+  "Velair lädt …": "Velair is loading…",
+  "Velair plant dieses Gerät nicht": "Velair does not plan this device",
+  "Velair wartet auf dich": "Velair is waiting for you",
+  "Velair braucht eine Bestätigung im Velair-Panel.": "Velair needs a confirmation in the Velair panel.",
+  "Im Velair-Panel öffnen": "Open in the Velair panel",
+  "Profile, Modi und Vorlagen": "Profiles, modes and templates",
+  "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "A profile is active – edit it in the Velair panel.",
+  "Ein Profil pausiert diesen Zeitplan.": "A profile pauses this schedule."
  },
  "patterns": [
   [
@@ -4391,6 +4440,34 @@
   [
    "^Zone (\\d+)$",
    "Zone {1}"
+  ],
+  [
+   "^Zeitplan pausiert bis (\\d{1,2}:\\d\\d)$",
+   "Schedule paused until {1}"
+  ],
+  [
+   "^Boost bis (\\d{1,2}:\\d\\d)$",
+   "Boost until {1}"
+  ],
+  [
+   "^Pausiert durch (.+)$",
+   "Paused by {1}"
+  ],
+  [
+   "^Lüfter (.+)$",
+   "Fan {1}"
+  ],
+  [
+   "^(.+) morgen ab (\\d{1,2}:\\d\\d)$",
+   "{1} tomorrow from {2}"
+  ],
+  [
+   "^(.+) am (Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) ab (\\d{1,2}:\\d\\d)$",
+   "{1} on {2} from {3}"
+  ],
+  [
+   "^(.+) ab (\\d{1,2}:\\d\\d)$",
+   "{1} from {2}"
   ]
  ]
 }
