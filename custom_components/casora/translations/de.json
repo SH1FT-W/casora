@@ -269,12 +269,6 @@
       }
     }
   },
-  "issues": {
-    "restart_after_update": {
-      "title": "Casora {version} ist installiert – Neustart nötig",
-      "description": "Casora wurde auf Version {version} aktualisiert. Starte Home Assistant neu, damit die neue Fassung geladen wird."
-    }
-  },
   "exceptions": {
     "timer_domain_blocked": {
       "message": "Zeitschalter ist für {domain} nicht erlaubt: {entity_id}"

@@ -4,8 +4,8 @@
 
 Ein aiohttp-Testserver spielt GitHubs REST-API (/repos/OWNER/casora/…); Casora bekommt
 eine Session dorthin untergeschoben. Geprüft: anonym (kein Authorization, aber User-Agent),
-Release-Liste, ETag → 304 ohne neuen Inhalt, Update-Entität (prüfen + installieren mit
-Sicherung), Studio-Liste, Karten-Updates (Paket, Prüfsumme, fehlende Datei),
+Release-Liste, ETag → 304 ohne neuen Inhalt, Update-Entität (nur prüfen und melden, lädt
+nichts herunter), Studio-Liste,
 404 = still „keine Updates“ (kein Fehler, keine Warnung im Log), 403/429-Ratelimit =
 „später erneut“ und bis zur Freigabe keine weitere Anfrage, HACS-Erkennung.
 """
@@ -14,14 +14,12 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-import io
 import json
 import logging
 import os
 import sys
 import tempfile
 import time
-import zipfile
 from types import SimpleNamespace
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -42,19 +40,8 @@ def check(name, cond, info=""):
         fails.append(name)
 
 
-def make_zip(version: str) -> bytes:
-    buf = io.BytesIO()
-    with zipfile.ZipFile(buf, "w") as zf:
-        root = "OWNER-casora-abc123/"
-        zf.writestr(root + "README.md", "x")
-        zf.writestr(root + "custom_components/casora/manifest.json", json.dumps({"version": version}))
-        zf.writestr(root + "custom_components/casora/__init__.py", "# neu\n")
-    return buf.getvalue()
-
-
 PKG_GOOD = json.dumps({"id": "karten-2026-10-01", "format": 1, "items": []}).encode()
 PKG_BAD = json.dumps({"id": "karten-2026-10-02", "format": 1, "items": []}).encode()
-ASSETS = {"11": PKG_GOOD, "12": PKG_BAD}
 RELEASES = [
     {"tag_name": "karten-2026-10-02", "draft": False, "prerelease": False, "body": "",
      "html_url": "https://github.com/OWNER/casora/releases/tag/karten-2026-10-02",
@@ -101,27 +88,11 @@ async def gh_releases(request):
     return web.json_response(RELEASES, headers={"ETag": ETAG})
 
 
-async def gh_zip(request):
-    guard(request)
-    if request.match_info["tag"] != "v99.0.1":
-        raise web.HTTPNotFound()
-    return web.Response(body=make_zip("99.0.1"), content_type="application/zip")
-
-
-async def gh_asset(request):
-    guard(request)
-    if request.headers.get("Accept") != "application/octet-stream":
-        return web.json_response({"id": request.match_info["id"]})  # wie GitHub: sonst nur Metadaten
-    return web.Response(body=ASSETS[request.match_info["id"]], content_type="application/octet-stream")
-
-
 class Hass:
     def __init__(self, cfg: str):
         self.data = {}
         self.config = SimpleNamespace(path=lambda *p: os.path.join(cfg, *p), config_dir=cfg, language="en")
         self.states = SimpleNamespace(get=lambda eid: None)
-        self.on_stop = []
-        self.bus = SimpleNamespace(async_listen_once=lambda ev, cb: self.on_stop.append(cb) or (lambda: None))
 
     async def async_add_executor_job(self, fn, *args):
         return fn(*args)
@@ -139,8 +110,6 @@ class Records(logging.Handler):
 async def main():
     app = web.Application()
     app.router.add_get("/repos/OWNER/casora/releases", gh_releases)
-    app.router.add_get("/repos/OWNER/casora/zipball/{tag}", gh_zip)
-    app.router.add_get("/repos/OWNER/casora/releases/assets/{id}", gh_asset)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "127.0.0.1", 0)
@@ -178,7 +147,7 @@ async def main():
         check("Studio deutsch: Deutsch-Block (aus dem Zwischenspeicher)", items_de[0]["notes_md"] == "- **Neu:** öffentlich"
               and items_de[0]["notes_lang"] == "de", repr(items_de[0]["notes_md"]))
 
-        # ── Update-Entität: prüfen + installieren ───────────────────────
+        # ── Update-Entität: prüfen und melden ───────────────────────────
         ent = update.CasoraUpdate(hass, SimpleNamespace(entry_id="e1", options={}))
         ent.async_write_ha_state = lambda: None
         await ent.async_update()
@@ -195,30 +164,8 @@ async def main():
               repr(ent.release_summary))
         hass.config.language = "en"
         await ent.async_update()
-        issues = []
-        update.ir = SimpleNamespace(async_create_issue=lambda *a, **k: issues.append(k),
-                                    IssueSeverity=SimpleNamespace(WARNING="warning"))
-
-        async def _rec(hass_, v, prev):
-            hass_.data.setdefault("installs", []).append(v)
-
-        update.async_record_install = _rec
-        target = hass.config.path("custom_components", "casora")
-        os.makedirs(os.path.join(target, "panel"))
-        with open(os.path.join(target, "manifest.json"), "w") as fh:
-            json.dump({"version": "0.5.0"}, fh)
-        with open(os.path.join(target, "panel", "casora-studio.js"), "w") as fh:
-            fh.write("// lader\n")
-        await ent.async_install(None, False)
-        # Eingespielt wird erst beim Beenden von HA (B-PY-03).
-        for cb in hass.on_stop:
-            await cb(None)
-        with open(os.path.join(target, "manifest.json")) as fh:
-            check("Installiert aus dem zipball", json.load(fh)["version"] == "99.0.1")
-        check("zipball anonym geladen", SEEN[-1]["path"].endswith("/zipball/v99.0.1") and SEEN[-1]["auth"] is None)
-        backups = os.listdir(hass.config.path("casora_sicherungen"))
-        check("Alte Fassung gesichert", len(backups) == 1 and backups[0].endswith(".zip"), repr(backups))
-        check("Neustart-Hinweis", issues and issues[0]["translation_placeholders"] == {"version": "99.0.1"})
+        check("Entität lädt nichts herunter (nur die Release-Liste)",
+              all(x["path"].endswith("/releases") for x in SEEN), repr({x["path"] for x in SEEN}))
 
         # ── 404: Repo (noch) nicht öffentlich → still keine Updates ───────
         MODE["now"] = "404"

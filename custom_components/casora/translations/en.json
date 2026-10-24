@@ -269,12 +269,6 @@
       }
     }
   },
-  "issues": {
-    "restart_after_update": {
-      "title": "Casora {version} installed – restart required",
-      "description": "Casora was updated to version {version}. Restart Home Assistant to load it."
-    }
-  },
   "exceptions": {
     "timer_domain_blocked": {
       "message": "Timers are not allowed for {domain}: {entity_id}"

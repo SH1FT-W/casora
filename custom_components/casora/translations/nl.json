@@ -269,12 +269,6 @@
       }
     }
   },
-  "issues": {
-    "restart_after_update": {
-      "title": "Casora {version} geïnstalleerd: herstart nodig",
-      "description": "Casora is bijgewerkt naar versie {version}. Herstart Home Assistant om die te laden."
-    }
-  },
   "exceptions": {
     "timer_domain_blocked": {
       "message": "Timers zijn niet toegestaan voor {domain}: {entity_id}"

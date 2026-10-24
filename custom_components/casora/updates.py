@@ -1,26 +1,23 @@
-"""Studio → „Updates“: Casora-Versionen und Versionshinweise.
+"""Studio → "Updates": Casora versions and release notes – read only.
 
-Die Liste kommt aus zwei Quellen (release_notes.py): den Releases des öffentlichen
-GitHub-Repos (update_source.py, anonym) und der mitgelieferten CHANGELOG.md bzw.
-CHANGELOG.de.md – offline zeigt das Studio so wenigstens die bekannten Versionen. Die
-Hinweise kommen in der Sprache der Oberfläche (Deutsch oder sonst Englisch). Die Antwort wird
-zwischengespeichert (CACHE_S).
+The list comes from two sources (release_notes.py): the releases of the public GitHub repo
+(update_source.py, anonymous) and the bundled CHANGELOG.md / CHANGELOG.de.md – so offline the
+Studio shows at least the known versions. Notes come in the UI language (German, otherwise
+English). The answer is cached (CACHE_S).
 
-Installieren und Prüfen laufen über die Update-Entität mit HAs eigenen Diensten
-update.install / homeassistant.update_entity; hier gibt es nur zu lesen. Verwaltet HACS
-Casora, gibt es keine eigene Update-Entität (hacs: true) – dann installiert das Studio über
-HACS' Update-Entität für das Casora-Repo (update.casora_update_entity), Prüfen übernimmt HACS.
+Casora installs nothing itself (HACS default-store rule): updates go through HACS. Checking runs
+through the update entity with HA's own service homeassistant.update_entity. If HACS manages
+Casora there is no own update entity (hacs: true); entity_id is then HACS' entry for the Casora
+repo (update.casora_update_entity) and hacs_url its HACS page.
 
-WebSocket (nur Admins):
-  casora/updates/list ← {"force"?: bool, "language"?: str (Sprache der Oberfläche)} →
-    {installed, latest, update_available, entity_id (Update-Entität zum Installieren oder None),
-     install_via ("hacs"|"casora"|None), install_version (Tag für update.install oder None),
-     entity_ready (Entität geladen und verfügbar?), entry_id, own_check (prüft Casora selbst?),
-     hacs, beta (Vorabversionen an?), last_check, last_error, pending_restart, scan_hours, repo_url,
-     notes_lang ("de"|"en"),
+WebSocket (admins only):
+  casora/updates/list ← {"force"?: bool, "language"?: str (UI language)} →
+    {installed, latest, update_available, entity_id (update entity or None), via ("hacs"|"casora"|None),
+     hacs_url (HACS page of Casora or None), entry_id, own_check (does Casora check itself?),
+     hacs, beta (pre-releases on?), last_check, last_error, pending_restart (HACS already put a
+     newer version in place, HA not restarted yet), scan_hours, repo_url, notes_lang ("de"|"en"),
      groups: [{kind: "casora", title, releases: [{kind, version, date, notes_md, notes_lang, notes_html,
-               summary, source: "github"|"changelog", url?, prerelease?, installed_at?}]}]}
-Weitere Gruppen (etwa Karten-Updates) kommen später mit eigenem „kind“ dazu.
+               summary, source: "github"|"changelog", url?, prerelease?}]}]}
 """
 
 from __future__ import annotations
@@ -49,12 +46,11 @@ from .release_notes import (
     summarize,
 )
 from .update import (
-    DATA_LAST_CHECK,
     DATA_HACS,
+    DATA_HACS_ID,
+    DATA_LAST_CHECK,
     DATA_LAST_ERROR,
-    DATA_PENDING,
     SCAN_INTERVAL,
-    async_load_history,
     beta_enabled,
     casora_update_entity,
 )
@@ -63,7 +59,7 @@ from .update_source import error_code, fetch_releases
 _LOGGER = logging.getLogger(__name__)
 
 CACHE_S = 15 * 60
-# Werden beim Release aus CHANGELOG.md / CHANGELOG.de.md im Repo kopiert (tools/sync-changelog.py).
+# Copied from the repo's CHANGELOG.md / CHANGELOG.de.md at release time (tools/sync-changelog.py).
 CHANGELOG = os.path.join(os.path.dirname(__file__), "CHANGELOG.md")
 
 
@@ -77,9 +73,9 @@ def _entry(hass: HomeAssistant):
 
 
 def read_changelog(lang: str) -> tuple[str, float, str]:
-    """Mitgelieferte CHANGELOG in dieser Sprache → (Sprache, mtime, Text).
+    """Bundled CHANGELOG in this language → (language, mtime, text).
 
-    Fehlt die deutsche Datei (ältere Installation), gilt die englische."""
+    If the German file is missing (older install), the English one counts."""
     for code in dict.fromkeys((notes_lang(lang), "en")):
         path = changelog_path(code)
         try:
@@ -94,7 +90,7 @@ async def _changelog(hass: HomeAssistant, lang: str) -> list[dict]:
     data = hass.data.setdefault(DOMAIN, {})
     code, mtime, text = await hass.async_add_executor_job(read_changelog, lang)
     caches = data.setdefault("changelog_cache", {})
-    if not isinstance(caches, dict):  # alter Aufbau (mtime, Liste) aus einer früheren Version
+    if not isinstance(caches, dict):  # old shape (mtime, list) from an earlier version
         caches = data["changelog_cache"] = {}
     cached = caches.get(code)
     if cached and cached[0] == mtime:
@@ -105,14 +101,14 @@ async def _changelog(hass: HomeAssistant, lang: str) -> list[dict]:
 
 
 async def _remote(hass: HomeAssistant, force: bool, lang: str = "en") -> tuple[list[dict], str | None]:
-    """Releases von GitHub, zwischengespeichert → (Einträge in dieser Sprache, Fehlercode)."""
+    """Releases from GitHub, cached → (entries in this language, error code)."""
     data = hass.data.setdefault(DOMAIN, {})
     cache = data.get("releases_cache") or {}
     if cache and not force and time.monotonic() - cache.get("at", 0) < CACHE_S:
         return from_github(cache.get("body") or [], lang), cache.get("error")
     try:
         body = await fetch_releases(hass)
-    except Exception as err:  # noqa: BLE001 – offline/GitHub-Limit: Studio zeigt die CHANGELOG
+    except Exception as err:  # noqa: BLE001 – offline/GitHub limit: the Studio shows the CHANGELOG
         _LOGGER.debug("Casora: Releases nicht abrufbar: %s", err)
         code = error_code(err)
         data["releases_cache"] = {**cache, "at": time.monotonic(), "error": code}
@@ -122,15 +118,11 @@ async def _remote(hass: HomeAssistant, force: bool, lang: str = "en") -> tuple[l
 
 
 async def async_updates_overview(hass: HomeAssistant, force: bool = False, lang: str | None = None) -> dict[str, Any]:
-    """lang: Sprache der Oberfläche (Panel); ohne Angabe die von Home Assistant."""
+    """lang: UI language (panel); without it Home Assistant's."""
     entry = _entry(hass)
     lang = notes_lang(lang or hass.config.language)
     github, error = await _remote(hass, force, lang)
     releases = merge_releases(github, await _changelog(hass, lang))
-
-    installed_at: dict[str, str] = {}
-    for h in await async_load_history(hass):  # jüngste Installation je Version gewinnt
-        installed_at[h["version"]] = h["ts"]
 
     data = hass.data.get(DOMAIN, {})
     hacs = bool(data.get(DATA_HACS))
@@ -141,35 +133,27 @@ async def async_updates_overview(hass: HomeAssistant, force: bool = False, lang:
     ent_latest = norm_version(st.attributes.get("latest_version")) if ready else ""
     if ent_latest and newer(ent_latest, latest):
         latest = ent_latest
-    # Vorabversionen nur mit „Beta-Versionen“ (Option beta_updates); die Liste ist neueste zuerst.
+    # Pre-releases only with "Beta versions" (option beta_updates); the list is newest first.
     beta = beta_enabled(entry)
     top = next((r["version"] for r in releases
                 if (beta or not r.get("prerelease")) and r.get("source") == "github"), None)
     if top and newer(top, latest):
         latest = top
-    # Installiert, aber noch nicht neu gestartet: das läuft erst nach dem Neustart.
-    pending = data.get(DATA_PENDING)
-    pending = pending if pending and pending != VERSION else None
+    # HACS already put the new version in place (installed_version), Casora still runs the old one.
+    pending = None
     if via == "hacs" and ready:
-        # HACS hat die neue Fassung schon abgelegt (installed_version), Casora läuft noch alt.
         hacs_inst = norm_version(st.attributes.get("installed_version"))
-        if hacs_inst and newer(hacs_inst, VERSION) and not (pending and newer(pending, hacs_inst)):
+        if hacs_inst and newer(hacs_inst, VERSION):
             pending = hacs_inst
     if pending and newer(pending, latest):
         latest = pending
-    # Kennt HACS die neueste Version noch nicht (fragt seltener), gezielt diesen Tag installieren.
-    install_version = None
-    if via == "hacs" and ready and newer(latest, ent_latest or VERSION):
-        raw = str(st.attributes.get("latest_version") or st.attributes.get("installed_version") or "")
-        install_version = ("v" if raw.startswith("v") else "") + latest
+    rid = data.get(DATA_HACS_ID)
 
     out = []
     for r in releases:
         item = dict(r)
         item["notes_html"] = render_markdown(r.get("notes_md", ""))
         item["summary"] = summarize(r.get("notes_md", ""))
-        if r["version"] in installed_at:
-            item["installed_at"] = installed_at[r["version"]]
         out.append(item)
 
     return {
@@ -177,14 +161,14 @@ async def async_updates_overview(hass: HomeAssistant, force: bool = False, lang:
         "latest": latest,
         "update_available": newer(latest, pending or VERSION),
         "entity_id": entity_id,
-        "install_via": via if entity_id else None,
-        "install_version": install_version,
-        "entity_ready": ready,
+        "via": via if entity_id else None,
+        # Casora's page in HACS (HACS' route takes the GitHub repo id).
+        "hacs_url": f"/hacs/repository/{rid}" if hacs and rid else None,
         "entry_id": entry.entry_id if entry else None,
-        # Prüft Casora selbst (eigene Update-Entität)? Mit HACS übernimmt HACS das.
+        # Does Casora check itself (own update entity)? With HACS, HACS does.
         "own_check": not hacs,
         "hacs": hacs,
-        # Option „Beta-Versionen“; mit HACS schaltet man Betas in HACS selbst ein.
+        # Option "Beta versions"; with HACS, betas are turned on in HACS.
         "beta": beta,
         "last_check": data.get(DATA_LAST_CHECK),
         "last_error": error or data.get(DATA_LAST_ERROR),
@@ -204,7 +188,7 @@ async def async_updates_overview(hass: HomeAssistant, force: bool = False, lang:
 })
 @websocket_api.async_response
 async def ws_list(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
-    # Die Sprache schickt das Panel mit (wie für seine übrigen Texte); sonst die von HA.
+    # The panel sends its language (as for its other texts); otherwise HA's.
     connection.send_result(msg["id"], await async_updates_overview(hass, msg["force"], msg.get("language")))
 
 

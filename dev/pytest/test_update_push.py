@@ -2,9 +2,8 @@
 
   uv run --python 3.14 --with pytest-homeassistant-custom-component pytest dev/pytest -q
 
-Gemeldet: „Installieren“ unter Studio › Updates tat nichts – das Studio nahm die eigene, mit HACS
-nicht mehr geladene Update-Entität (nicht verfügbar), HA übersprang den Aufruf still.
-Erwartet: HACS' Update-Entität für das Casora-Repo (Plattform hacs, unique_id = Repo-ID).
+Casora installs nothing itself (hacs/default#12143); the Studio links to HACS: Casora's HACS page
+(/hacs/repository/<repo id>) and HACS' update entity for the Casora repo (platform hacs, unique_id = repo id).
 """
 
 from __future__ import annotations
@@ -119,7 +118,7 @@ async def _overview(hass):
         return await updates.async_updates_overview(hass, force=True, lang="de")
 
 
-async def test_uebersicht_hacs_installieren_und_neustart(hass: HomeAssistant) -> None:
+async def test_uebersicht_hacs_link_und_neustart(hass: HomeAssistant) -> None:
     from custom_components.casora.const import VERSION  # noqa: PLC0415
 
     _entry(hass)
@@ -127,17 +126,17 @@ async def test_uebersicht_hacs_installieren_und_neustart(hass: HomeAssistant) ->
     new = _bump(VERSION)
     _state(hass, eid, new, VERSION)
     d = await _overview(hass)
-    assert d["entity_id"] == eid and d["install_via"] == "hacs" and d["entity_ready"]
-    assert d["update_available"] and d["latest"] == new and d["install_version"] is None
+    assert d["entity_id"] == eid and d["via"] == "hacs" and d["hacs_url"] == f"/hacs/repository/{REPO_ID}"
+    assert d["update_available"] and d["latest"] == new and "install_version" not in d
     assert not d["own_check"] and "token" not in d
-    # HACS hat installiert, Casora läuft bis zum Neustart noch alt.
+    # HACS installed it, Casora keeps running the old version until the restart.
     _state(hass, eid, new, new)
     d = await _overview(hass)
     assert d["pending_restart"] == new and not d["update_available"]
 
 
 async def test_uebersicht_hacs_noch_nicht_aktuell(hass: HomeAssistant) -> None:
-    """GitHub kennt schon eine neuere Version als HACS: gezielt diesen Tag installieren."""
+    """GitHub already knows a newer version than HACS: the Studio reports it (installing stays in HACS)."""
     from custom_components.casora import updates  # noqa: PLC0415
     from custom_components.casora.const import VERSION  # noqa: PLC0415
 
@@ -149,7 +148,7 @@ async def test_uebersicht_hacs_noch_nicht_aktuell(hass: HomeAssistant) -> None:
            "published_at": "2026-10-08T08:00:00Z"}
     with patch.object(updates, "fetch_releases", return_value=[rel]):
         d = await updates.async_updates_overview(hass, force=True, lang="de")
-    assert d["update_available"] and d["latest"] == newer and d["install_version"] == "v" + newer
+    assert d["update_available"] and d["latest"] == newer and d["hacs_url"]
 
 
 async def test_uebersicht_hacs_ohne_entitaet(hass: HomeAssistant) -> None:
@@ -158,7 +157,7 @@ async def test_uebersicht_hacs_ohne_entitaet(hass: HomeAssistant) -> None:
     _entry(hass)
     hass.data.setdefault(DOMAIN, {})[DATA_HACS] = True
     d = await _overview(hass)
-    assert d["hacs"] and d["entity_id"] is None and d["install_via"] is None
+    assert d["hacs"] and d["entity_id"] is None and d["via"] is None and d["hacs_url"] is None
 
 
 # ── Push je neuer Version ────────────────────────────────────────────────────

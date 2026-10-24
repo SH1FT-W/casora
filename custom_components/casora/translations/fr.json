@@ -269,12 +269,6 @@
       }
     }
   },
-  "issues": {
-    "restart_after_update": {
-      "title": "Casora {version} installé : redémarrage nécessaire",
-      "description": "Casora a été mis à jour en version {version}. Redémarre Home Assistant pour la charger."
-    }
-  },
   "exceptions": {
     "timer_domain_blocked": {
       "message": "Minuteries non autorisées pour {domain} : {entity_id}"

@@ -90,9 +90,17 @@ HACS-Download (Stand HACS-Quelle 20.10.2026, `repositories/base.py`): `hacs.json
 Version gelesen; mit `"zip_release": true` + `"filename": "casora.zip"` lädt HACS nur
 `releases/download/<tag>/casora.zip` und packt es unverändert nach `custom_components/casora` aus (Dateien im
 Zip-Root), ohne Rückfall auf das Repo-Archiv. Ältere Releases (ohne diese Schlüssel) laden weiter das Repo-Archiv.
-Deshalb hängt `tools/release.sh` an jedes Release `casora.zip` (`tools/build-release-zip.py`); die eigene
-Update-Entität nimmt dasselbe Paket (`update_source.download_release`). Test: `dev/unit/update_release_zip_test.py`
-(Paketaufbau, beide Zip-Formen); HACS selbst nicht im Test.
+Deshalb hängt `tools/release.sh` an jedes Release `casora.zip` (`tools/build-release-zip.py`). Casora selbst
+installiert nichts (HACS-Review hacs/default#12143): die eigene Update-Entität (nur ohne HACS, `update.py`) meldet
+neue Versionen und Versionshinweise, ohne `INSTALL`; das Studio verweist auf HACS (`/hacs/repository/<GitHub-ID>`,
+ID aus `.storage/hacs.repositories`, sonst Mehr-Info von HACS' Update-Entität). Tests:
+`dev/unit/update_release_zip_test.py` (Paketaufbau), `dev/unit/update_report_only_test.py` (kein `INSTALL`, kein
+Schreibzugriff auf `custom_components`); HACS selbst und die HACS-Route nicht im Test.
+
+`update.install` mit ausdrücklich genannten Entitäten, die `INSTALL` nicht können, lässt den ganzen Aufruf
+scheitern. Das Updates-Popup (`casora_popup_updates`, „Alle aktualisieren“) nimmt deshalb nur Entitäten mit
+`supported_features & 1`. Test: `dev/unit/update_report_only_test.py` (Vorlage enthält den Filter); HA-Verhalten
+selbst nicht im Test.
 
 Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCES`, `live_finder.py`, Zustand/Programm
 `02-devices.js`, `live_activity.py`; Tests `dev/unit/dishwasher_sources.mjs`, `dev/unit/live_finder_test.py`,

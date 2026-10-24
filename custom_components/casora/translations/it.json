@@ -269,12 +269,6 @@
       }
     }
   },
-  "issues": {
-    "restart_after_update": {
-      "title": "Casora {version} installato: serve un riavvio",
-      "description": "Casora è stato aggiornato alla versione {version}. Riavvia Home Assistant per caricarla."
-    }
-  },
   "exceptions": {
     "timer_domain_blocked": {
       "message": "Timer non consentiti per {domain}: {entity_id}"
