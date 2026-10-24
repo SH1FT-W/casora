@@ -76,6 +76,12 @@ new Function(core.slice(core.lastIndexOf('(function () {', ps0), core.indexOf('}
 window._casoraUI = { more: () => '', label: (t) => '[' + t + ']', group: () => 'G', hero: (o) => o };
 new Function(src('custom_components/casora/scripts/local/05-weich-mehr.js'))();
 const SE = window._casoraSoftEnergy;
+// Room climate tile/popup (casora_vent) and the hidden rows of automatic popups (casoraPopupHide, issue #54).
+globalThis.setInterval = () => 0;
+window.casoraSvc = (n) => ({ domain: 'casora', service: n });
+window._casoraUI._casoraLabelInside = true; // the module's HTML wrapper of UI.group stays off the stub
+new Function(src('custom_components/casora/scripts/local/05-standard-medien.js'))();
+const VENT = window._casoraVent, HIDE = window.casoraPopupHide;
 // The hero of the Home popup over a list, as the popup builds it (its card code run as button-card would).
 const homeHero = (hass, ids) => {
   const out = SE.build({ hass, states: hass.states, variables: { power_entities: ids }, powerId: null });
@@ -196,6 +202,40 @@ for (const f of files) {
     for (const [k, want] of Object.entries(X.printer.fields || {})) { assert.equal(c[k], want, at('printer ' + k)); checks++; }
   }
   if (X.cameras) { assert.deepEqual(window._casoraCams({}, null, hass), X.cameras, at('cameras tile')); checks++; }
+  // Room climate tile on a page: Zuhause = the house, a room = its own rows, an outdoor room = the outdoor
+  // air only, a room without sensors = the empty state (issue #54). Names as the dashboard's room pages.
+  const grp = window._casoraUI.group;
+  window._casoraUI.group = (rows, label) => ({ rows, label });
+  for (const [page, want] of Object.entries(X.vent || {})) {
+    const here = /^(zuhause|home)$/i.test(page) ? null : { name: page };
+    const m = VENT.model(H.states, {}, here);
+    assert.equal(m.mode, want.mode, at('vent ' + page + ' mode'));
+    assert.deepEqual(m.rooms.map((x) => x.n), want.rooms, at('vent ' + page + ' rows'));
+    checks += 2;
+    if (want.tile !== undefined) { assert.equal(VENT.tile(H.states, {}, here), want.tile, at('vent ' + page + ' tile')); checks++; }
+    if (want.out) {
+      const C = { hide: [], scope: m.scope };
+      assert.deepEqual(VENT.sec('out', H.states, C).rows.map((r) => r.label), want.out, at('vent ' + page + ' outdoor rows'));
+      assert.equal(VENT.sec('rooms', H.states, C), '', at('vent ' + page + ' no room rows'));
+      assert.equal(VENT.sec('coach', H.states, C), '', at('vent ' + page + ' no house coach'));
+      checks += 3;
+    }
+  }
+  // Hidden rows per tile (variables.popup_hide): popup and tile skip them, the Studio list keeps them.
+  for (const [tpl, want] of Object.entries(X.popup_hide || {})) {
+    const vars = { popup_hide: want.hide };
+    if (tpl === 'casora_vent') {
+      assert.deepEqual(VENT.model(H.states, vars, null).rooms.map((x) => x.n), want.rooms, at('popup_hide vent rows'));
+      assert.equal(VENT.tile(H.states, vars, null), want.tile, at('popup_hide vent tile'));
+      checks += 2;
+    } else if (tpl === 'casora_battery') {
+      assert.deepEqual(HIDE.batteries(H.states, vars, hass).map((e) => e.entity_id), want.rows, at('popup_hide battery rows'));
+      checks++;
+    }
+    assert.deepEqual(HIDE.entries(tpl, hass, vars, null).map((e) => e.id), want.studio, at('popup_hide Studio list ' + tpl));
+    checks++;
+  }
+  window._casoraUI.group = grp;
   if (X.cameras_chosen) {
     assert.deepEqual(window._casoraCams({ cameras: X.cameras_chosen.pick }, null, hass), X.cameras_chosen.want, at('cameras tile, chosen'));
     checks++;

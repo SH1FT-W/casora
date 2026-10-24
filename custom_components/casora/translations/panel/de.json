@@ -1481,6 +1481,11 @@
     "Switched on for this home": "Für dieses Zuhause eingeschaltet",
     "Pick Casora in your profile for the intended look": "Für das vorgesehene Design im Profil „Casora“ wählen",
     "Room climate": "Raumklima",
+    "Shown in the popup": "Im Popup zeigen",
+    "Switch off what the popup should not list.": "Schalte aus, was das Popup nicht zeigen soll.",
+    "Nothing to hide yet – the popup collects its rows by itself.": "Noch nichts zum Ausblenden – das Popup sammelt seine Zeilen selbst.",
+    "1 row hidden": "1 Zeile ausgeblendet",
+    "Loading…": "Lädt …",
     "Design your dashboard room by room, using the devices you already have in Home Assistant.": "Gestalte dein Dashboard Raum für Raum – mit den Geräten, die du schon in Home Assistant hast.",
     "1 tile added and saved": "1 Kachel eingebaut und gespeichert",
     "Personal settings…": "Persönliches …",
@@ -3195,6 +3200,10 @@
     [
       "^On the home page every door and window in the house counts automatically \\((\\d+) found\\)\\. The badge shows the open ones\\.$",
       "Auf Zuhause zählen alle Türen und Fenster im Haus automatisch mit ({1} gefunden). Das Badge zeigt die offenen."
+    ],
+    [
+      "^(\\d+) rows hidden$",
+      "{1} Zeilen ausgeblendet"
     ]
   ]
 }

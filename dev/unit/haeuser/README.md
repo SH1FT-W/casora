@@ -41,6 +41,11 @@ Felder von `expect` (alle optional):
   `cameras_chosen`: `{ "pick": [gewählt], "want": [gezeigt] }` mit Auswahl (Karten raus, Druckerkameras bleiben)
 - `energy_peers`: `{ grid, solar, battery }` – Leistungssensor je Teil der Anlage, den die Energie-Popups ohne
   Sub-Badges nehmen (`peers`), `null` = keiner
+- `vent`: `{ Seite: { "mode": "house" | "room" | "outdoor" | "empty", "rooms": [Raumnamen], "tile": "Luft gut",
+  "out": [Zeilen der Außenluft] } }` – was das Raumklima-Popup (casora_vent, `_casoraVent.model`) auf dieser Seite
+  zeigt: „Zuhause“ = das Haus, ein Raum = nur seine Zeilen, ein Außenbereich = nur die Außenluft, ohne Sensor leer (#54)
+- `popup_hide`: `{ Kachelart: { "hide": [ids], "rooms" | "rows": [was bleibt], "tile": Kacheltext, "studio": [Liste im Studio] } }`
+  – ausgeblendete Zeilen (`variables.popup_hide`, `casoraPopupHide`) fehlen in Popup und Kachel, die Studio-Liste führt alle
 - `energy_night`: `{ "states": { entity_id: Zustand }, "home": "700 W", "focus": { solar: "0 W", … } }` – die
   Zustände ersetzt (z. B. Wechselrichter nachts `unavailable`): Kopf des Zuhause-Popups (ohne „ohne Wert“) und
   Kopf der Popups je Teil

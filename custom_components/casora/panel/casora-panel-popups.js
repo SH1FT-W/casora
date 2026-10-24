@@ -338,6 +338,10 @@
       target = target || this._cpTarget();
       if (!target || this.classList.contains("phone")) return;
       css(this);
+      // Which room the previewed popup belongs to (issue #54): modules that follow the page (room climate,
+      // _casoraVent.scope) read it here, where there is no dashboard address to tell them.
+      const cpRoom = curRoom(this);
+      window._casoraStudioRoom = cpRoom && !(I().isHomeRoom && I().isHomeRoom(cpRoom)) ? { key: cpRoom.path, name: cpRoom.name } : null;
       this._cpWant = target.sig;
       this._cpShowPill(null);
       const plinth = this.shadowRoot.querySelector(".plinth");
@@ -672,6 +676,72 @@
         input.onchange = () => { clearTimeout(wait); put(); };
         advRow("Heading above your cards", input);
       }
+    };
+
+    // ── „Shown in the popup“: hide single rows of an automatic popup (issue #54) ──
+    // Popups that collect their rows by themselves (room climate: the rooms of sensor.casora_lueften,
+    // batteries: every battery of the house) get a list with one switch per row. Off = the id goes to
+    // tile.variables.popup_hide (array of ids); the popup and the tile's own summary skip it
+    // (window.casoraPopupHide in scripts/local/00-finder.js, where the format is described).
+    // The candidates come from the dashboard module itself (casoraPopupHide.sources[<template>].entries),
+    // so Studio and popup never disagree. LOAD names the script of a module the Studio does not load
+    // by itself; the finder (00-finder.js) comes first, it holds the registry.
+    // New automatic popup: filter its rows in the module + register() there, add its script here if needed.
+    const LOAD = { casora_vent: "/casora_scripts/local/05-standard-medien.js" };
+    const loading = new Set();
+    P._popupHideRows = function (tile, type, advRow) {
+      const tpl = tile && typeof tile.template === "string" ? tile.template : null;
+      if (!tpl || !(tpl in LOAD || (window.casoraPopupHide && window.casoraPopupHide.sources[tpl]))) return;
+      pcCss(this);
+      const H = window.casoraPopupHide;
+      const ready = H && H.sources[tpl];
+      if (!ready) {
+        if (!loading.has(tpl)) {
+          loading.add(tpl);
+          const steps = (H ? Promise.resolve() : import("/casora_scripts/local/00-finder.js"))
+            .then(() => (LOAD[tpl] ? import(LOAD[tpl]) : null));
+          steps.then(() => { loading.delete(tpl); this._renderForm(); }, () => { /* without the module no list */ });
+        }
+        const h = document.createElement("span");
+        h.className = "pc-sum";
+        h.textContent = "Loading…";
+        advRow("Shown in the popup", h);
+        return;
+      }
+      const room = curRoom(this);
+      const isHome = !!(room && I().isHomeRoom && I().isHomeRoom(room));
+      const entries = H.entries(tpl, this._hass, tile.variables || {}, room && !isHome ? room.name : null) || [];
+      if (!entries.length) {
+        const h = document.createElement("span");
+        h.className = "pc-sum";
+        h.textContent = "Nothing to hide yet – the popup collects its rows by itself.";
+        advRow("Shown in the popup", h);
+        return;
+      }
+      const hidden = new Set(H.list(tile.variables));
+      const write = (id, on) => {
+        if (on) hidden.delete(id); else hidden.add(id);
+        const v = tile.variables || (tile.variables = {});
+        // Keep only ids the popup still knows; stale ones (room gone) drop out on the next change.
+        const next = entries.map((e) => e.id).filter((x) => hidden.has(x));
+        if (next.length) v[H.KEY] = next;
+        else { delete v[H.KEY]; if (!Object.keys(v).length) delete tile.variables; }
+        if (this._markDirty) this._markDirty();
+        this._syncPreview();
+      };
+      const lead = document.createElement("span");
+      lead.className = "pc-sum";
+      lead.textContent = hidden.size ? (hidden.size === 1 ? "1 row hidden" : hidden.size + " rows hidden") : "Switch off what the popup should not list.";
+      advRow("Shown in the popup", lead);
+      entries.forEach((e) => {
+        const name = String(e.name || e.id);
+        const sw = this._boolSwitch(!hidden.has(e.id), true, (v) => write(e.id, v === undefined ? true : !!v), name);
+        const r = advRow(name, sw, e.sub ? String(e.sub) : null);
+        // Names and readings are data, not UI text.
+        const lab = sw.parentNode && sw.parentNode.querySelector("label");
+        if (lab) lab.setAttribute("data-no-i18n", "");
+        if (r && r.setAttribute) r.setAttribute("data-no-i18n", "");
+      });
     };
 
     // Paste or edit one card (YAML or JSON), with "Adapt to Casora with AI".

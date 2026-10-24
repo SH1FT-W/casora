@@ -2043,3 +2043,82 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   ideas.inRoom = inRoom;
   window.casoraAssistIdeas = ideas;
 })();
+
+// ── Hidden rows of automatic popups (issue #54, 24.10.2026) ───────────────────
+// Some popups collect their rows themselves (room climate: the rooms of sensor.casora_lueften,
+// batteries: every battery sensor of the house). The Studio lets the user switch single rows off;
+// the tile keeps them in variables.popup_hide: ["<id>", …] (entity ids, or the row's own key such as
+// the area id of a room). Every module that collects rows by itself applies the list in one place:
+//   window.casoraPopupHide.rows(rows, variables)   – UI.group rows without the hidden ones (r.entity or r.id)
+//   window.casoraPopupHide.ids(ids, variables)     – a plain id list without the hidden ones
+//   window.casoraPopupHide.has(variables, id)      – is this id hidden?
+// The Studio list „Shown in the popup“ (casora-panel-popups.js, _popupHideRows) asks the module for
+// its candidates: casoraPopupHide.register('<tile template>', { entries(hass, variables, room) }) with
+// entries → [{ id, name, sub }] in the popup's order, room = the Studio room's name (null on Home).
+// Adding the list to another automatic popup = three steps: 1) filter the collected rows with
+// rows()/ids() in the module (also where the tile sums them up), 2) register() the candidates,
+// 3) if the module is not loaded in the Studio, name its script in LOAD (casora-panel-popups.js).
+// Here and not in casora-core.js: the Studio loads this file, never casora-core.js.
+(function () {
+  if (window.casoraPopupHide) return;
+  var KEY = 'popup_hide';
+  var list = function (variables) {
+    var v = variables && variables[KEY];
+    if (typeof v === 'string') v = [v];
+    return Array.isArray(v) ? v.filter(function (x) { return typeof x === 'string' && x; }) : [];
+  };
+  var H = window.casoraPopupHide = {
+    KEY: KEY,
+    list: list,
+    has: function (variables, id) { return !!id && list(variables).indexOf(id) > -1; },
+    ids: function (ids, variables) {
+      var hide = list(variables);
+      return (ids || []).filter(function (id) { return hide.indexOf(id) < 0; });
+    },
+    rows: function (rows, variables) {
+      var hide = list(variables);
+      if (!hide.length) return rows || [];
+      return (rows || []).filter(function (r) { return !r || hide.indexOf(r.entity || r.id) < 0; });
+    },
+    sources: {},
+    register: function (template, source) { if (template && source && typeof source.entries === 'function') H.sources[template] = source; },
+    // Candidates of a tile's popup for the Studio, or null when no module registered the template.
+    entries: function (template, hass, variables, room) {
+      var s = H.sources[template];
+      if (!s) return null;
+      try { return s.entries(hass, variables || {}, room || null) || []; } catch (e) { return []; }
+    },
+  };
+
+  // Batteries (casora_battery): the pick of casoraBattery.scan (casora-core.js) and the battery popup –
+  // every battery sensor with a number, without personal devices and the solar storage; a chosen list
+  // (batteries / entity_filter) wins. opts.all keeps the hidden ones (Studio list).
+  var PERSONAL = /iphone|ipad|\bwatch\b|ebike|e-bike|drive_unit|performance_line/i;
+  var num = function (s) { var n = parseFloat(s); return isFinite(n) ? n : null; };
+  H.batteries = function (states, variables, hass, opts) {
+    var S = states || (hass && hass.states) || {}, v = variables || {};
+    var dcOf = function (e) { return e && e.attributes && e.attributes.device_class; };
+    var given = v.batteries || v.entity_filter;
+    var chosen = Array.isArray(given) && given.some(function (id) { return dcOf(S[id]) === 'battery'; }) ? given : null;
+    var ex = window.casoraDevice && hass ? window.casoraDevice.byKey(hass, 'anker_solix', 'state_of_charge', 'sensor') : null;
+    var all = chosen ? chosen.map(function (id) { return S[id]; }).filter(Boolean)
+      : Object.keys(S).map(function (id) { return S[id]; }).filter(function (e) {
+        return e.entity_id !== ex && !PERSONAL.test(e.entity_id + ' ' + ((e.attributes || {}).friendly_name || ''));
+      });
+    all = all.filter(function (e) {
+      return dcOf(e) === 'battery' && e.state !== 'unavailable' && e.state !== 'unknown' && num(e.state) != null;
+    });
+    if (opts && opts.all) return all;
+    return all.filter(function (e) { return !H.has(v, e.entity_id); });
+  };
+  H.register('casora_battery', {
+    entries: function (hass, variables) {
+      return H.batteries(null, variables, hass, { all: true })
+        .sort(function (a, b) { return num(a.state) - num(b.state); })
+        .map(function (e) {
+          var n = num(e.state);
+          return { id: e.entity_id, name: String((e.attributes || {}).friendly_name || e.entity_id), sub: n != null ? Math.round(n) + ' %' : null };
+        });
+    },
+  });
+})();
