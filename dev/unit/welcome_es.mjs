@@ -28,7 +28,7 @@ const listKeys = [...src.matchAll(/\["mdi:[^"]+", "(\w+)", "(\w+)"\]/g)].flatMap
 assert.ok(listKeys.length >= 6, 'WELCOME and WHATS_NEW entries found');
 for (const k of listKeys) assert.ok(TEXT.es[k], 'TEXT.es.' + k + ' for the list entry');
 
-// Run the module: Spanish HA → Spanish, other languages → English.
+// Run the module: Spanish HA → Spanish, languages without a table → English.
 const win = {};
 const storage = { getItem: () => '26.10.99', setItem() {} };
 const run = new Function('window', 'document', 'localStorage', 'setTimeout',
@@ -44,5 +44,5 @@ es.items.forEach(([t, x], i) => {
   assert.ok(t && x, 'item ' + i + ' filled');
   assert.notEqual(t, en.items[i][0], 'item ' + i + ' Spanish title');
 });
-assert.deepEqual(win.casoraWhatsNew('fr').items, en.items, 'other languages: English');
+assert.deepEqual(win.casoraWhatsNew('sv').items, en.items, 'languages without a table: English');
 console.log('ok welcome_es');
