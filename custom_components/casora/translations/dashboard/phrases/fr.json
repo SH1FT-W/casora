@@ -1,0 +1,4301 @@
+{
+ "exact": {
+  "Tankinhalt": "Carburant dans le réservoir",
+  "Staubbeutel oder Filter fehlt": "Sac ou filtre manquant",
+  "Absauggebläse gestört": "Ventilateur de vidage en panne",
+  "Absaugkanal verstopft": "Conduit de vidage bouché",
+  "Spannungsfehler an der Station": "Défaut de tension à la station",
+  "Reinigungsbürste blockiert": "Brosse de nettoyage bloquée",
+  "Schmutzwassertank nicht eingerastet": "Bac d'eau sale mal enclenché",
+  "Reinigungstank voll oder verstopft": "Bac de nettoyage plein ou bouché",
+  "Entfernen": "Retirer",
+  "Alle entfernen": "Tout retirer",
+  "Alle Meldungen entfernen?": "Retirer toutes les notifications ?",
+  "Sie kommen wieder, wenn sich etwas ändert.": "Elles reviendront quand quelque chose changera.",
+  "Alle Meldungen entfernt": "Notifications retirées",
+  "Rückgängig": "Annuler",
+  "Guten Morgen": "Bonjour",
+  "Guten Tag": "Bonjour",
+  "Guten Abend": "Bonsoir",
+  "und": "et",
+  "1 Problem": "1 problème",
+  "1 Batterie bald fällig": "1 pile bientôt à changer",
+  "Keine Probleme": "Aucun problème",
+  "Keine Geräte": "Aucun appareil",
+  "Nicht installiert": "Non installé",
+  "Pulse ist nicht installiert": "Pulse n'est pas installé",
+  "Bald fällig": "Bientôt",
+  "Batterie bald fällig": "Pile bientôt à changer",
+  "In Pulse öffnen": "Ouvrir dans Pulse",
+  "Gewechselt": "Changée",
+  "Batterie gewechselt": "Pile changée",
+  "Batteriewechsel gemeldet": "Changement de pile enregistré",
+  "Wichtig": "Important",
+  "Antwortet nicht": "Ne répond pas",
+  "Still": "Silencieux",
+  "Hat sich noch nicht gemeldet": "Ne s'est pas encore manifesté",
+  "Still, obwohl das Partnergerät aktiv war": "Silencieux alors que l'appareil associé était actif",
+  "Batterie fast leer": "Pile presque vide",
+  "Meldet schwache Batterie": "Signale une pile faible",
+  "wartet auf erste Meldung": "attend son premier rapport",
+  "Lernt noch den Rhythmus": "Apprend encore son rythme",
+  "Meldet sich wie gewohnt": "Se manifeste normalement",
+  "Ausgefallen": "En panne",
+  "Bitte prüfen": "À vérifier",
+  "Erinnerung pausiert": "Rappel en pause",
+  "jede Minute": "chaque minute",
+  "jede Stunde": "chaque heure",
+  "einmal am Tag": "une fois par jour",
+  "sonst jede Minute": "sinon chaque minute",
+  "sonst jede Stunde": "sinon chaque heure",
+  "sonst einmal am Tag": "sinon une fois par jour",
+  "Alarm!": "Alarme !",
+  "Scharf schalten": "Armer",
+  "Unscharf schalten": "Désarmer",
+  "Alarm beenden": "Arrêter l'alarme",
+  "Oder Modus wählen": "Ou choisis un mode",
+  "Code eingeben": "Saisis le code",
+  "Code falsch": "Code incorrect",
+  "Alarmanlage ausgeschaltet": "Alarme désactivée",
+  "Die Alarmanlage wurde ausgelöst": "L'alarme s'est déclenchée",
+  "Verlass das Haus oder brich ab": "Quitte la maison ou annule",
+  "Jetzt unscharf schalten, sonst geht der Alarm los": "Désarme maintenant, sinon l'alarme se déclenche",
+  "Wird scharf …": "Armement…",
+  "Dieses Gerät ist für dich ausgeblendet": "Cet appareil est masqué pour toi",
+  "wird scharf …": "armement…",
+  "scharf in": "armée dans",
+  "Alarm in": "Alarme dans",
+  "ausgelöst": "déclenchée",
+  "Abholung heute": "Collecte aujourd'hui",
+  "Abholung morgen · heute Abend raus": "Collecte demain · à sortir ce soir",
+  "Abholung": "Collecte",
+  "Casora wurde aktualisiert": "Casora a été mis à jour",
+  "Keine Abholung": "Pas de collecte",
+  "An": "Allumé",
+  "Aus": "Éteint",
+  "an": "allumé",
+  "aus": "éteint",
+  "Neu laden": "Recharger",
+  "Neu laden (Cache leeren)": "Recharger (vider le cache)",
+  "Offen": "Ouvert",
+  "offen": "ouvert",
+  "Geöffnet": "Ouvert",
+  "Geschlossen": "Fermé",
+  "geöffnet": "ouvert",
+  "geschlossen": "fermé",
+  "Verriegelt": "Verrouillé",
+  "Entriegelt": "Déverrouillé",
+  "Bereit": "Prêt",
+  "Fertig": "Terminé",
+  "Pausiert": "En pause",
+  "Läuft": "En marche",
+  "läuft": "en marche",
+  "Läuft …": "En marche…",
+  "Lädt": "En charge",
+  "Getrennt": "Déconnecté",
+  "Verbunden": "Connecté",
+  "Fehler": "Erreur",
+  "Nicht verfügbar": "Indisponible",
+  "nicht verfügbar": "indisponible",
+  "Gerade nicht verfügbar": "Indisponible pour l'instant",
+  "Keine": "Aucun",
+  "Keine aktiv": "Aucune active",
+  "Kein Dienst": "Aucun service",
+  "Neu": "Nouveau",
+  "Alle": "Tous",
+  "Gesamt": "Total",
+  "Fällig": "À faire",
+  "Überfällig": "En retard",
+  "Übersprungen": "Ignoré",
+  "Gelöst": "Résolu",
+  "Ausgelöst": "Déclenché",
+  "Kühl": "Frais",
+  "Heiß": "Chaud",
+  "Sehr heiß": "Très chaud",
+  "Mäßig": "Modéré",
+  "mäßig": "modéré",
+  "Gut": "Bon",
+  "Schlecht": "Mauvais",
+  "Sehr schlecht": "Très mauvais",
+  "Ausgezeichnet": "Excellent",
+  "Außergewöhnlich": "Exceptionnel",
+  "heute": "aujourd'hui",
+  "gestern": "hier",
+  "morgen": "demain",
+  "jetzt": "maintenant",
+  "gerade eben": "à l'instant",
+  "Gerade eben": "À l'instant",
+  "ganztägig": "toute la journée",
+  "jede Woche": "chaque semaine",
+  "Demnächst": "Bientôt",
+  "Früher": "Plus tôt",
+  "Diese Woche": "Cette semaine",
+  "Letzte 30 Tage": "30 derniers jours",
+  "Nächste 4 Wochen": "4 prochaines semaines",
+  "30 Tage": "30 jours",
+  "7 Tage": "7 jours",
+  "Älter als ein Tag": "Il y a plus d'un jour",
+  "Räume": "Pièces",
+  "Raum": "Pièce",
+  "Szenen": "Scènes",
+  "Szene": "Scène",
+  "Favoriten": "Favoris",
+  "Aktivität": "Activité",
+  "Akku": "Batterie",
+  "Akku schwach": "Batterie faible",
+  "Akku verbraucht": "Batterie épuisée",
+  "Akku & Strom": "Batterie et courant",
+  "Akku Lecksensor": "Batterie du capteur de fuite",
+  "Akku Temperaturfühler": "Batterie du thermomètre",
+  "Akku-Bereich": "Autonomie",
+  "Akku-Gesundheit": "Santé de la batterie",
+  "Aktualisieren": "Mettre à jour",
+  "Aktueller Raum": "Pièce actuelle",
+  "Aktueller Verbrauch": "Consommation actuelle",
+  "Alarm ausgelöst": "Alarme déclenchée",
+  "Alarm ausgelöst!": "Alarme déclenchée !",
+  "Alarm läuft an": "Armement de l'alarme",
+  "Alle An": "Tout allumer",
+  "Alle Aus": "Tout éteindre",
+  "Alle an": "Tout allumer",
+  "Alle aus": "Tout éteindre",
+  "Alles aus": "Tout éteindre",
+  "1 Licht im Haus ausschalten?": "Éteindre 1 lumière de la maison ?",
+  "Alle Lichter": "Toutes les lumières",
+  "Alle Räume aus": "Toutes les pièces éteintes",
+  "Alle Szenen": "Toutes les scènes",
+  "Alle Temperaturen im Normalbereich": "Toutes les températures normales",
+  "Alle Türen entriegelt": "Toutes les portes déverrouillées",
+  "Alle Türen verriegelt": "Toutes les portes verrouillées",
+  "Alle aktualisieren": "Tout mettre à jour",
+  "Alle entriegelt": "Tout déverrouillé",
+  "Alle geschlossen": "Tout fermé",
+  "Alle geöffnet": "Tout ouvert",
+  "Alle offline": "Tous hors ligne",
+  "Alle unterwegs": "Tous absents",
+  "Alle verriegelt": "Tout verrouillé",
+  "Alle zuhause": "Tous à la maison",
+  "Alles im grünen Bereich": "Tout va bien",
+  "An · alle Räume warm genug": "Allumé · toutes les pièces assez chaudes",
+  "AquaStop ausgelöst": "AquaStop déclenché",
+  "Aufnahme nicht verfügbar": "Enregistrement indisponible",
+  "Ausfüllen": "Remplir",
+  "Außenluft": "Air extérieur",
+  "Außenluft belastet": "Air extérieur pollué",
+  "Außenluft enthält mehr Wasser": "L'air extérieur contient plus d'humidité",
+  "Außenluft ist feuchter": "L'air extérieur est plus humide",
+  "Außenluft ist trockener": "L'air extérieur est plus sec",
+  "Außentemperatur": "Température extérieure",
+  "Bald lüften": "Aérer bientôt",
+  "Beifahrertür": "Porte passager",
+  "Bekommt zu viel Licht": "Reçoit trop de lumière",
+  "Bereit zum Starten": "Prêt à démarrer",
+  "Bereit zur Anpassung": "Prêt à ajuster",
+  "Bestätigen": "Confirmer",
+  "Betttemperatur gestört": "Défaut de température du plateau",
+  "Bewölkt": "Nuageux",
+  "Bitte nachfüllen": "À remplir",
+  "Bitte nicht stören: an": "Ne pas déranger : activé",
+  "Bitte nicht stören: aus": "Ne pas déranger : désactivé",
+  "Braucht Dünger": "A besoin d'engrais",
+  "Braucht etwas Pflege": "A besoin d'un peu de soin",
+  "Braucht mehr Licht": "Manque de lumière",
+  "Braucht sofortige Pflege": "A besoin de soins immédiats",
+  "Bypass und Entladen": "Bypass et décharge",
+  "CO₂ erhöht – lüften": "CO₂ élevé – aérer",
+  "CO₂ hoch – Fenster öffnen": "CO₂ haut – ouvre une fenêtre",
+  "Claude schaut sich das Bild an …": "Claude regarde l'image…",
+  "Cookidoo-App öffnen": "Ouvrir l'app Cookidoo",
+  "Apple Music öffnen": "Ouvrir Apple Music",
+  "Dock-Fehler": "Erreur de station",
+  "Dosiermenge je Stoß": "Dose par impulsion",
+  "Druck": "Impression",
+  "Druck abbrechen": "Annuler l'impression",
+  "Druck läuft gerade": "Impression en cours",
+  "Druck prüfen": "Vérifier l'impression",
+  "Druckbett heizt vor": "Préchauffage du plateau",
+  "Druckbett kühlt ab": "Plateau en refroidissement",
+  "Du bist diesen Monat nicht dran": "Ce mois-ci, ce n'est pas ton tour",
+  "Durchgänge erfasst": "Cycles enregistrés",
+  "Düngeanlage": "Pompe doseuse",
+  "Dünger": "Engrais",
+  "Düse": "Buse",
+  "Düse heizt auf": "Chauffe de la buse",
+  "Düse kühlt ab": "Buse en refroidissement",
+  "Düse verstopft": "Buse bouchée",
+  "Düse wird gereinigt": "Nettoyage de la buse",
+  "Düsentemperatur gestört": "Défaut de température de la buse",
+  "EU-Data-Act-Portal, kommt verzögert": "Portail Data Act UE, arrive en différé",
+  "Eigene Leistung": "Consommation propre",
+  "Eingriff nötig": "Intervention requise",
+  "Einkaufsliste nicht verfügbar": "Liste de courses indisponible",
+  "Energie heute": "Énergie aujourd'hui",
+  "Erde zu feucht": "Terre trop humide",
+  "Erde zu trocken": "Terre trop sèche",
+  "Erhöhte Partikelbelastung": "Particules élevées",
+  "Erste Schicht wird geprüft": "Vérification de la première couche",
+  "Fahrertür": "Porte conducteur",
+  "Falls das Ende nicht erkannt wird": "Si la fin n'est pas détectée",
+  "Fehler aufgetreten": "Une erreur est survenue",
+  "Fehler bei der Anfrage.": "La requête a échoué.",
+  "Fehler bei der Spracheingabe.": "La saisie vocale a échoué.",
+  "Fehler gemeldet": "Erreur signalée",
+  "Fehler in der ersten Schicht": "Échec de la première couche",
+  "Fenster": "Fenêtres",
+  "Fenster & Schiebedach": "Fenêtres et toit ouvrant",
+  "Fenster &amp; Schiebedach": "Fenêtres et toit ouvrant",
+  "Fenster hinten links": "Fenêtre arrière gauche",
+  "Fenster hinten rechts": "Fenêtre arrière droite",
+  "Fenster offen": "Fenêtre ouverte",
+  "Fenster schließen": "Fermer la fenêtre",
+  "Fenster vorne links": "Fenêtre avant gauche",
+  "Fenster vorne rechts": "Fenêtre avant droite",
+  "Fenster weit auf, nach Außentemperatur": "Fenêtres grandes ouvertes, selon la température extérieure",
+  "Fenster-Erkennung": "Détection de fenêtres",
+  "Fensterläden": "Volets",
+  "Fernstart am Gerät nicht erlaubt": "Démarrage à distance non autorisé sur l'appareil",
+  "Feuchte": "Humidité",
+  "Feuchter draußen": "Plus humide dehors",
+  "Filter": "Filtre",
+  "Filter & Kondensator reinigen": "Nettoyer filtre et condenseur",
+  "Filter reinigen": "Nettoyer le filtre",
+  "Filter verstopft": "Filtre bouché",
+  "Firmware passt nicht": "Firmware incompatible",
+  "Firmware-Update verfügbar": "Mise à jour du firmware disponible",
+  "Fläche": "Surface",
+  "Fläche insgesamt": "Surface totale",
+  "Frischwasser auffüllen": "Remplir l'eau propre",
+  "Frontabdeckung prüfen": "Vérifier le capot avant",
+  "Fußbodenheizung": "Plancher chauffant",
+  "Fährt herunter": "Arrêt en cours",
+  "Fährt zum Dock": "Retour à la station",
+  "Fährt zum Ziel": "Se rend à destination",
+  "Fährt zur Moppwäsche": "Va laver la serpillière",
+  "Gehärteter Stahl": "Acier trempé",
+  "Gerade kein Überschuss": "Pas d'excédent pour l'instant",
+  "Kein Sensor": "Aucun capteur",
+  "Kein Überschuss": "Pas d'excédent",
+  "Kein Sensor gewählt": "Aucun capteur choisi",
+  "Jetzt nutzen": "Utiliser maintenant",
+  "Keiner": "Aucun",
+  "Hausverbrauch": "Consommation de la maison",
+  "Solar-Tipp": "Conseil solaire",
+  "Sobald Sonnenstrom übrig ist, steht hier, welches Gerät sich lohnt.": "Dès qu'il reste du solaire, tu verras ici quel appareil vaut le coup.",
+  "Gereinigte Fläche": "Surface nettoyée",
+  "Gerät": "Appareil",
+  "Geräte": "Appareils",
+  "Geräte laufen schon": "Des appareils tournent déjà",
+  "Gerätemeldung (HMS)": "Message de l'appareil (HMS)",
+  "Geräteprofil": "Profil de l'appareil",
+  "Gerätestatus": "État de l'appareil",
+  "Geschirrspüler": "Lave-vaisselle",
+  "Waschmaschine": "Lave-linge",
+  "Trockner": "Sèche-linge",
+  "3D-Drucker": "Imprimante 3D",
+  "Saugroboter": "Robot aspirateur",
+  "Gilt bis morgen 9:00, dann übernimmt wieder der HA-Zeitplan.": "Valable jusqu'à demain 9:00, puis le planning HA reprend la main.",
+  "Für Räder mit Bosch Smart System: Die Werte kommen aus der Integration Bosch eBike (HACS: Xunil99/ha-bosch-ebike).": "Pour les vélos avec Bosch Smart System : les valeurs viennent de l'intégration Bosch eBike (HACS : Xunil99/ha-bosch-ebike).",
+  "Gründlich": "Intensif",
+  "Gründlich+": "Intensif+",
+  "Hauptbürste": "Brosse principale",
+  "Hauptbürste blockiert": "Brosse principale bloquée",
+  "Hauptspülen": "Rinçage principal",
+  "Hauptwäsche": "Lavage principal",
+  "Heizkörper": "Radiateur",
+  "Heizung": "Chauffage",
+  "Herausnehmen und ausspülen": "Retirer et rincer",
+  "Home Assistant jetzt neu starten?": "Redémarrer Home Assistant maintenant ?",
+  "Höhenmeter": "Dénivelé",
+  "Höhenmeter gesamt": "Dénivelé total",
+  "Hört zu …": "Écoute…",
+  "In der Cookidoo-App auf \"Meine Woche\" planen": "Planifie-la dans l'app Cookidoo sous \"Ma semaine\"",
+  "Info-Licht am Boden": "Lumière d'info au sol",
+  "Jetzt lüften": "Aérer maintenant",
+  "Jetzt prüfen": "Vérifier maintenant",
+  "KI prüft noch …": "L'IA vérifie encore…",
+  "KI-Blick auf den Druck": "Regard de l'IA sur l'impression",
+  "KI-Check steht noch aus": "Vérification IA en attente",
+  "Kalender nicht erreichbar": "Calendrier injoignable",
+  "Kaum Aktivität": "Presque aucune activité",
+  "Kehrt zurück": "Retour en cours",
+  "Kehrt zurück & Moppwäsche": "Retour et lavage de la serpillière",
+  "Kein Bild – die Kamera ist aus, schläft oder ist nicht erreichbar.": "Pas d'image – la caméra est éteinte, en veille ou injoignable.",
+  "Die Kamera ist aus oder offline und liefert gerade kein Bild.": "La caméra est éteinte ou hors ligne et ne fournit pas d'image pour l'instant.",
+  "Kein Zugriff aufs Mikrofon – bitte in den Einstellungen erlauben.": "Pas d'accès au micro – autorise-le dans les réglages.",
+  "Keine Antwort erhalten.": "Aucune réponse reçue.",
+  "Keine Batteriesensoren gefunden": "Aucun capteur de batterie trouvé",
+  "Keine Daten": "Aucune donnée",
+  "Keine Detailbeschreibung verfügbar.": "Pas de description détaillée.",
+  "Keine Idee gefunden": "Aucune idée trouvée",
+  "Keine Kameras": "Aucune caméra",
+  "Keine Kameras verfügbar": "Aucune caméra disponible",
+  "Keine Pflanzensensoren konfiguriert": "Aucun capteur de plante configuré",
+  "Keine Rückmeldung": "Pas de réponse",
+  "Keine Sensoren": "Aucun capteur",
+  "Keine Statusdaten": "Pas de données d'état",
+  "Keine Szene aktiv": "Aucune scène active",
+  "Keine Szenen": "Aucune scène",
+  "Keine Termine": "Aucun événement",
+  "Keine Tonnen gefunden": "Aucun bac trouvé",
+  "Keine Updates in 30 Tagen": "Aucune mise à jour en 30 jours",
+  "Keine Updates offen": "Aucune mise à jour en attente",
+  "Keine Verbindung": "Pas de connexion",
+  "Keine Verbindung zu Home Assistant.": "Pas de connexion à Home Assistant.",
+  "Keine Warnung": "Aucune alerte",
+  "Keine aktiven Warnungen": "Aucune alerte active",
+  "Klarspülen": "Rinçage",
+  "Klarspüler": "Liquide de rinçage",
+  "Kosten Monat": "Coût du mois",
+  "Kosten heute": "Coût du jour",
+  "Kosten letzter Durchgang": "Coût du dernier cycle",
+  "Kosten pro Tag": "Coût par jour",
+  "Kurz volle Leistung": "Pleine puissance brève",
+  "Laut Anker-App": "Selon l'app Anker",
+  "Lautstärke": "Volume",
+  "Leert Staubbehälter": "Vidage du bac à poussière",
+  "Leistung": "Puissance",
+  "Leistung der Station": "Puissance de la station",
+  "Leistung jetzt": "Puissance actuelle",
+  "Leistung · 24 Stunden": "Puissance · 24 heures",
+  "Letzte Aufgabe": "Dernière tâche",
+  "Letzte Aufnahme": "Dernier enregistrement",
+  "Letzte Durchgänge": "Derniers cycles",
+  "Letzte Fahrt": "Dernier trajet",
+  "Letzte Reinigung": "Dernier nettoyage",
+  "Licht": "Lumière",
+  "Licht nicht erreichbar": "Lumière injoignable",
+  "Licht offline": "Lumière hors ligne",
+  "Luft gut": "Air bon",
+  "Luft zu feucht": "Air trop humide",
+  "Luft zu trocken": "Air trop sec",
+  "Luftfeuchte außen": "Humidité extérieure",
+  "Luftqualität": "Qualité de l'air",
+  "Luftqualität ist gut": "La qualité de l'air est bonne",
+  "Luftqualität ist hervorragend": "La qualité de l'air est excellente",
+  "Luftqualität ist mäßig": "La qualité de l'air est modérée",
+  "Luftqualität nicht verfügbar": "Qualité de l'air indisponible",
+  "Länger abwesend": "Absent depuis un moment",
+  "Lässt sich nicht fortsetzen": "Impossible de reprendre",
+  "Läuft seit": "En marche depuis",
+  "Lüften": "Aérer",
+  "Lüften empfohlen": "Aération recommandée",
+  "Lüften erkannt": "Aération détectée",
+  "Lüften hilft gegen Feuchte": "Aérer aide contre l'humidité",
+  "Lüften hilft nicht gegen Feuchte": "Aérer n'aide pas contre l'humidité",
+  "Lüfter zu langsam": "Ventilateur trop lent",
+  "Lüftet": "Aère",
+  "Maschine läuft gerade": "La machine est en marche",
+  "Maschinenpflege fällig": "Entretien machine à faire",
+  "Material wird geprüft": "Vérification du matériau",
+  "Mikrofon nicht verfügbar.": "Micro indisponible.",
+  "Min. übrig": "min restantes",
+  "Mopp nicht angebracht": "Serpillière non fixée",
+  "Moppwäsche": "Lavage de la serpillière",
+  "Moppwäsche gestört": "Défaut du lavage de la serpillière",
+  "Pause · wäscht Mopp": "Pause · lave la serpillière",
+  "Pause · saugt ab": "Pause · vide le bac",
+  "Pause · trocknet": "Pause · sèche la serpillière",
+  "Pause · lädt": "Pause · en charge",
+  "Pause · an der Station": "Pause · à la station",
+  "Muss gedüngt werden": "Doit être fertilisée",
+  "NO₂ erkannt – lüften": "NO₂ détecté – aérer",
+  "Nachfüllen & Pflege": "Remplissage et entretien",
+  "Nachfüllen &amp; Pflege": "Remplissage et entretien",
+  "Neu auswerten": "Réévaluer",
+  "Neu prüfen": "Revérifier",
+  "Neu starten": "Redémarrer",
+  "Nicht stören": "Ne pas déranger",
+  "Nichts Neues": "Rien de nouveau",
+  "Nichts geplant": "Rien de prévu",
+  "Nichts läuft": "Rien en lecture",
+  "Nichts in den nächsten 30 Tagen": "Rien dans les 30 prochains jours",
+  "Noch keine Idee": "Pas encore d'idée",
+  "Noch nicht geprüft": "Pas encore vérifié",
+  "Nächste Abholung": "Prochaine collecte",
+  "Nächste Solltemperatur": "Prochaine température cible",
+  "Nächster Service": "Prochaine révision",
+  "Nährstoffe": "Nutriments",
+  "Oberer Stoßfänger gedrückt": "Pare-chocs supérieur enfoncé",
+  "Per Bluetooth nicht erreichbar": "Injoignable en Bluetooth",
+  "Pflanze kämpft": "La plante souffre",
+  "Pflanze schwächelt": "La plante faiblit",
+  "Pflege": "Soins",
+  "Pflege fällig": "Soins à faire",
+  "Prognose für dieses Programm": "Prévision pour ce programme",
+  "Programm": "Programme",
+  "Programm abbrechen": "Annuler le programme",
+  "Programm abgebrochen": "Programme annulé",
+  "Programm abgeschlossen": "Programme terminé",
+  "Programm aus der Roborock-App": "Programme de l'app Roborock",
+  "Programm festlegen": "Définir le programme",
+  "Programm „Maschinenpflege“ mit Reiniger starten": "Lancer le programme « entretien machine » avec nettoyant",
+  "Prüfen": "Vérifier",
+  "Prüft …": "Vérification…",
+  "Prüfung fehlgeschlagen": "Vérification échouée",
+  "Aktiviert · Bypass": "Activée · Bypass",
+  "Einzelne Sensoren ausgenommen": "Certains capteurs exclus",
+  "Alarm aus": "Alarme désactivée",
+  "Rezepte": "Recettes",
+  "Kühlt": "Refroidit",
+  "Entfeuchten": "Déshumidifier",
+  "Nur Lüfter": "Ventilateur seul",
+  "Keine KI eingerichtet (Einstellungen → KI-Aufgaben)": "Aucune IA configurée (Paramètres → Tâches IA)",
+  "Auswertung fehlgeschlagen.": "L'analyse a échoué.",
+  "Qualität": "Qualité",
+  "Reichweite jetzt": "Autonomie actuelle",
+  "Reichweite voller Akku": "Autonomie batterie pleine",
+  "Restzeit": "Temps restant",
+  "Roboter lädt nicht": "Le robot ne charge pas",
+  "Räder blockiert": "Roues bloquées",
+  "Räder hängen in der Luft": "Roues en l'air",
+  "Räume auswählen": "Choisir les pièces",
+  "Räume reinigen": "Nettoyer les pièces",
+  "Saugstärke": "Aspiration",
+  "Saugt & wischt Raum": "Aspire et lave la pièce",
+  "Schalte alle Lichter aus": "Éteins toutes les lumières",
+  "Scharfschaltung läuft": "Armement",
+  "Schlafzimmer Fenster ist offen": "La fenêtre de la chambre est ouverte",
+  "Schließen": "Fermer",
+  "Zurück": "Retour",
+  "Schließt": "Se ferme",
+  "Schließt bei Temperatursturz": "Se ferme en cas de chute de température",
+  "Schließt sich …": "Fermeture…",
+  "Schmutzfänger (Station)": "Filtre à saletés (station)",
+  "Schmutzfänger prüfen": "Vérifier le filtre à saletés",
+  "Seitenbürste": "Brosse latérale",
+  "Seitenbürste blockiert": "Brosse latérale bloquée",
+  "Sensordaten nicht verfügbar": "Données du capteur indisponibles",
+  "Sensoren temporär deaktiviert": "Capteurs temporairement désactivés",
+  "Service fällig": "Révision à faire",
+  "Sirene an": "Sirène activée",
+  "Sirene auslösen?": "Déclencher la sirène ?",
+  "Solaranteil heute": "Part solaire aujourd'hui",
+  "Spaßmodus": "Mode fun",
+  "Speiseplan nicht verfügbar": "Menu de la semaine indisponible",
+  "Spülen": "Rinçage",
+  "Starten": "Démarrer",
+  "Startet später": "Démarre plus tard",
+  "Staubbehälter fehlt": "Bac à poussière manquant",
+  "Staubbehälter leeren": "Vider le bac à poussière",
+  "Std. übrig": "h restantes",
+  "Steckdose nicht erreichbar": "Prise injoignable",
+  "Stoßfänger klemmt": "Pare-chocs coincé",
+  "Stoßlüften": "Aération intense",
+  "Stromstärke": "Intensité",
+  "Süßwasser": "Eau douce",
+  "Taste an der Steckdose": "Bouton de la prise",
+  "Tasten am Gerät gesperrt": "Boutons de l'appareil verrouillés",
+  "Tasten an der Station": "Boutons de la station",
+  "Teils bewölkt": "Partiellement nuageux",
+  "Teilweise bewölkt": "Partiellement nuageux",
+  "Teilweise geöffnet": "Partiellement ouvert",
+  "Temperatur": "Température",
+  "Temperatur am Heizkörper": "Température du radiateur",
+  "Temperatur im AMS": "Température dans l'AMS",
+  "Temperatur im Haus": "Température dans la maison",
+  "Temperatur im Normalbereich": "Température normale",
+  "Temperatur kritisch": "Température critique",
+  "Temperaturfühler": "Thermomètre",
+  "Temperaturfühler offline": "Thermomètre hors ligne",
+  "Ton an": "Son activé",
+  "Trotzdem aus": "Éteindre quand même",
+  "Tür": "Porte",
+  "Tür entriegelt": "Porte déverrouillée",
+  "Tür hinten links": "Porte arrière gauche",
+  "Tür hinten rechts": "Porte arrière droite",
+  "Tür ist offen": "La porte est ouverte",
+  "Tür offen": "Porte ouverte",
+  "Tür verriegelt": "Porte verrouillée",
+  "Türen": "Portes",
+  "Türen & Fenster": "Portes et fenêtres",
+  "Türen & Fenster überwacht": "Portes et fenêtres surveillées",
+  "Türen & Klappen": "Portes et trappes",
+  "Türen &amp; Klappen": "Portes et trappes",
+  "Unbekanntes Programm": "Programme inconnu",
+  "VOCs erkannt – lüften": "COV détectés – aérer",
+  "Ventilöffnung": "Ouverture de la vanne",
+  "Verbrauch": "Consommation",
+  "Verbrauch Monat": "Consommation du mois",
+  "Verbrauch heute": "Consommation du jour",
+  "Verbrauch pro Tag": "Consommation par jour",
+  "Verfügbare Updates": "Mises à jour disponibles",
+  "Verlauf nicht verfügbar": "Historique indisponible",
+  "Verzögerter Start": "Départ différé",
+  "Vollständig geladen": "Charge complète",
+  "Vorhänge": "Rideaux",
+  "Vorspülen": "Prérinçage",
+  "Vorwäsche": "Prélavage",
+  "Wasser erkannt": "Eau détectée",
+  "Wasser erkannt!": "Eau détectée !",
+  "Wasserbehälter leer": "Réservoir d'eau vide",
+  "Wasserstärke": "Débit d'eau",
+  "Weiter": "Suivant",
+  "Weitere Geräte": "Autres appareils",
+  "Welche Fenster sind offen?": "Quelles fenêtres sont ouvertes ?",
+  "Welche Lichter sind an?": "Quelles lumières sont allumées ?",
+  "Weniger als 1 Min. übrig": "Moins d'1 min restante",
+  "Windig & bewölkt": "Vent et nuages",
+  "Wird übernommen": "Application en cours",
+  "Wird abgebrochen": "Annulation",
+  "Wird aktiviert …": "Activation…",
+  "Wird aktualisiert": "Mise à jour",
+  "Wird deaktiviert …": "Désactivation…",
+  "Wird eingerichtet": "Configuration",
+  "Wird entfernt": "Retrait",
+  "Wird erkannt …": "Détection…",
+  "Wird geladen …": "Chargement…",
+  "Wird geleert": "Vidage",
+  "Wird gewaschen": "Lavage",
+  "Wird installiert": "Installation",
+  "Wird unscharf geschaltet": "Désarmement",
+  "Wirklich öffnen?": "Vraiment ouvrir ?",
+  "Wischt Raum": "Lave la pièce",
+  "Wärmeanforderung": "Demande de chaleur",
+  "Zeitplan überschrieben": "Planning remplacé",
+  "Zeitüberschreitung – bitte nochmal versuchen.": "Délai dépassé – réessaie.",
+  "Zieltemperatur alle Räume": "Température cible, toutes les pièces",
+  "Zu viel Dünger": "Trop d'engrais",
+  "Zuletzt aktualisiert": "Dernière mise à jour",
+  "Zuletzt gedruckt": "Dernière impression",
+  "Zum Öffnen tippen": "Touche pour ouvrir",
+  "Zurücksetzen": "Réinitialiser",
+  "Zusätzliche Käufe": "Achats supplémentaires",
+  "Zählerstand": "Relevé du compteur",
+  "außen": "dehors",
+  "Öffnen": "Ouvrir",
+  "Öffnet": "Ouverture",
+  "Öffnet sich …": "Ouverture…",
+  "Ölstand": "Niveau d'huile",
+  "Ölwechsel": "Vidange",
+  "Idee der Woche von Claude": "L'idée de la semaine de Claude",
+  "Lüftungs-Coach": "Coach aération",
+  "Heizungs-Coach": "Coach chauffage",
+  "Energie-Coach": "Coach énergie",
+  "Raumklima": "Climat intérieur",
+  "Keine Klimasensoren in diesem Raum": "Aucun capteur de climat dans cette pièce",
+  "Ein Feuchte- oder CO₂-Sensor im Raum genügt": "Un capteur d'humidité ou de CO₂ dans la pièce suffit",
+  "Sonnenstrom übrig": "Solaire en excédent",
+  "Fahrzeug": "Véhicule",
+  "Rezept der Woche": "Recette de la semaine",
+  "Schlösser": "Serrures",
+  "Beleuchtung": "Éclairage",
+  "Jalousien": "Stores",
+  "Klima": "Climat",
+  "Energie": "Énergie",
+  "Sicherheit": "Sécurité",
+  "Medien": "Multimédia",
+  "Personen": "Personnes",
+  "Batterien": "Piles",
+  "Netzwerk": "Réseau",
+  "Pflanzen": "Plantes",
+  "Kameras": "Caméras",
+  "Kalender": "Calendrier",
+  "Abfall": "Déchets",
+  "Abfall heute": "Déchets aujourd'hui",
+  "Abfall morgen": "Déchets demain",
+  "Restmüll": "Ordures ménagères",
+  "Biomüll": "Déchets organiques",
+  "Papier": "Papier",
+  "Gelber Sack": "Emballages",
+  "Wertstoff": "Recyclage",
+  "Abkühlen": "Refroidissement",
+  "Abpumpen nicht möglich": "Vidange impossible",
+  "Abbrechen": "Annuler",
+  "Beispiel-Künstler": "Artiste exemple",
+  "Türen offen": "Portes ouvertes",
+  "Zuletzt": "Dernier",
+  "Zuletzt:": "Dernier :",
+  "Entlädt": "Décharge",
+  "Weißton": "Ton de blanc",
+  "Helligkeit": "Luminosité",
+  "Farbe": "Couleur",
+  "Temperaturverlauf": "Historique de température",
+  "Fenster offen · noch": "Fenêtre ouverte · encore",
+  "Zu feucht": "Trop humide",
+  "Luftfeuchte": "Humidité",
+  "Heizt": "Chauffe",
+  "Heizen": "Chauffer",
+  "Kühlen": "Refroidir",
+  "Druckt": "Imprime",
+  "Reinigt": "Nettoie",
+  "Saugt": "Aspire",
+  "Angedockt": "À la station",
+  "Lädt auf": "En charge",
+  "Unterwegs": "Absent",
+  "Zuhause": "À la maison",
+  "Abwesend": "Absent",
+  "Luft": "Air",
+  "Wasser": "Eau",
+  "Strom": "Électricité",
+  "Solar": "Solaire",
+  "Netz": "Réseau",
+  "Haus": "Maison",
+  "Einspeisung": "Injection",
+  "Netzbezug": "Soutirage",
+  "Autarkie": "Autonomie",
+  "Eigenverbrauch": "Autoconsommation",
+  "Heute": "Aujourd'hui",
+  "Dieser Monat": "Ce mois-ci",
+  "Diesen Monat": "Ce mois-ci",
+  "Monat": "Mois",
+  "Woche": "Semaine",
+  "Jahr": "Année",
+  "Schwach": "Faible",
+  "Voll": "Plein",
+  "Leer": "Vide",
+  "Niedrig": "Bas",
+  "Hoch": "Haut",
+  "Mittel": "Moyen",
+  "Normal": "Normal",
+  "Online": "En ligne",
+  "Offline": "Hors ligne",
+  "Unbekannt": "Inconnu",
+  "Bauteillüfter": "Ventilateur de pièce",
+  "Druckkopflüfter": "Ventilateur du hotend",
+  "Druckraumlüfter": "Ventilateur du caisson",
+  "Lüfter": "Ventilateur",
+  "Claude wertet einmal pro Woche (samstags 10 Uhr) Feuchte, CO₂ und Fensterzeiten aus und sagt, wo, wann und wie lange sich Lüften lohnt.": "Une fois par semaine (le samedi à 10 h), Claude analyse l'humidité, le CO₂ et les temps d'ouverture des fenêtres et te dit où, quand et combien de temps il vaut la peine d'aérer.",
+  "Die Auswertung startet mit der Heizsaison: Sobald geheizt wird, prüft Claude jeden Montag Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad.": "L'analyse commence avec la saison de chauffe : dès que le chauffage tourne, Claude vérifie chaque lundi la durée de chauffe, les températures, le chauffage fenêtre ouverte et le radiateur de la salle de bain.",
+  "Gesichert": "Sécurisé",
+  "Sicher": "Sûr",
+  "Braucht Aufmerksamkeit": "À vérifier",
+  "Nicht gesichert": "Non sécurisé",
+  "Fortschritt": "Progression",
+  "Schicht": "Couche",
+  "Aufgabe": "Tâche",
+  "Steuerung": "Commandes",
+  "Pausieren": "Pause",
+  "Abspielen": "Lecture",
+  "Fortsetzen": "Reprendre",
+  "Druckraumlicht": "Lumière du caisson",
+  "Kamera": "Caméra",
+  "Temperaturen": "Températures",
+  "Druckbett": "Plateau",
+  "Steckdose": "Prise",
+  "Spannung": "Tension",
+  "Luftfeuchtigkeit im AMS": "Humidité dans l'AMS",
+  "Drucker": "Imprimante",
+  "Druckzeit insgesamt": "Temps d'impression total",
+  "Druckplatte": "Plaque d'impression",
+  "Texturiert (PEI)": "Texturée (PEI)",
+  "Glatt (PEI)": "Lisse (PEI)",
+  "Edelstahl": "Acier inoxydable",
+  "Einstellungen": "Réglages",
+  "Luftfeuchtigkeit": "Humidité",
+  "Status": "État",
+  "Modus": "Mode",
+  "Zustand": "État",
+  "Zielwert": "Cible",
+  "Feinstaub PM2,5": "Particules PM2,5",
+  "Bodenfeuchtigkeit": "Humidité du sol",
+  "Beleuchtungsstärke": "Éclairement",
+  "Bewegung": "Mouvement",
+  "Ausschalten": "Éteindre",
+  "Einschalten": "Allumer",
+  "Durchschnitt im Haus": "Moyenne de la maison",
+  "Halbe Ladung": "Demi-charge",
+  "Heizkreise mit Strom versorgt": "Circuits de chauffage alimentés",
+  "Kindersicherung": "Sécurité enfants",
+  "Nur im Betrieb schaltbar": "Seulement en fonctionnement",
+  "Verbindung": "Connexion",
+  "Weitere Einstellungen": "Autres réglages",
+  "Nächste Stunden": "Prochaines heures",
+  "Nachtlicht": "Veilleuse",
+  "Anzeige": "Affichage",
+  "Automatik": "Auto",
+  "Heizpause": "Pause chauffage",
+  "Temperaturabsenkung": "Abaissement",
+  "Abgerufen": "Récupéré",
+  "Abpumpen": "Vidange",
+  "AdBlue-Reichweite": "Autonomie AdBlue",
+  "Akkufehler": "Erreur de batterie",
+  "Akkustand": "Niveau de batterie",
+  "Aktiv": "Actif",
+  "Aktiver": "Actif",
+  "Aktivieren": "Activer",
+  "Aktiviert": "Activé",
+  "Aktualisiert": "Mis à jour",
+  "Aktuell": "À jour",
+  "Anbieter": "Fournisseur",
+  "Angenehm": "Agréable",
+  "Angepasst": "Ajusté",
+  "Angezogen": "Serré",
+  "Anpassen": "Ajuster",
+  "Anzeigen": "Afficher",
+  "Aquarien": "Aquariums",
+  "Aquarium-Doktor": "Docteur aquarium",
+  "Aufgehoben": "Levé",
+  "Aufheben": "Lever",
+  "Aufheizen": "Chauffe",
+  "Aufmerksamkeit": "Attention",
+  "Aufnahme": "Enregistrement",
+  "Aufwachen": "Réveil",
+  "Ausblenden": "Masquer",
+  "Ausgeschaltet": "Éteint",
+  "Ausgewogen": "Équilibré",
+  "Ausstehend": "En attente",
+  "Automatisch": "Automatique",
+  "Badezimmer": "Salle de bain",
+  "Batterie": "Pile",
+  "Beckenlicht": "Lumière du bac",
+  "Bedeckt": "Couvert",
+  "Beenden": "Arrêter",
+  "Beendet": "Terminé",
+  "Benachrichtigungen": "Notifications",
+  "Beobachten": "Surveiller",
+  "Bereitschaft": "Veille",
+  "Beschattungsautomatik": "Ombrage automatique",
+  "Betriebsart": "Mode de fonctionnement",
+  "Betriebssystem": "Système d'exploitation",
+  "Bezug": "Du réseau",
+  "Bild": "Image",
+  "Blockiert": "Bloqué",
+  "Bodenfeuchte": "Humidité du sol",
+  "Büro": "Bureau",
+  "Datenstand": "Données du",
+  "Deaktivieren": "Désactiver",
+  "Deaktiviert": "Désarmée",
+  "Diebstahl": "Vol",
+  "Dosieren": "Doser",
+  "Dosiert": "Dosé",
+  "Druckfehler": "Erreur d'impression",
+  "Durchgang": "Cycle",
+  "Durchgängen": "cycles",
+  "Eigene": "Personnalisé",
+  "Eigenversorgung": "Autoproduction",
+  "Eingeschaltet": "Allumé",
+  "Einkaufsliste": "Liste de courses",
+  "Einpassen": "Ajuster",
+  "Einweichen": "Trempage",
+  "Endet": "Se termine",
+  "Energiebedarf": "Besoin en énergie",
+  "Energieverbrauch": "Consommation d'énergie",
+  "Entkalken": "Détartrer",
+  "Entwarnung": "Fin d'alerte",
+  "Erinnerung": "Rappel",
+  "Erkannt": "Détecté",
+  "Erkennung": "Détection",
+  "Erledigt": "Fait",
+  "Extrem": "Extrême",
+  "Fahrt": "Trajet",
+  "Fahrten": "Trajets",
+  "Fahrzeit": "Temps de trajet",
+  "Favorit": "Favori",
+  "Fehlgeschlagen": "Échec",
+  "Fernstart": "Démarrage à distance",
+  "Feststellbremse": "Frein à main",
+  "Filamentwechsel": "Changement de filament",
+  "Flur": "Couloir",
+  "Frei": "Libre",
+  "Freigeben": "Approuver",
+  "Gekippt": "Entrouverte",
+  "Gemeldet": "Signalé",
+  "Gering": "Faible",
+  "Geringer": "Plus faible",
+  "Geschwindigkeit": "Vitesse",
+  "Gestartet": "Démarré",
+  "Gestern": "Hier",
+  "Gestoppt": "Arrêté",
+  "Gesund": "En bonne santé",
+  "Gewitter": "Orage",
+  "HA-Zeitplan": "Planning HA",
+  "Hagel": "Grêle",
+  "Handeln": "Agir",
+  "Hauptschalter": "Interrupteur général",
+  "Hauswirtschaftsraum": "Buanderie",
+  "Heckklappe": "Hayon",
+  "Hinweis": "Remarque",
+  "Hinweise": "Remarques",
+  "Inaktiv": "Inactif",
+  "Inspektion": "Révision",
+  "Installiert": "Installé",
+  "Intensiv": "Intensif",
+  "Isoliert": "Isolé",
+  "Jalousien-Automatik": "Stores automatiques",
+  "Jetzt": "Maintenant",
+  "Kalibrierung": "Calibrage",
+  "Kalorien": "Calories",
+  "Kalt": "Froid",
+  "Kaltstart": "Démarrage à froid",
+  "Kanal": "Canal",
+  "Kartierung": "Cartographie",
+  "Kilometerstand": "Kilométrage",
+  "Klar": "Dégagé",
+  "Klingel": "Sonnette",
+  "Knitterschutz": "Anti-froissage",
+  "Kritisch": "Critique",
+  "Küche": "Cuisine",
+  "LAN-Download": "Téléchargement LAN",
+  "Ladefehler": "Erreur de charge",
+  "Ladevorrang": "Priorité de charge",
+  "Ladezyklen": "Cycles de charge",
+  "Lagerwartung": "Entretien des roulements",
+  "Langzeit": "Long terme",
+  "Lecksensor": "Capteur de fuite",
+  "Leicht": "Léger",
+  "Leise": "Silencieux",
+  "Leiser": "Plus silencieux",
+  "Lichtsteuerung": "Commande d'éclairage",
+  "Luftdruck": "Pression atmosphérique",
+  "Luftreiniger": "Purificateur d'air",
+  "Manuell": "Manuel",
+  "Markisen": "Stores bannes",
+  "Maschinenpflege": "Entretien machine",
+  "Maschinenreinigung": "Nettoyage machine",
+  "Meerwasser": "Eau de mer",
+  "Meldefehler": "Erreur de rapport",
+  "Messwerte": "Mesures",
+  "Minuten": "minutes",
+  "Motorhaube": "Capot",
+  "Motorstunden": "Heures moteur",
+  "Nacht": "Nuit",
+  "Nachtmodus": "Mode nuit",
+  "Neustart": "Redémarrage",
+  "Nivellieren": "Nivellement",
+  "Notfall": "Urgence",
+  "Notstrom": "Secours",
+  "Optionen": "Options",
+  "Orten": "Localiser",
+  "Patrouille": "Patrouille",
+  "Pflanzen-Doktor": "Docteur plantes",
+  "Profil": "Profil",
+  "Punktreinigung": "Nettoyage ciblé",
+  "Quelle": "Source",
+  "Raumluft": "Air intérieur",
+  "Raumreinigung": "Nettoyage de pièce",
+  "Raumtemperatur": "Température ambiante",
+  "Rausstellen": "Sortir",
+  "Referenzfahrt": "Prise d'origine",
+  "Regen": "Pluie",
+  "Regeneriersalz": "Sel régénérant",
+  "Regnerisch": "Pluvieux",
+  "Reichweite": "Autonomie",
+  "Reinigen": "Nettoyer",
+  "Reinigung": "Nettoyage",
+  "Reinigungen": "Nettoyages",
+  "Reinigungsmodus": "Mode de nettoyage",
+  "Ruhig": "Calme",
+  "Salz": "Sel",
+  "Sanft": "Doux",
+  "Sauber": "Propre",
+  "Saugen": "Aspirer",
+  "Schiebedach": "Toit ouvrant",
+  "Schildkröte": "Tortue",
+  "Schlafzimmer": "Chambre",
+  "Schleudern": "Essorage",
+  "Schnee": "Neige",
+  "Schneefall": "Chute de neige",
+  "Schneeregen": "Neige fondue",
+  "Schnell": "Rapide",
+  "Schnellwahl": "Sélection rapide",
+  "Schrittverlust": "Perte de pas",
+  "Schutzladung": "Charge de protection",
+  "Schwer": "Grave",
+  "Sensoren": "Capteurs",
+  "Sicherheitswarnung": "Alerte de sécurité",
+  "Sichtweite": "Visibilité",
+  "Slicen": "Découpage",
+  "Sofort": "Immédiat",
+  "Solaranlage": "Installation solaire",
+  "Sonnig": "Ensoleillé",
+  "Speiseplan": "Menu de la semaine",
+  "Starker": "Fort",
+  "Starkregen": "Forte pluie",
+  "Startet": "Démarre",
+  "Statistik": "Statistiques",
+  "Stufe": "Niveau",
+  "Stumm": "Muet",
+  "Stunde": "heure",
+  "Stunden": "heures",
+  "Tagen": "jours",
+  "Tarif": "Tarif",
+  "Tastensperre": "Verrouillage des touches",
+  "Technik": "Équipement",
+  "Temperaturwarnung": "Alerte de température",
+  "Terrasse": "Terrasse",
+  "Tonnen": "Bacs",
+  "Trittfrequenz": "Cadence",
+  "Trocken": "Sec",
+  "Trocknen": "Sécher",
+  "Trocknet": "Sèche",
+  "Trommelreinigung": "Nettoyage du tambour",
+  "Unklar": "Incertain",
+  "Unkritisch": "Sans risque",
+  "Unscharf": "Désarmée",
+  "Unter": "Sous",
+  "Unterbrochen": "Interrompu",
+  "Unwetter": "Intempéries",
+  "Urlaub": "Vacances",
+  "VERBLEIBEND": "RESTANT",
+  "Ventil-Anpassung": "Réglage des vannes",
+  "Verriegelung": "Verrouillage",
+  "Vorbereitung": "Préparation",
+  "WLAN-Download": "Téléchargement Wi-Fi",
+  "Warm": "Chaud",
+  "Warnung": "Alerte",
+  "Wartung": "Entretien",
+  "Waschen": "Laver",
+  "Waschküche": "Buanderie",
+  "Wasserbedarf": "Besoin en eau",
+  "Wassertemperatur": "Température de l'eau",
+  "Wetterwarnung": "Alerte météo",
+  "Wiedergabe": "Lecture",
+  "Windig": "Venteux",
+  "Wischen": "Laver le sol",
+  "Wischmodus": "Mode lavage",
+  "Wischt": "Lave",
+  "Wohnzimmer": "Salon",
+  "Zeitplan": "Planning",
+  "Zonenreinigung": "Nettoyage par zone",
+  "Überschwemmung": "Inondation",
+  "überschwemmung": "inondation",
+  "Januar": "Janvier",
+  "Februar": "Février",
+  "März": "Mars",
+  "Mär": "Mars",
+  "April": "Avril",
+  "Mai": "Mai",
+  "Juni": "Juin",
+  "Juli": "Juillet",
+  "August": "Août",
+  "September": "Septembre",
+  "Oktober": "Octobre",
+  "November": "Novembre",
+  "Dezember": "Décembre",
+  "Montag": "Lundi",
+  "Dienstag": "Mardi",
+  "Mittwoch": "Mercredi",
+  "Donnerstag": "Jeudi",
+  "Freitag": "Vendredi",
+  "Samstag": "Samedi",
+  "Sonntag": "Dimanche",
+  "1 Reinigung": "1 nettoyage",
+  "1 Update braucht Aufmerksamkeit": "1 mise à jour à vérifier",
+  "AMS getrennt": "AMS déconnecté",
+  "AMS wird vorbereitet": "Préparation de l'AMS",
+  "Ablaufpumpe blockiert": "Pompe de vidange bloquée",
+  "Absturzsensor verschmutzt": "Capteur de vide sale",
+  "Abwesend scharf schalten?": "Armer en mode absent ?",
+  "Aktiviert (Abwesend)": "Activée (absent)",
+  "Aktiviert (Bypass)": "Activée (bypass)",
+  "Aktiviert (Zuhause)": "Activée (à la maison)",
+  "Aktiviert (Nacht)": "Activée (nuit)",
+  "Aktiviert (Urlaub)": "Activée (vacances)",
+  "Alarm deaktiviert": "Alarme désarmée",
+  "Alles aktuell": "Tout est à jour",
+  "Alles eingekauft": "Tout acheté",
+  "Alles gelesen": "Tout lu",
+  "Als beendet markieren": "Marquer comme terminé",
+  "Amtliche Warnung": "Alerte officielle",
+  "Andere Idee": "Autre idée",
+  "Aquarium-Licht": "Lumière d'aquarium",
+  "Auf die Einkaufsliste": "Sur la liste de courses",
+  "Automatisch erkennen": "Détecter automatiquement",
+  "Batterie schwach": "Pile faible",
+  "Betrifft bei dir": "Te concerne",
+  "Bett wird nivelliert": "Nivellement du plateau",
+  "Bewegung erkannt": "Mouvement détecté",
+  "Bewegungsmelder inaktiv": "Détecteur de mouvement inactif",
+  "Bitte warten": "Patiente",
+  "Bluetooth-Verbindung kurz unterbrochen": "Connexion Bluetooth brièvement interrompue",
+  "Braucht dringend Aufmerksamkeit": "Demande une attention urgente",
+  "Braucht etwas Aufmerksamkeit": "Demande un peu d'attention",
+  "braucht Aufmerksamkeit": "à vérifier",
+  "Breaking Change betrifft dich": "Un changement majeur te concerne",
+  "Breaking Changes betreffen dich": "Des changements majeurs te concernent",
+  "CO₂-Wert hoch": "CO₂ élevé",
+  "Claude liest die Release-Notes …": "Claude lit les notes de version…",
+  "Claude prüft Bodenfeuchte, Licht, Temperatur und Luftfeuchte der letzten 7 Tage passend zur Art und gibt einen Pflegetipp.": "Claude vérifie l'humidité du sol, la lumière, la température et l'humidité des 7 derniers jours selon l'espèce et te donne un conseil de soin.",
+  "Zu hoch": "Trop haut",
+  "Zu niedrig": "Trop bas",
+  "Claude prüft Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad der letzten 7 Tage.": "Claude vérifie la durée de chauffe, les températures, le chauffage fenêtre ouverte et le radiateur de la salle de bain des 7 derniers jours.",
+  "Code eingeben …": "Saisis le code…",
+  "Dashboard bearbeiten": "Modifier le tableau de bord",
+  "Deine Region": "Ta région",
+  "Details in der Bambu-App": "Détails dans l'app Bambu",
+  "Diebstahl gemeldet": "Vol signalé",
+  "Du bist diesen Monat dran": "Ce mois-ci, c'est ton tour",
+  "Du bist dran": "À toi",
+  "Nicht dran": "Pas ton tour",
+  "Dock getrennt": "Station déconnectée",
+  "Druckbett wird gescannt": "Scan du plateau",
+  "Drucker offline": "Imprimante hors ligne",
+  "Druckplatte wird erkannt": "Détection de la plaque",
+  "Eigenes Tagesprofil der Lampe": "Profil journalier propre à la lampe",
+  "Eingriff erforderlich": "Intervention requise",
+  "Einmalig erlaubt": "Autorisé une fois",
+  "Endet gleich": "Se termine bientôt",
+  "Energie gesamt": "Énergie totale",
+  "Erkennung fortsetzen": "Reprendre la détection",
+  "Erkennung pausieren": "Suspendre la détection",
+  "Wenn die Maschine kurz angehalten wird": "Quand la machine est brièvement arrêtée",
+  "Ersparnis gesamt": "Économies totales",
+  "Erst saugen, dann wischen": "Aspirer d'abord, puis laver",
+  "Extra Trocken": "Extra sec",
+  "Extreme Warnung": "Alerte extrême",
+  "Extremes Unwetter": "Intempéries extrêmes",
+  "Extrusion wird kalibriert": "Calibrage de l'extrusion",
+  "Fahrzeit gesamt": "Temps de trajet total",
+  "Farben nach deiner Automation": "Couleurs selon ton automatisation",
+  "Fast fertig": "Presque terminé",
+  "Feinstaub PM2.5": "Particules PM2.5",
+  "Fernsteuerung aktiv": "Commande à distance active",
+  "Feste Zieltemperatur": "Température cible fixe",
+  "Filament wird entladen": "Déchargement du filament",
+  "Filament wird geladen": "Chargement du filament",
+  "Fluss wird kalibriert": "Calibrage du débit",
+  "Frag Assist …": "Demande à Assist…",
+  "Frischwassertank leer": "Réservoir d'eau propre vide",
+  "Ganzes Haus": "Toute la maison",
+  "Gas erkannt": "Gaz détecté",
+  "Geladen (12 Monate)": "Chargée (12 mois)",
+  "Gerade angekommen": "Vient d'arriver",
+  "Gerade gegangen": "Vient de partir",
+  "Heute gefahren": "Roulé aujourd'hui",
+  "Gestern gefahren": "Roulé hier",
+  "Heute gegossen": "Arrosée aujourd'hui",
+  "Gestern gegossen": "Arrosée hier",
+  "Gewitter mit Regen": "Orage avec pluie",
+  "Heizkreise stromlos": "Circuits de chauffage hors tension",
+  "Heute dosiert": "Dosé aujourd'hui",
+  "Hohe Feuchtigkeit": "Humidité élevée",
+  "Ich habe nichts verstanden.": "Je n'ai pas compris.",
+  "Idee holen": "Demander une idée",
+  "Im Anruf": "En appel",
+  "Immer erlaubt": "Toujours autorisé",
+  "Intensiv 70°": "Intensif 70°",
+  "Jetzt aktualisieren": "Mettre à jour maintenant",
+  "Jetzt auswerten": "Analyser maintenant",
+  "Jetzt dosieren": "Doser maintenant",
+  "Jetzt neu starten": "Redémarrer maintenant",
+  "Jetzt starten": "Démarrer maintenant",
+  "Zeitversetzt starten": "Départ différé",
+  "Kindersicherung aktiv": "Sécurité enfants active",
+  "Klare Nacht": "Nuit dégagée",
+  "Kohlenmonoxid erkannt": "Monoxyde de carbone détecté",
+  "Kritische Temperaturabweichung!": "Écart de température critique !",
+  "Lädt und Bypass": "En charge et bypass",
+  "Lade Vorhersage …": "Chargement des prévisions…",
+  "Laden bis": "Charger jusqu'à",
+  "Nicht entladen unter": "Ne pas décharger sous",
+  "Laufzeit insgesamt": "Durée totale de fonctionnement",
+  "Lecksensor offline": "Capteur de fuite hors ligne",
+  "Letzter Durchgang": "Dernier cycle",
+  "Letzter Versuch fehlgeschlagen": "Dernière tentative échouée",
+  "Lidar blockiert": "Lidar bloqué",
+  "Manueller Modus": "Mode manuel",
+  "Mopp fehlt": "Serpillière manquante",
+  "Mopp trocknen": "Sécher la serpillière",
+  "Mopp waschen": "Laver la serpillière",
+  "Mopp wird angebracht": "Fixation de la serpillière",
+  "Mopp wird entfernt": "Retrait de la serpillière",
+  "Motor wird kalibriert": "Calibrage du moteur",
+  "Nach Zeitplan": "Selon le planning",
+  "Neue Post im Briefkasten": "Nouveau courrier dans la boîte aux lettres",
+  "Neues Gespräch": "Nouvelle conversation",
+  "Neustart ausstehend": "Redémarrage en attente",
+  "Neustart erforderlich": "Redémarrage requis",
+  "Nicht angepasst": "Non ajusté",
+  "Nicht erkannt": "Non détecté",
+  "Nicht gemeldet": "Non signalé",
+  "Nicht verbunden": "Non connecté",
+  "Nicht verriegelt": "Non verrouillé",
+  "Niedriger Wasserdruck": "Pression d'eau basse",
+  "Noch nie": "Jamais",
+  "Nur Anzeige": "Affichage seul",
+  "Pflanze ist gesund": "La plante est en bonne santé",
+  "Push am Vorabend": "Notification la veille au soir",
+  "Rauch erkannt": "Fumée détectée",
+  "Reichweite je Modus": "Autonomie par mode",
+  "Reinigung gestartet": "Nettoyage démarré",
+  "Reinigungen insgesamt": "Nettoyages au total",
+  "Reispfanne mit Hähnchen und Pilzen": "Poêlée de riz au poulet et aux champignons",
+  "Roboter gekippt": "Robot basculé",
+  "Roboter steckt fest": "Robot coincé",
+  "Saugen & wischen": "Aspirer et laver",
+  "Saugt & wischt": "Aspire et lave",
+  "Saugt & wischt Zone": "Aspire et lave la zone",
+  "Wischt Zone": "Lave la zone",
+  "Scharf schalten?": "Armer ?",
+  "Unscharf schalten?": "Désarmer ?",
+  "Sirene stoppen?": "Arrêter la sirène ?",
+  "Schmutzwasser leeren": "Vider l'eau sale",
+  "Schmutzwassertank voll": "Bac d'eau sale plein",
+  "Schnell 45°": "Rapide 45°",
+  "Schnell 65°": "Rapide 65°",
+  "Schnell 30": "Rapide 30",
+  "Baumwolle 40": "Coton 40",
+  "Pflegeleicht": "Synthétiques",
+  "Schneller fertig": "Finir plus vite",
+  "Schwere Warnung": "Alerte grave",
+  "Sehr kalt": "Très froid",
+  "Zu kalt": "Trop froid",
+  "Sehr trocken": "Très sec",
+  "Sensoren reinigen": "Nettoyer les capteurs",
+  "Service & Sicherheit": "Révision et sécurité",
+  "Service nach Strecke": "Révision au kilométrage",
+  "Sonstige Wartung": "Autre entretien",
+  "Speedtest starten": "Lancer un test de débit",
+  "Spracheingabe fehlgeschlagen.": "La saisie vocale a échoué.",
+  "Sprechen": "Parler",
+  "Starte den Saugroboter": "Lance le robot aspirateur",
+  "Starts insgesamt": "Démarrages au total",
+  "Stoppt …": "Arrêt…",
+  "Sucht ein Rezept …": "Recherche d'une recette…",
+  "Temperaturwarnung aktiv": "Alerte de température active",
+  "Trocknet Mopp": "Sèche la serpillière",
+  "Trocknung endet": "Fin du séchage",
+  "Verbindung stabil": "Connexion stable",
+  "Verschobene Termine": "Dates décalées",
+  "Voll geladen": "Charge complète",
+  "Voll, Bypass": "Plein, bypass",
+  "Vollschutz aktiv": "Protection complète active",
+  "Von dir pausiert": "Mis en pause par toi",
+  "WLAN & Sperren": "Wi-Fi et blocages",
+  "Warte auf Pflanzendaten": "En attente des données de la plante",
+  "Warte auf Start": "En attente du démarrage",
+  "Wartet auf Druckbett": "Attend le plateau",
+  "Wartet auf Neustart": "Attend le redémarrage",
+  "Was steht auf der Einkaufsliste?": "Qu'y a-t-il sur la liste de courses ?",
+  "Wasserheizung verkalkt": "Chauffe-eau entartré",
+  "Wasserkasten fehlt": "Réservoir d'eau manquant",
+  "Wetterwarnung aufgehoben": "Alerte météo levée",
+  "Wie kann ich helfen?": "Comment puis-je t'aider ?",
+  "Wieder anzeigen": "Réafficher",
+  "Zum Freigeben oben in der Update-Zeile auf „Freigeben“ tippen und bestätigen.": "Pour approuver, touche « Approuver » dans la ligne de mise à jour ci-dessus et confirme.",
+  "KI: alle unkritisch": "IA : tout sans risque",
+  "KI: unkritisch": "IA : sans risque",
+  "Installieren empfohlen": "Installation recommandée",
+  "auf der Arbeit": "au travail",
+  "dauert länger als üblich": "prend plus de temps que d'habitude",
+  "gibt es noch keine eigene Auswertung. „Neu auswerten“ erstellt sie für alle Räume.": "n'a pas encore d'analyse propre. « Réévaluer » la crée pour toutes les pièces.",
+  "sehr schlecht": "très mauvais",
+  "Stufe 1": "Niveau 1",
+  "Stufe 2": "Niveau 2",
+  "Stufe 3": "Niveau 3",
+  "Durchgänge seit dem letzten Mal": "cycles depuis la dernière fois",
+  "Ø Dauer": "Ø durée",
+  "Ø pro Durchgang": "Ø par cycle",
+  "Wertstoffabfall": "Recyclage",
+  "Aktuelle Wiedergabe": "En lecture",
+  "Beispiel-Titel": "Titre exemple",
+  "Daten: Deutscher Wetterdienst (DWD)": "Données : Deutscher Wetterdienst (DWD)",
+  "Internetsperre": "Blocage Internet",
+  "Latenz": "Latence",
+  "Startzeit": "Heure de début",
+  "Wetter": "Météo",
+  "Zieltemperatur": "Température cible",
+  "braucht Wasser": "a besoin d'eau",
+  "braucht Dünger": "a besoin d'engrais",
+  "braucht mehr Licht": "manque de lumière",
+  "steht in zu trockener Luft": "l'air est trop sec",
+  "steht in zu feuchter Luft": "l'air est trop humide",
+  "ausgezeichnet": "excellent",
+  "gut": "bon",
+  "schlecht": "mauvais",
+  "Lädt aus dem Netz": "Charge depuis le réseau",
+  "Übernahme fehlgeschlagen": "Reprise échouée",
+  "Backup läuft": "Sauvegarde en cours",
+  "An/Aus": "Allumé/Éteint",
+  "12-V-Batterie": "Batterie 12 V",
+  "Luftfeuchtigkeit außen": "Humidité extérieure",
+  "Nächstes Backup überfällig": "Prochaine sauvegarde en retard",
+  "Kamera nicht erreichbar": "Caméra injoignable",
+  "Kein Bild – Kamera ist offline oder ihr Dienst läuft nicht.": "Pas d'image – la caméra est hors ligne ou son service ne tourne pas.",
+  "Kamera offline": "Caméra hors ligne",
+  "Schloss offline": "Serrure hors ligne",
+  "Fenster gekippt": "Fenêtre entrouverte",
+  "Tor offen": "Portail ouvert",
+  "Luft ausgezeichnet": "Air excellent",
+  "Luft mäßig": "Air modéré",
+  "Luft schlecht": "Air mauvais",
+  "Luft sehr schlecht": "Air très mauvais",
+  "Klemmt": "Coincée",
+  "Wird geöffnet …": "Ouverture…",
+  "Gerät fehlt": "Appareil manquant",
+  "Aktionen": "Actions",
+  "Gerät nicht erreichbar": "Appareil injoignable",
+  "Aus (Bürste angehoben)": "Éteint (brosse relevée)",
+  "Eigene Wassermenge": "Débit d'eau personnalisé",
+  "Nur wischen": "Lavage seul",
+  "Pflanze": "Plante",
+  "Rezept": "Recette",
+  "Tür gekippt": "Porte entrouverte",
+  "Ton": "Son",
+  "Beschreiben": "Décrire",
+  "Prüfe Strom und WLAN der Kamera.": "Vérifie l'alimentation et le Wi-Fi de la caméra.",
+  "Erneut versuchen": "Réessayer",
+  "Schloss": "Serrure",
+  "Sirene": "Sirène",
+  "Alarm": "Alarme",
+  "Tor": "Portail",
+  "Lichtfarbe": "Couleur de la lumière",
+  "Leuchten im Raum": "Lumières de la pièce",
+  "Leuchten": "Lumières",
+  "Gedimmt": "Tamisée",
+  "Volle Helligkeit": "Pleine luminosité",
+  "Neutral": "Neutre",
+  "zuletzt": "dernier",
+  "Kanäle": "Canaux",
+  "Becken": "Bacs",
+  "Aquarien · Temperaturen": "Aquariums · Températures",
+  "Mehr": "Plus",
+  "Weniger": "Moins",
+  "WLAN": "Wi-Fi",
+  "Verbraucher": "Consommateurs",
+  "Energiefluss": "Flux d'énergie",
+  "Woher": "D'où",
+  "Wohin Solar": "Où va le solaire",
+  "Verbrauch im Haus": "Consommation de la maison",
+  "Akku lädt": "Batterie en charge",
+  "Akku entlädt": "Batterie en décharge",
+  "Akku bereit": "Batterie au repos",
+  "Solar liefert gerade nichts": "Pas de production solaire pour l'instant",
+  "Kein Verbrauch": "Pas de consommation",
+  "Noch keine Werte": "Pas encore de valeurs",
+  "Noch keine Aufteilung": "Pas encore de répartition",
+  "Sperren": "Blocages",
+  "Internet": "Internet",
+  "Durchsatz": "Débit",
+  "Gerätedetails": "Détails de l'appareil",
+  "Update verfügbar": "Mise à jour disponible",
+  "Problem": "Problème",
+  "Speedtest läuft …": "Test de débit en cours…",
+  "Kapazität": "Capacité",
+  "Tipps": "Conseils",
+  "Noch keine Auswertung": "Pas encore d'analyse",
+  "Solarbank": "Solarbank",
+  "Betriebszustand": "État de fonctionnement",
+  "Lastvorgabe": "Consigne de charge",
+  "Öffentliche IP": "IP publique",
+  "LAN-Upload": "Envoi LAN",
+  "WLAN-Upload": "Envoi Wi-Fi",
+  "pro Woche sparbar": "d'économie possible par semaine",
+  "Kein Strom ins Netz": "Pas d'injection au réseau",
+  "Abgabelimit": "Limite de sortie",
+  "Claude wertet die letzte Woche aus …": "Claude analyse la semaine dernière…",
+  "Niedriger Akkustand": "Batterie faible",
+  "Alle Geräte": "Tous les appareils",
+  "Keine Warnungen": "Aucune alerte",
+  "Alles in Ordnung": "Tout va bien",
+  "Alle Schlösser": "Toutes les serrures",
+  "Alle Kameras": "Toutes les caméras",
+  "Nicht geprüft": "Non vérifié",
+  "KI-Fehler": "Erreur IA",
+  "KI prüft …": "L'IA vérifie…",
+  "1 Batterie schwach": "1 pile faible",
+  "Tippen zum Verriegeln": "Touche pour verrouiller",
+  "Tippen zum Entriegeln": "Touche pour déverrouiller",
+  "Tippen, um alle zu verriegeln": "Touche pour tout verrouiller",
+  "Tippen, um alle zu entriegeln": "Touche pour tout déverrouiller",
+  "Wird verriegelt …": "Verrouillage…",
+  "Wird entriegelt …": "Déverrouillage…",
+  "● Unkritisch": "● Sans risque",
+  "● Breaking": "● Changement majeur",
+  "● Handeln": "● Intervention requise",
+  "KI-Blick: Druck prüfen": "Regard de l'IA : vérifie l'impression",
+  "Fertig gegen": "Terminé vers",
+  "Station": "Station",
+  "Alles aufgefüllt": "Tout est rempli",
+  "Salz, Klarspüler und Pflege sind in Ordnung": "Sel, liquide de rinçage et entretien sont en ordre",
+  "Fühler": "Sondes",
+  "Verlauf": "Historique",
+  "Verlauf der letzten 24 Stunden": "Historique des dernières 24 heures",
+  "Rad-Check im Detail": "Contrôle du vélo en détail",
+  "Motor": "Moteur",
+  "Alles zu und verriegelt": "Tout fermé et verrouillé",
+  "Alles zu": "Tout fermé",
+  "Feststellbremse angezogen": "Frein à main serré",
+  "Tank fast leer": "Réservoir presque vide",
+  "Speiseplan der nächsten 7 Tage ist leer": "Le menu des 7 prochains jours est vide",
+  "Zutaten der Idee": "Ingrédients de l'idée",
+  "Raumluft gut": "Air intérieur bon",
+  "Heute keine Termine": "Aucun événement aujourd'hui",
+  "1 Termin heute": "1 événement aujourd'hui",
+  "Keine Szenen gefunden. Casora zeigt alle Szenen, die in den Entitäten weder ausgeblendet noch deaktiviert sind.": "Aucune scène trouvée. Casora affiche toutes les scènes qui ne sont ni masquées ni désactivées dans les entités.",
+  "Aquarium": "Aquarium",
+  "Jalousie": "Store",
+  "E-Bike": "VAE",
+  "Ventilator": "Ventilateur",
+  "Spiel": "Jeu",
+  "Luftbefeuchter": "Humidificateur",
+  "Anwesenheit": "Présence",
+  "Schalter": "Interrupteur",
+  "Updates": "Mises à jour",
+  "Wetterwarnungen": "Alertes météo",
+  "Noch keine Geräte – im Studio hinzufügen": "Pas encore d'appareils – ajoute-les dans le Studio",
+  "Noch kein Gerät zugeordnet": "Pas encore d'appareil attribué",
+  "Im Casora Studio dieser Kachel ein Gerät zuweisen": "Attribue un appareil à cette tuile dans Casora Studio",
+  "Im Casora Studio neu zuordnen": "Réattribue-le dans Casora Studio",
+  "Noch nicht eingerichtet": "Pas encore configuré",
+  "Im Casora Studio der Kachel den Solar-Tipp zuordnen.": "Attribue le conseil solaire à cette tuile dans Casora Studio.",
+  "Noch keine Tageswerte": "Pas encore de valeurs journalières",
+  "Welche Geräte hier zählen, legst du im Studio fest.": "Tu choisis dans le Studio quels appareils comptent ici.",
+  "waschen": "laver le linge",
+  "spülen": "lancer le lave-vaisselle",
+  "trocknen": "lancer le sèche-linge",
+  "Fühlt sich wohl": "Se porte bien",
+  "Braucht Wasser": "A besoin d'eau",
+  "Steht zu nass": "Trop humide",
+  "Steht zu kalt": "Trop froid",
+  "Steht zu warm": "Trop chaud",
+  "Zu viel Sonne": "Trop de soleil",
+  "Überdüngt": "Trop d'engrais",
+  "Bitte nachsehen": "Jette un œil",
+  "Keine Messwerte": "Aucune mesure",
+  "Wartet auf Daten": "En attente de données",
+  "steht zu nass": "est trop humide",
+  "ist überdüngt": "a trop d'engrais",
+  "bekommt zu viel Sonne": "reçoit trop de soleil",
+  "steht zu kalt": "a trop froid",
+  "steht zu warm": "a trop chaud",
+  "Ausgeräumt": "Vidé",
+  "Wäsche ist noch drin": "Le linge est encore dedans",
+  "Wäsche ist noch im Trockner": "Le linge est encore dans le sèche-linge",
+  "Fertig · Wäsche drin": "Terminé · linge dedans",
+  "Wird beim Öffnen der Tür erkannt": "Détecté à l'ouverture de la porte",
+  "Welches Programm läuft?": "Quel programme tourne ?",
+  "Nächstes Programm": "Prochain programme",
+  "Erkennung anhalten": "Suspendre la détection",
+  "Wenn die Maschine kurz unterbrochen wird": "Quand la machine est brièvement interrompue",
+  "Die Erkennung ist angehalten": "La détection est suspendue",
+  "Erkennung verbessern": "Améliorer la détection",
+  "1 Einstellung empfohlen, in WashData übernehmen": "1 réglage recommandé, à reprendre dans WashData",
+  "Durchgänge insgesamt": "Cycles au total",
+  "Programme": "Programmes",
+  "Programm gewählt": "Programme choisi",
+  "An der Maschine gewählt": "Choisi sur la machine",
+  "Prüfung": "Vérification",
+  "Spülstopp": "Arrêt cuve pleine",
+  "Stromausfall": "Panne de courant",
+  "Störung": "Panne",
+  "Wartung nötig": "Entretien nécessaire",
+  "Abfallkalender gerade nicht erreichbar": "Calendrier des déchets injoignable pour l'instant",
+  "Nicht erreichbar": "Injoignable",
+  "Die Abholtermine kommen wieder, sobald der Entsorger antwortet.": "Les dates de collecte reviendront dès que le service de collecte répondra.",
+  "Lautsprecher und TVs": "Enceintes et TV",
+  "Sonstiges": "Autres",
+  "Schlaf": "Sommeil",
+  "Eco": "Eco",
+  "Smart": "Smart",
+  "Turbo": "Turbo",
+  "Boost": "Boost",
+  "Natur": "Nature",
+  "Hier gibt es noch keine Geräte": "Pas encore d'appareils ici",
+  "Im Casora Studio einem Raum zuordnen": "Attribue-les à une pièce dans Casora Studio",
+  "weitere": "autres",
+  "Zum Anfang": "Au début",
+  "Fast leer": "Presque vide",
+  "Alle Batterien OK": "Toutes les piles OK",
+  "1 Akku schwach": "1 batterie faible",
+  "Akku fast leer": "Batterie presque vide",
+  "Läuft gerade": "En lecture",
+  "Scharf": "Armée",
+  "Alarm unscharf": "Alarme désarmée",
+  "Welche Türen sind offen?": "Quelles portes sont ouvertes ?",
+  "Ist alles abgeschlossen?": "Tout est verrouillé ?",
+  "Alarm scharf schalten": "Armer l'alarme",
+  "Wie wird das Wetter heute?": "Quel temps fait-il aujourd'hui ?",
+  "Muss heute eine Tonne raus?": "Faut-il sortir un bac aujourd'hui ?",
+  "Öffne die Jalousien": "Ouvre les stores",
+  "Schließe die Jalousien": "Ferme les stores",
+  "Wie viel Strom brauchen wir gerade?": "Combien consommons-nous en ce moment ?",
+  "Läuft die Waschmaschine noch?": "Le lave-linge tourne-t-il encore ?",
+  "Was läuft gerade?": "Qu'est-ce qui passe en ce moment ?",
+  "Vorschläge für den Morgen": "Suggestions pour le matin",
+  "Vorschläge für heute": "Suggestions pour aujourd'hui",
+  "Vorschläge für den Abend": "Suggestions pour le soir",
+  "Vorschläge für die Nacht": "Suggestions pour la nuit",
+  "lädt": "en charge",
+  "Zum Dock": "Station",
+  "Smart wählt Saugstärke und Wischen je Raum selbst.": "Smart choisit lui-même l'aspiration et le lavage pour chaque pièce.",
+  "Kein Bild": "Pas d'image",
+  "Zu": "Fermer",
+  "Auf": "Ouvrir",
+  "Position": "Position",
+  "Spielt": "En lecture",
+  "Geräte im Casora Studio einem Raum zuordnen": "Attribue les appareils à une pièce dans Casora Studio",
+  "Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über eine https-Adresse öffnen.": "Le micro ne fonctionne qu'en HTTPS – ouvre Home Assistant via une adresse https.",
+  "In der Summe": "Dans le total",
+  "Nicht in der Summe": "Hors total",
+  "Keine Leistung": "Pas une puissance",
+  "Steckt hinter": "Derrière",
+  "1 Gerät ohne Wert": "1 appareil sans valeur",
+  "Schloss offen": "Serrure ouverte",
+  "Alles sicher": "Tout est sûr",
+  "Auswertung der letzten 7 Tage": "Analyse des 7 derniers jours",
+  "Idee der Woche": "Idée de la semaine",
+  "Vorschlag von Claude": "Suggestion de Claude",
+  "Karte": "Carte",
+  "Vom Hersteller, kommt verzögert": "Du fabricant, arrive en différé",
+  "der Entsorger": "le service de collecte",
+  "Mbit/s Download": "Mbit/s descendant",
+  "Mbit/s Upload": "Mbit/s montant",
+  "Download & Upload": "Réception et envoi",
+  "Download": "Réception",
+  "Upload": "Envoi",
+  "Sensor": "Capteur",
+  "Speedtest": "Speedtest",
+  "Standby": "Veille",
+  "Firmware": "Firmware",
+  "HACS": "HACS",
+  "Casora": "Casora",
+  "Cookidoo": "Cookidoo",
+  "Thermomix": "Thermomix",
+  "PowerTube": "PowerTube",
+  "PlayStation": "PlayStation",
+  "PlayStation Network": "PlayStation Network",
+  "1 Termin": "1 événement",
+  "1 Kamera offline": "1 caméra hors ligne",
+  "1 Schloss offline": "1 serrure hors ligne",
+  "1 Tür gekippt": "1 porte entrouverte",
+  "1 Tag": "1 jour",
+  "Wirklich ausschalten?": "Vraiment éteindre ?",
+  "Wirklich einschalten?": "Vraiment allumer ?",
+  "Wirklich schließen?": "Vraiment fermer ?",
+  "Wirklich aufschließen?": "Vraiment déverrouiller ?",
+  "Wirklich abschließen?": "Vraiment verrouiller ?",
+  "Aufschließen": "Déverrouiller",
+  "Abschließen": "Verrouiller",
+  "Achtung": "Attention",
+  "Trotzdem scharf schalten?": "Armer quand même ?",
+  "Trotzdem scharf schalten": "Armer quand même",
+  "1 Tür offen": "1 porte ouverte",
+  "1 Tor offen": "1 portail ouvert",
+  "1 Fenster offen": "1 fenêtre ouverte",
+  "1 Fenster gekippt": "1 fenêtre entrouverte",
+  "Licht aus": "Lumières éteintes",
+  "Kein Team-Tracker-Sensor": "Pas un capteur Team Tracker",
+  "Endstand": "Score final",
+  "Live": "En direct",
+  "Halbzeit": "Mi-temps",
+  "Morgen": "Demain",
+  "Heim": "Domicile",
+  "Gast": "Extérieur",
+  "Tabelle": "Classement",
+  "Form": "Forme",
+  "Letzte Duelle": "Confrontations",
+  "Licht an": "Lumière allumée",
+  "Feucht": "Humide",
+  "Ergebnis": "Score",
+  "Nächstes Spiel": "Prochain match",
+  "Letztes Spiel": "Dernier match",
+  "Testspiel": "Amical",
+  "Gegner": "adversaire",
+  "nächster Gegner": "prochain adversaire",
+  "Ganze Tabelle": "Classement complet",
+  "Weniger zeigen": "Voir moins",
+  "Keine Spiele gefunden": "Aucun match trouvé",
+  "Tabelle nicht erreichbar": "Classement indisponible",
+  "Keine Tabelle für diesen Wettbewerb": "Pas de classement pour cette compétition",
+  "Fußball": "Football",
+  "gegen": "contre",
+  "bei": "à",
+  "Kein Spiel angesetzt": "Aucun match programmé",
+  "Nächstes Spiel noch nicht angesetzt": "Prochain match pas encore programmé",
+  "Verschoben": "Reporté",
+  "Abgesagt": "Annulé",
+  "Uhrzeit offen": "Heure à confirmer",
+  "Verlängerung": "Prolongation",
+  "Elfmeterschießen": "Tirs au but",
+  "Gleich": "Bientôt",
+  "n. V.": "a.p.",
+  "i. E.": "t.a.b.",
+  "Sieg": "Victoire",
+  "Niederlage": "Défaite",
+  "1 Raum": "1 pièce",
+  "1 Licht an": "1 lumière allumée",
+  "Keine Räume": "Aucune pièce",
+  "Lampen-Modi": "Modes de la lampe",
+  "Lampen-Profil": "Profil de la lampe",
+  "Farbkanäle": "Canaux de couleur",
+  "Ohne Effekt": "Sans effet",
+  "Home Assistant": "Home Assistant",
+  "Programm der Lampe": "Programme propre à la lampe",
+  "Eigener Tagesablauf der Lampe": "Cycle journalier propre à la lampe",
+  "Temperatur zu hoch": "Température trop haute",
+  "Temperatur zu niedrig": "Température trop basse",
+  "Aktinisch": "Actinique",
+  "UV": "UV",
+  "Kaltweiß": "Blanc froid",
+  "Warmweiß": "Blanc chaud",
+  "Mondlicht": "Clair de lune",
+  "Rot": "Rouge",
+  "Grün": "Vert",
+  "Blau": "Bleu",
+  "Weiß": "Blanc",
+  "Tanken": "Carburant",
+  "Abruf gestört": "Requête en échec",
+  "Preise werden geladen": "Chargement des prix",
+  "Empfehlung": "Recommandation",
+  "Am günstigsten": "Le moins cher",
+  "In der Nähe": "À proximité",
+  "Günstigste": "La moins chère",
+  "Nächste": "La plus proche",
+  "Typischer Tag": "Journée type",
+  "Ø 14 Tage": "Ø 14 jours",
+  "Lernphase": "Apprentissage",
+  "Empfehlung kommt bald": "Recommandation bientôt",
+  "Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa einem Tag.": "La recommandation viendra dès qu'il y aura assez de prix, dans environ un jour.",
+  "Gerade": "En ce moment",
+  "Keine offene Tankstelle": "Aucune station ouverte",
+  "Im Umkreis hat gerade keine Tankstelle geöffnet.": "Aucune station des environs n'est ouverte pour l'instant.",
+  "Tank knapp": "Réservoir bas",
+  "Jetzt tanken": "Fais le plein maintenant",
+  "Warte bis heute Abend": "Attends ce soir",
+  "Warte bis morgen Abend": "Attends demain soir",
+  "Warte bis heute Vormittag": "Attends ce matin",
+  "Warte bis morgen früh": "Attends demain matin",
+  "Guter Zeitpunkt": "Bon moment",
+  "Kein großer Unterschied": "Peu de différence",
+  "In den nächsten Stunden ändert sich der Preis meist um weniger als 2 ct.": "Dans les prochaines heures, le prix varie en général de moins de 2 ct.",
+  "Noch keine Preise": "Pas encore de prix",
+  "Tankpreise gerade nicht abrufbar": "Prix du carburant indisponibles pour l'instant",
+  "Casora fragt alle 10 Minuten, die ersten Preise kommen gleich.": "Casora interroge toutes les 10 minutes, les premiers prix arrivent bientôt.",
+  "Gerade keine offen": "Aucune ouverte pour l'instant",
+  "Daten: Tankerkönig, CC BY 4.0": "Données : Tankerkönig, CC BY 4.0",
+  "Umkreis": "Rayon",
+  "bis": "à",
+  "Ø pro Tag": "Ø par jour",
+  "Heute bis": "Aujourd'hui jusqu'à",
+  "letzte 2 Stunden": "2 dernières heures",
+  "letzte 4 Stunden": "4 dernières heures",
+  "letzte 6 Stunden": "6 dernières heures",
+  "letzte 24 Stunden": "24 dernières heures",
+  "letzte 48 Stunden": "48 dernières heures",
+  "letzte 7 Tage": "7 derniers jours",
+  "letzte 30 Tage": "30 derniers jours",
+  "noch nie": "jamais",
+  "Salz nachfüllen": "Remplir le sel",
+  "Klarspüler nachfüllen": "Remplir le liquide de rinçage",
+  "Flusensieb reinigen": "Nettoyer le filtre à peluches",
+  "Kondensator reinigen": "Nettoyer le condenseur",
+  "Angehalten": "Arrêté",
+  "steht still, evtl. Unwucht": "à l'arrêt, peut-être un balourd",
+  "Eigene Aufgabe": "Tâche personnalisée",
+  "Am Schloss": "Sur la serrure",
+  "Bedienen": "Commandes",
+  "Entriegeln": "Déverrouiller",
+  "Verriegeln": "Verrouiller",
+  "Ganzer Verlauf": "Historique complet",
+  "Skript": "Script",
+  "Tür öffnen": "Ouvrir la porte",
+  "Türkontakt": "Contact de porte",
+  "Wirklich die Tür öffnen?": "Vraiment ouvrir la porte ?",
+  "Mit Rückfrage, wie im Studio eingestellt": "Demande d'abord, comme réglé dans le Studio",
+  "Schloss nicht erreichbar": "Serrure injoignable",
+  "Verlauf nicht abrufbar": "Historique indisponible",
+  "Heute keine Änderung": "Aucun changement aujourd'hui",
+  "per App": "via l'app",
+  "Über": "Via",
+  "Alles ok": "Tout va bien",
+  "Wirklich entriegeln?": "Vraiment déverrouiller ?",
+  "Wirklich verriegeln?": "Vraiment verrouiller ?",
+  "Nichts fällig": "Rien à faire",
+  "Daten": "Données",
+  "Jetzt nach Updates suchen": "Rechercher des mises à jour maintenant",
+  "Suche …": "Recherche…",
+  "Keine neuen Updates": "Aucune nouvelle mise à jour",
+  "1 neues Update gefunden": "1 nouvelle mise à jour trouvée",
+  "Suche fehlgeschlagen": "Recherche échouée",
+  "Vorheriger Titel": "Titre précédent",
+  "Nächster Titel": "Titre suivant",
+  "Klappen": "Trappes",
+  "Kraftstoff": "Carburant",
+  "jetzt günstig": "bon prix maintenant",
+  "keine offen": "aucune ouverte",
+  "KI:": "IA :",
+  "1 heizt": "1 chauffe",
+  "Handy": "Téléphone",
+  "Lädt nicht": "Ne charge pas",
+  "Mobilfunk": "Données mobiles",
+  "kein WLAN": "pas de Wi-Fi",
+  "Entfernung": "Distance",
+  "Richtung": "Direction",
+  "Nach Hause": "Vers la maison",
+  "Luftlinie zur Zone Zuhause": "À vol d'oiseau jusqu'à la zone Maison",
+  "Standort jetzt holen": "Obtenir la position maintenant",
+  "fragt die Companion-App": "interroge l'app Companion",
+  "Nachricht schicken": "Envoyer un message",
+  "Klingeln lassen": "Faire sonner",
+  "auch wenn es leise ist": "même en mode silencieux",
+  "Standort per GPS": "Position par GPS",
+  "über das WLAN": "par le Wi-Fi",
+  "über Bluetooth": "par Bluetooth",
+  "Verlauf wird geladen …": "Chargement de l'historique…",
+  "Kein Verlauf der letzten drei Tage": "Pas d'historique sur les trois derniers jours",
+  "Entfernt sich": "S'éloigne",
+  "Kommt näher": "Se rapproche",
+  "Bleibt stehen": "Immobile",
+  "Angekommen": "Arrivé",
+  "Standort angefragt": "Position demandée",
+  "Konnte das Handy nicht erreichen": "Impossible de joindre le téléphone",
+  "Nachricht gesendet": "Message envoyé",
+  "Handy klingelt": "Le téléphone sonne",
+  "Senden": "Envoyer",
+  "Nachricht": "Message",
+  "Nachricht an": "Message à",
+  "von zuhause": "de la maison",
+  "Handy klingeln lassen?": "Faire sonner le téléphone ?",
+  "Es klingelt auch, wenn es leise gestellt ist.": "Il sonne même s'il est en mode silencieux.",
+  "Klingeln": "Sonner",
+  "Hier bin ich!": "Je suis là !",
+  "Person": "Personne",
+  "jetzt hier": "ici maintenant",
+  "Keine Änderung in den letzten drei Tagen": "Aucun changement ces trois derniers jours",
+  "Mähroboter": "Robot tondeuse",
+  "Mäht": "Tond",
+  "In der Station": "Dans la station",
+  "Fährt zur Station": "Retour à la station",
+  "Mäht außerhalb des Zeitplans": "Tond hors planning",
+  "Verlässt die Station": "Quitte la station",
+  "Parkt bis zum nächsten Zeitplan": "Stationné jusqu'au prochain planning",
+  "Parkt bis auf Weiteres": "Stationné jusqu'à nouvel ordre",
+  "Parkt, Rasen wächst langsam": "Stationné, l'herbe pousse lentement",
+  "Parkt wegen Frost": "Stationné à cause du gel",
+  "Parkt, Tagesziel erreicht": "Stationné, objectif du jour atteint",
+  "Außerhalb des Mähbereichs": "Hors de la zone de tonte",
+  "Kein Signal vom Begrenzungsdraht": "Pas de signal du câble périphérique",
+  "Falsches Signal vom Begrenzungsdraht": "Signal incorrect du câble périphérique",
+  "Steckt fest": "Coincé",
+  "Umgekippt": "Retourné",
+  "Akku leer": "Batterie vide",
+  "Kann nicht fahren": "Ne peut pas avancer",
+  "Angehoben": "Soulevé",
+  "Kurz angehoben": "Brièvement soulevé",
+  "Steht schief": "Incliné",
+  "Rutscht": "Patine",
+  "Hängt in der Station fest": "Bloqué dans la station",
+  "Station blockiert": "Station bloquée",
+  "Ladestrom zu hoch": "Courant de charge trop élevé",
+  "Rad links blockiert": "Roue gauche bloquée",
+  "Rad rechts blockiert": "Roue droite bloquée",
+  "Rad links überlastet": "Roue gauche surchargée",
+  "Rad rechts überlastet": "Roue droite surchargée",
+  "Radantrieb links gestört": "Défaut d'entraînement gauche",
+  "Radantrieb rechts gestört": "Défaut d'entraînement droit",
+  "Mähwerk blockiert": "Système de coupe bloqué",
+  "Mähmotor gestört": "Défaut du moteur de coupe",
+  "Mähmotor defekt": "Moteur de coupe défectueux",
+  "Schnitthöhe blockiert": "Hauteur de coupe bloquée",
+  "Schnitthöhe gestört": "Défaut de hauteur de coupe",
+  "Stoßsensor vorne gestört": "Défaut du capteur de choc avant",
+  "Stoßsensor hinten gestört": "Défaut du capteur de choc arrière",
+  "Neigungssensor gestört": "Défaut du capteur d'inclinaison",
+  "Stopp-Taste gestört": "Défaut du bouton d'arrêt",
+  "Elektronik gestört": "Défaut électronique",
+  "Falsche PIN": "PIN incorrect",
+  "Klappe offen": "Trappe ouverte",
+  "Ausgeschaltet, Klappe zu": "Éteint, trappe fermée",
+  "Alarm: ausgeschaltet": "Alarme : éteint",
+  "Alarm: angehalten": "Alarme : arrêté",
+  "Alarm: angehoben": "Alarme : soulevé",
+  "Alarm: gekippt": "Alarme : incliné",
+  "Alarm: bewegt": "Alarme : déplacé",
+  "Alarm: außerhalb des Bereichs": "Alarme : hors de la zone",
+  "Zur Station": "Vers la station",
+  "Mähen": "Tondre",
+  "Parken": "Stationner",
+  "Pause": "Pause",
+  "Betriebsstunden": "Heures de fonctionnement",
+  "In den letzten 7 Tagen nicht gemäht": "Pas tondu ces 7 derniers jours",
+  "Mäht gerade": "Tond en ce moment",
+  "Gemäht": "Tondu",
+  "besteht noch": "toujours en cours",
+  "1 Fahrt": "1 trajet",
+  "KI-Check": "Vérification IA",
+  "Vorher sichern": "Sauvegarder d'abord",
+  "Installieren": "Installer",
+  "Überspringen": "Ignorer",
+  "Was ist neu": "Nouveautés",
+  "Alle Hinweise": "Toutes les notes",
+  "Keine Versionshinweise": "Pas de notes de version",
+  "KI-Einschätzung": "Avis de l'IA",
+  "Breaking Change": "Changement majeur",
+  "seit": "depuis",
+  "24 Std.": "24 h",
+  "Letzte 24 Std.": "24 dernières h",
+  "Letzte 7 Tage": "7 derniers jours",
+  "Höchster Wert": "Maximum",
+  "Tiefster Wert": "Minimum",
+  "Durchschnitt": "Moyenne",
+  "Letzte 12 Monate": "12 derniers mois",
+  "Linie": "Ligne",
+  "Balken": "Barres",
+  "Ø pro Monat": "Ø par mois",
+  "Ø pro Stunde": "Ø par heure",
+  "letzte 12 Monate": "12 derniers mois",
+  "Am längsten": "Le plus long",
+  "Änderungen": "Changements",
+  "Steigt": "Monte",
+  "Fällt": "Descend",
+  "nach": "après",
+  "seitdem": "depuis lors",
+  "Keine Änderung im Zeitraum": "Aucun changement sur la période",
+  "Hersteller": "Fabricant",
+  "Modell": "Modèle",
+  "Hardware": "Matériel",
+  "Verbunden über": "Connecté via",
+  "Bereich": "Zone",
+  "Integration": "Intégration",
+  "In Home Assistant öffnen": "Ouvrir dans Home Assistant",
+  "Einstellungen, Umbenennen, Symbol": "Réglages, renommer, icône",
+  "Gehört dazu": "En fait partie",
+  "Diagnose": "Diagnostic",
+  "Belegt": "Occupé",
+  "Anwesend": "Présent",
+  "Nass": "Mouillé",
+  "Rauch": "Fumée",
+  "Eingesteckt": "Branché",
+  "Ausgesteckt": "Débranché",
+  "Insgesamt geöffnet": "Ouvert au total",
+  "Insgesamt Bewegung": "Mouvement au total",
+  "Insgesamt belegt": "Occupé au total",
+  "Insgesamt anwesend": "Présent au total",
+  "Insgesamt nass": "Mouillé au total",
+  "Insgesamt verbunden": "Connecté au total",
+  "Insgesamt schwach": "Faible au total",
+  "Insgesamt Rauch": "Fumée au total",
+  "Insgesamt Problem": "Problème au total",
+  "Insgesamt entriegelt": "Déverrouillé au total",
+  "Insgesamt eingesteckt": "Branché au total",
+  "Insgesamt gelaufen": "En marche au total",
+  "Insgesamt an": "Allumé au total",
+  "Befeuchtet": "Humidifie",
+  "Entfeuchtet": "Déshumidifie",
+  "Betrieb": "Fonctionnement",
+  "Zielfeuchte": "Humidité cible",
+  "Wassertank": "Réservoir d'eau",
+  "Komfort": "Confort",
+  "Warnungen": "Alertes",
+  "Aktuell keine Warnungen": "Aucune alerte actuellement",
+  "Liefert gerade nichts": "Ne produit rien pour l'instant",
+  "Liefert": "Produit",
+  "Kein Austausch": "Aucun échange",
+  "Module": "Modules",
+  "Ertrag": "Production",
+  "Entladen": "Décharger",
+  "Laden": "Charger",
+  "Eingespeist gesamt": "Injecté au total",
+  "Einspeisung und Eigenversorgung": "Injection et autoproduction",
+  "Solarleistung": "Puissance solaire",
+  "Ladestand": "Niveau de charge",
+  "Akkuleistung": "Puissance de la batterie",
+  "Netzleistung": "Puissance réseau",
+  "Woher kommt der Strom": "D'où vient l'électricité",
+  "Wohin geht der Solarstrom": "Où va l'électricité solaire",
+  "Bypass": "Bypass",
+  "Popup öffnen": "Ouvrir la fenêtre",
+  "Kachel bearbeiten": "Modifier la tuile",
+  "Aus in": "Éteindre dans",
+  "An für": "Allumer pendant",
+  "Aus um": "Éteindre à",
+  "An um": "Allumer à",
+  "Stopp": "Stop",
+  "Lauter": "Plus fort",
+  "Kälter": "Plus froid",
+  "Wärmer": "Plus chaud",
+  "15 Min.": "15 min",
+  "30 Min.": "30 min",
+  "1 Std.": "1 h",
+  "2 Std.": "2 h",
+  "Details": "Détails",
+  "Ausschalten in": "Éteindre dans",
+  "Einschalten für": "Allumer pendant",
+  "Kamera live": "Caméra en direct",
+  "Live ansehen": "Voir en direct",
+  "Auto": "Auto",
+  "Hat nicht geklappt": "Ça n'a pas marché",
+  "Alarm scharf schalten?": "Armer l'alarme ?",
+  "Alarm unscharf schalten?": "Désarmer l'alarme ?",
+  "Code": "Code",
+  "Energie-Dashboard": "Tableau de bord énergie",
+  "Alle Updates": "Toutes les mises à jour",
+  "Nach Updates suchen": "Rechercher des mises à jour",
+  "Suche nach Updates …": "Recherche de mises à jour…",
+  "Handy klingeln lassen": "Faire sonner le téléphone",
+  "Auf der Einkaufsliste": "Sur la liste de courses",
+  "Rezept öffnen": "Ouvrir la recette",
+  "Batterie gewechselt?": "Pile changée ?",
+  "Gäste-WLAN an": "Wi-Fi invités activé",
+  "Gäste-WLAN aus": "Wi-Fi invités désactivé",
+  "Gäste-WLAN ausschalten?": "Désactiver le Wi-Fi invités ?",
+  "Daten aktualisieren": "Actualiser les données",
+  "Auto aufwecken und Daten holen?": "Réveiller la voiture et récupérer les données ?",
+  "Fertig um": "Terminé à",
+  "Fertig seit": "Terminé depuis",
+  "noch": "encore",
+  "An in": "Allumer dans",
+  "Std.": "h",
+  "Min.": "min",
+  "Tipp: Kachel gedrückt halten oder rechts klicken – Schnellbedienung": "Astuce : maintiens une tuile ou fais un clic droit – commandes rapides",
+  "Tipp: Kachel gedrückt halten – Schnellbedienung": "Astuce : maintiens une tuile – commandes rapides",
+  "Zeitschalter aus": "Arrêter la minuterie",
+  "Ändern auf": "Changer en",
+  "Update gestartet": "Mise à jour lancée",
+  "Aufnahme an": "Enregistrement activé",
+  "Aufnahme aus": "Enregistrement désactivé",
+  "Aufnahme ausschalten?": "Désactiver l'enregistrement ?",
+  "Aufnahmen": "Enregistrements",
+  "Automatisch folgen": "Suivi automatique",
+  "Bewegungserkennung": "Détection de mouvement",
+  "Erkennung an": "Détection activée",
+  "Erkennung aus": "Détection désactivée",
+  "Erkennung ausschalten?": "Désactiver la détection ?",
+  "Frigate meldet Fehler": "Frigate signale une erreur",
+  "Frigate startet": "Frigate démarre",
+  "Frigate antwortet nicht": "Frigate ne répond pas",
+  "Gerade im Bild": "À l'image en ce moment",
+  "Geräuscherkennung": "Détection audio",
+  "In Frigate öffnen": "Ouvrir dans Frigate",
+  "In den Medien von Home Assistant": "Dans les médias de Home Assistant",
+  "Kamera aus": "Caméra éteinte",
+  "Keine Erkennung": "Aucune détection",
+  "Keine Erkennungen in den letzten 7 Tagen": "Aucune détection ces 7 derniers jours",
+  "Letzte Erkennung": "Dernière détection",
+  "Letzte Erkennungen": "Dernières détections",
+  "Liste über die Frigate-Integration nicht abrufbar": "Liste de l'intégration Frigate impossible à charger",
+  "Noch nicht erkannt": "Pas encore détecté",
+  "Objekte": "Objets",
+  "Objekt": "Objet",
+  "Schnappschuss": "Instantané",
+  "Schnappschüsse": "Instantanés",
+  "Zonen": "Zones",
+  "läuft noch": "toujours en cours",
+  "System": "Système",
+  "Frigate": "Frigate",
+  "Bär": "Ours",
+  "Eichhörnchen": "Écureuil",
+  "Fahrrad": "Vélo",
+  "FedEx": "FedEx",
+  "Fuchs": "Renard",
+  "Gesicht": "Visage",
+  "Hund": "Chien",
+  "Kaninchen": "Lapin",
+  "Katze": "Chat",
+  "Kennzeichen": "Plaque d'immatriculation",
+  "Motorrad": "Moto",
+  "Mülltonne": "Poubelle",
+  "Paket": "Colis",
+  "Pferd": "Cheval",
+  "Schaf": "Mouton",
+  "Schirm": "Parapluie",
+  "USPS": "USPS",
+  "Vogel": "Oiseau",
+  "Waschbär": "Raton laveur",
+  "Reh": "Chevreuil",
+  "Kuh": "Vache",
+  "Boot": "Bateau",
+  "Lkw": "Camion",
+  "Bus": "Bus",
+  "Aufnahme & Erkennung": "Enregistrement et détection",
+  "Löst die Objekterkennung aus": "Déclenche la détection d'objets",
+  "Neuere Erkennung": "Détection plus récente",
+  "Ältere Erkennung": "Détection plus ancienne",
+  "Mehr anzeigen": "Voir plus",
+  "Weniger anzeigen": "Voir moins",
+  "Alle Objekte zeigen": "Voir tous les objets",
+  "Läuft noch": "Toujours en cours",
+  "Privatsphäre an": "Confidentialité activée",
+  "Hat geklingelt": "On a sonné",
+  "Tier": "Animal",
+  "Schnellantworten": "Réponses rapides",
+  "Schnellantwort": "Réponse rapide",
+  "Spielt ab": "Lecture",
+  "Antippen zum Stoppen": "Touche pour arrêter",
+  "Laut an der Tür, 10 Sekunden": "Fort à la porte, 10 secondes",
+  "Auslösen": "Déclencher la sirène",
+  "Sirene läuft": "La sirène retentit",
+  "An der Tür": "À la porte",
+  "Niemand hat geklingelt": "Personne n'a sonné",
+  "Klingelton": "Carillon",
+  "Lautsprecher": "Haut-parleur",
+  "Klingelton an der Tür": "Carillon à la porte",
+  "Ton aufnehmen": "Enregistrer le son",
+  "Ohne Ton hörst du die Tür nicht": "Sans le son, tu n'entends pas la porte",
+  "Infrarot-LEDs nachts": "LED infrarouges la nuit",
+  "Tag/Nacht-Modus": "Mode jour/nuit",
+  "Bild gerade": "Image actuelle",
+  "Status-LED": "LED d'état",
+  "Privatsphäre": "Confidentialité",
+  "Kamera und Ton aus": "Caméra et son coupés",
+  "Licht am Klingelknopf": "Lumière du bouton",
+  "Nachts an": "Allumée la nuit",
+  "Immer an": "Toujours allumée",
+  "Automatische Antwort": "Réponse automatique",
+  "Schwarz-Weiß": "Noir et blanc",
+  "Farbe mit Licht": "Couleur avec éclairage",
+  "Kamera und Ton der Klingel sind aus.": "La caméra et le son de la sonnette sont coupés.",
+  "Klingel nicht erreichbar": "Sonnette injoignable",
+  "Prüfe Strom und WLAN der Klingel.": "Vérifie l'alimentation et le Wi-Fi de la sonnette.",
+  "Ton aus": "Son coupé",
+  "Verbindet …": "Connexion…",
+  "Ton ist an der Klingel aus": "Le son de la sonnette est coupé",
+  "Sprechen klappt mit dieser Klingel nicht – Ton hören geht weiter": "Parler ne fonctionne pas avec cette sonnette – écouter marche toujours",
+  "Kein Zugriff aufs Mikrofon – im Browser erlauben": "Pas d'accès au micro – autorise-le dans le navigateur",
+  "Sprechen nach 90 Sekunden beendet": "Conversation terminée après 90 secondes",
+  "Verbindung zur Klingel beendet": "Connexion à la sonnette terminée",
+  "Ton hören": "Écouter",
+  "An der Tür abspielen?": "Lire à la porte ?",
+  "Geklingelt": "On a sonné",
+  "In den letzten 3 Tagen": "Ces 3 derniers jours",
+  "Kaffeevollautomat": "Machine à café automatique",
+  "Kaffeemaschine": "Machine à café",
+  "Kaffee": "Café",
+  "Kaffeekanne": "Verseuse de café",
+  "XL-Kaffee": "Café XL",
+  "Milchkaffee": "Café au lait",
+  "Kaffee verkehrt": "Café renversé",
+  "Kaffee mit Milch": "Café avec du lait",
+  "Warme Milch": "Lait chaud",
+  "Milchschaum": "Mousse de lait",
+  "Heißwasser": "Eau chaude",
+  "Tee": "Thé",
+  "Eiskaffee": "Café glacé",
+  "Pulverkaffee": "Café moulu",
+  "Milchgetränke": "Boissons lactées",
+  "Mein Kaffee": "Mon café",
+  "Entkalken & Reinigen": "Détartrage et nettoyage",
+  "Entkalkt": "Détartrage",
+  "Spült": "Rinçage",
+  "Pflege läuft": "Entretien en cours",
+  "Heizt auf": "Chauffe",
+  "Wasser nachfüllen": "Remplir l'eau",
+  "Wassertank ist leer": "Le réservoir d'eau est vide",
+  "Bohnen nachfüllen": "Remplir les grains",
+  "Bohnenbehälter ist leer": "Le bac à grains est vide",
+  "Schale leeren": "Vider le bac d'égouttage",
+  "Tropfschale ist voll": "Le bac d'égouttage est plein",
+  "Satzbehälter leeren": "Vider le bac à marc",
+  "Kaffeesatz ist voll": "Le bac à marc est plein",
+  "Milch kühlen": "Garder le lait au frais",
+  "Milch in den Kühlschrank stellen": "Mets le lait au réfrigérateur",
+  "Entkalkungsprogramm starten": "Lancer le détartrage",
+  "Pflegeprogramm starten": "Lancer le programme d'entretien",
+  "Reinigungsprogramm starten": "Lancer le programme de nettoyage",
+  "Filter wechseln": "Changer le filtre",
+  "Wasserfilter ist verbraucht": "Le filtre à eau est usé",
+  "Wassertank einsetzen": "Insérer le réservoir d'eau",
+  "Wassertank fehlt": "Réservoir d'eau manquant",
+  "Wasser bald leer": "Eau bientôt épuisée",
+  "Wassertank ist fast leer": "Le réservoir d'eau est presque vide",
+  "Schale einsetzen": "Insérer le bac d'égouttage",
+  "Tropfschale fehlt": "Bac d'égouttage manquant",
+  "Brühgruppe einsetzen": "Insérer l'unité de percolation",
+  "Brühgruppe fehlt": "Unité de percolation manquante",
+  "Entkalken überfällig": "Détartrage en retard",
+  "Reinigen überfällig": "Nettoyage en retard",
+  "Entkalken & Reinigen überfällig": "Détartrage et nettoyage en retard",
+  "Entkalken blockiert": "Détartrage bloqué",
+  "Entkalken an der Maschine fortsetzen": "Poursuis le détartrage sur la machine",
+  "Milchsystem reinigen": "Nettoyer le système à lait",
+  "Milchsystem spülen und reinigen": "Rince et nettoie le système à lait",
+  "Mahlt": "Mouture",
+  "Brüht vor": "Pré-infusion",
+  "Brüht": "Infusion",
+  "Läuft ein": "Écoulement",
+  "Milch": "Lait",
+  "Bereitet vor": "Préparation",
+  "Getränke": "Boissons",
+  "Fernstart an der Maschine erlauben": "Autorise le démarrage à distance sur la machine",
+  "Erst dann startet Casora Getränke aus der Ferne": "Ce n'est qu'alors que Casora peut lancer des boissons à distance",
+  "Stärke": "Intensité",
+  "Menge": "Quantité",
+  "Sehr mild": "Très doux",
+  "Mild": "Doux",
+  "Stark": "Fort",
+  "Sehr stark": "Très fort",
+  "Extra stark": "Extra fort",
+  "Max": "Max",
+  "Getränk": "Boisson",
+  "Getränk antippen, dann starten.": "Touche une boisson, puis lance-la.",
+  "Maschine": "Machine",
+  "Steckdose an": "Prise allumée",
+  "Steckdose aus": "Prise éteinte",
+  "Maschine meldet einen Fehler": "La machine signale une erreur",
+  "Hinweis im Display der Maschine ansehen": "Regarde le message sur l'écran de la machine",
+  "Wasserfilter": "Filtre à eau",
+  "Filterwechsel": "Changement de filtre",
+  "Warnungen in Home Assistant aktivieren": "Active les alertes dans Home Assistant",
+  "Home Connect legt Wassertank, Bohnen, Schale und Entkalken ausgeschaltet an. Am Gerät unter Entitäten einschalten, dann meldet die Kachel sie.": "Home Connect crée réservoir d'eau, grains, bac et détartrage désactivés. Active-les sous Entités de l'appareil, et la tuile les signalera.",
+  "Getränke gesamt": "Boissons au total",
+  "Lernt": "Apprend",
+  "Tank herausnehmen, füllen, einsetzen": "Retire le réservoir, remplis-le, remets-le",
+  "Bohnen in den Behälter füllen": "Remplis le bac à grains",
+  "Tropfschale herausnehmen und leeren": "Retire et vide le bac d'égouttage",
+  "Behälter herausnehmen und leeren": "Retire et vide le bac",
+  "Entkalken fällig": "Détartrage à faire",
+  "Entkalkungsprogramm an der Maschine starten": "Lance le détartrage sur la machine",
+  "Entkalken & Reinigen fällig": "Détartrage et nettoyage à faire",
+  "Pflegeprogramm an der Maschine starten": "Lance le programme d'entretien sur la machine",
+  "Reinigen fällig": "Nettoyage à faire",
+  "Reinigungsprogramm an der Maschine starten": "Lance le programme de nettoyage sur la machine",
+  "Wasserfilter an der Maschine tauschen": "Change le filtre à eau sur la machine",
+  "Wasser leer": "Plus d'eau",
+  "Bohnen leer": "Plus de grains",
+  "Schale voll": "Bac plein",
+  "Satz voll": "Marc plein",
+  "Tank fehlt": "Réservoir manquant",
+  "Schale fehlt": "Bac manquant",
+  "Behälter fehlt": "Récipient manquant",
+  "Tank einsetzen, bis er einrastet": "Insère le réservoir jusqu'au clic",
+  "Tank bei Gelegenheit füllen": "Remplis le réservoir à l'occasion",
+  "Tropfschale einsetzen": "Insère le bac d'égouttage",
+  "Brühgruppe einsetzen, bis sie einrastet": "Insère l'unité de percolation jusqu'au clic",
+  "Filterwechsel überfällig": "Changement de filtre en retard",
+  "Milchsystem an der Maschine spülen": "Rince le système à lait sur la machine",
+  "Service nötig": "Révision nécessaire",
+  "Maschine vom Kundendienst prüfen lassen": "Fais vérifier la machine par le SAV",
+  "Bohnenbehälter einsetzen": "Insérer le bac à grains",
+  "Bohnenbehälter einsetzen, bis er einrastet": "Insère le bac à grains jusqu'au clic",
+  "Verbindung zur Maschine prüfen": "Vérifie la connexion à la machine",
+  "Eingeschaltet, aber noch nicht bereit – Getränk an der Maschine starten": "Allumée, mais pas encore prête – lance la boisson sur la machine",
+  "Ausgewählt – Getränk an der Maschine starten": "Sélectionnée – lance la boisson sur la machine",
+  "Start abbrechen": "Annuler le démarrage",
+  "Abbrechen geht nur an der Maschine": "L'annulation n'est possible que sur la machine",
+  "Start hat nicht geklappt": "Le démarrage a échoué",
+  "Abbrechen hat nicht geklappt": "L'annulation a échoué",
+  "Wasser ist leer": "Il n'y a plus d'eau",
+  "Bohnen sind leer": "Il n'y a plus de grains",
+  "Schale ist voll": "Le bac d'égouttage est plein",
+  "Satzbehälter ist voll": "Le bac à marc est plein",
+  "trotzdem starten?": "lancer quand même ?",
+  "Trotzdem starten": "Lancer quand même",
+  "Abgebrochen": "Annulé",
+  "Startet, sobald bereit": "Démarre dès que prête",
+  "Startet …": "Démarrage…",
+  "Hinweise⁠": "Alertes",
+  "Rückspülen": "Rétro-rinçage",
+  "Getränk starten": "Lancer la boisson",
+  "Getränk starten?": "Lancer la boisson ?",
+  "Doppio+": "Doppio+",
+  "Ristretto doppio": "Ristretto doppio",
+  "Caffè Crema doppio": "Caffè crema doppio",
+  "Americano extra": "Americano extra",
+  "Long Black": "Long black",
+  "Kaffee to go": "Café à emporter",
+  "Cappuccino Italiano": "Cappuccino italiano",
+  "Cappuccino doppio": "Cappuccino doppio",
+  "Macchiato": "Macchiato",
+  "Latte Macchiato extra": "Latte macchiato extra",
+  "Latte Macchiato triple": "Latte macchiato triple",
+  "Kalte Milch": "Lait froid",
+  "Dampf": "Vapeur",
+  "Sehr heißes Wasser": "Eau très chaude",
+  "Schwarzer Tee": "Thé noir",
+  "Kräutertee": "Tisane",
+  "Früchtetee": "Infusion aux fruits",
+  "Grüner Tee": "Thé vert",
+  "Weißer Tee": "Thé blanc",
+  "Japanischer Tee": "Thé japonais",
+  "Chai Latte": "Chai latte",
+  "Kakao": "Chocolat chaud",
+  "Kaffee auf Eis": "Café sur glace",
+  "Ristretto & Espresso": "Ristretto et espresso",
+  "Galão": "Galão",
+  "Café con leche": "Café con leche",
+  "Red Eye": "Red eye",
+  "Black Eye": "Black eye",
+  "Dead Eye": "Dead eye",
+  "Café cortado": "Café cortado",
+  "Cold Brew": "Cold brew",
+  "Espresso doppio": "Espresso doppio",
+  "Caffè Crema": "Caffè crema",
+  "Caffè Grande": "Caffè grande",
+  "Kaffee starten": "Lancer le café",
+  "Kaffee starten?": "Lancer le café ?",
+  "Einschalten und Kaffee starten": "Allumer et lancer le café",
+  "Heißwasser starten": "Lancer l'eau chaude",
+  "Heißwasser starten?": "Lancer l'eau chaude ?",
+  "Einschalten und Heißwasser starten": "Allumer et lancer l'eau chaude",
+  "Warme Milch starten": "Lancer le lait chaud",
+  "Warme Milch starten?": "Lancer le lait chaud ?",
+  "Einschalten und Warme Milch starten": "Allumer et lancer le lait chaud",
+  "Milchschaum starten": "Lancer la mousse de lait",
+  "Milchschaum starten?": "Lancer la mousse de lait ?",
+  "Einschalten und Milchschaum starten": "Allumer et lancer la mousse de lait",
+  "Tee starten": "Lancer le thé",
+  "Tee starten?": "Lancer le thé ?",
+  "Einschalten und Tee starten": "Allumer et lancer le thé",
+  "Kakao starten": "Lancer le chocolat chaud",
+  "Kakao starten?": "Lancer le chocolat chaud ?",
+  "Einschalten und Kakao starten": "Allumer et lancer le chocolat chaud",
+  "Kalte Milch starten": "Lancer le lait froid",
+  "Kalte Milch starten?": "Lancer le lait froid ?",
+  "Einschalten und Kalte Milch starten": "Allumer et lancer le lait froid",
+  "Dampf starten": "Lancer la vapeur",
+  "Dampf starten?": "Lancer la vapeur ?",
+  "Einschalten und Dampf starten": "Allumer et lancer la vapeur",
+  "Milchkaffee starten": "Lancer le café au lait",
+  "Milchkaffee starten?": "Lancer le café au lait ?",
+  "Einschalten und Milchkaffee starten": "Allumer et lancer le café au lait",
+  "Kaffeekanne starten": "Lancer la verseuse de café",
+  "Kaffeekanne starten?": "Lancer la verseuse de café ?",
+  "Einschalten und Kaffeekanne starten": "Allumer et lancer la verseuse de café",
+  "Sehr heißes Wasser starten": "Lancer l'eau très chaude",
+  "Sehr heißes Wasser starten?": "Lancer l'eau très chaude ?",
+  "Einschalten und Sehr heißes Wasser starten": "Allumer et lancer l'eau très chaude",
+  "Eiskaffee starten": "Lancer le café glacé",
+  "Eiskaffee starten?": "Lancer le café glacé ?",
+  "Einschalten und Eiskaffee starten": "Allumer et lancer le café glacé",
+  "Kaffee mit Milch starten": "Lancer le café avec du lait",
+  "Kaffee mit Milch starten?": "Lancer le café avec du lait ?",
+  "Einschalten und Kaffee mit Milch starten": "Allumer et lancer le café avec du lait",
+  "XL-Kaffee starten": "Lancer le café XL",
+  "XL-Kaffee starten?": "Lancer le café XL ?",
+  "Einschalten und XL-Kaffee starten": "Allumer et lancer le café XL",
+  "Kaffee auf Eis starten": "Lancer le café sur glace",
+  "Kaffee auf Eis starten?": "Lancer le café sur glace ?",
+  "Einschalten und Kaffee auf Eis starten": "Allumer et lancer le café sur glace",
+  "Schwarzer Tee starten": "Lancer le thé noir",
+  "Schwarzer Tee starten?": "Lancer le thé noir ?",
+  "Einschalten und Schwarzer Tee starten": "Allumer et lancer le thé noir",
+  "Kräutertee starten": "Lancer la tisane",
+  "Kräutertee starten?": "Lancer la tisane ?",
+  "Einschalten und Kräutertee starten": "Allumer et lancer la tisane",
+  "Früchtetee starten": "Lancer l'infusion aux fruits",
+  "Früchtetee starten?": "Lancer l'infusion aux fruits ?",
+  "Einschalten und Früchtetee starten": "Allumer et lancer l'infusion aux fruits",
+  "Grüner Tee starten": "Lancer le thé vert",
+  "Grüner Tee starten?": "Lancer le thé vert ?",
+  "Einschalten und Grüner Tee starten": "Allumer et lancer le thé vert",
+  "Weißer Tee starten": "Lancer le thé blanc",
+  "Weißer Tee starten?": "Lancer le thé blanc ?",
+  "Einschalten und Weißer Tee starten": "Allumer et lancer le thé blanc",
+  "Japanischer Tee starten": "Lancer le thé japonais",
+  "Japanischer Tee starten?": "Lancer le thé japonais ?",
+  "Einschalten und Japanischer Tee starten": "Allumer et lancer le thé japonais",
+  "Kaffee verkehrt starten": "Lancer le café renversé",
+  "Kaffee verkehrt starten?": "Lancer le café renversé ?",
+  "Einschalten und Kaffee verkehrt starten": "Allumer et lancer le café renversé",
+  "Pulverkaffee starten": "Lancer le café moulu",
+  "Pulverkaffee starten?": "Lancer le café moulu ?",
+  "Einschalten und Pulverkaffee starten": "Allumer et lancer le café moulu",
+  "Kaffee to go starten": "Lancer le café à emporter",
+  "Kaffee to go starten?": "Lancer le café à emporter ?",
+  "Einschalten und Kaffee to go starten": "Allumer et lancer le café à emporter",
+  "Mithören": "Écouter",
+  "Bei Privatsphäre aus": "Coupé en mode confidentialité",
+  "Sprechen beendet – Privatsphäre an": "Conversation terminée – confidentialité activée",
+  "Sprechen beendet – Klingel nicht erreichbar": "Conversation terminée – sonnette injoignable",
+  "Sprechen geht in diesem Browser nicht": "Parler n'est pas possible dans ce navigateur",
+  "Sprechen braucht HTTPS": "Parler nécessite HTTPS",
+  "Sprechen klappt mit dieser Klingel nicht – Mithören geht weiter": "Parler ne fonctionne pas avec cette sonnette – écouter marche toujours",
+  "Sprechen klappt mit dieser Klingel nicht": "Parler ne fonctionne pas avec cette sonnette",
+  "Sprechen geht nur über die Klingel": "Parler n'est possible qu'avec la sonnette",
+  "Groß anzeigen": "Afficher en grand",
+  "Live-Bild": "Image en direct",
+  "Objekterkennung": "Détection d'objets",
+  "Objekterkennung ausschalten?": "Désactiver la détection d'objets ?",
+  "Erkennung einschalten": "Activer la détection",
+  "Erkennung ausschalten": "Désactiver la détection",
+  "Aufnahme einschalten": "Activer l'enregistrement",
+  "Aufnahme ausschalten": "Désactiver l'enregistrement",
+  "Kein Clip vorhanden": "Aucun clip disponible",
+  "Zone": "Zone",
+  "Alarme": "Alertes",
+  "Erkennungen": "Détections",
+  "Herunterladen": "Télécharger",
+  "Zeitleiste": "Chronologie",
+  "Nichts gefunden": "Rien trouvé",
+  "Filter ändern oder zurücksetzen": "Modifie ou réinitialise les filtres",
+  "Filter zurücksetzen": "Réinitialiser les filtres",
+  "Alle Aufnahmen": "Tous les enregistrements",
+  "Keine Aufnahmen": "Aucun enregistrement",
+  "Aufnahme unter „Einstellungen“ einschalten": "Active l'enregistrement sous « Réglages »",
+  "Frigate hat keine Aufnahmen dieser Kamera": "Frigate n'a aucun enregistrement de cette caméra",
+  "Aufnahme in den Einstellungen einschalten": "Active l'enregistrement dans les réglages",
+  "Tag": "Jour",
+  "Uhrzeit": "Heure",
+  "Aufnahme nicht abrufbar": "Enregistrement impossible à charger",
+  "Frigate liefert dieses Video nicht": "Frigate ne fournit pas cette vidéo",
+  "Keine Aufnahme in dieser Stunde": "Aucun enregistrement dans cette heure",
+  "1 neuer Alarm": "1 nouvelle alerte",
+  "1 Erkennung": "1 détection",
+  "1 Alarm": "1 alerte",
+  "Objekterkennung aus": "Détection d'objets désactivée",
+  "Objekterkennung einschalten": "Activer la détection d'objets",
+  "Objekterkennung ausschalten": "Désactiver la détection d'objets",
+  "Favorit ✓": "Favori ✓",
+  "Nur Favoriten": "Favoris seulement",
+  "Wird nicht automatisch gelöscht": "Ne sera pas supprimé automatiquement",
+  "Teilen": "Partager",
+  "Jetzt teilen": "Partager maintenant",
+  "Bild herunterladen": "Télécharger l'image",
+  "Gespeichert": "Enregistré",
+  "Nicht geladen": "Chargement impossible",
+  "Sicher erkannt": "Détecté avec certitude",
+  "Als neu markieren": "Marquer comme nouveau",
+  "Alle als gesehen markieren": "Tout marquer comme vu",
+  "Alle als gesehen markieren?": "Tout marquer comme vu ?",
+  "Danach steht nichts mehr als „Neu“ da.": "Ensuite, plus rien n'apparaîtra comme « Nouveau ».",
+  "Markieren": "Marquer",
+  "Zeitraum": "Période",
+  "Gesichter": "Visages",
+  "1 Filter aktiv": "1 filtre actif",
+  "Alarme: wichtige Erkennungen, z. B. eine Person in einer Zone": "Alertes : détections importantes, p. ex. une personne dans une zone",
+  "Keine Favoriten": "Aucun favori",
+  "Im Detail einer Erkennung „Favorit“ antippen": "Touche « Favori » dans le détail d'une détection",
+  "Springen nicht möglich": "Impossible de sauter dans cette vidéo",
+  "Ab hier:": "À partir d'ici :",
+  "Anhalten": "Pause",
+  "Kein Live-Video · Standbild alle 2 s": "Pas de vidéo en direct · image fixe toutes les 2 s",
+  "Hemma 2 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 2 ne fait plus partie de Casora – tu utilises maintenant Casora Glas, le look verre dans la structure Casora. Autres designs : Studio › Réglages › Design.",
+  "Hemma 1 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 1 ne fait plus partie de Casora – tu utilises maintenant Casora Glas, le look verre dans la structure Casora. Autres designs : Studio › Réglages › Design.",
+  "Das Hemma-Design gibt es nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Le design Hemma n'existe plus – tu utilises maintenant Casora Glas, le look verre dans la structure Casora. Autres designs : Studio › Réglages › Design.",
+  "Americano": "Americano",
+  "Cappuccino": "Cappuccino",
+  "Cortado": "Cortado",
+  "Doppio": "Doppio",
+  "Espresso": "Espresso",
+  "Espresso Macchiato": "Espresso macchiato",
+  "Latte Macchiato": "Latte macchiato",
+  "Lungo": "Lungo",
+  "Ristretto": "Ristretto",
+  "Casora Glas": "Casora Glas",
+  "Hemma": "Hemma",
+  "Hemma 1": "Hemma 1",
+  "Hemma 2": "Hemma 2",
+  "Tassen": "Tasses",
+  "Türklingel": "Sonnette",
+  "überfällig": "en retard",
+  "Einschalten und": "Allumer et",
+  "HLS-Fehler": "Erreur HLS",
+  "kein HLS": "pas de HLS",
+  "kein Video": "pas de vidéo",
+  "keine Quelle": "pas de source",
+  "keine Reviews": "pas de revues",
+  "lädt nicht": "ne charge pas",
+  "Videofehler": "Erreur vidéo",
+  "Unter-Liste nicht signiert": "sous-liste non signée",
+  "nicht signiert": "non signé",
+  "s ohne Antwort": "s sans réponse",
+  "HTTP": "HTTP",
+  "YYYY-MM-DD": "YYYY-MM-DD",
+  "TEXTAREA": "TEXTAREA",
+  "Bohnen bald leer": "Grains bientôt épuisés",
+  "Bohnen bei Gelegenheit nachfüllen": "Remplis les grains à l'occasion",
+  "Brühgruppe": "Unité de percolation",
+  "Brühgruppe herausnehmen und unter Wasser ausspülen": "Retire l'unité de percolation et rince-la sous l'eau",
+  "Brühgruppe spülen": "Rincer l'unité de percolation",
+  "Brühgruppe spülen überfällig": "Rinçage de l'unité de percolation en retard",
+  "Getränk an der Maschine wählen – Casora erkennt es am Stromverlauf.": "Choisis la boisson sur la machine – Casora la reconnaît à la courbe de consommation.",
+  "Kaffee doppio": "Café double",
+  "Funkt, schickt aber keine Werte": "Émet, mais n'envoie aucune valeur",
+  "Batteriewert fehlt": "Niveau de pile manquant",
+  "Cloud antwortet nicht": "Le cloud ne répond pas",
+  "Seit dem Neustart noch keine Meldung": "Aucun rapport depuis le redémarrage",
+  "Erreichbar, gerade nichts zu melden": "Joignable, rien à signaler pour l'instant",
+  "funkt, schickt aber keine Werte": "émet, mais n'envoie aucune valeur",
+  "meldet keinen Batteriewert": "ne signale aucun niveau de pile",
+  "Haustier": "Animal",
+  "Diagramm": "Diagramme",
+  "Linien": "Lignes",
+  "Kein Zahlenwert": "Pas de valeur numérique",
+  "Dieser Sensor liefert keine Zahl.": "Ce capteur ne fournit pas de nombre.",
+  "Noch keine Statistik": "Pas encore de statistiques",
+  "Statistik nicht abrufbar": "Statistiques indisponibles",
+  "Home Assistant sammelt sie stündlich.": "Home Assistant les collecte toutes les heures.",
+  "Dieser Sensor hat keine Statistik.": "Ce capteur n'a pas de statistiques.",
+  "Meldet sich nicht": "Ne se manifeste pas",
+  "Ungenaue Position": "Position imprécise",
+  "Live-Tracking": "Suivi en direct",
+  "Ziel": "Objectif",
+  "Min. aktiv": "min actif",
+  "Ruhe": "Repos",
+  "Schlaf Tag": "Sommeil de jour",
+  "Schlaf Nacht": "Sommeil de nuit",
+  "Tracker": "Traceur",
+  "Energiesparen": "Économie d'énergie",
+  "Favorites": "Favoris",
+  "Scenes": "Scènes",
+  "Ein": "Allumé",
+  "Home": "Maison",
+  "1 An": "1 allumée",
+  "1 an": "1 allumée",
+  "1 Aus": "1 éteinte",
+  "1 entriegelt": "1 déverrouillée",
+  "1 aktiv": "1 active",
+  "1 Aktiv": "1 active",
+  "1 offen": "1 ouverte",
+  "1 Offen": "1 ouverte",
+  "1 geöffnet": "1 ouverte",
+  "1 gekippt": "1 entrouverte",
+  "1 Schwach": "1 faible",
+  "1 Verfügbar": "1 disponible",
+  "1 ausgefallen": "1 en panne",
+  "1 übersprungen": "1 ignoré",
+  "Energiesparen ist an: der Tracker reagiert erst wieder, wenn er unterwegs ist.": "L'économie d'énergie est activée : le traceur ne répond à nouveau que lorsqu'il se déplace.",
+  "Der Tracker ist gerade nicht erreichbar.": "Le traceur est injoignable pour l'instant.",
+  "Leicht feucht": "Légèrement humide",
+  "Häufig": "Souvent",
+  "Selten": "Rarement",
+  "Intelligent": "Intelligent",
+  "Sehr hoch": "Très haut",
+  "Mopp-Pad": "Patin de lavage",
+  "Kantenreinigung": "Nettoyage des bords",
+  "Frischwassertank fehlt": "Réservoir d'eau propre manquant",
+  "Schmutzwassertank voll oder nicht eingesetzt": "Bac d'eau sale plein ou absent",
+  "Staubbeutel fehlt": "Sac à poussière manquant",
+  "Staubbeutel prüfen": "Vérifier le sac à poussière",
+  "Reinigungsmittel nachfüllen": "Remplir le détergent",
+  "Räder reinigen": "Nettoyer les roues",
+  "Wasserauslassfilter": "Filtre de sortie d'eau",
+  "Schmutzwassertank (Roboter)": "Bac d'eau sale (robot)",
+  "noch 1 Tag": "encore 1 jour",
+  "Kein Ton von der Klingel – neuer Versuch …": "Pas de son de la sonnette – nouvel essai…",
+  "Werte": "Valeurs",
+  "Bedienung": "Commandes",
+  "Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.": "Choisis un appareil dans le Studio ou ajoute des valeurs, un historique et tes propres cartes.",
+  "Kein Verlauf: {name} ist kein Zahlenwert.": "Pas d'historique : {name} n'est pas une valeur numérique.",
+  "Universal-Kachel": "Tuile universelle",
+  "Kein Gerät gewählt": "Aucun appareil choisi",
+  "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "Dans le Studio, tu peux ajouter des valeurs, un historique, des commandes et tes propres cartes."
+ },
+ "patterns": [
+  [
+   "^Spielt ab: (.+)$",
+   "Lecture : {1}"
+  ],
+  [
+   "^„(.+)“ an der Tür abspielen\\?$",
+   "Lire « {1} » à la porte ?"
+  ],
+  [
+   "^Geklingelt · (.+)$",
+   "On a sonné · {1}"
+  ],
+  [
+   "^Geklingelt (\\d{1,2}:\\d{2}.*)$",
+   "On a sonné à {1}"
+  ],
+  [
+   "^Treffer (\\d+) %$",
+   "Correspondance {1} %"
+  ],
+  [
+   "^Gestern (\\d{1,2}:\\d{2})$",
+   "Hier {1}"
+  ],
+  [
+   "^Top (\\d+) Verbraucher$",
+   "Top {1} consommateurs"
+  ],
+  [
+   "^(\\d+) Probleme$",
+   "{1} problèmes"
+  ],
+  [
+   "^(\\d+) bald$",
+   "{1} bientôt"
+  ],
+  [
+   "^(\\d+) beobachten$",
+   "{1} à surveiller"
+  ],
+  [
+   "^(\\d+) bald fällig$",
+   "{1} bientôt à changer"
+  ],
+  [
+   "^(\\d+) Batterien bald fällig$",
+   "{1} piles bientôt à changer"
+  ],
+  [
+   "^(\\d+) ausgefallen$",
+   "{1} en panne"
+  ],
+  [
+   "^(\\d+) prüfen$",
+   "{1} à vérifier"
+  ],
+  [
+   "^(\\d+) ok$",
+   "{1} ok"
+  ],
+  [
+   "^sonst alle (\\d+) Min\\.$",
+   "sinon toutes les {1} min"
+  ],
+  [
+   "^sonst alle (\\d+) Std\\.$",
+   "sinon toutes les {1} h"
+  ],
+  [
+   "^sonst alle (\\d+) Tage$",
+   "sinon tous les {1} jours"
+  ],
+  [
+   "^alle (\\d+) Min\\.$",
+   "toutes les {1} min"
+  ],
+  [
+   "^alle (\\d+) Std\\.$",
+   "toutes les {1} h"
+  ],
+  [
+   "^alle (\\d+) Tage$",
+   "tous les {1} jours"
+  ],
+  [
+   "^seit (\\d+) Min\\.$",
+   "depuis {1} min"
+  ],
+  [
+   "^seit (\\d+) Std\\.$",
+   "depuis {1} h"
+  ],
+  [
+   "^seit (\\d+) T\\.$",
+   "depuis {1} j"
+  ],
+  [
+   "^seit (\\d+) Tagen$",
+   "depuis {1} jours"
+  ],
+  [
+   "^zuletzt gemeldet gestern (.+)$",
+   "dernier rapport hier {1}"
+  ],
+  [
+   "^zuletzt gemeldet (.+)$",
+   "dernier rapport {1}"
+  ],
+  [
+   "^seit gestern (.+)$",
+   "depuis hier {1}"
+  ],
+  [
+   "^Alle (\\d+) Lichter im Haus ausschalten\\?$",
+   "Éteindre les {1} lumières de la maison ?"
+  ],
+  [
+   "^(\\d+) Geräte$",
+   "{1} appareils"
+  ],
+  [
+   "^(.+) unscharf$",
+   "{1} désarmée"
+  ],
+  [
+   "^(.+) scharf · (.+)$",
+   "{1} armée · {2}"
+  ],
+  [
+   "^Wartet seit (.+)$",
+   "En attente depuis {1}"
+  ],
+  [
+   "^Üblich sind (.+)$",
+   "D'habitude {1}"
+  ],
+  [
+   "^(\\d+) Einstellungen empfohlen, in WashData übernehmen$",
+   "{1} réglages recommandés, à reprendre dans WashData"
+  ],
+  [
+   "^Ø (.+)$",
+   "Ø {1}"
+  ],
+  [
+   "^Abholung in (\\d+) Tagen$",
+   "Collecte dans {1} jours"
+  ],
+  [
+   "^(\\d+) von (\\d+) An$",
+   "{1} sur {2} allumées"
+  ],
+  [
+   "^(\\d+) von (\\d+) Räumen an$",
+   "{1} pièces sur {2} allumées"
+  ],
+  [
+   "^KI: 1 Update braucht Aufmerksamkeit$",
+   "IA : 1 mise à jour à vérifier"
+  ],
+  [
+   "^KI: (\\d+) Updates brauchen Aufmerksamkeit$",
+   "IA : {1} mises à jour à vérifier"
+  ],
+  [
+   "^Schließt (\\d+) Updates ab$",
+   "Finalise {1} mises à jour"
+  ],
+  [
+   "^Backup (vor .+|gerade eben)$",
+   "Sauvegarde {1}"
+  ],
+  [
+   "^Absenkung um (.+)$",
+   "Réduction de {1}"
+  ],
+  [
+   "^Letzte Fahrt vor (.+) T\\.$",
+   "Dernier trajet il y a {1} j"
+  ],
+  [
+   "^Diesen Monat bist du dran, danach wieder im (.+)\\.$",
+   "Ce mois-ci, c'est ton tour ; ensuite en {1}."
+  ],
+  [
+   "^Diesen Monat bist du dran\\.?$",
+   "Ce mois-ci, c'est ton tour."
+  ],
+  [
+   "^startet in (.+)$",
+   "démarre dans {1}"
+  ],
+  [
+   "^trocken in etwa (\\d+) Tagen?$",
+   "sèche dans environ {1} jours"
+  ],
+  [
+   "^trocken in etwa 1 Tag$",
+   "sèche dans environ 1 jour"
+  ],
+  [
+   "^Vor (\\d+) Tagen gegossen$",
+   "Arrosée il y a {1} jours"
+  ],
+  [
+   "^davon (.+) Std\\. mit Unterstützung$",
+   "dont {1} h avec assistance"
+  ],
+  [
+   "^in (\\d[\\d.,]*) km$",
+   "à {1} km"
+  ],
+  [
+   "^(\\d+) ?% des aktuellen Verbrauchs$",
+   "{1} % de la consommation actuelle"
+  ],
+  [
+   "^(\\d+) werden installiert$",
+   "{1} en cours d'installation"
+  ],
+  [
+   "^(\\d+) Updates brauchen Aufmerksamkeit$",
+   "{1} mises à jour à vérifier"
+  ],
+  [
+   "^(\\d+) Breaking Changes betreffen dich$",
+   "{1} changements majeurs te concernent"
+  ],
+  [
+   "^1 Breaking Change betrifft dich$",
+   "1 changement majeur te concerne"
+  ],
+  [
+   "^(.+) g/m³ absolut$",
+   "{1} g/m³ absolue"
+  ],
+  [
+   "^drinnen Ø (.+)$",
+   "intérieur Ø {1}"
+  ],
+  [
+   "^(\\d+) Verfügbar$",
+   "{1} disponibles"
+  ],
+  [
+   "^Heute (.+) kWh$",
+   "Aujourd'hui {1} kWh"
+  ],
+  [
+   "^Heute (.+) kWh Bezug$",
+   "Aujourd'hui {1} kWh du réseau"
+  ],
+  [
+   "^Heute (.+) kWh entladen$",
+   "Aujourd'hui {1} kWh déchargés"
+  ],
+  [
+   "^(.+) km aufgezeichnet$",
+   "{1} km enregistrés"
+  ],
+  [
+   "^(.+) ohne Strom$",
+   "{1} sans courant"
+  ],
+  [
+   "^(.+) von (.+) aus Solar und Akku$",
+   "{1} sur {2} du solaire et de la batterie"
+  ],
+  [
+   "^Reinigt (.+)$",
+   "Nettoie {1}"
+  ],
+  [
+   "^Schließt das (.+)-Update ab$",
+   "Finalise la mise à jour de {1}"
+  ],
+  [
+   "^(.+) Update verfügbar$",
+   "Mise à jour de {1} disponible"
+  ],
+  [
+   "^(.+) hat das Haus verlassen$",
+   "{1} a quitté la maison"
+  ],
+  [
+   "^(.+) ist angekommen$",
+   "{1} vient d'arriver"
+  ],
+  [
+   "^(.+) ist gekippt$",
+   "{1} est entrouverte"
+  ],
+  [
+   "^(.+) ist gleich fertig$",
+   "{1} a bientôt fini"
+  ],
+  [
+   "^(.+) läuft$",
+   "{1} en marche"
+  ],
+  [
+   "^(.+) hat geklingelt$",
+   "{1} a sonné à la porte"
+  ],
+  [
+   "^(.+) hat fertig gereinigt$",
+   "{1} a fini de nettoyer"
+  ],
+  [
+   "^(.+) reinigt$",
+   "{1} nettoie"
+  ],
+  [
+   "^(.+) ist auf der Arbeit$",
+   "{1} est au travail"
+  ],
+  [
+   "^(.+) ist im (.+)$",
+   "{1} est à {2}"
+  ],
+  [
+   "^(.+) ist in der (.+)$",
+   "{1} est à {2}"
+  ],
+  [
+   "^(.+) ist am (.+)$",
+   "{1} est à {2}"
+  ],
+  [
+   "^(.+) ist bei (.+)$",
+   "{1} est chez {2}"
+  ],
+  [
+   "^(.+) umgeschaltet auf (.+)$",
+   "{1} passé sur {2}"
+  ],
+  [
+   "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
+   "{1} active · {2}"
+  ],
+  [
+   "^Alarm scharf – (.+)$",
+   "Alarme armée – {1}"
+  ],
+  [
+   "^(.+) braucht Wasser$",
+   "{1} a besoin d'eau"
+  ],
+  [
+   "^(.+) steht zu nass$",
+   "{1} est trop humide"
+  ],
+  [
+   "^(.+) braucht Dünger$",
+   "{1} a besoin d'engrais"
+  ],
+  [
+   "^(.+) ist überdüngt$",
+   "{1} a trop d'engrais"
+  ],
+  [
+   "^(.+) braucht mehr Licht$",
+   "{1} manque de lumière"
+  ],
+  [
+   "^(.+) bekommt zu viel Sonne$",
+   "{1} reçoit trop de soleil"
+  ],
+  [
+   "^(.+) steht zu kalt$",
+   "{1} a trop froid"
+  ],
+  [
+   "^(.+) steht zu warm$",
+   "{1} a trop chaud"
+  ],
+  [
+   "^(.+) steht in zu trockener Luft$",
+   "{1} : air trop sec"
+  ],
+  [
+   "^(.+) steht in zu feuchter Luft$",
+   "{1} : air trop humide"
+  ],
+  [
+   "^(\\d+) Reinigungen$",
+   "{1} nettoyages"
+  ],
+  [
+   "^(\\d+) entriegelt$",
+   "{1} déverrouillées"
+  ],
+  [
+   "^(\\d+) Schlösser entriegelt$",
+   "{1} serrures déverrouillées"
+  ],
+  [
+   "^1 Tür entriegelt$",
+   "1 porte déverrouillée"
+  ],
+  [
+   "^(\\d+) Türen entriegelt$",
+   "{1} portes déverrouillées"
+  ],
+  [
+   "^(.+) entriegelt$",
+   "{1} déverrouillée"
+  ],
+  [
+   "^Gestern, (.+)$",
+   "Hier, {1}"
+  ],
+  [
+   "^Heute, (.+)$",
+   "Aujourd'hui, {1}"
+  ],
+  [
+   "^alle (\\d+) Wochen$",
+   "toutes les {1} semaines"
+  ],
+  [
+   "^jede Woche$",
+   "chaque semaine"
+  ],
+  [
+   "^Luft ([^·]+)$",
+   "Air {1}"
+  ],
+  [
+   "^PM2,5 (.+)$",
+   "PM2,5 {1}"
+  ],
+  [
+   "^(\\d+) Tage?$",
+   "{1} jours"
+  ],
+  [
+   "^(\\d+) Stunden$",
+   "{1} heures"
+  ],
+  [
+   "^ca\\. (.+)$",
+   "env. {1}"
+  ],
+  [
+   "^(\\d{1,2}) Uhr$",
+   "{1} h"
+  ],
+  [
+   "^(.+) · Gehärteter Stahl$",
+   "{1} · acier trempé"
+  ],
+  [
+   "^(.+) · Edelstahl$",
+   "{1} · acier inoxydable"
+  ],
+  [
+   "^Ziel (.+)$",
+   "Cible {1}"
+  ],
+  [
+   "^Stufe (\\d+) von (\\d+)$",
+   "Niveau {1} sur {2}"
+  ],
+  [
+   "^(\\d+) von (\\d+) geöffnet$",
+   "{1} sur {2} ouvertes"
+  ],
+  [
+   "^(\\d+) von (\\d+)$",
+   "{1} sur {2}"
+  ],
+  [
+   "^Temperatur · (\\d+) Stunden$",
+   "Température · {1} heures"
+  ],
+  [
+   "^Leistung · (\\d+) Stunden$",
+   "Puissance · {1} heures"
+  ],
+  [
+   "^Online seit (\\d+) Stunden$",
+   "En ligne depuis {1} heures"
+  ],
+  [
+   "^Online seit (\\d+) Tagen$",
+   "En ligne depuis {1} jours"
+  ],
+  [
+   "^vor 1 Stunde$",
+   "il y a 1 heure"
+  ],
+  [
+   "^vor (\\d+) Stunden$",
+   "il y a {1} heures"
+  ],
+  [
+   "^vor 1 Minute$",
+   "il y a 1 minute"
+  ],
+  [
+   "^vor (\\d+) Minuten$",
+   "il y a {1} minutes"
+  ],
+  [
+   "^(\\d+) An$",
+   "{1} allumées"
+  ],
+  [
+   "^(\\d+) an$",
+   "{1} allumées"
+  ],
+  [
+   "^(\\d+) aktiv$",
+   "{1} actives"
+  ],
+  [
+   "^(\\d+) Aktiv$",
+   "{1} actives"
+  ],
+  [
+   "^(\\d+) Aus$",
+   "{1} éteintes"
+  ],
+  [
+   "^(\\d+) läuft$",
+   "{1} en marche"
+  ],
+  [
+   "^(\\d+) laufen$",
+   "{1} en marche"
+  ],
+  [
+   "^(\\d+) pausiert$",
+   "{1} en pause"
+  ],
+  [
+   "^(\\d+) offen$",
+   "{1} ouvertes"
+  ],
+  [
+   "^(\\d+) Offen$",
+   "{1} ouvertes"
+  ],
+  [
+   "^1 Schloss$",
+   "1 serrure"
+  ],
+  [
+   "^(\\d+) Schlösser$",
+   "{1} serrures"
+  ],
+  [
+   "^1 Raum heizt gerade$",
+   "1 pièce chauffe"
+  ],
+  [
+   "^(\\d+) Räume heizen gerade$",
+   "{1} pièces chauffent"
+  ],
+  [
+   "^(\\d+) heizen$",
+   "{1} chauffent"
+  ],
+  [
+   "^(\\d+) von (\\d+) an$",
+   "{1} sur {2} allumées"
+  ],
+  [
+   "^1 Raum reinigen$",
+   "Nettoyer 1 pièce"
+  ],
+  [
+   "^(\\d+) Räume reinigen$",
+   "Nettoyer {1} pièces"
+  ],
+  [
+   "^(\\d+) Räume$",
+   "{1} pièces"
+  ],
+  [
+   "^1 Sensor offen$",
+   "1 capteur ouvert"
+  ],
+  [
+   "^(\\d+) Sensoren offen$",
+   "{1} capteurs ouverts"
+  ],
+  [
+   "^(\\d+) Öffnungen offen$",
+   "{1} ouvertures ouvertes"
+  ],
+  [
+   "^(\\d+) Updates verfügbar$",
+   "{1} mises à jour disponibles"
+  ],
+  [
+   "^(\\d+) Geräte mit schwachem Akku$",
+   "{1} appareils avec batterie faible"
+  ],
+  [
+   "^(\\d+) Szenen$",
+   "{1} scènes"
+  ],
+  [
+   "^1 Szene$",
+   "1 scène"
+  ],
+  [
+   "^(\\d+) Durchgänge$",
+   "{1} cycles"
+  ],
+  [
+   "^In (\\d+) Durchgängen oder (\\d+) Tagen fällig$",
+   "À faire dans {1} cycles ou {2} jours"
+  ],
+  [
+   "^In (\\d+) Durchgängen fällig$",
+   "À faire dans {1} cycles"
+  ],
+  [
+   "^In (\\d+) Tagen fällig$",
+   "À faire dans {1} jours"
+  ],
+  [
+   "^In (\\d+) Durchgängen$",
+   "Dans {1} cycles"
+  ],
+  [
+   "^in (\\d+) Durchgängen$",
+   "dans {1} cycles"
+  ],
+  [
+   "^(\\d+) Durchgänge seit dem letzten Mal$",
+   "{1} cycles depuis la dernière fois"
+  ],
+  [
+   "^(\\d+) Tage seit dem letzten Mal$",
+   "{1} jours depuis la dernière fois"
+  ],
+  [
+   "^(\\d+) Durchgänge, (\\d+) Tage seit dem letzten Mal$",
+   "{1} cycles, {2} jours depuis la dernière fois"
+  ],
+  [
+   "^In (\\d+) Durchgängen oder (\\d+) Tagen$",
+   "Dans {1} cycles ou {2} jours"
+  ],
+  [
+   "^(\\d+) Unterwegs$",
+   "{1} absents"
+  ],
+  [
+   "^(\\d+) unterwegs$",
+   "{1} absents"
+  ],
+  [
+   "^(\\d+) Räumen an$",
+   "allumé dans {1} pièces"
+  ],
+  [
+   "^(\\d+) Min\\. übrig$",
+   "{1} min restantes"
+  ],
+  [
+   "^(\\d+) Std\\. übrig$",
+   "{1} h restantes"
+  ],
+  [
+   "^(\\d+) Std\\. (\\d+) Min\\.$",
+   "{1} h {2} min"
+  ],
+  [
+   "^(\\d+) Min\\.$",
+   "{1} min"
+  ],
+  [
+   "^(\\d+) Std\\.$",
+   "{1} h"
+  ],
+  [
+   "^vor (\\d+) s$",
+   "il y a {1} s"
+  ],
+  [
+   "^vor (\\d+) Min\\.$",
+   "il y a {1} min"
+  ],
+  [
+   "^vor (\\d+) Std\\.$",
+   "il y a {1} h"
+  ],
+  [
+   "^vor (\\d+) T\\.$",
+   "il y a {1} j"
+  ],
+  [
+   "^vor (\\d+) Tagen$",
+   "il y a {1} jours"
+  ],
+  [
+   "^vor (\\d+) Tag$",
+   "il y a {1} jour"
+  ],
+  [
+   "^vor (\\d+) Std\\. (\\d+) Min\\.$",
+   "il y a {1} h {2} min"
+  ],
+  [
+   "^seit (\\d+) Tagen fällig$",
+   "en retard de {1} jours"
+  ],
+  [
+   "^in (\\d+) Tagen$",
+   "dans {1} jours"
+  ],
+  [
+   "^In (\\d+) Tagen$",
+   "Dans {1} jours"
+  ],
+  [
+   "^um (\\d+) Uhr$",
+   "à {1} h"
+  ],
+  [
+   "^heute (\\d{1,2}:\\d{2})$",
+   "aujourd'hui {1}"
+  ],
+  [
+   "^morgen (\\d{1,2}:\\d{2})$",
+   "demain {1}"
+  ],
+  [
+   "^gestern (\\d{1,2}:\\d{2})$",
+   "hier {1}"
+  ],
+  [
+   "^Fertig um (.+)$",
+   "Terminé à {1}"
+  ],
+  [
+   "^Fertig gegen (.+)$",
+   "Terminé vers {1}"
+  ],
+  [
+   "^Läuft seit (.+)$",
+   "En marche depuis {1}"
+  ],
+  [
+   "^läuft seit (.+)$",
+   "en marche depuis {1}"
+  ],
+  [
+   "^noch (\\d+)[  ]s$",
+   "encore {1} s"
+  ],
+  [
+   "^noch (\\d+)[  ]Min\\.$",
+   "encore {1} min"
+  ],
+  [
+   "^noch (\\d+) Tage$",
+   "encore {1} jours"
+  ],
+  [
+   "^noch (.+)$",
+   "encore {1}"
+  ],
+  [
+   "^Zuletzt bekannt · vor (\\d+) Tagen$",
+   "Dernière position · il y a {1} jours"
+  ],
+  [
+   "^(\\d+) neue Updates gefunden$",
+   "{1} nouvelles mises à jour trouvées"
+  ],
+  [
+   "^Zuletzt gesucht: (.+)$",
+   "Dernière recherche : {1}"
+  ],
+  [
+   "^Zuletzt: (.+)$",
+   "Dernier : {1}"
+  ],
+  [
+   "^Zuletzt (vor .+|gestern|gerade eben)$",
+   "Dernière fois {1}"
+  ],
+  [
+   "^Zuletzt (.+)$",
+   "Dernier {1}"
+  ],
+  [
+   "^KI-Einschätzung · vor (\\d+) Min\\.$",
+   "Avis de l'IA · il y a {1} min"
+  ],
+  [
+   "^KI-Einschätzung · vor (\\d+) Std\\.$",
+   "Avis de l'IA · il y a {1} h"
+  ],
+  [
+   "^KI-Einschätzung · vor (\\d+) T\\.$",
+   "Avis de l'IA · il y a {1} j"
+  ],
+  [
+   "^KI-Einschätzung · gerade eben$",
+   "Avis de l'IA · à l'instant"
+  ],
+  [
+   "^Letzte Fahrt vor (\\d+) Tagen$",
+   "Dernier trajet il y a {1} jours"
+  ],
+  [
+   "^Letzte Fahrt vor (\\d+) Tagen; Akkustand nach Lagerung unbekannt$",
+   "Dernier trajet il y a {1} jours ; niveau de batterie après stockage inconnu"
+  ],
+  [
+   "^Service fällig seit (\\S+) \\((\\d+) Tage überfällig\\)$",
+   "Révision due depuis {1} ({2} jours de retard)"
+  ],
+  [
+   "^davon (\\d+) Std\\. mit Unterstützung$",
+   "dont {1} h avec assistance"
+  ],
+  [
+   "^Nächster Dienst im (.+)\\.$",
+   "Prochain tour en {1}."
+  ],
+  [
+   "^Verriegelt · Stand vor (\\d+) Std\\.$",
+   "Verrouillée · il y a {1} h"
+  ],
+  [
+   "^Entriegelt · Stand vor (\\d+) Std\\.$",
+   "Déverrouillée · il y a {1} h"
+  ],
+  [
+   "^Kühlt auf (.+)$",
+   "Refroidit à {1}"
+  ],
+  [
+   "^Heizt auf (.+)$",
+   "Chauffe à {1}"
+  ],
+  [
+   "^Kühl · (.+)$",
+   "Froid · {1}"
+  ],
+  [
+   "^Heizt · (.+)$",
+   "Chauffe · {1}"
+  ],
+  [
+   "^Bereit · (.+)$",
+   "Prêt · {1}"
+  ],
+  [
+   "^Automatik · (.+)$",
+   "Auto · {1}"
+  ],
+  [
+   "^Lädt · (.+)$",
+   "En charge · {1}"
+  ],
+  [
+   "^Entlädt · (.+)$",
+   "Décharge · {1}"
+  ],
+  [
+   "^Fällig · (.+)$",
+   "À faire · {1}"
+  ],
+  [
+   "^Prüfen · (.+)$",
+   "Vérifier · {1}"
+  ],
+  [
+   "^Pausiert: (.+)$",
+   "En pause : {1}"
+  ],
+  [
+   "^Akku (\\d+) ?%$",
+   "Batterie {1} %"
+  ],
+  [
+   "^Akku (.+)$",
+   "Batterie {1}"
+  ],
+  [
+   "^(\\d+) ?% Luftfeuchte$",
+   "{1} % d'humidité"
+  ],
+  [
+   "^(\\d+) ?% Feuchtigkeit$",
+   "{1} % d'humidité"
+  ],
+  [
+   "^(\\d+) ?% geöffnet$",
+   "{1} % ouvert"
+  ],
+  [
+   "^(\\d+) ?% Geöffnet$",
+   "{1} % ouvert"
+  ],
+  [
+   "^(\\d+) ?% Geschlossen$",
+   "{1} % fermé"
+  ],
+  [
+   "^Boden bei (\\d+) ?%$",
+   "Sol à {1} %"
+  ],
+  [
+   "^(\\d+) geöffnet$",
+   "{1} ouvertes"
+  ],
+  [
+   "^(\\d+) gekippt$",
+   "{1} entrouvertes"
+  ],
+  [
+   "^(\\d+) ?% Akku$",
+   "{1} % de batterie"
+  ],
+  [
+   "^Tank (\\d+) ?%$",
+   "Réservoir {1} %"
+  ],
+  [
+   "^CO₂ (\\d+) ppm$",
+   "CO₂ {1} ppm"
+  ],
+  [
+   "^Feuchte (\\d+) %$",
+   "Humidité {1} %"
+  ],
+  [
+   "^VOC (\\d+) ppb$",
+   "COV {1} ppb"
+  ],
+  [
+   "^Fenster offen · noch (\\d+) Min\\.$",
+   "Fenêtre ouverte · encore {1} min"
+  ],
+  [
+   "^Fenster offen seit (.+)$",
+   "Fenêtre ouverte depuis {1}"
+  ],
+  [
+   "^Fenster seit (.+) offen$",
+   "Fenêtre ouverte depuis {1}"
+  ],
+  [
+   "^Außenluft belastet \\(PM2\\.5 (\\d+)\\)$",
+   "Air extérieur pollué (PM2.5 {1})"
+  ],
+  [
+   "^Feuchte (\\d+) % · draußen feuchter$",
+   "Humidité {1} % · plus humide dehors"
+  ],
+  [
+   "^Feuchte (\\d+) % · Außenwerte fehlen$",
+   "Humidité {1} % · valeurs extérieures manquantes"
+  ],
+  [
+   "^≈ (.+) frei · jetzt (.+)$",
+   "≈ {1} libres · maintenant {2}"
+  ],
+  [
+   "^jetzt (.+)$",
+   "maintenant {1}"
+  ],
+  [
+   "^(.+) oder (.+)$",
+   "{1} ou {2}"
+  ],
+  [
+   "^(.+) fällig$",
+   "{1} à faire"
+  ],
+  [
+   "^(.+) ist offen$",
+   "{1} est ouverte"
+  ],
+  [
+   "^(.+) nachfüllen$",
+   "Remplir {1}"
+  ],
+  [
+   "^Alle (\\d+) Updates jetzt installieren\\?$",
+   "Installer les {1} mises à jour maintenant ?"
+  ],
+  [
+   "^(\\d+) Tage$",
+   "{1} jours"
+  ],
+  [
+   "^(\\d+) Tag$",
+   "{1} jour"
+  ],
+  [
+   "^(\\d+) Woche$",
+   "{1} semaine"
+  ],
+  [
+   "^(\\d+) Wochen$",
+   "{1} semaines"
+  ],
+  [
+   "^Nächstes (.+)$",
+   "Prochain : {1}"
+  ],
+  [
+   "^Als Nächstes: (.+)$",
+   "À suivre : {1}"
+  ],
+  [
+   "^Räume unterschiedlich · Ø (.+)$",
+   "Pièces différentes · Ø {1}"
+  ],
+  [
+   "^(.+) · heute Abend raus$",
+   "{1} · à sortir ce soir"
+  ],
+  [
+   "^(.+) · keine Leistung$",
+   "{1} · pas de puissance"
+  ],
+  [
+   "^(.+) · lädt$",
+   "{1} · en charge"
+  ],
+  [
+   "^Aus · (.+)$",
+   "Éteint · {1}"
+  ],
+  [
+   "^An · (.+)$",
+   "Allumé · {1}"
+  ],
+  [
+   "^Über (.+)$",
+   "Plus de {1}"
+  ],
+  [
+   "^bis (.+)$",
+   "jusqu'à {1}"
+  ],
+  [
+   "^seit (.+)$",
+   "depuis {1}"
+  ],
+  [
+   "^(\\d+) übersprungen$",
+   "{1} ignorés"
+  ],
+  [
+   "^Online seit (.+)$",
+   "En ligne depuis {1}"
+  ],
+  [
+   "^(.+) · (\\d+) Stunden$",
+   "{1} · {2} heures"
+  ],
+  [
+   "^(.+) · (\\d+) Tage$",
+   "{1} · {2} jours"
+  ],
+  [
+   "^(\\d+) ?% Luftfeuchtigkeit$",
+   "{1} % d'humidité"
+  ],
+  [
+   "^Einspeisung · (\\d+) % aus Solar und Akku · heute (.+)$",
+   "Injection · {1} % du solaire et de la batterie · aujourd'hui {2}"
+  ],
+  [
+   "^Einspeisung · heute (.+)$",
+   "Injection · aujourd'hui {1}"
+  ],
+  [
+   "^Einspeisung (.+)$",
+   "Injection {1}"
+  ],
+  [
+   "^(\\d+) Kameras offline$",
+   "{1} caméras hors ligne"
+  ],
+  [
+   "^(\\d+) Schlösser offline$",
+   "{1} serrures hors ligne"
+  ],
+  [
+   "^(\\d+) Tore offen$",
+   "{1} portails ouverts"
+  ],
+  [
+   "^(.+) ausgeschaltet$",
+   "{1} éteint"
+  ],
+  [
+   "^(.+) ausgelöst$",
+   "{1} déclenché"
+  ],
+  [
+   "^Vor (\\d+) Min\\.$",
+   "Il y a {1} min"
+  ],
+  [
+   "^Vor (\\d+) Std\\.$",
+   "Il y a {1} h"
+  ],
+  [
+   "^Vor (\\d+) T\\.$",
+   "Il y a {1} j"
+  ],
+  [
+   "^Vor (\\d+) Tagen$",
+   "Il y a {1} jours"
+  ],
+  [
+   "^Vor 1 Tag$",
+   "Il y a 1 jour"
+  ],
+  [
+   "^Vor (\\d+) Minuten$",
+   "Il y a {1} minutes"
+  ],
+  [
+   "^Vor (\\d+) Stunden$",
+   "Il y a {1} heures"
+  ],
+  [
+   "^Seit (\\d+) Min\\.$",
+   "Depuis {1} min"
+  ],
+  [
+   "^Seit (\\d+) Std\\.$",
+   "Depuis {1} h"
+  ],
+  [
+   "^Seit (\\d+) T\\.$",
+   "Depuis {1} j"
+  ],
+  [
+   "^Seit (.+)$",
+   "Depuis {1}"
+  ],
+  [
+   "^(\\d+) Türen offen$",
+   "{1} portes ouvertes"
+  ],
+  [
+   "^(\\d+) Fenster offen$",
+   "{1} fenêtres ouvertes"
+  ],
+  [
+   "^(\\d+) Fenster gekippt$",
+   "{1} fenêtres entrouvertes"
+  ],
+  [
+   "^(\\d+) Türen gekippt$",
+   "{1} portes entrouvertes"
+  ],
+  [
+   "^(\\d+) % aus Solar und Akku · heute (.+)$",
+   "{1} % du solaire et de la batterie · aujourd'hui {2}"
+  ],
+  [
+   "^(\\d+) % aus Solar und Akku$",
+   "{1} % du solaire et de la batterie"
+  ],
+  [
+   "^heute (.+)$",
+   "aujourd'hui {1}"
+  ],
+  [
+   "^Solarbank-Fehler (.+)$",
+   "Erreur Solarbank {1}"
+  ],
+  [
+   "^(.+) gespeichert$",
+   "{1} stockés"
+  ],
+  [
+   "^Modul (\\d+)$",
+   "Module {1}"
+  ],
+  [
+   "^(\\d+) Clients$",
+   "{1} clients"
+  ],
+  [
+   "^Gesamt (.+) kWh$",
+   "Total {1} kWh"
+  ],
+  [
+   "^(\\d+) Batterien schwach$",
+   "{1} piles faibles"
+  ],
+  [
+   "^Am niedrigsten: (.+) (\\d+) %$",
+   "La plus basse : {1} {2} %"
+  ],
+  [
+   "^(\\d+) von (\\d+) online$",
+   "{1} sur {2} en ligne"
+  ],
+  [
+   "^Bewegung vor (\\d+) Min\\.$",
+   "Mouvement il y a {1} min"
+  ],
+  [
+   "^Bewegung vor (\\d+) Std\\.$",
+   "Mouvement il y a {1} h"
+  ],
+  [
+   "^Bewegung vor (\\d+) T\\.$",
+   "Mouvement il y a {1} j"
+  ],
+  [
+   "^Bewegung gerade eben$",
+   "Mouvement à l'instant"
+  ],
+  [
+   "^Neu: (.+) · KI: Nicht geprüft$",
+   "Nouveau : {1} · IA : non vérifié"
+  ],
+  [
+   "^Neu: (.+) · KI: Unklar$",
+   "Nouveau : {1} · IA : incertain"
+  ],
+  [
+   "^Neu: (.+) · KI: KI prüft …$",
+   "Nouveau : {1} · IA : vérification…"
+  ],
+  [
+   "^Neu: (.+) · $",
+   "Nouveau : {1} ·"
+  ],
+  [
+   "^Neu: (.+)$",
+   "Nouveau : {1}"
+  ],
+  [
+   "^(\\d+) Termine heute$",
+   "{1} événements aujourd'hui"
+  ],
+  [
+   "^Reichweite (\\d[\\d.,]*)$",
+   "Autonomie {1}"
+  ],
+  [
+   "^Nächste Inspektion in (.+) km$",
+   "Prochaine révision dans {1} km"
+  ],
+  [
+   "^Nächste Inspektion (\\d{2}\\.\\d{2}\\.\\d{4})$",
+   "Prochaine révision {1}"
+  ],
+  [
+   "^(\\d+) % in (\\d+) Min\\.$",
+   "{1} % en {2} min"
+  ],
+  [
+   "^(Heute|Morgen|Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag): (.+)$",
+   "{1} : {2}"
+  ],
+  [
+   "^(\\d+) Schlösser offen$",
+   "{1} serrures ouvertes"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · keine offen$",
+   "{1} · aucune ouverte"
+  ],
+  [
+   "^(.+) offen$",
+   "{1} ouvert"
+  ],
+  [
+   "^(.+) gekippt$",
+   "{1} entrouvert"
+  ],
+  [
+   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
+   "Les dates de collecte reviendront dès que {1} répondra."
+  ],
+  [
+   "^(\\d+) Akkus schwach$",
+   "{1} batteries faibles"
+  ],
+  [
+   "^(\\d+) Schwach$",
+   "{1} faibles"
+  ],
+  [
+   "^(.+) Akku fast leer$",
+   "{1} batterie presque vide"
+  ],
+  [
+   "^(.+) Akku schwach$",
+   "{1} batterie faible"
+  ],
+  [
+   "^(\\d+) Wiedergaben$",
+   "{1} en lecture"
+  ],
+  [
+   "^H (-?\\d+)°$",
+   "Max {1}°"
+  ],
+  [
+   "^T (-?\\d+)°$",
+   "Min {1}°"
+  ],
+  [
+   "^(\\d+) % Regen$",
+   "{1} % de pluie"
+  ],
+  [
+   "^Wie warm ist es (?:im|in der) (.+)\\?$",
+   "Quelle température fait-il dans {1} ?"
+  ],
+  [
+   "^Dimme das Licht (?:im|in der) (.+)$",
+   "Baisse la lumière dans {1}"
+  ],
+  [
+   "^In der Summe · (\\d+) von (\\d+)$",
+   "Au total · {1} sur {2}"
+  ],
+  [
+   "^(\\d+) % der Summe$",
+   "{1} % du total"
+  ],
+  [
+   "^(\\d+) Geräte ohne Wert$",
+   "{1} appareils sans valeur"
+  ],
+  [
+   "^Nicht in der Summe · Steckt hinter (.+)$",
+   "Hors total · derrière {1}"
+  ],
+  [
+   "^Stand (.+) \\(verzögert\\)$",
+   "Relevé {1} (différé)"
+  ],
+  [
+   "^Stand (.+)$",
+   "Relevé {1}"
+  ],
+  [
+   "^Nächste Inspektion (.+)$",
+   "Prochaine révision {1}"
+  ],
+  [
+   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
+   "Les dates de collecte reviendront dès que {1} répondra."
+  ],
+  [
+   "^(\\d+) Termine$",
+   "{1} événements"
+  ],
+  [
+   "^(\\d+) an$",
+   "{1} allumées"
+  ],
+  [
+   "^in (\\d+) Wochen$",
+   "dans {1} semaines"
+  ],
+  [
+   "^in (\\d+) Monaten$",
+   "dans {1} mois"
+  ],
+  [
+   "^Platz (1|21|31)$",
+   "{1}er"
+  ],
+  [
+   "^Platz (2|22)$",
+   "{1}e"
+  ],
+  [
+   "^Platz (3|23)$",
+   "{1}e"
+  ],
+  [
+   "^Platz (\\d+)$",
+   "{1}e"
+  ],
+  [
+   "^(\\d+) Punkte$",
+   "{1} points"
+  ],
+  [
+   "^(\\S+ : \\S+) bei (.+)$",
+   "{1} à {2}"
+  ],
+  [
+   "^(\\S+ : \\S+) gegen (.+)$",
+   "{1} contre {2}"
+  ],
+  [
+   "^bei (.+)$",
+   "à {1}"
+  ],
+  [
+   "^gegen (.+)$",
+   "contre {1}"
+  ],
+  [
+   "^Heute (\\d\\d:\\d\\d)$",
+   "Aujourd'hui {1}"
+  ],
+  [
+   "^Morgen (\\d\\d:\\d\\d)$",
+   "Demain {1}"
+  ],
+  [
+   "^Mo (\\d.*)$",
+   "Lun {1}"
+  ],
+  [
+   "^Di (\\d.*)$",
+   "Mar {1}"
+  ],
+  [
+   "^Mi (\\d.*)$",
+   "Mer {1}"
+  ],
+  [
+   "^Do (\\d.*)$",
+   "Jeu {1}"
+  ],
+  [
+   "^Fr (\\d.*)$",
+   "Ven {1}"
+  ],
+  [
+   "^Sa (\\d.*)$",
+   "Sam {1}"
+  ],
+  [
+   "^So (\\d.*)$",
+   "Dim {1}"
+  ],
+  [
+   "^(\\d+) Monaten$",
+   "{1} mois"
+  ],
+  [
+   "^in (\\d+) Std\\.$",
+   "dans {1} h"
+  ],
+  [
+   "^in (\\d+) Min\\.$",
+   "dans {1} min"
+  ],
+  [
+   "^führt (\\d+:\\d+) (bei|gegen) (.+)$",
+   "mène {1} {2} {3}"
+  ],
+  [
+   "^liegt (\\d+:\\d+) zurück (bei|gegen) (.+)$",
+   "est mené {1} {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Sieg n\\. V\\. (bei|gegen) (.+)$",
+   "victoire {1} a.p. {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Niederlage n\\. V\\. (bei|gegen) (.+)$",
+   "défaite {1} a.p. {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Sieg (bei|gegen) (.+)$",
+   "victoire {1} {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Niederlage (bei|gegen) (.+)$",
+   "défaite {1} {2} {3}"
+  ],
+  [
+   "^Sieg i\\. E\\. (bei|gegen) (.+)$",
+   "Victoire aux tirs au but {1} {2}"
+  ],
+  [
+   "^Niederlage i\\. E\\. (bei|gegen) (.+)$",
+   "Défaite aux tirs au but {1} {2}"
+  ],
+  [
+   "^(\\d+:\\d+) (bei|gegen) (.+)$",
+   "{1} {2} {3}"
+  ],
+  [
+   "^i\\. E\\. (\\d+:\\d+)$",
+   "t.a.b. {1}"
+  ],
+  [
+   "^(\\d+) Lichter an$",
+   "{1} lumières allumées"
+  ],
+  [
+   "^Soll-Bereich (.+)$",
+   "Plage cible {1}"
+  ],
+  [
+   "^ab (\\d[\\d.,]*) €$",
+   "dès {1} €"
+  ],
+  [
+   "^Heute ab (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Aujourd'hui dès {1}"
+  ],
+  [
+   "^Morgen ab (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Demain dès {1}"
+  ],
+  [
+   "^Warte bis (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Attends jusqu'à {1}"
+  ],
+  [
+   "^Warte bis morgen (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Attends jusqu'à demain {1}"
+  ],
+  [
+   "^Tank reicht noch (\\d+) km\\. Ab (\\d{1,2}:\\d{2}(?: [AP]M)?) lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Carburant pour {1} km. À partir de {2}, {3} était en moyenne {4} ct moins cher ces 14 derniers jours."
+  ],
+  [
+   "^Ab (\\d{1,2}:\\d{2}(?: [AP]M)?) lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "À partir de {1}, {2} était en moyenne {3} ct moins cher ces 14 derniers jours."
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · ab (\\d{1,2}:\\d{2}(?: [AP]M)?) günstiger$",
+   "{1} · moins cher dès {2}"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · abends günstiger$",
+   "{1} · moins cher le soir"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · ab (\\d+) Uhr günstiger$",
+   "{1} · moins cher dès {2} h"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · jetzt günstig$",
+   "{1} · bon prix maintenant"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · kaum Unterschied$",
+   "{1} · peu de différence"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · Tank knapp$",
+   "{1} · réservoir bas"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · Preise werden gesammelt$",
+   "{1} · collecte des prix"
+  ],
+  [
+   "^Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa (\\d+) Tagen\\.$",
+   "La recommandation viendra dès qu'il y aura assez de prix, dans environ {1} jours."
+  ],
+  [
+   "^Heute ab (\\d+) Uhr$",
+   "Aujourd'hui dès {1} h"
+  ],
+  [
+   "^Morgen ab (\\d+) Uhr$",
+   "Demain dès {1} h"
+  ],
+  [
+   "^Warte bis (\\d+) Uhr$",
+   "Attends jusqu'à {1} h"
+  ],
+  [
+   "^Warte bis morgen (\\d+) Uhr$",
+   "Attends jusqu'à demain {1} h"
+  ],
+  [
+   "^Tank reicht noch (\\d+) km\\. Ab (\\d+) Uhr lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Carburant pour {1} km. À partir de {2} h, {3} était en moyenne {4} ct moins cher ces 14 derniers jours."
+  ],
+  [
+   "^Ab (\\d+) Uhr lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "À partir de {1} h, {2} était en moyenne {3} ct moins cher ces 14 derniers jours."
+  ],
+  [
+   "^(.+) liegt gerade im unteren Bereich der letzten 14 Tage\\.$",
+   "{1} est actuellement dans le bas de la fourchette des 14 derniers jours."
+  ],
+  [
+   "^Tank bei (\\d+) %, noch etwa (\\d+) km\\. Warten lohnt sich nicht\\.$",
+   "Réservoir à {1} %, encore environ {2} km. Attendre ne vaut pas le coup."
+  ],
+  [
+   "^Tank bei (\\d+) %\\. Warten lohnt sich nicht\\.$",
+   "Réservoir à {1} %. Attendre ne vaut pas le coup."
+  ],
+  [
+   "^Noch etwa (\\d+) km\\. Warten lohnt sich nicht\\.$",
+   "Encore environ {1} km. Attendre ne vaut pas le coup."
+  ],
+  [
+   "^(\\d[\\d.,]*) € Tief$",
+   "{1} € min."
+  ],
+  [
+   "^jetzt (\\d[\\d.,]*) €$",
+   "maintenant {1} €"
+  ],
+  [
+   "^(\\d[\\d.,]*) € Hoch$",
+   "{1} € max."
+  ],
+  [
+   "^(\\d+) Tankstellen in (\\d+) km$",
+   "{1} stations à {2} km"
+  ],
+  [
+   "^1 Tankstelle in (\\d+) km$",
+   "1 station à {1} km"
+  ],
+  [
+   "^(\\d[\\d.,]*) km · offen$",
+   "{1} km · ouverte"
+  ],
+  [
+   "^(\\d[\\d.,]*) km · zu$",
+   "{1} km · fermée"
+  ],
+  [
+   "^(\\d+) weitere$",
+   "{1} de plus"
+  ],
+  [
+   "^und (\\d+) weitere$",
+   "et {1} de plus"
+  ],
+  [
+   "^Umkreis (\\d+) km um Zuhause$",
+   "{1} km autour de la maison"
+  ],
+  [
+   "^Umkreis (\\d+) km um das Auto$",
+   "{1} km autour de la voiture"
+  ],
+  [
+   "^Tankerkönig antwortet gerade nicht: (.+)$",
+   "Tankerkönig ne répond pas pour l'instant : {1}"
+  ],
+  [
+   "^(.+) Uhr$",
+   "{1}"
+  ],
+  [
+   "^Reichweite (\\S+)$",
+   "Autonomie {1}"
+  ],
+  [
+   "^(\\d+) Geräte brauchen Aufmerksamkeit$",
+   "{1} appareils à vérifier"
+  ],
+  [
+   "^(.+) antwortet nicht$",
+   "{1} ne répond pas"
+  ],
+  [
+   "^(.+) ist still$",
+   "{1} est silencieux"
+  ],
+  [
+   "^(.+) hat sich noch nicht gemeldet$",
+   "{1} ne s'est pas encore manifesté"
+  ],
+  [
+   "^(.+) ist nicht erreichbar$",
+   "{1} est injoignable"
+  ],
+  [
+   "^(.+) braucht bald eine neue Batterie$",
+   "{1} aura bientôt besoin d'une pile neuve"
+  ],
+  [
+   "^(.+) braucht eine neue Batterie$",
+   "{1} a besoin d'une pile neuve"
+  ],
+  [
+   "^(.+) meldet schwache Batterie$",
+   "{1} signale une pile faible"
+  ],
+  [
+   "^(.+) wartet auf die erste Meldung$",
+   "{1} attend son premier rapport"
+  ],
+  [
+   "^(.+) ist ausgefallen$",
+   "{1} est en panne"
+  ],
+  [
+   "^(.+) sollte geprüft werden$",
+   "Il faudrait vérifier {1}"
+  ],
+  [
+   "^(\\d+) offline$",
+   "{1} hors ligne"
+  ],
+  [
+   "^seit (\\d{1,2}:\\d{2})$",
+   "depuis {1}"
+  ],
+  [
+   "^seit gestern (\\d{1,2}:\\d{2})$",
+   "depuis hier {1}"
+  ],
+  [
+   "^(.+) von zuhause$",
+   "{1} de la maison"
+  ],
+  [
+   "^GPS · auf (\\d+) m genau$",
+   "GPS · précis à {1} m"
+  ],
+  [
+   "^Nachricht an (.+)$",
+   "Message à {1}"
+  ],
+  [
+   "^gestern (\\d{1,2}:\\d{2}) – (\\d{1,2}:\\d{2})$",
+   "hier {1} – {2}"
+  ],
+  [
+   "^bis (\\d{1,2}:\\d\\d)$",
+   "jusqu'à {1}"
+  ],
+  [
+   "^Fehler: (.+)$",
+   "Erreur : {1}"
+  ],
+  [
+   "^(\\d+) Fahrten$",
+   "{1} trajets"
+  ],
+  [
+   "^Neue Version (.+)$",
+   "Nouvelle version {1}"
+  ],
+  [
+   "^Wird installiert · (\\d+) %$",
+   "Installation · {1} %"
+  ],
+  [
+   "^(\\d+:\\d\\d) Std\\. übrig$",
+   "{1} h restantes"
+  ],
+  [
+   "^Schicht (\\d+)/(\\d+)$",
+   "Couche {1}/{2}"
+  ],
+  [
+   "^Aktuell keine Warnungen für (.+)$",
+   "Aucune alerte pour {1} actuellement"
+  ],
+  [
+   "^Warnungen · (.+)$",
+   "Alertes · {1}"
+  ],
+  [
+   "^(\\d+) Module liefern$",
+   "{1} modules produisent"
+  ],
+  [
+   "^Solaranteil am Verbrauch (\\d+) %$",
+   "Part solaire de la consommation {1} %"
+  ],
+  [
+   "^Solar ([\\d.,]+) kWh$",
+   "Solaire {1} kWh"
+  ],
+  [
+   "^Netz ([\\d.,]+) kWh$",
+   "Réseau {1} kWh"
+  ],
+  [
+   "^(\\d+) im Bild$",
+   "{1} à l'image"
+  ],
+  [
+   "^(\\d+) Objekte erkannt$",
+   "{1} objets détectés"
+  ],
+  [
+   "^(.+) und (.+) erkannt$",
+   "{1} et {2} détectés"
+  ],
+  [
+   "^(.+) erkannt$",
+   "{1} détecté"
+  ],
+  [
+   "^([^,]+), (vor .+|gerade eben|gestern|Gestern|jetzt|\\d+ Min\\.|\\d+ Std\\.|\\d+ Tagen)$",
+   "{1}, {2}"
+  ],
+  [
+   "^(\\d{1,2}:\\d{2}) \\((.+)\\)$",
+   "{1} ({2})"
+  ],
+  [
+   "^(\\d+) neue Alarme$",
+   "{1} nouvelles alertes"
+  ],
+  [
+   "^(\\d+) Erkennungen$",
+   "{1} détections"
+  ],
+  [
+   "^(\\d+) Std\\. aufgenommen$",
+   "{1} h enregistrées"
+  ],
+  [
+   "^(\\d+) Min\\. aufgenommen$",
+   "{1} min enregistrées"
+  ],
+  [
+   "^Heute nichts erkannt: (.+)$",
+   "Rien détecté aujourd'hui : {1}"
+  ],
+  [
+   "^In 7 Tagen nichts erkannt: (.+)$",
+   "Rien détecté en 7 jours : {1}"
+  ],
+  [
+   "^Keine (.+) heute$",
+   "Pas de {1} aujourd'hui"
+  ],
+  [
+   "^(\\d+) Alarme$",
+   "{1} alertes"
+  ],
+  [
+   "^Keine (.+) in den letzten 7 Tagen$",
+   "Pas de {1} ces 7 derniers jours"
+  ],
+  [
+   "^(\\d+) Tagen$",
+   "{1} jours"
+  ],
+  [
+   "^Geklingelt (vor .+|gestern|gerade eben)$",
+   "Dernière sonnerie {1}"
+  ],
+  [
+   "^In den letzten (\\d+) Tagen$",
+   "Ces {1} derniers jours"
+  ],
+  [
+   "^Nach (\\d+) s ohne Antwort$",
+   "Après {1} s sans réponse"
+  ],
+  [
+   "^Mein Kaffee (\\d+)$",
+   "Mon café {1}"
+  ],
+  [
+   "^(Entkalken|Reinigen|Filterwechsel|Pflege) in 1[  ]Tasse$",
+   "{1} dans 1 tasse"
+  ],
+  [
+   "^(Entkalken|Reinigen|Filterwechsel|Pflege) in (\\d+)[  ]Tassen$",
+   "{1} dans {2} tasses"
+  ],
+  [
+   "^In 1[  ]Tasse$",
+   "Dans 1 tasse"
+  ],
+  [
+   "^In (\\d+)[  ]Tassen$",
+   "Dans {1} tasses"
+  ],
+  [
+   "^Alle Getränke \\((\\d+)\\)$",
+   "Toutes les boissons ({1})"
+  ],
+  [
+   "^Einschalten und (.+) starten$",
+   "Allumer et préparer {1}"
+  ],
+  [
+   "^(.+) starten\\?$",
+   "Préparer {1} ?"
+  ],
+  [
+   "^(.+) starten$",
+   "Préparer {1}"
+  ],
+  [
+   "^Leistung (.+) W$",
+   "Puissance {1} W"
+  ],
+  [
+   "^Heute (\\d+)$",
+   "{1} aujourd'hui"
+  ],
+  [
+   "^(\\d+) Filter aktiv$",
+   "{1} filtres actifs"
+  ],
+  [
+   "^Filter · (\\d+)$",
+   "Filtre · {1}"
+  ],
+  [
+   "^(\\d+) heute$",
+   "{1} aujourd'hui"
+  ],
+  [
+   "^(\\d+) % ([A-Za-zÄÖÜäöüß].*)$",
+   "{1} % {2}"
+  ],
+  [
+   "^In 1[  ]Tag$",
+   "Dans 1 jour"
+  ],
+  [
+   "^In (\\d+)[  ]Tagen$",
+   "Dans {1} jours"
+  ],
+  [
+   "^In ([\\d.,]+)[  ]l$",
+   "Dans {1} l"
+  ],
+  [
+   "^([\\d.,]+) Mbit/s Download$",
+   "{1} Mbit/s descendant"
+  ],
+  [
+   "^([\\d.,]+) Mbit/s Upload$",
+   "{1} Mbit/s montant"
+  ]
+ ]
+}
