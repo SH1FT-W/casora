@@ -1,0 +1,289 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Casora",
+        "description": "Dodaje Casora Studio do paska bocznego."
+      }
+    },
+    "abort": {
+      "already_configured": "Casora jest już skonfigurowana."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Casora – Ustawienia",
+        "description": "Puste pola Casora wypełnia sama: domyślne AI z Ustawienia → Zadania AI oraz czujniki zewnętrzne po nazwie.",
+        "data": {
+          "ai_task_entity": "AI dla asystentów, kamer i roślin",
+          "ai_task_web_entity": "AI z wyszukiwaniem w sieci (analiza aktualizacji, przepis)",
+          "outdoor_temperature": "Temperatura zewnętrzna",
+          "outdoor_humidity": "Wilgotność zewnętrzna",
+          "price_kwh": "Cena prądu",
+          "ki_hinweise": "Wskazówki dla AI",
+          "rezept_liste": "Lista zakupów na składniki (przepis tygodnia)",
+          "ki_plan_energie": "Asystent energii automatycznie",
+          "ki_plan_heizung": "Asystent ogrzewania automatycznie",
+          "ki_plan_lueftung": "Asystent wietrzenia automatycznie",
+          "ki_plan_rezept": "Przepis tygodnia automatycznie",
+          "ki_plan_update": "Sprawdzanie aktualizacji",
+          "lueften_push": "Wysyłaj powiadomienia o wietrzeniu do",
+          "lueften_personen": "Powiadamiaj tylko, gdy ktoś jest w domu",
+          "update_push": "Powiadamiaj o nowych wersjach Casora",
+          "beta_updates": "Wersje beta"
+        },
+        "data_description": {
+          "ki_hinweise": "Dołączane do każdej analizy, np. „Okno w sypialni jest celowo uchylone.”",
+          "ki_plan_energie": "Automatycznie: w niedziele o 18:00. Własna pora np. „sun 18:00” (dzień tygodnia po angielsku, od mon do sun).",
+          "ki_plan_heizung": "Automatycznie: w poniedziałki o 7:00, tylko w sezonie grzewczym.",
+          "ki_plan_lueftung": "Automatycznie: w soboty o 10:00.",
+          "ki_plan_rezept": "Automatycznie: w poniedziałki o 6:00.",
+          "ki_plan_update": "Codziennie: raz dziennie. Wył.: bez oceny AI w oknie aktualizacji.",
+          "lueften_push": "„Przewietrz teraz” (7–22) i „Zamknij okno” (7–23) po 10 min, CO₂ powyżej 2500 ppm od razu. Puste = bez powiadomień push.",
+          "lueften_personen": "„Przewietrz teraz” tylko wtedy, gdy jedna z tych osób jest w domu. Puste = ktokolwiek.",
+          "update_push": "Jedno powiadomienie na każdą nową wersję na wybrane telefony. Dotknięcie otwiera aktualizacje Casora. Puste = wył.",
+          "beta_updates": "Testuj nowe funkcje wcześniej. Bety mogą mieć błędy. Z HACS włącz bety zamiast tego w HACS."
+        }
+      }
+    },
+    "error": {
+      "invalid_plan": "Nieprawidłowa pora. Dozwolone: Wył., Automatycznie lub np. „sun 18:00”.",
+      "invalid": "Nieprawidłowy wpis."
+    }
+  },
+  "selector": {
+    "ki_plan": {
+      "options": {
+        "off": "Wył.",
+        "auto": "Automatycznie"
+      }
+    },
+    "ki_plan_update": {
+      "options": {
+        "off": "Wył.",
+        "daily": "Codziennie",
+        "manual": "Tylko na żądanie"
+      }
+    }
+  },
+  "services": {
+    "energie_coach": {
+      "name": "Asystent energii",
+      "description": "Analizuje z pomocą AI dane z pulpitu energii z ostatniego tygodnia.",
+      "fields": {}
+    },
+    "heizungs_coach": {
+      "name": "Asystent ogrzewania",
+      "description": "Analizuje z pomocą AI czas grzania oraz temperatury w pokojach i na zewnątrz z ostatniego tygodnia.",
+      "fields": {
+        "nur_heizsaison": {
+          "name": "Tylko w sezonie grzewczym",
+          "description": "Tylko w sezonie grzewczym"
+        }
+      }
+    },
+    "lueftungs_coach": {
+      "name": "Asystent wietrzenia",
+      "description": "Analizuje z pomocą AI wilgotność, CO₂ i otwieranie okien z ostatniego tygodnia.",
+      "fields": {}
+    },
+    "kamera_beschreiben": {
+      "name": "Opisz obraz z kamery",
+      "description": "AI opisuje aktualny obraz z kamery.",
+      "fields": {
+        "entity_id": {
+          "name": "Encja",
+          "description": "Encja"
+        }
+      }
+    },
+    "pflanzen_doktor": {
+      "name": "Doktor roślin",
+      "description": "Porada pielęgnacyjna dla rośliny na podstawie 7 dni pomiarów.",
+      "fields": {
+        "plant": {
+          "name": "Roślina",
+          "description": "Roślina"
+        }
+      }
+    },
+    "aquarium_doktor": {
+      "name": "Doktor akwarium",
+      "description": "Ocena AI akwarium na podstawie 7 dni temperatury, wyposażenia, światła i czujnika wycieku.",
+      "fields": {
+        "temp": {
+          "name": "Czujnik temperatury",
+          "description": "Temperatura wody w akwarium"
+        },
+        "name": {
+          "name": "Nazwa",
+          "description": "Nazwa akwarium"
+        },
+        "devices": {
+          "name": "Wyposażenie",
+          "description": "Lista urządzeń: label, entity, power"
+        },
+        "light": {
+          "name": "Światło",
+          "description": "Oświetlenie akwarium"
+        },
+        "leak": {
+          "name": "Czujnik wycieku",
+          "description": "Czujnik wycieku przy akwarium"
+        }
+      }
+    },
+    "ebike_check": {
+      "name": "Przegląd roweru",
+      "description": "Ocena AI e-roweru: serwis, zużycie według przebiegu i dbanie o baterię.",
+      "fields": {
+        "entities": {
+          "name": "Encje",
+          "description": "Encje roweru"
+        },
+        "name": {
+          "name": "Nazwa",
+          "description": "Nazwa roweru"
+        }
+      }
+    },
+    "update_pruefen": {
+      "name": "Sprawdź aktualizację z AI",
+      "description": "Sprawdza informacje o wydaniu oczekujących aktualizacji pod kątem tego systemu.",
+      "fields": {
+        "entity_id": {
+          "name": "Encja",
+          "description": "Encja"
+        }
+      }
+    },
+    "update_bestaetigen": {
+      "name": "Potwierdź ocenę AI",
+      "description": "Odblokowuje „Aktualizuj” po przeczytaniu ostrzeżenia.",
+      "fields": {
+        "entity_id": {
+          "name": "Encja",
+          "description": "Encja"
+        }
+      }
+    },
+    "rezept_neu": {
+      "name": "Nowy pomysł na przepis",
+      "description": "AI proponuje przepis tygodnia.",
+      "fields": {}
+    },
+    "rezept_auf_liste": {
+      "name": "Składniki na listę zakupów",
+      "description": "Dodaje składniki przepisu do listy zakupów.",
+      "fields": {}
+    },
+    "umstellen": {
+      "name": "Przestaw na nazwy Casora",
+      "description": "Przestawia starsze pulpity na nazwy Casora (z kopią zapasową).",
+      "fields": {
+        "probelauf": {
+          "name": "Tylko policz, niczego nie zmieniaj",
+          "description": "Tylko policz, niczego nie zmieniaj"
+        }
+      }
+    },
+    "einrichten": {
+      "name": "Skonfiguruj",
+      "description": "Tworzy brakujące pomocniki i skrypty Casora (dzieje się automatycznie przy starcie) i zgłasza, czego nie udało się utworzyć."
+    },
+    "set_timer": {
+      "name": "Ustaw wyłącznik czasowy",
+      "description": "Wyłącza lub włącza encję po podanej liczbie minut. Zastępuje istniejący wyłącznik czasowy tej samej encji. Gdy wyłącznik czasowy się kończy, Casora wysyła zdarzenie casora_timer_finished (entity_id, action, reason: expired, manual lub cancelled). Na życzenie odpowiada z entity_id, at i start.",
+      "fields": {
+        "entity_id": {
+          "name": "Encja",
+          "description": "Encja, która ma być przełączona"
+        },
+        "minutes": {
+          "name": "Minuty",
+          "description": "Po ilu minutach (liczba całkowita, 1–1440)"
+        },
+        "action": {
+          "name": "Akcja",
+          "description": "turn_off (domyślnie) lub turn_on"
+        }
+      }
+    },
+    "cancel_timer": {
+      "name": "Anuluj wyłącznik czasowy",
+      "description": "Usuwa wyłącznik czasowy encji (zdarzenie casora_timer_finished z reason cancelled).",
+      "fields": {
+        "entity_id": {
+          "name": "Encja",
+          "description": "Encja"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "media_paused": {
+        "name": "Casora Multimedia wstrzymane"
+      },
+      "lueften": {
+        "name": "Casora Wietrzenie"
+      },
+      "energie": {
+        "name": "Casora Asystent energii"
+      },
+      "heizung": {
+        "name": "Casora Asystent ogrzewania"
+      },
+      "lueftung": {
+        "name": "Casora Asystent wietrzenia"
+      },
+      "rezept": {
+        "name": "Casora Przepis tygodnia"
+      },
+      "kamera": {
+        "name": "Casora AI kamery"
+      },
+      "pflanzen": {
+        "name": "Casora AI roślin"
+      },
+      "update": {
+        "name": "Casora Analiza aktualizacji AI"
+      },
+      "aquarium": {
+        "name": "Casora AI akwarium"
+      },
+      "ebike": {
+        "name": "Casora AI e-roweru"
+      },
+      "timers": {
+        "name": "Casora Wyłączniki czasowe"
+      }
+    },
+    "binary_sensor": {
+      "lueften_hinweis": {
+        "name": "Casora Wskazówka wietrzenia"
+      },
+      "solar_tipp": {
+        "name": "Casora Wskazówka solarna"
+      }
+    }
+  },
+  "issues": {
+    "restart_after_update": {
+      "title": "Casora {version} zainstalowana – potrzebny restart",
+      "description": "Casora została zaktualizowana do wersji {version}. Uruchom Home Assistant ponownie, aby załadować nową wersję."
+    }
+  },
+  "exceptions": {
+    "timer_domain_blocked": {
+      "message": "Wyłącznik czasowy nie jest dozwolony dla {domain}: {entity_id}"
+    },
+    "timer_entity_not_found": {
+      "message": "Nie znaleziono encji: {entity_id}"
+    },
+    "timer_invalid_minutes": {
+      "message": "Nieprawidłowe minuty: {minutes}. Dozwolona jest liczba całkowita od 1 do {max}."
+    }
+  }
+}
