@@ -88,7 +88,7 @@ const MODULES = [
   '22-halten',
   '23-frigate',
   '24-klingel',
-  '25-kaffee',
+  '25-coffee',
   '26-haustier',
   '27-chart',
   '28-free-tile',

@@ -1,23 +1,29 @@
-"""Drei erfundene Kaffeevollautomaten für das Testhaus (Community-Karte „Kaffeevollautomat“, immer dabei).
+"""Made-up coffee machines for the test house (coffee machine card, always there), names invented.
 
-* „Testbarista“ – wie Home Connect (Core) ihn anlegt: Strom, Betriebszustand, aktives/gewähltes Programm,
-  Fortschritt, Programmende, Programm beenden, Fernstart, Optionen (Stärke, Temperatur, Menge), Tassen-Zähler
-  (Diagnose) und ein Teil der Warnungen (in echt ab Werk aus – hier aktiviert: Wassertank, Bohnen, Schale,
-  „Entkalken in 10 Tassen“, Entkalken fällig; die übrigen fehlen wie deaktivierte Entitäten).
-* „Morgenbohne“ – wie De'Longhi über Bluetooth (delonghi_primadonna): Status-Sensor „device_status“ (Zustand oder –
-  bei gesetztem Alarm-Bit – dessen Name), Strom, Getränke-Auswahl „make_beverage“ (Auswahl startet sofort, Zustand bleibt
-  „none“), „Gibt aus“ (Attribut percentage), Entkalken/Filter, Zähler (total_coffee, total_coffee_with_milk, total_water in L).
-  Ohne Abbrechen-Taste (die Integration hat keine).
-* „Bohnenwerk“ – wie die Strom-Integrationen delonghi/krups: Getränke am Stromverlauf erkannt (Betriebszustand
-  off/ready/running, letztes Programm, Bezüge heute/gesamt, Tassen je Getränk), Wartung als Sensor mit Attribut „due“,
-  Einschalter. Keine Getränke-Auswahl (startet nur die Maschine).
+* "Testbarista" – as Home Connect (core) creates it: power, operation state, active/selected program, progress,
+  program finish, stop program, remote start, options (strength, temperature, amount), cup counters (diagnostic) and
+  some of the warnings (disabled by default in reality – enabled here: water tank, beans, drip tray,
+  "descaling in 10 cups", descaling due; the others are missing like disabled entities).
+* "Morgenbohne" – like De'Longhi over Bluetooth (delonghi_primadonna): status sensor "device_status" (state or – with an
+  alarm bit set – its name), power, drink select "make_beverage" (choosing starts, the state stays "none"),
+  "dispensing" (attribute percentage), descaling/filter, counters (total_coffee, total_coffee_with_milk, total_water in L).
+  No cancel button (the integration has none).
+* "Bohnenwerk" – like the power-curve integrations delonghi/krups: drinks recognized from the power curve (state
+  off/ready/running, last program, drinks today/total, cups per drink), maintenance as sensors with attribute "due",
+  power switch. No drink select (only the machine starts drinks).
+* "Kaffeeinsel" – like Home Connect Local (homeconnect_ws): keys sensor_operation_state, switch_power_state,
+  select_program (program keys lower-cased, CamelCase not split) + button_start_program/button_abort_program, process
+  phase, water tank and drip tray as enum sensors, beans as binary sensor, countdown to descaling, counters sensor_count_*.
+* "Espressobar" – a plain smart plug (switch + power sensor, no translation keys) on a device named like a coffee
+  machine: the generic fallback. "Kaffeemühle" – a grinder on a plug, which is no coffee machine.
 
-Im Testhaus läuft alles unter casora_mock; Casora erkennt die Integration an den translation_keys.
-Testdienste:
-  casora_mock.kaffee_beziehen {getraenk, geraet: testbarista|morgenbohne|bohnenwerk, dauer}  – Bezug mit Fortschritt (~30 s), Zähler +1 am Ende
-  casora_mock.kaffee_warnung {art: wasser|bohnen|schale|entkalken|aus, geraet}      – Warnung setzen bzw. alle zurücknehmen
-Dazu antwortet home_connect.set_program_and_options (falls Home Connect nicht geladen ist) und die Auswahl des
-aktiven Programms bzw. der Getränke-Auswahl startet einen Bezug wie an der echten Maschine. Namen erfunden.
+Everything runs under casora_mock; Casora recognizes the integration by the translation_keys.
+Test services:
+  casora_mock.kaffee_beziehen {getraenk, geraet: testbarista|morgenbohne|bohnenwerk|kaffeeinsel|espressobar, dauer}
+      – brew with progress (~30 s), counter +1 at the end
+  casora_mock.kaffee_warnung {art: wasser|bohnen|schale|satz|entkalken|aus, geraet} – set a warning or clear all
+Also home_connect.set_program_and_options answers (if Home Connect is not loaded); choosing the active program or the
+drink select starts a brew like on the real machine, and so does the start button of Kaffeeinsel (selected program).
 """
 from __future__ import annotations
 
@@ -26,6 +32,9 @@ from datetime import timedelta
 HC = "testbarista"
 DL = "morgenbohne"
 SW = "bohnenwerk"
+WS = "kaffeeinsel"
+PL = "espressobar"
+GR = "kaffeemuehle"
 SW_DRINKS = ("Espresso", "Espresso 2x", "Kaffee", "Cappuccino")
 P = "consumer_products_coffee_maker_program_"
 PROGRAMS = [P + x for x in (
@@ -39,9 +48,20 @@ BEAN = ["consumer_products_coffee_maker_enum_type_bean_amount_" + x for x in (
     "extra_strong", "double_shot", "double_shot_plus", "double_shot_plus_plus")]
 TEMP = ["consumer_products_coffee_maker_enum_type_coffee_temperature_" + x for x in ("88_c", "90_c", "92_c", "94_c", "95_c", "96_c")]
 WARN_OPTS = ["confirmed", "off", "present"]
-# Wie delonghi_primadonna: „none“ plus die Rezeptnamen aus MachinesModels.json.
+# As delonghi_primadonna: "none" plus the recipe names from MachinesModels.json.
 DL_DRINKS = ["none", "Espresso Coffee", "Coffee", "Long", "Doppio+", "Americano", "Cappuccino", "Latte Macchiato", "Flat White", "Hot Water"]
 DL_MILK = ("Cappuccino", "Latte Macchiato", "Flat White")
+# homeconnect_ws: program keys lower-cased with "_" for ".", CamelCase not split.
+WSP = "consumerproducts_coffeemaker_program_"
+WS_PROGRAMS = [WSP + x for x in ("beverage_espresso", "beverage_coffee", "beverage_cappuccino", "beverage_lattemacchiato",
+                                 "beverage_hotwater", "cleaning_descaling")]
+# Program end → counter (sensor_count_<x>).
+WS_COUNT = {"espresso": "ristretto_espresso", "coffee": "coffee", "cappuccino": "coffee_milk", "lattemacchiato": "coffee_milk",
+            "hotwater": "hot_water_cups"}
+WS_PHASES = ("grinding", "coffeebrewing", "milkfroth")
+# Power switch per machine (the plug's switch has its own name).
+POWER = {HC: f"switch.{HC}_power", DL: f"switch.{DL}_power", SW: f"switch.{SW}_einschalter", WS: f"switch.{WS}_power",
+         PL: f"switch.{PL}_steckdose"}
 
 
 def _e(eid, state, key, device, name, attrs=None, dc=None, unit=None, cat=None):
@@ -70,7 +90,7 @@ def extra(now) -> dict:
         _e(f"select.{h}_bean_amount", BEAN[5], "bean_amount", h, "Testbarista Bohnenmenge", {"options": BEAN}),
         _e(f"select.{h}_coffee_temperature", TEMP[2], "coffee_temperature", h, "Testbarista Kaffeetemperatur", {"options": TEMP}),
         _e(f"number.{h}_fill_quantity", "120", "fill_quantity", h, "Testbarista Füllmenge", {"min": 60, "max": 250, "step": 10}, unit="ml"),
-        # Zähler (Diagnose, total_increasing) – Schlüssel wie Home Connect (Core); kein Gesamtzähler.
+        # Counters (diagnostic, total_increasing) – keys as Home Connect (core); no total counter.
         _e(f"sensor.{h}_coffees", "418", "coffee_counter", h, "Testbarista Kaffees", {"state_class": "total_increasing"}, cat="diagnostic"),
         _e(f"sensor.{h}_ristretto_espresso_counter", "236", "ristretto_espresso_counter", h, "Testbarista Ristretto/Espresso",
            {"state_class": "total_increasing"}, cat="diagnostic"),
@@ -80,7 +100,7 @@ def extra(now) -> dict:
         _e(f"sensor.{h}_hot_water_cups_counter", "22", "hot_water_cups_counter", h, "Testbarista Heißwasser Tassen",
            {"state_class": "total_increasing"}, cat="diagnostic"),
         _e(f"sensor.{h}_hot_water_counter", "4600", "hot_water_counter", h, "Testbarista Heißwasser", dc="volume", unit="mL", cat="diagnostic"),
-        # Warnungen (enum present/confirmed/off) – nur ein Teil „aktiviert“.
+        # Warnings (enum present/confirmed/off) – only some of them enabled.
         _e(f"sensor.{h}_water_tank_empty", "off", "water_tank_empty", h, "Testbarista Wassertank leer", {"options": WARN_OPTS}, dc="enum"),
         _e(f"sensor.{h}_bean_container_empty", "off", "bean_container_empty", h, "Testbarista Bohnenbehälter leer", {"options": WARN_OPTS}, dc="enum"),
         _e(f"sensor.{h}_drip_tray_full", "off", "drip_tray_full", h, "Testbarista Tropfschale voll", {"options": WARN_OPTS}, dc="enum"),
@@ -91,7 +111,7 @@ def extra(now) -> dict:
     ]
     d = DL
     ents += [
-        # device_status: Diagnose, kein enum (ready, heating, brewing … oder der Name des niedrigsten Alarm-Bits).
+        # device_status: diagnostic, no enum (ready, heating, brewing … or the name of the lowest alarm bit).
         _e(f"sensor.{d}_device_status", "ready", "device_status", d, "Morgenbohne Status", cat="diagnostic"),
         _e(f"switch.{d}_power", "on", "power", d, "Morgenbohne Strom"),
         _e(f"select.{d}_make_beverage", "none", "make_beverage", d, "Morgenbohne Getränk", {"options": DL_DRINKS}),
@@ -126,24 +146,63 @@ def extra(now) -> dict:
         _e(f"binary_sensor.{w}_milchsystem_reinigen", "off", "milk", w, "Bohnenwerk Milchsystem reinigen", dc="problem"),
         _e(f"binary_sensor.{w}_wartung_fallig", "off", "maintenance_due", w, "Bohnenwerk Wartung fällig", {"tasks": []}, dc="problem"),
     ]
-    # Verlauf der Zähler: heute früh drei Kaffees weniger – „Heute 3“ im Popup.
+    k = WS
+    ents += [
+        _e(f"switch.{k}_power", "on", "switch_power_state", k, "Kaffeeinsel Gerätestatus"),
+        _e(f"sensor.{k}_operation_state", "ready", "sensor_operation_state", k, "Kaffeeinsel Betriebszustand", {"options": OPS}, dc="enum"),
+        _e(f"select.{k}_program", WSP + "beverage_cappuccino", "select_program", k, "Kaffeeinsel Programm", {"options": WS_PROGRAMS}),
+        _e(f"sensor.{k}_active_program", "unknown", "sensor_active_program", k, "Kaffeeinsel Aktives Programm"),
+        _e(f"button.{k}_start", "unknown", "button_start_program", k, "Kaffeeinsel Programm starten"),
+        _e(f"button.{k}_abort", "unknown", "button_abort_program", k, "Kaffeeinsel Programm abbrechen"),
+        _e(f"sensor.{k}_program_progress", "unknown", "sensor_program_progress", k, "Kaffeeinsel Programmfortschritt", unit="%"),
+        _e(f"sensor.{k}_remaining_program_time", "unknown", "sensor_remaining_program_time", k, "Kaffeeinsel Restzeit",
+           dc="duration", unit="s"),
+        _e(f"sensor.{k}_process_phase", "none", "sensor_coffeemaker_process_phase", k, "Kaffeeinsel Prozessphase",
+           {"options": ["none", *WS_PHASES]}, dc="enum"),
+        _e(f"binary_sensor.{k}_remote_start", "on", "binary_remote_start_allowed", k, "Kaffeeinsel Fernstart erlaubt"),
+        _e(f"select.{k}_bean_amount", "normal", "select_bean_amount", k, "Kaffeeinsel Bohnenmenge",
+           {"options": ["verymild", "mild", "normal", "strong", "verystrong"]}),
+        _e(f"select.{k}_coffee_temperature", "92c", "select_coffee_temperature", k, "Kaffeeinsel Kaffeetemperatur",
+           {"options": ["88c", "90c", "92c", "94c"]}),
+        _e(f"sensor.{k}_water_tank", "full", "sensor_water_tank", k, "Kaffeeinsel Wassertank",
+           {"options": ["empty", "nearly_empty", "not_inserted", "full"]}, dc="enum"),
+        _e(f"sensor.{k}_drip_tray", "ok", "sensor_drip_tray", k, "Kaffeeinsel Tropfschale", {"options": ["full", "not_inserted", "ok"]}, dc="enum"),
+        _e(f"binary_sensor.{k}_bean_container_empty", "off", "binary_sensor_bean_container_empty", k,
+           "Kaffeeinsel Bohnenbehälter leer", dc="problem"),
+        _e(f"sensor.{k}_countdown_descaling", "35", "sensor_countdown_descaling", k, "Kaffeeinsel Entkalken in"),
+        *(_e(f"sensor.{k}_count_{n}", str(c), f"sensor_count_{n}", k, f"Kaffeeinsel Anzahl {n}", {"state_class": "total_increasing"})
+          for n, c in (("ristretto_espresso", 64), ("coffee", 120), ("coffee_milk", 210), ("hot_water_cups", 9))),
+    ]
+    # Generic plug on a device named like a coffee machine, and a grinder on a plug (no coffee machine).
+    ents += [
+        _e(f"switch.{PL}_steckdose", "on", None, PL, "Espressobar Steckdose"),
+        _e(f"sensor.{PL}_leistung", "4.0", None, PL, "Espressobar Leistung", {"state_class": "measurement"}, dc="power", unit="W"),
+        _e(f"sensor.{PL}_energie", "12.4", None, PL, "Espressobar Energie", {"state_class": "total_increasing"}, dc="energy", unit="kWh"),
+        _e(f"switch.{GR}_steckdose", "off", None, GR, "Kaffeemühle Steckdose"),
+        _e(f"sensor.{GR}_leistung", "0.0", None, GR, "Kaffeemühle Leistung", {"state_class": "measurement"}, dc="power", unit="W"),
+    ]
+    # Counter history: three coffees fewer early today – "Heute 3" in the popup.
     hist = {}
-    for eid, base in ((f"sensor.{h}_coffees", 418), (f"sensor.{h}_coffee_and_milk_counter", 655), (f"sensor.{d}_total_coffee", 1204)):
+    for eid, base in ((f"sensor.{h}_coffees", 418), (f"sensor.{h}_coffee_and_milk_counter", 655), (f"sensor.{d}_total_coffee", 1204),
+                      (f"sensor.{k}_count_coffee", 120)):
         hist[eid] = {"steps": [[20, str(base - 3)], [0.4, str(base - 2)], [0.1, str(base - 1)]]}
     return {
         "devices": [
             {"key": HC, "name": "Testbarista", "manufacturer": "Bosch", "model": "Vollautomat 9", "area": None},
             {"key": DL, "name": "Morgenbohne", "manufacturer": "De'Longhi", "model": "Bluetooth", "area": None},
             {"key": SW, "name": "Bohnenwerk", "manufacturer": "De'Longhi", "model": "Stromerkennung", "area": None},
+            {"key": WS, "name": "Kaffeeinsel", "manufacturer": "Siemens", "model": "Vollautomat lokal", "area": None},
+            {"key": PL, "name": "Espressobar", "manufacturer": "Steckwerk", "model": "Zwischenstecker", "area": None},
+            {"key": GR, "name": "Kaffeemühle", "manufacturer": "Steckwerk", "model": "Zwischenstecker", "area": None},
         ],
         "entities": ents,
         "_history": hist,
     }
 
 
-# ── Bezug, Warnungen, Testdienste ────────────────────────────────────────────
+# ── Brewing, warnings, test services ──────────────────────────────────────────
 def _counter(prog: str) -> tuple[str, int]:
-    """Welcher Zähler des Testbarista zählt (Entität, ml für Heißwasser)."""
+    """Which Testbarista counter counts (entity, ml for hot water)."""
     k = prog.rsplit("_program_", 1)[-1]
     if any(x in k for x in ("ristretto", "espresso_doppio")) or k.endswith("_espresso"):
         return f"sensor.{HC}_ristretto_espresso_counter", 0
@@ -164,7 +223,7 @@ def setup(hass, mock) -> None:
     from homeassistant.helpers.event import async_call_later, async_track_state_change_event
     from homeassistant.util import dt as dt_util
 
-    run = {HC: None, DL: None, SW: None}
+    run = {HC: None, DL: None, SW: None, WS: None, PL: None}
 
     def bump(eid: str, by: int = 1) -> None:
         st = hass.states.get(eid)
@@ -180,7 +239,7 @@ def setup(hass, mock) -> None:
                 cancel()
         run[dev] = None
         if dev == SW:
-            # Erst nach dem Vorgang steht das Getränk fest (wie die Strom-Erkennung).
+            # Only after the brew the drink is known (like the power-curve recognition).
             if done and job:
                 mock.set(f"sensor.{SW}_letztes_programm", job["prog"], start=job["t0"].isoformat())
                 bump(f"sensor.{SW}_bezuge_heute")
@@ -204,8 +263,20 @@ def setup(hass, mock) -> None:
                     if run[HC] is None and hass.states.is_state(f"sensor.{HC}_operation_state", "finished"):
                         mock.set(f"sensor.{HC}_operation_state", "ready")
                 async_call_later(hass, 4, ready)
+        elif dev == WS:
+            if done and job:
+                n = WS_COUNT.get(job["prog"].rsplit("_", 1)[-1])
+                if n:
+                    bump(f"sensor.{WS}_count_{n}")
+            mock.set(f"sensor.{WS}_operation_state", "ready")
+            mock.set(f"sensor.{WS}_active_program", "unknown")
+            mock.set(f"sensor.{WS}_program_progress", "unknown")
+            mock.set(f"sensor.{WS}_remaining_program_time", "unknown")
+            mock.set(f"sensor.{WS}_process_phase", "none")
+        elif dev == PL:
+            mock.set(f"sensor.{PL}_leistung", "4.0" if hass.states.is_state(POWER[PL], "on") else "0.0")
         else:
-            # Zähler erst am Ende des Bezugs +1 (wie die Maschine).
+            # Counter +1 only at the end of the brew (like the machine).
             if done and job:
                 bump(f"sensor.{DL}_total_coffee_with_milk" if job["prog"] in DL_MILK else f"sensor.{DL}_total_coffee")
             mock.set(f"binary_sensor.{DL}_dispensing", "off", percentage=0)
@@ -214,8 +285,8 @@ def setup(hass, mock) -> None:
     def brew(dev: str, prog: str, dauer: float = 30.0) -> None:
         if run.get(dev):
             return
-        if not hass.states.is_state(f"switch.{dev}_power", "on"):
-            mock.set(f"switch.{dev}_power", "on")
+        if not hass.states.is_state(POWER[dev], "on"):
+            mock.set(POWER[dev], "on")
         job = run[dev] = {"prog": prog, "timers": [], "t0": dt_util.utcnow()}
         steps = 10
         if dev == SW:
@@ -225,6 +296,14 @@ def setup(hass, mock) -> None:
             mock.set(f"select.{HC}_active_program", prog)
             mock.set(f"sensor.{HC}_program_progress", "0")
             mock.set(f"sensor.{HC}_program_finish_time", (job["t0"] + timedelta(seconds=dauer)).isoformat())
+        elif dev == WS:
+            mock.set(f"sensor.{WS}_operation_state", "run")
+            mock.set(f"sensor.{WS}_active_program", prog)
+            mock.set(f"sensor.{WS}_program_progress", "0")
+            mock.set(f"sensor.{WS}_remaining_program_time", str(int(dauer)))
+            mock.set(f"sensor.{WS}_process_phase", WS_PHASES[0])
+        elif dev == PL:
+            mock.set(f"sensor.{PL}_leistung", "1350.0")
         else:
             mock.set(f"sensor.{DL}_device_status", "brewing")
             mock.set(f"binary_sensor.{DL}_dispensing", "on", percentage=0)
@@ -235,10 +314,14 @@ def setup(hass, mock) -> None:
                     return
                 if i == steps:
                     stop(dev, True)
-                elif dev == SW:
+                elif dev in (SW, PL):
                     pass
                 elif dev == HC:
                     mock.set(f"sensor.{HC}_program_progress", str(i * 100 // steps))
+                elif dev == WS:
+                    mock.set(f"sensor.{WS}_program_progress", str(i * 100 // steps))
+                    mock.set(f"sensor.{WS}_remaining_program_time", str(int(dauer * (steps - i) / steps)))
+                    mock.set(f"sensor.{WS}_process_phase", WS_PHASES[min(len(WS_PHASES) - 1, i * len(WS_PHASES) // steps)])
                 else:
                     mock.set(f"binary_sensor.{DL}_dispensing", "on", percentage=i * 100 // steps)
             job["timers"].append(async_call_later(hass, dauer * i / steps, tick))
@@ -252,6 +335,11 @@ def setup(hass, mock) -> None:
         elif dev == HC:
             prog = g if g.startswith(P) else next((p for p in PROGRAMS if p.endswith("_" + g)), P + "beverage_cappuccino")
             brew(HC, prog, dauer)
+        elif dev == WS:
+            prog = g if g.startswith(WSP) else next((p for p in WS_PROGRAMS if p.endswith("_" + g)), WSP + "beverage_cappuccino")
+            brew(WS, prog, dauer)
+        elif dev == PL:
+            brew(PL, "power", dauer)
         else:
             brew(DL, next((x for x in DL_DRINKS if x.lower().replace(" ", "_") == g.lower()), g), dauer)
 
@@ -262,7 +350,7 @@ def setup(hass, mock) -> None:
         dev = call.data.get("geraet", HC)
         art = str(call.data.get("art", "wasser"))
         if dev == SW:
-            # Strom-Integration: Wartung über das Attribut „due“ (Wert 0 = jetzt fällig).
+            # Power-curve integration: maintenance through the attribute "due" (value 0 = due now).
             for a, k in (("wasser", "wassertank"), ("bohnen", "bohnen"), ("satz", "trester_leeren_in"), ("entkalken", "entkalken_in")):
                 if art == "aus" or a == art:
                     eid = f"sensor.{SW}_{k}"
@@ -272,7 +360,16 @@ def setup(hass, mock) -> None:
             for a, k in WARN.items():
                 if art == "aus" or a == art:
                     mock.set(f"sensor.{HC}_{k}", "off" if art == "aus" else "present")
-        else:
+        elif dev == WS:
+            if art in ("aus", "wasser"):
+                mock.set(f"sensor.{WS}_water_tank", "full" if art == "aus" else "empty")
+            if art in ("aus", "schale"):
+                mock.set(f"sensor.{WS}_drip_tray", "ok" if art == "aus" else "full")
+            if art in ("aus", "bohnen"):
+                mock.set(f"binary_sensor.{WS}_bean_container_empty", "off" if art == "aus" else "on")
+            if art in ("aus", "entkalken"):
+                mock.set(f"sensor.{WS}_countdown_descaling", "35" if art == "aus" else "0")
+        elif dev == DL:
             if art == "aus":
                 mock.set(f"sensor.{DL}_device_status", "ready")
                 mock.set(f"binary_sensor.{DL}_descaling", "off")
@@ -281,12 +378,13 @@ def setup(hass, mock) -> None:
             elif art in DL_WARN:
                 mock.set(f"sensor.{DL}_device_status", DL_WARN[art])
 
+    devs = [HC, DL, SW, WS, PL]
     hass.services.async_register("casora_mock", "kaffee_beziehen", beziehen, vol.Schema({
-        vol.Optional("getraenk"): str, vol.Optional("geraet"): vol.In([HC, DL, SW]), vol.Optional("dauer"): vol.Coerce(float)}))
+        vol.Optional("getraenk"): str, vol.Optional("geraet"): vol.In(devs), vol.Optional("dauer"): vol.Coerce(float)}))
     hass.services.async_register("casora_mock", "kaffee_warnung", warnung, vol.Schema({
-        vol.Required("art"): vol.In(["wasser", "bohnen", "schale", "satz", "entkalken", "aus"]), vol.Optional("geraet"): vol.In([HC, DL, SW])}))
+        vol.Required("art"): vol.In(["wasser", "bohnen", "schale", "satz", "entkalken", "aus"]), vol.Optional("geraet"): vol.In(devs)}))
 
-    # Wie Home Connect: Programm samt Optionen starten (nur, wenn die echte Integration fehlt).
+    # As Home Connect: start a program with its options (only when the real integration is missing).
     async def set_program(call) -> None:
         prog = call.data.get("program")
         if call.data.get("affects_to") == "active_program" and prog in PROGRAMS:
@@ -297,8 +395,8 @@ def setup(hass, mock) -> None:
     if not hass.services.has_service("home_connect", "set_program_and_options"):
         hass.services.async_register("home_connect", "set_program_and_options", set_program)
 
-    # Auswahl startet einen Bezug wie an der Maschine – auch dieselbe Sorte noch einmal (darum der Dienstaufruf,
-    # nicht der Zustandswechsel): HC „active_program“ (nur mit Fernstart), De'Longhi BT „make_beverage“ (Zustand bleibt „none“).
+    # Choosing starts a brew like on the machine – also the same drink again (hence the service call, not the state
+    # change): HC "active_program" (only with remote start), De'Longhi BT "make_beverage" (state stays "none").
     @callback
     def called(event) -> None:
         d = event.data
@@ -323,11 +421,25 @@ def setup(hass, mock) -> None:
             return
         if eid == f"button.{HC}_stop_program" and run[HC]:
             stop(HC, False)
+        elif eid == f"button.{WS}_abort" and run[WS]:
+            stop(WS, False)
+        elif eid == f"button.{WS}_start" and hass.states.is_state(f"binary_sensor.{WS}_remote_start", "on"):
+            sel = hass.states.get(f"select.{WS}_program")
+            if sel and sel.state in WS_PROGRAMS:
+                brew(WS, sel.state)
         elif eid == f"switch.{HC}_power" and new.state == "off":
             stop(HC, False)
             mock.set(f"sensor.{HC}_operation_state", "inactive")
         elif eid == f"switch.{HC}_power" and new.state == "on" and hass.states.is_state(f"sensor.{HC}_operation_state", "inactive"):
             mock.set(f"sensor.{HC}_operation_state", "ready")
+        elif eid == f"switch.{WS}_power":
+            if new.state == "off":
+                stop(WS, False)
+            mock.set(f"sensor.{WS}_operation_state", "inactive" if new.state == "off" else "ready")
+        elif eid == POWER[PL]:
+            if new.state == "off":
+                stop(PL, False)
+            mock.set(f"sensor.{PL}_leistung", "0.0" if new.state == "off" else "4.0")
         elif eid == f"switch.{SW}_einschalter":
             if new.state == "off":
                 stop(SW, False)
@@ -338,4 +450,5 @@ def setup(hass, mock) -> None:
             mock.set(f"sensor.{DL}_device_status", "turned_off" if new.state == "off" else "ready")
 
     async_track_state_change_event(hass, [f"button.{HC}_stop_program", f"switch.{HC}_power", f"switch.{DL}_power",
-                                         f"switch.{SW}_einschalter"], changed)
+                                         f"switch.{SW}_einschalter", f"button.{WS}_start", f"button.{WS}_abort",
+                                         f"switch.{WS}_power", POWER[PL]], changed)

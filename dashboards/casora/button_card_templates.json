@@ -18216,8 +18216,8 @@
    "haptic": "medium"
   },
   "icon_tap_action": {
-   "action": "[[[\n  /* Icon schaltet den Strom der Maschine (falls sie einen Schalter hat), sonst wie Tippen auf die Kachel. */\n  const K = window._casoraCoffee;\n  if (!K || !entity) return 'none';\n  const c = K.find(hass, entity.entity_id);\n  return K.iconService(c, K.status(c, states)) ? 'call-service' : 'none';\n]]]\n",
-   "service": "[[[\n  const K = window._casoraCoffee;\n  if (!K || !entity) return 'none';\n  const c = K.find(hass, entity.entity_id);\n  return K.iconService(c, K.status(c, states)) || 'none';\n]]]\n",
+   "action": "[[[\n  /* Icon schaltet den Strom der Maschine (falls sie einen Schalter hat), sonst wie Tippen auf die Kachel. */\n  const K = window._casoraCoffee;\n  if (!K || !entity) return 'none';\n  return K.iconService(K.find(hass, entity.entity_id), K.of(entity, hass, states)) ? 'call-service' : 'none';\n]]]\n",
+   "service": "[[[\n  const K = window._casoraCoffee;\n  if (!K || !entity) return 'none';\n  return K.iconService(K.find(hass, entity.entity_id), K.of(entity, hass, states)) || 'none';\n]]]\n",
    "service_data": "[[[\n  const K = window._casoraCoffee;\n  const c = K && entity ? K.find(hass, entity.entity_id) : null;\n  return { entity_id: c && c.power ? c.power : entity?.entity_id };\n]]]\n",
    "haptic": "light"
   },
@@ -18281,7 +18281,7 @@
       }
      ]
     },
-    "value": "[[[\n  // Kaffeevollautomat: hinterlegt beim Bezug, Aufheizen, Pflege und bei Hinweisen (orange/rot, 25-kaffee.js).\n  const K = window._casoraCoffee;\n  const s = K ? K.of(entity, hass, states) : null;\n  return !!(K && K.active(s));\n]]]\n"
+    "value": "[[[\n  // Kaffeevollautomat: hinterlegt beim Bezug, Aufheizen, Pflege und bei Hinweisen (orange/rot, 25-coffee.js).\n  const K = window._casoraCoffee;\n  const s = K ? K.of(entity, hass, states) : null;\n  return !!(K && K.active(s));\n]]]\n"
    }
   ],
   "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? t;\n  // „Bereit“, „Heizt auf“, „Cappuccino · 40 %“ (schmal „40 % Cappuccino“), „Wasser leer“, „Aus“ (window._casoraCoffee.tileText).\n  // Name der Kachel mitgeben: heißt das Getränk genauso („Kaffee“), steht „Läuft“ statt doppeltem Namen.\n  const K = window._casoraCoffee;\n  const nm = typeof this._config?.name === 'string' && this._config.name.indexOf('[[[') < 0 ? this._config.name : (entity?.attributes?.friendly_name || '');\n  const narrow = (this.offsetWidth || 999) < 240;\n  return K ? fit(K.tileText(K.of(entity, hass, states), narrow, nm)) : '';\n]]]\n",
@@ -18385,7 +18385,7 @@
  "casora_popup_coffee": {
   "tap_action": {
    "casora_popup": {
-    "content": "[[[\n  /* Kaffeevollautomat (Community-Karte): Kopf mit Status, beim Bezug großer Ring, links Getränke (antippen, dann\n     starten) mit Stärke/Menge/Temperatur bzw. „Abbrechen“, rechts Hinweise, Pflege und Statistik – window._casoraCoffee.popup\n     in 25-kaffee.js. Strom an/aus ist der Hauptschalter im Kopf. */\n  return window._casoraCoffee ? window._casoraCoffee.popup(entity, states, hass) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "content": "[[[\n  /* Kaffeevollautomat: Kopf mit Status, beim Bezug großer Ring, links Getränke (antippen, dann\n     starten) mit Stärke/Menge/Temperatur bzw. „Abbrechen“, rechts Hinweise, Pflege und Statistik – window._casoraCoffee.popup\n     in 25-coffee.js. Strom an/aus ist der Hauptschalter im Kopf. */\n  return window._casoraCoffee ? window._casoraCoffee.popup(entity, states, hass) : { type: 'vertical-stack', cards: [] };\n]]]\n",
     "dismiss_on_background": true,
     "popup_styles": [
      {

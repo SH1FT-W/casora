@@ -328,7 +328,7 @@ KEYS = [
     ("home_connect", "*", ["operation_state", "program_progress", "program_finish_time", "door", "active_program",
                            "selected_program", "pause_program", "resume_program", "stop_program",
                            "bean_amount", "coffee_temperature", "fill_quantity"],
-     "00-finder.js casoraLaundryFind.SOURCES (fields + dish for _casoraDish), live_finder.py, 25-kaffee.js"),
+     "00-finder.js casoraLaundryFind.SOURCES (fields + dish for _casoraDish), live_finder.py, 25-coffee.js"),
     ("home_connect", "select", ["active_program", "selected_program"], "00-finder.js SOURCES home_connect.dish"),
     ("home_connect", "button", ["stop_program"], "00-finder.js SOURCES home_connect.dish"),
     ("miele", "*", ["status", "program_id", "program_phase", "drying_step", "remaining_time", "finish", "elapsed_time",
@@ -347,7 +347,12 @@ KEYS = [
                           "last_attempted_automatic_backup", "backup_manager_state"], "03-popups.js (backup row)"),
     ("proximity", "sensor", ["dist_to_zone", "dir_of_travel"], "15-person.js"),
     ("unifi", "*", ["device_state", "wlan_clients", "wan_latency", "device_clients", "wlan_control"], "00-finder.js network"),
-    ("lamarzocco", "*", ["brew_active", "start_backflush", "total_coffees_made", "main"], "25-kaffee.js K.roles"),
+    ("lamarzocco", "*", ["brew_active", "start_backflush", "total_coffees_made", "main", "water_tank"], "25-coffee.js K.roles"),
+    ("home_connect", "*", ["power", "remote_start", "water_tank_empty", "bean_container_empty", "drip_tray_full",
+                           "keep_milk_tank_cool", "descaling_in_10_cups", "calc_n_clean_in10cups", "device_should_be_descaled",
+                           "device_descaling_overdue", "coffee_counter", "powder_coffee_counter", "hot_water_cups_counter",
+                           "frothy_milk_counter", "ristretto_espresso_counter", "coffee_and_milk_counter"],
+     "25-coffee.js K.roles (coffee maker: power, remote start, warnings, counters)"),
 ]
 
 

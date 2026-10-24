@@ -151,7 +151,7 @@ Cards for devices that not every home has ship with Casora but stay out of **Add
 
 - **Add a card.** Every card has a preview of its tile and popup; tap it to see both large. Once added, the card appears in **Add tile** for all your dashboards. Removing a card asks whether tiles that use it stay or go.
 - **Request a card.** Choose **Request a card…**, describe the device and what the tile and popup should show, and pick a few example entities. Casora prepares a GitHub issue with the kind of device, units, device classes and attribute names, but without entity names, rooms or places, and shows you the exact text first. You submit it on GitHub yourself. **Your requests** shows where each one stands: Open, Question (with the answer), In progress, Built or Declined.
-- **Available now:** Frigate camera, Reolink doorbell and coffee machine. The robot lawn mower started as a community card and is a regular tile now. Nothing is downloaded from outside your Home Assistant: new cards come with a Casora release. If a card is ever retired, it disappears from **Add tile** first while existing tiles keep working.
+- **Available now:** Frigate camera and Reolink doorbell. The robot lawn mower and the coffee machine started as community cards and are regular tiles now. Nothing is downloaded from outside your Home Assistant: new cards come with a Casora release. If a card is ever retired, it disappears from **Add tile** first while existing tiles keep working.
 
 ## When a device is missing
 

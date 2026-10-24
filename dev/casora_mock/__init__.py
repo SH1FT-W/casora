@@ -86,8 +86,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Kamerabilder Tag/Dämmerung/Nacht (kamerabild.py), Testdienst casora_mock.kamerabild.
     from .kamerabild import setup as kamerabild_setup
     kamerabild_setup(hass, mock)
-    from .kaffee import setup as kaffee_setup
-    kaffee_setup(hass, mock)
+    from .coffee import setup as coffee_setup
+    coffee_setup(hass, mock)
     from .live import setup as live_setup
     live_setup(hass, mock)
     mock.track_derived()

@@ -1,4 +1,4 @@
-// Kaffeevollautomat (Community-Karte, 25-kaffee.js) ohne HA: Rollenmodell je Integration (Home Connect Core,
+// Kaffeevollautomat (Community-Karte, 25-coffee.js) ohne HA: Rollenmodell je Integration (Home Connect Core,
 // homeconnect_ws, home_connect_alt, Miele, De'Longhi BT/WLAN/Coffeelink, Jura, Melitta/Nivona, La Marzocco, Strom-Erkennung
 // (delonghi/krups), Steckdose),
 // Zustand, Warnungen und Vorwarnungen, Zähler, Kachel-Text, Start je Integration, Halten-Menü, Popup-Kopf.
@@ -12,7 +12,7 @@ let HASS = null;
 globalThis.document = { querySelector: (q) => (q === 'home-assistant' && HASS ? { hass: HASS, dispatchEvent() {} } : null) };
 globalThis.localStorage = (() => { const m = {}; return { getItem: (k) => (k in m ? m[k] : null), setItem: (k, v) => { m[k] = String(v); } }; })();
 const src = (p) => fs.readFileSync(new URL('../../custom_components/casora/scripts/local/' + p, import.meta.url), 'utf8');
-new Function(src('25-kaffee.js'))();
+new Function(src('25-coffee.js'))();
 const K = window._casoraCoffee;
 assert.ok(K && K.roles && K.status && K.tileText && K.popup && K.hold, 'Modul geladen');
 

@@ -1,7 +1,7 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/25-kaffee.js dev/casora_mock/kaffee.py
-// Community-Karte Kaffeevollautomat am erfundenen „Testbarista“ (Home-Connect-artig) und „Morgenbohne“ (De'Longhi-BT-artig,
-// dev/casora_mock/kaffee.py):
+// @deckt: custom_components/casora/scripts/local/25-coffee.js dev/casora_mock/coffee.py
+// Kaffeevollautomat am erfundenen „Testbarista“ (Home-Connect-artig) und „Morgenbohne“ (De'Longhi-BT-artig,
+// dev/casora_mock/coffee.py):
 //   1. Kachel: „Bereit“ bzw. „Entkalken in …“ steht nur im Popup; Morgenbohne erkannt ohne Integration (Schlüssel
 //      device_status/make_beverage wie delonghi_primadonna).
 //   2. Popup: Titel „Kaffee“, Getränke-Raster, Cappuccino vorgewählt, „Cappuccino starten“ direkt unter dem Raster,

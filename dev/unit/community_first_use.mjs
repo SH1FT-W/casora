@@ -12,14 +12,14 @@ const TEST_DEVICES = {
   casora_pet: ['testhund_tracker'], // haustier.py: the tracker carries the device_tracker, the pet hangs behind it
   casora_frigate: ['frigate_testhof'], // frigate.py
   casora_reolink_doorbell: ['testklingel'], // klingel.py
-  casora_coffee: ['testbarista', 'morgenbohne', 'bohnenwerk'], // kaffee.py: Home Connect, De'Longhi BT, power curve
   casora_chart: ['testserver'], // testserver.py: System-Monitor-like CPU load, memory, temperature
 };
 
 const hass = testhaus();
 const { P, I } = await loadPanel();
 const community = I.TILE_TYPES.filter((t) => t.community && !t.community.retired);
-assert.ok(community.length >= 5, 'community cards loaded');
+// Mower and coffee machine are regular cards now (first use: maeher_erstnutzer.mjs, coffee_first_use.mjs).
+assert.ok(community.length >= 3, 'community cards loaded');
 const unknown = community.filter((t) => !TEST_DEVICES[t.id]).map((t) => t.id);
 assert.deepEqual(unknown, [], 'Community card without a test device – add one to dev/casora_mock and to TEST_DEVICES');
 window.casoraCommunityOn = new Set(community.map((t) => t.id));

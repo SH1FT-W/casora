@@ -1,7 +1,7 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/25-kaffee.js dev/casora_mock/kaffee.py custom_components/casora/panel/casora-panel-b-ux.js
-// Community-Karte Kaffeevollautomat am erfundenen „Bohnenwerk“ (wie die Strom-Integrationen delonghi/krups: Getränke am
-// Stromverlauf erkannt, Wartung mit Attribut „due“, dev/casora_mock/kaffee.py):
+// @deckt: custom_components/casora/scripts/local/25-coffee.js dev/casora_mock/coffee.py custom_components/casora/panel/casora-panel-b-ux.js
+// Kaffeevollautomat am erfundenen „Bohnenwerk“ (wie die Strom-Integrationen delonghi/krups: Getränke am
+// Stromverlauf erkannt, Wartung mit Attribut „due“, dev/casora_mock/coffee.py):
 //   1. Kachel „Bereit“ – erkannt nur an den Schlüsseln (learning + last_program).
 //   2. Popup: „Zuletzt“ mit dem letzten Getränk und Hinweis statt Getränke-Raster, Pflege mit Liter/Tagen
 //      (Entkalken, Wasserfilter, Brühgruppe), Statistik mit „Heute“ aus dem Sensor der Integration.
