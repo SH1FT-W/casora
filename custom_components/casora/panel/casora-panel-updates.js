@@ -1,12 +1,11 @@
-// Studio → „Updates“ (30.09.2026)
+// Studio → "Updates" (30.09.2026)
 //
-// Eigener Abschnitt „Casora“ ganz unten in der Seitenleiste. Die Seite zeigt die
-// installierte Version, ob es eine neue gibt (installieren, nach Updates suchen,
-// danach Neustart) und alle Versionen mit ihren Versionshinweisen. Einen Zugang braucht
-// es nicht (öffentliches Repo); verwaltet HACS Casora, meldet HACS neue Versionen.
-// Daten: casora/updates/list (updates.py); Installieren und Prüfen über HAs eigene
-// Dienste an der Update-Entität (update.py). Kein Zurückspielen älterer Versionen.
-// Die Liste ist nach „kind“ gruppiert – später können Karten-Updates dazukommen.
+// Own section "Casora" at the bottom of the sidebar. The page shows the installed version,
+// whether there is a newer one (check for updates, restart once HACS has put it in place) and
+// all versions with their release notes. Casora installs nothing itself (HACS default-store
+// rule): "Update via HACS" opens Casora's page in HACS (or HACS' update entry), betas are
+// turned on there too. Data: casora/updates/list (updates.py); checking via HA's own service
+// on the update entity (update.py). The list is grouped by "kind".
 (function () {
   const ICON = "data:image/svg+xml," + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.1" '
@@ -305,49 +304,25 @@
       this._cuRepaint();
     };
 
-    // Installieren über die Update-Entität: die eigene (ohne HACS) oder HACS' Eintrag für Casora.
-    // Rückmeldung ehrlich: läuft (in_progress), installiert (Neustart nötig) oder Fehler.
-    P._cuInstall = async function () {
+    // Updating is HACS' job: open Casora's page in HACS, otherwise HACS' update entry (more-info).
+    P._cuOpenHacs = async function () {
       const d = this._cuData || {};
-      if (!d.entity_id || this._cuBusy) return;
-      const hacs = d.install_via === "hacs";
-      const ok = await this._ask({
-        title: t("Install Casora {v}?").replace("{v}", String(d.latest)),
-        message: hacs
-          ? t("HACS downloads the new version. Home Assistant needs a restart afterwards.")
-          : t("The running version is backed up to casora_sicherungen first. Home Assistant needs a restart afterwards."),
-        confirmLabel: t("Install"),
-      });
-      if (!ok) return;
-      this._cuErr = null;
-      const st = this._hass && this._hass.states[d.entity_id];
-      if (!st || st.state === "unavailable" || st.state === "unknown") {
-        this._cuErr = t(hacs ? "HACS's update entry for Casora is not available right now. Try again in a moment or update in HACS."
-          : "Casora's update entry is not available right now. Try again in a moment.");
-        this._cuRepaint();
+      if (d.hacs_url && /^\/hacs\//.test(d.hacs_url)) {
+        const dirty = this._state && this._isDirty && this._isDirty();
+        if (dirty && !(await this._save())) return;
+        if (this._flowMode && this._exitFlow) this._exitFlow(false);
+        history.pushState(null, "", d.hacs_url);
+        window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
         return;
       }
-      this._cuBusy = "install";
-      this._cuRepaint();
-      const want = String(d.latest);
-      try {
-        const data = { entity_id: d.entity_id };
-        if (d.install_version) data.version = d.install_version;
-        await this._hass.callService("update", "install", data);
-      } catch (e) {
-        this._cuErr = t("Installing didn't work.") + " " + (e.message || e);
+      if (d.entity_id) {
+        this.dispatchEvent(new CustomEvent("hass-more-info", { bubbles: true, composed: true, detail: { entityId: d.entity_id } }));
       }
-      await this._cuLoad(false);
-      const now = this._cuData || {};
-      // Dienst ohne Fehler, aber nichts installiert (z. B. Entität übersprungen): nicht still bleiben.
-      if (!this._cuErr && now.pending_restart !== want && now.update_available) {
-        this._cuErr = t("Installing didn't work.") + " " + t(hacs
-          ? "HACS did not report the new version as installed. Check HACS."
-          : "The new version was not installed.");
-      }
-      this._cuBusy = null;
-      this._cuRepaint();
     };
+    const canOpenHacs = (d) => !!(d && d.hacs && (d.hacs_url || d.entity_id));
+    // Without HACS there is nothing to press: say where new versions come from.
+    const manualNote = () => el("div", "cu-note",
+      t("Casora installs no updates itself. Install new versions through HACS, or download casora.zip from the release page."));
 
     P._cuRestart = async function () {
       const dirty = this._state && this._isDirty && this._isDirty();
@@ -403,6 +378,7 @@
       const rels = group.releases || [];
       const latestRel = rels.find((r) => r.version === d.latest);
       const st = d.entity_id && this._hass && this._hass.states[d.entity_id];
+      // HACS installing right now (its update entry reports in_progress).
       const busy = this._cuBusy || (st && st.attributes && st.attributes.in_progress ? "install" : null);
 
       // Kopf
@@ -435,15 +411,9 @@
         const when = latestRel && latestRel.date ? " (" + fmtDate(this, latestRel.date) + ")" : "";
         stTx.textContent = t("New: {v}").replace("{v}", d.latest) + when;
         if (latestRel && latestRel.summary) hero.appendChild(el("div", "cu-sum", latestRel.summary));
-        const inst = btn(t("Install"), () => this._cuInstall());
-        inst.disabled = !d.entity_id || !!busy;
-        acts.appendChild(inst);
-        if (!d.entity_id) {
-          // Ohne Update-Entität kann der Knopf nichts anstoßen: sagen, wo es weitergeht.
-          hero.appendChild(el("div", "cu-note", d.hacs
-            ? t("HACS has no update entry for Casora yet. Update Casora in HACS, or try again later.")
-            : t("Casora's update entry is missing. Restart Home Assistant, then try again.")));
-        }
+        if (canOpenHacs(d)) acts.appendChild(btn(t("Update via HACS"), () => this._cuOpenHacs()));
+        else if (!d.hacs) hero.appendChild(manualNote());
+        else hero.appendChild(el("div", "cu-sum", t("HACS offers new Casora versions under Settings → Updates.")));
       } else if (d.hacs) {
         // Mit HACS keine eigene Update-Entität – HACS meldet neue Versionen.
         stTx.textContent = t("Updates via HACS");
@@ -462,9 +432,7 @@
       }
       if (acts.children.length) hero.appendChild(acts);
       if (d.pending_restart) {
-        hero.appendChild(el("div", "cu-note", d.install_via === "hacs"
-          ? t("Installed through HACS. Home Assistant also lists the restart under Repairs.")
-          : t("The previous version is kept in casora_sicherungen. Home Assistant also lists the restart under Repairs.")));
+        hero.appendChild(el("div", "cu-note", t("Installed through HACS. Home Assistant also lists the restart under Repairs.")));
       }
       const errTx = this._cuErr || (d.last_error && t(ERR[d.last_error] || ERR.unreachable));
       if (errTx) hero.appendChild(el("div", "cu-err", errTx));
@@ -493,9 +461,6 @@
         row.appendChild(tags);
         const body = el("div", "cu-body");
         body.hidden = !open;
-        if (r.installed_at) {
-          body.appendChild(el("div", "cu-meta", t("Installed on {date}").replace("{date}", fmtDate(this, r.installed_at))));
-        }
         const notes = el("div", "cu-notes");
         if (r.notes_html) notes.appendChild(safeNotes(r.notes_html));
         else notes.appendChild(el("p", "", t("No release notes.")));
@@ -517,12 +482,12 @@
           body.append(nw, more);
         }
         body.appendChild(notes);
-        // Hinweise einer noch nicht installierten Version: unten gleich installieren (wie oben im Kopf).
+        // Notes of a version not installed yet: the same way to HACS as in the header.
         if (d.update_available && !d.pending_restart && String(r.version).replace(/^v/, "") === String(d.latest)
-          && cmp(r.version, d.installed) > 0) {
-          const ib = btn(busy === "install" ? t("Installing v{v}…").replace("{v}", d.latest) : t("Install"), () => this._cuInstall());
+          && cmp(r.version, d.installed) > 0 && canOpenHacs(d)) {
+          const ib = btn(t("Update via HACS"), () => this._cuOpenHacs());
           ib.classList.add("cu-rowinst");
-          ib.disabled = !d.entity_id || !!busy;
+          ib.disabled = !!busy;
           body.appendChild(ib);
         }
         if (r.url && /^https:\/\//.test(r.url)) {
@@ -544,9 +509,9 @@
       this._cuFillCards(wrap);
     };
 
-    // ── Beta-Versionen (Option beta_updates, options.py) ─────────────────────
-    // An: Vorabversionen (GitHub-Prerelease, etwa v1.1.0-beta.1) gelten als Update.
-    // Mit HACS gibt es keine eigene Update-Entität: dann nur der Hinweis auf HACS.
+    // ── Beta versions (option beta_updates, options.py) ──────────────────────
+    // On: the own update entity also reports pre-releases (GitHub prerelease, e.g. 26.10.58b1).
+    // With HACS there is no own update entity: then only the hint to HACS' "Show beta versions".
     P._cuBetaBox = function (d) {
       const box = el("div", "cu-box cu-beta");
       const row = el("div", "cu-kv");

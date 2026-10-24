@@ -3,7 +3,7 @@
 
 HACS (hacs.json "zip_release": true, "filename": "casora.zip") downloads this asset and extracts it
 straight into custom_components/casora, so the files sit at the zip root (manifest.json, __init__.py,
-panel/ ...), without a casora/ folder. Casora's own update entity prefers the same asset.
+panel/ ...), without a casora/ folder. Casora itself downloads nothing (updates go through HACS).
 
 Deterministic: entries sorted, timestamps = commit time, fixed permissions, so the same commit always
 gives the same bytes (sha256 printed).

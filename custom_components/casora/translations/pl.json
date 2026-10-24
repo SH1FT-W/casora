@@ -269,12 +269,6 @@
       }
     }
   },
-  "issues": {
-    "restart_after_update": {
-      "title": "Casora {version} zainstalowana – potrzebny restart",
-      "description": "Casora została zaktualizowana do wersji {version}. Uruchom Home Assistant ponownie, aby załadować nową wersję."
-    }
-  },
   "exceptions": {
     "timer_domain_blocked": {
       "message": "Wyłącznik czasowy nie jest dozwolony dla {domain}: {entity_id}"

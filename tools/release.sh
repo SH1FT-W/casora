@@ -12,7 +12,7 @@
 #   tools/release.sh 26.10.32 --andere-version   Version weicht bewusst von tools/next-version ab
 #   tools/release.sh 26.10.32 --patch   echter Notfall-Hotfix: Patch-Gate (dev/qa/gate.sh --patch) zugelassen
 #   tools/release.sh --beta [--publish] Beta für Tester: nächste Nummer mit bK (26.10.58b1, b2 …), Vorabversion auf
-#                                       GitHub (HACS „Beta-Versionen“, Studio → Updates → Beta-Versionen). Patch-Gate
+#                                       GitHub (HACS „Beta-Versionen anzeigen“; ohne HACS meldet sie Casoras Update-Entität mit der Option „Beta-Versionen“). Patch-Gate
 #                                       reicht; Pflicht nur .qa/release-notes-<version>.md (englisch, von Hand);
 #                                       kein CHANGELOG/WHATS_NEW/Website. Gepusht wird nur der Tag, main nicht –
 #                                       die Website zeigt weiter die stabile Version. Betas zählen nicht als Nummer.
@@ -24,10 +24,10 @@
 # CHANGELOG.md und CHANGELOG.de.md haben je einen Abschnitt „## <version>“, WHATS_NEW (casora-panel-welcome.js) gefüllt
 # und seit dem letzten Release geändert. Versionshinweise: .qa/release-notes-<version>.md.
 # Verteilung: Das GitHub-Release ist die Quelle; Casora (update_source.py, anonym über die
-# öffentliche GitHub-API) und HACS finden es von selbst. Jedes Release (auch --beta) bekommt das Paket
+# öffentliche GitHub-API, meldet nur) und HACS (installiert) finden es von selbst. Jedes Release (auch --beta) bekommt das Paket
 # casora.zip (tools/build-release-zip.py: custom_components/casora des Release-Commits, Dateien im Zip-Root,
 # deterministisch). HACS lädt wegen hacs.json „zip_release“ nur dieses Paket statt des ganzen Repo-Archivs,
-# Casoras eigene Update-Entität nimmt es auch. Ohne Paket scheitert die HACS-Installation dieses Releases.
+# Casora selbst lädt nichts herunter. Ohne Paket scheitert die HACS-Installation dieses Releases.
 set -eu
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO"

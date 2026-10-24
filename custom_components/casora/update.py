@@ -1,37 +1,25 @@
-"""Casora updates without HACS – straight from the releases of the public GitHub repo.
+"""Casora's update entity: reports new releases of the public GitHub repo, installs nothing.
 
-Casora asks GitHub itself and anonymously (update_source.py) for new releases and offers
-them under Settings → Updates like any other integration. If HACS already manages Casora,
-HACS does that – then Casora creates no update entity of its own, otherwise the same
-version would show up twice under Updates.
-"Install" downloads the release (the package casora.zip if the release has one, otherwise the
-repo archive), backs up the running version to /config/casora_sicherungen/ and puts the new one
-into a staging area (/config/casora_update_neu). Only when Home Assistant stops does Casora swap
-the folder custom_components/casora – so frontend and server code match until the restart.
-Casora does not restart by itself, it reports the restart as a repair issue.
+Casora asks GitHub itself and anonymously (update_source.py) for new releases and shows them
+under Settings → Updates with their release notes. Installing is HACS' job: the entity has no
+INSTALL feature and no code here writes into custom_components (HACS default-store review,
+hacs/default#12143). If HACS already manages Casora, HACS reports new versions too – then Casora
+creates no update entity of its own, otherwise the same version would show up twice.
 """
 from __future__ import annotations
 
-import errno
-import io
 import json
 import logging
 import os
 import shutil
-import tempfile
-import zipfile
 from datetime import timedelta
 from typing import Any
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, UPDATE_REPO, VERSION
@@ -47,132 +35,30 @@ from .release_notes import (
     pick_notes,
     summarize,
 )
-from .update_source import (  # noqa: F401 – error_code: former import location
-    OPT_BETA,
-    download_release,
-    UpdateSourceError,
-    error_code,
-    error_text,
-    fetch_releases,
-)
+from .update_source import OPT_BETA, error_code, fetch_releases
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(hours=6)
-# When was the last check, and is an installed version waiting for the restart?
-# (Studio → "Updates", updates.py)
+# When was the last check, and did it fail? (Studio → "Updates", updates.py)
 DATA_LAST_CHECK = "update_last_check"
-DATA_PENDING = "update_pending"
 DATA_LAST_ERROR = "update_last_error"
 DATA_HACS = "update_via_hacs"
 # GitHub id of the Casora repo in HACS (= unique_id of HACS' update entity) when HACS manages Casora.
 DATA_HACS_ID = "update_hacs_repo_id"
-DATA_STAGE_LISTENER = "update_stage_listener"
-STAGE_DIR = "casora_update_neu"
-HISTORY_KEY = f"{DOMAIN}.update_history"
+# Leftovers of the former self-updater (last shipped in 26.10.59), both outside custom_components:
+# the staging area and the install history store. Setup deletes them once; keep this
+# for one release, then drop it (by then every install has run it).
+LEGACY_STAGE_DIR = "casora_update_neu"
+LEGACY_HISTORY_FILE = f"{DOMAIN}.update_history"
 
 
-def _history_store(hass: HomeAssistant) -> Store:
-    data = hass.data.setdefault(DOMAIN, {})
-    if "update_history" not in data:
-        data["update_history"] = Store(hass, 1, HISTORY_KEY)
-    return data["update_history"]
-
-
-async def async_load_history(hass: HomeAssistant) -> list[dict]:
-    """Installs via Studio/Updates: [{version, ts, from}], oldest first."""
-    raw = await _history_store(hass).async_load() or {}
-    return [x for x in raw.get("installs", []) if isinstance(x, dict) and x.get("version")]
-
-
-async def async_record_install(hass: HomeAssistant, version: str, previous: str) -> None:
-    items = await async_load_history(hass)
-    items.append({"version": version, "ts": dt_util.utcnow().isoformat(), "from": previous})
-    await _history_store(hass).async_save({"installs": items[-100:]})
-
-
-def zip_source_prefix(names: list[str]) -> str | None:
-    """Folder inside a release zip that holds Casora's files, or None.
-
-    Two layouts: the package casora.zip has the files at its root (manifest.json, panel/ …),
-    GitHub's repo archive has "<owner>-<repo>-<sha>/custom_components/casora/"."""
-    if "manifest.json" in names:
-        return ""
-    return next((n[: -len("manifest.json")] for n in names
-                 if n.endswith("custom_components/casora/manifest.json")), None)
-
-
-def install_zip(data: bytes, target: str, backups: str, backup_name: str) -> None:
-    """Unpack a release zip: its Casora folder to target, back up the old version as a zip."""
-    staged = target + ".neu"
-    stage_zip(data, target, backups, backup_name, staged)
-    swap_in(staged, target)
-
-
-def stage_zip(data: bytes, target: str, backups: str, backup_name: str, staged: str) -> None:
-    """Like install_zip, but only prepares the new version in staged (swap later with swap_in)."""
-    with zipfile.ZipFile(io.BytesIO(data)) as zf:
-        src = zip_source_prefix(zf.namelist())
-        if src is None:
-            raise RuntimeError("Im Release fehlt custom_components/casora")
-        with tempfile.TemporaryDirectory() as tmp:
-            new = os.path.join(tmp, "casora")
-            for name in zf.namelist():
-                if not name.startswith(src) or name.endswith("/"):
-                    continue
-                dest = os.path.normpath(os.path.join(new, name[len(src):]))
-                if not dest.startswith(new + os.sep):
-                    raise RuntimeError("Ungültiger Pfad im Release")
-                os.makedirs(os.path.dirname(dest), exist_ok=True)
-                with zf.open(name) as fsrc, open(dest, "wb") as fdst:
-                    shutil.copyfileobj(fsrc, fdst)
-            if not os.path.exists(os.path.join(new, "manifest.json")):
-                raise RuntimeError("Release unvollständig")
-            # The Studio loader panel/casora-studio.js is written at startup (__init__._write_loader,
-            # not in the repo) – carry it over, otherwise the Studio returns 404 until the restart.
-            loader = os.path.join("panel", "casora-studio.js")
-            if os.path.isfile(os.path.join(target, loader)) and not os.path.exists(os.path.join(new, loader)):
-                os.makedirs(os.path.join(new, "panel"), exist_ok=True)
-                shutil.copy2(os.path.join(target, loader), os.path.join(new, loader))
-            # Back up the running version, then replace it.
-            os.makedirs(backups, exist_ok=True)
-            if os.path.isdir(target):
-                shutil.make_archive(os.path.join(backups, backup_name), "zip", target)
-            # Copy completely next to the target first (disk full, permissions …: the target stays
-            # untouched), then only rename.
-            shutil.rmtree(staged, ignore_errors=True)
-            try:
-                shutil.copytree(new, staged)
-            except BaseException:
-                shutil.rmtree(staged, ignore_errors=True)
-                raise
-
-
-def swap_in(staged: str, target: str) -> None:
-    """Put the fully copied version in place of target; if that fails, the old one comes back."""
-    old = target + ".alt"
-    shutil.rmtree(old, ignore_errors=True)
-    had = os.path.isdir(target)
-    if had:
-        os.replace(target, old)
+def _remove_legacy_leftovers(config_dir: str) -> None:
+    shutil.rmtree(os.path.join(config_dir, LEGACY_STAGE_DIR), ignore_errors=True)
     try:
-        try:
-            os.replace(staged, target)
-        except OSError as err:
-            if err.errno != errno.EXDEV:
-                raise
-            # Staging area on another drive (custom Docker mount): copy.
-            try:
-                shutil.copytree(staged, target)
-            except BaseException:
-                shutil.rmtree(target, ignore_errors=True)
-                raise
-            shutil.rmtree(staged, ignore_errors=True)
-    except BaseException:
-        if had and not os.path.exists(target):
-            os.replace(old, target)
-        raise
-    shutil.rmtree(old, ignore_errors=True)
+        os.remove(os.path.join(config_dir, ".storage", LEGACY_HISTORY_FILE))
+    except OSError:
+        pass
 
 
 def _hacs_repo_id(path: str) -> str | None:
@@ -264,8 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     data = hass.data.setdefault(DOMAIN, {})
     data[DATA_HACS] = hacs
     if hacs:
-        # Own update entity from before HACS: would otherwise stay as "unavailable", and the
-        # Studio found it instead of HACS' entry (Install then did nothing).
+        # Own update entity from before HACS: would otherwise stay as "unavailable" next to HACS' entry.
         try:
             reg = er.async_get(hass)
             old = reg.async_get_entity_id("update", DOMAIN, _own_unique_id(entry))
@@ -273,21 +158,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 reg.async_remove(old)
         except Exception as err:  # noqa: BLE001 – cleanup must never break the startup
             _LOGGER.debug("Casora: alte Update-Entität nicht entfernt: %s", err)
-    if not data.get(DATA_PENDING):
-        # Leftover staging area not applied at the last stop (crash, power cut): discard it –
-        # the update is simply offered again.
-        await hass.async_add_executor_job(shutil.rmtree, hass.config.path(STAGE_DIR), True)
+    # Only deletes leftovers of the former self-updater; harmless when there are none.
+    await hass.async_add_executor_job(_remove_legacy_leftovers, hass.config.config_dir)
     if not hacs:
         # Not update_before_add: without internet that would delay Casora's startup by up to 20 s.
         async_add_entities([CasoraUpdate(hass, entry)])
 
 
 class CasoraUpdate(UpdateEntity):
-    """New Casora version from the releases of the public repo."""
+    """New Casora version from the releases of the public repo – report only (no INSTALL)."""
 
     _attr_has_entity_name = True
     _attr_title = "Casora"
-    _attr_supported_features = UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
+    _attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
     _attr_should_poll = True
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -298,12 +181,6 @@ class CasoraUpdate(UpdateEntity):
         self._attr_installed_version = VERSION
         self._attr_latest_version = VERSION
         self._release: dict[str, Any] | None = None
-        # Installed but not restarted yet? hass.data keeps that across a reload of the integration
-        # (options changed) – otherwise HA would offer the same version again.
-        pending = (hass.data.get(DOMAIN) or {}).get(DATA_PENDING)
-        self._installed_new: str | None = pending if pending and pending != VERSION else None
-        if self._installed_new:
-            self._attr_installed_version = self._attr_latest_version = self._installed_new
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
@@ -325,8 +202,7 @@ class CasoraUpdate(UpdateEntity):
             data[DATA_LAST_ERROR] = error_code(err)
             return
         data[DATA_LAST_ERROR] = None
-        # After installing, until the restart: the new version counts as installed.
-        installed = self._installed_new or VERSION
+        installed = VERSION
         rel, latest = pick_latest(rels, installed, beta_enabled(self._entry))
         # A beta is called "Casora Beta" in HA's update list (the version carries "-beta.N").
         self._attr_title = "Casora Beta" if is_prerelease(latest) else "Casora"
@@ -382,50 +258,3 @@ class CasoraUpdate(UpdateEntity):
     async def async_release_notes(self) -> str | None:
         # HA's dialog renders Markdown: join hard CHANGELOG line breaks, <…> as text.
         return ha_markdown(await self._notes_md()) or None
-
-    async def async_install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
-        rel = self._release
-        if not rel:
-            raise RuntimeError("Kein Casora-Release gefunden")
-        tag = str(rel.get("tag_name") or "")
-        try:
-            data = await download_release(self.hass, tag, rel)
-        except UpdateSourceError as err:
-            raise HomeAssistantError(f"Casora {tag} nicht geladen: {error_text(err.code)}") from err
-        target = self.hass.config.path("custom_components", DOMAIN)
-        backups = self.hass.config.path("casora_sicherungen")
-        stamp = dt_util.now().strftime("%Y-%m-%d_%H%M%S")
-
-        staged = self.hass.config.path(STAGE_DIR)
-        await self.hass.async_add_executor_job(stage_zip, data, target, backups, f"casora_{VERSION}_{stamp}", staged)
-        _swap_on_stop(self.hass, staged, target)
-        self._installed_new = str(tag).lstrip("v")
-        # For "installed on …" in the Studio; the old version keeps running until the restart.
-        await async_record_install(self.hass, self._installed_new, VERSION)
-        self.hass.data.setdefault(DOMAIN, {})[DATA_PENDING] = self._installed_new
-        self._attr_installed_version = self._installed_new
-        self._attr_latest_version = self._installed_new
-        ir.async_create_issue(
-            self.hass, DOMAIN, "restart_after_update", is_fixable=False, is_persistent=False,
-            severity=ir.IssueSeverity.WARNING, translation_key="restart_after_update",
-            translation_placeholders={"version": self._installed_new},
-        )
-        self.async_write_ha_state()
-
-
-def _swap_on_stop(hass: HomeAssistant, staged: str, target: str) -> None:
-    """Apply the new version only when HA stops – until then Casora keeps serving the frontend
-    that matches the running server code. Register once per run."""
-    data = hass.data.setdefault(DOMAIN, {})
-    if data.get(DATA_STAGE_LISTENER):
-        return
-
-    async def _apply(_event: Event) -> None:
-        if not await hass.async_add_executor_job(os.path.isdir, staged):
-            return
-        try:
-            await hass.async_add_executor_job(swap_in, staged, target)
-        except OSError as err:
-            _LOGGER.error("Casora: neue Fassung nicht eingespielt (%s) – die bisherige bleibt aktiv", err)
-
-    data[DATA_STAGE_LISTENER] = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _apply)

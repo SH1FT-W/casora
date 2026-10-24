@@ -269,12 +269,6 @@
       }
     }
   },
-  "issues": {
-    "restart_after_update": {
-      "title": "Casora {version} instalado: é preciso reiniciar",
-      "description": "O Casora foi atualizado para a versão {version}. Reinicia o Home Assistant para a carregar."
-    }
-  },
   "exceptions": {
     "timer_domain_blocked": {
       "message": "Temporizadores não são permitidos para {domain}: {entity_id}"

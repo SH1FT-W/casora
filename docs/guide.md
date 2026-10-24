@@ -171,7 +171,7 @@ Every save becomes a version. Casora keeps the last **30 versions** of each dash
 
 New versions arrive through **HACS** like any other integration: install the update and restart Home Assistant. Without HACS, Casora looks for new releases on GitHub and lists them under Settings → Updates.
 
-**Beta versions.** If you want new features early, turn on **Beta versions** under Casora Studio → **Updates**. Betas can have bugs. With HACS, turn betas on in HACS instead (*Show beta versions* on the Casora entry).
+**Beta versions.** With HACS, turn on *Show beta versions* on the Casora entry in HACS; HACS then offers betas like any other update. Without HACS, turn on **Beta versions** under Casora Studio → **Updates** so betas show up under Settings → Updates too. Betas can have bugs. Casora never installs anything by itself: updates always go through HACS (or a manual download).
 
 After an update, Casora brings your dashboards up to its new templates when Home Assistant starts. It only touches templates you haven't changed yourself, and it saves a version first, so a notification tells you which dashboards were updated and that you can undo it with [Rewind](#rewind-going-back-to-an-earlier-version).
 
