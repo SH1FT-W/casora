@@ -1,0 +1,289 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Casora",
+        "description": "Ajoute le panneau de configuration de Casora à la barre latérale."
+      }
+    },
+    "abort": {
+      "already_configured": "Casora est déjà configuré."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Casora – Réglages",
+        "description": "Laisse les champs vides pour que Casora choisisse : l'IA par défaut de Paramètres → Tâches IA et les capteurs extérieurs d'après leur nom.",
+        "data": {
+          "ai_task_entity": "IA pour les coachs, les caméras et les plantes",
+          "ai_task_web_entity": "IA avec recherche web (vérification des mises à jour, recette)",
+          "outdoor_temperature": "Température extérieure",
+          "outdoor_humidity": "Humidité extérieure",
+          "price_kwh": "Prix de l'électricité",
+          "ki_hinweise": "Indications pour l'IA",
+          "rezept_liste": "Liste de courses pour les ingrédients (recette de la semaine)",
+          "ki_plan_energie": "Coach énergie automatique",
+          "ki_plan_heizung": "Coach chauffage automatique",
+          "ki_plan_lueftung": "Coach aération automatique",
+          "ki_plan_rezept": "Recette de la semaine automatique",
+          "ki_plan_update": "Vérification des mises à jour",
+          "lueften_push": "Envoyer les conseils d'aération à",
+          "lueften_personen": "Prévenir seulement quand ils sont à la maison",
+          "update_push": "Prévenir des nouvelles versions de Casora",
+          "beta_updates": "Versions bêta"
+        },
+        "data_description": {
+          "ki_hinweise": "Transmis à chaque analyse, p. ex. « La fenêtre de la chambre est entrouverte volontairement. »",
+          "ki_plan_energie": "Automatique : le dimanche à 18:00. Heure personnalisée p. ex. « sun 18:00 » (jour en anglais, de mon à sun).",
+          "ki_plan_heizung": "Automatique : le lundi à 07:00, seulement en saison de chauffe.",
+          "ki_plan_lueftung": "Automatique : le samedi à 10:00.",
+          "ki_plan_rezept": "Automatique : le lundi à 06:00.",
+          "ki_plan_update": "Quotidien : une fois par jour. Désactivé : pas d'évaluation IA dans la fenêtre des mises à jour.",
+          "lueften_push": "« Aérer maintenant » (7 h–22 h) et « Fermer la fenêtre » (7 h–23 h) après 10 min, CO₂ au-dessus de 2500 ppm tout de suite. Vide = pas de notifications push.",
+          "lueften_personen": "« Aérer maintenant » seulement quand l'une de ces personnes est à la maison. Vide = n'importe qui.",
+          "update_push": "Une notification par nouvelle version sur les téléphones choisis. La toucher ouvre les mises à jour de Casora. Vide = désactivé.",
+          "beta_updates": "Essaie les nouvelles fonctions plus tôt. Les bêtas peuvent avoir des bugs. Avec HACS, active les bêtas dans HACS."
+        }
+      }
+    },
+    "error": {
+      "invalid_plan": "Heure non valide. Autorisé : Désactivé, Automatique ou p. ex. « sun 18:00 ».",
+      "invalid": "Saisie non valide."
+    }
+  },
+  "selector": {
+    "ki_plan": {
+      "options": {
+        "off": "Désactivé",
+        "auto": "Automatique"
+      }
+    },
+    "ki_plan_update": {
+      "options": {
+        "off": "Désactivé",
+        "daily": "Quotidien",
+        "manual": "Seulement sur pression d'un bouton"
+      }
+    }
+  },
+  "services": {
+    "energie_coach": {
+      "name": "Coach énergie",
+      "description": "Analyse par IA les données du tableau de bord Énergie de la semaine dernière.",
+      "fields": {}
+    },
+    "heizungs_coach": {
+      "name": "Coach chauffage",
+      "description": "Analyse par IA la durée de chauffe et les températures de la semaine dernière.",
+      "fields": {
+        "nur_heizsaison": {
+          "name": "Seulement en saison de chauffe",
+          "description": "Seulement en saison de chauffe"
+        }
+      }
+    },
+    "lueftungs_coach": {
+      "name": "Coach aération",
+      "description": "Analyse par IA l'humidité, le CO₂ et les ouvertures de fenêtres de la semaine dernière.",
+      "fields": {}
+    },
+    "kamera_beschreiben": {
+      "name": "Décrire l'image de la caméra",
+      "description": "Laisse l'IA décrire l'image actuelle de la caméra.",
+      "fields": {
+        "entity_id": {
+          "name": "Entité",
+          "description": "Entité"
+        }
+      }
+    },
+    "pflanzen_doktor": {
+      "name": "Docteur plantes",
+      "description": "Conseil de soin pour une plante à partir de 7 jours de mesures.",
+      "fields": {
+        "plant": {
+          "name": "Plante",
+          "description": "Plante"
+        }
+      }
+    },
+    "aquarium_doktor": {
+      "name": "Docteur aquarium",
+      "description": "Évaluation par IA d'un aquarium à partir de 7 jours de température, d'équipement, de lumière et de capteur de fuite.",
+      "fields": {
+        "temp": {
+          "name": "Capteur de température",
+          "description": "Température de l'eau de l'aquarium"
+        },
+        "name": {
+          "name": "Nom",
+          "description": "Nom de l'aquarium"
+        },
+        "devices": {
+          "name": "Équipement",
+          "description": "Liste des appareils : libellé, entité, puissance"
+        },
+        "light": {
+          "name": "Lumière",
+          "description": "Lumière de l'aquarium"
+        },
+        "leak": {
+          "name": "Capteur de fuite",
+          "description": "Capteur de fuite de l'aquarium"
+        }
+      }
+    },
+    "ebike_check": {
+      "name": "Contrôle du vélo",
+      "description": "Évaluation par IA du VAE : entretien, usure selon le kilométrage et soin de la batterie.",
+      "fields": {
+        "entities": {
+          "name": "Entités",
+          "description": "Entités du vélo"
+        },
+        "name": {
+          "name": "Nom",
+          "description": "Nom du vélo"
+        }
+      }
+    },
+    "update_pruefen": {
+      "name": "Vérifier la mise à jour avec l'IA",
+      "description": "Vérifie les notes de version des mises à jour en attente par rapport à ce système.",
+      "fields": {
+        "entity_id": {
+          "name": "Entité",
+          "description": "Entité"
+        }
+      }
+    },
+    "update_bestaetigen": {
+      "name": "Confirmer la vérification IA",
+      "description": "Débloque « Mettre à jour » après lecture de l'avertissement.",
+      "fields": {
+        "entity_id": {
+          "name": "Entité",
+          "description": "Entité"
+        }
+      }
+    },
+    "rezept_neu": {
+      "name": "Nouvelle idée de recette",
+      "description": "Laisse l'IA proposer une recette de la semaine.",
+      "fields": {}
+    },
+    "rezept_auf_liste": {
+      "name": "Ingrédients sur la liste de courses",
+      "description": "Ajoute les ingrédients de la recette à la liste de courses.",
+      "fields": {}
+    },
+    "umstellen": {
+      "name": "Passer aux noms Casora",
+      "description": "Convertit les anciens tableaux de bord aux noms Casora (avec sauvegarde).",
+      "fields": {
+        "probelauf": {
+          "name": "Compter seulement, ne rien changer",
+          "description": "Compter seulement, ne rien changer"
+        }
+      }
+    },
+    "einrichten": {
+      "name": "Configurer",
+      "description": "Crée les helpers et scripts Casora manquants (s'exécute automatiquement au démarrage) et signale ce qui n'a pas pu être créé."
+    },
+    "set_timer": {
+      "name": "Programmer une minuterie",
+      "description": "Éteint ou allume une entité après un nombre de minutes. Remplace une minuterie existante pour la même entité. À la fin de la minuterie, Casora déclenche l'événement casora_timer_finished (entity_id, action, reason : expired, manual ou cancelled). Peut répondre avec entity_id, at et start.",
+      "fields": {
+        "entity_id": {
+          "name": "Entité",
+          "description": "Entité à commuter"
+        },
+        "minutes": {
+          "name": "Minutes",
+          "description": "Après combien de minutes (nombre entier, 1–1440)"
+        },
+        "action": {
+          "name": "Action",
+          "description": "turn_off (par défaut) ou turn_on"
+        }
+      }
+    },
+    "cancel_timer": {
+      "name": "Annuler la minuterie",
+      "description": "Retire la minuterie d'une entité (événement casora_timer_finished avec reason cancelled).",
+      "fields": {
+        "entity_id": {
+          "name": "Entité",
+          "description": "Entité"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "media_paused": {
+        "name": "Casora Multimédia en pause"
+      },
+      "lueften": {
+        "name": "Casora Aération"
+      },
+      "energie": {
+        "name": "Casora Coach énergie"
+      },
+      "heizung": {
+        "name": "Casora Coach chauffage"
+      },
+      "lueftung": {
+        "name": "Casora Coach aération"
+      },
+      "rezept": {
+        "name": "Casora Recette de la semaine"
+      },
+      "kamera": {
+        "name": "Casora IA caméra"
+      },
+      "pflanzen": {
+        "name": "Casora IA plantes"
+      },
+      "update": {
+        "name": "Casora Analyse IA des mises à jour"
+      },
+      "aquarium": {
+        "name": "Casora IA aquarium"
+      },
+      "ebike": {
+        "name": "Casora IA VAE"
+      },
+      "timers": {
+        "name": "Casora Minuteries"
+      }
+    },
+    "binary_sensor": {
+      "lueften_hinweis": {
+        "name": "Casora Conseil d'aération"
+      },
+      "solar_tipp": {
+        "name": "Casora Conseil solaire"
+      }
+    }
+  },
+  "issues": {
+    "restart_after_update": {
+      "title": "Casora {version} installé : redémarrage nécessaire",
+      "description": "Casora a été mis à jour en version {version}. Redémarre Home Assistant pour la charger."
+    }
+  },
+  "exceptions": {
+    "timer_domain_blocked": {
+      "message": "Minuteries non autorisées pour {domain} : {entity_id}"
+    },
+    "timer_entity_not_found": {
+      "message": "Entité introuvable : {entity_id}"
+    },
+    "timer_invalid_minutes": {
+      "message": "Minutes non valides : {minutes}. Utilise un nombre entier de 1 à {max}."
+    }
+  }
+}
