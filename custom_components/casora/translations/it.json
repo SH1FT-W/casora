@@ -1,0 +1,289 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Casora",
+        "description": "Aggiunge il pannello di configurazione di Casora alla barra laterale."
+      }
+    },
+    "abort": {
+      "already_configured": "Casora è già configurato."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Casora – Impostazioni",
+        "description": "Lascia vuoti i campi perché scelga Casora: l'IA predefinita di Impostazioni → Attività IA e i sensori esterni in base al nome.",
+        "data": {
+          "ai_task_entity": "IA per assistenti, telecamere e piante",
+          "ai_task_web_entity": "IA con ricerca web (verifica aggiornamenti, ricetta)",
+          "outdoor_temperature": "Temperatura esterna",
+          "outdoor_humidity": "Umidità esterna",
+          "price_kwh": "Prezzo dell'elettricità",
+          "ki_hinweise": "Indicazioni per l'IA",
+          "rezept_liste": "Lista della spesa per gli ingredienti (ricetta della settimana)",
+          "ki_plan_energie": "Assistente energia automatico",
+          "ki_plan_heizung": "Assistente riscaldamento automatico",
+          "ki_plan_lueftung": "Assistente ventilazione automatico",
+          "ki_plan_rezept": "Ricetta della settimana automatica",
+          "ki_plan_update": "Verifica aggiornamenti",
+          "lueften_push": "Inviare gli avvisi di ventilazione a",
+          "lueften_personen": "Avvisare solo quando sono a casa",
+          "update_push": "Avvisare delle nuove versioni di Casora",
+          "beta_updates": "Versioni beta"
+        },
+        "data_description": {
+          "ki_hinweise": "Viene incluso in ogni analisi, ad es. “La finestra della camera è a ribalta di proposito.”",
+          "ki_plan_energie": "Automatico: la domenica alle 18:00. Orario personalizzato ad es. “sun 18:00” (giorno in inglese, da mon a sun).",
+          "ki_plan_heizung": "Automatico: il lunedì alle 07:00, solo nella stagione di riscaldamento.",
+          "ki_plan_lueftung": "Automatico: il sabato alle 10:00.",
+          "ki_plan_rezept": "Automatico: il lunedì alle 06:00.",
+          "ki_plan_update": "Giornaliero: una volta al giorno. Spento: nessuna valutazione IA nella finestra degli aggiornamenti.",
+          "lueften_push": "“Arieggia ora” (7–22) e “Chiudi la finestra” (7–23) dopo 10 min, CO₂ sopra 2500 ppm subito. Vuoto = nessuna notifica push.",
+          "lueften_personen": "“Arieggia ora” solo quando una di queste persone è a casa. Vuoto = chiunque.",
+          "update_push": "Una notifica per ogni nuova versione ai telefoni selezionati. Toccandola si aprono gli aggiornamenti di Casora. Vuoto = disattivato.",
+          "beta_updates": "Prova prima le nuove funzioni. Le beta possono contenere errori. Con HACS, attiva le beta in HACS."
+        }
+      }
+    },
+    "error": {
+      "invalid_plan": "Orario non valido. Ammessi: Spento, Automatico oppure ad es. “sun 18:00”.",
+      "invalid": "Valore non valido."
+    }
+  },
+  "selector": {
+    "ki_plan": {
+      "options": {
+        "off": "Spento",
+        "auto": "Automatico"
+      }
+    },
+    "ki_plan_update": {
+      "options": {
+        "off": "Spento",
+        "daily": "Giornaliero",
+        "manual": "Solo premendo un pulsante"
+      }
+    }
+  },
+  "services": {
+    "energie_coach": {
+      "name": "Assistente energia",
+      "description": "Analizza con l'IA i dati della dashboard energia della settimana scorsa.",
+      "fields": {}
+    },
+    "heizungs_coach": {
+      "name": "Assistente riscaldamento",
+      "description": "Analizza con l'IA i tempi di riscaldamento e le temperature della settimana scorsa.",
+      "fields": {
+        "nur_heizsaison": {
+          "name": "Solo nella stagione di riscaldamento",
+          "description": "Solo nella stagione di riscaldamento"
+        }
+      }
+    },
+    "lueftungs_coach": {
+      "name": "Assistente ventilazione",
+      "description": "Analizza con l'IA umidità, CO₂ e aperture delle finestre della settimana scorsa.",
+      "fields": {}
+    },
+    "kamera_beschreiben": {
+      "name": "Descrivi immagine della telecamera",
+      "description": "Lascia che l'IA descriva l'immagine attuale della telecamera.",
+      "fields": {
+        "entity_id": {
+          "name": "Entità",
+          "description": "Entità"
+        }
+      }
+    },
+    "pflanzen_doktor": {
+      "name": "Dottore delle piante",
+      "description": "Consiglio di cura per una pianta da 7 giorni di misurazioni.",
+      "fields": {
+        "plant": {
+          "name": "Pianta",
+          "description": "Pianta"
+        }
+      }
+    },
+    "aquarium_doktor": {
+      "name": "Dottore dell'acquario",
+      "description": "Valutazione con l'IA di un acquario da 7 giorni di temperatura, attrezzatura, luce e sensore perdite.",
+      "fields": {
+        "temp": {
+          "name": "Sensore di temperatura",
+          "description": "Temperatura dell'acqua dell'acquario"
+        },
+        "name": {
+          "name": "Nome",
+          "description": "Nome dell'acquario"
+        },
+        "devices": {
+          "name": "Attrezzatura",
+          "description": "Elenco dei dispositivi: etichetta, entità, potenza"
+        },
+        "light": {
+          "name": "Luce",
+          "description": "Luce dell'acquario"
+        },
+        "leak": {
+          "name": "Sensore perdite",
+          "description": "Sensore perdite dell'acquario"
+        }
+      }
+    },
+    "ebike_check": {
+      "name": "Controllo della bici",
+      "description": "Valutazione con l'IA dell'e-bike: manutenzione, usura in base ai chilometri e cura della batteria.",
+      "fields": {
+        "entities": {
+          "name": "Entità",
+          "description": "Entità della bici"
+        },
+        "name": {
+          "name": "Nome",
+          "description": "Nome della bici"
+        }
+      }
+    },
+    "update_pruefen": {
+      "name": "Verifica aggiornamento con l'IA",
+      "description": "Confronta le note di rilascio degli aggiornamenti in sospeso con questo sistema.",
+      "fields": {
+        "entity_id": {
+          "name": "Entità",
+          "description": "Entità"
+        }
+      }
+    },
+    "update_bestaetigen": {
+      "name": "Conferma verifica IA",
+      "description": "Sblocca “Aggiorna” dopo aver letto l'avviso.",
+      "fields": {
+        "entity_id": {
+          "name": "Entità",
+          "description": "Entità"
+        }
+      }
+    },
+    "rezept_neu": {
+      "name": "Nuova idea di ricetta",
+      "description": "Lascia che l'IA proponga una ricetta della settimana.",
+      "fields": {}
+    },
+    "rezept_auf_liste": {
+      "name": "Ingredienti nella lista della spesa",
+      "description": "Aggiunge gli ingredienti della ricetta alla lista della spesa.",
+      "fields": {}
+    },
+    "umstellen": {
+      "name": "Passa ai nomi Casora",
+      "description": "Converte le vecchie dashboard ai nomi Casora (con copia di sicurezza).",
+      "fields": {
+        "probelauf": {
+          "name": "Solo contare, non cambiare nulla",
+          "description": "Solo contare, non cambiare nulla"
+        }
+      }
+    },
+    "einrichten": {
+      "name": "Configura",
+      "description": "Crea gli helper e gli script Casora mancanti (eseguito automaticamente all'avvio) e segnala ciò che non è riuscito a creare."
+    },
+    "set_timer": {
+      "name": "Imposta timer",
+      "description": "Spegne o accende un'entità dopo un numero di minuti. Sostituisce un timer esistente per la stessa entità. Allo scadere del timer Casora emette l'evento casora_timer_finished (entity_id, action, reason: expired, manual o cancelled). Può rispondere con entity_id, at e start.",
+      "fields": {
+        "entity_id": {
+          "name": "Entità",
+          "description": "Entità da commutare"
+        },
+        "minutes": {
+          "name": "Minuti",
+          "description": "Dopo quanti minuti (numero intero, 1–1440)"
+        },
+        "action": {
+          "name": "Azione",
+          "description": "turn_off (predefinito) oppure turn_on"
+        }
+      }
+    },
+    "cancel_timer": {
+      "name": "Annulla timer",
+      "description": "Rimuove il timer di un'entità (evento casora_timer_finished con reason cancelled).",
+      "fields": {
+        "entity_id": {
+          "name": "Entità",
+          "description": "Entità"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "media_paused": {
+        "name": "Casora Multimedia in pausa"
+      },
+      "lueften": {
+        "name": "Casora Ventilazione"
+      },
+      "energie": {
+        "name": "Casora Assistente energia"
+      },
+      "heizung": {
+        "name": "Casora Assistente riscaldamento"
+      },
+      "lueftung": {
+        "name": "Casora Assistente ventilazione"
+      },
+      "rezept": {
+        "name": "Casora Ricetta della settimana"
+      },
+      "kamera": {
+        "name": "Casora IA telecamera"
+      },
+      "pflanzen": {
+        "name": "Casora IA piante"
+      },
+      "update": {
+        "name": "Casora Analisi aggiornamenti con IA"
+      },
+      "aquarium": {
+        "name": "Casora IA acquario"
+      },
+      "ebike": {
+        "name": "Casora IA e-bike"
+      },
+      "timers": {
+        "name": "Casora Timer"
+      }
+    },
+    "binary_sensor": {
+      "lueften_hinweis": {
+        "name": "Casora Avviso ventilazione"
+      },
+      "solar_tipp": {
+        "name": "Casora Consiglio solare"
+      }
+    }
+  },
+  "issues": {
+    "restart_after_update": {
+      "title": "Casora {version} installato: serve un riavvio",
+      "description": "Casora è stato aggiornato alla versione {version}. Riavvia Home Assistant per caricarla."
+    }
+  },
+  "exceptions": {
+    "timer_domain_blocked": {
+      "message": "Timer non consentiti per {domain}: {entity_id}"
+    },
+    "timer_entity_not_found": {
+      "message": "Entità non trovata: {entity_id}"
+    },
+    "timer_invalid_minutes": {
+      "message": "Minuti non validi: {minutes}. Usa un numero intero da 1 a {max}."
+    }
+  }
+}
