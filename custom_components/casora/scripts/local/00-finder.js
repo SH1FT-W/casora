@@ -2044,7 +2044,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
 })();
 
 // ── Fridge and freezer: where the values come from (24.10.2026) ───────────────────
-// One finder for the fridge card (30-kuehlschrank.js), the Studio (main entity of a new tile, field
+// One finder for the fridge card (30-fridge.js), the Studio (main entity of a new tile, field
 // placeholders, assistant) and the Python mirror live_finder.py (FRIDGE_SOURCES; dev/unit/live_finder_test.py
 // compares the tables). Detected by the entity's platform and its translation_key first, then by names:
 //   1. Liebherr (HA core `liebherr`, HomeAPI): zone sensors top_zone/middle_zone/bottom_zone (a single zone has no

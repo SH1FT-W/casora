@@ -3,7 +3,7 @@
 // status values and which popup rows appear. Battery and connection must work for every source; an unknown
 // integration falls back to device classes. Also the test house (dev/casora_mock/maeher.py): all three mock mowers
 // run under casora_mock and are recognised by their keys. Names made up.
-//   node dev/unit/maeher_quellen.mjs
+//   node dev/unit/mower_sources.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { testhaus } from './lib/testhaus.mjs';
@@ -263,4 +263,4 @@ assert.equal(M.hoursOf({ state: '7200', attributes: { unit_of_measurement: 's' }
     assert.ok(c.battery, id + ': battery');
   }
 }
-console.log('maeher_quellen: ok (' + Object.keys(CASES).length + ' integrations + generic + test house)');
+console.log('mower_sources: ok (' + Object.keys(CASES).length + ' integrations + generic + test house)');

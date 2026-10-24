@@ -1,8 +1,8 @@
 // @zustand: arbeit
 // @parallel: allein
-// @deckt: custom_components/casora/scripts/local/30-kuehlschrank.js custom_components/casora/scripts/local/00-finder.js dev/casora_mock/kuehlschrank.py
+// @deckt: custom_components/casora/scripts/local/30-fridge.js custom_components/casora/scripts/local/00-finder.js dev/casora_mock/fridge.py
 // New (24.10.2026): the fridge card (casora_fridge) for Liebherr, Home Connect and generically named fridges.
-// The test house has a made-up Liebherr-like fridge-freezer ("Testfrost", dev/casora_mock/kuehlschrank.py).
+// The test house has a made-up Liebherr-like fridge-freezer ("Testfrost", dev/casora_mock/fridge.py).
 // Expected:
 //   - Studio: "Kachel hinzufügen" → "Kühlschrank" suggests the fridge as the matching device without any choice
 //     ("Passendes Gerät gefunden"), the new tile takes its zone sensor and shows "7 °C · −18 °C" (nothing saved)

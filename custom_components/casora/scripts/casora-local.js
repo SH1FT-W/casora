@@ -117,7 +117,7 @@ const MODULES = [
   '27-chart',
   '28-free-tile',
   '29-eigene-badges',
-  '30-kuehlschrank',
+  '30-fridge',
   '31-velair',
 ];
 

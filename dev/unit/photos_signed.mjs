@@ -1,7 +1,7 @@
 // Private room photos (HACS review, hacs/default#12143): casoraPhotoUrl maps names and old
 // addresses (/casora_assets/rooms, /local/casora/rooms, /local/hemma/rooms) to the signed URLs
 // from casora/photos; demo photos stay public; reload on reconnect and on an unknown name.
-//   node dev/unit/fotos_signiert.mjs
+//   node dev/unit/photos_signed.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -111,4 +111,4 @@ assert.ok(T.casora_mobile_bg.styles.card.some((x) => String(x['--casora-mobile-h
 assert.ok(String(T.casora_shared.extra_styles).includes('casoraPhotoUrl'), 'casora_shared preload');
 assert.ok(read('custom_components/casora/scripts/filter-overlay.js').includes('casoraPhotoCss'), 'filter-overlay');
 
-console.log('fotos_signiert: ok');
+console.log('photos_signed: ok');

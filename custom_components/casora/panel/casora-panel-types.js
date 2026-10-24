@@ -649,10 +649,10 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   let medien = false, fussball = false, kaffee = false, fridge = false;
   const needMedien = (tile) => {
     const tn = names(tile && tile.template);
-    // Fridge: state ("7 °C · −18 °C", "Tür offen") via window._casoraFridge (scripts/local/30-kuehlschrank.js).
+    // Fridge: state ("7 °C · −18 °C", "Tür offen") via window._casoraFridge (scripts/local/30-fridge.js).
     if (!fridge && !window._casoraFridge && tn.includes("casora_fridge")) {
       fridge = true;
-      import("/casora_scripts/local/30-kuehlschrank.js").catch(() => {});
+      import("/casora_scripts/local/30-fridge.js").catch(() => {});
     }
     // Coffee machine: state ("Ready", "Cappuccino · 40 %") via window._casoraCoffee (scripts/local/25-coffee.js);
     // without the module the preview showed the integration's raw state ("Brewing").

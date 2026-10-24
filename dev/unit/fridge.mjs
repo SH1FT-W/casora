@@ -1,9 +1,9 @@
-// Fridge card (casoraFridgeFind in 00-finder.js, 30-kuehlschrank.js) without HA: finder per source (Liebherr core
+// Fridge card (casoraFridgeFind in 00-finder.js, 30-fridge.js) without HA: finder per source (Liebherr core
 // two zones and one zone, Liebherr HACS fork, Home Connect core, homeconnect_ws, home_connect_alt, generic by name,
 // none: oven, thermometer, washer), Studio overrides, state, tile text, popup parts; first use in the test house
 // (the Studio suggests the made-up fridge as a sure match). Keys as in the integrations' sources (10/2026);
 // devices and names invented.
-//   node dev/unit/kuehlschrank.mjs
+//   node dev/unit/fridge.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { testhaus, loadPanel } from './lib/testhaus.mjs';
@@ -12,7 +12,7 @@ globalThis.window = globalThis;
 globalThis.document = { querySelector: () => null };
 const src = (p) => fs.readFileSync(new URL('../../custom_components/casora/scripts/local/' + p, import.meta.url), 'utf8');
 new Function(src('00-finder.js'))();
-new Function(src('30-kuehlschrank.js'))();
+new Function(src('30-fridge.js'))();
 const FF = window.casoraFridgeFind, K = window._casoraFridge;
 assert.ok(FF && K && K.popup, 'modules loaded');
 
@@ -232,4 +232,4 @@ assert.equal(window.casoraFieldEntity(fld('entity_zone2_set'), { entity: 'sensor
 assert.equal(window.casoraFieldEntity(fld('sw_party'), { entity: 'sensor.testfrost_top_zone' }, H), 'switch.testfrost_partymode');
 const sug = window.casoraAssist.suggest(H, [home], I.TILE_TYPES).filter((x) => x.type === 'casora_fridge');
 assert.deepEqual(sug.map((x) => x.entity), ['sensor.testfrost_top_zone'], 'assistant suggests the fridge');
-console.log('kuehlschrank: ok');
+console.log('fridge: ok');

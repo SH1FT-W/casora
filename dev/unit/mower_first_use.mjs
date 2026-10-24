@@ -3,7 +3,7 @@
 // Community, (a) the tile type is offered, (b) adding the tile without choosing suggests a mower as a sure match
 // (_tileCandidates), (c) "What should go on the dashboard?" (_uxDevices) offers every mower as this card, and
 // (d) the device assistant suggests each mower as casora_lawn_mower, not as buttons or switches of the device.
-//   node dev/unit/maeher_erstnutzer.mjs
+//   node dev/unit/mower_first_use.mjs
 import assert from 'node:assert/strict';
 import { testhaus, loadPanel } from './lib/testhaus.mjs';
 
@@ -51,4 +51,4 @@ MOWERS.forEach((id) => {
   assert.ok(s, 'assistant suggests ' + id);
   assert.equal(s.type, 'casora_lawn_mower');
 });
-console.log('maeher_erstnutzer: ok (' + MOWERS.length + ' mowers, regular card)');
+console.log('mower_first_use: ok (' + MOWERS.length + ' mowers, regular card)');

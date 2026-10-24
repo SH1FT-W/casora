@@ -62,8 +62,8 @@ views:
         variables:
           # Image Configuration
           # Demo images ship with Casora (name ending in -demo) — replace with your own photos when ready.
-          # Upload them in the Studio, or place them at: /config/casora_fotos/home.jpg (light mode)
-          #                                              /config/casora_fotos/home-night.jpg (dark mode)
+          # Upload them in the Studio, or place them at: /config/casora_photos/home.jpg (light mode)
+          #                                              /config/casora_photos/home-night.jpg (dark mode)
           # (private: served only to logged-in users, through signed URLs)
           image: home-demo
           # Define all room images here once and reuse them across rooms via the YAML anchor.

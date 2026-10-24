@@ -1,10 +1,10 @@
 """Private room photos (images.py, assets.py) without a running HA (HACS review, hacs/default#12143).
 
-  ~/.cache/ha-venv/2026.10.1/bin/python dev/unit/fotos_privat_test.py
+  ~/.cache/ha-venv/2026.10.1/bin/python dev/unit/photos_private_test.py
 
 Checks: views that serve user photos need auth (public assets view never serves rooms/ from the
 user's folders), the photo view only serves plain image names from the private folder (then Hemma's),
-the one-time move www/casora/rooms -> casora_fotos (names and mtime kept, clash renamed, idempotent,
+the one-time move www/casora/rooms -> casora_photos (names and mtime kept, clash renamed, idempotent,
 empty folders removed, www/casora kept when other files are in it), and signing: URL path + ?v= in
 the claims, bound to the refresh token, reused while fresh, other URLs untouched.
 """

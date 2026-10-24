@@ -122,7 +122,7 @@ def base(tmp):
     """Hemma mit einem Raumfoto, das schon gleich in www/casora liegt (Umzug erledigt)."""
     write(os.path.join(tmp, "custom_components/hemma/__init__.py"), "# hemma")
     write(os.path.join(tmp, "www/hemma/rooms/kueche.jpg"), "kueche")
-    write(os.path.join(tmp, "casora_fotos/kueche.jpg"), "kueche")
+    write(os.path.join(tmp, "casora_photos/kueche.jpg"), "kueche")
     write(os.path.join(tmp, "www/hemma/scripts/hemma-core.js"), "js")
     os.makedirs(os.path.join(tmp, "custom_components/casora/assets"), exist_ok=True)
 

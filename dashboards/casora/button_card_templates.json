@@ -18600,7 +18600,7 @@
       }
      ]
     },
-    "value": "[[[\n  // Fridge: highlighted while a door stands open, an alarm is on or a special mode runs (30-kuehlschrank.js).\n  const K = window._casoraFridge;\n  const s = K ? K.of(entity, hass, states, variables) : null;\n  return !!(K && K.active(s));\n]]]\n"
+    "value": "[[[\n  // Fridge: highlighted while a door stands open, an alarm is on or a special mode runs (30-fridge.js).\n  const K = window._casoraFridge;\n  const s = K ? K.of(entity, hass, states, variables) : null;\n  return !!(K && K.active(s));\n]]]\n"
    }
   ],
   "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? (window.casoraEsc || String)(t);\n  // \"7 °C · −18 °C\", \"Tür offen · 7 °C · −18 °C\", \"SuperFrost · …\", \"Nicht verfügbar\" (window._casoraFridge.tileText).\n  const K = window._casoraFridge;\n  const narrow = (this.offsetWidth || 999) < 240;\n  return K ? fit(K.tileText(K.of(entity, hass, states, variables), narrow)) : '';\n]]]\n",
@@ -18615,7 +18615,7 @@
  "casora_popup_fridge": {
   "tap_action": {
    "casora_popup": {
-    "content": "[[[\n  /* Fridge/freezer: status line, 24 h chart of the zone temperatures, per zone the temperature with its setpoint\n     pills, modes as toggle rows, doors with \"open since\", further settings - window._casoraFridge.popup in 30-kuehlschrank.js. */\n  return window._casoraFridge ? window._casoraFridge.popup(entity, states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "content": "[[[\n  /* Fridge/freezer: status line, 24 h chart of the zone temperatures, per zone the temperature with its setpoint\n     pills, modes as toggle rows, doors with \"open since\", further settings - window._casoraFridge.popup in 30-fridge.js. */\n  return window._casoraFridge ? window._casoraFridge.popup(entity, states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
     "dismiss_on_background": true,
     "popup_styles": [
      {

@@ -19,7 +19,7 @@ const TEST_DEVICES = {
 const hass = testhaus();
 const { P, I } = await loadPanel();
 const community = I.TILE_TYPES.filter((t) => t.community && !t.community.retired);
-// Mower and coffee machine are regular cards now (first use: maeher_erstnutzer.mjs, coffee_first_use.mjs).
+// Mower and coffee machine are regular cards now (first use: mower_first_use.mjs, coffee_first_use.mjs).
 assert.ok(community.length >= 3, 'community cards loaded');
 const unknown = community.filter((t) => !TEST_DEVICES[t.id]).map((t) => t.id);
 assert.deepEqual(unknown, [], 'Community card without a test device – add one to dev/casora_mock and to TEST_DEVICES');

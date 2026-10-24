@@ -224,7 +224,7 @@ def setup_tmp(tmp):
     write(os.path.join(tmp, "www/hemma/rooms/bad.jpg"), b"bad-hemma")
     write(os.path.join(tmp, "www/hemma/icons/home.svg"), SHIPPED_ICON)
     write(os.path.join(tmp, "www/hemma/scripts/hemma-notify-local.js"), "js")
-    write(os.path.join(tmp, "casora_fotos/bad.jpg"), b"bad-hemma")  # schon da, gleich
+    write(os.path.join(tmp, "casora_photos/bad.jpg"), b"bad-hemma")  # schon da, gleich
     write(os.path.join(tmp, "custom_components/casora/assets/icons/home.svg"), SHIPPED_ICON)
 
 
@@ -237,7 +237,7 @@ async def main():
     with tempfile.TemporaryDirectory() as tmp:
         setup_tmp(tmp)
         write(os.path.join(tmp, "www/hemma/rooms/flur.jpg"), b"flur-hemma")
-        write(os.path.join(tmp, "casora_fotos/flur.jpg"), b"flur-casora")  # anders: Konflikt
+        write(os.path.join(tmp, "casora_photos/flur.jpg"), b"flur-casora")  # anders: Konflikt
         shipped = os.path.join(tmp, "custom_components/casora/assets")
         check("noch nicht vollständig", not hc.files_complete(tmp, shipped))
         r = hc.copy_files(tmp, shipped)
@@ -246,7 +246,7 @@ async def main():
         check("mitgelieferte Datei übersprungen", r["shipped"] == ["icons/home.svg"]
               and not os.path.exists(os.path.join(tmp, "www/casora/icons/home.svg")))
         check("Konflikt nicht überschrieben", r["conflicts"] == ["rooms/flur.jpg"]
-              and open(os.path.join(tmp, "casora_fotos/flur.jpg"), "rb").read() == b"flur-casora")
+              and open(os.path.join(tmp, "casora_photos/flur.jpg"), "rb").read() == b"flur-casora")
         check("scripts/ nicht übernommen", not os.path.exists(os.path.join(tmp, "www/casora/scripts")))
         check("Raumfotos gezählt (ohne Nacht, mit vorhandenem)", r["rooms"] == 2)
         m = r["mapping"]
@@ -339,7 +339,7 @@ async def main():
         names = zipfile.ZipFile(out["backup"]).namelist()
         check("www/hemma gelöscht, in Sicherung", f["ok"] and not f["kept"] and not os.path.exists(os.path.join(tmp, "www/hemma"))
               and "www/hemma/rooms/kueche.jpg" in names)
-        check("www/casora unberührt", os.path.isfile(os.path.join(tmp, "casora_fotos/kueche.jpg")))
+        check("www/casora unberührt", os.path.isfile(os.path.join(tmp, "casora_photos/kueche.jpg")))
 
     # ── Hemmas Paket, Theme, www/hemma ohne Umzug ────────────────────────────
     with tempfile.TemporaryDirectory() as tmp:
@@ -379,7 +379,7 @@ async def main():
         check("Sicherung: Paket-Original + Theme", "packages/hemma_helpers.yaml" in names and "themes/hemma/hemma.yaml" in names)
         check("ohne Umzug: erst nach www/casora kopiert, dann www/hemma gelöscht", steps["files"]["ok"]
               and not os.path.exists(os.path.join(tmp, "www/hemma"))
-              and open(os.path.join(tmp, "casora_fotos/kueche.jpg"), "rb").read() == b"kueche")
+              and open(os.path.join(tmp, "casora_photos/kueche.jpg"), "rb").read() == b"kueche")
         # Nur-Hemma-Paket: Datei verschwindet ganz.
         write(os.path.join(tmp, "packages/hemma_helpers.yaml"), "input_boolean:\n  hemma_motion_badges:\n    name: x\n")
         hass, calls = make_hass(tmp, Resources([]), {}, [])

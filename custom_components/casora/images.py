@@ -1,6 +1,6 @@
 """Room photos for the Casora panel and dashboards: listing, upload, private serving.
 
-Uploaded photos live in /config/casora_fotos (const.PHOTOS_DIR), outside www, so HA's
+Uploaded photos live in /config/casora_photos (const.PHOTOS_DIR), outside www, so HA's
 /local route does not serve them. CasoraPhotoView serves them with auth; the frontend gets
 signed URLs (async_sign_path, query authSig) from the listing and from the websocket command
 casora/photos, because <img> and CSS backgrounds cannot send an Authorization header.
@@ -302,7 +302,7 @@ def signed_map(hass: HomeAssistant, images: list[dict[str, Any]], refresh_token_
     return out
 
 
-# ── Migration www/casora/rooms → casora_fotos ────────────────────────────────
+# ── Migration www/casora/rooms → casora_photos ────────────────────────────────
 
 
 def _same_file(a: str, b: str) -> bool:
