@@ -236,7 +236,7 @@ const render = (p, tile) => {
 };
 const tile = { template: 'casora_vent', name: 'Raumklima' };
 let rows = render(panel(0), tile);
-eq('Studio Home: lead row + every room', rows.map((r) => r.label), ['Shown in the popup', 'Küche', 'Wohnzimmer', 'Büro']);
+eq('Studio Home: lead row + every room', rows.map((r) => r.label), ['Visible in the popup', 'Küche', 'Wohnzimmer', 'Büro']);
 ok('Studio: room names are data, not UI text', rows[1].r.querySelector('label').getAttribute('data-no-i18n') === '');
 ok('Studio: every room on', rows.slice(1).every((r) => r.input.getAttribute('aria-checked') === 'true'));
 const p0 = panel(0);
@@ -250,12 +250,12 @@ eq('Studio: lead names the count', rows[0].input.textContent, '1 row hidden');
 rows[1].input.click();
 eq('Studio: switching it on again removes the list', tile.variables, undefined);
 const tileW = { template: 'casora_vent' };
-eq('Studio in a room: only its rows', render(panel(1), tileW).map((r) => r.label), ['Shown in the popup', 'Wohnzimmer']);
+eq('Studio in a room: only its rows', render(panel(1), tileW).map((r) => r.label), ['Visible in the popup', 'Wohnzimmer']);
 rows = render(panel(2), tileW);
 eq('Studio in the garden: nothing to hide', [rows.length, rows[0].input.textContent], [1, 'Nothing to hide yet – the popup collects its rows by itself.']);
 eq('Studio: a tile without automatic popup gets no list', render(panel(0), { template: 'casora_light', entity: 'light.a' }).length, 0);
 rows = render(panel(0), { template: 'casora_battery' });
-eq('Studio batteries: the house list', rows.map((r) => r.label), ['Shown in the popup', 'Tür Batterie', 'Fenster Batterie']);
+eq('Studio batteries: the house list', rows.map((r) => r.label), ['Visible in the popup', 'Tür Batterie', 'Fenster Batterie']);
 // Stale ids (room gone) drop out on the next change.
 const stale = { template: 'casora_vent', variables: { popup_hide: ['keller', 'buro'] } };
 rows = render(panel(0), stale);
@@ -263,7 +263,7 @@ rows[2].input.click();
 eq('Studio: stale ids drop, known ones stay', stale.variables.popup_hide, ['wohnzimmer', 'buro']);
 // German Studio texts exist.
 const de = JSON.parse(src('custom_components/casora/translations/panel/de.json'));
-['Shown in the popup', 'Switch off what the popup should not list.', 'Nothing to hide yet – the popup collects its rows by itself.', '1 row hidden']
+['Visible in the popup', 'Switch off what the popup should not list.', 'Nothing to hide yet – the popup collects its rows by itself.', '1 row hidden']
   .forEach((k) => ok('de.json: ' + k, !!de.exact[k]));
 ok('de.json: plural pattern', de.patterns.some(([re]) => re === '^(\\d+) rows hidden$'));
 const en = JSON.parse(src('custom_components/casora/translations/dashboard/phrases/en.json'));

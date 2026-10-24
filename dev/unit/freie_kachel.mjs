@@ -152,7 +152,7 @@ UI.group = (rows, label) => '<group ' + label + '>' + rows.map((r) => (r.entity 
   + (r.svc ? '>' + r.svc.domain + '.' + r.svc.service : '') + (r.confirm ? '?' + r.confirm : '')).join(';') + '</group>';
 const sec = (part, ent, vars) => F.sec(part, F.plan(ent, states, hass, vars || {}), states, hass);
 
-assert.equal(sec('hero', null), '<line>Keine Entität gewählt|</line><note>Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.</note>');
+assert.equal(sec('hero', null), '<line>Kein Gerät gewählt|</line><note>Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.</note>');
 assert.match(sec('hero', states['switch.qa_pumpe'], V), /^<line>An\|seit 2 Std\.<\/line>/);
 assert.match(sec('hero', states['switch.qa_pumpe'], V), /<note>Kein Verlauf: pumpe ist kein Zahlenwert\.<\/note>/, 'wanted chart of a non-number: a note');
 assert.equal(sec('hero', states['sensor.qa_temp']), '<line>21,5 °C|seit 2 Std.</line><note>Im Studio kannst du Werte, Verlauf, Schalten und eigene Karten ergänzen.</note>');
