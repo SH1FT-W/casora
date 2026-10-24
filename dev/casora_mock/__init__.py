@@ -435,8 +435,9 @@ class CasoraMock:
 
         self.entry.async_on_unload(async_at_started(self.hass, run))
 
-    # 30 Tage Stundenstatistik: Messgrößen als Mittel/Min/Max aus derselben Kurve, Energiezähler
-    # (kWh, total_increasing) als Stand/Summe mit Tagesgang – Tagesbalken „Verbrauch pro Tag“.
+    # 30 Tage Stundenstatistik (je Entität mehr über „_stats_days“, z. B. 400 für den Jahres-Zeitraum der
+    # Diagramm-Karte): Messgrößen als Mittel/Min/Max aus derselben Kurve, Energiezähler (kWh, total_increasing)
+    # als Stand/Summe mit Tagesgang und Jahresgang (Winter mehr) – Balken je Stunde/Tag/Monat.
     # Bis zur letzten vollen Stunde; ein Neustart schreibt dieselben Stunden neu (kein Doppeln).
     def _import_statistics(self, spec: dict, curve, boot: float) -> None:
         import math
@@ -452,7 +453,8 @@ class CasoraMock:
             def unit_class(_u):
                 return None
         end = int(boot // 3600) * 3600
-        hours = range(end - 30 * 24 * 3600, end, 3600)
+        days_of = self.fixture.get("_stats_days") or {}
+        hours_of = lambda eid: range(end - int(days_of.get(eid, 30)) * 24 * 3600, end, 3600)  # noqa: E731
         utc = lambda ts: datetime.fromtimestamp(ts, timezone.utc)  # noqa: E731
         n = 0
         for eid, cfg in spec.items():
@@ -464,7 +466,7 @@ class CasoraMock:
             pts = curve(eid, cfg)
             day = [v for ts, v in pts[-144:]] or [cfg.get("base", 0)]
             rows = []
-            for i, h in enumerate(hours):
+            for i, h in enumerate(hours_of(eid)):
                 k = (i * 6) % len(day)
                 vals = day[k:k + 6] or day[:6]
                 rows.append({"start": utc(h), "mean": sum(vals) / len(vals), "min": min(vals), "max": max(vals)})
@@ -484,23 +486,29 @@ class CasoraMock:
             unit = attrs.get("unit_of_measurement") or "kWh"
             scale = {"Wh": 1000.0, "MWh": 0.001}.get(unit, 1.0)
             rnd = random.Random(eid)
+            hours = hours_of(eid)
             use = []
             for h in hours:
-                hour = datetime.fromtimestamp(h).hour
+                at = datetime.fromtimestamp(h)
+                hour = at.hour
                 base = 0.12 + 0.35 * math.exp(-((hour - 19.5) / 2.2) ** 2) + 0.25 * math.exp(-((hour - 7.5) / 1.2) ** 2)
-                use.append(base * (0.6 + 0.8 * rnd.random()) * scale)
+                # Jahresgang: Januar ~ +30 %, Juli ~ −30 % – Monatsbalken sehen nach Verbrauch aus.
+                season = 1 + 0.3 * math.cos(2 * math.pi * (at.timetuple().tm_yday - 15) / 365)
+                use.append(base * season * (0.6 + 0.8 * rnd.random()) * scale)
             total = sum(use)
             start_v = max(0.0, now_v - total)
+            # Die Summen enden bei 0: Die erste eigene Stunde des Recorders nach dem Import beginnt ihre Summe bei 0
+            # (noch keine Kurzzeitstatistik) – endete die Summe bei „total“, stand in dieser Stunde −total (negative Balken).
             acc, rows = 0.0, []
             for h, u in zip(hours, use):
                 acc += u
-                rows.append({"start": utc(h), "state": start_v + acc, "sum": acc})
+                rows.append({"start": utc(h), "state": start_v + acc, "sum": acc - total})
             async_import_statistics(self.hass, {
                 "has_mean": False, "mean_type": StatisticMeanType.NONE, "has_sum": True, "name": None,
                 "source": "recorder", "statistic_id": eid, "unit_class": unit_class(unit), "unit_of_measurement": unit,
             }, rows)
             n += 1
-        _LOGGER.warning("Casora Mock: Statistik für %s Sensoren importiert (30 Tage)", n)
+        _LOGGER.warning("Casora Mock: Statistik für %s Sensoren importiert (30 Tage, %s länger)", n, len(days_of))
 
     def run_scenario(self, name: str) -> None:
         for eid, state in self.scenarios.get(name, {}).items():

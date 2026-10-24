@@ -2,8 +2,10 @@
 
 Like HA's systemmonitor integration: one device, sensors with translation keys processor_use, memory_use_percent,
 processor_temperature and network_in, state_class measurement. The CPU sensor has no device class (only a unit), so
-the chart card has to read state_class and unit, not the device class. Curves for the last 48 h and 30 days of
-statistics come from the mock's history backfill (_history). Names made up.
+the chart card has to read state_class and unit, not the device class. Curves for the last 48 h and the long-term
+statistics come from the mock's history backfill (_history): 400 days for the chart card's year range. A smart-plug-
+like energy meter (kWh, total_increasing) on the same device gives the card a counter for bars per hour / day / month.
+Names made up.
 """
 from __future__ import annotations
 
@@ -13,6 +15,7 @@ CPU = f"sensor.{BASE}_processor_use"
 RAM = f"sensor.{BASE}_memory_use_percent"
 TEMP = f"sensor.{BASE}_processor_temperature"
 NET = f"sensor.{BASE}_network_in_eth0"
+ENERGY = f"sensor.{BASE}_energy"
 
 
 def _ent(eid, state, attrs, name, dc=None, unit=None, key=None, cat=None):
@@ -37,10 +40,15 @@ def extra(now) -> dict:
         # Total counters as HA's systemmonitor reports them (diagnostic, no chart of their own).
         _ent(f"sensor.{BASE}_network_throughput_in_eth0", "1842.3", {"state_class": "total_increasing"},
              "Testserver Network throughput in eth0", dc="data_size", unit="MiB", key="network_throughput_in", cat="diagnostic"),
+        # Energy meter of the server's smart plug: the mock imports hourly sums (__init__.py _import_statistics).
+        # The state must exceed 400 days of the mock's hourly sums (~2 500 kWh), else the recorder sees a reset.
+        _ent(ENERGY, "4870.6", {"state_class": "total_increasing"}, "Testserver Energy", dc="energy", unit="kWh", key="energy"),
     ]
     return {
         "devices": [{"key": DEV, "name": "Testserver", "manufacturer": None, "model": "Mini-PC", "area": None}],
         "entities": ents,
+        # Long-term statistics over 400 days (default 30) so the chart card's year range has twelve months.
+        "_stats_days": {CPU: 400, RAM: 400, TEMP: 400, NET: 400, ENERGY: 400},
         # Curves for the backfill (__init__.py backfill_history): nightly backup at 03:30, streaming in the evening.
         "_history": {
             CPU: {"base": 23, "wave": 9, "noise": 2.5, "digits": 0, "min": 0, "max": 100,

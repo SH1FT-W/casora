@@ -18125,6 +18125,8 @@
    "icon": "chart",
    "casora_default_name": "Diagramm",
    "mobile_filter_category": "unfiltered",
+   "chart_kind": null,
+   "chart_span": null,
    "chart_color": null,
    "entity_2": null,
    "label_2": null,
@@ -18356,7 +18358,7 @@
  "casora_popup_chart": {
   "tap_action": {
    "casora_popup": {
-    "content": "[[[\n  /* Chart (community card, card request #50): current value, range 24 h / 7 days / 30 days, Casora's own chart with up\n     to four sensors, lowest/highest/average or consumption from the recorder statistics - window._casoraChartCard.popup in 27-chart.js. */\n  return window._casoraChartCard ? window._casoraChartCard.popup(entity, states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "content": "[[[\n  /* Chart (community card, card request #50): current value, range 24 h / 7 days / 30 days / year, Casora's own chart as a line\n     or bars with up to four sensors, lowest/highest/average or consumption from the recorder statistics - window._casoraChartCard.popup in 27-chart.js. */\n  return window._casoraChartCard ? window._casoraChartCard.popup(entity, states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
     "dismiss_on_background": true,
     "popup_styles": [
      {
