@@ -62,7 +62,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import load_yaml
 
 from . import hemma_package as pkg
-from .const import ASSETS_DIR, ASSETS_URL_BASE, DOMAIN
+from .const import ASSETS_DIR, ASSETS_URL_BASE, DOMAIN, PHOTOS_DIR
 from .helfer import _collection
 from .settings import async_load_settings
 
@@ -485,12 +485,20 @@ def is_write_target(rel: str, targets: dict[str, list[str]] | None) -> bool:
     return False
 
 
+def dest_path(config_dir: str, rel: str) -> str:
+    """Where a www/hemma file goes: room photos into the private photo folder (not served
+    without auth), everything else into www/casora. Dashboards keep /local/casora/rooms/…
+    as the photo's address; the frontend maps it to a signed URL (casoraPhotoUrl)."""
+    if rel.startswith("rooms/"):
+        return os.path.join(config_dir, PHOTOS_DIR, rel[len("rooms/"):])
+    return os.path.join(config_dir, WWW_CASORA, rel)
+
+
 def plan_files(config_dir: str, shipped_dir: str, targets: dict[str, list[str]] | None = None) -> dict[str, str]:
     """Je Datei: copy (fehlt in www/casora), same (liegt dort gleich), shipped (gleich
     der mitgelieferten Casora-Datei), conflict (dort mit anderem Inhalt), write (eine
     Automation benutzt den Pfad – bleibt in www/hemma, wird nicht kopiert)."""
     src_base = os.path.join(config_dir, WWW_HEMMA)
-    dst_base = os.path.join(config_dir, WWW_CASORA)
     if targets is None:
         targets = write_targets(config_dir)
     plan: dict[str, str] = {}
@@ -499,7 +507,7 @@ def plan_files(config_dir: str, shipped_dir: str, targets: dict[str, list[str]] 
             plan[rel] = "write"
             continue
         src = os.path.join(src_base, rel)
-        dst = os.path.join(dst_base, rel)
+        dst = dest_path(config_dir, rel)
         ship = os.path.join(shipped_dir, rel)
         h = None
         if os.path.isfile(ship):
@@ -541,12 +549,11 @@ def copy_files(config_dir: str, shipped_dir: str) -> dict:
     targets = write_targets(config_dir)
     plan = plan_files(config_dir, shipped_dir, targets)
     src_base = os.path.join(config_dir, WWW_HEMMA)
-    dst_base = os.path.join(config_dir, WWW_CASORA)
     copied, failed = [], []
     for rel, what in plan.items():
         if what != "copy":
             continue
-        dst = os.path.join(dst_base, rel)
+        dst = dest_path(config_dir, rel)
         try:
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             if os.path.exists(dst):  # inzwischen entstanden: nie überschreiben

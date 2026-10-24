@@ -21829,7 +21829,8 @@ class CasoraPanel extends HTMLElement {
 
 
   async _images(force) {
-    if (this._imgs && !force) return this._imgs;
+    // Own photos come with signed URLs (a day valid, images.py): fetch again after a few hours.
+    if (this._imgs && !force && Date.now() - (this._imgsAt || 0) < 6 * 3600000) return this._imgs;
     if (this._imgsInFlight && !force) return this._imgsInFlight;
     this._imgsInFlight = this._fetchImages().finally(() => { this._imgsInFlight = null; });
     return this._imgsInFlight;
@@ -21842,6 +21843,7 @@ class CasoraPanel extends HTMLElement {
     if (!res.ok) throw new Error(`images ${res.status}`);
     const data = await res.json();
     this._imgs = data.images || [];
+    this._imgsAt = Date.now();
     this._imgsLoaded = true;
     return this._imgs;
   }
@@ -22416,7 +22418,7 @@ class CasoraPanel extends HTMLElement {
           err.nice = why[code] || "";
           throw err;
         }
-        this._imgs = data.images || [];
+        this._imgs = data.images || []; this._imgsAt = Date.now();
         this._imgsLoaded = true;
         room.variables.image = data.name || name;
         this._markDirty();

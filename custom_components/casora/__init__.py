@@ -31,7 +31,7 @@ from .ki import KiRunner
 from .umstellen import async_setup_umstellen
 from .hemma_cleanup import async_hemma_present, async_keep_own_modules, async_setup_hemma_cleanup, is_own_module
 from .fonts import CasoraFontsView
-from .images import CasoraImagesView
+from .images import CasoraImagesView, CasoraPhotoView, async_migrate_rooms, async_setup_photos_ws
 from .room_icons import CasoraRoomIconsView
 from .templates import CasoraTemplatesView, rebuild_if_stale
 from .const import (
@@ -236,6 +236,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, options={k: v for k, v in entry.options.items() if k not in LEGACY_OPTIONS})
     panel_dir = hass.config.path(f"custom_components/{DOMAIN}/panel")
 
+    # Room photos out of www (public /local) into the private folder; once, idempotent (images.py).
+    await async_migrate_rooms(hass)
+    async_setup_photos_ws(hass)
+
     # The bundle is derived from the template tree, so rebuild before the panel loads.
     await hass.async_add_executor_job(rebuild_if_stale, hass.config.config_dir)
 
@@ -306,6 +310,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Studio ebenso (statt statischer Route ohne gzip/Cache-Control).
         hass.http.register_view(CasoraPanelView(panel_dir))
         hass.http.register_view(CasoraImagesView())
+        hass.http.register_view(CasoraPhotoView())
         hass.http.register_view(CasoraFontsView())
         hass.http.register_view(CasoraRoomIconsView())
         hass.http.register_view(CasoraTemplatesView())

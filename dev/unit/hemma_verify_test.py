@@ -172,7 +172,7 @@ async def main():
     # ── Reste ────────────────────────────────────────────────────────────────
     with tempfile.TemporaryDirectory() as tmp:
         write(os.path.join(tmp, "www/hemma/rooms/kueche.jpg"))
-        write(os.path.join(tmp, "www/casora/rooms/kueche.jpg"))
+        write(os.path.join(tmp, "casora_fotos/kueche.jpg"))
         res = Resources([])
         dashes = {"hemma-home": Dash("hemma-home", HEMMA_CFG), "hemma-alt": Dash("hemma-alt", HEMMA_CFG),
                   "casora-home": Dash("casora-home", {"views": []})}
@@ -207,7 +207,7 @@ async def main():
     # ── www/hemma behalten gewollt → kein Rest ───────────────────────────────
     with tempfile.TemporaryDirectory() as tmp:
         write(os.path.join(tmp, "www/hemma/rooms/kueche.jpg"))
-        write(os.path.join(tmp, "www/casora/rooms/kueche.jpg"))
+        write(os.path.join(tmp, "casora_fotos/kueche.jpg"))
         hass = make_hass(tmp, Resources([]), {}, [])
         STORE.data = {"removed_at": "x", "boot": "alt", "keep_files": True, "verified": False}
         v = await hc.async_verify(hass)

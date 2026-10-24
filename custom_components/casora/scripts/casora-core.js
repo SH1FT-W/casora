@@ -7,6 +7,132 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
   try { window.dispatchEvent(new CustomEvent('haptic', { detail: kind || 'light' })); } catch (e) { /* egal */ }
 };
 
+// Room photos (HACS review, Oct 2026): uploaded photos are private (/api/casora/photo/<file>,
+// login required). <img> and CSS url() send no token, so the page asks casora/photos for signed
+// URLs (authSig, a day valid, per login) and maps every photo reference through casoraPhotoUrl:
+// a name ("kueche", "kueche-night") or an old address (/casora_assets/rooms/…, /local/casora/rooms/…,
+// /local/hemma/rooms/…) from saved dashboards. Shipped demo photos stay on /casora_assets.
+// casora-photos:start
+(function () {
+  if (window.casoraPhotoUrl) return;
+  var SHIPPED = '/casora_assets/rooms/';
+  var OLD = /^(?:https?:\/\/[^/]+)?\/(?:casora_assets\/rooms|local\/casora\/rooms|local\/hemma\/rooms|api\/casora\/photo)\/([^?#]+)/i;
+  var st = window.__casoraPhotos = window.__casoraPhotos || {
+    map: null, shipped: {}, busy: null, failed: false, refreshAt: 0, askedAt: 0, missed: {}, conn: null,
+  };
+
+  // "kueche" | "kueche-night.jpg" | "/local/casora/rooms/kueche.jpg?v=3" -> "kueche" / "kueche-night".
+  var stemOf = function (ref) {
+    var s = String(ref == null ? '' : ref).trim();
+    if (!s) return '';
+    var m = OLD.exec(s);
+    if (m) s = m[1];
+    else if (s.indexOf('/') >= 0 || s.indexOf(':') >= 0) return '';   // some other URL: not ours
+    try { s = decodeURIComponent(s); } catch (e) { /* keep as is */ }
+    return s.replace(/\.(jpe?g|png|webp)$/i, '');
+  };
+  var isShipped = function (stem) { return /-demo(-night)?$/.test(stem) || !!st.shipped[stem]; };
+  window.casoraPhotoStem = stemOf;
+
+  var hassOf = function (h) {
+    if (h && typeof h.callWS === 'function') return h;
+    try { var el = document.querySelector('home-assistant'); return (el && el.hass) || null; } catch (e) { return null; }
+  };
+
+  // Redraw whatever shows a photo: button-cards (templates read casoraPhotoUrl), the phone wallpaper.
+  var repaint = function () {
+    var seen = 0;
+    var walk = function (root, depth) {
+      if (!root || depth > 14 || !root.querySelectorAll || seen > 3000) return;
+      var all = root.querySelectorAll('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i];
+        if (el.localName === 'button-card' && window.casoraKick) { seen++; window.casoraKick(el); }
+        if (el.shadowRoot) walk(el.shadowRoot, depth + 1);
+      }
+    };
+    try { walk(document, 0); } catch (e) { /* the next state push redraws */ }
+    try { if (window.casoraWallpaperRefresh) window.casoraWallpaperRefresh(); } catch (e) { /* ignore */ }
+    try { window.dispatchEvent(new CustomEvent('casora-photos-changed')); } catch (e) { /* ignore */ }
+  };
+
+  var watchConn = function (conn) {
+    if (!conn || st.conn === conn || typeof conn.addEventListener !== 'function') return;
+    st.conn = conn;
+    // Reconnect (HA restart, new login): the old signatures may be gone.
+    conn.addEventListener('ready', function () { window.casoraPhotosLoad(null, true); });
+  };
+
+  // Ask the integration for signed URLs. force: even if the map is still fresh.
+  window.casoraPhotosLoad = function (h, force) {
+    if (st.busy) return st.busy;
+    var fresh = st.map && Date.now() < st.refreshAt;
+    if (fresh && !force) return Promise.resolve(st.map);
+    var hass = hassOf(h) || st.hass;
+    if (!hass) return Promise.resolve(st.map);
+    st.hass = hass;   // for the reconnect and wake-up reloads, which have no hass at hand
+    watchConn(hass.connection);
+    st.askedAt = Date.now();
+    st.busy = Promise.resolve().then(function () { return hass.callWS({ type: 'casora/photos' }); }).then(function (r) {
+      var next = (r && r.photos) || {};
+      var ttl = Math.max(300, (Number(r && r.expires_in) || 43200) - 3600);
+      st.refreshAt = Date.now() + ttl * 1000;
+      st.failed = false;
+      var changed = JSON.stringify(next) !== JSON.stringify(st.map || null);
+      st.map = next;
+      st.shipped = {};
+      ((r && r.shipped) || []).forEach(function (n) { st.shipped[n] = true; });
+      if (changed) st.missed = {};
+      return changed;
+    }, function () {
+      st.failed = true;
+      st.refreshAt = Date.now() + 60000;
+      var changed = !st.map;
+      if (!st.map) st.map = {};
+      return changed;
+    }).then(function (changed) {
+      st.busy = null;
+      if (changed) repaint();
+      return st.map;
+    });
+    return st.busy;
+  };
+
+  // Signed URL for a photo reference, or the shipped demo photo; '' while the list is still
+  // loading (callers then draw no photo instead of a broken one; a repaint follows).
+  window.casoraPhotoUrl = function (ref, hass) {
+    var stem = stemOf(ref);
+    if (!stem) return ref ? String(ref) : '';
+    if (isShipped(stem)) return SHIPPED + encodeURIComponent(stem) + '.jpg';
+    if (!st.map || Date.now() >= st.refreshAt) window.casoraPhotosLoad(hass);
+    if (!st.map) return '';
+    var hit = st.map[stem];
+    if (hit) return hit;
+    // Not in the list: a just uploaded photo? Ask again, once per name until the list changes.
+    var now = Date.now();
+    if (!st.failed && !st.missed[stem] && now - st.askedAt > 2000) {
+      st.missed[stem] = now;
+      window.casoraPhotosLoad(hass, true);
+    }
+    // Unknown name (deleted photo, missing night photo): the shipped one if there is one, else 404.
+    return SHIPPED + encodeURIComponent(stem) + '.jpg';
+  };
+
+  // CSS value: url("…"), or none while loading.
+  window.casoraPhotoCss = function (ref, hass) {
+    var u = window.casoraPhotoUrl(ref, hass);
+    return u ? 'url("' + String(u).replace(/["\\]/g, '\\$&') + '")' : 'none';
+  };
+
+  // Re-check after the tab was asleep (timers stop on phones).
+  try {
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible' && st.map && Date.now() >= st.refreshAt) window.casoraPhotosLoad(null, true);
+    });
+  } catch (e) { /* no document (tests) */ }
+})();
+// casora-photos:end
+
 // Is this entity a plant? window.casoraIsPlant lives in scripts/local/00-finder.js (shared with the Studio);
 // callers here that may run before it has loaded fall back to plant.* only.
 
@@ -3853,7 +3979,35 @@ window.casoraMenuGlass = {
       + `calc(${px}px + ${SAFE})`;
   }
 
+  // A theme may point the wallpaper at an own photo (/local/casora/rooms/…, from before photos
+  // became private): swap in its signed URL. Inserted first in <head>, so casora_mobile_bg's
+  // photo (appended later) still wins.
+  const THEME_ID = 'casora-mobile-hero-theme';
+  function mapThemePhotos() {
+    if (!window.casoraPhotoUrl || !window.casoraPhotoStem) return;
+    let el = document.getElementById(THEME_ID);
+    if (el) el.textContent = '';
+    const out = [];
+    ['day', 'night'].forEach((slot) => {
+      const name = '--casora-mobile-hero-img-' + slot;
+      const url = readVarUrl(name);
+      if (!url || /^\/casora_assets\//.test(url)) return;
+      const stem = window.casoraPhotoStem(url);
+      if (!stem) return;
+      const signed = window.casoraPhotoUrl(url);
+      if (signed && signed !== url) out.push(name + ':url("' + signed + '") !important;');
+    });
+    if (!out.length) { if (el) el.remove(); return; }
+    if (!el) {
+      el = document.createElement('style');
+      el.id = THEME_ID;
+      document.head.insertBefore(el, document.head.firstChild);
+    }
+    el.textContent = ':root{' + out.join('') + '}';
+  }
+
   function applyHtmlBackground() {
+    try { mapThemePhotos(); } catch (e) { /* theme photo stays as it is */ }
     if (!MOBILE_MQ.matches) return;
     const h = document.documentElement;
     if (!MOBILE_RE.test(window.location.pathname)) {

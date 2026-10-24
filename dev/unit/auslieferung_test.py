@@ -113,9 +113,18 @@ async def main():
         av = A.CasoraAssetsView(shipped)
         r = await av.get(req("/casora_assets/x.svg", hass), "x.svg")
         check("Assets: mitgeliefert → 1 Tag Cache", r.headers.get("Cache-Control") == A._SHIPPED_CC, dict(r.headers))
+        # Own photos are private (images.CasoraPhotoView): never on the public route, also not via ../
         r = await av.get(req("/casora_assets/rooms/eigen.jpg", hass, Accept="image/jpeg"), "rooms/eigen.jpg")
-        check("Assets: eigenes Foto → no-cache, JPEG ohne WebP-Annahme",
-              r.headers.get("Cache-Control") == "no-cache" and str(r._path).endswith(".jpg"), str(r._path))
+        check("Assets: own photo not served publicly (404)", r.status == 404, r.status)
+        r = await av.get(req("/casora_assets/icons/../rooms/eigen.jpg", hass), "icons/../rooms/eigen.jpg")
+        check("Assets: own photo not via icons/../rooms (404)", r.status == 404, r.status)
+        r = await av.get(req("/casora_assets/Rooms/eigen.jpg", hass), "Rooms/eigen.jpg")
+        check("Assets: own photo not via other case (404)", r.status == 404, r.status)
+        with open(os.path.join(d, "www/casora/own.svg"), "w") as h:
+            h.write("<svg/>")
+        r = await av.get(req("/casora_assets/own.svg", hass), "own.svg")
+        check("Assets: other own file (www/casora) → no-cache",
+              r.headers.get("Cache-Control") == "no-cache" and str(r._path).endswith("own.svg"), str(getattr(r, "_path", r.status)))
         r = await av.get(req("/casora_assets/rooms/wohnen-demo.jpg", hass, Accept="image/avif,image/webp,*/*"), "rooms/wohnen-demo.jpg")
         check("Assets: Raumfoto als WebP, wenn angenommen", str(r._path).endswith("-d.webp") and "Accept" in r.headers.get("Vary", ""), str(r._path))
         r = await av.get(req("/casora_assets/rooms/wohnen-demo.jpg", hass, Accept="image/webp",

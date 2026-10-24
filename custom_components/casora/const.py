@@ -52,6 +52,10 @@ ASSETS_DIR = f"custom_components/{DOMAIN}/assets"
 USER_ASSETS_DIR = "www/casora"
 # Frühere Ablage (Casora): füllt Lücken, wenn www/casora eine Datei nicht hat.
 LEGACY_USER_ASSETS_DIR = "www/hemma"
+# Uploaded room photos: outside www (HA serves www as /local without auth), next to Casora's
+# other data folders (casora_sicherungen, casora_versionen). Served only by images.CasoraPhotoView.
+PHOTOS_DIR = "casora_fotos"
+PHOTO_URL_BASE = "/api/casora/photo"
 
 # The panel keeps the url it was given in 2.0.5; only its title changed.
 PANEL_URL = "casora-studio"

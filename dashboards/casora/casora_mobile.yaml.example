@@ -60,7 +60,7 @@ views:
     cards:
 
       # BACKGROUND — no configuration needed. Uses the same room photo the
-      # desktop dashboard loads from /config/www/casora/rooms/ (light + -night
+      # desktop dashboard loads from /config/casora_fotos/ (light + -night
       # variants), anchored to the top, with the gradient below it colored by
       # sampling the photo itself.
       - type: custom:button-card
