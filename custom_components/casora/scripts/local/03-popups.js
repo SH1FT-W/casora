@@ -2405,69 +2405,242 @@
   setInterval(sweep, 1000);
 })();
 
-// ── eBike-Kachel + Popup (Bosch Smart System / ha_bosch_ebike, 23.09.2026) ──
-// Template casora_ebike (['casora_entity','casora_popup_ebike']) ruft nur
-// window._casoraBike.tile()/level()/popup() auf. Daten nur aus der Integration
-// Bosch eBike (HACS: Xunil99/ha-bosch-ebike) für Räder mit Bosch Smart System:
-// Fahrten, Reichweite je Modus, Akku-Werte, Service. Eigene Bridge-Felder (Ladegerät,
-// Akku live/zuletzt) gibt es seit 1.0.3 nicht mehr.
+// ── E-bike tile + popup (Bosch Smart System / ha_bosch_ebike, 23.09.2026; rebuilt 24.10.2026) ──
+// Template casora_ebike (['casora_entity','casora_popup_ebike']) only calls
+// window._casoraBike.tile()/level()/popup(). Data comes from the integration Bosch eBike
+// (HACS: Xunil99/ha-bosch-ebike, 1.19.x): one device per bike with every entity on it.
+// Finding the bike: no longer one translation_key plus entity-id suffixes (forum report
+// 24.10.2026: in a German HA the ids read sensor.<rad>_tage_seit_letzter_fahrt, so the old prefix
+// logic found only the theft sensor) but the device – every device whose entities carry the
+// integration's keys (or its platform, or a theft sensor), then all entities of that device,
+// mapped by translation_key with the English entity-id suffix as fallback (battery, range, theft
+// and location entities have no key). Settings ebike: {prefix, prefix_garage, capacity} still
+// add a bike by entity-id prefix. Older ids (…_service_due_in_kilometres, …_total_ride_duration,
+// …_last_ride_avg_rider_power, …_last_ride_battery_consumption) stay as alternatives.
 (function () {
   if (window._casoraBike) return;
   var B = window._casoraBike = {};
-  // Präfixe der Bosch-eBike-Entitäten (Drive Unit / Garage), aus den Kennungen der
-  // Integration abgeleitet (translation_key, damit es in jeder HA-Sprache passt);
-  // ebike: {prefix, prefix_garage, capacity} in den Einstellungen überschreibt das.
-  var P = '', G = '', X = {};
-  var bikeIds = function (states) {
-    var cfg = (window.CASORA_SETTINGS || {}).ebike || {};
-    var ha = document.querySelector('home-assistant'), h = ha && ha.hass;
-    var key = function (k, d) { return h && window.casoraDevice ? window.casoraDevice.keyAny(h, k, d) : null; };
-    var bare = function (id, suffix) { return id ? id.replace(/^[a-z_]+\./, '').replace(new RegExp('_' + suffix + '$'), '') : ''; };
-    var ends = function (dom, suffix) { return Object.keys(states).filter(function (k) { return k.indexOf(dom + '.') === 0 && k.slice(-suffix.length - 1) === '_' + suffix; }).sort()[0] || null; };
-    P = cfg.prefix || bare(key('days_since_last_ride', 'sensor'), 'days_since_last_ride');
-    G = cfg.prefix_garage || bare(ends('binary_sensor', 'theft_reported'), 'theft_reported');
-    /* Garage-Werte mit übersetzter Kennung (z. B. „geschatzte_reichweite_aktuell“ in deutschem HA):
-       über den translation_key der Integration, sonst die englische Endung. */
-    var gk = function (k, suffix) { var hit = key(k, 'sensor'); return hit && (!G || hit.indexOf('sensor.' + G + '_') === 0) ? hit : 'sensor.' + G + '_' + suffix; };
-    /* Akku-Werte heißen nach dem Akkumodell (powertube_750_…, powertube_625_…). */
-    var pt = function (pre, suffix) { return Object.keys(states).filter(function (k) { return pre && k.indexOf('sensor.' + pre + '_powertube_') === 0 && k.slice(-suffix.length - 1) === '_' + suffix; }).sort()[0] || null; };
-    X = {
-      capacity: cfg.capacity || key('battery_capacity', 'number'),
-      anchor: key('days_since_last_ride', 'sensor'),
-      rangeNow: gk('estimated_range_current', 'estimated_range_current'),
-      rangeFull: gk('estimated_range_full', 'estimated_range_full'),
-      charged365: gk('energy_charged_365d', 'energy_charged_365d'),
-      cycles: pt(P, 'charge_cycles'), lifetime: pt(P, 'wh_lifetime'), soh: pt(G, 'state_of_health'),
-    };
-  };
+  var hassOf = function () { var ha = document.querySelector('home-assistant'); return (ha && ha.hass) || null; };
   var num = function (v) { var n = parseFloat(v); return isNaN(n) ? null : n; };
-  var ok = function (s) { return s && s.state !== 'unknown' && s.state !== 'unavailable' && s.state !== 'Unknown'; };
+  var ok = function (s) { return s && s.state !== 'unknown' && s.state !== 'unavailable' && s.state !== 'Unknown' && s.state !== ''; };
   var fmtN = function (n, d) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); };
-  var v = function (states, id) { var s = states[id]; return ok(s) ? num(s.state) : null; };
-  var t = function (states, id) { var s = states[id]; return ok(s) ? String(s.state) : null; };
-  var MODES = [['a100m00040', 'Eco'], ['a100maaaa0', 'Tour+'], ['a100m0auto', 'Auto'], ['a100mspic7', 'Turbo']];
+  var v = function (states, id) { var s = id && states[id]; return ok(s) ? num(s.state) : null; };
+  var t = function (states, id) { var s = id && states[id]; return ok(s) ? String(s.state) : null; };
+  var PLATFORMS = ['ha_bosch_ebike', 'bosch_ebike'];
+  // Keys only the Bosch eBike integration uses (cars share odometer/service_due_in_days, so not those).
+  var BIKE_KEYS = ['days_since_last_ride', 'total_distance_activities', 'last_ride_distance', 'active_assist_modes',
+    'maintenance_overview', 'estimated_range_full', 'motor_total_hours', 'energy_charged_365d', 'service_due_odometer',
+    'total_rides', 'walk_assist_speed', 'max_assist_speed', 'total_duration', 'last_ride_battery_wh'];
+  // Bosch assist-mode application codes (profile_extra.py of the integration); older installs still
+  // carry the code in the entity id (…_reachable_range_a100m00040) and in „Active Assist Modes“.
+  var CODES = { A100M00040: 'ECO', A100ECOP37: 'ECO+', A100M00030: 'TOUR', A100MAAAA0: 'TOUR+', A100M00020: 'SPORT', A100M00010: 'TURBO',
+    A100M0AUTO: 'AUTO', A100EAAAB0: 'eMTB', A100MSPIC7: 'eMTB+', A100MSPIC8: 'eMTB+', A100MAAAB0: 'eMTB', A100G0AUTO: 'AUTO',
+    A100GAAAA0: 'TURBO', A100GAAAD0: 'ECO', A100ECOP38: 'ECO+', A100GAAAC0: 'TOUR', A100GAAAF0: 'TOUR+', A100GAAAB0: 'eMTB',
+    A100E10040: 'ECO', A100E1AAA0: 'TOUR+', A100ESPNT0: 'SPRINT', A100E10010: 'TURBO', A100M3AUTO: 'AUTO', A100M30020: 'TURBO',
+    A100M3AAB0: 'eMTB', A100E34AA0: 'TOUR+', A100M40010: 'TURBO', A100M30040: 'ECO', A100M3AAA0: 'TOUR+', A100M40040: 'ECO',
+    A100M40020: 'SPORT', A100M30030: 'TOUR', A100E3AAB0: 'eMTB' };
+  // „ECO“ → „Eco“, „TOUR+“ → „Tour+“; mixed case (eMTB) stays.
+  var modeName = function (s) {
+    s = String(s || '').trim();
+    var c = CODES[s.toUpperCase()] || s;
+    return c === c.toUpperCase() && /[A-Z]/.test(c) ? c.charAt(0) + c.slice(1).toLowerCase() : c;
+  };
+  B.modeName = modeName;
 
-  B.read = function (states) {
-    bikeIds(states);
-    var theft = states['binary_sensor.' + G + '_theft_reported'];
-    var dueDays = v(states, 'sensor.' + P + '_service_due_in_days');
-    var dueKm = v(states, 'sensor.' + P + '_service_due_in_kilometres');
+  // Field → [domain, translation_keys, entity-id suffixes (English names, old and new)].
+  var SPEC = {
+    km: ['sensor', ['odometer'], ['odometer']],
+    daysSince: ['sensor', ['days_since_last_ride'], ['days_since_last_ride']],
+    dueDays: ['sensor', ['service_due_in_days'], ['service_due_in_days']],
+    dueKm: ['sensor', ['service_due_in_km'], ['service_due_in_km', 'service_due_in_kilometres', 'service_due_in_kilometers']],
+    dueDate: ['date', ['service_due_date'], ['service_due_date']],
+    dueDateSensor: ['sensor', ['next_service_date'], ['next_service_date']],
+    dueOdo: ['number', ['service_due_odometer'], ['service_due_odometer', 'service_due_km']],
+    dueOdoSensor: ['sensor', ['next_service_odometer'], ['next_service_odometer']],
+    rangeFull: ['sensor', ['estimated_range_full'], ['estimated_range_full', 'estimated_range_full_battery']],
+    rangeNow: ['sensor', ['estimated_range_current'], ['estimated_range_current']],
+    band: ['sensor', [], ['range_band']],
+    charged365: ['sensor', ['energy_charged_365d'], ['energy_charged_365d', 'energy_charged_365_days']],
+    chargedTotal: ['sensor', ['total_charged_energy'], ['total_charged_energy']],
+    capacity: ['number', ['battery_capacity'], ['battery_capacity']],
+    cycles: ['sensor', [], ['charge_cycles']],
+    lifetime: ['sensor', [], ['wh_lifetime']],
+    soh: ['sensor', [], ['state_of_health']],
+    lastDate: ['sensor', ['last_ride_date'], ['last_ride_date']],
+    lastTitle: ['sensor', ['last_ride_title'], ['last_ride_title']],
+    lastDist: ['sensor', ['last_ride_distance'], ['last_ride_distance']],
+    lastDur: ['sensor', ['last_ride_duration'], ['last_ride_duration']],
+    lastAvg: ['sensor', ['last_ride_avg_speed'], ['last_ride_avg_speed']],
+    lastMax: ['sensor', ['last_ride_max_speed'], ['last_ride_max_speed']],
+    lastUp: ['sensor', ['last_ride_elevation_gain'], ['last_ride_elevation_gain']],
+    lastPower: ['sensor', ['last_ride_avg_power'], ['last_ride_avg_power', 'last_ride_avg_rider_power']],
+    lastCad: ['sensor', ['last_ride_avg_cadence'], ['last_ride_avg_cadence']],
+    lastWh: ['sensor', ['last_ride_battery_wh'], ['last_ride_battery_wh', 'last_ride_battery_consumption']],
+    rides: ['sensor', ['total_rides'], ['total_rides']],
+    dist: ['sensor', ['total_distance_activities'], ['total_distance_activities']],
+    hours: ['sensor', ['total_duration'], ['total_duration', 'total_ride_duration']],
+    up: ['sensor', ['total_elevation_gain'], ['total_elevation_gain']],
+    speed: ['sensor', ['avg_speed_all_rides'], ['avg_speed_all_rides']],
+    kcal: ['sensor', ['total_calories'], ['total_calories']],
+    motorH: ['sensor', ['motor_total_hours'], ['motor_total_hours']],
+    assistH: ['sensor', ['motor_assist_hours'], ['motor_assist_hours']],
+    modesActive: ['sensor', ['active_assist_modes'], ['active_assist_modes']],
+    maint: ['sensor', ['maintenance_overview'], ['maintenance_overview', 'maintenance_items_due']],
+    theft: ['binary_sensor', [], ['theft_reported']],
+    swUpdate: ['binary_sensor', [], ['software_update_available']],
+    location: ['device_tracker', [], ['last_known_location']],
+  };
+
+  /* All bikes of the house: [{dev, name, ids, capacity}], sorted by device name; a bike from the
+     settings (prefix) comes first. */
+  var scan = function (hass, states) {
+    var R = (hass && hass.entities) || {}, D = (hass && hass.devices) || {};
+    var score = {};
+    Object.keys(R).forEach(function (eid) {
+      var e = R[eid]; if (!e || !states[eid]) return;
+      var s = 0;
+      if (PLATFORMS.indexOf(e.platform) >= 0) s += 2;
+      if (e.translation_key && BIKE_KEYS.indexOf(e.translation_key) >= 0) s += 1;
+      if (eid.indexOf('binary_sensor.') === 0 && /_theft_reported$/.test(eid)) s += 1;
+      if (s) { var d = e.device_id || '-'; score[d] = (score[d] || 0) + s; }
+    });
+    var ofDev = function (d) {
+      return Object.keys(R).filter(function (eid) { var e = R[eid]; return e && (e.device_id || '-') === d && !e.hidden; });
+    };
+    var bikes = Object.keys(score).filter(function (d) { return score[d] >= 2; }).map(function (d) {
+      var ids = d !== '-' && window.casoraDevice ? window.casoraDevice.entities(hass, d).map(function (x) { return x.entity_id; }) : ofDev(d);
+      return { dev: d, name: String((D[d] && (D[d].name_by_user || D[d].name)) || ''), ids: ids.filter(function (eid) { return !!states[eid]; }) };
+    }).sort(function (a, b) { return a.name < b.name ? -1 : a.name > b.name ? 1 : 0; });
+    // Entities of the integration without a device (older account-wide battery capacity) go to the first bike.
+    var loose = bikes.filter(function (b) { return b.dev === '-'; })[0];
+    if (loose && bikes.length > 1) { bikes = bikes.filter(function (b) { return b !== loose; }); bikes[0].ids = bikes[0].ids.concat(loose.ids); }
+    // Settings: ebike.prefix / prefix_garage (entity-id prefixes) and capacity.
+    var cfg = (window.CASORA_SETTINGS || {}).ebike || {};
+    var pre = [cfg.prefix, cfg.prefix_garage].filter(Boolean);
+    if (pre.length || cfg.capacity) {
+      var ids = Object.keys(states).filter(function (k) {
+        var o = k.split('.')[1] || '';
+        return k === cfg.capacity || pre.some(function (p) { return o.indexOf(p + '_') === 0; });
+      });
+      if (ids.length) {
+        var same = bikes.filter(function (b) { return b.ids.some(function (x) { return ids.indexOf(x) >= 0; }); })[0];
+        if (same) { ids.forEach(function (x) { if (same.ids.indexOf(x) < 0) same.ids.push(x); }); same.capacity = cfg.capacity || null; bikes = [same].concat(bikes.filter(function (b) { return b !== same; })); }
+        else bikes.unshift({ dev: 'cfg', name: cfg.prefix || '', ids: ids, capacity: cfg.capacity || null });
+      }
+    }
+    // Without a registry (or an integration that sets no keys): the old way, by entity-id endings.
+    if (!bikes.length) {
+      var pref = {};
+      Object.keys(states).forEach(function (k) {
+        var m = /^(?:binary_sensor|sensor)\.(.+)_(theft_reported|days_since_last_ride|odometer)$/.exec(k);
+        if (m) pref[m[1]] = (pref[m[1]] || 0) + (m[2] === 'odometer' ? 1 : 2);
+      });
+      Object.keys(pref).filter(function (p) { return pref[p] >= 2; }).sort().forEach(function (p) {
+        bikes.push({ dev: 'id:' + p, name: p, ids: Object.keys(states).filter(function (k) { return (k.split('.')[1] || '').indexOf(p + '_') === 0; }) });
+      });
+    }
+    return bikes;
+  };
+
+  /* Entity map of one bike: field → entity id (null when the bike has no such entity). */
+  var mapOf = function (bike, hass, states) {
+    var R = (hass && hass.entities) || {};
+    var rows = bike.ids.map(function (eid) {
+      var e = R[eid] || {}, o = eid.split('.');
+      return { id: eid, dom: o[0], obj: o[1] || '', key: e.translation_key || null };
+    });
+    var first = function (list) { return list.map(function (r) { return r.id; }).sort()[0] || null; };
+    var byKey = function (dom, keys) {
+      for (var i = 0; i < keys.length; i++) {
+        var hit = first(rows.filter(function (r) { return r.dom === dom && r.key === keys[i]; }));
+        if (hit) return hit;
+      }
+      return null;
+    };
+    var bySuf = function (dom, sufs) {
+      for (var i = 0; i < sufs.length; i++) {
+        var s = sufs[i];
+        var hit = first(rows.filter(function (r) { return r.dom === dom && (r.obj === s || r.obj.slice(-s.length - 1) === '_' + s); }));
+        if (hit) return hit;
+      }
+      return null;
+    };
+    var M = {};
+    Object.keys(SPEC).forEach(function (f) { var s = SPEC[f]; M[f] = byKey(s[0], s[1]) || bySuf(s[0], s[2]); });
+    if (bike.capacity && states[bike.capacity]) M.capacity = bike.capacity;
+    if (!M.dueDate) M.dueDate = M.dueDateSensor;
+    if (!M.dueOdo) M.dueOdo = M.dueOdoSensor;
+    /* Range per assist mode: „Reachable Range <mode>“ sensors (no key); the mode from the name, older ids carry the code. */
+    M.modes = rows.filter(function (r) { return r.dom === 'sensor' && /_reachable_range_[a-z0-9_+]+$/.test(r.obj); }).map(function (r) {
+      var fn = ((states[r.id] || {}).attributes || {}).friendly_name || '';
+      var m = /reachable range (.+)$/i.exec(fn);
+      var raw = m ? m[1] : r.obj.replace(/^.*_reachable_range_/, '');
+      return { id: r.id, label: modeName(raw) };
+    });
+    return M;
+  };
+
+  var cache = { reg: null, n: 0, t: 0, bikes: null, maps: {} };
+  /* All bikes of the house (cached while the registry and the number of states stay the same). */
+  B.bikes = function (states) {
+    var hass = hassOf(), R = hass && hass.entities, n = Object.keys(states || {}).length;
+    if (cache.bikes && cache.reg === R && cache.n === n && Date.now() - cache.t < 15000) return cache.bikes;
+    cache = { reg: R, n: n, t: Date.now(), bikes: scan(hass, states || {}), maps: {} };
+    return cache.bikes;
+  };
+  /* The bike of the tile (entity of the tile, else the first) with its entity map. */
+  B.find = function (states, entity) {
+    states = states || {};
+    var bikes = B.bikes(states), eid = entity && (entity.entity_id || (typeof entity === 'string' ? entity : null));
+    var bike = eid ? bikes.filter(function (b) { return b.ids.indexOf(eid) >= 0; })[0] : null;
+    var hass = hassOf();
+    if (!bike && eid) {
+      var e = hass && hass.entities && hass.entities[eid];
+      if (e && e.device_id) bike = bikes.filter(function (b) { return b.dev === e.device_id; })[0];
+    }
+    bike = bike || bikes[0] || null;
+    var M = bike ? (cache.maps[bike.dev] || (cache.maps[bike.dev] = mapOf(bike, hass, states))) : {};
+    return { bike: bike, M: M, anchor: bike ? (M.daysSince || M.km || M.dist || M.theft || bike.ids[0] || null) : null };
+  };
+  B.map = function (states, entity) { return B.find(states, entity).M; };
+  /* Device name of the bike (popup title), null without a bike. */
+  B.name = function (states, entity) { var F = B.find(states || {}, entity); return F.bike && F.bike.name ? F.bike.name : null; };
+
+  /* Date of a date entity (YYYY-MM-DD, local day) or a timestamp sensor; null otherwise. */
+  var toDate = function (s) {
+    if (!s) return null;
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    var d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(s);
+    return isNaN(d) ? null : d;
+  };
+  B.read = function (states, entity) {
+    states = states || {};
+    var F = B.find(states, entity), M = F.M;
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var km = v(states, M.km), dist = v(states, M.dist);
+    var dueDate = toDate(t(states, M.dueDate));
+    var dueDays = v(states, M.dueDays);
+    if (dueDays == null && dueDate) dueDays = Math.round((dueDate - today) / 86400000);
+    var dueKm = v(states, M.dueKm), dueOdo = v(states, M.dueOdo);
+    if (dueKm == null && dueOdo != null && km != null) dueKm = Math.round((dueOdo - km) * 10) / 10;
+    var theft = M.theft && states[M.theft];
     return {
-      theft: theft && theft.state === 'on',
-      km: v(states, 'sensor.' + P + '_odometer'),
+      found: !!F.bike, theft: !!(theft && theft.state === 'on'),
+      km: km, dist: dist,
       serviceDue: (dueDays != null && dueDays <= 0) || (dueKm != null && dueKm <= 0),
-      dueDays: dueDays, dueKm: dueKm, dueDate: t(states, 'date.' + P + '_service_due_date'),
-      daysSince: v(states, 'sensor.' + P + '_days_since_last_ride'),
-      rangeFull: v(states, X.rangeFull),
+      dueDays: dueDays, dueKm: dueKm, dueDate: dueDate,
+      daysSince: v(states, M.daysSince),
+      rangeFull: v(states, M.rangeFull),
+      maint: v(states, M.maint),
     };
   };
-  /* Entitäten des Rads (Drive Unit und Garage der Bosch-Integration) – für das Popup und den Rad-Check. */
-  B.ids = function (states) {
-    bikeIds(states);
-    return Object.keys(states).filter(function (k) { return (P && k.indexOf(P) > -1) || (G && k.indexOf(G) > -1) || k === X.capacity; });
+  /* Entities of the bike – for the popup (triggers_update) and the bike check (ki.py). */
+  B.ids = function (states, entity) {
+    var F = B.find(states, entity);
+    return F.bike ? F.bike.ids.slice() : [];
   };
-  /* Rad-Check (Casora-KI, ki.py): Ergebnis in sensor.casora_ebike_ki; ältere eigene Pakete schrieben
-     nach sensor.hemma_ebike_ki – das gilt als Rückfall, solange Casora noch nichts hat. */
+  /* Bike check (Casora AI, ki.py): result in sensor.casora_ebike_ki; older own packages wrote
+     sensor.hemma_ebike_ki – that counts as fallback while Casora has nothing yet. */
   var EB_KI = ['sensor.casora_ebike_ki', 'sensor.hemma_ebike_ki'];
   B.kiSensors = function (states) { return EB_KI.filter(function (k) { return !!states[k]; }); };
   B.ki = function (states) {
@@ -2481,87 +2654,102 @@
     return window._casoraAiReady ? window._casoraAiReady(states) : Object.keys(states).some(function (k) { return k.indexOf('ai_task.') === 0; });
   };
   B.hasAi = function (states) { return aiReady(states) || !!(B.ki(states) || {}).fazit; };
-  B.level = function (states) {
-    var r = B.read(states);
+  B.level = function (states, entity) {
+    var r = B.read(states, entity);
     return r.theft ? 2 : r.serviceDue ? 1 : 0;
   };
-  B.tile = function (states) {
-    var r = B.read(states);
+  B.tile = function (states, entity) {
+    var r = B.read(states, entity);
     if (r.theft) return 'Diebstahl gemeldet';
     if (r.serviceDue) return 'Service fällig';
     if (r.daysSince != null) return r.daysSince < 1 ? 'Heute gefahren' : r.daysSince < 2 ? 'Gestern gefahren' : 'Letzte Fahrt vor ' + fmtN(Math.round(r.daysSince)) + ' T.';
-    return r.km != null ? fmtN(r.km) + ' km' : 'Keine Daten';
+    var km = r.km != null ? r.km : r.dist;
+    return km != null ? fmtN(Math.round(km)) + ' km' : 'Keine Daten';
   };
 
-  B.sec = function (name, states) {
+  B.sec = function (name, states, entity) {
     var UI = window._casoraUI; if (!UI) return '';
-    var r = B.read(states);
+    states = states || {};
+    var r = B.read(states, entity), M = B.map(states, entity);
     var DIM = 'rgba(255,255,255,0.18)';
     var SF = !!(window._casoraHH && window._casoraHH.on());
-    /* Noch gar keine Werte: unter dem Kopf sagen, woher sie kommen (Einstellungen → Haus & Geräte). */
-    var noData = r.km == null && r.daysSince == null && !r.theft;
-    var where = noData && UI.note ? '<div style="height:6px"></div>' + UI.note('Für Räder mit Bosch Smart System: Die Werte kommen aus der Integration Bosch eBike (HACS: Xunil99/ha-bosch-ebike).') : '';
-    /* Weich (Entschlacken): Kilometerstand als Hauptwert, Unterzeile „Service fällig“ bzw. letzte Fahrt. */
+    /* No bike at all: under the head say where the values come from (Settings → House & devices). */
+    var where = !r.found && UI.note ? '<div style="height:6px"></div>' + UI.note('Für Räder mit Bosch Smart System: Die Werte kommen aus der Integration Bosch eBike (HACS: Xunil99/ha-bosch-ebike).') : '';
+    /* Head: odometer, else the total distance of the recorded rides. */
+    var kmV = r.km != null ? r.km : r.dist, kmLabel = r.km != null ? 'Kilometerstand' : 'Distanz gesamt';
+    var sub = r.theft ? 'Diebstahl gemeldet' : r.serviceDue ? 'Service fällig' : (r.daysSince != null ? 'Letzte Fahrt vor ' + fmtN(Math.round(r.daysSince)) + ' Tagen' : null);
+    /* Soft (declutter): odometer as main value, sub line „Service fällig“ or the last ride. */
     if (name === 'hero' && SF) {
-      var subS = r.theft ? 'Diebstahl gemeldet' : r.serviceDue ? 'Service fällig' : (r.daysSince != null ? 'Letzte Fahrt vor ' + fmtN(Math.round(r.daysSince)) + ' Tagen' : null);
-      return UI.hero({ value: r.km != null ? fmtN(Math.round(r.km)) + ' km' : '—',
-        sub: subS, subTone: r.theft ? 'bad' : r.serviceDue ? 'warn' : null, center: true }) + where;
+      return UI.hero({ value: kmV != null ? fmtN(Math.round(kmV)) + ' km' : '—',
+        sub: sub, subTone: r.theft ? 'bad' : r.serviceDue ? 'warn' : null, center: true }) + where;
     }
     if (name === 'hero') {
-      var sub = r.theft ? 'Diebstahl gemeldet' : r.serviceDue ? 'Service fällig' : (r.daysSince != null ? 'Letzte Fahrt vor ' + fmtN(Math.round(r.daysSince)) + ' Tagen' : null);
-      return UI.hero({ label: 'Kilometerstand', value: r.km != null ? fmtN(Math.round(r.km)) : '—', unit: r.km != null ? 'km' : null,
+      return UI.hero({ label: kmLabel, value: kmV != null ? fmtN(Math.round(kmV)) : '—', unit: kmV != null ? 'km' : null,
         sub: sub, subTone: r.theft ? 'bad' : r.serviceDue ? 'warn' : null, center: true }) + where;
     }
     if (name === 'range') {
-      var rows = MODES.map(function (m) {
-        var x = v(states, 'sensor.' + G + '_reachable_range_' + m[0]);
-        return x == null ? null : { icon: 'mdi:map-marker-distance', iconTone: 'accent', label: m[1], value: fmtN(x) + ' km' };
+      var rows = (M.modes || []).map(function (m) {
+        var x = v(states, m.id);
+        return x == null ? null : { icon: 'mdi:map-marker-distance', iconTone: 'accent', label: m.label, value: fmtN(x) + ' km' };
       }).filter(Boolean);
+      /* No per-mode sensors: the band „37–80 km“ (min_km/max_km attributes) stands in. */
+      if (!rows.length && M.band && ok(states[M.band])) {
+        var ba = states[M.band].attributes || {}, lo = num(ba.min_km), hi = num(ba.max_km);
+        rows.push({ icon: 'mdi:map-marker-distance', iconTone: 'accent', label: 'Reichweite',
+          value: lo != null && hi != null ? (lo === hi ? fmtN(lo) : fmtN(lo) + '–' + fmtN(hi)) + ' km' : String(states[M.band].state) });
+      }
+      /* Active assist modes (codes or names) as the last row. */
+      var am = t(states, M.modesActive);
+      if (am) rows.push({ icon: 'mdi:bike-fast', iconTone: DIM, label: 'Unterstützungsmodi', value: am.split(/\s*,\s*/).filter(Boolean).map(modeName).join(', ') });
       return rows.length ? UI.group(rows, 'Reichweite je Modus') : '';
     }
     if (name === 'last') {
-      var d = t(states, 'sensor.' + P + '_last_ride_date'); if (!d) return '';
+      var d = t(states, M.lastDate), ld = v(states, M.lastDist);
+      if (!d && ld == null) return '';
       var rows2 = [
-        { icon: 'mdi:bike', iconTone: 'accent', label: t(states, 'sensor.' + P + '_last_ride_title') || 'Fahrt', sub: d, value: fmtN(v(states, 'sensor.' + P + '_last_ride_distance') || 0, 1) + ' km' },
+        { icon: 'mdi:bike', iconTone: 'accent', label: t(states, M.lastTitle) || 'Fahrt', sub: d, value: ld != null ? fmtN(ld, 1) + ' km' : '' },
       ];
-      var dur = v(states, 'sensor.' + P + '_last_ride_duration'), avg = v(states, 'sensor.' + P + '_last_ride_avg_speed'), up = v(states, 'sensor.' + P + '_last_ride_elevation_gain');
+      var dur = v(states, M.lastDur), avg = v(states, M.lastAvg), up = v(states, M.lastUp), mx = v(states, M.lastMax);
       if (dur != null) rows2.push({ icon: 'mdi:timer-outline', iconTone: DIM, label: 'Fahrzeit', value: fmtN(Math.round(dur)) + ' Min.' });
-      if (avg != null) rows2.push({ icon: 'mdi:speedometer', iconTone: DIM, label: 'Ø Tempo', sub: 'max. ' + fmtN(v(states, 'sensor.' + P + '_last_ride_max_speed') || 0, 1) + ' km/h', value: fmtN(avg, 1) + ' km/h' });
+      if (avg != null) rows2.push({ icon: 'mdi:speedometer', iconTone: DIM, label: 'Ø Tempo', sub: mx != null ? 'max. ' + fmtN(mx, 1) + ' km/h' : null, value: fmtN(avg, 1) + ' km/h' });
       if (up != null) rows2.push({ icon: 'mdi:elevation-rise', iconTone: DIM, label: 'Höhenmeter', value: fmtN(up) + ' m' });
-      var pw = v(states, 'sensor.' + P + '_last_ride_avg_rider_power');
-      if (pw != null) rows2.push({ icon: 'mdi:arm-flex-outline', iconTone: DIM, label: 'Eigene Leistung', sub: 'Trittfrequenz ' + fmtN(v(states, 'sensor.' + P + '_last_ride_avg_cadence') || 0) + ' U/min', value: fmtN(pw) + ' W' });
-      var wh = v(states, 'sensor.' + P + '_last_ride_battery_consumption');
+      var pw = v(states, M.lastPower), cad = v(states, M.lastCad);
+      if (pw != null) rows2.push({ icon: 'mdi:arm-flex-outline', iconTone: DIM, label: 'Eigene Leistung', sub: cad != null ? 'Trittfrequenz ' + fmtN(cad) + ' U/min' : null, value: fmtN(pw) + ' W' });
+      var wh = v(states, M.lastWh);
       if (wh != null) rows2.push({ icon: 'mdi:battery-arrow-down-outline', iconTone: DIM, label: 'Akku verbraucht', value: fmtN(wh, 1) + ' Wh' });
       return UI.group(rows2, 'Letzte Fahrt');
     }
     if (name === 'total') {
       var rows3 = [];
-      var n = v(states, 'sensor.' + P + '_total_rides'), dist = v(states, 'sensor.' + P + '_total_distance_activities'), h = v(states, 'sensor.' + P + '_total_ride_duration');
+      var n = v(states, M.rides), dist = r.dist, h = v(states, M.hours);
       if (n != null) rows3.push({ icon: 'mdi:counter', iconTone: 'accent', label: 'Fahrten', sub: dist != null ? fmtN(Math.round(dist)) + ' km aufgezeichnet' : null, value: fmtN(n) });
+      else if (dist != null && r.km != null) rows3.push({ icon: 'mdi:map-marker-distance', iconTone: 'accent', label: 'Distanz gesamt', value: fmtN(Math.round(dist)) + ' km' });
       if (h != null) rows3.push({ icon: 'mdi:clock-outline', iconTone: DIM, label: 'Fahrzeit gesamt', value: fmtN(Math.round(h)) + ' Std.' });
-      var el = v(states, 'sensor.' + P + '_total_elevation_gain'); if (el != null) rows3.push({ icon: 'mdi:elevation-rise', iconTone: DIM, label: 'Höhenmeter gesamt', value: fmtN(el) + ' m' });
-      var sp = v(states, 'sensor.' + P + '_avg_speed_all_rides'); if (sp != null) rows3.push({ icon: 'mdi:speedometer', iconTone: DIM, label: 'Ø Tempo', value: fmtN(sp, 1) + ' km/h' });
-      var kc = v(states, 'sensor.' + P + '_total_calories'); if (kc != null) rows3.push({ icon: 'mdi:fire', iconTone: DIM, label: 'Kalorien', value: fmtN(kc) + ' kcal' });
+      var el = v(states, M.up); if (el != null) rows3.push({ icon: 'mdi:elevation-rise', iconTone: DIM, label: 'Höhenmeter gesamt', value: fmtN(el) + ' m' });
+      var sp = v(states, M.speed); if (sp != null) rows3.push({ icon: 'mdi:speedometer', iconTone: DIM, label: 'Ø Tempo', value: fmtN(sp, 1) + ' km/h' });
+      var kc = v(states, M.kcal); if (kc != null) rows3.push({ icon: 'mdi:fire', iconTone: DIM, label: 'Kalorien', value: fmtN(kc) + ' kcal' });
       return rows3.length ? UI.group(rows3, 'Gesamt') : '';
     }
     if (name === 'battery') {
       var rows4 = [];
-      /* Akku-Werte der Bosch-Integration: Reichweite, Ladezyklen, Gesundheit, Energie.
-         Weich: Reichweiten stehen unter „Reichweite je Modus“. */
-      var rNow = SF ? null : v(states, X.rangeNow);
+      /* Battery values of the integration: range, charge cycles, health, energy.
+         Soft: the ranges sit under „Reichweite je Modus“. */
+      var rNow = SF ? null : v(states, M.rangeNow);
       if (rNow != null) rows4.push({ icon: 'mdi:map-marker-distance', iconTone: 'accent', label: 'Reichweite jetzt', value: '≈ ' + fmtN(rNow) + ' km' });
-      var cap = X.capacity ? v(states, X.capacity) : null;
-      var cyc = v(states, X.cycles); if (cyc != null) rows4.push({ icon: 'mdi:battery-sync-outline', iconTone: 'accent', label: 'Ladezyklen', sub: cap ? 'PowerTube ' + fmtN(cap) + ' Wh' : null, value: fmtN(cyc, 1) });
-      var soh = v(states, X.soh); if (soh != null) rows4.push({ icon: 'mdi:battery-heart-variant', iconTone: soh < 80 ? 'warn' : 'good', label: 'Akku-Gesundheit', value: fmtN(soh) + ' %' });
-      var life = v(states, X.lifetime); if (life != null) rows4.push({ icon: 'mdi:lightning-bolt', iconTone: DIM, label: 'Energie gesamt', value: fmtN(life / 1000, 1) + ' kWh' });
-      var y = v(states, X.charged365); if (y != null) rows4.push({ icon: 'mdi:ev-station', iconTone: DIM, label: 'Geladen (12 Monate)', value: fmtN(y / 1000, 2) + ' kWh' });
+      var cap = v(states, M.capacity);
+      var cyc = v(states, M.cycles); if (cyc != null) rows4.push({ icon: 'mdi:battery-sync-outline', iconTone: 'accent', label: 'Ladezyklen', sub: cap ? 'PowerTube ' + fmtN(cap) + ' Wh' : null, value: fmtN(cyc, 1) });
+      else if (cap) rows4.push({ icon: 'mdi:battery-high', iconTone: 'accent', label: 'Akkukapazität', value: fmtN(cap) + ' Wh' });
+      var soh = v(states, M.soh); if (soh != null) rows4.push({ icon: 'mdi:battery-heart-variant', iconTone: soh < 80 ? 'warn' : 'good', label: 'Akku-Gesundheit', value: fmtN(soh) + ' %' });
+      var life = v(states, M.lifetime); if (life != null) rows4.push({ icon: 'mdi:lightning-bolt', iconTone: DIM, label: 'Energie gesamt', value: fmtN(life / 1000, 1) + ' kWh' });
+      var y = v(states, M.charged365); if (y != null) rows4.push({ icon: 'mdi:ev-station', iconTone: DIM, label: 'Geladen (12 Monate)', value: fmtN(y / 1000, 2) + ' kWh' });
+      else { var yt = v(states, M.chargedTotal); if (yt != null) rows4.push({ icon: 'mdi:ev-station', iconTone: DIM, label: 'Geladen gesamt', value: fmtN(yt, 2) + ' kWh' }); }
       if (SF) return rows4.length ? UI.group(rows4, 'Akku') : '';
       if (r.rangeFull != null) rows4.push({ icon: 'mdi:map-marker-distance', iconTone: DIM, label: 'Reichweite voller Akku', value: '≈ ' + fmtN(r.rangeFull) + ' km' });
       return rows4.length ? UI.group(rows4, 'Akku') : '';
     }
     if (name === 'ai' || name === 'ai_tips') {
       if (name === 'ai_tips' && !SF) return '';
-      /* Rad-Check (KI, nur per Knopf, Dienst casora.ebike_check) */
+      /* Bike check (AI, only by button, service casora.ebike_check) */
       var ready = aiReady(states);
       var a = B.ki(states) || {}, T = UI.tokens;
       if (!ready && !a.fazit) return '';
@@ -2570,7 +2758,7 @@
       var Z = { gut: ['Alles im grünen Bereich', 'var(--casora-popup-ui-good, #30D158)', 'mdi:check-circle'], beobachten: ['Beobachten', 'var(--casora-popup-ui-warn, #FF9F0A)', 'mdi:eye-outline'], handeln: ['Handeln', 'var(--casora-popup-ui-bad, #FF453A)', 'mdi:alert'] };
       var li = function (arr, col) { return '<ul style="margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + col + ';white-space:normal;">' + arr.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'; };
       var running = a.status === 'running', has = !!a.fazit, z = Z[a.zustand], body;
-      /* Weich (Entschlacken): sichtbar nur das Fazit, Punkte und Tipps unter „Mehr“ (ai_tips). */
+      /* Soft (declutter): only the verdict is visible, points and tips under „Mehr“ (ai_tips). */
       if (SF && name === 'ai_tips') {
         if (running || !has || !((a.punkte || []).length || (a.tipps || []).length)) return '';
         return '<div style="font-family:' + T.font + ';text-align:left;">' + window._casoraHH.label('Rad-Check im Detail')
@@ -2587,9 +2775,9 @@
         + ((a.tipps || []).length ? '<div style="font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + T.ink + ';margin:12px 0 0;">Tipps</div>' + li(a.tipps, T.ink) : '');
       else body = '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink2 + ';white-space:normal;">Claude prüft Service, Verschleißteile nach Kilometern und die Akku-Pflege passend zur Jahreszeit.</div>';
       var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = Math.max(0, Math.round((Date.now() - q) / 60000)); return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
-      var svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_ebike_check', { entities: B.ids(states) }))) + '"';
+      var svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_ebike_check', { entities: B.ids(states, entity) }))) + '"';
       var btn = running || !ready ? '' : '<span' + svc + ' style="display:inline-flex;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;margin-top:11px;'
-      // Trefferfläche 44 px: unsichtbarer Rand (3 px, Fläche nur im Innern), Lage unverändert.
+      // 44 px hit area: invisible border (3 px, fill only inside), position unchanged.
       + 'border:3px solid transparent;background-clip:padding-box;margin-bottom:-3px;'
         + (has ? 'color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));background:var(--casora-popup-ui-action-tint, rgba(0,195,208,0.14));' : 'color:#000;background:var(--casora-color-teal, #00C3D0);') + '">' + (has ? 'Neu prüfen' : 'Jetzt prüfen') + '</span>';
       return '<div style="font-family:' + T.font + ';text-align:left;">'
@@ -2602,42 +2790,53 @@
     }
     if (name === 'service') {
       var rows5 = [];
-      var dd = r.dueDate ? new Date(r.dueDate) : null;
-      rows5.push({ icon: 'mdi:wrench-clock', iconTone: r.serviceDue ? 'warn' : 'accent', label: 'Nächster Service',
-        sub: r.dueDays != null ? (r.dueDays <= 0 ? 'seit ' + fmtN(Math.round(-r.dueDays)) + ' Tagen fällig' : 'in ' + fmtN(Math.round(r.dueDays)) + ' Tagen') : null,
-        value: dd && !isNaN(dd) ? dd.toLocaleDateString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—', valueTone: r.serviceDue ? 'warn' : null });
-      if (r.dueKm != null) rows5.push({ icon: 'mdi:road-variant', iconTone: DIM, label: 'Service nach Strecke', value: 'in ' + fmtN(Math.round(r.dueKm)) + ' km' });
-      var mh = SF ? null : v(states, 'sensor.' + P + '_motor_total_hours'); if (mh != null) rows5.push({ icon: 'mdi:engine-outline', iconTone: DIM, label: 'Motorstunden', sub: 'davon ' + fmtN(v(states, 'sensor.' + P + '_motor_assist_hours') || 0) + ' Std. mit Unterstützung', value: fmtN(mh) + ' Std.' });
-      var th = states['binary_sensor.' + G + '_theft_reported'];
-      if (th) rows5.push({ icon: th.state === 'on' ? 'mdi:shield-alert' : 'mdi:shield-check', iconTone: th.state === 'on' ? 'bad' : 'good', label: 'Diebstahl', value: th.state === 'on' ? 'Gemeldet' : 'Nicht gemeldet', valueTone: th.state === 'on' ? 'bad' : null });
-      return UI.group(rows5, 'Service & Sicherheit');
+      var daysTxt = r.dueDays != null ? (r.dueDays <= 0 ? 'seit ' + fmtN(Math.round(-r.dueDays)) + ' Tagen fällig' : 'in ' + fmtN(Math.round(r.dueDays)) + ' Tagen') : null;
+      /* Next service: date (sub: days), without a date the days themselves; nothing known → no row. */
+      if (r.dueDate || daysTxt) {
+        rows5.push({ icon: 'mdi:wrench-clock', iconTone: r.serviceDue ? 'warn' : 'accent', label: 'Nächster Service',
+          sub: r.dueDate ? daysTxt : null,
+          value: r.dueDate ? r.dueDate.toLocaleDateString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { day: '2-digit', month: '2-digit', year: 'numeric' }) : (r.dueDays <= 0 ? 'Fällig' : daysTxt),
+          valueTone: r.serviceDue ? 'warn' : null });
+      }
+      if (r.dueKm != null) rows5.push({ icon: 'mdi:road-variant', iconTone: r.dueKm <= 0 ? 'warn' : DIM, label: 'Service nach Strecke', value: r.dueKm <= 0 ? 'Fällig' : 'in ' + fmtN(Math.round(r.dueKm)) + ' km', valueTone: r.dueKm <= 0 ? 'warn' : null });
+      if (r.maint != null && r.maint > 0) rows5.push({ icon: 'mdi:tools', iconTone: 'warn', label: 'Wartung', value: fmtN(r.maint) + ' fällig', valueTone: 'warn' });
+      var mh = SF ? null : v(states, M.motorH), ah = v(states, M.assistH);
+      if (mh != null) rows5.push({ icon: 'mdi:engine-outline', iconTone: DIM, label: 'Motorstunden', sub: ah != null ? 'davon ' + fmtN(ah) + ' Std. mit Unterstützung' : null, value: fmtN(mh) + ' Std.' });
+      var su = M.swUpdate && states[M.swUpdate];
+      if (su && su.state === 'on') rows5.push({ icon: 'mdi:update', iconTone: 'accent', label: 'Software-Update', value: 'Verfügbar' });
+      var th = M.theft && states[M.theft];
+      if (th && ok(th)) rows5.push({ icon: th.state === 'on' ? 'mdi:shield-alert' : 'mdi:shield-check', iconTone: th.state === 'on' ? 'bad' : 'good', label: 'Diebstahl', value: th.state === 'on' ? 'Gemeldet' : 'Nicht gemeldet', valueTone: th.state === 'on' ? 'bad' : null });
+      var loc = M.location && states[M.location];
+      if (loc && ok(loc)) rows5.push({ icon: 'mdi:map-marker-outline', iconTone: DIM, label: 'Zuletzt gesehen', value: loc.state === 'home' ? 'Zuhause' : loc.state === 'not_home' ? 'Unterwegs' : String(loc.state) });
+      return rows5.length ? UI.group(rows5, 'Service & Sicherheit') : '';
     }
     if (name === 'motor') {
-      var mh2 = v(states, 'sensor.' + P + '_motor_total_hours'); if (mh2 == null) return '';
-      return UI.group([{ icon: 'mdi:engine-outline', iconTone: DIM, label: 'Motorstunden', sub: 'davon ' + fmtN(v(states, 'sensor.' + P + '_motor_assist_hours') || 0) + ' Std. mit Unterstützung', value: fmtN(mh2) + ' Std.' }], 'Motor');
+      var mh2 = v(states, M.motorH), ah2 = v(states, M.assistH); if (mh2 == null) return '';
+      return UI.group([{ icon: 'mdi:engine-outline', iconTone: DIM, label: 'Motorstunden', sub: ah2 != null ? 'davon ' + fmtN(ah2) + ' Std. mit Unterstützung' : null, value: fmtN(mh2) + ' Std.' }], 'Motor');
     }
     return '';
   };
 
   B.popup = function (entity, variables, states) {
     var UI = window._casoraUI;
-    bikeIds(states);
-    /* Ohne feste Entität: Anker aus der erkannten Drive Unit (sonst leeres Popup). */
-    var anchor = (entity && entity.entity_id) || (X.anchor && states[X.anchor] ? X.anchor : null)
-      || (P && states['sensor.' + P + '_days_since_last_ride'] ? 'sensor.' + P + '_days_since_last_ride' : null)
-      || (G && states['binary_sensor.' + G + '_theft_reported'] ? 'binary_sensor.' + G + '_theft_reported' : null);
+    states = states || {};
+    var F = B.find(states, entity);
+    /* Anchor: the tile's entity when it belongs to the bike, else the bike's own anchor; without
+       any bike some entity, so the popup still opens and the head says where the values come from. */
+    var own = entity && entity.entity_id && F.bike && F.bike.ids.indexOf(entity.entity_id) >= 0 ? entity.entity_id : null;
+    var anchor = own || F.anchor || (entity && entity.entity_id && states[entity.entity_id] ? entity.entity_id : null) || Object.keys(states)[0] || null;
     if (!UI || !anchor) return { type: 'vertical-stack', cards: [] };
     entity = { entity_id: anchor };
-    var watch = B.ids(states).concat(B.kiSensors(states));
-    var sec = function (n) { return '[[[ return window._casoraBike ? window._casoraBike.sec(' + JSON.stringify(n) + ', states) : ""; ]]]'; };
-    /* Weich (Entschlacken 01.10.2026): Kopf mit Akkustand, links Reichweite je Modus, rechts Service
-       und Fazit des Rad-Checks; Letzte Fahrt, Gesamt, Akku-Details, Rad-Check-Tipps und Motorstunden unter „Mehr“. */
+    var watch = B.ids(states, entity).concat(B.kiSensors(states));
+    var sec = function (n) { return '[[[ return window._casoraBike ? window._casoraBike.sec(' + JSON.stringify(n) + ', states, entity) : ""; ]]]'; };
+    /* Soft (declutter 01.10.2026): head with the battery, left range per mode, right service and the
+       verdict of the bike check; last ride, totals, battery details, check tips and motor hours under „Mehr“. */
     var HH = window._casoraHH;
     if (HH && HH.on() && HH.layout) {
       var fb = { hero: sec('hero'), range: sec('range'), service: sec('service') };
       if (B.hasAi(states)) fb.ai = sec('ai');
       fb.more = HH.moreCard(watch, 'const B = window._casoraBike, H = window._casoraHH;\n'
-        + 'return B && H ? H.more("ebike", ["last", "total", "battery", "ai_tips", "motor"].map(function (n) { return B.sec(n, states); })) : "";', entity.entity_id);
+        + 'return B && H ? H.more("ebike", ["last", "total", "battery", "ai_tips", "motor"].map(function (n) { return B.sec(n, states, entity); })) : "";', entity.entity_id);
       return HH.layout({ entity: entity.entity_id, watch: watch, fields: fb, left: ['range'], right: ['service', 'ai', 'more'] });
     }
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
