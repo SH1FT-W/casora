@@ -90,6 +90,7 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
         merge(fixture, live.extra(now), "Live-Testgeräte")
         # Lamps behind a Hue-like bridge and a Zigbee coordinator, a two-channel dimmer, see hubs.py.
         merge(fixture, hubs.extra(now), "Hub-Lampen Garage/Garten")
+        hubs.join_house_group(fixture)
     vacuum_map(fixture)
     # Only on request: HACS-like update entity for Casora (hacs_casora.py).
     if hacs:
