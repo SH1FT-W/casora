@@ -11,7 +11,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Universal tile (#52, forum wish):** a tile with title, icon and any device. In the Studio you assemble its popup from values (up to 8 devices), a 24 h history, the device's own controls and your own cards. A tile of your own finally opens something on tap.
 - **Own badges (#53, forum wish):** per room and on Home as many badges as you like, each from a device's state or from a Home Assistant template, with icon, color and tap action. New option “Wrap badges onto more lines” instead of scrolling sideways, on desktop, tablet and phone.
 - **Visible in the popup (#54):** for popups that collect their rows themselves (room climate, batteries) the Studio lists every row with a switch, so you can hide what does not belong there.
-- **Four new languages:** Casora now also speaks French, Italian, Dutch and Polish (dashboard, Studio, notifications, integration texts). Casora follows the language of your Home Assistant profile; live activities on the phone stay in English for these four for now.
+- **Five new languages:** Casora now also speaks French, Italian, Dutch, Polish and Portuguese (dashboard, Studio, notifications, integration texts). Casora follows the language of your Home Assistant profile; live activities on the phone stay in English for these five for now.
 - **Weather warning from DWD (#55):** the Weather warning tile accepts the "current warning level" sensor of the Deutscher Wetterdienst Weather Warnings integration, next to NINA, Meteoalarm and Warnwetter. Tile, popup and the bell read the warnings from its attributes; the Studio suggests the sensor automatically.
 
 ### Fixed

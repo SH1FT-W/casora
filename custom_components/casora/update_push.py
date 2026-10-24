@@ -36,10 +36,11 @@ TEXT = {
     "de": ("Casora {v} ist da", "Neue Version verfügbar"),
     "en": ("Casora {v} is here", "New version available"),
     "es": ("Ya está aquí Casora {v}", "Nueva versión disponible"),
-    "pl": ("Casora {v} już jest", "Dostępna nowa wersja"),
-    "nl": ("Casora {v} is er", "Nieuwe versie beschikbaar"),
-    "it": ("Casora {v} è arrivato", "Nuova versione disponibile"),
     "fr": ("Casora {v} est là", "Nouvelle version disponible"),
+    "it": ("Casora {v} è arrivato", "Nuova versione disponibile"),
+    "nl": ("Casora {v} is er", "Nieuwe versie beschikbaar"),
+    "pl": ("Casora {v} już jest", "Dostępna nowa wersja"),
+    "pt": ("Já chegou o Casora {v}", "Nova versão disponível"),
 }
 
 

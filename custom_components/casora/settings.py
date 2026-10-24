@@ -41,7 +41,7 @@ SECTIONS = ("waste", "calendars", "notify", "scenes", "contacts", "media", "nigh
 def ai_text_language(hass: HomeAssistant) -> str:
     """Language the AI writes user-facing notes in (named inside a German prompt)."""
     code = str(hass.config.language or "")[:2]
-    return {"de": "Deutsch", "es": "Spanisch (español)", "fr": "Französisch (français)", "it": "Italienisch (italiano)", "nl": "Niederländisch (Nederlands)", "pl": "Polnisch (polski)"}.get(code, "English")
+    return {"de": "Deutsch", "es": "Spanisch (español)", "fr": "Französisch (français)", "it": "Italienisch (italiano)", "nl": "Niederländisch (Nederlands)", "pl": "Polnisch (polski)", "pt": "Portugiesisch (português)"}.get(code, "English")
 
 
 def _store(hass: HomeAssistant) -> Store:
@@ -494,7 +494,7 @@ def adapt_card_result(card: dict, res: Any, lang: str) -> tuple[dict, list[str]]
     notes = [str(c).strip() for c in (changes or []) if str(c).strip()][:8]
     lost = sorted(_entity_ids(card) - _entity_ids(out))
     if lost:
-        head = {"Deutsch": "Nicht mehr enthalten", "Spanisch (español)": "Ya no incluido", "Französisch (français)": "N'est plus inclus", "Italienisch (italiano)": "Non più incluso"}.get(lang, "No longer included")
+        head = {"Deutsch": "Nicht mehr enthalten", "Spanisch (español)": "Ya no incluido", "Französisch (français)": "N'est plus inclus", "Italienisch (italiano)": "Non più incluso", "Portugiesisch (português)": "Já não incluído"}.get(lang, "No longer included")
         notes.insert(0, f"⚠ {head}: {', '.join(lost[:6])}")
     return out, notes
 

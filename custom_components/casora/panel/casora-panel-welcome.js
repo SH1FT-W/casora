@@ -139,6 +139,26 @@
       n3t: "Widoczne w oknie",
       n3: "Wiersze, które Casora zbiera sama, ukrywasz w Studio. Światło Domu liczy teraz wszystkie światła także bez grupy świateł.",
     },
+    pt: {
+      welcomeTitle: "Bem-vindo ao Casora",
+      whatsNewTitle: "Novidades do Casora {version}",
+      continue: "Continuar",
+      all: "Todas as alterações",
+      w1t: "Divisão a divisão",
+      w1: "Desenha o teu painel com os dispositivos que já tens no Home Assistant.",
+      w2t: "Assistente de dispositivos",
+      w2: "O Casora propõe os cartões certos para cada divisão e adiciona-os por ti.",
+      w3t: "Computador, tablet e telemóvel",
+      w3: "Um painel que se adapta a cada ecrã, com layout próprio para o telemóvel.",
+      n0t: "Cartão de diagrama",
+      n0: "Qualquer sensor numérico como cartão com histórico e como diagrama de 24 horas, 7 dias, 30 dias ou um ano, em linhas ou barras, com estatísticas.",
+      n1t: "Cartão universal",
+      n1: "Título, ícone, qualquer dispositivo e uma janela que compões no Studio com valores, histórico e controlos.",
+      n2t: "Emblemas próprios",
+      n2: "Tantos emblemas quantos quiseres a partir de dispositivos ou modelos e, se quiseres, passam para várias linhas em vez de deslizar.",
+      n3t: "Visível na janela",
+      n3: "As linhas que o Casora reúne sozinho podem ser ocultadas no Studio. As luzes de Casa contam agora todas as luzes, mesmo sem grupo.",
+    },
   };
   // Texts for a language: its own, English for anything it does not have (yet).
   const texts = (lang) => Object.assign({}, TEXT.en, TEXT[String(lang || "").split(/[-_]/)[0]] || {});
