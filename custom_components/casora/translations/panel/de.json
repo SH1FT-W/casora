@@ -2528,7 +2528,16 @@
     "Found automatically in the same room.": "Automatisch gefunden im selben Raum.",
     "Found automatically.": "Automatisch gefunden.",
     "Found automatically: the plug named after this device ({source}).": "Automatisch gefunden: die Steckdose mit dem Namen dieses Geräts ({source}).",
-    "Found automatically: the plug named after this device.": "Automatisch gefunden: die Steckdose mit dem Namen dieses Geräts."
+    "Found automatically: the plug named after this device.": "Automatisch gefunden: die Steckdose mit dem Namen dieses Geräts.",
+    "Flexible tile": "Freie Kachel",
+    "Optional – any entity": "Optional – jede Entität",
+    "Values": "Werte",
+    "add entity.": "Entität hinzufügen.",
+    "Up to 8 entities as rows in the popup, each with name and state. Tapping a row opens its details.": "Bis zu 8 Entitäten als Zeilen im Popup, je mit Name und Zustand. Antippen einer Zeile öffnet ihre Details.",
+    "History (24 h)": "Verlauf (24 Std.)",
+    "A chart of the last 24 hours – of this tile's entity, or of the one chosen below. Only numeric values have a history.": "Ein Diagramm der letzten 24 Stunden – vom Gerät dieser Kachel oder von dem unten gewählten. Nur Zahlenwerte haben einen Verlauf.",
+    "History of": "Verlauf von",
+    "The entity's own controls in the popup: on/off, brightness, cover buttons, lock, media keys, target temperature.": "Die eigene Bedienung der Entität im Popup: An/Aus, Helligkeit, Jalousie-Knöpfe, Schloss, Medien-Tasten, Zieltemperatur."
   },
   "patterns": [
     [

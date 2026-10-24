@@ -2308,7 +2308,15 @@
   "Räder reinigen": "Clean wheels",
   "Wasserauslassfilter": "Water outlet filter",
   "Schmutzwassertank (Roboter)": "Dirty water tank (robot)",
-  "noch 1 Tag": "1 day left"
+  "noch 1 Tag": "1 day left",
+  "Freie Kachel": "Flexible tile",
+  "Keine Entität gewählt": "No entity chosen",
+  "Werte": "Values",
+  "Schalten": "Controls",
+  "Bedienung": "Controls",
+  "Im Studio kannst du Werte, Verlauf, Schalten und eigene Karten ergänzen.": "In the Studio you can add values, history, controls and own cards.",
+  "Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.": "Choose a device in the Studio or add values, history and own cards.",
+  "Kein Verlauf: {name} ist kein Zahlenwert.": "No history: {name} is not a number."
  },
  "patterns": [
   [

@@ -90,6 +90,7 @@ const MODULES = [
   '24-klingel',
   '25-kaffee',
   '26-haustier',
+  '28-free-tile',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());

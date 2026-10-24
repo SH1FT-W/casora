@@ -24778,7 +24778,8 @@ class CasoraPanel extends HTMLElement {
       } else if (type && type.ownData && !tile.entity
         && /^(|Not set|Unknown|Unavailable|—)$/.test(el.querySelector(".mstate").textContent.trim())) {
         // Das Dashboard sucht die Daten zur Laufzeit selbst: neutral statt „nicht festgelegt“.
-        el.querySelector(".mstate").textContent = "Automatic";
+        // emptyWord: a type whose entity is simply optional (flexible tile) says nothing instead.
+        el.querySelector(".mstate").textContent = typeof type.emptyWord === "string" ? type.emptyWord : "Automatic";
       }
       const ring = tileProgressOn(tile, ent);
       if (ring) {
