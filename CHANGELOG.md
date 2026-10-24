@@ -16,7 +16,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Room climate in the garden (#54):** a room climate tile in a room showed all indoor rooms. It now follows its room: only that room's values, outdoors only the outside air, and a room without climate sensors says so.
 - **Home lights without a light group:** without an “all lights” group in Home Assistant the Home lights badge counted at most 10 lights, the house popup had no room bar and the main switch asked nothing. The badge now follows the rooms and counts every light, the popup shows the rooms, and “Switch off all N lights?” asks first. Existing dashboards are updated when the Studio opens.
 - **Rooms with Cyrillic names (#51):** every such room got the same address, so only one of them could be opened. They now get their own address; saved dashboards are repaired when you open the Studio.
-- **Energy on Home (#44):** a newly switched-on empty energy badge now takes Home Assistant's energy settings too.
+- **Energy on Home (#44):** a newly switched-on empty energy badge now takes Home Assistant's energy settings too. If you entered devices under “Individual devices” in Home Assistant's Energy dashboard, the popup lists exactly those as consumers instead of the automatic top 5. The battery row shows the charge level (“Charging · 78 %”) when the battery has a percentage sensor.
 - **Doorbell, talking (#23):** if the talk connection stays silent for a few seconds, the card ends it and tries once more by itself.
 - **Studio phone preview:** a room tile with the same light as the Home lights tile pointed to the Home tile.
 - **Meal plan week bar:** in the week the clocks change, Monday showed as a second Sunday.
