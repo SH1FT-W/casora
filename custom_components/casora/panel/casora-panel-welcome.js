@@ -27,10 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Energie aus Home Assistant", n0: "Netz, Solar und Akku aus dem Energie-Dashboard von Home Assistant: Zuhause zeigt den echten Hausverbrauch und woher der Strom kommt.",
-      n1t: "Diagnose kopieren", n1: "Unter ⋯ → Hilfe sammelt Casora Versionen und Integrationen für eine Problemmeldung, ohne Namen von Geräten, Räumen oder Personen.",
-      n2t: "Geräte besser erkannt", n2: "Home Connect aus HACS, Miele-Geschirrspüler und mehr Saugroboter-Werte werden jetzt erkannt. Backöfen werden nicht mehr als Geschirrspüler vorgeschlagen.",
-      n3t: "Warum gewählt", n3: "Im Studio steht unter automatisch gewählten Werten jetzt der Grund, z. B. „aus dem Energie-Dashboard“.",
+      n0t: "Diagramm-Kachel", n0: "Jeder Zahlen-Sensor als Kachel mit Verlauf und als Diagramm für 24 Stunden, 7 oder 30 Tage mit Statistik.",
+      n1t: "Universal-Kachel", n1: "Titel, Symbol, ein beliebiges Gerät und ein Popup, das du im Studio aus Werten, Verlauf und Bedienung zusammenstellst.",
+      n2t: "Eigene Badges", n2: "Beliebig viele Badges aus Geräten oder Vorlagen, und auf Wunsch brechen die Badges um statt zu scrollen.",
+      n3t: "Im Popup sichtbar", n3: "Zeilen, die Casora selbst sammelt, blendest du im Studio aus. Das Haus-Licht zählt jetzt auch ohne Lichtgruppe alle Lichter.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Energy from Home Assistant", n0: "Grid, solar and battery from Home Assistant's Energy dashboard: Home shows the real house consumption and where the power comes from.",
-      n1t: "Copy diagnostics", n1: "Under ⋯ → Help, Casora collects versions and integrations for a problem report, without names of devices, rooms or people.",
-      n2t: "Better device detection", n2: "Home Connect from HACS, Miele dishwashers and more vacuum values are detected now. Ovens are no longer suggested as dishwashers.",
-      n3t: "Why it was picked", n3: "In the Studio, values Casora picked itself now show the reason, e.g. “from the Energy dashboard”.",
+      n0t: "Chart tile", n0: "Any numeric sensor as a tile with history and as a chart for 24 hours, 7 or 30 days with statistics.",
+      n1t: "Universal tile", n1: "Title, icon, any device and a popup you assemble in the Studio from values, history and controls.",
+      n2t: "Own badges", n2: "As many badges as you like from devices or templates, and badges can wrap onto more lines instead of scrolling.",
+      n3t: "Visible in the popup", n3: "Rows Casora collects itself can be hidden in the Studio. Home's lights now count every light, even without a light group.",
     },
     // Spanish: same keys as en (dev/unit/welcome_es.mjs); a missing key falls back to English.
     es: {
@@ -54,10 +54,10 @@
       w1t: "Habitación por habitación", w1: "Diseña tu panel con los dispositivos que ya tienes en Home Assistant.",
       w2t: "Asistente de dispositivos", w2: "Casora propone las tarjetas adecuadas para cada habitación y las añade por ti.",
       w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
-      n0t: "Energía desde Home Assistant", n0: "Red, solar y batería del panel de Energía de Home Assistant: Casa muestra el consumo real y de dónde viene la electricidad.",
-      n1t: "Copiar diagnóstico", n1: "En ⋯ → Ayuda, Casora reúne versiones e integraciones para un informe de error, sin nombres.",
-      n2t: "Dispositivos mejor reconocidos", n2: "Home Connect de HACS, lavavajillas Miele y los valores del robot aspirador se reconocen ahora; los hornos ya no se proponen como lavavajillas.",
-      n3t: "Por qué se eligió", n3: "En el Studio, los valores que Casora elige automáticamente muestran ahora el motivo, p. ej. “del panel de Energía de Home Assistant”.",
+      n0t: "Tarjeta de gráfico", n0: "Cualquier sensor numérico como tarjeta con historial y como gráfico de 24 horas, 7 o 30 días con estadísticas.",
+      n1t: "Tarjeta universal", n1: "Título, icono, cualquier dispositivo y una ventana que compones en el Studio con valores, historial y controles.",
+      n2t: "Insignias propias", n2: "Tantas insignias como quieras a partir de dispositivos o plantillas, y si lo deseas pasan a varias líneas en vez de desplazarse.",
+      n3t: "Visible en la ventana", n3: "Las filas que Casora reúne sola se pueden ocultar en el Studio. Las luces de Casa cuentan ahora todas las luces, incluso sin grupo.",
     },
   };
   // Texts for a language: its own, English for anything it does not have (yet).
@@ -72,10 +72,10 @@
 
   /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
-    ["mdi:home-lightning-bolt-outline", "n0t", "n0"],
-    ["mdi:clipboard-text-outline", "n1t", "n1"],
-    ["mdi:dishwasher", "n2t", "n2"],
-    ["mdi:help-circle-outline", "n3t", "n3"],
+    ["mdi:chart-line", "n0t", "n0"],
+    ["mdi:shape-plus-outline", "n1t", "n1"],
+    ["mdi:tag-multiple-outline", "n2t", "n2"],
+    ["mdi:eye-outline", "n3t", "n3"],
   ];
 
   // Decide on load - before the Studio writes its own casora.* keys.

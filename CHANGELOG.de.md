@@ -4,6 +4,23 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.59 – 24.10.2026
+
+### Neu
+- **Diagramm-Kachel (#50):** eine Community-Karte mit dem aktuellen Wert und einer 24-Stunden-Linie auf der Kachel; das Popup zeigt Casoras eigenes Diagramm für 24 Stunden, 7 Tage oder 30 Tage mit bis zu 4 Linien, Höchst- und Tiefstwert mit Uhrzeit und dem Durchschnitt aus der Statistik von Home Assistant. Geht mit jedem Zahlen-Sensor, z. B. CPU-Last, Temperatur, Leistung oder einem Zähler.
+- **Universal-Kachel (#52, Forum-Wunsch):** eine Kachel mit Titel, Symbol und einem beliebigen Gerät. Im Studio stellst du ihr Popup aus Werten (bis zu 8 Geräte), einem 24-Stunden-Verlauf, der Bedienung des Geräts und eigenen Karten zusammen. Eine eigene Kachel öffnet beim Antippen endlich etwas.
+- **Eigene Badges (#53, Forum-Wunsch):** je Raum und auf Zuhause beliebig viele Badges, jedes aus dem Zustand eines Geräts oder aus einer Vorlage von Home Assistant, mit Symbol, Farbe und Aktion beim Antippen. Neue Option „Badges umbrechen“ statt seitlich zu scrollen, auf Desktop, Tablet und Handy.
+- **Im Popup sichtbar (#54):** Bei Popups, die ihre Zeilen selbst sammeln (Raumklima, Batterien), listet das Studio jede Zeile mit einem Schalter. So blendest du aus, was dort nicht hingehört.
+
+### Behoben
+- **Raumklima im Garten (#54):** Eine Raumklima-Kachel in einem Raum zeigte alle Innenräume. Sie folgt jetzt ihrem Raum: nur dessen Werte, draußen nur die Außenluft, und ein Raum ohne Klimasensoren sagt das.
+- **Haus-Licht ohne Lichtgruppe:** Ohne eine „alle Lampen“-Gruppe in Home Assistant zählte das Beleuchtungs-Badge auf Zuhause höchstens 10 Lichter, das Haus-Popup hatte keine Raumleiste und der Hauptschalter fragte nicht. Das Badge folgt jetzt den Räumen und zählt jedes Licht, das Popup zeigt die Räume, und „Alle N Lichter ausschalten?“ fragt vorher. Bestehende Dashboards werden beim Öffnen des Studios umgestellt.
+- **Räume mit kyrillischen Namen (#51):** Alle solchen Räume bekamen dieselbe Adresse, nur einer ließ sich öffnen. Sie bekommen jetzt eine eigene Adresse; gespeicherte Dashboards repariert das Studio beim Öffnen.
+- **Energie auf Zuhause (#44):** Ein neu eingeschaltetes, leeres Energie-Badge übernimmt jetzt ebenfalls die Energie-Einstellungen von Home Assistant.
+- **Klingel, Sprechen (#23):** Bleibt die Sprechverbindung ein paar Sekunden still, beendet die Karte sie und versucht es einmal von selbst neu.
+- **Studio-Handyvorschau:** Eine Raum-Kachel mit derselben Lampe wie die Licht-Kachel auf Zuhause zeigte auf die Kachel von Zuhause.
+- **Speiseplan-Wochenleiste:** In der Woche der Zeitumstellung stand statt Montag ein zweiter Sonntag.
+
 ## 26.10.58 – 23.10.2026
 
 ### Neu

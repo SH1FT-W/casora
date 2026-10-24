@@ -4,6 +4,23 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.59 – 24.10.2026
+
+### New
+- **Chart card (#50):** a Community card with the current value and a 24 h line on the tile; the popup shows Casora's own chart for 24 hours, 7 days or 30 days with up to 4 lines, highest and lowest value with time and the average from Home Assistant's statistics. Works with any numeric sensor, e.g. CPU load, temperature, power or a meter.
+- **Universal tile (#52, forum wish):** a tile with title, icon and any device. In the Studio you assemble its popup from values (up to 8 devices), a 24 h history, the device's own controls and your own cards. A tile of your own finally opens something on tap.
+- **Own badges (#53, forum wish):** per room and on Home as many badges as you like, each from a device's state or from a Home Assistant template, with icon, color and tap action. New option “Wrap badges onto more lines” instead of scrolling sideways, on desktop, tablet and phone.
+- **Visible in the popup (#54):** for popups that collect their rows themselves (room climate, batteries) the Studio lists every row with a switch, so you can hide what does not belong there.
+
+### Fixed
+- **Room climate in the garden (#54):** a room climate tile in a room showed all indoor rooms. It now follows its room: only that room's values, outdoors only the outside air, and a room without climate sensors says so.
+- **Home lights without a light group:** without an “all lights” group in Home Assistant the Home lights badge counted at most 10 lights, the house popup had no room bar and the main switch asked nothing. The badge now follows the rooms and counts every light, the popup shows the rooms, and “Switch off all N lights?” asks first. Existing dashboards are updated when the Studio opens.
+- **Rooms with Cyrillic names (#51):** every such room got the same address, so only one of them could be opened. They now get their own address; saved dashboards are repaired when you open the Studio.
+- **Energy on Home (#44):** a newly switched-on empty energy badge now takes Home Assistant's energy settings too.
+- **Doorbell, talking (#23):** if the talk connection stays silent for a few seconds, the card ends it and tries once more by itself.
+- **Studio phone preview:** a room tile with the same light as the Home lights tile pointed to the Home tile.
+- **Meal plan week bar:** in the week the clocks change, Monday showed as a second Sunday.
+
 ## 26.10.58 – 23.10.2026
 
 ### New
