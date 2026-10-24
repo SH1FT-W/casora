@@ -22,6 +22,8 @@ const src = T.casora_trash.tap_action.casora_popup.content.trim().replace(/^\[\[
 const popup = new Function('states', 'entity', 'user', 'hass', 'variables', 'html', src);
 
 const day = (n) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + n); return d; };
+// A clock time on day n (setHours, not + n hours: the day the clocks change has 23 or 25 hours).
+const atHour = (n, h) => { const d = day(n); d.setHours(h); return d; };
 const ymd = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 const states = {
   'sensor.bio': { entity_id: 'sensor.bio', state: '2', attributes: { friendly_name: 'Bio', daysTo: 2, [ymd(day(2))]: 'Bio', [ymd(day(16))]: 'Bio' } },
@@ -74,7 +76,7 @@ assert.match(K.html('wday'), /Keine Abholung/);
 
 // Kalender-Popup: Ort nur aus Satzzeichen fällt weg.
 K.ev = [{ name: 'Elternabend', loc: ' , ', start: day(1), end: day(1), allDay: false, cal: 'calendar.x' }];
-K.ev[0].start = new Date(day(1).getTime() + 16 * 3600000); K.ev[0].end = new Date(day(1).getTime() + 17 * 3600000);
+K.ev[0].start = atHour(1, 16); K.ev[0].end = atHour(1, 17);
 const up = K.html('up', { calendars: [{ entity: 'calendar.x', name: 'Privat', color: '#0A84FF' }] });
 assert.match(up, /Privat · bis 17:00</);
 console.log('abfall_kalender: ok');

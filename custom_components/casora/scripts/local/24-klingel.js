@@ -802,9 +802,15 @@
   };
   KL.audioIn = function (pc) { return KL.audioStats(pc).then(function (a) { return a.inBytes; }); };
   // Is sound flowing? Growing bytes = yes; no growth for 2.5 s = no (back to the player's sound).
-  KL.flowStep = function (t, bytes, now) {
+  // #23 (vitidron 24.10.): data kept arriving although he heard nothing – silence packets. The talk connection takes
+  // over only once real sound came through it (level above KL.SOUND); pauses between words do not switch back.
+  // Without a level from the browser (null), growing bytes decide as before.
+  KL.SOUND = 0.003;
+  KL.flowStep = function (t, bytes, now, level) {
     if (bytes != null && bytes > (t.lastBytes || 0)) { t.lastBytes = bytes; t.lastFlow = now; }
-    return !!(t.lastFlow && now - t.lastFlow < 2500);
+    if (level != null && level > KL.SOUND) t.heard = true;
+    var flowing = !!(t.lastFlow && now - t.lastFlow < 2500);
+    return flowing && (level == null || !!t.heard);
   };
   // Kandidat aus HAs WebRTC-Antwort (go2rtc: nur Text bzw. ohne sdpMid) → RTCIceCandidateInit.
   KL.candidate = function (x) {
@@ -1300,7 +1306,7 @@
               if (self._t !== t) return;
               KL.audioStats(pc).then(function (a) {
                 if (self._t !== t) return;
-                var flowing = KL.flowStep(t, a.inBytes, Date.now());
+                var flowing = KL.flowStep(t, a.inBytes, Date.now(), a.inLevel);
                 if (flowing !== t.hearing) {
                   t.hearing = flowing;
                   try { console.info('casora klingel: Ton über die Sprechverbindung', flowing ? 'an' : 'aus', a.inBytes); } catch (e) { /* quiet */ }

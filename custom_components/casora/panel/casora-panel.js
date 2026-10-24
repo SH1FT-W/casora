@@ -3127,12 +3127,42 @@ function refreshTemplates(current, bundleTemplates, priorPrints) {
 }
 
 // Umlaute ausschreiben statt verlieren: „Küche“ → kueche, nicht k-che.
+// #51: Cyrillic room names (Russian, Ukrainian, Belarusian, Bulgarian, Serbian) to Latin letters. Without this every
+// such room got the path "room" and only the first one could be opened.
+const CYRILLIC = { а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo", ж: "zh", з: "z", и: "i", й: "y", к: "k",
+  л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "kh", ц: "ts", ч: "ch", ш: "sh",
+  щ: "shch", ъ: "", ы: "y", ь: "", э: "e", ю: "yu", я: "ya", і: "i", ї: "yi", є: "ye", ґ: "g", ў: "u", ђ: "dj",
+  ј: "j", љ: "lj", њ: "nj", ћ: "c", џ: "dz" };
 const translit = (s) =>
   String(s || "").toLowerCase().trim()
+    .replace(/[\u0400-\u04ff]/g, (c) => (c in CYRILLIC ? CYRILLIC[c] : c))
     .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 const slug = (s) => translit(s) || "room";
+// A path no other room uses yet: base, else base-2, base-3 … (two rooms with one path cannot both be opened).
+function uniquePath(rooms, base) {
+  const taken = new Set((rooms || []).map((r) => r && r.path));
+  if (!taken.has(base)) return base;
+  for (let n = 2; n < 100; n++) if (!taken.has(base + "-" + n)) return base + "-" + n;
+  return base + "-" + Date.now();
+}
+// #51: dashboards saved with one path for several rooms (Cyrillic names all became "room"): such rooms get a path of
+// their own from their name, like a new room – also the first one with the bare fallback "room", so path and name
+// match again (the phone layout and the Studio find a room by slug(name)). Returns the rooms changed.
+function fixDuplicatePaths(rooms) {
+  const seen = [], changed = [];
+  (rooms || []).forEach((r) => {
+    if (!r) return;
+    const fallback = r.path === "room" && slug(r.name) !== "room";
+    if (r.path && (fallback || seen.some((x) => x.path === r.path))) {
+      r.path = uniquePath(seen.concat((rooms || []).filter((x) => x && x !== r)), slug(r.name));
+      changed.push(r);
+    }
+    seen.push(r);
+  });
+  return changed;
+}
 
 // Im Erststart gewählter Performance-Modus („“ = aus, „auto“, „on“); neue Räume übernehmen ihn.
 let firstRunPerf = null;
@@ -13991,7 +14021,10 @@ class CasoraPanel extends HTMLElement {
 
       const imgs = await this._images().catch(() => []);
       const rooms = [blankRoom("Home", "home", roomPhoto("Home", "home", imgs))];
-      picked.forEach((name) => rooms.push(blankRoom(name, slug(name), roomPhoto(name, slug(name), imgs))));
+      picked.forEach((name) => {
+        const path = uniquePath(rooms, slug(name));
+        rooms.push(blankRoom(name, path, roomPhoto(name, slug(name), imgs)));
+      });
       // Standardraum: Kacheln und Badge-Geräte je Raum.
       if (filled) {
         const tiles = filled.tiles || filled, vars = filled.vars || {};
@@ -15375,6 +15408,11 @@ class CasoraPanel extends HTMLElement {
       this._clean = this._print();
       this._resetUndo(false);
       // After _clean on purpose: the fix shows as unsaved, one save corrects the dashboard (#44).
+      const dupPaths = this._saveBlocked ? [] : fixDuplicatePaths(this._state.compact.rooms);
+      if (dupPaths.length) {
+        this._log(`rooms: ${dupPaths.length} room(s) shared a path with another room, now their own`, "ok");
+        this._markDirty();
+      }
       if (this._state.surface !== "mobile" && !this._saveBlocked && prefsHomePower(this._hass, this._state.compact.rooms)) {
         this._log("energy: Home now follows Home Assistant's energy settings", "ok");
         this._markDirty();

@@ -55,7 +55,7 @@ window.casoraPriceKwh = function (v) {
       // Energy never set up: HA answers with the error code not_found. Anything else keeps what was there.
       // Energy integration not loaded at all (unknown_command): the same, instead of asking again every few minutes.
       if (e && (e.code === 'not_found' || e.code === 'unknown_command')) cache = {};
-    }).then(function () { at = Date.now(); busy = null; return cache; });
+    }).then(function () { at = Date.now(); busy = null; window.casoraEnergyPrefs.tried = true; return cache; });
     return busy;
   };
   window.casoraEnergyPrefs = function (hass) { load(hass); return cache; };
@@ -1550,7 +1550,16 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   // Home Connect Alt: the program sensors and the program select carry the appliance type as their icon
   // (const.py DEVICE_ICON_MAP); else the program keys (translation mode "local") or the option entities' ids
   // (…_laundrycare_washer_option_temperature, …_dishcare_dishwasher_option_extradry). A coffee maker or oven: none.
+  // The program entities' icon is gone while the appliance is unavailable: keep the last role seen for the device,
+  // or the Studio suggestion comes and goes (review 23.10.2026).
+  var ALT_ROLE = {};
   var altRole = function (hass, list) {
+    var dev = list[0] && (list[0].device_id || list[0].entity_id);
+    var r = altRoleNow(hass, list);
+    if (r && dev) ALT_ROLE[dev] = r;
+    return r || (dev && ALT_ROLE[dev]) || null;
+  };
+  var altRoleNow = function (hass, list) {
     var progs = list.filter(function (e) { return e.key === 'programs' || tailHit(e, ['active_program', 'selected_program', 'programs']); });
     var icon = progs.map(function (e) {
       var a = (sts(hass)[e.entity_id] || {}).attributes || {};

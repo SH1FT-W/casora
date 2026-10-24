@@ -140,7 +140,9 @@ def store(directory: str, stem: str, data: bytes, night: bool) -> list[str]:
 
 def clean_name(raw: str) -> str:
     """'Wohn Zimmer' / 'Küche' -> 'wohn-zimmer' / 'kueche' (same rule as the panel's slug)."""
-    s = (raw or "").strip().lower()
+    from .phone_badges import CYRILLIC  # noqa: PLC0415
+
+    s = "".join(CYRILLIC.get(c, c) for c in (raw or "").strip().lower())
     for a, b in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"), ("ß", "ss")):
         s = s.replace(a, b)
     import unicodedata  # noqa: PLC0415

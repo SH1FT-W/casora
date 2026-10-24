@@ -140,3 +140,12 @@ res, text = ensure("script: !include scripts.yaml\n", "casora_x:\n  sequence: []
 assert res == ([], ["script.casora_x"], True), res
 assert text.count("casora_x:") == 1, text
 print("ok no duplicate keys")
+
+
+# Review 23.10.2026: without any mention of scripts.yaml nothing is written (no append + restore on every start);
+# a key in quotes counts as present.
+res, text = ensure("default_config:\n", "# mine\n", False)
+assert res == ([], ["script.casora_x"], False) and text == "# mine\n", (res, text)
+res, text = ensure("script: !include scripts.yaml\n", "\"casora_x\":\n  sequence: []\n", False)
+assert text.count("casora_x") == 1, text
+print("ok no write without scripts.yaml in configuration.yaml, quoted keys")

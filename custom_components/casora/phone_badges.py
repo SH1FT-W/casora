@@ -50,9 +50,18 @@ def room_key_of(name: Any) -> str:
     return "room_" + re.sub(r"[^a-z0-9]+", "", _js_lower(name))
 
 
+# Cyrillic to Latin like the Studio's translit (#51).
+CYRILLIC = {"а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "yo", "ж": "zh", "з": "z", "и": "i",
+            "й": "y", "к": "k", "л": "l", "м": "m", "н": "n", "о": "o", "п": "p", "р": "r", "с": "s", "т": "t",
+            "у": "u", "ф": "f", "х": "kh", "ц": "ts", "ч": "ch", "ш": "sh", "щ": "shch", "ъ": "", "ы": "y",
+            "ь": "", "э": "e", "ю": "yu", "я": "ya", "і": "i", "ї": "yi", "є": "ye", "ґ": "g", "ў": "u",
+            "ђ": "dj", "ј": "j", "љ": "lj", "њ": "nj", "ћ": "c", "џ": "dz"}
+
+
 def slug(s: Any) -> str:
     """slug() im Studio (Pfad eines Raums aus seinem ersten Namen)."""
     v = _js_lower(s)
+    v = "".join(CYRILLIC.get(ch, ch) for ch in v)
     v = v.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
     v = "".join(ch for ch in unicodedata.normalize("NFD", v) if not unicodedata.combining(ch))
     v = re.sub(r"[^a-z0-9]+", "-", v).strip("-")

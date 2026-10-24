@@ -153,6 +153,16 @@ def _scripts_file_ok(config_dir: str) -> bool:
     return re.search(r"^script:[ \t]*!include[ \t]+['\"]?scripts\.yaml['\"]?[ \t]*(#.*)?$", text.lstrip("\ufeff"), re.M) is not None
 
 
+def _scripts_file_named(config_dir: str) -> bool:
+    """Does configuration.yaml name scripts.yaml at all (outside comments)? Without that the try is not worth a write."""
+    try:
+        with open(os.path.join(config_dir, "configuration.yaml"), encoding="utf-8") as f:
+            text = f.read()
+    except OSError:
+        return False
+    return any("scripts.yaml" in line.split("#", 1)[0] for line in text.splitlines())
+
+
 def _append_scripts(config_dir: str, scripts: dict) -> tuple[bool, str] | None:
     """Hängt Skripte an scripts.yaml an – ohne den Rest neu zu schreiben, damit
     Kommentare und !secret-Verweise des Nutzers erhalten bleiben.
@@ -167,7 +177,7 @@ def _append_scripts(config_dir: str, scripts: dict) -> tuple[bool, str] | None:
     except FileNotFoundError:
         raw, existed = "", False
     scripts = {k: v for k, v in scripts.items()
-               if not re.search(rf"^{re.escape(k)}:", raw, re.M)}
+               if not re.search(rf"^[\"']?{re.escape(k)}[\"']?[ \t]*:", raw, re.M)}
     if not scripts:
         return None
     old = raw
@@ -210,6 +220,9 @@ async def _ensure_scripts(hass: HomeAssistant, spec: dict) -> tuple[list[str], l
     ids = [f"script.{k}" for k in missing]
     cfg = hass.config.config_dir
     include_ok = await hass.async_add_executor_job(_scripts_file_ok, cfg)
+    # No mention of scripts.yaml in configuration.yaml: HA cannot load it – do not write and put back on every start.
+    if not include_ok and not await hass.async_add_executor_job(_scripts_file_named, cfg):
+        return [], ids, False
     try:
         before = await hass.async_add_executor_job(_append_scripts, cfg, missing)
     except OSError:

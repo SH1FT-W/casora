@@ -19,7 +19,8 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **“Start fresh”:** the filter for status LEDs no longer removes real LED strips.
 - **Studio preview:** a room with only a thermostat no longer gets a Climate badge.
 - **Coffee tile:** When adding it, only real coffee machines are suggested (also De'Longhi and Krups), no thermometers or plugs.
-- **Doorbell (#23):** more details for troubleshooting talking (in the browser console).
+- **Rooms with Cyrillic names (#51):** every such room got the same address, so only one of them could be opened. Room names in Cyrillic now get their own address; dashboards saved that way are repaired when you open the Studio (save once).
+- **Doorbell, talking (#23):** the card only switches to the talk connection's sound once real sound comes through it; silence no longer mutes the player. More details for troubleshooting in the browser console.
 - **Home Connect from HACS:** Washers, dryers and dishwashers of Home Connect Alt were never detected. Home Connect Alt and Home Connect Local are detected now.
 - **Dishwasher suggestions:** The Studio no longer suggests a Home Connect oven or coffee machine as a dishwasher, in any language.
 - **A vacuum's second map camera** is no longer suggested as a security camera.
