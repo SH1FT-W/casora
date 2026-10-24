@@ -161,9 +161,9 @@ assert.equal(F.sec('hero', { id: 'sensor.qa_fehlt', values: [], labels: {} }, st
 
 // Controls per domain.
 let ctl = sec('ctl', states['switch.qa_pumpe']);
-assert.equal(ctl, '<seg Schalten>Aus>homeassistant.turn_off;*An>homeassistant.turn_on</seg>');
+assert.equal(ctl, '<seg Bedienung>Aus>homeassistant.turn_off;*An>homeassistant.turn_on</seg>');
 ctl = sec('ctl', states['light.qa_stehlampe']);
-assert.ok(ctl.startsWith('<seg Schalten>Aus>homeassistant.turn_off;*An>homeassistant.turn_on</seg>'), ctl);
+assert.ok(ctl.startsWith('<seg Bedienung>Aus>homeassistant.turn_off;*An>homeassistant.turn_on</seg>'), ctl);
 assert.match(ctl, /<slider 50 turn_on\/brightness_pct>/, 'dimmable light: brightness slider');
 assert.match(ctl, /<seg Helligkeit · 50 %>25 %>light\.turn_on\{"brightness_pct":25\};\*50 %>/, 'hold menu pills as segments');
 ctl = sec('ctl', states['cover.qa_rollo']);
@@ -178,7 +178,7 @@ assert.equal(sec('ctl', states['sensor.qa_temp']), '', 'nothing to control');
 assert.equal(sec('ctl', states['sensor.qa_weg']), '');
 delete window._casoraHold;
 assert.equal(sec('ctl', states['cover.qa_rollo']), '', 'without the hold module no cover controls, no error');
-assert.equal(sec('ctl', states['switch.qa_pumpe']), '<seg Schalten>Aus>homeassistant.turn_off;*An>homeassistant.turn_on</seg>', 'toggle works on its own');
+assert.equal(sec('ctl', states['switch.qa_pumpe']), '<seg Bedienung>Aus>homeassistant.turn_off;*An>homeassistant.turn_on</seg>', 'toggle works on its own');
 
 // Value rows: own label, entity for the tap, state with unit, unavailable marked.
 const vals = sec('vals', states['switch.qa_pumpe'], { free_values: ['sensor.qa_temp', 'binary_sensor.qa_tuer', 'sensor.qa_weg'], free_value_labels: { 'sensor.qa_temp': ' Innen ' } });
