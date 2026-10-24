@@ -161,12 +161,14 @@
   // Several devices of one kind → one tile (like Casora's own group tiles).
   // wide: the overview (all rooms) – there the whole house's group may hold more, and the light tile is
   // marked as the house's (house: true): its popup is "Beleuchtung", not the room of its first light (#30).
+  // Without an HA group the house tile also carries light_rooms_auto: the dashboard counts and lists the
+  // rooms' lights live (window._casoraHouseLights), not the list of the setup (24.10.2026).
   function groupTile(kind, ids, name, room, hass, wide) {
     if (kind === "light") {
       const g = ids.length === 1 ? ids[0] : groupFor(hass, ids, "light", !wide);
       const house = wide && ids.length > 1 ? { house: true } : null;
       if (g) return tile("light", g, name, house);
-      return tile("light", ids[0], name, Object.assign({ lights: ids.slice(), active_entities: ids.slice() }, house));
+      return tile("light", ids[0], name, Object.assign({ lights: ids.slice(), active_entities: ids.slice() }, house, house ? { light_rooms_auto: true } : null));
     }
     if (kind === "cover") return tile("cover_group", groupFor(hass, ids, "cover", !wide) || ids[0], name, { room_name: room, covers: ids.slice() });
     if (kind === "lock") return tile("lock_group", ids[0], name, { room_name: room, locks: ids.slice() });
@@ -604,10 +606,12 @@
     });
     const h = {};
     const lightsAll = topUnits(hass, all.light);
-    // The badge counts the single lights; the HA group is for the popup.
+    // The badge counts the single lights; the HA group is for the popup. Without a group covering the house the
+    // badge follows the rooms (light_rooms_auto): the dashboard derives the list from the rooms' light badges
+    // (every light, also ones added later), the popup gets its room bar from them (24.10.2026).
     const g = lightsAll.length > 1 ? groupFor(hass, lightsAll, "light") : null;
-    if (g) h.light_group_entity = g;
-    put(h, "light_entity_", lightsAll, 10);
+    if (g) { h.light_group_entity = g; put(h, "light_entity_", lightsAll, 10); }
+    else if (lightsAll.length) h.light_rooms_auto = true;
     put(h, "climate_entity_", [...new Set((p.houseClimate || []).concat(all.climate))], 3);
     const firstRoom = (k) => (p.rooms.slice(1).find((r) => r[k]) || {})[k];
     const ht = p.houseTemp || firstRoom("temp"), hh = p.houseHum || firstRoom("hum");
@@ -638,7 +642,7 @@
 
   // Badge categories: [category, "already set", which keys are taken over].
   const BADGE_CATS = [
-    ["lights", /^(light_entity_\d+|light_group_entity)$/, /^(light_entity_\d+|light_group_entity)$/],
+    ["lights", /^(light_entity_\d+|light_group_entity|light_rooms_auto)$/, /^(light_entity_\d+|light_group_entity|light_rooms_auto)$/],
     ["climate", /^(climate_entity_\d+|temp_sensor_\d+)$/, /^(climate_entity_\d+|temp_sensor_1|humidity_sensor)$/],
     ["security", /^security_(locks|cameras|entity_\d+|lock_entity(_\d+)?)$/, /^security_(locks|cameras|entity_\d+)$/],
     ["energy", /^energy_(power_entity|entity_\d+|entities)$/, /^(energy_(power_entity|entities)|casora_energy_auto)$/],
@@ -727,7 +731,8 @@
   // badge, where "Start fresh" would have put it (badgesOf). Before, the badge kept the lights of the setup and a new
   // lamp never showed (19.10.2026). Only lists (light_entity_1…10) grow: a badge switched off (show_lights false), one
   // that follows an HA light group, a full list, or a light already counted (also inside a listed group) stays as it
-  // is; light groups themselves are not added. The overview's house badge grows only when it lists lights already.
+  // is; light groups themselves are not added. The overview's house badge grows only when it lists lights already
+  // (one that follows the rooms, light_rooms_auto, gets the lamp through its room).
   // Returns the rooms changed.
   const LIGHT_KEYS = Array.from({ length: 10 }, (_, i) => "light_entity_" + (i + 1));
   function addLight(hass, rooms, room, eid) {
@@ -740,7 +745,7 @@
       const V = r.variables = r.variables || {};
       if (V.show_lights === false) return;
       const listed = LIGHT_KEYS.map((k) => V[k]).filter(Boolean);
-      if (!listed.length && (V.light_group_entity || !create)) return;
+      if (!listed.length && (V.light_group_entity || V.light_rooms_auto === true || !create)) return;
       if (listed.some((id) => id === eid || deepMembers(hass, id).includes(eid))) return;
       const free = LIGHT_KEYS.find((k) => !V[k]);
       if (!free) return;
@@ -750,6 +755,45 @@
     if (room && room !== home) put(room, true);
     put(home, false);
     return out;
+  }
+
+  // The house's lights without an HA group covering them (Home badge marked light_rooms_auto, 24.10.2026), from
+  // the rooms' light badges: rooms = the Studio's rooms (Home left out) with their variables. Same rule as the
+  // dashboard's window._casoraHouseLightsOf (scripts/local/01-basis.js), dev/unit/haus_licht_ohne_gruppe.mjs
+  // compares both. { rooms: [{ name, rid, lights }], ids: every light once, subs: per room its group, else its lamps }.
+  function houseLights(hass, rooms) {
+    const S = (hass && hass.states) || {};
+    const out = { rooms: [], ids: [], subs: [] };
+    const mem = (id) => membersOf(hass || {}, id).filter((x) => S[x]);
+    (rooms || []).forEach((r) => {
+      const V = r && r.variables;
+      if (!V || V.show_lights === false) return;
+      const slots = LIGHT_KEYS.map((k) => V[k]).filter((x) => typeof x === "string" && x);
+      const grp = typeof V.light_group_entity === "string" && V.light_group_entity ? V.light_group_entity : null;
+      let rid = null, lights;
+      if (slots.length === 1 && mem(slots[0]).length) { rid = slots[0]; lights = mem(rid); }
+      else if (slots.length) lights = slots;
+      else if (grp) { rid = grp; lights = mem(grp); if (!lights.length && S[grp]) lights = [grp]; }
+      else return;
+      lights = lights.filter((x, k, a) => a.indexOf(x) === k && S[x]);
+      if (!lights.length) return;
+      out.rooms.push({ name: String(r.name || ""), rid, lights });
+      lights.forEach((x) => { if (!out.ids.includes(x)) out.ids.push(x); });
+      (rid ? [rid] : lights).forEach((x) => { if (!out.subs.includes(x)) out.subs.push(x); });
+    });
+    return out;
+  }
+  // The "why" line under Home's light group field while the badge follows the rooms: English text, {n} lights
+  // and {m} rooms filled in after the Studio translated it. null: the user chose, or nothing to count.
+  function homeLightsWhy(hass, rooms) {
+    const list = rooms || [];
+    const home = list.find((r) => I() && I().isHomeRoom && I().isHomeRoom(r, list)) || list[0];
+    const V = home && home.variables;
+    if (!V || V.show_lights === false || V.light_rooms_auto !== true) return null;
+    const hl = houseLights(hass, list.filter((r) => r !== home));
+    if (!hl.ids.length) return null;
+    return { text: "Follows the rooms: {n} lights in {m} rooms, also ones added later. A light group or lights chosen here replace that.",
+      n: hl.ids.length, m: hl.rooms.length };
   }
 
   // 06.10.2026: power sensors of a room as the automatic picks them, for the Studio (extend the
@@ -766,7 +810,7 @@
       any: (room.powersAny || []).slice() };
   }
 
-  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo, addLight };
+  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo, addLight, houseLights, homeLightsWhy, topUnits };
 
   // KI kostet: Casora schätzt vor dem ersten Einsatz grob, was es über den API-Schlüssel
   // kostet (Zeichen → Token, Listenpreise je Modellfamilie in USD pro 1 Mio. Token) und fragt nach.

@@ -13192,7 +13192,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var energy = typeof window._casoraEnergyOn === 'function' ? window._casoraEnergyOn(o)
       : (o.show_energy !== false && (!!o.energy_power_entity || list(o.energy_entities)));
     return (o.show_climate !== false && !!(o.climate_entity_1 || o.temp_sensor_1 || o.humidity_sensor || o.quality_sensor))
-      || (o.show_lights !== false && !!(o.light_entity_1 || o.light_group_entity))
+      || (o.show_lights !== false && !!(o.light_entity_1 || o.light_group_entity || o.light_rooms_auto === true))
       || (o.show_people !== false && !!o.presence_entity_1)
       || (o.show_security !== false && (window.casoraHasSec ? window.casoraHasSec(o) : !!(o.security_lock_entity || some('security_entity_', 8)
         || list(o.security_locks) || list(o.security_cameras))))
@@ -13296,6 +13296,14 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       var u = urlNow();
       ensure(u);
       return u && cache[u] ? cache[u].home || null : null;
+    },
+    // All desktop rooms as [{ name, vars }] (the house's lights on the phone, _casoraHouseLights) or null.
+    rooms: function () {
+      var u = urlNow();
+      ensure(u);
+      var r = u && cache[u] ? cache[u].rooms : null;
+      if (!r || typeof r !== 'object') return null;
+      return Object.keys(r).map(function (k) { return { name: (r[k] && r[k].name) || k, vars: (r[k] && r[k].vars) || {} }; });
     },
     refresh: function () { var u = urlNow(); if (u) load(u); },
     // Was der Server liefert (rooms aus casora/phone_room_badges), z. B. für Prüfungen ohne Speichern.

@@ -45,15 +45,21 @@ const panel = (rooms, ri) => {
   const rooms = fresh();
   const wg = rooms[2];
   assert.deepEqual(listed(wg.variables), ['light.palmenleuchte'], 'badge at setup: the Hue lamp');
-  const homeBefore = listed(rooms[0].variables);
-  assert.ok(homeBefore.length && !homeBefore.includes(NEW), 'house badge lists the lights of the setup');
+  // The test house (no fixture) has no HA group over all lights: the house badge follows the rooms (24.10.2026),
+  // no slots of its own – a lamp added to a room reaches it through the room (casoraBasis.houseLights).
+  const H = rooms[0].variables;
+  assert.equal(H.light_rooms_auto, true, 'house badge follows the rooms');
+  assert.deepEqual(listed(H), [], 'house badge has no slots of its own');
+  const houseIds = () => B.houseLights(full, rooms.slice(1)).ids;
+  assert.ok(houseIds().length && !houseIds().includes(NEW), 'house badge lists the lights of the setup');
   const p = panel(rooms, 2);
   const c = p._uxDevices().find((x) => x.entity === NEW);
   assert.ok(c && c.fresh && c.type === 'light', 'new lamp offered in the device list');
   await p._uxAddDevice(c);
   assert.ok(wg.tiles.some((t) => t.entity === NEW), 'tile added');
   assert.deepEqual(listed(wg.variables), ['light.palmenleuchte', NEW], 'new lamp on the room\'s Lights badge');
-  assert.ok(listed(rooms[0].variables).includes(NEW), 'and on the house badge of the overview');
+  assert.ok(houseIds().includes(NEW), 'and on the house badge of the overview (through the room)');
+  assert.deepEqual(listed(H), [], 'house badge still without slots');
   // Twice is once.
   await p._uxAddDevice(c);
   assert.equal(listed(wg.variables).filter((x) => x === NEW).length, 1, 'listed once');

@@ -19,6 +19,9 @@ Felder von `expect` (alle optional):
 - `house_power_why`: `{ "stage": "house" | "total" | "grid", "word", "in": "name" | "id" }` – warum die Haussuche
   ihn nimmt (Warum-Zeile im Studio, `casoraBasis.housePowerWhy`)
 - `house_list`: stattdessen Liste auf Zuhause (Summe), z. B. aus den Energie-Einstellungen
+- `house_lights`: `{ "group": Lichtgruppe übers Haus | null, "auto": true (Badge folgt den Räumen, `light_rooms_auto`),
+  "rooms": [Raumnamen der Hausliste], "ids": [Lichter der Hausliste], "room_groups": { Raum: Gruppe | null } }` – was
+  „Neu beginnen“ auf Zuhause einträgt und was `casoraBasis.houseLights` aus den Raum-Badges ableitet
 - `plants`: Entitäten, die Pflanzen sind; `not_plants`: die es nicht sind
 - `dishwasher`: `{ "entity": Betriebszustand, "fields": { remaining, program, sel, door, progress, stop } }`
 - `laundry`: Liste `{ "entity", "role": "washer" | "dryer" | "dishwasher", "source", "fields": { state, program, … },

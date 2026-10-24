@@ -3617,10 +3617,12 @@
     return '<div class="lps-lbl">' + esc(tr('Räume')) + '</div><div class="lps-grid">'
       + cfg.rooms.map(function (r, i) {
         var s = stat(r.lights, states);
+        // A room without its own HA group (house list from the rooms, light_rooms_auto): its lamps switch together.
+        var sc = r.rid && states[r.rid] ? { a: 'scope', id: r.rid } : { a: 'scope', ids: r.lights };
         return '<div class="lps-row' + (s.on ? ' on' : '') + '" data-lps-tap="' + attr({ a: 'room', gid: cfg.gid, idx: i }) + '">'
-          + '<div class="lps-ic" data-lps-tap="' + attr({ a: 'scope', id: r.rid }) + '">' + glyph('light') + '</div>'
+          + '<div class="lps-ic" data-lps-tap="' + attr(sc) + '">' + glyph('light') + '</div>'
           + '<div class="lps-tx"><b>' + esc(r.name) + '</b><small>' + esc(subline(s, false)) + '</small></div>'
-          + '<div class="lps-sw" role="switch" aria-checked="' + (s.on ? 'true' : 'false') + '" data-lps-tap="' + attr({ a: 'scope', id: r.rid }) + '"></div>'
+          + '<div class="lps-sw" role="switch" aria-checked="' + (s.on ? 'true' : 'false') + '" data-lps-tap="' + attr(sc) + '"></div>'
           + '</div>';
       }).join('') + '</div>';
   };
@@ -3781,7 +3783,12 @@
       if (row) row.classList.toggle('on');
       h.callService('light', 'toggle', {}, { entity_id: d.id });
     } else if (d.a === 'scope') {
-      if (h.states['script.casora_light_smart_toggle']) h.callService('script', 'casora_light_smart_toggle', { light_entity: d.id });
+      if (!d.id && Array.isArray(d.ids) && d.ids.length) {
+        // Room without a group: any lamp on → all off, else all on.
+        var onIds = d.ids.filter(function (x) { return h.states[x] && h.states[x].state === 'on'; });
+        if (onIds.length) h.callService('light', 'turn_off', {}, { entity_id: onIds });
+        else h.callService('light', 'turn_on', {}, { entity_id: d.ids });
+      } else if (h.states['script.casora_light_smart_toggle']) h.callService('script', 'casora_light_smart_toggle', { light_entity: d.id });
       else h.callService('light', 'toggle', {}, { entity_id: d.id });
     } else if (d.a === 'scene') {
       el.classList.add('on');

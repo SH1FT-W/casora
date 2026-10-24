@@ -342,6 +342,7 @@ Ansicht, `cards(page, vorlage)` liefert sichtbare Karten mit Lage und Text,
 | rf06_wer_sieht_das | arbeit | „Wer sieht das?“ (Kachel, Badge, Raum) und „Vor dem Schalten fragen“ wirken im Dashboard (Desktop + Handy-Raumseite) |
 | rb11_studio_mehr | arbeit | Studio: Suche (⌘K, Alltagswörter), Änderungsliste am Titel, Wiederholen, Raum ausblenden, Wer sieht das, QR, Zeitreise anheften, Mobil-Vorschau Wiedergabe (F-13) |
 | r307_start_fresh_lamps | frisch | Lampen hinter einer Bridge fehlten in der Einrichtung (1.0.3 bis 26.10.41). „Neu beginnen“ bis vor das Anlegen: jede Lampe mit Bereich (ohne Status-LED, Konfig-Entität, Bauraumlicht) auf einer Kachel und im Beleuchtungs-Badge ihres Raums, Hub-/Dimmer-Lampen in Garage und Garten (nichts gespeichert) |
+| r316_haus_licht_ohne_gruppe | arbeit | Haus ohne HA-Lichtgruppe (24.10.2026): Beleuchtungs-Badge der Übersicht zählte nur zehn Lichter, Haus-Popup ohne Raumleiste, Hauptschalter ohne Rückfrage, Kachel „Beleuchtung“ als flache Liste. Mit `light_rooms_auto` folgt das Badge den Raum-Badges (`_casoraHouseLights`), Popup mit Raumleiste und Rückfrage, Kachel öffnet dasselbe Popup; Studio stellt Casoras Zehnerliste beim Laden um (Badge/Kachel im Browser angelegt, nichts gespeichert) |
 | erststart | frisch | Erststart: Willkommen → Assistent (Hemma/YAML gefunden) bzw. Räume, sonst Studio; ⋯-Menü „Einrichtungsassistent …“ |
 
 Hinweise zu einzelnen Tests: Im Zustand **frisch** gibt es kein Casora-Dashboard; das Studio
