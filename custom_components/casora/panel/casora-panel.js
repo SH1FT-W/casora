@@ -2765,7 +2765,10 @@ function prefsHomePower(hass, rooms) {
   if (!B || !B.prefsHouse || !B.prefsHomeVars || !hass || !V || V.show_energy === false) return false;
   const m = V.casora_energy_auto;
   const arr = (v) => (Array.isArray(v) ? v.filter(Boolean) : []);
-  const ours = m === "house" || m === 2 || m === "prefs"
+  // A Home badge with nothing set (just switched on in the Studio, #44 stalakerob 24.10.) is Casora's to fill too.
+  const empty = m === undefined && !V.energy_power_entity && !arr(V.energy_entities).length
+    && !Object.keys(V).some((k) => ENERGY_VAR.test(k) && V[k]);
+  const ours = m === "house" || m === 2 || m === "prefs" || empty
     || (m === undefined && !!V.energy_power_entity && !arr(V.energy_entities).length && B.oldHouseTotal && B.oldHouseTotal(hass) === V.energy_power_entity);
   if (!ours || V.casora_energy_rooms) return false;
   const ph = B.prefsHouse(hass);

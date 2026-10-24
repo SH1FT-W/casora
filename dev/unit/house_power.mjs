@@ -468,6 +468,16 @@ const FULL_IDS = ['sensor.energy_grid_power', 'sensor.wechselrichter_ac_power', 
     assert.equal(fillHomeEnergy(h, r), 0, 'no rooms\' sum over the settings');
     assert.equal(fixHomePower(h, r), false, 'the old fix leaves it alone');
   }
+  // #44 stalakerob 24.10.: a Home badge just switched on (nothing set, no marker) gets the settings too;
+  // one that already has a cost/usage field of the user's does not.
+  {
+    const r = rooms({});
+    assert.equal(prefsHomePower(h, r), true, 'empty Home badge: filled from the settings');
+    assert.deepEqual(r[0].variables.energy_entities, FULL_IDS);
+    assert.equal(r[0].variables.casora_energy_auto, 'prefs');
+    const u = rooms({ energy_cost_today: 'sensor.kosten_heute' });
+    assert.equal(prefsHomePower(h, u), false, 'the user already set a field: untouched');
+  }
   // The user's choice stays: marker false, an unmarked sensor that is not the old pick, energy switched off.
   for (const V of [{ energy_power_entity: 'sensor.kuhlschrank_power', casora_energy_auto: false },
     { energy_entities: ['sensor.fernseher_power'], casora_energy_auto: false },
