@@ -157,6 +157,8 @@
     if (pw) ['grid', 'solar', 'battery'].forEach(function (r) { if (!P[r].power && pw[r].length === 1) P[r].power = pw[r][0]; });
     P.solar.power = P.solar.power || key(hass, 'anker_solix', 'input_power', 'sensor');
     P.battery.power = P.battery.power || key(hass, 'anker_solix', 'battery_power_signed', 'sensor');
+    // #44: the charge level from the battery power sensor's device (or id stem) when no sub-badge names one.
+    if (!P.battery.soc && P.battery.power && window.casoraEnergyBatterySoc) P.battery.soc = window.casoraEnergyBatterySoc(hass, P.battery.power);
     P.battery.soc = P.battery.soc || key(hass, 'anker_solix', 'state_of_charge', 'sensor');
     P.grid.power = P.grid.power || key(hass, 'anker_solix', 'grid_power_signed', 'sensor');
     P.grid.exportTotal = gridPref(prefs, 'stat_energy_to');
@@ -374,8 +376,12 @@
     var r = rows(UI, C, states, hass);
     Object.keys(r).forEach(function (k2) { if (r[k2]) f[k2] = r[k2]; });
 
-    // Consumers (house): the largest found automatically as in the big popup, without the system itself.
-    if (focus === 'home' && window._casoraAutoConsumers) {
+    // Consumers (house): HA's "individual devices" when there are any (#44), else the largest found automatically as
+    // in the big popup, without the system itself.
+    var HC = focus === 'home' && window.casoraEnergyConsumers ? window.casoraEnergyConsumers(hass) : null;
+    if (HC) {
+      f.top = { card: K.secCard([C.home].concat(window.casoraEnergyConsumers.ids(HC)), K.call('_casoraSoftEnergy', 'auto', { home: C.home, auto: { ha: true } }), states) };
+    } else if (focus === 'home' && window._casoraAutoConsumers) {
       var CA = { home: C.home, auto: { exclude: [C.home, C.solar, C.grid, C.batt, C.charge, C.discharge, C.output].concat(C.pv).filter(Boolean),
         area: null, max: 5 } };
       var cand = window._casoraAutoConsumers(hass, states, CA.auto);

@@ -572,4 +572,122 @@ const FULL_IDS = ['sensor.energy_grid_power', 'sensor.wechselrichter_ac_power', 
   current = null;
 }
 
+// 14. #44: with "individual devices" in HA's energy settings the popup lists exactly those (casoraEnergyConsumers), by
+//     power: stat_rate, else the power sensor on the consumption entity's device, else today's energy; the settings'
+//     name wins; wallbox and inverter power sensors (MPPT1, BDC rated) never appear. The battery row shows the charge
+//     level from a percent sensor sharing the power sensor's id stem. Without entries: the automatic top list as before.
+{
+  const { h, dev, ent } = solarHouse();
+  dev('d_wm', 'ku', 'Waschmaschine');
+  ent('sensor.waschmaschine_leistung', { dev: 'd_wm', name: 'Waschmaschine Leistung', state: '1.2' });
+  h.states['sensor.waschmaschine_leistung'].attributes.unit_of_measurement = 'kW';
+  const kwh = (eid, d, name, state, unit = 'kWh') => {
+    h.entities[eid] = { entity_id: eid, device_id: d, area_id: null, platform: d ? 'zha' : 'template' };
+    h.states[eid] = { entity_id: eid, state, attributes: { device_class: 'energy', unit_of_measurement: unit, friendly_name: name, state_class: 'total_increasing' } };
+  };
+  kwh('sensor.waschmaschine_energie', 'd_wm', 'Waschmaschine Energie', '812.4');
+  kwh('sensor.fernseher_energie', 'd_tv', 'Fernseher Energie', '120.0');
+  kwh('sensor.ofen_energie_heute', null, 'Ofen Energie heute', '1.8');
+  kwh('sensor.pumpe_energie', null, 'Pumpe Energie', '3200', 'Wh');
+  // Distractors: wallbox and inverter strings, large power sensors but not "individual devices".
+  dev('d_wb', 'ke', 'Wallbox');
+  ent('sensor.wallbox_bdc_rated_power', { dev: 'd_wb', name: 'BDC rated power', state: '8000' });
+  ent('sensor.wallbox_vehicle_auxiliary', { dev: 'd_wb', name: 'Vehicle Auxiliary', state: '400' });
+  ent('sensor.wechselrichter_mppt1_power', { name: 'MPPT1 Power', state: '1300' });
+  ent('sensor.wechselrichter_mppt2_power', { name: 'MPPT2 Power', state: '1100' });
+  // The battery's percent sensor, with the power sensor's id stem (no device); a state-of-health sensor is no SoC.
+  h.states['sensor.energy_battery_soh'] = { entity_id: 'sensor.energy_battery_soh', state: '97', attributes: { unit_of_measurement: '%', friendly_name: 'Battery health' } };
+  h.states['sensor.energy_battery_soc'] = { entity_id: 'sensor.energy_battery_soc', state: '78.4', attributes: { device_class: 'battery', unit_of_measurement: '%', friendly_name: 'Battery SoC' } };
+  const DEVICES = [
+    { stat_consumption: 'sensor.waschmaschine_energie' },                                  // power from the device
+    { stat_consumption: 'sensor.fernseher_energie', stat_rate: 'sensor.fernseher_power' }, // power named in HA
+    { stat_consumption: 'sensor.ofen_energie_heute', name: 'Backofen' },                   // today's kWh, own name
+    { stat_consumption: 'sensor.pumpe_energie' },                                           // meter in Wh only
+    { stat_consumption: 'sensor.pv_ertrag' },                                               // a source's meter: never
+  ];
+  await prefsLoad(h, { ...FULL, device_consumption: DEVICES });
+  current = h;
+  const L = window.casoraEnergyConsumers(h);
+  assert.deepEqual(L.map((x) => [x.id, x.power, x.name]), [
+    ['sensor.waschmaschine_energie', 'sensor.waschmaschine_leistung', 'Waschmaschine'],
+    ['sensor.fernseher_energie', 'sensor.fernseher_power', 'Fernseher'],
+    ['sensor.ofen_energie_heute', null, 'Backofen'],
+    ['sensor.pumpe_energie', null, 'Pumpe'],
+  ], 'consumers: exactly the settings\' devices, by power, without the sources');
+  assert.equal(L[0].w, 1200, 'kW → W');
+  assert.deepEqual([L[2].kwh, L[2].daily, L[3].kwh, L[3].daily], [1.8, true, 3.2, false], 'energy: today vs. a meter');
+  assert.deepEqual(window.casoraEnergyConsumers.ids(L), ['sensor.waschmaschine_leistung', 'sensor.fernseher_power', 'sensor.ofen_energie_heute', 'sensor.pumpe_energie']);
+  assert.equal(window.casoraEnergyBatterySoc(h, 'sensor.energy_battery_power'), 'sensor.energy_battery_soc', 'SoC by id stem, not the health sensor');
+  assert.equal(window.casoraEnergyBatterySoc(h, 'sensor.zaehler_wirkleistung'), null, 'the meter has no SoC');
+
+  // The popup: the "sources" card renders the settings' sources with the charge level, then the consumers.
+  const groups = [], labels = [];
+  window._casoraUI = { more: () => '', label: (t) => { labels.push(t); return '[' + t + ']'; }, group: (rows) => { groups.push(rows); return 'G'; },
+    hero: (o) => 'H:' + o.value + '|' + (o.sub || '') };
+  window.addEventListener = window.addEventListener || (() => {});
+  const E = window._casoraSoftEnergy;
+  const cardOf = (out, part) => {
+    const code = JSON.stringify(out).match(new RegExp('\\[\\[\\[\\\\n(return window\\._casoraSoftEnergy \\? window\\._casoraSoftEnergy\\.sec\\(\\\\"' + part + '\\\\".*?)\\\\n\\]\\]\\]'));
+    assert.ok(code, part + ' card found');
+    return JSON.parse('"' + code[1] + '"');
+  };
+  const out = E.build({ hass: h, states: h.states, variables: { power_entities: FULL_IDS }, powerId: null });
+  const srcCode = cardOf(out, 'sources');
+  assert.match(srcCode, /"auto":\{"ha":true\}/, 'the sources card lists HA\'s devices');
+  const watch = JSON.stringify(out);
+  assert.match(watch, /sensor\.energy_battery_soc/, 'the charge level sensor is watched');
+  assert.match(watch, /sensor\.waschmaschine_leistung/, 'the devices\' power sensors are watched');
+  // The consumers' HTML is built before the sources' label: find the groups by content.
+  const run = (code) => {
+    groups.length = 0; labels.length = 0;
+    new Function('states', 'hass', code)(h.states, h);
+    const s = groups.find((g) => g.some((r) => r.entity === 'sensor.energy_battery_power'));
+    return { s, c: groups.find((g) => g !== s) };
+  };
+  let R = run(srcCode);
+  assert.deepEqual(labels.sort(), ['Verbraucher', 'Woher kommt der Strom'], 'titles: no "Top 5"');
+  const batt = R.s.find((r) => r.entity === 'sensor.energy_battery_power');
+  assert.equal(batt.sub, 'Lädt · 78 %', 'battery row: charging with the charge level');
+  assert.deepEqual(R.c.map((r) => [r.label, r.value, r.sub]), [
+    ['Waschmaschine', '1,2 kW', '75 % des aktuellen Verbrauchs'],
+    ['Fernseher', '60 W', '4 % des aktuellen Verbrauchs'],
+    ['Backofen', '1,8 kWh', 'heute'],
+    ['Pumpe', '3,2 kWh', null],
+  ], 'consumer rows');
+  assert.ok(!JSON.stringify(R.c).match(/mppt|bdc|auxiliary/i), 'no wallbox or inverter sensors');
+  // Battery discharging, SoC alone when the battery rests.
+  h.states['sensor.energy_battery_power'].state = '300';
+  assert.equal(run(srcCode).s.find((r) => r.entity === 'sensor.energy_battery_power').sub, 'Entlädt · 78 %');
+  h.states['sensor.energy_battery_power'].state = '0';
+  assert.equal(run(srcCode).s.find((r) => r.entity === 'sensor.energy_battery_power').sub, '78 %');
+  // A device whose power sensor is unreachable says so and goes last.
+  h.states['sensor.fernseher_power'].state = 'unavailable';
+  R = run(srcCode);
+  const tv = R.c.find((r) => r.label === 'Fernseher');
+  assert.deepEqual([tv.value, tv.sub, R.c.indexOf(tv)], [null, 'Nicht erreichbar', 3], 'unreachable power sensor');
+  h.states['sensor.fernseher_power'].state = '60';
+  // A house sensor (no list) with the settings' devices: the same list in the "auto" card.
+  const out2 = E.build({ hass: h, states: h.states, variables: {}, powerId: 'sensor.hausverbrauch' });
+  run(cardOf(out2, 'auto'));
+  assert.deepEqual(labels, ['Verbraucher']);
+  assert.equal(groups[0][0].label, 'Waschmaschine');
+  // The sub-badge popup "Zuhause" (20-energie-fokus.js) uses the same list; peers() finds the battery's charge level.
+  new Function(src('custom_components/casora/scripts/local/20-energie-fokus.js'))();
+  const F = window._casoraEnergyFocus;
+  const P = F.peers(h, {});
+  assert.equal(P.battery.soc, 'sensor.energy_battery_soc', 'peers: SoC from the settings\' battery');
+  assert.equal(F.peers(h, { energy_entity_1: 'sensor.energy_battery_soh', energy_popup_focus_1: 'battery' }).battery.soc,
+    'sensor.energy_battery_soh', 'a sub-badge wins');
+  // Without "individual devices": the automatic top list, as before (the distractors show up there).
+  const ca = core.indexOf('// 07.10.2026: Größte Verbraucher');
+  new Function(core.slice(ca, core.indexOf('// ── Performance mode', ca)))();
+  await prefsLoad(h, FULL);
+  assert.equal(window.casoraEnergyConsumers(h), null, 'no entries: null');
+  const out3 = E.build({ hass: h, states: h.states, variables: { power_entities: FULL_IDS }, powerId: null });
+  R = run(cardOf(out3, 'sources'));
+  assert.ok(labels.indexOf('Top 5 Verbraucher') > -1, 'without entries: the automatic list');
+  assert.ok(R.c.some((r) => r.entity === 'sensor.wallbox_bdc_rated_power'), 'automatic list: as before');
+  current = null;
+}
+
 console.log('house_power: ok');
