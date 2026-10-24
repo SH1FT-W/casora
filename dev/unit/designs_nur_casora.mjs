@@ -12,9 +12,9 @@ assert.ok(from > 0 && to > from);
 const { CASORA_THEMES, THEME_RENAMED } = new Function(src.slice(from, to) + '\nreturn { CASORA_THEMES, THEME_RENAMED };')();
 
 assert.deepEqual(CASORA_THEMES.map((x) => x.name), ['Casora', 'Casora Nebel', 'Casora Glas'], 'Casora, Nebel und Glas zur Wahl');
-// Hinweis nach der Umstellung: casora-core.js liest die Benutzerdaten von helfer.py, ein Text je Hemma-Look
+// Hinweis nach der Umstellung: casora-core.js liest die Benutzerdaten von theme.py, ein Text je Hemma-Look
 const coreTxt = fs.readFileSync(new URL('scripts/casora-core.js', cc), 'utf8');
-assert.ok(/casora_theme_notice/.test(coreTxt) && /THEME_NOTICE_KEY = "casora_theme_notice"/.test(read('helfer.py')), 'Hinweis-Schlüssel in helfer.py und casora-core.js gleich');
+assert.ok(/casora_theme_notice/.test(coreTxt) && /THEME_NOTICE_KEY = "casora_theme_notice"/.test(read('theme.py')), 'Hinweis-Schlüssel in theme.py und casora-core.js gleich');
 for (const k of ["'Hemma 2':", "'Hemma 1':", "'Hemma':"]) assert.ok(coreTxt.includes(k), 'Hinweistext für ' + k);
 // Hemma 1/2 (auch Altnamen und Hemmas „Hemma“) waren Glas-Looks → Casora Glas; „Casora Weich“ → Casora
 for (const old of ['Hemma 2', 'Hemma 1', 'Casora Standard', 'Casora Glass', 'Hemma']) {
@@ -29,8 +29,17 @@ const imgs = fs.readdirSync(new URL('assets/themes/', cc));
 assert.ok(!imgs.some((f) => /^(hemma|glass|perf-glass)-/.test(f)), 'keine Hemma-Vorschaubilder mehr');
 assert.ok(!/perf-glass|"glass"|look-glass|Hemma 1 \(Legacy\)|Hemma 2 \(Legacy\)/.test(src + read('panel/casora-panel-addons.js')),
   'kein Glas-/Legacy-Zweig in der Design-Wahl');
-// Browser: ein altes Theme wechselt nur, wenn es das alte nicht mehr gibt (Hemmas „Hemma“ bleibt, solange es da ist)
-assert.ok(/hass\.themes\.themes\[to\] && !hass\.themes\.themes\[sel\.theme\]/.test(src), 'Browser-Umstellung prüft altes Theme');
+// Browser (scripts/casora-theme.js): alte Namen zeigen das heutige Design, Hemmas „Hemma“ nur, solange HA es nicht mehr hat;
+// die Zuordnung ist dieselbe wie in theme.py und im Studio.
+const ctTxt = read('scripts/casora-theme.js');
+const ctRen = new Function('return ' + ctTxt.slice(ctTxt.indexOf('var RENAMED = ') + 14, ctTxt.indexOf('};', ctTxt.indexOf('var RENAMED = ')) + 1))();
+assert.deepEqual(ctRen, THEME_RENAMED, 'casora-theme.js kennt dieselben alten Namen wie das Studio');
+assert.ok(/n === 'Hemma' && other/.test(ctTxt), 'Hemmas eigenes Theme bleibt, solange HA es hat');
+const pyRen = read('theme.py');
+for (const [o, n] of Object.entries(THEME_RENAMED)) {
+  if (o === 'Hemma') assert.ok(/THEME_RENAMED_IF_GONE = \{"Hemma": THEME_GLAS\}/.test(pyRen), 'theme.py: Hemma nur ohne Hemma');
+  else assert.ok(new RegExp('"' + o + '": (THEME_GLAS|"' + n + '")').test(pyRen), 'theme.py kennt ' + o);
+}
 // Integration meldet nur theme_*.yaml an, kein Glas-Theme mehr
 assert.ok(!fs.existsSync(new URL('theme_glass.yaml', cc)), 'theme_glass.yaml entfernt');
 assert.ok(/^Casora Basis:/m.test(read('theme.yaml')), 'theme.yaml = Grundwerte, kein Design');

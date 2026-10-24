@@ -245,6 +245,54 @@
           "description": "Obrazy i inne media."
         }
       }
+    },
+    "light_smart_toggle": {
+      "name": "Inteligentne przełączanie światła",
+      "description": "Przełącza światło lub grupę świateł. Przy wyłączaniu Casora zapamiętuje, które lampy były włączone, i włącza ponownie dokładnie te.",
+      "fields": {
+        "light_entity": {
+          "name": "Światło",
+          "description": "Światło lub grupa świateł"
+        }
+      }
+    },
+    "thermostat_overlay_toggle": {
+      "name": "Otwórz/zamknij regulację termostatu",
+      "description": "Otwiera regulację temperatury kafelka termostatu, zamyka ją po drugim dotknięciu lub przełącza na inny kafelek.",
+      "fields": {
+        "thermostat_entity_id": {
+          "name": "Kafelek",
+          "description": "Klucz dotkniętego kafelka termostatu"
+        }
+      }
+    },
+    "actions_overlay_toggle": {
+      "name": "Otwórz/zamknij akcje",
+      "description": "Otwiera akcje kafelka, zamyka je po drugim dotknięciu lub przełącza na inny kafelek.",
+      "fields": {
+        "actions_entity_id": {
+          "name": "Kafelek",
+          "description": "Klucz dotkniętego kafelka"
+        }
+      }
+    },
+    "restart_toggle": {
+      "name": "Restart z potwierdzeniem",
+      "description": "Pierwsze dotknięcie prosi o potwierdzenie, drugie restartuje urządzenie i pokazuje „Gotowe”; dotknięcie go ukrywa.",
+      "fields": {
+        "button_entity": {
+          "name": "Przycisk restartu",
+          "description": "Przycisk, który restartuje urządzenie"
+        },
+        "helper_entity": {
+          "name": "Pomocnik potwierdzenia",
+          "description": "Przełącznik pokazujący potwierdzenie"
+        },
+        "done_entity": {
+          "name": "Pomocnik „Gotowe”",
+          "description": "Przełącznik pokazujący „Gotowe”"
+        }
+      }
     }
   },
   "entity": {
@@ -304,6 +352,16 @@
     },
     "timer_invalid_minutes": {
       "message": "Nieprawidłowe minuty: {minutes}. Dozwolona jest liczba całkowita od 1 do {max}."
+    }
+  },
+  "issues": {
+    "leftover_scripts": {
+      "title": "Casora nie potrzebuje już tych skryptów",
+      "description": "Wcześniejsze wersje Casory dodały te skrypty do scripts.yaml: {scripts}. Karty Casory używają teraz własnych akcji integracji (np. casora.light_smart_toggle). Możesz usunąć skrypty (Ustawienia › Automatyzacje i sceny › Skrypty), jeśli Twoje automatyzacje lub karty ich nie używają."
+    },
+    "leftover_theme_file": {
+      "title": "Casora nie potrzebuje już swojego pliku motywów",
+      "description": "Wcześniejsza wersja Casory zapisała swoje motywy w {path}. Casora dostarcza teraz swoje motywy sama; plik nie jest już aktualizowany. Możesz go usunąć, a potem wybrać „Przeładuj motywy” w Narzędziach deweloperskich › YAML."
     }
   }
 }

@@ -17,7 +17,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)
 
-from custom_components.casora.helfer import _load_theme  # noqa: E402
+from custom_components.casora.theme import load_themes as _load_theme  # noqa: E402
 
 spec = importlib.util.spec_from_file_location("nebel", os.path.join(ROOT, "tools/build-nebel-theme.py"))
 gen = importlib.util.module_from_spec(spec)

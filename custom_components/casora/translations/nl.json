@@ -245,6 +245,54 @@
           "description": "Afbeeldingen en andere media."
         }
       }
+    },
+    "light_smart_toggle": {
+      "name": "Slim licht schakelen",
+      "description": "Schakelt een lamp of lampgroep. Bij uitschakelen onthoudt Casora welke lampen brandden en zet precies die weer aan.",
+      "fields": {
+        "light_entity": {
+          "name": "Licht",
+          "description": "Lamp of lampgroep"
+        }
+      }
+    },
+    "thermostat_overlay_toggle": {
+      "name": "Thermostaatregeling open/dicht",
+      "description": "Opent de temperatuurregeling van een thermostaattegel, sluit die bij een tweede tik of wisselt naar een andere tegel.",
+      "fields": {
+        "thermostat_entity_id": {
+          "name": "Tegel",
+          "description": "Sleutel van de aangetikte thermostaattegel"
+        }
+      }
+    },
+    "actions_overlay_toggle": {
+      "name": "Acties open/dicht",
+      "description": "Opent de acties van een tegel, sluit ze bij een tweede tik of wisselt naar een andere tegel.",
+      "fields": {
+        "actions_entity_id": {
+          "name": "Tegel",
+          "description": "Sleutel van de aangetikte tegel"
+        }
+      }
+    },
+    "restart_toggle": {
+      "name": "Herstart met bevestiging",
+      "description": "De eerste tik vraagt om bevestiging, de tweede herstart het apparaat en toont „Klaar”; een tik daarop verbergt het.",
+      "fields": {
+        "button_entity": {
+          "name": "Herstartknop",
+          "description": "Knop die het apparaat herstart"
+        },
+        "helper_entity": {
+          "name": "Bevestigingshelper",
+          "description": "Schakelaar die de bevestiging toont"
+        },
+        "done_entity": {
+          "name": "Klaar-helper",
+          "description": "Schakelaar die „Klaar” toont"
+        }
+      }
     }
   },
   "entity": {
@@ -304,6 +352,16 @@
     },
     "timer_invalid_minutes": {
       "message": "Ongeldige minuten: {minutes}. Gebruik een geheel getal van 1 tot {max}."
+    }
+  },
+  "issues": {
+    "leftover_scripts": {
+      "title": "Casora heeft deze scripts niet meer nodig",
+      "description": "Eerdere Casora-versies hebben deze scripts aan scripts.yaml toegevoegd: {scripts}. De kaarten van Casora gebruiken nu eigen acties van de integratie (bijv. casora.light_smart_toggle). Je kunt de scripts verwijderen (Instellingen › Automatiseringen en scènes › Scripts) als je eigen automatiseringen of kaarten ze niet gebruiken."
+    },
+    "leftover_theme_file": {
+      "title": "Casora heeft zijn themabestand niet meer nodig",
+      "description": "Een eerdere Casora-versie heeft zijn ontwerpen in {path} opgeslagen. Casora brengt zijn ontwerpen nu zelf mee; het bestand wordt niet meer bijgewerkt. Je kunt het verwijderen en daarna onder Ontwikkelhulpmiddelen › YAML „Thema's herladen” kiezen."
     }
   }
 }

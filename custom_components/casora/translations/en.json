@@ -245,6 +245,54 @@
           "description": "Images and other media."
         }
       }
+    },
+    "light_smart_toggle": {
+      "name": "Smart light toggle",
+      "description": "Toggles a light or light group. When turning off, Casora remembers which lamps were on and turns exactly those back on.",
+      "fields": {
+        "light_entity": {
+          "name": "Light",
+          "description": "Light or light group"
+        }
+      }
+    },
+    "thermostat_overlay_toggle": {
+      "name": "Toggle thermostat controls",
+      "description": "Opens the temperature controls of a thermostat tile, closes them on a second tap, or switches to another tile.",
+      "fields": {
+        "thermostat_entity_id": {
+          "name": "Tile",
+          "description": "Key of the tapped thermostat tile"
+        }
+      }
+    },
+    "actions_overlay_toggle": {
+      "name": "Toggle actions",
+      "description": "Opens the actions of a tile, closes them on a second tap, or switches to another tile.",
+      "fields": {
+        "actions_entity_id": {
+          "name": "Tile",
+          "description": "Key of the tapped tile"
+        }
+      }
+    },
+    "restart_toggle": {
+      "name": "Restart with confirmation",
+      "description": "First tap asks to confirm, second tap restarts the device and shows \"Done\", tapping that dismisses it.",
+      "fields": {
+        "button_entity": {
+          "name": "Restart button",
+          "description": "Button that restarts the device"
+        },
+        "helper_entity": {
+          "name": "Confirm helper",
+          "description": "Switch that shows the confirmation"
+        },
+        "done_entity": {
+          "name": "Done helper",
+          "description": "Switch that shows \"Done\""
+        }
+      }
     }
   },
   "entity": {
@@ -304,6 +352,16 @@
     },
     "timer_invalid_minutes": {
       "message": "Invalid minutes: {minutes}. Use a whole number from 1 to {max}."
+    }
+  },
+  "issues": {
+    "leftover_scripts": {
+      "title": "Casora no longer needs these scripts",
+      "description": "Earlier Casora versions added these scripts to scripts.yaml: {scripts}. Casora's cards now use the integration's own actions (e.g. casora.light_smart_toggle). You can delete the scripts (Settings › Automations & Scenes › Scripts) unless your own automations or cards use them."
+    },
+    "leftover_theme_file": {
+      "title": "Casora no longer needs its theme file",
+      "description": "An earlier Casora version stored its designs in {path}. Casora now brings its designs itself; the file is no longer updated. You can delete it and then choose \"Reload themes\" under Developer tools › YAML."
     }
   }
 }

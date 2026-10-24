@@ -2093,10 +2093,10 @@ window.casoraMenuGlass = {
   apply();
 })();
 
-// ── Hinweis nach Design-Umstellung (Hemma 1/2 → Casora Glas) ───────────────────
-// helfer.py setzt bei der Umstellung je betroffenem HA-Benutzer die Benutzerdaten
-// casora_theme_notice = { from: 'Hemma 2' | 'Hemma 1' | 'Hemma', to: 'Casora Glas' }. Einmal als
-// Meldung zeigen (bleibt, bis sie weggeklickt wird), dann löschen – auf allen Geräten nur einmal.
+// ── Notice after the design switch (Hemma 1/2 → Casora Glas) ──────────────────
+// theme.py sets the user data casora_theme_notice = { from: 'Hemma 2' | 'Hemma 1' | 'Hemma',
+// to: 'Casora Glas' } for every HA user when it takes the design over. Shown once as a message
+// (stays until dismissed), then deleted - only once across all devices.
 (function () {
   if (window._casoraThemeNotice) return;
   window._casoraThemeNotice = true;
@@ -2533,7 +2533,6 @@ window.casoraMenuGlass = {
         + '>' + esc(text) + '</span></div>';
     }
 
-    var TOGGLE_SCRIPT = 'script.casora_actions_overlay_toggle';
 
     function moreMarkup(variables, eid) {
       if (!any(variables)) return '';
@@ -2634,9 +2633,8 @@ window.casoraMenuGlass = {
               var key = el.getAttribute('data-more-key');
               if (key) {
                 var H = (card && card._hass) || hass;
-                if (H) H.callService('script', 'turn_on', {
-                  entity_id: TOGGLE_SCRIPT, variables: { actions_entity_id: key },
-                });
+                // Open/close the inline actions (service of the integration, actions.py).
+                if (H) H.callService('casora', 'actions_overlay_toggle', { actions_entity_id: key });
                 return;
               }
               run(card, variables, el.getAttribute('data-action-index'), hass);

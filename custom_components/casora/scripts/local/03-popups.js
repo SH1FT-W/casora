@@ -3896,8 +3896,8 @@
           if (offIds.length) hh.callService('light', 'turn_off', {}, { entity_id: offIds });
         } else if (sc.room) {
           hh.callService('light', 'turn_on', {}, { entity_id: lights(sc.lights) });
-        } else if (ids.length > 1 && sc.rid && hh.states[sc.rid] && hh.states['script.casora_light_smart_toggle']) {
-          hh.callService('script', 'casora_light_smart_toggle', { light_entity: sc.rid });
+        } else if (ids.length > 1 && sc.rid && hh.states[sc.rid] && hh.services && hh.services.casora && hh.services.casora.light_smart_toggle) {
+          hh.callService('casora', 'light_smart_toggle', { light_entity: sc.rid });
         } else hh.callService('light', 'turn_on', {}, { entity_id: ids.length > 1 && sc.rid && hh.states[sc.rid] ? sc.rid : ids });
       } };
     }
@@ -3987,7 +3987,7 @@
         var onIds = d.ids.filter(function (x) { return h.states[x] && h.states[x].state === 'on'; });
         if (onIds.length) h.callService('light', 'turn_off', {}, { entity_id: onIds });
         else h.callService('light', 'turn_on', {}, { entity_id: d.ids });
-      } else if (h.states['script.casora_light_smart_toggle']) h.callService('script', 'casora_light_smart_toggle', { light_entity: d.id });
+      } else if (h.services && h.services.casora && h.services.casora.light_smart_toggle) h.callService('casora', 'light_smart_toggle', { light_entity: d.id });
       else h.callService('light', 'toggle', {}, { entity_id: d.id });
     } else if (d.a === 'scene') {
       el.classList.add('on');
