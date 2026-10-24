@@ -19,7 +19,8 @@ const r = await page.evaluate(() => {
   const keep = R.cal.list;
   const now = new Date();
   R.cal.list = [{ when: now, name: 'Zucchini-Käse-Lasagne mit Ricotta und Basilikum', min: 60 },
-    { when: new Date(now.getTime() + 86400000), name: 'Kürbissuppe', min: 30 }];
+    // Next calendar day (not +24 h: on the day clocks go back that is still today).
+    { when: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 12), name: 'Kürbissuppe', min: 30 }];
   const html = R.weekHtml();
   R.cal.list = keep;
   const box = document.createElement('div');

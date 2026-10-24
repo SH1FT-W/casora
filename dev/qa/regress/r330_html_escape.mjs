@@ -22,6 +22,8 @@ const has = (id) => statesNow.some((s) => s.entity_id === id);
 
 // A room view with a light badge; its first light, its area, a person, a scene and a calendar of the house.
 const d0 = JSON.parse(JSON.stringify(dash.config));
+// The Studio (opened below) writes the phone layout from the desktop one, hostile room name included: restore it too.
+const m0 = dash.phone ? JSON.parse(JSON.stringify(dash.phone.config)) : null;
 const d = JSON.parse(JSON.stringify(d0));
 const view = d.views.slice(1).find((v) => { const x = ((v.cards || [])[0] || {}).variables || {}; return x.light_entity_1 && regOf(x.light_entity_1); });
 await need('Room with a light badge', view);
@@ -46,6 +48,7 @@ atFinish(async () => {
   if (old.area) await k.cmd({ type: 'config/area_registry/update', area_id: old.area.area_id, name: old.area.name }).catch(() => {});
   k.close();
   await save(d0);
+  if (m0) { const k2 = await ws(); await k2.cmd({ type: 'lovelace/config/save', url_path: dash.phone.url, config: m0 }); k2.close(); }
 });
 {
   const k = await ws();

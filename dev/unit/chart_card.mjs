@@ -270,7 +270,9 @@ for (const [id, sub] of [['sensor.pumpe_strom', 'Home Assistant sammelt sie stü
 // Counter rows.
 const EC = { id: 'sensor.zaehler_energie', kind: 'total', series: E };
 M.setSpan('sensor.zaehler_energie', '7d');
-answer = { 'sensor.zaehler_energie': [{ start: h0 - D, change: 8 }, { start: h0, change: 3.5 }] };
+// Relative to the real today: the code compares with Date.now() (h0 is a fixed day and failed from the next day on).
+const today0 = dayStart(Date.now());
+answer = { 'sensor.zaehler_energie': [{ start: dayStart(today0 - 12 * 36e5), change: 8 }, { start: today0, change: 3.5 }] };
 M.sec('stats', EC, states, hass, el);
 await new Promise((r) => setTimeout(r, 0));
 st = JSON.parse(M.sec('stats', EC, states, hass, el));
