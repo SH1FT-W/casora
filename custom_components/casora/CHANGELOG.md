@@ -7,7 +7,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 26.10.59 – 24.10.2026
 
 ### New
-- **Chart card (#50):** a Community card with the current value and a 24 h line on the tile; the popup shows Casora's own chart for 24 hours, 7 days or 30 days with up to 4 lines, highest and lowest value with time and the average from Home Assistant's statistics. Works with any numeric sensor, e.g. CPU load, temperature, power or a meter.
+- **Chart card (#50):** a Community card with the current value and a 24 h line on the tile; the popup shows Casora's own chart for 24 hours, 7 days, 30 days or a year with up to 4 series, as lines or bars (switch in the popup, default in the Studio: automatic, line or bars; meters such as energy or rainfall get bars per hour, day or month), highest and lowest value with time and the average from Home Assistant's statistics. The Studio also sets the range the popup opens with. Works with any numeric sensor, e.g. CPU load, temperature, power or a meter.
 - **Universal tile (#52, forum wish):** a tile with title, icon and any device. In the Studio you assemble its popup from values (up to 8 devices), a 24 h history, the device's own controls and your own cards. A tile of your own finally opens something on tap.
 - **Own badges (#53, forum wish):** per room and on Home as many badges as you like, each from a device's state or from a Home Assistant template, with icon, color and tap action. New option “Wrap badges onto more lines” instead of scrolling sideways, on desktop, tablet and phone.
 - **Visible in the popup (#54):** for popups that collect their rows themselves (room climate, batteries) the Studio lists every row with a switch, so you can hide what does not belong there.
