@@ -1,0 +1,45 @@
+{
+  "_comment": "Portuguese (pt) strings for the shared code files that language agents must not edit themselves. Each field mirrors the es entry of the file named in its key; merge by hand into settings.py, update_push.py, lueften_push.py, panel/casora-panel-welcome.js and tools/i18ncheck.py. HA reports pt and pt-BR; Casora serves pt for both.",
+  "language_name": "Portugiesisch (português)",
+  "settings_lost_head": "Já não incluído",
+  "update_push": ["Já chegou o Casora {v}", "Nova versão disponível"],
+  "lueften_push": {
+    "jetzt": ["Ventilar: {n}", "{grund} – abre a janela uns minutos."],
+    "schliessen": ["Fechar janela: {n}", "{grund} – já a podes fechar."],
+    "co2krit": ["CO₂ crítico: {n}", "{co2} ppm – ventila já."]
+  },
+  "lueften_push_grund": [["Feuchte", "Humidade"], ["Fenster seit", "Janela aberta há"], [" offen", ""], ["Std.", "h"], ["Min.", "min"]],
+  "welcome_text": {
+    "welcomeTitle": "Bem-vindo ao Casora",
+    "whatsNewTitle": "Novidades do Casora {version}",
+    "continue": "Continuar",
+    "all": "Todas as alterações",
+    "w1t": "Divisão a divisão",
+    "w1": "Desenha o teu painel com os dispositivos que já tens no Home Assistant.",
+    "w2t": "Assistente de dispositivos",
+    "w2": "O Casora propõe os cartões certos para cada divisão e adiciona-os por ti.",
+    "w3t": "Computador, tablet e telemóvel",
+    "w3": "Um painel que se adapta a cada ecrã, com layout próprio para o telemóvel.",
+    "n0t": "Cartão de diagrama",
+    "n0": "Qualquer sensor numérico como cartão com histórico e como diagrama de 24 horas, 7 dias, 30 dias ou um ano, em linhas ou barras, com estatísticas.",
+    "n1t": "Cartão universal",
+    "n1": "Título, ícone, qualquer dispositivo e uma janela que compões no Studio com valores, histórico e controlos.",
+    "n2t": "Emblemas próprios",
+    "n2": "Tantos emblemas quantos quiseres a partir de dispositivos ou modelos e, se quiseres, passam para várias linhas em vez de deslizar.",
+    "n3t": "Visível na janela",
+    "n3": "As linhas que o Casora reúne sozinho podem ser ocultadas no Studio. As luzes de Casa contam agora todas as luzes, mesmo sem grupo."
+  },
+  "whats_new": {
+    "n0t": "Cartão de diagrama",
+    "n0": "Qualquer sensor numérico como cartão com histórico e como diagrama de 24 horas, 7 dias, 30 dias ou um ano, em linhas ou barras, com estatísticas.",
+    "n1t": "Cartão universal",
+    "n1": "Título, ícone, qualquer dispositivo e uma janela que compões no Studio com valores, histórico e controlos.",
+    "n2t": "Emblemas próprios",
+    "n2": "Tantos emblemas quantos quiseres a partir de dispositivos ou modelos e, se quiseres, passam para várias linhas em vez de deslizar.",
+    "n3t": "Visível na janela",
+    "n3": "As linhas que o Casora reúne sozinho podem ser ocultadas no Studio. As luzes de Casa contam agora todas as luzes, mesmo sem grupo."
+  },
+  "i18ncheck_allow": ["Portal", "Sirene", "Download", "Upload", "Foto", "Fotos", "Layout", "Design", "Sensor", "offline", "number",
+                      "Studio", "Hemma", "Casora", "Pulse", "Normal", "Total", "Radar", "Hotel", "Taxi", "Bar", "Auto", "Speedtest"],
+  "formal_regex": "\\b([Vv]ocê|[Vv]ocês|[Oo] senhor|[Aa] senhora|[Vv]ossa [Ee]xcelência)\\b"
+}
