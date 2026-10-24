@@ -34,27 +34,119 @@
     var rooms = (a.rooms || []).slice().sort(function (x, y) { return (ST[y.status] || ST.ok).r - (ST[x.status] || ST.ok).r; });
     return { rooms: rooms, out: a.aussen || {}, coach: states[COACH] };
   };
+
+  // ── Room scope (issue #54, 24.10.2026) ────────────────────────────────────
+  // The tile used to be the house's: on a room page (desktop view, phone room filter) its popup listed
+  // every room of the house – in the garden the indoor temperatures. Now the tile knows where it sits:
+  //   scope null            → Home: every room (the house), outdoor air, the house coach
+  //   room with own rows    → only this room's row(s), outdoor air, the room's coach
+  //   outdoor room, no rows → only the outdoor air (its own sensors), nothing from indoors
+  //   indoor room, no rows  → an empty state, never the other rooms
+  // Rows switched off in the Studio (variables.popup_hide: area ids) stay out everywhere – in the popup
+  // and in the tile's text and color (window.casoraPopupHide, 00-finder.js).
+  var OUTDOOR = /outdoor|aussen|außen|outside|draussen|draußen|garten|garden|jard[ií]n|terrasse|terrace|terraza|balkon|balcony|balc[oó]n|patio|veranda|\bhof\b|yard/i;
+  var slug = function (s) {
+    return String(s || '').toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  };
+  var norm = function (s) { return String(s || '').trim().toLowerCase(); };
+  var HOME = /^(home|zuhause|casa|favoriten|favorites|favoritos)$/i;
+  V.isOutdoor = function (name) { return OUTDOOR.test(String(name || '')); };
+  var fin = function (o) {
+    if (!o || (!o.key && !o.name)) return null;
+    return { key: o.key || slug(o.name), name: o.name || null, outdoor: V.isOutdoor(o.name) || V.isOutdoor(o.key) };
+  };
+  // Room name of a desktop view: the name of its casora_room header (the Studio keeps the title as the slug), else the title.
+  var viewRoom = function (view) {
+    var hit = null;
+    (function walk(x, d) {
+      if (hit || !x || typeof x !== 'object' || d > 6) return;
+      if (Array.isArray(x)) { x.forEach(function (y) { walk(y, d + 1); }); return; }
+      if ([].concat(x.template || []).indexOf('casora_room') > -1 && typeof x.name === 'string' && x.name.indexOf('[[[') < 0) { hit = x.name.trim(); return; }
+      walk(x.cards, d + 1);
+    })(view && view.cards, 0);
+    return hit || (view && view.title ? String(view.title).trim() : null);
+  };
+  /* Where the tile sits. here (tests, Studio): null = Home, { key, name } = that room; otherwise from the page:
+     desktop = the view of the address (first view = Home), phone (one view) = the room filter room_<key>. */
+  V.scope = function (variables, here) {
+    if (here !== undefined) return here ? fin(here) : null;
+    /* Studio preview: the panel names the room of the previewed popup (casora-panel-popups.js, _cpOpen). */
+    if (window._casoraStudioRoom !== undefined) return window._casoraStudioRoom ? fin(window._casoraStudioRoom) : null;
+    try {
+      var cfg = window._casoraLovelaceCfg ? window._casoraLovelaceCfg() : null;
+      var views = cfg && Array.isArray(cfg.views) ? cfg.views : [];
+      if (views.length <= 1) {
+        var F = window._casoraFilter, fv = F && typeof F.get === 'function' ? String(F.get() || '') : '';
+        if (fv.indexOf('room_') !== 0) return null;
+        var PR = window.casoraPhoneRoom, pv = PR && PR.vars ? PR.vars(fv) : null;
+        return fin({ key: fv.slice(5), name: pv && pv._name ? String(pv._name) : null });
+      }
+      var seg = decodeURIComponent(String((window.location && window.location.pathname) || '').split('/').filter(Boolean)[1] || '');
+      var vi = views.findIndex(function (x) { return x && String(x.path || '') === seg; });
+      if (vi < 0 && /^\d+$/.test(seg)) vi = Number(seg);
+      if (vi <= 0 || !views[vi]) return null;
+      var name = viewRoom(views[vi]);
+      if (name && HOME.test(name)) return null;
+      return fin({ key: String(views[vi].path || vi), name: name });
+    } catch (e) { return null; }
+  };
+  // The rows of sensor.casora_lueften that belong to a scope: area id, slug of the area name or the name itself.
+  V.roomsFor = function (rooms, scope) {
+    if (!scope) return rooms || [];
+    return (rooms || []).filter(function (x) {
+      return !!x && ((scope.key && (x.k === scope.key || slug(x.n) === scope.key)) || (scope.name && norm(x.n) === norm(scope.name)));
+    });
+  };
+  V.model = function (states, variables, here) {
+    var r = V.read(states), scope = V.scope(variables, here);
+    var own = V.roomsFor(r.rooms, scope), H = window.casoraPopupHide;
+    var rooms = H ? own.filter(function (x) { return !H.has(variables, x.k); }) : own;
+    var mode = !scope ? 'house' : own.length ? 'room' : scope.outdoor ? 'outdoor' : 'empty';
+    return { scope: scope, mode: mode, rooms: rooms, out: r.out, coach: r.coach, hidden: own.length - rooms.length };
+  };
   /* 0 = gut, 1 = jetzt lüften, 2 = Fenster schließen */
-  V.level = function (states) {
-    var r = V.read(states);
-    if (r.rooms.some(function (x) { return x.status === 'schliessen'; })) return 2;
-    if (r.rooms.some(function (x) { return x.status === 'jetzt'; })) return 1;
+  V.level = function (states, variables, here) {
+    var rooms = V.model(states, variables, here).rooms;
+    if (rooms.some(function (x) { return x.status === 'schliessen'; })) return 2;
+    if (rooms.some(function (x) { return x.status === 'jetzt'; })) return 1;
     return 0;
   };
-  V.color = function (states) {
-    var lv = V.level(states);
+  V.color = function (states, variables, here) {
+    var lv = V.level(states, variables, here);
     return lv === 2 ? 'var(--casora-color-orange, #FF9F0A)' : lv === 1 ? 'var(--casora-color-blue, #0A84FF)' : 'var(--casora-color-teal, #00C3D0)';
   };
-  V.tile = function (states) {
-    var r = V.read(states);
-    var cl = r.rooms.filter(function (x) { return x.status === 'schliessen'; });
-    var now = r.rooms.filter(function (x) { return x.status === 'jetzt'; });
+  V.tile = function (states, variables, here) {
+    var m = V.model(states, variables, here);
+    if (m.mode === 'outdoor') return m.out.t != null ? fmt(m.out.t, 1) + ' ' + tU() : 'Außenluft';
+    if (m.mode === 'empty') return 'Keine Sensoren';
+    var cl = m.rooms.filter(function (x) { return x.status === 'schliessen'; });
+    var now = m.rooms.filter(function (x) { return x.status === 'jetzt'; });
     /* Titel ist fest "Raumklima", Status = welcher Raum (was zu tun ist, zeigen Farbe + Popup).
        Priorität schließen > lüften > lüftet; ab 3 Räumen nur die Anzahl, sonst schrumpft casoraStateFit die Schrift. */
-    var l = cl.length ? cl : now.length ? now : r.rooms.filter(function (x) { return x.status === 'lueftet'; });
+    var l = cl.length ? cl : now.length ? now : m.rooms.filter(function (x) { return x.status === 'lueftet'; });
     if (!l.length) return 'Luft gut';
+    /* In a room its own status instead of its name (the name is the page title). */
+    if (m.mode === 'room' && m.rooms.length === 1) return (ST[l[0].status] || ST.ok).t;
     return l.length <= 2 ? l.map(function (x) { return x.n; }).join(', ') : l.length + ' Räume';
   };
+  // Studio list „Shown in the popup“: the rows this tile's popup collects (room = the Studio room's name).
+  var register = function () {
+    var H = window.casoraPopupHide;
+    if (!H || (H.sources && H.sources.casora_vent)) return !!H;
+    H.register('casora_vent', {
+      entries: function (hass, variables, room) {
+        var states = (hass && hass.states) || {}, r = V.read(states);
+        var rooms = room && !HOME.test(room) ? V.roomsFor(r.rooms, fin({ name: room })) : r.rooms;
+        return rooms.map(function (x) {
+          return { id: x.k, name: x.n, sub: [(ST[x.status] || ST.ok).t, vals(x) || null].filter(Boolean).join(' · ') };
+        });
+      },
+    });
+    return true;
+  };
+  V.register = register;
+  if (!register()) setTimeout(register, 1500);
   /* Messwerte der Zeile; was der Grund schon nennt (CO₂/Feuchte), nicht doppelt. */
   /* Temperaturen der Lüften-Auswertung kommen in der Einheit von HA (°C/°F). */
   var tU = function () {
@@ -110,50 +202,79 @@
       + btn + '</div></div>';
   };
 
-  V.sec = function (name, states) {
+  /* C (from V.popup, carried into the live cards): { hide: [area ids], scope: null | { key, name, outdoor } }.
+     Without C (older callers) the house. */
+  var modelOf = function (states, C) {
+    var c = C || {};
+    return V.model(states, { popup_hide: c.hide || [] }, c.scope === undefined ? null : c.scope);
+  };
+  V.sec = function (name, states, C) {
     var UI = window._casoraUI; if (!UI) return '';
     /* Raumzeilen: Grund und Messwerte als eigene sub-Teile (UI.group rendert sie inline-block),
        damit die Messwerte in die nächste Zeile rutschen statt mit … abgeschnitten zu werden. */
-    var r = V.read(states), o = r.out;
-    var avgAh = (function () { var l = r.rooms.filter(function (x) { return x.ah != null; }); return l.length ? l.reduce(function (s, x) { return s + x.ah; }, 0) / l.length : null; })();
+    var m = modelOf(states, C), rooms = m.rooms, o = m.out, mode = m.mode;
+    var avgAh = (function () { var l = rooms.filter(function (x) { return x.ah != null; }); return l.length ? l.reduce(function (s, x) { return s + x.ah; }, 0) / l.length : null; })();
     var helps = o.ah != null && avgAh != null ? o.ah < avgAh - 0.5 : null;
+    var SF = !!(window._casoraHH && window._casoraHH.on());
     if (name === 'hero') {
-      var lv = V.level(states);
-      var need = r.rooms.filter(function (x) { return x.status === 'jetzt' || x.status === 'schliessen'; });
+      /* Outdoor room: the outdoor air is its own reading. Indoor room without sensors: say so, not the house. */
+      if (mode === 'outdoor') {
+        var ob = [o.t != null ? fmt(o.t, 1) + ' ' + tU() : null, o.rh != null ? fmt(o.rh) + ' %' : null].filter(Boolean).join(' · ');
+        return UI.hero({ label: SF ? null : 'Außenluft', value: SF ? 'Außenluft' : (ob || '—'), sub: SF ? (ob || null) : null, center: true });
+      }
+      if (mode === 'empty') return UI.hero({ label: SF ? null : 'Raumluft', value: 'Keine Sensoren', sub: null, center: true });
+      /* One room: its own status and reason („Lüftet · Fenster offen seit 12 Min.“), not the house words. */
+      if (mode === 'room' && rooms.length === 1) {
+        var r1 = rooms[0], st1 = ST[r1.status] || ST.ok;
+        return UI.hero({ label: SF ? null : 'Raumluft', value: r1.status === 'ok' ? (SF ? 'Raumluft gut' : 'Gut') : st1.t, sub: r1.grund || null,
+          subTone: st1.tone === 'accent' ? null : st1.tone, center: true });
+      }
+      var lv = V.level(states, { popup_hide: (C && C.hide) || [] }, m.scope);
+      var need = rooms.filter(function (x) { return x.status === 'jetzt' || x.status === 'schliessen'; });
       var value = lv === 2 ? 'Schließen' : lv === 1 ? 'Lüften' : 'Gut';
-      var sub = need.length ? (need.length <= 2 ? need.map(function (x) { return x.n; }).join(', ') : need.length + ' Räume')
+      /* One room: its reason instead of its own name. */
+      var sub = need.length ? (mode === 'room' && rooms.length === 1 ? (need[0].grund || null) : need.length <= 2 ? need.map(function (x) { return x.n; }).join(', ') : need.length + ' Räume')
         : (helps === true ? 'Außenluft ist trockener' : helps === false ? 'Außenluft ist feuchter' : null);
       /* Kurz halten: die Hero-Unterzeile bricht nicht um und wird auf dem Handy sonst beidseitig abgeschnitten.
          "Feuchter draußen" ist kein Grün-Zustand → neutral. */
       /* Weich (Entschlacken): „Raumluft gut“ als eine Aussage, ohne Etikett darüber. */
-      if (window._casoraHH && window._casoraHH.on()) value = lv === 2 ? 'Fenster schließen' : lv === 1 ? 'Lüften empfohlen' : 'Raumluft gut';
-      return UI.hero({ label: window._casoraHH && window._casoraHH.on() ? null : 'Raumluft', value: value, sub: sub, subTone: lv ? 'warn' : helps === false ? null : 'good', center: true });
+      if (SF) value = lv === 2 ? 'Fenster schließen' : lv === 1 ? 'Lüften empfohlen' : 'Raumluft gut';
+      return UI.hero({ label: SF ? null : 'Raumluft', value: value, sub: sub, subTone: lv ? 'warn' : helps === false ? null : 'good', center: true });
     }
     if (name === 'rooms') {
-      var rows = r.rooms.map(function (x) {
+      var rows = rooms.map(function (x) {
         var st = ST[x.status] || ST.ok;
         var icon = x.fenster ? 'mdi:window-open-variant' : x.fenster === false ? 'mdi:window-closed-variant' : 'mdi:home-thermometer-outline';
         var tone = st.tone || 'rgba(255,255,255,0.18)';
-        return { icon: icon, iconTone: tone, label: x.n, sub: [x.grund || null, vals(x) || null].filter(Boolean), value: st.t, valueTone: st.tone === 'accent' ? null : st.tone,
+        return { id: x.k, icon: icon, iconTone: tone, label: x.n, sub: [x.grund || null, vals(x) || null].filter(Boolean), value: st.t, valueTone: st.tone === 'accent' ? null : st.tone,
           /* Weich: Raum mit Handlungsbedarf (lüften, schließen, zu feucht) oder der gerade lüftet als aktive Zeile. */
           active: ['schliessen', 'jetzt', 'feucht', 'lueftet'].indexOf(x.status) > -1 };
       });
-      return rows.length ? UI.group(rows, 'Räume') : '';
+      return rows.length ? UI.group(rows, mode === 'room' ? 'Raumluft' : 'Räume') : '';
+    }
+    if (name === 'empty') {
+      /* DP-09: a hint row instead of an empty sheet – and never the other rooms (issue #54). */
+      return UI.group([{ icon: 'mdi:home-thermometer-outline', iconTone: 'rgba(255,255,255,0.18)', label: 'Keine Klimasensoren in diesem Raum',
+        sub: 'Ein Feuchte- oder CO₂-Sensor im Raum genügt' }], 'Raumluft');
     }
     if (name === 'out') {
       var rows2 = [];
       if (o.t != null) rows2.push({ icon: 'mdi:thermometer', iconTone: 'rgba(255,255,255,0.18)', label: 'Temperatur', value: fmt(o.t, 1) + ' ' + tU() });
       /* Weich (Entschlacken): ohne absolute Feuchte (g/m³); „hilft nicht“ nur, wenn es zutrifft. */
-      var SFv = window._casoraHH && window._casoraHH.on();
-      if (o.rh != null && SFv) rows2.push({ icon: 'mdi:water-percent', iconTone: 'rgba(255,255,255,0.18)', label: 'Luftfeuchtigkeit', value: fmt(o.rh) + ' %' });
+      var SFv = SF;
+      if (o.rh != null && (SFv || mode === 'outdoor')) rows2.push({ icon: 'mdi:water-percent', iconTone: 'rgba(255,255,255,0.18)', label: 'Luftfeuchtigkeit', value: fmt(o.rh) + ' %' });
       else if (o.rh != null) rows2.push({ icon: 'mdi:water-percent', iconTone: 'rgba(255,255,255,0.18)', label: 'Luftfeuchtigkeit', sub: o.ah != null ? [fmt(o.ah, 1) + ' g/m³ absolut'].concat(avgAh != null ? ['drinnen Ø ' + fmt(avgAh, 1)] : []) : null, value: fmt(o.rh) + ' %' });
       if (o.pm25 != null) rows2.push({ icon: 'mdi:blur', iconTone: o.pm25 >= 35 ? 'bad' : 'rgba(255,255,255,0.18)', label: 'Feinstaub PM2.5', value: fmt(o.pm25) + ' µg/m³', valueTone: o.pm25 >= 35 ? 'bad' : null });
-      var ziel = (r.rooms[0] && r.rooms[0].ziel_min) || null;
-      if (ziel) rows2.push({ icon: 'mdi:timer-outline', iconTone: 'accent', label: 'Stoßlüften', sub: 'Fenster weit auf, nach Außentemperatur', value: 'ca. ' + ziel + ' Min.' });
-      if (helps != null && !(SFv && helps)) rows2.push({ icon: helps ? 'mdi:check-circle' : 'mdi:close-circle', iconTone: helps ? 'good' : 'warn', label: helps ? 'Lüften hilft gegen Feuchte' : 'Lüften hilft nicht gegen Feuchte', sub: helps ? 'Außenluft ist trockener' : 'Außenluft enthält mehr Wasser' });
+      /* Outdoors there is no room to air: no airing timer, no „helps against humidity“. */
+      if (mode !== 'outdoor') {
+        var ziel = (rooms[0] && rooms[0].ziel_min) || null;
+        if (ziel) rows2.push({ icon: 'mdi:timer-outline', iconTone: 'accent', label: 'Stoßlüften', sub: 'Fenster weit auf, nach Außentemperatur', value: 'ca. ' + ziel + ' Min.' });
+        if (helps != null && !(SFv && helps)) rows2.push({ icon: helps ? 'mdi:check-circle' : 'mdi:close-circle', iconTone: helps ? 'good' : 'warn', label: helps ? 'Lüften hilft gegen Feuchte' : 'Lüften hilft nicht gegen Feuchte', sub: helps ? 'Außenluft ist trockener' : 'Außenluft enthält mehr Wasser' });
+      }
       return rows2.length ? UI.group(rows2, 'Außenluft') : '';
     }
-    if (name === 'coach') return coachHtml(r.coach);
+    /* Coach: the house on Home, the room's own evaluation on a room page; nothing outdoors or without sensors. */
+    if (name === 'coach') return mode === 'house' ? coachHtml(m.coach) : mode === 'room' && rooms.length === 1 ? coachHtml(m.coach, rooms[0].n) : '';
     return '';
   };
 
@@ -161,10 +282,21 @@
      casora_climate_popup setzt <div class="casora-vent-coach"> (seit 24.09. Zuhause UND Räume; früher nicht in
      Raum-Popups); solange ein Popup offen ist, hier live nachführen. */
   V.ROOMS = ['Wohnzimmer', 'Küche', 'Büro', 'Schlafzimmer', 'Badezimmer', 'Flur', 'Waschküche', 'Terrasse'];
+  // Is this popup title a room of the dashboard? The dashboard's room names (any language), the rooms the coach
+  // evaluated, and the old fixed list as fallback. Issue #54: a room not in the fixed list („Garten“) got the
+  // house coach with every indoor room in it.
+  V.isRoom = function (name, states) {
+    var rn = String(name || '').trim();
+    if (!rn || HOME.test(rn)) return false;
+    var names = [];
+    try { names = (typeof window._casoraRoomNames === 'function' && window._casoraRoomNames()) || []; } catch (e) { names = []; }
+    var coach = states && states[COACH], raeume = (coach && coach.attributes && coach.attributes.raeume) || [];
+    return names.indexOf(rn) >= 0 || V.ROOMS.indexOf(rn) >= 0 || raeume.some(function (x) { return x && x.n === rn; });
+  };
   V.climateSlot = function (roomName, states) {
     /* 24.09.2026: Coach auch in den Raum-Klima-Popups – dort die Auswertung dieses Raums, im Zuhause-Popup die Hausauswertung. */
     var rn = String(roomName || '');
-    if (V.ROOMS.indexOf(rn) >= 0) return '<div class="casora-vent-coach" data-room="' + esc(rn) + '">' + coachHtml(states[COACH], rn) + '</div>';
+    if (V.isRoom(rn, states)) return '<div class="casora-vent-coach" data-room="' + esc(rn) + '">' + coachHtml(states[COACH], rn) + '</div>';
     return '<div class="casora-vent-coach">' + coachHtml(states[COACH]) + '</div>';
   };
   var deep = function (root, sel, out) {
@@ -191,7 +323,15 @@
     /* Ohne feste Entität: der Lüften-Sensor ist der Anker (sonst leeres Popup). */
     if (!entity || !entity.entity_id) entity = { entity_id: V.sensor(states) };
     var watch = [V.sensor(states), COACH];
-    var sec = function (n) { return '[[[ return window._casoraVent ? window._casoraVent.sec(' + JSON.stringify(n) + ', states) : ""; ]]]'; };
+    /* Issue #54: the room scope and the hidden rows travel with every live card as C – evaluated once here,
+       where the page (view, phone filter) is the one the tile sits on. */
+    var H = window.casoraPopupHide, m = V.model(states, variables);
+    var C = { hide: H ? H.list(variables) : [], scope: m.scope };
+    var sec = function (n) { return '[[[ return window._casoraVent ? window._casoraVent.sec(' + JSON.stringify(n) + ', states, ' + JSON.stringify(C) + ') : ""; ]]]'; };
+    /* Columns by mode: house and room left rooms, right outdoor air + coach; outdoor only the air; without sensors the hint. */
+    var sp = m.mode === 'outdoor' ? { left: ['out'], right: [] } : m.mode === 'empty' ? { left: ['empty'], right: [] }
+      : (window._casoraSplit ? window._casoraSplit('vent', ['rooms'], ['out', 'coach']) : { left: ['rooms'], right: ['out', 'coach'] });
+    var oneCol = !sp.right.length;
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
       + ' border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important;'
       + ' -webkit-backdrop-filter: none !important; padding: 0 !important; cursor: default !important; overflow: visible !important; }'
@@ -226,16 +366,16 @@
     return {
       type: 'custom:button-card', entity: entity.entity_id, triggers_update: watch,
       card_mod: { style: wrapperStyle + '\nha-card.disabled { pointer-events: auto !important; }' },
-      extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: "hero hero" "left right" !important;'
+      extra_styles: oneCol ? '' : '@media (min-width: 761px) { #container { grid-template-areas: "hero hero" "left right" !important;'
         + ' grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: var(--casora-popup-col-gap, 20px) !important; } }',
       tap_action: { action: 'none' }, show_icon: false, show_name: false, show_label: false, show_state: false,
       styles: {
         card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: window._casoraHH && window._casoraHH.on() ? '0 26px 22px 26px' : '6px 26px 22px 26px' }],
-        grid: [{ 'grid-template-areas': '"hero" "left" "right"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'align-items': 'start' }, { 'row-gap': 'var(--casora-popup-sec-gap, 18px)' }],
+        grid: [{ 'grid-template-areas': oneCol ? '"hero" "left"' : '"hero" "left" "right"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'align-items': 'start' }, { 'row-gap': 'var(--casora-popup-sec-gap, 18px)' }],
         custom_fields: { hero: [{ 'justify-self': 'stretch' }], left: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }], right: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }] },
       },
-      custom_fields: (function () { var sp = window._casoraSplit ? window._casoraSplit('vent', ['rooms'], ['out', 'coach']) : { left: ['rooms'], right: ['out', 'coach'] };
-        return { hero: sec('hero'), left: { card: makeCol(sp.left) }, right: { card: makeCol(sp.right) } }; })(),
+      custom_fields: oneCol ? { hero: sec('hero'), left: { card: makeCol(sp.left) } }
+        : { hero: sec('hero'), left: { card: makeCol(sp.left) }, right: { card: makeCol(sp.right) } },
     };
   };
 })();

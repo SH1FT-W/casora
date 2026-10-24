@@ -652,17 +652,23 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     scan: function (states, vars, hass) {
       var S = states || {};
       var v = vars || {};
-      var PERSONAL = /iphone|ipad|\bwatch\b|ebike|e-bike|drive_unit|performance_line/i;
-      var dcOf = function (e) { return e && e.attributes && e.attributes.device_class; };
-      var given = v.batteries || v.entity_filter;
-      var list = Array.isArray(given) && given.some(function (id) { return dcOf(S[id]) === 'battery'; }) ? given : null;
-      var ex = window.casoraDevice && hass ? window.casoraDevice.byKey(hass, 'anker_solix', 'state_of_charge', 'sensor') : null;
-      var all = (list ? list.map(function (id) { return S[id]; }).filter(Boolean)
-        : Object.keys(S).map(function (id) { return S[id]; }).filter(function (e) {
-          return e.entity_id !== ex && !PERSONAL.test(e.entity_id + ' ' + ((e.attributes || {}).friendly_name || ''));
-        })).filter(function (e) {
-        return dcOf(e) === 'battery' && e.state !== 'unavailable' && e.state !== 'unknown' && num(e.state) != null;
-      });
+      // Issue #54: rows switched off in the Studio (variables.popup_hide) count neither in the tile nor in the
+      // popup – the shared pick lives in 00-finder.js (casoraPopupHide.batteries); the old pick stays as fallback.
+      var all;
+      if (window.casoraPopupHide && window.casoraPopupHide.batteries) all = window.casoraPopupHide.batteries(S, v, hass);
+      else {
+        var PERSONAL = /iphone|ipad|\bwatch\b|ebike|e-bike|drive_unit|performance_line/i;
+        var dcOf = function (e) { return e && e.attributes && e.attributes.device_class; };
+        var given = v.batteries || v.entity_filter;
+        var list = Array.isArray(given) && given.some(function (id) { return dcOf(S[id]) === 'battery'; }) ? given : null;
+        var ex = window.casoraDevice && hass ? window.casoraDevice.byKey(hass, 'anker_solix', 'state_of_charge', 'sensor') : null;
+        all = (list ? list.map(function (id) { return S[id]; }).filter(Boolean)
+          : Object.keys(S).map(function (id) { return S[id]; }).filter(function (e) {
+            return e.entity_id !== ex && !PERSONAL.test(e.entity_id + ' ' + ((e.attributes || {}).friendly_name || ''));
+          })).filter(function (e) {
+          return dcOf(e) === 'battery' && e.state !== 'unavailable' && e.state !== 'unknown' && num(e.state) != null;
+        });
+      }
       var low = all.filter(function (e) { return B.level(e) !== 'ok'; });
       var crit = low.filter(function (e) { return B.level(e) === 'crit'; });
       var min = all.reduce(function (m, e) { return !m || num(e.state) < num(m.state) ? e : m; }, null);

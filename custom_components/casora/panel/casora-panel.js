@@ -27518,6 +27518,8 @@ class CasoraPanel extends HTMLElement {
       // Im Bereich „Popup“ selbst hieße die Zwischenzeile sonst noch einmal „Popup“.
       if (popupFold) { if (advGroup && advGroup !== "Popup") advGroupHead("Own cards"); }
       else if (advGroup ? advGroup !== "Popup" : advLabel !== "Popup") advGroupHead("Popup");
+      // Issue #54: „Shown in the popup“ for popups that collect their rows by themselves (casora-panel-popups.js).
+      if (this._popupHideRows) this._popupHideRows(tile, type, advRow);
       this._popupCardsRows(tile, type, advRow);
     }
     if (entityInDrawer) advRow(entityLabel, entCombo.wrap);

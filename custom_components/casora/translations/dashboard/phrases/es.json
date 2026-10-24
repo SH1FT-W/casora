@@ -572,6 +572,8 @@
   "Heizungs-Coach": "Asistente de calefacción",
   "Energie-Coach": "Asistente de energía",
   "Raumklima": "Clima interior",
+  "Keine Klimasensoren in diesem Raum": "No hay sensores de clima en esta habitación",
+  "Ein Feuchte- oder CO₂-Sensor im Raum genügt": "Basta un sensor de humedad o CO₂ en la habitación",
   "Sonnenstrom übrig": "Sobra energía solar",
   "Fahrzeug": "Vehículo",
   "Rezept der Woche": "Receta de la semana",

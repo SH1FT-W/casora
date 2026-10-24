@@ -1,0 +1,202 @@
+{
+ "quelle": "#54 (Raumklima-Popup im Garten zeigte die Raumtemperaturen, 24.10.2026), erfunden nach dem Bericht",
+ "areas": {
+  "wohnzimmer": {
+   "area_id": "wohnzimmer",
+   "name": "Wohnzimmer"
+  },
+  "kuche": {
+   "area_id": "kuche",
+   "name": "Küche"
+  },
+  "garten": {
+   "area_id": "garten",
+   "name": "Garten"
+  }
+ },
+ "devices": {
+  "d_wz": {
+   "id": "d_wz",
+   "name": "Klimasensor Wohnzimmer",
+   "area_id": "wohnzimmer"
+  },
+  "d_ku": {
+   "id": "d_ku",
+   "name": "Klimasensor Küche",
+   "area_id": "kuche"
+  },
+  "d_ga": {
+   "id": "d_ga",
+   "name": "Wetterstation",
+   "area_id": "garten"
+  }
+ },
+ "entities": {
+  "sensor.wohnzimmer_temperatur": {
+   "entity_id": "sensor.wohnzimmer_temperatur",
+   "device_id": "d_wz",
+   "area_id": null,
+   "platform": "zha"
+  },
+  "sensor.wohnzimmer_feuchte": {
+   "entity_id": "sensor.wohnzimmer_feuchte",
+   "device_id": "d_wz",
+   "area_id": null,
+   "platform": "zha"
+  },
+  "sensor.kuche_temperatur": {
+   "entity_id": "sensor.kuche_temperatur",
+   "device_id": "d_ku",
+   "area_id": null,
+   "platform": "zha"
+  },
+  "sensor.kuche_feuchte": {
+   "entity_id": "sensor.kuche_feuchte",
+   "device_id": "d_ku",
+   "area_id": null,
+   "platform": "zha"
+  },
+  "sensor.garten_temperatur": {
+   "entity_id": "sensor.garten_temperatur",
+   "device_id": "d_ga",
+   "area_id": null,
+   "platform": "zha"
+  },
+  "sensor.wetterstation_batterie": {
+   "entity_id": "sensor.wetterstation_batterie",
+   "device_id": "d_ga",
+   "area_id": null,
+   "platform": "zha"
+  },
+  "sensor.klimasensor_kuche_batterie": {
+   "entity_id": "sensor.klimasensor_kuche_batterie",
+   "device_id": "d_ku",
+   "area_id": null,
+   "platform": "zha"
+  }
+ },
+ "states": {
+  "sensor.wohnzimmer_temperatur": {
+   "entity_id": "sensor.wohnzimmer_temperatur",
+   "state": "21.4",
+   "attributes": {
+    "device_class": "temperature",
+    "unit_of_measurement": "°C",
+    "friendly_name": "Wohnzimmer Temperatur"
+   }
+  },
+  "sensor.wohnzimmer_feuchte": {
+   "entity_id": "sensor.wohnzimmer_feuchte",
+   "state": "48",
+   "attributes": {
+    "device_class": "humidity",
+    "unit_of_measurement": "%",
+    "friendly_name": "Wohnzimmer Feuchte"
+   }
+  },
+  "sensor.kuche_temperatur": {
+   "entity_id": "sensor.kuche_temperatur",
+   "state": "22.0",
+   "attributes": {
+    "device_class": "temperature",
+    "unit_of_measurement": "°C",
+    "friendly_name": "Küche Temperatur"
+   }
+  },
+  "sensor.kuche_feuchte": {
+   "entity_id": "sensor.kuche_feuchte",
+   "state": "66",
+   "attributes": {
+    "device_class": "humidity",
+    "unit_of_measurement": "%",
+    "friendly_name": "Küche Feuchte"
+   }
+  },
+  "sensor.garten_temperatur": {
+   "entity_id": "sensor.garten_temperatur",
+   "state": "12.5",
+   "attributes": {
+    "device_class": "temperature",
+    "unit_of_measurement": "°C",
+    "friendly_name": "Garten Temperatur"
+   }
+  },
+  "sensor.wetterstation_batterie": {
+   "entity_id": "sensor.wetterstation_batterie",
+   "state": "28",
+   "attributes": {
+    "device_class": "battery",
+    "unit_of_measurement": "%",
+    "friendly_name": "Wetterstation Batterie"
+   }
+  },
+  "sensor.klimasensor_kuche_batterie": {
+   "entity_id": "sensor.klimasensor_kuche_batterie",
+   "state": "91",
+   "attributes": {
+    "device_class": "battery",
+    "unit_of_measurement": "%",
+    "friendly_name": "Klimasensor Küche Batterie"
+   }
+  },
+  "sensor.casora_lueften": {
+   "entity_id": "sensor.casora_lueften",
+   "state": "jetzt",
+   "attributes": {
+    "rooms": [
+     {
+      "k": "wohnzimmer",
+      "n": "Wohnzimmer",
+      "status": "ok",
+      "grund": "",
+      "rh": 48,
+      "t": 21.4,
+      "co2": null,
+      "voc": null,
+      "ah": 9.0,
+      "fenster": null,
+      "offen_min": null,
+      "ziel_min": 20,
+      "heizt": false,
+      "co2_krit": false
+     },
+     {
+      "k": "kuche",
+      "n": "Küche",
+      "status": "jetzt",
+      "grund": "Feuchte 66 %",
+      "rh": 66,
+      "t": 22.0,
+      "co2": null,
+      "voc": null,
+      "ah": 12.8,
+      "fenster": null,
+      "offen_min": null,
+      "ziel_min": 20,
+      "heizt": false,
+      "co2_krit": false
+     }
+    ],
+    "aussen": {
+     "t": 12.5,
+     "rh": 70,
+     "ah": 7.6,
+     "pm25": null
+    },
+    "friendly_name": "Casora Lüften"
+   }
+  }
+ },
+ "expect": {
+  "vent": {
+   "Zuhause": { "mode": "house", "rooms": ["Küche", "Wohnzimmer"], "tile": "Küche" },
+   "Garten": { "mode": "outdoor", "rooms": [], "tile": "12,5 °C", "out": ["Temperatur", "Luftfeuchtigkeit"] },
+   "Wohnzimmer": { "mode": "room", "rooms": ["Wohnzimmer"], "tile": "Luft gut" },
+   "Keller": { "mode": "empty", "rooms": [], "tile": "Keine Sensoren" }
+  },
+  "popup_hide": {
+   "casora_vent": { "hide": ["kuche"], "rooms": ["Wohnzimmer"], "tile": "Luft gut", "studio": ["kuche", "wohnzimmer"] },
+   "casora_battery": { "hide": ["sensor.wetterstation_batterie"], "rows": ["sensor.klimasensor_kuche_batterie"], "studio": ["sensor.wetterstation_batterie", "sensor.klimasensor_kuche_batterie"] }
+  }
+ }
+}

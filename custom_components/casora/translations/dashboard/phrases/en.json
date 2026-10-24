@@ -572,6 +572,8 @@
   "Heizungs-Coach": "Heating coach",
   "Energie-Coach": "Energy coach",
   "Raumklima": "Room climate",
+  "Keine Klimasensoren in diesem Raum": "No climate sensors in this room",
+  "Ein Feuchte- oder CO₂-Sensor im Raum genügt": "A humidity or CO₂ sensor in the room is enough",
   "Sonnenstrom übrig": "Spare solar power",
   "Fahrzeug": "Vehicle",
   "Rezept der Woche": "Recipe of the week",
