@@ -1,0 +1,4301 @@
+{
+ "exact": {
+  "Tankinhalt": "Tankinhoud",
+  "Staubbeutel oder Filter fehlt": "Stofzak of filter ontbreekt",
+  "Absauggebläse gestört": "Storing in de afzuigventilator",
+  "Absaugkanal verstopft": "Afzuigkanaal verstopt",
+  "Spannungsfehler an der Station": "Spanningsfout bij het station",
+  "Reinigungsbürste blockiert": "Reinigingsborstel geblokkeerd",
+  "Schmutzwassertank nicht eingerastet": "Vuilwatertank niet vergrendeld",
+  "Reinigungstank voll oder verstopft": "Reinigingstank vol of verstopt",
+  "Entfernen": "Verwijderen",
+  "Alle entfernen": "Alles verwijderen",
+  "Alle Meldungen entfernen?": "Alle meldingen verwijderen?",
+  "Sie kommen wieder, wenn sich etwas ändert.": "Ze komen terug zodra er iets verandert.",
+  "Alle Meldungen entfernt": "Alle meldingen verwijderd",
+  "Rückgängig": "Ongedaan maken",
+  "Guten Morgen": "Goedemorgen",
+  "Guten Tag": "Goedemiddag",
+  "Guten Abend": "Goedenavond",
+  "und": "en",
+  "1 Problem": "1 probleem",
+  "1 Batterie bald fällig": "1 batterij binnenkort vervangen",
+  "Keine Probleme": "Geen problemen",
+  "Keine Geräte": "Geen apparaten",
+  "Nicht installiert": "Niet geïnstalleerd",
+  "Pulse ist nicht installiert": "Pulse is niet geïnstalleerd",
+  "Bald fällig": "Binnenkort",
+  "Batterie bald fällig": "Batterij binnenkort vervangen",
+  "In Pulse öffnen": "Openen in Pulse",
+  "Gewechselt": "Vervangen",
+  "Batterie gewechselt": "Batterij vervangen",
+  "Batteriewechsel gemeldet": "Batterijwissel gemeld",
+  "Wichtig": "Belangrijk",
+  "Antwortet nicht": "Reageert niet",
+  "Still": "Stil",
+  "Hat sich noch nicht gemeldet": "Heeft zich nog niet gemeld",
+  "Still, obwohl das Partnergerät aktiv war": "Stil, hoewel het partnerapparaat actief was",
+  "Batterie fast leer": "Batterij bijna leeg",
+  "Meldet schwache Batterie": "Meldt een zwakke batterij",
+  "wartet auf erste Meldung": "wacht op de eerste melding",
+  "Lernt noch den Rhythmus": "Leert nog het ritme",
+  "Meldet sich wie gewohnt": "Meldt zich zoals gewoonlijk",
+  "Ausgefallen": "Uitgevallen",
+  "Bitte prüfen": "Even controleren",
+  "Erinnerung pausiert": "Herinnering gepauzeerd",
+  "jede Minute": "elke minuut",
+  "jede Stunde": "elk uur",
+  "einmal am Tag": "eens per dag",
+  "sonst jede Minute": "normaal elke minuut",
+  "sonst jede Stunde": "normaal elk uur",
+  "sonst einmal am Tag": "normaal eens per dag",
+  "Alarm!": "Alarm!",
+  "Scharf schalten": "Inschakelen",
+  "Unscharf schalten": "Uitschakelen",
+  "Alarm beenden": "Alarm stoppen",
+  "Oder Modus wählen": "Of kies een modus",
+  "Code eingeben": "Code invoeren",
+  "Code falsch": "Code onjuist",
+  "Alarmanlage ausgeschaltet": "Alarmsysteem uit",
+  "Die Alarmanlage wurde ausgelöst": "Het alarm is afgegaan",
+  "Verlass das Haus oder brich ab": "Verlaat het huis of breek af",
+  "Jetzt unscharf schalten, sonst geht der Alarm los": "Schakel nu uit, anders gaat het alarm af",
+  "Wird scharf …": "Wordt ingeschakeld…",
+  "Dieses Gerät ist für dich ausgeblendet": "Dit apparaat is voor jou verborgen",
+  "wird scharf …": "wordt ingeschakeld…",
+  "scharf in": "ingeschakeld over",
+  "Alarm in": "Alarm over",
+  "ausgelöst": "afgegaan",
+  "Abholung heute": "Ophalen vandaag",
+  "Abholung morgen · heute Abend raus": "Ophalen morgen · vanavond buiten zetten",
+  "Abholung": "Ophalen",
+  "Casora wurde aktualisiert": "Casora is bijgewerkt",
+  "Keine Abholung": "Geen ophaaldag",
+  "An": "Aan",
+  "Aus": "Uit",
+  "an": "aan",
+  "aus": "uit",
+  "Neu laden": "Opnieuw laden",
+  "Neu laden (Cache leeren)": "Opnieuw laden (cache wissen)",
+  "Offen": "Open",
+  "offen": "open",
+  "Geöffnet": "Open",
+  "Geschlossen": "Gesloten",
+  "geöffnet": "open",
+  "geschlossen": "gesloten",
+  "Verriegelt": "Vergrendeld",
+  "Entriegelt": "Ontgrendeld",
+  "Bereit": "Gereed",
+  "Fertig": "Klaar",
+  "Pausiert": "Gepauzeerd",
+  "Läuft": "Bezig",
+  "läuft": "bezig",
+  "Läuft …": "Bezig…",
+  "Lädt": "Laadt",
+  "Getrennt": "Verbroken",
+  "Verbunden": "Verbonden",
+  "Fehler": "Fout",
+  "Nicht verfügbar": "Niet beschikbaar",
+  "nicht verfügbar": "niet beschikbaar",
+  "Gerade nicht verfügbar": "Nu even niet beschikbaar",
+  "Keine": "Geen",
+  "Keine aktiv": "Geen actief",
+  "Kein Dienst": "Geen dienst",
+  "Neu": "Nieuw",
+  "Alle": "Alles",
+  "Gesamt": "Totaal",
+  "Fällig": "Vervallen",
+  "Überfällig": "Te laat",
+  "Übersprungen": "Overgeslagen",
+  "Gelöst": "Opgelost",
+  "Ausgelöst": "Afgegaan",
+  "Kühl": "Koel",
+  "Heiß": "Heet",
+  "Sehr heiß": "Zeer heet",
+  "Mäßig": "Matig",
+  "mäßig": "matig",
+  "Gut": "Goed",
+  "Schlecht": "Slecht",
+  "Sehr schlecht": "Zeer slecht",
+  "Ausgezeichnet": "Uitstekend",
+  "Außergewöhnlich": "Uitzonderlijk",
+  "heute": "vandaag",
+  "gestern": "gisteren",
+  "morgen": "morgen",
+  "jetzt": "nu",
+  "gerade eben": "zojuist",
+  "Gerade eben": "Zojuist",
+  "ganztägig": "hele dag",
+  "jede Woche": "elke week",
+  "Demnächst": "Binnenkort",
+  "Früher": "Eerder",
+  "Diese Woche": "Deze week",
+  "Letzte 30 Tage": "Laatste 30 dagen",
+  "Nächste 4 Wochen": "Komende 4 weken",
+  "30 Tage": "30 dagen",
+  "7 Tage": "7 dagen",
+  "Älter als ein Tag": "Ouder dan een dag",
+  "Räume": "Kamers",
+  "Raum": "Kamer",
+  "Szenen": "Scènes",
+  "Szene": "Scène",
+  "Favoriten": "Favorieten",
+  "Aktivität": "Activiteit",
+  "Akku": "Accu",
+  "Akku schwach": "Accu laag",
+  "Akku verbraucht": "Accu leeg",
+  "Akku & Strom": "Accu & stroom",
+  "Akku Lecksensor": "Batterij leksensor",
+  "Akku Temperaturfühler": "Batterij temperatuurvoeler",
+  "Akku-Bereich": "Accubereik",
+  "Akku-Gesundheit": "Accugezondheid",
+  "Aktualisieren": "Bijwerken",
+  "Aktueller Raum": "Huidige kamer",
+  "Aktueller Verbrauch": "Huidig verbruik",
+  "Alarm ausgelöst": "Alarm afgegaan",
+  "Alarm ausgelöst!": "Alarm afgegaan!",
+  "Alarm läuft an": "Alarm wordt ingeschakeld",
+  "Alle An": "Alles aan",
+  "Alle Aus": "Alles uit",
+  "Alle an": "Alles aan",
+  "Alle aus": "Alles uit",
+  "Alles aus": "Alles uit",
+  "1 Licht im Haus ausschalten?": "1 lamp in huis uitschakelen?",
+  "Alle Lichter": "Alle lampen",
+  "Alle Räume aus": "Alle kamers uit",
+  "Alle Szenen": "Alle scènes",
+  "Alle Temperaturen im Normalbereich": "Alle temperaturen normaal",
+  "Alle Türen entriegelt": "Alle deuren ontgrendeld",
+  "Alle Türen verriegelt": "Alle deuren vergrendeld",
+  "Alle aktualisieren": "Alles bijwerken",
+  "Alle entriegelt": "Alles ontgrendeld",
+  "Alle geschlossen": "Alles gesloten",
+  "Alle geöffnet": "Alles open",
+  "Alle offline": "Alles offline",
+  "Alle unterwegs": "Iedereen weg",
+  "Alle verriegelt": "Alles vergrendeld",
+  "Alle zuhause": "Iedereen thuis",
+  "Alles im grünen Bereich": "Alles in orde",
+  "An · alle Räume warm genug": "Aan · alle kamers warm genoeg",
+  "AquaStop ausgelöst": "AquaStop geactiveerd",
+  "Aufnahme nicht verfügbar": "Opname niet beschikbaar",
+  "Ausfüllen": "Invullen",
+  "Außenluft": "Buitenlucht",
+  "Außenluft belastet": "Buitenlucht vervuild",
+  "Außenluft enthält mehr Wasser": "Buitenlucht bevat meer vocht",
+  "Außenluft ist feuchter": "Buitenlucht is vochtiger",
+  "Außenluft ist trockener": "Buitenlucht is droger",
+  "Außentemperatur": "Buitentemperatuur",
+  "Bald lüften": "Binnenkort luchten",
+  "Beifahrertür": "Bijrijdersdeur",
+  "Bekommt zu viel Licht": "Krijgt te veel licht",
+  "Bereit zum Starten": "Klaar om te starten",
+  "Bereit zur Anpassung": "Klaar om aan te passen",
+  "Bestätigen": "Bevestigen",
+  "Betttemperatur gestört": "Storing bedtemperatuur",
+  "Bewölkt": "Bewolkt",
+  "Bitte nachfüllen": "Even bijvullen",
+  "Bitte nicht stören: an": "Niet storen: aan",
+  "Bitte nicht stören: aus": "Niet storen: uit",
+  "Braucht Dünger": "Heeft voeding nodig",
+  "Braucht etwas Pflege": "Heeft wat zorg nodig",
+  "Braucht mehr Licht": "Heeft meer licht nodig",
+  "Braucht sofortige Pflege": "Heeft nu zorg nodig",
+  "Bypass und Entladen": "Bypass en ontladen",
+  "CO₂ erhöht – lüften": "CO₂ verhoogd – luchten",
+  "CO₂ hoch – Fenster öffnen": "CO₂ hoog – raam openen",
+  "Claude schaut sich das Bild an …": "Claude bekijkt het beeld…",
+  "Cookidoo-App öffnen": "Cookidoo-app openen",
+  "Apple Music öffnen": "Apple Music openen",
+  "Dock-Fehler": "Dockfout",
+  "Dosiermenge je Stoß": "Dosis per stoot",
+  "Druck": "Print",
+  "Druck abbrechen": "Print afbreken",
+  "Druck läuft gerade": "Print is bezig",
+  "Druck prüfen": "Print controleren",
+  "Druckbett heizt vor": "Printbed warmt op",
+  "Druckbett kühlt ab": "Printbed koelt af",
+  "Du bist diesen Monat nicht dran": "Jij bent deze maand niet aan de beurt",
+  "Durchgänge erfasst": "Cycli geregistreerd",
+  "Düngeanlage": "Doseerpomp",
+  "Dünger": "Voeding",
+  "Düse": "Nozzle",
+  "Düse heizt auf": "Nozzle warmt op",
+  "Düse kühlt ab": "Nozzle koelt af",
+  "Düse verstopft": "Nozzle verstopt",
+  "Düse wird gereinigt": "Nozzle wordt gereinigd",
+  "Düsentemperatur gestört": "Storing nozzletemperatuur",
+  "EU-Data-Act-Portal, kommt verzögert": "EU-Data-Act-portaal, komt vertraagd",
+  "Eigene Leistung": "Eigen vermogen",
+  "Eingriff nötig": "Ingrijpen nodig",
+  "Einkaufsliste nicht verfügbar": "Boodschappenlijst niet beschikbaar",
+  "Energie heute": "Energie vandaag",
+  "Erde zu feucht": "Grond te nat",
+  "Erde zu trocken": "Grond te droog",
+  "Erhöhte Partikelbelastung": "Verhoogd fijnstof",
+  "Erste Schicht wird geprüft": "Eerste laag wordt gecontroleerd",
+  "Fahrertür": "Bestuurdersdeur",
+  "Falls das Ende nicht erkannt wird": "Als het einde niet wordt herkend",
+  "Fehler aufgetreten": "Er is een fout opgetreden",
+  "Fehler bei der Anfrage.": "De aanvraag is mislukt.",
+  "Fehler bei der Spracheingabe.": "Spraakinvoer mislukt.",
+  "Fehler gemeldet": "Fout gemeld",
+  "Fehler in der ersten Schicht": "Fout in de eerste laag",
+  "Fenster": "Ramen",
+  "Fenster & Schiebedach": "Ramen & schuifdak",
+  "Fenster &amp; Schiebedach": "Ramen &amp; schuifdak",
+  "Fenster hinten links": "Raam linksachter",
+  "Fenster hinten rechts": "Raam rechtsachter",
+  "Fenster offen": "Raam open",
+  "Fenster schließen": "Raam sluiten",
+  "Fenster vorne links": "Raam linksvoor",
+  "Fenster vorne rechts": "Raam rechtsvoor",
+  "Fenster weit auf, nach Außentemperatur": "Ramen wijd open, op basis van buitentemperatuur",
+  "Fenster-Erkennung": "Raamdetectie",
+  "Fensterläden": "Luiken",
+  "Fernstart am Gerät nicht erlaubt": "Starten op afstand niet toegestaan op het apparaat",
+  "Feuchte": "Vochtigheid",
+  "Feuchter draußen": "Vochtiger buiten",
+  "Filter": "Filter",
+  "Filter & Kondensator reinigen": "Filter & condensor reinigen",
+  "Filter reinigen": "Filter reinigen",
+  "Filter verstopft": "Filter verstopt",
+  "Firmware passt nicht": "Firmware past niet",
+  "Firmware-Update verfügbar": "Firmware-update beschikbaar",
+  "Fläche": "Oppervlak",
+  "Fläche insgesamt": "Totaal oppervlak",
+  "Frischwasser auffüllen": "Schoon water bijvullen",
+  "Frontabdeckung prüfen": "Voorklep controleren",
+  "Fußbodenheizung": "Vloerverwarming",
+  "Fährt herunter": "Schakelt uit",
+  "Fährt zum Dock": "Keert terug naar dock",
+  "Fährt zum Ziel": "Onderweg naar doel",
+  "Fährt zur Moppwäsche": "Onderweg naar dweilreiniging",
+  "Gehärteter Stahl": "Gehard staal",
+  "Gerade kein Überschuss": "Nu geen overschot",
+  "Kein Sensor": "Geen sensor",
+  "Kein Überschuss": "Geen overschot",
+  "Kein Sensor gewählt": "Geen sensor gekozen",
+  "Jetzt nutzen": "Nu gebruiken",
+  "Keiner": "Geen",
+  "Hausverbrauch": "Huisverbruik",
+  "Solar-Tipp": "Zonnetip",
+  "Sobald Sonnenstrom übrig ist, steht hier, welches Gerät sich lohnt.": "Zodra er zonnestroom over is, staat hier welk apparaat de moeite loont.",
+  "Gereinigte Fläche": "Gereinigd oppervlak",
+  "Gerät": "Apparaat",
+  "Geräte": "Apparaten",
+  "Geräte laufen schon": "Apparaten zijn al bezig",
+  "Gerätemeldung (HMS)": "Apparaatmelding (HMS)",
+  "Geräteprofil": "Apparaatprofiel",
+  "Gerätestatus": "Apparaatstatus",
+  "Geschirrspüler": "Vaatwasser",
+  "Waschmaschine": "Wasmachine",
+  "Trockner": "Droger",
+  "3D-Drucker": "3D-printer",
+  "Saugroboter": "Robotstofzuiger",
+  "Gilt bis morgen 9:00, dann übernimmt wieder der HA-Zeitplan.": "Geldt tot morgen 9:00, daarna neemt het HA-schema het weer over.",
+  "Für Räder mit Bosch Smart System: Die Werte kommen aus der Integration Bosch eBike (HACS: Xunil99/ha-bosch-ebike).": "Voor fietsen met het Bosch Smart System: de waarden komen uit de integratie Bosch eBike (HACS: Xunil99/ha-bosch-ebike).",
+  "Gründlich": "Grondig",
+  "Gründlich+": "Grondig+",
+  "Hauptbürste": "Hoofdborstel",
+  "Hauptbürste blockiert": "Hoofdborstel geblokkeerd",
+  "Hauptspülen": "Hoofdspoeling",
+  "Hauptwäsche": "Hoofdwas",
+  "Heizkörper": "Radiator",
+  "Heizung": "Verwarming",
+  "Herausnehmen und ausspülen": "Uitnemen en uitspoelen",
+  "Home Assistant jetzt neu starten?": "Home Assistant nu herstarten?",
+  "Höhenmeter": "Hoogtemeters",
+  "Höhenmeter gesamt": "Hoogtemeters totaal",
+  "Hört zu …": "Luistert…",
+  "In der Cookidoo-App auf \"Meine Woche\" planen": "Plan het in de Cookidoo-app onder \"Mijn week\"",
+  "Info-Licht am Boden": "Infolicht op de vloer",
+  "Jetzt lüften": "Nu luchten",
+  "Jetzt prüfen": "Nu controleren",
+  "KI prüft noch …": "AI controleert nog…",
+  "KI-Blick auf den Druck": "AI-blik op de print",
+  "KI-Check steht noch aus": "AI-check staat nog open",
+  "Kalender nicht erreichbar": "Agenda niet bereikbaar",
+  "Kaum Aktivität": "Nauwelijks activiteit",
+  "Kehrt zurück": "Keert terug",
+  "Kehrt zurück & Moppwäsche": "Keert terug & dweilreiniging",
+  "Kein Bild – die Kamera ist aus, schläft oder ist nicht erreichbar.": "Geen beeld – de camera staat uit, slaapt of is niet bereikbaar.",
+  "Die Kamera ist aus oder offline und liefert gerade kein Bild.": "De camera staat uit of is offline en levert nu geen beeld.",
+  "Kein Zugriff aufs Mikrofon – bitte in den Einstellungen erlauben.": "Geen toegang tot de microfoon – sta dit toe in de instellingen.",
+  "Keine Antwort erhalten.": "Geen antwoord ontvangen.",
+  "Keine Batteriesensoren gefunden": "Geen batterijsensoren gevonden",
+  "Keine Daten": "Geen gegevens",
+  "Keine Detailbeschreibung verfügbar.": "Geen uitgebreide beschrijving beschikbaar.",
+  "Keine Idee gefunden": "Geen idee gevonden",
+  "Keine Kameras": "Geen camera's",
+  "Keine Kameras verfügbar": "Geen camera's beschikbaar",
+  "Keine Pflanzensensoren konfiguriert": "Geen plantsensoren ingesteld",
+  "Keine Rückmeldung": "Geen reactie",
+  "Keine Sensoren": "Geen sensoren",
+  "Keine Statusdaten": "Geen statusgegevens",
+  "Keine Szene aktiv": "Geen scène actief",
+  "Keine Szenen": "Geen scènes",
+  "Keine Termine": "Geen afspraken",
+  "Keine Tonnen gefunden": "Geen containers gevonden",
+  "Keine Updates in 30 Tagen": "Geen updates in 30 dagen",
+  "Keine Updates offen": "Geen updates open",
+  "Keine Verbindung": "Geen verbinding",
+  "Keine Verbindung zu Home Assistant.": "Geen verbinding met Home Assistant.",
+  "Keine Warnung": "Geen waarschuwing",
+  "Keine aktiven Warnungen": "Geen actieve waarschuwingen",
+  "Klarspülen": "Naspoelen",
+  "Klarspüler": "Glansspoelmiddel",
+  "Kosten Monat": "Kosten maand",
+  "Kosten heute": "Kosten vandaag",
+  "Kosten letzter Durchgang": "Kosten laatste cyclus",
+  "Kosten pro Tag": "Kosten per dag",
+  "Kurz volle Leistung": "Kort vol vermogen",
+  "Laut Anker-App": "Volgens de Anker-app",
+  "Lautstärke": "Volume",
+  "Leert Staubbehälter": "Leegt stofbak",
+  "Leistung": "Vermogen",
+  "Leistung der Station": "Vermogen van het station",
+  "Leistung jetzt": "Vermogen nu",
+  "Leistung · 24 Stunden": "Vermogen · 24 uur",
+  "Letzte Aufgabe": "Laatste taak",
+  "Letzte Aufnahme": "Laatste opname",
+  "Letzte Durchgänge": "Laatste cycli",
+  "Letzte Fahrt": "Laatste rit",
+  "Letzte Reinigung": "Laatste schoonmaak",
+  "Licht": "Licht",
+  "Licht nicht erreichbar": "Lamp niet bereikbaar",
+  "Licht offline": "Lamp offline",
+  "Luft gut": "Lucht goed",
+  "Luft zu feucht": "Lucht te vochtig",
+  "Luft zu trocken": "Lucht te droog",
+  "Luftfeuchte außen": "Luchtvochtigheid buiten",
+  "Luftqualität": "Luchtkwaliteit",
+  "Luftqualität ist gut": "Luchtkwaliteit is goed",
+  "Luftqualität ist hervorragend": "Luchtkwaliteit is uitstekend",
+  "Luftqualität ist mäßig": "Luchtkwaliteit is matig",
+  "Luftqualität nicht verfügbar": "Luchtkwaliteit niet beschikbaar",
+  "Länger abwesend": "Langer afwezig",
+  "Lässt sich nicht fortsetzen": "Kan niet worden hervat",
+  "Läuft seit": "Bezig sinds",
+  "Lüften": "Luchten",
+  "Lüften empfohlen": "Luchten aanbevolen",
+  "Lüften erkannt": "Luchten herkend",
+  "Lüften hilft gegen Feuchte": "Luchten helpt tegen vocht",
+  "Lüften hilft nicht gegen Feuchte": "Luchten helpt niet tegen vocht",
+  "Lüfter zu langsam": "Ventilator te langzaam",
+  "Lüftet": "Lucht",
+  "Maschine läuft gerade": "Machine is bezig",
+  "Maschinenpflege fällig": "Machineonderhoud nodig",
+  "Material wird geprüft": "Materiaal wordt gecontroleerd",
+  "Mikrofon nicht verfügbar.": "Microfoon niet beschikbaar.",
+  "Min. übrig": "min over",
+  "Mopp nicht angebracht": "Dweil niet bevestigd",
+  "Moppwäsche": "Dweilreiniging",
+  "Moppwäsche gestört": "Storing dweilreiniging",
+  "Pause · wäscht Mopp": "Pauze · wast dweil",
+  "Pause · saugt ab": "Pauze · leegt stofbak",
+  "Pause · trocknet": "Pauze · droogt",
+  "Pause · lädt": "Pauze · laadt",
+  "Pause · an der Station": "Pauze · bij het station",
+  "Muss gedüngt werden": "Moet worden bemest",
+  "NO₂ erkannt – lüften": "NO₂ gemeten – luchten",
+  "Nachfüllen & Pflege": "Bijvullen & onderhoud",
+  "Nachfüllen &amp; Pflege": "Bijvullen &amp; onderhoud",
+  "Neu auswerten": "Opnieuw beoordelen",
+  "Neu prüfen": "Opnieuw controleren",
+  "Neu starten": "Herstarten",
+  "Nicht stören": "Niet storen",
+  "Nichts Neues": "Niets nieuws",
+  "Nichts geplant": "Niets gepland",
+  "Nichts läuft": "Er speelt niets",
+  "Nichts in den nächsten 30 Tagen": "Niets in de komende 30 dagen",
+  "Noch keine Idee": "Nog geen idee",
+  "Noch nicht geprüft": "Nog niet gecontroleerd",
+  "Nächste Abholung": "Volgende ophaaldag",
+  "Nächste Solltemperatur": "Volgende doeltemperatuur",
+  "Nächster Service": "Volgende onderhoudsbeurt",
+  "Nährstoffe": "Voedingsstoffen",
+  "Oberer Stoßfänger gedrückt": "Bovenste bumper ingedrukt",
+  "Per Bluetooth nicht erreichbar": "Via Bluetooth niet bereikbaar",
+  "Pflanze kämpft": "Plant heeft het zwaar",
+  "Pflanze schwächelt": "Plant verzwakt",
+  "Pflege": "Verzorging",
+  "Pflege fällig": "Verzorging nodig",
+  "Prognose für dieses Programm": "Prognose voor dit programma",
+  "Programm": "Programma",
+  "Programm abbrechen": "Programma afbreken",
+  "Programm abgebrochen": "Programma afgebroken",
+  "Programm abgeschlossen": "Programma voltooid",
+  "Programm aus der Roborock-App": "Programma uit de Roborock-app",
+  "Programm festlegen": "Programma instellen",
+  "Programm „Maschinenpflege“ mit Reiniger starten": "Programma “machineonderhoud” met reiniger starten",
+  "Prüfen": "Controleren",
+  "Prüft …": "Controleert…",
+  "Prüfung fehlgeschlagen": "Controle mislukt",
+  "Aktiviert · Bypass": "Ingeschakeld · bypass",
+  "Einzelne Sensoren ausgenommen": "Enkele sensoren uitgezonderd",
+  "Alarm aus": "Alarm uit",
+  "Rezepte": "Recepten",
+  "Kühlt": "Koelt",
+  "Entfeuchten": "Ontvochtigen",
+  "Nur Lüfter": "Alleen ventilator",
+  "Keine KI eingerichtet (Einstellungen → KI-Aufgaben)": "Geen AI ingesteld (Instellingen → AI-taken)",
+  "Auswertung fehlgeschlagen.": "Analyse mislukt.",
+  "Qualität": "Kwaliteit",
+  "Reichweite jetzt": "Bereik nu",
+  "Reichweite voller Akku": "Bereik met volle accu",
+  "Restzeit": "Resterende tijd",
+  "Roboter lädt nicht": "Robot laadt niet",
+  "Räder blockiert": "Wielen geblokkeerd",
+  "Räder hängen in der Luft": "Wielen hangen in de lucht",
+  "Räume auswählen": "Kamers kiezen",
+  "Räume reinigen": "Kamers schoonmaken",
+  "Saugstärke": "Zuigkracht",
+  "Saugt & wischt Raum": "Zuigt & dweilt kamer",
+  "Schalte alle Lichter aus": "Schakel alle lampen uit",
+  "Scharfschaltung läuft": "Wordt ingeschakeld",
+  "Schlafzimmer Fenster ist offen": "Slaapkamerraam staat open",
+  "Schließen": "Sluiten",
+  "Zurück": "Terug",
+  "Schließt": "Sluit",
+  "Schließt bei Temperatursturz": "Sluit bij een temperatuurval",
+  "Schließt sich …": "Sluit…",
+  "Schmutzfänger (Station)": "Vuilopvang (station)",
+  "Schmutzfänger prüfen": "Vuilopvang controleren",
+  "Seitenbürste": "Zijborstel",
+  "Seitenbürste blockiert": "Zijborstel geblokkeerd",
+  "Sensordaten nicht verfügbar": "Sensorgegevens niet beschikbaar",
+  "Sensoren temporär deaktiviert": "Sensoren tijdelijk uitgeschakeld",
+  "Service fällig": "Onderhoud nodig",
+  "Sirene an": "Sirene aan",
+  "Sirene auslösen?": "Sirene laten afgaan?",
+  "Solaranteil heute": "Zonaandeel vandaag",
+  "Spaßmodus": "Plezierstand",
+  "Speiseplan nicht verfügbar": "Weekmenu niet beschikbaar",
+  "Spülen": "Spoelen",
+  "Starten": "Starten",
+  "Startet später": "Start later",
+  "Staubbehälter fehlt": "Stofbak ontbreekt",
+  "Staubbehälter leeren": "Stofbak legen",
+  "Std. übrig": "u over",
+  "Steckdose nicht erreichbar": "Stopcontact niet bereikbaar",
+  "Stoßfänger klemmt": "Bumper klemt",
+  "Stoßlüften": "Stootluchten",
+  "Stromstärke": "Stroomsterkte",
+  "Süßwasser": "Zoetwater",
+  "Taste an der Steckdose": "Toets op het stopcontact",
+  "Tasten am Gerät gesperrt": "Toetsen op het apparaat vergrendeld",
+  "Tasten an der Station": "Toetsen op het station",
+  "Teils bewölkt": "Half bewolkt",
+  "Teilweise bewölkt": "Gedeeltelijk bewolkt",
+  "Teilweise geöffnet": "Deels open",
+  "Temperatur": "Temperatuur",
+  "Temperatur am Heizkörper": "Temperatuur bij de radiator",
+  "Temperatur im AMS": "Temperatuur in het AMS",
+  "Temperatur im Haus": "Temperatuur in huis",
+  "Temperatur im Normalbereich": "Temperatuur normaal",
+  "Temperatur kritisch": "Temperatuur kritiek",
+  "Temperaturfühler": "Temperatuurvoeler",
+  "Temperaturfühler offline": "Temperatuurvoeler offline",
+  "Ton an": "Geluid aan",
+  "Trotzdem aus": "Toch uit",
+  "Tür": "Deur",
+  "Tür entriegelt": "Deur ontgrendeld",
+  "Tür hinten links": "Deur linksachter",
+  "Tür hinten rechts": "Deur rechtsachter",
+  "Tür ist offen": "Deur staat open",
+  "Tür offen": "Deur open",
+  "Tür verriegelt": "Deur vergrendeld",
+  "Türen": "Deuren",
+  "Türen & Fenster": "Deuren & ramen",
+  "Türen & Fenster überwacht": "Deuren & ramen bewaakt",
+  "Türen & Klappen": "Deuren & kleppen",
+  "Türen &amp; Klappen": "Deuren &amp; kleppen",
+  "Unbekanntes Programm": "Onbekend programma",
+  "VOCs erkannt – lüften": "VOC's gemeten – luchten",
+  "Ventilöffnung": "Klepstand",
+  "Verbrauch": "Verbruik",
+  "Verbrauch Monat": "Verbruik maand",
+  "Verbrauch heute": "Verbruik vandaag",
+  "Verbrauch pro Tag": "Verbruik per dag",
+  "Verfügbare Updates": "Beschikbare updates",
+  "Verlauf nicht verfügbar": "Geschiedenis niet beschikbaar",
+  "Verzögerter Start": "Uitgestelde start",
+  "Vollständig geladen": "Volledig opgeladen",
+  "Vorhänge": "Gordijnen",
+  "Vorspülen": "Voorspoelen",
+  "Vorwäsche": "Voorwas",
+  "Wasser erkannt": "Water gedetecteerd",
+  "Wasser erkannt!": "Water gedetecteerd!",
+  "Wasserbehälter leer": "Watertank leeg",
+  "Wasserstärke": "Waterdebiet",
+  "Weiter": "Verder",
+  "Weitere Geräte": "Meer apparaten",
+  "Welche Fenster sind offen?": "Welke ramen staan open?",
+  "Welche Lichter sind an?": "Welke lampen zijn aan?",
+  "Weniger als 1 Min. übrig": "Minder dan 1 min over",
+  "Windig & bewölkt": "Winderig & bewolkt",
+  "Wird übernommen": "Wordt toegepast",
+  "Wird abgebrochen": "Wordt afgebroken",
+  "Wird aktiviert …": "Wordt ingeschakeld…",
+  "Wird aktualisiert": "Wordt bijgewerkt",
+  "Wird deaktiviert …": "Wordt uitgeschakeld…",
+  "Wird eingerichtet": "Wordt ingesteld",
+  "Wird entfernt": "Wordt verwijderd",
+  "Wird erkannt …": "Wordt herkend…",
+  "Wird geladen …": "Wordt geladen…",
+  "Wird geleert": "Wordt geleegd",
+  "Wird gewaschen": "Wordt gewassen",
+  "Wird installiert": "Wordt geïnstalleerd",
+  "Wird unscharf geschaltet": "Wordt uitgeschakeld",
+  "Wirklich öffnen?": "Echt openen?",
+  "Wischt Raum": "Dweilt kamer",
+  "Wärmeanforderung": "Warmtevraag",
+  "Zeitplan überschrieben": "Schema overschreven",
+  "Zeitüberschreitung – bitte nochmal versuchen.": "Time-out – probeer het opnieuw.",
+  "Zieltemperatur alle Räume": "Doeltemperatuur alle kamers",
+  "Zu viel Dünger": "Te veel voeding",
+  "Zuletzt aktualisiert": "Laatst bijgewerkt",
+  "Zuletzt gedruckt": "Laatst geprint",
+  "Zum Öffnen tippen": "Tik om te openen",
+  "Zurücksetzen": "Resetten",
+  "Zusätzliche Käufe": "Extra aankopen",
+  "Zählerstand": "Meterstand",
+  "außen": "buiten",
+  "Öffnen": "Openen",
+  "Öffnet": "Opent",
+  "Öffnet sich …": "Opent…",
+  "Ölstand": "Oliepeil",
+  "Ölwechsel": "Olie verversen",
+  "Idee der Woche von Claude": "Idee van de week van Claude",
+  "Lüftungs-Coach": "Ventilatiecoach",
+  "Heizungs-Coach": "Verwarmingscoach",
+  "Energie-Coach": "Energiecoach",
+  "Raumklima": "Binnenklimaat",
+  "Keine Klimasensoren in diesem Raum": "Geen klimaatsensoren in deze kamer",
+  "Ein Feuchte- oder CO₂-Sensor im Raum genügt": "Eén vocht- of CO₂-sensor in de kamer is genoeg",
+  "Sonnenstrom übrig": "Zonnestroom over",
+  "Fahrzeug": "Voertuig",
+  "Rezept der Woche": "Recept van de week",
+  "Schlösser": "Sloten",
+  "Beleuchtung": "Verlichting",
+  "Jalousien": "Rolluiken",
+  "Klima": "Klimaat",
+  "Energie": "Energie",
+  "Sicherheit": "Beveiliging",
+  "Medien": "Media",
+  "Personen": "Personen",
+  "Batterien": "Batterijen",
+  "Netzwerk": "Netwerk",
+  "Pflanzen": "Planten",
+  "Kameras": "Camera's",
+  "Kalender": "Agenda",
+  "Abfall": "Afval",
+  "Abfall heute": "Afval vandaag",
+  "Abfall morgen": "Afval morgen",
+  "Restmüll": "Restafval",
+  "Biomüll": "GFT",
+  "Papier": "Papier",
+  "Gelber Sack": "PMD",
+  "Wertstoff": "PMD",
+  "Abkühlen": "Afkoelen",
+  "Abpumpen nicht möglich": "Afpompen niet mogelijk",
+  "Abbrechen": "Annuleren",
+  "Beispiel-Künstler": "Voorbeeldartiest",
+  "Türen offen": "Deuren open",
+  "Zuletzt": "Laatst",
+  "Zuletzt:": "Laatst:",
+  "Entlädt": "Ontlaadt",
+  "Weißton": "Wittint",
+  "Helligkeit": "Helderheid",
+  "Farbe": "Kleur",
+  "Temperaturverlauf": "Temperatuurverloop",
+  "Fenster offen · noch": "Raam open · nog",
+  "Zu feucht": "Te vochtig",
+  "Luftfeuchte": "Luchtvochtigheid",
+  "Heizt": "Verwarmt",
+  "Heizen": "Verwarmen",
+  "Kühlen": "Koelen",
+  "Druckt": "Print",
+  "Reinigt": "Reinigt",
+  "Saugt": "Zuigt",
+  "Angedockt": "In dock",
+  "Lädt auf": "Laadt op",
+  "Unterwegs": "Weg",
+  "Zuhause": "Thuis",
+  "Abwesend": "Afwezig",
+  "Luft": "Lucht",
+  "Wasser": "Water",
+  "Strom": "Stroom",
+  "Solar": "Zon",
+  "Netz": "Net",
+  "Haus": "Huis",
+  "Einspeisung": "Teruglevering",
+  "Netzbezug": "Netafname",
+  "Autarkie": "Zelfvoorziening",
+  "Eigenverbrauch": "Eigen verbruik",
+  "Heute": "Vandaag",
+  "Dieser Monat": "Deze maand",
+  "Diesen Monat": "Deze maand",
+  "Monat": "Maand",
+  "Woche": "Week",
+  "Jahr": "Jaar",
+  "Schwach": "Laag",
+  "Voll": "Vol",
+  "Leer": "Leeg",
+  "Niedrig": "Laag",
+  "Hoch": "Hoog",
+  "Mittel": "Gemiddeld",
+  "Normal": "Normaal",
+  "Online": "Online",
+  "Offline": "Offline",
+  "Unbekannt": "Onbekend",
+  "Bauteillüfter": "Onderdeelventilator",
+  "Druckkopflüfter": "Hotend-ventilator",
+  "Druckraumlüfter": "Kamerventilator",
+  "Lüfter": "Ventilator",
+  "Claude wertet einmal pro Woche (samstags 10 Uhr) Feuchte, CO₂ und Fensterzeiten aus und sagt, wo, wann und wie lange sich Lüften lohnt.": "Claude bekijkt eens per week (zaterdag 10 uur) vochtigheid, CO₂ en raamtijden en zegt waar, wanneer en hoe lang luchten de moeite loont.",
+  "Die Auswertung startet mit der Heizsaison: Sobald geheizt wird, prüft Claude jeden Montag Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad.": "De analyse begint met het stookseizoen: zodra er wordt gestookt, controleert Claude elke maandag de stooktijd, kamertemperaturen, verwarmen bij open raam en de radiator in de badkamer.",
+  "Gesichert": "Beveiligd",
+  "Sicher": "Veilig",
+  "Braucht Aufmerksamkeit": "Heeft aandacht nodig",
+  "Nicht gesichert": "Niet beveiligd",
+  "Fortschritt": "Voortgang",
+  "Schicht": "Laag",
+  "Aufgabe": "Taak",
+  "Steuerung": "Bediening",
+  "Pausieren": "Pauzeren",
+  "Abspielen": "Afspelen",
+  "Fortsetzen": "Hervatten",
+  "Druckraumlicht": "Kamerlicht",
+  "Kamera": "Camera",
+  "Temperaturen": "Temperaturen",
+  "Druckbett": "Printbed",
+  "Steckdose": "Stopcontact",
+  "Spannung": "Spanning",
+  "Luftfeuchtigkeit im AMS": "Luchtvochtigheid in het AMS",
+  "Drucker": "Printer",
+  "Druckzeit insgesamt": "Totale printtijd",
+  "Druckplatte": "Printplaat",
+  "Texturiert (PEI)": "Getextureerd (PEI)",
+  "Glatt (PEI)": "Glad (PEI)",
+  "Edelstahl": "Roestvrij staal",
+  "Einstellungen": "Instellingen",
+  "Luftfeuchtigkeit": "Luchtvochtigheid",
+  "Status": "Status",
+  "Modus": "Modus",
+  "Zustand": "Toestand",
+  "Zielwert": "Doelwaarde",
+  "Feinstaub PM2,5": "Fijnstof PM2,5",
+  "Bodenfeuchtigkeit": "Bodemvocht",
+  "Beleuchtungsstärke": "Lichtsterkte",
+  "Bewegung": "Beweging",
+  "Ausschalten": "Uitschakelen",
+  "Einschalten": "Inschakelen",
+  "Durchschnitt im Haus": "Gemiddelde in huis",
+  "Halbe Ladung": "Halve lading",
+  "Heizkreise mit Strom versorgt": "Verwarmingsgroepen van stroom voorzien",
+  "Kindersicherung": "Kinderslot",
+  "Nur im Betrieb schaltbar": "Alleen tijdens gebruik schakelbaar",
+  "Verbindung": "Verbinding",
+  "Weitere Einstellungen": "Meer instellingen",
+  "Nächste Stunden": "Komende uren",
+  "Nachtlicht": "Nachtlampje",
+  "Anzeige": "Weergave",
+  "Automatik": "Automatisch",
+  "Heizpause": "Stookpauze",
+  "Temperaturabsenkung": "Temperatuurverlaging",
+  "Abgerufen": "Opgehaald",
+  "Abpumpen": "Afpompen",
+  "AdBlue-Reichweite": "AdBlue-bereik",
+  "Akkufehler": "Accufout",
+  "Akkustand": "Accuniveau",
+  "Aktiv": "Actief",
+  "Aktiver": "Actief",
+  "Aktivieren": "Activeren",
+  "Aktiviert": "Geactiveerd",
+  "Aktualisiert": "Bijgewerkt",
+  "Aktuell": "Actueel",
+  "Anbieter": "Aanbieder",
+  "Angenehm": "Aangenaam",
+  "Angepasst": "Aangepast",
+  "Angezogen": "Aangetrokken",
+  "Anpassen": "Aanpassen",
+  "Anzeigen": "Tonen",
+  "Aquarien": "Aquaria",
+  "Aquarium-Doktor": "Aquariumdokter",
+  "Aufgehoben": "Opgeheven",
+  "Aufheben": "Opheffen",
+  "Aufheizen": "Opwarmen",
+  "Aufmerksamkeit": "Aandacht",
+  "Aufnahme": "Opname",
+  "Aufwachen": "Wordt wakker",
+  "Ausblenden": "Verbergen",
+  "Ausgeschaltet": "Uitgeschakeld",
+  "Ausgewogen": "Gebalanceerd",
+  "Ausstehend": "In afwachting",
+  "Automatisch": "Automatisch",
+  "Badezimmer": "Badkamer",
+  "Batterie": "Batterij",
+  "Beckenlicht": "Aquariumlicht",
+  "Bedeckt": "Betrokken",
+  "Beenden": "Stoppen",
+  "Beendet": "Beëindigd",
+  "Benachrichtigungen": "Notificaties",
+  "Beobachten": "Volgen",
+  "Bereitschaft": "Stand-by",
+  "Beschattungsautomatik": "Zonweringsautomatiek",
+  "Betriebsart": "Bedrijfsmodus",
+  "Betriebssystem": "Besturingssysteem",
+  "Bezug": "Van het net",
+  "Bild": "Beeld",
+  "Blockiert": "Geblokkeerd",
+  "Bodenfeuchte": "Bodemvocht",
+  "Büro": "Kantoor",
+  "Datenstand": "Gegevens per",
+  "Deaktivieren": "Deactiveren",
+  "Deaktiviert": "Uitgeschakeld",
+  "Diebstahl": "Diefstal",
+  "Dosieren": "Doseren",
+  "Dosiert": "Gedoseerd",
+  "Druckfehler": "Printfout",
+  "Durchgang": "Cyclus",
+  "Durchgängen": "cycli",
+  "Eigene": "Eigen",
+  "Eigenversorgung": "Zelfvoorziening",
+  "Eingeschaltet": "Ingeschakeld",
+  "Einkaufsliste": "Boodschappenlijst",
+  "Einpassen": "Inpassen",
+  "Einweichen": "Weken",
+  "Endet": "Eindigt",
+  "Energiebedarf": "Energiebehoefte",
+  "Energieverbrauch": "Energieverbruik",
+  "Entkalken": "Ontkalken",
+  "Entwarnung": "Veilig",
+  "Erinnerung": "Herinnering",
+  "Erkannt": "Gedetecteerd",
+  "Erkennung": "Detectie",
+  "Erledigt": "Afgerond",
+  "Extrem": "Extreem",
+  "Fahrt": "Rit",
+  "Fahrten": "Ritten",
+  "Fahrzeit": "Rijtijd",
+  "Favorit": "Favoriet",
+  "Fehlgeschlagen": "Mislukt",
+  "Fernstart": "Starten op afstand",
+  "Feststellbremse": "Parkeerrem",
+  "Filamentwechsel": "Filamentwissel",
+  "Flur": "Gang",
+  "Frei": "Vrij",
+  "Freigeben": "Goedkeuren",
+  "Gekippt": "Gekanteld",
+  "Gemeldet": "Gemeld",
+  "Gering": "Gering",
+  "Geringer": "Lager",
+  "Geschwindigkeit": "Snelheid",
+  "Gestartet": "Gestart",
+  "Gestern": "Gisteren",
+  "Gestoppt": "Gestopt",
+  "Gesund": "Gezond",
+  "Gewitter": "Onweer",
+  "HA-Zeitplan": "HA-schema",
+  "Hagel": "Hagel",
+  "Handeln": "Handelen",
+  "Hauptschalter": "Hoofdschakelaar",
+  "Hauswirtschaftsraum": "Bijkeuken",
+  "Heckklappe": "Achterklep",
+  "Hinweis": "Opmerking",
+  "Hinweise": "Opmerkingen",
+  "Inaktiv": "Inactief",
+  "Inspektion": "Inspectie",
+  "Installiert": "Geïnstalleerd",
+  "Intensiv": "Intensief",
+  "Isoliert": "Geïsoleerd",
+  "Jalousien-Automatik": "Rolluikautomatiek",
+  "Jetzt": "Nu",
+  "Kalibrierung": "Kalibratie",
+  "Kalorien": "Calorieën",
+  "Kalt": "Koud",
+  "Kaltstart": "Koude start",
+  "Kanal": "Kanaal",
+  "Kartierung": "In kaart brengen",
+  "Kilometerstand": "Kilometerstand",
+  "Klar": "Helder",
+  "Klingel": "Deurbel",
+  "Knitterschutz": "Kreukbescherming",
+  "Kritisch": "Kritiek",
+  "Küche": "Keuken",
+  "LAN-Download": "LAN-download",
+  "Ladefehler": "Laadfout",
+  "Ladevorrang": "Laadvoorrang",
+  "Ladezyklen": "Laadcycli",
+  "Lagerwartung": "Lageronderhoud",
+  "Langzeit": "Langetermijn",
+  "Lecksensor": "Leksensor",
+  "Leicht": "Licht",
+  "Leise": "Stil",
+  "Leiser": "Stiller",
+  "Lichtsteuerung": "Lichtbediening",
+  "Luftdruck": "Luchtdruk",
+  "Luftreiniger": "Luchtreiniger",
+  "Manuell": "Handmatig",
+  "Markisen": "Zonneschermen",
+  "Maschinenpflege": "Machineonderhoud",
+  "Maschinenreinigung": "Machinereiniging",
+  "Meerwasser": "Zeewater",
+  "Meldefehler": "Meldfout",
+  "Messwerte": "Meetwaarden",
+  "Minuten": "minuten",
+  "Motorhaube": "Motorkap",
+  "Motorstunden": "Motoruren",
+  "Nacht": "Nacht",
+  "Nachtmodus": "Nachtmodus",
+  "Neustart": "Herstart",
+  "Nivellieren": "Nivelleren",
+  "Notfall": "Noodgeval",
+  "Notstrom": "Noodstroom",
+  "Optionen": "Opties",
+  "Orten": "Lokaliseren",
+  "Patrouille": "Patrouille",
+  "Pflanzen-Doktor": "Plantendokter",
+  "Profil": "Profiel",
+  "Punktreinigung": "Plekreiniging",
+  "Quelle": "Bron",
+  "Raumluft": "Binnenlucht",
+  "Raumreinigung": "Kamerreiniging",
+  "Raumtemperatur": "Kamertemperatuur",
+  "Rausstellen": "Buiten zetten",
+  "Referenzfahrt": "Referentierit",
+  "Regen": "Regen",
+  "Regeneriersalz": "Regeneratiezout",
+  "Regnerisch": "Regenachtig",
+  "Reichweite": "Bereik",
+  "Reinigen": "Reinigen",
+  "Reinigung": "Reiniging",
+  "Reinigungen": "Reinigingen",
+  "Reinigungsmodus": "Reinigingsmodus",
+  "Ruhig": "Rustig",
+  "Salz": "Zout",
+  "Sanft": "Zacht",
+  "Sauber": "Schoon",
+  "Saugen": "Zuigen",
+  "Schiebedach": "Schuifdak",
+  "Schildkröte": "Schildpad",
+  "Schlafzimmer": "Slaapkamer",
+  "Schleudern": "Centrifugeren",
+  "Schnee": "Sneeuw",
+  "Schneefall": "Sneeuwval",
+  "Schneeregen": "Natte sneeuw",
+  "Schnell": "Snel",
+  "Schnellwahl": "Snelkeuze",
+  "Schrittverlust": "Stapverlies",
+  "Schutzladung": "Beschermlading",
+  "Schwer": "Zwaar",
+  "Sensoren": "Sensoren",
+  "Sicherheitswarnung": "Veiligheidswaarschuwing",
+  "Sichtweite": "Zicht",
+  "Slicen": "Slicen",
+  "Sofort": "Direct",
+  "Solaranlage": "Zonnepanelen",
+  "Sonnig": "Zonnig",
+  "Speiseplan": "Weekmenu",
+  "Starker": "Zware",
+  "Starkregen": "Zware regen",
+  "Startet": "Start",
+  "Statistik": "Statistiek",
+  "Stufe": "Stand",
+  "Stumm": "Gedempt",
+  "Stunde": "uur",
+  "Stunden": "uur",
+  "Tagen": "dagen",
+  "Tarif": "Tarief",
+  "Tastensperre": "Toetsvergrendeling",
+  "Technik": "Apparatuur",
+  "Temperaturwarnung": "Temperatuurwaarschuwing",
+  "Terrasse": "Terras",
+  "Tonnen": "Containers",
+  "Trittfrequenz": "Trapfrequentie",
+  "Trocken": "Droog",
+  "Trocknen": "Drogen",
+  "Trocknet": "Droogt",
+  "Trommelreinigung": "Trommelreiniging",
+  "Unklar": "Onduidelijk",
+  "Unkritisch": "Onkritisch",
+  "Unscharf": "Uitgeschakeld",
+  "Unter": "Onder",
+  "Unterbrochen": "Onderbroken",
+  "Unwetter": "Noodweer",
+  "Urlaub": "Vakantie",
+  "VERBLEIBEND": "RESTEREND",
+  "Ventil-Anpassung": "Klepaanpassing",
+  "Verriegelung": "Vergrendeling",
+  "Vorbereitung": "Voorbereiding",
+  "WLAN-Download": "Wifi-download",
+  "Warm": "Warm",
+  "Warnung": "Waarschuwing",
+  "Wartung": "Onderhoud",
+  "Waschen": "Wassen",
+  "Waschküche": "Wasruimte",
+  "Wasserbedarf": "Waterbehoefte",
+  "Wassertemperatur": "Watertemperatuur",
+  "Wetterwarnung": "Weerwaarschuwing",
+  "Wiedergabe": "Weergave",
+  "Windig": "Winderig",
+  "Wischen": "Dweilen",
+  "Wischmodus": "Dweilmodus",
+  "Wischt": "Dweilt",
+  "Wohnzimmer": "Woonkamer",
+  "Zeitplan": "Schema",
+  "Zonenreinigung": "Zonereiniging",
+  "Überschwemmung": "Overstroming",
+  "überschwemmung": "overstroming",
+  "Januar": "januari",
+  "Februar": "februari",
+  "März": "maart",
+  "Mär": "mrt",
+  "April": "april",
+  "Mai": "mei",
+  "Juni": "juni",
+  "Juli": "juli",
+  "August": "augustus",
+  "September": "september",
+  "Oktober": "oktober",
+  "November": "november",
+  "Dezember": "december",
+  "Montag": "maandag",
+  "Dienstag": "dinsdag",
+  "Mittwoch": "woensdag",
+  "Donnerstag": "donderdag",
+  "Freitag": "vrijdag",
+  "Samstag": "zaterdag",
+  "Sonntag": "zondag",
+  "1 Reinigung": "1 reiniging",
+  "1 Update braucht Aufmerksamkeit": "1 update heeft aandacht nodig",
+  "AMS getrennt": "AMS losgekoppeld",
+  "AMS wird vorbereitet": "AMS wordt voorbereid",
+  "Ablaufpumpe blockiert": "Afvoerpomp geblokkeerd",
+  "Absturzsensor verschmutzt": "Valsensor vuil",
+  "Abwesend scharf schalten?": "Inschakelen (afwezig)?",
+  "Aktiviert (Abwesend)": "Ingeschakeld (afwezig)",
+  "Aktiviert (Bypass)": "Ingeschakeld (bypass)",
+  "Aktiviert (Zuhause)": "Ingeschakeld (thuis)",
+  "Aktiviert (Nacht)": "Ingeschakeld (nacht)",
+  "Aktiviert (Urlaub)": "Ingeschakeld (vakantie)",
+  "Alarm deaktiviert": "Alarm uitgeschakeld",
+  "Alles aktuell": "Alles actueel",
+  "Alles eingekauft": "Alles gekocht",
+  "Alles gelesen": "Alles gelezen",
+  "Als beendet markieren": "Markeren als beëindigd",
+  "Amtliche Warnung": "Officiële waarschuwing",
+  "Andere Idee": "Ander idee",
+  "Aquarium-Licht": "Aquariumlicht",
+  "Auf die Einkaufsliste": "Op de boodschappenlijst",
+  "Automatisch erkennen": "Automatisch herkennen",
+  "Batterie schwach": "Batterij laag",
+  "Betrifft bei dir": "Geldt bij jou",
+  "Bett wird nivelliert": "Bed wordt genivelleerd",
+  "Bewegung erkannt": "Beweging gedetecteerd",
+  "Bewegungsmelder inaktiv": "Bewegingsmelder inactief",
+  "Bitte warten": "Even wachten",
+  "Bluetooth-Verbindung kurz unterbrochen": "Bluetooth-verbinding kort onderbroken",
+  "Braucht dringend Aufmerksamkeit": "Heeft dringend aandacht nodig",
+  "Braucht etwas Aufmerksamkeit": "Heeft wat aandacht nodig",
+  "braucht Aufmerksamkeit": "heeft aandacht nodig",
+  "Breaking Change betrifft dich": "breaking change raakt jou",
+  "Breaking Changes betreffen dich": "breaking changes raken jou",
+  "CO₂-Wert hoch": "CO₂-waarde hoog",
+  "Claude liest die Release-Notes …": "Claude leest de release-notes…",
+  "Claude prüft Bodenfeuchte, Licht, Temperatur und Luftfeuchte der letzten 7 Tage passend zur Art und gibt einen Pflegetipp.": "Claude controleert bodemvocht, licht, temperatuur en luchtvochtigheid van de laatste 7 dagen passend bij de soort en geeft een verzorgingstip.",
+  "Zu hoch": "Te hoog",
+  "Zu niedrig": "Te laag",
+  "Claude prüft Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad der letzten 7 Tage.": "Claude controleert stooktijd, kamertemperaturen, verwarmen bij open raam en de radiator in de badkamer van de laatste 7 dagen.",
+  "Code eingeben …": "Code invoeren…",
+  "Dashboard bearbeiten": "Dashboard bewerken",
+  "Deine Region": "Jouw regio",
+  "Details in der Bambu-App": "Details in de Bambu-app",
+  "Diebstahl gemeldet": "Diefstal gemeld",
+  "Du bist diesen Monat dran": "Jij bent deze maand aan de beurt",
+  "Du bist dran": "Jij bent aan de beurt",
+  "Nicht dran": "Niet aan de beurt",
+  "Dock getrennt": "Dock losgekoppeld",
+  "Druckbett wird gescannt": "Printbed wordt gescand",
+  "Drucker offline": "Printer offline",
+  "Druckplatte wird erkannt": "Printplaat wordt herkend",
+  "Eigenes Tagesprofil der Lampe": "Eigen dagprofiel van de lamp",
+  "Eingriff erforderlich": "Ingrijpen vereist",
+  "Einmalig erlaubt": "Eenmalig toegestaan",
+  "Endet gleich": "Eindigt zo",
+  "Energie gesamt": "Energie totaal",
+  "Erkennung fortsetzen": "Detectie hervatten",
+  "Erkennung pausieren": "Detectie pauzeren",
+  "Wenn die Maschine kurz angehalten wird": "Als de machine kort wordt gepauzeerd",
+  "Ersparnis gesamt": "Besparing totaal",
+  "Erst saugen, dann wischen": "Eerst zuigen, dan dweilen",
+  "Extra Trocken": "Extra droog",
+  "Extreme Warnung": "Extreme waarschuwing",
+  "Extremes Unwetter": "Extreem noodweer",
+  "Extrusion wird kalibriert": "Extrusie wordt gekalibreerd",
+  "Fahrzeit gesamt": "Rijtijd totaal",
+  "Farben nach deiner Automation": "Kleuren volgens jouw automatisering",
+  "Fast fertig": "Bijna klaar",
+  "Feinstaub PM2.5": "Fijnstof PM2.5",
+  "Fernsteuerung aktiv": "Afstandsbediening actief",
+  "Feste Zieltemperatur": "Vaste doeltemperatuur",
+  "Filament wird entladen": "Filament wordt uitgeladen",
+  "Filament wird geladen": "Filament wordt geladen",
+  "Fluss wird kalibriert": "Flow wordt gekalibreerd",
+  "Frag Assist …": "Vraag Assist…",
+  "Frischwassertank leer": "Schoonwatertank leeg",
+  "Ganzes Haus": "Hele huis",
+  "Gas erkannt": "Gas gedetecteerd",
+  "Geladen (12 Monate)": "Geladen (12 maanden)",
+  "Gerade angekommen": "Net aangekomen",
+  "Gerade gegangen": "Net vertrokken",
+  "Heute gefahren": "Vandaag gereden",
+  "Gestern gefahren": "Gisteren gereden",
+  "Heute gegossen": "Vandaag water gegeven",
+  "Gestern gegossen": "Gisteren water gegeven",
+  "Gewitter mit Regen": "Onweer met regen",
+  "Heizkreise stromlos": "Verwarmingsgroepen stroomloos",
+  "Heute dosiert": "Vandaag gedoseerd",
+  "Hohe Feuchtigkeit": "Hoge vochtigheid",
+  "Ich habe nichts verstanden.": "Ik heb het niet verstaan.",
+  "Idee holen": "Idee ophalen",
+  "Im Anruf": "In gesprek",
+  "Immer erlaubt": "Altijd toegestaan",
+  "Intensiv 70°": "Intensief 70°",
+  "Jetzt aktualisieren": "Nu bijwerken",
+  "Jetzt auswerten": "Nu analyseren",
+  "Jetzt dosieren": "Nu doseren",
+  "Jetzt neu starten": "Nu herstarten",
+  "Jetzt starten": "Nu starten",
+  "Zeitversetzt starten": "Uitgesteld starten",
+  "Kindersicherung aktiv": "Kinderslot actief",
+  "Klare Nacht": "Heldere nacht",
+  "Kohlenmonoxid erkannt": "Koolmonoxide gedetecteerd",
+  "Kritische Temperaturabweichung!": "Kritieke temperatuurafwijking!",
+  "Lädt und Bypass": "Laadt en bypass",
+  "Lade Vorhersage …": "Voorspelling laden…",
+  "Laden bis": "Laden tot",
+  "Nicht entladen unter": "Niet ontladen onder",
+  "Laufzeit insgesamt": "Totale looptijd",
+  "Lecksensor offline": "Leksensor offline",
+  "Letzter Durchgang": "Laatste cyclus",
+  "Letzter Versuch fehlgeschlagen": "Laatste poging mislukt",
+  "Lidar blockiert": "Lidar geblokkeerd",
+  "Manueller Modus": "Handmatige modus",
+  "Mopp fehlt": "Dweil ontbreekt",
+  "Mopp trocknen": "Dweil drogen",
+  "Mopp waschen": "Dweil wassen",
+  "Mopp wird angebracht": "Dweil wordt bevestigd",
+  "Mopp wird entfernt": "Dweil wordt verwijderd",
+  "Motor wird kalibriert": "Motor wordt gekalibreerd",
+  "Nach Zeitplan": "Volgens schema",
+  "Neue Post im Briefkasten": "Nieuwe post in de brievenbus",
+  "Neues Gespräch": "Nieuw gesprek",
+  "Neustart ausstehend": "Herstart in afwachting",
+  "Neustart erforderlich": "Herstart vereist",
+  "Nicht angepasst": "Niet aangepast",
+  "Nicht erkannt": "Niet herkend",
+  "Nicht gemeldet": "Niet gemeld",
+  "Nicht verbunden": "Niet verbonden",
+  "Nicht verriegelt": "Niet vergrendeld",
+  "Niedriger Wasserdruck": "Lage waterdruk",
+  "Noch nie": "Nog nooit",
+  "Nur Anzeige": "Alleen weergave",
+  "Pflanze ist gesund": "Plant is gezond",
+  "Push am Vorabend": "Push de avond ervoor",
+  "Rauch erkannt": "Rook gedetecteerd",
+  "Reichweite je Modus": "Bereik per modus",
+  "Reinigung gestartet": "Reiniging gestart",
+  "Reinigungen insgesamt": "Reinigingen totaal",
+  "Reispfanne mit Hähnchen und Pilzen": "Rijstpan met kip en champignons",
+  "Roboter gekippt": "Robot gekanteld",
+  "Roboter steckt fest": "Robot zit vast",
+  "Saugen & wischen": "Zuigen & dweilen",
+  "Saugt & wischt": "Zuigt & dweilt",
+  "Saugt & wischt Zone": "Zuigt & dweilt zone",
+  "Wischt Zone": "Dweilt zone",
+  "Scharf schalten?": "Inschakelen?",
+  "Unscharf schalten?": "Uitschakelen?",
+  "Sirene stoppen?": "Sirene stoppen?",
+  "Schmutzwasser leeren": "Vuil water legen",
+  "Schmutzwassertank voll": "Vuilwatertank vol",
+  "Schnell 45°": "Snel 45°",
+  "Schnell 65°": "Snel 65°",
+  "Schnell 30": "Snel 30",
+  "Baumwolle 40": "Katoen 40",
+  "Pflegeleicht": "Kreukherstellend",
+  "Schneller fertig": "Sneller klaar",
+  "Schwere Warnung": "Zware waarschuwing",
+  "Sehr kalt": "Zeer koud",
+  "Zu kalt": "Te koud",
+  "Sehr trocken": "Zeer droog",
+  "Sensoren reinigen": "Sensoren reinigen",
+  "Service & Sicherheit": "Onderhoud & veiligheid",
+  "Service nach Strecke": "Onderhoud op afstand",
+  "Sonstige Wartung": "Overig onderhoud",
+  "Speedtest starten": "Snelheidstest starten",
+  "Spracheingabe fehlgeschlagen.": "Spraakinvoer mislukt.",
+  "Sprechen": "Spreken",
+  "Starte den Saugroboter": "Start de robotstofzuiger",
+  "Starts insgesamt": "Starts totaal",
+  "Stoppt …": "Stopt…",
+  "Sucht ein Rezept …": "Zoekt een recept…",
+  "Temperaturwarnung aktiv": "Temperatuurwaarschuwing actief",
+  "Trocknet Mopp": "Droogt dweil",
+  "Trocknung endet": "Drogen eindigt",
+  "Verbindung stabil": "Verbinding stabiel",
+  "Verschobene Termine": "Verplaatste data",
+  "Voll geladen": "Volledig opgeladen",
+  "Voll, Bypass": "Vol, bypass",
+  "Vollschutz aktiv": "Volledige bescherming actief",
+  "Von dir pausiert": "Door jou gepauzeerd",
+  "WLAN & Sperren": "Wifi & blokkades",
+  "Warte auf Pflanzendaten": "Wacht op plantgegevens",
+  "Warte auf Start": "Wacht op start",
+  "Wartet auf Druckbett": "Wacht op printbed",
+  "Wartet auf Neustart": "Wacht op herstart",
+  "Was steht auf der Einkaufsliste?": "Wat staat er op de boodschappenlijst?",
+  "Wasserheizung verkalkt": "Waterverwarmer verkalkt",
+  "Wasserkasten fehlt": "Waterreservoir ontbreekt",
+  "Wetterwarnung aufgehoben": "Weerwaarschuwing opgeheven",
+  "Wie kann ich helfen?": "Waarmee kan ik helpen?",
+  "Wieder anzeigen": "Opnieuw tonen",
+  "Zum Freigeben oben in der Update-Zeile auf „Freigeben“ tippen und bestätigen.": "Tik om goed te keuren bovenaan in de updateregel op “Goedkeuren” en bevestig.",
+  "KI: alle unkritisch": "AI: alles onkritisch",
+  "KI: unkritisch": "AI: onkritisch",
+  "Installieren empfohlen": "Installeren aanbevolen",
+  "auf der Arbeit": "op het werk",
+  "dauert länger als üblich": "duurt langer dan normaal",
+  "gibt es noch keine eigene Auswertung. „Neu auswerten“ erstellt sie für alle Räume.": "heeft nog geen eigen analyse. “Opnieuw beoordelen” maakt er een voor alle kamers.",
+  "sehr schlecht": "zeer slecht",
+  "Stufe 1": "Stand 1",
+  "Stufe 2": "Stand 2",
+  "Stufe 3": "Stand 3",
+  "Durchgänge seit dem letzten Mal": "cycli sinds de vorige keer",
+  "Ø Dauer": "Ø duur",
+  "Ø pro Durchgang": "Ø per cyclus",
+  "Wertstoffabfall": "PMD-afval",
+  "Aktuelle Wiedergabe": "Speelt nu",
+  "Beispiel-Titel": "Voorbeeldtitel",
+  "Daten: Deutscher Wetterdienst (DWD)": "Gegevens: Deutscher Wetterdienst (DWD)",
+  "Internetsperre": "Internetblokkade",
+  "Latenz": "Latentie",
+  "Startzeit": "Starttijd",
+  "Wetter": "Weer",
+  "Zieltemperatur": "Doeltemperatuur",
+  "braucht Wasser": "heeft water nodig",
+  "braucht Dünger": "heeft voeding nodig",
+  "braucht mehr Licht": "heeft meer licht nodig",
+  "steht in zu trockener Luft": "staat in te droge lucht",
+  "steht in zu feuchter Luft": "staat in te vochtige lucht",
+  "ausgezeichnet": "uitstekend",
+  "gut": "goed",
+  "schlecht": "slecht",
+  "Lädt aus dem Netz": "Laadt van het net",
+  "Übernahme fehlgeschlagen": "Overname mislukt",
+  "Backup läuft": "Back-up bezig",
+  "An/Aus": "Aan/uit",
+  "12-V-Batterie": "12V-accu",
+  "Luftfeuchtigkeit außen": "Luchtvochtigheid buiten",
+  "Nächstes Backup überfällig": "Volgende back-up te laat",
+  "Kamera nicht erreichbar": "Camera niet bereikbaar",
+  "Kein Bild – Kamera ist offline oder ihr Dienst läuft nicht.": "Geen beeld – camera is offline of de dienst draait niet.",
+  "Kamera offline": "Camera offline",
+  "Schloss offline": "Slot offline",
+  "Fenster gekippt": "Raam gekanteld",
+  "Tor offen": "Poort open",
+  "Luft ausgezeichnet": "Lucht uitstekend",
+  "Luft mäßig": "Lucht matig",
+  "Luft schlecht": "Lucht slecht",
+  "Luft sehr schlecht": "Lucht zeer slecht",
+  "Klemmt": "Klemt",
+  "Wird geöffnet …": "Wordt geopend…",
+  "Gerät fehlt": "Apparaat ontbreekt",
+  "Aktionen": "Acties",
+  "Gerät nicht erreichbar": "Apparaat niet bereikbaar",
+  "Aus (Bürste angehoben)": "Uit (borstel omhoog)",
+  "Eigene Wassermenge": "Eigen waterhoeveelheid",
+  "Nur wischen": "Alleen dweilen",
+  "Pflanze": "Plant",
+  "Rezept": "Recept",
+  "Tür gekippt": "Deur gekanteld",
+  "Ton": "Geluid",
+  "Beschreiben": "Beschrijven",
+  "Prüfe Strom und WLAN der Kamera.": "Controleer stroom en wifi van de camera.",
+  "Erneut versuchen": "Opnieuw proberen",
+  "Schloss": "Slot",
+  "Sirene": "Sirene",
+  "Alarm": "Alarm",
+  "Tor": "Poort",
+  "Lichtfarbe": "Lichtkleur",
+  "Leuchten im Raum": "Lampen in deze kamer",
+  "Leuchten": "Lampen",
+  "Gedimmt": "Gedimd",
+  "Volle Helligkeit": "Volle helderheid",
+  "Neutral": "Neutraal",
+  "zuletzt": "laatst",
+  "Kanäle": "Kanalen",
+  "Becken": "Bakken",
+  "Aquarien · Temperaturen": "Aquaria · temperaturen",
+  "Mehr": "Meer",
+  "Weniger": "Minder",
+  "WLAN": "Wifi",
+  "Verbraucher": "Verbruikers",
+  "Energiefluss": "Energiestroom",
+  "Woher": "Vanwaar",
+  "Wohin Solar": "Waar zon heen gaat",
+  "Verbrauch im Haus": "Verbruik in huis",
+  "Akku lädt": "Accu laadt",
+  "Akku entlädt": "Accu ontlaadt",
+  "Akku bereit": "Accu in rust",
+  "Solar liefert gerade nichts": "Zon levert nu niets",
+  "Kein Verbrauch": "Geen verbruik",
+  "Noch keine Werte": "Nog geen waarden",
+  "Noch keine Aufteilung": "Nog geen verdeling",
+  "Sperren": "Blokkades",
+  "Internet": "Internet",
+  "Durchsatz": "Doorvoer",
+  "Gerätedetails": "Apparaatdetails",
+  "Update verfügbar": "Update beschikbaar",
+  "Problem": "Probleem",
+  "Speedtest läuft …": "Snelheidstest bezig…",
+  "Kapazität": "Capaciteit",
+  "Tipps": "Tips",
+  "Noch keine Auswertung": "Nog geen analyse",
+  "Solarbank": "Solarbank",
+  "Betriebszustand": "Bedrijfstoestand",
+  "Lastvorgabe": "Lastinstelling",
+  "Öffentliche IP": "Publiek IP",
+  "LAN-Upload": "LAN-upload",
+  "WLAN-Upload": "Wifi-upload",
+  "pro Woche sparbar": "per week te besparen",
+  "Kein Strom ins Netz": "Geen stroom naar het net",
+  "Abgabelimit": "Afgiftelimiet",
+  "Claude wertet die letzte Woche aus …": "Claude analyseert de afgelopen week…",
+  "Niedriger Akkustand": "Laag accuniveau",
+  "Alle Geräte": "Alle apparaten",
+  "Keine Warnungen": "Geen waarschuwingen",
+  "Alles in Ordnung": "Alles in orde",
+  "Alle Schlösser": "Alle sloten",
+  "Alle Kameras": "Alle camera's",
+  "Nicht geprüft": "Niet gecontroleerd",
+  "KI-Fehler": "AI-fout",
+  "KI prüft …": "AI controleert…",
+  "1 Batterie schwach": "1 batterij laag",
+  "Tippen zum Verriegeln": "Tik om te vergrendelen",
+  "Tippen zum Entriegeln": "Tik om te ontgrendelen",
+  "Tippen, um alle zu verriegeln": "Tik om alles te vergrendelen",
+  "Tippen, um alle zu entriegeln": "Tik om alles te ontgrendelen",
+  "Wird verriegelt …": "Vergrendelen…",
+  "Wird entriegelt …": "Ontgrendelen…",
+  "● Unkritisch": "● Onkritisch",
+  "● Breaking": "● Breaking",
+  "● Handeln": "● Handelen",
+  "KI-Blick: Druck prüfen": "AI-blik: print controleren",
+  "Fertig gegen": "Klaar rond",
+  "Station": "Station",
+  "Alles aufgefüllt": "Alles bijgevuld",
+  "Salz, Klarspüler und Pflege sind in Ordnung": "Zout, glansspoelmiddel en onderhoud zijn in orde",
+  "Fühler": "Voelers",
+  "Verlauf": "Geschiedenis",
+  "Verlauf der letzten 24 Stunden": "Geschiedenis van de laatste 24 uur",
+  "Rad-Check im Detail": "Fietscheck in detail",
+  "Motor": "Motor",
+  "Alles zu und verriegelt": "Alles dicht en vergrendeld",
+  "Alles zu": "Alles dicht",
+  "Feststellbremse angezogen": "Parkeerrem aangetrokken",
+  "Tank fast leer": "Tank bijna leeg",
+  "Speiseplan der nächsten 7 Tage ist leer": "Weekmenu van de komende 7 dagen is leeg",
+  "Zutaten der Idee": "Ingrediënten van het idee",
+  "Raumluft gut": "Binnenlucht goed",
+  "Heute keine Termine": "Vandaag geen afspraken",
+  "1 Termin heute": "1 afspraak vandaag",
+  "Keine Szenen gefunden. Casora zeigt alle Szenen, die in den Entitäten weder ausgeblendet noch deaktiviert sind.": "Geen scènes gevonden. Casora toont alle scènes die in de entiteiten niet verborgen of uitgeschakeld zijn.",
+  "Aquarium": "Aquarium",
+  "Jalousie": "Rolluik",
+  "E-Bike": "E-bike",
+  "Ventilator": "Ventilator",
+  "Spiel": "Game",
+  "Luftbefeuchter": "Luchtbevochtiger",
+  "Anwesenheit": "Aanwezigheid",
+  "Schalter": "Schakelaar",
+  "Updates": "Updates",
+  "Wetterwarnungen": "Weerwaarschuwingen",
+  "Noch keine Geräte – im Studio hinzufügen": "Nog geen apparaten – voeg ze toe in de Studio",
+  "Noch kein Gerät zugeordnet": "Nog geen apparaat toegewezen",
+  "Im Casora Studio dieser Kachel ein Gerät zuweisen": "Wijs in Casora Studio een apparaat toe aan deze tegel",
+  "Im Casora Studio neu zuordnen": "Opnieuw toewijzen in Casora Studio",
+  "Noch nicht eingerichtet": "Nog niet ingesteld",
+  "Im Casora Studio der Kachel den Solar-Tipp zuordnen.": "Wijs in Casora Studio de zonnetip toe aan deze tegel.",
+  "Noch keine Tageswerte": "Nog geen dagwaarden",
+  "Welche Geräte hier zählen, legst du im Studio fest.": "Welke apparaten hier meetellen, bepaal je in de Studio.",
+  "waschen": "wassen",
+  "spülen": "de vaatwasser draaien",
+  "trocknen": "drogen",
+  "Fühlt sich wohl": "Voelt zich goed",
+  "Braucht Wasser": "Heeft water nodig",
+  "Steht zu nass": "Staat te nat",
+  "Steht zu kalt": "Staat te koud",
+  "Steht zu warm": "Staat te warm",
+  "Zu viel Sonne": "Te veel zon",
+  "Überdüngt": "Overbemest",
+  "Bitte nachsehen": "Even kijken",
+  "Keine Messwerte": "Geen meetwaarden",
+  "Wartet auf Daten": "Wacht op gegevens",
+  "steht zu nass": "staat te nat",
+  "ist überdüngt": "is overbemest",
+  "bekommt zu viel Sonne": "krijgt te veel zon",
+  "steht zu kalt": "staat te koud",
+  "steht zu warm": "staat te warm",
+  "Ausgeräumt": "Leeggehaald",
+  "Wäsche ist noch drin": "Was zit er nog in",
+  "Wäsche ist noch im Trockner": "Was zit nog in de droger",
+  "Fertig · Wäsche drin": "Klaar · was zit erin",
+  "Wird beim Öffnen der Tür erkannt": "Wordt herkend bij het openen van de deur",
+  "Welches Programm läuft?": "Welk programma draait er?",
+  "Nächstes Programm": "Volgend programma",
+  "Erkennung anhalten": "Detectie stoppen",
+  "Wenn die Maschine kurz unterbrochen wird": "Als de machine kort wordt onderbroken",
+  "Die Erkennung ist angehalten": "De detectie is gestopt",
+  "Erkennung verbessern": "Detectie verbeteren",
+  "1 Einstellung empfohlen, in WashData übernehmen": "1 instelling aanbevolen, overnemen in WashData",
+  "Durchgänge insgesamt": "Cycli totaal",
+  "Programme": "Programma's",
+  "Programm gewählt": "Programma gekozen",
+  "An der Maschine gewählt": "Op de machine gekozen",
+  "Prüfung": "Controle",
+  "Spülstopp": "Spoelstop",
+  "Stromausfall": "Stroomstoring",
+  "Störung": "Storing",
+  "Wartung nötig": "Onderhoud nodig",
+  "Abfallkalender gerade nicht erreichbar": "Afvalkalender nu even niet bereikbaar",
+  "Nicht erreichbar": "Niet bereikbaar",
+  "Die Abholtermine kommen wieder, sobald der Entsorger antwortet.": "De ophaaldagen komen terug zodra de afvaldienst reageert.",
+  "Lautsprecher und TVs": "Speakers en tv's",
+  "Sonstiges": "Overig",
+  "Schlaf": "Slaap",
+  "Eco": "Eco",
+  "Smart": "Smart",
+  "Turbo": "Turbo",
+  "Boost": "Boost",
+  "Natur": "Natuur",
+  "Hier gibt es noch keine Geräte": "Hier zijn nog geen apparaten",
+  "Im Casora Studio einem Raum zuordnen": "Wijs ze in Casora Studio toe aan een kamer",
+  "weitere": "meer",
+  "Zum Anfang": "Naar het begin",
+  "Fast leer": "Bijna leeg",
+  "Alle Batterien OK": "Alle batterijen OK",
+  "1 Akku schwach": "1 accu laag",
+  "Akku fast leer": "Accu bijna leeg",
+  "Läuft gerade": "Speelt nu",
+  "Scharf": "Ingeschakeld",
+  "Alarm unscharf": "Alarm uitgeschakeld",
+  "Welche Türen sind offen?": "Welke deuren staan open?",
+  "Ist alles abgeschlossen?": "Is alles op slot?",
+  "Alarm scharf schalten": "Alarm inschakelen",
+  "Wie wird das Wetter heute?": "Wat voor weer wordt het vandaag?",
+  "Muss heute eine Tonne raus?": "Moet er vandaag een container buiten?",
+  "Öffne die Jalousien": "Open de rolluiken",
+  "Schließe die Jalousien": "Sluit de rolluiken",
+  "Wie viel Strom brauchen wir gerade?": "Hoeveel stroom gebruiken we nu?",
+  "Läuft die Waschmaschine noch?": "Draait de wasmachine nog?",
+  "Was läuft gerade?": "Wat speelt er nu?",
+  "Vorschläge für den Morgen": "Suggesties voor de ochtend",
+  "Vorschläge für heute": "Suggesties voor vandaag",
+  "Vorschläge für den Abend": "Suggesties voor de avond",
+  "Vorschläge für die Nacht": "Suggesties voor de nacht",
+  "lädt": "laadt",
+  "Zum Dock": "Naar dock",
+  "Smart wählt Saugstärke und Wischen je Raum selbst.": "Smart kiest zelf per kamer de zuigkracht en het dweilen.",
+  "Kein Bild": "Geen beeld",
+  "Zu": "Dicht",
+  "Auf": "Open",
+  "Position": "Positie",
+  "Spielt": "Speelt",
+  "Geräte im Casora Studio einem Raum zuordnen": "Wijs apparaten in Casora Studio toe aan een kamer",
+  "Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über eine https-Adresse öffnen.": "De microfoon werkt alleen via HTTPS – open Home Assistant via een https-adres.",
+  "In der Summe": "In het totaal",
+  "Nicht in der Summe": "Niet in het totaal",
+  "Keine Leistung": "Geen vermogen",
+  "Steckt hinter": "Zit achter",
+  "1 Gerät ohne Wert": "1 apparaat zonder waarde",
+  "Schloss offen": "Slot open",
+  "Alles sicher": "Alles veilig",
+  "Auswertung der letzten 7 Tage": "Analyse van de laatste 7 dagen",
+  "Idee der Woche": "Idee van de week",
+  "Vorschlag von Claude": "Suggestie van Claude",
+  "Karte": "Plattegrond",
+  "Vom Hersteller, kommt verzögert": "Van de fabrikant, komt vertraagd",
+  "der Entsorger": "de afvaldienst",
+  "Mbit/s Download": "Mbit/s download",
+  "Mbit/s Upload": "Mbit/s upload",
+  "Download & Upload": "Download & upload",
+  "Download": "Download",
+  "Upload": "Upload",
+  "Sensor": "Sensor",
+  "Speedtest": "Snelheidstest",
+  "Standby": "Stand-by",
+  "Firmware": "Firmware",
+  "HACS": "HACS",
+  "Casora": "Casora",
+  "Cookidoo": "Cookidoo",
+  "Thermomix": "Thermomix",
+  "PowerTube": "PowerTube",
+  "PlayStation": "PlayStation",
+  "PlayStation Network": "PlayStation Network",
+  "1 Termin": "1 afspraak",
+  "1 Kamera offline": "1 camera offline",
+  "1 Schloss offline": "1 slot offline",
+  "1 Tür gekippt": "1 deur gekanteld",
+  "1 Tag": "1 dag",
+  "Wirklich ausschalten?": "Echt uitschakelen?",
+  "Wirklich einschalten?": "Echt inschakelen?",
+  "Wirklich schließen?": "Echt sluiten?",
+  "Wirklich aufschließen?": "Echt ontgrendelen?",
+  "Wirklich abschließen?": "Echt vergrendelen?",
+  "Aufschließen": "Ontgrendelen",
+  "Abschließen": "Vergrendelen",
+  "Achtung": "Let op",
+  "Trotzdem scharf schalten?": "Toch inschakelen?",
+  "Trotzdem scharf schalten": "Toch inschakelen",
+  "1 Tür offen": "1 deur open",
+  "1 Tor offen": "1 poort open",
+  "1 Fenster offen": "1 raam open",
+  "1 Fenster gekippt": "1 raam gekanteld",
+  "Licht aus": "Licht uit",
+  "Kein Team-Tracker-Sensor": "Geen Team-Tracker-sensor",
+  "Endstand": "Eindstand",
+  "Live": "Live",
+  "Halbzeit": "Rust",
+  "Morgen": "Morgen",
+  "Heim": "Thuis",
+  "Gast": "Uit",
+  "Tabelle": "Stand",
+  "Form": "Vorm",
+  "Letzte Duelle": "Onderlinge duels",
+  "Licht an": "Licht aan",
+  "Feucht": "Vochtig",
+  "Ergebnis": "Uitslag",
+  "Nächstes Spiel": "Volgende wedstrijd",
+  "Letztes Spiel": "Vorige wedstrijd",
+  "Testspiel": "Oefenwedstrijd",
+  "Gegner": "tegenstander",
+  "nächster Gegner": "volgende tegenstander",
+  "Ganze Tabelle": "Hele stand",
+  "Weniger zeigen": "Minder tonen",
+  "Keine Spiele gefunden": "Geen wedstrijden gevonden",
+  "Tabelle nicht erreichbar": "Stand niet beschikbaar",
+  "Keine Tabelle für diesen Wettbewerb": "Geen stand voor deze competitie",
+  "Fußball": "Voetbal",
+  "gegen": "tegen",
+  "bei": "bij",
+  "Kein Spiel angesetzt": "Geen wedstrijd gepland",
+  "Nächstes Spiel noch nicht angesetzt": "Volgende wedstrijd nog niet gepland",
+  "Verschoben": "Uitgesteld",
+  "Abgesagt": "Afgelast",
+  "Uhrzeit offen": "Tijd volgt",
+  "Verlängerung": "Verlenging",
+  "Elfmeterschießen": "Strafschoppen",
+  "Gleich": "Zo meteen",
+  "n. V.": "n.v.",
+  "i. E.": "n.s.",
+  "Sieg": "Winst",
+  "Niederlage": "Verlies",
+  "1 Raum": "1 kamer",
+  "1 Licht an": "1 lamp aan",
+  "Keine Räume": "Geen kamers",
+  "Lampen-Modi": "Lampmodi",
+  "Lampen-Profil": "Lampprofiel",
+  "Farbkanäle": "Kleurkanalen",
+  "Ohne Effekt": "Zonder effect",
+  "Home Assistant": "Home Assistant",
+  "Programm der Lampe": "Programma van de lamp",
+  "Eigener Tagesablauf der Lampe": "Eigen dagritme van de lamp",
+  "Temperatur zu hoch": "Temperatuur te hoog",
+  "Temperatur zu niedrig": "Temperatuur te laag",
+  "Aktinisch": "Actinisch",
+  "UV": "UV",
+  "Kaltweiß": "Koudwit",
+  "Warmweiß": "Warmwit",
+  "Mondlicht": "Maanlicht",
+  "Rot": "Rood",
+  "Grün": "Groen",
+  "Blau": "Blauw",
+  "Weiß": "Wit",
+  "Tanken": "Tanken",
+  "Abruf gestört": "Ophalen mislukt",
+  "Preise werden geladen": "Prijzen worden geladen",
+  "Empfehlung": "Aanbeveling",
+  "Am günstigsten": "Voordeligst",
+  "In der Nähe": "In de buurt",
+  "Günstigste": "Voordeligste",
+  "Nächste": "Dichtstbijzijnde",
+  "Typischer Tag": "Typische dag",
+  "Ø 14 Tage": "Ø 14 dagen",
+  "Lernphase": "Leerfase",
+  "Empfehlung kommt bald": "Aanbeveling volgt binnenkort",
+  "Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa einem Tag.": "De aanbeveling komt zodra er genoeg prijzen zijn verzameld, over ongeveer een dag.",
+  "Gerade": "Nu",
+  "Keine offene Tankstelle": "Geen tankstation open",
+  "Im Umkreis hat gerade keine Tankstelle geöffnet.": "In de omgeving is nu geen tankstation open.",
+  "Tank knapp": "Tank bijna leeg",
+  "Jetzt tanken": "Nu tanken",
+  "Warte bis heute Abend": "Wacht tot vanavond",
+  "Warte bis morgen Abend": "Wacht tot morgenavond",
+  "Warte bis heute Vormittag": "Wacht tot vanochtend laat",
+  "Warte bis morgen früh": "Wacht tot morgenvroeg",
+  "Guter Zeitpunkt": "Goed moment",
+  "Kein großer Unterschied": "Weinig verschil",
+  "In den nächsten Stunden ändert sich der Preis meist um weniger als 2 ct.": "De komende uren verandert de prijs meestal minder dan 2 ct.",
+  "Noch keine Preise": "Nog geen prijzen",
+  "Tankpreise gerade nicht abrufbar": "Brandstofprijzen nu niet beschikbaar",
+  "Casora fragt alle 10 Minuten, die ersten Preise kommen gleich.": "Casora vraagt elke 10 minuten, de eerste prijzen komen zo.",
+  "Gerade keine offen": "Nu geen open",
+  "Daten: Tankerkönig, CC BY 4.0": "Gegevens: Tankerkönig, CC BY 4.0",
+  "Umkreis": "Straal",
+  "bis": "tot",
+  "Ø pro Tag": "Ø per dag",
+  "Heute bis": "Vandaag tot",
+  "letzte 2 Stunden": "laatste 2 uur",
+  "letzte 4 Stunden": "laatste 4 uur",
+  "letzte 6 Stunden": "laatste 6 uur",
+  "letzte 24 Stunden": "laatste 24 uur",
+  "letzte 48 Stunden": "laatste 48 uur",
+  "letzte 7 Tage": "laatste 7 dagen",
+  "letzte 30 Tage": "laatste 30 dagen",
+  "noch nie": "nog nooit",
+  "Salz nachfüllen": "Zout bijvullen",
+  "Klarspüler nachfüllen": "Glansspoelmiddel bijvullen",
+  "Flusensieb reinigen": "Pluizenfilter reinigen",
+  "Kondensator reinigen": "Condensor reinigen",
+  "Angehalten": "Stilgevallen",
+  "steht still, evtl. Unwucht": "staat stil, mogelijk onbalans",
+  "Eigene Aufgabe": "Eigen taak",
+  "Am Schloss": "Aan het slot",
+  "Bedienen": "Bedienen",
+  "Entriegeln": "Ontgrendelen",
+  "Verriegeln": "Vergrendelen",
+  "Ganzer Verlauf": "Hele geschiedenis",
+  "Skript": "Script",
+  "Tür öffnen": "Deur openen",
+  "Türkontakt": "Deurcontact",
+  "Wirklich die Tür öffnen?": "Echt de deur openen?",
+  "Mit Rückfrage, wie im Studio eingestellt": "Met bevestiging, zoals ingesteld in de Studio",
+  "Schloss nicht erreichbar": "Slot niet bereikbaar",
+  "Verlauf nicht abrufbar": "Geschiedenis niet beschikbaar",
+  "Heute keine Änderung": "Vandaag geen wijziging",
+  "per App": "via app",
+  "Über": "Via",
+  "Alles ok": "Alles ok",
+  "Wirklich entriegeln?": "Echt ontgrendelen?",
+  "Wirklich verriegeln?": "Echt vergrendelen?",
+  "Nichts fällig": "Niets nodig",
+  "Daten": "Gegevens",
+  "Jetzt nach Updates suchen": "Nu zoeken naar updates",
+  "Suche …": "Zoeken…",
+  "Keine neuen Updates": "Geen nieuwe updates",
+  "1 neues Update gefunden": "1 nieuwe update gevonden",
+  "Suche fehlgeschlagen": "Zoeken mislukt",
+  "Vorheriger Titel": "Vorig nummer",
+  "Nächster Titel": "Volgend nummer",
+  "Klappen": "Kleppen",
+  "Kraftstoff": "Brandstof",
+  "jetzt günstig": "nu voordelig",
+  "keine offen": "geen open",
+  "KI:": "AI:",
+  "1 heizt": "1 verwarmt",
+  "Handy": "Telefoon",
+  "Lädt nicht": "Laadt niet",
+  "Mobilfunk": "Mobiele data",
+  "kein WLAN": "geen wifi",
+  "Entfernung": "Afstand",
+  "Richtung": "Richting",
+  "Nach Hause": "Naar huis",
+  "Luftlinie zur Zone Zuhause": "Hemelsbreed tot de zone Thuis",
+  "Standort jetzt holen": "Locatie nu ophalen",
+  "fragt die Companion-App": "vraagt de Companion-app",
+  "Nachricht schicken": "Bericht sturen",
+  "Klingeln lassen": "Laten rinkelen",
+  "auch wenn es leise ist": "ook als hij op stil staat",
+  "Standort per GPS": "Locatie via gps",
+  "über das WLAN": "via wifi",
+  "über Bluetooth": "via Bluetooth",
+  "Verlauf wird geladen …": "Geschiedenis wordt geladen…",
+  "Kein Verlauf der letzten drei Tage": "Geen geschiedenis van de laatste drie dagen",
+  "Entfernt sich": "Gaat verder weg",
+  "Kommt näher": "Komt dichterbij",
+  "Bleibt stehen": "Blijft staan",
+  "Angekommen": "Aangekomen",
+  "Standort angefragt": "Locatie opgevraagd",
+  "Konnte das Handy nicht erreichen": "Kon de telefoon niet bereiken",
+  "Nachricht gesendet": "Bericht verzonden",
+  "Handy klingelt": "Telefoon rinkelt",
+  "Senden": "Versturen",
+  "Nachricht": "Bericht",
+  "Nachricht an": "Bericht aan",
+  "von zuhause": "van thuis",
+  "Handy klingeln lassen?": "Telefoon laten rinkelen?",
+  "Es klingelt auch, wenn es leise gestellt ist.": "Hij rinkelt ook als hij op stil staat.",
+  "Klingeln": "Rinkelen",
+  "Hier bin ich!": "Hier ben ik!",
+  "Person": "Persoon",
+  "jetzt hier": "nu hier",
+  "Keine Änderung in den letzten drei Tagen": "Geen wijziging in de laatste drie dagen",
+  "Mähroboter": "Robotmaaier",
+  "Mäht": "Maait",
+  "In der Station": "In het station",
+  "Fährt zur Station": "Rijdt naar het station",
+  "Mäht außerhalb des Zeitplans": "Maait buiten het schema",
+  "Verlässt die Station": "Verlaat het station",
+  "Parkt bis zum nächsten Zeitplan": "Geparkeerd tot het volgende schema",
+  "Parkt bis auf Weiteres": "Geparkeerd tot nader order",
+  "Parkt, Rasen wächst langsam": "Geparkeerd, gras groeit langzaam",
+  "Parkt wegen Frost": "Geparkeerd wegens vorst",
+  "Parkt, Tagesziel erreicht": "Geparkeerd, dagdoel bereikt",
+  "Außerhalb des Mähbereichs": "Buiten het maaigebied",
+  "Kein Signal vom Begrenzungsdraht": "Geen signaal van de begrenzingsdraad",
+  "Falsches Signal vom Begrenzungsdraht": "Verkeerd signaal van de begrenzingsdraad",
+  "Steckt fest": "Zit vast",
+  "Umgekippt": "Omgekiept",
+  "Akku leer": "Accu leeg",
+  "Kann nicht fahren": "Kan niet rijden",
+  "Angehoben": "Opgetild",
+  "Kurz angehoben": "Kort opgetild",
+  "Steht schief": "Staat schuin",
+  "Rutscht": "Slipt",
+  "Hängt in der Station fest": "Zit vast in het station",
+  "Station blockiert": "Station geblokkeerd",
+  "Ladestrom zu hoch": "Laadstroom te hoog",
+  "Rad links blockiert": "Linkerwiel geblokkeerd",
+  "Rad rechts blockiert": "Rechterwiel geblokkeerd",
+  "Rad links überlastet": "Linkerwiel overbelast",
+  "Rad rechts überlastet": "Rechterwiel overbelast",
+  "Radantrieb links gestört": "Storing wielaandrijving links",
+  "Radantrieb rechts gestört": "Storing wielaandrijving rechts",
+  "Mähwerk blockiert": "Maaidek geblokkeerd",
+  "Mähmotor gestört": "Storing maaimotor",
+  "Mähmotor defekt": "Maaimotor defect",
+  "Schnitthöhe blockiert": "Maaihoogte geblokkeerd",
+  "Schnitthöhe gestört": "Storing maaihoogte",
+  "Stoßsensor vorne gestört": "Storing botssensor voor",
+  "Stoßsensor hinten gestört": "Storing botssensor achter",
+  "Neigungssensor gestört": "Storing kantelsensor",
+  "Stopp-Taste gestört": "Storing stopknop",
+  "Elektronik gestört": "Storing elektronica",
+  "Falsche PIN": "Verkeerde pincode",
+  "Klappe offen": "Klep open",
+  "Ausgeschaltet, Klappe zu": "Uitgeschakeld, klep dicht",
+  "Alarm: ausgeschaltet": "Alarm: uitgeschakeld",
+  "Alarm: angehalten": "Alarm: gestopt",
+  "Alarm: angehoben": "Alarm: opgetild",
+  "Alarm: gekippt": "Alarm: gekanteld",
+  "Alarm: bewegt": "Alarm: verplaatst",
+  "Alarm: außerhalb des Bereichs": "Alarm: buiten het gebied",
+  "Zur Station": "Naar station",
+  "Mähen": "Maaien",
+  "Parken": "Parkeren",
+  "Pause": "Pauze",
+  "Betriebsstunden": "Bedrijfsuren",
+  "In den letzten 7 Tagen nicht gemäht": "De laatste 7 dagen niet gemaaid",
+  "Mäht gerade": "Maait nu",
+  "Gemäht": "Gemaaid",
+  "besteht noch": "geldt nog",
+  "1 Fahrt": "1 rit",
+  "KI-Check": "AI-check",
+  "Vorher sichern": "Eerst back-up maken",
+  "Installieren": "Installeren",
+  "Überspringen": "Overslaan",
+  "Was ist neu": "Wat is nieuw",
+  "Alle Hinweise": "Alle opmerkingen",
+  "Keine Versionshinweise": "Geen release-notes",
+  "KI-Einschätzung": "AI-beoordeling",
+  "Breaking Change": "Breaking change",
+  "seit": "sinds",
+  "24 Std.": "24 u",
+  "Letzte 24 Std.": "Laatste 24 u",
+  "Letzte 7 Tage": "Laatste 7 dagen",
+  "Höchster Wert": "Hoogste waarde",
+  "Tiefster Wert": "Laagste waarde",
+  "Durchschnitt": "Gemiddelde",
+  "Letzte 12 Monate": "Laatste 12 maanden",
+  "Linie": "Lijn",
+  "Balken": "Balken",
+  "Ø pro Monat": "Ø per maand",
+  "Ø pro Stunde": "Ø per uur",
+  "letzte 12 Monate": "laatste 12 maanden",
+  "Am längsten": "Langst",
+  "Änderungen": "Wijzigingen",
+  "Steigt": "Stijgt",
+  "Fällt": "Daalt",
+  "nach": "na",
+  "seitdem": "sindsdien",
+  "Keine Änderung im Zeitraum": "Geen wijziging in deze periode",
+  "Hersteller": "Fabrikant",
+  "Modell": "Model",
+  "Hardware": "Hardware",
+  "Verbunden über": "Verbonden via",
+  "Bereich": "Gebied",
+  "Integration": "Integratie",
+  "In Home Assistant öffnen": "Openen in Home Assistant",
+  "Einstellungen, Umbenennen, Symbol": "Instellingen, hernoemen, pictogram",
+  "Gehört dazu": "Hoort erbij",
+  "Diagnose": "Diagnose",
+  "Belegt": "Bezet",
+  "Anwesend": "Aanwezig",
+  "Nass": "Nat",
+  "Rauch": "Rook",
+  "Eingesteckt": "Ingeplugd",
+  "Ausgesteckt": "Uitgeplugd",
+  "Insgesamt geöffnet": "In totaal open",
+  "Insgesamt Bewegung": "In totaal beweging",
+  "Insgesamt belegt": "In totaal bezet",
+  "Insgesamt anwesend": "In totaal aanwezig",
+  "Insgesamt nass": "In totaal nat",
+  "Insgesamt verbunden": "In totaal verbonden",
+  "Insgesamt schwach": "In totaal laag",
+  "Insgesamt Rauch": "In totaal rook",
+  "Insgesamt Problem": "In totaal probleem",
+  "Insgesamt entriegelt": "In totaal ontgrendeld",
+  "Insgesamt eingesteckt": "In totaal ingeplugd",
+  "Insgesamt gelaufen": "In totaal gedraaid",
+  "Insgesamt an": "In totaal aan",
+  "Befeuchtet": "Bevochtigt",
+  "Entfeuchtet": "Ontvochtigt",
+  "Betrieb": "Werking",
+  "Zielfeuchte": "Doelvochtigheid",
+  "Wassertank": "Watertank",
+  "Komfort": "Comfort",
+  "Warnungen": "Waarschuwingen",
+  "Aktuell keine Warnungen": "Momenteel geen waarschuwingen",
+  "Liefert gerade nichts": "Levert nu niets",
+  "Liefert": "Levert",
+  "Kein Austausch": "Geen uitwisseling",
+  "Module": "Panelen",
+  "Ertrag": "Opbrengst",
+  "Entladen": "Ontladen",
+  "Laden": "Laden",
+  "Eingespeist gesamt": "Teruggeleverd totaal",
+  "Einspeisung und Eigenversorgung": "Teruglevering en zelfvoorziening",
+  "Solarleistung": "Zonvermogen",
+  "Ladestand": "Laadniveau",
+  "Akkuleistung": "Accuvermogen",
+  "Netzleistung": "Netvermogen",
+  "Woher kommt der Strom": "Waar de stroom vandaan komt",
+  "Wohin geht der Solarstrom": "Waar de zonnestroom heen gaat",
+  "Bypass": "Bypass",
+  "Popup öffnen": "Venster openen",
+  "Kachel bearbeiten": "Tegel bewerken",
+  "Aus in": "Uit over",
+  "An für": "Aan voor",
+  "Aus um": "Uit om",
+  "An um": "Aan om",
+  "Stopp": "Stop",
+  "Lauter": "Harder",
+  "Kälter": "Kouder",
+  "Wärmer": "Warmer",
+  "15 Min.": "15 min",
+  "30 Min.": "30 min",
+  "1 Std.": "1 u",
+  "2 Std.": "2 u",
+  "Details": "Details",
+  "Ausschalten in": "Uitschakelen over",
+  "Einschalten für": "Inschakelen voor",
+  "Kamera live": "Camera live",
+  "Live ansehen": "Live bekijken",
+  "Auto": "Auto",
+  "Hat nicht geklappt": "Is niet gelukt",
+  "Alarm scharf schalten?": "Alarm inschakelen?",
+  "Alarm unscharf schalten?": "Alarm uitschakelen?",
+  "Code": "Code",
+  "Energie-Dashboard": "Energiedashboard",
+  "Alle Updates": "Alle updates",
+  "Nach Updates suchen": "Zoeken naar updates",
+  "Suche nach Updates …": "Zoeken naar updates…",
+  "Handy klingeln lassen": "Telefoon laten rinkelen",
+  "Auf der Einkaufsliste": "Op de boodschappenlijst gezet",
+  "Rezept öffnen": "Recept openen",
+  "Batterie gewechselt?": "Batterij vervangen?",
+  "Gäste-WLAN an": "Gastenwifi aan",
+  "Gäste-WLAN aus": "Gastenwifi uit",
+  "Gäste-WLAN ausschalten?": "Gastenwifi uitschakelen?",
+  "Daten aktualisieren": "Gegevens vernieuwen",
+  "Auto aufwecken und Daten holen?": "Auto wekken en gegevens ophalen?",
+  "Fertig um": "Klaar om",
+  "Fertig seit": "Klaar sinds",
+  "noch": "nog",
+  "An in": "Aan over",
+  "Std.": "u",
+  "Min.": "min",
+  "Tipp: Kachel gedrückt halten oder rechts klicken – Schnellbedienung": "Tip: tegel ingedrukt houden of rechtsklikken – snelle bediening",
+  "Tipp: Kachel gedrückt halten – Schnellbedienung": "Tip: tegel ingedrukt houden – snelle bediening",
+  "Zeitschalter aus": "Timer uit",
+  "Ändern auf": "Wijzigen naar",
+  "Update gestartet": "Update gestart",
+  "Aufnahme an": "Opname aan",
+  "Aufnahme aus": "Opname uit",
+  "Aufnahme ausschalten?": "Opname uitschakelen?",
+  "Aufnahmen": "Opnames",
+  "Automatisch folgen": "Automatisch volgen",
+  "Bewegungserkennung": "Bewegingsdetectie",
+  "Erkennung an": "Detectie aan",
+  "Erkennung aus": "Detectie uit",
+  "Erkennung ausschalten?": "Detectie uitschakelen?",
+  "Frigate meldet Fehler": "Frigate meldt een fout",
+  "Frigate startet": "Frigate start",
+  "Frigate antwortet nicht": "Frigate reageert niet",
+  "Gerade im Bild": "Nu in beeld",
+  "Geräuscherkennung": "Geluidsdetectie",
+  "In Frigate öffnen": "Openen in Frigate",
+  "In den Medien von Home Assistant": "In de media van Home Assistant",
+  "Kamera aus": "Camera uit",
+  "Keine Erkennung": "Geen detectie",
+  "Keine Erkennungen in den letzten 7 Tagen": "Geen detecties in de laatste 7 dagen",
+  "Letzte Erkennung": "Laatste detectie",
+  "Letzte Erkennungen": "Laatste detecties",
+  "Liste über die Frigate-Integration nicht abrufbar": "Lijst via de Frigate-integratie niet op te halen",
+  "Noch nicht erkannt": "Nog niet gedetecteerd",
+  "Objekte": "Objecten",
+  "Objekt": "Object",
+  "Schnappschuss": "Snapshot",
+  "Schnappschüsse": "Snapshots",
+  "Zonen": "Zones",
+  "läuft noch": "loopt nog",
+  "System": "Systeem",
+  "Frigate": "Frigate",
+  "Bär": "Beer",
+  "Eichhörnchen": "Eekhoorn",
+  "Fahrrad": "Fiets",
+  "FedEx": "FedEx",
+  "Fuchs": "Vos",
+  "Gesicht": "Gezicht",
+  "Hund": "Hond",
+  "Kaninchen": "Konijn",
+  "Katze": "Kat",
+  "Kennzeichen": "Kenteken",
+  "Motorrad": "Motor",
+  "Mülltonne": "Afvalcontainer",
+  "Paket": "Pakket",
+  "Pferd": "Paard",
+  "Schaf": "Schaap",
+  "Schirm": "Paraplu",
+  "USPS": "USPS",
+  "Vogel": "Vogel",
+  "Waschbär": "Wasbeer",
+  "Reh": "Ree",
+  "Kuh": "Koe",
+  "Boot": "Boot",
+  "Lkw": "Vrachtwagen",
+  "Bus": "Bus",
+  "Aufnahme & Erkennung": "Opname & detectie",
+  "Löst die Objekterkennung aus": "Start de objectdetectie",
+  "Neuere Erkennung": "Nieuwere detectie",
+  "Ältere Erkennung": "Oudere detectie",
+  "Mehr anzeigen": "Meer tonen",
+  "Weniger anzeigen": "Minder tonen",
+  "Alle Objekte zeigen": "Alle objecten tonen",
+  "Läuft noch": "Loopt nog",
+  "Privatsphäre an": "Privacy aan",
+  "Hat geklingelt": "Er is aangebeld",
+  "Tier": "Dier",
+  "Schnellantworten": "Snelle antwoorden",
+  "Schnellantwort": "Snel antwoord",
+  "Spielt ab": "Speelt af",
+  "Antippen zum Stoppen": "Tik om te stoppen",
+  "Laut an der Tür, 10 Sekunden": "Luid aan de deur, 10 seconden",
+  "Auslösen": "Laten afgaan",
+  "Sirene läuft": "Sirene loopt",
+  "An der Tür": "Aan de deur",
+  "Niemand hat geklingelt": "Niemand heeft aangebeld",
+  "Klingelton": "Beltoon",
+  "Lautsprecher": "Speaker",
+  "Klingelton an der Tür": "Beltoon aan de deur",
+  "Ton aufnehmen": "Geluid opnemen",
+  "Ohne Ton hörst du die Tür nicht": "Zonder geluid hoor je de deur niet",
+  "Infrarot-LEDs nachts": "Infrarood-leds 's nachts",
+  "Tag/Nacht-Modus": "Dag/nacht-modus",
+  "Bild gerade": "Beeld nu",
+  "Status-LED": "Statusled",
+  "Privatsphäre": "Privacy",
+  "Kamera und Ton aus": "Camera en geluid uit",
+  "Licht am Klingelknopf": "Licht op de belknop",
+  "Nachts an": "'s Nachts aan",
+  "Immer an": "Altijd aan",
+  "Automatische Antwort": "Automatisch antwoord",
+  "Schwarz-Weiß": "Zwart-wit",
+  "Farbe mit Licht": "Kleur met licht",
+  "Kamera und Ton der Klingel sind aus.": "Camera en geluid van de deurbel staan uit.",
+  "Klingel nicht erreichbar": "Deurbel niet bereikbaar",
+  "Prüfe Strom und WLAN der Klingel.": "Controleer stroom en wifi van de deurbel.",
+  "Ton aus": "Geluid uit",
+  "Verbindet …": "Verbinden…",
+  "Ton ist an der Klingel aus": "Geluid staat uit op de deurbel",
+  "Sprechen klappt mit dieser Klingel nicht – Ton hören geht weiter": "Spreken werkt niet met deze deurbel – meeluisteren blijft werken",
+  "Kein Zugriff aufs Mikrofon – im Browser erlauben": "Geen toegang tot de microfoon – sta dit toe in de browser",
+  "Sprechen nach 90 Sekunden beendet": "Spreken na 90 seconden beëindigd",
+  "Verbindung zur Klingel beendet": "Verbinding met de deurbel beëindigd",
+  "Ton hören": "Meeluisteren",
+  "An der Tür abspielen?": "Afspelen aan de deur?",
+  "Geklingelt": "Aangebeld",
+  "In den letzten 3 Tagen": "In de laatste 3 dagen",
+  "Kaffeevollautomat": "Volautomaat",
+  "Kaffeemaschine": "Koffiezetapparaat",
+  "Kaffee": "Koffie",
+  "Kaffeekanne": "Koffiekan",
+  "XL-Kaffee": "XL-koffie",
+  "Milchkaffee": "Koffie verkeerd",
+  "Kaffee verkehrt": "Koffie met veel melk",
+  "Kaffee mit Milch": "Koffie met melk",
+  "Warme Milch": "Warme melk",
+  "Milchschaum": "Melkschuim",
+  "Heißwasser": "Heet water",
+  "Tee": "Thee",
+  "Eiskaffee": "IJskoffie",
+  "Pulverkaffee": "Gemalen koffie",
+  "Milchgetränke": "Melkdranken",
+  "Mein Kaffee": "Mijn koffie",
+  "Entkalken & Reinigen": "Ontkalken & reinigen",
+  "Entkalkt": "Ontkalkt",
+  "Spült": "Spoelt",
+  "Pflege läuft": "Onderhoud bezig",
+  "Heizt auf": "Warmt op",
+  "Wasser nachfüllen": "Water bijvullen",
+  "Wassertank ist leer": "Watertank is leeg",
+  "Bohnen nachfüllen": "Bonen bijvullen",
+  "Bohnenbehälter ist leer": "Bonenreservoir is leeg",
+  "Schale leeren": "Lekbak legen",
+  "Tropfschale ist voll": "Lekbak is vol",
+  "Satzbehälter leeren": "Koffiedikbak legen",
+  "Kaffeesatz ist voll": "Koffiedikbak is vol",
+  "Milch kühlen": "Melk koel houden",
+  "Milch in den Kühlschrank stellen": "Zet de melk in de koelkast",
+  "Entkalkungsprogramm starten": "Ontkalkingsprogramma starten",
+  "Pflegeprogramm starten": "Onderhoudsprogramma starten",
+  "Reinigungsprogramm starten": "Reinigingsprogramma starten",
+  "Filter wechseln": "Filter vervangen",
+  "Wasserfilter ist verbraucht": "Waterfilter is op",
+  "Wassertank einsetzen": "Watertank plaatsen",
+  "Wassertank fehlt": "Watertank ontbreekt",
+  "Wasser bald leer": "Water bijna op",
+  "Wassertank ist fast leer": "Watertank is bijna leeg",
+  "Schale einsetzen": "Lekbak plaatsen",
+  "Tropfschale fehlt": "Lekbak ontbreekt",
+  "Brühgruppe einsetzen": "Zetgroep plaatsen",
+  "Brühgruppe fehlt": "Zetgroep ontbreekt",
+  "Entkalken überfällig": "Ontkalken te laat",
+  "Reinigen überfällig": "Reinigen te laat",
+  "Entkalken & Reinigen überfällig": "Ontkalken & reinigen te laat",
+  "Entkalken blockiert": "Ontkalken geblokkeerd",
+  "Entkalken an der Maschine fortsetzen": "Ontkalken op de machine voortzetten",
+  "Milchsystem reinigen": "Melksysteem reinigen",
+  "Milchsystem spülen und reinigen": "Melksysteem spoelen en reinigen",
+  "Mahlt": "Maalt",
+  "Brüht vor": "Voorzet",
+  "Brüht": "Zet",
+  "Läuft ein": "Loopt door",
+  "Milch": "Melk",
+  "Bereitet vor": "Bereidt voor",
+  "Getränke": "Dranken",
+  "Fernstart an der Maschine erlauben": "Starten op afstand toestaan op de machine",
+  "Erst dann startet Casora Getränke aus der Ferne": "Pas dan start Casora dranken op afstand",
+  "Stärke": "Sterkte",
+  "Menge": "Hoeveelheid",
+  "Sehr mild": "Zeer mild",
+  "Mild": "Mild",
+  "Stark": "Sterk",
+  "Sehr stark": "Zeer sterk",
+  "Extra stark": "Extra sterk",
+  "Max": "Max",
+  "Getränk": "Drank",
+  "Getränk antippen, dann starten.": "Tik op een drank en start hem.",
+  "Maschine": "Machine",
+  "Steckdose an": "Stopcontact aan",
+  "Steckdose aus": "Stopcontact uit",
+  "Maschine meldet einen Fehler": "Machine meldt een fout",
+  "Hinweis im Display der Maschine ansehen": "Bekijk de melding op het display van de machine",
+  "Wasserfilter": "Waterfilter",
+  "Filterwechsel": "Filterwissel",
+  "Warnungen in Home Assistant aktivieren": "Waarschuwingen in Home Assistant inschakelen",
+  "Home Connect legt Wassertank, Bohnen, Schale und Entkalken ausgeschaltet an. Am Gerät unter Entitäten einschalten, dann meldet die Kachel sie.": "Home Connect maakt watertank, bonen, lekbak en ontkalken uitgeschakeld aan. Schakel ze bij het apparaat onder Entiteiten in, dan meldt de tegel ze.",
+  "Getränke gesamt": "Dranken totaal",
+  "Lernt": "Leert",
+  "Tank herausnehmen, füllen, einsetzen": "Tank uitnemen, vullen, terugplaatsen",
+  "Bohnen in den Behälter füllen": "Bonen in het reservoir doen",
+  "Tropfschale herausnehmen und leeren": "Lekbak uitnemen en legen",
+  "Behälter herausnehmen und leeren": "Bak uitnemen en legen",
+  "Entkalken fällig": "Ontkalken nodig",
+  "Entkalkungsprogramm an der Maschine starten": "Ontkalkingsprogramma op de machine starten",
+  "Entkalken & Reinigen fällig": "Ontkalken & reinigen nodig",
+  "Pflegeprogramm an der Maschine starten": "Onderhoudsprogramma op de machine starten",
+  "Reinigen fällig": "Reinigen nodig",
+  "Reinigungsprogramm an der Maschine starten": "Reinigingsprogramma op de machine starten",
+  "Wasserfilter an der Maschine tauschen": "Waterfilter op de machine vervangen",
+  "Wasser leer": "Water op",
+  "Bohnen leer": "Bonen op",
+  "Schale voll": "Lekbak vol",
+  "Satz voll": "Koffiedik vol",
+  "Tank fehlt": "Tank ontbreekt",
+  "Schale fehlt": "Lekbak ontbreekt",
+  "Behälter fehlt": "Bak ontbreekt",
+  "Tank einsetzen, bis er einrastet": "Tank plaatsen tot hij vastklikt",
+  "Tank bei Gelegenheit füllen": "Tank bij gelegenheid vullen",
+  "Tropfschale einsetzen": "Lekbak plaatsen",
+  "Brühgruppe einsetzen, bis sie einrastet": "Zetgroep plaatsen tot hij vastklikt",
+  "Filterwechsel überfällig": "Filterwissel te laat",
+  "Milchsystem an der Maschine spülen": "Melksysteem op de machine spoelen",
+  "Service nötig": "Onderhoud nodig",
+  "Maschine vom Kundendienst prüfen lassen": "Machine door de servicedienst laten controleren",
+  "Bohnenbehälter einsetzen": "Bonenreservoir plaatsen",
+  "Bohnenbehälter einsetzen, bis er einrastet": "Bonenreservoir plaatsen tot het vastklikt",
+  "Verbindung zur Maschine prüfen": "Verbinding met de machine controleren",
+  "Eingeschaltet, aber noch nicht bereit – Getränk an der Maschine starten": "Ingeschakeld, maar nog niet gereed – drank op de machine starten",
+  "Ausgewählt – Getränk an der Maschine starten": "Gekozen – drank op de machine starten",
+  "Start abbrechen": "Start afbreken",
+  "Abbrechen geht nur an der Maschine": "Afbreken kan alleen op de machine",
+  "Start hat nicht geklappt": "Starten is niet gelukt",
+  "Abbrechen hat nicht geklappt": "Afbreken is niet gelukt",
+  "Wasser ist leer": "Water is op",
+  "Bohnen sind leer": "Bonen zijn op",
+  "Schale ist voll": "Lekbak is vol",
+  "Satzbehälter ist voll": "Koffiedikbak is vol",
+  "trotzdem starten?": "toch starten?",
+  "Trotzdem starten": "Toch starten",
+  "Abgebrochen": "Afgebroken",
+  "Startet, sobald bereit": "Start zodra gereed",
+  "Startet …": "Start…",
+  "Hinweise⁠": "Meldingen⁠",
+  "Rückspülen": "Terugspoelen",
+  "Getränk starten": "Drank starten",
+  "Getränk starten?": "Drank starten?",
+  "Doppio+": "Doppio+",
+  "Ristretto doppio": "Ristretto doppio",
+  "Caffè Crema doppio": "Caffè crema doppio",
+  "Americano extra": "Americano extra",
+  "Long Black": "Long black",
+  "Kaffee to go": "Koffie to go",
+  "Cappuccino Italiano": "Cappuccino italiano",
+  "Cappuccino doppio": "Cappuccino doppio",
+  "Macchiato": "Macchiato",
+  "Latte Macchiato extra": "Latte macchiato extra",
+  "Latte Macchiato triple": "Latte macchiato triple",
+  "Kalte Milch": "Koude melk",
+  "Dampf": "Stoom",
+  "Sehr heißes Wasser": "Zeer heet water",
+  "Schwarzer Tee": "Zwarte thee",
+  "Kräutertee": "Kruidenthee",
+  "Früchtetee": "Vruchtenthee",
+  "Grüner Tee": "Groene thee",
+  "Weißer Tee": "Witte thee",
+  "Japanischer Tee": "Japanse thee",
+  "Chai Latte": "Chai latte",
+  "Kakao": "Warme chocolademelk",
+  "Kaffee auf Eis": "Koffie met ijs",
+  "Ristretto & Espresso": "Ristretto & espresso",
+  "Galão": "Galão",
+  "Café con leche": "Café con leche",
+  "Red Eye": "Red eye",
+  "Black Eye": "Black eye",
+  "Dead Eye": "Dead eye",
+  "Café cortado": "Café cortado",
+  "Cold Brew": "Cold brew",
+  "Espresso doppio": "Espresso doppio",
+  "Caffè Crema": "Caffè crema",
+  "Caffè Grande": "Caffè grande",
+  "Kaffee starten": "Koffie starten",
+  "Kaffee starten?": "Koffie starten?",
+  "Einschalten und Kaffee starten": "Inschakelen en koffie starten",
+  "Heißwasser starten": "Heet water starten",
+  "Heißwasser starten?": "Heet water starten?",
+  "Einschalten und Heißwasser starten": "Inschakelen en heet water starten",
+  "Warme Milch starten": "Warme melk starten",
+  "Warme Milch starten?": "Warme melk starten?",
+  "Einschalten und Warme Milch starten": "Inschakelen en warme melk starten",
+  "Milchschaum starten": "Melkschuim starten",
+  "Milchschaum starten?": "Melkschuim starten?",
+  "Einschalten und Milchschaum starten": "Inschakelen en melkschuim starten",
+  "Tee starten": "Thee starten",
+  "Tee starten?": "Thee starten?",
+  "Einschalten und Tee starten": "Inschakelen en thee starten",
+  "Kakao starten": "Warme chocolademelk starten",
+  "Kakao starten?": "Warme chocolademelk starten?",
+  "Einschalten und Kakao starten": "Inschakelen en warme chocolademelk starten",
+  "Kalte Milch starten": "Koude melk starten",
+  "Kalte Milch starten?": "Koude melk starten?",
+  "Einschalten und Kalte Milch starten": "Inschakelen en koude melk starten",
+  "Dampf starten": "Stoom starten",
+  "Dampf starten?": "Stoom starten?",
+  "Einschalten und Dampf starten": "Inschakelen en stoom starten",
+  "Milchkaffee starten": "Koffie verkeerd starten",
+  "Milchkaffee starten?": "Koffie verkeerd starten?",
+  "Einschalten und Milchkaffee starten": "Inschakelen en koffie verkeerd starten",
+  "Kaffeekanne starten": "Koffiekan starten",
+  "Kaffeekanne starten?": "Koffiekan starten?",
+  "Einschalten und Kaffeekanne starten": "Inschakelen en koffiekan starten",
+  "Sehr heißes Wasser starten": "Zeer heet water starten",
+  "Sehr heißes Wasser starten?": "Zeer heet water starten?",
+  "Einschalten und Sehr heißes Wasser starten": "Inschakelen en zeer heet water starten",
+  "Eiskaffee starten": "IJskoffie starten",
+  "Eiskaffee starten?": "IJskoffie starten?",
+  "Einschalten und Eiskaffee starten": "Inschakelen en ijskoffie starten",
+  "Kaffee mit Milch starten": "Koffie met melk starten",
+  "Kaffee mit Milch starten?": "Koffie met melk starten?",
+  "Einschalten und Kaffee mit Milch starten": "Inschakelen en koffie met melk starten",
+  "XL-Kaffee starten": "XL-koffie starten",
+  "XL-Kaffee starten?": "XL-koffie starten?",
+  "Einschalten und XL-Kaffee starten": "Inschakelen en XL-koffie starten",
+  "Kaffee auf Eis starten": "Koffie met ijs starten",
+  "Kaffee auf Eis starten?": "Koffie met ijs starten?",
+  "Einschalten und Kaffee auf Eis starten": "Inschakelen en koffie met ijs starten",
+  "Schwarzer Tee starten": "Zwarte thee starten",
+  "Schwarzer Tee starten?": "Zwarte thee starten?",
+  "Einschalten und Schwarzer Tee starten": "Inschakelen en zwarte thee starten",
+  "Kräutertee starten": "Kruidenthee starten",
+  "Kräutertee starten?": "Kruidenthee starten?",
+  "Einschalten und Kräutertee starten": "Inschakelen en kruidenthee starten",
+  "Früchtetee starten": "Vruchtenthee starten",
+  "Früchtetee starten?": "Vruchtenthee starten?",
+  "Einschalten und Früchtetee starten": "Inschakelen en vruchtenthee starten",
+  "Grüner Tee starten": "Groene thee starten",
+  "Grüner Tee starten?": "Groene thee starten?",
+  "Einschalten und Grüner Tee starten": "Inschakelen en groene thee starten",
+  "Weißer Tee starten": "Witte thee starten",
+  "Weißer Tee starten?": "Witte thee starten?",
+  "Einschalten und Weißer Tee starten": "Inschakelen en witte thee starten",
+  "Japanischer Tee starten": "Japanse thee starten",
+  "Japanischer Tee starten?": "Japanse thee starten?",
+  "Einschalten und Japanischer Tee starten": "Inschakelen en Japanse thee starten",
+  "Kaffee verkehrt starten": "Koffie met veel melk starten",
+  "Kaffee verkehrt starten?": "Koffie met veel melk starten?",
+  "Einschalten und Kaffee verkehrt starten": "Inschakelen en koffie met veel melk starten",
+  "Pulverkaffee starten": "Gemalen koffie starten",
+  "Pulverkaffee starten?": "Gemalen koffie starten?",
+  "Einschalten und Pulverkaffee starten": "Inschakelen en gemalen koffie starten",
+  "Kaffee to go starten": "Koffie to go starten",
+  "Kaffee to go starten?": "Koffie to go starten?",
+  "Einschalten und Kaffee to go starten": "Inschakelen en koffie to go starten",
+  "Mithören": "Meeluisteren",
+  "Bei Privatsphäre aus": "Uit zolang privacy aan staat",
+  "Sprechen beendet – Privatsphäre an": "Spreken beëindigd – privacy aan",
+  "Sprechen beendet – Klingel nicht erreichbar": "Spreken beëindigd – deurbel niet bereikbaar",
+  "Sprechen geht in diesem Browser nicht": "Spreken werkt niet in deze browser",
+  "Sprechen braucht HTTPS": "Spreken vereist HTTPS",
+  "Sprechen klappt mit dieser Klingel nicht – Mithören geht weiter": "Spreken werkt niet met deze deurbel – meeluisteren blijft werken",
+  "Sprechen klappt mit dieser Klingel nicht": "Spreken werkt niet met deze deurbel",
+  "Sprechen geht nur über die Klingel": "Spreken werkt alleen via de deurbel",
+  "Groß anzeigen": "Groot tonen",
+  "Live-Bild": "Livebeeld",
+  "Objekterkennung": "Objectdetectie",
+  "Objekterkennung ausschalten?": "Objectdetectie uitschakelen?",
+  "Erkennung einschalten": "Detectie inschakelen",
+  "Erkennung ausschalten": "Detectie uitschakelen",
+  "Aufnahme einschalten": "Opname inschakelen",
+  "Aufnahme ausschalten": "Opname uitschakelen",
+  "Kein Clip vorhanden": "Geen clip beschikbaar",
+  "Zone": "Zone",
+  "Alarme": "Alarmen",
+  "Erkennungen": "Detecties",
+  "Herunterladen": "Downloaden",
+  "Zeitleiste": "Tijdlijn",
+  "Nichts gefunden": "Niets gevonden",
+  "Filter ändern oder zurücksetzen": "Filters wijzigen of resetten",
+  "Filter zurücksetzen": "Filters resetten",
+  "Alle Aufnahmen": "Alle opnames",
+  "Keine Aufnahmen": "Geen opnames",
+  "Aufnahme unter „Einstellungen“ einschalten": "Opname inschakelen onder “Instellingen”",
+  "Frigate hat keine Aufnahmen dieser Kamera": "Frigate heeft geen opnames van deze camera",
+  "Aufnahme in den Einstellungen einschalten": "Opname inschakelen in de instellingen",
+  "Tag": "Dag",
+  "Uhrzeit": "Tijd",
+  "Aufnahme nicht abrufbar": "Opname niet op te halen",
+  "Frigate liefert dieses Video nicht": "Frigate levert deze video niet",
+  "Keine Aufnahme in dieser Stunde": "Geen opname in dit uur",
+  "1 neuer Alarm": "1 nieuw alarm",
+  "1 Erkennung": "1 detectie",
+  "1 Alarm": "1 alarm",
+  "Objekterkennung aus": "Objectdetectie uit",
+  "Objekterkennung einschalten": "Objectdetectie inschakelen",
+  "Objekterkennung ausschalten": "Objectdetectie uitschakelen",
+  "Favorit ✓": "Favoriet ✓",
+  "Nur Favoriten": "Alleen favorieten",
+  "Wird nicht automatisch gelöscht": "Wordt niet automatisch gewist",
+  "Teilen": "Delen",
+  "Jetzt teilen": "Nu delen",
+  "Bild herunterladen": "Afbeelding downloaden",
+  "Gespeichert": "Opgeslagen",
+  "Nicht geladen": "Niet geladen",
+  "Sicher erkannt": "Duidelijk gedetecteerd",
+  "Als neu markieren": "Markeren als nieuw",
+  "Alle als gesehen markieren": "Alles markeren als bekeken",
+  "Alle als gesehen markieren?": "Alles markeren als bekeken?",
+  "Danach steht nichts mehr als „Neu“ da.": "Daarna staat er niets meer als “Nieuw”.",
+  "Markieren": "Markeren",
+  "Zeitraum": "Periode",
+  "Gesichter": "Gezichten",
+  "1 Filter aktiv": "1 filter actief",
+  "Alarme: wichtige Erkennungen, z. B. eine Person in einer Zone": "Alarmen: belangrijke detecties, bijv. een persoon in een zone",
+  "Keine Favoriten": "Geen favorieten",
+  "Im Detail einer Erkennung „Favorit“ antippen": "Tik in het detail van een detectie op “Favoriet”",
+  "Springen nicht möglich": "Springen niet mogelijk",
+  "Ab hier:": "Vanaf hier:",
+  "Anhalten": "Pauzeren",
+  "Kein Live-Video · Standbild alle 2 s": "Geen livevideo · stilstaand beeld elke 2 s",
+  "Hemma 2 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 2 bestaat niet meer in Casora – je gebruikt nu Casora Glas, de glaslook in de Casora-opbouw. Andere designs: Studio › Instellingen › Design.",
+  "Hemma 1 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 1 bestaat niet meer in Casora – je gebruikt nu Casora Glas, de glaslook in de Casora-opbouw. Andere designs: Studio › Instellingen › Design.",
+  "Das Hemma-Design gibt es nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Het Hemma-design bestaat niet meer – je gebruikt nu Casora Glas, de glaslook in de Casora-opbouw. Andere designs: Studio › Instellingen › Design.",
+  "Americano": "Americano",
+  "Cappuccino": "Cappuccino",
+  "Cortado": "Cortado",
+  "Doppio": "Doppio",
+  "Espresso": "Espresso",
+  "Espresso Macchiato": "Espresso macchiato",
+  "Latte Macchiato": "Latte macchiato",
+  "Lungo": "Lungo",
+  "Ristretto": "Ristretto",
+  "Casora Glas": "Casora Glas",
+  "Hemma": "Hemma",
+  "Hemma 1": "Hemma 1",
+  "Hemma 2": "Hemma 2",
+  "Tassen": "Kopjes",
+  "Türklingel": "Deurbel",
+  "überfällig": "te laat",
+  "Einschalten und": "Inschakelen en",
+  "HLS-Fehler": "HLS-fout",
+  "kein HLS": "geen HLS",
+  "kein Video": "geen video",
+  "keine Quelle": "geen bron",
+  "keine Reviews": "geen reviews",
+  "lädt nicht": "laadt niet",
+  "Videofehler": "Videofout",
+  "Unter-Liste nicht signiert": "sublijst niet ondertekend",
+  "nicht signiert": "niet ondertekend",
+  "s ohne Antwort": "s zonder antwoord",
+  "HTTP": "HTTP",
+  "YYYY-MM-DD": "YYYY-MM-DD",
+  "TEXTAREA": "TEXTAREA",
+  "Bohnen bald leer": "Bonen bijna op",
+  "Bohnen bei Gelegenheit nachfüllen": "Bonen bij gelegenheid bijvullen",
+  "Brühgruppe": "Zetgroep",
+  "Brühgruppe herausnehmen und unter Wasser ausspülen": "Zetgroep uitnemen en onder water afspoelen",
+  "Brühgruppe spülen": "Zetgroep spoelen",
+  "Brühgruppe spülen überfällig": "Zetgroep spoelen te laat",
+  "Getränk an der Maschine wählen – Casora erkennt es am Stromverlauf.": "Kies de drank op de machine – Casora herkent hem aan het stroomverloop.",
+  "Kaffee doppio": "Dubbele koffie",
+  "Funkt, schickt aber keine Werte": "Zendt, maar stuurt geen waarden",
+  "Batteriewert fehlt": "Batterijwaarde ontbreekt",
+  "Cloud antwortet nicht": "Cloud reageert niet",
+  "Seit dem Neustart noch keine Meldung": "Sinds de herstart nog geen melding",
+  "Erreichbar, gerade nichts zu melden": "Bereikbaar, nu niets te melden",
+  "funkt, schickt aber keine Werte": "zendt, maar stuurt geen waarden",
+  "meldet keinen Batteriewert": "meldt geen batterijwaarde",
+  "Haustier": "Huisdier",
+  "Diagramm": "Grafiek",
+  "Linien": "Lijnen",
+  "Kein Zahlenwert": "Geen getalwaarde",
+  "Dieser Sensor liefert keine Zahl.": "Deze sensor levert geen getal.",
+  "Noch keine Statistik": "Nog geen statistiek",
+  "Statistik nicht abrufbar": "Statistiek niet beschikbaar",
+  "Home Assistant sammelt sie stündlich.": "Home Assistant verzamelt ze elk uur.",
+  "Dieser Sensor hat keine Statistik.": "Deze sensor heeft geen statistiek.",
+  "Meldet sich nicht": "Meldt zich niet",
+  "Ungenaue Position": "Onnauwkeurige positie",
+  "Live-Tracking": "Livetracking",
+  "Ziel": "Doel",
+  "Min. aktiv": "min actief",
+  "Ruhe": "Rust",
+  "Schlaf Tag": "Slaap overdag",
+  "Schlaf Nacht": "Slaap 's nachts",
+  "Tracker": "Tracker",
+  "Energiesparen": "Energiebesparing",
+  "Favorites": "Favorieten",
+  "Scenes": "Scènes",
+  "Ein": "Aan",
+  "Home": "Thuis",
+  "1 An": "1 Aan",
+  "1 an": "1 aan",
+  "1 Aus": "1 Uit",
+  "1 entriegelt": "1 ontgrendeld",
+  "1 aktiv": "1 actief",
+  "1 Aktiv": "1 Actief",
+  "1 offen": "1 open",
+  "1 Offen": "1 Open",
+  "1 geöffnet": "1 open",
+  "1 gekippt": "1 gekanteld",
+  "1 Schwach": "1 Laag",
+  "1 Verfügbar": "1 Beschikbaar",
+  "1 ausgefallen": "1 uitgevallen",
+  "1 übersprungen": "1 overgeslagen",
+  "Energiesparen ist an: der Tracker reagiert erst wieder, wenn er unterwegs ist.": "Energiebesparing staat aan: de tracker reageert pas weer als hij onderweg is.",
+  "Der Tracker ist gerade nicht erreichbar.": "De tracker is nu niet bereikbaar.",
+  "Leicht feucht": "Licht vochtig",
+  "Häufig": "Vaak",
+  "Selten": "Zelden",
+  "Intelligent": "Intelligent",
+  "Sehr hoch": "Zeer hoog",
+  "Mopp-Pad": "Dweilpad",
+  "Kantenreinigung": "Randreiniging",
+  "Frischwassertank fehlt": "Schoonwatertank ontbreekt",
+  "Schmutzwassertank voll oder nicht eingesetzt": "Vuilwatertank vol of niet geplaatst",
+  "Staubbeutel fehlt": "Stofzak ontbreekt",
+  "Staubbeutel prüfen": "Stofzak controleren",
+  "Reinigungsmittel nachfüllen": "Reinigingsmiddel bijvullen",
+  "Räder reinigen": "Wielen reinigen",
+  "Wasserauslassfilter": "Wateruitlaatfilter",
+  "Schmutzwassertank (Roboter)": "Vuilwatertank (robot)",
+  "noch 1 Tag": "nog 1 dag",
+  "Kein Ton von der Klingel – neuer Versuch …": "Geen geluid van de deurbel – nieuwe poging…",
+  "Werte": "Waarden",
+  "Bedienung": "Bediening",
+  "Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.": "Kies in de Studio een apparaat of voeg waarden, geschiedenis en eigen kaarten toe.",
+  "Kein Verlauf: {name} ist kein Zahlenwert.": "Geen geschiedenis: {name} is geen getalwaarde.",
+  "Universal-Kachel": "Universele tegel",
+  "Kein Gerät gewählt": "Geen apparaat gekozen",
+  "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "In de Studio kun je waarden, geschiedenis, bediening en eigen kaarten toevoegen."
+ },
+ "patterns": [
+  [
+   "^Spielt ab: (.+)$",
+   "Speelt af: {1}"
+  ],
+  [
+   "^„(.+)“ an der Tür abspielen\\?$",
+   "“{1}” aan de deur afspelen?"
+  ],
+  [
+   "^Geklingelt · (.+)$",
+   "Aangebeld · {1}"
+  ],
+  [
+   "^Geklingelt (\\d{1,2}:\\d{2}.*)$",
+   "Aangebeld om {1}"
+  ],
+  [
+   "^Treffer (\\d+) %$",
+   "Match {1}%"
+  ],
+  [
+   "^Gestern (\\d{1,2}:\\d{2})$",
+   "Gisteren {1}"
+  ],
+  [
+   "^Top (\\d+) Verbraucher$",
+   "Top {1} verbruikers"
+  ],
+  [
+   "^(\\d+) Probleme$",
+   "{1} problemen"
+  ],
+  [
+   "^(\\d+) bald$",
+   "{1} binnenkort"
+  ],
+  [
+   "^(\\d+) beobachten$",
+   "{1} in de gaten houden"
+  ],
+  [
+   "^(\\d+) bald fällig$",
+   "{1} binnenkort vervangen"
+  ],
+  [
+   "^(\\d+) Batterien bald fällig$",
+   "{1} batterijen binnenkort vervangen"
+  ],
+  [
+   "^(\\d+) ausgefallen$",
+   "{1} uitgevallen"
+  ],
+  [
+   "^(\\d+) prüfen$",
+   "{1} controleren"
+  ],
+  [
+   "^(\\d+) ok$",
+   "{1} ok"
+  ],
+  [
+   "^sonst alle (\\d+) Min\\.$",
+   "normaal elke {1} min"
+  ],
+  [
+   "^sonst alle (\\d+) Std\\.$",
+   "normaal elke {1} u"
+  ],
+  [
+   "^sonst alle (\\d+) Tage$",
+   "normaal elke {1} dagen"
+  ],
+  [
+   "^alle (\\d+) Min\\.$",
+   "elke {1} min"
+  ],
+  [
+   "^alle (\\d+) Std\\.$",
+   "elke {1} u"
+  ],
+  [
+   "^alle (\\d+) Tage$",
+   "elke {1} dagen"
+  ],
+  [
+   "^seit (\\d+) Min\\.$",
+   "sinds {1} min"
+  ],
+  [
+   "^seit (\\d+) Std\\.$",
+   "sinds {1} u"
+  ],
+  [
+   "^seit (\\d+) T\\.$",
+   "sinds {1} d"
+  ],
+  [
+   "^seit (\\d+) Tagen$",
+   "sinds {1} dagen"
+  ],
+  [
+   "^zuletzt gemeldet gestern (.+)$",
+   "laatst gemeld gisteren {1}"
+  ],
+  [
+   "^zuletzt gemeldet (.+)$",
+   "laatst gemeld {1}"
+  ],
+  [
+   "^seit gestern (.+)$",
+   "sinds gisteren {1}"
+  ],
+  [
+   "^Alle (\\d+) Lichter im Haus ausschalten\\?$",
+   "Alle {1} lampen in huis uitschakelen?"
+  ],
+  [
+   "^(\\d+) Geräte$",
+   "{1} apparaten"
+  ],
+  [
+   "^(.+) unscharf$",
+   "{1} uitgeschakeld"
+  ],
+  [
+   "^(.+) scharf · (.+)$",
+   "{1} ingeschakeld · {2}"
+  ],
+  [
+   "^Wartet seit (.+)$",
+   "Wacht sinds {1}"
+  ],
+  [
+   "^Üblich sind (.+)$",
+   "Normaal {1}"
+  ],
+  [
+   "^(\\d+) Einstellungen empfohlen, in WashData übernehmen$",
+   "{1} instellingen aanbevolen, overnemen in WashData"
+  ],
+  [
+   "^Ø (.+)$",
+   "Ø {1}"
+  ],
+  [
+   "^Abholung in (\\d+) Tagen$",
+   "Ophalen over {1} dagen"
+  ],
+  [
+   "^(\\d+) von (\\d+) An$",
+   "{1} van {2} aan"
+  ],
+  [
+   "^(\\d+) von (\\d+) Räumen an$",
+   "{1} van {2} kamers aan"
+  ],
+  [
+   "^KI: 1 Update braucht Aufmerksamkeit$",
+   "AI: 1 update heeft aandacht nodig"
+  ],
+  [
+   "^KI: (\\d+) Updates brauchen Aufmerksamkeit$",
+   "AI: {1} updates hebben aandacht nodig"
+  ],
+  [
+   "^Schließt (\\d+) Updates ab$",
+   "Rondt {1} updates af"
+  ],
+  [
+   "^Backup (vor .+|gerade eben)$",
+   "Back-up {1}"
+  ],
+  [
+   "^Absenkung um (.+)$",
+   "Verlaging met {1}"
+  ],
+  [
+   "^Letzte Fahrt vor (.+) T\\.$",
+   "Laatste rit {1} d geleden"
+  ],
+  [
+   "^Diesen Monat bist du dran, danach wieder im (.+)\\.$",
+   "Deze maand ben jij aan de beurt, daarna weer in {1}."
+  ],
+  [
+   "^Diesen Monat bist du dran\\.?$",
+   "Deze maand ben jij aan de beurt."
+  ],
+  [
+   "^startet in (.+)$",
+   "start over {1}"
+  ],
+  [
+   "^trocken in etwa (\\d+) Tagen?$",
+   "droog over ongeveer {1} dagen"
+  ],
+  [
+   "^trocken in etwa 1 Tag$",
+   "droog over ongeveer 1 dag"
+  ],
+  [
+   "^Vor (\\d+) Tagen gegossen$",
+   "{1} dagen geleden water gegeven"
+  ],
+  [
+   "^davon (.+) Std\\. mit Unterstützung$",
+   "waarvan {1} u met ondersteuning"
+  ],
+  [
+   "^in (\\d[\\d.,]*) km$",
+   "over {1} km"
+  ],
+  [
+   "^(\\d+) ?% des aktuellen Verbrauchs$",
+   "{1}% van het huidige verbruik"
+  ],
+  [
+   "^(\\d+) werden installiert$",
+   "{1} worden geïnstalleerd"
+  ],
+  [
+   "^(\\d+) Updates brauchen Aufmerksamkeit$",
+   "{1} updates hebben aandacht nodig"
+  ],
+  [
+   "^(\\d+) Breaking Changes betreffen dich$",
+   "{1} breaking changes raken jou"
+  ],
+  [
+   "^1 Breaking Change betrifft dich$",
+   "1 breaking change raakt jou"
+  ],
+  [
+   "^(.+) g/m³ absolut$",
+   "{1} g/m³ absoluut"
+  ],
+  [
+   "^drinnen Ø (.+)$",
+   "binnen Ø {1}"
+  ],
+  [
+   "^(\\d+) Verfügbar$",
+   "{1} beschikbaar"
+  ],
+  [
+   "^Heute (.+) kWh$",
+   "Vandaag {1} kWh"
+  ],
+  [
+   "^Heute (.+) kWh Bezug$",
+   "Vandaag {1} kWh van het net"
+  ],
+  [
+   "^Heute (.+) kWh entladen$",
+   "Vandaag {1} kWh ontladen"
+  ],
+  [
+   "^(.+) km aufgezeichnet$",
+   "{1} km geregistreerd"
+  ],
+  [
+   "^(.+) ohne Strom$",
+   "{1} zonder stroom"
+  ],
+  [
+   "^(.+) von (.+) aus Solar und Akku$",
+   "{1} van {2} uit zon en accu"
+  ],
+  [
+   "^Reinigt (.+)$",
+   "Reinigt {1}"
+  ],
+  [
+   "^Schließt das (.+)-Update ab$",
+   "Rondt de {1}-update af"
+  ],
+  [
+   "^(.+) Update verfügbar$",
+   "{1} update beschikbaar"
+  ],
+  [
+   "^(.+) hat das Haus verlassen$",
+   "{1} heeft het huis verlaten"
+  ],
+  [
+   "^(.+) ist angekommen$",
+   "{1} is thuisgekomen"
+  ],
+  [
+   "^(.+) ist gekippt$",
+   "{1} staat op een kier"
+  ],
+  [
+   "^(.+) ist gleich fertig$",
+   "{1} is bijna klaar"
+  ],
+  [
+   "^(.+) läuft$",
+   "{1} draait"
+  ],
+  [
+   "^(.+) hat geklingelt$",
+   "{1} heeft aangebeld"
+  ],
+  [
+   "^(.+) hat fertig gereinigt$",
+   "{1} is klaar met schoonmaken"
+  ],
+  [
+   "^(.+) reinigt$",
+   "{1} maakt schoon"
+  ],
+  [
+   "^(.+) ist auf der Arbeit$",
+   "{1} is op het werk"
+  ],
+  [
+   "^(.+) ist im (.+)$",
+   "{1} is in {2}"
+  ],
+  [
+   "^(.+) ist in der (.+)$",
+   "{1} is in {2}"
+  ],
+  [
+   "^(.+) ist am (.+)$",
+   "{1} is bij {2}"
+  ],
+  [
+   "^(.+) ist bei (.+)$",
+   "{1} is bij {2}"
+  ],
+  [
+   "^(.+) umgeschaltet auf (.+)$",
+   "{1} omgeschakeld naar {2}"
+  ],
+  [
+   "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
+   "{1} actief · {2}"
+  ],
+  [
+   "^Alarm scharf – (.+)$",
+   "Alarm ingeschakeld – {1}"
+  ],
+  [
+   "^(.+) braucht Wasser$",
+   "{1} heeft water nodig"
+  ],
+  [
+   "^(.+) steht zu nass$",
+   "{1} staat te nat"
+  ],
+  [
+   "^(.+) braucht Dünger$",
+   "{1} heeft voeding nodig"
+  ],
+  [
+   "^(.+) ist überdüngt$",
+   "{1} is overbemest"
+  ],
+  [
+   "^(.+) braucht mehr Licht$",
+   "{1} heeft meer licht nodig"
+  ],
+  [
+   "^(.+) bekommt zu viel Sonne$",
+   "{1} krijgt te veel zon"
+  ],
+  [
+   "^(.+) steht zu kalt$",
+   "{1} staat te koud"
+  ],
+  [
+   "^(.+) steht zu warm$",
+   "{1} staat te warm"
+  ],
+  [
+   "^(.+) steht in zu trockener Luft$",
+   "{1}: lucht te droog"
+  ],
+  [
+   "^(.+) steht in zu feuchter Luft$",
+   "{1}: lucht te vochtig"
+  ],
+  [
+   "^(\\d+) Reinigungen$",
+   "{1} reinigingen"
+  ],
+  [
+   "^(\\d+) entriegelt$",
+   "{1} ontgrendeld"
+  ],
+  [
+   "^(\\d+) Schlösser entriegelt$",
+   "{1} sloten ontgrendeld"
+  ],
+  [
+   "^1 Tür entriegelt$",
+   "1 deur ontgrendeld"
+  ],
+  [
+   "^(\\d+) Türen entriegelt$",
+   "{1} deuren ontgrendeld"
+  ],
+  [
+   "^(.+) entriegelt$",
+   "{1} ontgrendeld"
+  ],
+  [
+   "^Gestern, (.+)$",
+   "Gisteren, {1}"
+  ],
+  [
+   "^Heute, (.+)$",
+   "Vandaag, {1}"
+  ],
+  [
+   "^alle (\\d+) Wochen$",
+   "elke {1} weken"
+  ],
+  [
+   "^jede Woche$",
+   "elke week"
+  ],
+  [
+   "^Luft ([^·]+)$",
+   "Lucht {1}"
+  ],
+  [
+   "^PM2,5 (.+)$",
+   "PM2,5 {1}"
+  ],
+  [
+   "^(\\d+) Tage?$",
+   "{1} dagen"
+  ],
+  [
+   "^(\\d+) Stunden$",
+   "{1} uur"
+  ],
+  [
+   "^ca\\. (.+)$",
+   "ca. {1}"
+  ],
+  [
+   "^(\\d{1,2}) Uhr$",
+   "{1} uur"
+  ],
+  [
+   "^(.+) · Gehärteter Stahl$",
+   "{1} · gehard staal"
+  ],
+  [
+   "^(.+) · Edelstahl$",
+   "{1} · roestvrij staal"
+  ],
+  [
+   "^Ziel (.+)$",
+   "Doel {1}"
+  ],
+  [
+   "^Stufe (\\d+) von (\\d+)$",
+   "Stand {1} van {2}"
+  ],
+  [
+   "^(\\d+) von (\\d+) geöffnet$",
+   "{1} van {2} open"
+  ],
+  [
+   "^(\\d+) von (\\d+)$",
+   "{1} van {2}"
+  ],
+  [
+   "^Temperatur · (\\d+) Stunden$",
+   "Temperatuur · {1} uur"
+  ],
+  [
+   "^Leistung · (\\d+) Stunden$",
+   "Vermogen · {1} uur"
+  ],
+  [
+   "^Online seit (\\d+) Stunden$",
+   "Online sinds {1} uur"
+  ],
+  [
+   "^Online seit (\\d+) Tagen$",
+   "Online sinds {1} dagen"
+  ],
+  [
+   "^vor 1 Stunde$",
+   "1 uur geleden"
+  ],
+  [
+   "^vor (\\d+) Stunden$",
+   "{1} uur geleden"
+  ],
+  [
+   "^vor 1 Minute$",
+   "1 minuut geleden"
+  ],
+  [
+   "^vor (\\d+) Minuten$",
+   "{1} minuten geleden"
+  ],
+  [
+   "^(\\d+) An$",
+   "{1} Aan"
+  ],
+  [
+   "^(\\d+) an$",
+   "{1} aan"
+  ],
+  [
+   "^(\\d+) aktiv$",
+   "{1} actief"
+  ],
+  [
+   "^(\\d+) Aktiv$",
+   "{1} Actief"
+  ],
+  [
+   "^(\\d+) Aus$",
+   "{1} Uit"
+  ],
+  [
+   "^(\\d+) läuft$",
+   "{1} draait"
+  ],
+  [
+   "^(\\d+) laufen$",
+   "{1} draaien"
+  ],
+  [
+   "^(\\d+) pausiert$",
+   "{1} gepauzeerd"
+  ],
+  [
+   "^(\\d+) offen$",
+   "{1} open"
+  ],
+  [
+   "^(\\d+) Offen$",
+   "{1} Open"
+  ],
+  [
+   "^1 Schloss$",
+   "1 Slot"
+  ],
+  [
+   "^(\\d+) Schlösser$",
+   "{1} Sloten"
+  ],
+  [
+   "^1 Raum heizt gerade$",
+   "1 kamer verwarmt nu"
+  ],
+  [
+   "^(\\d+) Räume heizen gerade$",
+   "{1} kamers verwarmen nu"
+  ],
+  [
+   "^(\\d+) heizen$",
+   "{1} verwarmen"
+  ],
+  [
+   "^(\\d+) von (\\d+) an$",
+   "{1} van {2} aan"
+  ],
+  [
+   "^1 Raum reinigen$",
+   "1 kamer schoonmaken"
+  ],
+  [
+   "^(\\d+) Räume reinigen$",
+   "{1} kamers schoonmaken"
+  ],
+  [
+   "^(\\d+) Räume$",
+   "{1} kamers"
+  ],
+  [
+   "^1 Sensor offen$",
+   "1 sensor open"
+  ],
+  [
+   "^(\\d+) Sensoren offen$",
+   "{1} sensoren open"
+  ],
+  [
+   "^(\\d+) Öffnungen offen$",
+   "{1} openingen open"
+  ],
+  [
+   "^(\\d+) Updates verfügbar$",
+   "{1} updates beschikbaar"
+  ],
+  [
+   "^(\\d+) Geräte mit schwachem Akku$",
+   "{1} apparaten met lage accu"
+  ],
+  [
+   "^(\\d+) Szenen$",
+   "{1} scènes"
+  ],
+  [
+   "^1 Szene$",
+   "1 scène"
+  ],
+  [
+   "^(\\d+) Durchgänge$",
+   "{1} cycli"
+  ],
+  [
+   "^In (\\d+) Durchgängen oder (\\d+) Tagen fällig$",
+   "Over {1} cycli of {2} dagen nodig"
+  ],
+  [
+   "^In (\\d+) Durchgängen fällig$",
+   "Over {1} cycli nodig"
+  ],
+  [
+   "^In (\\d+) Tagen fällig$",
+   "Over {1} dagen nodig"
+  ],
+  [
+   "^In (\\d+) Durchgängen$",
+   "Over {1} cycli"
+  ],
+  [
+   "^in (\\d+) Durchgängen$",
+   "over {1} cycli"
+  ],
+  [
+   "^(\\d+) Durchgänge seit dem letzten Mal$",
+   "{1} cycli sinds de vorige keer"
+  ],
+  [
+   "^(\\d+) Tage seit dem letzten Mal$",
+   "{1} dagen sinds de vorige keer"
+  ],
+  [
+   "^(\\d+) Durchgänge, (\\d+) Tage seit dem letzten Mal$",
+   "{1} cycli, {2} dagen sinds de vorige keer"
+  ],
+  [
+   "^In (\\d+) Durchgängen oder (\\d+) Tagen$",
+   "Over {1} cycli of {2} dagen"
+  ],
+  [
+   "^(\\d+) Unterwegs$",
+   "{1} Weg"
+  ],
+  [
+   "^(\\d+) unterwegs$",
+   "{1} weg"
+  ],
+  [
+   "^(\\d+) Räumen an$",
+   "aan in {1} kamers"
+  ],
+  [
+   "^(\\d+) Min\\. übrig$",
+   "{1} min over"
+  ],
+  [
+   "^(\\d+) Std\\. übrig$",
+   "{1} u over"
+  ],
+  [
+   "^(\\d+) Std\\. (\\d+) Min\\.$",
+   "{1} u {2} min"
+  ],
+  [
+   "^(\\d+) Min\\.$",
+   "{1} min"
+  ],
+  [
+   "^(\\d+) Std\\.$",
+   "{1} u"
+  ],
+  [
+   "^vor (\\d+) s$",
+   "{1} s geleden"
+  ],
+  [
+   "^vor (\\d+) Min\\.$",
+   "{1} min geleden"
+  ],
+  [
+   "^vor (\\d+) Std\\.$",
+   "{1} u geleden"
+  ],
+  [
+   "^vor (\\d+) T\\.$",
+   "{1} d geleden"
+  ],
+  [
+   "^vor (\\d+) Tagen$",
+   "{1} dagen geleden"
+  ],
+  [
+   "^vor (\\d+) Tag$",
+   "{1} dag geleden"
+  ],
+  [
+   "^vor (\\d+) Std\\. (\\d+) Min\\.$",
+   "{1} u {2} min geleden"
+  ],
+  [
+   "^seit (\\d+) Tagen fällig$",
+   "al {1} dagen nodig"
+  ],
+  [
+   "^in (\\d+) Tagen$",
+   "over {1} dagen"
+  ],
+  [
+   "^In (\\d+) Tagen$",
+   "Over {1} dagen"
+  ],
+  [
+   "^um (\\d+) Uhr$",
+   "om {1} uur"
+  ],
+  [
+   "^heute (\\d{1,2}:\\d{2})$",
+   "vandaag {1}"
+  ],
+  [
+   "^morgen (\\d{1,2}:\\d{2})$",
+   "morgen {1}"
+  ],
+  [
+   "^gestern (\\d{1,2}:\\d{2})$",
+   "gisteren {1}"
+  ],
+  [
+   "^Fertig um (.+)$",
+   "Klaar om {1}"
+  ],
+  [
+   "^Fertig gegen (.+)$",
+   "Klaar rond {1}"
+  ],
+  [
+   "^Läuft seit (.+)$",
+   "Bezig sinds {1}"
+  ],
+  [
+   "^läuft seit (.+)$",
+   "bezig sinds {1}"
+  ],
+  [
+   "^noch (\\d+)[  ]s$",
+   "nog {1} s"
+  ],
+  [
+   "^noch (\\d+)[  ]Min\\.$",
+   "nog {1} min"
+  ],
+  [
+   "^noch (\\d+) Tage$",
+   "nog {1} dagen"
+  ],
+  [
+   "^noch (.+)$",
+   "nog {1}"
+  ],
+  [
+   "^Zuletzt bekannt · vor (\\d+) Tagen$",
+   "Laatst bekend · {1} dagen geleden"
+  ],
+  [
+   "^(\\d+) neue Updates gefunden$",
+   "{1} nieuwe updates gevonden"
+  ],
+  [
+   "^Zuletzt gesucht: (.+)$",
+   "Laatst gezocht: {1}"
+  ],
+  [
+   "^Zuletzt: (.+)$",
+   "Laatst: {1}"
+  ],
+  [
+   "^Zuletzt (vor .+|gestern|gerade eben)$",
+   "Laatst gezien {1}"
+  ],
+  [
+   "^Zuletzt (.+)$",
+   "Laatst {1}"
+  ],
+  [
+   "^KI-Einschätzung · vor (\\d+) Min\\.$",
+   "AI-beoordeling · {1} min geleden"
+  ],
+  [
+   "^KI-Einschätzung · vor (\\d+) Std\\.$",
+   "AI-beoordeling · {1} u geleden"
+  ],
+  [
+   "^KI-Einschätzung · vor (\\d+) T\\.$",
+   "AI-beoordeling · {1} d geleden"
+  ],
+  [
+   "^KI-Einschätzung · gerade eben$",
+   "AI-beoordeling · zojuist"
+  ],
+  [
+   "^Letzte Fahrt vor (\\d+) Tagen$",
+   "Laatste rit {1} dagen geleden"
+  ],
+  [
+   "^Letzte Fahrt vor (\\d+) Tagen; Akkustand nach Lagerung unbekannt$",
+   "Laatste rit {1} dagen geleden; accuniveau na opslag onbekend"
+  ],
+  [
+   "^Service fällig seit (\\S+) \\((\\d+) Tage überfällig\\)$",
+   "Onderhoud nodig sinds {1} ({2} dagen te laat)"
+  ],
+  [
+   "^davon (\\d+) Std\\. mit Unterstützung$",
+   "waarvan {1} u met ondersteuning"
+  ],
+  [
+   "^Nächster Dienst im (.+)\\.$",
+   "Volgende beurt in {1}."
+  ],
+  [
+   "^Verriegelt · Stand vor (\\d+) Std\\.$",
+   "Vergrendeld · stand van {1} u geleden"
+  ],
+  [
+   "^Entriegelt · Stand vor (\\d+) Std\\.$",
+   "Ontgrendeld · stand van {1} u geleden"
+  ],
+  [
+   "^Kühlt auf (.+)$",
+   "Koelt naar {1}"
+  ],
+  [
+   "^Heizt auf (.+)$",
+   "Verwarmt naar {1}"
+  ],
+  [
+   "^Kühl · (.+)$",
+   "Koel · {1}"
+  ],
+  [
+   "^Heizt · (.+)$",
+   "Verwarmt · {1}"
+  ],
+  [
+   "^Bereit · (.+)$",
+   "Gereed · {1}"
+  ],
+  [
+   "^Automatik · (.+)$",
+   "Auto · {1}"
+  ],
+  [
+   "^Lädt · (.+)$",
+   "Laadt · {1}"
+  ],
+  [
+   "^Entlädt · (.+)$",
+   "Ontlaadt · {1}"
+  ],
+  [
+   "^Fällig · (.+)$",
+   "Nodig · {1}"
+  ],
+  [
+   "^Prüfen · (.+)$",
+   "Controleren · {1}"
+  ],
+  [
+   "^Pausiert: (.+)$",
+   "Gepauzeerd: {1}"
+  ],
+  [
+   "^Akku (\\d+) ?%$",
+   "Accu {1}%"
+  ],
+  [
+   "^Akku (.+)$",
+   "Accu {1}"
+  ],
+  [
+   "^(\\d+) ?% Luftfeuchte$",
+   "{1}% luchtvochtigheid"
+  ],
+  [
+   "^(\\d+) ?% Feuchtigkeit$",
+   "{1}% vocht"
+  ],
+  [
+   "^(\\d+) ?% geöffnet$",
+   "{1}% open"
+  ],
+  [
+   "^(\\d+) ?% Geöffnet$",
+   "{1}% open"
+  ],
+  [
+   "^(\\d+) ?% Geschlossen$",
+   "{1}% gesloten"
+  ],
+  [
+   "^Boden bei (\\d+) ?%$",
+   "Bodem op {1}%"
+  ],
+  [
+   "^(\\d+) geöffnet$",
+   "{1} open"
+  ],
+  [
+   "^(\\d+) gekippt$",
+   "{1} gekanteld"
+  ],
+  [
+   "^(\\d+) ?% Akku$",
+   "{1}% accu"
+  ],
+  [
+   "^Tank (\\d+) ?%$",
+   "Tank {1}%"
+  ],
+  [
+   "^CO₂ (\\d+) ppm$",
+   "CO₂ {1} ppm"
+  ],
+  [
+   "^Feuchte (\\d+) %$",
+   "Vochtigheid {1}%"
+  ],
+  [
+   "^VOC (\\d+) ppb$",
+   "VOC {1} ppb"
+  ],
+  [
+   "^Fenster offen · noch (\\d+) Min\\.$",
+   "Raam open · nog {1} min"
+  ],
+  [
+   "^Fenster offen seit (.+)$",
+   "Raam open sinds {1}"
+  ],
+  [
+   "^Fenster seit (.+) offen$",
+   "Raam open sinds {1}"
+  ],
+  [
+   "^Außenluft belastet \\(PM2\\.5 (\\d+)\\)$",
+   "Buitenlucht vervuild (PM2.5 {1})"
+  ],
+  [
+   "^Feuchte (\\d+) % · draußen feuchter$",
+   "Vochtigheid {1}% · buiten vochtiger"
+  ],
+  [
+   "^Feuchte (\\d+) % · Außenwerte fehlen$",
+   "Vochtigheid {1}% · geen buitenwaarden"
+  ],
+  [
+   "^≈ (.+) frei · jetzt (.+)$",
+   "≈ {1} over · nu {2}"
+  ],
+  [
+   "^jetzt (.+)$",
+   "nu {1}"
+  ],
+  [
+   "^(.+) oder (.+)$",
+   "{1} of {2}"
+  ],
+  [
+   "^(.+) fällig$",
+   "{1} nodig"
+  ],
+  [
+   "^(.+) ist offen$",
+   "{1} staat open"
+  ],
+  [
+   "^(.+) nachfüllen$",
+   "{1} bijvullen"
+  ],
+  [
+   "^Alle (\\d+) Updates jetzt installieren\\?$",
+   "Alle {1} updates nu installeren?"
+  ],
+  [
+   "^(\\d+) Tage$",
+   "{1} dagen"
+  ],
+  [
+   "^(\\d+) Tag$",
+   "{1} dag"
+  ],
+  [
+   "^(\\d+) Woche$",
+   "{1} week"
+  ],
+  [
+   "^(\\d+) Wochen$",
+   "{1} weken"
+  ],
+  [
+   "^Nächstes (.+)$",
+   "Volgende {1}"
+  ],
+  [
+   "^Als Nächstes: (.+)$",
+   "Hierna: {1}"
+  ],
+  [
+   "^Räume unterschiedlich · Ø (.+)$",
+   "Kamers verschillen · Ø {1}"
+  ],
+  [
+   "^(.+) · heute Abend raus$",
+   "{1} · vanavond buiten zetten"
+  ],
+  [
+   "^(.+) · keine Leistung$",
+   "{1} · geen vermogen"
+  ],
+  [
+   "^(.+) · lädt$",
+   "{1} · laadt"
+  ],
+  [
+   "^Aus · (.+)$",
+   "Uit · {1}"
+  ],
+  [
+   "^An · (.+)$",
+   "Aan · {1}"
+  ],
+  [
+   "^Über (.+)$",
+   "Boven {1}"
+  ],
+  [
+   "^bis (.+)$",
+   "tot {1}"
+  ],
+  [
+   "^seit (.+)$",
+   "sinds {1}"
+  ],
+  [
+   "^(\\d+) übersprungen$",
+   "{1} overgeslagen"
+  ],
+  [
+   "^Online seit (.+)$",
+   "Online sinds {1}"
+  ],
+  [
+   "^(.+) · (\\d+) Stunden$",
+   "{1} · {2} uur"
+  ],
+  [
+   "^(.+) · (\\d+) Tage$",
+   "{1} · {2} dagen"
+  ],
+  [
+   "^(\\d+) ?% Luftfeuchtigkeit$",
+   "{1}% luchtvochtigheid"
+  ],
+  [
+   "^Einspeisung · (\\d+) % aus Solar und Akku · heute (.+)$",
+   "Teruglevering · {1}% uit zon en accu · vandaag {2}"
+  ],
+  [
+   "^Einspeisung · heute (.+)$",
+   "Teruglevering · vandaag {1}"
+  ],
+  [
+   "^Einspeisung (.+)$",
+   "Teruglevering {1}"
+  ],
+  [
+   "^(\\d+) Kameras offline$",
+   "{1} camera's offline"
+  ],
+  [
+   "^(\\d+) Schlösser offline$",
+   "{1} sloten offline"
+  ],
+  [
+   "^(\\d+) Tore offen$",
+   "{1} poorten open"
+  ],
+  [
+   "^(.+) ausgeschaltet$",
+   "{1} uitgeschakeld"
+  ],
+  [
+   "^(.+) ausgelöst$",
+   "{1} geactiveerd"
+  ],
+  [
+   "^Vor (\\d+) Min\\.$",
+   "{1} min geleden"
+  ],
+  [
+   "^Vor (\\d+) Std\\.$",
+   "{1} u geleden"
+  ],
+  [
+   "^Vor (\\d+) T\\.$",
+   "{1} d geleden"
+  ],
+  [
+   "^Vor (\\d+) Tagen$",
+   "{1} dagen geleden"
+  ],
+  [
+   "^Vor 1 Tag$",
+   "1 dag geleden"
+  ],
+  [
+   "^Vor (\\d+) Minuten$",
+   "{1} minuten geleden"
+  ],
+  [
+   "^Vor (\\d+) Stunden$",
+   "{1} uur geleden"
+  ],
+  [
+   "^Seit (\\d+) Min\\.$",
+   "Sinds {1} min"
+  ],
+  [
+   "^Seit (\\d+) Std\\.$",
+   "Sinds {1} u"
+  ],
+  [
+   "^Seit (\\d+) T\\.$",
+   "Sinds {1} d"
+  ],
+  [
+   "^Seit (.+)$",
+   "Sinds {1}"
+  ],
+  [
+   "^(\\d+) Türen offen$",
+   "{1} deuren open"
+  ],
+  [
+   "^(\\d+) Fenster offen$",
+   "{1} ramen open"
+  ],
+  [
+   "^(\\d+) Fenster gekippt$",
+   "{1} ramen gekanteld"
+  ],
+  [
+   "^(\\d+) Türen gekippt$",
+   "{1} deuren gekanteld"
+  ],
+  [
+   "^(\\d+) % aus Solar und Akku · heute (.+)$",
+   "{1}% uit zon en accu · vandaag {2}"
+  ],
+  [
+   "^(\\d+) % aus Solar und Akku$",
+   "{1}% uit zon en accu"
+  ],
+  [
+   "^heute (.+)$",
+   "vandaag {1}"
+  ],
+  [
+   "^Solarbank-Fehler (.+)$",
+   "Solarbank-fout {1}"
+  ],
+  [
+   "^(.+) gespeichert$",
+   "{1} opgeslagen"
+  ],
+  [
+   "^Modul (\\d+)$",
+   "Paneel {1}"
+  ],
+  [
+   "^(\\d+) Clients$",
+   "{1} clients"
+  ],
+  [
+   "^Gesamt (.+) kWh$",
+   "Totaal {1} kWh"
+  ],
+  [
+   "^(\\d+) Batterien schwach$",
+   "{1} batterijen laag"
+  ],
+  [
+   "^Am niedrigsten: (.+) (\\d+) %$",
+   "Laagste: {1} {2}%"
+  ],
+  [
+   "^(\\d+) von (\\d+) online$",
+   "{1} van {2} online"
+  ],
+  [
+   "^Bewegung vor (\\d+) Min\\.$",
+   "Beweging {1} min geleden"
+  ],
+  [
+   "^Bewegung vor (\\d+) Std\\.$",
+   "Beweging {1} u geleden"
+  ],
+  [
+   "^Bewegung vor (\\d+) T\\.$",
+   "Beweging {1} d geleden"
+  ],
+  [
+   "^Bewegung gerade eben$",
+   "Beweging zojuist"
+  ],
+  [
+   "^Neu: (.+) · KI: Nicht geprüft$",
+   "Nieuw: {1} · AI: niet gecontroleerd"
+  ],
+  [
+   "^Neu: (.+) · KI: Unklar$",
+   "Nieuw: {1} · AI: onduidelijk"
+  ],
+  [
+   "^Neu: (.+) · KI: KI prüft …$",
+   "Nieuw: {1} · AI: controleert…"
+  ],
+  [
+   "^Neu: (.+) · $",
+   "Nieuw: {1} · "
+  ],
+  [
+   "^Neu: (.+)$",
+   "Nieuw: {1}"
+  ],
+  [
+   "^(\\d+) Termine heute$",
+   "{1} afspraken vandaag"
+  ],
+  [
+   "^Reichweite (\\d[\\d.,]*)$",
+   "Bereik {1}"
+  ],
+  [
+   "^Nächste Inspektion in (.+) km$",
+   "Volgende inspectie over {1} km"
+  ],
+  [
+   "^Nächste Inspektion (\\d{2}\\.\\d{2}\\.\\d{4})$",
+   "Volgende inspectie {1}"
+  ],
+  [
+   "^(\\d+) % in (\\d+) Min\\.$",
+   "{1}% over {2} min"
+  ],
+  [
+   "^(Heute|Morgen|Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag): (.+)$",
+   "{1}: {2}"
+  ],
+  [
+   "^(\\d+) Schlösser offen$",
+   "{1} sloten open"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · keine offen$",
+   "{1} · geen open"
+  ],
+  [
+   "^(.+) offen$",
+   "{1} open"
+  ],
+  [
+   "^(.+) gekippt$",
+   "{1} gekanteld"
+  ],
+  [
+   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
+   "De ophaaldagen komen terug zodra {1} reageert."
+  ],
+  [
+   "^(\\d+) Akkus schwach$",
+   "{1} accu's laag"
+  ],
+  [
+   "^(\\d+) Schwach$",
+   "{1} Laag"
+  ],
+  [
+   "^(.+) Akku fast leer$",
+   "{1} accu bijna leeg"
+  ],
+  [
+   "^(.+) Akku schwach$",
+   "{1} accu laag"
+  ],
+  [
+   "^(\\d+) Wiedergaben$",
+   "{1} spelen"
+  ],
+  [
+   "^H (-?\\d+)°$",
+   "H {1}°"
+  ],
+  [
+   "^T (-?\\d+)°$",
+   "L {1}°"
+  ],
+  [
+   "^(\\d+) % Regen$",
+   "{1}% regen"
+  ],
+  [
+   "^Wie warm ist es (?:im|in der) (.+)\\?$",
+   "Hoe warm is het in de {1}?"
+  ],
+  [
+   "^Dimme das Licht (?:im|in der) (.+)$",
+   "Dim het licht in de {1}"
+  ],
+  [
+   "^In der Summe · (\\d+) von (\\d+)$",
+   "In het totaal · {1} van {2}"
+  ],
+  [
+   "^(\\d+) % der Summe$",
+   "{1}% van het totaal"
+  ],
+  [
+   "^(\\d+) Geräte ohne Wert$",
+   "{1} apparaten zonder waarde"
+  ],
+  [
+   "^Nicht in der Summe · Steckt hinter (.+)$",
+   "Niet in het totaal · zit achter {1}"
+  ],
+  [
+   "^Stand (.+) \\(verzögert\\)$",
+   "Stand {1} (vertraagd)"
+  ],
+  [
+   "^Stand (.+)$",
+   "Stand {1}"
+  ],
+  [
+   "^Nächste Inspektion (.+)$",
+   "Volgende inspectie {1}"
+  ],
+  [
+   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
+   "De ophaaldagen komen terug zodra {1} reageert."
+  ],
+  [
+   "^(\\d+) Termine$",
+   "{1} afspraken"
+  ],
+  [
+   "^(\\d+) an$",
+   "{1} aan"
+  ],
+  [
+   "^in (\\d+) Wochen$",
+   "over {1} weken"
+  ],
+  [
+   "^in (\\d+) Monaten$",
+   "over {1} maanden"
+  ],
+  [
+   "^Platz (1|21|31)$",
+   "{1}e"
+  ],
+  [
+   "^Platz (2|22)$",
+   "{1}e"
+  ],
+  [
+   "^Platz (3|23)$",
+   "{1}e"
+  ],
+  [
+   "^Platz (\\d+)$",
+   "{1}e"
+  ],
+  [
+   "^(\\d+) Punkte$",
+   "{1} punten"
+  ],
+  [
+   "^(\\S+ : \\S+) bei (.+)$",
+   "{1} bij {2}"
+  ],
+  [
+   "^(\\S+ : \\S+) gegen (.+)$",
+   "{1} tegen {2}"
+  ],
+  [
+   "^bei (.+)$",
+   "bij {1}"
+  ],
+  [
+   "^gegen (.+)$",
+   "tegen {1}"
+  ],
+  [
+   "^Heute (\\d\\d:\\d\\d)$",
+   "Vandaag {1}"
+  ],
+  [
+   "^Morgen (\\d\\d:\\d\\d)$",
+   "Morgen {1}"
+  ],
+  [
+   "^Mo (\\d.*)$",
+   "ma {1}"
+  ],
+  [
+   "^Di (\\d.*)$",
+   "di {1}"
+  ],
+  [
+   "^Mi (\\d.*)$",
+   "wo {1}"
+  ],
+  [
+   "^Do (\\d.*)$",
+   "do {1}"
+  ],
+  [
+   "^Fr (\\d.*)$",
+   "vr {1}"
+  ],
+  [
+   "^Sa (\\d.*)$",
+   "za {1}"
+  ],
+  [
+   "^So (\\d.*)$",
+   "zo {1}"
+  ],
+  [
+   "^(\\d+) Monaten$",
+   "{1} maanden"
+  ],
+  [
+   "^in (\\d+) Std\\.$",
+   "over {1} u"
+  ],
+  [
+   "^in (\\d+) Min\\.$",
+   "over {1} min"
+  ],
+  [
+   "^führt (\\d+:\\d+) (bei|gegen) (.+)$",
+   "leidt met {1} {2} {3}"
+  ],
+  [
+   "^liegt (\\d+:\\d+) zurück (bei|gegen) (.+)$",
+   "staat {1} achter {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Sieg n\\. V\\. (bei|gegen) (.+)$",
+   "{1}-winst n.v. {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Niederlage n\\. V\\. (bei|gegen) (.+)$",
+   "{1}-verlies n.v. {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Sieg (bei|gegen) (.+)$",
+   "{1}-winst {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Niederlage (bei|gegen) (.+)$",
+   "{1}-verlies {2} {3}"
+  ],
+  [
+   "^Sieg i\\. E\\. (bei|gegen) (.+)$",
+   "Winst n.s. {1} {2}"
+  ],
+  [
+   "^Niederlage i\\. E\\. (bei|gegen) (.+)$",
+   "Verlies n.s. {1} {2}"
+  ],
+  [
+   "^(\\d+:\\d+) (bei|gegen) (.+)$",
+   "{1} {2} {3}"
+  ],
+  [
+   "^i\\. E\\. (\\d+:\\d+)$",
+   "n.s. {1}"
+  ],
+  [
+   "^(\\d+) Lichter an$",
+   "{1} lampen aan"
+  ],
+  [
+   "^Soll-Bereich (.+)$",
+   "Doelbereik {1}"
+  ],
+  [
+   "^ab (\\d[\\d.,]*) €$",
+   "vanaf {1} €"
+  ],
+  [
+   "^Heute ab (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Vandaag vanaf {1}"
+  ],
+  [
+   "^Morgen ab (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Morgen vanaf {1}"
+  ],
+  [
+   "^Warte bis (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Wacht tot {1}"
+  ],
+  [
+   "^Warte bis morgen (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Wacht tot morgen {1}"
+  ],
+  [
+   "^Tank reicht noch (\\d+) km\\. Ab (\\d{1,2}:\\d{2}(?: [AP]M)?) lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Tank is goed voor nog {1} km. Vanaf {2} was {3} de laatste 14 dagen gemiddeld {4} ct goedkoper."
+  ],
+  [
+   "^Ab (\\d{1,2}:\\d{2}(?: [AP]M)?) lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Vanaf {1} was {2} de laatste 14 dagen gemiddeld {3} ct goedkoper."
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · ab (\\d{1,2}:\\d{2}(?: [AP]M)?) günstiger$",
+   "{1} · vanaf {2} goedkoper"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · abends günstiger$",
+   "{1} · 's avonds goedkoper"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · ab (\\d+) Uhr günstiger$",
+   "{1} · vanaf {2} uur goedkoper"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · jetzt günstig$",
+   "{1} · nu voordelig"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · kaum Unterschied$",
+   "{1} · weinig verschil"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · Tank knapp$",
+   "{1} · tank bijna leeg"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · Preise werden gesammelt$",
+   "{1} · prijzen worden verzameld"
+  ],
+  [
+   "^Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa (\\d+) Tagen\\.$",
+   "De aanbeveling komt zodra er genoeg prijzen zijn verzameld, over ongeveer {1} dagen."
+  ],
+  [
+   "^Heute ab (\\d+) Uhr$",
+   "Vandaag vanaf {1} uur"
+  ],
+  [
+   "^Morgen ab (\\d+) Uhr$",
+   "Morgen vanaf {1} uur"
+  ],
+  [
+   "^Warte bis (\\d+) Uhr$",
+   "Wacht tot {1} uur"
+  ],
+  [
+   "^Warte bis morgen (\\d+) Uhr$",
+   "Wacht tot morgen {1} uur"
+  ],
+  [
+   "^Tank reicht noch (\\d+) km\\. Ab (\\d+) Uhr lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Tank is goed voor nog {1} km. Vanaf {2} uur was {3} de laatste 14 dagen gemiddeld {4} ct goedkoper."
+  ],
+  [
+   "^Ab (\\d+) Uhr lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Vanaf {1} uur was {2} de laatste 14 dagen gemiddeld {3} ct goedkoper."
+  ],
+  [
+   "^(.+) liegt gerade im unteren Bereich der letzten 14 Tage\\.$",
+   "{1} zit nu in het lage deel van de laatste 14 dagen."
+  ],
+  [
+   "^Tank bei (\\d+) %, noch etwa (\\d+) km\\. Warten lohnt sich nicht\\.$",
+   "Tank op {1}%, nog ongeveer {2} km. Wachten loont niet."
+  ],
+  [
+   "^Tank bei (\\d+) %\\. Warten lohnt sich nicht\\.$",
+   "Tank op {1}%. Wachten loont niet."
+  ],
+  [
+   "^Noch etwa (\\d+) km\\. Warten lohnt sich nicht\\.$",
+   "Nog ongeveer {1} km. Wachten loont niet."
+  ],
+  [
+   "^(\\d[\\d.,]*) € Tief$",
+   "{1} € laag"
+  ],
+  [
+   "^jetzt (\\d[\\d.,]*) €$",
+   "nu {1} €"
+  ],
+  [
+   "^(\\d[\\d.,]*) € Hoch$",
+   "{1} € hoog"
+  ],
+  [
+   "^(\\d+) Tankstellen in (\\d+) km$",
+   "{1} tankstations binnen {2} km"
+  ],
+  [
+   "^1 Tankstelle in (\\d+) km$",
+   "1 tankstation binnen {1} km"
+  ],
+  [
+   "^(\\d[\\d.,]*) km · offen$",
+   "{1} km · open"
+  ],
+  [
+   "^(\\d[\\d.,]*) km · zu$",
+   "{1} km · dicht"
+  ],
+  [
+   "^(\\d+) weitere$",
+   "{1} meer"
+  ],
+  [
+   "^und (\\d+) weitere$",
+   "en {1} meer"
+  ],
+  [
+   "^Umkreis (\\d+) km um Zuhause$",
+   "{1} km rond huis"
+  ],
+  [
+   "^Umkreis (\\d+) km um das Auto$",
+   "{1} km rond de auto"
+  ],
+  [
+   "^Tankerkönig antwortet gerade nicht: (.+)$",
+   "Tankerkönig reageert nu niet: {1}"
+  ],
+  [
+   "^(.+) Uhr$",
+   "{1} uur"
+  ],
+  [
+   "^Reichweite (\\S+)$",
+   "Bereik {1}"
+  ],
+  [
+   "^(\\d+) Geräte brauchen Aufmerksamkeit$",
+   "{1} apparaten hebben aandacht nodig"
+  ],
+  [
+   "^(.+) antwortet nicht$",
+   "{1} reageert niet"
+  ],
+  [
+   "^(.+) ist still$",
+   "{1} is stil"
+  ],
+  [
+   "^(.+) hat sich noch nicht gemeldet$",
+   "{1} heeft zich nog niet gemeld"
+  ],
+  [
+   "^(.+) ist nicht erreichbar$",
+   "{1} is niet bereikbaar"
+  ],
+  [
+   "^(.+) braucht bald eine neue Batterie$",
+   "{1} heeft binnenkort een nieuwe batterij nodig"
+  ],
+  [
+   "^(.+) braucht eine neue Batterie$",
+   "{1} heeft een nieuwe batterij nodig"
+  ],
+  [
+   "^(.+) meldet schwache Batterie$",
+   "{1} meldt een zwakke batterij"
+  ],
+  [
+   "^(.+) wartet auf die erste Meldung$",
+   "{1} wacht op de eerste melding"
+  ],
+  [
+   "^(.+) ist ausgefallen$",
+   "{1} is uitgevallen"
+  ],
+  [
+   "^(.+) sollte geprüft werden$",
+   "{1} moet worden gecontroleerd"
+  ],
+  [
+   "^(\\d+) offline$",
+   "{1} offline"
+  ],
+  [
+   "^seit (\\d{1,2}:\\d{2})$",
+   "sinds {1}"
+  ],
+  [
+   "^seit gestern (\\d{1,2}:\\d{2})$",
+   "sinds gisteren {1}"
+  ],
+  [
+   "^(.+) von zuhause$",
+   "{1} van thuis"
+  ],
+  [
+   "^GPS · auf (\\d+) m genau$",
+   "Gps · tot op {1} m nauwkeurig"
+  ],
+  [
+   "^Nachricht an (.+)$",
+   "Bericht aan {1}"
+  ],
+  [
+   "^gestern (\\d{1,2}:\\d{2}) – (\\d{1,2}:\\d{2})$",
+   "gisteren {1} – {2}"
+  ],
+  [
+   "^bis (\\d{1,2}:\\d\\d)$",
+   "tot {1}"
+  ],
+  [
+   "^Fehler: (.+)$",
+   "Fout: {1}"
+  ],
+  [
+   "^(\\d+) Fahrten$",
+   "{1} ritten"
+  ],
+  [
+   "^Neue Version (.+)$",
+   "Nieuwe versie {1}"
+  ],
+  [
+   "^Wird installiert · (\\d+) %$",
+   "Wordt geïnstalleerd · {1}%"
+  ],
+  [
+   "^(\\d+:\\d\\d) Std\\. übrig$",
+   "{1} u over"
+  ],
+  [
+   "^Schicht (\\d+)/(\\d+)$",
+   "Laag {1}/{2}"
+  ],
+  [
+   "^Aktuell keine Warnungen für (.+)$",
+   "Momenteel geen waarschuwingen voor {1}"
+  ],
+  [
+   "^Warnungen · (.+)$",
+   "Waarschuwingen · {1}"
+  ],
+  [
+   "^(\\d+) Module liefern$",
+   "{1} panelen leveren"
+  ],
+  [
+   "^Solaranteil am Verbrauch (\\d+) %$",
+   "Zonaandeel in verbruik {1}%"
+  ],
+  [
+   "^Solar ([\\d.,]+) kWh$",
+   "Zon {1} kWh"
+  ],
+  [
+   "^Netz ([\\d.,]+) kWh$",
+   "Net {1} kWh"
+  ],
+  [
+   "^(\\d+) im Bild$",
+   "{1} in beeld"
+  ],
+  [
+   "^(\\d+) Objekte erkannt$",
+   "{1} objecten gedetecteerd"
+  ],
+  [
+   "^(.+) und (.+) erkannt$",
+   "{1} en {2} gedetecteerd"
+  ],
+  [
+   "^(.+) erkannt$",
+   "{1} gedetecteerd"
+  ],
+  [
+   "^([^,]+), (vor .+|gerade eben|gestern|Gestern|jetzt|\\d+ Min\\.|\\d+ Std\\.|\\d+ Tagen)$",
+   "{1}, {2}"
+  ],
+  [
+   "^(\\d{1,2}:\\d{2}) \\((.+)\\)$",
+   "{1} ({2})"
+  ],
+  [
+   "^(\\d+) neue Alarme$",
+   "{1} nieuwe alarmen"
+  ],
+  [
+   "^(\\d+) Erkennungen$",
+   "{1} detecties"
+  ],
+  [
+   "^(\\d+) Std\\. aufgenommen$",
+   "{1} u opgenomen"
+  ],
+  [
+   "^(\\d+) Min\\. aufgenommen$",
+   "{1} min opgenomen"
+  ],
+  [
+   "^Heute nichts erkannt: (.+)$",
+   "Vandaag niets gedetecteerd: {1}"
+  ],
+  [
+   "^In 7 Tagen nichts erkannt: (.+)$",
+   "In 7 dagen niets gedetecteerd: {1}"
+  ],
+  [
+   "^Keine (.+) heute$",
+   "Geen {1} vandaag"
+  ],
+  [
+   "^(\\d+) Alarme$",
+   "{1} alarmen"
+  ],
+  [
+   "^Keine (.+) in den letzten 7 Tagen$",
+   "Geen {1} in de laatste 7 dagen"
+  ],
+  [
+   "^(\\d+) Tagen$",
+   "{1} dagen"
+  ],
+  [
+   "^Geklingelt (vor .+|gestern|gerade eben)$",
+   "Laatst aangebeld {1}"
+  ],
+  [
+   "^In den letzten (\\d+) Tagen$",
+   "In de laatste {1} dagen"
+  ],
+  [
+   "^Nach (\\d+) s ohne Antwort$",
+   "Na {1} s zonder antwoord"
+  ],
+  [
+   "^Mein Kaffee (\\d+)$",
+   "Mijn koffie {1}"
+  ],
+  [
+   "^(Entkalken|Reinigen|Filterwechsel|Pflege) in 1[  ]Tasse$",
+   "{1} over 1 kopje"
+  ],
+  [
+   "^(Entkalken|Reinigen|Filterwechsel|Pflege) in (\\d+)[  ]Tassen$",
+   "{1} over {2} kopjes"
+  ],
+  [
+   "^In 1[  ]Tasse$",
+   "Over 1 kopje"
+  ],
+  [
+   "^In (\\d+)[  ]Tassen$",
+   "Over {1} kopjes"
+  ],
+  [
+   "^Alle Getränke \\((\\d+)\\)$",
+   "Alle dranken ({1})"
+  ],
+  [
+   "^Einschalten und (.+) starten$",
+   "Inschakelen en {1} starten"
+  ],
+  [
+   "^(.+) starten\\?$",
+   "{1} starten?"
+  ],
+  [
+   "^(.+) starten$",
+   "{1} starten"
+  ],
+  [
+   "^Leistung (.+) W$",
+   "Vermogen {1} W"
+  ],
+  [
+   "^Heute (\\d+)$",
+   "{1} vandaag"
+  ],
+  [
+   "^(\\d+) Filter aktiv$",
+   "{1} filters actief"
+  ],
+  [
+   "^Filter · (\\d+)$",
+   "Filter · {1}"
+  ],
+  [
+   "^(\\d+) heute$",
+   "{1} vandaag"
+  ],
+  [
+   "^(\\d+) % ([A-Za-zÄÖÜäöüß].*)$",
+   "{1}% {2}"
+  ],
+  [
+   "^In 1[  ]Tag$",
+   "Over 1 dag"
+  ],
+  [
+   "^In (\\d+)[  ]Tagen$",
+   "Over {1} dagen"
+  ],
+  [
+   "^In ([\\d.,]+)[  ]l$",
+   "Over {1} l"
+  ],
+  [
+   "^([\\d.,]+) Mbit/s Download$",
+   "{1} Mbit/s download"
+  ],
+  [
+   "^([\\d.,]+) Mbit/s Upload$",
+   "{1} Mbit/s upload"
+  ]
+ ]
+}
