@@ -20,11 +20,7 @@
     if (typeof r === 'object') { try { return JSON.stringify(r); } catch (e) { return String(r); } }
     return String(r);
   };
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
   // ── Shared template subscriber ────────────────────────────────────────────────
   // One subscription per template string, shared by every badge that shows it (two rooms with the same

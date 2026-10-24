@@ -8,11 +8,7 @@
   if (window._casoraWeichSpezial) return;
   window._casoraWeichSpezial = true;
 
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var FONT = 'var(--primary-font-family, system-ui)';
   var INK = 'var(--casora-popup-tiles-text-primary, #3A322B)';
   var SUB = 'var(--casora-soft-sub, var(--casora-popup-tiles-text-secondary))';
@@ -86,7 +82,7 @@
   var TON = 'var(--casora-ton-ink, #94603B)';
   var icon = function (name, size, color) {
     var u = (typeof window.casoraIconUrl === 'function') ? window.casoraIconUrl(name) : '';
-    return '<span style="display:inline-block;flex:none;width:' + size + 'px;height:' + size + 'px;background-color:' + color + ';'
+    return '<span style="display:inline-block;flex:none;width:' + esc(size) + 'px;height:' + esc(size) + 'px;background-color:' + esc(color) + ';'
       + "-webkit-mask:url('" + u + "') center / contain no-repeat;mask:url('" + u + "') center / contain no-repeat;pointer-events:none;\"></span>";
   };
   AL.info = function (ent, states) {
@@ -137,7 +133,7 @@
       bar: '<style>@keyframes ' + k + 'w{from{width:' + pct.toFixed(1) + '%}to{width:100%}}@keyframes ' + k + 'n{from{--cal-n:' + I.left + '}to{--cal-n:0}}'
         + '.cal-n::after{counter-reset:caln var(--cal-n);content:counter(caln);}</style>'
         + '<div style="height:6px;border-radius:3px;background:' + CTL + ';overflow:hidden;margin-top:10px;">'
-        + '<div style="height:100%;border-radius:3px;background:' + color + ';animation:' + k + 'w ' + I.left + 's linear forwards;"></div></div>',
+        + '<div style="height:100%;border-radius:3px;background:' + esc(color) + ';animation:' + k + 'w ' + I.left + 's linear forwards;"></div></div>',
       n: '<span class="cal-n" style="font-variant-numeric:tabular-nums;animation:' + k + 'n ' + I.left + 's steps(' + Math.max(1, I.left) + ', end) forwards;"></span>',
     };
   };

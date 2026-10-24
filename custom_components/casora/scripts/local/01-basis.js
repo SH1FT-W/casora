@@ -892,7 +892,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       })(root);
       return out;
     };
-    var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+    var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
     var ha = function () { return document.querySelector('home-assistant'); };
     var A = window._casoraAssist = {
       msgs: [], convId: null, busy: false,

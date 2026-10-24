@@ -8,11 +8,7 @@
 (function () {
   if (window._casoraScenesSoft) return;
   var Z = window._casoraScenesSoft = {};
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ago = function (ts) {
     var t = typeof ts === 'number' ? ts : Date.parse(ts); if (isNaN(t)) return null;
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));

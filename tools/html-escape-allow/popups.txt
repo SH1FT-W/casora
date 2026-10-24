@@ -1,0 +1,82 @@
+# Fork "popups": 00-finder.js, 01-basis.js, 03-popups.js, 04-navigation.js, 17-update-detail.js.
+# 00-finder.js – security summary: built from fixed words, icon keys and counts of the code.
+custom_components/casora/scripts/local/00-finder.js | u | casoraIconUrl() of a fixed icon key (door-open, lock …) | 2
+custom_components/casora/scripts/local/00-finder.js | x[2] | count (number) of open doors/windows | 1
+custom_components/casora/scripts/local/00-finder.js | items.join('') | markup built from escaped parts above | 1
+# 01-basis.js – Assist popup: design tokens, fixed handler code, escaped message log.
+custom_components/casora/scripts/local/01-basis.js | re:^ink[23]?$ | design token from UI.tokens or a fixed fallback colour | 7
+custom_components/casora/scripts/local/01-basis.js | re:^\(soft \? '\.has-chips\{ | fixed CSS of the code (only design tokens inside) | 1
+custom_components/casora/scripts/local/01-basis.js | re:^tap\(('window\._casoraAssist\.\w+\(\)'|send)\)$ | inline handler with fixed code (the question goes in data-q, escaped) | 4
+custom_components/casora/scripts/local/01-basis.js | send | fixed handler code 'window._casoraAssist.send(this.dataset.q)' | 1
+custom_components/casora/scripts/local/01-basis.js | (TONE[it.tone] || TONE.general) | colour from the fixed TONE table | 1
+custom_components/casora/scripts/local/01-basis.js | ((window._casoraInkOn && window._casoraInkOn(TONE[it.tone] || TONE.general)) || '#fff') | contrast colour computed from the fixed TONE table | 1
+custom_components/casora/scripts/local/01-basis.js | (window.casoraTr || function (x) { return x; })(out) | log markup, every message esc()'d where built | 1
+# 04-navigation.js
+custom_components/casora/scripts/local/04-navigation.js | ms | mask-size CSS computed from numbers (toFixed) | 1
+custom_components/casora/scripts/local/04-navigation.js | ic | icon markup from _iconHtml/casoraMenuGlass.iconHtml (icon escaped there) | 1
+# 17-update-detail.js
+custom_components/casora/scripts/local/17-update-detail.js | inline(m[1]) | release notes: inline() escapes first, then adds only <b>/<code> | 2
+custom_components/casora/scripts/local/17-update-detail.js | inline(l) | release notes: inline() escapes first, then adds only <b>/<code> | 1
+custom_components/casora/scripts/local/17-update-detail.js | css | HH.pillCss, fixed CSS of the code | 1
+custom_components/casora/scripts/local/17-update-detail.js | (k.attr || '') | data attributes built with esc() in D.sec | 1
+custom_components/casora/scripts/local/17-update-detail.js | on | boolean (aria-checked) | 1
+custom_components/casora/scripts/local/17-update-detail.js | head | markup: UI.label + escaped link/text | 1
+custom_components/casora/scripts/local/17-update-detail.js | body | markup: D.md() (escape-then-markup) or escaped fixed texts | 1
+# 03-popups.js – AI update check
+custom_components/casora/scripts/local/03-popups.js | lr | fixed CSS value 'var(--casora-soft-icon-radius, 9px)' | 2
+custom_components/casora/scripts/local/03-popups.js | re:^LV\[key\]\.[ic]$ | icon/colour from the fixed LV table | 2
+custom_components/casora/scripts/local/03-popups.js | [src, when].filter(Boolean).join(' · ') | src = link markup with escaped href, when escaped where built | 1
+custom_components/casora/scripts/local/03-popups.js | svc(x.id) | data-casora-svc attribute, esc(JSON.stringify(…)) inside | 1
+custom_components/casora/scripts/local/03-popups.js | lead(x.id, x.key) | icon markup, logo URL escaped inside | 1
+custom_components/casora/scripts/local/03-popups.js | pill | markup from the fixed LV table | 1
+custom_components/casora/scripts/local/03-popups.js | kiLbl | fixed markup | 2
+custom_components/casora/scripts/local/03-popups.js | headOut | fixed markup (design tokens) | 1
+# 03-popups.js – shared names; every flagged occurrence checked: CSS/markup of the code or built from escaped parts
+custom_components/casora/scripts/local/03-popups.js | plate | fixed CSS (row fill, radius, shadow) | 5
+custom_components/casora/scripts/local/03-popups.js | css | fixed <style> blocks (design tokens only) | 3
+custom_components/casora/scripts/local/03-popups.js | head | markup built above with escaped text | 1
+custom_components/casora/scripts/local/03-popups.js | rows | row markup, every value escaped where built | 3
+custom_components/casora/scripts/local/03-popups.js | body | AI/coach body markup, every HA text esc()'d where built | 6
+custom_components/casora/scripts/local/03-popups.js | btn | button markup with fixed labels and an escaped data-casora-svc | 4
+custom_components/casora/scripts/local/03-popups.js | svc | ' data-casora-svc="' + esc(JSON.stringify(…)) + '"' | 4
+custom_components/casora/scripts/local/03-popups.js | re:^\(hcSoft \? (''|hcHead) : (''|hcHead)\)$ | heating coach head markup (fixed text, escaped number) | 2
+custom_components/casora/scripts/local/03-popups.js | re:^\(\([ah]a?\.(punkte|erkenntnisse) \|\| \[\]\)\.length \? li\( | li() escapes every item | 3
+custom_components/casora/scripts/local/03-popups.js | re:^li\([ah]a?\.tipps, T\.ink\)$ | li() escapes every item | 3
+custom_components/casora/scripts/local/03-popups.js | re:^(ic|icon)\((z\[2\], 20, z\[1\]|'mdi:creation', 16, 'var\(--casora-color-teal, #00C3D0\)')\)$ | icon helper, escapes its arguments | 7
+custom_components/casora/scripts/local/03-popups.js | re:^\(window\.casoraTr \|\| function \(x\) \{ return x; \}\)\((html\(\)|fn\(\)|PA\.html\(pid, hass, !!box\._slot\)|window\._casoraCoach\(s\))\)$ | translating markup built by this file's escaping builders | 4
+# 03-popups.js – Cookidoo
+custom_components/casora/scripts/local/03-popups.js | cls | fixed class suffix ' now' or '' | 1
+custom_components/casora/scripts/local/03-popups.js | badge | day badge markup, escaped where built | 1
+custom_components/casora/scripts/local/03-popups.js | lbl | HH.label() markup (escapes its text) | 3
+custom_components/casora/scripts/local/03-popups.js | re:^row\('', empty, | row() escapes name/sub/right; fixed texts | 2
+custom_components/casora/scripts/local/03-popups.js | strip | week markup, escaped where built | 1
+custom_components/casora/scripts/local/03-popups.js | R.calSoft() | markup builder of this file (escapes) | 1
+custom_components/casora/scripts/local/03-popups.js | re:^(window\._casoraHH|HH)\.(label|pbar)\( | 02-devices.js H.label/H.pbar escape their text | 7
+custom_components/casora/scripts/local/03-popups.js | (window._casoraHH ? window._casoraHH.pillCss : '') | fixed CSS | 1
+custom_components/casora/scripts/local/03-popups.js | re:^f\[[12]\]$ | icon/colour from the fixed FOOD table (foodOf) | 3
+custom_components/casora/scripts/local/03-popups.js | tick(isDone) | fixed icon markup | 1
+custom_components/casora/scripts/local/03-popups.js | okC | fixed colour | 1
+custom_components/casora/scripts/local/03-popups.js | (sf ? 'color-mix(in srgb, ' + okC + ' 22%, transparent)' : 'rgba(48,209,88,0.2)') | fixed colours | 1
+custom_components/casora/scripts/local/03-popups.js | done.map(function (i) { return row(i, true); }).join('') | row() escapes summary/description | 1
+custom_components/casora/scripts/local/03-popups.js | re:^head\('Einkaufsliste' | head() escapes its text | 1
+custom_components/casora/scripts/local/03-popups.js | attr | data attribute built with esc() above | 1
+custom_components/casora/scripts/local/03-popups.js | (SF ? '' : btn('Cookidoo-App öffnen', 'data-casora-link="https://cookidoo.de/shopping/de-DE"', false)) | btn() escapes its label, fixed attribute | 1
+# 03-popups.js – vehicle
+custom_components/casora/scripts/local/03-popups.js | out | UI.hero() markup | 1
+custom_components/casora/scripts/local/03-popups.js | (tank() ? tank().row(p, states) : '') | 12-tanken.js row markup builder | 1
+custom_components/casora/scripts/local/03-popups.js | tr0 | 12-tanken.js row markup builder | 1
+# 03-popups.js – updates popup
+custom_components/casora/scripts/local/03-popups.js | lastLine(states) | markup with esc()'d name | 1
+custom_components/casora/scripts/local/03-popups.js | histRows(states, h) | UI.group() markup | 1
+custom_components/casora/scripts/local/03-popups.js | h.headOut('Zuletzt aktualisiert') | heading builder with a fixed text | 1
+custom_components/casora/scripts/local/03-popups.js | (soft ? UI.group(rr, 'Wartet auf Neustart') : h.headOut('Wartet auf Neustart') + UI.group(rr, null)) | UI.group/headOut markup with fixed headings | 1
+custom_components/casora/scripts/local/03-popups.js | re:^(tr\()?inner\(\)\)?$ | "search for updates" markup, texts esc()'d inside | 2
+# 03-popups.js – soft light popup
+custom_components/casora/scripts/local/03-popups.js | re:^attr\( | attr(o) = esc(JSON.stringify(o)) | 7
+custom_components/casora/scripts/local/03-popups.js | tg | attr(…) = esc(JSON.stringify(…)) | 2
+custom_components/casora/scripts/local/03-popups.js | glyph('light') | fixed icon markup (URL escaped) | 2
+custom_components/casora/scripts/local/03-popups.js | statusLine(sub) | statusLine() escapes every part | 1
+custom_components/casora/scripts/local/03-popups.js | barText(v) | number + escaped word | 1
+custom_components/casora/scripts/local/03-popups.js | left | brightness/colour/scene markup, escaped where built | 1
+custom_components/casora/scripts/local/03-popups.js | S.render(el._lpsCfg, el._lpsPart, h.states, h, null) | markup builder of this file (escapes) | 1
+custom_components/casora/scripts/local/03-popups.js | re:^L\.[ct]$ | colour/label from the fixed LV table (L = LV[x.key]) | 3

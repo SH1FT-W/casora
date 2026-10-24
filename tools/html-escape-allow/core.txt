@@ -1,0 +1,31 @@
+# casora-core.js, casora-chart.js, layout-card-modified.js – reviewed spots (see 00-common.txt for the format).
+custom_components/casora/scripts/casora-core.js | inner | iconHtml(inner): the caller's ready markup (contract of the function) | 1
+custom_components/casora/scripts/casora-core.js | cls | stateClass(): one of the fixed words unavailable/active/normal | 3
+custom_components/casora/scripts/casora-core.js | idx | action slot number from order() | 1
+custom_components/casora/scripts/casora-core.js | glyph(variables, idx, states, cls, hass) | returns markup with esc()/casoraSafeUrl() applied inside | 1
+custom_components/casora/scripts/casora-core.js | fitStyle(variables, states, prefix) | returns a style attribute with a number from measuring text | 1
+custom_components/casora/scripts/casora-core.js | term | repeat(): CSS calc() fragments of the code, not HTML ("out" is a local string here) | 1
+custom_components/casora/scripts/casora-core.js | more | number counted in code | 1
+custom_components/casora/scripts/casora-core.js | short | markup built in casoraStateFit from escHtml() parts | 1
+custom_components/casora/scripts/casora-core.js | rh | ring.html: markup from the ring builder, values escaped there | 1
+custom_components/casora/scripts/casora-core.js | sel + ' {\n' + retarget(e.styles) + '\n}\n' | CSS text of a <style> built in _dynamicCss, not HTML | 1
+custom_components/casora/scripts/casora-core.js | re:^(?:out|open|left|right|so|sOut|lead|tap|live|sLive|aLive|vlive|cnt|payload|lab|glyph)$ | markup/attributes built in the UI builders from esc()'d parts (payload = esc(JSON)) | 43
+custom_components/casora/scripts/casora-core.js | re:^\(o\.trailing \? '' : r[wv]\)$ | ready read attributes (rw constant, rv built with esc()) | 2
+custom_components/casora/scripts/casora-core.js | re:^r[wv]$ | ready read attributes (rw constant, rv built with esc()) | 2
+custom_components/casora/scripts/casora-core.js | re:^(?:tsz|sz|psz|lr)$ | CSS size/radius constants of the code | 14
+custom_components/casora/scripts/casora-core.js | re:^\(r\.imageFit === 'cover' \? 'width:calc\(' \+ psz | CSS from the psz constant | 1
+custom_components/casora/scripts/casora-core.js | aCls | class names from fixed words | 2
+custom_components/casora/scripts/casora-core.js | re:^\(r\.(?:action|value)Icon \? .*actx(?:Label|Inner)\( | actxLabel()/actxInner() escape their texts; else branch esc()/lit() | 8
+custom_components/casora/scripts/casora-core.js | re:^lit\(r\.(?:label|value), r\.(?:label|value)Lit\)$ | lit() escapes (esc inside, optional data-no-i18n span) | 2
+custom_components/casora/scripts/casora-core.js | re:^softLabel\(label\)$ | softLabel() escapes its text | 2
+custom_components/casora/scripts/casora-core.js | re:^delay\((?:0|i \+ 1)\)$ | animation delay "0.123s" computed from numbers | 3
+custom_components/casora/scripts/casora-core.js | i | forEach index | 2
+custom_components/casora/scripts/casora-core.js | v | slider value clamped to 0…100 (Math.max/min of Number) | 3
+custom_components/casora/scripts/casora-core.js | fillPct | number derived from the clamped slider value | 1
+custom_components/casora/scripts/casora-core.js | cols | CSS grid template from a number | 1
+custom_components/casora/scripts/casora-core.js | live.replace(' data-casora-invert="1"', '') | live attributes built with esc() | 1
+custom_components/casora/scripts/casora-core.js | (o.body || '') | kiCard body is ready markup by contract; callers (02-devices, 03-popups, 05-standard-medien) build it from escaped parts | 1
+custom_components/casora/scripts/casora-core.js | (o.btnSvc || '') | kiCard btnSvc is a ready data attribute built by the caller with esc() | 1
+custom_components/casora/scripts/casora-core.js | (window.casoraTr || function (x) { return x; })(sections()) | sections() builds the notification list with UI.group(), which escapes every text | 2
+custom_components/casora/scripts/casora-chart.js | n._casoraOrig | restores the innerHTML this card saved from the same node before | 1
+custom_components/casora/scripts/layout-card-modified.js | re:. | vendored layout-card (lit-html internals and CSS for :host), no Casora values in HTML | 4

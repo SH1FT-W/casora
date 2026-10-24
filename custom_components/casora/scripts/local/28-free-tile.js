@@ -27,11 +27,7 @@
     'armed_night', 'armed_vacation', 'armed_custom_bypass', 'triggered'];
   var MAX_VALUES = 8;
 
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var T = function (x) { return typeof window.casoraTr === 'function' ? window.casoraTr(x) : x; };
   var bad = function (s) { return s == null || s === '' || s === 'unknown' || s === 'unavailable'; };
   var dom = function (id) { return String(id || '').split('.')[0]; };

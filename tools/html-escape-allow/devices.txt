@@ -1,0 +1,69 @@
+# Reviewed by the "devices" pass: 02-devices.js, 12-tanken.js, 13-schloss.js.
+# 02-devices.js
+custom_components/casora/scripts/local/02-devices.js | _d | JSON literal pasted as JS code into a [[[ ]]] template string, not HTML | 1
+custom_components/casora/scripts/local/02-devices.js | head | markup: UI.label or a heading built with esc(label) | 1
+custom_components/casora/scripts/local/02-devices.js | px | number passed by the code (gap(10), gap(18)) | 1
+custom_components/casora/scripts/local/02-devices.js | re:^gap\(\d+\)(?: \+ (?:UI\.slider\(|window\._casoraAqChips\().*)?$ | markup: spacer with a fixed height, UI.slider / _casoraAqChips escape their own texts | 4
+custom_components/casora/scripts/local/02-devices.js | lbl('Farbkanäle') | markup: UI.label or a heading built with UI.esc(t) | 1
+custom_components/casora/scripts/local/02-devices.js | re:^z\[[012]\]$ | constant table Z (fixed German word, theme colour, mdi icon) | 4
+custom_components/casora/scripts/local/02-devices.js | svc | attribute text escaped where built (esc(JSON.stringify(…))) | 1
+custom_components/casora/scripts/local/02-devices.js | body | markup built above from esc()'d AI text and fixed texts | 1
+custom_components/casora/scripts/local/02-devices.js | btn | markup built above (svc escaped, fixed texts) | 1
+custom_components/casora/scripts/local/02-devices.js | plate | CSS constant of the code | 6
+custom_components/casora/scripts/local/02-devices.js | items.map(cell).join('') | markup: cell() escapes name and icon, the rest are numbers | 1
+custom_components/casora/scripts/local/02-devices.js | p | markup parts passed by the code (HH.more) | 1
+custom_components/casora/scripts/local/02-devices.js | id | escaped where built (var id = esc(camId)) | 2
+custom_components/casora/scripts/local/02-devices.js | (window.casoraTr || function (x) { return x; })(L.inner(el.getAttribute('data-hw-slot'), c, states)) | markup from L.inner (built from escaped parts), only translated | 1
+custom_components/casora/scripts/local/02-devices.js | re:^\(window\._casoraHH \? window\._casoraHH\.sel : String\)\(window\._casoraSelRows\(UI\.group\( | markup: UI.group escapes its rows, _casoraSelRows/HH.sel only restyle it | 2
+custom_components/casora/scripts/local/02-devices.js | segS | markup from UI.segments (escapes its labels) | 1
+custom_components/casora/scripts/local/02-devices.js | (window._casoraHH && window._casoraHH.on() ? window._casoraHH.dense(spSeg) : spSeg) | markup from UI.segments (escapes its labels) | 1
+custom_components/casora/scripts/local/02-devices.js | cls | class names fixed in the code (' dis', ' pri') | 2
+custom_components/casora/scripts/local/02-devices.js | s0 | attribute text escaped where built (svc() → esc(JSON.stringify(…))) | 1
+custom_components/casora/scripts/local/02-devices.js | re:^mdi\(.*\)$ | markup: mdi() escapes icon, size and colour | 4
+custom_components/casora/scripts/local/02-devices.js | out | markup from UI.hero (escapes its texts) | 1
+custom_components/casora/scripts/local/02-devices.js | re:^pill\(.*\)$ | markup: pill() escapes its label, svc is escaped where built | 3
+custom_components/casora/scripts/local/02-devices.js | re:^svc\('(?:return_to_base|locate)'\)$ | escaped where built (esc(JSON.stringify(…))) | 2
+custom_components/casora/scripts/local/02-devices.js | main.s | escaped where built (svc() → esc(JSON.stringify(…))) | 1
+custom_components/casora/scripts/local/02-devices.js | mapCss | CSS computed from numbers (fit of the map image) or a CSS constant | 2
+custom_components/casora/scripts/local/02-devices.js | under | markup built above with esc(prevUrl) | 1
+custom_components/casora/scripts/local/02-devices.js | inner | markup passed by the code (CARD / btn: esc()'d area names, escaped labels) | 2
+custom_components/casora/scripts/local/02-devices.js | (extra || '') | attribute markup built with esc(a) by the caller | 1
+custom_components/casora/scripts/local/02-devices.js | h | JS code constant of the inline handler (window._casoraVac.roomTap) | 3
+custom_components/casora/scripts/local/02-devices.js | re:^btn\('hv-go' | markup: btn() with an escaped label | 1
+custom_components/casora/scripts/local/02-devices.js | HH.label('Räume reinigen') | markup builder with a fixed text | 1
+# 12-tanken.js (prices, distances and coordinates are numbers; colours and CSS come from the code)
+custom_components/casora/scripts/local/12-tanken.js | wrap | attribute markup built from a number (size) and CSS constants | 3
+custom_components/casora/scripts/local/12-tanken.js | color(s) | colour from the fixed COLORS list | 2
+custom_components/casora/scripts/local/12-tanken.js | fit(st || 1, m[2]) | CSS computed from numbers of the fixed BRANDS table | 1
+custom_components/casora/scripts/local/12-tanken.js | re:^abbr\((?:true|false)\)$ | markup: abbr() escapes the station's short name | 2
+custom_components/casora/scripts/local/12-tanken.js | re:^k\.(?:T\.)?\w+$ | design tokens from tok() / UI.tokens (CSS constants) | 27
+custom_components/casora/scripts/local/12-tanken.js | re:^\(?(?:A\.tone === 'neutral' \? k\.ROW : k\.TINT\(c\)|i \? k\.ROW : k\.TINT\(k\.GOOD\)|isMin\(q\.g\.best\) \? k\.GOOD : MUTE|m \? k\.GOOD : \(k\.dark \? '#4A423B' : '#FFFDF9'\))\)?$ | colours from the code's tokens | 4
+custom_components/casora/scripts/local/12-tanken.js | c | colour token of the code (k.WARN / k.GOOD / k.SUB) | 1
+custom_components/casora/scripts/local/12-tanken.js | pos | number (position on the price scale) | 1
+custom_components/casora/scripts/local/12-tanken.js | out | markup built in verdict() from escaped texts | 1
+custom_components/casora/scripts/local/12-tanken.js | K.mark(x, 38, k.dark) | markup: K.mark escapes brand, name and logo URL | 1
+custom_components/casora/scripts/local/12-tanken.js | sup(x.p) | escaped price (sup → esc(price())) | 1
+custom_components/casora/scripts/local/12-tanken.js | re:^f1\(.*\)$ | number with one decimal (f1 → toFixed) | 22
+custom_components/casora/scripts/local/12-tanken.js | re:^(?:col|\(col === 'none' \? SUBC : col\))$ | colour constant of the code ('none', k.GOOD, MUTE) | 2
+custom_components/casora/scripts/local/12-tanken.js | shadow | style attribute constant of the code | 1
+custom_components/casora/scripts/local/12-tanken.js | re:^(?:pw|ph|h|cy|cx|more|px)$ | number computed by the code | 10
+custom_components/casora/scripts/local/12-tanken.js | s | SVG markup built in pins() from numbers and escaped prices | 1
+custom_components/casora/scripts/local/12-tanken.js | re:^(?:ground|line)$ | colour constant of the code | 3
+custom_components/casora/scripts/local/12-tanken.js | re:^pins\(I, k, W, H, function \(p\) | SVG markup from pins() (numbers, colours of the code, escaped prices) | 2
+custom_components/casora/scripts/local/12-tanken.js | re:^(?:head|foot|seg|L|R)$ | markup built in K.html from UI builders and escaped texts | 7
+custom_components/casora/scripts/local/12-tanken.js | re:^(?:sp\(\d+\)|\(m \? m \+ sp\(12\) : ''\))$ | markup: spacer with a fixed height / the map markup | 4
+custom_components/casora/scripts/local/12-tanken.js | list(I, sort) | markup from UI.group (escapes its rows) with K.mark logos | 1
+custom_components/casora/scripts/local/12-tanken.js | re:^v\.(?:ring|head\.st)$ | markup saved from the popup's own header before (restored as it was) | 2
+# 13-schloss.js
+custom_components/casora/scripts/local/13-schloss.js | re:^\(?(?:long && )?tr\.name \? SEP \+ nameSpan\(tr\.name\) : ''\)?$ | markup: nameSpan escapes the name, SEP is a constant | 2
+custom_components/casora/scripts/local/13-schloss.js | re:^nameSpan\((?:n|tr\.name)\)$ | markup: nameSpan escapes the name | 2
+custom_components/casora/scripts/local/13-schloss.js | re:^k\.\w+$ | design tokens from T() (CSS constants) | 22
+custom_components/casora/scripts/local/13-schloss.js | (o.primary ? 'background:' + k.ton + ';color:' + k.tonInk + ';' : 'background:' + k.ctl + ';color:' + k.ink + ';') | design tokens from T() (CSS constants) | 1
+custom_components/casora/scripts/local/13-schloss.js | (o.ic ? mask(o.ic, 18, 'currentColor') : '') | markup: mask() escapes URL, size and colour | 1
+custom_components/casora/scripts/local/13-schloss.js | (lv === 'alarm' ? color('alarm') : lv === 'warn' && !dead(s) ? color('warn') : k.ink) | colours of the code (casoraSecurityColor / tokens) | 1
+custom_components/casora/scripts/local/13-schloss.js | (who ? SEP + who : '') | markup from L.trigText (escaped names) | 1
+custom_components/casora/scripts/local/13-schloss.js | re:^pill\(k, | markup: pill() escapes svc and label | 1
+custom_components/casora/scripts/local/13-schloss.js | (canOpen ? pill(k, { svc: BUSY[s] ? null : 'open', t: 'Tür öffnen', ic: 'door-open', off: !!BUSY[s] }) : '') | markup: pill() escapes svc and label | 1
+custom_components/casora/scripts/local/13-schloss.js | dotTone(x.s) | colour of the code (DIM / casoraSecurityColor) | 1
+custom_components/casora/scripts/local/13-schloss.js | tt | markup from L.trigText (escaped names) | 1
+custom_components/casora/scripts/local/13-schloss.js | re:^(?:vl|body|bed|gap|zus|ver|line|left|right)$ | markup built in L.html from UI builders and escaped texts | 9

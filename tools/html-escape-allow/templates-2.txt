@@ -1,0 +1,40 @@
+# Card templates, second part: entries scoped to one template ("…templates.json#casora_x"), see 00-common.txt.
+# casora_weather
+dashboards/casora/button_card_templates.json#casora_weather | re:^(?:file|tempVal|_base|hi|lo|pp|_dev|_cls)$ | hero: svg file name from a fixed map, rounded numbers, fixed words, class from the id with [^a-z0-9_] replaced | 11
+dashboards/casora/button_card_templates.json#casora_weather | _cond | hero: condition word from the fixed map (_cm), never the raw state | 1
+dashboards/casora/button_card_templates.json#casora_weather | return (tempVal === null) ? '' : `${tempVal}°` | rounded number | 1
+dashboards/casora/button_card_templates.json#casora_weather | c[1] | popup: mdi icon from the fixed COND map | 2
+dashboards/casora/button_card_templates.json#casora_weather | re:^r0\( | popup: Math.round() number or '–' | 3
+dashboards/casora/button_card_templates.json#casora_weather | (i === 0 ? 'Heute' : d.toLocaleDateString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { weekday: 'short' }).replace('.', '')) | weekday from Intl (browser), no HA text | 1
+dashboards/casora/button_card_templates.json#casora_weather | re:^(?:left|width)$ | popup: bar position, toFixed() numbers | 2
+dashboards/casora/button_card_templates.json#casora_weather | re:^(?:pills|_mh|css|chartH)$ | popup: markup/CSS of the code (labels escaped where built) | 5
+dashboards/casora/button_card_templates.json#casora_weather | key | popup: 'hw_' + id with [^a-zA-Z0-9] replaced | 3
+dashboards/casora/button_card_templates.json#casora_weather | (hiLo || '') | popup: "H 12° · T 5°" from r0() numbers | 1
+# casora_weather_warning, casora_popup_weather_warning
+dashboards/casora/button_card_templates.json#casora_weather_warning | return isMobile ? _t : "Warnungen · " + _t | _t = casoraEsc(text) one line above | 1
+dashboards/casora/button_card_templates.json#casora_popup_weather_warning | re:^(?:info\.color|icon|warningIcon\(w, w\.level\))$ | colour from levelInfo() (fixed per level), mdi icon from warningIcon() (fixed names) | 5
+dashboards/casora/button_card_templates.json#casora_popup_weather_warning | ((window._casoraInkOn && window._casoraInkOn(info.color)) || 'var(--casora-soft-glyph, #fff)') | contrast colour of a fixed level colour | 1
+dashboards/casora/button_card_templates.json#casora_popup_weather_warning | re:^escBr\( | escBr = esc() first, then only <br> put back (warning text from DWD/NINA) | 4
+dashboards/casora/button_card_templates.json#casora_popup_weather_warning | re:^(?:meta|rows)$ | built from esc()'d parts above | 3
+# casora_popup_updates
+dashboards/casora/button_card_templates.json#casora_popup_updates | re:^(?:text|tint)$ | headText()/btnLabel(): only called with fixed labels and colour constants | 3
+dashboards/casora/button_card_templates.json#casora_popup_updates | re:^(?:JSON\.stringify\('Verfügbare Updates'\)|_hx)$ | JS source of a nested [[[ ]]] template (literal, fixed object), not HTML | 2
+# casora_popup_scenes, casora_scene_core, casora_scene_row
+dashboards/casora/button_card_templates.json#casora_popup_scenes | _lastSnip | JS source of a nested [[[ ]]] template (ids JSON.stringify'd), not HTML | 1
+dashboards/casora/button_card_templates.json#casora_scene_core | re:^(?:ink|circleBg|\(on \? onBg : SC_C\.offBg\))$ | colour-mix() of the escaped tint and constants | 4
+dashboards/casora/button_card_templates.json#casora_scene_core | re:^(?:glyph|tap|sizing|name)$ | built above with esc()/escaped JSON (icon, scene id, width, friendly_name) | 5
+dashboards/casora/button_card_templates.json#casora_scene_row | re:^(?:SC\.sortDebug\(\)|dbg|inner|return _frozen)$ | debug line of counters, fixed CSS, cached chip markup | 4
+dashboards/casora/button_card_templates.json#casora_scene_row | re:^ids\.map\(\(id\) => SC\.chipHtml\( | chipHtml() escapes name, icon, ids (casora_scene_core) | 1
+# casora_trash
+dashboards/casora/button_card_templates.json#casora_trash | re:^(?:\(pad \|\| '.*'\)|inner|\(vTone \|\| T\.ink2\))$ | plate()/title() helpers: called with fixed padding/colours and markup built from esc()'d parts | 3
+dashboards/casora/button_card_templates.json#casora_trash | re:^(?:w|cls|MON\[d\.getMonth\(\)\]|n\.charAt\(0\))$ | weekday/month names and class names of the code | 4
+dashboards/casora/button_card_templates.json#casora_trash | UI.label('Rausstellen').slice(0, -6) | UI.label markup of a fixed text | 1
+dashboards/casora/button_card_templates.json#casora_trash | re:^JSON\.stringify\(REM(?:INDER|_HEAD)\)$ | JS source of a nested [[[ ]]] template, not HTML | 2
+# Tiles whose state comes from a module builder (escaped there) through fit() (casoraStateFit or casoraEsc)
+dashboards/casora/button_card_templates.json | re:^return [A-Z] \? fit\([A-Z]\.tile(?:State|Text)\( | module tileState()/tileText() text through fit() = casoraStateFit (escapes) or casoraEsc | 6
+dashboards/casora/button_card_templates.json#casora_entity | re:^return window\.casora(?:TimerRing|StateFit) \? | timer ring (casora-core, escapes its label) / casoraStateFit with casoraEsc fallback | 1
+dashboards/casora/button_card_templates.json#casora_football | re:^return window\._casoraFootball \? window\._casoraFootball\.(?:corner|state)\( | 11-fussball.js builders escape team names and texts | 2
+dashboards/casora/button_card_templates.json | (UI.soft && UI.soft() && window._casoraMediaSoft ? window._casoraMediaSoft.srcRules() : '') | fixed <style> rules of the soft media popup | 3
+dashboards/casora/button_card_templates.json#casora_mobile_sensor_chips | sub | fixed words Erkannt/Nicht erkannt/Nicht verfügbar | 1
+dashboards/casora/button_card_templates.json#casora_thermostat | re:^return Number\.isInteger\(n\) \? | number with "°" | 1
+dashboards/casora/button_card_templates.json#casora_weather | re:^return map\[condKey\] \|\| \(window\.casoraEsc \|\| String\)\( | condition word from the fixed map, else the escaped raw state | 1

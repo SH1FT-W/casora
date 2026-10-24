@@ -11,9 +11,7 @@
   var API = 'https://site.api.espn.com/apis';
   var TTL = 10 * 60000, TTL_LIVE = 60000, TTL_NEXT = 60 * 60000, H = 3600000;
 
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var DAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
   var day0 = function (d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
   var diffDays = function (d, now) { return Math.round((day0(d) - day0(now || new Date())) / 86400000); };
@@ -667,7 +665,7 @@
           var opp = oppTag && r.id === i.opp.id && i.opp.id !== i.team.id;
           var cls = 'cfb-r' + (r.id === i.team.id ? ' me' : '') + (opp ? ' opp' : '');
           var tag = opp ? '<em>' + (i.phase === 'IN' ? 'Gegner' : 'nächster Gegner') + '</em>' : '';
-          return '<div class="' + cls + '"' + (r.zone ? ' data-z="' + r.zone + '"' : '') + '><span class="k">' + r.rank + '</span>'
+          return '<div class="' + cls + '"' + (r.zone ? ' data-z="' + esc(r.zone) + '"' : '') + '><span class="k">' + esc(r.rank) + '</span>'
             + mini(r.logo)
             + '<span class="n"><span data-no-i18n>' + esc(K.name(r.name)) + '</span>' + tag + '</span><span class="c">' + esc(r.gp) + '</span><span class="c">' + esc(r.gd) + '</span><span class="p">' + esc(r.pts) + '</span></div>';
         }).join('');
@@ -675,7 +673,7 @@
       var seen = {}, lg = '';
       tab.rows.forEach(function (r) {
         var l = r.zone && K.zoneLabel(r.zone, r.note);
-        if (l && !seen[l]) { seen[l] = 1; lg += '<span><i class="' + r.zone + '"></i><span data-no-i18n>' + esc(l) + '</span></span>'; }
+        if (l && !seen[l]) { seen[l] = 1; lg += '<span><i class="' + esc(r.zone) + '"></i><span data-no-i18n>' + esc(l) + '</span></span>'; }
       });
       return CSS() + '<div class="cfb">' + head(t) + '<div class="cfb-t">' + body + more + '</div>' + (lg ? '<div class="cfb-lg">' + lg + '</div>' : '') + '</div>';
     }
@@ -762,7 +760,7 @@
     K._id = entity.entity_id;
     K.load(K.info(entity));
     if (k === 'form' || k === 'table') K.fitSoon();
-    return '<div class="cfb-' + k + '">' + K.html(k, entity) + '</div>';
+    return '<div class="cfb-' + esc(k) + '">' + K.html(k, entity) + '</div>';
   };
 
   /* Spalte aus Abschnitten, wie im Kalender-Popup. */

@@ -208,6 +208,11 @@
     var core = text.trim().replace(/[\u00a0\u202f]/g, ' ');
     if (!core || !/[A-Za-zÄÖÜäöüß]/.test(core)) return pct(text);
     var out = one(core, t);
+    // Escaped markup ("Saugt &amp; wischt", casoraEsc): look up the plain text, escape the translation again.
+    if (out === null && /&(?:amp|lt|gt|quot|#39);/.test(core)) {
+      var plain = one(core.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&'), t);
+      if (plain !== null) out = plain.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
     if (out === null && core.indexOf(' · ') > 0) {
       var parts = core.split(' · ');
       var done = parts.map(function (p) { var r = one(p.trim(), t); return r === null ? p : r; });

@@ -194,8 +194,8 @@
   };
   var mask = function (name, size, col) {
     var u = window.casoraIconUrl ? window.casoraIconUrl(name) : '';
-    return '<span style="display:inline-block;flex:none;width:' + size + 'px;height:' + size + 'px;background-color:' + col + ';'
-      + "-webkit-mask:url('" + u + "') center / contain no-repeat;mask:url('" + u + "') center / contain no-repeat;pointer-events:none;\"></span>";
+    return '<span style="display:inline-block;flex:none;width:' + esc(size) + 'px;height:' + esc(size) + 'px;background-color:' + esc(col) + ';'
+      + "-webkit-mask:url('" + esc(u) + "') center / contain no-repeat;mask:url('" + esc(u) + "') center / contain no-repeat;pointer-events:none;\"></span>";
   };
   var pill = function (k, o) {
     var on = !o.off;
@@ -295,7 +295,7 @@
     var e = states()[V.id] || {}, s = String(e.state || '').toLowerCase();
     if (!ring) return;
     var u = window.casoraIconUrl ? window.casoraIconUrl(ringIcon(s)) : '';
-    var html = '<span class="g" style="--g:url(&quot;' + u + '&quot;)"></span>';
+    var html = '<span class="g" style="--g:url(&quot;' + esc(u) + '&quot;)"></span>';
     if (ring.innerHTML !== html) ring.innerHTML = html;
     ring.hidden = false;
     ring.style.setProperty('--ring', color(level(V.id, s)));

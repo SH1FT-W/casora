@@ -14,11 +14,7 @@
   if (window._casoraHold) return;
   var H = window._casoraHold = {};
   var T = function (x) { return typeof window.casoraTr === 'function' ? window.casoraTr(x) : x; };
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var hassNow = function () { var ha = document.querySelector('home-assistant'); return ha && ha.hass; };
   var num = function (v) { var n = parseFloat(v); return isFinite(n) ? n : null; };
   var bad = function (s) { return s == null || s === 'unknown' || s === 'unavailable'; };

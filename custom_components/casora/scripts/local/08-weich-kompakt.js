@@ -11,11 +11,7 @@
 (function () {
   if (window._casoraSoftBat) return;
 
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var raw = function (states, id) { return (id && states[id]) ? states[id].state : null; };
   var ok = function (s) { return s != null && s !== 'unknown' && s !== 'unavailable'; };
   var ago = function (ts) {
@@ -69,7 +65,7 @@
         + 'border-radius:var(--casora-popup-row-radius, 20px);box-shadow:var(--casora-popup-plate-shadow, none);padding:var(--casora-soft-plate-pad, 14px 10px 6px);">'
         + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);'
         + 'letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary,#fff));'
-        + 'text-align:left;padding:0 6px;">' + window._hpChartTitle(B.cur) + '</div>'
+        + 'text-align:left;padding:0 6px;">' + esc(window._hpChartTitle(B.cur)) + '</div>'
         + '<div class="hp-chart-slot" style="min-height:150px;margin:6px 0 0;"></div></div>';
       if (typeof window._hpChartInit === 'function') window._hpChartInit(B.cur);
     }

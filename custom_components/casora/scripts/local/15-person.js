@@ -12,11 +12,7 @@
   if (window._casoraPerson) return;
   var P = window._casoraPerson = {};
 
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var T = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
   var num = function (v) { var n = parseFloat(v); return isFinite(n) ? n : null; };
   var bad = function (s) { return s == null || s === 'unknown' || s === 'unavailable' || s === ''; };

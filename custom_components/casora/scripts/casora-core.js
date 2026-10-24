@@ -1,3 +1,61 @@
+// casora-esc:begin – canonical HTML escaping, the same block in every file that loads on its own
+// (checked by dev/unit/html_escape.mjs). Every value that goes into an HTML string goes through one of these:
+//   casoraEsc(v)      text and quoted attribute values: & < > " ' as entities
+//   casoraEscJs(v)    inside a quoted JS string of an inline handler (onclick="f('…')"): JS-escaped, then HTML-escaped
+//   casoraSafeUrl(u)  href/src: '' for javascript:, vbscript: and data: other than images, else escaped
+(function () {
+  if (window.casoraEsc) return;
+  var MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return MAP[c]; }); };
+  window.casoraEsc = esc;
+  window.casoraEscJs = function (v) {
+    return esc(String(v == null ? '' : v).replace(/[\\'"`<>&\n\r\u2028\u2029]/g, function (c) {
+      return '\\u' + ('000' + c.charCodeAt(0).toString(16)).slice(-4);
+    }));
+  };
+  window.casoraSafeUrl = function (u) {
+    var s = String(u == null ? '' : u).trim();
+    var k = s.replace(/[\u0000-\u0020\u007f-\u009f]/g, '').toLowerCase();
+    if (/^(?:javascript|vbscript|data):/.test(k) && !/^data:image\//.test(k)) return '';
+    return esc(s);
+  };
+})();
+// casora-esc:end
+
+// button-card renders a plain name or label (text from the card config, the entity's friendly_name as fallback)
+// and its default state text as HTML. For Casora's cards these are text: escape them – only characters that are
+// not escaped yet, so a value Casora code already escaped stays as it is. Names, labels and states from a
+// [[[ … ]]] template are left alone (the templates escape their own values).
+(function () {
+  if (!window.customElements || window.__casoraPlainEsc) return;
+  window.__casoraPlainEsc = true;
+  var once = function (s) {
+    return String(s).replace(/[<>"']|&(?!(?:[a-zA-Z][a-zA-Z0-9]*|#\d+|#x[0-9a-fA-F]+);)/g, function (c) { return window.casoraEsc(c); });
+  };
+  var isTpl = function (v) { return typeof v === 'string' && /^\s*\[\[\[/.test(v); };
+  var casoraCard = function (cfg) {
+    return [].concat((cfg && cfg.template) || []).some(function (t) { return /^casora_/.test(String(t)); });
+  };
+  customElements.whenDefined('button-card').then(function () {
+    var C = customElements.get('button-card');
+    var P = C && C.prototype;
+    if (!P || P.__casoraPlainEsc) return;
+    P.__casoraPlainEsc = true;
+    var wrap = function (fn, src) {
+      if (typeof P[fn] !== 'function') return;
+      var orig = P[fn];
+      P[fn] = function (st, cs) {
+        var out = orig.apply(this, arguments);
+        if (typeof out !== 'string' || !casoraCard(this._config)) return out;
+        return src && isTpl(src(this._config, cs)) ? out : once(out);
+      };
+    };
+    wrap('_buildName', function (cfg, cs) { return (cs && cs.name) || cfg.name; });
+    wrap('_buildLabel', function (cfg, cs) { return (cs && cs.label) || cfg.label; });
+    wrap('_buildStateString', null);
+  });
+})();
+
 // Haptik (14.10.2026): casoraHaptic('light'|'selection'|'medium'|'success') – HA-Companion-App vibriert.
 // Tipp-Handler hängen oft an touchend UND click: ein zweiter Impuls binnen 250 ms entfällt (Klick-Echo).
 window.casoraHaptic = window.casoraHaptic || function (kind) {
@@ -931,7 +989,7 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     if (card) card._casoraTimerLive = !!n;
     if (!n) return '';
     if (card) watch(card);
-    var esc = function (x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+    var esc = window.casoraEsc || function (x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
     // Mitte: Uhr-Symbol (mdi:timer-outline, Entscheid D) – die Restzeit zeigt der Ring, die genaue Zeit das Halten-Menü
     // und die Beschriftung (aria-label „Aus um …“). Eine Zahl wurde mit Helligkeit/Luftfeuchte verwechselt.
     return '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + esc(n.title) + '"'
@@ -1467,7 +1525,7 @@ window.casoraMenuGlass = {
   // Gleiches als HTML-Text (Menüs, die per innerHTML gebaut werden).
   iconHtml: function (inner, tone) {
     this._ensure();
-    return '<span class="casora-mi"' + (tone ? ' style="--casora-mi-tone:var(--casora-tone-' + tone + ', transparent)"' : '')
+    return '<span class="casora-mi"' + (tone ? ' style="--casora-mi-tone:var(--casora-tone-' + window.casoraEsc(tone) + ', transparent)"' : '')
       + '>' + inner + '</span>';
   },
 
@@ -2473,7 +2531,7 @@ window.casoraMenuGlass = {
         var base = String(variables.svg_path || '/casora_assets/icons').replace(/\/$/, '');
         src = base + '/' + raw + '.svg';
       }
-      return '<img class="casora-act-icon casora-act-svg ' + cls + '" src="' + esc(src) + '" alt="">';
+      return '<img class="casora-act-icon casora-act-svg ' + cls + '" src="' + window.casoraSafeUrl(src) + '" alt="">';
     }
 
     function label(variables, idx, states, prefix) {
@@ -2782,17 +2840,14 @@ window.casoraMenuGlass = {
       const t = text == null ? '' : String(text);
       if (!t) return '';
       const em = window.casoraTextEm(t, weight);
-      if (!(em > 0)) return t;
-      const esc = t.replace(/[&<>"]/g, (c) => (
-        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]
-      ));
+      const escHtml = window.casoraEsc || ((x) => String(x == null ? '' : x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+      if (!(em > 0)) return escHtml(t);
       const a = alt == null ? '' : String(alt);
       if (a && a !== t) {
-        const ea = a.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
         return '<casora-statefit data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
           + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
-          + '<span class="sf-f">' + esc + '</span><span class="sf-s" style="display:none;max-width:100%">'
-          + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">' + ea + '</span></span></casora-statefit>';
+          + '<span class="sf-f">' + escHtml(t) + '</span><span class="sf-s" style="display:none;max-width:100%">'
+          + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">' + escHtml(a) + '</span></span></casora-statefit>';
       }
       /* 1.4.1: überall (Handy und Desktop) dieselbe Schriftgröße – kein Verkleinern mehr. Passt ein Text
          mit „ · “ nicht, zeigt casora-statefit den ersten Teil ganz und zählt den Rest („Trocknet Mopp +3“,
@@ -2804,16 +2859,15 @@ window.casoraMenuGlass = {
         let more = parts.length - 1;
         const tail = /\s\+(\d+)$/.exec(parts[parts.length - 1]);
         if (tail) more += Number(tail[1]);
-        const e1 = parts[0].replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
         // Der Zähler bleibt immer sichtbar; zu lang wird nur der erste Teil gekürzt („Trocknu… +1“).
         short = '<span class="sf-s" style="display:none;max-width:100%;align-items:baseline">'
-          + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">' + e1 + '</span>'
+          + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">' + escHtml(parts[0]) + '</span>'
           + '<span style="flex:none;margin-left:6px;padding:0 6px;border-radius:999px;font-size:.86em;font-weight:700;'
           + 'background:color-mix(in srgb, currentColor 14%, transparent)" data-no-i18n>+' + more + '</span></span>';
       }
       return '<casora-statefit data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
         + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
-        + '<span class="sf-f">' + esc + '</span>' + short + '</casora-statefit>';
+        + '<span class="sf-f">' + escHtml(t) + '</span>' + short + '</casora-statefit>';
     };
     // Statuszeile (1.4.1): voller Text oder Kurzform, je nachdem, was in die Breite passt.
     if (!customElements.get('casora-statefit')) {
@@ -6782,16 +6836,16 @@ window.casoraMenuGlass = {
     var ph = null;
     (window._casoraRingPhotoHooks || []).some(function (f) { try { ph = f(src, key); } catch (e) { ph = null; } return !!ph; });
     if (ph && typeof ph.url === 'string' && /^(https?:|\/|data:image\/)/.test(ph.url)) {
-      return { hue: ph.hue || hue, html: '<img class="im ph" alt="" src="' + ph.url.replace(/["<>\\]/g, '') + '">', off: false };
+      return { hue: ph.hue || hue, html: '<img class="im ph" alt="" src="' + window.casoraEsc(ph.url.replace(/["<>\\]/g, '')) + '">', off: false };
     }
     var im = typeof window.casoraRingImage === 'function' ? window.casoraRingImage(src, key) : null;
     if (typeof im === 'string' && /^(https?:|\/|data:image\/)/.test(im)) {
-      return { hue: 'var(--casora-football-crest-bg, #fff)', html: '<img class="im" alt="" src="' + im.replace(/["<>\\]/g, '') + '">', off: false };
+      return { hue: 'var(--casora-football-crest-bg, #fff)', html: '<img class="im" alt="" src="' + window.casoraEsc(im.replace(/["<>\\]/g, '')) + '">', off: false };
     }
     var ru = typeof window.casoraRingUrl === 'function' ? window.casoraRingUrl(src, key) : null;
     if (typeof ru === 'string' && ru) {
       ic = null;
-      glyph = '<span class="g" style="--g:url(\'' + monoUrl(ru, onGlyph).replace(/['"\\]/g, '') + '\')"></span>';
+      glyph = '<span class="g" style="--g:url(\'' + window.casoraEsc(monoUrl(ru, onGlyph).replace(/['"\\]/g, '')) + '\')"></span>';
     }
     var isrc = ic && ic.tagName === 'IMG' ? String(ic.getAttribute('src') || '') : '';
     // Nur Vektor-Symbole taugen als Maske – ein Foto (Albumcover der Medienkachel) wäre ein Rechteck.
@@ -6802,22 +6856,22 @@ window.casoraMenuGlass = {
     }
     if (isrc) {
       var u = monoUrl(isrc, onGlyph);
-      glyph = '<span class="g" style="--g:url(\'' + u.replace(/['"\\]/g, '') + '\')"></span>';
+      glyph = '<span class="g" style="--g:url(\'' + window.casoraEsc(u.replace(/['"\\]/g, '')) + '\')"></span>';
     } else if (ic && typeof ic.icon === 'string' && ic.icon) {
-      glyph = '<ha-icon icon="' + ic.icon.replace(/[^\w:-]/g, '') + '"></ha-icon>';
+      glyph = '<ha-icon icon="' + window.casoraEsc(ic.icon.replace(/[^\w:-]/g, '')) + '"></ha-icon>';
     } else if (!glyph && src._config.icon && typeof src._config.icon === 'string' && src._config.icon.indexOf('[[[') < 0) {
-      glyph = '<ha-icon icon="' + src._config.icon.replace(/[^\w:-]/g, '') + '"></ha-icon>';
+      glyph = '<ha-icon icon="' + window.casoraEsc(src._config.icon.replace(/[^\w:-]/g, '')) + '"></ha-icon>';
     }
     // Kachel ohne eigenes Symbol (z. B. Now-Playing-Karte): Symbol aus variables.icon bzw. Medien-Symbol.
     if (!glyph && typeof window.casoraIconUrl === 'function') {
       var vi2 = src._config.variables && src._config.variables.icon;
       var nm = (typeof vi2 === 'string' && /^[\w-]+$/.test(vi2)) ? vi2 : (/media|now_playing/.test(key) ? 'media' : null);
-      if (nm) glyph = '<span class="g" style="--g:url(\'' + monoUrl(window.casoraIconUrl(nm), onGlyph).replace(/['"\\]/g, '') + '\')"></span>';
+      if (nm) glyph = '<span class="g" style="--g:url(\'' + window.casoraEsc(monoUrl(window.casoraIconUrl(nm), onGlyph).replace(/['"\\]/g, '')) + '\')"></span>';
     }
     // Kacheln ohne #icon (Thermostat-Puck): ein Popup-Modul darf ein Symbol nennen.
     if (!glyph && typeof window.casoraRingGlyph === 'function') {
       var rg = window.casoraRingGlyph(src, key);
-      if (typeof rg === 'string' && rg) glyph = '<ha-icon icon="' + rg.replace(/[^\w:-]/g, '') + '"></ha-icon>';
+      if (typeof rg === 'string' && rg) glyph = '<ha-icon icon="' + window.casoraEsc(rg.replace(/[^\w:-]/g, '')) + '"></ha-icon>';
     }
     // Thermostat-Kachel ohne Symbol (Puck): Thermometer wie im Entwurf, damit jeder Kopf einen Ring hat.
     if (!glyph && /thermostat|climate\./.test(key)) glyph = '<ha-icon icon="mdi:thermometer"></ha-icon>';
@@ -6834,7 +6888,7 @@ window.casoraMenuGlass = {
         var AIC = { disarmed: 'shield_off', armed_home: 'shield_check', armed_away: 'shield_lock', armed_night: 'shield_moon',
           armed_vacation: 'shield_vacation', armed_custom_bypass: 'shield_bypass', triggered: 'shield_alarm' };
         return { hue: window.casoraSecurityColor(window.casoraSecurityLevel(hA, [aid])),
-          html: '<span class="g" style="--g:url(\'' + monoUrl(window.casoraIconUrl(AIC[SA[aid].state] || 'shield_marked'), onGlyph).replace(/['"\\]/g, '') + '\')"></span>',
+          html: '<span class="g" style="--g:url(\'' + window.casoraEsc(monoUrl(window.casoraIconUrl(AIC[SA[aid].state] || 'shield_marked'), onGlyph).replace(/['"\\]/g, '')) + '\')"></span>',
           off: false };
       }
     }
@@ -8371,11 +8425,8 @@ window.casoraMenuGlass = {
 (function () {
   if (window._casoraUI) return;
 
-  var esc = function (s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  };
+  // The canonical escaper (casora-esc block at the top of this file); UI.esc is the same function.
+  var esc = window.casoraEsc || function (x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
   var T = {
     ink:  'var(--casora-popup-tiles-text-primary, #fff)',
@@ -8452,7 +8503,7 @@ window.casoraMenuGlass = {
       + 'color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));">' + esc(text) + '</div>';
     if (action && action.text) {
       out += '<div class="hui-ga" style="font-size:13px;font-weight:600;'
-        + 'color:' + (tone(action.tone) || T.blue) + ';cursor:pointer;white-space:nowrap;"'
+        + 'color:' + esc(tone(action.tone) || T.blue) + ';cursor:pointer;white-space:nowrap;"'
         + (action.svc ? ' data-casora-svc="' + esc(JSON.stringify(action.svc)) + '"' : '')
         + '>' + esc(action.text) + '</div>';
     }
@@ -8466,7 +8517,7 @@ window.casoraMenuGlass = {
     var lineO = { tone: o.stateTone, slotId: (o.captionSlot && !o.caption) ? o.captionId : null };
     if (o.barTitle) return softLine(o.state, rest, lineO);
     var out = '<div style="font-family:' + T.font + ';text-align:center;'
-      + 'padding:' + (o.padTop != null ? o.padTop : 0) + 'px 8px 8px;">'
+      + 'padding:' + esc(o.padTop != null ? o.padTop : 0) + 'px 8px 8px;">'
       + '<div style="font-size:28px;font-weight:800;letter-spacing:-0.025em;line-height:1.15;'
       + 'color:' + T.ink + ';">' + esc(o.title || '') + '</div></div>';
     return out + (o.state || rest.length ? softLine(o.state, rest, lineO) : '');
@@ -8486,14 +8537,14 @@ window.casoraMenuGlass = {
     var out = '<div class="hui-line" style="font-family:' + T.font + ';text-align:center;'
       + 'padding:0 8px var(--casora-soft-line-gap, 4px);margin-top:-4px;'
       + 'font-size:15px;font-weight:500;line-height:1.45;text-wrap:balance;overflow-wrap:anywhere;color:' + S.sub + ';">'
-      + (main ? '<span' + (o.read ? ' data-casora-read="' + esc(o.read) + '"' : '') + ' style="font-size:17px;font-weight:700;letter-spacing:-0.01em;color:' + (alertTone(o.tone) || T.ink) + ';">' + esc(main) + '</span>' : '');
+      + (main ? '<span' + (o.read ? ' data-casora-read="' + esc(o.read) + '"' : '') + ' style="font-size:17px;font-weight:700;letter-spacing:-0.01em;color:' + esc(alertTone(o.tone) || T.ink) + ';">' + esc(main) + '</span>' : '');
     /* o.read (1.2): casora-chart im selben Popup schreibt beim Ablesen den Wert in die Hauptzahl
        und die Zeit an die Stelle der Unterzeile; ohne Unterzeile in einen leeren Platz. */
     if (o.read) out += bits.length ? SEP + '<span data-casora-read-when="">' : '<span class="hui-lslot" data-casora-read-when=""></span>';
     bits.forEach(function (b, i) {
       var txt = typeof b === 'object' ? b.text : b;
       var ink = typeof b === 'object' ? alertTone(b.tone) : null;
-      var open = '<span' + (ink ? ' style="color:' + ink + ';"' : '') + '>';
+      var open = '<span' + (ink ? ' style="color:' + esc(ink) + ';"' : '') + '>';
       /* Jeder Trennpunkt ist ein eigenes Element (auch „ · “ innerhalb eines Textes): bricht
          die Zeile daran um, blendet sepFix ihn aus und setzt dort einen Zeilenumbruch –
          weder Zeilenende noch Zeilenanfang zeigen „·“ (03.10.2026, ersetzt das geschützte
@@ -8501,7 +8552,7 @@ window.casoraMenuGlass = {
       out += ((main || i) && !(o.read && !i) ? SEP : '')
         // „ · “ im Text bleibt in Textfarbe (nicht gedämpft) – wie bisher.
         + String(txt).split(' · ').map(function (t) { return open + esc(t) + '</span>'; })
-          .join('<span class="hui-sep"' + (ink ? ' style="color:' + ink + ';"' : '') + '> · </span>');
+          .join('<span class="hui-sep"' + (ink ? ' style="color:' + esc(ink) + ';"' : '') + '> · </span>');
     });
     if (o.read && bits.length) out += '</span>';
     if (o.slotId || o.slotClass) {
@@ -8514,7 +8565,7 @@ window.casoraMenuGlass = {
     if (o.chip && o.chip.text) {
       out += '<div><span style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;'
         + 'font-weight:600;padding:7px 13px;border-radius:999px;background:' + S.row + ';color:'
-        + (tone(o.chip.tone) || T.ink2) + ';"><span style="width:7px;height:7px;border-radius:50%;'
+        + esc(tone(o.chip.tone) || T.ink2) + ';"><span style="width:7px;height:7px;border-radius:50%;'
         + 'background:currentColor;"></span>' + esc(o.chip.text) + '</span></div>';
     }
     return '<style>.hui-lslot:not(:empty)::before{content:"\\00a0· ";opacity:.6;}' + SEP_CSS + '</style>' + out + '</div>';
@@ -8647,7 +8698,7 @@ window.casoraMenuGlass = {
     if (o.barTitle && !o.state) return '';
     if (soft()) return softHeadline(o);
     var out = '<div style="font-family:' + T.font + ';text-align:center;'
-      + 'padding:' + (o.padTop != null ? o.padTop : 2) + 'px 8px '
+      + 'padding:' + esc(o.padTop != null ? o.padTop : 2) + 'px 8px '
       + (o.barTitle ? ((o.caption != null || o.captionSlot) ? 3 : 10) : 18)
       + 'px;">';
     if (!o.barTitle) {
@@ -8660,7 +8711,7 @@ window.casoraMenuGlass = {
       out += '<div style="font-size:' + (sheet ? '22px' : 'clamp(17px, 2.1vw, 21px)')
         + ';font-weight:400;letter-spacing:' + (sheet ? '-0.5px' : '-0.01em')
         + ';margin-top:3px;color:'
-        + (tone(o.stateTone) || (sheet ? T.ink : T.ink2)) + ';">'
+        + esc(tone(o.stateTone) || (sheet ? T.ink : T.ink2)) + ';">'
         + esc(o.state) + '</div>';
     }
     if (o.caption != null || o.captionSlot) {
@@ -8704,7 +8755,7 @@ window.casoraMenuGlass = {
       out += '</div>';
       if (o.sub) {
         out += '<div style="font-size:13px;margin-top:2px;color:'
-          + (cInk || T.ink2) + ';">' + esc(o.sub) + '</div>';
+          + esc(cInk || T.ink2) + ';">' + esc(o.sub) + '</div>';
       }
       out += '</div>';
       if (o.trailing) {
@@ -8745,7 +8796,7 @@ window.casoraMenuGlass = {
       // Wraps rather than runs off: centered and nowrap, a long job name spilled out of both edges.
       left += '<div style="font-size:' + (c ? '16px' : '14px') + ';'
         + 'white-space:normal;text-wrap:balance;overflow-wrap:anywhere;line-height:1.35;'
-        + 'color:' + (tone(o.subTone) || (c ? T.ink : T.ink2)) + ';">'
+        + 'color:' + esc(tone(o.subTone) || (c ? T.ink : T.ink2)) + ';">'
         + esc(o.sub) + '</div>';
     }
     left += '</div>';
@@ -8754,7 +8805,7 @@ window.casoraMenuGlass = {
     if (o.chip && o.chip.text) {
       var chipInk = tone(o.chip.tone) || T.ink2;
       right = '<span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;'
-        + 'font-weight:500;padding:5px 11px;border-radius:999px;background:' + T.fill + ';color:' + chipInk + ';">'
+        + 'font-weight:500;padding:5px 11px;border-radius:999px;background:' + T.fill + ';color:' + esc(chipInk) + ';">'
         + '<span style="width:7px;height:7px;border-radius:50%;background:currentColor;"></span>'
         + esc(o.chip.text) + '</span>';
     }
@@ -8809,16 +8860,16 @@ window.casoraMenuGlass = {
     var tile = 'width:' + tsz + ';height:' + tsz + ';border-radius:7px;background:' + fill + ';flex:none;'
       + 'display:flex;align-items:center;justify-content:center;line-height:0;pointer-events:none;';
     if (String(name).indexOf(':') !== -1) {
-      return '<div style="' + tile + '"><ha-icon icon="' + esc(name) + '" style="--mdc-icon-size:calc(' + tsz + ' * .62);'
+      return '<div style="' + esc(tile) + '"><ha-icon icon="' + esc(name) + '" style="--mdc-icon-size:calc(' + tsz + ' * .62);'
         + 'width:calc(' + tsz + ' * .62);height:calc(' + tsz + ' * .62);color:' + glyph + ';display:flex;align-items:center;justify-content:center;'
         + 'line-height:0;"></ha-icon></div>';
     }
     var url = (typeof window.casoraIconUrl === 'function')
       ? window.casoraIconUrl(name) : '/casora_assets/icons/' + name + '.svg';
-    return '<div style="' + tile + '"><div style="width:calc(' + tsz + ' * .586);height:calc(' + tsz + ' * .586);'
+    return '<div style="' + esc(tile) + '"><div style="width:calc(' + tsz + ' * .586);height:calc(' + tsz + ' * .586);'
       + 'background-color:' + glyph + ';'
-      + "-webkit-mask:url('" + url + "') center / contain no-repeat;"
-      + "mask:url('" + url + "') center / contain no-repeat;\"></div></div>";
+      + "-webkit-mask:url('" + esc(url) + "') center / contain no-repeat;"
+      + "mask:url('" + esc(url) + "') center / contain no-repeat;\"></div></div>";
   }
 
   // Kreis in Gerätefarbe mit weißem Glyph; aus/leer: Sand-Kreis mit gedämpftem Glyph.
@@ -8880,16 +8931,16 @@ window.casoraMenuGlass = {
     var tile = 'width:' + sz + ';height:' + sz + ';border-radius:var(--casora-soft-icon-radius, 50%);background:' + bg + ';flex:none;'
       + 'display:flex;align-items:center;justify-content:center;line-height:0;pointer-events:none;';
     if (String(name).indexOf(':') !== -1) {
-      return '<div style="' + tile + '"><ha-icon icon="' + esc(name) + '" style="--mdc-icon-size:calc(' + sz + ' * .5);'
-        + 'width:calc(' + sz + ' * .5);height:calc(' + sz + ' * .5);color:' + ink + ';display:flex;'
+      return '<div style="' + esc(tile) + '"><ha-icon icon="' + esc(name) + '" style="--mdc-icon-size:calc(' + sz + ' * .5);'
+        + 'width:calc(' + sz + ' * .5);height:calc(' + sz + ' * .5);color:' + esc(ink) + ';display:flex;'
         + 'align-items:center;justify-content:center;line-height:0;"></ha-icon></div>';
     }
     var url = (typeof window.casoraIconUrl === 'function')
       ? window.casoraIconUrl(name) : '/casora_assets/icons/' + name + '.svg';
-    return '<div style="' + tile + '"><div style="width:calc(' + sz + ' * .5);height:calc(' + sz + ' * .5);'
-      + 'background-color:' + ink + ';'
-      + "-webkit-mask:url('" + url + "') center / contain no-repeat;"
-      + "mask:url('" + url + "') center / contain no-repeat;\"></div></div>";
+    return '<div style="' + esc(tile) + '"><div style="width:calc(' + sz + ' * .5);height:calc(' + sz + ' * .5);'
+      + 'background-color:' + esc(ink) + ';'
+      + "-webkit-mask:url('" + esc(url) + "') center / contain no-repeat;"
+      + "mask:url('" + esc(url) + "') center / contain no-repeat;\"></div></div>";
   }
 
   // Selbst gewählte Texte (Nachrichten einer Klingel, Namen): r.labelLit/r.valueLit – casora-i18n übersetzt sie nicht.
@@ -8937,7 +8988,7 @@ window.casoraMenuGlass = {
   // Inhalt einer Aktion/eines Werts mit Knopf-Symbol: Text (Desktop) + runder Knopf (Handy).
   function actxInner(text, iconName, bg) {
     return '<span class="hui-at">' + esc(text) + '</span>'
-      + '<span class="hui-ab" aria-hidden="true" style="background:' + bg + ';">'
+      + '<span class="hui-ab" aria-hidden="true" style="background:' + esc(bg) + ';">'
       + '<ha-icon icon="' + esc(iconName || '') + '"></ha-icon></span>';
   }
   function actxLabel(text) {
@@ -9028,14 +9079,14 @@ window.casoraMenuGlass = {
             + (r.image ? 'transparent;' : 'var(--casora-soft-control-fill, ' + S.iconOff + ');')
             + '">'
             + (r.image
-              ? '<img src="' + esc(r.image) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:' + lr + ';background:#fff;filter:var(--casora-logo-filter, none);display:block;">'
+              ? '<img src="' + window.casoraSafeUrl(r.image) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:' + lr + ';background:#fff;filter:var(--casora-logo-filter, none);display:block;">'
               : '<ha-icon icon="mdi:package-variant" style="--mdc-icon-size:19px;width:19px;height:19px;color:' + S.glyphOff + ';"></ha-icon>')
             + '</div>';
         } else
-        lead = '<div style="width:var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);border-radius:var(--casora-soft-icon-radius, 50%);flex:none;background:' + plate + ';'
+        lead = '<div style="width:var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);border-radius:var(--casora-soft-icon-radius, 50%);flex:none;background:' + esc(plate) + ';'
           + 'display:grid;place-items:center;overflow:hidden;">'
           + (r.image
-              ? '<img src="' + esc(r.image) + '" alt="" style="width:'
+              ? '<img src="' + window.casoraSafeUrl(r.image) + '" alt="" style="width:'
                 + (r.imageFit === 'cover' ? 'var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);object-fit:cover;' : '28px;height:28px;object-fit:contain;'
                   /* 04.10.2026: eckige Markenbilder (Updates) rund wie der Kreis dahinter, mittig. */
                   + 'border-radius:50%;')
@@ -9057,7 +9108,7 @@ window.casoraMenuGlass = {
         + lead
         + '<div style="flex:1;min-width:0;pointer-events:none;white-space:normal;">'
         + '<div style="font-size:var(--casora-soft-row-fs, 14.5px);font-weight:700;letter-spacing:-0.01em;line-height:1.3;color:'
-        + (tone(r.labelTone) || T.ink) + ';overflow:hidden;'
+        + esc(tone(r.labelTone) || T.ink) + ';overflow:hidden;'
         + 'text-overflow:ellipsis;white-space:nowrap;">' + lit(r.label, r.labelLit) + '</div>';
 
       if (r.sub) {
@@ -9073,7 +9124,7 @@ window.casoraMenuGlass = {
           out += '<div class="hui-sub' + (si ? ' hui-sub2' : '') + (r.subWrap ? ' hui-wrap' : '') + '"' + sLive
             + ' style="font-size:var(--casora-soft-sub-fs, 12.5px);font-weight:500;line-height:1.3;'
             // subTone: nur die erste Unterzeile einfärben (z. B. „Lädt“ grün, der Raum bleibt gedämpft).
-            + 'color:' + ((si === 0 && r.subTone && (tone(r.subTone) || r.subTone)) || S.sub) + ';overflow:hidden;'
+            + 'color:' + esc((si === 0 && r.subTone && (tone(r.subTone) || r.subTone)) || S.sub) + ';overflow:hidden;'
             + (one
                 ? 'white-space:normal;overflow-wrap:anywhere;display:-webkit-box;'
                   + '-webkit-box-orient:vertical;-webkit-line-clamp:2;'
@@ -9091,7 +9142,7 @@ window.casoraMenuGlass = {
         out += '<div style="height:5px;border-radius:999px;background:' + S.ctl
           + ';margin-top:7px;overflow:hidden;">'
           + '<div' + live + ' style="height:100%;width:' + pct.toFixed(1) + '%;'
-          + 'border-radius:999px;background:' + bt + ';'
+          + 'border-radius:999px;background:' + esc(bt) + ';'
           + 'transition:width .3s cubic-bezier(.36,0,.16,1);"></div></div>';
       }
       out += '</div>';
@@ -9106,7 +9157,7 @@ window.casoraMenuGlass = {
         out += '<div' + aLive + (armOnAction ? ' data-casora-arm=""' : '') + ' class="' + aCls + '"'
           + (r.actionIcon ? (armOnAction ? ' role="button"' : '') + actxLabel(r.action) : '')
           + ' style="font-size:14px;font-weight:700;color:'
-          + (r.actionBusy ? S.sub : (tone(r.actionTone) || T.blue)) + ';white-space:nowrap;'
+          + esc(r.actionBusy ? S.sub : (tone(r.actionTone) || T.blue)) + ';white-space:nowrap;'
           + (armOnAction
               ? 'pointer-events:auto;cursor:pointer;padding:8px 10px;margin:-8px -10px;'
               : 'pointer-events:none;')
@@ -9123,7 +9174,7 @@ window.casoraMenuGlass = {
             + ' data-casora-suffix="' + esc(r.liveSuffix || '') + '"';
         }
         out += '<div' + vlive + (r.valueIcon ? ' class="hui-end hui-actx"' + actxLabel(r.value) : ' class="hui-end"') + ' style="font-size:14px;font-weight:600;'
-          + 'font-variant-numeric:tabular-nums;color:' + (alertTone(r.valueTone) || T.ink2)
+          + 'font-variant-numeric:tabular-nums;color:' + esc(alertTone(r.valueTone) || T.ink2)
           + ';white-space:nowrap;pointer-events:none;">'
           + (r.valueIcon ? actxInner(r.value, r.valueIcon, S.iconOff) : lit(r.value, r.valueLit)) + '</div>';
       }
@@ -9156,7 +9207,7 @@ window.casoraMenuGlass = {
         + 'color:var(--casora-h15-c, ' + T.ink + ');">' + esc(label) + '</div>';
       if (labelAction && labelAction.text) {
         out += '<div class="hui-ga" style="font-size:15px;font-weight:500;'
-          + 'color:' + (tone(labelAction.tone) || T.blue) + ';'
+          + 'color:' + esc(tone(labelAction.tone) || T.blue) + ';'
           + 'cursor:pointer;white-space:nowrap;letter-spacing:-0.01em;"'
           + (labelAction.svc ? ' data-casora-svc="' + esc(JSON.stringify(labelAction.svc)) + '"' : '')
           + '>' + esc(labelAction.text) + '</div>';
@@ -9229,9 +9280,9 @@ window.casoraMenuGlass = {
           || T.fill2;
         var psz = 'var(--casora-popup-lead-plate, 32px)';
         lead = '<div style="width:' + psz + ';height:' + psz + ';border-radius:9px;flex:none;'
-          + 'background:' + plate + ';display:grid;place-items:center;overflow:hidden;">'
+          + 'background:' + esc(plate) + ';display:grid;place-items:center;overflow:hidden;">'
           + (r.image
-              ? '<img src="' + esc(r.image) + '" alt="" '
+              ? '<img src="' + window.casoraSafeUrl(r.image) + '" alt="" '
                 + 'style="' + (r.imageFit === 'cover'
                     ? 'width:calc(' + psz + ' * .875);height:calc(' + psz + ' * .875);'
                       + 'border-radius:7px;object-fit:cover;'
@@ -9258,7 +9309,7 @@ window.casoraMenuGlass = {
         + '<div style="font-size:var(--casora-popup-row-label-size, 17px);'
         + 'font-weight:var(--casora-popup-row-label-weight, 400);'
         + 'letter-spacing:-0.022em;color:'
-        + (tone(r.labelTone) || T.ink) + ';overflow:hidden;'
+        + esc(tone(r.labelTone) || T.ink) + ';overflow:hidden;'
         + 'text-overflow:ellipsis;white-space:nowrap;">' + lit(r.label, r.labelLit) + '</div>';
 
       if (r.sub) {
@@ -9294,7 +9345,7 @@ window.casoraMenuGlass = {
         out += '<div style="height:4px;border-radius:999px;background:' + T.fill2
           + ';margin-top:7px;overflow:hidden;">'
           + '<div' + live + ' style="height:100%;width:' + pct.toFixed(1) + '%;'
-          + 'border-radius:999px;background:' + bt + ';'
+          + 'border-radius:999px;background:' + esc(bt) + ';'
           + 'transition:width .3s cubic-bezier(.36,0,.16,1);"></div></div>';
       }
       out += '</div>';
@@ -9310,7 +9361,7 @@ window.casoraMenuGlass = {
           + (r.actionIcon ? (armOnAction ? ' role="button"' : '') + actxLabel(r.action) : '')
           + ' style="font-size:var(--casora-popup-row-action-size, 16px);'
           + 'font-weight:500;color:'
-          + (r.actionBusy ? T.ink2 : (tone(r.actionTone) || T.blue)) + ';white-space:nowrap;'
+          + esc(r.actionBusy ? T.ink2 : (tone(r.actionTone) || T.blue)) + ';white-space:nowrap;'
           + (armOnAction
               ? 'pointer-events:auto;cursor:pointer;padding:8px 10px;margin:-8px -10px;'
               : 'pointer-events:none;')
@@ -9328,7 +9379,7 @@ window.casoraMenuGlass = {
         }
         out += '<div' + vlive + (r.valueIcon ? ' class="hui-actx"' + actxLabel(r.value) : '') + ' style="font-size:var(--casora-popup-row-value-size, 17px);'
           + 'letter-spacing:-0.022em;color:'
-          + (tone(r.valueTone) || T.ink2)
+          + esc(tone(r.valueTone) || T.ink2)
           + ';margin-inline-start:var(--casora-popup-value-gap, 0px)'
           + ';white-space:nowrap;pointer-events:none;">'
           + (r.valueIcon ? actxInner(r.value, r.valueIcon, T.fill2) : lit(r.value, r.valueLit)) + '</div>';
@@ -9366,7 +9417,7 @@ window.casoraMenuGlass = {
         + '@media (max-width: 480px){.hui-lg{gap:5px;}.hui-lgp{font-size:11.5px;gap:4px;padding:5px 9px;letter-spacing:-0.01em;}}'
         + '</style><div class="hui-lg" style="font-family:' + T.font + ';">';
       (series || []).forEach(function (s) {
-        so += '<div class="hui-lgp"><i style="background:' + softColor(s.color) + ';"></i>'
+        so += '<div class="hui-lgp"><i style="background:' + esc(softColor(s.color)) + ';"></i>'
           + '<b>' + esc(s.value) + '</b><span>' + esc(s.label) + '</span></div>';
       });
       return so + '</div>';
@@ -9375,7 +9426,7 @@ window.casoraMenuGlass = {
     (series || []).forEach(function (s) {
       out += '<div style="display:flex;align-items:center;gap:6px;font-size:13px;color:' + T.ink2 + ';'
         + 'font-variant-numeric:tabular-nums;">'
-        + '<span style="width:8px;height:8px;border-radius:2px;background:' + s.color + ';"></span>'
+        + '<span style="width:8px;height:8px;border-radius:2px;background:' + esc(s.color) + ';"></span>'
         + '<b style="color:' + T.ink + ';font-weight:500;">' + esc(s.value) + '</b> ' + esc(s.label) + '</div>';
     });
     return out + '</div>';
@@ -9879,7 +9930,7 @@ window.casoraMenuGlass = {
     items.forEach(function (it) {
       out += '<div class="hui-art"><div class="p">'
         + (it.image
-            ? '<img src="' + esc(it.image) + '" loading="lazy" alt=""/>'
+            ? '<img src="' + window.casoraSafeUrl(it.image) + '" loading="lazy" alt=""/>'
             : '<div style="width:100%;height:100%;display:flex;align-items:center;'
               + 'justify-content:center;color:' + T.ink3 + ';font-size:24px;">\u25b6</div>')
         + (it.unwatched ? '<div class="n"></div>' : '')
@@ -10128,7 +10179,7 @@ window.casoraMenuGlass = {
           + ' style="--hui-d:' + delay(i + 1) + ';">'
           + '<div class="fa">'
           + (it.image
-              ? '<img src="' + esc(it.image) + '" alt="" decoding="async" '
+              ? '<img src="' + window.casoraSafeUrl(it.image) + '" alt="" decoding="async" '
                 + 'onload="this.parentNode.classList.add(\'rdy\')" '
                 + 'onerror="this.onerror=null;this.style.display=\'none\'"/>'
               : '<div class="ph">\u25b6</div>')
@@ -10158,7 +10209,7 @@ window.casoraMenuGlass = {
       items.forEach(function (it, i) {
         out += '<div class="hui-mdet" data-i="' + i + '" hidden>'
           + '<div class="fa">'
-          + (it.image ? '<img src="' + esc(it.image) + '" alt=""/>' : '')
+          + (it.image ? '<img src="' + window.casoraSafeUrl(it.image) + '" alt=""/>' : '')
           + '</div>'
           + '<div class="meta">'
           + (it.title ? '<div class="t">' + esc(it.title)
@@ -10183,7 +10234,7 @@ window.casoraMenuGlass = {
       out += '<div class="hui-m' + (tm ? ' split' : '')
         + '" style="--hui-d:' + delay(i + 1) + ';"><div class="fa">'
         + (it.image
-            ? '<img src="' + esc(it.image) + '" alt="" decoding="async" '
+            ? '<img src="' + window.casoraSafeUrl(it.image) + '" alt="" decoding="async" '
               + 'onload="this.parentNode.classList.add(\'rdy\')" '
               + 'onerror="this.onerror=null;this.style.display=\'none\'"/>'
             : '<div style="width:100%;height:100%;display:flex;align-items:center;'
@@ -10300,8 +10351,8 @@ window.casoraMenuGlass = {
     if (o.icon) {
       var url = (typeof window.casoraIconUrl === 'function')
         ? window.casoraIconUrl(o.icon) : '/casora_assets/icons/' + o.icon + '.svg';
-      glyph = '<div class="hui-sl-ic" style="-webkit-mask:url(\'' + url + '\') center / contain no-repeat;'
-        + 'mask:url(\'' + url + '\') center / contain no-repeat;"></div>';
+      glyph = '<div class="hui-sl-ic" style="-webkit-mask:url(\'' + esc(url) + '\') center / contain no-repeat;'
+        + 'mask:url(\'' + esc(url) + '\') center / contain no-repeat;"></div>';
     }
 
     var live = '';
@@ -10323,7 +10374,7 @@ window.casoraMenuGlass = {
       var hx = o.softHeight || 66;
       var sOut = '<style>'
         + 'ha-card.disabled{pointer-events:auto!important;}'
-        + '.hui-sl{position:relative;width:100%;height:' + hx + 'px;box-sizing:border-box;'
+        + '.hui-sl{position:relative;width:100%;height:' + esc(hx) + 'px;box-sizing:border-box;'
         +   'border-radius:var(--casora-popup-row-radius, 24px);overflow:hidden;background:'
         +     (soft() ? S.ctl : 'var(--casora-popup-row-fill, rgba(255,255,255,0.10))') + ';'
         +   'cursor:ew-resize;touch-action:none;user-select:none;-webkit-user-select:none;}'
@@ -10349,7 +10400,7 @@ window.casoraMenuGlass = {
         + (o.small ? '.hui-sl.sm .hui-sl-val{left:18px;font-size:15px;white-space:nowrap;}' : '')
         + '</style>'
         // Höhe auch am Element: mehrere Regler einer Karte teilen sich die .hui-sl-Regel (letzte gewinnt).
-        + '<div class="hui-sl' + (o.small ? ' sm' : '') + '" style="height:' + hx + 'px" data-casora-axis="x" data-casora-slider="' + payload + '"'
+        + '<div class="hui-sl' + (o.small ? ' sm' : '') + '" style="height:' + esc(hx) + 'px" data-casora-axis="x" data-casora-slider="' + payload + '"'
         +   (o.label ? ' data-casora-label="' + esc(o.label) + '"' : '') + '>'
         +   '<div class="hui-sl-fill"' + live.replace(' data-casora-invert="1"', '')
         +     (live ? ' data-casora-axis="x"' : '') + ' style="width:' + v + '%"></div>'
@@ -10363,7 +10414,7 @@ window.casoraMenuGlass = {
     var out = '<style>'
       + 'ha-card.disabled{pointer-events:auto!important;}'
       + '.hui-sl-wrap{display:flex;justify-content:center;}'
-      + '.hui-sl{position:relative;width:' + w + 'px;height:' + h + 'px;'
+      + '.hui-sl{position:relative;width:' + esc(w) + 'px;height:' + esc(h) + 'px;'
       +   'border-radius:var(--casora-popup-control-radius, 37px);overflow:hidden;'
       +   'background:var(--casora-popup-slider-track, rgba(0,0,0,0.34));'
       +   'cursor:ns-resize;touch-action:none;user-select:none;-webkit-user-select:none;}'
@@ -10395,14 +10446,14 @@ window.casoraMenuGlass = {
 
   // KI-Karte im Weich-Stil (Lüftungs-Coach, Pflanzen-/Aquarium-Doktor): Etikett darüber,
   // Sand-Platte, runder Knopf mit Funkel-Symbol. Nur Weich – sonst null, der Aufrufer
-  // baut seine bisherige Karte. body/foot sind fertiges HTML, btnSvc ein fertiges Attribut.
+  // baut seine bisherige Karte. body is ready HTML (built from escaped parts), foot plain text, btnSvc a ready attribute.
   function kiCard(o) {
     if (!soft()) return null;
     o = o || {};
     var out = o.title ? softLabel(o.title) : '';
     out += '<div style="background:' + S.row + ';border-radius:' + S.radius + ';padding:18px 20px 20px;">'
       + (o.body || '')
-      + (o.foot ? '<div style="font-size:12.5px;font-weight:500;color:' + S.sub + ';margin-top:10px;">' + o.foot + '</div>' : '')
+      + (o.foot ? '<div style="font-size:12.5px;font-weight:500;color:' + S.sub + ';margin-top:10px;">' + esc(o.foot) + '</div>' : '')
       + (o.btnText
           ? '<span' + (o.btnSvc || '') + ' style="display:inline-flex;align-items:center;gap:7px;cursor:pointer;'
             // 1.2 (P7): Text-Hauptknopf 44 hoch, voll rund (wie Saugroboter „Start“).
@@ -10416,7 +10467,7 @@ window.casoraMenuGlass = {
             + '<span style="pointer-events:none;">' + esc(o.btnText) + '</span></span>'
           : '')
       + '</div>';
-    return '<div style="font-family:' + T.font + ';text-align:left;' + (o.wrapStyle || '') + '">' + out + '</div>';
+    return '<div style="font-family:' + T.font + ';text-align:left;' + esc(o.wrapStyle || '') + '">' + out + '</div>';
   }
 
   // Rollo, Fensterladen und Fenster-Behang sind im Popup alle „Jalousien“ (07.10.2026): vorher stand

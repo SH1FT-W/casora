@@ -1,4 +1,28 @@
 
+// casora-esc:begin – canonical HTML escaping, the same block in every file that loads on its own
+// (checked by dev/unit/html_escape.mjs). Every value that goes into an HTML string goes through one of these:
+//   casoraEsc(v)      text and quoted attribute values: & < > " ' as entities
+//   casoraEscJs(v)    inside a quoted JS string of an inline handler (onclick="f('…')"): JS-escaped, then HTML-escaped
+//   casoraSafeUrl(u)  href/src: '' for javascript:, vbscript: and data: other than images, else escaped
+(function () {
+  if (window.casoraEsc) return;
+  var MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return MAP[c]; }); };
+  window.casoraEsc = esc;
+  window.casoraEscJs = function (v) {
+    return esc(String(v == null ? '' : v).replace(/[\\'"`<>&\n\r\u2028\u2029]/g, function (c) {
+      return '\\u' + ('000' + c.charCodeAt(0).toString(16)).slice(-4);
+    }));
+  };
+  window.casoraSafeUrl = function (u) {
+    var s = String(u == null ? '' : u).trim();
+    var k = s.replace(/[\u0000-\u0020\u007f-\u009f]/g, '').toLowerCase();
+    if (/^(?:javascript|vbscript|data):/.test(k) && !/^data:image\//.test(k)) return '';
+    return esc(s);
+  };
+})();
+// casora-esc:end
+
 // Casoras Version aus der Lader-URL (?v=<version>.<stempel>, __init__.py).
 const PANEL_VERSION = (() => {
   // ?v=<version>.<stempel>: den Stempel hinten abtrennen – die Version kann selbst Punkte
@@ -22307,7 +22331,7 @@ class CasoraPanel extends HTMLElement {
           const w = document.createElement("button");
           w.type = "button";
           w.className = "shot" + (url ? "" : " empty");
-          w.innerHTML = (url ? `<img src="${url}" alt="">` : "")
+          w.innerHTML = (url ? `<img src="${window.casoraSafeUrl(url)}" alt="">` : "")
             + '<span class="shotover"><span class="shotglyph"></span>'
             + (url ? "Replace" : "Add " + label.toLowerCase()) + "</span>"
             + `<span class="cap">${label}</span>`;

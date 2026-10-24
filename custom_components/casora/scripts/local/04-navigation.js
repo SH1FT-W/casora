@@ -50,6 +50,7 @@
   var FILTER = 'input_select.casora_mobile_filter';
   /* Beschriftung in der HA-Sprache (Deutsch ist die Quellsprache der Phrasen). */
   var T = function (de) { return window.casoraTr ? window.casoraTr(de) : de; };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   /* SF-Symbol-SVGs aus /casora_assets/icons (bathroom.svg selbst gezeichnet, gleicher Stil). */
   var SFI = '/casora_assets/icons/';
   /* Seitenverhältnis (viewBox B/H) je SVG: gleiche optische Größe statt "contain" (Bett ist breit, Kühlschrank hoch). */
@@ -379,7 +380,7 @@
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'hmn-btn'; b.setAttribute('data-k', key);
         /* Symbol in einer Hülle (hmn-bic): ohne Weich-Design display:contents, in Weich der Sand-Kreis. */
-        b.innerHTML = '<span class="hmn-bic">' + self._iconHtml(icon) + '</span><span>' + (window.casoraTr || function (x) { return x; })(label) + '</span>';
+        b.innerHTML = '<span class="hmn-bic">' + self._iconHtml(icon) + '</span><span>' + esc((window.casoraTr || function (x) { return x; })(label)) + '</span>';
         b._icon = icon;
         b.setAttribute('aria-label', (window.casoraTr || function (x) { return x; })(label));
         b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); self._haptic(); self._tap(key, b); });
@@ -433,7 +434,8 @@
     _iconHtml(icon) {
       var r = SF_RATIO[(icon.match(/([^/]+)\.svg/) || [])[1]], G = 78;
       var ms = r ? ';-webkit-mask-size:' + (G * Math.sqrt(r)).toFixed(1) + '% ' + (G / Math.sqrt(r)).toFixed(1) + '%;mask-size:' + (G * Math.sqrt(r)).toFixed(1) + '% ' + (G / Math.sqrt(r)).toFixed(1) + '%' : '';
-      return icon.charAt(0) === '/' ? '<i class="hmn-svg" style="--hmn-svg:url(\'' + icon + '\')' + ms + '"></i>' : '<ha-icon icon="' + icon + '"></ha-icon>';
+      /* Icon names/paths come from the config: escaped, and no quotes/brackets inside url(). */
+      return icon.charAt(0) === '/' ? '<i class="hmn-svg" style="--hmn-svg:url(\'' + esc(String(icon).replace(/['"()\\\s]/g, '')) + '\')' + ms + '"></i>' : '<ha-icon icon="' + esc(icon) + '"></ha-icon>';
     }
     _roomIcon(r) { return r.icon || ROOM_ICON[r.key.replace(/^room_/, '')] || 'mdi:door'; }
     _tap(key) {
@@ -575,8 +577,8 @@
         var ic = self._iconHtml(it.icon);
         if (window.casoraMenuGlass && window.casoraMenuGlass.iconHtml) ic = window.casoraMenuGlass.iconHtml(ic, kind === 'scenes' ? 'light' : 'general');
         /* Szene mit Studio-Farbe: Symbolton in dieser Farbe (B-SZENE). */
-        if (it.color) ic = ic.replace(/^<span class="casora-mi"[^>]*>/, '<span class="casora-mi" style="--casora-mi-tone:' + String(it.color).replace(/["<>;{}]/g, '') + '">');
-        b.innerHTML = ic + '<span>' + (window.casoraTr || function (x) { return x; })(it.label) + (it.sub ? '<span class="hmn-sub">' + it.sub + '</span>' : '') + '</span>';
+        if (it.color) ic = ic.replace(/^<span class="casora-mi"[^>]*>/, '<span class="casora-mi" style="--casora-mi-tone:' + esc(String(it.color).replace(/["<>;{}]/g, '')) + '">');
+        b.innerHTML = ic + '<span>' + esc((window.casoraTr || function (x) { return x; })(it.label)) + (it.sub ? '<span class="hmn-sub">' + esc(it.sub) + '</span>' : '') + '</span>';
         b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); self._haptic(); self._closeMenu(); it.run(); });
         m.appendChild(b);
       });

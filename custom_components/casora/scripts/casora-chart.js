@@ -12,6 +12,30 @@
 //     accent colour and the Ø line over the whole buckets, several take their own colours and a legend.
 //   Fixed columns without a history (e.g. fuel "typical day"): kind: 'bar', points: [{ t, v, color, tick }],
 //     unit, decimals, focus: 'min' (default reading = lowest value, "Cheapest, 19:00").
+// casora-esc:begin – canonical HTML escaping, the same block in every file that loads on its own
+// (checked by dev/unit/html_escape.mjs). Every value that goes into an HTML string goes through one of these:
+//   casoraEsc(v)      text and quoted attribute values: & < > " ' as entities
+//   casoraEscJs(v)    inside a quoted JS string of an inline handler (onclick="f('…')"): JS-escaped, then HTML-escaped
+//   casoraSafeUrl(u)  href/src: '' for javascript:, vbscript: and data: other than images, else escaped
+(function () {
+  if (window.casoraEsc) return;
+  var MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return MAP[c]; }); };
+  window.casoraEsc = esc;
+  window.casoraEscJs = function (v) {
+    return esc(String(v == null ? '' : v).replace(/[\\'"`<>&\n\r\u2028\u2029]/g, function (c) {
+      return '\\u' + ('000' + c.charCodeAt(0).toString(16)).slice(-4);
+    }));
+  };
+  window.casoraSafeUrl = function (u) {
+    var s = String(u == null ? '' : u).trim();
+    var k = s.replace(/[\u0000-\u0020\u007f-\u009f]/g, '').toLowerCase();
+    if (/^(?:javascript|vbscript|data):/.test(k) && !/^data:image\//.test(k)) return '';
+    return esc(s);
+  };
+})();
+// casora-esc:end
+
 (function () {
   'use strict';
   var H = 36e5, MIN = 6e4, DAY = 864e5, NS = 'http://www.w3.org/2000/svg';
@@ -333,7 +357,7 @@
         c.series.forEach(function (s, i) {
           var b = document.createElement('button');
           b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(i === me._sel));
-          b.innerHTML = '<i style="background:' + C.color(s.color) + '"></i>';
+          b.innerHTML = '<i style="background:' + window.casoraEsc(C.color(s.color)) + '"></i>';
           b.appendChild(document.createTextNode(C.tr(s.name || s.entity)));
           b.addEventListener('click', function (ev) { ev.stopPropagation(); me._sel = i; me._draw(); });
           sw.appendChild(b);
@@ -447,7 +471,7 @@
         + ', ' + C.tr('jetzt') + ' ' + C.nf(lastV, dec) + ' ' + unit : name + ', ' + C.tr('Keine Daten'));
       if (c.legend !== false && !multi && list.length > 1) {
         var lg = document.createElement('div'); lg.className = 'lg';
-        lg.innerHTML = list.map(function (s) { return '<span><i style="background:' + C.color(s.color) + '"></i>' + C.tr(s.name || s.entity) + '</span>'; }).join('');
+        lg.innerHTML = list.map(function (s) { return '<span><i style="background:' + window.casoraEsc(C.color(s.color)) + '"></i>' + window.casoraEsc(C.tr(s.name || s.entity)) + '</span>'; }).join('');
         box.insertBefore(lg, svg);
       }
       this._def = C.tr('Jetzt');
@@ -532,7 +556,7 @@
         + (avg != null ? ', Ø ' + C.nf(avg, dec) + ' ' + unit : '') : name + ', ' + C.tr('Keine Daten'));
       if (c.legend !== false && m > 1) {
         var lg = document.createElement('div'); lg.className = 'lg';
-        lg.innerHTML = list.map(function (s) { return '<span><i style="background:' + C.color(s.color) + '"></i>' + C.tr(s.name || s.entity) + '</span>'; }).join('');
+        lg.innerHTML = list.map(function (s) { return '<span><i style="background:' + window.casoraEsc(C.color(s.color)) + '"></i>' + window.casoraEsc(C.tr(s.name || s.entity)) + '</span>'; }).join('');
         box.insertBefore(lg, svg);
       }
       this._def = C.tr(per === 'hour' ? 'Ø pro Stunde' : per === 'month' ? 'Ø pro Monat' : 'Ø pro Tag');

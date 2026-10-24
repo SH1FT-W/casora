@@ -17,9 +17,7 @@
     none:     { t: 'Offen', c: 'var(--casora-upd-ai-neutral, rgba(255,255,255,0.45))', i: 'mdi:robot-outline' },
   };
   var RANK = { breaking: 0, action: 1, running: 2, unknown: 3, error: 4, none: 5, info: 6 };
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
@@ -337,12 +335,12 @@
       if (it.affects && it.affects.length) body += '<div class="lb">Betrifft bei dir</div><ul>' + it.affects.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>';
       if (it.todo && it.todo.length) body += '<div class="lb">Zu tun</div><ul>' + it.todo.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>';
       var src = it.source && /^https?:\/\//.test(it.source) ? '<a class="hua-link" href="' + esc(it.source) + '" target="_blank" rel="noopener">Release-Notes</a>' : '';
-      var when = it.checked && x.key !== 'none' ? (x.key === 'running' ? 'läuft seit ' : 'geprüft ') + ago(it.checked) : '';
+      var when = it.checked && x.key !== 'none' ? esc((x.key === 'running' ? 'läuft seit ' : 'geprüft ') + ago(it.checked)) : '';
       var needAck = (x.key === 'breaking' || x.key === 'action');
       if (needAck && !it.ack) {
         body += '<div class="hn">Zum Freigeben oben in der Update-Zeile auf „Freigeben“ tippen und bestätigen.</div>';
       } else if (needAck && it.ack) {
-        body += '<div class="ok">✓ Freigegeben' + (it.ack_at ? ' ' + ago(it.ack_at) : '') + '</div>';
+        body += '<div class="ok">✓ Freigegeben' + (it.ack_at ? ' ' + esc(ago(it.ack_at)) : '') + '</div>';
       }
       body += '<div class="ft">' + [src, when].filter(Boolean).join(' · ')
         + (x.key !== 'running' ? '<span class="bt"' + svc(x.id) + '>' + (x.key === 'none' ? 'Jetzt prüfen' : 'Neu prüfen') + '</span>' : '')
@@ -388,7 +386,7 @@
       + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);font-family:var(--primary-font-family, system-ui);text-align:left;">'
       + head
       + (cap ? '<div style="padding:12px var(--casora-popup-row-pad-x, 16px) 4px;font-size:13px;font-weight:600;color:'
-          + (nBad ? LV.breaking.c : LV.action.c) + ';">' + cap + '</div>' : '')
+          + (nBad ? LV.breaking.c : LV.action.c) + ';">' + esc(cap) + '</div>' : '')
       + rows + '</div>';
   };
 })();
@@ -418,9 +416,7 @@
     var ha = document.querySelector('home-assistant'), us = ha && ha.hass && ha.hass.config && ha.hass.config.unit_system;
     return (us && us.temperature) || '°C';
   };
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var MODES = { off: 'Aus', heat: 'Heizen', auto: 'Automatik' };
   var ORDER = ['off', 'heat', 'auto'];
 
@@ -571,7 +567,7 @@
         + '.fb-st-v .n{font-weight:700;}' : '')
       + '</style><div class="fb-st">'
       + btn('<svg width="20" height="20" viewBox="0 0 20 20" style="display:block"><path d="M4 10H16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>', -step, value <= lo)
-      + '<div class="fb-st-v"><div class="l">' + esc(label) + '</div><div class="n">' + fmt(value) + '<span> ' + TU() + '</span></div></div>'
+      + '<div class="fb-st-v"><div class="l">' + esc(label) + '</div><div class="n">' + esc(fmt(value)) + '<span> ' + esc(TU()) + '</span></div></div>'
       + btn('<svg width="20" height="20" viewBox="0 0 20 20" style="display:block"><path d="M4 10H16M10 4V16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>', step, value >= hi)
       + '</div>';
     if (withBar) {
@@ -585,8 +581,8 @@
         + '.fb-tb-s{display:flex;justify-content:space-between;font-size:12px;color:' + T.ink3 + ';margin-top:6px;font-variant-numeric:tabular-nums;}'
         + '</style>'
         + '<div class="fb-tb" data-fb-bar="' + esc(JSON.stringify({ lo: lo, hi: hi, st: step, id: tgt.entity_id })) + '">'
-        + '<div class="fb-tb-t"><div class="fb-tb-k" style="left:' + k + '%"></div></div>'
-        + '<div class="fb-tb-s"><span>' + fmt(lo) + ' ' + TU() + '</span><span>' + fmt(hi) + ' ' + TU() + '</span></div></div>';
+        + '<div class="fb-tb-t"><div class="fb-tb-k" style="left:' + esc(k) + '%"></div></div>'
+        + '<div class="fb-tb-s"><span>' + esc(fmt(lo)) + ' ' + esc(TU()) + '</span><span>' + esc(fmt(hi)) + ' ' + esc(TU()) + '</span></div></div>';
     }
     return out;
   };
@@ -721,7 +717,7 @@
           active: !!(s && s.state !== 'off' && s.state !== 'unavailable' && s.state !== 'unknown') };
       }), name === 'trvs' ? 'Heizkörper' : 'Räume');
       list.forEach(function (r) {
-        html = html.replace('data-casora-mi="' + r.id + '"', 'data-fbh-room="' + esc(JSON.stringify({ id: r.id, name: r.name })) + '"');
+        html = html.replace('data-casora-mi="' + esc(r.id) + '"', 'data-fbh-room="' + esc(JSON.stringify({ id: r.id, name: r.name })) + '"');
       });
       return html;
     }
@@ -739,13 +735,13 @@
       var Zc = { gut: ['Alles im grünen Bereich', 'var(--casora-popup-ui-good, #30D158)', 'mdi:check-circle'],
                  beobachten: ['Beobachten', 'var(--casora-popup-ui-warn, #FF9F0A)', 'mdi:eye-outline'],
                  handeln: ['Handeln', 'var(--casora-popup-ui-bad, #FF453A)', 'mdi:alert'] };
-      var ic = function (nm, px, col) { return '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 ' + px + 'px;width:' + px + 'px;height:' + px + 'px;"><ha-icon icon="' + nm + '" style="--mdc-icon-size:' + px + 'px;width:' + px + 'px;height:' + px + 'px;display:flex;align-items:center;justify-content:center;line-height:0;color:' + col + ';"></ha-icon></span>'; };
-      var li = function (arr, col) { return '<ul style="margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + col + ';white-space:normal;">' + arr.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>'; };
+      var ic = function (nm, px, col) { return '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 ' + esc(px) + 'px;width:' + esc(px) + 'px;height:' + esc(px) + 'px;"><ha-icon icon="' + esc(nm) + '" style="--mdc-icon-size:' + esc(px) + 'px;width:' + esc(px) + 'px;height:' + esc(px) + 'px;display:flex;align-items:center;justify-content:center;line-height:0;color:' + esc(col) + ';"></ha-icon></span>'; };
+      var li = function (arr, col) { return '<ul style="margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + esc(col) + ';white-space:normal;">' + arr.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>'; };
       var body;
       if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">Claude wertet die Heizwoche aus …</div>';
       else if (has) {
         var z = Zc[ha.zustand];
-        body = (z ? '<div style="display:flex;align-items:center;gap:8px;">' + ic(z[2], 20, z[1]) + '<span style="font-size:var(--casora-fs16,16px);font-weight:600;color:' + z[1] + ';">' + z[0] + '</span></div>' : '')
+        body = (z ? '<div style="display:flex;align-items:center;gap:8px;">' + ic(z[2], 20, z[1]) + '<span style="font-size:var(--casora-fs16,16px);font-weight:600;color:' + esc(z[1]) + ';">' + esc(z[0]) + '</span></div>' : '')
           + '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink + ';margin-top:8px;white-space:normal;">' + esc(ha.fazit) + '</div>'
           + ((ha.erkenntnisse || []).length ? li(ha.erkenntnisse, T.ink2) : '')
           + ((ha.tipps || []).length ? '<div style="font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + T.ink + ';margin:12px 0 0;">Tipps</div>' + li(ha.tipps, T.ink) : '');
@@ -766,14 +762,14 @@
         return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
       var hcHead = '<div style="font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, ' + T.ink + ');padding:0 4px 8px;display:flex;align-items:center;gap:6px;">'
         + ic('mdi:creation', 16, 'var(--casora-color-teal, #00C3D0)') + '<span style="flex:1 1 auto;text-align:left;">Heizungs-Coach</span>'
-        + '<span style="font-size:13px;font-weight:500;color:' + T.ink3 + ';">' + (hrs ? fmt(hrs).replace(',0', '') + ' Std. geheizt (7 T.)' : '') + '</span></div>';
+        + '<span style="font-size:13px;font-weight:500;color:' + T.ink3 + ';">' + (hrs ? esc(fmt(hrs).replace(',0', '') + ' Std. geheizt (7 T.)') : '') + '</span></div>';
       /* Weich: Titel in der Platte wie der Lüftungs-Coach. */
       var hcSoft = window._casoraHH && window._casoraHH.on();
       if (hcSoft) hcHead = hcHead.replace('padding:0 4px 8px;', 'padding:0 0 10px;');
       return '<div style="font-family:' + T.font + ';text-align:left;">'
         + (hcSoft ? '' : hcHead)
         + '<div style="' + plate + 'padding:16px 18px;">' + (hcSoft ? hcHead : '') + body
-        + (has && !running && ha.erstellt ? '<div style="font-size:12px;color:' + T.ink3 + ';margin-top:10px;">Auswertung der letzten 7 Tage · ' + ago(ha.erstellt) + '</div>' : '')
+        + (has && !running && ha.erstellt ? '<div style="font-size:12px;color:' + T.ink3 + ';margin-top:10px;">Auswertung der letzten 7 Tage · ' + esc(ago(ha.erstellt)) + '</div>' : '')
         + btn + '</div></div>';
     }
 
@@ -889,7 +885,7 @@
         : '<div style="' + plate + 'padding:var(--casora-soft-plate-pad, 14px 10px 6px);">'
         + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:15px;font-weight:600;'
         + 'letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary,#fff);text-align:left;padding:0 6px;">'
-        + window._hpChartTitle(chartId) + '</div>'
+        + esc(window._hpChartTitle(chartId)) + '</div>'
         + '<div class="hp-chart-slot" style="min-height:150px;margin:6px 0 0;"></div></div>');
       if (typeof window._hpChartInit === 'function') window._hpChartInit(chartId);
     }
@@ -1126,9 +1122,7 @@
   };
   var todayUp = function () { return (window.casoraTr ? window.casoraTr('Heute') : 'Heute').toUpperCase(); };
   var DAYL = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var dayStart = function (d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
   var dayName = function (d) {
     var diff = Math.round((dayStart(d) - dayStart(new Date())) / 86400000);
@@ -1219,16 +1213,16 @@
     var C = R.cal, HH = window._casoraHH;
     var lbl = HH.label('Speiseplan');
     var row = function (cls, badge, name, sub, right) {
-      return '<div class="hrw-r' + cls + '">' + badge + '<div class="hrw-t"><div class="hrw-n">' + name + '</div>'
-        + (sub ? '<div class="hrw-s">' + sub + '</div>' : '') + '</div>' + (right ? '<div class="hrw-m">' + right + '</div>' : '') + '</div>';
+      return '<div class="hrw-r' + cls + '">' + badge + '<div class="hrw-t"><div class="hrw-n">' + esc(name) + '</div>'
+        + (sub ? '<div class="hrw-s">' + esc(sub) + '</div>' : '') + '</div>' + (right ? '<div class="hrw-m">' + esc(right) + '</div>' : '') + '</div>';
     };
     var empty = '<div class="hrw-b"><ha-icon icon="mdi:calendar-blank-outline" style="--mdc-icon-size:18px;width:18px;height:18px;display:flex;"></ha-icon></div>';
     if (!C.list) return CAL_CSS + lbl + '<div class="hrw">' + row('', empty, C.err ? 'Speiseplan nicht verfügbar' : 'Wird geladen …') + '</div>';
     if (!C.list.length) return CAL_CSS + lbl + '<div class="hrw">' + row('', empty, 'Nichts geplant', 'In der Cookidoo-App auf „Meine Woche“ planen') + '</div>';
     return CAL_CSS + lbl + '<div class="hrw">' + C.list.map(function (x) {
       var dn = dayName(x.when), rel = dn === 'Heute' || dn === 'Morgen';
-      return row(dn === 'Heute' ? ' now' : '', '<div class="hrw-b"><b>' + dayUp(x.when) + '</b><span>' + x.when.getDate() + '</span></div>',
-        esc(x.name), rel ? dn : null, x.min ? mins(x.min) : null);
+      return row(dn === 'Heute' ? ' now' : '', '<div class="hrw-b"><b>' + esc(dayUp(x.when)) + '</b><span>' + x.when.getDate() + '</span></div>',
+        x.name, rel ? dn : null, x.min ? mins(x.min) : null);
     }).join('') + '</div>';
   };
   /* Weich, breit: Wochenleiste – sieben Tage nebeneinander (heute hervorgehoben, freie Tage
@@ -1260,8 +1254,8 @@
         var d = new Date(t0); d.setDate(t0.getDate() + i);
         var meals = C.list.filter(function (x) { return dayStart(x.when).getTime() === dayStart(d).getTime(); });
         var m0 = meals[0];
-        strip += '<div class="hrk-d' + (i === 0 ? ' now' : '') + '"><div class="hrk-h"><b>' + (i === 0 ? todayUp() : dayUp(d)) + '</b><span>' + d.getDate() + '</span></div>'
-          + (m0 ? '<div class="hrk-n">' + esc(m0.name) + (meals.length > 1 ? ' +' + (meals.length - 1) : '') + '</div>' + (m0.min ? '<div class="hrk-m">' + mins(m0.min) + '</div>' : '')
+        strip += '<div class="hrk-d' + (i === 0 ? ' now' : '') + '"><div class="hrk-h"><b>' + esc(i === 0 ? todayUp() : dayUp(d)) + '</b><span>' + d.getDate() + '</span></div>'
+          + (m0 ? '<div class="hrk-n">' + esc(m0.name) + (meals.length > 1 ? ' +' + (meals.length - 1) : '') + '</div>' + (m0.min ? '<div class="hrk-m">' + esc(mins(m0.min)) + '</div>' : '')
             : '<div class="hrk-n off">–</div>') + '</div>';
       }
     }
@@ -1325,7 +1319,7 @@
   };
   R.todoHtml = function () {
     var UI = window._casoraUI, T = R.todo, K = UI.tokens;
-    var head = function (t) { return '<div style="font-family:' + K.font + ';font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);text-align:left;color:var(--casora-h15-c, ' + K.ink + ');padding:0 4px 8px;">' + t + '</div>'; };
+    var head = function (t) { return '<div style="font-family:' + K.font + ';font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);text-align:left;color:var(--casora-h15-c, ' + K.ink + ');padding:0 4px 8px;">' + esc(t) + '</div>'; };
     if (!T.items) return UI.group([{ icon: 'mdi:cart-outline', iconTone: 'rgba(255,255,255,0.18)', label: T.err ? 'Einkaufsliste nicht verfügbar' : 'Wird geladen …' }], 'Einkaufsliste');
     var open = T.items.filter(function (i) { return i.status !== 'completed'; });
     var done = T.items.filter(function (i) { return i.status === 'completed'; });
@@ -1438,7 +1432,7 @@
             : 'color:' + T.ink + ';background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));')
           : primary ? (window._casoraHH && window._casoraHH.on() ? 'color:var(--casora-popup-ui-on-action, #fff);background:var(--casora-popup-ui-action, #276B64);'
             : 'color:#000;background:var(--casora-color-teal, #00C3D0);') : 'color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));background:var(--casora-popup-ui-action-tint, rgba(0,195,208,0.14));')
-          + '">' + label + '</span>';
+          + '">' + esc(label) + '</span>';
       };
       var out = '';
       /* Weich: das geplante Rezept steht im Kopf. */
@@ -1446,7 +1440,7 @@
         out += '<div style="' + plate + 'margin-bottom:18px;">'
           + '<div style="font-size:13px;color:' + T.ink2 + ';">Geplant · ' + esc(dayName(n.when)) + '</div>'
           + '<div style="font-size:var(--casora-fs24,24px);font-weight:var(--casora-fw24,600);letter-spacing:-0.02em;color:' + T.ink + ';margin-top:2px;">' + esc(n.name) + '</div>'
-          + (n.min ? '<div style="font-size:14px;color:' + T.ink2 + ';margin-top:4px;">' + mins(n.min) + '</div>' : '')
+          + (n.min ? '<div style="font-size:14px;color:' + T.ink2 + ';margin-top:4px;">' + esc(mins(n.min)) + '</div>' : '')
           + '</div>';
       }
       /* Weich: Etikett über der Karte wie bei Speiseplan/Einkaufsliste – die Spalten beginnen bündig. */
@@ -1464,7 +1458,7 @@
       } else if (has) {
         var m = mins(a.minuten);
         out += '<div style="font-size:' + (n ? '20' : '24') + 'px;font-weight:' + (softBtn ? 700 : 600) + ';letter-spacing:-0.02em;color:' + T.ink + ';margin-top:4px;">' + esc(s.state) + '</div>'
-          + '<div style="font-size:14px;color:' + T.ink2 + ';margin-top:4px;">' + [m, 'Thermomix'].filter(Boolean).join(' · ') + '</div>'
+          + '<div style="font-size:14px;color:' + T.ink2 + ';margin-top:4px;">' + esc([m, 'Thermomix'].filter(Boolean).join(' · ')) + '</div>'
           + (a.warum ? '<div style="font-size:14px;line-height:1.45;color:' + T.ink + ';margin-top:10px;white-space:normal;">' + esc(a.warum) + '</div>' : '');
       } else {
         out += '<div style="font-size:18px;font-weight:600;color:' + T.ink + ';margin-top:6px;">' + (a.status === 'error' ? 'Keine Idee gefunden' : 'Noch keine Idee') + '</div>';
@@ -1884,7 +1878,7 @@
       var SFh = window._casoraHH && window._casoraHH.on();
       /* Weich (Entschlacken): „Reichweite 140 km“ als Hauptwert; „kommt verzögert“ als kleiner Zusatz am Datenstand. */
       if (SFh) sub = [r.open.length ? r.open.join(', ') + ' offen' : (r.locked === false ? 'Nicht verriegelt' : r.locked ? 'Verriegelt' : null),
-        r.stamp ? 'Stand ' + ago(r.stamp) + ' (verzögert)' : null].filter(Boolean).join(' · ');
+        r.stamp ? 'Stand ' + esc(ago(r.stamp)) + ' (verzögert)' : null].filter(Boolean).join(' · ');
       var out = UI.hero({ label: SFh ? null : 'Reichweite', value: r.range != null ? (SFh ? 'Reichweite ' : '') + fmtN(r.range) : '—', unit: r.range != null ? r.rangeU : null,
         sub: sub, subTone: lv === 2 ? 'bad' : lv === 1 ? 'warn' : 'good', center: true });
       /* Weich 1.1.2: Tank als schmale Leiste unter dem Kopf (wie die Geräte-Popups); rechts leer,
@@ -1898,9 +1892,9 @@
         var col = r.tank <= 15 ? 'var(--casora-popup-ui-warn, #FF9F0A)' : 'var(--casora-color-teal, #00C3D0)';
         out += '<div style="max-width:420px;margin:14px auto 0;font-family:var(--primary-font-family, system-ui);">'
           + '<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--casora-popup-ui-tertiary, rgba(255,255,255,0.55));margin-bottom:6px;">'
-          + '<span>' + (r.ev ? 'Akku' : 'Tank') + '</span><span>' + fmtN(r.tank) + ' %</span></div>'
+          + '<span>' + (r.ev ? 'Akku' : 'Tank') + '</span><span>' + esc(fmtN(r.tank)) + ' %</span></div>'
           + '<div style="height:8px;border-radius:999px;background:rgba(255,255,255,0.14);overflow:hidden;">'
-          + '<div style="height:100%;width:' + Math.max(2, Math.min(100, r.tank)) + '%;border-radius:999px;background:' + col + ';"></div></div></div>';
+          + '<div style="height:100%;width:' + Math.max(2, Math.min(100, r.tank)) + '%;border-radius:999px;background:' + esc(col) + ';"></div></div></div>';
       }
       /* Kein Füllstand in %, aber Tankinhalt in Litern (1.4.1, Volvo): als Zeile unter dem Kopf. */
       if (r.tank == null && r.tankL != null) {
@@ -2091,9 +2085,7 @@
   if (window._casoraCamAi) return;
   var A = window._casoraCamAi = {};
   var SENSOR = 'sensor.casora_kamera_ki';
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
@@ -2134,8 +2126,8 @@
     return '<div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:16px;'
       + 'background:var(--casora-glass-pill-fill, rgba(255,255,255,0.10));font-family:var(--primary-font-family, system-ui);text-align:left;">'
       + '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 18px;width:18px;height:18px;margin-top:1px;"><ha-icon icon="mdi:creation" style="--mdc-icon-size:18px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;line-height:0;color:var(--casora-color-teal, #00C3D0);"></ha-icon></span>'
-      + '<div style="min-width:0;"><div style="font-size:14px;line-height:1.4;color:' + col + ';white-space:normal;">' + esc(text) + '</div>'
-      + (running ? '' : '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:3px;">KI-Beschreibung · ' + ago(it.at) + '</div>')
+      + '<div style="min-width:0;"><div style="font-size:14px;line-height:1.4;color:' + esc(col) + ';white-space:normal;">' + esc(text) + '</div>'
+      + (running ? '' : '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:3px;">KI-Beschreibung · ' + esc(ago(it.at)) + '</div>')
       + '</div></div>';
   };
   var sweep = function () {
@@ -2166,7 +2158,7 @@
       var loc = A.local[id];
       if (loc && (!it || Date.parse(loc.at) > Date.parse(it.at))) it = loc;
       var key = it ? it.status + '|' + it.at + '|' + Math.floor(Date.now() / 60000) : '';
-      if (box._k !== key) { box._k = key; var h = (window.casoraTr || function (x) { return x; })(boxHtml(it)); box.innerHTML = h; box.style.display = h ? '' : 'none'; }
+      if (box._k !== key) { box._k = key; var html = (window.casoraTr || function (x) { return x; })(boxHtml(it)); box.innerHTML = html; box.style.display = html ? '' : 'none'; }
     });
   };
   /* Eigenständiger Bereich (z. B. im Drucker-Popup): Überschrift, Knopf, darunter die Beschreibung. */
@@ -2191,7 +2183,7 @@
       var it = entryOf(hass, id), loc = A.local[id];
       if (loc && (!it || Date.parse(loc.at) > Date.parse(it.at))) it = loc;
       var key = it ? it.status + '|' + it.at + '|' + Math.floor(Date.now() / 60000) : '';
-      if (box._k !== key) { box._k = key; var h = (window.casoraTr || function (x) { return x; })(boxHtml(it)); box.innerHTML = h; box.style.display = h ? '' : 'none'; }
+      if (box._k !== key) { box._k = key; var html = (window.casoraTr || function (x) { return x; })(boxHtml(it)); box.innerHTML = html; box.style.display = html ? '' : 'none'; }
     });
   };
   setInterval(function () { sweep(); sweepInline(); }, 1000);
@@ -2239,9 +2231,7 @@
   if (window._casoraPlantAi) return;
   var PA = window._casoraPlantAi = {};
   var SENSOR = 'sensor.casora_pflanzen_ki';
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
@@ -2255,8 +2245,8 @@
     return out;
   };
   var icon = function (name, px, col) {
-    return '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 ' + px + 'px;width:' + px + 'px;height:' + px + 'px;">'
-      + '<ha-icon icon="' + name + '" style="--mdc-icon-size:' + px + 'px;width:' + px + 'px;height:' + px + 'px;display:flex;align-items:center;justify-content:center;line-height:0;color:' + col + ';"></ha-icon></span>';
+    return '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 ' + esc(px) + 'px;width:' + esc(px) + 'px;height:' + esc(px) + 'px;">'
+      + '<ha-icon icon="' + esc(name) + '" style="--mdc-icon-size:' + esc(px) + 'px;width:' + esc(px) + 'px;height:' + esc(px) + 'px;display:flex;align-items:center;justify-content:center;line-height:0;color:' + esc(col) + ';"></ha-icon></span>';
   };
   var Z = { gut: ['Alles im grünen Bereich', 'var(--casora-popup-ui-good, #30D158)', 'mdi:check-circle'],
             beobachten: ['Beobachten', 'var(--casora-popup-ui-warn, #FF9F0A)', 'mdi:eye-outline'],
@@ -2272,7 +2262,7 @@
     else if (it && it.status === 'error') body = '<div style="font-size:15px;color:' + T.ink + ';">' + esc(it.error || 'Auswertung fehlgeschlagen.') + '</div>';
     else if (it && z) {
       body = '<div style="display:flex;align-items:center;justify-content:flex-start;gap:8px;">' + icon(z[2], 20, z[1])
-        + '<span style="flex:1 1 auto;text-align:left;font-size:var(--casora-fs16,16px);font-weight:600;color:' + z[1] + ';">' + z[0] + '</span></div>'
+        + '<span style="flex:1 1 auto;text-align:left;font-size:var(--casora-fs16,16px);font-weight:600;color:' + esc(z[1]) + ';">' + esc(z[0]) + '</span></div>'
         + '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink + ';margin-top:8px;white-space:normal;">' + esc(it.fazit) + '</div>'
         + (it.punkte && it.punkte.length ? '<ul style="margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + T.ink2 + ';white-space:normal;">' + it.punkte.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' : '')
         + (it.tipps && it.tipps.length ? '<div style="font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + T.ink + ';margin:12px 0 3px;">Pflegetipps</div>'
@@ -2295,7 +2285,7 @@
       + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);">'
       + '<div style="font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, ' + T.ink + ');padding:0 0 10px;display:flex;align-items:center;justify-content:flex-start;gap:6px;">'
       + icon('mdi:creation', 16, 'var(--casora-color-teal, #00C3D0)') + '<span style="flex:1 1 auto;text-align:left;">Pflanzen-Doktor</span></div>'
-      + body + (it && !running && it.at ? '<div style="font-size:12px;color:' + T.ink3 + ';margin-top:10px;">KI-Einschätzung · ' + ago(it.at) + '</div>' : '')
+      + body + (it && !running && it.at ? '<div style="font-size:12px;color:' + T.ink3 + ';margin-top:10px;">KI-Einschätzung · ' + esc(ago(it.at)) + '</div>' : '')
       + btn + '</div></div>';
   };
   // The plant on the reading's device: plant.* or a Pflanzenmonitor Plus status sensor (window.casoraIsPlant,
@@ -2341,9 +2331,7 @@
 (function () {
   if (window._casoraCoach) return;
   var SENSOR = 'sensor.casora_energie_coach';
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
@@ -2357,8 +2345,8 @@
     return out;
   };
   var icon = function (name, px, col) {
-    return '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 ' + px + 'px;width:' + px + 'px;height:' + px + 'px;">'
-      + '<ha-icon icon="' + name + '" style="--mdc-icon-size:' + px + 'px;width:' + px + 'px;height:' + px + 'px;display:flex;align-items:center;justify-content:center;line-height:0;color:' + col + ';"></ha-icon></span>';
+    return '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 ' + esc(px) + 'px;width:' + esc(px) + 'px;height:' + esc(px) + 'px;">'
+      + '<ha-icon icon="' + esc(name) + '" style="--mdc-icon-size:' + esc(px) + 'px;width:' + esc(px) + 'px;height:' + esc(px) + 'px;display:flex;align-items:center;justify-content:center;line-height:0;color:' + esc(col) + ';"></ha-icon></span>';
   };
   window._casoraCoach = function (s) {
     var T = (window._casoraUI && window._casoraUI.tokens) || { ink: '#fff', ink2: 'rgba(255,255,255,0.7)', ink3: 'rgba(255,255,255,0.45)', font: 'system-ui' };
@@ -2371,7 +2359,7 @@
     else {
       var eur = Number(a.ersparnis_eur);
       body = (eur > 0 ? '<div style="display:inline-flex;align-items:baseline;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(48,209,88,0.16);margin-bottom:10px;">'
-          + '<span style="font-size:17px;font-weight:700;color:var(--casora-popup-ui-good, #30D158);">≈ ' + eur.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €</span>'
+          + '<span style="font-size:17px;font-weight:700;color:var(--casora-popup-ui-good, #30D158);">≈ ' + esc(eur.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 2, maximumFractionDigits: 2 })) + ' €</span>'
           + '<span style="font-size:13px;color:' + T.ink2 + ';">pro Woche sparbar</span></div>' : '')
         + '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink + ';white-space:normal;">' + esc(a.fazit) + '</div>'
         + ((a.erkenntnisse || []).length ? '<ul style="margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + T.ink2 + ';white-space:normal;">' + a.erkenntnisse.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' : '')
@@ -2389,7 +2377,7 @@
       + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);">'
       + '<div style="font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, ' + T.ink + ');padding:0 0 10px;display:flex;align-items:center;justify-content:flex-start;gap:6px;">'
       + icon('mdi:creation', 16, 'var(--casora-color-teal, #00C3D0)') + '<span style="flex:1 1 auto;text-align:left;">Energie-Coach</span></div>'
-      + body + (has && !running && a.erstellt ? '<div style="font-size:12px;color:' + T.ink3 + ';margin-top:10px;">Auswertung der letzten 7 Tage · ' + ago(a.erstellt) + '</div>' : '')
+      + body + (has && !running && a.erstellt ? '<div style="font-size:12px;color:' + T.ink3 + ';margin-top:10px;">Auswertung der letzten 7 Tage · ' + esc(ago(a.erstellt)) + '</div>' : '')
       + btn + '</div></div>';
   };
   var sweep = function () {
@@ -2753,10 +2741,10 @@
       var ready = aiReady(states);
       var a = B.ki(states) || {}, T = UI.tokens;
       if (!ready && !a.fazit) return '';
-      var esc = function (x) { return String(x == null ? '' : x).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; }); };
-      var ic = function (nm, px, col) { return '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 ' + px + 'px;width:' + px + 'px;height:' + px + 'px;"><ha-icon icon="' + nm + '" style="--mdc-icon-size:' + px + 'px;width:' + px + 'px;height:' + px + 'px;display:flex;align-items:center;justify-content:center;line-height:0;color:' + col + ';"></ha-icon></span>'; };
+      var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+      var ic = function (nm, px, col) { return '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 ' + esc(px) + 'px;width:' + esc(px) + 'px;height:' + esc(px) + 'px;"><ha-icon icon="' + esc(nm) + '" style="--mdc-icon-size:' + esc(px) + 'px;width:' + esc(px) + 'px;height:' + esc(px) + 'px;display:flex;align-items:center;justify-content:center;line-height:0;color:' + esc(col) + ';"></ha-icon></span>'; };
       var Z = { gut: ['Alles im grünen Bereich', 'var(--casora-popup-ui-good, #30D158)', 'mdi:check-circle'], beobachten: ['Beobachten', 'var(--casora-popup-ui-warn, #FF9F0A)', 'mdi:eye-outline'], handeln: ['Handeln', 'var(--casora-popup-ui-bad, #FF453A)', 'mdi:alert'] };
-      var li = function (arr, col) { return '<ul style="margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + col + ';white-space:normal;">' + arr.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'; };
+      var li = function (arr, col) { return '<ul style="margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + esc(col) + ';white-space:normal;">' + arr.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'; };
       var running = a.status === 'running', has = !!a.fazit, z = Z[a.zustand], body;
       /* Soft (declutter): only the verdict is visible, points and tips under „Mehr“ (ai_tips). */
       if (SF && name === 'ai_tips') {
@@ -2769,7 +2757,7 @@
       }
       if (SF) a = Object.assign({}, a, { punkte: [], tipps: [] });
       if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">Claude prüft das Rad …</div>';
-      else if (has) body = (z ? '<div style="display:flex;align-items:center;gap:8px;">' + ic(z[2], 20, z[1]) + '<span style="font-size:var(--casora-fs16,16px);font-weight:600;color:' + z[1] + ';">' + z[0] + '</span></div>' : '')
+      else if (has) body = (z ? '<div style="display:flex;align-items:center;gap:8px;">' + ic(z[2], 20, z[1]) + '<span style="font-size:var(--casora-fs16,16px);font-weight:600;color:' + esc(z[1]) + ';">' + esc(z[0]) + '</span></div>' : '')
         + '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink + ';margin-top:8px;white-space:normal;">' + esc(a.fazit) + '</div>'
         + ((a.punkte || []).length ? li(a.punkte, T.ink2) : '')
         + ((a.tipps || []).length ? '<div style="font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + T.ink + ';margin:12px 0 0;">Tipps</div>' + li(a.tipps, T.ink) : '');
@@ -2785,7 +2773,7 @@
         + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);">'
         + '<div style="font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, ' + T.ink + ');padding:0 0 10px;display:flex;align-items:center;gap:6px;">'
         + ic('mdi:creation', 16, 'var(--casora-color-teal, #00C3D0)') + '<span style="flex:1 1 auto;text-align:left;">Rad-Check</span></div>'
-        + body + (has && !running && a.erstellt ? '<div style="font-size:12px;color:' + T.ink3 + ';margin-top:10px;">KI-Einschätzung · ' + ago(a.erstellt) + '</div>' : '')
+        + body + (has && !running && a.erstellt ? '<div style="font-size:12px;color:' + T.ink3 + ';margin-top:10px;">KI-Einschätzung · ' + esc(ago(a.erstellt)) + '</div>' : '')
         + btn + '</div></div>';
     }
     if (name === 'service') {
@@ -2904,7 +2892,7 @@
   var INK = 'var(--casora-popup-tiles-text-primary, #fff)';
   var INK3 = 'var(--casora-popup-ui-tertiary, rgba(255,255,255,0.42))';
   var RED = 'var(--casora-popup-ui-bad, #FF453A)', ORG = 'var(--casora-popup-ui-warn, #FF9F0A)';
-  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var agoMs = function (t) {
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.'
@@ -2986,8 +2974,8 @@
       else c.info++;
     });
     var n = pend.length;
-    if (c.breaking) return '<span style="color:' + RED + ';">KI: ' + (c.breaking === 1 ? '1 Breaking Change' : c.breaking + ' Breaking Changes') + ' · erst lesen</span>';
-    if (c.action) return '<span style="color:' + ORG + ';">KI: ' + (c.action === 1 ? '1 Update braucht' : c.action + ' Updates brauchen') + ' Aufmerksamkeit</span>';
+    if (c.breaking) return '<span style="color:' + RED + ';">KI: ' + esc(c.breaking === 1 ? '1 Breaking Change' : c.breaking + ' Breaking Changes') + ' · erst lesen</span>';
+    if (c.action) return '<span style="color:' + ORG + ';">KI: ' + esc(c.action === 1 ? '1 Update braucht' : c.action + ' Updates brauchen') + ' Aufmerksamkeit</span>';
     if (c.running) return 'KI prüft noch …';
     if (c.open) return c.info ? 'KI: ' + c.info + ' von ' + n + ' geprüft' : 'KI-Check steht noch aus';
     return 'KI: ' + (n === 1 ? 'unkritisch' : 'alle unkritisch') + ' · Installieren empfohlen';
@@ -3182,7 +3170,7 @@
       + '.hus .cv{margin-left:-2px;transition:transform .2s ease;color:' + INK3 + ';}'
       + '.hus details[open] .cv{transform:rotate(90deg);}'
       + '</style>'
-      + '<div class="hua hus"><details data-id="' + id + '"' + (OPEN[id] ? ' open' : '') + '>'
+      + '<div class="hua hus"><details data-id="' + esc(id) + '"' + (OPEN[id] ? ' open' : '') + '>'
       + '<summary><span>Übersprungen</span><span class="cnt">' + sk.length + '</span>'
       + '<ha-icon class="cv" icon="mdi:chevron-right" style="--mdc-icon-size:20px;"></ha-icon></summary>'
       + body + '</details></div>';
@@ -3211,7 +3199,7 @@
     var saved = JSON.parse(localStorage.getItem(LS) || 'null');
     if (saved && typeof saved.t === 'number') { K.last = saved.t; K.found = typeof saved.found === 'number' ? saved.found : null; K.err = !!saved.err; }
   } catch (e) { /* ohne Speicher: erst nach der ersten Suche */ }
-  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var tr = function (x) { return (window.casoraTr || function (y) { return y; })(x); };
   var agoMs = function (t) {
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
@@ -3662,7 +3650,7 @@
     + '@media (prefers-reduced-motion:reduce){.lps-r *{transition:none!important;}}'
     + '</style>';
 
-  var glyph = function (n) { return '<span class="lps-g" style="--lps-ic:url(\'' + icon(n) + '\')"></span>'; };
+  var glyph = function (n) { return '<span class="lps-g" style="--lps-ic:url(\'' + esc(icon(n)) + '\')"></span>'; };
 
   // self: the lamp whose popup this is - its row still switches but does not open the same popup again.
   var lampRow = function (id, states, roomName, self) {
@@ -3763,9 +3751,9 @@
       var v = s.on ? (s.pct != null ? s.pct : 100) : 0;
       var target = dim.filter(function (id) { return states[id].state === 'on'; });
       left += '<div class="lps-lbl">' + esc(tr('Helligkeit')) + '</div>'
-        + '<div class="lps-bar" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + v + '" data-lps-bar="'
+        + '<div class="lps-bar" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + esc(v) + '" data-lps-bar="'
         + attr({ ids: target.length ? target : dim }) + '">'
-        + '<i style="width:' + v + '%"></i>' + barText(v) + '</div>';
+        + '<i style="width:' + esc(v) + '%"></i>' + barText(v) + '</div>';
     }
     var ct = ids.filter(function (id) { return hasCt(states[id]); });
     if (ct.length) {
@@ -3783,7 +3771,7 @@
         + pr.map(function (p, i) {
           return '<div class="lps-sg' + (i === best ? ' on' : '') + '" role="button" data-lps-tap="'
             + attr({ a: 'ct', ids: ctOn.length ? ctOn : ct, k: p.k }) + '">'
-            + '<i class="lps-dot" style="background:' + (p.d === 'cold' ? 'var(--casora-soft-dot-cold, var(--casora-lps-dot-cold))' : 'var(--casora-lps-dot-' + p.d + ')') + '"></i>' + esc(tr(p.l)) + '</div>';
+            + '<i class="lps-dot" style="background:' + esc(p.d === 'cold' ? 'var(--casora-soft-dot-cold, var(--casora-lps-dot-cold))' : 'var(--casora-lps-dot-' + p.d + ')') + '"></i>' + esc(tr(p.l)) + '</div>';
         }).join('') + '</div>';
     }
     var sc2 = scenesOf(h, states, sc);
@@ -3798,18 +3786,19 @@
           + esc(short(nameOf(id, states), room)) + '</div>';
       }).join('') + '</div>';
     }
-    var right = '<div class="lps-lbl">' + esc(tr(sc.house ? 'Leuchten' : 'Leuchten im Raum')) + '</div><div class="lps-rows">'
-      + (sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids).map(function (id) {
-        // Own row only in the popup of this one lamp - a room picked in the house popup is not its popup.
-        return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0]);
-      }).join('') + '</div>';
-    return '<div class="lps-cols' + (left ? '' : ' one') + '">' + (left ? '<div>' + left + '</div>' : '') + '<div>' + right + '</div></div>';
+    var lampsHtml = (sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids).map(function (id) {
+      // Own row only in the popup of this one lamp - a room picked in the house popup is not its popup.
+      return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0]);
+    }).join('');
+    var rightHtml = '<div class="lps-lbl">' + esc(tr(sc.house ? 'Leuchten' : 'Leuchten im Raum')) + '</div><div class="lps-rows">'
+      + lampsHtml + '</div>';
+    return '<div class="lps-cols' + (left ? '' : ' one') + '">' + (left ? '<div>' + left + '</div>' : '') + '<div>' + rightHtml + '</div></div>';
   };
   var word = function (v) { return v <= 0 ? tr('Aus') : v >= 100 ? tr('Volle Helligkeit') : tr('Gedimmt'); };
   /* Value and word twice: muted on the track, in fill ink clipped to the fill. */
   var barText = function (v) {
-    var t = '<span class="v">' + v + ' %</span><em>' + esc(word(v)) + '</em>';
-    return t + '<b aria-hidden="true" style="clip-path:inset(0 ' + (100 - v) + '% 0 0)">' + t + '</b>';
+    var tHtml = '<span class="v">' + esc(v) + ' %</span><em>' + esc(word(v)) + '</em>';
+    return tHtml + '<b aria-hidden="true" style="clip-path:inset(0 ' + (100 - v) + '% 0 0)">' + tHtml + '</b>';
   };
 
   var houseBody = function (cfg, states) {
@@ -3833,15 +3822,15 @@
       if (set.indexOf(el) < 0) set.push(el);
       S.els[cfg.gid] = set.filter(function (x) { return x.isConnected || x === el; });
     }
-    var inner;
+    var innerHtml;
     if (part === 'hero') {
-      S.cur = cfg; inner = hero(cfg, states);
+      S.cur = cfg; innerHtml = hero(cfg, states);
       // Hauptschalter im Kopf kennt die Ansicht erst jetzt.
       var pop0 = window.casoraPopup && window.casoraPopup.element;
       if (pop0 && pop0._syncHeadSwitch) setTimeout(function () { pop0._syncHeadSwitch(); }, 0);
     }
-    else { var sc = scopeOf(cfg); inner = sc ? roomBody(cfg, sc, states, h) : houseBody(cfg, states); }
-    return CSS + '<div class="lps-r" data-part="' + part + '">' + inner + '</div>';
+    else { var sc = scopeOf(cfg); innerHtml = sc ? roomBody(cfg, sc, states, h) : houseBody(cfg, states); }
+    return CSS + '<div class="lps-r" data-part="' + esc(part) + '">' + innerHtml + '</div>';
   };
 
   /* Raumauswahl gewechselt: Ring und Inhalt sofort neu zeichnen (die Auswahl

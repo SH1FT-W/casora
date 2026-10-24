@@ -30,6 +30,10 @@ Vorlage ruft nur auf, das Studio bietet sie an, ein Unit-Test prüft ohne HA. Di
 - **Farben**: Gerätefarbe/Ton aus [design-regeln.md §5](design-regeln.md#5-farben); Szenen nur `casoraSceneColor`.
 - **Zustandshelfer**: `casoraSecurityLevel/-Color`, `casoraBattery`, `_casoraOpenSince` statt eigener Kopien.
   Eigenes `ago()`/`esc()`/`num()` nicht noch einmal schreiben (heute 18 bzw. 35 Kopien – Altlast).
+- **HTML nur mit Escaping**: jeder Wert, der in einen HTML-String geht (innerHTML, `name`/`label`/`state_display`/
+  `custom_fields` von button-card, auch Namen verschachtelter button-cards), läuft durch `window.casoraEsc` (bzw.
+  `UI.esc`); im JS-String eines Inline-Handlers `casoraEscJs`, in `href`/`src` `casoraSafeUrl`. Popup-Titel nicht
+  (textContent). Geprüft von `tools/html-escape-check.mjs` (Ausnahmen mit Grund in `tools/html-escape-allow/`).
 
 ## 3. Vorlage – Muster aus `casora_pulse`
 

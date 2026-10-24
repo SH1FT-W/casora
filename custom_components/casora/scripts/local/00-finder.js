@@ -1324,12 +1324,12 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     // Tooltip and screen-reader text say what is meant („2 Fenster offen“) – casora-i18n.js does
     // not translate attributes by itself, hence casoraTr here.
     var tr = function (t) { return typeof window.casoraTr === 'function' ? window.casoraTr(t) : t; };
-    var att = function (t) { return String(t).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); };
+    var escAttr = function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
     var url = function (k) { return typeof window.casoraIconUrl === 'function' ? window.casoraIconUrl(k) : '/casora_assets/icons/' + k + '.svg'; };
     var items = L.map(function (x) {
-      if (!x[1]) return '<span class="cs-sum-item">' + x[0] + '</span>';
-      var lab = att(tr(x[0])), u = url(x[1]);
-      return '<span class="cs-sum-item" role="img" aria-label="' + lab + '" title="' + lab + '"'
+      if (!x[1]) return '<span class="cs-sum-item">' + escAttr(x[0]) + '</span>';
+      var lab = tr(x[0]), u = url(x[1]);
+      return '<span class="cs-sum-item" role="img" aria-label="' + escAttr(lab) + '" title="' + escAttr(lab) + '"'
         + ' style="display:inline-flex;align-items:center;gap:3px;white-space:nowrap">'
         + '<span aria-hidden="true" style="position:relative;display:inline-block;width:1.05em;height:1.05em;flex:none">'
         + '<span style="position:absolute;inset:0;background-color:currentColor;-webkit-mask:url(\'' + u + '\') center / contain no-repeat;mask:url(\'' + u + '\') center / contain no-repeat;' + (x[3] ? 'opacity:.7;' : '') + '"></span>'

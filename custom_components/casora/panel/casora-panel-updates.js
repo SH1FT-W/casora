@@ -105,7 +105,7 @@
     + ":host(.is-light) .cu-bar{background:rgba(0,0,0,.08)}:host(.is-light) .cu-notes code{background:rgba(0,0,0,.06)}";
 
   const t = (s) => (window.casoraI18n ? window.casoraI18n.t(s) : s);
-  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const esc = window.casoraEsc || ((s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])));
   // Versionen mit Vorabversions-Zusatz wie release_notes.compare_versions:
   // 1.1.0 > 1.1.0-beta.2 > 1.1.0-beta.1 > 1.0.3.
   const ver = (v) => (String(v || "").match(/\d+/g) || ["0"]).slice(0, 3).map(Number);

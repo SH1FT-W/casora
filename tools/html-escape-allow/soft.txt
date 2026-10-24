@@ -1,0 +1,44 @@
+# Soft design modules and calendar/football/media (scripts/local/05–11). Format: file | expression | reason
+custom_components/casora/scripts/local/06-kalender.js | re:^(?:row|rad|sub|hov|act|on|onSh)$ | CSS values of SCSS() (fixed var(--…) strings), go into <style> where entities would not decode | 27
+custom_components/casora/scripts/local/06-kalender.js | t | head()/sHead() title: callers pass esc() text or fixed month/section names | 2
+custom_components/casora/scripts/local/06-kalender.js | (right || '') | head()/sHead() right side: fixed navigation markup or a counter built in code | 2
+custom_components/casora/scripts/local/06-kalender.js | re:^s?[hH]ead\( | markup builder head()/sHead(); arguments are escaped or fixed text | 10
+custom_components/casora/scripts/local/06-kalender.js | re:^(?:CSS\(\)|\(SOFT\(\) \? SCSS\(T\) : ''\))$ | fixed <style> blocks built from design tokens | 7
+custom_components/casora/scripts/local/06-kalender.js | re:^(?:body|g|lg|wev|\(wait \|\| wout\)|row\(e, cals\))$ | markup built from escaped parts in this function | 9
+custom_components/casora/scripts/local/06-kalender.js | (window.casoraTr || function (x) { return x; })(K.html(k, K._vars)) | markup from K.html (escapes its values), translated by the phrase table | 1
+custom_components/casora/scripts/local/06-kalender.js | re:^(?:cls|wcls|pre)$ | class names / action prefixes from code literals | 6
+custom_components/casora/scripts/local/06-kalender.js | re:^(?:d|w|DAYS\[wd\.getDay\(\)\]|hm\(e\.start\)|ymd\(d\)|ymd\(wd\))$ | day number, fixed weekday names, digits-only time/date formatting | 6
+custom_components/casora/scripts/local/11-fussball.js | re:^(?:row|sub|on|onSh|onInk|rad|crestBg|hair|plate)$ | CSS values of CSS() (fixed var(--…) strings / design tokens) for the <style> block; "on" in K.corner is ' on' or '' | 26
+custom_components/casora/scripts/local/11-fussball.js | re:^(?:t|\(right \|\| ''\))$ | head() parameters: callers pass esc() text, fixed titles or markup built here | 4
+custom_components/casora/scripts/local/11-fussball.js | re:^(?:CSS\(\)|head\(.*\)|crest\(.*\)|mini\(.*\)|du\.map\(function \(x\) \{ return gameRow\(x, 'd', true\); \}\)\.join\(''\))$ | markup builders of this module; they escape names and image URLs (crest/mini use esc(K.img(…))) | 22
+custom_components/casora/scripts/local/11-fussball.js | re:^(?:body|more|lg|wait|tag)$ | markup built from escaped parts in K.html | 6
+custom_components/casora/scripts/local/11-fussball.js | (window.casoraTr || function (x) { return x; })(K.html(k, S[K._id])) | markup from K.html (escapes its values), translated by the phrase table | 1
+custom_components/casora/scripts/local/11-fussball.js | re:^(?:cls|\(cls \? ' ' \+ cls : ''\))$ | class names from code literals | 2
+custom_components/casora/scripts/local/11-fussball.js | re:^(?:ab2?\.(?:W|D|L|gp|gd|pts)|\(ab2?\[x\.res\] \|\| '–'\)|n\.[WDL])$ | fixed abbreviations of K.abbr() and counters | 11
+custom_components/casora/scripts/local/05-standard-medien.js | re:^z\[[012]\]$ | coach level label and colors from the fixed table ZT | 6
+custom_components/casora/scripts/local/05-standard-medien.js | svc | data attribute built with esc(JSON.stringify(…)) one line above | 1
+custom_components/casora/scripts/local/05-standard-medien.js | re:^(?:ic|body|btn)$ | coachHtml markup: fixed icon, body built from esc() parts, fixed button | 3
+custom_components/casora/scripts/local/05-standard-medien.js | (window.casoraTr || function (x) { return x; })(coachHtml(s, box.getAttribute('data-room') || undefined)) | markup from coachHtml (escapes its values), translated by the phrase table | 1
+custom_components/casora/scripts/local/05-standard-medien.js | re:^html\.slice\((?:0, k|k \+ 12)\)$ | markup returned by the original UI.group (core, escapes its values), split around a fixed marker | 2
+custom_components/casora/scripts/local/05-weich-mehr.js | re:^(?:\(running \? pill\(UI, .*\)\)|pill\(UI, a\.fazit .*\)|UI\.label\('Tipps'\)\.replace\(.*\))$ | markup builders pill() (UI.esc on text, tone and svc) and UI.label (core, escapes) | 3
+custom_components/casora/scripts/local/05-weich-mehr.js | re:^(?:x|heroH)$ | sections/hero markup from UI builders, wrapped in a div | 3
+custom_components/casora/scripts/local/05-weich-mehr.js | re:^(?:key|title|k|p\.k|FLOW_COL\[k\]|FLOW_NAME\[k\])$ | energy flow: section keys and titles from code literals, fixed color/name tables; also CSS selectors for querySelector | 22
+custom_components/casora/scripts/local/05-weich-mehr.js | re:^(?:\(only === '(?:to|from)' \? '' : sec\(.*\)\)|mi\(C\.(?:home|soc)\))$ | markup builders sec() (literal arguments) and mi() (esc on the entity id) | 4
+custom_components/casora/scripts/local/05-weich-mehr.js | re:^tp\('[stc]'\)$ | inline handler code with a literal argument | 3
+custom_components/casora/scripts/local/05-weich-mehr.js | re:^ink2?$ | fixed var(--…) colors | 4
+custom_components/casora/scripts/local/07-weich-spezial.js | srcRules() | fixed CSS rules from design tokens | 1
+custom_components/casora/scripts/local/07-weich-spezial.js | u | icon mask URL from casoraIconUrl for fixed icon names (b.ic literals) | 2
+custom_components/casora/scripts/local/07-weich-spezial.js | k | generated keyframe name ('cal' + base36 time) | 4
+custom_components/casora/scripts/local/07-weich-spezial.js | re:^(?:AL\.code\(I\)|AL\.act\(ent, b\.svc\)|icon\(b\.ic, 22, .*\)|bar)$ | markup builders of this module (AL.act uses esc(JSON.stringify(…)), icon escapes size/color) | 4
+custom_components/casora/scripts/local/07-weich-spezial.js | re:^b\.(?:bg|ink|t|s)$ | alarm button: fixed colors and texts; b.s = fixed mode word plus the countdown <span> from AL.count | 4
+custom_components/casora/scripts/local/08-weich-kompakt.js | q | regex source for String.replace (entity id with regex specials escaped), not HTML | 1
+custom_components/casora/scripts/local/08-weich-kompakt.js | re:^tapWrap\(UI\.group\(.*\)\)$ | markup from UI.group (core, escapes) wrapped by tapWrap (fixed handlers) | 1
+custom_components/casora/scripts/local/08-weich-kompakt.js | re:^(?:html\.slice\((?:0, i|i \+ s\.length)\)|s\.slice\((?:0, j|j \+ k\.length)\)|COL\[r\._tone\])$ | U.tint: markup from UI.group split around the escaped sub line (s = esc(r.sub)); fixed tone colors | 5
+custom_components/casora/scripts/local/08-weich-kompakt.js | re:^(?:rest|a|sk|x|X\.sys\(.*\)|X\.hist\(.*\))$ | update sections: markup from the _casoraUpd* builders (03-popups/17-update-detail, escape their values) | 6
+custom_components/casora/scripts/local/08-weich-kompakt.js | on | boolean for aria-checked | 1
+custom_components/casora/scripts/local/08-weich-kompakt.js | re:^(?:\(open \? lkHue : .*\)|\(open \? \(\(window\._casoraInkOn && .*\)|ic)$ | lock switch: fixed var(--…) colors, contrast ink from _casoraInkOn, icon URL for fixed icon names | 4
+custom_components/casora/scripts/local/09-weich-wiedergabe.js | re:^(?:s|d)$ | svg(d, s): fixed icon path and a pixel size from code | 3
+custom_components/casora/scripts/local/09-weich-wiedergabe.js | re:^(?:cls|a)$ | class names and button actions from code literals | 3
+custom_components/casora/scripts/local/09-weich-wiedergabe.js | re:^(?:art|cover|bar|ctl|inner|\(hasBar \? bar : ''\))$ | row markup built from escaped parts (art: esc(artU) in a style attribute) | 8
+custom_components/casora/scripts/local/09-weich-wiedergabe.js | re:^(?:pct\(rows\[key\]\)|\(desk \? ' style="grid-template-columns:repeat\(' \+ cols \+ ',minmax\(0,1fr\)\)"' : ''\))$ | numbers: progress percent (toFixed) and column count | 2
+custom_components/casora/scripts/local/07-weich-spezial.js | bindAttr | attribute markup from the camera template's bind('back') (fixed handler code) | 1

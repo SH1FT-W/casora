@@ -8,6 +8,7 @@
 // window._casoraSoft*.sec(...) aufruft – der Popup-Inhalt selbst wird nur beim Öffnen gebaut.
 (function () {
   if (window._casoraSoftNet) return;
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
   var LANG = function (hass) { return (hass && hass.locale && hass.locale.language) || 'de'; };
   var num = function (states, id) {
@@ -177,7 +178,7 @@
       + 'padding:8px 14px;border-radius:999px;background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));'
       // Trefferfläche 44 px (07.10.2026): unsichtbarer Rand oben/unten, Fläche nur im Innern, Lage unverändert.
       + (svc ? 'border-block:6px solid transparent;background-clip:padding-box;margin-block:-6px;' : '') + 'color:'
-      + (tone || 'var(--casora-popup-ui-action, var(--casora-color-teal, #4E9E95))') + ';white-space:nowrap;">' + UI.esc(text) + '</span>';
+      + UI.esc(tone || 'var(--casora-popup-ui-action, var(--casora-color-teal, #4E9E95))') + ';white-space:nowrap;">' + UI.esc(text) + '</span>';
   };
 
   // Bausteine für weitere entschlackte Popups (08-weich-kompakt.js).
@@ -328,8 +329,8 @@
       }
       if (irows.length) {
         var ih = UI.group(irows, 'Internet');
-        if (lat.length) ih = ih.split('data-casora-live="text" data-casora-ent="' + lat[0].id + '"')
-          .join('data-hp-live-join="' + lat.map(function (l) { return l.id; }).join(',') + '"');
+        if (lat.length) ih = ih.split('data-casora-live="text" data-casora-ent="' + UI.esc(lat[0].id) + '"')
+          .join('data-hp-live-join="' + UI.esc(lat.map(function (l) { return l.id; }).join(',')) + '"');
         secs.push(ih);
       }
       // Durchsatz LAN/WLAN
@@ -512,7 +513,7 @@
   var FLOW_NAME = { solar: 'Solar', akku: 'Akku', netz: 'Netz', exp: 'Einspeisung', haus: 'Haus' };
   var flowHtml = function (C, FK) {
     var INK = 'var(--casora-popup-tiles-text-primary, #3A322B)', INK2 = 'var(--casora-popup-tiles-text-secondary, rgba(58,50,43,.62))';
-    var mi = function (id) { return id ? ' data-casora-mi="' + String(id).replace(/"/g, '&quot;') + '"' : ''; };
+    var mi = function (id) { return id ? ' data-casora-mi="' + esc(id) + '"' : ''; };
     // C.only ('from' | 'to', Sub-Badge-Popups 15.10.2026): nur diese Hälfte, ohne Hauszeile und Zwischentitel.
     var only = C.only === 'from' || C.only === 'to' ? C.only : null;
     var sec = function (key, title, keys) {
@@ -685,7 +686,7 @@
          Leistung zurück auf die Leistungskurve – wie die Leistungszeile im Standard-Look. */
       if (C.home && window._hpPlantCfg && window._hpPlantCfg[C.home]) {
         var tp = function (k) { return 'window._hpPlantTap&&window._hpPlantTap(event,\'' + k + '\')'; };
-        heroH = '<div data-hp-metric="' + C.home + '" data-casora-nodismiss="" style="cursor:pointer;pointer-events:auto;"'
+        heroH = '<div data-hp-metric="' + esc(C.home) + '" data-casora-nodismiss="" style="cursor:pointer;pointer-events:auto;"'
           + ' ontouchstart="' + tp('s') + '" ontouchend="' + tp('t') + '" onclick="' + tp('c') + '">' + heroH + '</div>';
       }
       return heroH;
