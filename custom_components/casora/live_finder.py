@@ -38,6 +38,19 @@ class Ent:
         return self.entity_id.partition(".")[0]
 
 
+def is_product_name(name: str | None, manufacturer: str | None, model: str | None, model_id: str | None) -> bool:
+    """A device name that is just the product: empty, the model (or contains it) or starting with the maker."""
+    n = str(name or "").strip().lower()
+    if not n:
+        return True
+    for m in (model, model_id):
+        m = str(m or "").strip().lower()
+        if len(m) >= 3 and (m in n or n in m):
+            return True
+    maker = str(manufacturer or "").strip().lower()
+    return len(maker) >= 3 and n.startswith(maker)
+
+
 @dataclass
 class Found:
     device_id: str
@@ -49,6 +62,9 @@ class Found:
     area: str | None = None
     model: str = ""
     how: str = "platform"
+    # True when the name is only what the integration calls the product ("Roborock Qrevo Edge Series"):
+    # the live activity then shows the translated device kind instead (name_by_user always wins).
+    generic_name: bool = False
 
     @property
     def entity_ids(self) -> list[str]:
@@ -358,6 +374,7 @@ def find_devices(hass) -> list[Found]:
         if not f:
             continue
         f.name = d.name_by_user or d.name or ""
+        f.generic_name = not d.name_by_user and is_product_name(d.name, d.manufacturer, d.model, d.model_id)
         a = areas.async_get_area(d.area_id) if d.area_id else None
         f.area = a.name if a else None
         out.append(f)

@@ -916,6 +916,18 @@ for bad in ("#ff0000", "pink", 3, True):
         check(f"Farbe abgelehnt: {bad!r}", True)
 S.clear(); S.update(_vorher)
 
+# Title: a product name (maker/model) becomes the translated kind; a name the user gave stays.
+from custom_components.casora.live_finder import is_product_name  # noqa: E402
+check("Titel: Herstellername = Produkt", is_product_name("Roborock Qrevo Edge Series", "Roborock", "roborock.vacuum.a144", None))
+check("Titel: Modell im Namen = Produkt", is_product_name("WAV28M40 Serie 8", "BSH", "WAV28M40", None))
+check("Titel: leer = Produkt", is_product_name("", "Miele", "WWG660", None))
+check("Titel: eigener Name bleibt", not is_product_name("Robbi", "Roborock", "roborock.vacuum.a144", None))
+_ta = SimpleNamespace(TITLE=la.TITLE)
+_f = Found("d", "vacuum", "x", "full", {}, name="Roborock Qrevo Edge Series", generic_name=True)
+check("Titel: Produktname → Geräteart (de)", la.LiveActivity._title(_ta, _f, 0) == la.TITLE["vacuum"][0], la.LiveActivity._title(_ta, _f, 0))
+_f2 = Found("d", "vacuum", "x", "full", {}, name="Robbi", generic_name=False)
+check("Titel: eigener Name bleibt im Titel", la.LiveActivity._title(_ta, _f2, 0) == "Robbi")
+
 asyncio.run(flow())
 
 print("\nALLES OK" if not fails else f"\n{len(fails)} FEHLER")

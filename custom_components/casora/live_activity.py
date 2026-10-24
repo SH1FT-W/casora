@@ -1031,7 +1031,9 @@ class LiveActivity:
         return next((f for f in self.found if f.device_id == device_id), None)
 
     def _title(self, f: Found, lang: int) -> str:
-        return f.name or TITLE[f.kind][lang]
+        # The lock screen shows only title + clock: a product name ("Roborock Qrevo Edge Series") says less than the
+        # translated kind ("Saugroboter"); a name the user gave in HA stays.
+        return f.name if f.name and not getattr(f, "generic_name", False) else TITLE[f.kind][lang]
 
     @staticmethod
     def tag_for(f: Found) -> str:
@@ -1195,7 +1197,7 @@ class LiveActivity:
         kind = f.kind if f else "washer"
         now = dt_util.utcnow()
         lang = _lang(self.hass)
-        title = (f.name if f and f.name else TITLE[kind][lang]) + " · " + T["probe"][lang]
+        title = (self._title(f, lang) if f else TITLE[kind][lang]) + " · " + T["probe"][lang]
         payload = build_payload(probe_snapshot(kind, now, lang), kind, title, PROBE_TAG, self.url, silent=False)
         await self._deliver(self.targets, payload, device_id=device_id, phase="probe", now=now)
         self._save()
