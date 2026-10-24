@@ -1282,6 +1282,12 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       var eid = String(id || (st && st.entity_id) || '');
       return eid.indexOf('sensor.') === 0 && isFinite(count(st));
     };
+    // The DWD "advance warning level" covers the coming days: a source for the tile and its popup, but no bell
+    // row or push (it said „Wetterwarnung: Frost“ for a frost two days ahead).
+    var ADVANCE = /advance_warning|vorwarn|vorab/i;
+    var isAdvance = function (st, id) {
+      return isLevelSensor(st, id) && ADVANCE.test(String(id || (st && st.entity_id) || ''));
+    };
     var active = function (st, id) {
       if (!st) return false;
       if (isLevelSensor(st, id)) return parseInt(st.state, 10) > 0 && count(st) > 0;
@@ -1325,15 +1331,23 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     var top = function (states, ids) { var l = list(states, ids); return l.length ? l[0].level : 0; };
     // Warning area: DWD region_name, the region attribute of a combined integration, else nothing.
     var region = function (st) { var a = attrs(st); return str(a.region_name || a.region) || null; };
-    // Kind of warning for the bell: "… vor STURMBÖEN" → "Sturmböen", else the event name, else generic.
+    // Kind of warning for the bell: a DWD event name ("SCHWERE STURMBÖEN" → "Schwere Sturmböen"), else the headline's
+    // "… vor STURMBÖEN", else the event, else generic. Only all-caps text is recased, word by word
+    // (German nouns), with short joining words kept small.
+    var SMALL = /^(mit|und|oder|von|vor|im|in|am|an|bei|bis|der|die|das|den|dem|des|with|and|or|of|de|y|o|con)$/;
     var kind = function (w) {
       var m = str(w && w.headline).match(/vor (.+)$/i);
-      var t = m ? m[1] : str(w && w.event);
+      var ev = str(w && w.event);
+      // DWD names its events in capitals ("SCHWERE STURMBÖEN"); other sources (Meteoalarm "Moderate wind warning")
+      // keep the headline first as before.
+      var t = ev && ev === ev.toUpperCase() && /[A-ZÄÖÜ]/.test(ev) ? ev : (m ? m[1] : ev);
       if (!t) return 'Wetterwarnung';
-      t = t.toLowerCase();
-      return t.charAt(0).toUpperCase() + t.slice(1);
+      if (t !== t.toUpperCase()) return t.charAt(0).toUpperCase() + t.slice(1);
+      return t.toLowerCase().split(/(\s+)/).map(function (p, i) {
+        return /^\s+$/.test(p) || (i && SMALL.test(p)) ? p : p.charAt(0).toUpperCase() + p.slice(1);
+      }).join('');
     };
-    return { list: list, of: of, top: top, active: active, isLevelSensor: isLevelSensor, level: level,
+    return { list: list, of: of, top: top, active: active, isLevelSensor: isLevelSensor, isAdvance: isAdvance, level: level,
       severity: severity, region: region, kind: kind };
   })();
 
@@ -1345,7 +1359,8 @@ window._casoraColGap = window._casoraColGap || function (keys) {
   // A warning source: the NINA/Meteoalarm prefix from the settings or a DWD level sensor (any name).
   function isWarning(id, st) {
     var p = cfg().warn_prefix;
-    return (!!p && id.indexOf(p) === 0) || window.casoraWarnings.isLevelSensor(st, id);
+    return (!!p && id.indexOf(p) === 0)
+      || (window.casoraWarnings.isLevelSensor(st, id) && !window.casoraWarnings.isAdvance(st, id));
   }
 
   // Active as a warning source: binary_sensor on, DWD level > 0 with warnings.

@@ -21,7 +21,7 @@ assert.ok(block, 'casoraWarnings block in 01-basis.js');
 globalThis.window = {};
 new Function('window', block[0])(window);
 const W = window.casoraWarnings;
-for (const k of ['list', 'of', 'top', 'active', 'isLevelSensor', 'level', 'severity', 'region', 'kind']) assert.equal(typeof W[k], 'function', k);
+for (const k of ['list', 'of', 'top', 'active', 'isLevelSensor', 'isAdvance', 'level', 'severity', 'region', 'kind']) assert.equal(typeof W[k], 'function', k);
 
 // ── shapes ──
 const nina = (state, attrs) => ({ entity_id: 'binary_sensor.nina_warning_teststadt_1', state, attributes: attrs || {} });
@@ -62,6 +62,10 @@ assert.deepEqual(W.of(dwd(0, [])), []);
 assert.equal(W.active(dwd(2, [], { warning_count: 0 })), false, 'level without warnings = inactive');
 assert.equal(W.active(dwd(0, [GEWITTER], { warning_count: 1 })), false, 'warnings but level 0 = inactive (state wins)');
 assert.equal(W.active(dwd(2, [GEWITTER])), true);
+// The advance level (coming days) is a source for the tile, not for the bell.
+assert.equal(W.isAdvance(Object.assign(dwd(1, [GEWITTER]), { entity_id: 'sensor.testland_advance_warning_level' })), true, 'advance level');
+assert.equal(W.isAdvance(Object.assign(dwd(1, [GEWITTER]), { entity_id: 'sensor.testland_vorwarnstufe' })), true, 'advance level, German id');
+assert.equal(W.isAdvance(Object.assign(dwd(1, [GEWITTER]), { entity_id: 'sensor.testland_current_warning_level' })), false, 'current level');
 const one = W.of(dwd(2, [GEWITTER]));
 assert.equal(one.length, 1);
 assert.deepEqual([one[0].level, one[0].severity, one[0].headline, one[0].event], [2, 'Moderate', 'Amtliche WARNUNG vor GEWITTER', 'GEWITTER']);
@@ -72,6 +76,10 @@ assert.equal(one[0].end, '2026-10-24T12:00:00+02:00');
 assert.equal(one[0].updated, '2026-10-24T08:30:00+02:00', 'last_update as the update time');
 assert.equal(one[0].entity, 'sensor.testland_current_warning_level');
 assert.equal(W.kind(one[0]), 'Gewitter');
+assert.equal(W.kind({ event: 'SCHWERE STURMBÖEN', headline: 'Amtliche UNWETTERWARNUNG vor SCHWEREN STURMBÖEN' }), 'Schwere Sturmböen', 'event name, nominative');
+assert.equal(W.kind({ event: 'GEWITTER MIT STARKREGEN' }), 'Gewitter mit Starkregen', 'joining words stay small');
+assert.equal(W.kind({ headline: 'Amtliche WARNUNG vor FROST' }), 'Frost', 'headline when there is no event');
+assert.equal(W.kind({ event: 'Thunderstorm' }), 'Thunderstorm', 'mixed case kept');
 const two = W.of(dwd(3, [GEWITTER, STURM]));
 assert.equal(two.length, 2, 'warning_count warnings');
 assert.deepEqual(two.map((w) => w.level), [2, 3], 'of() keeps the sensor order');

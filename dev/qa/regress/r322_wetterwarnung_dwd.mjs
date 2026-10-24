@@ -95,7 +95,7 @@ const tile = await stable(page, () => {
 await check('Kachel: „Warnungen · Schwere Warnung“ (höchste DWD-Stufe 3)', tile && tile.name === 'Warnungen · Schwere Warnung', tile);
 await check('Kachel: schwerste Warnung plus Zähler („Schweren Sturmböen · 1 weitere“)', tile && /Schweren Sturmböen · 1 weitere/.test(tile.state), tile && tile.state);
 await check('Kachel: Farbe der Stufe 3 (das Rot des Themes wie „Severe“)', tile && !!tile.red && tile.colour === tile.red, tile && [tile.colour, tile.red]);
-await check('Glocke: zwei Zeilen aus derselben Liste (Sturmböen/Severe, Gewitter/Moderate)', tile && tile.bell && tile.bell.join('|') === 'Schweren sturmböen/Severe|Gewitter/Moderate', tile && tile.bell);
+await check('Glocke: zwei Zeilen aus derselben Liste (Sturmböen/Severe, Gewitter/Moderate)', tile && tile.bell && tile.bell.join('|') === 'Schwere Sturmböen/Severe|Gewitter/Moderate', tile && tile.bell);
 const at = await page.evaluate(() => { const r = document.querySelector('home-assistant').shadowRoot.querySelector('.qa-r322').getBoundingClientRect();
   return { x: r.x, y: r.y, w: r.width, h: r.height }; });
 if (OUT) await page.screenshot({ path: OUT + '/1-kachel-desktop-dunkel.png', clip: { x: at.x - 24, y: at.y - 24, width: at.w + 48, height: at.h + 48 } });
