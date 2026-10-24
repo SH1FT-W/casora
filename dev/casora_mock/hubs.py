@@ -10,7 +10,8 @@ nobody noticed. This module adds the usual shapes of a real home:
     (via_device) with a light and a power sensor, channel 1 in "Garage", channel 2 in "Garten".
 "Garage" and "Garten" were empty rooms of the test house: no new rooms (every room costs time in the gate), the
 rooms that had something keep their content. dev/unit/setup_completeness.mjs, dev/unit/light_badge_later.mjs and
-dev/qa/regress/r307_start_fresh_lamps.mjs rely on these devices. Names made up.
+dev/qa/regress/r307_start_fresh_lamps.mjs rely on these devices. With the private fixture the lamps also get a
+light group per room in the house's light group (join_house_group). Names made up.
 """
 from __future__ import annotations
 
@@ -53,6 +54,47 @@ def _on(base, brightness, **extra):
 
 def _off(base):
     return {**base, "color_mode": None, "brightness": None}
+
+
+def join_house_group(fixture: dict) -> list[str]:
+    """Give the hub lamps a light group per room and put those into the house's light group of the fixture.
+
+    The house group is a light group whose members are all light groups (one per room), like a real "all lamps"
+    group. With the hub lamps outside it, "Start fresh" found no HA group for Home (Home got a list tile and a
+    badge without a group) and the gate's checks of the house light popup lost their precondition (r69, r73,
+    r174, gate 23.10.2026). Room groups, not the lamps themselves: the house popup takes its members as rooms
+    (r270), and a lamp's popup shows the group it is in as its room (r65). The groups have no area and are not
+    named like the room, so "Start fresh" still finds the lamps themselves (r307). Without a fixture (unit tests,
+    --public) there is no house group and nothing changes. Returns the house groups changed.
+    """
+    lights = {e["entity_id"]: e for e in fixture["entities"] if e["entity_id"].startswith("light.")}
+
+    def members(eid):
+        m = ((lights.get(eid) or {}).get("attributes") or {}).get("entity_id")
+        return m if isinstance(m, list) else []
+
+    houses = [eid for eid in lights if len(members(eid)) >= 2 and all(members(x) for x in members(eid))]
+    if not houses:
+        return []
+    hub = extra(None)
+    area = {d["key"]: d.get("area") for d in hub["devices"]}
+    groups = []
+    for room in (AREA_A, AREA_B):
+        lamps = [e for e in hub["entities"] if e["entity_id"].startswith("light.") and area.get(e["device"]) == room]
+        gid = "light.hub_lampen_" + room.lower()
+        on = [e for e in lamps if e["state"] == "on"]
+        attrs = {"entity_id": [e["entity_id"] for e in lamps], "supported_color_modes": ["brightness"],
+                 "supported_features": 32, "color_mode": "brightness" if on else None,
+                 "brightness": max(e["attributes"].get("brightness") or 0 for e in on) if on else None}
+        g = _e(gid, "on" if on else "off", None, "Hub-Lampen " + room, attrs)
+        if gid not in lights:
+            fixture["entities"].append(g)
+            lights[gid] = g
+        groups.append(gid)
+    for eid in houses:
+        m = members(eid)
+        lights[eid]["attributes"] = {**lights[eid]["attributes"], "entity_id": m + [g for g in groups if g not in m]}
+    return houses
 
 
 def extra(now) -> dict:

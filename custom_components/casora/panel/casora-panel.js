@@ -24030,7 +24030,7 @@ class CasoraPanel extends HTMLElement {
         if ((tile.variables || {}).size === "large" || isActions) {
           el.classList.add("mp-lg");
         }
-        const twin = this._wideTwinOf(tile);
+        const twin = this._wideTwinOf(tile, sec);
         if (twin) {
           el.dataset.mk = "t:" + this._tileKey(twin.tile);
           el.dataset.mproom = String(twin.roomIndex);
@@ -24591,10 +24591,32 @@ class CasoraPanel extends HTMLElement {
       || (KEEP_TINT.indexOf(kind) !== -1 ? (TILE_COLOR[kind] || TILE_TINT) : null);
   }
 
-  _wideTwinOf(tile) {
+  // Room (index in this._state) a phone section belongs to: its link to the wide layout; editing the
+  // phone layout itself, the section is the room. null if unknown.
+  _wideRoomOfSection(sec) {
+    if (!sec) return null;
+    if ((this._state || {}).surface === "mobile") {
+      const i = ((this._state.compact || {}).rooms || []).indexOf(sec);
+      return i < 0 ? null : i;
+    }
+    const p = this._pair || {};
+    const i = (((p.mobile || {}).compact || {}).rooms || []).indexOf(sec);
+    const link = i < 0 ? null : ((p.link || {}).links || []).find((l) => l.section === i);
+    return link ? link.room : null;
+  }
+
+  // Tile of the wide layout a phone tile stands for. sec: the phone section it is in. The same tile
+  // (kind + entity) can stand in several rooms: the overview's "Lights" without an HA group for all
+  // lamps carries the first room's light. The first hit from the top sent that room's light tile in
+  // the phone preview to the overview (wrong tile in the editor, counted as hidden; rb18 in the gate,
+  // 24.10.2026). So the section's own room first, then the others as before.
+  _wideTwinOf(tile, sec) {
     const key = tileTwinKey(tile);
     const rooms = (this._state && this._state.compact.rooms) || [];
-    for (let i = 0; i < rooms.length; i++) {
+    const own = this._wideRoomOfSection(sec);
+    const order = rooms.map((r, i) => i);
+    if (own !== null && rooms[own]) order.unshift(...order.splice(own, 1));
+    for (const i of order) {
       const hit = (rooms[i].tiles || []).find((t) => t && tileTwinKey(t) === key);
       if (hit) return { tile: hit, roomIndex: i };
     }
