@@ -39,7 +39,7 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .ki import OPT_OUT_RH, OPT_OUT_T, OUTDOOR, _area_id, _outdoor, plant_devices
+from .ki import OPT_OUT_RH, OPT_OUT_T, OUTDOOR, OUTDOOR_AREA, _area_id, _outdoor, plant_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,7 +104,7 @@ def find_rooms(hass: HomeAssistant) -> list[dict]:
 
     def room(aid: str) -> dict | None:
         area = areas.async_get_area(aid)
-        if not area or OUTDOOR.search(area.name):
+        if not area or OUTDOOR_AREA.search(area.name):
             return None
         return rooms.setdefault(aid, {"k": aid, "n": area.name, "rh": [], "t": [], "co2": [], "voc": [],
                                       "w": [], "heat": []})
@@ -218,7 +218,7 @@ def _outdoor_pm(hass: HomeAssistant) -> str | None:
         text = f"{st.entity_id} {st.attributes.get('friendly_name', '')}"
         aid = _area_id(hass, st.entity_id)
         area = ar.async_get(hass).async_get_area(aid) if aid else None
-        if OUTDOOR.search(text) or re.search(r"wetter|weather", text, re.I) or (area and OUTDOOR.search(area.name)):
+        if OUTDOOR.search(text) or re.search(r"wetter|weather", text, re.I) or (area and OUTDOOR_AREA.search(area.name)):
             hits.append(st.entity_id)
     return sorted(hits)[0] if hits else None
 

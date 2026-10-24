@@ -85,6 +85,9 @@ LEGACY_UPDATE_EVENTS = ("hemma_update_ai_prune", "hemma_update_ai_ack")
 SEQUENCES = ("kamera", "pflanzen", "update", "rezept")
 NO_AI = "Keine KI eingerichtet (Einstellungen → KI-Aufgaben)"
 OUTDOOR = re.compile(r"outdoor|aussen|außen|outside|draussen|draußen", re.I)
+# An area that is outside the house (#54): garden, terrace, balcony … – its sensors are no room climate.
+# Only for area names; entity names keep the narrower OUTDOOR rule (a "Gartenlampe" is not a sensor).
+OUTDOOR_AREA = re.compile(r"outdoor|aussen|außen|outside|draussen|draußen|garten|garden|terrasse|terrace|balkon|balcony|patio|\bhof\b|yard|carport|einfahrt|driveway", re.I)
 WINDOW_CLASSES = {"window", "door", "garage_door", "opening"}
 WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 
