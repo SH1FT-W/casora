@@ -20,6 +20,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Studio-Vorschau:** Ein Raum nur mit Thermostat bekommt kein Klima-Badge mehr.
 - **Kaffee-Kachel:** Beim Anlegen werden nur echte Kaffeemaschinen vorgeschlagen (auch De'Longhi und Krups), keine Thermometer oder Steckdosen.
 - **Räume mit kyrillischen Namen (#51):** Alle solchen Räume bekamen dieselbe Adresse, nur einer ließ sich öffnen. Kyrillische Raumnamen bekommen jetzt eine eigene Adresse; so gespeicherte Dashboards repariert das Studio beim Öffnen (einmal speichern).
+- **Speiseplan-Wochenleiste:** In der Woche der Zeitumstellung stand statt Montag ein zweiter Sonntag mit dem Rezept vom Sonntag.
 - **Klingel, Sprechen (#23):** Die Karte schaltet erst auf den Ton der Sprechverbindung um, wenn dort echter Ton ankommt; Stille schaltet den Player nicht mehr stumm. Mehr Angaben zur Fehlersuche in der Browser-Konsole.
 - **Home Connect aus HACS:** Waschmaschinen, Trockner und Geschirrspüler von Home Connect Alt wurden nie erkannt. Home Connect Alt und Home Connect Local werden jetzt erkannt.
 - **Geschirrspüler-Vorschläge:** Das Studio schlägt einen Backofen oder eine Kaffeemaschine von Home Connect nicht mehr als Geschirrspüler vor, in jeder Sprache.

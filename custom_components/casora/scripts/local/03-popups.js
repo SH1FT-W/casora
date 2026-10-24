@@ -1184,7 +1184,7 @@
     var C = R.cal;
     if (C.busy || (C.ts && Date.now() - C.ts < 300000) || !hass || !hass.callApi || !cal()) return;
     C.busy = true;
-    var s = dayStart(new Date()), e = new Date(s.getTime() + 7 * 86400000);
+    var s = dayStart(new Date()), e = new Date(s); e.setDate(s.getDate() + 7);
     hass.callApi('GET', 'calendars/' + cal() + '?start=' + encodeURIComponent(s.toISOString()) + '&end=' + encodeURIComponent(e.toISOString()))
       .then(function (r) { C.list = (r || []).map(function (ev) {
         var st = ev.start && (ev.start.dateTime || ev.start.date);
@@ -1256,7 +1256,8 @@
     if (C.list) {
       var t0 = dayStart(new Date());
       for (var i = 0; i < 7; i++) {
-        var d = new Date(t0.getTime() + i * 86400000);
+        // Calendar days, not 24 h steps: in the week the clocks change, Monday was a second Sunday (gate 24.10.2026).
+        var d = new Date(t0); d.setDate(t0.getDate() + i);
         var meals = C.list.filter(function (x) { return dayStart(x.when).getTime() === dayStart(d).getTime(); });
         var m0 = meals[0];
         strip += '<div class="hrk-d' + (i === 0 ? ' now' : '') + '"><div class="hrk-h"><b>' + (i === 0 ? todayUp() : dayUp(d)) + '</b><span>' + d.getDate() + '</span></div>'
