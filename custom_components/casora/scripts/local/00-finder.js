@@ -2043,6 +2043,377 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     dish: dish, dishNames: DISH_NAMES, dishwashers: dishwashers };
 })();
 
+// ── Fridge and freezer: where the values come from (24.10.2026) ───────────────────
+// One finder for the fridge card (30-kuehlschrank.js), the Studio (main entity of a new tile, field
+// placeholders, assistant) and the Python mirror live_finder.py (FRIDGE_SOURCES; dev/unit/live_finder_test.py
+// compares the tables). Detected by the entity's platform and its translation_key first, then by names:
+//   1. Liebherr (HA core `liebherr`, HomeAPI): zone sensors top_zone/middle_zone/bottom_zone (a single zone has no
+//      key, only device_class temperature), numbers setpoint_temperature(_<zone>), switches super_cool/super_frost
+//      (_<zone>), night_mode, party_mode; selects BioFresh-Plus, HydroBreeze, IceMaker as extras. The HACS fork
+//      (bhuebschen/liebherr, same domain) has climate entities per zone and switches named "<nick> supercool 1".
+//   2. Home Connect (HA core `home_connect`, HACS `homeconnect_ws`, `home_connect_alt`): setpoint numbers per
+//      compartment, super mode switches, door binary sensors, eco/vacation/sabbath/fresh modes, door alarms.
+//   3. Generic: a device named like a fridge or freezer with temperature sensors, numbers and/or a door sensor.
+// Without a matching platform (test house: casora_mock) the key combination is enough, as with the laundry finder.
+//   casoraFridgeFind.find(hass, anchor) → { device, source, how, anchor, zones[], modes[], doors[], alarms[],
+//                                          extras[], watch[] } or null
+//   casoraFridgeFind.is(hass, anchor)   → the anchor belongs to a fridge
+//   casoraFridgeFind.all(hass)          → every fridge in the house [{ device, anchor, name, source }]
+//   casoraFridgeFind.field(hass, anchor, name) → one entity for a Studio field (z1temp, z1set, door, night …)
+(function () {
+  if (window.casoraFridgeFind) return;
+
+  function reg(hass) { return (hass && hass.entities) || {}; }
+  function sts(hass) { return (hass && hass.states) || {}; }
+  function devs(hass) { return (hass && hass.devices) || {}; }
+
+  // Zones in display order; labels in German (translated on the way out), the brand names stay.
+  var ZONE_ORDER = ['top', 'middle', 'bottom', 'fridge', 'chiller', 'chiller_left', 'chiller_right', 'flex', 'bottle',
+    'wine', 'wine2', 'wine3', 'freezer', 'single'];
+  var ZONE_LABEL = { top: 'Obere Zone', middle: 'Mittlere Zone', bottom: 'Untere Zone', fridge: 'Kühlteil', freezer: 'Gefrierteil',
+    chiller: 'Frischezone', chiller_left: 'Frischezone links', chiller_right: 'Frischezone rechts', flex: 'Flexfach',
+    bottle: 'Flaschenkühler', wine: 'Weinfach', wine2: 'Weinfach 2', wine3: 'Weinfach 3', single: 'Temperatur' };
+  var MODE = { night: ['Nachtmodus', 'mdi:weather-night'], party: ['Partymodus', 'mdi:party-popper'], vacation: ['Urlaubsmodus', 'mdi:beach'],
+    eco: ['Eco-Modus', 'mdi:leaf'], sabbath: ['Sabbat-Modus', 'mdi:candle'], fresh: ['Frische-Modus', 'mdi:sprout'],
+    dispenser: ['Wasserspender', 'mdi:cup-water'], assist_fridge: ['Türassistent Kühlteil', 'mdi:door-open'],
+    assist_freezer: ['Türassistent Gefrierteil', 'mdi:door-open'] };
+  // Super mode words: Liebherr's brand names, Home Connect's plain words.
+  var SUPER = { liebherr: { cool: 'SuperCool', frost: 'SuperFrost' }, other: { cool: 'Superkühlen', frost: 'Supergefrieren' } };
+
+  // Tables per source: translation_key (home_connect_alt: end of the entity_id) → zone, [zone, kind] or mode.
+  // Plain data, so live_finder.py can hold the same tables (parity test).
+  var SOURCES = [
+    { id: 'liebherr', platforms: ['liebherr'],
+      temps: { top_zone: 'top', middle_zone: 'middle', bottom_zone: 'bottom' },
+      sets: { setpoint_temperature: 'single', setpoint_temperature_top_zone: 'top', setpoint_temperature_middle_zone: 'middle',
+        setpoint_temperature_bottom_zone: 'bottom' },
+      supers: { super_cool: ['single', 'cool'], super_cool_top_zone: ['top', 'cool'], super_cool_middle_zone: ['middle', 'cool'],
+        super_cool_bottom_zone: ['bottom', 'cool'], super_frost: ['single', 'frost'], super_frost_top_zone: ['top', 'frost'],
+        super_frost_middle_zone: ['middle', 'frost'], super_frost_bottom_zone: ['bottom', 'frost'] },
+      modes: { night_mode: 'night', party_mode: 'party' },
+      doors: {}, alarms: {},
+      // Key prefixes of further settings (selects per zone, presentation light, AutoDoor): rows under "Mehr".
+      extras: ['bio_fresh_plus', 'hydro_breeze', 'ice_maker', 'presentation_light', 'auto_door'],
+      // A single-zone device: the temperature sensor has no key (HA names it after the device).
+      tempDc: true, climate: true, nameSwitches: true },
+    { id: 'home_connect', platforms: ['home_connect'],
+      temps: {},
+      sets: { refrigerator_setpoint_temperature: 'fridge', freezer_setpoint_temperature: 'freezer', chiller_setpoint_temperature: 'chiller',
+        chiller_left_setpoint_temperature: 'chiller_left', chiller_right_setpoint_temperature: 'chiller_right',
+        bottle_cooler_setpoint_temperature: 'bottle', wine_compartment_setpoint_temperature: 'wine',
+        wine_compartment_2_setpoint_temperature: 'wine2', wine_compartment_3_setpoint_temperature: 'wine3' },
+      supers: { refrigerator_super_mode: ['fridge', 'cool'], freezer_super_mode: ['freezer', 'frost'] },
+      modes: { eco_mode: 'eco', vacation_mode: 'vacation', sabbath_mode: 'sabbath', fresh_mode: 'fresh', dispenser_enabled: 'dispenser',
+        door_assistant_fridge: 'assist_fridge', door_assistant_freezer: 'assist_freezer' },
+      doors: { refrigerator_door: 'fridge', freezer_door: 'freezer', chiller_door: 'chiller', common_chiller_door: 'chiller',
+        left_chiller_door: 'chiller_left', right_chiller_door: 'chiller_right', bottle_cooler_door: 'bottle',
+        wine_compartment_door: 'wine', flex_compartment_door: 'flex' },
+      alarms: { refrigerator_door_alarm: ['fridge', 'door'], freezer_door_alarm: ['freezer', 'door'], freezer_temperature_alarm: ['freezer', 'temp'] },
+      extras: [] },
+    { id: 'homeconnect_ws', platforms: ['homeconnect_ws'],
+      temps: {},
+      sets: { number_setpoint_refrigerator: 'fridge', number_setpoint_freezer: 'freezer', number_setpoint_chiller_common: 'chiller' },
+      supers: { switch_super_refrigerator: ['fridge', 'cool'], switch_super_freezer: ['freezer', 'frost'] },
+      modes: { switch_refrigerator_eco: 'eco', switch_refrigerator_vacation: 'vacation', switch_refrigerator_sabbath_mode: 'sabbath',
+        switch_refrigerator_dispenser_enabled: 'dispenser', switch_refrigerator_dispenser_party_mode: 'party',
+        switch_refrigerator_door_assistant_freezer: 'assist_freezer' },
+      doors: { binary_sensor_fridge_door_state: 'fridge', binary_sensor_freezer_door_state: 'freezer',
+        binary_sensor_chiller_common_door_state: 'chiller' },
+      alarms: { binary_sensor_door_alarm_fridge: ['fridge', 'door'], binary_sensor_door_alarm_freezer: ['freezer', 'door'],
+        binary_sensor_door_alarm_chiller_common: ['chiller', 'door'], binary_sensor_temperature_alarm_freezer: ['freezer', 'temp'],
+        binary_sensor_temperature_alarm_chiller_common: ['chiller', 'temp'] },
+      extras: ['switch_refrigeration_light_internal', 'light_internal'] },
+    /* Home Connect Alt (HACS, ekutner): generic keys, entity_ids end with the Home Connect key in lower case
+       (Refrigeration.FridgeFreezer.Setting.SetpointTemperatureRefrigerator → …_setpointtemperaturerefrigerator). */
+    { id: 'home_connect_alt', platforms: ['home_connect_alt'], tail: true,
+      temps: {},
+      sets: { refrigeration_fridgefreezer_setting_setpointtemperaturerefrigerator: 'fridge', refrigeration_common_setting_refrigerator_setpointtemperature: 'fridge',
+        refrigeration_fridgefreezer_setting_setpointtemperaturefreezer: 'freezer', refrigeration_common_setting_freezer_setpointtemperature: 'freezer',
+        refrigeration_common_setting_chillercommon_setpointtemperature: 'chiller', refrigeration_common_setting_chillerleft_setpointtemperature: 'chiller_left',
+        refrigeration_common_setting_chillerright_setpointtemperature: 'chiller_right', refrigeration_common_setting_bottlecooler_setpointtemperature: 'bottle',
+        refrigeration_common_setting_winecompartment_setpointtemperature: 'wine', refrigeration_common_setting_winecompartment2_setpointtemperature: 'wine2',
+        refrigeration_common_setting_winecompartment3_setpointtemperature: 'wine3' },
+      supers: { refrigeration_fridgefreezer_setting_supermoderefrigerator: ['fridge', 'cool'], refrigeration_common_setting_refrigerator_supermode: ['fridge', 'cool'],
+        refrigeration_fridgefreezer_setting_supermodefreezer: ['freezer', 'frost'], refrigeration_common_setting_freezer_supermode: ['freezer', 'frost'] },
+      modes: { refrigeration_common_setting_ecomode: 'eco', refrigeration_fridgefreezer_setting_ecomode: 'eco',
+        refrigeration_common_setting_vacationmode: 'vacation', refrigeration_fridgefreezer_setting_vacationmode: 'vacation',
+        refrigeration_common_setting_sabbathmode: 'sabbath', refrigeration_fridgefreezer_setting_sabbathmode: 'sabbath',
+        refrigeration_common_setting_freshmode: 'fresh', refrigeration_fridgefreezer_setting_freshmode: 'fresh',
+        refrigeration_common_setting_dispenser_enabled: 'dispenser', refrigeration_common_setting_dispenser_partymode: 'party' },
+      doors: { refrigeration_common_status_door_refrigerator: 'fridge', refrigeration_fridgefreezer_status_doorrefrigerator: 'fridge',
+        refrigeration_common_status_door_freezer: 'freezer', refrigeration_fridgefreezer_status_doorfreezer: 'freezer',
+        refrigeration_common_status_door_chiller: 'chiller', refrigeration_common_status_door_chillercommon: 'chiller',
+        refrigeration_common_status_door_chillerleft: 'chiller_left', refrigeration_common_status_door_chillerright: 'chiller_right',
+        refrigeration_common_status_door_bottlecooler: 'bottle', refrigeration_common_status_door_winecompartment: 'wine',
+        refrigeration_common_status_door_flexcompartment: 'flex' },
+      alarms: { refrigeration_fridgefreezer_event_dooralarmrefrigerator: ['fridge', 'door'], refrigeration_common_event_door_alarmrefrigerator: ['fridge', 'door'],
+        refrigeration_fridgefreezer_event_dooralarmfreezer: ['freezer', 'door'], refrigeration_common_event_door_alarmfreezer: ['freezer', 'door'],
+        refrigeration_fridgefreezer_event_temperaturealarmfreezer: ['freezer', 'temp'], refrigeration_common_event_freezer_temperaturealarm: ['freezer', 'temp'] },
+      extras: [] },
+  ];
+  // Names that say "fridge" (generic source, and the HACS Liebherr fork's switches).
+  var FRIDGE_NAME = /k(ü|ue|u)hl|fridge|refrigerat|gefrier|freezer|tiefk(ü|ue|u)hl|frigo|nevera|congelador|eisschrank/i;
+  var NOT_FRIDGE_NAME = /k(ü|ue|u)hlk(ö|oe|o)rper|radiator|wasserk(ü|ue|u)hl|cpu|gpu|k(ü|ue|u)hlmittel|coolant|cooler master|k(ü|ue|u)hlwasser/i;
+  var DOOR_DC = /^(door|opening|garage_door)$/;
+  var DEAD = function (s) { return s == null || s === '' || s === 'unknown' || s === 'unavailable'; };
+
+  function list(hass, devId) {
+    var R = reg(hass), S = sts(hass);
+    return Object.keys(R).filter(function (eid) {
+      var e = R[eid];
+      return e && e.device_id === devId && !e.disabled_by && S[eid];
+    }).sort().map(function (eid) { return item(hass, eid); });
+  }
+  function item(hass, eid) {
+    var e = reg(hass)[eid] || {}, st = sts(hass)[eid], a = (st && st.attributes) || {};
+    return { entity_id: eid, key: e.translation_key || null, domain: eid.split('.')[0], platform: e.platform || null,
+      category: e.entity_category || null, hidden: !!e.hidden, dc: a.device_class || null, unit: a.unit_of_measurement || null,
+      name: String(a.friendly_name || e.name || e.original_name || '') };
+  }
+  // The key of an entity for a source: its translation_key, for Home Connect Alt the matching end of the entity_id.
+  function keyOf(src, e, table) {
+    if (!src.tail) return e.key && table[e.key] !== undefined ? e.key : null;
+    var obj = String(e.entity_id).split('.')[1] || '';
+    var hit = null;
+    Object.keys(table).forEach(function (t) { if (!hit && (obj === t || obj.slice(-(t.length + 1)) === '_' + t)) hit = t; });
+    return hit;
+  }
+  function hasAny(src, lst, table, domain) {
+    return lst.some(function (e) { return (!domain || e.domain === domain) && keyOf(src, e, table) !== null; });
+  }
+  // A source matches: by platform, else (no other known platform on the device) by its keys alone.
+  function matches(src, lst) {
+    if (lst.some(function (e) { return src.platforms.indexOf(e.platform) >= 0; })) return 'platform';
+    var known = SOURCES.some(function (o) { return o !== src && lst.some(function (e) { return o.platforms.indexOf(e.platform) >= 0; }); });
+    if (known || src.tail) return null;
+    var ok = hasAny(src, lst, src.sets, 'number') || hasAny(src, lst, src.temps, 'sensor') || hasAny(src, lst, src.supers, 'switch');
+    return ok ? 'keys' : null;
+  }
+  // Does the device look like a refrigeration appliance of this source at all (Home Connect also builds ovens)?
+  function refrigerates(src, lst) {
+    if (src.tail) return lst.some(function (e) { return /(^|_)refrigeration_/.test(String(e.entity_id).split('.')[1] || ''); });
+    return hasAny(src, lst, src.sets, 'number') || hasAny(src, lst, src.temps, 'sensor') || hasAny(src, lst, src.supers, 'switch')
+      || hasAny(src, lst, src.doors, 'binary_sensor') || (src.climate && lst.some(function (e) { return e.domain === 'climate'; }));
+  }
+  function devName(hass, devId) {
+    var d = devs(hass)[devId] || {};
+    return String(d.name_by_user || d.name || '');
+  }
+  // Entity name without the device name in front ("Combi Obere Zone" → "Obere Zone").
+  function shortName(name, dev) {
+    var n = String(name || '').trim(), d = String(dev || '').trim();
+    if (d && n.toLowerCase().indexOf(d.toLowerCase()) === 0) n = n.slice(d.length).replace(/^[\s:\-–·]+/, '');
+    return n || String(name || '');
+  }
+
+  function zoneIn(zones, key, label) {
+    var z = zones.filter(function (x) { return x.key === key; })[0];
+    if (!z) { z = { key: key, label: label || ZONE_LABEL[key] || key, temp: null, set: null, climate: null, sup: null, supKind: null, supLabel: null, door: null, alarm: null, alarmTemp: null }; zones.push(z); }
+    return z;
+  }
+  function order(zones) {
+    return zones.slice().sort(function (a, b) {
+      var ia = ZONE_ORDER.indexOf(a.key), ib = ZONE_ORDER.indexOf(b.key);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || (a.key < b.key ? -1 : 1);
+    });
+  }
+  // Keyed source: zones, modes, doors, alarms from the tables.
+  function build(src, hass, lst, devId) {
+    var zones = [], modes = [], alarms = [], extras = [], dn = devName(hass, devId);
+    var S = sts(hass);
+    var words = SUPER[src.id === 'liebherr' ? 'liebherr' : 'other'];
+    var seen = {};
+    var take = function (e) { seen[e.entity_id] = true; };
+    lst.forEach(function (e) {
+      var k;
+      if (e.domain === 'sensor' && (k = keyOf(src, e, src.temps))) { zoneIn(zones, src.temps[k]).temp = e.entity_id; take(e); return; }
+      if (e.domain === 'number' && (k = keyOf(src, e, src.sets))) { zoneIn(zones, src.sets[k]).set = e.entity_id; take(e); return; }
+      if (e.domain === 'switch' && (k = keyOf(src, e, src.supers))) {
+        var z = zoneIn(zones, src.supers[k][0]); z.sup = e.entity_id; z.supKind = src.supers[k][1]; z.supLabel = words[z.supKind]; take(e); return;
+      }
+      if (e.domain === 'switch' && (k = keyOf(src, e, src.modes))) {
+        var m = src.modes[k];
+        if (!modes.some(function (x) { return x.key === m; })) modes.push({ key: m, id: e.entity_id, label: MODE[m][0], icon: MODE[m][1] });
+        take(e); return;
+      }
+      if (e.domain === 'binary_sensor' && (k = keyOf(src, e, src.doors))) { zoneIn(zones, src.doors[k]).door = e.entity_id; take(e); return; }
+      if ((e.domain === 'sensor' || e.domain === 'binary_sensor' || e.domain === 'event') && (k = keyOf(src, e, src.alarms))) {
+        var za = zoneIn(zones, src.alarms[k][0]);
+        if (src.alarms[k][1] === 'temp') za.alarmTemp = e.entity_id; else za.alarm = e.entity_id;
+        alarms.push({ id: e.entity_id, zone: za.key, kind: src.alarms[k][1] }); take(e); return;
+      }
+      if (e.key && src.extras.some(function (p) { return e.key.indexOf(p) === 0; }) && !e.category) { extras.push(e.entity_id); take(e); }
+    });
+    // Liebherr single zone: the temperature sensor carries no key.
+    if (src.tempDc) {
+      lst.forEach(function (e) {
+        if (seen[e.entity_id] || e.domain !== 'sensor' || e.dc !== 'temperature' || e.category) return;
+        if (!zones.length) { zoneIn(zones, 'single').temp = e.entity_id; take(e); }
+        else if (zones.length === 1 && !zones[0].temp) { zones[0].temp = e.entity_id; take(e); }
+      });
+    }
+    // HACS Liebherr: climate per zone, switches by name.
+    if (src.climate) {
+      lst.forEach(function (e) {
+        if (seen[e.entity_id] || e.domain !== 'climate') return;
+        var ztemp = zones.filter(function (z) { return !z.set && !z.climate; })[0];
+        // Position from the id or name (the fork appends top/bottom or the zone number), so zones keep their order.
+        var t = (String(e.entity_id).split('.')[1] + ' ' + e.name).toLowerCase();
+        var pos = /top|upper|oben|obere/.test(t) ? 'top' : /middle|mitte/.test(t) ? 'middle' : /bottom|lower|unten|untere/.test(t) ? 'bottom' : 'c' + zones.length;
+        var z = ztemp && zones.length === 1 ? ztemp : zoneIn(zones, pos, shortName(e.name, dn) || ('Zone ' + (zones.length + 1)));
+        z.climate = e.entity_id; take(e);
+      });
+    }
+    if (src.nameSwitches) {
+      lst.forEach(function (e) {
+        if (seen[e.entity_id] || e.domain !== 'switch' || e.category) return;
+        var n = (String(e.entity_id).split('.')[1] + ' ' + e.name).toLowerCase();
+        var m = /nightmode|night_mode/.test(n) ? 'night' : /partymode|party_mode/.test(n) ? 'party' : /holidaymode|holiday_mode|vacation/.test(n) ? 'vacation' : null;
+        if (m) { if (!modes.some(function (x) { return x.key === m; })) modes.push({ key: m, id: e.entity_id, label: MODE[m][0], icon: MODE[m][1] }); take(e); return; }
+        var kind = /supercool|super_cool/.test(n) ? 'cool' : /superfrost|super_frost/.test(n) ? 'frost' : null;
+        if (!kind) return;
+        // "<nick> supercool 1": zone by its number, else the first zone without a super switch.
+        var num = /(\d+)\s*$/.exec(n), idx = num ? parseInt(num[1], 10) - 1 : -1;
+        var zs = order(zones), z = (idx >= 0 && zs[idx]) || zs.filter(function (x) { return !x.sup; })[0] || zoneIn(zones, 'single');
+        z.sup = e.entity_id; z.supKind = kind; z.supLabel = words[kind]; take(e);
+      });
+    }
+    // A single zone with a plain label: say what it is by its target.
+    zones.forEach(function (z) {
+      if (z.key !== 'single') return;
+      var v = parseFloat(((S[z.set] || S[z.temp] || {}).state) || NaN);
+      z.label = isFinite(v) ? (v <= -2 ? ZONE_LABEL.freezer : ZONE_LABEL.fridge) : ZONE_LABEL.single;
+    });
+    return { zones: order(zones), modes: modes, alarms: alarms, extras: extras };
+  }
+  // Generic: a device named like a fridge – temperature sensors as zones, numbers as setpoints, door sensors,
+  // every plain switch as a mode with its own name.
+  function buildGeneric(hass, lst, devId, anchor) {
+    var dn = devName(hass, devId);
+    var temps = lst.filter(function (e) { return e.domain === 'sensor' && e.dc === 'temperature' && !e.category && !e.hidden; });
+    var nums = lst.filter(function (e) { return e.domain === 'number' && !e.category && (e.dc === 'temperature' || /°/.test(String(e.unit || ''))); });
+    var clim = lst.filter(function (e) { return e.domain === 'climate'; });
+    var doors = lst.filter(function (e) { return e.domain === 'binary_sensor' && DOOR_DC.test(String(e.dc || '')) && !e.category; });
+    var sws = lst.filter(function (e) { return e.domain === 'switch' && !e.category && !e.hidden; });
+    // A door contact alone is a door, not a fridge (it belongs in the card's door field): a temperature is needed.
+    if (!temps.length && !nums.length && !clim.length) return null;
+    var zones = [];
+    var label = function (e, i, n) { var s = shortName(e.name, dn); return s && s.toLowerCase() !== dn.toLowerCase() ? s : (n > 1 ? 'Zone ' + (i + 1) : ZONE_LABEL.single); };
+    temps.forEach(function (e, i) { zones.push({ key: 'n' + i, label: label(e, i, temps.length), temp: e.entity_id, set: null, climate: null, sup: null, supKind: null, supLabel: null, door: null, alarm: null, alarmTemp: null }); });
+    if (nums.length === temps.length) nums.forEach(function (e, i) { zones[i].set = e.entity_id; });
+    else nums.forEach(function (e, i) { zones.push({ key: 's' + i, label: label(e, i, nums.length), temp: null, set: e.entity_id, climate: null, sup: null, supKind: null, supLabel: null, door: null, alarm: null, alarmTemp: null }); });
+    clim.forEach(function (e, i) {
+      var z = zones.filter(function (x) { return !x.set && !x.climate && !x.temp; })[0];
+      if (!z) { z = { key: 'c' + i, label: label(e, i, clim.length), temp: null, set: null, climate: null, sup: null, supKind: null, supLabel: null, door: null, alarm: null, alarmTemp: null }; zones.push(z); }
+      z.climate = e.entity_id;
+    });
+    if (!zones.length) zones.push({ key: 'single', label: ZONE_LABEL.single, temp: null, set: null, climate: null, sup: null, supKind: null, supLabel: null, door: null, alarm: null, alarmTemp: null });
+    if (doors.length === zones.length) doors.forEach(function (e, i) { zones[i].door = e.entity_id; });
+    else if (doors.length === 1) zones[0].door = doors[0].entity_id;
+    var modes = sws.map(function (e, i) {
+      var n = shortName(e.name, dn) || e.name;
+      var m = /super\s*cool/i.test(n) ? 'cool' : /super\s*fro/i.test(n) ? 'frost' : null;
+      return { key: 'sw' + i, id: e.entity_id, label: n, icon: m === 'cool' ? 'mdi:snowflake' : m === 'frost' ? 'mdi:snowflake-variant' : 'mdi:toggle-switch-outline' };
+    });
+    var extraDoors = doors.length !== zones.length && doors.length > 1 ? doors.slice(1).map(function (e) { return { id: e.entity_id, label: shortName(e.name, dn) || 'Tür' }; }) : [];
+    return { zones: zones, modes: modes, alarms: [], extras: [], extraDoors: extraDoors };
+  }
+  function nameHit(text) { return FRIDGE_NAME.test(text) && !NOT_FRIDGE_NAME.test(text); }
+
+  // Classify a device: null when it is no fridge.
+  function classify(hass, devId, anchor) {
+    if (!devId) return null;
+    var lst = list(hass, devId);
+    if (!lst.length) return null;
+    var out = null, how = null, src = null;
+    for (var i = 0; i < SOURCES.length && !out; i++) {
+      how = matches(SOURCES[i], lst);
+      if (!how || !refrigerates(SOURCES[i], lst)) continue;
+      src = SOURCES[i];
+      out = build(src, hass, lst, devId);
+    }
+    if (!out) {
+      // Generic only for a device that says so by its name (its own or the anchor's), never for every thermometer.
+      var txt = devName(hass, devId) + ' ' + (anchor ? (item(hass, anchor).name + ' ' + anchor) : '');
+      if (!nameHit(txt)) return null;
+      // A device of a known source that does not refrigerate (an oven) is no fridge, whatever its name.
+      if (SOURCES.some(function (o) { return lst.some(function (e) { return o.platforms.indexOf(e.platform) >= 0; }); })) return null;
+      out = buildGeneric(hass, lst, devId, anchor);
+      if (!out) return null;
+      src = { id: 'generic' }; how = 'name';
+    }
+    return finish(hass, out, devId, src.id, how, anchor);
+  }
+  function finish(hass, out, devId, source, how, anchor) {
+    var zones = out.zones;
+    var doors = zones.filter(function (z) { return z.door; }).map(function (z) { return { id: z.door, label: z.label, zone: z.key }; })
+      .concat(out.extraDoors || []);
+    var anchors = [].concat(zones.map(function (z) { return z.temp; }), zones.map(function (z) { return z.set; }), zones.map(function (z) { return z.climate; }),
+      doors.map(function (d) { return d.id; })).filter(Boolean);
+    if (!anchors.length) return null;
+    var watch = anchors.concat(zones.map(function (z) { return z.sup; }), zones.map(function (z) { return z.alarm; }), zones.map(function (z) { return z.alarmTemp; }),
+      out.modes.map(function (m) { return m.id; }), out.extras).filter(function (x, i, a) { return x && a.indexOf(x) === i; });
+    return { device: devId, source: source, how: how, anchor: anchor && anchors.indexOf(anchor) >= 0 ? anchor : anchors[0],
+      main: anchors[0], zones: zones, modes: out.modes, doors: doors, alarms: out.alarms, extras: out.extras, watch: watch };
+  }
+  // An entity without a device: only when the user picked it and it says "fridge" (a lone thermometer).
+  function lone(hass, eid) {
+    var S = sts(hass);
+    if (!eid || !S[eid]) return null;
+    var e = item(hass, eid);
+    if (!nameHit(e.name + ' ' + eid)) return null;
+    var z = { key: 'single', label: ZONE_LABEL.single, temp: null, set: null, climate: null, sup: null, supKind: null, supLabel: null, door: null, alarm: null, alarmTemp: null };
+    if (e.domain === 'sensor') z.temp = eid; else if (e.domain === 'number') z.set = eid; else if (e.domain === 'climate') z.climate = eid;
+    else if (e.domain === 'binary_sensor') z.door = eid; else return null;
+    return finish(hass, { zones: [z], modes: [], alarms: [], extras: [] }, null, 'generic', 'name', eid);
+  }
+
+  var memo = { reg: null, map: {} };
+  function find(hass, anchor) {
+    if (!anchor) return null;
+    var R = reg(hass);
+    if (memo.reg !== R) memo = { reg: R, map: {} };
+    var e = R[anchor];
+    var devId = (e && e.device_id) || null;
+    var key = (devId || '-') + '|' + anchor;
+    if (memo.map[key] !== undefined) return memo.map[key];
+    var out = devId ? classify(hass, devId, anchor) : lone(hass, anchor);
+    memo.map[key] = out;
+    return out;
+  }
+  function is(hass, anchor) { return !!find(hass, anchor); }
+  // Every fridge in the house: one entry per device, the main entity as anchor.
+  function all(hass) {
+    var D = devs(hass), out = [];
+    Object.keys(D).forEach(function (id) {
+      var d = D[id];
+      if (!d || d.disabled_by || d.entry_type === 'service') return;
+      var c = classify(hass, id, null);
+      if (c) out.push({ device: id, anchor: c.main, name: devName(hass, id), source: c.source, area: d.area_id || null });
+    });
+    // The makers' integrations before a device that is a fridge only by its name.
+    out.sort(function (a, b) { return (a.source === 'generic') - (b.source === 'generic') || a.name.localeCompare(b.name) || (a.device < b.device ? -1 : 1); });
+    return out;
+  }
+  // One entity for a Studio field (placeholder "Automatisch: …").
+  var FIELDS = {
+    z1temp: function (c) { return (c.zones[0] || {}).temp || null; }, z1set: function (c) { return (c.zones[0] || {}).set || (c.zones[0] || {}).climate || null; },
+    z2temp: function (c) { return (c.zones[1] || {}).temp || null; }, z2set: function (c) { return (c.zones[1] || {}).set || (c.zones[1] || {}).climate || null; },
+    door: function (c) { return (c.doors[0] || {}).id || null; },
+    supercool: function (c) { return (c.zones.filter(function (z) { return z.supKind === 'cool'; })[0] || {}).sup || null; },
+    superfrost: function (c) { return (c.zones.filter(function (z) { return z.supKind === 'frost'; })[0] || {}).sup || null; },
+    night: function (c) { return (c.modes.filter(function (m) { return m.key === 'night'; })[0] || {}).id || null; },
+    party: function (c) { return (c.modes.filter(function (m) { return m.key === 'party'; })[0] || {}).id || null; },
+  };
+  function field(hass, anchor, name) {
+    var c = find(hass, anchor);
+    return c && FIELDS[name] ? FIELDS[name](c) : null;
+  }
+
+  window.casoraFridgeFind = { find: find, is: is, all: all, field: field, classify: classify, sources: SOURCES,
+    zoneLabel: ZONE_LABEL, modeInfo: MODE, superWords: SUPER, nameRe: FRIDGE_NAME, notNameRe: NOT_FRIDGE_NAME, dead: DEAD };
+})();
+
 // ── Assist suggestions from the own house (D-ASSIST, 06.10.2026) ────────────
 // Formerly fixed sentences per time of day („Wie warm ist das Aquarium?“) – in another house
 // they led nowhere. Now building blocks that only appear when there are matching devices;

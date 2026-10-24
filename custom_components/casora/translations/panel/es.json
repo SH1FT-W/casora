@@ -2578,7 +2578,18 @@
     "A Home Assistant template. Its result is the badge's text and updates live.": "Una plantilla de Home Assistant. Su resultado es el texto de la insignia y se actualiza en directo.",
     "On tap": "Al tocar",
     "Do nothing": "No hacer nada",
-    "Visible in the popup": "Visible en la ventana"
+    "Visible in the popup": "Visible en la ventana",
+    "A zone temperature, setpoint or door of the fridge": "Una temperatura de zona, una consigna o la puerta del frigorífico",
+    "Zone 1 temperature": "Temperatura zona 1",
+    "Zone 1 setpoint": "Consigna zona 1",
+    "Zone 2 temperature": "Temperatura zona 2",
+    "Zone 2 setpoint": "Consigna zona 2",
+    "Zones": "Zonas",
+    "SuperCool": "SuperCool",
+    "SuperFrost": "SuperFrost",
+    "Night mode": "Modo nocturno",
+    "Party mode": "Modo fiesta",
+    "Modes": "Modos"
   },
   "patterns": [
     [

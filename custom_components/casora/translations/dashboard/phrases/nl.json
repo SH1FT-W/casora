@@ -2390,7 +2390,41 @@
   "eMTB+": "eMTB+",
   "Zuletzt gesehen": "Laatst gezien",
   "Software-Update": "Software-update",
-  "Verfügbar": "Beschikbaar"
+  "Verfügbar": "Beschikbaar",
+  "Obere Zone": "Bovenste zone",
+  "Mittlere Zone": "Middelste zone",
+  "Untere Zone": "Onderste zone",
+  "Kühlteil": "Koelkast",
+  "Gefrierteil": "Vriezer",
+  "Frischezone": "Versheidszone",
+  "Frischezone links": "Versheidszone links",
+  "Frischezone rechts": "Versheidszone rechts",
+  "Flexfach": "Flexvak",
+  "Flaschenkühler": "Flessenkoeler",
+  "Weinfach": "Wijnvak",
+  "Weinfach 2": "Wijnvak 2",
+  "Weinfach 3": "Wijnvak 3",
+  "Partymodus": "Feestmodus",
+  "Urlaubsmodus": "Vakantiemodus",
+  "Eco-Modus": "Ecomodus",
+  "Sabbat-Modus": "Sabbatmodus",
+  "Frische-Modus": "Versheidsmodus",
+  "Wasserspender": "Waterdispenser",
+  "Türassistent Kühlteil": "Deurassistent koelkast",
+  "Türassistent Gefrierteil": "Deurassistent vriezer",
+  "Superkühlen": "Supersnelkoelen",
+  "Supergefrieren": "Supersnelvriezen",
+  "Kühlschrank": "Koelkast",
+  "Gefrierschrank": "Vriezer",
+  "Kühl-Gefrier-Kombination": "Koel-vriescombinatie",
+  "Türalarm": "Deuralarm",
+  "Temperaturalarm": "Temperatuuralarm",
+  "Modi": "Standen",
+  "Kein Kühlschrank gefunden": "Geen koelkast gevonden",
+  "Wähle im Studio einen Temperatursensor oder Sollwert des Kühlschranks.": "Kies in de Studio een temperatuursensor of setpoint van de koelkast.",
+  "SuperCool": "SuperCool",
+  "SuperFrost": "SuperFrost",
+  "Super": "Super"
  },
  "patterns": [
   [
@@ -4364,6 +4398,14 @@
   [
    "^([\\d.,]+) Mbit/s Upload$",
    "{1} Mbit/s upload"
+  ],
+  [
+   "^Sollwert (.+)$",
+   "Setpoint {1}"
+  ],
+  [
+   "^Zone (\\d+)$",
+   "Zone {1}"
   ]
  ]
 }

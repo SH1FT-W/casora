@@ -288,5 +288,24 @@ st("select.hcs_prog", "dishcare_dishwasher_program_eco_50", options=["dishcare_d
 f = lf.classify("hcs", hcs, S.get)
 check("stage without print status hides no dishwasher", f is not None and f.kind == "dishwasher", f)
 
+# ── 5) Fridge tables like the card (casoraFridgeFind.sources) ───────────
+JS_FRIDGE = r"""
+const fs = require('fs');
+const src = fs.readFileSync(process.argv[1], 'utf8');
+const win = {};
+try { new Function('window', 'document', src)(win, { createElement: () => ({ style: {} }) }); } catch (e) { /* other modules */ }
+console.log(JSON.stringify(win.casoraFridgeFind.sources));
+"""
+try:
+    out = subprocess.run([node, "-e", JS_FRIDGE, os.path.join(ROOT, "custom_components/casora/scripts/local/00-finder.js")],
+                         capture_output=True, text=True, check=True).stdout
+    check("fridge sources as casoraFridgeFind.sources", json.loads(out) == lf.FRIDGE_SOURCES)
+except Exception as err:  # noqa: BLE001
+    check("JS fridge tables readable", False, err)
+lhf = [E("sensor.kf_top", "top_zone", "liebherr"), E("number.kf_set", "setpoint_temperature_top_zone", "liebherr")]
+check("fridge source: Liebherr", lf.fridge_source(lhf) == "liebherr")
+check("fridge source: Home Connect fridge", lf.fridge_source([E("number.kg_set", "refrigerator_setpoint_temperature", "home_connect")]) == "home_connect")
+check("fridge source: Home Connect oven is none", lf.fridge_source(oven) is None)
+
 print("\nALL OK" if not fails else f"\n{len(fails)} FAILED")
 sys.exit(1 if fails else 0)

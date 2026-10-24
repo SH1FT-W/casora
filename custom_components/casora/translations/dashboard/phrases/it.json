@@ -2390,7 +2390,41 @@
   "eMTB+": "eMTB+",
   "Zuletzt gesehen": "Ultima posizione",
   "Software-Update": "Aggiornamento software",
-  "Verfügbar": "Disponibile"
+  "Verfügbar": "Disponibile",
+  "Obere Zone": "Zona superiore",
+  "Mittlere Zone": "Zona centrale",
+  "Untere Zone": "Zona inferiore",
+  "Kühlteil": "Frigorifero",
+  "Gefrierteil": "Congelatore",
+  "Frischezone": "Zona freschezza",
+  "Frischezone links": "Zona freschezza sinistra",
+  "Frischezone rechts": "Zona freschezza destra",
+  "Flexfach": "Scomparto flessibile",
+  "Flaschenkühler": "Raffredda bottiglie",
+  "Weinfach": "Scomparto vino",
+  "Weinfach 2": "Scomparto vino 2",
+  "Weinfach 3": "Scomparto vino 3",
+  "Partymodus": "Modalità festa",
+  "Urlaubsmodus": "Modalità vacanza",
+  "Eco-Modus": "Modalità eco",
+  "Sabbat-Modus": "Modalità Sabbath",
+  "Frische-Modus": "Modalità freschezza",
+  "Wasserspender": "Distributore d'acqua",
+  "Türassistent Kühlteil": "Assistente porta frigorifero",
+  "Türassistent Gefrierteil": "Assistente porta congelatore",
+  "Superkühlen": "Super raffreddamento",
+  "Supergefrieren": "Super congelamento",
+  "Kühlschrank": "Frigorifero",
+  "Gefrierschrank": "Congelatore",
+  "Kühl-Gefrier-Kombination": "Frigorifero combinato",
+  "Türalarm": "Allarme porta",
+  "Temperaturalarm": "Allarme temperatura",
+  "Modi": "Modalità",
+  "Kein Kühlschrank gefunden": "Nessun frigorifero trovato",
+  "Wähle im Studio einen Temperatursensor oder Sollwert des Kühlschranks.": "Scegli nello Studio un sensore di temperatura o un setpoint del frigorifero.",
+  "SuperCool": "SuperCool",
+  "SuperFrost": "SuperFrost",
+  "Super": "Super"
  },
  "patterns": [
   [
@@ -4364,6 +4398,14 @@
   [
    "^([\\d.,]+) Mbit/s Upload$",
    "{1} Mbit/s upload"
+  ],
+  [
+   "^Sollwert (.+)$",
+   "Setpoint {1}"
+  ],
+  [
+   "^Zone (\\d+)$",
+   "Zona {1}"
   ]
  ]
 }

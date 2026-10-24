@@ -440,6 +440,8 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             self._attr_native_min_value = float(self.a.get("min", 0))
             self._attr_native_max_value = float(self.a.get("max", 100))
             self._attr_native_step = float(self.a.get("step", 1))
+            # A temperature number needs its native unit, or HA refuses set_value (fridge setpoints).
+            self._attr_native_unit_of_measurement = self.a.get("unit_of_measurement")
 
         async def async_set_native_value(self, value: float) -> None:
             self.put(str(value))

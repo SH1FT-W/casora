@@ -2390,7 +2390,41 @@
   "eMTB+": "eMTB+",
   "Zuletzt gesehen": "Vu pour la dernière fois",
   "Software-Update": "Mise à jour logicielle",
-  "Verfügbar": "Disponible"
+  "Verfügbar": "Disponible",
+  "Obere Zone": "Zone supérieure",
+  "Mittlere Zone": "Zone centrale",
+  "Untere Zone": "Zone inférieure",
+  "Kühlteil": "Réfrigérateur",
+  "Gefrierteil": "Congélateur",
+  "Frischezone": "Zone fraîcheur",
+  "Frischezone links": "Zone fraîcheur gauche",
+  "Frischezone rechts": "Zone fraîcheur droite",
+  "Flexfach": "Compartiment flexible",
+  "Flaschenkühler": "Refroidisseur de bouteilles",
+  "Weinfach": "Compartiment à vin",
+  "Weinfach 2": "Compartiment à vin 2",
+  "Weinfach 3": "Compartiment à vin 3",
+  "Partymodus": "Mode fête",
+  "Urlaubsmodus": "Mode vacances",
+  "Eco-Modus": "Mode éco",
+  "Sabbat-Modus": "Mode sabbat",
+  "Frische-Modus": "Mode fraîcheur",
+  "Wasserspender": "Distributeur d'eau",
+  "Türassistent Kühlteil": "Assistant de porte réfrigérateur",
+  "Türassistent Gefrierteil": "Assistant de porte congélateur",
+  "Superkühlen": "Super froid",
+  "Supergefrieren": "Super congélation",
+  "Kühlschrank": "Réfrigérateur",
+  "Gefrierschrank": "Congélateur",
+  "Kühl-Gefrier-Kombination": "Réfrigérateur-congélateur",
+  "Türalarm": "Alarme de porte",
+  "Temperaturalarm": "Alarme de température",
+  "Modi": "Modes",
+  "Kein Kühlschrank gefunden": "Aucun réfrigérateur trouvé",
+  "Wähle im Studio einen Temperatursensor oder Sollwert des Kühlschranks.": "Choisis dans le Studio un capteur de température ou une consigne du réfrigérateur.",
+  "SuperCool": "SuperCool",
+  "SuperFrost": "SuperFrost",
+  "Super": "Super"
  },
  "patterns": [
   [
@@ -4364,6 +4398,14 @@
   [
    "^([\\d.,]+) Mbit/s Upload$",
    "{1} Mbit/s montant"
+  ],
+  [
+   "^Sollwert (.+)$",
+   "Consigne {1}"
+  ],
+  [
+   "^Zone (\\d+)$",
+   "Zone {1}"
   ]
  ]
 }

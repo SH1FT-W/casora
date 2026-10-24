@@ -2578,7 +2578,18 @@
     "On tap": "Bij tikken",
     "Do nothing": "Niets doen",
     "Visible in the popup": "Zichtbaar in het venster",
-    "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town.": "Bijv. de NINA- of Meteoalarm-waarschuwingen of het DWD-waarschuwingsniveau voor je woonplaats."
+    "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town.": "Bijv. de NINA- of Meteoalarm-waarschuwingen of het DWD-waarschuwingsniveau voor je woonplaats.",
+    "A zone temperature, setpoint or door of the fridge": "Een zonetemperatuur, setpoint of deur van de koelkast",
+    "Zone 1 temperature": "Temperatuur zone 1",
+    "Zone 1 setpoint": "Setpoint zone 1",
+    "Zone 2 temperature": "Temperatuur zone 2",
+    "Zone 2 setpoint": "Setpoint zone 2",
+    "Zones": "Zones",
+    "SuperCool": "SuperCool",
+    "SuperFrost": "SuperFrost",
+    "Night mode": "Nachtmodus",
+    "Party mode": "Feestmodus",
+    "Modes": "Standen"
   },
   "patterns": [
     [

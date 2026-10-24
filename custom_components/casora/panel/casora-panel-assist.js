@@ -93,6 +93,8 @@
     // Dishwashers: the shared recognition (Home Connect, Miele …) – an oven or coffee machine with the same
     // operation_state key is no dishwasher, whatever its name (issue #48 follow-up: a Spanish "Horno").
     const dishes = new Map(LF && LF.dishwashers ? LF.dishwashers(hass).map((c) => [c.device, c]) : []);
+    const FF = window.casoraFridgeFind;
+    const fridges = new Map(FF ? FF.all(hass).map((c) => [c.device, c]) : []);
     // 3D printers: the printer card's rule and table (casoraDevice.isPrinter/printerFields in 00-finder.js);
     // the main entity is the print status, else the stage.
     const CD = window.casoraDevice;
@@ -121,6 +123,10 @@
       }
       const dw = !type && dishes.get(id);
       if (dw && typeIds.has("casora_dishwasher")) { type = "casora_dishwasher"; entity = dw.state; reason = "key"; }
+      // Fridges and freezers: the shared finder (casoraFridgeFind in 00-finder.js) – Liebherr, Home Connect, a device named
+      // like a fridge; its main entity (zone temperature, setpoint or door) is the tile's entity.
+      const fr = !type && fridges.get(id);
+      if (fr && typeIds.has("casora_fridge")) { type = "casora_fridge"; entity = fr.anchor; reason = fr.source === "generic" ? "name" : "key"; }
       const pr = !type && typeIds.has("casora_3d_printer") && printerOf(id, list);
       if (pr) { type = "casora_3d_printer"; entity = pr.entity_id; reason = "key"; }
       for (const s of SPECIAL) {
@@ -220,6 +226,7 @@
   // Alltagswörter je Kacheltyp – damit „Spülmaschine“ den Geschirrspüler findet.
   const SYNONYMS = {
     casora_dishwasher: ["spuelmaschine", "geschirrspueler", "spueler", "dishwasher"],
+    casora_fridge: ["kuehlschrank", "kuehl", "gefrierschrank", "gefrier", "tiefkuehl", "fridge", "freezer", "refrigerator"],
     casora_washer: ["waschmaschine", "waesche", "washer", "washing"],
     casora_dryer: ["trockner", "waeschetrockner", "dryer"],
     vacuum: ["sauger", "staubsauger", "saugroboter", "roboter", "wischer", "vacuum", "robot"],

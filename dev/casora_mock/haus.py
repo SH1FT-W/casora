@@ -58,8 +58,8 @@ def vacuum_map(fixture: dict) -> None:
 
 def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict | None = None) -> dict:
     """Fixture plus the made-up devices, in the order async_setup_entry always used."""
-    from . import (aquarium, befeuchter, ebike, frigate, fussball, haustier, halten, hubs, kaffee, klingel, live, maeher,
-                   testserver, waesche)
+    from . import (aquarium, befeuchter, ebike, frigate, fussball, haustier, halten, hubs, kaffee, klingel, kuehlschrank, live,
+                   maeher, testserver, waesche)
     if stress:
         merge(fixture, stress)
     # Demo house (dev/demo/demo_fixture.py sets "_demo"): without the German test devices (washers A/B with
@@ -89,6 +89,8 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
     merge(fixture, befeuchter.extra(now), "Testbefeuchter")
     # A made-up home server with System-Monitor-like sensors (community card "Chart", #50), see testserver.py.
     merge(fixture, testserver.extra(now), "Testserver")
+    # A made-up Liebherr-like fridge-freezer with two zones, setpoints and modes (fridge card), see kuehlschrank.py.
+    merge(fixture, kuehlschrank.extra(now), "Testfrost")
     if not demo:
         # One test device per tile type for the hold menu (light, climate, printer, alarm ...), see halten.py.
         merge(fixture, halten.extra(now), "Halten-Testgeräte")
