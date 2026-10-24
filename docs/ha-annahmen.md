@@ -108,6 +108,17 @@ Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCE
   (laundry_care.py). Entitäts-IDs aus den übersetzten Namen (`has_entity_name`), daher die deutschen Endungen in
   `casoraLaundryFind.dishNames` (translations/de.json).
 
+- `ha_bosch_ebike` (Xunil99/ha-bosch-ebike 1.19.59, Stand 24.10.2026): ein Gerät je Rad (`identifiers (DOMAIN, bike_id)`,
+  Name = Antrieb), alle Entitäten daran, `has_entity_name`. Sensoren mit `translation_key` (`odometer`,
+  `days_since_last_ride`, `service_due_in_days`/`service_due_in_km`, `total_distance_activities`, `total_duration`,
+  `estimated_range_full`, `energy_charged_365d`, …; `number` `battery_capacity`/`service_due_odometer`, `date`
+  `service_due_date`) bekommen seit 1.18 (Juni 2026) übersetzte Namen, in deutschem HA also deutsche Entitäts-IDs
+  (`…_tage_seit_letzter_fahrt`). Akku (`<Akkumodell> Charge Cycles`/`Wh Lifetime`/`State of Health`), Reichweite je Modus
+  (`Reachable Range <Modus>`), `Range Band`, Diebstahl (`Theft Reported`), Software-Update und `Last Known Location`
+  haben feste englische Namen ohne Schlüssel. `03-popups.js` (`_casoraBike`) findet das Rad deshalb über das Gerät
+  (Plattform oder zwei Rad-Schlüssel oder Diebstahlsensor) und liest je Feld Schlüssel, sonst englische Endung;
+  Tests `dev/unit/ebike_zuordnung.mjs`, `dev/qa/regress/r323_ebike_neue_integration.mjs`, Testrad `dev/casora_mock/ebike.py`.
+
 Bekannt wacklig (Stand 2026.10.1, nicht im Test, weil es Rückfälle bzw. HACS-Schlüssel sind):
 
 - `reolink`: Kamera `clear`, `fluent`, `balanced` und Auswahl `day_night` gibt es im Kern nicht (nur Rückfall).
