@@ -15,7 +15,7 @@
 
   // Kacheltyp je Domain (Reihenfolge = Vorrang, wenn ein Gerät mehrere hat).
   const BY_DOMAIN = [
-    ["climate", "thermostat"], ["vacuum", "vacuum"], ["alarm_control_panel", "casora_alarm"],
+    ["climate", "thermostat"], ["vacuum", "vacuum"], ["lawn_mower", "casora_lawn_mower"], ["alarm_control_panel", "casora_alarm"],
     ["lock", "lock"], ["cover", "cover"], ["media_player", "media"], ["camera", "casora_camera"],
     ["fan", "fan"], ["humidifier", "humidifier"], ["light", "light"],
   ];
@@ -68,7 +68,7 @@
 
   // Devices behind a hub (Hue bridge, Zigbee coordinator, Matter bridge …) carry via_device_id. They count when they
   // have something to operate; parts of another device (printer camera, AMS, dock) stay out.
-  const VIA_DOMAINS = new Set(["light", "cover", "lock", "climate", "fan", "humidifier", "media_player", "vacuum"]);
+  const VIA_DOMAINS = new Set(["light", "cover", "lock", "climate", "fan", "humidifier", "media_player", "vacuum", "lawn_mower"]);
   // A ceiling fan or a garage door with a light: the light gets its own tile next to the device's tile.
   const LIGHT_TOO = new Set(["fan", "cover"]);
 

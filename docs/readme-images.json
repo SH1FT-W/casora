@@ -101,7 +101,7 @@
         "icon": "robot-mower-outline",
         "title": "Robot lawn mower",
         "ver": "1.5.0",
-        "text": "Mowing, parked or trapped, the battery as a ring, to station, mow and park, and the mowing time of the last 7 days. Extra details for Gardena."
+        "text": "Mowing, parked or trapped, the battery as a ring, to station, mow and park, and the mowing time of the last 7 days. Husqvarna Automower, Gardena, Worx Landroid, Segway Navimow, Ecovacs GOAT and Mammotion."
       }
     ],
     "layouts": {
@@ -202,7 +202,7 @@
       {
         "icon": "account-group-outline",
         "title": "Community cards",
-        "text": "Frigate camera, Reolink doorbell, coffee machine, robot lawn mower. They wait in the Studio until you add them."
+        "text": "Frigate camera, Reolink doorbell, coffee machine. They wait in the Studio until you add them."
       },
       {
         "icon": "puzzle-outline",

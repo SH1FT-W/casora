@@ -9,7 +9,6 @@ import { testhaus, loadPanel } from './lib/testhaus.mjs';
 
 // Community card → made-up devices (dev/casora_mock keys) the card has to find.
 const TEST_DEVICES = {
-  casora_lawn_mower: ['testmaeher'], // maeher.py
   casora_pet: ['testhund_tracker'], // haustier.py: the tracker carries the device_tracker, the pet hangs behind it
   casora_frigate: ['frigate_testhof'], // frigate.py
   casora_reolink_doorbell: ['testklingel'], // klingel.py

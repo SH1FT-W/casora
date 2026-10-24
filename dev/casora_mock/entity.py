@@ -378,17 +378,24 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         async def async_send_command(self, command, params=None, **kw) -> None:
             return None
 
-    # Lawn mower like Gardena: state + activity as attribute, read by the mower popup and tile.
+    # Lawn mower: state, plus the Gardena activity attribute where the fixture has one (Husqvarna/Landroid-like
+    # mowers carry no attributes), read by the mower popup and tile.
     class MLawnMower(MockEntity, LawnMowerEntity):
+        def _go(self, state: str, activity: str) -> None:
+            if "activity" in self.a:
+                self.put(state, activity=activity)
+            else:
+                self.put(state)
+
         async def async_start_mowing(self) -> None:
-            self.put("mowing", activity="OK_CUTTING")
+            self._go("mowing", "OK_CUTTING")
 
         async def async_pause(self) -> None:
-            self.put("paused", activity="PAUSED")
+            self._go("paused", "PAUSED")
 
         # No driving time: back in the dock at once and parked by schedule (base state of the tests).
         async def async_dock(self) -> None:
-            self.put("docked", activity="PARKED_TIMER")
+            self._go("docked", "PARKED_TIMER")
 
     class MHumidifier(MockEntity, ToggleMixin, HumidifierEntity):
         # HA checks set_mode/set_humidity against these properties, not against the attributes.

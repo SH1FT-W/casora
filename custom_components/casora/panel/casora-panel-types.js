@@ -304,14 +304,13 @@ window.CASORA_TILE_TYPES = [
     color: "var(--casora-color-green, #30D158)", entityLabel: "Pulse problems", entityPlaceholder: "Automatic",
     onlyIf: (hass) => !!(hass && hass.entities && Object.values(hass.entities).some((e) => e && e.platform === "pulse")),
     fields: [ICON, { ...TITLE, placeholder: "Pulse" }] },
-  // Robot mower (community card 1.5, from a card request): any lawn_mower entity; battery, connection and
-  // "park until further notice" are found by scripts/local/16-maeher.js on the same device. Gardena also
-  // provides activity and error code as attributes.
+  // Robot lawn mower (regular device card since 26.10; community card in 1.5): any lawn_mower entity. Status,
+  // battery and connection; mow, pause, back to the station and park. Battery, connection, error, next start,
+  // cutting height, blade usage, rain delay and work areas come from the entities on the same device, by the
+  // integration's translation_keys (scripts/local/16-maeher.js SOURCES: Husqvarna Automower, Gardena smart system,
+  // Worx Landroid, Segway Navimow, Ecovacs GOAT, Mammotion). Gardena also provides activity and error code as attributes.
   { id: "casora_lawn_mower", label: "Robot lawn mower", template: "casora_lawn_mower", domains: ["lawn_mower"],
     icon: "lawn-mower", color: "var(--casora-color-green, #30D158)", entityLabel: "Lawn mower",
-    community: { desc: "Status, battery and connection. Mow, pause, back to the station and park. More details for Gardena.",
-      needs: "lawn_mower", needsText: "For every robot lawn mower in Home Assistant",
-      needsMissing: "No robot lawn mower in Home Assistant yet" },
     fields: [ICON, TITLE_NAME] },
   // Pet tracker (community card, card request #25): every Tractive device_tracker; battery, status, live tracking,
   // sound, light and activity come from the pet and its tracker device (scripts/local/26-haustier.js).
