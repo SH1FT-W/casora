@@ -3,7 +3,8 @@ import re
 
 # Feste Entitäten aus dem Testhaus dürfen nicht ins Paket – bei anderen Nutzern
 # überstimmen sie sonst die gewählte Entität. Erlaubt sind nur Casoras eigene Helfer.
-ALLOWED = re.compile(r"^(\w+\.casora_\w+|sensor\.time|script\.turn_on|climate\.set_hvac_mode|alarm_control_panel\.alarmo)$")
+# Casora's own services (casora.light_smart_toggle …, actions.py) are no entities either.
+ALLOWED = re.compile(r"^(\w+\.casora_\w+|casora\.\w+|sensor\.time|script\.turn_on|climate\.set_hvac_mode|alarm_control_panel\.alarmo)$")
 # Bis Lüften in Casora nachgebaut ist: eigener Sensor (Lüften-Kachel).
 TEMP_ALLOWED = {"binary_sensor.hemma_lueften_hinweis", "sensor.hemma_lueften"}
 ENTITY = re.compile(r"^[a-z_]+\.[a-z0-9_]+$")

@@ -245,6 +245,54 @@
           "description": "Imagens e outros média."
         }
       }
+    },
+    "light_smart_toggle": {
+      "name": "Alternar luz inteligente",
+      "description": "Alterna uma luz ou um grupo de luzes. Ao desligar, o Casora lembra quais lâmpadas estavam acesas e volta a acender exatamente essas.",
+      "fields": {
+        "light_entity": {
+          "name": "Luz",
+          "description": "Luz ou grupo de luzes"
+        }
+      }
+    },
+    "thermostat_overlay_toggle": {
+      "name": "Abrir/fechar controlos do termóstato",
+      "description": "Abre os controlos de temperatura de um mosaico de termóstato, fecha-os com um segundo toque ou muda para outro mosaico.",
+      "fields": {
+        "thermostat_entity_id": {
+          "name": "Mosaico",
+          "description": "Chave do mosaico de termóstato tocado"
+        }
+      }
+    },
+    "actions_overlay_toggle": {
+      "name": "Abrir/fechar ações",
+      "description": "Abre as ações de um mosaico, fecha-as com um segundo toque ou muda para outro mosaico.",
+      "fields": {
+        "actions_entity_id": {
+          "name": "Mosaico",
+          "description": "Chave do mosaico tocado"
+        }
+      }
+    },
+    "restart_toggle": {
+      "name": "Reinício com confirmação",
+      "description": "O primeiro toque pede confirmação, o segundo reinicia o dispositivo e mostra «Concluído»; um toque aí oculta-o.",
+      "fields": {
+        "button_entity": {
+          "name": "Botão de reinício",
+          "description": "Botão que reinicia o dispositivo"
+        },
+        "helper_entity": {
+          "name": "Auxiliar de confirmação",
+          "description": "Interruptor que mostra a confirmação"
+        },
+        "done_entity": {
+          "name": "Auxiliar «Concluído»",
+          "description": "Interruptor que mostra «Concluído»"
+        }
+      }
     }
   },
   "entity": {
@@ -304,6 +352,16 @@
     },
     "timer_invalid_minutes": {
       "message": "Minutos inválidos: {minutes}. Usa um número inteiro de 1 a {max}."
+    }
+  },
+  "issues": {
+    "leftover_scripts": {
+      "title": "O Casora já não precisa destes scripts",
+      "description": "Versões anteriores do Casora adicionaram estes scripts ao scripts.yaml: {scripts}. Os cartões do Casora usam agora ações próprias da integração (p. ex. casora.light_smart_toggle). Podes apagar os scripts (Definições › Automatizações e cenas › Scripts) se as tuas automatizações ou cartões não os usarem."
+    },
+    "leftover_theme_file": {
+      "title": "O Casora já não precisa do seu ficheiro de temas",
+      "description": "Uma versão anterior do Casora guardou os seus designs em {path}. O Casora traz agora os seus designs por si; o ficheiro já não é atualizado. Podes apagá-lo e depois escolher «Recarregar temas» em Ferramentas de programador › YAML."
     }
   }
 }

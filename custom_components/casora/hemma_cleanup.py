@@ -64,6 +64,7 @@ from homeassistant.util.yaml import load_yaml
 from . import hemma_package as pkg
 from .const import ASSETS_DIR, ASSETS_URL_BASE, DOMAIN, PHOTOS_DIR
 from .helfer import _collection
+from .theme import async_set_design, current_design
 from .settings import async_load_settings
 
 _LOGGER = logging.getLogger(__name__)
@@ -1152,12 +1153,16 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
             await hass.async_add_executor_job(_rm_themes)
         except OSError as err:
             errs.append(str(err))
+        # Hemma's theme was the default: HA goes back to its own theme and Casora's design takes over
+        # (theme.py; Casora's designs are no HA themes).
         for key, mode in (("frontend_default_theme", None), ("frontend_default_dark_theme", "dark")):
             cur = hass.data.get(key)
             if cur and str(cur).lower().startswith("hemma"):
-                data = {"name": CASORA_DEFAULT_THEME, **({"mode": mode} if mode else {})}
+                data = {"name": "default", **({"mode": mode} if mode else {})}
                 try:
                     await hass.services.async_call("frontend", "set_theme", data, blocking=True)
+                    if current_design(hass) in (None, ""):
+                        await async_set_design(hass, CASORA_DEFAULT_THEME)
                 except Exception as err:  # noqa: BLE001
                     errs.append(str(err))
         try:

@@ -1,30 +1,24 @@
-"""Voraussetzungen, die Casora selbst einrichtet: Helfer, Skripte, Automatik, Theme.
+"""What Casora sets up by itself: helpers and the small automatic behaviours.
 
-Früher musste man packages/casora_helpers.yaml und themes/casora/ von Hand
-kopieren und configuration.yaml anpassen. Jetzt:
+Earlier one had to copy packages/casora_helpers.yaml and themes/casora/ by hand and edit
+configuration.yaml. Now:
 
-  • Helfer (input_boolean/text/select/number/datetime) – als normale UI-Helfer
-    über die Speicher-Sammlung der jeweiligen Integration, genau wie beim
-    Anlegen unter Einstellungen → Helfer.
-  • Skripte – als Einträge in scripts.yaml (dort legt auch der Skript-Editor
-    sie ab), danach script.reload. Karten rufen sie per script.turn_on auf.
-  • Automatik (Neustart-Knöpfe zurücksetzen, Medienzeile aufklappen) – hier
-    in Python, ohne Automationen.
-  • Themes „Casora …“ – direkt bei der Oberfläche angemeldet, auch nach „Themes
-    neu laden“, und als Kopie im Theme-Ordner (falls configuration.yaml ihn per
-    !include_dir_merge_named lädt), damit sie schon beim HA-Start bereitstehen.
+  • Helpers (input_boolean/text/select/number/datetime) - normal UI helpers, created through the
+    storage collection of their integration, exactly like Settings › Helpers does.
+  • Actions for the cards - services of the integration (actions.py), nothing in scripts.yaml.
+  • Automatic behaviour (reset the restart buttons, expand the media row) - here in Python,
+    without automations.
+  • Designs - served by the integration and applied in the browser (theme.py), no theme file.
 
-Was es schon gibt (z. B. aus einem alten Paket), bleibt unangetastet.
-Der Dienst casora.einrichten wiederholt das Ganze und meldet, was fehlt.
+Nothing in the config folder is written. What exists already (e.g. from an old package) is left alone.
+The service casora.einrichten repeats the setup and reports what is missing.
 """
 
 from __future__ import annotations
 
-import contextlib
 import inspect
 import logging
 import os
-import re
 from typing import Any
 
 import voluptuous as vol
@@ -32,33 +26,23 @@ import voluptuous as vol
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_STATE_CHANGED, UnitOfTemperature
 from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.util.yaml import dump, load_yaml
+from homeassistant.util.yaml import load_yaml
 
+from .actions import FORMER_SCRIPTS
 from .const import DOMAIN
+from .theme import old_theme_file
 
 _LOGGER = logging.getLogger(__name__)
 
 HELPER_DOMAINS = ("input_boolean", "input_text", "input_select", "input_number", "input_datetime")
-# Grundwerte in theme.yaml (kein eigenes Design); die Designs stehen in theme_*.yaml.
-THEME_BASE = "Casora Basis"
-# Frühere Namen: ein so gespeichertes Standard-Theme wird einmal auf den heutigen Namen umgestellt.
-# „Casora Weich“ hieß Casora bis 05.10.2026. Die Legacy-Designs Hemma 2 (früher „Casora Standard“)
-# und Hemma 1 (früher „Casora Glass“) gibt es seit 1.6.1 nicht mehr – ihre Nutzer bekommen
-# „Casora Glas“, den Glas-Look im Casora-Aufbau.
-THEME_GLAS = "Casora Glas"
-THEME_RENAMED = {"Casora Weich": "Casora", "Casora Standard": THEME_GLAS, "Casora Glass": THEME_GLAS,
-                 "Hemma 2": THEME_GLAS, "Hemma 1": THEME_GLAS}
-# Hemmas eigenes Theme hieß „Hemma“ – nur umstellen, wenn es nicht mehr da ist (Hemma entfernt).
-THEME_RENAMED_IF_GONE = {"Hemma": THEME_GLAS}
-# Einmaliger Hinweis im Dashboard (Benutzerdaten, casora-core.js): welcher Hemma-Look ersetzt wurde.
-THEME_NOTICE_KEY = "casora_theme_notice"
-THEME_NOTICE_FROM = {"Hemma 2": "Hemma 2", "Casora Standard": "Hemma 2", "Hemma 1": "Hemma 1",
-                     "Casora Glass": "Hemma 1", "Hemma": "Hemma"}
 EXPANDED_ROW = "input_select.casora_expanded_row"
 RESTART_DONE = ("input_boolean.casora_restart_done_1", "input_boolean.casora_restart_done_2")
 PLAYING = ("playing", "buffering")
+ISSUE_SCRIPTS = "leftover_scripts"
+ISSUE_THEME_FILE = "leftover_theme_file"
 
 _DIR = os.path.dirname(__file__)
 
@@ -68,12 +52,12 @@ def _read(name: str) -> Any:
 
 
 def _collection(hass: HomeAssistant, domain: str):
-    """Speicher-Sammlung eines Helfer-Typs – über den Websocket-Befehl, den auch
-    der Helfer-Dialog benutzt (<domain>/create). None, wenn nicht erreichbar."""
+    """Storage collection of a helper type, via the WebSocket command the helper dialog uses
+    (<domain>/create). None when not reachable."""
     try:
         handler = hass.data["websocket_api"][f"{domain}/create"][0]
         return inspect.unwrap(handler).__self__.storage_collection
-    except Exception:  # noqa: BLE001 – Aufbau kann sich mit HA-Versionen ändern
+    except Exception:  # noqa: BLE001 - the layout may change between HA versions
         return None
 
 
@@ -93,7 +77,7 @@ def _adapt(hass: HomeAssistant, domain: str, key: str, conf: dict) -> dict:
 
 
 async def _add_options(coll, key: str, wanted: list[str]) -> None:
-    """Fehlende Optionen an eine gespeicherte Auswahlliste anhängen (YAML-Listen bleiben unberührt)."""
+    """Append missing options to a stored select (YAML selects stay untouched)."""
     if coll is None:
         return
     item = (getattr(coll, "data", None) or {}).get(key)
@@ -118,8 +102,8 @@ async def _ensure_helpers(hass: HomeAssistant, spec: dict) -> tuple[list[str], l
         for key, conf in items.items():
             entity_id = f"{domain}.{key}"
             if _exists(hass, entity_id):
-                # Auswahllisten, die Casora früher angelegt hat, bekommen neue Optionen nachgetragen
-                # (z. B. „scenes“ für die Szenen-Badge) – eigene Zusätze bleiben erhalten.
+                # Selects Casora created earlier get new options added (e.g. "scenes" for the
+                # scene badge); the user's own additions stay.
                 if domain == "input_select" and conf.get("options"):
                     coll = coll or _collection(hass, domain)
                     await _add_options(coll, key, list(conf["options"]))
@@ -130,8 +114,8 @@ async def _ensure_helpers(hass: HomeAssistant, spec: dict) -> tuple[list[str], l
                 continue
             conf = _adapt(hass, domain, key, conf)
             try:
-                # Die ID entsteht aus dem Namen – erst mit dem Schlüssel anlegen,
-                # dann den lesbaren Namen setzen (die entity_id bleibt).
+                # The id comes from the name: create with the key first, then set the
+                # readable name (the entity_id stays).
                 item = await coll.async_create_item({**conf, "name": key})
                 item_id = item["id"] if isinstance(item, dict) else getattr(item, "id", key)
                 await coll.async_update_item(item_id, {**conf, "name": conf.get("name", key)})
@@ -142,350 +126,7 @@ async def _ensure_helpers(hass: HomeAssistant, spec: dict) -> tuple[list[str], l
     return created, failed
 
 
-def _scripts_file_ok(config_dir: str) -> bool:
-    """Lädt configuration.yaml die scripts.yaml? (Standard bei neuen Installationen)"""
-    try:
-        with open(os.path.join(config_dir, "configuration.yaml"), encoding="utf-8") as f:
-            text = f.read()
-    except OSError:
-        return False
-    # Also with quotes or a trailing comment (script: !include "scripts.yaml"  # UI).
-    return re.search(r"^script:[ \t]*!include[ \t]+['\"]?scripts\.yaml['\"]?[ \t]*(#.*)?$", text.lstrip("\ufeff"), re.M) is not None
-
-
-def _scripts_file_named(config_dir: str) -> bool:
-    """Does configuration.yaml name scripts.yaml at all (outside comments)? Without that the try is not worth a write."""
-    try:
-        with open(os.path.join(config_dir, "configuration.yaml"), encoding="utf-8") as f:
-            text = f.read()
-    except OSError:
-        return False
-    return any("scripts.yaml" in line.split("#", 1)[0] for line in text.splitlines())
-
-
-def _append_scripts(config_dir: str, scripts: dict) -> tuple[bool, str] | None:
-    """Hängt Skripte an scripts.yaml an – ohne den Rest neu zu schreiben, damit
-    Kommentare und !secret-Verweise des Nutzers erhalten bleiben.
-
-    Keys already at the top level of the file are not written again (no duplicates after a failed try).
-    Returns (file existed, old content) for _restore_scripts, or None when nothing was written."""
-    path = os.path.join(config_dir, "scripts.yaml")
-    try:
-        with open(path, encoding="utf-8") as f:
-            raw = f.read()
-        existed = True
-    except FileNotFoundError:
-        raw, existed = "", False
-    scripts = {k: v for k, v in scripts.items()
-               if not re.search(rf"^[\"']?{re.escape(k)}[\"']?[ \t]*:", raw, re.M)}
-    if not scripts:
-        return None
-    old = raw
-    if old.strip() in ("", "{}"):
-        old = ""
-    elif not old.endswith("\n"):
-        old += "\n"
-    body = old + ("\n" if old else "") + dump(scripts)
-    tmp = path + ".casora.tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write(body)
-    os.replace(tmp, path)
-    return existed, raw
-
-
-def _restore_scripts(config_dir: str, before: tuple[bool, str]) -> None:
-    """Puts scripts.yaml back as it was before _append_scripts."""
-    path = os.path.join(config_dir, "scripts.yaml")
-    existed, raw = before
-    if not existed:
-        with contextlib.suppress(FileNotFoundError):
-            os.remove(path)
-        return
-    tmp = path + ".casora.tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write(raw)
-    os.replace(tmp, path)
-
-
-async def _ensure_scripts(hass: HomeAssistant, spec: dict) -> tuple[list[str], list[str], bool]:
-    """Returns (created, failed, include_ok). include_ok False: configuration.yaml does not load scripts.yaml.
-
-    Forum 23.10.2026: the include line was not recognised although it was there, so nothing was written.
-    The check of configuration.yaml is only a hint now: Casora writes the scripts, reloads and looks
-    whether HA created them. If not and the include line is missing, scripts.yaml is put back."""
-    wanted = spec.get("script") or {}
-    missing = {k: v for k, v in wanted.items() if not _exists(hass, f"script.{k}")}
-    if not missing:
-        return [], [], True
-    ids = [f"script.{k}" for k in missing]
-    cfg = hass.config.config_dir
-    include_ok = await hass.async_add_executor_job(_scripts_file_ok, cfg)
-    # No mention of scripts.yaml in configuration.yaml: HA cannot load it – do not write and put back on every start.
-    if not include_ok and not await hass.async_add_executor_job(_scripts_file_named, cfg):
-        return [], ids, False
-    try:
-        before = await hass.async_add_executor_job(_append_scripts, cfg, missing)
-    except OSError:
-        # scripts.yaml not writable (read-only config, single-file mount): the notice names the scripts.
-        _LOGGER.warning("Casora: scripts.yaml nicht beschreibbar", exc_info=True)
-        return [], ids, include_ok
-    try:
-        await hass.services.async_call("script", "reload", blocking=True)
-    except Exception:  # noqa: BLE001 – a broken script elsewhere: the check below tells
-        _LOGGER.warning("Casora: script.reload fehlgeschlagen", exc_info=True)
-    failed = [i for i in ids if hass.states.get(i) is None]
-    created = [i for i in ids if i not in failed]
-    if failed and not include_ok and not created:
-        if before is not None:
-            try:
-                await hass.async_add_executor_job(_restore_scripts, cfg, before)
-            except OSError:
-                _LOGGER.warning("Casora: scripts.yaml nicht zurückgesetzt", exc_info=True)
-        return [], ids, False
-    return created, failed, True
-
-
-# ── Theme ────────────────────────────────────────────────────────────────────
-
-def _overlay(base: dict, over: dict) -> dict:
-    out = dict(base)
-    for k, v in over.items():
-        out[k] = _overlay(base[k], v) if isinstance(v, dict) and isinstance(base.get(k), dict) else v
-    return out
-
-
-def _load_theme() -> dict:
-    data = load_yaml(os.path.join(_DIR, "theme.yaml")) or {}
-    themes: dict = {}
-    # Die Designs: nur ihre Abweichungen liegen in theme_<name>.yaml, der Rest kommt aus den Grundwerten.
-    base = data.get(THEME_BASE)
-    if not base:
-        return themes
-    # casora-theme-base: dieser Look baut auf einem anderen Look auf (Nebel auf Casora/Weich)
-    # statt direkt auf dem Grund-Theme – er wird erst danach zusammengesetzt.
-    later = []
-    for fn in sorted(os.listdir(_DIR)):
-        if fn.startswith("theme_") and fn.endswith(".yaml"):
-            for name, over in (load_yaml(os.path.join(_DIR, fn)) or {}).items():
-                parent = over.get("casora-theme-base") if isinstance(over, dict) else None
-                if parent:
-                    later.append((name, parent, {k: v for k, v in over.items() if k != "casora-theme-base"}))
-                else:
-                    themes[name] = _overlay(base, over)
-    for name, parent, over in later:
-        themes[name] = _overlay(themes.get(parent, base), over)
-    return themes
-
-
-@callback
-def _inject_theme(hass: HomeAssistant, themes: dict, retired: frozenset = frozenset()) -> bool:
-    store = hass.data.get("frontend_themes")
-    if store is None:
-        return False
-    added = False
-    # Früher von Casora angemeldete Designs (alte Theme-Datei beim Start, alte Sitzung).
-    for name in retired:
-        if name in store and name not in themes:
-            del store[name]
-            added = True
-    for name, theme in themes.items():
-        # Auch ersetzen: die Kopie im Theme-Ordner (unten) kann von einer älteren Version stammen.
-        if store.get(name) != theme:
-            store[name] = theme
-            added = True
-    return added
-
-
-# Kopie im Theme-Ordner: HA lädt ihn schon beim Start der Oberfläche, lange bevor Casora
-# selbst geladen ist. Sonst zeichnet das Dashboard nach einem Neustart kurz ohne Casora-Theme.
-THEME_FILE = "casora-themes.yaml"
-_THEMES_INCLUDE = re.compile(r"^[ \t]+themes:[ \t]*!include_dir_merge_named[ \t]+['\"]?([^'\"\s#]+)", re.M)
-
-
-def _themes_dir(config_dir: str) -> str | None:
-    """Ordner aus „frontend: themes: !include_dir_merge_named <ordner>“, sonst None.
-    configuration.yaml wird nur gelesen, nie geändert."""
-    try:
-        with open(os.path.join(config_dir, "configuration.yaml"), encoding="utf-8") as f:
-            m = _THEMES_INCLUDE.search(f.read())
-    except OSError:
-        return None
-    if not m:
-        return None
-    path = os.path.normpath(os.path.join(config_dir, m.group(1)))
-    return path if os.path.isdir(path) else None
-
-
-def _theme_file_body(themes: dict) -> str:
-    import json
-
-    # JSON-Runde: keine YAML-Anker für geteilte Teile (Modi), nur schlichte Werte.
-    plain = json.loads(json.dumps(themes))
-    return ("# Von der Casora-Integration geschrieben und bei jedem Start aktualisiert – nicht bearbeiten.\n"
-            "# Damit kennt Home Assistant Casoras Themes schon beim Start. Löschen ist unschädlich.\n"
-            + dump(plain))
-
-
-def _theme_file_names(config_dir: str) -> set:
-    """Theme-Namen in Casoras Kopie im Theme-Ordner (von einer früheren Version geschrieben)."""
-    folder = _themes_dir(config_dir)
-    if not folder:
-        return set()
-    try:
-        return set((load_yaml(os.path.join(folder, THEME_FILE)) or {}).keys())
-    except Exception:  # noqa: BLE001 – fehlt oder unlesbar: nichts zu räumen
-        return set()
-
-
-def theme_renames(saved: dict, known: Any) -> dict:
-    """Gespeicherte Standard-Themes (hell/dunkel), die auf einen heutigen Namen wechseln.
-    known: Themes, die HA gerade kennt (None = unbekannt, dann nichts „Verschwundenes“ umstellen)."""
-    out = {}
-    for key in DEFAULT_KEYS:
-        v = saved.get(key)
-        if v in THEME_RENAMED:
-            out[key] = THEME_RENAMED[v]
-        elif v in THEME_RENAMED_IF_GONE and known is not None and v not in known:
-            out[key] = THEME_RENAMED_IF_GONE[v]
-    return out
-
-
-def user_theme_rename(value: Any, known: Any) -> Any:
-    """Theme-Wahl im Profil (Benutzerdaten „theme“, {"theme": …, "dark": …}) mit heutigem Namen, sonst None."""
-    if not isinstance(value, dict):
-        return None
-    to = theme_renames({DEFAULT_KEYS[0]: value.get("theme")}, known).get(DEFAULT_KEYS[0])
-    return dict(value, theme=to) if to else None
-
-
-async def _migrate_user_themes(hass: HomeAssistant, known: Any, default_from: str | None = None) -> None:
-    """Profil-Theme je Benutzer (HA speichert es auf dem Server) einmal umstellen.
-    default_from: Hemma-Look, den das Standard-Theme gerade verloren hat – Benutzer ohne eigenes
-    Profil-Theme sehen das Standard-Theme und bekommen dafür den Hinweis."""
-    try:
-        from homeassistant.components.frontend.storage import async_user_store
-    except ImportError:  # ältere HA-Fassung ohne Benutzerdaten
-        return
-    for user in await hass.auth.async_get_users():
-        if user.system_generated:
-            continue
-        try:
-            store = await async_user_store(hass, user.id)
-            old = store.data.get("theme")
-            new = user_theme_rename(old, known)
-            if new:
-                await store.async_set_item("theme", new)
-            own = old.get("theme") if isinstance(old, dict) else None
-            # Hinweis nur, wer wirklich von einem Hemma-Look auf Casora Glas wechselt: eigenes
-            # Profil-Theme umgestellt, oder kein eigenes und das Standard-Theme wurde umgestellt.
-            if new:
-                frm = THEME_NOTICE_FROM.get(own) if new.get("theme") == THEME_GLAS else None
-            else:
-                frm = default_from if own in (None, "", "default") else None
-            if frm:
-                await store.async_set_item(THEME_NOTICE_KEY, {"from": frm, "to": THEME_GLAS})
-        except Exception as err:  # noqa: BLE001 – ein Benutzer ohne Daten hält die anderen nicht auf
-            _LOGGER.debug("Casora: Profil-Theme nicht umgestellt: %s", err)
-
-
-def _write_theme_file(config_dir: str, themes: dict) -> str | None:
-    folder = _themes_dir(config_dir)
-    if not folder:
-        return None
-    path = os.path.join(folder, THEME_FILE)
-    body = _theme_file_body(themes)
-    try:
-        with open(path, encoding="utf-8") as f:
-            if f.read() == body:
-                return path
-    except OSError:
-        pass
-    tmp = path + ".casora.tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write(body)
-    os.replace(tmp, path)
-    return path
-
-
-def remove_theme_file(config_dir: str) -> None:
-    folder = _themes_dir(config_dir)
-    if folder:
-        try:
-            os.remove(os.path.join(folder, THEME_FILE))
-        except OSError:
-            pass
-
-
-DEFAULT_KEYS = ("frontend_default_theme", "frontend_default_dark_theme")
-
-
-async def _setup_theme(hass: HomeAssistant, runtime: dict) -> None:
-    themes = await hass.async_add_executor_job(_load_theme)
-    if not themes:
-        return
-    # Beim Start kennt die Oberfläche Casora noch nicht und fällt vom gespeicherten
-    # Standard-Theme auf „default“ zurück – den gespeicherten Wert wiederherstellen.
-    saved: dict = {}
-    store = hass.data.get("frontend_themes_store")
-    if store is not None:
-        try:
-            saved = await store.async_load() or {}
-        except Exception:  # noqa: BLE001
-            saved = {}
-    last = {k: saved.get(k) for k in DEFAULT_KEYS}
-    # Was die alte Theme-Datei angemeldet hat und heute fehlt, räumt _inject_theme aus der Liste.
-    old_names = await hass.async_add_executor_job(_theme_file_names, hass.config.config_dir)
-    retired = frozenset(n for n in old_names if n not in themes)
-    known = hass.data.get("frontend_themes")
-    renamed = theme_renames(last, None if known is None else set(known) - retired)
-    last.update(renamed)
-
-    @callback
-    def _apply() -> bool:
-        if not _inject_theme(hass, themes, retired):
-            return False
-        for k in DEFAULT_KEYS:
-            cur = hass.data.get(k)
-            # Auch ein alter Name (Theme gibt es nicht mehr) weicht dem neuen.
-            if last.get(k) in themes and (cur in (None, "default") or cur in THEME_RENAMED or cur in retired):
-                hass.data[k] = last[k]
-        return True
-
-    if _apply():
-        hass.bus.async_fire("themes_updated")
-    # Umbenennung dauerhaft speichern (frontend.set_theme schreibt den Store).
-    for key, name in renamed.items():
-        data = {"name": name}
-        if key == "frontend_default_dark_theme":
-            data["mode"] = "dark"
-        try:
-            await hass.services.async_call("frontend", "set_theme", data, blocking=True)
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.debug("Casora: Theme %s nicht umgestellt: %s", name, err)
-
-    # Profil-Theme der Benutzer: im Hintergrund, der Start wartet nicht darauf.
-    default_from = next((THEME_NOTICE_FROM[saved.get(k)] for k in DEFAULT_KEYS
-                         if renamed.get(k) == THEME_GLAS and saved.get(k) in THEME_NOTICE_FROM), None)
-    hass.async_create_task(_migrate_user_themes(hass, None if known is None else set(known) - retired | set(themes),
-                                                default_from))
-
-    @callback
-    def _updated(_event: Event) -> None:
-        # „Themes neu laden“ ersetzt die Liste – Casora wieder dazulegen.
-        if _apply():
-            hass.bus.async_fire("themes_updated")
-        else:
-            last.update({k: hass.data.get(k) for k in DEFAULT_KEYS})
-
-    runtime["unsub"].append(hass.bus.async_listen("themes_updated", _updated))
-
-    try:
-        await hass.async_add_executor_job(_write_theme_file, hass.config.config_dir, themes)
-    except Exception as err:  # noqa: BLE001 – ohne Kopie greift nur der Weg oben
-        _LOGGER.debug("Casora: Theme-Datei nicht geschrieben: %s", err)
-
-
-# ── Automatik (früher Automationen im Paket) ─────────────────────────────────
+# ── Automatic behaviour (formerly automations in the package) ────────────────
 
 def _legacy_automation(hass: HomeAssistant, unique_id: str) -> bool:
     return er.async_get(hass).async_get_entity_id("automation", "automation", unique_id) is not None
@@ -502,7 +143,7 @@ def _setup_automatik(hass: HomeAssistant, runtime: dict) -> None:
                       or _legacy_automation(hass, "casora_auto_clear_restart_done_2"))
     expand = not _legacy_automation(hass, "casora_auto_expand_media_row")
     state = {"playing": _any_playing(hass)}
-    # Je Neustart-Schalter höchstens ein Zeitgeber – sonst wüchse unsub mit jedem Einschalten.
+    # At most one timer per restart switch, else unsub would grow with every switch-on.
     timers: dict[str, Any] = {}
     unsub.append(lambda: [t() for t in list(timers.values())])
 
@@ -517,7 +158,7 @@ def _setup_automatik(hass: HomeAssistant, runtime: dict) -> None:
         eid = event.data["entity_id"]
         new = event.data.get("new_state")
         if clear_done and eid in RESTART_DONE and new and new.state == "on":
-            # Nach 3 s zurück – wie die frühere Automation.
+            # Back after 3 s, like the former automation.
             if (prev := timers.pop(eid, None)) is not None:
                 prev()
 
@@ -538,53 +179,59 @@ def _setup_automatik(hass: HomeAssistant, runtime: dict) -> None:
         _expand()
 
 
-# ── Einstieg ─────────────────────────────────────────────────────────────────
+# ── Leftovers of earlier versions ────────────────────────────────────────────
+
+@callback
+def _issue(hass: HomeAssistant, issue_id: str, show: bool, placeholders: dict[str, str]) -> None:
+    if show:
+        ir.async_create_issue(hass, DOMAIN, issue_id, is_fixable=False, is_persistent=False,
+                              severity=ir.IssueSeverity.WARNING, translation_key=issue_id,
+                              translation_placeholders=placeholders)
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+async def async_check_leftovers(hass: HomeAssistant) -> None:
+    """Earlier versions wrote scripts into scripts.yaml and a theme file into the themes folder.
+
+    Both stay where they are: the user may use the scripts in own automations, and the file is the user's
+    to delete. A repair notice says once per start that Casora no longer needs them. Read only."""
+    # Only scripts HA really loaded: a registry entry without its YAML shows up as a restored placeholder.
+    scripts = [e for e in FORMER_SCRIPTS
+               if (s := hass.states.get(e)) is not None and not (getattr(s, "attributes", None) or {}).get("restored")]
+    _issue(hass, ISSUE_SCRIPTS, bool(scripts), {"scripts": ", ".join(scripts)})
+    try:
+        path = await hass.async_add_executor_job(old_theme_file, hass.config.config_dir)
+    except Exception:  # noqa: BLE001 - only a hint
+        path = None
+    _issue(hass, ISSUE_THEME_FILE, bool(path), {"path": path or ""})
+
+
+# ── Entry ────────────────────────────────────────────────────────────────────
 
 async def async_einrichten(hass: HomeAssistant) -> dict[str, Any]:
     spec = await hass.async_add_executor_job(_read, "helfer.yaml")
-    h_new, h_fail = await _ensure_helpers(hass, spec)
-    s_new, s_fail, include_ok = await _ensure_scripts(hass, spec)
-    result = {"angelegt": h_new + s_new, "fehlt": h_fail + s_fail}
-    if result["angelegt"]:
-        _LOGGER.info("Casora: %d Helfer/Skripte angelegt: %s", len(result["angelegt"]), ", ".join(result["angelegt"]))
-    if not result["fehlt"]:
+    created, failed = await _ensure_helpers(hass, spec)
+    result = {"angelegt": created, "fehlt": failed}
+    if created:
+        _LOGGER.info("Casora: %d helpers created: %s", len(created), ", ".join(created))
+    if not failed:
         # Everything is there (again): an older notice must not stay behind.
         hass.async_create_task(hass.services.async_call("persistent_notification", "dismiss",
                                                         {"notification_id": "casora_einrichten"}))
         return result
-    if s_fail and not include_ok:
-        hint = "Skripte brauchen `script: !include scripts.yaml` in configuration.yaml."
-    elif s_fail:
-        # scripts.yaml is loaded, the scripts were written there, but HA did not create them after the reload.
-        hint = ("Casora hat die Skripte in scripts.yaml eingetragen, Home Assistant hat sie nach dem Neuladen "
-                "aber nicht angelegt. Im Protokoll unter „script“ steht der Grund.")
-    else:
-        hint = ""
-    _LOGGER.warning("Casora: konnte nicht anlegen: %s. %s", ", ".join(result["fehlt"]), hint)
+    _LOGGER.warning("Casora: could not create: %s", ", ".join(failed))
     hass.async_create_task(hass.services.async_call("persistent_notification", "create", {
         "notification_id": "casora_einrichten",
         "title": "Casora",
-        "message": "Diese Helfer oder Skripte konnte Casora nicht selbst anlegen:\n\n"
-                   + "\n".join(f"- `{i}`" for i in result["fehlt"])
-                   + ("\n\n" + hint if hint else ""),
+        "message": "Diese Helfer konnte Casora nicht selbst anlegen:\n\n"
+                   + "\n".join(f"- `{i}`" for i in failed),
     }))
     return result
 
 
-async def async_setup_theme(hass: HomeAssistant) -> None:
-    """Als Erstes beim Laden: Themes anmelden, bevor irgendetwas anderes wartet."""
-    runtime = hass.data.setdefault(DOMAIN, {}).setdefault("helfer", {"unsub": []})
-    if runtime.get("theme"):
-        return
-    runtime["theme"] = True
-    try:
-        await _setup_theme(hass, runtime)
-    except Exception:  # noqa: BLE001 – darf das Laden nie verhindern
-        _LOGGER.exception("Casora: Theme nicht angemeldet")
-
-
 async def async_setup_helfer(hass: HomeAssistant) -> None:
-    """Beim Laden der Integration; einmal pro HA-Lauf."""
+    """When the integration loads; once per HA run."""
     runtime = hass.data.setdefault(DOMAIN, {}).setdefault("helfer", {"unsub": []})
 
     async def _run(_event: Event | None = None) -> None:
@@ -592,13 +239,15 @@ async def async_setup_helfer(hass: HomeAssistant) -> None:
             runtime["unsub"].remove(waiting.pop())
         try:
             await async_einrichten(hass)
-        except Exception:  # noqa: BLE001 – darf das Laden nie verhindern
-            _LOGGER.exception("Casora: Einrichtung fehlgeschlagen")
+        except Exception:  # noqa: BLE001 - must never stop loading
+            _LOGGER.exception("Casora: setup failed")
+        try:
+            await async_check_leftovers(hass)
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("Casora: leftover check failed", exc_info=True)
         _setup_automatik(hass, runtime)
 
-    await async_setup_theme(hass)
-    # Helfer/Skripte erst, wenn HA läuft: dann sind alle YAML-Pakete geladen und
-    # nichts wird doppelt angelegt.
+    # Helpers only once HA runs: then all YAML packages are loaded and nothing is created twice.
     waiting: list = []
     if hass.state is CoreState.running:
         await _run()
@@ -610,7 +259,7 @@ async def async_setup_helfer(hass: HomeAssistant) -> None:
         return await async_einrichten(hass)
 
     if not hass.services.has_service(DOMAIN, "einrichten"):
-        # Nur für Admins: legt Helfer an und schreibt in scripts.yaml.
+        # Admins only: creates helpers.
         async_register_admin_service(hass, DOMAIN, "einrichten", _service, vol.Schema({}, extra=vol.ALLOW_EXTRA),
                                      SupportsResponse.OPTIONAL)
 
@@ -621,5 +270,5 @@ def async_unload_helfer(hass: HomeAssistant) -> None:
     for u in (runtime or {}).get("unsub", []):
         try:
             u()
-        except Exception:  # noqa: BLE001 – schon abgelaufen
+        except Exception:  # noqa: BLE001 - already expired
             pass

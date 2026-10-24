@@ -110,7 +110,9 @@
       casora: cleanVersion(o.casora),
       ha: cleanVersion(H.config && H.config.version),
       language: cleanLang((H.locale && H.locale.language) || H.language),
-      theme: cleanTheme((H.selectedTheme && H.selectedTheme.theme) || (H.themes && H.themes.default_theme)),
+      // Casora's design (scripts/casora-theme.js) first, else HA's theme.
+      theme: cleanTheme((W.casoraTheme && W.casoraTheme.active(H)) || (H.selectedTheme && H.selectedTheme.theme)
+        || (H.themes && H.themes.default_theme)),
       dark: !!((H.selectedTheme && typeof H.selectedTheme.dark === "boolean") ? H.selectedTheme.dark : (H.themes && H.themes.darkMode)),
       device: oneOf(o.device, ["phone", "tablet", "desktop"]),
       studio: oneOf(o.studio, ["new", "previous"]),

@@ -30,11 +30,11 @@ const REQUIREMENTS = [
 ];
 
 
-// Legt die Integration selbst an (helfer.py); fehlen sie, hilft casora.einrichten.
+// Created by the integration itself (helfer.py); if they are missing, casora.einrichten helps.
+// The cards' actions are services of the integration (actions.py), no scripts.
 const SETUP_ENTITIES = [
   "input_select.casora_expanded_row", "input_select.casora_mobile_filter",
   "input_boolean.casora_mobile_navigation", "input_text.casora_thermostat_active_entity",
-  "script.casora_light_smart_toggle", "script.casora_thermostat_overlay_toggle",
 ];
 // Weich ist seit 01.10.2026 DAS Casora-Design; die Legacy-Designs Hemma 1/2 gibt es seit 1.6.1 nicht mehr.
 const CASORA_THEME = "Casora";
@@ -60,6 +60,33 @@ const CASORA_THEMES = [
     ph: { light: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23D9C3A5%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%238C8378%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%2224%22%20y%3D%2226%22%20width%3D%22120%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%23FFFDFA%22%20fill-opacity%3D%22.6%22%2F%3E%3Crect%20x%3D%2224%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23FFFDFA%22%20fill-opacity%3D%22.6%22%2F%3E%3Crect%20x%3D%22116%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23FFFDFA%22%20fill-opacity%3D%22.6%22%2F%3E%3Crect%20x%3D%2224%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23FFFDFA%22%2F%3E%3Crect%20x%3D%22168%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23FFFDFA%22%20fill-opacity%3D%22.6%22%2F%3E%3Ccircle%20cx%3D%2246%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%23B67A50%22%2F%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%23B67A50%22%20opacity%3D%22.35%22%2F%3E%3C%2Fsvg%3E")', dark: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%233A4250%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%231C1916%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%2224%22%20y%3D%2226%22%20width%3D%22120%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%231E1B18%22%20fill-opacity%3D%22.6%22%2F%3E%3Crect%20x%3D%2224%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%231E1B18%22%20fill-opacity%3D%22.6%22%2F%3E%3Crect%20x%3D%22116%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%231E1B18%22%20fill-opacity%3D%22.6%22%2F%3E%3Crect%20x%3D%2224%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23F2E8DA%22%2F%3E%3Crect%20x%3D%22168%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%231E1B18%22%20fill-opacity%3D%22.6%22%2F%3E%3Ccircle%20cx%3D%2246%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%23B67A50%22%2F%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%23B67A50%22%20opacity%3D%22.35%22%2F%3E%3C%2Fsvg%3E")' } },
 ];
 const isCasoraTheme = (n) => !!n && CASORA_THEMES.some((x) => x.name === n || (x.aliases || []).includes(n));
+// Casora's designs are served by the integration (theme.py) and applied by scripts/casora-theme.js;
+// they are no HA themes. window.casoraTheme knows the design of the installation and of this browser.
+const casoraThemeApi = () => window.casoraTheme || null;
+// HA's own theme in this browser (profile) or as default; "default" when none.
+const haThemeName = (hass) => {
+  const T = (hass && hass.themes) || {};
+  const sel = hass && hass.selectedTheme && hass.selectedTheme.theme;
+  return (sel && sel !== "default") ? sel : (T.theme || T.default_theme || "default");
+};
+// What the dashboards show: a Casora design, else HA's theme name.
+const activeLook = (hass) => {
+  const CT = casoraThemeApi();
+  return (CT && CT.active(hass)) || haThemeName(hass);
+};
+// An HA theme of the user's own (not a Casora design, also not an old copy of one).
+const ownHaTheme = (hass) => {
+  const n = haThemeName(hass);
+  const have = (hass && hass.themes && hass.themes.themes) || {};
+  return n && n !== "default" && have[n] && !isCasoraTheme(n) && !THEME_RENAMED[n] && !String(n).startsWith("Casora") ? n : null;
+};
+// Casora designs on offer (the integration's list; before it answers, the known ones).
+const designsOnOffer = () => {
+  const CT = casoraThemeApi();
+  if (!CT) return [];
+  const names = CT.names();
+  return CASORA_THEMES.filter((x) => !names.length || names.includes(x.name));
+};
 
 const clone = (x) => (x === undefined ? undefined : JSON.parse(JSON.stringify(x)));
 
@@ -4085,8 +4112,11 @@ const softLook = () => {
 function previewThemeVars(hass, dark) {
   const T = hass && hass.themes;
   if (!T || !!T.darkMode === !!dark) return null;
-  const name = (hass.selectedTheme && hass.selectedTheme.theme) || T.theme || T.default_theme;
-  const t = T.themes && T.themes[name];
+  // Casora's designs come from the integration (scripts/casora-theme.js), other themes from HA's list.
+  const CT = typeof window !== "undefined" ? window.casoraTheme : null;
+  const look = CT ? CT.active(hass) : "";
+  const name = look || (hass.selectedTheme && hass.selectedTheme.theme) || T.theme || T.default_theme;
+  const t = (look && CT.theme(look)) || (T.themes && T.themes[name]);
   const want = t && t.modes && t.modes[dark ? "dark" : "light"];
   if (!want) return null;
   const now = t.modes[dark ? "light" : "dark"] || {};
@@ -6143,8 +6173,7 @@ class CasoraPanel extends HTMLElement {
     // jeder hass-Wechsel kommt hier an, ein Umschalten braucht also kein Neuladen.
     const dark = !(hass.themes && hass.themes.darkMode === false);
     this._lightTheme = !dark;
-    ACCENT_THEME = (hass.selectedTheme && hass.selectedTheme.theme)
-      || (hass.themes && (hass.themes.theme || hass.themes.default_theme)) || "";
+    ACCENT_THEME = activeLook(hass);
     this._syncLight();
     // HA switched light/dark: the preview's day/night follows, as before the preview had its own mode; the
     // switch above it decides until the next change in HA.
@@ -6158,28 +6187,22 @@ class CasoraPanel extends HTMLElement {
       pulseReg = hass.entities;
       PULSE_HERE = Object.values(pulseReg || {}).some((e) => e && e.platform === "pulse");
     }
-    // Theme oder Modus gewechselt: die Vorschau-Nachbildung folgt dem Look sofort.
+    // Theme or mode changed: the preview follows the look right away.
     if (this._themeSeen !== hass.themes || this._themeSel !== hass.selectedTheme) {
       this._themeSeen = hass.themes;
       this._themeSel = hass.selectedTheme;
       this._syncSoftLook();
     }
-    this._syncMenuBtn();
-    // Themes renamed (THEME_RENAMED): a browser that picked an old name moves
-    // along once, keeping its light/dark choice.
-    if (!this._themeMoved) {
-      this._themeMoved = true;
-      try {
-        const sel = JSON.parse(localStorage.getItem("selectedTheme") || "null");
-        const to = sel && THEME_RENAMED[sel.theme];
-        // Nur wenn es das alte Theme nicht mehr gibt (z. B. Hemmas eigenes „Hemma“ bleibt, solange es da ist).
-        if (to && hass.themes && hass.themes.themes && hass.themes.themes[to] && !hass.themes.themes[sel.theme]) {
-          const detail = { theme: to };
-          if (typeof sel.dark === "boolean") detail.dark = sel.dark;
-          setTimeout(() => this.dispatchEvent(new CustomEvent("settheme", { detail, bubbles: true, composed: true })), 0);
-        }
-      } catch (e) { /* ohne Speicher nichts umzustellen */ }
+    // Casora's design changed (Studio, another device): same, without a hass change.
+    if (!this._designHooked && casoraThemeApi()) {
+      this._designHooked = true;
+      casoraThemeApi().onChange(() => {
+        if (!this.isConnected || !this._hass) return;
+        ACCENT_THEME = activeLook(this._hass);
+        this._syncSoftLook();
+      });
     }
+    this._syncMenuBtn();
     // Docking or folding HA's sidebar moves the panel without a window resize.
     if (this._setVph && this.isConnected && panelW(this) !== this._lastW) this._setVph();
     if (!this._built) { this._built = true; this._build(); }
@@ -13743,16 +13766,14 @@ class CasoraPanel extends HTMLElement {
   // will look, applied the moment it is made.
   _themeStep() {
     const t = (this._hass && this._hass.themes) || {};
-    const have = t.themes || {};
-    const themes = CASORA_THEMES.filter((x) => have[x.name]);
+    const themes = designsOnOffer();
     const next = () => (this._firstRunGo ? this._firstRunGo() : this._createForm({ back: () => this._themeStep() }));
     if (!themes.length) return next();
-    let local = null;
-    try { local = JSON.parse(localStorage.getItem("selectedTheme") || "null"); } catch (e) { local = null; }
-    const current = (local && local.theme && local.theme !== "default") ? local.theme : t.default_theme;
+    const CT = casoraThemeApi();
+    const current = (CT && CT.active(this._hass)) || "";
     const ours = themes.find((x) => x.name === current || (x.aliases || []).includes(current));
-    // Eigenes Theme nur anbieten, wenn es das noch gibt (nicht z. B. das entfernte „Hemma 2“).
-    const own = current && current !== "default" && !ours && have[current] ? current : null;
+    // The user's own HA theme only while HA still has it (not e.g. the removed "Hemma 2").
+    const own = !ours ? ownHaTheme(this._hass) : null;
     // Ersteinrichtung: immer „Standard“ vorschlagen. Erneut gestartet (es gibt schon ein
     // Dashboard): das Design, das gerade aktiv ist.
     let pick = (this._dashUrl && ours) ? ours.name : themes[0].name;
@@ -13895,7 +13916,7 @@ class CasoraPanel extends HTMLElement {
     const dark = !(this._hass && this._hass.themes && this._hass.themes.darkMode === false);
     // Real screenshots of each mode, in the look picked one step earlier.
     let look = this._lookPick;
-    if (!look) { try { look = (JSON.parse(localStorage.getItem("selectedTheme") || "null") || {}).theme; } catch (e) { look = null; } }
+    if (!look) look = (casoraThemeApi() && casoraThemeApi().active(this._hass)) || null;
     look = THEME_RENAMED[look] || look;
     // Nebel hat eigene Bilder (perf-nebel-*), gleicher Aufbau wie Weich; std = eigenes Theme (Dashboard ohne Casora-Look).
     const set = look === "Casora Nebel" ? "nebel" : look === CASORA_THEME ? "weich" : "std";
@@ -13947,20 +13968,21 @@ class CasoraPanel extends HTMLElement {
     }
   }
 
-  // Default for every device (light and dark), and this browser too if it
-  // had picked something of its own.
+  // The design for every device (light and dark): a Casora design, or "" for the user's own HA theme.
+  // This browser follows too if it had picked something of its own.
   async _applyTheme(name) {
+    const CT = casoraThemeApi();
+    const design = isCasoraTheme(name) ? (THEME_RENAMED[name] || name) : "";
     try {
-      await this._hass.callService("frontend", "set_theme", { name });
-      await this._hass.callService("frontend", "set_theme", { name, mode: "dark" });
+      if (CT) await CT.set(design);
     } catch (e) {
-      console.warn("Casora: theme could not be set", e);
+      console.warn("Casora: design could not be set", e);
     }
     let local = null;
     try { local = JSON.parse(localStorage.getItem("selectedTheme") || "null"); } catch (e) { local = null; }
-    if (local && local.theme && local.theme !== "default" && local.theme !== name) {
+    if (design && local && local.theme && local.theme !== "default" && local.theme !== name) {
       this.dispatchEvent(new CustomEvent("settheme", {
-        detail: { theme: name }, bubbles: true, composed: true,
+        detail: { theme: "default" }, bubbles: true, composed: true,
       }));
     }
   }
@@ -15268,26 +15290,27 @@ class CasoraPanel extends HTMLElement {
     return lacking();
   }
 
-  // Casora sieht nur mit seinem Theme richtig aus. Hat niemand ein anderes Theme
-  // gewählt, wird Casora Standard-Theme (hell und dunkel) – eine eigene Wahl bleibt.
+  // Casora only looks right in its design. Has nobody chosen one, Casora becomes the design for
+  // every device (light and dark); an own choice (also an own HA theme) stays.
   async _ensureTheme() {
-    const t = this._hass && this._hass.themes;
-    if (!t || !t.themes || !t.themes[CASORA_THEME]) return "missing";
-    let local = null;
-    try { local = JSON.parse(localStorage.getItem("selectedTheme") || "null"); } catch (e) { local = null; }
-    const pick = local && local.theme;
-    if (isCasoraTheme(pick)) return "on";
-    if (pick && pick !== "default") return "own";
-    if (isCasoraTheme(t.default_theme)) return "on";
-    if (t.default_theme && t.default_theme !== "default") return "own";
-    try {
-      await this._hass.callService("frontend", "set_theme", { name: CASORA_THEME });
-      await this._hass.callService("frontend", "set_theme", { name: CASORA_THEME, mode: "dark" });
-      return "set";
-    } catch (e) {
-      console.warn("Casora: theme could not be set", e);
-      return "own";
+    const CT = casoraThemeApi();
+    if (!CT) return "missing";
+    try { await CT.ready; } catch (e) { /* answer below from what is known */ }
+    if (!CT.names().includes(CASORA_THEME)) return "missing";
+    const shown = CT.active(this._hass);
+    // Not chosen for the installation yet: what this browser shows (or Casora) becomes the design for
+    // every device - unless the user has an HA theme of their own.
+    if (CT.design() == null) {
+      if (!shown && ownHaTheme(this._hass)) return "own";
+      try {
+        await CT.set(shown || CASORA_THEME);
+        return shown ? "on" : "set";
+      } catch (e) {
+        console.warn("Casora: design could not be set", e);
+        return "own";
+      }
     }
+    return shown ? "on" : "own";
   }
 
   async _gateOnReqs() {

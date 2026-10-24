@@ -14,7 +14,9 @@ from homeassistant.core import HomeAssistant
 
 from .assets import CasoraAssetsView
 from .scripts_view import CasoraPanelView, CasoraScriptsView
-from .helfer import async_setup_helfer, async_setup_theme, async_unload_helfer, remove_theme_file
+from .actions import SERVICES as ACTION_SERVICES, async_setup_actions
+from .helfer import async_setup_helfer, async_unload_helfer
+from .theme import async_setup_theme, async_unload_theme, remove_old_theme_file
 from .lueften_push import async_start as async_start_lueften_push
 from .update_push import async_start as async_start_update_push
 from .raumklima import async_start as async_start_raumklima
@@ -226,9 +228,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Register the panel assets and the sidebar entry."""
-    # Theme zuerst: Die Oberfläche läuft schon, und ein offenes Dashboard verbindet sich neu,
-    # während Casora noch lädt. Ohne Casora-Theme zeichnet es so lange im falschen Look.
-    await async_setup_theme(hass)
+    # Designs first: the frontend is running, and an open dashboard reconnects while Casora
+    # still loads. Without the design it would draw in the wrong look that long.
+    try:
+        await async_setup_theme(hass)
+    except Exception:  # noqa: BLE001 - must never stop loading
+        _LOGGER.exception("Casora: designs not set up")
+    # The cards' actions (formerly scripts in scripts.yaml).
+    async_setup_actions(hass)
     # Optionen des früheren Update-Servers (Schlüssel/Adresse/Token) still entfernen – vor dem
     # Update-Listener, damit das kein Neuladen auslöst.
     if any(k in entry.options for k in LEGACY_OPTIONS):
@@ -341,7 +348,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     runner = KiRunner(hass, entry)
     await runner.async_setup()
     await async_setup_umstellen(hass)
-    # Helfer, Skripte, Automatik und Theme – früher Paket + Theme-Ordner von Hand.
+    # Helpers and automatic behaviour - formerly a package copied by hand.
     await async_setup_helfer(hass)
     hass.data.setdefault(DOMAIN, {})["ki"] = runner
     # Lüften + Solar-Tipp (raumklima.py) – Sensoren entstehen, sobald Quellen gefunden sind.
@@ -443,8 +450,8 @@ async def _remove_script_resources(hass: HomeAssistant) -> None:
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Integration removed: drop the theme copy in the theme folder and the script resources."""
-    await hass.async_add_executor_job(remove_theme_file, hass.config.config_dir)
+    """Integration removed: drop the former theme copy in the theme folder and the script resources."""
+    await hass.async_add_executor_job(remove_old_theme_file, hass.config.config_dir)
     await _remove_script_resources(hass)
 
 
@@ -453,8 +460,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.data.get(DOMAIN, {}).get("reloading"):
         async_remove_panel(hass, PANEL_URL, warn_if_unknown=False)
     async_unload_helfer(hass)
-    # Sonst blieben sie bis zum Neustart aufrufbar, auch nach dem Entfernen von Casora.
-    for name in ("einrichten", "umstellen"):
+    async_unload_theme(hass)
+    # Otherwise they stay callable until the restart, even after removing Casora.
+    for name in ("einrichten", "umstellen", *ACTION_SERVICES):
         hass.services.async_remove(DOMAIN, name)
     runner = hass.data.get(DOMAIN, {}).pop("ki", None)
     if runner:

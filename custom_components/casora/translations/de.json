@@ -245,6 +245,54 @@
           "description": "Bilder und andere Medien."
         }
       }
+    },
+    "light_smart_toggle": {
+      "name": "Licht klug schalten",
+      "description": "Schaltet ein Licht oder eine Lichtgruppe um. Beim Ausschalten merkt sich Casora, welche Lampen an waren, und schaltet beim Einschalten genau diese wieder ein.",
+      "fields": {
+        "light_entity": {
+          "name": "Licht",
+          "description": "Licht oder Lichtgruppe"
+        }
+      }
+    },
+    "thermostat_overlay_toggle": {
+      "name": "Thermostat-Regler auf/zu",
+      "description": "Öffnet die Temperaturregler einer Thermostat-Kachel, schließt sie beim zweiten Tippen oder wechselt zu einer anderen Kachel.",
+      "fields": {
+        "thermostat_entity_id": {
+          "name": "Kachel",
+          "description": "Schlüssel der getippten Thermostat-Kachel"
+        }
+      }
+    },
+    "actions_overlay_toggle": {
+      "name": "Aktionen auf/zu",
+      "description": "Öffnet die Aktionen einer Kachel, schließt sie beim zweiten Tippen oder wechselt zu einer anderen Kachel.",
+      "fields": {
+        "actions_entity_id": {
+          "name": "Kachel",
+          "description": "Schlüssel der getippten Kachel"
+        }
+      }
+    },
+    "restart_toggle": {
+      "name": "Neustart mit Bestätigung",
+      "description": "Erstes Tippen fragt nach, zweites Tippen startet das Gerät neu und zeigt „Erledigt“, ein Tippen darauf blendet es aus.",
+      "fields": {
+        "button_entity": {
+          "name": "Neustart-Knopf",
+          "description": "Knopf, der das Gerät neu startet"
+        },
+        "helper_entity": {
+          "name": "Bestätigungs-Helfer",
+          "description": "Schalter, der die Nachfrage anzeigt"
+        },
+        "done_entity": {
+          "name": "Erledigt-Helfer",
+          "description": "Schalter, der „Erledigt“ anzeigt"
+        }
+      }
     }
   },
   "entity": {
@@ -304,6 +352,16 @@
     },
     "timer_invalid_minutes": {
       "message": "Ungültige Minuten: {minutes}. Erlaubt ist eine ganze Zahl von 1 bis {max}."
+    }
+  },
+  "issues": {
+    "leftover_scripts": {
+      "title": "Casora braucht diese Skripte nicht mehr",
+      "description": "Frühere Casora-Versionen haben diese Skripte in scripts.yaml eingetragen: {scripts}. Casoras Karten nutzen jetzt eigene Aktionen der Integration (z. B. casora.light_smart_toggle). Du kannst die Skripte löschen (Einstellungen › Automationen & Szenen › Skripte), wenn deine eigenen Automationen oder Karten sie nicht verwenden."
+    },
+    "leftover_theme_file": {
+      "title": "Casora braucht seine Theme-Datei nicht mehr",
+      "description": "Eine frühere Casora-Version hat ihre Designs in {path} abgelegt. Casora bringt seine Designs jetzt selbst mit; die Datei wird nicht mehr aktualisiert. Du kannst sie löschen und danach unter Entwicklerwerkzeuge › YAML „Themes neu laden“ wählen."
     }
   }
 }

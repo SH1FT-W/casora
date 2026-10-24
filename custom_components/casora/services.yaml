@@ -119,3 +119,38 @@ ai_generate:
     attachments:
       selector:
         object:
+light_smart_toggle:
+  fields:
+    light_entity:
+      required: true
+      selector:
+        entity:
+          domain: light
+thermostat_overlay_toggle:
+  fields:
+    thermostat_entity_id:
+      required: true
+      selector:
+        text:
+actions_overlay_toggle:
+  fields:
+    actions_entity_id:
+      required: true
+      selector:
+        text:
+restart_toggle:
+  fields:
+    button_entity:
+      required: true
+      selector:
+        entity:
+          domain: button
+    helper_entity:
+      required: true
+      selector:
+        entity:
+          domain: input_boolean
+    done_entity:
+      selector:
+        entity:
+          domain: input_boolean

@@ -156,16 +156,19 @@ customElements.whenDefined("casora-panel").then(() => {
   const P = customElements.get("casora-panel").prototype;
   if (P.__casoraLookRow) return;
   P.__casoraLookRow = true;
-  // Die Vorschau braucht hier keine eigenen Werte: casora-panel.js setzt .soft auf die Vorschau-Karte
-  // und liest die Theme-Variablen selbst (hell und dunkel, auch beim Umschalten ohne Neuladen).
+  // The preview needs no values of its own here: casora-panel.js sets .soft on the preview card and
+  // reads the theme variables itself (light and dark, also when switching without a reload).
+  // The design comes from the integration (window.casoraTheme, scripts/casora-theme.js); "" = own HA theme.
   const themeNow = (panel) => {
     if (panel._lookNow) return panel._lookNow;
+    const CT = window.casoraTheme;
+    const shown = CT ? CT.active(panel._hass) : "";
+    if (shown) return shown;
     const t = (panel._hass && panel._hass.themes) || {};
-    let local = null;
-    try { local = JSON.parse(localStorage.getItem("selectedTheme") || "null"); } catch (e) { local = null; }
-    return (local && local.theme && local.theme !== "default") ? local.theme : t.default_theme;
+    const sel = panel._hass && panel._hass.selectedTheme && panel._hass.selectedTheme.theme;
+    return (sel && sel !== "default") ? sel : t.default_theme;
   };
-  // Das Design gilt sofort für alle Dashboards (HA-Theme, nicht Teil von „Speichern“),
+  // The design applies to all dashboards right away (setting of the integration, not part of "Save"),
   // lässt sich aber mit Rückgängig zurücknehmen: der Undo-Eintrag trägt das vorige Design.
   const undo = P._undo;
   P._undo = function () {
@@ -206,10 +209,12 @@ customElements.whenDefined("casora-panel").then(() => {
   };
   // Design-Auswahl (Karten mit Bild) in host zeichnen – für „Einstellungen › Design“.
   P._casoraLookPicker = function (host) {
+    const CT = window.casoraTheme;
+    const names = CT ? CT.names() : [];
     const themes = ((window.__casoraPanelInternals || {}).CASORA_THEMES || [])
-      .filter((x) => this._hass && this._hass.themes && (this._hass.themes.themes || {})[x.name]);
+      .filter((x) => CT && (!names.length || names.includes(x.name)));
     if (!host || !themes.length) return false;
-    const t = this._hass.themes;
+    const t = this._hass.themes || {};
     const cur = themeNow(this);
     const ours = themes.find((x) => x.name === cur || (x.aliases || []).includes(cur));
     const tr = (x) => (window.casoraI18n ? window.casoraI18n.t(x) : x);
@@ -278,8 +283,8 @@ customElements.whenDefined("casora-panel").then(() => {
     const SL = (window.__casoraPanelInternals || {}).shotLang || ((u) => u);
     themes.forEach((x) => add(x.name, tr(x.label), x.shot && SL(dark ? x.shot.dark : x.shot.light, this._hass),
       x.ph && (dark ? x.ph.dark : x.ph.light)));
-    // Eigenes Theme nur, solange HA es kennt (nicht das entfernte „Hemma 2“).
-    if (!ours && cur && (t.themes || {})[cur]) add(cur, cur, null);
+    // The user's own HA theme only while HA knows it (not the removed "Hemma 2", not a copy of a Casora design).
+    if (!ours && cur && cur !== "default" && (t.themes || {})[cur] && !/^Casora/.test(cur)) add(cur, cur, null);
     grid.style.setProperty("--casora-looks-n", Math.min(3, cards.length) || 1);
     paint();
     box.appendChild(grid);
