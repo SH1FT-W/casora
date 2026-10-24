@@ -127,6 +127,20 @@ Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCE
   haben feste englische Namen ohne Schlüssel. `03-popups.js` (`_casoraBike`) findet das Rad deshalb über das Gerät
   (Plattform oder zwei Rad-Schlüssel oder Diebstahlsensor) und liest je Feld Schlüssel, sonst englische Endung;
   Tests `dev/unit/ebike_zuordnung.mjs`, `dev/qa/regress/r323_ebike_neue_integration.mjs`, Testrad `dev/casora_mock/ebike.py`.
+- Mähroboter (Stand 24.10.2026, aus dem Quellcode): `lawn_mower`-Zustände `mowing/docked/paused/returning/error/idle`,
+  Funktionen 1/2/4 (8 = STOP ungenutzt). Je Integration liest `16-maeher.js` (`SOURCES`) die Entitäten am selben Gerät über
+  `translation_key`, Akku/Laden/Verbindung über `device_class`:
+  `husqvarna_automower` (Kern: `error`, `next_start_timestamp`, `mode`, `restricted_reason`, `work_area`,
+  `cutting_blade_usage_time`/`total_running_time` in s, `number` `cutting_height` 1–9, `switch` `enable_schedule` = Parken,
+  `button` `confirm_error`; Akku ohne Schlüssel), `gardena_smart_system` (HACS: Attribute `activity`/`state`/`last_error_code`
+  am Mäher, Fehler `mower_error`, übrige Entitäten ohne Schlüssel und ohne `has_entity_name` → Endung der Entitäts-ID),
+  `landroid_cloud` (HACS: eigene Zustände `rain_delayed`, `edgecut`, `starting`, `zoning`, `searching_zone`,
+  `escaped_digital_fence`; `battery`, `error`, `rssi` dBm, `next_schedule`, `rain_delay`(`_remaining`), `rain_sensor`,
+  `blade_runtime_current` min, `cutting_height` mm, `select` `zone`), `navimow` (HACS, nur `battery` und Attribute),
+  `ecovacs` (Kern: `error` mit Attribut `description`, `lifespan_blade` %, `total_stats_time_mower`), `mammotion` (HACS:
+  `battery_percent`, `error_1_message` als Satz, `blade_used_time` s, `blade_height`, `rain_detected`, `mqtt_status`).
+  `dreame_vacuum` hat keine Mäher. Tests `dev/unit/maeher_quellen.mjs`, `dev/unit/maeher_erstnutzer.mjs`,
+  `dev/qa/regress/r325_maeher_integrationen.mjs`, Testmäher `dev/casora_mock/maeher.py`.
 
 Bekannt wacklig (Stand 2026.10.1, nicht im Test, weil es Rückfälle bzw. HACS-Schlüssel sind):
 

@@ -1703,6 +1703,38 @@
   "Gemäht": "Skoszono",
   "besteht noch": "nadal trwa",
   "1 Fahrt": "1 przejazd",
+  "Bestätigt": "Potwierdzono",
+  "Messer": "Noże",
+  "Schnitthöhe": "Wysokość koszenia",
+  "Nächster Start": "Następny start",
+  "Gesperrt": "Zablokowany",
+  "Demo": "Demo",
+  "Hauptbereich": "Obszar główny",
+  "Nebenbereich": "Obszar dodatkowy",
+  "Zielpunkt": "Punkt docelowy",
+  "Restlebensdauer": "Pozostała żywotność",
+  "Einsatzzeit": "Czas użycia",
+  "Regenpause": "Przerwa z powodu deszczu",
+  "Regen erkannt": "Wykryto deszcz",
+  "Parkt (extern)": "Zaparkowana (zewn.)",
+  "Mäht die Kante": "Kosi krawędź",
+  "Fährt zur Zone": "Jedzie do strefy",
+  "Sucht die Zone": "Szuka strefy",
+  "Parkt wegen Regen": "Zaparkowana z powodu deszczu",
+  "Parkt, zu dunkel": "Zaparkowana, za ciemno",
+  "Parkt, alles gemäht": "Zaparkowana, wszystko skoszone",
+  "Sucht Satelliten": "Szuka satelitów",
+  "Begrenzungsdraht verpolt": "Przewód odwrotnie podłączony",
+  "Zu steil": "Za stromo",
+  "Findet die Station nicht": "Nie może znaleźć stacji",
+  "Rad blockiert": "Koło zablokowane",
+  "Klappe schließen": "Zamknij klapę",
+  "Zone nicht erreichbar": "Strefa nieosiągalna",
+  "Kartenfehler": "Błąd mapy",
+  "Kamera gestört": "Usterka kamery",
+  "Fehler beim Start": "Błąd przy uruchomieniu",
+  "Schwerer Fehler": "Poważny błąd",
+  "Aus, Klappe zu": "Wył., klapa zamknięta",
   "KI-Check": "Kontrola AI",
   "Vorher sichern": "Najpierw kopia zapasowa",
   "Installieren": "Zainstaluj",
@@ -2361,6 +2393,34 @@
   "Verfügbar": "Dostępna"
  },
  "patterns": [
+  [
+   "^Nächster Start (.+)$",
+   "Następny start {1}"
+  ],
+  [
+   "^heute (\\d{1,2}:\\d\\d)$",
+   "dziś {1}"
+  ],
+  [
+   "^morgen (\\d{1,2}:\\d\\d)$",
+   "jutro {1}"
+  ],
+  [
+   "^Pause noch (.+)$",
+   "Przerwa jeszcze {1}"
+  ],
+  [
+   "^Verzögerung (.+)$",
+   "Opóźnienie {1}"
+  ],
+  [
+   "^Zone (\\d+)$",
+   "Strefa {1}"
+  ],
+  [
+   "^Schnitthöhe \\((.+)\\)$",
+   "Wysokość koszenia ({1})"
+  ],
   [
    "^Spielt ab: (.+)$",
    "Odtwarza: {1}"

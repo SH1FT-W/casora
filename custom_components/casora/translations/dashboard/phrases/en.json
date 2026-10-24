@@ -1711,6 +1711,38 @@
   "Gemäht": "Mowed",
   "besteht noch": "still active",
   "1 Fahrt": "1 run",
+  "Bestätigt": "Confirmed",
+  "Messer": "Blades",
+  "Schnitthöhe": "Cutting height",
+  "Nächster Start": "Next start",
+  "Gesperrt": "Locked",
+  "Demo": "Demo",
+  "Hauptbereich": "Main area",
+  "Nebenbereich": "Secondary area",
+  "Zielpunkt": "Point of interest",
+  "Restlebensdauer": "Remaining life",
+  "Einsatzzeit": "Usage time",
+  "Regenpause": "Rain delay",
+  "Regen erkannt": "Rain detected",
+  "Parkt (extern)": "Parked (external)",
+  "Mäht die Kante": "Cutting the edge",
+  "Fährt zur Zone": "Driving to the zone",
+  "Sucht die Zone": "Searching for the zone",
+  "Parkt wegen Regen": "Parked due to rain",
+  "Parkt, zu dunkel": "Parked, too dark",
+  "Parkt, alles gemäht": "Parked, all mowed",
+  "Sucht Satelliten": "Searching for satellites",
+  "Begrenzungsdraht verpolt": "Boundary wire reversed",
+  "Zu steil": "Too steep",
+  "Findet die Station nicht": "Can't find the station",
+  "Rad blockiert": "Wheel blocked",
+  "Klappe schließen": "Close the hatch",
+  "Zone nicht erreichbar": "Zone unreachable",
+  "Kartenfehler": "Map error",
+  "Kamera gestört": "Camera fault",
+  "Fehler beim Start": "Error at power up",
+  "Schwerer Fehler": "Fatal error",
+  "Aus, Klappe zu": "Off, hatch closed",
   "KI-Check": "AI check",
   "Vorher sichern": "Back up first",
   "Installieren": "Install",
@@ -2343,6 +2375,34 @@
   "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "In the Studio you can add values, history, controls and own cards."
  },
  "patterns": [
+  [
+   "^Nächster Start (.+)$",
+   "Next start {1}"
+  ],
+  [
+   "^heute (\\d{1,2}:\\d\\d)$",
+   "today {1}"
+  ],
+  [
+   "^morgen (\\d{1,2}:\\d\\d)$",
+   "tomorrow {1}"
+  ],
+  [
+   "^Pause noch (.+)$",
+   "Paused for {1} more"
+  ],
+  [
+   "^Verzögerung (.+)$",
+   "Delay {1}"
+  ],
+  [
+   "^Zone (\\d+)$",
+   "Zone {1}"
+  ],
+  [
+   "^Schnitthöhe \\((.+)\\)$",
+   "Cutting height ({1})"
+  ],
   [
    "^Spielt ab: (.+)$",
    "Playing: {1}"

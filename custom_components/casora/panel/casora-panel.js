@@ -4899,7 +4899,7 @@ const TILE_MAIN_FIND = {
   // De'Longhi, Jura, Melitta, La Marzocco and the power-curve integrations delonghi/krups); any sensor/switch/select
   // gave hundreds of suggestions.
   casora_coffee: { coffee: true },
-  // Community cards whose device is plain to see: every lawn mower, every Frigate camera (only Frigate sets
+  // Devices plain to see: every lawn mower (regular device card), every Frigate camera (only Frigate sets
   // device_class "camera"; Birdseye is no single camera, as 23-frigate.js), the live camera of a Reolink doorbell
   // (casora-panel-b-ux.js bellCam). Before, adding the tile found them only as an unsure match.
   casora_lawn_mower: { domain: "lawn_mower", match: () => true },

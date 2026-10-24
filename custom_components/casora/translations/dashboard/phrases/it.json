@@ -1703,6 +1703,38 @@
   "Gemäht": "Tagliato",
   "besteht noch": "ancora attivo",
   "1 Fahrt": "1 sessione",
+  "Bestätigt": "Confermato",
+  "Messer": "Lame",
+  "Schnitthöhe": "Altezza di taglio",
+  "Nächster Start": "Prossimo avvio",
+  "Gesperrt": "Bloccato",
+  "Demo": "Demo",
+  "Hauptbereich": "Area principale",
+  "Nebenbereich": "Area secondaria",
+  "Zielpunkt": "Punto di interesse",
+  "Restlebensdauer": "Vita residua",
+  "Einsatzzeit": "Tempo di utilizzo",
+  "Regenpause": "Pausa pioggia",
+  "Regen erkannt": "Pioggia rilevata",
+  "Parkt (extern)": "Parcheggiato (esterno)",
+  "Mäht die Kante": "Taglia il bordo",
+  "Fährt zur Zone": "Va alla zona",
+  "Sucht die Zone": "Cerca la zona",
+  "Parkt wegen Regen": "Parcheggiato per pioggia",
+  "Parkt, zu dunkel": "Parcheggiato, troppo buio",
+  "Parkt, alles gemäht": "Parcheggiato, tutto tagliato",
+  "Sucht Satelliten": "Cerca i satelliti",
+  "Begrenzungsdraht verpolt": "Cavo perimetrale invertito",
+  "Zu steil": "Troppo ripido",
+  "Findet die Station nicht": "Non trova la base",
+  "Rad blockiert": "Ruota bloccata",
+  "Klappe schließen": "Chiudi lo sportello",
+  "Zone nicht erreichbar": "Zona irraggiungibile",
+  "Kartenfehler": "Errore mappa",
+  "Kamera gestört": "Guasto fotocamera",
+  "Fehler beim Start": "Errore all’avvio",
+  "Schwerer Fehler": "Errore grave",
+  "Aus, Klappe zu": "Spento, sportello chiuso",
   "KI-Check": "Verifica IA",
   "Vorher sichern": "Prima fai un backup",
   "Installieren": "Installa",
@@ -2361,6 +2393,34 @@
   "Verfügbar": "Disponibile"
  },
  "patterns": [
+  [
+   "^Nächster Start (.+)$",
+   "Prossimo avvio {1}"
+  ],
+  [
+   "^heute (\\d{1,2}:\\d\\d)$",
+   "oggi {1}"
+  ],
+  [
+   "^morgen (\\d{1,2}:\\d\\d)$",
+   "domani {1}"
+  ],
+  [
+   "^Pause noch (.+)$",
+   "In pausa ancora {1}"
+  ],
+  [
+   "^Verzögerung (.+)$",
+   "Ritardo {1}"
+  ],
+  [
+   "^Zone (\\d+)$",
+   "Zona {1}"
+  ],
+  [
+   "^Schnitthöhe \\((.+)\\)$",
+   "Altezza di taglio ({1})"
+  ],
   [
    "^Spielt ab: (.+)$",
    "In riproduzione: {1}"

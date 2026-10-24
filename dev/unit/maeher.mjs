@@ -75,7 +75,7 @@ assert.equal(s.label, 'Fehler: Something new', 'unbekannter Code lesbar');
 s = set('docked', { state: 'WARNING', last_error_code: 'OFF_HATCH_OPEN' });
 assert.equal(s.label, 'Klappe offen'); assert.equal(s.level, 2);
 s = set('docked', { rf_link_state: 'OFFLINE' });
-assert.equal(s.label, 'Keine Verbindung'); assert.equal(s.level, 2); assert.equal(M.color(s), M.COLOR.warn);
+assert.equal(s.label, 'Offline', 'Wortliste: Gerät weg = Offline'); assert.equal(s.level, 2); assert.equal(M.color(s), M.COLOR.warn);
 // Nicht verfügbar / fehlt
 states[ID] = { entity_id: ID, state: 'unavailable', attributes: {} };
 s = M.of(states[ID], hass, states);

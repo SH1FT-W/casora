@@ -1711,6 +1711,38 @@
   "Gemäht": "Cortado",
   "besteht noch": "continua ativo",
   "1 Fahrt": "1 percurso",
+  "Bestätigt": "Confirmado",
+  "Messer": "Lâminas",
+  "Schnitthöhe": "Altura de corte",
+  "Nächster Start": "Próximo início",
+  "Gesperrt": "Bloqueado",
+  "Demo": "Demo",
+  "Hauptbereich": "Área principal",
+  "Nebenbereich": "Área secundária",
+  "Zielpunkt": "Ponto de interesse",
+  "Restlebensdauer": "Vida útil restante",
+  "Einsatzzeit": "Tempo de uso",
+  "Regenpause": "Pausa por chuva",
+  "Regen erkannt": "Chuva detetada",
+  "Parkt (extern)": "Estacionado (externo)",
+  "Mäht die Kante": "A cortar a borda",
+  "Fährt zur Zone": "A ir para a zona",
+  "Sucht die Zone": "A procurar a zona",
+  "Parkt wegen Regen": "Estacionado devido à chuva",
+  "Parkt, zu dunkel": "Estacionado, muito escuro",
+  "Parkt, alles gemäht": "Estacionado, tudo cortado",
+  "Sucht Satelliten": "A procurar satélites",
+  "Begrenzungsdraht verpolt": "Fio perimetral invertido",
+  "Zu steil": "Demasiado íngreme",
+  "Findet die Station nicht": "Não encontra a base",
+  "Rad blockiert": "Roda bloqueada",
+  "Klappe schließen": "Fecha a tampa",
+  "Zone nicht erreichbar": "Zona inacessível",
+  "Kartenfehler": "Erro de mapa",
+  "Kamera gestört": "Avaria da câmara",
+  "Fehler beim Start": "Erro ao ligar",
+  "Schwerer Fehler": "Erro grave",
+  "Aus, Klappe zu": "Desligado, tampa fechada",
   "KI-Check": "Verificação da IA",
   "Vorher sichern": "Cópia de segurança antes",
   "Installieren": "Instalar",
@@ -2361,6 +2393,34 @@
   "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "No Studio podes acrescentar valores, histórico, controlo e cartões próprios."
  },
  "patterns": [
+  [
+   "^Nächster Start (.+)$",
+   "Próximo início {1}"
+  ],
+  [
+   "^heute (\\d{1,2}:\\d\\d)$",
+   "hoje {1}"
+  ],
+  [
+   "^morgen (\\d{1,2}:\\d\\d)$",
+   "amanhã {1}"
+  ],
+  [
+   "^Pause noch (.+)$",
+   "Em pausa mais {1}"
+  ],
+  [
+   "^Verzögerung (.+)$",
+   "Atraso {1}"
+  ],
+  [
+   "^Zone (\\d+)$",
+   "Zona {1}"
+  ],
+  [
+   "^Schnitthöhe \\((.+)\\)$",
+   "Altura de corte ({1})"
+  ],
   [
    "^Spielt ab: (.+)$",
    "A reproduzir: {1}"

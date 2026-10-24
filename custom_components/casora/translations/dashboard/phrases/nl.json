@@ -1703,6 +1703,38 @@
   "Gemäht": "Gemaaid",
   "besteht noch": "geldt nog",
   "1 Fahrt": "1 rit",
+  "Bestätigt": "Bevestigd",
+  "Messer": "Messen",
+  "Schnitthöhe": "Maaihoogte",
+  "Nächster Start": "Volgende start",
+  "Gesperrt": "Vergrendeld",
+  "Demo": "Demo",
+  "Hauptbereich": "Hoofdgebied",
+  "Nebenbereich": "Tweede gebied",
+  "Zielpunkt": "Interessepunt",
+  "Restlebensdauer": "Resterende levensduur",
+  "Einsatzzeit": "Gebruikstijd",
+  "Regenpause": "Regenpauze",
+  "Regen erkannt": "Regen gedetecteerd",
+  "Parkt (extern)": "Geparkeerd (van buitenaf)",
+  "Mäht die Kante": "Maait de rand",
+  "Fährt zur Zone": "Rijdt naar de zone",
+  "Sucht die Zone": "Zoekt de zone",
+  "Parkt wegen Regen": "Geparkeerd vanwege regen",
+  "Parkt, zu dunkel": "Geparkeerd, te donker",
+  "Parkt, alles gemäht": "Geparkeerd, alles gemaaid",
+  "Sucht Satelliten": "Zoekt satellieten",
+  "Begrenzungsdraht verpolt": "Begrenzingsdraad omgepoold",
+  "Zu steil": "Helling te groot",
+  "Findet die Station nicht": "Vindt het station niet",
+  "Rad blockiert": "Wiel geblokkeerd",
+  "Klappe schließen": "Sluit de klep",
+  "Zone nicht erreichbar": "Zone onbereikbaar",
+  "Kartenfehler": "Kaartfout",
+  "Kamera gestört": "Camerastoring",
+  "Fehler beim Start": "Fout bij opstarten",
+  "Schwerer Fehler": "Ernstige fout",
+  "Aus, Klappe zu": "Uit, klep dicht",
   "KI-Check": "AI-check",
   "Vorher sichern": "Eerst back-up maken",
   "Installieren": "Installeren",
@@ -2361,6 +2393,34 @@
   "Verfügbar": "Beschikbaar"
  },
  "patterns": [
+  [
+   "^Nächster Start (.+)$",
+   "Volgende start {1}"
+  ],
+  [
+   "^heute (\\d{1,2}:\\d\\d)$",
+   "vandaag {1}"
+  ],
+  [
+   "^morgen (\\d{1,2}:\\d\\d)$",
+   "morgen {1}"
+  ],
+  [
+   "^Pause noch (.+)$",
+   "Pauze nog {1}"
+  ],
+  [
+   "^Verzögerung (.+)$",
+   "Vertraging {1}"
+  ],
+  [
+   "^Zone (\\d+)$",
+   "Zone {1}"
+  ],
+  [
+   "^Schnitthöhe \\((.+)\\)$",
+   "Maaihoogte ({1})"
+  ],
   [
    "^Spielt ab: (.+)$",
    "Speelt af: {1}"

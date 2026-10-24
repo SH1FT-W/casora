@@ -1703,6 +1703,38 @@
   "Gemäht": "Tondu",
   "besteht noch": "toujours en cours",
   "1 Fahrt": "1 trajet",
+  "Bestätigt": "Confirmé",
+  "Messer": "Lames",
+  "Schnitthöhe": "Hauteur de coupe",
+  "Nächster Start": "Prochain départ",
+  "Gesperrt": "Verrouillé",
+  "Demo": "Démo",
+  "Hauptbereich": "Zone principale",
+  "Nebenbereich": "Zone secondaire",
+  "Zielpunkt": "Point d’intérêt",
+  "Restlebensdauer": "Durée de vie restante",
+  "Einsatzzeit": "Temps d’utilisation",
+  "Regenpause": "Pause pluie",
+  "Regen erkannt": "Pluie détectée",
+  "Parkt (extern)": "Garé (externe)",
+  "Mäht die Kante": "Coupe la bordure",
+  "Fährt zur Zone": "Va vers la zone",
+  "Sucht die Zone": "Cherche la zone",
+  "Parkt wegen Regen": "Garé à cause de la pluie",
+  "Parkt, zu dunkel": "Garé, trop sombre",
+  "Parkt, alles gemäht": "Garé, tout est tondu",
+  "Sucht Satelliten": "Cherche les satellites",
+  "Begrenzungsdraht verpolt": "Câble périphérique inversé",
+  "Zu steil": "Trop raide",
+  "Findet die Station nicht": "Ne trouve pas la base",
+  "Rad blockiert": "Roue bloquée",
+  "Klappe schließen": "Ferme le capot",
+  "Zone nicht erreichbar": "Zone inaccessible",
+  "Kartenfehler": "Erreur de carte",
+  "Kamera gestört": "Défaut caméra",
+  "Fehler beim Start": "Erreur au démarrage",
+  "Schwerer Fehler": "Erreur grave",
+  "Aus, Klappe zu": "Éteint, capot fermé",
   "KI-Check": "Vérification IA",
   "Vorher sichern": "Sauvegarder d'abord",
   "Installieren": "Installer",
@@ -2361,6 +2393,34 @@
   "Verfügbar": "Disponible"
  },
  "patterns": [
+  [
+   "^Nächster Start (.+)$",
+   "Prochain départ {1}"
+  ],
+  [
+   "^heute (\\d{1,2}:\\d\\d)$",
+   "aujourd’hui {1}"
+  ],
+  [
+   "^morgen (\\d{1,2}:\\d\\d)$",
+   "demain {1}"
+  ],
+  [
+   "^Pause noch (.+)$",
+   "En pause encore {1}"
+  ],
+  [
+   "^Verzögerung (.+)$",
+   "Délai {1}"
+  ],
+  [
+   "^Zone (\\d+)$",
+   "Zone {1}"
+  ],
+  [
+   "^Schnitthöhe \\((.+)\\)$",
+   "Hauteur de coupe ({1})"
+  ],
   [
    "^Spielt ab: (.+)$",
    "Lecture : {1}"

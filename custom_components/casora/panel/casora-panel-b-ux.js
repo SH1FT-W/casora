@@ -88,7 +88,7 @@
     if (suggested && typeIds.has(suggested)) return suggested;
     const t = BY_DOMAIN[String(entity || "").split(".")[0]];
     if (t && typeIds.has(t)) return t;
-    // Community-Karte (Mähroboter …), die nicht hinzugefügt ist: Gerät hier nicht anbieten.
+    // A community card that is not added: do not offer the device here.
     const ty = t && ((W.__casoraPanelInternals || {}).TILE_TYPES || []).find((x) => x.id === t);
     if (ty && ty.community) return null;
     return typeIds.has("entity_actions") ? "entity_actions" : null;
@@ -669,7 +669,7 @@
       });
       sugg.forEach((x) => push(x.entity, x.name, x.type));
       Object.keys(S).forEach((id) => { if (ADD_DOMAINS.indexOf(id.split(".")[0]) >= 0) push(id, "", byEntity.has(id) ? byEntity.get(id).type : null); });
-      // Buttons and switches of a device that already has its own card (mower, coffee machine, pet with the tracker
+      // Buttons and switches of a device that already has its own card (lawn mower, coffee machine, pet with the tracker
       // behind it) are part of that card, not offered again on their own.
       const owned = new Set();
       out.filter((x) => OWN_CARDS.has(x.type)).forEach((x) => {
