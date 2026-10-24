@@ -71,6 +71,11 @@ Kern-Integrationen (Schlüssel im Test geprüft):
   `live_finder.py`)
 - `home_connect`, `miele`, `smartthings`, `lg_thinq`, `whirlpool`: Wäsche/Spüler (`00-finder.js`
   `casoraLaundryFind`, `live_finder.py`), Home Connect auch Kaffee
+- `dwd_weather_warnings` (#55): Stufensensoren `…_current_warning_level`/`…_advance_warning_level`, Zustand = Stufe
+  0–4, Attribute `warning_count`, `region_name`, `last_update` und je Warnung `warning_<n>_name/_level/_headline/
+  _description/_instruction/_start/_end` (`01-basis.js` `casoraWarnings`, `casora-panel.js` `isWarningLevelSensor`;
+  Test `dev/unit/wetterwarnung_dwd.mjs`, Testhaus `dev/casora_mock/testserver.py`). Erkennung nur über `warning_count`,
+  nicht über `translation_key`.
 - `cookidoo` (Rezept, `03-popups.js`, `ki.py`), `backup` (`03-popups.js`), `proximity` (`15-person.js`),
   `unifi` (Netzwerk, `00-finder.js`), `lamarzocco` (Kaffee, `25-kaffee.js`), `tankerkoenig` (nur `platform`,
   `tanken.py`)

@@ -4868,6 +4868,16 @@ function tileMissingEntity(tile, type) {
     || (Array.isArray(v) && v.some(looks)));
 }
 
+// DWD warning level sensor (HA core dwd_weather_warnings, issue #55): a sensor whose warning_count is a number –
+// no device class, the warnings sit in warning_<n>_* attributes. The dashboard's rule is casoraWarnings.isLevelSensor
+// (scripts/local/01-basis.js); the panel loads without the dashboard scripts, so the shape is checked here too.
+const isWarningLevelSensor = (h, id) => /^sensor\./.test(id)
+  && Number.isFinite(parseInt((((h.states || {})[id] || {}).attributes || {}).warning_count, 10));
+// Picker rules beyond domain and device class (types.js `accept`): an entity the rule accepts is offered as well.
+const ACCEPT_RULES = {
+  weather_warning: isWarningLevelSensor,
+};
+
 // The main entity a new tile suggests: by the integration's translation_key (language-independent, however
 // renamed) – WashData, Home Connect, Bambu Lab, NINA/DWD. like/not separate devices with the same key (dryer).
 // laundry: the shared washer/dryer/dishwasher recognition (casoraLaundryFind in scripts/local/00-finder.js, the
@@ -4899,7 +4909,8 @@ const TILE_MAIN_FIND = {
   // temperature and power first – that is what the request was about (first use: a sure match, not every sensor).
   casora_chart: { domain: "sensor", keys: ["processor_use"], platform: "systemmonitor", match: (h, id) => isStatSensor(h, id),
     like: /processor|prozessor|\bcpu\b|temperat|\bpower\b|leistung|\bstrom|\benerg/i },
-  casora_weather_warning: { keys: ["warning", "warnings"], domain: "binary_sensor", dc: "safety" },
+  // NINA/Meteoalarm safety binary_sensor or a DWD level sensor; the current level, not the advance warning (#55).
+  casora_weather_warning: { keys: ["warning", "warnings"], dc: "safety", match: isWarningLevelSensor, not: /advance_warning|vorwarn/i },
   // Ein Aquarium ist kein beliebiges Thermometer (sonst: Außentemperatur des Autos).
   casora_aquarium: { domain: "sensor", dc: "temperature", strict: true,
     like: /aquari|becken|\btank\b|\breef\b|fluval|trigon|helialux|chihiros|juwel|terrari|schildkr|turtle/i },
@@ -18176,7 +18187,7 @@ class CasoraPanel extends HTMLElement {
                   f.iconDefault || "default",
                   (v) => write(v === ICON_DEFAULT ? "" : v),
                   { icon: true, iconFallback: f.iconDefault || null })
-              : this._combo(map[id] || "", this._rankedEntityList(f.domains, f.classes, room, map[id]),
+              : this._combo(map[id] || "", this._rankedEntityList(f.domains, f.classes, room, map[id], f.accept),
                   pickHint(f.domains), write, { clearable: true });
             r.appendChild(c.wrap);
             if (n === 0) addDrop(r, f);
@@ -18254,7 +18265,7 @@ class CasoraPanel extends HTMLElement {
           const pinned = f.repeatKinds && this._slotKind.get(room.path + "|" + unitOf(f));
           const kind = pinned && f.repeatKinds.find((k) => k.id === pinned);
           const doms = (kind && kind.domains) || f.domains;
-          const c = this._combo(cur, this._rankedEntityList(doms, f.classes, room, cur),
+          const c = this._combo(cur, this._rankedEntityList(doms, f.classes, room, cur, f.accept),
             f.placeholder || (ghosts.has(unitOf(f)) ? "Choose" : pickHint(doms)),
             (v) => {
               setVar(f.key, v, f);
@@ -20761,7 +20772,7 @@ class CasoraPanel extends HTMLElement {
         wrap.appendChild(chips);
       }
 
-      const options = this._entityList(domains, opts && opts.classes)
+      const options = this._entityList(domains, opts && opts.classes, opts && opts.accept)
         .filter((e) => !list.includes(e));
       const ph = (opts && opts.placeholder)
         || pickHint(domains, true);
@@ -21458,12 +21469,14 @@ class CasoraPanel extends HTMLElement {
 
   // classes: Liste für alle Domains oder {domain: [...]} je Domain. Ohne device_class
   // zählt ein Sensor nur, wenn seine Einheit zur gesuchten Art passt (CLASS_UNITS).
-  _entityList(domains, classes) {
+  // accept: name of an ACCEPT_RULES entry – an entity it accepts is offered regardless of class (DWD level sensor).
+  _entityList(domains, classes, accept) {
     // Jedes Gerätefeld eines Raums fragt beim Zeichnen dieselben Listen ab – je Stand von
     // hass.states nur einmal durch alle Entitäten gehen (war über die Hälfte der Zeichenzeit).
     const states = this._hass.states;
     if (!this._entMemo || this._entMemo.states !== states) this._entMemo = { states, map: new Map() };
-    const memoKey = JSON.stringify([domains, classes || null]);
+    const memoKey = JSON.stringify([domains, classes || null, accept || null]);
+    const acc = (accept && ACCEPT_RULES[accept]) || null;
     const hit = this._entMemo.map.get(memoKey);
     if (hit) return hit.slice();
     // Entitäten je Domain einmal je Stand einsortieren; jede Abfrage geht dann nur durch ihre Domains.
@@ -21485,6 +21498,7 @@ class CasoraPanel extends HTMLElement {
       .flatMap((d) => this._entMemo.byDom.get(d))
       .concat(plus)
       .filter((e) => {
+        if (acc && acc(this._hass, e)) return true;
         const want = perDomain ? perDomain[e.split(".")[0]] : all;
         if (!want || !want.length) return true;
         const at = this._hass.states[e]?.attributes || {};
@@ -21499,7 +21513,7 @@ class CasoraPanel extends HTMLElement {
 
   // Choices for entity fields: this room's devices first, then by name. Config/diagnostic entities (status LEDs
   // on the router …) drop out, except sensors (battery, signal), device_trackers (listCategory) and the current one.
-  _rankedEntityList(domains, classes, room, cur) {
+  _rankedEntityList(domains, classes, room, cur, accept) {
     const h = this._hass;
     const R = (h && h.entities) || {}, D = (h && h.devices) || {};
     const area = room ? this._roomArea(room) : null;
@@ -21509,7 +21523,7 @@ class CasoraPanel extends HTMLElement {
     const key = room && room.path !== "home" ? foldName(room.name || "") : "";
     const mine = (e) => (area && areaOf(e) === area)
       || (key.length > 2 && foldName(e + " " + this._prettyEntity(e)).includes(key));
-    return this._entityList(domains, classes)
+    return this._entityList(domains, classes, accept)
       .filter((e) => e === cur || /^(binary_)?sensor\./.test(e)
         || !["config", "diagnostic"].includes(listCategory(e, R[e])))
       .map((e) => [e, mine(e) ? 0 : 1, name(e)])
@@ -27057,7 +27071,7 @@ class CasoraPanel extends HTMLElement {
     // (Tractive) may not have its entities yet while the inspector is drawn (issue #25). It is a device field
     // even while that list is empty, also for tiles with their own data: typed text is no entity.
     const entOptions = () => {
-      const all = this._rankedEntityList(type.domains, type.classes, room, tile.entity);
+      const all = this._rankedEntityList(type.domains, type.classes, room, tile.entity, type.accept);
       // Pet tracker: only the Tractive trackers, not every phone (issue #25); all of them if none is found.
       if (type.id !== "casora_pet") return all;
       const pets = all.filter((e) => e === tile.entity || isPetTracker(this._hass, e));
@@ -27583,7 +27597,7 @@ class CasoraPanel extends HTMLElement {
           // Zuordnungen je Eintrag (type "map", over: diese Liste) brauchen ein neues Formular.
           if (tfields.some((m) => m.over === f.key)) { this._syncPreview(); return this._renderForm(); }
           this._syncPreview();
-        }, undefined, { classes: f.classes, placeholder: f.placeholder }));
+        }, undefined, { classes: f.classes, accept: f.accept, placeholder: f.placeholder }));
         hintUnder();
         return;
       }
@@ -27629,7 +27643,7 @@ class CasoraPanel extends HTMLElement {
                 f.iconDefault || "default",
                 (v) => write(v === ICON_DEFAULT ? "" : v),
                 { icon: true, iconFallback: f.iconDefault || null })
-            : this._combo(map[id] || "", this._entityList(f.domains, f.classes),
+            : this._combo(map[id] || "", this._entityList(f.domains, f.classes, f.accept),
                 pickHint(f.domains), write, { clearable: true });
           put(f.label, c.wrap, who);
         });
@@ -27812,7 +27826,7 @@ class CasoraPanel extends HTMLElement {
           // Casora: leeres Feld zeigt, was der Geräte-Finder stattdessen nimmt.
           const found = f.find && window.casoraFieldFound && window.casoraFieldFound(f, tile, this._hass);
           let whyEl = null;
-          put(f.label, this._combo(cur, this._entityList(f.domains, f.classes),
+          put(f.label, this._combo(cur, this._entityList(f.domains, f.classes, f.accept),
             found || f.placeholder || pickHint(f.domains), (v) => { if (whyEl && v) { whyEl.remove(); whyEl = null; } set(v); },
             { clearable: true }).wrap);
           hintUnder();

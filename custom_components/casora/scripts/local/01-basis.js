@@ -1262,23 +1262,94 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     Minor: 'Hinweis', Moderate: 'Warnung', Severe: 'Unwetter', Extreme: 'Extremes Unwetter',
   };
 
+  // Weather warnings in one shape (issue #55). Two sources: a binary_sensor (NINA, Meteoalarm, "Wetter &
+  // Warnungen": state on/off, attributes severity/headline/description/instruction/sent/expires) and the level
+  // sensors of HA's "Deutscher Wetterdienst (DWD) Weather Warnings" (sensor.<region>_current_warning_level:
+  // state = level 0–4, warning_count, warning_<n>_name/_level/_headline/_description/_instruction/_start/_end).
+  // The tile, its popup and the bell (standing/describe below) all read this list, nothing parses attributes twice.
+  // Entry: { entity, level 1–4, severity Minor|Moderate|Severe|Extreme, headline, description, instruction,
+  //          event, start, end, updated, msgType }. Test: dev/unit/wetterwarnung_dwd.mjs.
+  window.casoraWarnings = (function () {
+    var SEV = ['Minor', 'Moderate', 'Severe', 'Extreme'];
+    var clamp = function (n) { n = parseInt(n, 10); return isFinite(n) ? Math.max(1, Math.min(4, n)) : 1; };
+    // Severity word → level; NINA's "Extreme" and a mistyped "Extrem" both count; unknown or missing = Minor.
+    var level = function (sev) { var i = SEV.indexOf(String(sev || '')); return i >= 0 ? i + 1 : /^extrem/i.test(String(sev || '')) ? 4 : 1; };
+    var severity = function (lv) { return SEV[clamp(lv) - 1]; };
+    var attrs = function (st) { return (st && st.attributes) || {}; };
+    var count = function (st) { var n = parseInt(attrs(st).warning_count, 10); return isFinite(n) ? n : NaN; };
+    // DWD level sensor: a sensor whose warning_count is a number (the binary_sensor sources have none).
+    var isLevelSensor = function (st, id) {
+      var eid = String(id || (st && st.entity_id) || '');
+      return eid.indexOf('sensor.') === 0 && isFinite(count(st));
+    };
+    var active = function (st, id) {
+      if (!st) return false;
+      if (isLevelSensor(st, id)) return parseInt(st.state, 10) > 0 && count(st) > 0;
+      return st.state === 'on';
+    };
+    var str = function (v) { return v == null ? '' : String(v); };
+    var of = function (st, id) {
+      if (!active(st, id)) return [];
+      var eid = String(id || st.entity_id || '');
+      var a = attrs(st);
+      if (!isLevelSensor(st, id)) {
+        var lv = level(a.severity);
+        return [{ entity: eid, level: lv, severity: severity(lv), headline: str(a.headline || a.title),
+          description: str(a.description), instruction: str(a.instruction), event: str(a.event),
+          start: a.effective || a.onset || a.sent || a.start_time || null, end: a.expires || a.end_time || null,
+          updated: a.sent || null, msgType: str(a.message_type || a.msgType) }];
+      }
+      var out = [];
+      for (var n = 1; n <= count(st); n++) {
+        var k = 'warning_' + n + '_';
+        if (a[k + 'headline'] == null && a[k + 'name'] == null && a[k + 'level'] == null) continue;
+        var l = clamp(a[k + 'level']);
+        out.push({ entity: eid, level: l, severity: severity(l), headline: str(a[k + 'headline']),
+          description: str(a[k + 'description']), instruction: str(a[k + 'instruction']),
+          event: str(a[k + 'name'] || a[k + 'type']), start: a[k + 'start'] || null, end: a[k + 'end'] || null,
+          updated: a.last_update || null, msgType: '' });
+      }
+      return out;
+    };
+    // All warnings of these sensors, most severe first (stable within a level).
+    var list = function (states, ids) {
+      var out = [];
+      [].concat(ids || []).forEach(function (id) {
+        if (!id || !states || !states[id]) return;
+        of(states[id], id).forEach(function (w) { out.push(w); });
+      });
+      return out.map(function (w, i) { return [w, i]; })
+        .sort(function (x, y) { return y[0].level - x[0].level || x[1] - y[1]; })
+        .map(function (p) { return p[0]; });
+    };
+    var top = function (states, ids) { var l = list(states, ids); return l.length ? l[0].level : 0; };
+    // Warning area: DWD region_name, the region attribute of a combined integration, else nothing.
+    var region = function (st) { var a = attrs(st); return str(a.region_name || a.region) || null; };
+    // Kind of warning for the bell: "… vor STURMBÖEN" → "Sturmböen", else the event name, else generic.
+    var kind = function (w) {
+      var m = str(w && w.headline).match(/vor (.+)$/i);
+      var t = m ? m[1] : str(w && w.event);
+      if (!t) return 'Wetterwarnung';
+      t = t.toLowerCase();
+      return t.charAt(0).toUpperCase() + t.slice(1);
+    };
+    return { list: list, of: of, top: top, active: active, isLevelSensor: isLevelSensor, level: level,
+      severity: severity, region: region, kind: kind };
+  })();
+
   function cfg() {
     var own = (window.casoraSettings && window.casoraSettings('notify')) || {};
     return Object.assign({}, DEFAULTS, own, window.CASORA_NOTIFY_LOCAL || {});
   }
 
-  function isWarning(id) {
+  // A warning source: the NINA/Meteoalarm prefix from the settings or a DWD level sensor (any name).
+  function isWarning(id, st) {
     var p = cfg().warn_prefix;
-    return !!p && id.indexOf(p) === 0;
+    return (!!p && id.indexOf(p) === 0) || window.casoraWarnings.isLevelSensor(st, id);
   }
 
-  function warningType(st) {
-    var h = String((st && st.attributes && st.attributes.headline) || '');
-    var m = h.match(/vor (.+)$/i);
-    if (!m) return 'Wetterwarnung';
-    var t = m[1].toLowerCase();
-    return t.charAt(0).toUpperCase() + t.slice(1);
-  }
+  // Active as a warning source: binary_sensor on, DWD level > 0 with warnings.
+  function warnOn(s) { return s === 'on' || parseInt(s, 10) > 0; }
 
   function hhmm(iso) {
     var t = Date.parse(iso || '');
@@ -1338,7 +1409,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       var out = [];
       Object.keys(hass.states).forEach(function (id) {
         if (c.post && id === c.mail) out.push(id);
-        else if (c.warnings && isWarning(id)) out.push(id);
+        else if (c.warnings && isWarning(id, hass.states[id])) out.push(id);
       });
       return out;
     },
@@ -1378,13 +1449,13 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         return { label: 'Neue Post im Briefkasten', icon: 'mdi:mailbox', tone: 'accent' };
       }
 
-      if (isWarning(id)) {
+      if (isWarning(id, st)) {
         // Eine laufende Warnung steht schon als Live-Zeile mit Details oben.
-        if (s === 'on' && st && st.state === 'on') return null;
-        if (s === 'on') {
+        if (warnOn(s) && st && warnOn(st.state)) return null;
+        if (warnOn(s)) {
           return { label: 'Wetterwarnung', sub: 'Amtliche Warnung', icon: 'exclamation', tone: 'warn' };
         }
-        if (s === 'off' && prev === 'on') {
+        if (!warnOn(s) && s !== 'unavailable' && s !== 'unknown' && warnOn(prev)) {
           return { label: 'Entwarnung', sub: 'Wetterwarnung aufgehoben', icon: 'exclamation', tone: 'good' };
         }
         return null;
@@ -1400,7 +1471,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       var S = hass.states;
       rows = fixBattery(hass, rows, api, c);
       var out = rows.filter(function (r) {
-        return !(r.entity && isWarning(r.entity) && String(r.id || '').indexOf('casora:safety:') === 0);
+        return !(r.entity && isWarning(r.entity, S[r.entity]) && String(r.id || '').indexOf('casora:safety:') === 0);
       });
 
       // Kombi-Sensoren: Einzelsensoren ausblenden, Kipp-Stellung als "gekippt".
@@ -1458,23 +1529,26 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       }
 
       if (c.warnings) {
+        var WR = window.casoraWarnings;
         Object.keys(S).forEach(function (id) {
-          if (!isWarning(id)) return;
           var st = S[id];
-          if (st.state !== 'on') return;
-          var a = st.attributes || {};
-          var until = hhmm(a.expires);
-          out.push({
-            id: 'casora:warning:' + id,
-            when: Date.parse(st.last_changed || '') || Date.now(),
-            label: 'Wetterwarnung: ' + warningType(st),
-            sub: (WARN_LEVEL[a.severity] || 'Warnung') + (until ? ' · bis ' + until : ''),
-            icon: 'exclamation',
-            tone: (a.severity === 'Severe' || a.severity === 'Extreme') ? 'bad' : 'warn',
-            hue: window.casoraWarnHue(a.severity),
-            entity: id,
-            rank: 1,
-            seen: [id + '|' + warningType(st) + '|' + String(a.severity || '') + '|' + String(a.expires || '')],
+          if (!isWarning(id, st)) return;
+          // One row per warning: a binary_sensor carries one, a DWD level sensor warning_count of them.
+          WR.of(st, id).forEach(function (w, i) {
+            var until = hhmm(w.end);
+            var kind = WR.kind(w);
+            out.push({
+              id: 'casora:warning:' + id + (i ? ':' + i : ''),
+              when: Date.parse(st.last_changed || '') || Date.now(),
+              label: 'Wetterwarnung: ' + kind,
+              sub: (WARN_LEVEL[w.severity] || 'Warnung') + (until ? ' · bis ' + until : ''),
+              icon: 'exclamation',
+              tone: w.level >= 3 ? 'bad' : 'warn',
+              hue: window.casoraWarnHue(w.severity),
+              entity: id,
+              rank: 1,
+              seen: [id + '|' + kind + '|' + w.severity + '|' + String(w.end || '')],
+            });
           });
         });
       }

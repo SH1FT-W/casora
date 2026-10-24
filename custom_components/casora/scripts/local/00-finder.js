@@ -1166,6 +1166,10 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         add(id, 'co2', parseFloat(s) >= co2);
       }
       if (warn && id.indexOf(warn) === 0) add(id, 'warning', s === 'on');
+      // DWD level sensor (issue #55): the same source as in the bell (01-basis.js casoraWarnings).
+      else if (dom === 'sensor' && window.casoraWarnings && window.casoraWarnings.isLevelSensor(st, id)) {
+        add(id, 'warning', window.casoraWarnings.active(st, id));
+      }
     });
     appl.forEach(function (id) { if (S[id]) add(id, 'appliance', false); });
     if (n.mail && S[n.mail]) add(n.mail, 'mail', false);

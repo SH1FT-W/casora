@@ -289,7 +289,7 @@ const type = (input, text) => { input.value = text; input.oninput(); };
   const at = src.indexOf('const entCombo = this._combo(tile.entity');
   assert.ok(at > 0, 'main field');
   const head = src.slice(src.lastIndexOf('const entOptions = () => {', at), at);
-  assert.ok(head.includes('this._rankedEntityList(type.domains, type.classes, room, tile.entity)'), 'ranked list');
+  assert.ok(head.includes('this._rankedEntityList(type.domains, type.classes, room, tile.entity, type.accept)'), 'ranked list');
   assert.ok(/isPetTracker\(this\._hass, e\)/.test(head), 'pet filter inside the source');
   const end = src.indexOf('const entityLabel = ', at);
   assert.ok(src.slice(at, end).includes('{ source: entOptions, entity: true }'), 'source and entity passed (also own-data tiles)');

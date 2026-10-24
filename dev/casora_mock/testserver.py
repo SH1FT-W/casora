@@ -4,8 +4,12 @@ Like HA's systemmonitor integration: one device, sensors with translation keys p
 processor_temperature and network_in, state_class measurement. The CPU sensor has no device class (only a unit), so
 the chart card has to read state_class and unit, not the device class. Curves for the last 48 h and 30 days of
 statistics come from the mock's history backfill (_history). Names made up.
+
+Beside it a made-up DWD-like warning region (two warning level sensors, issue #55) for the weather warning tile.
 """
 from __future__ import annotations
+
+from datetime import timedelta
 
 DEV = "testserver"
 BASE = "testserver"
@@ -15,20 +19,62 @@ TEMP = f"sensor.{BASE}_processor_temperature"
 NET = f"sensor.{BASE}_network_in_eth0"
 
 
-def _ent(eid, state, attrs, name, dc=None, unit=None, key=None, cat=None):
+def _ent(eid, state, attrs, name, dc=None, unit=None, key=None, cat=None, dev=DEV):
     a = dict(attrs)
     a.setdefault("friendly_name", name)
     if dc:
         a["device_class"] = dc
     if unit:
         a["unit_of_measurement"] = unit
-    return {"entity_id": eid, "state": state, "attributes": a, "platform": "casora_mock", "device": DEV, "area": None,
+    return {"entity_id": eid, "state": state, "attributes": a, "platform": "casora_mock", "device": dev, "area": None,
             "original_name": name, "name": None, "icon": None, "device_class": dc, "unit": unit, "hidden": False,
             "translation_key": key, "entity_category": cat}
 
 
+# Made-up DWD-like warning region (HA core dwd_weather_warnings, issue #55): two level sensors without a device class,
+# state = level 0–4, warnings in warning_<n>_* attributes. Region name invented.
+DWD_DEV = "testwetter"
+DWD_REGION = "Testland Nord"
+WARN_NOW = f"sensor.{BASE}_wetterwarnung_stufe"
+WARN_PRE = f"sensor.{BASE}_vorwarnung_stufe"
+
+
+def _dwd(now, key, name, warnings):
+    t = lambda h: (now + timedelta(hours=h)).replace(microsecond=0).isoformat()
+    a = {"last_update": t(-0.5), "region_name": DWD_REGION, "region_id": 909999999, "warning_count": len(warnings)}
+    for n, w in enumerate(warnings, 1):
+        a.update({f"warning_{n}_name": w["name"], f"warning_{n}_type": w["type"], f"warning_{n}_level": w["level"],
+                  f"warning_{n}_headline": w["headline"], f"warning_{n}_description": w["description"],
+                  f"warning_{n}_instruction": w["instruction"], f"warning_{n}_start": t(w["start"]), f"warning_{n}_end": t(w["end"]),
+                  f"warning_{n}_parameters": w.get("parameters", {}), f"warning_{n}_color": w["color"]})
+    level = max([w["level"] for w in warnings] or [0])
+    return _ent(key[0], str(level), a, name, key=key[1], dev=DWD_DEV)
+
+
 def extra(now) -> dict:
     ents = [
+        _dwd(now, (WARN_NOW, "current_warning_level"), f"{DWD_REGION} Aktuelle Warnstufe", [
+            {"name": "SCHWERE STURMBÖEN", "type": 52, "level": 3, "color": "#ff0000",
+             "headline": "Amtliche UNWETTERWARNUNG vor SCHWEREN STURMBÖEN",
+             "description": "Es treten schwere Sturmböen mit Geschwindigkeiten zwischen 90 km/h (25 m/s, 10 Bft) und "
+                            "100 km/h (28 m/s, 10 Bft) aus westlicher Richtung auf. In exponierten Lagen muss mit "
+                            "orkanartigen Böen bis 110 km/h (31 m/s, 11 Bft) gerechnet werden.",
+             "instruction": "ACHTUNG! Hinweis auf mögliche Gefahren: Es können zum Beispiel einzelne Äste herabstürzen. "
+                            "Achten Sie besonders auf herabfallende Gegenstände.",
+             "start": -2, "end": 6, "parameters": {"Windböen": "90-100 [110] km/h"}},
+            {"name": "GEWITTER", "type": 31, "level": 2, "color": "#ffa500",
+             "headline": "Amtliche WARNUNG vor GEWITTER",
+             "description": "Von Westen ziehen Gewitter auf. Dabei gibt es Windböen mit Geschwindigkeiten um 60 km/h "
+                            "(17 m/s, 7 Bft) und Starkregen mit Niederschlagsmengen um 15 l/m² in einer Stunde.",
+             "instruction": "Hinweis auf mögliche Gefahren: Örtlich kann es Blitzschlag geben.",
+             "start": 1, "end": 5, "parameters": {"Windböen": "~60 km/h", "Niederschlag": "~15 l/m²"}},
+        ]),
+        _dwd(now, (WARN_PRE, "advance_warning_level"), f"{DWD_REGION} Vorwarnstufe", [
+            {"name": "FROST", "type": 22, "level": 1, "color": "#ffff00",
+             "headline": "Amtliche WARNUNG vor FROST",
+             "description": "In der Nacht zum Freitag muss mit leichtem Frost zwischen 0 °C und -3 °C gerechnet werden.",
+             "instruction": "", "start": 20, "end": 32},
+        ]),
         _ent(CPU, "23", {"state_class": "measurement"}, "Testserver Processor use", unit="%", key="processor_use"),
         _ent(RAM, "61", {"state_class": "measurement"}, "Testserver Memory use", unit="%", key="memory_use_percent"),
         _ent(TEMP, "48.5", {"state_class": "measurement"}, "Testserver Processor temperature", dc="temperature", unit="°C",
@@ -39,7 +85,8 @@ def extra(now) -> dict:
              "Testserver Network throughput in eth0", dc="data_size", unit="MiB", key="network_throughput_in", cat="diagnostic"),
     ]
     return {
-        "devices": [{"key": DEV, "name": "Testserver", "manufacturer": None, "model": "Mini-PC", "area": None}],
+        "devices": [{"key": DEV, "name": "Testserver", "manufacturer": None, "model": "Mini-PC", "area": None},
+                    {"key": DWD_DEV, "name": DWD_REGION, "manufacturer": None, "model": "Weather warnings", "area": None}],
         "entities": ents,
         # Curves for the backfill (__init__.py backfill_history): nightly backup at 03:30, streaming in the evening.
         "_history": {
