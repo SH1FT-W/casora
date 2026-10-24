@@ -59,7 +59,7 @@ def vacuum_map(fixture: dict) -> None:
 def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict | None = None) -> dict:
     """Fixture plus the made-up devices, in the order async_setup_entry always used."""
     from . import (aquarium, befeuchter, coffee, ebike, frigate, fussball, haustier, halten, hubs, klingel, kuehlschrank, live,
-                   maeher, testserver, waesche)
+                   maeher, testserver, velair, waesche)
     if stress:
         merge(fixture, stress)
     # Demo house (dev/demo/demo_fixture.py sets "_demo"): without the German test devices (washers A/B with
@@ -99,6 +99,8 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
         # Lamps behind a Hue-like bridge and a Zigbee coordinator, a two-channel dimmer, see hubs.py.
         merge(fixture, hubs.extra(now), "Hub-Lampen Garage/Garten")
         hubs.join_house_group(fixture)
+        # A made-up air conditioner planned by a Velair-like scheduler (community card #32), see velair.py.
+        merge(fixture, velair.extra(now), "Testklimaanlage + Velair")
     vacuum_map(fixture)
     # Only on request: HACS-like update entity for Casora (hacs_casora.py).
     if hacs:
@@ -137,7 +139,8 @@ def snapshot(fixture: dict, skip: list[str] | tuple = ()) -> dict:
         if eid in skip or domain in REAL_DOMAINS:
             continue
         did = "dev_" + str(e.get("device")) if e.get("device") else None
-        entities[eid] = {"entity_id": eid, "platform": "casora_mock", "device_id": did if did in devices else None,
+        # registry_platform: registered under another integration's name (Velair, velair.py), as in a real house.
+        entities[eid] = {"entity_id": eid, "platform": e.get("registry_platform") or "casora_mock", "device_id": did if did in devices else None,
                          "area_id": area_id.get(e.get("area")), "name": e.get("name"), "icon": e.get("icon"),
                          "translation_key": e.get("translation_key"), "hidden": False,
                          "entity_category": e.get("entity_category") or DEFAULT_CATEGORY.get(domain)}

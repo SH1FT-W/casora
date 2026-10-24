@@ -296,9 +296,21 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         def target_temperature(self):
             return self.a.get("temperature")
 
+        @property
+        def fan_mode(self):
+            return self.a.get("fan_mode")
+
+        @property
+        def fan_modes(self):
+            return self.a.get("fan_modes")
+
         async def async_set_temperature(self, **kw) -> None:
             mode = kw.get("hvac_mode")
-            self.put(str(mode) if mode else None, temperature=kw.get("temperature"))
+            self.put(str(mode) if mode else None, temperature=kw.get("temperature"),
+                     target_temp_low=kw.get("target_temp_low"), target_temp_high=kw.get("target_temp_high"))
+
+        async def async_set_fan_mode(self, fan_mode) -> None:
+            self.put(None, fan_mode=fan_mode)
 
         async def async_set_hvac_mode(self, hvac_mode) -> None:
             self.put(str(hvac_mode))
@@ -804,7 +816,9 @@ PLATFORMS = [
 async def setup_domain(hass: HomeAssistant, entry, async_add_entities, domain: str) -> None:
     mock = hass.data[DOMAIN]
     cls = mock.classes[domain]
-    async_add_entities(cls(mock, eid) for eid in mock.store if eid.split(".")[0] == domain)
+    # Entities registered under another integration (registry_platform, velair.py) have no object of their own.
+    async_add_entities(cls(mock, eid) for eid in mock.store if eid.split(".")[0] == domain
+                       and not (mock.entities.get(eid) or {}).get("registry_platform"))
 
 
 def _png(w: int, h: int, rgb: tuple[int, int, int]) -> bytes:

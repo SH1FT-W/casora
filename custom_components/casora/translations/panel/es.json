@@ -2584,7 +2584,12 @@
     "Add a stronger AI task in Home Assistant": "Añadir una tarea de IA más potente en Home Assistant",
     "Set up an AI in Home Assistant": "Configurar una IA en Home Assistant",
     "Pick a stronger model there. If Casora doesn't recognise your model, type its name under Settings → AI.": "Elige allí un modelo más potente. Si Casora no reconoce tu modelo, escribe su nombre en Ajustes → IA.",
-    "For example Anthropic, OpenAI or Google with an AI task. Casora then finds it by itself.": "Por ejemplo Anthropic, OpenAI o Google con una tarea de IA. Casora la encontrará por sí solo."
+    "For example Anthropic, OpenAI or Google with an AI task. Casora then finds it by itself.": "Por ejemplo Anthropic, OpenAI o Google con una tarea de IA. Casora la encontrará por sí solo.",
+    "Velair": "Velair",
+    "A climate Velair plans": "Un climatizador que planifica Velair",
+    "For every climate Velair plans": "Para cada climatizador que planifica Velair",
+    "Velair integration not installed yet": "Integración Velair aún no instalada",
+    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, objetivo y modo en la tarjeta, como en el termostato. La ventana tiene modo, temperatura objetivo, ventilador, preajustes y lamas, además del horario de Velair: las franjas de hoy, la semana de un vistazo, horario activado o desactivado, reanudar tras un cambio manual y editar las franjas de un día. Para climatizadores que planifica la integración Velair."
   },
   "patterns": [
     [

@@ -328,6 +328,19 @@ window.CASORA_TILE_TYPES = [
       needs: "tractive", needsText: "For every pet in the Tractive integration",
       needsMissing: "Tractive integration not installed yet" },
     fields: [ICON, TITLE_NAME] },
+  // Velair (community card, issue #32): a climate Velair (HACS, domain velair) plans. Tile = the thermostat tile;
+  // the popup adds Velair's schedule (today, week, on/off, editing a day) from Velair's WebSocket API and services
+  // (scripts/local/31-velair.js, casoraVelairFind in 00-finder.js). Only offered when an entity has the platform velair.
+  { id: "casora_velair", like: "thermostat", label: "Velair", template: "casora_velair", domains: ["climate"],
+    icon: "velair", color: "var(--casora-color-orange, #FF9F0A)", entityLabel: "Climate", entityPlaceholder: "A climate Velair plans",
+    onlyIf: (hass) => !!(window.casoraVelairFind && window.casoraVelairFind.present(hass)),
+    community: { desc: "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.",
+      needs: "velair", needsText: "For every climate Velair plans", needsMissing: "Velair integration not installed yet" },
+    // No icon field: the thermostat tile draws its own heating coil.
+    fields: [
+      { key: "temp_sensor", label: "Temperature sensor", domains: ["sensor"], classes: ["temperature"] },
+      { key: "show_toggle", label: "Toggle button", type: "bool", boolDefault: true },
+      TITLE_NAME] },
   // Chart (community card, card request #50): any numeric sensor with a state class (CPU load of System Monitor,
   // temperature, power, energy). Tile: value with unit and a 24 h sparkline; popup: Casora's own chart over
   // 24 h / 7 / 30 days / a year as a line or bars with up to four sensors and the statistics of the main one
@@ -484,7 +497,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "shield_alarm", "shield_bypass", "shield_vacation", "calendar", "calendar-day", "window-open",
   "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower", "coffee-maker", "paw",
   "coffee-espresso", "coffee-doppio", "coffee-cup", "coffee-cappuccino", "coffee-latte", "coffee-tall", "coffee-water",
-  "coffee-milk", "coffee-tea", "chart",
+  "coffee-milk", "coffee-tea", "chart", "velair",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Preview: show conditional cards (type: conditional) as the dashboard does –
@@ -692,6 +705,9 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       // the preview does it here – otherwise an English UI showed "3 Räume" or "Bereit" (07.10.2026).
       const tv = typeof window.casoraTr === "function" ? window.casoraTr(String(v)) : String(v);
       const d = new DOMParser().parseFromString(tv, "text/html");
+      // casoraStateFit holds a second, short form (.sf-s) the dashboard shows only on narrow tiles – read the
+      // long one ("Heizt auf 21°" was "Heizt auf 21°Heizt").
+      if (d.body) d.body.querySelectorAll(".sf-s").forEach((n) => n.remove());
       return ((d.body && d.body.textContent) || "").trim() || null;
     } catch (e) {
       return null;

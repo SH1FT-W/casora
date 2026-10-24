@@ -2427,7 +2427,56 @@
   "Wähle im Studio einen Temperatursensor oder Sollwert des Kühlschranks.": "Choisis dans le Studio un capteur de température ou une consigne du réfrigérateur.",
   "SuperCool": "SuperCool",
   "SuperFrost": "SuperFrost",
-  "Super": "Super"
+  "Super": "Super",
+  "Vom Vortag": "De la veille",
+  "Mo": "Lun",
+  "Di": "Mar",
+  "Mi": "Mer",
+  "Do": "Jeu",
+  "Fr": "Ven",
+  "Sa": "Sam",
+  "So": "Dim",
+  "Heizen/Kühlen": "Chauffage/Refroidissement",
+  "Horizontal": "Horizontal",
+  "Vertikal": "Vertical",
+  "Beide": "Les deux",
+  "Verteilt": "Diffus",
+  "Fokus": "Ciblé",
+  "Lamellen": "Volets",
+  "Voreinstellung": "Préréglage",
+  "Schlafen": "Sommeil",
+  "Löschen": "Supprimer",
+  "Speichern": "Enregistrer",
+  "Speichert …": "Enregistrement…",
+  "Speichern hat nicht geklappt": "L'enregistrement a échoué",
+  "Uhrzeit ungültig": "Heure non valide",
+  "Zu dieser Uhrzeit gibt es schon ein Zeitfenster": "Il y a déjà un créneau à cette heure",
+  "Beginn": "Début",
+  "Oben": "Haut",
+  "Unten": "Bas",
+  "Nur Modus": "Mode seul",
+  "Neues Zeitfenster": "Nouveau créneau",
+  "Zeitfenster bearbeiten": "Modifier le créneau",
+  "Zeitfenster hinzufügen": "Ajouter un créneau",
+  "Zeitfenster löschen?": "Supprimer le créneau ?",
+  "Noch kein Zeitplan": "Pas encore de programme",
+  "Lege das erste Zeitfenster an": "Ajoute le premier créneau",
+  "Zeitplan aus": "Programme désactivé",
+  "Zeitplan pausiert": "Programme en pause",
+  "Manuell eingestellt": "Réglé manuellement",
+  "Der Zeitplan wartet, bis du fortsetzt": "Le programme attend que tu reprennes",
+  "Extern gesteuert": "Contrôlé de l'extérieur",
+  "Alle Zeitpläne warten": "Tous les programmes attendent",
+  "Velair": "Velair",
+  "Velair pausiert": "Velair en pause",
+  "Velair lädt …": "Velair se charge…",
+  "Velair plant dieses Gerät nicht": "Velair ne planifie pas cet appareil",
+  "Velair wartet auf dich": "Velair t'attend",
+  "Velair braucht eine Bestätigung im Velair-Panel.": "Velair a besoin d'une confirmation dans le panneau Velair.",
+  "Im Velair-Panel öffnen": "Ouvrir dans le panneau Velair",
+  "Profile, Modi und Vorlagen": "Profils, modes et modèles",
+  "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "Un profil est actif – modifie-le dans le panneau Velair.",
+  "Ein Profil pausiert diesen Zeitplan.": "Un profil met ce programme en pause."
  },
  "patterns": [
   [
@@ -4409,6 +4458,34 @@
   [
    "^Zone (\\d+)$",
    "Zone {1}"
+  ],
+  [
+   "^Zeitplan pausiert bis (\\d{1,2}:\\d\\d)$",
+   "Programme en pause jusqu'à {1}"
+  ],
+  [
+   "^Boost bis (\\d{1,2}:\\d\\d)$",
+   "Boost jusqu'à {1}"
+  ],
+  [
+   "^Pausiert durch (.+)$",
+   "En pause par {1}"
+  ],
+  [
+   "^Lüfter (.+)$",
+   "Ventilation {1}"
+  ],
+  [
+   "^(.+) morgen ab (\\d{1,2}:\\d\\d)$",
+   "{1} demain dès {2}"
+  ],
+  [
+   "^(.+) am (Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) ab (\\d{1,2}:\\d\\d)$",
+   "{1} {2} dès {3}"
+  ],
+  [
+   "^(.+) ab (\\d{1,2}:\\d\\d)$",
+   "{1} dès {2}"
   ]
  ]
 }

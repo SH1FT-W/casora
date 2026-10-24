@@ -2427,7 +2427,56 @@
   "Wähle im Studio einen Temperatursensor oder Sollwert des Kühlschranks.": "Kies in de Studio een temperatuursensor of setpoint van de koelkast.",
   "SuperCool": "SuperCool",
   "SuperFrost": "SuperFrost",
-  "Super": "Super"
+  "Super": "Super",
+  "Vom Vortag": "Van de vorige dag",
+  "Mo": "ma",
+  "Di": "di",
+  "Mi": "wo",
+  "Do": "do",
+  "Fr": "vr",
+  "Sa": "za",
+  "So": "zo",
+  "Heizen/Kühlen": "Verwarmen/Koelen",
+  "Horizontal": "Horizontaal",
+  "Vertikal": "Verticaal",
+  "Beide": "Beide",
+  "Verteilt": "Verspreid",
+  "Fokus": "Gericht",
+  "Lamellen": "Zwenken",
+  "Voreinstellung": "Voorinstelling",
+  "Schlafen": "Slapen",
+  "Löschen": "Verwijderen",
+  "Speichern": "Opslaan",
+  "Speichert …": "Opslaan…",
+  "Speichern hat nicht geklappt": "Opslaan is mislukt",
+  "Uhrzeit ungültig": "Ongeldige tijd",
+  "Zu dieser Uhrzeit gibt es schon ein Zeitfenster": "Er is al een tijdvak op dit tijdstip",
+  "Beginn": "Begin",
+  "Oben": "Boven",
+  "Unten": "Onder",
+  "Nur Modus": "Alleen modus",
+  "Neues Zeitfenster": "Nieuw tijdvak",
+  "Zeitfenster bearbeiten": "Tijdvak bewerken",
+  "Zeitfenster hinzufügen": "Tijdvak toevoegen",
+  "Zeitfenster löschen?": "Tijdvak verwijderen?",
+  "Noch kein Zeitplan": "Nog geen schema",
+  "Lege das erste Zeitfenster an": "Voeg het eerste tijdvak toe",
+  "Zeitplan aus": "Schema uit",
+  "Zeitplan pausiert": "Schema gepauzeerd",
+  "Manuell eingestellt": "Handmatig ingesteld",
+  "Der Zeitplan wartet, bis du fortsetzt": "Het schema wacht tot je hervat",
+  "Extern gesteuert": "Van buitenaf bestuurd",
+  "Alle Zeitpläne warten": "Alle schema's wachten",
+  "Velair": "Velair",
+  "Velair pausiert": "Velair gepauzeerd",
+  "Velair lädt …": "Velair laadt…",
+  "Velair plant dieses Gerät nicht": "Velair beheert dit apparaat niet",
+  "Velair wartet auf dich": "Velair wacht op jou",
+  "Velair braucht eine Bestätigung im Velair-Panel.": "Velair heeft een bevestiging nodig in het Velair-paneel.",
+  "Im Velair-Panel öffnen": "Openen in het Velair-paneel",
+  "Profile, Modi und Vorlagen": "Profielen, modi en sjablonen",
+  "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "Er is een profiel actief – bewerk het in het Velair-paneel.",
+  "Ein Profil pausiert diesen Zeitplan.": "Een profiel pauzeert dit schema."
  },
  "patterns": [
   [
@@ -4409,6 +4458,34 @@
   [
    "^Zone (\\d+)$",
    "Zone {1}"
+  ],
+  [
+   "^Zeitplan pausiert bis (\\d{1,2}:\\d\\d)$",
+   "Schema gepauzeerd tot {1}"
+  ],
+  [
+   "^Boost bis (\\d{1,2}:\\d\\d)$",
+   "Boost tot {1}"
+  ],
+  [
+   "^Pausiert durch (.+)$",
+   "Gepauzeerd door {1}"
+  ],
+  [
+   "^Lüfter (.+)$",
+   "Ventilator {1}"
+  ],
+  [
+   "^(.+) morgen ab (\\d{1,2}:\\d\\d)$",
+   "{1} morgen vanaf {2}"
+  ],
+  [
+   "^(.+) am (Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) ab (\\d{1,2}:\\d\\d)$",
+   "{1} op {2} vanaf {3}"
+  ],
+  [
+   "^(.+) ab (\\d{1,2}:\\d\\d)$",
+   "{1} vanaf {2}"
   ]
  ]
 }

@@ -2427,7 +2427,56 @@
   "Wähle im Studio einen Temperatursensor oder Sollwert des Kühlschranks.": "Elige en el Studio un sensor de temperatura o una consigna del frigorífico.",
   "SuperCool": "SuperCool",
   "SuperFrost": "SuperFrost",
-  "Super": "Super"
+  "Super": "Super",
+  "Vom Vortag": "Del día anterior",
+  "Mo": "Lun",
+  "Di": "Mar",
+  "Mi": "Mié",
+  "Do": "Jue",
+  "Fr": "Vie",
+  "Sa": "Sáb",
+  "So": "Dom",
+  "Heizen/Kühlen": "Calor/Frío",
+  "Horizontal": "Horizontal",
+  "Vertikal": "Vertical",
+  "Beide": "Ambos",
+  "Verteilt": "Difuso",
+  "Fokus": "Enfoque",
+  "Lamellen": "Lamas",
+  "Voreinstellung": "Preajuste",
+  "Schlafen": "Dormir",
+  "Löschen": "Eliminar",
+  "Speichern": "Guardar",
+  "Speichert …": "Guardando…",
+  "Speichern hat nicht geklappt": "No se pudo guardar",
+  "Uhrzeit ungültig": "Hora no válida",
+  "Zu dieser Uhrzeit gibt es schon ein Zeitfenster": "Ya hay una franja a esta hora",
+  "Beginn": "Inicio",
+  "Oben": "Superior",
+  "Unten": "Inferior",
+  "Nur Modus": "Solo modo",
+  "Neues Zeitfenster": "Nueva franja",
+  "Zeitfenster bearbeiten": "Editar franja",
+  "Zeitfenster hinzufügen": "Añadir franja",
+  "Zeitfenster löschen?": "¿Eliminar franja?",
+  "Noch kein Zeitplan": "Aún sin horario",
+  "Lege das erste Zeitfenster an": "Añade la primera franja",
+  "Zeitplan aus": "Horario desactivado",
+  "Zeitplan pausiert": "Horario en pausa",
+  "Manuell eingestellt": "Ajustado manualmente",
+  "Der Zeitplan wartet, bis du fortsetzt": "El horario espera hasta que lo reanudes",
+  "Extern gesteuert": "Controlado externamente",
+  "Alle Zeitpläne warten": "Todos los horarios esperan",
+  "Velair": "Velair",
+  "Velair pausiert": "Velair en pausa",
+  "Velair lädt …": "Velair está cargando…",
+  "Velair plant dieses Gerät nicht": "Velair no planifica este dispositivo",
+  "Velair wartet auf dich": "Velair te espera",
+  "Velair braucht eine Bestätigung im Velair-Panel.": "Velair necesita una confirmación en el panel de Velair.",
+  "Im Velair-Panel öffnen": "Abrir en el panel de Velair",
+  "Profile, Modi und Vorlagen": "Perfiles, modos y plantillas",
+  "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "Hay un perfil activo: edítalo en el panel de Velair.",
+  "Ein Profil pausiert diesen Zeitplan.": "Un perfil pausa este horario."
  },
  "patterns": [
   [
@@ -4409,6 +4458,34 @@
   [
    "^Zone (\\d+)$",
    "Zona {1}"
+  ],
+  [
+   "^Zeitplan pausiert bis (\\d{1,2}:\\d\\d)$",
+   "Horario en pausa hasta las {1}"
+  ],
+  [
+   "^Boost bis (\\d{1,2}:\\d\\d)$",
+   "Boost hasta las {1}"
+  ],
+  [
+   "^Pausiert durch (.+)$",
+   "En pausa por {1}"
+  ],
+  [
+   "^Lüfter (.+)$",
+   "Ventilador {1}"
+  ],
+  [
+   "^(.+) morgen ab (\\d{1,2}:\\d\\d)$",
+   "{1} mañana desde las {2}"
+  ],
+  [
+   "^(.+) am (Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) ab (\\d{1,2}:\\d\\d)$",
+   "{1} el {2} desde las {3}"
+  ],
+  [
+   "^(.+) ab (\\d{1,2}:\\d\\d)$",
+   "{1} desde las {2}"
   ]
  ]
 }

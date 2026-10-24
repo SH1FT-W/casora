@@ -2427,7 +2427,56 @@
   "Wähle im Studio einen Temperatursensor oder Sollwert des Kühlschranks.": "Scegli nello Studio un sensore di temperatura o un setpoint del frigorifero.",
   "SuperCool": "SuperCool",
   "SuperFrost": "SuperFrost",
-  "Super": "Super"
+  "Super": "Super",
+  "Vom Vortag": "Dal giorno prima",
+  "Mo": "Lun",
+  "Di": "Mar",
+  "Mi": "Mer",
+  "Do": "Gio",
+  "Fr": "Ven",
+  "Sa": "Sab",
+  "So": "Dom",
+  "Heizen/Kühlen": "Caldo/Freddo",
+  "Horizontal": "Orizzontale",
+  "Vertikal": "Verticale",
+  "Beide": "Entrambi",
+  "Verteilt": "Diffuso",
+  "Fokus": "Mirato",
+  "Lamellen": "Alette",
+  "Voreinstellung": "Preimpostazione",
+  "Schlafen": "Notte",
+  "Löschen": "Elimina",
+  "Speichern": "Salva",
+  "Speichert …": "Salvataggio…",
+  "Speichern hat nicht geklappt": "Salvataggio non riuscito",
+  "Uhrzeit ungültig": "Orario non valido",
+  "Zu dieser Uhrzeit gibt es schon ein Zeitfenster": "C'è già una fascia a quest'ora",
+  "Beginn": "Inizio",
+  "Oben": "Superiore",
+  "Unten": "Inferiore",
+  "Nur Modus": "Solo modalità",
+  "Neues Zeitfenster": "Nuova fascia",
+  "Zeitfenster bearbeiten": "Modifica fascia",
+  "Zeitfenster hinzufügen": "Aggiungi fascia",
+  "Zeitfenster löschen?": "Eliminare la fascia?",
+  "Noch kein Zeitplan": "Ancora nessuna programmazione",
+  "Lege das erste Zeitfenster an": "Aggiungi la prima fascia",
+  "Zeitplan aus": "Programmazione spenta",
+  "Zeitplan pausiert": "Programmazione in pausa",
+  "Manuell eingestellt": "Impostato manualmente",
+  "Der Zeitplan wartet, bis du fortsetzt": "La programmazione attende che tu riprenda",
+  "Extern gesteuert": "Controllato esternamente",
+  "Alle Zeitpläne warten": "Tutte le programmazioni sono in attesa",
+  "Velair": "Velair",
+  "Velair pausiert": "Velair in pausa",
+  "Velair lädt …": "Velair si sta caricando…",
+  "Velair plant dieses Gerät nicht": "Velair non pianifica questo dispositivo",
+  "Velair wartet auf dich": "Velair ti aspetta",
+  "Velair braucht eine Bestätigung im Velair-Panel.": "Velair ha bisogno di una conferma nel pannello Velair.",
+  "Im Velair-Panel öffnen": "Apri nel pannello Velair",
+  "Profile, Modi und Vorlagen": "Profili, modalità e modelli",
+  "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "È attivo un profilo – modificalo nel pannello Velair.",
+  "Ein Profil pausiert diesen Zeitplan.": "Un profilo mette in pausa questa programmazione."
  },
  "patterns": [
   [
@@ -4409,6 +4458,34 @@
   [
    "^Zone (\\d+)$",
    "Zona {1}"
+  ],
+  [
+   "^Zeitplan pausiert bis (\\d{1,2}:\\d\\d)$",
+   "Programmazione in pausa fino alle {1}"
+  ],
+  [
+   "^Boost bis (\\d{1,2}:\\d\\d)$",
+   "Boost fino alle {1}"
+  ],
+  [
+   "^Pausiert durch (.+)$",
+   "In pausa da {1}"
+  ],
+  [
+   "^Lüfter (.+)$",
+   "Ventola {1}"
+  ],
+  [
+   "^(.+) morgen ab (\\d{1,2}:\\d\\d)$",
+   "{1} domani dalle {2}"
+  ],
+  [
+   "^(.+) am (Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) ab (\\d{1,2}:\\d\\d)$",
+   "{1} {2} dalle {3}"
+  ],
+  [
+   "^(.+) ab (\\d{1,2}:\\d\\d)$",
+   "{1} dalle {2}"
   ]
  ]
 }

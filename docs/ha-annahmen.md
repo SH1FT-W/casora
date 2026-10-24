@@ -93,7 +93,7 @@ Kern-Integrationen (Schlüssel im Test geprüft):
 
 Nicht im Kern-Paket prüfbar (HACS), Casora liest `platform`/`translation_key`:
 `waste_collection_schedule`, `frigate`, `ha_washdata`, `home_connect_alt`/`homeconnect_ws`, `bambu_lab`,
-`anker_solix`, `pulse`, `teamtracker`, `bosch_ebike`, `powercalc`, `browser_mod`, `hacs`, Kaffee-Integrationen
+`anker_solix`, `pulse`, `teamtracker`, `bosch_ebike`, `velair`, `powercalc`, `browser_mod`, `hacs`, Kaffee-Integrationen
 (`delonghi_primadonna`, `delonghi_coffee`, `delonghi_coffeelink`, `jura`, `jura_wifi`, `melitta_barista`, `philips_homeid`;
 Schlüssel je Quelle in `25-coffee.js` `SOURCES`, Stand Quellcode 24.10.2026, Test `dev/unit/coffee_sources.mjs`),
 Auto-Integrationen.
@@ -161,6 +161,26 @@ Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCE
   `battery_percent`, `error_1_message` als Satz, `blade_used_time` s, `blade_height`, `rain_detected`, `mqtt_status`).
   `dreame_vacuum` hat keine Mäher. Tests `dev/unit/maeher_quellen.mjs`, `dev/unit/maeher_erstnutzer.mjs`,
   `dev/qa/regress/r325_maeher_integrationen.mjs`, Testmäher `dev/casora_mock/maeher.py`.
+- `velair` (cgonfer/velair 1.8.0, Stand 24.10.2026, Community-Karte „Velair“, #32): Velair ist ein Planer, kein Gerät –
+  ein Dienst-Gerät „Velair“ mit `switch` `automatic_scheduling`, `select` `mode`, `sensor` `scheduler_status`/
+  `next_climate_event` und je geplantem Klimagerät `zone_control` (Objekt-ID `velair_control_<Klima-Objekt-ID>`),
+  `zone_active_target_temperature` (Attribut `entity_id` des Klimageräts, solange ein Block läuft), `zone_override_state`
+  u. a. Die Klimageräte selbst gehören anderen Integrationen. Erkannt wird Velair nur über `platform` `velair` in
+  `hass.entities`; welche Klimageräte es plant und die Zeitpläne liefert nur seine WebSocket-API: `velair/get_schedule`
+  (`configured_entities`, `zones[<id>].schedule[<wochentag>]` = Blöcke `start` „HH:MM“ + `action` `set_temperature`
+  (`temperature` oder `target_temp_low`/`_high`, optional `hvac_mode`, `fan_mode` …)/`set_hvac_mode`/`set_climate_options`/
+  `turn_off`, `zones[<id>].enabled`, `global.mode` `auto`/`paused`, `active_profile_ids` + `profiles[].zones[<id>].behavior`
+  `normal`/`schedule`/`pause`, `zone_runtime[<id>]` mit `state`, `control_mode`, `pause_count`, `until`,
+  `temperature_migration.required`, `settings.first_weekday`/`min_temperature`/`max_temperature`) und
+  `velair/subscribe_updates` (Ereignis `{loaded, schedule}`), beide ohne Admin. Ein Block gilt bis zum nächsten der Woche,
+  auch über Mitternacht und leere Tage. Schreiben nur über Velairs Dienste: `set_daily_schedule` (ersetzt einen Tag des
+  Standard-Zeitplans; ein aktives Profil mit eigenem Zeitplan ändert das nicht – Casora zeigt ihn dann nur an),
+  `pause_zone` (`action: none`) / `resume_zone` (`resume_all`, `apply_current_schedule`) wie Velairs eigene Karte,
+  `resume_automatic_control`. Nie `hass.data`/`runtime_data` von Velair (HACS-Review). Code: `00-finder.js`
+  `casoraVelairFind` (Quelltabelle `SOURCE`), `31-velair.js`, `casora-panel.js` `TILE_MAIN_FIND.casora_velair`,
+  `casora-panel-b-ux.js`; Tests `dev/unit/velair.mjs`, `dev/unit/community_first_use.mjs`,
+  `dev/qa/regress/r331_velair_zeitplan.mjs`, Testhaus `dev/casora_mock/velair.py` (Entitäten unter `platform` `velair`,
+  WebSocket-Befehle und Dienste nachgebaut). HACS, nicht im Kern prüfbar.
 
 Bekannt wacklig (Stand 2026.10.1, nicht im Test, weil es Rückfälle bzw. HACS-Schlüssel sind):
 

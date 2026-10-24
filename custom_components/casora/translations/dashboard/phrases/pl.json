@@ -2427,7 +2427,56 @@
   "Wähle im Studio einen Temperatursensor oder Sollwert des Kühlschranks.": "Wybierz w Studio czujnik temperatury lub wartość zadaną lodówki.",
   "SuperCool": "SuperCool",
   "SuperFrost": "SuperFrost",
-  "Super": "Super"
+  "Super": "Super",
+  "Vom Vortag": "Z poprzedniego dnia",
+  "Mo": "Pon",
+  "Di": "Wt",
+  "Mi": "Śr",
+  "Do": "Czw",
+  "Fr": "Pt",
+  "Sa": "Sob",
+  "So": "Nd",
+  "Heizen/Kühlen": "Grzanie/Chłodzenie",
+  "Horizontal": "Poziomo",
+  "Vertikal": "Pionowo",
+  "Beide": "Oba",
+  "Verteilt": "Rozproszony",
+  "Fokus": "Skupiony",
+  "Lamellen": "Żaluzje",
+  "Voreinstellung": "Ustawienie wstępne",
+  "Schlafen": "Sen",
+  "Löschen": "Usuń",
+  "Speichern": "Zapisz",
+  "Speichert …": "Zapisywanie…",
+  "Speichern hat nicht geklappt": "Nie udało się zapisać",
+  "Uhrzeit ungültig": "Nieprawidłowa godzina",
+  "Zu dieser Uhrzeit gibt es schon ein Zeitfenster": "O tej godzinie jest już przedział",
+  "Beginn": "Początek",
+  "Oben": "Górna",
+  "Unten": "Dolna",
+  "Nur Modus": "Tylko tryb",
+  "Neues Zeitfenster": "Nowy przedział",
+  "Zeitfenster bearbeiten": "Edytuj przedział",
+  "Zeitfenster hinzufügen": "Dodaj przedział",
+  "Zeitfenster löschen?": "Usunąć przedział?",
+  "Noch kein Zeitplan": "Brak harmonogramu",
+  "Lege das erste Zeitfenster an": "Dodaj pierwszy przedział",
+  "Zeitplan aus": "Harmonogram wyłączony",
+  "Zeitplan pausiert": "Harmonogram wstrzymany",
+  "Manuell eingestellt": "Ustawione ręcznie",
+  "Der Zeitplan wartet, bis du fortsetzt": "Harmonogram czeka, aż wznowisz",
+  "Extern gesteuert": "Sterowane zewnętrznie",
+  "Alle Zeitpläne warten": "Wszystkie harmonogramy czekają",
+  "Velair": "Velair",
+  "Velair pausiert": "Velair wstrzymany",
+  "Velair lädt …": "Velair się wczytuje…",
+  "Velair plant dieses Gerät nicht": "Velair nie planuje tego urządzenia",
+  "Velair wartet auf dich": "Velair czeka na ciebie",
+  "Velair braucht eine Bestätigung im Velair-Panel.": "Velair potrzebuje potwierdzenia w panelu Velair.",
+  "Im Velair-Panel öffnen": "Otwórz w panelu Velair",
+  "Profile, Modi und Vorlagen": "Ustawienia profili, trybów i szablonów",
+  "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "Aktywny jest profil – edytuj go w panelu Velair.",
+  "Ein Profil pausiert diesen Zeitplan.": "Profil wstrzymuje ten harmonogram."
  },
  "patterns": [
   [
@@ -4409,6 +4458,34 @@
   [
    "^Zone (\\d+)$",
    "Strefa {1}"
+  ],
+  [
+   "^Zeitplan pausiert bis (\\d{1,2}:\\d\\d)$",
+   "Harmonogram wstrzymany do {1}"
+  ],
+  [
+   "^Boost bis (\\d{1,2}:\\d\\d)$",
+   "Boost do {1}"
+  ],
+  [
+   "^Pausiert durch (.+)$",
+   "Wstrzymane przez {1}"
+  ],
+  [
+   "^Lüfter (.+)$",
+   "Wentylator {1}"
+  ],
+  [
+   "^(.+) morgen ab (\\d{1,2}:\\d\\d)$",
+   "{1} jutro od {2}"
+  ],
+  [
+   "^(.+) am (Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) ab (\\d{1,2}:\\d\\d)$",
+   "{1} w {2} od {3}"
+  ],
+  [
+   "^(.+) ab (\\d{1,2}:\\d\\d)$",
+   "{1} od {2}"
   ]
  ]
 }

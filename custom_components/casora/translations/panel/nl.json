@@ -2584,7 +2584,12 @@
     "Add a stronger AI task in Home Assistant": "Sterkere AI-taak toevoegen in Home Assistant",
     "Set up an AI in Home Assistant": "AI instellen in Home Assistant",
     "Pick a stronger model there. If Casora doesn't recognise your model, type its name under Settings → AI.": "Kies daar een sterker model. Herkent Casora je model niet, typ dan de naam onder Instellingen → AI.",
-    "For example Anthropic, OpenAI or Google with an AI task. Casora then finds it by itself.": "Bijvoorbeeld Anthropic, OpenAI of Google met een AI-taak. Casora vindt die daarna vanzelf."
+    "For example Anthropic, OpenAI or Google with an AI task. Casora then finds it by itself.": "Bijvoorbeeld Anthropic, OpenAI of Google met een AI-taak. Casora vindt die daarna vanzelf.",
+    "Velair": "Velair",
+    "A climate Velair plans": "Een klimaatapparaat dat Velair beheert",
+    "For every climate Velair plans": "Voor elk klimaatapparaat dat Velair beheert",
+    "Velair integration not installed yet": "Velair-integratie nog niet geïnstalleerd",
+    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatuur, doel en modus op de tegel zoals bij de thermostaat. De popup heeft modus, doeltemperatuur, ventilator, voorinstellingen en zwenken, plus het schema van Velair: de tijdvakken van vandaag, de week in één oogopslag, schema aan of uit, hervatten na een handmatige wijziging en de tijdvakken van een dag bewerken. Voor klimaatapparaten die de Velair-integratie beheert."
   },
   "patterns": [
     [

@@ -538,7 +538,7 @@
   const ROOM_GROUP_MIN_TILES = 4;
   const ROOM_GROUP_BY_TEMPLATE = {
     casora_light: 'lights',
-    casora_thermostat: 'climate', casora_air_purifier: 'climate', casora_air_device: 'climate',
+    casora_thermostat: 'climate', casora_velair: 'climate', casora_air_purifier: 'climate', casora_air_device: 'climate',
     casora_fan: 'climate', casora_humidifier: 'climate', casora_vent: 'climate', casora_cover: 'covers',
     casora_lock: 'security', casora_alarm: 'security', casora_camera: 'security', casora_cameras: 'security',
     casora_doorbell: 'security', casora_frigate: 'security', casora_reolink_doorbell: 'security', casora_motion: 'security',
