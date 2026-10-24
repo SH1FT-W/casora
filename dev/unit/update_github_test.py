@@ -226,25 +226,32 @@ async def main():
         MODE["now"] = "ok"
 
         # ── HACS verwaltet Casora → keine eigene Update-Entität ──────────
-        hh = Hass(tempfile.mkdtemp())
-        added = []
-        await update.async_setup_entry(hh, SimpleNamespace(entry_id="e6", options={}), lambda ents, **k: added.extend(ents))
-        check("ohne HACS: eigene Update-Entität", len(added) == 1 and hh.data["casora"][update.DATA_HACS] is False)
-        os.makedirs(hh.config.path(".storage"))
-        with open(hh.config.path(".storage", "hacs.repositories"), "w") as fh:
-            json.dump({"version": 1, "key": "hacs.repositories", "data": {
-                "1": {"full_name": "someone/other", "installed": True},
-                "2": {"full_name": update_source.UPDATE_REPO.lower(), "installed": True}}}, fh)
-        added.clear()
-        await update.async_setup_entry(hh, SimpleNamespace(entry_id="e6", options={}), lambda ents, **k: added.extend(ents))
-        check("mit HACS: keine zweite Update-Entität", added == [] and hh.data["casora"][update.DATA_HACS] is True)
-        with open(hh.config.path(".storage", "hacs.repositories"), "w") as fh:
-            json.dump({"data": {"2": {"full_name": update_source.UPDATE_REPO, "installed": False}}}, fh)
-        check("HACS kennt Casora, aber nicht installiert → selbst prüfen",
-              update._read_hacs(hh.config.path(".storage", "hacs.repositories")) is False)
-        with open(hh.config.path(".storage", "hacs.repositories"), "w") as fh:
-            fh.write("{kaputt")
-        check("kaputte HACS-Datei → selbst prüfen", update._read_hacs(hh.config.path(".storage", "hacs.repositories")) is False)
+        # HACS keys the repository's device and update entity by the GitHub id (public registries,
+        # no HACS storage file read).
+        devices, entities = set(), {}
+        real_reg = update.dr, update.er
+        update.dr = SimpleNamespace(async_get=lambda h: SimpleNamespace(
+            devices={i: SimpleNamespace(identifiers={i}) for i in devices}))
+        update.er = SimpleNamespace(async_get=lambda h: SimpleNamespace(
+            async_get_entity_id=lambda dom, plat, uid: entities.get((dom, plat, uid)),
+            async_remove=lambda eid: None, entities={}))
+        try:
+            hh = Hass(tempfile.mkdtemp())
+            added = []
+            await update.async_setup_entry(hh, SimpleNamespace(entry_id="e6", options={}), lambda ents, **k: added.extend(ents))
+            check("ohne HACS: eigene Update-Entität", len(added) == 1 and hh.data["casora"][update.DATA_HACS] is False)
+            devices.add(("hacs", "123"))  # another repository
+            check("anderes HACS-Paket → selbst prüfen", update.hacs_repo_id(hh) is None)
+            devices.add(("hacs", update.UPDATE_REPO_ID))
+            added.clear()
+            await update.async_setup_entry(hh, SimpleNamespace(entry_id="e6", options={}), lambda ents, **k: added.extend(ents))
+            check("mit HACS (Gerät): keine zweite Update-Entität", added == [] and hh.data["casora"][update.DATA_HACS] is True)
+            devices.clear()
+            entities[("update", "hacs", update.UPDATE_REPO_ID)] = "update.casora_update"
+            check("mit HACS (nur Update-Entität) erkannt", update.hacs_repo_id(hh) == update.UPDATE_REPO_ID)
+            check("keine HACS-Datei gelesen", not os.path.exists(hh.config.path(".storage")))
+        finally:
+            update.dr, update.er = real_reg
     finally:
         await session.close()
         await runner.cleanup()

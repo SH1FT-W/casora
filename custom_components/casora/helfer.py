@@ -53,7 +53,10 @@ def _read(name: str) -> Any:
 
 def _collection(hass: HomeAssistant, domain: str):
     """Storage collection of a helper type, via the WebSocket command the helper dialog uses
-    (<domain>/create). None when not reachable."""
+    (<domain>/create). None when not reachable.
+
+    HA has no public Python API to create UI helpers; this is a known, allowlisted access to another
+    integration's internals (dev/unit/no_foreign_internals_test.py, docs/ha-annahmen.md "Fremde Interna")."""
     try:
         handler = hass.data["websocket_api"][f"{domain}/create"][0]
         return inspect.unwrap(handler).__self__.storage_collection

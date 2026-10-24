@@ -25,6 +25,11 @@ sys.path.insert(0, ROOT)
 
 from custom_components.casora import hemma_cleanup as hc  # noqa: E402
 from custom_components.casora import hemma_package as pkg  # noqa: E402
+from custom_components.casora import update as casora_update  # noqa: E402
+
+# No HACS device for Hemma in the registry.
+casora_update.dr = SimpleNamespace(async_get=lambda h: SimpleNamespace(devices={}))
+casora_update.er = SimpleNamespace(async_get=lambda h: SimpleNamespace(async_get_entity_id=lambda *a: None))
 
 fails: list[str] = []
 

@@ -96,17 +96,17 @@ async def test_mit_hacs_alte_eigene_entitaet_weg(hass: HomeAssistant, tmp_path) 
     from custom_components.casora import update  # noqa: PLC0415
 
     hass.config.config_dir = str(tmp_path)
-    (tmp_path / ".storage").mkdir()
-    (tmp_path / ".storage" / "hacs.repositories").write_text(json.dumps({"data": {
-        REPO_ID: {"id": REPO_ID, "full_name": "SH1FT-W/casora", "installed": True}}}))
     entry = _entry(hass)
     reg = er.async_get(hass)
     reg.async_get_or_create("update", DOMAIN, f"{entry.entry_id}_update", suggested_object_id="casora")
+    # HACS' update entity for Casora carries the GitHub id as unique_id (found in the registry, no HACS file).
+    reg.async_get_or_create("update", "hacs", update.UPDATE_REPO_ID, suggested_object_id="casora_update")
     added = []
     await update.async_setup_entry(hass, entry, lambda ents, **k: added.extend(ents))
     assert added == []
     assert reg.async_get_entity_id("update", DOMAIN, f"{entry.entry_id}_update") is None
-    assert hass.data[DOMAIN][update.DATA_HACS_ID] == REPO_ID
+    assert hass.data[DOMAIN][update.DATA_HACS_ID] == update.UPDATE_REPO_ID
+    assert not (tmp_path / ".storage" / "hacs.repositories").exists()
 
 
 # ── Studio-Übersicht mit HACS ─────────────────────────────────────────────────

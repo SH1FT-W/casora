@@ -7,6 +7,10 @@ on every start. Now the setup of designs, helpers and automatic behaviour runs w
 watched: nothing may be opened for writing, replaced or removed in the config folder, even when
 configuration.yaml loads scripts.yaml and a themes folder. Leftovers of earlier versions (the four scripts,
 the theme file) only raise a repair notice. The setup notice names missing helpers and goes away once all exist.
+
+Also (next review round): nothing is written into the integration folder at run time - the Studio loader
+(scripts_view.studio_loader) and the template bundle (templates.bundle_text, also with a template tree present)
+come from memory, and no module of the integration opens a path under its own folder for writing.
 """
 
 from __future__ import annotations
@@ -218,6 +222,62 @@ check(calls == [("persistent_notification", "dismiss", {"notification_id": "caso
 res, calls = asyncio.run(einrichten(([], ["input_text.casora_x"])))
 check(calls[0][1] == "create" and "input_text.casora_x" in calls[0][2]["message"], f"named: {calls}")
 check(res == {"angelegt": [], "fehlt": ["input_text.casora_x"]}, "service response")
+
+# 5. No code path left that writes scripts.yaml or a theme file
+src = open(os.path.join(ROOT, "custom_components/casora/helfer.py"), encoding="utf-8").read()
+check("scripts.yaml\")" not in src and "_append_scripts" not in src and "script.reload" not in src
+      and '"script", "reload"' not in src, "helfer.py has no scripts.yaml writer")
+tsrc = open(os.path.join(ROOT, "custom_components/casora/theme.py"), encoding="utf-8").read()
+check('"frontend_themes"' not in tsrc and "themes_updated" not in tsrc and "set_theme" not in tsrc,
+      "theme.py neither touches HA's theme registry nor its default theme")
+
+# 6. Nothing written into the integration folder (Studio loader, template bundle)
+from custom_components.casora import scripts_view, templates  # noqa: E402
+
+with tempfile.TemporaryDirectory() as d:
+    pkg = os.path.join(d, "custom_components", "casora")
+    os.makedirs(os.path.join(pkg, "panel"))
+    with open(os.path.join(ROOT, "custom_components/casora/panel/casora-templates.json"), encoding="utf-8") as f:
+        shipped = f.read()
+    with open(os.path.join(pkg, "panel", "casora-templates.json"), "w", encoding="utf-8") as f:
+        f.write(shipped)
+    for name in scripts_view.STUDIO_MODULES:
+        open(os.path.join(pkg, "panel", name), "w").close()
+    # A development setup: the template tree lives in the config folder and is newer than the bundle.
+    for rel in (templates.SOURCE, templates.SOURCE_MOBILE):
+        os.makedirs(os.path.dirname(os.path.join(d, rel)), exist_ok=True)
+        open(os.path.join(d, rel), "w").close()
+    os.makedirs(os.path.join(d, templates.TEMPLATE_DIR), exist_ok=True)
+    real_build = templates._build
+    templates._build = lambda *a: {"templates": {"x": {}}, "scaffold": {}, "mobile": {}}
+    writes, real = watched(pkg)
+    try:
+        loader = scripts_view.studio_loader(f"1.0.{scripts_view.studio_stamp(os.path.join(pkg, 'panel'))}")
+        built = templates.bundle_text(d)
+    finally:
+        restore(real)
+        templates._build = real_build
+    check(not writes, f"integration folder: no writes ({writes})")
+    check(built and '"x"' in built, "bundle built in memory from the template tree")
+    check(not os.path.exists(os.path.join(pkg, "panel", "casora-studio.js")) and "casora-panel.js?v=1.0." in loader,
+          "Studio loader only in memory")
+    os.remove(os.path.join(d, templates.SOURCE))
+    check(templates.bundle_text(d) == shipped, "without the template tree: the shipped bundle as it is")
+
+# 7. No module writes under its own folder (open(..., "w") etc. next to __file__ / custom_components/casora)
+import re  # noqa: E402
+
+pkg_dir = os.path.join(ROOT, "custom_components", "casora")
+own = re.compile(r"(__file__|_DIR\b|panel_dir|custom_components/\{DOMAIN\}|custom_components/casora|BUNDLE)")
+writer = re.compile(r"open\([^)]*[\"'][wax]b?\+?[\"']|write_text\(|write_bytes\(|os\.replace\(|shutil\.(copy|move)")
+hits = []
+for name in sorted(os.listdir(pkg_dir)):
+    if not name.endswith(".py"):
+        continue
+    for no, line in enumerate(open(os.path.join(pkg_dir, name), encoding="utf-8"), 1):
+        if writer.search(line) and own.search(line):
+            hits.append(f"{name}:{no}: {line.strip()}")
+check(not hits, f"no writer next to the integration's own paths: {hits}")
 
 # 5. No code path left that writes scripts.yaml or a theme file
 src = open(os.path.join(ROOT, "custom_components/casora/helfer.py"), encoding="utf-8").read()

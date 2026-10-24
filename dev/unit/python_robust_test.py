@@ -11,8 +11,8 @@ B-PY-08: Neustart-Schalter: die Liste der Abmelder wächst nicht mit jedem Einsc
 B-PY-13: ein gelöschter Karten-Update-Anhang blockiert die übrigen Karten-Updates nicht.
 B-PY-14: Kamera-/Pflanzen-KI ohne eingerichtete KI → Fehler mit Grund, kein Aufruf mit „None“.
 B-PY-15: Heizungs-Coach nennt die Temperatur-Einheit von HA (°F), nicht fest °C.
-B-PY-17: zwei gleichzeitige Vorlagen-Abrufe schreiben nicht in dieselbe .tmp-Datei.
-B-PY-18: HACS' Liste im Speicher wird im Event-Loop gelesen, nicht in einem Hintergrund-Thread.
+B-PY-17: zwei gleichzeitige Vorlagen-Abrufe liefern ein heiles Bundle, gebaut nur im Speicher.
+B-PY-18: Hemma in HACS wird über die Registry erkannt (keine HACS-Objekte, keine HACS-Datei).
 SEC-05:  casora/phone_room_badges liefert Nicht-Admins nichts aus Admin-Dashboards.
 """
 
@@ -222,7 +222,6 @@ def t_py17():
     import json
     import tempfile
     import threading
-    import time
 
     from custom_components.casora import templates
 
@@ -233,23 +232,13 @@ def t_py17():
     os.makedirs(os.path.join(cfg, templates.TEMPLATE_DIR), exist_ok=True)
     os.makedirs(os.path.dirname(os.path.join(cfg, templates.BUNDLE)), exist_ok=True)
     big = {"templates": {f"t{i}": {"x": "y" * 200} for i in range(3000)}, "scaffold": {"a": 1}, "mobile": {}}
-    real_build, real_dump = templates._build, templates.json.dump
-
-    def slow_dump(obj, fh, **k):
-        # Halb schreiben, warten, Rest schreiben – so überschneiden sich zwei Läufe sicher.
-        text = json.dumps(obj, **k)
-        fh.write(text[: len(text) // 2])
-        fh.flush()
-        time.sleep(0.05)
-        fh.write(text[len(text) // 2:])
-
+    real_build = templates._build
     templates._build = lambda *a: big
-    templates.json.dump = slow_dump
-    errs = []
+    errs, got = [], []
 
     def run():
         try:
-            templates.rebuild_if_stale(cfg)
+            got.append(templates.bundle_text(cfg))
         except Exception as e:  # noqa: BLE001
             errs.append(e)
 
@@ -260,33 +249,38 @@ def t_py17():
         for t in ts:
             t.join()
     finally:
-        templates._build, templates.json.dump = real_build, real_dump
-    try:
-        ok = len(json.load(open(os.path.join(cfg, templates.BUNDLE)))["templates"]) == 3000
-    except ValueError as e:
-        ok, errs = False, errs + [e]
-    left = [f for f in os.listdir(os.path.dirname(os.path.join(cfg, templates.BUNDLE))) if f.endswith(".tmp")]
-    check("B-PY-17: Bundle nach zwei gleichzeitigen Abrufen heil", ok and not errs and not left, repr((errs, left)))
+        templates._build = real_build
+    ok = len(got) == 2 and all(len(json.loads(g)["templates"]) == 3000 for g in got)
+    written = os.listdir(os.path.dirname(os.path.join(cfg, templates.BUNDLE)))
+    check("B-PY-17: Bundle nach zwei gleichzeitigen Abrufen heil, nur im Speicher gebaut",
+          ok and not errs and not written, repr((errs, written)))
 
 
 async def t_py18():
-    import threading
-
     from custom_components.casora import hemma_cleanup
 
-    seen = []
+    # HACS keys a repository's device and update entity by its GitHub id: Hemma is found in the registry,
+    # without HACS' objects in hass.data and without reading HACS' storage file.
+    devs = {("hacs", hemma_cleanup.HEMMA_REPO_ID)}
+    from custom_components.casora import update
 
-    class Repos:
-        @property
-        def list_all(self):
-            seen.append(threading.current_thread() is threading.main_thread())
-            return [SimpleNamespace(data=SimpleNamespace(full_name="willsanderson/Hemma", id=5, installed=True, domain="hemma"))]
+    real = update.dr, update.er
+    update.dr = SimpleNamespace(async_get=lambda h: SimpleNamespace(
+        devices={i: SimpleNamespace(identifiers={i}) for i in devs}))
+    update.er = SimpleNamespace(async_get=lambda h: SimpleNamespace(async_get_entity_id=lambda *a: None))
 
-    loop = asyncio.get_running_loop()
-    hass = SimpleNamespace(data={"hacs": SimpleNamespace(repositories=Repos())},
-                           async_add_executor_job=lambda fn, *a: loop.run_in_executor(None, fn, *a))
-    got = await hemma_cleanup.async_hacs_repo(hass, "/nirgends")
-    check("B-PY-18: HACS-Liste im Event-Loop gelesen", seen == [True] and got and got["id"] == "5", repr((seen, got)))
+    async def job(fn, *a):
+        return fn(*a)
+
+    hass = SimpleNamespace(data={}, async_add_executor_job=job, config=SimpleNamespace(config_dir="/nirgends", components=set()))
+    try:
+        got = await hemma_cleanup.async_hacs_repo(hass, "/nirgends")
+        devs.clear()
+        none = await hemma_cleanup.async_hacs_repo(hass, "/nirgends")
+    finally:
+        update.dr, update.er = real
+    check("B-PY-18: Hemma in HACS über die Registry erkannt", got and got["id"] == hemma_cleanup.HEMMA_REPO_ID
+          and none is None, repr((got, none)))
 
 
 async def t_sec05():

@@ -7,6 +7,8 @@ DOMAIN = "casora"
 # Casoras öffentliches Repo – Updates und Karten-Updates kommen anonym aus dessen
 # Releases (update_source.py).
 UPDATE_REPO = "SH1FT-W/casora"
+# Its GitHub id: HACS keys the repository's device and update entity by it (update.hacs_repo_id).
+UPDATE_REPO_ID = "1404244036"
 
 # manifest.json is the single source of truth: HACS reads it.
 VERSION = json.loads(

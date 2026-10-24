@@ -110,6 +110,14 @@ def static_checks() -> None:
           "(a.supported_features & 1) && !(window._casoraUpdAiBlocked" in content)
 
 
+HACS_DEVICES: set = set()
+# HACS keys the repository's device by its GitHub id; the registries are HA's public API.
+update.dr = SimpleNamespace(async_get=lambda h: SimpleNamespace(
+    devices={i: SimpleNamespace(identifiers={i}) for i in HACS_DEVICES}))
+update.er = SimpleNamespace(async_get=lambda h: SimpleNamespace(
+    async_get_entity_id=lambda *a: None, async_remove=lambda eid: None, entities={}))
+
+
 async def runtime_checks() -> None:
     tmp = tempfile.mkdtemp()
     hass = Hass(tmp)
@@ -157,13 +165,11 @@ async def runtime_checks() -> None:
 
     # With HACS: no own entity (HACS reports), detection unchanged.
     hh = Hass(tempfile.mkdtemp())
-    os.makedirs(hh.config.path(".storage"))
-    with open(hh.config.path(".storage", "hacs.repositories"), "w") as fh:
-        json.dump({"data": {"42": {"full_name": update.UPDATE_REPO, "installed": True}}}, fh)
+    HACS_DEVICES.add(("hacs", update.UPDATE_REPO_ID))
     added.clear()
     await update.async_setup_entry(hh, SimpleNamespace(entry_id="e2", options={}), lambda ents, **k: added.append(ents))
     check("with HACS: no own update entity", added == [] and hh.data["casora"][update.DATA_HACS] is True)
-    check("with HACS: repo id kept for the HACS page", hh.data["casora"][update.DATA_HACS_ID] == "42")
+    check("with HACS: repo id kept for the HACS page", hh.data["casora"][update.DATA_HACS_ID] == update.UPDATE_REPO_ID)
 
 
 static_checks()

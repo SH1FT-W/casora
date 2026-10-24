@@ -2,7 +2,9 @@
 
 The bundle is a derived artifact. Shipping it prebuilt means it can drift from
 the templates it was built from, and a Save then writes stale templates into the
-dashboard. Rebuilding it here keeps the two in step no matter who edited what.
+dashboard. Where the template tree is present (development setups), the bundle is
+built from it in memory, so the two stay in step no matter who edited what. Nothing
+is ever written into the integration folder; installs use the shipped bundle.
 """
 
 from __future__ import annotations
@@ -12,7 +14,6 @@ import hashlib
 import json
 import logging
 import os
-import tempfile
 
 from aiohttp import web
 from homeassistant.components.http import HomeAssistantView
@@ -129,71 +130,69 @@ def _mobile_scaffold(source: str) -> dict | None:
     }
 
 
-def _bundle_is_whole(out: str) -> bool:
-    """Whether the bundle on disk carries everything this builder emits."""
-    try:
-        with open(out, encoding="utf-8") as handle:
-            bundle = json.load(handle)
-    except (OSError, ValueError):
+def _bundle_is_whole(bundle: dict | None) -> bool:
+    """Whether a bundle carries everything this builder emits."""
+    if not isinstance(bundle, dict) or not bundle.get("templates") or not bundle.get("scaffold"):
         return False
-    if not bundle.get("templates") or not bundle.get("scaffold"):
-        return False
-    if bundle.get("mobile") is None:
-        _LOGGER.info("Casora: bundle has no phone scaffold, rebuilding")
-        return False
-    return True
+    return bundle.get("mobile") is not None
 
 
-def rebuild_if_stale(config_dir: str) -> bool:
-    """Regenerate the bundle when a template is newer than it. Blocking."""
+# Built bundle in memory: (newest source mtime, JSON text). Never written into the integration folder.
+_BUILT: dict[str, tuple[float, str]] = {}
+
+
+def bundle_text(config_dir: str) -> str | None:
+    """The template bundle as JSON text. Blocking.
+
+    Normally the bundle shipped in the package (built by tools/build-templates.py). Only where the
+    dashboard template tree exists in the config folder (development setups) and is newer than the
+    shipped bundle, the bundle is built from it - in memory, cached until a template changes."""
+    out = os.path.join(config_dir, BUNDLE)
     source = os.path.join(config_dir, SOURCE)
     tree = os.path.join(config_dir, TEMPLATE_DIR)
-    out = os.path.join(config_dir, BUNDLE)
-
-    if not os.path.exists(source) or not os.path.isdir(tree):
-        _LOGGER.debug("Casora: no template source, keeping the shipped bundle")
-        return False
-
-    newest = _newest_mtime(source, os.path.join(config_dir, SOURCE_MOBILE), tree)
-    try:
-        current = os.path.getmtime(out)
-    except OSError:
-        current = 0.0
-
-    # An mtime check alone trusts whoever wrote the bundle last to have finished.
-    if current >= newest and _bundle_is_whole(out):
-        return False
-
-    try:
-        bundle = _build(source, os.path.join(config_dir, SOURCE_MOBILE))
-    except Exception:
-        # A half-written template must not take the panel down with it.
-        _LOGGER.exception("Casora: could not rebuild the template bundle")
-        return False
-
-    # Eigener Zwischenname je Lauf: zwei gleichzeitige Abrufe (zwei Studio-Tabs) schrieben
-    # sonst in dieselbe .tmp-Datei.
-    fd, tmp = tempfile.mkstemp(prefix=os.path.basename(out) + ".", suffix=".tmp", dir=os.path.dirname(out))
-    os.chmod(tmp, 0o644)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            json.dump(bundle, handle, ensure_ascii=False, separators=(",", ":"))
-        os.replace(tmp, out)
-    except BaseException:
+    if os.path.exists(source) and os.path.isdir(tree):
+        newest = _newest_mtime(source, os.path.join(config_dir, SOURCE_MOBILE), tree)
+        hit = _BUILT.get(config_dir)
+        if hit and hit[0] == newest:
+            return hit[1]
         try:
-            os.remove(tmp)
+            shipped_mtime = os.path.getmtime(out)
         except OSError:
-            pass
-        raise
+            shipped_mtime = 0.0
+        shipped = None
+        if shipped_mtime >= newest:
+            shipped = _read_text(out)
+            try:
+                whole = _bundle_is_whole(json.loads(shipped)) if shipped else False
+            except ValueError:
+                whole = False
+            if whole:
+                return shipped
+        try:
+            bundle = _build(source, os.path.join(config_dir, SOURCE_MOBILE))
+        except Exception:
+            # A half-written template must not take the panel down with it.
+            _LOGGER.exception("Casora: could not build the template bundle")
+            return shipped if shipped is not None else _read_text(out)
+        text = json.dumps(bundle, ensure_ascii=False, separators=(",", ":"))
+        _BUILT[config_dir] = (newest, text)
+        _LOGGER.info("Casora: built the template bundle in memory (%d templates)", len(bundle["templates"]))
+        return text
+    return _read_text(out)
 
-    _LOGGER.info("Casora: rebuilt the template bundle (%d templates)", len(bundle["templates"]))
-    return True
+
+def _read_text(path: str) -> str | None:
+    try:
+        with open(path, encoding="utf-8") as handle:
+            return handle.read()
+    except OSError:
+        return None
 
 
 class CasoraTemplatesView(HomeAssistantView):
     """The template bundle, rebuilt on the way out.
 
-    It used to be a static file, so rebuild_if_stale ran only at setup. Editing
+    It used to be a static file, rebuilt only at setup. Editing
     a template and hitting Save in the panel then wrote the PREVIOUS bundle and
     still reported "refreshed 79 template(s)" - the edit was simply absent, with
     nothing to say so. Rebuilding here means a Save always writes what is on
@@ -206,14 +205,9 @@ class CasoraTemplatesView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         hass: HomeAssistant = request.app["hass"]
-        out = os.path.join(hass.config.config_dir, BUNDLE)
-
         def _read() -> str | None:
-            rebuild_if_stale(hass.config.config_dir)
-            try:
-                with open(out, encoding="utf-8") as handle:
-                    body = handle.read()
-            except OSError:
+            body = bundle_text(hass.config.config_dir)
+            if body is None:
                 return None
             # Angenommene Karten-Updates darüberlegen (card_package.py) – das Studio
             # speichert so dieselben Vorlagen, die auch das Auffrischen schreibt.

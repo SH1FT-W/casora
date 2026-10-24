@@ -79,13 +79,26 @@ async def main():
             for p in ("../a.js", "a.exe", "fehlt.js"):
                 check(f"{label}: {p} → 404", (await v.get(req("/x/" + p, hass), p)).status == 404)
 
+        # Studio loader: generated in memory, never written into the panel folder
+        hass.data = {"casora": {SV.STUDIO_LOADER_KEY: SV.studio_loader("9.9.9.42")}}
+        pv = SV.CasoraPanelView(base)
+        r = await pv.get(req("/casora_panel/casora-studio.js?v=9.9.9.42", hass), SV.STUDIO_LOADER)
+        text = r.body.decode("utf-8") if isinstance(r.body, bytes) else str(r.text)
+        check("Studio-Lader: aus dem Speicher", r.status == 200 and 'import "./casora-panel.js?v=9.9.9.42";' in text
+              and text.count("import ") == len(SV.STUDIO_MODULES), text[:120])
+        check("Studio-Lader: keine Datei", not os.path.exists(os.path.join(base, SV.STUDIO_LOADER)))
+        check("Studio-Lader: Übersetzung zuerst", text.index("casora-panel-i18n.js") < text.index("casora-panel.js"))
+        hass.data = {}
+        r = await pv.get(req("/casora_panel/casora-studio.js", hass), SV.STUDIO_LOADER)
+        check("Studio-Lader: ohne Einrichtung 404", r.status == 404)
+
         # Vorlagen
         out = os.path.join(d, T.BUNDLE)
         os.makedirs(os.path.dirname(out))
         with open(out, "w", encoding="utf-8") as h:
             h.write('{"templates":{"a":{}}}' * 50)
         tv = T.CasoraTemplatesView()
-        with mock.patch.object(T, "rebuild_if_stale", lambda _d: False):
+        if True:  # no template tree in d: the shipped bundle is served as it is
             r = await tv.get(req("/api/casora/templates", hass, **{"Accept-Encoding": "gzip"}))
             check("Vorlagen: gepackt", r.headers.get("Content-Encoding") == "gzip" and len(r.body) < os.path.getsize(out))
             check("Vorlagen: immer nachfragen (private, no-cache)", r.headers["Cache-Control"] == "private, no-cache")
