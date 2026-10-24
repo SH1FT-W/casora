@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 import sys
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
@@ -250,41 +251,89 @@ for table in (la.T, la.PHASE, la.PROGRAM, la.VAC_TEXT, la.PRINT_STEP, la.TITLE):
     for de_, en_, *_ in table.values():
         if en_ and en_ != de_ and not any(en_ in v[0] for v in table.values()):
             EN_ONLY.add(en_.split(" {")[0])
-msgs = []
-for kind in la.KINDS:
-    ps = la.probe_snapshot(kind, NOW, 0)
-    msgs += [ps.message, ps.critical or "", ps.step or "", ps.program or "", ps.extra or "", la.TITLE[kind][0] + " · " + la.T["probe"][0]]
-for raw in ("running", "ending", "paused", "user_paused", "finished", "anti_wrinkle", "delay_wait", "interrupted"):
-    st("sensor.w_state", raw); st("sensor.w_phase", "spin"); st("sensor.w_rem", "20", unit_of_measurement="min")
-    sn = la.snapshot(washer(), S.get, NOW, 0)
-    msgs += [sn.message, sn.critical or "", sn.step or ""]
-for raw in ("run", "pause", "actionrequired", "error", "finished", "delayedstart"):
-    st("sensor.g_state", raw)
-    sn = la.snapshot(dish(), S.get, NOW, 0)
-    msgs += [sn.message, sn.critical or ""]
-for raw in la.VAC_TEXT:
-    st("vacuum.v", "cleaning"); st("sensor.v_status", raw)
-    sn = la.snapshot(vac(), S.get, NOW, 0)
-    msgs += [sn.message, sn.critical or ""]
-st("vacuum.v", "docked"); st("sensor.v_status", "charging")
-msgs.append(la.snapshot(vac(), S.get, NOW, 0, prev=la.Snap(phase="run")).message)
-for stage in la.PRINT_STEP:
-    for raw in ("prepare", "running", "pause", "finish", "failed"):
-        st("sensor.p_state", raw); st("sensor.p_stage", stage); st("sensor.p_task", "unknown")
-        sn = la.snapshot(printer(), S.get, NOW, 0)
+
+
+def collect(lang):
+    """Messages, short texts and titles of every snapshot kind in one language."""
+    msgs = []
+    for kind in la.KINDS:
+        ps = la.probe_snapshot(kind, NOW, lang)
+        msgs += [ps.message, ps.critical or "", ps.step or "", ps.program or "", ps.extra or "", la.TITLE[kind][lang] + " · " + la.T["probe"][lang]]
+    for raw in ("running", "ending", "paused", "user_paused", "finished", "anti_wrinkle", "delay_wait", "interrupted"):
+        st("sensor.w_state", raw); st("sensor.w_phase", "spin"); st("sensor.w_rem", "20", unit_of_measurement="min")
+        sn = la.snapshot(washer(), S.get, NOW, lang)
+        msgs += [sn.message, sn.critical or "", sn.step or ""]
+    for raw in ("run", "pause", "actionrequired", "error", "finished", "delayedstart"):
+        st("sensor.g_state", raw)
+        sn = la.snapshot(dish(), S.get, NOW, lang)
         msgs += [sn.message, sn.critical or ""]
+    for raw in la.VAC_TEXT:
+        st("vacuum.v", "cleaning"); st("sensor.v_status", raw)
+        sn = la.snapshot(vac(), S.get, NOW, lang)
+        msgs += [sn.message, sn.critical or ""]
+    st("vacuum.v", "docked"); st("sensor.v_status", "charging")
+    msgs.append(la.snapshot(vac(), S.get, NOW, lang, prev=la.Snap(phase="run")).message)
+    for stage in la.PRINT_STEP:
+        for raw in ("prepare", "running", "pause", "finish", "failed"):
+            st("sensor.p_state", raw); st("sensor.p_stage", stage); st("sensor.p_task", "unknown")
+            sn = la.snapshot(printer(), S.get, NOW, lang)
+            msgs += [sn.message, sn.critical or ""]
+    return msgs
+
+
+msgs = collect(0)
 english = sorted({w for w in EN_ONLY for m in msgs if w and w in m})
 check("Deutsch: keine englischen Texte in Meldungen/Probe/Phasen/Schritten", not english, english)
 
-# Spanish (index 2): every text has a Spanish form, no German leftovers in the messages, 24 h and "42 %".
-tables = (la.T, la.PHASE, la.PROGRAM, la.VAC_TEXT, la.PRINT_STEP, la.TITLE)
-check("Spanisch: jede Tabelle (de, en, es)", all(len(v) == 3 for t in tables for v in t.values()))
-check("Spanisch: HA-Sprache es → Index 2", la._lang(SimpleNamespace(config=SimpleNamespace(language="es-ES"))) == 2)
+# Every language: each table has all LANGS, the HA language picks its index, texts are translated (no German
+# or English leftovers in fr/it/nl/pl/pt), 24 h clock and "42 %" for everyone but English.
+tables = {"T": la.T, "PHASE": la.PHASE, "PROGRAM": la.PROGRAM, "VAC_TEXT": la.VAC_TEXT, "PRINT_STEP": la.PRINT_STEP,
+          "TITLE": la.TITLE, "PROBE": la.PROBE}
+check("Sprachen: de, en, es, fr, it, nl, pl, pt", la.LANGS == ("de", "en", "es", "fr", "it", "nl", "pl", "pt"), la.LANGS)
+short = [f"{n}.{k}" for n, t in tables.items() for k, v in t.items() if len(v) != len(la.LANGS)]
+check("jede Tabelle hat alle Sprachen", not short, short)
+lang_of = lambda code: la._lang(SimpleNamespace(config=SimpleNamespace(language=code)))  # noqa: E731
+check("HA-Sprache → Index", [lang_of(c) for c in la.LANGS] == list(range(len(la.LANGS)))
+      and lang_of("es-ES") == 2 and lang_of("pt-BR") == la.LANGS.index("pt") and lang_of("sv") == lang_of("") == la.EN)
+# Same word in German or English and the new language on purpose (product names, loanwords, real Dutch words).
+SAME_OK = {"Attention", "Auto 45–65°", "Eco 50°", "Homing", "Manual", "Mix", "Pause", "Pause (G-code)", "Reinigen",
+           "Reinigt", "Sensitive", "Test", "{a} m²", "{a} m² in {m} min", ""}
+DE_WORDS = {v[0] for t in tables.values() for v in t.values() if v[0] and v[0] not in SAME_OK}
+EN_WORDS = {v[1] for t in tables.values() for v in t.values() if v[1] and v[1] not in SAME_OK and len(v[1]) > 3}
+for code in ("fr", "it", "nl", "pl", "pt"):
+    i = la.LANGS.index(code)
+    left = sorted(f"{n}.{k}={v[i]!r}" for n, t in tables.items() for k, v in t.items()
+                  if (v[i] == v[0] or v[i] == v[1]) and v[i] not in SAME_OK)
+    check(f"{code}: Tabellen übersetzt", not left, left)
+    # Integration values (plain German program, room) are no Casora texts: use keys / leave them out.
+    st("sensor.w_prog", "laundry_care_washer_program_cotton"); st("sensor.v_room", "unknown")
+    texts = [m for m in collect(i) if m]
+    texts += [la.snapshot(washer(), S.get, NOW, i).message]
+    rest = sorted({m for m in texts for w in DE_WORDS | EN_WORDS if w in m.split(" · ")})
+    german = [m for m in texts if any(c in m for c in "äöüßÄÖÜ")]
+    check(f"{code}: Meldungen ohne deutsche/englische Reste", not rest and not german, (rest, german))
+    check(f"{code}: Prozent mit Leerzeichen, 24 h", la._pct_text(42, i) == "42\u202f%"
+          and re.fullmatch(r"\d\d:\d\d", la._time_text(int(NOW.timestamp()), i)), la._time_text(int(NOW.timestamp()), i))
+check("Englisch: 42% und 12-h-Uhr", la._pct_text(42, la.EN) == "42%" and la._time_text(int(NOW.timestamp()), la.EN)[-2:] in ("AM", "PM"))
 es_msgs = [la.probe_snapshot(kind, NOW, 2).message for kind in la.KINDS]
 st("sensor.w_state", "finished"); es_msgs.append(la.snapshot(washer(), S.get, NOW, 2).message)
 german_es = [m for m in es_msgs if any(c in m for c in "äöüßÄÖÜ")]
 check("Spanisch: Meldungen ohne deutsche Reste", not german_es and "Terminado" in es_msgs[-1], es_msgs)
-check("Spanisch: Prozent mit Leerzeichen", la._pct_text(42, 2) == "42\u202f%")
+# Lock screen / Always-On show title + critical_text only (the chronometer replaces the message): an unknown raw
+# value of the integration (English) stays in the message but never becomes critical_text (user report 24.10.).
+saved = dict(S)
+st("sensor.w_state", "running"); st("sensor.w_phase", "steam_refresh"); st("sensor.w_pct", "unknown")
+sn = la.snapshot(washer(), S.get, NOW, 0)
+check("unbekannte Phase: Kurztext „Läuft“, Phase nur im Text", sn.critical == "Läuft" and "Steam refresh" in sn.message, sn)
+st("sensor.w_pct", "30")
+check("unbekannte Phase mit Prozent: Kurztext Prozent", la.snapshot(washer(), S.get, NOW, 0).critical == "30\u202f%")
+st("vacuum.v", "cleaning"); st("sensor.v_status", "air_drying_stopping"); st("sensor.v_pct", "unknown")
+sn = la.snapshot(vac(), S.get, NOW, 0, prev=la.Snap(phase="run"))
+check("Sauger unbekannter Status: Kurztext „Läuft“", sn.phase == "run" and sn.critical == "Läuft", sn)
+st("sensor.p_state", "prepare"); st("sensor.p_stage", "checking_new_sensor")
+sn = la.snapshot(printer(), S.get, NOW, 0)
+check("Drucker unbekannter Schritt: Kurztext „Vorbereitung“", sn.critical == "Vorbereitung", sn)
+S.clear(); S.update(saved)  # the flow below starts from the states before
 st("sensor.p_task", "Testwürfel.3mf")
 
 # Probe

@@ -13,7 +13,7 @@ activities are stored there as well – after a restart they are re-evaluated (s
 resent silently, otherwise ended). Switching off (device, recipient, all) ends running ones at once.
 
 Rules: only show what the device delivers; never read unknown states as "done"; colors from the
-Casora palette; texts German/English/Spanish by HA language; times as local time.
+Casora palette; texts in the HA language (LANGS, English otherwise); times as local time.
 
 WebSocket (admins only):
   casora/live/get   ← {} → {targets, devices, found: [...], notify_services, log, active, url, test_runs (test house only)}
@@ -66,28 +66,65 @@ COLOR = {"washer": "#5B8FC9", "dryer": "#DE8A4E", "dishwasher": "#4E9E95", "vacu
          "done": "#6AAE78", "pause": "#E8B04A", "attn": "#D35A4E", "error": "#D35A4E"}
 ICON = {"washer": "mdi:washing-machine", "dryer": "mdi:tumble-dryer", "dishwasher": "mdi:dishwasher",
         "vacuum": "mdi:robot-vacuum", "printer": "mdi:printer-3d-nozzle"}
-TITLE = {"washer": ("Waschmaschine", "Washing machine", "Lavadora"), "dryer": ("Trockner", "Dryer", "Secadora"),
-         "dishwasher": ("Geschirrspüler", "Dishwasher", "Lavavajillas"),
-         "vacuum": ("Saugroboter", "Robot vacuum", "Robot aspirador"),
-         "printer": ("3D-Drucker", "3D printer", "Impresora 3D")}
+# Text tables: one tuple per key, in the order of LANGS (_lang() maps the HA language to the index).
+LANGS = ("de", "en", "es", "fr", "it", "nl", "pl", "pt")
+EN = LANGS.index("en")
+TITLE = {
+    "washer": ("Waschmaschine", "Washing machine", "Lavadora",
+               "Lave-linge", "Lavatrice", "Wasmachine", "Pralka", "Máquina de lavar roupa"),
+    "dryer": ("Trockner", "Dryer", "Secadora", "Sèche-linge", "Asciugatrice", "Droger", "Suszarka", "Máquina de secar"),
+    "dishwasher": ("Geschirrspüler", "Dishwasher", "Lavavajillas",
+                   "Lave-vaisselle", "Lavastoviglie", "Vaatwasser", "Zmywarka", "Máquina de lavar loiça"),
+    "vacuum": ("Saugroboter", "Robot vacuum", "Robot aspirador",
+               "Robot aspirateur", "Robot aspirapolvere", "Robotstofzuiger", "Odkurzacz", "Robot aspirador"),
+    "printer": ("3D-Drucker", "3D printer", "Impresora 3D",
+                "Imprimante 3D", "Stampante 3D", "3D-printer", "Drukarka 3D", "Impressora 3D"),
+}
 T = {
-    "laeuft": ("Läuft", "Running", "En marcha"), "fertig": ("Fertig", "Done", "Terminado"), "pause": ("Pause", "Pause", "Pausa"),
-    "pausiert": ("Pausiert", "Paused", "En pausa"),
-    "eingriff": ("Eingriff", "Attention", "Atención"),
-    "eingriff_noetig": ("Eingriff nötig", "Attention needed", "Requiere acción"), "fehler": ("Fehler", "Error", "Error"),
-    "startzeit": ("Startzeit", "Start time", "Hora de inicio"),
-    "startet": ("Startet {t} Uhr", "Starts at {t}", "Empieza a las {t}"),
-    "waesche_raus": ("Wäsche rausnehmen", "Take out the laundry", "Saca la ropa"),
-    "geschirr_raus": ("Geschirr ausräumen", "Unload the dishes", "Vacía el lavavajillas"),
-    "knitterschutz": ("Knitterschutz läuft", "Anti-crease running", "Antiarrugas en marcha"),
-    "kurze_pause": ("Kurze Pause", "Short pause", "Pausa breve"),
-    "endet": ("Endet", "Ending", "Termina"), "endet_gleich": ("Endet gleich", "Ending soon", "Termina enseguida"),
-    "fehlgeschlagen": ("Fehlgeschlagen", "Failed", "Falló"), "vorbereitung": ("Vorbereitung", "Preparing", "Preparando"),
-    "schicht": ("Schicht {a}/{b}", "Layer {a}/{b}", "Capa {a}/{b}"),
-    "druckauftrag": ("Druckauftrag", "Print job", "Trabajo de impresión"),
-    "flaeche_dauer": ("{a} m² in {m} Min.", "{a} m² in {m} min", "{a} m² en {m} min"), "flaeche": ("{a} m²", "{a} m²", "{a} m²"),
-    "probe": ("Probe", "Test", "Prueba"),
-    "probe_text": ("Beispiel aus Casora – verschwindet in 2 Minuten", "Sample from Casora – gone in 2 minutes", "Ejemplo de Casora – desaparece en 2 minutos"),
+    "laeuft": ("Läuft", "Running", "En marcha", "En marche", "In corso", "Bezig", "Pracuje", "A funcionar"),
+    "fertig": ("Fertig", "Done", "Terminado", "Terminé", "Finito", "Klaar", "Zakończone", "Concluído"),
+    "pause": ("Pause", "Pause", "Pausa", "Pause", "Pausa", "Pauze", "Pauza", "Pausa"),
+    "pausiert": ("Pausiert", "Paused", "En pausa", "En pause", "In pausa", "Gepauzeerd", "Wstrzymane", "Em pausa"),
+    "eingriff": ("Eingriff", "Attention", "Atención", "Attention", "Attenzione", "Let op", "Uwaga", "Atenção"),
+    "eingriff_noetig": ("Eingriff nötig", "Attention needed", "Requiere acción", "Intervention requise",
+                        "Serve un intervento", "Ingrijpen nodig", "Wymaga działania", "Requer intervenção"),
+    "fehler": ("Fehler", "Error", "Error", "Erreur", "Errore", "Fout", "Błąd", "Erro"),
+    "startzeit": ("Startzeit", "Start time", "Hora de inicio",
+                  "Heure de début", "Ora di avvio", "Starttijd", "Czas rozpoczęcia", "Hora de início"),
+    "startet": ("Startet {t} Uhr", "Starts at {t}", "Empieza a las {t}",
+                "Démarre à {t}", "Parte alle {t}", "Start om {t}", "Start o {t}", "Começa às {t}"),
+    "waesche_raus": ("Wäsche rausnehmen", "Take out the laundry", "Saca la ropa",
+                     "Sors le linge", "Togli il bucato", "Haal de was eruit", "Wyjmij pranie", "Tira a roupa"),
+    "geschirr_raus": ("Geschirr ausräumen", "Unload the dishes",
+                      "Vacía el lavavajillas", "Vide le lave-vaisselle", "Svuota la lavastoviglie",
+                      "Ruim de vaatwasser uit", "Rozładuj zmywarkę", "Esvazia a máquina da loiça"),
+    "knitterschutz": ("Knitterschutz läuft", "Anti-crease running", "Antiarrugas en marcha", "Anti-froissage en cours",
+                      "Antipiega in corso", "Kreukbescherming actief", "Trwa łatwe prasowanie", "Antivincos ativo"),
+    "kurze_pause": ("Kurze Pause", "Short pause", "Pausa breve",
+                    "Courte pause", "Breve pausa", "Korte pauze", "Krótka pauza", "Pausa curta"),
+    "endet": ("Endet", "Ending", "Termina", "Se termine", "Termina", "Eindigt", "Koniec", "Termina"),
+    "endet_gleich": ("Endet gleich", "Ending soon", "Termina enseguida",
+                     "Se termine bientôt", "Termina a breve", "Eindigt zo", "Zaraz koniec", "Termina em breve"),
+    "fehlgeschlagen": ("Fehlgeschlagen", "Failed", "Falló",
+                       "Échec", "Non riuscito", "Mislukt", "Niepowodzenie", "Falhou"),
+    "vorbereitung": ("Vorbereitung", "Preparing", "Preparando",
+                     "Préparation", "Preparazione", "Voorbereiding", "Przygotowanie", "A preparar"),
+    "schicht": ("Schicht {a}/{b}", "Layer {a}/{b}", "Capa {a}/{b}",
+                "Couche {a}/{b}", "Strato {a}/{b}", "Laag {a}/{b}", "Warstwa {a}/{b}", "Camada {a}/{b}"),
+    "druckauftrag": ("Druckauftrag", "Print job", "Trabajo de impresión", "Tâche d'impression",
+                     "Lavoro di stampa", "Printopdracht", "Zadanie druku", "Trabalho de impressão"),
+    "flaeche_dauer": ("{a} m² in {m} Min.", "{a} m² in {m} min", "{a} m² en {m} min", "{a} m² en {m} min",
+                      "{a} m² in {m} min", "{a} m² in {m} min", "{a} m² w {m} min", "{a} m² em {m} min"),
+    "flaeche": ("{a} m²", "{a} m²", "{a} m²", "{a} m²", "{a} m²", "{a} m²", "{a} m²", "{a} m²"),
+    "probe": ("Probe", "Test", "Prueba", "Test", "Prova", "Test", "Test", "Teste"),
+    "probe_text": ("Beispiel aus Casora – verschwindet in 2 Minuten",
+                   "Sample from Casora – gone in 2 minutes",
+                   "Ejemplo de Casora – desaparece en 2 minutos",
+                   "Exemple de Casora – disparaît dans 2 minutes",
+                   "Esempio di Casora – scompare tra 2 minuti",
+                   "Voorbeeld van Casora – verdwijnt over 2 minuten",
+                   "Przykład z Casory – zniknie za 2 minuty",
+                   "Exemplo do Casora – desaparece dentro de 2 minutos"),
 }
 
 # Device state → phase (like STATE in scripts/local/02-devices.js, kind off|idle|delay|run|pause|attn|done|error).
@@ -119,50 +156,100 @@ STATE_PHASE = {
 NOPROG = {"off", "none", "unknown", "unavailable", "detecting...", "detecting", "starting", "running", "idle", "paused",
           "user_paused", "ending", "finished", "clean", "auto_detect", "nophase", "progstarted", ""}
 PHASE = {
-    "pre-wash": ("Vorwäsche", "Pre-wash", "Prelavado"), "prewash": ("Vorwäsche", "Pre-wash", "Prelavado"),
-    "pre-rinse": ("Vorspülen", "Pre-rinse", "Prelavado"),
-    "prerinse": ("Vorspülen", "Pre-rinse", "Prelavado"), "wash": ("Waschen", "Washing", "Lavando"),
-    "mainwash": ("Reinigen", "Cleaning", "Limpiando"),
-    "rinse": ("Spülen", "Rinsing", "Aclarando"), "finalrinse": ("Klarspülen", "Final rinse", "Aclarado final"),
-    "spin": ("Schleudern", "Spinning", "Centrifugando"),
-    "soak": ("Einweichen", "Soaking", "Remojo"), "anti-crease": ("Knitterschutz", "Anti-crease", "Antiarrugas"),
-    "anti-wrinkle": ("Knitterschutz", "Anti-crease", "Antiarrugas"),
-    "drying": ("Trocknen", "Drying", "Secando"), "dry": ("Trocknen", "Drying", "Secando"),
-    "cool-down": ("Abkühlen", "Cooling down", "Enfriando"),
-    "cooldown": ("Abkühlen", "Cooling down", "Enfriando"), "heat-up": ("Aufheizen", "Heating up", "Calentando"),
-    "heating": ("Aufheizen", "Heating up", "Calentando"),
-    "heat": ("Aufheizen", "Heating up", "Calentando"), "drain": ("Abpumpen", "Draining", "Desaguando"),
-    "drain-&-switch": ("Abpumpen", "Draining", "Desaguando"),
-    "sensor-check": ("Prüfung", "Sensor check", "Revisión"), "sanitize": ("Hygiene", "Sanitize", "Higienizar"),
+    "pre-wash": ("Vorwäsche", "Pre-wash", "Prelavado",
+                 "Prélavage", "Prelavaggio", "Voorwas", "Pranie wstępne", "Pré-lavagem"),
+    "prewash": ("Vorwäsche", "Pre-wash", "Prelavado",
+                "Prélavage", "Prelavaggio", "Voorwas", "Pranie wstępne", "Pré-lavagem"),
+    "pre-rinse": ("Vorspülen", "Pre-rinse", "Prelavado",
+                  "Prérinçage", "Prelavaggio", "Voorspoelen", "Płukanie wstępne", "Pré-lavagem"),
+    "prerinse": ("Vorspülen", "Pre-rinse", "Prelavado",
+                 "Prérinçage", "Prelavaggio", "Voorspoelen", "Płukanie wstępne", "Pré-lavagem"),
+    "wash": ("Waschen", "Washing", "Lavando", "Lavage", "Lavaggio", "Wassen", "Pranie", "Lavagem"),
+    "mainwash": ("Reinigen", "Cleaning", "Limpiando", "Nettoyage", "Pulizia", "Reinigen", "Mycie", "Limpeza"),
+    "rinse": ("Spülen", "Rinsing", "Aclarando", "Rinçage", "Risciacquo", "Spoelen", "Płukanie", "Enxaguamento"),
+    "finalrinse": ("Klarspülen", "Final rinse", "Aclarado final",
+                   "Rinçage final", "Risciacquo finale", "Naspoelen", "Płukanie końcowe", "Enxaguamento final"),
+    "spin": ("Schleudern", "Spinning", "Centrifugando",
+             "Essorage", "Centrifuga", "Centrifugeren", "Wirowanie", "Centrifugação"),
+    "soak": ("Einweichen", "Soaking", "Remojo", "Trempage", "Ammollo", "Weken", "Namaczanie", "Demolha"),
+    "anti-crease": ("Knitterschutz", "Anti-crease", "Antiarrugas",
+                    "Anti-froissage", "Antipiega", "Kreukbescherming", "Łatwe prasowanie", "Antivincos"),
+    "anti-wrinkle": ("Knitterschutz", "Anti-crease", "Antiarrugas",
+                     "Anti-froissage", "Antipiega", "Kreukbescherming", "Łatwe prasowanie", "Antivincos"),
+    "drying": ("Trocknen", "Drying", "Secando", "Séchage", "Asciugatura", "Drogen", "Suszenie", "Secagem"),
+    "dry": ("Trocknen", "Drying", "Secando", "Séchage", "Asciugatura", "Drogen", "Suszenie", "Secagem"),
+    "cool-down": ("Abkühlen", "Cooling down", "Enfriando",
+                  "Refroidissement", "Raffreddamento", "Afkoelen", "Chłodzenie", "Arrefecimento"),
+    "cooldown": ("Abkühlen", "Cooling down", "Enfriando",
+                 "Refroidissement", "Raffreddamento", "Afkoelen", "Chłodzenie", "Arrefecimento"),
+    "heat-up": ("Aufheizen", "Heating up", "Calentando",
+                "Chauffe", "Riscaldamento", "Opwarmen", "Nagrzewanie", "Aquecimento"),
+    "heating": ("Aufheizen", "Heating up", "Calentando",
+                "Chauffe", "Riscaldamento", "Opwarmen", "Nagrzewanie", "Aquecimento"),
+    "heat": ("Aufheizen", "Heating up", "Calentando",
+             "Chauffe", "Riscaldamento", "Opwarmen", "Nagrzewanie", "Aquecimento"),
+    "drain": ("Abpumpen", "Draining", "Desaguando", "Vidange", "Scarico", "Afpompen", "Odpompowywanie", "Escoamento"),
+    "drain-&-switch": ("Abpumpen", "Draining", "Desaguando",
+                       "Vidange", "Scarico", "Afpompen", "Odpompowywanie", "Escoamento"),
+    "sensor-check": ("Prüfung", "Sensor check", "Revisión",
+                     "Vérification", "Controllo", "Controle", "Kontrola", "Verificação"),
+    "sanitize": ("Hygiene", "Sanitize", "Higienizar",
+                 "Hygiène", "Igienizzazione", "Hygiëne", "Higiena", "Higienização"),
     # Home Connect WS laundry/dryer process phases
-    "washing": ("Waschen", "Washing", "Lavando"), "rinsing": ("Spülen", "Rinsing", "Aclarando"),
-    "rinsingsoftener": ("Spülen", "Rinsing", "Aclarando"),
-    "rinsingfoam": ("Spülen", "Rinsing", "Aclarando"), "spinning": ("Schleudern", "Spinning", "Centrifugando"),
-    "spinningfinal": ("Schleudern", "Spinning", "Centrifugando"),
-    "intermediatespin": ("Schleudern", "Spinning", "Centrifugando"), "pumping": ("Abpumpen", "Draining", "Desaguando"),
-    "soaking": ("Einweichen", "Soaking", "Remojo"),
-    "coolingdown": ("Abkühlen", "Cooling down", "Enfriando"), "cooling": ("Abkühlen", "Cooling down", "Enfriando"),
-    "guardingwrinkle": ("Knitterschutz", "Anti-crease", "Antiarrugas"),
-    "finishedanticrease": ("Knitterschutz", "Anti-crease", "Antiarrugas"),
+    "washing": ("Waschen", "Washing", "Lavando", "Lavage", "Lavaggio", "Wassen", "Pranie", "Lavagem"),
+    "rinsing": ("Spülen", "Rinsing", "Aclarando", "Rinçage", "Risciacquo", "Spoelen", "Płukanie", "Enxaguamento"),
+    "rinsingsoftener": ("Spülen", "Rinsing", "Aclarando",
+                        "Rinçage", "Risciacquo", "Spoelen", "Płukanie", "Enxaguamento"),
+    "rinsingfoam": ("Spülen", "Rinsing", "Aclarando", "Rinçage", "Risciacquo", "Spoelen", "Płukanie", "Enxaguamento"),
+    "spinning": ("Schleudern", "Spinning", "Centrifugando",
+                 "Essorage", "Centrifuga", "Centrifugeren", "Wirowanie", "Centrifugação"),
+    "spinningfinal": ("Schleudern", "Spinning", "Centrifugando",
+                      "Essorage", "Centrifuga", "Centrifugeren", "Wirowanie", "Centrifugação"),
+    "intermediatespin": ("Schleudern", "Spinning", "Centrifugando",
+                         "Essorage", "Centrifuga", "Centrifugeren", "Wirowanie", "Centrifugação"),
+    "pumping": ("Abpumpen", "Draining", "Desaguando", "Vidange", "Scarico", "Afpompen", "Odpompowywanie", "Escoamento"),
+    "soaking": ("Einweichen", "Soaking", "Remojo", "Trempage", "Ammollo", "Weken", "Namaczanie", "Demolha"),
+    "coolingdown": ("Abkühlen", "Cooling down", "Enfriando",
+                    "Refroidissement", "Raffreddamento", "Afkoelen", "Chłodzenie", "Arrefecimento"),
+    "cooling": ("Abkühlen", "Cooling down", "Enfriando",
+                "Refroidissement", "Raffreddamento", "Afkoelen", "Chłodzenie", "Arrefecimento"),
+    "guardingwrinkle": ("Knitterschutz", "Anti-crease", "Antiarrugas",
+                        "Anti-froissage", "Antipiega", "Kreukbescherming", "Łatwe prasowanie", "Antivincos"),
+    "finishedanticrease": ("Knitterschutz", "Anti-crease", "Antiarrugas",
+                           "Anti-froissage", "Antipiega", "Kreukbescherming", "Łatwe prasowanie", "Antivincos"),
 }
 PROGRAM = {
-    "dishcare_dishwasher_program_eco50": ("Eco 50°", "Eco 50°", "Eco 50°"),
-    "dishcare_dishwasher_program_auto2": ("Auto 45–65°", "Auto 45–65°", "Auto 45–65°"),
-    "dishcare_dishwasher_program_intensiv70": ("Intensiv 70°", "Intensive 70°", "Intensivo 70°"),
-    "dishcare_dishwasher_program_quick45": ("Schnell 45°", "Quick 45°", "Rápido 45°"),
-    "dishcare_dishwasher_program_quick65": ("Schnell 65°", "Quick 65°", "Rápido 65°"),
-    "dishcare_dishwasher_program_prerinse": ("Vorspülen", "Pre-rinse", "Prelavado"),
-    "dishcare_dishwasher_program_machinecare": ("Maschinenpflege", "Machine care", "Cuidado de la máquina"),
-    "favorite_001": ("Favorit", "Favorite", "Favorito"),
-    "laundry_care_washer_program_cotton": ("Baumwolle", "Cotton", "Algodón"),
-    "laundry_care_washer_program_easy_care": ("Pflegeleicht", "Easy care", "Sintéticos"),
-    "laundry_care_washer_program_mix": ("Mix", "Mix", "Mixto"),
-    "laundry_care_washer_program_delicates_silk": ("Feinwäsche", "Delicates", "Delicada"),
-    "laundry_care_washer_program_wool": ("Wolle", "Wool", "Lana"),
-    "laundry_care_washer_program_sensitive": ("Sensitiv", "Sensitive", "Sensible"),
-    "laundry_care_dryer_program_cotton": ("Baumwolle", "Cotton", "Algodón"),
-    "laundry_care_dryer_program_synthetic": ("Pflegeleicht", "Synthetics", "Sintéticos"),
-    "laundry_care_dryer_program_mix": ("Mix", "Mix", "Mixto"),
+    "dishcare_dishwasher_program_eco50": ("Eco 50°", "Eco 50°", "Eco 50°",
+                                          "Eco 50°", "Eco 50°", "Eco 50°", "Eco 50°", "Eco 50°"),
+    "dishcare_dishwasher_program_auto2": ("Auto 45–65°", "Auto 45–65°", "Auto 45–65°",
+                                          "Auto 45–65°", "Auto 45–65°", "Auto 45–65°", "Auto 45–65°", "Auto 45–65°"),
+    "dishcare_dishwasher_program_intensiv70": ("Intensiv 70°", "Intensive 70°", "Intensivo 70°", "Intensif 70°",
+                                               "Intensivo 70°", "Intensief 70°", "Intensywny 70°", "Intensivo 70°"),
+    "dishcare_dishwasher_program_quick45": ("Schnell 45°", "Quick 45°", "Rápido 45°",
+                                            "Rapide 45°", "Rapido 45°", "Snel 45°", "Szybki 45°", "Rápido 45°"),
+    "dishcare_dishwasher_program_quick65": ("Schnell 65°", "Quick 65°", "Rápido 65°",
+                                            "Rapide 65°", "Rapido 65°", "Snel 65°", "Szybki 65°", "Rápido 65°"),
+    "dishcare_dishwasher_program_prerinse": ("Vorspülen", "Pre-rinse", "Prelavado", "Prérinçage",
+                                             "Prelavaggio", "Voorspoelen", "Płukanie wstępne", "Pré-lavagem"),
+    "dishcare_dishwasher_program_machinecare": ("Maschinenpflege", "Machine care",
+                                                "Cuidado de la máquina", "Entretien machine", "Cura della macchina",
+                                                "Machineonderhoud", "Pielęgnacja urządzenia", "Cuidado da máquina"),
+    "favorite_001": ("Favorit", "Favorite", "Favorito", "Favori", "Preferito", "Favoriet", "Ulubione", "Favorito"),
+    "laundry_care_washer_program_cotton": ("Baumwolle", "Cotton", "Algodón",
+                                           "Coton", "Cotone", "Katoen", "Bawełna", "Algodão"),
+    "laundry_care_washer_program_easy_care": ("Pflegeleicht", "Easy care", "Sintéticos", "Synthétiques",
+                                              "Sintetici", "Kreukherstellend", "Syntetyki", "Fácil cuidado"),
+    "laundry_care_washer_program_mix": ("Mix", "Mix", "Mixto", "Mixte", "Misto", "Mix", "Mix", "Mistura"),
+    "laundry_care_washer_program_delicates_silk": ("Feinwäsche", "Delicates", "Delicada",
+                                                   "Délicat", "Delicati", "Fijne was", "Delikatne", "Delicados"),
+    "laundry_care_washer_program_wool": ("Wolle", "Wool", "Lana", "Laine", "Lana", "Wol", "Wełna", "Lã"),
+    "laundry_care_washer_program_sensitive": ("Sensitiv", "Sensitive", "Sensible",
+                                              "Sensible", "Sensitive", "Gevoelig", "Sensitive", "Sensitive"),
+    "laundry_care_dryer_program_cotton": ("Baumwolle", "Cotton", "Algodón",
+                                          "Coton", "Cotone", "Katoen", "Bawełna", "Algodão"),
+    "laundry_care_dryer_program_synthetic": ("Pflegeleicht", "Synthetics", "Sintéticos",
+                                             "Synthétiques", "Sintetici", "Synthetisch", "Syntetyki", "Sintéticos"),
+    "laundry_care_dryer_program_mix": ("Mix", "Mix", "Mixto", "Mixte", "Misto", "Mix", "Mix", "Mistura"),
 }
 # HA core: laundry_care_washer_program_…; Home Connect Local: laundrycare_washer_program_…; Home Connect Alt: the
 # Home Connect key with dots (LaundryCare.Washer.Program.Cotton), compared with the dots as underscores.
@@ -186,63 +273,138 @@ VAC_STATION = {"washing_the_mop", "going_to_wash_the_mop", "back_to_dock_washing
 # and washes the mop afterwards (otherwise "done" twice with sound).
 VAC_SETTLE_S = 90
 VAC_TEXT = {
-    "cleaning": ("Reinigt", "Cleaning", "Limpiando"), "segment_cleaning": ("Reinigt", "Cleaning", "Limpiando"),
-    "zoned_cleaning": ("Reinigt", "Cleaning", "Limpiando"),
-    "spot_cleaning": ("Punktreinigung", "Spot cleaning", "Limpieza puntual"),
-    "robot_status_mopping": ("Wischt", "Mopping", "Fregando"), "segment_mopping": ("Wischt", "Mopping", "Fregando"),
-    "zoned_mopping": ("Wischt", "Mopping", "Fregando"), "clean_mop_cleaning": ("Reinigt", "Cleaning", "Limpiando"),
-    "clean_mop_mopping": ("Wischt", "Mopping", "Fregando"),
-    "segment_clean_mop_cleaning": ("Reinigt", "Cleaning", "Limpiando"),
-    "segment_clean_mop_mopping": ("Wischt", "Mopping", "Fregando"),
-    "zoned_clean_mop_cleaning": ("Reinigt", "Cleaning", "Limpiando"),
-    "zoned_clean_mop_mopping": ("Wischt", "Mopping", "Fregando"),
-    "washing_the_mop": ("Mopp waschen", "Washing the mop", "Lavando la mopa"),
-    "going_to_wash_the_mop": ("Zur Moppwäsche", "Going to wash the mop", "A lavar la mopa"),
-    "back_to_dock_washing_duster": ("Zur Moppwäsche", "Going to wash the mop", "A lavar la mopa"),
-    "emptying_the_bin": ("Staub entleeren", "Emptying the bin", "Vaciando el polvo"),
-    "returning_home": ("Zurück zur Station", "Returning to dock", "Volviendo a la base"),
-    "returning": ("Zurück zur Station", "Returning to dock", "Volviendo a la base"),
-    "docking": ("Dockt an", "Docking", "Acoplándose"), "paused": ("Pausiert", "Paused", "En pausa"),
-    "charging": ("Lädt", "Charging", "Cargando"),
-    "charging_complete": ("Geladen", "Charged", "Cargado"), "charger_disconnected": ("Abgedockt", "Undocked", "Fuera de la base"),
-    "idle": ("Bereit", "Ready", "Listo"), "error": ("Fehler", "Error", "Error"),
-    "charging_problem": ("Ladeproblem", "Charging problem", "Problema de carga"),
-    "going_to_target": ("Unterwegs", "On the way", "En camino"), "mapping": ("Kartiert", "Mapping", "Mapeando"),
-    "attaching_the_mop": ("Mopp anbringen", "Attaching the mop", "Colocar la mopa"),
-    "detaching_the_mop": ("Mopp abnehmen", "Detaching the mop", "Quitar la mopa"),
-    "starting": ("Startet", "Starting", "Iniciando"), "manual_mode": ("Manuell", "Manual", "Manual"),
-    "remote_control_active": ("Fernsteuerung", "Remote control", "Control remoto"),
+    "cleaning": ("Reinigt", "Cleaning", "Limpiando", "Nettoie", "Pulisce", "Reinigt", "Sprząta", "A limpar"),
+    "segment_cleaning": ("Reinigt", "Cleaning", "Limpiando", "Nettoie", "Pulisce", "Reinigt", "Sprząta", "A limpar"),
+    "zoned_cleaning": ("Reinigt", "Cleaning", "Limpiando", "Nettoie", "Pulisce", "Reinigt", "Sprząta", "A limpar"),
+    "spot_cleaning": ("Punktreinigung", "Spot cleaning", "Limpieza puntual",
+                      "Nettoyage ciblé", "Pulizia mirata", "Plekreiniging", "Sprzątanie punktowe", "Limpeza pontual"),
+    "robot_status_mopping": ("Wischt", "Mopping", "Fregando", "Lave", "Lava", "Dweilt", "Mopuje", "A lavar o chão"),
+    "segment_mopping": ("Wischt", "Mopping", "Fregando", "Lave", "Lava", "Dweilt", "Mopuje", "A lavar o chão"),
+    "zoned_mopping": ("Wischt", "Mopping", "Fregando", "Lave", "Lava", "Dweilt", "Mopuje", "A lavar o chão"),
+    "clean_mop_cleaning": ("Reinigt", "Cleaning", "Limpiando", "Nettoie", "Pulisce", "Reinigt", "Sprząta", "A limpar"),
+    "clean_mop_mopping": ("Wischt", "Mopping", "Fregando", "Lave", "Lava", "Dweilt", "Mopuje", "A lavar o chão"),
+    "segment_clean_mop_cleaning": ("Reinigt", "Cleaning", "Limpiando",
+                                   "Nettoie", "Pulisce", "Reinigt", "Sprząta", "A limpar"),
+    "segment_clean_mop_mopping": ("Wischt", "Mopping", "Fregando",
+                                  "Lave", "Lava", "Dweilt", "Mopuje", "A lavar o chão"),
+    "zoned_clean_mop_cleaning": ("Reinigt", "Cleaning", "Limpiando",
+                                 "Nettoie", "Pulisce", "Reinigt", "Sprząta", "A limpar"),
+    "zoned_clean_mop_mopping": ("Wischt", "Mopping", "Fregando", "Lave", "Lava", "Dweilt", "Mopuje", "A lavar o chão"),
+    "washing_the_mop": ("Mopp waschen", "Washing the mop", "Lavando la mopa",
+                        "Lave la serpillière", "Lava il mocio", "Dweil wassen", "Mycie mopa", "Lavagem da mopa"),
+    "going_to_wash_the_mop": ("Zur Moppwäsche", "Going to wash the mop", "A lavar la mopa", "Va laver la serpillière",
+                              "Va a lavare il mocio", "Naar dweilreiniging", "Jedzie myć mop", "A ir lavar a mopa"),
+    "back_to_dock_washing_duster": ("Zur Moppwäsche", "Going to wash the mop",
+                                    "A lavar la mopa", "Va laver la serpillière", "Va a lavare il mocio",
+                                    "Naar dweilreiniging", "Jedzie myć mop", "A ir lavar a mopa"),
+    "emptying_the_bin": ("Staub entleeren", "Emptying the bin",
+                         "Vaciando el polvo", "Vide le bac", "Svuota la polvere",
+                         "Leegt stofbak", "Opróżnia pojemnik na kurz", "A esvaziar o depósito de pó"),
+    "returning_home": ("Zurück zur Station", "Returning to dock", "Volviendo a la base", "Retour à la station",
+                       "Torna alla base", "Terug naar station", "Wraca do stacji", "A voltar à base"),
+    "returning": ("Zurück zur Station", "Returning to dock", "Volviendo a la base",
+                  "Retour à la station", "Torna alla base", "Terug naar station", "Wraca do stacji", "A voltar à base"),
+    "docking": ("Dockt an", "Docking", "Acoplándose",
+                "Accostage", "Aggancio alla base", "Dockt aan", "Dokuje", "A acoplar"),
+    "paused": ("Pausiert", "Paused", "En pausa", "En pause", "In pausa", "Gepauzeerd", "Wstrzymane", "Em pausa"),
+    "charging": ("Lädt", "Charging", "Cargando", "En charge", "In carica", "Laadt", "Ładuje", "A carregar"),
+    "charging_complete": ("Geladen", "Charged", "Cargado", "Chargé", "Carico", "Opgeladen", "Naładowany", "Carregado"),
+    "charger_disconnected": ("Abgedockt", "Undocked", "Fuera de la base",
+                             "Hors station", "Fuori dalla base", "Uit dock", "Poza stacją", "Fora da base"),
+    "idle": ("Bereit", "Ready", "Listo", "Prêt", "Pronto", "Gereed", "Gotowe", "Pronto"),
+    "error": ("Fehler", "Error", "Error", "Erreur", "Errore", "Fout", "Błąd", "Erro"),
+    "charging_problem": ("Ladeproblem", "Charging problem", "Problema de carga", "Problème de charge",
+                         "Problema di carica", "Laadprobleem", "Problem z ładowaniem", "Problema de carga"),
+    "going_to_target": ("Unterwegs", "On the way", "En camino",
+                        "En route", "In viaggio", "Onderweg", "W drodze", "A caminho"),
+    "mapping": ("Kartiert", "Mapping", "Mapeando",
+                "Cartographie", "Mappatura", "In kaart brengen", "Mapowanie", "Mapeamento"),
+    "attaching_the_mop": ("Mopp anbringen", "Attaching the mop", "Colocar la mopa",
+                          "Fixer la serpillière", "Monta il mocio", "Dweil bevestigen", "Załóż mopa", "Colocar a mopa"),
+    "detaching_the_mop": ("Mopp abnehmen", "Detaching the mop", "Quitar la mopa", "Retirer la serpillière",
+                          "Togli il mocio", "Dweil verwijderen", "Zdejmij mopa", "Retirar a mopa"),
+    "starting": ("Startet", "Starting", "Iniciando", "Démarre", "Avvio", "Start", "Uruchamianie", "A iniciar"),
+    "manual_mode": ("Manuell", "Manual", "Manual", "Manuel", "Manuale", "Handmatig", "Ręcznie", "Manual"),
+    "remote_control_active": ("Fernsteuerung", "Remote control", "Control remoto", "Commande à distance",
+                              "Telecomando", "Afstandsbediening", "Zdalne sterowanie", "Controlo remoto"),
 }
 # 3D printer (Bambu Lab): work step → text.
 PRINT_STEP = {
-    "printing": ("Druckt", "Printing", "Imprimiendo"), "heating_hotend": ("Düse heizt", "Heating nozzle", "Calentando boquilla"),
-    "heatbed_preheating": ("Bett heizt", "Heating bed", "Calentando cama"),
-    "waiting_for_heatbed_temperature": ("Bett heizt", "Heating bed", "Calentando cama"),
-    "auto_bed_leveling": ("Bett-Leveling", "Bed leveling", "Nivelando cama"),
-    "bed_level_phase_1": ("Bett-Leveling", "Bed leveling", "Nivelando cama"),
-    "bed_level_phase_2": ("Bett-Leveling", "Bed leveling", "Nivelando cama"),
-    "homing_toolhead": ("Homing", "Homing", "Homing"),
-    "cleaning_nozzle_tip": ("Düse reinigen", "Cleaning nozzle", "Limpiando boquilla"),
-    "preparing_ams": ("AMS vorbereiten", "Preparing AMS", "Preparando AMS"),
-    "changing_filament": ("Filamentwechsel", "Changing filament", "Cambio de filamento"),
-    "filament_loading": ("Filament laden", "Loading filament", "Cargando filamento"),
-    "filament_unloading": ("Filament entladen", "Unloading filament", "Descargando filamento"),
-    "inspecting_first_layer": ("Erste Schicht prüfen", "Inspecting first layer", "Revisando primera capa"),
-    "calibrating_micro_lidar": ("Kalibrierung", "Calibrating", "Calibrando"),
-    "calibrating_extrusion": ("Kalibrierung", "Calibrating", "Calibrando"),
-    "calibrating_extrusion_flow": ("Kalibrierung", "Calibrating", "Calibrando"),
-    "pre_extrusion_before_printing": ("Vorextrusion", "Pre-extrusion", "Preextrusión"),
-    "heating_chamber": ("Kammer heizt", "Heating chamber", "Calentando cámara"),
-    "cooling_chamber": ("Kammer kühlt", "Cooling chamber", "Enfriando cámara"),
-    "purifying_chamber_air": ("Luft filtern", "Purifying air", "Filtrando aire"),
-    "paused_user": ("Pausiert", "Paused", "En pausa"),
-    "paused_filament_runout": ("Filament leer", "Filament runout", "Sin filamento"),
-    "paused_front_cover_falling": ("Abdeckung offen", "Cover open", "Tapa abierta"),
-    "paused_nozzle_clog": ("Düse verstopft", "Nozzle clogged", "Boquilla obstruida"),
-    "paused_first_layer_error": ("Erste Schicht fehlerhaft", "First layer error", "Error en la primera capa"),
-    "paused_ams_lost": ("AMS getrennt", "AMS lost", "AMS desconectado"),
-    "m400_pause": ("Pause (G-Code)", "Pause (G-code)", "Pausa (código G)"), "idle": ("", "", ""), "unknown": ("", "", ""),
-    "offline": ("", "", ""), "unavailable": ("", "", ""),
+    "printing": ("Druckt", "Printing", "Imprimiendo", "Imprime", "Stampa", "Printen", "Drukuje", "A imprimir"),
+    "heating_hotend": ("Düse heizt", "Heating nozzle", "Calentando boquilla", "Chauffe de la buse",
+                       "Ugello in riscaldamento", "Nozzle warmt op", "Dysza się nagrzewa", "Bico a aquecer"),
+    "heatbed_preheating": ("Bett heizt", "Heating bed", "Calentando cama", "Chauffe du plateau",
+                           "Piatto in riscaldamento", "Printbed warmt op", "Stół się nagrzewa", "Mesa a aquecer"),
+    "waiting_for_heatbed_temperature": ("Bett heizt", "Heating bed",
+                                        "Calentando cama", "Chauffe du plateau", "Piatto in riscaldamento",
+                                        "Printbed warmt op", "Stół się nagrzewa", "Mesa a aquecer"),
+    "auto_bed_leveling": ("Bett-Leveling", "Bed leveling", "Nivelando cama", "Nivellement du plateau",
+                          "Livellamento piatto", "Bed nivelleren", "Poziomowanie stołu", "A nivelar a mesa"),
+    "bed_level_phase_1": ("Bett-Leveling", "Bed leveling", "Nivelando cama", "Nivellement du plateau",
+                          "Livellamento piatto", "Bed nivelleren", "Poziomowanie stołu", "A nivelar a mesa"),
+    "bed_level_phase_2": ("Bett-Leveling", "Bed leveling", "Nivelando cama", "Nivellement du plateau",
+                          "Livellamento piatto", "Bed nivelleren", "Poziomowanie stołu", "A nivelar a mesa"),
+    "homing_toolhead": ("Homing", "Homing", "Homing", "Prise d'origine", "Homing", "Homing", "Homing", "Homing"),
+    "cleaning_nozzle_tip": ("Düse reinigen", "Cleaning nozzle", "Limpiando boquilla", "Nettoyage de la buse",
+                            "Pulizia ugello", "Nozzle reinigen", "Czyszczenie dyszy", "A limpar o bico"),
+    "preparing_ams": ("AMS vorbereiten", "Preparing AMS", "Preparando AMS", "Préparation de l'AMS",
+                      "Preparazione AMS", "AMS voorbereiden", "Przygotowanie AMS", "A preparar o AMS"),
+    "changing_filament": ("Filamentwechsel", "Changing filament", "Cambio de filamento", "Changement de filament",
+                          "Cambio filamento", "Filamentwissel", "Zmiana filamentu", "Troca de filamento"),
+    "filament_loading": ("Filament laden", "Loading filament",
+                         "Cargando filamento", "Chargement du filament", "Caricamento filamento",
+                         "Filament wordt geladen", "Ładowanie filamentu", "A carregar o filamento"),
+    "filament_unloading": ("Filament entladen", "Unloading filament",
+                           "Descargando filamento", "Déchargement du filament", "Scarico filamento",
+                           "Filament wordt uitgeladen", "Wyładowywanie filamentu", "A descarregar o filamento"),
+    "inspecting_first_layer": ("Erste Schicht prüfen",
+                               "Inspecting first layer",
+                               "Revisando primera capa",
+                               "Vérification de la première couche",
+                               "Controllo primo strato",
+                               "Eerste laag controleren",
+                               "Sprawdzanie pierwszej warstwy",
+                               "A verificar a primeira camada"),
+    "calibrating_micro_lidar": ("Kalibrierung", "Calibrating", "Calibrando",
+                                "Calibrage", "Calibrazione", "Kalibreren", "Kalibracja", "A calibrar"),
+    "calibrating_extrusion": ("Kalibrierung", "Calibrating", "Calibrando",
+                              "Calibrage", "Calibrazione", "Kalibreren", "Kalibracja", "A calibrar"),
+    "calibrating_extrusion_flow": ("Kalibrierung", "Calibrating", "Calibrando",
+                                   "Calibrage", "Calibrazione", "Kalibreren", "Kalibracja", "A calibrar"),
+    "pre_extrusion_before_printing": ("Vorextrusion", "Pre-extrusion", "Preextrusión", "Pré-extrusion",
+                                      "Pre-estrusione", "Pre-extrusie", "Wstępna ekstruzja", "Pré-extrusão"),
+    "heating_chamber": ("Kammer heizt", "Heating chamber", "Calentando cámara", "Chauffe du caisson",
+                        "Camera in riscaldamento", "Kamer warmt op", "Komora się nagrzewa", "Câmara a aquecer"),
+    "cooling_chamber": ("Kammer kühlt", "Cooling chamber", "Enfriando cámara", "Refroidissement du caisson",
+                        "Camera in raffreddamento", "Kamer koelt af", "Komora stygnie", "Câmara a arrefecer"),
+    "purifying_chamber_air": ("Luft filtern", "Purifying air", "Filtrando aire", "Filtrage de l'air",
+                              "Filtraggio aria", "Lucht filteren", "Filtrowanie powietrza", "A filtrar o ar"),
+    "paused_user": ("Pausiert", "Paused", "En pausa", "En pause", "In pausa", "Gepauzeerd", "Wstrzymane", "Em pausa"),
+    "paused_filament_runout": ("Filament leer", "Filament runout", "Sin filamento", "Plus de filament",
+                               "Filamento esaurito", "Filament op", "Brak filamentu", "Sem filamento"),
+    "paused_front_cover_falling": ("Abdeckung offen", "Cover open", "Tapa abierta",
+                                   "Capot ouvert", "Coperchio aperto", "Klep open", "Pokrywa otwarta", "Tampa aberta"),
+    "paused_nozzle_clog": ("Düse verstopft", "Nozzle clogged", "Boquilla obstruida",
+                           "Buse bouchée", "Ugello ostruito", "Nozzle verstopt", "Dysza zatkana", "Bico entupido"),
+    "paused_first_layer_error": ("Erste Schicht fehlerhaft", "First layer error",
+                                 "Error en la primera capa", "Erreur de première couche", "Errore nel primo strato",
+                                 "Fout in eerste laag", "Błąd pierwszej warstwy", "Falha na primeira camada"),
+    "paused_ams_lost": ("AMS getrennt", "AMS lost", "AMS desconectado",
+                        "AMS déconnecté", "AMS scollegato", "AMS losgekoppeld", "AMS odłączony", "AMS desligado"),
+    "m400_pause": ("Pause (G-Code)", "Pause (G-code)", "Pausa (código G)",
+                   "Pause (G-code)", "Pausa (G-code)", "Pauze (G-code)", "Pauza (G-code)", "Pausa (código G)"),
+    "idle": ("", "", "", "", "", "", "", ""),
+    "unknown": ("", "", "", "", "", "", "", ""),
+    "offline": ("", "", "", "", "", "", "", ""),
+    "unavailable": ("", "", "", "", "", "", "", ""),
+}
+# Sample texts for „Probe senden“.
+PROBE = {
+    "room": ("Wohnzimmer", "Living room", "Salón", "Salon", "Soggiorno", "Woonkamer", "Salon", "Sala"),
+    "part": ("Beispielteil", "Sample part", "Pieza de ejemplo",
+             "Pièce d'exemple", "Pezzo di esempio", "Voorbeeldonderdeel", "Przykładowa część", "Peça de exemplo"),
+    "program": ("Baumwolle 40", "Cotton 40", "Algodón 40",
+                "Coton 40", "Cotone 40", "Katoen 40", "Bawełna 40", "Algodão 40"),
 }
 PRINT_PHASE = {"prepare": "run", "running": "run", "pause": "pause", "finish": "done", "failed": "error"}
 
@@ -276,12 +438,13 @@ class Snap:
 
 
 def _lang(hass) -> int:
-    # Index into the (de, en, es) text tuples.
-    return {"de": 0, "es": 2}.get(str(getattr(hass.config, "language", "") or "")[:2], 1)
+    """Index into the text tuples (order of LANGS); unknown languages get English."""
+    code = str(getattr(hass.config, "language", "") or "")[:2].lower()
+    return LANGS.index(code) if code in LANGS else EN
 
 
 def _pct_text(pct: int, lang: int) -> str:
-    return f"{pct}%" if lang == 1 else f"{pct} %"
+    return f"{pct}%" if lang == EN else f"{pct} %"
 
 
 def _num(st) -> float | None:
@@ -362,7 +525,7 @@ def _join(*parts: str | None) -> str:
 
 def _time_text(ts: int, lang: int) -> str:
     local = dt_util.as_local(dt_util.utc_from_timestamp(ts))
-    return local.strftime("%-I:%M %p") if lang == 1 else local.strftime("%H:%M")
+    return local.strftime("%-I:%M %p") if lang == EN else local.strftime("%H:%M")
 
 
 def snapshot(found: Found, get: Callable[[str], Any], now: datetime, lang: int, prev: Snap | None = None) -> Snap:
@@ -426,7 +589,9 @@ def _snap_appliance(found: Found, g, now: datetime, lang: int) -> Snap:
             s.step = T["endet_gleich"][lang]
             s.critical = T["endet"][lang]
         else:
-            s.critical = s.step or pct_t or T["laeuft"][lang]
+            # critical_text is what the lock screen shows next to the title: only translated phases, never the
+            # integration's raw value (see build_payload).
+            s.critical = (s.step if phase_raw in PHASE else None) or pct_t or T["laeuft"][lang]
         s.message = _join(prog or T["laeuft"][lang], s.step, pct_t)
     return s
 
@@ -499,7 +664,8 @@ def _snap_vacuum(found: Found, g, now: datetime, lang: int, prev: Snap | None) -
         s.message = _join(T["pausiert"][lang], room, s.extra, pct_t)
     else:
         s.step = room if cleaning and room else text
-        s.critical = pct_t if cleaning and not room and pct_t else s.step
+        own = room if cleaning and room else text if raw in VAC_TEXT else None  # no raw status as critical_text
+        s.critical = pct_t if cleaning and not room and pct_t else own or pct_t or T["laeuft"][lang]
         s.message = _join(text, room if cleaning else None, s.extra if cleaning else None, pct_t)
     return s
 
@@ -534,7 +700,7 @@ def _snap_printer(found: Found, g, now: datetime, lang: int) -> Snap:
         s.message = _join(T["pausiert"][lang], s.step, task)
     elif raw == "prepare" or stage != "printing":
         s.step = step or T["vorbereitung"][lang]
-        s.critical = s.step
+        s.critical = s.step if stage in PRINT_STEP else T["vorbereitung"][lang]  # no raw stage as critical_text
         s.message = _join(task, s.step)
     else:
         a, b = _num(g("layer")), _num(g("layers"))
@@ -548,7 +714,16 @@ def build_payload(snap: Snap, kind: str, title: str, tag: str, url: str, silent:
                   color_key: str = "auto") -> dict[str, Any]:
     """Notification for notify.mobile_app_* – like the reference automations.
 
-    color_key: chosen device color; done/pause/attention/error keep their signal colors."""
+    color_key: chosen device color; done/pause/attention/error keep their signal colors.
+
+    What the HA iOS app shows where (home-assistant/iOS, Sources/Extensions/Widgets/LiveActivity, 10/2026):
+    lock screen / Always-On / StandBy (HALockScreenView): title, then the chronometer INSTEAD of the message
+    while a timer runs, critical_text on the right, progress bar. Dynamic Island compact (HACompactTrailingView):
+    icon + chronometer (critical_text only without a timer, else the percentage); minimal: icon only. Expanded
+    island: title + message + chronometer. The app adds no visible words of its own (only "percent" for VoiceOver),
+    so every word on an inactive screen is title or critical_text from here: critical_text must always be a
+    translated text, and the title is the HA device name (name_by_user or the integration's name, often an English model
+    name), which Casora shows as the device is named in HA (rename it there to change it)."""
     color = PALETTE.get(color_key) or COLOR.get(kind, COLOR["washer"])
     if snap.phase in ("done", "attn", "error") or (snap.phase == "pause" and not snap.minor):
         color = COLOR[snap.phase]
@@ -576,17 +751,17 @@ def probe_snapshot(kind: str, now: datetime, lang: int) -> Snap:
     """Sample for „Probe senden“: running, 42 %, 25 minutes left."""
     s = Snap(phase="run", pct=42, end_ts=int(now.timestamp() + 25 * 60), minor=False)
     if kind == "vacuum":
-        s.step = ("Wohnzimmer", "Living room", "Salón")[lang]
-        s.message = _join(("Reinigt", "Cleaning", "Limpiando")[lang], s.step, _pct_text(42, lang))
+        s.step = PROBE["room"][lang]
+        s.message = _join(VAC_TEXT["cleaning"][lang], s.step, _pct_text(42, lang))
     elif kind == "printer":
-        s.program = ("Beispielteil", "Sample part", "Pieza de ejemplo")[lang]
+        s.program = PROBE["part"][lang]
         s.extra = T["schicht"][lang].format(a=34, b=80)
         s.message = _join(s.program, s.extra, _pct_text(42, lang))
     elif kind == "dishwasher":
         s.program, s.step = "Eco 50°", PHASE["mainwash"][lang]
         s.message = _join(s.program, s.step, _pct_text(42, lang))
     else:
-        s.program, s.step = ("Baumwolle 40", "Cotton 40", "Algodón 40")[lang], PHASE["rinse"][lang]
+        s.program, s.step = PROBE["program"][lang], PHASE["rinse"][lang]
         s.message = _join(s.program, s.step, _pct_text(42, lang))
     s.critical = s.step or _pct_text(42, lang)
     s.message = _join(s.message, T["probe_text"][lang])
