@@ -225,11 +225,14 @@ window.CASORA_TILE_TYPES = [
         placeholder: "alarm_control_panel.alarmo", hint: "The alarm the popup arms and disarms." },
       { ...TITLE, placeholder: "Automatic" },
     ] },
-  { id: "casora_weather_warning", label: "Weather warning", template: "casora_weather_warning", domains: ["binary_sensor"], classes: ["safety"],
+  // Sources: a safety binary_sensor (NINA, Meteoalarm, "Wetter & Warnungen") or a DWD warning level sensor
+  // (sensor with warning_count, issue #55) – accept: "weather_warning" lets the picker offer the latter.
+  { id: "casora_weather_warning", label: "Weather warning", template: "casora_weather_warning", domains: ["binary_sensor", "sensor"],
+    classes: ["safety"], accept: "weather_warning",
     icon: "attention2", color: "var(--casora-color-orange, #FF9F0A)", fields: [
       ICON,
-      { key: "sensors", type: "list", label: "Warning sensors", domains: ["binary_sensor"], classes: ["safety"],
-        placeholder: "Add a warning sensor", hint: "E.g. the NINA or DWD warnings for your town." },
+      { key: "sensors", type: "list", label: "Warning sensors", domains: ["binary_sensor", "sensor"], classes: ["safety"], accept: "weather_warning",
+        placeholder: "Add a warning sensor", hint: "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town." },
       { ...TITLE, placeholder: "Warnings" },
     ] },
   { id: "casora_solar_tip", label: "Solar tip", template: "casora_solar_tip", domains: ["binary_sensor"], ownData: true,

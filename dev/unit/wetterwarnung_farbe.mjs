@@ -8,15 +8,17 @@ import assert from 'node:assert/strict';
 const T = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
 const basis = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/01-basis.js', import.meta.url), 'utf8');
 const core = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-core.js', import.meta.url), 'utf8');
-const window = {};
+// The tile's expressions read window.casoraWarnings (01-basis.js, #55) – load the normaliser along with the hue.
+globalThis.window = {};
 new Function('window', basis.match(/  window\.casoraWarnHue = function \(sev\) \{[\s\S]*?\n  \};\n/)[0])(window);
+new Function('window', basis.match(/  window\.casoraWarnings = \(function \(\) \{[\s\S]*?\n  \}\)\(\);\n/)[0])(window);
 
 let tileColour = null;
 (function walk(o) {
   if (!o || typeof o !== 'object') return;
   if (Array.isArray(o)) return o.forEach(walk);
   for (const [k, v] of Object.entries(o)) {
-    if (k === '--casora-icon-color-current' && typeof v === 'string' && v.includes('severity')) tileColour = v;
+    if (k === '--casora-icon-color-current' && typeof v === 'string' && v.includes('casoraWarnings')) tileColour = v;
     else walk(v);
   }
 })(T.casora_weather_warning);
@@ -27,6 +29,6 @@ for (const sev of ['Minor', 'Moderate', 'Severe', 'Extreme']) {
   assert.equal(window.casoraWarnHue(sev), tile(states, { entity_id: 'binary_sensor.w' }, {}, {}, {}), 'same colour for ' + sev);
 }
 assert.ok(!JSON.stringify(T.casora_weather_warning).includes("'Extrem'"), 'tile knows NINA’s „Extreme“');
-assert.ok(basis.includes('hue: window.casoraWarnHue(a.severity),'), 'bell row carries the level colour');
+assert.ok(basis.includes('hue: window.casoraWarnHue(w.severity),'), 'bell row carries the level colour');
 assert.ok(core.includes('if (r.hue) return r.hue;'), 'Soft tone takes the row’s own colour');
 console.log('ok wetterwarnung_farbe');
