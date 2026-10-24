@@ -2,7 +2,7 @@
 // #54: a room climate tile (casora_vent) on a room page opened the house popup – in the garden the indoor
 // rooms with their temperatures. Expected: the popup follows the page (garden = outdoor air only, a room =
 // its own row, Home = the house) and rows switched off in the Studio (variables.popup_hide) stay out of the
-// popup, the tile and show as „off“ in the Studio list „Im Popup zeigen“. Copies of the arbeit dashboards
+// popup, the tile and show as „off“ in the Studio list „Im Popup sichtbar“. Copies of the arbeit dashboards
 // with three room climate tiles (qa-popupzeilen-r, deleted at the end); nothing else is saved.
 import { open, studio, casoraDashboard, dashboard, stable, check, need, finish, atFinish } from './lib.mjs';
 import { ws } from '../ws.mjs';
@@ -97,7 +97,7 @@ if (pt.length) {
   await check('Phone garden: no indoor room in the popup', !hasAny(txt, rooms.map((x) => x.n)).length && /Außenluft/.test(txt), txt.slice(0, 200));
 }
 
-// Studio: „Im Popup zeigen“ on the Home tile (Küche off), nothing to hide in the garden.
+// Studio: „Im Popup sichtbar“ on the Home tile (Küche off), nothing to hide in the garden.
 await studio(page, URL);
 const form = async (path) => page.evaluate(async (p0) => {
   const p = window.__panel();
@@ -121,12 +121,12 @@ const form = async (path) => page.evaluate(async (p0) => {
   return { err: 'still loading' };
 }, path);
 let f = await form('home');
-await check('Studio Home: list „Im Popup zeigen“', f.rows && f.rows.some((r) => /Im Popup zeigen|Shown in the popup/.test(r.label)), f.err || f.rows);
+await check('Studio Home: list „Im Popup sichtbar“', f.rows && f.rows.some((r) => /Im Popup (zeigen|sichtbar)|(Shown|Visible) in the popup/.test(r.label)), f.err || f.rows);
 if (f.rows) {
   const ku = f.rows.find((r) => r.label.startsWith('Küche')), wo = f.rows.find((r) => r.label.startsWith('Wohnzimmer'));
   await check('Studio Home: Küche off, Wohnzimmer on', ku && ku.on === 'false' && wo && wo.on === 'true', { ku, wo });
 }
 f = await form('garten');
 await check('Studio garden: nothing to hide (no indoor rows)', f.rows && !f.rows.some((r) => /^(Küche|Wohnzimmer|Schlafzimmer)/.test(r.label))
-  && f.rows.some((r) => /Im Popup zeigen|Shown in the popup/.test(r.label)), f.err || f.rows);
+  && f.rows.some((r) => /Im Popup (zeigen|sichtbar)|(Shown|Visible) in the popup/.test(r.label)), f.err || f.rows);
 await finish();

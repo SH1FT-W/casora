@@ -8,7 +8,7 @@
 // an entity. Entities are picked from the house at run time (nothing hard-coded), nothing is switched.
 // Expected on desktop and phone (light + dark, theme Casora):
 //   - tile: subline "An"/"Aus" like the other tiles, the entity-less tile shows its name with no state
-//   - tap: popup opens with the state line, a casora-chart, "Schalten" segments (Aus/An), "Werte" with 4 rows
+//   - tap: popup opens with the state line, a casora-chart, "Bedienung" segments (Aus/An), "Werte" with 4 rows
 //     and "Weitere Einstellungen"; desktop two columns (controls left of values), phone one column
 //   - the entity-less tile opens a popup that says "Kein Gerät gewählt" – never an empty popup
 // Pictures: CASORA_FREI_BILDER=<folder> stores tile, dashboard and popup pictures per view.
@@ -107,7 +107,7 @@ const POPUP = () => {
   const line = (window.__pierce('.hui-line')[0] || {}).textContent || '';
   const segs = txt('.hui-sg');
   const rows = window.__pierce('.hui-srow').filter((r) => r.getBoundingClientRect().height > 0);
-  const vals = box('.hui-slbl', /^Werte$/), ctl = box('.hui-slbl', /^Schalten$/);
+  const vals = box('.hui-slbl', /^Werte$/), ctl = box('.hui-slbl', /^(Bedienung|Schalten)$/);
   const surface = window.casoraPopup && window.casoraPopup.surface;
   return { line: line.replace(/\s+/g, ' ').trim(), labels: txt('.hui-slbl'), segs, rows: rows.length,
     chart: window.__pierce('casora-chart').some((n) => n.getBoundingClientRect().height > 0),
@@ -171,7 +171,7 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
   const p = await stable(page, POPUP, null, { until: (v) => v && v.chart && v.rows >= 5 });
   await check(tag + ': state line „' + WANT + '“', new RegExp('^' + WANT + '\\b').test(p.line), p.line);
   await check(tag + ': history chart', p.chart, p.chart);
-  await check(tag + ': „Schalten“ with Aus/An segments', p.ctl && p.segs.includes('Aus') && p.segs.includes('An'), p.segs);
+  await check(tag + ': „Bedienung“ with Aus/An segments', p.ctl && p.segs.includes('Aus') && p.segs.includes('An'), p.segs);
   await check(tag + ': „Werte“ with 4 rows and „Weitere Einstellungen“', p.vals && p.rows === 5 && p.rowText.some((t) => /Weitere Einstellungen/.test(t)), p.rowText);
   await check(tag + ': own label „Innen“ with the temperature', p.rowText.some((t) => /^Innen/.test(t) && /°C/.test(t)), p.rowText);
   await check(tag + ': contact row in words (Geöffnet/Geschlossen), not on/off', p.rowText.some((t) => /Geöffnet|Geschlossen/.test(t)) && !p.rowText.some((t) => /\b(on|off)$/.test(t)), p.rowText);

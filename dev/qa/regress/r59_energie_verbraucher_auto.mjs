@@ -56,20 +56,24 @@ const res = await page.evaluate(() => {
   return { label: true, n: rows.length, ids, w: ids.map(w) };
 });
 // Was Casora für diese Kachel finden müsste (Raum-Popup: nur der Bereich des Raums).
+let haList = false;
 const want = await page.evaluate(({ id, url }) => {
   const h = document.querySelector('home-assistant').hass;
   const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).join(',') === 'casora_energy' && x.getBoundingClientRect().width > 0);
   const v = (b && b._config.variables) || {};
   const area = window._casoraSoftEnergy.autoArea({ hass: h, states: h.states, powerId: id }, v);
-  return window._casoraAutoConsumers(h, h.states, { exclude: [id], area }).top.map((x) => x.id);
-}, { id: tile.entity });
+  // #44: a house sensor (no area) lists the "individual devices" of HA's energy dashboard when it has any.
+  const ha = !area && window.casoraEnergyConsumers ? window.casoraEnergyConsumers(h) : null;
+  if (ha) return { ha: true, ids: ha.map((x) => x.power || x.id) };
+  return { ha: false, ids: window._casoraAutoConsumers(h, h.states, { exclude: [id], area }).top.map((x) => x.id) };
+}, { id: tile.entity }).then((r) => { haList = r.ha; return r.ids; });
 if (!want.length && !tile.assigned.length) {
   await check('ohne passende Verbraucher kein leerer Abschnitt', !res.label, res);
   await finish();
 }
 await check('Abschnitt „Verbraucher“ im Energie-Popup', res.label, { res, want });
 if (res.label) {
-  await check('1 bis 5 Verbraucher', res.n >= 1 && res.n <= 5, res);
+  await check(haList ? 'Verbraucher aus dem Energie-Dashboard' : '1 bis 5 Verbraucher', res.n >= 1 && (haList || res.n <= 5), res);
   await check('jede Zeile gehört zu einem Sensor', res.ids.length === res.n, res);
   await check('absteigend nach Leistung', res.w.every((x, i) => i === 0 || x == null || res.w[i - 1] == null || res.w[i - 1] >= x), res);
   await check('Haus-Sensor der Kachel nicht in der Liste', !res.ids.includes(tile.entity), res);

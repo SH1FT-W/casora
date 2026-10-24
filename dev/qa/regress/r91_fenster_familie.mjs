@@ -36,7 +36,11 @@ const frame = (page, [sel, row, ic, name]) => page.evaluate(([sel, row, ic, name
     icW: i0 ? i0.getBoundingClientRect().width : null, fs: n0 ? parseFloat(getComputedStyle(n0).fontSize) : null, fw: n0 ? +getComputedStyle(n0).fontWeight : null,
     head: !!m.querySelector('.casora-welle-head') || [...m.querySelectorAll('div')].some((d) => /^(Benachrichtigungen|Notifications)$/.test(d.textContent.trim())),
     read: (() => { const b = m.querySelector('.casora-notify-read'); if (!b) return null; const r = b.getBoundingClientRect(), c = getComputedStyle(b);
-      return { below: r.top >= (rows.length ? rows[rows.length - 1].getBoundingClientRect().bottom - 1 : 0), radius: parseFloat(c.borderTopLeftRadius), h: r.height, bg: c.backgroundColor, fs: parseFloat(c.fontSize) }; })() };
+      // The list may scroll (more messages than fit): then the last visible row ends at the scroll box.
+      const last = rows.length ? rows[rows.length - 1] : null;
+      let sc = last && last.parentElement, end = last ? last.getBoundingClientRect().bottom : 0;
+      while (sc && sc !== m) { const o = getComputedStyle(sc).overflowY; if (o === 'auto' || o === 'scroll') { end = Math.min(end, sc.getBoundingClientRect().bottom); break; } sc = sc.parentElement || (sc.getRootNode() && sc.getRootNode().host); }
+      return { below: r.top >= end - 1, radius: parseFloat(c.borderTopLeftRadius), h: r.height, bg: c.backgroundColor, fs: parseFloat(c.fontSize) }; })() };
 }, [sel, row, ic, name]);
 const tap = async (page, fn) => { const p = await page.evaluate(fn); if (!p) return false; await page.mouse.click(p.x, p.y); await page.waitForTimeout(1300); return true; };
 // maxTop: Kopfzeile (Desktop 220); am Handy sitzen Glocke/⋯ seit 1.3 (Leiste B) unten in der Navigationsleiste.

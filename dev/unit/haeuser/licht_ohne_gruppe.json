@@ -32,7 +32,7 @@
   "light.kueche_spots": {"entity_id": "light.kueche_spots", "device_id": null, "area_id": "ku", "platform": "group"},
   "light.bad_spiegel": {"entity_id": "light.bad_spiegel", "device_id": "d_bad_spiegel", "area_id": null, "platform": "shelly"},
   "light.bad_decke": {"entity_id": "light.bad_decke", "device_id": "d_bad_decke", "area_id": null, "platform": "shelly"},
-  "light.flur": {"entity_id": "light.flur", "device_id": "d_flur", "area_id": null, "platform": "shelly"},
+  "light.testflur": {"entity_id": "light.testflur", "device_id": "d_flur", "area_id": null, "platform": "shelly"},
   "light.schlafzimmer_decke": {"entity_id": "light.schlafzimmer_decke", "device_id": "d_sz_decke", "area_id": null, "platform": "hue"},
   "light.schlafzimmer_nachttisch": {"entity_id": "light.schlafzimmer_nachttisch", "device_id": "d_sz_nacht", "area_id": null, "platform": "hue"},
   "light.kinderzimmer_sternenhimmel": {"entity_id": "light.kinderzimmer_sternenhimmel", "device_id": "d_kind", "area_id": null, "platform": "hue"},
@@ -48,11 +48,11 @@
   "light.kueche_spots": {"entity_id": "light.kueche_spots", "state": "on", "attributes": {"friendly_name": "Küche Spots", "entity_id": ["light.kueche_spot_1", "light.kueche_spot_2"], "supported_color_modes": ["color_temp"], "brightness": 255}},
   "light.bad_spiegel": {"entity_id": "light.bad_spiegel", "state": "off", "attributes": {"friendly_name": "Bad Spiegel", "supported_color_modes": ["onoff"]}},
   "light.bad_decke": {"entity_id": "light.bad_decke", "state": "off", "attributes": {"friendly_name": "Bad Decke", "supported_color_modes": ["brightness"]}},
-  "light.flur": {"entity_id": "light.flur", "state": "on", "attributes": {"friendly_name": "Flur", "supported_color_modes": ["onoff"]}},
+  "light.testflur": {"entity_id": "light.testflur", "state": "on", "attributes": {"friendly_name": "Flur", "supported_color_modes": ["onoff"]}},
   "light.schlafzimmer_decke": {"entity_id": "light.schlafzimmer_decke", "state": "off", "attributes": {"friendly_name": "Schlafzimmer Decke", "supported_color_modes": ["color_temp", "xy"]}},
   "light.schlafzimmer_nachttisch": {"entity_id": "light.schlafzimmer_nachttisch", "state": "off", "attributes": {"friendly_name": "Schlafzimmer Nachttisch", "supported_color_modes": ["color_temp", "xy"]}},
   "light.kinderzimmer_sternenhimmel": {"entity_id": "light.kinderzimmer_sternenhimmel", "state": "off", "attributes": {"friendly_name": "Kinderzimmer Sternenhimmel", "supported_color_modes": ["xy"]}},
-  "light.erdgeschoss": {"entity_id": "light.erdgeschoss", "state": "on", "attributes": {"friendly_name": "Erdgeschoss", "entity_id": ["light.wohnzimmer_decke", "light.wohnzimmer_stehlampe", "light.kueche_spots", "light.flur"], "supported_color_modes": ["color_temp", "xy"]}}
+  "light.erdgeschoss": {"entity_id": "light.erdgeschoss", "state": "on", "attributes": {"friendly_name": "Erdgeschoss", "entity_id": ["light.wohnzimmer_decke", "light.wohnzimmer_stehlampe", "light.kueche_spots", "light.testflur"], "supported_color_modes": ["color_temp", "xy"]}}
  },
  "expect": {
   "house_power": null,
@@ -60,7 +60,7 @@
    "group": null,
    "auto": true,
    "rooms": ["Wohnzimmer", "Küche", "Bad", "Flur", "Schlafzimmer", "Kinderzimmer"],
-   "ids": ["light.wohnzimmer_decke", "light.wohnzimmer_stehlampe", "light.wohnzimmer_regal", "light.kueche_spot_1", "light.kueche_spot_2", "light.kueche_theke", "light.bad_spiegel", "light.bad_decke", "light.flur", "light.schlafzimmer_decke", "light.schlafzimmer_nachttisch", "light.kinderzimmer_sternenhimmel"],
+   "ids": ["light.wohnzimmer_decke", "light.wohnzimmer_stehlampe", "light.wohnzimmer_regal", "light.kueche_spot_1", "light.kueche_spot_2", "light.kueche_theke", "light.bad_spiegel", "light.bad_decke", "light.testflur", "light.schlafzimmer_decke", "light.schlafzimmer_nachttisch", "light.kinderzimmer_sternenhimmel"],
    "room_groups": {"Küche": null}
   }
  }

@@ -103,7 +103,8 @@ await page.evaluate(() => { const col = window.__panel().shadowRoot.querySelecto
 await page.waitForTimeout(400);
 const list = await page.evaluate(() => {
   const col = window.__panel().shadowRoot.querySelector('.badgecol');
-  return col ? [...col.children].filter((c) => c.dataset && c.dataset.bid).map((c) => c.dataset.bid) : [];
+  // "custom" (own badges, #53) stays pinned below the sortable list and takes no part in the order.
+  return col ? [...col.children].filter((c) => c.dataset && c.dataset.bid && c.dataset.bid !== 'custom').map((c) => c.dataset.bid) : [];
 });
 await check('Studio: Szenen steht in der Badge-Reihenfolge (Standard nach Energie, vor Medien)', list.includes('scenes')
   && (!list.includes('energy') || list.indexOf('scenes') > list.indexOf('energy'))
