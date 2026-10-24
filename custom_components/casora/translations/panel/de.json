@@ -2553,7 +2553,23 @@
     "History (24 h)": "Verlauf (24 Std.)",
     "A chart of the last 24 hours – of this tile's entity, or of the one chosen below. Only numeric values have a history.": "Ein Diagramm der letzten 24 Stunden – vom Gerät dieser Kachel oder von dem unten gewählten. Nur Zahlenwerte haben einen Verlauf.",
     "History of": "Verlauf von",
-    "The entity's own controls in the popup: on/off, brightness, cover buttons, lock, media keys, target temperature.": "Die eigene Bedienung der Entität im Popup: An/Aus, Helligkeit, Jalousie-Knöpfe, Schloss, Medien-Tasten, Zieltemperatur."
+    "The entity's own controls in the popup: on/off, brightness, cover buttons, lock, media keys, target temperature.": "Die eigene Bedienung der Entität im Popup: An/Aus, Helligkeit, Jalousie-Knöpfe, Schloss, Medien-Tasten, Zieltemperatur.",
+    "Own badges": "Eigene Badges",
+    "Badges of your own: a device's state or the text of a template.": "Badges nach deinem Wunsch: der Zustand eines Geräts oder der Text einer Vorlage.",
+    "Wrap badges onto more lines": "Badges umbrechen",
+    "Badges that do not fit continue on the next line instead of scrolling sideways. Desktop, tablet and phone.": "Badges, die nicht mehr passen, gehen in die nächste Zeile, statt seitwärts zu scrollen. Desktop, Tablet und Handy.",
+    "No own badges yet. Add one below – a device's state or the text of a template.": "Noch keine eigenen Badges. Füge unten eins hinzu – den Zustand eines Geräts oder den Text einer Vorlage.",
+    "Remove badge": "Badge entfernen",
+    "Badge removed": "Badge entfernt",
+    "Teal (default)": "Türkis (Standard)",
+    "Nothing": "Nichts",
+    "Go to room": "Zum Raum",
+    "Tap": "Tippen",
+    "Choose a room": "Raum wählen",
+    "Add badge": "Badge hinzufügen",
+    "From a device": "Von einem Gerät",
+    "From a template": "Von einer Vorlage",
+    "A Home Assistant template (Jinja). Its text is the badge's value, rendered live.": "Eine Home-Assistant-Vorlage (Jinja). Ihr Text ist der Wert des Badges, live gerendert."
   },
   "patterns": [
     [

@@ -2232,7 +2232,7 @@ var ye = function() {
                         var r = P(i[n], 2),
                             o = r[0],
                             a = r[1];
-                        (o.startsWith("grid") || o.startsWith("align") || o.startsWith("justify") || o.startsWith("overflow") || o.startsWith("overscroll") || "grid" === o || "place-items" === o || "place-content" === o || "width"=== o|| "max-width" === o|| "min-width" === o|| "min-height" === o|| "max-height" === o|| "scroll-snap-type" === o|| "inset" === o || "position" === o|| "background" === o|| "padding" === o|| "backdrop-filter" === o|| "display" === o|| "height" === o|| "margin" === o|| "touch-action" === o|| "overflow-anchor" === o|| "scrollbar-width" === o|| "-ms-overflow-style" === o|| "-webkit-overflow-scrolling" === o|| o.startsWith("mask")) && e.style.setProperty(o, a)
+                        (o.startsWith("grid") || o.startsWith("align") || o.startsWith("justify") || o.startsWith("overflow") || o.startsWith("overscroll") || "grid" === o || "place-items" === o || "place-content" === o || "width"=== o|| "max-width" === o|| "min-width" === o|| "min-height" === o|| "max-height" === o|| "scroll-snap-type" === o|| "inset" === o || "position" === o|| "background" === o|| "padding" === o|| "backdrop-filter" === o|| "display" === o|| "height" === o|| "margin" === o|| "touch-action" === o|| "overflow-anchor" === o|| "scrollbar-width" === o|| "-ms-overflow-style" === o|| "-webkit-overflow-scrolling" === o|| "flex-wrap" === o|| "row-gap" === o|| "column-gap" === o|| "gap" === o|| o.startsWith("mask")) && e.style.setProperty(o, a)
                     }
                 };
                 e.style.cssText = "", this._config.layout && n(this._config.layout);

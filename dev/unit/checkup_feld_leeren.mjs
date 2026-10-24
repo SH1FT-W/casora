@@ -12,7 +12,8 @@ const combo = src.slice(a, b);
 assert.ok(/if \(opts && opts\.clearable\)/.test(combo), '_combo kennt clearable');
 assert.ok(/x\.onclick = \(ev\) => \{[^}]*commit\(""\)/.test(combo), '× leert über commit("")');
 assert.ok(/if \(wrap\._paintX\) wrap\._paintX\(\);/.test(combo), 'commit aktualisiert das ×');
-assert.equal((src.match(/clearable: true/g) || []).length, 5, 'fünf optionale Geräte-Auswahlen');
+// Sechs seit den eigenen Badges (#53): deren Gerätefeld ist ebenfalls optional (Wechsel auf Vorlage).
+assert.equal((src.match(/clearable: true/g) || []).length, 6, 'sechs optionale Geräte-Auswahlen');
 const ent = src.indexOf('const entCombo = this._combo(tile.entity');
 assert.ok(ent > 0 && !src.slice(ent, ent + 400).includes('clearable'), 'Haupt-Entität ohne ×');
 assert.ok(src.includes('shownSig() !== shown0'), 'abhängige Felder zeichnen nach');

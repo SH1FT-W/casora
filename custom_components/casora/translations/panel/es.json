@@ -2553,7 +2553,23 @@
     "History (24 h)": "Historial (24 h)",
     "A chart of the last 24 hours – of this tile's entity, or of the one chosen below. Only numeric values have a history.": "Un gráfico de las últimas 24 horas: de la entidad de esta tarjeta o de la elegida abajo. Solo los valores numéricos tienen historial.",
     "History of": "Historial de",
-    "The entity's own controls in the popup: on/off, brightness, cover buttons, lock, media keys, target temperature.": "Los controles propios de la entidad en la ventana: encendido/apagado, brillo, botones de persiana, cerradura, teclas multimedia, temperatura objetivo."
+    "The entity's own controls in the popup: on/off, brightness, cover buttons, lock, media keys, target temperature.": "Los controles propios de la entidad en la ventana: encendido/apagado, brillo, botones de persiana, cerradura, teclas multimedia, temperatura objetivo.",
+    "Own badges": "Insignias propias",
+    "Badges of your own: a device's state or the text of a template.": "Insignias a tu gusto: el estado de un dispositivo o el texto de una plantilla.",
+    "Wrap badges onto more lines": "Insignias en varias líneas",
+    "Badges that do not fit continue on the next line instead of scrolling sideways. Desktop, tablet and phone.": "Las insignias que no caben siguen en la línea siguiente en vez de desplazarse de lado. Escritorio, tableta y móvil.",
+    "No own badges yet. Add one below – a device's state or the text of a template.": "Aún no hay insignias propias. Añade una abajo: el estado de un dispositivo o el texto de una plantilla.",
+    "Remove badge": "Quitar insignia",
+    "Badge removed": "Insignia quitada",
+    "Teal (default)": "Turquesa (predeterminado)",
+    "Nothing": "Nada",
+    "Go to room": "Ir a la habitación",
+    "Tap": "Toque",
+    "Choose a room": "Elige una habitación",
+    "Add badge": "Añadir insignia",
+    "From a device": "De un dispositivo",
+    "From a template": "De una plantilla",
+    "A Home Assistant template (Jinja). Its text is the badge's value, rendered live.": "Una plantilla de Home Assistant (Jinja). Su texto es el valor de la insignia, renderizado en vivo."
   },
   "patterns": [
     [
