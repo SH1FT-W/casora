@@ -384,9 +384,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-# Optionen, die zur Laufzeit gelesen werden (lueften_push.py und update_push.py lesen entry.options
-# bei jeder Prüfung): Speichern braucht dafür kein Neuladen der Integration.
-LIVE_OPTIONS = frozenset({"lueften_push", "lueften_personen", "update_push"})
+# Options read at run time (lueften_push.py and update_push.py read entry.options on every check,
+# ki.ai_models the typed model names on every call): saving them needs no reload of the integration.
+LIVE_OPTIONS = frozenset({"lueften_push", "lueften_personen", "update_push", "ai_task_models"})
 
 
 def live_only(old: dict, new: dict) -> bool:

@@ -15,9 +15,9 @@ nicht ohne Anmeldung lesbar.
   casora/backup/umzug_phones ← {["sources"]} → {"backups": [{file, url_path, title, time, mobile}]}  (nur Admins, nur lesen)
   casora/ki/merge_template ← {"name", "mine", "casora"} → {"template", "changes"}  (nur Admins)
   casora/ki/adapt_card ← {"card", "context"} → {"card", "changes"}  (nur Admins)
-  casora/ki/models     → {"best": {...}|None, "all": [...]}      (nur Admins)
+  casora/ki/models     → {"best": {...}|None, "all": [...]}      (nur Admins; model from the device registry
+                         or typed by the user, never from another integration's client)
   casora/ki/basis      ← {"rooms", "loose"} → {"rooms"}          (nur Admins)
-  casora/ki/upgrade    ← {} → {"options"} | {"entry_id", "model"} → {"entity_id", "best"}  (nur Admins)
 """
 
 from __future__ import annotations
@@ -612,29 +612,6 @@ def ws_ai_models(hass: HomeAssistant, connection: websocket_api.ActiveConnection
     connection.send_result(msg["id"], {"best": next((m for m in models if m["ok"]), None), "all": models})
 
 
-@websocket_api.require_admin
-@websocket_api.websocket_command({
-    vol.Required("type"): "casora/ki/upgrade",
-    vol.Optional("entry_id"): str,
-    vol.Optional("model"): str,
-})
-@websocket_api.async_response
-async def ws_ai_upgrade(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
-    """Ohne entry_id: welche starke KI Casora anlegen könnte. Mit entry_id + model: anlegen."""
-    from .ki import ai_models, ai_upgrade_apply, ai_upgrade_options
-
-    if "entry_id" not in msg:
-        connection.send_result(msg["id"], {"options": await ai_upgrade_options(hass)})
-        return
-    try:
-        ent = await ai_upgrade_apply(hass, msg["entry_id"], msg.get("model") or "")
-    except Exception as err:  # noqa: BLE001 – dem Studio als Meldung zeigen
-        connection.send_error(msg["id"], "upgrade_failed", str(err))
-        return
-    models = ai_models(hass)
-    connection.send_result(msg["id"], {"entity_id": ent, "best": next((m for m in models if m["ok"]), None)})
-
-
 @callback
 def async_setup_settings(hass: HomeAssistant) -> None:
     if hass.data.get(DOMAIN, {}).get("settings_ws"):
@@ -647,5 +624,4 @@ def async_setup_settings(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_adapt_card)
     websocket_api.async_register_command(hass, ws_ai_models)
     websocket_api.async_register_command(hass, ws_basis)
-    websocket_api.async_register_command(hass, ws_ai_upgrade)
     hass.data.setdefault(DOMAIN, {})["settings_ws"] = True

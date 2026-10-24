@@ -36,7 +36,8 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
+from homeassistant.core import Context, HomeAssistant, ServiceCall, SupportsResponse, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
@@ -94,6 +95,8 @@ WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 # Optionen (Casora → Konfigurieren)
 OPT_AI = "ai_task_entity"
 OPT_AI_WEB = "ai_task_web_entity"
+# Model names the user typed per AI task ({entity_id: model}) where the device registry names none.
+OPT_AI_MODELS = "ai_task_models"
 OPT_OUT_T = "outdoor_temperature"
 OPT_OUT_RH = "outdoor_humidity"
 OPT_PRICE = "price_kwh"
@@ -216,20 +219,23 @@ def is_external(hass: HomeAssistant, key: str) -> bool:
 
 
 def ai_entity(hass: HomeAssistant, entry: ConfigEntry, web: bool = False) -> str | None:
-    """Gewählte KI, sonst die Standard-KI aus Einstellungen → KI-Aufgaben."""
+    """AI task chosen in Casora's options; without a choice the only AI task there is.
+
+    With several AI tasks and no choice this is None: the call then leaves entity_id out and
+    HA's own preferred AI task (Settings → AI tasks) answers. Casora never reads the ai_task
+    integration's stored preferences itself (hass.data of another integration).
+    """
     opts = entry.options
     ent = (opts.get(OPT_AI_WEB) if web else None) or opts.get(OPT_AI)
-    if not ent:
-        try:
-            from homeassistant.components.ai_task.const import DATA_PREFERENCES
+    if ent:
+        return ent
+    ids = hass.states.async_entity_ids("ai_task")
+    return ids[0] if len(ids) == 1 else None
 
-            ent = hass.data[DATA_PREFERENCES].gen_data_entity_id
-        except Exception:  # noqa: BLE001 – ai_task nicht geladen
-            ent = None
-    if not ent:
-        ids = sorted(hass.states.async_entity_ids("ai_task"))
-        ent = ids[0] if ids else None
-    return ent
+
+def ai_available(hass: HomeAssistant, entry: ConfigEntry, web: bool = False) -> bool:
+    """There is an AI to ask: a chosen one, or any AI task (HA's preferred one answers)."""
+    return bool(ai_entity(hass, entry, web)) or bool(hass.states.async_entity_ids("ai_task"))
 
 
 def _area_id(hass: HomeAssistant, entity_id: str) -> str | None:
@@ -390,17 +396,14 @@ def _entities_in_area(hass: HomeAssistant, area_id: str, domain: str, classes: s
     )
 
 
-# ── Modell hinter einer KI-Aufgabe ────────────────────────────────────────────
-# Anspruchsvolle Aufgaben (Vorlagen beim Umzug zusammenführen) laufen nur mit einem
-# starken Modell. HA speichert das Modell im Unterzugang der Integration (chat_model);
-# ohne eigene Wahl gilt die Empfehlung der Integration (RECOMMENDED_CHAT_MODEL).
-# Mindestens: Claude Sonnet 4.5 / jede Opus- oder Fable-Fassung, GPT-5, Gemini 2.5 Pro.
-# Neuere Versionen zählen automatisch mit.
-_INTEGRATION_CONST = {
-    "anthropic": "homeassistant.components.anthropic.const",
-    "openai_conversation": "homeassistant.components.openai_conversation.const",
-    "google_generative_ai_conversation": "homeassistant.components.google_generative_ai_conversation.const",
-}
+# ── Model behind an AI task ───────────────────────────────────────────────────
+# Demanding tasks (merging templates on a move, filling rooms, tile types) only run with a
+# strong model. Casora learns the model through public HA APIs only: the device registry
+# entry of the AI task (the integrations put the model there: Anthropic, OpenAI, Google,
+# Ollama) and, as a hint, the device name (OpenRouter names its AI tasks after the model).
+# Where neither tells, the user types the model name in the Studio (OPT_AI_MODELS).
+# Casora never reads another integration's config entry data, runtime_data or SDK client.
+# Minimum: Claude Sonnet 4.5 / any Opus or Fable, GPT-5, Gemini 2.5 Pro. Newer versions count too.
 
 
 def _ver(text: str) -> float:
@@ -408,12 +411,12 @@ def _ver(text: str) -> float:
     if not parts:
         return 0.0
     major = int(parts[0])
-    minor = int(parts[1]) if len(parts) > 1 and len(parts[1]) < 3 else 0  # kein Datum (20250514) als Nebenversion
+    minor = int(parts[1]) if len(parts) > 1 and len(parts[1]) < 3 else 0  # no date (20250514) as minor version
     return major + minor / 10
 
 
 def model_rank(domain: str, model: str | None) -> tuple[int, str]:
-    """(Rang, Anzeigename). Rang 0 = zu schwach oder unbekannt; höher = stärker."""
+    """(rank, display name). Rank 0 = too weak or unknown; higher = stronger."""
     m = (model or "").lower()
     # OpenRouter and similar gateways name the model with its vendor in front ("anthropic/claude-sonnet-4.5").
     base_m = m.rsplit("/", 1)[-1]
@@ -424,7 +427,7 @@ def model_rank(domain: str, model: str | None) -> tuple[int, str]:
         rest = base_m.replace("claude", "").replace(fam, "")
         v = _ver(rest)
         name = "Claude " + fam.capitalize() + (" " + (f"{v:g}") if v else "")
-        if fam == "fable" or (fam == "opus" and (v >= 4 or not v)):  # Fable: jede Fassung
+        if fam == "fable" or (fam == "opus" and (v >= 4 or not v)):  # Fable: every version
             return 300 + int(v * 10), name
         if fam == "sonnet" and v >= 4.5:
             return 200 + int(v * 10), name
@@ -439,7 +442,7 @@ def model_rank(domain: str, model: str | None) -> tuple[int, str]:
         return 0, name
     if "gemini" in m or domain == "google_generative_ai_conversation":
         v = _ver(m)
-        base = (model or "gemini").rsplit("/", 1)[-1]  # Google liefert „models/gemini-…“
+        base = (model or "gemini").rsplit("/", 1)[-1]  # Google names it "models/gemini-…"
         name = " ".join(w if w[:1].isdigit() else w.capitalize() for w in base.split("-"))
         if "pro" in m and v >= 2.5:
             return 100 + int(v * 10), name
@@ -447,133 +450,138 @@ def model_rank(domain: str, model: str | None) -> tuple[int, str]:
     return 0, model or domain
 
 
-def ai_models(hass: HomeAssistant) -> list[dict]:
-    """Alle KI-Aufgaben mit Modell und Rang, stärkste zuerst."""
-    import importlib
+def model_names(options: Any) -> dict[str, str]:
+    """Model names the user typed per AI task ({entity_id: model}); anything else is dropped."""
+    raw = (options or {}).get(OPT_AI_MODELS) if hasattr(options, "get") else None
+    if not isinstance(raw, dict):
+        return {}
+    return {k: " ".join(str(v).split())[:120] for k, v in raw.items()
+            if isinstance(k, str) and k.startswith("ai_task.") and isinstance(v, str) and v.strip()}
 
-    reg = er.async_get(hass)
+
+def entity_model(hass: HomeAssistant, entity_id: str, typed: str | None = None) -> tuple[str, str | None, str | None]:
+    """(platform, model, source) of an AI task. source: "typed", "device", "title" or None.
+
+    Only the entity and device registries are read (public HA APIs). The device name is a hint
+    for gateways that name their AI tasks after the model ("Anthropic: Claude Sonnet 4.5").
+    """
+    ent = er.async_get(hass).async_get(entity_id)
+    domain = ent.platform if ent else ""
+    if typed:
+        return domain, typed, "typed"
+    dev = dr.async_get(hass).async_get(ent.device_id) if ent and ent.device_id else None
+    cands: list[tuple[str, str]] = []
+    if dev:
+        cands += [(str(x), "device") for x in (getattr(dev, "model_id", None), dev.model) if x]
+        title = dev.name_by_user or dev.name
+        if title:
+            # "Vendor: Model" (OpenRouter) → the model part; "gpt-oss:20b" keeps its tag.
+            cands.append((title.split(": ", 1)[-1].strip(), "title"))
+    for model, source in cands:
+        if model_rank(domain, model)[0] > 0:
+            return domain, model, source
+    first = next(((m, s) for m, s in cands if s == "device"), None)
+    return (domain, first[0], first[1]) if first else (domain, None, None)
+
+
+def _casora_options(hass: HomeAssistant) -> Any:
+    try:
+        entries = hass.config_entries.async_entries(DOMAIN)
+    except Exception:  # noqa: BLE001 – test doubles without config entries
+        return {}
+    return entries[0].options if entries else {}
+
+
+def ai_models(hass: HomeAssistant) -> list[dict]:
+    """All AI tasks with model and rank, preferred first."""
+    typed = model_names(_casora_options(hass))
     out = []
     for eid in sorted(hass.states.async_entity_ids("ai_task")):
-        ent = reg.async_get(eid)
-        domain = ent.platform if ent else ""
-        model = None
-        if ent and ent.config_entry_id:
-            ce = hass.config_entries.async_get_entry(ent.config_entry_id)
-            sub = ce.subentries.get(ent.config_subentry_id) if ce and ent.config_subentry_id else None
-            data = dict(sub.data) if sub else dict(ce.options) if ce else {}
-            # chat_model: Anthropic/OpenAI/Google; model: OpenRouter, Ollama.
-            model = data.get("chat_model") or data.get("model")
-            if not model and domain in _INTEGRATION_CONST:
-                try:
-                    const = importlib.import_module(_INTEGRATION_CONST[domain])
-                except ImportError:
-                    const = None
-                # OpenAI/Google: RECOMMENDED_CHAT_MODEL; Anthropic: DEFAULT["chat_model"]
-                model = getattr(const, "RECOMMENDED_CHAT_MODEL", None) or (
-                    getattr(const, "DEFAULT", None) or {}).get("chat_model")
+        domain, model, source = entity_model(hass, eid, typed.get(eid))
         rank, label = model_rank(domain, model)
         st = hass.states.get(eid)
         out.append({"entity_id": eid, "name": (st.attributes.get("friendly_name") if st else None) or eid,
-                    "model": model, "label": label, "rank": rank, "ok": rank > 0})
+                    "domain": domain, "model": model, "source": source, "typed": typed.get(eid) or "",
+                    "label": label, "rank": rank, "ok": rank > 0})
     out.sort(key=lambda x: -_preference(x["model"], x["rank"]))
     return out
 
 
 def _preference(model: str | None, rank: int) -> int:
-    """Reihenfolge der Wahl: ausreichende Sonnet-Modelle vor stärkeren (teureren) wie Opus.
+    """Order of choice: a sufficient Sonnet model before stronger (pricier) ones such as Opus.
 
-    Für Casoras KI-Aufgaben (Unterschiede finden, Räume sortieren) reicht Sonnet und ist
-    günstiger und schneller. Wer Opus will, stellt seine KI-Aufgabe selbst darauf um."""
+    For Casora's AI jobs (finding differences, sorting rooms) Sonnet is enough, cheaper and
+    faster. Whoever wants Opus switches their AI task to it."""
     if rank <= 0:
         return rank
     return rank + (1000 if "sonnet" in str(model or "").lower() else 0)
 
 
-# ── Starke KI anlegen („Casora KI“) ───────────────────────────────────────────
-# Ist keine KI-Aufgabe stark genug, legt Casora in derselben Integration eine eigene an –
-# mit dem stärksten Modell, das der Anbieter gerade anbietet. Die bestehende KI-Aufgabe
-# bleibt unverändert (andere Automationen nutzen sie weiter mit ihrem Modell).
-_NOT_CHAT = re.compile(r"codex|audio|realtime|image|search|tts|transcribe|embed|moderation|instruct|live|computer")
-_OPENAI_PRO = re.compile(r"-pro(-|$)")  # GPT-…-Pro: nur über die Responses-API und sehr teuer
-CASORA_AI_TITLE = "Casora KI"
+def _first_ai_task(hass: HomeAssistant) -> str | None:
+    """First AI task that can generate data (state attribute supported_features, bit 1), else the first one."""
+    ids = sorted(hass.states.async_entity_ids("ai_task"))
+    able = [e for e in ids if int((getattr(hass.states.get(e), "attributes", None) or {}).get("supported_features") or 0) & 1]
+    return (able or ids or [None])[0]
 
 
-async def _provider_models(hass: HomeAssistant, entry: ConfigEntry) -> list[str]:
-    """Modell-IDs, die der Anbieter gerade anbietet (leer, wenn er nicht antwortet)."""
-    rt = getattr(entry, "runtime_data", None)
+async def generate(hass: HomeAssistant, data: dict[str, Any], ent: str | None) -> dict:
+    """ai_task.generate_data (public service) with Casora's choice of AI task.
+
+    ent given: that one. Without: entity_id stays out and HA's preferred AI task answers; if HA has
+    none ("no preferred entity set"), the first suitable AI task, as Casora did before.
+    """
+    if not ent and not hass.states.async_entity_ids("ai_task"):
+        raise HomeAssistantError(NO_AI)
+    payload = {k: v for k, v in data.items() if k != "entity_id" and v not in (None, "", [])}
+    if ent:
+        payload["entity_id"] = ent
+
+    async def call(p: dict) -> Any:
+        return await hass.services.async_call("ai_task", "generate_data", p, blocking=True, return_response=True)
+
     try:
-        if entry.domain == "anthropic":
-            return [m.id for m in (getattr(rt, "data", None) or [])]
-        if entry.domain == "openai_conversation":
-            page = await rt.models.list()
-            return [m.id for m in getattr(page, "data", [])]
-        if entry.domain == "google_generative_ai_conversation":
-            pager = await rt.aio.models.list(config={"query_base": True})
-            return [m.name async for m in pager]
-    except Exception:  # noqa: BLE001 – Anbieter nicht erreichbar: dann kein Vorschlag
-        _LOGGER.debug("Casora: Modelle von %s nicht lesbar", entry.domain, exc_info=True)
-    return []
-
-
-async def ai_upgrade_options(hass: HomeAssistant) -> list[dict]:
-    """Je eingerichteter KI-Integration das stärkste ausreichende Modell."""
-    out = []
-    for domain in _INTEGRATION_CONST:
-        for entry in hass.config_entries.async_loaded_entries(domain):
-            ids = [m for m in await _provider_models(hass, entry) if not _NOT_CHAT.search(m.split("/")[-1])
-                   and not (domain == "openai_conversation" and _OPENAI_PRO.search(m))]
-            ranked = sorted(((model_rank(domain, m), m) for m in ids), key=lambda x: -_preference(x[1], x[0][0]))
-            best = next(((r, m) for r, m in ranked if r[0] > 0), None)
-            if best:
-                out.append({"entry_id": entry.entry_id, "domain": domain, "provider": entry.title,
-                            "model": best[1], "label": best[0][1]})
-    return out
-
-
-async def ai_upgrade_apply(hass: HomeAssistant, entry_id: str, model: str) -> str | None:
-    """Legt „Casora KI“ mit diesem Modell an; gibt die neue ai_task-Entität zurück."""
-    import asyncio
-    from types import MappingProxyType
-
-    from homeassistant.config_entries import ConfigSubentry
-
-    entry = hass.config_entries.async_get_entry(entry_id)
-    if not entry or entry.domain not in _INTEGRATION_CONST:
-        raise ValueError("Unbekannte KI-Integration")
-    data = {"recommended": False, "chat_model": model, "max_tokens": 32000}
-    existing = next((s for s in entry.subentries.values()
-                     if s.subentry_type == "ai_task_data" and s.title == CASORA_AI_TITLE), None)
-    if existing:
-        hass.config_entries.async_update_subentry(entry, existing, data=dict(existing.data) | data)
-        sub_id = existing.subentry_id
-    else:
-        sub = ConfigSubentry(data=MappingProxyType(data), subentry_type="ai_task_data",
-                             title=CASORA_AI_TITLE, unique_id=None)
-        hass.config_entries.async_add_subentry(entry, sub)
-        sub_id = sub.subentry_id
-    # Die Integration lädt sich nach der Änderung neu; auf die neue Entität warten.
-    reg = er.async_get(hass)
-    for _ in range(60):
-        await asyncio.sleep(0.5)
-        hit = next((e.entity_id for e in reg.entities.values()
-                    if e.config_subentry_id == sub_id and e.domain == "ai_task"), None)
-        if hit and hass.states.get(hit):
-            return hit
-    return None
+        resp = await call(payload)
+    except HomeAssistantError as err:
+        first = _first_ai_task(hass)
+        if ent or not first or "preferred" not in str(err):
+            raise
+        resp = await call({**payload, "entity_id": first})
+    return dict(resp or {})
 
 
 async def ask_ai(hass: HomeAssistant, entry: ConfigEntry, task: str, instructions: str,
                  structure: dict, web: bool = False, attachments: list | None = None,
                  entity: str | None = None) -> dict | None:
+    """Ask an AI task through HA's public service ai_task.generate_data."""
     ent = entity or ai_entity(hass, entry, web)
-    if not ent:
+    if not ent and not hass.states.async_entity_ids("ai_task"):
         raise ValueError(NO_AI)
-    data: dict[str, Any] = {"entity_id": ent, "task_name": task, "instructions": instructions, "structure": structure}
+    data: dict[str, Any] = {"task_name": task, "instructions": instructions, "structure": structure}
     if attachments:
         data["attachments"] = attachments
-    resp = await hass.services.async_call("ai_task", "generate_data", data, blocking=True, return_response=True)
-    result = (resp or {}).get("data")
+    result = (await generate(hass, data, ent)).get("data")
     return result if isinstance(result, dict) else None
+
+
+# Service casora.ai_generate for the flows in ki/*.yaml: same fields as ai_task.generate_data, but
+# entity_id may be empty; the choice and the fallback are those of generate() above.
+AI_GENERATE_SCHEMA = vol.Schema({
+    vol.Required("task_name"): cv.string,
+    vol.Required("instructions"): cv.string,
+    vol.Optional("entity_id"): vol.Any(None, "", cv.entity_id),
+    vol.Optional("structure"): vol.Any(None, dict),
+    vol.Optional("attachments"): vol.Any(None, list),
+})
+
+
+def register_ai_generate(hass: HomeAssistant) -> None:
+    """Register casora.ai_generate (returns the answer of ai_task.generate_data)."""
+
+    async def handle(call: ServiceCall) -> dict:
+        return await generate(hass, dict(call.data), call.data.get("entity_id") or None)
+
+    hass.services.async_register(DOMAIN, "ai_generate", handle, schema=AI_GENERATE_SCHEMA,
+                                 supports_response=SupportsResponse.ONLY)
 
 
 COACH_STRUCTURE = {
@@ -1169,6 +1177,7 @@ class KiRunner:
         ]
         for name, fn, schema in reg:
             hass.services.async_register(DOMAIN, name, fn, schema=schema)
+        register_ai_generate(hass)
 
         # Erst nach dem Start: dann ist klar, ob alte Paket-Sensoren noch geliefert werden (is_external).
         if hass.is_running:
@@ -1215,7 +1224,7 @@ class KiRunner:
             u()
         for name in ("energie_coach", "heizungs_coach", "lueftungs_coach", "kamera_beschreiben",
                      "pflanzen_doktor", "aquarium_doktor", "ebike_check", "update_pruefen", "update_bestaetigen",
-                     "rezept_neu", "rezept_auf_liste"):
+                     "rezept_neu", "rezept_auf_liste", "ai_generate"):
             self.hass.services.async_remove(DOMAIN, name)
 
     def _bg(self, coro) -> None:
@@ -1240,7 +1249,7 @@ class KiRunner:
 
     def _no_ai(self, feature: str, key: dict, web: bool = False) -> bool:
         """Keine KI eingerichtet: Fehler mit Grund melden, statt die KI-Aufgabe „None“ aufzurufen."""
-        if ai_entity(self.hass, self.entry, web=web):
+        if ai_available(self.hass, self.entry, web=web):
             return False
         self.hass.bus.async_fire(FEATURES[feature]["event"], {**key, "status": "error", "error": NO_AI})
         return True

@@ -219,6 +219,32 @@
           "description": "Entidade"
         }
       }
+    },
+    "ai_generate": {
+      "name": "Gerar com IA",
+      "description": "Como Tarefa de IA: gerar dados, mas sem IA escolhida usa a primeira tarefa de IA. Para os fluxos de IA da Casora.",
+      "fields": {
+        "task_name": {
+          "name": "Nome da tarefa",
+          "description": "Nome da tarefa."
+        },
+        "instructions": {
+          "name": "Instruções",
+          "description": "O que a IA deve fazer."
+        },
+        "entity_id": {
+          "name": "Tarefa de IA",
+          "description": "Vazio: a tarefa de IA preferida das Definições; caso contrário, a primeira."
+        },
+        "structure": {
+          "name": "Estrutura",
+          "description": "Campos da resposta."
+        },
+        "attachments": {
+          "name": "Anexos",
+          "description": "Imagens e outros média."
+        }
+      }
     }
   },
   "entity": {

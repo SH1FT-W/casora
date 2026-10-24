@@ -1741,11 +1741,6 @@
     "Fill automatically": "Automatisch vullen",
     "Locks, lights and blinds of all rooms": "Sloten, lampen en rolluiken van alle kamers",
     "Reset standard room": "Standaardkamer resetten",
-    "Set up Casora AI with {1}": "Casora-AI instellen met {1}",
-    "A separate AI task for Casora – your current AI stays as it is.": "Een aparte AI-taak voor Casora – je huidige AI blijft zoals hij is.",
-    "Setting up {1}…": "{1} wordt ingesteld…",
-    "The new AI didn't start.": "De nieuwe AI is niet gestart.",
-    "Didn't work: ": "Niet gelukt: ",
     "{1} of {2} done": "{1} van {2} klaar",
     "about {1} min left": "nog ongeveer {1} min",
     "estimating time…": "tijd wordt geschat…",
@@ -2578,7 +2573,18 @@
     "SuperFrost": "SuperFrost",
     "Night mode": "Nachtmodus",
     "Party mode": "Feestmodus",
-    "Modes": "Standen"
+    "Modes": "Standen",
+    "AI models": "AI-modellen",
+    "Demanding jobs (setup with AI, moving changes, tile types) need a strong model. Casora reads the model from the AI task in Home Assistant. If it shows none, type the model name, for example anthropic/claude-sonnet-4.5.": "Veeleisende taken (instellen met AI, wijzigingen overnemen, tegeltypes) hebben een sterk model nodig. Casora leest het model uit de AI-taak in Home Assistant. Toont die er geen, typ dan de modelnaam, bijvoorbeeld anthropic/claude-sonnet-4.5.",
+    "No AI task set up in Home Assistant.": "Geen AI-taak ingesteld in Home Assistant.",
+    "Model unknown": "Model onbekend",
+    "strong enough": "sterk genoeg",
+    "too weak for demanding jobs": "te zwak voor veeleisende taken",
+    "Model name": "Modelnaam",
+    "Add a stronger AI task in Home Assistant": "Sterkere AI-taak toevoegen in Home Assistant",
+    "Set up an AI in Home Assistant": "AI instellen in Home Assistant",
+    "Pick a stronger model there. If Casora doesn't recognise your model, type its name under Settings → AI.": "Kies daar een sterker model. Herkent Casora je model niet, typ dan de naam onder Instellingen → AI.",
+    "For example Anthropic, OpenAI or Google with an AI task. Casora then finds it by itself.": "Bijvoorbeeld Anthropic, OpenAI of Google met een AI-taak. Casora vindt die daarna vanzelf."
   },
   "patterns": [
     [

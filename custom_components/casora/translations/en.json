@@ -219,6 +219,32 @@
           "description": "Entity"
         }
       }
+    },
+    "ai_generate": {
+      "name": "Generate with AI",
+      "description": "Like AI task: generate data, but without a chosen AI it falls back to the first AI task. Used by Casora's AI flows.",
+      "fields": {
+        "task_name": {
+          "name": "Task name",
+          "description": "Name of the task."
+        },
+        "instructions": {
+          "name": "Instructions",
+          "description": "What the AI should do."
+        },
+        "entity_id": {
+          "name": "AI task",
+          "description": "Empty: the preferred AI task from Settings, otherwise the first one."
+        },
+        "structure": {
+          "name": "Structure",
+          "description": "Fields of the answer."
+        },
+        "attachments": {
+          "name": "Attachments",
+          "description": "Images and other media."
+        }
+      }
     }
   },
   "entity": {

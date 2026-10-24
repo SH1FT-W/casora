@@ -101,7 +101,8 @@ r = c.results[-1]
 check("get: alte Update-Optionen unsichtbar", TOKEN not in repr(r) and KEY not in repr(r)
       and not set(LEGACY) & set(r["options"]) and "key" not in r and "token" not in r)
 check("get: notify-Dienste ohne send_message", r["notify_services"] == ["notify.mobile_app_phone"])
-check("get: Standard-KI als Automatik", r["auto"]["ai_task_entity"] == "ai_task.claude")
+# Several AI tasks, none chosen: no guess – HA's preferred AI task answers (Studio asks HA for its name).
+check("get: mehrere KI-Aufgaben → Automatik = HAs Standard", r["auto"]["ai_task_entity"] is None)
 
 
 def ws_set(msg):

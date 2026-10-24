@@ -1741,11 +1741,6 @@
     "Fill automatically": "Riempi automaticamente",
     "Locks, lights and blinds of all rooms": "Serrature, luci e tapparelle di tutte le stanze",
     "Reset standard room": "Ripristina stanza standard",
-    "Set up Casora AI with {1}": "Configura l'IA di Casora con {1}",
-    "A separate AI task for Casora – your current AI stays as it is.": "Un'attività IA separata per Casora: la tua IA attuale resta com'è.",
-    "Setting up {1}…": "Configurazione di {1}…",
-    "The new AI didn't start.": "La nuova IA non si è avviata.",
-    "Didn't work: ": "Non ha funzionato: ",
     "{1} of {2} done": "{1} di {2} fatti",
     "about {1} min left": "mancano circa {1} min",
     "estimating time…": "stima del tempo…",
@@ -2578,7 +2573,18 @@
     "SuperFrost": "SuperFrost",
     "Night mode": "Modalità notte",
     "Party mode": "Modalità festa",
-    "Modes": "Modalità"
+    "Modes": "Modalità",
+    "AI models": "Modelli IA",
+    "Demanding jobs (setup with AI, moving changes, tile types) need a strong model. Casora reads the model from the AI task in Home Assistant. If it shows none, type the model name, for example anthropic/claude-sonnet-4.5.": "Le attività impegnative (configurazione con IA, trasferimento delle modifiche, tipi di riquadro) richiedono un modello potente. Casora legge il modello dall'attività IA in Home Assistant. Se non ne mostra nessuno, scrivi il nome del modello, ad esempio anthropic/claude-sonnet-4.5.",
+    "No AI task set up in Home Assistant.": "Nessuna attività IA configurata in Home Assistant.",
+    "Model unknown": "Modello sconosciuto",
+    "strong enough": "abbastanza potente",
+    "too weak for demanding jobs": "troppo debole per attività impegnative",
+    "Model name": "Nome del modello",
+    "Add a stronger AI task in Home Assistant": "Aggiungi un'attività IA più potente in Home Assistant",
+    "Set up an AI in Home Assistant": "Configura un'IA in Home Assistant",
+    "Pick a stronger model there. If Casora doesn't recognise your model, type its name under Settings → AI.": "Scegli lì un modello più potente. Se Casora non riconosce il tuo modello, scrivi il suo nome in Impostazioni → IA.",
+    "For example Anthropic, OpenAI or Google with an AI task. Casora then finds it by itself.": "Ad esempio Anthropic, OpenAI o Google con un'attività IA. Casora la trova poi da solo."
   },
   "patterns": [
     [

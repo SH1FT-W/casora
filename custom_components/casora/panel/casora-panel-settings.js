@@ -228,6 +228,15 @@
       try {
         takeOptions(cs, await hass.callWS({ type: "casora/options/get" }));
         cs.optErr = null;
+        // Several AI tasks, none chosen: HA's preferred one answers. Name it in the hint through HA's
+        // own frontend command (the backend does not read ai_task's stored preferences).
+        const auto = cs.opt.auto || (cs.opt.auto = {});
+        if (!auto.ai_task_entity || !auto.ai_task_web_entity) {
+          try {
+            const pref = ((await hass.callWS({ type: "ai_task/preferences/get" })) || {}).gen_data_entity_id;
+            if (pref) { auto.ai_task_entity = auto.ai_task_entity || pref; auto.ai_task_web_entity = auto.ai_task_web_entity || pref; }
+          } catch (e) { /* without ai_task: plain "Automatic" */ }
+        }
       } catch (e) {
         cs.opt = null;
         cs.optErr = e && e.code === "unknown_command" ? "old" : ((e && e.message) || String(e));
@@ -355,6 +364,43 @@
       if (on) cur.push(id);
       if (cur.length) cs.O[key] = cur; else delete cs.O[key];
     };
+    // ── AI models (ki.py ai_models) ─────────────────────────────────────────
+    // Every AI task with its model. Casora reads the model from the AI task's device in HA;
+    // where that names none, the user types it (option ai_task_models: {entity_id: model}).
+    // Only for judging strength – the AI task keeps answering with its own model.
+    const aiModelGroup = (self, cs, host) => {
+      const g = self._flowGroup(host, { header: t("AI models"),
+        footer: t("Demanding jobs (setup with AI, moving changes, tile types) need a strong model. Casora reads the model from the AI task in Home Assistant. If it shows none, type the model name, for example anthropic/claude-sonnet-4.5.") });
+      const wait = self._flowRow(g, { title: t("Loading…") });
+      self._hass.callWS({ type: "casora/ki/models" }).then((r) => {
+        wait.row.remove();
+        const all = (r && r.all) || [];
+        if (!all.length) { self._flowRow(g, { title: t("No AI task set up in Home Assistant.") }); return; }
+        const had = Object.prototype.hasOwnProperty.call(JSON.parse(cs.O0 || "{}"), "ai_task_models");
+        all.forEach((m) => {
+          const typed = (cs.O.ai_task_models || {})[m.entity_id] || "";
+          const known = m.model && m.source !== "typed";
+          const sub = (m.model ? m.label : t("Model unknown")) + " · " + (m.ok ? t("strong enough") : t("too weak for demanding jobs"));
+          const row = ctlRow(self, g, m.name, sub, []);
+          row.querySelectorAll(".rtext > b, .rtext > span").forEach((x) => x.setAttribute("data-no-i18n", ""));
+          const inp = el("input", "fin");
+          inp.type = "text";
+          inp.value = typed;
+          inp.placeholder = known ? m.model : t("Model name");
+          inp.setAttribute("aria-label", t("Model name"));
+          inp.setAttribute("data-no-i18n", "");
+          inp.oninput = () => {
+            const map = Object.assign({}, cs.O.ai_task_models || {});
+            const v = inp.value.trim();
+            if (v) map[m.entity_id] = v; else delete map[m.entity_id];
+            // Emptied: send {} when one was stored (options.py then removes it), else leave the key out.
+            if (Object.keys(map).length || had) cs.O.ai_task_models = map; else delete cs.O.ai_task_models;
+            self._csBar();
+          };
+          row.querySelector(".casora-pctl").appendChild(inp);
+        });
+      }).catch(() => { wait.row.remove(); });
+    };
     // ── AI schedules (1.0.3) ─────────────────────────────────────────────────
     // Per function: off (default, not stored), auto (previous slot) or
     // own time ("sun 18:00"; daily functions only "18:00"). Like ki.py PLAN_AUTO.
@@ -451,6 +497,7 @@
         ctlRow(this, g, t("AI for coaches, camera and plants"), null, [entPick(this, cs, "ai_task_entity", ["ai_task"])]);
         ctlRow(this, g, t("AI with web search"), t("Update analysis, recipe"),
           [entPick(this, cs, "ai_task_web_entity", ["ai_task"])]);
+        aiModelGroup(this, cs, host);
         planGroup(this, host, O);
         g = this._flowGroup(host, { header: t("Recipe of the week"),
           footer: t("Empty: Cookidoo's additional purchases if set up, otherwise the first to-do list.") });

@@ -219,6 +219,32 @@
           "description": "Encja"
         }
       }
+    },
+    "ai_generate": {
+      "name": "Generuj z AI",
+      "description": "Jak zadanie AI: generuj dane, ale bez wybranej AI używa pierwszego zadania AI. Dla przepływów AI Casory.",
+      "fields": {
+        "task_name": {
+          "name": "Nazwa zadania",
+          "description": "Nazwa zadania."
+        },
+        "instructions": {
+          "name": "Instrukcje",
+          "description": "Co ma zrobić AI."
+        },
+        "entity_id": {
+          "name": "Zadanie AI",
+          "description": "Puste: preferowane zadanie AI z Ustawień, w przeciwnym razie pierwsze."
+        },
+        "structure": {
+          "name": "Struktura",
+          "description": "Pola odpowiedzi."
+        },
+        "attachments": {
+          "name": "Załączniki",
+          "description": "Obrazy i inne media."
+        }
+      }
     }
   },
   "entity": {

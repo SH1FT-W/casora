@@ -4,7 +4,8 @@
   event_data:
     entity_id: '{{ entity_id }}'
     status: running
-- action: ai_task.generate_data
+# casora.ai_generate calls ai_task.generate_data; empty entity_id: HA's preferred AI task, else the first (ki.py generate).
+- action: casora.ai_generate
   continue_on_error: true
   response_variable: r
   data:

@@ -219,6 +219,32 @@
           "description": "Entidad"
         }
       }
+    },
+    "ai_generate": {
+      "name": "Generar con IA",
+      "description": "Como tarea de IA: generar datos, pero sin IA elegida usa la primera tarea de IA. Para los flujos de IA de Casora.",
+      "fields": {
+        "task_name": {
+          "name": "Nombre de la tarea",
+          "description": "Nombre de la tarea."
+        },
+        "instructions": {
+          "name": "Instrucciones",
+          "description": "Lo que debe hacer la IA."
+        },
+        "entity_id": {
+          "name": "Tarea de IA",
+          "description": "Vacío: la tarea de IA preferida de Ajustes; si no, la primera."
+        },
+        "structure": {
+          "name": "Estructura",
+          "description": "Campos de la respuesta."
+        },
+        "attachments": {
+          "name": "Adjuntos",
+          "description": "Imágenes y otros medios."
+        }
+      }
     }
   },
   "entity": {

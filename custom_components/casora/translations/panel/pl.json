@@ -1741,11 +1741,6 @@
     "Fill automatically": "Wypełnij automatycznie",
     "Locks, lights and blinds of all rooms": "Zamki, światła i rolety wszystkich pokoi",
     "Reset standard room": "Przywróć pokój standardowy",
-    "Set up Casora AI with {1}": "Skonfiguruj AI Casory z {1}",
-    "A separate AI task for Casora – your current AI stays as it is.": "Osobne zadanie AI dla Casory – twoja obecna AI pozostaje bez zmian.",
-    "Setting up {1}…": "Konfigurowanie {1}…",
-    "The new AI didn't start.": "Nowa AI nie uruchomiła się.",
-    "Didn't work: ": "Nie zadziałało: ",
     "{1} of {2} done": "Gotowe: {1} z {2}",
     "about {1} min left": "jeszcze ok. {1} min",
     "estimating time…": "szacowanie czasu…",
@@ -2578,7 +2573,18 @@
     "SuperFrost": "SuperFrost",
     "Night mode": "Tryb nocny",
     "Party mode": "Tryb imprezy",
-    "Modes": "Tryby"
+    "Modes": "Tryby",
+    "AI models": "Modele AI",
+    "Demanding jobs (setup with AI, moving changes, tile types) need a strong model. Casora reads the model from the AI task in Home Assistant. If it shows none, type the model name, for example anthropic/claude-sonnet-4.5.": "Wymagające zadania (konfiguracja z AI, przenoszenie zmian, typy kafelków) potrzebują mocnego modelu. Casora odczytuje model z zadania AI w Home Assistant. Jeśli nie pokazuje żadnego, wpisz nazwę modelu, na przykład anthropic/claude-sonnet-4.5.",
+    "No AI task set up in Home Assistant.": "Brak zadania AI w Home Assistant.",
+    "Model unknown": "Model nieznany",
+    "strong enough": "wystarczająco mocny",
+    "too weak for demanding jobs": "za słaby na wymagające zadania",
+    "Model name": "Nazwa modelu",
+    "Add a stronger AI task in Home Assistant": "Dodaj mocniejsze zadanie AI w Home Assistant",
+    "Set up an AI in Home Assistant": "Skonfiguruj AI w Home Assistant",
+    "Pick a stronger model there. If Casora doesn't recognise your model, type its name under Settings → AI.": "Wybierz tam mocniejszy model. Jeśli Casora nie rozpozna twojego modelu, wpisz jego nazwę w Ustawienia → AI.",
+    "For example Anthropic, OpenAI or Google with an AI task. Casora then finds it by itself.": "Na przykład Anthropic, OpenAI lub Google z zadaniem AI. Casora znajdzie je wtedy sama."
   },
   "patterns": [
     [

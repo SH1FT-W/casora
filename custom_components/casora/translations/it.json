@@ -219,6 +219,32 @@
           "description": "Entità"
         }
       }
+    },
+    "ai_generate": {
+      "name": "Genera con IA",
+      "description": "Come Attività IA: genera dati, ma senza IA scelta usa la prima attività IA. Per i flussi IA di Casora.",
+      "fields": {
+        "task_name": {
+          "name": "Nome dell'attività",
+          "description": "Nome dell'attività."
+        },
+        "instructions": {
+          "name": "Istruzioni",
+          "description": "Cosa deve fare l'IA."
+        },
+        "entity_id": {
+          "name": "Attività IA",
+          "description": "Vuoto: l'attività IA preferita dalle Impostazioni, altrimenti la prima."
+        },
+        "structure": {
+          "name": "Struttura",
+          "description": "Campi della risposta."
+        },
+        "attachments": {
+          "name": "Allegati",
+          "description": "Immagini e altri media."
+        }
+      }
     }
   },
   "entity": {

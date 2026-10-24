@@ -1742,11 +1742,6 @@
     "Fill automatically": "Automatisch füllen",
     "Locks, lights and blinds of all rooms": "Schlösser, Lichter und Jalousien aller Räume",
     "Reset standard room": "Standardraum zurücksetzen",
-    "Set up Casora AI with {1}": "Casora-KI mit {1} anlegen",
-    "A separate AI task for Casora – your current AI stays as it is.": "Eine eigene KI-Aufgabe für Casora – deine bisherige KI bleibt, wie sie ist.",
-    "Setting up {1}…": "{1} wird eingerichtet …",
-    "The new AI didn't start.": "Die neue KI ist nicht gestartet.",
-    "Didn't work: ": "Hat nicht geklappt: ",
     "{1} of {2} done": "{1} von {2} fertig",
     "about {1} min left": "noch ca. {1} Min.",
     "estimating time…": "Zeit wird geschätzt …",
@@ -2578,7 +2573,18 @@
     "SuperFrost": "SuperFrost",
     "Night mode": "Nachtmodus",
     "Party mode": "Partymodus",
-    "Modes": "Modi"
+    "Modes": "Modi",
+    "AI models": "KI-Modelle",
+    "Demanding jobs (setup with AI, moving changes, tile types) need a strong model. Casora reads the model from the AI task in Home Assistant. If it shows none, type the model name, for example anthropic/claude-sonnet-4.5.": "Anspruchsvolle Aufgaben (Einrichten mit KI, Änderungen übernehmen, Kachelarten) brauchen ein starkes Modell. Casora liest das Modell aus der KI-Aufgabe in Home Assistant. Zeigt sie keins, tipp den Modellnamen ein, zum Beispiel anthropic/claude-sonnet-4.5.",
+    "No AI task set up in Home Assistant.": "Keine KI-Aufgabe in Home Assistant eingerichtet.",
+    "Model unknown": "Modell unbekannt",
+    "strong enough": "stark genug",
+    "too weak for demanding jobs": "zu schwach für anspruchsvolle Aufgaben",
+    "Model name": "Modellname",
+    "Add a stronger AI task in Home Assistant": "Stärkere KI-Aufgabe in Home Assistant anlegen",
+    "Set up an AI in Home Assistant": "KI in Home Assistant einrichten",
+    "Pick a stronger model there. If Casora doesn't recognise your model, type its name under Settings → AI.": "Wähl dort ein stärkeres Modell. Erkennt Casora dein Modell nicht, tipp seinen Namen unter Einstellungen → KI ein.",
+    "For example Anthropic, OpenAI or Google with an AI task. Casora then finds it by itself.": "Zum Beispiel Anthropic, OpenAI oder Google mit einer KI-Aufgabe. Casora findet sie dann von selbst."
   },
   "patterns": [
     [

@@ -30,9 +30,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 
 from .const import DOMAIN
-from .ki import (OPT_AI, OPT_AI_WEB, OPT_AUTO, OPT_NOTES, OPT_OUT_RH, OPT_OUT_T, OPT_PLAN_UPDATE, OPT_PRICE,
+from .ki import (OPT_AI, OPT_AI_MODELS, OPT_AI_WEB, OPT_AUTO, OPT_NOTES, OPT_OUT_RH, OPT_OUT_T, OPT_PLAN_UPDATE, OPT_PRICE,
                  OPT_RECIPE_LIST,
-                 PLAN_OPTS, UPDATE_PLANS, _PLAN_RE, valid_plan)
+                 PLAN_OPTS, UPDATE_PLANS, _PLAN_RE, model_names, valid_plan)
 from .lueften_push import OPT_VENT_NOTIFY, OPT_VENT_PERSONS, notify_services
 from .update_push import OPT_UPDATE_PUSH
 from .update_source import LEGACY_OPTIONS, OPT_BETA
@@ -95,7 +95,7 @@ def clean_options(data: dict[str, Any]) -> dict[str, Any]:
     Zeitpläne: „aus“ ist der Standard und wird nicht gespeichert. Beta-Versionen aus (Standard) ebenso.
     """
     return {k: v for k, v in data.items()
-            if v not in (None, "", []) and k not in LEGACY_OPTIONS and k != OPT_AUTO
+            if v not in (None, "", [], {}) and k not in LEGACY_OPTIONS and k != OPT_AUTO
             and not (k in PLAN_KEYS and v == "off") and not (k == OPT_BETA and v is False)}
 
 
@@ -152,6 +152,14 @@ def build_options(hass: HomeAssistant, current: dict[str, Any], submitted: dict[
     # Leere Felder schickt HAs Dialog gar nicht erst – hier genauso, sonst lehnt der Selektor "" ab.
     # Alte Update-Optionen (etwa aus einem noch offenen älteren Studio) fallen still weg.
     data = clean_options(submitted)
+    # Model names typed per AI task (Studio only, not in HA's dialog): checked here, kept if not sent.
+    if OPT_AI_MODELS in submitted:
+        raw = data.pop(OPT_AI_MODELS, None)
+        if raw is not None and not isinstance(raw, dict):
+            raise OptionsError("ai_task_models must be an object {ai_task.…: model}", OPT_AI_MODELS)
+        models = model_names({OPT_AI_MODELS: raw})
+    else:
+        models = model_names(current)
     # Der Beta-Schalter steht unter Updates, nicht auf der Einstellungen-Seite: schickt die
     # (oder ein älteres Studio) ihn nicht mit, bleibt er, wie er ist.
     # „Aus“ muss bis zur Prüfung bleiben, sonst setzt der Standard (bisheriger Wert) es wieder an.
@@ -176,6 +184,8 @@ def build_options(hass: HomeAssistant, current: dict[str, Any], submitted: dict[
             m = _PLAN_RE.match(str(valid[k]).strip().lower())
             if m:
                 valid[k] = (m.group(1) + " " if m.group(1) else "") + f"{int(m.group(2)):02d}:{m.group(3)}"
+    if models:
+        valid[OPT_AI_MODELS] = models
     return clean_options(valid)
 
 
