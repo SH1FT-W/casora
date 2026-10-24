@@ -856,19 +856,23 @@
     },
   };
 
-  // Zu schwache KI: Knopf „Casora KI mit … anlegen“ – eine eigene KI-Aufgabe mit dem
-  // stärksten Modell des Anbieters; die bisherige bleibt, wie sie ist. onDone(best).
+  // AI too weak: Casora no longer sets up an AI task itself (that would mean reaching into another
+  // integration). It points to that integration's page in HA, where the user adds an AI task with a
+  // stronger model, and to Studio → Settings → AI for typing a model name. Back on the page Casora
+  // checks again; onDone(best) as soon as a strong AI is there.
   window.casoraAiUpgrade = async (panel, host, onDone) => {
-    let opts = [];
-    try { opts = (await panel._hass.callWS({ type: "casora/ki/upgrade" })).options || []; } catch (e) { opts = []; }
-    if (!opts.length || !host.isConnected) return;
-    const o = opts[0];
+    let all = [];
+    try { all = ((await panel._hass.callWS({ type: "casora/ki/models" })) || {}).all || []; } catch (e) { all = []; }
+    if (!host.isConnected) return;
+    const domain = (all.find((m) => m.domain) || {}).domain;
+    const path = domain ? "/config/integrations/integration/" + encodeURIComponent(domain) : "/config/integrations/dashboard";
     const box = document.createElement("div"); box.className = "cc-upg";
     const b = document.createElement("button"); b.type = "button"; b.className = "cc-upg-btn";
-    b.setAttribute("data-no-i18n", "");
-    b.textContent = "✦ " + tr("Set up Casora AI with {1}").replace("{1}", o.label);
+    b.textContent = "✦ " + tr(all.length ? "Add a stronger AI task in Home Assistant" : "Set up an AI in Home Assistant");
     const n = document.createElement("div"); n.className = "cc-upg-note";
-    n.textContent = tr("A separate AI task for Casora – your current AI stays as it is.");
+    n.textContent = tr(all.length
+      ? "Pick a stronger model there. If Casora doesn't recognise your model, type its name under Settings → AI."
+      : "For example Anthropic, OpenAI or Google with an AI task. Casora then finds it by itself.");
     box.append(b, n);
     host.appendChild(box);
     if (!panel.shadowRoot.getElementById("casora-upg-css")) {
@@ -876,25 +880,21 @@
       st.textContent = ".cc-upg{display:flex;flex-direction:column;align-items:center;gap:6px;margin:10px 0 0}"
         + ".cc-upg-btn{appearance:none;border:0;cursor:pointer;padding:9px 18px;border-radius:999px;font:600 var(--t-callout) var(--casora-font-studio, system-ui);color:#fff;"
         + "background:var(--casora-studio-ai-grad, linear-gradient(135deg,#bf5af2,#7d5cff));box-shadow:0 4px 18px rgba(191,90,242,.35)}"
-        + ".cc-upg-btn:disabled{cursor:progress;background:var(--casora-studio-ai-shimmer, linear-gradient(100deg,#bf5af2 20%,#e3a6ff 50%,#7d5cff 80%)) 0 0/250% 100%;animation:ccupg 1.4s linear infinite}"
-        + "@keyframes ccupg{to{background-position:-250% 0}}"
-        + ".cc-upg-note{font-size:var(--t-caption);color:var(--ink-3,rgba(255,255,255,.5))}";
+        + ".cc-upg-note{font-size:var(--t-caption);color:var(--ink-3,rgba(255,255,255,.5));text-align:center}";
       panel.shadowRoot.appendChild(st);
     }
-    b.onclick = async () => {
-      b.disabled = true;
-      b.textContent = "✦ " + tr("Setting up {1}…").replace("{1}", o.label);
-      try {
-        const r = await panel._hass.callWS({ type: "casora/ki/upgrade", entry_id: o.entry_id, model: o.model });
-        if (!r.best) throw new Error(tr("The new AI didn't start."));
-        box.remove();
-        onDone(r.best);
-      } catch (e) {
-        b.disabled = false;
-        b.textContent = "✦ " + tr("Set up Casora AI with {1}").replace("{1}", o.label);
-        n.textContent = tr("Didn't work: ") + ((e && e.message) || e);
-      }
+    // New tab: the flow in the Studio stays where it is.
+    b.onclick = () => { window.open(path, "_blank", "noopener"); };
+    const recheck = async () => {
+      if (!box.isConnected) { window.removeEventListener("focus", recheck); return; }
+      let best = null;
+      try { best = ((await panel._hass.callWS({ type: "casora/ki/models" })) || {}).best || null; } catch (e) { best = null; }
+      if (!best || !box.isConnected) return;
+      window.removeEventListener("focus", recheck);
+      box.remove();
+      onDone(best);
     };
+    window.addEventListener("focus", recheck);
   };
 
   customElements.whenDefined("casora-panel").then(() => {

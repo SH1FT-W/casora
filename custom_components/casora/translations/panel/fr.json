@@ -1741,11 +1741,6 @@
   "Fill automatically": "Remplir automatiquement",
   "Locks, lights and blinds of all rooms": "Serrures, lumières et stores de toutes les pièces",
   "Reset standard room": "Réinitialiser la pièce standard",
-  "Set up Casora AI with {1}": "Configurer l'IA Casora avec {1}",
-  "A separate AI task for Casora – your current AI stays as it is.": "Une tâche IA à part pour Casora – ton IA actuelle reste telle quelle.",
-  "Setting up {1}…": "Configuration de {1}…",
-  "The new AI didn't start.": "La nouvelle IA n'a pas démarré.",
-  "Didn't work: ": "Ça n'a pas marché :",
   "{1} of {2} done": "{1} sur {2} terminés",
   "about {1} min left": "encore environ {1} min",
   "estimating time…": "estimation du temps…",
@@ -2581,7 +2576,18 @@
   "On tap": "Au toucher",
   "Do nothing": "Ne rien faire",
   "Visible in the popup": "Visible dans la fenêtre",
-  "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town.": "P. ex. les alertes NINA ou Meteoalarm ou le niveau d’alerte DWD pour ta ville."
+  "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town.": "P. ex. les alertes NINA ou Meteoalarm ou le niveau d’alerte DWD pour ta ville.",
+  "AI models": "Modèles d'IA",
+  "Demanding jobs (setup with AI, moving changes, tile types) need a strong model. Casora reads the model from the AI task in Home Assistant. If it shows none, type the model name, for example anthropic/claude-sonnet-4.5.": "Les tâches exigeantes (configuration avec l'IA, reprise des modifications, types de tuiles) demandent un modèle puissant. Casora lit le modèle dans la tâche IA de Home Assistant. S'il n'y en a aucun, saisis le nom du modèle, par exemple anthropic/claude-sonnet-4.5.",
+  "No AI task set up in Home Assistant.": "Aucune tâche IA configurée dans Home Assistant.",
+  "Model unknown": "Modèle inconnu",
+  "strong enough": "assez puissant",
+  "too weak for demanding jobs": "trop faible pour les tâches exigeantes",
+  "Model name": "Nom du modèle",
+  "Add a stronger AI task in Home Assistant": "Ajouter une tâche IA plus puissante dans Home Assistant",
+  "Set up an AI in Home Assistant": "Configurer une IA dans Home Assistant",
+  "Pick a stronger model there. If Casora doesn't recognise your model, type its name under Settings → AI.": "Choisis-y un modèle plus puissant. Si Casora ne reconnaît pas ton modèle, saisis son nom sous Paramètres → IA.",
+  "For example Anthropic, OpenAI or Google with an AI task. Casora then finds it by itself.": "Par exemple Anthropic, OpenAI ou Google avec une tâche IA. Casora la trouve ensuite tout seul."
  },
  "patterns": [
   [

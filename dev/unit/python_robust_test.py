@@ -182,6 +182,7 @@ async def t_py14():
     runner.hass = SimpleNamespace(bus=SimpleNamespace(async_fire=lambda ev, data: fired.append((ev, data))))
     runner.entry = SimpleNamespace(options={})
     runner._bg = lambda coro: (ran.append(1), coro.close())
+    runner.hass.states = SimpleNamespace(async_entity_ids=lambda d: [])  # no AI task at all
     real = ki.ai_entity
     ki.ai_entity = lambda *a, **k: None
     try:

@@ -53,100 +53,102 @@
         from: '{{ v_from }}'
         version: '{{ v_to }}'
         status: running
+    - variables:
+        ai_data:
+          task_name: Casora Update-Analyse {{ name }}
+          instructions: 'Du prüfst ein anstehendes Update für ein bestimmtes Home-Assistant-System auf Breaking Changes und
+            nötige Schritte, die GENAU DIESES System betreffen. Antworte auf {{ sprache | default(''Deutsch'') }}, knapp, ohne Markdown.
+
+
+            UPDATE
+
+            Name: {{ name }}
+
+            Installiert: {{ v_from }}  →  Neu: {{ v_to }}
+
+            {{ kontext }}
+
+            {% if notizen %}RELEASE-NOTES (vollständig, alle Versionen nach der installierten; nur Versionen bis einschließlich
+            {{ v_to }} zählen)
+
+            {{ notizen }}
+
+            {% endif %}
+
+
+            VORGEHEN
+
+            - {% if notizen %}Die Release-Notes stehen oben unter RELEASE-NOTES, kein Abruf nötig. Werte nur sie aus.{% else
+            %}Lies die Release-Notes (web_fetch auf die Release-URL; bei Home Assistant Core den Blogpost und dort den Abschnitt
+            "Backward-incompatible changes"; sonst per web_search).{% endif %}
+
+            - Überspringt das Update Versionen (z. B. 2026.8 → 2026.10 oder v6.3 → v7.1), berücksichtige ALLE Zwischenversionen.
+
+            - Vergleiche jede Breaking Change mit dem System unten. Betrifft sie eine Integration/Gerät, das hier nicht vorkommt,
+            ist sie für dieses System irrelevant.
+
+
+            SYSTEM
+
+            Home Assistant Core {{ ha_version }}
+
+            Installierte Integrationen: {{ domains | join('', '') }}
+
+
+            BEWERTUNG (level)
+
+            - breaking: etwas in diesem System hört ohne Eingriff auf zu funktionieren (entfernte Entität/Option, geänderte
+            Entity-IDs, entfernte YAML-Konfiguration, eingestelltes Gerät o. Ä.)
+
+            - action: nichts bricht sofort, aber ein manueller Schritt ist nötig oder dringend empfohlen (Neukonfiguration,
+            Neustart, Migration prüfen)
+
+            - info: Änderungen ohne Handlungsbedarf für dieses System (auch: Breaking Changes nur für nicht installierte Integrationen)
+
+            - unknown: keine Release-Notes auffindbar
+
+            In ''affects'' nur Dinge nennen, die in diesem System tatsächlich vorkommen (Integration, Entität, Gerät). In ''todo''
+            konkrete Schritte, leer wenn nichts zu tun ist. ''headline'' höchstens 60 Zeichen.'
+          structure:
+            level:
+              required: true
+              selector:
+                select:
+                  options:
+                  - breaking
+                  - action
+                  - info
+                  - unknown
+            headline:
+              description: Kurzfazit, max. 60 Zeichen
+              required: true
+              selector:
+                text: {}
+            summary:
+              description: 1-3 Sätze, was sich ändert und ob es dieses System betrifft
+              required: true
+              selector:
+                text:
+                  multiline: true
+            affects:
+              description: Konkret betroffene Teile dieses Systems
+              selector:
+                text:
+                  multiple: true
+            todo:
+              description: Konkrete Schritte vor/nach dem Update
+              selector:
+                text:
+                  multiple: true
+            source:
+              description: Wichtigste genutzte Quelle (URL)
+              selector:
+                text: {}
     - action: ai_task.generate_data
       continue_on_error: true
       response_variable: r
-      data:
-        entity_id: '{{ ai_web_entity }}'
-        task_name: Casora Update-Analyse {{ name }}
-        instructions: 'Du prüfst ein anstehendes Update für ein bestimmtes Home-Assistant-System auf Breaking Changes und
-          nötige Schritte, die GENAU DIESES System betreffen. Antworte auf {{ sprache | default(''Deutsch'') }}, knapp, ohne Markdown.
-
-
-          UPDATE
-
-          Name: {{ name }}
-
-          Installiert: {{ v_from }}  →  Neu: {{ v_to }}
-
-          {{ kontext }}
-
-          {% if notizen %}RELEASE-NOTES (vollständig, alle Versionen nach der installierten; nur Versionen bis einschließlich
-          {{ v_to }} zählen)
-
-          {{ notizen }}
-
-          {% endif %}
-
-
-          VORGEHEN
-
-          - {% if notizen %}Die Release-Notes stehen oben unter RELEASE-NOTES, kein Abruf nötig. Werte nur sie aus.{% else
-          %}Lies die Release-Notes (web_fetch auf die Release-URL; bei Home Assistant Core den Blogpost und dort den Abschnitt
-          "Backward-incompatible changes"; sonst per web_search).{% endif %}
-
-          - Überspringt das Update Versionen (z. B. 2026.8 → 2026.10 oder v6.3 → v7.1), berücksichtige ALLE Zwischenversionen.
-
-          - Vergleiche jede Breaking Change mit dem System unten. Betrifft sie eine Integration/Gerät, das hier nicht vorkommt,
-          ist sie für dieses System irrelevant.
-
-
-          SYSTEM
-
-          Home Assistant Core {{ ha_version }}
-
-          Installierte Integrationen: {{ domains | join('', '') }}
-
-
-          BEWERTUNG (level)
-
-          - breaking: etwas in diesem System hört ohne Eingriff auf zu funktionieren (entfernte Entität/Option, geänderte
-          Entity-IDs, entfernte YAML-Konfiguration, eingestelltes Gerät o. Ä.)
-
-          - action: nichts bricht sofort, aber ein manueller Schritt ist nötig oder dringend empfohlen (Neukonfiguration,
-          Neustart, Migration prüfen)
-
-          - info: Änderungen ohne Handlungsbedarf für dieses System (auch: Breaking Changes nur für nicht installierte Integrationen)
-
-          - unknown: keine Release-Notes auffindbar
-
-          In ''affects'' nur Dinge nennen, die in diesem System tatsächlich vorkommen (Integration, Entität, Gerät). In ''todo''
-          konkrete Schritte, leer wenn nichts zu tun ist. ''headline'' höchstens 60 Zeichen.'
-        structure:
-          level:
-            required: true
-            selector:
-              select:
-                options:
-                - breaking
-                - action
-                - info
-                - unknown
-          headline:
-            description: Kurzfazit, max. 60 Zeichen
-            required: true
-            selector:
-              text: {}
-          summary:
-            description: 1-3 Sätze, was sich ändert und ob es dieses System betrifft
-            required: true
-            selector:
-              text:
-                multiline: true
-          affects:
-            description: Konkret betroffene Teile dieses Systems
-            selector:
-              text:
-                multiple: true
-          todo:
-            description: Konkrete Schritte vor/nach dem Update
-            selector:
-              text:
-                multiple: true
-          source:
-            description: Wichtigste genutzte Quelle (URL)
-            selector:
-              text: {}
+      # No AI chosen in Casora: entity_id stays out, HA's preferred AI task answers.
+      data: '{{ dict(ai_data, entity_id=ai_web_entity) if ai_web_entity else ai_data }}'
     - if:
       - condition: template
         value_template: '{{ r is defined and r.data is defined and r.data is mapping }}'
