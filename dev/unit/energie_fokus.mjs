@@ -93,7 +93,9 @@ assert.equal(P.grid.costToday, 'sensor.kosten_heute');
   vm.runInContext(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8'), ctx);
   const S5 = { ...states, 'sensor.stp_8000tl_20_grid_power': st(2400, 'W', 'power', 'STP 8000TL-20 Grid power'),
     'sensor.stromzahler_emh_power_curr': st(424, 'W', 'power', 'Wirkleistung (W)'),
-    'sensor.speicher_leistung': st(-200, 'W', 'power', 'Speicher Leistung') };
+    'sensor.speicher_leistung': st(-200, 'W', 'power', 'Speicher Leistung'),
+    // #44: the charge level shares the battery power sensor's id stem (no registry here).
+    'sensor.speicher_soc': st(55, '%', 'battery', 'Speicher SoC') };
   const h5 = { states: S5, entities: { ...entities, 'sensor.stp_8000tl_20_grid_power': { platform: 'sma' } },
     callWS: async () => ({ energy_sources: [
       { type: 'grid', stat_energy_from: 'sensor.bezug', stat_energy_to: 'sensor.einspeisung_gesamt', stat_rate: 'sensor.stromzahler_emh_power_curr' },
@@ -116,6 +118,8 @@ assert.equal(P.grid.costToday, 'sensor.kosten_heute');
   const P5 = F.peers(h5, {});
   assert.equal(P5.grid.power, 'sensor.stromzahler_emh_power_curr', 'peers: grid from the settings');
   assert.equal(P5.battery.power, 'sensor.speicher_leistung', 'peers: battery from the settings');
+  assert.equal(P5.battery.soc, 'sensor.speicher_soc', 'peers: charge level next to the settings\' battery (#44)');
+  assert.equal(F.peers(h5, { energy_entity_1: 'sensor.sb_soc' }).battery.soc, 'sensor.sb_soc', 'sub-badge SoC wins');
   assert.equal(P5.solar.power, 'sensor.sb_solar', 'peers: two solar sources in the settings, the Anker key');
   // A sub-badge and a Studio field still win over the settings.
   assert.equal(F.peers(h5, { energy_entity_1: 'sensor.sb_akku' }).battery.power, 'sensor.sb_akku', 'sub-badge wins');

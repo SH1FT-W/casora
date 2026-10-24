@@ -41,6 +41,14 @@ window.casoraPriceKwh = function (v) {
 //                                   grid alone, else null (the house is the sum of ids).
 //   casoraEnergySources(hass, ids) – ids by role when they are all such sensors (with the grid), else null: a list
 //                                   that is the house from the settings, not consumers.
+//   casoraEnergyConsumers(hass, p) – HA's "individual devices" (device_consumption) as the popup lists them, sorted by
+//                                   power, or null without entries: [{ id, name, power, w, energy, kwh, daily }].
+//                                   id = stat_consumption; power = stat_rate when it exists, else a power sensor on the
+//                                   consumption entity's device (same id stem first); w its watts. Without a power
+//                                   sensor: energy = the consumption entity when it is a Wh/kWh sensor, kwh its value,
+//                                   daily when it is today's value. The sources' own sensors never appear.
+//   casoraEnergyBatterySoc(hass, id) – charge level sensor (%) for a battery power sensor (default: the settings' first
+//                                   battery): on its device, else one whose id shares its stem. null without one.
 (function () {
   if (window.casoraEnergyPrefs) return;
   var AGE = 5 * 60 * 1000;
@@ -122,6 +130,132 @@ window.casoraPriceKwh = function (v) {
       return !!r;
     });
     return all && out.grid.length ? out : null;
+  };
+
+  // #44: consumers from HA's energy dashboard ("individual devices") and the battery's charge level.
+  var POWER_UNIT = /^[mkMG]?W$/, W_FACTOR = { mW: 0.001, W: 1, kW: 1000, MW: 1e6, GW: 1e9 };
+  var KWH_FACTOR = { Wh: 0.001, kWh: 1, MWh: 1000, GWh: 1e6 };
+  var DAILY = /heute|today|daily|t(ä|ae)glich|(^|[_\s])tag(es)?([_\s]|$)|(^|[_\s])day([_\s]|$)/i;
+  var NAME_TAIL = /(\s+(energie|energy|verbrauch|consumption|leistung|power|gesamt|total|heute|today|daily|aktuell|aktuelle|current|momentan|kwh))+$/i;
+  var reg = function (hass) { return (hass && hass.entities) || {}; };
+  var isPowerState = function (s) {
+    var a = (s && s.attributes) || {};
+    return a.device_class === 'power' || (!a.device_class && POWER_UNIT.test(String(a.unit_of_measurement || '')));
+  };
+  var wattOf = function (S, id) {
+    var s = id && S[id];
+    if (!s) return null;
+    var n = parseFloat(s.state), u = String((s.attributes || {}).unit_of_measurement || 'W');
+    return isFinite(n) && isPowerState(s) ? n * (W_FACTOR[u] || 1) : null;
+  };
+  var kwhOf = function (S, id) {
+    var s = id && S[id];
+    if (!s) return null;
+    var n = parseFloat(s.state), f = KWH_FACTOR[String((s.attributes || {}).unit_of_measurement || '')];
+    return isFinite(n) && f ? n * f : null;
+  };
+  var usable = function (hass, id) { var e = reg(hass)[id]; return !(e && (e.hidden || e.entity_category)); };
+  // Id without domain and without a trailing energy/power word (sensor.waschmaschine_energie → waschmaschine).
+  var stem = function (id) {
+    var x = String(id || '').replace(/^[^.]*\./, '');
+    var y = x.replace(/_(energy|energie|verbrauch|consumption|power|leistung|total|gesamt|today|heute|daily|kwh|wh|w|p|soc|curr|current)(_[^_]*)?$/i, '');
+    return y || x;
+  };
+  var friendly = function (S, id) { return String(((id && S[id] && S[id].attributes) || {}).friendly_name || '').trim(); };
+  var ownSensors = function (hass, p) {
+    var pw = window.casoraEnergyPowers(hass, p), own = pw.grid.concat(pw.solar, pw.battery);
+    // The sources' meters too (also the legacy grid format with flow_from/flow_to lists).
+    var meters = function (x) { ['stat_energy_from', 'stat_energy_to'].forEach(function (k) { if (x && typeof x[k] === 'string') own.push(x[k]); }); };
+    sources(p).forEach(function (s) {
+      meters(s);
+      (Array.isArray(s.flow_from) ? s.flow_from : []).concat(Array.isArray(s.flow_to) ? s.flow_to : []).forEach(meters);
+    });
+    return own;
+  };
+  // Power sensor on the consumption entity's device: the one with the same id stem, else a device total, else the
+  // first. Kept per prefs and registry (the registry object changes when devices or entities change).
+  var devPowerCache = { p: null, R: null, map: {} };
+  var devPower = function (hass, p, id) {
+    var R = reg(hass);
+    if (devPowerCache.p !== p || devPowerCache.R !== R) devPowerCache = { p: p, R: R, map: {} };
+    if (id in devPowerCache.map) return devPowerCache.map[id];
+    var S = (hass && hass.states) || {}, out = null;
+    if (window.casoraDevice && R[id] && R[id].device_id) {
+      var list = window.casoraDevice.entities(hass, id, { children: false }).filter(function (e) {
+        return e.domain === 'sensor' && !e.category && e.entity_id !== id && S[e.entity_id] && isPowerState(S[e.entity_id]);
+      }).map(function (e) { return e.entity_id; });
+      var st = stem(id);
+      out = list.filter(function (x) { return stem(x) === st; })[0]
+        || list.filter(function (x) { return /device.?power|total.?power|power.?total|ger(ä|ae)t.?(leistung|gesamt)|gesamt.?leistung/i.test(x + ' ' + friendly(S, x)); })[0]
+        || list[0] || null;
+    }
+    devPowerCache.map[id] = out;
+    return out;
+  };
+  window.casoraEnergyConsumers = function (hass, prefs) {
+    var p = prefs !== undefined ? prefs : window.casoraEnergyPrefs(hass);
+    var dc = (p && Array.isArray(p.device_consumption) ? p.device_consumption : []).filter(function (d) {
+      return d && typeof d.stat_consumption === 'string' && d.stat_consumption;
+    });
+    if (!dc.length) return null;
+    var S = (hass && hass.states) || {}, own = ownSensors(hass, p), seen = {};
+    var list = [];
+    dc.forEach(function (d) {
+      var id = d.stat_consumption;
+      if (own.indexOf(id) > -1 || seen[id]) return;
+      seen[id] = true;
+      var power = typeof d.stat_rate === 'string' && S[d.stat_rate] && usable(hass, d.stat_rate) ? d.stat_rate : devPower(hass, p, id);
+      if (power && own.indexOf(power) > -1) return;
+      var energy = !power && S[id] && KWH_FACTOR[String((S[id].attributes || {}).unit_of_measurement || '')] ? id : null;
+      var name = String(d.name || '').trim() || friendly(S, id) || friendly(S, power);
+      name = name ? (name.replace(NAME_TAIL, '').trim() || name) : stem(id).replace(/_/g, ' ');
+      list.push({ id: id, name: name, power: power, w: wattOf(S, power), energy: energy, kwh: kwhOf(S, energy),
+        daily: !!energy && DAILY.test(id + ' ' + friendly(S, id)) });
+    });
+    // By power; devices without a power sensor after them (today's energy, then meters); without any value last.
+    var rank = function (x) { return x.w != null ? 0 : x.kwh != null ? (x.daily ? 1 : 2) : 3; };
+    list.sort(function (a, b) { return rank(a) - rank(b) || (b.w || 0) - (a.w || 0) || (b.kwh || 0) - (a.kwh || 0); });
+    return list;
+  };
+  // The sensors a list reads (for a card's triggers_update).
+  window.casoraEnergyConsumers.ids = function (list) {
+    var out = [];
+    (list || []).forEach(function (x) { [x.power, x.energy].forEach(function (id) { if (id && out.indexOf(id) < 0) out.push(id); }); });
+    return out;
+  };
+
+  var NOT_SOC = /health|\bsoh\b|_soh(_|$)|wirkungsgrad|efficien|limit|grenze|reserve|minim|maxim|(^|_)(min|max)(_|$)|humid|feucht|signal|rssi|progress|fortschritt/i;
+  var SOC_WORD = /\bsoc\b|_soc(_|$)|state.?of.?charge|ladestand|ladezustand|f(ü|ue)llstand|akku|batter|speicher|storage/i;
+  var socCache = { R: null, map: {} };
+  window.casoraEnergyBatterySoc = function (hass, powerId) {
+    var S = (hass && hass.states) || {}, R = reg(hass);
+    if (!powerId) powerId = window.casoraEnergyPowers(hass).battery[0] || null;
+    if (!powerId) return null;
+    if (socCache.R !== R) socCache = { R: R, map: {} };
+    if (powerId in socCache.map && (!socCache.map[powerId] || S[socCache.map[powerId]])) return socCache.map[powerId];
+    var pct = function (id) {
+      var s = S[id], a = (s && s.attributes) || {};
+      if (id.indexOf('sensor.') !== 0 || !s || !usable(hass, id)) return false;
+      if (a.device_class === 'battery') return true;
+      return a.unit_of_measurement === '%' && !a.device_class && !NOT_SOC.test(id + ' ' + (a.friendly_name || ''));
+    };
+    var score = function (id) {
+      var a = S[id].attributes || {}, t = id + ' ' + (a.friendly_name || '');
+      return (a.device_class === 'battery' ? 0 : 2) + (SOC_WORD.test(t) ? 0 : 1);
+    };
+    var cands = [];
+    if (window.casoraDevice && R[powerId] && R[powerId].device_id) {
+      cands = window.casoraDevice.entities(hass, powerId, { children: false }).map(function (e) { return e.entity_id; }).filter(pct);
+    }
+    if (!cands.length) {
+      var st = stem(powerId);
+      if (st === powerId.replace(/^[^.]*\./, '')) st = st.replace(/_[^_]+$/, '');
+      var pre = 'sensor.' + st + '_';
+      if (st) cands = Object.keys(S).filter(function (id) { return id.indexOf(pre) === 0 && id !== powerId && pct(id); });
+    }
+    cands.sort(function (a, b) { return score(a) - score(b) || (a < b ? -1 : 1); });
+    socCache.map[powerId] = cands[0] || null;
+    return socCache.map[powerId];
   };
 })();
 

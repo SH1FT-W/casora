@@ -249,6 +249,34 @@ for (const f of files) {
     const P = F.peers(hass, {});
     for (const [role, want] of Object.entries(X.energy_peers)) { assert.equal(P[role].power || null, want, at('energy peer ' + role)); checks++; }
   }
+  // #44: HA's "individual devices" are the popup's consumers, by power; the sources' sensors and any other power
+  // sensor (wallbox, inverter strings) never appear.
+  if (X.energy_consumers) {
+    const L = window.casoraEnergyConsumers(hass) || [];
+    assert.deepEqual(L.map((x) => ({ id: x.id, power: x.power, name: x.name })), X.energy_consumers, at('energy consumers'));
+    checks++;
+  }
+  if (X.energy_not_consumers) {
+    const L = window.casoraEnergyConsumers(hass) || [];
+    const used = L.map((x) => x.power).concat(L.map((x) => x.id));
+    for (const id of X.energy_not_consumers) { assert.ok(used.indexOf(id) < 0, at('not a consumer: ' + id)); checks++; }
+  }
+  // #44: the battery's charge level for its power sensor, in the flow popups (peers) and the "Woher kommt der Strom" row.
+  for (const [pw, want] of Object.entries(X.energy_battery_soc || {})) {
+    assert.equal(window.casoraEnergyBatterySoc(hass, pw), want.soc, at('battery SoC for ' + pw));
+    assert.equal(F.peers(hass, {}).battery.soc || null, want.soc, at('peers: battery SoC'));
+    checks += 2;
+    if (want.row) {
+      const rows = [], grp0 = window._casoraUI.group;
+      window._casoraUI.group = (r) => { rows.push(...r); return 'G'; };
+      const ids = X.house_list || window.casoraEnergyHouse(hass).ids;
+      SE.sec('sources', { sum: { energy_entities: ids }, sources: window.casoraEnergySources(hass, ids) }, H.states, hass);
+      window._casoraUI.group = grp0;
+      const row = rows.find((r) => r.entity === pw);
+      assert.equal(row && row.sub, want.row, at('battery row with the charge level'));
+      checks++;
+    }
+  }
   // Night: the states replaced, the Home popup's hero and the focus popups' heroes as written.
   if (X.energy_night) {
     const N = X.energy_night, saved = {};

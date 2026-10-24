@@ -1,5 +1,5 @@
 {
- "quelle": "Energie-Einstellungen mit Netz, Solar und Akku (Qualitätsrunde A, 23.10.2026), erfunden nach HA 2026.10",
+ "quelle": "Energie-Einstellungen mit Netz, Solar und Akku (Qualitätsrunde A, 23.10.2026), erfunden nach HA 2026.10; 24.10. einzelne Geräte, Akkustand und Wallbox-/MPPT-Störer nach #44",
  "areas": {
   "ke": {
    "area_id": "ke",
@@ -30,6 +30,16 @@
    "id": "d_tv",
    "name": "Fernseher",
    "area_id": "wz"
+  },
+  "d_wm": {
+   "id": "d_wm",
+   "name": "Waschmaschine",
+   "area_id": "ke"
+  },
+  "d_wb": {
+   "id": "d_wb",
+   "name": "Wallbox",
+   "area_id": "ke"
   }
  },
  "entities": {
@@ -62,6 +72,66 @@
    "device_id": "d_tv",
    "area_id": null,
    "platform": "shelly"
+  },
+  "sensor.waschmaschine_energie": {
+   "entity_id": "sensor.waschmaschine_energie",
+   "device_id": "d_wm",
+   "area_id": null,
+   "platform": "shelly"
+  },
+  "sensor.waschmaschine_leistung": {
+   "entity_id": "sensor.waschmaschine_leistung",
+   "device_id": "d_wm",
+   "area_id": null,
+   "platform": "shelly"
+  },
+  "sensor.fernseher_energie": {
+   "entity_id": "sensor.fernseher_energie",
+   "device_id": "d_tv",
+   "area_id": null,
+   "platform": "shelly"
+  },
+  "sensor.ofen_energie_heute": {
+   "entity_id": "sensor.ofen_energie_heute",
+   "device_id": null,
+   "area_id": null,
+   "platform": "template"
+  },
+  "sensor.speicher_ladestand": {
+   "entity_id": "sensor.speicher_ladestand",
+   "device_id": "d_sp",
+   "area_id": null,
+   "platform": "modbus"
+  },
+  "sensor.speicher_wirkungsgrad": {
+   "entity_id": "sensor.speicher_wirkungsgrad",
+   "device_id": "d_sp",
+   "area_id": null,
+   "platform": "modbus"
+  },
+  "sensor.wallbox_bdc_rated_power": {
+   "entity_id": "sensor.wallbox_bdc_rated_power",
+   "device_id": "d_wb",
+   "area_id": null,
+   "platform": "modbus"
+  },
+  "sensor.wallbox_vehicle_auxiliary": {
+   "entity_id": "sensor.wallbox_vehicle_auxiliary",
+   "device_id": "d_wb",
+   "area_id": null,
+   "platform": "modbus"
+  },
+  "sensor.wechselrichter_mppt1_leistung": {
+   "entity_id": "sensor.wechselrichter_mppt1_leistung",
+   "device_id": "d_wr",
+   "area_id": null,
+   "platform": "fronius"
+  },
+  "sensor.wechselrichter_mppt2_leistung": {
+   "entity_id": "sensor.wechselrichter_mppt2_leistung",
+   "device_id": "d_wr",
+   "area_id": null,
+   "platform": "fronius"
   }
  },
  "states": {
@@ -109,6 +179,98 @@
     "unit_of_measurement": "W",
     "friendly_name": "Fernseher Total power"
    }
+  },
+  "sensor.waschmaschine_energie": {
+   "entity_id": "sensor.waschmaschine_energie",
+   "state": "812.4",
+   "attributes": {
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit_of_measurement": "kWh",
+    "friendly_name": "Waschmaschine Energie"
+   }
+  },
+  "sensor.waschmaschine_leistung": {
+   "entity_id": "sensor.waschmaschine_leistung",
+   "state": "1200",
+   "attributes": {
+    "device_class": "power",
+    "unit_of_measurement": "W",
+    "friendly_name": "Waschmaschine Leistung"
+   }
+  },
+  "sensor.fernseher_energie": {
+   "entity_id": "sensor.fernseher_energie",
+   "state": "120.0",
+   "attributes": {
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit_of_measurement": "kWh",
+    "friendly_name": "Fernseher Energie"
+   }
+  },
+  "sensor.ofen_energie_heute": {
+   "entity_id": "sensor.ofen_energie_heute",
+   "state": "1.8",
+   "attributes": {
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit_of_measurement": "kWh",
+    "friendly_name": "Ofen Energie heute"
+   }
+  },
+  "sensor.speicher_ladestand": {
+   "entity_id": "sensor.speicher_ladestand",
+   "state": "40",
+   "attributes": {
+    "device_class": "battery",
+    "unit_of_measurement": "%",
+    "friendly_name": "Speicher Ladestand"
+   }
+  },
+  "sensor.speicher_wirkungsgrad": {
+   "entity_id": "sensor.speicher_wirkungsgrad",
+   "state": "94",
+   "attributes": {
+    "unit_of_measurement": "%",
+    "friendly_name": "Speicher Wirkungsgrad"
+   }
+  },
+  "sensor.wallbox_bdc_rated_power": {
+   "entity_id": "sensor.wallbox_bdc_rated_power",
+   "state": "8000",
+   "attributes": {
+    "device_class": "power",
+    "unit_of_measurement": "W",
+    "friendly_name": "Wallbox BDC rated power"
+   }
+  },
+  "sensor.wallbox_vehicle_auxiliary": {
+   "entity_id": "sensor.wallbox_vehicle_auxiliary",
+   "state": "400",
+   "attributes": {
+    "device_class": "power",
+    "unit_of_measurement": "W",
+    "friendly_name": "Wallbox Vehicle Auxiliary"
+   }
+  },
+  "sensor.wechselrichter_mppt1_leistung": {
+   "entity_id": "sensor.wechselrichter_mppt1_leistung",
+   "state": "1300",
+   "attributes": {
+    "device_class": "power",
+    "unit_of_measurement": "W",
+    "friendly_name": "Wechselrichter MPPT1 Leistung"
+   }
+  },
+  "sensor.wechselrichter_mppt2_leistung": {
+   "entity_id": "sensor.wechselrichter_mppt2_leistung",
+   "state": "1100",
+   "attributes": {
+    "device_class": "power",
+    "unit_of_measurement": "W",
+    "friendly_name": "Wechselrichter MPPT2 Leistung"
+   }
   }
  },
  "expect": {
@@ -138,6 +300,37 @@
     "solar": "0 W",
     "grid": "400 W"
    }
+  },
+  "energy_consumers": [
+   {
+    "id": "sensor.waschmaschine_energie",
+    "power": "sensor.waschmaschine_leistung",
+    "name": "Waschmaschine"
+   },
+   {
+    "id": "sensor.fernseher_energie",
+    "power": "sensor.fernseher_total_power",
+    "name": "Fernseher"
+   },
+   {
+    "id": "sensor.ofen_energie_heute",
+    "power": null,
+    "name": "Backofen"
+   }
+  ],
+  "energy_not_consumers": [
+   "sensor.wallbox_bdc_rated_power",
+   "sensor.wallbox_vehicle_auxiliary",
+   "sensor.wechselrichter_mppt1_leistung",
+   "sensor.wechselrichter_mppt2_leistung",
+   "sensor.wechselrichter_ertrag",
+   "sensor.hausverbrauch_steckdose"
+  ],
+  "energy_battery_soc": {
+   "sensor.speicher_leistung": {
+    "soc": "sensor.speicher_ladestand",
+    "row": "Lädt · 40 %"
+   }
   }
  },
  "energy_prefs": {
@@ -164,6 +357,21 @@
     }
    }
   ],
-  "device_consumption": []
+  "device_consumption": [
+   {
+    "stat_consumption": "sensor.waschmaschine_energie"
+   },
+   {
+    "stat_consumption": "sensor.fernseher_energie",
+    "stat_rate": "sensor.fernseher_total_power"
+   },
+   {
+    "stat_consumption": "sensor.ofen_energie_heute",
+    "name": "Backofen"
+   },
+   {
+    "stat_consumption": "sensor.wechselrichter_ertrag"
+   }
+  ]
  }
 }

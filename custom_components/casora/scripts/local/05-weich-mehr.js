@@ -409,21 +409,32 @@
     if (ctx.metricCard) f.metric = { card: chartCard(ctx.metricCard) };
     var fl = ctx.fields || {}, autoTop = null;
     if (typeof fl.use === 'string' && fl.use) f.use = UI.label('Verbrauch') + fl.use;
-    // #44: the settings' sources, then the largest consumers as with a house sensor (the parts are no consumers).
+    // #44: the house popup (the settings' list, or a house sensor without an area) lists the "individual devices" of
+    // HA's energy dashboard when there are any (casoraEnergyConsumers, 00-finder.js), instead of the automatic top list.
+    var area = ctx.powerId ? autoArea(ctx, v) : null;
+    var haCons = window.casoraEnergyConsumers && (srcs || (ctx.powerId && !area)) ? window.casoraEnergyConsumers(ctx.hass) : null;
+    var haIds = haCons ? window.casoraEnergyConsumers.ids(haCons) : [];
+    // #44: the settings' sources, then the consumers as with a house sensor (the parts are no consumers).
     if (srcs) {
       var cand0 = { ids: [] };
-      if (window._casoraAutoConsumers) {
+      if (haCons) C.auto = { ha: true };
+      else if (window._casoraAutoConsumers) {
         C.auto = { exclude: sumIds.concat(C.solar, C.grid).filter(Boolean), area: null, max: 5 };
         cand0 = window._casoraAutoConsumers(ctx.hass, states, C.auto);
       }
-      f.top = { card: secCard(sumIds.concat(cand0.ids.slice(0, 60)), call('_casoraSoftEnergy', 'sources', C), states) };
+      // The battery rows show the charge level: its sensor is watched too.
+      var socIds = window.casoraEnergyBatterySoc ? (srcs.battery || []).map(function (id) { return window.casoraEnergyBatterySoc(ctx.hass, id); }) : [];
+      f.top = { card: secCard(sumIds.concat(socIds, haIds, cand0.ids.slice(0, 60)), call('_casoraSoftEnergy', 'sources', C), states) };
     } else if (parts) f.top = { card: secCard(sumIds, call('_casoraSoftEnergy', 'parts', C), states) };
     else if (typeof fl.top === 'string' && fl.top) f.top = UI.label('Verbraucher') + fl.top;
-    else if (ctx.powerId && window._casoraAutoConsumers) {
+    else if (haCons) {
+      C.auto = { ha: true };
+      f.top = { card: secCard([C.home].concat(haIds), call('_casoraSoftEnergy', 'auto', C), states) };
+    } else if (ctx.powerId && window._casoraAutoConsumers) {
       // 07.10.2026: no consumers assigned, Casora finds the largest itself (up to 5 by power).
       // Popup of a room (sensor with an area, not a house sensor): only that area.
       C.auto = { exclude: [C.home, C.solar, C.grid, C.charge, C.discharge, C.output, C.export, C.loadTarget]
-        .concat(C.pv).filter(Boolean), area: autoArea(ctx, v), max: 5 };
+        .concat(C.pv).filter(Boolean), area: area, max: 5 };
       var cand = window._casoraAutoConsumers(ctx.hass, states, C.auto);
       if (cand.ids.length) autoTop = f.top = { card: secCard([C.home].concat(cand.ids.slice(0, 60)), call('_casoraSoftEnergy', 'auto', C), states) };
     }
@@ -691,19 +702,44 @@
           if (w == null && r[0] !== 'grid' && states[id]) w = 0;
           var how = w == null ? 'Nicht erreichbar' : r[0] === 'grid' && w < -FLOW_ON ? 'Einspeisung'
             : r[0] === 'battery' && w > FLOW_ON ? 'Entlädt' : r[0] === 'battery' && w < -FLOW_ON ? 'Lädt' : null;
-          srows.push({ entity: id, icon: r[2], label: r[1], sub: how, value: fW(w == null ? null : Math.abs(w), hass) });
+          // #44: the battery's charge level („Lädt · 78 %“) when its device has a percent sensor.
+          var soc = r[0] === 'battery' && window.casoraEnergyBatterySoc ? num(states, window.casoraEnergyBatterySoc(hass, id)) : null;
+          var socT = soc != null ? Math.round(soc) + ' %' : null;
+          srows.push({ entity: id, icon: r[2], label: r[1], sub: how && socT ? how + ' · ' + socT : (how || socT),
+            value: fW(w == null ? null : Math.abs(w), hass) });
         });
       });
       var autoHtml = C.auto ? E.sec('auto', C, states, hass) : '';
       return (srows.length ? UI.label('Woher kommt der Strom') + UI.group(srows) : '') + autoHtml;
     }
-    if (part === 'auto' && C.auto && window._casoraAutoConsumers) {
-      var A = window._casoraAutoConsumers(hass, states, Object.assign({}, C.auto, { visible: autoVisible }));
+    // The house's power for the consumers' shares: the sensor, else the sum of the list.
+    var homeW = function () {
       var home = watt(states, C.home);
       if (home == null && C.sum && window._casoraPowerSum) {
         var RH = window._casoraPowerSum(C.sum, states);
         home = isFinite(RH.sum) ? RH.sum : null;
       }
+      return home;
+    };
+    var wText = function (w) { return w < 10 ? (Math.round(w * 10) / 10).toLocaleString(LANG(hass)) + ' W' : fW(w, hass); };
+    if (part === 'auto' && C.auto && C.auto.ha && window.casoraEnergyConsumers) {
+      // #44: exactly the "individual devices" of HA's energy dashboard, by power; a device without a power sensor
+      // shows today's energy (or just its meter), one whose sensor is unreachable says so.
+      var L = window.casoraEnergyConsumers(hass) || [];
+      var vis = autoVisible(L.map(function (x) { return x.power || x.id; })) || [];
+      var homeH = homeW();
+      var hrows = L.filter(function (x) { return vis.indexOf(x.power || x.id) > -1; }).map(function (x) {
+        var pct = x.w != null && homeH > 0 ? Math.round(x.w / homeH * 100) : null;
+        var sub = pct > 0 && pct <= 100 ? pct + ' % des aktuellen Verbrauchs'
+          : x.power && x.w == null ? 'Nicht erreichbar' : x.kwh != null && x.daily ? 'heute' : null;
+        return { entity: x.power || x.id, icon: 'plug', label: x.name, sub: sub,
+          value: x.w != null ? wText(x.w) : x.kwh != null ? fN(x.kwh, hass) + ' kWh' : null };
+      });
+      return hrows.length ? UI.label('Verbraucher') + UI.group(hrows) : '';
+    }
+    if (part === 'auto' && C.auto && window._casoraAutoConsumers) {
+      var A = window._casoraAutoConsumers(hass, states, Object.assign({}, C.auto, { visible: autoVisible }));
+      var home = homeW();
       var anm = function (id) {
         var a = (states[id] && states[id].attributes) || {};
         var t = String(a.friendly_name || (hass && hass.entities && hass.entities[id] && hass.entities[id].name) || id);
@@ -713,7 +749,7 @@
         var pct = home > 0 ? Math.round(x.w / home * 100) : null;
         return { entity: x.id, icon: 'plug', label: anm(x.id),
           sub: pct > 0 && pct <= 100 ? pct + ' % des aktuellen Verbrauchs' : null,
-          value: x.w < 10 ? (Math.round(x.w * 10) / 10).toLocaleString(LANG(hass)) + ' W' : fW(x.w, hass) };
+          value: wText(x.w) };
       });
       /* #44: "Top N" says the list is the largest ones, not every consumer adding up to the total. */
       return arows2.length ? UI.label(arows2.length > 1 ? 'Top ' + arows2.length + ' Verbraucher' : 'Verbraucher') + UI.group(arows2) : '';

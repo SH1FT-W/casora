@@ -41,6 +41,12 @@ Felder von `expect` (alle optional):
   `cameras_chosen`: `{ "pick": [gewählt], "want": [gezeigt] }` mit Auswahl (Karten raus, Druckerkameras bleiben)
 - `energy_peers`: `{ grid, solar, battery }` – Leistungssensor je Teil der Anlage, den die Energie-Popups ohne
   Sub-Badges nehmen (`peers`), `null` = keiner
+- `energy_consumers`: Liste `{ "id", "power", "name" }` – genau die „Einzelnen Geräte“ aus den Energie-Einstellungen
+  (`device_consumption`), wie das Popup „Verbraucher“ sie zeigt, nach Leistung (`casoraEnergyConsumers`): `id` der
+  Energiezähler, `power` der Leistungssensor (`stat_rate`, sonst der am selben Gerät, `null` = keiner), `name` der
+  Zeilentitel; `energy_not_consumers`: Sensoren, die dort nie auftauchen (Wallbox, MPPT-Strings, Quellen)
+- `energy_battery_soc`: `{ Akku-Leistungssensor: { "soc": Prozentsensor, "row": "Lädt · 40 %" } }` – Ladestand am Gerät des
+  Akkus (`casoraEnergyBatterySoc`, auch `peers().battery.soc`) und die Unterzeile der Akku-Zeile in „Woher kommt der Strom“
 - `vent`: `{ Seite: { "mode": "house" | "room" | "outdoor" | "empty", "rooms": [Raumnamen], "tile": "Luft gut",
   "out": [Zeilen der Außenluft] } }` – was das Raumklima-Popup (casora_vent, `_casoraVent.model`) auf dieser Seite
   zeigt: „Zuhause“ = das Haus, ein Raum = nur seine Zeilen, ein Außenbereich = nur die Außenluft, ohne Sensor leer (#54)
