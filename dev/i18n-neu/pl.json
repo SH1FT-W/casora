@@ -1,0 +1,59 @@
+{
+ "_comment": "Polish (pl) strings for shared code files; not edited directly because several language agents run in parallel. settings.py ai_text_language, update_push.py TEXT, lueften_push.py TEXT/GRUND, panel/casora-panel-welcome.js TEXT.pl, tools/i18ncheck.py SHARED/FORMAL, scripts/casora-i18n.js TABLES (generated from translations/dashboard/pl.json).",
+ "language_name": "Polnisch (polski)",
+ "update_push": ["Casora {v} już jest", "Dostępna nowa wersja"],
+ "lueften_push": {
+  "jetzt": ["Przewietrz: {n}", "{grund} – otwórz okno na kilka minut."],
+  "schliessen": ["Zamknij okno: {n}", "{grund} – możesz już zamknąć."],
+  "co2krit": ["CO₂ krytyczne: {n}", "{co2} ppm – przewietrz natychmiast."]
+ },
+ "lueften_grund": [["Feuchte", "Wilgotność"], ["Fenster seit", "Okno otwarte od"], [" offen", ""], ["Std.", "godz."], ["Min.", "min"]],
+ "welcome_text": {
+  "welcomeTitle": "Witaj w Casora",
+  "whatsNewTitle": "Nowości w Casora {version}",
+  "continue": "Dalej",
+  "all": "Wszystkie zmiany",
+  "w1t": "Pokój po pokoju",
+  "w1": "Zaprojektuj swój pulpit z urządzeń, które już masz w Home Assistant.",
+  "w2t": "Asystent urządzeń",
+  "w2": "Casora proponuje pasujące kafelki dla każdego pokoju i dodaje je za ciebie.",
+  "w3t": "Komputer, tablet i telefon",
+  "w3": "Jeden pulpit, który dopasowuje się do każdego ekranu, z własnym układem na telefon.",
+  "n0t": "Kafelek diagramu",
+  "n0": "Dowolny czujnik liczbowy jako kafelek z historią i jako diagram za 24 godziny, 7 dni, 30 dni lub rok, jako linie lub słupki, ze statystyką.",
+  "n1t": "Kafelek uniwersalny",
+  "n1": "Tytuł, ikona, dowolne urządzenie i okno, które składasz w Studio z wartości, historii i sterowania.",
+  "n2t": "Własne odznaki",
+  "n2": "Dowolnie wiele odznak z urządzeń lub szablonów, a na życzenie odznaki zawijają się w kolejne wiersze zamiast przewijać.",
+  "n3t": "Widoczne w oknie",
+  "n3": "Wiersze, które Casora zbiera sama, ukrywasz w Studio. Światło Domu liczy teraz wszystkie światła także bez grupy świateł."
+ },
+ "whats_new": {
+  "n0t": "Kafelek diagramu",
+  "n0": "Dowolny czujnik liczbowy jako kafelek z historią i jako diagram za 24 godziny, 7 dni, 30 dni lub rok, jako linie lub słupki, ze statystyką.",
+  "n1t": "Kafelek uniwersalny",
+  "n1": "Tytuł, ikona, dowolne urządzenie i okno, które składasz w Studio z wartości, historii i sterowania.",
+  "n2t": "Własne odznaki",
+  "n2": "Dowolnie wiele odznak z urządzeń lub szablonów, a na życzenie odznaki zawijają się w kolejne wiersze zamiast przewijać.",
+  "n3t": "Widoczne w oknie",
+  "n3": "Wiersze, które Casora zbiera sama, ukrywasz w Studio. Światło Domu liczy teraz wszystkie światła także bez grupy świateł."
+ },
+ "i18ncheck_allow_comment": "Words i18ncheck.py flagged as German leftovers in pl (run 24.10.) that are legitimate Polish/brand words; shape like SHARED['es'].",
+ "i18ncheck_allow": ["Portal", "Kamera", "Mikrofon", "Papier", "Doktor", "Profil", "Komfort", "Kakao", "Studio", "Ping", "Konto", "offline", "Kontakt", "Balkon", "Standard", "number", "Hemma", "Casora", "Pulse", "Sensor", "Radar", "Hotel", "Taxi", "Bar", "Normal", "Total", "Status", "Problem", "Program", "Alarm", "Solar", "Online", "Offline", "Tablet"],
+ "formal_regex": "\\b(Pan|Pani|Pana|Pani\\u0105|Panu|Panem|Pa\\u0144stwo|Pa\\u0144stwa|Pa\\u0144stwu|prosz\\u0119)\\b",
+ "casora_i18n_js": {
+  "filter.all": "Dom",
+  "filter.climate": "Klimat",
+  "filter.energy": "Energia",
+  "filter.lights": "Oświetlenie",
+  "filter.media": "Multimedia",
+  "filter.presence": "Osoby",
+  "filter.security": "Bezpieczeństwo",
+  "presence.all_away": "Wszyscy poza domem",
+  "presence.all_home": "Wszyscy w domu",
+  "presence.group.title": "Osoby",
+  "presence.n_away": "Poza domem: {n}",
+  "presence.person": "Osoba"
+ },
+ "live_activity_note": "live_activity.py _lang() indexes (de, en, es) text tuples; Polish would need a fourth tuple element or fall back to English (index 1)."
+}
