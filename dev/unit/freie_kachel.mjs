@@ -155,8 +155,8 @@ const sec = (part, ent, vars) => F.sec(part, F.plan(ent, states, hass, vars || {
 assert.equal(sec('hero', null), '<line>Kein Gerät gewählt|</line><note>Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.</note>');
 assert.match(sec('hero', states['switch.qa_pumpe'], V), /^<line>An\|seit 2 Std\.<\/line>/);
 assert.match(sec('hero', states['switch.qa_pumpe'], V), /<note>Kein Verlauf: pumpe ist kein Zahlenwert\.<\/note>/, 'wanted chart of a non-number: a note');
-assert.equal(sec('hero', states['sensor.qa_temp']), '<line>21,5 °C|seit 2 Std.</line><note>Im Studio kannst du Werte, Verlauf, Schalten und eigene Karten ergänzen.</note>');
-assert.equal(sec('hero', states['sensor.qa_weg']), '<line>Nicht verfügbar|</line><note>Im Studio kannst du Werte, Verlauf, Schalten und eigene Karten ergänzen.</note>');
+assert.equal(sec('hero', states['sensor.qa_temp']), '<line>21,5 °C|seit 2 Std.</line><note>Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.</note>');
+assert.equal(sec('hero', states['sensor.qa_weg']), '<line>Nicht verfügbar|</line><note>Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.</note>');
 assert.equal(F.sec('hero', { id: 'sensor.qa_fehlt', values: [], labels: {} }, states, hass), '<line>Gerät fehlt|sensor.qa_fehlt</line>');
 
 // Controls per domain.
@@ -236,7 +236,7 @@ for (const lang of ['de', 'es']) {
 for (const lang of ['en', 'es']) {
   const ph = JSON.parse(src('custom_components/casora/translations/dashboard/phrases/' + lang + '.json')).exact;
   for (const s of ['Universal-Kachel', 'Kein Gerät gewählt', 'Werte', 'Bedienung', 'Kein Verlauf: {name} ist kein Zahlenwert.',
-    'Im Studio kannst du Werte, Verlauf, Schalten und eigene Karten ergänzen.', 'Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.'])
+    'Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.', 'Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.'])
     assert.ok(ph[s], lang + ' phrase missing for: ' + s);
 }
 console.log('freie_kachel: ok');
