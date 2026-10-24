@@ -575,7 +575,7 @@
       if (has(/\bcasora_frigate\b/) && window._casoraFrigate && window._casoraFrigate.hold) out = out.concat(window._casoraFrigate.hold(h, id));
       // Reolink-Türklingel: Ton hören (Popup mit Ton), Schnellantworten mit Rückfrage (24-klingel.js).
       if (has(/\bcasora_reolink_doorbell\b/) && window._casoraKlingel && window._casoraKlingel.hold) out = out.concat(window._casoraKlingel.hold(h, id));
-      // Kaffeevollautomat: An/Aus, zwei Getränke direkt starten (Rückfrage), Abbrechen beim Bezug (25-kaffee.js).
+      // Kaffeevollautomat: An/Aus, zwei Getränke direkt starten (Rückfrage), Abbrechen beim Bezug (25-coffee.js).
       if (has(/\bcasora_coffee\b/) && window._casoraCoffee && window._casoraCoffee.hold) out = out.concat(window._casoraCoffee.hold(h, id));
       // Netzwerk: Gäste-WLAN (genau ein Schalter), Speedtest-Taste der Kachel.
       if (has(/\bcasora_network\b/)) {

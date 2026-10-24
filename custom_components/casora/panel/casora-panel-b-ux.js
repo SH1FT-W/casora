@@ -93,11 +93,13 @@
     if (ty && ty.community) return null;
     return typeIds.has("entity_actions") ? "entity_actions" : null;
   }
-  // Kaffeevollautomaten erkennen (Kurzfassung von scripts/local/25-kaffee.js – das Studio lädt die Dashboard-Module
+  // Kaffeevollautomaten erkennen (Kurzfassung von scripts/local/25-coffee.js – das Studio lädt die Dashboard-Module
   // nicht): Integration oder Kaffee-Schlüssel am Gerät (Home Connect und Miele bauen auch Waschmaschinen).
-  const COFFEE_PLATFORMS = new Set(["delonghi_primadonna", "delonghi_coffee", "delonghi_coffeelink", "jura", "melitta_barista", "lamarzocco"]);
+  // Integrations that only build coffee machines (25-coffee.js SOURCES; Home Connect, Miele and Philips build other
+  // appliances too – there the coffee keys decide).
+  const COFFEE_PLATFORMS = new Set(["delonghi_primadonna", "delonghi_coffee", "delonghi_coffeelink", "jura", "jura_wifi", "melitta_barista", "lamarzocco"]);
   // „machinestatus“ nur als ganzer Schlüssel (De'Longhi): als Teil traf er „Washing Machine Status“ einer Waschmaschine.
-  const COFFEE_KEY = /coffee(counter|temperature|cups)|beanamount|beancontainer|coffeebeans|totalcoffee|brewingactive|brewactive|makebeverage|beveragecounter/;
+  const COFFEE_KEY = /coffee(counter|temperature|cups)|beanamount|beancontainer|coffeebeans|totalcoffee|brewingactive|brewactive|makebeverage|beveragecounter|^espressomainstate$|^ritamachinestate$/;
   const COFFEE_OPT = /coffeemaker|cappuccino|espresso|lattemacchiato/;
   const coffeeNk = (x) => String(x == null ? "" : x).toLowerCase().replace(/[\s_.\-]/g, "");
   // Wie im Modul (keyOf): home_connect_alt nennt alle Entitäten einer Art gleich (statuses, settings, options, programs),
@@ -105,6 +107,9 @@
   const COFFEE_GENERIC = new Set(["statuses", "settings", "options", "programs", "homeconnectstatus"]);
   const coffeeKey = (e) => { const k = coffeeNk(e.translation_key); return COFFEE_GENERIC.has(k) ? "" : k; };
   const coffeeTail = (e) => coffeeNk(String(e.entity_id).split(".")[1] || "");
+  // Device names of the generic plug fallback (same rule as 25-coffee.js COFFEE_NAME / NOT_COFFEE_NAME).
+  const COFFEE_NAME = /kaffee|coffee|espresso|barista|siebtr(a|ä|ae)ger/i;
+  const NOT_COFFEE_NAME = /m(u|ü|ue)hle|grinder|milchaufsch|frother|tassenw(a|ä|ae)rmer|cup ?warmer/i;
   // Live-Kamera einer Reolink-Klingel (je Gerät eine, sub vor main): aus 24-klingel.js (KL.liveCam), sobald das
   // Dashboard-Modul geladen ist – das Studio lädt es dafür einmal nach. Bis dahin dieselbe Regel hier.
   let klingelLoad = false;
@@ -138,27 +143,40 @@
         || (coffeeKey(e) === "lastprogram" && list.some((x) => coffeeKey(x) === "learning"))
         // options is not always a list (a sensor of another integration had a plain string): only lists count.
         || [].concat(((S[e.entity_id] || {}).attributes || {}).options || []).some((o) => COFFEE_OPT.test(coffeeNk(o))));
-      if (!yes) return;
+      const d = D[dev] || {};
+      if (!yes) {
+        // Generic fallback (as 25-coffee.js isPlugItems): a plug on a device named like a coffee machine – on/off and,
+        // with a power sensor, its watts. Its switch carries the tile.
+        const nm = d.name_by_user || d.name || "";
+        if (!COFFEE_NAME.test(nm) || NOT_COFFEE_NAME.test(nm)) return;
+        const ok = (e) => !e.entity_category && !e.disabled_by;
+        const sw = list.find((e) => ok(e) && e.entity_id.startsWith("switch."));
+        if (!sw) return;
+        const pw = list.find((e) => ok(e) && e.entity_id.startsWith("sensor.")
+          && (((S[e.entity_id] || {}).attributes || {}).device_class === "power" || ((S[e.entity_id] || {}).attributes || {}).unit_of_measurement === "W"));
+        out.push({ anchor: sw.entity_id, device: dev, name: nm, plug: true, also: pw ? [pw.entity_id] : [] });
+        return;
+      }
       const k = (e) => coffeeKey(e);
       // Ohne Schlüssel: Ende der Entity-ID (…_bsh_common_status_operationstate, <mac>_product, …_recipe, …_state).
       const t = (e, re) => !k(e) && re.test(coffeeTail(e));
       // The tile needs an entity the Studio lists: De'Longhi BT marks its status sensor diagnostic, then the power
       // switch carries the tile (the module finds the status on the device). Before, the machine was not offered at all.
       const pick = list.filter((e) => !e.entity_category && !e.disabled_by);
-      const sensor = pick.find((e) => e.entity_id.startsWith("sensor.") && (/operationstate$|^(machinestatus|devicestatus|status|state)$/.test(k(e))
+      const sensor = pick.find((e) => e.entity_id.startsWith("sensor.") && (/operationstate$|^(machinestatus|devicestatus|status|state|espressomainstate|ritamachinestate)$/.test(k(e))
         || t(e, /operationstate$|devicestatus$|machinestatus$/))) || pick.find((e) => e.entity_id.startsWith("sensor.") && t(e, /state$/) && e.platform === "melitta_barista");
       const power = pick.find((e) => e.entity_id.startsWith("switch.") && (/^(power|powerstate|switchpowerstate|main)$/.test(k(e)) || t(e, /powerstate$/)));
       const sel = pick.find((e) => e.entity_id.startsWith("select.") && (/^(selectedprogram|selectprogram|makebeverage|beverage|product|recipe)$/.test(k(e))
         || t(e, /programs$|product$|recipe$|recipeselect$/)));
       const a = sensor || power || sel;
       if (!a) return;
-      const d = D[dev] || {};
-      out.push({ anchor: a.entity_id, name: d.name_by_user || d.name || "", also: power && power !== a ? [power.entity_id] : [] });
+      out.push({ anchor: a.entity_id, device: dev, name: d.name_by_user || d.name || "", also: power && power !== a ? [power.entity_id] : [] });
     });
     return out;
   }
   // Also used by the panel's tile suggestions (_tileCandidates), so a new coffee tile only suggests coffee machines.
   W.__casoraCoffeeAnchors = coffeeAnchors;
+  coffeeAnchors.platforms = COFFEE_PLATFORMS;
   // Also used by _tileCandidates: a new doorbell tile suggests the doorbell's live camera as a sure match.
   W.__casoraBellCam = bellCam;
   const foldTx = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ß/g, "ss");
@@ -654,8 +672,8 @@
           loose: !!(e && !e.device_id && e.area_id),
           words: (WORDS[type] || "") + " " + ((S[id].attributes || {}).friendly_name || "") });
       };
-      // Kaffeevollautomat (Community-Karte, wenn hinzugefügt): je Gerät eine Kachel am Status-Sensor (sonst Strom/Getränke);
-      // der Strom-Schalter erscheint dann nicht noch einmal als Schalter.
+      // Coffee machine: one tile per device on its status sensor (else power/drinks, a named plug's switch); the power
+      // switch is then not offered again as a switch.
       if (typeIds.has("casora_coffee")) coffeeAnchors(h).forEach((x) => { push(x.anchor, x.name, "casora_coffee"); x.also.forEach((id) => seen.add(id)); });
       // Pet tracker (community card, when added): one tile per Tractive device_tracker, named like the pet - HA names
       // the tracker after its hardware ("Tracker 1A2B3C4D"), the pet's name is on the device behind it (issue #25).

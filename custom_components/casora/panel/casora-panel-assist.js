@@ -95,6 +95,10 @@
     const dishes = new Map(LF && LF.dishwashers ? LF.dishwashers(hass).map((c) => [c.device, c]) : []);
     const FF = window.casoraFridgeFind;
     const fridges = new Map(FF ? FF.all(hass).map((c) => [c.device, c]) : []);
+    // Coffee machines: the anchors of the coffee card (casora-panel-b-ux.js coffeeAnchors, same rules as 25-coffee.js) –
+    // the maker's integration, else a plug on a device named like a coffee machine.
+    const coffee = new Map(typeIds.has("casora_coffee") && typeof window.__casoraCoffeeAnchors === "function"
+      ? window.__casoraCoffeeAnchors(hass).map((c) => [c.device, c]) : []);
     // 3D printers: the printer card's rule and table (casoraDevice.isPrinter/printerFields in 00-finder.js);
     // the main entity is the print status, else the stage.
     const CD = window.casoraDevice;
@@ -127,6 +131,8 @@
       // like a fridge; its main entity (zone temperature, setpoint or door) is the tile's entity.
       const fr = !type && fridges.get(id);
       if (fr && typeIds.has("casora_fridge")) { type = "casora_fridge"; entity = fr.anchor; reason = fr.source === "generic" ? "name" : "key"; }
+      const cof = !type && coffee.get(id);
+      if (cof) { type = "casora_coffee"; entity = cof.anchor; reason = cof.plug ? "name" : "key"; }
       const pr = !type && typeIds.has("casora_3d_printer") && printerOf(id, list);
       if (pr) { type = "casora_3d_printer"; entity = pr.entity_id; reason = "key"; }
       for (const s of SPECIAL) {

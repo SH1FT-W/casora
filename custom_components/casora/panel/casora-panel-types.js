@@ -125,6 +125,14 @@ window.CASORA_TILE_TYPES = [
         hint: "Only without a smart plug." },
       CHART(),
     ] },
+  // Coffee machine (a regular device card, formerly a community card): pick one entity of the device (status,
+  // power or drink selection); scripts/local/25-coffee.js finds the rest on the device – Home Connect (core,
+  // homeconnect_ws, home_connect_alt), Miele, De'Longhi, Jura, Melitta/Nivona, La Marzocco, the power-curve integrations
+  // or a plug on a device named like a coffee machine. TILE_MAIN_FIND.coffee suggests only real coffee machines.
+  { id: "casora_coffee", label: "Coffee machine", template: "casora_coffee", domains: ["sensor", "switch", "select"],
+    icon: "coffee-maker", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Coffee machine",
+    entityPlaceholder: "State or power of the machine (e.g. Home Connect, Miele, De'Longhi or Jura)",
+    fields: [ICON, TITLE_NAME] },
   { id: "casora_aquarium", label: "Aquarium", template: "casora_aquarium_tank", domains: ["sensor"], classes: ["temperature"],
     entityLabel: "Water temperature", icon: "fish", fields: [
       ICON,
@@ -414,13 +422,6 @@ window.CASORA_TILE_TYPES = [
       { key: "sw_night", label: "Night mode", domains: ["switch"], find: { fridge: "night" }, advanced: true },
       { key: "sw_party", label: "Party mode", domains: ["switch"], find: { fridge: "party" }, advanced: true },
     ] },
-  // Coffee machine (community card, card request): pick one entity of the device (status, power or
-  // drink selection); scripts/local/25-kaffee.js finds the rest on the device – Home Connect, Miele, De'Longhi, Jura,
-  // Melitta/Nivona, La Marzocco or a smart plug with power metering.
-  { id: "casora_coffee", label: "Coffee machine", template: "casora_coffee", domains: ["sensor", "switch", "select"],
-    icon: "coffee-maker", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Coffee machine",
-    community: { desc: "Ready, heating up or brewing with progress, and what the machine needs: water, beans, drip tray, descaling. The popup starts drinks with strength and amount, shows care and how many coffees you made. For Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco or a smart plug." },
-    fields: [ICON, TITLE_NAME] },
   // Flexible tile (issue #52, forum wish): any entity or none; the popup is assembled from sections – values
   // (up to 8 rows), 24 h history, the entity's own controls and the shared own cards (scripts/local/28-free-tile.js).
   // The entity is optional (ownData, emptyWord): "Add a tile" adds it straight away with the title only, the
@@ -640,11 +641,11 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       fridge = true;
       import("/casora_scripts/local/30-kuehlschrank.js").catch(() => {});
     }
-    // Coffee machine: state ("Ready", "Cappuccino · 40 %") via window._casoraCoffee (scripts/local/25-kaffee.js);
+    // Coffee machine: state ("Ready", "Cappuccino · 40 %") via window._casoraCoffee (scripts/local/25-coffee.js);
     // without the module the preview showed the integration's raw state ("Brewing").
     if (!kaffee && !window._casoraCoffee && tn.includes("casora_coffee")) {
       kaffee = true;
-      import("/casora_scripts/local/25-kaffee.js").catch(() => {});
+      import("/casora_scripts/local/25-coffee.js").catch(() => {});
     }
     // Football: text ("Sat 18:30 · vs …") from window._casoraFootball (scripts/local/11-fussball.js).
     if (!fussball && !window._casoraFootball && tn.includes("casora_football")) {

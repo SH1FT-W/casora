@@ -58,7 +58,7 @@ def vacuum_map(fixture: dict) -> None:
 
 def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict | None = None) -> dict:
     """Fixture plus the made-up devices, in the order async_setup_entry always used."""
-    from . import (aquarium, befeuchter, ebike, frigate, fussball, haustier, halten, hubs, kaffee, klingel, kuehlschrank, live,
+    from . import (aquarium, befeuchter, coffee, ebike, frigate, fussball, haustier, halten, hubs, klingel, kuehlschrank, live,
                    maeher, testserver, waesche)
     if stress:
         merge(fixture, stress)
@@ -81,8 +81,8 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
     merge(fixture, frigate.extra(now), "Frigate-Testhof")
     # A made-up Reolink doorbell with presses in the history (community card), see klingel.py.
     merge(fixture, klingel.extra(now), "Testklingel")
-    # Three made-up coffee machines (Home Connect-, De'Longhi-BT-like and power curve, community card), see kaffee.py.
-    merge(fixture, kaffee.extra(now), "Testbarista/Morgenbohne/Bohnenwerk")
+    # Made-up coffee machines (Home Connect core/local, De'Longhi BT, power curve, a named plug) and a grinder, see coffee.py.
+    merge(fixture, coffee.extra(now), "Testbarista/Morgenbohne/Bohnenwerk/Kaffeeinsel/Espressobar")
     # A made-up pet with a Tractive-like tracker (community card #25), see haustier.py.
     merge(fixture, haustier.extra(now), "Testhund")
     # A made-up humidifier with modes, water tank and humidity sensor, see befeuchter.py.

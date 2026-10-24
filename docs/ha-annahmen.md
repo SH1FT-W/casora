@@ -73,20 +73,24 @@ Kern-Integrationen (Schlüssel im Test geprüft):
 - `roborock`: Status, Raum, Verbrauchsteile, Nicht-stören, Modi, Karte (`02-devices.js`, `00-finder.js`,
   `live_finder.py`)
 - `home_connect`, `miele`, `smartthings`, `lg_thinq`, `whirlpool`: Wäsche/Spüler (`00-finder.js`
-  `casoraLaundryFind`, `live_finder.py`), Home Connect auch Kaffee
+  `casoraLaundryFind`, `live_finder.py`), Home Connect und Miele auch Kaffee (`25-coffee.js` `SOURCES`: Home Connect
+  ohne Start-Knopf, Start über `home_connect.set_program_and_options`, Warn-Sensoren ab Werk deaktiviert; Miele-Kaffee
+  ohne Start/Stopp und ohne Fortschritt; Test `dev/unit/coffee_sources.mjs`)
 - `dwd_weather_warnings` (#55): Stufensensoren `…_current_warning_level`/`…_advance_warning_level`, Zustand = Stufe
   0–4, Attribute `warning_count`, `region_name`, `last_update` und je Warnung `warning_<n>_name/_level/_headline/
   _description/_instruction/_start/_end` (`01-basis.js` `casoraWarnings`, `casora-panel.js` `isWarningLevelSensor`;
   Test `dev/unit/wetterwarnung_dwd.mjs`, Testhaus `dev/casora_mock/testserver.py`). Erkennung nur über `warning_count`,
   nicht über `translation_key`.
 - `cookidoo` (Rezept, `03-popups.js`, `ki.py`), `backup` (`03-popups.js`), `proximity` (`15-person.js`),
-  `unifi` (Netzwerk, `00-finder.js`), `lamarzocco` (Kaffee, `25-kaffee.js`), `tankerkoenig` (nur `platform`,
+  `unifi` (Netzwerk, `00-finder.js`), `lamarzocco` (Kaffee, `25-coffee.js`), `tankerkoenig` (nur `platform`,
   `tanken.py`)
 
 Nicht im Kern-Paket prüfbar (HACS), Casora liest `platform`/`translation_key`:
 `waste_collection_schedule`, `frigate`, `ha_washdata`, `home_connect_alt`/`homeconnect_ws`, `bambu_lab`,
 `anker_solix`, `pulse`, `teamtracker`, `bosch_ebike`, `powercalc`, `browser_mod`, `hacs`, Kaffee-Integrationen
-(De'Longhi, Jura, Melitta), Auto-Integrationen.
+(`delonghi_primadonna`, `delonghi_coffee`, `delonghi_coffeelink`, `jura`, `jura_wifi`, `melitta_barista`, `philips_homeid`;
+Schlüssel je Quelle in `25-coffee.js` `SOURCES`, Stand Quellcode 24.10.2026, Test `dev/unit/coffee_sources.mjs`),
+Auto-Integrationen.
 
 HACS-Download (Stand HACS-Quelle 20.10.2026, `repositories/base.py`): `hacs.json` wird für die zu installierende
 Version gelesen; mit `"zip_release": true` + `"filename": "casora.zip"` lädt HACS nur
