@@ -1,26 +1,35 @@
 // ── Chart: tile + popup (community card, card request #50) ─────────────────────
 // One tile for any numeric sensor with a state class (CPU load of System Monitor, temperature, power, energy …).
 // The tile shows the current value with its unit and a 24 h sparkline; the popup draws Casora's own chart
-// (casora-chart.js) over 24 h / 7 days / 30 days with up to four sensors (Studio fields entity_2…4 with label and
-// color), a legend, and the main sensor's lowest, highest and average – or, for counters (total_increasing), today's
-// and the range's consumption – from the recorder's long-term statistics (recorder/statistics_during_period:
-// hourly for 24 h, daily for 7/30 days). The 24 h line itself comes from the history (casora-chart does that).
+// (casora-chart.js) over 24 h / 7 days / 30 days / a year with up to four sensors (Studio fields entity_2…4 with
+// label and color), a legend, and the main sensor's lowest, highest and average – or, for counters (total_increasing),
+// today's and the range's consumption – from the recorder's long-term statistics (recorder/statistics_during_period:
+// hourly for 24 h, daily for 7/30 days, monthly for the year). The 24 h line itself comes from the history.
+// Shape (Studio "Display": automatic / line / bars, plus a switch in the popup remembered per sensor for the session):
+// automatic draws bars for counters and a line for readings; bars have one bucket per hour (24 h), day (7/30 d)
+// or month (year), several sensors side by side. Studio "Range when opening" picks the first range.
 //   window._casoraChartCard.kind(st)                         → 'measurement' | 'total' | null (not numeric)
 //   window._casoraChartCard.value(st, hass)                  → "23 %", "21,5 °C", "Nicht verfügbar"
 //   window._casoraChartCard.series(entity, V, hass)          → [{entity, name, color, unit}] main + entity_2…4
-//   window._casoraChartCard.chartCfg(series, span, kind)     → casora-chart card config
+//   window._casoraChartCard.autoShape(kind)                  → 'bar' for counters, 'line' for readings
+//   window._casoraChartCard.chartCfg(series, span, kind, shape) → casora-chart card config
 //   window._casoraChartCard.summarize(rows, kind, span, now) → {min, max, mean} | {sum, today, perDay} from a WS answer
 //   window._casoraChartCard.stats(hass, id, span, el)        → the same, fetched once per range (null while loading)
+//   window._casoraChartCard.span(id) / setSpan(id, span), shape(id) / setShape(id, shape) – session choice per sensor
 //   window._casoraChartCard.popup(entity, states, hass, V)   – popup casora_popup_chart
 //   window._casoraChartCard.sec(part, C, states, hass, el)   – live parts (hero, range, series, stats)
 (function () {
   if (window._casoraChartCard) return;
   var M = window._casoraChartCard = {};
 
-  var SPANS = ['24h', '7d', '30d'];
-  var MS = { '24h': 864e5, '7d': 7 * 864e5, '30d': 30 * 864e5 };
-  var LABEL = { '24h': '24 Std.', '7d': '7 Tage', '30d': '30 Tage' };
-  var HEAD = { '24h': 'Letzte 24 Std.', '7d': 'Letzte 7 Tage', '30d': 'Letzte 30 Tage' };
+  var SPANS = ['24h', '7d', '30d', '1y'];
+  var MS = { '24h': 864e5, '7d': 7 * 864e5, '30d': 30 * 864e5, '1y': 365 * 864e5 };
+  var LABEL = { '24h': '24 Std.', '7d': '7 Tage', '30d': '30 Tage', '1y': 'Jahr' };
+  var HEAD = { '24h': 'Letzte 24 Std.', '7d': 'Letzte 7 Tage', '30d': 'Letzte 30 Tage', '1y': 'Letzte 12 Monate' };
+  // Statistics period = bar bucket per range.
+  var PERIOD = { '24h': 'hour', '7d': 'day', '30d': 'day', '1y': 'month' };
+  var SHAPES = ['line', 'bar'];
+  var SHAPE_LABEL = { line: 'Linie', bar: 'Balken' };
   // casora-chart's checked colour steps (blue, orange, teal, gold) for series without a Studio colour; the same
   // tones as theme variables for rows outside the chart's shadow root.
   var STEPS = ['c1', 'c2', 'c3', 'c4'];
@@ -28,6 +37,7 @@
     c3: 'var(--casora-chart-c3, #008A7E)', c4: 'var(--casora-chart-c4, #A88327)' };
   M.SPANS = SPANS;
   M.LABEL = LABEL;
+  M.SHAPES = SHAPES;
 
   var bad = function (s) { return s == null || s === 'unknown' || s === 'unavailable' || s === ''; };
   // Strictly a number ("23", "-1.5"): parseFloat would read 2026 out of a timestamp.
@@ -42,6 +52,9 @@
   var two = function (n) { return (n < 10 ? '0' : '') + n; };
   var hm = function (ms) { var d = new Date(ms); return two(d.getHours()) + ':' + two(d.getMinutes()); };
   var dayStart = function (ms) { var d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
+  var monthStart = function (ms, back) { var d = new Date(ms); return new Date(d.getFullYear(), d.getMonth() - (back || 0), 1).getTime(); };
+  // Start of the current bucket of a range: today (hours/days) or this month (year).
+  var curStart = function (span, now) { return span === '1y' ? monthStart(now) : dayStart(now); };
   var kick = function (el) {
     try {
       if (typeof window.casoraKick === 'function') window.casoraKick(el);
@@ -106,23 +119,35 @@
   // Colour as a theme value for rows and legend outside the chart.
   M.tone = function (color) { return STEP_VAR[color] || color || STEP_VAR.c1; };
 
-  // Chart per range: 24 h live from the history (15-min means), 7/30 days from the statistics; a single counter
-  // over 7/30 days as bars per day (consumption), otherwise lines. Same unit: one chart with a legend;
-  // different units: casora-chart's own switch between the series. The hero reads the value while scrubbing.
-  M.chartCfg = function (series, span, kind) {
-    var cfg = { type: 'custom:casora-chart', kind: 'line', span: span, height: 190, readout: 'hero', plate: true,
-      series: (series || []).map(function (s) { return { entity: s.entity, name: s.name, color: s.color }; }) };
-    if (kind === 'total' && series.length === 1 && span !== '24h') { cfg.kind = 'bar'; cfg.source = 'change'; return cfg; }
-    cfg.source = span === '24h' ? 'history' : 'stats';
-    // Coarser means over days like the device popups (01-basis.js _hpSmooth): hourly means over a week drew spikes.
-    cfg.bucket = span === '24h' ? '15min' : span === '7d' ? '6h' : '1d';
+  // Automatic shape: counters (energy, water, rainfall – what counts up) as bars, readings as a line.
+  M.autoShape = function (kind) { return kind === 'total' ? 'bar' : 'line'; };
+  // Chart per range and shape. Line: 24 h live from the history (15-min means), 7/30 days from the daily statistics,
+  // the year from monthly means. Bars: one bucket per hour / day / month – counters as consumption per bucket
+  // (statistics change), readings as the bucket's mean (24 h from the history, so the current hour is in). Same
+  // unit: one chart with a legend (bars side by side); different units: casora-chart's own switch between the
+  // series. The hero reads the value while scrubbing.
+  M.chartCfg = function (series, span, kind, shape) {
+    series = series || [];
+    shape = shape || M.autoShape(kind);
+    var cfg = { type: 'custom:casora-chart', kind: shape === 'bar' ? 'bar' : 'line', span: span, height: 190, readout: 'hero', plate: true,
+      series: series.map(function (s) { return { entity: s.entity, name: s.name, color: s.color }; }) };
     if (series.length > 1 && M.sameUnit(series)) cfg.switch = false;
+    if (shape === 'bar') {
+      cfg.period = PERIOD[span] || 'day';
+      cfg.source = kind === 'total' ? 'change' : span === '24h' ? 'history' : 'stats';
+      return cfg;
+    }
+    cfg.source = span === '24h' ? 'history' : 'stats';
+    if (span === '1y') cfg.period = 'month';
+    // Coarser means over days like the device popups (01-basis.js _hpSmooth): hourly means over a week drew spikes.
+    cfg.bucket = span === '24h' ? '15min' : span === '7d' ? '6h' : span === '30d' ? '1d' : '30d';
     return cfg;
   };
-  M.key = function (id, span) { return 'casora_chart:' + id + '|' + span; };
+  M.key = function (id, span, shape) { return 'casora_chart:' + id + '|' + span + (shape ? '|' + shape : ''); };
 
   // ── Statistics (one request per sensor and range, refreshed every 5 minutes) ─
-  // rows: recorder/statistics_during_period answer for one sensor (hourly for 24 h, daily for 7/30 days).
+  // rows: recorder/statistics_during_period answer for one sensor (hourly for 24 h, daily for 7/30 days, monthly
+  // for the year). Counters: today (year: this month), the range's sum and the average per whole day / month.
   M.summarize = function (rows, kind, span, now) {
     now = now || Date.now();
     var pts = (rows || []).map(function (p) {
@@ -132,15 +157,16 @@
     var ok = function (v) { return v != null && isFinite(v); };
     var out = { kind: kind, span: span, n: 0, empty: true };
     if (kind === 'total') {
-      var midnight = dayStart(now), sum = 0, today = 0, n = 0, full = 0;
+      var cur = curStart(span, now), sum = 0, today = 0, n = 0, full = 0;
       pts.forEach(function (p) {
         if (!ok(p.change)) return;
         n++; sum += p.change;
-        if (p.t >= midnight) today += p.change; else if (span !== '24h') full++;
+        if (p.t >= cur) today += p.change; else if (span !== '24h') full++;
       });
       out.n = n; out.empty = !n; out.sum = n ? sum : null; out.today = n ? today : null;
-      // Average per whole day (today is still running).
-      out.perDay = full ? (sum - today) / full : null;
+      // Average per whole day or month (the current one is still running).
+      out.perDay = full && span !== '1y' ? (sum - today) / full : null;
+      out.perMonth = full && span === '1y' ? (sum - today) / full : null;
       return out;
     }
     var mn = null, mx = null, s = 0, k = 0;
@@ -192,11 +218,12 @@
     var hit = cache[ck];
     if (hit && hit.key === key) { if (el && hit.busy && hit.wait.indexOf(el) < 0) hit.wait.push(el); return hit.data; }
     var cell = cache[ck] = { key: key, data: hit ? hit.data : null, busy: true, wait: el ? [el] : [] };
-    var now = Date.now(), day = span !== '24h';
-    // Day buckets start at local midnight: the range begins at the day start too, so the first bucket is whole.
-    var from = day ? dayStart(now - MS[span]) : now - MS[span];
+    var now = Date.now(), per = PERIOD[span];
+    // Day buckets start at local midnight, month buckets on the 1st: the range begins there too, so the first
+    // bucket is whole – the year is this month plus the eleven before it.
+    var from = per === 'month' ? monthStart(now, 11) : per === 'day' ? dayStart(now - MS[span]) : now - MS[span];
     var msg = { type: 'recorder/statistics_during_period', start_time: new Date(from).toISOString(),
-      statistic_ids: [id], period: day ? 'day' : 'hour', types: kind === 'total' ? ['change'] : ['mean', 'min', 'max'] };
+      statistic_ids: [id], period: per, types: kind === 'total' ? ['change'] : ['mean', 'min', 'max'] };
     var units = M.units(st);
     if (units) msg.units = units;
     hass.callWS(msg)
@@ -211,35 +238,55 @@
     return cell.data;
   };
 
-  // ── Range per sensor, shared by all live parts of the popup ─────────────────
-  var spanOf = {}, parts = {};
-  M.span = function (id) { return spanOf[id] || '24h'; };
-  M.setSpan = function (id, span) {
-    if (!MS[span]) return;
-    spanOf[id] = span;
+  // ── Range and shape per sensor, shared by all live parts of the popup ───────
+  // Studio defaults (chart_span, chart_kind) are set when the popup opens; a tap in the popup wins for the
+  // session (not saved to the dashboard). shape: 'line' | 'bar' – without a choice the Studio field, else automatic.
+  var spanOf = {}, shapeOf = {}, dflt = {}, parts = {};
+  M.span = function (id) { return spanOf[id] || (dflt[id] && dflt[id].span) || '24h'; };
+  M.shape = function (id) {
+    var d = dflt[id] || {};
+    return shapeOf[id] || d.shape || M.autoShape(d.kind);
+  };
+  M.setDefaults = function (id, V, kind) {
+    V = V || {};
+    dflt[id] = { span: MS[V.chart_span] ? V.chart_span : '24h', shape: SHAPE_LABEL[V.chart_kind] ? V.chart_kind : null, kind: kind };
+  };
+  var show = function (id) {
     // The chart in the open popup (01-basis.js keeps the configs per key and swaps the mounted chart).
-    if (typeof window._hpPlantShow === 'function') window._hpPlantShow(M.key(id, span), null, true);
+    if (typeof window._hpPlantShow === 'function') window._hpPlantShow(M.key(id, M.span(id), M.shape(id)), null, true);
     // Hero, range and statistics redraw; the chart card itself is static (a redraw would drop the chart).
     var els = (parts[id] || []).filter(function (e) { return e && e.isConnected; });
     parts[id] = els;
     els.forEach(kick);
+  };
+  M.setSpan = function (id, span) {
+    if (!MS[span]) return;
+    spanOf[id] = span;
+    show(id);
+  };
+  M.setShape = function (id, shape) {
+    if (!SHAPE_LABEL[shape]) return;
+    shapeOf[id] = shape;
+    show(id);
   };
   var remember = function (id, el) {
     if (!el) return;
     var list = parts[id] = (parts[id] || []).filter(function (e) { return e && e.isConnected; });
     if (list.indexOf(el) < 0) list.push(el);
   };
-  // Tapping a range segment.
+  // Tapping a range or shape segment.
   document.addEventListener('click', function (ev) {
     var p = (ev.composedPath && ev.composedPath()) || [];
     for (var i = 0; i < p.length; i++) {
       var n = p[i];
-      if (!n || !n.getAttribute || !n.hasAttribute('data-casora-cspan')) continue;
+      if (!n || !n.getAttribute) continue;
+      var span = n.hasAttribute('data-casora-cspan'), shape = !span && n.hasAttribute('data-casora-cshape');
+      if (!span && !shape) continue;
       ev.preventDefault(); ev.stopPropagation();
-      var v = n.getAttribute('data-casora-cspan').split('|');
+      var v = n.getAttribute(span ? 'data-casora-cspan' : 'data-casora-cshape').split('|');
       if (window.casoraHaptic) window.casoraHaptic('selection');
       window._casoraSuppressDismiss = Date.now() + 600;
-      M.setSpan(v[0], v[1]);
+      if (span) M.setSpan(v[0], v[1]); else M.setShape(v[0], v[1]);
       return;
     }
   }, true);
@@ -254,11 +301,14 @@
     var series = M.series(entity, V, hass);
     var kind = M.kind(states[id]);
     var C = { id: id, kind: kind, series: series };
-    // One chart config per range; the popup mounts the current one, the segments swap it.
+    M.setDefaults(id, V, kind);
+    // One chart config per range and shape; the popup mounts the current one, the segments swap it.
     if (window._hpPlantCfg) {
       SPANS.forEach(function (sp) {
-        window._hpPlantCfg[M.key(id, sp)] = M.chartCfg(series, sp, kind);
-        if (window._hpPlantMeta) window._hpPlantMeta[M.key(id, sp)] = [series[0].name, sp, series[0].color];
+        SHAPES.forEach(function (sh) {
+          window._hpPlantCfg[M.key(id, sp, sh)] = M.chartCfg(series, sp, kind, sh);
+          if (window._hpPlantMeta) window._hpPlantMeta[M.key(id, sp, sh)] = [series[0].name, sp, series[0].color];
+        });
       });
     }
     var watch = series.map(function (s) { return s.entity; });
@@ -274,7 +324,7 @@
         custom_fields: { c: [{ 'justify-self': 'stretch' }, { overflow: 'visible' }] } };
       chart.custom_fields = { c: '<div class="hp-chart-slot" style="min-height:230px;pointer-events:auto;"></div>' };
       f.chart = { card: chart };
-      if (typeof window._hpChartInit === 'function') window._hpChartInit(M.key(id, M.span(id)), false);
+      if (typeof window._hpChartInit === 'function') window._hpChartInit(M.key(id, M.span(id), M.shape(id)), false);
     }
     if (series.length > 1) f.series = { card: K.secCard(watch, call('series'), states) };
     f.stats = { card: K.secCard([id], call('stats'), states) };
@@ -282,10 +332,12 @@
       narrowOrder: ['series', 'stats'] });
   };
 
-  // Time of a statistics bucket: hour → "14:00" / "Gestern 14:00", day → "Heute" / "Gestern" / weekday.
+  // Time of a statistics bucket: hour → "14:00" / "Gestern 14:00", day → "Heute" / "Gestern" / weekday,
+  // month → "Dieser Monat" / "Oktober 2026".
   var at = function (t, span, now) {
     var dd = Math.round((dayStart(now) - dayStart(t)) / 864e5);
     if (span === '24h') return dd <= 0 ? hm(t) : T('Gestern') + ' ' + hm(t);
+    if (span === '1y') return t >= monthStart(now) ? T('Dieser Monat') : new Date(t).toLocaleDateString(loc(), { month: 'long', year: 'numeric' });
     if (dd <= 0) return T('Heute');
     if (dd === 1) return T('Gestern');
     return new Date(t).toLocaleDateString(loc(), span === '30d' ? { day: 'numeric', month: 'numeric' } : { weekday: 'short' }).replace(/\.$/, '');
@@ -295,23 +347,29 @@
     var UI = window._casoraUI;
     if (!UI || !C || !C.id) return '';
     var st = states && states[C.id];
-    var span = M.span(C.id), now = Date.now();
+    var span = M.span(C.id), shape = M.shape(C.id), now = Date.now();
     if (part !== 'series') remember(C.id, el);
     if (part === 'hero') {
       var rest = [];
       var s = st && C.kind ? M.stats(hass, C.id, span, el) : null;
       if (s && !s.empty) {
-        if (C.kind === 'total') { if (s.today != null) rest.push(T('Heute') + ' ' + M.fmt(hass, C.id, s.today)); }
+        if (C.kind === 'total') { if (s.today != null) rest.push(T(span === '1y' ? 'Dieser Monat' : 'Heute') + ' ' + M.fmt(hass, C.id, s.today)); }
         else if (s.mean != null) rest.push('Ø ' + M.fmt(hass, C.id, s.mean) + ' · ' + LABEL[span]);
       }
       return UI.hero({ center: true, value: M.value(st, hass), sub: rest.join(' · ') || null, read: C.id,
         valueTone: st && bad(st.state) ? 'warn' : null });
     }
     if (part === 'range') {
-      // Segments like the mode switch; each carries its range (click handler above).
-      var i = 0;
-      var out = UI.segments(SPANS.map(function (sp) { return { label: LABEL[sp], active: sp === span }; }), null);
-      return out.replace(/<div class="hui-sg/g, function () { return '<div data-casora-cspan="' + esc(C.id + '|' + SPANS[i++]) + '" class="hui-sg'; });
+      // Segments like the mode switch: the ranges, beside them the shape (line / bars); each carries its value
+      // (click handler above). Narrow (phone) the shape row wraps under the ranges.
+      var i = 0, j = 0;
+      var out = UI.segments(SPANS.map(function (sp) { return { label: LABEL[sp], active: sp === span }; }), null)
+        .replace(/<div class="hui-sg/g, function () { return '<div data-casora-cspan="' + esc(C.id + '|' + SPANS[i++]) + '" class="hui-sg'; });
+      if (!C.kind) return out;
+      var sw = UI.segments(SHAPES.map(function (sh) { return { label: SHAPE_LABEL[sh], active: sh === shape }; }), null)
+        .replace(/<div class="hui-sg/g, function () { return '<div data-casora-cshape="' + esc(C.id + '|' + SHAPES[j++]) + '" class="hui-sg'; });
+      return '<div style="display:flex;flex-wrap:wrap;gap:10px 24px;align-items:start;"><div style="flex:3 1 300px;min-width:0;">' + out
+        + '</div><div style="flex:1 1 150px;min-width:0;">' + sw + '</div></div>';
     }
     if (part === 'series') {
       var rows = (C.series || []).map(function (x) {
@@ -334,9 +392,10 @@
       }
       var r = [];
       if (C.kind === 'total') {
-        if (d.today != null) r.push({ icon: 'calendar-day', iconTone: 'accent', label: 'Heute', value: M.fmt(hass, C.id, d.today) });
+        if (d.today != null) r.push({ icon: 'calendar-day', iconTone: 'accent', label: span === '1y' ? 'Dieser Monat' : 'Heute', value: M.fmt(hass, C.id, d.today) });
         if (span !== '24h' && d.sum != null) r.push({ icon: 'calendar', iconTone: 'accent', label: HEAD[span], value: M.fmt(hass, C.id, d.sum) });
         if (d.perDay != null) r.push({ icon: 'mdi:approximately-equal', iconTone: 'accent', label: 'Ø pro Tag', value: M.fmt(hass, C.id, d.perDay) });
+        if (d.perMonth != null) r.push({ icon: 'mdi:approximately-equal', iconTone: 'accent', label: 'Ø pro Monat', value: M.fmt(hass, C.id, d.perMonth) });
       } else {
         if (d.max) r.push({ icon: 'mdi:arrow-up-bold-outline', iconTone: 'bad', label: 'Höchster Wert', sub: at(d.max.t, span, now), value: M.fmt(hass, C.id, d.max.v) });
         if (d.min) r.push({ icon: 'mdi:arrow-down-bold-outline', iconTone: 'accent', label: 'Tiefster Wert', sub: at(d.min.t, span, now), value: M.fmt(hass, C.id, d.min.v) });

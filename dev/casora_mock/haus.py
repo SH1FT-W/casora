@@ -37,6 +37,8 @@ def merge(fixture: dict, extra: dict, label: str = "Stresshaus aktiv") -> None:
     fixture["entities"] = list(fixture["entities"]) + [e for e in extra.get("entities", []) if e["entity_id"] not in ids]
     fixture.setdefault("_buttons", {}).update(extra.get("_buttons", {}))
     fixture.setdefault("_history_extra", {}).update(extra.get("_history", {}))
+    # Days of long-term statistics per entity (default 30; e.g. 400 for the chart card's year range).
+    fixture.setdefault("_stats_days", {}).update(extra.get("_stats_days", {}))
     _LOGGER.warning("Casora Mock: %s (+%s Entitäten)", label, len(extra.get("entities", [])))
 
 

@@ -1,23 +1,26 @@
-// casora-chart.js – Casoras eigene Diagramm-Karte (ersetzt apexcharts-card, 1.2).
-// Lovelace-Karte custom:casora-chart, SVG, ohne Fremdbibliothek. Richtung A „Still“:
-// 2-px-Linie, Fläche 12 % → 0, gepunktete Hilfslinien, Skala rechts, Ablesen über die
-// große Zahl (eigene oder Hero-Zahl) statt schwebendem Fenster.
-//   { type: 'custom:casora-chart', kind: 'line'|'bar'|'spark', span: '48h',
+// casora-chart.js – Casora's own chart card (replaces apexcharts-card, 1.2).
+// Lovelace card custom:casora-chart, SVG, no third-party library. Direction A "calm":
+// 2 px line, area 12 % → 0, dotted guide lines, scale on the right, reading through the
+// big number (own or the popup's hero number) instead of a floating tooltip.
+//   { type: 'custom:casora-chart', kind: 'line'|'bar'|'spark', span: '48h' | '7d' | '1y',
 //     series: [{ entity, name, color, unit, decimals, map }], source: 'auto'|'history'|'stats'|'change',
-//     agg: 'mean'|'max', bucket: '1h', height, y: { min, max, labels }, step, readout: 'own'|'hero'|'none', legend,
-//     selected: Index oder Entität der zuerst gezeigten Reihe (Umschalter),
-//     read_as: Entität, die die Hero-Zahl beim Ablesen mitliest, plate, title }
-//   Feste Säulen ohne Verlauf (z. B. Tanken „Typischer Tag“): kind: 'bar', points: [{ t, v, color, tick }],
-//     unit, decimals, focus: 'min' (Grundanzeige = kleinster Wert, „Am günstigsten, 19:00 Uhr“).
+//     agg: 'mean'|'max', bucket: '1h', period: 'hour'|'day'|'month' (statistics period = bar bucket),
+//     height, y: { min, max, labels }, step, readout: 'own'|'hero'|'none', legend,
+//     selected: index or entity of the series shown first (switch),
+//     read_as: entity whose hero number reads along, plate, title }
+//   Bars: one bucket per hour / day / month (period), up to four series side by side; one series keeps the
+//     accent colour and the Ø line over the whole buckets, several take their own colours and a legend.
+//   Fixed columns without a history (e.g. fuel "typical day"): kind: 'bar', points: [{ t, v, color, tick }],
+//     unit, decimals, focus: 'min' (default reading = lowest value, "Cheapest, 19:00").
 (function () {
   'use strict';
   var H = 36e5, MIN = 6e4, DAY = 864e5, NS = 'http://www.w3.org/2000/svg';
   var C = {};
   C.ms = function (s) {
-    var m = /^(\d+(?:\.\d+)?)\s*(min|h|d)$/.exec(String(s || '').trim());
-    return m ? m[1] * (m[2] === 'min' ? MIN : m[2] === 'h' ? H : DAY) : 0;
+    var m = /^(\d+(?:\.\d+)?)\s*(min|h|d|y)$/.exec(String(s || '').trim());
+    return m ? m[1] * (m[2] === 'min' ? MIN : m[2] === 'h' ? H : m[2] === 'y' ? 365 * DAY : DAY) : 0;
   };
-  /* „Schöne“ Skala mit n Schritten; flache Linie (21,3999… gegen 21,4) bekommt ±1. */
+  /* "Nice" scale with n steps; a flat line (21.3999… against 21.4) gets ±1. */
   C.nice = function (lo, hi, n, min0) {
     if (min0 && lo > 0) lo = 0;
     if (!(hi - lo > 1e-9 * Math.max(1, Math.abs(hi)))) { if (min0 && lo >= 0) hi = hi > 0 ? hi * 2 : 1; else { lo -= 1; hi += 1; } }
@@ -27,7 +30,7 @@
     for (var i = 0, v = a; v <= b + step / 2 && i < 50; i++, v = a + i * step) t.push(+v.toFixed(10) || 0);
     return { lo: a, hi: b, ticks: t, step: step };
   };
-  /* Zusammenfassen: Mittel (oder Höchstwert) je Fenster, leere Fenster tragen den letzten Wert weiter. */
+  /* Summarise: mean (or maximum) per window; empty windows carry the last value on. */
   C.bucket = function (pts, t0, t1, ms, agg) {
     var out = [], i = 0, last = null;
     while (i < pts.length && pts[i][0] < t0) last = pts[i++][1];
@@ -45,10 +48,20 @@
     if (b.length && v != null && isFinite(v)) b[b.length - 1] = [t1, v];
     return b;
   };
-  /* Tagesanfänge (lokal, 23/25-Stunden-Tage bei Zeitumstellung richtig), letzter = heute. */
+  /* Day starts (local, 23/25-hour days around the clock change come out right), the last one = today. */
   C.days = function (now, n) {
     var d = new Date(now), out = [];
     for (var i = n - 1; i >= 0; i--) out.push(new Date(d.getFullYear(), d.getMonth(), d.getDate() - i).getTime());
+    return out;
+  };
+  /* Bucket starts for bars: n whole hours / days / months (local), the last one holds "now". */
+  C.starts = function (now, per, n) {
+    if (per === 'day') return C.days(now, n);
+    var d = new Date(now), out = [];
+    for (var i = n - 1; i >= 0; i--) {
+      out.push(per === 'month' ? new Date(d.getFullYear(), d.getMonth() - i, 1).getTime()
+        : new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours() - i).getTime());
+    }
     return out;
   };
   C.mono = function (p) {
@@ -69,12 +82,22 @@
   C.stepPath = function (p) {
     return p.map(function (q, i) { return (i ? 'H' + q[0].toFixed(1) + 'V' : 'M' + q[0].toFixed(1) + ',') + q[1].toFixed(1); }).join('');
   };
-  /* Zeitachse: Schritt so, dass Beschriftungen ≥ 64 px auseinander liegen; ganze Stunden/Tage lokal. */
+  /* Time axis: step so that labels sit ≥ 64 px apart; whole hours/days local. Over 90 days: month starts. */
   C.xTicks = function (t0, t1, w) {
-    var st = [15 * MIN, 30 * MIN, H, 2 * H, 3 * H, 6 * H, 12 * H, DAY, 2 * DAY, 7 * DAY], step = st[st.length - 1], out = [];
-    for (var i = 0; i < st.length; i++) if (w / ((t1 - t0) / st[i]) >= Math.max(72, w / 6)) { step = st[i]; break; }
-    // Lokal zählen, auch über die Zeitumstellung (Frühjahr: fehlende Uhrzeit entfällt;
-    // Herbst: liegt die erste 02:00 vor t0, gilt die zweite).
+    var out = [], i;
+    if (t1 - t0 > 90 * DAY) {
+      var d0 = new Date(t0), every = Math.max(1, Math.ceil(64 / (w / ((t1 - t0) / (30.4 * DAY)))));
+      for (i = 0; i < 40; i++) {
+        var tm = new Date(d0.getFullYear(), d0.getMonth() + i + 1, 1).getTime();
+        if (tm >= t1 - 10 * DAY) break;
+        if (tm >= t0 && i % every === 0) out.push({ t: tm, day: true, mon: true });
+      }
+      return out;
+    }
+    var st = [15 * MIN, 30 * MIN, H, 2 * H, 3 * H, 6 * H, 12 * H, DAY, 2 * DAY, 7 * DAY], step = st[st.length - 1];
+    for (i = 0; i < st.length; i++) if (w / ((t1 - t0) / st[i]) >= Math.max(72, w / 6)) { step = st[i]; break; }
+    // Count locally, also across the clock change (spring: the missing hour is skipped;
+    // autumn: if the first 02:00 lies before t0, the second one counts).
     var sm = step / MIN, b = new Date(t0);
     for (var k = step > DAY ? 1440 : 0; k < 1e6; k += sm) {
       var t = new Date(b.getFullYear(), b.getMonth(), b.getDate(), 0, k), m = t.getHours() * 60 + t.getMinutes(), u = +t;
@@ -92,24 +115,26 @@
   };
   C.hm = function (t, h12) {
     var o = { hour: '2-digit', minute: '2-digit' }; if (h12 != null) o.hour12 = h12;
-    try { if (new Intl.DateTimeFormat(C.lang(), o).resolvedOptions().hour12) o.hour = 'numeric'; } catch (e) {} // 12 h: „7:00 PM“
+    try { if (new Intl.DateTimeFormat(C.lang(), o).resolvedOptions().hour12) o.hour = 'numeric'; } catch (e) {} // 12 h: "7:00 PM"
     return new Date(t).toLocaleTimeString(C.lang(), o);
   };
   C.wd = function (t) { return new Date(t).toLocaleDateString(C.lang(), { weekday: 'short' }).replace('.', ''); };
   C.dm = function (t) { return new Date(t).toLocaleDateString(C.lang(), { day: 'numeric', month: 'numeric' }); };
   C.dayLong = function (t) { return new Date(t).toLocaleDateString(C.lang(), { weekday: 'long', day: 'numeric', month: 'long' }); };
+  C.mon = function (t) { return new Date(t).toLocaleDateString(C.lang(), { month: 'short' }).replace('.', ''); };
+  C.monLong = function (t) { return new Date(t).toLocaleDateString(C.lang(), { month: 'long', year: 'numeric' }); };
   C.uhr = function (s) { return /^de/.test(C.lang()) ? s + ' Uhr' : s; };
   C.when = function (t, now, h12) {
     var a = new Date(t), b = new Date(now), same = a.toDateString() === b.toDateString();
     return C.uhr((same ? C.tr('Heute') : C.wd(t)) + ', ' + C.hm(t, h12));
   };
-  /* Gerätefarben (iOS-Töne aus den Aufrufern) → eine der vier geprüften Diagrammstufen. */
+  /* Device colours (iOS tones from the callers) → one of the four checked chart steps. */
   C.color = function (c) {
     c = String(c || '').trim();
     if (!c) return 'var(--cc1)';
     if (/^c[1-4]$/.test(c)) return 'var(--c' + c + ')';
     if (c === 'accent') return 'var(--cacc)';
-    // D9 (1.2): Sparklines neutral im Text-Ton; Farbe nur im Popup.
+    // D9 (1.2): sparklines neutral in the text tone; colour only in the popup.
     if (c === 'spark') return 'var(--casora-chart-spark, var(--cink3))';
     var m = /^#([0-9a-f]{6})$/i.exec(c);
     if (!m) return c;
@@ -134,7 +159,7 @@
     + '.ro{display:flex;align-items:baseline;gap:8px;min-height:34px;padding:0 var(--casora-chart-inset,6px);font-variant-numeric:tabular-nums}'
     + '.v{font-size:28px;font-weight:600;letter-spacing:-.02em;color:var(--cink)}.u{font-size:15px;font-weight:500;color:var(--cink2);margin-left:-4px}'
     + '.w{font-size:13px;font-weight:500;color:var(--cink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-    // Umschalter wie hui-sg: Felder 46 hoch, Radius 18, aktiv hell.
+    // Switch like hui-sg: fields 46 high, radius 18, the active one light.
     + '.sw{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;margin:2px var(--casora-chart-inset,6px) 10px}'
     + '.sw button{all:unset;box-sizing:border-box;min-width:0;min-height:46px;border-radius:var(--casora-soft-seg-radius,18px);padding:0 12px;display:flex;align-items:center;justify-content:center;gap:6px;'
     + 'background:var(--casora-soft-control-fill,rgba(140,115,90,.10));font-size:13px;font-weight:600;color:var(--casora-soft-sub,var(--cink2));cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-tap-highlight-color:transparent;transition:background-color .16s ease}'
@@ -163,10 +188,10 @@
   class CasoraChart extends HTMLElement {
     static getStubConfig() { return { kind: 'line', span: '24h', series: [] }; }
     setConfig(c) {
-      if (!c) throw new Error('casora-chart: keine Konfiguration');
+      if (!c) throw new Error('casora-chart: no configuration');
       var s = Array.isArray(c.series) ? c.series : c.entity ? [{ entity: c.entity, color: c.color, attribute: c.attribute }] : [];
       this._c = Object.assign({ kind: 'line', span: '24h', source: 'auto' }, c, { series: s.filter(function (x) { return x && x.entity; }) });
-      var sel = c.selected, ser = this._c.series;  // selected: zuerst gezeigte Reihe (Index oder Entität)
+      var sel = c.selected, ser = this._c.series;  // selected: series shown first (index or entity)
       this._sel = typeof sel === 'string' ? Math.max(0, ser.findIndex(function (x) { return x.entity === sel; })) : sel >= 0 && sel < ser.length ? Math.floor(sel) : 0;
       this._data = null; this._key = null;
       this.toggleAttribute('plate', !!c.plate);
@@ -202,19 +227,30 @@
       if (c.source !== 'auto') return c.source;
       return c.kind === 'bar' ? 'change' : this._spanMs() > 2 * DAY && !c.series.some(function (s) { return s.attribute; }) ? 'stats' : 'history';
     }
+    /* Statistics period = bar bucket: hour within a day, day up to a month, month beyond (or c.period). */
+    _per() {
+      var c = this._c, span = this._spanMs();
+      if (c.period) return c.period;
+      if (c.kind !== 'bar') return 'hour';
+      return span <= DAY ? 'hour' : span > 60 * DAY ? 'month' : 'day';
+    }
+    _n(per) {
+      var span = this._spanMs();
+      return Math.max(1, per === 'hour' ? Math.round(span / H) : per === 'month' ? Math.round(span / (30.4 * DAY)) : Math.round(span / DAY) || 7);
+    }
     _load(force) {
       var c = this._c, h = this._h;
       if (c && c.points) { this._draw(); return; }
       if (!c || !h || !h.connection || !c.series.length || !this.isConnected) { this._draw(); return; }
-      var src = this._src(), ids = c.series.map(function (s) { return s.entity; });
-      var key = ids.join(',') + '|' + c.span + '|' + src + '|' + (c.agg || '');
+      var src = this._src(), ids = c.series.map(function (s) { return s.entity; }), per = this._per();
+      var key = ids.join(',') + '|' + c.span + '|' + src + '|' + (c.agg || '') + '|' + per + (c.kind === 'bar' ? '|bar' : '');
       if (!force && key === this._key && (this._sub || Date.now() - this._at < 5 * MIN)) return;
       this._key = key; this._at = Date.now();
       var hit = cache.get(key);
       if (hit && Date.now() - hit.at < 60000) { this._data = hit.data; this._draw(); if (src !== 'history') return; }
       this._unsub();
       var me = this, now = Date.now(), span = this._spanMs();
-      var start = c.kind === 'bar' ? C.days(now, Math.round(span / DAY))[0] : now - span;
+      var start = c.kind === 'bar' ? C.starts(now, per, this._n(per))[0] : now - span;
       var put = function (data) { if (me._key !== key) return; me._data = data; cache.set(key, { at: Date.now(), data: data }); me._draw(); };
       var hist = function () {
         var acc = {}, la = {}, at = {};
@@ -223,7 +259,7 @@
           var st = (msg && msg.states) || {};
           Object.keys(st).forEach(function (e) {
             (st[e] || []).forEach(function (x) {
-              // Attribut (z. B. current_temperature des Thermostats): fehlt es, gilt das letzte.
+              // Attribute (e.g. the thermostat's current_temperature): missing → the last one holds.
               if (x.a) la[e] = x.a;
               if (acc[e]) acc[e].push([(x.lu || x.lc || 0) * 1000, at[e] ? (la[e] || {})[at[e]] : x.s]);
             });
@@ -236,16 +272,16 @@
       if (src === 'history') { hist(); return; }
       var change = src === 'change';
       h.callWS({ type: 'recorder/statistics_during_period', start_time: new Date(start).toISOString(),
-        statistic_ids: ids, period: change ? 'day' : 'hour', types: change ? ['change'] : ['mean', 'min', 'max', 'state'] })
+        statistic_ids: ids, period: per, types: change ? ['change'] : ['mean', 'min', 'max', 'state'] })
         .then(function (r) {
           var any = ids.some(function (e) { return r && r[e] && r[e].length; });
-          if (!any) return change ? put({ src: src, stats: r || {} }) : hist();
-          put({ src: src, stats: r });
+          if (!any) return change ? put({ src: src, stats: r || {}, per: per }) : hist();
+          put({ src: src, stats: r, per: per });
         }).catch(hist);
     }
-    /* Punkte je Reihe: [[t, Zahl], …] aus Verlauf (mit map für Textzustände) oder Statistik. */
+    /* Points per series: [[t, number], …] from the history (map for text states) or the statistics. */
     _points(s) {
-      var d = this._data;
+      var d = this._data, me = this;
       if (!d) return [];
       var map = s.map, num = function (v) {
         if (map && Object.prototype.hasOwnProperty.call(map, String(v).toLowerCase())) return map[String(v).toLowerCase()];
@@ -256,7 +292,9 @@
       else (d.stats[s.entity] || []).forEach(function (p) {
         var v = d.src === 'change' ? p.change : p.mean != null ? p.mean : p.state;
         var t = typeof p.start === 'number' ? p.start : Date.parse(p.start);
-        if (v != null && isFinite(v)) out.push([d.src === 'change' ? t : t + 30 * MIN, +v]);
+        // Lines put a statistics value in the middle of its period; bars keep the bucket start.
+        var mid = d.per === 'month' ? 15 * DAY : d.per === 'day' ? 12 * H : 30 * MIN;
+        if (v != null && isFinite(v)) out.push([d.src === 'change' || me._c.kind === 'bar' ? t : t + mid, +v]);
       });
       return out.sort(function (a, b) { return a[0] - b[0]; });
     }
@@ -288,7 +326,7 @@
     }
     _head(box, name, unit) {
       var c = this._c, me = this;
-      // Etikett innen (1.2.1)
+      // Label inside (1.2.1)
       if (c.title) box.appendChild(Object.assign(document.createElement('div'), { className: 'tt', textContent: C.tr(c.title) }));
       if (c.kind !== 'spark' && c.series.length > 1 && c.switch !== false) {
         var sw = document.createElement('div'); sw.className = 'sw'; sw.setAttribute('role', 'tablist');
@@ -314,8 +352,8 @@
       var live = this.shadowRoot.querySelector('.srt');
       if (live && w !== this._def) live.textContent = (name ? name + ' ' : '') + v + ' ' + u + ', ' + w;
     }
-    /* Hero-Zahl des Popups liest mit: [data-casora-read="<entity>"] bekommt den Wert,
-       [data-casora-read-when] die Zeit. Loslassen stellt den Text wieder her. */
+    /* The popup's hero number reads along: [data-casora-read="<entity>"] gets the value,
+       [data-casora-read-when] the time. Letting go restores the text. */
     _hero(vals, w) {
       var t = this._tg, me = this;
       if (!t || t.some(function (n) { return !n.isConnected; })) {
@@ -404,7 +442,7 @@
       var Y = function (v) { return padT + (1 - (v - sc.lo) / (sc.hi - sc.lo || 1)) * (Hh - padT - padB); };
       var cv = live(s0);
       var lastV = isFinite(cv) ? cv : vals.length ? B[0][B[0].length - 1][1] : null;
-      var spanTxt = C.tr(({ '2h': 'letzte 2 Stunden', '4h': 'letzte 4 Stunden', '6h': 'letzte 6 Stunden', '24h': 'letzte 24 Stunden', '48h': 'letzte 48 Stunden', '7d': 'letzte 7 Tage', '30d': 'letzte 30 Tage' })[c.span] || c.span);
+      var spanTxt = C.tr(({ '2h': 'letzte 2 Stunden', '4h': 'letzte 4 Stunden', '6h': 'letzte 6 Stunden', '24h': 'letzte 24 Stunden', '48h': 'letzte 48 Stunden', '7d': 'letzte 7 Tage', '30d': 'letzte 30 Tage', '1y': 'letzte 12 Monate' })[c.span] || c.span);
       var svg = this._svg(box, W, Hh, vals.length ? name + ', ' + spanTxt + ', ' + C.nf(lo, dec) + ' ' + C.tr('bis') + ' ' + C.nf(hi, dec) + ' ' + unit
         + ', ' + C.tr('jetzt') + ' ' + C.nf(lastV, dec) + ' ' + unit : name + ', ' + C.tr('Keine Daten'));
       if (c.legend !== false && !multi && list.length > 1) {
@@ -418,7 +456,7 @@
         this._grid(svg, sc, Y, W, padR, fmt);
         C.xTicks(t0, now, W - padL - padR).forEach(function (k) {
           var x = X(k.t); if (x < 14 || x > W - padR - 14) return;
-          svg.appendChild(el('text', { x: x, y: Hh - 6, 'text-anchor': 'middle' }, k.day ? (span > 2 * DAY ? (span > 8 * DAY ? C.dm(k.t) : C.wd(k.t)) : C.wd(k.t)) : C.hm(k.t, me._h12())));
+          svg.appendChild(el('text', { x: x, y: Hh - 6, 'text-anchor': 'middle' }, k.mon ? C.mon(k.t) : k.day ? (span > 8 * DAY ? C.dm(k.t) : C.wd(k.t)) : C.hm(k.t, me._h12())));
         });
       }
       var P = B.map(function (b) { return b.map(function (p) { return [X(p[0]), Y(p[1])]; }); });
@@ -458,62 +496,93 @@
         me._say(ro, t[0], t[1], w, name, cur(i));
       }, function () { g.style.opacity = 0; me._release(); dflt(); });
     }
+    /* Bars per bucket (hour / day / month): one series in the accent colour with the Ø line over the whole
+       buckets, several side by side in their own colours with a legend (different units: the switch). */
     _bars(box, W) {
-      var c = this._c, me = this, now = Date.now(), n = Math.round(this._spanMs() / DAY) || 7;
-      var s0 = c.series[0] || {}, unit = s0.entity ? this._unit(s0) : '', name = C.tr(s0.name || '');
+      var c = this._c, me = this, now = Date.now(), per = this._per(), n = this._n(per), d = this._data;
+      var multi = c.series.length > 1 && c.switch !== false;
+      var list = multi ? [c.series[this._sel] || c.series[0]] : c.series.slice(0, 4), m = list.length;
+      var s0 = list[0] || {}, unit = s0.entity ? this._unit(s0) : '', name = C.tr(s0.name || '');
       var ro = this._head(box, name, unit), Hh = c.height || 150, padT = 10, padB = 24, padR = 40, padL = 2;
-      var starts = C.days(now, n), pts = this._points(s0), d = this._data;
-      var days = starts.map(function (t, i) {
-        var end = i < n - 1 ? starts[i + 1] : now + 1, v = null;
-        pts.forEach(function (p) {
-          if (p[0] < t || p[0] >= end) return;
-          v = d && d.src === 'change' ? (v || 0) + p[1] : c.agg === 'mean' ? p[1] : Math.max(v == null ? -Infinity : v, p[1]);
+      var starts = C.starts(now, per, n), dec = s0.decimals != null ? s0.decimals : 1;
+      // Value per bucket and series: counter → sum of the changes, raw history → mean, statistics → the bucket's value.
+      var V = list.map(function (s) {
+        var pts = me._points(s);
+        return starts.map(function (t, i) {
+          var end = i < n - 1 ? starts[i + 1] : now + 1, v = null, sum = 0, k = 0;
+          pts.forEach(function (p) {
+            if (p[0] < t || p[0] >= end) return;
+            if (d && d.src === 'change') v = (v || 0) + p[1];
+            else if (d && d.raw) { sum += p[1]; k++; v = sum / k; }
+            else v = c.agg === 'max' ? Math.max(v == null ? -Infinity : v, p[1]) : p[1];
+          });
+          return v;
         });
-        return { t: t, v: v };
       });
-      var have = days.filter(function (x) { return x.v != null; }), dec = s0.decimals != null ? s0.decimals : 1;
-      var prev = have.filter(function (x) { return x.t !== starts[n - 1]; });
-      var avg = prev.length ? prev.reduce(function (a, x) { return a + x.v; }, 0) / prev.length : null;
-      var hi = have.length ? Math.max.apply(null, have.map(function (x) { return x.v; })) : 0, sc = C.nice(0, hi, 2, true);
-      var Y = function (v) { return padT + (1 - v / (sc.hi || 1)) * (Hh - padT - padB); }, base = Y(0);
-      var slot = (W - padL - padR) / n, bw = Math.max(2, Math.min(26, slot * 0.56));
-      var spanTxt = C.tr(n > 7 ? 'letzte 30 Tage' : 'letzte 7 Tage');
-      var svg = this._svg(box, W, Hh, have.length ? name + ', ' + spanTxt + ', ' + C.nf(Math.min.apply(null, have.map(function (x) { return x.v; })), dec)
-        + ' ' + C.tr('bis') + ' ' + C.nf(hi, dec) + ' ' + unit + (avg != null ? ', Ø ' + C.nf(avg, dec) + ' ' + unit : '') : name + ', ' + C.tr('Keine Daten'));
-      this._def = C.tr('Ø pro Tag');
+      var have = [].concat.apply([], V).filter(function (v) { return v != null; });
+      var prev = V[0].filter(function (v, i) { return v != null && i < n - 1; });
+      var avg = prev.length ? prev.reduce(function (a, v) { return a + v; }, 0) / prev.length : null;
+      var hi = have.length ? Math.max.apply(null, have) : 0, lo = have.length ? Math.min.apply(null, have) : 0;
+      var sc = C.nice(Math.min(0, lo), hi, 2, true);
+      var Y = function (v) { return padT + (1 - (v - sc.lo) / (sc.hi - sc.lo || 1)) * (Hh - padT - padB); }, base = Y(0);
+      var slot = (W - padL - padR) / n, gap = m > 1 ? 2 : 0;
+      var bw = Math.max(2, Math.min(m > 1 ? 18 : 26, (slot * (m > 1 ? 0.7 : 0.56) - gap * (m - 1)) / m)), gw = bw * m + gap * (m - 1);
+      var spanTxt = C.tr(per === 'hour' ? 'letzte 24 Stunden' : per === 'month' ? 'letzte 12 Monate' : n > 7 ? 'letzte 30 Tage' : 'letzte 7 Tage');
+      var svg = this._svg(box, W, Hh, have.length ? name + ', ' + spanTxt + ', ' + C.nf(lo, dec) + ' ' + C.tr('bis') + ' ' + C.nf(hi, dec) + ' ' + unit
+        + (avg != null ? ', Ø ' + C.nf(avg, dec) + ' ' + unit : '') : name + ', ' + C.tr('Keine Daten'));
+      if (c.legend !== false && m > 1) {
+        var lg = document.createElement('div'); lg.className = 'lg';
+        lg.innerHTML = list.map(function (s) { return '<span><i style="background:' + C.color(s.color) + '"></i>' + C.tr(s.name || s.entity) + '</span>'; }).join('');
+        box.insertBefore(lg, svg);
+      }
+      this._def = C.tr(per === 'hour' ? 'Ø pro Stunde' : per === 'month' ? 'Ø pro Monat' : 'Ø pro Tag');
       var dflt = function () { me._say(ro, avg != null ? C.nf(avg, dec) : '–', unit, me._def, null); };
       if (!have.length) { this._empty(svg, W, Hh); dflt(); return; }
       var tl = this._grid(svg, sc, Y, W, padR, function (v) { return C.nf(v, v % 1 ? 1 : 0); });
-      var every = n > 7 ? Math.ceil(44 / slot) : 1, bars = [];
-      days.forEach(function (x, i) {
-        var cx = padL + slot * (i + 0.5), today = i === n - 1, y = Y(x.v || 0);
-        var b = el('path', { d: roundTop(cx - bw / 2, y, bw, Math.max(0, base - y), Math.min(4, bw / 2)), style: 'fill:var(--cacc);opacity:' + (today ? 1 : 0.45) });
-        if (x.v) svg.appendChild(b);
-        bars.push(b);
-        if (today || (n - 1 - i) % every === 0 && i < n - 1 - every / 2) {
-          svg.appendChild(el('text', { x: cx, y: Hh - 6, 'text-anchor': 'middle', style: today ? 'fill:var(--cink);font-weight:600' : null },
-            today ? C.tr('Heute') : n > 7 ? C.dm(x.t) : C.wd(x.t)));
+      // Labels: hours at whole steps (1/2/3/6 h by room), days as before, months by their short name; the current bucket bold.
+      var every = per === 'hour' ? (slot >= 44 ? 1 : slot >= 22 ? 2 : slot >= 15 ? 3 : 6) : per === 'month' ? Math.ceil(30 / slot) : n > 7 ? Math.ceil(44 / slot) : 1;
+      var rest = m > 1 ? 0.6 : 0.45, bars = [];
+      starts.forEach(function (t, i) {
+        var cx = padL + slot * (i + 0.5), cur = i === n - 1;
+        bars[i] = list.map(function (s, j) {
+          var v = V[j][i], y = Y(v || 0), x = cx - gw / 2 + j * (bw + gap);
+          var b = el('path', { d: roundTop(x, Math.min(y, base), bw, Math.abs(base - y), Math.min(4, bw / 2)),
+            style: 'fill:' + (m > 1 ? C.color(s.color) : 'var(--cacc)') + ';opacity:' + (cur ? 1 : rest) });
+          if (v) svg.appendChild(b);
+          return b;
+        });
+        var show = per === 'hour' ? new Date(t).getHours() % every === 0 : per === 'day' ? cur || (n - 1 - i) % every === 0 && i < n - 1 - every / 2 : (n - 1 - i) % every === 0;
+        if (show) {
+          svg.appendChild(el('text', { x: cx, y: Hh - 6, 'text-anchor': 'middle', style: cur && per !== 'hour' ? 'fill:var(--cink);font-weight:600' : null },
+            per === 'hour' ? C.hm(t, me._h12()) : per === 'month' ? C.mon(t) : cur ? C.tr('Heute') : n > 7 ? C.dm(t) : C.wd(t)));
         }
       });
-      if (avg != null) {
+      if (avg != null && m === 1) {
         var ya = Y(avg);
-        // „Ø“ hat Vorrang vor einer Skalenzahl auf gleicher Höhe.
+        // "Ø" wins over a scale number at the same height.
         tl.forEach(function (t) { if (Math.abs(t.getAttribute('y') - ya - 4) < 12) t.remove(); });
         svg.appendChild(el('line', { x1: padL, x2: W - padR, y1: ya, y2: ya, style: 'stroke:var(--cink2);stroke-width:1.25;stroke-dasharray:4 4' }));
         svg.appendChild(el('text', { x: W - padR + 10, y: ya + 4, style: 'fill:var(--cink2);font-weight:600' }, 'Ø'));
       }
       dflt();
+      var txt = function (v) { return v == null ? '–' : C.nf(v, dec); };
+      var when = function (i) {
+        var t = starts[i], cur = i === n - 1;
+        if (per === 'hour') return C.when(t, now, me._h12());
+        if (per === 'month') return C.monLong(t);
+        if (cur) return d && d.raw ? C.tr('Heute') : C.uhr(C.tr('Heute bis') + ' ' + C.hm(Math.floor(now / H) * H, me._h12()));
+        return C.dayLong(t);
+      };
       this._near = function (x) { return Math.max(0, Math.min(n - 1, Math.floor((x - padL) / slot))); };
       this._bind(svg, n, function (i) {
-        var x = days[i];
-        bars.forEach(function (b, j) { b.style.opacity = j === i ? 1 : j === n - 1 ? 0.6 : 0.3; });
-        var w = i === n - 1 ? C.uhr(C.tr('Heute bis') + ' ' + C.hm(Math.floor(now / H) * H, me._h12())) : C.dayLong(x.t);
-        if (d && d.raw && i === n - 1) w = C.tr('Heute');
-        me._say(ro, x.v == null ? '–' : C.nf(x.v, dec), unit, w, name, [{ entity: s0.entity, text: x.v == null ? '–' : C.nf(x.v, dec) + ' ' + unit, num: x.v == null ? '–' : C.nf(x.v, dec) }]);
-      }, function () { bars.forEach(function (b, j) { b.style.opacity = j === n - 1 ? 1 : 0.45; }); me._release(); dflt(); });
+        bars.forEach(function (row, k) { row.forEach(function (b) { b.style.opacity = k === i ? 1 : k === n - 1 ? 0.6 : 0.3; }); });
+        me._say(ro, txt(V[0][i]), unit, when(i), name, list.map(function (s, j) {
+          var v = V[j][i]; return { entity: s.entity, text: txt(v) + (v == null ? '' : ' ' + me._unit(s)), num: txt(v) };
+        }));
+      }, function () { bars.forEach(function (row, k) { row.forEach(function (b) { b.style.opacity = k === n - 1 ? 1 : rest; }); }); me._release(); dflt(); });
     }
-    /* Feste Säulen (points): Skala rechts ab dem kleinsten Wert, gepunktete Linien, Farbe je Säule;
-       Ablesen zeigt Wert und Uhrzeit, Grundanzeige der kleinste Wert („Am günstigsten“). */
+    /* Fixed columns (points): scale on the right from the lowest value, dotted lines, colour per column;
+       reading shows value and time, the default reading is the lowest value ("Cheapest"). */
     _fixed(box, W) {
       var c = this._c, me = this, pts = c.points.filter(function (p) { return p && isFinite(p.v); });
       var unit = c.unit || '', dec = c.decimals != null ? c.decimals : 1;

@@ -66,6 +66,29 @@ console.log('ok Live-Ende');
 }
 console.log('ok Tage');
 
+// Bucket starts for bars: whole hours (24 h), days, months (12, the last = this month); '1y' = 365 days.
+{
+  const now = new Date(2026, 9, 24, 14, 10).getTime();
+  let s = C.starts(now, 'hour', 24);
+  assert.equal(s.length, 24);
+  assert.equal(s[23], new Date(2026, 9, 24, 14).getTime(), 'last bucket = the current hour');
+  assert.equal(s[0], new Date(2026, 9, 23, 15).getTime());
+  s = C.starts(now, 'month', 12);
+  assert.equal(s.length, 12);
+  assert.equal(s[11], new Date(2026, 9, 1).getTime(), 'last = 1 October');
+  assert.equal(s[0], new Date(2025, 10, 1).getTime(), 'first = 1 November last year');
+  assert.deepEqual(C.starts(now, 'day', 7), C.days(now, 7));
+  assert.equal(C.ms('1y'), 365 * DAY);
+  assert.equal(C.mon(new Date(2026, 9, 1).getTime()), 'Okt');
+  assert.equal(C.monLong(new Date(2026, 9, 1).getTime()), 'Oktober 2026');
+  // Year axis: month starts, thinned so labels keep ≥ 72 px.
+  let k = C.xTicks(now - 365 * DAY, now, 800);
+  assert.ok(k.length >= 10 && k.length <= 12 && k.every((x) => x.mon && new Date(x.t).getDate() === 1), 'year wide: ' + k.length);
+  k = C.xTicks(now - 365 * DAY, now, 300);
+  assert.ok(k.length >= 3 && k.length <= 6 && k.every((x) => x.mon), 'year narrow: ' + k.length);
+}
+console.log('ok Bucket-Starts');
+
 // Zeitachse: Abstand ≥ 64 px, ganze Stunden; 48 h → Wochentage um Mitternacht; 30 T → Tagesdatum.
 {
   const now = new Date(2026, 9, 8, 14, 10).getTime();
@@ -117,13 +140,13 @@ console.log('ok Pfade');
 }
 console.log('ok Farben');
 
-// Größe: ausgeliefert gzip-komprimiert ≤ 12 KB (apexcharts-card: ~500 KB), unkomprimiert ≤ 37 KB
-// (bis 26.10.31: 12 KB / 36 KB – das Limit lag 8 Bytes über dem Stand; „selected“, der Umschalter startet mit einer
-// gewählten Reihe, brauchte ~300 Bytes).
+// Größe: ausgeliefert gzip-komprimiert ≤ 13,5 KB (apexcharts-card: ~500 KB), unkomprimiert ≤ 42 KB
+// (bis 26.10.31: 12 KB / 36 KB; bis 26.10.59: 12,5 KB / 37 KB – Balken je Stunde/Tag/Monat mit bis zu vier Reihen
+// nebeneinander, Jahr-Spanne und Monats-Ticks (Diagramm-Karte #50) brauchten ~5 KB).
 {
   const zlib = await import('node:zlib');
   const raw = Buffer.byteLength(src), gz = zlib.gzipSync(src).length;
-  assert.ok(raw <= 37 * 1024, 'casora-chart.js ' + raw + ' Bytes > 37 KB');
-  assert.ok(gz <= 12.5 * 1024, 'casora-chart.js gzip ' + gz + ' Bytes > 12,5 KB');
+  assert.ok(raw <= 42 * 1024, 'casora-chart.js ' + raw + ' Bytes > 42 KB');
+  assert.ok(gz <= 13.5 * 1024, 'casora-chart.js gzip ' + gz + ' Bytes > 13,5 KB');
 }
 console.log('ok Größe');
