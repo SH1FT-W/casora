@@ -56,7 +56,7 @@ if (shotsDir) fs.mkdirSync(shotsDir, { recursive: true });
 const ERLAUBT = [
   [/./, /pring|mp-back|mini-badges>button\.pbadge|mini-subs>span\.pbadge|mp-badges>button\.pbadge/,
     'Vorschau bildet die Maße des echten Dashboard-Badges/-Zurück-Knopfs nach (Symbolkreis links 6 statt 5 px, Zurück-Pfeil 2 px optisch versetzt) – Dashboard-Frage, offen'],
-  [/./, /^fluchten .*miniroom>div\.mini-body>div\.mz\]/,
+  [/./, /^fluchten .*miniroom>div\.mini-body>div\.mz$/,
     'Studio-Vorschau: die Zonen (Wetter + Raumname, Badge-Zeile) teilen nur die Klasse mz, sind aber keine Liste – die Badge-Zeile zeigt Pillen mit Innenabstand, das Wetter-Symbol steht frei. Gemessen wird das erst, seit die Badge-Zeile mit dem Platzhalter „Eigene Badges“ (#53) zweizeilig und damit ähnlich hoch wird (24.10.2026)'],
   [/./, /^groesse .*(rowmenu|bclose|back)/,
     'Kopfzeile des Inspektors: ⋯ bewusst kleiner als ✕ bzw. ‹ (Rangfolge) – Geschmacksfrage, offen'],
