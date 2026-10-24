@@ -30,7 +30,8 @@
 
   const SPRING_IN = 'cubic-bezier(0.32, 0.72, 0, 1)';
   const EASE_OUT  = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-  // casora-local-patch: Raumfotos für die Raum-Ansicht (Basisname in www/casora/rooms/<name>.jpg, + "-night").
+  // casora-local-patch: room photos for the room view (file name of the photo, + "-night"; own photos are
+  // private and get a signed URL from casoraPhotoCss in casora-core.js).
   const ROOM_PHOTOS = {
     'Wohnzimmer': 'wohnzimmer', 'Küche': 'kuche', 'Büro': 'buro', 'Schlafzimmer': 'schlafzimmer',
     'Bad': 'badezimmer', 'Badezimmer': 'badezimmer', 'Flur': 'flur', 'HWR': 'hwr', 'Waschküche': 'hwr',
@@ -1374,12 +1375,14 @@
       this._blurLayerRoomBg = null;
       {
         // Das Studio schreibt das Raumfoto mit (image/image_night) – auch nach Umbenennen.
-        const _rp = this._config.room ? (this._config.image || ROOM_PHOTOS[this._config.room]) : null;
+        const _stem = (r) => (window.casoraPhotoStem ? window.casoraPhotoStem(r) : r) || null;
+        const _rp = this._config.room ? (_stem(this._config.image) || ROOM_PHOTOS[this._config.room]) : null;
         if (_rp) {
           const _dark = typeof this._hass?.themes?.darkMode === 'boolean'
             ? this._hass.themes.darkMode : window.matchMedia('(prefers-color-scheme: dark)').matches;
-          const _pic = _dark ? (this._config.image_night || _rp + '-night') : _rp;
-          this._blurLayerRoomBg = `var(--casora-wallpaper-veil-light, linear-gradient(transparent, transparent)) 0 96px / 100% 100lvh no-repeat, linear-gradient(var(--casora-filter-veil, rgba(8,10,14,0.32)), var(--casora-filter-veil, rgba(8,10,14,0.32))) center center / cover no-repeat, url("/casora_assets/rooms/${_pic}.jpg") center center / cover no-repeat`;
+          const _pic = _dark ? (_stem(this._config.image_night) || _rp + '-night') : _rp;
+          const _css = window.casoraPhotoCss ? window.casoraPhotoCss(_pic, this._hass) : `url("/casora_assets/rooms/${_pic}.jpg")`;
+          this._blurLayerRoomBg = `var(--casora-wallpaper-veil-light, linear-gradient(transparent, transparent)) 0 96px / 100% 100lvh no-repeat, linear-gradient(var(--casora-filter-veil, rgba(8,10,14,0.32)), var(--casora-filter-veil, rgba(8,10,14,0.32))) center center / cover no-repeat, ${_css} center center / cover no-repeat`;
           Object.assign(blurLayer.style, {
             backdropFilter: 'none', webkitBackdropFilter: 'none',
             background: this._blurLayerRoomBg, filter: `blur(${ROOM_PHOTO_BLUR}) saturate(1.05)`,
@@ -1387,6 +1390,17 @@
             width: 'calc(100vw + 192px)', height: 'calc(100lvh + 192px)', // feste Bildschirmmaße, unabhängig vom Eltern-Element
             transform: 'translateZ(0)', webkitTransform: 'translateZ(0)',
           });
+          // Signed photo URLs still loading: fill the photo in once they are there.
+          if (_css === 'none' && window.casoraPhotoCss) {
+            const _late = () => {
+              const c = window.casoraPhotoCss(_pic, this._hass);
+              if (c === 'none') return;
+              window.removeEventListener('casora-photos-changed', _late);
+              this._blurLayerRoomBg = this._blurLayerRoomBg.replace('none center center', c + ' center center');
+              blurLayer.style.background = this._blurLayerRoomBg;
+            };
+            window.addEventListener('casora-photos-changed', _late);
+          }
           // Zwilling direkt in <body> (z-index -1): Die Ebene oben hängt in einem verschobenen
           // Casora-Element und wird an dessen Rand abgeschnitten (rechts ~16 px). Der Zwilling
           // liegt unter allem Seiteninhalt, deckt aber das Home-Wallpaper in diesem Streifen ab.
@@ -1600,7 +1614,8 @@
         b.style.display = 'block';
         b.style.opacity = '1';
       }
-      if (this._blurLayerRoomBg && b.style.background.indexOf('/casora_assets/rooms/') < 0) b.style.background = this._blurLayerRoomBg;
+      if (this._blurLayerRoomBg && b.style.background.indexOf('/casora_assets/rooms/') < 0
+          && b.style.background.indexOf('/api/casora/photo/') < 0) b.style.background = this._blurLayerRoomBg;
     }
 
     _ensureAutoSections() {

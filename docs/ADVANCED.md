@@ -125,12 +125,20 @@ The redirect is **on by default** (`input_boolean.casora_dashboard_redirect`). L
 
 #### Your own wallpaper
 
-Point the theme at your own pair of photos and everything below them follows automatically:
+The easiest way is the Studio: upload a photo for the overview and pick it. Uploaded photos are
+private (stored in `/config/casora_fotos`, served only to logged-in users through signed URLs).
+
+You can also point the theme at your own pair of photos and everything below them follows automatically:
 
 ```yaml
-  casora-mobile-hero-img-day: url("/local/casora/rooms/my-home.jpg")
-  casora-mobile-hero-img-night: url("/local/casora/rooms/my-home-night.jpg")
+  casora-mobile-hero-img-day: url("/api/casora/photo/my-home.jpg")
+  casora-mobile-hero-img-night: url("/api/casora/photo/my-home-night.jpg")
 ```
+
+`/api/casora/photo/<file>` is an uploaded photo (in `/config/casora_fotos`); `casora-core.js` swaps
+it for a signed URL, because a CSS background cannot log in. The old address
+`/local/casora/rooms/<file>` is read the same way, so older themes keep working after the photos
+moved. Any other `/local/…` file is used as it is (and is public, like everything in `www`).
 
 `casora-core.js` reads both images and derives the gradient and mesh colors the
 photo dissolves into, per mode, so the bottom of the screen blends with whatever
@@ -160,7 +168,7 @@ These are the only files you edit to map Casora to your devices/entities. All be
 
 ### 7) Add your room images + icons
 
-- Room images live in: `/config/www/casora/rooms/`
+- Room images live in: `/config/casora_fotos/` (private, outside `www`; upload them in the Studio)
   - Example: `home.jpg` (light) and `home-night.jpg` (dark)
   - Casora ships a **day and a night photo for 31 room types** (`<room>-demo.jpg` / `<room>-demo-night.jpg`: living room, kitchen, bedroom, kids' room, bathroom, office, hallway, laundry, garage, garden, terrace, pool and more). New rooms get the matching one automatically from their name, in German or English: *Küche* gets the kitchen, *Waschküche* the laundry room, *Gäste-WC* the guest toilet.
   - Your own photo always wins: name it after the room (`kueche.jpg` or `kuche.jpg`, `buero.jpg`, `wohnzimmer.jpg` …) and Casora picks it instead. Rooms with no match get the house.
@@ -623,7 +631,7 @@ Optionally add a `room_chips:` entry for its sensor chips, and set `mobile_filte
 
 `room_key:` on the header remains available as an override for the rare case where a display name shouldn't drive the key: two rooms whose names slug identically, or a name containing an emoji. Setting it also overrides the overlay if you pass `filter_category:` explicitly there.
 
-**Wallpaper:** nothing to configure here. The mobile background reuses the same room photo the desktop dashboard loads from `www/casora/rooms/`, with the gradient beneath it colored by sampling that photo. There is no separate set of mobile wallpapers. To point it at your own pair of images, see [Your own wallpaper](#your-own-wallpaper) above.
+**Wallpaper:** nothing to configure here. The mobile background reuses the same room photo the desktop dashboard loads from `/config/casora_fotos/`, with the gradient beneath it colored by sampling that photo. There is no separate set of mobile wallpapers. To point it at your own pair of images, see [Your own wallpaper](#your-own-wallpaper) above.
 
 ---
 
@@ -631,7 +639,7 @@ Optionally add a `room_chips:` entry for its sensor chips, and set `mobile_filte
 
 This repo is intended as a starting point:
 
-- Swap out room/background images in `www/casora/rooms/`.
+- Swap out room/background images in the Studio (stored in `/config/casora_fotos/`).
 - Tweak theme colors, shadows, and typography: copy `custom_components/casora/theme_weich.yaml` (the Casora look; it builds on the base values in `theme.yaml`) to `/config/themes/`, rename the theme inside it (updates overwrite the integration's copy) and pick your version in the profile.
 - Adjust layouts (`casora_screen_layout.yaml`, etc.) to match your devices and preferences.
 

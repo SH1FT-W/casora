@@ -201,18 +201,20 @@ await check('neuer Name nur mit Nachtfoto sofort gewählt und in der Auswahl', n
   && n.image === 'qa-raumfoto-nur-nacht' && n.list.includes('qa-raumfoto-nur-nacht'), { last: n.last, image: n.image });
 await pg.evaluate((nm) => { const p = window.__panel(); p._state.compact.rooms[p._room].variables.image = nm; p._renderForm(); }, NAME);
 
-// (5) Das Dashboard lädt <name>.jpg und <name>-night.jpg über /casora_assets.
+// (5) Das Dashboard lädt <name>.jpg und <name>-night.jpg (seit HACS-Review privat: signierte Adressen).
 const urls = await pg.evaluate(async (n) => {
   const r = {};
-  for (const u of [`/casora_assets/rooms/${n}.jpg`, `/casora_assets/rooms/${n}-night.jpg`]) {
+  const hit = (await window.__panel()._images(true)).find((i) => i.name === n) || {};
+  for (const u of [hit.day, hit.night].filter(Boolean)) {
     const res = await fetch(u, { cache: 'no-store' });
     const buf = new Uint8Array(await res.arrayBuffer());
     r[u] = { status: res.status, jpeg: buf[0] === 0xff && buf[1] === 0xd8, kb: Math.round(buf.length / 1024) };
   }
   return r;
 }, NAME);
-await check('Dashboard findet Tag- und Nachtfoto als JPEG', Object.values(urls).every((x) => x.status === 200 && x.jpeg), urls);
-await check('großes Foto verkleinert (unter 3 MB)', urls[`/casora_assets/rooms/${NAME}.jpg`].kb < 3072, urls);
+await check('Dashboard findet Tag- und Nachtfoto als JPEG', Object.keys(urls).length === 2
+  && Object.values(urls).every((x) => x.status === 200 && x.jpeg), urls);
+await check('großes Foto verkleinert (unter 3 MB)', Object.values(urls).every((x) => x.kb < 3072), urls);
 
 // (6) Speichern → neu laden → bleibt
 const saved = await pg.evaluate(async () => { const p = window.__panel(); await p._save(); return !p._isDirty(); });

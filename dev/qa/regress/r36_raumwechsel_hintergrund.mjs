@@ -55,7 +55,7 @@ const state = (key) => pg.evaluate((key) => {
   return {
     shown: !!(o && o._showing), layer: !!(b && b.isConnected),
     display: cs && cs.display, opacity: cs && +parseFloat(cs.opacity).toFixed(2),
-    photo: !!(b && /\/casora_assets\/rooms\//.test(b.style.background || '')),
+    photo: !!(b && /\/(casora_assets\/rooms|api\/casora\/photo)\//.test(b.style.background || '')),
     covers: !!(r && r.left <= 0 && r.top <= 0 && r.right >= innerWidth && r.bottom >= innerHeight),
   };
 }, key);

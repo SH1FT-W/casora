@@ -1,4 +1,4 @@
-"""Serve Casora's icons, fonts, weather art and demo room images."""
+"""Serve Casora's icons, fonts, weather art and demo room images (public, no user photos)."""
 
 from __future__ import annotations
 
@@ -19,18 +19,18 @@ _LOGGER = logging.getLogger(__name__)
 
 SETTINGS_FILE = "einstellungen.js"
 
-# Raumfotos (06.10.2026): Das Dashboard lädt sie als /casora_assets/rooms/<name>.jpg – rund
-# 3 MB je Öffnen. Nimmt der Browser WebP an, kommt eine WebP-Fassung (gleiche Größe, etwa
-# halb so viele Bytes; am Handy höchstens PHONE_EDGE Pixel breit – das Foto liegt dort
-# ohnehin weichgezeichnet hinter den Karten). Die Fassungen entstehen beim ersten Abruf und
-# liegen unter CACHE_DIR; die Originale bleiben unverändert.
+# Room photos (Oct 2026): about 3 MB per dashboard open. When the browser accepts WebP it gets a
+# WebP version (same size, about half the bytes; on phones at most PHONE_EDGE wide, the photo
+# sits blurred behind the cards there anyway). Versions are made on first request and kept in
+# CACHE_DIR; originals stay untouched. Used here for the shipped demo photos and by
+# images.CasoraPhotoView for the user's own (private) photos.
 CACHE_DIR = ".storage/casora_bilder"
 PHOTO_EXT = (".jpg", ".jpeg", ".png")
 WEBP_QUALITY = 80
 PHONE_EDGE = 1280
-_PHONE = re.compile(r"iPhone|iPod|Android.*Mobile|Mobile.*Android", re.I)
-# Mitgelieferte Dateien ändern sich nur mit einem Update: einen Tag cachen. Eigene Dateien
-# (www/casora) können jederzeit ersetzt werden: immer kurz nachfragen (ETag → meist „304“).
+PHONE_RE = re.compile(r"iPhone|iPod|Android.*Mobile|Mobile.*Android", re.I)
+# Shipped files only change with an update: cache for a day. Own files (www/casora) can be
+# replaced at any time: always revalidate (ETag, usually 304).
 _SHIPPED_CC = "public, max-age=86400"
 _OWN_CC = "no-cache"
 _lock = threading.Lock()
@@ -46,7 +46,7 @@ def _under(base: str, rel: str) -> str | None:
 
 
 def webp_variant(src: str, cache_dir: str, phone: bool) -> str | None:
-    """Pfad der WebP-Fassung von src (anlegen, falls nötig); None, wenn es keine gibt."""
+    """Path of the WebP version of src (made when needed); None when there is none."""
     try:
         st = os.stat(src)
     except OSError:
@@ -55,7 +55,7 @@ def webp_variant(src: str, cache_dir: str, phone: bool) -> str | None:
     name = f"{key}-{st.st_mtime_ns:x}-{st.st_size:x}-{'p' if phone else 'd'}.webp"
     out = os.path.join(cache_dir, name)
     if os.path.isfile(out):
-        # Leere Datei = Umwandlung schlug schon einmal fehl: nicht bei jedem Abruf neu rechnen.
+        # Empty file = conversion failed before: do not retry on every request.
         size = os.path.getsize(out)
         return out if 0 < size < st.st_size else None
     try:
@@ -71,12 +71,12 @@ def webp_variant(src: str, cache_dir: str, phone: bool) -> str | None:
                 img = img.resize((PHONE_EDGE, round(img.height * PHONE_EDGE / img.width)), Image.LANCZOS)
             buf = io.BytesIO()
             img.save(buf, "WEBP", quality=WEBP_QUALITY, method=4)
-    except Exception:  # noqa: BLE001 - dann eben das Original
-        _LOGGER.debug("Casora: keine WebP-Fassung für %s", src, exc_info=True)
+    except Exception:  # noqa: BLE001 - serve the original then
+        _LOGGER.debug("Casora: no WebP version for %s", src, exc_info=True)
         buf = None
     with _lock:
         os.makedirs(cache_dir, exist_ok=True)
-        # Ältere Fassungen desselben Fotos (ersetzt) entfernen.
+        # Drop older versions of the same (replaced) photo.
         for old in os.listdir(cache_dir):
             if old.startswith(key + "-") and old.endswith(("-p.webp" if phone else "-d.webp")) and old != name:
                 try:
@@ -92,10 +92,11 @@ def webp_variant(src: str, cache_dir: str, phone: bool) -> str | None:
 
 
 class CasoraAssetsView(HomeAssistantView):
-    """Shipped assets win; the user's www/casora fills the gaps.
+    """Shipped assets win; the user's www/casora fills the gaps (icons, fonts, settings file).
 
-    Unauthenticated because these are loaded by bare <img> and @font-face,
-    which send no token. Same reach as /local, which serves the same files.
+    Unauthenticated because these are loaded by bare <img> and @font-face, which send no
+    token; same reach as /local, which serves the same files. rooms/ is shipped demo photos
+    only: uploaded photos are private (images.CasoraPhotoView, signed URLs).
     """
 
     url = ASSETS_URL_BASE + "/{path:.*}"
@@ -110,8 +111,12 @@ class CasoraAssetsView(HomeAssistantView):
         user = hass.config.path(USER_ASSETS_DIR)
         legacy = hass.config.path(LEGACY_USER_ASSETS_DIR)
 
+        rel = os.path.normpath(path).replace(os.sep, "/").lower()
+        # Never a user's photo here, also not through www/casora or www/hemma (old places).
+        bases = (self._shipped,) if rel == "rooms" or rel.startswith("rooms/") else (self._shipped, user, legacy)
+
         def _find() -> str | None:
-            for base in (self._shipped, user, legacy):
+            for base in bases:
                 full = _under(base, path)
                 if full and os.path.isfile(full):
                     return full
@@ -119,7 +124,7 @@ class CasoraAssetsView(HomeAssistantView):
 
         found = await hass.async_add_executor_job(_find)
         if found is None and path == SETTINGS_FILE:
-            # Eigene Einstellungen sind optional: ohne Datei ein leeres Modul.
+            # Own settings are optional: without the file an empty module.
             return web.Response(text="// Keine eigenen Casora-Einstellungen (www/casora/einstellungen.js).\n",
                                 content_type="text/javascript", headers={"Cache-Control": "no-store"})
         if found is None:
@@ -129,7 +134,7 @@ class CasoraAssetsView(HomeAssistantView):
         if path.startswith("rooms/") and found.lower().endswith(PHOTO_EXT):
             headers["Vary"] = "Accept, User-Agent"
             if "image/webp" in request.headers.get("Accept", ""):
-                phone = bool(_PHONE.search(request.headers.get("User-Agent", "")))
+                phone = bool(PHONE_RE.search(request.headers.get("User-Agent", "")))
                 webp = await hass.async_add_executor_job(
                     webp_variant, found, hass.config.path(CACHE_DIR), phone)
                 if webp:
