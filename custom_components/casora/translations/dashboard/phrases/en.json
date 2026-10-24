@@ -2308,7 +2308,8 @@
   "Räder reinigen": "Clean wheels",
   "Wasserauslassfilter": "Water outlet filter",
   "Schmutzwassertank (Roboter)": "Dirty water tank (robot)",
-  "noch 1 Tag": "1 day left"
+  "noch 1 Tag": "1 day left",
+  "Kein Ton von der Klingel – neuer Versuch …": "No sound from the doorbell, trying again …"
  },
  "patterns": [
   [

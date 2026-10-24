@@ -477,6 +477,14 @@ states['camera.carport_sub'].state = 'idle';
   assert.equal(KL.flowStep(fs, 1400, 3000, 0.05), true, 'real sound: talk connection');
   assert.equal(KL.flowStep(fs, 1900, 4000, 0.0001), true, 'pause between words: stays');
   assert.equal(KL.flowStep(fs, 1900, 6600, 0.0001), false, 'no data for 2.5 s: back to the player');
+  // #23 (24.10.): pure silence (level 0, bytes growing) for 6 s → retry; any sound or unknown level resets.
+  const ss = {};
+  assert.equal(KL.silentStep(ss, 0, 1000, 1000), false);
+  assert.equal(KL.silentStep(ss, 0, 2000, 4000), false, 'not yet 6 s');
+  assert.equal(KL.silentStep(ss, 0, 3000, 7100), true, '6 s of silence: retry due');
+  assert.equal(KL.silentStep(ss, 0.004, 4000, 8000), false, 'sound: reset');
+  assert.equal(KL.silentStep(ss, 0, 5000, 9000), false, 'counting anew');
+  assert.equal(KL.silentStep({}, null, 5000, 99000), false, 'level unknown: never');
   const stats = (b) => ({ getStats: () => Promise.resolve(new Map([['a', { type: 'inbound-rtp', kind: 'audio', bytesReceived: b }], ['v', { type: 'inbound-rtp', kind: 'video', bytesReceived: 9e9 }]])) });
   assert.equal(await KL.audioIn(stats(1234)), 1234, 'audio bytes only');
   assert.equal(await KL.audioIn(null), null);

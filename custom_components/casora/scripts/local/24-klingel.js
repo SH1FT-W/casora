@@ -806,6 +806,15 @@
   // over only once real sound came through it (level above KL.SOUND); pauses between words do not switch back.
   // Without a level from the browser (null), growing bytes decide as before.
   KL.SOUND = 0.003;
+  // #23 (vitidron 24.10., levels): a failed session carries pure silence (level exactly 0, bytes growing) while the
+  // microphone sends – the doorbell serves the previous two-way session still. After SILENT ms of that, the card ends
+  // the session and starts it once more by itself (one retry per press). Returns true when that is due.
+  KL.SILENT = 6000;
+  KL.silentStep = function (t, level, bytes, now) {
+    if (level == null || level > 0 || !(bytes > 0)) { t.silentSince = null; return false; }
+    if (!t.silentSince) t.silentSince = now;
+    return now - t.silentSince >= KL.SILENT;
+  };
   KL.flowStep = function (t, bytes, now, level) {
     if (bytes != null && bytes > (t.lastBytes || 0)) { t.lastBytes = bytes; t.lastFlow = now; }
     if (level != null && level > KL.SOUND) t.heard = true;
@@ -1248,11 +1257,11 @@
     };
 
     // Sprechen (Versuch).
-    P._talk = function () {
+    P._talk = function (again) {
       if (this._t) { this._talkStop(); return; }
       var self = this, h = this._hass, id = (this._cfg || {}).entity;
       if (!h || !id || !KL.canTalk() || (this._v && this._v.idx)) return;
-      if (window.casoraHaptic) window.casoraHaptic('medium');
+      if (!again) { this._talkRetried = false; if (window.casoraHaptic) window.casoraHaptic('medium'); }
       // Sprechen an: groß (Studio-Option, Standard an).
       if ((this._cfg || {}).big && !this._big) this._setBig(true);
       var t = this._t = { state: 'connecting', sid: null, queue: [] };
@@ -1315,6 +1324,14 @@
                 // Every 2 s: is it real sound or silence, and does the microphone send?
                 if (++tick % 2 === 0) {
                   try { console.info('casora klingel: Pegel', JSON.stringify(KL.levelLine(a))); } catch (e) { /* quiet */ }
+                }
+                // Silent session: once more, by itself.
+                if (!self._talkRetried && KL.silentStep(t, a.inLevel, a.inBytes, Date.now())) {
+                  self._talkRetried = true;
+                  try { console.info('casora klingel: Sprechverbindung bleibt still – neuer Versuch'); } catch (e) { /* quiet */ }
+                  self._talkStop(true);
+                  self._note('Kein Ton von der Klingel – neuer Versuch …', 4000);
+                  setTimeout(function () { if (!self._t && self.isConnected) self._talk(true); }, 1500);
                 }
               });
             }, 1000);
