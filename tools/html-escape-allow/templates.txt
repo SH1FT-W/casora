@@ -1,0 +1,13 @@
+# Card templates (dashboards/casora/button_card_templates.json), see 00-common.txt for the format.
+dashboards/casora/button_card_templates.json | re:^(?:return )?fit\( | fit = casoraStateFit (escapes its text, casora-core.js) or casoraEsc | 90
+dashboards/casora/button_card_templates.json | re:^arcPath\( | SVG arc path from numbers (badge gauge rings) | 8
+dashboards/casora/button_card_templates.json | GLYPHS[glyph] || '' | fixed SVG glyph map of the progress ring (pause/play) | 2
+dashboards/casora/button_card_templates.json | pathD | SVG path data, ln() is only called with literals (air quality badge) | 1
+dashboards/casora/button_card_templates.json | hide | camera popup: constant JS of the onerror handler (the whole handler is escaped where it goes into the attribute) | 2
+dashboards/casora/button_card_templates.json | row.join('') | camera popup: control buttons built from escaped parts (detailFor) | 2
+dashboards/casora/button_card_templates.json | cams.map(buildTile).join('') | camera popup: tiles built from escaped parts (buildTile) | 2
+dashboards/casora/button_card_templates.json | cams.map(detailFor).join('') | camera popup: detail views built from escaped parts (detailFor) | 2
+dashboards/casora/button_card_templates.json | (_soft ? window._casoraCamSoft.mode() : '') | fixed markup of the soft camera mode switch (03-popups.js) | 2
+dashboards/casora/button_card_templates.json | metricFields.head | popup head markup built by UI helpers, wrapped for the chart tap | 2
+dashboards/casora/button_card_templates.json | re:^(?:_pid|_tid|_mid|_ctid|_cmid|_cur|_safe|_fmt|_powerScore|_sns|_qid|_thresh|_scoreBlock|_hid|_room|_lid|_doorId|_hzSys|_pwrSnip|_id|_countSnip|_drTileM|_drTileD|_name|_battId|_ids|_badgeOc)$ | JS source spliced into nested [[[ ]]] templates (JSON.stringify'd ids or fixed code), not HTML | 76
+dashboards/casora/button_card_templates.json | re:^JSON\.stringify\((?:entityId \|\| ''|costEntityId \|\| ''|labelText|side|name|info\.unit|_tw|iconOn|iconOff|eid)\)$ | JS literal spliced into the source of a nested [[[ ]]] template, not HTML | 14

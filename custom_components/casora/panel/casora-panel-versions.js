@@ -94,7 +94,7 @@
     + ":host(.is-light.cv-peek) #mapmount::after{background:rgba(0,0,0,.035)}";
 
   const t = (s) => (window.casoraI18n ? window.casoraI18n.t(s) : s);
-  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const esc = window.casoraEsc || ((s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])));
   const I = () => window.__casoraPanelInternals || {};
   const stable = (x) => JSON.stringify(x, (k, v) => (v && typeof v === "object" && !Array.isArray(v)
     ? Object.keys(v).sort().reduce((o, key) => { o[key] = v[key]; return o; }, {}) : v));

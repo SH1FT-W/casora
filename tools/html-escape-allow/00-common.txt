@@ -1,0 +1,11 @@
+# Reviewed spots for tools/html-escape-check.mjs: "file | expression | reason" (one per line).
+# The expression is the exact text as the checker prints it, "re:<regex>", or "def <name>" for a definition
+# named like an escaper that is no HTML escaper. The file may end in "*" (prefix).
+# Only for values that are code constants, numbers or markup built from escaped parts – never for text from Home
+# Assistant (names, states, attributes), the dashboard config or the user.
+custom_components/casora/panel/casora-panel-b-mehr.js | def esc | keydown handler for the Escape key, not an escaper
+custom_components/casora/panel/casora-panel-b-ux.js | def esc | keydown handler for the Escape key, not an escaper
+custom_components/casora/panel/casora-panel-community.js | def esc | keydown handler for the Escape key, not an escaper
+custom_components/casora/panel/casora-panel-glocke.js | def esc | keydown handler for the Escape key, not an escaper
+custom_components/casora/panel/casora-panel-umzug.js | def esc | regex escaper for new RegExp, not used in HTML
+custom_components/casora/scripts/local/04-navigation.js | def _esc | keydown handler for the Escape key, not an escaper

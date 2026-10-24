@@ -6,6 +6,8 @@
 // Gruppe, Symbol leuchtet, wenn eins an ist.
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+// Templates take the escaper from window (casoraEsc) with a local fallback.
+globalThis.window = globalThis.window || globalThis;
 
 const T = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
 const B = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/panel/casora-templates.json', import.meta.url), 'utf8')).templates;

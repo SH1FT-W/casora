@@ -39,11 +39,7 @@
   var bad = function (s) { return s == null || s === 'unknown' || s === 'unavailable'; };
   var num = function (v) { var n = parseFloat(v); return isFinite(n) ? n : null; };
   var tr = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"']/g, function (ch) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
-    });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var hassNow = function () { var ha = document.querySelector('home-assistant'); return ha && ha.hass; };
   var notice = function (msg) {
     var ha = document.querySelector('home-assistant');

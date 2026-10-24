@@ -68,7 +68,7 @@
     return { name, icon: I.roomIconSrc ? I.roomIconSrc(glyph) : "/casora_assets/icons/" + glyph + ".svg" };
   }
 
-  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const esc = window.casoraEsc || ((s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])));
 
   function build(phone, room) {
     const labels = LABELS[lang] || LABELS[lang.split("-")[0]] || LABELS.en;

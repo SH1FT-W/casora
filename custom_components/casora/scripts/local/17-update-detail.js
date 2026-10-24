@@ -201,7 +201,7 @@
       + keys.map(function (k) {
         return '<div class="hh-pill' + (k.pri ? ' pri' : '') + (k.off ? ' dis' : '') + '"'
           + (k.off || !k.svc ? '' : ' data-casora-svc="' + esc(JSON.stringify(k.svc)) + '"') + (k.attr || '') + '>'
-          + '<ha-icon icon="' + k.icon + '" style="--mdc-icon-size:20px;width:20px;height:20px;display:block;"></ha-icon>'
+          + '<ha-icon icon="' + esc(k.icon) + '" style="--mdc-icon-size:20px;width:20px;height:20px;display:block;"></ha-icon>'
           + '<span>' + esc(T(k.label)) + '</span></div>';
       }).join('') + '</div>';
   };

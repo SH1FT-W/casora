@@ -16,11 +16,7 @@
   var DEVICE = /^(light|cover|climate|fan|media_player|vacuum|lawn_mower|switch|lock|alarm_control_panel|camera|humidifier|water_heater|valve|siren|input_boolean|person|remote)$/;
   var SETTINGS_ROW = /^(Weitere Einstellungen|More settings)$/i;
 
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var T = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
   var hassNow = function () { var ha = document.querySelector('home-assistant'); return ha && ha.hass; };
   var two = function (n) { return (n < 10 ? '0' : '') + n; };

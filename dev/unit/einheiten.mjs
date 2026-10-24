@@ -2,6 +2,8 @@
 //   node dev/unit/einheiten.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+// Templates take the escaper from window (casoraEsc) with a local fallback.
+globalThis.window = globalThis.window || globalThis;
 const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
 // Quelle statt Paket: das Paket ist seit 1.3 ohne Einrückung/Kommentare (tools/js_schlank.py), die
 // Ausschnitte unten suchen nach Einrückung.

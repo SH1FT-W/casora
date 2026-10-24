@@ -40,9 +40,7 @@
   var DAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
   var MON = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
   var MONS = ['Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sep.', 'Okt.', 'Nov.', 'Dez.'];
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var day0 = function (d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
   var addD = function (d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; };
   var ymd = function (d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
@@ -305,8 +303,8 @@
     var loc = String(e.loc || '').replace(/^[\s,;.·\-–]+|[\s,;·\-–]+$/g, '');
     if (!/[\p{L}\p{N}]/u.test(loc)) loc = '';
     var sub = [c.name, span, loc].filter(Boolean).join(' · ');
-    return '<div class="hcal-r"><div class="hcal-bar" style="background:' + c.color + ';"></div>'
-      + '<div class="hcal-tm"' + (e.allDay ? ' style="font-size:12px;"' : '') + '>' + tm + '</div>'
+    return '<div class="hcal-r"><div class="hcal-bar" style="background:' + esc(c.color) + ';"></div>'
+      + '<div class="hcal-tm"' + (e.allDay ? ' style="font-size:12px;"' : '') + '>' + esc(tm) + '</div>'
       + '<div class="hcal-tx"><div class="hcal-tt">' + esc(e.name) + '</div><div class="hcal-ts">' + esc(sub) + '</div></div></div>';
   };
 
@@ -328,11 +326,11 @@
       var cls = 'hcal-d' + (d.getMonth() !== m.getMonth() ? ' o' : '') + (d.getDay() % 6 === 0 ? ' we' : '')
         + (ymd(d) === ymd(today) ? ' t' : '') + (ymd(d) === ymd(sel) ? ' s' : '');
       g += '<div class="' + cls + '" data-hcal="' + pre + 'day:' + ymd(d) + '"><div class="hcal-n">' + d.getDate() + '</div>'
-        + '<div class="hcal-dots">' + cols.slice(0, 3).map(function (cc) { return '<i style="background:' + cc + ';"></i>'; }).join('') + '</div></div>';
+        + '<div class="hcal-dots">' + cols.slice(0, 3).map(function (cc) { return '<i style="background:' + esc(cc) + ';"></i>'; }).join('') + '</div></div>';
     }
     g += '</div>';
     var lg = '<div class="hcal-lg">' + legend.map(function (c) {
-      return '<span class="hcal-c' + (c.off ? ' off' : '') + '" data-hcal="' + c.key + '"><i style="background:' + c.color + ';"></i>' + esc(c.name) + '</span>';
+      return '<span class="hcal-c' + (c.off ? ' off' : '') + '" data-hcal="' + esc(c.key) + '"><i style="background:' + esc(c.color) + ';"></i>' + esc(c.name) + '</span>';
     }).join('') + '</div>';
     if (SOFT()) return CSS() + '<div class="hcal hs">' + sHead(MON[m.getMonth()] + ' ' + m.getFullYear(), nav) + '<div class="hcal-pl">' + g + lg + '</div></div>';
     return CSS() + '<div class="hcal">' + head(MON[m.getMonth()] + ' ' + m.getFullYear(), nav) + g + lg + '</div>';
@@ -376,7 +374,7 @@
     var hits = on(sel);
     var sub = n === 0 ? 'Abholung heute' : n === 1 ? 'Abholung morgen · heute Abend raus' : n > 1 ? 'Abholung in ' + n + ' Tagen' : 'Abholung';
     var body = hits.length ? hits.map(function (b) {
-      return '<div class="hcal-r"><div class="hcal-bar" style="background:' + b.color + ';"></div>'
+      return '<div class="hcal-r"><div class="hcal-bar" style="background:' + esc(b.color) + ';"></div>'
         + '<div class="hcal-tx"><div class="hcal-tt">' + esc(b.label) + '</div><div class="hcal-ts">' + esc(sub) + '</div></div></div>';
     }).join('') : '<div class="hcal-e">' + (data.loading && !data.list.length ? 'Wird geladen …' : 'Keine Abholung') + '</div>';
     return CSS() + (SOFT() ? '<div class="hcal hs">' + sHead(esc(t)) : '<div class="hcal">' + head(esc(t))) + body + '</div>';
@@ -389,7 +387,7 @@
       K.w.tries++;
       setTimeout(K.repaint, 1200);
     }
-    return '<div class="hcal-' + k + '">' + K.html(k) + '</div>';
+    return '<div class="hcal-' + esc(k) + '">' + K.html(k) + '</div>';
   };
   /* Spalte fürs Abfall-Popup: Monat und gewählter Tag; beim Öffnen auf den nächsten Abholtag.
      keys (Issue #7, 04.10.2026): nur einzelne Abschnitte, z. B. ['wmonth'] links und ['wday'] rechts. */
@@ -461,7 +459,7 @@
         wl.forEach(function (e) { if (wseen.indexOf(e) < 0) wseen.push(e); });
         var wcls = 'hcal-wd' + (ymd(wd) === ymd(today) ? ' t' : wd < today ? ' p' : '') + (K.sel && ymd(wd) === K.sel ? ' s' : '');
         var wev = wl.length ? wl.slice(0, 4).map(function (e) {
-          return '<div class="hcal-we"><i style="background:' + calOf(cals, e.cal).color + ';"></i>'
+          return '<div class="hcal-we"><i style="background:' + esc(calOf(cals, e.cal).color) + ';"></i>'
             + (e.allDay ? '' : '<b>' + hm(e.start) + '</b>') + '<span>' + esc(e.name) + '</span></div>';
         }).join('') + (wl.length > 4 ? '<div class="hcal-wf">+' + (wl.length - 4) + ' weitere</div>' : '')
           : '<div class="hcal-wf">Frei</div>';
@@ -487,7 +485,7 @@
   K.sec = function (k, states, hass, variables) {
     K.load(hass, variables);
     K._vars = variables;
-    return '<div class="hcal-' + k + '">' + K.html(k, variables) + '</div>';
+    return '<div class="hcal-' + esc(k) + '">' + K.html(k, variables) + '</div>';
   };
 
   /* Spalte aus Abschnitten (custom_fields, je eine Hülle aus sec/wsec), für beide Popups. */

@@ -357,7 +357,7 @@
     const ch = window._casoraAqChannels(c.light, { light_channels: c.lightChannels }, states, hass);
     if (ch.length) {
       out += gap(18) + lbl('Farbkanäle') + '<div class="aq-chs" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">'
-        + ch.map((k, i) => '<div style="min-width:0;--casora-popup-slider-fill:' + (k.color || 'var(--casora-popup-ui-accent, #5E9E96)') + ';'
+        + ch.map((k, i) => '<div style="min-width:0;--casora-popup-slider-fill:' + UI.esc(k.color || 'var(--casora-popup-ui-accent, #5E9E96)') + ';'
           + (i === ch.length - 1 && ch.length % 2 ? 'grid-column:1 / -1;' : '') + '">'
           + UI.slider({ value: k.value, softHeight: 46, bar: true, small: true, label: k.name, svc: k.svc }) + '</div>').join('')
         + '</div>';
@@ -499,7 +499,7 @@
     const it = window._casoraAqAiItem(a.temp, states);
     const ready = window._casoraAiReady(states);
     if (!ready && !it) return '';
-    const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+    const esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
     const ago = (ts) => { const t = Date.parse(ts); if (isNaN(t)) return ''; const m = Math.max(0, Math.round((Date.now() - t) / 60000));
       return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
     const Z = { gut: ['Alles im grünen Bereich', 'var(--casora-popup-ui-good, #30D158)', 'mdi:check-circle'],
@@ -534,7 +534,7 @@
       + '<span style="flex:1 1 auto;text-align:left;">Aquarium-Doktor</span></div>'
       + '<div style="background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);padding:16px 18px;'
       + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);">'
-      + body + (it && !running && it.at ? '<div style="font-size:12px;color:' + T.ink3 + ';margin-top:10px;">KI-Einschätzung · ' + ago(it.at) + '</div>' : '')
+      + body + (it && !running && it.at ? '<div style="font-size:12px;color:' + T.ink3 + ';margin-top:10px;">KI-Einschätzung · ' + esc(ago(it.at)) + '</div>' : '')
       + btn + '</div></div>';
   };
 
@@ -648,7 +648,7 @@
       + (_aqSoft ? 'font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));padding:0 6px;'
                  : 'font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary,#fff));padding:0 6px;')
       + 'text-align:left;">'
-      + window._hpChartTitle(cfg.temp) + '</div>'
+      + UI.esc(window._hpChartTitle(cfg.temp)) + '</div>'
       + '<div class="hp-chart-slot" style="min-height:150px;margin:6px 0 0;"></div></div>');
     if (typeof window._hpChartInit === 'function') window._hpChartInit(cfg.temp);
   }
@@ -891,9 +891,7 @@
 // Only active when _casoraSoft() is on – otherwise callers keep their previous HTML.
 (function () {
   if (window._casoraHH) return;
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var FONT = 'var(--primary-font-family, system-ui)';
   var SUB = 'var(--casora-soft-sub, var(--secondary-text-color))';
   var H = window._casoraHH = { esc: esc };
@@ -908,7 +906,7 @@
     return '<div style="' + plate + 'padding:18px 14px 8px;">'
       + '<div class="hp-ct" style="font-family:' + FONT + ';font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);'
       + 'color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));text-align:left;padding:0 6px;">'
-      + title + '</div>'
+      + esc(title) + '</div>'
       + '<div class="hp-chart-slot" style="min-height:150px;margin:8px 0 0;"></div></div>';
   };
   /* Tones of the progress bars (HH.pbar, HH.forecast). The wide history block HH.bar is gone since 1.1.2. */
@@ -925,7 +923,7 @@
     return '<div class="hh-pbar" style="font-family:' + FONT + ';padding:0 8px;">'
       + '<div class="hh-pbar-track" style="height:6px;border-radius:999px;overflow:hidden;'
       + 'background:var(--casora-hh-bar-track, var(--casora-soft-control-fill, rgba(140,115,90,0.10)));">'
-      + '<div class="hh-pbar-fill" style="height:100%;width:' + p.toFixed(1) + '%;border-radius:999px;background:' + c + ';'
+      + '<div class="hh-pbar-fill" style="height:100%;width:' + p.toFixed(1) + '%;border-radius:999px;background:' + esc(c) + ';'
       + 'transition:width .3s cubic-bezier(.36,0,.16,1);"></div></div>'
       + ((o.left || o.right) ? '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;font-size:13px;font-weight:600;'
         + 'color:' + SUB + ';font-variant-numeric:tabular-nums;white-space:nowrap;">'
@@ -1234,9 +1232,7 @@
   var STALLED = ['Angehalten', 'warn', true, 'pause'];
   var DIM = 'rgba(255,255,255,0.18)';
 
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var num = function (states, e) {
     if (!e || !states[e]) return null;
     var n = parseFloat(states[e].state);
@@ -1457,7 +1453,7 @@
     });
   };
   var slot = function (kind, c, states) {
-    return '<div data-hw-slot="' + kind + '" data-hw-key="' + esc(c.st) + '">' + L.inner(kind, c, states) + '</div>';
+    return '<div data-hw-slot="' + esc(kind) + '" data-hw-key="' + esc(c.st) + '">' + L.inner(kind, c, states) + '</div>';
   };
 
   /* Taps: chart rows (data-hp-metric) and „Erledigt“ for maintenance (two steps). */
@@ -1943,7 +1939,7 @@
         : '<div style="' + plate + '">'
         + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:15px;font-weight:600;'
         + 'letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary,#fff);text-align:left;padding:0 6px;">'
-        + window._hpChartTitle(c.power) + '</div>'
+        + esc(window._hpChartTitle(c.power)) + '</div>'
         + '<div class="hp-chart-slot" style="min-height:150px;margin:6px 0 0;"></div></div>');
       if (typeof window._hpChartInit === 'function') window._hpChartInit(c.power);
     }
@@ -2506,7 +2502,7 @@
         : '<div style="' + plate + '">'
         + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:15px;font-weight:600;'
         + 'letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary,#fff);text-align:left;padding:0 6px;">'
-        + window._hpChartTitle(c.power) + '</div>'
+        + U.esc(window._hpChartTitle(c.power)) + '</div>'
         + '<div class="hp-chart-slot" style="min-height:150px;margin:6px 0 0;"></div></div>');
       if (typeof window._hpChartInit === 'function') window._hpChartInit(c.power);
     }
@@ -3019,7 +3015,7 @@
         : '<div style="' + plate + 'padding:var(--casora-soft-plate-pad, 14px 10px 6px);">'
         + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:15px;font-weight:600;'
         + 'letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary,#fff);text-align:left;padding:0 6px;">'
-        + window._hpChartTitle(c.power) + '</div>'
+        + U.esc(window._hpChartTitle(c.power)) + '</div>'
         + '<div class="hp-chart-slot" style="min-height:150px;margin:6px 0 0;"></div></div>');
       if (typeof window._hpChartInit === 'function') window._hpChartInit(c.power);
     }
@@ -3567,13 +3563,13 @@
       var out = UI.hero({ value: value, unit: unit, sub: sub.join(' · ') || null, subTone: tone, center: true });
       /* Big buttons: to dock · start/pause · locate */
       var svc = function (service) { return esc(JSON.stringify({ domain: 'vacuum', service: service, data: {}, target: { entity_id: c.st } })); };
-      var mdi = function (n, sz, col) { return '<ha-icon icon="' + n + '" style="--mdc-icon-size:' + sz + 'px;width:' + sz + 'px;height:' + sz + 'px;display:block;color:' + (col || 'currentColor') + ';"></ha-icon>'; };
+      var mdi = function (n, sz, col) { return '<ha-icon icon="' + esc(n) + '" style="--mdc-icon-size:' + esc(sz) + 'px;width:' + esc(sz) + 'px;height:' + esc(sz) + 'px;display:block;color:' + esc(col || 'currentColor') + ';"></ha-icon>'; };
       var docked = !s.run && !s.paused;
       var main = s.run ? { s: svc('pause'), i: 'mdi:pause', l: 'Pause' } : { s: svc('start'), i: 'mdi:play', l: s.paused ? 'Fortsetzen' : 'Start' };
       /* Soft: three round pills with icon and text, the main action filled. */
       if (SF) {
         var pill = function (cls, s0, ic, l) {
-          return '<div class="hh-pill' + cls + '"' + (cls.indexOf('dis') > -1 ? '' : ' data-casora-svc="' + s0 + '"') + '>' + mdi(ic, 20) + '<span style="pointer-events:none;">' + l + '</span></div>';
+          return '<div class="hh-pill' + cls + '"' + (cls.indexOf('dis') > -1 ? '' : ' data-casora-svc="' + s0 + '"') + '>' + mdi(ic, 20) + '<span style="pointer-events:none;">' + esc(l) + '</span></div>';
         };
         return out + HH.pillCss + '<style>.hh-pill > *{pointer-events:none;}</style><div class="hh-pills" style="margin-top:12px;">'
           + pill(s.dead || docked ? ' dis' : '', svc('return_to_base'), 'mdi:home-import-outline', 'Zum Dock')
@@ -3592,7 +3588,7 @@
         + '<div class="hv-b' + (s.dead || docked ? ' dis' : '') + '" data-casora-svc="' + svc('return_to_base') + '">' + mdi('mdi:home-import-outline', 24) + '</div>'
         + '<div class="hv-b lg' + (s.dead ? ' dis' : '') + '" data-casora-svc="' + main.s + '">' + mdi(main.i, 32, '#000') + '</div>'
         + '<div class="hv-b' + (s.dead ? ' dis' : '') + '" data-casora-svc="' + svc('locate') + '">' + mdi('mdi:map-marker-radius-outline', 24) + '</div>'
-        + '</div><div class="hv-cap"><span>Zum Dock</span><span class="lg">' + main.l + '</span><span>Orten</span></div>';
+        + '</div><div class="hv-cap"><span>Zum Dock</span><span class="lg">' + esc(main.l) + '</span><span>Orten</span></div>';
       return out;
     }
 
@@ -3649,13 +3645,13 @@
     var PL = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
       + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);'
       + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);padding:14px;';
-    var HEAD = function (t) { return '<div style="font-family:' + T.font + ';font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, ' + T.ink + ');text-align:left;padding:0 4px 8px;">' + t + '</div>'; };
-    var CAP = function (t) { return '<div style="font-family:' + T.font + ';font-size:13px;color:' + T.ink3 + ';text-align:left;padding:0 2px 8px;">' + t + '</div>'; };
+    var HEAD = function (t) { return '<div style="font-family:' + T.font + ';font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, ' + T.ink + ');text-align:left;padding:0 4px 8px;">' + esc(t) + '</div>'; };
+    var CAP = function (t) { return '<div style="font-family:' + T.font + ';font-size:13px;color:' + T.ink3 + ';text-align:left;padding:0 2px 8px;">' + esc(t) + '</div>'; };
     var CARD = function (inner) { return '<style>.hv-card .hui-seg{justify-content:flex-start;}</style><div class="hv-card" style="' + PL + '">' + inner + '</div>'; };
     /* Soft: labels in capitals, segments free without a card, sub lines dimmed. */
     if (SF) {
       HEAD = function (t) { return HH.label(t); };
-      CAP = function (t) { return '<div style="font-family:' + T.font + ';font-size:13px;font-weight:600;color:var(--casora-soft-sub, ' + T.ink2 + ');text-align:left;padding:0 6px 8px;">' + t + '</div>'; };
+      CAP = function (t) { return '<div style="font-family:' + T.font + ';font-size:13px;font-weight:600;color:var(--casora-soft-sub, ' + T.ink2 + ');text-align:left;padding:0 6px 8px;">' + esc(t) + '</div>'; };
       CARD = function (inner) { return HH.dense(inner, true); };
     }
 
@@ -3711,7 +3707,7 @@
         + '<div class="hv-rooms" data-vac="' + esc(c.st) + '">' + (SF ? HH.label('Räume reinigen') + '<div><div class="hv-rw">'
           : '<div class="hv-rl">Räume reinigen</div><div style="' + PL + '"><div class="hv-rw">')
         + ids.map(function (a) { return btn('hv-room' + (sel.indexOf(a) !== -1 ? ' on' : ''), esc(hass.areas[a].name), ' data-area="' + esc(a) + '"'); }).join('')
-        + '</div>' + btn('hv-go' + (sel.length ? '' : ' dis'), V.goLabel(sel.length)) + '</div></div>';
+        + '</div>' + btn('hv-go' + (sel.length ? '' : ' dis'), esc(V.goLabel(sel.length))) + '</div></div>';
     }
 
     if (kind === 'v_mode') {
@@ -3920,7 +3916,7 @@
           : '<div style="' + plate + 'padding:var(--casora-soft-plate-pad, 14px 10px 6px);height:100%;box-sizing:border-box;">'
           + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:15px;font-weight:600;'
           + 'letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary,#fff);text-align:left;padding:0 6px;">'
-          + window._hpChartTitle(c.battery) + '</div>'
+          + U.esc(window._hpChartTitle(c.battery)) + '</div>'
           + '<div class="hp-chart-slot" style="min-height:150px;margin:6px 0 0;"></div></div>');
         if (typeof window._hpChartInit === 'function') window._hpChartInit(c.battery);
       }

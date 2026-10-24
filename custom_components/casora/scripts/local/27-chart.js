@@ -42,11 +42,7 @@
   var bad = function (s) { return s == null || s === 'unknown' || s === 'unavailable' || s === ''; };
   // Strictly a number ("23", "-1.5"): parseFloat would read 2026 out of a timestamp.
   var numOf = function (s) { s = String(s == null ? '' : s).trim(); return /^-?\d+(\.\d+)?$/.test(s) ? parseFloat(s) : NaN; };
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var T = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
   var loc = function () { return window.casoraLocale ? window.casoraLocale() : 'de-DE'; };
   var two = function (n) { return (n < 10 ? '0' : '') + n; };

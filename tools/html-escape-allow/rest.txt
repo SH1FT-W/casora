@@ -1,0 +1,99 @@
+# Reviewed spots in scripts/local/14…29 and the Studio (panel/*.js). Format: file | expression | reason.
+
+# 14-pulse.js – overview bar
+custom_components/casora/scripts/local/14-pulse.js | p[1] | device count (number) as flex grow | 1
+custom_components/casora/scripts/local/14-pulse.js | COLOR[p[0]] | colour constant of the status (COLOR map) | 2
+custom_components/casora/scripts/local/14-pulse.js | re:^[ab]$ | join(): sections built by UI.group from escaped rows | 2
+
+# 15-person.js – history timeline (lastHtml) and phone actions
+custom_components/casora/scripts/local/15-person.js | re:^(?:font|ink|sub|row|ctl|dim)$ | CSS colour/font constants of lastHtml | 11
+custom_components/casora/scripts/local/15-person.js | re:^(?:head|body|info)$ | markup of lastHtml built from esc()'d parts | 3
+custom_components/casora/scripts/local/15-person.js | P.zoneHue(s.state) | colour from a fixed palette (hash of the zone name picks an entry) | 1
+custom_components/casora/scripts/local/15-person.js | kind | action key, one of the literals 'loc'/'msg'/'ring' | 1
+custom_components/casora/scripts/local/15-person.js | re:^act\('(?:loc|msg|ring)', | UI.group markup with fixed labels; act() escapes pid/notify | 3
+
+# 16-maeher.js – history timeline and buttons
+custom_components/casora/scripts/local/16-maeher.js | re:^(?:font|ink|sub|row|ctl|dim|sz|n|\(col \|\| 'currentColor'\))$ | CSS constants of histHtml, icon size numbers, fixed mdi names/colours of mdi() | 16
+custom_components/casora/scripts/local/16-maeher.js | re:^(?:head|body|info)$ | markup of histHtml built from esc()'d parts | 3
+custom_components/casora/scripts/local/16-maeher.js | k.s | service JSON, escaped where built (svc()) | 2
+custom_components/casora/scripts/local/16-maeher.js | re:^mdi\(k\.i, | ha-icon markup with a fixed mdi: name of the key list | 2
+custom_components/casora/scripts/local/16-maeher.js | re:^keys\.map\((?:pill|b)\)\.join\(''\)$ | button markup built from escaped parts | 2
+
+# 18-ziele.js – timeline and state band
+custom_components/casora/scripts/local/18-ziele.js | re:^(?:font|ink|sub|row|dim|\(x\.color \|\| dim\))$ | CSS constants of timeline(); x.color is a fixed colour of the code | 8
+custom_components/casora/scripts/local/18-ziele.js | x.sub | timeline sub line, escaped where the items are built (esc(Z.fmt …), esc(T(…))) | 1
+custom_components/casora/scripts/local/18-ziele.js | re:^t[nk]\.fill$ | stateTone(): Pulse colour constants | 2
+custom_components/casora/scripts/local/18-ziele.js | (C3 ? 'top:auto;height:' + HGT[x.s] + '%;' : '') | HGT: fixed height per state (number) | 1
+custom_components/casora/scripts/local/18-ziele.js | leg | legend markup built from escaped parts | 1
+custom_components/casora/scripts/local/18-ziele.js | head2 | UI.label markup | 1
+
+# 22-halten.js – hold menu
+custom_components/casora/scripts/local/22-halten.js | re:^(?:Hh|d|i|qi|ii)$ | numbers (viewport size, SVG path of numbers, indexes) | 12
+custom_components/casora/scripts/local/22-halten.js | (cls ? ' ' + cls : '') | class name, only the literal 'main' is passed | 1
+custom_components/casora/scripts/local/22-halten.js | glyph(ic) | ha-icon/mask markup, glyph() escapes the icon | 1
+custom_components/casora/scripts/local/22-halten.js | row('main', m.main.t, m.main.ic, 'main') | row() escapes key, text and sub | 1
+custom_components/casora/scripts/local/22-halten.js | label | pill content built from esc()'d parts above | 1
+
+# 23-frigate.js – clip, recording and filters
+custom_components/casora/scripts/local/23-frigate.js | side | 'left'/'right' literal | 2
+custom_components/casora/scripts/local/23-frigate.js | re:^arrow\('(?:left|right)', | arrow() escapes label and ids | 2
+custom_components/casora/scripts/local/23-frigate.js | re:^(?:n|\(n > 1 \? ' n' \+ n : ''\))$ | button count (number) | 2
+custom_components/casora/scripts/local/23-frigate.js | re:^(?:a|b|m|fill|sel|tk|ticks|strip|one|fx|chips)$ | numbers (a/b in aria-* are escaped, these are the other uses), fixed CSS, or chip markup built from escaped parts | 10
+custom_components/casora/scripts/local/23-frigate.js | re:^pct\( | percentage computed in code (toFixed) | 4
+custom_components/casora/scripts/local/23-frigate.js | (o.countBg || 'var(--casora-popup-ui-action, #276B64)') | colour constant passed by the code | 1
+custom_components/casora/scripts/local/23-frigate.js | g.map(function (x) { return x.join(''); }).join('') | chip markup, chip() escapes everything | 1
+custom_components/casora/scripts/local/23-frigate.js | cells.join('') | strip markup built from escaped parts | 1
+custom_components/casora/scripts/local/23-frigate.js | re:^chipRow\( | chipRow() markup, escapes its row key | 3
+custom_components/casora/scripts/local/23-frigate.js | re:^grp\('Zeitraum' | filter groups: grp()/chip() escape labels and keys | 1
+
+# 24-klingel.js – history timeline
+custom_components/casora/scripts/local/24-klingel.js | re:^(?:sub|ink|rowBg|dim|off|body|x|\((?:4|6|16|2) \+ off\)|\(ring \? ringHue : detHue\))$ | CSS constants, offsets (numbers), markup built from escaped parts | 15
+custom_components/casora/scripts/local/24-klingel.js | re:^pill\(more\[c\.cam\] \? | pill() escapes the text and key | 1
+
+# 25-kaffee.js – brew ring and options
+custom_components/casora/scripts/local/25-coffee.js | re:^(?:r|\(L \* \(1 - p / 100\)\)\.toFixed\(2\))$ | ring radius / dash offset (numbers) | 3
+custom_components/casora/scripts/local/25-coffee.js | hold | min-height from a measured offsetHeight (number) | 1
+custom_components/casora/scripts/local/25-coffee.js | run | markup built from escaped parts | 1
+custom_components/casora/scripts/local/25-coffee.js | re:^sw\(c\.opts\. | UI.segments markup (escapes labels) | 3
+
+# 26-haustier.js – buttons and today
+custom_components/casora/scripts/local/26-haustier.js | re:^(?:n|sz|\(col \|\| 'currentColor'\)|why|r|dim|ink|sub|font|head|row|ring|stats|\(len \* part\)\.toFixed\(1\))$ | fixed mdi names/sizes, CSS constants, numbers, markup built from escaped parts | 21
+custom_components/casora/scripts/local/26-haustier.js | svc(k.id) | service JSON escaped in svc() | 1
+custom_components/casora/scripts/local/26-haustier.js | re:^\(UI\.tokens \|\| \{\}\)\.(?:ink3|font)$ | design tokens | 2
+custom_components/casora/scripts/local/26-haustier.js | act(k) | attribute string, svc() escapes its value | 2
+custom_components/casora/scripts/local/26-haustier.js | re:^mdi\(k\.i, | ha-icon markup with a fixed mdi: name | 2
+
+# 27-chart.js – range switch
+custom_components/casora/scripts/local/27-chart.js | re:^(?:out|sw)$ | UI.segments markup | 2
+
+# 28-free-tile.js – controls
+custom_components/casora/scripts/local/28-free-tile.js | re:^\(out \? gap : ''\) \+ UI\.(?:segments|group)\( | spacer constant plus UI builder markup (UI escapes labels) | 3
+custom_components/casora/scripts/local/28-free-tile.js | notes.map(function (n) { return UI.note(n); }).join('') | UI.note escapes the text | 1
+
+# Studio (panel/*.js)
+custom_components/casora/panel/casora-panel-addons.js | re:^labels\[[012]\]$ | fixed labels of the LABELS table | 2
+custom_components/casora/panel/casora-panel-addons.js | mask | style attribute built from esc(room.icon) | 1
+custom_components/casora/panel/casora-panel-addons.js | room ? esc(room.name) : labels[1] | escaped name or fixed label | 1
+custom_components/casora/panel/casora-panel-b-mehr.js | re:^[nd]$ | QR code: module count and SVG path made of numbers | 5
+custom_components/casora/panel/casora-panel-b-mehr.js | (w || 2) | stroke width (number) | 1
+custom_components/casora/panel/casora-panel-b-mehr.js | ICONS[k] | fixed SVG paths | 1
+custom_components/casora/panel/casora-panel-b-mehr.js | code | QR SVG from qrSvg() (numbers only) | 1
+custom_components/casora/panel/casora-panel-b-plus.js | (sw || 2) | stroke width (number) | 1
+custom_components/casora/panel/casora-panel-b-plus.js | ICON[k] | fixed SVG paths | 1
+custom_components/casora/panel/casora-panel-b.js | ICON[k] | fixed SVG paths | 1
+custom_components/casora/panel/casora-panel-b.js | re:^svg\("list"\)\.replace\( | fixed SVG with a fixed path swapped in | 1
+custom_components/casora/panel/casora-panel-community.js | re:^(?:dom|\(e\.translation_key \? "_" \+ e\.translation_key : ""\)|id)$ | Markdown text of a GitHub issue ("<geraet>" placeholder), not rendered as HTML here | 3
+custom_components/casora/panel/casora-panel-settings.js | STATUS_ICON[tone] | fixed SVG per tone | 1
+custom_components/casora/panel/casora-panel-updates.js | re:^(?:emph\(esc\(label\)\)|inline\(.*\)|stack\.pop\(\)\.tag|n|tag)$ | Markdown renderer: escapes first, adds own tags (heading level number, list tag literal); the result goes through safeNotes() | 10
+custom_components/casora/panel/casora-panel-versions.js | re:^rowInner\( | rowInner() escapes name, time and description | 2
+custom_components/casora/panel/casora-panel-welcome.js | icon | fixed mdi: name of the WELCOME/WHATS_NEW list | 1
+custom_components/casora/panel/casora-panel-welcome.js | re:^CHANGELOG_URL\.replace\( | fixed changelog URL constant | 1
+custom_components/casora/panel/casora-panel.js | re:^(?:g\.[whd]|height|w \|\| 2|d|path|paths|mid|pv|u)$ | numbers, fixed SVG paths/ids, preview keys of a fixed map, fixed asset URLs | 16
+custom_components/casora/panel/casora-panel.js | re:^\(?FLOW_GLYPH\[ | fixed SVG glyphs | 4
+custom_components/casora/panel/casora-panel.js | shot(mode) | fixed theme preview image URL | 1
+custom_components/casora/panel/casora-panel.js | MENU_ICONS[item.icon] | fixed SVG paths | 1
+custom_components/casora/panel/casora-panel.js | def esc | the local "esc" at the tile link is CSS.escape for a selector, not an HTML escaper
+custom_components/casora/panel/casora-panel.js | re:^arcPath\( | SVG arc path made of numbers | 2
+custom_components/casora/panel/casora-panel.js | re:^\(87\.965 - pct \* 0\.87965\)\.toFixed\(3\)$ | number | 1
+custom_components/casora/panel/casora-panel.js | (glyph ? GLYPH[glyph] : "") | fixed SVG glyphs | 1
+custom_components/casora/panel/casora-panel.js | re:^\(url \? "Replace" : "Add " \+ label\.toLowerCase\(\)\)$|^label$ | fixed English labels ("Day"/"Night") | 2

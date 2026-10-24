@@ -31,11 +31,7 @@
   // aria-labels (die übersetzt die Laufzeit nie). T und tr sind dasselbe (eine frühere, nicht vorhandene Übersetzungsfunktion ließ alles deutsch).
   var tr = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
   var T = tr;
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"']/g, function (ch) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
-    });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   // Die Integration antwortet mit Frigates JSON-Text (decode_json=False).
   var jparse = function (raw) {
     if (typeof raw !== 'string') return raw;
@@ -1762,8 +1758,8 @@
       r.innerHTML = '<style>' + RCSS + '</style>'
         + '<div class="fr"><div class="mt"></div><div class="ld" role="status" aria-live="polite"><span>' + esc(tr('Wird geladen …')) + '</span></div></div>'
         // Erkennungs-Punkte (Knöpfe) liegen neben dem Schieberegler, nicht in ihm (role=slider darf keine Bedienelemente enthalten).
-        + '<div class="tlw"><div class="tl" role="slider" tabindex="0" aria-label="' + esc(tr('Zeitleiste')) + '" aria-valuemin="' + a + '" aria-valuemax="' + b
-        + '" aria-valuenow="' + a + '" aria-valuetext="' + esc(clock(a * 1000)) + '">'
+        + '<div class="tlw"><div class="tl" role="slider" tabindex="0" aria-label="' + esc(tr('Zeitleiste')) + '" aria-valuemin="' + esc(a) + '" aria-valuemax="' + esc(b)
+        + '" aria-valuenow="' + esc(a) + '" aria-valuetext="' + esc(clock(a * 1000)) + '">'
         + '<div class="trk"><div class="sgs"></div></div><div class="ph" hidden></div></div><div class="dts"></div></div>'
         + '<div class="tk" aria-hidden="true">' + tk + '</div>'
         + '<div class="rw"><button class="b pp" type="button" aria-label="' + esc(tr('Abspielen')) + '" disabled><ha-icon icon="mdi:play"></ha-icon></button>'

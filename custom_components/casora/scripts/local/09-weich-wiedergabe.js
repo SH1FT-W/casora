@@ -27,11 +27,7 @@
   var soft = function () { return typeof window._casoraSoft === 'function' && window._casoraSoft(); };
   var getHass = function () { var h = document.querySelector('home-assistant'); return h && h.hass; };
   var T = function (de) { return window.casoraTr ? window.casoraTr(de) : de; };
-  var esc = function (t) {
-    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var P = {
     // Abgerundet im Stil der Apple-Mediensteuerung (eigene Pfade).
     play: 'M7,6.7Q7,4.5 8.91,5.6L18.09,10.9Q20,12 18.09,13.1L8.91,18.4Q7,19.5 7,17.3Z',
@@ -535,8 +531,8 @@
         inner = cover + '<div class="m"><div class="t">' + esc(title) + '</div><div class="s">' + esc(sub) + '</div>' + bar + '</div>'
           + (ctl ? '<div class="ct">' + ctl + '</div>' : '');
       }
-      return '<div class="' + cls + '" data-k="' + esc(key) + '" data-n="' + it[8] + '"' + (artU ? ' data-art="' + esc(artU) + '"' : '')
-        + (col ? ' style="--c:' + col + '"' : '') + ' role="button" tabindex="0" aria-label="' + esc(title) + '">'
+      return '<div class="' + cls + '" data-k="' + esc(key) + '" data-n="' + esc(it[8]) + '"' + (artU ? ' data-art="' + esc(artU) + '"' : '')
+        + (col ? ' style="--c:' + esc(col) + '"' : '') + ' role="button" tabindex="0" aria-label="' + esc(title) + '">'
         + '<div class="rc">' + inner + '</div>'
         + '<button type="button" class="hd" tabindex="-1">' + esc(hideL) + '</button>'
         + '</div>';

@@ -13,7 +13,7 @@
   V.sensor = function (states) { return states && states[OLD] && !states[NEW] ? OLD : NEW; };
   V.hint = function (states) { return V.sensor(states) === OLD ? 'binary_sensor.hemma_lueften_hinweis' : 'binary_sensor.casora_lueften_hinweis'; };
   var fmt = function (n, d) { return Number(n).toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); };
-  var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
@@ -210,7 +210,7 @@
       + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);">'
       + '<div style="font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, ' + T.ink + ');padding:0 0 10px;display:flex;align-items:center;justify-content:flex-start;gap:6px;">'
       + ic + '<span style="flex:1 1 auto;text-align:left;">Lüftungs-Coach' + (room ? ' · ' + esc(room) : '') + '</span></div>'
-      + body + (has && !running && a.erstellt ? '<div style="font-size:12px;color:' + T.ink3 + ';margin-top:10px;">Auswertung der letzten 7 Tage · ' + ago(a.erstellt) + '</div>' : '')
+      + body + (has && !running && a.erstellt ? '<div style="font-size:12px;color:' + T.ink3 + ';margin-top:10px;">Auswertung der letzten 7 Tage · ' + esc(ago(a.erstellt)) + '</div>' : '')
       + btn + '</div></div>';
   };
 
@@ -490,7 +490,7 @@ window._casoraStd = function (ui, o) {
       var k = html.indexOf(IN);
       if (k < 0) return orig.call(this, rows, label, labelAction, opts);
       html = html.slice(0, k) + '<div style="display:var(--casora-lbl-in, none);' + html.slice(k + 12);
-      var esc = UI.esc || function (x) { return x; };
+      var esc = UI.esc || window.casoraEsc;
       return '<div style="display:var(--casora-lbl-out, flex);align-items:baseline;justify-content:space-between;gap:12px;padding:0 4px 8px;">'
         + '<div style="font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, ' + (T.ink || '#fff') + ');">' + esc(label) + '</div></div>' + html;
     };

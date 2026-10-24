@@ -346,7 +346,7 @@
       var mc = ctx.metricCard;
       var cf = {
         ct: '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:12px;color:var(--casora-h15-c, var(--casora-popup-tiles-text-muted, rgba(255,255,255,0.55)));margin:2px 2px 4px;text-align:left;">'
-          + window._hpChartTitle(main) + '</div>',
+          + window.casoraEsc(window._hpChartTitle(main)) + '</div>',
         chart: '<div class="hp-chart-slot" style="min-height:120px;pointer-events:auto;"></div>',
       };
       var cs = { ct: [{ 'justify-self': 'stretch' }], chart: [{ 'justify-self': 'stretch' }] };
