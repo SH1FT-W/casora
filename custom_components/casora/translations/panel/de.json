@@ -448,6 +448,7 @@
     "Doors": "Türen",
     "Drag to reorder": "Zum Sortieren ziehen",
     "Each light in the group becomes a sub-badge.": "Jedes Licht der Gruppe wird ein Unter-Badge.",
+    "Follows the rooms: {n} lights in {m} rooms, also ones added later. A light group or lights chosen here replace that.": "Folgt den Räumen: {n} Lichter in {m} Räumen, auch später hinzugekommene. Eine Lichtgruppe oder Lichter hier ersetzen das.",
     "Edit": "Bearbeiten",
     "Edit card": "YAML bearbeiten",
     "Edit card…": "YAML bearbeiten …",

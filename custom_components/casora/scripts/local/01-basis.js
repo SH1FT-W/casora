@@ -365,6 +365,69 @@ window._casoraLightsHouse = function (vars, gid, ids, hass) {
     return n > 1;
   } catch (e) { return false; }
 };
+/* The house's lights without an HA light group covering them (Home badge marked light_rooms_auto, 24.10.2026):
+   derived from the rooms' light badges instead of the ten slots light_entity_1…10, so a house with more lights,
+   or one that gains lamps later, counts them all. rooms: [{ name, vars }] (the rooms' casora_room variables);
+   states: for existing members. A room counts when its badge is on (show_lights not false) and lists lights or
+   an HA group: one listed group is the room (its existing members as the lights), else the listed lights as they
+   are. Result { rooms: [{ name, rid (the room's group or null), lights }], ids: every light once, subs: one entry
+   per room (its group, else its lamps) for the sub-badge row }. Same rule in the Studio (casoraBasis.houseLights),
+   dev/unit/haus_licht_ohne_gruppe.mjs compares both. */
+window._casoraHouseLightsOf = function (rooms, states) {
+  var S = states || {};
+  var out = { rooms: [], ids: [], subs: [] };
+  var mem = function (id) { var a = S[id] && S[id].attributes; return a && Array.isArray(a.entity_id) ? a.entity_id.filter(function (x) { return typeof x === 'string' && S[x]; }) : []; };
+  (rooms || []).forEach(function (r) {
+    var V = r && r.vars;
+    if (!V || V.show_lights === false) return;
+    var slots = [];
+    for (var i = 1; i <= 10; i++) if (typeof V['light_entity_' + i] === 'string' && V['light_entity_' + i]) slots.push(V['light_entity_' + i]);
+    var grp = typeof V.light_group_entity === 'string' && V.light_group_entity ? V.light_group_entity : null;
+    var rid = null, lights;
+    if (slots.length === 1 && mem(slots[0]).length) { rid = slots[0]; lights = mem(rid); }
+    else if (slots.length) lights = slots;
+    else if (grp) { rid = grp; lights = mem(grp); if (!lights.length && S[grp]) lights = [grp]; }
+    else return;
+    lights = lights.filter(function (x, k, a) { return a.indexOf(x) === k && (!states || S[x]); });
+    if (!lights.length) return;
+    out.rooms.push({ name: String(r.name || ''), rid: rid, lights: lights });
+    lights.forEach(function (x) { if (out.ids.indexOf(x) < 0) out.ids.push(x); });
+    (rid ? [rid] : lights).forEach(function (x) { if (out.subs.indexOf(x) < 0) out.subs.push(x); });
+  });
+  return out;
+};
+/* The same from the open dashboard: the room views' casora_room variables (desktop), on the phone the desktop
+   rooms the server delivers (casoraPhoneRoom.rooms). Cached per dashboard config and states object; reading
+   states[...] inside a button-card template subscribes it to the lights. */
+window._casoraHouseLights = function (hass) {
+  var h = hass || (document.querySelector('home-assistant') || {}).hass;
+  var S = (h && h.states) || {};
+  try {
+    var cfg = window._casoraLovelaceCfg && window._casoraLovelaceCfg();
+    var C = window._casoraHouseLightsC;
+    var rooms = C && C.cfg === cfg && cfg ? C.rooms : null;
+    if (!rooms) {
+      rooms = [];
+      var tpl = function (x) { return [].concat((x && x.template) || []); };
+      if (cfg && Array.isArray(cfg.views)) cfg.views.forEach(function (v, vi) {
+        if (!v || (vi === 0 && cfg.views.length > 1)) return;
+        var hero = null;
+        (function find(x, d) {
+          if (hero || !x || typeof x !== 'object' || d > 6) return;
+          if (Array.isArray(x)) { x.forEach(function (y) { find(y, d + 1); }); return; }
+          if (tpl(x).indexOf('casora_room') > -1 && x.variables) { hero = x; return; }
+          find(x.cards, d + 1);
+        })(v.cards, 0);
+        if (hero) rooms.push({ name: (typeof hero.name === 'string' && hero.name.indexOf('[[[') < 0 ? hero.name : v.title) || '', vars: hero.variables });
+      });
+      if (cfg && rooms.length) window._casoraHouseLightsC = { cfg: cfg, rooms: rooms };
+      // Phone layout: one view without room cards – the desktop rooms come from the server (not cached, they arrive later).
+      if (!rooms.length && window.casoraPhoneRoom && window.casoraPhoneRoom.rooms) rooms = window.casoraPhoneRoom.rooms() || [];
+    }
+    // Reads every listed light, so a button-card template re-renders when one changes (it tracks states[...]).
+    return window._casoraHouseLightsOf(rooms, S);
+  } catch (e) { return { rooms: [], ids: [], subs: [] }; }
+};
 window.casoraPopupTitle = function (card, variables, def, defaults) {
   var V = variables || {};
   var own = String(V.room_name || '').trim();

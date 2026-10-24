@@ -115,6 +115,30 @@ for (const f of files) {
     assert.deepEqual(B.housePowerWhy(hass, X.house_power), X.house_power_why, at('why line for the house sensor'));
     checks++;
   }
+  // Home's lights after "Start fresh": the HA group over the house, or the badge follows the rooms
+  // (light_rooms_auto) and the house list comes from the rooms' light badges (casoraBasis.houseLights).
+  if (X.house_lights) {
+    const want = X.house_lights;
+    const areas = Object.values(H.areas || {}).map((a) => a.name);
+    // The plan needs the real tile types (the assistant finds the lamps by them).
+    const keepTypes = window.__casoraPanelInternals.TILE_TYPES;
+    window.__casoraPanelInternals.TILE_TYPES = studio.I.TILE_TYPES;
+    const p = B.plan(hass, areas, { ...B.DEFAULTS });
+    const { vars } = B.tilesOf(p, hass);
+    window.__casoraPanelInternals.TILE_TYPES = keepTypes;
+    const home = vars[p.rooms[0].name] || {};
+    assert.equal(home.light_group_entity || null, want.group, at('house light group'));
+    assert.equal(home.light_rooms_auto === true, !!want.auto, at('house badge follows the rooms'));
+    const rooms = p.rooms.slice(1).map((r) => ({ name: r.name, variables: vars[r.name] || {} }));
+    const hl = B.houseLights(hass, rooms);
+    assert.deepEqual(hl.rooms.map((r) => r.name), want.rooms, at('house list: rooms'));
+    assert.deepEqual([...hl.ids].sort(), [...want.ids].sort(), at('house list: lights'));
+    for (const [name, rid] of Object.entries(want.room_groups || {})) {
+      assert.equal((hl.rooms.find((r) => r.name === name) || {}).rid || null, rid, at('house list: group of ' + name));
+      checks++;
+    }
+    checks += 4;
+  }
   for (const id of X.plants || []) { assert.ok(window.casoraIsPlant(hass, id), at('plant ' + id)); checks++; }
   for (const id of X.not_plants || []) { assert.ok(!window.casoraIsPlant(hass, id), at('no plant ' + id)); checks++; }
   // Washer, dryer, dishwasher: the device behind the entity by the shared source table (casoraLaundryFind).

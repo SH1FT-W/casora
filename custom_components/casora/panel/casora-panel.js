@@ -2715,6 +2715,39 @@ function fillHomeEnergy(hass, rooms) {
   return 1;
 }
 
+// Home's Lights badge without an HA group covering the house (24.10.2026): "Start fresh" used to list the first
+// ten lights (light_entity_1…10), the rest went missing and the popup had no room bar. Now the badge follows the
+// rooms (light_rooms_auto, the dashboard derives the list from the rooms' light badges). An existing Home badge is
+// switched on load when its list is exactly Casora's pick (the rooms' lights as the setup listed them, order
+// aside): a list the user changed (a light taken out, one from nowhere added) stays, as does one with an HA group.
+// Quiet like fillRoomEnergy: saved with the next save. Returns whether Home changed.
+const LIGHT_SLOTS = Array.from({ length: 10 }, (_, i) => "light_entity_" + (i + 1));
+function fillHomeLights(hass, rooms) {
+  const B = typeof window !== "undefined" && window.casoraBasis;
+  const list = rooms || [];
+  const home = list.find((r) => isHomeRoom(r, list));
+  const V = home && home.variables;
+  if (!B || !B.houseLights || !B.topUnits || !hass || !V || V.show_lights === false || V.light_group_entity || V.light_rooms_auto !== undefined) return false;
+  const listed = LIGHT_SLOTS.map((k) => V[k]).filter(Boolean);
+  if (!listed.length) return false;
+  const others = list.filter((r) => r !== home && r && r.path !== "home" && r.variables);
+  const roomLights = [];
+  others.forEach((r) => { if (r.variables.show_lights === false) return; LIGHT_SLOTS.forEach((k) => { if (r.variables[k] && !roomLights.includes(r.variables[k])) roomLights.push(r.variables[k]); }); });
+  const want = B.topUnits(hass, roomLights).slice(0, 10);
+  if (!want.length || want.length !== listed.length || !listed.every((id) => want.includes(id))) return false;
+  if (!B.houseLights(hass, others).ids.length) return false;
+  LIGHT_SLOTS.forEach((k) => { delete V[k]; });
+  V.light_rooms_auto = true;
+  return true;
+}
+// The user picks a light group or a light on Home: the badge is theirs (marker gone). Clearing the last one
+// without a group: the badge follows the rooms again (it used to vanish).
+function homeLightsEdit(V, key, value) {
+  if (!V || !/^(light_group_entity|light_entity_\d+)$/.test(key)) return;
+  if (value) { delete V.light_rooms_auto; return; }
+  if (!V.light_group_entity && !LIGHT_SLOTS.some((k) => V[k])) V.light_rooms_auto = true;
+}
+
 // #44: a Home sensor that the old rule picked (exactly casoraBasis.oldHouseTotal, a device's
 // "total" in one of the rooms, casoraBasis.wrongHousePower) becomes the house sensor, else the
 // sum of the rooms. Only on dashboards without a marker: casora_energy_auto is set once Casora
@@ -15400,6 +15433,7 @@ class CasoraPanel extends HTMLElement {
         const nE = fillRoomEnergy(this._hass, this._state.compact.rooms);
         if (nE) this._log(`energy: ${nE} room(s) with a power sensor got the energy badge`, "ok");
         if (fillHomeEnergy(this._hass, this._state.compact.rooms)) this._log("energy: Home sum got the rooms' new sensors", "ok");
+        if (fillHomeLights(this._hass, this._state.compact.rooms)) this._log("lights: Home's Lights badge now follows the rooms (no HA group over the house)", "ok");
       }
       this._exitFlow();
       this._paintDashes();
@@ -17872,6 +17906,12 @@ class CasoraPanel extends HTMLElement {
           if (r === this._state.compact.rooms[0] || r.path === "home") homeEnergyEdit(r.variables, key, value);
           if (value === undefined || value === "" || (Array.isArray(value) && !value.length)) delete r.variables[key];
           else r.variables[key] = value;
+          if (isHomeRoom(r, this._state.compact.rooms)) {
+            const was = r.variables.light_rooms_auto;
+            homeLightsEdit(r.variables, key, value);
+            // The marker goes to the phone's badge row with it (also its removal).
+            if (was !== r.variables.light_rooms_auto) this._mirrorToPair("light_rooms_auto", r.variables.light_rooms_auto, [r]);
+          }
         });
         // The house sensor was cleared: fill the rooms' sum right away (homeEnergyEdit set the marker).
         if (key === "energy_power_entity" && !value) fillHomeEnergy(this._hass, this._state.compact.rooms);
@@ -17977,19 +18017,21 @@ class CasoraPanel extends HTMLElement {
           else fs.appendChild(w);
         };
         // #44: why Casora chose Home's energy sensors (casoraBasis.homeEnergyWhy), so a wrong pick shows.
-        // Gone as soon as the user picks (the marker turns false).
+        // Gone as soon as the user picks (the marker turns false). Lights: how many lights of how many rooms
+        // Home's badge counts while it follows the rooms (casoraBasis.homeLightsWhy, light_rooms_auto).
         let whyEl = null;
         const addWhy = () => {
           if (whyEl) { whyEl.remove(); whyEl = null; }
           const B = window.casoraBasis;
-          if (!B || !B.homeEnergyWhy || !/^energy_(power_entity|entities)$/.test(f.key)
-            || !(room === this._state.compact.rooms[0] || room.path === "home")) return;
-          const w = B.homeEnergyWhy(this._hass, room.variables, f.key);
+          if (!B || !(room === this._state.compact.rooms[0] || room.path === "home")) return;
+          let w = null;
+          if (/^energy_(power_entity|entities)$/.test(f.key) && B.homeEnergyWhy) w = B.homeEnergyWhy(this._hass, room.variables, f.key);
+          else if (f.key === "light_group_entity" && B.homeLightsWhy) w = B.homeLightsWhy(this._hass, this._state.compact.rooms);
           if (!w) return;
           const h = document.createElement("div");
           h.className = "hint autowhy";
           h.setAttribute("data-no-i18n", "");
-          h.textContent = trLabel(w.text).replace("{word}", w.word || "");
+          h.textContent = trLabel(w.text).replace("{word}", w.word || "").replace("{n}", String(w.n)).replace("{m}", String(w.m));
           whyEl = h;
           const after = hintEl && hintEl.parentNode ? hintEl : (row.parentNode ? row : null);
           if (after && after.parentNode) after.parentNode.insertBefore(h, after.nextSibling);
@@ -22700,14 +22742,19 @@ class CasoraPanel extends HTMLElement {
     const grp = V.light_group_entity;
     const listed = list("light_entity_", 10);
     const members = grp ? ((st(grp) || {}).attributes || {}).entity_id : null;
-    const lights = listed.length ? listed
+    // Home without an HA group over the house (light_rooms_auto): the rooms' lights, as the dashboard derives them.
+    const B0 = window.casoraBasis;
+    const allRooms = (this._state && this._state.compact && this._state.compact.rooms) || [];
+    const hl = V.light_rooms_auto === true && !grp && !listed.length && B0 && B0.houseLights && isHomeRoom(room, allRooms)
+      ? B0.houseLights(this._hass, allRooms.filter((r) => r !== room)) : null;
+    const lights = hl ? hl.ids : listed.length ? listed
       : (Array.isArray(members) && members.length ? members.filter(Boolean) : (grp ? [grp] : []));
-    if (on("show_lights") && (grp || listed.length)) {
+    if (on("show_lights") && (grp || listed.length || (hl && hl.ids.length))) {
       const lit = lights.filter((e) => (st(e) || {}).state === "on").length;
       out.push({
         id: "lights", label: "Lights", icon: "light", color: LIGHT, dim: !lit,
         text: lit ? lit + " on" : "All off",
-        subs: lights.map((e) => {
+        subs: (hl ? hl.subs : lights).map((e) => {
           const l = st(e) || {};
           const br = l.attributes && l.attributes.brightness;
           return {
@@ -27544,7 +27591,7 @@ window.__casoraPanelInternals = {
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
   linkPair, syncPairRooms, syncPairTiles, syncTwinTile, phoneCondSnapshot, condChain, condModel, condWrite, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, setInnerSize, expandMobileConfig, extractMobileConfig,
-  deriveEnergyRooms, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
+  deriveEnergyRooms, fillHomeLights, homeLightsEdit, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
   CASORA_ACCENTS, accentsShown, accentLabel, swatchCss,
   condStates, condLoadSeen, isCarouselCard, isPageTile, carouselOf, carouselId, markCarousel, CAROUSEL_CARD, CAROUSEL_TILE,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)
