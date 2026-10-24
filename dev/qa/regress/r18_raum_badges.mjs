@@ -108,7 +108,7 @@ for (const [name, how] of [['qa-badges', 'auto'], ['qa-badges-leer', 'empty']]) 
     const V = hero.variables || {};
     const keys = Object.keys(V);
     checked++;
-    if (w.lights && !keys.some((k) => /^(light_entity_\d+|light_group_entity)$/.test(k) && V[k])) miss.push(hero.name + ': Beleuchtung');
+    if (w.lights && !keys.some((k) => /^(light_entity_\d+|light_group_entity)$/.test(k) && V[k]) && V.light_rooms_auto !== true) miss.push(hero.name + ': Beleuchtung');
     if (w.locks && !(V.security_locks || []).some((l) => w.locks.includes(l))) miss.push(hero.name + ': Sicherheit/Schloss');
     if (w.media && !V.media_player_1) miss.push(hero.name + ': Medien');
     if (w.climate && !(V.climate_entity_1 || V.temp_sensor_1)) miss.push(hero.name + ': Klima');
@@ -116,7 +116,8 @@ for (const [name, how] of [['qa-badges', 'auto'], ['qa-badges-leer', 'empty']]) 
   await check(`[${how}] Räume mit Geräten im Bereich geprüft`, checked >= 5, checked);
   await check(`[${how}] jeder Raum hat seine Badges (Licht/Klima/Sicherheit/Medien)`, !miss.length, miss.slice(0, 12));
   const home = rooms[0].variables || {};
-  await check(`[${how}] Home hat Badges`, Object.keys(home).some((k) => /^light_entity_\d+$/.test(k)), Object.keys(home));
+  // Without an HA light group Home follows the rooms (light_rooms_auto, 26.10.59) instead of light slots.
+  await check(`[${how}] Home hat Badges`, Object.keys(home).some((k) => /^light_entity_\d+$/.test(k)) || home.light_rooms_auto === true, Object.keys(home));
 
   // Handy: Licht/Klima der Räume als Raum-Chips.
   const m = await configOf(name + '-mobile');
