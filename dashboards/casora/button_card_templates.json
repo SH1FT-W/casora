@@ -4790,7 +4790,7 @@
    ]
   },
   "icon_tap_action": {
-   "action": "[[[ return window._casoraFree && window._casoraFree.switchable(entity) ? 'call-service' : 'none'; ]]]",
+   "action": "[[[ /* Only when the icon has a service (lock locking/jammed, media without power feature → none): else the tap opens the popup. */ const F = window._casoraFree; return F && F.iconService(entity) !== 'none' ? 'call-service' : 'none'; ]]]",
    "service": "[[[ return window._casoraFree ? window._casoraFree.iconService(entity) : 'none'; ]]]",
    "service_data": {
     "entity_id": "[[[ return entity?.entity_id ]]]"

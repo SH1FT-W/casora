@@ -35,6 +35,8 @@ add('sensor.heimserver_temp', '48.5', { state_class: 'measurement', unit_of_meas
 add('sensor.zaehler_energie', '1234.567', { state_class: 'total_increasing', unit_of_measurement: 'kWh', device_class: 'energy' });
 add('sensor.heimserver_start', '2026-10-20T06:00:00+00:00', { device_class: 'timestamp' });
 add('sensor.heimserver_weg', 'unavailable', { state_class: 'measurement', unit_of_measurement: '%' });
+add('sensor.pumpe_strom', '0.004', { state_class: 'measurement', unit_of_measurement: 'A', device_class: 'current' });
+add('sensor.luft_ppm', '42', { unit_of_measurement: 'ppm' });
 let calls = [];
 let answer = null;
 const hass = { states, entities, callWS: (msg) => { calls.push(msg); return answer ? Promise.resolve(answer) : Promise.reject(new Error('no')); } };
@@ -53,6 +55,11 @@ assert.equal(M.value(states['sensor.heimserver_weg'], hass), 'Nicht verfügbar')
 assert.equal(M.value({ entity_id: 'sensor.x', state: 'unknown', attributes: {} }, hass), 'Unbekannt');
 assert.equal(M.value(null, hass), 'Nicht verfügbar');
 assert.equal(M.value(states['sensor.heimserver_start'], hass), '2026-10-20T06:00:00+00:00', 'text stays text');
+// Small values keep up to three decimals when the state has them: "0.004 A" must not read "0 A".
+assert.equal(M.value(states['sensor.pumpe_strom'], hass), '0,004 A');
+assert.equal(M.fmt(hass, 'sensor.pumpe_strom', 0.0043), '0,004 A', 'derived value of a small sensor');
+assert.equal(M.fmt(hass, 'sensor.pumpe_strom', 0.5), '0,5 A', 'from 0.1 on two decimals at most');
+assert.equal(M.fmt(hass, 'sensor.zaehler_energie', 0.05), '0,05 kWh', 'three decimals only when the state has them');
 console.log('ok kind/value');
 
 // Series: main first, entity_2…4 with label and colour, duplicates and missing entities dropped, default colour steps.
@@ -115,6 +122,8 @@ answer = { [CPU]: [{ start: h0, mean: 20, min: 10, max: 30 }, { start: h0 + H, m
 assert.equal(M.stats(hass, CPU, '24h', el), null, 'loading');
 assert.equal(calls.length, 1);
 assert.deepEqual([calls[0].type, calls[0].period, calls[0].types, calls[0].statistic_ids], ['recorder/statistics_during_period', 'hour', ['mean', 'min', 'max'], [CPU]]);
+assert.ok(Math.abs(Date.parse(calls[0].start_time) - (Date.now() - D)) < 5000, 'hours: exactly 24 h back');
+assert.equal(calls[0].units, undefined, 'a percentage without device class sends no units');
 assert.equal(M.stats(hass, CPU, '24h', el), null, 'still loading, no second request');
 assert.equal(calls.length, 1);
 await new Promise((r) => setTimeout(r, 0));
@@ -125,15 +134,39 @@ assert.equal(calls.length, 1, 'cached');
 calls = [];
 assert.equal(M.stats(hass, CPU, '7d', el), null);
 assert.deepEqual([calls[0].period, calls[0].types], ['day', ['mean', 'min', 'max']], 'days for 7 d');
+// Day buckets start at local midnight: the range does too, so the first day is a whole one.
+const dayStart = (ms) => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
+assert.equal(calls[0].start_time, new Date(dayStart(Date.now() - 7 * D)).toISOString(), 'days: from the day start 7 days back');
 calls = [];
 assert.equal(M.stats(hass, 'sensor.zaehler_energie', '30d', el), null);
 assert.deepEqual([calls[0].period, calls[0].types], ['day', ['change']], 'counter: change per day');
+assert.equal(calls[0].start_time, new Date(dayStart(Date.now() - 30 * D)).toISOString());
+assert.deepEqual(calls[0].units, { energy: 'kWh' }, 'the display unit goes along: Wh stored, kWh shown');
+// Units only for HA's statistics unit classes and their valid units (recorder UNIT_SCHEMA).
+assert.deepEqual(M.units(states['sensor.heimserver_temp']), { temperature: '°C' });
+assert.deepEqual(M.units(states['sensor.pumpe_strom']), { electric_current: 'A' });
+assert.deepEqual(M.units({ attributes: { device_class: 'power', unit_of_measurement: 'W' } }), { power: 'W' });
+assert.equal(M.units({ attributes: { device_class: 'energy', unit_of_measurement: 'Punkte' } }), null, 'unknown unit: none, the request must not fail');
+assert.equal(M.units({ attributes: { device_class: 'battery', unit_of_measurement: '%' } }), null, 'battery is no statistics unit class');
+assert.equal(M.units(states[CPU]), null);
+assert.equal(M.units(null), null);
 answer = null;
 calls = [];
 assert.equal(M.stats(hass, 'sensor.heimserver_ram', '24h', el), null);
 await new Promise((r) => setTimeout(r, 0));
 d = M.stats(hass, 'sensor.heimserver_ram', '24h', el);
 assert.deepEqual([d.empty, d.error], [true, true], 'request failed: empty with error');
+// A hiccup after a good answer keeps the numbers: the error row shows only when nothing was ever loaded.
+const realNow = Date.now;
+Date.now = () => realNow() + 2 * 300000;
+try {
+  calls = [];
+  d = M.stats(hass, CPU, '24h', el);
+  assert.deepEqual([d.n, d.error, calls.length], [2, undefined, 1], 'refresh due: old data returned, new request sent');
+  await new Promise((r) => setTimeout(r, 0));
+  d = M.stats(hass, CPU, '24h', el);
+  assert.deepEqual([d.n, d.mean, d.error], [2, 30, undefined], 'failed refresh: the old statistics stay');
+} finally { Date.now = realNow; }
 assert.equal(M.stats({ states }, CPU, '24h', el), null, 'no connection: nothing');
 console.log('ok fetch');
 
@@ -179,6 +212,15 @@ assert.equal(noNum.rows[0].label, 'Kein Zahlenwert');
 const ramC = { id: 'sensor.heimserver_ram', kind: 'measurement', series: [] };
 st = JSON.parse(M.sec('stats', ramC, states, hass, el));
 assert.equal(st.rows[0].label, 'Statistik nicht abrufbar');
+// Empty statistics: the hint about hourly collection only for sensors HA actually records (state class).
+for (const [id, sub] of [['sensor.pumpe_strom', 'Home Assistant sammelt sie stündlich.'], ['sensor.luft_ppm', 'Dieser Sensor hat keine Statistik.']]) {
+  answer = { [id]: [] };
+  const EC0 = { id, kind: 'measurement', series: [] };
+  M.sec('stats', EC0, states, hass, el);
+  await new Promise((r) => setTimeout(r, 0));
+  st = JSON.parse(M.sec('stats', EC0, states, hass, el));
+  assert.deepEqual([st.rows[0].label, st.rows[0].sub], ['Noch keine Statistik', sub], id);
+}
 // Counter rows.
 const EC = { id: 'sensor.zaehler_energie', kind: 'total', series: E };
 M.setSpan('sensor.zaehler_energie', '7d');
@@ -227,4 +269,9 @@ assert.equal(lay.fields.series, undefined);
 lay = M.popup(states['sensor.heimserver_start'], states, hass, {});
 assert.equal(lay.fields.chart, undefined, 'no chart for a text sensor');
 assert.deepEqual(M.popup({ entity_id: 'sensor.fehlt' }, states, hass, {}), { type: 'vertical-stack', cards: [] });
+for (const lang of ['en', 'es']) {
+  const ph = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/translations/dashboard/phrases/' + lang + '.json', import.meta.url), 'utf8')).exact;
+  for (const t of ['Noch keine Statistik', 'Statistik nicht abrufbar', 'Home Assistant sammelt sie stündlich.', 'Dieser Sensor hat keine Statistik.'])
+    assert.ok(ph[t], lang + ' phrase missing for: ' + t);
+}
 console.log('chart_card: ok');

@@ -2290,6 +2290,7 @@
   "Noch keine Statistik": "Aún sin estadísticas",
   "Statistik nicht abrufbar": "Estadísticas no disponibles",
   "Home Assistant sammelt sie stündlich.": "Home Assistant las recopila cada hora.",
+  "Dieser Sensor hat keine Statistik.": "Este sensor no tiene estadísticas.",
   "Meldet sich nicht": "No informa",
   "Ungenaue Position": "Posición imprecisa",
   "Live-Tracking": "Seguimiento en vivo",
