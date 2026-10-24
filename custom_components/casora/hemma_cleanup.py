@@ -73,6 +73,8 @@ HEMMA_DOMAIN = "hemma"
 HEMMA_DIR = f"custom_components/{HEMMA_DOMAIN}"
 # HACS-Pakete, die Hemma sind (Kleinschreibung).
 HACS_NAMES = ("willsanderson/hemma",)
+# GitHub id of willsanderson/Hemma: HACS uses it for the repository's device and update entity.
+HEMMA_REPO_ID = "1100856001"
 # Hemmas Skripte und seine Schrift (Casora bringt eigene Schriften mit).
 HEMMA_RESOURCE_PREFIXES = ("/hemma_scripts/", "/local/hemma/scripts/", "/local/hemma/fonts/")
 THEMES_HEMMA = "themes/hemma"
@@ -204,55 +206,22 @@ async def async_hemma_present(hass: HomeAssistant) -> bool:
     return await hass.async_add_executor_job(os.path.isdir, _hemma_dir(hass.config.config_dir))
 
 
-def _hacs_from_storage(config_dir: str) -> dict | None:
-    path = os.path.join(config_dir, ".storage", "hacs.repositories")
-    try:
-        with open(path, encoding="utf-8") as fh:
-            data = json.load(fh).get("data", {})
-    except (OSError, ValueError, AttributeError):
+def hacs_repo(hass: HomeAssistant, config_dir: str | None = None) -> dict | None:
+    """Hemma als HACS-Paket: {id, full_name, source} oder None.
+
+    From HA's registries only (public API): HACS keys the device and the update entity of a downloaded
+    repository by its GitHub id, so this works without HACS' objects or storage file, also before HACS has
+    loaded. A Hemma installed from a fork (other id) is not recognised and counts as a plain folder."""
+    from .update import hacs_knows
+
+    if not hacs_knows(hass, HEMMA_REPO_ID):
         return None
-    for rid, repo in (data or {}).items():
-        if not isinstance(repo, dict):
-            continue
-        name = str(repo.get("full_name", "")).lower()
-        if (name in HACS_NAMES or repo.get("domain") == HEMMA_DOMAIN) and repo.get("installed"):
-            return {"id": str(repo.get("id") or rid), "full_name": repo.get("full_name"), "source": "storage"}
-    return None
+    return {"id": HEMMA_REPO_ID, "full_name": "willsanderson/Hemma", "source": "registry"}
 
 
-_NO_LIVE = object()
-
-
-def _hacs_live(hass: HomeAssistant) -> dict | None | object:
-    """Hemma in HACS' Liste im Speicher; _NO_LIVE, wenn HACS nicht geladen ist. Im Event-Loop aufrufen –
-    HACS ändert die Liste dort."""
-    hacs = hass.data.get("hacs")
-    repos = getattr(getattr(hacs, "repositories", None), "list_all", None)
-    if repos is not None:
-        try:
-            for repo in list(repos):
-                d = getattr(repo, "data", None)
-                name = str(getattr(d, "full_name", "")).lower()
-                if (name in HACS_NAMES or getattr(d, "domain", None) == HEMMA_DOMAIN) and getattr(d, "installed", False):
-                    return {"id": str(getattr(d, "id", "")), "full_name": getattr(d, "full_name", None), "source": "hacs"}
-            return None
-        except Exception:  # noqa: BLE001 - dann die gespeicherte Liste
-            pass
-    return _NO_LIVE
-
-
-def hacs_repo(hass: HomeAssistant, config_dir: str) -> dict | None:
-    """Hemma als HACS-Paket: {id, full_name, source} oder None."""
-    live = _hacs_live(hass)
-    return _hacs_from_storage(config_dir) if live is _NO_LIVE else live
-
-
-async def async_hacs_repo(hass: HomeAssistant, config_dir: str) -> dict | None:
-    """Wie hacs_repo: HACS' Liste im Event-Loop lesen, nur die gespeicherte Datei im Executor."""
-    live = _hacs_live(hass)
-    if live is _NO_LIVE:
-        return await hass.async_add_executor_job(_hacs_from_storage, config_dir)
-    return live
+async def async_hacs_repo(hass: HomeAssistant, config_dir: str | None = None) -> dict | None:
+    """Like hacs_repo (kept async for the callers)."""
+    return hacs_repo(hass, config_dir)
 
 
 def _resources(hass: HomeAssistant):
@@ -670,6 +639,9 @@ class _Conn:
 async def call_ws(hass: HomeAssistant, command: str, payload: dict) -> Any:
     """Einen registrierten WebSocket-Befehl (HACS, Lovelace) direkt ausführen.
 
+    Known, allowlisted access to internals (websocket handler registry), only for the admin action
+    "remove Hemma" (dev/unit/no_foreign_internals_test.py, docs/ha-annahmen.md "Fremde Interna").
+
     Ohne die Dekoratoren (require_admin, async_response) – die eigenen Befehle hier sind
     schon nur für Admins – damit das Ergebnis abgewartet werden kann.
     """
@@ -1060,7 +1032,7 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
             try:
                 await call_ws(hass, "hacs/repository/remove", {"repository": hacs["id"]})
             except LookupError:
-                # HACS nicht geladen (Eintrag nur aus .storage): Ordner bleibt, sonst führt HACS
+                # HACS nicht geladen (Eintrag nur in der Registry): Ordner bleibt, sonst führt HACS
                 # Hemma weiter als installiert – klare Meldung statt KeyError.
                 if hass.data.get("hacs") is None:
                     raise RuntimeError("hacs_not_loaded") from None

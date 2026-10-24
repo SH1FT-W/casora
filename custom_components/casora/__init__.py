@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .assets import CasoraAssetsView
-from .scripts_view import CasoraPanelView, CasoraScriptsView
+from .scripts_view import STUDIO_LOADER, STUDIO_LOADER_KEY, CasoraPanelView, CasoraScriptsView, studio_loader, studio_stamp
 from .actions import SERVICES as ACTION_SERVICES, async_setup_actions
 from .helfer import async_setup_helfer, async_unload_helfer
 from .theme import async_setup_theme, async_unload_theme, remove_old_theme_file
@@ -35,7 +35,7 @@ from .hemma_cleanup import async_hemma_present, async_keep_own_modules, async_se
 from .fonts import CasoraFontsView
 from .images import CasoraImagesView, CasoraPhotoView, async_migrate_rooms, async_setup_photos_ws
 from .room_icons import CasoraRoomIconsView
-from .templates import CasoraTemplatesView, rebuild_if_stale
+from .templates import CasoraTemplatesView
 from .const import (
     ASSETS_DIR,
     DOMAIN,
@@ -247,68 +247,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await async_migrate_rooms(hass)
     async_setup_photos_ws(hass)
 
-    # The bundle is derived from the template tree, so rebuild before the panel loads.
-    await hass.async_add_executor_job(rebuild_if_stale, hass.config.config_dir)
-
     scripts_dir = hass.config.path(SCRIPTS_DIR)
 
     await _sync_script_resources(hass, scripts_dir, keep_hemma=await async_hemma_present(hass))
 
-    def _stamp() -> int:
-        # Jüngste Änderung von Panel, Übersetzung und Lader – sonst liefert der Cache Altes.
-        stamps = []
-        for name in ("casora-panel.js", "casora-panel-i18n.js", "casora-panel-addons.js", "casora-panel-types.js", "casora-panel-import.js", "casora-panel-assist.js", "casora-panel-welcome.js", "casora-panel-personal.js", "casora-panel-umzug.js", "casora-panel-basis.js", "casora-panel-versions.js", "casora-panel-updates.js", "casora-panel-settings.js", "casora-panel-glocke.js", "casora-panel-popups.js", "casora-panel-kachelart.js", "casora-panel-b.js", "casora-panel-b-plus.js", "casora-panel-b-mehr.js", "casora-panel-b-ux.js", "casora-panel-community.js", "casora-panel-live.js", "casora-panel-diagnostics.js"):
-            try:
-                stamps.append(int(os.path.getmtime(os.path.join(panel_dir, name))))
-            except OSError:
-                pass
-        return max(stamps, default=0)
-
-    stamp = await hass.async_add_executor_job(_stamp)
-
-    def _write_loader() -> None:
-        # Statische Imports (siehe Kommentar in der Datei) – die Version steckt
-        # im Pfad, damit Browser nach einem Update nie alte Teile aus dem Cache nehmen.
-        v = f"{VERSION}.{stamp}"
-        body = (
-            "// Von der Casora-Integration beim Start erzeugt – nicht von Hand bearbeiten.\n"
-            "// Lädt zuerst die Übersetzung, dann das (unveränderte) Casora-Panel. Statische\n"
-            "// Imports, weil HA das Element sonst vor seiner Definition anlegt.\n"
-            f'import "./casora-panel-i18n.js?v={v}";\n'
-            f'import "./casora-panel-types.js?v={v}";\n'
-            f'import "./casora-panel.js?v={v}";\n'
-            f'import "./casora-panel-import.js?v={v}";\n'
-            f'import "./casora-panel-assist.js?v={v}";\n'
-            f'import "./casora-panel-personal.js?v={v}";\n'
-            f'import "./casora-panel-umzug.js?v={v}";\n'
-            f'import "./casora-panel-basis.js?v={v}";\n'
-            f'import "./casora-panel-versions.js?v={v}";\n'
-            f'import "./casora-panel-updates.js?v={v}";\n'
-            f'import "./casora-panel-settings.js?v={v}";\n'
-            f'import "./casora-panel-glocke.js?v={v}";\n'
-            f'import "./casora-panel-popups.js?v={v}";\n'
-            f'import "./casora-panel-kachelart.js?v={v}";\n'
-            f'import "./casora-panel-addons.js?v={v}";\n'
-            f'import "./casora-panel-welcome.js?v={v}";\n'
-            f'import "./casora-panel-b.js?v={v}";\n'
-            f'import "./casora-panel-b-plus.js?v={v}";\n'
-            f'import "./casora-panel-b-mehr.js?v={v}";\n'
-            f'import "./casora-panel-b-ux.js?v={v}";\n'
-            f'import "./casora-panel-community.js?v={v}";\n'
-            f'import "./casora-panel-live.js?v={v}";\n'
-            f'import "./casora-panel-diagnostics.js?v={v}";\n'
-        )
-        path = os.path.join(panel_dir, "casora-studio.js")
-        try:
-            with open(path, encoding="utf-8") as f:
-                if f.read() == body:
-                    return
-        except OSError:
-            pass
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(body)
-
-    await hass.async_add_executor_job(_write_loader)
+    # Studio loader: generated in memory and served by CasoraPanelView, nothing is written into the package.
+    stamp = await hass.async_add_executor_job(studio_stamp, panel_dir)
+    hass.data.setdefault(DOMAIN, {})[STUDIO_LOADER_KEY] = studio_loader(f"{VERSION}.{stamp}")
 
     if not hass.data.get(f"{DOMAIN}_views"):
         hass.http.register_view(CasoraAssetsView(hass.config.path(ASSETS_DIR)))
@@ -338,7 +283,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "name": "casora-panel",
                 "embed_iframe": False,
                 "trust_external": False,
-                "module_url": f"{URL_BASE}/casora-studio.js?v={VERSION}.{stamp}",
+                "module_url": f"{URL_BASE}/{STUDIO_LOADER}?v={VERSION}.{stamp}",
             }
         },
     )

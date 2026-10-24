@@ -28,6 +28,13 @@ sys.path.insert(0, ROOT)
 
 import custom_components.casora as casora_init  # noqa: E402
 from custom_components.casora import hemma_cleanup as hc  # noqa: E402
+from custom_components.casora import update as casora_update  # noqa: E402
+
+HACS_DEVICES: set = set()
+# HACS keys a repository's device by its GitHub id (update.hacs_knows reads the registries).
+casora_update.dr = SimpleNamespace(async_get=lambda h: SimpleNamespace(
+    devices={i: SimpleNamespace(identifiers={i}) for i in HACS_DEVICES}))
+casora_update.er = SimpleNamespace(async_get=lambda h: SimpleNamespace(async_get_entity_id=lambda *a: None))
 
 fails = []
 
@@ -130,10 +137,10 @@ def make_hass(tmp, resources, dashboards, entries, hacs_installed=False):
         return outer
 
     data = {"lovelace": lov, "websocket_api": {"lovelace/dashboards/delete": (wrapped(dash_delete), None)}}
+    HACS_DEVICES.clear()
     if hacs_installed:
         data["websocket_api"]["hacs/repository/remove"] = (wrapped(hacs_remove), None)
-        repo = SimpleNamespace(data=SimpleNamespace(full_name="willsanderson/Hemma", installed=True, id="123", domain="hemma"))
-        data["hacs"] = SimpleNamespace(repositories=SimpleNamespace(list_all=[repo]))
+        HACS_DEVICES.add(("hacs", hc.HEMMA_REPO_ID))
     async def svc(domain, service, data=None, blocking=False):
         calls.append(("service", domain, service, dict(data or {})))
 
@@ -424,22 +431,22 @@ async def main():
         dashes = {"hemma-y": Dash("hemma-y", HEMMA_CFG, mode="yaml")}
         hass, calls = make_hass(tmp, res, dashes, [entry("e1")], hacs_installed=True)
         st = await hc.async_status(hass)
-        check("Status: HACS erkannt", st["hacs"] and st["hacs_repo"]["id"] == "123" and not st["resources_writable"])
+        check("Status: HACS erkannt", st["hacs"] and st["hacs_repo"]["id"] == hc.HEMMA_REPO_ID and not st["resources_writable"])
         out = await hc.async_remove(hass, ["hemma-y"], keep_files=True)
         steps = {s["step"]: s for s in out["steps"]}
-        check("HACS-Befehl statt Ordner löschen", ("hacs_remove", "123") in calls and steps["integration"]["via"] == "hacs"
+        check("HACS-Befehl statt Ordner löschen", ("hacs_remove", hc.HEMMA_REPO_ID) in calls and steps["integration"]["via"] == "hacs"
               and steps["integration"]["ok"])
         check("YAML-Ressourcen gemeldet", not steps["resources"]["ok"] and steps["resources"]["manual"] == ["/hemma_scripts/hemma-core.js"])
         check("YAML-Dashboard gemeldet, nicht gelöscht", steps["dashboards"]["manual"] == ["hemma-y"] and "hemma-y" in dashes)
         check("Gesamt nicht ok (manuelle Schritte)", out["ok"] is False and out["restart_required"])
 
-    # HACS nur in .storage (HACS läuft nicht): erkannt, Entfernen meldet Fehler statt Ordner zu löschen.
+    # HACS only in the registry (HACS not running): recognised, removing reports an error instead of deleting the folder.
     with tempfile.TemporaryDirectory() as tmp:
         setup_tmp(tmp)
-        write(os.path.join(tmp, ".storage/hacs.repositories"), json.dumps(
-            {"data": {"123": {"full_name": "willsanderson/Hemma", "installed": True, "id": "123"}}}))
         hass, calls = make_hass(tmp, Resources([]), {}, [])
-        check("HACS aus .storage", hc.hacs_repo(hass, tmp) == {"id": "123", "full_name": "willsanderson/Hemma", "source": "storage"})
+        HACS_DEVICES.add(("hacs", hc.HEMMA_REPO_ID))
+        check("HACS aus der Registry", hc.hacs_repo(hass, tmp) == {
+            "id": hc.HEMMA_REPO_ID, "full_name": "willsanderson/Hemma", "source": "registry"})
         out = await hc.async_remove(hass, [], keep_files=True)
         i = {s["step"]: s for s in out["steps"]}["integration"]
         check("ohne laufendes HACS: Fehler, Ordner bleibt", not i["ok"] and os.path.isdir(os.path.join(tmp, "custom_components/hemma")))

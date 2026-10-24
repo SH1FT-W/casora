@@ -24,8 +24,8 @@ async def http(hass: HomeAssistant, tmp_path):
     # frontend/http/lovelace gelten als geladen (frontend bräuchte das große hass_frontend-Paket);
     # input_* und script richtet HA selbst ein.
     hass.config.components.update({"frontend", "http", "lovelace"})
-    # Eigenes Konfig-Verzeichnis mit einer Kopie der Integration: Casora schreibt beim Start
-    # Dateien neben sich (Lader casora-studio.js, Vorlagen-Bündel) – nie ins Repo.
+    # Own config folder with a copy of the integration, so the check below sees any write into it
+    # (Casora writes nothing there; the Studio loader and the template bundle come from memory).
     src = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "custom_components", DOMAIN)
     shutil.copytree(src, tmp_path / "custom_components" / DOMAIN, ignore=shutil.ignore_patterns("__pycache__", "rooms"))
     hass.config.config_dir = str(tmp_path)
@@ -100,3 +100,25 @@ async def test_migration_ki_auto(hass: HomeAssistant, http, panel) -> None:
     assert "ki_auto" not in entry.options
     # ki_auto aus → Update-Check nur auf Knopfdruck
     assert entry.options[OPT_PLAN_UPDATE] == "manual"
+
+
+def _tree(root) -> dict:
+    out = {}
+    for base, dirs, files in os.walk(root):
+        dirs[:] = [d for d in dirs if d != "__pycache__"]
+        for f in files:
+            st = os.stat(os.path.join(base, f))
+            out[os.path.relpath(os.path.join(base, f), root)] = (st.st_size, st.st_mtime_ns)
+    return out
+
+
+async def test_setup_schreibt_nichts_in_den_integrationsordner(hass: HomeAssistant, http, panel) -> None:
+    """HACS review: no runtime writes into the package (Studio loader and template bundle come from memory)."""
+    root = os.path.join(hass.config.config_dir, "custom_components", DOMAIN)
+    before = _tree(root)
+    entry = await _setup(hass)
+    hass.config_entries.async_update_entry(entry, options={"x_test": 1})
+    await hass.async_block_till_done()
+    assert _tree(root) == before
+    assert not os.path.exists(os.path.join(root, "panel", "casora-studio.js"))
+    assert "casora-panel.js?v=" in hass.data[DOMAIN]["studio_loader"]

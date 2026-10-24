@@ -8,7 +8,6 @@ creates no update entity of its own, otherwise the same version would show up tw
 """
 from __future__ import annotations
 
-import json
 import logging
 import os
 import re
@@ -19,11 +18,12 @@ from typing import Any
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, UPDATE_REPO, VERSION
+from .const import DOMAIN, UPDATE_REPO, UPDATE_REPO_ID, VERSION
 from .release_notes import (
     changelog_file,
     ha_markdown,
@@ -88,25 +88,20 @@ def _prune_version_backups(folder: str) -> list[str]:
     return removed
 
 
-def _hacs_repo_id(path: str) -> str | None:
-    """GitHub id of UPDATE_REPO in HACS' list if installed there (.storage/hacs.repositories).
+def hacs_knows(hass: HomeAssistant, repo_id: str) -> bool:
+    """Is this GitHub repository downloaded through HACS?
 
-    HACS uses this id as unique_id of its update entity."""
-    try:
-        with open(path, encoding="utf-8") as fh:
-            repos = (json.load(fh) or {}).get("data") or {}
-    except (OSError, ValueError, AttributeError):
-        return None
-    want = UPDATE_REPO.lower()
-    for key, r in (repos.items() if isinstance(repos, dict) else []):
-        if isinstance(r, dict) and str(r.get("full_name") or "").lower() == want and r.get("installed"):
-            return str(r.get("id") or key)
-    return None
+    HACS keys the device and the update entity of a downloaded repository by its GitHub id; both live in
+    HA's registries (public API), so this works before HACS has loaded and without reading HACS' storage."""
+    if er.async_get(hass).async_get_entity_id("update", "hacs", repo_id) is not None:
+        return True
+    ident = ("hacs", repo_id)
+    return any(ident in d.identifiers for d in list(dr.async_get(hass).devices.values()))
 
 
-def _read_hacs(path: str) -> bool:
-    """Is UPDATE_REPO listed as installed in HACS' list? (.storage/hacs.repositories)"""
-    return _hacs_repo_id(path) is not None
+def hacs_repo_id(hass: HomeAssistant) -> str | None:
+    """GitHub id of UPDATE_REPO if HACS manages Casora, else None."""
+    return UPDATE_REPO_ID if hacs_knows(hass, UPDATE_REPO_ID) else None
 
 
 def beta_enabled(entry: ConfigEntry | None) -> bool:
@@ -129,10 +124,10 @@ def pick_latest(releases: list[dict], installed: str, beta: bool) -> tuple[dict 
 
 
 async def async_hacs_managed(hass: HomeAssistant) -> bool:
-    """Does HACS manage Casora? From the stored list – HACS need not be loaded yet.
+    """Does HACS manage Casora? From the registries – HACS need not be loaded yet.
 
     Also remembers the repo id (DATA_HACS_ID) that casora_update_entity uses to find HACS' entry."""
-    rid = await hass.async_add_executor_job(_hacs_repo_id, hass.config.path(".storage", "hacs.repositories"))
+    rid = hacs_repo_id(hass)
     hass.data.setdefault(DOMAIN, {})[DATA_HACS_ID] = rid
     return rid is not None
 

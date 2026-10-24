@@ -38,7 +38,7 @@ from homeassistant.util import dt as dt_util
 from .card_package import effective_templates, read_overlay
 from .const import DOMAIN, VERSION
 from .template_print import FINGERPRINT_KEY, home_vars_of, refresh_dashboard
-from .templates import BUNDLE
+from .templates import bundle_text
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,9 +69,8 @@ def _is_mobile(cfg: dict) -> bool:
 
 def _read_bundle(config_dir: str) -> tuple[dict, str] | None:
     try:
-        with open(os.path.join(config_dir, BUNDLE), encoding="utf-8") as fh:
-            templates = json.load(fh).get("templates")
-    except (OSError, ValueError):
+        templates = json.loads(bundle_text(config_dir) or "").get("templates")
+    except (ValueError, AttributeError):
         return None
     if not isinstance(templates, dict) or not templates:
         return None

@@ -184,8 +184,8 @@ console.log('ok diagnostics: cleaning');
   assert.ok(/if \(id === "diag"\) return this\._diagShow\(\);/.test(panelSrc), 'help menu opens the dialog');
   const mehr = read('custom_components/casora/panel/casora-panel-b-mehr.js');
   assert.ok(/A\("diag", "Copy diagnostics…", "diagnose[^"]*github/.test(mehr), 'findable in the Studio search');
-  const init = read('custom_components/casora/__init__.py');
-  assert.equal((init.match(/casora-panel-diagnostics\.js/g) || []).length, 2, 'in __init__.py at both places (stamp + loader)');
+  const sv = read('custom_components/casora/scripts_view.py');
+  assert.equal((sv.match(/"casora-panel-diagnostics\.js"/g) || []).length, 1, 'in STUDIO_MODULES (stamp + loader, scripts_view.py)');
   const de = JSON.parse(read('custom_components/casora/translations/panel/de.json')).exact;
   for (const k of ['Copy diagnostics…', 'Diagnostics', 'Copy', 'Copied', 'Close', 'Report a problem',
     'Paste it into your GitHub issue. It contains only counts, versions and integrations – no names of devices, rooms or people, no addresses.',

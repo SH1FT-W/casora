@@ -39,6 +39,8 @@ Plattform-Basisklassen (siehe `dev/casora_mock/entity.py`), und die Annahmen unt
 | Theme-Variable `--dialog-surface-margin-top` verschiebt HA-Dialoge (am Handy setzt HA sie selbst auf 0) | `theme.yaml` (`dialog-surface-margin-top`) | keiner |
 | Lovelace-Ressourcen unter `hass.data["lovelace"].resources` (früher Dict-Schlüssel) mit `async_items`, `async_load`/`loaded`, `async_create_item`, `async_update_item`, `async_delete_item`; im yaml-Modus ohne `async_create_item` | `__init__.py` `_lovelace_resources`, `_sync_script_resources`, `_remove_script_resources` | `dev/unit/hemma_entfernen_test.py`, `dev/unit/remove_entry_resources_test.py` (Attrappen) |
 | `async_remove_entry` läuft beim Löschen des Config-Eintrags | `__init__.py` | keiner |
+| HACS schlüsselt Gerät (`identifiers {("hacs", <GitHub-ID>)}`) und Update-Entität (`unique_id` = GitHub-ID) eines geladenen Repos nach der GitHub-ID; Casora `1404244036` (`const.UPDATE_REPO_ID`), Hemma `1100856001`. Nur über die Registry erkannt (kein `.storage/hacs.repositories`, keine HACS-Objekte); ein Hemma aus einem Fork (andere ID) gilt als einfacher Ordner | `update.py` `hacs_knows`/`hacs_repo_id`, `hemma_cleanup.py` `hacs_repo` | `dev/unit/update_github_test.py`, `dev/unit/update_report_only_test.py`, `dev/unit/hemma_entfernen_test.py`, `dev/pytest/test_update_push.py` (HACS selbst nicht im Test; Quelle HACS `entity.py`, 24.10.2026) |
+| Panels laden ihr Modul per URL ohne Anmeldung; Casoras Studio-Lader `casora-studio.js` entsteht beim Start im Speicher (`scripts_view.studio_loader`) und wird von `CasoraPanelView` (`requires_auth = False`, nur statischer Code) ausgeliefert; das Vorlagen-Bündel liegt fertig im Paket, nur mit Vorlagen-Baum im Config-Ordner (Entwicklung) wird es im Speicher gebaut. Nichts wird zur Laufzeit ins Paket geschrieben | `scripts_view.py`, `templates.py` `bundle_text`, `template_refresh.py` | `dev/unit/auslieferung_test.py`, `dev/unit/no_config_writes_test.py` (6, 7), `dev/pytest/test_setup.py` `test_setup_schreibt_nichts_in_den_integrationsordner` |
 | Eine Integration kann keine Themes anmelden (öffentlich nur `configuration.yaml` → `frontend: themes:`); `frontend.add_extra_js_url` lädt ein Modul auf jeder Seite, auch in neu verbundenen Browsern | `theme.py` `async_setup_theme` (lädt `scripts/casora-theme.js`), kein Theme-Ordner, kein `hass.data["frontend_themes"]` mehr | `dev/unit/theme_served_test.py`, `dev/unit/no_config_writes_test.py`, `dev/qa/regress/r326_ohne_yaml.mjs` |
 | HA legt sein Theme inline auf `<html>` (`--name`, für Hex-Farben `--rgb-name`, außer das Theme bringt `rgb-name` selbst mit; Grundwerte, dann `modes.light`/`modes.dark`); Hell/Dunkel steht in `hass.themes.darkMode`. Eine `:root`-Regel mit `!important` gewinnt gegen den Inline-Stil | `scripts/casora-theme.js` `vars()`/`apply()` | `dev/unit/casora_theme_js.mjs` (Attrappe), `r326_ohne_yaml.mjs` (echtes Frontend) |
 | `hass.selectedTheme.theme` = Theme-Wahl des Browsers/Profils; `"default"` ist HAs eingebautes Theme, ohne Wert gilt das Standard-Theme der Installation | `casora-theme.js` `browserPick()` | `dev/unit/casora_theme_js.mjs` |
@@ -105,7 +107,8 @@ Zip-Root), ohne Rückfall auf das Repo-Archiv. Ältere Releases (ohne diese Schl
 Deshalb hängt `tools/release.sh` an jedes Release `casora.zip` (`tools/build-release-zip.py`). Casora selbst
 installiert nichts (HACS-Review hacs/default#12143): die eigene Update-Entität (nur ohne HACS, `update.py`) meldet
 neue Versionen und Versionshinweise, ohne `INSTALL`; das Studio verweist auf HACS (`/hacs/repository/<GitHub-ID>`,
-ID aus `.storage/hacs.repositories`, sonst Mehr-Info von HACS' Update-Entität). Tests:
+GitHub-ID fest in `const.UPDATE_REPO_ID`, HACS-Verwaltung erkannt über HACS' Gerät bzw. Update-Entität in der
+Registry, sonst Mehr-Info von HACS' Update-Entität). Tests:
 `dev/unit/update_release_zip_test.py` (Paketaufbau), `dev/unit/update_report_only_test.py` (kein `INSTALL`, kein
 Schreibzugriff auf `custom_components`); HACS selbst und die HACS-Route nicht im Test.
 
@@ -189,6 +192,25 @@ Bekannt wacklig (Stand 2026.10.1, nicht im Test, weil es Rückfälle bzw. HACS-S
 - Bosch-Raumklima-Schlüssel (`call_for_heat`, `summer_mode` …) gibt es nur in einer HACS-Variante;
   `ki.py` (`call_for_heat`) hat keinen Rückfall.
 - `main_switch` (Fußbodenheizung) und `warnings` (Wetterwarnung) gibt es in keiner Kern-Integration.
+
+## Fremde Interna (bewusst, mit Grund)
+
+`dev/unit/no_foreign_internals_test.py` prüft den Python-Code auf fremde `hass.data`-Schlüssel, `runtime_data`,
+private Importe/Untermodule anderer Integrationen, `inspect.unwrap`/`__self__`, Monkeypatching und fremde
+`.storage`-Schlüssel. Was bleibt, steht dort in `ALLOWED` und hier. Für Lovelace und die UI-Helfer bietet HA
+keine öffentliche Python-API (nur WebSocket-Befehle, die eine Browser-Verbindung brauchen); eine Brücke über den
+Browser hat Daniel am 24.10.2026 verworfen.
+
+| Zugriff | Wo | Grund |
+|---|---|---|
+| `hass.data["lovelace"]` (Ressourcen) | `__init__.py` `_lovelace_resources` | Casoras Skript-Ressourcen eintragen/umstellen/entfernen, beim Start und beim Entfernen der Integration |
+| `LOVELACE_DATA`/`hass.data["lovelace"]` (Dashboards) | `template_refresh.py`, `versions.py`, `umstellen.py`, `phone_badges.py`, `room_icons.py`, `live_activity.py` | Vorlagen nach einem Update auffrischen (beim Start, ohne Browser), Versionen im Studio, `casora.umstellen`, Handy-Badges/Partner-Daten für alle Nutzer (nur lesen), Symbol-Nutzung, Tipp-Ziel der Live-Aktivität (nur lesen) |
+| `hass.data["websocket_api"]` + `inspect.unwrap(...).__self__.storage_collection` | `helfer.py` `_collection` | Casoras UI-Helfer beim Start anlegen (keine Python-API für UI-Helfer); dieselbe Sammlung wie Einstellungen › Helfer |
+| `hass.data["lovelace"]`, `hass.data["websocket_api"]` (`call_ws`), `hass.data["hacs"]` (Rückfall-Deinstallation), `hass.data["frontend_default_theme"]` | `hemma_cleanup.py` | Admin-Aktion „Hemma entfernen“ im Studio: Ressourcen, Dashboards, HACS-Paket und Theme des Vorgängers wegräumen |
+| `homeassistant.components.http.auth.async_sign_path` | `images.py` | öffentliche Hilfe von `http` für signierte Adressen (Kern-Integrationen wie `media_source` nutzen sie genauso); Raumfotos mit Anmeldung (Review Punkt 1) |
+| `homeassistant.components.recorder.statistics.statistics_during_period`, `recorder.history` | `ki.py` | dokumentierte Recorder-API für Statistik/Verlauf, nur lesen |
+| `homeassistant.components.energy.data.async_get_manager` | `ki.py`, `settings.py`, `raumklima.py` | Energie-Einstellungen, nur lesen; aus Python gibt es keinen WebSocket-Weg, Kern-`analytics` liest sie genauso |
+| `homeassistant.components.frontend.storage.async_user_store`, `Store(…, "frontend_theme")` | `theme.py` `_migrate`, `_write_notices` | einmalige Übernahme der Design-Wahl aus der Theme-Zeit (Casora ≤ 26.10.59): liest HAs gespeichertes Standard-Theme einmal (nie geschrieben) und legt je Nutzer einmal einen Hinweis ab; mit der Migration entfernen |
 
 ## Prüfbefehl
 

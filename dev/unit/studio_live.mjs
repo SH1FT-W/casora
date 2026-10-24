@@ -100,7 +100,7 @@ assert.ok(/"set-live": \["energy", "var\(--casora-color-green, #30D158\)"\]/.tes
 const mehr = read('panel/casora-panel-b-mehr.js');
 assert.ok(/\["live", "Live Activities", "live aktivität aktivitäten sperrbildschirm/.test(mehr), 'über die Suche findbar');
 const init = read('__init__.py');
-assert.equal((init.match(/casora-panel-live\.js/g) || []).length, 2, 'in __init__.py an beiden Stellen (Stempel + Lader)');
+assert.equal((read('scripts_view.py').match(/"casora-panel-live\.js"/g) || []).length, 1, 'in STUDIO_MODULES (Stempel + Lader, scripts_view.py)');
 assert.ok(/async_setup_live\(hass\)/.test(init) && /live\.stop\(\)/.test(init), 'Start und Stopp der Integration');
 
 // ── Texts: everything t("…") uses in the module has a German version ───────────────────
