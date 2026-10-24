@@ -168,5 +168,19 @@ async def runtime_checks() -> None:
 
 static_checks()
 asyncio.run(runtime_checks())
+# Old version zips of the self-updater: all but the newest go, dashboard backups stay.
+with tempfile.TemporaryDirectory() as _d:
+    _b = os.path.join(_d, "casora_sicherungen"); os.makedirs(_b)
+    _names = ["casora_26.10.40_2026-10-18_101010.zip", "casora_26.10.58_2026-10-23_202020.zip",
+              "casora_26.10.58b1_2026-10-22_111111.zip", "umzug_2026-10-20_120000_home.json", "casora_notes.zip"]
+    for _i, _n in enumerate(_names):
+        _p = os.path.join(_b, _n); open(_p, "w").close(); os.utime(_p, (1_000_000 + _i, 1_000_000 + _i))
+    os.utime(os.path.join(_b, "casora_26.10.58_2026-10-23_202020.zip"), (2_000_000, 2_000_000))
+    update._remove_legacy_leftovers(_d)
+    _left = sorted(os.listdir(_b))
+    check("Versionssicherungen: nur die neueste bleibt, andere Dateien unberührt",
+          _left == ["casora_26.10.58_2026-10-23_202020.zip", "casora_notes.zip", "umzug_2026-10-20_120000_home.json"], _left)
+    check("Versionssicherungen: fehlender Ordner ist kein Fehler", update._prune_version_backups(os.path.join(_d, "nichts")) == [])
+
 print("\nALLES OK" if not fails else f"\n{len(fails)} FEHLER")
 sys.exit(1 if fails else 0)
