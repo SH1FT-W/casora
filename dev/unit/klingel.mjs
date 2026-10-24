@@ -485,6 +485,16 @@ states['camera.carport_sub'].state = 'idle';
   assert.equal(KL.silentStep(ss, 0.004, 4000, 8000), false, 'sound: reset');
   assert.equal(KL.silentStep(ss, 0, 5000, 9000), false, 'counting anew');
   assert.equal(KL.silentStep({}, null, 5000, 99000), false, 'level unknown: never');
+  // The retry itself: once, first camera only, and only on a visible page (a hidden tab must not open the microphone).
+  assert.equal(KL.retryWanted({ _v: { idx: 0 } }), true);
+  assert.equal(KL.retryWanted({ _talkRetried: true, _v: { idx: 0 } }), false, 'once per press');
+  assert.equal(KL.retryWanted({ _v: { idx: 1 } }), false, 'second camera: no retry, no note');
+  assert.equal(KL.retryGo({ _t: null, isConnected: true }, { visibilityState: 'visible' }), true);
+  assert.equal(KL.retryGo({ _t: {}, isConnected: true }, { visibilityState: 'visible' }), false, 'talking again already');
+  assert.equal(KL.retryGo({ _t: null, isConnected: false }, { visibilityState: 'visible' }), false, 'card gone');
+  assert.equal(KL.retryGo({ _t: null, isConnected: true }, { visibilityState: 'hidden' }), false, 'tab hidden: no retry');
+  assert.match(src('24-klingel.js'), /if \(KL\.retryGo\(self, document\)\) self\._talk\(true\); \}, 1500\)/, 'the 1500 ms retry asks retryGo');
+  assert.match(src('24-klingel.js'), /KL\.retryWanted\(self\) && KL\.silentStep\(/, 'the note and the retry ask retryWanted');
   const stats = (b) => ({ getStats: () => Promise.resolve(new Map([['a', { type: 'inbound-rtp', kind: 'audio', bytesReceived: b }], ['v', { type: 'inbound-rtp', kind: 'video', bytesReceived: 9e9 }]])) });
   assert.equal(await KL.audioIn(stats(1234)), 1234, 'audio bytes only');
   assert.equal(await KL.audioIn(null), null);

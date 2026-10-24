@@ -76,20 +76,32 @@ cfg = { views: [{ path: 'home', title: 'home', cards: [] },
   { path: 'wohnzimmer', title: 'wohnzimmer', cards: [{ type: 'custom:button-card', template: 'casora_room', name: 'Wohnzimmer' }] },
   { path: 'buero', title: 'buero', cards: [{ type: 'custom:button-card', template: 'casora_room', name: 'Büro' }] },
   { path: 'garten', title: 'garten', cards: [{ type: 'custom:button-card', template: 'casora_room', name: 'Garten' }] },
-  { path: 'abstellkammer', title: 'abstellkammer', cards: [] }] };
+  { path: 'abstellkammer', title: 'abstellkammer', cards: [] },
+  { path: 'energie', title: 'Energie', cards: [{ type: 'custom:button-card', template: 'casora_energy' }] },
+  { path: 'bad', title: 'Bad', cards: [{ type: 'vertical-stack', cards: [{ type: 'custom:button-card', template: 'casora_room', name: '[[[ return variables.room_name ]]]' }] }] }] };
 const at = (p) => { location.pathname = p; return V.scope({}); };
 eq('desktop: Home view → house', at('/casora/home'), null);
 eq('desktop: no view segment → house', at('/casora'), null);
 eq('desktop: garden view', at('/casora/garten'), { key: 'garten', name: 'Garten', outdoor: true });
 eq('desktop: living room view (name from the room header)', at('/casora/wohnzimmer'), { key: 'wohnzimmer', name: 'Wohnzimmer', outdoor: false });
 eq('desktop: view by index', at('/casora/3'), { key: 'garten', name: 'Garten', outdoor: true });
-eq('desktop: view without header → title', at('/casora/abstellkammer'), { key: 'abstellkammer', name: 'abstellkammer', outdoor: false });
+// A view without a casora_room header is no room (Energy, Scenes, an own page): the house, not "Keine Sensoren".
+eq('desktop: view without header → house', at('/casora/abstellkammer'), null);
+eq('desktop: Energy view (tiles, no room header) → house', at('/casora/energie'), null);
+eq('desktop: header with a template name → the title', at('/casora/bad'), { key: 'bad', name: 'Bad', outdoor: false });
 eq('explicit: null = house', V.scope({}, null), null);
+// The Studio's preview room counts only while the Studio is on the page (HA keeps one window: the dashboard
+// opened after the Studio must not inherit it).
 window._casoraStudioRoom = { key: 'garten', name: 'Garten' };
+eq('Studio room without the Studio on the page: ignored (the address decides)', at('/casora/wohnzimmer'), { key: 'wohnzimmer', name: 'Wohnzimmer', outdoor: false });
+window._casoraStudioPanel = { isConnected: true };
 eq('Studio preview: the panel names the room', at('/casora-studio'), { key: 'garten', name: 'Garten', outdoor: true });
 window._casoraStudioRoom = null;
 eq('Studio preview: Home', at('/casora-studio'), null);
-delete window._casoraStudioRoom;
+window._casoraStudioRoom = { key: 'garten', name: 'Garten' };
+window._casoraStudioPanel = { isConnected: false };
+eq('Studio left (panel disconnected): ignored', at('/casora/wohnzimmer'), { key: 'wohnzimmer', name: 'Wohnzimmer', outdoor: false });
+delete window._casoraStudioRoom; delete window._casoraStudioPanel;
 eq('explicit: a room by name', V.scope({}, { name: 'Terrasse' }), { key: 'terrasse', name: 'Terrasse', outdoor: true });
 // Phone: one view, the room filter decides.
 cfg = { views: [{ path: 'home', cards: [] }] };
@@ -261,6 +273,20 @@ const stale = { template: 'casora_vent', variables: { popup_hide: ['keller', 'bu
 rows = render(panel(0), stale);
 rows[2].input.click();
 eq('Studio: stale ids drop, known ones stay', stale.variables.popup_hide, ['wohnzimmer', 'buro']);
+// The preview's room marker ends with the preview and with the panel (casora-panel-popups.js _cpClose, disconnectedCallback).
+{
+  const p = panel(2);
+  p.classList = { remove: noop, add: noop, contains: () => false }; p._cpSync = noop; p._cpLayer = null;
+  window._casoraStudioRoom = { key: 'garten', name: 'Garten' };
+  P._cpClose.call(p);
+  ok('Studio: closing the preview drops the room marker', !('_casoraStudioRoom' in window));
+  window._casoraStudioRoom = { key: 'garten', name: 'Garten' };
+  window._casoraStudioPanel = p;
+  P.disconnectedCallback.call(p);
+  ok('Studio: leaving the panel drops the room marker', !('_casoraStudioRoom' in window));
+  ok('Studio: leaving the panel unregisters it', window._casoraStudioPanel === null);
+  ok('Studio: _cpOpen sets the marker', /window\._casoraStudioRoom = cpRoom/.test(src('custom_components/casora/panel/casora-panel-popups.js')));
+}
 // German Studio texts exist.
 const de = JSON.parse(src('custom_components/casora/translations/panel/de.json'));
 ['Visible in the popup', 'Switch off what the popup should not list.', 'Nothing to hide yet – the popup collects its rows by itself.', '1 row hidden']

@@ -815,6 +815,12 @@
     if (!t.silentSince) t.silentSince = now;
     return now - t.silentSince >= KL.SILENT;
   };
+  // The retry after silence: once per press, never on the second camera (it has no talk); and it starts only while
+  // the card is still on a visible page – a hidden tab must not open the microphone by itself.
+  KL.retryWanted = function (card) { return !card._talkRetried && !(card._v && card._v.idx); };
+  KL.retryGo = function (card, doc) {
+    return !card._t && !!card.isConnected && !!doc && doc.visibilityState === 'visible';
+  };
   KL.flowStep = function (t, bytes, now, level) {
     if (bytes != null && bytes > (t.lastBytes || 0)) { t.lastBytes = bytes; t.lastFlow = now; }
     if (level != null && level > KL.SOUND) t.heard = true;
@@ -1325,13 +1331,13 @@
                 if (++tick % 2 === 0) {
                   try { console.info('casora klingel: Pegel', JSON.stringify(KL.levelLine(a))); } catch (e) { /* quiet */ }
                 }
-                // Silent session: once more, by itself.
-                if (!self._talkRetried && KL.silentStep(t, a.inLevel, a.inBytes, Date.now())) {
+                // Silent session: once more, by itself (first camera only – the second one cannot talk).
+                if (KL.retryWanted(self) && KL.silentStep(t, a.inLevel, a.inBytes, Date.now())) {
                   self._talkRetried = true;
                   try { console.info('casora klingel: Sprechverbindung bleibt still – neuer Versuch'); } catch (e) { /* quiet */ }
                   self._talkStop(true);
                   self._note('Kein Ton von der Klingel – neuer Versuch …', 4000);
-                  setTimeout(function () { if (!self._t && self.isConnected) self._talk(true); }, 1500);
+                  setTimeout(function () { if (KL.retryGo(self, document)) self._talk(true); }, 1500);
                 }
               });
             }, 1000);

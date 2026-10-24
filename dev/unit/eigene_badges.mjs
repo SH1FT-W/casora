@@ -168,4 +168,130 @@ assert.ok(/\["custom", "Own badges"\]/.test(read('custom_components/casora/panel
 const de = JSON.parse(read('custom_components/casora/translations/panel/de.json')).exact;
 assert.equal(de['Own badges'], 'Eigene Badges'); assert.equal(de['Wrap badges onto more lines'], 'Badges umbrechen');
 
+// ── Studio field with a minimal DOM: a template badge can be created, the preview releases its subscriptions ──
+class El {
+  constructor(tag) { this.tagName = tag.toUpperCase(); this.children = []; this.attrs = {}; this.style = {}; this.dataset = {}; this.classList = { add() {}, remove() {}, toggle() {}, contains: () => false }; this.isConnected = true; }
+  setAttribute(k, v) { this.attrs[k] = v; }
+  getAttribute(k) { return this.attrs[k]; }
+  appendChild(c) { this.children.push(c); c.parentNode = this; return c; }
+  querySelector() { return null; }
+  querySelectorAll() { return []; }
+  addEventListener() {}
+  get textContent() { return this._t || ''; }
+  set textContent(v) { this._t = String(v); }
+}
+const stub = () => new Proxy(function () {}, { get: (t, k) => (k === Symbol.toPrimitive ? () => '' : stub()), apply: () => stub(), construct: () => stub() });
+const Row = customElements.get('casora-custom-badges');
+let Panel = null;
+const set = (k, v) => Object.defineProperty(globalThis, k, { value: v, configurable: true, writable: true });
+set('document', new Proxy({ createElement: (t) => new El(t), querySelector: (s) => (s === 'home-assistant' ? { hass } : null) }, { get: (t, k) => (k in t ? t[k] : stub()) }));
+set('customElements', { get: () => Panel, define: (nm, c) => { Panel = c; }, whenDefined: () => Promise.resolve() });
+set('requestAnimationFrame', () => 0);
+set('matchMedia', () => ({ matches: false, addEventListener() {} }));
+set('fetch', () => Promise.reject(new Error('offline')));
+set('HTMLElement', class {}); set('innerWidth', 1400); set('innerHeight', 900);
+set('localStorage', { getItem: () => null, setItem() {}, removeItem() {} });
+const fix = (s) => s.replace(/import\.meta\.url/g, '"http://x/casora-panel.js?v=0"');
+const info = console.info; console.info = () => {};
+new Function(fix(read('custom_components/casora/panel/casora-panel-types.js')))();
+new Function(fix(panel))();
+await new Promise((r) => setImmediate(r));
+console.info = info;
+assert.ok(Panel, 'panel class');
+const P = Panel.prototype;
+const room = { path: 'wohnzimmer', name: 'Wohnzimmer', tiles: [], variables: {} };
+const studio = () => {
+  const p = Object.create(P);
+  p._hass = hass; p._room = 1; p._pair = null; p.menus = []; p.combos = [];
+  p._state = { compact: { rooms: [{ path: 'home', name: 'Zuhause', tiles: [], variables: {} }, room] }, templates: {} };
+  p._markDirty = () => {}; p._syncPreview = () => {}; p._renderForm = () => {}; p._status = () => {};
+  p._prettyEntity = (id) => id; p._roomLabel = (r) => r.name; p._rankedEntityList = () => [];
+  p._combo = (value, options, placeholder, onChange, opts) => { const c = { value, options, onChange, opts, wrap: new El('div') }; p.combos.push(c); return c; };
+  p._menuAt = (anchor, items, cb) => { p.menus.push({ items, cb }); };
+  return p;
+};
+const F = { key: 'custom_badges' };
+const render = (p) => {
+  const fs = new El('section');
+  p.combos = []; p.menus = [];
+  P._customBadgesField.call(p, room, fs, F, (key, value) => { if (value === undefined) delete room.variables[key]; else room.variables[key] = value; });
+  const rows = [];
+  (function walk(el) { el.children.forEach((c) => { if (c.tagName === 'LABEL') rows.push(c.textContent); walk(c); }); })(fs);
+  const ta = (function find(el) { for (const c of el.children) { if (c.tagName === 'TEXTAREA') return c; const d = find(c); if (d) return d; } return null; })(fs);
+  return { fs, rows, ta };
+};
+let p = studio();
+let r = render(p);
+assert.deepEqual(r.rows, [], 'no badges yet');
+assert.equal(p.menus.length, 0);
+// "Add badge" → "From a template": the row must show the textarea, not the entity picker (store() drops empty strings).
+const addBtn = r.fs.children.find((c) => c.tagName === 'BUTTON');
+addBtn.onclick();
+assert.equal(p.menus.length, 1, 'add menu');
+p.menus[0].cb('template');
+assert.deepEqual(room.variables.custom_badges, [{ source: 'template' }], 'the template badge keeps its source marker');
+r = render(p);
+assert.ok(r.rows.includes('Template') && !r.rows.includes('Device'), 'template row with textarea: ' + r.rows.join(','));
+assert.ok(r.ta, 'textarea present');
+r.ta.value = " {{ states('sun.sun') }} ";
+r.ta.onchange();
+assert.deepEqual(room.variables.custom_badges, [{ source: 'template', template: "{{ states('sun.sun') }}" }], 'typed template stored');
+// The dashboard row drops a template badge without text, keeps one with text; the marker does not matter there.
+{
+  const row = Object.create(Row.prototype); row._items = []; row._config = {}; row.style = {}; row.isConnected = false; row._sync = () => {};
+  row.setConfig({ badges: [{ source: 'template' }, { source: 'template', template: '{{ 1 }}' }, { entity: 'light.x' }, {}] });
+  assert.deepEqual(row._config.badges, [{ source: 'template', template: '{{ 1 }}' }, { entity: 'light.x' }], 'dashboard keeps only badges with an entity or template text');
+}
+// Source switch on an entity badge → template: textarea, no entity picker; back → entity picker.
+room.variables.custom_badges = [{ entity: 'light.x', name: 'Lampe' }];
+r = render(p);
+assert.ok(r.rows.includes('Device') && !r.rows.includes('Template'));
+p.combos.find((c) => c.opts && c.opts.labels && c.opts.labels.template === 'Template').onChange('template');
+assert.deepEqual(room.variables.custom_badges, [{ name: 'Lampe', source: 'template' }], 'switched to template: marker, entity gone');
+r = render(p);
+assert.ok(r.rows.includes('Template') && !r.rows.includes('Device'), 'textarea after the switch');
+p.combos.find((c) => c.opts && c.opts.labels && c.opts.labels.template === 'Template').onChange('entity');
+assert.deepEqual(room.variables.custom_badges, [{ name: 'Lampe' }], 'back to device: no marker');
+r = render(p);
+assert.ok(r.rows.includes('Device'));
+
+// Preview text of template badges: one subscription per string, released when the string changes or the panel leaves.
+hass = { connection: { subscribeMessage(cb, msg) { subscribed.push({ cb, msg }); return Promise.resolve(() => { unsubscribed++; }); } } };
+const flush = async () => { for (const t of timers.filter((x) => x.fn)) { const fn = t.fn; t.fn = null; fn(); } await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); };
+const before = subscribed.length, freed = unsubscribed;
+room.variables.custom_badges = [{ source: 'template', template: '{{ 2 }}' }];
+let synced = 0;
+p = studio(); p._syncPreview = () => { synced++; };
+assert.equal(P._customBadgeText.call(p, '{{ 2 }}'), null, 'no text yet');
+assert.equal(subscribed.length, before + 1, 'one subscription (via the dashboard module)');
+assert.equal(P._customBadgeText.call(p, '{{ 2 }}'), null, 'cached: no second subscription');
+assert.equal(subscribed.length, before + 1);
+subscribed[before].cb({ result: 2 });
+assert.equal(P._customBadgeText.call(p, '{{ 2 }}'), '2', 'result as text'); assert.equal(synced, 1, 'preview redrawn');
+// A second panel instance meets the shared cache: the text comes back at once, without a redraw inside the render.
+{ const q = studio(); let s2 = 0; q._syncPreview = () => { s2++; }; assert.equal(P._customBadgeText.call(q, '{{ 2 }}'), '2', 'cached text at once'); assert.equal(s2, 0, 'no redraw from inside the render'); q._gList = []; P.disconnectedCallback.call(q); }
+// Unused string (the typed template changed): the sweep releases it; the room's current one stays.
+P._customBadgeText.call(p, '{{ old }}');
+assert.equal(subscribed.length, before + 2);
+P._customBadgeSweep.call(p);
+await flush();
+assert.equal(unsubscribed, freed + 1, 'the old string is unsubscribed');
+assert.ok(p._customTpl.has('{{ 2 }}') && !p._customTpl.has('{{ old }}'), 'cache follows');
+// Panel leaves: everything goes.
+p._gList = []; p._gOff = false;
+P.disconnectedCallback.call(p);
+await flush();
+assert.equal(unsubscribed, freed + 2, 'panel gone: all released');
+// Without the dashboard module: HA's connection directly, unsubscribed just the same.
+const sharedTP = window._casoraTemplates; window._casoraTemplates = undefined;
+p = studio();
+P._customBadgeText.call(p, '{{ 3 }}');
+assert.equal(subscribed.length, before + 3, 'direct subscription');
+assert.equal(subscribed[before + 2].msg.template, '{{ 3 }}');
+room.variables.custom_badges = [];
+P._customBadgeSweep.call(p);
+await flush();
+assert.equal(unsubscribed, freed + 3, 'direct subscription released');
+window._casoraTemplates = sharedTP;
+
 console.log('ok eigene_badges');

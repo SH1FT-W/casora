@@ -383,16 +383,18 @@ window._casoraHouseLightsOf = function (rooms, states) {
     var slots = [];
     for (var i = 1; i <= 10; i++) if (typeof V['light_entity_' + i] === 'string' && V['light_entity_' + i]) slots.push(V['light_entity_' + i]);
     var grp = typeof V.light_group_entity === 'string' && V.light_group_entity ? V.light_group_entity : null;
-    var rid = null, lights;
+    var rid = null, lights, subs;
     if (slots.length === 1 && mem(slots[0]).length) { rid = slots[0]; lights = mem(rid); }
-    else if (slots.length) lights = slots;
+    // Several slots: a group among them counts as its members (else the group is one lamp, and lamps listed in
+    // another room too count twice); the sub-badge row keeps the group as one entry.
+    else if (slots.length) { lights = []; slots.forEach(function (x) { var m = mem(x); (m.length ? m : [x]).forEach(function (y) { lights.push(y); }); }); subs = slots; }
     else if (grp) { rid = grp; lights = mem(grp); if (!lights.length && S[grp]) lights = [grp]; }
     else return;
     lights = lights.filter(function (x, k, a) { return a.indexOf(x) === k && (!states || S[x]); });
     if (!lights.length) return;
     out.rooms.push({ name: String(r.name || ''), rid: rid, lights: lights });
     lights.forEach(function (x) { if (out.ids.indexOf(x) < 0) out.ids.push(x); });
-    (rid ? [rid] : lights).forEach(function (x) { if (out.subs.indexOf(x) < 0) out.subs.push(x); });
+    (rid ? [rid] : subs || lights).forEach(function (x) { if (out.subs.indexOf(x) < 0) out.subs.push(x); });
   });
   return out;
 };

@@ -120,6 +120,19 @@ const l2 = B.houseLights(h, r2.slice(1));
 assert.ok(!l2.ids.includes('light.demo_ku_1') && l2.ids.includes('light.demo_flur_neu'), 'switched-off room out, new lamp in');
 assert.deepEqual(window._casoraHouseLightsOf(r2.slice(1).map((r) => ({ name: r.name, vars: r.variables })), h.states), l2);
 delete h.states['light.demo_flur_neu'];
+// A room with several slots, one of them a group (Bad: its group plus a lamp of the hall): the group counts as its
+// members, a lamp listed in two rooms once – the badge counted the group as one lamp and the hall lamp twice.
+{
+  const r3 = JSON.parse(JSON.stringify(rooms));
+  r3[3].variables.light_entity_2 = 'light.demo_flur_1';
+  const l3 = B.houseLights(h, r3.slice(1));
+  same(l3.ids, ALL);
+  const bad = l3.rooms.find((r) => r.name === 'Bad');
+  assert.deepEqual([bad.rid, bad.lights], [null, ['light.demo_bad_1', 'light.demo_bad_2', 'light.demo_flur_1']], 'Bad: members instead of the group');
+  assert.ok(!l3.ids.includes('light.demo_bad_alle'), 'the group itself is no lamp');
+  assert.ok(l3.subs.includes('light.demo_bad_alle') && !l3.subs.includes('light.demo_bad_1'), 'sub-badge row keeps the group as one entry');
+  assert.deepEqual(window._casoraHouseLightsOf(r3.slice(1).map((r) => ({ name: r.name, vars: r.variables })), h.states), l3, 'dashboard agrees');
+}
 // Phone: one view without room cards – the desktop rooms come from the server (casoraPhoneRoom.rooms).
 useDash({ views: [{ cards: [{ type: 'custom:button-card', template: 'casora_mobile_header', name: 'Zuhause' }] }] });
 window.casoraPhoneRoom = { rooms: () => rooms.slice(1).map((r) => ({ name: r.name, vars: r.variables })) };

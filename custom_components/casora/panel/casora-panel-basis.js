@@ -770,16 +770,17 @@
       if (!V || V.show_lights === false) return;
       const slots = LIGHT_KEYS.map((k) => V[k]).filter((x) => typeof x === "string" && x);
       const grp = typeof V.light_group_entity === "string" && V.light_group_entity ? V.light_group_entity : null;
-      let rid = null, lights;
+      let rid = null, lights, subs;
       if (slots.length === 1 && mem(slots[0]).length) { rid = slots[0]; lights = mem(rid); }
-      else if (slots.length) lights = slots;
+      // Several slots: a group among them counts as its members; the sub-badge row keeps the group as one entry.
+      else if (slots.length) { lights = slots.flatMap((x) => { const m = mem(x); return m.length ? m : [x]; }); subs = slots; }
       else if (grp) { rid = grp; lights = mem(grp); if (!lights.length && S[grp]) lights = [grp]; }
       else return;
       lights = lights.filter((x, k, a) => a.indexOf(x) === k && S[x]);
       if (!lights.length) return;
       out.rooms.push({ name: String(r.name || ""), rid, lights });
       lights.forEach((x) => { if (!out.ids.includes(x)) out.ids.push(x); });
-      (rid ? [rid] : lights).forEach((x) => { if (!out.subs.includes(x)) out.subs.push(x); });
+      (rid ? [rid] : subs || lights).forEach((x) => { if (!out.subs.includes(x)) out.subs.push(x); });
     });
     return out;
   }

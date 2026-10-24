@@ -6052,6 +6052,9 @@ class CasoraPanel extends HTMLElement {
   // Not the constructor: an element may not gain an attribute there.
   connectedCallback() {
     if (!this._built) this.style.backgroundColor = STUDIO_GROUND;
+    // The dashboard modules check this before they follow the Studio (window._casoraStudioRoom, issue #54):
+    // the panel sits in HA's shadow DOM, document.querySelector("casora-panel") does not find it.
+    window._casoraStudioPanel = this;
     // Wieder eingehängt (selten – HA baut das Panel sonst neu): globale Listener zurück.
     if (this._gOff) { this._gOff = false; (this._gList || []).forEach(([t, ty, fn, o]) => t.addEventListener(ty, fn, o)); }
     if (this._slotObs && this.parentElement) this._slotObs.observe(this.parentElement);
@@ -6069,6 +6072,11 @@ class CasoraPanel extends HTMLElement {
     if (!this._gOff) { this._gOff = true; (this._gList || []).forEach(([t, ty, fn, o]) => t.removeEventListener(ty, fn, o)); }
     // Der ResizeObserver am Eltern-Element hielte die alte Instanz sonst ebenso fest.
     if (this._slotObs) this._slotObs.disconnect();
+    // Template badges of the preview: their render_template subscriptions go with the panel.
+    if (this._customTpl) { const all = this._customTpl; this._customTpl = null; all.forEach((rec) => { if (rec.off) { try { rec.off(); } catch (e) { /* gone */ } } }); }
+    // The previewed popup's room (issue #54) must not outlive the Studio – the dashboard reads it too.
+    if (window._casoraStudioRoom !== undefined) delete window._casoraStudioRoom;
+    if (window._casoraStudioPanel === this) window._casoraStudioPanel = null;
   }
 
   // Globaler Listener, den disconnectedCallback wieder abmeldet.
@@ -23166,28 +23174,60 @@ class CasoraPanel extends HTMLElement {
     return out;
   }
 
-  // Live text of a template badge for the preview: one render_template subscription per template, kept for
-  // the session; the first answer redraws the preview.
+  // Live text of a template badge for the preview: one render_template subscription per template string (the
+  // dashboard's shared subscriber when its module is loaded, else HA's connection directly); the first answer
+  // redraws the preview. Released by _customBadgeSweep (string changed or badge gone) and when the panel leaves.
   _customBadgeText(tpl) {
     const key = String(tpl || "");
     const cache = this._customTpl || (this._customTpl = new Map());
     const hit = cache.get(key);
     if (hit) return hit.text;
-    const rec = { text: null };
+    const rec = { text: null, off: null, live: false };
     cache.set(key, rec);
+    // live: a result that arrives later redraws the preview; the shared subscriber's cached text comes back at once,
+    // in the middle of a preview render – that one is returned, not redrawn.
+    const got = (r, error) => {
+      rec.text = error ? "" : (r == null ? "" : (typeof r === "object" ? JSON.stringify(r) : String(r)));
+      if (rec.live) { try { this._syncPreview(); } catch (e) { /* preview not open */ } }
+    };
+    const shared = window._casoraTemplates;
+    if (shared && typeof shared.watch === "function") {
+      try { rec.off = shared.watch(key, (text, error) => got(text, !!error)); } catch (e) { rec.text = ""; }
+      rec.live = true;
+      return rec.text;
+    }
     const c = this._hass && this._hass.connection;
     if (!c || typeof c.subscribeMessage !== "function") return null;
     try {
-      c.subscribeMessage((msg) => {
-        if (msg && typeof msg === "object" && "result" in msg) {
-          const r = msg.result;
-          rec.text = r == null ? "" : (typeof r === "object" ? JSON.stringify(r) : String(r));
-        } else if (msg && msg.error) rec.text = "";
-        else return;
-        try { this._syncPreview(); } catch (e) { /* preview not open */ }
-      }, { type: "render_template", template: key, report_errors: true }).catch(() => { rec.text = ""; });
+      const p = c.subscribeMessage((msg) => {
+        if (msg && typeof msg === "object" && "result" in msg) got(msg.result, false);
+        else if (msg && msg.error) got(null, true);
+      }, { type: "render_template", template: key, report_errors: true });
+      p.catch(() => { rec.text = ""; });
+      rec.off = () => { p.then((u) => { try { u(); } catch (e) { /* already gone */ } }).catch(() => {}); };
+      rec.live = true;
     } catch (e) { rec.text = ""; }
     return rec.text;
+  }
+
+  // Drop the template subscriptions no badge of any room uses any more (all of them without a state).
+  _customBadgeSweep() {
+    const cache = this._customTpl;
+    if (!cache || !cache.size) return;
+    const keep = new Set();
+    const rooms = [];
+    [this._state, (this._pair || {}).mobile].forEach((s) => {
+      if (s && s.compact && Array.isArray(s.compact.rooms)) rooms.push(...s.compact.rooms);
+    });
+    rooms.forEach((r) => {
+      const list = r && r.variables && Array.isArray(r.variables.custom_badges) ? r.variables.custom_badges : [];
+      list.forEach((b) => { if (b && typeof b === "object" && !b.entity && typeof b.template === "string") keep.add(b.template); });
+    });
+    cache.forEach((rec, key) => {
+      if (keep.has(key)) return;
+      cache.delete(key);
+      if (rec.off) { try { rec.off(); } catch (e) { /* already gone */ } }
+    });
   }
 
   // ── layout animation ──────────────────────────────────────────────────────
@@ -25969,6 +26009,7 @@ class CasoraPanel extends HTMLElement {
       });
       write(KEY, clean.length ? clean : undefined, f);
       this._markDirty();
+      this._customBadgeSweep();
       this._syncPreview();
       if (redraw) this._renderForm();
     };
@@ -26073,11 +26114,12 @@ class CasoraPanel extends HTMLElement {
       };
       box.appendChild(rowOf("Color", pick));
 
-      // Source: a device (its state with unit) or a template (its text).
-      const src = b.template && !b.entity ? "template" : "entity";
+      // Source: a device (its state with unit) or a template (its text). An explicit source: "template" marks a
+      // template badge without text yet – store() drops empty strings, so the marker alone keeps the textarea.
+      const src = b.source === "template" || (b.template && !b.entity) ? "template" : "entity";
       const srcPick = this._combo(src, ["entity", "template"], "", (v) => {
-        if (v === "template") patch(i, { entity: "", template: b.template || "" }, true);
-        else patch(i, { template: "", entity: b.entity || "" }, true);
+        if (v === "template") patch(i, { entity: "", template: b.template || "", source: "template" }, true);
+        else patch(i, { template: "", entity: b.entity || "", source: "" }, true);
       }, { fixed: true, labels: { entity: "Device", template: "Template" } });
       box.appendChild(rowOf("Source", srcPick.wrap));
       if (src === "entity") {
@@ -26130,7 +26172,7 @@ class CasoraPanel extends HTMLElement {
       { id: "template", label: "From a template" },
     ], (id) => {
       if (!id) return;
-      store(clone(items).concat([id === "template" ? { template: "" } : { entity: "" }]), true);
+      store(clone(items).concat([id === "template" ? { source: "template" } : { entity: "" }]), true);
     });
     fs.appendChild(add);
     if (f.hint) {
