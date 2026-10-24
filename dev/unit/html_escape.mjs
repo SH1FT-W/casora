@@ -4,7 +4,8 @@
 // Checks:
 //   1. the canonical block (casoraEsc / casoraEscJs / casoraSafeUrl) is the same in every file and escapes fully,
 //   2. tools/html-escape-check.mjs: its rules on small samples, then the whole codebase is clean (no unescaped
-//      value in an HTML string, every escaper definition full, no stale allow entry),
+//      value in an HTML string, every escaper definition full, no stale allow entry, no escaper used before its
+//      var in the same function or without any declaration in reach),
 //   3. runtime: every card template is rendered like button-card does (variables, name/label/state_display,
 //      custom_fields, popup content, nested button-cards) against a house where every name, state, area, floor,
 //      device, calendar event, media title and text variable is hostile markup; no output may contain the markup raw,
@@ -101,6 +102,20 @@ blocks.forEach((b, i) => assert.equal(b, blocks[0], BLOCK_FILES[i] + ': casora-e
   const ok = [];
   CHK.checkEscapers('sample.js', "var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>\"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[c]; }); };", [], ok);
   assert.equal(ok.length, 0, 'the standard local esc passes');
+  // An escaper redeclared further down in the same function is undefined above it (hoisting).
+  const hoist = [];
+  CHK.checkHoist('sample.js', "var esc = window.casoraEsc; function f(x) { var a = '<b>' + esc(x) + '</b>'; var esc = UI.esc; return a; }", hoist);
+  assert.equal(hoist.length, 1, 'esc used before its var in the same function is reported');
+  const noHoist = [];
+  CHK.checkHoist('sample.js', "function f(x) { const g = (t) => esc(t); const esc = window.casoraEsc; var h = function () { return esc(x); }; return { esc: 1 }.esc + g(x) + h(); }", noHoist);
+  assert.equal(noHoist.length, 0, 'uses in nested functions and property names are fine');
+  // An escaper used in a module that never declares it (copied code from another IIFE) is a ReferenceError.
+  const undef = [];
+  CHK.checkHoist('sample.js', "(function () { var esc = window.casoraEsc; })(); (function () { return '<b>' + esc(x) + '</b>'; })();", undef);
+  assert.equal(undef.length, 1, 'esc without a declaration in reach is reported');
+  const params = [];
+  CHK.checkHoist('sample.js', "function f(esc, x) { return esc(x); } var g = (escJs) => escJs(1); var h = esc2 => esc2(1); try { } catch (esc3) { esc3(); }", params);
+  assert.equal(params.length, 0, 'parameters and catch bindings count as declarations');
 
   const { out: all, unused } = run();
   if (all.length) console.log(all.slice(0, 40).map((o) => `${o.file}:${o.line}${o.where ? ' [' + o.where + ']' : ''}: ${o.expr}`).join('\n'));

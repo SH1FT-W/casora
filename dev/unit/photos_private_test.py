@@ -1,6 +1,7 @@
 """Private room photos (images.py, assets.py) without a running HA (HACS review, hacs/default#12143).
 
   ~/.cache/ha-venv/2026.10.1/bin/python dev/unit/photos_private_test.py
+  uv run --python 3.14 --with homeassistant python dev/unit/photos_private_test.py
 
 Checks: views that serve user photos need auth (public assets view never serves rooms/ from the
 user's folders), the photo view only serves plain image names from the private folder (then Hemma's),

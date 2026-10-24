@@ -37,8 +37,11 @@ await need('Velair answers velair/get_schedule', s0 && s0.zones && s0.zones[AC],
 
 // ── Studio: the card suggests the air conditioner ──
 const all = await casoraDashboards();
-const desk = all.find((d) => !d.mobile && (d.config.views || []).length > 1);
-const phone = all.find((d) => d.mobile);
+// The copies put the tile behind a recipe or batteries tile on the home page; the QA dashboard of the Studio flow
+// (qa-arbeit, listed first) has neither, so take the first dashboards that have one.
+const anchored = (d) => /"template":(?:\[[^\]]*)?"casora_(?:recipe|battery)"/.test(JSON.stringify((d.config.views || [])[0] || {}));
+const desk = all.find((d) => !d.mobile && (d.config.views || []).length > 1 && anchored(d));
+const phone = all.find((d) => d.mobile && anchored(d));
 await need('Casora dashboards', desk && phone, all.map((d) => d.url));
 {
   const o = await open({ width: 1600, height: 1000, dark: true });

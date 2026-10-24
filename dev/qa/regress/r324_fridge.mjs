@@ -36,8 +36,11 @@ atFinish(async () => {
 
 // ── Studio: add the tile without choosing anything ──
 const all = await casoraDashboards();
-const desk = all.find((d) => !d.mobile && (d.config.views || []).length > 1);
-const phone = all.find((d) => d.mobile);
+// The copies put the tile behind a recipe or batteries tile on the home page; the QA dashboard of the Studio flow
+// (qa-arbeit, listed first) has neither, so take the first dashboards that have one.
+const anchored = (d) => /"template":(?:\[[^\]]*)?"casora_(?:recipe|battery)"/.test(JSON.stringify((d.config.views || [])[0] || {}));
+const desk = all.find((d) => !d.mobile && (d.config.views || []).length > 1 && anchored(d));
+const phone = all.find((d) => d.mobile && anchored(d));
 await need('Casora dashboards', desk && phone, all.map((d) => d.url));
 {
   const o = await open({ width: 1600, height: 1000, dark: true });
@@ -175,6 +178,8 @@ for (const [tag, o, url, mobile, act] of VIEWS) {
     const row = await page.evaluate(() => { const r = window.__pierce('.hui-srow').find((n) => /^SuperFrost/.test(n.textContent.replace(/\s+/g, ' ').trim()) && n.getBoundingClientRect().height > 0);
       if (!r) return null; r.scrollIntoView({ block: 'center' }); const b = r.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; });
     await need(tag + ': SuperFrost row', row);
+    // Taps within 600 ms of the popup opening are swallowed on purpose (02-devices.js OPEN_LOCK, ghost taps).
+    await page.waitForTimeout(700);
     await page.mouse.click(row.x, row.y);
     let fs1 = before.frost;
     for (let i = 0; i < 20 && fs1 === before.frost; i++) { await page.waitForTimeout(300); fs1 = await stateOf(FROST); }

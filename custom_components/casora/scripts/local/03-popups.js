@@ -1642,6 +1642,7 @@
   /* Tanken-Modul (12-tanken.js) nur in Casoras eigener Fassung – ein fremdes _casoraTank (altes
      _hemmaTank über casora-kompat) hat eine andere watch()/row() und kippte das ganze Popup (Issue #14). */
   var tank = function () { var T = window._casoraTank; return T && T.casora === true ? T : null; };
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var num = function (v) { var n = parseFloat(v); return isNaN(n) ? null : n; };
   var ok = function (s) { return s && s.state !== 'unknown' && s.state !== 'unavailable'; };
   var fmtN = function (n, d) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); };

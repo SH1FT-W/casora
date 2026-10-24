@@ -1,6 +1,7 @@
 """Casora's update entity only reports (update.py) – no installer of its own (hacs/default#12143).
 
   ~/.cache/ha-venv/2026.10.1/bin/python dev/unit/update_report_only_test.py
+  uv run --python 3.14 --with homeassistant python dev/unit/update_report_only_test.py
 
 - The entity offers RELEASE_NOTES only, no INSTALL, and defines no async_install.
 - update.py / update_source.py / updates.py contain no install code (zip, swap, stop listener,

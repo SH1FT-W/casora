@@ -80,7 +80,8 @@ await check('Prüfkarte in der Liste mit „Hinzufügen“ und Integrations-Hinw
   && s.chips.includes('Hinzufügen'), s && s.text);
 await check('Vor dem Hinzufügen nicht in „Kachel hinzufügen“', !(await pickable()));
 
-// Große Vorschau (Mähroboter hat Kachel- und Popup-Bild): Antippen öffnet sie, Esc schließt nur die Vorschau.
+// Große Vorschau (die erste Karte mit Kachel- und Popup-Bild; früher der Mähroboter, der ist jetzt eine reguläre Karte):
+// Antippen öffnet sie, Esc schließt nur die Vorschau.
 const lb = async () => page.evaluate(() => {
   const ps = window.__panel().shadowRoot.querySelectorAll('.askpane'); const a = ps[ps.length - 1];
   const l = a && a.querySelector('.comlb');
@@ -89,13 +90,14 @@ const lb = async () => page.evaluate(() => {
 await inPane("a.querySelector('.comrow.comcard button.comzoom').click()");
 await wait(1200);
 let v = await lb();
-await check('Vorschau groß: Kachel aktiv, Umschalter Kachel/Popup', v && /community\/casora_lawn_mower\.webp$/.test(v.src) && v.segs.join() === 'Kachel*,Popup', v);
+const tileImg = v && (v.src.match(/community\/(casora_[a-z0-9_]+)\.webp$/) || [])[1];
+await check('Vorschau groß: Kachel aktiv, Umschalter Kachel/Popup', !!tileImg && v.segs.join() === 'Kachel*,Popup', v);
 const xm = await inPane("const x = a.querySelector('.comlb .comx'), b = x.getBoundingClientRect(), i = x.querySelector('ha-icon').getBoundingClientRect(); return [Math.round(i.x + i.width / 2 - b.x - b.width / 2), Math.round(i.y + i.height / 2 - b.y - b.height / 2)];");
 await check('Schließen-× mittig im Kreis', xm && Math.abs(xm[0]) <= 1 && Math.abs(xm[1]) <= 1, xm);
 await inPane("[...a.querySelectorAll('.comlb .comseg button')].find((b) => b.textContent === 'Popup').click()");
 await wait(500);
 v = await lb();
-await check('Umschalter zeigt das Popup-Bild', v && /casora_lawn_mower-popup\.webp$/.test(v.src), v);
+await check('Umschalter zeigt das Popup-Bild', !!tileImg && v && v.src.endsWith('community/' + tileImg + '-popup.webp'), v);
 await page.keyboard.press('Escape');
 await wait(500);
 s = await pane();

@@ -45,9 +45,9 @@ const phone = all.find((d) => d.mobile && has(d));
 await need('dashboards with a recipe or batteries tile', desk && phone, all.map((d) => d.url));
 
 const TILE_A = { type: 'custom:button-card', template: 'casora_free', entity: sw.entity_id, name: name(sw),
-  variables: { icon: 'default', size: 'auto', free_values: [temp.entity_id, hum.entity_id, door.entity_id, power.entity_id],
+  variables: { qa_r319: true, icon: 'default', size: 'auto', free_values: [temp.entity_id, hum.entity_id, door.entity_id, power.entity_id],
     free_value_labels: { [temp.entity_id]: 'Innen' }, free_chart: true, free_chart_entity: temp.entity_id, free_controls: true } };
-const TILE_B = { type: 'custom:button-card', template: 'casora_free', entity: '', name: 'Universal-Kachel', variables: { icon: 'default', size: 'auto' } };
+const TILE_B = { type: 'custom:button-card', template: 'casora_free', entity: '', name: 'Universal-Kachel', variables: { qa_r319: true, icon: 'default', size: 'auto' } };
 const withTiles = (cfg) => {
   const o = JSON.parse(JSON.stringify(cfg));
   let done = false, view = null;
@@ -92,8 +92,9 @@ c.close();
 
 // ── In the browser ──
 // which: entity id to bring into view before measuring ('' = the tile without one); nothing scrolls otherwise.
+// Only the two inserted tiles (variable qa_r319): the copied dashboard can hold flexible tiles of its own (e2e runs).
 const TILES = (which) => window.__pierce('button-card').filter((b) => [].concat((b._config || {}).template || []).includes('casora_free')
-  && b.getBoundingClientRect().width > 20).map((b) => {
+  && ((b._config || {}).variables || {}).qa_r319 && b.getBoundingClientRect().width > 20).map((b) => {
   if (which !== undefined && which !== null && ((b._config || {}).entity || '') === which) b.scrollIntoView({ block: 'center', inline: 'center' });
   const sr = b.shadowRoot, r = b.getBoundingClientRect();
   const st = sr && sr.querySelector('#state'), nm = sr && sr.querySelector('#name');

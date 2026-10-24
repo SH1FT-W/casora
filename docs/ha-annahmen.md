@@ -199,7 +199,7 @@ Bekannt wacklig (Stand 2026.10.1, nicht im Test, weil es Rückfälle bzw. HACS-S
 private Importe/Untermodule anderer Integrationen, `inspect.unwrap`/`__self__`, Monkeypatching und fremde
 `.storage`-Schlüssel. Was bleibt, steht dort in `ALLOWED` und hier. Für Lovelace und die UI-Helfer bietet HA
 keine öffentliche Python-API (nur WebSocket-Befehle, die eine Browser-Verbindung brauchen); eine Brücke über den
-Browser hat Daniel am 24.10.2026 verworfen.
+Browser wurde am 24.10.2026 verworfen.
 
 | Zugriff | Wo | Grund |
 |---|---|---|

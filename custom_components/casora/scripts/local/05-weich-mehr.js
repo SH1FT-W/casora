@@ -790,7 +790,6 @@
         var head = { icon: 'mdi:creation', iconTone: 'accent', label: 'Energie-Coach',
           value: running ? 'Läuft …' : (eur > 0 ? '≈ ' + money(eur, '€', hass) : null),
           sub: running ? 'Claude wertet die letzte Woche aus …' : (eur > 0 ? 'pro Woche sparbar' : (a.fazit ? null : 'Noch keine Auswertung')) };
-        var esc = UI.esc;
         var ink = 'var(--casora-popup-tiles-text-primary, #3A322B)', ink2 = 'var(--casora-soft-sub, rgba(58,50,43,0.6))';
         var body = '<div style="font-family:var(--primary-font-family, system-ui);padding:2px 6px 0;text-align:left;white-space:normal;">'
           + (a.fazit ? '<div style="font-size:14px;line-height:1.45;color:' + ink + ';">' + esc(a.fazit) + '</div>' : '')

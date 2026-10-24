@@ -113,8 +113,9 @@ class HAReality(unittest.TestCase):
 
     def test_generate_data_feature_bit(self):
         """ki._first_ai_task picks AI tasks with supported_features bit 1 (public state attribute)."""
-        from homeassistant.components.ai_task import AITaskEntityFeature
-        self.assertEqual(int(AITaskEntityFeature.GENERATE_DATA), 1)
+        # Read the source: importing ai_task pulls in conversation (hassil, gazetteer_matcher).
+        self.assertRegex(self.read("ai_task", "const.py"),
+                         r"class AITaskEntityFeature\b[^\n]*\n(?:[^\n]*\n)*?\s+GENERATE_DATA = 1\b")
 
     def test_generate_data_entity_optional(self):
         self.assertRegex(self.read("ai_task", "services.py"), r"Optional\(ATTR_ENTITY_ID\)")

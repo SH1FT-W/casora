@@ -531,6 +531,90 @@ function checkReturns(file, body, allow, out, base, where) {
   }
 }
 
+// An escaper redeclared with var/let/const inside a function shadows the outer one for the whole function: a use
+// above the declaration gets undefined ("esc is not a function" at runtime, 26.10.60b1). Reported per scope.
+export function checkHoist(file, src, out, base = 0, where = '', globals = null) {
+  let toks;
+  try { toks = lex(src).toks; } catch (e) { return; }
+  const m = matchIndex(toks);
+  // Function bodies as token ranges [open brace, close brace].
+  // Function bodies as token ranges [start, end], with the token range of their parameters.
+  const bodies = [[-1, toks.length, -1, -1]];
+  toks.forEach((t, i) => {
+    let j = -1, pa = -1, pb = -1;
+    if (t.t === 'id' && t.v === 'function') {
+      j = i + 1;
+      while (j < toks.length && !(toks[j].t === 'p' && toks[j].v === '(')) j++;
+      if (j < toks.length && m[j] > 0) { pa = j; pb = m[j]; j = m[j] + 1; } else return;
+    } else if (t.t === 'p' && t.v === '=>') {
+      j = i + 1;
+      const q = toks[i - 1];
+      if (q && q.t === 'p' && q.v === ')' && m[i - 1] >= 0) { pa = m[i - 1]; pb = i - 1; } else { pa = i - 1; pb = i - 1; }
+    } else if (t.t === 'p' && t.v === ')' && m[i] >= 0 && toks[i + 1] && toks[i + 1].t === 'p' && toks[i + 1].v === '{') {
+      // Method shorthand: name(args) { … } inside an object or class.
+      const o = m[i], prev = toks[o - 1];
+      if (prev && prev.t === 'id' && !/^(?:if|for|while|switch|with|function)$/.test(prev.v)
+        && !(toks[o - 2] && toks[o - 2].t === 'p' && toks[o - 2].v === '.')) { j = i + 1; pa = o; pb = i; }
+    }
+    if (j >= 0 && toks[j] && toks[j].t === 'p' && toks[j].v === '{' && m[j] > j) bodies.push([j, m[j], pa, pb]);
+    else if (t.t === 'p' && t.v === '=>') {
+      // Expression body: runs later as well, up to the end of the expression.
+      let k = j;
+      while (k < toks.length && !(toks[k].t === 'p' && /^[,;)\]}]$/.test(toks[k].v))) k = (m[k] > k ? m[k] : k) + 1;
+      bodies.push([j - 1, k, pa, pb]);
+    }
+  });
+  bodies.sort((a, b) => a[0] - b[0]);
+  // Innermost body per token.
+  const owner = new Array(toks.length).fill(0);
+  bodies.forEach((b, bi) => { for (let k = Math.max(b[0], 0); k < Math.min(b[1], toks.length); k++) owner[k] = bi; });
+  const depth = new Array(toks.length).fill(0);
+  { const st = []; toks.forEach((t, i) => { depth[i] = st.length; if (t.t === 'p' && t.v === '{') st.push(i); else if (t.t === 'p' && t.v === '}') st.pop(); }); }
+  const isUse = (i) => {
+    const p = toks[i - 1], n = toks[i + 1];
+    if (p && p.t === 'p' && (p.v === '.' || p.v === '?.')) return false;
+    if (n && n.t === 'p' && n.v === ':' && p && p.t === 'p' && (p.v === '{' || p.v === ',')) return false;
+    return true;
+  };
+  // Escaper names declared per body (var/let/const/function, a later name in a var list, parameters).
+  const parent = bodies.map((b, bi) => (bi === 0 ? -1 : owner[Math.max(b[0] - 1, 0)]));
+  const declared = bodies.map(() => new Set());
+  const isDecl = new Array(toks.length).fill(false);
+  bodies.forEach((b, bi) => { if (b[2] >= 0) for (let k = b[2]; k <= b[3]; k++) if (toks[k].t === 'id') { declared[bi].add(toks[k].v); isDecl[k] = true; } });
+  toks.forEach((t, i) => {
+    if (t.t !== 'id' || !ESC_LOCAL.test(t.v) || isDecl[i]) return;
+    const p = toks[i - 1], n = toks[i + 1];
+    if ((p && p.t === 'id' && /^(?:var|let|const|function)$/.test(p.v)) || (p && p.t === 'p' && p.v === ',' && n && n.t === 'p' && n.v === '=')
+      || (p && p.t === 'id' && p.v === 'catch')) {
+      declared[owner[i]].add(t.v); isDecl[i] = true;
+    }
+    if (p && p.t === 'p' && p.v === '(' && toks[i - 2] && toks[i - 2].t === 'id' && toks[i - 2].v === 'catch') { declared[owner[i]].add(t.v); isDecl[i] = true; }
+  });
+  // A use with no declaration in any enclosing function is a ReferenceError at runtime (unless a global).
+  toks.forEach((t, i) => {
+    if (t.t !== 'id' || !ESC_LOCAL.test(t.v) || isDecl[i] || !isUse(i)) return;
+    if (globals && globals.has(t.v)) return;
+    for (let b = owner[i]; b >= 0; b = parent[b]) if (declared[b].has(t.v)) return;
+    out.push({ file, line: lineOf(src, t.s) + base, where, expr: `${t.v} is not defined in any enclosing function` });
+  });
+  toks.forEach((t, i) => {
+    if (t.t !== 'id' || !/^(?:var|let|const)$/.test(t.v)) return;
+    const d = toks[i + 1];
+    if (!d || d.t !== 'id' || !ESC_LOCAL.test(d.v)) return;
+    const bi = owner[i], lo = Math.max(bodies[bi][0], 0);
+    // let/const are block scoped: only count them at the top level of the function.
+    if (t.v !== 'var' && depth[i] !== (bodies[bi][0] < 0 ? 0 : depth[bodies[bi][0]] + 1)) return;
+    for (let k = lo; k < i; k++) {
+      if (owner[k] !== bi || toks[k].t !== 'id' || toks[k].v !== d.v || !isUse(k)) continue;
+      const pk = toks[k - 1];
+      if (pk && pk.t === 'id' && /^(?:var|let|const|function)$/.test(pk.v)) continue;
+      out.push({ file, line: lineOf(src, toks[k].s) + base, where,
+        expr: `${d.v} used before "${t.v} ${d.v}" in the same function (line ${lineOf(src, t.s) + base}) – it is undefined there` });
+      break;
+    }
+  });
+}
+
 export function checkTemplates(file, allow, out) {
   const doc = JSON.parse(fs.readFileSync(path.join(ROOT, file), 'utf8'));
   const walk = (v, where) => {
@@ -541,6 +625,7 @@ export function checkTemplates(file, allow, out) {
       const w = where;
       checkSource(file, body, allow, out, 0, w);
       checkEscapers(file, body, allow, out, w);
+      checkHoist(file, body, out, 0, w);
       // Variables are no sink themselves (the template that shows them is checked).
       if (HTML_FIELDS.test(w.replace(/^[^.]+\./, '')) && !/\.variables\./.test(w)) checkReturns(file, body, allow, out, 0, w);
     } else if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${where}[${i}]`));
@@ -567,6 +652,7 @@ export function run(files) {
       const src = fs.readFileSync(path.join(ROOT, f), 'utf8');
       checkSource(f, src, allow, out);
       checkEscapers(f, src, allow, out);
+      checkHoist(f, src, out);
     }
   }
   const unused = files && files.length ? [] : allow.filter((a) => !a.used || (a.max != null && a.used < a.max));
