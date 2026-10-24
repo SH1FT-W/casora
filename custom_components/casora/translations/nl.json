@@ -1,0 +1,289 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Casora",
+        "description": "Voegt Casora Studio toe aan de zijbalk."
+      }
+    },
+    "abort": {
+      "already_configured": "Casora is al ingesteld."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Casora – Instellingen",
+        "description": "Lege velden kiest Casora zelf: de standaard-AI uit Instellingen → AI-taken en buitensensoren op hun naam.",
+        "data": {
+          "ai_task_entity": "AI voor coaches, camera en planten",
+          "ai_task_web_entity": "AI met zoeken op het web (update-analyse, recept)",
+          "outdoor_temperature": "Buitentemperatuur",
+          "outdoor_humidity": "Buitenvochtigheid",
+          "price_kwh": "Stroomprijs",
+          "ki_hinweise": "Tips voor de AI",
+          "rezept_liste": "Boodschappenlijst voor de ingrediënten (recept van de week)",
+          "ki_plan_energie": "Energiecoach automatisch",
+          "ki_plan_heizung": "Verwarmingscoach automatisch",
+          "ki_plan_lueftung": "Ventilatiecoach automatisch",
+          "ki_plan_rezept": "Recept van de week automatisch",
+          "ki_plan_update": "Updatecheck",
+          "lueften_push": "Luchttips per push naar",
+          "lueften_personen": "Luchten alleen melden als iemand thuis is",
+          "update_push": "Melden bij nieuwe Casora-versies",
+          "beta_updates": "Bètaversies"
+        },
+        "data_description": {
+          "ki_hinweise": "Wordt aan elke analyse meegegeven, bijv. “De ramen in de slaapkamer staan bewust op een kier.”",
+          "ki_plan_energie": "Automatisch: zondag 18:00. Eigen tijd bijv. “sun 18:00” (weekdag in het Engels, mon t/m sun).",
+          "ki_plan_heizung": "Automatisch: maandag 7:00, alleen in het stookseizoen.",
+          "ki_plan_lueftung": "Automatisch: zaterdag 10:00.",
+          "ki_plan_rezept": "Automatisch: maandag 6:00.",
+          "ki_plan_update": "Dagelijks: eens per dag. Uit: geen AI-beoordeling in het updatevenster.",
+          "lueften_push": "“Nu luchten” (7–22 uur), “Raam sluiten” (7–23 uur) na 10 min, CO₂ boven 2500 ppm meteen. Leeg = geen pushmeldingen.",
+          "lueften_personen": "“Nu luchten” alleen als een van deze personen thuis is. Leeg = iedereen.",
+          "update_push": "Eén push per nieuwe versie naar de gekozen telefoons. Tikken opent de Casora-updates. Leeg = uit.",
+          "beta_updates": "Probeer nieuwe functies eerder. Bèta's kunnen fouten bevatten. Met HACS zet je bèta's in plaats daarvan aan in HACS."
+        }
+      }
+    },
+    "error": {
+      "invalid_plan": "Ongeldige tijd. Toegestaan: Uit, Automatisch of bijv. “sun 18:00”.",
+      "invalid": "Ongeldige invoer."
+    }
+  },
+  "selector": {
+    "ki_plan": {
+      "options": {
+        "off": "Uit",
+        "auto": "Automatisch"
+      }
+    },
+    "ki_plan_update": {
+      "options": {
+        "off": "Uit",
+        "daily": "Dagelijks",
+        "manual": "Alleen op een druk op de knop"
+      }
+    }
+  },
+  "services": {
+    "energie_coach": {
+      "name": "Energiecoach",
+      "description": "Analyseert met AI de gegevens van het Energiedashboard van de afgelopen week.",
+      "fields": {}
+    },
+    "heizungs_coach": {
+      "name": "Verwarmingscoach",
+      "description": "Analyseert met AI de stooktijd en temperaturen van de afgelopen week.",
+      "fields": {
+        "nur_heizsaison": {
+          "name": "Alleen in het stookseizoen",
+          "description": "Alleen in het stookseizoen"
+        }
+      }
+    },
+    "lueftungs_coach": {
+      "name": "Ventilatiecoach",
+      "description": "Analyseert met AI de luchtvochtigheid, CO₂ en raamopeningen van de afgelopen week.",
+      "fields": {}
+    },
+    "kamera_beschreiben": {
+      "name": "Camerabeeld beschrijven",
+      "description": "Laat de AI het huidige camerabeeld beschrijven.",
+      "fields": {
+        "entity_id": {
+          "name": "Entiteit",
+          "description": "Entiteit"
+        }
+      }
+    },
+    "pflanzen_doktor": {
+      "name": "Plantendokter",
+      "description": "Verzorgingstip voor een plant op basis van 7 dagen meetwaarden.",
+      "fields": {
+        "plant": {
+          "name": "Plant",
+          "description": "Plant"
+        }
+      }
+    },
+    "aquarium_doktor": {
+      "name": "Aquariumdokter",
+      "description": "AI-beoordeling van een aquarium op basis van 7 dagen temperatuur, apparatuur, licht en leksensor.",
+      "fields": {
+        "temp": {
+          "name": "Temperatuursensor",
+          "description": "Watertemperatuur van het aquarium"
+        },
+        "name": {
+          "name": "Naam",
+          "description": "Naam van het aquarium"
+        },
+        "devices": {
+          "name": "Apparatuur",
+          "description": "Lijst van apparaten: label, entity, power"
+        },
+        "light": {
+          "name": "Licht",
+          "description": "Aquariumlicht"
+        },
+        "leak": {
+          "name": "Leksensor",
+          "description": "Leksensor bij het aquarium"
+        }
+      }
+    },
+    "ebike_check": {
+      "name": "Fietscheck",
+      "description": "AI-beoordeling van de e-bike: onderhoud, slijtage naar kilometerstand en accuverzorging.",
+      "fields": {
+        "entities": {
+          "name": "Entiteiten",
+          "description": "Entiteiten van de fiets"
+        },
+        "name": {
+          "name": "Naam",
+          "description": "Naam van de fiets"
+        }
+      }
+    },
+    "update_pruefen": {
+      "name": "Update controleren met AI",
+      "description": "Controleert de release-notes van openstaande updates tegen dit systeem.",
+      "fields": {
+        "entity_id": {
+          "name": "Entiteit",
+          "description": "Entiteit"
+        }
+      }
+    },
+    "update_bestaetigen": {
+      "name": "AI-controle bevestigen",
+      "description": "Geeft “Bijwerken” vrij na het lezen van de melding.",
+      "fields": {
+        "entity_id": {
+          "name": "Entiteit",
+          "description": "Entiteit"
+        }
+      }
+    },
+    "rezept_neu": {
+      "name": "Nieuw receptidee",
+      "description": "Laat de AI een recept van de week voorstellen.",
+      "fields": {}
+    },
+    "rezept_auf_liste": {
+      "name": "Ingrediënten op de boodschappenlijst",
+      "description": "Zet de ingrediënten van het recept op de boodschappenlijst.",
+      "fields": {}
+    },
+    "umstellen": {
+      "name": "Omzetten naar Casora-namen",
+      "description": "Zet oude dashboards om naar Casora-namen (met back-up).",
+      "fields": {
+        "probelauf": {
+          "name": "Alleen tellen, niets wijzigen",
+          "description": "Alleen tellen, niets wijzigen"
+        }
+      }
+    },
+    "einrichten": {
+      "name": "Instellen",
+      "description": "Maakt ontbrekende Casora-helpers en -scripts aan (draait automatisch bij het starten) en meldt wat niet kon worden aangemaakt."
+    },
+    "set_timer": {
+      "name": "Timer instellen",
+      "description": "Schakelt een entiteit na een aantal minuten uit of in. Vervangt een bestaande timer voor dezelfde entiteit. Als de timer afloopt, verstuurt Casora het event casora_timer_finished (entity_id, action, reason: expired, manual of cancelled). Kan antwoorden met entity_id, at en start.",
+      "fields": {
+        "entity_id": {
+          "name": "Entiteit",
+          "description": "Entiteit die geschakeld wordt"
+        },
+        "minutes": {
+          "name": "Minuten",
+          "description": "Na hoeveel minuten (geheel getal, 1–1440)"
+        },
+        "action": {
+          "name": "Actie",
+          "description": "turn_off (standaard) of turn_on"
+        }
+      }
+    },
+    "cancel_timer": {
+      "name": "Timer annuleren",
+      "description": "Verwijdert de timer van een entiteit (event casora_timer_finished met reason cancelled).",
+      "fields": {
+        "entity_id": {
+          "name": "Entiteit",
+          "description": "Entiteit"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "media_paused": {
+        "name": "Casora Media gepauzeerd"
+      },
+      "lueften": {
+        "name": "Casora Luchten"
+      },
+      "energie": {
+        "name": "Casora Energiecoach"
+      },
+      "heizung": {
+        "name": "Casora Verwarmingscoach"
+      },
+      "lueftung": {
+        "name": "Casora Ventilatiecoach"
+      },
+      "rezept": {
+        "name": "Casora Recept van de week"
+      },
+      "kamera": {
+        "name": "Casora Camera-AI"
+      },
+      "pflanzen": {
+        "name": "Casora Planten-AI"
+      },
+      "update": {
+        "name": "Casora Update-analyse met AI"
+      },
+      "aquarium": {
+        "name": "Casora Aquarium-AI"
+      },
+      "ebike": {
+        "name": "Casora E-bike-AI"
+      },
+      "timers": {
+        "name": "Casora Timers"
+      }
+    },
+    "binary_sensor": {
+      "lueften_hinweis": {
+        "name": "Casora Luchttip"
+      },
+      "solar_tipp": {
+        "name": "Casora Zonnetip"
+      }
+    }
+  },
+  "issues": {
+    "restart_after_update": {
+      "title": "Casora {version} geïnstalleerd: herstart nodig",
+      "description": "Casora is bijgewerkt naar versie {version}. Herstart Home Assistant om die te laden."
+    }
+  },
+  "exceptions": {
+    "timer_domain_blocked": {
+      "message": "Timers zijn niet toegestaan voor {domain}: {entity_id}"
+    },
+    "timer_entity_not_found": {
+      "message": "Entiteit niet gevonden: {entity_id}"
+    },
+    "timer_invalid_minutes": {
+      "message": "Ongeldige minuten: {minutes}. Gebruik een geheel getal van 1 tot {max}."
+    }
+  }
+}

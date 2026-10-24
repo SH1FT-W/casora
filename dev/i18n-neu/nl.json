@@ -1,0 +1,71 @@
+{
+  "language_name": "Niederländisch (Nederlands)",
+  "update_push": ["Casora {v} is er", "Nieuwe versie beschikbaar"],
+  "lueften_push": {
+    "texts": {
+      "jetzt": ["Luchten: {n}", "{grund} – zet een raam een paar minuten open."],
+      "schliessen": ["Raam sluiten: {n}", "{grund} – je kunt het weer dichtdoen."],
+      "co2krit": ["CO₂ kritiek: {n}", "{co2} ppm – lucht nu meteen."]
+    },
+    "grund": [["Feuchte", "Vochtigheid"], ["Fenster seit", "Raam open sinds"], [" offen", ""], ["Std.", "u"], ["Min.", "min"]]
+  },
+  "welcome_text": {
+    "welcomeTitle": "Welkom bij Casora",
+    "whatsNewTitle": "Nieuw in Casora {version}",
+    "continue": "Verder",
+    "all": "Alle wijzigingen",
+    "w1t": "Kamer voor kamer",
+    "w1": "Ontwerp je dashboard met de apparaten die je al in Home Assistant hebt.",
+    "w2t": "Apparaatassistent",
+    "w2": "Casora stelt voor elke kamer passende tegels voor en bouwt ze in.",
+    "w3t": "Desktop, tablet en telefoon",
+    "w3": "Eén dashboard dat zich aan elk scherm aanpast, met een eigen telefoonweergave.",
+    "n0t": "Grafiektegel",
+    "n0": "Elke numerieke sensor als tegel met verloop en als grafiek over 24 uur, 7 dagen, 30 dagen of een jaar, als lijn of balken, met statistiek.",
+    "n1t": "Universele tegel",
+    "n1": "Titel, pictogram, een willekeurig apparaat en een venster dat je in de Studio samenstelt uit waarden, geschiedenis en bediening.",
+    "n2t": "Eigen badges",
+    "n2": "Zoveel badges als je wilt uit apparaten of sjablonen, en desgewenst lopen de badges door op een volgende regel in plaats van te scrollen.",
+    "n3t": "Zichtbaar in het venster",
+    "n3": "Regels die Casora zelf verzamelt, verberg je in de Studio. Het huislicht telt nu ook zonder lichtgroep alle lampen."
+  },
+  "whats_new": {
+    "n0t": "Grafiektegel",
+    "n0": "Elke numerieke sensor als tegel met verloop en als grafiek over 24 uur, 7 dagen, 30 dagen of een jaar, als lijn of balken, met statistiek.",
+    "n1t": "Universele tegel",
+    "n1": "Titel, pictogram, een willekeurig apparaat en een venster dat je in de Studio samenstelt uit waarden, geschiedenis en bediening.",
+    "n2t": "Eigen badges",
+    "n2": "Zoveel badges als je wilt uit apparaten of sjablonen, en desgewenst lopen de badges door op een volgende regel in plaats van te scrollen.",
+    "n3t": "Zichtbaar in het venster",
+    "n3": "Regels die Casora zelf verzamelt, verberg je in de Studio. Het huislicht telt nu ook zonder lichtgroep alle lampen."
+  },
+  "i18ncheck_allow": [
+    "Alarm", "Alle", "alle", "Alles", "alles", "Andere", "andere", "anders", "Auto", "Automatisch", "automatisch", "Automatische", "automatische",
+    "Badge", "Badges", "Balken", "Balkon", "Bedienen", "bedienen", "Beide", "beide", "beginnen", "binnen", "Boot",
+    "Casora", "Code", "Dashboard", "Details", "Diagnose", "Dienst", "dringend", "echte", "Energie", "Energieprognose", "externe",
+    "Filament", "Filamentgewicht", "Filter", "Foto", "gebracht", "Geladen", "geladen", "Geometrisch", "Gering", "Glas",
+    "Hagel", "Hemma", "Hier", "hier", "Idee", "Internetstatus", "Kalender", "Kilometerstand", "Klein", "klein", "kleine", "kleiner", "Kosten", "kosten",
+    "Laden", "laden", "lange", "Licht", "Link", "links", "Live", "live", "melden", "Minuten", "Modus", "Morgen", "morgen", "Motor",
+    "Nacht", "Nachtfoto", "Nachtmodus", "Nachts", "nachts", "Namen", "Niemand", "normale", "number",
+    "offline", "paar", "Papier", "passen", "passend", "Patrouille", "Personen", "Prognose", "Pulse",
+    "rechts", "Regen", "Reinigen", "reinigen", "Reinigt", "scrollen", "Sensor", "Sensoren", "Sirene", "Slicen", "Springen",
+    "Stand", "Start", "Starten", "starten", "Starts", "Status", "stoppen", "Studio",
+    "Tank", "Tanken", "tanken", "Temperaturen", "testen", "Titel", "Update", "Updates",
+    "Ventilator", "verborgen", "verkalkt", "verloren", "vier", "Vogel", "Volle", "vorige", "Warme", "YAML"
+  ],
+  "formal_regex": "\\b[Uu]w\\b|(?<![\\d}] )\\b[Uu]\\b(?!$)(?! (over|geleden)\\b)",
+  "casora_i18n_js": {
+    "filter.all": "Thuis",
+    "filter.climate": "Klimaat",
+    "filter.energy": "Energie",
+    "filter.lights": "Verlichting",
+    "filter.media": "Media",
+    "filter.presence": "Personen",
+    "filter.security": "Beveiliging",
+    "presence.all_away": "Iedereen weg",
+    "presence.all_home": "Iedereen thuis",
+    "presence.group.title": "Personen",
+    "presence.n_away": "{n} weg",
+    "presence.person": "Persoon"
+  }
+}

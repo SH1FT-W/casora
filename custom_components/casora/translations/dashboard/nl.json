@@ -1,0 +1,14 @@
+{
+  "filter.all": "Thuis",
+  "filter.climate": "Klimaat",
+  "filter.energy": "Energie",
+  "filter.lights": "Verlichting",
+  "filter.media": "Media",
+  "filter.presence": "Personen",
+  "filter.security": "Beveiliging",
+  "presence.all_away": "Iedereen weg",
+  "presence.all_home": "Iedereen thuis",
+  "presence.group.title": "Personen",
+  "presence.n_away": "{n} weg",
+  "presence.person": "Persoon"
+}
