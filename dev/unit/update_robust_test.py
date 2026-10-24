@@ -66,7 +66,7 @@ async def main():
     async def _rels(h):
         return [REL]
 
-    async def _dl(h, tag):
+    async def _dl(h, tag, rel=None):
         return make_zip("99.0.1")
 
     async def _rec(*a):

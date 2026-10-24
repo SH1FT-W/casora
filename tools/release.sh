@@ -24,7 +24,10 @@
 # CHANGELOG.md und CHANGELOG.de.md haben je einen Abschnitt „## <version>“, WHATS_NEW (casora-panel-welcome.js) gefüllt
 # und seit dem letzten Release geändert. Versionshinweise: .qa/release-notes-<version>.md.
 # Verteilung: Das GitHub-Release ist die Quelle; Casora (update_source.py, anonym über die
-# öffentliche GitHub-API) und HACS finden es von selbst.
+# öffentliche GitHub-API) und HACS finden es von selbst. Jedes Release (auch --beta) bekommt das Paket
+# casora.zip (tools/build-release-zip.py: custom_components/casora des Release-Commits, Dateien im Zip-Root,
+# deterministisch). HACS lädt wegen hacs.json „zip_release“ nur dieses Paket statt des ganzen Repo-Archivs,
+# Casoras eigene Update-Entität nimmt es auch. Ohne Paket scheitert die HACS-Installation dieses Releases.
 set -eu
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO"
@@ -71,6 +74,12 @@ ok "Version $VER"
 fi
 TAG="v$VER"
 
+# 0b) Release-Paket casora.zip aus HEAD (= dem Commit, der den Tag bekommt), nicht aus dem Arbeitsstand
+ZIP=".qa/release-$VER/casora.zip"
+ZIP_COMMIT="$(git rev-parse HEAD)"
+ZIP_MSG="$(python3 tools/build-release-zip.py "$ZIP" --ref "$ZIP_COMMIT")" || fail "casora.zip nicht gebaut"
+ok "Paket $ZIP_MSG"
+
 # 1) Gate (inkl. sauberem Arbeitsstand; Kalender-Versionen brauchen das volle Gate, Patch-Gate nur mit --patch)
 [ -n "$PATCH" ] && echo "! --patch: Notfall-Hotfix, Patch-Gate wird angenommen"
 if [ $BETA = 1 ]; then
@@ -88,6 +97,10 @@ ok "CHANGELOG in der Integration aktuell"
 MV="$(python3 -c 'import json;print(json.load(open("custom_components/casora/manifest.json"))["version"])')"
 [ "$MV" = "$VER" ] || fail "manifest.json hat Version $MV, nicht $VER"
 ok "manifest.json: $MV"
+ZV="$(python3 -c 'import json,sys,zipfile;print(json.loads(zipfile.ZipFile(sys.argv[1]).read("manifest.json"))["version"])' "$ZIP")"
+[ "$ZV" = "$VER" ] || fail "$ZIP hat Version $ZV, nicht $VER"
+[ "$(git rev-parse HEAD)" = "$ZIP_COMMIT" ] || fail "HEAD hat sich seit dem Paketbau geändert – neu starten"
+ok "Paket-Version: $ZV"
 
 if [ $BETA = 1 ]; then
   git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && fail "Tag $TAG gibt es schon"
@@ -96,13 +109,13 @@ if [ $BETA = 1 ]; then
   ok "Beta-Notizen: $NOTES"
   echo
   echo "Beta $TAG – Befehle:"
-  echo "  git tag -a $TAG -m $TAG"
+  echo "  git tag -a $TAG -m $TAG $ZIP_COMMIT"
   echo "  git push origin $TAG"
-  echo "  gh release create $TAG --prerelease --title $TAG --notes-file $NOTES"
+  echo "  gh release create $TAG --prerelease --title $TAG --notes-file $NOTES $ZIP"
   if [ $PUBLISH = 1 ]; then
-    git tag -a "$TAG" -m "$TAG"
+    git tag -a "$TAG" -m "$TAG" "$ZIP_COMMIT"
     git push origin "$TAG"
-    gh release create "$TAG" --prerelease --title "$TAG" --notes-file "$NOTES"
+    gh release create "$TAG" --prerelease --title "$TAG" --notes-file "$NOTES" "$ZIP"
     ok "Beta $TAG veröffentlicht (Vorabversion)"
   else
     echo "(nichts ausgeführt – mit --publish ausführen)"
@@ -162,15 +175,15 @@ ok "WHATS_NEW: $(echo "$NOW" | wc -l | tr -d ' ') Einträge"
 
 echo
 echo "Release $TAG – Befehle:"
-echo "  git tag -a $TAG -m $TAG"
+echo "  git tag -a $TAG -m $TAG $ZIP_COMMIT"
 echo "  git push origin HEAD $TAG"
-echo "  gh release create $TAG --title $TAG --notes-file $NOTES"
+echo "  gh release create $TAG --title $TAG --notes-file $NOTES $ZIP"
 if [ $PUBLISH = 1 ]; then
   echo
   echo "--publish: führe aus …"
-  git tag -a "$TAG" -m "$TAG"
+  git tag -a "$TAG" -m "$TAG" "$ZIP_COMMIT"
   git push origin HEAD "$TAG"
-  gh release create "$TAG" --title "$TAG" --notes-file "$NOTES"
+  gh release create "$TAG" --title "$TAG" --notes-file "$NOTES" "$ZIP"
   ok "Release $TAG veröffentlicht"
 else
   echo "(nichts ausgeführt – mit --publish ausführen)"

@@ -85,6 +85,14 @@ Nicht im Kern-Paket prüfbar (HACS), Casora liest `platform`/`translation_key`:
 `anker_solix`, `pulse`, `teamtracker`, `bosch_ebike`, `powercalc`, `browser_mod`, `hacs`, Kaffee-Integrationen
 (De'Longhi, Jura, Melitta), Auto-Integrationen.
 
+HACS-Download (Stand HACS-Quelle 20.10.2026, `repositories/base.py`): `hacs.json` wird für die zu installierende
+Version gelesen; mit `"zip_release": true` + `"filename": "casora.zip"` lädt HACS nur
+`releases/download/<tag>/casora.zip` und packt es unverändert nach `custom_components/casora` aus (Dateien im
+Zip-Root), ohne Rückfall auf das Repo-Archiv. Ältere Releases (ohne diese Schlüssel) laden weiter das Repo-Archiv.
+Deshalb hängt `tools/release.sh` an jedes Release `casora.zip` (`tools/build-release-zip.py`); die eigene
+Update-Entität nimmt dasselbe Paket (`update_source.download_release`). Test: `dev/unit/update_release_zip_test.py`
+(Paketaufbau, beide Zip-Formen); HACS selbst nicht im Test.
+
 Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCES`, `live_finder.py`, Zustand/Programm
 `02-devices.js`, `live_activity.py`; Tests `dev/unit/dishwasher_sources.mjs`, `dev/unit/live_finder_test.py`,
 `dev/unit/live_activity_test.py`, Häuser `dev/unit/haeuser/hc_*.json`), Stand 23.10.2026:
