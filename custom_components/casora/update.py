@@ -11,7 +11,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-import re
 import shutil
 from datetime import timedelta
 from typing import Any
@@ -52,11 +51,6 @@ DATA_HACS_ID = "update_hacs_repo_id"
 # for one release, then drop it (by then every install has run it).
 LEGACY_STAGE_DIR = "casora_update_neu"
 LEGACY_HISTORY_FILE = f"{DOMAIN}.update_history"
-# Before every install the self-updater zipped the running version into casora_sicherungen
-# ("casora_<version>_<YYYY-MM-DD_HHMMSS>.zip", 20-35 MB each). The newest stays as a fallback; dashboard backups
-# in the same folder (umzug_…, umstellen_…, Hemma) have other names and are never touched.
-LEGACY_BACKUP_DIR = "casora_sicherungen"
-LEGACY_BACKUP_ZIP = re.compile(r"^casora_\d+\.\d+\.\d+(b\d+)?_\d{4}-\d{2}-\d{2}_\d{6}\.zip$")
 
 
 def _remove_legacy_leftovers(config_dir: str) -> None:
@@ -65,27 +59,6 @@ def _remove_legacy_leftovers(config_dir: str) -> None:
         os.remove(os.path.join(config_dir, ".storage", LEGACY_HISTORY_FILE))
     except OSError:
         pass
-    _prune_version_backups(os.path.join(config_dir, LEGACY_BACKUP_DIR))
-
-
-def _prune_version_backups(folder: str) -> list[str]:
-    """Delete the self-updater's version zips except the newest; returns the removed names."""
-    try:
-        names = [n for n in os.listdir(folder) if LEGACY_BACKUP_ZIP.match(n)
-                 and os.path.isfile(os.path.join(folder, n))]
-    except OSError:
-        return []
-    names.sort(key=lambda n: os.path.getmtime(os.path.join(folder, n)))
-    removed = []
-    for n in names[:-1]:
-        try:
-            os.remove(os.path.join(folder, n))
-            removed.append(n)
-        except OSError:
-            continue
-    if removed:
-        _LOGGER.info("Casora: removed %d old version backups from %s (kept the newest)", len(removed), folder)
-    return removed
 
 
 def _hacs_repo_id(path: str) -> str | None:
