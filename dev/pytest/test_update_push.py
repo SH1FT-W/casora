@@ -8,6 +8,8 @@ Casora installs nothing itself (hacs/default#12143); the Studio links to HACS: C
 
 from __future__ import annotations
 
+import re
+
 import json
 from unittest.mock import patch
 
@@ -21,7 +23,8 @@ REPO_ID = "424242"
 
 
 def _bump(v: str, n: int = 1) -> str:
-    a, b, c = (int(x) for x in v.split("-")[0].split(".")[:3])
+    # Betas ("26.10.60b1") bump the base number too.
+    a, b, c = (int(re.match(r"\d+", x).group()) for x in v.split("-")[0].split(".")[:3])
     return f"{a}.{b}.{c + n}"
 
 
