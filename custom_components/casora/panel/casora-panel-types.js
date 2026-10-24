@@ -310,6 +310,26 @@ window.CASORA_TILE_TYPES = [
       needs: "tractive", needsText: "For every pet in the Tractive integration",
       needsMissing: "Tractive integration not installed yet" },
     fields: [ICON, TITLE_NAME] },
+  // Chart (community card, card request #50): any numeric sensor with a state class (CPU load of System Monitor,
+  // temperature, power, energy). Tile: value with unit and a 24 h sparkline; popup: Casora's own chart over
+  // 24 h / 7 / 30 days with up to four sensors and the statistics of the main one (scripts/local/27-chart.js).
+  { id: "casora_chart", label: "Chart", template: "casora_chart", domains: ["sensor"],
+    icon: "chart", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Sensor", entityPlaceholder: "A sensor with numbers",
+    community: { desc: "Current value with unit and a 24-hour sparkline on the tile. The popup draws Casora's own chart over 24 hours, 7 or 30 days with up to four sensors, a legend and the lowest, highest and average value – for any numeric sensor such as CPU load, temperature, power or energy." },
+    fields: [ICON, TITLE_NAME,
+      { key: "chart_color", label: "Line color", type: "color", advanced: true,
+        hint: "Color of this sensor's line in the popup. The sparkline on the tile stays neutral." },
+      { key: "entity_2", label: "Second sensor", domains: ["sensor"], group: "Popup",
+        hint: "Up to three more sensors in the popup chart. With the same unit they share one chart; with different units the popup shows a switch between them." },
+      { key: "label_2", label: "Label", type: "text", advanced: true, placeholder: "The sensor's name", when: (v) => !!v.entity_2 },
+      { key: "color_2", label: "Color", type: "color", advanced: true, when: (v) => !!v.entity_2 },
+      { key: "entity_3", label: "Third sensor", domains: ["sensor"], when: (v) => !!v.entity_2 },
+      { key: "label_3", label: "Label", type: "text", advanced: true, placeholder: "The sensor's name", when: (v) => !!v.entity_3 },
+      { key: "color_3", label: "Color", type: "color", advanced: true, when: (v) => !!v.entity_3 },
+      { key: "entity_4", label: "Fourth sensor", domains: ["sensor"], when: (v) => !!v.entity_3 },
+      { key: "label_4", label: "Label", type: "text", advanced: true, placeholder: "The sensor's name", when: (v) => !!v.entity_4 },
+      { key: "color_4", label: "Color", type: "color", advanced: true, when: (v) => !!v.entity_4 },
+    ] },
   // Frigate (community card, from card request #22): camera tile for cameras of the Frigate integration
   // (only Frigate sets device_class "camera"), plus detections, snapshots and switches on the same device
   // (scripts/local/23-frigate.js). Fields like the camera tile, without the popup fields of the camera overview.
@@ -405,7 +425,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "shield_alarm", "shield_bypass", "shield_vacation", "calendar", "calendar-day", "window-open",
   "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower", "coffee-maker", "paw",
   "coffee-espresso", "coffee-doppio", "coffee-cup", "coffee-cappuccino", "coffee-latte", "coffee-tall", "coffee-water",
-  "coffee-milk", "coffee-tea",
+  "coffee-milk", "coffee-tea", "chart",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Preview: show conditional cards (type: conditional) as the dashboard does –

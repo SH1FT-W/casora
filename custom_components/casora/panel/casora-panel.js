@@ -4878,6 +4878,10 @@ const TILE_MAIN_FIND = {
   casora_lawn_mower: { domain: "lawn_mower", match: () => true },
   casora_frigate: { domain: "camera", match: (h, id) => ((((h.states || {})[id] || {}).attributes || {}).device_class === "camera") && !/birdseye/i.test(id) },
   casora_reolink_doorbell: { domain: "camera", match: (h, id) => typeof window.__casoraBellCam === "function" && !!window.__casoraBellCam(h, id) },
+  // Chart (community card #50): every numeric sensor with a state class; CPU load (System Monitor's processor_use),
+  // temperature and power first – that is what the request was about (first use: a sure match, not every sensor).
+  casora_chart: { domain: "sensor", keys: ["processor_use"], platform: "systemmonitor", match: (h, id) => isStatSensor(h, id),
+    like: /processor|prozessor|\bcpu\b|temperat|\bpower\b|leistung|\bstrom|\benerg/i },
   casora_weather_warning: { keys: ["warning", "warnings"], domain: "binary_sensor", dc: "safety" },
   // Ein Aquarium ist kein beliebiges Thermometer (sonst: Außentemperatur des Autos).
   casora_aquarium: { domain: "sensor", dc: "temperature", strict: true,
@@ -4900,6 +4904,12 @@ const isPetTracker = (h, id) => {
   if (e.platform === "tractive") return true;
   const d = D[e.device_id], hw = d && D[d.via_device_id];
   return [d, hw].some((x) => /tractive/i.test((x && x.manufacturer) || ""));
+};
+// A sensor the chart card can draw: a number with a state class (measurement, total, total_increasing).
+const isStatSensor = (h, id) => {
+  const st = ((h && h.states) || {})[id];
+  const a = (st && st.attributes) || {};
+  return /^sensor\./.test(id) && /^(measurement|total|total_increasing)$/.test(String(a.state_class || "")) && isFinite(parseFloat(st.state));
 };
 // The pet's name for a Tractive tracker, "" for anything else: the user's own entity name, else the pet device.
 const petName = (h, id) => {
@@ -27588,7 +27598,7 @@ class CasoraPanel extends HTMLElement {
 window.__casoraPanelInternals = {
   blankRoom, roomPhoto, slug, translit, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
   applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
-  findType, tileTypeAny, newTile, isPetTracker, petName, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
+  findType, tileTypeAny, newTile, isPetTracker, petName, isStatSensor, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,

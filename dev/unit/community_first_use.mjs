@@ -14,6 +14,7 @@ const TEST_DEVICES = {
   casora_frigate: ['frigate_testhof'], // frigate.py
   casora_reolink_doorbell: ['testklingel'], // klingel.py
   casora_coffee: ['testbarista', 'morgenbohne', 'bohnenwerk'], // kaffee.py: Home Connect, De'Longhi BT, power curve
+  casora_chart: ['testserver'], // testserver.py: System-Monitor-like CPU load, memory, temperature
 };
 
 const hass = testhaus();
