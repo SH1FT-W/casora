@@ -2,6 +2,7 @@
 
   "$(tools/ha-venv.sh install)/bin/python" dev/unit/ha_annahmen_test.py     # gate's standard HA version
   dev/qa/ha-annahmen.sh [stable] [beta] [<version>]                          # newest stable + beta
+  uv run --python 3.14 --with homeassistant python dev/unit/ha_annahmen_test.py   # CI (newest HA release)
 
 @ha-venv: the gate runs this file with the Python of tools/ha-venv.sh (its standard HA version), not via uv.
 
