@@ -2390,7 +2390,41 @@
   "eMTB+": "eMTB+",
   "Zuletzt gesehen": "Ostatnio widziano",
   "Software-Update": "Aktualizacja oprogramowania",
-  "Verfügbar": "Dostępna"
+  "Verfügbar": "Dostępna",
+  "Obere Zone": "Strefa górna",
+  "Mittlere Zone": "Strefa środkowa",
+  "Untere Zone": "Strefa dolna",
+  "Kühlteil": "Chłodziarka",
+  "Gefrierteil": "Zamrażarka",
+  "Frischezone": "Strefa świeżości",
+  "Frischezone links": "Strefa świeżości lewa",
+  "Frischezone rechts": "Strefa świeżości prawa",
+  "Flexfach": "Komora elastyczna",
+  "Flaschenkühler": "Chłodziarka do butelek",
+  "Weinfach": "Komora na wino",
+  "Weinfach 2": "Komora na wino 2",
+  "Weinfach 3": "Komora na wino 3",
+  "Partymodus": "Tryb imprezy",
+  "Urlaubsmodus": "Tryb urlopowy",
+  "Eco-Modus": "Tryb eko",
+  "Sabbat-Modus": "Tryb szabatowy",
+  "Frische-Modus": "Tryb świeżości",
+  "Wasserspender": "Dystrybutor wody",
+  "Türassistent Kühlteil": "Asystent drzwi chłodziarki",
+  "Türassistent Gefrierteil": "Asystent drzwi zamrażarki",
+  "Superkühlen": "Superchłodzenie",
+  "Supergefrieren": "Superzamrażanie",
+  "Kühlschrank": "Lodówka",
+  "Gefrierschrank": "Zamrażarka",
+  "Kühl-Gefrier-Kombination": "Lodówko-zamrażarka",
+  "Türalarm": "Alarm drzwi",
+  "Temperaturalarm": "Alarm temperatury",
+  "Modi": "Tryby",
+  "Kein Kühlschrank gefunden": "Nie znaleziono lodówki",
+  "Wähle im Studio einen Temperatursensor oder Sollwert des Kühlschranks.": "Wybierz w Studio czujnik temperatury lub wartość zadaną lodówki.",
+  "SuperCool": "SuperCool",
+  "SuperFrost": "SuperFrost",
+  "Super": "Super"
  },
  "patterns": [
   [
@@ -4364,6 +4398,14 @@
   [
    "^([\\d.,]+) Mbit/s Upload$",
    "{1} Mbit/s wysyłanie"
+  ],
+  [
+   "^Sollwert (.+)$",
+   "Wartość zadana {1}"
+  ],
+  [
+   "^Zone (\\d+)$",
+   "Strefa {1}"
   ]
  ]
 }

@@ -2390,7 +2390,41 @@
   "Kein Verlauf: {name} ist kein Zahlenwert.": "Sem histórico: {name} não é um valor numérico.",
   "Universal-Kachel": "Cartão universal",
   "Kein Gerät gewählt": "Nenhum dispositivo escolhido",
-  "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "No Studio podes acrescentar valores, histórico, controlo e cartões próprios."
+  "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "No Studio podes acrescentar valores, histórico, controlo e cartões próprios.",
+  "Obere Zone": "Zona superior",
+  "Mittlere Zone": "Zona central",
+  "Untere Zone": "Zona inferior",
+  "Kühlteil": "Frigorífico",
+  "Gefrierteil": "Congelador",
+  "Frischezone": "Zona de frescura",
+  "Frischezone links": "Zona de frescura esquerda",
+  "Frischezone rechts": "Zona de frescura direita",
+  "Flexfach": "Compartimento flexível",
+  "Flaschenkühler": "Refrigerador de garrafas",
+  "Weinfach": "Compartimento de vinho",
+  "Weinfach 2": "Compartimento de vinho 2",
+  "Weinfach 3": "Compartimento de vinho 3",
+  "Partymodus": "Modo festa",
+  "Urlaubsmodus": "Modo férias",
+  "Eco-Modus": "Modo eco",
+  "Sabbat-Modus": "Modo sabático",
+  "Frische-Modus": "Modo frescura",
+  "Wasserspender": "Dispensador de água",
+  "Türassistent Kühlteil": "Assistente de porta do frigorífico",
+  "Türassistent Gefrierteil": "Assistente de porta do congelador",
+  "Superkühlen": "Super refrigeração",
+  "Supergefrieren": "Super congelação",
+  "Kühlschrank": "Frigorífico",
+  "Gefrierschrank": "Congelador",
+  "Kühl-Gefrier-Kombination": "Frigorífico combinado",
+  "Türalarm": "Alarme de porta",
+  "Temperaturalarm": "Alarme de temperatura",
+  "Modi": "Modos",
+  "Kein Kühlschrank gefunden": "Nenhum frigorífico encontrado",
+  "Wähle im Studio einen Temperatursensor oder Sollwert des Kühlschranks.": "Escolhe no Studio um sensor de temperatura ou um valor alvo do frigorífico.",
+  "SuperCool": "SuperCool",
+  "SuperFrost": "SuperFrost",
+  "Super": "Super"
  },
  "patterns": [
   [
@@ -4364,6 +4398,14 @@
   [
    "^([\\d.,]+) Mbit/s Upload$",
    "{1} Mbit/s upload"
+  ],
+  [
+   "^Sollwert (.+)$",
+   "Valor alvo {1}"
+  ],
+  [
+   "^Zone (\\d+)$",
+   "Zona {1}"
   ]
  ]
 }

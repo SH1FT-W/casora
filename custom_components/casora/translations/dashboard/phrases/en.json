@@ -2372,7 +2372,41 @@
   "Kein Verlauf: {name} ist kein Zahlenwert.": "No history: {name} is not a number.",
   "Universal-Kachel": "Universal tile",
   "Kein Gerät gewählt": "No device chosen",
-  "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "In the Studio you can add values, history, controls and own cards."
+  "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "In the Studio you can add values, history, controls and own cards.",
+  "Obere Zone": "Top zone",
+  "Mittlere Zone": "Middle zone",
+  "Untere Zone": "Bottom zone",
+  "Kühlteil": "Fridge",
+  "Gefrierteil": "Freezer",
+  "Frischezone": "Fresh zone",
+  "Frischezone links": "Fresh zone left",
+  "Frischezone rechts": "Fresh zone right",
+  "Flexfach": "Flex compartment",
+  "Flaschenkühler": "Bottle cooler",
+  "Weinfach": "Wine compartment",
+  "Weinfach 2": "Wine compartment 2",
+  "Weinfach 3": "Wine compartment 3",
+  "Partymodus": "Party mode",
+  "Urlaubsmodus": "Holiday mode",
+  "Eco-Modus": "Eco mode",
+  "Sabbat-Modus": "Sabbath mode",
+  "Frische-Modus": "Fresh mode",
+  "Wasserspender": "Water dispenser",
+  "Türassistent Kühlteil": "Fridge door assistant",
+  "Türassistent Gefrierteil": "Freezer door assistant",
+  "Superkühlen": "Super cool",
+  "Supergefrieren": "Super freeze",
+  "Kühlschrank": "Fridge",
+  "Gefrierschrank": "Freezer",
+  "Kühl-Gefrier-Kombination": "Fridge-freezer",
+  "Türalarm": "Door alarm",
+  "Temperaturalarm": "Temperature alarm",
+  "Modi": "Modes",
+  "Kein Kühlschrank gefunden": "No fridge found",
+  "Wähle im Studio einen Temperatursensor oder Sollwert des Kühlschranks.": "Pick a temperature sensor or setpoint of the fridge in the Studio.",
+  "SuperCool": "SuperCool",
+  "SuperFrost": "SuperFrost",
+  "Super": "Super"
  },
  "patterns": [
   [
@@ -4346,6 +4380,14 @@
   [
    "^([\\d.,]+) Mbit/s Upload$",
    "{1} Mbit/s Upload"
+  ],
+  [
+   "^Sollwert (.+)$",
+   "Setpoint {1}"
+  ],
+  [
+   "^Zone (\\d+)$",
+   "Zone {1}"
   ]
  ]
 }

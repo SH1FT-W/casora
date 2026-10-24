@@ -93,6 +93,7 @@ const MODULES = [
   '27-chart',
   '28-free-tile',
   '29-eigene-badges',
+  '30-kuehlschrank',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());

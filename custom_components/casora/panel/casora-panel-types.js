@@ -394,6 +394,26 @@ window.CASORA_TILE_TYPES = [
       { key: "big_on_audio", label: "Large picture when listening/talking", type: "bool", boolDefault: true, advanced: true, group: "Popup",
         hint: "Tapping Listen or Talk opens the live picture large over the popup. Close it with ×, Esc or by swiping down." },
     ] },
+  // Fridge / freezer (24.10.2026): pick one entity of the appliance (a zone temperature, setpoint or door);
+  // scripts/local/00-finder.js casoraFridgeFind finds the rest on the device – Liebherr (HA core), Home Connect
+  // (core, homeconnect_ws, home_connect_alt) or a device named like a fridge. ownData: without an entity the tile
+  // takes the house's fridge. find.fridge: the finder's field names (z1temp, z1set, z2temp, z2set, door, supercool …).
+  { id: "casora_fridge", label: "Fridge", template: "casora_fridge", domains: ["sensor", "number", "binary_sensor", "climate"], ownData: true,
+    icon: "fridge", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Fridge", entityPlaceholder: "A zone temperature, setpoint or door of the fridge",
+    fields: [
+      ICON,
+      TITLE_NAME,
+      { key: "entity_zone1_temp", label: "Zone 1 temperature", domains: ["sensor"], classes: ["temperature"], find: { fridge: "z1temp" },
+        advanced: true, group: "Zones" },
+      { key: "entity_zone1_set", label: "Zone 1 setpoint", domains: ["number", "climate"], find: { fridge: "z1set" }, advanced: true },
+      { key: "entity_zone2_temp", label: "Zone 2 temperature", domains: ["sensor"], classes: ["temperature"], find: { fridge: "z2temp" }, advanced: true },
+      { key: "entity_zone2_set", label: "Zone 2 setpoint", domains: ["number", "climate"], find: { fridge: "z2set" }, advanced: true },
+      { key: "entity_door", label: "Door", domains: ["binary_sensor"], classes: ["door", "opening"], find: { fridge: "door" }, advanced: true },
+      { key: "sw_super_cool", label: "SuperCool", domains: ["switch"], find: { fridge: "supercool" }, advanced: true, group: "Modes" },
+      { key: "sw_super_frost", label: "SuperFrost", domains: ["switch"], find: { fridge: "superfrost" }, advanced: true },
+      { key: "sw_night", label: "Night mode", domains: ["switch"], find: { fridge: "night" }, advanced: true },
+      { key: "sw_party", label: "Party mode", domains: ["switch"], find: { fridge: "party" }, advanced: true },
+    ] },
   // Coffee machine (community card, card request): pick one entity of the device (status, power or
   // drink selection); scripts/local/25-kaffee.js finds the rest on the device – Home Connect, Miele, De'Longhi, Jura,
   // Melitta/Nivona, La Marzocco or a smart plug with power metering.
@@ -612,9 +632,14 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   // Room climate (casora_vent) and solar tip (casora_solar_tip) build their text via
   // window._casoraVent / _casoraSolar from scripts/local/05-standard-medien.js – without the
   // module the preview only said "Off". Load it once (pure functions, no cards).
-  let medien = false, fussball = false, kaffee = false;
+  let medien = false, fussball = false, kaffee = false, fridge = false;
   const needMedien = (tile) => {
     const tn = names(tile && tile.template);
+    // Fridge: state ("7 °C · −18 °C", "Tür offen") via window._casoraFridge (scripts/local/30-kuehlschrank.js).
+    if (!fridge && !window._casoraFridge && tn.includes("casora_fridge")) {
+      fridge = true;
+      import("/casora_scripts/local/30-kuehlschrank.js").catch(() => {});
+    }
     // Coffee machine: state ("Ready", "Cappuccino · 40 %") via window._casoraCoffee (scripts/local/25-kaffee.js);
     // without the module the preview showed the integration's raw state ("Brewing").
     if (!kaffee && !window._casoraCoffee && tn.includes("casora_coffee")) {
@@ -777,6 +802,11 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       if (f.find.dish) {
         const LF = window.casoraLaundryFind;
         return (LF && LF.dish && LF.dish.field(hass, tile.entity, f.find.dish)) || null;
+      }
+      // Fridge: the shared fridge finder (Liebherr, Home Connect, generic) and its field.
+      if (f.find.fridge) {
+        const FF = window.casoraFridgeFind;
+        return (FF && FF.field(hass, tile.entity, f.find.fridge)) || null;
       }
       if (f.find.plug) {
         const p = CD.companionPlug(hass, tile.entity);

@@ -4899,6 +4899,9 @@ const TILE_MAIN_FIND = {
   // De'Longhi, Jura, Melitta, La Marzocco and the power-curve integrations delonghi/krups); any sensor/switch/select
   // gave hundreds of suggestions.
   casora_coffee: { coffee: true },
+  // Fridge: the main entity of every fridge the shared finder knows (casoraFridgeFind.all in scripts/local/00-finder.js –
+  // Liebherr, Home Connect, a device named like a fridge); any temperature sensor would be guesswork.
+  casora_fridge: { match: (h, id) => !!(window.casoraFridgeFind && window.casoraFridgeFind.all(h).some((f) => f.anchor === id)) },
   // Devices plain to see: every lawn mower (regular device card), every Frigate camera (only Frigate sets
   // device_class "camera"; Birdseye is no single camera, as 23-frigate.js), the live camera of a Reolink doorbell
   // (casora-panel-b-ux.js bellCam). Before, adding the tile found them only as an unsure match.

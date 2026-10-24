@@ -2578,7 +2578,18 @@
     "On tap": "Po dotknięciu",
     "Do nothing": "Nic nie rób",
     "Visible in the popup": "Widoczne w oknie",
-    "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town.": "Np. ostrzeżenia NINA lub Meteoalarm albo poziom ostrzeżenia DWD dla Twojej miejscowości."
+    "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town.": "Np. ostrzeżenia NINA lub Meteoalarm albo poziom ostrzeżenia DWD dla Twojej miejscowości.",
+    "A zone temperature, setpoint or door of the fridge": "Temperatura strefy, wartość zadana lub drzwi lodówki",
+    "Zone 1 temperature": "Temperatura strefy 1",
+    "Zone 1 setpoint": "Wartość zadana strefy 1",
+    "Zone 2 temperature": "Temperatura strefy 2",
+    "Zone 2 setpoint": "Wartość zadana strefy 2",
+    "Zones": "Strefy",
+    "SuperCool": "SuperCool",
+    "SuperFrost": "SuperFrost",
+    "Night mode": "Tryb nocny",
+    "Party mode": "Tryb imprezy",
+    "Modes": "Tryby"
   },
   "patterns": [
     [
