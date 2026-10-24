@@ -2350,7 +2350,15 @@
   "Kein Verlauf: {name} ist kein Zahlenwert.": "Nessuna cronologia: {name} non è un valore numerico.",
   "Universal-Kachel": "Scheda universale",
   "Kein Gerät gewählt": "Nessun dispositivo scelto",
-  "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "Nello Studio puoi aggiungere valori, cronologia, controlli e schede personali."
+  "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "Nello Studio puoi aggiungere valori, cronologia, controlli e schede personali.",
+  "Akkukapazität": "Capacità della batteria",
+  "Distanz gesamt": "Distanza totale",
+  "Geladen gesamt": "Caricato in totale",
+  "Unterstützungsmodi": "Modalità di assistenza",
+  "eMTB+": "eMTB+",
+  "Zuletzt gesehen": "Ultima posizione",
+  "Software-Update": "Aggiornamento software",
+  "Verfügbar": "Disponibile"
  },
  "patterns": [
   [

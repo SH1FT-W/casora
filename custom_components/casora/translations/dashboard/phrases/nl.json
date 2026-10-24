@@ -2350,7 +2350,15 @@
   "Kein Verlauf: {name} ist kein Zahlenwert.": "Geen geschiedenis: {name} is geen getalwaarde.",
   "Universal-Kachel": "Universele tegel",
   "Kein Gerät gewählt": "Geen apparaat gekozen",
-  "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "In de Studio kun je waarden, geschiedenis, bediening en eigen kaarten toevoegen."
+  "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "In de Studio kun je waarden, geschiedenis, bediening en eigen kaarten toevoegen.",
+  "Akkukapazität": "Accucapaciteit",
+  "Distanz gesamt": "Totale afstand",
+  "Geladen gesamt": "Totaal geladen",
+  "Unterstützungsmodi": "Ondersteuningsstanden",
+  "eMTB+": "eMTB+",
+  "Zuletzt gesehen": "Laatst gezien",
+  "Software-Update": "Software-update",
+  "Verfügbar": "Beschikbaar"
  },
  "patterns": [
   [

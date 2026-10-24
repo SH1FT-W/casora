@@ -1449,7 +1449,6 @@
     "Active program": "Programma attivo",
     "Add a warning sensor": "Aggiungi un sensore di avvisi",
     "Chamber light": "Luce interna",
-    "E.g. the NINA or DWD warnings for your town.": "Es. gli avvisi NINA o DWD per la tua località.",
     "Electricity price per kWh": "Prezzo dell'elettricità per kWh",
     "Leak sensor": "Sensore perdite",
     "Leak sensor battery": "Batteria sensore perdite",
@@ -2581,7 +2580,8 @@
     "A Home Assistant template. Its result is the badge's text and updates live.": "Un modello di Home Assistant. Il suo risultato è il testo del badge e si aggiorna in tempo reale.",
     "On tap": "Al tocco",
     "Do nothing": "Non fare nulla",
-    "Visible in the popup": "Visibile nella finestra"
+    "Visible in the popup": "Visibile nella finestra",
+    "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town.": "Ad es. gli avvisi NINA o Meteoalarm oppure il livello di allerta DWD per la tua città."
   },
   "patterns": [
     [

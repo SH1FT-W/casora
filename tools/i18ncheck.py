@@ -58,9 +58,17 @@ GERMAN_ONLY = re.compile(r"[äöÄÖßẞ]")
 SHARED = {
     "es": {"Portal", "Foto", "Fotos", "Sensor", "Sensores", "number", "Radar", "Hotel", "Taxi", "Bar", "Normal",
            "Total", "Global", "Final", "Manual", "Ideal", "Real", "Hemma", "Casora", "Studio", "Pulse"},
+    "fr": {"Analyse", "Badge", "Badges", "Bar", "Batterie", "Casora", "Coach", "Code", "Design", "Filament", "Final", "Foto", "Global", "Hemma", "Hotel", "Ideal", "Lampe", "Liste", "Normal", "Papier", "Patrouille", "Pause", "Portal", "Position", "Profil", "Pulse", "Radar", "Sensor", "Signal", "Station", "Studio", "Tarif", "Taxi", "Terrasse", "Total", "Zone", "externe", "manuelle", "normale", "number"},
+    "it": {"Auto", "Bar", "Casora", "Dashboard", "Design", "Download", "Foto", "Hemma", "Hotel", "Layout", "Pulse", "Radar", "Router", "Speedtest", "Studio", "Taxi", "Upload", "doppio", "intelligente", "live", "normale", "number", "offline"},
+    "nl": {"Alarm", "Alle", "Alles", "Andere", "Auto", "Automatisch", "Automatische", "Badge", "Badges", "Balken", "Balkon", "Bedienen", "Beide", "Boot", "Casora", "Code", "Dashboard", "Details", "Diagnose", "Dienst", "Energie", "Energieprognose", "Filament", "Filamentgewicht", "Filter", "Foto", "Geladen", "Geometrisch", "Gering", "Glas", "Hagel", "Hemma", "Hier", "Idee", "Internetstatus", "Kalender", "Kilometerstand", "Klein", "Kosten", "Laden", "Licht", "Link", "Live", "Minuten", "Modus", "Morgen", "Motor", "Nacht", "Nachtfoto", "Nachtmodus", "Nachts", "Namen", "Niemand", "Papier", "Patrouille", "Personen", "Prognose", "Pulse", "Regen", "Reinigen", "Reinigt", "Sensor", "Sensoren", "Sirene", "Slicen", "Springen", "Stand", "Start", "Starten", "Starts", "Status", "Studio", "Tank", "Tanken", "Temperaturen", "Titel", "Update", "Updates", "Ventilator", "Vogel", "Volle", "Warme", "YAML", "alle", "alles", "andere", "anders", "automatisch", "automatische", "bedienen", "beginnen", "beide", "binnen", "dringend", "echte", "externe", "gebracht", "geladen", "hier", "klein", "kleine", "kleiner", "kosten", "laden", "lange", "links", "live", "melden", "morgen", "nachts", "normale", "number", "offline", "paar", "passen", "passend", "rechts", "reinigen", "scrollen", "starten", "stoppen", "tanken", "testen", "verborgen", "verkalkt", "verloren", "vier", "vorige"},
+    "pl": {"Alarm", "Balkon", "Bar", "Casora", "Doktor", "Hemma", "Hotel", "Kakao", "Kamera", "Komfort", "Kontakt", "Konto", "Mikrofon", "Normal", "Offline", "Online", "Papier", "Ping", "Portal", "Problem", "Profil", "Program", "Pulse", "Radar", "Sensor", "Solar", "Standard", "Status", "Studio", "Tablet", "Taxi", "Total", "number", "offline"},
 }
 # Second person singular everywhere (wortliste: du / tú).
-FORMAL = {"es": re.compile(r"\b(usted|Usted|ustedes|Ustedes)\b")}
+FORMAL = {"es": re.compile(r"\b(usted|Usted|ustedes|Ustedes)\b"),
+          "pl": re.compile(r"\b(Pan|Pani|Pana|Pani\u0105|Panu|Panem|Pa\u0144stwo|Pa\u0144stwa|Pa\u0144stwu|prosz\u0119)\b"),
+          "nl": re.compile(r"\b[Uu]w\b|(?<![\d}] )\b[Uu]\b(?!$)(?! (over|geleden)\b)"),
+          "it": re.compile(r"\b(Lei|Suo|Sua|Suoi|Sue)\b"),
+          "fr": re.compile(r"\b(vous|Vous|votre|Votre|vos|Vos|veuillez|Veuillez)\b")}
 
 
 def _load(path):

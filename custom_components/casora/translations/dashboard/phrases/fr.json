@@ -2350,7 +2350,15 @@
   "Kein Verlauf: {name} ist kein Zahlenwert.": "Pas d'historique : {name} n'est pas une valeur numérique.",
   "Universal-Kachel": "Tuile universelle",
   "Kein Gerät gewählt": "Aucun appareil choisi",
-  "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "Dans le Studio, tu peux ajouter des valeurs, un historique, des commandes et tes propres cartes."
+  "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "Dans le Studio, tu peux ajouter des valeurs, un historique, des commandes et tes propres cartes.",
+  "Akkukapazität": "Capacité de la batterie",
+  "Distanz gesamt": "Distance totale",
+  "Geladen gesamt": "Chargé au total",
+  "Unterstützungsmodi": "Modes d'assistance",
+  "eMTB+": "eMTB+",
+  "Zuletzt gesehen": "Vu pour la dernière fois",
+  "Software-Update": "Mise à jour logicielle",
+  "Verfügbar": "Disponible"
  },
  "patterns": [
   [

@@ -47,11 +47,34 @@ TEXT = {
         "schliessen": ("Cerrar ventana: {n}", "{grund} – ya puedes cerrarla."),
         "co2krit": ("CO₂ crítico: {n}", "{co2} ppm – ventila ahora mismo."),
     },
+    "pl": {
+        "jetzt": ("Przewietrz: {n}", "{grund} – otwórz okno na kilka minut."),
+        "schliessen": ("Zamknij okno: {n}", "{grund} – możesz już zamknąć."),
+        "co2krit": ("CO₂ krytyczne: {n}", "{co2} ppm – przewietrz natychmiast."),
+    },
+    "nl": {
+        "jetzt": ("Luchten: {n}", "{grund} – zet een raam een paar minuten open."),
+        "schliessen": ("Raam sluiten: {n}", "{grund} – je kunt het weer dichtdoen."),
+        "co2krit": ("CO₂ kritiek: {n}", "{co2} ppm – lucht nu meteen."),
+    },
+    "it": {
+        "jetzt": ("Arieggiare: {n}", "{grund} – apri la finestra per qualche minuto."),
+        "schliessen": ("Chiudere la finestra: {n}", "{grund} – puoi richiuderla."),
+        "co2krit": ("CO₂ critico: {n}", "{co2} ppm – arieggia subito."),
+    },
+    "fr": {
+        "jetzt": ("Aérer : {n}", "{grund} – ouvre la fenêtre quelques minutes."),
+        "schliessen": ("Fermer la fenêtre : {n}", "{grund} – tu peux la refermer."),
+        "co2krit": ("CO₂ critique : {n}", "{co2} ppm – aère tout de suite."),
+    },
 }
 # Gründe kommen deutsch aus raumklima.py; für Englisch die festen Teile tauschen.
 GRUND_EN = (("Feuchte", "Humidity"), ("Fenster seit", "Window open for"), (" offen", ""), ("Std.", "h"), ("Min.", "min"))
 GRUND = {"en": GRUND_EN, "es": (("Feuchte", "Humedad"), ("Fenster seit", "Ventana abierta hace"), (" offen", ""),
-                                 ("Std.", "h"), ("Min.", "min"))}
+                                 ("Std.", "h"), ("Min.", "min")),
+         "fr": (("Feuchte", "Humidité"), ("Fenster seit", "Fenêtre ouverte depuis"), (" offen", ""), ("Std.", "h"), ("Min.", "min")),
+         "it": (("Feuchte", "Umidità"), ("Fenster seit", "Finestra aperta da"), (" offen", ""), ("Std.", "h"), ("Min.", "min")),
+         "nl": (("Feuchte", "Vochtigheid"), ("Fenster seit", "Raam open sinds"), (" offen", ""), ("Std.", "u"), ("Min.", "min"))}
 
 
 def notify_services(hass: HomeAssistant) -> list[str]:

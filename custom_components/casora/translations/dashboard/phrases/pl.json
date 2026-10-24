@@ -2350,7 +2350,15 @@
   "Kein Verlauf: {name} ist kein Zahlenwert.": "Brak historii: {name} nie jest wartością liczbową.",
   "Universal-Kachel": "Kafelek uniwersalny",
   "Kein Gerät gewählt": "Nie wybrano urządzenia",
-  "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "W Studio możesz dodać wartości, historię, sterowanie i własne karty."
+  "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "W Studio możesz dodać wartości, historię, sterowanie i własne karty.",
+  "Akkukapazität": "Pojemność baterii",
+  "Distanz gesamt": "Dystans łącznie",
+  "Geladen gesamt": "Naładowano łącznie",
+  "Unterstützungsmodi": "Tryby wspomagania",
+  "eMTB+": "eMTB+",
+  "Zuletzt gesehen": "Ostatnio widziano",
+  "Software-Update": "Aktualizacja oprogramowania",
+  "Verfügbar": "Dostępna"
  },
  "patterns": [
   [
