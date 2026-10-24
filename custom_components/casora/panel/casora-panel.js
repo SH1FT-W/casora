@@ -2155,6 +2155,10 @@ const SECTIONS = [
     fields: [
       { key: "show_assist", sub: "chrome", label: "Show Assist button", type: "bool",
         boolDefault: true, auto: true, scope: "dashboard" },
+      // Badge row on more lines (#53, badges_wrap): desktop, tablet and phone; off = one row that scrolls sideways.
+      { key: "badges_wrap", sub: "chrome", label: "Wrap badges onto more lines", type: "bool",
+        boolDefault: false, auto: true, scope: "dashboard",
+        hint: "Badges that do not fit continue on the next line instead of scrolling sideways. Desktop, tablet and phone." },
       // Gespeichert als casora_hide_header (true = versteckt), angezeigt andersherum.
       { key: "casora_hide_header", sub: "chrome", label: "Show the HA header", type: "bool", invert: true,
         boolDefault: true, auto: true, scope: "dashboard" },
@@ -2478,7 +2482,20 @@ const SECTIONS = [
       ], "Popup detail"),   // one per sub-badge: what its popup shows instead of the room's totals
     ],
   },
+  {
+    // Own badges (#53): any number, each from a device or a Jinja template; the dashboard draws them after the
+    // built-in badges (casora_badge_custom via custom:casora-custom-badges, 27-eigene-badges.js).
+    label: "Own badges", bid: "custom", icon: "badge", iconColor: studioIcon("badges"), group: "badges",
+    blurb: "Badges of your own: a device's state or the text of a template.",
+    fields: [{ key: "custom_badges", label: "Own badges", type: "custombadges", always: true }],
+  },
 ];
+
+// Devices an own badge can show (any domain with a readable state).
+const CUSTOM_BADGE_DOMAINS = ["sensor", "binary_sensor", "light", "switch", "input_boolean", "input_number", "input_text",
+  "input_select", "input_datetime", "number", "select", "text", "counter", "timer", "person", "device_tracker", "climate",
+  "cover", "lock", "fan", "humidifier", "water_heater", "media_player", "vacuum", "lawn_mower", "weather", "sun", "zone",
+  "alarm_control_panel", "camera", "update", "event", "calendar", "todo", "scene", "script", "automation", "plant"];
 
 // Repeats are flattened once per section; visibility then works on units as before.
 function sectionFields(sec) {
@@ -10858,6 +10875,19 @@ class CasoraPanel extends HTMLElement {
           position:relative; z-index:3; border-radius:var(--r-m);
           background:rgba(58,58,66,0.92); box-shadow:0 8px 22px rgba(0,0,0,0.32);
         }
+        /* Own badges (#53): one block per badge inside the section card. */
+        .ownbadge { margin:6px 0 10px; padding:4px 0 6px; border-top:1px solid var(--hair, var(--casora-studio-hair, rgba(255,255,255,0.08))); }
+        .ownbadge:first-of-type { border-top:0; margin-top:0; }
+        .ownbadge-head { display:flex; align-items:center; gap:4px; min-height:30px; }
+        .ownbadge-title { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+          font-size:var(--t-foot); font-weight:600; color:var(--ink-2); }
+        .ownbadge-head .mini.icon { flex:0 0 auto; width:28px; height:28px; padding:0; display:grid; place-items:center; }
+        .ownbadge-head .mini.icon svg { width:16px; height:16px; }
+        .ownbadge-head .mini.icon[disabled] { opacity:.35; }
+        .ownbadge .row.ownbadge-tplrow { align-items:flex-start; }
+        .ownbadge textarea.ownbadge-tpl { flex:1 1 auto; min-width:0; width:100%; box-sizing:border-box; resize:vertical;
+          min-height:48px; font:var(--t-foot)/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; white-space:pre-wrap; }
+        .ownbadge .scpick { max-width:240px; }
         .scenecolor {
           width:calc(100% + 8px); box-sizing:border-box; margin:0 -4px;
           display:flex; align-items:center; gap:var(--scgap, 11px);
@@ -18004,6 +18034,12 @@ class CasoraPanel extends HTMLElement {
           return;
         }
 
+        if (f.type === "custombadges") {
+          row.remove();
+          this._customBadgesField(room, fs, f, setVar);
+          return;
+        }
+
         if (f.type === "action") {
           fs.appendChild(row);
           addHint();
@@ -23042,7 +23078,56 @@ class CasoraPanel extends HTMLElement {
       const own = String(V[b.id + "_title"] || "").trim();
       if (own) { b.label = own; b.raw = true; }
     });
+    // Own badges (#53) after the built-in ones, as casora_badge_custom draws them: device state (HA's own
+    // wording) or the template's text (rendered live, see _customBadgeText); "off"-like states dim.
+    const OFFISH = ["off", "closed", "locked", "not_home", "away", "idle", "standby", "disarmed", "paused", "docked",
+      "false", "no", "none", "0", "", "unavailable", "unknown"];
+    (Array.isArray(V.custom_badges) ? V.custom_badges : []).forEach((b, i) => {
+      if (!b || typeof b !== "object") return;
+      const ic = String(b.icon || "").trim();
+      const icon = ic && !/^mdi:/.test(ic) ? ic : "default";
+      const color = String(b.color || "").trim() || TEAL;
+      if (b.entity) {
+        const e = st(b.entity);
+        const s = String((e || {}).state || "").trim().toLowerCase();
+        if (!e || ["unavailable", "unknown", "none", ""].includes(s)) return;
+        let text = "";
+        try { text = (this._hass.formatEntityState && this._hass.formatEntityState(e)) || ""; } catch (x) { text = ""; }
+        if (!text) text = s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, " ");
+        const dim = !Number.isFinite(parseFloat(s)) && OFFISH.includes(s);
+        out.push({ id: "custom:" + i, label: String(b.name || "").trim() || nameOf(b.entity), raw: true, icon, color, dim, text, subs: [] });
+      } else if (typeof b.template === "string" && b.template.trim()) {
+        const text = this._customBadgeText(b.template);
+        out.push({ id: "custom:" + i, label: String(b.name || "").trim() || "Badge", raw: true, icon, color,
+          dim: text == null || OFFISH.includes(String(text).trim().toLowerCase()),
+          text: text == null ? "…" : (String(text).trim() || "—"), subs: [] });
+      }
+    });
     return out;
+  }
+
+  // Live text of a template badge for the preview: one render_template subscription per template, kept for
+  // the session; the first answer redraws the preview.
+  _customBadgeText(tpl) {
+    const key = String(tpl || "");
+    const cache = this._customTpl || (this._customTpl = new Map());
+    const hit = cache.get(key);
+    if (hit) return hit.text;
+    const rec = { text: null };
+    cache.set(key, rec);
+    const c = this._hass && this._hass.connection;
+    if (!c || typeof c.subscribeMessage !== "function") return null;
+    try {
+      c.subscribeMessage((msg) => {
+        if (msg && typeof msg === "object" && "result" in msg) {
+          const r = msg.result;
+          rec.text = r == null ? "" : (typeof r === "object" ? JSON.stringify(r) : String(r));
+        } else if (msg && msg.error) rec.text = "";
+        else return;
+        try { this._syncPreview(); } catch (e) { /* preview not open */ }
+      }, { type: "render_template", template: key, report_errors: true }).catch(() => { rec.text = ""; });
+    } catch (e) { rec.text = ""; }
+    return rec.text;
   }
 
   // ── layout animation ──────────────────────────────────────────────────────
@@ -25715,13 +25800,18 @@ class CasoraPanel extends HTMLElement {
       col.insertBefore(bar, gh ? gh.nextSibling : col.firstChild);
     }
     if (!this._sel) this._sceneOrderCard(room, col);
-    const cards = [...col.children].filter((c) => c.dataset && c.dataset.bid);
+    // Own badges (#53) always come last and are not part of the order list.
+    const own = col.querySelector(':scope > [data-bid="custom"]');
+    const cards = [...col.children].filter((c) => c.dataset && c.dataset.bid && c !== own);
+    if (cards.length >= 2) {
+      const order = this._badgeOrder(room);
+      order.forEach((id) => {
+        const hit = cards.find((c) => c.dataset.bid === id);
+        if (hit) col.appendChild(hit);
+      });
+    }
+    if (own) col.appendChild(own);
     if (cards.length < 2) return;
-    const order = this._badgeOrder(room);
-    order.forEach((id) => {
-      const hit = cards.find((c) => c.dataset.bid === id);
-      if (hit) col.appendChild(hit);
-    });
     if (this._sel) return;  // pushed into one badge; there is no list to sort
 
     cards.forEach((box) => {
@@ -25746,7 +25836,7 @@ class CasoraPanel extends HTMLElement {
     if (ev.button) return;
     ev.preventDefault();
     ev.stopPropagation();
-    const cards = [...col.children].filter((c) => c.dataset && c.dataset.bid);
+    const cards = [...col.children].filter((c) => c.dataset && c.dataset.bid && c.dataset.bid !== "custom");
     const me = cards.indexOf(box);
     if (me < 0) return;
     const rects = cards.map((c) => c.getBoundingClientRect());
@@ -25802,6 +25892,192 @@ class CasoraPanel extends HTMLElement {
 
   _badgeOrder(room) {
     return badgeOrderOf(((room || {}).variables || {}).badge_order);
+  }
+
+  // Own badges (#53): the list custom_badges in the room's variables, one block per badge – name, icon, color,
+  // source (a device or a Jinja template), tap (nothing, popup, go to a room). Up/down buttons order them; the
+  // dashboard draws the list after the built-in badges. write = the section's setVar (mirrors to the phone pair).
+  _customBadgesField(room, fs, f, write) {
+    const KEY = f.key;
+    const list = () => (Array.isArray(room.variables[KEY]) ? room.variables[KEY] : []).filter((b) => b && typeof b === "object");
+    const store = (next, redraw) => {
+      const clean = next.map((b) => {
+        const o = {};
+        Object.keys(b).forEach((k) => { if (b[k] !== undefined && b[k] !== null && b[k] !== "") o[k] = b[k]; });
+        return o;
+      });
+      write(KEY, clean.length ? clean : undefined, f);
+      this._markDirty();
+      this._syncPreview();
+      if (redraw) this._renderForm();
+    };
+    const patch = (i, changes, redraw) => {
+      const next = clone(list());
+      next[i] = { ...next[i], ...changes };
+      store(next, redraw);
+    };
+    const rooms = this._state.compact.rooms;
+    const mobile = (this._pair || {}).mobile || null;
+    const filterKeyOf = (r) => (mobile ? phoneKeyOf(phoneRoomKeys(mobile), r.name) : roomKeyOf(r.name));
+
+    const items = list();
+    if (!items.length) {
+      const n = document.createElement("div");
+      n.className = "hint";
+      n.textContent = "No own badges yet. Add one below – a device's state or the text of a template.";
+      fs.appendChild(n);
+    }
+    const rowOf = (label, control, cls) => {
+      const r = document.createElement("div");
+      r.className = "row" + (cls ? " " + cls : "");
+      const l = document.createElement("label");
+      l.textContent = label;
+      r.appendChild(l);
+      r.appendChild(control);
+      return r;
+    };
+    items.forEach((b, i) => {
+      const box = document.createElement("div");
+      box.className = "ownbadge";
+      box.dataset.index = String(i);
+      const head = document.createElement("div");
+      head.className = "ownbadge-head";
+      const title = document.createElement("span");
+      title.className = "ownbadge-title";
+      title.setAttribute("data-no-i18n", "");
+      title.textContent = String(b.name || "").trim() || (b.entity ? this._prettyEntity(b.entity) : "") || ("Badge " + (i + 1));
+      head.appendChild(title);
+      const mk = (cls, label, path, onClick, disabled) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "mini icon " + cls;
+        btn.title = label;
+        btn.setAttribute("aria-label", label);
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' + path + "</svg>";
+        btn.disabled = !!disabled;
+        btn.onclick = onClick;
+        return btn;
+      };
+      head.appendChild(mk("ownbadge-up", "Move up", '<path d="m6 14 6-6 6 6"/>', () => {
+        const next = clone(items); const [m] = next.splice(i, 1); next.splice(i - 1, 0, m); store(next, true);
+      }, i === 0));
+      head.appendChild(mk("ownbadge-down", "Move down", '<path d="m6 10 6 6 6-6"/>', () => {
+        const next = clone(items); const [m] = next.splice(i, 1); next.splice(i + 1, 0, m); store(next, true);
+      }, i === items.length - 1));
+      head.appendChild(mk("ownbadge-remove", "Remove badge", '<path d="M7 7l10 10M17 7L7 17"/>', () => {
+        const next = clone(items); next.splice(i, 1); store(next, true);
+        this._status("Badge removed", "ok");
+      }));
+      box.appendChild(head);
+
+      // Name – into the preview while typing.
+      const name = document.createElement("input");
+      name.value = String(b.name || "");
+      name.placeholder = b.entity ? this._prettyEntity(b.entity) : "Badge";
+      let t0 = 0;
+      const putName = () => { patch(i, { name: name.value.trim() }, false); title.textContent = name.value.trim() || name.placeholder; };
+      name.addEventListener("input", () => { clearTimeout(t0); t0 = setTimeout(() => { if (name.isConnected) putName(); }, 280); });
+      name.onchange = putName;
+      box.appendChild(rowOf("Name", name));
+
+      // Icon – the Studio's icons; "Automatic" = the device's own icon.
+      const ic = this._combo(b.icon && !/^mdi:/.test(b.icon) ? b.icon : "", [ICON_DEFAULT].concat(CASORA_ICONS), "Automatic",
+        (v) => patch(i, { icon: v === ICON_DEFAULT ? "" : v }, false), { icon: true });
+      box.appendChild(rowOf("Icon", ic.wrap));
+
+      // Color – the Casora colors as for scenes; empty = teal.
+      const pick = document.createElement("button");
+      pick.type = "button";
+      pick.className = "scpick";
+      pick.setAttribute("aria-label", "Color");
+      const val = document.createElement("span");
+      val.className = "scval";
+      const sw = document.createElement("span");
+      sw.className = "swatch";
+      const TEALC = "var(--casora-color-teal, #00C3D0)";
+      const paintColor = () => {
+        const cv = String(b.color || "");
+        sw.style.background = swatchCss(cv || TEALC) || "transparent";
+        val.textContent = cv ? colorLabel(cv) : "Teal";
+        val.classList.toggle("dim", !cv);
+      };
+      paintColor();
+      pick.appendChild(val);
+      pick.appendChild(sw);
+      pick.onclick = () => {
+        const cur = String(b.color || "");
+        const menu = [{ id: "", label: "Teal (default)", checked: !cur }];
+        accentsShown(cur).forEach((acc) => menu.push({ id: acc.id, label: accentLabel(acc), swatch: swatchCss(acc.id), checked: cur === acc.id }));
+        this._menuAt(pick, menu, (id) => { b.color = id; patch(i, { color: id }, false); paintColor(); });
+      };
+      box.appendChild(rowOf("Color", pick));
+
+      // Source: a device (its state with unit) or a template (its text).
+      const src = b.template && !b.entity ? "template" : "entity";
+      const srcPick = this._combo(src, ["entity", "template"], "", (v) => {
+        if (v === "template") patch(i, { entity: "", template: b.template || "" }, true);
+        else patch(i, { template: "", entity: b.entity || "" }, true);
+      }, { fixed: true, labels: { entity: "Device", template: "Template" } });
+      box.appendChild(rowOf("Source", srcPick.wrap));
+      if (src === "entity") {
+        const ent = this._combo(String(b.entity || ""), this._rankedEntityList(CUSTOM_BADGE_DOMAINS, null, room, b.entity),
+          pickHint(["sensor"]), (v) => patch(i, { entity: v }, true), { clearable: true, entity: true });
+        box.appendChild(rowOf("Device", ent.wrap));
+      } else {
+        const ta = document.createElement("textarea");
+        ta.className = "ownbadge-tpl";
+        ta.rows = 2;
+        ta.spellcheck = false;
+        ta.value = String(b.template || "");
+        ta.placeholder = "{{ states('sensor.outdoor_temperature') }} °C";
+        ta.setAttribute("aria-label", "Template");
+        ta.onchange = () => patch(i, { template: ta.value.trim() }, false);
+        box.appendChild(rowOf("Template", ta, "ownbadge-tplrow"));
+        const h = document.createElement("div");
+        h.className = "hint";
+        h.textContent = "A Home Assistant template (Jinja). Its text is the badge's value, rendered live.";
+        box.appendChild(h);
+      }
+
+      // Tap: nothing, the device's popup, or a room's page.
+      const tap = b.tap === "navigate" || b.tap === "popup" ? b.tap : "none";
+      const tapOpts = src === "entity" ? ["none", "popup", "navigate"] : ["none", "navigate"];
+      const tapPick = this._combo(tap, tapOpts, "", (v) => patch(i, { tap: v === "none" ? "" : v }, true),
+        { fixed: true, labels: { none: "Nothing", popup: "Popup", navigate: "Go to room" } });
+      box.appendChild(rowOf("Tap", tapPick.wrap));
+      if (tap === "navigate") {
+        const paths = rooms.map((r) => r.path);
+        const labels = {};
+        rooms.forEach((r) => { labels[r.path] = this._roomLabel(r); });
+        const rp = this._combo(String(b.navigate || ""), paths, "Choose a room", (v) => {
+          const r = rooms.find((x) => x.path === v);
+          patch(i, { navigate: v, navigate_filter: r ? filterKeyOf(r) : "" }, false);
+        }, { fixed: true, labels });
+        box.appendChild(rowOf("Room", rp.wrap));
+      }
+      fs.appendChild(box);
+    });
+
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "scadd fieldadd";
+    add.innerHTML = '<span class="scadddot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+      + ' stroke-width="2.4" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg></span>'
+      + '<span class="scaddname">Add badge</span>';
+    add.onclick = () => this._menuAt(add, [
+      { id: "entity", label: "From a device" },
+      { id: "template", label: "From a template" },
+    ], (id) => {
+      if (!id) return;
+      store(clone(items).concat([id === "template" ? { template: "" } : { entity: "" }]), true);
+    });
+    fs.appendChild(add);
+    if (f.hint) {
+      const h = document.createElement("div");
+      h.className = "hint";
+      h.textContent = f.hint;
+      fs.appendChild(h);
+    }
   }
 
   // Szenen als Badge (nur Home, show_scenes) steht in der Reihenfolge-Liste wie die sechs:

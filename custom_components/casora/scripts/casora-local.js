@@ -90,6 +90,7 @@ const MODULES = [
   '24-klingel',
   '25-kaffee',
   '26-haustier',
+  '27-eigene-badges',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());

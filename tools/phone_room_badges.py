@@ -94,8 +94,25 @@ def _row_cards(room: dict) -> list:
             # The phone room page sits in the view „home“ – it is still a room
             # (security „Automatisch“ = spelled out, 07.10.2026).
             c.setdefault("variables", {})["place"] = "room"
+        if c.get("type") == "custom:casora-custom-badges":
+            # Own badges (#53): "go to room" sets the phone's filter instead of navigating.
+            c["place"] = "phone"
         out.append(c)
     return out
+
+
+# Wrap option of the badge row (badges_wrap, #53): the phone room page wraps like the desktop header.
+WRAP_KEYS = ("display", "flex-wrap", "row-gap")
+
+
+def _row_layout(room: dict, row: dict) -> None:
+    lay = room["custom_fields"]["badges"]["card"].get("layout") or {}
+    target = row.setdefault("layout", {})
+    for k in WRAP_KEYS:
+        if k in lay:
+            target[k] = _tx(lay[k])
+        else:
+            target.pop(k, None)
 
 
 def _sub_display(kind: str) -> str:
@@ -132,6 +149,7 @@ def derive(templates: dict) -> bool:
         if isinstance(es, str) and ":host{order:99;}" not in es:
             m["extra_styles"] = es.replace("return (hide ?", "return ':host{order:99;}\\n' + (hide ?", 1)
     row["cards"] = _row_cards(room) + motion
+    _row_layout(room, row)
 
     # Sub-rows, after the row in this order.
     for k in [k for k in cf if k.startswith("room_sub_")]:

@@ -571,11 +571,14 @@
     #pane .brow.mhid .bgrip { margin-left:8px; }
   `;
 
-  const BADGES = [["climate", "Climate"], ["lights", "Lights"], ["people", "People"], ["media", "Media"], ["security", "Security"], ["energy", "Energy"]];
+  const BADGES = [["climate", "Climate"], ["lights", "Lights"], ["people", "People"], ["media", "Media"], ["security", "Security"], ["energy", "Energy"],
+    ["custom", "Own badges"]];
   const BADGE_KEY = { climate: /^(climate_entity|temp_sensor|humidity_sensor|quality_sensor)/, lights: /^light_(entity|group)/,
-    people: /^presence_entity/, media: /^(media_|now_playing_|psn_)/, security: /^security_/, energy: /^energy_(entity|power|cost)/ };
+    people: /^presence_entity/, media: /^(media_|now_playing_|psn_)/, security: /^security_/, energy: /^energy_(entity|power|cost)/,
+    custom: /^custom_badges$/ };
   const BADGE_WORDS = { climate: "klima temperatur luft feuchte", lights: "licht lampen beleuchtung", people: "personen anwesenheit leute",
-    media: "medien musik fernseher tv", security: "sicherheit schloss tür kamera alarm kurz ausführlich ausfuehrlich ausgeschrieben unterzeile symbole short detailed summary", energy: "energie strom verbrauch" };
+    media: "medien musik fernseher tv", security: "sicherheit schloss tür kamera alarm kurz ausführlich ausfuehrlich ausgeschrieben unterzeile symbole short detailed summary", energy: "energie strom verbrauch",
+    custom: "eigene badges vorlage template jinja eigenes badge own custom" };
 
   customElements.whenDefined("casora-panel").then(() => {
     const P = customElements.get("casora-panel").prototype;

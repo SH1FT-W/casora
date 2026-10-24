@@ -5881,6 +5881,12 @@
         "entity_13": "[[[ return variables.media_player_10 ]]]",
         "title": "[[[ return variables.media_title ]]]"
        }
+      },
+      {
+       "type": "custom:casora-custom-badges",
+       "badges": "[[[ const _hv = variables.casora_hv; const l = _hv ? _hv.custom_badges : variables.custom_badges; return Array.isArray(l) ? l : [] ]]]",
+       "enabled": "[[[ const _hv = variables.casora_hv; return !_hv || (window.casoraSeen?window.casoraSeen(_hv,'custom',user,true):true)!==false ]]]",
+       "place": "phone"
       }
      ],
      "layout": {
@@ -5892,7 +5898,10 @@
       "justify-content": "start",
       "justify-items": "start",
       "margin": 0,
-      "padding": 0
+      "padding": 0,
+      "display": "[[[ const _hv = variables.casora_hv; return (_hv ? _hv.badges_wrap : variables.badges_wrap) === true ? 'flex' : 'grid' ]]]",
+      "flex-wrap": "wrap",
+      "row-gap": "var(--badge-gap-current, var(--badge-gap, 10px))"
      },
      "layout_type": "custom:grid-layout",
      "type": "custom:layout-card"
@@ -5902,7 +5911,7 @@
   "double_tap_action": {
    "action": "none"
   },
-  "extra_styles": ":host {\n  position: sticky !important;\n  top: -200px !important;\n  z-index: 100 !important;\n  display: block !important;\n}\n:host(.casora-navbar-card.casora-navbar-card):active {\n  filter: none !important;\n  -webkit-filter: none !important;\n}\n:host { filter: none !important; -webkit-filter: none !important; }\nha-card.button-card-main {\n  background: transparent !important;\n  backdrop-filter: none !important;\n  -webkit-backdrop-filter: none !important;\n  box-shadow: none !important;\n  border: none !important;\n  overflow: visible !important;\n  padding: 0 !important;\n  contain: none !important;\n  isolation: auto !important;\n  will-change: auto !important;\n  transition: none !important;\n  filter: none !important;\n  -webkit-filter: none !important;\n}\n.button-card-main, .button-card-content, #customfields {\n  overflow: visible !important;\n  contain: none !important;\n  isolation: auto !important;\n}\n\n/* Handy: zu breite Badge-Reihen blättern seitwärts (30.09.2026). Die innere Karte ist so breit\n   wie ihre Badges (mindestens die Reihe), damit die Reihe selbst scrollt und nicht das Raster\n   darin über den Rand ragt. Der rechte Abstand sitzt an der inneren Karte, sonst fehlt er\n   am Ende des Scrollbereichs. Weiche Ränder setzt window._casoraBadgeRows (01-basis.js). */\n#badges > *{width:max-content!important;min-width:100%!important;display:block!important;box-sizing:border-box!important;padding-right:var(--casora-rail-left, 16px)!important}\n#badges::-webkit-scrollbar{display:none!important}\n#badges{touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}\n#badges[data-cs-fade=\"r\"]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}\n#badges[data-cs-fade=\"l\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px);mask-image:linear-gradient(to right,transparent,#000 32px)}\n#badges[data-cs-fade=\"l r\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent)}\n",
+  "extra_styles": ":host {\n  position: sticky !important;\n  top: -200px !important;\n  z-index: 100 !important;\n  display: block !important;\n}\n:host(.casora-navbar-card.casora-navbar-card):active {\n  filter: none !important;\n  -webkit-filter: none !important;\n}\n:host { filter: none !important; -webkit-filter: none !important; }\nha-card.button-card-main {\n  background: transparent !important;\n  backdrop-filter: none !important;\n  -webkit-backdrop-filter: none !important;\n  box-shadow: none !important;\n  border: none !important;\n  overflow: visible !important;\n  padding: 0 !important;\n  contain: none !important;\n  isolation: auto !important;\n  will-change: auto !important;\n  transition: none !important;\n  filter: none !important;\n  -webkit-filter: none !important;\n}\n.button-card-main, .button-card-content, #customfields {\n  overflow: visible !important;\n  contain: none !important;\n  isolation: auto !important;\n}\n\n/* Handy: zu breite Badge-Reihen blättern seitwärts (30.09.2026). Die innere Karte ist so breit\n   wie ihre Badges (mindestens die Reihe), damit die Reihe selbst scrollt und nicht das Raster\n   darin über den Rand ragt. Der rechte Abstand sitzt an der inneren Karte, sonst fehlt er\n   am Ende des Scrollbereichs. Weiche Ränder setzt window._casoraBadgeRows (01-basis.js). */\n#badges > *{width:var(--casora-badge-row-child-w, max-content)!important;min-width:100%!important;display:block!important;box-sizing:border-box!important;padding-right:var(--casora-rail-left, 16px)!important}\n#badges::-webkit-scrollbar{display:none!important}\n#badges{touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}\n#badges[data-cs-fade=\"r\"]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}\n#badges[data-cs-fade=\"l\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px);mask-image:linear-gradient(to right,transparent,#000 32px)}\n#badges[data-cs-fade=\"l r\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent)}\n",
   "hold_action": {
    "action": "none"
   },
@@ -5996,6 +6005,9 @@
      },
      {
       "display": "block"
+     },
+     {
+      "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _hv = variables.casora_hv; return (_hv ? _hv.badges_wrap : variables.badges_wrap) === true ? '100%' : 'max-content' ]]]"
      }
     ]
    },
@@ -6102,7 +6114,9 @@
    "security_title": null,
    "media_title": null,
    "people_title": null,
-   "casora_hv": "[[[\n  // Badge variables of the desktop's overview room (casora-core.js, casoraPhoneRoom.home): \"hidden\" and\n  // \"Who sees this?\" as on the desktop. null (older server, no desktop dashboard): every badge as before.\n  const f = states['input_select.casora_mobile_filter']?.state;\n  return window.casoraPhoneRoom && window.casoraPhoneRoom.home ? window.casoraPhoneRoom.home() : null;\n]]]\n"
+   "casora_hv": "[[[\n  // Badge variables of the desktop's overview room (casora-core.js, casoraPhoneRoom.home): \"hidden\" and\n  // \"Who sees this?\" as on the desktop. null (older server, no desktop dashboard): every badge as before.\n  const f = states['input_select.casora_mobile_filter']?.state;\n  return window.casoraPhoneRoom && window.casoraPhoneRoom.home ? window.casoraPhoneRoom.home() : null;\n]]]\n",
+   "custom_badges": null,
+   "badges_wrap": null
   }
  },
  "casora_mobile_header": {
@@ -7623,6 +7637,12 @@
        }
       },
       {
+       "type": "custom:casora-custom-badges",
+       "badges": "[[[ const _rv = variables.casora_rv || {}; return Array.isArray(_rv.custom_badges) ? _rv.custom_badges : [] ]]]",
+       "enabled": "[[[ const _rv = variables.casora_rv || {}; return (window.casoraSeen?window.casoraSeen(_rv,'custom',user,true):true)!==false ]]]",
+       "place": "phone"
+      },
+      {
        "entity": "[[[\n  const f = states['input_select.casora_mobile_filter']?.state;\n  return variables.room_chips?.[f]?.motion_entity || null;\n]]]\n",
        "extra_styles": "[[[\n  /* Ohne Bewegungsmelder auch den Platz in der Chip-Reihe räumen – sonst steht ein leeres\n     Grid-Element da und der Abstand davor wird doppelt so groß (04.10.2026). */\n  const f = states['input_select.casora_mobile_filter']?.state;\n  const hide = !variables.room_chips?.[f]?.motion_entity;\n  return ':host{order:99;}\\n' + (hide ? ':host{display:none !important;}\\n' : '') + `#img-cell, .img-cell{ position: relative; }\n\n#img-cell #icon, .img-cell #icon{\n  color: transparent !important;\n  opacity: 0 !important;\n}\n\n#img-cell::before,\n.img-cell::before{\n  content: '';\n  position: absolute;\n  inset: 0;\n  background-color: var(--casora-badge-icon-fg, var(--primary-text-color)) !important;\n\n  -webkit-mask: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3C%21--Generator%3A%20Apple%20Native%20CoreSVG%20341--%3E%0A%3C%21DOCTYPE%20svg%0APUBLIC%20%22-%2F%2FW3C%2F%2FDTD%20SVG%201.1%2F%2FEN%22%0A%20%20%20%20%20%20%20%22http%3A%2F%2Fwww.w3.org%2FGraphics%2FSVG%2F1.1%2FDTD%2Fsvg11.dtd%22%3E%0A%3Csvg%20version%3D%221.1%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20viewBox%3D%220%200%2028.9805%2027.2461%22%3E%0A%20%3Cg%3E%0A%20%20%3Crect%20height%3D%2227.2461%22%20opacity%3D%220%22%20width%3D%2228.9805%22%20x%3D%220%22%20y%3D%220%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M4.92188%204.76953L11.6836%204.76953C12.0938%204.76953%2012.4219%204.42969%2012.4219%204.00781C12.4219%203.58594%2012.0938%203.23438%2011.6836%203.23438L4.92188%203.23438C4.5%203.23438%204.18359%203.58594%204.18359%204.00781C4.18359%204.42969%204.5%204.76953%204.92188%204.76953ZM0.726562%2010.6406L8.75391%2010.6406C9.17578%2010.6406%209.49219%2010.3008%209.49219%209.87891C9.49219%209.45703%209.17578%209.10547%208.75391%209.10547L0.726562%209.10547C0.316406%209.10547%200%209.46875%200%209.87891C0%2010.2891%200.316406%2010.6406%200.726562%2010.6406ZM4.23047%2016.5117L8.69531%2016.5117C9.10547%2016.5117%209.42188%2016.1719%209.42188%2015.75C9.42188%2015.3281%209.10547%2014.9766%208.69531%2014.9766L4.23047%2014.9766C3.80859%2014.9766%203.49219%2015.3281%203.49219%2015.75C3.49219%2016.1719%203.80859%2016.5117%204.23047%2016.5117ZM1.14844%2022.3125L7.26562%2022.3125C7.67578%2022.3125%207.99219%2021.9727%207.99219%2021.5508C7.99219%2021.1289%207.67578%2020.7773%207.26562%2020.7773L1.14844%2020.7773C0.738281%2020.7773%200.421875%2021.1289%200.421875%2021.5508C0.421875%2021.9727%200.738281%2022.3125%201.14844%2022.3125Z%22%20fill%3D%22white%22%20fill-opacity%3D%220.425%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M14.1211%2026.332L17.8125%2021.9375C18.1758%2021.5156%2018.2227%2021.3984%2018.3633%2020.9531L18.668%2020.0508L16.6875%2017.5664L16.0664%2020.4141L12.4102%2024.7383C11.2383%2026.1211%2013.1484%2027.4805%2014.1211%2026.332ZM23.1211%2025.9688C23.8711%2027.5156%2026.1445%2026.5664%2025.3242%2024.9023L22.8164%2019.8164C22.6289%2019.4297%2022.3477%2019.0195%2022.125%2018.6914L20.5195%2016.418L20.6367%2016.0898C21.082%2014.8242%2021.2227%2014.0508%2021.3164%2012.7852L21.5625%209.23438C21.6797%207.54688%2020.6836%206.25781%2018.9609%206.25781C17.6602%206.25781%2016.7812%206.91406%2015.5859%208.08594L13.7109%209.9375C13.0898%2010.5469%2012.8906%2011.0391%2012.832%2011.8359L12.6094%2014.7422C12.5508%2015.4688%2012.9609%2015.9961%2013.6406%2016.0195C14.3203%2016.0664%2014.7305%2015.668%2014.8008%2014.8828L15.082%2011.6953L15.9844%2010.875C16.3125%2010.582%2016.7461%2010.7812%2016.7109%2011.1094L16.5117%2013.8164C16.4062%2015.1758%2016.7227%2015.8203%2017.6719%2016.9922L20.1562%2020.1211C20.4023%2020.4375%2020.4375%2020.5664%2020.543%2020.7539ZM27.3984%2011.0742L24.5508%2011.0742L22.6992%209.01172L22.5117%2012L23.2617%2012.75C23.6719%2013.1602%2024.0234%2013.2773%2024.75%2013.2773L27.3984%2013.2773C28.1367%2013.2773%2028.6289%2012.8555%2028.6289%2012.1641C28.6289%2011.5078%2028.125%2011.0742%2027.3984%2011.0742ZM20.332%205.15625C21.7617%205.15625%2022.9102%204.00781%2022.9102%202.57812C22.9102%201.14844%2021.7617%200%2020.332%200C18.9023%200%2017.7539%201.14844%2017.7539%202.57812C17.7539%204.00781%2018.9023%205.15625%2020.332%205.15625Z%22%20fill%3D%22white%22%20fill-opacity%3D%220.85%22%2F%3E%0A%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A') no-repeat center / auto 70%;\n  mask: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3C%21--Generator%3A%20Apple%20Native%20CoreSVG%20341--%3E%0A%3C%21DOCTYPE%20svg%0APUBLIC%20%22-%2F%2FW3C%2F%2FDTD%20SVG%201.1%2F%2FEN%22%0A%20%20%20%20%20%20%20%22http%3A%2F%2Fwww.w3.org%2FGraphics%2FSVG%2F1.1%2FDTD%2Fsvg11.dtd%22%3E%0A%3Csvg%20version%3D%221.1%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20viewBox%3D%220%200%2028.9805%2027.2461%22%3E%0A%20%3Cg%3E%0A%20%20%3Crect%20height%3D%2227.2461%22%20opacity%3D%220%22%20width%3D%2228.9805%22%20x%3D%220%22%20y%3D%220%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M4.92188%204.76953L11.6836%204.76953C12.0938%204.76953%2012.4219%204.42969%2012.4219%204.00781C12.4219%203.58594%2012.0938%203.23438%2011.6836%203.23438L4.92188%203.23438C4.5%203.23438%204.18359%203.58594%204.18359%204.00781C4.18359%204.42969%204.5%204.76953%204.92188%204.76953ZM0.726562%2010.6406L8.75391%2010.6406C9.17578%2010.6406%209.49219%2010.3008%209.49219%209.87891C9.49219%209.45703%209.17578%209.10547%208.75391%209.10547L0.726562%209.10547C0.316406%209.10547%200%209.46875%200%209.87891C0%2010.2891%200.316406%2010.6406%200.726562%2010.6406ZM4.23047%2016.5117L8.69531%2016.5117C9.10547%2016.5117%209.42188%2016.1719%209.42188%2015.75C9.42188%2015.3281%209.10547%2014.9766%208.69531%2014.9766L4.23047%2014.9766C3.80859%2014.9766%203.49219%2015.3281%203.49219%2015.75C3.49219%2016.1719%203.80859%2016.5117%204.23047%2016.5117ZM1.14844%2022.3125L7.26562%2022.3125C7.67578%2022.3125%207.99219%2021.9727%207.99219%2021.5508C7.99219%2021.1289%207.67578%2020.7773%207.26562%2020.7773L1.14844%2020.7773C0.738281%2020.7773%200.421875%2021.1289%200.421875%2021.5508C0.421875%2021.9727%200.738281%2022.3125%201.14844%2022.3125Z%22%20fill%3D%22white%22%20fill-opacity%3D%220.425%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M14.1211%2026.332L17.8125%2021.9375C18.1758%2021.5156%2018.2227%2021.3984%2018.3633%2020.9531L18.668%2020.0508L16.6875%2017.5664L16.0664%2020.4141L12.4102%2024.7383C11.2383%2026.1211%2013.1484%2027.4805%2014.1211%2026.332ZM23.1211%2025.9688C23.8711%2027.5156%2026.1445%2026.5664%2025.3242%2024.9023L22.8164%2019.8164C22.6289%2019.4297%2022.3477%2019.0195%2022.125%2018.6914L20.5195%2016.418L20.6367%2016.0898C21.082%2014.8242%2021.2227%2014.0508%2021.3164%2012.7852L21.5625%209.23438C21.6797%207.54688%2020.6836%206.25781%2018.9609%206.25781C17.6602%206.25781%2016.7812%206.91406%2015.5859%208.08594L13.7109%209.9375C13.0898%2010.5469%2012.8906%2011.0391%2012.832%2011.8359L12.6094%2014.7422C12.5508%2015.4688%2012.9609%2015.9961%2013.6406%2016.0195C14.3203%2016.0664%2014.7305%2015.668%2014.8008%2014.8828L15.082%2011.6953L15.9844%2010.875C16.3125%2010.582%2016.7461%2010.7812%2016.7109%2011.1094L16.5117%2013.8164C16.4062%2015.1758%2016.7227%2015.8203%2017.6719%2016.9922L20.1562%2020.1211C20.4023%2020.4375%2020.4375%2020.5664%2020.543%2020.7539ZM27.3984%2011.0742L24.5508%2011.0742L22.6992%209.01172L22.5117%2012L23.2617%2012.75C23.6719%2013.1602%2024.0234%2013.2773%2024.75%2013.2773L27.3984%2013.2773C28.1367%2013.2773%2028.6289%2012.8555%2028.6289%2012.1641C28.6289%2011.5078%2028.125%2011.0742%2027.3984%2011.0742ZM20.332%205.15625C21.7617%205.15625%2022.9102%204.00781%2022.9102%202.57812C22.9102%201.14844%2021.7617%200%2020.332%200C18.9023%200%2017.7539%201.14844%2017.7539%202.57812C17.7539%204.00781%2018.9023%205.15625%2020.332%205.15625Z%22%20fill%3D%22white%22%20fill-opacity%3D%220.85%22%2F%3E%0A%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A') no-repeat center / auto 70%;\n\n  transform: translateZ(0);\n}\n`;\n]]]\n",
        "icon": "mdi:motion-sensor",
@@ -7656,7 +7676,10 @@
       "grid-template-columns": "none",
       "justify-content": "start",
       "margin": 0,
-      "padding": 0
+      "padding": 0,
+      "display": "[[[ const _rv = variables.casora_rv || {}; return _rv.badges_wrap === true ? 'flex' : 'grid' ]]]",
+      "flex-wrap": "wrap",
+      "row-gap": "var(--badge-gap-current, var(--badge-gap, 10px))"
      },
      "layout_type": "custom:grid-layout",
      "type": "custom:layout-card"
@@ -8596,7 +8619,7 @@
    "action": "none"
   },
   "entity": "input_select.casora_mobile_filter",
-  "extra_styles": ":host(.casora-navbar-card.casora-navbar-card):active{filter:none!important;-webkit-filter:none!important}\n:host{position:sticky!important;top:-9999px!important;filter:none!important;-webkit-filter:none!important}\n#aspect-ratio{display:block!important;min-width:0!important;min-height:0!important}\nha-card.button-card-main{background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important;border:none!important;overflow:visible!important;padding:0!important;contain:none!important;isolation:auto!important;will-change:auto!important;transition:none!important}\n.button-card-main,.button-card-content,#customfields{overflow:visible!important;contain:none!important;isolation:auto!important}\n\n/* Handy: zu breite Badge-Reihen blättern seitwärts (30.09.2026). Die innere Karte ist so breit\n   wie ihre Badges (mindestens die Reihe), damit die Reihe selbst scrollt und nicht das Raster\n   darin über den Rand ragt. Der rechte Abstand sitzt an der inneren Karte, sonst fehlt er\n   am Ende des Scrollbereichs. Weiche Ränder setzt window._casoraBadgeRows (01-basis.js). */\n#climate_row > *,#security_row > *,#energy_row > *,#rooms_row > *,#room_sub_climate > *,#room_sub_security > *,#room_sub_lights > *,#room_sub_presence > *,#room_sub_energy > *,#room_sub_media > *{width:max-content!important;min-width:100%!important;display:block!important;box-sizing:border-box!important;padding-right:var(--casora-rail-left, 16px)!important}\n#climate_row::-webkit-scrollbar,#security_row::-webkit-scrollbar,#energy_row::-webkit-scrollbar,#rooms_row::-webkit-scrollbar,#room_sub_climate::-webkit-scrollbar,#room_sub_security::-webkit-scrollbar,#room_sub_lights::-webkit-scrollbar,#room_sub_presence::-webkit-scrollbar,#room_sub_energy::-webkit-scrollbar,#room_sub_media::-webkit-scrollbar{display:none!important}\n#climate_row,#security_row,#energy_row,#rooms_row,#room_sub_climate,#room_sub_security,#room_sub_lights,#room_sub_presence,#room_sub_energy,#room_sub_media{touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}\n#climate_row[data-cs-fade=\"r\"],#security_row[data-cs-fade=\"r\"],#energy_row[data-cs-fade=\"r\"],#rooms_row[data-cs-fade=\"r\"],#room_sub_climate[data-cs-fade=\"r\"],#room_sub_security[data-cs-fade=\"r\"],#room_sub_lights[data-cs-fade=\"r\"],#room_sub_presence[data-cs-fade=\"r\"],#room_sub_energy[data-cs-fade=\"r\"],#room_sub_media[data-cs-fade=\"r\"]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}\n#climate_row[data-cs-fade=\"l\"],#security_row[data-cs-fade=\"l\"],#energy_row[data-cs-fade=\"l\"],#rooms_row[data-cs-fade=\"l\"],#room_sub_climate[data-cs-fade=\"l\"],#room_sub_security[data-cs-fade=\"l\"],#room_sub_lights[data-cs-fade=\"l\"],#room_sub_presence[data-cs-fade=\"l\"],#room_sub_energy[data-cs-fade=\"l\"],#room_sub_media[data-cs-fade=\"l\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px);mask-image:linear-gradient(to right,transparent,#000 32px)}\n#climate_row[data-cs-fade=\"l r\"],#security_row[data-cs-fade=\"l r\"],#energy_row[data-cs-fade=\"l r\"],#rooms_row[data-cs-fade=\"l r\"],#room_sub_climate[data-cs-fade=\"l r\"],#room_sub_security[data-cs-fade=\"l r\"],#room_sub_lights[data-cs-fade=\"l r\"],#room_sub_presence[data-cs-fade=\"l r\"],#room_sub_energy[data-cs-fade=\"l r\"],#room_sub_media[data-cs-fade=\"l r\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent)}\n",
+  "extra_styles": ":host(.casora-navbar-card.casora-navbar-card):active{filter:none!important;-webkit-filter:none!important}\n:host{position:sticky!important;top:-9999px!important;filter:none!important;-webkit-filter:none!important}\n#aspect-ratio{display:block!important;min-width:0!important;min-height:0!important}\nha-card.button-card-main{background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important;border:none!important;overflow:visible!important;padding:0!important;contain:none!important;isolation:auto!important;will-change:auto!important;transition:none!important}\n.button-card-main,.button-card-content,#customfields{overflow:visible!important;contain:none!important;isolation:auto!important}\n\n/* Handy: zu breite Badge-Reihen blättern seitwärts (30.09.2026). Die innere Karte ist so breit\n   wie ihre Badges (mindestens die Reihe), damit die Reihe selbst scrollt und nicht das Raster\n   darin über den Rand ragt. Der rechte Abstand sitzt an der inneren Karte, sonst fehlt er\n   am Ende des Scrollbereichs. Weiche Ränder setzt window._casoraBadgeRows (01-basis.js). */\n#climate_row > *,#security_row > *,#energy_row > *,#rooms_row > *,#room_sub_climate > *,#room_sub_security > *,#room_sub_lights > *,#room_sub_presence > *,#room_sub_energy > *,#room_sub_media > *{width:var(--casora-badge-row-child-w, max-content)!important;min-width:100%!important;display:block!important;box-sizing:border-box!important;padding-right:var(--casora-rail-left, 16px)!important}\n#climate_row::-webkit-scrollbar,#security_row::-webkit-scrollbar,#energy_row::-webkit-scrollbar,#rooms_row::-webkit-scrollbar,#room_sub_climate::-webkit-scrollbar,#room_sub_security::-webkit-scrollbar,#room_sub_lights::-webkit-scrollbar,#room_sub_presence::-webkit-scrollbar,#room_sub_energy::-webkit-scrollbar,#room_sub_media::-webkit-scrollbar{display:none!important}\n#climate_row,#security_row,#energy_row,#rooms_row,#room_sub_climate,#room_sub_security,#room_sub_lights,#room_sub_presence,#room_sub_energy,#room_sub_media{touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}\n#climate_row[data-cs-fade=\"r\"],#security_row[data-cs-fade=\"r\"],#energy_row[data-cs-fade=\"r\"],#rooms_row[data-cs-fade=\"r\"],#room_sub_climate[data-cs-fade=\"r\"],#room_sub_security[data-cs-fade=\"r\"],#room_sub_lights[data-cs-fade=\"r\"],#room_sub_presence[data-cs-fade=\"r\"],#room_sub_energy[data-cs-fade=\"r\"],#room_sub_media[data-cs-fade=\"r\"]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}\n#climate_row[data-cs-fade=\"l\"],#security_row[data-cs-fade=\"l\"],#energy_row[data-cs-fade=\"l\"],#rooms_row[data-cs-fade=\"l\"],#room_sub_climate[data-cs-fade=\"l\"],#room_sub_security[data-cs-fade=\"l\"],#room_sub_lights[data-cs-fade=\"l\"],#room_sub_presence[data-cs-fade=\"l\"],#room_sub_energy[data-cs-fade=\"l\"],#room_sub_media[data-cs-fade=\"l\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px);mask-image:linear-gradient(to right,transparent,#000 32px)}\n#climate_row[data-cs-fade=\"l r\"],#security_row[data-cs-fade=\"l r\"],#energy_row[data-cs-fade=\"l r\"],#rooms_row[data-cs-fade=\"l r\"],#room_sub_climate[data-cs-fade=\"l r\"],#room_sub_security[data-cs-fade=\"l r\"],#room_sub_lights[data-cs-fade=\"l r\"],#room_sub_presence[data-cs-fade=\"l r\"],#room_sub_energy[data-cs-fade=\"l r\"],#room_sub_media[data-cs-fade=\"l r\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent)}\n",
   "hold_action": {
    "action": "none"
   },
@@ -8813,6 +8836,9 @@
       "height": "auto"
      },
      {
+      "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _rv = variables.casora_rv || {}; return _rv.badges_wrap === true ? '100%' : 'max-content' ]]]"
+     },
+     {
       "--casora-badge-order-security": "[[[ const _rv = variables.casora_rv || {}; \n  // Standard wie das Studio (BADGE_ORDER_IDS): gespeicherte Reihenfolge zuerst, was fehlt, danach.\n  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media'];\n  const o = (Array.isArray(_rv.badge_order) ? _rv.badge_order : []).filter((x) => D.includes(x));\n  D.forEach((x) => { if (!o.includes(x)) o.push(x); });\n  return o.indexOf('security') + 1;\n]]]\n"
      },
      {
@@ -8940,6 +8966,9 @@
       "height": "auto"
      },
      {
+      "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _rv = variables.casora_rv || {}; return _rv.badges_wrap === true ? '100%' : 'max-content' ]]]"
+     },
+     {
       "--casora-badge-order-security": "[[[ const _rv = variables.casora_rv || {}; \n  // Standard wie das Studio (BADGE_ORDER_IDS): gespeicherte Reihenfolge zuerst, was fehlt, danach.\n  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media'];\n  const o = (Array.isArray(_rv.badge_order) ? _rv.badge_order : []).filter((x) => D.includes(x));\n  D.forEach((x) => { if (!o.includes(x)) o.push(x); });\n  return o.indexOf('security') + 1;\n]]]\n"
      },
      {
@@ -9015,6 +9044,9 @@
      },
      {
       "height": "auto"
+     },
+     {
+      "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _rv = variables.casora_rv || {}; return _rv.badges_wrap === true ? '100%' : 'max-content' ]]]"
      },
      {
       "--casora-badge-order-security": "[[[ const _rv = variables.casora_rv || {}; \n  // Standard wie das Studio (BADGE_ORDER_IDS): gespeicherte Reihenfolge zuerst, was fehlt, danach.\n  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media'];\n  const o = (Array.isArray(_rv.badge_order) ? _rv.badge_order : []).filter((x) => D.includes(x));\n  D.forEach((x) => { if (!o.includes(x)) o.push(x); });\n  return o.indexOf('security') + 1;\n]]]\n"
@@ -9094,6 +9126,9 @@
       "height": "auto"
      },
      {
+      "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _rv = variables.casora_rv || {}; return _rv.badges_wrap === true ? '100%' : 'max-content' ]]]"
+     },
+     {
       "--casora-badge-order-security": "[[[ const _rv = variables.casora_rv || {}; \n  // Standard wie das Studio (BADGE_ORDER_IDS): gespeicherte Reihenfolge zuerst, was fehlt, danach.\n  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media'];\n  const o = (Array.isArray(_rv.badge_order) ? _rv.badge_order : []).filter((x) => D.includes(x));\n  D.forEach((x) => { if (!o.includes(x)) o.push(x); });\n  return o.indexOf('security') + 1;\n]]]\n"
      },
      {
@@ -9169,6 +9204,9 @@
      },
      {
       "height": "auto"
+     },
+     {
+      "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _rv = variables.casora_rv || {}; return _rv.badges_wrap === true ? '100%' : 'max-content' ]]]"
      },
      {
       "--casora-badge-order-security": "[[[ const _rv = variables.casora_rv || {}; \n  // Standard wie das Studio (BADGE_ORDER_IDS): gespeicherte Reihenfolge zuerst, was fehlt, danach.\n  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media'];\n  const o = (Array.isArray(_rv.badge_order) ? _rv.badge_order : []).filter((x) => D.includes(x));\n  D.forEach((x) => { if (!o.includes(x)) o.push(x); });\n  return o.indexOf('security') + 1;\n]]]\n"
@@ -9248,6 +9286,9 @@
       "height": "auto"
      },
      {
+      "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _rv = variables.casora_rv || {}; return _rv.badges_wrap === true ? '100%' : 'max-content' ]]]"
+     },
+     {
       "--casora-badge-order-security": "[[[ const _rv = variables.casora_rv || {}; \n  // Standard wie das Studio (BADGE_ORDER_IDS): gespeicherte Reihenfolge zuerst, was fehlt, danach.\n  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media'];\n  const o = (Array.isArray(_rv.badge_order) ? _rv.badge_order : []).filter((x) => D.includes(x));\n  D.forEach((x) => { if (!o.includes(x)) o.push(x); });\n  return o.indexOf('security') + 1;\n]]]\n"
      },
      {
@@ -9323,6 +9364,9 @@
      },
      {
       "height": "auto"
+     },
+     {
+      "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _rv = variables.casora_rv || {}; return _rv.badges_wrap === true ? '100%' : 'max-content' ]]]"
      },
      {
       "--casora-badge-order-security": "[[[ const _rv = variables.casora_rv || {}; \n  // Standard wie das Studio (BADGE_ORDER_IDS): gespeicherte Reihenfolge zuerst, was fehlt, danach.\n  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media'];\n  const o = (Array.isArray(_rv.badge_order) ? _rv.badge_order : []).filter((x) => D.includes(x));\n  D.forEach((x) => { if (!o.includes(x)) o.push(x); });\n  return o.indexOf('security') + 1;\n]]]\n"
@@ -13246,6 +13290,12 @@
         "scene_entities": "[[[ return variables.scene_entities || [] ]]]",
         "title": "[[[ return variables.scenes_title ]]]"
        }
+      },
+      {
+       "type": "custom:casora-custom-badges",
+       "badges": "[[[ return Array.isArray(variables.custom_badges) ? variables.custom_badges : [] ]]]",
+       "enabled": "[[[ return (window.casoraSeen?window.casoraSeen(variables,'custom',user,true):true)!==false ]]]",
+       "place": "room"
       }
      ],
      "layout": {
@@ -13255,7 +13305,10 @@
       "grid-column-gap": "var(--badge-gap-current, var(--badge-gap, 10px))",
       "grid-template-columns": "none",
       "justify-content": "start",
-      "justify-items": "start"
+      "justify-items": "start",
+      "display": "[[[ return variables.badges_wrap === true ? 'flex' : 'grid' ]]]",
+      "flex-wrap": "wrap",
+      "row-gap": "var(--badge-gap-current, var(--badge-gap, 10px))"
      },
      "layout_type": "custom:grid-layout",
      "type": "custom:layout-card"
@@ -15507,7 +15560,9 @@
    "energy_popup_focus_4": null,
    "energy_popup_focus_5": null,
    "energy_popup_focus_6": null,
-   "hold_mode": null
+   "hold_mode": null,
+   "custom_badges": null,
+   "badges_wrap": null
   }
  },
  "casora_scene_core": {
@@ -18227,6 +18282,67 @@
   ],
   "variables": {
    "room_name": null
+  }
+ },
+ "casora_badge_custom": {
+  "template": [
+   "casora_badge_base"
+  ],
+  "show_icon": true,
+  "show_name": true,
+  "show_label": false,
+  "show_state": false,
+  "icon": "[[[\n  /* Own badge (#53): mdi icon as given, a Casora icon is drawn as a mask (extra_styles); without one the entity's own icon. */\n  const ic = String((variables.badge || {}).icon || '');\n  if (/^mdi:/.test(ic)) return ic;\n  return (entity && entity.attributes && entity.attributes.icon) || (ic ? 'mdi:circle-small' : undefined);\n]]]\n",
+  "name": "[[[\n  const _cb = window._casoraCustomBadge; const _b = variables.badge || {};\n  const _v = _cb ? _cb.view(_b, entity, variables.value, typeof hass !== 'undefined' ? hass : null) : null;\n  if (!_v) return '';\n  return _cb.html(_v);\n]]]\n",
+  "extra_styles": "[[[\n  const _cb = window._casoraCustomBadge; const _b = variables.badge || {};\n  const _v = _cb ? _cb.view(_b, entity, variables.value, typeof hass !== 'undefined' ? hass : null) : null;\n  const hide = !_v || _v.hide || variables.enabled === false;\n  let css = `:host{display:${hide ? 'none' : 'inline-block'} !important;order:var(--casora-badge-order-custom,8);}`;\n  if (_v && _v.svg) css += `\n    #img-cell, .img-cell{ position: relative; }\n    #img-cell #icon, .img-cell #icon{ color: transparent !important; opacity: 0 !important; }\n    #img-cell::before, .img-cell::before{\n      content: '';\n      position: absolute;\n      inset: 0;\n      background-color: color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), var(--casora-icon-color, var(--primary-text-color))) !important;\n      scale: var(--casora-badge-glyph-scale, none);\n      -webkit-mask: url('${_v.svg}') no-repeat center / auto 85%;\n      mask: url('${_v.svg}') no-repeat center / auto 85%;\n      transform: translateZ(0);\n    }`;\n  return css;\n]]]\n",
+  "styles": {
+   "card": [
+    {
+     "display": "[[[\n  const _cb = window._casoraCustomBadge; const _b = variables.badge || {};\n  const _v = _cb ? _cb.view(_b, entity, variables.value, typeof hass !== 'undefined' ? hass : null) : null;\n  return (!_v || _v.hide || variables.enabled === false) ? 'none' : 'inline-grid';\n]]]\n"
+    },
+    {
+     "--casora-icon-color": "[[[\n  const _cb = window._casoraCustomBadge; const _b = variables.badge || {};\n  const _v = _cb ? _cb.view(_b, entity, variables.value, typeof hass !== 'undefined' ? hass : null) : null;\n  return _v && _v.active ? _v.color : 'var(--badge-title-inactive)';\n]]]\n"
+    },
+    {
+     "--badge-title-color": "[[[\n  const _cb = window._casoraCustomBadge; const _b = variables.badge || {};\n  const _v = _cb ? _cb.view(_b, entity, variables.value, typeof hass !== 'undefined' ? hass : null) : null;\n  return _v && _v.active ? 'var(--primary-text-color)' : 'var(--badge-title-inactive)';\n]]]\n"
+    },
+    {
+     "--badge-sub-color": "[[[\n  const _cb = window._casoraCustomBadge; const _b = variables.badge || {};\n  const _v = _cb ? _cb.view(_b, entity, variables.value, typeof hass !== 'undefined' ? hass : null) : null;\n  return _v && _v.active ? 'var(--secondary-text-color)' : 'color-mix(in oklab, var(--secondary-text-color) 70%, transparent)';\n]]]\n"
+    },
+    {
+     "--casora-badge-tone": "[[[\n  const _cb = window._casoraCustomBadge; const _b = variables.badge || {};\n  const _v = _cb ? _cb.view(_b, entity, variables.value, typeof hass !== 'undefined' ? hass : null) : null;\n  return _v && _v.active ? 'initial' : 'var(--casora-badge-off-tone, transparent)';\n]]]\n"
+    },
+    {
+     "--casora-badge-glyph": "[[[\n  const _cb = window._casoraCustomBadge; const _b = variables.badge || {};\n  const _v = _cb ? _cb.view(_b, entity, variables.value, typeof hass !== 'undefined' ? hass : null) : null;\n  return _v && _v.active ? 'initial' : 'var(--casora-badge-off-glyph, #fff)';\n]]]\n"
+    }
+   ],
+   "icon": [
+    {
+     "color": "color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), var(--casora-icon-color))"
+    }
+   ],
+   "img_cell": [
+    {
+     "overflow": "visible !important"
+    }
+   ]
+  },
+  "tap_action": {
+   "action": "none",
+   "haptic": "light"
+  },
+  "hold_action": {
+   "action": "none"
+  },
+  "double_tap_action": {
+   "action": "none"
+  },
+  "variables": {
+   "badge": null,
+   "enabled": true,
+   "index": 0,
+   "place": "room",
+   "value": null
   }
  }
 }
