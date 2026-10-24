@@ -60,7 +60,7 @@
    "group": null,
    "auto": true,
    "rooms": ["Wohnzimmer", "Küche", "Bad", "Flur", "Schlafzimmer", "Kinderzimmer"],
-   "ids": ["light.wohnzimmer_decke", "light.wohnzimmer_stehlampe", "light.wohnzimmer_regal", "light.kueche_spots", "light.kueche_theke", "light.bad_spiegel", "light.bad_decke", "light.flur", "light.schlafzimmer_decke", "light.schlafzimmer_nachttisch", "light.kinderzimmer_sternenhimmel"],
+   "ids": ["light.wohnzimmer_decke", "light.wohnzimmer_stehlampe", "light.wohnzimmer_regal", "light.kueche_spot_1", "light.kueche_spot_2", "light.kueche_theke", "light.bad_spiegel", "light.bad_decke", "light.flur", "light.schlafzimmer_decke", "light.schlafzimmer_nachttisch", "light.kinderzimmer_sternenhimmel"],
    "room_groups": {"Küche": null}
   }
  }

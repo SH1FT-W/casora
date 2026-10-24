@@ -56,23 +56,35 @@
     if (!o || (!o.key && !o.name)) return null;
     return { key: o.key || slug(o.name), name: o.name || null, outdoor: V.isOutdoor(o.name) || V.isOutdoor(o.key) };
   };
-  // Room name of a desktop view: the name of its casora_room header (the Studio keeps the title as the slug), else the title.
+  // Room name of a desktop view: the name of its casora_room header (the Studio keeps the title as the slug), else
+  // the title. A view without a header (Energy, Scenes, a user's own page) is no room: null.
   var viewRoom = function (view) {
     var hit = null;
     (function walk(x, d) {
       if (hit || !x || typeof x !== 'object' || d > 6) return;
       if (Array.isArray(x)) { x.forEach(function (y) { walk(y, d + 1); }); return; }
-      if ([].concat(x.template || []).indexOf('casora_room') > -1 && typeof x.name === 'string' && x.name.indexOf('[[[') < 0) { hit = x.name.trim(); return; }
+      if ([].concat(x.template || []).indexOf('casora_room') > -1) { hit = x; return; }
       walk(x.cards, d + 1);
     })(view && view.cards, 0);
-    return hit || (view && view.title ? String(view.title).trim() : null);
+    if (!hit) return null;
+    if (typeof hit.name === 'string' && hit.name.indexOf('[[[') < 0 && hit.name.trim()) return hit.name.trim();
+    return view && view.title ? String(view.title).trim() : String(view.path || '');
+  };
+  // The Studio (casora-panel) is on the page: only then its preview room counts (the marker is deleted when the
+  // preview closes, but the dashboard in the same window must never follow a stale value). The panel registers
+  // itself (window._casoraStudioPanel, it sits in HA's shadow DOM); a top-level element counts too.
+  var studioOpen = function () {
+    try {
+      var p = window._casoraStudioPanel || document.querySelector('casora-panel');
+      return !!(p && p.isConnected !== false);
+    } catch (e) { return false; }
   };
   /* Where the tile sits. here (tests, Studio): null = Home, { key, name } = that room; otherwise from the page:
      desktop = the view of the address (first view = Home), phone (one view) = the room filter room_<key>. */
   V.scope = function (variables, here) {
     if (here !== undefined) return here ? fin(here) : null;
     /* Studio preview: the panel names the room of the previewed popup (casora-panel-popups.js, _cpOpen). */
-    if (window._casoraStudioRoom !== undefined) return window._casoraStudioRoom ? fin(window._casoraStudioRoom) : null;
+    if (window._casoraStudioRoom !== undefined && studioOpen()) return window._casoraStudioRoom ? fin(window._casoraStudioRoom) : null;
     try {
       var cfg = window._casoraLovelaceCfg ? window._casoraLovelaceCfg() : null;
       var views = cfg && Array.isArray(cfg.views) ? cfg.views : [];
@@ -87,7 +99,7 @@
       if (vi < 0 && /^\d+$/.test(seg)) vi = Number(seg);
       if (vi <= 0 || !views[vi]) return null;
       var name = viewRoom(views[vi]);
-      if (name && HOME.test(name)) return null;
+      if (!name || HOME.test(name)) return null;
       return fin({ key: String(views[vi].path || vi), name: name });
     } catch (e) { return null; }
   };

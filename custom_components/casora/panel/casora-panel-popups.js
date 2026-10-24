@@ -432,6 +432,9 @@
       if (byUser) this._cpDismissed = this._cpWant;
       this._cpWant = null;
       this._cpSig = null;
+      // The preview's room (set in _cpOpen) ends with the preview: the dashboard in the same window
+      // (HA keeps one page) would otherwise take the Studio's room for its own tiles (issue #54).
+      if (window._casoraStudioRoom !== undefined) delete window._casoraStudioRoom;
       const layer = this._cpLayer;
       this._cpLayer = null;
       if (this._cpObs) this._cpObs.disconnect();
