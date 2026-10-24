@@ -1,4 +1,4 @@
-// ── Flexible tile: tile + popup assembled in the Studio (issue #52, forum wish) ──────────────
+// ── Universal tile: tile + popup assembled in the Studio (issue #52, forum wish) ──────────────
 // One tile for any entity (or none): title, icon, the entity's state as the subline; the icon toggles
 // lights, switches, fans, covers and locks like the other tiles. The popup is put together in the
 // Studio from sections: "Werte" (up to 8 entities as rows), "Verlauf" (24 h chart of the main or a
@@ -219,7 +219,7 @@
       out += UI.segments([
         { label: 'Aus', active: s !== 'on', svc: { domain: 'homeassistant', service: 'turn_off', target: tgt } },
         { label: 'An', active: s === 'on', svc: { domain: 'homeassistant', service: 'turn_on', target: tgt } },
-      ], 'Schalten');
+      ], 'Bedienung');
       var modes = Array.isArray(a.supported_color_modes) ? a.supported_color_modes : [];
       if (d === 'light' && modes.some(function (m) { return m !== 'onoff'; }) && UI.slider) {
         out += '<div style="height:10px"></div>' + UI.slider({ value: s === 'on' && a.brightness != null ? Math.round(a.brightness / 2.55) : 0,
@@ -251,7 +251,7 @@
     // Main action (lock, cover without buttons, media, vacuum …) as one row; risky ones ask first.
     if (m.main && m.main.svc && !TOGGLE.test(d) && !hadButtons) {
       out += (out ? gap : '') + UI.group([{ icon: m.main.ic || 'mdi:gesture-tap', iconTone: 'accent', label: m.main.t,
-        svc: svcOf(id, m.main), confirm: m.main.ask || null }], 'Schalten');
+        svc: svcOf(id, m.main), confirm: m.main.ask || null }], 'Bedienung');
     }
     return out;
   };
@@ -264,7 +264,7 @@
       var notes = [];
       if (!C.id) {
         notes.push(T('Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.'));
-        return UI.line('Keine Entität gewählt', []) + (UI.note ? UI.note(notes[0]) : '');
+        return UI.line('Kein Gerät gewählt', []) + (UI.note ? UI.note(notes[0]) : '');
       }
       if (!st) return UI.line('Gerät fehlt', [C.id]);
       var rest = [];
@@ -272,7 +272,7 @@
       if (ago) rest.push(ago);
       var out = UI.line(F.word(hass, st), rest);
       if (C.chartMissing && C.chartWant) notes.push(T('Kein Verlauf: {name} ist kein Zahlenwert.').replace('{name}', nameOf(S[C.chartWant], C.chartWant)));
-      if (C.empty) notes.push(T('Im Studio kannst du Werte, Verlauf, Schalten und eigene Karten ergänzen.'));
+      if (C.empty) notes.push(T('Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.'));
       if (notes.length && UI.note) out += notes.map(function (n) { return UI.note(n); }).join('');
       return out;
     }

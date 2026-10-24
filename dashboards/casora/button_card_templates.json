@@ -4760,7 +4760,7 @@
   ],
   "variables": {
    "icon": "default",
-   "casora_default_name": "Freie Kachel",
+   "casora_default_name": "Universal-Kachel",
    "active_states": [
     "mowing",
     "heating",
@@ -12300,7 +12300,7 @@
  "casora_popup_free": {
   "tap_action": {
    "casora_popup": {
-    "content": "[[[\n  /* Flexible tile (issue #52): state line, 24 h chart, the entity's own controls, value rows and own cards -\n     assembled in the Studio; window._casoraFree.popup in 28-free-tile.js. Never empty: without sections a hint. */\n  return window._casoraFree ? window._casoraFree.popup(entity, states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "content": "[[[\n  /* Universal tile (issue #52): state line, 24 h chart, the entity's own controls, value rows and own cards -\n     assembled in the Studio; window._casoraFree.popup in 28-free-tile.js. Never empty: without sections a hint. */\n  return window._casoraFree ? window._casoraFree.popup(entity, states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
     "dismiss_on_background": true,
     "popup_styles": [
      {
@@ -12309,7 +12309,7 @@
      }
     ],
     "style": "[[[\n  /* Two columns (controls left, values right) only when both are configured - else one column like Pulse. */\n  const F = window._casoraFree;\n  const _w = F && F.wide(entity, states, variables) ? 900 : 552;\n  return '--popup-min-width: min(' + _w + 'px, 92vw);' + ' --popup-max-width: min(' + _w + 'px, 92vw);';\n]]]\n",
-    "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Freie Kachel', ['Freie Kachel', 'Flexible tile']) : (String(variables.room_name || '').trim() || 'Freie Kachel'); ]]]",
+    "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Universal-Kachel', ['Universal-Kachel', 'Universal tile']) : (String(variables.room_name || '').trim() || 'Universal-Kachel'); ]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
    }
   },

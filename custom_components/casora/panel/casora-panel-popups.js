@@ -705,7 +705,7 @@
         const h = document.createElement("span");
         h.className = "pc-sum";
         h.textContent = "Loading…";
-        advRow("Shown in the popup", h);
+        advRow("Visible in the popup", h);
         return;
       }
       const room = curRoom(this);
@@ -715,7 +715,7 @@
         const h = document.createElement("span");
         h.className = "pc-sum";
         h.textContent = "Nothing to hide yet – the popup collects its rows by itself.";
-        advRow("Shown in the popup", h);
+        advRow("Visible in the popup", h);
         return;
       }
       const hidden = new Set(H.list(tile.variables));
@@ -732,7 +732,7 @@
       const lead = document.createElement("span");
       lead.className = "pc-sum";
       lead.textContent = hidden.size ? (hidden.size === 1 ? "1 row hidden" : hidden.size + " rows hidden") : "Switch off what the popup should not list.";
-      advRow("Shown in the popup", lead);
+      advRow("Visible in the popup", lead);
       entries.forEach((e) => {
         const name = String(e.name || e.id);
         const sw = this._boolSwitch(!hidden.has(e.id), true, (v) => write(e.id, v === undefined ? true : !!v), name);

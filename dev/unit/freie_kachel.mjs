@@ -1,4 +1,4 @@
-// Flexible tile (issue #52, scripts/local/28-free-tile.js) without HA: Studio settings → sections, state text for
+// Universal tile (issue #52, scripts/local/28-free-tile.js) without HA: Studio settings → sections, state text for
 // any domain (words, numbers with unit, unavailable), icon toggle only for switchable domains, popup assembly
 // (hero, chart, controls, values, more; never empty), live parts with the UI stubbed, template and Studio entry.
 // All devices and names are invented.   node dev/unit/freie_kachel.mjs
@@ -196,7 +196,7 @@ assert.equal(tile.variables.show_toggle, undefined, 'no toggle control in the ti
 assert.match(tile.icon_tap_action.action, /_casoraFree\.switchable/, 'icon toggle decided by the module');
 assert.match(tile.icon_tap_action.service, /_casoraFree\.iconService/);
 assert.equal(tile.icon_tap_action.haptic, 'light');
-assert.equal(tile.variables.casora_default_name, 'Freie Kachel');
+assert.equal(tile.variables.casora_default_name, 'Universal-Kachel');
 assert.match(tile.state_display, /tileState/);
 // Highlighting is casora_entity's (its active state wins for on/open/…): only extra words and the circle colour here.
 assert.equal(tile.state, undefined, 'no own state block – casora_entity highlights');
@@ -204,7 +204,7 @@ assert.ok(tile.variables.active_states.includes('home') && tile.variables.active
 assert.ok(tile.styles.card.some((o) => /_casoraFree[\s\S]*F\.color\(/.test(o['--casora-icon-fallback-color'] || '')), 'circle colour by domain tone');
 assert.match(pop.tap_action.casora_popup.content, /_casoraFree\.popup\(entity, states, hass, variables\)/);
 assert.match(pop.tap_action.casora_popup.extra, /casoraPopupExtras/, 'own cards work here too');
-assert.match(pop.tap_action.casora_popup.title, /'Freie Kachel'/);
+assert.match(pop.tap_action.casora_popup.title, /'Universal-Kachel'/);
 assert.match(pop.tap_action.casora_popup.popup_styles[0].styles, /prefers-reduced-motion/);
 assert.equal(pop.tap_action.haptic, undefined, 'haptic comes from casora_popup_base');
 assert.deepEqual(pop.template, ['casora_popup_base']);
@@ -235,7 +235,7 @@ for (const lang of ['de', 'es']) {
 }
 for (const lang of ['en', 'es']) {
   const ph = JSON.parse(src('custom_components/casora/translations/dashboard/phrases/' + lang + '.json')).exact;
-  for (const s of ['Freie Kachel', 'Keine Entität gewählt', 'Werte', 'Schalten', 'Bedienung', 'Kein Verlauf: {name} ist kein Zahlenwert.',
+  for (const s of ['Universal-Kachel', 'Kein Gerät gewählt', 'Werte', 'Bedienung', 'Kein Verlauf: {name} ist kein Zahlenwert.',
     'Im Studio kannst du Werte, Verlauf, Schalten und eigene Karten ergänzen.', 'Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.'])
     assert.ok(ph[s], lang + ' phrase missing for: ' + s);
 }

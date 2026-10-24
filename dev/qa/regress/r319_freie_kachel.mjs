@@ -10,7 +10,7 @@
 //   - tile: subline "An"/"Aus" like the other tiles, the entity-less tile shows its name with no state
 //   - tap: popup opens with the state line, a casora-chart, "Schalten" segments (Aus/An), "Werte" with 4 rows
 //     and "Weitere Einstellungen"; desktop two columns (controls left of values), phone one column
-//   - the entity-less tile opens a popup that says "Keine Entität gewählt" – never an empty popup
+//   - the entity-less tile opens a popup that says "Kein Gerät gewählt" – never an empty popup
 // Pictures: CASORA_FREI_BILDER=<folder> stores tile, dashboard and popup pictures per view.
 import fs from 'node:fs';
 import { open, casoraDashboards, dashboard, check, need, finish, atFinish, stable } from './lib.mjs';
@@ -47,7 +47,7 @@ await need('dashboards with a recipe or batteries tile', desk && phone, all.map(
 const TILE_A = { type: 'custom:button-card', template: 'casora_free', entity: sw.entity_id, name: name(sw),
   variables: { icon: 'default', size: 'auto', free_values: [temp.entity_id, hum.entity_id, door.entity_id, power.entity_id],
     free_value_labels: { [temp.entity_id]: 'Innen' }, free_chart: true, free_chart_entity: temp.entity_id, free_controls: true } };
-const TILE_B = { type: 'custom:button-card', template: 'casora_free', entity: '', name: 'Freie Kachel', variables: { icon: 'default', size: 'auto' } };
+const TILE_B = { type: 'custom:button-card', template: 'casora_free', entity: '', name: 'Universal-Kachel', variables: { icon: 'default', size: 'auto' } };
 const withTiles = (cfg) => {
   const o = JSON.parse(JSON.stringify(cfg));
   let done = false, view = null;
@@ -80,8 +80,8 @@ const save = async (url, cfg, title) => {
 };
 const D = withTiles(desk.config), M = withTiles(phone.config);
 await need('tiles inserted', D.view !== null && M.view !== null);
-await save('qa-frei', D.config, 'QA Freie Kachel');
-await save('qa-frei-mobile', M.config, 'QA Freie Kachel Handy');
+await save('qa-frei', D.config, 'QA Universal-Kachel');
+await save('qa-frei-mobile', M.config, 'QA Universal-Kachel Handy');
 atFinish(async () => {
   const c2 = await ws();
   const list = await c2.cmd({ type: 'lovelace/dashboards/list' });
@@ -146,7 +146,7 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
   await need(tag + ': tile with entity and tile without', A && B, tiles);
   await check(tag + ': subline is the state word („' + WANT + '“)', A.state === WANT, A.state);
   await check(tag + ': highlighted exactly when on', A.active === (sw.state === 'on'), A.active);
-  await check(tag + ': tile without entity shows its name and no state', B.name === 'Freie Kachel' && B.state === '', B);
+  await check(tag + ': tile without entity shows its name and no state', B.name === 'Universal-Kachel' && B.state === '', B);
   // Picture of one tile with its neighbours (scrolled into view first – the desktop row is paged).
   const tileShot = async (which, n) => {
     if (!BILDER) return;
@@ -184,8 +184,8 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
   // Popup of the tile without an entity: never empty.
   await tap((await at('')) || B);
   await need(tag + ': popup of the empty tile opens', await offen());
-  const q = await stable(page, POPUP, null, { until: (v) => v && /Keine Entität gewählt/.test(v.line) });
-  await check(tag + ': empty tile says „Keine Entität gewählt“ with a hint', /Keine Entität gewählt/.test(q.line) && q.notes >= 1, q);
+  const q = await stable(page, POPUP, null, { until: (v) => v && /Kein Gerät gewählt/.test(v.line) });
+  await check(tag + ': empty tile says „Kein Gerät gewählt“ with a hint', /Kein Gerät gewählt/.test(q.line) && q.notes >= 1, q);
   if (BILDER) { await page.waitForTimeout(600); await page.screenshot({ path: file('popup-leer') }); }
   await close();
 }

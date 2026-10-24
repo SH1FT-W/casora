@@ -395,13 +395,13 @@ window.CASORA_TILE_TYPES = [
   // (up to 8 rows), 24 h history, the entity's own controls and the shared own cards (scripts/local/28-free-tile.js).
   // The entity is optional (ownData, emptyWord): "Add a tile" adds it straight away with the title only, the
   // preview shows no "Automatic" for it. Many domains, so the Studio suggests no device of its own.
-  { id: "casora_free", label: "Flexible tile", template: "casora_free", domains: FREE_DOMAINS, ownData: true, emptyWord: "",
-    icon: "default", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Entity", entityPlaceholder: "Optional – any entity",
+  { id: "casora_free", label: "Universal tile", template: "casora_free", domains: FREE_DOMAINS, ownData: true, emptyWord: "",
+    icon: "default", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Entity", entityPlaceholder: "Optional – any device",
     fields: [
       ICON,
       { ...TITLE_NAME, advanced: false },
-      { key: "free_values", label: "Values", type: "list", domains: FREE_DOMAINS, placeholder: "add entity.",
-        hint: "Up to 8 entities as rows in the popup, each with name and state. Tapping a row opens its details." },
+      { key: "free_values", label: "Values", type: "list", domains: FREE_DOMAINS, placeholder: "Add device …",
+        hint: "Up to 8 devices as rows in the popup, each with name and state. Tapping a row opens its details." },
       { key: "free_value_labels", label: "Label", type: "map", over: "free_values", kind: "text",
         when: (v) => Array.isArray(v.free_values) && v.free_values.length > 0 },
       { key: "free_chart", label: "History (24 h)", type: "bool", boolDefault: false,
@@ -409,7 +409,7 @@ window.CASORA_TILE_TYPES = [
       { key: "free_chart_entity", label: "History of", domains: ["sensor", "number", "input_number", "counter"],
         placeholder: "This tile's entity", when: (v) => !!v.free_chart },
       { key: "free_controls", label: "Controls", type: "bool", boolDefault: true,
-        hint: "The entity's own controls in the popup: on/off, brightness, cover buttons, lock, media keys, target temperature." },
+        hint: "The device's own controls in the popup: on/off, brightness, cover buttons, lock, media keys, target temperature." },
     ] },
   // Aquarium overview (Hemma 1 and older versions "…_aquarium"): up to three tanks in one tile. Only for
   // editing migrated tiles – new tanks get the aquarium tile (casora_aquarium_tank).

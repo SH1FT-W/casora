@@ -26096,7 +26096,7 @@ class CasoraPanel extends HTMLElement {
         box.appendChild(rowOf("Template", ta, "ownbadge-tplrow"));
         const h = document.createElement("div");
         h.className = "hint";
-        h.textContent = "A Home Assistant template (Jinja). Its text is the badge's value, rendered live.";
+        h.textContent = "A Home Assistant template. Its result is the badge's text and updates live.";
         box.appendChild(h);
       }
 
@@ -26104,8 +26104,8 @@ class CasoraPanel extends HTMLElement {
       const tap = b.tap === "navigate" || b.tap === "popup" ? b.tap : "none";
       const tapOpts = src === "entity" ? ["none", "popup", "navigate"] : ["none", "navigate"];
       const tapPick = this._combo(tap, tapOpts, "", (v) => patch(i, { tap: v === "none" ? "" : v }, true),
-        { fixed: true, labels: { none: "Nothing", popup: "Popup", navigate: "Go to room" } });
-      box.appendChild(rowOf("Tap", tapPick.wrap));
+        { fixed: true, labels: { none: "Do nothing", popup: "Popup", navigate: "Go to room" } });
+      box.appendChild(rowOf("On tap", tapPick.wrap));
       if (tap === "navigate") {
         const paths = rooms.map((r) => r.path);
         const labels = {};
