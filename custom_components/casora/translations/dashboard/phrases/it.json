@@ -1,0 +1,4301 @@
+{
+ "exact": {
+  "Tankinhalt": "Carburante nel serbatoio",
+  "Staubbeutel oder Filter fehlt": "Manca il sacchetto o il filtro",
+  "Absauggebläse gestört": "Guasto alla ventola di svuotamento",
+  "Absaugkanal verstopft": "Condotto di svuotamento ostruito",
+  "Spannungsfehler an der Station": "Errore di tensione alla base",
+  "Reinigungsbürste blockiert": "Spazzola di pulizia bloccata",
+  "Schmutzwassertank nicht eingerastet": "Serbatoio acqua sporca non inserito",
+  "Reinigungstank voll oder verstopft": "Serbatoio di pulizia pieno o ostruito",
+  "Entfernen": "Rimuovi",
+  "Alle entfernen": "Rimuovi tutto",
+  "Alle Meldungen entfernen?": "Rimuovere tutte le notifiche?",
+  "Sie kommen wieder, wenn sich etwas ändert.": "Torneranno quando cambia qualcosa.",
+  "Alle Meldungen entfernt": "Notifiche rimosse",
+  "Rückgängig": "Annulla",
+  "Guten Morgen": "Buongiorno",
+  "Guten Tag": "Buon pomeriggio",
+  "Guten Abend": "Buonasera",
+  "und": "e",
+  "1 Problem": "1 problema",
+  "1 Batterie bald fällig": "1 batteria da sostituire a breve",
+  "Keine Probleme": "Nessun problema",
+  "Keine Geräte": "Nessun dispositivo",
+  "Nicht installiert": "Non installato",
+  "Pulse ist nicht installiert": "Pulse non è installato",
+  "Bald fällig": "In scadenza",
+  "Batterie bald fällig": "Batteria da sostituire a breve",
+  "In Pulse öffnen": "Apri in Pulse",
+  "Gewechselt": "Sostituita",
+  "Batterie gewechselt": "Batteria sostituita",
+  "Batteriewechsel gemeldet": "Sostituzione batteria registrata",
+  "Wichtig": "Importante",
+  "Antwortet nicht": "Non risponde",
+  "Still": "In silenzio",
+  "Hat sich noch nicht gemeldet": "Non ha ancora inviato dati",
+  "Still, obwohl das Partnergerät aktiv war": "In silenzio anche se il dispositivo associato era attivo",
+  "Batterie fast leer": "Batteria quasi scarica",
+  "Meldet schwache Batterie": "Segnala batteria scarica",
+  "wartet auf erste Meldung": "in attesa del primo report",
+  "Lernt noch den Rhythmus": "Sta ancora imparando il ritmo",
+  "Meldet sich wie gewohnt": "Invia dati regolarmente",
+  "Ausgefallen": "Guasto",
+  "Bitte prüfen": "Controlla",
+  "Erinnerung pausiert": "Promemoria in pausa",
+  "jede Minute": "ogni minuto",
+  "jede Stunde": "ogni ora",
+  "einmal am Tag": "una volta al giorno",
+  "sonst jede Minute": "di solito ogni minuto",
+  "sonst jede Stunde": "di solito ogni ora",
+  "sonst einmal am Tag": "di solito una volta al giorno",
+  "Alarm!": "Allarme!",
+  "Scharf schalten": "Inserisci",
+  "Unscharf schalten": "Disinserisci",
+  "Alarm beenden": "Ferma allarme",
+  "Oder Modus wählen": "Oppure scegli una modalità",
+  "Code eingeben": "Inserisci il codice",
+  "Code falsch": "Codice errato",
+  "Alarmanlage ausgeschaltet": "Allarme disattivato",
+  "Die Alarmanlage wurde ausgelöst": "L'allarme è scattato",
+  "Verlass das Haus oder brich ab": "Esci di casa o annulla",
+  "Jetzt unscharf schalten, sonst geht der Alarm los": "Disinserisci ora o scatterà l'allarme",
+  "Wird scharf …": "Inserimento…",
+  "Dieses Gerät ist für dich ausgeblendet": "Questo dispositivo è nascosto per te",
+  "wird scharf …": "inserimento…",
+  "scharf in": "inserito tra",
+  "Alarm in": "Allarme tra",
+  "ausgelöst": "scattato",
+  "Abholung heute": "Raccolta oggi",
+  "Abholung morgen · heute Abend raus": "Raccolta domani · esponi stasera",
+  "Abholung": "Raccolta",
+  "Casora wurde aktualisiert": "Casora è stato aggiornato",
+  "Keine Abholung": "Nessuna raccolta",
+  "An": "Acceso",
+  "Aus": "Spento",
+  "an": "acceso",
+  "aus": "spento",
+  "Neu laden": "Ricarica",
+  "Neu laden (Cache leeren)": "Ricarica (svuota cache)",
+  "Offen": "Aperto",
+  "offen": "aperto",
+  "Geöffnet": "Aperto",
+  "Geschlossen": "Chiuso",
+  "geöffnet": "aperto",
+  "geschlossen": "chiuso",
+  "Verriegelt": "Bloccata",
+  "Entriegelt": "Sbloccata",
+  "Bereit": "Pronto",
+  "Fertig": "Terminato",
+  "Pausiert": "In pausa",
+  "Läuft": "In funzione",
+  "läuft": "in funzione",
+  "Läuft …": "In funzione…",
+  "Lädt": "In carica",
+  "Getrennt": "Disconnesso",
+  "Verbunden": "Connesso",
+  "Fehler": "Errore",
+  "Nicht verfügbar": "Non disponibile",
+  "nicht verfügbar": "non disponibile",
+  "Gerade nicht verfügbar": "Non disponibile ora",
+  "Keine": "Nessuno",
+  "Keine aktiv": "Nessuna attiva",
+  "Kein Dienst": "Nessun servizio",
+  "Neu": "Nuovo",
+  "Alle": "Tutti",
+  "Gesamt": "Totale",
+  "Fällig": "In scadenza",
+  "Überfällig": "Scaduto",
+  "Übersprungen": "Saltato",
+  "Gelöst": "Risolto",
+  "Ausgelöst": "Attivato",
+  "Kühl": "Fresco",
+  "Heiß": "Caldo",
+  "Sehr heiß": "Molto caldo",
+  "Mäßig": "Moderato",
+  "mäßig": "moderato",
+  "Gut": "Buono",
+  "Schlecht": "Scarso",
+  "Sehr schlecht": "Molto scarso",
+  "Ausgezeichnet": "Eccellente",
+  "Außergewöhnlich": "Eccezionale",
+  "heute": "oggi",
+  "gestern": "ieri",
+  "morgen": "domani",
+  "jetzt": "ora",
+  "gerade eben": "proprio ora",
+  "Gerade eben": "Proprio ora",
+  "ganztägig": "tutto il giorno",
+  "jede Woche": "ogni settimana",
+  "Demnächst": "Prossimamente",
+  "Früher": "Prima",
+  "Diese Woche": "Questa settimana",
+  "Letzte 30 Tage": "Ultimi 30 giorni",
+  "Nächste 4 Wochen": "Prossime 4 settimane",
+  "30 Tage": "30 giorni",
+  "7 Tage": "7 giorni",
+  "Älter als ein Tag": "Più di un giorno fa",
+  "Räume": "Stanze",
+  "Raum": "Stanza",
+  "Szenen": "Scene",
+  "Szene": "Scena",
+  "Favoriten": "Preferiti",
+  "Aktivität": "Attività",
+  "Akku": "Batteria",
+  "Akku schwach": "Batteria scarica",
+  "Akku verbraucht": "Batteria esaurita",
+  "Akku & Strom": "Batteria e corrente",
+  "Akku Lecksensor": "Batteria sensore perdite",
+  "Akku Temperaturfühler": "Batteria termometro",
+  "Akku-Bereich": "Autonomia",
+  "Akku-Gesundheit": "Salute della batteria",
+  "Aktualisieren": "Aggiorna",
+  "Aktueller Raum": "Stanza attuale",
+  "Aktueller Verbrauch": "Consumo attuale",
+  "Alarm ausgelöst": "Allarme scattato",
+  "Alarm ausgelöst!": "Allarme scattato!",
+  "Alarm läuft an": "Inserimento allarme",
+  "Alle An": "Accendi tutto",
+  "Alle Aus": "Spegni tutto",
+  "Alle an": "Accendi tutto",
+  "Alle aus": "Spegni tutto",
+  "Alles aus": "Spegni tutto",
+  "1 Licht im Haus ausschalten?": "Spegnere 1 luce in casa?",
+  "Alle Lichter": "Tutte le luci",
+  "Alle Räume aus": "Tutte le stanze spente",
+  "Alle Szenen": "Tutte le scene",
+  "Alle Temperaturen im Normalbereich": "Tutte le temperature nella norma",
+  "Alle Türen entriegelt": "Tutte le porte sbloccate",
+  "Alle Türen verriegelt": "Tutte le porte bloccate",
+  "Alle aktualisieren": "Aggiorna tutto",
+  "Alle entriegelt": "Tutto sbloccato",
+  "Alle geschlossen": "Tutto chiuso",
+  "Alle geöffnet": "Tutto aperto",
+  "Alle offline": "Tutti offline",
+  "Alle unterwegs": "Tutti fuori",
+  "Alle verriegelt": "Tutto bloccato",
+  "Alle zuhause": "Tutti a casa",
+  "Alles im grünen Bereich": "Tutto in ordine",
+  "An · alle Räume warm genug": "Acceso · tutte le stanze abbastanza calde",
+  "AquaStop ausgelöst": "AquaStop attivato",
+  "Aufnahme nicht verfügbar": "Registrazione non disponibile",
+  "Ausfüllen": "Compila",
+  "Außenluft": "Aria esterna",
+  "Außenluft belastet": "Aria esterna inquinata",
+  "Außenluft enthält mehr Wasser": "L'aria esterna contiene più umidità",
+  "Außenluft ist feuchter": "L'aria esterna è più umida",
+  "Außenluft ist trockener": "L'aria esterna è più secca",
+  "Außentemperatur": "Temperatura esterna",
+  "Bald lüften": "Arieggia presto",
+  "Beifahrertür": "Porta passeggero",
+  "Bekommt zu viel Licht": "Riceve troppa luce",
+  "Bereit zum Starten": "Pronto per partire",
+  "Bereit zur Anpassung": "Pronto per la regolazione",
+  "Bestätigen": "Conferma",
+  "Betttemperatur gestört": "Errore temperatura piatto",
+  "Bewölkt": "Nuvoloso",
+  "Bitte nachfüllen": "Riempilo",
+  "Bitte nicht stören: an": "Non disturbare: attivo",
+  "Bitte nicht stören: aus": "Non disturbare: disattivo",
+  "Braucht Dünger": "Ha bisogno di concime",
+  "Braucht etwas Pflege": "Ha bisogno di un po' di cure",
+  "Braucht mehr Licht": "Ha bisogno di più luce",
+  "Braucht sofortige Pflege": "Ha bisogno di cure subito",
+  "Bypass und Entladen": "Bypass e scarica",
+  "CO₂ erhöht – lüften": "CO₂ elevata – arieggia",
+  "CO₂ hoch – Fenster öffnen": "CO₂ alta – apri una finestra",
+  "Claude schaut sich das Bild an …": "Claude sta guardando l'immagine…",
+  "Cookidoo-App öffnen": "Apri l'app Cookidoo",
+  "Apple Music öffnen": "Apri Apple Music",
+  "Dock-Fehler": "Errore della base",
+  "Dosiermenge je Stoß": "Dose per impulso",
+  "Druck": "Stampa",
+  "Druck abbrechen": "Annulla stampa",
+  "Druck läuft gerade": "Stampa in corso",
+  "Druck prüfen": "Controlla stampa",
+  "Druckbett heizt vor": "Preriscaldamento piatto",
+  "Druckbett kühlt ab": "Piatto in raffreddamento",
+  "Du bist diesen Monat nicht dran": "Questo mese non tocca a te",
+  "Durchgänge erfasst": "Cicli registrati",
+  "Düngeanlage": "Pompa dosatrice",
+  "Dünger": "Concime",
+  "Düse": "Ugello",
+  "Düse heizt auf": "Riscaldamento ugello",
+  "Düse kühlt ab": "Ugello in raffreddamento",
+  "Düse verstopft": "Ugello intasato",
+  "Düse wird gereinigt": "Pulizia ugello",
+  "Düsentemperatur gestört": "Errore temperatura ugello",
+  "EU-Data-Act-Portal, kommt verzögert": "Portale Data Act UE, arriva in ritardo",
+  "Eigene Leistung": "Consumo proprio",
+  "Eingriff nötig": "Serve un intervento",
+  "Einkaufsliste nicht verfügbar": "Lista della spesa non disponibile",
+  "Energie heute": "Energia oggi",
+  "Erde zu feucht": "Terreno troppo umido",
+  "Erde zu trocken": "Terreno troppo secco",
+  "Erhöhte Partikelbelastung": "Particolato elevato",
+  "Erste Schicht wird geprüft": "Controllo primo strato",
+  "Fahrertür": "Porta conducente",
+  "Falls das Ende nicht erkannt wird": "Se la fine non viene rilevata",
+  "Fehler aufgetreten": "Si è verificato un errore",
+  "Fehler bei der Anfrage.": "Richiesta non riuscita.",
+  "Fehler bei der Spracheingabe.": "Inserimento vocale non riuscito.",
+  "Fehler gemeldet": "Errore segnalato",
+  "Fehler in der ersten Schicht": "Errore nel primo strato",
+  "Fenster": "Finestre",
+  "Fenster & Schiebedach": "Finestre e tettuccio",
+  "Fenster &amp; Schiebedach": "Finestre e tettuccio",
+  "Fenster hinten links": "Finestrino posteriore sinistro",
+  "Fenster hinten rechts": "Finestrino posteriore destro",
+  "Fenster offen": "Finestra aperta",
+  "Fenster schließen": "Chiudi finestra",
+  "Fenster vorne links": "Finestrino anteriore sinistro",
+  "Fenster vorne rechts": "Finestrino anteriore destro",
+  "Fenster weit auf, nach Außentemperatur": "Finestre spalancate, in base alla temperatura esterna",
+  "Fenster-Erkennung": "Rilevamento finestre",
+  "Fensterläden": "Persiane",
+  "Fernstart am Gerät nicht erlaubt": "Avvio remoto non consentito sull'apparecchio",
+  "Feuchte": "Umidità",
+  "Feuchter draußen": "Più umido fuori",
+  "Filter": "Filtro",
+  "Filter & Kondensator reinigen": "Pulisci filtro e condensatore",
+  "Filter reinigen": "Pulisci filtro",
+  "Filter verstopft": "Filtro intasato",
+  "Firmware passt nicht": "Firmware non corrispondente",
+  "Firmware-Update verfügbar": "Aggiornamento firmware disponibile",
+  "Fläche": "Superficie",
+  "Fläche insgesamt": "Superficie totale",
+  "Frischwasser auffüllen": "Riempi acqua pulita",
+  "Frontabdeckung prüfen": "Controlla il coperchio frontale",
+  "Fußbodenheizung": "Riscaldamento a pavimento",
+  "Fährt herunter": "Spegnimento in corso",
+  "Fährt zum Dock": "Ritorno alla base",
+  "Fährt zum Ziel": "Verso la destinazione",
+  "Fährt zur Moppwäsche": "Va a lavare il mocio",
+  "Gehärteter Stahl": "Acciaio temprato",
+  "Gerade kein Überschuss": "Nessun surplus al momento",
+  "Kein Sensor": "Nessun sensore",
+  "Kein Überschuss": "Nessun surplus",
+  "Kein Sensor gewählt": "Nessun sensore selezionato",
+  "Jetzt nutzen": "Usalo ora",
+  "Keiner": "Nessuno",
+  "Hausverbrauch": "Consumo della casa",
+  "Solar-Tipp": "Consiglio solare",
+  "Sobald Sonnenstrom übrig ist, steht hier, welches Gerät sich lohnt.": "Quando c'è energia solare in eccesso, qui vedrai quale dispositivo conviene usare.",
+  "Gereinigte Fläche": "Superficie pulita",
+  "Gerät": "Dispositivo",
+  "Geräte": "Dispositivi",
+  "Geräte laufen schon": "Ci sono già dispositivi in funzione",
+  "Gerätemeldung (HMS)": "Messaggio del dispositivo (HMS)",
+  "Geräteprofil": "Profilo del dispositivo",
+  "Gerätestatus": "Stato del dispositivo",
+  "Geschirrspüler": "Lavastoviglie",
+  "Waschmaschine": "Lavatrice",
+  "Trockner": "Asciugatrice",
+  "3D-Drucker": "Stampante 3D",
+  "Saugroboter": "Robot aspirapolvere",
+  "Gilt bis morgen 9:00, dann übernimmt wieder der HA-Zeitplan.": "Valido fino a domani alle 9:00, poi riprende la programmazione di HA.",
+  "Für Räder mit Bosch Smart System: Die Werte kommen aus der Integration Bosch eBike (HACS: Xunil99/ha-bosch-ebike).": "Per bici con Bosch Smart System: i valori arrivano dall'integrazione Bosch eBike (HACS: Xunil99/ha-bosch-ebike).",
+  "Gründlich": "Accurata",
+  "Gründlich+": "Accurata+",
+  "Hauptbürste": "Spazzola principale",
+  "Hauptbürste blockiert": "Spazzola principale bloccata",
+  "Hauptspülen": "Risciacquo principale",
+  "Hauptwäsche": "Lavaggio principale",
+  "Heizkörper": "Termosifone",
+  "Heizung": "Riscaldamento",
+  "Herausnehmen und ausspülen": "Estrailo e risciacqualo",
+  "Home Assistant jetzt neu starten?": "Riavviare Home Assistant ora?",
+  "Höhenmeter": "Dislivello",
+  "Höhenmeter gesamt": "Dislivello totale",
+  "Hört zu …": "In ascolto…",
+  "In der Cookidoo-App auf \"Meine Woche\" planen": "Pianificalo nell'app Cookidoo in \"La mia settimana\"",
+  "Info-Licht am Boden": "Luce info a pavimento",
+  "Jetzt lüften": "Arieggia ora",
+  "Jetzt prüfen": "Controlla ora",
+  "KI prüft noch …": "L'IA sta ancora controllando…",
+  "KI-Blick auf den Druck": "L'IA guarda la stampa",
+  "KI-Check steht noch aus": "Controllo IA in sospeso",
+  "Kalender nicht erreichbar": "Calendario non raggiungibile",
+  "Kaum Aktivität": "Poca attività",
+  "Kehrt zurück": "Sta tornando",
+  "Kehrt zurück & Moppwäsche": "Sta tornando e lava il mocio",
+  "Kein Bild – die Kamera ist aus, schläft oder ist nicht erreichbar.": "Nessuna immagine – la telecamera è spenta, in standby o non raggiungibile.",
+  "Die Kamera ist aus oder offline und liefert gerade kein Bild.": "La telecamera è spenta o offline e al momento non fornisce immagini.",
+  "Kein Zugriff aufs Mikrofon – bitte in den Einstellungen erlauben.": "Nessun accesso al microfono – consentilo nelle impostazioni.",
+  "Keine Antwort erhalten.": "Nessuna risposta ricevuta.",
+  "Keine Batteriesensoren gefunden": "Nessun sensore di batteria trovato",
+  "Keine Daten": "Nessun dato",
+  "Keine Detailbeschreibung verfügbar.": "Nessuna descrizione dettagliata.",
+  "Keine Idee gefunden": "Nessuna idea trovata",
+  "Keine Kameras": "Nessuna telecamera",
+  "Keine Kameras verfügbar": "Nessuna telecamera disponibile",
+  "Keine Pflanzensensoren konfiguriert": "Nessun sensore per piante configurato",
+  "Keine Rückmeldung": "Nessuna risposta",
+  "Keine Sensoren": "Nessun sensore",
+  "Keine Statusdaten": "Nessun dato di stato",
+  "Keine Szene aktiv": "Nessuna scena attiva",
+  "Keine Szenen": "Nessuna scena",
+  "Keine Termine": "Nessun evento",
+  "Keine Tonnen gefunden": "Nessun bidone trovato",
+  "Keine Updates in 30 Tagen": "Nessun aggiornamento in 30 giorni",
+  "Keine Updates offen": "Nessun aggiornamento in sospeso",
+  "Keine Verbindung": "Nessuna connessione",
+  "Keine Verbindung zu Home Assistant.": "Nessuna connessione a Home Assistant.",
+  "Keine Warnung": "Nessun avviso",
+  "Keine aktiven Warnungen": "Nessuna allerta attiva",
+  "Klarspülen": "Risciacquo",
+  "Klarspüler": "Brillantante",
+  "Kosten Monat": "Costo del mese",
+  "Kosten heute": "Costo di oggi",
+  "Kosten letzter Durchgang": "Costo ultimo ciclo",
+  "Kosten pro Tag": "Costo al giorno",
+  "Kurz volle Leistung": "Piena potenza per poco",
+  "Laut Anker-App": "Secondo l'app Anker",
+  "Lautstärke": "Volume",
+  "Leert Staubbehälter": "Svuotamento contenitore polvere",
+  "Leistung": "Potenza",
+  "Leistung der Station": "Potenza della base",
+  "Leistung jetzt": "Potenza ora",
+  "Leistung · 24 Stunden": "Potenza · 24 ore",
+  "Letzte Aufgabe": "Ultima attività",
+  "Letzte Aufnahme": "Ultima registrazione",
+  "Letzte Durchgänge": "Ultimi cicli",
+  "Letzte Fahrt": "Ultimo tragitto",
+  "Letzte Reinigung": "Ultima pulizia",
+  "Licht": "Luce",
+  "Licht nicht erreichbar": "Luce non raggiungibile",
+  "Licht offline": "Luce offline",
+  "Luft gut": "Aria buona",
+  "Luft zu feucht": "Aria troppo umida",
+  "Luft zu trocken": "Aria troppo secca",
+  "Luftfeuchte außen": "Umidità esterna",
+  "Luftqualität": "Qualità dell'aria",
+  "Luftqualität ist gut": "La qualità dell'aria è buona",
+  "Luftqualität ist hervorragend": "La qualità dell'aria è eccellente",
+  "Luftqualität ist mäßig": "La qualità dell'aria è moderata",
+  "Luftqualität nicht verfügbar": "Qualità dell'aria non disponibile",
+  "Länger abwesend": "Fuori da un po'",
+  "Lässt sich nicht fortsetzen": "Impossibile riprendere",
+  "Läuft seit": "In funzione da",
+  "Lüften": "Arieggiare",
+  "Lüften empfohlen": "Consigliato arieggiare",
+  "Lüften erkannt": "Ventilazione rilevata",
+  "Lüften hilft gegen Feuchte": "Arieggiare aiuta contro l'umidità",
+  "Lüften hilft nicht gegen Feuchte": "Arieggiare non aiuta contro l'umidità",
+  "Lüfter zu langsam": "Ventola troppo lenta",
+  "Lüftet": "Sta arieggiando",
+  "Maschine läuft gerade": "La macchina è in funzione",
+  "Maschinenpflege fällig": "Cura macchina da fare",
+  "Material wird geprüft": "Controllo materiale",
+  "Mikrofon nicht verfügbar.": "Microfono non disponibile.",
+  "Min. übrig": "min rimanenti",
+  "Mopp nicht angebracht": "Mocio non montato",
+  "Moppwäsche": "Lavaggio mocio",
+  "Moppwäsche gestört": "Errore nel lavaggio mocio",
+  "Pause · wäscht Mopp": "Pausa · lava il mocio",
+  "Pause · saugt ab": "Pausa · svuota il contenitore",
+  "Pause · trocknet": "Pausa · asciuga il mocio",
+  "Pause · lädt": "Pausa · in carica",
+  "Pause · an der Station": "Pausa · alla base",
+  "Muss gedüngt werden": "Da concimare",
+  "NO₂ erkannt – lüften": "NO₂ rilevato – arieggia",
+  "Nachfüllen & Pflege": "Rabbocco e cura",
+  "Nachfüllen &amp; Pflege": "Rabbocco e cura",
+  "Neu auswerten": "Rianalizza",
+  "Neu prüfen": "Ricontrolla",
+  "Neu starten": "Riavvia",
+  "Nicht stören": "Non disturbare",
+  "Nichts Neues": "Niente di nuovo",
+  "Nichts geplant": "Niente in programma",
+  "Nichts läuft": "Nessuna riproduzione",
+  "Nichts in den nächsten 30 Tagen": "Niente nei prossimi 30 giorni",
+  "Noch keine Idee": "Ancora nessuna idea",
+  "Noch nicht geprüft": "Non ancora controllato",
+  "Nächste Abholung": "Prossima raccolta",
+  "Nächste Solltemperatur": "Prossima temperatura target",
+  "Nächster Service": "Prossima manutenzione",
+  "Nährstoffe": "Nutrienti",
+  "Oberer Stoßfänger gedrückt": "Paraurti superiore premuto",
+  "Per Bluetooth nicht erreichbar": "Non raggiungibile via Bluetooth",
+  "Pflanze kämpft": "La pianta soffre",
+  "Pflanze schwächelt": "La pianta si indebolisce",
+  "Pflege": "Cura",
+  "Pflege fällig": "Cura da fare",
+  "Prognose für dieses Programm": "Previsione per questo programma",
+  "Programm": "Programma",
+  "Programm abbrechen": "Annulla programma",
+  "Programm abgebrochen": "Programma annullato",
+  "Programm abgeschlossen": "Programma terminato",
+  "Programm aus der Roborock-App": "Programma dall'app Roborock",
+  "Programm festlegen": "Imposta programma",
+  "Programm „Maschinenpflege“ mit Reiniger starten": "Avvia il programma “cura macchina” con detergente",
+  "Prüfen": "Controlla",
+  "Prüft …": "Controllo…",
+  "Prüfung fehlgeschlagen": "Controllo non riuscito",
+  "Aktiviert · Bypass": "Inserito · Bypass",
+  "Einzelne Sensoren ausgenommen": "Alcuni sensori esclusi",
+  "Alarm aus": "Allarme spento",
+  "Rezepte": "Ricette",
+  "Kühlt": "Raffresca",
+  "Entfeuchten": "Deumidificazione",
+  "Nur Lüfter": "Solo ventola",
+  "Keine KI eingerichtet (Einstellungen → KI-Aufgaben)": "Nessuna IA configurata (Impostazioni → Attività IA)",
+  "Auswertung fehlgeschlagen.": "Analisi non riuscita.",
+  "Qualität": "Qualità",
+  "Reichweite jetzt": "Autonomia ora",
+  "Reichweite voller Akku": "Autonomia con batteria piena",
+  "Restzeit": "Tempo rimanente",
+  "Roboter lädt nicht": "Il robot non si carica",
+  "Räder blockiert": "Ruote bloccate",
+  "Räder hängen in der Luft": "Ruote sollevate",
+  "Räume auswählen": "Scegli le stanze",
+  "Räume reinigen": "Pulisci stanze",
+  "Saugstärke": "Aspirazione",
+  "Saugt & wischt Raum": "Aspira e lava la stanza",
+  "Schalte alle Lichter aus": "Spegni tutte le luci",
+  "Scharfschaltung läuft": "Inserimento in corso",
+  "Schlafzimmer Fenster ist offen": "La finestra della camera da letto è aperta",
+  "Schließen": "Chiudi",
+  "Zurück": "Indietro",
+  "Schließt": "In chiusura",
+  "Schließt bei Temperatursturz": "Si chiude se la temperatura cala",
+  "Schließt sich …": "In chiusura…",
+  "Schmutzfänger (Station)": "Filtro antisporco (base)",
+  "Schmutzfänger prüfen": "Controlla il filtro antisporco",
+  "Seitenbürste": "Spazzola laterale",
+  "Seitenbürste blockiert": "Spazzola laterale bloccata",
+  "Sensordaten nicht verfügbar": "Dati del sensore non disponibili",
+  "Sensoren temporär deaktiviert": "Sensori disattivati temporaneamente",
+  "Service fällig": "Manutenzione da fare",
+  "Sirene an": "Sirena accesa",
+  "Sirene auslösen?": "Attivare la sirena?",
+  "Solaranteil heute": "Quota solare oggi",
+  "Spaßmodus": "Modalità divertimento",
+  "Speiseplan nicht verfügbar": "Menu settimanale non disponibile",
+  "Spülen": "Risciacquo",
+  "Starten": "Avvia",
+  "Startet später": "Parte più tardi",
+  "Staubbehälter fehlt": "Manca il contenitore polvere",
+  "Staubbehälter leeren": "Svuota il contenitore polvere",
+  "Std. übrig": "h rimanenti",
+  "Steckdose nicht erreichbar": "Presa non raggiungibile",
+  "Stoßfänger klemmt": "Paraurti bloccato",
+  "Stoßlüften": "Ventilazione rapida",
+  "Stromstärke": "Corrente",
+  "Süßwasser": "Acqua dolce",
+  "Taste an der Steckdose": "Pulsante sulla presa",
+  "Tasten am Gerät gesperrt": "Pulsanti del dispositivo bloccati",
+  "Tasten an der Station": "Pulsanti della base",
+  "Teils bewölkt": "Parzialmente nuvoloso",
+  "Teilweise bewölkt": "Parzialmente nuvoloso",
+  "Teilweise geöffnet": "Parzialmente aperto",
+  "Temperatur": "Temperatura",
+  "Temperatur am Heizkörper": "Temperatura del termosifone",
+  "Temperatur im AMS": "Temperatura nell'AMS",
+  "Temperatur im Haus": "Temperatura in casa",
+  "Temperatur im Normalbereich": "Temperatura nella norma",
+  "Temperatur kritisch": "Temperatura critica",
+  "Temperaturfühler": "Termometro",
+  "Temperaturfühler offline": "Termometro offline",
+  "Ton an": "Suono attivo",
+  "Trotzdem aus": "Spegni comunque",
+  "Tür": "Porta",
+  "Tür entriegelt": "Porta sbloccata",
+  "Tür hinten links": "Porta posteriore sinistra",
+  "Tür hinten rechts": "Porta posteriore destra",
+  "Tür ist offen": "La porta è aperta",
+  "Tür offen": "Porta aperta",
+  "Tür verriegelt": "Porta bloccata",
+  "Türen": "Porte",
+  "Türen & Fenster": "Porte e finestre",
+  "Türen & Fenster überwacht": "Porte e finestre monitorate",
+  "Türen & Klappen": "Porte e portelloni",
+  "Türen &amp; Klappen": "Porte e portelloni",
+  "Unbekanntes Programm": "Programma sconosciuto",
+  "VOCs erkannt – lüften": "COV rilevati – arieggia",
+  "Ventilöffnung": "Apertura valvola",
+  "Verbrauch": "Consumo",
+  "Verbrauch Monat": "Consumo del mese",
+  "Verbrauch heute": "Consumo di oggi",
+  "Verbrauch pro Tag": "Consumo al giorno",
+  "Verfügbare Updates": "Aggiornamenti disponibili",
+  "Verlauf nicht verfügbar": "Cronologia non disponibile",
+  "Verzögerter Start": "Avvio ritardato",
+  "Vollständig geladen": "Carica completa",
+  "Vorhänge": "Tende",
+  "Vorspülen": "Prelavaggio",
+  "Vorwäsche": "Prelavaggio",
+  "Wasser erkannt": "Acqua rilevata",
+  "Wasser erkannt!": "Acqua rilevata!",
+  "Wasserbehälter leer": "Serbatoio acqua vuoto",
+  "Wasserstärke": "Flusso d'acqua",
+  "Weiter": "Avanti",
+  "Weitere Geräte": "Altri dispositivi",
+  "Welche Fenster sind offen?": "Quali finestre sono aperte?",
+  "Welche Lichter sind an?": "Quali luci sono accese?",
+  "Weniger als 1 Min. übrig": "Meno di 1 min rimanente",
+  "Windig & bewölkt": "Vento e nuvole",
+  "Wird übernommen": "Applicazione in corso",
+  "Wird abgebrochen": "Annullamento in corso",
+  "Wird aktiviert …": "Attivazione…",
+  "Wird aktualisiert": "Aggiornamento in corso",
+  "Wird deaktiviert …": "Disattivazione…",
+  "Wird eingerichtet": "Configurazione in corso",
+  "Wird entfernt": "Rimozione in corso",
+  "Wird erkannt …": "Rilevamento…",
+  "Wird geladen …": "Caricamento…",
+  "Wird geleert": "Svuotamento in corso",
+  "Wird gewaschen": "Lavaggio in corso",
+  "Wird installiert": "Installazione in corso",
+  "Wird unscharf geschaltet": "Disinserimento in corso",
+  "Wirklich öffnen?": "Aprire davvero?",
+  "Wischt Raum": "Lava la stanza",
+  "Wärmeanforderung": "Richiesta di calore",
+  "Zeitplan überschrieben": "Programmazione sovrascritta",
+  "Zeitüberschreitung – bitte nochmal versuchen.": "Tempo scaduto – riprova.",
+  "Zieltemperatur alle Räume": "Temperatura target, tutte le stanze",
+  "Zu viel Dünger": "Troppo concime",
+  "Zuletzt aktualisiert": "Ultimo aggiornamento",
+  "Zuletzt gedruckt": "Ultima stampa",
+  "Zum Öffnen tippen": "Tocca per aprire",
+  "Zurücksetzen": "Ripristina",
+  "Zusätzliche Käufe": "Acquisti aggiuntivi",
+  "Zählerstand": "Lettura del contatore",
+  "außen": "fuori",
+  "Öffnen": "Apri",
+  "Öffnet": "In apertura",
+  "Öffnet sich …": "In apertura…",
+  "Ölstand": "Livello olio",
+  "Ölwechsel": "Cambio olio",
+  "Idee der Woche von Claude": "L'idea della settimana di Claude",
+  "Lüftungs-Coach": "Assistente ventilazione",
+  "Heizungs-Coach": "Assistente riscaldamento",
+  "Energie-Coach": "Assistente energia",
+  "Raumklima": "Clima interno",
+  "Keine Klimasensoren in diesem Raum": "Nessun sensore climatico in questa stanza",
+  "Ein Feuchte- oder CO₂-Sensor im Raum genügt": "Basta un sensore di umidità o CO₂ nella stanza",
+  "Sonnenstrom übrig": "Energia solare in eccesso",
+  "Fahrzeug": "Veicolo",
+  "Rezept der Woche": "Ricetta della settimana",
+  "Schlösser": "Serrature",
+  "Beleuchtung": "Illuminazione",
+  "Jalousien": "Tapparelle",
+  "Klima": "Clima",
+  "Energie": "Energia",
+  "Sicherheit": "Sicurezza",
+  "Medien": "Multimedia",
+  "Personen": "Persone",
+  "Batterien": "Batteria",
+  "Netzwerk": "Rete",
+  "Pflanzen": "Piante",
+  "Kameras": "Telecamere",
+  "Kalender": "Calendario",
+  "Abfall": "Rifiuti",
+  "Abfall heute": "Rifiuti oggi",
+  "Abfall morgen": "Rifiuti domani",
+  "Restmüll": "Indifferenziato",
+  "Biomüll": "Organico",
+  "Papier": "Carta",
+  "Gelber Sack": "Plastica",
+  "Wertstoff": "Riciclabili",
+  "Abkühlen": "Raffreddamento",
+  "Abpumpen nicht möglich": "Scarico non possibile",
+  "Abbrechen": "Annulla",
+  "Beispiel-Künstler": "Artista di esempio",
+  "Türen offen": "Porte aperte",
+  "Zuletzt": "Ultimo",
+  "Zuletzt:": "Ultimo:",
+  "Entlädt": "In scarica",
+  "Weißton": "Tonalità di bianco",
+  "Helligkeit": "Luminosità",
+  "Farbe": "Colore",
+  "Temperaturverlauf": "Storico temperatura",
+  "Fenster offen · noch": "Finestra aperta · ancora",
+  "Zu feucht": "Troppo umido",
+  "Luftfeuchte": "Umidità",
+  "Heizt": "Riscalda",
+  "Heizen": "Riscaldamento",
+  "Kühlen": "Raffrescamento",
+  "Druckt": "In stampa",
+  "Reinigt": "Pulisce",
+  "Saugt": "Aspira",
+  "Angedockt": "Alla base",
+  "Lädt auf": "In carica",
+  "Unterwegs": "Fuori",
+  "Zuhause": "A casa",
+  "Abwesend": "Assente",
+  "Luft": "Aria",
+  "Wasser": "Acqua",
+  "Strom": "Elettricità",
+  "Solar": "Solare",
+  "Netz": "Rete",
+  "Haus": "Casa",
+  "Einspeisung": "Immissione",
+  "Netzbezug": "Prelievo dalla rete",
+  "Autarkie": "Autarchia",
+  "Eigenverbrauch": "Autoconsumo",
+  "Heute": "Oggi",
+  "Dieser Monat": "Questo mese",
+  "Diesen Monat": "Questo mese",
+  "Monat": "Mese",
+  "Woche": "Settimana",
+  "Jahr": "Anno",
+  "Schwach": "Debole",
+  "Voll": "Pieno",
+  "Leer": "Vuoto",
+  "Niedrig": "Basso",
+  "Hoch": "Alto",
+  "Mittel": "Medio",
+  "Normal": "Normale",
+  "Online": "Online",
+  "Offline": "Offline",
+  "Unbekannt": "Sconosciuto",
+  "Bauteillüfter": "Ventola pezzo",
+  "Druckkopflüfter": "Ventola hotend",
+  "Druckraumlüfter": "Ventola camera",
+  "Lüfter": "Ventola",
+  "Claude wertet einmal pro Woche (samstags 10 Uhr) Feuchte, CO₂ und Fensterzeiten aus und sagt, wo, wann und wie lange sich Lüften lohnt.": "Una volta a settimana (il sabato alle 10:00) Claude analizza umidità, CO₂ e tempi di finestre aperte e ti dice dove, quando e per quanto conviene arieggiare.",
+  "Die Auswertung startet mit der Heizsaison: Sobald geheizt wird, prüft Claude jeden Montag Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad.": "L'analisi parte con la stagione di riscaldamento: appena si accende, Claude controlla ogni lunedì durata del riscaldamento, temperature, riscaldamento a finestre aperte e il termosifone del bagno.",
+  "Gesichert": "Protetto",
+  "Sicher": "Sicuro",
+  "Braucht Aufmerksamkeit": "Da controllare",
+  "Nicht gesichert": "Non protetto",
+  "Fortschritt": "Avanzamento",
+  "Schicht": "Strato",
+  "Aufgabe": "Lavoro",
+  "Steuerung": "Comandi",
+  "Pausieren": "Pausa",
+  "Abspielen": "Riproduci",
+  "Fortsetzen": "Riprendi",
+  "Druckraumlicht": "Luce camera",
+  "Kamera": "Telecamera",
+  "Temperaturen": "Temperature",
+  "Druckbett": "Piatto",
+  "Steckdose": "Presa",
+  "Spannung": "Tensione",
+  "Luftfeuchtigkeit im AMS": "Umidità nell'AMS",
+  "Drucker": "Stampante",
+  "Druckzeit insgesamt": "Tempo di stampa totale",
+  "Druckplatte": "Piastra di stampa",
+  "Texturiert (PEI)": "Testurizzata (PEI)",
+  "Glatt (PEI)": "Liscia (PEI)",
+  "Edelstahl": "Acciaio inox",
+  "Einstellungen": "Impostazioni",
+  "Luftfeuchtigkeit": "Umidità",
+  "Status": "Stato",
+  "Modus": "Modalità",
+  "Zustand": "Stato",
+  "Zielwert": "Obiettivo",
+  "Feinstaub PM2,5": "Polveri sottili PM2,5",
+  "Bodenfeuchtigkeit": "Umidità del terreno",
+  "Beleuchtungsstärke": "Illuminamento",
+  "Bewegung": "Movimento",
+  "Ausschalten": "Spegni",
+  "Einschalten": "Accendi",
+  "Durchschnitt im Haus": "Media della casa",
+  "Halbe Ladung": "Mezzo carico",
+  "Heizkreise mit Strom versorgt": "Circuiti di riscaldamento alimentati",
+  "Kindersicherung": "Blocco bambini",
+  "Nur im Betrieb schaltbar": "Solo in funzione",
+  "Verbindung": "Connessione",
+  "Weitere Einstellungen": "Altre impostazioni",
+  "Nächste Stunden": "Prossime ore",
+  "Nachtlicht": "Luce notturna",
+  "Anzeige": "Display",
+  "Automatik": "Auto",
+  "Heizpause": "Pausa riscaldamento",
+  "Temperaturabsenkung": "Riduzione temperatura",
+  "Abgerufen": "Recuperato",
+  "Abpumpen": "Scarico",
+  "AdBlue-Reichweite": "Autonomia AdBlue",
+  "Akkufehler": "Errore batteria",
+  "Akkustand": "Livello batteria",
+  "Aktiv": "Attivo",
+  "Aktiver": "Attivo",
+  "Aktivieren": "Attiva",
+  "Aktiviert": "Attivato",
+  "Aktualisiert": "Aggiornato",
+  "Aktuell": "Aggiornato",
+  "Anbieter": "Fornitore",
+  "Angenehm": "Gradevole",
+  "Angepasst": "Regolato",
+  "Angezogen": "Inserito",
+  "Anpassen": "Regola",
+  "Anzeigen": "Mostra",
+  "Aquarien": "Acquari",
+  "Aquarium-Doktor": "Dottore dell'acquario",
+  "Aufgehoben": "Revocato",
+  "Aufheben": "Revoca",
+  "Aufheizen": "In riscaldamento",
+  "Aufmerksamkeit": "Attenzione",
+  "Aufnahme": "Registrazione",
+  "Aufwachen": "Risveglio",
+  "Ausblenden": "Nascondi",
+  "Ausgeschaltet": "Spento",
+  "Ausgewogen": "Bilanciato",
+  "Ausstehend": "In sospeso",
+  "Automatisch": "Automatico",
+  "Badezimmer": "Bagno",
+  "Batterie": "Batteria",
+  "Beckenlicht": "Luce acquario",
+  "Bedeckt": "Coperto",
+  "Beenden": "Termina",
+  "Beendet": "Terminato",
+  "Benachrichtigungen": "Notifiche",
+  "Beobachten": "Osservare",
+  "Bereitschaft": "Standby",
+  "Beschattungsautomatik": "Ombreggiatura automatica",
+  "Betriebsart": "Modalità operativa",
+  "Betriebssystem": "Sistema operativo",
+  "Bezug": "Dalla rete",
+  "Bild": "Immagine",
+  "Blockiert": "Bloccato",
+  "Bodenfeuchte": "Umidità del terreno",
+  "Büro": "Ufficio",
+  "Datenstand": "Dati al",
+  "Deaktivieren": "Disattiva",
+  "Deaktiviert": "Disinserito",
+  "Diebstahl": "Furto",
+  "Dosieren": "Dosa",
+  "Dosiert": "Dosato",
+  "Druckfehler": "Errore di stampa",
+  "Durchgang": "Ciclo",
+  "Durchgängen": "cicli",
+  "Eigene": "Personalizzato",
+  "Eigenversorgung": "Autosufficienza",
+  "Eingeschaltet": "Acceso",
+  "Einkaufsliste": "Lista della spesa",
+  "Einpassen": "Adatta",
+  "Einweichen": "Ammollo",
+  "Endet": "Finisce",
+  "Energiebedarf": "Fabbisogno energetico",
+  "Energieverbrauch": "Consumo energetico",
+  "Entkalken": "Decalcifica",
+  "Entwarnung": "Cessato allarme",
+  "Erinnerung": "Promemoria",
+  "Erkannt": "Rilevato",
+  "Erkennung": "Rilevamento",
+  "Erledigt": "Fatto",
+  "Extrem": "Estremo",
+  "Fahrt": "Percorso",
+  "Fahrten": "Percorsi",
+  "Fahrzeit": "Tempo di percorrenza",
+  "Favorit": "Preferito",
+  "Fehlgeschlagen": "Non riuscito",
+  "Fernstart": "Avvio remoto",
+  "Feststellbremse": "Freno a mano",
+  "Filamentwechsel": "Cambio filamento",
+  "Flur": "Corridoio",
+  "Frei": "Libero",
+  "Freigeben": "Approva",
+  "Gekippt": "A ribalta",
+  "Gemeldet": "Segnalato",
+  "Gering": "Basso",
+  "Geringer": "Inferiore",
+  "Geschwindigkeit": "Velocità",
+  "Gestartet": "Avviato",
+  "Gestern": "Ieri",
+  "Gestoppt": "Fermato",
+  "Gesund": "Sana",
+  "Gewitter": "Temporale",
+  "HA-Zeitplan": "Programma HA",
+  "Hagel": "Grandine",
+  "Handeln": "Agire",
+  "Hauptschalter": "Interruttore generale",
+  "Hauswirtschaftsraum": "Lavanderia",
+  "Heckklappe": "Portellone",
+  "Hinweis": "Avviso",
+  "Hinweise": "Avvisi",
+  "Inaktiv": "Inattivo",
+  "Inspektion": "Revisione",
+  "Installiert": "Installato",
+  "Intensiv": "Intensivo",
+  "Isoliert": "Isolato",
+  "Jalousien-Automatik": "Tapparelle automatiche",
+  "Jetzt": "Ora",
+  "Kalibrierung": "Calibrazione",
+  "Kalorien": "Calorie",
+  "Kalt": "Freddo",
+  "Kaltstart": "Avvio a freddo",
+  "Kanal": "Canale",
+  "Kartierung": "Mappatura",
+  "Kilometerstand": "Chilometraggio",
+  "Klar": "Sereno",
+  "Klingel": "Campanello",
+  "Knitterschutz": "Antipiega",
+  "Kritisch": "Critico",
+  "Küche": "Cucina",
+  "LAN-Download": "Download LAN",
+  "Ladefehler": "Errore di ricarica",
+  "Ladevorrang": "Priorità di ricarica",
+  "Ladezyklen": "Cicli di ricarica",
+  "Lagerwartung": "Manutenzione cuscinetti",
+  "Langzeit": "Lungo periodo",
+  "Lecksensor": "Sensore perdite",
+  "Leicht": "Lieve",
+  "Leise": "Silenzioso",
+  "Leiser": "Più silenzioso",
+  "Lichtsteuerung": "Controllo luci",
+  "Luftdruck": "Pressione atmosferica",
+  "Luftreiniger": "Purificatore",
+  "Manuell": "Manuale",
+  "Markisen": "Tende da sole",
+  "Maschinenpflege": "Cura della macchina",
+  "Maschinenreinigung": "Pulizia della macchina",
+  "Meerwasser": "Acqua salata",
+  "Meldefehler": "Errore di segnalazione",
+  "Messwerte": "Misurazioni",
+  "Minuten": "minuti",
+  "Motorhaube": "Cofano",
+  "Motorstunden": "Ore motore",
+  "Nacht": "Notte",
+  "Nachtmodus": "Modalità notte",
+  "Neustart": "Riavvio",
+  "Nivellieren": "Livellamento",
+  "Notfall": "Emergenza",
+  "Notstrom": "Alimentazione di riserva",
+  "Optionen": "Opzioni",
+  "Orten": "Localizza",
+  "Patrouille": "Pattuglia",
+  "Pflanzen-Doktor": "Dottore delle piante",
+  "Profil": "Profilo",
+  "Punktreinigung": "Pulizia puntuale",
+  "Quelle": "Sorgente",
+  "Raumluft": "Aria interna",
+  "Raumreinigung": "Pulizia stanza",
+  "Raumtemperatur": "Temperatura ambiente",
+  "Rausstellen": "Esporre",
+  "Referenzfahrt": "Corsa di riferimento",
+  "Regen": "Pioggia",
+  "Regeneriersalz": "Sale per lavastoviglie",
+  "Regnerisch": "Piovoso",
+  "Reichweite": "Autonomia",
+  "Reinigen": "Pulisci",
+  "Reinigung": "Pulizia",
+  "Reinigungen": "Pulizie",
+  "Reinigungsmodus": "Modalità pulizia",
+  "Ruhig": "Calmo",
+  "Salz": "Sale",
+  "Sanft": "Delicato",
+  "Sauber": "Pulito",
+  "Saugen": "Aspira",
+  "Schiebedach": "Tetto apribile",
+  "Schildkröte": "Tartaruga",
+  "Schlafzimmer": "Camera da letto",
+  "Schleudern": "Centrifuga",
+  "Schnee": "Neve",
+  "Schneefall": "Nevicata",
+  "Schneeregen": "Nevischio",
+  "Schnell": "Rapido",
+  "Schnellwahl": "Selezione rapida",
+  "Schrittverlust": "Perdita di passi",
+  "Schutzladung": "Carica di protezione",
+  "Schwer": "Grave",
+  "Sensoren": "Sensori",
+  "Sicherheitswarnung": "Avviso di sicurezza",
+  "Sichtweite": "Visibilità",
+  "Slicen": "Slicing",
+  "Sofort": "Subito",
+  "Solaranlage": "Impianto fotovoltaico",
+  "Sonnig": "Soleggiato",
+  "Speiseplan": "Menù settimanale",
+  "Starker": "Forte",
+  "Starkregen": "Pioggia intensa",
+  "Startet": "In avvio",
+  "Statistik": "Statistiche",
+  "Stufe": "Livello",
+  "Stumm": "Muto",
+  "Stunde": "ora",
+  "Stunden": "ore",
+  "Tagen": "giorni",
+  "Tarif": "Tariffa",
+  "Tastensperre": "Blocco tasti",
+  "Technik": "Attrezzatura",
+  "Temperaturwarnung": "Avviso temperatura",
+  "Terrasse": "Terrazza",
+  "Tonnen": "Bidoni",
+  "Trittfrequenz": "Cadenza",
+  "Trocken": "Secco",
+  "Trocknen": "Asciuga",
+  "Trocknet": "In asciugatura",
+  "Trommelreinigung": "Pulizia cestello",
+  "Unklar": "Incerto",
+  "Unkritisch": "Non critico",
+  "Unscharf": "Disinserito",
+  "Unter": "Sotto",
+  "Unterbrochen": "Interrotto",
+  "Unwetter": "Maltempo",
+  "Urlaub": "Vacanza",
+  "VERBLEIBEND": "RIMANENTE",
+  "Ventil-Anpassung": "Regolazione valvole",
+  "Verriegelung": "Blocco",
+  "Vorbereitung": "Preparazione",
+  "WLAN-Download": "Download Wi-Fi",
+  "Warm": "Caldo",
+  "Warnung": "Avviso",
+  "Wartung": "Manutenzione",
+  "Waschen": "Lavaggio",
+  "Waschküche": "Lavanderia",
+  "Wasserbedarf": "Fabbisogno d'acqua",
+  "Wassertemperatur": "Temperatura dell'acqua",
+  "Wetterwarnung": "Allerta meteo",
+  "Wiedergabe": "Riproduzione",
+  "Windig": "Ventoso",
+  "Wischen": "Lava",
+  "Wischmodus": "Modalità lavaggio",
+  "Wischt": "Lava",
+  "Wohnzimmer": "Soggiorno",
+  "Zeitplan": "Programma",
+  "Zonenreinigung": "Pulizia a zone",
+  "Überschwemmung": "Alluvione",
+  "überschwemmung": "alluvione",
+  "Januar": "Gennaio",
+  "Februar": "Febbraio",
+  "März": "Marzo",
+  "Mär": "Mar",
+  "April": "Aprile",
+  "Mai": "Maggio",
+  "Juni": "Giugno",
+  "Juli": "Luglio",
+  "August": "Agosto",
+  "September": "Settembre",
+  "Oktober": "Ottobre",
+  "November": "Novembre",
+  "Dezember": "Dicembre",
+  "Montag": "Lunedì",
+  "Dienstag": "Martedì",
+  "Mittwoch": "Mercoledì",
+  "Donnerstag": "Giovedì",
+  "Freitag": "Venerdì",
+  "Samstag": "Sabato",
+  "Sonntag": "Domenica",
+  "1 Reinigung": "1 pulizia",
+  "1 Update braucht Aufmerksamkeit": "1 aggiornamento richiede attenzione",
+  "AMS getrennt": "AMS scollegato",
+  "AMS wird vorbereitet": "Preparazione AMS",
+  "Ablaufpumpe blockiert": "Pompa di scarico bloccata",
+  "Absturzsensor verschmutzt": "Sensore anticaduta sporco",
+  "Abwesend scharf schalten?": "Inserire in modalità assente?",
+  "Aktiviert (Abwesend)": "Inserito (assente)",
+  "Aktiviert (Bypass)": "Inserito (bypass)",
+  "Aktiviert (Zuhause)": "Inserito (a casa)",
+  "Aktiviert (Nacht)": "Inserito (notte)",
+  "Aktiviert (Urlaub)": "Inserito (vacanza)",
+  "Alarm deaktiviert": "Allarme disinserito",
+  "Alles aktuell": "Tutto aggiornato",
+  "Alles eingekauft": "Tutto comprato",
+  "Alles gelesen": "Tutto letto",
+  "Als beendet markieren": "Segna come terminato",
+  "Amtliche Warnung": "Avviso ufficiale",
+  "Andere Idee": "Un'altra idea",
+  "Aquarium-Licht": "Luce acquario",
+  "Auf die Einkaufsliste": "Nella lista della spesa",
+  "Automatisch erkennen": "Rileva automaticamente",
+  "Batterie schwach": "Batteria scarica",
+  "Betrifft bei dir": "Ti riguarda",
+  "Bett wird nivelliert": "Livellamento piatto",
+  "Bewegung erkannt": "Movimento rilevato",
+  "Bewegungsmelder inaktiv": "Sensore di movimento inattivo",
+  "Bitte warten": "Attendi",
+  "Bluetooth-Verbindung kurz unterbrochen": "Connessione Bluetooth interrotta brevemente",
+  "Braucht dringend Aufmerksamkeit": "Richiede attenzione urgente",
+  "Braucht etwas Aufmerksamkeit": "Richiede un po' di attenzione",
+  "braucht Aufmerksamkeit": "richiede attenzione",
+  "Breaking Change betrifft dich": "Una modifica importante ti riguarda",
+  "Breaking Changes betreffen dich": "Ci sono modifiche importanti che ti riguardano",
+  "CO₂-Wert hoch": "CO₂ alto",
+  "Claude liest die Release-Notes …": "Claude sta leggendo le note di rilascio…",
+  "Claude prüft Bodenfeuchte, Licht, Temperatur und Luftfeuchte der letzten 7 Tage passend zur Art und gibt einen Pflegetipp.": "Claude controlla umidità del terreno, luce, temperatura e umidità degli ultimi 7 giorni in base alla specie e ti dà un consiglio di cura.",
+  "Zu hoch": "Troppo alto",
+  "Zu niedrig": "Troppo basso",
+  "Claude prüft Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad der letzten 7 Tage.": "Claude controlla durata del riscaldamento, temperature, riscaldamento a finestre aperte e il termosifone del bagno degli ultimi 7 giorni.",
+  "Code eingeben …": "Inserisci il codice…",
+  "Dashboard bearbeiten": "Modifica dashboard",
+  "Deine Region": "La tua regione",
+  "Details in der Bambu-App": "Dettagli nell'app Bambu",
+  "Diebstahl gemeldet": "Furto segnalato",
+  "Du bist diesen Monat dran": "Questo mese tocca a te",
+  "Du bist dran": "Tocca a te",
+  "Nicht dran": "Non tocca a te",
+  "Dock getrennt": "Base scollegata",
+  "Druckbett wird gescannt": "Scansione piatto",
+  "Drucker offline": "Stampante offline",
+  "Druckplatte wird erkannt": "Rilevamento piastra",
+  "Eigenes Tagesprofil der Lampe": "Profilo giornaliero della lampada",
+  "Eingriff erforderlich": "Intervento necessario",
+  "Einmalig erlaubt": "Consentito una volta",
+  "Endet gleich": "Finisce a breve",
+  "Energie gesamt": "Energia totale",
+  "Erkennung fortsetzen": "Riprendi rilevamento",
+  "Erkennung pausieren": "Pausa rilevamento",
+  "Wenn die Maschine kurz angehalten wird": "Se la macchina si ferma per un momento",
+  "Ersparnis gesamt": "Risparmio totale",
+  "Erst saugen, dann wischen": "Prima aspira, poi lava",
+  "Extra Trocken": "Extra asciutto",
+  "Extreme Warnung": "Avviso estremo",
+  "Extremes Unwetter": "Maltempo estremo",
+  "Extrusion wird kalibriert": "Calibrazione estrusione",
+  "Fahrzeit gesamt": "Tempo di percorrenza totale",
+  "Farben nach deiner Automation": "Colori dalla tua automazione",
+  "Fast fertig": "Quasi pronto",
+  "Feinstaub PM2.5": "Polveri sottili PM2.5",
+  "Fernsteuerung aktiv": "Controllo remoto attivo",
+  "Feste Zieltemperatur": "Temperatura obiettivo fissa",
+  "Filament wird entladen": "Scarico filamento",
+  "Filament wird geladen": "Caricamento filamento",
+  "Fluss wird kalibriert": "Calibrazione flusso",
+  "Frag Assist …": "Chiedi ad Assist…",
+  "Frischwassertank leer": "Serbatoio acqua pulita vuoto",
+  "Ganzes Haus": "Tutta la casa",
+  "Gas erkannt": "Gas rilevato",
+  "Geladen (12 Monate)": "Caricato (12 mesi)",
+  "Gerade angekommen": "Appena arrivato",
+  "Gerade gegangen": "Appena uscito",
+  "Heute gefahren": "Percorso oggi",
+  "Gestern gefahren": "Percorso ieri",
+  "Heute gegossen": "Annaffiata oggi",
+  "Gestern gegossen": "Annaffiata ieri",
+  "Gewitter mit Regen": "Temporale con pioggia",
+  "Heizkreise stromlos": "Circuiti di riscaldamento non alimentati",
+  "Heute dosiert": "Dosato oggi",
+  "Hohe Feuchtigkeit": "Umidità alta",
+  "Ich habe nichts verstanden.": "Non ho capito.",
+  "Idee holen": "Chiedi un'idea",
+  "Im Anruf": "In chiamata",
+  "Immer erlaubt": "Sempre consentito",
+  "Intensiv 70°": "Intensivo 70°",
+  "Jetzt aktualisieren": "Aggiorna ora",
+  "Jetzt auswerten": "Analizza ora",
+  "Jetzt dosieren": "Dosa ora",
+  "Jetzt neu starten": "Riavvia ora",
+  "Jetzt starten": "Avvia ora",
+  "Zeitversetzt starten": "Avvio ritardato",
+  "Kindersicherung aktiv": "Blocco bambini attivo",
+  "Klare Nacht": "Notte serena",
+  "Kohlenmonoxid erkannt": "Monossido di carbonio rilevato",
+  "Kritische Temperaturabweichung!": "Deviazione critica di temperatura!",
+  "Lädt und Bypass": "In carica e bypass",
+  "Lade Vorhersage …": "Caricamento previsioni…",
+  "Laden bis": "Carica fino a",
+  "Nicht entladen unter": "Non scaricare sotto",
+  "Laufzeit insgesamt": "Tempo di funzionamento totale",
+  "Lecksensor offline": "Sensore perdite offline",
+  "Letzter Durchgang": "Ultimo ciclo",
+  "Letzter Versuch fehlgeschlagen": "Ultimo tentativo non riuscito",
+  "Lidar blockiert": "Lidar bloccato",
+  "Manueller Modus": "Modalità manuale",
+  "Mopp fehlt": "Manca il mocio",
+  "Mopp trocknen": "Asciuga mocio",
+  "Mopp waschen": "Lava mocio",
+  "Mopp wird angebracht": "Montaggio mocio",
+  "Mopp wird entfernt": "Rimozione mocio",
+  "Motor wird kalibriert": "Calibrazione motore",
+  "Nach Zeitplan": "Da programma",
+  "Neue Post im Briefkasten": "Nuova posta nella cassetta",
+  "Neues Gespräch": "Nuova conversazione",
+  "Neustart ausstehend": "Riavvio in sospeso",
+  "Neustart erforderlich": "Riavvio necessario",
+  "Nicht angepasst": "Non regolato",
+  "Nicht erkannt": "Non rilevato",
+  "Nicht gemeldet": "Non segnalato",
+  "Nicht verbunden": "Non connesso",
+  "Nicht verriegelt": "Non bloccata",
+  "Niedriger Wasserdruck": "Pressione acqua bassa",
+  "Noch nie": "Ancora mai",
+  "Nur Anzeige": "Solo visualizzazione",
+  "Pflanze ist gesund": "La pianta è sana",
+  "Push am Vorabend": "Notifica la sera prima",
+  "Rauch erkannt": "Fumo rilevato",
+  "Reichweite je Modus": "Autonomia per modalità",
+  "Reinigung gestartet": "Pulizia avviata",
+  "Reinigungen insgesamt": "Pulizie totali",
+  "Reispfanne mit Hähnchen und Pilzen": "Riso saltato con pollo e funghi",
+  "Roboter gekippt": "Robot ribaltato",
+  "Roboter steckt fest": "Robot bloccato",
+  "Saugen & wischen": "Aspirazione e lavaggio",
+  "Saugt & wischt": "Aspira e lava",
+  "Saugt & wischt Zone": "Aspira e lava zona",
+  "Wischt Zone": "Lava zona",
+  "Scharf schalten?": "Inserire?",
+  "Unscharf schalten?": "Disinserire?",
+  "Sirene stoppen?": "Fermare la sirena?",
+  "Schmutzwasser leeren": "Svuota acqua sporca",
+  "Schmutzwassertank voll": "Serbatoio acqua sporca pieno",
+  "Schnell 45°": "Rapido 45°",
+  "Schnell 65°": "Rapido 65°",
+  "Schnell 30": "Rapido 30",
+  "Baumwolle 40": "Cotone 40",
+  "Pflegeleicht": "Sintetici",
+  "Schneller fertig": "Più veloce",
+  "Schwere Warnung": "Avviso grave",
+  "Sehr kalt": "Molto freddo",
+  "Zu kalt": "Troppo freddo",
+  "Sehr trocken": "Molto secco",
+  "Sensoren reinigen": "Pulisci i sensori",
+  "Service & Sicherheit": "Assistenza e sicurezza",
+  "Service nach Strecke": "Tagliando per chilometri",
+  "Sonstige Wartung": "Altra manutenzione",
+  "Speedtest starten": "Misura velocità",
+  "Spracheingabe fehlgeschlagen.": "Input vocale non riuscito.",
+  "Sprechen": "Parla",
+  "Starte den Saugroboter": "Avvia il robot aspirapolvere",
+  "Starts insgesamt": "Avvii totali",
+  "Stoppt …": "Arresto in corso…",
+  "Sucht ein Rezept …": "Sta cercando una ricetta…",
+  "Temperaturwarnung aktiv": "Avviso temperatura attivo",
+  "Trocknet Mopp": "Asciuga il mocio",
+  "Trocknung endet": "Asciugatura quasi finita",
+  "Verbindung stabil": "Connessione stabile",
+  "Verschobene Termine": "Date spostate",
+  "Voll geladen": "Carica completa",
+  "Voll, Bypass": "Pieno, bypass",
+  "Vollschutz aktiv": "Protezione totale attiva",
+  "Von dir pausiert": "Messo in pausa da te",
+  "WLAN & Sperren": "Wi-Fi e blocchi",
+  "Warte auf Pflanzendaten": "In attesa dei dati della pianta",
+  "Warte auf Start": "In attesa dell'avvio",
+  "Wartet auf Druckbett": "In attesa del piatto",
+  "Wartet auf Neustart": "In attesa del riavvio",
+  "Was steht auf der Einkaufsliste?": "Cosa c'è nella lista della spesa?",
+  "Wasserheizung verkalkt": "Riscaldatore con calcare",
+  "Wasserkasten fehlt": "Manca il serbatoio dell'acqua",
+  "Wetterwarnung aufgehoben": "Allerta meteo revocata",
+  "Wie kann ich helfen?": "Come posso aiutarti?",
+  "Wieder anzeigen": "Mostra di nuovo",
+  "Zum Freigeben oben in der Update-Zeile auf „Freigeben“ tippen und bestätigen.": "Per approvare, tocca “Approva” nella riga dell'aggiornamento qui sopra e conferma.",
+  "KI: alle unkritisch": "IA: tutto non critico",
+  "KI: unkritisch": "IA: non critico",
+  "Installieren empfohlen": "Installazione consigliata",
+  "auf der Arbeit": "al lavoro",
+  "dauert länger als üblich": "dura più del solito",
+  "gibt es noch keine eigene Auswertung. „Neu auswerten“ erstellt sie für alle Räume.": "non ha ancora un'analisi propria. “Rianalizza” la crea per tutte le stanze.",
+  "sehr schlecht": "molto scarsa",
+  "Stufe 1": "Livello 1",
+  "Stufe 2": "Livello 2",
+  "Stufe 3": "Livello 3",
+  "Durchgänge seit dem letzten Mal": "cicli dall'ultima volta",
+  "Ø Dauer": "Ø durata",
+  "Ø pro Durchgang": "Ø per ciclo",
+  "Wertstoffabfall": "Riciclabili",
+  "Aktuelle Wiedergabe": "In riproduzione",
+  "Beispiel-Titel": "Titolo di esempio",
+  "Daten: Deutscher Wetterdienst (DWD)": "Dati: Deutscher Wetterdienst (DWD)",
+  "Internetsperre": "Blocco internet",
+  "Latenz": "Latenza",
+  "Startzeit": "Ora di inizio",
+  "Wetter": "Meteo",
+  "Zieltemperatur": "Temperatura desiderata",
+  "braucht Wasser": "ha bisogno di acqua",
+  "braucht Dünger": "ha bisogno di concime",
+  "braucht mehr Licht": "ha bisogno di più luce",
+  "steht in zu trockener Luft": "l'aria è troppo secca",
+  "steht in zu feuchter Luft": "l'aria è troppo umida",
+  "ausgezeichnet": "eccellente",
+  "gut": "buona",
+  "schlecht": "scarsa",
+  "Lädt aus dem Netz": "In carica dalla rete",
+  "Übernahme fehlgeschlagen": "Presa di controllo non riuscita",
+  "Backup läuft": "Backup in corso",
+  "An/Aus": "Acceso/Spento",
+  "12-V-Batterie": "Batteria 12 V",
+  "Luftfeuchtigkeit außen": "Umidità esterna",
+  "Nächstes Backup überfällig": "Prossimo backup in ritardo",
+  "Kamera nicht erreichbar": "Telecamera non raggiungibile",
+  "Kein Bild – Kamera ist offline oder ihr Dienst läuft nicht.": "Nessuna immagine – la telecamera è offline o il suo servizio non è attivo.",
+  "Kamera offline": "Telecamera offline",
+  "Schloss offline": "Serratura offline",
+  "Fenster gekippt": "Finestra a ribalta",
+  "Tor offen": "Cancello aperto",
+  "Luft ausgezeichnet": "Aria eccellente",
+  "Luft mäßig": "Aria discreta",
+  "Luft schlecht": "Aria scarsa",
+  "Luft sehr schlecht": "Aria pessima",
+  "Klemmt": "Inceppato",
+  "Wird geöffnet …": "Apertura…",
+  "Gerät fehlt": "Dispositivo mancante",
+  "Aktionen": "Azioni",
+  "Gerät nicht erreichbar": "Dispositivo non raggiungibile",
+  "Aus (Bürste angehoben)": "Spento (spazzola sollevata)",
+  "Eigene Wassermenge": "Flusso d'acqua personalizzato",
+  "Nur wischen": "Solo lavaggio",
+  "Pflanze": "Pianta",
+  "Rezept": "Ricetta",
+  "Tür gekippt": "Porta a ribalta",
+  "Ton": "Suono",
+  "Beschreiben": "Descrivi",
+  "Prüfe Strom und WLAN der Kamera.": "Controlla alimentazione e Wi-Fi della telecamera.",
+  "Erneut versuchen": "Riprova",
+  "Schloss": "Serratura",
+  "Sirene": "Sirena",
+  "Alarm": "Allarme",
+  "Tor": "Cancello",
+  "Lichtfarbe": "Colore della luce",
+  "Leuchten im Raum": "Luci della stanza",
+  "Leuchten": "Luci",
+  "Gedimmt": "Attenuata",
+  "Volle Helligkeit": "Luminosità massima",
+  "Neutral": "Neutro",
+  "zuletzt": "ultimo",
+  "Kanäle": "Canali",
+  "Becken": "Vasche",
+  "Aquarien · Temperaturen": "Acquari · Temperature",
+  "Mehr": "Più",
+  "Weniger": "Meno",
+  "WLAN": "Wi-Fi",
+  "Verbraucher": "Utenze",
+  "Energiefluss": "Flusso di energia",
+  "Woher": "Da dove",
+  "Wohin Solar": "Dove va il solare",
+  "Verbrauch im Haus": "Consumo della casa",
+  "Akku lädt": "Batteria in carica",
+  "Akku entlädt": "Batteria in scarica",
+  "Akku bereit": "Batteria a riposo",
+  "Solar liefert gerade nichts": "Nessuna produzione solare ora",
+  "Kein Verbrauch": "Nessun consumo",
+  "Noch keine Werte": "Ancora nessun valore",
+  "Noch keine Aufteilung": "Ancora nessuna ripartizione",
+  "Sperren": "Blocchi",
+  "Internet": "Internet",
+  "Durchsatz": "Throughput",
+  "Gerätedetails": "Dettagli dispositivo",
+  "Update verfügbar": "Aggiornamento disponibile",
+  "Problem": "Problema",
+  "Speedtest läuft …": "Speedtest in corso…",
+  "Kapazität": "Capacità",
+  "Tipps": "Consigli",
+  "Noch keine Auswertung": "Ancora nessuna analisi",
+  "Solarbank": "Solarbank",
+  "Betriebszustand": "Stato di funzionamento",
+  "Lastvorgabe": "Carico impostato",
+  "Öffentliche IP": "IP pubblico",
+  "LAN-Upload": "Upload LAN",
+  "WLAN-Upload": "Upload Wi-Fi",
+  "pro Woche sparbar": "risparmiabili a settimana",
+  "Kein Strom ins Netz": "Nessuna immissione in rete",
+  "Abgabelimit": "Limite di uscita",
+  "Claude wertet die letzte Woche aus …": "Claude sta analizzando l'ultima settimana…",
+  "Niedriger Akkustand": "Batteria bassa",
+  "Alle Geräte": "Tutti i dispositivi",
+  "Keine Warnungen": "Nessun avviso",
+  "Alles in Ordnung": "Tutto in ordine",
+  "Alle Schlösser": "Tutte le serrature",
+  "Alle Kameras": "Tutte le telecamere",
+  "Nicht geprüft": "Non verificato",
+  "KI-Fehler": "Errore IA",
+  "KI prüft …": "L'IA sta verificando…",
+  "1 Batterie schwach": "1 batteria bassa",
+  "Tippen zum Verriegeln": "Tocca per bloccare",
+  "Tippen zum Entriegeln": "Tocca per sbloccare",
+  "Tippen, um alle zu verriegeln": "Tocca per bloccare tutto",
+  "Tippen, um alle zu entriegeln": "Tocca per sbloccare tutto",
+  "Wird verriegelt …": "Blocco in corso…",
+  "Wird entriegelt …": "Sblocco in corso…",
+  "● Unkritisch": "● Non critico",
+  "● Breaking": "● Cambiamento importante",
+  "● Handeln": "● Richiede azione",
+  "KI-Blick: Druck prüfen": "Sguardo IA: controlla la stampa",
+  "Fertig gegen": "Pronto verso le",
+  "Station": "Base",
+  "Alles aufgefüllt": "Tutto rifornito",
+  "Salz, Klarspüler und Pflege sind in Ordnung": "Sale, brillantante e cura sono a posto",
+  "Fühler": "Sonde",
+  "Verlauf": "Cronologia",
+  "Verlauf der letzten 24 Stunden": "Cronologia delle ultime 24 ore",
+  "Rad-Check im Detail": "Controllo bici nel dettaglio",
+  "Motor": "Motore",
+  "Alles zu und verriegelt": "Tutto chiuso e bloccato",
+  "Alles zu": "Tutto chiuso",
+  "Feststellbremse angezogen": "Freno di stazionamento inserito",
+  "Tank fast leer": "Serbatoio quasi vuoto",
+  "Speiseplan der nächsten 7 Tage ist leer": "Il menù dei prossimi 7 giorni è vuoto",
+  "Zutaten der Idee": "Ingredienti dell'idea",
+  "Raumluft gut": "Aria interna buona",
+  "Heute keine Termine": "Oggi nessun evento",
+  "1 Termin heute": "1 evento oggi",
+  "Keine Szenen gefunden. Casora zeigt alle Szenen, die in den Entitäten weder ausgeblendet noch deaktiviert sind.": "Nessuna scena trovata. Casora mostra tutte le scene che nelle entità non sono né nascoste né disattivate.",
+  "Aquarium": "Acquario",
+  "Jalousie": "Tapparella",
+  "E-Bike": "E-bike",
+  "Ventilator": "Ventilatore",
+  "Spiel": "Gioco",
+  "Luftbefeuchter": "Umidificatore",
+  "Anwesenheit": "Presenza",
+  "Schalter": "Interruttore",
+  "Updates": "Aggiornamenti",
+  "Wetterwarnungen": "Allerte meteo",
+  "Noch keine Geräte – im Studio hinzufügen": "Ancora nessun dispositivo – aggiungili nello Studio",
+  "Noch kein Gerät zugeordnet": "Ancora nessun dispositivo assegnato",
+  "Im Casora Studio dieser Kachel ein Gerät zuweisen": "Assegna un dispositivo a questa scheda in Casora Studio",
+  "Im Casora Studio neu zuordnen": "Riassegnalo in Casora Studio",
+  "Noch nicht eingerichtet": "Non ancora configurato",
+  "Im Casora Studio der Kachel den Solar-Tipp zuordnen.": "Assegna il consiglio solare a questa scheda in Casora Studio.",
+  "Noch keine Tageswerte": "Ancora nessun valore giornaliero",
+  "Welche Geräte hier zählen, legst du im Studio fest.": "Quali dispositivi contano qui lo decidi nello Studio.",
+  "waschen": "fare il bucato",
+  "spülen": "avviare la lavastoviglie",
+  "trocknen": "avviare l'asciugatrice",
+  "Fühlt sich wohl": "Sta bene",
+  "Braucht Wasser": "Ha bisogno di acqua",
+  "Steht zu nass": "Troppo bagnata",
+  "Steht zu kalt": "Ha troppo freddo",
+  "Steht zu warm": "Ha troppo caldo",
+  "Zu viel Sonne": "Troppo sole",
+  "Überdüngt": "Troppo concime",
+  "Bitte nachsehen": "Dai un'occhiata",
+  "Keine Messwerte": "Nessuna misurazione",
+  "Wartet auf Daten": "In attesa di dati",
+  "steht zu nass": "è troppo bagnata",
+  "ist überdüngt": "ha troppo concime",
+  "bekommt zu viel Sonne": "riceve troppo sole",
+  "steht zu kalt": "ha troppo freddo",
+  "steht zu warm": "ha troppo caldo",
+  "Ausgeräumt": "Svuotata",
+  "Wäsche ist noch drin": "Il bucato è ancora dentro",
+  "Wäsche ist noch im Trockner": "Il bucato è ancora nell'asciugatrice",
+  "Fertig · Wäsche drin": "Finito · bucato dentro",
+  "Wird beim Öffnen der Tür erkannt": "Rilevato all'apertura dello sportello",
+  "Welches Programm läuft?": "Quale programma è in corso?",
+  "Nächstes Programm": "Prossimo programma",
+  "Erkennung anhalten": "Sospendi rilevamento",
+  "Wenn die Maschine kurz unterbrochen wird": "Se la macchina si interrompe per poco",
+  "Die Erkennung ist angehalten": "Il rilevamento è in pausa",
+  "Erkennung verbessern": "Migliora rilevamento",
+  "1 Einstellung empfohlen, in WashData übernehmen": "1 impostazione consigliata, applicala in WashData",
+  "Durchgänge insgesamt": "Cicli in totale",
+  "Programme": "Programmi",
+  "Programm gewählt": "Programma scelto",
+  "An der Maschine gewählt": "Scelto sulla macchina",
+  "Prüfung": "Verifica",
+  "Spülstopp": "Stop risciacquo",
+  "Stromausfall": "Interruzione di corrente",
+  "Störung": "Guasto",
+  "Wartung nötig": "Manutenzione necessaria",
+  "Abfallkalender gerade nicht erreichbar": "Calendario rifiuti al momento non raggiungibile",
+  "Nicht erreichbar": "Non raggiungibile",
+  "Die Abholtermine kommen wieder, sobald der Entsorger antwortet.": "Le date di raccolta torneranno appena il servizio rifiuti risponde.",
+  "Lautsprecher und TVs": "Altoparlanti e TV",
+  "Sonstiges": "Altro",
+  "Schlaf": "Sonno",
+  "Eco": "Eco",
+  "Smart": "Smart",
+  "Turbo": "Turbo",
+  "Boost": "Boost",
+  "Natur": "Naturale",
+  "Hier gibt es noch keine Geräte": "Qui non ci sono ancora dispositivi",
+  "Im Casora Studio einem Raum zuordnen": "Assegnali a una stanza in Casora Studio",
+  "weitere": "altri",
+  "Zum Anfang": "All'inizio",
+  "Fast leer": "Quasi vuoto",
+  "Alle Batterien OK": "Tutte le batterie OK",
+  "1 Akku schwach": "1 batteria bassa",
+  "Akku fast leer": "Batteria quasi scarica",
+  "Läuft gerade": "In riproduzione",
+  "Scharf": "Inserito",
+  "Alarm unscharf": "Allarme disinserito",
+  "Welche Türen sind offen?": "Quali porte sono aperte?",
+  "Ist alles abgeschlossen?": "È tutto chiuso a chiave?",
+  "Alarm scharf schalten": "Inserisci l'allarme",
+  "Wie wird das Wetter heute?": "Che tempo fa oggi?",
+  "Muss heute eine Tonne raus?": "Oggi va fuori qualche bidone?",
+  "Öffne die Jalousien": "Apri le tapparelle",
+  "Schließe die Jalousien": "Chiudi le tapparelle",
+  "Wie viel Strom brauchen wir gerade?": "Quanta corrente stiamo usando ora?",
+  "Läuft die Waschmaschine noch?": "La lavatrice è ancora in funzione?",
+  "Was läuft gerade?": "Cosa sta suonando?",
+  "Vorschläge für den Morgen": "Suggerimenti per la mattina",
+  "Vorschläge für heute": "Suggerimenti per oggi",
+  "Vorschläge für den Abend": "Suggerimenti per la sera",
+  "Vorschläge für die Nacht": "Suggerimenti per la notte",
+  "lädt": "in carica",
+  "Zum Dock": "Alla base",
+  "Smart wählt Saugstärke und Wischen je Raum selbst.": "Smart sceglie da solo aspirazione e lavaggio per ogni stanza.",
+  "Kein Bild": "Nessuna immagine",
+  "Zu": "Chiudi",
+  "Auf": "Apri",
+  "Position": "Posizione",
+  "Spielt": "In riproduzione",
+  "Geräte im Casora Studio einem Raum zuordnen": "Assegna i dispositivi a una stanza in Casora Studio",
+  "Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über eine https-Adresse öffnen.": "Il microfono funziona solo con HTTPS – apri Home Assistant da un indirizzo https.",
+  "In der Summe": "Nella somma",
+  "Nicht in der Summe": "Fuori dalla somma",
+  "Keine Leistung": "Non è potenza",
+  "Steckt hinter": "Dietro a",
+  "1 Gerät ohne Wert": "1 dispositivo senza valore",
+  "Schloss offen": "Serratura aperta",
+  "Alles sicher": "Tutto sicuro",
+  "Auswertung der letzten 7 Tage": "Analisi degli ultimi 7 giorni",
+  "Idee der Woche": "Idea della settimana",
+  "Vorschlag von Claude": "Suggerimento di Claude",
+  "Karte": "Mappa",
+  "Vom Hersteller, kommt verzögert": "Dal produttore, arriva in ritardo",
+  "der Entsorger": "il servizio rifiuti",
+  "Mbit/s Download": "Mbit/s in download",
+  "Mbit/s Upload": "Mbit/s in upload",
+  "Download & Upload": "Download e upload",
+  "Download": "Download",
+  "Upload": "Upload",
+  "Sensor": "Sensore",
+  "Speedtest": "Speedtest",
+  "Standby": "Standby",
+  "Firmware": "Firmware",
+  "HACS": "HACS",
+  "Casora": "Casora",
+  "Cookidoo": "Cookidoo",
+  "Thermomix": "Thermomix",
+  "PowerTube": "PowerTube",
+  "PlayStation": "PlayStation",
+  "PlayStation Network": "PlayStation Network",
+  "1 Termin": "1 evento",
+  "1 Kamera offline": "1 telecamera offline",
+  "1 Schloss offline": "1 serratura offline",
+  "1 Tür gekippt": "1 porta a ribalta",
+  "1 Tag": "1 giorno",
+  "Wirklich ausschalten?": "Spegnere davvero?",
+  "Wirklich einschalten?": "Accendere davvero?",
+  "Wirklich schließen?": "Chiudere davvero?",
+  "Wirklich aufschließen?": "Sbloccare davvero?",
+  "Wirklich abschließen?": "Bloccare davvero?",
+  "Aufschließen": "Sblocca",
+  "Abschließen": "Blocca",
+  "Achtung": "Attenzione",
+  "Trotzdem scharf schalten?": "Inserire comunque?",
+  "Trotzdem scharf schalten": "Inserisci comunque",
+  "1 Tür offen": "1 porta aperta",
+  "1 Tor offen": "1 cancello aperto",
+  "1 Fenster offen": "1 finestra aperta",
+  "1 Fenster gekippt": "1 finestra a ribalta",
+  "Licht aus": "Luci spente",
+  "Kein Team-Tracker-Sensor": "Non è un sensore Team Tracker",
+  "Endstand": "Finale",
+  "Live": "Live",
+  "Halbzeit": "Intervallo",
+  "Morgen": "Domani",
+  "Heim": "Casa",
+  "Gast": "Trasferta",
+  "Tabelle": "Classifica",
+  "Form": "Forma",
+  "Letzte Duelle": "Precedenti",
+  "Licht an": "Luce accesa",
+  "Feucht": "Umido",
+  "Ergebnis": "Risultato",
+  "Nächstes Spiel": "Prossima partita",
+  "Letztes Spiel": "Ultima partita",
+  "Testspiel": "Amichevole",
+  "Gegner": "avversario",
+  "nächster Gegner": "prossimo avversario",
+  "Ganze Tabelle": "Classifica completa",
+  "Weniger zeigen": "Mostra meno",
+  "Keine Spiele gefunden": "Nessuna partita trovata",
+  "Tabelle nicht erreichbar": "Classifica non disponibile",
+  "Keine Tabelle für diesen Wettbewerb": "Nessuna classifica per questa competizione",
+  "Fußball": "Calcio",
+  "gegen": "vs",
+  "bei": "in casa di",
+  "Kein Spiel angesetzt": "Nessuna partita in programma",
+  "Nächstes Spiel noch nicht angesetzt": "Prossima partita non ancora in programma",
+  "Verschoben": "Rinviata",
+  "Abgesagt": "Annullata",
+  "Uhrzeit offen": "Orario da definire",
+  "Verlängerung": "Tempi supplementari",
+  "Elfmeterschießen": "Rigori",
+  "Gleich": "Tra poco",
+  "n. V.": "d.t.s.",
+  "i. E.": "d.c.r.",
+  "Sieg": "Vittoria",
+  "Niederlage": "Sconfitta",
+  "1 Raum": "1 stanza",
+  "1 Licht an": "1 luce accesa",
+  "Keine Räume": "Nessuna stanza",
+  "Lampen-Modi": "Modalità della lampada",
+  "Lampen-Profil": "Profilo della lampada",
+  "Farbkanäle": "Canali colore",
+  "Ohne Effekt": "Nessun effetto",
+  "Home Assistant": "Home Assistant",
+  "Programm der Lampe": "Programma della lampada",
+  "Eigener Tagesablauf der Lampe": "Ciclo giornaliero della lampada",
+  "Temperatur zu hoch": "Temperatura troppo alta",
+  "Temperatur zu niedrig": "Temperatura troppo bassa",
+  "Aktinisch": "Attinica",
+  "UV": "UV",
+  "Kaltweiß": "Bianco freddo",
+  "Warmweiß": "Bianco caldo",
+  "Mondlicht": "Luce lunare",
+  "Rot": "Rosso",
+  "Grün": "Verde",
+  "Blau": "Blu",
+  "Weiß": "Bianco",
+  "Tanken": "Rifornimento",
+  "Abruf gestört": "Errore nel recupero",
+  "Preise werden geladen": "Caricamento prezzi",
+  "Empfehlung": "Consiglio",
+  "Am günstigsten": "Più conveniente",
+  "In der Nähe": "Nelle vicinanze",
+  "Günstigste": "Più economica",
+  "Nächste": "Più vicina",
+  "Typischer Tag": "Giornata tipica",
+  "Ø 14 Tage": "Ø 14 giorni",
+  "Lernphase": "In apprendimento",
+  "Empfehlung kommt bald": "Consiglio in arrivo",
+  "Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa einem Tag.": "Il consiglio arriverà quando ci saranno abbastanza prezzi, in circa un giorno.",
+  "Gerade": "Adesso",
+  "Keine offene Tankstelle": "Nessun distributore aperto",
+  "Im Umkreis hat gerade keine Tankstelle geöffnet.": "Al momento nessun distributore della zona è aperto.",
+  "Tank knapp": "Carburante in riserva",
+  "Jetzt tanken": "Fai rifornimento ora",
+  "Warte bis heute Abend": "Aspetta fino a stasera",
+  "Warte bis morgen Abend": "Aspetta fino a domani sera",
+  "Warte bis heute Vormittag": "Aspetta fino a metà mattina",
+  "Warte bis morgen früh": "Aspetta fino a domattina",
+  "Guter Zeitpunkt": "Buon momento",
+  "Kein großer Unterschied": "Poca differenza",
+  "In den nächsten Stunden ändert sich der Preis meist um weniger als 2 ct.": "Nelle prossime ore il prezzo di solito varia meno di 2 ct.",
+  "Noch keine Preise": "Ancora nessun prezzo",
+  "Tankpreise gerade nicht abrufbar": "Prezzi carburante al momento non disponibili",
+  "Casora fragt alle 10 Minuten, die ersten Preise kommen gleich.": "Casora controlla ogni 10 minuti; i primi prezzi arrivano tra poco.",
+  "Gerade keine offen": "Nessuno aperto ora",
+  "Daten: Tankerkönig, CC BY 4.0": "Dati: Tankerkönig, CC BY 4.0",
+  "Umkreis": "Raggio",
+  "bis": "fino a",
+  "Ø pro Tag": "Ø al giorno",
+  "Heute bis": "Oggi fino a",
+  "letzte 2 Stunden": "ultime 2 ore",
+  "letzte 4 Stunden": "ultime 4 ore",
+  "letzte 6 Stunden": "ultime 6 ore",
+  "letzte 24 Stunden": "ultime 24 ore",
+  "letzte 48 Stunden": "ultime 48 ore",
+  "letzte 7 Tage": "ultimi 7 giorni",
+  "letzte 30 Tage": "ultimi 30 giorni",
+  "noch nie": "mai",
+  "Salz nachfüllen": "Aggiungere sale",
+  "Klarspüler nachfüllen": "Aggiungere brillantante",
+  "Flusensieb reinigen": "Pulire il filtro lanugine",
+  "Kondensator reinigen": "Pulire il condensatore",
+  "Angehalten": "Ferma",
+  "steht still, evtl. Unwucht": "ferma, forse carico sbilanciato",
+  "Eigene Aufgabe": "Attività personalizzata",
+  "Am Schloss": "Sulla serratura",
+  "Bedienen": "Comandi",
+  "Entriegeln": "Sblocca",
+  "Verriegeln": "Blocca",
+  "Ganzer Verlauf": "Cronologia completa",
+  "Skript": "Script",
+  "Tür öffnen": "Apri porta",
+  "Türkontakt": "Contatto porta",
+  "Wirklich die Tür öffnen?": "Aprire davvero la porta?",
+  "Mit Rückfrage, wie im Studio eingestellt": "Chiede conferma, come impostato nello Studio",
+  "Schloss nicht erreichbar": "Serratura non raggiungibile",
+  "Verlauf nicht abrufbar": "Cronologia non disponibile",
+  "Heute keine Änderung": "Oggi nessuna modifica",
+  "per App": "tramite app",
+  "Über": "Tramite",
+  "Alles ok": "Tutto ok",
+  "Wirklich entriegeln?": "Sbloccare davvero?",
+  "Wirklich verriegeln?": "Bloccare davvero?",
+  "Nichts fällig": "Niente in scadenza",
+  "Daten": "Dati",
+  "Jetzt nach Updates suchen": "Cerca aggiornamenti ora",
+  "Suche …": "Ricerca…",
+  "Keine neuen Updates": "Nessun nuovo aggiornamento",
+  "1 neues Update gefunden": "1 nuovo aggiornamento trovato",
+  "Suche fehlgeschlagen": "Ricerca non riuscita",
+  "Vorheriger Titel": "Brano precedente",
+  "Nächster Titel": "Brano successivo",
+  "Klappen": "Portelli",
+  "Kraftstoff": "Carburante",
+  "jetzt günstig": "ora conveniente",
+  "keine offen": "nessuno aperto",
+  "KI:": "IA:",
+  "1 heizt": "1 in riscaldamento",
+  "Handy": "Telefono",
+  "Lädt nicht": "Non in carica",
+  "Mobilfunk": "Rete mobile",
+  "kein WLAN": "nessun Wi-Fi",
+  "Entfernung": "Distanza",
+  "Richtung": "Direzione",
+  "Nach Hause": "Verso casa",
+  "Luftlinie zur Zone Zuhause": "In linea d'aria fino alla zona Casa",
+  "Standort jetzt holen": "Rileva posizione ora",
+  "fragt die Companion-App": "chiede alla app Companion",
+  "Nachricht schicken": "Invia un messaggio",
+  "Klingeln lassen": "Fai squillare",
+  "auch wenn es leise ist": "anche se è in silenzioso",
+  "Standort per GPS": "Posizione via GPS",
+  "über das WLAN": "tramite Wi-Fi",
+  "über Bluetooth": "tramite Bluetooth",
+  "Verlauf wird geladen …": "Caricamento cronologia…",
+  "Kein Verlauf der letzten drei Tage": "Nessuna cronologia negli ultimi tre giorni",
+  "Entfernt sich": "Si allontana",
+  "Kommt näher": "Si avvicina",
+  "Bleibt stehen": "Fermo",
+  "Angekommen": "Arrivato",
+  "Standort angefragt": "Posizione richiesta",
+  "Konnte das Handy nicht erreichen": "Impossibile raggiungere il telefono",
+  "Nachricht gesendet": "Messaggio inviato",
+  "Handy klingelt": "Il telefono sta squillando",
+  "Senden": "Invia",
+  "Nachricht": "Messaggio",
+  "Nachricht an": "Messaggio a",
+  "von zuhause": "da casa",
+  "Handy klingeln lassen?": "Far squillare il telefono?",
+  "Es klingelt auch, wenn es leise gestellt ist.": "Squilla anche se è in silenzioso.",
+  "Klingeln": "Fai squillare",
+  "Hier bin ich!": "Sono qui!",
+  "Person": "Persona",
+  "jetzt hier": "ora qui",
+  "Keine Änderung in den letzten drei Tagen": "Nessuna modifica negli ultimi tre giorni",
+  "Mähroboter": "Robot tagliaerba",
+  "Mäht": "Taglia",
+  "In der Station": "Nella base",
+  "Fährt zur Station": "Torna alla base",
+  "Mäht außerhalb des Zeitplans": "Taglia fuori orario",
+  "Verlässt die Station": "Lascia la base",
+  "Parkt bis zum nächsten Zeitplan": "Parcheggiato fino al prossimo orario",
+  "Parkt bis auf Weiteres": "Parcheggiato fino a nuovo avviso",
+  "Parkt, Rasen wächst langsam": "Parcheggiato, l'erba cresce lentamente",
+  "Parkt wegen Frost": "Parcheggiato per gelo",
+  "Parkt, Tagesziel erreicht": "Parcheggiato, obiettivo giornaliero raggiunto",
+  "Außerhalb des Mähbereichs": "Fuori dall'area di taglio",
+  "Kein Signal vom Begrenzungsdraht": "Nessun segnale dal filo perimetrale",
+  "Falsches Signal vom Begrenzungsdraht": "Segnale errato dal filo perimetrale",
+  "Steckt fest": "Bloccato",
+  "Umgekippt": "Ribaltato",
+  "Akku leer": "Batteria scarica",
+  "Kann nicht fahren": "Non riesce ad avanzare",
+  "Angehoben": "Sollevato",
+  "Kurz angehoben": "Sollevato per un attimo",
+  "Steht schief": "Inclinato",
+  "Rutscht": "Slitta",
+  "Hängt in der Station fest": "Bloccato nella base",
+  "Station blockiert": "Base bloccata",
+  "Ladestrom zu hoch": "Corrente di carica troppo alta",
+  "Rad links blockiert": "Ruota sinistra bloccata",
+  "Rad rechts blockiert": "Ruota destra bloccata",
+  "Rad links überlastet": "Ruota sinistra sovraccarica",
+  "Rad rechts überlastet": "Ruota destra sovraccarica",
+  "Radantrieb links gestört": "Guasto trazione sinistra",
+  "Radantrieb rechts gestört": "Guasto trazione destra",
+  "Mähwerk blockiert": "Sistema di taglio bloccato",
+  "Mähmotor gestört": "Guasto motore di taglio",
+  "Mähmotor defekt": "Motore di taglio difettoso",
+  "Schnitthöhe blockiert": "Altezza di taglio bloccata",
+  "Schnitthöhe gestört": "Guasto altezza di taglio",
+  "Stoßsensor vorne gestört": "Guasto sensore urto anteriore",
+  "Stoßsensor hinten gestört": "Guasto sensore urto posteriore",
+  "Neigungssensor gestört": "Guasto sensore inclinazione",
+  "Stopp-Taste gestört": "Guasto pulsante stop",
+  "Elektronik gestört": "Guasto elettronica",
+  "Falsche PIN": "PIN errato",
+  "Klappe offen": "Sportello aperto",
+  "Ausgeschaltet, Klappe zu": "Spento, sportello chiuso",
+  "Alarm: ausgeschaltet": "Allarme: spento",
+  "Alarm: angehalten": "Allarme: fermato",
+  "Alarm: angehoben": "Allarme: sollevato",
+  "Alarm: gekippt": "Allarme: inclinato",
+  "Alarm: bewegt": "Allarme: spostato",
+  "Alarm: außerhalb des Bereichs": "Allarme: fuori dall'area",
+  "Zur Station": "Alla base",
+  "Mähen": "Taglia",
+  "Parken": "Parcheggia",
+  "Pause": "Pausa",
+  "Betriebsstunden": "Ore di funzionamento",
+  "In den letzten 7 Tagen nicht gemäht": "Nessun taglio negli ultimi 7 giorni",
+  "Mäht gerade": "Sta tagliando",
+  "Gemäht": "Tagliato",
+  "besteht noch": "ancora attivo",
+  "1 Fahrt": "1 sessione",
+  "KI-Check": "Verifica IA",
+  "Vorher sichern": "Prima fai un backup",
+  "Installieren": "Installa",
+  "Überspringen": "Salta",
+  "Was ist neu": "Novità",
+  "Alle Hinweise": "Tutte le note",
+  "Keine Versionshinweise": "Nessuna nota di versione",
+  "KI-Einschätzung": "Valutazione IA",
+  "Breaking Change": "Cambiamento importante",
+  "seit": "da",
+  "24 Std.": "24 h",
+  "Letzte 24 Std.": "Ultime 24 h",
+  "Letzte 7 Tage": "Ultimi 7 giorni",
+  "Höchster Wert": "Massimo",
+  "Tiefster Wert": "Minimo",
+  "Durchschnitt": "Media",
+  "Letzte 12 Monate": "Ultimi 12 mesi",
+  "Linie": "Linea",
+  "Balken": "Barre",
+  "Ø pro Monat": "Ø al mese",
+  "Ø pro Stunde": "Ø all'ora",
+  "letzte 12 Monate": "ultimi 12 mesi",
+  "Am längsten": "Più a lungo",
+  "Änderungen": "Modifiche",
+  "Steigt": "Sale",
+  "Fällt": "Scende",
+  "nach": "dopo",
+  "seitdem": "da allora",
+  "Keine Änderung im Zeitraum": "Nessuna modifica nel periodo",
+  "Hersteller": "Produttore",
+  "Modell": "Modello",
+  "Hardware": "Hardware",
+  "Verbunden über": "Connesso tramite",
+  "Bereich": "Area",
+  "Integration": "Integrazione",
+  "In Home Assistant öffnen": "Apri in Home Assistant",
+  "Einstellungen, Umbenennen, Symbol": "Impostazioni, rinomina, icona",
+  "Gehört dazu": "Ne fa parte",
+  "Diagnose": "Diagnostica",
+  "Belegt": "Occupato",
+  "Anwesend": "Presente",
+  "Nass": "Bagnato",
+  "Rauch": "Fumo",
+  "Eingesteckt": "Collegato",
+  "Ausgesteckt": "Scollegato",
+  "Insgesamt geöffnet": "Aperto in totale",
+  "Insgesamt Bewegung": "Movimento in totale",
+  "Insgesamt belegt": "Occupato in totale",
+  "Insgesamt anwesend": "Presente in totale",
+  "Insgesamt nass": "Bagnato in totale",
+  "Insgesamt verbunden": "Connesso in totale",
+  "Insgesamt schwach": "Basso in totale",
+  "Insgesamt Rauch": "Fumo in totale",
+  "Insgesamt Problem": "Problema in totale",
+  "Insgesamt entriegelt": "Sbloccato in totale",
+  "Insgesamt eingesteckt": "Collegato in totale",
+  "Insgesamt gelaufen": "In funzione in totale",
+  "Insgesamt an": "Acceso in totale",
+  "Befeuchtet": "Umidifica",
+  "Entfeuchtet": "Deumidifica",
+  "Betrieb": "Funzionamento",
+  "Zielfeuchte": "Umidità target",
+  "Wassertank": "Serbatoio dell'acqua",
+  "Komfort": "Comfort",
+  "Warnungen": "Avvisi",
+  "Aktuell keine Warnungen": "Nessun avviso al momento",
+  "Liefert gerade nichts": "Ora non produce",
+  "Liefert": "Produce",
+  "Kein Austausch": "Nessuno scambio",
+  "Module": "Moduli",
+  "Ertrag": "Produzione",
+  "Entladen": "Scarica",
+  "Laden": "Carica",
+  "Eingespeist gesamt": "Immesso in totale",
+  "Einspeisung und Eigenversorgung": "Immissione e autoconsumo",
+  "Solarleistung": "Potenza solare",
+  "Ladestand": "Livello di carica",
+  "Akkuleistung": "Potenza della batteria",
+  "Netzleistung": "Potenza di rete",
+  "Woher kommt der Strom": "Da dove viene l'elettricità",
+  "Wohin geht der Solarstrom": "Dove va l'energia solare",
+  "Bypass": "Bypass",
+  "Popup öffnen": "Apri finestra",
+  "Kachel bearbeiten": "Modifica scheda",
+  "Aus in": "Spegni tra",
+  "An für": "Accendi per",
+  "Aus um": "Spegni alle",
+  "An um": "Accendi alle",
+  "Stopp": "Stop",
+  "Lauter": "Più forte",
+  "Kälter": "Più freddo",
+  "Wärmer": "Più caldo",
+  "15 Min.": "15 min",
+  "30 Min.": "30 min",
+  "1 Std.": "1 h",
+  "2 Std.": "2 h",
+  "Details": "Dettagli",
+  "Ausschalten in": "Spegni tra",
+  "Einschalten für": "Accendi per",
+  "Kamera live": "Telecamera live",
+  "Live ansehen": "Guarda live",
+  "Auto": "Auto",
+  "Hat nicht geklappt": "Non ha funzionato",
+  "Alarm scharf schalten?": "Inserire l'allarme?",
+  "Alarm unscharf schalten?": "Disinserire l'allarme?",
+  "Code": "Codice",
+  "Energie-Dashboard": "Dashboard energia",
+  "Alle Updates": "Tutti gli aggiornamenti",
+  "Nach Updates suchen": "Cerca aggiornamenti",
+  "Suche nach Updates …": "Ricerca aggiornamenti…",
+  "Handy klingeln lassen": "Fai squillare il telefono",
+  "Auf der Einkaufsliste": "Nella lista della spesa",
+  "Rezept öffnen": "Apri ricetta",
+  "Batterie gewechselt?": "Batteria sostituita?",
+  "Gäste-WLAN an": "Wi-Fi ospiti acceso",
+  "Gäste-WLAN aus": "Wi-Fi ospiti spento",
+  "Gäste-WLAN ausschalten?": "Spegnere il Wi-Fi ospiti?",
+  "Daten aktualisieren": "Aggiorna dati",
+  "Auto aufwecken und Daten holen?": "Svegliare l'auto e recuperare i dati?",
+  "Fertig um": "Pronto alle",
+  "Fertig seit": "Pronto da",
+  "noch": "mancano",
+  "An in": "Accendi tra",
+  "Std.": "h",
+  "Min.": "min",
+  "Tipp: Kachel gedrückt halten oder rechts klicken – Schnellbedienung": "Suggerimento: tieni premuta una scheda o fai clic destro per i controlli rapidi",
+  "Tipp: Kachel gedrückt halten – Schnellbedienung": "Suggerimento: tieni premuta una scheda per i controlli rapidi",
+  "Zeitschalter aus": "Ferma timer",
+  "Ändern auf": "Cambia in",
+  "Update gestartet": "Aggiornamento avviato",
+  "Aufnahme an": "Registrazione attiva",
+  "Aufnahme aus": "Registrazione disattivata",
+  "Aufnahme ausschalten?": "Disattivare la registrazione?",
+  "Aufnahmen": "Registrazioni",
+  "Automatisch folgen": "Inseguimento automatico",
+  "Bewegungserkennung": "Rilevamento movimento",
+  "Erkennung an": "Rilevamento attivo",
+  "Erkennung aus": "Rilevamento disattivato",
+  "Erkennung ausschalten?": "Disattivare il rilevamento?",
+  "Frigate meldet Fehler": "Frigate segnala un errore",
+  "Frigate startet": "Frigate si sta avviando",
+  "Frigate antwortet nicht": "Frigate non risponde",
+  "Gerade im Bild": "Ora nell'inquadratura",
+  "Geräuscherkennung": "Rilevamento audio",
+  "In Frigate öffnen": "Apri in Frigate",
+  "In den Medien von Home Assistant": "Nei media di Home Assistant",
+  "Kamera aus": "Telecamera spenta",
+  "Keine Erkennung": "Nessun rilevamento",
+  "Keine Erkennungen in den letzten 7 Tagen": "Nessun rilevamento negli ultimi 7 giorni",
+  "Letzte Erkennung": "Ultimo rilevamento",
+  "Letzte Erkennungen": "Ultimi rilevamenti",
+  "Liste über die Frigate-Integration nicht abrufbar": "Impossibile caricare la lista dall'integrazione Frigate",
+  "Noch nicht erkannt": "Non ancora rilevato",
+  "Objekte": "Oggetti",
+  "Objekt": "Oggetto",
+  "Schnappschuss": "Istantanea",
+  "Schnappschüsse": "Istantanee",
+  "Zonen": "Aree",
+  "läuft noch": "ancora in corso",
+  "System": "Sistema",
+  "Frigate": "Frigate",
+  "Bär": "Orso",
+  "Eichhörnchen": "Scoiattolo",
+  "Fahrrad": "Bicicletta",
+  "FedEx": "FedEx",
+  "Fuchs": "Volpe",
+  "Gesicht": "Volto",
+  "Hund": "Cane",
+  "Kaninchen": "Coniglio",
+  "Katze": "Gatto",
+  "Kennzeichen": "Targa",
+  "Motorrad": "Moto",
+  "Mülltonne": "Bidone",
+  "Paket": "Pacco",
+  "Pferd": "Cavallo",
+  "Schaf": "Pecora",
+  "Schirm": "Ombrello",
+  "USPS": "USPS",
+  "Vogel": "Uccello",
+  "Waschbär": "Procione",
+  "Reh": "Capriolo",
+  "Kuh": "Mucca",
+  "Boot": "Barca",
+  "Lkw": "Camion",
+  "Bus": "Autobus",
+  "Aufnahme & Erkennung": "Registrazione e rilevamento",
+  "Löst die Objekterkennung aus": "Attiva il rilevamento oggetti",
+  "Neuere Erkennung": "Rilevamento più recente",
+  "Ältere Erkennung": "Rilevamento precedente",
+  "Mehr anzeigen": "Mostra di più",
+  "Weniger anzeigen": "Mostra meno",
+  "Alle Objekte zeigen": "Mostra tutti gli oggetti",
+  "Läuft noch": "Ancora in corso",
+  "Privatsphäre an": "Privacy attiva",
+  "Hat geklingelt": "Hanno suonato",
+  "Tier": "Animale",
+  "Schnellantworten": "Risposte rapide",
+  "Schnellantwort": "Risposta rapida",
+  "Spielt ab": "In riproduzione",
+  "Antippen zum Stoppen": "Tocca per fermare",
+  "Laut an der Tür, 10 Sekunden": "Forte alla porta, 10 secondi",
+  "Auslösen": "Attiva sirena",
+  "Sirene läuft": "La sirena sta suonando",
+  "An der Tür": "Alla porta",
+  "Niemand hat geklingelt": "Nessuno ha suonato",
+  "Klingelton": "Suoneria",
+  "Lautsprecher": "Altoparlante",
+  "Klingelton an der Tür": "Suoneria alla porta",
+  "Ton aufnehmen": "Registra audio",
+  "Ohne Ton hörst du die Tür nicht": "Senza audio non senti la porta",
+  "Infrarot-LEDs nachts": "LED a infrarossi di notte",
+  "Tag/Nacht-Modus": "Modalità giorno/notte",
+  "Bild gerade": "Immagine ora",
+  "Status-LED": "LED di stato",
+  "Privatsphäre": "Privacy",
+  "Kamera und Ton aus": "Telecamera e audio spenti",
+  "Licht am Klingelknopf": "Luce del pulsante",
+  "Nachts an": "Accesa di notte",
+  "Immer an": "Sempre accesa",
+  "Automatische Antwort": "Risposta automatica",
+  "Schwarz-Weiß": "Bianco e nero",
+  "Farbe mit Licht": "Colore con luce",
+  "Kamera und Ton der Klingel sind aus.": "Telecamera e audio del campanello sono spenti.",
+  "Klingel nicht erreichbar": "Campanello non raggiungibile",
+  "Prüfe Strom und WLAN der Klingel.": "Controlla alimentazione e Wi-Fi del campanello.",
+  "Ton aus": "Audio disattivato",
+  "Verbindet …": "Connessione…",
+  "Ton ist an der Klingel aus": "L'audio del campanello è spento",
+  "Sprechen klappt mit dieser Klingel nicht – Ton hören geht weiter": "Parlare non funziona con questo campanello – ascoltare sì",
+  "Kein Zugriff aufs Mikrofon – im Browser erlauben": "Nessun accesso al microfono – consentilo nel browser",
+  "Sprechen nach 90 Sekunden beendet": "Conversazione terminata dopo 90 secondi",
+  "Verbindung zur Klingel beendet": "Connessione con il campanello terminata",
+  "Ton hören": "Ascolta",
+  "An der Tür abspielen?": "Riprodurre alla porta?",
+  "Geklingelt": "Hanno suonato",
+  "In den letzten 3 Tagen": "Negli ultimi 3 giorni",
+  "Kaffeevollautomat": "Macchina da caffè automatica",
+  "Kaffeemaschine": "Macchina del caffè",
+  "Kaffee": "Caffè",
+  "Kaffeekanne": "Caraffa di caffè",
+  "XL-Kaffee": "Caffè XL",
+  "Milchkaffee": "Caffellatte",
+  "Kaffee verkehrt": "Latte e caffè",
+  "Kaffee mit Milch": "Caffè con latte",
+  "Warme Milch": "Latte caldo",
+  "Milchschaum": "Schiuma di latte",
+  "Heißwasser": "Acqua calda",
+  "Tee": "Tè",
+  "Eiskaffee": "Caffè freddo",
+  "Pulverkaffee": "Caffè macinato",
+  "Milchgetränke": "Bevande al latte",
+  "Mein Kaffee": "Il mio caffè",
+  "Entkalken & Reinigen": "Decalcificare e pulire",
+  "Entkalkt": "Decalcificazione",
+  "Spült": "Risciacquo",
+  "Pflege läuft": "Manutenzione in corso",
+  "Heizt auf": "Riscaldamento",
+  "Wasser nachfüllen": "Aggiungi acqua",
+  "Wassertank ist leer": "Il serbatoio dell'acqua è vuoto",
+  "Bohnen nachfüllen": "Aggiungi chicchi",
+  "Bohnenbehälter ist leer": "Il contenitore dei chicchi è vuoto",
+  "Schale leeren": "Svuota la vaschetta",
+  "Tropfschale ist voll": "La vaschetta raccogligocce è piena",
+  "Satzbehälter leeren": "Svuota i fondi",
+  "Kaffeesatz ist voll": "Il contenitore dei fondi è pieno",
+  "Milch kühlen": "Tieni il latte al fresco",
+  "Milch in den Kühlschrank stellen": "Metti il latte in frigo",
+  "Entkalkungsprogramm starten": "Avvia decalcificazione",
+  "Pflegeprogramm starten": "Avvia programma di manutenzione",
+  "Reinigungsprogramm starten": "Avvia programma di pulizia",
+  "Filter wechseln": "Cambia filtro",
+  "Wasserfilter ist verbraucht": "Il filtro dell'acqua è esaurito",
+  "Wassertank einsetzen": "Inserisci il serbatoio dell'acqua",
+  "Wassertank fehlt": "Manca il serbatoio dell'acqua",
+  "Wasser bald leer": "Acqua quasi finita",
+  "Wassertank ist fast leer": "Il serbatoio dell'acqua è quasi vuoto",
+  "Schale einsetzen": "Inserisci la vaschetta",
+  "Tropfschale fehlt": "Manca la vaschetta raccogligocce",
+  "Brühgruppe einsetzen": "Inserisci il gruppo infusore",
+  "Brühgruppe fehlt": "Manca il gruppo infusore",
+  "Entkalken überfällig": "Decalcificazione in ritardo",
+  "Reinigen überfällig": "Pulizia in ritardo",
+  "Entkalken & Reinigen überfällig": "Decalcificazione e pulizia in ritardo",
+  "Entkalken blockiert": "Decalcificazione bloccata",
+  "Entkalken an der Maschine fortsetzen": "Continua la decalcificazione sulla macchina",
+  "Milchsystem reinigen": "Pulisci il sistema latte",
+  "Milchsystem spülen und reinigen": "Risciacqua e pulisci il sistema latte",
+  "Mahlt": "Macinatura",
+  "Brüht vor": "Preinfusione",
+  "Brüht": "Infusione",
+  "Läuft ein": "Erogazione",
+  "Milch": "Latte",
+  "Bereitet vor": "Preparazione",
+  "Getränke": "Bevande",
+  "Fernstart an der Maschine erlauben": "Consenti l'avvio remoto sulla macchina",
+  "Erst dann startet Casora Getränke aus der Ferne": "Solo allora Casora può preparare bevande a distanza",
+  "Stärke": "Intensità",
+  "Menge": "Quantità",
+  "Sehr mild": "Molto delicato",
+  "Mild": "Delicato",
+  "Stark": "Forte",
+  "Sehr stark": "Molto forte",
+  "Extra stark": "Extra forte",
+  "Max": "Max",
+  "Getränk": "Bevanda",
+  "Getränk antippen, dann starten.": "Tocca una bevanda, poi avviala.",
+  "Maschine": "Macchina",
+  "Steckdose an": "Presa accesa",
+  "Steckdose aus": "Presa spenta",
+  "Maschine meldet einen Fehler": "La macchina segnala un errore",
+  "Hinweis im Display der Maschine ansehen": "Guarda il messaggio sul display della macchina",
+  "Wasserfilter": "Filtro dell'acqua",
+  "Filterwechsel": "Cambio filtro",
+  "Warnungen in Home Assistant aktivieren": "Attiva gli avvisi in Home Assistant",
+  "Home Connect legt Wassertank, Bohnen, Schale und Entkalken ausgeschaltet an. Am Gerät unter Entitäten einschalten, dann meldet die Kachel sie.": "Home Connect crea serbatoio dell'acqua, chicchi, vaschetta e decalcificazione disattivati. Attivali in Entità del dispositivo e la scheda li mostrerà.",
+  "Getränke gesamt": "Bevande in totale",
+  "Lernt": "Apprendimento",
+  "Tank herausnehmen, füllen, einsetzen": "Estrai il serbatoio, riempilo e rimettilo",
+  "Bohnen in den Behälter füllen": "Riempi il contenitore dei chicchi",
+  "Tropfschale herausnehmen und leeren": "Estrai e svuota la vaschetta raccogligocce",
+  "Behälter herausnehmen und leeren": "Estrai e svuota il contenitore",
+  "Entkalken fällig": "Da decalcificare",
+  "Entkalkungsprogramm an der Maschine starten": "Avvia la decalcificazione sulla macchina",
+  "Entkalken & Reinigen fällig": "Da decalcificare e pulire",
+  "Pflegeprogramm an der Maschine starten": "Avvia il programma di manutenzione sulla macchina",
+  "Reinigen fällig": "Da pulire",
+  "Reinigungsprogramm an der Maschine starten": "Avvia il programma di pulizia sulla macchina",
+  "Wasserfilter an der Maschine tauschen": "Cambia il filtro dell'acqua sulla macchina",
+  "Wasser leer": "Acqua finita",
+  "Bohnen leer": "Chicchi finiti",
+  "Schale voll": "Vaschetta piena",
+  "Satz voll": "Fondi pieni",
+  "Tank fehlt": "Manca il serbatoio",
+  "Schale fehlt": "Manca la vaschetta",
+  "Behälter fehlt": "Manca il contenitore",
+  "Tank einsetzen, bis er einrastet": "Inserisci il serbatoio finché non scatta",
+  "Tank bei Gelegenheit füllen": "Riempi il serbatoio quando puoi",
+  "Tropfschale einsetzen": "Inserisci la vaschetta raccogligocce",
+  "Brühgruppe einsetzen, bis sie einrastet": "Inserisci il gruppo infusore finché non scatta",
+  "Filterwechsel überfällig": "Cambio filtro in ritardo",
+  "Milchsystem an der Maschine spülen": "Risciacqua il sistema latte sulla macchina",
+  "Service nötig": "Assistenza necessaria",
+  "Maschine vom Kundendienst prüfen lassen": "Fai controllare la macchina dall'assistenza",
+  "Bohnenbehälter einsetzen": "Inserisci il contenitore dei chicchi",
+  "Bohnenbehälter einsetzen, bis er einrastet": "Inserisci il contenitore dei chicchi finché non scatta",
+  "Verbindung zur Maschine prüfen": "Controlla la connessione con la macchina",
+  "Eingeschaltet, aber noch nicht bereit – Getränk an der Maschine starten": "Accesa, ma non ancora pronta – avvia la bevanda sulla macchina",
+  "Ausgewählt – Getränk an der Maschine starten": "Selezionata – avvia la bevanda sulla macchina",
+  "Start abbrechen": "Annulla avvio",
+  "Abbrechen geht nur an der Maschine": "Si può annullare solo sulla macchina",
+  "Start hat nicht geklappt": "Avvio non riuscito",
+  "Abbrechen hat nicht geklappt": "Annullamento non riuscito",
+  "Wasser ist leer": "Non c'è acqua",
+  "Bohnen sind leer": "Non ci sono chicchi",
+  "Schale ist voll": "La vaschetta è piena",
+  "Satzbehälter ist voll": "Il contenitore dei fondi è pieno",
+  "trotzdem starten?": "avviare comunque?",
+  "Trotzdem starten": "Avvia comunque",
+  "Abgebrochen": "Annullato",
+  "Startet, sobald bereit": "Parte appena pronta",
+  "Startet …": "Avvio…",
+  "Hinweise⁠": "Avvisi",
+  "Rückspülen": "Controlavaggio",
+  "Getränk starten": "Prepara bevanda",
+  "Getränk starten?": "Preparare bevanda?",
+  "Doppio+": "Doppio+",
+  "Ristretto doppio": "Ristretto doppio",
+  "Caffè Crema doppio": "Caffè crema doppio",
+  "Americano extra": "Americano extra",
+  "Long Black": "Long black",
+  "Kaffee to go": "Caffè da asporto",
+  "Cappuccino Italiano": "Cappuccino italiano",
+  "Cappuccino doppio": "Cappuccino doppio",
+  "Macchiato": "Macchiato",
+  "Latte Macchiato extra": "Latte macchiato extra",
+  "Latte Macchiato triple": "Latte macchiato triplo",
+  "Kalte Milch": "Latte freddo",
+  "Dampf": "Vapore",
+  "Sehr heißes Wasser": "Acqua molto calda",
+  "Schwarzer Tee": "Tè nero",
+  "Kräutertee": "Tisana alle erbe",
+  "Früchtetee": "Tisana alla frutta",
+  "Grüner Tee": "Tè verde",
+  "Weißer Tee": "Tè bianco",
+  "Japanischer Tee": "Tè giapponese",
+  "Chai Latte": "Chai latte",
+  "Kakao": "Cioccolata calda",
+  "Kaffee auf Eis": "Caffè con ghiaccio",
+  "Ristretto & Espresso": "Ristretto ed espresso",
+  "Galão": "Galão",
+  "Café con leche": "Café con leche",
+  "Red Eye": "Red eye",
+  "Black Eye": "Black eye",
+  "Dead Eye": "Dead eye",
+  "Café cortado": "Café cortado",
+  "Cold Brew": "Cold brew",
+  "Espresso doppio": "Espresso doppio",
+  "Caffè Crema": "Caffè crema",
+  "Caffè Grande": "Caffè grande",
+  "Kaffee starten": "Prepara caffè",
+  "Kaffee starten?": "Preparare caffè?",
+  "Einschalten und Kaffee starten": "Accendi e prepara caffè",
+  "Heißwasser starten": "Eroga acqua calda",
+  "Heißwasser starten?": "Erogare acqua calda?",
+  "Einschalten und Heißwasser starten": "Accendi ed eroga acqua calda",
+  "Warme Milch starten": "Eroga latte caldo",
+  "Warme Milch starten?": "Erogare latte caldo?",
+  "Einschalten und Warme Milch starten": "Accendi ed eroga latte caldo",
+  "Milchschaum starten": "Prepara schiuma di latte",
+  "Milchschaum starten?": "Preparare schiuma di latte?",
+  "Einschalten und Milchschaum starten": "Accendi e prepara schiuma di latte",
+  "Tee starten": "Prepara tè",
+  "Tee starten?": "Preparare tè?",
+  "Einschalten und Tee starten": "Accendi e prepara tè",
+  "Kakao starten": "Prepara cioccolata calda",
+  "Kakao starten?": "Preparare cioccolata calda?",
+  "Einschalten und Kakao starten": "Accendi e prepara cioccolata calda",
+  "Kalte Milch starten": "Eroga latte freddo",
+  "Kalte Milch starten?": "Erogare latte freddo?",
+  "Einschalten und Kalte Milch starten": "Accendi ed eroga latte freddo",
+  "Dampf starten": "Avvia vapore",
+  "Dampf starten?": "Avviare vapore?",
+  "Einschalten und Dampf starten": "Accendi e avvia vapore",
+  "Milchkaffee starten": "Prepara caffellatte",
+  "Milchkaffee starten?": "Preparare caffellatte?",
+  "Einschalten und Milchkaffee starten": "Accendi e prepara caffellatte",
+  "Kaffeekanne starten": "Prepara caraffa di caffè",
+  "Kaffeekanne starten?": "Preparare caraffa di caffè?",
+  "Einschalten und Kaffeekanne starten": "Accendi e prepara caraffa di caffè",
+  "Sehr heißes Wasser starten": "Eroga acqua molto calda",
+  "Sehr heißes Wasser starten?": "Erogare acqua molto calda?",
+  "Einschalten und Sehr heißes Wasser starten": "Accendi ed eroga acqua molto calda",
+  "Eiskaffee starten": "Prepara caffè freddo",
+  "Eiskaffee starten?": "Preparare caffè freddo?",
+  "Einschalten und Eiskaffee starten": "Accendi e prepara caffè freddo",
+  "Kaffee mit Milch starten": "Prepara caffè con latte",
+  "Kaffee mit Milch starten?": "Preparare caffè con latte?",
+  "Einschalten und Kaffee mit Milch starten": "Accendi e prepara caffè con latte",
+  "XL-Kaffee starten": "Prepara caffè XL",
+  "XL-Kaffee starten?": "Preparare caffè XL?",
+  "Einschalten und XL-Kaffee starten": "Accendi e prepara caffè XL",
+  "Kaffee auf Eis starten": "Prepara caffè con ghiaccio",
+  "Kaffee auf Eis starten?": "Preparare caffè con ghiaccio?",
+  "Einschalten und Kaffee auf Eis starten": "Accendi e prepara caffè con ghiaccio",
+  "Schwarzer Tee starten": "Prepara tè nero",
+  "Schwarzer Tee starten?": "Preparare tè nero?",
+  "Einschalten und Schwarzer Tee starten": "Accendi e prepara tè nero",
+  "Kräutertee starten": "Prepara tisana alle erbe",
+  "Kräutertee starten?": "Preparare tisana alle erbe?",
+  "Einschalten und Kräutertee starten": "Accendi e prepara tisana alle erbe",
+  "Früchtetee starten": "Prepara tisana alla frutta",
+  "Früchtetee starten?": "Preparare tisana alla frutta?",
+  "Einschalten und Früchtetee starten": "Accendi e prepara tisana alla frutta",
+  "Grüner Tee starten": "Prepara tè verde",
+  "Grüner Tee starten?": "Preparare tè verde?",
+  "Einschalten und Grüner Tee starten": "Accendi e prepara tè verde",
+  "Weißer Tee starten": "Prepara tè bianco",
+  "Weißer Tee starten?": "Preparare tè bianco?",
+  "Einschalten und Weißer Tee starten": "Accendi e prepara tè bianco",
+  "Japanischer Tee starten": "Prepara tè giapponese",
+  "Japanischer Tee starten?": "Preparare tè giapponese?",
+  "Einschalten und Japanischer Tee starten": "Accendi e prepara tè giapponese",
+  "Kaffee verkehrt starten": "Prepara latte e caffè",
+  "Kaffee verkehrt starten?": "Preparare latte e caffè?",
+  "Einschalten und Kaffee verkehrt starten": "Accendi e prepara latte e caffè",
+  "Pulverkaffee starten": "Prepara caffè macinato",
+  "Pulverkaffee starten?": "Preparare caffè macinato?",
+  "Einschalten und Pulverkaffee starten": "Accendi e prepara caffè macinato",
+  "Kaffee to go starten": "Prepara caffè da asporto",
+  "Kaffee to go starten?": "Preparare caffè da asporto?",
+  "Einschalten und Kaffee to go starten": "Accendi e prepara caffè da asporto",
+  "Mithören": "Ascolta",
+  "Bei Privatsphäre aus": "Spento con privacy attiva",
+  "Sprechen beendet – Privatsphäre an": "Conversazione terminata – privacy attiva",
+  "Sprechen beendet – Klingel nicht erreichbar": "Conversazione terminata – campanello non raggiungibile",
+  "Sprechen geht in diesem Browser nicht": "Parlare non funziona in questo browser",
+  "Sprechen braucht HTTPS": "Per parlare serve HTTPS",
+  "Sprechen klappt mit dieser Klingel nicht – Mithören geht weiter": "Parlare non funziona con questo campanello – ascoltare sì",
+  "Sprechen klappt mit dieser Klingel nicht": "Parlare non funziona con questo campanello",
+  "Sprechen geht nur über die Klingel": "Si può parlare solo tramite il campanello",
+  "Groß anzeigen": "Mostra in grande",
+  "Live-Bild": "Immagine live",
+  "Objekterkennung": "Rilevamento oggetti",
+  "Objekterkennung ausschalten?": "Disattivare il rilevamento oggetti?",
+  "Erkennung einschalten": "Attiva rilevamento",
+  "Erkennung ausschalten": "Disattiva rilevamento",
+  "Aufnahme einschalten": "Attiva registrazione",
+  "Aufnahme ausschalten": "Disattiva registrazione",
+  "Kein Clip vorhanden": "Nessuna clip",
+  "Zone": "Zona",
+  "Alarme": "Allarmi",
+  "Erkennungen": "Rilevamenti",
+  "Herunterladen": "Scarica",
+  "Zeitleiste": "Timeline",
+  "Nichts gefunden": "Nessun risultato",
+  "Filter ändern oder zurücksetzen": "Cambia o reimposta i filtri",
+  "Filter zurücksetzen": "Reimposta filtri",
+  "Alle Aufnahmen": "Tutte le registrazioni",
+  "Keine Aufnahmen": "Nessuna registrazione",
+  "Aufnahme unter „Einstellungen“ einschalten": "Attiva la registrazione in “Impostazioni”",
+  "Frigate hat keine Aufnahmen dieser Kamera": "Frigate non ha registrazioni di questa telecamera",
+  "Aufnahme in den Einstellungen einschalten": "Attiva la registrazione nelle impostazioni",
+  "Tag": "Giorno",
+  "Uhrzeit": "Ora",
+  "Aufnahme nicht abrufbar": "Impossibile caricare la registrazione",
+  "Frigate liefert dieses Video nicht": "Frigate non fornisce questo video",
+  "Keine Aufnahme in dieser Stunde": "Nessuna registrazione in quest'ora",
+  "1 neuer Alarm": "1 nuovo allarme",
+  "1 Erkennung": "1 rilevamento",
+  "1 Alarm": "1 allarme",
+  "Objekterkennung aus": "Rilevamento oggetti disattivato",
+  "Objekterkennung einschalten": "Attiva rilevamento oggetti",
+  "Objekterkennung ausschalten": "Disattiva rilevamento oggetti",
+  "Favorit ✓": "Preferito ✓",
+  "Nur Favoriten": "Solo preferiti",
+  "Wird nicht automatisch gelöscht": "Non verrà eliminato automaticamente",
+  "Teilen": "Condividi",
+  "Jetzt teilen": "Condividi ora",
+  "Bild herunterladen": "Scarica immagine",
+  "Gespeichert": "Salvato",
+  "Nicht geladen": "Non caricato",
+  "Sicher erkannt": "Rilevato con certezza",
+  "Als neu markieren": "Segna come nuovo",
+  "Alle als gesehen markieren": "Segna tutto come visto",
+  "Alle als gesehen markieren?": "Segnare tutto come visto?",
+  "Danach steht nichts mehr als „Neu“ da.": "Dopo nulla apparirà più come “Nuovo”.",
+  "Markieren": "Segna",
+  "Zeitraum": "Periodo",
+  "Gesichter": "Volti",
+  "1 Filter aktiv": "1 filtro attivo",
+  "Alarme: wichtige Erkennungen, z. B. eine Person in einer Zone": "Allarmi: rilevamenti importanti, ad es. una persona in una zona",
+  "Keine Favoriten": "Nessun preferito",
+  "Im Detail einer Erkennung „Favorit“ antippen": "Tocca “Preferito” nel dettaglio di un rilevamento",
+  "Springen nicht möglich": "Impossibile saltare in questo video",
+  "Ab hier:": "Da qui:",
+  "Anhalten": "Pausa",
+  "Kein Live-Video · Standbild alle 2 s": "Nessun video live · immagine fissa ogni 2 s",
+  "Hemma 2 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 2 non fa più parte di Casora – ora usi Casora Glas, il look vetro nella struttura di Casora. Altri design: Studio › Impostazioni › Design.",
+  "Hemma 1 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 1 non fa più parte di Casora – ora usi Casora Glas, il look vetro nella struttura di Casora. Altri design: Studio › Impostazioni › Design.",
+  "Das Hemma-Design gibt es nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Il design Hemma non esiste più – ora usi Casora Glas, il look vetro nella struttura di Casora. Altri design: Studio › Impostazioni › Design.",
+  "Americano": "Americano",
+  "Cappuccino": "Cappuccino",
+  "Cortado": "Cortado",
+  "Doppio": "Doppio",
+  "Espresso": "Espresso",
+  "Espresso Macchiato": "Espresso macchiato",
+  "Latte Macchiato": "Latte macchiato",
+  "Lungo": "Lungo",
+  "Ristretto": "Ristretto",
+  "Casora Glas": "Casora Glas",
+  "Hemma": "Hemma",
+  "Hemma 1": "Hemma 1",
+  "Hemma 2": "Hemma 2",
+  "Tassen": "Tazze",
+  "Türklingel": "Campanello",
+  "überfällig": "in ritardo",
+  "Einschalten und": "Accendi e",
+  "HLS-Fehler": "Errore HLS",
+  "kein HLS": "nessun HLS",
+  "kein Video": "nessun video",
+  "keine Quelle": "nessuna sorgente",
+  "keine Reviews": "nessuna review",
+  "lädt nicht": "non carica",
+  "Videofehler": "Errore video",
+  "Unter-Liste nicht signiert": "sottolista non firmata",
+  "nicht signiert": "non firmato",
+  "s ohne Antwort": "s senza risposta",
+  "HTTP": "HTTP",
+  "YYYY-MM-DD": "YYYY-MM-DD",
+  "TEXTAREA": "TEXTAREA",
+  "Bohnen bald leer": "Chicchi quasi finiti",
+  "Bohnen bei Gelegenheit nachfüllen": "Aggiungi chicchi quando puoi",
+  "Brühgruppe": "Gruppo infusore",
+  "Brühgruppe herausnehmen und unter Wasser ausspülen": "Estrai il gruppo infusore e sciacqualo sotto l'acqua",
+  "Brühgruppe spülen": "Risciacqua il gruppo infusore",
+  "Brühgruppe spülen überfällig": "Risciacquo del gruppo infusore in ritardo",
+  "Getränk an der Maschine wählen – Casora erkennt es am Stromverlauf.": "Scegli la bevanda sulla macchina – Casora la riconosce dal consumo elettrico.",
+  "Kaffee doppio": "Caffè doppio",
+  "Funkt, schickt aber keine Werte": "Trasmette, ma non invia valori",
+  "Batteriewert fehlt": "Manca il livello della batteria",
+  "Cloud antwortet nicht": "Il cloud non risponde",
+  "Seit dem Neustart noch keine Meldung": "Nessun dato dal riavvio",
+  "Erreichbar, gerade nichts zu melden": "Raggiungibile, niente da segnalare ora",
+  "funkt, schickt aber keine Werte": "trasmette, ma non invia valori",
+  "meldet keinen Batteriewert": "non segnala il livello della batteria",
+  "Haustier": "Animale domestico",
+  "Diagramm": "Grafico",
+  "Linien": "Linee",
+  "Kein Zahlenwert": "Nessun valore numerico",
+  "Dieser Sensor liefert keine Zahl.": "Questo sensore non fornisce un numero.",
+  "Noch keine Statistik": "Ancora nessuna statistica",
+  "Statistik nicht abrufbar": "Statistiche non disponibili",
+  "Home Assistant sammelt sie stündlich.": "Home Assistant le raccoglie ogni ora.",
+  "Dieser Sensor hat keine Statistik.": "Questo sensore non ha statistiche.",
+  "Meldet sich nicht": "Non comunica",
+  "Ungenaue Position": "Posizione imprecisa",
+  "Live-Tracking": "Tracciamento live",
+  "Ziel": "Obiettivo",
+  "Min. aktiv": "min attivo",
+  "Ruhe": "Riposo",
+  "Schlaf Tag": "Sonno diurno",
+  "Schlaf Nacht": "Sonno notturno",
+  "Tracker": "Tracker",
+  "Energiesparen": "Risparmio energetico",
+  "Favorites": "Preferiti",
+  "Scenes": "Scene",
+  "Ein": "Acceso",
+  "Home": "Casa",
+  "1 An": "1 accesa",
+  "1 an": "1 accesa",
+  "1 Aus": "1 spenta",
+  "1 entriegelt": "1 sbloccata",
+  "1 aktiv": "1 attiva",
+  "1 Aktiv": "1 attiva",
+  "1 offen": "1 aperta",
+  "1 Offen": "1 aperta",
+  "1 geöffnet": "1 aperta",
+  "1 gekippt": "1 a ribalta",
+  "1 Schwach": "1 scarica",
+  "1 Verfügbar": "1 disponibile",
+  "1 ausgefallen": "1 guasto",
+  "1 übersprungen": "1 saltato",
+  "Energiesparen ist an: der Tracker reagiert erst wieder, wenn er unterwegs ist.": "Il risparmio energetico è attivo: il tracker risponde di nuovo quando è in movimento.",
+  "Der Tracker ist gerade nicht erreichbar.": "Il tracker al momento non è raggiungibile.",
+  "Leicht feucht": "Leggermente umido",
+  "Häufig": "Spesso",
+  "Selten": "Raramente",
+  "Intelligent": "Intelligente",
+  "Sehr hoch": "Molto alto",
+  "Mopp-Pad": "Mop",
+  "Kantenreinigung": "Pulizia dei bordi",
+  "Frischwassertank fehlt": "Manca il serbatoio dell'acqua pulita",
+  "Schmutzwassertank voll oder nicht eingesetzt": "Serbatoio acqua sporca pieno o non inserito",
+  "Staubbeutel fehlt": "Manca il sacchetto della polvere",
+  "Staubbeutel prüfen": "Controlla il sacchetto della polvere",
+  "Reinigungsmittel nachfüllen": "Aggiungi detergente",
+  "Räder reinigen": "Pulisci le ruote",
+  "Wasserauslassfilter": "Filtro di uscita dell'acqua",
+  "Schmutzwassertank (Roboter)": "Serbatoio acqua sporca (robot)",
+  "noch 1 Tag": "manca 1 giorno",
+  "Kein Ton von der Klingel – neuer Versuch …": "Nessun audio dal campanello, nuovo tentativo …",
+  "Werte": "Valori",
+  "Bedienung": "Controlli",
+  "Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.": "Scegli un dispositivo nello Studio o aggiungi valori, cronologia e schede personali.",
+  "Kein Verlauf: {name} ist kein Zahlenwert.": "Nessuna cronologia: {name} non è un valore numerico.",
+  "Universal-Kachel": "Scheda universale",
+  "Kein Gerät gewählt": "Nessun dispositivo scelto",
+  "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "Nello Studio puoi aggiungere valori, cronologia, controlli e schede personali."
+ },
+ "patterns": [
+  [
+   "^Spielt ab: (.+)$",
+   "In riproduzione: {1}"
+  ],
+  [
+   "^„(.+)“ an der Tür abspielen\\?$",
+   "Riprodurre “{1}” alla porta?"
+  ],
+  [
+   "^Geklingelt · (.+)$",
+   "Hanno suonato · {1}"
+  ],
+  [
+   "^Geklingelt (\\d{1,2}:\\d{2}.*)$",
+   "Hanno suonato alle {1}"
+  ],
+  [
+   "^Treffer (\\d+) %$",
+   "Corrispondenza {1} %"
+  ],
+  [
+   "^Gestern (\\d{1,2}:\\d{2})$",
+   "Ieri {1}"
+  ],
+  [
+   "^Top (\\d+) Verbraucher$",
+   "Top {1} consumatori"
+  ],
+  [
+   "^(\\d+) Probleme$",
+   "{1} problemi"
+  ],
+  [
+   "^(\\d+) bald$",
+   "{1} a breve"
+  ],
+  [
+   "^(\\d+) beobachten$",
+   "{1} da osservare"
+  ],
+  [
+   "^(\\d+) bald fällig$",
+   "{1} da sostituire a breve"
+  ],
+  [
+   "^(\\d+) Batterien bald fällig$",
+   "{1} batterie da sostituire a breve"
+  ],
+  [
+   "^(\\d+) ausgefallen$",
+   "{1} guasti"
+  ],
+  [
+   "^(\\d+) prüfen$",
+   "{1} da controllare"
+  ],
+  [
+   "^(\\d+) ok$",
+   "{1} ok"
+  ],
+  [
+   "^sonst alle (\\d+) Min\\.$",
+   "di solito ogni {1} min"
+  ],
+  [
+   "^sonst alle (\\d+) Std\\.$",
+   "di solito ogni {1} h"
+  ],
+  [
+   "^sonst alle (\\d+) Tage$",
+   "di solito ogni {1} giorni"
+  ],
+  [
+   "^alle (\\d+) Min\\.$",
+   "ogni {1} min"
+  ],
+  [
+   "^alle (\\d+) Std\\.$",
+   "ogni {1} h"
+  ],
+  [
+   "^alle (\\d+) Tage$",
+   "ogni {1} giorni"
+  ],
+  [
+   "^seit (\\d+) Min\\.$",
+   "da {1} min"
+  ],
+  [
+   "^seit (\\d+) Std\\.$",
+   "da {1} h"
+  ],
+  [
+   "^seit (\\d+) T\\.$",
+   "da {1} g"
+  ],
+  [
+   "^seit (\\d+) Tagen$",
+   "da {1} giorni"
+  ],
+  [
+   "^zuletzt gemeldet gestern (.+)$",
+   "ultimo rilevamento ieri {1}"
+  ],
+  [
+   "^zuletzt gemeldet (.+)$",
+   "ultimo rilevamento {1}"
+  ],
+  [
+   "^seit gestern (.+)$",
+   "da ieri {1}"
+  ],
+  [
+   "^Alle (\\d+) Lichter im Haus ausschalten\\?$",
+   "Spegnere tutte le {1} luci della casa?"
+  ],
+  [
+   "^(\\d+) Geräte$",
+   "{1} dispositivi"
+  ],
+  [
+   "^(.+) unscharf$",
+   "{1} disinserito"
+  ],
+  [
+   "^(.+) scharf · (.+)$",
+   "{1} inserito · {2}"
+  ],
+  [
+   "^Wartet seit (.+)$",
+   "In attesa da {1}"
+  ],
+  [
+   "^Üblich sind (.+)$",
+   "Di solito {1}"
+  ],
+  [
+   "^(\\d+) Einstellungen empfohlen, in WashData übernehmen$",
+   "{1} impostazioni consigliate, applicale in WashData"
+  ],
+  [
+   "^Ø (.+)$",
+   "Ø {1}"
+  ],
+  [
+   "^Abholung in (\\d+) Tagen$",
+   "Raccolta tra {1} giorni"
+  ],
+  [
+   "^(\\d+) von (\\d+) An$",
+   "{1} di {2} accese"
+  ],
+  [
+   "^(\\d+) von (\\d+) Räumen an$",
+   "{1} di {2} stanze accese"
+  ],
+  [
+   "^KI: 1 Update braucht Aufmerksamkeit$",
+   "IA: 1 aggiornamento richiede attenzione"
+  ],
+  [
+   "^KI: (\\d+) Updates brauchen Aufmerksamkeit$",
+   "IA: {1} aggiornamenti richiedono attenzione"
+  ],
+  [
+   "^Schließt (\\d+) Updates ab$",
+   "Completamento di {1} aggiornamenti"
+  ],
+  [
+   "^Backup (vor .+|gerade eben)$",
+   "Backup {1}"
+  ],
+  [
+   "^Absenkung um (.+)$",
+   "Riduzione di {1}"
+  ],
+  [
+   "^Letzte Fahrt vor (.+) T\\.$",
+   "Ultimo giro {1} giorni fa"
+  ],
+  [
+   "^Diesen Monat bist du dran, danach wieder im (.+)\\.$",
+   "Questo mese tocca a te; la prossima volta a {1}."
+  ],
+  [
+   "^Diesen Monat bist du dran\\.?$",
+   "Questo mese tocca a te."
+  ],
+  [
+   "^startet in (.+)$",
+   "inizia tra {1}"
+  ],
+  [
+   "^trocken in etwa (\\d+) Tagen?$",
+   "asciutta tra circa {1} giorni"
+  ],
+  [
+   "^trocken in etwa 1 Tag$",
+   "asciutta tra circa 1 giorno"
+  ],
+  [
+   "^Vor (\\d+) Tagen gegossen$",
+   "Annaffiata {1} giorni fa"
+  ],
+  [
+   "^davon (.+) Std\\. mit Unterstützung$",
+   "{1} h con assistenza"
+  ],
+  [
+   "^in (\\d[\\d.,]*) km$",
+   "tra {1} km"
+  ],
+  [
+   "^(\\d+) ?% des aktuellen Verbrauchs$",
+   "{1} % del consumo attuale"
+  ],
+  [
+   "^(\\d+) werden installiert$",
+   "{1} in installazione"
+  ],
+  [
+   "^(\\d+) Updates brauchen Aufmerksamkeit$",
+   "{1} aggiornamenti richiedono attenzione"
+  ],
+  [
+   "^(\\d+) Breaking Changes betreffen dich$",
+   "{1} modifiche importanti ti riguardano"
+  ],
+  [
+   "^1 Breaking Change betrifft dich$",
+   "1 modifica importante ti riguarda"
+  ],
+  [
+   "^(.+) g/m³ absolut$",
+   "{1} g/m³ assoluta"
+  ],
+  [
+   "^drinnen Ø (.+)$",
+   "interno Ø {1}"
+  ],
+  [
+   "^(\\d+) Verfügbar$",
+   "{1} disponibili"
+  ],
+  [
+   "^Heute (.+) kWh$",
+   "Oggi {1} kWh"
+  ],
+  [
+   "^Heute (.+) kWh Bezug$",
+   "Oggi {1} kWh dalla rete"
+  ],
+  [
+   "^Heute (.+) kWh entladen$",
+   "Oggi {1} kWh scaricati"
+  ],
+  [
+   "^(.+) km aufgezeichnet$",
+   "{1} km registrati"
+  ],
+  [
+   "^(.+) ohne Strom$",
+   "{1} senza corrente"
+  ],
+  [
+   "^(.+) von (.+) aus Solar und Akku$",
+   "{1} di {2} da solare e batteria"
+  ],
+  [
+   "^Reinigt (.+)$",
+   "Pulisce {1}"
+  ],
+  [
+   "^Schließt das (.+)-Update ab$",
+   "Completa l'aggiornamento di {1}"
+  ],
+  [
+   "^(.+) Update verfügbar$",
+   "Aggiornamento di {1} disponibile"
+  ],
+  [
+   "^(.+) hat das Haus verlassen$",
+   "{1} ha lasciato casa"
+  ],
+  [
+   "^(.+) ist angekommen$",
+   "{1} è arrivato a casa"
+  ],
+  [
+   "^(.+) ist gekippt$",
+   "{1} è a ribalta"
+  ],
+  [
+   "^(.+) ist gleich fertig$",
+   "{1} sta per finire"
+  ],
+  [
+   "^(.+) läuft$",
+   "{1} in funzione"
+  ],
+  [
+   "^(.+) hat geklingelt$",
+   "{1} ha suonato al campanello"
+  ],
+  [
+   "^(.+) hat fertig gereinigt$",
+   "{1} ha finito di pulire"
+  ],
+  [
+   "^(.+) reinigt$",
+   "{1} sta pulendo"
+  ],
+  [
+   "^(.+) ist auf der Arbeit$",
+   "{1} è al lavoro"
+  ],
+  [
+   "^(.+) ist im (.+)$",
+   "{1} è in {2}"
+  ],
+  [
+   "^(.+) ist in der (.+)$",
+   "{1} è a {2}"
+  ],
+  [
+   "^(.+) ist am (.+)$",
+   "{1} è a {2}"
+  ],
+  [
+   "^(.+) ist bei (.+)$",
+   "{1} è da {2}"
+  ],
+  [
+   "^(.+) umgeschaltet auf (.+)$",
+   "{1} passato a {2}"
+  ],
+  [
+   "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
+   "{1} attivo · {2}"
+  ],
+  [
+   "^Alarm scharf – (.+)$",
+   "Allarme inserito – {1}"
+  ],
+  [
+   "^(.+) braucht Wasser$",
+   "{1} ha bisogno d'acqua"
+  ],
+  [
+   "^(.+) steht zu nass$",
+   "{1} è troppo bagnata"
+  ],
+  [
+   "^(.+) braucht Dünger$",
+   "{1} ha bisogno di concime"
+  ],
+  [
+   "^(.+) ist überdüngt$",
+   "{1} ha troppo concime"
+  ],
+  [
+   "^(.+) braucht mehr Licht$",
+   "{1} ha bisogno di più luce"
+  ],
+  [
+   "^(.+) bekommt zu viel Sonne$",
+   "{1} prende troppo sole"
+  ],
+  [
+   "^(.+) steht zu kalt$",
+   "{1} ha troppo freddo"
+  ],
+  [
+   "^(.+) steht zu warm$",
+   "{1} ha troppo caldo"
+  ],
+  [
+   "^(.+) steht in zu trockener Luft$",
+   "{1}: aria troppo secca"
+  ],
+  [
+   "^(.+) steht in zu feuchter Luft$",
+   "{1}: aria troppo umida"
+  ],
+  [
+   "^(\\d+) Reinigungen$",
+   "{1} pulizie"
+  ],
+  [
+   "^(\\d+) entriegelt$",
+   "{1} sbloccate"
+  ],
+  [
+   "^(\\d+) Schlösser entriegelt$",
+   "{1} serrature sbloccate"
+  ],
+  [
+   "^1 Tür entriegelt$",
+   "1 porta sbloccata"
+  ],
+  [
+   "^(\\d+) Türen entriegelt$",
+   "{1} porte sbloccate"
+  ],
+  [
+   "^(.+) entriegelt$",
+   "{1} sbloccata"
+  ],
+  [
+   "^Gestern, (.+)$",
+   "Ieri, {1}"
+  ],
+  [
+   "^Heute, (.+)$",
+   "Oggi, {1}"
+  ],
+  [
+   "^alle (\\d+) Wochen$",
+   "ogni {1} settimane"
+  ],
+  [
+   "^jede Woche$",
+   "ogni settimana"
+  ],
+  [
+   "^Luft ([^·]+)$",
+   "Aria {1}"
+  ],
+  [
+   "^PM2,5 (.+)$",
+   "PM2,5 {1}"
+  ],
+  [
+   "^(\\d+) Tage?$",
+   "{1} giorni"
+  ],
+  [
+   "^(\\d+) Stunden$",
+   "{1} ore"
+  ],
+  [
+   "^ca\\. (.+)$",
+   "circa {1}"
+  ],
+  [
+   "^(\\d{1,2}) Uhr$",
+   "{1}:00"
+  ],
+  [
+   "^(.+) · Gehärteter Stahl$",
+   "{1} · acciaio temprato"
+  ],
+  [
+   "^(.+) · Edelstahl$",
+   "{1} · acciaio inox"
+  ],
+  [
+   "^Ziel (.+)$",
+   "Obiettivo {1}"
+  ],
+  [
+   "^Stufe (\\d+) von (\\d+)$",
+   "Livello {1} di {2}"
+  ],
+  [
+   "^(\\d+) von (\\d+) geöffnet$",
+   "{1} di {2} aperte"
+  ],
+  [
+   "^(\\d+) von (\\d+)$",
+   "{1} di {2}"
+  ],
+  [
+   "^Temperatur · (\\d+) Stunden$",
+   "Temperatura · {1} ore"
+  ],
+  [
+   "^Leistung · (\\d+) Stunden$",
+   "Potenza · {1} ore"
+  ],
+  [
+   "^Online seit (\\d+) Stunden$",
+   "Online da {1} ore"
+  ],
+  [
+   "^Online seit (\\d+) Tagen$",
+   "Online da {1} giorni"
+  ],
+  [
+   "^vor 1 Stunde$",
+   "1 ora fa"
+  ],
+  [
+   "^vor (\\d+) Stunden$",
+   "{1} ore fa"
+  ],
+  [
+   "^vor 1 Minute$",
+   "1 minuto fa"
+  ],
+  [
+   "^vor (\\d+) Minuten$",
+   "{1} minuti fa"
+  ],
+  [
+   "^(\\d+) An$",
+   "{1} accese"
+  ],
+  [
+   "^(\\d+) an$",
+   "{1} accese"
+  ],
+  [
+   "^(\\d+) aktiv$",
+   "{1} attive"
+  ],
+  [
+   "^(\\d+) Aktiv$",
+   "{1} attive"
+  ],
+  [
+   "^(\\d+) Aus$",
+   "{1} spente"
+  ],
+  [
+   "^(\\d+) läuft$",
+   "{1} in funzione"
+  ],
+  [
+   "^(\\d+) laufen$",
+   "{1} in funzione"
+  ],
+  [
+   "^(\\d+) pausiert$",
+   "{1} in pausa"
+  ],
+  [
+   "^(\\d+) offen$",
+   "{1} aperte"
+  ],
+  [
+   "^(\\d+) Offen$",
+   "{1} aperte"
+  ],
+  [
+   "^1 Schloss$",
+   "1 serratura"
+  ],
+  [
+   "^(\\d+) Schlösser$",
+   "{1} serrature"
+  ],
+  [
+   "^1 Raum heizt gerade$",
+   "1 stanza in riscaldamento"
+  ],
+  [
+   "^(\\d+) Räume heizen gerade$",
+   "{1} stanze in riscaldamento"
+  ],
+  [
+   "^(\\d+) heizen$",
+   "{1} in riscaldamento"
+  ],
+  [
+   "^(\\d+) von (\\d+) an$",
+   "{1} di {2} accese"
+  ],
+  [
+   "^1 Raum reinigen$",
+   "Pulisci 1 stanza"
+  ],
+  [
+   "^(\\d+) Räume reinigen$",
+   "Pulisci {1} stanze"
+  ],
+  [
+   "^(\\d+) Räume$",
+   "{1} stanze"
+  ],
+  [
+   "^1 Sensor offen$",
+   "1 sensore aperto"
+  ],
+  [
+   "^(\\d+) Sensoren offen$",
+   "{1} sensori aperti"
+  ],
+  [
+   "^(\\d+) Öffnungen offen$",
+   "{1} varchi aperti"
+  ],
+  [
+   "^(\\d+) Updates verfügbar$",
+   "{1} aggiornamenti disponibili"
+  ],
+  [
+   "^(\\d+) Geräte mit schwachem Akku$",
+   "{1} dispositivi con batteria scarica"
+  ],
+  [
+   "^(\\d+) Szenen$",
+   "{1} scene"
+  ],
+  [
+   "^1 Szene$",
+   "1 scena"
+  ],
+  [
+   "^(\\d+) Durchgänge$",
+   "{1} cicli"
+  ],
+  [
+   "^In (\\d+) Durchgängen oder (\\d+) Tagen fällig$",
+   "Scade tra {1} cicli o {2} giorni"
+  ],
+  [
+   "^In (\\d+) Durchgängen fällig$",
+   "Scade tra {1} cicli"
+  ],
+  [
+   "^In (\\d+) Tagen fällig$",
+   "Scade tra {1} giorni"
+  ],
+  [
+   "^In (\\d+) Durchgängen$",
+   "Tra {1} cicli"
+  ],
+  [
+   "^in (\\d+) Durchgängen$",
+   "tra {1} cicli"
+  ],
+  [
+   "^(\\d+) Durchgänge seit dem letzten Mal$",
+   "{1} cicli dall'ultima volta"
+  ],
+  [
+   "^(\\d+) Tage seit dem letzten Mal$",
+   "{1} giorni dall'ultima volta"
+  ],
+  [
+   "^(\\d+) Durchgänge, (\\d+) Tage seit dem letzten Mal$",
+   "{1} cicli, {2} giorni dall'ultima volta"
+  ],
+  [
+   "^In (\\d+) Durchgängen oder (\\d+) Tagen$",
+   "Tra {1} cicli o {2} giorni"
+  ],
+  [
+   "^(\\d+) Unterwegs$",
+   "{1} fuori"
+  ],
+  [
+   "^(\\d+) unterwegs$",
+   "{1} fuori"
+  ],
+  [
+   "^(\\d+) Räumen an$",
+   "acceso in {1} stanze"
+  ],
+  [
+   "^(\\d+) Min\\. übrig$",
+   "{1} min rimanenti"
+  ],
+  [
+   "^(\\d+) Std\\. übrig$",
+   "{1} h rimanenti"
+  ],
+  [
+   "^(\\d+) Std\\. (\\d+) Min\\.$",
+   "{1} h {2} min"
+  ],
+  [
+   "^(\\d+) Min\\.$",
+   "{1} min"
+  ],
+  [
+   "^(\\d+) Std\\.$",
+   "{1} h"
+  ],
+  [
+   "^vor (\\d+) s$",
+   "{1} s fa"
+  ],
+  [
+   "^vor (\\d+) Min\\.$",
+   "{1} min fa"
+  ],
+  [
+   "^vor (\\d+) Std\\.$",
+   "{1} h fa"
+  ],
+  [
+   "^vor (\\d+) T\\.$",
+   "{1} g fa"
+  ],
+  [
+   "^vor (\\d+) Tagen$",
+   "{1} giorni fa"
+  ],
+  [
+   "^vor (\\d+) Tag$",
+   "{1} giorno fa"
+  ],
+  [
+   "^vor (\\d+) Std\\. (\\d+) Min\\.$",
+   "{1} h {2} min fa"
+  ],
+  [
+   "^seit (\\d+) Tagen fällig$",
+   "scaduto da {1} giorni"
+  ],
+  [
+   "^in (\\d+) Tagen$",
+   "tra {1} giorni"
+  ],
+  [
+   "^In (\\d+) Tagen$",
+   "Tra {1} giorni"
+  ],
+  [
+   "^um (\\d+) Uhr$",
+   "alle {1}:00"
+  ],
+  [
+   "^heute (\\d{1,2}:\\d{2})$",
+   "oggi {1}"
+  ],
+  [
+   "^morgen (\\d{1,2}:\\d{2})$",
+   "domani {1}"
+  ],
+  [
+   "^gestern (\\d{1,2}:\\d{2})$",
+   "ieri {1}"
+  ],
+  [
+   "^Fertig um (.+)$",
+   "Pronto alle {1}"
+  ],
+  [
+   "^Fertig gegen (.+)$",
+   "Pronto verso le {1}"
+  ],
+  [
+   "^Läuft seit (.+)$",
+   "In funzione da {1}"
+  ],
+  [
+   "^läuft seit (.+)$",
+   "in funzione da {1}"
+  ],
+  [
+   "^noch (\\d+)[  ]s$",
+   "mancano {1} s"
+  ],
+  [
+   "^noch (\\d+)[  ]Min\\.$",
+   "mancano {1} min"
+  ],
+  [
+   "^noch (\\d+) Tage$",
+   "mancano {1} giorni"
+  ],
+  [
+   "^noch (.+)$",
+   "ancora {1}"
+  ],
+  [
+   "^Zuletzt bekannt · vor (\\d+) Tagen$",
+   "Ultima posizione · {1} giorni fa"
+  ],
+  [
+   "^(\\d+) neue Updates gefunden$",
+   "{1} nuovi aggiornamenti trovati"
+  ],
+  [
+   "^Zuletzt gesucht: (.+)$",
+   "Ultima ricerca: {1}"
+  ],
+  [
+   "^Zuletzt: (.+)$",
+   "Ultimo: {1}"
+  ],
+  [
+   "^Zuletzt (vor .+|gestern|gerade eben)$",
+   "Ultima volta {1}"
+  ],
+  [
+   "^Zuletzt (.+)$",
+   "Ultimo {1}"
+  ],
+  [
+   "^KI-Einschätzung · vor (\\d+) Min\\.$",
+   "Valutazione IA · {1} min fa"
+  ],
+  [
+   "^KI-Einschätzung · vor (\\d+) Std\\.$",
+   "Valutazione IA · {1} h fa"
+  ],
+  [
+   "^KI-Einschätzung · vor (\\d+) T\\.$",
+   "Valutazione IA · {1} g fa"
+  ],
+  [
+   "^KI-Einschätzung · gerade eben$",
+   "Valutazione IA · proprio ora"
+  ],
+  [
+   "^Letzte Fahrt vor (\\d+) Tagen$",
+   "Ultimo giro {1} giorni fa"
+  ],
+  [
+   "^Letzte Fahrt vor (\\d+) Tagen; Akkustand nach Lagerung unbekannt$",
+   "Ultimo giro {1} giorni fa; livello batteria dopo la sosta sconosciuto"
+  ],
+  [
+   "^Service fällig seit (\\S+) \\((\\d+) Tage überfällig\\)$",
+   "Revisione scaduta dal {1} ({2} giorni di ritardo)"
+  ],
+  [
+   "^davon (\\d+) Std\\. mit Unterstützung$",
+   "{1} h con assistenza"
+  ],
+  [
+   "^Nächster Dienst im (.+)\\.$",
+   "Prossimo turno a {1}."
+  ],
+  [
+   "^Verriegelt · Stand vor (\\d+) Std\\.$",
+   "Bloccata · {1} h fa"
+  ],
+  [
+   "^Entriegelt · Stand vor (\\d+) Std\\.$",
+   "Sbloccata · {1} h fa"
+  ],
+  [
+   "^Kühlt auf (.+)$",
+   "Raffresca a {1}"
+  ],
+  [
+   "^Heizt auf (.+)$",
+   "Riscalda a {1}"
+  ],
+  [
+   "^Kühl · (.+)$",
+   "Raffresca · {1}"
+  ],
+  [
+   "^Heizt · (.+)$",
+   "Riscalda · {1}"
+  ],
+  [
+   "^Bereit · (.+)$",
+   "Pronto · {1}"
+  ],
+  [
+   "^Automatik · (.+)$",
+   "Auto · {1}"
+  ],
+  [
+   "^Lädt · (.+)$",
+   "In carica · {1}"
+  ],
+  [
+   "^Entlädt · (.+)$",
+   "In scarica · {1}"
+  ],
+  [
+   "^Fällig · (.+)$",
+   "Da fare · {1}"
+  ],
+  [
+   "^Prüfen · (.+)$",
+   "Da controllare · {1}"
+  ],
+  [
+   "^Pausiert: (.+)$",
+   "In pausa: {1}"
+  ],
+  [
+   "^Akku (\\d+) ?%$",
+   "Batteria {1} %"
+  ],
+  [
+   "^Akku (.+)$",
+   "Batteria {1}"
+  ],
+  [
+   "^(\\d+) ?% Luftfeuchte$",
+   "{1} % di umidità"
+  ],
+  [
+   "^(\\d+) ?% Feuchtigkeit$",
+   "{1} % di umidità"
+  ],
+  [
+   "^(\\d+) ?% geöffnet$",
+   "{1} % aperto"
+  ],
+  [
+   "^(\\d+) ?% Geöffnet$",
+   "{1} % aperto"
+  ],
+  [
+   "^(\\d+) ?% Geschlossen$",
+   "{1} % chiuso"
+  ],
+  [
+   "^Boden bei (\\d+) ?%$",
+   "Terreno al {1} %"
+  ],
+  [
+   "^(\\d+) geöffnet$",
+   "{1} aperte"
+  ],
+  [
+   "^(\\d+) gekippt$",
+   "{1} a ribalta"
+  ],
+  [
+   "^(\\d+) ?% Akku$",
+   "{1} % di batteria"
+  ],
+  [
+   "^Tank (\\d+) ?%$",
+   "Serbatoio {1} %"
+  ],
+  [
+   "^CO₂ (\\d+) ppm$",
+   "CO₂ {1} ppm"
+  ],
+  [
+   "^Feuchte (\\d+) %$",
+   "Umidità {1} %"
+  ],
+  [
+   "^VOC (\\d+) ppb$",
+   "VOC {1} ppb"
+  ],
+  [
+   "^Fenster offen · noch (\\d+) Min\\.$",
+   "Finestra aperta · ancora {1} min"
+  ],
+  [
+   "^Fenster offen seit (.+)$",
+   "Finestra aperta da {1}"
+  ],
+  [
+   "^Fenster seit (.+) offen$",
+   "Finestra aperta da {1}"
+  ],
+  [
+   "^Außenluft belastet \\(PM2\\.5 (\\d+)\\)$",
+   "Aria esterna inquinata (PM2.5 {1})"
+  ],
+  [
+   "^Feuchte (\\d+) % · draußen feuchter$",
+   "Umidità {1} % · fuori più umido"
+  ],
+  [
+   "^Feuchte (\\d+) % · Außenwerte fehlen$",
+   "Umidità {1} % · valori esterni mancanti"
+  ],
+  [
+   "^≈ (.+) frei · jetzt (.+)$",
+   "≈ {1} liberi · ora {2}"
+  ],
+  [
+   "^jetzt (.+)$",
+   "ora {1}"
+  ],
+  [
+   "^(.+) oder (.+)$",
+   "{1} o {2}"
+  ],
+  [
+   "^(.+) fällig$",
+   "{1} da fare"
+  ],
+  [
+   "^(.+) ist offen$",
+   "{1} è aperta"
+  ],
+  [
+   "^(.+) nachfüllen$",
+   "Rabbocca {1}"
+  ],
+  [
+   "^Alle (\\d+) Updates jetzt installieren\\?$",
+   "Installare ora tutti i {1} aggiornamenti?"
+  ],
+  [
+   "^(\\d+) Tage$",
+   "{1} giorni"
+  ],
+  [
+   "^(\\d+) Tag$",
+   "{1} giorno"
+  ],
+  [
+   "^(\\d+) Woche$",
+   "{1} settimana"
+  ],
+  [
+   "^(\\d+) Wochen$",
+   "{1} settimane"
+  ],
+  [
+   "^Nächstes (.+)$",
+   "Prossimo: {1}"
+  ],
+  [
+   "^Als Nächstes: (.+)$",
+   "A seguire: {1}"
+  ],
+  [
+   "^Räume unterschiedlich · Ø (.+)$",
+   "Stanze diverse · Ø {1}"
+  ],
+  [
+   "^(.+) · heute Abend raus$",
+   "{1} · porta fuori stasera"
+  ],
+  [
+   "^(.+) · keine Leistung$",
+   "{1} · senza potenza"
+  ],
+  [
+   "^(.+) · lädt$",
+   "{1} · in carica"
+  ],
+  [
+   "^Aus · (.+)$",
+   "Spento · {1}"
+  ],
+  [
+   "^An · (.+)$",
+   "Acceso · {1}"
+  ],
+  [
+   "^Über (.+)$",
+   "Oltre {1}"
+  ],
+  [
+   "^bis (.+)$",
+   "fino a {1}"
+  ],
+  [
+   "^seit (.+)$",
+   "da {1}"
+  ],
+  [
+   "^(\\d+) übersprungen$",
+   "{1} saltati"
+  ],
+  [
+   "^Online seit (.+)$",
+   "Online da {1}"
+  ],
+  [
+   "^(.+) · (\\d+) Stunden$",
+   "{1} · {2} ore"
+  ],
+  [
+   "^(.+) · (\\d+) Tage$",
+   "{1} · {2} giorni"
+  ],
+  [
+   "^(\\d+) ?% Luftfeuchtigkeit$",
+   "{1} % di umidità"
+  ],
+  [
+   "^Einspeisung · (\\d+) % aus Solar und Akku · heute (.+)$",
+   "Immissione · {1} % da solare e batteria · oggi {2}"
+  ],
+  [
+   "^Einspeisung · heute (.+)$",
+   "Immissione · oggi {1}"
+  ],
+  [
+   "^Einspeisung (.+)$",
+   "Immissione {1}"
+  ],
+  [
+   "^(\\d+) Kameras offline$",
+   "{1} telecamere offline"
+  ],
+  [
+   "^(\\d+) Schlösser offline$",
+   "{1} serrature offline"
+  ],
+  [
+   "^(\\d+) Tore offen$",
+   "{1} cancelli aperti"
+  ],
+  [
+   "^(.+) ausgeschaltet$",
+   "{1} spento"
+  ],
+  [
+   "^(.+) ausgelöst$",
+   "{1} attivato"
+  ],
+  [
+   "^Vor (\\d+) Min\\.$",
+   "{1} min fa"
+  ],
+  [
+   "^Vor (\\d+) Std\\.$",
+   "{1} h fa"
+  ],
+  [
+   "^Vor (\\d+) T\\.$",
+   "{1} g fa"
+  ],
+  [
+   "^Vor (\\d+) Tagen$",
+   "{1} giorni fa"
+  ],
+  [
+   "^Vor 1 Tag$",
+   "1 giorno fa"
+  ],
+  [
+   "^Vor (\\d+) Minuten$",
+   "{1} minuti fa"
+  ],
+  [
+   "^Vor (\\d+) Stunden$",
+   "{1} ore fa"
+  ],
+  [
+   "^Seit (\\d+) Min\\.$",
+   "Da {1} min"
+  ],
+  [
+   "^Seit (\\d+) Std\\.$",
+   "Da {1} h"
+  ],
+  [
+   "^Seit (\\d+) T\\.$",
+   "Da {1} g"
+  ],
+  [
+   "^Seit (.+)$",
+   "Da {1}"
+  ],
+  [
+   "^(\\d+) Türen offen$",
+   "{1} porte aperte"
+  ],
+  [
+   "^(\\d+) Fenster offen$",
+   "{1} finestre aperte"
+  ],
+  [
+   "^(\\d+) Fenster gekippt$",
+   "{1} finestre a ribalta"
+  ],
+  [
+   "^(\\d+) Türen gekippt$",
+   "{1} porte a ribalta"
+  ],
+  [
+   "^(\\d+) % aus Solar und Akku · heute (.+)$",
+   "{1} % da solare e batteria · oggi {2}"
+  ],
+  [
+   "^(\\d+) % aus Solar und Akku$",
+   "{1} % da solare e batteria"
+  ],
+  [
+   "^heute (.+)$",
+   "oggi {1}"
+  ],
+  [
+   "^Solarbank-Fehler (.+)$",
+   "Errore Solarbank {1}"
+  ],
+  [
+   "^(.+) gespeichert$",
+   "{1} accumulati"
+  ],
+  [
+   "^Modul (\\d+)$",
+   "Modulo {1}"
+  ],
+  [
+   "^(\\d+) Clients$",
+   "{1} client"
+  ],
+  [
+   "^Gesamt (.+) kWh$",
+   "Totale {1} kWh"
+  ],
+  [
+   "^(\\d+) Batterien schwach$",
+   "{1} batterie scariche"
+  ],
+  [
+   "^Am niedrigsten: (.+) (\\d+) %$",
+   "La più bassa: {1} {2} %"
+  ],
+  [
+   "^(\\d+) von (\\d+) online$",
+   "{1} di {2} online"
+  ],
+  [
+   "^Bewegung vor (\\d+) Min\\.$",
+   "Movimento {1} min fa"
+  ],
+  [
+   "^Bewegung vor (\\d+) Std\\.$",
+   "Movimento {1} h fa"
+  ],
+  [
+   "^Bewegung vor (\\d+) T\\.$",
+   "Movimento {1} g fa"
+  ],
+  [
+   "^Bewegung gerade eben$",
+   "Movimento proprio ora"
+  ],
+  [
+   "^Neu: (.+) · KI: Nicht geprüft$",
+   "Nuovo: {1} · IA: non verificato"
+  ],
+  [
+   "^Neu: (.+) · KI: Unklar$",
+   "Nuovo: {1} · IA: incerto"
+  ],
+  [
+   "^Neu: (.+) · KI: KI prüft …$",
+   "Nuovo: {1} · IA: in verifica…"
+  ],
+  [
+   "^Neu: (.+) · $",
+   "Nuovo: {1} · "
+  ],
+  [
+   "^Neu: (.+)$",
+   "Nuovo: {1}"
+  ],
+  [
+   "^(\\d+) Termine heute$",
+   "{1} eventi oggi"
+  ],
+  [
+   "^Reichweite (\\d[\\d.,]*)$",
+   "Autonomia {1}"
+  ],
+  [
+   "^Nächste Inspektion in (.+) km$",
+   "Prossima revisione tra {1} km"
+  ],
+  [
+   "^Nächste Inspektion (\\d{2}\\.\\d{2}\\.\\d{4})$",
+   "Prossima revisione {1}"
+  ],
+  [
+   "^(\\d+) % in (\\d+) Min\\.$",
+   "{1} % tra {2} min"
+  ],
+  [
+   "^(Heute|Morgen|Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag): (.+)$",
+   "{1}: {2}"
+  ],
+  [
+   "^(\\d+) Schlösser offen$",
+   "{1} serrature aperte"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · keine offen$",
+   "{1} · nessuno aperto"
+  ],
+  [
+   "^(.+) offen$",
+   "{1} aperto"
+  ],
+  [
+   "^(.+) gekippt$",
+   "{1} a ribalta"
+  ],
+  [
+   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
+   "Le date di raccolta torneranno appena {1} risponde."
+  ],
+  [
+   "^(\\d+) Akkus schwach$",
+   "{1} batterie scariche"
+  ],
+  [
+   "^(\\d+) Schwach$",
+   "{1} scariche"
+  ],
+  [
+   "^(.+) Akku fast leer$",
+   "{1} batteria quasi esaurita"
+  ],
+  [
+   "^(.+) Akku schwach$",
+   "{1} batteria scarica"
+  ],
+  [
+   "^(\\d+) Wiedergaben$",
+   "{1} in riproduzione"
+  ],
+  [
+   "^H (-?\\d+)°$",
+   "Max {1}°"
+  ],
+  [
+   "^T (-?\\d+)°$",
+   "Min {1}°"
+  ],
+  [
+   "^(\\d+) % Regen$",
+   "{1} % pioggia"
+  ],
+  [
+   "^Wie warm ist es (?:im|in der) (.+)\\?$",
+   "Che temperatura c'è in {1}?"
+  ],
+  [
+   "^Dimme das Licht (?:im|in der) (.+)$",
+   "Abbassa la luce in {1}"
+  ],
+  [
+   "^In der Summe · (\\d+) von (\\d+)$",
+   "Nel totale · {1} di {2}"
+  ],
+  [
+   "^(\\d+) % der Summe$",
+   "{1} % del totale"
+  ],
+  [
+   "^(\\d+) Geräte ohne Wert$",
+   "{1} dispositivi senza valore"
+  ],
+  [
+   "^Nicht in der Summe · Steckt hinter (.+)$",
+   "Fuori dal totale · dietro {1}"
+  ],
+  [
+   "^Stand (.+) \\(verzögert\\)$",
+   "Aggiornato {1} (in ritardo)"
+  ],
+  [
+   "^Stand (.+)$",
+   "Aggiornato {1}"
+  ],
+  [
+   "^Nächste Inspektion (.+)$",
+   "Prossima revisione {1}"
+  ],
+  [
+   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
+   "Le date di raccolta torneranno appena {1} risponde."
+  ],
+  [
+   "^(\\d+) Termine$",
+   "{1} eventi"
+  ],
+  [
+   "^(\\d+) an$",
+   "{1} accese"
+  ],
+  [
+   "^in (\\d+) Wochen$",
+   "tra {1} settimane"
+  ],
+  [
+   "^in (\\d+) Monaten$",
+   "tra {1} mesi"
+  ],
+  [
+   "^Platz (1|21|31)$",
+   "{1}º"
+  ],
+  [
+   "^Platz (2|22)$",
+   "{1}º"
+  ],
+  [
+   "^Platz (3|23)$",
+   "{1}º"
+  ],
+  [
+   "^Platz (\\d+)$",
+   "{1}º"
+  ],
+  [
+   "^(\\d+) Punkte$",
+   "{1} punti"
+  ],
+  [
+   "^(\\S+ : \\S+) bei (.+)$",
+   "{1} a {2}"
+  ],
+  [
+   "^(\\S+ : \\S+) gegen (.+)$",
+   "{1} vs {2}"
+  ],
+  [
+   "^bei (.+)$",
+   "a {1}"
+  ],
+  [
+   "^gegen (.+)$",
+   "vs {1}"
+  ],
+  [
+   "^Heute (\\d\\d:\\d\\d)$",
+   "Oggi {1}"
+  ],
+  [
+   "^Morgen (\\d\\d:\\d\\d)$",
+   "Domani {1}"
+  ],
+  [
+   "^Mo (\\d.*)$",
+   "Lun {1}"
+  ],
+  [
+   "^Di (\\d.*)$",
+   "Mar {1}"
+  ],
+  [
+   "^Mi (\\d.*)$",
+   "Mer {1}"
+  ],
+  [
+   "^Do (\\d.*)$",
+   "Gio {1}"
+  ],
+  [
+   "^Fr (\\d.*)$",
+   "Ven {1}"
+  ],
+  [
+   "^Sa (\\d.*)$",
+   "Sab {1}"
+  ],
+  [
+   "^So (\\d.*)$",
+   "Dom {1}"
+  ],
+  [
+   "^(\\d+) Monaten$",
+   "{1} mesi"
+  ],
+  [
+   "^in (\\d+) Std\\.$",
+   "tra {1} h"
+  ],
+  [
+   "^in (\\d+) Min\\.$",
+   "tra {1} min"
+  ],
+  [
+   "^führt (\\d+:\\d+) (bei|gegen) (.+)$",
+   "in vantaggio {1} {2} {3}"
+  ],
+  [
+   "^liegt (\\d+:\\d+) zurück (bei|gegen) (.+)$",
+   "in svantaggio {1} {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Sieg n\\. V\\. (bei|gegen) (.+)$",
+   "vittoria {1} ai supplementari {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Niederlage n\\. V\\. (bei|gegen) (.+)$",
+   "sconfitta {1} ai supplementari {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Sieg (bei|gegen) (.+)$",
+   "vittoria {1} {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Niederlage (bei|gegen) (.+)$",
+   "sconfitta {1} {2} {3}"
+  ],
+  [
+   "^Sieg i\\. E\\. (bei|gegen) (.+)$",
+   "Vittoria ai rigori {1} {2}"
+  ],
+  [
+   "^Niederlage i\\. E\\. (bei|gegen) (.+)$",
+   "Sconfitta ai rigori {1} {2}"
+  ],
+  [
+   "^(\\d+:\\d+) (bei|gegen) (.+)$",
+   "{1} {2} {3}"
+  ],
+  [
+   "^i\\. E\\. (\\d+:\\d+)$",
+   "rig. {1}"
+  ],
+  [
+   "^(\\d+) Lichter an$",
+   "{1} luci accese"
+  ],
+  [
+   "^Soll-Bereich (.+)$",
+   "Intervallo obiettivo {1}"
+  ],
+  [
+   "^ab (\\d[\\d.,]*) €$",
+   "da {1} €"
+  ],
+  [
+   "^Heute ab (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Oggi dalle {1}"
+  ],
+  [
+   "^Morgen ab (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Domani dalle {1}"
+  ],
+  [
+   "^Warte bis (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Aspetta fino alle {1}"
+  ],
+  [
+   "^Warte bis morgen (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Aspetta fino a domani alle {1}"
+  ],
+  [
+   "^Tank reicht noch (\\d+) km\\. Ab (\\d{1,2}:\\d{2}(?: [AP]M)?) lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Carburante per {1} km. Dalle {2}, {3} è costato in media {4} ct in meno negli ultimi 14 giorni."
+  ],
+  [
+   "^Ab (\\d{1,2}:\\d{2}(?: [AP]M)?) lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Dalle {1}, {2} è costato in media {3} ct in meno negli ultimi 14 giorni."
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · ab (\\d{1,2}:\\d{2}(?: [AP]M)?) günstiger$",
+   "{1} · più economico dalle {2}"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · abends günstiger$",
+   "{1} · più economico la sera"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · ab (\\d+) Uhr günstiger$",
+   "{1} · più economico dalle {2}:00"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · jetzt günstig$",
+   "{1} · buon prezzo ora"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · kaum Unterschied$",
+   "{1} · poca differenza"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · Tank knapp$",
+   "{1} · poco carburante"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · Preise werden gesammelt$",
+   "{1} · raccolta prezzi in corso"
+  ],
+  [
+   "^Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa (\\d+) Tagen\\.$",
+   "Il consiglio arriverà quando ci saranno abbastanza prezzi, tra circa {1} giorni."
+  ],
+  [
+   "^Heute ab (\\d+) Uhr$",
+   "Oggi dalle {1}:00"
+  ],
+  [
+   "^Morgen ab (\\d+) Uhr$",
+   "Domani dalle {1}:00"
+  ],
+  [
+   "^Warte bis (\\d+) Uhr$",
+   "Aspetta fino alle {1}:00"
+  ],
+  [
+   "^Warte bis morgen (\\d+) Uhr$",
+   "Aspetta fino a domani alle {1}:00"
+  ],
+  [
+   "^Tank reicht noch (\\d+) km\\. Ab (\\d+) Uhr lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Carburante per {1} km. Dalle {2}:00, {3} è costato in media {4} ct in meno negli ultimi 14 giorni."
+  ],
+  [
+   "^Ab (\\d+) Uhr lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Dalle {1}:00, {2} è costato in media {3} ct in meno negli ultimi 14 giorni."
+  ],
+  [
+   "^(.+) liegt gerade im unteren Bereich der letzten 14 Tage\\.$",
+   "{1} è ora nella fascia bassa degli ultimi 14 giorni."
+  ],
+  [
+   "^Tank bei (\\d+) %, noch etwa (\\d+) km\\. Warten lohnt sich nicht\\.$",
+   "Serbatoio al {1} %, ancora circa {2} km. Non conviene aspettare."
+  ],
+  [
+   "^Tank bei (\\d+) %\\. Warten lohnt sich nicht\\.$",
+   "Serbatoio al {1} %. Non conviene aspettare."
+  ],
+  [
+   "^Noch etwa (\\d+) km\\. Warten lohnt sich nicht\\.$",
+   "Ancora circa {1} km. Non conviene aspettare."
+  ],
+  [
+   "^(\\d[\\d.,]*) € Tief$",
+   "{1} € min."
+  ],
+  [
+   "^jetzt (\\d[\\d.,]*) €$",
+   "ora {1} €"
+  ],
+  [
+   "^(\\d[\\d.,]*) € Hoch$",
+   "{1} € max."
+  ],
+  [
+   "^(\\d+) Tankstellen in (\\d+) km$",
+   "{1} distributori entro {2} km"
+  ],
+  [
+   "^1 Tankstelle in (\\d+) km$",
+   "1 distributore entro {1} km"
+  ],
+  [
+   "^(\\d[\\d.,]*) km · offen$",
+   "{1} km · aperto"
+  ],
+  [
+   "^(\\d[\\d.,]*) km · zu$",
+   "{1} km · chiuso"
+  ],
+  [
+   "^(\\d+) weitere$",
+   "altri {1}"
+  ],
+  [
+   "^und (\\d+) weitere$",
+   "e altri {1}"
+  ],
+  [
+   "^Umkreis (\\d+) km um Zuhause$",
+   "{1} km intorno a casa"
+  ],
+  [
+   "^Umkreis (\\d+) km um das Auto$",
+   "{1} km intorno all'auto"
+  ],
+  [
+   "^Tankerkönig antwortet gerade nicht: (.+)$",
+   "Tankerkönig non risponde al momento: {1}"
+  ],
+  [
+   "^(.+) Uhr$",
+   "{1}"
+  ],
+  [
+   "^Reichweite (\\S+)$",
+   "Autonomia {1}"
+  ],
+  [
+   "^(\\d+) Geräte brauchen Aufmerksamkeit$",
+   "{1} dispositivi richiedono attenzione"
+  ],
+  [
+   "^(.+) antwortet nicht$",
+   "{1} non risponde"
+  ],
+  [
+   "^(.+) ist still$",
+   "{1} tace"
+  ],
+  [
+   "^(.+) hat sich noch nicht gemeldet$",
+   "{1} non ha ancora inviato dati"
+  ],
+  [
+   "^(.+) ist nicht erreichbar$",
+   "{1} non è raggiungibile"
+  ],
+  [
+   "^(.+) braucht bald eine neue Batterie$",
+   "{1} avrà presto bisogno di una batteria nuova"
+  ],
+  [
+   "^(.+) braucht eine neue Batterie$",
+   "{1} ha bisogno di una batteria nuova"
+  ],
+  [
+   "^(.+) meldet schwache Batterie$",
+   "{1} segnala batteria scarica"
+  ],
+  [
+   "^(.+) wartet auf die erste Meldung$",
+   "{1} attende i primi dati"
+  ],
+  [
+   "^(.+) ist ausgefallen$",
+   "{1} è guasto"
+  ],
+  [
+   "^(.+) sollte geprüft werden$",
+   "Conviene controllare {1}"
+  ],
+  [
+   "^(\\d+) offline$",
+   "{1} offline"
+  ],
+  [
+   "^seit (\\d{1,2}:\\d{2})$",
+   "dalle {1}"
+  ],
+  [
+   "^seit gestern (\\d{1,2}:\\d{2})$",
+   "da ieri alle {1}"
+  ],
+  [
+   "^(.+) von zuhause$",
+   "{1} da casa"
+  ],
+  [
+   "^GPS · auf (\\d+) m genau$",
+   "GPS · precisione {1} m"
+  ],
+  [
+   "^Nachricht an (.+)$",
+   "Messaggio a {1}"
+  ],
+  [
+   "^gestern (\\d{1,2}:\\d{2}) – (\\d{1,2}:\\d{2})$",
+   "ieri {1} – {2}"
+  ],
+  [
+   "^bis (\\d{1,2}:\\d\\d)$",
+   "fino alle {1}"
+  ],
+  [
+   "^Fehler: (.+)$",
+   "Errore: {1}"
+  ],
+  [
+   "^(\\d+) Fahrten$",
+   "{1} percorsi"
+  ],
+  [
+   "^Neue Version (.+)$",
+   "Nuova versione {1}"
+  ],
+  [
+   "^Wird installiert · (\\d+) %$",
+   "Installazione · {1} %"
+  ],
+  [
+   "^(\\d+:\\d\\d) Std\\. übrig$",
+   "{1} h rimanenti"
+  ],
+  [
+   "^Schicht (\\d+)/(\\d+)$",
+   "Strato {1}/{2}"
+  ],
+  [
+   "^Aktuell keine Warnungen für (.+)$",
+   "Al momento nessun avviso per {1}"
+  ],
+  [
+   "^Warnungen · (.+)$",
+   "Avvisi · {1}"
+  ],
+  [
+   "^(\\d+) Module liefern$",
+   "{1} moduli in produzione"
+  ],
+  [
+   "^Solaranteil am Verbrauch (\\d+) %$",
+   "Quota solare del consumo {1} %"
+  ],
+  [
+   "^Solar ([\\d.,]+) kWh$",
+   "Solare {1} kWh"
+  ],
+  [
+   "^Netz ([\\d.,]+) kWh$",
+   "Rete {1} kWh"
+  ],
+  [
+   "^(\\d+) im Bild$",
+   "{1} nell'immagine"
+  ],
+  [
+   "^(\\d+) Objekte erkannt$",
+   "{1} oggetti rilevati"
+  ],
+  [
+   "^(.+) und (.+) erkannt$",
+   "{1} e {2} rilevati"
+  ],
+  [
+   "^(.+) erkannt$",
+   "{1} rilevato"
+  ],
+  [
+   "^([^,]+), (vor .+|gerade eben|gestern|Gestern|jetzt|\\d+ Min\\.|\\d+ Std\\.|\\d+ Tagen)$",
+   "{1}, {2}"
+  ],
+  [
+   "^(\\d{1,2}:\\d{2}) \\((.+)\\)$",
+   "{1} ({2})"
+  ],
+  [
+   "^(\\d+) neue Alarme$",
+   "{1} nuovi allarmi"
+  ],
+  [
+   "^(\\d+) Erkennungen$",
+   "{1} rilevamenti"
+  ],
+  [
+   "^(\\d+) Std\\. aufgenommen$",
+   "{1} h registrate"
+  ],
+  [
+   "^(\\d+) Min\\. aufgenommen$",
+   "{1} min registrati"
+  ],
+  [
+   "^Heute nichts erkannt: (.+)$",
+   "Oggi nulla rilevato: {1}"
+  ],
+  [
+   "^In 7 Tagen nichts erkannt: (.+)$",
+   "Nulla rilevato in 7 giorni: {1}"
+  ],
+  [
+   "^Keine (.+) heute$",
+   "Niente {1} oggi"
+  ],
+  [
+   "^(\\d+) Alarme$",
+   "{1} allarmi"
+  ],
+  [
+   "^Keine (.+) in den letzten 7 Tagen$",
+   "Niente {1} negli ultimi 7 giorni"
+  ],
+  [
+   "^(\\d+) Tagen$",
+   "{1} giorni"
+  ],
+  [
+   "^Geklingelt (vor .+|gestern|gerade eben)$",
+   "Ultimo squillo {1}"
+  ],
+  [
+   "^In den letzten (\\d+) Tagen$",
+   "Negli ultimi {1} giorni"
+  ],
+  [
+   "^Nach (\\d+) s ohne Antwort$",
+   "Dopo {1} s senza risposta"
+  ],
+  [
+   "^Mein Kaffee (\\d+)$",
+   "Il mio caffè {1}"
+  ],
+  [
+   "^(Entkalken|Reinigen|Filterwechsel|Pflege) in 1[  ]Tasse$",
+   "{1} tra 1 tazza"
+  ],
+  [
+   "^(Entkalken|Reinigen|Filterwechsel|Pflege) in (\\d+)[  ]Tassen$",
+   "{1} tra {2} tazze"
+  ],
+  [
+   "^In 1[  ]Tasse$",
+   "Tra 1 tazza"
+  ],
+  [
+   "^In (\\d+)[  ]Tassen$",
+   "Tra {1} tazze"
+  ],
+  [
+   "^Alle Getränke \\((\\d+)\\)$",
+   "Tutte le bevande ({1})"
+  ],
+  [
+   "^Einschalten und (.+) starten$",
+   "Accendi e prepara {1}"
+  ],
+  [
+   "^(.+) starten\\?$",
+   "Preparare {1}?"
+  ],
+  [
+   "^(.+) starten$",
+   "Prepara {1}"
+  ],
+  [
+   "^Leistung (.+) W$",
+   "Potenza {1} W"
+  ],
+  [
+   "^Heute (\\d+)$",
+   "{1} oggi"
+  ],
+  [
+   "^(\\d+) Filter aktiv$",
+   "{1} filtri attivi"
+  ],
+  [
+   "^Filter · (\\d+)$",
+   "Filtro · {1}"
+  ],
+  [
+   "^(\\d+) heute$",
+   "{1} oggi"
+  ],
+  [
+   "^(\\d+) % ([A-Za-zÄÖÜäöüß].*)$",
+   "{1} % {2}"
+  ],
+  [
+   "^In 1[  ]Tag$",
+   "Tra 1 giorno"
+  ],
+  [
+   "^In (\\d+)[  ]Tagen$",
+   "Tra {1} giorni"
+  ],
+  [
+   "^In ([\\d.,]+)[  ]l$",
+   "Tra {1} l"
+  ],
+  [
+   "^([\\d.,]+) Mbit/s Download$",
+   "{1} Mbit/s download"
+  ],
+  [
+   "^([\\d.,]+) Mbit/s Upload$",
+   "{1} Mbit/s upload"
+  ]
+ ]
+}
