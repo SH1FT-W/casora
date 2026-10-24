@@ -4753,6 +4753,51 @@
    "haptic": "medium"
   }
  },
+ "casora_free": {
+  "template": [
+   "casora_entity",
+   "casora_popup_free"
+  ],
+  "variables": {
+   "icon": "default",
+   "casora_default_name": "Freie Kachel",
+   "active_states": [
+    "mowing",
+    "heating",
+    "cooling",
+    "home",
+    "armed_home",
+    "armed_away",
+    "armed_night",
+    "armed_vacation",
+    "armed_custom_bypass",
+    "triggered"
+   ]
+  },
+  "hold_action": {
+   "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
+   "haptic": "medium"
+  },
+  "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? t;\n  // State of the entity as the subline: \"An\", \"21,5 °C\", \"Geöffnet\" (window._casoraFree.word); without an entity nothing.\n  const F = window._casoraFree;\n  if (!entity) return '';\n  return F ? fit(F.tileState(entity, hass, states)) : '';\n]]]\n",
+  "styles": {
+   "card": [
+    {
+     "--casora-icon-inactive-color": "var(--casora-color-sand, #9A8672)"
+    },
+    {
+     "--casora-icon-fallback-color": "[[[ const F = window._casoraFree; return F && entity ? F.color(states[entity.entity_id] || entity) : 'var(--casora-color-teal, #4E9E95)'; ]]]"
+    }
+   ]
+  },
+  "icon_tap_action": {
+   "action": "[[[ return window._casoraFree && window._casoraFree.switchable(entity) ? 'call-service' : 'none'; ]]]",
+   "service": "[[[ return window._casoraFree ? window._casoraFree.iconService(entity) : 'none'; ]]]",
+   "service_data": {
+    "entity_id": "[[[ return entity?.entity_id ]]]"
+   },
+   "haptic": "light"
+  }
+ },
  "casora_game": {
   "show_empty": false,
   "state_display": "[[[\n  /* Ohne Gerät nicht leer bleiben (30.09.2026). */\n  if (!entity) return 'Gerät fehlt';\n  if (variables.is_active && variables.game) {\n    const esc = (t) => String(t ?? '')\n      .replaceAll(\"&\",\"&amp;\")\n      .replaceAll(\"<\",\"&lt;\")\n      .replaceAll(\">\",\"&gt;\")\n      .replaceAll('\"',\"&quot;\")\n      .trim();\n    return `<span class=\"casora-media-state\">${esc(variables.game)}</span>`;\n  }\n  if (!entity?.state) return \"\";\n  return (() => { try { return hass.formatEntityState(entity); } catch (e) { return ''; } })() || entity?.state;\n]]]\n",
@@ -12206,6 +12251,34 @@
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst Kachelname, sonst der Sensor. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', [])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own) return _own;\n  const n = String(this._config?.name || '').trim();\n  return (n.startsWith('[[[') ? '' : n) || entity?.attributes?.friendly_name || 'Fußball';\n]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
    }
+  }
+ },
+ "casora_popup_free": {
+  "tap_action": {
+   "casora_popup": {
+    "content": "[[[\n  /* Flexible tile (issue #52): state line, 24 h chart, the entity's own controls, value rows and own cards -\n     assembled in the Studio; window._casoraFree.popup in 28-free-tile.js. Never empty: without sections a hint. */\n  return window._casoraFree ? window._casoraFree.popup(entity, states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "dismiss_on_background": true,
+    "popup_styles": [
+     {
+      "style": "all",
+      "styles": "/* Eine Popup-Familie (01.10.2026): dieselbe Sheet-Fläche wie die Bedien-Popups –\n   Fläche, Blur, Schatten und Abdunklung aus dem Standard, Höhe folgt dem Inhalt,\n   Schließen-Kreuz mit demselben Abstand zur Sheet-Kante. */\n.header { padding-top: var(--casora-popup-header-gap, 10px); }\n--casora-popup-header-gap: 14px;\n--casora-popup-gutter-wide: 34px;\n--casora-popup-gutter-phone: 22px;\n\n/* No chart here, so nothing to wait for. Read by each widget for\n   itself, never by a wrapper - an animated opacity on an ancestor\n   flattens the frost inside it. */\n--casora-popup-plate-enter:\n  casora-plate-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n@media (prefers-reduced-motion: reduce) {\n  --casora-popup-plate-enter: none;\n}\n\n/* The surface is sized from the content by the style template\n   below: two columns need the full measure, one does not, and a\n   narrow card centered in a wide surface put the plate's edge 80px\n   to the right of the close control. */\n\n--casora-popup-hero-label-size: 15px;\n--casora-popup-row-radius: 26px;\n/* Frosted, not opaque. The pane's blur used to sit under these, and\n   .content still nulls --ha-card-backdrop-filter for every card in\n   the popup, so the frost has to be asked for here. The fills drop\n   to let it read. */\n/* The theme lifts every ha-card with filter: brightness(1.01) on\n   hover. A filter on an ancestor makes every descendant's\n   backdrop-filter inert, so hovering the empty space around a\n   widget - the wrapper card - knocked the frost out of both of\n   them. Killed popup-wide; the plate re-declares its own shadow. */\n--casora-card-hover-filter: none;\n--casora-hover-filter: none;\n--casora-card-hover-shadow: none;\n\n--casora-popup-row-pad-x: 26px;\n--casora-popup-row-pad-y: 15px;\n--casora-popup-plate-backdrop: blur(24px) saturate(180%);\n--casora-popup-chart-fill: var(--casora-sheet-chart-fill, rgba(10, 12, 16, 0.68));\n--casora-popup-row-fill: var(--casora-sheet-row-fill, rgba(12, 14, 19, 0.62));\n/* Lifted, not slabbed: one wide soft pass carries the height, one\n   short contact pass keeps the edge from dissolving into the room. */\n--casora-popup-plate-shadow: var(--casora-sheet-plate-shadow,\n  0 18px 40px -22px rgba(0, 0, 0, 0.50),\n  0 2px 8px -5px rgba(0, 0, 0, 0.28));\n\n/* visionOS puts nothing bare on the room: the only chrome outside a\n   window is its close control, and that control is itself a glass\n   object. The title was printed twice - here and in the widget\n   eight pixels below - so it goes, clipped rather than removed so a\n   screen reader still gets it. */\n\n/* The chrome arrives with the first plate instead of being there\n   on frame one while everything under it fades in. */\n--casora-popup-chrome-enter:\n  casora-popup-chrome-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n.content { animation: none; }\n/* The title lives in the bar now, centered and level with the\n   close control, so it is no longer hidden. */\n.header-title { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }\n/* 48px is left alone: the base sizes it so the glyph's ink lands on\n   the same left margin as the widgets below. */\n.header-close {\n  border-radius: 50%;\n  background: var(--casora-popup-row-fill, rgba(255, 255, 255, 0.10));\n  backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  -webkit-backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  box-shadow: var(--casora-popup-plate-shadow, none);\n}\n\nha-adaptive-dialog, ha-dialog, wa-drawer {\n  --ha-card-backdrop-filter: none;\n  --ha-card-background: transparent;\n  --card-background-color: transparent;\n  --ha-card-box-shadow: none;\n  --ha-card-border-width: 0px;\n}\n\n/* Width from the style template: 900 px with controls and values side by side, else 552 px (one column). */\n\n/* Popup-Standard (24.09.2026): Info-Popup - Abschnittsüberschriften in der Karte. */\n--casora-lbl-in: block;\n--casora-lbl-out: none;\n"
+     }
+    ],
+    "style": "[[[\n  /* Two columns (controls left, values right) only when both are configured - else one column like Pulse. */\n  const F = window._casoraFree;\n  const _w = F && F.wide(entity, states, variables) ? 900 : 552;\n  return '--popup-min-width: min(' + _w + 'px, 92vw);' + ' --popup-max-width: min(' + _w + 'px, 92vw);';\n]]]\n",
+    "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Freie Kachel', ['Freie Kachel', 'Flexible tile']) : (String(variables.room_name || '').trim() || 'Freie Kachel'); ]]]",
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+   }
+  },
+  "template": [
+   "casora_popup_base"
+  ],
+  "variables": {
+   "room_name": null,
+   "free_values": null,
+   "free_value_labels": null,
+   "free_chart": false,
+   "free_chart_entity": null,
+   "free_controls": true
   }
  },
  "casora_popup_laundry": {

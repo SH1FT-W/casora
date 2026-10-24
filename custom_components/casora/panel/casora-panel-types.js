@@ -64,6 +64,14 @@ const PRINT_FIELDS = [
   { key: "btn_stop", label: "Stop button", domains: ["button"], find: { print: "stop" }, advanced: true },
   CHART(),
 ];
+// Flexible tile: every domain the tile or its value rows may show (the Studio lists entities per domain).
+const FREE_DOMAINS = [
+  "sensor", "binary_sensor", "switch", "light", "fan", "cover", "lock", "climate", "humidifier", "media_player",
+  "vacuum", "lawn_mower", "input_boolean", "input_number", "input_select", "input_text", "input_datetime", "number",
+  "select", "text", "counter", "timer", "button", "input_button", "script", "scene", "automation", "person",
+  "device_tracker", "alarm_control_panel", "camera", "weather", "sun", "update", "water_heater", "valve", "siren",
+  "remote", "event", "calendar", "todo", "plant", "image", "date", "datetime", "time",
+];
 window.CASORA_TILE_TYPES = [
   { id: "casora_3d_printer", label: "3D printer", template: "casora_3d_printer", domains: ["sensor"],
     entityLabel: "Print status", icon: "3D_Printer", fields: [
@@ -383,6 +391,26 @@ window.CASORA_TILE_TYPES = [
     icon: "coffee-maker", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Coffee machine",
     community: { desc: "Ready, heating up or brewing with progress, and what the machine needs: water, beans, drip tray, descaling. The popup starts drinks with strength and amount, shows care and how many coffees you made. For Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco or a smart plug." },
     fields: [ICON, TITLE_NAME] },
+  // Flexible tile (issue #52, forum wish): any entity or none; the popup is assembled from sections – values
+  // (up to 8 rows), 24 h history, the entity's own controls and the shared own cards (scripts/local/28-free-tile.js).
+  // The entity is optional (ownData, emptyWord): "Add a tile" adds it straight away with the title only, the
+  // preview shows no "Automatic" for it. Many domains, so the Studio suggests no device of its own.
+  { id: "casora_free", label: "Flexible tile", template: "casora_free", domains: FREE_DOMAINS, ownData: true, emptyWord: "",
+    icon: "default", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Entity", entityPlaceholder: "Optional – any entity",
+    fields: [
+      ICON,
+      { ...TITLE_NAME, advanced: false },
+      { key: "free_values", label: "Values", type: "list", domains: FREE_DOMAINS, placeholder: "add entity.",
+        hint: "Up to 8 entities as rows in the popup, each with name and state. Tapping a row opens its details." },
+      { key: "free_value_labels", label: "Label", type: "map", over: "free_values", kind: "text",
+        when: (v) => Array.isArray(v.free_values) && v.free_values.length > 0 },
+      { key: "free_chart", label: "History (24 h)", type: "bool", boolDefault: false,
+        hint: "A chart of the last 24 hours – of this tile's entity, or of the one chosen below. Only numeric values have a history." },
+      { key: "free_chart_entity", label: "History of", domains: ["sensor", "number", "input_number", "counter"],
+        placeholder: "This tile's entity", when: (v) => !!v.free_chart },
+      { key: "free_controls", label: "Controls", type: "bool", boolDefault: true,
+        hint: "The entity's own controls in the popup: on/off, brightness, cover buttons, lock, media keys, target temperature." },
+    ] },
   // Aquarium overview (Hemma 1 and older versions "…_aquarium"): up to three tanks in one tile. Only for
   // editing migrated tiles – new tanks get the aquarium tile (casora_aquarium_tank).
   { id: "casora_aquariums", label: "Aquariums", template: "casora_aquarium", hidden: true, domains: ["sensor"],

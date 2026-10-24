@@ -91,6 +91,7 @@ const MODULES = [
   '25-kaffee',
   '26-haustier',
   '27-chart',
+  '28-free-tile',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());

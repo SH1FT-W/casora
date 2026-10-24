@@ -2336,7 +2336,15 @@
   "Wasserauslassfilter": "Filtro de salida de agua",
   "Schmutzwassertank (Roboter)": "Depósito de agua sucia (robot)",
   "noch 1 Tag": "queda 1 día",
-  "Kein Ton von der Klingel – neuer Versuch …": "Sin sonido del timbre, probando de nuevo …"
+  "Kein Ton von der Klingel – neuer Versuch …": "Sin sonido del timbre, probando de nuevo …",
+  "Freie Kachel": "Tarjeta flexible",
+  "Keine Entität gewählt": "Ninguna entidad elegida",
+  "Werte": "Valores",
+  "Schalten": "Control",
+  "Bedienung": "Control",
+  "Im Studio kannst du Werte, Verlauf, Schalten und eigene Karten ergänzen.": "En el Studio puedes añadir valores, historial, control y tarjetas propias.",
+  "Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.": "Elige un dispositivo en el Studio o añade valores, historial y tarjetas propias.",
+  "Kein Verlauf: {name} ist kein Zahlenwert.": "Sin historial: {name} no es un valor numérico."
  },
  "patterns": [
   [
