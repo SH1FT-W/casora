@@ -82,7 +82,8 @@
   const WORDS = { light: "licht lampe leuchte light lamp", cover: "jalousie rollladen rollo markise blind", thermostat: "heizung thermostat klima heating",
     media: "fernseher tv musik lautsprecher speaker", lock: "schloss tür tuer lock", vacuum: "sauger staubsauger saugroboter vacuum",
     casora_switch: "schalter steckdose switch plug", fan: "ventilator lüfter fan", casora_camera: "kamera camera", casora_alarm: "alarm sicherheit",
-    casora_coffee: "kaffee kaffeemaschine vollautomat espresso coffee", casora_pet: "haustier hund katze tracker tractive pet dog cat" };
+    casora_coffee: "kaffee kaffeemaschine vollautomat espresso coffee", casora_pet: "haustier hund katze tracker tractive pet dog cat",
+    casora_chart: "diagramm chart verlauf graph statistik cpu prozessor server system monitor" };
   function typeFor(entity, typeIds, suggested) {
     if (suggested && typeIds.has(suggested)) return suggested;
     const t = BY_DOMAIN[String(entity || "").split(".")[0]];
@@ -660,6 +661,11 @@
       // the tracker after its hardware ("Tracker 1A2B3C4D"), the pet's name is on the device behind it (issue #25).
       if (typeIds.has("casora_pet") && I.isPetTracker) Object.keys(S).forEach((id) => {
         if (I.isPetTracker(h, id)) push(id, I.petName(h, id), "casora_pet");
+      });
+      // Chart (community card #50, when added): the CPU load of every System-Monitor-like device (translation_key
+      // processor_use) – every other numeric sensor would flood the list; those are picked in the tile's own field.
+      if (typeIds.has("casora_chart")) Object.keys(S).forEach((id) => {
+        if (id.startsWith("sensor.") && (R[id] || {}).translation_key === "processor_use") push(id, "", "casora_chart");
       });
       sugg.forEach((x) => push(x.entity, x.name, x.type));
       Object.keys(S).forEach((id) => { if (ADD_DOMAINS.indexOf(id.split(".")[0]) >= 0) push(id, "", byEntity.has(id) ? byEntity.get(id).type : null); });
