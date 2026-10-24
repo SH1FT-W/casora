@@ -171,7 +171,7 @@ assert.match(ctl, /<seg Bedienung>Auf>cover\.open_cover;Stopp>cover\.stop_cover;
 assert.match(ctl, /<seg Position · 60 %>25 %>cover\.set_cover_position\{"position":25\}/);
 assert.doesNotMatch(ctl, /<group/, 'cover with buttons: no extra main row');
 ctl = sec('ctl', states['lock.qa_tor']);
-assert.equal(ctl, '<group Schalten>Entriegeln=>lock.unlock?Wirklich entriegeln?</group>', 'risky action asks first');
+assert.equal(ctl, '<group Bedienung>Entriegeln=>lock.unlock?Wirklich entriegeln?</group>', 'risky action asks first');
 ctl = sec('ctl', states['climate.qa_thermostat']);
 assert.match(ctl, /<seg Zieltemperatur · 21°>20°>climate\.set_temperature\{"temperature":20\};20,5°>[^;]*;\*21°>[^;]*;21,5°>[^;]*;22°>/);
 assert.equal(sec('ctl', states['sensor.qa_temp']), '', 'nothing to control');
