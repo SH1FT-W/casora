@@ -14,6 +14,11 @@ const src = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8
 const load = (p) => new Function(src('custom_components/casora/scripts/local/' + p))();
 load('18-ziele.js');   // binWords / iconOf for value rows
 load('22-halten.js');  // controls model per domain
+// The core's state words (casora-core.js _casoraStateText), cut out of the bundle: the real "Geöffnet"/"An" path.
+const core = src('custom_components/casora/scripts/casora-core.js');
+const stI = core.indexOf('if (window._casoraStateText) return;');
+new Function(core.slice(core.lastIndexOf('(function () {', stI), core.indexOf('})();', stI) + 5))();
+assert.equal(typeof window._casoraStateText, 'function', 'core state text loaded');
 load('28-free-tile.js');
 const F = window._casoraFree;
 assert.ok(F && window._casoraHold && window._casoraZiele, 'modules loaded');
@@ -37,6 +42,10 @@ add('sensor.qa_programm', 'Bereit', {});
 add('sensor.qa_weg', 'unavailable', { unit_of_measurement: 'W' });
 add('binary_sensor.qa_tuer', 'on', { device_class: 'door' });
 add('sensor.qa_prozent', '62', { unit_of_measurement: '%' });
+add('sensor.qa_handy', 'iPhone 15');
+add('sensor.qa_wlan', 'WLAN_5G');
+add('input_text.qa_notiz', 'Milch kaufen');
+add('select.qa_modus', 'Eco Plus', { options: ['Eco Plus', 'Normal'] });
 const hass = { states, entities, formatEntityState: (st) => (st.state === 'on' ? 'Ein' : st.state === 'off' ? 'Aus' : st.state) };
 
 // ── Studio settings ───────────────────────────────────────────────────────
@@ -63,7 +72,16 @@ assert.equal(F.word(hass, states['sensor.qa_weg']), 'Nicht verfügbar');
 assert.equal(F.word(hass, { entity_id: 'sensor.x', state: 'unknown', attributes: {} }), 'Unbekannt');
 assert.equal(F.word(hass, null), 'Nicht verfügbar');
 assert.equal(F.word(hass, states['binary_sensor.qa_tuer']), 'Geöffnet', 'binary sensors by device class (18-ziele.js)');
-assert.equal(F.word(hass, states['cover.qa_rollo']), 'Open', 'without _casoraStateText HA formats; the core module supplies "Geöffnet"');
+assert.equal(F.word(hass, states['cover.qa_rollo']), 'Geöffnet', 'the core module supplies the cover words');
+assert.equal(F.word(hass, { ...states['lock.qa_tor'], state: 'jammed' }), 'Klemmt');
+// Text domains: the state as written ("iPhone 15", not "Iphone 15"), HA's translation when it has one.
+assert.equal(F.word(hass, states['sensor.qa_handy']), 'iPhone 15', 'text sensor keeps its case');
+assert.equal(F.word(hass, states['sensor.qa_wlan']), 'WLAN_5G', 'underscores and capitals stay');
+assert.equal(F.word(hass, states['input_text.qa_notiz']), 'Milch kaufen');
+assert.equal(F.word(hass, states['select.qa_modus']), 'Eco Plus');
+assert.equal(F.word({ ...hass, formatEntityState: () => 'Sparen' }, states['select.qa_modus']), 'Sparen', 'HA formats enum/select states');
+assert.equal(F.word({ states, entities }, states['sensor.qa_handy']), 'iPhone 15', 'without formatEntityState: the raw state');
+assert.equal(F.word({ states, entities }, states['switch.qa_pumpe']), 'An', 'binary domains keep their words');
 entities['sensor.qa_temp'].display_precision = 2;
 assert.equal(F.word(hass, states['sensor.qa_temp']), '21,47 °C', 'registry display precision wins');
 delete entities['sensor.qa_temp'].display_precision;
@@ -132,7 +150,11 @@ assert.deepEqual(L.narrowOrder, ['ctl', 'vals', 'more'], 'phone: controls, then 
 const ch = L.fields.chart.card;
 assert.equal(ch.type, 'custom:casora-chart'); assert.equal(ch.span, '24h'); assert.equal(ch.source, 'history');
 assert.deepEqual(ch.series, [{ entity: 'sensor.qa_temp', name: 'temp', unit: '°C' }]);
-assert.deepEqual(L.fields.hero.card.watch, ['switch.qa_pumpe', 'sensor.qa_temp', 'binary_sensor.qa_tuer'], 'every shown entity redraws the parts');
+assert.deepEqual(L.fields.hero.card.watch, ['switch.qa_pumpe', 'sensor.qa_temp', 'binary_sensor.qa_tuer'], 'every shown entity redraws the hero');
+// A ticking value sensor must not rebuild the controls (slider drag) or the settings row.
+assert.deepEqual(L.fields.ctl.card.watch, ['switch.qa_pumpe'], 'controls follow the main entity only');
+assert.deepEqual(L.fields.more.card.watch, ['switch.qa_pumpe']);
+assert.deepEqual(L.fields.vals.card.watch, ['sensor.qa_temp', 'binary_sensor.qa_tuer'], 'value rows follow their own entities');
 L = F.popup(states['sensor.qa_temp'], states, hass, {});
 assert.deepEqual(Object.keys(L.fields), ['hero', 'more'], 'sensor without sections: state line and settings row');
 L = F.popup(null, states, hass, {});
@@ -193,8 +215,16 @@ const tile = T.casora_free, pop = T.casora_popup_free;
 assert.ok(tile && pop, 'templates exist');
 assert.deepEqual(tile.template, ['casora_entity', 'casora_popup_free']);
 assert.equal(tile.variables.show_toggle, undefined, 'no toggle control in the tile corner');
-assert.match(tile.icon_tap_action.action, /_casoraFree\.switchable/, 'icon toggle decided by the module');
 assert.match(tile.icon_tap_action.service, /_casoraFree\.iconService/);
+// The icon calls a service only when there is one; a jammed lock or a TV without a power feature opens the popup.
+const iconAction = (ent) => new Function('entity', 'window', 'states', 'hass', tile.icon_tap_action.action.replace(/^\s*\[\[\[|\]\]\]\s*$/g, ''))(ent, window, states, hass);
+assert.equal(iconAction(states['switch.qa_pumpe']), 'call-service');
+assert.equal(iconAction(states['lock.qa_tor']), 'call-service');
+assert.equal(iconAction({ ...states['lock.qa_tor'], state: 'jammed' }), 'none', 'switchable but no service: no error toast');
+assert.equal(iconAction({ ...states['lock.qa_tor'], state: 'locking' }), 'none');
+assert.equal(iconAction({ entity_id: 'media_player.qa_tv', state: 'playing', attributes: { supported_features: 128 } }), 'none');
+assert.equal(iconAction(states['sensor.qa_temp']), 'none');
+assert.equal(iconAction(null), 'none');
 assert.equal(tile.icon_tap_action.haptic, 'light');
 assert.equal(tile.variables.casora_default_name, 'Universal-Kachel');
 assert.match(tile.state_display, /tileState/);

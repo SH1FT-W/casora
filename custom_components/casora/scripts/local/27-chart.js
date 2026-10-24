@@ -61,21 +61,23 @@
     return a.unit_of_measurement && isFinite(numOf(st.state)) ? 'measurement' : null;
   };
   // Number with unit. Decimals: the registry's display precision, else those of the sensor's own state (at most
-  // two) – CPU "23" stays "23 %", a temperature "48.5" keeps one decimal; values from 100 on have none, derived
-  // values (average, consumption) at least one when the sensor has any.
-  M.precision = function (hass, id) {
+  // two, three for small values under 0.1 so "0.004 A" does not read "0") – CPU "23" stays "23 %", a temperature
+  // "48.5" keeps one decimal; values from 100 on have none, derived values (average, consumption) at least one
+  // when the sensor has any.
+  M.precision = function (hass, id, v) {
     var e = ((hass && hass.entities) || {})[id] || {};
     var p = e.display_precision != null ? e.display_precision : (e.options && e.options.sensor && e.options.sensor.display_precision);
     if (p != null && isFinite(p)) return Math.max(0, Math.min(4, +p));
     var st = (hass && hass.states && hass.states[id]) || {};
     var m = /\.(\d+)$/.exec(String(st.state == null ? '' : st.state).trim());
-    return m ? Math.min(2, m[1].replace(/0+$/, '').length) : 0;
+    var cap = v != null && isFinite(v) && Math.abs(v) < 0.1 ? 3 : 2;
+    return m ? Math.min(cap, m[1].replace(/0+$/, '').length) : 0;
   };
   M.fmt = function (hass, id, v) {
     var n = parseFloat(v);
     if (!isFinite(n)) return String(v == null ? '' : v);
     var st = (hass && hass.states && hass.states[id]) || {}, a = st.attributes || {};
-    var d = Math.abs(n) >= 100 ? 0 : M.precision(hass, id);
+    var d = Math.abs(n) >= 100 ? 0 : M.precision(hass, id, n);
     return n.toLocaleString(loc(), { minimumFractionDigits: Math.min(d, 1), maximumFractionDigits: d }) + (a.unit_of_measurement ? ' ' + a.unit_of_measurement : '');
   };
   M.value = function (st, hass) {
@@ -150,6 +152,36 @@
     out.n = k; out.empty = !k && !mn && !mx; out.min = mn; out.max = mx; out.mean = k ? s / k : null;
     return out;
   };
+  // Units for recorder/statistics_during_period: the sensor's display unit by device class, so a counter stored
+  // in Wh and shown in kWh sums in kWh. Keys and valid units as HA's UNIT_SCHEMA (recorder/websocket_api.py,
+  // 2026.10); anything else is left out – an unknown unit would fail the whole request.
+  var UNIT_CLASS = { apparent_power: 'apparent_power', area: 'area', blood_glucose_concentration: 'blood_glucose_concentration',
+    carbon_monoxide: 'carbon_monoxide', absolute_humidity: 'concentration', volatile_organic_compounds: 'concentration',
+    conductivity: 'conductivity', data_rate: 'data_rate', distance: 'distance', precipitation: 'distance', duration: 'duration',
+    current: 'electric_current', energy: 'energy', energy_storage: 'energy', energy_distance: 'energy_distance',
+    frequency: 'frequency', data_size: 'information', weight: 'mass', nitrogen_dioxide: 'nitrogen_dioxide',
+    nitrogen_monoxide: 'nitrogen_monoxide', ozone: 'ozone', power: 'power', pressure: 'pressure', atmospheric_pressure: 'pressure',
+    radon: 'radiation_concentration', reactive_energy: 'reactive_energy', reactive_power: 'reactive_power', speed: 'speed',
+    wind_speed: 'speed', precipitation_intensity: 'speed', sulphur_dioxide: 'sulphur_dioxide', temperature: 'temperature',
+    temperature_delta: 'temperature_delta', power_factor: 'unitless', volatile_organic_compounds_parts: 'unitless',
+    voltage: 'voltage', volume: 'volume', volume_storage: 'volume', water: 'volume', gas: 'volume', volume_flow_rate: 'volume_flow_rate' };
+  var UNITS = {
+    apparent_power: 'VA|kVA|mVA', area: 'ac|cm²|ft²|ha|in²|km²|mi²|mm²|m²|yd²', blood_glucose_concentration: 'mg/dL|mmol/L',
+    carbon_monoxide: 'mg/m³|ppb|ppm|μg/m³', concentration: 'g/m³|mg/m³|μg/m³', conductivity: 'S/cm|mS/cm|μS/cm',
+    data_rate: 'B/s|GB/s|Gbit/s|GiB/s|KiB/s|MB/s|Mbit/s|MiB/s|bit/s|kB/s|kbit/s', distance: 'cm|ft|in|km|m|mi|mm|nmi|yd',
+    duration: 'd|h|min|ms|s|w|μs', electric_current: 'A|mA|μA', energy: 'GJ|GWh|Gcal|J|MJ|MWh|Mcal|TWh|Wh|cal|kJ|kWh|kcal|mWh|thm',
+    energy_distance: 'Wh/km|kWh/100km|km/kWh|mi/kWh', frequency: 'GHz|Hz|MHz|kHz|mHz',
+    information: 'B|EB|EiB|GB|Gbit|GiB|KiB|MB|Mbit|MiB|PB|PiB|TB|TiB|YB|YiB|ZB|ZiB|bit|kB|kbit', mass: 'g|kg|lb|mg|oz|st|μg',
+    nitrogen_dioxide: 'ppb|ppm|μg/m³', nitrogen_monoxide: 'ppb|μg/m³', ozone: 'ppb|ppm|μg/m³', power: 'BTU/h|GW|MW|TW|W|kW|mW',
+    pressure: 'Pa|atm|bar|cbar|hPa|inHg|inH₂O|kPa|mPa|mbar|mmHg|psi', radiation_concentration: 'Bq/m³|pCi/L',
+    reactive_energy: 'kvarh|varh', reactive_power: 'kvar|mvar|var', speed: 'Beaufort|ft/s|in/d|in/h|in/s|km/h|kn|m/min|m/s|mm/d|mm/h|mm/s|mph',
+    sulphur_dioxide: 'ppb|μg/m³', temperature: 'K|°C|°F', temperature_delta: 'K|°C|°F', unitless: '%|ppb|ppm', voltage: 'MV|V|kV|mV|μV',
+    volume: 'CCF|L|MCF|ft³|gal|mL|m³', volume_flow_rate: 'L/h|L/min|L/s|ft³/min|gal/d|gal/h|gal/min|mL/s|m³/h|m³/min|m³/s' };
+  M.units = function (st) {
+    var a = (st && st.attributes) || {}, key = UNIT_CLASS[a.device_class], u = a.unit_of_measurement;
+    if (!key || !u || ('|' + UNITS[key] + '|').indexOf('|' + u + '|') < 0) return null;
+    var out = {}; out[key] = u; return out;
+  };
   var cache = {};
   M.stats = function (hass, id, span, el) {
     var st = hass && hass.states && hass.states[id];
@@ -161,10 +193,16 @@
     if (hit && hit.key === key) { if (el && hit.busy && hit.wait.indexOf(el) < 0) hit.wait.push(el); return hit.data; }
     var cell = cache[ck] = { key: key, data: hit ? hit.data : null, busy: true, wait: el ? [el] : [] };
     var now = Date.now(), day = span !== '24h';
-    hass.callWS({ type: 'recorder/statistics_during_period', start_time: new Date(now - MS[span]).toISOString(),
-      statistic_ids: [id], period: day ? 'day' : 'hour', types: kind === 'total' ? ['change'] : ['mean', 'min', 'max'] })
+    // Day buckets start at local midnight: the range begins at the day start too, so the first bucket is whole.
+    var from = day ? dayStart(now - MS[span]) : now - MS[span];
+    var msg = { type: 'recorder/statistics_during_period', start_time: new Date(from).toISOString(),
+      statistic_ids: [id], period: day ? 'day' : 'hour', types: kind === 'total' ? ['change'] : ['mean', 'min', 'max'] };
+    var units = M.units(st);
+    if (units) msg.units = units;
+    hass.callWS(msg)
       .then(function (r) { cell.data = M.summarize((r && r[id]) || [], kind, span, Date.now()); },
-        function () { cell.data = { kind: kind, span: span, n: 0, empty: true, error: true }; })
+        // A hiccup must not wipe numbers already on screen; the error shows only when there is nothing yet.
+        function () { if (!cell.data) cell.data = { kind: kind, span: span, n: 0, empty: true, error: true }; })
       .then(function () {
         cell.busy = false;
         var ws = cell.wait; cell.wait = [];
@@ -289,8 +327,10 @@
       var d = M.stats(hass, C.id, span, el);
       if (d == null) return UI.group([{ icon: 'mdi:timer-sand', label: 'Wird geladen …' }], head);
       if (d.empty) {
+        // Only a sensor with a state class ever gets long-term statistics.
+        var collects = !!(st.attributes || {}).state_class;
         return UI.group([{ icon: 'mdi:chart-line-variant', label: d.error ? 'Statistik nicht abrufbar' : 'Noch keine Statistik',
-          sub: d.error ? null : 'Home Assistant sammelt sie stündlich.' }], head);
+          sub: d.error ? null : collects ? 'Home Assistant sammelt sie stündlich.' : 'Dieser Sensor hat keine Statistik.' }], head);
       }
       var r = [];
       if (C.kind === 'total') {

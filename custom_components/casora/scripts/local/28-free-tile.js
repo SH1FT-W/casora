@@ -20,6 +20,8 @@
   var SWITCHABLE = /^(light|switch|input_boolean|fan|humidifier|cover|lock|media_player|vacuum)$/;
   var CONTROL = /^(light|switch|input_boolean|fan|humidifier|cover|lock|media_player|vacuum|lawn_mower|climate|valve)$/;
   var MEAS_ONLY = /^(binary_sensor|input_select|select|input_text|text|person|device_tracker|zone|weather|sun|event|update|camera|image|calendar|todo)$/;
+  // Domains whose non-numeric state is free text, not an on/off word.
+  var TEXTUAL = /^(sensor|input_text|text|select|input_select)$/;
   var ON = ['on', 'open', 'opening', 'unlocked', 'unlocking', 'playing', 'cleaning', 'returning', 'mowing', 'cool', 'heat',
     'heating', 'cooling', 'washing', 'rinsing', 'spinning', 'drying', 'running', 'active', 'home', 'armed_home', 'armed_away',
     'armed_night', 'armed_vacation', 'armed_custom_bypass', 'triggered'];
@@ -98,9 +100,19 @@
       var w = window._casoraZiele.binWords(st);
       return s === 'on' ? w[0] : w[1];
     }
-    if (typeof window._casoraStateText === 'function') return window._casoraStateText(hass, st);
+    // Text domains keep the state as the device wrote it ("iPhone 15", "WLAN_5G"), translated by HA when it can
+    // (enum sensors, select options); the core's word list would mangle the case.
+    if (TEXTUAL.test(dom(st.entity_id))) {
+      try {
+        var f = hass && typeof hass.formatEntityState === 'function' ? hass.formatEntityState(st) : '';
+        if (f != null && String(f) !== '') return String(f);
+      } catch (e) { /* entity half loaded */ }
+      return String(st.state);
+    }
+    // Casora's words before HA's ("Ein"): the core would take hass.formatEntityState first.
     if (s === 'on') return 'An';
     if (s === 'off') return 'Aus';
+    if (typeof window._casoraStateText === 'function') return window._casoraStateText(hass, st);
     return s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ');
   };
   F.tileState = function (entity, hass, states) {
@@ -200,9 +212,11 @@
         series: [{ entity: C.chart, name: nameOf(cst, C.chart), unit: unit }], height: 160, readout: 'own', plate: true } };
       top.push('chart');
     }
-    if (C.controls) f.ctl = { card: K.secCard(watch, call('ctl'), S) };
-    if (C.values.length) f.vals = { card: K.secCard(watch, call('vals'), S) };
-    if (C.id && S[C.id]) f.more = { card: K.secCard(watch, call('more'), S) };
+    // Controls and the settings row follow the main entity only, the value rows their own entities: a power
+    // sensor ticking in "Werte" must not rebuild the brightness slider mid-drag.
+    if (C.controls) f.ctl = { card: K.secCard([C.id], call('ctl'), S) };
+    if (C.values.length) f.vals = { card: K.secCard(C.values, call('vals'), S) };
+    if (C.id && S[C.id]) f.more = { card: K.secCard([C.id], call('more'), S) };
     return K.layout({ fields: f, top: top, left: ['ctl'], right: ['vals', 'more'], narrowOrder: ['ctl', 'vals', 'more'] });
   };
 

@@ -2290,6 +2290,7 @@
   "Noch keine Statistik": "No statistics yet",
   "Statistik nicht abrufbar": "Statistics unavailable",
   "Home Assistant sammelt sie stündlich.": "Home Assistant collects them every hour.",
+  "Dieser Sensor hat keine Statistik.": "This sensor has no statistics.",
   "Meldet sich nicht": "Not reporting",
   "Ungenaue Position": "Inaccurate position",
   "Live-Tracking": "Live tracking",
