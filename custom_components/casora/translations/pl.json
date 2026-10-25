@@ -355,13 +355,9 @@
     }
   },
   "issues": {
-    "leftover_scripts": {
-      "title": "Casora nie potrzebuje już tych skryptów",
-      "description": "Wcześniejsze wersje Casory dodały te skrypty do scripts.yaml: {scripts}. Karty Casory używają teraz własnych akcji integracji (np. casora.light_smart_toggle). Możesz usunąć skrypty (Ustawienia › Automatyzacje i sceny › Skrypty), jeśli Twoje automatyzacje lub karty ich nie używają."
-    },
-    "leftover_theme_file": {
-      "title": "Casora nie potrzebuje już swojego pliku motywów",
-      "description": "Wcześniejsza wersja Casory zapisała swoje motywy w {path}. Casora dostarcza teraz swoje motywy sama; plik nie jest już aktualizowany. Możesz go usunąć, a potem wybrać „Przeładuj motywy” w Narzędziach deweloperskich › YAML."
+    "kept_scripts": {
+      "title": "Casora zachowała kilka starych skryptów",
+      "description": "Wcześniejsze wersje Casory dodały skrypty do scripts.yaml. Casora je usunęła, ale zachowała te, ponieważ są nadal używane, zostały przez Ciebie zmienione lub nie znajdują się w scripts.yaml: {scripts}. Karty Casory już ich nie potrzebują (korzystają z własnych akcji integracji, np. casora.light_smart_toggle). Jeśli Ty też ich nie potrzebujesz, możesz je usunąć w Ustawienia › Automatyzacje i sceny › Skrypty."
     }
   }
 }

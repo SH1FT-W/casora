@@ -355,13 +355,9 @@
     }
   },
   "issues": {
-    "leftover_scripts": {
-      "title": "Casora heeft deze scripts niet meer nodig",
-      "description": "Eerdere Casora-versies hebben deze scripts aan scripts.yaml toegevoegd: {scripts}. De kaarten van Casora gebruiken nu eigen acties van de integratie (bijv. casora.light_smart_toggle). Je kunt de scripts verwijderen (Instellingen › Automatiseringen en scènes › Scripts) als je eigen automatiseringen of kaarten ze niet gebruiken."
-    },
-    "leftover_theme_file": {
-      "title": "Casora heeft zijn themabestand niet meer nodig",
-      "description": "Een eerdere Casora-versie heeft zijn ontwerpen in {path} opgeslagen. Casora brengt zijn ontwerpen nu zelf mee; het bestand wordt niet meer bijgewerkt. Je kunt het verwijderen en daarna onder Ontwikkelhulpmiddelen › YAML „Thema's herladen” kiezen."
+    "kept_scripts": {
+      "title": "Casora heeft enkele oude scripts behouden",
+      "description": "Eerdere Casora-versies hebben scripts aan scripts.yaml toegevoegd. Casora heeft ze verwijderd, maar deze behouden, omdat ze nog gebruikt worden, door jou gewijzigd zijn of niet in scripts.yaml staan: {scripts}. De kaarten van Casora hebben ze niet meer nodig (ze gebruiken eigen acties van de integratie zoals casora.light_smart_toggle). Heb je ze zelf ook niet meer nodig, dan kun je ze verwijderen onder Instellingen › Automatiseringen & scènes › Scripts."
     }
   }
 }

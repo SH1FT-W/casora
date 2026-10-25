@@ -11,6 +11,7 @@ configuration.yaml. Now:
   • Designs - served by the integration and applied in the browser (theme.py), no theme file.
 
 Nothing in the config folder is written. What exists already (e.g. from an old package) is left alone.
+Only exception: Casora's own leftovers of earlier versions are removed once (legacy_cleanup.py).
 The service casora.einrichten repeats the setup and reports what is missing.
 """
 
@@ -26,14 +27,13 @@ import voluptuous as vol
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_STATE_CHANGED, UnitOfTemperature
 from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util.yaml import load_yaml
 
-from .actions import FORMER_SCRIPTS
 from .const import DOMAIN
-from .theme import old_theme_file
+from .legacy_cleanup import async_run as async_legacy_cleanup
+from .legacy_cleanup import async_unload as async_unload_legacy_cleanup
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +41,6 @@ HELPER_DOMAINS = ("input_boolean", "input_text", "input_select", "input_number",
 EXPANDED_ROW = "input_select.casora_expanded_row"
 RESTART_DONE = ("input_boolean.casora_restart_done_1", "input_boolean.casora_restart_done_2")
 PLAYING = ("playing", "buffering")
-ISSUE_SCRIPTS = "leftover_scripts"
-ISSUE_THEME_FILE = "leftover_theme_file"
 
 _DIR = os.path.dirname(__file__)
 
@@ -182,34 +180,6 @@ def _setup_automatik(hass: HomeAssistant, runtime: dict) -> None:
         _expand()
 
 
-# ── Leftovers of earlier versions ────────────────────────────────────────────
-
-@callback
-def _issue(hass: HomeAssistant, issue_id: str, show: bool, placeholders: dict[str, str]) -> None:
-    if show:
-        ir.async_create_issue(hass, DOMAIN, issue_id, is_fixable=False, is_persistent=False,
-                              severity=ir.IssueSeverity.WARNING, translation_key=issue_id,
-                              translation_placeholders=placeholders)
-    else:
-        ir.async_delete_issue(hass, DOMAIN, issue_id)
-
-
-async def async_check_leftovers(hass: HomeAssistant) -> None:
-    """Earlier versions wrote scripts into scripts.yaml and a theme file into the themes folder.
-
-    Both stay where they are: the user may use the scripts in own automations, and the file is the user's
-    to delete. A repair notice says once per start that Casora no longer needs them. Read only."""
-    # Only scripts HA really loaded: a registry entry without its YAML shows up as a restored placeholder.
-    scripts = [e for e in FORMER_SCRIPTS
-               if (s := hass.states.get(e)) is not None and not (getattr(s, "attributes", None) or {}).get("restored")]
-    _issue(hass, ISSUE_SCRIPTS, bool(scripts), {"scripts": ", ".join(scripts)})
-    try:
-        path = await hass.async_add_executor_job(old_theme_file, hass.config.config_dir)
-    except Exception:  # noqa: BLE001 - only a hint
-        path = None
-    _issue(hass, ISSUE_THEME_FILE, bool(path), {"path": path or ""})
-
-
 # ── Entry ────────────────────────────────────────────────────────────────────
 
 async def async_einrichten(hass: HomeAssistant) -> dict[str, Any]:
@@ -245,9 +215,10 @@ async def async_setup_helfer(hass: HomeAssistant) -> None:
         except Exception:  # noqa: BLE001 - must never stop loading
             _LOGGER.exception("Casora: setup failed")
         try:
-            await async_check_leftovers(hass)
+            # Leftovers of earlier versions (scripts in scripts.yaml, theme file): removed once, then told.
+            await async_legacy_cleanup(hass)
         except Exception:  # noqa: BLE001
-            _LOGGER.debug("Casora: leftover check failed", exc_info=True)
+            _LOGGER.debug("Casora: legacy cleanup failed", exc_info=True)
         _setup_automatik(hass, runtime)
 
     # Helpers only once HA runs: then all YAML packages are loaded and nothing is created twice.
@@ -269,6 +240,7 @@ async def async_setup_helfer(hass: HomeAssistant) -> None:
 
 @callback
 def async_unload_helfer(hass: HomeAssistant) -> None:
+    async_unload_legacy_cleanup(hass)
     runtime = hass.data.get(DOMAIN, {}).pop("helfer", None)
     for u in (runtime or {}).get("unsub", []):
         try:

@@ -355,13 +355,9 @@
     }
   },
   "issues": {
-    "leftover_scripts": {
-      "title": "Casora ya no necesita estos scripts",
-      "description": "Versiones anteriores de Casora añadieron estos scripts a scripts.yaml: {scripts}. Las tarjetas de Casora usan ahora acciones propias de la integración (p. ej. casora.light_smart_toggle). Puedes borrar los scripts (Ajustes › Automatizaciones y escenas › Scripts) si tus propias automatizaciones o tarjetas no los usan."
-    },
-    "leftover_theme_file": {
-      "title": "Casora ya no necesita su archivo de temas",
-      "description": "Una versión anterior de Casora guardó sus diseños en {path}. Casora trae ahora sus diseños por sí misma; el archivo ya no se actualiza. Puedes borrarlo y después elegir «Recargar temas» en Herramientas para desarrolladores › YAML."
+    "kept_scripts": {
+      "title": "Casora ha conservado algunos scripts antiguos",
+      "description": "Versiones anteriores de Casora añadieron scripts a scripts.yaml. Casora los ha eliminado, pero ha conservado estos porque aún se usan, los has modificado tú o no están en scripts.yaml: {scripts}. Las tarjetas de Casora ya no los necesitan (usan acciones propias de la integración como casora.light_smart_toggle). Si tú tampoco los necesitas, puedes eliminarlos en Ajustes › Automatizaciones y escenas › Scripts."
     }
   }
 }

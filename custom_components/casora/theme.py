@@ -134,8 +134,8 @@ def migrate_design(saved: dict, names: Any, hemma_gone: bool) -> tuple[str | Non
 # ── Theme file of earlier versions ───────────────────────────────────────────
 # Up to 26.10 Casora kept a copy of its designs in the user's themes folder (themes/casora-themes.yaml,
 # when configuration.yaml loads that folder with !include_dir_merge_named). It is no longer written.
-# An existing copy stays (helfer.py names it in a repair notice); only removing the integration deletes
-# it, and only when it still carries Casora's own first line.
+# An existing copy is deleted once (legacy_cleanup.py) or when the integration is removed, in both cases
+# only when it still carries Casora's own first line.
 
 OLD_THEME_FILE = "casora-themes.yaml"
 OLD_THEME_MARKER = "# Von der Casora-Integration geschrieben"

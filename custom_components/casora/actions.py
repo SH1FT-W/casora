@@ -35,7 +35,7 @@ THERMOSTAT_TOGGLE = "thermostat_overlay_toggle"
 ACTIONS_TOGGLE = "actions_overlay_toggle"
 RESTART_TOGGLE = "restart_toggle"
 SERVICES = (LIGHT_TOGGLE, THERMOSTAT_TOGGLE, ACTIONS_TOGGLE, RESTART_TOGGLE)
-# The scripts these services replace (helfer.py names leftovers in a repair notice).
+# The scripts these services replace (legacy_cleanup.py removes them once).
 FORMER_SCRIPTS = tuple(f"script.casora_{s}" for s in SERVICES)
 
 THERMOSTAT_OVERLAY = ("input_boolean.casora_thermostat_overlay", "input_text.casora_thermostat_active_entity")
