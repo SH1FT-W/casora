@@ -36,8 +36,9 @@
     game: 'M7.97,16L5,19C4.67,19.3 4.23,19.5 3.75,19.5A1.75,1.75 0 0,1 2,17.75V17.5L3,10.12C3.21,7.81 5.14,6 7.5,6H16.5C18.86,6 20.79,7.81 21,10.12L22,17.5V17.75A1.75,1.75 0 0,1 20.25,19.5C19.77,19.5 19.33,19.3 19,19L16.03,16H7.97M7,8V10H5V11H7V13H8V11H10V10H8V8H7M16.5,8A0.75,0.75 0 0,0 15.75,8.75A0.75,0.75 0 0,0 16.5,9.5A0.75,0.75 0 0,0 17.25,8.75A0.75,0.75 0 0,0 16.5,8M14.75,9.75A0.75,0.75 0 0,0 14,10.5A0.75,0.75 0 0,0 14.75,11.25A0.75,0.75 0 0,0 15.5,10.5A0.75,0.75 0 0,0 14.75,9.75M18.25,9.75A0.75,0.75 0 0,0 17.5,10.5A0.75,0.75 0 0,0 18.25,11.25A0.75,0.75 0 0,0 19,10.5A0.75,0.75 0 0,0 18.25,9.75M16.5,11.5A0.75,0.75 0 0,0 15.75,12.25A0.75,0.75 0 0,0 16.5,13A0.75,0.75 0 0,0 17.25,12.25A0.75,0.75 0 0,0 16.5,11.5Z',
   };
   // Zurück/Weiter als Doppeldreieck ohne Strich (wie Apple Musik/TV).
-  P.prev = 'M22,8.1Q22,6.5 20.61,7.3L13.79,11.2Q12.4,12 13.79,12.8L20.61,16.7Q22,17.5 22,15.9ZM12.2,8.1Q12.2,6.5 10.81,7.3L3.99,11.2Q2.6,12 3.99,12.8L10.81,16.7Q12.2,17.5 12.2,15.9Z';
-  P.next = 'M2,8.1Q2,6.5 3.39,7.3L10.21,11.2Q11.6,12 10.21,12.8L3.39,16.7Q2,17.5 2,15.9ZM11.8,8.1Q11.8,6.5 13.19,7.3L20.01,11.2Q21.4,12 20.01,12.8L13.19,16.7Q11.8,17.5 11.8,15.9Z';
+  // Shifted ±0.6475 so the drawn shape (not the 24-unit box) sits centred in its round button.
+  P.prev = 'M21.3525,8.1Q21.3525,6.5 19.9625,7.3L13.1425,11.2Q11.7525,12 13.1425,12.8L19.9625,16.7Q21.3525,17.5 21.3525,15.9ZM11.5525,8.1Q11.5525,6.5 10.1625,7.3L3.3425,11.2Q1.9525,12 3.3425,12.8L10.1625,16.7Q11.5525,17.5 11.5525,15.9Z';
+  P.next = 'M2.6475,8.1Q2.6475,6.5 4.0375,7.3L10.8575,11.2Q12.2475,12 10.8575,12.8L4.0375,16.7Q2.6475,17.5 2.6475,15.9ZM12.4475,8.1Q12.4475,6.5 13.8375,7.3L20.6575,11.2Q22.0475,12 20.6575,12.8L13.8375,16.7Q12.4475,17.5 12.4475,15.9Z';
   var svg = function (d, s) { return '<svg viewBox="0 0 24 24" width="' + s + '" height="' + s + '" aria-hidden="true"><path fill="currentColor" d="' + d + '"/></svg>'; };
 
   // Einstellungen der Raumkarte → dieselbe Form wie casora_mobile_now_playing (variables.cfg),
@@ -545,9 +546,12 @@
     return html;
   }
 
+  // Progress from casora-core.js (_casoraNPPos): HA's latest position, ⏮/⏭ restarts from 0 until HA reports.
   function pct(r) {
     if (!r || !r.bar) return '0';
-    var p = r.pos + (r.playing && r.at ? (Date.now() - r.at) / 1000 : 0);
+    var NPP = window._casoraNPPos;
+    var q = NPP ? NPP({ entity: r.live, pos: r.pos, dur: r.dur, posAt: r.at, playing: r.playing }) : null;
+    var p = q ? q.pos : r.pos + (r.playing && r.at ? Math.max(0, (Date.now() - r.at) / 1000) : 0);
     return (Math.max(0, Math.min(1, p / r.dur)) * 100).toFixed(2);
   }
 
@@ -558,7 +562,8 @@
       var r = e.rows[row.getAttribute('data-k')];
       if (!r) return;
       var bar = row.querySelector('.b i');
-      if (r.bar && r.playing && bar) bar.style.width = pct(r) + '%';
+      // Paused bars too: a seek or restart while paused must show as well.
+      if (r.bar && bar) bar.style.width = pct(r) + '%';
     });
   }
 
@@ -633,6 +638,11 @@
     if (!r || !r.live || !h) return;
     try { card_haptic(e.card); } catch (err) { /* egal */ }
     h.callService('media_player', dir === 'prev' ? 'media_previous_track' : 'media_next_track', { entity_id: r.live });
+    // Optimistic restart from 0 (casora-core.js keeps it until HA reports, at most a few seconds).
+    if (window._casoraNPSkipMark) {
+      window._casoraNPSkipMark(r.live, h.states);
+      entries.concat(painted).forEach(function (x) { if (x && x.rows) progress(x); });
+    }
   }
 
 
