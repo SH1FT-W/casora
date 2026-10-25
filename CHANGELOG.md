@@ -34,6 +34,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Energy (#44):** consumers whose meter is disabled in Home Assistant are no longer listed.
 - **Studio froze when adding a fridge tile** in homes with many devices; adding any tile kind takes milliseconds now.
 - **Empty room:** the hint “No devices yet, add them in the Studio” no longer flickers.
+- **Now playing:** after ⏮ the progress bar jumps back to the start when the same song restarts, and the circles behind ⏮ and ⏭ sit centered on their symbols.
 - **Weather warning bell:** the DWD advance warning no longer shows as a current warning, and warning kinds are spelled properly.
 - **E-bike, coffee, mower, fridge:** several state and counter fixes from the review of these cards.
 
