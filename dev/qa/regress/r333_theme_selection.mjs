@@ -102,7 +102,7 @@ const look = () => page.evaluate(() => {
 const until = async (fn, ms = 15000) => { const t = Date.now(); let v; while (Date.now() - t < ms) { v = await look(); if (fn(v)) return v; await sleep(400); } return v; };
 await dashboard(page, dash.url + '/0');
 let v = await until((x) => x.profile === '' && x.list.includes('Casora Nebel'));
-await check('profile "Casora" of the theme-file era → Backend-selected', v.profile === '' && (await userData('theme') || {}).theme === '', v.profile);
+await check('profile "Casora" of the theme-file era = installation design: stays named in the profile', v.profile === 'Casora', v.profile);
 await check('dashboard shows the installation design Casora', v.active === 'Casora' && v.attr && v.bg === v.want && v.uix === 'Casora', v);
 await check('all designs in the browser\'s theme list, own theme kept', names.every((n) => v.list.includes(n)) && v.list.includes(OWN), v.list);
 await shot('1_dashboard_casora');
@@ -123,7 +123,7 @@ await check('Studio pick applies at once (Studio)', v.design === 'Casora Nebel' 
 await shot('2_studio_nebel');
 await dashboard(page, dash.url + '/0');
 v = await until((x) => x.active === 'Casora Nebel' && x.bg === x.want);
-await check('Studio pick shown on the dashboard after a reload', v.active === 'Casora Nebel' && v.bg === v.want && v.profile === '', v);
+await check('Studio pick shown on the dashboard after a reload, and named in the profile', v.active === 'Casora Nebel' && v.bg === v.want && v.profile === 'Casora Nebel', v);
 await shot('3_dashboard_nebel');
 
 // 4. HA's profile picker lists the designs; picking one there applies it
@@ -168,7 +168,7 @@ await setUserData('theme', { theme: 'Casora Glas' });
 await until((x) => x.active === 'Casora Glas');
 await page.evaluate(() => window.casoraTheme.set('Casora'));
 v = await until((x) => x.active === 'Casora' && x.profile === '');
-await check('Studio pick over a profile design: profile → Backend-selected, Casora shown', v.active === 'Casora' && v.profile === '' && v.bg === v.want, v);
+await check('Studio pick over a profile design: the profile takes the pick, Casora shown', v.active === 'Casora' && v.profile === 'Casora' && v.bg === v.want, v);
 
 // 8. Phone
 const phone = dashes.find((d) => d.mobile) || dash;

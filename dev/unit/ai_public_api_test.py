@@ -259,6 +259,13 @@ class Real(unittest.IsolatedAsyncioTestCase):
         script = Script(self.hass, seqs[name], "test", "casora", script_mode="parallel")
         await script.async_run(run_variables=variables, context=None)
         await self.hass.async_block_till_done()
+        # Under load the last event can follow a moment later: wait (max 3 s) until the flow left "running".
+        import asyncio  # noqa: PLC0415
+        for _ in range(30):
+            if fired and fired[-1].get("status") != "running":
+                break
+            await asyncio.sleep(0.1)
+            await self.hass.async_block_till_done()
         return fired
 
     BASE = {"weather_entity": "", "idea_sensor": "", "cookidoo": False, "hinweise": "", "sprache": "Deutsch"}
