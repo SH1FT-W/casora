@@ -2591,7 +2591,12 @@
     "For every climate Velair plans": "Para cada climatizador que planifica Velair",
     "Velair integration not installed yet": "Integración Velair aún no instalada",
     "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, objetivo y modo en la tarjeta, como en el termostato. La ventana tiene modo, temperatura objetivo, ventilador, preajustes y lamas, además del horario de Velair: las franjas de hoy, la semana de un vistazo, horario activado o desactivado, reanudar tras un cambio manual y editar las franjas de un día. Para climatizadores que planifica la integración Velair.",
-    "Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list. Going back to an older stable version is not supported.": "Casora se actualiza a través de HACS. Para probar una beta: abre Casora en HACS, ⋮ › «Volver a descargar» y elige la beta en la lista de versiones. No se puede volver después a una versión estable anterior."
+    "Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list. Going back to an older stable version is not supported.": "Casora se actualiza a través de HACS. Para probar una beta: abre Casora en HACS, ⋮ › «Volver a descargar» y elige la beta en la lista de versiones. No se puede volver después a una versión estable anterior.",
+    "Felt temperature": "Sensación térmica",
+    "Felt temperature sensor": "Sensor de sensación térmica",
+    "Second curve in the weather popup's temperature chart, when the weather source provides it.": "Segunda curva en el gráfico de temperatura de la ventana del tiempo, si la fuente meteorológica la ofrece.",
+    "Extra values": "Valores adicionales",
+    "Dew point, wind gusts, cloud cover, chance of rain and more in the weather popup, when the weather source provides them.": "Punto de rocío, ráfagas, nubosidad, probabilidad de lluvia y más en la ventana del tiempo, si la fuente meteorológica los ofrece."
   },
   "patterns": [
     [

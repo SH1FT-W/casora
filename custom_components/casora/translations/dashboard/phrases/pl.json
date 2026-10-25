@@ -2476,7 +2476,16 @@
   "Im Velair-Panel öffnen": "Otwórz w panelu Velair",
   "Profile, Modi und Vorlagen": "Ustawienia profili, trybów i szablonów",
   "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "Aktywny jest profil – edytuj go w panelu Velair.",
-  "Ein Profil pausiert diesen Zeitplan.": "Profil wstrzymuje ten harmonogram."
+  "Ein Profil pausiert diesen Zeitplan.": "Profil wstrzymuje ten harmonogram.",
+  "Gefühlt": "Odczuwalna",
+  "Taupunkt": "Punkt rosy",
+  "Windböen": "Porywy wiatru",
+  "Bewölkung": "Zachmurzenie",
+  "Regenwahrscheinlichkeit": "Szansa na deszcz",
+  "Regen heute": "Deszcz dziś",
+  "Niederschlag": "Opady",
+  "Sonneneinstrahlung": "Promieniowanie słoneczne",
+  "UV-Index": "Indeks UV"
  },
  "patterns": [
   [

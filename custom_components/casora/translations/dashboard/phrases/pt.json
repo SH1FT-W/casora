@@ -2476,7 +2476,16 @@
   "Im Velair-Panel öffnen": "Abrir no painel Velair",
   "Profile, Modi und Vorlagen": "Perfis, modos e modelos",
   "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "Está ativo um perfil – edita-o no painel Velair.",
-  "Ein Profil pausiert diesen Zeitplan.": "Um perfil pausa este horário."
+  "Ein Profil pausiert diesen Zeitplan.": "Um perfil pausa este horário.",
+  "Gefühlt": "Sensação",
+  "Taupunkt": "Ponto de orvalho",
+  "Windböen": "Rajadas",
+  "Bewölkung": "Nebulosidade",
+  "Regenwahrscheinlichkeit": "Probabilidade de chuva",
+  "Regen heute": "Chuva hoje",
+  "Niederschlag": "Precipitação",
+  "Sonneneinstrahlung": "Radiação solar",
+  "UV-Index": "Índice UV"
  },
  "patterns": [
   [

@@ -2476,7 +2476,16 @@
   "Im Velair-Panel öffnen": "Apri nel pannello Velair",
   "Profile, Modi und Vorlagen": "Profili, modalità e modelli",
   "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "È attivo un profilo – modificalo nel pannello Velair.",
-  "Ein Profil pausiert diesen Zeitplan.": "Un profilo mette in pausa questa programmazione."
+  "Ein Profil pausiert diesen Zeitplan.": "Un profilo mette in pausa questa programmazione.",
+  "Gefühlt": "Percepita",
+  "Taupunkt": "Punto di rugiada",
+  "Windböen": "Raffiche",
+  "Bewölkung": "Nuvolosità",
+  "Regenwahrscheinlichkeit": "Probabilità di pioggia",
+  "Regen heute": "Pioggia oggi",
+  "Niederschlag": "Precipitazioni",
+  "Sonneneinstrahlung": "Radiazione solare",
+  "UV-Index": "Indice UV"
  },
  "patterns": [
   [
