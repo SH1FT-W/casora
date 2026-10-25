@@ -355,13 +355,9 @@
     }
   },
   "issues": {
-    "leftover_scripts": {
-      "title": "Casora braucht diese Skripte nicht mehr",
-      "description": "Frühere Casora-Versionen haben diese Skripte in scripts.yaml eingetragen: {scripts}. Casoras Karten nutzen jetzt eigene Aktionen der Integration (z. B. casora.light_smart_toggle). Du kannst die Skripte löschen (Einstellungen › Automationen & Szenen › Skripte), wenn deine eigenen Automationen oder Karten sie nicht verwenden."
-    },
-    "leftover_theme_file": {
-      "title": "Casora braucht seine Theme-Datei nicht mehr",
-      "description": "Eine frühere Casora-Version hat ihre Designs in {path} abgelegt. Casora bringt seine Designs jetzt selbst mit; die Datei wird nicht mehr aktualisiert. Du kannst sie löschen und danach unter Entwicklerwerkzeuge › YAML „Themes neu laden“ wählen."
+    "kept_scripts": {
+      "title": "Casora hat alte Skripte behalten",
+      "description": "Frühere Casora-Versionen haben Skripte in scripts.yaml eingetragen. Casora hat sie entfernt, diese aber behalten, weil sie noch verwendet werden, von dir geändert wurden oder nicht in scripts.yaml stehen: {scripts}. Casoras Karten brauchen sie nicht mehr (sie nutzen eigene Aktionen wie casora.light_smart_toggle). Wenn du sie selbst nicht mehr brauchst, kannst du sie unter Einstellungen › Automationen & Szenen › Skripte löschen."
     }
   }
 }

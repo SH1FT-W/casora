@@ -32,7 +32,7 @@ for (const [svc, fields] of Object.entries(FIELDS)) {
 for (const l of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
   const t = JSON.parse(read('translations/' + l + '.json'));
   for (const svc of Object.keys(FIELDS)) assert.ok(t.services[svc] && t.services[svc].name, l + ': ' + svc);
-  for (const i of ['leftover_scripts', 'leftover_theme_file']) assert.ok(t.issues[i] && t.issues[i].description, l + ': ' + i);
+  assert.ok(t.issues.kept_scripts && t.issues.kept_scripts.description.includes('{scripts}'), l + ': kept_scripts');
 }
 
 // Templates: every call-service to casora.* carries exactly the service's fields.

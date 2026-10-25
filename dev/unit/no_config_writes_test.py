@@ -5,8 +5,12 @@
 HACS review (hacs/default#12143): Casora appended scripts to scripts.yaml and wrote themes/casora-themes.yaml
 on every start. Now the setup of designs, helpers and automatic behaviour runs with open/replace/remove
 watched: nothing may be opened for writing, replaced or removed in the config folder, even when
-configuration.yaml loads scripts.yaml and a themes folder. Leftovers of earlier versions (the four scripts,
-the theme file) only raise a repair notice. The setup notice names missing helpers and goes away once all exist.
+configuration.yaml loads scripts.yaml and a themes folder. The setup notice names missing helpers and goes away
+once all exist.
+
+Leftovers of earlier versions (legacy_cleanup.py): the one allowed change is removing Casora's own former theme
+file (ALLOWED_WRITES), once and only with Casora's marker line; the four scripts are never touched from Python
+(an admin's browser deletes them through HA's script config API), and the old repair notices are gone.
 
 Also (next review round): nothing is written into the integration folder at run time - the Studio loader
 (scripts_view.studio_loader) and the template bundle (templates.bundle_text, also with a template tree present)
@@ -27,7 +31,7 @@ sys.path.insert(0, ROOT)
 
 from homeassistant.core import CoreState  # noqa: E402
 
-from custom_components.casora import helfer, theme  # noqa: E402
+from custom_components.casora import helfer, legacy_cleanup, theme  # noqa: E402
 
 FAILS: list[str] = []
 
@@ -52,13 +56,24 @@ class FakeStore:
 
 
 theme.Store = FakeStore
+legacy_cleanup.Store = FakeStore
+legacy_cleanup.websocket_api = SimpleNamespace(async_register_command=lambda hass, cmd: None)
+legacy_cleanup.add_extra_js_url = lambda hass, url: None
+notes: list = []
+legacy_cleanup.persistent_notification = SimpleNamespace(
+    async_create=lambda hass, message, title=None, notification_id=None: notes.append(message))
+# The only write allowed in the config folder, with its reason.
+ALLOWED_WRITES = {
+    ("remove", os.path.join("themes", theme.OLD_THEME_FILE)):
+        "legacy_cleanup.py: one-time, marker-guarded removal of Casora's own former theme file",
+}
 theme.add_extra_js_url = lambda hass, url: None
 theme.websocket_api.async_register_command = lambda hass, cmd: None
 helfer._legacy_automation = lambda *a: False
 helfer._any_playing = lambda h: False
 helfer.async_register_admin_service = lambda *a, **k: None
 issues: dict = {}
-helfer.ir = SimpleNamespace(
+legacy_cleanup.ir = SimpleNamespace(
     async_create_issue=lambda hass, dom, iid, **k: issues.__setitem__(iid, k),
     async_delete_issue=lambda hass, dom, iid: issues.pop(iid, None),
     IssueSeverity=SimpleNamespace(WARNING="warning"),
@@ -169,35 +184,39 @@ with tempfile.TemporaryDirectory() as d:
           "notice names the missing helpers only")
     check(FakeStore.saved.get("casora.theme") == {"design": None, "migrated": True}, "design not chosen yet")
 
-    # 2. Update from a version that wrote both: they stay, a repair notice names them
+    # 2. Update from a version that wrote both: the theme file goes once (allowed), scripts.yaml stays as it is
     with open(os.path.join(d, "themes", theme.OLD_THEME_FILE), "w", encoding="utf-8") as f:
         f.write(theme.OLD_THEME_MARKER + " und bei jedem Start aktualisiert – nicht bearbeiten.\nCasora: {}\n")
     loaded = SimpleNamespace(state="off", attributes={})
-    # A registry entry whose YAML is gone only shows up as a restored placeholder: not a leftover.
-    gone = SimpleNamespace(state="unavailable", attributes={"restored": True})
-    states = {"script.casora_light_smart_toggle": loaded, "script.casora_restart_toggle": loaded,
-              "script.casora_actions_overlay_toggle": gone}
+    states = {"script.casora_light_smart_toggle": loaded, "script.casora_restart_toggle": loaded}
     FakeStore.saved = {"frontend_theme": {"frontend_default_theme": "Casora"}}
+    issues.update({"leftover_scripts": {}, "leftover_theme_file": {}})
     hass, calls, tasks = make_hass(d, states)
     writes, real = watched(d)
     try:
         asyncio.run(setup(hass, tasks))
     finally:
         restore(real)
-    check(not writes, f"update: no writes either ({writes})")
-    check(os.path.exists(os.path.join(d, "themes", theme.OLD_THEME_FILE)), "old theme file left alone")
-    s = issues.get("leftover_scripts", {})
-    check(s.get("translation_placeholders", {}).get("scripts") == "script.casora_light_smart_toggle, script.casora_restart_toggle",
-          f"scripts named: {s}")
-    t = issues.get("leftover_theme_file", {})
-    check(t.get("translation_placeholders", {}).get("path") == os.path.join("themes", theme.OLD_THEME_FILE), f"file named: {t}")
+    check(all(w in ALLOWED_WRITES for w in writes) and len(writes) == 1, f"update: only the allowed removal ({writes})")
+    check(open(os.path.join(d, "scripts.yaml"), encoding="utf-8").read() == before["scripts.yaml"], "scripts.yaml untouched")
+    check(not issues, f"old repair notices gone ({issues})")
+    check(legacy_cleanup._rt(hass).pending == ["casora_light_smart_toggle", "casora_restart_toggle"],
+          "scripts wait for an admin browser")
     check(FakeStore.saved["casora.theme"]["design"] == "Casora", "design taken over from HA's default theme")
 
-    # 3. Leftovers gone: the notices go too
-    os.remove(os.path.join(d, "themes", theme.OLD_THEME_FILE))
+    # 3. Next start: nothing written again (the removal is stored, even if the file came back)
+    os.rename(os.path.join(d, "themes"), os.path.join(d, "themes-x"))
+    os.mkdir(os.path.join(d, "themes"))
+    with open(os.path.join(d, "themes", theme.OLD_THEME_FILE), "w", encoding="utf-8") as f:
+        f.write(theme.OLD_THEME_MARKER + "\n")
     hass, calls, tasks = make_hass(d, {})
-    asyncio.run(helfer.async_check_leftovers(hass))
-    check(not issues, f"notices removed ({issues})")
+    writes, real = watched(d)
+    try:
+        asyncio.run(setup(hass, tasks))
+    finally:
+        restore(real)
+    check(not writes, f"second start: no writes ({writes})")
+    check(not issues, f"no notices ({issues})")
 
 
 # 4. Setup notice: dismissed once all helpers exist
