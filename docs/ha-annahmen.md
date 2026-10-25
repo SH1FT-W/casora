@@ -140,6 +140,12 @@ scheitern. Das Updates-Popup (`casora_popup_updates`, „Alle aktualisieren“) 
 `supported_features & 1`. Test: `dev/unit/update_report_only_test.py` (Vorlage enthält den Filter); HA-Verhalten
 selbst nicht im Test.
 
+Updates-Kachel, -Popup und Glocke: Update-Entität `on` = offen (auch während `in_progress`), `off` bei übersprungener
+Version. „Installiert, Neustart fehlt“ = `off`, `installed_version == latest_version` und „restart“ in
+`release_summary` (HACS: „Restart of Home Assistant required“) – eine Regel, `scripts/casora-core.js`
+`casoraNeedsRestart`. Test: `dev/unit/updates_restart_live.mjs`; der HACS-Text nicht im Kern prüfbar (Testhaus
+`dev/casora_mock/entity.py` spielt ihn nach).
+
 Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCES`, `live_finder.py`, Zustand/Programm
 `02-devices.js`, `live_activity.py`; Tests `dev/unit/dishwasher_sources.mjs`, `dev/unit/live_finder_test.py`,
 `dev/unit/live_activity_test.py`, Häuser `dev/unit/haeuser/hc_*.json`), Stand 23.10.2026:

@@ -11055,6 +11055,15 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     return Math.max(1, Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate())
       - new Date(then.getFullYear(), then.getMonth(), then.getDate())) / 86400000));
   };
+  /* Installed, but Home Assistant still has to restart - one rule for the Updates tile, popup and bell.
+     HACS says "Restart of Home Assistant required" in release_summary once the install is done, with
+     installed == latest and the state off. */
+  window.casoraNeedsRestart = function (e) {
+    if (!e || e.state !== 'off') return false;
+    var a = e.attributes || {};
+    if (!a.installed_version || a.installed_version !== a.latest_version) return false;
+    return String(a.release_summary || '').toLowerCase().indexOf('restart') !== -1;
+  };
   function ago(ms) {
     var s = Math.max(0, (Date.now() - ms) / 1000);
     if (s < 60) return 'gerade eben';
@@ -11515,11 +11524,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       var st = S[id];
       var a = st.attributes || {};
       if (st.state === 'on' && !a.in_progress) { updates.push(st); return; }
-      var rs = String(a.release_summary || '').toLowerCase();
-      if (rs.indexOf('restart') !== -1 && st.state === 'off'
-        && a.installed_version && a.installed_version === a.latest_version) {
-        restarts.push(st);
-      }
+      if (window.casoraNeedsRestart(st)) restarts.push(st);
     });
 
     var newest = function (list) {

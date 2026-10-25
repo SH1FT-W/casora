@@ -285,14 +285,16 @@
           : c.open ? (c.info ? 'KI: ' + c.info + ' von ' + n + ' geprüft' : 'KI-Check steht noch aus')
           : 'KI: ' + (n === 1 ? 'unkritisch' : 'alle unkritisch');
       }
-      var head = n === 0 ? 'Alles aktuell' : n === 1 ? '1 Update verfügbar' : n + ' Updates verfügbar';
       var X0 = window._casoraUpdX;
+      // Nothing left to install but a restart is owed: that is not "all up to date".
+      var restartOnly = !n && X0 && X0.restartIds && X0.restartIds(states).length > 0;
+      var head = n === 0 ? (restartOnly ? 'Neustart ausstehend' : 'Alles aktuell') : n === 1 ? '1 Update verfügbar' : n + ' Updates verfügbar';
       var rest = X0 && X0.restart ? X0.restart(states, { UI: UI, headOut: function (t) { return UI.label(t); },
         logoOf: function (id) { return logoOf(states, id); } }) : '';
       // 09.10.2026: „Jetzt nach Updates suchen“ als Pille unter der Statuszeile (03-popups.js).
       var chk = window._casoraUpdCheck ? '<div style="display:flex;justify-content:center;">' + window._casoraUpdCheck.html(true) + '</div>' : '';
       return UI.line(head, [busy ? (busy === 1 ? 'Wird installiert' : busy + ' werden installiert') : null, ki, backup],
-        { tone: n ? null : 'good' }) + chk + (rest ? '<div style="text-align:left;">' + rest + '</div>' : '');
+        { tone: n ? null : restartOnly ? 'warn' : 'good' }) + chk + (rest ? '<div style="text-align:left;">' + rest + '</div>' : '');
     }
     if (part === 'more') {
       var X = window._casoraUpdX, secs = [];

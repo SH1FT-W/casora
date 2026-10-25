@@ -3120,6 +3120,7 @@
   // erneutem Öffnen. Gleiche Erkennung wie headCount im Template: aus, Kurzfassung nennt
   // „restart“, installierte = neueste Version.
   X.needsRestart = function (e) {
+    if (window.casoraNeedsRestart) return window.casoraNeedsRestart(e);
     if (!e || e.state !== 'off') return false;
     var a = e.attributes || {};
     return String(a.release_summary || '').toLowerCase().indexOf('restart') !== -1
