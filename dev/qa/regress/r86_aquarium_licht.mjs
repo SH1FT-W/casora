@@ -119,18 +119,20 @@ const drag = async (pg, label, frac) => {
 
   // Becken B: Fluval-/Chihiros-Muster.
   await need('Kachel B angelegt', await mount(page, B));
+  // Sticky: any real state_changed in the busy gate house (mock printer etc.) would otherwise
+  // replace hass.states before the tile reads it and drop the fake temperature.
   let t = await tileText(page);
   await check('Kachel B: alles ok ohne Temperatur („Alles ok“)', /^Alles ok/.test(t), t);
-  await fakeStates(page, { 'sensor.testbecken_b_wassertemperatur': { state: '26.8' } });
+  await fakeStates(page, { 'sensor.testbecken_b_wassertemperatur': { state: '26.8' } }, { sticky: true });
   t = await tileText(page);
   await check('Kachel B: über dem Soll-Bereich → „Prüfen · Temperatur zu hoch“', /^26,8° · Prüfen · Temperatur zu hoch/.test(t), t);
-  await fakeStates(page, { 'sensor.testbecken_b_wassertemperatur': { state: '28.4' } });
+  await fakeStates(page, { 'sensor.testbecken_b_wassertemperatur': { state: '28.4' } }, { sticky: true });
   t = await tileText(page);
   await check('Kachel B: mehr als 2 °C daneben → Alarm', /^28,4° · Alarm · Temperatur zu hoch/.test(t), t);
-  await fakeStates(page, { 'sensor.testbecken_b_wassertemperatur': { state: '23.5' } });
+  await fakeStates(page, { 'sensor.testbecken_b_wassertemperatur': { state: '23.5' } }, { sticky: true });
   t = await tileText(page);
   await check('Kachel B: unter dem Soll-Bereich → „Temperatur zu niedrig“', /Temperatur zu niedrig/.test(t), t);
-  await fakeStates(page, { 'sensor.testbecken_b_wassertemperatur': { state: '25.9' } });
+  await fakeStates(page, { 'sensor.testbecken_b_wassertemperatur': { state: '25.9' } }, { sticky: true });
   await tileText(page);
 
   await openPopup(page);

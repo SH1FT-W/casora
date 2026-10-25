@@ -13,13 +13,28 @@ await H(async () => {
   for (const d of await h.callWS({ type: 'lovelace/dashboards/list' }))
     if (d.mode === 'storage' && /^(test-neu|casora-dashboard)/.test(d.url_path)) await h.callWS({ type: 'lovelace/dashboards/delete', dashboard_id: d.id });
 });
+// Reload and open the create form. Under gate load the page was once navigated again right after the
+// reload ("Execution context was destroyed"); t03 has no re-check and t04–t14 build on test-neu, so wait
+// for the Studio again and retry once instead of failing the whole chain.
+const PIERCE = (await import('./harness.mjs')).PIERCE;
+const studioUp = async () => {
+  await page.waitForLoadState('domcontentloaded');
+  await page.addScriptTag({ content: PIERCE });
+  await page.waitForFunction(() => { const p = window.__panel && window.__panel(); return p && p._state && p._hass; }, null, { timeout: 45000 });
+  await page.waitForTimeout(1500);
+};
 await page.reload({ waitUntil: 'domcontentloaded' });
-await page.addScriptTag({ content: (await import('./harness.mjs')).PIERCE });
-await page.waitForFunction(() => { const p = window.__panel && window.__panel(); return p && p._state && p._hass; }, null, { timeout: 45000 });
-await page.waitForTimeout(1500);
-
-await H(() => window.__panel()._createForm());
-await page.getByText('Räume wählen').waitFor({ timeout: 20000 });
+for (let attempt = 1; ; attempt++) {
+  try {
+    await studioUp();
+    await H(() => { window.__panel()._createForm(); });
+    await page.getByText('Räume wählen').waitFor({ timeout: 20000 });
+    break;
+  } catch (e) {
+    if (attempt >= 2 || !/Execution context was destroyed|navigat/i.test(String(e && e.message))) throw e;
+    console.log('Seite während des Ladens neu navigiert – zweiter Versuch:', String(e.message).split('\n')[0]);
+  }
+}
 const rooms = await H(() => window.__pierce('.flowin .frow').map((r) => r.textContent.replace(/\s+/g, ' ').trim()).slice(0, 20));
 console.log('Räume zur Auswahl:', rooms);
 const nameDefault = await H(() => window.__pierce('.flowin input.fin').pop()?.value);

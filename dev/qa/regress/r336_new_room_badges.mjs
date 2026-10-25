@@ -24,8 +24,14 @@ atFinish(async () => { for (const u of URLS) await saveCfg(u, saved0[u]); });
 const shotDir = process.env.CASORA_OUT || '/tmp/casora-qa';
 
 const AREA = 'Garten';
+// Dashboards made from the whole house (t03's test-neu, qa-arbeit) already have the room: take it out
+// first (restored at the end), so the test does not depend on which dashboard comes first.
+const isArea = (v) => ((v.cards || [])[0] || {}).name === AREA;
+if (saved0[dash.url].views.some(isArea)) {
+  await saveCfg(dash.url, { ...saved0[dash.url], views: saved0[dash.url].views.filter((v) => !isArea(v)) });
+}
 await need('Test house has the HA area "Garten" with lights and no room of that name',
-  !saved0[dash.url].views.some((v) => ((v.cards || [])[0] || {}).name === AREA));
+  !(await cfgOf(dash.url)).views.some(isArea));
 
 // Badges in the room header (desktop) / on the phone room page.
 const deskBadges = (pg) => pg.evaluate(() => {

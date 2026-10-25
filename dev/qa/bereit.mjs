@@ -37,12 +37,23 @@ function connect() {
     const sock = new WebSocket(BASE.replace(/^http/, 'ws') + '/api/websocket');
     let id = 0; const wait = new Map(); const listeners = [];
     const api = {
-      cmd(msg) { const i = ++id; return new Promise((res, rej) => { wait.set(i, { res, rej }); sock.send(JSON.stringify({ ...msg, id: i })); }); },
+      closed: false,
+      cmd(msg) {
+        if (api.closed) return Promise.reject(new Error('WebSocket geschlossen'));
+        const i = ++id; return new Promise((res, rej) => { wait.set(i, { res, rej }); sock.send(JSON.stringify({ ...msg, id: i })); });
+      },
       onEvent(fn) { listeners.push(fn); },
       close() { try { sock.close(); } catch (e) { /* zu */ } },
     };
     sock.onerror = () => reject(new Error('WebSocket-Fehler'));
-    sock.onclose = () => reject(new Error('WebSocket geschlossen'));
+    // A socket closed while HA starts (restart, overload) must not leave a command hanging: Node would
+    // end with "unsettled top-level await" and the HA counted as not ready. Reject them; the loop reconnects.
+    sock.onclose = () => {
+      api.closed = true;
+      for (const w of wait.values()) w.rej(new Error('WebSocket geschlossen'));
+      wait.clear();
+      reject(new Error('WebSocket geschlossen'));
+    };
     sock.onmessage = (ev) => {
       const m = JSON.parse(ev.data);
       if (m.type === 'auth_required') sock.send(JSON.stringify({ type: 'auth', access_token: tok.access_token }));
@@ -57,18 +68,23 @@ function connect() {
 }
 
 let c = null;
-while (!c) {
-  try { c = await connect(); } catch (e) {
-    if (Date.now() - t0 > MAX) { console.log('bereit: WebSocket nicht erreichbar: ' + e.message); process.exit(1); }
-    await sleep(500);
-  }
-}
-
 let last = Date.now(), builds = 0;
-c.onEvent((ev) => {
-  if (BUILD.has(ev.event_type) || (ev.event_type === 'state_changed' && ev.data && !ev.data.old_state)) { last = Date.now(); builds++; }
-});
-try { await c.cmd({ type: 'subscribe_events' }); } catch (e) { /* ohne Admin: nur RUNNING + Befehl */ }
+// (Re)connect and subscribe; after a lost socket the quiet time starts again.
+async function open() {
+  c = null;
+  while (!c) {
+    try { c = await connect(); } catch (e) {
+      if (Date.now() - t0 > MAX) { console.log('bereit: WebSocket nicht erreichbar: ' + e.message); process.exit(1); }
+      await sleep(500);
+    }
+  }
+  last = Date.now();
+  c.onEvent((ev) => {
+    if (BUILD.has(ev.event_type) || (ev.event_type === 'state_changed' && ev.data && !ev.data.old_state)) { last = Date.now(); builds++; }
+  });
+  try { await c.cmd({ type: 'subscribe_events' }); } catch (e) { /* ohne Admin: nur RUNNING + Befehl */ }
+}
+await open();
 
 let runningAt = 0;
 for (;;) {
@@ -76,6 +92,7 @@ for (;;) {
     console.log(`bereit: nach ${secs()} s nicht bereit (${runningAt ? 'läuft, aber noch nicht ruhig' : 'Start nicht abgeschlossen'})`);
     c.close(); process.exit(1);
   }
+  if (c.closed) { runningAt = 0; await open(); }
   if (!runningAt) {
     const cfg = await c.cmd({ type: 'get_config' }).catch(() => ({}));
     if (cfg.state === 'RUNNING') { runningAt = Date.now(); last = Math.max(last, runningAt); }
@@ -85,6 +102,7 @@ for (;;) {
 
 let casora = '';
 while (!casora) {
+  if (c.closed) await open();
   try { await c.cmd({ type: 'casora/settings/get' }); casora = 'ok'; } catch (e) {
     if (e.code === 'unknown_command') casora = 'nicht eingerichtet';
     else if (Date.now() - t0 > MAX) casora = 'Fehler ' + e.message;
