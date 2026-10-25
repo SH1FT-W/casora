@@ -10522,6 +10522,72 @@ window.casoraMenuGlass = {
     }
     return k.open;
   };
+  // Summary of several covers for the group tile and its popup (#63): both read the same member list and
+  // the same average. The tile used to show the HA group's own current_position (another member list, 85 %)
+  // next to a popup averaging the listed covers (70 %). A group entity in the list counts by its members;
+  // unavailable, unknown and missing members are left out. Open = position > 0, without a position the
+  // state (open/opening/stopping). The average covers members that report current_position; only when none
+  // does, open counts 100 and closed 0.
+  window.casoraCoverSummary = function (states, ids) {
+    var S = states || {};
+    var seen = {};
+    var list = [];
+    var gone = 0;
+    var add = function (id, depth) {
+      if (!id || seen[id]) return;
+      seen[id] = true;
+      var st = S[id];
+      var m = st && st.attributes && st.attributes.entity_id;
+      // A group whose members HA knows counts by them; one without known members counts as itself.
+      if (Array.isArray(m) && depth < 4 && m.some(function (x) { return x !== id && S[x]; })) {
+        m.forEach(function (x) { add(x, depth + 1); });
+        return;
+      }
+      var s = String((st && st.state) || '').toLowerCase();
+      if (!st || s === 'unavailable' || s === 'unknown' || !s) { gone++; return; }
+      list.push(id);
+    };
+    (Array.isArray(ids) ? ids : [ids]).forEach(function (id) { add(id, 0); });
+    var posOf = function (id) {
+      var p = S[id].attributes && S[id].attributes.current_position;
+      p = p == null || p === '' ? NaN : Number(p);
+      return isFinite(p) ? Math.max(0, Math.min(100, p)) : null;
+    };
+    var open = 0, opening = false, closing = false, sum = 0, n = 0;
+    list.forEach(function (id) {
+      var s = String(S[id].state).toLowerCase();
+      var p = posOf(id);
+      if (s === 'opening') opening = true;
+      if (s === 'closing') closing = true;
+      if (p != null ? p > 0 : (s === 'open' || s === 'opening' || s === 'stopping')) open++;
+      if (p != null) { sum += p; n++; }
+    });
+    var avg = n ? Math.round(sum / n) : (list.length ? Math.round(open * 100 / list.length) : null);
+    return { ids: list, total: list.length, open: open, closed: list.length - open, avg: avg,
+      positions: n, unavailable: gone, moving: opening ? 'opening' : (closing ? 'closing' : null) };
+  };
+  // The words for a summary, the same on tile and popup head (wortliste: „3 von 5 geöffnet“, „Alle geöffnet“).
+  // full: with the average („3 von 6 geöffnet · Ø 70 %“), short: for narrow tiles („3 von 6 geöffnet“).
+  window.casoraCoverSummaryText = function (sum) {
+    var s = sum || { total: 0 };
+    var one = s.total === 1;
+    var avgPart = s.avg != null && s.positions ? 'Ø ' + s.avg + ' %' : '';
+    var full;
+    var short = null;
+    if (!s.total) full = 'Nicht verfügbar';
+    else if (s.moving) full = s.moving === 'opening' ? 'Öffnet sich …' : 'Schließt sich …';
+    else if (!s.open) full = one ? 'Geschlossen' : 'Alle geschlossen';
+    else if (s.open === s.total) {
+      var part = s.positions && s.avg != null && s.avg < 100;
+      if (!part) full = one ? 'Geöffnet' : 'Alle geöffnet';
+      else if (one) full = s.avg + ' % geöffnet';
+      else { full = 'Alle geöffnet · ' + avgPart; short = 'Alle geöffnet'; }
+    } else {
+      short = s.open + ' von ' + s.total + ' geöffnet';
+      full = avgPart ? short + ' · ' + avgPart : short;
+    }
+    return { full: full, short: short || full };
+  };
   // Als URL; eigenes Symbol aus dem Studio (variables.icon_open / icon_closed) geht vor.
   window.casoraCoverIconUrl = function (st, vars) {
     var name = window.casoraCoverIconName(st);
