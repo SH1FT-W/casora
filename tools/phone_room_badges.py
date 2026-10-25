@@ -13,6 +13,7 @@ delivers at runtime (casora-core.js, WS casora/phone_room_badges).
 
 Deliberately different from the desktop:
   - Scenes: no badge, the phone room page has an area of its own for them.
+  - Media opens its popup like on the desktop (#64).
   - Group badges open their sub-row per device (ll-custom casora_phone_row,
     window._casoraFilter.setRow) instead of via the shared helper casora_expanded_row – otherwise
     a tap on the wall tablet opened the row on the phone and vice versa.
@@ -88,6 +89,8 @@ def _row_cards(room: dict) -> list:
                 "casora_phone_row": subs + "return s ? 'energy' : null; ]]]",
                 "haptic": "light",
             }
+        elif kind == "media":
+            pass   # media opens its popup (casora_popup_media, #64), as on the desktop
         elif kind:
             c["tap_action"] = {"action": "fire-dom-event", "casora_phone_row": kind, "haptic": "light"}
         if kind == "security":

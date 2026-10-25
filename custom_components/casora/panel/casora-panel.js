@@ -23286,8 +23286,14 @@ class CasoraPanel extends HTMLElement {
       }
       return e.last_changed;
     };
+    // Same rule as the dashboard badge and its popup (window._casoraMediaBadge.kind, #64): idle with a title
+    // does not count – the Studio said "1 Playing" where the dashboard said "Nichts läuft".
+    const MB = window._casoraMediaBadge;
     const mediaLive = (e) => {
       if (!e) return false;
+      if (MB && typeof MB.kind === "function") {
+        return MB.kind(e, V.pause_timeout_minutes ?? 10, (this._hass || {}).states) !== "rest";
+      }
       const state = String(e.state || "").toLowerCase();
       if (["unavailable", "unknown", "off", "standby"].includes(state)) return false;
       if (["playing", "buffering", "on"].includes(state)) return true;
@@ -23300,7 +23306,7 @@ class CasoraPanel extends HTMLElement {
         if (timeout <= 0) return true;
         return (Date.now() - new Date(pausedSince(e)).getTime()) / 60000 <= timeout;
       }
-      return state === "idle";
+      return false;
     };
     // Am Handy wie am Desktop nur, wenn etwas läuft (casora_mobile_filter_badges ohne always_visible);
     // die Now-Playing-Karte blendet dort die Badge nicht aus.
@@ -23309,8 +23315,7 @@ class CasoraPanel extends HTMLElement {
     if (on("show_media") && mediaShows) {
       const live = players.map(st).find((e) => e && e.state === "playing");
       const artOf = (e) => (e && e.attributes && e.attributes.entity_picture) || null;
-      // Gezählt wie im Dashboard (casora_badge_media_group): jeder aktive Player, auch
-      // pausiert/bereit mit Titel. Sonst stünde „Nichts läuft“, wo das Dashboard „1 läuft“ zeigt.
+      // Counted like the dashboard (casora_badge_media_group): every active player, paused with a title too.
       const playing = players.filter((e) => mediaLive(st(e))).length;
       out.push({
         id: "media", label: "Media", icon: "media", color: "var(--ink)", dim: !live, clip: true,
@@ -23321,7 +23326,8 @@ class CasoraPanel extends HTMLElement {
           const playing = s && s.state === "playing";
           return {
             icon: "media", color: "var(--ink)", dim: !playing, clip: true, label: nameOf(e),
-            text: playing ? (s.attributes.media_title || "Playing") : "Idle",
+            text: playing ? (s.attributes.media_title || "Playing")
+              : s && s.state === "paused" ? "Paused" : s && s.state === "on" ? "On" : "Idle",
             pic: playing ? artOf(s) : null, art: true,
           };
         }),
