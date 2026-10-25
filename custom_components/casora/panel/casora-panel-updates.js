@@ -518,7 +518,7 @@
       const row = el("div", "cu-kv");
       const tx = el("span", "cu-kvtx");
       tx.append(el("b", "", t("Beta versions")), el("small", "", d.hacs
-        ? t("Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list. Going back to an older stable version is not supported.")
+        ? t("Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list.")
         : t("Try new features earlier. Betas can have bugs.")));
       row.appendChild(tx);
       if (!d.hacs && this._boolSwitch) {

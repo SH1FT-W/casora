@@ -2591,7 +2591,6 @@
     "For every climate Velair plans": "Dla każdego klimatyzatora planowanego przez Velair",
     "Velair integration not installed yet": "Integracja Velair nie jest jeszcze zainstalowana",
     "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, cel i tryb na kafelku jak przy termostacie. Okno ma tryb, temperaturę docelową, wentylator, ustawienia wstępne i żaluzje, a także harmonogram Velair: dzisiejsze przedziały, tydzień w skrócie, harmonogram włączony lub wyłączony, wznowienie po ręcznej zmianie i edycję przedziałów dnia. Dla klimatyzatorów planowanych przez integrację Velair.",
-    "Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list. Going back to an older stable version is not supported.": "Casora aktualizuje się przez HACS. Aby wypróbować betę: otwórz Casorę w HACS, ⋮ › „Pobierz ponownie” i wybierz betę z listy wersji. Powrót do starszej stabilnej wersji nie jest potem obsługiwany.",
     "Felt temperature": "Temperatura odczuwalna",
     "Felt temperature sensor": "Czujnik temperatury odczuwalnej",
     "Extra values": "Dodatkowe wartości",
@@ -2620,7 +2619,8 @@
     "Chance of rain": "Szansa na deszcz",
     "Chance of rain today": "Szansa na deszcz dziś",
     "Solar radiation": "Promieniowanie słoneczne",
-    "UV index": "Indeks UV"
+    "UV index": "Indeks UV",
+    "Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list.": "Casora aktualizuje się przez HACS. Aby wypróbować betę: otwórz Casorę w HACS, ⋮ › „Pobierz ponownie” i wybierz betę z listy wersji."
   },
   "patterns": [
     [
