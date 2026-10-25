@@ -11,17 +11,23 @@
 //      searched a list of thousands of ids. Now none watches more than a tenth of the states.
 //   3. A door opening still redraws the contact badge that lists it (it subscribes to its members).
 //   4. Room switch: desktop (view change) and phone (room filter) settle within a sane bound.
-import { open, casoraDashboard, dashboard, check, need, finish, fakeStates } from './lib.mjs';
+//   5. Phone: a change of an entity no card shows redraws (almost) nothing. The room filter rewrote its helper
+//      (input_select.casora_mobile_filter) twice per update – filter overlay, then the smart row inside it – and with
+//      a badge row token (casora_tok) made a new entity object each time: every card at the helper redrew on every
+//      change in the house (12 room headers, weather, badges: ~27 redraws per change, now ≤ 4).
+import { open, casoraDashboard, dashboard, check, need, finish, fakeStates, BASE } from './lib.mjs';
+import { tokens } from '../ws.mjs';
 
 const MAX_SWITCH = 2500;   // ms until no card redraws any more, per switch (measured ~60–160 ms on the test house)
 const MAX_MEDIAN = 1200;
+const MAX_PHONE_DRAWS = 4; // button-card redraws per change of an entity no card shows (phone)
 
 const d = await casoraDashboard((x) => (x.config.views || []).length >= 3);
 await need('Casora dashboard with rooms', d, null);
 const views = (d.config.views || []).map((v, i) => v.path || String(i));
 
 const instrument = () => {
-  const L = window.__qaLag = { uh: 0, themes: 0, keys: {}, last: 0 };
+  const L = window.__qaLag = { uh: 0, themes: 0, keys: {}, last: 0, draws: 0 };
   const hook = () => {
     const H = customElements.get('home-assistant');
     if (H && !H.prototype.__qaLag) {
@@ -38,7 +44,7 @@ const instrument = () => {
     if (B && !B.prototype.__qaLag) {
       B.prototype.__qaLag = true;
       const u = B.prototype.update;
-      B.prototype.update = function (ch) { try { return u.call(this, ch); } finally { L.last = performance.now(); } };
+      B.prototype.update = function (ch) { try { return u.call(this, ch); } finally { L.last = performance.now(); L.draws++; } };
     }
   };
   customElements.whenDefined('home-assistant').then(hook);
@@ -148,6 +154,22 @@ if (d.phone) {
     await check(`phone room switches: no theme list handed to HA, no other _updateHass (${JSON.stringify(extra(a, b))})`,
       b.themes === a.themes && !Object.keys(extra(a, b)).length);
   } else console.log('  (phone dashboard without room filter – phone part skipped)');
+
+  // Foreign changes: the badge rows' token set (as when the server's room badges arrive), then 5 changes of an
+  // entity no card shows.
+  if (ok) {
+    await page.evaluate(() => window._casoraFilter.bump && window._casoraFilter.bump());
+    await page.waitForTimeout(1500);
+    const tok = (await tokens()).access_token;
+    const d0 = await page.evaluate(() => window.__qaLag.draws);
+    for (let i = 0; i < 5; i++) {
+      await fetch(BASE + '/api/states/sensor.casora_qa_foreign', { method: 'POST', headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state: String(100 + i), attributes: { unit_of_measurement: 'W' } }) });
+      await page.waitForTimeout(800);
+    }
+    const per = ((await page.evaluate(() => window.__qaLag.draws)) - d0) / 5;
+    await check(`phone: at most ${MAX_PHONE_DRAWS} redraws per change of an entity no card shows (${per})`, per <= MAX_PHONE_DRAWS, per);
+  }
 }
 
 await finish();
