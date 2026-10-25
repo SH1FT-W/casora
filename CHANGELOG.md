@@ -6,7 +6,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ## 26.10.61 – 25.10.2026
 
-Includes everything from 26.10.60 plus two fixes. Coming from 26.10.59 or older, please read the note below first.
+Includes everything from 26.10.60 plus three fixes. Coming from 26.10.59 or older, please read the note below first.
 
 **Please read before updating:** this version changes parts of Casora's foundation so that Casora can join the official HACS store. Going back to 26.10.59 afterwards is not supported.
 
@@ -30,6 +30,7 @@ Includes everything from 26.10.60 plus two fixes. Coming from 26.10.59 or older,
 ### Fixed
 - **Weather warnings in the bell (#66):** tapping one now always opens the warnings popup with the warning text, also without a weather warning tile on the dashboard. Before, without the tile only the sensor's plain popup ("On · since …") opened.
 - **Studio on the phone:** device fields with a remove button show only one cross. Before, the cross that clears the value sat doubled next to it.
+- **"Open in Home Assistant" on the phone:** the entry on the device page now opens Home Assistant's dialog on the phone too. Before, tapping it did nothing; only the desktop worked.
 - **Lighting badge on Home (#64):** tapping it now opens the room badges also when no Home Assistant light group covers the house. Before, the badge counted the rooms' lights but the row stayed hidden.
 - **Updates tile and popup:** "Restart pending" now shows reliably and live, also in a popup opened with nothing to update, and "Restart now" only appears once no install is running anymore.
 - **3D printer live activity:** a print started right after the previous one now counts from its own start instead of the old job, no longer shows the old 100 % while preparing, and shows the remaining time as soon as the printer knows it.

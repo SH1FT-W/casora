@@ -6,7 +6,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ## 26.10.61 – 25.10.2026
 
-Enthält alles aus 26.10.60 und zwei Fehlerbehebungen. Wer von 26.10.59 oder älter kommt, bitte zuerst den Hinweis unten lesen.
+Enthält alles aus 26.10.60 und drei Fehlerbehebungen. Wer von 26.10.59 oder älter kommt, bitte zuerst den Hinweis unten lesen.
 
 **Bitte vor dem Update lesen:** Diese Version baut Teile von Casoras Unterbau um, damit Casora in den offiziellen HACS-Store kann. Zurück auf 26.10.59 geht danach nicht.
 
@@ -30,6 +30,7 @@ Enthält alles aus 26.10.60 und zwei Fehlerbehebungen. Wer von 26.10.59 oder äl
 ### Behoben
 - **Wetterwarnungen in der Glocke (#66):** Antippen öffnet jetzt immer das Warnungs-Popup mit dem Warntext, auch ohne Wetterwarnungs-Kachel auf dem Dashboard. Vorher kam ohne Kachel nur das allgemeine Popup des Sensors („An · seit …“).
 - **Studio am Handy:** Gerätefelder mit Entfernen-Knopf zeigen nur noch ein Kreuz. Vorher lag das Kreuz zum Leeren des Werts doppelt daneben.
+- **„In Home Assistant öffnen“ am Handy:** Der Eintrag auf der Geräteseite öffnet jetzt auch am Handy den Dialog von Home Assistant. Vorher passierte beim Antippen nichts, nur am Desktop ging es.
 - **Beleuchtungs-Badge auf Zuhause (#64):** Tippen klappt die Raum-Badges jetzt auch ohne Home-Assistant-Lichtgruppe über das Haus auf. Vorher zählte das Badge die Lichter der Räume, die Reihe blieb aber verborgen.
 - **Updates-Kachel und -Popup:** „Neustart ausstehend“ erscheint jetzt zuverlässig und live, auch in einem Popup, das ohne offene Updates geöffnet wurde, und „Jetzt neu starten“ kommt erst, wenn keine Installation mehr läuft.
 - **3D-Drucker-Live-Aktivität:** ein Druck direkt nach dem vorigen zählt jetzt ab seinem eigenen Start statt ab dem alten Auftrag, zeigt beim Vorbereiten nicht mehr die alten 100 % und zeigt die Restzeit, sobald der Drucker sie kennt.
