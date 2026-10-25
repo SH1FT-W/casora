@@ -758,6 +758,23 @@ async def flow():
     await L18._evaluate("d-print", "state")
     check("Printer: resume after pause silent", len(svc18.calls) == 3 and svc18.calls[2][1]["data"]["silent"] is True, svc18.calls)
 
+    # ── Printer 25.10.: next job right after "done" – fresh start, no stale 100 %, end time at once ──
+    st("sensor.p_state", "finish"); st("sensor.p_stage", "idle"); st("sensor.p_pct", "100")
+    await L18._evaluate("d-print", "state")
+    L18.active["d-print"]["since"] = (dt_util.utcnow() - timedelta(hours=4)).isoformat()
+    st("sensor.p_state", "prepare"); st("sensor.p_end", "unknown"); st("sensor.p_rem", "0", unit_of_measurement="h")
+    await L18._evaluate("d-print", "state")
+    d = svc18.calls[-1][1]["data"]
+    check("Printer next job: progress of the old job not shown", "progress" not in d, d)
+    check("Printer next job: running since now, not since the old job",
+          abs(d.get("when", 0) - dt_util.utcnow().timestamp()) < 5, d)
+    n = len(svc18.calls)
+    st("sensor.p_state", "running"); st("sensor.p_stage", "heatbed_preheating"); st("sensor.p_pct", "0")
+    st("sensor.p_end", (dt_util.utcnow() + timedelta(minutes=35)).isoformat())
+    await L18._evaluate("d-print", "state")
+    check("Printer: first end time sent at once", len(svc18.calls) == n + 1
+          and abs(svc18.calls[-1][1]["data"].get("when", 0) - (dt_util.utcnow().timestamp() + 35 * 60)) < 5, svc18.calls[-1])
+
     # ── Scheduled start: start time appears at once, does not drift, delay → run silent ──
     st("sensor.g_state", "delayedstart"); st("sensor.g_start", "0", unit_of_measurement="min"); st("sensor.g_pct", "0")
     L22, svc22 = make([dish("d-d2")])

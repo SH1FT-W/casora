@@ -433,7 +433,8 @@ class Snap:
         such as AMS filament changes) follows on the interval tick. A changed start time sends at once."""
         start = self.end_ts // 60 if self.phase == "delay" and self.end_ts else None
         if self.detail_on_tick:
-            return (self.phase, self.program, None, None, None, self.minor, start)
+            # Whether an end time is known sends at once (Bambu reports it only after "prepare" began).
+            return (self.phase, self.program, None, None, None, self.minor, start, self.end_ts is not None)
         return (self.phase, self.program, self.step, None, self.extra, self.minor, start)
 
 
@@ -699,6 +700,8 @@ def _snap_printer(found: Found, g, now: datetime, lang: int) -> Snap:
         s.critical = T["pause"][lang]
         s.message = _join(T["pausiert"][lang], s.step, task)
     elif raw == "prepare" or stage != "printing":
+        if raw == "prepare" and s.pct == 100:
+            s.pct = None  # Bambu keeps the previous job's 100 % until the new job starts printing
         s.step = step or T["vorbereitung"][lang]
         s.critical = s.step if stage in PRINT_STEP else T["vorbereitung"][lang]  # no raw stage as critical_text
         s.message = _join(task, s.step)
@@ -1094,7 +1097,9 @@ class LiveActivity:
             self._save()
         if snap.phase in ("run", "pause") and snap.start_ts is None and snap.end_ts is None:
             # Without remaining time and without a duration from the device: "running since" from the start of the activity.
-            since = dt_util.parse_datetime(str(act.get("since") or "")) if act else None
+            # A next job while "done" still showed starts its own count (_send gives it a new activity).
+            old_run = act and act.get("phase") not in ("done", "error")
+            since = dt_util.parse_datetime(str(act.get("since") or "")) if old_run else None
             snap.start_ts = int((since or now).timestamp())
         self.snaps[device_id] = snap
         if snap.rest_since and not (prev and prev.rest_since == snap.rest_since):
@@ -1147,7 +1152,10 @@ class LiveActivity:
         tag = self.tag_for(f)
         payload = build_payload(snap, f.kind, self._title(f, lang), tag, self.url, silent,
                                 device_settings(self.cfg, f.device_id)["color"])
-        act = self.active.get(f.device_id) or {"tag": tag, "kind": f.kind, "since": now.isoformat()}
+        act = self.active.get(f.device_id)
+        if act and act.get("phase") in ("done", "error") and snap.phase not in ("done", "error"):
+            act = None  # next job while "done" still showed: a new run with its own start, not the old one's
+        act = act or {"tag": tag, "kind": f.kind, "since": now.isoformat()}
         if snap.phase in ("done", "error") and act.get("phase") not in ("done", "error"):
             act["done_at"] = now.timestamp()
         act["phase"], act["sent_at"], act["title"] = snap.phase, now.timestamp(), payload["title"]
