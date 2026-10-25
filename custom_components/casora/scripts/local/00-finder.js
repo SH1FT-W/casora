@@ -9,6 +9,31 @@
 // Devices without keys (e.g. Zigbee plugs) are helped by device_class.
 // Variables set in the dashboard always win – the finder only fills gaps.
 
+// Entity ids of one device, sorted: an index built once per entity registry object instead of scanning every entity
+// for every device (fridge finder on a house with hundreds of devices: each device scanned all entities, and the
+// Studio asked that for every entity – the Studio hung). HA replaces hass.entities on every registry change, so the
+// object itself is the version (as the other registry caches here); casoraDeviceEntities.reset() after an in-place change.
+//   casoraDeviceEntities(R, devId) → [entity_id] (shared, do not change)
+if (!window.casoraDeviceEntities) {
+  (function () {
+    var memo = { reg: null, map: null };
+    var EMPTY = [];
+    window.casoraDeviceEntities = function (R, devId) {
+      if (!R || !devId) return EMPTY;
+      if (memo.reg !== R) {
+        var map = Object.create(null);
+        Object.keys(R).sort().forEach(function (eid) {
+          var e = R[eid], d = e && e.device_id;
+          if (d) (map[d] || (map[d] = [])).push(eid);
+        });
+        memo = { reg: R, map: map };
+      }
+      return memo.map[devId] || EMPTY;
+    };
+    window.casoraDeviceEntities.reset = function () { memo = { reg: null, map: null }; };
+  })();
+}
+
 // Electricity price for costs in device popups (1.0.3): 1) card variable price_kwh, 2) the price from
 // the Casora settings (outdoor values & electricity price), 3) grid import from HA's energy dashboard
 // (fixed price or live the state of the price entity, CASORA_PRICE_ENTITY). 2) and 3) come with
@@ -304,6 +329,11 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     return out;
   }
 
+  // Entity ids of a device: the shared index (casoraDeviceEntities above), a scan when this block runs alone (unit tests).
+  var devIds = function (R, d) {
+    return window.casoraDeviceEntities ? window.casoraDeviceEntities(R, d)
+      : Object.keys(R).filter(function (x) { return R[x] && R[x].device_id === d; }).sort();
+  };
   // Every entity of the device (with sub-devices), in a stable order.
   function entities(hass, anchor, opts) {
     var devId = deviceOf(hass, anchor);
@@ -311,10 +341,12 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     var ids = (opts && opts.children === false) ? [devId] : family(hass, devId);
     if (opts && opts.siblings) siblings(hass, devId).forEach(function (id) { ids = ids.concat(family(hass, id)); });
     var R = reg(hass);
-    return Object.keys(R).filter(function (eid) {
+    var own = ids.length === 1 ? devIds(R, ids[0])
+      : [].concat.apply([], ids.map(function (d) { return devIds(R, d); })).sort();
+    return own.filter(function (eid) {
       var e = R[eid];
-      return e && ids.indexOf(e.device_id) >= 0 && !e.hidden;
-    }).sort().map(function (eid) {
+      return e && !e.hidden;
+    }).map(function (eid) {
       var e = R[eid];
       return { entity_id: eid, key: e.translation_key || null, domain: eid.split('.')[0],
                device_id: e.device_id, dc: dc(hass, eid), category: e.entity_category || null };
@@ -1848,12 +1880,17 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         progress: k(['program_progress', 'progress']), door: k(['door', 'door_lock', 'door_status'], 'binary_sensor') } },
   ];
 
+  // Entity ids of a device: the shared index (casoraDeviceEntities above), a scan when this block runs alone (unit tests).
+  var devIds = function (R, d) {
+    return window.casoraDeviceEntities ? window.casoraDeviceEntities(R, d)
+      : Object.keys(R).filter(function (x) { return R[x] && R[x].device_id === d; }).sort();
+  };
   function list(hass, devId) {
     var R = reg(hass), S = sts(hass);
-    return Object.keys(R).filter(function (eid) {
+    return devIds(R, devId).filter(function (eid) {
       var e = R[eid];
-      return e && e.device_id === devId && !e.disabled_by && S[eid];
-    }).sort().map(function (eid) {
+      return e && !e.disabled_by && S[eid];
+    }).map(function (eid) {
       var e = R[eid];
       return { entity_id: eid, key: e.translation_key || null, domain: eid.split('.')[0], platform: e.platform || null,
                category: e.entity_category || null };
@@ -2157,12 +2194,17 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   var DOOR_DC = /^(door|opening|garage_door)$/;
   var DEAD = function (s) { return s == null || s === '' || s === 'unknown' || s === 'unavailable'; };
 
+  // Entity ids of a device: the shared index (casoraDeviceEntities above), a scan when this block runs alone (unit tests).
+  var devIds = function (R, d) {
+    return window.casoraDeviceEntities ? window.casoraDeviceEntities(R, d)
+      : Object.keys(R).filter(function (x) { return R[x] && R[x].device_id === d; }).sort();
+  };
   function list(hass, devId) {
     var R = reg(hass), S = sts(hass);
-    return Object.keys(R).filter(function (eid) {
+    return devIds(R, devId).filter(function (eid) {
       var e = R[eid];
-      return e && e.device_id === devId && !e.disabled_by && S[eid];
-    }).sort().map(function (eid) { return item(hass, eid); });
+      return e && !e.disabled_by && S[eid];
+    }).map(function (eid) { return item(hass, eid); });
   }
   function item(hass, eid) {
     var e = reg(hass)[eid] || {}, st = sts(hass)[eid], a = (st && st.attributes) || {};
@@ -2383,8 +2425,17 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   }
   function is(hass, anchor) { return !!find(hass, anchor); }
   // Every fridge in the house: one entry per device, the main entity as anchor.
+  // Kept per registry, devices and states object: the Studio asks for it per candidate entity.
+  var allMemo = { reg: null, devs: null, sts: null, out: null };
   function all(hass) {
-    var D = devs(hass), out = [];
+    var D = devs(hass), R = reg(hass), S = sts(hass);
+    if (allMemo.out && allMemo.reg === R && allMemo.devs === D && allMemo.sts === S) return allMemo.out.slice();
+    var out = allFresh(hass, D);
+    allMemo = { reg: R, devs: D, sts: S, out: out };
+    return out.slice();
+  }
+  function allFresh(hass, D) {
+    var out = [];
     Object.keys(D).forEach(function (id) {
       var d = D[id];
       if (!d || d.disabled_by || d.entry_type === 'service') return;

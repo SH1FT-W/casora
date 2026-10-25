@@ -123,7 +123,8 @@
     if (!e || !e.device_id || !/^(sub|main)$/.test(tk)) return false;
     // Nur Kameras der Reolink-Integration (casora_mock = Test-HA) – eine fremde Kamera am selben Gerät nicht.
     if (e.platform && e.platform !== "reolink" && e.platform !== "casora_mock") return false;
-    const dev = Object.keys(R).filter((x) => R[x] && R[x].device_id === e.device_id);
+    const dev = W.casoraDeviceEntities ? W.casoraDeviceEntities(R, e.device_id)
+      : Object.keys(R).filter((x) => R[x] && R[x].device_id === e.device_id);
     if (!dev.some((x) => R[x].translation_key === "visitor" && x.startsWith("binary_sensor."))) return false;
     return tk === "sub" || !dev.some((x) => x !== id && R[x].translation_key === "sub" && x.startsWith("camera.") && S[x] && !R[x].hidden && !R[x].disabled_by);
   }

@@ -11,7 +11,8 @@ const cut = (src, a, b) => { const i = src.indexOf(a), j = src.indexOf(b, i); as
 const hass = { devices: { robot: { id: 'robot' } }, entities: {}, states: {} };
 const reg = (domain, key, unit, state) => {
   const id = `${domain}.example_robot_${key}`;
-  hass.entities[id] = { entity_id: id, device_id: 'robot', translation_key: key };
+  // A new registry object, as HA hands it over after a change (the finder indexes per registry object).
+  hass.entities = { ...hass.entities, [id]: { entity_id: id, device_id: 'robot', translation_key: key } };
   hass.states[id] = { entity_id: id, state, attributes: unit ? { unit_of_measurement: unit } : {} };
   return id;
 };

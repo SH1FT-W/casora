@@ -4958,9 +4958,10 @@ const TILE_MAIN_FIND = {
   // Liebherr, Home Connect, a device named like a fridge); any temperature sensor would be guesswork.
   // Velair (community card #32): the climates Velair plans (casoraVelairFind – its schedule response, before that its
   // zone sensors) – a climate Velair does not plan has no schedule to show.
-  casora_velair: { domain: "climate",
-    match: (h, id) => !!(window.casoraVelairFind && window.casoraVelairFind.climates(h).indexOf(id) >= 0) },
-  casora_fridge: { match: (h, id) => !!(window.casoraFridgeFind && window.casoraFridgeFind.all(h).some((f) => f.anchor === id)) },
+  // anchors: the finder's whole list, asked once per search (not per entity – per entity the fridge finder walked every
+  // device for each of thousands of entities and the Studio hung).
+  casora_velair: { domain: "climate", anchors: (h) => (window.casoraVelairFind ? window.casoraVelairFind.climates(h) : []) },
+  casora_fridge: { anchors: (h) => (window.casoraFridgeFind ? window.casoraFridgeFind.all(h).map((f) => f.anchor) : []) },
   // Devices plain to see: every lawn mower (regular device card), every Frigate camera (only Frigate sets
   // device_class "camera"; Birdseye is no single camera, as 23-frigate.js), the live camera of a Reolink doorbell
   // (casora-panel-b-ux.js bellCam). Before, adding the tile found them only as an unsure match.
@@ -21639,6 +21640,7 @@ class CasoraPanel extends HTMLElement {
     };
     const coffee = spec && spec.coffee
       ? new Set((typeof window.__casoraCoffeeAnchors === "function" ? window.__casoraCoffeeAnchors(h) : []).map((x) => x.anchor)) : null;
+    const anchors = spec && spec.anchors ? new Set(spec.anchors(h) || []) : null;
     let ids;
     // Washer/dryer/dishwasher: the shared finder (scripts/local/00-finder.js) – the maker's integration before
     // WashData; washer/dryer without either: the smart plugs in the room's area. A dishwasher only from a source
@@ -21665,8 +21667,9 @@ class CasoraPanel extends HTMLElement {
         const dcHit = spec.dc && ((S[id].attributes || {}).device_class === spec.dc);
         const petHit = spec.pet && isPetTracker(h, id);
         const coffeeHit = !!coffee && coffee.has(id);
+        const anchorHit = !!anchors && anchors.has(id);
         const matchHit = !!spec.match && spec.match(h, id);
-        if (!keyHit && !dcHit && !petHit && !coffeeHit && !matchHit) return false;
+        if (!keyHit && !dcHit && !petHit && !coffeeHit && !anchorHit && !matchHit) return false;
         const text = id + " " + nameOf(id) + " " + devName(id);
         if (spec.not && spec.not.test(text)) return false;
         return true;
@@ -21698,7 +21701,8 @@ class CasoraPanel extends HTMLElement {
       let k = null;
       for (const [kind, re] of DEVICE_KINDS) { if (re.test(txt)) { k = kind; break; } }
       if (!k) {
-        const mine = Object.keys(R).filter((x) => R[x] && R[x].device_id === devId);
+        const mine = window.casoraDeviceEntities ? window.casoraDeviceEntities(R, devId)
+          : Object.keys(R).filter((x) => R[x] && R[x].device_id === devId);
         if (mine.some((x) => /^(vacuum|lawn_mower)\./.test(x))) k = "vacuum";
         // The card's own printer rule (casoraDevice.isPrinter: print status or stage sensor).
         else if (window.casoraDevice && window.casoraDevice.isPrinter && window.casoraDevice.isPrinter(h, devId)) k = "printer";
@@ -21736,7 +21740,7 @@ class CasoraPanel extends HTMLElement {
       const lr = laundryRank.has(id) ? laundryRank.get(id) : null;
       const keyHit = lr !== null ? lr < 2 : !!spec && ((spec.keys || []).includes((R[id] || {}).translation_key)
         || platformHit(spec, R[id] || {}, S[id]) || (!!spec.pet && isPetTracker(h, id)) || (!!coffee && coffee.has(id))
-        || (!!spec.match && spec.match(h, id)));
+        || (!!anchors && anchors.has(id)) || (!!spec.match && spec.match(h, id)));
       if (keyHit) score += 8;
       // Hersteller-Integration vor WashData.
       if (lr === 0) score += 1;
