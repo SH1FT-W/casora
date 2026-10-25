@@ -934,7 +934,9 @@ class CasoraSmartRow extends HTMLElement {
       this._vizSweep = null;
       if (!this._initialized) return;
       this._config.cards.forEach((_, i) => this._reported.add(i));
-      let anyVisible = false;
+      // A room without tiles that shows its empty hint stays visible; otherwise every state change
+      // showed the row (show() above) and this sweep hid it again 500 ms later: the hint flickered.
+      let anyVisible = this._emptyHintShown();
       this._wrappers.forEach((wrapper, i) => {
         const card = this._cards[i];
         if (!card) return;
@@ -954,6 +956,12 @@ class CasoraSmartRow extends HTMLElement {
       });
       this.style.display = anyVisible ? '' : 'none';
     }, 500);
+  }
+
+  // True when the empty-room hint exists and the design shows it (--casora-empty-row-display).
+  _emptyHintShown() {
+    const h = this._emptyHint;
+    return !!(h && h.isConnected && getComputedStyle(h).display !== 'none');
   }
 
   _patchNoFilterCard(card) {
@@ -1086,6 +1094,7 @@ class CasoraSmartRow extends HTMLElement {
     if (!this._helpers) this._helpers = await window.loadCardHelpers();
     // Abgebrochener Aufbau (Zeile war zwischendurch nicht im DOM): neu beginnen.
     this.shadowRoot.innerHTML = '';
+    this._emptyHint = null;
     if (!this.isConnected) { this._initializing = false; return; }
 
     const styleEl = document.createElement('style');
@@ -1166,6 +1175,7 @@ class CasoraSmartRow extends HTMLElement {
           + (seg[0] ? '?dash=' + encodeURIComponent(seg[0]) : ''));
       });
       container.appendChild(hint);
+      this._emptyHint = hint;
     }
 
     rowLog('build start', { sort: this._sortEnabled,
