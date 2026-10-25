@@ -2,7 +2,11 @@
 // HACS review (hacs/default#12143): no theme file, no HA theme registry. The integration serves the designs
 // (theme.py) and this script applies them like HA applies a theme: --name for every value (base, then the
 // light/dark mode), --rgb-name for hex colours, in one :root rule with !important. It also puts the design
-// into the browser's copy of HA's theme list, where UIX looks up its theme styles by name.
+// into the browser's copy of HA's theme list, where UIX looks up its theme styles by name and HA's profile
+// theme picker lists them. Owner report on 26.10.60b2: a profile theme named after a Casora design (theme-file
+// era) or HA's "default" hid every Studio choice. Which design shows: profile design > real other HA theme >
+// installation design (also for Backend-selected, unknown and old names); HA's "default" picked = HA's look, but a
+// "default" written by the Studio of 26.10.60b1 is migrated to Backend-selected once per user.
 import fs from 'node:fs';
 import vm from 'node:vm';
 import strict from 'node:assert/strict';
@@ -18,8 +22,9 @@ const T = (bg, extra = {}) => ({
   modes: { light: { 'primary-background-color': bg + 'L' }, dark: { 'primary-background-color': bg + 'D' } }, ...extra,
 });
 
-function env({ cache, hass }) {
+function env({ cache, cache2, hass, updateHass = false }) {
   const store = new Map(Object.entries(cache ? { 'casora.theme.v1': JSON.stringify(cache) } : {}));
+  if (cache2) store.set('casora.theme.v2', JSON.stringify(cache2));
   const events = [];
   const rules = [];
   const mkRule = () => {
@@ -34,7 +39,12 @@ function env({ cache, hass }) {
   };
   const head = { appendChild(el) { el.isConnected = true; el.sheet = { cssRules: [mkRule()] }; rules.push(el.sheet.cssRules[0]); } };
   const attrs = new Set();
-  const haEl = { hass };
+  const settheme = [];
+  const updates = [];
+  const haEl = { hass, dispatchEvent: (e) => { if (e.type === 'settheme') { settheme.push(e.detail.theme);
+    haEl.hass.selectedTheme = { ...(haEl.hass.selectedTheme || {}), ...e.detail }; } } };
+  // HA's root element: _updateHass hands out a new hass (as HA does)
+  if (updateHass) haEl._updateHass = (patch) => { updates.push(patch); haEl.hass = { ...haEl.hass, ...patch }; };
   const doc = {
     head, documentElement: { toggleAttribute: (a, on) => (on ? attrs.add(a) : attrs.delete(a)) },
     querySelector: (s) => (s === 'home-assistant' ? haEl : null),
@@ -53,7 +63,7 @@ function env({ cache, hass }) {
   vm.createContext(ctx);
   vm.runInContext(src, ctx);
   const tick = async () => { for (let i = 0; i < 5; i++) { while (timers.length) timers.shift()(); await new Promise((r) => setImmediate(r)); } };
-  return { api: ctx.casoraTheme, rule: () => rules[rules.length - 1], events, store, haEl, attrs, tick };
+  return { api: ctx.casoraTheme, rule: () => rules[rules.length - 1], events, store, haEl, attrs, tick, settheme, updates };
 }
 
 // 1. Cached design applies at once, before HA is there (no flash on reload)
@@ -86,7 +96,12 @@ function env({ cache, hass }) {
   assert.equal(e.rule().style.get('--primary-background-color')[0], 'gL', 'server design applied');
   assert.ok(hass.themes.themes['Casora Glas'], 'design in the browser copy of HA theme list (UIX)');
   assert.ok(e.events.some((x) => x.type === 'uix-update' && x.detail.reason === 'theme'), 'UIX told to look again');
-  assert.equal(JSON.parse(e.store.get('casora.theme.v1')).name, 'Casora Glas', 'cached for the next load');
+  const cached = JSON.parse(e.store.get('casora.theme.v2'));
+  assert.ok(cached.themes['Casora Glas'] && cached.design === 'Casora Glas', 'cached for the next load');
+  await e.tick();
+  assert.ok(sent.some((m) => m.type === 'casora/theme/get' && m.name === 'Casora Nebel'), 'the other designs are loaded too (HA picker)');
+  assert.ok(['Casora', 'Casora Glas', 'Casora Nebel'].every((n) => hass.themes.themes[n]), 'all designs in HA\'s list');
+  assert.ok(hass.themes.themes.Moonbeam, 'HA\'s own themes stay');
 
   // Dark mode
   hass.themes = { ...hass.themes, darkMode: true };
@@ -94,14 +109,16 @@ function env({ cache, hass }) {
   assert.equal(e.rule().style.get('--primary-background-color')[0], 'gD', 'dark mode values');
   assert.ok(hass.themes.themes['Casora Glas'], 'HA replaced its list: registered again');
 
-  // The browser's own choice: old Casora name → today's design; own HA theme → none; "default" → installation
+  // The profile's choice: a design wins; old name, "default", nothing, unknown → installation; own theme → none
   hass.selectedTheme = { theme: 'Casora Nebel' };
   e.api.apply();
   await e.tick();
-  assert.ok(sent.some((m) => m.type === 'casora/theme/get' && m.name === 'Casora Nebel'), 'other design fetched once');
-  assert.equal(e.rule().style.get('--primary-background-color')[0], 'nD', 'browser design applied');
-  hass.selectedTheme = { theme: 'Hemma 2' };
-  assert.equal(e.api.active(hass), 'Casora Glas', 'Hemma 2 → Casora Glas');
+  assert.equal(e.rule().style.get('--primary-background-color')[0], 'nD', 'profile design applied');
+  assert.equal(sent.filter((m) => m.type === 'casora/theme/get' && m.name === 'Casora Nebel').length, 1, 'fetched once');
+  assert.equal(e.api.active({ ...hass, selectedTheme: { theme: 'Hemma 2' } }), 'Casora Glas', 'old name, installation design Casora Glas');
+  assert.equal(e.api.active({ ...hass, selectedTheme: { theme: 'Casora Weich' } }), 'Casora Glas', 'stale Casora Weich does not hide the installation design');
+  assert.equal(e.api.active({ ...hass, selectedTheme: { theme: 'Gone Theme' } }), 'Casora Glas', 'a name HA no longer has → installation');
+  assert.equal(e.api.active({ ...hass, selectedTheme: { theme: '' } }), 'Casora Glas', 'Backend-selected → installation');
   hass.selectedTheme = { theme: 'Moonbeam' };
   e.api.apply();
   assert.equal(e.api.active(hass), '', 'own HA theme: no Casora design');
@@ -111,16 +128,101 @@ function env({ cache, hass }) {
   hass.selectedTheme = { theme: 'Hemma' };
   assert.equal(e.api.active(hass), '', 'Hemma\'s theme stays while HA has it');
   hass.selectedTheme = { theme: 'default' };
-  assert.equal(e.api.active(hass), '', 'HA\'s built-in theme picked: no Casora design');
+  assert.equal(e.api.active(hass), '', 'HA\'s built-in theme ("Home Assistant") picked: no Casora design');
   hass.selectedTheme = { dark: true };
   assert.equal(e.api.active(hass), 'Casora Glas', 'no own choice → installation design');
 
-  // Installation design "" (own theme) and setting it from the Studio
+  // Installation design "" (own theme): an old name maps to today's design
   cb({ design: '', names: ['Casora', 'Casora Glas', 'Casora Nebel'], hash: '' });
   assert.equal(e.api.active(hass), '');
+  assert.equal(e.api.active({ ...hass, selectedTheme: { theme: 'Hemma 2' } }), 'Casora Glas', 'no installation design: Hemma 2 → Casora Glas');
+  assert.equal(e.api.active({ ...hass, selectedTheme: { theme: 'default' } }), '', '"default" without installation design: none');
   await e.api.set('Casora');
   assert.deepEqual(sent[sent.length - 1], { type: 'casora/theme/set', design: 'Casora' }, 'saved over the WebSocket');
   assert.equal(e.api.design(), 'Casora');
+}
+
+// 4. Owner's path: profile names a design (theme-file era), HA's picker, Studio pick, migration
+{
+  let cb;
+  const sent = [];
+  const userData = {};
+  const conn = {
+    sendMessagePromise: async (m) => {
+      sent.push(m);
+      if (m.type === 'casora/theme/get') return { name: m.name, theme: T(m.name[7] || 'c'), hash: 'x' + m.name };
+      if (m.type === 'frontend/get_user_data') return { value: userData[m.key] ?? null };
+      if (m.type === 'frontend/set_user_data') { userData[m.key] = m.value; return null; }
+      return null;
+    },
+    subscribeMessage: async (fn) => { cb = fn; return () => {}; },
+  };
+  const own = { 'primary-color': '#000' };
+  const list = { Moonbeam: own };
+  const hass = { connection: conn, user: { id: 'u' }, selectedTheme: { theme: 'Casora' }, themes: { darkMode: false, themes: list } };
+  const e = env({ hass, updateHass: true });
+  await e.tick();
+  const names = ['Casora', 'Casora Glas', 'Casora Nebel'];
+  cb({ design: 'Casora', names, hash: 'h', hashes: { Casora: 'h' }, theme: T('c') });
+  await e.tick();
+  const h = () => e.haEl.hass;
+  assert.ok(e.updates.length > 0, 'designs handed to HA as a new theme list (picker is memoised on it)');
+  assert.notEqual(h().themes.themes, list, 'new list object');
+  assert.ok(names.every((n) => h().themes.themes[n]) && h().themes.themes.Moonbeam === own, 'designs + own theme in the list');
+  assert.deepEqual(e.settheme, [''], 'profile "Casora" = installation design → Backend-selected (once)');
+  assert.equal(userData.casora_theme_profile, true, 'migration remembered per user');
+  assert.equal(e.api.active(h()), 'Casora');
+
+  // Profile picks another design in HA's picker: it wins for this user
+  h().selectedTheme = { theme: 'Casora Nebel' };
+  e.api.apply();
+  assert.equal(e.api.active(h()), 'Casora Nebel');
+  // Studio pick: the profile follows the installation again
+  await e.api.set('Casora Glas');
+  assert.deepEqual(e.settheme, ['', ''], 'Studio pick → profile Backend-selected');
+  assert.equal(e.api.active(h()), 'Casora Glas');
+  assert.equal(e.rule().style.get('--primary-background-color')[0], 'GL', 'Studio pick applied at once');
+  // A real theme of the user's own wins over everything
+  h().selectedTheme = { theme: 'Moonbeam' };
+  e.api.apply();
+  assert.equal(e.api.active(h()), '');
+  assert.equal(e.rule().style.size, 0, 'no Casora design over the own theme');
+  // Studio "own theme" ("") keeps an own profile theme
+  await e.api.set('');
+  assert.deepEqual(e.settheme, ['', ''], 'own theme stays in the profile');
+  // Old name of the theme-file era in the profile: rewritten (installation design set → Backend-selected)
+  await e.api.set('Casora');
+  h().selectedTheme = { theme: 'Hemma 2' };
+  e.api.apply();
+  assert.equal(e.settheme[e.settheme.length - 1], '', 'Hemma 2 → Backend-selected');
+  assert.equal(e.api.active(h()), 'Casora');
+  // HA replaces its list (themes_updated): designs put back
+  e.haEl.hass = { ...h(), themes: { ...h().themes, themes: { Moonbeam: own } } };
+  e.api.apply();
+  assert.ok(names.every((n) => h().themes.themes[n]), 'designs back after HA reloaded its themes');
+  // "default" written by the Studio of 26.10.60b1: migrated once per user
+  delete userData.casora_theme_profile;
+  const e3 = env({ hass: { ...hass, selectedTheme: { theme: 'default' } }, updateHass: true });
+  await e3.tick();
+  cb({ design: 'Casora', names, hash: 'h', hashes: {}, theme: T('c') });
+  await e3.tick();
+  assert.deepEqual(e3.settheme, [''], '"default" of 26.10.60b1 → Backend-selected');
+  assert.equal(e3.api.active(e3.haEl.hass), 'Casora');
+  // Second page load: migration not again
+  const e2 = env({ hass: { ...hass, selectedTheme: { theme: 'default' } }, updateHass: true });
+  await e2.tick();
+  cb({ design: 'Casora', names, hash: 'h', hashes: {}, theme: T('c') });
+  await e2.tick();
+  assert.deepEqual(e2.settheme, [], 'per-user migration runs once');
+  assert.equal(e2.api.active(e2.haEl.hass), '', 'afterwards "Home Assistant" picked in the profile is HA\'s look');
+}
+
+// 5. Cache v2: all designs at once on the next load; outdated ones fetched again
+{
+  const e = env({ cache2: { themes: { Casora: T('c'), 'Casora Nebel': T('n') }, hashes: { Casora: 'a', 'Casora Nebel': 'old' },
+    names: ['Casora', 'Casora Nebel'], design: 'Casora Nebel' } });
+  assert.equal(e.rule().style.get('--primary-background-color')[0], 'nL', 'cached design applies before HA is there');
+  assert.ok(e.api.theme('Casora'), 'other designs cached too');
 }
 
 // 3. Nothing cached, nothing chosen: nothing applied

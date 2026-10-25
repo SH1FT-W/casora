@@ -156,6 +156,9 @@ with tempfile.TemporaryDirectory() as d:
     p = rt.payload(None)
     check(p["design"] == G and p["theme"] == themes[G] and p["names"] == names, "first payload carries the design")
     check("theme" not in rt.payload(p["hash"]), "cached version: no theme sent again")
+    check(p["hashes"] == {n: theme.theme_hash(t) for n, t in themes.items()},
+          "payload names every design's version (the browser loads them all for HA's theme picker)")
+    check(set(p["hashes"]) == set(names) and p["hashes"][G] == p["hash"], f"hashes: {p.get('hashes')}")
 
     # 5. Setting the design: saved, every subscriber hears it; unknown names refused
     sent = []

@@ -13998,7 +13998,7 @@ class CasoraPanel extends HTMLElement {
   }
 
   // The design for every device (light and dark): a Casora design, or "" for the user's own HA theme.
-  // This browser follows too if it had picked something of its own.
+  // casoraTheme.set also lets this user's profile theme follow it ("Backend-selected"), so the choice shows here.
   async _applyTheme(name) {
     const CT = casoraThemeApi();
     const design = isCasoraTheme(name) ? (THEME_RENAMED[name] || name) : "";
@@ -14006,13 +14006,6 @@ class CasoraPanel extends HTMLElement {
       if (CT) await CT.set(design);
     } catch (e) {
       console.warn("Casora: design could not be set", e);
-    }
-    let local = null;
-    try { local = JSON.parse(localStorage.getItem("selectedTheme") || "null"); } catch (e) { local = null; }
-    if (design && local && local.theme && local.theme !== "default" && local.theme !== name) {
-      this.dispatchEvent(new CustomEvent("settheme", {
-        detail: { theme: "default" }, bubbles: true, composed: true,
-      }));
     }
   }
 
