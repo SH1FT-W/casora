@@ -19,4 +19,6 @@ const ent = src.indexOf('const entCombo = this._combo(tile.entity');
 assert.ok(ent > 0 && !src.slice(ent, ent + 400).includes('clearable'), 'main entity without ×');
 assert.ok(src.includes('shownSig() !== shown0'), 'dependent fields redraw');
 assert.ok(!/\\0[0-9a-f]{3}/i.test(src.slice(src.indexOf('.combo > .combo-x'), src.indexOf('.combo > .combo-x') + 1500)), 'no octal escape in the CSS');
+// A row with its own remove ✕ (.drop) hides the "×": both sat on top of each other on the phone.
+assert.ok(src.includes(':host .row:has(> .drop:not(.blank)) > .combo.clearable > .combo-x { display:none; }'), 'no second × next to the row ✕');
 console.log('ok feld_leeren');

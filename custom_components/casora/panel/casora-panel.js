@@ -12009,6 +12009,8 @@ class CasoraPanel extends HTMLElement {
         :host(.phone) .row:has(> .drop:not(.blank)) > input { padding-right:50px; }
         :host .row:has(> .drop:not(.blank)) > .combo.hasent > .entface { right:66px; }
         :host(.phone) .row:has(> .drop:not(.blank)) > .combo.hasent > .entface { right:76px; }
+        /* A row with its own ✕ (removes the field) needs no second „ד (clears the value): both sat on top of each other. */
+        :host .row:has(> .drop:not(.blank)) > .combo.clearable > .combo-x { display:none; }
 
         /* Schalter */
         :host(:not(.phone)) .sw { width:46px; height:24px; flex:0 0 46px; }
