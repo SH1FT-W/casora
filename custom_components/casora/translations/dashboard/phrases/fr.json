@@ -2485,7 +2485,12 @@
   "Regen heute": "Pluie aujourd’hui",
   "Niederschlag": "Précipitations",
   "Sonneneinstrahlung": "Rayonnement solaire",
-  "UV-Index": "Indice UV"
+  "UV-Index": "Indice UV",
+  "Unterstream": "Flux secondaire",
+  "Hauptstream": "Flux principal",
+  "Standard": "Standard",
+  "Stream": "Flux",
+  "Stream nicht erreichbar · Standard": "Flux injoignable · Standard"
  },
  "patterns": [
   [

@@ -2485,7 +2485,12 @@
   "Regen heute": "Lluvia hoy",
   "Niederschlag": "Precipitación",
   "Sonneneinstrahlung": "Radiación solar",
-  "UV-Index": "Índice UV"
+  "UV-Index": "Índice UV",
+  "Unterstream": "Subflujo",
+  "Hauptstream": "Flujo principal",
+  "Standard": "Estándar",
+  "Stream": "Flujo",
+  "Stream nicht erreichbar · Standard": "Flujo no disponible · Estándar"
  },
  "patterns": [
   [

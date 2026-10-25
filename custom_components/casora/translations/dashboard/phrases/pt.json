@@ -2485,7 +2485,12 @@
   "Regen heute": "Chuva hoje",
   "Niederschlag": "Precipitação",
   "Sonneneinstrahlung": "Radiação solar",
-  "UV-Index": "Índice UV"
+  "UV-Index": "Índice UV",
+  "Unterstream": "Fluxo secundário",
+  "Hauptstream": "Fluxo principal",
+  "Standard": "Padrão",
+  "Stream": "Fluxo",
+  "Stream nicht erreichbar · Standard": "Fluxo inacessível · Padrão"
  },
  "patterns": [
   [

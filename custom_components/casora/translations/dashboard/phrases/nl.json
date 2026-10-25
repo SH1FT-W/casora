@@ -2485,7 +2485,12 @@
   "Regen heute": "Regen vandaag",
   "Niederschlag": "Neerslag",
   "Sonneneinstrahlung": "Zonnestraling",
-  "UV-Index": "UV-index"
+  "UV-Index": "UV-index",
+  "Unterstream": "Substream",
+  "Hauptstream": "Hoofdstream",
+  "Standard": "Standaard",
+  "Stream": "Stream",
+  "Stream nicht erreichbar · Standard": "Stream niet bereikbaar · Standaard"
  },
  "patterns": [
   [

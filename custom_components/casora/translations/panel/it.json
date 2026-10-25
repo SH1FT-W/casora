@@ -2596,7 +2596,18 @@
     "Felt temperature sensor": "Sensore temperatura percepita",
     "Second curve in the weather popup's temperature chart, when the weather source provides it.": "Seconda curva nel grafico della temperatura del popup meteo, se la fonte meteo la fornisce.",
     "Extra values": "Valori aggiuntivi",
-    "Dew point, wind gusts, cloud cover, chance of rain and more in the weather popup, when the weather source provides them.": "Punto di rugiada, raffiche, nuvolosità, probabilità di pioggia e altro nel popup meteo, se la fonte meteo li fornisce."
+    "Dew point, wind gusts, cloud cover, chance of rain and more in the weather popup, when the weather source provides them.": "Punto di rugiada, raffiche, nuvolosità, probabilità di pioggia e altro nel popup meteo, se la fonte meteo li fornisce.",
+    "Stream on the tile": "Flusso sulla scheda",
+    "Stream on the tile (phone)": "Flusso sulla scheda (telefono)",
+    "Stream in the popup (default)": "Flusso nella finestra (predefinito)",
+    "Stream in the popup on the phone": "Flusso nella finestra sul telefono",
+    "Sub stream": "Flusso secondario",
+    "Main stream": "Flusso principale",
+    "Same as desktop": "Come sul desktop",
+    "Which of the camera's streams plays live on the tile. “Standard” is the stream Home Assistant knows for this camera; the others come from Frigate (go2rtc).": "Quale flusso della telecamera va in diretta sulla scheda. «Standard» è il flusso che Home Assistant conosce per questa telecamera; gli altri arrivano da Frigate (go2rtc).",
+    "On a phone. “Automatic” takes the camera's sub stream when Frigate has one – it needs less data – otherwise the same stream as on the desktop.": "Sul telefono. «Automatico» usa il flusso secondario della telecamera se Frigate ne ha uno – consuma meno dati –, altrimenti lo stesso flusso del desktop.",
+    "The stream the popup starts with. With more than one stream the popup shows a switch below the picture; the choice there holds until the browser is closed.": "Il flusso con cui parte la finestra. Con più di un flusso la finestra mostra un selettore sotto l’immagine; la scelta resta valida finché il browser non viene chiuso.",
+    "On a phone. “Automatic” starts with the sub stream when Frigate has one, otherwise with the desktop's stream.": "Sul telefono. «Automatico» parte con il flusso secondario se Frigate ne ha uno, altrimenti con il flusso del desktop."
   },
   "patterns": [
     [

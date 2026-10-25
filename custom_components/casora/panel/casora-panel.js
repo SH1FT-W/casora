@@ -27898,7 +27898,17 @@ class CasoraPanel extends HTMLElement {
         return;
       }
       if (f.type === "select") {
-        put(f.label, this._combo(String(cur === undefined ? "" : cur), f.options, "",
+        // Choices that depend on the tile's device (Frigate streams, #61): dynOptions(hass, entity, redraw) →
+        // {options, labels} or null while loading (then the fixed options); a stored value stays selectable.
+        let opts = f.options, dynLabels = null;
+        if (typeof f.dynOptions === "function") {
+          let dyn = null;
+          try { dyn = f.dynOptions(this._hass, this._tileEnt(tile), () => { if (this.isConnected) this._renderForm(); }); } catch (e) { dyn = null; }
+          if (dyn && Array.isArray(dyn.options)) { opts = dyn.options; dynLabels = dyn.labels || null; }
+          const c0 = String(cur === undefined ? "" : cur);
+          if (c0 && !opts.includes(c0)) opts = opts.concat([c0]);
+        }
+        put(f.label, this._combo(String(cur === undefined ? "" : cur), opts, "",
           (v) => {
             if (v === "") { if (tile.variables) delete tile.variables[f.key]; }
             else { if (!tile.variables) tile.variables = {}; tile.variables[f.key] = v; }
@@ -27907,7 +27917,7 @@ class CasoraPanel extends HTMLElement {
             if (f.key === "size" && isContainerCard(tile)) setInnerSize(tile, v);
             after();
           },
-          { fixed: true, labels: { "": "Default", ...(f.optionLabels || {}) } }).wrap);
+          { fixed: true, labels: { "": "Default", ...(f.optionLabels || {}), ...(dynLabels || {}) } }).wrap);
         hintUnder();
         return;
       }

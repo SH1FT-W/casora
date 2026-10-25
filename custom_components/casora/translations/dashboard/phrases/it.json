@@ -2485,7 +2485,12 @@
   "Regen heute": "Pioggia oggi",
   "Niederschlag": "Precipitazioni",
   "Sonneneinstrahlung": "Radiazione solare",
-  "UV-Index": "Indice UV"
+  "UV-Index": "Indice UV",
+  "Unterstream": "Flusso secondario",
+  "Hauptstream": "Flusso principale",
+  "Standard": "Standard",
+  "Stream": "Flusso",
+  "Stream nicht erreichbar · Standard": "Flusso non raggiungibile · Standard"
  },
  "patterns": [
   [

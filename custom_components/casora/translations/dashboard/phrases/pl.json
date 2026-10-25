@@ -2485,7 +2485,12 @@
   "Regen heute": "Deszcz dziś",
   "Niederschlag": "Opady",
   "Sonneneinstrahlung": "Promieniowanie słoneczne",
-  "UV-Index": "Indeks UV"
+  "UV-Index": "Indeks UV",
+  "Unterstream": "Strumień pomocniczy",
+  "Hauptstream": "Strumień główny",
+  "Standard": "Standardowy",
+  "Stream": "Strumień",
+  "Stream nicht erreichbar · Standard": "Strumień nieosiągalny · Standardowy"
  },
  "patterns": [
   [

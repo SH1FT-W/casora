@@ -2467,7 +2467,12 @@
   "Regen heute": "Rain today",
   "Niederschlag": "Precipitation",
   "Sonneneinstrahlung": "Solar radiation",
-  "UV-Index": "UV index"
+  "UV-Index": "UV index",
+  "Unterstream": "Sub stream",
+  "Hauptstream": "Main stream",
+  "Standard": "Standard",
+  "Stream": "Stream",
+  "Stream nicht erreichbar · Standard": "Stream not reachable · Standard"
  },
  "patterns": [
   [

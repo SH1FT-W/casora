@@ -2596,7 +2596,18 @@
     "Felt temperature sensor": "Czujnik temperatury odczuwalnej",
     "Second curve in the weather popup's temperature chart, when the weather source provides it.": "Druga krzywa na wykresie temperatury w okienku pogody, jeśli źródło pogody ją dostarcza.",
     "Extra values": "Dodatkowe wartości",
-    "Dew point, wind gusts, cloud cover, chance of rain and more in the weather popup, when the weather source provides them.": "Punkt rosy, porywy wiatru, zachmurzenie, prawdopodobieństwo opadów i więcej w okienku pogody, jeśli źródło pogody je dostarcza."
+    "Dew point, wind gusts, cloud cover, chance of rain and more in the weather popup, when the weather source provides them.": "Punkt rosy, porywy wiatru, zachmurzenie, prawdopodobieństwo opadów i więcej w okienku pogody, jeśli źródło pogody je dostarcza.",
+    "Stream on the tile": "Strumień na kafelku",
+    "Stream on the tile (phone)": "Strumień na kafelku (telefon)",
+    "Stream in the popup (default)": "Strumień w oknie (domyślny)",
+    "Stream in the popup on the phone": "Strumień w oknie na telefonie",
+    "Sub stream": "Strumień pomocniczy",
+    "Main stream": "Strumień główny",
+    "Same as desktop": "Jak na komputerze",
+    "Which of the camera's streams plays live on the tile. “Standard” is the stream Home Assistant knows for this camera; the others come from Frigate (go2rtc).": "Który strumień kamery leci na żywo na kafelku. „Standardowy” to strumień, który Home Assistant zna dla tej kamery; pozostałe pochodzą z Frigate (go2rtc).",
+    "On a phone. “Automatic” takes the camera's sub stream when Frigate has one – it needs less data – otherwise the same stream as on the desktop.": "Na telefonie. „Automatycznie” bierze strumień pomocniczy kamery, jeśli Frigate go ma – zużywa mniej danych – w przeciwnym razie ten sam strumień co na komputerze.",
+    "The stream the popup starts with. With more than one stream the popup shows a switch below the picture; the choice there holds until the browser is closed.": "Strumień, od którego startuje okno. Przy więcej niż jednym strumieniu okno pokazuje przełącznik pod obrazem; wybór obowiązuje do zamknięcia przeglądarki.",
+    "On a phone. “Automatic” starts with the sub stream when Frigate has one, otherwise with the desktop's stream.": "Na telefonie. „Automatycznie” startuje ze strumieniem pomocniczym, jeśli Frigate go ma, w przeciwnym razie ze strumieniem z komputera."
   },
   "patterns": [
     [

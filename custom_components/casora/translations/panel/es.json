@@ -2596,7 +2596,18 @@
     "Felt temperature sensor": "Sensor de sensación térmica",
     "Second curve in the weather popup's temperature chart, when the weather source provides it.": "Segunda curva en el gráfico de temperatura de la ventana del tiempo, si la fuente meteorológica la ofrece.",
     "Extra values": "Valores adicionales",
-    "Dew point, wind gusts, cloud cover, chance of rain and more in the weather popup, when the weather source provides them.": "Punto de rocío, ráfagas, nubosidad, probabilidad de lluvia y más en la ventana del tiempo, si la fuente meteorológica los ofrece."
+    "Dew point, wind gusts, cloud cover, chance of rain and more in the weather popup, when the weather source provides them.": "Punto de rocío, ráfagas, nubosidad, probabilidad de lluvia y más en la ventana del tiempo, si la fuente meteorológica los ofrece.",
+    "Stream on the tile": "Flujo en la tarjeta",
+    "Stream on the tile (phone)": "Flujo en la tarjeta (móvil)",
+    "Stream in the popup (default)": "Flujo en la ventana (predeterminado)",
+    "Stream in the popup on the phone": "Flujo en la ventana en el móvil",
+    "Sub stream": "Subflujo",
+    "Main stream": "Flujo principal",
+    "Same as desktop": "Igual que en el escritorio",
+    "Which of the camera's streams plays live on the tile. “Standard” is the stream Home Assistant knows for this camera; the others come from Frigate (go2rtc).": "Qué flujo de la cámara se reproduce en directo en la tarjeta. «Estándar» es el flujo que Home Assistant conoce para esta cámara; los demás vienen de Frigate (go2rtc).",
+    "On a phone. “Automatic” takes the camera's sub stream when Frigate has one – it needs less data – otherwise the same stream as on the desktop.": "En el móvil. «Automático» usa el subflujo de la cámara si Frigate tiene uno –necesita menos datos–; si no, el mismo flujo que en el escritorio.",
+    "The stream the popup starts with. With more than one stream the popup shows a switch below the picture; the choice there holds until the browser is closed.": "El flujo con el que empieza la ventana. Con más de un flujo, la ventana muestra un selector bajo la imagen; lo elegido ahí vale hasta cerrar el navegador.",
+    "On a phone. “Automatic” starts with the sub stream when Frigate has one, otherwise with the desktop's stream.": "En el móvil. «Automático» empieza con el subflujo si Frigate tiene uno; si no, con el flujo del escritorio."
   },
   "patterns": [
     [
