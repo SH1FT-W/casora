@@ -1882,7 +1882,6 @@
     "Pre-release": "Wersja wstępna",
     "Beta versions": "Wersje beta",
     "Try new features earlier. Betas can have bugs.": "Wypróbuj nowe funkcje wcześniej. Bety mogą zawierać błędy.",
-    "Casora is updated through HACS. Turn on betas there: Show beta versions on the Casora entry.": "Casora jest aktualizowana przez HACS. Włącz tam bety: „Pokaż wersje beta” we wpisie Casory.",
     "Saving didn't work.": "Zapisywanie nie powiodło się.",
     "No release notes.": "Brak informacji o wydaniu.",
     "View on GitHub": "Zobacz na GitHubie",
@@ -2589,7 +2588,8 @@
     "A climate Velair plans": "Klimatyzator planowany przez Velair",
     "For every climate Velair plans": "Dla każdego klimatyzatora planowanego przez Velair",
     "Velair integration not installed yet": "Integracja Velair nie jest jeszcze zainstalowana",
-    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, cel i tryb na kafelku jak przy termostacie. Okno ma tryb, temperaturę docelową, wentylator, ustawienia wstępne i żaluzje, a także harmonogram Velair: dzisiejsze przedziały, tydzień w skrócie, harmonogram włączony lub wyłączony, wznowienie po ręcznej zmianie i edycję przedziałów dnia. Dla klimatyzatorów planowanych przez integrację Velair."
+    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, cel i tryb na kafelku jak przy termostacie. Okno ma tryb, temperaturę docelową, wentylator, ustawienia wstępne i żaluzje, a także harmonogram Velair: dzisiejsze przedziały, tydzień w skrócie, harmonogram włączony lub wyłączony, wznowienie po ręcznej zmianie i edycję przedziałów dnia. Dla klimatyzatorów planowanych przez integrację Velair.",
+    "Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list. Going back to an older stable version is not supported.": "Casora aktualizuje się przez HACS. Aby wypróbować betę: otwórz Casorę w HACS, ⋮ › „Pobierz ponownie” i wybierz betę z listy wersji. Powrót do starszej stabilnej wersji nie jest potem obsługiwany."
   },
   "patterns": [
     [

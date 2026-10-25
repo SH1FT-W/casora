@@ -1882,7 +1882,6 @@
     "Pre-release": "Versione preliminare",
     "Beta versions": "Versioni beta",
     "Try new features earlier. Betas can have bugs.": "Prova prima le nuove funzioni. Le beta possono avere errori.",
-    "Casora is updated through HACS. Turn on betas there: Show beta versions on the Casora entry.": "Casora si aggiorna tramite HACS. Attiva lì le beta: Mostra versioni beta nella voce Casora.",
     "Saving didn't work.": "Il salvataggio non è riuscito.",
     "No release notes.": "Nessuna nota di rilascio.",
     "View on GitHub": "Vedi su GitHub",
@@ -2589,7 +2588,8 @@
     "A climate Velair plans": "Un climatizzatore pianificato da Velair",
     "For every climate Velair plans": "Per ogni climatizzatore pianificato da Velair",
     "Velair integration not installed yet": "Integrazione Velair non ancora installata",
-    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, obiettivo e modalità sul riquadro come per il termostato. Il popup ha modalità, temperatura obiettivo, ventola, preimpostazioni e alette, oltre alla programmazione di Velair: le fasce di oggi, la settimana a colpo d'occhio, programmazione attiva o spenta, ripresa dopo una modifica manuale e modifica delle fasce di un giorno. Per i climatizzatori pianificati dall'integrazione Velair."
+    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, obiettivo e modalità sul riquadro come per il termostato. Il popup ha modalità, temperatura obiettivo, ventola, preimpostazioni e alette, oltre alla programmazione di Velair: le fasce di oggi, la settimana a colpo d'occhio, programmazione attiva o spenta, ripresa dopo una modifica manuale e modifica delle fasce di un giorno. Per i climatizzatori pianificati dall'integrazione Velair.",
+    "Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list. Going back to an older stable version is not supported.": "Casora si aggiorna tramite HACS. Per provare una beta: apri Casora in HACS, ⋮ › «Scarica di nuovo» e scegli la beta nell'elenco delle versioni. Tornare poi a una versione precedente non è supportato."
   },
   "patterns": [
     [

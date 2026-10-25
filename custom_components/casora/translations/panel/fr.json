@@ -1882,7 +1882,6 @@
     "Pre-release": "Préversion",
     "Beta versions": "Versions bêta",
     "Try new features earlier. Betas can have bugs.": "Essaie les nouvelles fonctions plus tôt. Les bêtas peuvent avoir des bugs.",
-    "Casora is updated through HACS. Turn on betas there: Show beta versions on the Casora entry.": "Casora est mis à jour via HACS. Active les bêtas là-bas : Afficher les versions bêta sur l'entrée Casora.",
     "Saving didn't work.": "L'enregistrement n'a pas marché.",
     "No release notes.": "Pas de notes de version.",
     "View on GitHub": "Voir sur GitHub",
@@ -2589,7 +2588,8 @@
     "A climate Velair plans": "Un appareil de climatisation planifié par Velair",
     "For every climate Velair plans": "Pour chaque appareil planifié par Velair",
     "Velair integration not installed yet": "Intégration Velair pas encore installée",
-    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Température, consigne et mode sur la tuile comme pour le thermostat. Le popup propose le mode, la température de consigne, la ventilation, les préréglages et les volets, ainsi que le programme de Velair : les créneaux du jour, la semaine d'un coup d'œil, programme activé ou désactivé, reprise après un réglage manuel et modification des créneaux d'une journée. Pour les appareils planifiés par l'intégration Velair."
+    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Température, consigne et mode sur la tuile comme pour le thermostat. Le popup propose le mode, la température de consigne, la ventilation, les préréglages et les volets, ainsi que le programme de Velair : les créneaux du jour, la semaine d'un coup d'œil, programme activé ou désactivé, reprise après un réglage manuel et modification des créneaux d'une journée. Pour les appareils planifiés par l'intégration Velair.",
+    "Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list. Going back to an older stable version is not supported.": "Casora se met à jour via HACS. Pour essayer une bêta : ouvre Casora dans HACS, ⋮ › « Retélécharger » et choisis la bêta dans la liste des versions. Revenir ensuite à une version stable plus ancienne n'est pas pris en charge."
   },
   "patterns": [
     [

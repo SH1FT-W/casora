@@ -1883,7 +1883,6 @@
     "Pre-release": "Versão preliminar",
     "Beta versions": "Versões beta",
     "Try new features earlier. Betas can have bugs.": "Experimenta as novas funções mais cedo. As betas podem ter erros.",
-    "Casora is updated through HACS. Turn on betas there: Show beta versions on the Casora entry.": "O Casora é atualizado através do HACS. Liga as betas aí: Mostrar versões beta na entrada do Casora.",
     "Saving didn't work.": "Não foi possível guardar.",
     "No release notes.": "Sem notas da versão.",
     "View on GitHub": "Ver no GitHub",
@@ -2589,7 +2588,8 @@
     "A climate Velair plans": "Um climatizador planeado pelo Velair",
     "For every climate Velair plans": "Para cada climatizador planeado pelo Velair",
     "Velair integration not installed yet": "Integração Velair ainda não instalada",
-    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, objetivo e modo no cartão como no termóstato. A janela tem modo, temperatura objetivo, ventilador, predefinições e lâminas, além do horário do Velair: os intervalos de hoje, a semana num relance, horário ligado ou desligado, retomar após uma alteração manual e editar os intervalos de um dia. Para climatizadores planeados pela integração Velair."
+    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, objetivo e modo no cartão como no termóstato. A janela tem modo, temperatura objetivo, ventilador, predefinições e lâminas, além do horário do Velair: os intervalos de hoje, a semana num relance, horário ligado ou desligado, retomar após uma alteração manual e editar os intervalos de um dia. Para climatizadores planeados pela integração Velair.",
+    "Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list. Going back to an older stable version is not supported.": "A Casora é atualizada através do HACS. Para experimentar uma beta: abre a Casora no HACS, ⋮ › «Transferir novamente» e escolhe a beta na lista de versões. Voltar depois a uma versão estável anterior não é suportado."
   },
   "patterns": [
     [

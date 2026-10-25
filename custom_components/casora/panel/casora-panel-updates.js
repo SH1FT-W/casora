@@ -512,13 +512,13 @@
 
     // ── Beta versions (option beta_updates, options.py) ──────────────────────
     // On: the own update entity also reports pre-releases (GitHub prerelease, e.g. 26.10.58b1).
-    // With HACS there is no own update entity: then only the hint to HACS' "Show beta versions".
+    // With HACS there is no own update entity: then only the hint how to pick a beta in HACS (Redownload › version list).
     P._cuBetaBox = function (d) {
       const box = el("div", "cu-box cu-beta");
       const row = el("div", "cu-kv");
       const tx = el("span", "cu-kvtx");
       tx.append(el("b", "", t("Beta versions")), el("small", "", d.hacs
-        ? t("Casora is updated through HACS. Turn on betas there: Show beta versions on the Casora entry.")
+        ? t("Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list. Going back to an older stable version is not supported.")
         : t("Try new features earlier. Betas can have bugs.")));
       row.appendChild(tx);
       if (!d.hacs && this._boolSwitch) {
