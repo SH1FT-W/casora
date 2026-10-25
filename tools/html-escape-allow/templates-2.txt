@@ -18,7 +18,7 @@ dashboards/casora/button_card_templates.json#casora_popup_weather_warning | re:^
 dashboards/casora/button_card_templates.json#casora_popup_weather_warning | re:^(?:meta|rows)$ | built from esc()'d parts above | 3
 # casora_popup_updates
 dashboards/casora/button_card_templates.json#casora_popup_updates | re:^(?:text|tint)$ | headText()/btnLabel(): only called with fixed labels and colour constants | 3
-dashboards/casora/button_card_templates.json#casora_popup_updates | re:^(?:JSON\.stringify\('Verfügbare Updates'\)|_hx)$ | JS source of a nested [[[ ]]] template (literal, fixed object), not HTML | 2
+dashboards/casora/button_card_templates.json#casora_popup_updates | re:^(?:_anyOn|_hx)$ | JS source of a nested [[[ ]]] template (boolean expression picking one of two fixed headings, fixed object), not HTML | 2
 # casora_popup_scenes, casora_scene_core, casora_scene_row
 dashboards/casora/button_card_templates.json#casora_popup_scenes | _lastSnip | JS source of a nested [[[ ]]] template (ids JSON.stringify'd), not HTML | 1
 dashboards/casora/button_card_templates.json#casora_scene_core | re:^(?:ink|circleBg|\(on \? onBg : SC_C\.offBg\))$ | colour-mix() of the escaped tint and constants | 4
