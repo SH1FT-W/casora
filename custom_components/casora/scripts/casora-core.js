@@ -13331,27 +13331,39 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   // rewrite is memoised on it rather than repeated down the tree. Der umgeschriebene
   // Zustand selbst bleibt dasselbe Objekt, solange sich nichts daran ändert – sonst zeichneten
   // alle Karten am Filter-Helfer bei jedem Update im Haus neu.
-  var lastIn = null, lastVal = null, lastOut = null, lastRow = null, lastTok = 0;
+  var lastIn = null, lastWant = null, lastOut = null;
   var entIn = null, entKey = null, entOut = null;
+  // The rewritten entity → HA's own. A card inside a rewritten one (smart row in the filter overlay) hands the
+  // rewritten hass on and it comes through here again: it must stay as it is. Before, that second pass made a new
+  // entity from the rewritten one and the next update one from HA's again – with a badge row (casora_tok set) the
+  // helper was a new object on every update in the house, and every phone card at it redrew (12 room headers,
+  // weather, badges …) and the states were copied twice per update.
+  var rawOf = typeof WeakMap === 'function' ? new WeakMap() : null;
 
   function apply(hass) {
     if (!hass || !hass.states) return hass;
     var ent = hass.states[ENTITY];
     if (!ent) return hass;                    // no helper: nothing to stand in for
+    var raw = (rawOf && rawOf.get(ent)) || ent;
     var v = get();
-    if (ent.state === v && !row && !tok) return hass;
-    if (hass === lastIn && v === lastVal && row === lastRow && tok === lastTok) return lastOut;
-    var key = v + '|' + (row || '') + '|' + tok;
-    if (ent !== entIn || key !== entKey) {
-      var next = Object.assign({}, ent, { state: v });
-      if (row || tok) next.attributes = Object.assign({}, ent.attributes, { casora_row: row, casora_tok: tok });
-      entIn = ent; entKey = key; entOut = next;
+    var want = raw;
+    if (raw.state !== v || row || tok) {
+      var key = v + '|' + (row || '') + '|' + tok;
+      if (raw !== entIn || key !== entKey) {
+        var next = Object.assign({}, raw, { state: v });
+        if (row || tok) next.attributes = Object.assign({}, raw.attributes, { casora_row: row, casora_tok: tok });
+        if (rawOf) rawOf.set(next, raw);
+        entIn = raw; entKey = key; entOut = next;
+      }
+      want = entOut;
     }
+    if (ent === want) return hass;            // already right (also a hass rewritten further up the tree)
+    if (hass === lastIn && want === lastWant) return lastOut;
     var states = Object.assign({}, hass.states);
-    states[ENTITY] = entOut;
+    states[ENTITY] = want;
     var out = Object.assign({}, hass);
     out.states = states;
-    lastIn = hass; lastVal = v; lastOut = out; lastRow = row; lastTok = tok;
+    lastIn = hass; lastWant = want; lastOut = out;
     return out;
   }
 
