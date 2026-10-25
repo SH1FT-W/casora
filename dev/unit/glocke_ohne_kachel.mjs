@@ -22,4 +22,12 @@ assert.equal(synth(['casora_plant'], 'plant.fehlt'), null, 'nur vorhandene Entit
 assert.equal(synth([], 'plant.beispiel'), null);
 // Reihenfolge: echte Kachel → Kachel aus der Konfiguration → nachgebaute Kachel → HA-Dialog.
 assert.ok(/cardFromConfig\(names, fallbackEntity\)\.then\(function \(el\) \{[\s\S]{0,400}if \(!el\) el = cardSynth\(names, fallbackEntity\);\s*if \(!el\) return fall\(\);/.test(core));
+// #66: weather warnings never borrow a warning tile of other sensors („Keine Warnungen“), they get their own hidden tile.
+const own = core.match(/  var OWN_TPL = [^\n]+\n  var ownOnly = function \(names, entityId\) \{[\s\S]*?\n  \};\n/);
+assert.ok(own, 'ownOnly fehlt');
+const ownOnly = new Function('OWN_TILE', own[0] + ' return ownOnly;')(/^(lock|light)\./);
+assert.equal(ownOnly(['casora_weather_warning', 'casora_popup_weather_warning'], 'binary_sensor.nina_warning_x_1'), true);
+assert.equal(ownOnly(['casora_updates'], 'update.x'), false, 'group tiles still fall back to any tile');
+assert.equal(ownOnly([], 'lock.door'), true);
+assert.equal((core.match(/!ownOnly\(names, entityId\)/g) || []).length, 2, 'both fallbacks (DOM and config) use ownOnly');
 console.log('ok glocke_ohne_kachel');

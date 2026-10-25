@@ -12,6 +12,7 @@ const src = [
   pick(/  function standsForGroup\(cfg, entityId\) \{[\s\S]*?\n  \}\n/),
   pick(/  function tileFor\(entityId\) \{[\s\S]*?\n  \}\n/),
   pick(/  var OWN_TILE = [^\n]+\n/),
+  pick(/  var OWN_TPL = [^\n]+\n  var ownOnly = function \(names, entityId\) \{[\s\S]*?\n  \};\n/),
   pick(/  function cardWithTemplate\(names, entityId\) \{[\s\S]*?\n  \}\n/),
 ].join('\n');
 const card = (template, cfg, shown = true) => ({ _config: { template, tap_action: { casora_popup: {} }, ...cfg },

@@ -12457,6 +12457,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   // Devices that have their own tile: without a matching tile never open the popup of some other
   // card with the same template (before: lock entry → popup of another door).
   var OWN_TILE = /^(lock|alarm_control_panel|vacuum|lawn_mower|cover|climate|media_player|camera|light|fan|humidifier|water_heater)\./;
+  // Tiles that show only their own sensors: another tile of the same template shows other warnings („Keine
+  // Warnungen“, #66), so without a tile for this sensor a hidden one is built for it (cardSynth).
+  var OWN_TPL = /^casora_(popup_)?weather_warning$/;
+  var ownOnly = function (names, entityId) {
+    return OWN_TILE.test(entityId || '') || (names || []).some(function (n) { return OWN_TPL.test(n); });
+  };
 
   function cardWithTemplate(names, entityId) {
     var out = null;
@@ -12472,7 +12478,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       })(document, 0);
     };
     if (entityId) scan(entityId);
-    if (!out && !OWN_TILE.test(entityId || '')) scan(null);
+    if (!out && !ownOnly(names, entityId)) scan(null);
     return out;
   }
 
@@ -12492,7 +12498,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       })((cfg.views || []).reduce(function (a, v) {
         return a.concat(v.cards || []);
       }, []));
-      if (!found && entityId && !OWN_TILE.test(entityId)) {
+      if (!found && entityId && !ownOnly(names, entityId)) {
         (function walk(cards) {
           (cards || []).forEach(function (c) {
             if (found || !c || typeof c !== 'object') return;
