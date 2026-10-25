@@ -29,8 +29,12 @@
 (function () {
   if (!window.customElements || window.__casoraPlainEsc) return;
   window.__casoraPlainEsc = true;
+  // Runs on every render of every Casora card: most names have nothing to escape, skip the replace for them.
+  var NEEDS = /[<>"'&]/;
   var once = function (s) {
-    return String(s).replace(/[<>"']|&(?!(?:[a-zA-Z][a-zA-Z0-9]*|#\d+|#x[0-9a-fA-F]+);)/g, function (c) { return window.casoraEsc(c); });
+    s = String(s);
+    if (!NEEDS.test(s)) return s;
+    return s.replace(/[<>"']|&(?!(?:[a-zA-Z][a-zA-Z0-9]*|#\d+|#x[0-9a-fA-F]+);)/g, function (c) { return window.casoraEsc(c); });
   };
   var isTpl = function (v) { return typeof v === 'string' && /^\s*\[\[\[/.test(v); };
   var casoraCard = function (cfg) {

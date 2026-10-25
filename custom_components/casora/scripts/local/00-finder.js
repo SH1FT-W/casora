@@ -937,11 +937,29 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     }
     return { groups: groups, sub: sub, excl: excl, tilt: tilt };
   }
-  window.casoraContacts = contacts;
+  // contacts() reads every binary sensor. Through button-card's state proxy each read subscribes the card to that
+  // entity (it then redrew on every motion sensor of the house, and every further proxy read searched that list),
+  // and it ran again for every card on every update. So: once per states object of HA's root element (HA replaces it
+  // on every change), from its plain states – only when the caller's hass is of the same house (same registry).
+  // Callers read the members they show through their own hass, which subscribes them to just those.
+  var rootHass = function () {
+    try { var ha = document.querySelector('home-assistant'); return (ha && ha.hass) || null; } catch (e) { return null; }
+  };
+  var ccShared = { S: null, R: null, cfg: null, v: null };
+  var contactsShared = function (hass) {
+    var root = rootHass(), raw = root && root.states;
+    if (!raw || !hass || reg(hass) !== reg(root)) return contacts(hass);
+    var cfg = window.CASORA_SETTINGS || null;
+    if (ccShared.S !== raw || ccShared.R !== reg(root) || ccShared.cfg !== cfg) {
+      ccShared = { S: raw, R: reg(root), cfg: cfg, v: contacts(raw === hass.states ? hass : Object.assign({}, hass, { states: raw })) };
+    }
+    return ccShared.v;
+  };
+  window.casoraContacts = contactsShared;
   // Every door and window of the house, merged sensors left out: what the security badge counts
   // on the home view without entries of its own (#39).
   window.casoraHouseContacts = function (hass) {
-    var cc = contacts(hass), out = [];
+    var cc = contactsShared(hass), out = [];
     cc.groups.forEach(function (g) {
       (g.members || []).forEach(function (x) { if (out.indexOf(x) < 0 && cc.excl.indexOf(x) < 0) out.push(x); });
     });
@@ -956,8 +974,8 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   // new one per update (its states are a proxy that stays the same for the card's life, so not those).
   var ccMemo = typeof WeakMap === 'function' ? new WeakMap() : null;
   var contactsOnce = function (hass) {
-    if (!ccMemo || !hass || typeof hass !== 'object') return contacts(hass);
-    if (!ccMemo.has(hass)) ccMemo.set(hass, contacts(hass));
+    if (!ccMemo || !hass || typeof hass !== 'object') return contactsShared(hass);
+    if (!ccMemo.has(hass)) ccMemo.set(hass, contactsShared(hass));
     return ccMemo.get(hass);
   };
   // Kinds of door/window the badge lists itself (security_entity_1…8): contacts, or groups of them.
@@ -1236,22 +1254,28 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   //   alarm alarm triggered, lock jammed, open/unlocked while away
   // Away: an alarm panel is armed „away“/„vacation“, or there are persons and all with
   // a known state are gone (unknown persons do not count as away).
-  var awayMemo = typeof WeakMap === 'function' ? new WeakMap() : null;
+  // Only alarm panels and persons are read (button-card's state proxy subscribes a card to every entity it reads;
+  // reading all of them made each security badge redraw on every change in the house). Remembered per states
+  // object of HA's root element (replaced on every change; button-card's proxy stays the same for a card's life,
+  // so keyed by it the answer never changed); a hit still reads the few ids through the caller's states.
+  var awayMemo = { S: null, ids: null, r: false };
   function securityAway(hass) {
     var S = hass && hass.states;
     if (!S) return false;
-    if (awayMemo && awayMemo.has(S)) return awayMemo.get(S);
+    var root = rootHass(), raw = (root && reg(root) === reg(hass) && root.states) || null;
+    if (raw && awayMemo.S === raw) { awayMemo.ids.forEach(function (id) { return S[id]; }); return awayMemo.r; }
+    var ids = Object.keys(S).filter(function (id) { return id.indexOf('alarm_control_panel.') === 0 || id.indexOf('person.') === 0; });
     var armedAway = false, persons = 0, known = 0, home = 0;
-    Object.keys(S).forEach(function (id) {
+    ids.forEach(function (id) {
       var s = String((S[id] || {}).state || '').toLowerCase();
       if (id.indexOf('alarm_control_panel.') === 0) { if (s === 'armed_away' || s === 'armed_vacation') armedAway = true; }
-      else if (id.indexOf('person.') === 0) {
+      else {
         persons++;
         if (s && s !== 'unknown' && s !== 'unavailable') { known++; if (s === 'home') home++; }
       }
     });
     var r = armedAway || (persons > 0 && known === persons && home === 0);
-    if (awayMemo) awayMemo.set(S, r);
+    if (raw) awayMemo = { S: raw, ids: ids, r: r };
     return r;
   }
   var SEC_RANK = { ok: 0, warn: 1, alarm: 2 };

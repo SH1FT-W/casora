@@ -217,6 +217,74 @@ function env({ cache, cache2, hass, updateHass = false }) {
   assert.equal(e2.api.active(e2.haEl.hass), '', 'afterwards "Home Assistant" picked in the profile is HA\'s look');
 }
 
+// 4b. Register guard (lag report after 26.10.60b2): _updateHass redraws the whole frontend, so the designs go to
+// HA's theme list once per list, never from inside the own call, and at most 3 times in 10 s even when something
+// copies the theme objects into a new list on every update (a loop register → _updateHass → apply → register).
+{
+  const names = ['Casora', 'Casora Glas'];
+  const cache2 = { themes: { Casora: T('c'), 'Casora Glas': T('g') }, hashes: { Casora: 'h', 'Casora Glas': 'g' }, names, design: 'Casora' };
+  const fresh = () => ({ selectedTheme: { theme: 'Casora' }, themes: { darkMode: false, themes: { Moonbeam: { 'primary-color': '#000' } } } });
+  // a. Plain HA: one hand-over, then nothing however often apply() runs (interval, html style changes).
+  {
+    const e = env({ cache2, hass: fresh(), updateHass: true });
+    e.api.apply();
+    const n = e.updates.length;
+    assert.ok(n >= 1 && names.every((x) => e.haEl.hass.themes.themes[x]), 'designs handed to HA');
+    for (let i = 0; i < 20; i++) e.api.apply();
+    assert.equal(e.updates.length, n, 'no further _updateHass for a completed list');
+    assert.equal(e.api.registerStats().updates, n, 'counted');
+    // HA reloads its themes (new list without the designs): handed over once more
+    e.haEl.hass = { ...e.haEl.hass, themes: { ...e.haEl.hass.themes, themes: { Moonbeam: {} } } };
+    e.api.apply(); e.api.apply();
+    assert.equal(e.updates.length, n + 1, 'a new list from HA: once again');
+  }
+  // b. Something copies the theme objects on every update: at most 3 hand-overs, then filled in place.
+  {
+    const e = env({ cache2, hass: fresh(), updateHass: true });
+    e.haEl._updateHass = (patch) => {
+      e.updates.push(patch);
+      const p = patch.themes ? { ...patch, themes: { ...patch.themes, themes: JSON.parse(JSON.stringify(patch.themes.themes)) } } : patch;
+      e.haEl.hass = { ...e.haEl.hass, ...p };
+    };
+    // HA's list now holds copies of the designs (other objects than Casora's)
+    e.haEl.hass = { ...e.haEl.hass, themes: { ...e.haEl.hass.themes, themes: JSON.parse(JSON.stringify(e.haEl.hass.themes.themes)) } };
+    for (let i = 0; i < 30; i++) e.api.apply();
+    assert.ok(e.updates.length <= 3, 'copying list: at most 3 _updateHass in 10 s (' + e.updates.length + ')');
+    assert.ok(e.api.registerStats().inPlace >= 1, 'then filled in place');
+    const n = e.updates.length;
+    for (let i = 0; i < 30; i++) e.api.apply();
+    assert.equal(e.updates.length, n, 'and it stays quiet');
+    assert.ok(names.every((x) => e.haEl.hass.themes.themes[x]), 'designs still in HA\'s list');
+  }
+  // c. _updateHass that applies again right away (synchronous observer): no nested hand-over.
+  {
+    const e = env({ cache2, hass: fresh(), updateHass: true });
+    const orig = e.haEl._updateHass;
+    let depth = 0, maxDepth = 0;
+    e.haEl._updateHass = (patch) => {
+      depth++; maxDepth = Math.max(maxDepth, depth);
+      orig({ ...patch, themes: patch.themes && { ...patch.themes, themes: { ...patch.themes.themes, Other: {} } } });
+      e.haEl.hass = { ...e.haEl.hass, themes: { ...e.haEl.hass.themes, themes: { Moonbeam: {} } } };
+      e.api.apply();
+      depth--;
+    };
+    e.haEl.hass = { ...e.haEl.hass, themes: { ...e.haEl.hass.themes, themes: { Moonbeam: {} } } };
+    e.api.apply();
+    assert.equal(maxDepth, 1, 'never from inside its own _updateHass');
+  }
+  // d. A newer version of a design (hash changed) in a completed list still reaches HA's list.
+  {
+    let cb;
+    const conn = { sendMessagePromise: async () => null, subscribeMessage: async (fn) => { cb = fn; return () => {}; } };
+    const e = env({ cache2, hass: { ...fresh(), connection: conn }, updateHass: true });
+    await e.tick();
+    cb({ design: 'Casora', names, hash: 'h2', hashes: { Casora: 'h2', 'Casora Glas': 'g' }, theme: T('new') });
+    await e.tick();
+    assert.equal(e.haEl.hass.themes.themes.Casora['primary-background-color'], undefined);
+    assert.equal(e.haEl.hass.themes.themes.Casora.modes.light['primary-background-color'], 'newL', 'new version in HA\'s list');
+  }
+}
+
 // 5. Cache v2: all designs at once on the next load; outdated ones fetched again
 {
   const e = env({ cache2: { themes: { Casora: T('c'), 'Casora Nebel': T('n') }, hashes: { Casora: 'a', 'Casora Nebel': 'old' },

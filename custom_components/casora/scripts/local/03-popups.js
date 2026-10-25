@@ -2481,12 +2481,13 @@
   };
 
   /* All bikes of the house: [{dev, name, ids, capacity}], sorted by device name; a bike from the
-     settings (prefix) comes first. */
+     settings (prefix) comes first. Presence by `in` (button-card's state proxy answers it without subscribing
+     the card): a read per entity subscribed the tile to every entity of the house, so it redrew on every change. */
   var scan = function (hass, states) {
     var R = (hass && hass.entities) || {}, D = (hass && hass.devices) || {};
     var score = {};
     Object.keys(R).forEach(function (eid) {
-      var e = R[eid]; if (!e || !states[eid]) return;
+      var e = R[eid]; if (!e || !(eid in states)) return;
       var s = 0;
       if (PLATFORMS.indexOf(e.platform) >= 0) s += 2;
       if (e.translation_key && BIKE_KEYS.indexOf(e.translation_key) >= 0) s += 1;
@@ -2498,7 +2499,7 @@
     };
     var bikes = Object.keys(score).filter(function (d) { return score[d] >= 2; }).map(function (d) {
       var ids = d !== '-' && window.casoraDevice ? window.casoraDevice.entities(hass, d).map(function (x) { return x.entity_id; }) : ofDev(d);
-      return { dev: d, name: String((D[d] && (D[d].name_by_user || D[d].name)) || ''), ids: ids.filter(function (eid) { return !!states[eid]; }) };
+      return { dev: d, name: String((D[d] && (D[d].name_by_user || D[d].name)) || ''), ids: ids.filter(function (eid) { return eid in states; }) };
     }).sort(function (a, b) { return a.name < b.name ? -1 : a.name > b.name ? 1 : 0; });
     // Entities of the integration without a device (older account-wide battery capacity) go to the first bike.
     var loose = bikes.filter(function (b) { return b.dev === '-'; })[0];
@@ -2572,9 +2573,13 @@
   var cache = { reg: null, n: 0, t: 0, bikes: null, maps: {} };
   /* All bikes of the house (cached while the registry and the number of states stay the same). */
   B.bikes = function (states) {
-    var hass = hassOf(), R = hass && hass.entities, n = Object.keys(states || {}).length;
-    if (cache.bikes && cache.reg === R && cache.n === n && Date.now() - cache.t < 15000) return cache.bikes;
-    cache = { reg: R, n: n, t: Date.now(), bikes: scan(hass, states || {}), maps: {} };
+    var hass = hassOf(), R = hass && hass.entities, raw = (hass && hass.states) || states || {};
+    var fresh = cache.bikes && cache.reg === R && Date.now() - cache.t < 15000;
+    /* Counting the states of the proxy costs a walk over all of them: only when HA's states object changed. */
+    if (fresh && cache.raw === raw) return cache.bikes;
+    var n = Object.keys(raw).length;
+    if (fresh && cache.n === n) { cache.raw = raw; return cache.bikes; }
+    cache = { reg: R, raw: raw, n: n, t: Date.now(), bikes: scan(hass, states || {}), maps: {} };
     return cache.bikes;
   };
   /* The bike of the tile (entity of the tile, else the first) with its entity map. */
