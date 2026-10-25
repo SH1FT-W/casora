@@ -13407,7 +13407,15 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       || (o.show_security !== false && (window.casoraHasSec ? window.casoraHasSec(o) : !!(o.security_lock_entity || some('security_entity_', 8)
         || list(o.security_locks) || list(o.security_cameras))))
       || !!energy
-      || (o.show_media !== false && !o.show_now_playing && !!o.media_player_1);
+      || (o.show_media !== false && !o.show_now_playing && !!o.media_player_1)
+      || ownBadge(o);
+  }
+  // Own badges (#53) count as well: a room with only those had no badge row on the phone (#57).
+  function ownBadge(o) {
+    return Array.isArray(o.custom_badges) && o.custom_badges.some(function (b) {
+      return !!b && typeof b === 'object' && ((typeof b.entity === 'string' && !!b.entity)
+        || (typeof b.template === 'string' && !!b.template.trim()));
+    });
   }
 
   // desk: Variablen des Desktop-Raums (oder null), chip: room_chips[<raum>], name: Raumname.

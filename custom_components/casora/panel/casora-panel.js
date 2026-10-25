@@ -2765,6 +2765,37 @@ function fillRoomEnergy(hass, rooms) {
   return n + up;
 }
 
+// #57: a room added in the Studio started without badge devices – its badges were switched on (dashed in the
+// preview), but the dashboard drew none of them, only the own badges; new dashboards fill every room from its HA
+// area (casoraBasis.fillBadges). A room is filled the same way when it is added and, once, on load when it still
+// has no device for lights, climate, security or media (rooms that hit #57). casora_badges_auto marks a filled
+// room: whoever empties it afterwards does not get the devices back. Switched-off badges (show_… false) stay off.
+// Energy has its own automatic (fillRoomEnergy). Returns the rooms filled.
+const ROOM_BADGE_VAR = /^(light_entity_\d+|light_group_entity|light_rooms_auto|climate_entity_\d+|temp_sensor_\d+|humidity_sensor|quality_sensor|security_(locks|cameras|entity_\d+|lock_entity(_\d+)?)|media_player_\d+)$/;
+function roomBadgesEmpty(V) {
+  return !Object.keys(V || {}).some((k) => ROOM_BADGE_VAR.test(k) && !emptyVal(V[k]));
+}
+function fillNewRoomBadges(hass, rooms, only) {
+  const B = typeof window !== "undefined" && window.casoraBasis;
+  if (!B || !B.fillBadges || !hass) return [];
+  const all = rooms || [];
+  const list = (only || all).filter((r) => r && r.variables && !isHomeRoom(r, all) && r.path !== "home"
+    && !r.variables.casora_badges_auto && roomBadgesEmpty(r.variables));
+  if (!list.length) return [];
+  let got = [];
+  try {
+    got = B.fillBadges(hass, list.map((r) => ({ name: r.name, vars: r.variables,
+      only: ["lights", "climate", "security", "media"] })));
+  } catch (e) { return []; }
+  const out = [];
+  list.forEach((r, i) => {
+    if (!(got[i] || []).length) return;
+    r.variables.casora_badges_auto = true;
+    out.push(r);
+  });
+  return out;
+}
+
 // #44: Home without a house sensor counts the rooms (casoraBasis.homeSumIds). While
 // casora_energy_auto is 2 the list is Casora's: on load it follows the rooms (adds and removes),
 // leaves energy_exclude out. A list the user edited (marker false) is never touched. Runs after
@@ -15558,6 +15589,13 @@ class CasoraPanel extends HTMLElement {
         this._log(`rooms: ${dupPaths.length} room(s) shared a path with another room, now their own`, "ok");
         this._markDirty();
       }
+      // #57: rooms added without their area's devices get them now (after _clean: one save fixes the dashboard).
+      const filledRooms = this._state.surface !== "mobile" && !this._saveBlocked
+        ? fillNewRoomBadges(this._hass, this._state.compact.rooms) : [];
+      if (filledRooms.length) {
+        this._log(`badges: ${filledRooms.length} room(s) without badge devices filled from their area`, "ok");
+        this._markDirty();
+      }
       if (this._state.surface !== "mobile" && !this._saveBlocked && prefsHomePower(this._hass, this._state.compact.rooms)) {
         this._log("energy: Home now follows Home Assistant's energy settings", "ok");
         this._markDirty();
@@ -16841,6 +16879,9 @@ class CasoraPanel extends HTMLElement {
         if (fresh.variables[k] === undefined) fresh.variables[k] = clone(v);
       });
     }
+    // #57: the badges' devices from the HA area of the same name, as for a new dashboard (energy: its own automatic).
+    if (fillNewRoomBadges(this._hass, rooms, [fresh]).length) this._log("badges: new room filled from its area", "ok");
+    fillRoomEnergy(this._hass, rooms);
     this._room = rooms.length - 1;
     this._renderTabs();
     this._renderForm();
