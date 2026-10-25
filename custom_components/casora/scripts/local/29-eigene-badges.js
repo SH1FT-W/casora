@@ -8,7 +8,13 @@
 //   window._casoraTemplates.watch(template, cb) → unsubscribe   one HA render_template subscription per template
 //   window._casoraTemplates.text(template)      → last result or null (cached per template string)
 //   window._casoraCustomBadge.view(badge, entity, value, hass) → what the template draws (title, sub, active …)
+//   window._casoraCustomBadge.popupVars(badge) → the badge's own popup as the Universal tile's variables (#60)
 //   <casora-custom-badges>  setConfig({badges, enabled, place}), .hass – the row card
+//
+// Tap "Own popup" (tap: 'own_popup', #60): the badge carries popup: {free_values, free_value_labels, free_chart,
+// free_chart_entity, free_controls, popup_extra_cards, popup_extra_title} – the Universal tile's settings, composed in
+// the Studio with the same fields. The badge card then also gets the template casora_popup_own_badge (built on
+// casora_popup_free), so the popup is the Universal tile's (window._casoraFree.popup in 28-free-tile.js).
 (function () {
   if (window._casoraTemplates) return;
 
@@ -87,6 +93,7 @@
     'false', 'no', 'none', '0', '', 'unavailable', 'unknown', 'aus', 'nein', 'zu', 'geschlossen'];
   var DEAD = ['unavailable', 'unknown', 'none', ''];
   var TEAL = 'var(--casora-color-teal, #4E9E95)';
+  var POPUP_KEYS = ['free_values', 'free_value_labels', 'free_chart', 'free_chart_entity', 'free_controls', 'popup_extra_cards', 'popup_extra_title'];
 
   var stateText = function (e, hass) {
     var raw = String(e.state == null ? '' : e.state);
@@ -133,7 +140,20 @@
       return '<div class="badge-wrap"><div class="badge-title"><span data-no-i18n>' + esc(v.title) + '</span></div>'
         + (v.sub ? '<div class="badge-sub">' + (v.tpl ? '<span data-no-i18n>' + esc(v.sub) + '</span>' : esc(v.sub)) + '</div>' : '') + '</div>';
     },
-    // tap_action of one badge: popup = HA more-info (Casora routes it to the device's page, casora-core.js),
+    // Studio settings of the own popup, flat as the Universal tile's variables (and casoraPopupExtras) read them.
+    hasPopup: function (b) { return !!(b && typeof b === 'object' && b.tap === 'own_popup'); },
+    popupVars: function (b) {
+      var p = b && b.popup && typeof b.popup === 'object' && !Array.isArray(b.popup) ? b.popup : {};
+      var out = {};
+      POPUP_KEYS.forEach(function (k) { if (p[k] !== undefined && p[k] !== null && p[k] !== '') out[k] = p[k]; });
+      if (!b.entity && typeof b.template === 'string' && b.template.trim()) out.free_template = b.template;
+      return out;
+    },
+    popupTitle: function (b, entity) {
+      var n = String((b && b.name) || '').trim();
+      return n || (entity && entity.attributes && entity.attributes.friendly_name) || (entity && entity.entity_id) || 'Badge';
+    },
+    // tap_action of one badge: own_popup = the template's popup action (null: nothing of its own); popup = HA more-info (Casora routes it to the device's page, casora-core.js),
     // navigate = the room's page (phone: its filter), else nothing.
     tap: function (b, place) {
       b = b && typeof b === 'object' ? b : {};
@@ -143,6 +163,7 @@
         var dash = String((typeof location !== 'undefined' && location.pathname) || '').split('/')[1] || 'lovelace';
         return { action: 'navigate', navigation_path: '/' + dash + '/' + String(b.navigate).replace(/^\/+/, ''), haptic: 'light' };
       }
+      if (t === 'own_popup') return null;
       if (t === 'popup' && b.entity) return { action: 'more-info', entity: String(b.entity), haptic: 'light' };
       return { action: 'none' };
     },
@@ -151,12 +172,19 @@
   // ── Row card: one button-card per badge ───────────────────────────────────────
   var keyOf = function (b, i) { try { return i + ':' + JSON.stringify(b); } catch (e) { return i + ':' + String(b); } };
   var cardConfig = function (b, i, place, text) {
+    var CB = window._casoraCustomBadge;
+    var own = CB.hasPopup(b);
+    // The popup settings travel as flat variables only (as on a tile): button-card evaluates variables deeply, a
+    // pasted card's [[[ ]]] inside variables.badge would run twice.
+    var shown = b;
+    if (own || (b && b.popup)) { shown = Object.assign({}, b); delete shown.popup; }
     var cfg = {
       type: 'custom:button-card',
-      template: 'casora_badge_custom',
-      variables: { badge: b, index: i, place: place || 'room', value: text == null ? null : text },
-      tap_action: window._casoraCustomBadge.tap(b, place),
+      template: own ? ['casora_badge_custom', 'casora_popup_own_badge'] : 'casora_badge_custom',
+      variables: Object.assign({ badge: shown, index: i, place: place || 'room', value: text == null ? null : text }, own ? CB.popupVars(b) : {}),
     };
+    var tap = CB.tap(b, place);
+    if (tap) cfg.tap_action = tap;
     if (b && typeof b.entity === 'string' && b.entity) cfg.entity = b.entity;
     return cfg;
   };
@@ -247,5 +275,34 @@
       if (this._hass) it.el.hass = this._hass;
     }
   }
+  // Popup header of an own popup: the badge's colour and icon, sand when the badge looks off (DP-15).
+  var ownView = function (src, key) {
+    if (!/\bcasora_popup_own_badge\b/.test(String(key || '')) || !src || !src._config) return null;
+    var V = src._config.variables || {};
+    return window._casoraCustomBadge.view(V.badge, src._stateObj || null, V.value, src._hass || hassOf());
+  };
+  (window._casoraRingHueHooks = window._casoraRingHueHooks || []).push(function (src, key) {
+    var v = ownView(src, key);
+    return v ? { hue: v.color, off: !v.active } : null;
+  });
+  var prevRingUrl = window.casoraRingUrl;
+  window.casoraRingUrl = function (src, key) {
+    var v = ownView(src, key);
+    if (v && v.svg) return v.svg;
+    return typeof prevRingUrl === 'function' ? prevRingUrl(src, key) : null;
+  };
+  // mdi icon of the badge, else the device's own (the badge draws HA's state icon, which names none).
+  var prevRingGlyph = window.casoraRingGlyph;
+  window.casoraRingGlyph = function (src, key) {
+    var v = ownView(src, key);
+    if (v) {
+      if (v.mdi) return v.mdi;
+      var st = src._stateObj;
+      if (st && window._casoraZiele && window._casoraZiele.iconOf) return window._casoraZiele.iconOf(st);
+      if (st && st.attributes && st.attributes.icon) return st.attributes.icon;
+    }
+    return typeof prevRingGlyph === 'function' ? prevRingGlyph(src, key) : null;
+  };
+
   if (!customElements.get('casora-custom-badges')) customElements.define('casora-custom-badges', CasoraCustomBadges);
 })();

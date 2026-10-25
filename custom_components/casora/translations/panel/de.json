@@ -2561,6 +2561,8 @@
     "A Home Assistant template. Its result is the badge's text and updates live.": "Eine Vorlage von Home Assistant. Ihr Ergebnis steht als Text im Badge und aktualisiert sich laufend.",
     "On tap": "Beim Antippen",
     "Do nothing": "Nichts tun",
+    "Own popup": "Eigenes Popup",
+    "This badge's device": "Gerät dieses Badges",
     "Visible in the popup": "Im Popup sichtbar",
     "A zone temperature, setpoint or door of the fridge": "Eine Zonentemperatur, ein Sollwert oder die Tür des Kühlschranks",
     "Zone 1 temperature": "Temperatur Zone 1",

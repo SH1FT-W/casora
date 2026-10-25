@@ -2560,6 +2560,8 @@
     "A Home Assistant template. Its result is the badge's text and updates live.": "Un template Home Assistant. Son résultat est le texte du badge et se met à jour en direct.",
     "On tap": "Au toucher",
     "Do nothing": "Ne rien faire",
+    "Own popup": "Fenêtre personnalisée",
+    "This badge's device": "Appareil de ce badge",
     "Visible in the popup": "Visible dans la fenêtre",
     "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town.": "P. ex. les alertes NINA ou Meteoalarm ou le niveau d’alerte DWD pour ta ville.",
     "A zone temperature, setpoint or door of the fridge": "Une température de zone, une consigne ou la porte du réfrigérateur",

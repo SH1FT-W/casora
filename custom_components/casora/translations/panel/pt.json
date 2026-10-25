@@ -2561,6 +2561,8 @@
     "A Home Assistant template. Its result is the badge's text and updates live.": "Um modelo do Home Assistant. O resultado é o texto do emblema e atualiza-se em direto.",
     "On tap": "Ao tocar",
     "Do nothing": "Não fazer nada",
+    "Own popup": "Janela própria",
+    "This badge's device": "Dispositivo deste emblema",
     "Visible in the popup": "Visível na janela",
     "A zone temperature, setpoint or door of the fridge": "Uma temperatura de zona, um valor alvo ou a porta do frigorífico",
     "Zone 1 temperature": "Temperatura zona 1",

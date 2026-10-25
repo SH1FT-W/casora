@@ -2560,6 +2560,8 @@
     "A Home Assistant template. Its result is the badge's text and updates live.": "Een Home Assistant-sjabloon. Het resultaat is de tekst van de badge en wordt live bijgewerkt.",
     "On tap": "Bij tikken",
     "Do nothing": "Niets doen",
+    "Own popup": "Eigen venster",
+    "This badge's device": "Apparaat van deze badge",
     "Visible in the popup": "Zichtbaar in het venster",
     "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town.": "Bijv. de NINA- of Meteoalarm-waarschuwingen of het DWD-waarschuwingsniveau voor je woonplaats.",
     "A zone temperature, setpoint or door of the fridge": "Een zonetemperatuur, setpoint of deur van de koelkast",

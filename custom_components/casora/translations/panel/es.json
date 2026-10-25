@@ -2561,6 +2561,8 @@
     "A Home Assistant template. Its result is the badge's text and updates live.": "Una plantilla de Home Assistant. Su resultado es el texto de la insignia y se actualiza en directo.",
     "On tap": "Al tocar",
     "Do nothing": "No hacer nada",
+    "Own popup": "Ventana propia",
+    "This badge's device": "Dispositivo de esta insignia",
     "Visible in the popup": "Visible en la ventana",
     "A zone temperature, setpoint or door of the fridge": "Una temperatura de zona, una consigna o la puerta del frigorífico",
     "Zone 1 temperature": "Temperatura zona 1",
