@@ -27,6 +27,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ### Fixed
 - **Lighting badge on Home (#64):** tapping it now opens the room badges also when no Home Assistant light group covers the house. Before, the badge counted the rooms' lights but the row stayed hidden.
+- **Weather warnings in the bell (#66):** tapping one now always opens the warnings popup with the warning text, also without a weather warning tile on the dashboard. Before, without the tile only the sensor's plain popup ("On · since …") opened.
 - **Updates tile and popup:** "Restart pending" now shows reliably and live, also in a popup opened with nothing to update, and "Restart now" only appears once no install is running anymore.
 - **3D printer live activity:** a print started right after the previous one now counts from its own start instead of the old job, no longer shows the old 100 % while preparing, and shows the remaining time as soon as the printer knows it.
 - **Smoother dashboard in large homes:** badges no longer listen to every entity in the house, and on the phone the room filter no longer redraws about 30 cards on every unrelated change. In a home with 4,700 entities, drawing per state change went from about 14 to 1 ms on desktop and from about 19 to 1 to 4 ms on the phone.

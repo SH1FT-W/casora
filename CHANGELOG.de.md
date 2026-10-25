@@ -27,6 +27,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ### Behoben
 - **Beleuchtungs-Badge auf Zuhause (#64):** Tippen klappt die Raum-Badges jetzt auch ohne Home-Assistant-Lichtgruppe über das Haus auf. Vorher zählte das Badge die Lichter der Räume, die Reihe blieb aber verborgen.
+- **Wetterwarnungen in der Glocke (#66):** Antippen öffnet jetzt immer das Warnungs-Popup mit dem Warntext, auch ohne Wetterwarnungs-Kachel auf dem Dashboard. Vorher kam ohne Kachel nur das allgemeine Popup des Sensors („An · seit …“).
 - **Updates-Kachel und -Popup:** „Neustart ausstehend“ erscheint jetzt zuverlässig und live, auch in einem Popup, das ohne offene Updates geöffnet wurde, und „Jetzt neu starten“ kommt erst, wenn keine Installation mehr läuft.
 - **3D-Drucker-Live-Aktivität:** ein Druck direkt nach dem vorigen zählt jetzt ab seinem eigenen Start statt ab dem alten Auftrag, zeigt beim Vorbereiten nicht mehr die alten 100 % und zeigt die Restzeit, sobald der Drucker sie kennt.
 - **Flüssigeres Dashboard in großen Häusern:** Badges hängen nicht mehr an jeder Entität im Haus, und am Handy zeichnet der Raumfilter bei fremden Änderungen nicht mehr rund 30 Karten neu. In einem Haus mit 4.700 Entitäten sank die Zeichenzeit je Zustandsänderung am Desktop von etwa 14 auf 1 ms und am Handy von etwa 19 auf 1 bis 4 ms.

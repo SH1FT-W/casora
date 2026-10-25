@@ -1561,6 +1561,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
               tone: w.level >= 3 ? 'bad' : 'warn',
               hue: window.casoraWarnHue(w.severity),
               entity: id,
+              // Tap opens the warning popup even without a warning tile on the dashboard (hidden tile of
+              // the template for this sensor); without opens it fell back to the plain entity popup (#66).
+              opens: ['casora_weather_warning', 'casora_popup_weather_warning'],
               rank: 1,
               seen: [id + '|' + kind + '|' + w.severity + '|' + String(w.end || '')],
             });
