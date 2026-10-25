@@ -26,6 +26,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Cleanup:** old program backups of the former self-updater (casora_sicherungen/casora_<version>_<time>.zip) are removed, the newest stays. Dashboard backups and the time travel are not touched.
 
 ### Fixed
+- **Updates tile and popup:** "Restart pending" now shows reliably and live, also in a popup opened with nothing to update, and "Restart now" only appears once no install is running anymore.
 - **3D printer live activity:** a print started right after the previous one now counts from its own start instead of the old job, no longer shows the old 100 % while preparing, and shows the remaining time as soon as the printer knows it.
 - **Smoother dashboard in large homes:** badges no longer listen to every entity in the house, and on the phone the room filter no longer redraws about 30 cards on every unrelated change. In a home with 4,700 entities, drawing per state change went from about 14 to 1 ms on desktop and from about 19 to 1 to 4 ms on the phone.
 - **Blinds (#63):** tile and popup now count and average the same blinds (“4 of 6 open · Ø 50 %”, “All open · Ø 70 %”); without an own list the tile uses the members of the Home Assistant group.
