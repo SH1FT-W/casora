@@ -184,6 +184,8 @@
     b.addEventListener('click', function (ev) { ev.stopPropagation(); if (Date.now() - at > 700) fn(); });
   };
 
+  var rawKey = function (s) { return s.attribute ? s.entity + '#' + s.attribute : s.entity; };
+
   window.casoraChart = C;
   if (typeof customElements === 'undefined' || customElements.get('casora-chart')) return;
 
@@ -283,8 +285,9 @@
       var c = this._c, h = this._h;
       if (c && c.points) { this._draw(); return; }
       if (!c || !h || !h.connection || !c.series.length || !this.isConnected) { this._draw(); return; }
-      var src = this._src(), ids = c.series.map(function (s) { return s.entity; }), per = this._per();
-      var key = ids.join(',') + '|' + c.span + '|' + src + '|' + (c.agg || '') + '|' + per + (c.kind === 'bar' ? '|bar' : '');
+      var src = this._src(), per = this._per();
+      var ids = c.series.map(function (s) { return s.entity; }).filter(function (e, i, a) { return a.indexOf(e) === i; });
+      var key = c.series.map(rawKey).join(',') + '|' + c.span + '|' + src + '|' + (c.agg || '') + '|' + per + (c.kind === 'bar' ? '|bar' : '');
       if (!force && key === this._key && (this._sub || Date.now() - this._at < 5 * MIN)) return;
       this._key = key; this._at = Date.now();
       var hit = cache.get(key);
@@ -294,20 +297,24 @@
       var start = c.kind === 'bar' ? C.starts(now, per, this._n(per))[0] : now - span;
       var put = function (data) { if (me._key !== key) return; me._data = data; cache.set(key, { at: Date.now(), data: data }); me._draw(); };
       var hist = function () {
-        var acc = {}, la = {}, at = {};
-        c.series.forEach(function (s) { acc[s.entity] = []; if (s.attribute) at[s.entity] = s.attribute; });
+        // One list per series: an entity can give several curves (weather attributes, #56).
+        var acc = {}, la = {}, of = {}, attrs = false;
+        c.series.forEach(function (s) {
+          var k = rawKey(s);
+          if (!acc[k]) { acc[k] = []; (of[s.entity] = of[s.entity] || []).push({ k: k, a: s.attribute }); attrs = attrs || !!s.attribute; }
+        });
         me._sub = h.connection.subscribeMessage(function (msg) {
           var st = (msg && msg.states) || {};
           Object.keys(st).forEach(function (e) {
             (st[e] || []).forEach(function (x) {
               // Attribute (e.g. the thermostat's current_temperature): missing → the last one holds.
               if (x.a) la[e] = x.a;
-              if (acc[e]) acc[e].push([(x.lu || x.lc || 0) * 1000, at[e] ? (la[e] || {})[at[e]] : x.s]);
+              (of[e] || []).forEach(function (q) { acc[q.k].push([(x.lu || x.lc || 0) * 1000, q.a ? (la[e] || {})[q.a] : x.s]); });
             });
           });
           put({ src: 'history', raw: acc });
         }, { type: 'history/stream', entity_ids: ids, start_time: new Date(start).toISOString(),
-             minimal_response: !Object.keys(at).length, no_attributes: !Object.keys(at).length, significant_changes_only: false });
+             minimal_response: !attrs, no_attributes: !attrs, significant_changes_only: false });
         me._sub.catch(function () { put({ src: 'history', raw: acc }); });
       };
       if (src === 'history') { hist(); return; }
@@ -329,7 +336,7 @@
         var n = parseFloat(v); return isFinite(n) ? n : null;
       };
       var out = [];
-      if (d.raw) (d.raw[s.entity] || []).forEach(function (p) { var v = num(p[1]); if (v != null) out.push([p[0], v]); });
+      if (d.raw) (d.raw[rawKey(s)] || []).forEach(function (p) { var v = num(p[1]); if (v != null) out.push([p[0], v]); });
       else (d.stats[s.entity] || []).forEach(function (p) {
         var v = d.src === 'change' ? p.change : p.mean != null ? p.mean : p.state;
         var t = typeof p.start === 'number' ? p.start : Date.parse(p.start);

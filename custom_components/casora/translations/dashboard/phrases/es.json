@@ -2490,7 +2490,8 @@
   "Hauptstream": "Flujo principal",
   "Standard": "Estándar",
   "Stream": "Flujo",
-  "Stream nicht erreichbar · Standard": "Flujo no disponible · Estándar"
+  "Stream nicht erreichbar · Standard": "Flujo no disponible · Estándar",
+  "Wind": "Viento"
  },
  "patterns": [
   [

@@ -2472,7 +2472,8 @@
   "Hauptstream": "Main stream",
   "Standard": "Standard",
   "Stream": "Stream",
-  "Stream nicht erreichbar · Standard": "Stream not reachable · Standard"
+  "Stream nicht erreichbar · Standard": "Stream not reachable · Standard",
+  "Wind": "Wind"
  },
  "patterns": [
   [

@@ -2490,7 +2490,8 @@
   "Hauptstream": "Strumień główny",
   "Standard": "Standardowy",
   "Stream": "Strumień",
-  "Stream nicht erreichbar · Standard": "Strumień nieosiągalny · Standardowy"
+  "Stream nicht erreichbar · Standard": "Strumień nieosiągalny · Standardowy",
+  "Wind": "Wiatr"
  },
  "patterns": [
   [
