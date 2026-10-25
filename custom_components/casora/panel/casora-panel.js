@@ -2553,6 +2553,18 @@ const SECTIONS = [
       ], "Popup detail"),   // one per sub-badge: what its popup shows instead of the room's totals
     ],
   },
+  // Scenes badge of a room (desktop and tablet; the phone room page has its own scene area). Home keeps the
+  // dashboard-wide "Scenes" (all scenes of the navigation). Off by default; turning it on the first time fills
+  // the list with the scenes of the room's Home Assistant area (_areaScenes).
+  {
+    label: "Room scenes", title: "Scenes", bid: "scenes", icon: "scenes", iconColor: studioIcon("scenes"), group: "badges",
+    roomOnly: true, toggleFn: "roomScenes",
+    fields: [
+      { ...T("scenes_title", "Name on the badge"), always: true, ord: -1, placeholder: "Scenes" },
+      { ...LIST("scene_entities", "Scenes", ["scene"]), unitLabel: "Scenes", always: true, ord: 1,
+        hint: "Turning the badge on adds the scenes of this room's area." },
+    ],
+  },
   {
     // Own badges (#53): any number, each from a device or a Jinja template; the dashboard draws them after the
     // built-in badges (casora_badge_custom via custom:casora-custom-badges, 29-eigene-badges.js).
@@ -5990,7 +6002,7 @@ const selKeyOf = (mk) => {
     // The inline climate badges (climate:0..2) stand for the same card.
     const base = id.split(":")[0];
     // Das Szenen-Badge gehört zu „Szenen“ (Dashboard-weit): öffnet dessen Editor wie die anderen Badges.
-    if (base === "scenes") return { group: "rooms", key: "Scenes", label: "Scenes" };
+    if (base === "scenes") return { group: "rooms", key: "Scenes", label: "Scenes", sceneBadge: true };
     const sec = SECTIONS.find((x) => x.group === "badges"
       && String(x.label).toLowerCase() === base);
     return sec ? { group: "badges", key: sec.label, label: sec.label } : null;
@@ -17866,7 +17878,9 @@ class CasoraPanel extends HTMLElement {
       });
     });
 
+    const onHome = isHomeRoom(room, this._state.compact.rooms);
     SECTIONS.forEach((sec) => {
+      if (sec.roomOnly && onHome) return;
       const fs = document.createElement("section");
       fs.className = "card";
       fs.dataset.k = sec.label;
@@ -17959,6 +17973,14 @@ class CasoraPanel extends HTMLElement {
         get: () => this._scenesMode() !== "off",
         // Einschalten: als Badge auf Home – so wie Casora neue Dashboards anlegt.
         set: () => this._setScenesMode(this._scenesMode() === "off" ? "badge" : "off"),
+      } : (sec.toggleFn === "roomScenes" ? {
+        get: () => room.variables.show_scenes === true,
+        set: () => {
+          const V = room.variables;
+          if (V.show_scenes === true) { delete V.show_scenes; return; }
+          V.show_scenes = true;
+          if (!Array.isArray(V.scene_entities) || !V.scene_entities.length) V.scene_entities = this._areaScenes(room);
+        },
       } : (sec.toggleFn === "nowplaying" ? {
         get: () => room.variables.show_media !== false && !!room.variables.show_now_playing,
         set: () => {
@@ -17969,7 +17991,7 @@ class CasoraPanel extends HTMLElement {
             if (room.variables.show_media === false) delete room.variables.show_media;
           }
         },
-      } : null));
+      } : null)));
 
       if (toggle) {
         const on = toggle.get();
@@ -20565,6 +20587,11 @@ class CasoraPanel extends HTMLElement {
 
   _select(pick) {
     if (!pick) return;
+    // The scenes badge of a room (not Home) has its own badge section; Home's is the dashboard-wide "Scenes".
+    if (pick.sceneBadge && this._state && this._state.compact
+      && !isHomeRoom(this._state.compact.rooms[this._room], this._state.compact.rooms)) {
+      pick = { group: "badges", key: "Room scenes", label: "Room scenes" };
+    }
     if (pick.group === "tiles" && !pick.label) {
       pick = { group: pick.group, key: pick.key, label: this._tileLabelFor(pick.key) };
     }
@@ -21734,6 +21761,18 @@ class CasoraPanel extends HTMLElement {
 
   // Der HA-Bereich zu einem Studio-Raum: gleicher Name oder gleiche Kennung,
   // Umlaute und Schreibweise egal („Küche“/„kueche“ ↔ Bereich „kuche“).
+  // Scenes of the room's HA area (own area or its device's), by name – the room scenes badge starts with them.
+  _areaScenes(room) {
+    const aid = this._roomArea(room);
+    const H = this._hass || {}, R = H.entities || {}, D = H.devices || {};
+    if (!aid) return [];
+    return Object.keys(H.states || {}).filter((id) => {
+      if (id.indexOf("scene.") !== 0 || !R[id] || R[id].hidden || R[id].disabled_by) return false;
+      return (R[id].area_id || (D[R[id].device_id] || {}).area_id) === aid;
+    }).sort((a, b) => String((H.states[a].attributes || {}).friendly_name || a)
+      .localeCompare(String((H.states[b].attributes || {}).friendly_name || b)));
+  }
+
   _roomArea(room) {
     const A = (this._hass && this._hass.areas) || {};
     if (!room || room.path === "home") return null;
@@ -23336,10 +23375,13 @@ class CasoraPanel extends HTMLElement {
       });
     }
     // Szenen als Badge der Home-Zeile (casora_badge_scene_group): steht dort hinter den sechs.
+    // A room's own scenes badge lists its scene_entities (Home: an expression, all scenes of the navigation).
     if (!forPhone && V.show_scenes === true) {
       const H = this._hass;
-      const ids = (window.casoraNavScenes ? window.casoraNavScenes(H, V.scene_exclude)
-        : this._sceneCatalog().map((x) => x.id)) || [];
+      const own = Array.isArray(V.scene_entities);
+      const ids = own ? V.scene_entities.filter((id) => typeof id === "string" && H.states[id])
+        : (window.casoraNavScenes ? window.casoraNavScenes(H, V.scene_exclude)
+          : this._sceneCatalog().map((x) => x.id)) || [];
       const SC = window._casoraSC;
       const isOn = (id) => { try { return !!(SC && SC.isActive(id, H.states)); } catch (e) { return false; } };
       const act = ids.filter(isOn).length;
@@ -23364,7 +23406,7 @@ class CasoraPanel extends HTMLElement {
         return { icon: "scenes", color: studioIcon("scenes"), dim: !isOn(id),
           label: (s.attributes && s.attributes.friendly_name) || id, text: ago(s.state), raw: true };
       });
-      out.push({ id: "scenes", label: "Scenes", icon: "scenes", color: studioIcon("scenes"),
+      if (!own || ids.length) out.push({ id: "scenes", label: "Scenes", icon: "scenes", color: studioIcon("scenes"),
         dim: !act, text: act ? act + " active" : "None active", subs });
     }
     // „Name auf dem Badge“: eigener Name statt des Standardnamens, unübersetzt (wie im Dashboard).
@@ -25609,15 +25651,16 @@ class CasoraPanel extends HTMLElement {
     const mediaSetUp = RV.show_media !== false && (!!RV.show_now_playing
       || Array.from({ length: 10 }, (_, k) => RV["media_player_" + (k + 1)]).some(Boolean)
       || !!RV.psn_1 || !!RV.psn_2);
+    const onHome = isHomeRoom(room, ((this._state || {}).compact || {}).rooms || []);
     SECTIONS.filter((sec) => sec.group === "badges" && sec.icon && !shown.has(sec.bid)
-      && !(sec.bid === "media" && mediaSetUp))
+      && !(sec.bid === "media" && mediaSetUp) && !(sec.roomOnly && onHome))
       .sort((a, b) => rank(a.bid) - rank(b.bid)).forEach((sec) => {
-      const el = pill({ id: String(sec.label).toLowerCase(), label: sec.label,
+      const el = pill({ id: String(sec.label).toLowerCase(), label: secName(sec),
         icon: sec.icon, color: sec.iconColor || "var(--ink)", subs: [] }, false);
       el.classList.add("ghost");
       delete el.dataset.mk;
       const off = sec.toggle && (room.variables || {})[sec.toggle] === false;
-      el.title = (off ? "Turn on " : "Add ") + sec.label + (off ? " in this room" : " to this room");
+      el.title = (off ? "Turn on " : "Add ") + secName(sec) + (off ? " in this room" : " to this room");
       el.onclick = (ev) => {
         ev.stopPropagation();
         this._select({ group: "badges", key: sec.label, label: sec.label });
@@ -26512,7 +26555,8 @@ class CasoraPanel extends HTMLElement {
   _sceneOrderCard(room, col) {
     const rooms = ((this._state || {}).compact || {}).rooms || [];
     const on = room && rooms[0] === room && (room.variables || {}).show_scenes === true;
-    const had = col.querySelector(':scope > [data-bid="scenes"]');
+    // Only its own card: a room's scenes badge section carries data-bid="scenes" too.
+    const had = col.querySelector(':scope > .scenesorder[data-bid="scenes"]');
     if (!on) { if (had) had.remove(); return; }
     if (had) return;
     const fs = document.createElement("section");
