@@ -140,6 +140,34 @@ console.log('ok Pfade');
 }
 console.log('ok Farben');
 
+// Series switch buttons on a phone (#58): in a popup the button-card cancels the touchend, so no click follows –
+// the finger lifted in place selects; a moved finger (scrolling) does not; the click echo after a touch is dropped.
+{
+  const on = {}, b = { addEventListener: (t, f) => { on[t] = f; } };
+  let n = 0;
+  C.onTap(b, () => n++);
+  const ev = (k, x, y) => ({ [k]: [{ clientX: x, clientY: y }], cancelable: true, stopPropagation() {}, preventDefault() { this.dp = true; } });
+  on.touchstart(ev('touches', 10, 10));
+  const e1 = ev('changedTouches', 14, 12);
+  on.touchend(e1);
+  assert.equal(n, 1, 'finger tap selects');
+  assert.ok(e1.dp, 'touchend cancelled: no ghost click');
+  on.click(ev('x', 0, 0));
+  assert.equal(n, 1, 'click echo dropped');
+  on.touchstart(ev('touches', 10, 10));
+  on.touchend(ev('changedTouches', 10, 60));
+  assert.equal(n, 1, 'a moved finger is scrolling');
+  on.touchend(ev('changedTouches', 10, 10));
+  assert.equal(n, 1, 'touchend without a start is no tap');
+  const on2 = {};
+  let m = 0;
+  C.onTap({ addEventListener: (t, f) => { on2[t] = f; } }, () => m++);
+  on2.click(ev('x', 0, 0));
+  assert.equal(m, 1, 'mouse click selects');
+  win._casoraSuppressDismiss = 0;
+}
+console.log('ok Antippen');
+
 // Größe: ausgeliefert gzip-komprimiert ≤ 13,5 KB (apexcharts-card: ~500 KB), unkomprimiert ≤ 42 KB
 // (bis 26.10.31: 12 KB / 36 KB; bis 26.10.59: 12,5 KB / 37 KB – Balken je Stunde/Tag/Monat mit bis zu vier Reihen
 // nebeneinander, Jahr-Spanne und Monats-Ticks (Diagramm-Karte #50) brauchten ~5 KB).

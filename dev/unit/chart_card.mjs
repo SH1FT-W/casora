@@ -7,8 +7,10 @@ import assert from 'node:assert/strict';
 
 process.env.TZ = process.env.TZ || 'Europe/Berlin';
 globalThis.window = globalThis;
-const clicks = [];
-globalThis.document = { querySelector: () => null, addEventListener: (type, fn) => { if (type === 'click') clicks.push(fn); } };
+const clicks = [], touches = { touchstart: [], touchend: [] };
+globalThis.document = { querySelector: () => null, addEventListener: (type, fn) => {
+  if (type === 'click') clicks.push(fn); else if (touches[type]) touches[type].push(fn);
+} };
 globalThis.addEventListener = () => {};
 window.casoraLocale = () => 'de-DE';
 window.casoraTr = (s) => s;
@@ -217,7 +219,13 @@ answer = { [CPU]: [{ start: h0, mean: 20, min: 10, max: 30 }] };
 let hero = JSON.parse(M.sec('hero', C, states, hass, el)).hero;
 assert.deepEqual([hero.value, hero.read, hero.center], ['23 %', CPU, true]);
 assert.match(hero.sub, /^Ø 30 % · 24 Std\.$/, 'average of the loaded range in the status line');
+shown.length = 0;
 let range = M.sec('range', C, states, hass, el);
+// The range part mounts the chart once per card element (each popup build, also back from a page inside it, #58).
+assert.deepEqual(shown, ['init:casora_chart:' + CPU + '|24h|line'], 'first draw of the range part mounts the chart');
+M.sec('range', C, states, hass, el);
+assert.equal(shown.length, 1, 'a redraw of the same card does not mount again');
+shown.length = 0;
 assert.equal((range.match(/data-casora-cspan="/g) || []).length, 4, 'four ranges incl. the year');
 assert.match(range, /data-casora-cspan="sensor\.heimserver_cpu\|24h" class="hui-sg on">24 Std\./);
 assert.match(range, /data-casora-cspan="sensor\.heimserver_cpu\|7d" class="hui-sg">7 Tage/);
@@ -229,8 +237,10 @@ assert.match(range, /data-casora-cshape="sensor\.heimserver_cpu\|bar" class="hui
 M.setDefaults('sensor.zaehler_energie', {}, 'total');
 range = M.sec('range', { id: 'sensor.zaehler_energie', kind: 'total', series: [] }, states, hass, el);
 assert.match(range, /data-casora-cshape="sensor\.zaehler_energie\|bar" class="hui-sg on">Balken/, 'counter: bars active');
-range = M.sec('range', { id: 'sensor.heimserver_start', kind: null, series: [] }, states, hass, el);
+range = M.sec('range', { id: 'sensor.heimserver_start', kind: null, series: [] }, states, hass, { isConnected: true });
 assert.equal((range.match(/data-casora-cshape="/g) || []).length, 0, 'no chart, no shape switch');
+assert.ok(!shown.some((k) => /heimserver_start/.test(k)), 'no chart to mount for a text sensor');
+shown.length = 0;
 let st = JSON.parse(M.sec('stats', C, states, hass, el));
 assert.equal(st.label, 'Letzte 24 Std.');
 assert.deepEqual(st.rows.map((r) => [r.label, r.value]), [['Höchster Wert', '70 %'], ['Tiefster Wert', '10 %'], ['Durchschnitt', '30 %']]);
@@ -327,6 +337,34 @@ assert.equal(M.shape(CPU), 'bar', 'unknown shape ignored');
 assert.equal(M.shape('sensor.heimserver_ram'), 'line', 'other sensors untouched');
 M.setShape(CPU, 'line');
 M.setSpan(CPU, '30d');
+// Finger tap (#58): button-card cancels the touchend in the popup, so no click follows – the touchend itself switches.
+// A second touchstart of the same finger with a path without the segment (seen in the popup) keeps the start;
+// a touch that moved is scrolling; the click echo right after a handled touch is dropped.
+const touchEv = (type, path, x, y, extra) => Object.assign({ type, composedPath: () => path, preventDefault() { this.prevented = true; },
+  stopPropagation: () => {}, touches: type === 'touchstart' ? [{ clientX: x, clientY: y, identifier: 7 }] : [],
+  changedTouches: [{ clientX: x, clientY: y, identifier: 7 }] }, extra || {});
+const fire = (ev) => { (touches[ev.type] || clicks).forEach((fn) => fn(ev)); return ev; };
+const seg7 = { attrs: { 'data-casora-cspan': CPU + '|7d' }, getAttribute(k) { return this.attrs[k]; }, hasAttribute(k) { return k in this.attrs; } };
+const bar = { attrs: { 'data-casora-cshape': CPU + '|bar' }, getAttribute(k) { return this.attrs[k]; }, hasAttribute(k) { return k in this.attrs; } };
+const box = { getAttribute: () => null, hasAttribute: () => false };
+fire(touchEv('touchstart', [seg7, box], 100, 200));
+fire(touchEv('touchstart', [box], 100, 200));
+let te = fire(touchEv('touchend', [seg7, box], 103, 202));
+assert.equal(M.span(CPU), '7d', 'finger tap on "7 Tage" switches without a click');
+assert.ok(te.prevented, 'touchend handled: no ghost click');
+fire({ type: 'click', composedPath: () => [{ attrs: { 'data-casora-cspan': CPU + '|1y' }, getAttribute(k) { return this.attrs[k]; }, hasAttribute(k) { return k in this.attrs; } }], preventDefault() {}, stopPropagation() {} });
+assert.equal(M.span(CPU), '7d', 'click echo right after the touch is dropped');
+fire(touchEv('touchstart', [bar], 50, 300));
+fire(touchEv('touchend', [bar], 50, 340));
+assert.equal(M.shape(CPU), 'line', 'a touch that moved (scrolling the sheet) is no tap');
+fire(touchEv('touchstart', [bar], 50, 300));
+fire(touchEv('touchend', [bar], 51, 301));
+assert.equal(M.shape(CPU), 'bar', 'finger tap on "Balken"');
+fire(touchEv('touchstart', [box], 10, 10));
+fire(touchEv('touchend', [{ attrs: { 'data-casora-cspan': CPU + '|1y' }, getAttribute(k) { return this.attrs[k]; }, hasAttribute(k) { return k in this.attrs; } }], 10, 10));
+assert.equal(M.span(CPU), '7d', 'a touch that started elsewhere is no tap on a segment');
+M.setShape(CPU, 'line');
+M.setSpan(CPU, '30d');
 console.log('ok range tap');
 
 // Popup layout with the soft kit stub: chart configs for all ranges registered, chart slot static, lines only with 2+.
@@ -341,13 +379,16 @@ const keys = [];
 assert.deepEqual(Object.keys(window._hpPlantCfg).sort(), keys.sort(), 'one config per range and shape');
 assert.equal(window._hpPlantCfg['casora_chart:' + CPU + '|7d|line'].series.length, 2);
 assert.deepEqual([window._hpPlantCfg['casora_chart:' + CPU + '|1y|bar'].kind, window._hpPlantCfg['casora_chart:' + CPU + '|1y|bar'].period], ['bar', 'month']);
-assert.deepEqual(shown, ['init:casora_chart:' + CPU + '|30d|line'], 'the remembered range is mounted with the automatic shape');
+assert.deepEqual(shown, [], 'the popup template mounts nothing itself (back from a page reuses the built config)');
+M.sec('range', { id: CPU, kind: 'measurement', series: [] }, states, hass, { isConnected: true });
+assert.deepEqual(shown, ['init:casora_chart:' + CPU + '|30d|line'], 'a new range card mounts the remembered range with the automatic shape');
 assert.deepEqual(lay.fields.hero.card.watch, [CPU, 'sensor.heimserver_ram']);
 // Studio defaults: "Range when opening" and "Display" apply to a sensor without a session choice; a choice made
 // in the popup wins for the session.
 shown.length = 0;
 M.popup(states['sensor.heimserver_temp'], states, hass, { chart_span: '7d', chart_kind: 'bar' });
 assert.deepEqual([M.span('sensor.heimserver_temp'), M.shape('sensor.heimserver_temp')], ['7d', 'bar']);
+M.sec('range', { id: 'sensor.heimserver_temp', kind: 'measurement', series: [] }, states, hass, { isConnected: true });
 assert.deepEqual(shown, ['init:casora_chart:sensor.heimserver_temp|7d|bar'], 'Studio defaults mount the first chart');
 M.popup(states['sensor.zaehler_energie'], states, hass, { chart_span: '1y' });
 assert.deepEqual([M.span('sensor.zaehler_energie'), M.shape('sensor.zaehler_energie')], ['1y', 'bar'], 'year on opening, counter → bars');

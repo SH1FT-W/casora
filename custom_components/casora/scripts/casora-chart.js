@@ -169,6 +169,22 @@
     h = (h * 60 + 360) % 360;
     return 'var(--cc' + (h < 42 || h >= 330 ? 2 : h < 70 ? 4 : h < 175 ? 3 : 1) + ')';
   };
+  // Tap: click, or a finger lifted where it went down – in a button-card (popups) the card cancels the touchend,
+  // so a phone sends no click (#58). The click echo after a touch is dropped.
+  var onTap = C.onTap = function (b, fn) {
+    var t0, at = 0, pt = function (ev, k) { return ev[k] && ev[k].length === 1 && ev[k][0]; };
+    b.addEventListener('touchstart', function (ev) { t0 = pt(ev, 'touches'); }, { passive: true });
+    b.addEventListener('touchend', function (ev) {
+      var s = t0, t = pt(ev, 'changedTouches');
+      t0 = null;
+      if (!s || !t || Math.abs(t.clientX - s.clientX) > 10 || Math.abs(t.clientY - s.clientY) > 10) return;
+      at = Date.now(); window._casoraSuppressDismiss = at + 600;
+      ev.stopPropagation(); if (ev.cancelable) ev.preventDefault();
+      fn();
+    });
+    b.addEventListener('click', function (ev) { ev.stopPropagation(); if (Date.now() - at > 700) fn(); });
+  };
+
   window.casoraChart = C;
   if (typeof customElements === 'undefined' || customElements.get('casora-chart')) return;
 
@@ -359,7 +375,7 @@
           b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(i === me._sel));
           b.innerHTML = '<i style="background:' + window.casoraEsc(C.color(s.color)) + '"></i>';
           b.appendChild(document.createTextNode(C.tr(s.name || s.entity)));
-          b.addEventListener('click', function (ev) { ev.stopPropagation(); me._sel = i; me._draw(); });
+          onTap(b, function () { me._sel = i; me._draw(); });
           sw.appendChild(b);
         });
         box.appendChild(sw);
