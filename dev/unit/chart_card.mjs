@@ -7,9 +7,9 @@ import assert from 'node:assert/strict';
 
 process.env.TZ = process.env.TZ || 'Europe/Berlin';
 globalThis.window = globalThis;
-const clicks = [], touches = { touchstart: [], touchend: [] };
+const clicks = [], touches = { touchstart: [], touchend: [] }, other = {};
 globalThis.document = { querySelector: () => null, addEventListener: (type, fn) => {
-  if (type === 'click') clicks.push(fn); else if (touches[type]) touches[type].push(fn);
+  if (type === 'click') clicks.push(fn); else if (touches[type]) touches[type].push(fn); else (other[type] = other[type] || []).push(fn);
 } };
 globalThis.addEventListener = () => {};
 window.casoraLocale = () => 'de-DE';
@@ -383,6 +383,19 @@ assert.deepEqual(shown, [], 'the popup template mounts nothing itself (back from
 M.sec('range', { id: CPU, kind: 'measurement', series: [] }, states, hass, { isConnected: true });
 assert.deepEqual(shown, ['init:casora_chart:' + CPU + '|30d|line'], 'a new range card mounts the remembered range with the automatic shape');
 assert.deepEqual(lay.fields.hero.card.watch, [CPU, 'sensor.heimserver_ram']);
+// Series picked in the chart's own switch (different units, #58): casora-chart-select is kept for the session and
+// written into every config of that tile, so a range switch or "Zurück" (both mount a new chart) shows it again.
+assert.equal(M.sel(CPU), null);
+other['casora-chart-select'].forEach((fn) => fn({ detail: { main: CPU, entity: 'sensor.heimserver_ram' } }));
+assert.equal(M.sel(CPU), 'sensor.heimserver_ram');
+assert.ok(keys.every((k) => window._hpPlantCfg[k].selected === 'sensor.heimserver_ram'), 'all ranges and shapes keep the pick');
+M.popup(states[CPU], states, hass, { entity_2: 'sensor.heimserver_ram' });
+assert.equal(window._hpPlantCfg['casora_chart:' + CPU + '|7d|bar'].selected, 'sensor.heimserver_ram', 'a new build of the popup keeps it');
+other['casora-chart-select'].forEach((fn) => fn({ detail: { main: 'sensor.anderer_chart', entity: 'sensor.x' } }));
+assert.equal(M.sel('sensor.anderer_chart'), null, 'charts of other popups are ignored');
+M.popup(states['sensor.heimserver_temp'], states, hass, {});
+assert.equal(window._hpPlantCfg['casora_chart:sensor.heimserver_temp|24h|line'].selected, undefined, 'other tiles untouched');
+shown.length = 0;
 // Studio defaults: "Range when opening" and "Display" apply to a sensor without a session choice; a choice made
 // in the popup wins for the session.
 shown.length = 0;

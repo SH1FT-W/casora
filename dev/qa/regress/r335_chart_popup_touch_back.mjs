@@ -5,7 +5,9 @@
 //      casora-chart's own switch), a range segment (24 Std. / 7 Tage / 30 Tage / Jahr) and the Linie/Balken switch
 //      changes the chart. Before, nothing happened on a phone; with a mouse it worked.
 //   2. Desktop and phone: tapping a sensor under "Linien" opens its page in the popup; "Zurück" (top left) returns to
-//      the chart popup – with the chart drawn again (before, the chart area stayed empty).
+//      the chart popup – with the chart drawn again (before, the chart area stayed empty) and the series picked before
+//      still selected (also across a range switch).
+//   3. Long series names sit inside their buttons, cut with "…" at the end (before: cut at both sides on a phone).
 // Nothing is saved: the tile only exists in the browser. CHART58_SHOTS=<dir>: store screenshots.
 import { open, casoraDashboard, dashboard, check, need, finish, stable } from './lib.mjs';
 
@@ -31,9 +33,14 @@ const popupInfo = () => {
   const ch = window.__pierce('casora-chart', pop.shadowRoot).filter((c) => c.getBoundingClientRect().width > 0)[0];
   const seg = (attr) => window.__pierce('[' + attr + ']', pop.shadowRoot).map((s) => (s.className.includes(' on') ? '*' : '') + s.textContent.trim());
   const sw = ch && ch.shadowRoot ? [...ch.shadowRoot.querySelectorAll('.sw button')].map((b) => (b.getAttribute('aria-selected') === 'true' ? '*' : '') + b.textContent.trim()) : [];
+  // Name inside each series button: never cut at its start (long names end in "…").
+  const inside = ch && ch.shadowRoot ? [...ch.shadowRoot.querySelectorAll('.sw button')].every((btn) => {
+    const t = btn.querySelector('b'), r = btn.getBoundingClientRect(), q = t && t.getBoundingClientRect();
+    return q && q.left >= r.left && q.right <= r.right && (t.scrollWidth <= t.clientWidth || getComputedStyle(t).textOverflow === 'ellipsis');
+  }) : false;
   const back = pop.shadowRoot.querySelector('.header-back');
   return { txt: parts.join(' ').replace(/\s+/g, ' ').slice(0, 900), chart: !!ch, span: ch && ch._c ? ch._c.span : null,
-    kind: ch && ch._c ? ch._c.kind : null, sel: ch ? ch._sel : null, sw,
+    kind: ch && ch._c ? ch._c.kind : null, sel: ch ? ch._sel : null, sw, inside,
     paths: ch && ch.shadowRoot ? ch.shadowRoot.querySelectorAll('svg path').length : 0,
     slots: window.__pierce('.hp-chart-slot', pop.shadowRoot).length,
     segs: seg('data-casora-cspan'), shapes: seg('data-casora-cshape'), back: !!(back && !back.hidden) };
@@ -90,6 +97,7 @@ const run = async (view) => {
   let p = await openPop();
   await check(tag + ': popup with chart, three series buttons (the first active), 24 Std. active',
     p && p.chart && p.sw.length === 3 && /^\*/.test(p.sw[0]) && p.sw[2] === 'Temperatur' && p.segs[0] === '*24 Std.', p && [p.sw, p.segs, p.paths]);
+  await check(tag + ': series names sit inside their buttons (cut with "…" at the end, not at the start)', p && p.inside, p && p.sw);
   await shot('1-popup');
   // 1. Series button "Temperatur".
   await tapAt(swEl, 2);
@@ -100,6 +108,7 @@ const run = async (view) => {
   await tapAt(segEl, ['data-casora-cspan', '7d']);
   p = await info((x) => x && x.span === '7d' && /Letzte 7 Tage/.test(x.txt));
   await check(tag + ': tap on "7 Tage" switches the chart and the statistics', p && p.span === '7d' && p.segs[1] === '*7 Tage' && /Letzte 7 Tage/.test(p.txt), p && [p.span, p.segs]);
+  await check(tag + ': the picked series "Temperatur" stays after the range switch', p && p.sel === 2, p && [p.sel, p.sw]);
   await shot('3-range-7d');
   // 3. Shape "Balken".
   await tapAt(segEl, ['data-casora-cshape', 'bar']);
@@ -120,6 +129,7 @@ const run = async (view) => {
   await tapAt(() => window.__pierce('casora-popup').find((p) => p.hasAttribute('open')).shadowRoot.querySelector('.header-back'));
   p = await info((x) => x && x.chart && x.paths > 0 && /Linien/.test(x.txt));
   await check(tag + ': after "Zurück" the chart is drawn again', p && p.chart && p.paths > 0 && /Linien/.test(p.txt), p && [p.chart, p.paths, p.slots, p.txt.slice(0, 200)]);
+  await check(tag + ': after "Zurück" the picked series "Temperatur" is still selected', p && p.sel === 2 && /^\*Temperatur/.test(p.sw[2] || ''), p && [p.sel, p.sw]);
   await shot('6-after-back');
   // Still tappable after coming back.
   await tapAt(segEl, ['data-casora-cspan', '30d']);

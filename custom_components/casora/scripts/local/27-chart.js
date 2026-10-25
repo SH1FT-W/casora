@@ -16,6 +16,7 @@
 //   window._casoraChartCard.summarize(rows, kind, span, now) → {min, max, mean} | {sum, today, perDay} from a WS answer
 //   window._casoraChartCard.stats(hass, id, span, el)        → the same, fetched once per range (null while loading)
 //   window._casoraChartCard.span(id) / setSpan(id, span), shape(id) / setShape(id, shape) – session choice per sensor
+//   window._casoraChartCard.sel(id) / setSel(id, entity)      – series picked in the chart's switch, for the session
 //   window._casoraChartCard.pick(ev)                         – tap (click / finger touchend) on a range or shape segment
 //   window._casoraChartCard.popup(entity, states, hass, V)   – popup casora_popup_chart
 //   window._casoraChartCard.sec(part, C, states, hass, el)   – live parts (hero, range, series, stats)
@@ -266,6 +267,22 @@
     shapeOf[id] = shape;
     show(id);
   };
+  // Series picked with the chart's own switch (different units): kept for the session like range and shape, so a
+  // range switch or "Zurück" from a page in the popup (both mount a new chart) shows it again (#58). The chart is
+  // not remounted here – it already shows the pick.
+  var selOf = {};
+  M.sel = function (id) { return selOf[id] || null; };
+  M.setSel = function (id, entity) {
+    if (!id || !entity) return;
+    selOf[id] = entity;
+    SPANS.forEach(function (sp) {
+      SHAPES.forEach(function (sh) { var c = (window._hpPlantCfg || {})[M.key(id, sp, sh)]; if (c) c.selected = entity; });
+    });
+  };
+  document.addEventListener('casora-chart-select', function (ev) {
+    var d = ev.detail || {};
+    if (window._hpPlantCfg && window._hpPlantCfg[M.key(d.main, M.span(d.main), M.shape(d.main))]) M.setSel(d.main, d.entity);
+  }, true);
   var remember = function (id, el) {
     if (!el) return;
     var list = parts[id] = (parts[id] || []).filter(function (e) { return e && e.isConnected; });
@@ -326,7 +343,8 @@
     if (window._hpPlantCfg) {
       SPANS.forEach(function (sp) {
         SHAPES.forEach(function (sh) {
-          window._hpPlantCfg[M.key(id, sp, sh)] = M.chartCfg(series, sp, kind, sh);
+          var cfg = window._hpPlantCfg[M.key(id, sp, sh)] = M.chartCfg(series, sp, kind, sh);
+          if (selOf[id]) cfg.selected = selOf[id];
           if (window._hpPlantMeta) window._hpPlantMeta[M.key(id, sp, sh)] = [series[0].name, sp, series[0].color];
         });
       });
