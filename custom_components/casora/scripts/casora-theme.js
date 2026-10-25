@@ -31,6 +31,7 @@
 //   window.casoraTheme.set(design)   Promise: save the installation design (admins); the profile follows it
 //   window.casoraTheme.vars(theme, dark)  {"--name": value} as applied
 //   window.casoraTheme.onChange(fn)  called after every change of what is applied
+//   window.casoraTheme.registerStats()  {updates, inPlace}: designs handed to HA's theme list (see register())
 (function () {
   if (window.casoraTheme) return;
   var CACHE = 'casora.theme.v2';
@@ -145,23 +146,53 @@
   // element (_updateHass), so HA's theme picker (memoised on the list) shows them; without that method the
   // list is filled in place (HA still finds a design picked there, UIX its styles). HA replaces the list on
   // every themes_updated (e.g. "Reload themes"); apply() runs again then and puts them back.
+  // _updateHass makes the whole frontend draw again, so it is guarded (casoraTheme.registerStats() counts):
+  //   • in a list Casora already completed, a design counts only when it is absent or Casora has a newer version of
+  //     it – an object something else copied in (another identity, same design) does not make it hand the list again;
+  //   • never from inside its own _updateHass;
+  //   • at most UPDATE_MAX calls in UPDATE_WINDOW ms – beyond that the list is filled in place (no redraw), so
+  //     nothing can turn this into a loop (themes_updated → register → _updateHass → apply → …).
+  var UPDATE_MAX = 3, UPDATE_WINDOW = 10000;
+  var completed = typeof WeakMap === 'function' ? new WeakMap() : null;   // list → {name: object Casora put in}
+  var registering = false;
+  var recent = [];
+  var stats = { updates: 0, inPlace: 0 };
   function register(h) {
     var list = h && h.themes && h.themes.themes;
-    if (!list) return false;
-    var missing = state.names.filter(function (n) { return state.themes[n] && list[n] !== state.themes[n]; });
+    if (!list || registering) return false;
+    var done = completed && completed.get(list);
+    var missing = state.names.filter(function (n) {
+      return state.themes[n] && list[n] !== state.themes[n] && !(done && list[n] && list[n] !== done[n]);
+    });
     if (!missing.length) return false;
     var el = root();
-    if (el && typeof el._updateHass === 'function') {
+    var now = Date.now();
+    recent = recent.filter(function (t) { return now - t < UPDATE_WINDOW; });
+    if (el && typeof el._updateHass === 'function' && recent.length < UPDATE_MAX) {
       var next = {};
       for (var k in list) next[k] = list[k];
       missing.forEach(function (n) { next[n] = state.themes[n]; });
       var themes = {};
       for (k in h.themes) themes[k] = h.themes[k];
       themes.themes = next;
-      try { el._updateHass({ themes: themes }); return true; } catch (e) { /* fall back to filling in place */ }
+      recent.push(now);
+      registering = true;
+      try {
+        el._updateHass({ themes: themes });
+        stats.updates++;
+        if (completed) completed.set(next, snapshot());
+        return true;
+      } catch (e) { /* fall back to filling in place */ } finally { registering = false; }
     }
     try { missing.forEach(function (n) { list[n] = state.themes[n]; }); } catch (e) { return false; }
+    stats.inPlace++;
+    if (completed) completed.set(list, snapshot());
     return true;
+  }
+  function snapshot() {
+    var o = {};
+    state.names.forEach(function (n) { if (state.themes[n]) o[n] = state.themes[n]; });
+    return o;
   }
 
   function notify() {
@@ -325,6 +356,8 @@
     renamed: RENAMED,
     onChange: function (fn) { listeners.push(fn); },
     apply: function () { apply(true); },
+    // How often the designs were handed to HA (_updateHass) or filled into its list in place (tests).
+    registerStats: function () { return { updates: stats.updates, inPlace: stats.inPlace }; },
   };
 
   // Light/dark and the browser's theme choice: HA re-applies its theme on <html> whenever either changes;
