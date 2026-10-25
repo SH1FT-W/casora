@@ -2476,7 +2476,12 @@
   "Im Velair-Panel öffnen": "Otwórz w panelu Velair",
   "Profile, Modi und Vorlagen": "Ustawienia profili, trybów i szablonów",
   "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "Aktywny jest profil – edytuj go w panelu Velair.",
-  "Ein Profil pausiert diesen Zeitplan.": "Profil wstrzymuje ten harmonogram."
+  "Ein Profil pausiert diesen Zeitplan.": "Profil wstrzymuje ten harmonogram.",
+  "Unterstream": "Strumień pomocniczy",
+  "Hauptstream": "Strumień główny",
+  "Standard": "Standardowy",
+  "Stream": "Strumień",
+  "Stream nicht erreichbar · Standard": "Strumień nieosiągalny · Standardowy"
  },
  "patterns": [
   [

@@ -18393,7 +18393,7 @@
  "casora_popup_frigate": {
   "tap_action": {
    "casora_popup": {
-    "content": "[[[\n  /* Frigate (Community-Karte): Kopf mit Status und Erkennung als Hauptschalter, darunter das Live-Bild,\n     links Schalter und Objekte, rechts die letzten Erkennungen mit Schnappschuss – window._casoraFrigate.popup in 23-frigate.js. */\n  return window._casoraFrigate ? window._casoraFrigate.popup(entity, states, hass) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "content": "[[[\n  /* Frigate (Community-Karte): Kopf mit Status und Erkennung als Hauptschalter, darunter das Live-Bild,\n     links Schalter und Objekte, rechts die letzten Erkennungen mit Schnappschuss – window._casoraFrigate.popup in 23-frigate.js. */\n  return window._casoraFrigate ? window._casoraFrigate.popup(entity, states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
     "dismiss_on_background": true,
     "popup_styles": [
      {

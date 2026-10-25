@@ -2589,7 +2589,18 @@
     "A climate Velair plans": "Un appareil de climatisation planifié par Velair",
     "For every climate Velair plans": "Pour chaque appareil planifié par Velair",
     "Velair integration not installed yet": "Intégration Velair pas encore installée",
-    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Température, consigne et mode sur la tuile comme pour le thermostat. Le popup propose le mode, la température de consigne, la ventilation, les préréglages et les volets, ainsi que le programme de Velair : les créneaux du jour, la semaine d'un coup d'œil, programme activé ou désactivé, reprise après un réglage manuel et modification des créneaux d'une journée. Pour les appareils planifiés par l'intégration Velair."
+    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Température, consigne et mode sur la tuile comme pour le thermostat. Le popup propose le mode, la température de consigne, la ventilation, les préréglages et les volets, ainsi que le programme de Velair : les créneaux du jour, la semaine d'un coup d'œil, programme activé ou désactivé, reprise après un réglage manuel et modification des créneaux d'une journée. Pour les appareils planifiés par l'intégration Velair.",
+    "Stream on the tile": "Flux sur la tuile",
+    "Stream on the tile (phone)": "Flux sur la tuile (téléphone)",
+    "Stream in the popup (default)": "Flux dans la fenêtre (par défaut)",
+    "Stream in the popup on the phone": "Flux dans la fenêtre sur le téléphone",
+    "Sub stream": "Flux secondaire",
+    "Main stream": "Flux principal",
+    "Same as desktop": "Comme sur l’ordinateur",
+    "Which of the camera's streams plays live on the tile. “Standard” is the stream Home Assistant knows for this camera; the others come from Frigate (go2rtc).": "Le flux de la caméra diffusé en direct sur la tuile. « Standard » est le flux que Home Assistant connaît pour cette caméra ; les autres viennent de Frigate (go2rtc).",
+    "On a phone. “Automatic” takes the camera's sub stream when Frigate has one – it needs less data – otherwise the same stream as on the desktop.": "Sur un téléphone. « Automatique » prend le flux secondaire de la caméra si Frigate en a un – il consomme moins de données –, sinon le même flux que sur l’ordinateur.",
+    "The stream the popup starts with. With more than one stream the popup shows a switch below the picture; the choice there holds until the browser is closed.": "Le flux avec lequel la fenêtre démarre. Avec plusieurs flux, la fenêtre affiche un sélecteur sous l’image ; le choix fait là reste valable jusqu’à la fermeture du navigateur.",
+    "On a phone. “Automatic” starts with the sub stream when Frigate has one, otherwise with the desktop's stream.": "Sur un téléphone. « Automatique » démarre avec le flux secondaire si Frigate en a un, sinon avec le flux de l’ordinateur."
   },
   "patterns": [
     [

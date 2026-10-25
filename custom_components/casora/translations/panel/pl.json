@@ -2589,7 +2589,18 @@
     "A climate Velair plans": "Klimatyzator planowany przez Velair",
     "For every climate Velair plans": "Dla każdego klimatyzatora planowanego przez Velair",
     "Velair integration not installed yet": "Integracja Velair nie jest jeszcze zainstalowana",
-    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, cel i tryb na kafelku jak przy termostacie. Okno ma tryb, temperaturę docelową, wentylator, ustawienia wstępne i żaluzje, a także harmonogram Velair: dzisiejsze przedziały, tydzień w skrócie, harmonogram włączony lub wyłączony, wznowienie po ręcznej zmianie i edycję przedziałów dnia. Dla klimatyzatorów planowanych przez integrację Velair."
+    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, cel i tryb na kafelku jak przy termostacie. Okno ma tryb, temperaturę docelową, wentylator, ustawienia wstępne i żaluzje, a także harmonogram Velair: dzisiejsze przedziały, tydzień w skrócie, harmonogram włączony lub wyłączony, wznowienie po ręcznej zmianie i edycję przedziałów dnia. Dla klimatyzatorów planowanych przez integrację Velair.",
+    "Stream on the tile": "Strumień na kafelku",
+    "Stream on the tile (phone)": "Strumień na kafelku (telefon)",
+    "Stream in the popup (default)": "Strumień w oknie (domyślny)",
+    "Stream in the popup on the phone": "Strumień w oknie na telefonie",
+    "Sub stream": "Strumień pomocniczy",
+    "Main stream": "Strumień główny",
+    "Same as desktop": "Jak na komputerze",
+    "Which of the camera's streams plays live on the tile. “Standard” is the stream Home Assistant knows for this camera; the others come from Frigate (go2rtc).": "Który strumień kamery leci na żywo na kafelku. „Standardowy” to strumień, który Home Assistant zna dla tej kamery; pozostałe pochodzą z Frigate (go2rtc).",
+    "On a phone. “Automatic” takes the camera's sub stream when Frigate has one – it needs less data – otherwise the same stream as on the desktop.": "Na telefonie. „Automatycznie” bierze strumień pomocniczy kamery, jeśli Frigate go ma – zużywa mniej danych – w przeciwnym razie ten sam strumień co na komputerze.",
+    "The stream the popup starts with. With more than one stream the popup shows a switch below the picture; the choice there holds until the browser is closed.": "Strumień, od którego startuje okno. Przy więcej niż jednym strumieniu okno pokazuje przełącznik pod obrazem; wybór obowiązuje do zamknięcia przeglądarki.",
+    "On a phone. “Automatic” starts with the sub stream when Frigate has one, otherwise with the desktop's stream.": "Na telefonie. „Automatycznie” startuje ze strumieniem pomocniczym, jeśli Frigate go ma, w przeciwnym razie ze strumieniem z komputera."
   },
   "patterns": [
     [

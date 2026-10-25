@@ -2589,7 +2589,18 @@
     "A climate Velair plans": "Un climatizador que planifica Velair",
     "For every climate Velair plans": "Para cada climatizador que planifica Velair",
     "Velair integration not installed yet": "Integración Velair aún no instalada",
-    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, objetivo y modo en la tarjeta, como en el termostato. La ventana tiene modo, temperatura objetivo, ventilador, preajustes y lamas, además del horario de Velair: las franjas de hoy, la semana de un vistazo, horario activado o desactivado, reanudar tras un cambio manual y editar las franjas de un día. Para climatizadores que planifica la integración Velair."
+    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, objetivo y modo en la tarjeta, como en el termostato. La ventana tiene modo, temperatura objetivo, ventilador, preajustes y lamas, además del horario de Velair: las franjas de hoy, la semana de un vistazo, horario activado o desactivado, reanudar tras un cambio manual y editar las franjas de un día. Para climatizadores que planifica la integración Velair.",
+    "Stream on the tile": "Flujo en la tarjeta",
+    "Stream on the tile (phone)": "Flujo en la tarjeta (móvil)",
+    "Stream in the popup (default)": "Flujo en la ventana (predeterminado)",
+    "Stream in the popup on the phone": "Flujo en la ventana en el móvil",
+    "Sub stream": "Subflujo",
+    "Main stream": "Flujo principal",
+    "Same as desktop": "Igual que en el escritorio",
+    "Which of the camera's streams plays live on the tile. “Standard” is the stream Home Assistant knows for this camera; the others come from Frigate (go2rtc).": "Qué flujo de la cámara se reproduce en directo en la tarjeta. «Estándar» es el flujo que Home Assistant conoce para esta cámara; los demás vienen de Frigate (go2rtc).",
+    "On a phone. “Automatic” takes the camera's sub stream when Frigate has one – it needs less data – otherwise the same stream as on the desktop.": "En el móvil. «Automático» usa el subflujo de la cámara si Frigate tiene uno –necesita menos datos–; si no, el mismo flujo que en el escritorio.",
+    "The stream the popup starts with. With more than one stream the popup shows a switch below the picture; the choice there holds until the browser is closed.": "El flujo con el que empieza la ventana. Con más de un flujo, la ventana muestra un selector bajo la imagen; lo elegido ahí vale hasta cerrar el navegador.",
+    "On a phone. “Automatic” starts with the sub stream when Frigate has one, otherwise with the desktop's stream.": "En el móvil. «Automático» empieza con el subflujo si Frigate tiene uno; si no, con el flujo del escritorio."
   },
   "patterns": [
     [

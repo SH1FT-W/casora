@@ -936,10 +936,319 @@
   // Für Tests: was gerade läuft (Abos, Halter, Kacheln, Live-Bilder).
   F._dbg = function () {
     var live = 0;
-    tiles.forEach(function (h) { if (h._frig && h._frig.layer) live++; });
+    var srcs = [];
+    tiles.forEach(function (h) { if (h._frig && h._frig.layer) { live++; srcs.push(h._frig.src || STD); } });
     return { subs: Object.keys(subs).filter(function (k) { return subs[k].on; }), subKind: Object.keys(subs).map(function (k) { return subs[k].kind; }),
-      holders: holders.length, tiles: tiles.size, live: live, timer: !!sweepT };
+      holders: holders.length, tiles: tiles.size, live: live, srcs: srcs, timer: !!sweepT };
   };
+
+  // ── Streams (#61): pick the live stream per tile/popup and device ─────────
+  // The integration gives one camera entity per Frigate camera; its stream is the first of Frigate's live.streams
+  // (or the go2rtc stream named like the camera) – "Standard" here, played by HA's own ha-camera-stream. Further
+  // streams (a sub stream for phones) only exist in Frigate's go2rtc: their names come from the integration's
+  // proxy /api/frigate/<inst>/go2rtc/api/streams (Frigate ≥ 0.18 answers from its own API, credentials masked); the
+  // ones named after the camera (garden_sub, garden-low …) count as its streams. They play over the integration's
+  // websocket proxy /api/frigate/<inst>/mse/api/ws?src=<stream> (MSE, as Frigate's own UI; WebRTC over
+  // …/webrtc/api/ws where MSE is missing) – signed via auth/sign_path, never go2rtc directly.
+  // Variables: stream_tile, stream_tile_phone, stream_popup, stream_popup_phone; '' = default, 'standard' = the
+  // camera entity's stream, else a go2rtc stream name. Phone default: the sub stream when there is one.
+  var STD = 'standard';
+  F.STD = STD;
+  var SUB_RE = /^(sub|substream|low|lq|sd|small|mobile|klein|ext|lowres|lo)\d*$/;
+  var MAIN_RE = /^(main|mainstream|hd|high|hq|full|fhd|uhd|haupt|hi)\d*$/;
+  F.streamTail = function (cam, name) {
+    var c = String(cam || '').toLowerCase(), n = String(name || '');
+    if (!c || n.toLowerCase().indexOf(c) !== 0) return null;
+    var rest = n.slice(c.length);
+    if (!rest || !/^[_\-.]/.test(rest)) return null;
+    return rest.replace(/^[_\-.]+/, '') || null;
+  };
+  // go2rtc's stream list (object by name, or array) → the camera's own extra streams, in Frigate's order.
+  F.parseStreams = function (raw, cam) {
+    var x = jparse(raw);
+    var names = Array.isArray(x) ? x.map(function (s) { return s && typeof s === 'object' ? s.name : s; })
+      : x && typeof x === 'object' ? Object.keys(x) : [];
+    return names.filter(function (n) { return typeof n === 'string' && F.streamTail(cam, n) != null; }).filter(uniq);
+  };
+  F.streamKind = function (cam, name) {
+    var t = String(F.streamTail(cam, name) || '').toLowerCase();
+    return SUB_RE.test(t) ? 'sub' : MAIN_RE.test(t) ? 'main' : null;
+  };
+  // Label for the switch: "Standard", "Unterstream", "Hauptstream", otherwise the rest of the name ("cam2").
+  F.streamLabel = function (cam, name, list) {
+    if (!name || name === STD) return 'Standard';
+    var k = F.streamKind(cam, name), tail = String(F.streamTail(cam, name) || name);
+    // Two of the same kind (sub, sub2): the name tells them apart.
+    if (!k || (list || []).some(function (o) { return o !== name && F.streamKind(cam, o) === k; })) return tail;
+    return k === 'sub' ? 'Unterstream' : 'Hauptstream';
+  };
+  F.subStream = function (cam, list) {
+    return (list || []).filter(function (n) { return F.streamKind(cam, n) === 'sub'; })[0] || null;
+  };
+  F.isPhone = function () {
+    try {
+      if (/^\/[^/]*[-_]mobile(\/|$)/i.test(window.location.pathname)) return true;
+      return !!(window.matchMedia && window.matchMedia('(max-width: 767px), (max-height: 500px)').matches);
+    } catch (e) { return false; }
+  };
+  // Which stream: session choice (popup only) → phone field (empty: the sub stream) → desktop field → Standard.
+  // Returns '' for Standard (HA's own stream), else the go2rtc stream name.
+  F.pickStream = function (cam, list, variables, where, phone, session) {
+    var v = variables || {}, L = list || [];
+    var ok = function (s) { return s === STD || L.indexOf(s) >= 0; };
+    var out = function (s) { return s === STD ? '' : s; };
+    if (where === 'popup' && session && ok(session)) return out(session);
+    var base = String(v['stream_' + where] || ''), ph = String(v['stream_' + where + '_phone'] || '');
+    if (phone) {
+      if (ph && ok(ph)) return out(ph);
+      if (!ph) { var sub = F.subStream(cam, L); if (sub) return sub; }
+    }
+    return base && ok(base) ? out(base) : '';
+  };
+  // The stream picked in the popup, per camera entity, for this browser session.
+  var SESS = 'casora-frigate-stream:';
+  var sessMem = {};
+  F.sessionStream = function (id, val) {
+    if (val !== undefined) {
+      sessMem[id] = val;
+      try { window.sessionStorage.setItem(SESS + id, val); } catch (e) { /* memory only */ }
+      return val;
+    }
+    if (sessMem[id] != null) return sessMem[id];
+    try { return (window.sessionStorage && window.sessionStorage.getItem(SESS + id)) || ''; } catch (e) { return ''; }
+  };
+  // Stream names per Frigate instance, asked once per 10 min.; null = not known yet (asks, done() afterwards),
+  // [] = none or not reachable (integration without the go2rtc proxy, Frigate without go2rtc).
+  var streamsByInst = {};
+  F.streamsPath = function (inst) { return '/api/frigate/' + encodeURIComponent(inst) + '/go2rtc/api/streams'; };
+  F.streamList = function (hass, c, done) {
+    if (!c || !c.inst || !c.name) return [];
+    var x = streamsByInst[c.inst];
+    var known = x && x.raw !== undefined;
+    if (known && !x.job && Date.now() - x.at < 600000) return F.parseStreams(x.raw, c.name);
+    if (x && x.job) {
+      if (done && x.wait.indexOf(done) < 0) x.wait.push(done);
+      return known ? F.parseStreams(x.raw, c.name) : null;
+    }
+    if (!hass) return known ? F.parseStreams(x.raw, c.name) : [];
+    var keep = known ? x.raw : undefined;
+    x = streamsByInst[c.inst] = { at: Date.now(), raw: keep, wait: done ? [done] : [], job: null };
+    var path = F.streamsPath(c.inst);
+    var get = typeof hass.fetchWithAuth === 'function'
+      ? Promise.resolve().then(function () { return hass.fetchWithAuth(path); })
+      : F.sign(hass, path, 60).then(function (u) { if (!u) throw new Error('sign'); return fetch(abs(hass, u)); });
+    x.job = get.then(function (r) { if (!r || !r.ok) throw new Error('streams ' + (r && r.status)); return r.json(); })
+      .catch(function () { return null; })
+      .then(function (raw) {
+        x.raw = raw; x.at = Date.now(); x.job = null;
+        var w = x.wait; x.wait = [];
+        w.forEach(function (fn) { try { fn(); } catch (e) { /* caller gone */ } });
+      });
+    return keep !== undefined ? F.parseStreams(keep, c.name) : null;
+  };
+  F._streamsReset = function () { streamsByInst = {}; sessMem = {}; };
+  // Studio (casora-panel-types.js): the camera's streams for the stream fields; null while the list loads (done
+  // redraws). kind per stream ('sub' | 'main' | null) – the Studio writes its own (English) labels.
+  F.streamChoices = function (hass, id, done) {
+    if (!hass || !F.is(hass, id)) return null;
+    var c = F.find(hass, id), list = F.streamList(hass, c, done);
+    if (list == null) return null;
+    var kind = {};
+    list.forEach(function (n) {
+      var k = F.streamKind(c.name, n);
+      // Two of a kind: no kind word, the name tells them apart (as F.streamLabel).
+      kind[n] = k && list.some(function (o) { return o !== n && F.streamKind(c.name, o) === k; }) ? null : k;
+    });
+    return { options: ['', STD].concat(list), streams: list, kind: kind, sub: F.subStream(c.name, list) };
+  };
+
+  // <casora-frigate-stream>: plays one go2rtc stream through the integration's websocket proxy – MSE (or iOS'
+  // ManagedMediaSource) first, WebRTC where MSE is missing. Its only child is a muted inline <video> (the tile check
+  // finds it like ha-camera-stream's). Fires 'casora-stream-fail' when no way showed a frame within 12 s each.
+  var MSE_CODECS = ['avc1.640029', 'avc1.64002A', 'avc1.640033', 'avc1.42E01E', 'hvc1.1.6.L153.B0', 'mp4a.40.2', 'mp4a.40.5', 'flac', 'opus'];
+  F.mseCodecs = function (MS) {
+    if (!MS || typeof MS.isTypeSupported !== 'function') return '';
+    return MSE_CODECS.filter(function (cd) { return MS.isTypeSupported('video/mp4; codecs="' + cd + '"'); }).join();
+  };
+  F.wsUrl = function (hass, signedPath) { return String(abs(hass, signedPath) || '').replace(/^http/, 'ws'); };
+  F.streamWays = function (MS, rtc) {
+    var w = [];
+    if (MS) w.push(['mse', 'mse/api/ws'], ['mse', 'go2rtc/ws/api/ws']);
+    if (rtc) w.push(['webrtc', 'webrtc/api/ws']);
+    return w;
+  };
+  if (typeof customElements !== 'undefined' && !customElements.get('casora-frigate-stream')) {
+    class FStream extends HTMLElement {
+      connectedCallback() { this.style.display = 'block'; if (!this._ws && !this._pc) this._go(); }
+      disconnectedCallback() { this._stop(); }
+      set src(v) { if (v !== this._src) { this._src = v; if (this.isConnected) this._go(); } }
+      get src() { return this._src; }
+    }
+    var XP = FStream.prototype;
+    XP._video = function () {
+      var v = this._v;
+      if (!v) {
+        v = this._v = document.createElement('video');
+        v.muted = true; v.autoplay = true; v.playsInline = true; v.controls = false;
+        v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('autoplay', '');
+        v.style.cssText = 'display:block;width:100%;height:100%;object-fit:' + (this.fit || 'contain') + ';background:#000;';
+        this.appendChild(v);
+      }
+      return v;
+    };
+    XP._stop = function () {
+      this._gen = (this._gen || 0) + 1;
+      clearTimeout(this._t);
+      try { if (this._ws) this._ws.close(); } catch (e) { /* closed */ }
+      try { if (this._pc) this._pc.close(); } catch (e) { /* closed */ }
+      this._ws = null; this._pc = null; this._sb = null; this._q = [];
+      if (this._v) {
+        try { this._v.pause(); } catch (e) { /* none */ }
+        try { this._v.srcObject = null; } catch (e) { /* none */ }
+        if (this._url) { try { URL.revokeObjectURL(this._url); } catch (e) { /* none */ } this._url = null; }
+        this._v.removeAttribute('src');
+        try { this._v.load(); } catch (e) { /* none */ }
+      }
+      this.way = null; this.playing = false;
+    };
+    XP._go = function () {
+      this._stop();
+      var self = this, gen = this._gen;
+      if (!this.hass || !this.inst || !this._src) return;
+      var MS = window.ManagedMediaSource || window.MediaSource;
+      var ways = F.streamWays(MS && F.mseCodecs(MS) ? MS : null, !!window.RTCPeerConnection);
+      this.failed = false;
+      var next = function (i) {
+        if (gen !== self._gen) return;
+        if (i >= ways.length) { self.failed = true; self.dispatchEvent(new CustomEvent('casora-stream-fail', { bubbles: true, composed: true })); return; }
+        self._stop(); gen = self._gen;
+        var path = '/api/frigate/' + encodeURIComponent(self.inst) + '/' + ways[i][1] + '?src=' + encodeURIComponent(self._src);
+        var done = false;
+        var fail = function () { if (gen === self._gen && !done) { done = true; next(i + 1); } };
+        F.sign(self.hass, path, 60, true).then(function (u) {
+          if (gen !== self._gen) return;
+          if (!u) { fail(); return; }
+          self.way = ways[i][0];
+          if (ways[i][0] === 'mse') self._mse(F.wsUrl(self.hass, u), MS, gen, fail);
+          else self._rtc(F.wsUrl(self.hass, u), gen, fail);
+          // A way counts once a frame is there; otherwise the next one after 12 s.
+          var t0 = Date.now();
+          var look = function () {
+            if (gen !== self._gen || done) return;
+            var v = self._v;
+            if (v && v.readyState >= 2 && !v.error) { self.playing = true; return; }
+            if (Date.now() - t0 > 12000) { fail(); return; }
+            self._t = setTimeout(look, 400);
+          };
+          self._t = setTimeout(look, 400);
+        });
+      };
+      next(0);
+    };
+    XP._mse = function (url, MS, gen, fail) {
+      var self = this, v = this._video(), ms = new MS();
+      if (window.ManagedMediaSource && MS === window.ManagedMediaSource) {
+        v.disableRemotePlayback = true;
+        v.srcObject = ms;
+      } else {
+        this._url = URL.createObjectURL(ms);
+        v.src = this._url;
+      }
+      this._q = [];
+      var pump = function () {
+        var sb = self._sb;
+        if (!sb || sb.updating || gen !== self._gen) return;
+        if (self._q.length) {
+          var n = 0, o = 0;
+          self._q.forEach(function (b) { n += b.byteLength; });
+          var all = new Uint8Array(n);
+          self._q.forEach(function (b) { all.set(new Uint8Array(b), o); o += b.byteLength; });
+          self._q = [];
+          try { sb.appendBuffer(all); } catch (e) { fail(); }
+          return;
+        }
+        // Keep about 10 s and stay at the live edge (a slow phone or a hidden tab would drift behind).
+        try {
+          var b = sb.buffered;
+          if (b && b.length) {
+            var end = b.end(b.length - 1), start = b.start(0);
+            if (end - start > 20) { sb.remove(start, end - 10); return; }
+            if (end - v.currentTime > 2.5) v.currentTime = Math.max(start, end - 0.5);
+          }
+        } catch (e) { /* buffer gone */ }
+      };
+      ms.addEventListener('sourceopen', function () {
+        if (gen !== self._gen) return;
+        var ws;
+        try { ws = self._ws = new WebSocket(url); } catch (e) { fail(); return; }
+        ws.binaryType = 'arraybuffer';
+        ws.onopen = function () { ws.send(JSON.stringify({ type: 'mse', value: F.mseCodecs(MS) })); };
+        ws.onerror = function () { if (!self.playing) fail(); };
+        ws.onclose = function () { if (gen === self._gen && !self.playing) fail(); };
+        ws.onmessage = function (ev) {
+          if (gen !== self._gen) return;
+          if (typeof ev.data === 'string') {
+            var m = jparse(ev.data) || {};
+            if (m.type === 'mse' && m.value && !self._sb) {
+              if (!MS.isTypeSupported(m.value)) { fail(); return; }
+              try {
+                self._sb = ms.addSourceBuffer(m.value);
+                self._sb.mode = 'segments';
+                self._sb.addEventListener('updateend', pump);
+              } catch (e) { fail(); }
+            } else if (m.type === 'error') fail();
+            return;
+          }
+          self._q.push(ev.data);
+          pump();
+          var p = v.paused && v.play ? v.play() : null;
+          if (p && p.catch) p.catch(function () { /* muted autoplay may still wait */ });
+        };
+      }, { once: true });
+    };
+    XP._rtc = function (url, gen, fail) {
+      var self = this, v = this._video(), hass = this.hass;
+      // ICE servers as HA hands them to its own WebRTC player (camera/webrtc/get_client_config), none otherwise.
+      var cfg = this.entity && hass.callWS
+        ? hass.callWS({ type: 'camera/webrtc/get_client_config', entity_id: this.entity })
+          .then(function (r) { return (r && r.configuration) || {}; }).catch(function () { return {}; })
+        : Promise.resolve({});
+      cfg.then(function (conf) {
+        if (gen !== self._gen) return;
+        var pc, ws;
+        try {
+          pc = self._pc = new RTCPeerConnection({ bundlePolicy: 'max-bundle', iceServers: conf.iceServers || [] });
+          ws = self._ws = new WebSocket(url);
+        } catch (e) { fail(); return; }
+        var media = new MediaStream();
+        pc.addTransceiver('video', { direction: 'recvonly' });
+        pc.addTransceiver('audio', { direction: 'recvonly' });
+        pc.ontrack = function (e) {
+          media.addTrack(e.track);
+          if (v.srcObject !== media) v.srcObject = media;
+          var p = v.play && v.play();
+          if (p && p.catch) p.catch(function () { /* muted autoplay may still wait */ });
+        };
+        pc.onicecandidate = function (e) {
+          if (ws.readyState === 1) ws.send(JSON.stringify({ type: 'webrtc/candidate', value: e.candidate ? e.candidate.candidate : '' }));
+        };
+        ws.onopen = function () {
+          pc.createOffer().then(function (o) { return pc.setLocalDescription(o); })
+            .then(function () { ws.send(JSON.stringify({ type: 'webrtc/offer', value: pc.localDescription.sdp })); })
+            .catch(fail);
+        };
+        ws.onerror = function () { if (!self.playing) fail(); };
+        ws.onmessage = function (ev) {
+          if (gen !== self._gen || typeof ev.data !== 'string') return;
+          var m = jparse(ev.data) || {};
+          if (m.type === 'webrtc/answer') pc.setRemoteDescription({ type: 'answer', sdp: m.value }).catch(fail);
+          else if (m.type === 'webrtc/candidate' && m.value) pc.addIceCandidate({ candidate: m.value, sdpMid: '0' }).catch(function () { /* late */ });
+          else if (m.type === 'error') fail();
+        };
+      });
+    };
+    customElements.define('casora-frigate-stream', FStream);
+  }
 
   // ── Kachel: sichtbar? Live-Bild, Abo, Reviews ─────────────────────────────
   // Aufgerufen aus state_display der Kachel (casora_frigate). Live-Bild nur mit Studio-Feld „Live auf der Kachel“,
@@ -960,7 +1269,7 @@
       var id = entity && entity.entity_id;
       if (!host || !id || !F.is(hass, id)) return;
       var st = host._frig || (host._frig = { vis: false, id: id });
-      st.id = id; st.hass = hass; st.want = F.liveWanted(variables);
+      st.id = id; st.hass = hass; st.want = F.liveWanted(variables); st.vars = variables || {};
       // Kachelname (für Titel und Dateinamen): eingetragener Name, sonst der gezeichnete.
       var cfgName = host._config && typeof host._config.name === 'string' ? host._config.name : '';
       var nmEl = !cfgName && host.shadowRoot && host.shadowRoot.querySelector('#name');
@@ -968,6 +1277,7 @@
       if (!st.io && typeof IntersectionObserver === 'function') {
         st.io = new IntersectionObserver(function (en) {
           st.vis = en.some(function (x) { return x.isIntersecting; });
+          if (st.vis && st.hass) { try { F.streamList(st.hass, F.find(st.hass, st.id)); } catch (e) { /* later */ } }
           tileSync(host);
           sweep();
         }, { rootMargin: '80px' });
@@ -977,6 +1287,8 @@
       var c = F.find(hass, id);
       hold(host, c, hass, 'tile');
       if (st.vis && !hidden()) F.reviews(hass, c, host);
+      // Stream names ready before the popup opens (#61; one request per instance and 10 min.).
+      if (st.vis) F.streamList(hass, c);
       tileSync(host);
     } catch (e) { /* Kachel zeichnet trotzdem */ }
   };
@@ -986,11 +1298,24 @@
     if (!st) return;
     var S = (st.hass && st.hass.states) || {}, cs = S[st.id];
     var stream = !!(cs && (Number((cs.attributes || {}).supported_features) || 0) & 2);
-    var ok = st.want && st.vis && !hidden() && host.isConnected && stream && cs && !bad(cs.state) && cs.state !== 'off'
-      && !(st.fail && Date.now() - st.fail < 300000) && (liveFails[st.id] || 0) < 2 && typeof customElements !== 'undefined' && !!customElements.get('ha-camera-stream');
-    if (ok && !st.layer) liveMount(host, st);
+    // Which stream (#61): only once the list is known (no switch from Standard to the sub stream a second later);
+    // a picked stream that failed in this session falls back to Standard.
+    var c = st.want ? F.find(st.hass, st.id) : null;
+    var list = c ? F.streamList(st.hass, c, function () { if (host._frig === st) tileSync(host); }) : [];
+    var src = list == null ? null : c ? F.pickStream(c.name, list, st.vars, 'tile', F.isPhone()) : '';
+    if (src && st.badSrc === src) src = '';
+    var ce = typeof customElements !== 'undefined';
+    var can = src ? ce && !!customElements.get('casora-frigate-stream') : stream && ce && !!customElements.get('ha-camera-stream');
+    var ok = st.want && src != null && st.vis && !hidden() && host.isConnected && can && cs && !bad(cs.state) && cs.state !== 'off'
+      && !(st.fail && Date.now() - st.fail < 300000) && (liveFails[st.id] || 0) < 2;
+    if (ok && st.layer && st.src !== src) liveDrop(host, st);
+    if (ok && !st.layer) liveMount(host, st, src);
     else if (!ok && st.layer) liveDrop(host, st);
-    else if (st.layer && st.cam) { st.cam.hass = st.hass; if (st.cam.stateObj !== cs) st.cam.stateObj = cs; liveCheck(host, st); }
+    else if (st.layer && st.cam) {
+      st.cam.hass = st.hass;
+      if (!st.src && st.cam.stateObj !== cs) st.cam.stateObj = cs;
+      liveCheck(host, st);
+    }
   };
   // Zweimal kein Bild: für diese Sitzung aufgeben (Standbild), statt alle 5 Min. neu zu versuchen.
   var liveFails = {};
@@ -1002,7 +1327,7 @@
     for (var i = 0; i < all.length; i++) if (all[i].shadowRoot) { var x = findImg(all[i].shadowRoot, d + 1); if (x) return x; }
     return null;
   };
-  var liveMount = function (host, st) {
+  var liveMount = function (host, st, src) {
     var root = host.shadowRoot, card = root && root.querySelector('ha-card');
     if (!card) return;
     var layer = document.createElement('div');
@@ -1010,12 +1335,26 @@
     // Unter Name/Zustand (die liegen im Raster darüber), über dem Standbild; erst sichtbar, wenn es läuft.
     layer.style.cssText = 'position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:inherit;opacity:0;'
       + 'transition:opacity var(--casora-dur-feedback, 160ms) var(--casora-ease-feedback, ease);';
-    var el = document.createElement('ha-camera-stream');
-    el.muted = true; el.controls = false; el.allowExoPlayer = false; el.fitMode = 'cover';
-    el.setAttribute('muted', '');
-    el.style.cssText = 'display:block;width:100%;height:100%;--video-max-height:100%;';
-    el.hass = st.hass; el.stateObj = (st.hass.states || {})[st.id];
-    layer.appendChild(el);
+    var el;
+    if (src) {
+      // A picked go2rtc stream (#61) over the integration's proxy; failing → Standard for this session.
+      el = document.createElement('casora-frigate-stream');
+      el.fit = 'cover'; el.hass = st.hass; el.inst = F.find(st.hass, st.id).inst; el.entity = st.id;
+      el.style.cssText = 'display:block;width:100%;height:100%;';
+      el.addEventListener('casora-stream-fail', function () {
+        if (host._frig !== st || st.cam !== el) return;
+        st.badSrc = src; liveDrop(host, st); tileSync(host);
+      });
+      layer.appendChild(el);
+      el.src = src;
+    } else {
+      el = document.createElement('ha-camera-stream');
+      el.muted = true; el.controls = false; el.allowExoPlayer = false; el.fitMode = 'cover';
+      el.setAttribute('muted', '');
+      el.style.cssText = 'display:block;width:100%;height:100%;--video-max-height:100%;';
+      el.hass = st.hass; el.stateObj = (st.hass.states || {})[st.id];
+      layer.appendChild(el);
+    }
     // Kleines „Live“-Zeichen oben rechts, sobald das Bild läuft (mit der Ebene eingeblendet).
     var tag = document.createElement('span');
     tag.className = 'casora-frigate-live-tag';
@@ -1026,12 +1365,12 @@
     tag.lastChild.textContent = tr('Live');
     layer.appendChild(tag);
     card.insertBefore(layer, card.firstChild);
-    st.layer = layer; st.cam = el; st.at = Date.now(); st.playing = false;
+    st.layer = layer; st.cam = el; st.src = src || ''; st.at = Date.now(); st.okAt = 0; st.playing = false;
   };
   var liveDrop = function (host, st) {
     if (st.layer) { try { st.layer.remove(); } catch (e) { /* weg */ } }
     var was = st.playing;
-    st.layer = null; st.cam = null; st.playing = false;
+    st.layer = null; st.cam = null; st.src = null; st.playing = false;
     if (was) kick(host);
   };
   // Läuft das Video? Dann einblenden (Text „Live“); nach 20 s ohne Bild oder bei Abbruch zurück aufs Standbild.
@@ -1046,7 +1385,11 @@
       try { if (v) { v.muted = true; if (v.style.objectFit !== 'cover') v.style.objectFit = 'cover'; } else if (im.style.objectFit !== 'cover') im.style.objectFit = 'cover'; } catch (e) { /* egal */ }
       return;
     }
-    if (Date.now() - (st.okAt || st.at) > 20000) { st.fail = Date.now(); liveFails[st.id] = (liveFails[st.id] || 0) + 1; liveDrop(host, st); }
+    if (Date.now() - (st.okAt || st.at) > 20000) {
+      // A picked stream that stalls: Standard instead (no pause for the whole tile).
+      if (st.src) { st.badSrc = st.src; liveDrop(host, st); return; }
+      st.fail = Date.now(); liveFails[st.id] = (liveFails[st.id] || 0) + 1; liveDrop(host, st);
+    }
   };
   var tileDrop = function (host) {
     var st = host._frig;
@@ -1658,12 +2001,181 @@
     };
     customElements.define('casora-frigate-still', FStill);
   }
-  F.live = function (id, name, back) {
+
+  // <casora-frigate-live> (#61): the popup's live picture with a switch between the camera's streams (segments as
+  // in other popups, only with more than one stream). Standard = HA's ha-camera-stream of the camera entity, other
+  // streams = <casora-frigate-stream>. The pick holds for this session (F.sessionStream); a stream that does not
+  // play falls back to Standard with a note. Tapping opens the big view with the same stream (not in big itself).
+  var badStream = {};
+  if (typeof customElements !== 'undefined' && !customElements.get('casora-frigate-live')) {
+    class FLive extends HTMLElement {
+      setConfig(cfg) { this._cfg = cfg || {}; }
+      getCardSize() { return 5; }
+      set hass(h) {
+        this._hass = h;
+        if (!this._root) this._build();
+        var p = this._player;
+        if (p) { p.hass = h; if (!this._src && h && h.states[this._cfg.entity] && p.stateObj !== h.states[this._cfg.entity]) p.stateObj = h.states[this._cfg.entity]; }
+      }
+      get hass() { return this._hass; }
+      connectedCallback() { if (this._hass && !this._root) this._build(); else if (this._root && !this._player) this._mount(); }
+      disconnectedCallback() { if (this._player) { try { this._player.remove(); } catch (e) { /* gone */ } this._player = null; } }
+    }
+    var LP = FLive.prototype;
+    LP._build = function () {
+      var self = this, cfg = this._cfg || {};
+      var r = this._root = this.attachShadow({ mode: 'open' });
+      r.innerHTML = '<style>' + PCSS + '.fr{cursor:pointer;}' + (cfg.big ? '.fr{max-height:none;cursor:default;}' : '')
+        + '.sw{margin-top:var(--casora-space-3, 12px);}.sw:empty{display:none;}</style>'
+        + '<div class="fr" role="img"><div class="mt"></div><div class="ov" role="status" hidden></div></div><div class="sw"></div>';
+      var fr = r.querySelector('.fr');
+      fr.setAttribute('aria-label', tr('Live'));
+      if (!cfg.big) fr.addEventListener('click', function () { haptic('light'); F.live(cfg.entity, null, backHere(), self._src || STD); });
+      var sw = r.querySelector('.sw');
+      sw.addEventListener('keydown', function (ev) {
+        if ((ev.key === 'Enter' || ev.key === ' ') && ev.target && ev.target.classList && ev.target.classList.contains('hui-sg')) {
+          ev.preventDefault();
+          ev.target.click();
+        }
+      });
+      sw.addEventListener('click', function (ev) {
+        // Handled here: the popup frame takes a click without a position (keyboard, click()) for a tap outside.
+        ev.stopPropagation();
+        var b = ev.target && ev.target.closest && ev.target.closest('.hui-sg');
+        var v = b && b.getAttribute('data-stream');
+        if (v == null) return;
+        haptic('light');
+        badStream[cfg.entity + '|' + v] = false;
+        F.sessionStream(cfg.entity, v);
+        self._pick(v === STD ? '' : v);
+      });
+      this._lists();
+    };
+    // Stream list of the camera (cached per instance); waits for it once so a phone starts on the sub stream.
+    LP._lists = function () {
+      var self = this, cfg = this._cfg || {}, h = this._hass;
+      var c = h && F.is(h, cfg.entity) ? F.find(h, cfg.entity) : null;
+      var list = c ? F.streamList(h, c, function () { if (self.isConnected) self._lists(); }) : [];
+      if (list == null) return;
+      this._list = list; this._cam = c ? c.name : '';
+      var want = cfg.src != null && cfg.src !== '' ? (cfg.src === STD ? STD : cfg.src)
+        : F.sessionStream(cfg.entity);
+      var src = F.pickStream(this._cam, list, cfg.vars, 'popup', F.isPhone(), want);
+      if (src && badStream[cfg.entity + '|' + src]) src = '';
+      this._pick(src);
+    };
+    LP._seg = function () {
+      var UI = window._casoraUI, box = this._root && this._root.querySelector('.sw');
+      if (!box) return;
+      var list = this._list || [], cam = this._cam, cur = this._src || STD;
+      if (!list.length || !UI || !UI.segments) { box.innerHTML = ''; this._segKey = ''; return; }
+      // Same streams: only move the active field. Rebuilding would detach the tapped field, and the popup frame
+      // takes a tap on a detached element for a tap outside (closes).
+      var key = [STD].concat(list).join('|');
+      if (this._segKey === key) {
+        box.querySelectorAll('.hui-sg').forEach(function (s) {
+          var on = s.getAttribute('data-stream') === cur;
+          s.classList.toggle('on', on);
+          s.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        return;
+      }
+      this._segKey = key;
+      var items = [STD].concat(list).map(function (n) { return { label: tr(F.streamLabel(cam, n, list)), active: n === cur, n: n }; });
+      box.innerHTML = UI.segments(items);
+      // Each field knows its stream; aria for the switch (segments are plain divs in the core).
+      var segs = box.querySelectorAll('.hui-sg');
+      for (var i = 0; i < segs.length && i < items.length; i++) {
+        segs[i].setAttribute('data-stream', items[i].n);
+        segs[i].setAttribute('role', 'button');
+        segs[i].setAttribute('tabindex', '0');
+        segs[i].setAttribute('aria-pressed', items[i].active ? 'true' : 'false');
+        segs[i].title = items[i].n === STD ? tr('Standard') : items[i].n;
+      }
+      var grid = box.querySelector('.hui-seg');
+      if (grid) { grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', tr('Stream')); }
+    };
+    LP._pick = function (src) {
+      this._src = src || '';
+      this._seg();
+      this._mount();
+    };
+    LP._mount = function () {
+      var self = this, cfg = this._cfg || {}, h = this._hass, mt = this._root && this._root.querySelector('.mt');
+      if (!mt || !h || this._list == null) return;
+      var src = this._src, old = this._player;
+      if (old && (old._casoraSrc || '') === src && old.isConnected) return;
+      if (old) { try { old.remove(); } catch (e) { /* gone */ } }
+      var p;
+      if (src) {
+        p = document.createElement('casora-frigate-stream');
+        p.fit = 'contain'; p.hass = h; p.inst = F.find(h, cfg.entity).inst; p.entity = cfg.entity;
+        p.addEventListener('casora-stream-fail', function () {
+          if (self._player !== p) return;
+          badStream[cfg.entity + '|' + src] = true;
+          self._note(tr('Stream nicht erreichbar · Standard'));
+          self._pick('');
+        });
+        mt.appendChild(p);
+        p.src = src;
+      } else if (!(Number(((h.states[cfg.entity] || {}).attributes || {}).supported_features || 0) & 2)) {
+        // Standard without a stream (Frigate without RTSP restream): the still, renewed every 10 s, as the picture
+        // card did before – HA's player would stay black.
+        p = document.createElement('img');
+        p.className = 'po'; p.alt = '';
+        var tick = function () {
+          // Stops once another player took over or the card left the page (disconnectedCallback drops it).
+          if (self._player !== p) return;
+          var st = self._hass && self._hass.states[cfg.entity], pic = st && st.attributes && st.attributes.entity_picture;
+          if (pic && !hidden()) p.src = pic + (pic.indexOf('?') < 0 ? '?' : '&') + '_=' + Date.now();
+          p._t = setTimeout(tick, 10000);
+        };
+        mt.appendChild(p);
+        this._player = p;
+        tick();
+      } else {
+        p = document.createElement('ha-camera-stream');
+        p.muted = true; p.controls = false; p.allowExoPlayer = false; p.fitMode = 'contain';
+        p.setAttribute('muted', '');
+        p.style.cssText = 'display:block;width:100%;height:100%;--video-max-height:100%;';
+        p.hass = h; p.stateObj = h.states[cfg.entity];
+        mt.appendChild(p);
+      }
+      p._casoraSrc = src;
+      this._player = p;
+    };
+    LP._note = function (text) {
+      var ov = this._root && this._root.querySelector('.ov');
+      if (!ov) return;
+      ov.textContent = text; ov.hidden = false;
+      clearTimeout(this._nt);
+      this._nt = setTimeout(function () { ov.hidden = true; }, 6000);
+    };
+    customElements.define('casora-frigate-live', FLive);
+  }
+  F._badStreamReset = function () { badStream = {}; };
+  // Live card for popup and big view: own card when the camera streams (or has extra streams), else null.
+  F.liveCard = function (hass, id, vars, src, big) {
+    var st = hass && hass.states[id];
+    if (!st) return null;
+    var stream = !!(Number((st.attributes || {}).supported_features || 0) & 2);
+    var list = F.streamList(hass, F.find(hass, id));
+    if (!stream && !(list && list.length) && !src) return null;
+    var v = {};
+    ['stream_popup', 'stream_popup_phone'].forEach(function (k) { if (vars && vars[k]) v[k] = String(vars[k]); });
+    var cfg = { type: 'custom:casora-frigate-live', entity: id, vars: v };
+    if (src) cfg.src = src;
+    if (big) cfg.big = true;
+    return cfg;
+  };
+  F.live = function (id, name, back, src) {
     var ha = document.querySelector('home-assistant'), hass = ha && ha.hass, P = window.casoraPopup;
     if (!hass || !P || !F.is(hass, id) || !hass.states[id]) return false;
     if (name) F.setName(id, name);
     var stream = !!(Number((hass.states[id].attributes || {}).supported_features || 0) & 2);
-    var content = stream
+    // Own card (stream switch) when HA streams or a go2rtc stream was picked; Standard without a stream stays the still.
+    var own = stream || (src && src !== STD) ? F.liveCard(hass, id, null, src || '', true) : null;
+    var content = own ? own : stream
       ? { type: 'picture-entity', entity: id, camera_view: 'live', show_name: false, show_state: false, aspect_ratio: '16:9',
         tap_action: { action: 'none' }, hold_action: { action: 'none' },
         card_mod: { style: 'ha-card { border-radius: var(--casora-popup-row-radius, 20px) !important; overflow: hidden !important;'
@@ -2252,7 +2764,7 @@
   });
 
   // ── Popup ─────────────────────────────────────────────────────────────────
-  F.popup = function (entity, states, hass) {
+  F.popup = function (entity, states, hass, variables) {
     var K = window._casoraSoftKit, UI = window._casoraUI;
     var empty = { type: 'vertical-stack', cards: [] };
     if (!K || !UI) return empty;
@@ -2268,7 +2780,8 @@
     // Live-Bild wie Casoras Kamera-Vollbild (18-ziele.js openCamera); Antippen öffnet es groß.
     // Ohne Stream (Frigate ohne RTSP-Restream, supported_features ohne STREAM 2): Standbild im Takt statt Schwarz.
     var stream = !!(Number(((states[id] || {}).attributes || {}).supported_features || 0) & 2);
-    var live = { type: 'picture-entity', entity: id, camera_view: stream ? 'live' : 'auto', show_name: false, show_state: false, aspect_ratio: '16:9',
+    // With a stream (or extra go2rtc streams, #61): own live card with the stream switch; HA's stream stays Standard.
+    var live = F.liveCard(hass, id, variables) || { type: 'picture-entity', entity: id, camera_view: stream ? 'live' : 'auto', show_name: false, show_state: false, aspect_ratio: '16:9',
       tap_action: { action: 'more-info' }, hold_action: { action: 'none' },
       card_mod: { style: 'ha-card { border-radius: var(--casora-popup-row-radius, 24px) !important; overflow: hidden !important;'
         + ' border: none !important; background: #000 !important; box-shadow: none !important; }' } };

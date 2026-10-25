@@ -2476,7 +2476,12 @@
   "Im Velair-Panel öffnen": "Abrir en el panel de Velair",
   "Profile, Modi und Vorlagen": "Perfiles, modos y plantillas",
   "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "Hay un perfil activo: edítalo en el panel de Velair.",
-  "Ein Profil pausiert diesen Zeitplan.": "Un perfil pausa este horario."
+  "Ein Profil pausiert diesen Zeitplan.": "Un perfil pausa este horario.",
+  "Unterstream": "Subflujo",
+  "Hauptstream": "Flujo principal",
+  "Standard": "Estándar",
+  "Stream": "Flujo",
+  "Stream nicht erreichbar · Standard": "Flujo no disponible · Estándar"
  },
  "patterns": [
   [

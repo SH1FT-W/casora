@@ -2458,7 +2458,12 @@
   "Im Velair-Panel öffnen": "Open in the Velair panel",
   "Profile, Modi und Vorlagen": "Profiles, modes and templates",
   "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "A profile is active – edit it in the Velair panel.",
-  "Ein Profil pausiert diesen Zeitplan.": "A profile pauses this schedule."
+  "Ein Profil pausiert diesen Zeitplan.": "A profile pauses this schedule.",
+  "Unterstream": "Sub stream",
+  "Hauptstream": "Main stream",
+  "Standard": "Standard",
+  "Stream": "Stream",
+  "Stream nicht erreichbar · Standard": "Stream not reachable · Standard"
  },
  "patterns": [
   [

@@ -15,6 +15,26 @@
 //          The Studio shows the match as a placeholder ("Auto: …"); the
 //          AI helper only fills what the finder does not find.
 const ICON = { key: "icon", label: "Icon", type: "icon" };
+// Frigate stream fields (#61): choices = the camera's go2rtc streams from the Frigate integration
+// (23-frigate.js F.streamChoices; the Studio loads the module once if no dashboard did). Until the list
+// is there (or without any), only "Default"/"Standard". dynOptions(hass, entityId, redraw) → {options, labels} | null.
+let frigateLoad = null;
+const frigateStreams = (phone) => (hass, id, redraw) => {
+  const W = window;
+  const t = (s) => (W.casoraI18n && typeof W.casoraI18n.t === "function" ? W.casoraI18n.t(s) : s);
+  const F = W._casoraFrigate;
+  if (!F || typeof F.streamChoices !== "function") {
+    if (!frigateLoad) frigateLoad = import("/casora_scripts/local/23-frigate.js").then(() => { if (redraw) redraw(); }, () => {});
+    return null;
+  }
+  const ch = F.streamChoices(hass, id, redraw);
+  if (!ch) return null;
+  const word = { sub: "Sub stream", main: "Main stream" };
+  const labels = { standard: t("Standard") };
+  ch.streams.forEach((n) => { labels[n] = ch.kind[n] ? `${t(word[ch.kind[n]])} · ${n}` : n; });
+  labels[""] = phone ? (ch.sub ? `${t("Automatic")} · ${labels[ch.sub]}` : t("Same as desktop")) : t("Standard");
+  return { options: phone ? ch.options : ch.options.filter((o) => o !== "standard"), labels };
+};
 const TITLE = { key: "room_name", label: "Popup title", type: "text", advanced: true };
 // Popups whose title is otherwise the tile name (window.casoraPopupTitle).
 const TITLE_NAME = { ...TITLE, placeholder: "The tile's name" };
@@ -389,6 +409,21 @@ window.CASORA_TILE_TYPES = [
       // Frigate 2: live image instead of a still (23-frigate.js tileWatch) – only while visible and in front, else torn down.
       { key: "live_tile", label: "Live on the tile", type: "bool", boolDefault: false, advanced: true, tileLevel: true,
         hint: "Plays the muted live stream on the tile instead of the still image – only while the tile is visible and the page is open, so it uses more data only then. Without a stream (or if it fails) the tile keeps the still image." },
+      // #61: which go2rtc stream of the camera plays (23-frigate.js F.pickStream); phone default = the sub stream.
+      { key: "stream_tile", label: "Stream on the tile", type: "select", advanced: true, tileLevel: true,
+        options: [""], optionLabels: { "": "Standard" }, dynOptions: frigateStreams(false),
+        when: (v) => v.live_tile === true || v.live_tile === "true",
+        hint: "Which of the camera's streams plays live on the tile. “Standard” is the stream Home Assistant knows for this camera; the others come from Frigate (go2rtc)." },
+      { key: "stream_tile_phone", label: "Stream on the tile (phone)", type: "select", advanced: true, tileLevel: true,
+        options: ["", "standard"], optionLabels: { "": "Automatic", standard: "Standard" }, dynOptions: frigateStreams(true),
+        when: (v) => v.live_tile === true || v.live_tile === "true",
+        hint: "On a phone. “Automatic” takes the camera's sub stream when Frigate has one – it needs less data – otherwise the same stream as on the desktop." },
+      { key: "stream_popup", label: "Stream in the popup (default)", type: "select", advanced: true,
+        options: [""], optionLabels: { "": "Standard" }, dynOptions: frigateStreams(false),
+        hint: "The stream the popup starts with. With more than one stream the popup shows a switch below the picture; the choice there holds until the browser is closed." },
+      { key: "stream_popup_phone", label: "Stream in the popup on the phone", type: "select", advanced: true,
+        options: ["", "standard"], optionLabels: { "": "Automatic", standard: "Standard" }, dynOptions: frigateStreams(true),
+        hint: "On a phone. “Automatic” starts with the sub stream when Frigate has one, otherwise with the desktop's stream." },
     ] },
   // Reolink doorbell (community card, from card request #23): camera tile for the live camera of a Reolink
   // doorbell (device with the "visitor" doorbell button), plus rings, detections, quick replies, siren and

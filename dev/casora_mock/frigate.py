@@ -17,8 +17,9 @@ Dazu, was sonst nur Frigate selbst kann (Antworten als JSON-Text wie die Integra
   <kamera>/review_thumbnail.webp|master.m3u8}, vod/…/master.m3u8 (HLS; streng wie die Integration: Listen nur angemeldet
   bzw. pfadgenau signiert, Segmente mit Signatur aus demselben Verzeichnis), recording/<kamera>/start/<s>/end/<e> (MP4),
   jeweils mit ?download=true als Anhang. Videos: 60 s Testbild, beim ersten Abruf mit dem ffmpeg des HA-Images erzeugt.
+  Streams (#61): go2rtc/api/streams (testhof + testhof_sub), mse/api/ws bzw. go2rtc/ws/api/ws (MSE, fragmentiertes MP4).
   Testdienste: casora_mock.frigate_erkennung {label, dauer} löst eine neue Erkennung aus;
-  casora_mock.frigate_proxy {notifications, vod, reviews, stream, clips, zuruecksetzen} schaltet Rückfälle
+  casora_mock.frigate_proxy {notifications, vod, reviews, stream, clips, streams, zuruecksetzen} schaltet Rückfälle
   (Notification-Proxy aus, ohne HLS, Frigate ohne Reviews, Kamera mit Stream-Funktion, ohne Clips-Proxy
   clips/review/thumb-<kamera>-<id>.webp). Kamera- und Gesichtsname erfunden.
 """
@@ -150,8 +151,42 @@ def _media() -> str | None:
     return _MEDIA
 
 
+# #61: the camera's go2rtc streams – main (testsrc2, 640 × 360) and sub (testsrc, 320 × 180, other pattern, so a
+# screenshot shows which one plays). Fragmented MP4 for MSE, made once per stream and codec on first use.
+STREAMS = [CAM, f"{CAM}_sub"]
+LIVE_SECONDS = 600
+LIVE_MIME = {"h264": 'video/mp4; codecs="avc1.42E01E"', "vp9": 'video/mp4; codecs="vp09.00.10.08"'}
+
+
+def _live(src: str, kind: str) -> str | None:
+    import os
+    import shutil
+    import subprocess
+    ff = shutil.which("ffmpeg")
+    if not ff or src not in STREAMS:
+        return None
+    os.makedirs(_MEDIA, exist_ok=True)
+    out = os.path.join(_MEDIA, f"live-{src}-{kind}.mp4")
+    if os.path.exists(out + ".ok"):
+        return out
+    pat = "testsrc=size=320x180:rate=5" if src.endswith("_sub") else "testsrc2=size=640x360:rate=5"
+    enc = (["-c:v", "libx264", "-profile:v", "baseline", "-level", "3.0", "-preset", "ultrafast"] if kind == "h264"
+           else ["-c:v", "libvpx-vp9", "-deadline", "realtime", "-cpu-used", "8", "-b:v", "300k"])
+    try:
+        subprocess.run([ff, "-y", "-loglevel", "error", "-f", "lavfi", "-i", pat, "-t", str(LIVE_SECONDS), *enc,
+                        "-pix_fmt", "yuv420p", "-g", "10", "-an",
+                        "-movflags", "frag_keyframe+empty_moov+default_base_moof", "-f", "mp4", out],
+                       check=True, timeout=300)
+    except Exception:  # noqa: BLE001
+        return None
+    open(out + ".ok", "w").close()
+    return out
+
+
 # ── Ereignisse, Reviews, Aufnahmen, WebSocket, Proxy-Adressen, Testdienste ─────
 def setup(hass, mock) -> None:
+    # asyncio only here: haus.py runs with dev/casora_mock on the path, where select.py shadows the stdlib.
+    import asyncio
     import os
     from aiohttp import web
     import voluptuous as vol
@@ -179,7 +214,8 @@ def setup(hass, mock) -> None:
     hass.data["casora_mock_frigate_rev"] = reviews
     # Schalter fürs Testen der Rückfälle (Dienst casora_mock.frigate_proxy): Notification-Proxy (Integrations-
     # Option), VOD/HLS, reviews/get (ältere Frigate-Versionen), Stream-Funktion der Kamera.
-    flags = hass.data["casora_mock_frigate_flags"] = {"notifications": True, "vod": True, "reviews": True, "stream": False, "clips": True}
+    flags = hass.data["casora_mock_frigate_flags"] = {"notifications": True, "vod": True, "reviews": True, "stream": False, "clips": True,
+                                                   "streams": True}
     subs: dict = {"events": {}, "reviews": {}}
 
     base = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA
@@ -485,7 +521,74 @@ def setup(hass, mock) -> None:
         async def get(self, request, inst, cam, start, end):
             return await mp4(request, f"{cam}-{start}.mp4")
 
-    for v in (Thumb, Snap, Notif, Clips, Vod, Rec):
+    # #61 streams: go2rtc of the made-up Frigate has the camera's main stream and a sub stream (flag "streams").
+    # Like Go2RTCAPIProxyView: …/go2rtc/api/streams lists them; like MSEProxyView / Go2RTCAPIWebsocketProxyView:
+    # …/mse/api/ws?src=<stream> speaks go2rtc's MSE protocol ({type: mse, value: codecs} → {type: mse, value: mime},
+    # then fragmented MP4) – H.264 when the browser lists avc1, else VP9 (Playwright's Chromium has no H.264).
+    async def go2_ws(request, path):
+        src = request.query.get("src", "")
+        if not flags["streams"] or src not in STREAMS or path.rstrip("/") != "api/ws":
+            return web.Response(status=404)
+        ws = web.WebSocketResponse()
+        await ws.prepare(request)
+        try:
+            first = await ws.receive(timeout=10)
+            want = json.loads(first.data).get("value", "") if first.type == web.WSMsgType.TEXT else ""
+        except Exception:  # noqa: BLE001
+            await ws.close()
+            return ws
+        kind = "h264" if "avc1" in want else "vp9"
+        name = await hass.async_add_executor_job(_live, src, kind)
+        if not name:
+            await ws.send_str(json.dumps({"type": "error", "value": "no media"}))
+            await ws.close()
+            return ws
+        await ws.send_str(json.dumps({"type": "mse", "value": LIVE_MIME[kind]}))
+        data = await hass.async_add_executor_job(lambda: open(name, "rb").read())
+        # Paced like a live stream: two seconds at once, then a quarter second every quarter second.
+        per_s = max(1, len(data) // LIVE_SECONDS)
+        pos, step = per_s * 2, max(1024, per_s // 4)
+        hass.data.setdefault("casora_mock_frigate_live", []).append(src)
+        try:
+            await ws.send_bytes(data[:pos])
+            while pos < len(data) and not ws.closed:
+                await asyncio.sleep(0.25)
+                await ws.send_bytes(data[pos:pos + step])
+                pos += step
+        except Exception:  # noqa: BLE001
+            pass
+        if not ws.closed:
+            await ws.close()
+        return ws
+
+    class Go2Ws(HomeAssistantView):
+        url = "/api/frigate/{inst}/go2rtc/ws/{path:.*}"
+        name = "api:casora_mock:frigate_go2rtc_ws"
+
+        async def get(self, request, inst, path):
+            return await go2_ws(request, path)
+
+    class Mse(HomeAssistantView):
+        url = "/api/frigate/{inst}/mse/{path:.+}"
+        name = "api:casora_mock:frigate_mse"
+
+        async def get(self, request, inst, path):
+            return await go2_ws(request, path)
+
+    class Go2(HomeAssistantView):
+        url = "/api/frigate/{inst}/go2rtc/{path:.*}"
+        name = "api:casora_mock:frigate_go2rtc"
+
+        async def get(self, request, inst, path):
+            if path.rstrip("/") != "api/streams":
+                return web.Response(status=404)
+            if not flags["streams"]:
+                return web.Response(status=404)  # integration without the go2rtc proxy
+            # Shape of go2rtc's /api/streams (producers/consumers per name), no addresses.
+            return web.json_response({s: {"producers": [{"url": "rtsp://***"}], "consumers": []} for s in STREAMS})
+
+    # The websocket route first (as the integration registers it), else …/go2rtc/{path} would take it.
+    for v in (Thumb, Snap, Notif, Clips, Vod, Rec, Go2Ws, Mse, Go2):
         hass.http.register_view(v())
 
     def now_ts():

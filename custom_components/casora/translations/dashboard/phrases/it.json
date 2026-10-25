@@ -2476,7 +2476,12 @@
   "Im Velair-Panel öffnen": "Apri nel pannello Velair",
   "Profile, Modi und Vorlagen": "Profili, modalità e modelli",
   "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "È attivo un profilo – modificalo nel pannello Velair.",
-  "Ein Profil pausiert diesen Zeitplan.": "Un profilo mette in pausa questa programmazione."
+  "Ein Profil pausiert diesen Zeitplan.": "Un profilo mette in pausa questa programmazione.",
+  "Unterstream": "Flusso secondario",
+  "Hauptstream": "Flusso principale",
+  "Standard": "Standard",
+  "Stream": "Flusso",
+  "Stream nicht erreichbar · Standard": "Flusso non raggiungibile · Standard"
  },
  "patterns": [
   [

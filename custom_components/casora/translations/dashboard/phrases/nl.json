@@ -2476,7 +2476,12 @@
   "Im Velair-Panel öffnen": "Openen in het Velair-paneel",
   "Profile, Modi und Vorlagen": "Profielen, modi en sjablonen",
   "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "Er is een profiel actief – bewerk het in het Velair-paneel.",
-  "Ein Profil pausiert diesen Zeitplan.": "Een profiel pauzeert dit schema."
+  "Ein Profil pausiert diesen Zeitplan.": "Een profiel pauzeert dit schema.",
+  "Unterstream": "Substream",
+  "Hauptstream": "Hoofdstream",
+  "Standard": "Standaard",
+  "Stream": "Stream",
+  "Stream nicht erreichbar · Standard": "Stream niet bereikbaar · Standaard"
  },
  "patterns": [
   [

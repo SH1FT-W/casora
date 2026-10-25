@@ -37,6 +37,7 @@ custom_components/casora/scripts/local/22-halten.js | label | pill content built
 # 23-frigate.js – clip, recording and filters
 custom_components/casora/scripts/local/23-frigate.js | side | 'left'/'right' literal | 2
 custom_components/casora/scripts/local/23-frigate.js | re:^arrow\('(?:left|right)', | arrow() escapes label and ids | 2
+custom_components/casora/scripts/local/23-frigate.js | cd | MIME type for MediaSource.isTypeSupported (codec from a fixed list), not HTML | 1
 custom_components/casora/scripts/local/23-frigate.js | re:^(?:n|\(n > 1 \? ' n' \+ n : ''\))$ | button count (number) | 2
 custom_components/casora/scripts/local/23-frigate.js | re:^(?:a|b|m|fill|sel|tk|ticks|strip|one|fx|chips)$ | numbers (a/b in aria-* are escaped, these are the other uses), fixed CSS, or chip markup built from escaped parts | 10
 custom_components/casora/scripts/local/23-frigate.js | re:^pct\( | percentage computed in code (toFixed) | 4
