@@ -14752,7 +14752,7 @@
       "max-width": "100%"
      },
      {
-      "margin-top": "[[[\n  if (!((window.casoraSeen?window.casoraSeen(variables,'lights',user,variables.show_lights):variables.show_lights)!==false&&(!!variables.light_entity_1||!!variables.light_group_entity))) return '0';\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';\n  return states['input_select.casora_expanded_row']?.state === 'lights'\n    ? 'var(--casora-badge-subrow-gap-current, 6px)' : '0';\n]]]\n"
+      "margin-top": "[[[\n  if (!((window.casoraSeen?window.casoraSeen(variables,'lights',user,variables.show_lights):variables.show_lights)!==false&&(!!variables.light_entity_1||!!variables.light_group_entity||variables.light_rooms_auto===true))) return '0';\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';\n  return states['input_select.casora_expanded_row']?.state === 'lights'\n    ? 'var(--casora-badge-subrow-gap-current, 6px)' : '0';\n]]]\n"
      },
      {
       "margin-bottom": 0
@@ -14767,13 +14767,13 @@
       "height": "auto !important"
      },
      {
-      "opacity": "[[[\n  if (!((window.casoraSeen?window.casoraSeen(variables,'lights',user,variables.show_lights):variables.show_lights)!==false&&(!!variables.light_entity_1||!!variables.light_group_entity))) return 0;\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;\n  return states['input_select.casora_expanded_row']?.state === 'lights' ? 1 : 0;\n]]]\n"
+      "opacity": "[[[\n  if (!((window.casoraSeen?window.casoraSeen(variables,'lights',user,variables.show_lights):variables.show_lights)!==false&&(!!variables.light_entity_1||!!variables.light_group_entity||variables.light_rooms_auto===true))) return 0;\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;\n  return states['input_select.casora_expanded_row']?.state === 'lights' ? 1 : 0;\n]]]\n"
      },
      {
-      "display": "[[[\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 'none';\n  if (!((window.casoraSeen?window.casoraSeen(variables,'lights',user,variables.show_lights):variables.show_lights)!==false&&(!!variables.light_entity_1||!!variables.light_group_entity))) return 'none';\n  return 'block';\n]]]\n"
+      "display": "[[[\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 'none';\n  if (!((window.casoraSeen?window.casoraSeen(variables,'lights',user,variables.show_lights):variables.show_lights)!==false&&(!!variables.light_entity_1||!!variables.light_group_entity||variables.light_rooms_auto===true))) return 'none';\n  return 'block';\n]]]\n"
      },
      {
-      "max-height": "[[[\n  if (!((window.casoraSeen?window.casoraSeen(variables,'lights',user,variables.show_lights):variables.show_lights)!==false&&(!!variables.light_entity_1||!!variables.light_group_entity))) return '0';\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';\n  return states['input_select.casora_expanded_row']?.state === 'lights' ? '200px' : '0';\n]]]\n"
+      "max-height": "[[[\n  if (!((window.casoraSeen?window.casoraSeen(variables,'lights',user,variables.show_lights):variables.show_lights)!==false&&(!!variables.light_entity_1||!!variables.light_group_entity||variables.light_rooms_auto===true))) return '0';\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';\n  return states['input_select.casora_expanded_row']?.state === 'lights' ? '200px' : '0';\n]]]\n"
      },
      {
       "overflow-x": "auto"
@@ -14788,7 +14788,7 @@
       "overscroll-behavior-x": "contain"
      },
      {
-      "--casora-row-fade": "[[[\n  if (!((window.casoraSeen?window.casoraSeen(variables,'lights',user,variables.show_lights):variables.show_lights)!==false&&(!!variables.light_entity_1||!!variables.light_group_entity))) return 0;\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;\n  return states['input_select.casora_expanded_row']?.state === 'lights' ? 1 : 0;\n]]]\n"
+      "--casora-row-fade": "[[[\n  if (!((window.casoraSeen?window.casoraSeen(variables,'lights',user,variables.show_lights):variables.show_lights)!==false&&(!!variables.light_entity_1||!!variables.light_group_entity||variables.light_rooms_auto===true))) return 0;\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;\n  return states['input_select.casora_expanded_row']?.state === 'lights' ? 1 : 0;\n]]]\n"
      },
      {
       "--casora-converge-lights": "[[[\n  const st = states['input_select.casora_expanded_row']?.state;\n  const token = st + '|' + (window.innerWidth || 0);\n  if (this._casoraCvLights !== token) {\n    this._casoraCvLights = token;\n    const rootEl = this.shadowRoot;\n    if (st === 'lights' && rootEl) {\n      const go = (r) => {\n        if (typeof window._casoraConverge === 'function') {\n          window._casoraConverge(rootEl, 'badges_lights', 'casora_badge_light_group', r);\n        }\n      };\n        requestAnimationFrame(() => go(false));\n      setTimeout(() => go(true), 700);\n    }\n  }\n  return '0';\n]]]\n"
