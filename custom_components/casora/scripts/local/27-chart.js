@@ -16,6 +16,8 @@
 //   window._casoraChartCard.summarize(rows, kind, span, now) → {min, max, mean} | {sum, today, perDay} from a WS answer
 //   window._casoraChartCard.stats(hass, id, span, el)        → the same, fetched once per range (null while loading)
 //   window._casoraChartCard.span(id) / setSpan(id, span), shape(id) / setShape(id, shape) – session choice per sensor
+//   window._casoraChartCard.sel(id) / setSel(id, entity)      – series picked in the chart's switch, for the session
+//   window._casoraChartCard.pick(ev)                         – tap (click / finger touchend) on a range or shape segment
 //   window._casoraChartCard.popup(entity, states, hass, V)   – popup casora_popup_chart
 //   window._casoraChartCard.sec(part, C, states, hass, el)   – live parts (hero, range, series, stats)
 (function () {
@@ -265,27 +267,66 @@
     shapeOf[id] = shape;
     show(id);
   };
+  // Series picked with the chart's own switch (different units): kept for the session like range and shape, so a
+  // range switch or "Zurück" from a page in the popup (both mount a new chart) shows it again (#58). The chart is
+  // not remounted here – it already shows the pick.
+  var selOf = {};
+  M.sel = function (id) { return selOf[id] || null; };
+  M.setSel = function (id, entity) {
+    if (!id || !entity) return;
+    selOf[id] = entity;
+    SPANS.forEach(function (sp) {
+      SHAPES.forEach(function (sh) { var c = (window._hpPlantCfg || {})[M.key(id, sp, sh)]; if (c) c.selected = entity; });
+    });
+  };
+  document.addEventListener('casora-chart-select', function (ev) {
+    var d = ev.detail || {};
+    if (window._hpPlantCfg && window._hpPlantCfg[M.key(d.main, M.span(d.main), M.shape(d.main))]) M.setSel(d.main, d.entity);
+  }, true);
   var remember = function (id, el) {
     if (!el) return;
     var list = parts[id] = (parts[id] || []).filter(function (e) { return e && e.isConnected; });
     if (list.indexOf(el) < 0) list.push(el);
   };
-  // Tapping a range or shape segment.
-  document.addEventListener('click', function (ev) {
+  // Tapping a range or shape segment. A finger tap is taken on touchend: the popup's button-cards cancel the
+  // touchend (button-card's action handler), so on a phone no click ever follows (#58). The click that may still
+  // come after a handled touch is dropped; a touch that moved (scrolling the sheet) is no tap.
+  var SLOP = 10, touch = null, touchAt = 0;
+  var segOf = function (ev) {
     var p = (ev.composedPath && ev.composedPath()) || [];
     for (var i = 0; i < p.length; i++) {
       var n = p[i];
-      if (!n || !n.getAttribute) continue;
-      var span = n.hasAttribute('data-casora-cspan'), shape = !span && n.hasAttribute('data-casora-cshape');
-      if (!span && !shape) continue;
-      ev.preventDefault(); ev.stopPropagation();
-      var v = n.getAttribute(span ? 'data-casora-cspan' : 'data-casora-cshape').split('|');
-      if (window.casoraHaptic) window.casoraHaptic('selection');
-      window._casoraSuppressDismiss = Date.now() + 600;
-      if (span) M.setSpan(v[0], v[1]); else M.setShape(v[0], v[1]);
-      return;
+      if (n && n.hasAttribute && (n.hasAttribute('data-casora-cspan') || n.hasAttribute('data-casora-cshape'))) return n;
     }
+    return null;
+  };
+  M.pick = function (ev) {
+    var n = segOf(ev);
+    if (!n) return false;
+    ev.preventDefault(); ev.stopPropagation();
+    if (ev.type === 'touchend') touchAt = Date.now();
+    else if (Date.now() - touchAt < 700) return false;
+    var span = n.hasAttribute('data-casora-cspan');
+    var v = n.getAttribute(span ? 'data-casora-cspan' : 'data-casora-cshape').split('|');
+    if (window.casoraHaptic) window.casoraHaptic('selection');
+    window._casoraSuppressDismiss = Date.now() + 600;
+    if (span) M.setSpan(v[0], v[1]); else M.setShape(v[0], v[1]);
+    return true;
+  };
+  // In the popup a second touchstart of the same finger arrives with a path that ends at the popup's container
+  // (without the segment): it must not drop the start.
+  document.addEventListener('touchstart', function (ev) {
+    var t = ev.touches && ev.touches.length === 1 && ev.touches[0];
+    if (t && segOf(ev)) touch = { x: t.clientX, y: t.clientY, id: t.identifier };
+    else if (!t || !touch || touch.id !== t.identifier) touch = null;
+  }, { capture: true, passive: true });
+  document.addEventListener('touchend', function (ev) {
+    var s = touch, t = ev.changedTouches && ev.changedTouches[0];
+    touch = null;
+    if (!s || !t || Math.abs(t.clientX - s.x) > SLOP || Math.abs(t.clientY - s.y) > SLOP) return;
+    M.pick(ev);
   }, true);
+  document.addEventListener('click', M.pick, true);
 
   // ── Popup ───────────────────────────────────────────────────────────────────
   M.popup = function (entity, states, hass, V) {
@@ -302,7 +343,8 @@
     if (window._hpPlantCfg) {
       SPANS.forEach(function (sp) {
         SHAPES.forEach(function (sh) {
-          window._hpPlantCfg[M.key(id, sp, sh)] = M.chartCfg(series, sp, kind, sh);
+          var cfg = window._hpPlantCfg[M.key(id, sp, sh)] = M.chartCfg(series, sp, kind, sh);
+          if (selOf[id]) cfg.selected = selOf[id];
           if (window._hpPlantMeta) window._hpPlantMeta[M.key(id, sp, sh)] = [series[0].name, sp, series[0].color];
         });
       });
@@ -319,8 +361,9 @@
         grid: [{ 'grid-template-areas': '"c"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }],
         custom_fields: { c: [{ 'justify-self': 'stretch' }, { overflow: 'visible' }] } };
       chart.custom_fields = { c: '<div class="hp-chart-slot" style="min-height:230px;pointer-events:auto;"></div>' };
+      // Mounted by the range part when it first draws (M.sec), not here: "Zurück" from a page opened in the popup
+      // rebuilds the popup from this config without running the template again – the slot stayed empty (#58).
       f.chart = { card: chart };
-      if (typeof window._hpChartInit === 'function') window._hpChartInit(M.key(id, M.span(id), M.shape(id)), false);
     }
     if (series.length > 1) f.series = { card: K.secCard(watch, call('series'), states) };
     f.stats = { card: K.secCard([id], call('stats'), states) };
@@ -356,6 +399,11 @@
         valueTone: st && bad(st.state) ? 'warn' : null });
     }
     if (part === 'range') {
+      // Each build of the popup (opening, or back from a page inside it) creates this card anew: mount the chart.
+      if (C.kind && el && !el._casoraChartMount) {
+        el._casoraChartMount = true;
+        if (typeof window._hpChartInit === 'function') window._hpChartInit(M.key(C.id, span, shape), false);
+      }
       // Segments like the mode switch: the ranges, beside them the shape (line / bars); each carries its value
       // (click handler above). Narrow (phone) the shape row wraps under the ranges.
       var i = 0, j = 0;

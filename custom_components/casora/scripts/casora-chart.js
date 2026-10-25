@@ -169,6 +169,21 @@
     h = (h * 60 + 360) % 360;
     return 'var(--cc' + (h < 42 || h >= 330 ? 2 : h < 70 ? 4 : h < 175 ? 3 : 1) + ')';
   };
+  // Tap: click or a finger lifted in place (button-card cancels touchend: no click, #58); no click echo.
+  var onTap = C.onTap = function (b, fn) {
+    var t0, at = 0, pt = function (ev, k) { return ev[k] && ev[k].length === 1 && ev[k][0]; };
+    b.addEventListener('touchstart', function (ev) { t0 = pt(ev, 'touches'); }, { passive: true });
+    b.addEventListener('touchend', function (ev) {
+      var s = t0, t = pt(ev, 'changedTouches');
+      t0 = null;
+      if (!s || !t || Math.abs(t.clientX - s.clientX) > 10 || Math.abs(t.clientY - s.clientY) > 10) return;
+      at = Date.now(); window._casoraSuppressDismiss = at + 600;
+      ev.stopPropagation(); if (ev.cancelable) ev.preventDefault();
+      fn();
+    });
+    b.addEventListener('click', function (ev) { ev.stopPropagation(); if (Date.now() - at > 700) fn(); });
+  };
+
   window.casoraChart = C;
   if (typeof customElements === 'undefined' || customElements.get('casora-chart')) return;
 
@@ -186,7 +201,9 @@
     // Switch like hui-sg: fields 46 high, radius 18, the active one light.
     + '.sw{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;margin:2px var(--casora-chart-inset,6px) 10px}'
     + '.sw button{all:unset;box-sizing:border-box;min-width:0;min-height:46px;border-radius:var(--casora-soft-seg-radius,18px);padding:0 12px;display:flex;align-items:center;justify-content:center;gap:6px;'
-    + 'background:var(--casora-soft-control-fill,rgba(140,115,90,.10));font-size:13px;font-weight:600;color:var(--casora-soft-sub,var(--cink2));cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-tap-highlight-color:transparent;transition:background-color .16s ease}'
+    + 'background:var(--casora-soft-control-fill,rgba(140,115,90,.10));font-size:13px;font-weight:600;color:var(--casora-soft-sub,var(--cink2));cursor:pointer;white-space:nowrap;overflow:hidden;-webkit-tap-highlight-color:transparent;transition:background-color .16s ease}'
+    // Name centred if it fits, else "…" at the end (#58)
+    + '.sw b{font:inherit;min-width:0;overflow:hidden;text-overflow:ellipsis}'
     + '.sw button[aria-selected=true]{background:var(--casora-soft-seg-on,#FFFDF9);color:var(--casora-soft-seg-on-ink,var(--cink));box-shadow:var(--casora-soft-seg-on-shadow,none)}'
     + '@media (hover:hover){.sw button[aria-selected=false]:hover{background:var(--casora-soft-row-hover,rgba(140,115,90,.11))}}'
     + '.sw button:focus-visible,svg:focus-visible{outline:2px solid var(--cacc);outline-offset:2px}'
@@ -357,9 +374,9 @@
         c.series.forEach(function (s, i) {
           var b = document.createElement('button');
           b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(i === me._sel));
-          b.innerHTML = '<i style="background:' + window.casoraEsc(C.color(s.color)) + '"></i>';
-          b.appendChild(document.createTextNode(C.tr(s.name || s.entity)));
-          b.addEventListener('click', function (ev) { ev.stopPropagation(); me._sel = i; me._draw(); });
+          b.innerHTML = '<i style="background:' + window.casoraEsc(C.color(s.color)) + '"></i><b></b>';
+          b.lastChild.textContent = C.tr(s.name || s.entity);
+          onTap(b, function () { me._sel = i; me._draw(); me.dispatchEvent(new CustomEvent('casora-chart-select', { bubbles: true, composed: true, detail: { entity: s.entity, main: c.series[0].entity } })); });
           sw.appendChild(b);
         });
         box.appendChild(sw);
@@ -529,7 +546,7 @@
       var s0 = list[0] || {}, unit = s0.entity ? this._unit(s0) : '', name = C.tr(s0.name || '');
       var ro = this._head(box, name, unit), Hh = c.height || 150, padT = 10, padB = 24, padR = 40, padL = 2;
       var starts = C.starts(now, per, n), dec = s0.decimals != null ? s0.decimals : 1;
-      // Value per bucket and series: counter → sum of the changes, raw history → mean, statistics → the bucket's value.
+      // Value per bucket: counter → sum of changes, history → mean, statistics → bucket value.
       var V = list.map(function (s) {
         var pts = me._points(s);
         return starts.map(function (t, i) {
@@ -563,7 +580,7 @@
       var dflt = function () { me._say(ro, avg != null ? C.nf(avg, dec) : '–', unit, me._def, null); };
       if (!have.length) { this._empty(svg, W, Hh); dflt(); return; }
       var tl = this._grid(svg, sc, Y, W, padR, function (v) { return C.nf(v, v % 1 ? 1 : 0); });
-      // Labels: hours at whole steps (1/2/3/6 h by room), days as before, months by their short name; the current bucket bold.
+      // Labels: hours at whole steps (1/2/3/6 h), days, short month names; current bucket bold.
       var every = per === 'hour' ? (slot >= 44 ? 1 : slot >= 22 ? 2 : slot >= 15 ? 3 : 6) : per === 'month' ? Math.ceil(30 / slot) : n > 7 ? Math.ceil(44 / slot) : 1;
       var rest = m > 1 ? 0.6 : 0.45, bars = [];
       starts.forEach(function (t, i) {
