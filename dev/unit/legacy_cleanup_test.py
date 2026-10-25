@@ -1,6 +1,7 @@
 """One-time removal of what earlier versions left in the config folder (legacy_cleanup.py), without a running HA.
 
   ~/.cache/ha-venv/2026.10.1/bin/python dev/unit/legacy_cleanup_test.py
+  uv run --python 3.14 --with homeassistant python dev/unit/legacy_cleanup_test.py
 
 Owner request: the repair notices for the old scripts and the old theme file should not ask the user to clean up;
 Casora removes its own leftovers once and then tells. HACS review (hacs/default#12143, point 3): no editing of
