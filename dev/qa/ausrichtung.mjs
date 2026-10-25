@@ -303,7 +303,12 @@ const MEASURE = () => {
           if (!ic && isIcon(d)) ic = R(d);
           const word = (n) => n.nodeType === 3 && n.textContent.trim().length > 1;
           if (!tx && !inSvg(d) && !/^(STYLE|SCRIPT)$/.test(d.tagName) && [...d.childNodes].some(word)) {
-            const n = [...d.childNodes].find(word); const rg = document.createRange(); rg.selectNodeContents(n); const q = rg.getClientRects()[0]; if (q) tx = q;
+            // Where the text of the row starts: its first word in reading order, also inside an inline child
+            // (a paragraph opening with **bold** measured from the text after the bold part, 25.10.2026).
+            const tw = document.createTreeWalker(d, NodeFilter.SHOW_TEXT, { acceptNode: (t) => (word(t) && !inSvg(t.parentNode)
+              && !/^(STYLE|SCRIPT)$/.test(t.parentNode.tagName) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP) });
+            const n = tw.nextNode() || [...d.childNodes].find(word);
+            const rg = document.createRange(); rg.selectNodeContents(n); const q = rg.getClientRects()[0]; if (q) tx = q;
           }
         }
         return { ic: ic ? ic.left - rs[i].left : null, icy: ic ? (ic.top + ic.bottom) / 2 - (rs[i].top + rs[i].bottom) / 2 : null, tx: tx ? tx.left - rs[i].left : null, hasIc: !!ic };
