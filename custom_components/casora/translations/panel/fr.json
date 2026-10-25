@@ -2620,7 +2620,15 @@
     "Chance of rain today": "Probabilité de pluie aujourd’hui",
     "Solar radiation": "Rayonnement solaire",
     "UV index": "Indice UV",
-    "Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list.": "Casora se met à jour via HACS. Pour essayer une bêta : ouvre Casora dans HACS, ⋮ › « Retélécharger » et choisis la bêta dans la liste des versions."
+    "Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list.": "Casora se met à jour via HACS. Pour essayer une bêta : ouvre Casora dans HACS, ⋮ › « Retélécharger » et choisis la bêta dans la liste des versions.",
+    "Install Casora {v}?": "Installer Casora {v} ?",
+    "HACS downloads the new version. Home Assistant needs a restart afterwards.": "HACS télécharge la nouvelle version. Home Assistant doit ensuite redémarrer.",
+    "Install": "Installer",
+    "Installing didn't work.": "L'installation n'a pas marché.",
+    "HACS's update entry for Casora is not available right now. Try again in a moment or update in HACS.": "L'entrée de mise à jour HACS pour Casora n'est pas disponible pour l'instant. Réessaie dans un moment ou mets à jour dans HACS.",
+    "HACS did not report the new version as installed. Check HACS.": "HACS n'a pas signalé la nouvelle version comme installée. Vérifie HACS.",
+    "Open in HACS": "Ouvrir dans HACS",
+    "Casora is updated through HACS. To try a beta, open it in the list below and tap Install. Betas can have bugs.": "Casora est mis à jour via HACS. Pour essayer une bêta, ouvre-la dans la liste ci-dessous et touche Installer. Les bêtas peuvent avoir des bugs."
   },
   "patterns": [
     [

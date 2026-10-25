@@ -18,7 +18,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Live activities in all eight languages,** and the title shows the device kind ("Robot vacuum") when the device name is only the product name.
 
 ### Changed
-- **Updates only through HACS:** Casora no longer installs updates itself; the Studio's button opens Casora in HACS. Releases carry a casora.zip, so HACS downloads only the integration instead of the whole repository and the update no longer hangs at 50 %.
+- **Updates only through HACS:** Casora no longer installs updates itself. The Studio's Install button asks HACS to do it, and a beta is installed straight from its row in the version list. Releases carry a casora.zip, so HACS downloads only the integration instead of the whole repository and the update no longer hangs at 50 %.
 - **Private room photos:** your own room photos move from /config/www/casora to /config/casora_photos and are served only to logged-in users through signed links. Saved dashboards keep working.
 - **Nothing written into your configuration:** Casora's helper scripts are now Casora actions, and the designs come from the integration itself instead of a file in your themes folder. The Studio's design choice applies at once, shows in your Home Assistant profile and HA's profile theme picker lists the Casora designs. Old Casora scripts and the old theme file are removed once by themselves (only if unused and unchanged), and a notification says what was removed.
 - **AI only through Home Assistant's public interface:** Casora calls AI tasks through ai_task and no longer touches other integrations' clients. The model is detected from the device or typed in the Studio.

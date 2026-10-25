@@ -18,7 +18,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Live-Aktivitäten in allen acht Sprachen,** und der Titel zeigt die Geräteart („Saugroboter“), wenn der Gerätename nur der Produktname ist.
 
 ### Geändert
-- **Updates nur noch über HACS:** Casora installiert nicht mehr selbst, der Knopf im Studio öffnet Casora in HACS. Releases bringen eine casora.zip mit, HACS lädt damit nur noch die Integration statt des ganzen Repos, und das Update hängt nicht mehr bei 50 %.
+- **Updates nur noch über HACS:** Casora installiert nicht mehr selbst. Der Knopf „Installieren“ im Studio lässt HACS das Update laden, und eine Beta installierst du direkt aus ihrer Zeile in der Versionsliste. Releases bringen eine casora.zip mit, HACS lädt damit nur noch die Integration statt des ganzen Repos, und das Update hängt nicht mehr bei 50 %.
 - **Private Raumfotos:** Eigene Raumfotos ziehen von /config/www/casora nach /config/casora_photos und werden nur noch angemeldet über signierte Links ausgeliefert. Gespeicherte Dashboards funktionieren weiter.
 - **Nichts mehr in deine Konfiguration geschrieben:** Casoras Hilfsskripte sind jetzt Casora-Aktionen, und die Designs kommen aus der Integration statt aus einer Datei im themes-Ordner. Die Design-Wahl im Studio wirkt sofort, steht in deinem Home-Assistant-Profil, und HAs Profil-Auswahl zeigt die Casora-Designs. Alte Casora-Skripte und die alte Theme-Datei entfernt Casora einmal selbst (nur unbenutzt und unverändert), eine Mitteilung sagt, was entfernt wurde.
 - **KI nur über Home Assistants öffentliche Schnittstelle:** Casora ruft KI-Aufgaben über ai_task auf und fasst die Clients anderer Integrationen nicht mehr an. Das Modell wird am Gerät erkannt oder im Studio eingetippt.

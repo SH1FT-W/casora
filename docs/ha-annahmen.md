@@ -126,9 +126,12 @@ Version gelesen; mit `"zip_release": true` + `"filename": "casora.zip"` lädt HA
 Zip-Root), ohne Rückfall auf das Repo-Archiv. Ältere Releases (ohne diese Schlüssel) laden weiter das Repo-Archiv.
 Deshalb hängt `tools/release.sh` an jedes Release `casora.zip` (`tools/build-release-zip.py`). Casora selbst
 installiert nichts (HACS-Review hacs/default#12143): die eigene Update-Entität (nur ohne HACS, `update.py`) meldet
-neue Versionen und Versionshinweise, ohne `INSTALL`; das Studio verweist auf HACS (`/hacs/repository/<GitHub-ID>`,
-GitHub-ID fest in `const.UPDATE_REPO_ID`, HACS-Verwaltung erkannt über HACS' Gerät bzw. Update-Entität in der
-Registry, sonst Mehr-Info von HACS' Update-Entität). Tests:
+neue Versionen und Versionshinweise, ohne `INSTALL`. Mit HACS ruft das Studio HAs öffentlichen Dienst `update.install`
+an HACS' Update-Entität für Casora auf (HACS-Quelle `update.py`, 25.10.2026: Funktionen `INSTALL` + `SPECIFIC_VERSION`
++ `PROGRESS`, `version` = Release-Tag `v<version>`, danach `installed_version` = neue Version und Neustart nötig);
+eine Beta geht mit ihrem Tag als `version`. „In HACS öffnen“ führt zu `/hacs/repository/<GitHub-ID>`
+(GitHub-ID fest in `const.UPDATE_REPO_ID`, HACS-Verwaltung erkannt über HACS' Gerät bzw. Update-Entität in der
+Registry, sonst Mehr-Info von HACS' Update-Entität). Tests: `dev/qa/regress/r84_updates_via_hacs.mjs` (Studio-Aufruf, Mock),
 `dev/unit/update_release_zip_test.py` (Paketaufbau), `dev/unit/update_report_only_test.py` (kein `INSTALL`, kein
 Schreibzugriff auf `custom_components`); HACS selbst und die HACS-Route nicht im Test.
 
