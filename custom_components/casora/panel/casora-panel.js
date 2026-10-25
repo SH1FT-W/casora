@@ -2023,6 +2023,15 @@ function expandPair(pair, parts) {
 // ─── form schema ──────────────────────────────────────────────────────────────
 
 const E = (key, label, domains) => ({ key, label, domains });
+// Weather popup lists (#56), the same keys and order as casoraDevice.weatherChart/weatherRows (00-finder.js).
+const WEATHER_CURVES = ["temperature", "feels", "dew_point", "humidity", "wind", "gust", "cloud", "precipitation", "rain_chance", "solar", "uv"];
+const WEATHER_ROWS = ["feels", "dew_point", "gust", "cloud", "rain_chance", "rain_chance_today", "precipitation", "solar", "uv"];
+const WEATHER_MAX_CURVES = 4;
+const WEATHER_PICK_LABELS = {
+  temperature: "Temperature", feels: "Felt temperature", dew_point: "Dew point", humidity: "Humidity", wind: "Wind",
+  gust: "Wind gusts", cloud: "Cloud cover", precipitation: "Precipitation", rain_chance: "Chance of rain",
+  rain_chance_today: "Chance of rain today", solar: "Solar radiation", uv: "UV index",
+};
 // Einheiten, an denen ein Sensor ohne device_class seine Art verrät (_entityList).
 const NO_UNIT = /^$/;
 const CLASS_UNITS = {
@@ -2282,14 +2291,16 @@ const SECTIONS = [
       // „H · T · Regen“ neben der Temperatur. Geht als weather_details an casora_room (hero_details).
       { key: "weather_details", label: "Show details", type: "bool", boolDefault: true, always: true,
         hint: "Condition, high/low and rain next to the temperature on desktop and tablet." },
-      // Issue #56: the weather popup's felt temperature curve and the source's further values
-      // (casoraDevice.weatherChart/weatherRows). Go as weather_feels/weather_extras/weather_feels_sensor to casora_weather.
-      { key: "weather_feels", label: "Felt temperature", type: "bool", boolDefault: true, always: true,
-        hint: "Second curve in the weather popup's temperature chart, when the weather source provides it." },
+      // Issue #56: what the weather popup shows of the source, as lists of what it offers (casoraDevice.weatherOptions):
+      // weather_chart = the chart's curves (at most four; absent: temperature + felt), weather_extras = the extra
+      // detail rows (absent: all, false: none). The older on/off weather_feels counts until the first change
+      // (casoraDevice.weatherChoice). Go with weather_feels_sensor to casora_weather, on the phone via casora_mobile_weather.
+      { key: "weather_chart", label: "In the chart", type: "weatherpick", pick: "curves", always: true,
+        hint: "Curves in the weather popup's chart, up to four. Values in another unit get their own chart behind the switch." },
       { ...E("weather_feels_sensor", "Felt temperature sensor", ["sensor"]), classes: ["temperature"],
         noAdd: true, placeholder: "Automatic: from the source" },
-      { key: "weather_extras", label: "Extra values", type: "bool", boolDefault: true, always: true,
-        hint: "Dew point, wind gusts, cloud cover, chance of rain and more in the weather popup, when the weather source provides them." },
+      { key: "weather_extras", label: "Extra values", type: "weatherpick", pick: "rows", always: true,
+        hint: "Rows in the weather popup's details, when the weather source provides them." },
     ],
   },
   {
@@ -18296,6 +18307,42 @@ class CasoraPanel extends HTMLElement {
           return;
         }
 
+        if (f.type === "weatherpick") {
+          // #56: chips of the chosen curves/rows, a list to add what the weather source offers. Writing one list
+          // settles the older weather_feels switch into both lists, then drops it.
+          const D = window.casoraDevice;
+          const val = (k) => room.variables[k] ?? anyRoom({ key: k });
+          const V = {};
+          ["weather_chart", "weather_extras", "weather_feels", "weather_feels_sensor"].forEach((k) => { V[k] = val(k); });
+          const choice = D && D.weatherChoice ? D.weatherChoice(V)
+            : { chart: ["temperature", "feels"], rows: WEATHER_ROWS.slice() };
+          const wid = val("weather_entity");
+          const offer = D && D.weatherOptions && wid && this._hass && this._hass.states[wid]
+            ? D.weatherOptions(this._hass, wid, { feels: V.weather_feels_sensor || "" }) : null;
+          const curves = f.pick === "curves";
+          const all = curves ? WEATHER_CURVES : WEATHER_ROWS;
+          const avail = offer ? offer[f.pick] : all;
+          const picked = (curves ? choice.chart : choice.rows).filter((k) => avail.includes(k));
+          const write = (list) => {
+            if (V.weather_feels !== undefined && V.weather_feels !== null && V.weather_feels !== "") {
+              if (!Array.isArray(V.weather_chart)) setVar("weather_chart", choice.chart, f);
+              if (!Array.isArray(V.weather_extras)) setVar("weather_extras", choice.rows.length ? choice.rows : false, f);
+              setVar("weather_feels", undefined, f);
+            }
+            if (curves) setVar(f.key, list, f);
+            // Every value the source has: stored as absent, so values the source adds later show as well.
+            else setVar(f.key, !list.length ? false : avail.every((k) => list.includes(k)) ? undefined : list, f);
+            this._syncPreview();
+            this._renderForm();
+          };
+          row.appendChild(this._optionChips(picked, avail, WEATHER_PICK_LABELS, write,
+            { max: curves ? WEATHER_MAX_CURVES : 0, min: curves ? 1 : 0, order: all }));
+          addDrop(row, f);
+          fs.appendChild(row);
+          addHint();
+          return;
+        }
+
         if (f.type === "bool") {
           // invert: the switch shows the opposite of the stored value.
           const flip = (v) => (f.invert && v !== undefined && v !== "" && v !== null ? !v : v);
@@ -20886,6 +20933,60 @@ class CasoraPanel extends HTMLElement {
     };
 
     draw();
+    return wrap;
+  }
+
+  // Chips of fixed choices (#56 weather lists), like _chipPicker for entities: the picked keys as chips with ×,
+  // a list to add the others. opts.max: no list once reached, opts.min: no × below, opts.order: chip order.
+  _optionChips(picked, choices, labels, onChange, opts) {
+    const o = opts || {};
+    const t9 = (x) => (window.casoraI18n && typeof x === "string" ? window.casoraI18n.t(x) : x);
+    const order = o.order || choices;
+    const list = picked.filter((k, i) => choices.includes(k) && picked.indexOf(k) === i)
+      .sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    const wrap = document.createElement("div");
+    wrap.className = "chipwrap";
+    if (list.length) {
+      const chips = document.createElement("div");
+      chips.className = "chips";
+      list.forEach((k) => {
+        const c = document.createElement("span");
+        c.className = "chip";
+        c.dataset.pick = k;
+        const t = document.createElement("span");
+        t.setAttribute("data-no-i18n", "");
+        t.textContent = t9(labels[k] || k);
+        c.appendChild(t);
+        if (list.length > (o.min || 0)) {
+          const x = document.createElement("button");
+          x.type = "button";
+          x.textContent = "×";
+          x.title = "Remove";
+          x.setAttribute("aria-label", t9("Remove") + " " + t.textContent);
+          x.onclick = () => onChange(list.filter((v) => v !== k));
+          c.appendChild(x);
+        }
+        chips.appendChild(c);
+      });
+      wrap.appendChild(chips);
+    }
+    const rest = choices.filter((k) => !list.includes(k));
+    if (o.max && list.length >= o.max) {
+      const n = document.createElement("div");
+      n.className = "none";
+      n.textContent = "Up to four curves. Remove one to add another.";
+      wrap.appendChild(n);
+    } else if (rest.length) {
+      const combo = this._combo("", rest, "Add a value", (v) => {
+        if (v && rest.includes(v)) onChange(list.concat([v]));
+      }, { fixed: true, labels });
+      wrap.appendChild(combo.wrap);
+    } else if (!list.length) {
+      const n = document.createElement("div");
+      n.className = "none";
+      n.textContent = "The weather source has no further values.";
+      wrap.appendChild(n);
+    }
     return wrap;
   }
 

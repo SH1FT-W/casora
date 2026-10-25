@@ -2490,7 +2490,8 @@
   "Hauptstream": "Hoofdstream",
   "Standard": "Standaard",
   "Stream": "Stream",
-  "Stream nicht erreichbar · Standard": "Stream niet bereikbaar · Standaard"
+  "Stream nicht erreichbar · Standard": "Stream niet bereikbaar · Standaard",
+  "Wind": "Wind"
  },
  "patterns": [
   [

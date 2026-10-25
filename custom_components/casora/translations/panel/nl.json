@@ -2594,9 +2594,7 @@
     "Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list. Going back to an older stable version is not supported.": "Casora wordt via HACS bijgewerkt. Een bèta probeer je zo: open Casora in HACS, ⋮ › „Opnieuw downloaden” en kies de bèta in de versielijst. Teruggaan naar een oudere stabiele versie wordt daarna niet ondersteund.",
     "Felt temperature": "Gevoelstemperatuur",
     "Felt temperature sensor": "Sensor gevoelstemperatuur",
-    "Second curve in the weather popup's temperature chart, when the weather source provides it.": "Tweede lijn in de temperatuurgrafiek van de weerpop-up, als de weerbron die levert.",
     "Extra values": "Extra waarden",
-    "Dew point, wind gusts, cloud cover, chance of rain and more in the weather popup, when the weather source provides them.": "Dauwpunt, windstoten, bewolking, kans op regen en meer in de weerpop-up, als de weerbron die levert.",
     "Stream on the tile": "Stream op de tegel",
     "Stream on the tile (phone)": "Stream op de tegel (telefoon)",
     "Stream in the popup (default)": "Stream in het venster (standaard)",
@@ -2607,7 +2605,22 @@
     "Which of the camera's streams plays live on the tile. “Standard” is the stream Home Assistant knows for this camera; the others come from Frigate (go2rtc).": "Welke stream van de camera live op de tegel speelt. ‘Standaard’ is de stream die Home Assistant voor deze camera kent; de andere komen van Frigate (go2rtc).",
     "On a phone. “Automatic” takes the camera's sub stream when Frigate has one – it needs less data – otherwise the same stream as on the desktop.": "Op een telefoon. ‘Automatisch’ neemt de substream van de camera als Frigate er een heeft – die gebruikt minder data –, anders dezelfde stream als op de desktop.",
     "The stream the popup starts with. With more than one stream the popup shows a switch below the picture; the choice there holds until the browser is closed.": "Met welke stream het venster start. Bij meer dan één stream toont het venster een schakelaar onder het beeld; de keuze daar geldt tot de browser wordt gesloten.",
-    "On a phone. “Automatic” starts with the sub stream when Frigate has one, otherwise with the desktop's stream.": "Op een telefoon. ‘Automatisch’ start met de substream als Frigate er een heeft, anders met de stream van de desktop."
+    "On a phone. “Automatic” starts with the sub stream when Frigate has one, otherwise with the desktop's stream.": "Op een telefoon. ‘Automatisch’ start met de substream als Frigate er een heeft, anders met de stream van de desktop.",
+    "In the chart": "In de grafiek",
+    "Curves in the weather popup's chart, up to four. Values in another unit get their own chart behind the switch.": "Lijnen in de grafiek van het weer-pop-upvenster, tot vier. Waarden met een andere eenheid krijgen een eigen grafiek achter de schakelaar.",
+    "Rows in the weather popup's details, when the weather source provides them.": "Regels in de details van het weer-pop-upvenster, als de weerbron ze levert.",
+    "Add a value": "Waarde toevoegen",
+    "Up to four curves. Remove one to add another.": "Tot vier lijnen. Verwijder er een om een andere toe te voegen.",
+    "The weather source has no further values.": "De weerbron levert geen verdere waarden.",
+    "Dew point": "Dauwpunt",
+    "Wind": "Wind",
+    "Wind gusts": "Windstoten",
+    "Cloud cover": "Bewolking",
+    "Precipitation": "Neerslag",
+    "Chance of rain": "Regenkans",
+    "Chance of rain today": "Regenkans vandaag",
+    "Solar radiation": "Zonnestraling",
+    "UV index": "UV-index"
   },
   "patterns": [
     [

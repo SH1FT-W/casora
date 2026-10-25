@@ -1,6 +1,7 @@
 // Issue #56: felt temperature as a second curve in the weather popup's temperature chart, and the further values of
 // the weather source ("Wetter & Warnungen": sensors by translation_key on the weather device; HA's standard weather
-// attributes). Without such sources the chart keeps its one curve and the popup gets no extra rows.
+// attributes). Without such sources the chart keeps its one curve and the popup gets no extra rows. The Studio picks
+// which curves go into the chart (up to four, one chart per unit) and which extra rows show (weatherChoice).
 //   node dev/unit/weather_feels_like.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -121,16 +122,126 @@ const house = ({ attrs = {}, sensors = [], dev = 'd1' } = {}) => {
   assert.deepEqual(D.weatherSources({ states: {} }, 'weather.gone'), {});
 }
 
-// 5. The template uses the helpers: chart series replaced only with a felt curve, rows inserted after their neighbour.
+// 5. The template uses the helpers: one chart per unit group, rows inserted after their neighbour; the Studio's lists
+//    reach the popup on desktop (casora_room) and phone (casora_mobile_weather, declared so the Studio mirrors them).
 {
   const tpl = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
   const c = tpl.casora_weather.tap_action.casora_popup.content;
   assert.ok(c.includes('casoraDevice.weatherChart(hass, id,'), 'popup asks weatherChart');
-  assert.ok(c.includes('_cc.switch = false'), 'both curves at once, with legend');
+  assert.ok(c.includes('casoraDevice.weatherChoice(variables)'), 'popup reads the Studio choice');
+  assert.ok(c.includes('_cc.switch = false'), 'curves of one unit at once, with legend');
+  assert.ok(c.includes('_wxG.map((g) => [g.key, g.label])'), 'one switch button per unit');
   assert.ok(c.includes('casoraDevice.weatherRows(hass, id, _wxOpt)'), 'popup asks weatherRows');
+  assert.ok(!c.includes("r.key === 'feels' && !_wxOpt.showFeels"), 'the felt row follows the row list, not the curve');
   assert.equal(tpl.casora_weather.variables.weather_extras, true);
-  assert.equal(tpl.casora_weather.variables.weather_feels, true);
-  const room = JSON.stringify(tpl.casora_room);
-  assert.equal((room.match(/"weather_feels_sensor"/g) || []).length, 2, 'room hero and weather card pass the Studio settings');
+  assert.equal(tpl.casora_weather.variables.weather_chart, null);
+  for (const [name, at] of [['casora_room', ['temperature', 'weather']], ['casora_mobile_weather', ['weather']]]) {
+    const t = tpl[name];
+    for (const k of ['weather_chart', 'weather_extras', 'weather_feels', 'weather_feels_sensor']) {
+      assert.ok(Object.prototype.hasOwnProperty.call(t.variables, k), name + ' declares ' + k);
+    }
+    for (const f of at) {
+      const v = t.custom_fields[f].card.variables;
+      assert.equal(v.weather_chart, '[[[ return variables.weather_chart || null; ]]]', name + '/' + f + ' passes the curves');
+      assert.ok(/return variables\.weather_extras == null/.test(v.weather_extras) && !/!== false/.test(v.weather_extras),
+        name + '/' + f + ' passes the row list as it is, not as on/off');
+    }
+  }
+}
+
+// 6. Studio choice and migration of the older on/off settings.
+{
+  const ALL = ['feels', 'dew_point', 'gust', 'cloud', 'rain_chance', 'rain_chance_today', 'precipitation', 'solar', 'uv'];
+  assert.deepEqual(D.weatherChoice({}), { chart: ['temperature', 'feels'], rows: ALL }, 'defaults: temperature + felt, all rows');
+  assert.deepEqual(D.weatherChoice({ weather_feels: true, weather_extras: true }), { chart: ['temperature', 'feels'], rows: ALL });
+  assert.deepEqual(D.weatherChoice({ weather_extras: false }).rows, [], 'old extras off: no rows');
+  assert.deepEqual(D.weatherChoice({ weather_extras: 'false' }).rows, []);
+  const off = D.weatherChoice({ weather_feels: false });
+  assert.deepEqual(off.chart, ['temperature'], 'old felt off: temperature alone');
+  assert.deepEqual(off.rows, ALL.filter((k) => k !== 'feels'), 'old felt off: no felt row either');
+  assert.deepEqual(D.weatherChoice({ weather_feels: false, weather_chart: ['temperature', 'dew_point'] }).chart, ['temperature', 'dew_point'],
+    'a chosen list wins over the old switch');
+  assert.deepEqual(D.weatherChoice({ weather_chart: ['dew_point', 'bogus', 'dew_point'], weather_extras: ['gust', 'nope'] }),
+    { chart: ['dew_point'], rows: ['gust'] }, 'unknown and repeated keys dropped');
+  assert.deepEqual(D.weatherChoice({ weather_chart: [] }).chart, ['temperature', 'feels'], 'empty list: default');
+  assert.equal(D.weatherChoice({ weather_chart: ['temperature', 'feels', 'dew_point', 'humidity', 'wind'] }).chart.length, 4, 'at most four');
+  assert.equal(D.weatherMaxCurves, 4);
+}
+
+// 7. Chosen curves: same unit together (legend), other units in their own chart behind the switch, sensors first.
+{
+  const h = house({
+    attrs: { apparent_temperature: 9, dew_point: 6.2, humidity: 70, wind_speed: 18, wind_gust_speed: 41, wind_speed_unit: 'km/h', cloud_coverage: 75 },
+    sensors: [
+      ['sensor.station_temperatur', '11.4', 'temperature', '°C'],
+      ['sensor.station_gefuehlt', '8.6', 'apparent_temperature', '°C'],
+      ['sensor.station_taupunkt', '6.2', 'dew_point', '°C'],
+      ['sensor.station_boen', '41', 'wind_gust', 'km/h'],
+      ['sensor.station_solar', '180', 'solar', 'W/m²'],
+    ],
+  });
+  h.states['sensor.outdoor'] = { entity_id: 'sensor.outdoor', state: '12', attributes: { unit_of_measurement: '°C' } };
+  const opt = D.weatherOptions(h, W);
+  assert.deepEqual(opt.curves, ['temperature', 'feels', 'dew_point', 'humidity', 'wind', 'gust', 'cloud', 'solar'], 'what the source offers');
+  assert.deepEqual(opt.rows, ['feels', 'dew_point', 'gust', 'cloud', 'solar']);
+  // Temperature, felt and dew point: one chart, three curves, the dew point from its sensor (statistics).
+  let c = D.weatherChart(h, W, 'sensor.outdoor', { curves: ['temperature', 'feels', 'dew_point'] });
+  assert.equal(c.groups.length, 1);
+  assert.deepEqual(c.series.map((s) => [s.entity, s.name, s.color]), [
+    ['sensor.station_temperatur', 'Temperatur', '#FF9F0A'], ['sensor.station_gefuehlt', 'Gefühlt', 'c1'], ['sensor.station_taupunkt', 'Taupunkt', 'c3']]);
+  assert.equal(c.groups[0].unit, '°C');
+  assert.equal(c.groups[0].title, 'Außentemperatur');
+  // Different units: temperature alone (the outdoor sensor, as before), humidity, wind with gusts.
+  c = D.weatherChart(h, W, 'sensor.outdoor', { curves: ['temperature', 'humidity', 'wind', 'gust'] });
+  assert.deepEqual(c.groups.map((g) => [g.unit, g.label, g.series.map((s) => s.entity + (s.attribute ? '#' + s.attribute : ''))]), [
+    ['°C', 'Temperatur', ['sensor.outdoor']],
+    ['%', 'Luftfeuchtigkeit', [W + '#humidity']],
+    ['km/h', 'Wind', [W + '#wind_speed', 'sensor.station_boen']]]);
+  assert.equal(new Set(c.groups.map((g) => g.key)).size, 3, 'every chart has its own key');
+  assert.equal(c.groups[1].key, W + '#humidity');
+  assert.deepEqual(c.groups[2].series.map((s) => s.color), ['c1', 'c3']);
+  assert.equal(c.groups[2].title, 'Wind · Windböen');
+  // Without the temperature: the first chosen unit is the first chart; a value the source lacks is left out.
+  c = D.weatherChart(h, W, 'sensor.outdoor', { curves: ['solar', 'precipitation'] });
+  assert.deepEqual(c.groups.map((g) => [g.key, g.label]), [['sensor.station_solar', 'Sonneneinstrahlung']]);
+  assert.equal(c.series[0].color, 'c4');
+  // At most four curves, in the fixed order.
+  c = D.weatherChart(h, W, null, { curves: ['solar', 'cloud', 'gust', 'wind', 'humidity', 'dew_point', 'feels', 'temperature'] });
+  assert.deepEqual([].concat(...c.groups.map((g) => g.curves)), ['temperature', 'feels', 'dew_point', 'humidity']);
+}
+
+// 8. Attributes only (e.g. met.no): several curves from one weather entity, each its own attribute history.
+{
+  const h = house({ attrs: { apparent_temperature: 8.4, dew_point: 6.1, cloud_coverage: 75 } });
+  const c = D.weatherChart(h, W, null, { curves: ['temperature', 'feels', 'dew_point', 'cloud'] });
+  assert.deepEqual(c.groups.map((g) => g.series.map((s) => s.attribute)), [['temperature', 'apparent_temperature', 'dew_point'], ['cloud_coverage']]);
+  assert.ok(c.groups[0].series.every((s) => s.entity === W && s.unit === '°C'));
+  assert.equal(c.groups[0].key, W);
+  assert.equal(c.groups[1].key, W + '#cloud_coverage');
+  assert.deepEqual(c.groups[1].series[0].unit, '%');
+}
+
+// 9. Chosen rows: only those, in the popup's order; none at all with an empty list.
+{
+  const h = house({ attrs: { apparent_temperature: 8.4, dew_point: 6.1, wind_gust_speed: 40, cloud_coverage: 75 } });
+  assert.deepEqual(D.weatherRows(h, W, { rows: ['cloud', 'dew_point'] }).map((r) => r.key), ['dew_point', 'cloud']);
+  assert.deepEqual(D.weatherRows(h, W, { rows: [] }), []);
+  assert.equal(D.weatherRows(h, W, { rows: null }).length, 4, 'no list: all');
+  assert.deepEqual(D.weatherRows(h, W, { rows: D.weatherChoice({ weather_feels: false }).rows }).map((r) => r.key), ['dew_point', 'gust', 'cloud']);
+}
+
+// 10. Studio: both lists as chip pickers of what the source offers, no on/off switch for them any more.
+{
+  const p = fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel.js', import.meta.url), 'utf8');
+  assert.ok(/key: "weather_chart", label: "In the chart", type: "weatherpick", pick: "curves"/.test(p));
+  assert.ok(/key: "weather_extras", label: "Extra values", type: "weatherpick", pick: "rows"/.test(p));
+  assert.ok(!/key: "weather_feels", label/.test(p), 'old felt switch gone');
+  assert.ok(/f\.type === "weatherpick"/.test(p) && /_optionChips\(/.test(p));
+  const keys = (s) => JSON.parse(s.replace(/'/g, '"'));
+  const pc = keys(/const WEATHER_CURVES = (\[[^\]]+\])/.exec(p)[1]);
+  const pr = keys(/const WEATHER_ROWS = (\[[^\]]+\])/.exec(p)[1]);
+  const f = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8');
+  assert.deepEqual(pc, keys(/var WX_CURVES = (\[[^\]]+\])/.exec(f)[1]), 'Studio and dashboard know the same curves');
+  assert.deepEqual(pr, keys(/var WX_ROWS = (\[[^\]]+\])/.exec(f)[1]), 'Studio and dashboard know the same rows');
 }
 console.log('weather_feels_like: ok');

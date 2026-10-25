@@ -2594,9 +2594,7 @@
     "Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list. Going back to an older stable version is not supported.": "Casora se actualiza a través de HACS. Para probar una beta: abre Casora en HACS, ⋮ › «Volver a descargar» y elige la beta en la lista de versiones. No se puede volver después a una versión estable anterior.",
     "Felt temperature": "Sensación térmica",
     "Felt temperature sensor": "Sensor de sensación térmica",
-    "Second curve in the weather popup's temperature chart, when the weather source provides it.": "Segunda curva en el gráfico de temperatura de la ventana del tiempo, si la fuente meteorológica la ofrece.",
     "Extra values": "Valores adicionales",
-    "Dew point, wind gusts, cloud cover, chance of rain and more in the weather popup, when the weather source provides them.": "Punto de rocío, ráfagas, nubosidad, probabilidad de lluvia y más en la ventana del tiempo, si la fuente meteorológica los ofrece.",
     "Stream on the tile": "Flujo en la tarjeta",
     "Stream on the tile (phone)": "Flujo en la tarjeta (móvil)",
     "Stream in the popup (default)": "Flujo en la ventana (predeterminado)",
@@ -2607,7 +2605,22 @@
     "Which of the camera's streams plays live on the tile. “Standard” is the stream Home Assistant knows for this camera; the others come from Frigate (go2rtc).": "Qué flujo de la cámara se reproduce en directo en la tarjeta. «Estándar» es el flujo que Home Assistant conoce para esta cámara; los demás vienen de Frigate (go2rtc).",
     "On a phone. “Automatic” takes the camera's sub stream when Frigate has one – it needs less data – otherwise the same stream as on the desktop.": "En el móvil. «Automático» usa el subflujo de la cámara si Frigate tiene uno –necesita menos datos–; si no, el mismo flujo que en el escritorio.",
     "The stream the popup starts with. With more than one stream the popup shows a switch below the picture; the choice there holds until the browser is closed.": "El flujo con el que empieza la ventana. Con más de un flujo, la ventana muestra un selector bajo la imagen; lo elegido ahí vale hasta cerrar el navegador.",
-    "On a phone. “Automatic” starts with the sub stream when Frigate has one, otherwise with the desktop's stream.": "En el móvil. «Automático» empieza con el subflujo si Frigate tiene uno; si no, con el flujo del escritorio."
+    "On a phone. “Automatic” starts with the sub stream when Frigate has one, otherwise with the desktop's stream.": "En el móvil. «Automático» empieza con el subflujo si Frigate tiene uno; si no, con el flujo del escritorio.",
+    "In the chart": "En el gráfico",
+    "Curves in the weather popup's chart, up to four. Values in another unit get their own chart behind the switch.": "Curvas del gráfico de la ventana del tiempo, hasta cuatro. Los valores con otra unidad tienen su propio gráfico tras el selector.",
+    "Rows in the weather popup's details, when the weather source provides them.": "Filas de los detalles de la ventana del tiempo, si la fuente meteorológica las ofrece.",
+    "Add a value": "Añadir un valor",
+    "Up to four curves. Remove one to add another.": "Hasta cuatro curvas. Quita una para añadir otra.",
+    "The weather source has no further values.": "La fuente meteorológica no ofrece más valores.",
+    "Dew point": "Punto de rocío",
+    "Wind": "Viento",
+    "Wind gusts": "Rachas de viento",
+    "Cloud cover": "Nubosidad",
+    "Precipitation": "Precipitación",
+    "Chance of rain": "Probabilidad de lluvia",
+    "Chance of rain today": "Probabilidad de lluvia hoy",
+    "Solar radiation": "Radiación solar",
+    "UV index": "Índice UV"
   },
   "patterns": [
     [

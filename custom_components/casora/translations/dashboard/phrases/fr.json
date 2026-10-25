@@ -2490,7 +2490,8 @@
   "Hauptstream": "Flux principal",
   "Standard": "Standard",
   "Stream": "Flux",
-  "Stream nicht erreichbar · Standard": "Flux injoignable · Standard"
+  "Stream nicht erreichbar · Standard": "Flux injoignable · Standard",
+  "Wind": "Vent"
  },
  "patterns": [
   [

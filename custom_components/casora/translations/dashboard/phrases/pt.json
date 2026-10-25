@@ -2490,7 +2490,8 @@
   "Hauptstream": "Fluxo principal",
   "Standard": "Padrão",
   "Stream": "Fluxo",
-  "Stream nicht erreichbar · Standard": "Fluxo inacessível · Padrão"
+  "Stream nicht erreichbar · Standard": "Fluxo inacessível · Padrão",
+  "Wind": "Vento"
  },
  "patterns": [
   [

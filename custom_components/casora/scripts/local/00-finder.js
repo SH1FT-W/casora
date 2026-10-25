@@ -1481,21 +1481,34 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
 
   // ── Extra values of the weather source (issue #56) ──────────────────────────────
   // Felt temperature and the other values a weather integration offers beside the forecast: HA's standard
-  // weather attributes (apparent_temperature, dew_point, wind_gust_speed, cloud_coverage, uv_index) and the
-  // sensors on the weather entity's own device by translation_key ("Wetter & Warnungen": dew_point, wind_gust,
-  // cloud_cover, precipitation, precipitation_probability(_today), solar). Attributes first (the entity the user
-  // chose), sensors fill the gaps; for the felt curve a sensor goes first (it has statistics).
+  // weather attributes (apparent_temperature, dew_point, humidity, wind_speed, wind_gust_speed, cloud_coverage,
+  // uv_index) and the sensors on the weather entity's own device by translation_key ("Wetter & Warnungen":
+  // dew_point, wind_gust, cloud_cover, precipitation, precipitation_probability(_today), solar). Display values:
+  // attributes first (the entity the user chose), sensors fill the gaps. Chart curves: sensors first (statistics),
+  // the attribute's history otherwise.
   var WX_FEELS = ['apparent_temperature', 'feels_like_temperature', 'feels_like', 'realfeel_temperature', 'apparent_temp'];
   var WX_KEYS = {
     temperature: ['temperature'], feels: WX_FEELS, dew_point: ['dew_point', 'dewpoint'],
+    humidity: ['humidity', 'relative_humidity'], wind: ['wind_speed'],
     gust: ['wind_gust', 'wind_gust_speed', 'wind_gusts'], cloud: ['cloud_cover', 'cloud_coverage', 'cloudiness'],
     rain_chance: ['precipitation_probability'], rain_chance_today: ['precipitation_probability_today'],
     precipitation: ['precipitation', 'precipitation_intensity'], solar: ['solar', 'solar_irradiance', 'irradiance'],
     uv: ['uv_index', 'uv'],
   };
-  var WX_ATTR = { temperature: 'temperature', feels: 'apparent_temperature', dew_point: 'dew_point',
-    gust: 'wind_gust_speed', cloud: 'cloud_coverage', uv: 'uv_index' };
+  var WX_ATTR = { temperature: 'temperature', feels: 'apparent_temperature', dew_point: 'dew_point', humidity: 'humidity',
+    wind: 'wind_speed', gust: 'wind_gust_speed', cloud: 'cloud_coverage', uv: 'uv_index' };
+  // Curves the popup chart can draw (Studio "In the chart"), in this order, and the extra rows (Studio "Extra values").
+  var WX_CURVES = ['temperature', 'feels', 'dew_point', 'humidity', 'wind', 'gust', 'cloud', 'precipitation', 'rain_chance', 'solar', 'uv'];
+  var WX_ROWS = ['feels', 'dew_point', 'gust', 'cloud', 'rain_chance', 'rain_chance_today', 'precipitation', 'solar', 'uv'];
+  var WX_NAMES = { temperature: 'Temperatur', feels: 'Gefühlt', dew_point: 'Taupunkt', humidity: 'Luftfeuchtigkeit', wind: 'Wind',
+    gust: 'Windböen', cloud: 'Bewölkung', precipitation: 'Niederschlag', rain_chance: 'Regenwahrscheinlichkeit',
+    rain_chance_today: 'Regen heute', solar: 'Sonneneinstrahlung', uv: 'UV-Index' };
+  // The chart's four colour steps (casora-chart C.color); the temperature keeps its orange (= c2).
+  var WX_COLOR = { feels: 'c1', dew_point: 'c3', humidity: 'c1', wind: 'c1', gust: 'c3', cloud: 'c3', precipitation: 'c1',
+    rain_chance: 'c1', solar: 'c4', uv: 'c4' };
+  var WX_MAX_CURVES = 4;
   var wxNum = function (v) { if (v == null || v === '') return null; var n = Number(v); return isFinite(n) ? n : null; };
+  var wxOff = function (v) { return v === false || String(v) === 'false'; };
   // Sensors of the weather entity's device, by translation_key: { key: entity_id } (numeric state only).
   function weatherSensors(hass, wid) {
     var S = (hass && hass.states) || {}, R = reg(hass), dev = R[wid] && R[wid].device_id, out = {};
@@ -1510,12 +1523,13 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     return out;
   }
   // { key: { entity, attribute?, value, unit } } for every value the source has. opts.feels: chosen sensor
-  // for the felt temperature (Studio), wins while it has a number.
+  // for the felt temperature (Studio), wins while it has a number. opts.sensorFirst: sensors before attributes
+  // for every value (chart curves); otherwise only for temperature and felt temperature.
   function weatherSources(hass, wid, opts) {
     var S = (hass && hass.states) || {}, w = S[wid], a = (w && w.attributes) || {}, o = opts || {};
     var sens = weatherSensors(hass, wid), out = {};
-    var tu = a.temperature_unit || '°C';
-    var attrUnit = { temperature: tu, feels: tu, dew_point: tu, gust: a.wind_speed_unit || 'km/h', cloud: '%', uv: '' };
+    var tu = a.temperature_unit || '°C', wu = a.wind_speed_unit || 'km/h';
+    var attrUnit = { temperature: tu, feels: tu, dew_point: tu, humidity: '%', wind: wu, gust: wu, cloud: '%', uv: '' };
     var fromSensor = function (k, id) {
       var st = id && S[id], v = st ? wxNum(st.state) : null;
       return v == null ? null : { entity: id, value: v, unit: String((st.attributes || {}).unit_of_measurement || '') };
@@ -1525,7 +1539,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       return v == null ? null : { entity: wid, attribute: WX_ATTR[k], value: v, unit: attrUnit[k] };
     };
     Object.keys(WX_KEYS).forEach(function (k) {
-      var sensorFirst = k === 'feels' || k === 'temperature';
+      var sensorFirst = o.sensorFirst || k === 'feels' || k === 'temperature';
       var hit = sensorFirst ? fromSensor(k, sens[k]) || fromAttr(k) : fromAttr(k) || fromSensor(k, sens[k]);
       if (hit) out[k] = hit;
     });
@@ -1533,44 +1547,105 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     if (own) out.feels = own;
     return out;
   }
-  // Series of the weather popup's temperature chart. Without a felt value: the outdoor sensor as before, else the
-  // weather device's temperature sensor. With one: the measured temperature of the same source (its sensor, else
-  // the weather entity's attribute) - an outdoor sensor elsewhere would put two places side by side - and the felt
-  // temperature as a second curve. null without a temperature to draw.
+  // The Studio choice from the card variables, older settings migrated: weather_chart (curve keys; absent:
+  // temperature + felt, or temperature alone with the old weather_feels off), weather_extras (row keys; false:
+  // none, true/absent: all - without the felt row when the old weather_feels was off). { chart, rows }.
+  function weatherChoice(v) {
+    var V = v || {}, feelsOff = wxOff(V.weather_feels);
+    var known = function (list, all) {
+      return list.map(String).filter(function (k, i, x) { return all.indexOf(k) > -1 && x.indexOf(k) === i; });
+    };
+    var c = Array.isArray(V.weather_chart) ? known(V.weather_chart, WX_CURVES) : [];
+    var chart = c.length ? c.slice(0, WX_MAX_CURVES) : feelsOff ? ['temperature'] : ['temperature', 'feels'];
+    var r = V.weather_extras, rows;
+    if (Array.isArray(r)) rows = known(r, WX_ROWS);
+    else if (wxOff(r)) rows = [];
+    else rows = WX_ROWS.filter(function (k) { return !(feelsOff && k === 'feels'); });
+    return { chart: chart, rows: rows };
+  }
+  // What this source offers for the Studio's lists: { curves: [keys], rows: [keys] }. The temperature is always
+  // a curve (outdoor sensor or the source's own).
+  function weatherOptions(hass, wid, opts) {
+    var src = weatherSources(hass, wid, Object.assign({}, opts || {}, { sensorFirst: true }));
+    return {
+      curves: WX_CURVES.filter(function (k) { return k === 'temperature' || src[k]; }),
+      rows: weatherRows(hass, wid, Object.assign({}, opts || {}, { rows: null })).map(function (r) { return r.key; }),
+    };
+  }
+  // The weather popup's chart: the chosen curves (opts.curves; without: temperature + felt, opts.showFeels false:
+  // temperature alone) the source has, at most four, grouped by unit - one chart per unit with the popup's switch
+  // between them, curves of one unit drawn together with a legend. The temperature alone: the outdoor sensor as
+  // before (else the weather device's temperature sensor); next to other curves of its unit the measured
+  // temperature of the same source (its sensor, else the weather entity's attribute) - an outdoor sensor elsewhere
+  // would put two places side by side. { key, series, feels (first group), groups: [{ key, label, title, unit,
+  // series, curves }] }, null without anything to draw.
   function weatherChart(hass, wid, outT, opts) {
-    var o = opts || {}, src = weatherSources(hass, wid, o), t = src.temperature, f = o.showFeels === false ? null : src.feels;
-    var own = t ? (t.attribute ? { entity: wid, attribute: 'temperature', unit: t.unit } : { entity: t.entity }) : null;
-    var base = f && own ? own : outT ? { entity: outT } : own && !own.attribute ? own : null;
-    if (!base) return null;
-    var series = [Object.assign({ name: 'Temperatur', color: '#FF9F0A' }, base)];
-    if (f && !(f.entity === base.entity && f.attribute === base.attribute)) {
-      // c1: the chart's blue step - an orange/red hex would map to the same step as the temperature.
-      series.push(Object.assign({ entity: f.entity, name: 'Gefühlt', color: 'c1' }, f.attribute ? { attribute: f.attribute, unit: f.unit } : {}));
-    }
-    return { key: base.entity, series: series, feels: series.length > 1 };
+    var o = opts || {}, S = (hass && hass.states) || {};
+    var want = Array.isArray(o.curves) ? o.curves : o.showFeels === false ? ['temperature'] : ['temperature', 'feels'];
+    var src = weatherSources(hass, wid, Object.assign({}, o, { sensorFirst: true }));
+    var keys = WX_CURVES.filter(function (k) { return want.indexOf(k) > -1 && (k === 'temperature' || src[k]); }).slice(0, WX_MAX_CURVES);
+    var t = src.temperature, outU = outT && S[outT] ? String((S[outT].attributes || {}).unit_of_measurement || '') : '';
+    var unitOf = function (k) { return String(k === 'temperature' ? (t ? t.unit : outU) || '°C' : src[k].unit || '').trim(); };
+    var groups = [];
+    keys.forEach(function (k) {
+      var u = unitOf(k), g = groups.find(function (x) { return x.unit === u; });
+      if (!g) groups.push(g = { unit: u, curves: [] });
+      g.curves.push(k);
+    });
+    var out = [];
+    groups.forEach(function (g) {
+      var series = [], used = {};
+      g.curves.forEach(function (k) {
+        if (k === 'temperature') {
+          var own = t ? (t.attribute ? { entity: wid, attribute: 'temperature', unit: t.unit } : { entity: t.entity }) : null;
+          var base = g.curves.length > 1 ? own || (outT ? { entity: outT } : null) : outT ? { entity: outT } : own && !own.attribute ? own : null;
+          if (base) { series.push(Object.assign({ name: WX_NAMES.temperature, color: '#FF9F0A' }, base)); used.c2 = 1; }
+          return;
+        }
+        var s = src[k];
+        if (series.some(function (x) { return x.entity === s.entity && x.attribute === s.attribute; })) return;
+        var col = !used[WX_COLOR[k]] ? WX_COLOR[k] : ['c1', 'c3', 'c4', 'c2'].find(function (c) { return !used[c]; }) || WX_COLOR[k];
+        used[col] = 1;
+        series.push(Object.assign({ entity: s.entity, name: WX_NAMES[k], color: col }, s.attribute ? { attribute: s.attribute, unit: s.unit } : {}));
+      });
+      if (!series.length) return;
+      var names = series.map(function (x) { return x.name; });
+      var hasT = names[0] === WX_NAMES.temperature;
+      var curves = g.curves.filter(function (k) { return k !== 'temperature' || hasT; });
+      var windy = curves.length > 1 && curves.every(function (k) { return k === 'wind' || k === 'gust'; });
+      // Chart key (window._hpPlantCfg, data-hp-metric): the first chart's entity, the others' made unique.
+      var key = series[0].attribute && out.length ? wid + '#' + series[0].attribute : series[0].entity;
+      if (out.some(function (x) { return x.key === key; })) key += '#' + out.length;
+      out.push({ key: key, unit: g.unit, curves: curves, series: series,
+        label: hasT ? WX_NAMES.temperature : windy ? WX_NAMES.wind : names.join(' · '),
+        title: hasT ? 'Außentemperatur' : names.join(' · ') });
+    });
+    if (!out.length) return null;
+    return { key: out[0].key, series: out[0].series, feels: out[0].curves.indexOf('feels') > -1, groups: out };
   }
   // Rows for the popup's "Details" group (UI.group objects), each with `after` = the label of the standard row it
   // follows (null: at the end, `first`: on top). The standard rows (humidity, wind, pressure, UV, visibility)
-  // stay in the template; UV only comes from here when the entity has no uv_index.
+  // stay in the template; UV only comes from here when the entity has no uv_index. opts.rows: the keys to show
+  // (Studio "Extra values"), all without.
   function weatherRows(hass, wid, opts) {
-    var src = weatherSources(hass, wid, opts), rows = [];
+    var o = opts || {}, src = weatherSources(hass, wid, o), rows = [], pick = Array.isArray(o.rows) ? o.rows : null;
     var num = function (v, d) { return window.casoraNum ? window.casoraNum(v, 0, d) : String(Math.round(v * Math.pow(10, d)) / Math.pow(10, d)).replace('.', ','); };
     var val = function (s, d) { return num(s.value, d) + (s.unit ? (s.unit === '%' ? ' %' : ' ' + s.unit) : ''); };
-    var add = function (k, icon, label, d, after, tone) {
+    var add = function (k, icon, d, after, tone) {
       var s = src[k];
-      if (!s) return;
-      rows.push({ key: k, icon: icon, iconTone: tone || 'accent', label: label, value: val(s, d), entity: s.attribute ? undefined : s.entity,
+      if (!s || (pick && pick.indexOf(k) < 0)) return;
+      rows.push({ key: k, icon: icon, iconTone: tone || 'accent', label: WX_NAMES[k], value: val(s, d), entity: s.attribute ? undefined : s.entity,
         after: after || null, first: !after && k === 'feels' });
     };
-    add('feels', 'mdi:thermometer-lines', 'Gefühlt', 0);
-    add('dew_point', 'mdi:thermometer-water', 'Taupunkt', 0, 'Luftfeuchtigkeit');
-    add('gust', 'mdi:weather-windy-variant', 'Windböen', 0, 'Wind');
-    add('cloud', 'mdi:cloud-percent', 'Bewölkung', 0);
-    add('rain_chance', 'mdi:umbrella-outline', 'Regenwahrscheinlichkeit', 0);
-    add('rain_chance_today', 'mdi:umbrella-outline', 'Regen heute', 0);
-    add('precipitation', 'mdi:weather-rainy', 'Niederschlag', 1);
-    add('solar', 'mdi:sun-wireless-outline', 'Sonneneinstrahlung', 0, null, 'var(--casora-color-yellow, #FFCC00)');
-    if (src.uv && !src.uv.attribute) add('uv', 'mdi:white-balance-sunny', 'UV-Index', 0, null, 'var(--casora-color-yellow, #FFCC00)');
+    add('feels', 'mdi:thermometer-lines', 0);
+    add('dew_point', 'mdi:thermometer-water', 0, 'Luftfeuchtigkeit');
+    add('gust', 'mdi:weather-windy-variant', 0, 'Wind');
+    add('cloud', 'mdi:cloud-percent', 0);
+    add('rain_chance', 'mdi:umbrella-outline', 0);
+    add('rain_chance_today', 'mdi:umbrella-outline', 0);
+    add('precipitation', 'mdi:weather-rainy', 1);
+    add('solar', 'mdi:sun-wireless-outline', 0, null, 'var(--casora-color-yellow, #FFCC00)');
+    if (src.uv && !src.uv.attribute) add('uv', 'mdi:white-balance-sunny', 0, null, 'var(--casora-color-yellow, #FFCC00)');
     return rows;
   }
 
@@ -1728,7 +1803,8 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     deviceOf: deviceOf, entities: entities, map: map, companionPlug: companionPlug, byKey: byKey,
     waste: waste, wasteDates: wasteDates, wasteDown: wasteDown, siblings: siblings, dayStart: dayStart, onHours: onHours, lastOn: lastOn, keyAny: keyAny, network: network,
     contacts: contacts, outdoor: outdoor, openings: openings,
-    weatherSources: weatherSources, weatherChart: weatherChart, weatherRows: weatherRows,
+    weatherSources: weatherSources, weatherChart: weatherChart, weatherRows: weatherRows, weatherChoice: weatherChoice,
+    weatherOptions: weatherOptions, weatherNames: WX_NAMES, weatherMaxCurves: WX_MAX_CURVES,
   };
 })();
 
