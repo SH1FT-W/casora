@@ -33,6 +33,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Chart card on phones (#58):** taps on series, range and line/bar buttons work on phones, the chart is back after “Back”, the chosen series stays, long names end with “…”.
 - **Energy (#44):** consumers whose meter is disabled in Home Assistant are no longer listed.
 - **Studio froze when adding a fridge tile** in homes with many devices; adding any tile kind takes milliseconds now.
+- **Empty room:** the hint “No devices yet, add them in the Studio” no longer flickers.
 - **Weather warning bell:** the DWD advance warning no longer shows as a current warning, and warning kinds are spelled properly.
 - **E-bike, coffee, mower, fridge:** several state and counter fixes from the review of these cards.
 

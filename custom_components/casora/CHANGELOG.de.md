@@ -33,6 +33,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Diagramm-Karte am Handy (#58):** Sensor-, Zeitraum- und Linie/Balken-Knöpfe reagieren am Handy, nach „Zurück“ ist das Diagramm wieder da, die Sensorwahl bleibt, lange Namen enden mit „…“.
 - **Energie (#44):** Verbraucher, deren Zähler in Home Assistant deaktiviert ist, erscheinen nicht mehr.
 - **Studio hing beim Hinzufügen einer Kühlschrank-Kachel** in Häusern mit vielen Geräten; jede Kachelart braucht jetzt Millisekunden.
+- **Leerer Raum:** Der Hinweis „Noch keine Geräte – im Studio hinzufügen“ flackert nicht mehr.
 - **Wetterwarnung in der Glocke:** Die DWD-Vorwarnung erscheint nicht mehr als aktuelle Warnung, und die Warnarten werden richtig geschrieben.
 - **E-Bike, Kaffee, Mäher, Kühlschrank:** mehrere Zustands- und Zählerfehler aus der Durchsicht dieser Karten.
 
