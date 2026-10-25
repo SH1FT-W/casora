@@ -38,3 +38,5 @@ dashboards/casora/button_card_templates.json | (UI.soft && UI.soft() && window._
 dashboards/casora/button_card_templates.json#casora_mobile_sensor_chips | sub | fixed words Erkannt/Nicht erkannt/Nicht verfügbar | 1
 dashboards/casora/button_card_templates.json#casora_thermostat | re:^return Number\.isInteger\(n\) \? | number with "°" | 1
 dashboards/casora/button_card_templates.json#casora_weather | re:^return map\[condKey\] \|\| \(window\.casoraEsc \|\| String\)\( | condition word from the fixed map, else the escaped raw state | 1
+# casora_light
+dashboards/casora/button_card_templates.json#casora_light | re:^JSON\.stringify\((?:_cs|_rb)\)$ | color row: JS source of the live card; colors, light id and service data escaped where built (esc) | 2

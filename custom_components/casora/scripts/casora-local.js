@@ -120,6 +120,7 @@ const MODULES = [
   '30-fridge',
   '31-velair',
   '32-media-badge',
+  '33-color-wheel',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());
