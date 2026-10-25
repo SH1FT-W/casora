@@ -39,8 +39,19 @@ def ver(v: Any) -> tuple:
 
 def norm_version(v: Any) -> str:
     """„v0.4.0“ / „Casora 0.4.0“ → „0.4.0“ (Vorabversionen behalten ihren Zusatz)."""
-    m = re.search(r"\d+(?:\.\d+){0,2}(?:[-+][0-9A-Za-z.-]+)?", str(v or ""))
+    # Casora's betas carry the suffix directly (26.10.60b1, PEP 440 style), older ones with a dash (1.1.0-beta.1).
+    m = re.search(r"\d+(?:\.\d+){0,2}(?:(?:a|b|rc)\d+|[-+][0-9A-Za-z.-]+)?", str(v or ""))
     return m.group(0) if m else ""
+
+
+def _split_pre(v: str) -> tuple[str, str]:
+    """„26.10.60b1“ → („26.10.60“, „b.1“), „1.1.0-beta.1“ → („1.1.0“, „beta.1“); no suffix → („…“, „“)."""
+    m = re.match(r"^(\d+(?:\.\d+){0,2})(?:(a|b|rc)(\d+)|-([0-9A-Za-z.-]+))?", v)
+    if not m:
+        return v, ""
+    if m.group(2):
+        return m.group(1), f"{m.group(2)}.{m.group(3)}"
+    return m.group(1), m.group(4) or ""
 
 
 _DATE_DE = re.compile(r"\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b")
@@ -101,8 +112,8 @@ def is_casora_tag(tag: Any) -> bool:
 
 
 def is_prerelease(v: Any) -> bool:
-    """„1.1.0-beta.1“ → True (Vorabversion am Zusatz erkennbar)."""
-    return "-" in norm_version(v)
+    """„1.1.0-beta.1“, „26.10.60b1“ → True (pre-release, recognised by the suffix)."""
+    return bool(_split_pre(norm_version(v))[1])
 
 
 def _fallback_cmp(a: str, b: str) -> int:
@@ -110,7 +121,7 @@ def _fallback_cmp(a: str, b: str) -> int:
     ka, kb = ver(a), ver(b)
     if ka != kb:
         return 1 if ka > kb else -1
-    pa, pb = a.partition("-")[2], b.partition("-")[2]
+    pa, pb = _split_pre(a)[1], _split_pre(b)[1]
     if pa == pb:
         return 0
     if not pa or not pb:
@@ -132,7 +143,8 @@ def compare_versions(a: Any, b: Any) -> int:
     Ergebnis wie cmp: 1, 0 oder -1. Unlesbares zählt als 0.
     """
     na, nb = norm_version(a) or "0", norm_version(b) or "0"
-    if AwesomeVersion is not None:
+    # AwesomeVersion orders 26.10.60b2 below 26.10.60b1 (2026.10): pre-releases always the own way.
+    if AwesomeVersion is not None and not (_split_pre(na)[1] or _split_pre(nb)[1]):
         try:
             x, y = AwesomeVersion(na), AwesomeVersion(nb)
             return 0 if x == y else (1 if x > y else -1)

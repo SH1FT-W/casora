@@ -48,6 +48,14 @@ CAL = (("26.10.33", "1.6.0"), ("v26.10.10", "26.10.9"), ("26.10.1", "26.9.12"), 
 for a, b in CAL:
     check(f"Kalender: {a} > {b}", newer(a, b) and not newer(b, a))
 check("Vorabversion erkannt", is_prerelease("v1.1.0-beta.1") and not is_prerelease("1.0.3"))
+# Casora betas as tools/release.sh names them (26.10.60b1): below the stable 26.10.60, above 26.10.59, b10 > b2.
+BETA = (("26.10.60", "26.10.60b1"), ("26.10.60b1", "26.10.59"), ("26.10.60b2", "26.10.60b1"), ("26.10.60b10", "26.10.60b2"),
+        ("26.10.61", "26.10.60b3"))
+for a, b in BETA:
+    check(f"Beta: {a} > {b}", newer(a, b) and not newer(b, a))
+check("Beta: v26.10.60b1 == 26.10.60b1", compare_versions("v26.10.60b1", "26.10.60b1") == 0)
+check("Beta: Suffix bleibt", release_notes.norm_version("Casora 26.10.60b1") == "26.10.60b1")
+check("Beta erkannt", is_prerelease("v26.10.60b1") and not is_prerelease("26.10.60"))
 # Ohne AwesomeVersion (einfacher Vergleich) dasselbe Ergebnis
 saved = release_notes.AwesomeVersion
 release_notes.AwesomeVersion = None
@@ -56,6 +64,7 @@ try:
           newer("1.1.0-beta.2", "1.1.0-beta.1") and newer("1.1.0", "1.1.0-beta.2") and newer("1.1.0-beta.1", "1.0.3")
           and newer("1.1.0-beta.10", "1.1.0-beta.9") and compare_versions("v1.0.3", "1.0.3") == 0)
     check("ohne AwesomeVersion: Kalender-Versionen", all(newer(a, b) and not newer(b, a) for a, b in CAL))
+    check("ohne AwesomeVersion: Betas", all(newer(a, b) and not newer(b, a) for a, b in BETA))
 finally:
     release_notes.AwesomeVersion = saved
 

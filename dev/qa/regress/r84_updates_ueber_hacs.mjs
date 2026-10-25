@@ -20,7 +20,8 @@ const E = 'update.qa_hacs_casora';
 const URL_HACS = '/hacs/repository/424242';
 await page.evaluate(({ E, URL_HACS }) => {
   const ha = document.querySelector('home-assistant');
-  const bump = (v) => { const p = String(v).split('-')[0].split('.').map(Number); return `${p[0]}.${p[1]}.${(p[2] || 0) + 1}`; };
+  // Next stable number, also from a beta (26.10.60b1 → 26.10.61).
+  const bump = (v) => { const p = String(v).replace(/^v/, '').split('-')[0].split('.').map((x) => parseInt(x, 10)); return `${p[0]}.${p[1]}.${(p[2] || 0) + 1}`; };
   window.__qaUpd = { calls: [], done: false, entity: E, url: URL_HACS, pushed: [], moreInfo: [] };
   const patch = (h) => {
     if (!h || h.__qaUpd) return;
@@ -94,17 +95,20 @@ const q1 = await page.evaluate(() => window.__qaUpd);
 await check('öffnet die HACS-Seite von Casora', q1.pushed.length === 1 && q1.pushed[0] === URL_HACS, q1.pushed);
 await check('kein update.install aus dem Studio', q1.calls.every((c) => c[1] !== 'install'), q1.calls);
 
-// 1b) Notes of the new version: same button at the bottom; installed version without one.
+// 1b) Notes of the new version: same button at the bottom; installed version without one. An installed beta
+// (26.10.60b1) has no notes of its own in the list – then the newest listed version below the new one.
 await openUpdates();
 const rows = await page.evaluate(() => {
   const p = window.__panel(); const d = p._cuData;
   const out = {};
-  window.__pierce('.cu-item').forEach((it) => {
-    const v = (it.querySelector('.cu-v') || {}).textContent;
-    const body = it.querySelector('.cu-body');
-    if (v === d.installed || v === d.latest) {
+  const items = window.__pierce('.cu-item').map((it) => ({ it, v: (it.querySelector('.cu-v') || {}).textContent }));
+  const inst = items.find((x) => x.v === d.installed) || items.find((x) => x.v !== d.latest);
+  items.forEach(({ it, v }) => {
+    if (v === d.latest || (inst && it === inst.it)) {
+      const body = it.querySelector('.cu-body');
       if (body && body.hidden) it.querySelector('.cu-row').click();
       out[v === d.latest ? 'neu' : 'inst'] = it.querySelectorAll('.cu-rowinst').length;
+      if (v !== d.latest) out.instV = v;
     }
   });
   return out;

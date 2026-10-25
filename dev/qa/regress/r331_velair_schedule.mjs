@@ -119,8 +119,9 @@ atFinish(async () => {
   c2.close();
 });
 
-const TILE = (tpl) => window.__pierce('button-card').filter((b) => [].concat((b._config || {}).template || []).join(' ') === tpl
-  && b.getBoundingClientRect().width > 20).map((b) => {
+// By template and entity: the copied dashboard can hold Velair/thermostat tiles of its own (e2e runs, no device).
+const TILE = ([tpl, ent]) => window.__pierce('button-card').filter((b) => [].concat((b._config || {}).template || []).join(' ') === tpl
+  && (b._config || {}).entity === ent && b.getBoundingClientRect().width > 20).map((b) => {
   b.scrollIntoView({ block: 'center', inline: 'center' });
   const r = b.getBoundingClientRect();
   // Left half of the tile: the thermostat's +/- rail and its icon have taps of their own.
@@ -158,7 +159,7 @@ for (const [tag, o, url, mobile, act] of VIEWS) {
       await page.waitForTimeout(500);
     }
     await page.waitForTimeout(600);
-    const at = await stable(page, TILE, tpl, { until: (v) => v && v.state });
+    const at = await stable(page, TILE, [tpl, tpl === 'casora_velair' ? AC : PLAIN], { until: (v) => v && v.state });
     if (!at) return false;
     await page.waitForTimeout(400);
     for (let t = 0; t < 4 && !(await offen()); t++) {

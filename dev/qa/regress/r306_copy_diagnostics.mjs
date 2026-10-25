@@ -67,7 +67,7 @@ const row = (d) => (text.split('\n').find((l) => l.startsWith(d + ' ')) || '').t
 const tracker = row('device_tracker');
 await need('tracker in the test house', want.trackers > 0, want);
 await check('code block with header "Casora-Diagnose"', /^```text\nCasora-Diagnose · \d{4}-\d{2}-\d{2}\n/.test(text) && text.endsWith('\n```\n'), text.slice(0, 80));
-await check('versions', text.includes('Home Assistant ' + want.ha) && /\nCasora \d+\.\d+\.\d+ /.test(text), text.split('\n')[2]);
+await check('versions', text.includes('Home Assistant ' + want.ha) && /\nCasora \d+\.\d+\.\d+(?:b\d+)? /.test(text), text.split('\n')[2]);
 await check('device_tracker: all and diag as in HA (diagnostic since HA 2026.10)', tracker[1] === String(want.trackers) && tracker[2] === String(want.diag),
   { row: tracker, want });
 await check('device_tracker: lists = the Studio entity list', tracker[8] === String(want.lists), { row: tracker, want });

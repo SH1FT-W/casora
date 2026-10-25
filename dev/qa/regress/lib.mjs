@@ -240,7 +240,7 @@ export async function stable(pg, fn, arg, { max = 6000, quiet = 700, step = 175,
 }
 
 // Der Home-Assistant-Oberfläche lokal andere Zustände unterschieben (nur dieser Browser,
-// nichts geht an HA): patch = { entity_id: { state, attributes? } | null (fehlt) }.
+// nichts geht an HA): patch = { entity_id: { state, attributes?, last_changed? } | null (fehlt) }.
 // sticky: true hält den Patch auch über echte state_changed-Ereignisse hinweg (HA schickt bei
 // jedem Ereignis die volle Zustandsliste neu – ohne sticky kehrt ein „entferntes“ Gerät zurück,
 // sobald im Haus irgendein Zustand wechselt, z. B. durch parallel laufende Tests).
@@ -254,7 +254,8 @@ export async function fakeStates(pg, patch, { sticky = false } = {}) {
         for (const [id, v] of Object.entries(p)) {
           if (v === null) { delete out[id]; continue; }
           const old = out[id] || { entity_id: id, attributes: {}, context: { id: 'qa' } };
-          out[id] = { ...old, state: v.state, attributes: { ...old.attributes, ...(v.attributes || {}) } };
+          out[id] = { ...old, state: v.state, attributes: { ...old.attributes, ...(v.attributes || {}) },
+            ...(v.last_changed ? { last_changed: v.last_changed, last_updated: v.last_changed } : {}) };
         }
         return out;
       };
@@ -267,7 +268,7 @@ export async function fakeStates(pg, patch, { sticky = false } = {}) {
       if (v === null) { delete states[id]; continue; } // Entität „fehlt“
       const old = states[id] || { entity_id: id, attributes: {}, context: { id: 'qa' } };
       states[id] = { ...old, state: v.state, attributes: { ...old.attributes, ...(v.attributes || {}) },
-        last_changed: new Date().toISOString(), last_updated: new Date().toISOString() };
+        last_changed: v.last_changed || new Date().toISOString(), last_updated: v.last_changed || new Date().toISOString() };
     }
     // HA-eigener Weg (hass-base-mixin): verteilt den neuen hass wie ein state_changed.
     if (typeof ha._updateHass === 'function') { ha._updateHass({ states }); return; }
