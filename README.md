@@ -13,7 +13,7 @@ Shape the rest room by room in a visual studio. No YAML.</p>
 [![HACS](https://img.shields.io/badge/HACS-custom-94603B?style=flat-square&labelColor=3A322B)](https://hacs.xyz)
 [![License](https://img.shields.io/badge/license-MIT-94603B?style=flat-square&labelColor=3A322B)](LICENSE)
 
-<p><a href="https://sh1ft-w.github.io/casora"><b>Website</b></a> &nbsp;·&nbsp; <a href="#new">New</a> &nbsp;·&nbsp; <a href="#layouts">Layouts</a> &nbsp;·&nbsp; <a href="#popups">Popups</a> &nbsp;·&nbsp; <a href="#studio">Studio</a> &nbsp;·&nbsp; <a href="#look">Designs</a> &nbsp;·&nbsp; <a href="#privacy">Privacy</a> &nbsp;·&nbsp; <a href="#install">Install</a> &nbsp;·&nbsp; <a href="CHANGELOG.md">Changelog</a></p>
+<p><a href="https://sh1ft-w.github.io/casora"><b>Website</b></a> &nbsp;·&nbsp; <a href="#new">New</a> &nbsp;·&nbsp; <a href="#layouts">Layouts</a> &nbsp;·&nbsp; <a href="#popups">Popups</a> &nbsp;·&nbsp; <a href="#studio">Studio</a> &nbsp;·&nbsp; <a href="#look">Designs</a> &nbsp;·&nbsp; <a href="#privacy">Privacy</a> &nbsp;·&nbsp; <a href="#install">Install</a> &nbsp;·&nbsp; <a href="#thanks">Thanks</a> &nbsp;·&nbsp; <a href="CHANGELOG.md">Changelog</a></p>
 
 </div>
 
@@ -298,6 +298,23 @@ Casora only reaches outside for AI features you turn on (through the provider yo
 With an AI task set up in Home Assistant, Casora can place devices that have no room, name tiles, and adapt your own cards to its look. On the dashboard it adds a few helpers: an energy coach, a heating coach, a ventilation coach, camera descriptions, a plant doctor, an aquarium doctor, a bike check, an update check against your setup and a recipe of the week.
 
 AI runs on your own provider account. Before each AI step in the Studio, Casora shows a cost estimate. Each feature has its own schedule (off, automatic or a time you pick), and on a new install all of them start switched off. Without an AI task, these features simply stay off. More in the [guide](docs/guide.md#ai-features-optional).
+
+<br/>
+
+<a id="thanks"></a>
+<sub><b>HALL OF FAME</b></sub>
+## Made better by you.
+
+Casora gets better with every bug report and every idea. A big thank you to everyone who tests, reports and keeps asking for more:
+
+- [**@srsly88**](https://github.com/srsly88): the most reports of all, from plants and fuel prices to the phone layout.
+- [**@Westerloer**](https://github.com/Westerloer): sharp eyes for navigation, energy, blinds and media, always with clear steps to reproduce.
+- [**@stalakerob**](https://github.com/stalakerob): the chart card, the Universal tile, own badges, popups for badges, Frigate streams and many more ideas.
+- [**@vitidron**](https://github.com/vitidron): tireless testing of the Reolink doorbell, plus the Tractive and dishwasher cards.
+- [**@gekberlin**](https://github.com/gekberlin): the thermostat fixes, the Velair schedule and calendar ideas.
+- [**@dnestico**](https://github.com/dnestico), [**@customstudioyandexru**](https://github.com/customstudioyandexru), [**@andreasgoetzke**](https://github.com/andreasgoetzke): reports and wishes that made it into Casora.
+
+Found something or missing a card? [Open an issue](https://github.com/SH1FT-W/casora/issues/new/choose). You might be next on this list.
 
 <br/>
 
