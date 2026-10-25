@@ -294,12 +294,17 @@
     return false;
   };
 
-  // Zeitraum-Pillen und „In Home Assistant öffnen“.
-  document.addEventListener('click', function (ev) {
+  // Period pills and „In Home Assistant öffnen“. On touch devices the click never arrived (a popup handler
+  // cancels it), so a tap that did not move counts on touchend, like the other modules; tapAt swallows its click echo.
+  var tp = null, tapAt = 0;
+  var fire = function (ev) {
     var p = (ev.composedPath && ev.composedPath()) || [];
     for (var i = 0; i < p.length; i++) {
       var n = p[i];
       if (!n || !n.getAttribute) continue;
+      if (!n.hasAttribute('data-casora-zspan') && !n.hasAttribute('data-casora-native')) continue;
+      if (Date.now() - tapAt < 400) { ev.preventDefault(); ev.stopPropagation(); return; }
+      tapAt = Date.now();
       if (n.hasAttribute('data-casora-zspan')) {
         ev.preventDefault(); ev.stopPropagation();
         var v = n.getAttribute('data-casora-zspan').split('|');
@@ -313,7 +318,14 @@
         return;
       }
     }
-  }, true);
+  };
+  document.addEventListener('touchstart', function (ev) { var t = ev.touches && ev.touches[0]; tp = t ? { x: t.clientX, y: t.clientY, moved: false } : null; }, { capture: true, passive: true });
+  document.addEventListener('touchmove', function (ev) {
+    var t = ev.touches && ev.touches[0];
+    if (tp && t && (Math.abs(t.clientX - tp.x) > 10 || Math.abs(t.clientY - tp.y) > 10)) tp.moved = true;
+  }, { capture: true, passive: true });
+  document.addEventListener('click', fire, true);
+  document.addEventListener('touchend', function (ev) { var moved = !!(tp && tp.moved); tp = null; if (!moved) fire(ev); }, true);
 
   // ── Bereiche ───────────────────────────────────────────────────────────────
   var CSS = '<style>.cz-pills{display:flex;gap:6px;justify-content:center;margin-top:12px;}'
