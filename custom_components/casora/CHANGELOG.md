@@ -4,6 +4,47 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.61 – 25.10.2026
+
+Includes everything from 26.10.60 plus two fixes. Coming from 26.10.59 or older, please read the note below first.
+
+**Please read before updating:** this version changes parts of Casora's foundation so that Casora can join the official HACS store. Going back to 26.10.59 afterwards is not supported.
+
+### New
+- **Fridge card:** temperature per zone, setpoints as quick choices, SuperCool, SuperFrost, night and party mode, door open and alarms, a 24 h chart per zone. Works with Liebherr (core and HACS), Home Connect (core, local, alt) and any device named like a fridge or freezer; the Studio suggests it by itself.
+- **Robot lawn mower and coffee machine are regular device cards:** the Studio suggests them like any other device. The mower reads Husqvarna Automower, Gardena, Worx Landroid, Segway Navimow, Ecovacs GOAT and Mammotion (battery, next start, blades, rain delay, cutting height, zones, park). The coffee machine reads Home Connect (core, local, alt), Miele, De'Longhi, Jura (Bluetooth and Wi-Fi), Melitta, La Marzocco, Philips and a plain smart plug.
+- **Velair community card (#32):** a thermostat with the Velair schedule: on/off, the week, today's time slots and editing them. Your regular thermostat is unchanged.
+- **Own popup for own badges (#60):** an own badge can open its own popup with values, a 24 h history, controls and your own cards, built in the Studio like the Universal tile.
+- **Weather (#56):** the felt temperature as a second curve, and in the Studio you pick which values go into the chart (up to four, e.g. dew point or gusts) and which extra rows the popup shows (dew point, gusts, cloud cover, rain, sun, UV). The felt temperature needs a source that provides it, e.g. Wetter & Warnungen 26.10.10.
+- **Frigate stream choice (#61):** pick the stream for the tile and the popup, with the sub stream as default on phones, and switch streams in the popup.
+- **Live activities in all eight languages,** and the title shows the device kind ("Robot vacuum") when the device name is only the product name.
+
+### Changed
+- **Updates only through HACS:** Casora no longer installs updates itself. The Studio's Install button asks HACS to do it, and a beta is installed straight from its row in the version list. Releases carry a casora.zip, so HACS downloads only the integration instead of the whole repository and the update no longer hangs at 50 %.
+- **Private room photos:** your own room photos move from /config/www/casora to /config/casora_photos and are served only to logged-in users through signed links. Saved dashboards keep working.
+- **Nothing written into your configuration:** Casora's helper scripts are now Casora actions, and the designs come from the integration itself instead of a file in your themes folder. The Studio's design choice applies at once, shows in your Home Assistant profile and HA's profile theme picker lists the Casora designs. Old Casora scripts and the old theme file are removed once by themselves (only if unused and unchanged), and a notification says what was removed.
+- **AI only through Home Assistant's public interface:** Casora calls AI tasks through ai_task and no longer touches other integrations' clients. The model is detected from the device or typed in the Studio.
+- **Safer text output:** every name and text is escaped before it reaches the dashboard.
+- **Cleanup:** old program backups of the former self-updater (casora_sicherungen/casora_<version>_<time>.zip) are removed, the newest stays. Dashboard backups and the time travel are not touched.
+
+### Fixed
+- **Weather warnings in the bell (#66):** tapping one now always opens the warnings popup with the warning text, also without a weather warning tile on the dashboard. Before, without the tile only the sensor's plain popup ("On · since …") opened.
+- **Studio on the phone:** device fields with a remove button show only one cross. Before, the cross that clears the value sat doubled next to it.
+- **Lighting badge on Home (#64):** tapping it now opens the room badges also when no Home Assistant light group covers the house. Before, the badge counted the rooms' lights but the row stayed hidden.
+- **Updates tile and popup:** "Restart pending" now shows reliably and live, also in a popup opened with nothing to update, and "Restart now" only appears once no install is running anymore.
+- **3D printer live activity:** a print started right after the previous one now counts from its own start instead of the old job, no longer shows the old 100 % while preparing, and shows the remaining time as soon as the printer knows it.
+- **Smoother dashboard in large homes:** badges no longer listen to every entity in the house, and on the phone the room filter no longer redraws about 30 cards on every unrelated change. In a home with 4,700 entities, drawing per state change went from about 14 to 1 ms on desktop and from about 19 to 1 to 4 ms on the phone.
+- **Blinds (#63):** tile and popup now count and average the same blinds (“4 of 6 open · Ø 50 %”, “All open · Ø 70 %”); without an own list the tile uses the members of the Home Assistant group.
+- **Media badge (#64):** tapping always opens the media popup with the playing devices first; a TV that is only on counts the same in badge and popup.
+- **Badges in a new room (#57):** a new room takes the standard badges from the Home Assistant area of the same name, and on the phone a room with only own badges shows its badge row.
+- **Chart card on phones (#58):** taps on series, range and line/bar buttons work on phones, the chart is back after “Back”, the chosen series stays, long names end with “…”.
+- **Energy (#44):** consumers whose meter is disabled in Home Assistant are no longer listed.
+- **Studio froze when adding a fridge tile** in homes with many devices; adding any tile kind takes milliseconds now.
+- **Empty room:** the hint “No devices yet, add them in the Studio” no longer flickers.
+- **Now playing:** after ⏮ the progress bar jumps back to the start when the same song restarts, and the circles behind ⏮ and ⏭ sit centered on their symbols.
+- **Weather warning bell:** the DWD advance warning no longer shows as a current warning, and warning kinds are spelled properly.
+- **E-bike, coffee, mower, fridge:** several state and counter fixes from the review of these cards.
+
 ## 26.10.60 – 25.10.2026
 
 **Please read before updating:** this version changes parts of Casora's foundation so that Casora can join the official HACS store. Going back to 26.10.59 afterwards is not supported.
@@ -27,7 +68,6 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ### Fixed
 - **Lighting badge on Home (#64):** tapping it now opens the room badges also when no Home Assistant light group covers the house. Before, the badge counted the rooms' lights but the row stayed hidden.
-- **Weather warnings in the bell (#66):** tapping one now always opens the warnings popup with the warning text, also without a weather warning tile on the dashboard. Before, without the tile only the sensor's plain popup ("On · since …") opened.
 - **Updates tile and popup:** "Restart pending" now shows reliably and live, also in a popup opened with nothing to update, and "Restart now" only appears once no install is running anymore.
 - **3D printer live activity:** a print started right after the previous one now counts from its own start instead of the old job, no longer shows the old 100 % while preparing, and shows the remaining time as soon as the printer knows it.
 - **Smoother dashboard in large homes:** badges no longer listen to every entity in the house, and on the phone the room filter no longer redraws about 30 cards on every unrelated change. In a home with 4,700 entities, drawing per state change went from about 14 to 1 ms on desktop and from about 19 to 1 to 4 ms on the phone.
