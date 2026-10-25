@@ -12316,6 +12316,19 @@
    "free_controls": true
   }
  },
+ "casora_popup_own_badge": {
+  "template": [
+   "casora_popup_free"
+  ],
+  "tap_action": {
+   "casora_popup": {
+    "title": "[[[\n  /* Own badge with the tap \"Own popup\" (#60): the Universal tile's popup (casora_popup_free) under the badge's name;\n     its settings arrive as the tile's variables (window._casoraCustomBadge.popupVars, 29-eigene-badges.js). */\n  const _cb = window._casoraCustomBadge;\n  return _cb ? _cb.popupTitle(variables.badge, entity) : 'Badge';\n]]]\n"
+   }
+  },
+  "variables": {
+   "free_template": null
+  }
+ },
  "casora_popup_laundry": {
   "icon_tap_action": {
    "action": "[[[\n  return window.casoraPopupAction ? window.casoraPopupAction() : 'more-info';\n]]]\n",

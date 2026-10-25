@@ -12,6 +12,9 @@
 //   window._casoraFree.color(st) / .on(st)            – circle and ring colour by domain, highlighted states
 //   window._casoraFree.popup(entity, states, hass, variables) – popup casora_popup_free
 //   window._casoraFree.sec(part, C, states, hass)     – live parts (hero, ctl, vals, more)
+// The same popup serves own badges with the tap "Own popup" (#60, 29-eigene-badges.js, casora_popup_own_badge):
+// the badge hands its popup settings in as the same variables; a template badge without an entity adds
+// free_template, whose last result (window._casoraTemplates) is the status line.
 (function () {
   if (window._casoraFree) return;
   var F = window._casoraFree = {};
@@ -167,7 +170,7 @@
   // Main switch in the header for entities the house toggles.
   (window._casoraHeadSwitchHooks = window._casoraHeadSwitchHooks || []).push(function (src) {
     var tpl = [].concat((src && src._config && src._config.template) || []).join(' ');
-    if (!/\bcasora_free\b/.test(tpl)) return null;
+    if (!/\bcasora_(free|popup_own_badge)\b/.test(tpl)) return null;
     var id = src._stateObj && src._stateObj.entity_id;
     return id && TOGGLE.test(dom(id)) ? [id] : false;
   });
@@ -181,8 +184,10 @@
     var st = id ? S[id] : null;
     var values = cfg.values.filter(function (x) { return !!S[x]; });
     var chartWant = cfg.chart ? (cfg.chartEntity || id) : null;
+    var v = variables || {};
+    var tpl = !id && typeof v.free_template === 'string' && v.free_template.trim() ? v.free_template : null;
     var chart = chartWant && S[chartWant] && F.isNumeric(S[chartWant]) ? chartWant : null;
-    return { id: id, values: values, labels: cfg.labels, controls: !!(cfg.controls && st && F.hasControls(st)),
+    return { id: id, tpl: tpl, values: values, labels: cfg.labels, controls: !!(cfg.controls && st && F.hasControls(st)),
       chart: chart, chartMissing: !!(chartWant && !chart), chartWant: chartWant,
       empty: !values.length && !chart && !(cfg.controls && st && F.hasControls(st)) };
   };
@@ -272,6 +277,15 @@
     var S = states || {}, st = C.id ? S[C.id] : null;
     if (part === 'hero') {
       var notes = [];
+      if (!C.id && C.tpl) {
+        // Template badge: its text as the status line, "…" until the first result.
+        var TP = window._casoraTemplates;
+        var txt = TP && TP.text ? TP.text(C.tpl) : null;
+        var line = UI.line(txt == null ? '…' : (String(txt).trim() || '—'), []);
+        if (C.chartMissing && C.chartWant) notes.push(T('Kein Verlauf: {name} ist kein Zahlenwert.').replace('{name}', nameOf(S[C.chartWant], C.chartWant)));
+        if (C.empty) notes.push(T('Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.'));
+        return line + (UI.note ? notes.map(function (n) { return UI.note(n); }).join('') : '');
+      }
       if (!C.id) {
         notes.push(T('Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.'));
         return UI.line('Kein Gerät gewählt', []) + (UI.note ? UI.note(notes[0]) : '');

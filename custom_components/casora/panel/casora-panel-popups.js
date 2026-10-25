@@ -593,6 +593,8 @@
         delete v.popup_extra_title;
         if (!Object.keys(v).length) delete tile.variables;
       }
+      // A stand-in "tile" (an own badge's popup, #60) stores its variables itself.
+      if (typeof tile._commit === "function") tile._commit();
       if (self._markDirty) self._markDirty();
       self._renderForm();
     };
@@ -672,6 +674,7 @@
           const v = input.value.trim();
           if (v) tile.variables.popup_extra_title = v;
           else delete tile.variables.popup_extra_title;
+          if (typeof tile._commit === "function") tile._commit();
           this._syncPreview();
         };
         let wait = 0;

@@ -2,51 +2,11 @@
 // any domain (words, numbers with unit, unavailable), icon toggle only for switchable domains, popup assembly
 // (hero, chart, controls, values, more; never empty), live parts with the UI stubbed, template and Studio entry.
 // All devices and names are invented.   node dev/unit/freie_kachel.mjs
-import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import { freeTileEnv, stubKit, stubUI } from './lib/free_tile_env.mjs';
 
-globalThis.window = globalThis;
-globalThis.document = { querySelector: () => null, addEventListener: () => {}, createElement: () => ({ style: {}, setAttribute() {}, appendChild() {} }), body: { appendChild() {} }, head: { appendChild() {} } };
-globalThis.addEventListener = () => {};
-globalThis.setTimeout = () => 0;
-globalThis.casoraLocale = () => 'de-DE';
-const src = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
-const load = (p) => new Function(src('custom_components/casora/scripts/local/' + p))();
-load('18-ziele.js');   // binWords / iconOf for value rows
-load('22-halten.js');  // controls model per domain
-// The core's state words (casora-core.js _casoraStateText), cut out of the bundle: the real "Geöffnet"/"An" path.
-const core = src('custom_components/casora/scripts/casora-core.js');
-const stI = core.indexOf('if (window._casoraStateText) return;');
-new Function(core.slice(core.lastIndexOf('(function () {', stI), core.indexOf('})();', stI) + 5))();
-assert.equal(typeof window._casoraStateText, 'function', 'core state text loaded');
-load('28-free-tile.js');
-const F = window._casoraFree;
-assert.ok(F && window._casoraHold && window._casoraZiele, 'modules loaded');
-
-// ── Invented house ────────────────────────────────────────────────────────
-const states = {}, entities = {};
-const add = (id, state, attributes = {}, reg = {}) => {
-  states[id] = { entity_id: id, state, attributes: { friendly_name: id.split('.')[1].replace(/^qa_/, '').replace(/_/g, ' '), ...attributes },
-    last_changed: new Date(Date.now() - 2 * 3600000).toISOString() };
-  entities[id] = { entity_id: id, ...reg };
-};
-add('switch.qa_pumpe', 'on');
-add('light.qa_stehlampe', 'on', { brightness: 128, supported_color_modes: ['brightness'] });
-add('cover.qa_rollo', 'open', { supported_features: 15, current_position: 60 });
-add('lock.qa_tor', 'locked', { supported_features: 0 });
-add('climate.qa_thermostat', 'heat', { temperature: 21, min_temp: 7, max_temp: 30, target_temp_step: 0.5, hvac_modes: ['off', 'heat'], supported_features: 1 });
-add('sensor.qa_temp', '21.47', { unit_of_measurement: '°C', device_class: 'temperature', state_class: 'measurement' });
-add('sensor.qa_energie', '1234.5', { unit_of_measurement: 'kWh', device_class: 'energy', state_class: 'total_increasing' });
-add('sensor.qa_zaehler', '7', { state_class: 'measurement' });
-add('sensor.qa_programm', 'Bereit', {});
-add('sensor.qa_weg', 'unavailable', { unit_of_measurement: 'W' });
-add('binary_sensor.qa_tuer', 'on', { device_class: 'door' });
-add('sensor.qa_prozent', '62', { unit_of_measurement: '%' });
-add('sensor.qa_handy', 'iPhone 15');
-add('sensor.qa_wlan', 'WLAN_5G');
-add('input_text.qa_notiz', 'Milch kaufen');
-add('select.qa_modus', 'Eco Plus', { options: ['Eco Plus', 'Normal'] });
-const hass = { states, entities, formatEntityState: (st) => (st.state === 'on' ? 'Ein' : st.state === 'off' ? 'Aus' : st.state) };
+// Modules and the invented house are shared with badge_popup.mjs (lib/free_tile_env.mjs).
+const { F, states, entities, hass, src } = freeTileEnv();
 
 // ── Studio settings ───────────────────────────────────────────────────────
 let c = F.cfg({});
@@ -138,10 +98,7 @@ C = F.plan(states['sensor.qa_temp'], states, hass, { free_chart: true });
 assert.equal(C.chart, 'sensor.qa_temp', 'history of the tile entity itself'); assert.equal(C.empty, false);
 
 // ── Popup assembly (kit stubbed) ─────────────────────────────────────────
-window._casoraSoftKit = {
-  secCard: (watch, code, st) => ({ sec: /sec\("(\w+)"/.exec(code)[1], watch: watch.filter((id) => st[id]) }),
-  layout: (o) => o,
-};
+stubKit();
 window._casoraUI = {};
 let L = F.popup(states['switch.qa_pumpe'], states, hass, { ...V, free_chart_entity: 'sensor.qa_temp' });
 assert.deepEqual(Object.keys(L.fields), ['hero', 'chart', 'ctl', 'vals', 'more']);
@@ -164,14 +121,7 @@ assert.deepEqual(Object.keys(L.fields), ['hero', 'more'], 'controls switched off
 assert.deepEqual(F.popup(states['switch.qa_pumpe'], { ...states }, { ...hass }, { free_chart: true }).top, ['hero'], 'wanted chart of a switch: none');
 
 // ── Live parts ────────────────────────────────────────────────────────────
-const UI = window._casoraUI;
-UI.line = (main, rest) => '<line>' + main + '|' + (rest || []).join(' · ') + '</line>';
-UI.note = (t) => '<note>' + t + '</note>';
-UI.segments = (items, label) => '<seg ' + (label || '') + '>' + items.map((i) => (i.active ? '*' : '') + i.label + '>' + i.svc.domain + '.' + i.svc.service
-  + (i.svc.data && Object.keys(i.svc.data).length ? JSON.stringify(i.svc.data) : '')).join(';') + '</seg>';
-UI.slider = (o) => '<slider ' + o.value + ' ' + o.svc.service + '/' + o.svc.field + '>';
-UI.group = (rows, label) => '<group ' + label + '>' + rows.map((r) => (r.entity ? r.entity + ':' : '') + r.label + '=' + (r.value || '')
-  + (r.svc ? '>' + r.svc.domain + '.' + r.svc.service : '') + (r.confirm ? '?' + r.confirm : '')).join(';') + '</group>';
+stubUI();
 const sec = (part, ent, vars) => F.sec(part, F.plan(ent, states, hass, vars || {}), states, hass);
 
 assert.equal(sec('hero', null), '<line>Kein Gerät gewählt|</line><note>Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.</note>');

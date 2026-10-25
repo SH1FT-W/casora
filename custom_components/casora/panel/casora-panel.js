@@ -26210,12 +26210,13 @@ class CasoraPanel extends HTMLElement {
         box.appendChild(h);
       }
 
-      // Tap: nothing, the device's popup, or a room's page.
-      const tap = b.tap === "navigate" || b.tap === "popup" ? b.tap : "none";
-      const tapOpts = src === "entity" ? ["none", "popup", "navigate"] : ["none", "navigate"];
+      // Tap: nothing, the device's popup, an own popup (#60) or a room's page.
+      const tap = b.tap === "navigate" || b.tap === "own_popup" || (b.tap === "popup" && src === "entity") ? b.tap : "none";
+      const tapOpts = src === "entity" ? ["none", "popup", "own_popup", "navigate"] : ["none", "own_popup", "navigate"];
       const tapPick = this._combo(tap, tapOpts, "", (v) => patch(i, { tap: v === "none" ? "" : v }, true),
-        { fixed: true, labels: { none: "Do nothing", popup: "Popup", navigate: "Go to room" } });
+        { fixed: true, labels: { none: "Do nothing", popup: "Popup", own_popup: "Own popup", navigate: "Go to room" } });
       box.appendChild(rowOf("On tap", tapPick.wrap));
+      if (tap === "own_popup") this._badgePopupFields(room, box, b, src === "entity", (popup, redraw) => patch(i, { popup }, redraw), rowOf);
       if (tap === "navigate") {
         const paths = rooms.map((r) => r.path);
         const labels = {};
@@ -26248,6 +26249,103 @@ class CasoraPanel extends HTMLElement {
       h.className = "hint";
       h.textContent = f.hint;
       fs.appendChild(h);
+    }
+  }
+
+  // Own popup of an own badge (#60): the Universal tile's popup sections – casora_free's fields from
+  // CASORA_TILE_TYPES with the same widgets – and its own cards (_popupCardsRows, casora-panel-popups.js), kept in
+  // b.popup instead of a tile's variables; the dashboard hands them to the tile's popup (29-eigene-badges.js).
+  // commit(popup | undefined, redraw) stores the badge; hasEntity: controls only for a device badge.
+  _badgePopupFields(room, box, b, hasEntity, commit, rowOf) {
+    const type = (window.CASORA_TILE_TYPES || []).find((t) => t.id === "casora_free");
+    if (!type) return;
+    const P = clone(b.popup && typeof b.popup === "object" && !Array.isArray(b.popup) ? b.popup : {});
+    const empty = (v) => v === undefined || v === null || v === "" || (Array.isArray(v) && !v.length)
+      || (typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length);
+    const save = (redraw) => {
+      const next = {};
+      Object.keys(P).forEach((k) => { if (!empty(P[k])) next[k] = P[k]; });
+      commit(Object.keys(next).length ? next : undefined, redraw);
+    };
+    const put = (label, control, data) => {
+      const r = rowOf(label, control);
+      // Device names are data, not UI text.
+      if (data) r.setAttribute("data-no-i18n", "");
+      box.appendChild(r);
+      return r;
+    };
+    const hintOf = (f) => {
+      if (!f.hint) return;
+      const h = document.createElement("div");
+      h.className = "hint";
+      h.textContent = f.hint;
+      box.appendChild(h);
+    };
+    const subhead = (text) => {
+      const h = document.createElement("div");
+      h.className = "subhead";
+      h.textContent = text;
+      box.appendChild(h);
+    };
+    subhead("Own popup");
+    type.fields.filter((f) => /^free_/.test(f.key) && (hasEntity || f.key !== "free_controls") && (!f.when || f.when(P))).forEach((f) => {
+      const cur = P[f.key];
+      if (f.type === "list") {
+        put(f.label, this._chipPicker(Array.isArray(cur) ? cur : [], f.domains || ["sensor"], (items) => {
+          P[f.key] = items;
+          // Labels of removed values go with them.
+          type.fields.filter((m) => m.over === f.key).forEach((m) => {
+            const map = P[m.key];
+            if (map && typeof map === "object") Object.keys(map).forEach((id) => { if (!items.includes(id)) delete map[id]; });
+          });
+          save(true);
+        }, undefined, { classes: f.classes, accept: f.accept, placeholder: f.placeholder }));
+        hintOf(f);
+        return;
+      }
+      if (f.type === "map") {
+        const over = (Array.isArray(P[f.over]) ? P[f.over] : []).filter(Boolean);
+        if (!over.length) return;
+        subhead(f.label);
+        over.forEach((id) => {
+          const st = this._hass && this._hass.states && this._hass.states[id];
+          const who = String((st && st.attributes && st.attributes.friendly_name) || id);
+          const map = P[f.key] && typeof P[f.key] === "object" && !Array.isArray(P[f.key]) ? P[f.key] : {};
+          const input = document.createElement("input");
+          input.value = map[id] || "";
+          input.placeholder = who;
+          input.onchange = () => {
+            const next = { ...(P[f.key] && typeof P[f.key] === "object" ? P[f.key] : {}) };
+            const v = input.value.trim();
+            if (v) next[id] = v; else delete next[id];
+            P[f.key] = next;
+            save(false);
+          };
+          put(who, input, true);
+        });
+        hintOf(f);
+        return;
+      }
+      if (f.type === "bool") {
+        put(f.label, this._boolSwitch(cur, f.boolDefault, (v) => {
+          if (v === undefined) delete P[f.key]; else P[f.key] = v;
+          // "History of" shows with the history switch only.
+          save(type.fields.some((m) => m.when && /^free_/.test(m.key) && m.key !== f.key && m.when(P) !== m.when({ ...P, [f.key]: cur })));
+        }, f.label));
+        hintOf(f);
+        return;
+      }
+      if (f.domains) {
+        const c = this._combo(String(cur || ""), this._rankedEntityList(f.domains, f.classes, room, cur, f.accept),
+          hasEntity ? "This badge's device" : "Choose", (v) => { P[f.key] = v; save(false); }, { clearable: true });
+        put(f.label, c.wrap);
+        hintOf(f);
+      }
+    });
+    // Own cards below the sections: the tiles' editor on a stand-in tile that stores into the badge.
+    if (typeof this._popupCardsRows === "function") {
+      const stand = { template: "casora_free", variables: P, _commit: () => save(false) };
+      this._popupCardsRows(stand, type, (label, control) => put(label, control));
     }
   }
 
