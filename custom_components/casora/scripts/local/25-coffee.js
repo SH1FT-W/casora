@@ -146,12 +146,18 @@
   };
 
   // ── Entities of the device ─────────────────────────────────────────────────
+  // Visible entity ids of a device (the shared index of 00-finder.js, else a scan of the registry).
+  var ofDevice = function (R, dev) {
+    var ids = window.casoraDeviceEntities ? window.casoraDeviceEntities(R, dev)
+      : Object.keys(R).filter(function (eid) { return R[eid] && R[eid].device_id === dev; });
+    return ids.filter(function (eid) { return R[eid] && !R[eid].hidden; });
+  };
   K.items = function (hass, id) {
     var R = (hass && hass.entities) || {}, S = (hass && hass.states) || {};
     var me = R[id];
     var out = [];
     var dev = me && me.device_id;
-    var ids = dev ? Object.keys(R).filter(function (eid) { var e = R[eid]; return e && e.device_id === dev && !e.hidden; }) : [id];
+    var ids = dev ? ofDevice(R, dev) : [id];
     var D = (hass && hass.devices) || {}, d = dev && D[dev];
     var devName = d ? String(d.name_by_user || d.name || '') : '';
     ids.sort().forEach(function (eid) {
@@ -472,7 +478,7 @@
   var cache = {};
   var devIds = function (hass, id) {
     var R = (hass && hass.entities) || {}, dev = R[id] && R[id].device_id;
-    return dev ? Object.keys(R).filter(function (eid) { return R[eid] && R[eid].device_id === dev && !R[eid].hidden; }) : [id];
+    return dev ? ofDevice(R, dev) : [id];
   };
   var liveCount = function (hass, ids) { var S = (hass && hass.states) || {}; return ids.filter(function (x) { return S[x]; }).length; };
   K.find = function (hass, id) {
