@@ -119,6 +119,7 @@ const MODULES = [
   '29-eigene-badges',
   '30-fridge',
   '31-velair',
+  '32-media-badge',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());

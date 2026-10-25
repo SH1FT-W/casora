@@ -160,7 +160,9 @@ const groups = { casora_badge_security_group: 'security', casora_badge_climate_g
   casora_badge_light_group: 'lights', casora_badge_presence_group: 'presence', casora_badge_media_group: 'media' };
 for (const [tpl, kind] of Object.entries(groups)) {
   const c = phone.find((x) => x.template === tpl);
-  assert.deepEqual(c.tap_action, { action: 'fire-dom-event', casora_phone_row: kind, haptic: 'light' }, tpl);
+  // Media opens its popup like on the desktop (#64, casora_popup_media) – no tap override.
+  if (kind === 'media') assert.equal(c.tap_action, undefined, tpl);
+  else assert.deepEqual(c.tap_action, { action: 'fire-dom-event', casora_phone_row: kind, haptic: 'light' }, tpl);
   assert.ok(C.custom_fields['room_sub_' + kind], 'Unter-Reihe ' + kind);
   const dsub = R.custom_fields[{ lights: 'badges_lights', presence: 'badges_presence' }[kind] || 'badges_' + kind];
   assert.equal(JSON.stringify(C.custom_fields['room_sub_' + kind]).length > JSON.stringify(dsub).length * 0.9, true);
