@@ -3456,8 +3456,11 @@ window.casoraMenuGlass = {
         if (e) {
           const s = states[e]; const a = s?.attributes || {};
           const ps = pausedMap && pausedMap[e];
+          // Position and duration belong in the signature too: a player that restarts the same title
+          // may report position 0 without a new timestamp, and the bars must not keep the old one.
           parts.push(e + s?.state + (a.media_title || '') + '\u0001' + (a.media_artist || a.artist || '') +
-            (a.media_position_updated_at || '') + (ps ? '\u0001' + (ps.since || '') + (ps.title ?? '') : '') +
+            (a.media_position_updated_at || '') + '\u0001' + (a.media_position ?? '') + '\u0001' + (a.media_duration ?? '') +
+            (ps ?'\u0001' + (ps.since || '') + (ps.title ?? '') : '') +
             artSig(a.entity_picture || a.media_image_url || a.media_album_cover_url || a.image_url));
         }
       }
@@ -3519,6 +3522,84 @@ window.casoraMenuGlass = {
     };
     window._casoraNP._casoraCore = true;
   }
+
+  // casora-np-progress:start
+  // Now-playing progress, shared by every bar (soft list, wave stage, media popup). The position is
+  // always derived from the latest media_position + media_position_updated_at, so a restart of the
+  // same title (position back near 0) resets at once instead of keeping the old position.
+  // After ⏮/⏭ (_casoraNPSkipMark) the bar restarts from 0 right away; that guess holds until HA
+  // reports a new position or timestamp for the player, and at most SKIP_MS - then HA's value wins.
+  // Players that only send media_position on change (AirPlay via apple_tv, Music Assistant) count
+  // as "reported" as soon as either value differs from the one seen at the tap.
+  {
+    const SKIP_MS = 5000;
+    const skips = window._casoraNPSkips = window._casoraNPSkips || {};
+    const same = (x, y) => x === y || (x !== x && y !== y); // NaN-safe
+    const toMs = (v) => {
+      if (typeof v === 'number') return v;
+      const t = Date.parse(v || '');
+      return Number.isFinite(t) ? t : NaN;
+    };
+    // r: { entity, pos, dur, posAt (ms or ISO), playing }. Returns { pos, dur, frac, skip } or null
+    // without a usable position. frac is NaN without a duration (no bar, but a clock still works).
+    window._casoraNPPos = function (r, now) {
+      if (!r) return null;
+      now = now == null ? Date.now() : now;
+      const dur = Number(r.dur);
+      const hasDur = Number.isFinite(dur) && dur > 0;
+      const posAt = toMs(r.posAt);
+      let pos = (r.pos === null || r.pos === undefined || r.pos === '') ? NaN : Number(r.pos);
+      let skip = false;
+      const sk = r.entity ? skips[r.entity] : null;
+      if (sk) {
+        const reported = !same(pos, sk.pos) || !same(posAt, sk.posAt);
+        if (reported || now - sk.at > SKIP_MS || now < sk.at) delete skips[r.entity];
+        else { pos = r.playing ? (now - sk.at) / 1000 : 0; skip = true; }
+      }
+      if (!Number.isFinite(pos)) return null;
+      // Paused: the position stands. Playing: extrapolate from HA's timestamp (never backwards when
+      // the browser clock lags behind HA's).
+      if (!skip && r.playing && Number.isFinite(posAt) && posAt > 0) pos += Math.max(0, (now - posAt) / 1000);
+      pos = Math.max(0, hasDur ? Math.min(dur, pos) : pos);
+      return { pos: pos, dur: hasDur ? dur : NaN, frac: hasDur ? pos / dur : NaN, skip: skip };
+    };
+    // ⏮/⏭ tapped for a player: remember what HA showed at the tap, restart visible popup bars.
+    window._casoraNPSkipMark = function (entity, states) {
+      if (!entity) return;
+      const a = (states && states[entity] && states[entity].attributes) || {};
+      const pos = (a.media_position === null || a.media_position === undefined) ? NaN : Number(a.media_position);
+      skips[entity] = { at: Date.now(), pos: pos, posAt: toMs(a.media_position_updated_at) };
+      try { window.dispatchEvent(new CustomEvent('casora-np-skip', { detail: { entity: entity } })); } catch (e) { /* no DOM */ }
+    };
+    // Popup bar (.hm-fill with data-np-*): set it from _casoraNPPos without waiting for a re-render.
+    // A jump backwards is applied at once (no transition), then the bar runs on linearly.
+    window._casoraNPBarSync = function (el) {
+      if (!el || !el.dataset || !el.isConnected) return;
+      const d = el.dataset;
+      const playing = d.npPlay === '1';
+      const p = window._casoraNPPos({ entity: d.npEnt, pos: d.npPos, dur: d.npDur, posAt: Number(d.npAt), playing: playing });
+      if (!p || !Number.isFinite(p.frac)) return;
+      if (el._npAnim) { try { el._npAnim.cancel(); } catch (e) { /* gone */ } el._npAnim = null; }
+      el.style.animation = 'none';
+      el.style.transition = 'none';
+      el.style.width = (p.frac * 100).toFixed(2) + '%';
+      if (playing && p.dur > p.pos && typeof el.animate === 'function') {
+        el._npAnim = el.animate([{ width: (p.frac * 100).toFixed(2) + '%' }, { width: '100%' }],
+          { duration: (p.dur - p.pos) * 1000, easing: 'linear', fill: 'forwards' });
+      }
+    };
+    // All popup bars of one player (only on a ⏮/⏭ tap, so a full shadow-DOM walk is fine).
+    window._casoraNPBarsFor = function (entity) {
+      const out = [];
+      (function walk(n, depth) {
+        if (!n || depth > 14 || !n.querySelectorAll) return;
+        n.querySelectorAll('.hm-fill[data-np-ent]').forEach((el) => { if (el.dataset.npEnt === entity) out.push(el); });
+        n.querySelectorAll('*').forEach((el) => { if (el.shadowRoot) walk(el.shadowRoot, depth + 1); });
+      })(typeof document !== 'undefined' ? document : null, 0);
+      return out;
+    };
+  }
+  // casora-np-progress:end
 
   // casora-np-hidden:start
   // Weich (05.10.2026): Wiedergaben „ausblenden“ – nur auf diesem Gerät (localStorage), je Player
@@ -9685,7 +9766,17 @@ window.casoraMenuGlass = {
             if (isFinite(stepBy) && ha2 && ha2.hass && spec && spec.data) stepSpec(t, spec, stepBy, ha2.hass);
             if (ha2 && ha2.hass && spec && spec.domain && spec.service) {
               // „Vor dem Schalten fragen“ der Kachel gilt auch für die Knöpfe im Popup.
-              var go2 = function () { ha2.hass.callService(spec.domain, spec.service, spec.data || {}, spec.target || undefined); };
+              var go2 = function () {
+                ha2.hass.callService(spec.domain, spec.service, spec.data || {}, spec.target || undefined);
+                // ⏮/⏭ in the media popup: bar restarts from 0 until HA reports (casora-np-progress).
+                var skEnt = spec.domain === 'media_player' && /^media_(previous|next)_track$/.test(spec.service)
+                  && ((spec.target && spec.target.entity_id) || (spec.data && spec.data.entity_id));
+                if (skEnt && typeof skEnt === 'string' && window._casoraNPSkipMark) {
+                  window._casoraNPSkipMark(skEnt, ha2.hass.states);
+                  window._casoraNPBarsFor(skEnt).forEach(window._casoraNPBarSync);
+                  setTimeout(function () { window._casoraNPBarsFor(skEnt).forEach(window._casoraNPBarSync); }, 5100);
+                }
+              };
               if (window.casoraConfirmSpec) window.casoraConfirmSpec(spec).then(function (ok) { if (ok) go2(); });
               else go2();
             }
