@@ -2589,7 +2589,12 @@
     "A climate Velair plans": "Een klimaatapparaat dat Velair beheert",
     "For every climate Velair plans": "Voor elk klimaatapparaat dat Velair beheert",
     "Velair integration not installed yet": "Velair-integratie nog niet geïnstalleerd",
-    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatuur, doel en modus op de tegel zoals bij de thermostaat. De popup heeft modus, doeltemperatuur, ventilator, voorinstellingen en zwenken, plus het schema van Velair: de tijdvakken van vandaag, de week in één oogopslag, schema aan of uit, hervatten na een handmatige wijziging en de tijdvakken van een dag bewerken. Voor klimaatapparaten die de Velair-integratie beheert."
+    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatuur, doel en modus op de tegel zoals bij de thermostaat. De popup heeft modus, doeltemperatuur, ventilator, voorinstellingen en zwenken, plus het schema van Velair: de tijdvakken van vandaag, de week in één oogopslag, schema aan of uit, hervatten na een handmatige wijziging en de tijdvakken van een dag bewerken. Voor klimaatapparaten die de Velair-integratie beheert.",
+    "Felt temperature": "Gevoelstemperatuur",
+    "Felt temperature sensor": "Sensor gevoelstemperatuur",
+    "Second curve in the weather popup's temperature chart, when the weather source provides it.": "Tweede lijn in de temperatuurgrafiek van de weerpop-up, als de weerbron die levert.",
+    "Extra values": "Extra waarden",
+    "Dew point, wind gusts, cloud cover, chance of rain and more in the weather popup, when the weather source provides them.": "Dauwpunt, windstoten, bewolking, kans op regen en meer in de weerpop-up, als de weerbron die levert."
   },
   "patterns": [
     [

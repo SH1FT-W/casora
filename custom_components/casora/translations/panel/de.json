@@ -2589,7 +2589,12 @@
     "A climate Velair plans": "Ein Klimagerät, das Velair plant",
     "For every climate Velair plans": "Für jedes Klimagerät, das Velair plant",
     "Velair integration not installed yet": "Velair-Integration noch nicht installiert",
-    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatur, Ziel und Modus auf der Kachel wie beim Thermostat. Das Popup hat Modus, Zieltemperatur, Lüfter, Voreinstellungen und Lamellen und dazu den Zeitplan aus Velair: die Zeitfenster von heute, die Woche auf einen Blick, Zeitplan an oder aus, Fortsetzen nach einer manuellen Änderung und die Zeitfenster eines Tages bearbeiten. Für Klimageräte, die die Integration Velair plant."
+    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatur, Ziel und Modus auf der Kachel wie beim Thermostat. Das Popup hat Modus, Zieltemperatur, Lüfter, Voreinstellungen und Lamellen und dazu den Zeitplan aus Velair: die Zeitfenster von heute, die Woche auf einen Blick, Zeitplan an oder aus, Fortsetzen nach einer manuellen Änderung und die Zeitfenster eines Tages bearbeiten. Für Klimageräte, die die Integration Velair plant.",
+    "Felt temperature": "Gefühlte Temperatur",
+    "Felt temperature sensor": "Sensor für gefühlte Temperatur",
+    "Second curve in the weather popup's temperature chart, when the weather source provides it.": "Zweite Kurve im Temperaturdiagramm des Wetter-Popups, wenn die Wetterquelle sie liefert.",
+    "Extra values": "Zusätzliche Werte",
+    "Dew point, wind gusts, cloud cover, chance of rain and more in the weather popup, when the weather source provides them.": "Taupunkt, Windböen, Bewölkung, Regenwahrscheinlichkeit und mehr im Wetter-Popup, wenn die Wetterquelle sie liefert."
   },
   "patterns": [
     [

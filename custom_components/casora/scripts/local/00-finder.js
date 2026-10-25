@@ -1474,6 +1474,101 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     return dcs.join(' ').indexOf('pressure') >= 0 ? cand[0] || null : null;
   }
 
+  // ── Extra values of the weather source (issue #56) ──────────────────────────────
+  // Felt temperature and the other values a weather integration offers beside the forecast: HA's standard
+  // weather attributes (apparent_temperature, dew_point, wind_gust_speed, cloud_coverage, uv_index) and the
+  // sensors on the weather entity's own device by translation_key ("Wetter & Warnungen": dew_point, wind_gust,
+  // cloud_cover, precipitation, precipitation_probability(_today), solar). Attributes first (the entity the user
+  // chose), sensors fill the gaps; for the felt curve a sensor goes first (it has statistics).
+  var WX_FEELS = ['apparent_temperature', 'feels_like_temperature', 'feels_like', 'realfeel_temperature', 'apparent_temp'];
+  var WX_KEYS = {
+    temperature: ['temperature'], feels: WX_FEELS, dew_point: ['dew_point', 'dewpoint'],
+    gust: ['wind_gust', 'wind_gust_speed', 'wind_gusts'], cloud: ['cloud_cover', 'cloud_coverage', 'cloudiness'],
+    rain_chance: ['precipitation_probability'], rain_chance_today: ['precipitation_probability_today'],
+    precipitation: ['precipitation', 'precipitation_intensity'], solar: ['solar', 'solar_irradiance', 'irradiance'],
+    uv: ['uv_index', 'uv'],
+  };
+  var WX_ATTR = { temperature: 'temperature', feels: 'apparent_temperature', dew_point: 'dew_point',
+    gust: 'wind_gust_speed', cloud: 'cloud_coverage', uv: 'uv_index' };
+  var wxNum = function (v) { if (v == null || v === '') return null; var n = Number(v); return isFinite(n) ? n : null; };
+  // Sensors of the weather entity's device, by translation_key: { key: entity_id } (numeric state only).
+  function weatherSensors(hass, wid) {
+    var S = (hass && hass.states) || {}, R = reg(hass), dev = R[wid] && R[wid].device_id, out = {};
+    if (!dev) return out;
+    Object.keys(R).forEach(function (id) {
+      var e = R[id];
+      if (!e || e.device_id !== dev || id.indexOf('sensor.') !== 0 || !S[id] || wxNum(S[id].state) == null) return;
+      Object.keys(WX_KEYS).forEach(function (k) {
+        if (!out[k] && WX_KEYS[k].indexOf(String(e.translation_key || '')) > -1) out[k] = id;
+      });
+    });
+    return out;
+  }
+  // { key: { entity, attribute?, value, unit } } for every value the source has. opts.feels: chosen sensor
+  // for the felt temperature (Studio), wins while it has a number.
+  function weatherSources(hass, wid, opts) {
+    var S = (hass && hass.states) || {}, w = S[wid], a = (w && w.attributes) || {}, o = opts || {};
+    var sens = weatherSensors(hass, wid), out = {};
+    var tu = a.temperature_unit || '°C';
+    var attrUnit = { temperature: tu, feels: tu, dew_point: tu, gust: a.wind_speed_unit || 'km/h', cloud: '%', uv: '' };
+    var fromSensor = function (k, id) {
+      var st = id && S[id], v = st ? wxNum(st.state) : null;
+      return v == null ? null : { entity: id, value: v, unit: String((st.attributes || {}).unit_of_measurement || '') };
+    };
+    var fromAttr = function (k) {
+      var v = WX_ATTR[k] && w ? wxNum(a[WX_ATTR[k]]) : null;
+      return v == null ? null : { entity: wid, attribute: WX_ATTR[k], value: v, unit: attrUnit[k] };
+    };
+    Object.keys(WX_KEYS).forEach(function (k) {
+      var sensorFirst = k === 'feels' || k === 'temperature';
+      var hit = sensorFirst ? fromSensor(k, sens[k]) || fromAttr(k) : fromAttr(k) || fromSensor(k, sens[k]);
+      if (hit) out[k] = hit;
+    });
+    var own = o.feels ? fromSensor('feels', o.feels) : null;
+    if (own) out.feels = own;
+    return out;
+  }
+  // Series of the weather popup's temperature chart. Without a felt value: the outdoor sensor as before, else the
+  // weather device's temperature sensor. With one: the measured temperature of the same source (its sensor, else
+  // the weather entity's attribute) - an outdoor sensor elsewhere would put two places side by side - and the felt
+  // temperature as a second curve. null without a temperature to draw.
+  function weatherChart(hass, wid, outT, opts) {
+    var o = opts || {}, src = weatherSources(hass, wid, o), t = src.temperature, f = o.showFeels === false ? null : src.feels;
+    var own = t ? (t.attribute ? { entity: wid, attribute: 'temperature', unit: t.unit } : { entity: t.entity }) : null;
+    var base = f && own ? own : outT ? { entity: outT } : own && !own.attribute ? own : null;
+    if (!base) return null;
+    var series = [Object.assign({ name: 'Temperatur', color: '#FF9F0A' }, base)];
+    if (f && !(f.entity === base.entity && f.attribute === base.attribute)) {
+      // c1: the chart's blue step - an orange/red hex would map to the same step as the temperature.
+      series.push(Object.assign({ entity: f.entity, name: 'Gefühlt', color: 'c1' }, f.attribute ? { attribute: f.attribute, unit: f.unit } : {}));
+    }
+    return { key: base.entity, series: series, feels: series.length > 1 };
+  }
+  // Rows for the popup's "Details" group (UI.group objects), each with `after` = the label of the standard row it
+  // follows (null: at the end, `first`: on top). The standard rows (humidity, wind, pressure, UV, visibility)
+  // stay in the template; UV only comes from here when the entity has no uv_index.
+  function weatherRows(hass, wid, opts) {
+    var src = weatherSources(hass, wid, opts), rows = [];
+    var num = function (v, d) { return window.casoraNum ? window.casoraNum(v, 0, d) : String(Math.round(v * Math.pow(10, d)) / Math.pow(10, d)).replace('.', ','); };
+    var val = function (s, d) { return num(s.value, d) + (s.unit ? (s.unit === '%' ? ' %' : ' ' + s.unit) : ''); };
+    var add = function (k, icon, label, d, after, tone) {
+      var s = src[k];
+      if (!s) return;
+      rows.push({ key: k, icon: icon, iconTone: tone || 'accent', label: label, value: val(s, d), entity: s.attribute ? undefined : s.entity,
+        after: after || null, first: !after && k === 'feels' });
+    };
+    add('feels', 'mdi:thermometer-lines', 'Gefühlt', 0);
+    add('dew_point', 'mdi:thermometer-water', 'Taupunkt', 0, 'Luftfeuchtigkeit');
+    add('gust', 'mdi:weather-windy-variant', 'Windböen', 0, 'Wind');
+    add('cloud', 'mdi:cloud-percent', 'Bewölkung', 0);
+    add('rain_chance', 'mdi:umbrella-outline', 'Regenwahrscheinlichkeit', 0);
+    add('rain_chance_today', 'mdi:umbrella-outline', 'Regen heute', 0);
+    add('precipitation', 'mdi:weather-rainy', 'Niederschlag', 1);
+    add('solar', 'mdi:sun-wireless-outline', 'Sonneneinstrahlung', 0, null, 'var(--casora-color-yellow, #FFCC00)');
+    if (src.uv && !src.uv.attribute) add('uv', 'mdi:white-balance-sunny', 'UV-Index', 0, null, 'var(--casora-color-yellow, #FFCC00)');
+    return rows;
+  }
+
   /* Robot vacuum fields, shared by the card (02-devices.js _casoraVac) and its Studio fields (find.vac).
      Roborock's translation_keys first, then those of other integrations with the same meaning: Dreame (HACS,
      Tasshack), Ecovacs and iRobot Roomba (HA core). Settings that only look alike (Dreame's auto drying, auto
@@ -1628,6 +1723,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     deviceOf: deviceOf, entities: entities, map: map, companionPlug: companionPlug, byKey: byKey,
     waste: waste, wasteDates: wasteDates, wasteDown: wasteDown, siblings: siblings, dayStart: dayStart, onHours: onHours, lastOn: lastOn, keyAny: keyAny, network: network,
     contacts: contacts, outdoor: outdoor, openings: openings,
+    weatherSources: weatherSources, weatherChart: weatherChart, weatherRows: weatherRows,
   };
 })();
 

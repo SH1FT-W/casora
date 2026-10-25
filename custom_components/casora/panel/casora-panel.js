@@ -2282,6 +2282,14 @@ const SECTIONS = [
       // „H · T · Regen“ neben der Temperatur. Geht als weather_details an casora_room (hero_details).
       { key: "weather_details", label: "Show details", type: "bool", boolDefault: true, always: true,
         hint: "Condition, high/low and rain next to the temperature on desktop and tablet." },
+      // Issue #56: the weather popup's felt temperature curve and the source's further values
+      // (casoraDevice.weatherChart/weatherRows). Go as weather_feels/weather_extras/weather_feels_sensor to casora_weather.
+      { key: "weather_feels", label: "Felt temperature", type: "bool", boolDefault: true, always: true,
+        hint: "Second curve in the weather popup's temperature chart, when the weather source provides it." },
+      { ...E("weather_feels_sensor", "Felt temperature sensor", ["sensor"]), classes: ["temperature"],
+        noAdd: true, placeholder: "Automatic: from the source" },
+      { key: "weather_extras", label: "Extra values", type: "bool", boolDefault: true, always: true,
+        hint: "Dew point, wind gusts, cloud cover, chance of rain and more in the weather popup, when the weather source provides them." },
     ],
   },
   {

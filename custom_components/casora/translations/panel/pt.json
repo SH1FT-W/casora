@@ -2589,7 +2589,12 @@
     "A climate Velair plans": "Um climatizador planeado pelo Velair",
     "For every climate Velair plans": "Para cada climatizador planeado pelo Velair",
     "Velair integration not installed yet": "Integração Velair ainda não instalada",
-    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, objetivo e modo no cartão como no termóstato. A janela tem modo, temperatura objetivo, ventilador, predefinições e lâminas, além do horário do Velair: os intervalos de hoje, a semana num relance, horário ligado ou desligado, retomar após uma alteração manual e editar os intervalos de um dia. Para climatizadores planeados pela integração Velair."
+    "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, objetivo e modo no cartão como no termóstato. A janela tem modo, temperatura objetivo, ventilador, predefinições e lâminas, além do horário do Velair: os intervalos de hoje, a semana num relance, horário ligado ou desligado, retomar após uma alteração manual e editar os intervalos de um dia. Para climatizadores planeados pela integração Velair.",
+    "Felt temperature": "Sensação térmica",
+    "Felt temperature sensor": "Sensor de sensação térmica",
+    "Second curve in the weather popup's temperature chart, when the weather source provides it.": "Segunda curva no gráfico de temperatura do popup do tempo, se a fonte meteorológica a fornecer.",
+    "Extra values": "Valores adicionais",
+    "Dew point, wind gusts, cloud cover, chance of rain and more in the weather popup, when the weather source provides them.": "Ponto de orvalho, rajadas, nebulosidade, probabilidade de chuva e mais no popup do tempo, se a fonte meteorológica os fornecer."
   },
   "patterns": [
     [

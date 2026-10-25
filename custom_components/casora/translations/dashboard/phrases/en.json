@@ -2458,7 +2458,16 @@
   "Im Velair-Panel öffnen": "Open in the Velair panel",
   "Profile, Modi und Vorlagen": "Profiles, modes and templates",
   "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "A profile is active – edit it in the Velair panel.",
-  "Ein Profil pausiert diesen Zeitplan.": "A profile pauses this schedule."
+  "Ein Profil pausiert diesen Zeitplan.": "A profile pauses this schedule.",
+  "Gefühlt": "Feels like",
+  "Taupunkt": "Dew point",
+  "Windböen": "Wind gusts",
+  "Bewölkung": "Cloud cover",
+  "Regenwahrscheinlichkeit": "Chance of rain",
+  "Regen heute": "Rain today",
+  "Niederschlag": "Precipitation",
+  "Sonneneinstrahlung": "Solar radiation",
+  "UV-Index": "UV index"
  },
  "patterns": [
   [

@@ -2476,7 +2476,16 @@
   "Im Velair-Panel öffnen": "Openen in het Velair-paneel",
   "Profile, Modi und Vorlagen": "Profielen, modi en sjablonen",
   "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "Er is een profiel actief – bewerk het in het Velair-paneel.",
-  "Ein Profil pausiert diesen Zeitplan.": "Een profiel pauzeert dit schema."
+  "Ein Profil pausiert diesen Zeitplan.": "Een profiel pauzeert dit schema.",
+  "Gefühlt": "Voelt als",
+  "Taupunkt": "Dauwpunt",
+  "Windböen": "Windstoten",
+  "Bewölkung": "Bewolking",
+  "Regenwahrscheinlichkeit": "Kans op regen",
+  "Regen heute": "Regen vandaag",
+  "Niederschlag": "Neerslag",
+  "Sonneneinstrahlung": "Zonnestraling",
+  "UV-Index": "UV-index"
  },
  "patterns": [
   [

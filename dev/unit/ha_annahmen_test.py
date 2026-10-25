@@ -437,6 +437,25 @@ class Frontend(unittest.TestCase):
         self.assertEqual({k: found.get(k) for k in want}, want)
 
 
+class WeatherAttributes(unittest.TestCase):
+    """Weather popup (#56). Casora: scripts/local/00-finder.js casoraDevice.weatherSources reads the felt temperature
+    and the extra values from the weather entity's state attributes by these names, with the units in
+    temperature_unit/wind_speed_unit; the felt curve is the attribute's history (casora-chart, attribute series)."""
+
+    def test_attribute_names(self):
+        from homeassistant.components.weather import const
+        want = {"ATTR_WEATHER_APPARENT_TEMPERATURE": "apparent_temperature", "ATTR_WEATHER_DEW_POINT": "dew_point",
+                "ATTR_WEATHER_WIND_GUST_SPEED": "wind_gust_speed", "ATTR_WEATHER_CLOUD_COVERAGE": "cloud_coverage",
+                "ATTR_WEATHER_UV_INDEX": "uv_index", "ATTR_WEATHER_TEMPERATURE": "temperature",
+                "ATTR_WEATHER_TEMPERATURE_UNIT": "temperature_unit", "ATTR_WEATHER_WIND_SPEED_UNIT": "wind_speed_unit"}
+        self.assertEqual({k: getattr(const, k, None) for k in want}, want)
+
+    def test_entity_offers_apparent_temperature(self):
+        from homeassistant.components.weather import WeatherEntity
+        self.assertTrue(hasattr(WeatherEntity, "native_apparent_temperature"))
+        self.assertTrue(hasattr(WeatherEntity, "native_wind_gust_speed"))
+
+
 class EnergyPrefs(unittest.TestCase):
     """Energy settings (#44). Casora: scripts/local/00-finder.js casoraEnergyHouse takes the house from
     energy/get_prefs: grid, solar and battery sources carry their power sensor in stat_rate (power_config for grid

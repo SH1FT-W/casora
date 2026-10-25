@@ -2476,7 +2476,16 @@
   "Im Velair-Panel öffnen": "Abrir en el panel de Velair",
   "Profile, Modi und Vorlagen": "Perfiles, modos y plantillas",
   "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "Hay un perfil activo: edítalo en el panel de Velair.",
-  "Ein Profil pausiert diesen Zeitplan.": "Un perfil pausa este horario."
+  "Ein Profil pausiert diesen Zeitplan.": "Un perfil pausa este horario.",
+  "Gefühlt": "Sensación",
+  "Taupunkt": "Punto de rocío",
+  "Windböen": "Ráfagas",
+  "Bewölkung": "Nubosidad",
+  "Regenwahrscheinlichkeit": "Probabilidad de lluvia",
+  "Regen heute": "Lluvia hoy",
+  "Niederschlag": "Precipitación",
+  "Sonneneinstrahlung": "Radiación solar",
+  "UV-Index": "Índice UV"
  },
  "patterns": [
   [
