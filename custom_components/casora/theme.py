@@ -11,8 +11,9 @@ The design is one setting for the whole installation (Studio › Settings › De
 "not chosen yet".
 
   casora/theme/subscribe ← {"hash"?: str}
-      → events {"design": str|None, "names": [...], "hash": str, "theme"?: {...}}
-        ("theme" only when the browser does not have that version cached; every signed-in user)
+      → events {"design": str|None, "names": [...], "hash": str, "hashes": {name: str}, "theme"?: {...}}
+        ("theme" only when the browser does not have that version cached; "hashes" tells which cached
+        designs are current - the browser loads all of them for HA's theme picker; every signed-in user)
   casora/theme/set       ← {"design": str|None}   (admins; "", None or one of "names")
   casora/theme/get       ← {"name": str} → {"theme": {...}}   (any design, for previews)
 """
@@ -188,7 +189,7 @@ class _Runtime:
     def payload(self, have: str | None) -> dict:
         d = self.design
         h = self.hashes.get(d or "", "")
-        out: dict[str, Any] = {"design": d, "names": list(self.themes), "hash": h}
+        out: dict[str, Any] = {"design": d, "names": list(self.themes), "hash": h, "hashes": dict(self.hashes)}
         if d and h != have:
             out["theme"] = self.themes[d]
         return out

@@ -34,7 +34,7 @@ assert.ok(!/perf-glass|"glass"|look-glass|Hemma 1 \(Legacy\)|Hemma 2 \(Legacy\)/
 const ctTxt = read('scripts/casora-theme.js');
 const ctRen = new Function('return ' + ctTxt.slice(ctTxt.indexOf('var RENAMED = ') + 14, ctTxt.indexOf('};', ctTxt.indexOf('var RENAMED = ')) + 1))();
 assert.deepEqual(ctRen, THEME_RENAMED, 'casora-theme.js kennt dieselben alten Namen wie das Studio');
-assert.ok(/n === 'Hemma' && other/.test(ctTxt), 'Hemmas eigenes Theme bleibt, solange HA es hat');
+assert.ok(/n === 'Hemma' && realTheme\(h, n\)/.test(ctTxt), 'Hemmas eigenes Theme bleibt, solange HA es hat');
 const pyRen = read('theme.py');
 for (const [o, n] of Object.entries(THEME_RENAMED)) {
   if (o === 'Hemma') assert.ok(/THEME_RENAMED_IF_GONE = \{"Hemma": THEME_GLAS\}/.test(pyRen), 'theme.py: Hemma nur ohne Hemma');

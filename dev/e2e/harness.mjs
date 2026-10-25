@@ -140,6 +140,16 @@ export async function open({ width = 1440, height = 900, mobile = false, umzug =
               return;
             } catch (e) { /* dann normal senden */ }
           }
+          // Same reason: Casora's one-time profile migration (casora-theme.js migrate()) would turn the browser's
+          // test theme ("default", a design) into "Backend-selected". Answer "already done".
+          if (typeof d === 'string' && d.indexOf('"frontend/get_user_data"') > -1 && /"key":"casora_theme_profile"/.test(d)) {
+            try {
+              const m = JSON.parse(d);
+              setTimeout(() => this.dispatchEvent(new MessageEvent('message', { data: JSON.stringify(
+                { id: m.id, type: 'result', success: true, result: { value: true } }) })), 0);
+              return;
+            } catch (e) { /* dann normal senden */ }
+          }
           return super.send(d);
         }
       };
