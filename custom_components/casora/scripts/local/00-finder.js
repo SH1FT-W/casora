@@ -179,7 +179,8 @@ window.casoraPriceKwh = function (v) {
     var n = parseFloat(s.state), f = KWH_FACTOR[String((s.attributes || {}).unit_of_measurement || '')];
     return isFinite(n) && f ? n * f : null;
   };
-  var usable = function (hass, id) { var e = reg(hass)[id]; return !(e && (e.hidden || e.entity_category)); };
+  var usable = function (hass, id) { var e = reg(hass)[id]; return !(e && (e.hidden || e.entity_category || e.disabled_by)); };
+  var disabled = function (hass, id) { var e = reg(hass)[id]; return !!(e && e.disabled_by); };
   // Id without domain and without a trailing energy/power word (sensor.waschmaschine_energie → waschmaschine).
   var stem = function (id) {
     var x = String(id || '').replace(/^[^.]*\./, '');
@@ -228,9 +229,13 @@ window.casoraPriceKwh = function (v) {
     dc.forEach(function (d) {
       var id = d.stat_consumption;
       if (own.indexOf(id) > -1 || seen[id]) return;
+      // #44: a meter disabled in HA stays in the energy prefs but is no consumer to list.
+      if (disabled(hass, id)) return;
       seen[id] = true;
       var power = typeof d.stat_rate === 'string' && S[d.stat_rate] && usable(hass, d.stat_rate) ? d.stat_rate : devPower(hass, p, id);
       if (power && own.indexOf(power) > -1) return;
+      // A disabled entity has no state at all (and is missing from hass.entities): no meter and no power → skip.
+      if (!S[id] && !power) return;
       var energy = !power && S[id] && KWH_FACTOR[String((S[id].attributes || {}).unit_of_measurement || '')] ? id : null;
       var name = String(d.name || '').trim() || friendly(S, id) || friendly(S, power);
       name = name ? (name.replace(NAME_TAIL, '').trim() || name) : stem(id).replace(/_/g, ' ');

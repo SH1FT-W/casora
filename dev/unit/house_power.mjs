@@ -604,6 +604,7 @@ const FULL_IDS = ['sensor.energy_grid_power', 'sensor.wechselrichter_ac_power', 
     { stat_consumption: 'sensor.ofen_energie_heute', name: 'Backofen' },                   // today's kWh, own name
     { stat_consumption: 'sensor.pumpe_energie' },                                           // meter in Wh only
     { stat_consumption: 'sensor.pv_ertrag' },                                               // a source's meter: never
+    { stat_consumption: 'sensor.esstisch_energie' },                                        // #44: disabled in HA (no state)
   ];
   await prefsLoad(h, { ...FULL, device_consumption: DEVICES });
   current = h;
