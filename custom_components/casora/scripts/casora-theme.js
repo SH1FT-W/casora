@@ -186,8 +186,8 @@
       setProfile(state.design ? '' : RENAMED[n]);
       return;
     }
-    // Once per user: the profile names the installation design itself (written by the Studio of the
-    // theme-file era) or "default" (written by the Studio of 26.10.60b1) → "Backend-selected".
+    // Once per user: "default" written by the Studio of 26.10.60b1 → "Backend-selected". A profile that names
+    // the installation design stays: the Studio writes it there itself.
     if (migrating[MIGRATED_KEY]) return;
     var c = conn();
     if (!c) return;
@@ -195,7 +195,7 @@
     c.sendMessagePromise({ type: 'frontend/get_user_data', key: MIGRATED_KEY }).then(function (r) {
       if (r && r.value) return null;
       var now = selection(hassNow());
-      if (now === 'default' || (now && known(now) && now === state.design)) setProfile('');
+      if (now === 'default') setProfile('');
       return c.sendMessagePromise({ type: 'frontend/set_user_data', key: MIGRATED_KEY, value: true });
     }).catch(function () { /* user data not available: try on the next page load */ });
   }
@@ -300,9 +300,14 @@
       return c.sendMessagePromise({ type: 'casora/theme/set', design: design || '' });
     }).then(function () {
       state.design = design || '';
-      // The Studio's choice shows in this browser too: a profile theme of its own would hide it.
-      var n = selection(hassNow());
-      if (n && (design || known(n) || RENAMED[n])) setProfile('');
+      // The Studio's choice is also this user's profile theme, so HA's own picker names it ("Casora Nebel")
+      // instead of an empty "use default" field. Other users who picked nothing keep following the installation.
+      if (design && known(design)) setProfile(design);
+      else {
+        // "Own theme" in the Studio: a Casora name in the profile goes, a real HA theme of the user's stays.
+        var n = selection(hassNow());
+        if (n && (known(n) || RENAMED[n])) setProfile('');
+      }
       remember();
       apply();
     });

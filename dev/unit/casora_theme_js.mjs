@@ -169,7 +169,7 @@ function env({ cache, cache2, hass, updateHass = false }) {
   assert.ok(e.updates.length > 0, 'designs handed to HA as a new theme list (picker is memoised on it)');
   assert.notEqual(h().themes.themes, list, 'new list object');
   assert.ok(names.every((n) => h().themes.themes[n]) && h().themes.themes.Moonbeam === own, 'designs + own theme in the list');
-  assert.deepEqual(e.settheme, [''], 'profile "Casora" = installation design → Backend-selected (once)');
+  assert.deepEqual(e.settheme, [], 'profile "Casora" = installation design stays (the Studio writes it there)');
   assert.equal(userData.casora_theme_profile, true, 'migration remembered per user');
   assert.equal(e.api.active(h()), 'Casora');
 
@@ -177,9 +177,9 @@ function env({ cache, cache2, hass, updateHass = false }) {
   h().selectedTheme = { theme: 'Casora Nebel' };
   e.api.apply();
   assert.equal(e.api.active(h()), 'Casora Nebel');
-  // Studio pick: the profile follows the installation again
+  // Studio pick: written into this user's profile too, so HA's picker names it
   await e.api.set('Casora Glas');
-  assert.deepEqual(e.settheme, ['', ''], 'Studio pick → profile Backend-selected');
+  assert.deepEqual(e.settheme, ['Casora Glas'], 'Studio pick → profile shows the design');
   assert.equal(e.api.active(h()), 'Casora Glas');
   assert.equal(e.rule().style.get('--primary-background-color')[0], 'GL', 'Studio pick applied at once');
   // A real theme of the user's own wins over everything
@@ -189,7 +189,7 @@ function env({ cache, cache2, hass, updateHass = false }) {
   assert.equal(e.rule().style.size, 0, 'no Casora design over the own theme');
   // Studio "own theme" ("") keeps an own profile theme
   await e.api.set('');
-  assert.deepEqual(e.settheme, ['', ''], 'own theme stays in the profile');
+  assert.deepEqual(e.settheme, ['Casora Glas'], 'own theme stays in the profile');
   // Old name of the theme-file era in the profile: rewritten (installation design set → Backend-selected)
   await e.api.set('Casora');
   h().selectedTheme = { theme: 'Hemma 2' };
