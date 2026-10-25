@@ -4,6 +4,38 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.60 – 25.10.2026
+
+**Bitte vor dem Update lesen:** Diese Version baut Teile von Casoras Unterbau um, damit Casora in den offiziellen HACS-Store kann. Zurück auf 26.10.59 geht danach nicht.
+
+### Neu
+- **Kühlschrank-Karte:** Temperatur je Zone, Sollwerte als Schnellwahl, SuperCool, SuperFrost, Nacht- und Partymodus, offene Tür und Alarme, 24-Stunden-Verlauf je Zone. Für Liebherr (Kern und HACS), Home Connect (Kern, lokal, Alt) und jedes Gerät, das wie ein Kühl- oder Gefrierschrank heißt; das Studio schlägt sie selbst vor.
+- **Mähroboter und Kaffeevollautomat sind normale Gerätekarten:** Das Studio schlägt sie vor wie andere Geräte. Der Mäher liest Husqvarna Automower, Gardena, Worx Landroid, Segway Navimow, Ecovacs GOAT und Mammotion (Akku, nächster Start, Messer, Regenpause, Schnitthöhe, Zonen, Parken). Der Kaffeevollautomat liest Home Connect (Kern, lokal, Alt), Miele, De'Longhi, Jura (Bluetooth und WLAN), Melitta, La Marzocco, Philips und eine einfache Steckdose.
+- **Velair-Community-Karte (#32):** ein Thermostat mit dem Velair-Zeitplan: an/aus, die Woche, die Zeitfenster von heute und deren Bearbeitung. Dein normales Thermostat bleibt unverändert.
+- **Eigenes Popup für eigene Badges (#60):** Ein eigenes Badge kann ein eigenes Popup öffnen, mit Werten, 24-Stunden-Verlauf, Bedienung und eigenen Karten, im Studio zusammengestellt wie bei der Universal-Kachel.
+- **Wetter (#56):** die gefühlte Temperatur als zweite Kurve, und im Studio wählst du, welche Werte ins Diagramm kommen (bis zu vier, z. B. Taupunkt oder Böen) und welche Zusatzzeilen das Popup zeigt (Taupunkt, Böen, Bewölkung, Regen, Sonne, UV). Die gefühlte Temperatur braucht eine Quelle, die sie liefert, z. B. Wetter & Warnungen 26.10.10.
+- **Frigate: Stream wählbar (#61):** Stream für Kachel und Popup wählen, am Handy standardmäßig der Unterstream, im Popup umschaltbar.
+- **Live-Aktivitäten in allen acht Sprachen,** und der Titel zeigt die Geräteart („Saugroboter“), wenn der Gerätename nur der Produktname ist.
+
+### Geändert
+- **Updates nur noch über HACS:** Casora installiert nicht mehr selbst, der Knopf im Studio öffnet Casora in HACS. Releases bringen eine casora.zip mit, HACS lädt damit nur noch die Integration statt des ganzen Repos, und das Update hängt nicht mehr bei 50 %.
+- **Private Raumfotos:** Eigene Raumfotos ziehen von /config/www/casora nach /config/casora_photos und werden nur noch angemeldet über signierte Links ausgeliefert. Gespeicherte Dashboards funktionieren weiter.
+- **Nichts mehr in deine Konfiguration geschrieben:** Casoras Hilfsskripte sind jetzt Casora-Aktionen, und die Designs kommen aus der Integration statt aus einer Datei im themes-Ordner. Die Design-Wahl im Studio wirkt sofort, steht in deinem Home-Assistant-Profil, und HAs Profil-Auswahl zeigt die Casora-Designs. Alte Casora-Skripte und die alte Theme-Datei entfernt Casora einmal selbst (nur unbenutzt und unverändert), eine Mitteilung sagt, was entfernt wurde.
+- **KI nur über Home Assistants öffentliche Schnittstelle:** Casora ruft KI-Aufgaben über ai_task auf und fasst die Clients anderer Integrationen nicht mehr an. Das Modell wird am Gerät erkannt oder im Studio eingetippt.
+- **Sichere Textausgabe:** Jeder Name und Text wird maskiert, bevor er ins Dashboard kommt.
+- **Aufräumen:** Alte Programmsicherungen des früheren Selbst-Updaters (casora_sicherungen/casora_<version>_<zeit>.zip) werden entfernt, die neueste bleibt. Dashboard-Sicherungen und die Zeitreise bleiben unberührt.
+
+### Behoben
+- **Flüssigeres Dashboard in großen Häusern:** Badges hängen nicht mehr an jeder Entität im Haus, und am Handy zeichnet der Raumfilter bei fremden Änderungen nicht mehr rund 30 Karten neu. In einem Haus mit 4.700 Entitäten sank die Zeichenzeit je Zustandsänderung am Desktop von etwa 14 auf 1 ms und am Handy von etwa 19 auf 1 bis 4 ms.
+- **Jalousien (#63):** Kachel und Popup zählen und mitteln dieselben Jalousien („4 von 6 geöffnet · Ø 50 %“, „Alle geöffnet · Ø 70 %“); ohne eigene Liste nimmt die Kachel die Mitglieder der Home-Assistant-Gruppe.
+- **Medien-Badge (#64):** Antippen öffnet immer das Medien-Popup, laufende Geräte oben; ein Fernseher, der nur an ist, zählt in Badge und Popup gleich.
+- **Badges im neuen Raum (#57):** Ein neuer Raum übernimmt die Standard-Badges aus dem gleichnamigen Home-Assistant-Bereich, und am Handy zeigt ein Raum mit nur eigenen Badges seine Badge-Reihe.
+- **Diagramm-Karte am Handy (#58):** Sensor-, Zeitraum- und Linie/Balken-Knöpfe reagieren am Handy, nach „Zurück“ ist das Diagramm wieder da, die Sensorwahl bleibt, lange Namen enden mit „…“.
+- **Energie (#44):** Verbraucher, deren Zähler in Home Assistant deaktiviert ist, erscheinen nicht mehr.
+- **Studio hing beim Hinzufügen einer Kühlschrank-Kachel** in Häusern mit vielen Geräten; jede Kachelart braucht jetzt Millisekunden.
+- **Wetterwarnung in der Glocke:** Die DWD-Vorwarnung erscheint nicht mehr als aktuelle Warnung, und die Warnarten werden richtig geschrieben.
+- **E-Bike, Kaffee, Mäher, Kühlschrank:** mehrere Zustands- und Zählerfehler aus der Durchsicht dieser Karten.
+
 ## 26.10.59 – 24.10.2026
 
 ### Neu
