@@ -2698,7 +2698,12 @@
     "Each group becomes a list in the popup, with its devices in the group's order.": "Jede Gruppe wird zu einer Liste im Popup, mit ihren Geräten in der Reihenfolge der Gruppe.",
     "Charts": "Diagramme",
     "Add sensor …": "Sensor hinzufügen …",
-    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Jeder Sensor öffnet sich als Diagramm wie im Popup der Diagramm-Kachel: 24 Stunden, 7 oder 30 Tage oder ein Jahr."
+    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Jeder Sensor öffnet sich als Diagramm wie im Popup der Diagramm-Kachel: 24 Stunden, 7 oder 30 Tage oder ein Jahr.",
+    "Back to automatic": "Zurück auf Automatisch",
+    "Your own choice stays until you tap this. Automatic takes grid, solar and battery from Home Assistant's Energy dashboard; without them a house sensor or the sum of the rooms.": "Deine eigene Wahl bleibt, bis du hier tippst. Automatisch nimmt Netz, Solar und Akku aus dem Energie-Dashboard von Home Assistant, ohne sie einen Haussensor oder die Summe der Räume.",
+    "Your own choice stays until you tap this. Automatic adds up the power sensors in this room's area and adds new ones by itself.": "Deine eigene Wahl bleibt, bis du hier tippst. Automatisch zählt die Leistungssensoren im Bereich dieses Raums zusammen und nimmt neue von selbst dazu.",
+    "Casora found no power sensor for it, so your choice stays.": "Casora hat dafür keinen Leistungssensor gefunden, deine Wahl bleibt.",
+    "Energy badge back to automatic": "Energie-Badge wieder auf Automatisch"
   },
   "patterns": [
     [

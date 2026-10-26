@@ -2698,7 +2698,12 @@
     "Each group becomes a list in the popup, with its devices in the group's order.": "Każda grupa staje się listą w oknie, z urządzeniami w kolejności grupy.",
     "Charts": "Wykresy",
     "Add sensor …": "Dodaj czujnik …",
-    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Każdy czujnik otwiera się jako wykres jak okno kafelka Wykres: 24 godziny, 7 lub 30 dni albo rok."
+    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Każdy czujnik otwiera się jako wykres jak okno kafelka Wykres: 24 godziny, 7 lub 30 dni albo rok.",
+    "Back to automatic": "Wróć do Automatycznie",
+    "Your own choice stays until you tap this. Automatic takes grid, solar and battery from Home Assistant's Energy dashboard; without them a house sensor or the sum of the rooms.": "Twój wybór zostaje, dopóki tu nie dotkniesz. Automatycznie bierze sieć, fotowoltaikę i akumulator z pulpitu Energia w Home Assistant; bez nich czujnik domu albo sumę pomieszczeń.",
+    "Your own choice stays until you tap this. Automatic adds up the power sensors in this room's area and adds new ones by itself.": "Twój wybór zostaje, dopóki tu nie dotkniesz. Automatycznie sumuje czujniki mocy z obszaru tego pomieszczenia i sam dodaje nowe.",
+    "Casora found no power sensor for it, so your choice stays.": "Casora nie znalazła czujnika mocy, więc twój wybór zostaje.",
+    "Energy badge back to automatic": "Odznaka energii znowu na Automatycznie"
   },
   "patterns": [
     [
