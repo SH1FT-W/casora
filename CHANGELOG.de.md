@@ -27,7 +27,6 @@ Fasst alles aus den Betas 26.10.62b1 bis b6 zusammen, dazu einheitliche Popups.
 - **Energie:** Die Quellen aus dem Energie-Dashboard von Home Assistant haben Vorrang (auch vor Anker Solix), und der Anteil aus Solar und Akku erscheint auch ohne die Solarfelder der Kachel.
 - **Strompreis** nur noch aus den Einstellungen bzw. dem Energie-Dashboard; das Feld an der Kachel ist weg.
 - **Studio:** Abschnitte aus den Einstellungen behalten ihre Breite; die Vorschau flackert nicht mehr bei Änderungen, die sie nicht zeigt; größere Tippflächen am Handy; der Glocken-Schalter ist eine eigene Zeile.
-- **Licht-Popup auf Zuhause (#73):** Ein Raum-Knopf setzt den Raumnamen in den Kopf.
 - **Sprechen an der Klingel (#23):** eine Verbindung für Bild und Mikrofon; mit Home Assistant 2026.11 spricht Casora über Home Assistants eigenen Player.
 - **Diagnose** mit anonymem Energie-Abschnitt.
 

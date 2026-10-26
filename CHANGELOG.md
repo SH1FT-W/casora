@@ -27,7 +27,6 @@ Collects everything from the betas 26.10.62b1 to b6, plus consistent popups.
 - **Energy:** the sources from Home Assistant's energy dashboard come first (also before Anker Solix), and the share from solar and battery also shows without the tile's solar fields.
 - **Electricity price** only from the settings or the energy dashboard; the per-tile price field is gone.
 - **Studio:** sections opened from the settings keep their width; the preview no longer flickers when something it doesn't show changes; larger tap areas on the phone; the bell switch is its own row.
-- **Lights popup on Home (#73):** a room button puts the room's name in the header.
 - **Doorbell talk (#23):** one session for picture and microphone; with Home Assistant 2026.11 Casora talks through Home Assistant's own player.
 - **Diagnostics** include an anonymous energy section.
 
