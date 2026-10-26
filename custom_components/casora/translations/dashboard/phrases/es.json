@@ -2648,6 +2648,18 @@
    "desde hace {1} días"
   ],
   [
+   "^seit (\\d+) Tag$",
+   "desde hace {1} día"
+  ],
+  [
+   "^Antwortet (seit .+) nicht$",
+   "No responde {1}"
+  ],
+  [
+   "^Still (seit .+)$",
+   "En silencio {1}"
+  ],
+  [
    "^zuletzt gemeldet gestern (.+)$",
    "último informe ayer {1}"
   ],
@@ -2738,26 +2750,6 @@
   [
    "^startet in (.+)$",
    "empieza en {1}"
-  ],
-  [
-   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
-   "Empieza a las {1}"
-  ],
-  [
-   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
-   "Empieza mañana a las {1}"
-  ],
-  [
-   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
-   "Iniciar a las {1}"
-  ],
-  [
-   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
-   "Iniciar mañana a las {1}"
-  ],
-  [
-   "^(\\d+) Programme$",
-   "{1} programas"
   ],
   [
    "^trocken in etwa (\\d+) Tagen?$",
@@ -4546,6 +4538,42 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} desde las {2}"
+  ],
+  [
+   "^(\\d+) Einstellungen$",
+   "{1} ajustes"
+  ],
+  [
+   "^(\\d+) Listen$",
+   "{1} listas"
+  ],
+  [
+   "^(\\d+) Diagramme$",
+   "{1} gráficos"
+  ],
+  [
+   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Empieza a las {1}"
+  ],
+  [
+   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Empieza mañana a las {1}"
+  ],
+  [
+   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Iniciar a las {1}"
+  ],
+  [
+   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Iniciar mañana a las {1}"
+  ],
+  [
+   "^(\\d+) Programme$",
+   "{1} programas"
+  ],
+  [
+   "^(\\d+) Rollos offen$",
+   "{1} persianas abiertas"
   ]
  ]
 }

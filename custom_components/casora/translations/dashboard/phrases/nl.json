@@ -2648,6 +2648,18 @@
    "sinds {1} dagen"
   ],
   [
+   "^seit (\\d+) Tag$",
+   "sinds {1} dag"
+  ],
+  [
+   "^Antwortet (seit .+) nicht$",
+   "Reageert {1} niet"
+  ],
+  [
+   "^Still (seit .+)$",
+   "Stil {1}"
+  ],
+  [
    "^zuletzt gemeldet gestern (.+)$",
    "laatst gemeld gisteren {1}"
   ],
@@ -2738,26 +2750,6 @@
   [
    "^startet in (.+)$",
    "start over {1}"
-  ],
-  [
-   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
-   "Start om {1}"
-  ],
-  [
-   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
-   "Start morgen om {1}"
-  ],
-  [
-   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
-   "Starten om {1}"
-  ],
-  [
-   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
-   "Morgen starten om {1}"
-  ],
-  [
-   "^(\\d+) Programme$",
-   "{1} programma's"
   ],
   [
    "^trocken in etwa (\\d+) Tagen?$",
@@ -4546,6 +4538,42 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} vanaf {2}"
+  ],
+  [
+   "^(\\d+) Einstellungen$",
+   "{1} instellingen"
+  ],
+  [
+   "^(\\d+) Listen$",
+   "{1} lijsten"
+  ],
+  [
+   "^(\\d+) Diagramme$",
+   "{1} grafieken"
+  ],
+  [
+   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Start om {1}"
+  ],
+  [
+   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Start morgen om {1}"
+  ],
+  [
+   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Starten om {1}"
+  ],
+  [
+   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Morgen starten om {1}"
+  ],
+  [
+   "^(\\d+) Programme$",
+   "{1} programma's"
+  ],
+  [
+   "^(\\d+) Rollos offen$",
+   "{1} rolluiken open"
   ]
  ]
 }

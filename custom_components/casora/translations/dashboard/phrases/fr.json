@@ -2648,6 +2648,18 @@
    "depuis {1} jours"
   ],
   [
+   "^seit (\\d+) Tag$",
+   "depuis {1} jour"
+  ],
+  [
+   "^Antwortet (seit .+) nicht$",
+   "Ne répond pas {1}"
+  ],
+  [
+   "^Still (seit .+)$",
+   "Silencieux {1}"
+  ],
+  [
    "^zuletzt gemeldet gestern (.+)$",
    "dernier rapport hier {1}"
   ],
@@ -2738,26 +2750,6 @@
   [
    "^startet in (.+)$",
    "démarre dans {1}"
-  ],
-  [
-   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
-   "Démarre à {1}"
-  ],
-  [
-   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
-   "Démarre demain à {1}"
-  ],
-  [
-   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
-   "Démarrer à {1}"
-  ],
-  [
-   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
-   "Démarrer demain à {1}"
-  ],
-  [
-   "^(\\d+) Programme$",
-   "{1} programmes"
   ],
   [
    "^trocken in etwa (\\d+) Tagen?$",
@@ -4546,6 +4538,42 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} dès {2}"
+  ],
+  [
+   "^(\\d+) Einstellungen$",
+   "{1} réglages"
+  ],
+  [
+   "^(\\d+) Listen$",
+   "{1} listes"
+  ],
+  [
+   "^(\\d+) Diagramme$",
+   "{1} diagrammes"
+  ],
+  [
+   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Démarre à {1}"
+  ],
+  [
+   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Démarre demain à {1}"
+  ],
+  [
+   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Démarrer à {1}"
+  ],
+  [
+   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Démarrer demain à {1}"
+  ],
+  [
+   "^(\\d+) Programme$",
+   "{1} programmes"
+  ],
+  [
+   "^(\\d+) Rollos offen$",
+   "{1} volets ouverts"
   ]
  ]
 }
