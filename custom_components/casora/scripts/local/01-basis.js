@@ -836,7 +836,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         var R = (window._hwRender || {})[key], F = window._hwFc || {};
         if (R) ['hourly', 'daily'].forEach(function (t) {
           var fc = F[key + '_' + t];
-          if (fc && fc.length) find(pop.shadowRoot, '.hw-slot-' + t + '-' + key).forEach(function (el) { if (el.querySelector('.hw-wait')) el.innerHTML = R[t](fc); });
+          // The weather template's own renderer (_hwRender), the same markup as on the first opening.
+          var fcHtml = fc && fc.length ? R[t](fc) : '';
+          if (fcHtml) find(pop.shadowRoot, '.hw-slot-' + t + '-' + key).forEach(function (el) { if (el.querySelector('.hw-wait')) el.innerHTML = fcHtml; });
         });
         // High/low of the day in the header line, as the forecast fills it (casora_weather).
         var d0 = (F[key + '_daily'] || [])[0];
