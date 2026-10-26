@@ -2491,7 +2491,8 @@
   "Standard": "Standardowy",
   "Stream": "Strumień",
   "Stream nicht erreichbar · Standard": "Strumień nieosiągalny · Standardowy",
-  "Wind": "Wiatr"
+  "Wind": "Wiatr",
+  "Benachrichtigung": "Powiadomienie"
  },
  "patterns": [
   [

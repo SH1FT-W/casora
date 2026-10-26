@@ -10985,6 +10985,27 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       announce();
     }, function () { _hidLoaded = false; });
   }
+  // Home Assistant notifications (#70): what scripts and automations create with persistent_notification.create,
+  // live from HA. Swiping one away dismisses it in HA as well; "Remove all" only clears the bell (it can be undone).
+  var _pn = null, _pnSub = false;
+  function watchPn(hass) {
+    if (_pnSub || !hass || !hass.connection || typeof hass.connection.subscribeMessage !== 'function') return;
+    _pnSub = true;
+    hass.connection.subscribeMessage(function (ev) {
+      var n = (ev && ev.notifications) || {};
+      if (!_pn || ev.type === 'current') _pn = {};
+      if (ev.type === 'removed') Object.keys(n).forEach(function (k) { delete _pn[k]; });
+      else Object.keys(n).forEach(function (k) { _pn[k] = n[k]; });
+      // A build already running read the old list: build once more after it.
+      if (_busy) _busy.then(function () { collect(); }); else collect();
+    }, { type: 'persistent_notification/subscribe' }).catch(function () { _pnSub = false; });
+  }
+  // Markdown of the message as one plain line: links keep their text, no marks, at most 160 characters.
+  function pnText(t) {
+    var s = String(t == null ? '' : t).replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_`#>]+/g, '')
+      .replace(/\s+/g, ' ').trim();
+    return s.length > 160 ? s.slice(0, 159).replace(/\s+\S*$/, '') + ' …' : s;
+  }
   function rowKey(r) { return String((r && r.id) || ((r && r.entity) || '') + '|' + ((r && r.label) || '')); }
   function isHidden(r) {
     if (!r) return false;
@@ -11002,7 +11023,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     }
   }
   function hideRows(list) {
-    (list || []).forEach(function (r) { if (r) _hid.rows[rowKey(r)] = r.when; });
+    var h0 = hassOf();
+    (list || []).forEach(function (r) {
+      if (!r) return;
+      _hid.rows[rowKey(r)] = r.when;
+      if (r.pn && h0 && h0.callService) h0.callService('persistent_notification', 'dismiss', { notification_id: r.pn }).catch(function () { /* stays hidden here */ });
+    });
     saveHidden();
     _rows = _rows.filter(function (x) { return !isHidden(x); });
     announce();
@@ -11534,6 +11560,14 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       }, 0);
     };
 
+    if (_pn && on('ha')) {
+      Object.keys(_pn).forEach(function (k) {
+        var n = _pn[k] || {}, title = pnText(n.title), msg = pnText(n.message);
+        rows.push({ id: 'ha:pn:' + k, when: Date.parse(n.created_at || '') || Date.now(), label: title || msg || 'Benachrichtigung',
+          sub: title ? msg || null : null, icon: 'bell', tone: 'accent', pn: k });
+      });
+    }
+
     if (updates.length && on('updates')) {
       rows.push({
         id: 'casora:updates',
@@ -11948,6 +11982,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (!hass) return Promise.resolve(_rows);
     if (_busy) return _busy;
     loadHidden(hass);
+    watchPn(hass);
 
     var live = standing(hass);
     var ids = watched(hass);
@@ -13100,7 +13135,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
   // The categories a dashboard can switch off, as the panel writes them.
   var TYPES = ['safety', 'air', 'locks', 'alarm', 'doorbell', 'doors', 'people',
-    'vacuum', 'appliances', 'plants', 'battery', 'pulse', 'updates', 'restart'];
+    'vacuum', 'appliances', 'plants', 'battery', 'pulse', 'updates', 'restart', 'ha'];
 
   function configureFrom(V) {
     V = V || {};

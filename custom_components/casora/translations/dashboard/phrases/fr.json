@@ -2491,7 +2491,8 @@
   "Standard": "Standard",
   "Stream": "Flux",
   "Stream nicht erreichbar · Standard": "Flux injoignable · Standard",
-  "Wind": "Vent"
+  "Wind": "Vent",
+  "Benachrichtigung": "Notification"
  },
  "patterns": [
   [

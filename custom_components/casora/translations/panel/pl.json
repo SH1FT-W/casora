@@ -2633,7 +2633,9 @@
     "Own name": "Własna nazwa",
     "Rename a door or window": "Zmień nazwę drzwi lub okna",
     "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Bez grupy liczą się wszystkie czujniki drzwi i okien. Ukryte i własne nazwy dotyczą odznak i okienek bezpieczeństwa.",
-    "Name of this sensor in the popup's legend.": "Nazwa tego czujnika w legendzie okienka."
+    "Name of this sensor in the popup's legend.": "Nazwa tego czujnika w legendzie okienka.",
+    "Home Assistant notifications": "Powiadomienia Home Assistant",
+    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "To, co skrypty i automatyzacje tworzą przez persistent_notification.create, oraz komunikaty samego Home Assistant. Przesunięcie w dzwonku usuwa powiadomienie także w Home Assistant."
   },
   "patterns": [
     [

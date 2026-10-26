@@ -2633,7 +2633,9 @@
     "Own name": "Eigen naam",
     "Rename a door or window": "Deur of raam hernoemen",
     "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Zonder groep tellen alle deur- en raamsensoren. Verborgen sensoren en eigen namen gelden voor de beveiligingsbadges en -pop-ups.",
-    "Name of this sensor in the popup's legend.": "Naam van deze sensor in de legenda van de pop-up."
+    "Name of this sensor in the popup's legend.": "Naam van deze sensor in de legenda van de pop-up.",
+    "Home Assistant notifications": "Home Assistant-meldingen",
+    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "Wat scripts en automatiseringen aanmaken met persistent_notification.create, plus de meldingen van Home Assistant zelf. Een melding wegvegen in de bel verwijdert hem ook in Home Assistant."
   },
   "patterns": [
     [

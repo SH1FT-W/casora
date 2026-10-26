@@ -2491,7 +2491,8 @@
   "Standard": "Estándar",
   "Stream": "Flujo",
   "Stream nicht erreichbar · Standard": "Flujo no disponible · Estándar",
-  "Wind": "Viento"
+  "Wind": "Viento",
+  "Benachrichtigung": "Aviso"
  },
  "patterns": [
   [
