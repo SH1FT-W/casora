@@ -448,7 +448,14 @@
     }
 
     var headerStack = findRoomHeaderStack();
-    if (headerStack) observeEl(headerStack);
+    if (headerStack) {
+      observeEl(headerStack);
+      // The container keeps a fixed height; an opened sub-badge row only
+      // grows its own grid area, so watch the badge rows themselves.
+      var root = headerStack.getRootNode ? headerStack.getRootNode() : null;
+      var rows = root && root.querySelectorAll ? root.querySelectorAll('#container > [id^="badges"]') : [];
+      for (var i = 0; i < rows.length; i++) observeEl(rows[i]);
+    }
     var entityRow = findActiveEntityRow();
     if (entityRow) observeEl(entityRow);
 

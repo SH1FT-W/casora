@@ -154,6 +154,37 @@ for (const [w, h, touch] of [[1440, 900, false], [1920, 1080, false], [1180, 820
   await check(`Control ${w}×${h}: not tight, nothing fitted`, r && r.baseGap >= GAP && !r.fit, r);
 }
 
+// Reported follow-up (26.10.2026): an opened sub-badge row (e.g. Beleuchtung) slid behind the tiles - the
+// container keeps its height, only the row's grid area grows. Expected: the hero follows up, the lower row
+// clears the tiles, and closing it again goes back to the plain fit.
+{
+  const o = await open({ width: 1006, height: 528, touch: true, scale: 1, dark: true, theme: 'Casora' });
+  await o.context.addInitScript(() => localStorage.setItem('dockedSidebar', '"always_hidden"'));
+  const pg = o.page;
+  await dashboard(pg, dash.url + '/' + ((dash.config.views || [])[0]?.path || '0'));
+  await settle(pg);
+  const closed = await measure(pg);
+  const opened = {};
+  for (const row of ['lights', 'climate', 'scenes']) {
+    await fakeStates(pg, { 'input_select.casora_expanded_row': { state: row } }, { sticky: true });
+    await settle(pg);
+    opened[row] = await measure(pg);
+  }
+  await fakeStates(pg, { 'input_select.casora_expanded_row': { state: 'none' } }, { sticky: true });
+  await settle(pg);
+  const back = await measure(pg);
+  await o.browser.close();
+  for (const [row, m] of Object.entries(opened)) {
+    const gap = m && m.badges ? Math.round(m.tilesTop - m.badges.b) : null;
+    await check(`1006×528, sub-row ${row} open: lower row clears the tiles (${gap} px)`,
+      gap != null && gap >= GAP - 1 && m.badges.b - m.badges.t > 80, m && m.fit);
+    await check(`1006×528, sub-row ${row} open: hero moved further up, below the nav bar`,
+      m && closed && m.badges.t < closed.badges.t && m.temp.t >= m.navBottom + 19, { closed: closed && closed.badges.t, open: m && m.badges.t });
+  }
+  await check('1006×528: closing the sub-row restores the plain fit', JSON.stringify(back && back.fit) === JSON.stringify(closed && closed.fit),
+    { closed: closed && closed.fit, back: back && back.fit });
+}
+
 // Phone: no fit anywhere.
 {
   const o = await open({ width: 393, height: 852, mobile: true, scale: 1, dark: true, theme: 'Casora' });
