@@ -4,6 +4,7 @@
 // casora_popup_fbh, „Modus“ | „Räume“ side by side) was 552 px wide since stage 2 – room names cut („Badezi…“),
 // „Ziel 22,0 °C“ wrapped. casora_thermostat's own popup width (one column, 552) won over casora_popup_fbh's 900.
 // Expected on desktop 1440: the floor heating popup is 900 wide, room names are not cut; a plain thermostat stays 552.
+// Owner, prod: one floor heating room (casora_popup_fbh without members) is one column – 552, not stretched to 900.
 import { open, casoraDashboards, dashboard, check, need, finish, usePage, shot } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -43,6 +44,10 @@ const g = await openPop(['casora_thermostat', 'casora_popup_fbh'], ids.grp);
 await shot('Fussbodenheizung Gruppe Desktop');
 await check('Fußbodenheizung (Gruppe): Popup 900 breit', g.w >= 880, g);
 await check('Fußbodenheizung (Gruppe): Raumnamen nicht abgeschnitten', g.cut.length === 0, g);
+await close();
+const r1 = await openPop(['casora_thermostat', 'casora_popup_fbh'], ids.one);
+await shot('Fussbodenheizung Raum Desktop');
+await check('Fußbodenheizung (ein Raum): Popup 552 breit', r1.w > 500 && r1.w < 600, r1);
 await close();
 const t = await openPop('casora_thermostat', ids.one);
 await check('Thermostat einzeln: Popup bleibt 552 breit', t.w > 500 && t.w < 600, t);

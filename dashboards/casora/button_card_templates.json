@@ -12459,7 +12459,7 @@
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', [])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own) return _own;\n  const n = String(this._config?.name || '').trim();\n  if (n && !n.startsWith('[[[')) return n;\n  return (window.casoraClimateMembers ? window.casoraClimateMembers(entity, states).length : entity?.attributes?.member_entities) ? 'Fußbodenheizung' : (entity?.attributes?.friendly_name || 'Heizung');\n]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
-    "style": "[[[ /* Two columns (Modus | Räume): 900 – overrides casora_thermostat's one-column 552 underneath. */ return window.casoraPopupWidth ? window.casoraPopupWidth('two') : '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);'; ]]]"
+    "style": "[[[ /* Group (Modus | Räume side by side): 900 – overrides casora_thermostat's one-column 552 underneath. One room is one column: 552. */ const _g = window.casoraClimateMembers ? window.casoraClimateMembers(entity, states).length > 0 : Array.isArray(entity?.attributes?.member_entities); return window.casoraPopupWidth ? window.casoraPopupWidth(_g ? 'two' : 'one') : (_g ? '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);' : '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'); ]]]"
    },
    "haptic": "medium"
   },
@@ -12475,7 +12475,7 @@
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', [])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own) return _own;\n  const n = String(this._config?.name || '').trim();\n  if (n && !n.startsWith('[[[')) return n;\n  return (window.casoraClimateMembers ? window.casoraClimateMembers(entity, states).length : entity?.attributes?.member_entities) ? 'Fußbodenheizung' : (entity?.attributes?.friendly_name || 'Heizung');\n]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
-    "style": "[[[ /* Two columns (Modus | Räume): 900 – overrides casora_thermostat's one-column 552 underneath. */ return window.casoraPopupWidth ? window.casoraPopupWidth('two') : '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);'; ]]]"
+    "style": "[[[ /* Group (Modus | Räume side by side): 900 – overrides casora_thermostat's one-column 552 underneath. One room is one column: 552. */ const _g = window.casoraClimateMembers ? window.casoraClimateMembers(entity, states).length > 0 : Array.isArray(entity?.attributes?.member_entities); return window.casoraPopupWidth ? window.casoraPopupWidth(_g ? 'two' : 'one') : (_g ? '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);' : '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'); ]]]"
    },
    "haptic": "light"
   }
