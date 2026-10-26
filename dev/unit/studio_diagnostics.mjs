@@ -186,7 +186,7 @@ assert.ok(text.includes('energy settings (HA): set up · grid 1 (power 1) · sol
 {
   const head = text.split('\n').findIndex((l) => l.startsWith('dashboard '));
   assert.ok(head > 0, 'energy table');
-  assert.deepEqual(text.split('\n')[head + 1].trim().split(/\s+/), ['1*', '1', '1', 'settings', '0', '1', '1', '2/0'], 'one room, by hand, two sensors, one left out, none found in its area');
+  assert.deepEqual(text.split('\n')[head + 1].trim().split(/\s+/), ['1+', '1', '1', 'settings', '0', '1', '1', '2:0'], 'one room, by hand, two sensors, one left out, none found in its area');
 }
 // The pure part: every mode, phone halves never counted twice, unknown settings.
 {
@@ -200,14 +200,14 @@ assert.ok(text.includes('energy settings (HA): set up · grid 1 (power 1) · sol
   ] }]);
   assert.equal(e.prefs, 'unknown');
   assert.deepEqual(e.dashboards[0], { current: false, rooms: 5, badges: 3, home: 'rooms-chosen', auto: 2, manual: 0, left: 1,
-    per: ['1/2', '1/1', 'off', '0/3', '0/?'] });
+    per: ['1:2', '1:1', 'off', '0:3', '0:x'] });
   assert.deepEqual(['prefs', 'house', 2, false, undefined].map((m) => DG.energyBadge({ energy_power_entity: 'p', casora_energy_auto: m }, true).mode),
     ['settings', 'name', 'rooms', 'manual', 'manual']);
   assert.equal(DG.energyBadge({}, true).mode, 'none');
   const legacy = DG.energyOf({ energy_sources: [{ type: 'grid', flow_from: [], power: [{ stat_rate: 'g' }] }, { type: 'battery', power_config: { stat_rate: 'b' } }, { type: 'wind' }] }, false, []);
   assert.deepEqual([legacy.prefs, legacy.power.grid, legacy.power.battery, legacy.sources.other, legacy.house], ['yes', 1, 1, 1, false]);
   assert.equal(DG.energyOf({}, null, []).prefs, 'none');
-  assert.ok(DG.format(DG.collect(hass, { energy: { prefs: {}, house: null, dashboards: [] } })).includes('energy settings (HA): not set up · house from settings: ?'));
+  assert.ok(DG.format(DG.collect(hass, { energy: { prefs: {}, house: null, dashboards: [] } })).includes('energy settings (HA): not set up · house from settings: –'));
 }
 console.log('ok diagnostics: energy');
 

@@ -119,11 +119,11 @@
         const found = num(r && r.found);
         // Switched off: "off"; nothing to show (no sensor added up): 0 of what the area has.
         if (r && r.vars && r.vars.show_energy === false) { row.per.push("off"); return; }
-        if (!b.on) { row.per.push(found ? "0/" + found : "–"); return; }
+        if (!b.on) { row.per.push(found ? "0:" + found : "–"); return; }
         row.badges++;
         if (b.mode === "auto") row.auto++;
         else if (b.mode === "manual") row.manual++;
-        row.per.push(b.n + "/" + (found === null ? "?" : found));
+        row.per.push(b.n + ":" + (found === null ? "x" : found));
       });
       out.dashboards.push(row);
     });
@@ -224,13 +224,13 @@
     out.push("energy settings (HA): " + (e.prefs === "yes" ? "set up" : e.prefs === "none" ? "not set up" : "not loaded")
       + (e.prefs === "yes" ? " · " + ENERGY_TYPES.map(typ).join(" · ") + (e.sources.other ? " · other " + e.sources.other : "")
         + " · devices " + e.devices + " (power " + e.devicesPower + ")" : "")
-      + " · house from settings: " + (e.house === null ? "?" : e.house ? "yes" : "no"));
+      + " · house from settings: " + (e.house === null ? "–" : e.house ? "yes" : "no"));
     if (!e.dashboards.length) return out;
-    out.push("energy badges (per room: sensors added up/found in its area, off = switched off, ? = no area of that name)");
+    out.push("energy badges (per room: sensors added up:found in its area, off = switched off, x = no area of that name)");
     out.push(...table(["dashboard", "rooms", "badges", "home", "auto", "manual", "left_out", "per room"],
-      e.dashboards.map((r, i) => [(i + 1) + (r.current ? "*" : ""), r.rooms, r.badges, r.home, r.auto, r.manual, r.left,
+      e.dashboards.map((r, i) => [(i + 1) + (r.current ? "+" : ""), r.rooms, r.badges, r.home, r.auto, r.manual, r.left,
         r.per.length ? r.per.join(" ") : "–"]), [3, 7]));
-    out.push("(* = open in the Studio, unsaved changes included)");
+    out.push("(+ = open in the Studio, unsaved changes included)");
     return out;
   }
   function format(d) {
