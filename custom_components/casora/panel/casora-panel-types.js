@@ -37,6 +37,9 @@ const frigateStreams = (phone) => (hass, id, redraw) => {
 };
 const TITLE = { key: "room_name", label: "Popup title", type: "text", advanced: true };
 // Popups whose title is otherwise the tile name (window.casoraPopupTitle).
+// Domains a group can live in: old group.* and the group helpers; the picker keeps only real groups (accept "group").
+const GROUP_DOMAINS = ["group", "light", "switch", "cover", "fan", "binary_sensor", "sensor", "media_player", "lock",
+  "input_boolean", "climate", "event", "notify", "valve"];
 const TITLE_NAME = { ...TITLE, placeholder: "The tile's name" };
 const PLUG = { key: "plug_entity", label: "Smart plug", domains: ["switch"], find: { plug: "switch" },
   advanced: true, group: "Popup", hint: "Measures power and energy; the popup shows usage and cost." };
@@ -525,7 +528,7 @@ window.CASORA_TILE_TYPES = [
       TITLE_NAME,
       { key: "list_source", label: "Where do the entries come from?", type: "select", seg: true, options: ["", "pick", "label"],
         optionLabels: { "": "Group", pick: "Pick", label: "HA label" } },
-      { key: "list_group", label: "Group", domains: ["group"], when: (v) => !v.list_source || v.list_source === "group",
+      { key: "list_group", label: "Group", domains: GROUP_DOMAINS, accept: "group", when: (v) => !v.list_source || v.list_source === "group",
         hint: "The list keeps the group's order." },
       { key: "list_entities", label: "Entries", type: "list", domains: FREE_DOMAINS, placeholder: "Add device …",
         when: (v) => v.list_source === "pick", hint: "In the order you add them." },
@@ -545,7 +548,7 @@ window.CASORA_TILE_TYPES = [
     icon: "grid", color: "var(--casora-color-teal, #00C3D0)", fields: [
       ICON,
       TITLE_NAME,
-      { key: "more_lists", label: "Lists", type: "list", domains: ["group"], placeholder: "Add group …",
+      { key: "more_lists", label: "Lists", type: "list", domains: GROUP_DOMAINS, accept: "group", placeholder: "Add group …",
         hint: "Each group becomes a list in the popup, with its devices in the group's order." },
       { key: "more_list_labels", label: "Name", type: "map", over: "more_lists", kind: "text",
         when: (v) => Array.isArray(v.more_lists) && v.more_lists.length > 0 },

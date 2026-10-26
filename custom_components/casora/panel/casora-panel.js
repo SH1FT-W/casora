@@ -5056,8 +5056,12 @@ function tileMissingEntity(tile, type) {
 const isWarningLevelSensor = (h, id) => /^sensor\./.test(id)
   && Number.isFinite(parseInt((((h.states || {})[id] || {}).attributes || {}).warning_count, 10));
 // Picker rules beyond domain and device class (types.js `accept`): an entity the rule accepts is offered as well.
+// Groups in any form: old group.* and the group helpers (light/switch/cover/… groups) – both list their
+// members in attributes.entity_id. accept "group" keeps ONLY those (see _entityList).
+const isGroupEntity = (hass, e) => Array.isArray((((hass && hass.states[e]) || {}).attributes || {}).entity_id);
 const ACCEPT_RULES = {
   weather_warning: isWarningLevelSensor,
+  group: isGroupEntity,
 };
 
 // The main entity a new tile suggests: by the integration's translation_key (language-independent, however
@@ -21887,6 +21891,7 @@ class CasoraPanel extends HTMLElement {
       .flatMap((d) => this._entMemo.byDom.get(d))
       .concat(plus)
       .filter((e) => {
+        if (accept === "group") return acc(this._hass, e);
         if (acc && acc(this._hass, e)) return true;
         const want = perDomain ? perDomain[e.split(".")[0]] : all;
         if (!want || !want.length) return true;
