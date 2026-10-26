@@ -5,7 +5,7 @@
 
   var html = document.documentElement;
 
-  // Ein Durchlauf für alle drei Suchen, gilt bis zum nächsten Mikrotask (vorher sechs je Takt).
+  // One walk serves all three lookups and holds until the next microtask (was six per tick).
   var scanned = null;
   function scan() {
     if (scanned) return scanned;
@@ -239,8 +239,173 @@
     }
   }
 
+  // ── Hero fit ──────────────────────────────────────────────────────────────
+  // The hero (weather line, room title, badge rows) starts at the theme's
+  // --hero-top while the tile row sits at the bottom of the screen. On short
+  // landscape screens (8.7" tablets, 720p laptops, kiosk browsers with a
+  // bigger text size) the badge rows ran into the tiles while the photo
+  // above stayed empty. Only when the gap gets too small does the hero move
+  // up (never into the nav bar or an open Now Playing card) and the title
+  // shrink a little, just as much as needed. Where it fits nothing is set, so
+  // those layouts stay exactly as the theme draws them.
+  //
+  // Each pass clears the card's override, measures the natural layout and
+  // derives the override from that, so the result depends only on the
+  // natural layout and a re-run can't feed on its own output (no loop).
+  var FIT_GAP = 28;            // wanted space between the lowest badge row and the tiles
+  var FIT_TOP_GAP = 20;        // least space between the nav bar and the hero's top
+  var FIT_TITLE_SHARE = 0.35;  // part of the shortfall a smaller title takes
+  var FIT_TITLE_SOFT = 0.85;   // ... while it keeps this share of its size
+  var FIT_TITLE_MIN = 0.62;    // only with no room left to move up, down to this
+  var FIT_TITLE_MIN_PX = 30;   // ... nor below this
+  var fittedHosts = [];
+
+  function boxOf(el) {
+    if (!el) return null;
+    var r = el.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) return null;
+    return r;
+  }
+
+  // Inside a real dashboard view only: the Studio preview is a scaled replica
+  // with its own layout and must not be touched.
+  function inLovelace(el) {
+    for (var n = el, i = 0; n && i < 60; i++) {
+      var name = n.localName;
+      if (name === 'ha-panel-lovelace' || name === 'hui-root') return true;
+      if (name === 'casora-panel' || name === 'casora-studio') return false;
+      n = n.parentNode || n.host;
+    }
+    return false;
+  }
+
+  function clearFit(host) {
+    if (!host || !host._casoraHeroFit) return;
+    host._casoraHeroFit = null;
+    host.style.removeProperty('--hero-top');
+    host.style.removeProperty('--hero-room-name-size-current');
+  }
+
+  function clearAllFits() {
+    for (var i = 0; i < fittedHosts.length; i++) clearFit(fittedHosts[i]);
+    fittedHosts = [];
+  }
+
+  // Box of the badge rows: height from the grid areas that take space
+  // (collapsed sub-rows are zero high with hidden content), width from their
+  // visible content rather than the full grid track.
+  function badgeRowsBox(els) {
+    var out = null;
+    for (var i = 0; i < els.length; i++) {
+      var area = boxOf(els[i]);
+      if (!area) continue;
+      var left = area.left, right = area.right;
+      var kid = els[i].firstElementChild;
+      var kr = kid && getComputedStyle(kid).visibility !== 'hidden' ? boxOf(kid) : null;
+      if (kr) { left = Math.max(left, kr.left); right = Math.min(right, kr.right); }
+      if (!out) out = { left: left, right: right, top: area.top, bottom: area.bottom };
+      else {
+        out.left = Math.min(out.left, left); out.right = Math.max(out.right, right);
+        out.top = Math.min(out.top, area.top); out.bottom = Math.max(out.bottom, area.bottom);
+      }
+    }
+    return out;
+  }
+
+  function tilesTop(row) {
+    var wraps = row._wrappers || [];
+    var top = Infinity;
+    for (var i = 0; i < wraps.length; i++) {
+      var w = wraps[i];
+      if (!w || !w.isConnected || w.offsetParent === null) continue;
+      var r = boxOf(w);
+      if (r && r.right > 0 && r.left < window.innerWidth) top = Math.min(top, r.top);
+    }
+    return top === Infinity ? null : { top: top, rect: row.getBoundingClientRect() };
+  }
+
+  // Bottom edge of Now Playing where it overlaps [left, right]: the card in
+  // the room header and the open list under the waveform (10-weich-welle.js,
+  // a fixed box on <body>).
+  function nowPlayingBottom(sr, left, right) {
+    var bottom = 0;
+    function take(r) {
+      if (r && r.right > left && r.left < right && r.height < window.innerHeight / 2) bottom = Math.max(bottom, r.bottom);
+    }
+    (function walk(root, depth) {
+      if (!root || depth > 6) return;
+      var kids = root.children || [];
+      for (var i = 0; i < kids.length; i++) {
+        take(boxOf(kids[i]));
+        if (kids[i].shadowRoot) walk(kids[i].shadowRoot, depth + 1);
+        walk(kids[i], depth + 1);
+      }
+    })(sr.querySelector('#now_playing'), 0);
+    var menus = document.querySelectorAll('body > .casora-welle-menu');
+    for (var m = 0; m < menus.length; m++) take(boxOf(menus[m]));
+    return bottom;
+  }
+
+  function fitHero(headerStack, entityRow, navbarBottom) {
+    var sr = headerStack.getRootNode ? headerStack.getRootNode() : null;
+    var host = sr && sr.host;
+    if (!host || !inLovelace(host)) return;
+    clearFit(host);
+    // Regression tests compare against the unfitted layout.
+    if (!entityRow || window.CASORA_QA_NO_HERO_FIT) return;
+
+    var tiles = tilesTop(entityRow);
+    var badgeEls = sr.querySelectorAll('#container > [id^="badges"]');
+    var badges = badgeRowsBox(badgeEls);
+    if (!tiles || !badges) return;
+    // Tiles beside the hero (phone landscape rail) can't collide with it.
+    if (tiles.rect.right <= badges.left || tiles.rect.left >= badges.right) return;
+
+    var need = FIT_GAP - (tiles.top - badges.bottom);
+    if (need <= 0.5) return;
+
+    var title = boxOf(sr.querySelector('#name')) ? sr.querySelector('#name')
+      : (boxOf(sr.querySelector('#n')) ? sr.querySelector('#n') : null);
+    var stackTop = badges.top, left = badges.left, right = badges.right;
+    ['#temperature', '#weather', '#name', '#n'].forEach(function (sel) {
+      var r = boxOf(sr.querySelector(sel));
+      if (!r) return;
+      stackTop = Math.min(stackTop, r.top);
+      left = Math.min(left, r.left); right = Math.max(right, r.right);
+    });
+    var limit = Math.max(navbarBottom || 0, nowPlayingBottom(sr, left, right)) + FIT_TOP_GAP;
+    var room = Math.max(0, stackTop - limit);
+
+    var titleH = 0, size0 = 0;
+    if (title) {
+      titleH = title.getBoundingClientRect().height;
+      size0 = parseFloat(getComputedStyle(title).fontSize) || 0;
+    }
+    var softCut = 0, maxCut = 0;
+    if (titleH > 0 && size0 > 0) {
+      var minSize = Math.min(size0, Math.max(FIT_TITLE_MIN_PX, size0 * FIT_TITLE_MIN));
+      maxCut = titleH * (1 - minSize / size0);
+      softCut = Math.min(maxCut, titleH * (1 - FIT_TITLE_SOFT));
+    }
+    // A somewhat smaller title takes its share, moving up the rest; whatever
+    // the move can't cover (no room left under the nav bar) goes back to the
+    // title, down to its minimum.
+    var cut = Math.min(softCut, need * FIT_TITLE_SHARE);
+    var shift = Math.min(room, need - cut);
+    cut = Math.max(cut, Math.min(maxCut, need - shift));
+    shift = Math.round(shift);
+    var size = cut > 0.5 ? Math.round(size0 * (1 - cut / titleH) * 10) / 10 : 0;
+    if (shift < 1 && !size) return;
+
+    var base = getComputedStyle(host).getPropertyValue('--hero-top').trim();
+    if (shift >= 1 && base) host.style.setProperty('--hero-top', 'calc(' + base + ' - ' + shift + 'px)');
+    if (size) host.style.setProperty('--hero-room-name-size-current', size + 'px');
+    host._casoraHeroFit = { shift: shift, size: size, size0: size0, need: Math.round(need) };
+    if (fittedHosts.indexOf(host) === -1) fittedHosts.push(host);
+  }
+
   function computeAndApplyHeader() {
-    if (!isDesktopOrTablet()) return;
+    if (!isDesktopOrTablet()) { clearAllFits(); return; }
     applyExtras();
 
     var headerStack = findRoomHeaderStack();
@@ -258,6 +423,8 @@
     var centeredTop = navbarBottom + Math.max(0, (available - headerH) / 2);
 
     setHeaderTop(centeredTop);
+    // A failed fit must never take the rest of the header logic with it.
+    try { fitHero(headerStack, entityRow, navbarBottom); } catch (e) {}
   }
 
   function queueRecompute() {
@@ -281,7 +448,14 @@
     }
 
     var headerStack = findRoomHeaderStack();
-    if (headerStack) observeEl(headerStack);
+    if (headerStack) {
+      observeEl(headerStack);
+      // The container keeps a fixed height; an opened sub-badge row only
+      // grows its own grid area, so watch the badge rows themselves.
+      var root = headerStack.getRootNode ? headerStack.getRootNode() : null;
+      var rows = root && root.querySelectorAll ? root.querySelectorAll('#container > [id^="badges"]') : [];
+      for (var i = 0; i < rows.length; i++) observeEl(rows[i]);
+    }
     var entityRow = findActiveEntityRow();
     if (entityRow) observeEl(entityRow);
 
@@ -307,8 +481,36 @@
     headerObservedEls = [];
     lastExtras = -1;
     if (headerRO) { try { headerRO.disconnect(); } catch (e) {} }
+    // Early passes fit a new room's hero before it has been on screen long.
+    setTimeout(queueRecompute, 60);
+    setTimeout(queueRecompute, 180);
     setTimeout(initHeader, 400);
   });
+
+  // The Now Playing list under the waveform opens and closes on <body>; the
+  // hero must stay clear of it, so a change there is a reason to re-fit.
+  function watchNowPlayingMenu() {
+    if (!document.body) return;
+    try {
+      new MutationObserver(function (list) {
+        for (var i = 0; i < list.length; i++) {
+          var nodes = [].slice.call(list[i].addedNodes).concat([].slice.call(list[i].removedNodes));
+          for (var k = 0; k < nodes.length; k++) {
+            if (nodes[k].classList && nodes[k].classList.contains('casora-welle-menu')) {
+              // Its size settles after the opening animation.
+              queueRecompute();
+              setTimeout(queueRecompute, 400);
+              return;
+            }
+          }
+        }
+      }).observe(document.body, { childList: true });
+    } catch (e) {}
+  }
+  try {
+    if (document.body) watchNowPlayingMenu();
+    else document.addEventListener('DOMContentLoaded', watchNowPlayingMenu);
+  } catch (e) {}
 
   setTimeout(initSidebar, 200);
   setTimeout(initSidebar, 1500);
