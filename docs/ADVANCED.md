@@ -42,20 +42,21 @@ Example layout:
 │           ├── casora_mobile_layout.yaml
 │           ├── casora_navbar_tablet.yaml
 │           └── casora_navigation.yaml
+├── casora_photos/                      # Your own room photos (private, uploaded in the Studio)
+├── custom_components/
+│   └── casora/                         # The Casora integration (from HACS)
+│       └── scripts/                    # JavaScript resources, served from /casora_scripts/
+│           ├── layout-card-modified.js # Modified Layout Card build
+│           ├── layout-offsets.js       # Navbar/hero offsets track sidebar visibility
+│           ├── smart-row.js            # Smart entity row with active-card sorting
+│           ├── filter-overlay.js       # Mobile filter/room popups + collapsing header
+│           ├── casora-icons.js         # Inline icon map
+│           ├── casora-core.js          # Shared card helpers + Now Playing collector + mobile wallpaper
+│           └── casora-redirect.js      # Phone ↔ mobile dashboard routing (on by default)
 └── www/
-    └── casora/
-        ├── fonts/                      # UI fonts
-        ├── icons/                      # UI icons
-        ├── rooms/                      # Your own room photos (Casora's *-demo photos ship with the integration)
-        ├── weather/                    # Weather icons
-        └── scripts/                    # JavaScript resources
-            ├── layout-card-modified.js # Modified Layout Card build
-            ├── layout-offsets.js       # Navbar/hero offsets track sidebar visibility
-            ├── smart-row.js            # Smart entity row with active-card sorting
-            ├── filter-overlay.js       # Mobile filter/room popups + collapsing header
-            ├── casora-icons.js          # Inline icon map (load first)
-            ├── casora-core.js           # Shared card helpers + Now Playing collector + mobile wallpaper
-            └── casora-redirect.js       # Phone ↔ mobile dashboard routing (on by default)
+    └── casora/                         # Optional: your own files (Casora's ship with the integration)
+        ├── fonts/                      # Fonts you upload in the Studio
+        └── icons/                      # Your own icons
 ```
 
 ## :rocket: Installation
@@ -64,39 +65,24 @@ Example layout:
 Make a full Home Assistant backup/snapshot before you start. YAML dashboards + themes are easy to roll back, but you'll be happier if you can restore quickly if something goes sideways.
 
 ### 2) Copy Casora into your Home Assistant config
-The theme and the helpers/scripts the cards use come with the Casora integration
-(`custom_components/casora/theme*.yaml`, `custom_components/casora/helfer.yaml`) and are
-set up automatically when it loads. There are no packages or theme folder to copy.
+The designs, helpers and actions the cards use come with the Casora integration
+(`custom_components/casora/theme*.yaml`, `custom_components/casora/helfer.yaml`, the `casora.*`
+actions) and are set up automatically when it loads. There are no packages, scripts or theme folder
+to copy. The integration is required: the templates call Casora's actions (for example
+`casora.light_smart_toggle`) and read the helpers it creates.
 
 Copy these folders/files from this repo into your HA `/config`:
 
 - `dashboards/casora/` → `/config/dashboards/casora/`
 - `dashboards/templates/` → `/config/dashboards/templates/` (merge if you already have templates)
-- `www/casora/` → `/config/www/casora/`
+- `www/casora/` → `/config/www/casora/` (optional; Casora's own icons, fonts and demo photos ship with the integration)
 
-### 3) Add Lovelace resources
+### 3) Lovelace resources
 
-> **Skip this if you have the Casora integration installed.** It registers these
-> for you, from `/casora_scripts/` rather than `/local/`, and adding them by hand
-> as well would load every script twice. The list below is only for running the
-> dashboard with no integration at all.
-
-In Settings → Dashboards → Resources, add:
-
-Add these two first. The others read their icons and shared entity tables from them:
-
-- `/local/casora/scripts/casora-icons.js` (from this repo)
-- `/local/casora/scripts/casora-core.js` (from this repo, **required**: shared card helpers, the Now Playing collector, and the mobile wallpaper: it samples your home photos to derive the colors the mobile background fades into)
-
-Then the rest, in any order:
-
-- `/local/casora/scripts/layout-card-modified.js` (from this repo)
-- `/local/casora/scripts/layout-offsets.js` (from this repo)
-- `/local/casora/scripts/smart-row.js` (from this repo, required for Smart Row)
-- `/local/casora/scripts/filter-overlay.js` (from this repo, required for the mobile dashboard)
-- `/local/casora/scripts/casora-redirect.js` (from this repo, recommended: routes phones to the mobile dashboard and back)
-- `/local/casora/fonts/hanken-grotesk.css` (from this repo; loads Inter, Casora's font, and Hanken Grotesk)
-- `/hacsfiles/button-card/button-card.js` (should already be present if installed via HACS)
+Nothing to add. The Casora integration registers its scripts as dashboard resources from
+`/casora_scripts/` (when Lovelace runs in YAML mode, Home Assistant's log names the lines to add under
+`lovelace: resources:`). Don't add them a second time from `/local/`, or every script loads twice.
+button-card comes from HACS as usual (`/hacsfiles/button-card/button-card.js`).
 
 ### 4) Register the Casora dashboards
 Add (or verify) in your `configuration.yaml`:
@@ -159,12 +145,11 @@ In `/config/dashboards/casora/`:
 
 These are the only files you edit to map Casora to your devices/entities. All behavior lives in the shared templates.
 
-### 6) Enable the Casora theme
+### 6) Choose the design
 
-- Profile → Theme → choose **Casora**, Casora's own look (the setup assistant in Casora Studio does this for you)
-- **Casora Nebel** is the second look: the same design in cool grey with a petrol accent
-- The legacy looks **Hemma 2** and **Hemma 1** (earlier *Casora Standard* and *Casora Glass*) were removed in 1.6.1, as was the old name *Casora Weich*: a saved choice, in the profile or as the default theme, moves to **Casora** by itself
-  *(You may need to reload themes or restart after copying.)*
+- In Casora Studio pick the design under **Settings › Look & feel › Design**: **Casora** (the default), **Casora Nebel** (the same design in cool grey with a petrol accent) or **Casora Glas** (frosted glass over the room photos). It applies to all dashboards; the setup assistant asks for it at the start.
+- Home Assistant's theme picker in your profile lists the Casora designs too. A theme picked there wins in that browser.
+- The legacy looks **Hemma 2** and **Hemma 1** (earlier *Casora Standard* and *Casora Glass*) were removed in 26.10.31: a saved choice moves to **Casora Glas** by itself. The old name *Casora Weich* moves to **Casora**.
 
 ### 7) Add your room images + icons
 
@@ -172,7 +157,7 @@ These are the only files you edit to map Casora to your devices/entities. All be
   - Example: `home.jpg` (light) and `home-night.jpg` (dark)
   - Casora ships a **day and a night photo for 31 room types** (`<room>-demo.jpg` / `<room>-demo-night.jpg`: living room, kitchen, bedroom, kids' room, bathroom, office, hallway, laundry, garage, garden, terrace, pool and more). New rooms get the matching one automatically from their name, in German or English: *Küche* gets the kitchen, *Waschküche* the laundry room, *Gäste-WC* the guest toilet.
   - Your own photo always wins: name it after the room (`kueche.jpg` or `kuche.jpg`, `buero.jpg`, `wohnzimmer.jpg` …) and Casora picks it instead. Rooms with no match get the house.
-- Icons live in: `/config/www/casora/icons/`
+- Your own icons go into `/config/www/casora/icons/` (Casora's own ship with the integration)
 
 ---
 
@@ -198,7 +183,7 @@ The climate group badge aggregates temperature, HVAC activity, humidity, and air
 
 > **Dependency:** The expand/collapse behavior for all badge groups (climate, lights, presence, media, energy, security) is driven by `input_select.casora_expanded_row`. The Casora integration creates this helper automatically (run the `casora.einrichten` action if it is ever missing). Without it, tapping a badge group will throw a service-call error and the sub-badge row will not expand.
 
-> **Badges are enabled by their entities.** There are no `show_*` switches for the badge rows. A badge appears as soon as you give it something to show and stays hidden otherwise. The climate badge appears when **any** of `climate_entity_1`, `temp_sensor_1`, `humidity_sensor`, or `quality_sensor` is set.
+> **Badges are enabled by their entities.** A badge appears as soon as you give it something to show and stays hidden otherwise. `show_climate: false` (likewise `show_lights`, `show_people`, `show_media`, `show_energy`, `show_security`) hides a badge that has entities; that is what the Studio's switch writes. The climate badge appears when **any** of `climate_entity_1`, `temp_sensor_1`, `humidity_sensor`, or `quality_sensor` is set.
 
 | Variable | Description |
 |---|---|
@@ -263,7 +248,7 @@ They appear when `media_player_1` is set, *unless* `show_now_playing: true`, in 
 | Variable | Description |
 |---|---|
 | `media_player_1` to `media_player_10` | Media player entity IDs |
-| `pause_timeout_minutes` | Minutes before a paused player is considered inactive (default: `5`) |
+| `pause_timeout_minutes` | Minutes before a paused player is considered inactive (default: `10`) |
 
 Example home view with all badge types enabled:
 
@@ -312,7 +297,7 @@ Example home view with all badge types enabled:
     security_label_1: Front Door
 ```
 
-Notes: badge rows are enabled by their entities, not by `show_*` flags. A badge with no entities stays hidden, so there is nothing to switch off. Media badges additionally only appear when a player is actually active (playing, buffering, or recently paused within `pause_timeout_minutes`).
+Notes: badge rows are enabled by their entities. A badge with no entities stays hidden; `show_*: false` hides one that has entities. Media badges additionally only appear when a player is actually active (playing, buffering, or recently paused within `pause_timeout_minutes`).
 
 ---
 
@@ -325,14 +310,14 @@ Set `show_now_playing: true` on a room card. `casora_room` suppresses the media 
 | Variable | Default | Description |
 |---|---|---|
 | `show_now_playing` | `false` | `true` to use the panel instead of the media badge row |
-| `now_playing_panel` | `'0'` | `'0'` = tiles float free, right-aligned, no container. `'1'` = tiles wrapped in a glass panel with a collapsible "Now Playing" header |
 | `media_player_1` to `media_player_10` | - | Standard media player entities |
 | `psn_1` to `psn_2` | - | Game-activity sensors (e.g. PlayStation), shown as activity sources |
-| `pause_timeout_minutes` | `5` | Minutes before a paused source drops out of the panel |
+| `discord_user`, `steam_account` | - | Discord or Steam account sensors, shown as game activity |
+| `pause_timeout_minutes` | `10` | Minutes before a paused source drops out of the panel |
 
-**Interaction:** tap a rail chip to promote it to the primary slot; hold to pin it there (stored in `input_text.casora_now_playing_pinned`). With `now_playing_panel: '1'`, the header collapses the panel, tracked by `input_boolean.casora_now_playing_minimized`.
+**Interaction:** tap a rail chip to promote it to the primary slot; hold to pin it there (stored in `input_text.casora_now_playing_pinned`). The "Now Playing" header collapses the panel, tracked by `input_boolean.casora_now_playing_minimized`.
 
-**Requires:** `casora-core.js` registered as a Lovelace resource, which holds the source collector both dashboards read. The mobile dashboard's Now Playing row uses the same collector and the same tile templates.
+**Requires:** `casora-core.js` (registered by the integration), which holds the source collector both dashboards read. The mobile dashboard's Now Playing row uses the same collector and the same tile templates.
 
 ---
 
@@ -350,7 +335,7 @@ The energy group badge adds an expandable row of value badges to the hero card. 
 | `energy_unit_N` | `auto` (W, switching to kW above 1000), `kwh`, or `cost` |
 | `energy_cost_N` | *(optional)* Cost sensor appended to the value as `· $1.23`. Two numbers on one badge is hard to read at a glance; prefer `unit: cost` |
 | `normal_threshold` / `heavy_threshold` / `extreme_threshold` | Watt breakpoints for the usage tier. Defaults 200 / 1000 / 3000 |
-| `high_threshold` | Watts at which the Energy card promotes itself to its active state. Default 500 |
+| `high_threshold` | Watts at which the Energy card promotes itself to its active state. Default 1000 |
 | `release_threshold` | *(optional)* Watts at which it drops back. Defaults to 80% of `high_threshold` |
 
 **Cost over kWh.** A kWh figure is hard to judge at a glance, so the badges read better pointed at a cost
@@ -491,8 +476,29 @@ above. Using `casora_popup_camera` directly gives you the rest:
 ```
 
 `casora_camera` was previously called `casora_doorbell`. That name still works as an alias, so existing
-dashboards need no change, but it will be removed in a future major version. The tile was never
+dashboards need no change, but it will be removed in a future version. The tile was never
 doorbell-specific, and it now opens the camera popup rather than a bare more-info dialog.
+
+---
+
+### :bell: Bell
+
+The bell reads its settings from the `casora_room` cards. The Studio writes them to every room of the
+dashboard (**Settings › Messages › Bell on this dashboard**); by hand, set them on each `casora_room` the
+same way. Every kind of message is on until you switch it off, and the limits are optional.
+
+| Variable | Default | Description |
+|---|---|---|
+| `notify_safety`, `notify_air`, `notify_locks`, `notify_alarm`, `notify_doorbell`, `notify_doors`, `notify_people`, `notify_vacuum`, `notify_appliances`, `notify_plants`, `notify_battery`, `notify_pulse`, `notify_updates`, `notify_restart` | `true` | `false` leaves that kind of message out of the bell |
+| `notify_ha` | `true` | `false` leaves out Home Assistant's notifications (`persistent_notification.create` from scripts and automations, and Home Assistant's own notices) |
+| `notification_co2_ppm` | `1800` | CO₂ level in ppm that counts as high |
+| `notification_open_minutes` | `10` | Minutes a door may stay open before it is reported. `0` turns this off |
+| `notification_battery_threshold` | `20` | Battery level in % below which a battery counts as low |
+| `notification_battery_hold_minutes` | `30` | Minutes a battery has to stay low before it is reported |
+| `notification_appliances` | - | Appliances to watch (sensor, binary_sensor, switch or vacuum) |
+| `notification_appliance_timers` | - | `entity_id: sensor` map with each appliance's time remaining |
+
+Wording, mailbox and exceptions apply to all dashboards and are set in the Studio, not in YAML.
 
 ---
 
@@ -500,7 +506,7 @@ doorbell-specific, and it now opens the camera popup rather than a bare more-inf
 
 `casora-smart-row` is a custom Lovelace card that replaces a static list of entity cards with a self-sorting row. On desktop, any card that becomes active automatically slides to the front of the row using a FLIP animation. On mobile portrait and landscape the cards render in a fixed grid without reordering.
 
-**Requires:** `smart-row.js` registered as a Lovelace resource (included in this repo).
+**Requires:** `smart-row.js` (registered by the integration).
 
 #### Usage
 
@@ -533,7 +539,7 @@ Replace a plain list of `button-card` entries with a single `casora-smart-row` c
 #### How sorting works
 
 - Active state is detected via `--casora-active-overlay-opacity: 1` on each card's shadow DOM (works with all Casora templates including plant thresholds and numeric conditions).
-- When a card becomes active it moves to the front of the row after a short 2.5 s delay - long enough to avoid flickering on transient states.
+- When a card becomes active it moves to the front of the row after a short 2.5 s delay - long enough to avoid flickering on transient states. The row also waits until nothing on the page has been touched for 2 s and no Casora popup is open, so it never reorders under your finger.
 - On page load, active cards are pre-sorted before the entry animation plays so the sweep order always matches the sorted order.
 - Respects `prefers-reduced-motion` - reorders instantly without animation when enabled.
 
@@ -541,7 +547,7 @@ Replace a plain list of `button-card` entries with a single `casora-smart-row` c
 
 ### :zap: Entity Actions card (`casora_entity_actions`)
 
-`casora_entity_actions` extends `casora_entity` with up to two action buttons in a rail down the right side of the card. Each button is a flat capsule that fills with its domain's accent color when its entity is on, dims when the entity is unavailable, and disappears entirely when disabled or left without an entity. Turn both off and the rail collapses so the card reflows to normal padding.
+`casora_entity_actions` extends `casora_entity` with up to two actions. A ⋯ button in the corner of the tile shows them as labelled pills at the bottom of the tile. A pill lights up when its entity is on, dims when the entity is unavailable, and is left out when disabled or without an entity. Turn both off and the ⋯ button disappears.
 
 Originally contributed by [@hostand](https://github.com/hostand).
 
@@ -570,17 +576,17 @@ Replace `N` with `1` or `2`.
 |---|---|---|
 | `action_N_entity` | - | Entity the button acts on and reads state from. Required: no entity, no button |
 | `action_N_enabled` | `true` | Set to `false` to hide this button |
-| `action_N_icon` | entity's own icon, then `mdi:help-circle` | `mdi:*`, a bare Casora SVG name, or a full `/local/…`, `http(s)://…`, or `.svg`/`.png`/`.webp` path |
-| `action_N_active_color` | domain accent | CSS color for the active fill, overriding the domain default |
+| `action_N_icon` | entity's own icon, then `mdi:bookmark` | `mdi:*`, a bare Casora SVG name, or a full `/local/…`, `http(s)://…`, or `.svg`/`.png`/`.webp` path |
+| `action_N_label` | entity's name | Text on the pill. Without it, the entity's name, with the tile's name left out in front |
 | `action_N_action` | `more-info` | `more-info` · `toggle` · `navigate` · `call-service` |
 | `action_N_navigation_path` | - | Path for the `navigate` action |
 | `action_N_service` | - | `domain.service` for the `call-service` action |
 | `action_N_service_data` | `{}` | Service data map. `entity_id` defaults to `action_N_entity` |
-| `svg_path` | `/local/casora/icons` | Base path used to resolve bare SVG icon names |
+| `svg_path` | `/casora_assets/icons` | Base path used to resolve bare SVG icon names |
 
 #### Driving the tile's active state from the buttons
 
-The tile's own active state follows its `entity:` as usual, and the buttons light up independently. If the tile points at a passive sensor that never reads as active, hand the job to the action entities instead:
+The tile's own active state follows its `entity:` as usual, and the pills light up independently. If the tile points at a passive sensor that never reads as active, hand the job to the action entities instead:
 
 ```yaml
   variables:
@@ -590,7 +596,7 @@ The tile's own active state follows its `entity:` as usual, and the buttons ligh
     active_entities_mode: all   # all = every entity on; any (default) = at least one
 ```
 
-These are listed explicitly rather than inferred from `action_N_entity`, so a card can key off entities that aren't buttons, and a tile with a meaningful status sensor can keep using it.
+These are listed explicitly rather than inferred from `action_N_entity`, so a card can key off entities that aren't actions, and a tile with a meaningful status sensor can keep using it.
 
 ---
 
@@ -649,7 +655,7 @@ Casora is designed for edge-to-edge screens. If you are using the HA iOS Compani
 
 ### Button Card Icons
 
-To add additional button card icons, you can download them from the links below and place the icons in the `www/casora/icons/` folder:
+To add additional button card icons, you can download them from the links below and place the icons in the `/config/www/casora/icons/` folder:
 
 [Google Material Icons](https://fonts.google.com/icons?icon.query=light): weight 300 recommended, file type: svg
 
