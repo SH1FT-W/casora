@@ -2499,7 +2499,17 @@
   "Bis Sonnenaufgang": "Fino all'alba",
   "Ab Sonnenuntergang": "Dal tramonto",
   "Keine Rollos ausgewählt": "Nessuna tapparella scelta",
-  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Scegli le tapparelle nello Studio in Impostazioni › Casa e dispositivi › Sicurezza."
+  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Scegli le tapparelle nello Studio in Impostazioni › Casa e dispositivi › Sicurezza.",
+  "Liste": "Elenco",
+  "Keine Einträge": "Nessuna voce",
+  "1 Einstellung": "1 impostazione",
+  "Nichts gewählt": "Nulla scelto",
+  "1 Liste": "1 elenco",
+  "1 Diagramm": "1 grafico",
+  "Diagramme": "Grafici",
+  "Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.": "Il gruppo non esiste più. Scegline un altro nello Studio.",
+  "Wähle im Studio eine Gruppe, Geräte oder ein Label.": "Scegli nello Studio un gruppo, dei dispositivi o un'etichetta.",
+  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Scegli nello Studio gruppi e sensori per questa scheda."
  },
  "patterns": [
   [
@@ -3687,10 +3697,6 @@
    "{1} finestre aperte"
   ],
   [
-   "^(\\d+) Rollos offen$",
-   "{1} tapparelle aperte"
-  ],
-  [
    "^(\\d+) Fenster gekippt$",
    "{1} finestre a ribalta"
   ],
@@ -4513,6 +4519,18 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} dalle {2}"
+  ],
+  [
+   "^(\\d+) Einstellungen$",
+   "{1} impostazioni"
+  ],
+  [
+   "^(\\d+) Listen$",
+   "{1} elenchi"
+  ],
+  [
+   "^(\\d+) Diagramme$",
+   "{1} grafici"
   ]
  ]
 }

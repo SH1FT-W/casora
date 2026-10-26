@@ -2499,7 +2499,17 @@
   "Bis Sonnenaufgang": "Do wschodu słońca",
   "Ab Sonnenuntergang": "Od zachodu słońca",
   "Keine Rollos ausgewählt": "Nie wybrano rolet",
-  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Rolety wybierasz w Studio w Ustawienia › Dom i urządzenia › Bezpieczeństwo."
+  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Rolety wybierasz w Studio w Ustawienia › Dom i urządzenia › Bezpieczeństwo.",
+  "Liste": "Lista",
+  "Keine Einträge": "Brak pozycji",
+  "1 Einstellung": "1 ustawienie",
+  "Nichts gewählt": "Nic nie wybrano",
+  "1 Liste": "1 lista",
+  "1 Diagramm": "1 wykres",
+  "Diagramme": "Wykresy",
+  "Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.": "Ta grupa już nie istnieje. Wybierz inną w Studio.",
+  "Wähle im Studio eine Gruppe, Geräte oder ein Label.": "Wybierz w Studio grupę, urządzenia lub etykietę.",
+  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Wybierz w Studio grupy i czujniki dla tego kafelka."
  },
  "patterns": [
   [
@@ -3687,10 +3697,6 @@
    "Otwarte okna: {1}"
   ],
   [
-   "^(\\d+) Rollos offen$",
-   "{1} rolety otwarte"
-  ],
-  [
    "^(\\d+) Fenster gekippt$",
    "Uchylone okna: {1}"
   ],
@@ -4513,6 +4519,18 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} od {2}"
+  ],
+  [
+   "^(\\d+) Einstellungen$",
+   "Ustawienia: {1}"
+  ],
+  [
+   "^(\\d+) Listen$",
+   "Listy: {1}"
+  ],
+  [
+   "^(\\d+) Diagramme$",
+   "Wykresy: {1}"
   ]
  ]
 }

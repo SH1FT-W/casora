@@ -2499,7 +2499,17 @@
   "Bis Sonnenaufgang": "Até ao nascer do sol",
   "Ab Sonnenuntergang": "A partir do pôr do sol",
   "Keine Rollos ausgewählt": "Nenhum estore escolhido",
-  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Escolhe os estores no Studio em Definições › Casa e dispositivos › Segurança."
+  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Escolhe os estores no Studio em Definições › Casa e dispositivos › Segurança.",
+  "Liste": "Lista",
+  "Keine Einträge": "Sem entradas",
+  "1 Einstellung": "1 definição",
+  "Nichts gewählt": "Nada escolhido",
+  "1 Liste": "1 lista",
+  "1 Diagramm": "1 gráfico",
+  "Diagramme": "Gráficos",
+  "Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.": "O grupo já não existe. Escolhe outro no Studio.",
+  "Wähle im Studio eine Gruppe, Geräte oder ein Label.": "Escolhe no Studio um grupo, dispositivos ou uma etiqueta.",
+  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Escolhe no Studio grupos e sensores para este cartão."
  },
  "patterns": [
   [
@@ -3687,10 +3697,6 @@
    "{1} janelas abertas"
   ],
   [
-   "^(\\d+) Rollos offen$",
-   "{1} estores abertos"
-  ],
-  [
    "^(\\d+) Fenster gekippt$",
    "{1} janelas basculadas"
   ],
@@ -4513,6 +4519,18 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} a partir das {2}"
+  ],
+  [
+   "^(\\d+) Einstellungen$",
+   "{1} definições"
+  ],
+  [
+   "^(\\d+) Listen$",
+   "{1} listas"
+  ],
+  [
+   "^(\\d+) Diagramme$",
+   "{1} gráficos"
   ]
  ]
 }

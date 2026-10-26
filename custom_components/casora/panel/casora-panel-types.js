@@ -92,6 +92,30 @@ const FREE_DOMAINS = [
   "device_tracker", "alarm_control_panel", "camera", "weather", "sun", "update", "water_heater", "valve", "siren",
   "remote", "event", "calendar", "todo", "plant", "image", "date", "datetime", "time",
 ];
+// HA labels for the entity list's "HA label" (#59): the label registry, fetched once; until it is there only the
+// placeholder. dynOptions(hass, entityId, redraw) → {options, labels} | null.
+let labelReg = null, labelLoad = null;
+const haLabels = (hass, id, redraw) => {
+  if (labelReg) {
+    const names = {};
+    labelReg.forEach((l) => { names[l.label_id] = l.name || l.label_id; });
+    return { options: labelReg.map((l) => l.label_id), labels: names };
+  }
+  if (!labelLoad && hass && typeof hass.callWS === "function") {
+    labelLoad = hass.callWS({ type: "config/label_registry/list" })
+      .then((r) => { labelReg = Array.isArray(r) ? r.filter((l) => l && l.label_id) : []; if (redraw) redraw(); }, () => { labelReg = []; });
+  }
+  return null;
+};
+// Entries of an entity list in the Studio (sections field): the dashboard's own resolution from
+// scripts/local/34-entity-list.js, loaded once; null until it is there.
+let listLoad = null;
+window.casoraListEntries = (hass, V, redraw) => {
+  const L = window._casoraEntityList;
+  if (L && hass) return L.resolve(hass, hass.states, L.cfg(V || {}));
+  if (!listLoad) listLoad = import("/casora_scripts/local/34-entity-list.js").then(() => { if (redraw) redraw(); }, () => {});
+  return null;
+};
 window.CASORA_TILE_TYPES = [
   { id: "casora_3d_printer", label: "3D printer", template: "casora_3d_printer", domains: ["sensor"],
     entityLabel: "Print status", icon: "3D_Printer", fields: [
@@ -493,6 +517,45 @@ window.CASORA_TILE_TYPES = [
       { key: "free_controls", label: "Controls", type: "bool", boolDefault: true,
         hint: "The device's own controls in the popup: on/off, brightness, cover buttons, lock, media keys, target temperature." },
     ] },
+  // Entity list (card request #59): settings from a group (in the group's order), a hand-picked list or everything with an
+  // HA label, as popup rows with their own control – switch, time, − / +, choice – in one or two columns (Auto: one on the
+  // phone), with optional section headings (scripts/local/34-entity-list.js). No entity of its own: the fields say what
+  // it lists. list_source: '' group | pick | label; list_layout: '' auto | 1 | 2; list_sections: [{title, before}].
+  { id: "casora_entity_list", label: "Entity list", template: "casora_entity_list", domains: [], noEntity: true,
+    icon: "list", color: "var(--casora-color-teal, #00C3D0)", fields: [
+      ICON,
+      TITLE_NAME,
+      { key: "list_source", label: "Where do the entries come from?", type: "select", seg: true, options: ["", "pick", "label"],
+        optionLabels: { "": "Group", pick: "Pick", label: "HA label" } },
+      { key: "list_group", label: "Group", domains: ["group"], when: (v) => !v.list_source || v.list_source === "group",
+        hint: "The list keeps the group's order." },
+      { key: "list_entities", label: "Entries", type: "list", domains: FREE_DOMAINS, placeholder: "Add device …",
+        when: (v) => v.list_source === "pick", hint: "In the order you add them." },
+      { key: "list_label", label: "HA label", type: "select", options: [""], optionLabels: { "": "Choose a label" },
+        dynOptions: haLabels, when: (v) => v.list_source === "label",
+        hint: "Every device with this label in Home Assistant, sorted by name." },
+      { key: "list_layout", label: "Display", type: "select", seg: true, options: ["1", "2", ""],
+        optionLabels: { "1": "One column", "2": "Two columns", "": "Auto" },
+        hint: "Auto: one column on the phone, two on larger screens." },
+      { key: "list_sections", label: "Sections", type: "headings",
+        hint: "Optional. Type a heading such as “Per month”, then choose the entry it goes before." },
+    ] },
+  // "Mehr" (card request #59): one tile for lists and charts that need no tile of their own. Lists are groups (each shown
+  // like an entity list), charts are sensors (each shown as the Chart tile's popup); a tap opens it in the same popup
+  // with ‹ back (scripts/local/34-entity-list.js). Defined right here instead of pointing at other tiles.
+  { id: "casora_more", label: "More", template: "casora_more", domains: [], noEntity: true,
+    icon: "grid", color: "var(--casora-color-teal, #00C3D0)", fields: [
+      ICON,
+      TITLE_NAME,
+      { key: "more_lists", label: "Lists", type: "list", domains: ["group"], placeholder: "Add group …",
+        hint: "Each group becomes a list in the popup, with its devices in the group's order." },
+      { key: "more_list_labels", label: "Name", type: "map", over: "more_lists", kind: "text",
+        when: (v) => Array.isArray(v.more_lists) && v.more_lists.length > 0 },
+      { key: "more_charts", label: "Charts", type: "list", domains: ["sensor"], placeholder: "Add sensor …",
+        hint: "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year." },
+      { key: "more_chart_labels", label: "Name", type: "map", over: "more_charts", kind: "text",
+        when: (v) => Array.isArray(v.more_charts) && v.more_charts.length > 0 },
+    ] },
   // Aquarium overview (Hemma 1 and older versions "…_aquarium"): up to three tanks in one tile. Only for
   // editing migrated tiles – new tanks get the aquarium tile (casora_aquarium_tank).
   { id: "casora_aquariums", label: "Aquariums", template: "casora_aquarium", hidden: true, domains: ["sensor"],
@@ -535,7 +598,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "shield_alarm", "shield_bypass", "shield_vacation", "calendar", "calendar-day", "window-open",
   "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower", "coffee-maker", "paw",
   "coffee-espresso", "coffee-doppio", "coffee-cup", "coffee-cappuccino", "coffee-latte", "coffee-tall", "coffee-water",
-  "coffee-milk", "coffee-tea", "chart", "velair",
+  "coffee-milk", "coffee-tea", "chart", "velair", "list", "grid",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Preview: show conditional cards (type: conditional) as the dashboard does –
@@ -710,6 +773,15 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   };
 
   window.casoraTileState = (tile, ent, hass, templates) => {
+    // Entity list and Mehr (#59) have no entity: their text comes from the dashboard module.
+    const tl = names(tile && tile.template);
+    if (hass && (tl.includes("casora_entity_list") || tl.includes("casora_more"))) {
+      const L = window._casoraEntityList;
+      if (!L) { if (window.casoraListEntries) window.casoraListEntries(null, null); return null; }
+      const V = (tile && tile.variables) || {};
+      const txt = tl.includes("casora_more") ? L.moreTile(hass, hass.states, V) : L.tileState(hass, hass.states, V);
+      return typeof window.casoraTr === "function" ? window.casoraTr(txt) : txt;
+    }
     if (!isOurs(tile) || !ent) return null;
     needMedien(tile);
     try {

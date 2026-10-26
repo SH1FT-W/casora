@@ -9264,6 +9264,9 @@ window.casoraMenuGlass = {
           + ';white-space:nowrap;pointer-events:none;">'
           + (r.valueIcon ? actxInner(r.value, r.valueIcon, S.iconOff) : lit(r.value, r.valueLit)) + '</div>';
       }
+      // r.endHtml (#59): the row's own control on the right (switch, time, stepper of the entity list), built by the module
+      // from escaped parts; it takes the clicks itself, the rest of the row stays as it is.
+      if (r.endHtml) out += '<div class="hui-end" style="flex:none;display:flex;align-items:center;">' + r.endHtml + '</div>';
       if ((r.entity || r.tappable) && (!r.svc || armOnAction)) {
         out += '<svg class="hui-chev hui-end" width="7" height="12" viewBox="0 0 7 12" aria-hidden="true">'
           // DP-30: Pfeil in Text 1 mit Deckkraft .6 (Text 3 · .6 lag bei 2,5 : 1).
@@ -9470,6 +9473,7 @@ window.casoraMenuGlass = {
           + ';white-space:nowrap;pointer-events:none;">'
           + (r.valueIcon ? actxInner(r.value, r.valueIcon, T.fill2) : lit(r.value, r.valueLit)) + '</div>';
       }
+      if (r.endHtml) out += '<div style="flex:none;display:flex;align-items:center;">' + r.endHtml + '</div>';
       if ((r.entity || r.tappable) && (!r.svc || armOnAction)) {
         out += '<svg class="hui-chev" width="7" height="12" viewBox="0 0 7 12" aria-hidden="true">'
           + '<path d="M1 1L6 6L1 11" fill="none" stroke="' + T.ink3 + '" stroke-width="2" '

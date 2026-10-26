@@ -120,6 +120,7 @@ const MODULES = [
   '32-media-badge',
   '33-color-wheel',
   '34-security-covers',
+  '34-entity-list',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());

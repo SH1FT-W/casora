@@ -2499,7 +2499,17 @@
   "Bis Sonnenaufgang": "Jusqu'au lever du soleil",
   "Ab Sonnenuntergang": "Dès le coucher du soleil",
   "Keine Rollos ausgewählt": "Aucun volet choisi",
-  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Choisis les volets dans le Studio sous Réglages › Maison et appareils › Sécurité."
+  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Choisis les volets dans le Studio sous Réglages › Maison et appareils › Sécurité.",
+  "Liste": "Liste",
+  "Keine Einträge": "Aucune entrée",
+  "1 Einstellung": "1 réglage",
+  "Nichts gewählt": "Rien de choisi",
+  "1 Liste": "1 liste",
+  "1 Diagramm": "1 diagramme",
+  "Diagramme": "Diagrammes",
+  "Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.": "Le groupe n'existe plus. Choisis-en un autre dans le Studio.",
+  "Wähle im Studio eine Gruppe, Geräte oder ein Label.": "Choisis un groupe, des appareils ou un libellé dans le Studio.",
+  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Choisis dans le Studio des groupes et des capteurs pour cette tuile."
  },
  "patterns": [
   [
@@ -3687,10 +3697,6 @@
    "{1} fenêtres ouvertes"
   ],
   [
-   "^(\\d+) Rollos offen$",
-   "{1} volets ouverts"
-  ],
-  [
    "^(\\d+) Fenster gekippt$",
    "{1} fenêtres entrouvertes"
   ],
@@ -4513,6 +4519,18 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} dès {2}"
+  ],
+  [
+   "^(\\d+) Einstellungen$",
+   "{1} réglages"
+  ],
+  [
+   "^(\\d+) Listen$",
+   "{1} listes"
+  ],
+  [
+   "^(\\d+) Diagramme$",
+   "{1} diagrammes"
   ]
  ]
 }

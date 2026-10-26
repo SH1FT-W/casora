@@ -2499,7 +2499,17 @@
   "Bis Sonnenaufgang": "Hasta el amanecer",
   "Ab Sonnenuntergang": "Desde el atardecer",
   "Keine Rollos ausgewählt": "Ninguna persiana elegida",
-  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Elige las persianas en el Studio, en Ajustes › Casa y dispositivos › Seguridad."
+  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Elige las persianas en el Studio, en Ajustes › Casa y dispositivos › Seguridad.",
+  "Liste": "Lista",
+  "Keine Einträge": "Sin entradas",
+  "1 Einstellung": "1 ajuste",
+  "Nichts gewählt": "Nada elegido",
+  "1 Liste": "1 lista",
+  "1 Diagramm": "1 gráfico",
+  "Diagramme": "Gráficos",
+  "Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.": "El grupo ya no existe. Elige otro en el Studio.",
+  "Wähle im Studio eine Gruppe, Geräte oder ein Label.": "Elige en el Studio un grupo, dispositivos o una etiqueta.",
+  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Elige en el Studio grupos y sensores para esta tarjeta."
  },
  "patterns": [
   [
@@ -3687,10 +3697,6 @@
    "{1} ventanas abiertas"
   ],
   [
-   "^(\\d+) Rollos offen$",
-   "{1} persianas abiertas"
-  ],
-  [
    "^(\\d+) Fenster gekippt$",
    "{1} ventanas inclinadas"
   ],
@@ -4513,6 +4519,18 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} desde las {2}"
+  ],
+  [
+   "^(\\d+) Einstellungen$",
+   "{1} ajustes"
+  ],
+  [
+   "^(\\d+) Listen$",
+   "{1} listas"
+  ],
+  [
+   "^(\\d+) Diagramme$",
+   "{1} gráficos"
   ]
  ]
 }

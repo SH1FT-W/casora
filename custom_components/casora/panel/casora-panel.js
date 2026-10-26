@@ -3595,7 +3595,8 @@ const autoRoomGlyph = (name) => {
 // Tile types about the whole home: a room's own device (a dishwasher's plug in the
 // kitchen) is no reason to offer them as "Fits <room>".
 const HOUSE_WIDE_TILES = new Set(["energy_tile", "network", "battery", "updates", "casora_alarm",
-  "casora_weather_warning", "casora_solar_tip", "casora_trash", "casora_recipe", "casora_pulse", "casora_calendar"]);
+  "casora_weather_warning", "casora_solar_tip", "casora_trash", "casora_recipe", "casora_pulse", "casora_calendar",
+  "casora_entity_list", "casora_more"]);
 
 // The automatic icon follows the name. A new name it doesn't know ("Küche" →
 // "Kochecke") would fall back to the house - keep the icon the room had instead.
@@ -5608,6 +5609,12 @@ const tileHidesNow = (type, kind, ent, V, states) =>
   tileShowWhen(type, V) === "active" && !tileActive(kind, ent, V || {}, states);
 
 const tileActive = (kind, ent, V, states) => {
+  // Entity list (#59): no entity of its own – highlighted when one of its entries is on (dashboard module).
+  if (kind === "casora_entity_list") {
+    const L = window._casoraEntityList;
+    const ha = document.querySelector("home-assistant");
+    return !!(L && states && L.tileActive({ states, entities: (ha && ha.hass && ha.hass.entities) || {} }, states, V || {}));
+  }
   if (!ent) return false;
   const state = String(ent.state || "").toLowerCase();
   switch (kind) {
@@ -9055,6 +9062,9 @@ class CasoraPanel extends HTMLElement {
           display:inline-flex; gap:2px; padding:2px; border-radius:999px;
           background:var(--field); box-shadow:inset 0 0 0 1px var(--field-rim);
         }
+        /* A select field drawn as segments (seg: true, entity list #59): full width, equal parts. */
+        .seg.fieldseg { display:flex; width:100%; box-sizing:border-box; }
+        .seg.fieldseg .segopt { flex:1 1 0; min-width:0; padding:6px 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         .segthumb {
           position:absolute; top:2px; left:2px; width:0; height:calc(100% - 4px);
           border-radius:999px; pointer-events:none;
@@ -28116,6 +28126,66 @@ class CasoraPanel extends HTMLElement {
         return;
       }
 
+      // Section headings of an entity list (#59): [{title, before}] – a heading starts before an entry of the list.
+      // Chips for the headings there are; a text field and the list's entries to add one.
+      if (f.type === "headings") {
+        const vars0 = tile.variables || {};
+        const ents = (window.casoraListEntries
+          && window.casoraListEntries(this._hass, vars0, () => { if (this.isConnected) this._renderForm(); })) || [];
+        const heads = (Array.isArray(cur) ? cur : []).filter((h) => h && typeof h === "object" && h.before
+          && String(h.title || "").trim());
+        const order = (h) => { const i = ents.indexOf(h.before); return i < 0 ? 1e6 : i; };
+        const write = (next) => {
+          if (next.length) { if (!tile.variables) tile.variables = {}; tile.variables[f.key] = next; }
+          else if (tile.variables) { delete tile.variables[f.key]; if (!Object.keys(tile.variables).length) delete tile.variables; }
+          this._syncPreview();
+          this._renderForm();
+        };
+        const wrap = document.createElement("div");
+        wrap.className = "chipwrap";
+        if (heads.length) {
+          const chips = document.createElement("div");
+          chips.className = "chips";
+          heads.slice().sort((x, y) => order(x) - order(y)).forEach((h) => {
+            const c = document.createElement("span");
+            c.className = "chip";
+            const t = document.createElement("span");
+            t.setAttribute("data-no-i18n", "");
+            t.textContent = "„" + String(h.title).trim() + "“ · " + this._prettyEntity(h.before);
+            c.title = h.before;
+            const x = document.createElement("button");
+            x.type = "button";
+            x.textContent = "\u00d7";
+            x.title = "Remove";
+            x.onclick = () => write(heads.filter((o) => o !== h));
+            c.appendChild(t); c.appendChild(x);
+            chips.appendChild(c);
+          });
+          wrap.appendChild(chips);
+        }
+        if (ents.length) {
+          const inp = document.createElement("input");
+          inp.placeholder = (window.casoraI18n && window.casoraI18n.t) ? window.casoraI18n.t("Heading, e.g. Per month") : "Heading, e.g. Per month";
+          const taken = new Set(heads.map((h) => h.before));
+          const combo = this._combo("", ents.filter((e) => !taken.has(e)), "Before which entry?", (v) => {
+            const title = String(inp.value || "").trim();
+            if (!v) return;
+            if (!title) { inp.focus(); return; }
+            write(heads.concat([{ title, before: v }]));
+          });
+          wrap.appendChild(inp);
+          wrap.appendChild(combo.wrap);
+        } else {
+          const none = document.createElement("div");
+          none.className = "none";
+          none.textContent = "Choose the entries first.";
+          wrap.appendChild(none);
+        }
+        put(f.label, wrap);
+        hintUnder();
+        return;
+      }
+
       if (f.type === "list") {
         put(f.label, this._chipPicker(cur, f.domains || ["sensor"], (items) => {
           if (items.length) { if (!tile.variables) tile.variables = {}; tile.variables[f.key] = items; }
@@ -28210,6 +28280,32 @@ class CasoraPanel extends HTMLElement {
         return;
       }
       const after = () => { if (f.reveals || shownSig() !== shown0) this._renderForm(); else this._syncPreview(); };
+      // A few fixed choices as segments (seg: true, entity list #59) – one tap, all choices visible.
+      if (f.type === "select" && f.seg) {
+        const seg = document.createElement("div");
+        seg.className = "seg fieldseg";
+        seg.setAttribute("role", "group");
+        seg.setAttribute("aria-label", f.label);
+        seg.appendChild(document.createElement("span")).className = "segthumb";
+        (f.options || []).forEach((o) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "segopt";
+          b.dataset.v = o;
+          b.textContent = (f.optionLabels && f.optionLabels[o]) || o;
+          seg.appendChild(b);
+        });
+        const now = String(cur === undefined || cur === null ? "" : cur);
+        this._wireSeg(seg, "v", (f.options || []).includes(now) ? now : "", (v) => {
+          if (v === "") { if (tile.variables) delete tile.variables[f.key]; }
+          else { if (!tile.variables) tile.variables = {}; tile.variables[f.key] = v; }
+          if (tile.variables && !Object.keys(tile.variables).length) delete tile.variables;
+          after();
+        });
+        put(f.label, seg);
+        hintUnder();
+        return;
+      }
       if (f.type === "states") {
         const vals = f.values || {};
         put(f.label, this._combo(listOption(vals, cur), f.options, "",
