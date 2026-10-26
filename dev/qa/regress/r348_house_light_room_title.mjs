@@ -1,9 +1,9 @@
 // @zustand: arbeit
 // @parallel: ui
 // @deckt: dashboards/casora/button_card_templates.json custom_components/casora/scripts/local/03-popups.js
-// Issue #73 (Westerloer, 26.10.2026): in the house lights popup (tile "Beleuchtung" on Home) choosing a room with its
-// chip kept the header "Beleuchtung"; the room's own light popup is titled with the room. Expected: a room chip puts
-// the room's name in the header, "Alle" brings back "Beleuchtung". Desktop 1440, theme Casora.
+// House lights popup (tile "Beleuchtung" on Home): the header always says "Beleuchtung" – the chosen room shows in the
+// chip row. #73 had put the room's name there; the owner reverted that on 26.10.2026 (it also flipped back on every
+// light change). Expected: "Beleuchtung" before, after choosing a room, after switching a light, after "Alle".
 import { open, casoraDashboards, dashboard, check, need, finish, usePage } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -32,12 +32,12 @@ await check('zuerst „Beleuchtung“', (await title()) === 'Beleuchtung', await
 const room = C.find((c) => c.a === 'toggle');
 await page.mouse.click(room.x, room.y); await page.waitForTimeout(700);
 const t1 = await title();
-await check('#73: Raum gewählt → Raumname in der Überschrift', t1 === room.name, { t1, room: room.name });
+await check('Raum gewählt → weiter „Beleuchtung“', t1 === 'Beleuchtung', { t1, room: room.name });
 // A light switched while a room is chosen re-draws the header: the room's name must stay (26.10.2026).
 await page.evaluate(() => { const h = document.querySelector('home-assistant').hass; const g = Object.keys(h.states).find((e) => e.startsWith('light.') && Array.isArray(h.states[e].attributes.entity_id)); const id = g ? h.states[g].attributes.entity_id[0] : Object.keys(h.states).find((e) => e.startsWith('light.')); if (id) h.callService('light', 'toggle', { entity_id: id }); });
 await page.waitForTimeout(1500);
 const t1b = await title();
-await check('#73: nach Schalten eines Lichts bleibt der Raumname', t1b === room.name, { t1b, room: room.name });
+await check('nach Schalten eines Lichts weiter „Beleuchtung“', t1b === 'Beleuchtung', { t1b, room: room.name });
 const allChip = C.find((c) => c.a === 'all');
 await page.mouse.click(allChip.x, allChip.y); await page.waitForTimeout(700);
 await check('„Alle“ → wieder „Beleuchtung“', (await title()) === 'Beleuchtung', await title());

@@ -7450,8 +7450,6 @@ window.casoraMenuGlass = {
       this.toggleAttribute('flat', cfg.flat === true);
       var hasHeader = !!(cfg.title || cfg.eyebrow);
       this._cfgTitle = cfg.title || '';
-      // A title the content set while open (e.g. the chosen room in the house lights popup, #73) – cleared on every open.
-      this._titleOverride = null;
       this._cfgEyebrow = cfg.eyebrow || '';
       this._hsCfg = cfg.head_switch;
       this._headerTitle.textContent = cfg.title || '';
@@ -7622,7 +7620,7 @@ window.casoraMenuGlass = {
       }
       var room = sf && this._ringSrc ? roomLabelOf(this._ringSrc) : '';
       this._roomLabel = room;
-      var title = this._titleOverride || (sf ? stripRoom(this._cfgTitle, room) : this._cfgTitle);
+      var title = sf ? stripRoom(this._cfgTitle, room) : this._cfgTitle;
       // Titel beginnt schon mit dem Raum („Wohnzimmer/Küche“): Etikett weglassen statt den Raum doppelt zu zeigen.
       if (room && title.toLowerCase().indexOf(room.toLowerCase()) === 0) room = '';
       // Lange Titel umbrechen an „/“ (Zonen wie „Wohnzimmer/Küche“), nicht mitten im Wort.
