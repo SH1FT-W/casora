@@ -11064,7 +11064,9 @@ window.casoraMenuGlass = {
     if (!wide) return;
     var ra = seen(a), rb = seen(b);
     // Only side by side (same row of the grid), never stacked.
-    if (!ra || !rb || Math.abs(ra.top + (parseFloat(a.dataset.casoraColPad || '0') || 0) - rb.top - (parseFloat(b.dataset.casoraColPad || '0') || 0)) > 4) return;
+    // Our padding sits inside the column and does not move its top edge – adding it here made every later pass
+    // bail out, so the first measurement (taken while the plates still settle) stuck: „Mehr“ 2–13 px low.
+    if (!ra || !rb || Math.abs(ra.top - rb.top) > 4) return;
     var la = colLead(a), lb = colLead(b);
     if (la === null || lb === null) return;
     // Both with a heading (or both without): their own rhythm, no reserved slot (r331: „Modus“ beside „Zeitplan“).
