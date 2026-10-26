@@ -35,7 +35,28 @@ window.CASORA_SETTINGS = { contacts: { names: { 'binary_sensor.kitchen_window': 
 assert.equal(window.casoraContactName('binary_sensor.kitchen_window'), 'Over the sink');
 assert.equal(window.casoraContactName('binary_sensor.front_door'), '');
 
+// A door with two sensors (contact + tilt, merged into a combined sensor): the rows show the combined sensor.
+// Hiding or naming either the combined sensor or the single contact works.
+hass.states['binary_sensor.patio'] = st('door', 'Patio contact');
+hass.states['binary_sensor.patio_tilt'] = st('window', 'Patio tilt');
+hass.states['binary_sensor.patio_combined'] = { state: 'off', attributes: { device_class: 'door', friendly_name: 'Patio door' } };
+delete hass.states['binary_sensor.doors'];
+const merged = { 'binary_sensor.patio_combined': ['binary_sensor.patio', 'binary_sensor.patio_tilt'] };
+window.CASORA_SETTINGS = { notify: { contact_merged: merged }, contacts: { hidden: ['binary_sensor.patio_combined'] } };
+assert.ok(!members().includes('binary_sensor.patio'), 'hiding the combined sensor hides the door');
+window.CASORA_SETTINGS = { notify: { contact_merged: merged }, contacts: { hidden: ['binary_sensor.patio'] } };
+assert.ok(!members().includes('binary_sensor.patio'), 'hiding the single contact hides the door');
+// The name lookup reads the last shared result (the root hass, as in the dashboard).
+globalThis.document = { querySelector: () => ({ hass }) };
+window.CASORA_SETTINGS = { notify: { contact_merged: merged }, contacts: { names: { 'binary_sensor.patio': 'Garden door' } } };
+window.casoraContacts(hass);
+assert.equal(window.casoraContactName('binary_sensor.patio_combined'), 'Garden door', 'name of the single contact shows on the combined row');
+window.CASORA_SETTINGS = { notify: { contact_merged: merged }, contacts: { names: { 'binary_sensor.patio_combined': 'Garden door' } } };
+assert.equal(window.casoraContactName('binary_sensor.patio_combined'), 'Garden door', 'name of the combined sensor');
+globalThis.document = { querySelector: () => null };
+
 // Popup rows: own name as title, the room below.
+window.CASORA_SETTINGS = { contacts: { names: { 'binary_sensor.kitchen_window': 'Over the sink' } } };
 const tpl = JSON.parse(src('dashboards/casora/button_card_templates.json'));
 hass.areas = { ku: { name: 'Kitchen' } };
 hass.devices = { d1: { area_id: 'ku', name: 'Kitchen window sensor' } };

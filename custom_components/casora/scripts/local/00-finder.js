@@ -915,9 +915,6 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       };
       groups = [{ label: 'Türen', members: pick(['door', 'garage_door']) }, { label: 'Fenster', members: pick(['window']) }];
     }
-    // Settings › Doors and windows › Hidden (#69): left out of every group, found automatically or not.
-    var hidden = (cfg.contacts && cfg.contacts.hidden) || [];
-    if (hidden.length) groups.forEach(function (g) { g.members = (g.members || []).filter(function (x) { return hidden.indexOf(x) < 0; }); });
     // Without a configured combined sensor: detect contact + tilt sensor (+ combined) of the
     // same door (casoraOpenings) – the combined sensor stands for the single sensors, otherwise
     // the contact stays and shows the tilt position via tilt[contact].
@@ -938,6 +935,12 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         if (!u.combo && u.tilt && u.tilt !== u.main) tilt[u.main] = u.tilt;
       });
     }
+    // Settings › Doors and windows › Hidden (#69): left out of every group, found automatically or not. A door with
+    // two sensors shows as its combined sensor: hiding either one hides the door.
+    var hidden = (cfg.contacts && cfg.contacts.hidden) || [];
+    if (hidden.length) groups.forEach(function (g) {
+      g.members = (g.members || []).filter(function (x) { return hidden.indexOf(x) < 0 && hidden.indexOf(sub[x]) < 0; });
+    });
     return { groups: groups, sub: sub, excl: excl, tilt: tilt };
   }
   // contacts() reads every binary sensor. Through button-card's state proxy each read subscribes the card to that
@@ -960,8 +963,15 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   };
   window.casoraContacts = contactsShared;
   // Own name of a door or window from Settings › Doors and windows (#69), '' without one.
+  // A name given to a single sensor of a merged door counts for its combined sensor (the row shows that one).
   window.casoraContactName = function (id) {
-    var c = (window.CASORA_SETTINGS || {}).contacts, n = c && c.names && c.names[id];
+    var c = (window.CASORA_SETTINGS || {}).contacts, N = (c && c.names) || {};
+    var n = N[id];
+    if (typeof n !== 'string' || !n.trim()) {
+      var sub = (ccShared.v && ccShared.v.sub) || {};
+      var k = Object.keys(N).filter(function (x) { return sub[x] === id && typeof N[x] === 'string' && N[x].trim(); })[0];
+      n = k ? N[k] : '';
+    }
     return typeof n === 'string' ? n.trim() : '';
   };
   // Every door and window of the house, merged sensors left out: what the security badge counts
