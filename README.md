@@ -23,7 +23,7 @@ Shape the rest room by room in a visual studio. No YAML.</p>
 <sub><b>JUST ARRIVED</b></sub>
 ## Four new cards. One new look.
 
-Community cards come with every Casora release and wait in the Studio until you add them, so your tile list stays short.
+The Frigate camera and the Reolink doorbell are community cards: they come with every Casora release and wait in the Studio until you add them, so your tile list stays short. The coffee machine and the robot lawn mower started as community cards and are regular tiles now.
 
 <!-- cards:new -->
 <table>
@@ -130,22 +130,22 @@ Casora picks the right tile and popup for each device on its own, with the integ
 <!-- cards:tiles -->
 <table>
 <tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/home-outline-dark.svg"><img src="docs/images/icons/home-outline-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Every home</b><br>Lights and light groups, switches, scenes, blinds and covers, locks, thermostats and room climate, fans, air purifiers, humidifiers, media players, cameras and doorbells.</td><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/shield-home-outline-dark.svg"><img src="docs/images/icons/shield-home-outline-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Safety</b><br>Alarm system, doors and windows, smoke, water and gas sensors, official warnings.</td></tr>
-<tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/lightning-bolt-outline-dark.svg"><img src="docs/images/icons/lightning-bolt-outline-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Energy and house</b><br>Energy with solar and home battery, batteries of all devices, network, updates, waste collection, calendar, Pulse.</td><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/washing-machine-dark.svg"><img src="docs/images/icons/washing-machine-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Appliances</b><br>Washing machine, dryer, dishwasher, robot vacuum, 3D printer.</td></tr>
+<tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/lightning-bolt-outline-dark.svg"><img src="docs/images/icons/lightning-bolt-outline-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Energy and house</b><br>Energy with solar and home battery, batteries of all devices, network, updates, waste collection, calendar, Pulse.</td><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/washing-machine-dark.svg"><img src="docs/images/icons/washing-machine-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Appliances</b><br>Washing machine, dryer, dishwasher, fridge, coffee machine, robot vacuum, robot lawn mower, 3D printer.</td></tr>
 <tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/car-outline-dark.svg"><img src="docs/images/icons/car-outline-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>On the road</b><br>Car with fuel prices nearby, e-bike.</td><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/flower-outline-dark.svg"><img src="docs/images/icons/flower-outline-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Hobbies</b><br>Plants, aquariums, football, game activity (PlayStation, Steam, Discord), recipe of the week.</td></tr>
-<tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/account-group-outline-dark.svg"><img src="docs/images/icons/account-group-outline-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Community cards</b><br>Frigate camera, Reolink doorbell. They wait in the Studio until you add them.</td><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/puzzle-outline-dark.svg"><img src="docs/images/icons/puzzle-outline-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Your own</b><br>Any Home Assistant card as a custom tile.</td></tr>
+<tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/account-group-outline-dark.svg"><img src="docs/images/icons/account-group-outline-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Community cards</b><br>Frigate camera, Reolink doorbell, Velair thermostat, chart, pet tracker. They wait in the Studio until you add them.</td><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/puzzle-outline-dark.svg"><img src="docs/images/icons/puzzle-outline-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Your own</b><br>Any Home Assistant card as a custom tile.</td></tr>
 </table>
 <!-- /cards:tiles -->
 
 ### Community cards
 
-Community cards ship with Casora, but they only appear in **Add tile** once you add them in the Community, so your tile list stays short. Every card has a preview of its tile and popup. Removing a card asks whether tiles that use it stay or go. Nothing is downloaded from outside your Home Assistant: a new Community card comes with a Casora release. If a card is ever retired, it disappears from **Add tile** first while existing tiles keep working, and only a later release removes it.
+Community cards ship with Casora, but they only appear in **Add a tile** once you add them in the Community, so your tile list stays short. Every card has a preview of its tile and popup. Removing a card asks whether tiles that use it stay or go. Nothing is downloaded from outside your Home Assistant: a new Community card comes with a Casora release. If a card is ever retired, it disappears from **Add a tile** first while existing tiles keep working, and only a later release removes it.
 
 
 <details>
 <summary><b>Request a card and follow it</b></summary>
 <br/>
 
-**Request a card.** In the Studio, open **Community** in the header (on a phone: the **⋯** menu) and choose **Request a card…**. Describe the device and what the tile and popup should show, and pick a few example entities. Casora prepares a GitHub issue for you and shows you the exact text before anything is sent. It contains the kind of device, units, device classes and attribute names, but no entity names, rooms or places. You submit it on GitHub yourself.
+**Request a card.** In the Studio, open **Community** in the toolbar (on a phone: **⋯** › **Community cards…**) and choose **Request a card…**. Describe the device and what the tile and popup should show, and pick a few example entities. Casora prepares a GitHub issue for you and shows you the exact text before anything is sent. It contains the kind of device, units, device classes and attribute names, but no entity names, rooms or places. You submit it on GitHub yourself.
 
 **Follow it.** Under **Your requests** in the Community the Studio shows where each request stands:
 
@@ -186,7 +186,7 @@ A visual editor in the Home Assistant sidebar. Rooms, tiles, badges and popups, 
 <!-- cards:studio -->
 <table>
 <tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/eye-outline-dark.svg"><img src="docs/images/icons/eye-outline-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>See it before you save</b><br>Switch the preview between desktop, tablet and phone. Nothing is written until you click Save, and a draft survives a reload.</td><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/history-dark.svg"><img src="docs/images/icons/history-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Go back in time</b><br>Every save becomes a version. Preview any earlier one and restore it with a click. Nothing is ever lost.</td></tr>
-<tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/auto-fix-dark.svg"><img src="docs/images/icons/auto-fix-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>New devices find their place</b><br>The device assistant spots what is new in your home and suggests the room and the tile. You decide.</td><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/tune-dark.svg"><img src="docs/images/icons/tune-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Hold is configurable</b><br>Under Controls, Tiles, Hold on tiles picks what press and hold does: quick menu, popup or Home Assistant dialog, for all tiles or one.</td></tr>
+<tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/auto-fix-dark.svg"><img src="docs/images/icons/auto-fix-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>New devices find their place</b><br>The device assistant spots what is new in your home and suggests the room and the tile. You decide.</td><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/tune-dark.svg"><img src="docs/images/icons/tune-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Hold is configurable</b><br>Under Settings, Controls, Hold on tiles picks what press and hold does: quick menu, popup or Home Assistant dialog, for all tiles or one.</td></tr>
 </table>
 <!-- /cards:studio -->
 
@@ -254,7 +254,7 @@ Updates arrive through HACS like any other integration. After an update, Casora 
 | [**button-card**](https://github.com/custom-cards/button-card) | Required, from HACS. |
 | An **AI task** in Home Assistant | Optional, for the [AI features](docs/guide.md#ai-features-optional). |
 
-Casora checks all of this when you first open the Studio and links you to anything missing. Helpers, scripts, resources and the theme are created by Casora itself.
+Casora checks all of this when you first open the Studio and links you to anything missing. Casora creates its helpers and registers its dashboard resources itself; its actions and designs come with the integration, so nothing is written into your configuration.
 
 <details>
 <summary><b>Without HACS</b></summary>
@@ -291,7 +291,7 @@ Found a bug or have an idea? [Open an issue](https://github.com/SH1FT-W/casora/i
 - **Your data, your backups.** Dashboards, versions and settings live on your own instance and are part of its regular backups.
 - **AI only if you ask.** AI features stay off until you turn them on, and then use the provider you already set up in Home Assistant.
 
-Casora only reaches outside for AI features you turn on (through the provider you configured), for integration logos from `brands.home-assistant.io` and to look for new Casora releases on GitHub. Updates come through HACS or the release page. The full list is in the [guide](docs/guide.md#privacy-in-detail).
+Casora only reaches outside for AI features you turn on (through the provider you configured), for integration logos from `brands.home-assistant.io`, to look for new Casora releases on GitHub and, if you use them, for fuel prices, the football table and the status of your card requests. Updates come through HACS or the release page. The full list is in the [guide](docs/guide.md#privacy-in-detail).
 
 ### Optional, and quietly useful
 
