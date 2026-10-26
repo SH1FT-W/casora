@@ -2635,7 +2635,25 @@
     "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Sem grupo contam todos os sensores de portas e janelas. Os ocultos e os nomes próprios valem para os emblemas e janelas de segurança.",
     "Name of this sensor in the popup's legend.": "Nome deste sensor na legenda da janela.",
     "Home Assistant notifications": "Avisos do Home Assistant",
-    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "O que scripts e automações criam com persistent_notification.create, e os avisos do próprio Home Assistant. Deslizar um aviso no sino também o remove no Home Assistant."
+    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "O que scripts e automações criam com persistent_notification.create, e os avisos do próprio Home Assistant. Deslizar um aviso no sino também o remove no Home Assistant.",
+    "Look & feel": "Aparência",
+    "Messages": "Avisos",
+    "Weather & climate": "Tempo e clima",
+    "Extras": "Extras",
+    "Search settings…": "Procurar definição…",
+    "Settings by topic. What only this dashboard affects is marked.": "Definições por tema. O que só afeta este painel está assinalado.",
+    "Design and time": "Design e hora",
+    "Bell, notifications, push and Live Activities": "Sino, avisos, push e atividades em direto",
+    "Waste, doors and windows, scenes, players and calendars": "Lixo, portas e janelas, cenas, leitores e calendários",
+    "Weather, outdoor values and electricity price": "Tempo, valores exteriores e preço da eletricidade",
+    "Hold, kiosk, font, tile size and new dashboards": "Manter premido, quiosque, letra, tamanho dos mosaicos e novos painéis",
+    "AI and fuel prices": "IA e preços de combustível",
+    "Shown at the top left": "Mostrada no canto superior esquerdo",
+    "Which messages this dashboard shows": "Que avisos este painel mostra",
+    "Order and colors": "Ordem e cores",
+    "Source and values in the chart": "Fonte e valores no gráfico",
+    "Hold, kiosk, font, tile size": "Manter premido, quiosque, letra, tamanho dos mosaicos",
+    "Installed version and betas": "Versão instalada e betas"
   },
   "patterns": [
     [

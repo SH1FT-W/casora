@@ -2635,7 +2635,25 @@
     "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Zonder groep tellen alle deur- en raamsensoren. Verborgen sensoren en eigen namen gelden voor de beveiligingsbadges en -pop-ups.",
     "Name of this sensor in the popup's legend.": "Naam van deze sensor in de legenda van de pop-up.",
     "Home Assistant notifications": "Home Assistant-meldingen",
-    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "Wat scripts en automatiseringen aanmaken met persistent_notification.create, plus de meldingen van Home Assistant zelf. Een melding wegvegen in de bel verwijdert hem ook in Home Assistant."
+    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "Wat scripts en automatiseringen aanmaken met persistent_notification.create, plus de meldingen van Home Assistant zelf. Een melding wegvegen in de bel verwijdert hem ook in Home Assistant.",
+    "Look & feel": "Uiterlijk",
+    "Messages": "Meldingen",
+    "Weather & climate": "Weer & klimaat",
+    "Extras": "Extra's",
+    "Search settings…": "Instelling zoeken…",
+    "Settings by topic. What only this dashboard affects is marked.": "Instellingen per onderwerp. Wat alleen dit dashboard betreft, is gemarkeerd.",
+    "Design and time": "Ontwerp en tijd",
+    "Bell, notifications, push and Live Activities": "Bel, meldingen, push en live-activiteiten",
+    "Waste, doors and windows, scenes, players and calendars": "Afval, deuren en ramen, scènes, spelers en agenda's",
+    "Weather, outdoor values and electricity price": "Weer, buitenwaarden en stroomprijs",
+    "Hold, kiosk, font, tile size and new dashboards": "Vasthouden, kiosk, lettertype, tegelgrootte en nieuwe dashboards",
+    "AI and fuel prices": "AI en brandstofprijzen",
+    "Shown at the top left": "Linksboven getoond",
+    "Which messages this dashboard shows": "Welke meldingen dit dashboard toont",
+    "Order and colors": "Volgorde en kleuren",
+    "Source and values in the chart": "Bron en waarden in de grafiek",
+    "Hold, kiosk, font, tile size": "Vasthouden, kiosk, lettertype, tegelgrootte",
+    "Installed version and betas": "Geïnstalleerde versie en bèta's"
   },
   "patterns": [
     [

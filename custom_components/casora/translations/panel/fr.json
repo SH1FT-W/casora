@@ -2635,7 +2635,25 @@
     "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Sans groupe, tous les capteurs de portes et fenêtres comptent. Les masqués et les noms personnalisés s'appliquent aux badges et fenêtres de sécurité.",
     "Name of this sensor in the popup's legend.": "Nom de ce capteur dans la légende de la fenêtre.",
     "Home Assistant notifications": "Notifications de Home Assistant",
-    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "Ce que les scripts et automatisations créent avec persistent_notification.create, et les avis de Home Assistant. Balayer une notification dans la cloche la supprime aussi dans Home Assistant."
+    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "Ce que les scripts et automatisations créent avec persistent_notification.create, et les avis de Home Assistant. Balayer une notification dans la cloche la supprime aussi dans Home Assistant.",
+    "Look & feel": "Apparence",
+    "Messages": "Messages",
+    "Weather & climate": "Météo et climat",
+    "Extras": "Extras",
+    "Search settings…": "Rechercher un réglage…",
+    "Settings by topic. What only this dashboard affects is marked.": "Réglages par thème. Ce qui ne concerne que ce tableau de bord est signalé.",
+    "Design and time": "Design et heure",
+    "Bell, notifications, push and Live Activities": "Cloche, notifications, push et activités en direct",
+    "Waste, doors and windows, scenes, players and calendars": "Déchets, portes et fenêtres, scènes, lecteurs et calendriers",
+    "Weather, outdoor values and electricity price": "Météo, valeurs extérieures et prix de l'électricité",
+    "Hold, kiosk, font, tile size and new dashboards": "Appui long, kiosque, police, taille des tuiles et nouveaux tableaux de bord",
+    "AI and fuel prices": "IA et prix du carburant",
+    "Shown at the top left": "Affichée en haut à gauche",
+    "Which messages this dashboard shows": "Quels messages ce tableau de bord affiche",
+    "Order and colors": "Ordre et couleurs",
+    "Source and values in the chart": "Source et valeurs du graphique",
+    "Hold, kiosk, font, tile size": "Appui long, kiosque, police, taille des tuiles",
+    "Installed version and betas": "Édition installée et bêtas"
   },
   "patterns": [
     [

@@ -2635,7 +2635,25 @@
     "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Ohne Gruppe gelten alle Tür- und Fenstersensoren. Ausgeblendete und eigene Namen gelten für die Sicherheits-Badges und -Popups.",
     "Name of this sensor in the popup's legend.": "Name dieses Sensors in der Legende des Popups.",
     "Home Assistant notifications": "Home-Assistant-Benachrichtigungen",
-    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "Was Skripte und Automationen mit persistent_notification.create anlegen, dazu die Hinweise von Home Assistant selbst. Wegwischen in der Glocke entfernt sie auch in Home Assistant."
+    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "Was Skripte und Automationen mit persistent_notification.create anlegen, dazu die Hinweise von Home Assistant selbst. Wegwischen in der Glocke entfernt sie auch in Home Assistant.",
+    "Look & feel": "Aussehen",
+    "Messages": "Meldungen",
+    "Weather & climate": "Wetter & Klima",
+    "Extras": "Extras",
+    "Search settings…": "Einstellung suchen …",
+    "Settings by topic. What only this dashboard affects is marked.": "Einstellungen nach Themen. Was nur dieses Dashboard betrifft, ist markiert.",
+    "Design and time": "Design und Uhrzeit",
+    "Bell, notifications, push and Live Activities": "Glocke, Benachrichtigungen, Push und Live-Aktivitäten",
+    "Waste, doors and windows, scenes, players and calendars": "Abfall, Türen und Fenster, Szenen, Player und Kalender",
+    "Weather, outdoor values and electricity price": "Wetter, Außenwerte und Strompreis",
+    "Hold, kiosk, font, tile size and new dashboards": "Halten, Kiosk, Schrift, Kachelgröße und neue Dashboards",
+    "AI and fuel prices": "KI und Tankpreise",
+    "Shown at the top left": "Anzeige oben links",
+    "Which messages this dashboard shows": "Welche Meldungen dieses Dashboard zeigt",
+    "Order and colors": "Reihenfolge und Farben",
+    "Source and values in the chart": "Quelle und Werte im Diagramm",
+    "Hold, kiosk, font, tile size": "Halten, Kiosk, Schrift, Kachelgröße",
+    "Installed version and betas": "Installierte Version und Betas"
   },
   "patterns": [
     [

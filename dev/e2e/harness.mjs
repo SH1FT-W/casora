@@ -80,7 +80,7 @@ export async function open({ width = 1440, height = 900, mobile = false, umzug =
   // ohne Angabe gilt der Standard des Panels. Option studio: 'a'|'b' überschreibt.
   const studio = arguments[0] && arguments[0].studio || process.env.CASORA_STUDIO;
   if (studio === 'a' || studio === 'b') {
-    await context.addInitScript((v) => localStorage.setItem('casora.studio.b', v), studio === 'b' ? '1' : '0');
+    await context.addInitScript((v) => { if (v) localStorage.setItem('casora.studio.legacy', '1'); else localStorage.removeItem('casora.studio.legacy'); }, studio === 'a');
   }
   // serviceWorkers: 'block' lässt navigator.serviceWorker.register() nichts zurückgeben. Das
   // HA-Frontend registriert auf localhost aber /sw-modern.js und ruft dann

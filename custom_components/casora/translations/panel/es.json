@@ -2635,7 +2635,25 @@
     "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Sin grupo cuentan todos los sensores de puertas y ventanas. Los ocultos y los nombres propios se aplican a las insignias y ventanas de seguridad.",
     "Name of this sensor in the popup's legend.": "Nombre de este sensor en la leyenda de la ventana emergente.",
     "Home Assistant notifications": "Avisos de Home Assistant",
-    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "Lo que crean scripts y automatizaciones con persistent_notification.create, y los avisos de Home Assistant. Al deslizar uno en la campana, también se descarta en Home Assistant."
+    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "Lo que crean scripts y automatizaciones con persistent_notification.create, y los avisos de Home Assistant. Al deslizar uno en la campana, también se descarta en Home Assistant.",
+    "Look & feel": "Apariencia",
+    "Messages": "Avisos",
+    "Weather & climate": "Tiempo y clima",
+    "Extras": "Extras",
+    "Search settings…": "Buscar ajuste…",
+    "Settings by topic. What only this dashboard affects is marked.": "Ajustes por temas. Lo que solo afecta a este panel está marcado.",
+    "Design and time": "Diseño y hora",
+    "Bell, notifications, push and Live Activities": "Campana, avisos, push y actividades en vivo",
+    "Waste, doors and windows, scenes, players and calendars": "Basura, puertas y ventanas, escenas, reproductores y calendarios",
+    "Weather, outdoor values and electricity price": "Tiempo, valores exteriores y precio de la luz",
+    "Hold, kiosk, font, tile size and new dashboards": "Mantener, quiosco, fuente, tamaño de mosaico y paneles nuevos",
+    "AI and fuel prices": "IA y precios de combustible",
+    "Shown at the top left": "Arriba a la izquierda",
+    "Which messages this dashboard shows": "Qué avisos muestra este panel",
+    "Order and colors": "Orden y colores",
+    "Source and values in the chart": "Fuente y valores del gráfico",
+    "Hold, kiosk, font, tile size": "Mantener, quiosco, fuente, tamaño de mosaico",
+    "Installed version and betas": "Versión instalada y betas"
   },
   "patterns": [
     [

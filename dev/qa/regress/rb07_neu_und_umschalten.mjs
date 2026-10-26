@@ -2,8 +2,8 @@
 // @parallel: ui
 // Neues Studio (B, ab 1.1.0-beta.1): Update-Hinweis und Umschalter. Erwartet: Nach dem Update von
 // einer älteren Version zeigt „Neu in Casora“ die volle Version (1.1.0-beta.1, nicht
-// „1.1.0-beta“) mit ihren Neuerungen; das Studio nennt dieselbe Version. Wer über
-// „…“ › Hilfe › „Bisheriges Studio öffnen“ zum bisherigen Studio wechselt, behält das nach neuem Laden (pro Browser).
+// „1.1.0-beta“) mit ihren Neuerungen; das Studio nennt dieselbe Version. Since 26.10.62b5 there is no way back to the
+// previous Studio: an old choice in this browser (casora.studio.b = "0") still opens the new one after a reload.
 // Es wird nichts gespeichert.
 import fs from 'node:fs';
 import { open, studio, casoraDashboard, check, need, finish, usePage } from './lib.mjs';
@@ -34,16 +34,10 @@ await o.page.waitForTimeout(800);
 const ver = await H(() => { const v = window.__panel().shadowRoot.querySelector('.ver'); return v ? v.textContent.trim() : null; });
 await check('Studio nennt v' + version, ver === 'v' + version, ver);
 
-// Umschalten zum bisherigen Studio, neu laden
-await H(() => { const p = window.__panel(); if (p._bClose) p._bClose(); });
-await o.page.locator('#more').click();
-await o.page.waitForTimeout(500);
-await o.page.locator('.combo-opt', { hasText: /Hilfe …|Help…/ }).first().click();
-await o.page.waitForTimeout(600);
-await o.page.locator('.combo-opt', { hasText: /Bisheriges Studio|previous Studio/ }).first().click();
-await o.page.waitForTimeout(1500);
+// An old choice of the previous Studio no longer counts (26.10.62b5).
+await H(() => { const p = window.__panel(); if (p._bClose) p._bClose(); localStorage.setItem('casora.studio.b', '0'); });
 await o.page.reload();
 await studio(o.page, dash.url);
 const a = await H(() => ({ b: window.__panel().classList.contains('bmode'), key: localStorage.getItem('casora.studio.b') }));
-await check('Bisheriges Studio bleibt nach neuem Laden', !a.b && a.key === '0', a);
+await check('früher gewähltes bisheriges Studio: nach neuem Laden trotzdem das neue', a.b, a);
 await finish();

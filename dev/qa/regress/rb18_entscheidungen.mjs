@@ -130,20 +130,18 @@ const closePopup = async (pg) => { await pg.evaluate(() => window.casoraPopup &&
 
   // 3) Design unter Einstellungen
   await P(() => window.__panel()._bClose());
-  await page.locator('.btool[data-b=dash]').click(); await W(page, 600);
-  const dm = await menu(page);
-  await check('3: Dashboard-Menü: „Bedienung“ und Verweis „Design (für alle Dashboards)“',
-    dm.some((t) => /^Bedienung/.test(t)) && dm.some((t) => /^Design \(für alle Dashboards\)/.test(t)) && !dm.some((t) => /Design & Bedienung/.test(t)), dm);
-  await page.locator('.combo-opt', { hasText: 'Design (für alle Dashboards)' }).first().click();
+  // Since 26.10.62b5: Einstellungen › Bedienung › Bedienung (this dashboard) keeps the link to the design for all.
+  await page.locator('.btools .btool[data-b=home]').first().click(); await W(page, 1200);
+  const first = await P(() => { const t = window.__panel().shadowRoot.querySelector('#pane .cs-hubtile'); return t ? t.textContent.replace(/\s+/g, ' ').trim() : ''; });
+  await check('3: Einstellungen beginnen mit „Aussehen“ (Design und Uhrzeit)', /^Aussehen.*Design/.test(first), first);
+  await P(() => window.__panel()._csHubGo({ sec: 'General' })); await W(page, 1500);
+  const link = page.locator('#pane .casora-looklink').first();
+  await check('3: Bedienung: Verweis „Design (für alle Dashboards)“', (await link.count()) > 0 && /^Design \(für alle Dashboards\)/.test(await link.textContent()));
+  await link.click();
   await W(page, 1500);
   await check('3: Verweis öffnet „Einstellungen › Design“', await P(() => { const p = window.__panel(); return p._csOpen && p._csPage === 'design' && !!p.shadowRoot.querySelector('#pane .casora-looks'); }));
   await P(() => { const p = window.__panel(); p._csClose && p._csClose(); p._bClose(); });
   await W(page, 600);
-  const setBtn = page.locator('.btools .btool', { hasText: 'Einstellungen' }).first();
-  await setBtn.click(); await W(page, 600);
-  const hm = await menu(page);
-  await check('3: Menü „Einstellungen“ beginnt mit „Design“', /^Design/.test(hm[0] || ''), hm);
-  await page.keyboard.press('Escape'); await W(page, 400);
 
   // 4) Lila unter Casora
   await P(() => { const p = window.__panel(); p._room = 0; p._renderTabs(); p._bOpen = true; p._select({ group: 'rooms', key: 'Scenes', label: 'Scenes' }); });

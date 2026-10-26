@@ -213,22 +213,19 @@ const SW = () => {
 };
 const openNotify = async (page, mobile) => {
   if (mobile) {
-    // Handy-Studio: Abschnitte als Liste, „Benachrichtigungen“ antippen klappt ihn auf.
-    const at = await page.evaluate(() => {
-      const c = window.__panel().shadowRoot.querySelector('section[data-k="Notifications"] .chead');
-      if (!c) return null;
-      c.scrollIntoView({ block: 'center' });
-      const q = c.getBoundingClientRect();
-      return { x: q.x + q.width / 2, y: q.y + q.height / 2 };
-    });
-    if (at) { await page.mouse.click(at.x, at.y); await page.waitForTimeout(1500); }
+    // Phone Studio (26.10.62b5): Einstellungen › Meldungen › Benachrichtigungen opens the section in the sheet.
+    await page.evaluate(() => window.__panel()._csHubGo({ sec: 'Notifications' }));
+    await page.waitForTimeout(1500);
     return;
   }
-  const btn = page.locator('.btool[data-b=dash]');
+  // Since 26.10.62b5: Einstellungen › Meldungen › Benachrichtigungen (only this dashboard).
+  const btn = page.locator('.btool[data-b=home]');
   if (await btn.count() && await btn.first().isVisible()) {
     await btn.first().click();
-    await page.waitForTimeout(600);
-    await page.locator('.combo-opt', { hasText: 'Benachrichtigungen' }).first().click();
+    await page.waitForTimeout(1200);
+    await page.locator('.cs-hubtile', { hasText: 'Meldungen' }).first().click();
+    await page.waitForTimeout(900);
+    await page.locator('.frow').filter({ has: page.locator('b', { hasText: /^Benachrichtigungen$/ }) }).first().click();
   }
   await page.waitForTimeout(1500);
 };

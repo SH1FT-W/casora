@@ -2635,7 +2635,25 @@
     "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Senza gruppo contano tutti i sensori di porte e finestre. Quelli nascosti e i nomi personalizzati valgono per i badge e i popup di sicurezza.",
     "Name of this sensor in the popup's legend.": "Nome di questo sensore nella legenda del popup.",
     "Home Assistant notifications": "Notifiche di Home Assistant",
-    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "Ciò che script e automazioni creano con persistent_notification.create, e gli avvisi di Home Assistant. Scorrere via una notifica nella campanella la elimina anche in Home Assistant."
+    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "Ciò che script e automazioni creano con persistent_notification.create, e gli avvisi di Home Assistant. Scorrere via una notifica nella campanella la elimina anche in Home Assistant.",
+    "Look & feel": "Aspetto",
+    "Messages": "Messaggi",
+    "Weather & climate": "Meteo e clima",
+    "Extras": "Extra",
+    "Search settings…": "Cerca impostazione…",
+    "Settings by topic. What only this dashboard affects is marked.": "Impostazioni per argomento. Ciò che riguarda solo questa dashboard è segnato.",
+    "Design and time": "Design e ora",
+    "Bell, notifications, push and Live Activities": "Campanella, notifiche, push e attività live",
+    "Waste, doors and windows, scenes, players and calendars": "Rifiuti, porte e finestre, scene, lettori e calendari",
+    "Weather, outdoor values and electricity price": "Meteo, valori esterni e prezzo dell'elettricità",
+    "Hold, kiosk, font, tile size and new dashboards": "Pressione lunga, kiosk, carattere, dimensione riquadri e nuove dashboard",
+    "AI and fuel prices": "IA e prezzi del carburante",
+    "Shown at the top left": "Mostrata in alto a sinistra",
+    "Which messages this dashboard shows": "Quali messaggi mostra questa dashboard",
+    "Order and colors": "Ordine e colori",
+    "Source and values in the chart": "Fonte e valori nel grafico",
+    "Hold, kiosk, font, tile size": "Pressione lunga, kiosk, carattere, dimensione riquadri",
+    "Installed version and betas": "Versione installata e beta"
   },
   "patterns": [
     [

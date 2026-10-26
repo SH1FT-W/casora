@@ -1,8 +1,8 @@
 // @zustand: arbeit
 // @parallel: ui
 // Neues Studio – Orientierung und Wege (UX-Runde 06.10.2026, V-01 … V-14). Erwartet:
-// Werkzeugleiste „Inhalt“ (nicht „Elemente“) mit Untertitel beim Zeigen; Dashboard-Menü beginnt mit
-// „Gilt für: dieses Dashboard“, Einstellungen mit „Gilt für: alle Dashboards“; der Kachel-Editor
+// Werkzeugleiste „Inhalt“ (nicht „Elemente“) mit Untertitel beim Zeigen; „Einstellungen“ nach Themen (26.10.62b5):
+// this dashboard's sections carry „Nur dieses Dashboard“ on their row, pages for all dashboards do not; der Kachel-Editor
 // nennt den Weg („… › Kacheln · Gilt für: diesen Raum“); „+“ öffnet „Was soll auf das Dashboard?“,
 // ein Gerät aus einem anderen Raum fragt „Wohin?“ und landet dort mit der passenden Kachelart;
 // „…“ heißt „Hilfe & Extras“ ohne Zeitreise (die steht im Titelmenü). Am Handy: Rückgängig und
@@ -23,18 +23,16 @@ await page.waitForTimeout(500);
 const list = await H(() => { const b = window.__panel().shadowRoot.querySelector('.btools [data-b="list"]'); return { t: b.innerText, tip: b.title }; });
 await check('Werkzeugleiste: „Inhalt“ mit Untertitel', /Inhalt/.test(list.t) && /Foto, Badges, Kacheln und Popups/.test(list.tip), list);
 
-// V-01: Gilt für
-await tool('dash');
-await page.waitForTimeout(500);
-const dm = await menuText();
-// Seit 07.10.2026 steht das Design unter „Einstellungen“; das Dashboard-Menü verweist nur noch darauf.
-await check('Dashboard-Menü: „Gilt für: dieses Dashboard“, Verweis aufs Design für alle', /^Gilt für: dieses Dashboard/.test(dm) && /Design \(für alle Dashboards\)/.test(dm), dm.slice(0, 160));
-await page.keyboard.press('Escape');
+// V-01: what a setting applies to – since 26.10.62b5 on the row of the topic page.
 await tool('home');
+await page.waitForTimeout(1200);
+await H(() => window.__panel()._csShow('t-msg'));
+await page.waitForTimeout(1000);
+const rows = await H(() => [...window.__panel().shadowRoot.querySelectorAll('#pane .frow')].map((r) => r.textContent.replace(/\s+/g, ' ').trim()));
+await check('Thema Meldungen: Benachrichtigungen „Nur dieses Dashboard“, Glocke & Meldungen ohne',
+  rows.some((t) => /^Benachrichtigungen.*Nur dieses Dashboard/.test(t)) && rows.some((t) => /^Glocke & Meldungen/.test(t) && !/Nur dieses Dashboard/.test(t)), rows);
+await H(() => window.__panel()._bClose());
 await page.waitForTimeout(500);
-const hm = await menuText();
-await check('Einstellungen-Menü: „Gilt für: alle Dashboards“', /^Gilt für: alle Dashboards/.test(hm), hm.slice(0, 80));
-await page.keyboard.press('Escape');
 
 // V-07: Weg im Kachel-Editor
 const tileRoom = await H(() => { const p = window.__panel(); const rs = p._state.compact.rooms;

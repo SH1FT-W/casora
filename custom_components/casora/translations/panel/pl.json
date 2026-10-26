@@ -2635,7 +2635,25 @@
     "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Bez grupy liczą się wszystkie czujniki drzwi i okien. Ukryte i własne nazwy dotyczą odznak i okienek bezpieczeństwa.",
     "Name of this sensor in the popup's legend.": "Nazwa tego czujnika w legendzie okienka.",
     "Home Assistant notifications": "Powiadomienia Home Assistant",
-    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "To, co skrypty i automatyzacje tworzą przez persistent_notification.create, oraz komunikaty samego Home Assistant. Przesunięcie w dzwonku usuwa powiadomienie także w Home Assistant."
+    "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too.": "To, co skrypty i automatyzacje tworzą przez persistent_notification.create, oraz komunikaty samego Home Assistant. Przesunięcie w dzwonku usuwa powiadomienie także w Home Assistant.",
+    "Look & feel": "Wygląd",
+    "Messages": "Komunikaty",
+    "Weather & climate": "Pogoda i klimat",
+    "Extras": "Dodatki",
+    "Search settings…": "Szukaj ustawienia…",
+    "Settings by topic. What only this dashboard affects is marked.": "Ustawienia według tematów. To, co dotyczy tylko tego pulpitu, jest oznaczone.",
+    "Design and time": "Wygląd i godzina",
+    "Bell, notifications, push and Live Activities": "Dzwonek, powiadomienia, push i aktywności na żywo",
+    "Waste, doors and windows, scenes, players and calendars": "Odpady, drzwi i okna, sceny, odtwarzacze i kalendarze",
+    "Weather, outdoor values and electricity price": "Pogoda, wartości zewnętrzne i cena prądu",
+    "Hold, kiosk, font, tile size and new dashboards": "Przytrzymanie, kiosk, czcionka, rozmiar kafelków i nowe pulpity",
+    "AI and fuel prices": "AI i ceny paliwa",
+    "Shown at the top left": "Wyświetlana w lewym górnym rogu",
+    "Which messages this dashboard shows": "Jakie komunikaty pokazuje ten pulpit",
+    "Order and colors": "Kolejność i kolory",
+    "Source and values in the chart": "Źródło i wartości na wykresie",
+    "Hold, kiosk, font, tile size": "Przytrzymanie, kiosk, czcionka, rozmiar kafelków",
+    "Installed version and betas": "Zainstalowana wersja i bety"
   },
   "patterns": [
     [

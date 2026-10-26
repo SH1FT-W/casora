@@ -7,12 +7,11 @@
 // Data model, saving ("Done"), undo, migration and templates stay unchanged –
 // this module only arranges what the panel draws anyway.
 //
-// Switchable via "…" › Help › "Open the previous Studio" or, in the previous Studio, "…" ›
-// "Open the new Studio" (per browser, localStorage casora.studio.b).
+// The only Studio since 26.10.62b5: the switch back to the previous layout is gone, an earlier choice
+// (localStorage casora.studio.b = "0") no longer counts. Tests of the previous layout's own parts set
+// casora.studio.legacy = "1" (dev/e2e/harness.mjs, studio: 'a') – nothing in the Studio leads there.
 (() => {
-  const KEY = "casora.studio.b";
-  // Default from 1.1.0; the previous Studio stays reachable via "…" › Help.
-  const DEFAULT_ON = true;
+  const LEGACY = "casora.studio.legacy";
 
   const ICON = {
     rooms: '<path d="M4 11V8a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v3M2 12a2 2 0 0 1 4 0v3h12v-3a2 2 0 0 1 4 0v5H2zM5 17v2M19 17v2"/>',
@@ -325,14 +324,11 @@
     };
 
     P._bOn = function () {
-      try {
-        const v = localStorage.getItem(KEY);
-        return v === null ? DEFAULT_ON : v === "1";
-      } catch (e) { return DEFAULT_ON; }
+      try { return localStorage.getItem(LEGACY) !== "1"; } catch (e) { return true; }
     };
 
     P._bSetOn = function (on) {
-      try { localStorage.setItem(KEY, on ? "1" : "0"); } catch (e) { /* session only */ }
+      try { if (on) localStorage.removeItem(LEGACY); else localStorage.setItem(LEGACY, "1"); } catch (e) { /* session only */ }
       this._bOpen = false;
       this._bApply();
       if (this._state) {
@@ -544,9 +540,9 @@
         rb.querySelector(".blabel").setAttribute("data-no-i18n", "");
         // V-02: "Content" instead of "Elements" – everything in this room.
         mk("list", "list", "Content", () => this._bShowList());
-        mk("dash", "dash", "Dashboard", (b) => this._bDashMenu(b));
-        // UX-04: settings for all dashboards – not "Home & Devices" (only the first page is called that).
-        mk("home", "gear", "Settings", (b) => this._bHomeMenu(b));
+        // Variant B (26.10.2026): one place for every setting, by topic – the menus "Dashboard" (this dashboard)
+        // and "Settings" (all dashboards) became one (casora-panel-settings.js, page "start").
+        mk("home", "gear", "Settings", (b) => this._bOpenSettings(b));
         // 1.5: Community – add/remove community cards, card request (casora-panel-community.js).
         const com = mk("com", "community", "Community", () => this._comCatalog && this._comCatalog());
         com.setAttribute("aria-haspopup", "dialog");
@@ -639,8 +635,7 @@
         mk("rooms", "rooms", "Rooms", (b) => this._roomTitleMenu(b));
         mk("list", "list", "Content", () => this._bShowList());
         mk("add", "plus", "Add a tile", () => this._bAddTile(), "bplus");
-        mk("dash", "dash", "Dashboard", (b) => this._bDashMenu(b));
-        mk("home", "gear", "Settings", (b) => this._bHomeMenu(b));
+        mk("home", "gear", "Settings", (b) => this._bOpenSettings(b));
         shell.appendChild(bar);
       }
     };
@@ -797,6 +792,13 @@
       ["ai", "AI", "assist"], ["outdoor", "Outdoor & Price", "temp-medium"], ["vent", "Ventilation", "fan"],
       ["live", "Live Activities", "iphone"], ["fuel", "Fuel prices", "car"],
     ];
+    P._bOpenSettings = function (anchor) {
+      this._bFrom = anchor;
+      this._bRooms = false;
+      if (typeof this._csShow !== "function") return this._bHomeMenu(anchor);
+      this._bOpen = true;
+      return this._csShow("start");
+    };
     P._bHomeMenu = function (anchor) {
       const items = PAGES.map(([id, l, g]) => ({ id: "page:" + id, label: l, glyph: g, plainGlyph: true,
         group: "For all dashboards" }));
@@ -1238,9 +1240,6 @@
       if (r && typeof r.then === "function") r.then(() => this._bApply());
     }));
 
-    // Switching between the two Studios (V-08): in the new Studio under "…" › Help
-    // "Open the previous Studio", in the previous Studio in the "…" "Open the new Studio".
-    // "New Studio" with a check mark sounded as if there were a better old one.
     const menuAt = P._menuAt;
     P._menuAt = function (anchor, items, onPick, mopts) {
       // Type picker from the "+" of the bottom bar: open at the "+", not at the hidden button in the sheet.
@@ -1249,20 +1248,6 @@
       if (this.classList.contains("bmode") && Array.isArray(items) && items.some((x) => x && x.id === "hints")) {
         const DOC = ["renamedash", "icondash", "delete", "addmobile", "casora_versions"];
         items = items.filter((x) => !(x && DOC.indexOf(x.id) >= 0));
-      }
-      if (Array.isArray(items) && !this._bOn() && items.some((x) => x && x.id === "hints") && !items.some((x) => x && x.id === "studio_b")) {
-        const at = items.findIndex((x) => x && x.id === "hints");
-        items = items.slice();
-        items.splice(at, 0, { id: "studio_b", label: "Open the new Studio", glyph: "tile", plainGlyph: true });
-        const pick = onPick;
-        onPick = (id) => (id === "studio_b" ? this._bSetOn(true) : pick(id));
-      }
-      // Help submenu (welcome … issue): back to the previous Studio.
-      if (Array.isArray(items) && this._bOn() && items.some((x) => x && x.id === "welcome") && items.some((x) => x && x.id === "issue")
-        && !items.some((x) => x && x.id === "studio_b")) {
-        items = items.concat([{ id: "studio_b", label: "Open the previous Studio", glyph: "tile", plainGlyph: true, group: "studio", quiet: true }]);
-        const pick = onPick;
-        onPick = (id) => (id === "studio_b" ? this._bSetOn(false) : pick(id));
       }
       // Room menu in B: sort rooms (the sidebar's room list is missing here).
       if (this.classList.contains("bmode") && Array.isArray(items)

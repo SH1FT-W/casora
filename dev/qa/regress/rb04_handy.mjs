@@ -27,7 +27,8 @@ for (const safari of [false, true]) {
       bar: [...r.querySelectorAll('.bbar button')].filter((b) => b.getClientRects().length).map((b) => b.dataset.b),
       insp: vis('.inspector') }; });
   await check(tag + ': Vorschau sichtbar statt Liste', s0.phone && s0.map && !s0.insp, s0);
-  await check(tag + ': untere Leiste vollständig', ['rooms', 'list', 'add', 'dash', 'home'].every((k) => s0.bar.includes(k)), s0.bar);
+  // Variant B (26.10.62b5): one "Einstellungen" (home) instead of "Dashboard" and "Einstellungen".
+  await check(tag + ': untere Leiste vollständig', ['rooms', 'list', 'add', 'home'].every((k) => s0.bar.includes(k)) && !s0.bar.includes('dash'), s0.bar);
 
   // Kachel der Vorschau (Tablet- oder Mobil-Vorschau) in der Mitte antippen.
   const at = await H(() => { const p = window.__panel();
@@ -57,12 +58,13 @@ for (const safari of [false, true]) {
   await check(tag + ': Antippen der Abdunkelung schließt', !(await H(() => window.__panel().classList.contains('binsp'))));
 
   await o.page.locator('.bbar [data-b=home]').tap();
-  await o.page.waitForTimeout(700);
-  const opt = o.page.locator('.combo-opt', { hasText: /Haus & Geräte|Home & Devices/ }).first();
-  await opt.tap();
+  await o.page.waitForTimeout(1200);
+  await o.page.locator('.cs-hubtile', { hasText: /Haus & Geräte|Home & Devices/ }).first().tap();
+  await o.page.waitForTimeout(1000);
+  await o.page.locator('.frow').filter({ has: o.page.locator('b', { hasText: /^(Haus & Geräte|Home & Devices)$/ }) }).first().tap();
   await o.page.waitForTimeout(2500);
-  const s3 = await H(() => { const p = window.__panel(); return { page: !!p._csOpen, open: p.classList.contains('binsp') }; });
-  await check(tag + ': Zuhause → Haus & Geräte öffnet die Einstellungsseite', s3.page && s3.open, s3);
+  const s3 = await H(() => { const p = window.__panel(); return { page: !!p._csOpen, id: p._csPage, open: p.classList.contains('binsp') }; });
+  await check(tag + ': Einstellungen › Haus & Geräte › Haus & Geräte öffnet die Einstellungsseite', s3.page && s3.id === 'home' && s3.open, s3);
   await o.browser.close();
 }
 await finish();

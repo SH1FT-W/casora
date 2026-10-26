@@ -44,9 +44,46 @@
     { id: "fuel", label: "Fuel prices", icon: "car", tone: "set-fuel", tanken: true,
       lede: "Gas stations nearby in the car popup: price, distance, open or closed." },
   ];
-  const pageOf = (id) => PAGES.find((p) => p.id === id) || PAGES[0];
+  // Settings by topic (variant B, 26.10.2026): one place for every setting. A topic lists the pages above ("page",
+  // all dashboards) and the dashboard's own sections ("sec", only this dashboard) that belong to it.
+  const HUB = [
+    { id: "look", label: "Look & feel", icon: "desktop", tone: "set-design", sub: "Design and time",
+      items: [{ page: "design" }, { sec: "Time", label: "Time", icon: "clock", sub: "Shown at the top left" }] },
+    { id: "msg", label: "Messages", icon: "bell", tone: "set-alerts", sub: "Bell, notifications, push and Live Activities",
+      items: [{ sec: "Notifications", label: "Notifications", icon: "bell", sub: "Which messages this dashboard shows" },
+        { page: "alerts" }, { page: "vent" }, { page: "live" }] },
+    { id: "house", label: "Home & Devices", icon: "home", tone: "set-home", sub: "Waste, doors and windows, scenes, players and calendars",
+      items: [{ page: "home" }, { page: "calendar" }, { sec: "Scenes", label: "Scenes", icon: "scenes", sub: "Order and colors" }] },
+    { id: "wx", label: "Weather & climate", icon: "temp-medium", tone: "set-outdoor", sub: "Weather, outdoor values and electricity price",
+      items: [{ sec: "Weather", label: "Weather", icon: "weather", sub: "Source and values in the chart" }, { page: "outdoor" }] },
+    { id: "ctl", label: "Controls", icon: "settings", tone: "set-dashboards", sub: "Hold, kiosk, font, tile size and new dashboards",
+      items: [{ sec: "General", label: "Controls", icon: "settings", sub: "Hold, kiosk, font, tile size" }, { page: "dashboards" }] },
+    { id: "ext", label: "Extras", icon: "assist", tone: "set-ai", sub: "AI and fuel prices", items: [{ page: "ai" }, { page: "fuel" }] },
+  ];
+  const HUB_START = { id: "start", label: "Settings", hub: true, lede: "Settings by topic. What only this dashboard affects is marked." };
+  const hubPage = (id) => {
+    if (id === "start") return HUB_START;
+    const h = HUB.find((x) => "t-" + x.id === id);
+    return h ? { id: "t-" + h.id, label: h.label, hub: true, topic: h, lede: h.sub } : null;
+  };
+  const pageOf = (id) => hubPage(id) || PAGES.find((p) => p.id === id) || PAGES[0];
 
   const CSS = ".cs-wrap{padding:4px 0 28px}"
+    // Settings by topic: search, topic tiles (two columns), "only this dashboard" on the row.
+    + ".cs-hubsearch{margin:0 0 12px}.cs-hubsearch input{width:100%;box-sizing:border-box;height:42px;padding:0 14px;border:0;outline:none;"
+    +   "border-radius:var(--r-m,14px);background:var(--casora-popup-row-fill,rgba(255,255,255,.10));color:var(--casora-popup-tiles-text-primary,#fff);font:inherit;font-size:var(--t-body)}"
+    + ".cs-hubsearch input:focus-visible{box-shadow:0 0 0 2px var(--accent)}"
+    + ".cs-hubgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 18px}"
+    + ".cs-hubtile{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px;min-height:104px;"
+    +   "border-radius:var(--casora-popup-row-radius,20px);background:var(--casora-popup-row-fill,rgba(255,255,255,.10));color:var(--casora-popup-tiles-text-primary,#fff)}"
+    + ".cs-hubtile:hover{background:var(--wash-hover,var(--casora-studio-wash-hover,rgba(255,255,255,.06)))}"
+    + ".cs-hubtile:focus-visible{outline:2px solid var(--accent);outline-offset:2px}"
+    + ".cs-hubtile b{margin-top:6px;font-size:var(--t-body);font-weight:600}"
+    + ".cs-hubtile span:last-child{font-size:var(--t-foot);line-height:1.3;color:var(--ink-2)}"
+    + ".cs-hubback{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin:0 6px 10px;font-size:var(--t-callout);font-weight:600;color:var(--accent)}"
+    + "@media (max-width:600px){.rdetail.cs-dash{white-space:normal!important;max-width:84px;text-align:center;line-height:1.15}}"
+    + ".rdetail.cs-dash{flex:none;font-size:var(--t-caption);font-weight:700;padding:3px 8px;border-radius:8px;white-space:nowrap;"
+    +   "color:var(--casora-color-orange,#FF9230);background:color-mix(in srgb,var(--casora-color-orange,#FF9230) 16%,transparent)}"
     // Same sizes as the tile editor (inspector): field label 13 px, value/input
     // 15 px at 38 px field height, groups with the radius of the editor cards and 10 px indent.
     // Checked by dev/qa/regress/r19_einstellungen_feldgroesse.mjs.
@@ -716,7 +753,18 @@
       const cs = this._cs;
       const page = pageOf(pageId);
       host.replaceChildren();
+      // Desktop: a page opened from the topics has its way back (the phone sheet has its own ‹).
+      if (!page.hub || page.topic) {
+        if ((page.topic || this._csHubBack) && this._csDesk()) {
+          const back = el("button", "cs-hubback", "‹ " + t(page.topic ? "Settings" : "Back"));
+          back.type = "button";
+          const to = page.topic ? "start" : this._csHubTopic ? "t-" + this._csHubTopic : "start";
+          back.onclick = () => this._csShow(to);
+          host.appendChild(back);
+        }
+      }
       host.appendChild(el("p", "cs-lede", t(page.lede)));
+      if (page.hub) { this._csFillHub(host, page); return; }
       if (page.look) {
         if (!(typeof this._casoraLookPicker === "function" && this._casoraLookPicker(host))) {
           host.appendChild(el("p", "cs-lede", t("No Casora design is installed.")));
@@ -750,6 +798,90 @@
       } else {
         this._csFillOptions(host, page.id);
       }
+    };
+
+    // ── Settings by topic (variant B) ───────────────────────────────────────────
+    // New Studio: pages in the inspector (on the phone its sheet), as the toolbar always opened them; the full-screen
+    // sheet only in the previous layout's phone view.
+    P._csDesk = function () {
+      return split(this) || this.classList.contains("bmode");
+    };
+    const hubItem = (it, topic) => {
+      if (it.page) {
+        const p = PAGES.find((x) => x.id === it.page);
+        return { label: p.label, sub: p.lede, icon: p.icon, tone: p.tone, go: { page: p.id, topic: topic && topic.id } };
+      }
+      if (it.updates) return { label: "Updates", sub: it.sub, icon: "updates", tone: "updates", go: { updates: true } };
+      return { label: it.label, sub: it.sub || "", icon: it.icon, tone: topic.tone, dash: true, go: { sec: it.sec } };
+    };
+    P._csHubGo = function (go) {
+      if (go.page) {
+        this._csHubBack = true;
+        this._csHubTopic = go.topic || null;
+        return this._csShow(go.page);
+      }
+      if (go.updates) return typeof this._cuFromMenu === "function" ? this._cuFromMenu() : null;
+      if (go.sec) {
+        this._csHubBack = false;
+        if (this._flowMode) this._exitFlow(false);
+        this._csClose();
+        if (typeof this._bLeavePages === "function") this._bLeavePages();
+        // The inspector (on the phone its sheet) shows the section, also when the topics were not open before.
+        if (this.classList.contains("bmode")) this._bOpen = true;
+        this._select({ group: "rooms", key: go.sec, label: go.sec });
+      }
+      return null;
+    };
+    P._csFillHub = function (host, page) {
+      const row = (list, it) => this._flowRow(list, { mask: icon(it.icon), tint: tint(it), title: t(it.label),
+        sub: it.sub ? t(it.sub) : null, detail: it.dash ? t("Only this dashboard") : undefined,
+        detailTone: it.dash ? "cs-dash" : undefined, chevron: true, onTap: () => this._csHubGo(it.go) });
+      if (page.topic) {
+        const list = this._flowGroup(host);
+        page.topic.items.forEach((x) => row(list, hubItem(x, page.topic)));
+        return;
+      }
+      this._csHubBack = false;
+      const box = el("div", "cs-hubsearch");
+      const inp = el("input", "fin");
+      inp.type = "search";
+      inp.placeholder = t("Search settings…");
+      inp.setAttribute("aria-label", t("Search settings…"));
+      box.appendChild(inp);
+      const res = el("div"), main = el("div");
+      host.append(box, res, main);
+      const grid = el("div", "cs-hubgrid");
+      HUB.forEach((h) => {
+        const b = el("button", "cs-hubtile");
+        b.type = "button";
+        const ic = el("span", "rico"), mk = el("span", "mk");
+        ic.style.setProperty("--tint", tint(h));
+        mk.style.setProperty("--i", "url('" + icon(h.icon) + "')");
+        ic.appendChild(mk);
+        b.append(ic, el("b", "", t(h.label)), el("span", "", t(h.sub)));
+        b.onclick = () => this._csShow("t-" + h.id);
+        grid.appendChild(b);
+      });
+      main.appendChild(grid);
+      const sysItems = typeof this._cuFromMenu === "function" ? [{ updates: true, sub: "Installed version and betas" }] : [];
+      if (sysItems.length) {
+        const sys = this._flowGroup(main, { header: t("System") });
+        sysItems.forEach((x) => row(sys, hubItem(x)));
+      }
+      // Search: every entry of every topic, by its (translated) name, description and topic.
+      const all = [];
+      HUB.forEach((h) => h.items.forEach((x) => { const it = hubItem(x, h); all.push({ it, hay: [t(it.label), it.sub ? t(it.sub) : "", t(h.label)].join(" ").toLowerCase() }); }));
+      sysItems.forEach((x) => { const it = hubItem(x); all.push({ it, hay: [t(it.label), t(it.sub || "")].join(" ").toLowerCase() }); });
+      inp.oninput = () => {
+        const q = inp.value.trim().toLowerCase();
+        res.replaceChildren();
+        main.style.display = q ? "none" : "";
+        if (!q) return;
+        const hits = all.filter((a) => q.split(/\s+/).every((w) => a.hay.includes(w)));
+        if (!hits.length) { res.appendChild(el("p", "cs-lede", t("No match"))); return; }
+        const list = this._flowGroup(res);
+        hits.forEach((a) => row(list, a.it));
+      };
     };
 
     // Update the save bar and the dot in the sidebar.
@@ -1256,7 +1388,8 @@
       wrap.appendChild(body);
       // Design applies right away (own path, casora-panel-addons.js) – without the "Save settings" bar.
       const bar = el("div", "cs-bar" + (this._csDirty() && !page.look ? "" : " cs-clean"));
-      if (page.look) bar.style.display = "none";
+      // Design and the topic pages: nothing to save here (unsaved drafts keep their bar on their own page).
+      if (page.look || (page.hub && !this._csDirty())) bar.style.display = "none";
       const state = el("span", "cs-state");
       const save = btn(t("Save settings"), () => this._csSave());
       save.className = "cs-save";
@@ -1315,7 +1448,7 @@
 
     // From anywhere (hints in the Studio pages, updates, menu): desktop page or sheet.
     P._csShow = function (pageId, focus) {
-      if (split(this)) return this._csOpenPage(pageId, focus);
+      if (this._csDesk()) return this._csOpenPage(pageId || "start", focus);
       return this._csSheet(pageId || null, focus);
     };
 
@@ -1458,7 +1591,8 @@
     P._csSheet = async function (pageId, focus, quiet) {
       css(this);
       watch(this);
-      if (!pageId) {
+      if (!pageId) pageId = "start";
+      if (pageId === "start-list") {
         this._csSheetPage = null;
         const s = this._flowScreen({ icon: "home", title: t("Settings"), quiet,
           lede: t("For all dashboards: your home, the bell, new dashboards and Casora's options.") });
@@ -1483,8 +1617,11 @@
       }
       const page = pageOf(pageId);
       this._csSheetPage = page.id;
+      // Back: a topic's page → that topic, a topic → the topics; the topics themselves close (Cancel).
+      const backTo = page.id === "start" ? null : page.topic ? "start" : this._csHubTopic ? "t-" + this._csHubTopic : "start";
       const s = this._flowScreen({ title: t(page.label), quiet,
-        back: () => { this._csSheet(null); } });
+        back: backTo ? () => { this._flowDir = -1; this._csSheet(backTo); } : undefined });
+      if (page.id === "start") this._flowCancel(s.acts);
       // The intro already sits below the sheet's title.
       const host = el("div");
       s.body.appendChild(host);
@@ -1499,8 +1636,8 @@
         s.box.insertBefore(lede, s.box.querySelector(".flowerr"));
       }
       fill();
-      // Design applies right away – no "Save settings" there.
-      if (page.look) { this._csBar(); return; }
+      // Design applies right away – no "Save settings" there; the topic pages only lead on.
+      if (page.look || page.hub) { this._csBar(); return; }
       const save = this._flowButton(s.acts, t("Save settings"), () => this._csSave());
       save.classList.add("cs-save");
       this._csBar();
@@ -1528,6 +1665,37 @@
         const cols = slot && slot.parentElement;
         if (!cols || !cols.classList.contains("phonelist") || cols.querySelector(".cs-phone")) return r;
         css(this);
+        // New Studio (variant B): this dashboard's sections and the pages for all dashboards are one entry,
+        // "Settings" (by topic); under "Dashboard" only Rewind stays.
+        if (this.classList.contains("bmode")) {
+          const SECS = I().SECTIONS || [];
+          const isDash = (k) => SECS.some((x) => x.group === "rooms" && x.label === k && x.scope === "dashboard");
+          // Hidden, not removed: a section opened from the topics is looked up here (_renderForm), and shows.
+          const open = this._sel && this._sel.group === "rooms" ? this._sel.key : null;
+          cols.querySelectorAll("section.card[data-k]").forEach((c) => {
+            if (isDash(c.dataset.k) && c.dataset.k !== open) c.style.display = "none";
+          });
+          const col = el("div", "col phonepanel cs-phone");
+          col.style.marginTop = "18px";
+          const c = el("section", "card grouprow shut cs-pagerow");
+          c.dataset.page = "start";
+          const ch = el("div", "chead");
+          const gi = el("span", "sicon");
+          gi.style.setProperty("--i", "url('" + icon("settings") + "')");
+          gi.style.setProperty("--sc", tint({ tone: "set-dashboards" }));
+          const fold = el("span", "fold");
+          fold.setAttribute("aria-hidden", "true");
+          fold.setAttribute("aria-expanded", "false");
+          fold.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" '
+            + 'stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+          ch.append(gi, el("h2", "", t("Settings")), fold);
+          ch.onclick = () => this._csShow("start");
+          c.appendChild(ch);
+          col.appendChild(c);
+          col.setAttribute("data-no-i18n", "");
+          cols.appendChild(col);
+          return r;
+        }
         const h = el("h2", "sidehead phonehead cu-sidehead", t("Settings"));
         h.setAttribute("data-no-i18n", "");
         h.appendChild(el("small", "", t("for all dashboards")));

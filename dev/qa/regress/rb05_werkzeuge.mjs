@@ -1,11 +1,11 @@
 // @zustand: arbeit
 // @parallel: ui
 // Neues Studio (B): Alles aus der früheren Seitenleiste bleibt über die Werkzeugleiste erreichbar.
-// Erwartet: Dashboard-Menü öffnet Bedienung (Verweis „Design (für alle Dashboards)“), Wetter, Uhrzeit, Benachrichtigungen und
-// Szenen; das Titelmenü (Dashboard-Name) wechselt Dashboards und enthält Umbenennen, Symbol,
-// Löschen (UX-03), „…“ diese nicht mehr; Zeitreise als Uhr neben Rückgängig; Einstellungen-Menü alle Einstellungsseiten
-// und Updates; das Raummenü wechselt Räume, verschiebt sie und öffnet „Räume ordnen“;
-// „…“ › Hilfe › „Bisheriges Studio öffnen“ und „…“ › „Neues Studio öffnen“ schalten hin und zurück. Es wird nichts gespeichert.
+// Expected: one button "Einstellungen" (variant B, 26.10.62b5: no "Dashboard" menu) opens the settings by topic; a topic
+// opens this dashboard's sections (Wetter) in the inspector and the pages for all dashboards (KI, also via the search);
+// the title menu (dashboard name) switches dashboards and holds rename, icon, delete (UX-03), "…" does not; Rewind is
+// the clock next to undo; the room menu switches and moves rooms and opens "Räume ordnen"; "…" › Hilfe no longer offers
+// the previous Studio. Nothing is saved.
 import { open, studio, casoraDashboard, check, need, finish } from './lib.mjs';
 
 const dash = await casoraDashboard();
@@ -16,16 +16,21 @@ const H = (fn, a) => page.evaluate(fn, a);
 const menu = () => H(() => window.__pierce('.combo-menu .combo-opt').filter((e) => e.getClientRects().length).map((e) => e.textContent.trim()));
 const close = () => H(() => window.__panel()._bClose());
 
-// Dashboard-Menü
-await page.locator('.btool[data-b=dash]').click();
-await page.waitForTimeout(600);
-const dm = await menu();
-await check('Dashboard-Menü: Bedienung, Wetter, Uhrzeit, Benachrichtigungen, Szenen, Verweis aufs Design',
-  ['Bedienung', 'Design (für alle Dashboards)', 'Wetter', 'Uhrzeit', 'Benachrichtigungen', 'Szenen'].every((x) => dm.some((t) => t.replace(/^✓/, '').indexOf(x) === 0)), dm);
-await page.locator('.combo-opt', { hasText: 'Wetter' }).first().click();
+// Settings by topic (variant B): no "Dashboard" button any more, one "Einstellungen".
+const noDash = await H(() => !window.__panel().shadowRoot.querySelector('.btool[data-b=dash]'));
+await check('kein eigener Dashboard-Knopf mehr', noDash);
+await page.locator('.btool[data-b=home]').click();
 await page.waitForTimeout(1200);
-const w = await H(() => { const p = window.__panel(); return { open: p.classList.contains('binsp'), sel: p._sel && p._sel.key }; });
-await check('Wetter öffnet im Inspektor', w.open && w.sel === 'Weather', w);
+const topics = await H(() => [...window.__panel().shadowRoot.querySelectorAll('.cs-hubtile b')].map((b) => b.textContent.trim()));
+await check('Einstellungen: sechs Themen', ['Aussehen', 'Meldungen', 'Haus & Geräte', 'Wetter & Klima', 'Bedienung', 'Extras'].every((x) => topics.includes(x)), topics);
+await page.locator('.cs-hubtile', { hasText: 'Wetter & Klima' }).click();
+await page.waitForTimeout(1000);
+const wrow = await H(() => [...window.__panel().shadowRoot.querySelectorAll('.frow')].map((r) => r.textContent.replace(/\s+/g, ' ').trim()));
+await check('Thema Wetter & Klima: Wetter (nur dieses Dashboard) und Außenwerte', wrow.some((t) => /^Wetter.*Nur dieses Dashboard/.test(t)) && wrow.some((t) => /^Außenwerte & Strompreis/.test(t)), wrow);
+await page.locator('.frow').filter({ has: page.locator('b', { hasText: /^Wetter$/ }) }).first().click();
+await page.waitForTimeout(1200);
+const w = await H(() => { const p = window.__panel(); return { open: p.classList.contains('binsp'), sel: p._sel && p._sel.key, cs: !!p._csOpen }; });
+await check('Wetter öffnet im Inspektor', w.open && w.sel === 'Weather' && !w.cs, w);
 await close();
 
 // Titelmenü: Dashboards und alles zu diesem Dashboard
@@ -52,19 +57,19 @@ await check('„…“ ohne Umbenennen/Löschen (stehen im Titelmenü)', !mm.som
 await page.keyboard.press('Escape');
 await page.waitForTimeout(400);
 
-// Einstellungen-Menü (für alle Dashboards)
+// Settings: the search finds the page "KI" (all dashboards).
 const hl = await H(() => window.__panel().shadowRoot.querySelector('.btool[data-b=home] .blabel').textContent.trim());
 await check('Knopf heißt „Einstellungen“', hl === 'Einstellungen', hl);
 await page.locator('.btool[data-b=home]').click();
-await page.waitForTimeout(600);
-const hm = await menu();
-await check('Zuhause-Menü: alle Einstellungsseiten und Updates',
-  ['Design', 'Haus & Geräte', 'Glocke & Meldungen', 'Neue Dashboards', 'KI', 'Außenwerte & Strompreis', 'Lüften', 'Updates'].every((x) => hm.some((t) => t.replace(/^✓/, '').indexOf(x) === 0)), hm);
-await page.locator('.combo-opt', { hasText: 'KI' }).first().click();
+await page.waitForTimeout(1200);
+await page.locator('.cs-hubsearch input').fill('KI');
+await page.waitForTimeout(400);
+await page.locator('.frow').filter({ has: page.locator('b', { hasText: /^KI$/ }) }).first().click();
 await page.waitForTimeout(2500);
 const k = await H(() => { const p = window.__panel(); const i = p.shadowRoot.querySelector('.inspector');
-  return { cs: !!p._csOpen, page: p._csPage, wide: i.getBoundingClientRect().width, map: !!p.shadowRoot.querySelector('.card.map') }; });
-await check('KI öffnet als breite Seite über der Vorschau', k.cs && k.page === 'ai' && k.wide > 500 && k.map, k);
+  return { cs: !!p._csOpen, page: p._csPage, wide: i.getBoundingClientRect().width, map: !!p.shadowRoot.querySelector('.card.map'),
+    back: !!p.shadowRoot.querySelector('.cs-hubback') }; });
+await check('KI öffnet als breite Seite über der Vorschau, mit „‹ Zurück“', k.cs && k.page === 'ai' && k.wide > 500 && k.map && k.back, k);
 await close();
 await page.waitForTimeout(600);
 
@@ -90,22 +95,14 @@ const lab = await H(() => window.__panel().shadowRoot.querySelector('.btool[data
 const nm = await H(() => { const p = window.__panel(); return p._roomLabel(p._state.compact.rooms[p._room]); });
 await check('Raum-Knopf nennt den offenen Raum', lab === nm, { lab, nm });
 
-// Umschalten: altes Studio und zurück
-// V-08: im neuen Studio unter „…“ › Hilfe „Bisheriges Studio öffnen“, zurück über „…“ › „Neues Studio öffnen“.
+// The previous Studio is gone (26.10.62b5): no entry under "…" › Hilfe, an old choice in this browser does not count.
 await page.locator('#more').click();
 await page.waitForTimeout(500);
 await page.locator('.combo-opt', { hasText: /Hilfe …|Help…/ }).first().click();
 await page.waitForTimeout(600);
-await page.locator('.combo-opt', { hasText: /Bisheriges Studio|previous Studio/ }).first().click();
-await page.waitForTimeout(1500);
-const a = await H(() => { const p = window.__panel(); const r = p.shadowRoot;
-  return { b: p.classList.contains('bmode'), side: !!(r.querySelector('.sidelist') && r.querySelector('.sidelist').getClientRects().length),
-    key: localStorage.getItem('casora.studio.b') }; });
-await check('„Bisheriges Studio öffnen“ → bisheriges Studio mit Seitenleiste', !a.b && a.side && a.key === '0', a);
-await page.locator('#more').click();
-await page.waitForTimeout(500);
-await page.locator('.combo-opt', { hasText: /Neues Studio öffnen|Open the new Studio/ }).first().click();
-await page.waitForTimeout(1500);
-const b = await H(() => window.__panel().classList.contains('bmode'));
-await check('„Neues Studio“ wieder an', b);
+const help = await menu();
+await check('Hilfe ohne „Bisheriges Studio öffnen“', help.length > 0 && !help.some((t) => /Bisheriges Studio|previous Studio/.test(t)), help);
+await page.keyboard.press('Escape');
+const old = await H(() => { localStorage.setItem('casora.studio.b', '0'); return window.__panel()._bOn(); });
+await check('früher gewähltes „bisheriges Studio“ zählt nicht mehr', old === true, old);
 await finish();
