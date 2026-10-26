@@ -715,7 +715,7 @@ class CasoraSmartRow extends HTMLElement {
     }
     // A tile can turn inactive a beat after this frame (its card re-renders later, or reads
     // several sensors), and then nothing re-checked the row until the next change: "Warnungen"
-    // stayed among the active tiles until a reload (Daniel, 26.10.2026). Look once more.
+    // stayed among the active tiles until a reload (26.10.2026). Look once more.
     if (!this._lateSortT) {
       this._lateSortT = setTimeout(() => {
         this._lateSortT = null;

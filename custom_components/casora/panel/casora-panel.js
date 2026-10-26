@@ -25949,7 +25949,7 @@ class CasoraPanel extends HTMLElement {
       }
       if (this._miniSize === "phone") budget = Math.round(budget * 0.88);
       // Studio on the phone: the frame ends above "N hidden", which floats over the bottom bar - a taller
-      // frame put its own dock under that chip (Daniel, 26.10.2026). Room for the chip is kept even
+      // frame put its own dock under that chip (26.10.2026). Room for the chip is kept even
       // without one, so the frame does not jump when the first tile is hidden.
       if (this.classList.contains("bmode") && this.classList.contains("phone")) {
         const bar = this.shadowRoot.querySelector(".bbar");

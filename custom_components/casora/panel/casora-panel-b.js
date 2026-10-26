@@ -81,7 +81,7 @@
        (banner above the preview) to the bottom edge. Irrelevant for pages without editing. */
     :host(.bmode.bpage.split:not(.flow)) .maprowhint { visibility:hidden; }
     /* Settings and Updates: a narrower page beside the preview, which moves left as it does for
-       the inspector (Daniel, 26.10.2026). Portrait tablets keep the page on top (bstack). */
+       the inspector (26.10.2026). Portrait tablets keep the page on top (bstack). */
     :host(.bmode.bpage.bside.split:not(.flow):not(.bstack)) { --b-insp-w:min(560px, 46vw); }
     :host(.bmode.bpage.bside.split:not(.flow):not(.bstack)) .main { padding-right:calc(var(--b-insp-w) + 14px); }
     :host(.bmode.bpage.bside.split:not(.flow):not(.bstack)) .stage .segrow,
