@@ -2700,7 +2700,12 @@
     "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Ogni sensore si apre come grafico, come la finestra della scheda Grafico: 24 ore, 7 o 30 giorni o un anno.",
     "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Le tapparelle scelte non del tutto chiuse compaiono in Home nella riga Sicurezza come «Tapparelle» e contano come non sicure. Senza selezione non cambia nulla.",
     "Which covers count as open at night": "Quali tapparelle contano come aperte di notte",
-    "Which covers count as open at night – for all dashboards.": "Quali tapparelle contano come aperte di notte, per tutte le dashboard."
+    "Which covers count as open at night – for all dashboards.": "Quali tapparelle contano come aperte di notte, per tutte le dashboard.",
+    "Back to automatic": "Torna ad Automatico",
+    "Your own choice stays until you tap this. Automatic takes grid, solar and battery from Home Assistant's Energy dashboard; without them a house sensor or the sum of the rooms.": "La tua scelta resta finché non tocchi qui. Automatico prende rete, solare e batteria dalla dashboard Energia di Home Assistant; senza di essi un sensore della casa o la somma delle stanze.",
+    "Your own choice stays until you tap this. Automatic adds up the power sensors in this room's area and adds new ones by itself.": "La tua scelta resta finché non tocchi qui. Automatico somma i sensori di potenza dell'area di questa stanza e aggiunge da solo quelli nuovi.",
+    "Casora found no power sensor for it, so your choice stays.": "Casora non ha trovato alcun sensore di potenza, quindi la tua scelta resta.",
+    "Energy badge back to automatic": "Il badge Energia torna su Automatico"
   },
   "patterns": [
     [

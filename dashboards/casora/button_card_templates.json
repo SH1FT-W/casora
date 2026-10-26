@@ -5991,18 +5991,21 @@
       {
        "entity": "input_select.casora_mobile_filter",
        "tap_action": {
-        "action": "fire-dom-event",
-        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  return cur === 'energy' ? 'all' : 'energy';\n]]]\n",
+        "action": "[[[\n  /* #78: filter the start page only when it has energy tiles; else the energy popup as on the desktop. */\n  const has = window._casoraFilterHas ? window._casoraFilterHas('energy') : null;\n  return has === false ? (window.casoraPopupAction ? window.casoraPopupAction() : 'more-info') : 'fire-dom-event';\n]]]\n",
+        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  /* #78: no energy tile on the page: no filter, the popup opens (action). */\n  if (window._casoraFilterHas && window._casoraFilterHas('energy') === false) return null;\n  return cur === 'energy' ? 'all' : 'energy';\n]]]\n",
         "haptic": "selection"
        },
        "template": "casora_badge_energy_group",
        "type": "custom:button-card",
        "variables": {
         "enabled": "[[[ const _hv = variables.casora_hv; return !_hv || (window.casoraSeen?window.casoraSeen(_hv,'energy',user,_hv.show_energy):_hv.show_energy)!==false ]]]",
-        "home_power_entity": "[[[ return variables.home_power_entity || variables.power_entity ]]]",
-        "power_entity": "[[[ return variables.power_entity ]]]",
+        "home_power_entity": "[[[ const _hv = variables.casora_hv || {}; const _l = Array.isArray(_hv.energy_entities) ? _hv.energy_entities.filter(Boolean) : []; return variables.home_power_entity || (_l.length ? undefined : (_hv.energy_power_entity || variables.power_entity)) ]]]",
+        "power_entity": "[[[ const _hv = variables.casora_hv || {}; const _l = Array.isArray(_hv.energy_entities) ? _hv.energy_entities.filter(Boolean) : []; /* #78: the desktop Home's list counts before its sensor, like on the desktop */ return _l.length ? undefined : (_hv.energy_power_entity || variables.power_entity) ]]]",
         "row_entity": "input_select.casora_mobile_filter",
-        "title": "[[[ return variables.energy_title ]]]"
+        "title": "[[[ return variables.energy_title ]]]",
+        "power_entities": "[[[ const _hv = variables.casora_hv || {}; const _l = Array.isArray(_hv.energy_entities) ? _hv.energy_entities.filter(Boolean) : []; const _ex = Array.isArray(_hv.energy_exclude) ? _hv.energy_exclude : [];\n  const l = _l.filter((id, i, a) => a.indexOf(id) === i && !_ex.includes(id));\n  return l.length ? l : undefined;\n]]]",
+        "power_parent": "[[[ const _hv = variables.casora_hv || {}; return _hv.energy_parent || undefined ]]]",
+        "power_exclude": "[[[ const _hv = variables.casora_hv || {}; return Array.isArray(_hv.energy_exclude) && _hv.energy_exclude.some(Boolean) ? _hv.energy_exclude.filter(Boolean) : undefined ]]]"
        }
       },
       {
@@ -7784,6 +7787,7 @@
         "home_power_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_home_power_entity || ((Array.isArray(_rv.energy_entities) && _rv.energy_entities.some(Boolean)) ? undefined : _rv.energy_power_entity) ]]]",
         "power_entity": "[[[ const _rv = variables.casora_rv || {}; return (Array.isArray(_rv.energy_entities) && _rv.energy_entities.some(Boolean)) ? undefined : _rv.energy_power_entity ]]]",
         "power_entities": "[[[ const _rv = variables.casora_rv || {}; /* ohne Ausgeschlossene und doppelte (06.10.2026) */\n  const _ex = Array.isArray(_rv.energy_exclude) ? _rv.energy_exclude : [];\n  const _l = Array.isArray(_rv.energy_entities) ? _rv.energy_entities.filter((id, i, a) => id && a.indexOf(id) === i && !_ex.includes(id)) : [];\n  return _l.length ? _l : undefined;\n]]]",
+        "power_exclude": "[[[ const _rv = variables.casora_rv || {}; /* #79: the popup leaves excluded sensors out of the room's further consumers too */ return Array.isArray(_rv.energy_exclude) && _rv.energy_exclude.some(Boolean) ? _rv.energy_exclude.filter(Boolean) : undefined ]]]",
         "room_name": "[[[ const _rv = variables.casora_rv || {}; return _rv.room_name || _rv.aqi_room_name ]]]",
         "has_subs": "[[[ const _rv = variables.casora_rv || {}; for (let i = 1; i <= 8; i++) if (_rv['energy_entity_' + i]) return true; return false; ]]]",
         "title": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_title ]]]",
@@ -13638,6 +13642,7 @@
         "home_power_entity": "[[[ return variables.energy_home_power_entity || ((Array.isArray(variables.energy_entities) && variables.energy_entities.some(Boolean)) ? undefined : variables.energy_power_entity) ]]]",
         "power_entity": "[[[ return (Array.isArray(variables.energy_entities) && variables.energy_entities.some(Boolean)) ? undefined : variables.energy_power_entity ]]]",
         "power_entities": "[[[ /* ohne Ausgeschlossene und doppelte (06.10.2026) */\n  const _ex = Array.isArray(variables.energy_exclude) ? variables.energy_exclude : [];\n  const _l = Array.isArray(variables.energy_entities) ? variables.energy_entities.filter((id, i, a) => id && a.indexOf(id) === i && !_ex.includes(id)) : [];\n  return _l.length ? _l : undefined;\n]]]",
+        "power_exclude": "[[[ /* #79: the popup leaves excluded sensors out of the room's further consumers too */ return Array.isArray(variables.energy_exclude) && variables.energy_exclude.some(Boolean) ? variables.energy_exclude.filter(Boolean) : undefined ]]]",
         "room_name": "[[[ return variables.room_name || variables.aqi_room_name ]]]",
         "has_subs": "[[[ for (let i = 1; i <= 8; i++) if (variables['energy_entity_' + i]) return true; return false; ]]]",
         "title": "[[[ return variables.energy_title ]]]",

@@ -4,6 +4,8 @@
 // come from the real panel filters (_rankedEntityList, _tileCandidates, listCategory) – issue #25 would have
 // read "device_tracker 3 all, 3 diag" with the lists that Casora leaves.
 // Also: wiring (help menu, search, loader in __init__.py) and the German texts.
+// Energy (#78/#79): HA's energy settings as counts, the energy badges per dashboard (automatic or by hand, sensors
+// per room against what the room's area has), never an entity id or a name.
 //   node dev/unit/studio_diagnostics.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -117,9 +119,28 @@ const panel = () => {
   p._state = { compact: { rooms } };
   p._room = 1;
   p._dashList = [{ url_path: 'villa-kumquat', title: 'Villa Kumquat' }, { url_path: 'villa-kumquat-mobile', title: 'Quixtenberg phone' }];
+  p._dashUrl = 'villa-kumquat';
   p.classList = { contains: () => false };
   return p;
 };
+// Energy: HA's settings with private sensor ids, Home from them, the room's badge chosen by hand with one left out.
+const PREFS = {
+  energy_sources: [
+    { type: 'grid', stat_energy_from: 'sensor.fluffyquill_import', stat_rate: 'sensor.fluffyquill_grid_power' },
+    { type: 'solar', stat_energy_from: 'sensor.brambleton_pv_energy' },
+    { type: 'gas', stat_energy_from: 'sensor.zorvanka_gas' },
+  ],
+  device_consumption: [
+    { stat_consumption: 'sensor.wobbleshire_kwh', stat_rate: 'sensor.wobbleshire_w', name: 'Wobbleshire heater' },
+    { stat_consumption: 'sensor.gristlewood_kwh' },
+  ],
+};
+window.casoraEnergyPrefs = Object.assign(() => PREFS, { load: async () => PREFS, tried: true });
+window.casoraEnergyHouse = (h, pr) => (pr === PREFS ? { ids: ['sensor.fluffyquill_grid_power'], power: 'sensor.fluffyquill_grid_power' } : null);
+new Function(read('custom_components/casora/panel/casora-panel-basis.js'))();
+rooms[0].variables = { energy_power_entity: 'sensor.fluffyquill_grid_power', casora_energy_auto: 'prefs' };
+rooms[1].variables = { energy_entities: ['sensor.plumtwist_disabled_power', 'sensor.wobbleshire_w'], energy_exclude: ['sensor.zorvanka_plug'],
+  casora_energy_auto: false };
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36';
 Object.defineProperty(globalThis, 'navigator', { value: { userAgent: UA }, configurable: true });
 
@@ -131,9 +152,10 @@ const text = DG.format(data);
 // Nothing private in the text
 for (const w of PRIVATE) assert.ok(!text.toLowerCase().includes(w.toLowerCase()), 'private word in the diagnostics: ' + w);
 for (const id of Object.keys(states).concat(Object.keys(entities), [OFF])) assert.ok(!text.includes(id), 'entity id in the diagnostics: ' + id);
+assert.ok(!/sensor\.|heater/i.test(text), 'no energy sensor ids or device names');
 assert.ok(!/https?:|\d+\.\d+\.\d+\.\d+|@/.test(text.replace(/\d+\.\d+\.\d+ · Home/, '')), 'no URL, IP or address: ' + text);
 // Only plain characters: letters, digits, spaces, a few signs, and the fence.
-assert.ok(/^[A-Za-z0-9 _.,:()=+·–\-\n`]+$/.test(text), 'unexpected characters:\n' + text);
+assert.ok(/^[A-Za-z0-9 _.,:()=+·–\-\n`/*?]+$/.test(text), 'unexpected characters:\n' + text);
 console.log('ok diagnostics: no private data');
 
 // Shape and numbers
@@ -157,6 +179,37 @@ assert.ok(/\ncasora_pet +2\n/.test(text), 'pet tile finds both trackers');
 assert.ok(/\ntractive +3  device_tracker 2, sensor 1\n/.test(text), 'known integration with domains');
 assert.ok(text.includes('other integrations: 3 (7 entities)'), 'custom integrations only counted');
 console.log('ok diagnostics: counts from the real filters');
+
+// Energy section: settings as counts, the open dashboard's badges (unsaved state), per room assigned/found.
+assert.ok(text.includes('energy settings (HA): set up · grid 1 (power 1) · solar 1 (power 0) · battery 0 · gas 1 · water 0'
+  + ' · devices 2 (power 1) · house from settings: yes'), 'energy settings line:\n' + text);
+{
+  const head = text.split('\n').findIndex((l) => l.startsWith('dashboard '));
+  assert.ok(head > 0, 'energy table');
+  assert.deepEqual(text.split('\n')[head + 1].trim().split(/\s+/), ['1*', '1', '1', 'settings', '0', '1', '1', '2/0'], 'one room, by hand, two sensors, one left out, none found in its area');
+}
+// The pure part: every mode, phone halves never counted twice, unknown settings.
+{
+  const e = DG.energyOf(null, null, [{ current: false, rooms: [
+    { home: true, vars: { energy_entities: ['a', 'b'], casora_energy_auto: 2, casora_energy_rooms: true } },
+    { vars: { energy_entities: ['a', 'x'], energy_exclude: ['x'], casora_energy_auto: 2 }, found: 2 },
+    { vars: { energy_power_entity: 'b', casora_energy_auto: true }, found: 1 },
+    { vars: { show_energy: false, energy_entities: ['c'] }, found: 1 },
+    { vars: {}, found: 3 },
+    { vars: { energy_cost_month: 'm' }, found: null },
+  ] }]);
+  assert.equal(e.prefs, 'unknown');
+  assert.deepEqual(e.dashboards[0], { current: false, rooms: 5, badges: 3, home: 'rooms-chosen', auto: 2, manual: 0, left: 1,
+    per: ['1/2', '1/1', 'off', '0/3', '0/?'] });
+  assert.deepEqual(['prefs', 'house', 2, false, undefined].map((m) => DG.energyBadge({ energy_power_entity: 'p', casora_energy_auto: m }, true).mode),
+    ['settings', 'name', 'rooms', 'manual', 'manual']);
+  assert.equal(DG.energyBadge({}, true).mode, 'none');
+  const legacy = DG.energyOf({ energy_sources: [{ type: 'grid', flow_from: [], power: [{ stat_rate: 'g' }] }, { type: 'battery', power_config: { stat_rate: 'b' } }, { type: 'wind' }] }, false, []);
+  assert.deepEqual([legacy.prefs, legacy.power.grid, legacy.power.battery, legacy.sources.other, legacy.house], ['yes', 1, 1, 1, false]);
+  assert.equal(DG.energyOf({}, null, []).prefs, 'none');
+  assert.ok(DG.format(DG.collect(hass, { energy: { prefs: {}, house: null, dashboards: [] } })).includes('energy settings (HA): not set up · house from settings: ?'));
+}
+console.log('ok diagnostics: energy');
 
 // Without the full registry (no admin): disabled is "–", nothing breaks.
 {

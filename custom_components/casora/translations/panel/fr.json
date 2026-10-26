@@ -2700,7 +2700,12 @@
     "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Chaque capteur s'ouvre en diagramme comme la fenêtre de la tuile Diagramme : 24 heures, 7 ou 30 jours ou un an.",
     "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Les volets choisis qui ne sont pas entièrement fermés apparaissent sur Accueil dans la rangée Sécurité sous « Volets » et comptent comme non sécurisés. Sans sélection, rien ne change.",
     "Which covers count as open at night": "Quels stores comptent comme ouverts la nuit",
-    "Which covers count as open at night – for all dashboards.": "Quels stores comptent comme ouverts la nuit, pour tous les tableaux de bord."
+    "Which covers count as open at night – for all dashboards.": "Quels stores comptent comme ouverts la nuit, pour tous les tableaux de bord.",
+    "Back to automatic": "Revenir à Automatique",
+    "Your own choice stays until you tap this. Automatic takes grid, solar and battery from Home Assistant's Energy dashboard; without them a house sensor or the sum of the rooms.": "Ton choix reste jusqu'à ce que tu touches ici. Automatique prend le réseau, le solaire et la batterie du tableau Énergie de Home Assistant ; sans eux, un capteur de la maison ou la somme des pièces.",
+    "Your own choice stays until you tap this. Automatic adds up the power sensors in this room's area and adds new ones by itself.": "Ton choix reste jusqu'à ce que tu touches ici. Automatique additionne les capteurs de puissance de la zone de cette pièce et ajoute les nouveaux tout seul.",
+    "Casora found no power sensor for it, so your choice stays.": "Casora n'a trouvé aucun capteur de puissance, ton choix reste.",
+    "Energy badge back to automatic": "Badge Énergie de nouveau en Automatique"
   },
   "patterns": [
     [
