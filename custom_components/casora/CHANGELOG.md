@@ -4,6 +4,42 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.62 – 26.10.2026
+
+Collects everything from the betas 26.10.62b1 to b6, plus consistent popups.
+
+### New
+- **Settings by topic in the Studio:** one "Settings" button opens a start page with a search, six topics (Look & feel, Messages, Home & Devices, Weather & climate, Controls, Extras) and System (Updates). Settings that apply only to this dashboard are marked. The previous Studio is gone.
+- **Energy flow (#62):** the energy popup shows the flow like Home Assistant's energy dashboard: grid, solar, home and battery (plus CO₂ when available) with calm moving dots for the direction of the live power. Below, the five biggest consumers and "Show all N".
+- **Entity list and "More" tiles (#59):** a tile whose popup lists entities to switch or set right there (switches, times, numbers, choices), from a group (also group helpers), a hand-picked list or a Home Assistant label; and one tile for lists and charts that don't need a tile of their own.
+- **Home Assistant notifications in the bell (#70):** messages from `persistent_notification.create` and Home Assistant's own notices show in the bell; swiping one away dismisses it in Home Assistant, tapping it opens the whole text with Delete.
+- **Blinds in security (#76):** pick which blinds count for security (Settings › Home & Devices, or from the security badge). An open one shows on Home as "Blinds · N open", by default only from sunset to sunrise, with a popup to close them.
+- **Dishwasher (#77):** Home Connect dishwashers are recognised by Home Assistant's keys; Hygiene+ and Intensive zone; the program as one row; delayed start as a time of day.
+- **Color wheel in the light popup** and a **Scenes badge in every room**.
+- **Hide or rename single doors and windows (#69).**
+- **Energy badge back to automatic (#78)** with one button in the Studio.
+
+### Changed
+- **Consistent popups:** every popup follows the same pattern: header with room, name and status; at most one main control; sections in a fixed order (controls, state, history, settings); › always opens a sub page with ‹ back; "More settings" with the device info at the end of every device popup; one button style; one width. Two-column popups are symmetric.
+- **Pulse popup** reorganised: short status, counts at each section, battery level on the icon.
+- **Room energy list (#79):** every consumer of the room is listed, 0 W ones dimmed after the active ones. On the phone the Home energy badge opens the popup.
+- **Lighting badge on the phone (#80):** if the badge has its own lights, the phone shows exactly those, like the desktop.
+- **Energy:** the sources from Home Assistant's energy dashboard come first (also before Anker Solix), and the share from solar and battery also shows without the tile's solar fields.
+- **Electricity price** only from the settings or the energy dashboard; the per-tile price field is gone.
+- **Studio:** sections opened from the settings keep their width; the preview no longer flickers when something it doesn't show changes; larger tap areas on the phone; the bell switch is its own row.
+- **Lights popup on Home (#73):** a room button puts the room's name in the header.
+- **Doorbell talk (#23):** one session for picture and microphone; with Home Assistant 2026.11 Casora talks through Home Assistant's own player.
+- **Diagnostics** include an anonymous energy section.
+
+### Fixed
+- **Saving locked after adding your own card (#75).**
+- **Light popup in Firefox (#74):** the last room button was invisible.
+- **Weather popup (#67, #68):** values of every curve, chart after ‹ back.
+- **Studio "Add a tile" (#71)** and the **first chart sensor's label (#72).**
+- **Energy check-up:** kW read as W in the Standard look, negative power in W on badges, empty Home popup with only one house sensor.
+- **Smart Sort:** a tile that turned inactive could stay among the active ones.
+- Smaller: pet values overlapping on the phone, "526 h" shown in days, "3w ago" written out, "connected" translated, the CO₂ field shows the real default 1800 ppm.
+
 ## 26.10.61 – 25.10.2026
 
 Includes everything from 26.10.60 plus three fixes. Coming from 26.10.59 or older, please read the note below first.
