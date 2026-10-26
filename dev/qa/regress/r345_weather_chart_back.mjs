@@ -93,6 +93,8 @@ await page.waitForTimeout(400);
 const after = await waitChart();
 await check('#68: nach ‹ ist das Diagramm wieder gezeichnet', after && after.lines >= 2 && after.h > 60, { before, after });
 await check('#68: Legende wieder da', after && after.legend.join('|') === before.legend.join('|'), { before: before.legend, after: after && after.legend });
+const hilo = await page.evaluate(() => window.__pierce('[class*="hw-slot-hilo-"]', window.casoraPopup.surface).map((e) => e.textContent.trim()));
+await check('#68: Hoch/Tief in der Kopfzeile auch nach ‹', hilo.length && hilo.every((t) => /^H .+ · T /.test(t)), hilo);
 const vals2 = await hover();
 await check('#67/#68: Zeigen geht auch nach ‹', vals2.length >= 2 && vals2.every((v) => /\d/.test(v)), vals2);
 await check('keine Seitenfehler', !errs.length, errs);

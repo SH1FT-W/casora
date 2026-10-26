@@ -838,6 +838,11 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           var fc = F[key + '_' + t];
           if (fc && fc.length) find(pop.shadowRoot, '.hw-slot-' + t + '-' + key).forEach(function (el) { if (el.querySelector('.hw-wait')) el.innerHTML = R[t](fc); });
         });
+        // High/low of the day in the header line, as the forecast fills it (casora_weather).
+        var d0 = (F[key + '_daily'] || [])[0];
+        if (d0 && d0.temperature != null && d0.templow != null) find(pop.shadowRoot, '.hw-slot-hilo-' + key).forEach(function (el) {
+          if (!el.textContent.trim()) el.textContent = 'H ' + Math.round(d0.temperature) + '° · T ' + Math.round(d0.templow) + '°';
+        });
       }, 80);
     };
     window._hpPlantTap = function (ev, kind) {
