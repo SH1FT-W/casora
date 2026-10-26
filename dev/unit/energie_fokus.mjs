@@ -114,13 +114,42 @@ assert.equal(P.grid.costToday, 'sensor.kosten_heute');
   // The export meter for the grid popup comes from the same settings.
   assert.equal(F.peers(h5, {}).grid.exportTotal, 'sensor.einspeisung_gesamt');
   // Without sub-badges the system comes from the settings too: one sensor per role. Two solar sources: none
-  // (one alone would be half the solar power), the Anker key fills in as before.
+  // (one alone would be half the solar power); the Anker key is only the fallback for a role the settings do not
+  // name (owner decision b7), so it does not fill in here either.
   const P5 = F.peers(h5, {});
   assert.equal(P5.grid.power, 'sensor.stromzahler_emh_power_curr', 'peers: grid from the settings');
   assert.equal(P5.battery.power, 'sensor.speicher_leistung', 'peers: battery from the settings');
   assert.equal(P5.battery.soc, 'sensor.speicher_soc', 'peers: charge level next to the settings\' battery (#44)');
   assert.equal(F.peers(h5, { energy_entity_1: 'sensor.sb_soc' }).battery.soc, 'sensor.sb_soc', 'sub-badge SoC wins');
-  assert.equal(P5.solar.power, 'sensor.sb_solar', 'peers: two solar sources in the settings, the Anker key');
+  assert.equal(P5.solar.power, null, 'peers: two solar sources in the settings, no Anker key');
+  // b7: HA's battery wins over the Anker Solix battery (power, charge level, charge/discharge, state); Anker keys
+  // still fill a role the settings do not name.
+  assert.notEqual(P5.battery.soc, 'sensor.sb_soc', 'peers: no Anker charge level next to the settings\' battery');
+  {
+    const ent7 = { ...entities, 'sensor.sb_chg': { platform: 'anker_solix', translation_key: 'bat_charge_power' },
+      'sensor.sb_dis': { platform: 'anker_solix', translation_key: 'bat_discharge_power' },
+      'sensor.sb_state': { platform: 'anker_solix', translation_key: 'charging_status_desc' } };
+    const S7 = { ...S5, 'sensor.sb_chg': st(999, 'W', 'power', 'Anker laden'), 'sensor.sb_dis': st(0, 'W', 'power', 'Anker entladen'),
+      'sensor.sb_state': { state: 'charge', attributes: {} } };
+    win.casoraDevice = { byKey: (h, plat, k) => Object.keys(h.entities).find((id) => h.entities[id].platform === plat && h.entities[id].translation_key === k) || null };
+    const h7 = { states: S7, entities: ent7, callWS: h5.callWS };
+    const P7 = F.peers(h7, {});
+    assert.equal(P7.battery.power, 'sensor.speicher_leistung', 'battery from the settings, not Anker');
+    assert.equal(P7.grid.power, 'sensor.stromzahler_emh_power_curr', 'grid from the settings, not Anker');
+    const M7 = F.model(h7, 'battery', P7, null);
+    assert.equal(M7.charge, null, 'no Anker charge power next to the settings\' battery');
+    assert.equal(M7.discharge, null);
+    assert.equal(M7.state, null, 'no Anker charging state next to the settings\' battery');
+    // Without a battery in the settings the Anker sensors are the fallback.
+    const h8 = { states: S7, entities: ent7, callWS: async () => ({ energy_sources: [{ type: 'grid', stat_rate: 'sensor.stromzahler_emh_power_curr' }] }) };
+    await win.casoraEnergyPrefs.load(h8, true);
+    const P8 = F.peers(h8, {});
+    assert.equal(P8.battery.power, 'sensor.sb_akku', 'no battery in the settings: the Anker key');
+    assert.equal(P8.battery.soc, 'sensor.sb_soc');
+    assert.equal(F.model(h8, 'battery', P8, null).charge, 'sensor.sb_chg', 'Anker charge power as fallback');
+    delete win.casoraDevice;
+    await win.casoraEnergyPrefs.load(h5, true);
+  }
   // A sub-badge and a Studio field still win over the settings.
   assert.equal(F.peers(h5, { energy_entity_1: 'sensor.sb_akku' }).battery.power, 'sensor.sb_akku', 'sub-badge wins');
   assert.equal(F.peers(h5, { energy_entity_1: 'sensor.sb_soc', energy_popup_power_1: 'sensor.sb_akku' }).battery.power,

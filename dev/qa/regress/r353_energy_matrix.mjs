@@ -58,7 +58,8 @@ const SETUPS = {
     states: { 'sensor.qa_e_grid': P(300), 'sensor.qa_e_pv': P(1500), 'sensor.qa_e_bat': P(-0.6, 'kW'), 'sensor.qa_e_bat_soc': SOC(64),
       'sensor.qa_e_wm': P(2100, 'W', 'Waschmaschine Leistung'), 'sensor.qa_e_tv': P(0.12, 'kW', 'Fernseher Leistung'),
       'sensor.qa_e_wm_energy': E(3.2), 'sensor.qa_e_tv_energy': E(800, 'Wh', 'Fernseher Energie'), 'sensor.qa_e_pump_energy': E(1500, 'Wh', 'Teichpumpe Energie heute') },
-    want: { home: 1200, flow: { grid: ['300 W', 'Netz'], solar: ['1,5 kW'], battery: ['64 %', '600 W', 'Akku lädt'], home: ['1,2 kW'] },
+    // b7: "x % aus Solar und Akku" in the header with only HA's energy settings (no solar fields on the tile).
+    want: { home: 1200, share: '75 % aus Solar und Akku', flow: { grid: ['300 W', 'Netz'], solar: ['1,5 kW'], battery: ['64 %', '600 W', 'Akku lädt'], home: ['1,2 kW'] },
       rows: [['Waschmaschine', ['2,1 kW', '2100 W']], ['Fernseher', '120 W'], ['Teichpumpe', '1,5 kWh']] },
   },
   battery_discharging_night: {
@@ -75,6 +76,13 @@ const SETUPS = {
     prefs: 'none', home: { energy_power_entity: 'sensor.qa_e_house' },
     states: { 'sensor.qa_e_house': P(0.42, 'kW', 'Hausverbrauch') }, want: { home: 420, flow: null },
   },
+};
+// b7 (owner decision): HA's energy settings win over the Anker Solix integration's battery sensors (the test house's
+// Solarbank, set here to values that must not show); Anker is only the fallback.
+SETUPS.prefs_over_anker = {
+  prefs: SETUPS.battery_charging.prefs, home: SETUPS.battery_charging.home, states: SETUPS.battery_charging.states,
+  anker: { bat_charge_power: P(999), bat_discharge_power: P(0), state_of_charge: SOC(12), battery_power_signed: P(999), charging_status_desc: { state: 'charge', attributes: {} } },
+  want: { home: 1200, share: '75 % aus Solar und Akku', flow: { battery: ['64 %', '600 W', 'Akku lädt'], home: ['1,2 kW'] } },
 };
 // A grid meter as Home's own sensor (#44, Westerloer) while the plant feeds in: the badge in kW with its sign, the
 // popup's headline as the amount with "Einspeisung".
@@ -197,6 +205,13 @@ async function run(name, S, theme, { view = 0, vars, size = [1440, 900], dark = 
   const hide = await page.evaluate(() => Object.keys(document.querySelector('home-assistant').hass.states)
     .filter((id) => /solarbank|system_home|iometer|smart_meter/.test(id)));
   const patch = Object.fromEntries(hide.map((id) => [id, null]));
+  // S.anker: the Solarbank's sensors by translation key with the given states instead of hidden.
+  if (S.anker) {
+    const ids = await page.evaluate((keys) => { const E = document.querySelector('home-assistant').hass.entities || {};
+      return Object.fromEntries(keys.map((k) => [k, Object.keys(E).find((id) => E[id].platform === 'anker_solix' && E[id].translation_key === k) || null])); }, Object.keys(S.anker));
+    for (const [k, id] of Object.entries(ids)) if (id) patch[id] = S.anker[k];
+    await check(`${name}: Anker-Solix-Sensoren im Testhaus`, Object.values(ids).filter(Boolean).length >= 3, ids);
+  }
   await fakeStates(page, { ...patch, ...S.states }, { sticky: true });
   await page.evaluate(async () => { const h = document.querySelector('home-assistant').hass; if (window.casoraEnergyPrefs) await window.casoraEnergyPrefs.load(h, true); });
   let b = null;
@@ -218,6 +233,7 @@ async function run(name, S, theme, { view = 0, vars, size = [1440, 900], dark = 
   // Standard and Glass print the headline in whole watts ("1200 W"), the Casora look in kW from 1000 W.
   const heads = S.want.head ? [S.want.head] : [de(S.want.home), Math.round(S.want.home) + ' W'];
   await check(`${tag}: Popup zeigt oben ${heads[0]}`, pop.texts.slice(0, 40).some((t) => heads.includes(t)), pop.texts.slice(0, 40));
+  if (S.want.share && theme === 'Casora') await check(`${tag}: Kopf „${S.want.share}“`, pop.texts.slice(0, 40).some((t) => t.includes(S.want.share)), pop.texts.slice(0, 40));
   if (theme === 'Casora' && S.want.flow !== undefined) {
     if (S.want.flow === null) await check(`${tag}: kein Energiefluss`, !Object.keys(pop.e1).length, pop.e1);
     else for (const [k, parts] of Object.entries(S.want.flow)) {

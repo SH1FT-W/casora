@@ -430,7 +430,6 @@
     var listArea = parts && !srcs ? E.listArea(ctx.hass, v, sumIds.concat(pex)) : null;
     if (listArea) { C.area = listArea; if (pex.length) C.exclude = pex; }
     var f = {};
-    f.hero = { card: secCard([C.home, C.grid, C.costToday, C.today, C.error].concat(sumIds), call('_casoraSoftEnergy', 'hero', C), states) };
     if (ctx.metricCard) f.metric = { card: chartCard(ctx.metricCard) };
     var fl = ctx.fields || {}, autoTop = null;
     if (typeof fl.use === 'string' && fl.use) f.use = UI.label('Verbrauch') + fl.use;
@@ -445,6 +444,10 @@
     var fs = (solar && has(C.solar)) || house ? E.flowSources(C, ctx.hass, states, house) : null;
     // Standard look (ctx.only 'top'): no E1 flow there, so the sources stay rows ("Woher kommt der Strom").
     if (fs && ctx.only !== 'top') C.flowOn = true;
+    // The hero's "x % aus Solar und Akku" reads the flow's sensors when the tile has no solar and grid fields.
+    if (fs) C.flowSrc = fs;
+    f.hero = { card: secCard([C.home, C.grid, C.costToday, C.today, C.error].concat(sumIds, fs ? E.flowSources.ids(fs) : []),
+      call('_casoraSoftEnergy', 'hero', C), states) };
     // #44: the settings' sources, then the consumers as with a house sensor (the parts are no consumers).
     if (srcs) {
       var cand0 = { ids: [] };
@@ -694,9 +697,11 @@
     var pw = house && window.casoraEnergyPowers ? window.casoraEnergyPowers(hass) : { grid: [], solar: [], battery: [] };
     var F = {};
     if (has(C.solar)) F.solar = [C.solar]; else if (pw.solar.length) { F.solar = pw.solar.slice(); F.solarHa = true; }
-    if (has(C.charge) || has(C.discharge)) { F.chg = C.charge || null; F.dis = C.discharge || null; }
+    // The battery of HA's energy settings wins over the auto-detected Anker Solix charge/discharge sensors
+    // (C.charge/C.discharge, no Studio fields); Anker only as the fallback. A battery field of the tile stays first.
+    if (pw.battery.length && !has(C.battery)) F.batHa = pw.battery.slice();
+    else if (has(C.charge) || has(C.discharge)) { F.chg = C.charge || null; F.dis = C.discharge || null; }
     else if (has(C.battery)) F.batTile = C.battery;
-    else if (pw.battery.length) F.batHa = pw.battery.slice();
     if (has(C.grid) || has(C.export)) { F.grid = C.grid || null; F.exp = C.export || null; }
     else if (pw.grid.length) F.gridHa = pw.grid.slice();
     if (has(C.soc)) F.soc = C.soc;
@@ -1041,8 +1046,13 @@
         if (off0) bits.push(off0 === 1 ? '1 Gerät ohne Wert' : off0 + ' Geräte ohne Wert');
       }
       if (p != null && p < -20) bits.push('Einspeisung');
-      if (C.solar && p != null && p > 0 && grid != null) {
-        var aut = Math.max(0, Math.min(1, 1 - Math.max(grid, 0) / p));
+      // Share of the house's power from solar and battery: from the tile's solar and grid fields, else from the
+      // energy flow's sensors (HA's energy settings), so it also shows with only the energy dashboard set up.
+      var imp = C.solar && grid != null ? Math.max(grid, 0) : null;
+      var fsrc = C.flowSrc;
+      if (imp == null && fsrc && fsrc.has && (fsrc.has.solar || fsrc.has.battery) && fsrc.has.grid) imp = E.flowValues(fsrc, states).imp;
+      if (p != null && p > 0 && imp != null) {
+        var aut = Math.max(0, Math.min(1, 1 - imp / p));
         bits.push(Math.round(aut * 100) + ' % aus Solar und Akku');
       }
       var cost = money(num(states, C.costToday), C.cur, hass);

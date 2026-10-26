@@ -558,7 +558,14 @@ const FULL_IDS = ['sensor.energy_grid_power', 'sensor.wechselrichter_ac_power', 
   h.states['sensor.wechselrichter_ac_power'].state = 'unavailable';
   h.states['sensor.energy_grid_power'].state = '400';
   h.states['sensor.energy_battery_power'].state = '300';
-  assert.equal(heroOf(FULL_IDS), 'H:700 W|', 'night: grid + battery, no device without a value');
+  // b7: the share from solar and battery also with only HA's energy settings (300 of 700 W from the battery).
+  assert.equal(heroOf(FULL_IDS), 'H:700 W|43 % aus Solar und Akku', 'night: grid + battery, no device without a value');
+  // All from the grid: 0 %; feeding the battery from the grid does not count as from the battery.
+  h.states['sensor.energy_battery_power'].state = '0';
+  h.states['sensor.energy_grid_power'].state = '700';
+  assert.equal(heroOf(FULL_IDS), 'H:700 W|0 % aus Solar und Akku', 'all from the grid');
+  h.states['sensor.energy_grid_power'].state = '400';
+  h.states['sensor.energy_battery_power'].state = '300';
   const C = { sum: { energy_entities: FULL_IDS }, sources: window.casoraEnergySources(h, FULL_IDS) };
   E.sec('sources', C, h.states, h);
   const solarRow = groups.pop().find((r) => r.entity === 'sensor.wechselrichter_ac_power');

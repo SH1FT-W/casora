@@ -155,12 +155,14 @@
     // Only a role with exactly one sensor: of two inverters, one alone would show half the solar power.
     var pw = window.casoraEnergyPowers ? window.casoraEnergyPowers(hass) : null;
     if (pw) ['grid', 'solar', 'battery'].forEach(function (r) { if (!P[r].power && pw[r].length === 1) P[r].power = pw[r][0]; });
-    P.solar.power = P.solar.power || key(hass, 'anker_solix', 'input_power', 'sensor');
-    P.battery.power = P.battery.power || key(hass, 'anker_solix', 'battery_power_signed', 'sensor');
+    // Anker Solix keys only as the fallback: a role HA's energy settings name stays theirs (also with two sensors).
+    var anker = function (r, k2) { return pw && pw[r].length ? null : key(hass, 'anker_solix', k2, 'sensor'); };
+    P.solar.power = P.solar.power || anker('solar', 'input_power');
+    P.battery.power = P.battery.power || anker('battery', 'battery_power_signed');
     // #44: the charge level from the battery power sensor's device (or id stem) when no sub-badge names one.
     if (!P.battery.soc && P.battery.power && window.casoraEnergyBatterySoc) P.battery.soc = window.casoraEnergyBatterySoc(hass, P.battery.power);
-    P.battery.soc = P.battery.soc || key(hass, 'anker_solix', 'state_of_charge', 'sensor');
-    P.grid.power = P.grid.power || key(hass, 'anker_solix', 'grid_power_signed', 'sensor');
+    P.battery.soc = P.battery.soc || anker('battery', 'state_of_charge');
+    P.grid.power = P.grid.power || anker('grid', 'grid_power_signed');
     P.grid.exportTotal = gridPref(prefs, 'stat_energy_to');
     return P;
   }
@@ -178,6 +180,8 @@
     }
     // Solar and battery sensors of HA's energy settings: unavailable at night is an inverter asleep, so 0 W.
     var pw = window.casoraEnergyPowers ? window.casoraEnergyPowers(hass) : null;
+    // The Anker Solix battery details only when HA's energy settings name no battery (they would be another device's).
+    var kb = function (key2) { return pw && pw.battery.length ? null : k(key2); };
     return {
       focus: focus, self: self || null, asleep: pw ? pw.solar.concat(pw.battery) : [],
       // HA's battery power is positive while discharging; the hero reads positive as charging (Anker): flip it.
@@ -188,8 +192,8 @@
       costToday: P.home.costToday || null, costMonth: P.home.costMonth || null,
       grid: (focus === 'grid' && self) || P.grid.power || null, gridToday: P.grid.today || null, gridMonth: P.grid.month || null,
       gridCostToday: P.grid.costToday || null, gridCostMonth: P.grid.costMonth || null, exportTotal: P.grid.exportTotal || null,
-      charge: k('bat_charge_power'), discharge: k('bat_discharge_power'), output: k('ac_to_home_load'),
-      state: k('charging_status_desc'), energy: k('battery_energy'), capacity: k('battery_capacity', 'number'),
+      charge: kb('bat_charge_power'), discharge: kb('bat_discharge_power'), output: k('ac_to_home_load'),
+      state: kb('charging_status_desc'), energy: kb('battery_energy'), capacity: k('battery_capacity', 'number'),
       temp: k('temperature'), savings: k('total_saved_money'),
       pv: ['solar_power_1', 'solar_power_2', 'solar_power_3', 'solar_power_4'].map(function (x) { return k(x); }).filter(Boolean),
       exportSwitch: k('allow_grid_export', 'switch'), socMin: k('min_soc', 'number'), socMax: k('max_soc', 'number'),
