@@ -208,7 +208,7 @@ async function run(name, S, theme, { view = 0, vars, size = [1440, 900], dark = 
   // S.anker: the Solarbank's sensors by translation key with the given states instead of hidden.
   if (S.anker) {
     const ids = await page.evaluate((keys) => { const E = document.querySelector('home-assistant').hass.entities || {};
-      return Object.fromEntries(keys.map((k) => [k, Object.keys(E).find((id) => E[id].platform === 'anker_solix' && E[id].translation_key === k) || null])); }, Object.keys(S.anker));
+      return Object.fromEntries(keys.map((k) => [k, Object.keys(E).find((id) => (E[id].platform === 'anker_solix' || /solarbank|system_home/.test(id)) && E[id].translation_key === k) || null])); }, Object.keys(S.anker));
     for (const [k, id] of Object.entries(ids)) if (id) patch[id] = S.anker[k];
     await check(`${name}: Anker-Solix-Sensoren im Testhaus`, Object.values(ids).filter(Boolean).length >= 3, ids);
   }
@@ -233,7 +233,7 @@ async function run(name, S, theme, { view = 0, vars, size = [1440, 900], dark = 
   // Standard and Glass print the headline in whole watts ("1200 W"), the Casora look in kW from 1000 W.
   const heads = S.want.head ? [S.want.head] : [de(S.want.home), Math.round(S.want.home) + ' W'];
   await check(`${tag}: Popup zeigt oben ${heads[0]}`, pop.texts.slice(0, 40).some((t) => heads.includes(t)), pop.texts.slice(0, 40));
-  if (S.want.share && theme === 'Casora') await check(`${tag}: Kopf „${S.want.share}“`, pop.texts.slice(0, 40).some((t) => t.includes(S.want.share)), pop.texts.slice(0, 40));
+  if (S.want.share && theme === 'Casora') await check(`${tag}: Kopf „${S.want.share}“`, pop.texts.slice(0, 40).some((t) => t.replace(/[\u00a0\u202f]/g, ' ').includes(S.want.share)), pop.texts.slice(0, 40));
   if (theme === 'Casora' && S.want.flow !== undefined) {
     if (S.want.flow === null) await check(`${tag}: kein Energiefluss`, !Object.keys(pop.e1).length, pop.e1);
     else for (const [k, parts] of Object.entries(S.want.flow)) {

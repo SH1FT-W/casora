@@ -577,12 +577,15 @@
         }).join('')
         + '</div><div data-b="' + key + '-hint" style="margin-top:8px;font-size:12.5px;font-weight:500;color:' + INK2 + ';"></div></div>';
     };
-    return '<div data-casora-flow="' + FK + '" data-casora-kind="b" style="background:var(--casora-popup-row-fill, #FEFCF7);'
+    // Blueprint v2 (rule 5/12): the section heading „Energiefluss“ sits above the card like „Verbrauch“ beside it,
+    // so both columns start level (owner 26.10.2026); the partial view (only) keeps the sub-badge popup's own label.
+    var flowLbl = !only && window._casoraUI && window._casoraUI.label ? window._casoraUI.label('Energiefluss') : '';
+    return flowLbl + '<div data-casora-flow="' + FK + '" data-casora-kind="b" style="background:var(--casora-popup-row-fill, #FEFCF7);'
       + 'border-radius:var(--casora-popup-row-radius, 24px);padding:18px 20px 20px;box-shadow:var(--casora-popup-plate-shadow, none);'
       + 'font-family:var(--primary-font-family, Inter, system-ui);color:' + INK + ';text-align:left;">'
       // Partial view: the label sits outside (UI.label in the sub-badge popup), like the other sections there.
-      + (only ? '' : '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));">Energiefluss</div>')
-      + (only ? '' : '<div style="display:flex;align-items:center;gap:14px;margin-top:14px;">'
+      + (only || flowLbl ? '' : '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));">Energiefluss</div>')
+      + (only ? '' : '<div style="display:flex;align-items:center;gap:14px;margin-top:' + (flowLbl ? 0 : 14) + 'px;">'
       + '<div' + mi(C.home) + ' style="width:44px;height:44px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;cursor:pointer;'
       + 'background:color-mix(in srgb, ' + FLOW_COL.haus + ' 16%, transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb, ' + FLOW_COL.haus + ' 70%, transparent);">'
       + '<ha-icon icon="mdi:home-outline" style="--mdc-icon-size:21px;color:' + FLOW_COL.haus + ';display:flex;pointer-events:none;"></ha-icon></div>'
@@ -658,7 +661,8 @@
     // First build: the frame with the values in it, returned as HTML (afterwards only apply()).
     var tpl = document.createElement('template');
     tpl.innerHTML = buildHtml(FK);
-    apply(tpl.content.firstElementChild);
+    // The section label may precede the card (blueprint v2), so look the card up instead of taking the first child.
+    apply(tpl.content.querySelector('[data-casora-flow]') || tpl.content.firstElementChild);
     var html = tpl.innerHTML;
     memo[FK] = { html: html, el: null };
     return html;
@@ -890,11 +894,13 @@
         + '</div>';
     };
     var nodesHtml = ['co2', 'solar', 'grid', 'home', 'battery'].map(node).join('');
-    return '<div data-casora-flow="' + esc(FK) + '" data-casora-kind="e1" style="background:' + FILL + ';'
+    // Blueprint v2: heading above the card (see the bar variant).
+    var e1Lbl = window._casoraUI && window._casoraUI.label ? window._casoraUI.label('Energiefluss') : '';
+    return e1Lbl + '<div data-casora-flow="' + esc(FK) + '" data-casora-kind="e1" style="background:' + FILL + ';'
       + 'border-radius:var(--casora-popup-row-radius, 24px);padding:18px 20px 20px;box-shadow:var(--casora-popup-plate-shadow, none);'
       + 'font-family:var(--primary-font-family, Inter, system-ui);color:' + INK + ';text-align:left;">'
-      + '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));">Energiefluss</div>'
-      + '<div data-e1-stage style="position:relative;width:100%;max-width:' + esc(c.W) + 'px;aspect-ratio:' + esc(c.W) + ' / ' + esc(g.H) + ';margin:14px auto 0;">'
+      + (e1Lbl ? '' : '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));">Energiefluss</div>')
+      + '<div data-e1-stage style="position:relative;width:100%;max-width:' + esc(c.W) + 'px;aspect-ratio:' + esc(c.W) + ' / ' + esc(g.H) + ';margin:' + (e1Lbl ? 0 : 14) + 'px auto 0;">'
       + svg + nodesHtml + '</div><style>' + E1_CSS + '</style></div>';
   };
   // Writes the model into the existing nodes; text only when it really changes (the translation swaps it afterwards).

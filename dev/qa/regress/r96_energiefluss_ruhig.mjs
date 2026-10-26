@@ -76,8 +76,13 @@ if (B) {
   // Casora-Design: Überschriften in Satzschreibung statt Versalien – die beiden Texte trotzdem messen.
   const L = await plateLabels(page, { texts: '^(Leistung|Energiefluss)' });
   const lei = L.find((l) => /^Leistung/.test(l.t)), ef = L.find((l) => l.t === 'Energiefluss');
-  check('Etiketten „Leistung“ und „Energiefluss“ 20/18 vom Kartenrand und bündig',
-    lei && ef && lei.dx === 20 && lei.dy === 18 && ef.dx === 20 && ef.dy === 18 && lei.x === ef.x, L);
+  check('Etikett „Leistung“ 20/18 vom Kartenrand', lei && lei.dx === 20 && lei.dy === 18, L);
+}
+// Blueprint v2 (owner 26.10.2026): „Energiefluss“ is a section heading above the flow card, not inside it.
+{
+  const inside = await page.evaluate((f) => { const box = new Function('return (' + f + ')()')();
+    return !!box && [...box.querySelectorAll('div')].some((d) => !d.children.length && d.textContent.trim() === 'Energiefluss'); }, FIND.toString());
+  check('„Energiefluss“ steht über der Karte, nicht darin', !inside, inside);
 }
 
 // Beobachten: Knoten merken, Mutationen zählen, Animationen merken.

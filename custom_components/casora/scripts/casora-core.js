@@ -11035,6 +11035,14 @@ window.casoraMenuGlass = {
     });
     return best === null ? null : best - top;
   }
+  // Does a section heading stand above the column's first plate? Only then the column has its own heading slot.
+  var HEAD_SEL = '.hui-slbl,[data-casora-head]';
+  function colHead(el) {
+    var pad = parseFloat(el.dataset.casoraColPad || '0') || 0;
+    var top = el.getBoundingClientRect().top + pad, lead = colLead(el);
+    if (lead === null) return false;
+    return deepAll(el, HEAD_SEL, []).some(function (n) { var r = seen(n); return r && r.top - top < lead && r.top >= top - 2; });
+  }
   function alignPair(a, b, wide) {
     [a, b].forEach(function (el) { if (!wide && el.dataset.casoraColPad) { el.style.removeProperty('padding-top'); delete el.dataset.casoraColPad; } });
     if (!wide) return;
@@ -11043,7 +11051,8 @@ window.casoraMenuGlass = {
     if (!ra || !rb || Math.abs(ra.top + (parseFloat(a.dataset.casoraColPad || '0') || 0) - rb.top - (parseFloat(b.dataset.casoraColPad || '0') || 0)) > 4) return;
     var la = colLead(a), lb = colLead(b);
     if (la === null || lb === null) return;
-    var d = Math.round(la - lb);
+    // Both with a heading (or both without): their own rhythm, no reserved slot (r331: „Modus“ beside „Zeitplan“).
+    var d = colHead(a) === colHead(b) ? 0 : Math.round(la - lb);
     var set = function (el, px) {
       if (px > 2 && px < 72) { el.style.setProperty('padding-top', px + 'px'); el.dataset.casoraColPad = String(px); }
       else if (el.dataset.casoraColPad) { el.style.removeProperty('padding-top'); delete el.dataset.casoraColPad; }
