@@ -793,7 +793,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       var slot = find(pop.shadowRoot, '.hp-chart-slot')[0];
       if (!slot) return false;
       mount(slot, cfg);
-      find(pop.shadowRoot, '.hp-ct').forEach(function (t) { t.textContent = window._hpChartTitle(eid); });
+      // A chart head with „Details ›“ (blueprint v2, decision 3): only its title text changes, the link follows the reading.
+      find(pop.shadowRoot, '.hp-ct').forEach(function (t) { var tt = t.querySelector('.hp-ct-t'); (tt || t).textContent = window._hpChartTitle(eid); });
+      find(pop.shadowRoot, '.hp-det').forEach(function (d) { if (!/^hwd\d+:/.test(eid)) d.setAttribute('data-casora-mi', eid); });
       find(pop.shadowRoot, '[data-hp-metric]').forEach(function (r) { r.classList.toggle('hp-sel', r.dataset.hpMetric === eid); });
       window._hpShown = eid;
       if (!noScroll) {
@@ -1140,7 +1142,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           + (soft ? '.has-chips{justify-content:flex-start;gap:8px;}'
             + '.has-chips-l{display:block;flex:0 0 100%;text-align:left;padding-left:4px;font-size:13px;font-weight:600;color:' + ink2 + ';margin:0 0 2px;}'
             + '.has-chip{display:inline-flex;align-items:center;gap:9px;min-height:44px;box-sizing:border-box;padding:0 16px 0 6px;font-size:15px;font-weight:600;letter-spacing:-0.01em;color:' + ink + ';}'
-            + '.has-chip-i{display:grid;place-items:center;width:32px;height:32px;flex:none;border-radius:50%;background:var(--t);color:#fff;}'
+            + '.has-chip-i{display:grid;place-items:center;width:32px;height:32px;flex:none;border-radius:var(--casora-r-small, 12px);background:var(--t);color:#fff;}' /* blueprint v2: icon tiles like the rows */
             + '.has-chip:focus-visible{outline:2px solid var(--casora-ton-ink,currentColor);outline-offset:2px;}'
             + '@media (hover:hover){.has-chip:hover{background:var(--casora-soft-row-hover,rgba(140,115,90,0.11));}}' : '')
           + '.has-bar{display:flex;align-items:center;gap:8px;contain:layout style;}'
@@ -1189,12 +1191,14 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           var h0 = ha();
           find(h0 && h0.shadowRoot ? h0.shadowRoot : document, 'button-card').some(function (c) {
             var ps = c._config && c._config.tap_action && c._config.tap_action.casora_popup && c._config.tap_action.casora_popup.popup_styles;
-            if (Array.isArray(ps) && ps.length) { styles = JSON.parse(JSON.stringify(ps).replace(/--popup-(min|max)-width:[^;]*;/g, '--popup-$1-width: min(560px, 92vw);')); return true; }
+            if (Array.isArray(ps) && ps.length) { styles = JSON.parse(JSON.stringify(ps).replace(/--popup-(min|max)-width:[^;]*;/g, '--popup-$1-width: min(552px, 92vw);')); return true; }
             return false;
           });
         } catch (e) {}
         window.casoraPopup.open({
           title: 'Assist', dismissable: true, popup_styles: styles || undefined,
+          // Blueprint v2 (rule 1): header tile like every popup (Assist has no tile of its own).
+          ring: { icon: 'mdi:message-processing-outline', hue: 'var(--casora-tone-general, var(--casora-color-teal, #4E9E95))' },
           content: { type: 'custom:button-card', tap_action: { action: 'none' }, hold_action: { action: 'none' },
             show_icon: false, show_name: false, show_label: false, show_state: false,
             card_mod: { style: ':host { --ha-card-background: transparent !important; --ha-card-box-shadow: none !important; } ha-card { background: transparent !important; border: none !important; box-shadow: none !important; } @media (max-width: 600px) { ha-card { padding-left: 14px !important; padding-right: 14px !important; } }' },

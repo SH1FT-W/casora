@@ -84,14 +84,15 @@
       return 'return window._casoraHumid ? window._casoraHumid.sec(' + JSON.stringify(part) + ', ' + JSON.stringify(c) + ', states, hass) : "";';
     };
     var f = { hero: { card: K.secCard(watch, call('hero'), states) }, ctrl: { card: K.secCard(watch, call('ctrl'), states) },
-      info: { card: K.secCard(watch, call('info'), states) }, set: { card: K.secCard(watch, call('set'), states) } };
+      info: { card: K.secCard(watch, call('info'), states) } };
     var top = ['hero'];
     if (c.humidity) {
       f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history',
         series: [{ entity: c.humidity, name: 'Luftfeuchte', unit: '%' }], height: 160, readout: 'own', plate: true } };
       top.push('chart');
     }
-    return K.layout({ fields: f, top: top, left: ['ctrl', 'set'], right: ['info'], narrowOrder: ['ctrl', 'info', 'set'] });
+    /* Blueprint v2: „Einstellungen“ last – right column bottom on the desktop, the end on the phone (both orders alike). */
+    return K.layout({ fields: f, top: top, left: ['ctrl'], right: ['info'], narrowOrder: ['ctrl', 'info'], settings: id });
   };
 
   H.sec = function (part, c, states, hass) {
@@ -103,22 +104,24 @@
       var area = r.area_id || (r.device_id && hass.devices && hass.devices[r.device_id] ? hass.devices[r.device_id].area_id : null);
       // Ohne Raum kein Etikett – sonst stünde „Luftbefeuchter“ unter dem gleichnamigen Titel.
       var room = (area && hass.areas && hass.areas[area] && hass.areas[area].name) || null;
-      return UI.hero({ label: room, value: s.mode ? H.modeLabel(hass, st, s.mode) : s.label,
+      // The room is the label above the title (frame, blueprint v2 rule 1), not part of the status line.
+      void room;
+      return UI.hero({ value: s.mode ? H.modeLabel(hass, st, s.mode) : s.label,
         sub: s.on && s.target != null ? 'Ziel ' + Math.round(s.target) + ' %' : null, center: true });
     }
     if (part === 'ctrl') {
       if (s.dead) return '';
-      var out = UI.segments([
-        { label: 'Aus', active: !s.on, svc: { domain: 'humidifier', service: 'turn_off', target: tgt } },
-        { label: 'An', active: s.on, svc: { domain: 'humidifier', service: 'turn_on', target: tgt } },
-      ], 'Betrieb');
+      /* Blueprint v2 (decision 2): on/off is only the main switch in the header – no „Betrieb Aus | An“ any more.
+         While off, a mode switches the humidifier on. */
+      var out = '';
       if (s.modes.length) {
-        out += '<div style="height:18px"></div>' + UI.segments(s.modes.map(function (m) {
-          return { label: H.modeLabel(hass, st, m), active: s.mode === m, svc: { domain: 'humidifier', service: 'set_mode', data: { mode: m }, target: tgt } };
+        out += UI.segments(s.modes.map(function (m) {
+          return { label: H.modeLabel(hass, st, m), active: s.on && s.mode === m,
+            svc: s.on ? { domain: 'humidifier', service: 'set_mode', data: { mode: m }, target: tgt } : { domain: 'humidifier', service: 'turn_on', target: tgt } };
         }), 'Modus');
       }
       if (s.target != null) {
-        out += '<div style="height:18px"></div>' + UI.segments(H.steps(s.min, s.max, s.target).map(function (v) {
+        out += (out ? '<div style="height:18px"></div>' : '') + UI.segments(H.steps(s.min, s.max, s.target).map(function (v) {
           return { label: v + ' %', active: Math.round(s.target) === v, svc: { domain: 'humidifier', service: 'set_humidity', data: { humidity: v }, target: tgt } };
         }), 'Zielfeuchte');
       }
@@ -127,7 +130,6 @@
     if (part === 'info') {
       var rows = [];
       if (s.current != null) rows.push({ entity: c.humidity || null, icon: 'mdi:water-percent', iconTone: 'accent', label: 'Luftfeuchte', value: Math.round(s.current) + ' %' });
-      if (s.target != null) rows.push({ icon: 'mdi:target', iconTone: 'accent', label: 'Zielfeuchte', value: Math.round(s.target) + ' %' });
       if (s.water != null) rows.push({ entity: c.water, icon: 'mdi:cup-water', iconTone: s.water < 15 ? 'warn' : 'accent', label: 'Wassertank',
         value: Math.round(s.water) + ' %', bar: s.water / 100, barTone: s.water < 15 ? 'bad' : s.water < 30 ? 'warn' : 'good' });
       else if (s.waterLow != null) rows.push({ entity: c.waterLow, icon: 'mdi:cup-water', iconTone: s.waterLow ? 'bad' : 'accent', label: 'Wassertank',
@@ -136,7 +138,7 @@
       if (pw != null) rows.push({ entity: c.power, icon: 'mdi:flash', iconTone: 'good', label: 'Leistung', value: (pw < 10 ? pw.toFixed(1).replace('.', ',') : Math.round(pw)) + ' W' });
       return rows.length ? UI.group(rows, 'Status') : '';
     }
-    if (part === 'set') return UI.group([{ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', entity: c.hum }], 'Einstellungen');
+    if (part === 'set') return UI.settings ? UI.settings(c.hum) : '';
     return '';
   };
 })();

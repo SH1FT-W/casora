@@ -135,7 +135,7 @@
     var mapStyle = [{ 'border-radius': 'var(--casora-popup-row-radius, 26px)' }, { overflow: 'hidden' }, { 'isolation': 'isolate' },
       { background: 'var(--casora-soft-row-fill, rgba(140,115,90,0.07))' }];
     return K.layout({ fields: f, top: ['hero', 'map'], left: ['info'], right: ['today', 'hist'],
-      narrowOrder: ['today', 'info', 'hist'], fieldStyle: { map: mapStyle } });
+      narrowOrder: ['today', 'info', 'hist'], fieldStyle: { map: mapStyle }, settings: c.tracker || id });
   };
 
   // Live tracking, sound and light as pills (Weich) or round keys; each one only if the tracker has it.
@@ -213,9 +213,12 @@
         + '<div style="font-size:16px;font-weight:700;color:' + ink + ';font-variant-numeric:tabular-nums;margin-top:2px;white-space:nowrap;">' + esc(T(P.mins(m))) + '</div></div>';
     };
     var stats = stat('Ruhe', rest) + stat('Schlaf Tag', sd) + stat('Schlaf Nacht', sn);
-    return '<div style="font-family:' + font + '">' + head
+    /* Phone: the values one under the other – two columns beside the ring ran into each other („9 Std. 40 Min3 Std. 5 Min.“). */
+    return '<style>.hpt-st{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px;flex:1 1 auto;min-width:0;}'
+      + '@media (max-width:480px){.hpt-st{grid-template-columns:minmax(0,1fr);gap:8px;}}</style>'
+      + '<div style="font-family:' + font + '">' + head
       + '<div style="background:' + row + ';border-radius:var(--casora-popup-row-radius, 24px);padding:16px 18px;display:flex;align-items:center;gap:18px;">'
-      + ring + '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px;flex:1 1 auto;min-width:0;">' + stats + '</div></div></div>';
+      + ring + '<div class="hpt-st">' + stats + '</div></div></div>';
   };
 
   P.sec = function (part, c, states, hass, el) {

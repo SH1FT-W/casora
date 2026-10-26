@@ -787,9 +787,11 @@ window._hpMultiTap = function (ev, kind) {
       var hs0 = o.house && states[o.house];
       var hw0 = hs0 ? parseFloat(hs0.state) : NaN;
       /* D-20: Untertitel nur der Zustand, die Anleitung als eigene Hinweiszeile (brach sonst zweizeilig um). */
+      /* Blueprint v2 (rule 10): the empty row (into the Studio for admins) instead of a centred grey sentence. */
       return UI.hero({ value: 'Noch nicht eingerichtet', center: true })
-        + ((window.casoraIsAdmin && !window.casoraIsAdmin()) ? '' : '<div style="font-family:var(--primary-font-family, system-ui);font-size:13px;font-weight:500;line-height:1.4;text-align:center;'
-        + 'color:var(--casora-soft-sub, var(--secondary-text-color));padding:10px 6px 0;">Im Casora Studio der Kachel den Solar-Tipp zuordnen.</div>')
+        + (UI.empty ? UI.empty({ icon: 'mdi:solar-power-variant', text: 'Solar-Tipp zuordnen', sub: 'Im Casora Studio der Kachel den Solar-Tipp wählen', studio: true })
+          : ((window.casoraIsAdmin && !window.casoraIsAdmin()) ? '' : '<div style="font-family:var(--primary-font-family, system-ui);font-size:13px;font-weight:500;line-height:1.4;text-align:center;'
+          + 'color:var(--casora-soft-sub, var(--secondary-text-color));padding:10px 6px 0;">Im Casora Studio der Kachel den Solar-Tipp zuordnen.</div>'))
         + (hs0 && !isNaN(hw0) ? '<div style="height:18px"></div>' + UI.group([{ icon: 'mdi:home-lightning-bolt-outline', iconTone: 'good', label: 'Hausverbrauch',
           value: Math.round(hw0) + ' ' + ((hs0.attributes || {}).unit_of_measurement || 'W') }], null) : '');
     }
@@ -829,6 +831,8 @@ window._hpMultiTap = function (ev, kind) {
       else if (pe && tile0) pe._src = tile0;
       window.casoraPopup.open({
         title: 'Solar-Tipp', dismissable: true, src: (pe && pe._src) || tile0 || undefined,
+        // Blueprint v2 (rule 11): one column, 552 wide.
+        style: window.casoraPopupWidth ? window.casoraPopupWidth('one') : undefined,
         content: {
           type: 'custom:button-card', entity: eid || house || undefined, triggers_update: (eid ? [eid] : []).concat(house ? [house] : []),
           tap_action: { action: 'none' }, hold_action: { action: 'none' },

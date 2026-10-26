@@ -80,6 +80,8 @@ window._casoraUI = {
   group: (rows, l) => '<group ' + l + '>' + rows.map((r) => r.label + '=' + (r.value || '') + (r.sub ? '(' + r.sub + ')' : '') + (r.svc ? '>' + r.svc.service : '')).join(';') + '</group>',
   segments: (items, l) => '<seg ' + l + '>' + items.map((i) => (i.active ? '*' : '') + i.label + '>' + JSON.stringify(i.svc.data)).join(';') + '</seg>',
   note: (t) => '<note>' + t + '</note>',
+  // Blueprint v2: the row comes from the shared builder (casora-core.js).
+  settingsRow: (id) => ({ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', entity: id }),
 };
 assert.equal(K.sec('hero', C, states, hass()), '<line >7 °C · −18 °C|Alles in Ordnung</line>');
 const zones = K.sec('zones', C, states, hass());

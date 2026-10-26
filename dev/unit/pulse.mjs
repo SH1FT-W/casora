@@ -194,7 +194,12 @@ assert.ok(!/[\u2062\u2063]/.test(secs.failed), 'no markers left');
 const more = P.sec('more', null, states, hass);
 assert.ok(/<more Alles ok 2>/.test(more), '„Alles ok“ eingeklappt mit Anzahl');
 assert.ok(more.includes('class="pls-okic"'), 'green check in front of „Alles ok“');
-assert.ok(more.includes('class="pls-link" data-casora-link="/pulse"'), 'Fuß führt ins Pulse-Panel (Textlink)');
+const footRow = groups.slice().reverse().find((g) => g.rows.some((r) => r.label === 'In Pulse öffnen'));
+assert.ok(footRow, 'Fuß: Zeile „In Pulse öffnen“ (blueprint v2: ↗ statt Textlink)');
+const footR = footRow.rows.find((r) => r.label === 'In Pulse öffnen');
+assert.equal(footR.out, true, 'leaves Casora: ↗');
+assert.equal(footR.url, '/pulse', 'into the Pulse panel');
+assert.ok(!more.includes('class="pls-link"'), 'no text link any more');
 assert.ok(more.includes('<span class="pls-pct">64 %</span>'), 'battery badge in „Alles ok“ too');
 assert.ok(P.sec('hero', null, states, hass).includes('3 Probleme'));
 

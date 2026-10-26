@@ -187,7 +187,7 @@ window._casoraUI = {
   label: (t) => '<label ' + t + '>',
   slider: (o) => '<slider ' + o.label + '=' + o.value + ' ' + JSON.stringify(o.svc.scale) + '>',
   segments: (items, label) => '<seg ' + label + '>' + items.map((i) => i.label + (i.active ? '*' : '')).join(',') + '</seg>',
-  more: (id, html, o) => '<more ' + o.label + ' ' + o.count + ' ' + o.less + '>' + html + '</more>',
+  more: (id, html, o) => '<more ' + o.label + ' ' + o.count + ' ' + o.less + ' ' + o.hint + '>' + html + '</more>',
 };
 let h = n(KL.sec('hero', c, states, hass));
 assert.ok(/^<line>Bereit\|Akku 15 %!warn<\/line>$/.test(h), h);
@@ -210,7 +210,7 @@ states['siren.pforte_sirene'].last_changed = new Date(Date.now() - 4000).toISOSt
 assert.ok(/Sirene=~Laut an der Tür, 10 Sekunden!Auslösen#siren\.turn_on/.test(n(KL.sec('say', c, states, hass))), 'nach 3 s wieder auslösbar');
 states['siren.pforte_sirene'].last_changed = iso(120);
 const mo = n(KL.sec('more', c, states, hass));
-assert.ok(/<more Einstellungen undefined Einstellungen>/.test(mo), 'ohne Zähler, aufgeklappt bleibt „Einstellungen“');
+assert.ok(/<more undefined [1-9] undefined [^>]*Lautstärke[^>]*>/.test(mo), '„Mehr (n)“ (Standardwort) mit Zahl, Unterzeile nennt den Inhalt: ' + mo.slice(0, 80));
 assert.ok(/<slider Klingelton=40 \[0,100,1\]>.*<slider Sprechen=50.*<slider Lautsprecher=80/.test(mo), 'Lautstärken in der Reihenfolge Klingel, Sprechen, Lautsprecher');
 assert.ok(/Ton aufnehmen=An~Ohne Ton hörst du die Tür nicht!Ausschalten/.test(mo) && /Klingelton an der Tür=An~[^!]/.test(mo), mo);
 assert.ok(/Privatsphäre=Aus~Kamera und Ton aus!Einschalten/.test(mo), 'Privatsphäre einschalten fragt nach');

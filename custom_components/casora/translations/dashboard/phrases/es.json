@@ -2516,7 +2516,26 @@
   "Später nicht möglich": "No es posible más tarde",
   "Früher nicht möglich": "No es posible antes",
   "Programm wählen": "Elige un programa",
-  "CO₂-neutral": "Bajo en carbono"
+  "CO₂-neutral": "Bajo en carbono",
+  "Alle Batterien": "Todas las pilas",
+  "Alle Schlösser entriegeln?": "¿Desbloquear todas las cerraduras?",
+  "Alle entriegeln": "Desbloquear todas",
+  "Alle verriegeln": "Bloquear todas",
+  "Alles ruhig": "Todo tranquilo",
+  "Amtliche Warnungen erscheinen hier": "Los avisos oficiales aparecen aquí",
+  "Im Casora Studio der Kachel den Solar-Tipp wählen": "Elige el consejo solar de esta tarjeta en Casora Studio",
+  "Im Studio unter Einstellungen › Haus & Geräte › Sicherheit": "En Studio, en Ajustes › Casa y dispositivos › Seguridad",
+  "Keine offenen Updates": "Sin actualizaciones pendientes",
+  "Neue Versionen erscheinen hier": "Las nuevas versiones aparecen aquí",
+  "Noch keine Jalousien gewählt": "Aún no hay persianas elegidas",
+  "Pulse einrichten": "Configurar Pulse",
+  "Im Pulse-Panel": "En el panel de Pulse",
+  "Salz, Klarspüler voll": "Sal y abrillantador llenos",
+  "Solar-Tipp zuordnen": "Asignar el consejo solar",
+  "Verläufe, Ersatz, Einstellungen": "Historial, recambios, ajustes",
+  "KI-Blick": "Vistazo de IA",
+  "Tag/Nacht": "Día/noche",
+  "vor 1 Woche": "hace 1 semana"
  },
  "patterns": [
   [
@@ -3188,6 +3207,10 @@
    "En {1} ciclos"
   ],
   [
+   "^Pflege in (\\d+) Durchgängen$",
+   "Mantenimiento en {1} ciclos"
+  ],
+  [
    "^in (\\d+) Durchgängen$",
    "en {1} ciclos"
   ],
@@ -3262,6 +3285,10 @@
   [
    "^vor (\\d+) Tag$",
    "hace {1} día"
+  ],
+  [
+   "^vor (\\d+) Wochen$",
+   "hace {1} semanas"
   ],
   [
    "^vor (\\d+) Std\\. (\\d+) Min\\.$",
@@ -3502,6 +3529,14 @@
   [
    "^Fenster offen · noch (\\d+) Min\\.$",
    "Ventana abierta · quedan {1} min"
+  ],
+  [
+   "^Fenster offen seit (\\d+) Tagen$",
+   "Ventana abierta hace {1} días"
+  ],
+  [
+   "^Fenster seit (\\d+) Tagen offen$",
+   "Ventana abierta hace {1} días"
   ],
   [
    "^Fenster offen seit (.+)$",

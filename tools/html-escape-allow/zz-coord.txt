@@ -2,6 +2,5 @@
 custom_components/casora/scripts/local/02-devices.js | H.pillCss | fixed <style> block of the module | 1
 custom_components/casora/scripts/local/07-weich-spezial.js | I.left | seconds left, Math.round() number in a keyframe | 3
 custom_components/casora/scripts/local/12-tanken.js | re:^[WH]$ | map width/height in px (numbers from the code) | 6
-custom_components/casora/scripts/local/14-pulse.js | P.PANEL | fixed panel path '/pulse' | 1
 custom_components/casora/scripts/local/22-halten.js | W | window.innerWidth (number) | 2
 custom_components/casora/panel/casora-panel.js | W | stroke width (number constant) | 2

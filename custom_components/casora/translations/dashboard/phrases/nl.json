@@ -2516,7 +2516,26 @@
   "Später nicht möglich": "Later niet mogelijk",
   "Früher nicht möglich": "Eerder niet mogelijk",
   "Programm wählen": "Kies een programma",
-  "CO₂-neutral": "Koolstofarm"
+  "CO₂-neutral": "Koolstofarm",
+  "Alle Batterien": "Alle batterijen",
+  "Alle Schlösser entriegeln?": "Alle sloten ontgrendelen?",
+  "Alle entriegeln": "Alles ontgrendelen",
+  "Alle verriegeln": "Alles vergrendelen",
+  "Alles ruhig": "Alles rustig",
+  "Amtliche Warnungen erscheinen hier": "Officiële waarschuwingen verschijnen hier",
+  "Im Casora Studio der Kachel den Solar-Tipp wählen": "Kies in Casora Studio de zonnetip voor deze tegel",
+  "Im Studio unter Einstellungen › Haus & Geräte › Sicherheit": "In Studio onder Instellingen › Huis & apparaten › Beveiliging",
+  "Keine offenen Updates": "Geen openstaande updates",
+  "Neue Versionen erscheinen hier": "Nieuwe versies verschijnen hier",
+  "Noch keine Jalousien gewählt": "Nog geen jaloezieën gekozen",
+  "Pulse einrichten": "Pulse instellen",
+  "Im Pulse-Panel": "In het Pulse-paneel",
+  "Salz, Klarspüler voll": "Zout en glansspoelmiddel vol",
+  "Solar-Tipp zuordnen": "Zonnetip toewijzen",
+  "Verläufe, Ersatz, Einstellungen": "Geschiedenis, vervangingen, instellingen",
+  "KI-Blick": "AI-blik",
+  "Tag/Nacht": "Dag/nacht",
+  "vor 1 Woche": "1 week geleden"
  },
  "patterns": [
   [
@@ -3188,6 +3207,10 @@
    "Over {1} cycli"
   ],
   [
+   "^Pflege in (\\d+) Durchgängen$",
+   "Onderhoud over {1} cycli"
+  ],
+  [
    "^in (\\d+) Durchgängen$",
    "over {1} cycli"
   ],
@@ -3262,6 +3285,10 @@
   [
    "^vor (\\d+) Tag$",
    "{1} dag geleden"
+  ],
+  [
+   "^vor (\\d+) Wochen$",
+   "{1} weken geleden"
   ],
   [
    "^vor (\\d+) Std\\. (\\d+) Min\\.$",
@@ -3502,6 +3529,14 @@
   [
    "^Fenster offen · noch (\\d+) Min\\.$",
    "Raam open · nog {1} min"
+  ],
+  [
+   "^Fenster offen seit (\\d+) Tagen$",
+   "Raam {1} dagen open"
+  ],
+  [
+   "^Fenster seit (\\d+) Tagen offen$",
+   "Raam {1} dagen open"
   ],
   [
    "^Fenster offen seit (.+)$",

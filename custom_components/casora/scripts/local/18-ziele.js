@@ -92,9 +92,14 @@
     if (bad(s)) return s === 'unknown' ? 'Unbekannt' : 'Nicht verfügbar';
     if (/^binary_sensor\./.test(id)) { var w = Z.binWords(st); return s === 'on' ? w[0] : w[1]; }
     if (Z.isNumeric(st)) return Z.fmt(h, id, s);
-    try { var l = h.formatEntityState && h.formatEntityState(Object.assign({}, st, { state: s })); if (l) return l; } catch (e) { /* roh */ }
-    return String(s);
+    var l = null;
+    try { l = h.formatEntityState && h.formatEntityState(Object.assign({}, st, { state: s })); } catch (e) { /* raw */ }
+    // Enum sensors without a translation come back raw („connected“): the common words in German.
+    if (!l || l === s) return RAW_WORD[String(s).toLowerCase()] || l || String(s);
+    return l;
   };
+  var RAW_WORD = { connected: 'Verbunden', disconnected: 'Getrennt', online: 'Online', offline: 'Offline', idle: 'Bereit',
+    on: 'An', off: 'Aus', open: 'Geöffnet', closed: 'Geschlossen', home: 'Zuhause', not_home: 'Unterwegs' };
 
   // ── Verlauf holen (je Entität und Zeitraum einmal je Zustandswechsel) ───────
   var SPANS = { '24h': 864e5, '7d': 7 * 864e5, '30d': 30 * 864e5 };
@@ -181,10 +186,12 @@
     var P = window.casoraPopup, prev = P && P.current;
     return prev ? function () { P.open(prev); } : null;
   };
-  var pageCfg = function (title, content, back) {
+  var pageCfg = function (title, content, back, eyebrow) {
     var P = window.casoraPopup, prev = P && P.current;
     return {
       title: title, content: content, back: back,
+      // Blueprint v2 (rule 7): a page of its own never carries the main switch of the popup before it.
+      head_switch: false, eyebrow: eyebrow || undefined,
       dismiss_on_background: prev ? prev.dismiss_on_background !== false : true,
       style: '--popup-min-width: min(900px, 92vw); --popup-max-width: min(920px, 92vw);',
       popup_styles: prev && prev.popup_styles,
@@ -211,8 +218,23 @@
     }
     f.vals = { card: K.secCard(watch, call('m_vals', id, span), h.states) };
     f.tl = { card: K.secCard(watch, call('m_tl', id, span), h.states) };
-    var lay = K.layout({ fields: f, top: num ? ['hero', 'chart'] : ['hero'], left: ['vals'], right: ['tl'], narrowOrder: ['vals', 'tl'] });
-    P.open(pageCfg(Z.nameOf(h, id), lay, back));
+    // Blueprint v2 (rule 8): the device is „Weitere Einstellungen“ under „Einstellungen“ (was „Gerät ›“ beside the values).
+    var d = devOf(h, id), set = null;
+    if (d) {
+      var batt = null;
+      Object.keys(h.entities || {}).some(function (eid) {
+        var x = h.entities[eid], s3 = h.states[eid];
+        if (x.device_id !== d.id || !s3 || (s3.attributes || {}).device_class !== 'battery' || !/^sensor\./.test(eid)) return false;
+        batt = parseFloat(s3.state); return isFinite(batt);
+      });
+      var sub = [devName(d), batt != null && isFinite(batt) ? T('Batterie') + ' ' + Math.round(batt) + ' %' : null].filter(Boolean).join(' · ');
+      set = window._casoraUI && window._casoraUI.settingsRow ? window._casoraUI.settingsRow(id, { sub: sub || null }) : null;
+    }
+    var lay = K.layout({ fields: f, top: num ? ['hero', 'chart'] : ['hero'], left: ['vals'], right: ['tl'], narrowOrder: ['vals', 'tl'], settings: set });
+    // Short title („Temperatur“, not „AirCube Wohnzimmer Temperatur“) with the device (else the room) as the label.
+    var full = Z.nameOf(h, id), short = shortName(h, id, d);
+    if (window.casoraCleanName) short = window.casoraCleanName(short, true);
+    P.open(pageCfg(short || full, lay, back, short && short !== full ? devName(d) : (areaOf(h, id) || '')));
     return true;
   };
 
@@ -229,6 +251,21 @@
     var lay = K.layout({ fields: f, top: ['hero'], left: ['info'], right: ['ents'], narrowOrder: ['info', 'ents'] });
     P.open(pageCfg(devName(d) || Z.nameOf(h, id), lay, back));
     return true;
+  };
+
+  // Blueprint v2 (rule 8): „Weitere Einstellungen“ of several devices – first the choice, then the device page.
+  var pages = window._casoraPages || (window._casoraPages = {});
+  pages.device = function (id) { Z.openDevice(id); };
+  pages.devices = function (arg) {
+    var h = hassNow(), K = window._casoraSoftKit, UI = window._casoraUI;
+    var ids = String(arg || '').split(',').filter(function (x) { return x && h && h.states[x]; });
+    if (!ids.length || !K || !UI || !window.casoraPopup || !window.casoraPopup.sub) return;
+    var rows = ids.map(function (x) {
+      var d = devOf(h, x);
+      return { icon: Z.iconOf(h.states[x]), iconTone: 'rgba(0,0,0,0)', label: Z.nameOf(h, x), labelLit: true,
+        sub: [d && d.model, areaOf(h, x)].filter(Boolean).join(' · ') || null, page: 'device|' + x };
+    });
+    window.casoraPopup.sub({ title: 'Weitere Einstellungen', content: K.layout({ fields: { l: UI.group(rows, null) }, top: [], left: ['l'], right: [] }) });
   };
 
   // Device with its own tile: its Casora popup (without switching), otherwise the device page.
@@ -413,7 +450,8 @@
     var now = Date.now(), num = Z.isNumeric(st), bin = /^binary_sensor\./.test(id);
     if (part === 'm_hero') {
       var since = Date.parse(st.last_changed);
-      var rest = [areaOf(hass, id), isFinite(since) ? T('seit') + ' ' + when(since, now) : null].filter(Boolean);
+      // The room is the label above the title (blueprint v2, rule 1), not part of the status line.
+      var rest = [isFinite(since) ? T('seit') + ' ' + when(since, now) : null].filter(Boolean);
       var out = CSS + UI.line(Z.stateWord(hass, id, st.state), rest, { tone: bad(st.state) ? 'warn' : null }) + pills(id, span);
       if (!num) {
         // Band: wann „an“ (offen, Bewegung …) über den Zeitraum.
@@ -472,9 +510,9 @@
           r.push({ icon: 'mdi:swap-horizontal', iconTone: 'accent', label: 'Änderungen', value: String(Math.max(0, sg2.segs.length - 1)) });
         }
       }
-      // Sensor: Gerät (öffnet die Geräteseite) und Akku des Geräts.
+      // Sensor: device row only in the standard design – Soft has „Weitere Einstellungen“ as the last section (openMeasure).
       var d = devOf(hass, id), out2 = r.length ? UI.group(r, head) : '';
-      if (d) {
+      if (d && !(window._casoraSoft && window._casoraSoft())) {
         var batt = null;
         Object.keys(hass.entities || {}).some(function (eid) {
           var x = hass.entities[eid], s3 = states[eid];
@@ -537,8 +575,9 @@
       if (integ) rows3.push({ icon: 'mdi:puzzle-outline', iconTone: 'accent', label: 'Integration', value: integ });
       var outI = rows3.length ? UI.group(rows3, 'Gerät') : '';
       // Bewusster Ausweg: HAs eigener Dialog (Einstellungen, die Casora noch nicht zeigt).
+      // Blueprint v2 (rule 6): ↗ – this row leaves Casora.
       outI += '<div style="height:16px"></div>' + UI.group([{ icon: 'mdi:open-in-new', iconTone: 'rgba(0,0,0,0)', label: 'In Home Assistant öffnen',
-        sub: 'Einstellungen, Umbenennen, Symbol', tappable: true }], null)
+        sub: 'Einstellungen, Umbenennen, Symbol', tappable: true, out: true }], null)
         .replace('<div class="hui-row', '<div data-casora-native="' + esc(id) + '" class="hui-row');
       return outI;
     }

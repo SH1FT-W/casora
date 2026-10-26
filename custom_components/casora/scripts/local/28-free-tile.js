@@ -137,7 +137,13 @@
     return 'homeassistant.toggle';
   };
   F.hasControls = function (st) {
-    return !!(st && !bad(st.state) && CONTROL.test(dom(st.entity_id)));
+    if (!(st && !bad(st.state) && CONTROL.test(dom(st.entity_id)))) return false;
+    /* Blueprint v2 (decision 2): a pure switch is switched by the header's main switch only – nothing left to show here.
+       A light keeps its brightness, fans and humidifiers their modes. */
+    var d = dom(st.entity_id), a = st.attributes || {};
+    if (/^(switch|input_boolean)$/.test(d)) return false;
+    if (d === 'light') return (Array.isArray(a.supported_color_modes) ? a.supported_color_modes : []).some(function (m) { return m !== 'onoff'; });
+    return true;
   };
 
   // Elapsed time for the status line ("seit 5 Min.", "seit 3 Std.", "seit 2 Tagen").
@@ -231,13 +237,10 @@
     var id = st.entity_id, d = dom(id), s = String(st.state || ''), a = st.attributes || {}, out = '';
     var tgt = { entity_id: id }, gap = '<div style="height:18px"></div>';
     if (TOGGLE.test(d)) {
-      out += UI.segments([
-        { label: 'Aus', active: s !== 'on', svc: { domain: 'homeassistant', service: 'turn_off', target: tgt } },
-        { label: 'An', active: s === 'on', svc: { domain: 'homeassistant', service: 'turn_on', target: tgt } },
-      ], 'Bedienung');
+      // On/off is the header's main switch (blueprint v2, decision 2) – here only what it cannot do.
       var modes = Array.isArray(a.supported_color_modes) ? a.supported_color_modes : [];
       if (d === 'light' && modes.some(function (m) { return m !== 'onoff'; }) && UI.slider) {
-        out += '<div style="height:10px"></div>' + UI.slider({ value: s === 'on' && a.brightness != null ? Math.round(a.brightness / 2.55) : 0,
+        out += (UI.label ? UI.label('Helligkeit') : '') + UI.slider({ value: s === 'on' && a.brightness != null ? Math.round(a.brightness / 2.55) : 0,
           softHeight: 58, bar: true, icon: 'light', svc: { domain: 'light', service: 'turn_on', field: 'brightness_pct', target: tgt } });
       }
     }
@@ -310,7 +313,7 @@
       });
       return rows.length ? UI.group(rows, 'Werte') : '';
     }
-    if (part === 'more') return st ? UI.group([{ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', entity: C.id }], 'Einstellungen') : '';
+    if (part === 'more') return st && UI.settings ? UI.settings(C.id) : '';
     return '';
   };
 })();

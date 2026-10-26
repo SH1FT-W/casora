@@ -436,8 +436,6 @@
     var main = !s.total ? 'Keine Geräte' : s.problems ? (s.problems === 1 ? '1 Problem' : s.problems + ' Probleme') : 'Keine Probleme';
     return { main: main, rest: s.total ? [s.ok + ' ok'] : [], tone: s.counts.failed ? 'bad' : s.problems ? 'warn' : null };
   };
-  var CHEV = '<svg width="7" height="12" viewBox="0 0 7 12" aria-hidden="true" style="flex:none;"><path d="M1 1L6 6L1 11" fill="none" '
-    + 'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var MORE_CSS = '<style>'
     // „Alles ok“: green check in front, count centred, › while closed (opens in place).
     + '.pls-ok .hui-mhd{min-height:52px;padding:8px 14px 8px 12px;gap:12px;}'
@@ -447,14 +445,6 @@
     + '.pls-okic{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;pointer-events:none;'
     +   'background:' + COLOR.ok + ';color:var(--casora-soft-glyph, #fff);}'
     + '.pls-okic ha-icon{--mdc-icon-size:18px;width:18px;height:18px;display:flex;}'
-    // „In Pulse öffnen“ as a centred text link (44 px tall to tap).
-    + '.pls-foot{display:flex;justify-content:center;margin-top:8px;}'
-    + '.pls-link{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 18px;box-sizing:border-box;border-radius:999px;'
-    +   'font-size:14px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;'
-    +   'color:var(--casora-popup-ui-action, var(--casora-color-teal, #4E9E95));'
-    +   'transition:transform var(--casora-dur-feedback, 160ms) ease, background-color var(--casora-dur-feedback, 160ms) ease;}'
-    + '@media (hover:hover){.pls-link:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}}'
-    + '.pls-link:active{transform:scale(var(--casora-press-scale, .97));}'
     + '</style>';
   P.sec = function (part, C, states, hass) {
     var UI = window._casoraUI;
@@ -488,7 +478,10 @@
       var moreHtml = ok.length ? UI.more('pulse-ok', okHtml, { label: 'Alles ok', count: ok.length }) : '';
       moreHtml = moreHtml.replace('<span class="hui-mlb">', '<span class="pls-okic" aria-hidden="true"><ha-icon icon="mdi:check"></ha-icon></span><span class="hui-mlb">');
       // Footer: into the Pulse panel (rhythm bars, replacement history, settings stay there).
-      var foot = '<div class="pls-foot"><div role="button" class="pls-link" data-casora-link="' + P.PANEL + '"><span>In Pulse öffnen</span>' + CHEV + '</div></div>';
+      /* Blueprint v2 (rules 6, 10): the way into the Pulse panel is a ↗ row (was a text link); not installed: the empty row. */
+      var foot = '<div style="height:8px"></div>' + (!s.installed
+        ? UI.empty({ icon: 'mdi:heart-pulse', text: 'Pulse einrichten', sub: 'Im Pulse-Panel', out: P.PANEL })
+        : UI.group([{ icon: 'mdi:heart-pulse', iconTone: 'rgba(0,0,0,0)', label: 'In Pulse öffnen', sub: 'Verläufe, Ersatz, Einstellungen', out: true, url: P.PANEL }], null));
       return ROW_CSS + MORE_CSS + (moreHtml ? '<div class="pls-ok">' + moreHtml + '</div>' : '') + foot;
     }
     return '';

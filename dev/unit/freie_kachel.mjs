@@ -81,14 +81,16 @@ assert.match(F.color(null), /--casora-tone-general/);
 const V = { free_values: ['sensor.qa_temp', 'binary_sensor.qa_tuer', 'sensor.qa_nicht_da'], free_chart: true, free_controls: true };
 let C = F.plan(states['switch.qa_pumpe'], states, hass, V);
 assert.deepEqual(C.values, ['sensor.qa_temp', 'binary_sensor.qa_tuer'], 'missing entities drop out of the rows');
-assert.equal(C.controls, true);
+assert.equal(C.controls, false, 'a pure switch: on/off is the header main switch (blueprint v2), nothing else to control');
+assert.equal(F.plan(states['light.qa_stehlampe'], states, hass, V).controls, true, 'a dimmable lamp keeps its brightness');
 assert.equal(C.chart, null, 'a switch has no numeric history');
 assert.equal(C.chartMissing, true); assert.equal(C.chartWant, 'switch.qa_pumpe');
 assert.equal(C.empty, false);
 C = F.plan(states['switch.qa_pumpe'], states, hass, { ...V, free_chart_entity: 'sensor.qa_temp' });
 assert.equal(C.chart, 'sensor.qa_temp', 'chosen numeric entity');
-assert.equal(F.wide(states['switch.qa_pumpe'], states, V), true, 'controls + values → two columns');
-assert.equal(F.wide(states['switch.qa_pumpe'], states, {}), false, 'controls alone → one column');
+assert.equal(F.wide(states['light.qa_stehlampe'], states, V), true, 'controls + values → two columns');
+assert.equal(F.wide(states['switch.qa_pumpe'], states, V), false, 'a switch has no controls of its own → one column');
+assert.equal(F.wide(states['light.qa_stehlampe'], states, {}), false, 'controls alone → one column');
 assert.equal(F.wide(states['sensor.qa_temp'], states, V), false, 'a sensor has no controls → one column');
 C = F.plan(states['sensor.qa_temp'], states, hass, {});
 assert.equal(C.controls, false); assert.equal(C.empty, true, 'nothing configured, nothing to switch → empty, hint follows');
@@ -100,17 +102,19 @@ assert.equal(C.chart, 'sensor.qa_temp', 'history of the tile entity itself'); as
 // ── Popup assembly (kit stubbed) ─────────────────────────────────────────
 stubKit();
 window._casoraUI = {};
-let L = F.popup(states['switch.qa_pumpe'], states, hass, { ...V, free_chart_entity: 'sensor.qa_temp' });
+let L = F.popup(states['light.qa_stehlampe'], states, hass, { ...V, free_chart_entity: 'sensor.qa_temp' });
 assert.deepEqual(Object.keys(L.fields), ['hero', 'chart', 'ctl', 'vals', 'more']);
 assert.deepEqual(L.top, ['hero', 'chart']); assert.deepEqual(L.left, ['ctl']); assert.deepEqual(L.right, ['vals', 'more']);
 assert.deepEqual(L.narrowOrder, ['ctl', 'vals', 'more'], 'phone: controls, then values, then more');
 const ch = L.fields.chart.card;
 assert.equal(ch.type, 'custom:casora-chart'); assert.equal(ch.span, '24h'); assert.equal(ch.source, 'history');
 assert.deepEqual(ch.series, [{ entity: 'sensor.qa_temp', name: 'temp', unit: '°C' }]);
-assert.deepEqual(L.fields.hero.card.watch, ['switch.qa_pumpe', 'sensor.qa_temp', 'binary_sensor.qa_tuer'], 'every shown entity redraws the hero');
+assert.deepEqual(L.fields.hero.card.watch, ['light.qa_stehlampe', 'sensor.qa_temp', 'binary_sensor.qa_tuer'], 'every shown entity redraws the hero');
 // A ticking value sensor must not rebuild the controls (slider drag) or the settings row.
-assert.deepEqual(L.fields.ctl.card.watch, ['switch.qa_pumpe'], 'controls follow the main entity only');
-assert.deepEqual(L.fields.more.card.watch, ['switch.qa_pumpe']);
+assert.deepEqual(L.fields.ctl.card.watch, ['light.qa_stehlampe'], 'controls follow the main entity only');
+assert.deepEqual(L.fields.more.card.watch, ['light.qa_stehlampe']);
+L = F.popup(states['switch.qa_pumpe'], states, hass, V);
+assert.deepEqual(Object.keys(L.fields), ['hero', 'vals', 'more'], 'switch: no controls section next to the header switch');
 assert.deepEqual(L.fields.vals.card.watch, ['sensor.qa_temp', 'binary_sensor.qa_tuer'], 'value rows follow their own entities');
 L = F.popup(states['sensor.qa_temp'], states, hass, {});
 assert.deepEqual(Object.keys(L.fields), ['hero', 'more'], 'sensor without sections: state line and settings row');
@@ -133,9 +137,9 @@ assert.equal(F.sec('hero', { id: 'sensor.qa_fehlt', values: [], labels: {} }, st
 
 // Controls per domain.
 let ctl = sec('ctl', states['switch.qa_pumpe']);
-assert.equal(ctl, '<seg Bedienung>Aus>homeassistant.turn_off;*An>homeassistant.turn_on</seg>');
+assert.equal(ctl, '', 'switch: on/off only in the header (blueprint v2, decision 2)');
 ctl = sec('ctl', states['light.qa_stehlampe']);
-assert.ok(ctl.startsWith('<seg Bedienung>Aus>homeassistant.turn_off;*An>homeassistant.turn_on</seg>'), ctl);
+assert.doesNotMatch(ctl, /homeassistant\.turn_off/, 'no second on/off next to the header switch');
 assert.match(ctl, /<slider 50 turn_on\/brightness_pct>/, 'dimmable light: brightness slider');
 assert.match(ctl, /<seg Helligkeit · 50 %>25 %>light\.turn_on\{"brightness_pct":25\};\*50 %>/, 'hold menu pills as segments');
 ctl = sec('ctl', states['cover.qa_rollo']);
@@ -150,12 +154,13 @@ assert.equal(sec('ctl', states['sensor.qa_temp']), '', 'nothing to control');
 assert.equal(sec('ctl', states['sensor.qa_weg']), '');
 delete window._casoraHold;
 assert.equal(sec('ctl', states['cover.qa_rollo']), '', 'without the hold module no cover controls, no error');
-assert.equal(sec('ctl', states['switch.qa_pumpe']), '<seg Bedienung>Aus>homeassistant.turn_off;*An>homeassistant.turn_on</seg>', 'toggle works on its own');
+assert.equal(sec('ctl', states['switch.qa_pumpe']), '', 'switch without the hold module: still nothing (header switch)');
 
 // Value rows: own label, entity for the tap, state with unit, unavailable marked.
 const vals = sec('vals', states['switch.qa_pumpe'], { free_values: ['sensor.qa_temp', 'binary_sensor.qa_tuer', 'sensor.qa_weg'], free_value_labels: { 'sensor.qa_temp': ' Innen ' } });
 assert.equal(vals, '<group Werte>sensor.qa_temp:Innen=21,5 °C;binary_sensor.qa_tuer:tuer=Geöffnet;sensor.qa_weg:weg=Nicht verfügbar</group>');
 assert.equal(sec('vals', states['switch.qa_pumpe']), '', 'no values configured: no section');
+window._casoraUI.settings = (id) => window._casoraUI.group([{ entity: id, label: 'Weitere Einstellungen' }], 'Einstellungen');
 assert.equal(sec('more', states['switch.qa_pumpe']), '<group Einstellungen>switch.qa_pumpe:Weitere Einstellungen=</group>');
 assert.equal(sec('more', null), '');
 

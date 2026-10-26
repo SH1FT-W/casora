@@ -67,5 +67,10 @@ h = hass_with([st("sensor.rh", 70), st("sensor.t", 21), st("sensor.out_t", 20), 
 _, rooms, _ = raumklima.evaluate_rooms(h, [dict(ROOM, w=[])], "sensor.out_t", "sensor.out_rh", None)
 check("B-PY-10: mit feuchten Außenwerten wie bisher", rooms[0]["grund"] == "Feuchte 70 % · draußen feuchter", rooms[0]["grund"])
 
+# Long durations read as days, not „526 Std. 47 Min.“ (popup audit 26.10.2026).
+check("dauer minuten", raumklima._dur(12) == "12 Min.", raumklima._dur(12))
+check("dauer stunden", raumklima._dur(47 * 60 + 5) == "47 Std. 5 Min.", raumklima._dur(47 * 60 + 5))
+check("dauer tage", raumklima._dur(526 * 60 + 47) == "21 Tagen", raumklima._dur(526 * 60 + 47))
+
 print("\nALLES OK" if not fails else f"\n{len(fails)} FEHLER")
 sys.exit(1 if fails else 0)

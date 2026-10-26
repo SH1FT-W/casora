@@ -188,8 +188,11 @@
       dismiss_on_background: prev ? prev.dismiss_on_background : true,
       style: (prev && prev.style) || '--popup-min-width: min(900px, 92vw); --popup-max-width: min(920px, 92vw);',
       popup_styles: prev && prev.popup_styles,
+      // Blueprint v2: own header tile when no Updates tile is behind it (opened from the bell).
+      ring: { icon: 'mdi:package-up', hue: 'var(--casora-tone-media, var(--casora-color-blue, #5B8FC9))' },
     };
-    P.open(cfg);
+    // From the Updates list: a sub page (‹ back, label „Updates“); on its own: a popup of its own.
+    if (prev && P.sub) P.sub(cfg); else P.open(cfg);
     return true;
   };
 

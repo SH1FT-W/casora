@@ -68,9 +68,9 @@ assert.deepEqual(c2.tap_action, { action: 'more-info', entity: 'light.qa_stehlam
 stubKit();
 window._casoraUI = {};
 let L = F.popup(states['switch.qa_pumpe'], states, hass, c0.variables);
-assert.deepEqual(Object.keys(L.fields), ['hero', 'chart', 'ctl', 'vals', 'more'], 'values, history and controls as configured');
+assert.deepEqual(Object.keys(L.fields), ['hero', 'chart', 'vals', 'more'], 'values and history as configured; a switch has no controls next to the header switch');
 assert.deepEqual(L.fields.chart.card.series, [{ entity: 'sensor.qa_temp', name: 'temp', unit: '°C' }]);
-assert.equal(F.wide(states['switch.qa_pumpe'], states, c0.variables), true, 'controls + values: two columns');
+assert.equal(F.wide(states['switch.qa_pumpe'], states, c0.variables), false, 'switch + values: one column (552)');
 L = F.popup(null, states, hass, c1.variables);
 assert.deepEqual(Object.keys(L.fields), ['hero', 'vals'], 'template badge: status line and values, no controls');
 const UI = stubUI();

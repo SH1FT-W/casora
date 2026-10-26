@@ -65,7 +65,10 @@
         + 'border-radius:var(--casora-popup-row-radius, 20px);box-shadow:var(--casora-popup-plate-shadow, none);padding:var(--casora-soft-plate-pad, 14px 10px 6px);">'
         + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);'
         + 'letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary,#fff));'
-        + 'text-align:left;padding:0 6px;">' + esc(window._hpChartTitle(B.cur)) + '</div>'
+        + 'text-align:left;padding:0 6px;display:flex;align-items:baseline;gap:12px;"><span class="hp-ct-t" style="flex:1;min-width:0;">' + esc(window._hpChartTitle(B.cur)) + '</span>'
+        /* Decision 3 (variant A): a row picks the chart (no ›), the chosen battery's own page through „Details ›“. */
+        + '<span class="hp-det" role="button" data-casora-mi="' + esc(B.cur) + '" style="font-size:var(--casora-fs-sub,13px);font-weight:700;cursor:pointer;'
+        + 'color:var(--casora-popup-ui-action, var(--casora-color-teal));white-space:nowrap;"><span>' + esc('Details') + '</span> ›</span></div>'
         + '<div class="hp-chart-slot" style="min-height:150px;margin:6px 0 0;"></div></div>';
       if (typeof window._hpChartInit === 'function') window._hpChartInit(B.cur);
     }
@@ -104,8 +107,9 @@
     return { entity: r.id, icon: lv === 'ok' ? (r.icon || 'battery') : BAT() ? BAT().icon(lv, r.v) : 'mdi:battery-low',
       iconTone: lv === 'ok' ? undefined : tone,
       label: r.name, sub: sub.length ? sub.join(' · ') : null, active: c, value: r.v + ' %',
-      valueTone: lv === 'charging' ? null : tone };
+      valueTone: lv === 'charging' ? null : tone, noChev: !noPick };
   };
+  var noPick = false;
   // Zeilen schalten das Diagramm um statt More-Info (data-hp-metric wie im Pflanzen-Popup);
   // die gezeigte Batterie (B.cur) bleibt auch nach dem Neuzeichnen der Liste hinterlegt.
   var tapWrap = function (html) {
@@ -117,6 +121,12 @@
     }
     return '<div ontouchstart="window._casoraSoftBat.tap(event,\'s\')" ontouchend="window._casoraSoftBat.tap(event,\'t\')"'
       + ' onclick="window._casoraSoftBat.tap(event,\'c\')">' + html + '</div>';
+  };
+  (window._casoraPages || (window._casoraPages = {}))['bat-all'] = function () {
+    var K = kit(), C = B.lastC, h = (document.querySelector('home-assistant') || {}).hass;
+    if (!K || !C || !h || !window.casoraPopup || !window.casoraPopup.sub) return;
+    var ids = C.b.map(function (b) { return b[0]; });
+    window.casoraPopup.sub({ title: 'Alle Batterien', content: K.layout({ fields: { l: { card: K.secCard(ids, call('_casoraSoftBat', 'list', C), h.states) } }, top: [], left: ['l'], right: [] }) });
   };
   B.tap = function (ev, kind) {
     window._hpPlantTap(ev, kind);
@@ -137,13 +147,28 @@
     if (part === 'low') {
       return low.length ? SEL_CSS + tapWrap(UI.group(low.map(function (r) { return rowOf(states, r); }), 'Akku schwach')) : '';
     }
+    if (part === 'list') {
+      // Sub page „Alle Batterien“: every battery as a row with › onto its own page.
+      noPick = true;
+      var allHtml = UI.group(R.map(function (r) { return rowOf(states, r); }), null);
+      noPick = false;
+      return allHtml;
+    }
     if (part === 'all') {
       var rest = R.filter(function (r) { return lvOf(r.v) === 'ok'; });
       if (!rest.length) return '';
+      /* Blueprint v2 (rule 9): from 12 rows on the first 12 (weakest first) and „Alle (n) ›“ onto a page. */
+      var moreRowHtml = '';
+      if (R.length > 12) {
+        rest = rest.slice(0, Math.max(0, 12 - low.length));
+        moreRowHtml = '<div style="height:8px"></div>' + UI.group([{ icon: 'mdi:format-list-bulleted', iconTone: 'rgba(0,0,0,0)',
+          label: 'Alle', value: String(R.length), page: 'bat-all' }], null);
+        if (!rest.length) return moreRowHtml;
+      }
       // Eine Liste über zwei Spalten (schmal eine), nach Prozent sortiert.
       return SEL_CSS + '<style>.hp-batall .hui-plate{display:grid !important;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px 18px !important;}'
         + '@media (max-width: 760px){.hp-batall .hui-plate{grid-template-columns:minmax(0, 1fr);}}</style>'
-        + '<div class="hp-batall">' + tapWrap(UI.group(rest.map(function (r) { return rowOf(states, r); }), low.length ? 'Weitere Geräte' : 'Alle Geräte')) + '</div>';
+        + '<div class="hp-batall">' + tapWrap(UI.group(rest.map(function (r) { return rowOf(states, r); }), low.length ? 'Weitere Geräte' : 'Alle Geräte')) + '</div>' + moreRowHtml;
     }
     return '';
   };
@@ -202,12 +227,14 @@
     /* 1.0.5: „Wartet auf Neustart“ steht live im Kopf (sec 'hero'), nicht als eigenes Feld – ein
        leeres Rasterfeld kostete einen Abstand, und beim Öffnen gebaut fehlte es nach der Installation. */
     if (fl.upd) f.upd = fl.upd;
+    /* Blueprint v2: nothing to install → an empty row; the search is an action row at the end of the list. */
+    f.chk = { card: K.secCard(all, call('_casoraSoftUpd', 'chk', C), states) };
     var warn = U.hasWarn(states);
     if (warn && fl.ai) f.ai = fl.ai;
     var sysIds = (C.system || []).map(function (s) { return s[0]; }).concat(['update.hacs_update', 'update.casora_update', C.backupNext]);
     var Cm = Object.assign({}, C, { aiInMore: !warn });
     f.more = { card: K.secCard(all.concat(watchB, sysIds), call('_casoraSoftUpd', 'more', Cm), states) };
-    var lay = K.layout({ fields: f, top: ['hero'], left: ['upd'], right: ['ai', 'more'], moveLeft: [] });
+    var lay = K.layout({ fields: f, top: ['hero'], left: ['upd', 'chk'], right: ['ai', 'more'], moveLeft: [] });
     return lay;
   };
   var logoOf = function (states, id) {
@@ -291,10 +318,16 @@
       var head = n === 0 ? (restartOnly ? 'Neustart ausstehend' : 'Alles aktuell') : n === 1 ? '1 Update verfügbar' : n + ' Updates verfügbar';
       var rest = X0 && X0.restart ? X0.restart(states, { UI: UI, headOut: function (t) { return UI.label(t); },
         logoOf: function (id) { return logoOf(states, id); } }) : '';
-      // 09.10.2026: „Jetzt nach Updates suchen“ als Pille unter der Statuszeile (03-popups.js).
-      var chk = window._casoraUpdCheck ? '<div style="display:flex;justify-content:center;">' + window._casoraUpdCheck.html(true) + '</div>' : '';
+      // „Jetzt nach Updates suchen“ is the action row at the end of the list (part 'chk', blueprint v2).
+      var chk = '';
       return UI.line(head, [busy ? (busy === 1 ? 'Wird installiert' : busy + ' werden installiert') : null, ki, backup],
         { tone: n ? null : restartOnly ? 'warn' : 'good' }) + chk + (rest ? '<div style="text-align:left;">' + rest + '</div>' : '');
+    }
+    if (part === 'chk') {
+      var none = !pend.length && !(window._casoraUpdX && window._casoraUpdX.restartIds && window._casoraUpdX.restartIds(states).length);
+      return (none && UI.empty ? UI.empty({ icon: 'mdi:check-circle-outline', text: 'Keine offenen Updates', sub: 'Neue Versionen erscheinen hier' })
+        + '<div style="height:8px"></div>' : '')
+        + (window._casoraUpdCheck ? window._casoraUpdCheck.html('row') : '');
     }
     if (part === 'more') {
       var X = window._casoraUpdX, secs = [];

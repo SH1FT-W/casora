@@ -1225,7 +1225,8 @@
     if (c.total || c.counters.length) parts.push('stats');
     parts.forEach(function (k) { f[k] = { card: KIT.secCard(watch, call(k), states) }; });
     return KIT.layout({ fields: f, top: ['hero'], left: ['drinks'], right: ['info', 'stats'], // Phone: notes before the drinks only when something is missing at opening (else operate first).
-      narrowOrder: K.status(c, states).warns.some(function (w) { return !w.soft && !CARE_NAME[w.art]; }) ? ['info', 'drinks', 'stats'] : ['drinks', 'info', 'stats'] });
+      narrowOrder: K.status(c, states).warns.some(function (w) { return !w.soft && !CARE_NAME[w.art]; }) ? ['info', 'drinks', 'stats'] : ['drinks', 'info', 'stats'],
+      settings: c.anchor && states[c.anchor] ? c.anchor : id });
   };
 
   var LBL = 'font-family:var(--primary-font-family, system-ui);';
@@ -1498,8 +1499,9 @@
             return { label: it.label, active: it.on, svc: it.on ? null : svcOf(it) };
           }), label);
         };
-        html += sw(c.opts.strength, K.strengths(S[c.opts.strength], narrow ? 3 : 4), 'Stärke', function (it) { return { domain: 'select', service: 'select_option', data: { option: it.raw }, target: { entity_id: c.opts.strength } }; });
-        html += sw(c.opts.amount, K.amounts(S[c.opts.amount], narrow ? 4 : 5), 'Menge', function (it) { return { domain: 'number', service: 'set_value', data: { value: it.v }, target: { entity_id: c.opts.amount } }; });
+        /* Blueprint v2: phone and desktop offer the same steps (the phone used to drop one strength and one amount). */
+        html += sw(c.opts.strength, K.strengths(S[c.opts.strength], 4), 'Stärke', function (it) { return { domain: 'select', service: 'select_option', data: { option: it.raw }, target: { entity_id: c.opts.strength } }; });
+        html += sw(c.opts.amount, K.amounts(S[c.opts.amount], 5), 'Menge', function (it) { return { domain: 'number', service: 'set_value', data: { value: it.v }, target: { entity_id: c.opts.amount } }; });
         html += sw(c.opts.temp, S[c.opts.temp] ? K.temps(S[c.opts.temp]) : [], 'Temperatur', function (it) { return { domain: 'select', service: 'select_option', data: { option: it.raw }, target: { entity_id: c.opts.temp } }; });
       } else if (!why && !stopRecent) html += UI.note ? UI.note('Getränk antippen, dann starten.') : '';
       return html;

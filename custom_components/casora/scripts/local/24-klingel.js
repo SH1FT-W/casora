@@ -419,7 +419,16 @@
     // Live-Bild links über den Schnellantworten (volle Breite wäre 16:9 über 850 px), rechts der Verlauf,
     // darunter über beide Spalten die Einstellungen („Mehr“).
     return K.layout({ fields: f, top: ['hero'], left: ['live', 'say'], right: ['hist', 'more'],
-      narrowOrder: ['live', 'say', 'hist', 'more'] });
+      narrowOrder: ['live', 'say', 'hist', 'more'], settings: id });
+  };
+  // Blueprint v2 (rule 9): „Ganzer Verlauf ›“ opens the whole list (30 entries) as a sub page with ‹.
+  (window._casoraPages || (window._casoraPages = {}))['klingel-hist'] = function (camId) {
+    var K = window._casoraSoftKit, ha = document.querySelector('home-assistant'), h = ha && ha.hass;
+    if (!K || !h || !window.casoraPopup || !window.casoraPopup.sub) return;
+    var id = Object.keys(h.states).filter(function (x) { return x === camId; })[0] || camId;
+    var c = KL.find(h, id);
+    var code = 'return window._casoraKlingel ? window._casoraKlingel.sec("histall", ' + JSON.stringify(c) + ', states, hass, this) : "";';
+    window.casoraPopup.sub({ title: 'Verlauf', content: K.layout({ fields: { h: { card: K.secCard(KL.watch(c), code, h.states) } }, top: [], left: ['h'], right: [] }) });
   };
 
   var pill = function (text, mid) {
@@ -505,7 +514,7 @@
       }
       return out;
     }
-    if (part === 'hist') {
+    if (part === 'hist' || part === 'histall') {
       if (el) { els[c.cam] = (els[c.cam] || []).filter(function (w) { return w.isConnected; }); if (els[c.cam].indexOf(el) < 0) els[c.cam].push(el); }
       var got = KL.history(hass, c, el);
       var job = hc[c.cam] || {};
@@ -517,7 +526,7 @@
         o2 = UI.group([{ icon: job.err ? 'mdi:alert-circle-outline' : 'mdi:check', iconTone: job.err ? 'warn' : null,
           label: job.err ? 'Verlauf nicht abrufbar' : 'Niemand hat geklingelt', sub: job.err ? null : 'In den letzten 3 Tagen' }], head);
       } else {
-        var max = more[c.cam] ? 30 : 8;
+        var max = part === 'histall' ? 30 : 8;
         var newest = list.filter(function (e) { return e.kind === 'ring'; })[0];
         // Zeitleiste wie Person/Schloss (15-person.js): Uhrzeit | Punkt mit Linie zum nächsten | Was, darunter wie lange her.
         // Klingeln als Punkt in Gerätefarbe, Erkennungen ruhig – beim ersten Eintrag eines früheren Tags steht der Tag über der Uhrzeit.
@@ -550,11 +559,13 @@
             + (isNew ? '<div style="font-size:13px;font-weight:700;padding-top:' + (2 + off) + 'px;color:var(--casora-color-red-text, var(--casora-color-red));">' + esc(tr('Neu')) + '</div>' : '<div></div>')
             + '</div>';
         }).join('');
-        o2 = (UI.label ? UI.label(head) : '')
+        o2 = (UI.label && part === 'hist' ? UI.label(head) : '')
           + '<div class="kl-verlauf" style="font-family:var(--primary-font-family, system-ui);background:' + rowBg + ';border-radius:var(--casora-popup-row-radius, 24px);padding:8px 16px 8px 12px;">' + body + '</div>';
-        if (list.length > 8) o2 += pill(more[c.cam] ? 'Weniger anzeigen' : 'Mehr anzeigen', 'klingel-more:' + c.cam);
+        // The last 8 here, the rest on its own page (was: „Mehr anzeigen“ unfolding in place).
+        if (list.length > 8 && part === 'hist') o2 += '<div style="height:8px"></div>' + UI.group([{ icon: 'mdi:history', iconTone: 'rgba(0,0,0,0)',
+          label: 'Ganzer Verlauf', value: String(Math.min(list.length, 30)), page: 'klingel-hist|' + c.cam }], null);
       }
-      var media = KL.media(hass, c);
+      var media = part === 'hist' ? KL.media(hass, c) : null;
       if (media) o2 += '<div style="height:8px"></div>' + UI.group([{ icon: 'mdi:filmstrip-box-multiple', iconTone: 'accent', label: 'Aufnahmen',
         sub: 'In den Medien von Home Assistant', entity: 'klingel-go:' + media }], null);
       return o2;
@@ -562,7 +573,8 @@
     if (part === 'more') {
       var secs = [];
       var vols = slider(UI, S, c.vol.bell, 'Klingelton') + slider(UI, S, c.vol.speak, 'Sprechen') + slider(UI, S, c.vol.spk, 'Lautsprecher');
-      if (vols) secs.push(UI.label('Lautstärke') + vols.replace('<div style="margin-top:8px;">', '<div>'));
+      var names = [];
+      if (vols) { secs.push(UI.label('Lautstärke') + vols.replace('<div style="margin-top:8px;">', '<div>')); names.push('Lautstärke'); }
       var rows = [
         swRow(S, c.sw.bell, 'mdi:bell-ring-outline', 'Klingelton an der Tür', false),
         swRow(S, c.sw.audio, 'mdi:microphone-outline', 'Ton aufnehmen', true, 'Ohne Ton hörst du die Tür nicht'),
@@ -584,8 +596,8 @@
         });
         if (words.length > 1 && words.length <= 5) segs = UI.segments(words, 'Licht am Klingelknopf');
       }
-      if (rows.length) secs.push(UI.group(rows, 'Klingel'));
-      if (segs) secs.push(segs);
+      if (rows.length) { secs.push(UI.group(rows, 'Klingel')); names.push('Klingel'); }
+      if (segs) { secs.push(segs); names.push('LED'); }
       var dm = c.dayMode && S[c.dayMode] && !bad(S[c.dayMode].state) ? S[c.dayMode] : null;
       if (dm) {
         var DM = { auto: 'Automatisch', color: 'Farbe', blackwhite: 'Schwarz-Weiß', blackandwhite: 'Schwarz-Weiß' };
@@ -593,7 +605,7 @@
           return { label: DM[String(o).toLowerCase().replace(/[^a-z]/g, '')] || String(o), active: o === dm.state,
             svc: { domain: 'select', service: 'select_option', target: { entity_id: c.dayMode }, data: { option: o } } };
         });
-        if (dw2.length > 1 && dw2.length <= 4) secs.push(UI.segments(dw2, 'Tag/Nacht-Modus'));
+        if (dw2.length > 1 && dw2.length <= 4) { secs.push(UI.segments(dw2, 'Tag/Nacht-Modus')); names.push('Tag/Nacht'); }
       }
       var ar = c.autoReply && S[c.autoReply] && !bad(S[c.autoReply].state) ? S[c.autoReply] : null;
       var dev = [];
@@ -622,9 +634,10 @@
         dev.push({ icon: dn === 'night' ? 'mdi:weather-night' : 'mdi:white-balance-sunny', iconTone: 'rgba(0,0,0,0)', label: 'Bild gerade',
           value: dn === 'night' ? 'Schwarz-Weiß' : dn === 'led_day' ? 'Farbe mit Licht' : 'Farbe' });
       }
-      if (dev.length) secs.push(UI.group(dev, 'Gerät'));
-      // Ohne Zähler (die Zahl der Abschnitte sagte niemandem etwas); aufgeklappt bleibt „Einstellungen“ stehen, nur der Pfeil dreht.
-      return secs.length ? UI.more('klingel', secs.map(function (x) { return '<div>' + x + '</div>'; }).join(''), { label: 'Einstellungen', less: 'Einstellungen' }) : '';
+      if (dev.length) { secs.push(UI.group(dev, 'Gerät')); names.push(dev.some(function (r) { return r.label === 'Akku'; }) ? 'Akku' : 'Gerät'); }
+      // Blueprint v2 (rule 9): the shared „Mehr (n) ⌄“; its sub line names what is inside (was „Einstellungen ⌄“).
+      return secs.length ? UI.more('klingel', secs.map(function (x) { return '<div>' + x + '</div>'; }).join(''),
+        { count: secs.length, hint: names.map(tr).join(', ') }) : '';
     }
     return '';
   };

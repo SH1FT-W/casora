@@ -323,7 +323,7 @@
   };
 
   /* Light in the tank popup (1.1.2): on/off row, brightness, colour channels (two columns) and the lamp's
-     own modes or profile to tap; „Weitere Einstellungen“ opens the HA dialog. */
+     own modes or profile to tap; „Weitere Einstellungen“ (standard design) opens the device page. */
   window._casoraAqLight = function (c, states, hass) {
     const UI = window._casoraUI;
     if (!UI) return '';
@@ -388,7 +388,8 @@
         if (items.length) out += gap(18) + window._casoraAqChips(items, 'Lampen-Profil');
       }
     }
-    return out + gap(12) + UI.group([{ icon: 'mdi:tune-variant', iconTone: 'rgba(255,255,255,0.18)', label: 'Weitere Einstellungen', entity: c.light }], null);
+    /* Soft: the light's „Weitere Einstellungen“ is the popup's last section (blueprint v2), not a row here. */
+    return soft ? out : out + gap(12) + UI.group([UI.settingsRow(c.light, { iconTone: 'rgba(255,255,255,0.18)' })], null);
   };
 
   /* Control: schedule switch as two rows (active one highlighted); meaning of "on" per lamp. */
@@ -849,7 +850,9 @@
     f2.more = HH.moreCard(watch, 'const __p = [' + parts.map((p) => '(() => {' + p + '\n})()').join(',\n') + '];\n'
       + 'return window._casoraHH ? window._casoraHH.more("aquarium", __p) : "";', cfg.temp);
     return HH.layout({ entity: cfg.temp, watch: watch, fields: f2, top: ['hero', 'chart'],
-      left: ['glight', 'gctl', 'gtech'].filter((k) => f2[k]), right: ['gdose', 'gleak', 'more'].filter((k) => f2[k]) });
+      left: ['glight', 'gctl', 'gtech'].filter((k) => f2[k]), right: ['gdose', 'gleak', 'more'].filter((k) => f2[k]),
+      /* Blueprint v2 (rule 8): „Weitere Einstellungen“ of the tank's main device (light first, else the thermometer). */
+      settings: [cfg.light, cfg.temp].filter((x) => x && states[x])[0] || null });
   }
   /* Popup standard (24.09.2026): controls on the left (light, equipment, dosing), info on the right (safety, consumption, AI doctor). */
   const _sp = ((l, r) => window._casoraSplit ? window._casoraSplit('aquarium', l, r) : { left: l, right: r })(
@@ -1001,7 +1004,8 @@
     + 'font-family:' + FONT + ';font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer;user-select:none;-webkit-user-select:none;'
     + 'background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));color:var(--casora-popup-tiles-text-primary, #2E2721);'
     + 'transition:background-color .16s ease, filter .16s ease;-webkit-tap-highlight-color:transparent;}'
-    + '.hh-pill.pri{background:var(--casora-soft-primary, var(--casora-popup-ui-action, #276B64));color:var(--casora-soft-primary-ink, var(--casora-popup-ui-on-action, #fff));}'
+    /* Blueprint v2 (rule 4, decision 6): the main action is filled in the header tile's colour with dark ink. */
+    + '.hh-pill.pri{background:var(--casora-popup-accent, var(--casora-soft-primary, #94603B));color:var(--casora-popup-action-ink, rgba(46,34,20,.9));}'
     + '.hh-pill.dis{opacity:.4;cursor:default;}'
     + '@media (hover:hover){.hh-pill:not(.dis):not(.pri):hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}'
     + '.hh-pill.pri:not(.dis):hover{filter:brightness(1.08);}}'
@@ -1058,6 +1062,15 @@
   H.layout = function (o) {
     var f = o.fields, has = function (k) { return f[k] !== undefined && f[k] !== null && f[k] !== ''; };
     var top = (o.top || ['hero']).filter(has), L = (o.left || []).filter(has), R = (o.right || []).filter(has);
+    /* Blueprint v2 (rule 8): o.settings = the device's entity → section „Einstellungen“ with „Weitere
+       Einstellungen“ as the last section – right column before „Mehr“, or at the end of the only column. */
+    var UIb = window._casoraUI;
+    if (o.settings && UIb && UIb.settings && !has('set')) {
+      f = Object.assign({}, f, { set: UIb.settings(o.settings, o.settingsRows) });
+      var rOnly = R.filter(function (k) { return k !== 'more'; });
+      if (!rOnly.length) L = L.concat(['set']);
+      else R = R.indexOf('more') > -1 ? R.slice(0, R.indexOf('more')).concat(['set'], R.slice(R.indexOf('more'))) : R.concat(['set']);
+    }
     if (!L.length && R.length > 1) { L = R.slice(0, 1); R = R.slice(1); }
     /* B-11: if only „Mehr“ is on the right, the popup becomes one column and „Mehr“ is the last row –
        instead of an almost empty right column with „Mehr“ on top. */
@@ -1118,6 +1131,15 @@
     + ' .hui-more.open > .hui-mbd { display: block !important; column-count: 2; column-gap: var(--casora-popup-col-gap, 26px) !important; }'
     + ' .hui-more.open > .hui-mbd > * { break-inside: avoid; -webkit-column-break-inside: avoid; display: block; margin: 0; padding-bottom: 18px; }'
     + ' .hui-more.open > .hui-mbd > style { display: none; margin: 0; } }';
+  /* Blueprint v2 (rule 7): sub page in the same popup (‹ back, label = page before) with one live section;
+     code = body (… return html). */
+  H.page = function (title, watch, code, entity) {
+    if (!window.casoraPopup || !window.casoraPopup.sub) return;
+    var col = H.col(['p'], { p: '[[[\n' + code + '\n]]]' }, watch, entity);
+    col.card_mod = { style: WRAP_CSS };
+    col.styles.card = [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px 24px 26px' }];
+    window.casoraPopup.sub({ title: title, content: col });
+  };
   /* More section as its own button-card with triggers_update; code = body (… return html). */
   H.moreCard = function (watch, code, entity) {
     return { card: H.col(['m'], { m: '[[[\n' + code + '\n]]]' }, watch, entity) };
@@ -1140,6 +1162,13 @@
      Here the glass colours of its description are only recoloured to the Soft tones. */
   H.aiButton = function (camId, label) {
     var id = esc(camId);
+    /* Blueprint v2: AI looks are the shared AI card (✦ title, text, „Neu prüfen“) – the module fills .cam-ai-box. */
+    var UIk = window._casoraUI, kcHtml = UIk && UIk.kiCard ? UIk.kiCard({ title: 'KI-Blick', body: '<div class="cam-ai-box" style="display:none;margin-bottom:4px;"></div>',
+      btnText: String(label || '').replace(/^KI-Blick:\s*/, '') || 'Prüfen', btnSvc: ' data-cam-ai="' + esc(camId) + '"', primary: true }) : null;
+    if (kcHtml) return '<style>.cam-ai-inline .cam-ai-box>div{background:transparent!important;padding:0!important;}'
+      + '.cam-ai-inline .cam-ai-box [style*="rgba(255,255,255,0.92)"]{color:var(--casora-popup-tiles-text-primary, #3A322B)!important;}'
+      + '.cam-ai-inline .cam-ai-box [style*="rgba(255,255,255,0.5)"],.cam-ai-inline .cam-ai-box [style*="rgba(255,255,255,0.6)"]{color:var(--casora-soft-sub, rgba(58,50,43,0.6))!important;}</style>'
+      + '<div class="cam-ai-inline" data-cam="' + esc(camId) + '">' + kcHtml + '</div>';
     return H.pillCss + '<style>'
       + '.cam-ai-inline .cam-ai-box>div{background:var(--casora-soft-row-fill, rgba(140,115,90,0.07))!important;border-radius:var(--casora-popup-row-radius, 24px)!important;padding:14px 16px!important;}'
       + '.cam-ai-inline .cam-ai-box [style*="rgba(255,255,255,0.92)"]{color:var(--casora-popup-tiles-text-primary, #3A322B)!important;}'
@@ -1570,7 +1599,7 @@
     /* Device data (manufacturer, model, integration, the device's other entities) the same way as the other device
        popups: „Weitere Einstellungen“ opens Casora's device page (issue #77). */
     if (kind === 'devset') {
-      return c.st && states[c.st] ? UI.group([{ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', entity: c.st }], 'Gerät') : '';
+      return c.st && states[c.st] ? UI.settings(c.st) : '';
     }
 
     if (kind === 'hero') {
@@ -1985,7 +2014,8 @@
          the last cycles sit on the left under the cycle and the programs on the right (as when off). */
       if (run0) f2.pbar = tpl('pbar', false);   /* empty it costs a grid gap on top – only add it while running */
       f2.abort = tpl('abort', false);
-      var moreKeys = (WD ? ['ctrl', 'stats', 'energy', 'maint_rest', 'tips', 'plug'] : ['energy', 'plug']).concat(['devset']);
+      /* „Weitere Einstellungen“ is no longer hidden in „Mehr“ – blueprint v2 puts it last (HH.layout settings). */
+      var moreKeys = WD ? ['ctrl', 'stats', 'energy', 'maint_rest', 'tips', 'plug'] : ['energy', 'plug'];
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("laundry", ' + JSON.stringify(moreKeys) + '.map(function (k) {'
         + ' return (k === "ctrl" || k === "plug" || k === "tips" || k === "devset") ? L.inner(k, c, states) : L.slot(k, c, states); })) : "";', c.st);
@@ -1993,7 +2023,7 @@
       if (!WD) { left = ['run', 'act', 'dev', 'abort']; right = ['more']; }
       else if (run0) { left = ['unload', 'run', 'pick', 'act', 'cycles', 'abort']; right = ['progs', 'maint', 'more']; }
       else { left = ['unload', 'act', 'cycles']; right = ['progs', 'maint', 'more']; }
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: left, right: right });
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: left, right: right, settings: states[c.st] ? c.st : null });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
@@ -2388,10 +2418,34 @@
       tp0 = t ? { x: t.clientX, y: t.clientY } : null;
     }, { capture: true, passive: true });
     var goTap = function (ev) {
-      var path = (ev.composedPath && ev.composedPath()) || [ev.target], el = null;
-      for (var i = 0; i < path.length && !el; i++) {
+      var path = (ev.composedPath && ev.composedPath()) || [ev.target], el = null, pill = null;
+      for (var i = 0; i < path.length && !el && !pill; i++) {
         var t = path[i];
         if (t && t.classList && t.classList.contains('hui-cf') && t.dataset && /"dish"/.test(t.dataset.casoraCf || '')) el = t;
+        if (t && t.dataset && t.dataset.dishGo) pill = t;
+      }
+      /* Blueprint v2: the start pill asks first („Starten“), then starts like the confirmed row did (D.go
+         recounts a chosen clock time from now, else the plain service call). */
+      if (pill) {
+        ev.stopImmediatePropagation();
+        if (ev.cancelable) ev.preventDefault();
+        if (ev.type === 'touchend') {
+          var p0 = ev.changedTouches && ev.changedTouches[0];
+          if (tp0 && p0 && (Math.abs(p0.clientX - tp0.x) > 10 || Math.abs(p0.clientY - tp0.y) > 10)) return;
+        }
+        if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
+        D._goAt = window._casoraUILastTap = Date.now();
+        var pspec = null;
+        try { pspec = JSON.parse(pill.dataset.dishGo); } catch (e) { return; }
+        if (window.casoraHaptic) window.casoraHaptic('light');
+        var ask = window.casoraAsk ? window.casoraAsk({ title: pill.dataset.dishAsk || '', verb: 'Starten', withPopup: true }) : Promise.resolve(true);
+        ask.then(function (ok) {
+          if (!ok) return;
+          if (D.go(pspec)) return;
+          var h = hassNow();
+          if (h) h.callService(pspec.domain, pspec.service, pspec.data || {}, pspec.target);
+        });
+        return;
       }
       if (!el) return;
       if (ev.type === 'touchend') {
@@ -2462,7 +2516,8 @@
     var delay = t ? Math.max(0, Math.round((t.at - Date.now()) / 1000)) : (info ? info.secs : 0);
     var out = '';
     var go = D.startSvc(c, states, delay);
-    if (go) {
+    /* Blueprint v2 (rule 4): in Soft the start is the action pill on top (d_go), not a row here. */
+    if (go && !SF) {
       var remote = c.remote && states[c.remote] ? states[c.remote].state : null;
       var rStart = c.remoteStart && states[c.remoteStart] ? states[c.remoteStart].state : null;
       var why = remote === 'monitoring' || rStart === 'off' ? 'Fernstart am Gerät nicht erlaubt' : isOpen(states, c.door) ? 'Tür ist offen' : null;
@@ -2514,9 +2569,16 @@
     return out;
   };
 
+  /* Sub page „Nachfüllen & Pflege“ with every single value (from the summary row, blueprint v2). */
+  (window._casoraPages || (window._casoraPages = {}))['dish-care'] = function (st) {
+    var c = D._c[st], H = window._casoraHH;
+    if (!c || !H) return;
+    H.page('Nachfüllen & Pflege', D.watch(c), 'const c = ' + JSON.stringify(c) + ';\nreturn window._casoraLaundry ? window._casoraLaundry.inner("d_care_all", c, states) : "";', c.st);
+  };
   D.inner = function (kind, c, states) {
     var UI = window._casoraUI;
     if (!UI) return '';
+    D._c[c.st] = c;
     var s = L.state(states, c.st);
     var active = s[2];
     var raw = String((states[c.st] || {}).state || '').toLowerCase().replace(/^bsh\.common\.enumtype\.operationstate\./, '');
@@ -2595,6 +2657,24 @@
       return UI.group(rows, 'Durchgang');
     }
 
+    /* Blueprint v2 (rule 4): „Jetzt starten · Eco 50°“ as the main action, filled in the device colour, first thing
+       under the header (before: a row on the right, on the phone below eight programmes). */
+    if (kind === 'd_go') {
+      if (active || !SF) return '';
+      var infoG = D.numInfo(states, c.startIn);
+      var tG = infoG ? D.target(c, states) : null;
+      var delayG = tG ? Math.max(0, Math.round((tG.at - Date.now()) / 1000)) : (infoG ? infoG.secs : 0);
+      var goG = D.startSvc(c, states, delayG);
+      if (!goG) return '';
+      var remoteG = c.remote && states[c.remote] ? states[c.remote].state : null;
+      var rStartG = c.remoteStart && states[c.remoteStart] ? states[c.remoteStart].state : null;
+      var whyG = remoteG === 'monitoring' || rStartG === 'off' ? 'Fernstart am Gerät nicht erlaubt' : doorOpen ? 'Tür ist offen' : null;
+      var spG = progName(U.str(states, c.sel), states[c.sel]);
+      var lblG = tG ? (nextDay(tG.at) ? 'Morgen um ' : 'Um ') + U.clock(new Date(tG.at)) + ' starten' : delayG ? 'Zeitversetzt starten' : 'Jetzt starten';
+      return UI.actions([{ text: lblG, sub: whyG || [spG, !tG && delayG ? 'startet in ' + U.dur(delayG / 60) : null].filter(Boolean).join(' · ') || null,
+        icon: 'mdi:play', primary: true, disabled: !!whyG, attrs: whyG ? null : { 'data-dish-go': JSON.stringify(goG), 'data-dish-ask': spG || lblG } }]);
+    }
+
     if (kind === 'd_prog' || kind === 'd_start') {
       if (active) return '';
       /* Soft: the program choice stands alone on the left, „Start“ (start row level with the program row,
@@ -2608,10 +2688,10 @@
     if (kind === 'd_opts') {
       var ro = c.opts.filter(function (o) { return states[o[0]] && states[o[0]].state !== 'unavailable'; }).map(function (o) {
         var on = states[o[0]].state === 'on';
-        return { icon: o[2], iconTone: on ? 'accent' : DIM, label: o[1], value: on ? 'An' : 'Aus',
-          svc: { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: o[0] } } };
+        /* Blueprint v2 (rule 6): a real switch instead of the word „An“. */
+        return UI.row.toggle({ icon: o[2], label: o[1], on: on, entity: o[0] });
       });
-      return ro.length ? UI.group(ro, 'Optionen') : '';
+      return ro.length ? UI.section('control', ro, 'Optionen') : '';
     }
 
     if (kind === 'd_alerts') {
@@ -2620,7 +2700,7 @@
       return al.length ? UI.group(al, 'Hinweise') : '';
     }
 
-    if (kind === 'd_care') {
+    if (kind === 'd_care' || kind === 'd_care_all') {
       var rc = [];
       [[D.fill(states, c.salt, c.saltLow, c.saltLack), 'Regeneriersalz', 'mdi:shaker-outline'],
        [D.fill(states, c.rinse, c.rinseLow, c.rinseLack), 'Klarspüler', 'mdi:water-opacity']].forEach(function (x) {
@@ -2639,13 +2719,16 @@
       if (cr != null || c.machineCare || c.machineFilter) rc.push({ icon: 'mdi:spray-bottle', iconTone: mdue ? 'warn' : 'good', label: 'Maschinenpflege',
         sub: mdue ? 'Programm „Maschinenpflege“ mit Reiniger starten' : (cr != null ? 'In ' + Math.round(cr) + ' Durchgängen' : null),
         value: mdue ? 'Fällig' : null, valueTone: mdue ? 'warn' : null });
-      /* Soft 1.1.2: on desktop/tablet the full list with fill levels (carries the right column);
-         on the phone only what is due, else one sentence – the popup stays short there. */
-      var phone = window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
-      if (SF && rc.length && phone) {
+      /* Blueprint v2: desktop like phone – what is due as rows, else one row „Alles aufgefüllt“ whose sub line names
+         the next care; › opens the single values on a sub page (vermisst: the full bars stay one tap away). */
+      if (SF && rc.length && kind === 'd_care') {
         var dueR = rc.filter(function (r) { return r.valueTone; });
-        return UI.group(dueR.length ? dueR : [{ icon: 'mdi:check-circle-outline', iconTone: 'good', label: 'Alles aufgefüllt',
-          sub: 'Salz, Klarspüler und Pflege sind in Ordnung' }], 'Nachfüllen & Pflege');
+        if (dueR.length) return UI.group(dueR, 'Nachfüllen & Pflege');
+        var okBits = [], careRow = rc.filter(function (r) { return r.label === 'Maschinenpflege'; })[0];
+        if (rc.some(function (r) { return r.label === 'Regeneriersalz' || r.label === 'Klarspüler'; })) okBits.push('Salz, Klarspüler voll');
+        if (careRow && careRow.sub) okBits.push('Pflege ' + careRow.sub.charAt(0).toLowerCase() + careRow.sub.slice(1));
+        return UI.group([{ icon: 'mdi:check-circle-outline', iconTone: 'good', label: 'Alles aufgefüllt',
+          sub: okBits.join(' · ') || null, page: 'dish-care|' + c.st }], 'Nachfüllen & Pflege');
       }
       return rc.length ? UI.group(rc, 'Nachfüllen & Pflege') : '';
     }
@@ -2677,13 +2760,11 @@
         rd.push({ icon: cn ? 'mdi:wifi' : 'mdi:wifi-off', iconTone: cn ? DIM : 'bad', label: 'Verbindung', value: cn ? 'Verbunden' : 'Getrennt', valueTone: cn ? null : 'bad' }); }
       if (c.remote && states[c.remote] && !SFd) rd.push({ icon: 'mdi:remote', iconTone: DIM, label: 'Fernstart', value: REMOTE[states[c.remote].state] || states[c.remote].state });
       if (c.power_sw && states[c.power_sw] && states[c.power_sw].state !== 'unavailable') { var ps = states[c.power_sw].state === 'on';
-        rd.push({ icon: 'mdi:power', iconTone: ps ? 'good' : DIM, label: 'Eingeschaltet', value: ps ? 'An' : 'Aus',
-          svc: { domain: 'switch', service: ps ? 'turn_off' : 'turn_on', target: { entity_id: c.power_sw } }, confirm: ps && active ? 'Ausschalten' : null }); }
+        rd.push(UI.row.toggle({ icon: 'mdi:power', label: 'Eingeschaltet', on: ps, entity: c.power_sw, confirm: ps && active ? 'Ausschalten' : null })); }
       if (c.light && states[c.light] && states[c.light].state !== 'unavailable') { var li = states[c.light].state === 'on';
-        rd.push({ icon: 'mdi:led-on', iconTone: li ? 'accent' : DIM, label: 'Info-Licht am Boden', value: li ? 'An' : 'Aus',
-          svc: { domain: 'switch', service: li ? 'turn_off' : 'turn_on', target: { entity_id: c.light } } }); }
-      /* Like the other device popups: manufacturer, model, integration and the device's other entities (issue #77). */
-      if (c.st && states[c.st]) rd.push({ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', entity: c.st });
+        rd.push(UI.row.toggle({ icon: 'mdi:led-on', label: 'Info-Licht am Boden', on: li, entity: c.light })); }
+      /* „Weitere Einstellungen“ (issue #77) is the popup's last section now (HH.layout settings); standard design keeps it here. */
+      if (c.st && states[c.st] && !SFd) rd.push(UI.settingsRow(c.st));
       return rd.length ? UI.group(rd, 'Gerät') : '';
     }
     return '';
@@ -2767,7 +2848,8 @@
        device switches and plug under „Mehr“. No power chart. */
     if (window._casoraHH && window._casoraHH.on() && window._casoraHH.layout) {
       var HH = window._casoraHH;
-      var f2 = { hero: fields.hero, run: fields.run, prog: fields.prog, start: fields.start, alerts: fields.alerts, care: fields.care };
+      var f2 = { hero: fields.hero, run: fields.run, prog: fields.prog, start: fields.start, alerts: fields.alerts, care: fields.care,
+        go: active ? undefined : tpl('d_go', false) };
       /* Issue #77: before the start the options belong to the chosen program – under it on the left, not in „Mehr“. */
       if (!active) f2.opts = fields.opts;
       /* 1.1.2 (direction A): bar under the head (only added while running – empty it costs a
@@ -2780,7 +2862,8 @@
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("dish", ' + JSON.stringify(moreD) + '.map(function (k) {'
         + ' return (k === "energy" || k === "d_stats") ? L.slot(k, c, states) : L.inner(k, c, states); })) : "";', c.st);
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: ['run', 'stats', 'prog', 'opts', 'abort'], right: ['start', 'alerts', 'care', 'more'] });
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: ['go', 'run', 'stats', 'prog', 'opts', 'abort'], right: ['start', 'alerts', 'care', 'more'],
+        settings: states[c.st] ? c.st : null });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
@@ -3047,10 +3130,11 @@
           if (fil) sb.push(fil);
           if (raw === 'pause') sb.unshift('Pausiert');
         } else {
-          if (task) sb.push('Zuletzt: ' + task);
+          /* Blueprint v2 (rule 1): the (often long) job name is the first row of „Zuletzt gedruckt“, not the header. */
           if (raw === 'finish' && c.end && U.str(states, c.end)) sb.push('seit ' + U.clock(new Date(states[c.end].state)) + ' Uhr');
         }
-        if (errOn) sb.push('Fehler gemeldet');
+        if (errOn) sb.unshift('Fehler gemeldet');
+        sb = sb.slice(0, 2);
         /* Round 2 (B-16): the error is in the state (red), the meta line stays calm. */
         var vH = s[0], uH = null;
         if (active && rem != null && rem > 0) {
@@ -3115,11 +3199,9 @@
       if (active && ok(c.stop)) rc.push({ icon: 'mdi:stop', iconTone: 'bad', label: 'Druck abbrechen', sub: 'Lässt sich nicht fortsetzen',
         svc: { domain: 'button', service: 'press', target: { entity_id: c.stop } }, confirm: 'Abbrechen' });
       if (c.light && states[c.light]) { var lo = states[c.light].state === 'on';
-        rc.push({ icon: 'mdi:led-strip-variant', iconTone: lo ? 'accent' : DIM, label: 'Druckraumlicht', value: lo ? 'An' : 'Aus',
-          svc: { domain: 'light', service: lo ? 'turn_off' : 'turn_on', target: { entity_id: c.light } } }); }
+        rc.push(UI.row.toggle({ icon: 'mdi:led-strip-variant', label: 'Druckraumlicht', on: lo, entity: c.light })); }
       if (c.camSw && states[c.camSw] && states[c.camSw].state !== 'unavailable') { var co = states[c.camSw].state === 'on';
-        rc.push({ icon: 'mdi:video-outline', iconTone: co ? 'accent' : DIM, label: 'Kamera', value: co ? 'An' : 'Aus',
-          svc: { domain: 'switch', service: co ? 'turn_off' : 'turn_on', target: { entity_id: c.camSw } } }); }
+        rc.push(UI.row.toggle({ icon: 'mdi:video-outline', label: 'Kamera', on: co, entity: c.camSw })); }
       var out = rc.length ? UI.group(rc, 'Steuerung') : '';
       var sp = c.speedSel && states[c.speedSel];
       /* Soft: speed sits under „Mehr“ (p_speed). */
@@ -3215,7 +3297,8 @@
       if (spd && !active) ri.push({ icon: 'mdi:speedometer', iconTone: DIM, label: 'Geschwindigkeit', value: SPEED[spd] || spd });
       if (c.fw && states[c.fw] && !(window._casoraHH && window._casoraHH.on())) ri.push({ icon: 'mdi:chip', iconTone: DIM, label: 'Firmware', value: (states[c.fw].attributes || {}).installed_version || '—' });
       /* Like the other device popups: device data through Casora's device page (issue #77). */
-      if (c.st && states[c.st]) ri.push({ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', entity: c.st });
+      /* Soft: „Weitere Einstellungen“ is the popup's last section (HH.layout settings); standard keeps it here. */
+      if (c.st && states[c.st] && !(window._casoraHH && window._casoraHH.on())) ri.push(UI.settingsRow(c.st));
       return ri.length ? UI.group(ri, 'Drucker') : '';
     }
     return '';
@@ -3303,6 +3386,7 @@
         + 'return L && H ? H.more("printer", ["p_ams", "p_temp", "p_speed", "energy", "p_info", "plug"].map(function (k) {'
         + ' return k === "energy" ? L.slot(k, c, states) : L.inner(k, c, states); })) : "";', c.st);
       return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: ['alerts', 'ctrl', 'job'], right: ['camlbl', 'cam', 'camai', 'more'],
+        settings: states[c.st] ? c.st : null,
         colExtra: ' #container > #cam { margin-top: 0 !important; } #container > #camai:not(:empty) { margin-top: 12px !important; }' });
     }
 
@@ -3808,6 +3892,8 @@
       if ((s.run || s.paused) && pct != null) { value = String(Math.round(pct)); unit = '% · ' + s.label; }
       /* Soft (declutter): „Akku 93 % · zuletzt Sa. 11:18, 20 m²“ – the last cleaning's area belongs to it. */
       if (SF && !(s.run || s.paused) && area != null && sub.length && sub[sub.length - 1].indexOf(lastW + ' ') === 0) sub[sub.length - 1] += ', ' + U.f(area, 1) + ' m²';
+      /* Blueprint v2 (rule 1): state plus at most two extras – the rest is under „Mehr“ (Reinigung, Akku). */
+      if (SF) sub = sub.slice(0, 2);
       var out = UI.hero({ value: value, unit: unit, sub: sub.join(' · ') || null, subTone: tone, center: true });
       /* Big buttons: to dock · start/pause · locate */
       var svc = function (service) { return esc(JSON.stringify({ domain: 'vacuum', service: service, data: {}, target: { entity_id: c.st } })); };
@@ -3815,15 +3901,13 @@
       var docked = !s.run && !s.paused;
       var main = s.run ? { s: svc('pause'), i: 'mdi:pause', l: 'Pause' } : { s: svc('start'), i: 'mdi:play', l: s.paused ? 'Fortsetzen' : 'Start' };
       /* Soft: three round pills with icon and text, the main action filled. */
+      /* Blueprint v2 (rule 4): the shared action row – start/pause filled in the device colour. */
       if (SF) {
-        var pill = function (cls, s0, ic, l) {
-          return '<div class="hh-pill' + cls + '"' + (cls.indexOf('dis') > -1 ? '' : ' data-casora-svc="' + s0 + '"') + '>' + mdi(ic, 20) + '<span style="pointer-events:none;">' + esc(l) + '</span></div>';
-        };
-        return out + HH.pillCss + '<style>.hh-pill > *{pointer-events:none;}</style><div class="hh-pills" style="margin-top:12px;">'
-          + pill(s.dead || docked ? ' dis' : '', svc('return_to_base'), 'mdi:home-import-outline', 'Zum Dock')
-          + pill(' pri' + (s.dead ? ' dis' : ''), main.s, main.i, main.l)
-          + pill(s.dead ? ' dis' : '', svc('locate'), 'mdi:map-marker-radius-outline', 'Orten')
-          + '</div>';
+        var vs = function (service) { return { domain: 'vacuum', service: service, data: {}, target: { entity_id: c.st } }; };
+        return out + '<div style="margin-top:12px;">' + UI.actions([
+          { text: 'Zum Dock', icon: 'mdi:home-import-outline', svc: vs('return_to_base'), disabled: s.dead || docked },
+          { text: main.l, icon: main.i, svc: vs(s.run ? 'pause' : 'start'), primary: true, disabled: s.dead },
+          { text: 'Orten', icon: 'mdi:map-marker-radius-outline', svc: vs('locate'), disabled: s.dead }]) + '</div>';
       }
       out += '<style>.hv-ctl{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:14px;color:' + T.ink + ';font-family:' + T.font + ';}'
         + '.hv-b{border-radius:999px;display:grid;place-items:center;cursor:pointer;line-height:0;flex:none;width:52px;height:52px;'
@@ -4081,19 +4165,18 @@
       if (ok(c.dnd)) {
         var dOn = on(c.dnd);
         var ds = U.str(states, c.dndStart), de = U.str(states, c.dndEnd);
-        rs.push({ icon: 'mdi:moon-waning-crescent', iconTone: dOn ? 'accent' : DIM, label: 'Nicht stören',
-          sub: ds && de ? ds.slice(0, 5) + '–' + de.slice(0, 5) + ' Uhr' : null, value: dOn ? 'An' : 'Aus',
-          svc: { domain: 'switch', service: dOn ? 'turn_off' : 'turn_on', target: { entity_id: c.dnd } } });
+        rs.push(UI.row.toggle({ icon: 'mdi:moon-waning-crescent', label: 'Nicht stören',
+          sub: ds && de ? ds.slice(0, 5) + '–' + de.slice(0, 5) + ' Uhr' : null, on: dOn, entity: c.dnd }));
       }
       if (ok(c.lock)) {
         var lOn = on(c.lock);
-        rs.push({ icon: 'mdi:lock-outline', iconTone: lOn ? 'accent' : DIM, label: 'Kindersicherung', sub: 'Tasten an der Station', value: lOn ? 'An' : 'Aus',
-          svc: { domain: 'switch', service: lOn ? 'turn_off' : 'turn_on', target: { entity_id: c.lock } } });
+        rs.push(UI.row.toggle({ icon: 'mdi:lock-outline', label: 'Kindersicherung', sub: 'Tasten an der Station', on: lOn, entity: c.lock }));
       }
       var vol = U.num(states, c.volume);
       if (vol != null) rs.push({ icon: 'mdi:volume-medium', iconTone: DIM, label: 'Lautstärke', value: Math.round(vol) + ' %', entity: c.volume });
-      rs.push({ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', entity: c.st });
-      return UI.group(rs, 'Einstellungen');
+      /* Soft: „Weitere Einstellungen“ is the popup's last section (HH.layout settings), this part sits under „Mehr“. */
+      if (!SF) rs.push(UI.settingsRow(c.st));
+      return rs.length ? UI.group(rs, SF ? 'Optionen' : 'Einstellungen') : '';
     }
 
     if (kind === 'v_stats') {
@@ -4197,7 +4280,7 @@
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("vacuum", ["v_dock", "v_settings", "v_care", "v_stats", "v_run", "v_power"].map(function (k) {'
         + ' return L.inner(k, c, states); })) : "";', c.st);
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, left: ['rooms', 'mode'], right: ['map', 'attn', 'more'] });
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, left: ['rooms', 'mode'], right: ['map', 'attn', 'more'], settings: states[c.st] ? c.st : null });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'

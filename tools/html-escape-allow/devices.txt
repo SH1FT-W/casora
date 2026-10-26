@@ -16,11 +16,9 @@ custom_components/casora/scripts/local/02-devices.js | id | escaped where built 
 custom_components/casora/scripts/local/02-devices.js | (window.casoraTr || function (x) { return x; })(L.inner(el.getAttribute('data-hw-slot'), c, states)) | markup from L.inner (built from escaped parts), only translated | 1
 custom_components/casora/scripts/local/02-devices.js | re:^\(window\._casoraHH \? window\._casoraHH\.sel : String\)\(window\._casoraSelRows\(UI\.group\( | markup: UI.group escapes its rows, _casoraSelRows/HH.sel only restyle it | 1
 custom_components/casora/scripts/local/02-devices.js | (window._casoraHH && window._casoraHH.on() ? window._casoraHH.dense(spSeg) : spSeg) | markup from UI.segments (escapes its labels) | 1
-custom_components/casora/scripts/local/02-devices.js | cls | class names fixed in the code (' dis', ' pri') | 2
-custom_components/casora/scripts/local/02-devices.js | s0 | attribute text escaped where built (svc() → esc(JSON.stringify(…))) | 1
-custom_components/casora/scripts/local/02-devices.js | re:^mdi\(.*\)$ | markup: mdi() escapes icon, size and colour | 4
+custom_components/casora/scripts/local/02-devices.js | cls | class names fixed in the code (' dis', ' pri')
+custom_components/casora/scripts/local/02-devices.js | re:^mdi\(.*\)$ | markup: mdi() escapes icon, size and colour | 3
 custom_components/casora/scripts/local/02-devices.js | out | markup from UI.hero (escapes its texts) | 1
-custom_components/casora/scripts/local/02-devices.js | re:^pill\(.*\)$ | markup: pill() escapes its label, svc is escaped where built | 3
 custom_components/casora/scripts/local/02-devices.js | re:^svc\('(?:return_to_base|locate)'\)$ | escaped where built (esc(JSON.stringify(…))) | 2
 custom_components/casora/scripts/local/02-devices.js | main.s | escaped where built (svc() → esc(JSON.stringify(…))) | 1
 custom_components/casora/scripts/local/02-devices.js | mapCss | CSS computed from numbers (fit of the map image) or a CSS constant | 2

@@ -15,9 +15,8 @@ custom_components/casora/scripts/local/15-person.js | re:^act\('(?:loc|msg|ring)
 # 16-maeher.js – history timeline and buttons
 custom_components/casora/scripts/local/16-maeher.js | re:^(?:font|ink|sub|row|ctl|dim|sz|n|\(col \|\| 'currentColor'\))$ | CSS constants of histHtml, icon size numbers, fixed mdi names/colours of mdi() | 16
 custom_components/casora/scripts/local/16-maeher.js | re:^(?:head|body|info)$ | markup of histHtml built from esc()'d parts | 3
-custom_components/casora/scripts/local/16-maeher.js | k.s | service JSON, escaped where built (svc()) | 2
-custom_components/casora/scripts/local/16-maeher.js | re:^mdi\(k\.i, | ha-icon markup with a fixed mdi: name of the key list | 2
-custom_components/casora/scripts/local/16-maeher.js | re:^keys\.map\((?:pill|b)\)\.join\(''\)$ | button markup built from escaped parts | 2
+custom_components/casora/scripts/local/16-maeher.js | re:^mdi\(k\.i, | ha-icon markup with a fixed mdi: name of the key list
+custom_components/casora/scripts/local/16-maeher.js | re:^keys\.map\((?:pill|b)\)\.join\(''\)$ | button markup built from escaped parts
 
 # 18-ziele.js – timeline and state band
 custom_components/casora/scripts/local/18-ziele.js | re:^(?:font|ink|sub|row|dim|\(x\.color \|\| dim\))$ | CSS constants of timeline(); x.color is a fixed colour of the code | 8
@@ -49,7 +48,6 @@ custom_components/casora/scripts/local/23-frigate.js | re:^grp\('Zeitraum' | fil
 
 # 24-klingel.js – history timeline
 custom_components/casora/scripts/local/24-klingel.js | re:^(?:sub|ink|rowBg|dim|off|body|x|\((?:4|6|16|2) \+ off\)|\(ring \? ringHue : detHue\))$ | CSS constants, offsets (numbers), markup built from escaped parts | 15
-custom_components/casora/scripts/local/24-klingel.js | re:^pill\(more\[c\.cam\] \? | pill() escapes the text and key | 1
 
 # 25-kaffee.js – brew ring and options
 custom_components/casora/scripts/local/25-coffee.js | re:^(?:r|\(L \* \(1 - p / 100\)\)\.toFixed\(2\))$ | ring radius / dash offset (numbers) | 3
@@ -68,8 +66,6 @@ custom_components/casora/scripts/local/26-haustier.js | re:^mdi\(k\.i, | ha-icon
 custom_components/casora/scripts/local/27-chart.js | re:^(?:out|sw)$ | UI.segments markup | 2
 
 # 28-free-tile.js – controls
-custom_components/casora/scripts/local/28-free-tile.js | re:^\(out \? gap : ''\) \+ UI\.(?:segments|group)\( | spacer constant plus UI builder markup (UI escapes labels) | 3
-custom_components/casora/scripts/local/28-free-tile.js | notes.map(function (n) { return UI.note(n); }).join('') | UI.note escapes the text | 1
 
 # Studio (panel/*.js)
 custom_components/casora/panel/casora-panel-addons.js | re:^labels\[[012]\]$ | fixed labels of the LABELS table | 2

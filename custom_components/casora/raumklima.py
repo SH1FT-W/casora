@@ -90,7 +90,12 @@ def _abs_humidity(rh: float | None, t: float | None) -> float | None:
 
 
 def _dur(minutes: int) -> str:
-    return f"{minutes} Min." if minutes < 60 else f"{minutes // 60} Std. {minutes % 60} Min."
+    """Duration after „seit“: minutes, hours, from two days on whole days („seit 22 Tagen“, not „526 Std. 47 Min.“)."""
+    if minutes < 60:
+        return f"{minutes} Min."
+    if minutes < 48 * 60:
+        return f"{minutes // 60} Std. {minutes % 60} Min."
+    return f"{minutes // (24 * 60)} Tagen"
 
 
 # ── Lüften ───────────────────────────────────────────────────────────────────

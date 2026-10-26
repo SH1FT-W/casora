@@ -909,10 +909,13 @@
       if (c.group) {
         var g = { hero: fields.hero, house: fields.house, allrooms: sec('allrooms'),
           more: HH.moreCard(watch, mcode(['hcoach', 'master', 'history']), id) };
-        return HH.layout({ entity: id, watch: watch, fields: g, left: ['house'], right: ['allrooms', 'more'] });
+        /* Blueprint v2 (rule 8): several thermostats – „Weitere Einstellungen“ first offers the choice. */
+        var devIds = c.rooms.concat(c.trvs).map(function (x) { return x.id; }).filter(function (x) { return x && states[x]; });
+        return HH.layout({ entity: id, watch: watch, fields: g, left: ['house'], right: ['allrooms', 'more'],
+          settings: devIds.length ? devIds : null });
       }
       var r1 = { hero: fields.hero, chart: fields.chart, ctl: fields.ctl, more: HH.moreCard(watch, mcode(['det']), id) };
-      return HH.layout({ entity: id, watch: watch, fields: r1, top: ['hero', 'chart'], left: ['ctl'], right: ['more'] });
+      return HH.layout({ entity: id, watch: watch, fields: r1, top: ['hero', 'chart'], left: ['ctl'], right: ['more'], settings: id });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
@@ -2012,7 +2015,7 @@
       var fc = { hero: sec('hero'), state_s: sec('state_s'), service_s: sec('service_s'),
         more: HH.moreCard(watch, 'const C = window._casoraCar, H = window._casoraHH;\n'
           + 'return C && H ? H.more("car", ["state", "service", "trips"].map(function (n) { return C.sec(n, ' + JSON.stringify(p) + ', states); })) : "";', entity.entity_id) };
-      return HH.layout({ entity: entity.entity_id, watch: watch, fields: fc, left: ['state_s'], right: ['service_s', 'more'] });
+      return HH.layout({ entity: entity.entity_id, watch: watch, fields: fc, left: ['state_s'], right: ['service_s', 'more'], settings: entity.entity_id });
     }
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
       + ' border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important;'
@@ -2770,6 +2773,12 @@
       else body = '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink2 + ';white-space:normal;">Claude prüft Service, Verschleißteile nach Kilometern und die Akku-Pflege passend zur Jahreszeit.</div>';
       var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = Math.max(0, Math.round((Date.now() - q) / 60000)); return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
       var svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_ebike_check', { entities: B.ids(states, entity) }))) + '"';
+      /* Blueprint v2: the shared AI card (✦ heading, verdict, text, time, „Neu prüfen“ – main action in the device colour). */
+      if (SF && UI.kiCard) {
+        var kc = UI.kiCard({ title: 'Rad-Check', body: body, foot: has && !running && a.erstellt ? 'KI-Einschätzung · ' + ago(a.erstellt) : null,
+          btnText: running || !ready ? '' : (has ? 'Neu prüfen' : 'Jetzt prüfen'), btnSvc: svc, primary: !has });
+        if (kc) return kc;
+      }
       var btn = running || !ready ? '' : '<span' + svc + ' style="display:inline-flex;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;margin-top:11px;'
       // 44 px hit area: invisible border (3 px, fill only inside), position unchanged.
       + 'border:3px solid transparent;background-clip:padding-box;margin-bottom:-3px;'
@@ -2831,7 +2840,7 @@
       if (B.hasAi(states)) fb.ai = sec('ai');
       fb.more = HH.moreCard(watch, 'const B = window._casoraBike, H = window._casoraHH;\n'
         + 'return B && H ? H.more("ebike", ["last", "total", "battery", "ai_tips", "motor"].map(function (n) { return B.sec(n, states, entity); })) : "";', entity.entity_id);
-      return HH.layout({ entity: entity.entity_id, watch: watch, fields: fb, left: ['range'], right: ['service', 'ai', 'more'] });
+      return HH.layout({ entity: entity.entity_id, watch: watch, fields: fb, left: ['range'], right: ['service', 'ai', 'more'], settings: entity.entity_id });
     }
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
       + ' border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important;'
@@ -3346,9 +3355,22 @@
     + '.huc.soft .huc-b:focus-visible{border-radius:999px;}'
     + '@media (hover:hover){.huc.soft .huc-b:not(.busy):hover{opacity:1;filter:brightness(.98);}}'
     + '.huc.soft .huc-s{color:var(--casora-soft-sub, var(--secondary-text-color));}'
+    /* Blueprint v2 (rule 9): the search as an action row at the end of the list (icon tile, label, status below). */
+    + '.huc.row{position:relative;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:2px;margin:0;text-align:left;'
+    +   'min-height:var(--casora-soft-row-h, 60px);box-sizing:border-box;padding:12px 16px 12px 60px;border-radius:var(--casora-popup-row-radius, 24px);'
+    +   'background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));}'
+    + '.huc.row::before{content:"";position:absolute;left:12px;top:50%;margin-top:-18px;width:36px;height:36px;'
+    +   'border-radius:var(--casora-soft-icon-radius, 12px);background:var(--casora-soft-icon-off, rgba(140,115,90,0.12));pointer-events:none;}'
+    + '.huc.row .huc-g{position:absolute;left:22px;top:50%;margin-top:-8px;width:16px;height:16px;color:var(--casora-soft-glyph-off, rgba(58,50,43,0.55));}'
+    + '.huc.row .huc-b{position:static;font-size:var(--casora-fs-row, 15px);font-weight:700;color:var(--casora-popup-tiles-text-primary, inherit);white-space:normal;}'
+    + '.huc.row .huc-b::before{inset:0;left:0;right:0;top:0;bottom:0;border-radius:var(--casora-popup-row-radius, 24px);}'
+    + '.huc.row .huc-s{font-size:var(--casora-fs-sub, 13px);font-weight:500;color:var(--casora-soft-sub, var(--secondary-text-color));text-align:left;}'
+    + '@media (hover:hover){.huc.row:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}.huc.row .huc-b:not(.busy):hover{opacity:1;}}'
     + '</style>';
   // HTML für die Vorlage (Statuskarte) bzw. die Weich-Kopfzeile.
   K.html = function (isSoft) {
+    var rowHtml = isSoft === 'row' ? inner() : '';
+    if (isSoft === 'row') return CSS + '<div class="huc row" data-casora-nodismiss="">' + rowHtml + '</div>';
     if (isSoft == null) isSoft = soft();
     return CSS + '<div class="huc' + (isSoft ? ' soft' : '') + '" data-casora-nodismiss="">' + inner() + '</div>';
   };
@@ -3799,6 +3821,12 @@
     }).join('');
     var rightHtml = '<div class="lps-lbl">' + esc(tr(sc.house ? 'Leuchten' : 'Leuchten im Raum')) + '</div><div class="lps-rows">'
       + lampsHtml + '</div>';
+    /* Blueprint v2 (rule 8): „Weitere Einstellungen“ last – one lamp: its device page; several: first the choice. */
+    var lampIds = (sc.room ? sc.room : ids).filter(function (id) { return states[id] && !Array.isArray((states[id].attributes || {}).entity_id); });
+    if (!sc.house && window._casoraUI && window._casoraUI.settings && lampIds.length) {
+      rightHtml += '<div style="height:var(--casora-popup-sec-gap, 22px)"></div>'
+        + window._casoraUI.settings(!cfg.rooms && sc.lights.length === 1 ? sc.lights[0] : lampIds);
+    }
     return '<div class="lps-cols' + (left ? '' : ' one') + '">' + (left ? '<div>' + left + '</div>' : '') + '<div>' + rightHtml + '</div></div>';
   };
   var word = function (v) { return v <= 0 ? tr('Aus') : v >= 100 ? tr('Volle Helligkeit') : tr('Gedimmt'); };

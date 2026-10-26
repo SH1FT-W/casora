@@ -2516,7 +2516,26 @@
   "Später nicht möglich": "Pas possible plus tard",
   "Früher nicht möglich": "Pas possible plus tôt",
   "Programm wählen": "Choisis un programme",
-  "CO₂-neutral": "Bas carbone"
+  "CO₂-neutral": "Bas carbone",
+  "Alle Batterien": "Toutes les piles",
+  "Alle Schlösser entriegeln?": "Déverrouiller toutes les serrures ?",
+  "Alle entriegeln": "Tout déverrouiller",
+  "Alle verriegeln": "Tout verrouiller",
+  "Alles ruhig": "Tout est calme",
+  "Amtliche Warnungen erscheinen hier": "Les alertes officielles apparaissent ici",
+  "Im Casora Studio der Kachel den Solar-Tipp wählen": "Choisis le conseil solaire de cette tuile dans Casora Studio",
+  "Im Studio unter Einstellungen › Haus & Geräte › Sicherheit": "Dans Studio, sous Réglages › Maison et appareils › Sécurité",
+  "Keine offenen Updates": "Aucune mise à jour en attente",
+  "Neue Versionen erscheinen hier": "Les nouvelles versions apparaissent ici",
+  "Noch keine Jalousien gewählt": "Aucun store choisi pour l’instant",
+  "Pulse einrichten": "Configurer Pulse",
+  "Im Pulse-Panel": "Dans le panneau Pulse",
+  "Salz, Klarspüler voll": "Sel et liquide de rinçage pleins",
+  "Solar-Tipp zuordnen": "Attribuer le conseil solaire",
+  "Verläufe, Ersatz, Einstellungen": "Historique, remplacements, réglages",
+  "KI-Blick": "Regard IA",
+  "Tag/Nacht": "Jour/nuit",
+  "vor 1 Woche": "il y a 1 semaine"
  },
  "patterns": [
   [
@@ -3188,6 +3207,10 @@
    "Dans {1} cycles"
   ],
   [
+   "^Pflege in (\\d+) Durchgängen$",
+   "Entretien dans {1} cycles"
+  ],
+  [
    "^in (\\d+) Durchgängen$",
    "dans {1} cycles"
   ],
@@ -3262,6 +3285,10 @@
   [
    "^vor (\\d+) Tag$",
    "il y a {1} jour"
+  ],
+  [
+   "^vor (\\d+) Wochen$",
+   "il y a {1} semaines"
   ],
   [
    "^vor (\\d+) Std\\. (\\d+) Min\\.$",
@@ -3502,6 +3529,14 @@
   [
    "^Fenster offen · noch (\\d+) Min\\.$",
    "Fenêtre ouverte · encore {1} min"
+  ],
+  [
+   "^Fenster offen seit (\\d+) Tagen$",
+   "Fenêtre ouverte depuis {1} jours"
+  ],
+  [
+   "^Fenster seit (\\d+) Tagen offen$",
+   "Fenêtre ouverte depuis {1} jours"
   ],
   [
    "^Fenster offen seit (.+)$",

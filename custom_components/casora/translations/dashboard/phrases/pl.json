@@ -2516,7 +2516,26 @@
   "Später nicht möglich": "Później niemożliwe",
   "Früher nicht möglich": "Wcześniej niemożliwe",
   "Programm wählen": "Wybierz program",
-  "CO₂-neutral": "Niskoemisyjne"
+  "CO₂-neutral": "Niskoemisyjne",
+  "Alle Batterien": "Wszystkie baterie",
+  "Alle Schlösser entriegeln?": "Odblokować wszystkie zamki?",
+  "Alle entriegeln": "Odblokuj wszystkie",
+  "Alle verriegeln": "Zablokuj wszystkie",
+  "Alles ruhig": "Wszystko spokojnie",
+  "Amtliche Warnungen erscheinen hier": "Oficjalne ostrzeżenia pojawią się tutaj",
+  "Im Casora Studio der Kachel den Solar-Tipp wählen": "Wybierz poradę solarną dla tego kafelka w Casora Studio",
+  "Im Studio unter Einstellungen › Haus & Geräte › Sicherheit": "W Studio w Ustawienia › Dom i urządzenia › Bezpieczeństwo",
+  "Keine offenen Updates": "Brak oczekujących aktualizacji",
+  "Neue Versionen erscheinen hier": "Nowe wersje pojawią się tutaj",
+  "Noch keine Jalousien gewählt": "Nie wybrano jeszcze żaluzji",
+  "Pulse einrichten": "Skonfiguruj Pulse",
+  "Im Pulse-Panel": "W panelu Pulse",
+  "Salz, Klarspüler voll": "Sól i nabłyszczacz pełne",
+  "Solar-Tipp zuordnen": "Przypisz poradę solarną",
+  "Verläufe, Ersatz, Einstellungen": "Historia, wymiany, ustawienia",
+  "KI-Blick": "Spojrzenie AI",
+  "Tag/Nacht": "Dzień/noc",
+  "vor 1 Woche": "1 tydzień temu"
  },
  "patterns": [
   [
@@ -3188,6 +3207,10 @@
    "Za {1} cykli"
   ],
   [
+   "^Pflege in (\\d+) Durchgängen$",
+   "Konserwacja za {1} cykli"
+  ],
+  [
    "^in (\\d+) Durchgängen$",
    "za {1} cykli"
   ],
@@ -3262,6 +3285,10 @@
   [
    "^vor (\\d+) Tag$",
    "{1} dzień temu"
+  ],
+  [
+   "^vor (\\d+) Wochen$",
+   "{1} tyg. temu"
   ],
   [
    "^vor (\\d+) Std\\. (\\d+) Min\\.$",
@@ -3502,6 +3529,14 @@
   [
    "^Fenster offen · noch (\\d+) Min\\.$",
    "Okno otwarte · jeszcze {1} min"
+  ],
+  [
+   "^Fenster offen seit (\\d+) Tagen$",
+   "Okno otwarte od {1} dni"
+  ],
+  [
+   "^Fenster seit (\\d+) Tagen offen$",
+   "Okno otwarte od {1} dni"
   ],
   [
    "^Fenster offen seit (.+)$",

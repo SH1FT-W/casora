@@ -228,7 +228,8 @@
     // Wege: „Details“ nur, wenn Tippen nicht schon das Popup öffnet; Gerät und Bearbeiten nur für Admins.
     if (!o.tapPopup) m.rows.push({ key: 'popup', t: 'Details', ic: 'mdi:card-text-outline' });
     if (dom !== 'camera') m.rows.push({ key: 'history', t: 'Verlauf', ic: 'mdi:history' });
-    if (o.device && o.admin) m.rows.push({ key: 'device', t: 'Gerät', ic: 'mdi:tune-variant' });
+    // Blueprint v2 (rule 8): the same word as the last row of every popup.
+    if (o.device && o.admin) m.rows.push({ key: 'device', t: 'Weitere Einstellungen', ic: 'mdi:tune-variant' });
     if (o.admin) m.rows.push({ key: 'edit', t: 'Kachel bearbeiten', ic: 'mdi:pencil-outline', sep: true });
     return m;
   };

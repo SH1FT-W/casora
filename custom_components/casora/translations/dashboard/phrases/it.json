@@ -2516,7 +2516,26 @@
   "Später nicht möglich": "Non possibile più tardi",
   "Früher nicht möglich": "Non possibile prima",
   "Programm wählen": "Scegli un programma",
-  "CO₂-neutral": "A basse emissioni"
+  "CO₂-neutral": "A basse emissioni",
+  "Alle Batterien": "Tutte le batterie",
+  "Alle Schlösser entriegeln?": "Sbloccare tutte le serrature?",
+  "Alle entriegeln": "Sblocca tutte",
+  "Alle verriegeln": "Blocca tutte",
+  "Alles ruhig": "Tutto tranquillo",
+  "Amtliche Warnungen erscheinen hier": "Gli avvisi ufficiali compaiono qui",
+  "Im Casora Studio der Kachel den Solar-Tipp wählen": "Scegli il consiglio solare di questa scheda in Casora Studio",
+  "Im Studio unter Einstellungen › Haus & Geräte › Sicherheit": "In Studio, in Impostazioni › Casa e dispositivi › Sicurezza",
+  "Keine offenen Updates": "Nessun aggiornamento in sospeso",
+  "Neue Versionen erscheinen hier": "Le nuove versioni compaiono qui",
+  "Noch keine Jalousien gewählt": "Nessuna tapparella ancora scelta",
+  "Pulse einrichten": "Configura Pulse",
+  "Im Pulse-Panel": "Nel pannello Pulse",
+  "Salz, Klarspüler voll": "Sale e brillantante pieni",
+  "Solar-Tipp zuordnen": "Assegna il consiglio solare",
+  "Verläufe, Ersatz, Einstellungen": "Cronologia, sostituzioni, impostazioni",
+  "KI-Blick": "Sguardo IA",
+  "Tag/Nacht": "Giorno/notte",
+  "vor 1 Woche": "1 settimana fa"
  },
  "patterns": [
   [
@@ -3188,6 +3207,10 @@
    "Tra {1} cicli"
   ],
   [
+   "^Pflege in (\\d+) Durchgängen$",
+   "Manutenzione tra {1} cicli"
+  ],
+  [
    "^in (\\d+) Durchgängen$",
    "tra {1} cicli"
   ],
@@ -3262,6 +3285,10 @@
   [
    "^vor (\\d+) Tag$",
    "{1} giorno fa"
+  ],
+  [
+   "^vor (\\d+) Wochen$",
+   "{1} settimane fa"
   ],
   [
    "^vor (\\d+) Std\\. (\\d+) Min\\.$",
@@ -3502,6 +3529,14 @@
   [
    "^Fenster offen · noch (\\d+) Min\\.$",
    "Finestra aperta · ancora {1} min"
+  ],
+  [
+   "^Fenster offen seit (\\d+) Tagen$",
+   "Finestra aperta da {1} giorni"
+  ],
+  [
+   "^Fenster seit (\\d+) Tagen offen$",
+   "Finestra aperta da {1} giorni"
   ],
   [
    "^Fenster offen seit (.+)$",

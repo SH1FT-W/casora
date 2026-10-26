@@ -359,7 +359,7 @@
         if (dn && lbl.toLowerCase().indexOf(dn.toLowerCase() + ' ') === 0) lbl = lbl.slice(dn.length + 1);
         return { entity: id, icon: a.icon || 'mdi:tune-variant', iconTone: 'accent', label: lbl, value: word };
       }).filter(Boolean);
-      if (C.anchor) xr.push({ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', entity: C.anchor });
+      if (C.anchor && UI.settingsRow) xr.push(UI.settingsRow(C.anchor));
       if (xr.length) out += (out ? gap : '') + UI.group(xr, 'Einstellungen');
       return out;
     }

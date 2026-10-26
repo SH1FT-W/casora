@@ -487,14 +487,15 @@
       hist: { card: K.secCard(watch, call('hist'), states) } };
     // Settings only when the source has something to set (cutting height, zone, schedule).
     if (c.cutHeight || c.zone) f.ctrl = { card: K.secCard(watch, call('ctrl'), states) };
-    return K.layout({ fields: f, top: ['hero'], left: ['info', 'ctrl'], right: ['hist'], narrowOrder: ['info', 'ctrl', 'hist'] });
+    return K.layout({ fields: f, top: ['hero'], left: ['info', 'ctrl'], right: ['hist'], narrowOrder: ['info', 'ctrl', 'hist'],
+      settings: hass && hass.states && hass.states[c.mower] ? c.mower : id });
   };
 
   // Keys like the vacuum (To station · Mow/Pause · Park): soft design as pills, else large round buttons.
   // "Park" = until further notice: Gardena's button, Husqvarna's schedule switch (off = park).
   var buttons = function (s, c, UI, states) {
     var esc2 = UI.esc, TK = UI.tokens;
-    var svc = function (domain, service, target, data) { return esc2(JSON.stringify({ domain: domain, service: service, data: data || {}, target: { entity_id: target } })); };
+    var svc = function (domain, service, target, data) { return { domain: domain, service: service, data: data || {}, target: { entity_id: target } }; };
     var mdi = function (n, sz, col) { return '<ha-icon icon="' + n + '" style="--mdc-icon-size:' + sz + 'px;width:' + sz + 'px;height:' + sz + 'px;display:block;color:' + (col || 'currentColor') + ';"></ha-icon>'; };
     var canStart = !!(s.features & 1), canPause = !!(s.features & 2), canDock = !!(s.features & 4);
     var main = (s.run || s.returning) && canPause ? { s: svc('lawn_mower', 'pause', c.mower), i: 'mdi:pause', l: 'Pause', ok: true }
@@ -512,18 +513,15 @@
     }
     // Casora design (soft): pills with icon and text like the vacuum, the main action filled.
     var HH = window._casoraHH;
-    if (HH && HH.on && HH.on()) {
-      var pill = function (k) {
-        var on = k.ok && !s.dead;
-        return '<div class="hh-pill' + (k.lg ? ' pri' : '') + (on ? '' : ' dis') + '"' + (on ? ' data-casora-svc="' + k.s + '"' : '') + '>'
-          + mdi(k.i, 20) + '<span style="pointer-events:none;">' + esc2(k.l) + '</span></div>';
-      };
-      return HH.pillCss + '<style>.hh-pill > *{pointer-events:none;}</style><div class="hh-pills" style="margin-top:12px;">'
-        + keys.map(pill).join('') + '</div>';
+    /* Blueprint v2 (rule 4): the shared action row, mowing/pause filled in the device colour. */
+    if (HH && HH.on && HH.on() && UI.actions) {
+      return '<div style="margin-top:12px;">' + UI.actions(keys.map(function (k) {
+        return { text: k.l, icon: k.i, svc: k.s, primary: !!k.lg, disabled: !(k.ok && !s.dead) };
+      })) + '</div>';
     }
     var b = function (k) {
       var on = k.ok && !s.dead;
-      return '<div class="hm-b' + (k.lg ? ' lg' : '') + (on ? '' : ' dis') + '"' + (on ? ' data-casora-svc="' + k.s + '"' : '') + '>'
+      return '<div class="hm-b' + (k.lg ? ' lg' : '') + (on ? '' : ' dis') + '"' + (on ? ' data-casora-svc="' + esc2(JSON.stringify(k.s)) + '"' : '') + '>'
         + mdi(k.i, k.lg ? 32 : 24, k.lg ? '#000' : null) + '</div>';
     };
     return '<style>.hm-ctl{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:14px;color:' + TK.ink + ';font-family:' + TK.font + ';}'

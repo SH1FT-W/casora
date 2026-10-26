@@ -180,7 +180,10 @@
       return UI.line(main, rest, { tone: r.open.length && r.active ? 'warn' : null });
     }
     if (part !== 'list') return '';
-    if (!r.ids.length) return UI.note ? UI.note('Jalousien wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.') : '';
+    /* Blueprint v2 (rule 10): the empty row with the way into the Studio (was a grey sentence without a plate). */
+    if (!r.ids.length) return UI.empty ? UI.empty({ icon: 'mdi:window-shutter', text: 'Noch keine Jalousien gewählt',
+      sub: 'Im Studio unter Einstellungen › Haus & Geräte › Sicherheit', studio: true })
+      : (UI.note ? UI.note('Jalousien wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.') : '');
     var groupsHtml = '';
     if (R.open.length) {
       var all = r.open.map(function (id) { return closeSvc(id, (states || {})[id]); })

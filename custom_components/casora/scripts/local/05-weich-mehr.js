@@ -90,6 +90,10 @@
     if (!keys.length) return null;
     var cf = {}, cs = {};
     keys.forEach(function (k) { cf[k] = f[k]; cs[k] = st[k] || [{ 'justify-self': 'stretch' }]; });
+    /* Blueprint v2: the chart's title is a normal section heading (17/700), not a small grey caption. */
+    if (typeof cf.ct === 'string') cf.ct = cf.ct.replace(/(<div class="hp-ct" style=")[^"]*"/, '$1font-family:var(--primary-font-family,system-ui);'
+      + 'font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);'
+      + 'color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));margin:0 2px 8px;text-align:left;"');
     if (extra) { cf.x = extra; cs.x = [{ 'justify-self': 'stretch' }, { overflow: 'visible' }]; keys.push('x'); }
     var styles = Object.assign({}, metricCard.styles);
     styles.card = (metricCard.styles.card || []).map(function (o) { return o.padding ? { padding: '16px 18px 18px 18px' } : o; });
@@ -112,6 +116,16 @@
   // Aufbau: top (volle Breite) – dann links/rechts; schmal eine Spalte in Lesereihenfolge.
   var layout = function (o) {
     var narrow = typeof window !== 'undefined' && window.innerWidth <= 760;
+    /* Blueprint v2 (rule 8): o.settings = device entity → section „Einstellungen“ with „Weitere Einstellungen“ as the
+       last section (right column before „Mehr“, or at the end of the only column; phone: last before „Mehr“). */
+    var UIb = window._casoraUI;
+    if (o.settings && UIb && UIb.settings && o.fields.set == null) {
+      o = Object.assign({}, o, { fields: Object.assign({}, o.fields, { set: UIb.settings(o.settings, o.settingsRows) }) });
+      var rr = o.right.filter(function (k) { return k !== 'more' && o.fields[k] != null && o.fields[k] !== ''; });
+      if (!rr.length) o.left = o.left.concat(['set']);
+      else o.right = o.right.indexOf('more') > -1 ? o.right.slice(0, o.right.indexOf('more')).concat(['set'], o.right.slice(o.right.indexOf('more'))) : o.right.concat(['set']);
+      if (o.narrowOrder) o.narrowOrder = o.narrowOrder.filter(function (k) { return k !== 'more'; }).concat(['set', 'more']);
+    }
     var has = function (k) { return o.fields[k] != null && o.fields[k] !== ''; };
     var top = o.top.filter(has), L = o.left.filter(has), R = o.right.filter(has);
     if (!L.length && R.length > 1 && o.moveLeft) { L = R.filter(function (k) { return o.moveLeft.indexOf(k) > -1; }); R = R.filter(function (k) { return L.indexOf(k) < 0; }); }
@@ -272,6 +286,12 @@
         if (!states[w.sw]) return;
         var on = raw(states, w.sw) === 'on';
         var cl = num(states, w.clients);
+        /* Blueprint v2 (rule 6): a real switch instead of the word „An“; switching off still asks first. */
+        var tr0 = UI.row ? UI.row.toggle({ icon: 'wifi', label: w.label, on: on,
+          sub: on ? (cl != null ? Math.round(cl) + ' Clients' : 'Aktiv') : 'Ausgeschaltet',
+          svc: { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: w.sw } },
+          confirm: on ? 'Ausschalten' : undefined }) : null;
+        if (tr0) { tr0.iconTone = on ? NET_TONE : null; rows.push(tr0); return; }
         rows.push({ icon: 'wifi', iconTone: on ? NET_TONE : null, label: w.label,
           sub: on ? (cl != null ? Math.round(cl) + ' Clients' : 'Aktiv') : 'Ausgeschaltet',
           action: on ? 'An' : 'Aus', actionTone: null,
@@ -470,7 +490,8 @@
     var wide = !!(solar || f.flow);
     return layout({ fields: f, top: ['hero', 'metric'], left: wide ? ['flow'] : ['top'],
       right: wide ? ['use', 'top', 'more'] : ['use', 'more'], moveLeft: ['top'],
-      narrowOrder: ['flow', 'use', 'top', 'more'] });
+      /* Blueprint v2: the phone reads like the desktop, left before right – the consumers before „Verbrauch“. */
+      narrowOrder: ['flow', 'top', 'use', 'more'] });
   };
 
   // ── Energy flow as bars (1.2.1, design B "Sankey light") ─────────────────
@@ -1040,7 +1061,7 @@
       var anm = function (id) {
         var a = (states[id] && states[id].attributes) || {};
         var t = String(a.friendly_name || (hass && hass.entities && hass.entities[id] && hass.entities[id].name) || id);
-        return t.replace(/\s*((aktuelle|momentane)\s+leistung|current\s+(power|consumption)|power|leistung)$/i, '').trim() || t;
+        return window.casoraCleanName ? window.casoraCleanName(t) : (t.replace(/\s*((aktuelle|momentane)\s+leistung|current\s+(power|consumption)|power|leistung)$/i, '').trim() || t);
       };
       var arows2 = A.top.map(function (x) {
         var pct = home > 0 ? Math.round(x.w / home * 100) : null;

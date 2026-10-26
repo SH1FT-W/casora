@@ -2498,7 +2498,26 @@
   "Später nicht möglich": "Not possible later",
   "Früher nicht möglich": "Not possible earlier",
   "Programm wählen": "Choose program",
-  "CO₂-neutral": "Low-carbon"
+  "CO₂-neutral": "Low-carbon",
+  "Alle Batterien": "All batteries",
+  "Alle Schlösser entriegeln?": "Unlock all locks?",
+  "Alle entriegeln": "Unlock all",
+  "Alle verriegeln": "Lock all",
+  "Alles ruhig": "All quiet",
+  "Amtliche Warnungen erscheinen hier": "Official warnings appear here",
+  "Im Casora Studio der Kachel den Solar-Tipp wählen": "Choose the solar tip for this tile in Casora Studio",
+  "Im Studio unter Einstellungen › Haus & Geräte › Sicherheit": "In Studio under Settings › Home & devices › Security",
+  "Keine offenen Updates": "No pending updates",
+  "Neue Versionen erscheinen hier": "New versions appear here",
+  "Noch keine Jalousien gewählt": "No blinds chosen yet",
+  "Pulse einrichten": "Set up Pulse",
+  "Im Pulse-Panel": "In the Pulse panel",
+  "Salz, Klarspüler voll": "Salt and rinse aid full",
+  "Solar-Tipp zuordnen": "Assign the solar tip",
+  "Verläufe, Ersatz, Einstellungen": "History, replacements, settings",
+  "KI-Blick": "AI look",
+  "Tag/Nacht": "Day/night",
+  "vor 1 Woche": "1 week ago"
  },
  "patterns": [
   [
@@ -3170,6 +3189,10 @@
    "In {1} cycles"
   ],
   [
+   "^Pflege in (\\d+) Durchgängen$",
+   "Care in {1} cycles"
+  ],
+  [
    "^in (\\d+) Durchgängen$",
    "in {1} cycles"
   ],
@@ -3244,6 +3267,10 @@
   [
    "^vor (\\d+) Tag$",
    "{1} day ago"
+  ],
+  [
+   "^vor (\\d+) Wochen$",
+   "{1} weeks ago"
   ],
   [
    "^vor (\\d+) Std\\. (\\d+) Min\\.$",
@@ -3484,6 +3511,14 @@
   [
    "^Fenster offen · noch (\\d+) Min\\.$",
    "Window open · {1} min to go"
+  ],
+  [
+   "^Fenster offen seit (\\d+) Tagen$",
+   "Window open for {1} days"
+  ],
+  [
+   "^Fenster seit (\\d+) Tagen offen$",
+   "Window open for {1} days"
   ],
   [
    "^Fenster offen seit (.+)$",

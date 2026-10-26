@@ -39,7 +39,7 @@ for (const key of ['casora_cover', 'casora_popup_cover']) {
 
   r = run(key, ['cover.a'], true);
   assert.equal(r.fields.k0, undefined, key + ': single cover with automation lists itself');
-  assert.deepEqual(r.std.right, ['auto'], key + ': automation stays on the right');
+  assert.equal(r.std.single, true, key + ': single cover with automation is one column too (552)');
   assert.ok(r.fields.auto, key + ': automation missing');
 
   r = run(key, ['cover.a', 'cover.b']);
