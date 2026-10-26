@@ -2498,7 +2498,10 @@
   "Später nicht möglich": "Not possible later",
   "Früher nicht möglich": "Not possible earlier",
   "Programm wählen": "Choose program",
-  "CO₂-neutral": "Low-carbon"
+  "CO₂-neutral": "Low-carbon",
+  "Antwortet": "Responds",
+  "Startet um": "Starts at",
+  "Startet morgen um": "Starts tomorrow at"
  },
  "patterns": [
   [

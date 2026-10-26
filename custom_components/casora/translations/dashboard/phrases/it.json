@@ -2516,7 +2516,10 @@
   "Später nicht möglich": "Non possibile più tardi",
   "Früher nicht möglich": "Non possibile prima",
   "Programm wählen": "Scegli un programma",
-  "CO₂-neutral": "A basse emissioni"
+  "CO₂-neutral": "A basse emissioni",
+  "Antwortet": "Risponde",
+  "Startet um": "Parte alle",
+  "Startet morgen um": "Parte domani alle"
  },
  "patterns": [
   [

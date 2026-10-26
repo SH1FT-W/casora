@@ -2516,7 +2516,10 @@
   "Später nicht möglich": "Later niet mogelijk",
   "Früher nicht möglich": "Eerder niet mogelijk",
   "Programm wählen": "Kies een programma",
-  "CO₂-neutral": "Koolstofarm"
+  "CO₂-neutral": "Koolstofarm",
+  "Antwortet": "Reageert",
+  "Startet um": "Start om",
+  "Startet morgen um": "Start morgen om"
  },
  "patterns": [
   [

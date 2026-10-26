@@ -2516,7 +2516,10 @@
   "Später nicht möglich": "Não é possível mais tarde",
   "Früher nicht möglich": "Não é possível mais cedo",
   "Programm wählen": "Escolhe um programa",
-  "CO₂-neutral": "Baixo carbono"
+  "CO₂-neutral": "Baixo carbono",
+  "Antwortet": "Responde",
+  "Startet um": "Começa às",
+  "Startet morgen um": "Começa amanhã às"
  },
  "patterns": [
   [

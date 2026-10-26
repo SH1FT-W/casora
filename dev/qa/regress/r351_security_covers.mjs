@@ -114,6 +114,8 @@ const run = async (tag, page, mobile, pre) => {
   await check(tag + ': status line „2 von 4 geöffnet · Bis Sonnenaufgang“', p && /2 von 4 geöffnet/.test(p.text) && /Bis Sonnenaufgang/.test(p.text), p && p.text);
   await shoot(page, pre + '-2-popup.png');
   // „Schließen“ calls cover.close_cover for that cover; „Alle schließen“ for both open ones.
+  // Popup buttons ignore taps in the first 600 ms after opening (OPEN_LOCK, 02-devices.js) – wait like a person would.
+  await page.waitForTimeout(800);
   await stub(page);
   const rowAt = await page.evaluate((n) => {
     const s = window.casoraPopup.surface;

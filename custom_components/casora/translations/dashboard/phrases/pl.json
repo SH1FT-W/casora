@@ -2516,7 +2516,10 @@
   "Später nicht möglich": "Później niemożliwe",
   "Früher nicht möglich": "Wcześniej niemożliwe",
   "Programm wählen": "Wybierz program",
-  "CO₂-neutral": "Niskoemisyjne"
+  "CO₂-neutral": "Niskoemisyjne",
+  "Antwortet": "Odpowiada",
+  "Startet um": "Startuje o",
+  "Startet morgen um": "Startuje jutro o"
  },
  "patterns": [
   [
