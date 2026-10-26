@@ -27100,10 +27100,8 @@ class CasoraPanel extends HTMLElement {
         const wasSel = this._sel && this._sel.group === "tiles" && this._sel.key === this._tileKey(shell);
         const [gone] = room.tiles.splice(at, 1);
         this._removePairTwin(room, gone);
-        if (wasSel) {
-          this._sel = null;
-          if (this.classList.contains("bmode")) this._group = GROUPS[0].id;
-        }
+        // Stay in the tile list (phone and desktop), only the editor closes.
+        if (wasSel) this._sel = null;
         this._renderForm();
       };
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return done();
