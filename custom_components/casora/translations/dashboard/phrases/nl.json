@@ -630,6 +630,7 @@
   "Solar": "Zon",
   "Netz": "Net",
   "Haus": "Huis",
+  "CO₂-neutral": "Koolstofarm",
   "Einspeisung": "Teruglevering",
   "Netzbezug": "Netafname",
   "Autarkie": "Zelfvoorziening",
@@ -4502,6 +4503,10 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} vanaf {2}"
+  ],
+  [
+   "^Alle (\\d+) anzeigen$",
+   "Alle {1} tonen"
   ]
  ]
 }

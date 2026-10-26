@@ -630,6 +630,7 @@
   "Solar": "Solar",
   "Netz": "Rede",
   "Haus": "Casa",
+  "CO₂-neutral": "Baixo carbono",
   "Einspeisung": "Injeção na rede",
   "Netzbezug": "Consumo da rede",
   "Autarkie": "Autossuficiência",
@@ -4502,6 +4503,10 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} a partir das {2}"
+  ],
+  [
+   "^Alle (\\d+) anzeigen$",
+   "Ver os {1}"
   ]
  ]
 }

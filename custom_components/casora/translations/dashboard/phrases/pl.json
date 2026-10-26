@@ -630,6 +630,7 @@
   "Solar": "Solar",
   "Netz": "Sieć",
   "Haus": "Dom",
+  "CO₂-neutral": "Niskoemisyjne",
   "Einspeisung": "Oddane do sieci",
   "Netzbezug": "Pobór z sieci",
   "Autarkie": "Autarkia",
@@ -4502,6 +4503,10 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} od {2}"
+  ],
+  [
+   "^Alle (\\d+) anzeigen$",
+   "Pokaż wszystkie {1}"
   ]
  ]
 }

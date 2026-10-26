@@ -382,7 +382,7 @@
     var solar = v.entity_solar_power || null;
     var C = {
       home: ctx.powerId, costToday: ctx.costTodayId, today: ctx.todayId, cur: ctx.costCurrency || '',
-      solar: solar, soc: v.entity_battery_soc || null, grid: v.entity_netz_power || null,
+      solar: solar, soc: v.entity_battery_soc || null, grid: v.entity_netz_power || null, battery: v.entity_battery_power || null,
       solarToday: v.entity_solar_today || null, gridToday: v.entity_netz_today || null,
       charge: v.entity_battery_charge, discharge: v.entity_battery_discharge,
       output: v.entity_solarbank_output, export: v.entity_grid_export,
@@ -415,6 +415,11 @@
     var area = ctx.powerId ? autoArea(ctx, v) : null;
     var haCons = window.casoraEnergyConsumers && (srcs || (ctx.powerId && !area)) ? window.casoraEnergyConsumers(ctx.hass) : null;
     var haIds = haCons ? window.casoraEnergyConsumers.ids(haCons) : [];
+    // #62: the energy flow (E1) with the tile's solar fields as before, and for the house also from HA's energy
+    // settings (its solar, battery and grid sensors); "Woher kommt der Strom" then is the flow, not a list.
+    var house = !!(srcs || (ctx.powerId && !area));
+    var fs = (solar && has(C.solar)) || house ? E.flowSources(C, ctx.hass, states, house) : null;
+    if (fs) C.flowOn = true;
     // #44: the settings' sources, then the consumers as with a house sensor (the parts are no consumers).
     if (srcs) {
       var cand0 = { ids: [] };
@@ -441,13 +446,13 @@
     }
     var inner = ctx.inner || {};
     var cj = 'const C = ' + JSON.stringify(C) + ';\n';
-    if (solar && has(C.solar) && has(C.home)) {
-      /* 1.2.1: Energiefluss als ruhige Balken (E.flow unten); Standard und Glas behalten den Kreis-Fluss. */
-      f.flow = { card: secCard([C.solar, C.charge, C.discharge, C.output, C.grid, C.export, C.home, C.soc],
-        'return window._casoraSoftEnergy ? window._casoraSoftEnergy.flow(' + JSON.stringify(C) + ', states, hass, this) : "";', states) };
+    if (fs) {
+      // Standard and Glass keep their own circle flow (casora_popup_energy).
+      f.flow = { card: secCard(E.flowSources.ids(fs).concat(C.home),
+        'return window._casoraSoftEnergy ? window._casoraSoftEnergy.flow(' + JSON.stringify(Object.assign({}, C, { fs: fs })) + ', states, hass, this) : "";', states) };
     }
     if (solar && inner.common) {
-      /* Steuerung läuft mit dem bisherigen Rumpf (gleiche Dienste), nur das Etikett wird weich. */
+      /* Controls run with the existing body (same services), only the label is soft. */
       var ctl = inner.ctl ? inner.ctl.replace("plate(title('Steuerung') + parts.join(div))", "UI.label('Steuerung') + plate(parts.join(div))") : "return '';";
       var code = inner.common + cj + 'const __ctl = (() => {\n' + ctl + '\n})();\n'
         + 'return window._casoraSoftEnergy ? window._casoraSoftEnergy.sec("more", C, states, hass, __ctl) : "";';
@@ -456,23 +461,24 @@
       if (E.sec('more', C, states, null, '')) f.more = { card: secCard(watch, code, states) };
       else if (inner.ctl && (has(C.mode) || has(C.limit) || has(C.exportSwitch))) f.more = { card: secCard(watch, code, states) };
     }
-    // Leerzustand (Runde 2): ohne Tageszähler, Verbraucher und Solar nicht nur das Diagramm,
-    // sondern eine ruhige Zeile mit dem nächsten Schritt – wie „Noch kein Gerät zugeordnet“.
+    // Empty state (round 2): without daily meters, consumers and solar not just the chart but a calm row with the
+    // next step, like "Noch kein Gerät zugeordnet".
     if (!f.use && (!f.top || f.top === autoTop) && !f.flow && !f.more) {
       f.use = UI.group([{ icon: 'mdi:link-variant-off', iconTone: 'var(--casora-popup-ui-dim, rgba(255,255,255,0.18))',
         label: 'Noch keine Tageswerte', sub: (!window.casoraIsAdmin || window.casoraIsAdmin()) ? 'Welche Geräte hier zählen, legst du im Studio fest.' : null, subWrap: true }], 'Verbrauch');
     }
-    return layout({ fields: f, top: ['hero', 'metric'], left: solar ? ['flow'] : ['top'],
-      right: solar ? ['use', 'top', 'more'] : ['use', 'more'], moveLeft: ['top'],
+    var wide = !!(solar || f.flow);
+    return layout({ fields: f, top: ['hero', 'metric'], left: wide ? ['flow'] : ['top'],
+      right: wide ? ['use', 'top', 'more'] : ['use', 'more'], moveLeft: ['top'],
       narrowOrder: ['flow', 'use', 'top', 'more'] });
   };
 
-  // ── Energiefluss als Balken (1.2.1, Entwurf B „Sankey light“) ────────────
-  // Oben der Hausverbrauch mit Akkustand, darunter „Woher“ (Anteile am Hausverbrauch) und „Wohin
-  // Solar“. Ohne Animation. Live wie der Fix gegen das Blinken: das HTML bleibt je Karte gleich,
-  // neue Werte, Breiten und Sichtbarkeit werden direkt in die vorhandenen Knoten geschrieben.
+  // ── Energy flow as bars (1.2.1, design B "Sankey light") ─────────────────
+  // On top the home's power with the battery level, below "Woher" (shares of the home's power) and "Wohin Solar".
+  // No animation. Since #62 only the sub-badge popups' halves (C.only); live like the fix against the blinking: the
+  // HTML stays the same per card, new values, widths and visibility go straight into the existing nodes.
   var FLOW_ON = 5;
-  // Ganze Prozent, die zusammen genau 100 ergeben (größter Rest bekommt den Ausgleich).
+  // Whole percentages adding up to exactly 100 (the largest remainder gets the difference).
   var shares = function (parts) {
     var sum = parts.reduce(function (s, p) { return s + p.w; }, 0);
     if (!sum) return parts.map(function () { return 0; });
@@ -488,8 +494,8 @@
     var pos = function (w) { return w == null ? null : Math.max(0, w); };
     var exporting = act(v.exp);
     var dis = pos(v.dis), chg = pos(v.chg), netz = exporting ? 0 : pos(v.grid);
-    // Solar, das im Haus bleibt: was nach Akku und Einspeisung übrig ist (sonst Ausgang minus Entladen),
-    // höchstens so viel, wie das Haus nach Akku und Netz noch braucht.
+    // Solar that stays in the home: what is left after battery and feed-in (else output minus discharge),
+    // at most what the home still needs after battery and grid.
     var avail = v.solar != null ? Math.max(0, v.solar - (chg || 0) - (exporting ? v.exp : 0))
       : (v.outp != null ? Math.max(0, v.outp - (dis || 0)) : null);
     var need = v.home != null ? Math.max(0, v.home - (dis || 0) - (netz || 0)) : null;
@@ -514,7 +520,7 @@
   var flowHtml = function (C, FK) {
     var INK = 'var(--casora-popup-tiles-text-primary, #3A322B)', INK2 = 'var(--casora-popup-tiles-text-secondary, rgba(58,50,43,.62))';
     var mi = function (id) { return id ? ' data-casora-mi="' + esc(id) + '"' : ''; };
-    // C.only ('from' | 'to', Sub-Badge-Popups 15.10.2026): nur diese Hälfte, ohne Hauszeile und Zwischentitel.
+    // C.only ('from' | 'to', sub-badge popups 15.10.2026): only this half, without the home row and subtitles.
     var only = C.only === 'from' || C.only === 'to' ? C.only : null;
     var sec = function (key, title, keys) {
       return '<div data-b="' + key + '">'
@@ -535,7 +541,7 @@
     return '<div data-casora-flow="' + FK + '" data-casora-kind="b" style="background:var(--casora-popup-row-fill, #FEFCF7);'
       + 'border-radius:var(--casora-popup-row-radius, 24px);padding:18px 20px 20px;box-shadow:var(--casora-popup-plate-shadow, none);'
       + 'font-family:var(--primary-font-family, Inter, system-ui);color:' + INK + ';text-align:left;">'
-      // Teilansicht: Etikett steht außen (UI.label im Sub-Badge-Popup), wie die übrigen Abschnitte dort.
+      // Partial view: the label sits outside (UI.label in the sub-badge popup), like the other sections there.
       + (only ? '' : '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));">Energiefluss</div>')
       + (only ? '' : '<div style="display:flex;align-items:center;gap:14px;margin-top:14px;">'
       + '<div' + mi(C.home) + ' style="width:44px;height:44px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;cursor:pointer;'
@@ -550,12 +556,12 @@
       + (only === 'from' ? '' : sec('to', only ? '' : 'Wohin Solar', ['haus', 'akku', 'exp']))
       + '</div>';
   };
-  // Schreibt das Modell in die vorhandenen Knoten; Text nur, wenn er sich wirklich ändert (die
-  // Übersetzung tauscht den Text danach aus, deshalb wird der zuletzt geschriebene Wert gemerkt).
+  // Writes the model into the existing nodes; text only when it really changes (the translation swaps the text
+  // afterwards, so the value last written is remembered).
   var flowApply = function (box, m, hass) {
     var q = function (s, r) { return (r || box).querySelector(s); };
     var txt = function (el, s) { if (el && el.dataset.t !== s) { el.dataset.t = s; el.textContent = s; } };
-    // Ausblenden merkt sich die eigene Anzeige (flex), Einblenden stellt sie wieder her.
+    // Hiding remembers the element's own display (flex), showing restores it.
     var show = function (el, on) {
       if (!el) return;
       var hid = el.style.display === 'none';
@@ -567,7 +573,7 @@
     txt(q('[data-b="soc"]'), m.soc != null ? Math.round(m.soc) + ' %' : '—');
     txt(q('[data-b="akkusub"]'), m.akkuSub);
     var side = function (key, parts, total, empty, quiet) {
-      // Teilansicht (C.only): die andere Hälfte fehlt – nicht in den Segmenten der vorhandenen schreiben.
+      // Partial view (C.only): the other half is missing; do not write into the segments of the present one.
       if (!q('[data-b="' + key + '-bar"]')) return;
       var on = parts.some(function (p) { return p.on; });
       show(q('[data-b="' + key + '-total"]'), !quiet);
@@ -586,17 +592,14 @@
       });
     };
     side('from', m.from, m.home, m.fromEmpty, false);
-    // Solar aus: kein Balken, nur der ruhige Hinweis.
+    // Solar off: no bar, only the calm hint.
     side('to', m.to, m.solar, m.toEmpty, !m.solarOn);
   };
-  // Bausteine für die Sub-Badge-Popups (20-energie-fokus.js).
+  // Building blocks for the sub-badge popups (20-energie-fokus.js).
   E.kit = { secCard: secCard, layout: layout, chartCard: chartCard, call: call };
-  E.flow = function (C, states, hass, self) {
-    var has = function (id) { return !!(id && states[id]); };
-    var lade = has(C.charge) || has(C.discharge);
-    var m = E.flowModel({ solar: watt(states, C.solar), chg: watt(states, C.charge), dis: watt(states, C.discharge),
-      outp: watt(states, C.output), grid: watt(states, C.grid), exp: watt(states, C.export), home: watt(states, C.home),
-      soc: num(states, C.soc), akku: has(C.soc) || lade, lade: lade });
+  // Live without rebuilding (fix against the blinking flow, r96): the HTML stays the same per card; after the first
+  // build, apply() writes new values straight into the existing nodes and the card gets the same HTML back.
+  var flowLive = function (C, self, buildHtml, apply) {
     var FK = 'b' + Array.from(JSON.stringify(C)).reduce(function (h, ch) { return (h * 31 + ch.charCodeAt(0)) | 0; }, 7).toString(36);
     var host = (self && typeof self === 'object') ? self : window;
     var MEMO = window._casoraFlowMemo || (window._casoraFlowMemo = new WeakMap());
@@ -612,14 +615,292 @@
     };
     var sel = '[data-casora-flow="' + FK + '"]', mm = memo[FK];
     if (mm && !(mm.el && mm.el.isConnected)) mm.el = deep(host.shadowRoot, sel) || deep(host.renderRoot !== host.shadowRoot ? host.renderRoot : null, sel);
-    if (mm && mm.el && mm.el.isConnected) { flowApply(mm.el, m, hass); return mm.html; }
-    // Erster Aufbau: Gerüst bauen, Werte einsetzen, als HTML zurückgeben (danach nur noch flowApply).
+    if (mm && mm.el && mm.el.isConnected) { apply(mm.el); return mm.html; }
+    // First build: the frame with the values in it, returned as HTML (afterwards only apply()).
     var tpl = document.createElement('template');
-    tpl.innerHTML = flowHtml(C, FK);
-    flowApply(tpl.content.firstElementChild, m, hass);
+    tpl.innerHTML = buildHtml(FK);
+    apply(tpl.content.firstElementChild);
     var html = tpl.innerHTML;
     memo[FK] = { html: html, el: null };
     return html;
+  };
+  E.flow = function (C, states, hass, self) {
+    // #62: the energy popup shows the flow like HA's energy dashboard (E1); the sub-badge popups keep their half
+    // of the bars (C.only).
+    if (C.fs && !C.only) return E.flowE1(C, states, hass, self);
+    var has = function (id) { return !!(id && states[id]); };
+    var lade = has(C.charge) || has(C.discharge);
+    var m = E.flowModel({ solar: watt(states, C.solar), chg: watt(states, C.charge), dis: watt(states, C.discharge),
+      outp: watt(states, C.output), grid: watt(states, C.grid), exp: watt(states, C.export), home: watt(states, C.home),
+      soc: num(states, C.soc), akku: has(C.soc) || lade, lade: lade });
+    return flowLive(C, self, function (FK) { return flowHtml(C, FK); }, function (el) { flowApply(el, m, hass); });
+  };
+
+  // ── Energy flow like HA's energy dashboard (#62, design E1) ────────────────
+  // Circles for grid (left), solar (top), home (right) and battery (bottom), plus a low-carbon circle above the grid
+  // when HA's CO2 signal integration is set up; only the sources that exist. Lines between them carry slow dots in
+  // the direction of the flow (none with reduced motion); the home's ring shows where its power comes from.
+  //
+  // E.flowSources(C, hass, states, house): which sensors feed the flow, or null when there is nothing to draw
+  // (neither solar nor a battery). The tile's fields (Studio) come first; for the house popup HA's energy settings
+  // fill in what the tile does not name (casoraEnergyPowers, 00-finder.js). Signs: the tile's grid sensor is positive
+  // on import (negative = feed-in) and its battery power positive while charging (as the Standard popup reads it);
+  // HA's grid is positive on import, its battery positive while discharging.
+  var co2Of = function (hass, states) {
+    // HA's energy dashboard takes the CO2 signal entry's sensor in % (fossil fuel share of the grid).
+    var R = (hass && hass.entities) || {};
+    for (var id in R) {
+      var e = R[id], s = states[id];
+      if (e && e.platform === 'co2signal' && s && (s.attributes || {}).unit_of_measurement === '%') return id;
+    }
+    return null;
+  };
+  E.flowSources = function (C, hass, states, house) {
+    var has = function (id) { return !!(id && states[id]); };
+    var pw = house && window.casoraEnergyPowers ? window.casoraEnergyPowers(hass) : { grid: [], solar: [], battery: [] };
+    var F = {};
+    if (has(C.solar)) F.solar = [C.solar]; else if (pw.solar.length) { F.solar = pw.solar.slice(); F.solarHa = true; }
+    if (has(C.charge) || has(C.discharge)) { F.chg = C.charge || null; F.dis = C.discharge || null; }
+    else if (has(C.battery)) F.batTile = C.battery;
+    else if (pw.battery.length) F.batHa = pw.battery.slice();
+    if (has(C.grid) || has(C.export)) { F.grid = C.grid || null; F.exp = C.export || null; }
+    else if (pw.grid.length) F.gridHa = pw.grid.slice();
+    if (has(C.soc)) F.soc = C.soc;
+    else if (F.batHa && window.casoraEnergyBatterySoc) F.soc = window.casoraEnergyBatterySoc(hass, F.batHa[0]) || null;
+    var bat = !!(F.chg || F.dis || F.batTile || F.batHa || F.soc), grid = !!(F.grid || F.exp || F.gridHa);
+    if (!F.solar && !bat) return null;
+    if (has(C.home)) F.home = C.home; else if (C.sum) F.sum = C.sum;
+    if (!F.home && !F.sum && !grid) return null;
+    if (house && grid) F.co2 = co2Of(hass, states);
+    F.has = { solar: !!F.solar, battery: bat, grid: grid, co2: !!F.co2 };
+    return F;
+  };
+  // Sensors the flow reads (for the card's triggers_update).
+  E.flowSources.ids = function (F) {
+    var out = [];
+    ['solar', 'batHa', 'gridHa'].forEach(function (k) { (F[k] || []).forEach(function (id) { out.push(id); }); });
+    ['chg', 'dis', 'batTile', 'grid', 'exp', 'soc', 'home', 'co2'].forEach(function (k) { if (F[k]) out.push(F[k]); });
+    if (F.sum && window._casoraPowerIds) out = out.concat(window._casoraPowerIds(F.sum));
+    return out;
+  };
+  // Values in watts from the sensors (E.flowSources); null where nothing is known.
+  E.flowValues = function (F, states) {
+    var sum = function (ids, sleep) {
+      var t = null;
+      (ids || []).forEach(function (id) {
+        var w = watt(states, id);
+        // #44: a solar or battery sensor of HA's settings without a value is an inverter asleep (0 W).
+        if (w == null && sleep && states[id]) w = 0;
+        if (w != null) t = (t || 0) + w;
+      });
+      return t;
+    };
+    var pos = function (w) { return w == null ? null : Math.max(0, w); };
+    var neg = function (w) { return w == null ? null : Math.max(0, -w); };
+    var v = { has: F.has, solar: F.solar ? sum(F.solar, !!F.solarHa) : null };
+    if (F.chg || F.dis) { v.chg = pos(watt(states, F.chg)); v.dis = pos(watt(states, F.dis)); }
+    else if (F.batTile) { var b = watt(states, F.batTile); v.chg = pos(b); v.dis = neg(b); }
+    else if (F.batHa) { var h = sum(F.batHa, true); v.dis = pos(h); v.chg = neg(h); }
+    if (F.grid || F.exp) {
+      var g = watt(states, F.grid), x = watt(states, F.exp);
+      v.imp = pos(g); v.exp = x != null ? pos(x) : neg(g);
+    } else if (F.gridHa) { var gh = sum(F.gridHa, false); v.imp = pos(gh); v.exp = neg(gh); }
+    v.lade = !!(F.chg || F.dis || F.batTile || F.batHa);
+    v.soc = num(states, F.soc);
+    if (F.home) v.home = watt(states, F.home);
+    else if (F.sum && window._casoraPowerSum) { var R = window._casoraPowerSum(F.sum, states); v.home = isFinite(R.sum) ? R.sum : null; }
+    var fossil = num(states, F.co2);
+    v.co2 = fossil == null ? null : Math.max(0, Math.min(100, 100 - fossil));
+    return v;
+  };
+  // Dot pattern: one dot every DOT_GAP units; the speed grows with the power, but only a little (calm), in steps of
+  // a quarter second so that small changes keep the same pace.
+  var DOT_GAP = 44;
+  E.flowDur = function (w) {
+    var speed = 14 + 8 * Math.log10(1 + Math.max(0, w || 0) / 100);
+    return Math.round(DOT_GAP / speed * 4) / 4;
+  };
+  // The model: which circles and lines, who feeds whom, the home's shares. Pure, for dev/unit/energy_flow_e1.mjs.
+  // v: { has: { solar, grid, battery, co2 }, solar, imp, exp, chg, dis, home, soc, co2, lade } (watts ≥ 0 or null)
+  E.flowE1Model = function (v) {
+    var h = v.has || {};
+    var known = function (w) { return w != null && isFinite(w); };
+    var z = function (w) { return known(w) ? Math.max(0, w) : 0; };
+    var act = function (w) { return w != null && w > FLOW_ON; };
+    var solar = h.solar ? z(v.solar) : 0, imp = h.grid ? z(v.imp) : 0, exp = h.grid ? z(v.exp) : 0;
+    var chg = h.battery ? z(v.chg) : 0, dis = h.battery ? z(v.dis) : 0;
+    // Like HA's energy distribution: feed-in comes from solar first, the rest of it from the battery; the battery
+    // charges from solar first, the rest from the grid; what is left of each source goes to the home.
+    var bToG = Math.min(dis, Math.max(0, exp - solar));
+    var sToG = Math.min(solar, Math.max(0, exp - bToG));
+    var sRest = solar - sToG;
+    var sToB = Math.min(chg, sRest);
+    var gToB = Math.min(Math.max(0, chg - sToB), imp);
+    var bToH = Math.max(0, dis - bToG), gToH = Math.max(0, imp - gToB);
+    var sToH = Math.max(0, sRest - sToB);
+    var home = known(v.home) ? Math.max(0, v.home) : null;
+    // Solar the home cannot use (no feed-in or battery sensor) is not invented as home power.
+    if (home != null) sToH = Math.min(sToH, Math.max(0, home - bToH - gToH));
+    var any = [v.solar, v.imp, v.exp, v.chg, v.dis].some(known);
+    if (home == null && any) home = sToH + bToH + gToH;
+    var edge = function (show, w, rev) {
+      w = show ? w : 0;
+      return { show: !!show, w: w, on: !!show && act(w), rev: !!rev, dur: E.flowDur(w) };
+    };
+    var parts = [{ k: 'solar', w: sToH }, { k: 'battery', w: bToH }, { k: 'grid', w: gToH }].filter(function (p) { return act(p.w); });
+    var pc = shares(parts);
+    var exporting = act(exp) && !act(imp);
+    return {
+      top: !!(h.solar || (h.co2 && h.grid)), bottom: !!h.battery,
+      nodes: {
+        grid: { show: !!h.grid, w: !known(v.imp) && !known(v.exp) ? null : exporting ? exp : imp,
+          label: exporting ? 'Einspeisung' : 'Netz' },
+        solar: { show: !!h.solar, w: known(v.solar) ? solar : null, label: 'Solar' },
+        battery: { show: !!h.battery, soc: known(v.soc) ? v.soc : null,
+          w: !known(v.chg) && !known(v.dis) ? null : act(chg) ? chg : act(dis) ? dis : 0,
+          label: !v.lade ? 'Akku' : act(chg) ? 'Akku lädt' : act(dis) ? 'Akku entlädt' : 'Akku bereit' },
+        home: { show: true, w: home, label: 'Haus' },
+        co2: { show: !!(h.co2 && h.grid), pct: known(v.co2) ? v.co2 : null, label: 'CO₂-neutral' },
+      },
+      edges: {
+        sh: edge(h.solar, sToH), sg: edge(h.solar && h.grid, sToG), sb: edge(h.solar && h.battery, sToB),
+        gh: edge(h.grid, gToH), gb: edge(h.grid && h.battery, Math.max(gToB, bToG), bToG > gToB), bh: edge(h.battery, bToH),
+        co2: { show: !!(h.co2 && h.grid), w: 0, on: false, rev: false, dur: E.flowDur(0) },
+      },
+      ring: parts.map(function (p, i) { return { k: p.k, pct: pc[i] }; }),
+    };
+  };
+  // Stage geometry in px (300 wide fits a 393 px phone unscaled; it never scales up, only down on smaller phones).
+  var E1 = { W: 300, xL: 44, xC: 150, xR: 256, R: 38, RC: 30, off: 10, dy: 8, k: 22, gap: 104 };
+  E.flowE1Geo = function (top, bottom) {
+    var y0 = top ? 64 : null, y1 = top ? 64 + E1.gap : 46, y2 = bottom ? y1 + E1.gap : null;
+    return { y0: y0, y1: y1, y2: y2, H: (bottom ? y2 : y1) + E1.R + 26 };
+  };
+  var E1_COL = { solar: 'var(--casora-color-yellow, #E8B04A)', battery: 'var(--casora-color-blue, #5B8FC9)',
+    grid: 'var(--casora-color-sand, #9A8672)', home: 'var(--casora-color-teal, #4E9E95)', co2: 'var(--casora-color-green, #6AAE78)' };
+  var E1_ICON = { solar: 'mdi:solar-power-variant', battery: 'mdi:home-battery-outline', grid: 'mdi:transmission-tower',
+    home: 'mdi:home-outline', co2: 'mdi:leaf' };
+  // Each line in its source's colour, from the edge of its source circle to the edge of its target (the circles are
+  // see-through in the Casora look, so no line may run under them).
+  var E1_FROM = { sh: 'solar', sg: 'solar', sb: 'solar', gh: 'grid', gb: 'grid', bh: 'battery', co2: 'co2' };
+  E.flowE1Paths = function (g) {
+    var c = E1, P = {}, l = c.xC - c.off, r = c.xC + c.off;
+    var n = function (x) { return String(Math.round(x * 10) / 10); };
+    var vOff = Math.sqrt(c.R * c.R - c.off * c.off), hOff = Math.sqrt(c.R * c.R - c.dy * c.dy);
+    if (g.y0 != null) {
+      P.sh = 'M' + r + ' ' + n(g.y0 + vOff) + ' V' + (g.y1 - c.dy - c.k) + ' Q' + r + ' ' + (g.y1 - c.dy) + ' ' + (r + c.k) + ' ' + (g.y1 - c.dy) + ' H' + n(c.xR - hOff);
+      P.sg = 'M' + l + ' ' + n(g.y0 + vOff) + ' V' + (g.y1 - c.dy - c.k) + ' Q' + l + ' ' + (g.y1 - c.dy) + ' ' + (l - c.k) + ' ' + (g.y1 - c.dy) + ' H' + n(c.xL + hOff);
+      P.co2 = 'M' + c.xL + ' ' + (g.y0 + c.RC) + ' V' + (g.y1 - c.R);
+    }
+    if (g.y0 != null && g.y2 != null) P.sb = 'M' + c.xC + ' ' + (g.y0 + c.R) + ' V' + (g.y2 - c.R);
+    P.gh = 'M' + (c.xL + c.R) + ' ' + g.y1 + ' H' + (c.xR - c.R);
+    if (g.y2 != null) {
+      P.gb = 'M' + n(c.xL + hOff) + ' ' + (g.y1 + c.dy) + ' H' + (l - c.k) + ' Q' + l + ' ' + (g.y1 + c.dy) + ' ' + l + ' ' + (g.y1 + c.dy + c.k) + ' V' + n(g.y2 - vOff);
+      P.bh = 'M' + r + ' ' + n(g.y2 - vOff) + ' V' + (g.y1 + c.dy + c.k) + ' Q' + r + ' ' + (g.y1 + c.dy) + ' ' + (r + c.k) + ' ' + (g.y1 + c.dy) + ' H' + n(c.xR - hOff);
+    }
+    return P;
+  };
+  var E1_CSS = '@keyframes casora-flow-dot{from{stroke-dashoffset:' + DOT_GAP + ';}to{stroke-dashoffset:0;}}'
+    + '[data-e1-dot]{animation:casora-flow-dot 2s linear infinite;transition:opacity var(--casora-dur-feedback, 160ms) ease;}'
+    + '@media (prefers-reduced-motion:reduce){[data-e1-dot]{animation:none;display:none;}}';
+  var e1Html = function (F, m, FK) {
+    var INK = 'var(--casora-popup-tiles-text-primary, #3A322B)', INK2 = 'var(--casora-popup-tiles-text-secondary, rgba(58,50,43,.62))';
+    var FILL = 'var(--casora-popup-row-fill, #FEFCF7)';
+    var g = E.flowE1Geo(m.top, m.bottom), P = E.flowE1Paths(g), c = E1;
+    var first = function (ids) { return Array.isArray(ids) ? ids[0] : ids; };
+    var miOf = { grid: first(F.gridHa) || F.grid || F.exp, solar: first(F.solar), battery: F.soc || F.batTile || first(F.batHa) || F.chg || F.dis,
+      home: F.home, co2: F.co2 };
+    var svg = '<svg viewBox="0 0 ' + esc(c.W) + ' ' + esc(g.H) + '" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;" aria-hidden="true">';
+    Object.keys(m.edges).forEach(function (k) {
+      if (!m.edges[k].show || !P[k]) return;
+      var col = E1_COL[E1_FROM[k]];
+      svg += '<path data-e1-line="' + esc(k) + '" d="' + esc(P[k]) + '" fill="none" stroke="' + esc(col) + '" stroke-width="2" stroke-linecap="round" style="opacity:.35;"></path>';
+      if (k !== 'co2') svg += '<path data-e1-dot="' + esc(k) + '" d="' + esc(P[k]) + '" fill="none" stroke="' + esc(col) + '" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 ' + esc(DOT_GAP) + '" style="opacity:0;"></path>';
+    });
+    svg += '</svg>';
+    var pos = { grid: [c.xL, g.y1], solar: [c.xC, g.y0], battery: [c.xC, g.y2], home: [c.xR, g.y1], co2: [c.xL, g.y0] };
+    var node = function (k) {
+      var n = m.nodes[k];
+      if (!n.show) return '';
+      var x = pos[k][0] / c.W * 100, y = pos[k][1] / g.H * 100, rr = k === 'co2' ? c.RC : c.R, above = k === 'solar' || k === 'co2';
+      // [icon top, value top, watts top, icon size] inside the padding box (circles with a 2 px border, home without).
+      var lay = { co2: [9, 30, 0, 18], battery: [8, 32, 50, 22], home: [15, 41, 0, 22] }[k] || [13, 39, 0, 22];
+      // Home: a ring of segments in the colours of its sources (its own svg in px, so it never scales).
+      var ringSvg = k !== 'home' ? ''
+        : '<svg viewBox="0 0 76 76" style="position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none;" aria-hidden="true">'
+          + '<circle data-e1-ring="none" cx="38" cy="38" r="37" fill="none" stroke="' + esc(E1_COL.home) + '" stroke-width="2"></circle>'
+          + ['solar', 'battery', 'grid'].map(function (s) {
+            return '<circle data-e1-ring="' + esc(s) + '" cx="38" cy="38" r="37" fill="none" stroke="' + esc(E1_COL[s]) + '" stroke-width="3" pathLength="100" stroke-dasharray="0 100" style="display:none;"></circle>';
+          }).join('') + '</svg>';
+      return '<div data-e1-node="' + esc(k) + '"' + (miOf[k] ? ' data-casora-mi="' + esc(miOf[k]) + '"' : '') + ' style="position:absolute;left:' + esc(x.toFixed(3)) + '%;top:' + esc(y.toFixed(3)) + '%;'
+        + 'width:' + esc(rr * 2) + 'px;height:' + esc(rr * 2) + 'px;margin:-' + esc(rr) + 'px 0 0 -' + esc(rr) + 'px;box-sizing:border-box;border-radius:50%;'
+        + 'background:' + FILL + ';' + (k === 'home' ? '' : 'border:2px solid ' + esc(E1_COL[k]) + ';')
+        + 'cursor:' + (miOf[k] ? 'pointer' : 'default') + ';">'
+        + ringSvg
+        // Fixed places inside the circle (icon, value, battery's watts), so nothing moves when a value changes.
+        + '<ha-icon icon="' + esc(E1_ICON[k]) + '" style="position:absolute;left:50%;top:' + esc(lay[0]) + 'px;margin-left:-' + esc(lay[3] / 2) + 'px;'
+        + '--mdc-icon-size:' + esc(lay[3]) + 'px;width:' + esc(lay[3]) + 'px;height:' + esc(lay[3]) + 'px;color:color-mix(in srgb, ' + esc(E1_COL[k]) + ' 50%, ' + INK + ');display:flex;pointer-events:none;"></ha-icon>'
+        + '<div data-e1-v style="position:absolute;left:0;right:0;top:' + esc(lay[1]) + 'px;text-align:center;font-size:' + (k === 'co2' ? 12 : 13) + 'px;font-weight:700;line-height:16px;'
+        + 'font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none;"></div>'
+        + (k === 'battery' ? '<div data-e1-s style="position:absolute;left:0;right:0;top:' + esc(lay[2]) + 'px;text-align:center;font-size:12px;font-weight:500;line-height:14px;color:' + INK2 + ';'
+          + 'font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none;"></div>' : '')
+        + '<div data-e1-l style="position:absolute;left:50%;transform:translateX(-50%);' + (above ? 'bottom:100%;margin-bottom:6px;' : 'top:100%;margin-top:6px;')
+        + 'font-size:12px;font-weight:600;line-height:16px;color:' + INK2 + ';white-space:nowrap;pointer-events:none;"></div>'
+        + '</div>';
+    };
+    var nodesHtml = ['co2', 'solar', 'grid', 'home', 'battery'].map(node).join('');
+    return '<div data-casora-flow="' + esc(FK) + '" data-casora-kind="e1" style="background:' + FILL + ';'
+      + 'border-radius:var(--casora-popup-row-radius, 24px);padding:18px 20px 20px;box-shadow:var(--casora-popup-plate-shadow, none);'
+      + 'font-family:var(--primary-font-family, Inter, system-ui);color:' + INK + ';text-align:left;">'
+      + '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));">Energiefluss</div>'
+      + '<div data-e1-stage style="position:relative;width:100%;max-width:' + esc(c.W) + 'px;aspect-ratio:' + esc(c.W) + ' / ' + esc(g.H) + ';margin:14px auto 0;">'
+      + svg + nodesHtml + '</div><style>' + E1_CSS + '</style></div>';
+  };
+  // Writes the model into the existing nodes; text only when it really changes (the translation swaps it afterwards).
+  var e1Apply = function (box, m, hass) {
+    var q = function (s, r) { return (r || box).querySelector(s); };
+    var txt = function (el, s) { if (el && el.dataset.t !== s) { el.dataset.t = s; el.textContent = s; } };
+    var set = function (el, prop, val) { if (el && el.style[prop] !== val) el.style[prop] = val; };
+    Object.keys(m.nodes).forEach(function (k) {
+      var n = m.nodes[k], el = q('[data-e1-node="' + esc(k) + '"]');
+      if (!el) return;
+      txt(q('[data-e1-l]', el), n.label);
+      if (k === 'co2') txt(q('[data-e1-v]', el), n.pct == null ? '—' : Math.round(n.pct) + ' %');
+      else if (k === 'battery') {
+        txt(q('[data-e1-v]', el), n.soc != null ? Math.round(n.soc) + ' %' : fW(n.w, hass));
+        txt(q('[data-e1-s]', el), n.soc != null && n.w != null ? fW(n.w, hass) : '');
+      } else txt(q('[data-e1-v]', el), fW(n.w, hass));
+    });
+    Object.keys(m.edges).forEach(function (k) {
+      var e = m.edges[k], line = q('[data-e1-line="' + esc(k) + '"]'), dot = q('[data-e1-dot="' + esc(k) + '"]');
+      set(line, 'opacity', e.on ? '0.9' : '0.35');
+      // The dots keep running while hidden: switching them on never starts a new animation.
+      set(dot, 'opacity', e.on ? '1' : '0');
+      set(dot, 'animationDuration', e.dur + 's');
+      set(dot, 'animationDirection', e.rev ? 'reverse' : 'normal');
+      if (k === 'gb' && line) {
+        var col = E1_COL[e.rev ? 'battery' : 'grid'];
+        if (line.getAttribute('stroke') !== col) { line.setAttribute('stroke', col); if (dot) dot.setAttribute('stroke', col); }
+      }
+    });
+    // Home ring: one segment per source in its share, clockwise from the top; the plain ring without any flow.
+    var at = 0;
+    ['solar', 'battery', 'grid'].forEach(function (s) {
+      var seg = q('[data-e1-ring="' + esc(s) + '"]'), p = m.ring.filter(function (x) { return x.k === s; })[0];
+      if (!seg) return;
+      set(seg, 'display', p ? '' : 'none');
+      if (p) {
+        var da = p.pct + ' ' + (100 - p.pct), off = String(-at);
+        if (seg.getAttribute('stroke-dasharray') !== da) seg.setAttribute('stroke-dasharray', da);
+        if (seg.getAttribute('stroke-dashoffset') !== off) seg.setAttribute('stroke-dashoffset', off);
+        at += p.pct;
+      }
+    });
+    set(q('[data-e1-ring="none"]'), 'display', m.ring.length ? 'none' : '');
+  };
+  E.flowE1 = function (C, states, hass, self) {
+    var F = C.fs, m = E.flowE1Model(E.flowValues(F, states));
+    return flowLive(C, self, function (FK) { return e1Html(F, m, FK); }, function (el) { e1Apply(el, m, hass); });
   };
 
   // Area for the automatic consumers: the room of the popup (room_name = area name) or the area
@@ -642,6 +923,20 @@
     var now = window.casoraVisibleIdsNow ? window.casoraVisibleIdsNow(ids) : ids;
     if (now) return now;
     return (!window.casoraIsAdmin || window.casoraIsAdmin()) ? ids : [];
+  };
+
+  // #62: long consumer lists show the largest five, the rest behind "Alle N anzeigen" (open while the popup is).
+  var CONS_TOP = 5;
+  E.consSplit = function (rows, n) {
+    n = n || CONS_TOP;
+    return rows.length > n ? { top: rows.slice(0, n), rest: rows.slice(n) } : { top: rows, rest: [] };
+  };
+  var consList = function (UI, rows) {
+    var s = E.consSplit(rows);
+    return UI.group(s.top) + (s.rest.length
+      ? '<div style="margin-top:var(--casora-space-2, 8px);">'
+        + UI.more('energy-cons', UI.group(s.rest), { label: 'Alle ' + rows.length + ' anzeigen', less: 'Weniger anzeigen' }) + '</div>'
+      : '');
   };
 
   var money = function (v, cur, hass) {
@@ -674,16 +969,16 @@
       if (cost) bits.push('heute ' + cost);
       else if (kwh != null) bits.push('heute ' + fN(kwh, hass) + ' kWh');
       var err = raw(states, C.error);
-      /* Anker-Code 40 = Geräteschlaf (Akku leer, nachts) – kein Fehler. */
+      /* Anker code 40 = device asleep (battery empty, at night), no error. */
       var bad = ok(err) && err !== '0' && err !== '40' && String(err).toLowerCase() !== 'none';
-      /* Ohne Leistungssensor: der erste Wert wird zur Hauptzeile („Heute 3,72 kWh“) statt „— · heute …“. */
+      /* Without a power sensor the first value becomes the main line ("Heute 3,72 kWh") instead of "— · heute …". */
       var main = p == null ? null : fW(Math.abs(p) < 20 && p < 0 ? 0 : Math.abs(p), hass);
       if (main == null && bits.length) { main = bits.shift(); main = main.charAt(0).toUpperCase() + main.slice(1); }
       var heroH = UI.hero({ center: true, value: main == null ? '—' : main,
         sub: bits.join(' · ') || null, read: C.home || null,
         chip: bad ? { text: 'Solarbank-Fehler ' + err, tone: 'bad' } : null });
-      /* 1.2: Zeigt das Diagramm Säulen (Zeile „Heute“/„Diesen Monat“), schaltet Tippen auf die
-         Leistung zurück auf die Leistungskurve – wie die Leistungszeile im Standard-Look. */
+      /* 1.2: when the chart shows columns (row "Heute"/"Diesen Monat"), tapping the power switches back to the
+         power curve, like the power row in the Standard look. */
       if (C.home && window._hpPlantCfg && window._hpPlantCfg[C.home]) {
         var tp = function (k) { return 'window._hpPlantTap&&window._hpPlantTap(event,\'' + k + '\')'; };
         heroH = '<div data-hp-metric="' + esc(C.home) + '" data-casora-nodismiss="" style="cursor:pointer;pointer-events:auto;"'
@@ -711,7 +1006,8 @@
         });
       });
       var autoHtml = C.auto ? E.sec('auto', C, states, hass) : '';
-      return (srows.length ? UI.label('Woher kommt der Strom') + UI.group(srows) : '') + autoHtml;
+      // #62: with the energy flow above, the sources are its circles, not a second list.
+      return (srows.length && !C.flowOn ? UI.label('Woher kommt der Strom') + UI.group(srows) : '') + autoHtml;
     }
     // The house's power for the consumers' shares: the sensor, else the sum of the list.
     var homeW = function () {
@@ -736,7 +1032,7 @@
         return { entity: x.power || x.id, icon: 'plug', label: x.name, sub: sub,
           value: x.w != null ? wText(x.w) : x.kwh != null ? fN(x.kwh, hass) + ' kWh' : null };
       });
-      return hrows.length ? UI.label('Verbraucher') + UI.group(hrows) : '';
+      return hrows.length ? UI.label('Verbraucher') + consList(UI, hrows) : '';
     }
     if (part === 'auto' && C.auto && window._casoraAutoConsumers) {
       var A = window._casoraAutoConsumers(hass, states, Object.assign({}, C.auto, { visible: autoVisible }));
@@ -781,7 +1077,7 @@
     if (part === 'more') {
       var secs = [];
       if (ctlHtml) secs.push(ctlHtml);
-      // Energie-Coach: eine Zeile, aufklappbar mit Fazit, Tipps und „Neu auswerten“
+      // Energy coach: one row, expandable with summary, tips and "Neu auswerten"
       var cs = states[COACH];
       if (cs) {
         var a = cs.attributes || {};
@@ -805,7 +1101,7 @@
         secs.push('<div>' + UI.group([head])
           + '<div style="margin-top:8px;">' + UI.more('energy-coach', body, { sub: true, label: 'Tipps', less: 'Weniger' }) + '</div></div>');
       }
-      // Autarkie-Details (Eigenversorgung steht schon oben in der Unterzeile)
+      // Self-sufficiency details (the self-supply share is already in the status line)
       var arows = [];
       var sT = num(states, C.solarToday), nT = num(states, C.gridToday);
       if (sT != null && nT != null && sT + nT > 0) {
@@ -813,7 +1109,7 @@
           value: Math.round(sT / (sT + nT) * 100) + ' %', sub: 'Solar ' + fN(sT, hass) + ' kWh · Netz ' + fN(nT, hass) + ' kWh' });
       }
       var exp = watt(states, C.export), expTot = num(states, C.exportTotal);
-      // Zähler in Wh, kWh oder MWh – unten durch 1000 in kWh.
+      // Meter in Wh, kWh or MWh; divided by 1000 below for kWh.
       if (expTot != null) expTot *= ({ kWh: 1000, MWh: 1e6 }[(states[C.exportTotal].attributes || {}).unit_of_measurement] || 1);
       if (exp != null || expTot != null) {
         arows.push({ entity: C.export || C.exportTotal, icon: 'mdi:transmission-tower-export', iconTone: '#30D158', label: 'Einspeisung',
@@ -826,7 +1122,7 @@
           value: money(sav, cur, hass) });
       }
       if (arows.length) secs.push(UI.group(arows, 'Autarkie'));
-      // Solarbank-Technik (ohne Akkustand – der steht im Energiefluss)
+      // Solarbank details (without the battery level, which is in the energy flow)
       var STATE = {
         detection: 'Erkennung', protection_charge: 'Schutzladung', bypass: 'Bypass',
         bypass_discharge: 'Bypass und Entladen', discharge: 'Entlädt', charge: 'Lädt',
