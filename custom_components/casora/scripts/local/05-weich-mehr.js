@@ -423,7 +423,8 @@
     // settings (its solar, battery and grid sensors); "Woher kommt der Strom" then is the flow, not a list.
     var house = !!(srcs || (ctx.powerId && !area));
     var fs = (solar && has(C.solar)) || house ? E.flowSources(C, ctx.hass, states, house) : null;
-    if (fs) C.flowOn = true;
+    // Standard look (ctx.only 'top'): no E1 flow there, so the sources stay rows ("Woher kommt der Strom").
+    if (fs && ctx.only !== 'top') C.flowOn = true;
     // #44: the settings' sources, then the consumers as with a house sensor (the parts are no consumers).
     if (srcs) {
       var cand0 = { ids: [] };
@@ -453,6 +454,9 @@
       var cand = window._casoraAutoConsumers(ctx.hass, states, C.auto);
       if (cand.ids.length) autoTop = f.top = { card: secCard([C.home].concat(cand.ids.slice(0, 60)), call('_casoraSoftEnergy', 'auto', C), states) };
     }
+    // Standard look (casora_popup_energy): the same consumer list as here, so units, the rooms' complete list (#79),
+    // HA's individual devices and the house's sources (#44) read alike in every look.
+    if (ctx.only === 'top') return f.top && f.top.card ? own(f.top) : null;
     var inner = ctx.inner || {};
     var cj = 'const C = ' + JSON.stringify(C) + ';\n';
     if (fs) {

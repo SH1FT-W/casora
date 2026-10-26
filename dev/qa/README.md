@@ -337,6 +337,7 @@ Ansicht, `cards(page, vorlage)` liefert sichtbare Karten mit Lage und Text,
 | rf01_kachel_ablauf | arbeit | Ablauf Kachel: Kachelart hinzufügen, umbenennen, „Kachel entfernen“, ⌘S – Ergebnis in HA (Desktop + Mobil) und im Dashboard |
 | rf02_raum_ablauf | arbeit | Ablauf Raum über das Raum-Menü: hinzufügen, umbenennen, Symbol, „Nach vorne“, löschen – Ergebnis in HA und in der Navigation |
 | rf03_speichern_zeitreise | arbeit | Rückgängig, „Ungespeicherte Änderungen wiederherstellen“ nach Verlassen, ⌘S, Zeitreise zum Stand davor |
+| r353_energy_matrix | arbeit | Energie-Audit (#34, #44, #62, #78, #79): Matrix aus Netz, Solar, Akku, Einspeisung, zwei Netzzählern, W/kW/Wh/kWh, schlafendem Wechselrichter, ohne Energie-Einstellungen und Räumen mit 0 W bzw. gemischten Einheiten; Badge, Popup-Kopf, Energiefluss und Verbraucher in Casora, Casora Glas und Standard, Desktop dunkel und Handy hell. Energie-Einstellungen, Sensoren und Raumfelder nur im Browser (WebSocket-Antworten umgeschrieben); `R353_SHOTS=<ordner>` legt Bilder ab |
 | rf04_energie_ausschliessen | arbeit | Energie-Badge: Gerät per × ausschließen bleibt nach neuem Laden draußen (energy_exclude) |
 | rf05_handy_ausgeblendet | arbeit | Im Studio ausgeblendete Kachel (enabled: false) blieb auf der Handy-Raumseite sichtbar |
 | rf06_wer_sieht_das | arbeit | „Wer sieht das?“ (Kachel, Badge, Raum) und „Vor dem Schalten fragen“ wirken im Dashboard (Desktop + Handy-Raumseite) |

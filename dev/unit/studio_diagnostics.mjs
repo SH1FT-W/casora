@@ -222,6 +222,7 @@ assert.equal(DG.cleanVersion('2026.10.2'), '2026.10.2');
 assert.equal(DG.cleanVersion('http://10.77.12.9'), '?');
 assert.equal(DG.cleanWord('Fluffyquill'), '?');
 assert.equal(DG.cleanTheme('Casora Nebel'), 'Casora Nebel');
+assert.equal(DG.cleanTheme('Casora Glas'), 'Casora Glas');
 assert.equal(DG.cleanTheme('Moonbeam theme'), 'other');
 assert.deepEqual(DG.envOf('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Home Assistant/2025.9'),
   { app: 'app', os: 'iOS', browser: 'Safari' });

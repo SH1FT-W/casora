@@ -33,8 +33,9 @@
     "unifi", "fritz", "tplink_omada", "tplink_deco", "asuswrt", "netgear", "mikrotik", "eero",
   ];
   const KNOWN = new Set(KNOWN_PLATFORMS);
-  // Theme names Casora ships; any other theme is "other" (its name is the user's).
-  const THEMES = ["Casora", "Casora Nebel", "Casora Weich"];
+  // Theme names Casora ships; any other theme is "other" (its name is the user's). "Casora Glas" was missing (energy
+  // audit b7): Glass users showed up as "other", although the look decides how the energy popup is built.
+  const THEMES = ["Casora", "Casora Glas", "Casora Nebel", "Casora Weich"];
 
   // ── Cleaning: whatever is not plainly safe becomes "?" ──────────────────────
   const cleanWord = (x) => (/^[a-z0-9_]{1,40}$/.test(String(x || "")) ? String(x) : "?");
