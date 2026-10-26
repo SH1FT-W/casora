@@ -3745,6 +3745,71 @@ const MAP_OUT = [
   { opacity: 0, transform: "scale(0.72)" },
 ];
 
+// <preview-patch> (dev/unit/preview_patch.mjs evaluates this block)
+// A live state change (clock minute, light on/off, sensor value) rebuilds the preview. When the new
+// build has the same shape as the last one – same elements in the same order – only texts and
+// attributes differ; those are patched into the preview on screen instead of swapping it, which
+// repainted the nav bar and every tile (visible flicker on a busy house).
+// previewDiff(a, b): ops turning build a into build b, or null when the shape differs.
+function previewDiff(a, b, path, ops) {
+  path = path || [];
+  ops = ops || [];
+  if (a.nodeType !== b.nodeType) return null;
+  if (a.nodeType === 3 || a.nodeType === 8) {
+    if (a.nodeValue !== b.nodeValue) ops.push({ path, text: b.nodeValue });
+    return ops;
+  }
+  if (a.nodeType !== 1 || a.tagName !== b.tagName) return null;
+  const an = a.getAttributeNames(), bn = b.getAttributeNames();
+  an.concat(bn.filter((n) => an.indexOf(n) < 0)).forEach((n) => {
+    const av = a.getAttribute(n), bv = b.getAttribute(n);
+    if (av !== bv) ops.push({ path, tag: a.tagName, attr: n, from: av, value: bv });
+  });
+  const ac = a.childNodes, bc = b.childNodes;
+  if (ac.length !== bc.length) return null;
+  for (let i = 0; i < ac.length; i++) if (!previewDiff(ac[i], bc[i], path.concat(i), ops)) return null;
+  return ops;
+}
+const previewTokens = (s) => String(s || "").split(/\s+/).filter(Boolean);
+// previewPatch(live, ops): applies ops to the preview on screen; false (and nothing touched) when a
+// target is missing. Classes and inline styles change token by token, so what the Studio added at
+// runtime (hover marks, sizes, placeholders appended at the end of a row) stays.
+function previewPatch(root, ops) {
+  const plan = [];
+  for (const op of ops) {
+    let n = root;
+    for (const i of op.path) n = n && n.childNodes[i];
+    if (!n) return false;
+    if (op.text !== undefined ? (n.nodeType !== 3 && n.nodeType !== 8) : (n.nodeType !== 1 || n.tagName !== op.tag)) return false;
+    plan.push([n, op]);
+  }
+  plan.forEach(([n, op]) => {
+    if (op.text !== undefined) { if (n.nodeValue !== op.text) n.nodeValue = op.text; return; }
+    if (op.attr === "class") {
+      const was = previewTokens(op.from), now = previewTokens(op.value);
+      was.filter((t) => now.indexOf(t) < 0).forEach((t) => n.classList.remove(t));
+      now.filter((t) => was.indexOf(t) < 0).forEach((t) => n.classList.add(t));
+      return;
+    }
+    if (op.attr === "style" && n.style && n.getAttribute("style") !== op.from) {
+      const parse = (css) => { const s = (n.ownerDocument || document).createElement("i").style; s.cssText = css || ""; return s; };
+      const was = parse(op.from), now = parse(op.value);
+      for (let i = 0; i < was.length; i++) if (!now.getPropertyValue(was[i])) n.style.removeProperty(was[i]);
+      for (let i = 0; i < now.length; i++) {
+        const p = now[i];
+        if (was.getPropertyValue(p) !== now.getPropertyValue(p) || was.getPropertyPriority(p) !== now.getPropertyPriority(p)) {
+          n.style.setProperty(p, now.getPropertyValue(p), now.getPropertyPriority(p));
+        }
+      }
+      return;
+    }
+    if (op.value === null) n.removeAttribute(op.attr);
+    else n.setAttribute(op.attr, op.value);
+  });
+  return true;
+}
+// </preview-patch>
+
 const MENU_IN = [{ opacity: 0, transform: "scale(0.92)" }, { opacity: 1, transform: "none" }];
 const MENU_OUT = [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(0.96)" }];
 // macOS decelerates into place and never travels past the target.
@@ -6515,6 +6580,7 @@ class CasoraPanel extends HTMLElement {
       const room = this._state && this._state.compact.rooms[this._room];
       if (!room) return;
       this._liveAt = Date.now();
+      this._mapLiveSwap = true;
       this._swapMap(mount, room);
     }, 1500);
   }
@@ -24114,6 +24180,9 @@ class CasoraPanel extends HTMLElement {
     const roomChanged = this._mapRoom !== room.path;
     const shapeSwap = !!this._mapShapeSwap;
     this._mapShapeSwap = false;
+    // Only live state changes patch in place: a Studio edit swaps, so every handler sees the new config.
+    const live = !!this._mapLiveSwap;
+    this._mapLiveSwap = false;
 
     const commit = () => {
       if (token !== this._mapSwap) return;
@@ -24126,7 +24195,18 @@ class CasoraPanel extends HTMLElement {
       // Swapping in an identical copy repainted the nav bar and tiles - a visible flicker.
       const html = card.outerHTML;
       const oldSlot = old && old.querySelector(".mapslot");
-      if (old && oldSlot && keepApply && !roomChanged && !shapeSwap && old.isConnected && html === this._mapHtml) {
+      const canKeep = old && oldSlot && keepApply && !roomChanged && !shapeSwap && old.isConnected;
+      // Same shape, other texts/attributes (clock, values, on/off): patch the card on screen. Not with
+      // a shadow-root painting (the player keeps a handle on the element it painted) and not after a
+      // click into the preview (its handlers were built for the earlier config).
+      let patched = false;
+      if (canKeep && live && html !== this._mapHtml && this._mapGen
+        && !card.querySelector(".mini-npreal") && !old.querySelector(".mini-npreal")) {
+        const ops = previewDiff(this._mapGen, card);
+        patched = !!(ops && previewPatch(old, ops));
+        if (patched) { this._mapGen = card; this._mapHtml = html; }
+      }
+      if (canKeep && (patched || html === this._mapHtml)) {
         this._applyMapSize = keepApply;
         this._mapVis = keepVis;
         if (this._sizeObs) this._sizeObs.disconnect();
@@ -24145,6 +24225,9 @@ class CasoraPanel extends HTMLElement {
         return;
       }
       this._mapHtml = html;
+      // The build as it came, for the next live patch (the card itself changes once it is on screen).
+      this._mapGen = card.cloneNode(true);
+      card.addEventListener("click", () => { this._mapGen = null; }, true);
       if (old) {
         const pool = new Map();
         old.querySelectorAll("img").forEach((was) => {
