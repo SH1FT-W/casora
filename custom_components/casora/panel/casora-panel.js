@@ -2429,7 +2429,7 @@ const SECTIONS = [
         emptyHint: "Add an appliance above first." },
 
       { ...T("notification_co2_ppm", "Carbon dioxide warning (ppm)"),
-        auto: true, advanced: true, noAdd: true, ord: 20, placeholder: "1400" },
+        auto: true, advanced: true, noAdd: true, ord: 20, placeholder: "1800" },
       { ...T("notification_open_minutes", "Door left open (minutes)"),
         auto: true, advanced: true, noAdd: true, ord: 21, placeholder: "10" },
       { ...T("notification_battery_threshold", "Low battery below (%)"),
