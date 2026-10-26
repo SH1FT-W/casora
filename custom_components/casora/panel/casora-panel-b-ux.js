@@ -32,7 +32,7 @@
   const SUB = {
     list: "Photo, badges, tiles and popups of {room}",
     dash: "Controls, weather, time, notifications and scenes – for this dashboard",
-    home: "Design, home, bell, AI and updates – for all dashboards",
+    home: "Every setting by topic – for this dashboard and all dashboards",
   };
 
   // Fachwörter mit Halbsatz (V-08): in der Inhalt-Liste unter „Badges“ und „Popups“.

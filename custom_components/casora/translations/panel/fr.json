@@ -2653,7 +2653,20 @@
     "Order and colors": "Ordre et couleurs",
     "Source and values in the chart": "Source et valeurs du graphique",
     "Hold, kiosk, font, tile size": "Appui long, kiosque, police, taille des tuiles",
-    "Installed version and betas": "Édition installée et bêtas"
+    "Installed version and betas": "Édition installée et bêtas",
+    "Every setting by topic – for this dashboard and all dashboards": "Tous les réglages par thème – pour ce tableau de bord et tous les autres",
+    "Bell on this dashboard": "Cloche sur ce tableau de bord",
+    "Which messages it shows here": "Quels messages elle affiche ici",
+    "Bell: wording & exceptions": "Cloche : formulation et exceptions",
+    "Zone wording, mailbox, exceptions, limits": "Textes de zone, boîte aux lettres, exceptions, seuils",
+    "Waste, doors & windows, players": "Déchets, portes et fenêtres, lecteurs",
+    "And hidden scenes – the same in every dashboard": "Et scènes masquées – identique dans chaque tableau de bord",
+    "Scenes on this dashboard": "Scènes sur ce tableau de bord",
+    "Controls on this dashboard": "Commandes sur ce tableau de bord",
+    "Hold, font, tile size and new dashboards": "Appui long, police, taille des tuiles et nouveaux tableaux de bord",
+    "Hold, font, tile size": "Appui long, police, taille des tuiles",
+    "No match – try one of the topics below.": "Aucun résultat – essayez l'un des thèmes ci-dessous.",
+    "Bell, notifications, push and Live‑Activities": "Cloche, notifications, push et activités en direct"
   },
   "patterns": [
     [

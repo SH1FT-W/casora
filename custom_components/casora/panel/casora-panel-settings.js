@@ -48,17 +48,35 @@
   // all dashboards) and the dashboard's own sections ("sec", only this dashboard) that belong to it.
   const HUB = [
     { id: "look", label: "Look & feel", icon: "desktop", tone: "set-design", sub: "Design and time",
-      items: [{ page: "design" }, { sec: "Time", label: "Time", icon: "clock", sub: "Shown at the top left" }] },
-    { id: "msg", label: "Messages", icon: "bell", tone: "set-alerts", sub: "Bell, notifications, push and Live Activities",
-      items: [{ sec: "Notifications", label: "Notifications", icon: "bell", sub: "Which messages this dashboard shows" },
-        { page: "alerts" }, { page: "vent" }, { page: "live" }] },
+      items: [{ page: "design", kw: "theme thema farben farbe hintergrund aussehen dunkel hell look colors" },
+        { sec: "Time", label: "Time", icon: "clock", sub: "Shown at the top left", kw: "uhr uhrzeit datum clock" }] },
+    { id: "msg", label: "Messages", icon: "bell", tone: "set-alerts", sub: "Bell, notifications, push and Live\u2011Activities",
+      items: [{ sec: "Notifications", label: "Bell on this dashboard", icon: "bell", sub: "Which messages it shows here",
+          kw: "glocke bell benachrichtigungen notifications meldungen sicherheit personen sauger pflanzen akku updates pulse" },
+        { page: "alerts", label: "Bell: wording & exceptions", icon: "settings", sub: "Zone wording, mailbox, exceptions, limits",
+          kw: "glocke bell meldungen ausnahmen nicht melden briefkasten post akku batterie push grenzwerte co2" },
+        { page: "vent", kw: "push lüften lueften lüftung fenster" }, { page: "live", kw: "push sperrbildschirm iphone waschmaschine trockner" }] },
     { id: "house", label: "Home & Devices", icon: "home", tone: "set-home", sub: "Waste, doors and windows, scenes, players and calendars",
-      items: [{ page: "home" }, { page: "calendar" }, { sec: "Scenes", label: "Scenes", icon: "scenes", sub: "Order and colors" }] },
+      items: [{ page: "home", label: "Waste, doors & windows, players", sub: "And hidden scenes – the same in every dashboard",
+          kw: "abfall müll muell tonne türen tueren fenster kontakte player medien geräte" },
+        { page: "calendar", kw: "kalender termine" },
+        { sec: "Scenes", label: "Scenes on this dashboard", icon: "scenes", sub: "Order and colors", kw: "szenen szene stimmung" }] },
     { id: "wx", label: "Weather & climate", icon: "temp-medium", tone: "set-outdoor", sub: "Weather, outdoor values and electricity price",
-      items: [{ sec: "Weather", label: "Weather", icon: "weather", sub: "Source and values in the chart" }, { page: "outdoor" }] },
-    { id: "ctl", label: "Controls", icon: "settings", tone: "set-dashboards", sub: "Hold, kiosk, font, tile size and new dashboards",
-      items: [{ sec: "General", label: "Controls", icon: "settings", sub: "Hold, kiosk, font, tile size" }, { page: "dashboards" }] },
-    { id: "ext", label: "Extras", icon: "assist", tone: "set-ai", sub: "AI and fuel prices", items: [{ page: "ai" }, { page: "fuel" }] },
+      items: [{ sec: "Weather", label: "Weather", icon: "weather", sub: "Source and values in the chart", kw: "wetter quelle vorhersage" },
+        { page: "outdoor", kw: "außen aussen temperatur strom strompreis tibber" }] },
+    { id: "ctl", label: "Controls", icon: "settings", tone: "set-dashboards", sub: "Hold, font, tile size and new dashboards",
+      items: [{ sec: "General", label: "Controls on this dashboard", icon: "settings", sub: "Hold, font, tile size", kw: "halten schrift kachelgröße kiosk handy" },
+        { page: "dashboards", kw: "neue dashboards hemma vorlagen" }] },
+    { id: "ext", label: "Extras", icon: "assist", tone: "set-ai", sub: "AI and fuel prices",
+      items: [{ page: "ai", kw: "ki ai assist coach" }, { page: "fuel", kw: "tanken benzin diesel" }] },
+  ];
+  // Only found by the search: a group inside a page, opened scrolled to it.
+  const HUB_FIND = [
+    { page: "home", focus: "contacts", label: "Doors and windows", topic: "house", kw: "türen tueren fenster kontakte ausblenden umbenennen" },
+    { page: "home", focus: "waste", label: "Waste collection", topic: "house", kw: "abfall müll muell tonne abholung" },
+    { page: "home", focus: "scenes", label: "Hidden scenes", topic: "house", kw: "szenen ausblenden verstecken" },
+    { page: "home", focus: "media", label: "Now Playing", topic: "house", kw: "player medien musik wiedergabe" },
+    { page: "alerts", focus: "notify", label: "Bell: wording & exceptions", topic: "msg", kw: "zonen briefkasten akku ausnahme nicht melden" },
   ];
   const HUB_START = { id: "start", label: "Settings", hub: true, lede: "Settings by topic. What only this dashboard affects is marked." };
   const hubPage = (id) => {
@@ -80,6 +98,8 @@
     + ".cs-hubtile:focus-visible{outline:2px solid var(--accent);outline-offset:2px}"
     + ".cs-hubtile b{margin-top:6px;font-size:var(--t-body);font-weight:600}"
     + ".cs-hubtile span:last-child{font-size:var(--t-foot);line-height:1.3;color:var(--ink-2)}"
+    + ".cs-hubback{min-height:40px;padding:8px 10px 8px 2px;box-sizing:border-box}"
+    + ".cs-hublist .rtext span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}"
     + ".cs-hubback{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin:0 6px 10px;font-size:var(--t-callout);font-weight:600;color:var(--accent)}"
     + "@media (max-width:600px){.rdetail.cs-dash{white-space:normal!important;max-width:84px;text-align:center;line-height:1.15}}"
     + ".rdetail.cs-dash{flex:none;font-size:var(--t-caption);font-weight:700;padding:3px 8px;border-radius:8px;white-space:nowrap;"
@@ -753,15 +773,10 @@
       const cs = this._cs;
       const page = pageOf(pageId);
       host.replaceChildren();
-      // Desktop: a page opened from the topics has its way back (the phone sheet has its own ‹).
-      if (!page.hub || page.topic) {
-        if ((page.topic || this._csHubBack) && this._csDesk()) {
-          const back = el("button", "cs-hubback", "‹ " + t(page.topic ? "Settings" : "Back"));
-          back.type = "button";
-          const to = page.topic ? "start" : this._csHubTopic ? "t-" + this._csHubTopic : "start";
-          back.onclick = () => this._csShow(to);
-          host.appendChild(back);
-        }
+      // New Studio: a topic leads back to the start, a page to where it was opened from (topic, start, search,
+      // a dashboard section); the phone's full-screen sheet of the previous layout has its own ‹.
+      if (this._csDesk() && (page.topic || (!page.hub && this._hubBackTo))) {
+        host.appendChild(this._csBackButton(page.topic ? "start" : this._hubBackTo));
       }
       host.appendChild(el("p", "cs-lede", t(page.lede)));
       if (page.hub) { this._csFillHub(host, page); return; }
@@ -807,30 +822,82 @@
       return split(this) || this.classList.contains("bmode");
     };
     const hubItem = (it, topic) => {
+      const to = topic ? "t-" + topic.id : "start";
       if (it.page) {
         const p = PAGES.find((x) => x.id === it.page);
-        return { label: p.label, sub: p.lede, icon: p.icon, tone: p.tone, go: { page: p.id, topic: topic && topic.id } };
+        return { label: it.label || p.label, sub: it.sub || p.lede, icon: it.icon || p.icon, tone: p.tone, kw: it.kw || "", go: { page: p.id, back: to, focus: it.focus } };
       }
-      if (it.updates) return { label: "Updates", sub: it.sub, icon: "updates", tone: "updates", go: { updates: true } };
-      return { label: it.label, sub: it.sub || "", icon: it.icon, tone: topic.tone, dash: true, go: { sec: it.sec } };
+      if (it.updates) return { label: "Updates", sub: it.sub, icon: "updates", tone: "updates", kw: "beta version update", go: { updates: true, back: to } };
+      return { label: it.label, sub: it.sub || "", icon: it.icon, tone: topic.tone, dash: true, kw: it.kw || "", go: { sec: it.sec, back: to } };
     };
-    P._csHubGo = function (go) {
-      if (go.page) {
-        this._csHubBack = true;
-        this._csHubTopic = go.topic || null;
-        return this._csShow(go.page);
+    // "‹ <where it came from>": a topic, the start (also after a search), or the dashboard section that linked here.
+    const backLabel = (to) => {
+      if (!to || to === "start") return t("Settings");
+      if (to.indexOf("sec:") === 0) {
+        const k = to.slice(4);
+        const it = [].concat(...HUB.map((h) => h.items)).find((x) => x.sec === k);
+        return t(it ? it.label : k);
       }
-      if (go.updates) return typeof this._cuFromMenu === "function" ? this._cuFromMenu() : null;
+      return t(pageOf(to).label);
+    };
+    P._csBackButton = function (to) {
+      const b = el("button", "cs-hubback", "‹ " + backLabel(to));
+      b.type = "button";
+      b.onclick = () => {
+        if (to && to.indexOf("sec:") === 0) return this._csHubGo({ sec: to.slice(4), back: this._hubSecBack || "start" });
+        this._hubBackTo = null;
+        return this._csShow(to || "start");
+      };
+      return b;
+    };
+    // A navigation from the topics says where back leads; any other way of opening clears it (stale backs, #review).
+    P._csHubGo = function (go) {
+      this._hubNav = true;
+      this._hubBackTo = go.back || "start";
+      if (go.page) return this._csShow(go.page, go.focus);
+      if (go.updates) {
+        if (typeof this._cuFromMenu !== "function") return null;
+        const r = this._cuFromMenu();
+        // Updates draw their own head: the way back goes into it (the page body is redrawn after loading).
+        const to = this._hubBackTo;
+        setTimeout(() => {
+          const h = this._cuOpen && this.shadowRoot.querySelector(".insphead .cu-head");
+          if (h && !h.querySelector(".cs-hubback")) h.insertBefore(this._csBackButton(to), h.firstChild);
+        }, 60);
+        this._hubNav = false;
+        return r;
+      }
       if (go.sec) {
-        this._csHubBack = false;
+        this._hubSecBack = this._hubBackTo;
         if (this._flowMode) this._exitFlow(false);
-        this._csClose();
+        this._csLeaving = true;
+        try { this._csClose(); } finally { this._csLeaving = false; }
         if (typeof this._bLeavePages === "function") this._bLeavePages();
         // The inspector (on the phone its sheet) shows the section, also when the topics were not open before.
         if (this.classList.contains("bmode")) this._bOpen = true;
         this._select({ group: "rooms", key: go.sec, label: go.sec });
       }
+      this._hubNav = false;
       return null;
+    };
+    // A dashboard section opened from the topics: its ‹ (phone) and a "‹ <topic>" link (desktop head) lead back there.
+    P._csHubDecorate = function () {
+      const to = this._hubBackTo, sel = this._sel;
+      if (!to || !sel || sel.group !== "rooms" || this._csOpen || this._cuOpen) return;
+      const root = this.shadowRoot;
+      const round = root.querySelector("#pane .detailbar .back, .navrow .detailbar .back");
+      if (round && round.getClientRects().length) {
+        round.onclick = (ev) => { ev.stopPropagation(); this._hubBackTo = null; this._csShow(to); };
+        round.title = round.getAttribute("aria-label") ? backLabel(to) : round.title;
+        round.setAttribute("aria-label", backLabel(to));
+        return;
+      }
+      const pane = this.$("pane");
+      if (pane && !pane.querySelector(":scope > .cs-hubback")) {
+        const b = this._csBackButton(to);
+        b.style.margin = "0 6px 6px";
+        pane.insertBefore(b, pane.firstChild);
+      }
     };
     P._csFillHub = function (host, page) {
       const row = (list, it) => this._flowRow(list, { mask: icon(it.icon), tint: tint(it), title: t(it.label),
@@ -838,13 +905,15 @@
         detailTone: it.dash ? "cs-dash" : undefined, chevron: true, onTap: () => this._csHubGo(it.go) });
       if (page.topic) {
         const list = this._flowGroup(host);
+        list.classList.add("cs-hublist");
         page.topic.items.forEach((x) => row(list, hubItem(x, page.topic)));
         return;
       }
-      this._csHubBack = false;
       const box = el("div", "cs-hubsearch");
       const inp = el("input", "fin");
       inp.type = "search";
+      // The search text stays while the settings are open (redraws after loading, back from a hit).
+      inp.value = this._hubQ || "";
       inp.placeholder = t("Search settings…");
       inp.setAttribute("aria-label", t("Search settings…"));
       box.appendChild(inp);
@@ -869,19 +938,42 @@
         sysItems.forEach((x) => row(sys, hubItem(x)));
       }
       // Search: every entry of every topic, by its (translated) name, description and topic.
+      // Search: name, description, topic and search words (German and English) of every entry; hits that start with
+      // the word first. A hit leads back to the search, not into a topic that was never open.
+      const fold = (x) => String(x || "").toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss");
       const all = [];
-      HUB.forEach((h) => h.items.forEach((x) => { const it = hubItem(x, h); all.push({ it, hay: [t(it.label), it.sub ? t(it.sub) : "", t(h.label)].join(" ").toLowerCase() }); }));
-      sysItems.forEach((x) => { const it = hubItem(x); all.push({ it, hay: [t(it.label), t(it.sub || "")].join(" ").toLowerCase() }); });
-      inp.oninput = () => {
-        const q = inp.value.trim().toLowerCase();
+      const add = (it, h) => {
+        const name = fold(t(it.label));
+        it.go = Object.assign({}, it.go, { back: "start" });
+        all.push({ it, name, hay: fold([name, it.sub ? t(it.sub) : "", h ? t(h.label) : "", it.kw || ""].join(" ")) });
+      };
+      HUB.forEach((h) => h.items.forEach((x) => add(hubItem(x, h), h)));
+      HUB_FIND.forEach((x) => { const h = HUB.find((y) => y.id === x.topic); const it = hubItem(x, h); it.sub = t(pageOf(x.page).label); add(it, h); });
+      sysItems.forEach((x) => add(hubItem(x)));
+      const find = () => {
+        const q = fold(inp.value.trim());
+        this._hubQ = inp.value;
+        // The field stays where it is while typing (the sheet would shrink to the hits and move it).
+        if (q && !host.style.minHeight) host.style.minHeight = host.offsetHeight + "px";
+        if (!q) host.style.minHeight = "";
         res.replaceChildren();
         main.style.display = q ? "none" : "";
         if (!q) return;
-        const hits = all.filter((a) => q.split(/\s+/).every((w) => a.hay.includes(w)));
-        if (!hits.length) { res.appendChild(el("p", "cs-lede", t("No match"))); return; }
+        const words = q.split(/\s+/);
+        const score = (a) => (words.every((w) => a.name.split(/[\s&:,]+/).some((n) => n.indexOf(w) === 0)) ? 2 : 0)
+          + (words.every((w) => a.hay.split(/[\s&:,/·–-]+/).some((n) => n.indexOf(w) === 0)) ? 1 : 0);
+        const hits = all.filter((a) => words.every((w) => a.hay.includes(w))).sort((a, b) => score(b) - score(a));
+        if (!hits.length) {
+          res.appendChild(el("p", "cs-lede", t("No match – try one of the topics below.")));
+          main.style.display = "";
+          return;
+        }
         const list = this._flowGroup(res);
+        list.classList.add("cs-hublist");
         hits.forEach((a) => row(list, a.it));
       };
+      inp.oninput = find;
+      if (inp.value) find();
     };
 
     // Update the save bar and the dot in the sidebar.
@@ -1411,6 +1503,13 @@
         try { this._cuClose(); } finally { this._cuLeaving = false; }
       }
       if (this._flowMode) this._exitFlow(false);
+      // Opened from the topics: back as set there; from a dashboard section (link): back to it; otherwise none.
+      if (this._hubNav) this._hubNav = false;
+      else if (!/^(start|t-)/.test(String(pageId || ""))) {
+        const sel = this._sel;
+        this._hubBackTo = sel && sel.group === "rooms" && !this._csOpen ? "sec:" + sel.key : null;
+      }
+      if (pageId === "start" && !this._csOpen) this._hubQ = "";
       this._csOpen = true;
       this.classList.add("contentpage");
       this._csPage = pageOf(pageId).id;
@@ -1434,6 +1533,7 @@
     P._csClose = function () {
       if (!this._csOpen) return;
       this._csOpen = false;
+      if (!this._hubNav) this._hubBackTo = null;
       if (!this._cuOpen) this.classList.remove("contentpage");
       const head = this.shadowRoot.querySelector(".insphead");
       if (head) {
@@ -1469,8 +1569,19 @@
     P._renderForm = function () {
       const r = renderForm.apply(this, arguments);
       if (this._csOpen && !this._csLeaving) this._csRender();
+      else if (this._hubBackTo) this._csHubDecorate();
       return r;
     };
+    // Choosing anything else (a tile, a badge, another section) leaves the way back to the topics.
+    const select = P._select;
+    P._select = function (pick) {
+      if (!this._hubNav && pick && !(pick.group === "rooms" && this._hubBackTo && String(this._hubBackTo).indexOf("sec:") === 0)) this._hubBackTo = null;
+      return select.apply(this, arguments);
+    };
+    const bClose = P._bClose;
+    if (typeof bClose === "function") {
+      P._bClose = function () { this._hubBackTo = null; this._hubQ = ""; return bClose.apply(this, arguments); };
+    }
 
     // ── Sidebar: heading "Settings – for all dashboards", the subpages below ──────────────────────
     P._csSideRow = function () {
@@ -1591,7 +1702,8 @@
     P._csSheet = async function (pageId, focus, quiet) {
       css(this);
       watch(this);
-      if (!pageId) pageId = "start";
+      // New Studio: the topics; the previous layout (tests only) keeps its list.
+      if (!pageId) pageId = this.classList.contains("bmode") ? "start" : "start-list";
       if (pageId === "start-list") {
         this._csSheetPage = null;
         const s = this._flowScreen({ icon: "home", title: t("Settings"), quiet,
@@ -1618,7 +1730,8 @@
       const page = pageOf(pageId);
       this._csSheetPage = page.id;
       // Back: a topic's page → that topic, a topic → the topics; the topics themselves close (Cancel).
-      const backTo = page.id === "start" ? null : page.topic ? "start" : this._csHubTopic ? "t-" + this._csHubTopic : "start";
+      const legacy = !this.classList.contains("bmode");
+      const backTo = page.id === "start" ? null : legacy ? "start-list" : page.topic ? "start" : this._hubBackTo || "start";
       const s = this._flowScreen({ title: t(page.label), quiet,
         back: backTo ? () => { this._flowDir = -1; this._csSheet(backTo); } : undefined });
       if (page.id === "start") this._flowCancel(s.acts);
@@ -1674,6 +1787,13 @@
           const open = this._sel && this._sel.group === "rooms" ? this._sel.key : null;
           cols.querySelectorAll("section.card[data-k]").forEach((c) => {
             if (isDash(c.dataset.k) && c.dataset.k !== open) c.style.display = "none";
+          });
+          // A "Dashboard" heading over nothing (no Rewind here): away with its column.
+          cols.querySelectorAll(":scope > .col.phonepanel:not(.cs-phone)").forEach((c) => {
+            if ([...c.children].some((x) => x.style.display !== "none")) return;
+            const h = c.previousElementSibling;
+            if (h && h.classList.contains("phonehead")) h.remove();
+            c.remove();
           });
           const col = el("div", "col phonepanel cs-phone");
           col.style.marginTop = "18px";

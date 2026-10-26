@@ -2653,7 +2653,20 @@
     "Order and colors": "Ordem e cores",
     "Source and values in the chart": "Fonte e valores no gráfico",
     "Hold, kiosk, font, tile size": "Manter premido, quiosque, letra, tamanho dos mosaicos",
-    "Installed version and betas": "Versão instalada e betas"
+    "Installed version and betas": "Versão instalada e betas",
+    "Every setting by topic – for this dashboard and all dashboards": "Todas as definições por tema – para este e todos os painéis",
+    "Bell on this dashboard": "Sino neste painel",
+    "Which messages it shows here": "Que avisos mostra aqui",
+    "Bell: wording & exceptions": "Sino: texto e exceções",
+    "Zone wording, mailbox, exceptions, limits": "Textos de zona, caixa de correio, exceções, limites",
+    "Waste, doors & windows, players": "Lixo, portas e janelas, leitores",
+    "And hidden scenes – the same in every dashboard": "E cenas ocultas – igual em todos os painéis",
+    "Scenes on this dashboard": "Cenas neste painel",
+    "Controls on this dashboard": "Controlo neste painel",
+    "Hold, font, tile size and new dashboards": "Manter premido, letra, tamanho dos mosaicos e novos painéis",
+    "Hold, font, tile size": "Manter premido, letra, tamanho dos mosaicos",
+    "No match – try one of the topics below.": "Sem resultados – experimente um dos temas abaixo.",
+    "Bell, notifications, push and Live‑Activities": "Sino, avisos, push e atividades em direto"
   },
   "patterns": [
     [

@@ -2653,7 +2653,20 @@
     "Order and colors": "Kolejność i kolory",
     "Source and values in the chart": "Źródło i wartości na wykresie",
     "Hold, kiosk, font, tile size": "Przytrzymanie, kiosk, czcionka, rozmiar kafelków",
-    "Installed version and betas": "Zainstalowana wersja i bety"
+    "Installed version and betas": "Zainstalowana wersja i bety",
+    "Every setting by topic – for this dashboard and all dashboards": "Wszystkie ustawienia według tematów – dla tego i wszystkich pulpitów",
+    "Bell on this dashboard": "Dzwonek na tym pulpicie",
+    "Which messages it shows here": "Jakie komunikaty tu pokazuje",
+    "Bell: wording & exceptions": "Dzwonek: treść i wyjątki",
+    "Zone wording, mailbox, exceptions, limits": "Teksty stref, skrzynka, wyjątki, progi",
+    "Waste, doors & windows, players": "Odpady, drzwi i okna, odtwarzacze",
+    "And hidden scenes – the same in every dashboard": "Oraz ukryte sceny – tak samo na każdym pulpicie",
+    "Scenes on this dashboard": "Sceny na tym pulpicie",
+    "Controls on this dashboard": "Obsługa na tym pulpicie",
+    "Hold, font, tile size and new dashboards": "Przytrzymanie, czcionka, rozmiar kafelków i nowe pulpity",
+    "Hold, font, tile size": "Przytrzymanie, czcionka, rozmiar kafelków",
+    "No match – try one of the topics below.": "Brak wyników – zajrzyj do jednego z tematów poniżej.",
+    "Bell, notifications, push and Live‑Activities": "Dzwonek, powiadomienia, push i aktywności na żywo"
   },
   "patterns": [
     [

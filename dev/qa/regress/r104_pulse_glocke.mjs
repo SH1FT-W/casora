@@ -225,7 +225,7 @@ const openNotify = async (page, mobile) => {
     await page.waitForTimeout(1200);
     await page.locator('.cs-hubtile', { hasText: 'Meldungen' }).first().click();
     await page.waitForTimeout(900);
-    await page.locator('.frow').filter({ has: page.locator('b', { hasText: /^Benachrichtigungen$/ }) }).first().click();
+    await page.locator('.frow').filter({ has: page.locator('b', { hasText: /^Glocke auf diesem Dashboard$/ }) }).first().click();
   }
   await page.waitForTimeout(1500);
 };

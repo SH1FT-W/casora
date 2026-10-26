@@ -2653,7 +2653,20 @@
     "Order and colors": "Volgorde en kleuren",
     "Source and values in the chart": "Bron en waarden in de grafiek",
     "Hold, kiosk, font, tile size": "Vasthouden, kiosk, lettertype, tegelgrootte",
-    "Installed version and betas": "Geïnstalleerde versie en bèta's"
+    "Installed version and betas": "Geïnstalleerde versie en bèta's",
+    "Every setting by topic – for this dashboard and all dashboards": "Alle instellingen per onderwerp – voor dit en alle dashboards",
+    "Bell on this dashboard": "Bel op dit dashboard",
+    "Which messages it shows here": "Welke meldingen hij hier toont",
+    "Bell: wording & exceptions": "Bel: formulering & uitzonderingen",
+    "Zone wording, mailbox, exceptions, limits": "Zoneteksten, brievenbus, uitzonderingen, grenzen",
+    "Waste, doors & windows, players": "Afval, deuren en ramen, spelers",
+    "And hidden scenes – the same in every dashboard": "En verborgen scènes – in elk dashboard gelijk",
+    "Scenes on this dashboard": "Scènes op dit dashboard",
+    "Controls on this dashboard": "Bediening op dit dashboard",
+    "Hold, font, tile size and new dashboards": "Vasthouden, lettertype, tegelgrootte en nieuwe dashboards",
+    "Hold, font, tile size": "Vasthouden, lettertype, tegelgrootte",
+    "No match – try one of the topics below.": "Geen resultaat – probeer een van de onderwerpen hieronder.",
+    "Bell, notifications, push and Live‑Activities": "Bel, meldingen, push en live‑activiteiten"
   },
   "patterns": [
     [

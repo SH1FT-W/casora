@@ -2653,7 +2653,20 @@
     "Order and colors": "Reihenfolge und Farben",
     "Source and values in the chart": "Quelle und Werte im Diagramm",
     "Hold, kiosk, font, tile size": "Halten, Kiosk, Schrift, Kachelgröße",
-    "Installed version and betas": "Installierte Version und Betas"
+    "Installed version and betas": "Installierte Version und Betas",
+    "Every setting by topic – for this dashboard and all dashboards": "Alle Einstellungen nach Themen – für dieses und alle Dashboards",
+    "Bell on this dashboard": "Glocke auf diesem Dashboard",
+    "Which messages it shows here": "Welche Meldungen sie hier zeigt",
+    "Bell: wording & exceptions": "Glocke: Wortlaut & Ausnahmen",
+    "Zone wording, mailbox, exceptions, limits": "Zonen-Texte, Briefkasten, Ausnahmen, Grenzwerte",
+    "Waste, doors & windows, players": "Abfall, Türen & Fenster, Player",
+    "And hidden scenes – the same in every dashboard": "Dazu ausgeblendete Szenen – in jedem Dashboard gleich",
+    "Scenes on this dashboard": "Szenen auf diesem Dashboard",
+    "Controls on this dashboard": "Bedienung auf diesem Dashboard",
+    "Hold, font, tile size and new dashboards": "Halten, Schrift, Kachelgröße und neue Dashboards",
+    "Hold, font, tile size": "Halten, Schrift, Kachelgröße",
+    "No match – try one of the topics below.": "Kein Treffer – schau in eines der Themen unten.",
+    "Bell, notifications, push and Live‑Activities": "Glocke, Benachrichtigungen, Push und Live‑Aktivitäten"
   },
   "patterns": [
     [

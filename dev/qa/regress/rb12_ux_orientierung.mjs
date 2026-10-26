@@ -29,8 +29,8 @@ await page.waitForTimeout(1200);
 await H(() => window.__panel()._csShow('t-msg'));
 await page.waitForTimeout(1000);
 const rows = await H(() => [...window.__panel().shadowRoot.querySelectorAll('#pane .frow')].map((r) => r.textContent.replace(/\s+/g, ' ').trim()));
-await check('Thema Meldungen: Benachrichtigungen „Nur dieses Dashboard“, Glocke & Meldungen ohne',
-  rows.some((t) => /^Benachrichtigungen.*Nur dieses Dashboard/.test(t)) && rows.some((t) => /^Glocke & Meldungen/.test(t) && !/Nur dieses Dashboard/.test(t)), rows);
+await check('Thema Meldungen: „Glocke auf diesem Dashboard“ mit „Nur dieses Dashboard“, „Glocke: Wortlaut & Ausnahmen“ ohne',
+  rows.some((t) => /^Glocke auf diesem Dashboard.*Nur dieses Dashboard/.test(t)) && rows.some((t) => /^Glocke: Wortlaut & Ausnahmen/.test(t) && !/Nur dieses Dashboard/.test(t)), rows);
 await H(() => window.__panel()._bClose());
 await page.waitForTimeout(500);
 

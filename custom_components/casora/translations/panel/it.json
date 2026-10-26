@@ -2653,7 +2653,20 @@
     "Order and colors": "Ordine e colori",
     "Source and values in the chart": "Fonte e valori nel grafico",
     "Hold, kiosk, font, tile size": "Pressione lunga, kiosk, carattere, dimensione riquadri",
-    "Installed version and betas": "Versione installata e beta"
+    "Installed version and betas": "Versione installata e beta",
+    "Every setting by topic – for this dashboard and all dashboards": "Tutte le impostazioni per argomento – per questa e tutte le dashboard",
+    "Bell on this dashboard": "Campanella su questa dashboard",
+    "Which messages it shows here": "Quali messaggi mostra qui",
+    "Bell: wording & exceptions": "Campanella: testi ed eccezioni",
+    "Zone wording, mailbox, exceptions, limits": "Testi delle zone, cassetta postale, eccezioni, soglie",
+    "Waste, doors & windows, players": "Rifiuti, porte e finestre, lettori",
+    "And hidden scenes – the same in every dashboard": "E scene nascoste – uguale in ogni dashboard",
+    "Scenes on this dashboard": "Scene su questa dashboard",
+    "Controls on this dashboard": "Comandi su questa dashboard",
+    "Hold, font, tile size and new dashboards": "Pressione lunga, carattere, dimensione riquadri e nuove dashboard",
+    "Hold, font, tile size": "Pressione lunga, carattere, dimensione riquadri",
+    "No match – try one of the topics below.": "Nessun risultato – prova uno degli argomenti qui sotto.",
+    "Bell, notifications, push and Live‑Activities": "Campanella, notifiche, push e attività live"
   },
   "patterns": [
     [

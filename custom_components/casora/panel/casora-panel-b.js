@@ -525,7 +525,8 @@
           b.innerHTML = svg(icon) + '<span class="blabel"></span>';
           b.querySelector(".blabel").textContent = label;
           b.title = label;
-          b.setAttribute("aria-haspopup", id === "list" ? "false" : "menu");
+          // "Content" and "Settings" open a page, the others a menu.
+          b.setAttribute("aria-haspopup", id === "list" || id === "home" ? "false" : "menu");
           b.onclick = () => onPick(b);
           tools.appendChild(b);
           return b;
@@ -565,6 +566,9 @@
         }
         const list = tools.querySelector('[data-b="list"]');
         if (list) list.classList.toggle("on", !!this._bOpen && !this._sel && !this._bPage());
+        // "Settings" stays marked on its topics, pages and the sections opened from them.
+        const setb = tools.querySelector('[data-b="home"]');
+        if (setb) setb.classList.toggle("on", !!(this._csOpen || this._cuOpen || this._hubBackTo));
         // Update hint: the same number as the (here hidden) "Updates" row.
         const n = this._bUpdates();
         const upd = tools.querySelector(".bupd");
@@ -758,31 +762,6 @@
         if (!insp) return;
         const first = insp.querySelector(".insphead button, .sheet h2, .sheet button, .sheet input");
         if (first && first.focus) first.focus({ preventScroll: true });
-      });
-    };
-
-    // Icons as in the previous Studio's sidebar (sections or settings pages).
-    const SECS = [
-      ["General", "Controls", "settings"], ["Weather", "Weather", "weather"], ["Time", "Time", "clock"],
-      ["Notifications", "Notifications", "bell"], ["Scenes", "Scenes", "scenes"],
-    ];
-    P._bDashMenu = function (anchor) {
-      // UX-03: only settings of this dashboard. Rewind and mobile layout belong to the
-      // dashboard itself and sit in the title menu (_bDocItems).
-      const items = SECS.map(([k, l, g]) => ({ id: "sec:" + k, label: l, glyph: g, plainGlyph: true,
-        group: "Only this dashboard" }));
-      // The design applies to all dashboards and sits under "Settings" – only a link here.
-      if (typeof this._casoraShowDesign === "function") {
-        items.push({ id: "design", label: "Design (for all dashboards) ›", glyph: "desktop", plainGlyph: true, group: "design", quiet: true });
-      }
-      this._menuAt(anchor, items, (id) => {
-        if (id === "design") { this._bFrom = anchor; return this._casoraShowDesign(); }
-        if (id.indexOf("sec:") === 0) {
-          const key = id.slice(4);
-          this._bLeavePages();
-          this._bFrom = anchor;
-          this._select({ group: "rooms", key, label: key });
-        }
       });
     };
 
