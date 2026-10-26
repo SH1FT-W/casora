@@ -27095,8 +27095,15 @@ class CasoraPanel extends HTMLElement {
       const done = () => {
         const at = room.tiles.indexOf(shell);
         if (at < 0) return;
+        // #71: the removed tile was open in the editor – leave it first. _renderTiles leaves out "Add a tile"
+        // while a tile is selected, and the selection was only dropped after that (until a reload).
+        const wasSel = this._sel && this._sel.group === "tiles" && this._sel.key === this._tileKey(shell);
         const [gone] = room.tiles.splice(at, 1);
         this._removePairTwin(room, gone);
+        if (wasSel) {
+          this._sel = null;
+          if (this.classList.contains("bmode")) this._group = GROUPS[0].id;
+        }
         this._renderForm();
       };
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return done();
