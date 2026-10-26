@@ -1,9 +1,9 @@
 # Reviewed spots in scripts/local/14…29 and the Studio (panel/*.js). Format: file | expression | reason.
 
-# 14-pulse.js – overview bar
+# 14-pulse.js – overview bar, section count pill
 custom_components/casora/scripts/local/14-pulse.js | p[1] | device count (number) as flex grow | 1
-custom_components/casora/scripts/local/14-pulse.js | COLOR[p[0]] | colour constant of the status (COLOR map) | 2
-custom_components/casora/scripts/local/14-pulse.js | re:^[ab]$ | join(): sections built by UI.group from escaped rows | 2
+custom_components/casora/scripts/local/14-pulse.js | COLOR[p[0]] | colour constant of the status (COLOR map) | 1
+custom_components/casora/scripts/local/14-pulse.js | COLOR[st] | colour constant of the section's status (COLOR map) | 1
 
 # 15-person.js – history timeline (lastHtml) and phone actions
 custom_components/casora/scripts/local/15-person.js | re:^(?:font|ink|sub|row|ctl|dim)$ | CSS colour/font constants of lastHtml | 11

@@ -2623,6 +2623,18 @@
    "for {1} days"
   ],
   [
+   "^seit (\\d+) Tag$",
+   "for {1} day"
+  ],
+  [
+   "^Antwortet (seit .+) nicht$",
+   "Not responding {1}"
+  ],
+  [
+   "^Still (seit .+)$",
+   "Silent {1}"
+  ],
+  [
    "^zuletzt gemeldet gestern (.+)$",
    "last reported yesterday {1}"
   ],

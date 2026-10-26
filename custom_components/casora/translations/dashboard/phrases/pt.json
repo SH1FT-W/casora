@@ -2641,6 +2641,18 @@
    "há {1} dias"
   ],
   [
+   "^seit (\\d+) Tag$",
+   "há {1} dia"
+  ],
+  [
+   "^Antwortet (seit .+) nicht$",
+   "Não responde {1}"
+  ],
+  [
+   "^Still (seit .+)$",
+   "Em silêncio {1}"
+  ],
+  [
    "^zuletzt gemeldet gestern (.+)$",
    "última comunicação ontem {1}"
   ],

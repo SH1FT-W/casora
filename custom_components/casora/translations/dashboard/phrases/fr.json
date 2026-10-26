@@ -2641,6 +2641,18 @@
    "depuis {1} jours"
   ],
   [
+   "^seit (\\d+) Tag$",
+   "depuis {1} jour"
+  ],
+  [
+   "^Antwortet (seit .+) nicht$",
+   "Ne répond pas {1}"
+  ],
+  [
+   "^Still (seit .+)$",
+   "Silencieux {1}"
+  ],
+  [
    "^zuletzt gemeldet gestern (.+)$",
    "dernier rapport hier {1}"
   ],

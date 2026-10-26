@@ -105,7 +105,11 @@ assert.equal(P.icon({ reason: 'radio_only', status: 'watch' }), 'mdi:access-poin
 assert.equal(P.every(600), 'alle 10 Min.');
 assert.equal(P.every(86400), 'einmal am Tag');
 assert.equal(P.every(null), null);
-assert.equal(P.since(ago(50), NOW), 'seit 2 T.');
+assert.equal(P.since(ago(50), NOW), 'seit 2 Tagen');
+assert.equal(P.since(ago(30), NOW), 'seit 1 Tag');
+// The time goes into the sentence (popup row, 26.10.: right side only ›).
+assert.equal(P.reason(by['Rauchmelder Speicher'], 'seit 2 Tagen'), 'Antwortet seit 2 Tagen nicht · sonst alle 4 Std.');
+assert.equal(P.reason(by['Bewegung Treppe'], 'seit 9 Std.'), 'Still seit 9 Std. · sonst jede Stunde');
 assert.equal(P.since(ago(9), NOW), 'seit 9 Std.');
 assert.equal(P.since(new Date(NOW - 12 * 60000).toISOString(), NOW), 'seit 12 Min.');
 
@@ -131,48 +135,67 @@ assert.equal(P.tileState(one), '1 Problem');
 assert.equal(P.color(one.worst), P.COLOR.check);
 assert.equal(P.tileState(P.scan({ entities: {}, states: {} })), 'Nicht installiert');
 
-// Unterzeile „N Probleme · M bald fällig · K ok“ und Leiste.
-assert.deepEqual(P.subline(s), { main: '3 Probleme', rest: ['2 beobachten', '2 ok'], tone: 'bad' });
+// Short subline „N Probleme · K ok“ (one line on a phone; the watch count stands at its section) and bar.
+assert.deepEqual(P.subline(s), { main: '3 Probleme', rest: ['2 ok'], tone: 'bad' });
 assert.deepEqual(P.subline(onlyWatch).main, 'Keine Probleme');
 const bar = P.bar(s);
 for (const t of ['1 ausgefallen', '2 prüfen', '2 beobachten', '2 ok']) assert.ok(bar.includes(t), t);
-assert.equal(P.wide(hass, states), true, 'Probleme + bald fällig → zweispaltig');
+assert.equal((bar.match(/<span /g) || []).length, 4, 'four segments, no legend');
+assert.equal(P.wide(hass, states), true, 'a section with two entries → wide');
+assert.equal(P.wide(hass, { ...states,
+  'sensor.x1_status': { ...states['sensor.x1_status'], state: 'ok' },
+  'sensor.x3_status': { ...states['sensor.x3_status'], state: 'ok' },
+  'sensor.x4_status': { ...states['sensor.x4_status'], state: 'ok' },
+  'sensor.x5_status': { ...states['sensor.x5_status'], state: 'ok' } }), false, 'one entry per section → narrow');
 
-// Popup-Bereiche: Zeilen über einen Stub von window._casoraUI.
+// Popup sections: rows through a stub of window._casoraUI (row markup like the core: icon after .hui-inner).
 const groups = [];
 window._casoraUI = {
   line: (m, r) => '<line>' + m + '|' + r.join('|') + '</line>',
-  group: (rows, label) => { groups.push({ rows, label }); return '<div class="hui-row">' + rows.map((r) => r.label + ' ' + (r.sub || '')).join(',') + '</div>'; },
-  more: (id, html, o) => '<more ' + o.label + ' ' + o.count + '>' + html + '</more>',
+  icon: (n, t) => '<i data-ic="' + n + '|' + t + '"></i>',
+  group: (rows, label) => { groups.push({ rows, label }); return rows.map((r) => '<div class="hui-row"><div class="hui-inner">' + window._casoraUI.icon(r.icon, r.iconTone)
+    + r.label + ' ' + (r.sub || '') + (r.action ? '<div class="hui-actx" aria-label="' + r.action + '"></div>' : '') + '</div></div>').join(''); },
+  more: (id, html, o) => '<more ' + o.label + ' ' + o.count + '><span class="hui-mlb"></span>' + html + '</more>',
 };
-// Abschnitte wie im Pulse-Panel: links Ausgefallen/Prüfen, rechts Batterie/Beobachten.
+// Sections by Pulse status, stacked: Ausgefallen, Prüfen, Beobachten – each with its count.
 groups.length = 0;
-const prob = P.sec('prob', null, states, hass);
-const left = groups.splice(0);
-assert.ok(left.length && left.every((x) => x.label === 'Ausgefallen' || x.label === 'Prüfen'), left.map((x) => x.label));
-assert.ok(prob.includes('Wichtig'), '„Wichtig“-Marke für kritisches Gerät');
-P.sec('soon', null, states, hass);
-const right = groups.splice(0);
-assert.ok(right.length && right.every((x) => x.label === 'Batterie' || x.label === 'Beobachten'), right.map((x) => x.label));
-const all = left.concat(right).flatMap((x) => x.rows);
+const secs = {};
+for (const [part, label, n] of [['failed', 'Ausgefallen', 1], ['check', 'Prüfen', 2], ['watch', 'Beobachten', 2]]) {
+  secs[part] = P.sec(part, null, states, hass);
+  assert.ok(secs[part].includes('>' + label + '</div><span class="pls-n"'), label);
+  assert.ok(secs[part].includes('>' + n + '</span>'), label + ' count ' + n);
+}
+assert.equal(P.sec('soon', null, states, hass), '', 'no „Batterie“ section any more');
+const all = groups.splice(0).flatMap((x) => x.rows);
 assert.equal(all.length, 5, '3 Probleme + 2 beobachten');
-const batRows = (right.find((x) => x.label === 'Batterie') || { rows: [] }).rows;
 const win = all.find((r) => r.label === 'Fenster Atelier');
-assert.ok(batRows.includes(win), 'Batterie-Grund steht unter „Batterie“');
-assert.equal(win.action, 'Gewechselt');
+assert.ok(secs.check.includes('Fenster Atelier'), 'battery „prüfen“ under „Prüfen“');
+assert.ok(secs.watch.includes('Thermometer Wintergarten'), 'battery „bald fällig“ under „Beobachten“');
+assert.equal(win.action, 'Batterie gewechselt');
+assert.equal(win.actionIcon, 'mdi:check', 'round ✓ button');
+assert.ok(secs.check.includes('aria-label="Batterie gewechselt" title="Batterie gewechselt"'), 'tooltip on the ✓ button');
 assert.deepEqual(win.svc.domain + '.' + win.svc.service, 'pulse.mark_replaced');
 assert.deepEqual(win.svc.data, { device_id: 'd_win' });
 assert.ok(win.confirm, 'Rückfrage vor dem Melden');
 assert.ok(win.svc.done, 'Rückmeldung nach dem Melden');
-assert.equal(win.value, '7 %');
-assert.equal(win.entity, 'sensor.x2_status');
-const smoke = all.find((r) => /^Rauchmelder/.test(r.label));
+assert.equal(win.value, undefined, 'nothing on the right but the controls');
+assert.equal(win.pct, '7 %');
+// Badge sits on the icon of its own row (rows with the same icon before it stay without).
+const winRow = secs.check.split('<div class="hui-row">').find((x) => x.includes('Fenster Atelier'));
+assert.ok(/<div class="pls-ic"><i [^>]*><\/i><span class="pls-pct">7 %<\/span><\/div>/.test(winRow), winRow);
+assert.ok(!secs.check.split('<div class="hui-row">').find((x) => x.includes('Bewegung Treppe')).includes('pls-pct'), 'no badge without battery');
+const smoke = all.find((r) => /Rauchmelder/.test(r.label));
 assert.equal(smoke.action, undefined, 'kein „Gewechselt“ bei Stille');
 assert.equal(smoke.iconTone, 'bad');
-assert.ok(left.flatMap((x) => x.rows).includes(smoke), 'Stille steht links');
+assert.equal(smoke.pct, null, 'silent: no (stale) battery badge');
+assert.ok(/^Antwortet seit \d+ Tagen nicht · sonst alle 4 Std\. · Speicher$/.test(smoke.sub), smoke.sub);
+assert.ok(secs.failed.includes('<span class="pls-nm">Rauchmelder Speicher</span><span class="pls-tag">Wichtig</span>'), '„Wichtig“ beside the name');
+assert.ok(!/[\u2062\u2063]/.test(secs.failed), 'no markers left');
 const more = P.sec('more', null, states, hass);
 assert.ok(/<more Alles ok 2>/.test(more), '„Alles ok“ eingeklappt mit Anzahl');
-assert.ok(more.includes('data-casora-link="/pulse"'), 'Fuß führt ins Pulse-Panel');
+assert.ok(more.includes('class="pls-okic"'), 'green check in front of „Alles ok“');
+assert.ok(more.includes('class="pls-link" data-casora-link="/pulse"'), 'Fuß führt ins Pulse-Panel (Textlink)');
+assert.ok(more.includes('<span class="pls-pct">64 %</span>'), 'battery badge in „Alles ok“ too');
 assert.ok(P.sec('hero', null, states, hass).includes('3 Probleme'));
 
 // Studio: Kacheltyp nur mit Pulse; Finder-Schlüssel; Assistent schlägt eine Kachel für die Startseite vor.

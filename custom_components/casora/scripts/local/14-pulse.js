@@ -78,7 +78,8 @@
     var d = Math.round(s / 86400);
     return d < 2 ? 'einmal am Tag' : 'alle ' + d + ' Tage';
   };
-  // Timestamp → „seit 12 Min.“, „seit 9 Std.“, „seit 2 T.“
+  // Timestamp → „seit 12 Min.“, „seit 9 Std.“, „seit 1 Tag“, „seit 2 Tagen“ (days written out: it sits in the
+  // row's subline now, not as a short value on the right).
   P.since = function (ts, now) {
     var t = Date.parse(ts);
     if (isNaN(t)) return null;
@@ -86,13 +87,16 @@
     if (m < 60) return 'seit ' + m + ' Min.';
     var h = Math.round(m / 60);
     if (h < 24) return 'seit ' + h + ' Std.';
-    return 'seit ' + Math.max(1, Math.floor(m / 1440)) + ' T.';
+    var days = Math.max(1, Math.floor(m / 1440));
+    return 'seit ' + days + (days === 1 ? ' Tag' : ' Tagen');
   };
-  // Short reason per reason_key; the status tells silent (check) from failed.
-  P.reason = function (d) {
+  // Short reason per reason_key; the status tells silent (check) from failed. since (optional, P.since)
+  // goes into the sentence: „Antwortet seit 2 Tagen nicht“, „Still seit 9 Std.“.
+  P.reason = function (d, since) {
     var k = d.reason, ev = P.every(d.typical);
     switch (k) {
-      case 'silent': return (d.status === 'failed' ? 'Antwortet nicht' : 'Still') + (ev ? ' · sonst ' + ev : '');
+      case 'silent': return (d.status === 'failed' ? 'Antwortet ' + (since ? since + ' ' : '') + 'nicht' : 'Still' + (since ? ' ' + since : ''))
+        + (ev ? ' · sonst ' + ev : '');
       case 'silent_new': return 'Hat sich noch nicht gemeldet';
       case 'unavailable': return 'Nicht erreichbar';
       case 'partner': return 'Still, obwohl das Partnergerät aktiv war';
@@ -282,14 +286,17 @@
   };
 
   // ── Popup ─────────────────────────────────────────────────────────────────
-  // Ring + title come from the popup frame (tile icon in tile colour). Below: the subline
-  // „N Probleme · M beobachten · K ok“ and the overview bar, left „Ausgefallen“/„Prüfen“,
-  // right „Batterie“/„Beobachten“, below that „Alles ok“ collapsed and „In Pulse öffnen“.
+  // Ring + title come from the popup frame (tile icon in tile colour). Below: the short subline
+  // „N Probleme · K ok“ and the thin overview bar, then „Ausgefallen“, „Prüfen“, „Beobachten“ stacked,
+  // each with its count as a pill and its entries in two columns (one on narrow popups, a single entry
+  // over the full width), „Alles ok“ collapsed and the text link „In Pulse öffnen“ at the bottom.
+  // Sections follow Pulse's status, so they count the same as the bar.
+  var SECTIONS = [['failed', 'Ausgefallen'], ['check', 'Prüfen'], ['watch', 'Beobachten']];
+  var inSec = function (s, st) { return s.list.filter(function (d) { return d.status === st; }); };
+  // Wide popup only when some section has two entries to put side by side.
   P.wide = function (hass, states) {
     var s = P.scan(hass, states);
-    var left = s.list.some(function (d) { return d.status === 'failed' || (d.status === 'check' && !BATTERY[d.reason]); });
-    var right = s.list.some(function (d) { return d.status === 'watch' || (d.status === 'check' && BATTERY[d.reason]); });
-    return left && right;
+    return SECTIONS.some(function (x) { return inSec(s, x[0]).length > 1; });
   };
   P.popup = function (states, hass) {
     var K = window._casoraSoftKit, UI = window._casoraUI;
@@ -307,44 +314,109 @@
       return 'return window._casoraPulse ? window._casoraPulse.sec(' + JSON.stringify(part) + ', null, states, hass) : "";';
     };
     var f = { hero: { card: K.secCard(watch, call('hero'), states) } };
-    // Sections by content, not by counters: „prüfen“ because of the battery counts as a problem,
-    // but sits under „Batterie“ (right) – with only one such device the row was missing (checkup 10/2026).
-    var batt = function (d) { return !!BATTERY[d.reason]; };
-    if (s.list.some(function (d) { return d.status === 'failed' || (d.status === 'check' && !batt(d)); })) f.prob = { card: K.secCard(watch, call('prob'), states) };
-    if (s.list.some(function (d) { return d.status === 'watch' || (d.status === 'check' && batt(d)); })) f.soon = { card: K.secCard(watch, call('soon'), states) };
+    // Sections by content: only those with entries (an only-battery „prüfen“ still gets its row, checkup 10/2026).
+    SECTIONS.forEach(function (x) { if (inSec(s, x[0]).length) f[x[0]] = { card: K.secCard(watch, call(x[0]), states) }; });
     f.more = { card: K.secCard(watch, call('more'), states) };
-    return K.layout({ fields: f, top: ['hero'], left: ['prob'], right: ['soon', 'more'], moveLeft: ['soon'] });
+    return K.layout({ fields: f, top: ['hero'], left: ['failed', 'check', 'watch', 'more'], right: [] });
   };
 
-  var CHIP_MARK = '⁣';
+  // Markers around the name of critical devices: replaced by a span for the name (ellipsis) and the
+  // „Wichtig“ tag behind it, which then stays visible however long the name is.
+  var NAME_ON = '⁢', NAME_OFF = '⁣';
+  var SILENT = { silent: 1, silent_new: 1, unavailable: 1, partner: 1, radio_only: 1 };
   var rowOf = function (d, opts) {
     var tone = d.status === 'failed' ? 'bad' : d.status === 'check' ? 'warn' : d.status === 'watch' ? COLOR.watch : undefined;
-    var sub = [d.text, d.area].filter(Boolean);
+    var silent = !!SILENT[d.reason];
+    // How long it has been silent goes into the sentence („Antwortet seit 2 Tagen nicht“), right only ›.
+    var since = silent && d.silentSince ? P.since(d.silentSince) : null;
+    var sub = [P.reason(d, since)];
+    if (since && d.reason !== 'silent') sub.push(since);
+    if (d.area) sub.push(d.area);
     if (d.snoozed) sub.push('Erinnerung pausiert');
-    var silent = d.reason === 'silent' || d.reason === 'silent_new' || d.reason === 'unavailable' || d.reason === 'partner' || d.reason === 'radio_only';
+    var tag = d.critical && (d.status === 'failed' || d.status === 'check');
     var r = {
       entity: d.statusId, icon: P.icon(d), iconTone: tone,
-      label: d.name,
-      // Badge at the start of the subline – behind the name the ellipsis („…“) cut it off.
-      sub: (d.critical && (d.status === 'failed' || d.status === 'check') ? CHIP_MARK : '') + sub.join(' · '),
-      value: silent && d.silentSince ? P.since(d.silentSince) : d.battery != null ? Math.round(d.battery) + ' %' : null,
-      valueTone: d.status === 'failed' ? 'bad' : d.status === 'check' ? 'warn' : null,
+      label: tag ? NAME_ON + d.name + NAME_OFF : d.name,
+      sub: sub.join(' · '),
+      // Battery level as a small badge on the icon (not for silent devices: their value is stale).
+      pct: !(silent && d.silentSince) && d.battery != null ? Math.round(d.battery) + ' %' : null,
     };
-    // „Gewechselt“ (pulse.mark_replaced) for battery reasons – with confirmation („Bestätigen“ slider).
+    // „Batterie gewechselt“ (pulse.mark_replaced) for battery reasons: round ✓ button, with confirmation.
     if (opts && opts.replace && BATTERY[d.reason]) {
-      r.action = 'Gewechselt';
+      r.action = 'Batterie gewechselt';
+      r.actionIcon = 'mdi:check';
       r.svc = { domain: 'pulse', service: 'mark_replaced', data: { device_id: d.device }, done: 'Batteriewechsel gemeldet' };
       r.confirm = 'Batterie gewechselt';
     }
     return r;
   };
-  // „Wichtig“ badge before the reason of critical devices (smoke, water).
-  var chips = function (html) {
-    return html.split(CHIP_MARK).join('<span style="display:inline-block;vertical-align:1px;margin-right:6px;padding:1px 7px;'
-      + 'border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;'
-      + 'background:' + COLOR.failed + ';">Wichtig</span>');
+
+  // Text 1 of the popup (as the core's T.ink: without a Casora theme the popup is dark, so white).
+  var INK = 'var(--casora-popup-tiles-text-primary, #fff)';
+  var ROW_CSS = '<style>'
+    // Count pill beside a section heading: centred on the heading's line box (= cap height in Inter).
+    + '.pls-h{display:flex;align-items:center;gap:8px;}'
+    + '.pls-ht{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.25;}'
+    + '.pls-n{flex:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;'
+    +   'min-width:20px;height:20px;padding:0 6px;border-radius:999px;font-size:12px;font-weight:700;line-height:1;'
+    +   'font-variant-numeric:tabular-nums;letter-spacing:0;color:var(--casora-soft-glyph, #fff);}'
+    // Entries of a section side by side once there is room (popup wide), a single one over the full width.
+    + '.pls-grid{container-type:inline-size;}'
+    + '@container (min-width: 560px){.pls-grid .hui-plate{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));}'
+    +   '.pls-grid .hui-plate>.hui-srow:only-child{grid-column:1/-1;}}'
+    // Battery badge: bottom right on the icon, 6 px outside it, clear of the glyph.
+    + '.pls-ic{position:relative;flex:none;display:flex;line-height:0;}'
+    + '.pls-pct{position:absolute;right:-6px;bottom:-6px;box-sizing:border-box;height:14px;padding:0 4px;border-radius:999px;'
+    +   'border:1px solid var(--casora-soft-row-fill, transparent);font-size:10px;font-weight:800;line-height:12px;letter-spacing:0;'
+    +   'font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none;color:' + INK + ';'
+    +   'background:linear-gradient(var(--casora-soft-surface, transparent), var(--casora-soft-surface, transparent)), var(--primary-background-color, #fff);}'
+    + '.pls-std .pls-pct{bottom:-9px;border-color:transparent;background:rgb(28,28,30);}'
+    // „Wichtig“ beside the name; the name takes the ellipsis.
+    + '.hui-inner div:has(>.pls-nm){display:flex;align-items:center;gap:6px;}'
+    + '.pls-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
+    + '.pls-tag{flex:none;padding:2px 6px;border-radius:6px;font-size:10px;font-weight:800;line-height:12px;letter-spacing:.06em;'
+    +   'text-transform:uppercase;color:var(--casora-soft-glyph, #fff);background:' + COLOR.failed + ';}'
+    // „Batterie gewechselt“ as a round ✓ button on every screen (the core shows text on wide screens).
+    + '.pls-sec .hui-actx{padding:2px!important;margin:-2px 0!important;gap:0!important;flex:none;color:' + INK + '!important;}'
+    + '.pls-sec .hui-actx .hui-at{display:none!important;}'
+    + '.pls-sec .hui-actx .hui-ab{display:grid!important;place-items:center;width:36px;height:36px;border-radius:50%;flex:none;'
+    +   'transition:transform var(--casora-dur-feedback, 160ms) ease, background-color var(--casora-dur-feedback, 160ms) ease;}'
+    + '.pls-sec .hui-actx .hui-ab ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;}'
+    + '.pls-sec .hui-actx:active .hui-ab{transform:scale(var(--casora-press-scale, .97));}'
+    + '@media (hover:hover){.pls-sec .hui-actx:hover .hui-ab{background:var(--casora-soft-row-press, rgba(140,115,90,0.16))!important;}}'
+    + '</style>';
+
+  // Rows through the core group (taps, confirm, live), then badge, name/tag and tooltip worked in.
+  var plateHtml = function (UI, list, opts) {
+    var rs = list.map(function (d) { return rowOf(d, opts); });
+    var html = UI.group(rs, null);
+    var INNER = '<div class="hui-inner">', at = 0;
+    if (typeof UI.icon === 'function') {
+      rs.forEach(function (r) {
+        var iconHtml = UI.icon(r.icon, r.iconTone), leadHtml = INNER + iconHtml;
+        var i = html.indexOf(leadHtml, at);
+        if (i < 0) return;
+        // Rows in order, so a row never picks up the badge of an earlier one with the same icon.
+        var repHtml = r.pct ? INNER + '<div class="pls-ic">' + iconHtml + '<span class="pls-pct">' + esc(r.pct) + '</span></div>' : leadHtml;
+        html = html.slice(0, i) + repHtml + html.slice(i + leadHtml.length);
+        at = i + repHtml.length;
+      });
+    }
+    return html.split(NAME_ON).join('<span class="pls-nm">')
+      .split(NAME_OFF).join('</span><span class="pls-tag">Wichtig</span>')
+      .replace(/ aria-label="([^"]*)"/g, ' aria-label="$1" title="$1"');
   };
-  // Overview bar: shares failed / check / due soon / ok, legend below.
+  var soft = function () { return !!(window._casoraSoft && window._casoraSoft()); };
+  var section = function (UI, st, label, list) {
+    var T = UI.tokens || {}, sf = soft();
+    var headHtml = '<div class="hui-slbl pls-h" style="font-family:' + (T.font || 'inherit') + ';'
+      + (sf ? 'margin:0 6px 10px;">' : 'padding:0 4px 8px;">')
+      + '<div class="pls-ht" style="font-size:var(--casora-h15-fs,' + (sf ? '17px' : '15px') + ');font-weight:var(--casora-h15-fw,' + (sf ? '700' : '600') + ');'
+      + 'letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, ' + INK + ');">'
+      + esc(label) + '</div><span class="pls-n" style="background:' + COLOR[st] + ';">' + list.length + '</span></div>';
+    return ROW_CSS + '<div class="pls-sec' + (sf ? ' pls-grid' : ' pls-std') + '">' + headHtml + plateHtml(UI, list, { replace: true }) + '</div>';
+  };
+  // Overview bar: thin segments failed / check / due soon / ok; the counts stand at the sections.
   P.bar = function (s) {
     var parts = [
       ['failed', s.counts.failed, s.counts.failed + ' ausgefallen'],
@@ -353,22 +425,37 @@
       ['ok', s.counts.ok + s.counts.learning, (s.counts.ok + s.counts.learning) + ' ok'],
     ].filter(function (p) { return p[1] > 0; });
     if (!parts.length) return '';
-    return '<div class="pls-bar" style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:3px;margin:14px 6px 0;">'
-      + parts.map(function (p) { return '<span style="flex:' + p[1] + ' 1 0;min-width:6px;background:' + COLOR[p[0]] + ';"></span>'; }).join('')
-      + '</div><div class="pls-leg" style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin:10px 6px 0;'
-      + 'font-size:13px;font-weight:500;color:var(--casora-soft-sub, var(--secondary-text-color));">'
-      + parts.map(function (p) {
-        return '<span style="display:inline-flex;align-items:center;gap:6px;"><i style="width:9px;height:9px;border-radius:50%;background:'
-          + COLOR[p[0]] + ';"></i><span>' + esc(p[2]) + '</span></span>';
-      }).join('') + '</div>';
+    var said = parts.map(function (p) { return p[2]; }).join(' · ');
+    if (typeof window.casoraTr === 'function') said = window.casoraTr(said);
+    return '<div class="pls-bar" role="img" aria-label="' + esc(said) + '" style="display:flex;gap:3px;height:6px;margin:14px 6px 0;">'
+      + parts.map(function (p) { return '<span style="flex:' + p[1] + ' 1 0;min-width:6px;border-radius:3px;background:' + COLOR[p[0]] + ';"></span>'; }).join('')
+      + '</div>';
   };
+  // Short, one line on a phone: the watch count stands at „Beobachten“.
   P.subline = function (s) {
     var main = !s.total ? 'Keine Geräte' : s.problems ? (s.problems === 1 ? '1 Problem' : s.problems + ' Probleme') : 'Keine Probleme';
-    var rest = [];
-    if (s.soon) rest.push(s.soon + ' beobachten');
-    if (s.total) rest.push(s.ok + ' ok');
-    return { main: main, rest: rest, tone: s.counts.failed ? 'bad' : s.problems ? 'warn' : null };
+    return { main: main, rest: s.total ? [s.ok + ' ok'] : [], tone: s.counts.failed ? 'bad' : s.problems ? 'warn' : null };
   };
+  var CHEV = '<svg width="7" height="12" viewBox="0 0 7 12" aria-hidden="true" style="flex:none;"><path d="M1 1L6 6L1 11" fill="none" '
+    + 'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var MORE_CSS = '<style>'
+    // „Alles ok“: green check in front, count centred, › while closed (opens in place).
+    + '.pls-ok .hui-mhd{min-height:52px;padding:8px 14px 8px 12px;gap:12px;}'
+    + '.pls-ok .hui-mlb{color:' + INK + ';}'
+    + '.pls-ok .hui-mct{line-height:1;}'
+    + '.pls-ok .hui-more:not(.open)>.hui-mhd .hui-mch{transform:rotate(-90deg);}'
+    + '.pls-okic{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;pointer-events:none;'
+    +   'background:' + COLOR.ok + ';color:var(--casora-soft-glyph, #fff);}'
+    + '.pls-okic ha-icon{--mdc-icon-size:18px;width:18px;height:18px;display:flex;}'
+    // „In Pulse öffnen“ as a centred text link (44 px tall to tap).
+    + '.pls-foot{display:flex;justify-content:center;margin-top:8px;}'
+    + '.pls-link{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 18px;box-sizing:border-box;border-radius:999px;'
+    +   'font-size:14px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;'
+    +   'color:var(--casora-popup-ui-action, var(--casora-color-teal, #4E9E95));'
+    +   'transition:transform var(--casora-dur-feedback, 160ms) ease, background-color var(--casora-dur-feedback, 160ms) ease;}'
+    + '@media (hover:hover){.pls-link:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}}'
+    + '.pls-link:active{transform:scale(var(--casora-press-scale, .97));}'
+    + '</style>';
   P.sec = function (part, C, states, hass) {
     var UI = window._casoraUI;
     if (!UI) return '';
@@ -378,20 +465,10 @@
       var h = P.subline(s);
       return UI.line(h.main, h.rest, { tone: h.tone }) + P.bar(s);
     }
-    // Sections as in the Pulse panel: left Failed + Check, right Battery + Watch.
-    // Battery reasons go under „Batterie“, whether Pulse lists them as check or watch.
-    var sect = function (rows, label) {
-      return rows.length ? chips(UI.group(rows.map(function (d) { return rowOf(d, { replace: true }); }), label)) : '';
-    };
-    var join = function (a, b) { return a && b ? a + '<div style="height:12px"></div>' + b : a || b; };
-    var bat = function (d) { return !!BATTERY[d.reason]; };
-    if (part === 'prob') {
-      return join(sect(s.list.filter(function (d) { return d.status === 'failed'; }), 'Ausgefallen'),
-        sect(s.list.filter(function (d) { return d.status === 'check' && !bat(d); }), 'Prüfen'));
-    }
-    if (part === 'soon') {
-      return join(sect(s.list.filter(function (d) { return (d.status === 'check' || d.status === 'watch') && bat(d); }), 'Batterie'),
-        sect(s.list.filter(function (d) { return d.status === 'watch' && !bat(d); }), 'Beobachten'));
+    for (var i = 0; i < SECTIONS.length; i++) {
+      if (part !== SECTIONS[i][0]) continue;
+      var list = inSec(s, part);
+      return list.length ? section(UI, part, SECTIONS[i][1], list) : '';
     }
     if (part === 'more') {
       var ok = s.list.filter(function (d) { return d.status === 'ok' || d.status === 'learning'; });
@@ -405,14 +482,14 @@
       var cols = ok.length > 1 ? [ok.filter(function (d, i) { return i % 2 === 0; }), ok.filter(function (d, i) { return i % 2 === 1; })] : [ok];
       // column-span: the wide „Mehr“ (02-devices, MORE_WIDE_CSS) splits its own content into two columns –
       // without spanning, this two-column grid sat entirely in its left half and fell to one column (11.10.2026).
-      var okHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:start;column-span:all;-webkit-column-span:all;">'
-        + cols.map(function (c) { return '<div style="min-width:0;">' + UI.group(c.map(function (d) { return rowOf(d); }), null) + '</div>'; }).join('')
+      var okHtml = '<div class="' + (soft() ? '' : 'pls-std') + '" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:start;column-span:all;-webkit-column-span:all;">'
+        + cols.map(function (c) { return '<div style="min-width:0;">' + plateHtml(UI, c) + '</div>'; }).join('')
         + '</div>';
-      var out = ok.length ? UI.more('pulse-ok', okHtml, { label: 'Alles ok', count: ok.length }) : '';
+      var moreHtml = ok.length ? UI.more('pulse-ok', okHtml, { label: 'Alles ok', count: ok.length }) : '';
+      moreHtml = moreHtml.replace('<span class="hui-mlb">', '<span class="pls-okic" aria-hidden="true"><ha-icon icon="mdi:check"></ha-icon></span><span class="hui-mlb">');
       // Footer: into the Pulse panel (rhythm bars, replacement history, settings stay there).
-      var foot = UI.group([{ icon: 'mdi:pulse', label: 'In Pulse öffnen', tappable: true }], null)
-        .replace('<div class="hui-row', '<div data-casora-link="' + P.PANEL + '" class="hui-row');
-      return out + (out ? '<div style="height:12px"></div>' : '') + foot;
+      var foot = '<div class="pls-foot"><div role="button" class="pls-link" data-casora-link="' + P.PANEL + '"><span>In Pulse öffnen</span>' + CHEV + '</div></div>';
+      return ROW_CSS + MORE_CSS + (moreHtml ? '<div class="pls-ok">' + moreHtml + '</div>' : '') + foot;
     }
     return '';
   };

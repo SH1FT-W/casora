@@ -29,11 +29,13 @@ assert.equal(s.soon, 0, 'nichts „beobachten“');
 // Popup-Gerüst: welche Abschnitte entstehen?
 const made = [];
 window._casoraSoftKit = { secCard: (w, code) => { made.push(code); return {}; }, layout: (o) => o };
-window._casoraUI = { group: (rows, label) => '[' + label + ':' + rows.map((r) => r.label).join(',') + ']', line: () => '', more: () => '' };
+// Since 26.10. the sections follow Pulse's status (Ausgefallen/Prüfen/Beobachten): the row is under „Prüfen“.
+window._casoraUI = { group: (rows) => '[' + rows.map((r) => r.label).join(',') + ']', line: () => '', more: () => '' };
 const lay = P.popup(states, hass);
-assert.ok(lay.fields.soon, 'Abschnitt „Batterie“ wird angelegt');
-assert.ok(!lay.fields.prob, 'kein leerer Problem-Abschnitt');
-assert.ok(P.sec('soon', null, states, hass).includes('[Batterie:Heizkörper Test]'), 'Zeile unter „Batterie“');
+assert.ok(lay.fields.check, 'Abschnitt „Prüfen“ wird angelegt');
+assert.ok(!lay.fields.failed && !lay.fields.watch, 'keine leeren Abschnitte');
+const sec = P.sec('check', null, states, hass);
+assert.ok(sec.includes('>Prüfen</div>') && sec.includes('[Heizkörper Test]'), 'Zeile unter „Prüfen“');
 console.log('ok pulse_nur_batterie');
 
 // Kachel vor dem Laden des Moduls: Aktiv nach der Kachel-Entität (Pulse „Probleme“), nicht erst hinten.

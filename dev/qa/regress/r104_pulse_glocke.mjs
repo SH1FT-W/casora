@@ -174,7 +174,7 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
     for (let w = 0; w < 30 && !(pop && pop.open && pop.prob); w++) {
       await page.waitForTimeout(250);
       pop = await page.evaluate(() => ({ open: !!(window.casoraPopup && window.casoraPopup.surface),
-        prob: window.__pierce('.hui-slbl').some((n) => /^(Ausgefallen|Prüfen)$/.test(n.textContent.trim())) }));
+        prob: window.__pierce('.hui-slbl').some((n) => /^(Ausgefallen|Prüfen)$/.test((n.firstElementChild || n).textContent.trim())) }));
     }
     await check(tag + ': Tipp öffnet das Pulse-Popup', pop && pop.open && pop.prob, pop);
     if (BILDER) await page.screenshot({ path: file('popup') });

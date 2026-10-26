@@ -2641,6 +2641,18 @@
    "sinds {1} dagen"
   ],
   [
+   "^seit (\\d+) Tag$",
+   "sinds {1} dag"
+  ],
+  [
+   "^Antwortet (seit .+) nicht$",
+   "Reageert {1} niet"
+  ],
+  [
+   "^Still (seit .+)$",
+   "Stil {1}"
+  ],
+  [
    "^zuletzt gemeldet gestern (.+)$",
    "laatst gemeld gisteren {1}"
   ],

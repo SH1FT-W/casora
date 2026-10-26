@@ -8,9 +8,11 @@
 // Erwartet am Desktop und Handy (hell + dunkel, Theme Casora):
 //   - alles ok: Kachel „Alles ok“, nicht hinterlegt; nur „bald fällig“: „N bald fällig“, hinterlegt (1.4)
 //   - Probleme: „3 Probleme · 1 Batterie bald fällig · 1 beobachten“ (seit 1.4.2 Batterie getrennt), hinterlegt, Symbol rot
-//   - Popup: Unterzeile „3 Probleme · 2 beobachten · 2 ok“, Übersichtsleiste, „Ausgefallen“/„Prüfen“,
-//     „Batterie“/„Beobachten“, „Alles ok“ eingeklappt, „In Pulse öffnen“; Desktop zweispaltig, Handy einspaltig
-//   - „Gewechselt“ → Bestätigen → pulse.mark_replaced mit der device_id des Geräts, danach ein Hinweis
+//   - Popup (restyle 26.10.): short subline „3 Probleme · 2 ok“ on one line, thin bar without legend,
+//     „Ausgefallen 1“/„Prüfen 2“/„Beobachten 2“ stacked with count pills centred on the heading, entries of a
+//     section side by side on the desktop (one column on the phone), the time in the subline („seit 2 Tagen“),
+//     battery as a badge at the icon's bottom right, „Alles ok“ collapsed (count centred), „In Pulse öffnen“ as a link
+//   - ✓ „Batterie gewechselt“ → Bestätigen → pulse.mark_replaced mit der device_id des Geräts, danach ein Hinweis
 // Bilder fürs Ergebnis: CASORA_PULSE_BILDER=<ordner> legt dort je Ansicht Kachel- und Popup-Bilder ab.
 import fs from 'node:fs';
 import { open, casoraDashboards, dashboard, check, need, finish, atFinish, stable } from './lib.mjs';
@@ -190,36 +192,60 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
   }
   await need(tag + ': Popup geöffnet', await offen());
   const p = await stable(page, () => {
-    const txt = (sel) => window.__pierce(sel).map((n) => n.textContent.trim()).filter(Boolean);
-    const lbl = txt('.hui-slbl');
+    const box = (n) => { if (!n) return null; const q = n.getBoundingClientRect(); return { l: q.left, r: q.right, t: q.top, b: q.bottom, cy: (q.top + q.bottom) / 2 }; };
+    const heads = window.__pierce('.pls-h').filter((h) => h.getBoundingClientRect().height > 0).map((h) => {
+      const t = h.querySelector('.pls-ht'), n = h.querySelector('.pls-n');
+      return { t: t ? t.textContent.trim() : '', n: n ? n.textContent.trim() : '', dy: t && n ? box(n).cy - box(t).cy : null, x: box(h).l };
+    });
     const rows = window.__pierce('.hui-srow').filter((r) => r.getBoundingClientRect().height > 0);
-    const byLbl = (re) => window.__pierce('.hui-slbl').find((n) => re.test(n.textContent.trim()));
-    const L = byLbl(/^(Ausgefallen|Prüfen)$/), R = byLbl(/^(Batterie|Beobachten)$/);
+    const row = (re) => rows.find((r) => re.test(r.textContent));
     const more = window.__pierce('.hui-more')[0];
+    const mhd = more && more.querySelector('.hui-mhd'), mct = more && more.querySelector('.hui-mct'), mlb = more && more.querySelector('.hui-mlb');
     const link = window.__pierce('[data-casora-link="/pulse"]')[0];
     const bar = window.__pierce('.pls-bar span').length;
-    const line = (window.__pierce('.hui-line')[0] || {}).textContent || '';
+    const leg = window.__pierce('.pls-leg').length;
+    const status = window.__pierce('.header-status').find((n) => !n.hidden && n.getBoundingClientRect().height > 0);
+    const line = (status || window.__pierce('.hui-line')[0] || {}).textContent || '';
     const ring = window.__pierce('.header-ring')[0];
-    return { lbl, rows: rows.length, line: line.replace(/\s+/g, ' ').trim(), bar,
-      lx: L ? L.getBoundingClientRect().left : null, rx: R ? R.getBoundingClientRect().left : null,
-      ly: L ? L.getBoundingClientRect().top : null, ry: R ? R.getBoundingClientRect().top : null,
+    const win = row(/Fenster Atelier/), stairs = row(/Bewegung Treppe/), smoke = row(/Rauchmelder Dachboden/);
+    const pct = win && win.querySelector('.pls-pct'), ic = pct && pct.parentElement.firstElementChild;
+    const tagEl = smoke && smoke.querySelector('.pls-tag');
+    const lh = status ? parseFloat(getComputedStyle(status).lineHeight) || parseFloat(getComputedStyle(status).fontSize) * 1.4 : null;
+    // Not ready yet (header line not mirrored, sections missing): null keeps stable() waiting.
+    if (!status || heads.length < 3) return null;
+    return { heads, rows: rows.length, line: line.replace(/\s+/g, ' ').trim(), bar, leg,
+      lineH: status ? status.getBoundingClientRect().height : null, lh,
+      win: box(win), stairs: box(stairs), single: smoke && win ? box(smoke).r - box(smoke).l - (box(win).r - box(win).l) : null,
+      smokeSub: smoke ? (smoke.querySelector('.hui-sub') || {}).textContent : '',
+      pct: pct ? { t: pct.textContent.trim(), dr: box(pct).r - box(ic).r, db: box(pct).b - box(ic).b, top: box(pct).t - box(ic).t, icH: box(ic).b - box(ic).t } : null,
+      right: win ? [...win.querySelectorAll('.hui-end')].filter((n) => n.getBoundingClientRect().width > 0).map((n) => (n.innerText || "").trim()) : null,
       moreOpen: more ? more.classList.contains('open') : null, moreTxt: more ? more.textContent.replace(/\s+/g, ' ').trim() : '',
-      link: !!link,
-      // Marke sichtbar, nicht von der Auslassung abgeschnitten (erster Bau: hinter dem Namen, „…“ verschluckte sie).
-      chip: window.__pierce('.hui-sub span').some((n) => { if (n.textContent.trim() !== 'Wichtig') return false;
-        const a = n.getBoundingClientRect(), b = n.parentElement.getBoundingClientRect(); return a.width > 20 && a.right <= b.right + 1; }),
+      moreDy: mct && mhd ? box(mct).cy - box(mhd).cy : null, moreLbDy: mct && mlb ? box(mct).cy - box(mlb).cy : null,
+      link: !!link, linkRow: !!(link && link.closest('.hui-srow')),
+      // Tag beside the name, not cut by the name's ellipsis.
+      chip: !!tagEl && /Wichtig/i.test(tagEl.textContent) && tagEl.getBoundingClientRect().width > 20
+        && tagEl.getBoundingClientRect().right <= tagEl.parentElement.getBoundingClientRect().right + 1,
       ring: ring && !ring.hidden ? getComputedStyle(ring).backgroundColor : null };
-  });
-  await check(tag + ': Unterzeile „3 Probleme · 2 beobachten · 2 ok“', /3 Probleme/.test(p.line) && /2 beobachten/.test(p.line) && /2 ok/.test(p.line), p.line);
-  await check(tag + ': Übersichtsleiste mit 4 Teilen', p.bar === 4, p.bar);
-  await check(tag + ': Abschnitte wie im Pulse-Panel (Ausgefallen/Prüfen, Batterie/Beobachten)', p.lbl.some((t) => /^(Ausgefallen|Prüfen)$/i.test(t)) && p.lbl.some((t) => /^(Batterie|Beobachten)$/i.test(t)), p.lbl);
-  await check(tag + ': 5 sichtbare Zeilen (3 Probleme, 2 beobachten) + „In Pulse öffnen“', p.rows === 6, p.rows);
-  await check(tag + ': „Alles ok“ eingeklappt', p.moreOpen === false && /Alles ok/i.test(p.moreTxt), p.moreTxt);
+  }, undefined, { max: 9000 });
+  await need(tag + ': Popup-Inhalt vollständig', p, p);
+  await check(tag + ': Unterzeile kurz „3 Probleme · 2 ok“', /3 Probleme/.test(p.line) && /2 ok/.test(p.line) && !/beobachten/.test(p.line), p.line);
+  await check(tag + ': Unterzeile auf einer Zeile', p.lineH !== null && p.lineH < p.lh * 1.6, { h: p.lineH, lh: p.lh });
+  await check(tag + ': Übersichtsleiste mit 4 Teilen, ohne Legende', p.bar === 4 && p.leg === 0, p);
+  await check(tag + ': Abschnitte „Ausgefallen 1“, „Prüfen 2“, „Beobachten 2“ untereinander', JSON.stringify(p.heads.map((h) => h.t + ' ' + h.n)) === JSON.stringify(['Ausgefallen 1', 'Prüfen 2', 'Beobachten 2'])
+    && p.heads.every((h) => Math.abs(h.x - p.heads[0].x) < 1), p.heads);
+  await check(tag + ': Zahl mittig zur Überschrift (±1 px)', p.heads.every((h) => h.dy !== null && Math.abs(h.dy) <= 1), p.heads.map((h) => h.dy));
+  await check(tag + ': 5 sichtbare Zeilen (3 Probleme, 2 beobachten), „In Pulse öffnen“ keine Zeile', p.rows === 5 && !p.linkRow, p.rows);
+  await check(tag + ': Zeit im Satz („Antwortet seit 2 Tagen nicht“)', /Antwortet seit 2 Tagen nicht/.test(p.smokeSub || ''), p.smokeSub);
+  await check(tag + ': rechts nur ✓ und › (kein Text)', p.right && p.right.every((t) => !t), p.right);
+  await check(tag + ': Akku-Schild „7 %“ unten rechts am Symbol (6 px Versatz, unter der Glyphe)', p.pct && /^7\s?%$/.test(p.pct.t.replace(/[  ]/g, ' '))
+    && Math.abs(p.pct.dr - 6) <= 1 && Math.abs(p.pct.db - 6) <= 1 && p.pct.top >= p.pct.icH * 0.75 - 1, p.pct);
+  await check(tag + ': „Alles ok“ eingeklappt, Zahl mittig', p.moreOpen === false && /Alles ok/i.test(p.moreTxt) && Math.abs(p.moreDy) <= 1 && Math.abs(p.moreLbDy) <= 1, p);
   await check(tag + ': „In Pulse öffnen“ führt ins Pulse-Panel', p.link, p.link);
-  await check(tag + ': „Wichtig“ beim kritischen Gerät', p.chip, p.chip);
+  await check(tag + ': „Wichtig“ neben dem Namen', p.chip, p.chip);
   await check(tag + ': Ring in Alarmfarbe', red(p.ring), p.ring);
-  if (mobile) await check(tag + ': Handy einspaltig', p.lx !== null && p.rx !== null && Math.abs(p.lx - p.rx) < 4 && p.ry > p.ly, p);
-  else await check(tag + ': Desktop zweispaltig', p.lx !== null && p.rx !== null && p.rx > p.lx + 200 && Math.abs(p.ry - p.ly) < 4, p);
+  if (mobile) await check(tag + ': Handy einspaltig', p.win && p.stairs && Math.abs(p.win.l - p.stairs.l) < 2 && p.win.t > p.stairs.b, p);
+  else await check(tag + ': Desktop: Einträge eines Abschnitts nebeneinander, ein einzelner über die volle Breite', p.win && p.stairs
+    && Math.abs(p.win.t - p.stairs.t) < 2 && p.win.l > p.stairs.r && p.single > 200, p);
   // Gemeldet 11.10.2026: aufgeklappt stand „Alles ok“ am Desktop nur in der linken Hälfte, einspaltig.
   if (!mobile) {
     for (let i = 0; i < 3; i++) {
@@ -239,7 +265,7 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
     await page.screenshot({ path: file('popup'), fullPage: false });
   }
 
-  // „Gewechselt“ → Bestätigen → Dienst (abgefangen, nichts wird wirklich aufgerufen) → Hinweis.
+  // ✓ „Batterie gewechselt“ → Bestätigen → Dienst (abgefangen, nichts wird wirklich aufgerufen) → Hinweis.
   if (tag === 'Desktop hell' || tag === 'Handy hell') {
     await page.evaluate(() => {
       const ha = document.querySelector('home-assistant');
@@ -250,13 +276,14 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
     });
     const at = await page.evaluate(() => {
       const row = window.__pierce('.hui-srow').find((r) => /Fenster Atelier/.test(r.textContent));
-      const act = row && [...row.querySelectorAll('[data-casora-arm]')].find((n) => /Gewechselt/.test(n.textContent));
+      const act = row && [...row.querySelectorAll('[data-casora-arm]')].find((n) => /Batterie gewechselt/.test(n.getAttribute('aria-label') || ''));
       if (!act) return null;
       act.scrollIntoView({ block: 'center' });
-      const q = act.getBoundingClientRect();
-      return { x: q.x + q.width / 2, y: q.y + q.height / 2 };
+      const q = act.getBoundingClientRect(), ab = act.querySelector('.hui-ab'), b = { width: ab.offsetWidth, height: ab.offsetHeight };
+      return { x: q.x + q.width / 2, y: q.y + q.height / 2, w: act.offsetWidth, h: act.offsetHeight, round: Math.round(b.width) === Math.round(b.height) && b.width >= 32,
+        title: act.getAttribute('title') };
     });
-    await check(tag + ': Knopf „Gewechselt“ an der Batterie-Zeile', at, at);
+    await check(tag + ': runder ✓-Knopf „Batterie gewechselt“ (Tooltip, Fläche ≥ 40 px)', at && at.round && /Batterie gewechselt/.test(at.title || '') && at.w >= 40 && at.h >= 40, at);
     if (at) {
       if (mobile) await page.touchscreen.tap(at.x, at.y); else await page.mouse.click(at.x, at.y);
       await page.waitForTimeout(600);
