@@ -1068,7 +1068,8 @@
     if (o.settings && UIb && UIb.settings && !has('set')) {
       f = Object.assign({}, f, { set: UIb.settings(o.settings, o.settingsRows) });
       var rOnly = R.filter(function (k) { return k !== 'more'; });
-      if (!rOnly.length) L = L.concat(['set']);
+      /* o.settingsSide 'left': the columns stay balanced when the right one is the long one (rule 5). */
+      if (!rOnly.length || o.settingsSide === 'left') L = L.concat(['set']);
       else R = R.indexOf('more') > -1 ? R.slice(0, R.indexOf('more')).concat(['set'], R.slice(R.indexOf('more'))) : R.concat(['set']);
     }
     if (!L.length && R.length > 1) { L = R.slice(0, 1); R = R.slice(1); }
@@ -2023,7 +2024,8 @@
       if (!WD) { left = ['run', 'act', 'dev', 'abort']; right = ['more']; }
       else if (run0) { left = ['unload', 'run', 'pick', 'act', 'cycles', 'abort']; right = ['progs', 'maint', 'more']; }
       else { left = ['unload', 'act', 'cycles']; right = ['progs', 'maint', 'more']; }
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: left, right: right, settings: states[c.st] ? c.st : null });
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: left, right: right, settings: states[c.st] ? c.st : null,
+        settingsSide: WD ? 'left' : 'right' });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
@@ -2856,14 +2858,14 @@
          grid gap on top), cancel pill at the end of the left column. */
       if (active) f2.pbar = tpl('d_pbar', false);
       f2.abort = tpl('d_abort', false);
-      /* While running „Verlauf“ sits on the left under the cycle (column balance against the care list). */
+      /* While running „Verlauf“ (rule 5: right column) – the care list is one row now, the right column has room. */
       if (active) f2.stats = fields.stats;
       var moreD = (active ? ['d_opts', 'energy'] : ['energy', 'd_stats']).concat(['d_device', 'plug']);
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("dish", ' + JSON.stringify(moreD) + '.map(function (k) {'
         + ' return (k === "energy" || k === "d_stats") ? L.slot(k, c, states) : L.inner(k, c, states); })) : "";', c.st);
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: ['go', 'run', 'stats', 'prog', 'opts', 'abort'], right: ['start', 'alerts', 'care', 'more'],
-        settings: states[c.st] ? c.st : null });
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: ['go', 'run', 'prog', 'opts', 'abort'], right: ['start', 'alerts', 'care', 'stats', 'more'],
+        settings: states[c.st] ? c.st : null, settingsSide: active ? 'left' : 'right' });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'

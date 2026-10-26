@@ -80,12 +80,17 @@ const look = (page) => page.evaluate(() => {
   const txt = (e) => (e ? e.textContent.replace(/\s+/g, ' ').trim() : '');
   const box = (e) => { const r = e.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) }; };
   const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
-  const rows = window.__pierce('.hui-row', s).filter(vis).map((e) => ({ t: txt(e), ...box(e) }));
+  const rows = window.__pierce('.hui-row', s).filter(vis).map((e) => {
+    const sw = e.querySelector('[role=switch]');
+    return { t: txt(e), sw: sw ? sw.getAttribute('aria-checked') : null, ...box(e) };
+  });
+  // Blueprint v2: the start is the action pill on top (UI.actions), not a row.
+  const acts = window.__pierce('.hui-act-p', s).filter(vis).map((e) => ({ t: txt(e), pri: e.classList.contains('pri'), dis: e.classList.contains('dis'), ...box(e) }));
   const pick = window.__pierce('.dw-pick', s)[0];
   const heads = window.__pierce('div', s).filter((e) => vis(e) && e.children.length === 0 && /^(Programm|Start|Optionen|Startzeit)$/.test(txt(e))
     && !e.closest('.hui-row')).map((e) => ({ t: txt(e), ...box(e) }));
   const inp = window.__pierce('input.dw-time-in', s)[0];
-  return { rows, heads, pick: pick ? { open: pick.classList.contains('open'), list: window.__pierce('.dw-pbd .hui-row', pick).filter(vis).length } : null,
+  return { rows, acts, heads, pick: pick ? { open: pick.classList.contains('open'), list: window.__pierce('.dw-pbd .hui-row', pick).filter(vis).length } : null,
     input: inp ? { value: inp.value, ...box(inp) } : null, text: txt(s) };
 });
 
@@ -152,19 +157,16 @@ for (const [tag, opts, url, name] of VIEWS) {
   await check(tag + ': Programm als eine Zeile mit Auswahl', !!(L.pick && !L.pick.open && L.pick.list === 0), L.pick);
   const progRow = L.rows.find((r) => /^Eco 50°/.test(r.t));
   await check(tag + ': gewähltes Programm „Eco 50°“ steht in der Zeile', !!progRow, L.rows.map((r) => r.t));
-  // 2. Start row level with the program row.
-  const startRow = L.rows.find((r) => /^Jetzt starten/.test(r.t));
-  await check(tag + ': Zeile „Jetzt starten“', !!startRow, L.rows.map((r) => r.t));
-  const hP = L.heads.find((h) => h.t === 'Programm'), hS = L.heads.find((h) => h.t === 'Start');
-  await check(tag + ': Überschrift „Start“', !!hS, L.heads);
-  if (!mobile && progRow && startRow && hP && hS) {
-    await check('Desktop: „Jetzt starten“ in einer Flucht mit dem Programm', Math.abs(progRow.y - startRow.y) <= 1 && Math.abs(hP.y - hS.y) <= 1,
-      { prog: progRow, start: startRow, hP, hS });
-  }
+  // 2. Blueprint v2 (rule 4): „Jetzt starten · Eco 50°“ is the main action on top, filled in the device colour.
+  const startAct = L.acts.find((a) => /^Jetzt starten/.test(a.t));
+  await check(tag + ': Hauptaktion „Jetzt starten · Eco 50°“', !!startAct && startAct.pri && /Eco 50°/.test(startAct.t), L.acts);
+  await check(tag + ': Hauptaktion über dem Programm', !!startAct && !!progRow && startAct.y < progRow.y, { act: startAct, prog: progRow });
+  await check(tag + ': Überschrift „Startzeit“', L.heads.some((h) => h.t === 'Startzeit'), L.heads);
   // 3. Options.
   const hyg = L.rows.find((r) => /^Hygiene\+/.test(r.t)), iz = L.rows.find((r) => /^Intensivzone/.test(r.t));
-  await check(tag + ': Option Hygiene+ (Aus)', !!hyg && /Aus$/.test(hyg.t), L.rows.map((r) => r.t));
-  await check(tag + ': Option Intensivzone (An)', !!iz && /An$/.test(iz.t), L.rows.map((r) => r.t));
+  // Real switches instead of the words An/Aus (blueprint v2, rule 6).
+  await check(tag + ': Option Hygiene+ (Schalter aus)', !!hyg && hyg.sw === 'false', L.rows.map((r) => [r.t, r.sw]));
+  await check(tag + ': Option Intensivzone (Schalter an)', !!iz && iz.sw === 'true', L.rows.map((r) => [r.t, r.sw]));
   const optRows = L.rows.filter((r) => /^(Extra Trocken|Halbe Ladung|Hygiene\+|Intensivzone)/.test(r.t));
   await check(tag + ': Optionen in einer Flucht mit dem Programm', optRows.length === 4 && progRow
     && optRows.every((r) => Math.abs(r.x - progRow.x) <= 1 && Math.abs(r.w - progRow.w) <= 1), optRows);
@@ -201,14 +203,16 @@ for (const [tag, opts, url, name] of VIEWS) {
   if (set) await fake({ [NUM]: { state: String(set.data.value) } });
   await wait(page, 900);
   L = await look(page);
-  const sr = L.rows.find((r) => /starten/.test(r.t) && /22:30/.test(r.t));
-  await check(tag + ': Startzeile „Um 22:30 starten“', !!sr && /^(Morgen u|U)m 22:30 starten/.test(sr.t), L.rows.map((r) => r.t));
+  const sr = L.acts.find((a) => /starten/.test(a.t) && /22:30/.test(a.t));
+  await check(tag + ': Hauptaktion „Um 22:30 starten“', !!sr && /^(Morgen u|U)m 22:30 starten/.test(sr.t), L.acts.map((a) => a.t));
   await check(tag + ': Hinweis „Startet … um 22:30 Uhr“', L.rows.some((r) => /^Uhrzeit\s*Startet (morgen )?um 22:30 Uhr/.test(r.t)), L.rows.map((r) => r.t));
   await check(tag + ': Feld zeigt 22:30', !!L.input && L.input.value === '22:30', L.input);
   await pic(page, name + '-startzeit');
-  // Confirm the start: the action with the delay counted from now.
-  await tap(page, mobile, '.hui-row', /^(Morgen u|U)m 22:30 starten/);
-  await tap(page, mobile, '.hui-cf', /Starten/);
+  // Confirm the start (the pill asks „Starten?“): the action with the delay counted from now.
+  await tap(page, mobile, '.hui-act-p', /^(Morgen u|U)m 22:30 starten/);
+  await wait(page, 600);
+  await page.evaluate(() => { const a = document.querySelector('.casora-askfirst'); const y = a && a.shadowRoot && a.shadowRoot.querySelector('.yes'); if (y) y.click(); });
+  await wait(page, 800);
   C = await calls(page);
   const go = C.find((c) => c.domain === 'home_connect' && c.service === 'start_selected_program');
   const want2 = await expectSecs(page, '22:30');
@@ -219,14 +223,13 @@ for (const [tag, opts, url, name] of VIEWS) {
   await fake({ [REMOTE]: { state: 'off' }, [NUM]: { state: '0' } });
   await wait(page, 900);
   L = await look(page);
-  await check(tag + ': Fernstart aus → kein Start', L.rows.some((r) => /^Jetzt starten\s*Fernstart am Gerät nicht erlaubt/.test(r.t)), L.rows.map((r) => r.t));
+  await check(tag + ': Fernstart aus → kein Start', L.acts.some((a) => a.dis && /^Jetzt starten\s*· Fernstart am Gerät nicht erlaubt/.test(a.t)), L.acts);
   await fake({ [REMOTE]: { state: 'on' } });
   await wait(page, 600);
 
-  // 5. „Mehr“ → „Weitere Einstellungen“ → device page.
-  await tap(page, mobile, '.hui-mhd', /Mehr/);
+  // 5. „Weitere Einstellungen“ as the last section (blueprint v2, no longer inside „Mehr“) → device page.
   L = await look(page);
-  await check(tag + ': „Weitere Einstellungen“ unter „Mehr“', L.rows.some((r) => /^Weitere Einstellungen/.test(r.t)), L.rows.map((r) => r.t));
+  await check(tag + ': „Weitere Einstellungen“ als letzter Abschnitt', L.rows.some((r) => /^Weitere Einstellungen/.test(r.t)), L.rows.map((r) => r.t));
   await page.evaluate(() => { const s = window.casoraPopup.surface; const r = window.__pierce('.hui-row', s).find((e) => /^Weitere Einstellungen/.test(e.textContent.trim()));
     if (r) r.scrollIntoView({ block: 'center', behavior: 'instant' }); });
   await wait(page, 300);

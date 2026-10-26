@@ -43,7 +43,8 @@ for (const phone of [false, true]) {
     const all = []; const walk = (n) => n.querySelectorAll('*').forEach((e) => { all.push(e); if (e.shadowRoot) walk(e.shadowRoot); }); walk(document);
     const box = all.find((e) => e.classList && e.classList.contains('cpn') && e.getClientRects().length);
     if (!box) return null;
-    const btn = box.querySelector('button'); const q = btn.getBoundingClientRect();
+    // Blueprint v2: „Löschen“ is an action row (data-casora-pn-del), no loose button.
+    const btn = box.querySelector('[data-casora-pn-del]'); if (!btn) return null; const q = btn.getBoundingClientRect();
     return { text: box.textContent.replace(/\s+/g, ' ').trim(), b: box.querySelectorAll('b').length, li: box.querySelectorAll('li').length,
       href: (box.querySelector('a') || {}).href || null, title: window.casoraPopup.element && window.casoraPopup.element._headerTitle ? window.casoraPopup.element._headerTitle.textContent.trim() : null,
       btn: { x: q.left + q.width / 2, y: q.top + q.height / 2, vis: q.width > 0 && q.bottom <= innerHeight } };

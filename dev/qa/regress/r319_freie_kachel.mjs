@@ -8,7 +8,7 @@
 // an entity. Entities are picked from the house at run time (nothing hard-coded), nothing is switched.
 // Expected on desktop and phone (light + dark, theme Casora):
 //   - tile: subline "An"/"Aus" like the other tiles, the entity-less tile shows its name with no state
-//   - tap: popup opens with the state line, a casora-chart, "Bedienung" segments (Aus/An), "Werte" with 4 rows
+//   - tap: popup opens with the state line, a casora-chart, no own Aus/An (the header switch, blueprint v2), "Werte" with 4 rows
 //     and "Weitere Einstellungen"; desktop two columns (controls left of values), phone one column
 //   - the entity-less tile opens a popup that says "Kein Gerät gewählt" – never an empty popup
 // Pictures: CASORA_FREI_BILDER=<folder> stores tile, dashboard and popup pictures per view.
@@ -172,13 +172,12 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
   const p = await stable(page, POPUP, null, { until: (v) => v && v.chart && v.rows >= 5 });
   await check(tag + ': state line „' + WANT + '“', new RegExp('^' + WANT + '\\b').test(p.line), p.line);
   await check(tag + ': history chart', p.chart, p.chart);
-  await check(tag + ': „Bedienung“ with Aus/An segments', p.ctl && p.segs.includes('Aus') && p.segs.includes('An'), p.segs);
+  await check(tag + ': no own Aus/An next to the header switch (blueprint v2, decision 2)', !p.ctl && !p.segs.includes('Aus') && !p.segs.includes('An'), p.segs);
   await check(tag + ': „Werte“ with 4 rows and „Weitere Einstellungen“', p.vals && p.rows === 5 && p.rowText.some((t) => /Weitere Einstellungen/.test(t)), p.rowText);
   await check(tag + ': own label „Innen“ with the temperature', p.rowText.some((t) => /^Innen/.test(t) && /°C/.test(t)), p.rowText);
   await check(tag + ': contact row in words (Geöffnet/Geschlossen), not on/off', p.rowText.some((t) => /Geöffnet|Geschlossen/.test(t)) && !p.rowText.some((t) => /\b(on|off)$/.test(t)), p.rowText);
-  if (mobile) await check(tag + ': phone one column – controls above values', p.ctl && p.vals && Math.abs(p.ctl.x - p.vals.x) < 4 && p.vals.y > p.ctl.y, { ctl: p.ctl, vals: p.vals });
-  // Headings level: the segment label and the group label differ by their box padding (8 px), the text sits on one line.
-  else await check(tag + ': desktop two columns – controls left of values', p.ctl && p.vals && p.vals.x > p.ctl.x + 200 && Math.abs(p.vals.y - p.ctl.y) < 12, { ctl: p.ctl, vals: p.vals, width: p.width });
+  // Without controls of its own the popup is one column, 552 wide on the desktop (blueprint v2, rule 11).
+  if (!mobile) await check(tag + ': desktop one column, 552 wide', p.width && p.width <= 560, { width: p.width });
   if (BILDER) { await page.waitForTimeout(600); await page.screenshot({ path: file('popup') }); }
   await close();
 

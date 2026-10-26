@@ -11,7 +11,7 @@
 //   - Popup (restyle 26.10.): short subline „3 Probleme · 2 ok“ on one line, thin bar without legend,
 //     „Ausgefallen 1“/„Prüfen 2“/„Beobachten 2“ stacked with count pills centred on the heading, entries of a
 //     section side by side on the desktop (one column on the phone), the time in the subline („seit 2 Tagen“),
-//     battery as a badge at the icon's bottom right, „Alles ok“ collapsed (count centred), „In Pulse öffnen“ as a link
+//     battery as a badge at the icon's bottom right, „Alles ok“ collapsed (count centred), „In Pulse öffnen ↗“ as a way-out row (blueprint v2)
 //   - ✓ „Batterie gewechselt“ → Bestätigen → pulse.mark_replaced mit der device_id des Geräts, danach ein Hinweis
 // Bilder fürs Ergebnis: CASORA_PULSE_BILDER=<ordner> legt dort je Ansicht Kachel- und Popup-Bilder ab.
 import fs from 'node:fs';
@@ -201,7 +201,7 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
     const row = (re) => rows.find((r) => re.test(r.textContent));
     const more = window.__pierce('.hui-more')[0];
     const mhd = more && more.querySelector('.hui-mhd'), mct = more && more.querySelector('.hui-mct'), mlb = more && more.querySelector('.hui-mlb');
-    const link = window.__pierce('[data-casora-link="/pulse"]')[0];
+    const link = window.__pierce('[data-casora-go="/pulse"]')[0];
     const bar = window.__pierce('.pls-bar span').length;
     const leg = window.__pierce('.pls-leg').length;
     const status = window.__pierce('.header-status').find((n) => !n.hidden && n.getBoundingClientRect().height > 0);
@@ -234,7 +234,7 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
   await check(tag + ': Abschnitte „Ausgefallen 1“, „Prüfen 2“, „Beobachten 2“ untereinander', JSON.stringify(p.heads.map((h) => h.t + ' ' + h.n)) === JSON.stringify(['Ausgefallen 1', 'Prüfen 2', 'Beobachten 2'])
     && p.heads.every((h) => Math.abs(h.x - p.heads[0].x) < 1), p.heads);
   await check(tag + ': Zahl mittig zur Überschrift (±1 px)', p.heads.every((h) => h.dy !== null && Math.abs(h.dy) <= 1), p.heads.map((h) => h.dy));
-  await check(tag + ': 5 sichtbare Zeilen (3 Probleme, 2 beobachten), „In Pulse öffnen“ keine Zeile', p.rows === 5 && !p.linkRow, p.rows);
+  await check(tag + ': 5 sichtbare Zeilen (3 Probleme, 2 beobachten) und die Weg-Zeile „In Pulse öffnen ↗“', p.rows === 6 && p.linkRow, p.rows);
   await check(tag + ': Zeit im Satz („Antwortet seit 2 Tagen nicht“)', /Antwortet seit 2 Tagen nicht/.test(p.smokeSub || ''), p.smokeSub);
   await check(tag + ': rechts nur ✓ und › (kein Text)', p.right && p.right.every((t) => !t), p.right);
   await check(tag + ': Akku-Schild „7 %“ unten rechts am Symbol (6 px Versatz, unter der Glyphe)', p.pct && /^7\s?%$/.test(p.pct.t.replace(/[  ]/g, ' '))

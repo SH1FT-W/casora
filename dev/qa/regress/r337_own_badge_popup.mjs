@@ -5,7 +5,7 @@
 // controls, own cards). The test builds it in the Studio by hand – own badge from a switch of the house, tap
 // "Own popup", two value rows (one with an own label), history of a temperature sensor, one own Markdown card –
 // saves, then taps the badge on the desktop room and on the phone room page. Expected: the popup carries the
-// badge's name, the state line, a casora-chart, "Bedienung" with Aus/An, "Werte" with both rows and the own card;
+// badge's name, the state line, a casora-chart, no own Aus/An (header switch, blueprint v2), "Werte" with both rows and the own card;
 // desktop two columns, phone one. Entities come from the house at run time, nothing is switched. The dashboards
 // are restored at the end. Pictures: CASORA_BP60_BILDER=<folder> (Studio editor, popup desktop dark, phone).
 import fs from 'node:fs';
@@ -199,12 +199,11 @@ const run = async (tag, page, mobile, file) => {
   await check(tag + ': title is the badge name', /QA Pumpe/.test(p.title), p.title);
   await check(tag + ': state line „' + WANT + '“', new RegExp('^' + WANT + '\\b').test(p.line), p.line);
   await check(tag + ': history chart', p.chart);
-  await check(tag + ': „Bedienung“ with Aus/An', !!p.ctl && p.segs.includes('Aus') && p.segs.includes('An'), p.segs);
+  await check(tag + ': no own Aus/An next to the header switch (blueprint v2, decision 2)', !p.ctl && !p.segs.includes('Aus') && !p.segs.includes('An'), p.segs);
   await check(tag + ': „Werte“ with the own label and the second value', !!p.vals && p.rowText.some((t) => /^QA Innen/.test(t) && /°C/.test(t))
     && p.rowText.some((t) => t.startsWith(fname(hum)) || /%/.test(t)), p.rowText);
   await check(tag + ': own Markdown card below', p.card);
-  if (mobile) await check(tag + ': one column – controls above values', p.ctl && p.vals && Math.abs(p.ctl.x - p.vals.x) < 4 && p.vals.y > p.ctl.y, { ctl: p.ctl, vals: p.vals });
-  else await check(tag + ': two columns – controls left of values', p.ctl && p.vals && p.vals.x > p.ctl.x + 200, { ctl: p.ctl, vals: p.vals });
+  await check(tag + ': values shown (one column without controls)', !!p.vals, { vals: p.vals });
   if (BILDER) { await page.waitForTimeout(700); await page.screenshot({ path: BILDER + '/' + file }); }
 };
 

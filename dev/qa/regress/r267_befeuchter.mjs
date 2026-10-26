@@ -1,7 +1,7 @@
 // @zustand: arbeit
 // @deckt: custom_components/casora/scripts/local/19-befeuchter.js
 // Luftbefeuchter-Kachel (1.5): Tippen öffnet das Casora-Popup statt HAs Dialog – Raum/Zustand, Verlauf der
-// Luftfeuchte, Betrieb/Modus/Zielfeuchte, Status mit Wassertank. Zielfeuchte und Modus werden bedient und
+// Luftfeuchte, Modus/Zielfeuchte (Ein/Aus nur im Kopf, Muster v2), Status mit Wassertank, „Weitere Einstellungen“. Zielfeuchte und Modus werden bedient und
 // danach auf den Ausgangswert zurückgesetzt. Halten öffnet ebenfalls kein HA-Dialog. Test-Befeuchter aus dem Mock.
 import { open, casoraDashboard, dashboard, check, need, finish, stable } from './lib.mjs';
 
@@ -41,7 +41,8 @@ const press = (label) => page.evaluate((label) => {
 await act('tap');
 let s = await look();
 await check('Tippen: Casora-Popup statt HA-Dialog', s.open && !s.native, { open: s.open, native: s.native });
-await check('Betrieb, Modus, Zielfeuchte, Status mit Wassertank', ['Betrieb', 'Modus', 'Zielfeuchte', 'Wassertank', 'Luftfeuchte', 'Ziel 50 %'].every((w) => s.text.includes(w)), s.text.slice(0, 500));
+await check('Modus, Zielfeuchte, Status mit Wassertank, Weitere Einstellungen', ['Modus', 'Zielfeuchte', 'Wassertank', 'Luftfeuchte', 'Ziel 50 %', 'Weitere Einstellungen'].every((w) => s.text.includes(w)), s.text.slice(0, 500));
+await check('kein zweites Ein/Aus im Inhalt (Muster v2: nur der Kopf-Schalter)', !s.text.includes('Betrieb'), s.text.slice(0, 300));
 await check('Verlauf der Luftfeuchte', s.chart >= 1, s.chart);
 
 await check('Zielfeuchte 55 % antippen', await press('55 %'));

@@ -55,7 +55,7 @@ const run = async (view, dark, first) => {
       });
       walk(pop.shadowRoot);
       const txt = parts.join(' ').replace(/\s+/g, ' ');
-      const btns = window.__pierce('.hm-b, .hh-pill', pop.shadowRoot).map((b) => ({ on: !b.classList.contains('dis'), svc: b.getAttribute('data-casora-svc') || '' }));
+      const btns = window.__pierce('.hm-b, .hh-pill, .hui-act-p', pop.shadowRoot).map((b) => ({ on: !b.classList.contains('dis'), svc: b.getAttribute('data-casora-svc') || '' }));
       return { txt: txt.slice(0, 900), btns };
     }, null, { max: 10000, quiet: 1000 });
   };
@@ -93,7 +93,7 @@ const run = async (view, dark, first) => {
     // Echter Dienst über die Taste im Popup.
     await page.evaluate(() => {
       const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
-      window.__pierce('.hm-b.lg, .hh-pill.pri', pop.shadowRoot)[0].click();
+      window.__pierce('.hm-b.lg, .hh-pill.pri, .hui-act-p.pri', pop.shadowRoot)[0].click();
     });
     await page.waitForTimeout(1500);
     const st = await page.evaluate((id) => document.querySelector('home-assistant').hass.states[id].state, ID);

@@ -3823,6 +3823,8 @@
       + lampsHtml + '</div>';
     /* Blueprint v2 (rule 8): „Weitere Einstellungen“ last – one lamp: its device page; several: first the choice. */
     var lampIds = (sc.room ? sc.room : ids).filter(function (id) { return states[id] && !Array.isArray((states[id].attributes || {}).entity_id); });
+    // A room group without lamps of its own: its group entity (device page of the group).
+    if (!lampIds.length) lampIds = ids.slice(0, 1);
     if (!sc.house && window._casoraUI && window._casoraUI.settings && lampIds.length) {
       rightHtml += '<div style="height:var(--casora-popup-sec-gap, 22px)"></div>'
         + window._casoraUI.settings(!cfg.rooms && sc.lights.length === 1 ? sc.lights[0] : lampIds);

@@ -10,7 +10,7 @@
 // links, die Programme rechts.
 // Erwartet (Casora hell, Desktop 1440 und Handy 393): Leiste 6 px hoch und so breit wie der Inhalt, kein
 // Verlaufsblock, Prognose eine Zeile, Spalten am Desktop höchstens 1,5 Zeilen (95 px) auseinander (beim
-// Geschirrspüler steht dafür „Verlauf“ links), Pille letztes Element links, Pflege-Liste rechts; am Handy
+// Geschirrspüler steht „Verlauf“ seit Muster v2 rechts unter der kurzen Pflege), Pille letztes Element links, Pflege rechts; am Handy
 // einspaltig, Leiste volle Breite, kein Scrollen beim laufenden Geschirrspüler.
 // Dazu Auto und 3D-Drucker: Auto zeigt den Tank als dieselbe Leiste („Tank 19 %“, rechts leer, ab 15 % im
 // Warn-Ton) statt des Blocks; der Drucker zeigt die Restzeit groß im Kopf und „42 %“/„Fertig gegen“ an der
@@ -96,7 +96,8 @@ const measure = (pg) => pg.evaluate(() => {
     if (left) {
       const kids = window.__pierce('button-card', left)[0];
       const cont = kids && kids.shadowRoot && kids.shadowRoot.querySelector('#container');
-      const fields = cont ? [...cont.children].filter(vis) : [];
+      // Blueprint v2 (rule 8): „Einstellungen“ may follow as the column's last section – the pill ends the content before it.
+      const fields = cont ? [...cont.children].filter(vis).filter((c) => (getComputedStyle(c).gridArea || '').split(' ')[0] !== 'set') : [];
       const last = fields[fields.length - 1];
       out.leftLast = last ? { area: (getComputedStyle(last).gridArea || '').split(' ')[0], hasPill: !!last.querySelector('.hh-abort'), text: (last.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 60) } : null;
     }
@@ -167,11 +168,12 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
     if (dev === 'dish') {
       if (pr.estimates) {
         const lv = m.labels['VERLAUF'];
-        await check('dish: „Verlauf“ links beim Laufen', lv && lv.x < m.areas.right.x, lv);
+        await check('dish: „Verlauf“ rechts beim Laufen (Muster v2, Regel 5)', lv && lv.x >= m.areas.right.x - 2, lv);
         await check('dish: Prognose als eine Zeile mit zwei Mini-Balken', m.forecastRows === 1 && m.forecastBars === 2 && !m.rows.some((r) => /^(Energiebedarf|Wasserbedarf)/.test(r)), { forecastRows: m.forecastRows, forecastBars: m.forecastBars });
       }
-      await check('dish: Pflege-Liste rechts mit Salz, Klarspüler, Filter, Maschinenpflege', m.careLabel && m.careLabel.x >= m.areas.right.x - 2
-        && ['Regeneriersalz', 'Klarspüler', 'Filter', 'Maschinenpflege'].every((w) => m.rows.some((r) => r.indexOf(w) === 0)) && !m.rows.some((r) => /^Alles aufgefüllt/.test(r)),
+      // Blueprint v2: desktop like the phone – what is due, else one row „Alles aufgefüllt“ (› to the single values).
+      await check('dish: Pflege rechts, nur Fälliges oder „Alles aufgefüllt“', m.careLabel && m.careLabel.x >= m.areas.right.x - 2
+        && !['Regeneriersalz', 'Klarspüler', 'Filter', 'Maschinenpflege'].every((w) => m.rows.some((r) => r.indexOf(w) === 0)),
         { careLabel: m.careLabel, right: m.areas.right, rows: m.rows });
     } else {
       if (pr.washdata) {
@@ -286,7 +288,8 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
     await check(dev + ' Handy: kein Verlaufsblock', m && m.blocks === 0 && m.block66 === 0, m && { blocks: m.blocks, block66: m.block66 });
     if (dev === 'dish') {
       await check('dish Handy: Pflege nur Fälliges oder „Alles aufgefüllt“ (keine volle Liste)', m && !(['Regeneriersalz', 'Klarspüler', 'Filter', 'Maschinenpflege'].every((w) => m.rows.some((r) => r.indexOf(w) === 0))), m && m.rows);
-      await check('dish Handy: laufender Geschirrspüler scrollt nicht', m && m.scrollH != null && m.scrollH <= m.clientH + 2, m && { scrollH: m.scrollH, clientH: m.clientH });
+      // Muster v2 (Regel 8): „Einstellungen · Weitere Einstellungen“ als letzter Abschnitt – höchstens dieser Abschnitt liegt unter dem Rand.
+      await check('dish Handy: laufender Geschirrspüler scrollt höchstens um den Einstellungen-Abschnitt', m && m.scrollH != null && m.scrollH <= m.clientH + 110, m && { scrollH: m.scrollH, clientH: m.clientH });
     }
     await closePopup(page);
   }
