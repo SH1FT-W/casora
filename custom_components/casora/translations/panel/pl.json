@@ -21,8 +21,8 @@
     "Violet": "Fioletowy",
     "Controls": "Sterowanie",
     "Design (for all dashboards) ›": "Styl (dla wszystkich pulpitów) ›",
-    "The design applies to all dashboards right away. Undo switches it back.": "Styl obowiązuje od razu na wszystkich pulpitach. „Cofnij” przywraca poprzedni.",
-    "How every Casora dashboard looks – the change applies right away.": "Jak wyglądają wszystkie pulpity Casora – zmiana obowiązuje od razu.",
+    "Undo brings the previous design back.": "„Cofnij” przywraca poprzedni styl.",
+    "How every Casora dashboard looks.": "Jak wyglądają wszystkie pulpity Casora.",
     "No Casora design is installed.": "Nie zainstalowano żadnego stylu Casora.",
     "Header and buttons, font and speed – for this dashboard.": "Nagłówek i przyciski, czcionka i tempo – dla tego pulpitu.",
     "Controls, weather, time, notifications and scenes – for this dashboard": "Sterowanie, pogoda, zegar, powiadomienia i sceny – dla tego pulpitu",
@@ -2668,7 +2668,8 @@
     "Hold, font, tile size and new dashboards": "Przytrzymanie, czcionka, rozmiar kafelków i nowe pulpity",
     "Hold, font, tile size": "Przytrzymanie, czcionka, rozmiar kafelków",
     "No match – try one of the topics below.": "Brak wyników – zajrzyj do jednego z tematów poniżej.",
-    "Bell, notifications, push and Live‑Activities": "Dzwonek, powiadomienia, push i aktywności na żywo"
+    "Bell, notifications, push and Live‑Activities": "Dzwonek, powiadomienia, push i aktywności na żywo",
+    "Show the bell on this dashboard": "Pokaż dzwonek na tym pulpicie"
   },
   "patterns": [
     [

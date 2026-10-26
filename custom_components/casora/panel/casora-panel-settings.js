@@ -20,7 +20,7 @@
   const PAGES = [
     // Design (theme): applies to all dashboards right away, without "Save settings" (casora-panel-addons.js).
     { id: "design", label: "Design", icon: "desktop", tone: "set-design", look: true,
-      lede: "How every Casora dashboard looks – the change applies right away." },
+      lede: "How every Casora dashboard looks." },
     { id: "home", label: "Home & Devices", icon: "home", tone: "set-home",
       personal: ["waste", "contacts", "scenes", "media", "devices"],
       lede: "Waste collection, doors and windows, scenes and players – the same in every dashboard." },
@@ -123,7 +123,8 @@
     + ".cs-err:empty{display:none}"
     // Save bar: floating, rounded bar at content width (like a menu/toast:
     // opaque surface, soft shadow), spaced from the bottom edge. Without changes it is
-    // hidden; it keeps its space at the end of the page so the content never stays covered.
+    // hidden and takes no space (an empty strip at the end of e.g. Ventilation on the phone, 26.10.); with changes
+    // it keeps its space at the end of the page so the content never stays covered.
     + ".cs-wrap:has(.cs-bar){padding-bottom:0}"
     + ".cs-bar{position:sticky;bottom:max(16px, calc(env(safe-area-inset-bottom, 0px) + 10px));z-index:3;box-sizing:border-box;"
     + "display:flex;align-items:center;gap:12px;min-height:56px;margin:24px 0 16px;padding:8px 8px 8px 20px;border-radius:22px;"
@@ -134,6 +135,7 @@
     // In light mode the bar sits white on a white card – a deeper, soft shadow lifts it off.
     + ":host(.is-light) .cs-bar{box-shadow:var(--toast-rim, 0 0 0 .5px rgba(0,0,0,0.08)), 0 18px 40px -12px color-mix(in srgb, var(--ink, #3C2814) 28%, transparent), 0 2px 8px color-mix(in srgb, var(--ink, #3C2814) 8%, transparent)}"
     + ".cs-bar.cs-clean{opacity:0;visibility:hidden;pointer-events:none;transform:translateY(18px) scale(.98);"
+    + "min-height:0;height:0;margin:0;padding-top:0;padding-bottom:0;overflow:hidden;"
     + "transition:opacity .18s ease, transform .22s ease, visibility 0s .22s}"
     + "@media (prefers-reduced-motion:reduce){.cs-bar,.cs-bar.cs-clean{transform:none;transition:opacity .15s}}"
     + ".cs-bar span{flex:1 1 auto;display:flex;align-items:center;gap:9px;min-width:0;font-size:var(--t-callout);font-weight:500;color:var(--ink)}"

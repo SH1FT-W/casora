@@ -295,7 +295,7 @@ customElements.whenDefined("casora-panel").then(() => {
     box.appendChild(grid);
     const hint = document.createElement("div");
     hint.className = "hint";
-    hint.textContent = tr("The design applies to all dashboards right away. Undo switches it back.");
+    hint.textContent = tr("Undo brings the previous design back.");
     // Die Seite heißt schon „Design“ – keine zweite Überschrift.
     host.append(box, hint);
     return true;

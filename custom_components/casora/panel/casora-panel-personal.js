@@ -46,6 +46,12 @@
     + ".casora-tog input[type=checkbox]:checked{background:var(--sw-on, #34c759)}"
     + ".casora-tog input[type=checkbox]:checked::before{transform:translateX(14px)}"
     + ".casora-tog input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}"
+    // Phone: the 36×22 switch and its text get a 44 px tap height (the label toggles it); the look stays.
+    + ":host(.phone) .casora-tog{position:relative}"
+    + ":host(.phone) .casora-tog::before{content:'';position:absolute;left:-4px;right:-4px;top:50%;height:44px;transform:translateY(-50%)}"
+    // Calendar: name, color, switch and ✕ in one line (the ✕ used to wrap into a line of its own on the phone).
+    + ".frow.casora-calrow .casora-pctl>input.fin.casora-short{flex:1 1 72px}"
+    + ".frow.casora-calrow .casora-pctl>.casora-x{margin-left:auto}"
     + ".fgroup.casora-pfocus .flist{box-shadow:0 0 0 2px var(--casora-studio-done, #0a84ff);transition:box-shadow .3s}"
     + ".frow.casora-pmore .rtext b{color:var(--casora-studio-link, #0a84ff);font-weight:500}"
     + ".frow.casora-pmore .rchev{transform:rotate(90deg);transition:transform .2s}"
@@ -371,7 +377,7 @@
             ent(c.entity, ["calendar"], (v) => { c.entity = v; }),
             txt(c.name, "Name", (v) => { c.name = v; }, true), col, tog,
             del(() => { S.calendars.splice(i, 1); }),
-          ]);
+          ]).classList.add("casora-calrow");
         });
         addRow(g, "Add calendar", () => { S.calendars.push({ entity: "", name: "", color: CAL_DEFAULT }); });
       }

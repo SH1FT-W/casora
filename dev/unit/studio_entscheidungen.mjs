@@ -67,8 +67,11 @@ const need = (keys) => keys.forEach((k) => assert.ok(de[k], 'de.json: ' + k));
   const gen = main.slice(main.indexOf('label: "General", title: "Controls"'), main.indexOf('label: "Weather"'));
   const keys = gen.match(/key: "[^"]+"/g) || [];
   assert.ok(keys.length > 5 && (gen.match(/scope: "dashboard"/g) || []).length >= keys.length, 'alle Bedienung-Felder: dieses Dashboard');
-  need(['Controls', 'Design (for all dashboards) ›', 'How every Casora dashboard looks – the change applies right away.',
-    'The design applies to all dashboards right away. Undo switches it back.']);
+  // 26.10.: "applies to all" only once, in the scope line; intro and the note under the pictures without it.
+  need(['Controls', 'Design (for all dashboards) ›', 'How every Casora dashboard looks.',
+    'Undo brings the previous design back.', 'Applies to: all dashboards']);
+  assert.ok(!/right away/.test(set.match(/\{ id: "design"[^}]*\}/)[0]) && /tr\("Undo brings the previous design back\."\)/.test(add),
+    'Design: kein zweites/drittes „gilt sofort für alle“');
   assert.ok(!de['Look & Controls'] && !de['Exception: the design applies to all dashboards'], 'alte Texte entfernt');
   console.log('studio_entscheidungen: 3 Design unter Einstellungen ok');
 }
@@ -106,4 +109,32 @@ const need = (keys) => keys.forEach((k) => assert.ok(de[k], 'de.json: ' + k));
   assert.equal((mehr.match(/this\._mWhoRow\(/g) || []).length, 3, 'Kachel, Badge, Raum nutzen _mWhoRow');
   need(['New users only see this once you switch them on here.']);
   console.log('studio_entscheidungen: 5 Wer sieht das ok');
+}
+
+// 6) Studio findings 17–19 (26.10.): bell switch as its own row, phone tap areas, calendar ✕ in the row,
+//    no empty save strip, clock note under "Show clock", toast at the bottom over the phone sheet.
+{
+  const main = read('panel/casora-panel.js');
+  const at = main.indexOf('label: "Notifications", icon: "bell"');
+  const notif = main.slice(at, main.indexOf('subs: [', at));
+  assert.ok(/toggle: "show_notifications"/.test(notif) && /toggleRow: "Show the bell on this dashboard"/.test(notif), '17: Glocke als eigene Zeile');
+  assert.ok(/if \(sw && hit\._toggleRow\) this\._toggleRowFor\(ownHead, sw, hit\._toggleRow\);\s*else if \(sw\) bar\.appendChild\(sw\);/.test(main),
+    '17: Schalter nicht in der Kopfzeile, nur bei diesem Abschnitt');
+  assert.equal((main.match(/toggleRow: "/g) || []).length, 1, '17: nur Benachrichtigungen');
+  need(['Show the bell on this dashboard']);
+  assert.equal(de['Show the bell on this dashboard'], 'Glocke im Dashboard zeigen');
+  assert.ok(/:host\(\.phone\) \.sw::before \{\s*content:""; position:absolute;[^}]*height:44px/.test(main), '18a: Schalter 44 px am Handy');
+  assert.ok(/:host\(\.bmode\.phone\) \.bclose::before \{[^}]*width:44px; height:44px/.test(read('panel/casora-panel-b.js')), '18a: ✕ 44 px am Handy');
+  const pers = read('panel/casora-panel-personal.js');
+  assert.ok(/:host\(\.phone\) \.casora-tog::before\{[^}]*height:44px/.test(pers), '18a: Kalender-Schalter 44 px am Handy');
+  assert.ok(/\]\)\.classList\.add\("casora-calrow"\);/.test(pers) && /\.casora-calrow \.casora-pctl>\.casora-x\{margin-left:auto\}/.test(pers),
+    '18b: ✕ rechts in der Kalenderzeile');
+  assert.ok(/\.cs-bar\.cs-clean\{[^}]*min-height:0;height:0;margin:0;/.test(read('panel/casora-panel-settings.js')), '18c: ohne Änderungen kein leerer Streifen');
+  const time = main.slice(main.indexOf('label: "Time", icon: "clock"'), at);
+  assert.ok(/key: "show_time"[^}]*hint: "For desktop and tablet – the phone layout has no clock\." \}/.test(time)
+    && !/key: "use_12h"[^}]*hint:/.test(time), '18d: Hinweis unter „Uhr anzeigen“');
+  const plus = read('panel/casora-panel-b-plus.js');
+  assert.ok(/:host\(\.bmode\.phone\.binsp\) \.btoast \{ bottom:calc\(16px/.test(plus) && !/\.binsp\) \.btoast \{ bottom:auto; top:/.test(plus),
+    '19: Meldung unten über dem Blatt');
+  console.log('studio_entscheidungen: 6 Funde 17–19 ok');
 }
