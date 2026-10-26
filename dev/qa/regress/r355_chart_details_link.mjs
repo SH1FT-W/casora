@@ -2,7 +2,8 @@
 // @parallel: ui
 // 26.10.2026 (owner, prod): in the air purifier popup the chart head „Feinstaub PM2,5 · 48 Stunden“ shows „Details ›“,
 // tapping it did nothing. Expected: „Details ›“ opens the reading's own page (Casora measurement page, header changes,
-// ‹ back) – air purifier and fan, desktop 1440 and phone 393.
+// ‹ back) – air purifier and fan (plant and batteries for the back step too), desktop 1440 and phone 393. Then (owner, prod): after ‹ back the chart card stayed
+// empty – expected: the chart is drawn again (a curve, like #68 in the weather popup).
 import { open, casoraDashboards, dashboard, check, need, finish, usePage, shot } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -12,11 +13,12 @@ for (const [w, h, dev] of [[1440, 900, 'Desktop'], [393, 852, 'Handy']]) {
   const { page } = await open({ width: w, height: h, theme: 'Casora' });
   usePage(page);
   await dashboard(page, desk.url);
-  for (const tpl of ['casora_air_purifier', 'casora_fan']) {
+  for (const tpl of ['casora_air_purifier', 'casora_fan', 'casora_popup_plant', 'casora_popup_battery']) {
     const r = await page.evaluate(async (tpl) => {
       const ha = document.querySelector('home-assistant');
-      const dom = 'fan.';
-      const ids = Object.keys(ha.hass.states).filter((k) => k.startsWith(dom));
+      const st = ha.hass.states;
+      const ids = Object.keys(st).filter((k) => tpl === 'casora_popup_plant' ? k.startsWith('plant.')
+        : tpl === 'casora_popup_battery' ? st[k].attributes.device_class === 'battery' : k.startsWith('fan.')).slice(0, 6);
       const old = window.__pierce('button-card').find((b) => { const x = b.getBoundingClientRect(); return x.width > 120 && x.height > 60 && x.top > 60; });
       for (const fid of ids) {
         const el = document.createElement('button-card');
@@ -49,6 +51,22 @@ for (const [w, h, dev] of [[1440, 900, 'Desktop'], [393, 852, 'Handy']]) {
     });
     await shot(dev + ' ' + tpl + ' nach Details');
     await check(dev + ' ' + tpl + ': „Details ›“ öffnet die Seite des Messwerts', (after.open && after.title && after.title !== r.t0) || after.moreInfo, { r, after });
+    // ‹ back: the popup of the device again, with its chart drawn.
+    await page.evaluate(() => { const b = window.casoraPopup.element && window.casoraPopup.element._headerBack; if (b && !b.hidden) b.click(); });
+    let back = null;
+    for (let i = 0; i < 20; i++) {
+      await page.waitForTimeout(300);
+      back = await page.evaluate(() => {
+        const pop = window.casoraPopup && window.casoraPopup.element;
+        const S = window.casoraPopup && window.casoraPopup.surface;
+        const c = S && window.__pierce('casora-chart', S)[0];
+        const lines = c && c.shadowRoot ? [...c.shadowRoot.querySelectorAll('path')].filter((p) => (p.getAttribute('d') || '').length > 20).length : 0;
+        return { title: pop && pop._headerTitle ? pop._headerTitle.textContent : '', chart: !!c, lines, h: c ? Math.round(c.getBoundingClientRect().height) : 0 };
+      });
+      if (back.lines > 0 && back.title === r.t0) break;
+    }
+    await shot(dev + ' ' + tpl + ' nach zurueck');
+    await check(dev + ' ' + tpl + ': nach ‹ wieder im Popup, Diagramm gezeichnet', back.title === r.t0 && back.lines > 0 && back.h > 60, back);
     await page.evaluate(() => { if (window.casoraPopup) window.casoraPopup.close(); window.__pierce('ha-more-info-dialog').forEach((d) => d.close && d.close()); });
     await page.waitForTimeout(500);
   }

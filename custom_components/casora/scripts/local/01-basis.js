@@ -832,6 +832,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       find(pop.shadowRoot, '.hp-det').forEach(function (d) { if (!/^hwd\d+:/.test(eid)) d.setAttribute('data-casora-mi', eid); });
       find(pop.shadowRoot, '[data-hp-metric]').forEach(function (r) { r.classList.toggle('hp-sel', r.dataset.hpMetric === eid); });
       window._hpShown = eid;
+      if (window.casoraPopup && window.casoraPopup.current) window.casoraPopup.current._hpEid = eid;
       if (!noScroll) {
         var sc = pop.shadowRoot.querySelector('.content') || null;
         var head = find(pop.shadowRoot, '.hp-ct')[0] || slot;
@@ -858,6 +859,31 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       };
       setTimeout(tick, 60);
     };
+    /* Popups with a chart and „Details ›“ (air purifier, fan, plant, batteries …): ‹ back from the reading's page
+       reopens the popup's config, but its chart was only hung in when the tile was tapped – the card stayed empty.
+       _hpPlantShow notes the chart on the open config; opening that config again mounts it once more if its slot is
+       empty, with the reading that was chosen (the weather popup has its own way, _hwReopen, #68). */
+    (function hookChartBack() {
+      var P = window.casoraPopup;
+      if (!P || !P.open || P._hpBackWrapped) return;
+      var o = P.open;
+      P.open = function (cfg) {
+        var r = o.apply(this, arguments);
+        var eid = cfg && cfg._hpEid;
+        if (eid) {
+          var n = 0;
+          var tick = function () {
+            var pop = popRoot();
+            var slot = pop && find(pop.shadowRoot, '.hp-chart-slot')[0];
+            if (slot) { if (!slot.querySelector('casora-chart')) window._hpChartInit(eid); return; }
+            if (++n < 30) setTimeout(tick, 100);
+          };
+          setTimeout(tick, 120);
+        }
+        return r;
+      };
+      P._hpBackWrapped = true;
+    })();
     /* Weather popup (#68): ‹ back reopens the popup with the content of its first opening, but chart and forecast were
        only hung in when the tile was tapped. The content calls this on every drawing; once per opening (_openGen) it
        mounts the chart again and fills forecast slots still waiting from the cache. */
