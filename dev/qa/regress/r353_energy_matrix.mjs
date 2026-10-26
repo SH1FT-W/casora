@@ -28,7 +28,7 @@ const E = (v, u = 'kWh', name) => ({ state: String(v), attributes: { unit_of_mea
 const SOC = (v) => ({ state: String(v), attributes: { unit_of_measurement: '%', device_class: 'battery', friendly_name: 'Hausakku Ladestand' } });
 const grid = (rate) => ({ type: 'grid', stat_energy_from: 'sensor.qa_e_import', stat_energy_to: 'sensor.qa_e_export', stat_rate: rate });
 const de = (w) => (Math.abs(w) >= 1000 ? (Math.round(w / 100) / 10).toLocaleString('de') + ' kW' : Math.round(w) + ' W');
-const badge = (w) => (w >= 1000 ? (w / 1000).toLocaleString('de', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kW' : Math.round(w) + ' W');
+const badge = (w) => (Math.abs(w) >= 1000 ? (w / 1000).toLocaleString('de', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kW' : Math.round(w) + ' W');
 
 // home: what the badge and the popup header must show; flow: E1 circle → text it must contain (null = no circle);
 // rows: consumer rows in this order (label part, value), at the top of the list.
@@ -75,6 +75,12 @@ const SETUPS = {
     prefs: 'none', home: { energy_power_entity: 'sensor.qa_e_house' },
     states: { 'sensor.qa_e_house': P(0.42, 'kW', 'Hausverbrauch') }, want: { home: 420, flow: null },
   },
+};
+// A grid meter as Home's own sensor (#44, Westerloer) while the plant feeds in: the badge in kW with its sign, the
+// popup's headline as the amount with "Einspeisung".
+SETUPS.meter_feed_in = {
+  prefs: 'none', home: { energy_power_entity: 'sensor.qa_e_meter' },
+  states: { 'sensor.qa_e_meter': P(-1500, 'W', 'Stromzähler Leistung') }, want: { home: -1500, head: '1,5 kW', flow: null },
 };
 const ROOMS = {
   room_zero: {
@@ -207,8 +213,8 @@ async function run(name, S, theme, { view = 0, vars, size = [1440, 900], dark = 
   // R353_SHOTS=<dir>: keep a picture of each popup (before/after comparisons of the audit).
   if (process.env.R353_SHOTS) await page.screenshot({ path: `${process.env.R353_SHOTS}/${name}_${theme.replace(/\s+/g, '-')}_${dark ? 'dunkel' : 'hell'}${size[0] < 600 ? '_handy' : ''}.png` });
   // Standard and Glass print the headline in whole watts ("1200 W"), the Casora look in kW from 1000 W.
-  const heads = [de(S.want.home), Math.round(S.want.home) + ' W'];
-  await check(`${tag}: Popup zeigt oben ${de(S.want.home)}`, pop.texts.slice(0, 40).some((t) => heads.includes(t)), pop.texts.slice(0, 40));
+  const heads = S.want.head ? [S.want.head] : [de(S.want.home), Math.round(S.want.home) + ' W'];
+  await check(`${tag}: Popup zeigt oben ${heads[0]}`, pop.texts.slice(0, 40).some((t) => heads.includes(t)), pop.texts.slice(0, 40));
   if (theme === 'Casora' && S.want.flow !== undefined) {
     if (S.want.flow === null) await check(`${tag}: kein Energiefluss`, !Object.keys(pop.e1).length, pop.e1);
     else for (const [k, parts] of Object.entries(S.want.flow)) {
