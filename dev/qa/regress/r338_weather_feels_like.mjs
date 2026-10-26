@@ -106,7 +106,8 @@ for (const [tag, opts, url] of VIEWS) {
   const { page, browser } = await open(opts);
   usePage(page);
   const errs = [];
-  page.on('pageerror', (e) => errs.push('pageerror: ' + String(e && e.message || e)));
+  // Only Casora's own errors count (the test HA also runs other plugins, e.g. kiosk-mode).
+  page.on('pageerror', (e) => { const t = String(e && e.stack || e); if (/casora|button-card/i.test(t)) errs.push('pageerror: ' + String(e && e.message || e)); });
   page.on('console', (m) => { if (m.type() === 'error' && /casora|button-card|TypeError/i.test(m.text())) errs.push(m.text()); });
   await dashboard(page, url, 3);
   // The mock writes the history after HA has started (backfill_history), up to a minute or two after "ready".

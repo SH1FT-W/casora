@@ -209,7 +209,7 @@
     + '.sw button[aria-selected=true]{background:var(--casora-soft-seg-on,#FFFDF9);color:var(--casora-soft-seg-on-ink,var(--cink));box-shadow:var(--casora-soft-seg-on-shadow,none)}'
     + '@media (hover:hover){.sw button[aria-selected=false]:hover{background:var(--casora-soft-row-hover,rgba(140,115,90,.11))}}'
     + '.sw button:focus-visible,svg:focus-visible{outline:2px solid var(--cacc);outline-offset:2px}'
-    + 'i{width:8px;height:8px;border-radius:50%;flex:none}.lg{display:flex;gap:14px;padding:0 var(--casora-chart-inset,6px) 6px;font-size:12px;color:var(--cink2)}.lg span{display:flex;align-items:center;gap:6px}'
+    + 'i{width:8px;height:8px;border-radius:50%;flex:none}.lg{display:flex;gap:14px;padding:0 var(--casora-chart-inset,6px) 6px;font-size:12px;color:var(--cink2)}.lg span{display:flex;align-items:center;gap:6px}.lv{font-weight:600;color:var(--cink);font-variant-numeric:tabular-nums}.lv:empty{display:none}'
     + 'svg{display:block;width:100%;overflow:visible;touch-action:pan-y;outline:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}'
     + 'text{font-size:11px;font-weight:500;fill:var(--cink3);font-variant-numeric:tabular-nums}.no{font-size:13px;fill:var(--cink3)}'
     + '.srt{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}'
@@ -495,7 +495,8 @@
         + ', ' + C.tr('jetzt') + ' ' + C.nf(lastV, dec) + ' ' + unit : name + ', ' + C.tr('Keine Daten'));
       if (c.legend !== false && !multi && list.length > 1) {
         var lg = document.createElement('div'); lg.className = 'lg';
-        lg.innerHTML = list.map(function (s) { return '<span><i style="background:' + window.casoraEsc(C.color(s.color)) + '"></i>' + window.casoraEsc(C.tr(s.name || s.entity)) + '</span>'; }).join('');
+        // While pointing, each legend entry shows its curve's value there (#67).
+        lg.innerHTML = list.map(function (s) { return '<span><i style="background:' + window.casoraEsc(C.color(s.color)) + '"></i>' + window.casoraEsc(C.tr(s.name || s.entity)) + '<b class="lv"></b></span>'; }).join('');
         box.insertBefore(lg, svg);
       }
       this._def = C.tr('Jetzt');
@@ -526,7 +527,10 @@
         svg.appendChild(el('circle', { cx: l[0], cy: l[1], r: spark ? 3 : 4, style: 'fill:' + col + ';stroke:var(--cplate);stroke-width:2' }));
       });
       var txt = function (s, v) { return lab ? C.tr(lab[Math.round(v)] || '') : C.nf(v, me._dec(s, v)) + (me._unit(s) ? ' ' + me._unit(s) : ''); };
-      var cur = function (i) { return list.map(function (s, j) { var p = B[j][Math.min(i, B[j].length - 1)]; return p ? { entity: s.entity, text: txt(s, p[1]), num: lab ? txt(s, p[1]) : C.nf(p[1], me._dec(s, p[1])) } : null; }).filter(Boolean); };
+      // Curves can start later than the first one (fewer buckets): match by time, not by index.
+      var at = function (j, t) { var b = B[j], k = -1; b.forEach(function (p, n) { if (k < 0 || Math.abs(p[0] - t) < Math.abs(b[k][0] - t)) k = n; }); return k; };
+      var cur = function (i) { return list.map(function (s, j) { var p = B[j][at(j, B[0][i][0])]; return p ? { entity: s.entity, text: txt(s, p[1]), num: lab ? txt(s, p[1]) : C.nf(p[1], me._dec(s, p[1])) } : null; }).filter(Boolean); };
+      var lv = lg ? lg.querySelectorAll('.lv') : [];
       var split = function (t) { var m = /^(.*?)\s+(\S+)$/.exec(t); return lab || !m || !unit ? [t, ''] : [m[1], m[2]]; };
       var dflt = function () { var t = split(txt(s0, lastV)); me._say(ro, t[0], t[1], me._def, null); };
       dflt();
@@ -539,10 +543,10 @@
       this._bind(svg, P[0].length, function (i) {
         var p = P[0][i];
         g.style.opacity = 1; hair.setAttribute('x1', p[0]); hair.setAttribute('x2', p[0]);
-        dots.forEach(function (d, j) { var q = P[j][Math.min(i, P[j].length - 1)]; if (q) { d.setAttribute('cx', q[0]); d.setAttribute('cy', q[1]); } });
+        dots.forEach(function (d, j) { var k = at(j, B[0][i][0]), q = P[j][k]; if (q) { d.setAttribute('cx', q[0]); d.setAttribute('cy', q[1]); } if (lv[j]) lv[j].textContent = k > -1 ? txt(list[j], B[j][k][1]) : ''; });
         var t = split(txt(s0, B[0][i][1])), w = i === P[0].length - 1 ? me._def : C.when(B[0][i][0], now, me._h12());
         me._say(ro, t[0], t[1], w, name, cur(i));
-      }, function () { g.style.opacity = 0; me._release(); dflt(); });
+      }, function () { g.style.opacity = 0; lv.forEach(function (n) { n.textContent = ''; }); me._release(); dflt(); });
     }
     /* Bars per bucket (hour / day / month): one series in the accent colour with the Ø line over the whole
        buckets, several side by side in their own colours with a legend (different units: the switch). */

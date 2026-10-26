@@ -822,6 +822,24 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       };
       setTimeout(tick, 60);
     };
+    /* Weather popup (#68): ‹ back reopens the popup with the content of its first opening, but chart and forecast were
+       only hung in when the tile was tapped. The content calls this on every drawing; once per opening (_openGen) it
+       mounts the chart again and fills forecast slots still waiting from the cache. */
+    window._hwReopen = function (key, chartId) {
+      setTimeout(function () {
+        var pop = window.casoraPopup && window.casoraPopup.element;
+        if (!pop || !pop.shadowRoot || !pop.hasAttribute('open') || pop._hwGen === pop._openGen) return;
+        var slot = find(pop.shadowRoot, '.hp-chart-slot')[0];
+        if (chartId && !slot) return;
+        pop._hwGen = pop._openGen;
+        if (chartId && !slot.querySelector('casora-chart')) window._hpChartInit(chartId);
+        var R = (window._hwRender || {})[key], F = window._hwFc || {};
+        if (R) ['hourly', 'daily'].forEach(function (t) {
+          var fc = F[key + '_' + t];
+          if (fc && fc.length) find(pop.shadowRoot, '.hw-slot-' + t + '-' + key).forEach(function (el) { if (el.querySelector('.hw-wait')) el.innerHTML = R[t](fc); });
+        });
+      }, 80);
+    };
     window._hpPlantTap = function (ev, kind) {
       if (kind === 's') { var t0 = ev.touches && ev.touches[0]; window._hpTy = t0 ? t0.clientY : 0; window._hpTx = t0 ? t0.clientX : 0; return; }
       if (kind === 't') {
