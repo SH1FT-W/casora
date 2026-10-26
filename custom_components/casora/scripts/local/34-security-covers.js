@@ -11,7 +11,7 @@
 //   C.isNight(states)                         → true from sunset to sunrise, true without sun.sun
 //   C.scan(states, hass, user)                → { on, active, ids, open, closed, dead, count }
 //   C.count(states, hass, user, v, where)     → open covers that count now on Home (0 elsewhere/by day/off)
-//   C.show(states, hass, user, v, where)      → sub-badge "Rollos" visible (Home, counting, ≥ 1 open)
+//   C.show(states, hass, user, v, where)      → sub-badge "Jalousien" visible (Home, counting, ≥ 1 open)
 //   C.popup(states, hass, variables)          – popup casora_popup_security_covers
 //   C.sec(part, cfg, states, hass)            – live parts (hero, list)
 (function () {
@@ -171,7 +171,7 @@
     var r = R.scan;
     if (part === 'hero') {
       var n = r.ids.length;
-      var main = !n ? 'Keine Rollos ausgewählt'
+      var main = !n ? 'Keine Jalousien ausgewählt'
         : r.open.length ? r.open.length + ' von ' + n + ' geöffnet'
         : r.closed.length ? (r.closed.length === 1 ? 'Geschlossen' : 'Alle geschlossen')
         : 'Nicht verfügbar';
@@ -180,7 +180,7 @@
       return UI.line(main, rest, { tone: r.open.length && r.active ? 'warn' : null });
     }
     if (part !== 'list') return '';
-    if (!r.ids.length) return UI.note ? UI.note('Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.') : '';
+    if (!r.ids.length) return UI.note ? UI.note('Jalousien wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.') : '';
     var groupsHtml = '';
     if (R.open.length) {
       var all = r.open.map(function (id) { return closeSvc(id, (states || {})[id]); })

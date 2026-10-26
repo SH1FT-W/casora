@@ -1396,7 +1396,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     if (S.windowsTilted) L.push([n(S.windowsTilted, 'Fenster gekippt', 'Fenster gekippt'), 'window-tilt', S.windowsTilted]);
     if (S.doorsTilted) L.push([n(S.doorsTilted, 'Tür gekippt', 'Türen gekippt'), 'window-tilt', S.doorsTilted]);
     // Selected covers open in the evening/night (#76, 34-security-covers.js), Home only.
-    if (S.covers) L.push([n(S.covers, 'Rollo offen', 'Rollos offen'), 'cover_open', S.covers]);
+    if (S.covers) L.push([n(S.covers, 'Jalousie offen', 'Jalousien offen'), 'cover_open', S.covers]);
     if (S.lockDead) L.push([n(S.lockDead, 'Schloss offline', 'Schlösser offline'), 'lock', S.lockDead, true]);
     if (S.camDead) L.push([n(S.camDead, 'Kamera offline', 'Kameras offline'), 'camera', S.camDead, true]);
     var text = L.map(function (x) { return x[0]; }).join(' · ');

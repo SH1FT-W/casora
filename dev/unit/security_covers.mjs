@@ -2,7 +2,7 @@
 // without any nothing changes. "Evening and night only" (default on) counts them from sunset to sunrise (sun.sun
 // below_horizon, always without sun.sun). Open = state other than closed, or current_position > 0. Unavailable ones are
 // left out of the count; garage doors/gates/doors already count as gates. Home only: the security badge counts them
-// (summary icon "Rollos offen"), the sub-badge "Rollos · N offen" opens a popup with "Schließen" / "Alle schließen".
+// (summary icon "Jalousien offen"), the sub-badge "Jalousien · N geöffnet" opens a popup with "Schließen" / "Alle schließen".
 //   node dev/unit/security_covers.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -109,8 +109,8 @@ delete window.casoraSeesEntity;
 const sum = window.casoraSecuritySummary;
 const base = { triggered: false, disarmed: false, locks: 0, lockDead: 0, doors: 0, windows: 1, doorsTilted: 0, windowsTilted: 0, gates: 0, camDead: 0 };
 const s2 = Object.assign({}, base, { covers: 2, insecure: true, problem: false });
-assert.equal(sum(s2, { summary: 'detailed' }).text, 'Fenster offen · 2 Rollos offen');
-assert.equal(sum(Object.assign({}, s2, { windows: 0, covers: 1 }), { summary: 'detailed' }).text, 'Rollo offen');
+assert.equal(sum(s2, { summary: 'detailed' }).text, 'Fenster offen · 2 Jalousien offen');
+assert.equal(sum(Object.assign({}, s2, { windows: 0, covers: 1 }), { summary: 'detailed' }).text, 'Jalousie offen');
 const short = sum(s2, { summary: 'short' }).html;
 assert.ok(short.includes('/i/cover_open.svg') && short.includes('>2</span>'), 'cover icon with its number');
 
@@ -125,7 +125,7 @@ set({ covers: ['cover.living', 'cover.kitchen', 'cover.bed'] });
 assert.equal(evalT(G.icon, { place: 'home' }, states), 'mdi:shield-alert', 'Home at night: open covers = not secure');
 assert.equal(evalT(G.icon, { place: 'room' }, states), 'mdi:shield-check', 'room: covers do not count');
 assert.equal(evalT(G.icon, { place: 'home' }, day), 'mdi:shield-check', 'by day: secure');
-assert.match(evalT(G.name, { place: 'home' }, states), /2 Rollos offen/, 'legacy sub-line names them');
+assert.match(evalT(G.name, { place: 'home' }, states), /2 Jalousien offen/, 'legacy sub-line names them');
 set(undefined);
 assert.equal(evalT(G.icon, { place: 'home' }, states), 'mdi:shield-check', 'feature off: nothing changes');
 
@@ -134,10 +134,10 @@ const B = T.casora_badge_security_covers;
 assert.deepEqual(B.template, ['casora_badge_base', 'casora_popup_security_covers']);
 const P = T.casora_popup_security_covers;
 assert.match(P.tap_action.casora_popup.content, /_casoraSecCovers\.popup/);
-assert.match(P.tap_action.casora_popup.title, /'Rollos'/);
+assert.match(P.tap_action.casora_popup.title, /'Jalousien'/);
 set({ covers: ['cover.living', 'cover.kitchen', 'cover.bed'] });
 const nm = new Function('states', 'hass', 'variables', 'user', 'entity', body(B.name)).call({}, states, hass, {}, null, null);
-assert.match(nm, /badge-title">Rollos</); assert.match(nm, /badge-sub">2 offen</);
+assert.match(nm, /badge-title">Jalousien</); assert.match(nm, /badge-sub">2 geöffnet</);
 const disp = new Function('states', 'hass', 'variables', 'user', 'entity', body(B.styles.card[0].display));
 assert.equal(disp.call({}, states, hass, { enabled: true }, null, null), 'inline-grid');
 assert.equal(disp.call({}, day, hass, { enabled: true }, null, null), 'none', 'hidden by day');

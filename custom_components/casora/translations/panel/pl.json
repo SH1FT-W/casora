@@ -2673,7 +2673,6 @@
     "The design applies to all dashboards right away. Undo switches it back.": "Styl obowiązuje od razu na wszystkich pulpitach. „Cofnij” przywraca poprzedni.",
     "How every Casora dashboard looks – the change applies right away.": "Jak wyglądają wszystkie pulpity Casora – zmiana obowiązuje od razu.",
     "Security: covers": "Bezpieczeństwo: rolety",
-    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Wybrane rolety, które nie są całkowicie zamknięte, pojawiają się na stronie głównej w rzędzie bezpieczeństwa jako „Rolety” i liczą się jako niezabezpieczone. Bez wyboru nic się nie zmienia.",
     "Evening and night only": "Tylko wieczorem i w nocy",
     "From sunset to sunrise": "Od zachodu do wschodu słońca",
     "No covers found": "Nie znaleziono rolet",
@@ -2698,7 +2697,8 @@
     "Each group becomes a list in the popup, with its devices in the group's order.": "Każda grupa staje się listą w oknie, z urządzeniami w kolejności grupy.",
     "Charts": "Wykresy",
     "Add sensor …": "Dodaj czujnik …",
-    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Każdy czujnik otwiera się jako wykres jak okno kafelka Wykres: 24 godziny, 7 lub 30 dni albo rok."
+    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Każdy czujnik otwiera się jako wykres jak okno kafelka Wykres: 24 godziny, 7 lub 30 dni albo rok.",
+    "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Wybrane rolety, które nie są całkowicie zamknięte, pojawiają się na stronie głównej w rzędzie bezpieczeństwa jako „Rolety” i liczą się jako niezabezpieczone. Bez wyboru nic się nie zmienia."
   },
   "patterns": [
     [

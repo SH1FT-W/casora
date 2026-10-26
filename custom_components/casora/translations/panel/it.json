@@ -2673,7 +2673,6 @@
     "The design applies to all dashboards right away. Undo switches it back.": "Il design si applica subito a tutte le dashboard. Annulla ripristina quello precedente.",
     "How every Casora dashboard looks – the change applies right away.": "L'aspetto di tutte le dashboard Casora: la modifica si applica subito.",
     "Security: covers": "Sicurezza: tapparelle",
-    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Le tapparelle scelte non del tutto chiuse compaiono in Home nella riga Sicurezza come «Tapparelle» e contano come non sicure. Senza selezione non cambia nulla.",
     "Evening and night only": "Solo di sera e di notte",
     "From sunset to sunrise": "Dal tramonto all'alba",
     "No covers found": "Nessuna tapparella trovata",
@@ -2698,7 +2697,8 @@
     "Each group becomes a list in the popup, with its devices in the group's order.": "Ogni gruppo diventa un elenco nella finestra, con i suoi dispositivi nell'ordine del gruppo.",
     "Charts": "Grafici",
     "Add sensor …": "Aggiungi sensore …",
-    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Ogni sensore si apre come grafico, come la finestra della scheda Grafico: 24 ore, 7 o 30 giorni o un anno."
+    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Ogni sensore si apre come grafico, come la finestra della scheda Grafico: 24 ore, 7 o 30 giorni o un anno.",
+    "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Le tapparelle scelte non del tutto chiuse compaiono in Home nella riga Sicurezza come «Tapparelle» e contano come non sicure. Senza selezione non cambia nulla."
   },
   "patterns": [
     [

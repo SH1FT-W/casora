@@ -2493,13 +2493,12 @@
   "Stream nicht erreichbar · Standard": "Stream niet bereikbaar · Standaard",
   "Wind": "Wind",
   "Benachrichtigung": "Melding",
-  "Rollos": "Rolluiken",
-  "Rollo offen": "Rolluik open",
+  "Jalousie offen": "Rolluik open",
   "Alle schließen": "Alles sluiten",
   "Bis Sonnenaufgang": "Tot zonsopgang",
   "Ab Sonnenuntergang": "Vanaf zonsondergang",
-  "Keine Rollos ausgewählt": "Geen rolluiken gekozen",
-  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Kies de rolluiken in de Studio onder Instellingen › Huis en apparaten › Beveiliging.",
+  "Keine Jalousien ausgewählt": "Geen rolluiken gekozen",
+  "Jalousien wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Kies de rolluiken in de Studio onder Instellingen › Huis en apparaten › Beveiliging.",
   "Liste": "Lijst",
   "Keine Einträge": "Geen items",
   "1 Einstellung": "1 instelling",
@@ -4573,7 +4572,7 @@
    "{1} programma's"
   ],
   [
-   "^(\\d+) Rollos offen$",
+   "^(\\d+) Jalousien offen$",
    "{1} rolluiken open"
   ],
   [

@@ -2493,13 +2493,12 @@
   "Stream nicht erreichbar · Standard": "Flujo no disponible · Estándar",
   "Wind": "Viento",
   "Benachrichtigung": "Aviso",
-  "Rollos": "Persianas",
-  "Rollo offen": "Persiana abierta",
+  "Jalousie offen": "Persiana abierta",
   "Alle schließen": "Cerrar todas",
   "Bis Sonnenaufgang": "Hasta el amanecer",
   "Ab Sonnenuntergang": "Desde el atardecer",
-  "Keine Rollos ausgewählt": "Ninguna persiana elegida",
-  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Elige las persianas en el Studio, en Ajustes › Casa y dispositivos › Seguridad.",
+  "Keine Jalousien ausgewählt": "Ninguna persiana elegida",
+  "Jalousien wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Elige las persianas en el Studio, en Ajustes › Casa y dispositivos › Seguridad.",
   "Liste": "Lista",
   "Keine Einträge": "Sin entradas",
   "1 Einstellung": "1 ajuste",
@@ -4573,7 +4572,7 @@
    "{1} programas"
   ],
   [
-   "^(\\d+) Rollos offen$",
+   "^(\\d+) Jalousien offen$",
    "{1} persianas abiertas"
   ],
   [

@@ -2493,13 +2493,12 @@
   "Stream nicht erreichbar · Standard": "Flusso non raggiungibile · Standard",
   "Wind": "Vento",
   "Benachrichtigung": "Notifica",
-  "Rollos": "Tapparelle",
-  "Rollo offen": "Tapparella aperta",
+  "Jalousie offen": "Tapparella aperta",
   "Alle schließen": "Chiudi tutte",
   "Bis Sonnenaufgang": "Fino all'alba",
   "Ab Sonnenuntergang": "Dal tramonto",
-  "Keine Rollos ausgewählt": "Nessuna tapparella scelta",
-  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Scegli le tapparelle nello Studio in Impostazioni › Casa e dispositivi › Sicurezza.",
+  "Keine Jalousien ausgewählt": "Nessuna tapparella scelta",
+  "Jalousien wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Scegli le tapparelle nello Studio in Impostazioni › Casa e dispositivi › Sicurezza.",
   "Liste": "Elenco",
   "Keine Einträge": "Nessuna voce",
   "1 Einstellung": "1 impostazione",
@@ -4573,7 +4572,7 @@
    "{1} programmi"
   ],
   [
-   "^(\\d+) Rollos offen$",
+   "^(\\d+) Jalousien offen$",
    "{1} tapparelle aperte"
   ],
   [

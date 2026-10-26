@@ -2475,13 +2475,12 @@
   "Stream nicht erreichbar · Standard": "Stream not reachable · Standard",
   "Wind": "Wind",
   "Benachrichtigung": "Notification",
-  "Rollos": "Shutters",
-  "Rollo offen": "Shutter open",
+  "Jalousie offen": "Blind open",
   "Alle schließen": "Close all",
   "Bis Sonnenaufgang": "Until sunrise",
   "Ab Sonnenuntergang": "From sunset",
-  "Keine Rollos ausgewählt": "No shutters picked",
-  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Pick the shutters in the Studio under Settings › Home & Devices › Security.",
+  "Keine Jalousien ausgewählt": "No blinds picked",
+  "Jalousien wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Pick the blinds in the Studio under Settings › Home & Devices › Security.",
   "Liste": "List",
   "Keine Einträge": "No entries",
   "1 Einstellung": "1 setting",
@@ -4555,8 +4554,8 @@
    "{1} programs"
   ],
   [
-   "^(\\d+) Rollos offen$",
-   "{1} shutters open"
+   "^(\\d+) Jalousien offen$",
+   "{1} blinds open"
   ],
   [
    "^Alle (\\d+) anzeigen$",

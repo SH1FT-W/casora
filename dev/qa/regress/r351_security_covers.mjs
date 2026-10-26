@@ -2,10 +2,10 @@
 // @parallel: allein
 // @deckt: custom_components/casora/scripts/local/34-security-covers.js custom_components/casora/settings.py custom_components/casora/panel/casora-panel-personal.js tools/phone_room_badges.py
 // Issue #76 (wish): "in the evening and at night see at a glance whether every security-relevant cover is closed,
-// with a choice of which covers count." Settings › Home & Devices › "Sicherheit: Rollos" picks the covers and
-// "Nur abends und nachts" (on by default). Expected on Home: in the expanded security row a sub-badge "Rollos ·
+// with a choice of which covers count." Settings › Home & Devices › "Sicherheit: Jalousien" picks the covers and
+// "Nur abends und nachts" (on by default). Expected on Home: in the expanded security row a sub-badge "Jalousien ·
 // N offen" (only at night and only with an open picked cover), the security badge's summary line with a cover icon and
-// the number, the badge not secure. Tap → popup "Rollos": "Offen" first with „Schließen" per cover and „Alle schließen",
+// the number, the badge not secure. Tap → popup "Jalousien": "Offen" first with „Schließen" per cover and „Alle schließen",
 // then "Geschlossen". By day (sun above the horizon) nothing shows. Nothing picked: nothing changes. Phone Home the same.
 // Studio: the picker lists the covers of the house with check marks, the search finds it by "Rollladen".
 // Writes Casora's settings (security.covers, test HA only) and restores them; cover and sun states are faked in the
@@ -88,11 +88,11 @@ const run = async (tag, page, mobile, pre) => {
   await fake(NIGHT);
   if (mobile) await page.evaluate(() => window._casoraFilter && window._casoraFilter.set && window._casoraFilter.set('security'));
   else await fake({ 'input_select.casora_expanded_row': { state: 'security', attributes: {} } });
-  const g = await stable(page, look, 'casora_badge_security_group', { max: 12000, until: (v) => v && (v.icon || /Rollos offen/.test(v.sub)) });
-  await check(tag + ': security badge names the open covers (icon with 2 / „2 Rollos offen“)',
-    g && (g.items.includes('2 Rollos offen') || /2 Rollos offen/.test(g.sub)), g);
+  const g = await stable(page, look, 'casora_badge_security_group', { max: 12000, until: (v) => v && (v.icon || /Jalousien offen/.test(v.sub)) });
+  await check(tag + ': security badge names the open covers (icon with 2 / „2 Jalousien offen“)',
+    g && (g.items.includes('2 Jalousien offen') || /2 Jalousien offen/.test(g.sub)), g);
   const b = await stable(page, look, 'casora_badge_security_covers', { max: 12000, until: (v) => v && v.sub === '2 offen' });
-  await check(tag + ': sub-badge „Rollos · 2 offen“ in the security row', b && b.title === 'Rollos' && b.sub === '2 offen', b);
+  await check(tag + ': sub-badge „Jalousien · 2 geöffnet“ in the security row', b && b.title === 'Jalousien' && b.sub === '2 geöffnet', b);
   if (b) await page.evaluate(() => { const x = window.__pierce('button-card').find((y) => [].concat((y._config || {}).template || []).includes('casora_badge_security_covers') && y.getBoundingClientRect().width > 20); if (x) x.scrollIntoView({ block: 'center', inline: 'center' }); });
   await shoot(page, pre + '-1-home-night.png');
 
@@ -105,7 +105,7 @@ const run = async (tag, page, mobile, pre) => {
   }
   await need(tag + ': tap opens the covers popup', await offen(page));
   let p = await stable(page, POPUP, null, { max: 10000, until: (v) => v && v.rows.length >= 4 });
-  await check(tag + ': title „Rollos“', p && /^Rollos/.test(p.title), p && p.title);
+  await check(tag + ': title „Jalousien“', p && /^Jalousien/.test(p.title), p && p.title);
   const at = (n) => (p ? p.rows.findIndex((r) => r.includes(n)) : -1);
   await check(tag + ': open ones first with „Schließen“', p && at(NAME[0]) === 0 && at(NAME[1]) === 1
     && /Schließen$/.test(p.rows[0]) && /40 % geöffnet/.test(p.rows[1]), p && p.rows);
@@ -143,13 +143,13 @@ const run = async (tag, page, mobile, pre) => {
   await check(tag + ': live: a closed cover leaves „Offen“', p && p.rows[0].includes(NAME[1]) && !p.labels.includes('Alle schließen'), p && p.rows);
   await page.evaluate(() => window.casoraPopup && window.casoraPopup.close && window.casoraPopup.close());
   await page.waitForTimeout(900);
-  const b1 = await stable(page, look, 'casora_badge_security_covers', { max: 8000, until: (v) => v && v.sub === '1 offen' });
-  await check(tag + ': badge follows („1 offen“)', b1 && b1.sub === '1 offen', b1);
+  const b1 = await stable(page, look, 'casora_badge_security_covers', { max: 8000, until: (v) => v && v.sub === '1 geöffnet' });
+  await check(tag + ': badge follows („1 geöffnet“)', b1 && b1.sub === '1 geöffnet', b1);
 
   // Day: nothing shows, the security badge is as before.
   await fake(DAY);
   const b2 = await stable(page, look, 'casora_badge_security_covers', { max: 8000, until: (v) => v === null });
-  await check(tag + ': by day no „Rollos“ badge', b2 === null, b2);
+  await check(tag + ': by day no „Jalousien“ badge', b2 === null, b2);
   const g2 = await stable(page, look, 'casora_badge_security_group', { max: 8000 });
   await check(tag + ': by day no cover in the summary', g2 && !g2.icon && !/Rollo/.test(g2.sub), g2);
   await fake(NIGHT);
@@ -160,7 +160,7 @@ usePage(dk.page);
 await dashboard(dk.page, dash.url + '/home', 3);
 await run('Desktop', dk.page, false, 'desktop');
 
-// ── Studio: Settings › Home & Devices › „Sicherheit: Rollos“ ──
+// ── Studio: Settings › Home & Devices › „Sicherheit: Jalousien“ ──
 await studio(dk.page, dash.url);
 const H = (fn, a) => dk.page.evaluate(fn, a);
 await H(() => window.__panel()._bOpenSettings && window.__panel()._bOpenSettings());
@@ -168,8 +168,8 @@ await dk.page.waitForTimeout(1000);
 await dk.page.locator('.cs-hubsearch input').fill('Rollladen');
 await dk.page.waitForTimeout(500);
 const hits = await H(() => [...window.__panel().shadowRoot.querySelectorAll('#pane .frow b')].filter((b) => b.getClientRects().length).map((b) => b.textContent.trim()));
-await check('Studio: search „Rollladen“ finds „Sicherheit: Rollos“', hits[0] === 'Sicherheit: Rollos', hits);
-await dk.page.locator('.frow').filter({ has: dk.page.locator('b', { hasText: /^Sicherheit: Rollos$/ }) }).first().click();
+await check('Studio: search „Rollladen“ finds „Sicherheit: Jalousien“', hits[0] === 'Sicherheit: Jalousien', hits);
+await dk.page.locator('.frow').filter({ has: dk.page.locator('b', { hasText: /^Sicherheit: Jalousien$/ }) }).first().click();
 await dk.page.waitForTimeout(2200);
 const st = await H((ids) => {
   const r = window.__panel().shadowRoot;
@@ -180,7 +180,7 @@ const st = await H((ids) => {
     rows: rows.length, checked: rows.filter((x) => x.getAttribute('aria-checked') === 'true').length, inView: !!box && box.top < innerHeight && box.bottom > 0,
     areas: [...r.querySelectorAll('#pane .casora-psec-covers .fhead')].map((x) => x.textContent), ids };
 }, IDS);
-await check('Studio: group „Sicherheit: Rollos“, opened at it', st.group && st.head === 'Sicherheit: Rollos' && st.inView, st);
+await check('Studio: group „Sicherheit: Jalousien“, opened at it', st.group && st.head === 'Sicherheit: Jalousien' && st.inView, st);
 await check('Studio: „Nur abends und nachts“ on by default', st.night === 'true', st);
 await check('Studio: covers listed by area with check marks, the four picked ones checked', st.rows >= 4 && st.checked === 4 && st.areas.length >= 1, st);
 await dk.page.evaluate(() => { const r = window.__panel().shadowRoot; const g = r.querySelector('#pane [data-pkey="security"]'); if (g) g.scrollIntoView({ block: 'start' }); });
@@ -208,7 +208,7 @@ const phs = await ph.page.evaluate(() => {
   if (g) g.scrollIntoView({ block: 'start' });
   return { group: !!g, rows: r.querySelectorAll('.casora-psec-covers .frow[role="checkbox"]').length };
 });
-await check('Studio phone: „Sicherheit: Rollos“ with the covers', phs.group && phs.rows >= 4, phs);
+await check('Studio phone: „Sicherheit: Jalousien“ with the covers', phs.group && phs.rows >= 4, phs);
 await shoot(ph.page, 'phone-4-studio.png');
 await ph.browser.close();
 
@@ -222,7 +222,7 @@ await dashboard(dk2.page, dash.url + '/home', 3);
 await fakeStates(dk2.page, { ...NIGHT, 'input_select.casora_expanded_row': { state: 'security', attributes: {} } }, { sticky: true });
 const off = await stable(dk2.page, look, 'casora_badge_security_covers', { max: 6000 });
 const offG = await stable(dk2.page, look, 'casora_badge_security_group', { max: 6000 });
-await check('nothing picked: no „Rollos“ badge, no cover in the summary', off === null && offG && !offG.icon, { off, offG });
+await check('nothing picked: no „Jalousien“ badge, no cover in the summary', off === null && offG && !offG.icon, { off, offG });
 await dk2.browser.close();
 
 await finish();

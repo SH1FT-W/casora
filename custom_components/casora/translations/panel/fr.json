@@ -2673,7 +2673,6 @@
     "The design applies to all dashboards right away. Undo switches it back.": "Le design s'applique tout de suite à tous les tableaux de bord. Annuler revient au précédent.",
     "How every Casora dashboard looks – the change applies right away.": "L'apparence de tous les tableaux de bord Casora – le changement s'applique tout de suite.",
     "Security: covers": "Sécurité : volets",
-    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Les volets choisis qui ne sont pas entièrement fermés apparaissent sur Accueil dans la rangée Sécurité sous « Volets » et comptent comme non sécurisés. Sans sélection, rien ne change.",
     "Evening and night only": "Seulement le soir et la nuit",
     "From sunset to sunrise": "Du coucher au lever du soleil",
     "No covers found": "Aucun volet trouvé",
@@ -2698,7 +2697,8 @@
     "Each group becomes a list in the popup, with its devices in the group's order.": "Chaque groupe devient une liste dans la fenêtre, avec ses appareils dans l'ordre du groupe.",
     "Charts": "Diagrammes",
     "Add sensor …": "Ajouter un capteur…",
-    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Chaque capteur s'ouvre en diagramme comme la fenêtre de la tuile Diagramme : 24 heures, 7 ou 30 jours ou un an."
+    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Chaque capteur s'ouvre en diagramme comme la fenêtre de la tuile Diagramme : 24 heures, 7 ou 30 jours ou un an.",
+    "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Les volets choisis qui ne sont pas entièrement fermés apparaissent sur Accueil dans la rangée Sécurité sous « Volets » et comptent comme non sécurisés. Sans sélection, rien ne change."
   },
   "patterns": [
     [

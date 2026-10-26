@@ -2672,11 +2672,10 @@
     "Show the bell on this dashboard": "Glocke im Dashboard zeigen",
     "The design applies to all dashboards right away. Undo switches it back.": "Das Design gilt sofort für alle Dashboards. „Rückgängig“ holt das vorige Design zurück.",
     "How every Casora dashboard looks – the change applies right away.": "Wie alle Casora-Dashboards aussehen – die Änderung gilt sofort.",
-    "Security: covers": "Sicherheit: Rollos",
-    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Ausgewählte Rollos, die nicht ganz geschlossen sind, erscheinen auf „Zuhause“ in der Sicherheits-Reihe als „Rollos“ und zählen als nicht sicher. Ohne Auswahl ändert sich nichts.",
+    "Security: covers": "Sicherheit: Jalousien",
     "Evening and night only": "Nur abends und nachts",
     "From sunset to sunrise": "Von Sonnenuntergang bis Sonnenaufgang",
-    "No covers found": "Keine Rollos gefunden",
+    "No covers found": "Keine Jalousien gefunden",
     "Entity list": "Entity-Liste",
     "Where do the entries come from?": "Woher kommen die Einträge?",
     "Pick": "Auswählen",
@@ -2698,7 +2697,8 @@
     "Each group becomes a list in the popup, with its devices in the group's order.": "Jede Gruppe wird zu einer Liste im Popup, mit ihren Geräten in der Reihenfolge der Gruppe.",
     "Charts": "Diagramme",
     "Add sensor …": "Sensor hinzufügen …",
-    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Jeder Sensor öffnet sich als Diagramm wie im Popup der Diagramm-Kachel: 24 Stunden, 7 oder 30 Tage oder ein Jahr."
+    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Jeder Sensor öffnet sich als Diagramm wie im Popup der Diagramm-Kachel: 24 Stunden, 7 oder 30 Tage oder ein Jahr.",
+    "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Ausgewählte Jalousien, die nicht ganz geschlossen sind, erscheinen auf „Zuhause“ in der Sicherheits-Reihe als „Jalousien“ und zählen als nicht sicher. Ohne Auswahl ändert sich nichts."
   },
   "patterns": [
     [

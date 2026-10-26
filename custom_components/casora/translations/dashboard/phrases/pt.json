@@ -2493,13 +2493,12 @@
   "Stream nicht erreichbar · Standard": "Fluxo inacessível · Padrão",
   "Wind": "Vento",
   "Benachrichtigung": "Aviso",
-  "Rollos": "Estores",
-  "Rollo offen": "Estore aberto",
+  "Jalousie offen": "Estore aberto",
   "Alle schließen": "Fechar todos",
   "Bis Sonnenaufgang": "Até ao nascer do sol",
   "Ab Sonnenuntergang": "A partir do pôr do sol",
-  "Keine Rollos ausgewählt": "Nenhum estore escolhido",
-  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Escolhe os estores no Studio em Definições › Casa e dispositivos › Segurança.",
+  "Keine Jalousien ausgewählt": "Nenhum estore escolhido",
+  "Jalousien wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Escolhe os estores no Studio em Definições › Casa e dispositivos › Segurança.",
   "Liste": "Lista",
   "Keine Einträge": "Sem entradas",
   "1 Einstellung": "1 definição",
@@ -4573,7 +4572,7 @@
    "{1} programas"
   ],
   [
-   "^(\\d+) Rollos offen$",
+   "^(\\d+) Jalousien offen$",
    "{1} estores abertos"
   ],
   [

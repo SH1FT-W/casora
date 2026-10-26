@@ -2493,13 +2493,12 @@
   "Stream nicht erreichbar · Standard": "Strumień nieosiągalny · Standardowy",
   "Wind": "Wiatr",
   "Benachrichtigung": "Powiadomienie",
-  "Rollos": "Rolety",
-  "Rollo offen": "Roleta otwarta",
+  "Jalousie offen": "Roleta otwarta",
   "Alle schließen": "Zamknij wszystkie",
   "Bis Sonnenaufgang": "Do wschodu słońca",
   "Ab Sonnenuntergang": "Od zachodu słońca",
-  "Keine Rollos ausgewählt": "Nie wybrano rolet",
-  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Rolety wybierasz w Studio w Ustawienia › Dom i urządzenia › Bezpieczeństwo.",
+  "Keine Jalousien ausgewählt": "Nie wybrano rolet",
+  "Jalousien wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Rolety wybierasz w Studio w Ustawienia › Dom i urządzenia › Bezpieczeństwo.",
   "Liste": "Lista",
   "Keine Einträge": "Brak pozycji",
   "1 Einstellung": "1 ustawienie",
@@ -4573,7 +4572,7 @@
    "Programy: {1}"
   ],
   [
-   "^(\\d+) Rollos offen$",
+   "^(\\d+) Jalousien offen$",
    "{1} rolety otwarte"
   ],
   [

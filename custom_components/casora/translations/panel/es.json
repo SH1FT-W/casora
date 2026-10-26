@@ -2673,7 +2673,6 @@
     "The design applies to all dashboards right away. Undo switches it back.": "El diseño se aplica al instante a todos los paneles. Deshacer vuelve al anterior.",
     "How every Casora dashboard looks – the change applies right away.": "Cómo se ven todos los paneles de Casora: el cambio se aplica al instante.",
     "Security: covers": "Seguridad: persianas",
-    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Las persianas elegidas que no estén del todo cerradas aparecen en Inicio, en la fila de seguridad, como «Persianas» y cuentan como no seguras. Sin selección no cambia nada.",
     "Evening and night only": "Solo por la tarde y la noche",
     "From sunset to sunrise": "Del atardecer al amanecer",
     "No covers found": "No se encontraron persianas",
@@ -2698,7 +2697,8 @@
     "Each group becomes a list in the popup, with its devices in the group's order.": "Cada grupo se convierte en una lista en la ventana, con sus dispositivos en el orden del grupo.",
     "Charts": "Gráficos",
     "Add sensor …": "Añadir sensor …",
-    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Cada sensor se abre como gráfico, igual que la ventana de la tarjeta Gráfico: 24 horas, 7 o 30 días o un año."
+    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Cada sensor se abre como gráfico, igual que la ventana de la tarjeta Gráfico: 24 horas, 7 o 30 días o un año.",
+    "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Las persianas elegidas que no estén del todo cerradas aparecen en Inicio, en la fila de seguridad, como «Persianas» y cuentan como no seguras. Sin selección no cambia nada."
   },
   "patterns": [
     [

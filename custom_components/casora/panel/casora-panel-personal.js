@@ -420,7 +420,7 @@
         // only from sunset to sunrise (on by default; only "off" is stored). No cover picked = feature off.
         const sec = S.security;
         g = group("security", { header: "Security: covers",
-          footer: "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes." });
+          footer: "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes." });
         const nightRow = self._flowRow(g, { title: "Evening and night only", sub: "From sunset to sunrise" });
         if (typeof self._boolSwitch === "function") {
           nightRow.row.appendChild(self._boolSwitch(sec.covers_night !== false, true, (v) => {

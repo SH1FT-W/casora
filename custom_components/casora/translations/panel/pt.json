@@ -2673,7 +2673,6 @@
     "The design applies to all dashboards right away. Undo switches it back.": "O design aplica-se de imediato a todos os painéis. Desfazer volta ao anterior.",
     "How every Casora dashboard looks – the change applies right away.": "Como ficam todos os painéis do Casora – a alteração aplica-se de imediato.",
     "Security: covers": "Segurança: estores",
-    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Os estores escolhidos que não estejam totalmente fechados aparecem no Início, na linha de segurança, como «Estores» e contam como não seguros. Sem seleção, nada muda.",
     "Evening and night only": "Só ao fim do dia e à noite",
     "From sunset to sunrise": "Do pôr do sol ao nascer do sol",
     "No covers found": "Nenhum estore encontrado",
@@ -2698,7 +2697,8 @@
     "Each group becomes a list in the popup, with its devices in the group's order.": "Cada grupo torna-se uma lista na janela, com os seus dispositivos pela ordem do grupo.",
     "Charts": "Gráficos",
     "Add sensor …": "Adicionar sensor …",
-    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Cada sensor abre como gráfico, como a janela do cartão Gráfico: 24 horas, 7 ou 30 dias ou um ano."
+    "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Cada sensor abre como gráfico, como a janela do cartão Gráfico: 24 horas, 7 ou 30 dias ou um ano.",
+    "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Os estores escolhidos que não estejam totalmente fechados aparecem no Início, na linha de segurança, como «Estores» e contam como não seguros. Sem seleção, nada muda."
   },
   "patterns": [
     [

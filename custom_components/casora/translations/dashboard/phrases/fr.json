@@ -2493,13 +2493,12 @@
   "Stream nicht erreichbar · Standard": "Flux injoignable · Standard",
   "Wind": "Vent",
   "Benachrichtigung": "Notification",
-  "Rollos": "Volets",
-  "Rollo offen": "Volet ouvert",
+  "Jalousie offen": "Store ouvert",
   "Alle schließen": "Tout fermer",
   "Bis Sonnenaufgang": "Jusqu'au lever du soleil",
   "Ab Sonnenuntergang": "Dès le coucher du soleil",
-  "Keine Rollos ausgewählt": "Aucun volet choisi",
-  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Choisis les volets dans le Studio sous Réglages › Maison et appareils › Sécurité.",
+  "Keine Jalousien ausgewählt": "Aucun store choisi",
+  "Jalousien wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Choisis les stores dans le Studio sous Réglages › Maison et appareils › Sécurité.",
   "Liste": "Liste",
   "Keine Einträge": "Aucune entrée",
   "1 Einstellung": "1 réglage",
@@ -4573,8 +4572,8 @@
    "{1} programmes"
   ],
   [
-   "^(\\d+) Rollos offen$",
-   "{1} volets ouverts"
+   "^(\\d+) Jalousien offen$",
+   "{1} stores ouverts"
   ],
   [
    "^Alle (\\d+) anzeigen$",
