@@ -12,8 +12,6 @@
   "stellen": {
    "custom_components/casora/scripts/local/05-standard-medien.js": { "anzahl": 1, "grund": "Gerät allgemein (casora_appliance): Stufe 2 (mittel)" },
    "custom_components/casora/scripts/local/31-velair.js": { "anzahl": 1, "grund": "Klimaanlage Velair: Stufe 2 (mittel)" },
-   "tpl:casora_air_purifier": { "anzahl": 1, "grund": "Luftreiniger: „Weitere Einstellungen“ mitten in der Liste, Stufe 2 (mittel)" },
-   "tpl:casora_fan": { "anzahl": 1, "grund": "Lüfter: wie Luftreiniger, Stufe 2 (mittel)" },
    "tpl:casora_media": { "anzahl": 1, "grund": "Medien-Player: Stufe 2 (mittel)" },
    "tpl:casora_now_playing_chip": { "anzahl": 1, "grund": "Medien (Now Playing): Stufe 2 (mittel)" },
    "tpl:casora_now_playing_primary": { "anzahl": 1, "grund": "Medien (Now Playing): Stufe 2 (mittel)" }
