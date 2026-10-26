@@ -276,6 +276,9 @@
     :host(.bmode.phone) .inspector .insphead { padding:4px 60px 8px 16px; }
     /* UX-09: ✕ centered on the header (back/title), not above it. */
     :host(.bmode.phone) .bclose { top:27px; right:14px; }
+    /* Phone: 44 px tap area around the 34 px ✕, also without touch (narrow window); the look stays. */
+    :host(.bmode.phone) .bclose::before {
+      content:""; position:absolute; left:50%; top:50%; width:44px; height:44px; transform:translate(-50%, -50%); }
     .bscrim { display:none; }
     :host(.bmode.phone.binsp) .bscrim { display:block; position:fixed; inset:0; z-index:29; background:rgba(0,0,0,.28); }
     .bbar { display:none; }

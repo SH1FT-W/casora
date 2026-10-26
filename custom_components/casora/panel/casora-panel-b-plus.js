@@ -221,8 +221,9 @@
     .btoast.err { background:var(--casora-studio-bad, #C9342C); color:#fff; }
     .btoast.err .btico { color:#fff; }
     :host(.bmode.phone) .btoast { bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
-    :host(.bmode.phone.binsp) .btoast { bottom:auto; top:calc(70px + env(safe-area-inset-top, 0px)); transform:translate(-50%, -10px); }
-    :host(.bmode.phone.binsp) .btoast.on { transform:translate(-50%, 0); }
+    /* Sheet open (no tab bar): at the bottom over the sheet, as on desktop – at the top it covered the
+       Desktop/Tablet/Phone switch (26.10.). */
+    :host(.bmode.phone.binsp) .btoast { bottom:calc(16px + env(safe-area-inset-bottom, 0px)); }
     /* Erfolgsmoment nach dem allerersten Speichern: größer, mit gezeichnetem Haken. */
     .btoast.big { padding:14px 18px 14px 14px; gap:12px; border-radius:20px; }
     .btoast.big .btico { width:38px; height:38px; margin:0; border-radius:50%; background:#34C759; color:#fff; }

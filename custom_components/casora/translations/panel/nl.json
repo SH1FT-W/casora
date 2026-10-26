@@ -21,8 +21,8 @@
     "Violet": "Violet",
     "Controls": "Bediening",
     "Design (for all dashboards) ›": "Design (voor alle dashboards) ›",
-    "The design applies to all dashboards right away. Undo switches it back.": "Het design geldt meteen voor alle dashboards. Ongedaan maken zet het vorige terug.",
-    "How every Casora dashboard looks – the change applies right away.": "Hoe alle Casora-dashboards eruitzien – de wijziging geldt meteen.",
+    "Undo brings the previous design back.": "Ongedaan maken zet het vorige design terug.",
+    "How every Casora dashboard looks.": "Hoe alle Casora-dashboards eruitzien.",
     "No Casora design is installed.": "Er is geen Casora-design geïnstalleerd.",
     "Header and buttons, font and speed – for this dashboard.": "Kopregel en knoppen, lettertype en tempo – voor dit dashboard.",
     "Controls, weather, time, notifications and scenes – for this dashboard": "Bediening, weer, klok, meldingen en scènes – voor dit dashboard",
@@ -2668,7 +2668,8 @@
     "Hold, font, tile size and new dashboards": "Vasthouden, lettertype, tegelgrootte en nieuwe dashboards",
     "Hold, font, tile size": "Vasthouden, lettertype, tegelgrootte",
     "No match – try one of the topics below.": "Geen resultaat – probeer een van de onderwerpen hieronder.",
-    "Bell, notifications, push and Live‑Activities": "Bel, meldingen, push en live‑activiteiten"
+    "Bell, notifications, push and Live‑Activities": "Bel, meldingen, push en live‑activiteiten",
+    "Show the bell on this dashboard": "Bel tonen op dit dashboard"
   },
   "patterns": [
     [

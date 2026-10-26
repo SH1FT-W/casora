@@ -21,8 +21,8 @@
     "Violet": "Violet",
     "Controls": "Commandes",
     "Design (for all dashboards) ›": "Design (pour tous les tableaux de bord) ›",
-    "The design applies to all dashboards right away. Undo switches it back.": "Le design s'applique tout de suite à tous les tableaux de bord. Annuler revient au précédent.",
-    "How every Casora dashboard looks – the change applies right away.": "L'apparence de tous les tableaux de bord Casora – le changement s'applique tout de suite.",
+    "Undo brings the previous design back.": "Annuler revient au design précédent.",
+    "How every Casora dashboard looks.": "L'apparence de tous les tableaux de bord Casora.",
     "No Casora design is installed.": "Aucun design Casora n'est installé.",
     "Header and buttons, font and speed – for this dashboard.": "En-tête et boutons, police et vitesse – pour ce tableau de bord.",
     "Controls, weather, time, notifications and scenes – for this dashboard": "Commandes, météo, heure, notifications et scènes – pour ce tableau de bord",
@@ -2668,7 +2668,8 @@
     "Hold, font, tile size and new dashboards": "Appui long, police, taille des tuiles et nouveaux tableaux de bord",
     "Hold, font, tile size": "Appui long, police, taille des tuiles",
     "No match – try one of the topics below.": "Aucun résultat – essayez l'un des thèmes ci-dessous.",
-    "Bell, notifications, push and Live‑Activities": "Cloche, notifications, push et activités en direct"
+    "Bell, notifications, push and Live‑Activities": "Cloche, notifications, push et activités en direct",
+    "Show the bell on this dashboard": "Afficher la cloche sur ce tableau de bord"
   },
   "patterns": [
     [

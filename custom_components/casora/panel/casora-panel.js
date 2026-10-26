@@ -2365,12 +2365,13 @@ const SECTIONS = [
     label: "Time", icon: "clock", iconColor: studioIcon("time"), group: "rooms", scope: "dashboard",
     blurb: "The clock in the top bar (desktop and tablet – the phone layout has no clock).",
     fields: [
-      { key: "show_time", label: "Show clock", type: "bool", boolDefault: true, always: true, ord: -1 },
-      // Immer sichtbar: ohne Eintrag nimmt die Uhr sensor.time, und das soll man sehen.
-      { ...E("time_entity", "Time sensor", ["sensor"]), always: true, placeholder: "Automatic" },
-      // Der Abschnittstext (blurb) ist im neuen Studio verdeckt – der Hinweis gehört an den Schalter (Nutzertest 4, E-T3).
-      { key: "use_12h", label: "12-hour clock", type: "bool", boolDefault: LOCALE_12H, always: true,
+      // The new Studio hides the section text (blurb), so the note sits right under "Show clock" (user test 4, E-T3;
+      // until 26.10 it stood under the 12-hour switch at the bottom).
+      { key: "show_time", label: "Show clock", type: "bool", boolDefault: true, always: true, ord: -1,
         hint: "For desktop and tablet – the phone layout has no clock." },
+      // Always visible: without an entry the clock takes sensor.time, and that should show.
+      { ...E("time_entity", "Time sensor", ["sensor"]), always: true, placeholder: "Automatic" },
+      { key: "use_12h", label: "12-hour clock", type: "bool", boolDefault: LOCALE_12H, always: true },
       { ...T("time_suffix", "Suffix"),
         auto: true, advanced: true, noAdd: true },
     ],
@@ -2378,6 +2379,9 @@ const SECTIONS = [
   {
     label: "Notifications", icon: "bell", iconColor: studioIcon("notifications"),
     group: "rooms", scope: "dashboard", toggle: "show_notifications",
+    // The switch controls the bell, not the messages the heading names: in the open section it gets its own
+    // labelled first row instead of sitting in the header (on the phone it also cut the heading short).
+    toggleRow: "Show the bell on this dashboard",
     blurb: "Which messages the bell shows in this dashboard. "
       + "Wording, mailbox and exceptions apply to all dashboards: Settings, Bell & Alerts.",
     subs: [
@@ -8829,6 +8833,10 @@ class CasoraPanel extends HTMLElement {
         :host(.phone) .row .drop svg { width:15px; height:15px; }
         /* iOS 27 Settings geometry, measured: 62x27 track, 37x23 capsule knob. */
         :host(.phone) .sw { width:62px; height:27px; flex:0 0 62px; }
+        /* 44 px tap height around the 27 px track; the look stays. */
+        :host(.phone) .sw::before {
+          content:""; position:absolute; left:50%; top:50%; width:max(100%, 44px); height:44px; transform:translate(-50%, -50%);
+        }
         :host(.phone) .sw::after { top:2px; left:2px; width:37px; height:23px; }
         :host(.phone) .sw[aria-checked="true"]::after { transform:translateX(21px); }
         :host(.phone) .thead { touch-action:auto; }
@@ -18136,6 +18144,7 @@ class CasoraPanel extends HTMLElement {
           if (fe) fe.paint();
         }
         if (this._folded.has(foldKey)) fs.classList.add("shut");
+        if (sec.toggleRow) fs._toggleRow = sec.toggleRow;
         this._switches.push({ fs, sw, get: toggle.get, foldKey, cnt, head, stackCard: sec.group === "rooms" });
       }
       // Raumansicht: ein aufgeklappter Abschnitt bleibt beim Neuzeichnen offen.
@@ -18827,7 +18836,8 @@ class CasoraPanel extends HTMLElement {
         if (ownHead) {
           const sw = ownHead.querySelector(".sw");
           ownHead.querySelectorAll(".plus").forEach((c) => bar.appendChild(c));
-          if (sw) bar.appendChild(sw);
+          if (sw && hit._toggleRow) this._toggleRowFor(ownHead, sw, hit._toggleRow);
+          else if (sw) bar.appendChild(sw);
           ownHead.querySelectorAll(".rowmenu").forEach((c) => bar.appendChild(c));
         }
         // The SAME slot the switcher lives in. Swapped, not stacked.
@@ -20167,13 +20177,32 @@ class CasoraPanel extends HTMLElement {
     setTimeout(put, 400);
   }
 
+  // Section switch as the open card's first row with its own label (sec.toggleRow), switch on the right.
+  _toggleRowFor(head, sw, label) {
+    const box = document.createElement("div");
+    box.className = "subcard togglecard";
+    const row = document.createElement("div");
+    row.className = "row togglerow";
+    const lab = document.createElement("label");
+    lab.className = "swlabel";
+    lab.textContent = label;
+    lab.addEventListener("click", () => sw.click());
+    sw.setAttribute("aria-label", label);
+    sw.removeAttribute("title");
+    const blank = document.createElement("span");
+    blank.className = "drop blank";
+    row.append(lab, sw, blank);
+    box.appendChild(row);
+    head.after(box);
+  }
+
   _syncSwitches() {
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     (this._switches || []).forEach((s) => {
       const on = s.get();
       if (s.sw.getAttribute("aria-checked") === (on ? "true" : "false")) return;
       s.sw.setAttribute("aria-checked", on ? "true" : "false");
-      s.sw.title = on ? "Shown on the dashboard" : "Hidden on the dashboard";
+      if (!s.fs._toggleRow) s.sw.title = on ? "Shown on the dashboard" : "Hidden on the dashboard";
       s.fs.classList.toggle("off", !on);
       if (s.add) s.add.disabled = !on;
       // „Aus“ neben dem Schalter folgt ihm.

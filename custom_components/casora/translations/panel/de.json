@@ -21,8 +21,8 @@
     "Violet": "Lila",
     "Controls": "Bedienung",
     "Design (for all dashboards) ›": "Design (für alle Dashboards) ›",
-    "The design applies to all dashboards right away. Undo switches it back.": "Das Design gilt sofort für alle Dashboards. „Rückgängig“ holt das vorige Design zurück.",
-    "How every Casora dashboard looks – the change applies right away.": "Wie alle Casora-Dashboards aussehen – die Änderung gilt sofort.",
+    "Undo brings the previous design back.": "„Rückgängig“ holt das vorige Design zurück.",
+    "How every Casora dashboard looks.": "Wie alle Casora-Dashboards aussehen.",
     "No Casora design is installed.": "Kein Casora-Design installiert.",
     "Header and buttons, font and speed – for this dashboard.": "Kopfzeile und Knöpfe, Schrift und Tempo – für dieses Dashboard.",
     "Controls, weather, time, notifications and scenes – for this dashboard": "Bedienung, Wetter, Uhr, Meldungen und Szenen – für dieses Dashboard",
@@ -2668,7 +2668,8 @@
     "Hold, font, tile size and new dashboards": "Halten, Schrift, Kachelgröße und neue Dashboards",
     "Hold, font, tile size": "Halten, Schrift, Kachelgröße",
     "No match – try one of the topics below.": "Kein Treffer – schau in eines der Themen unten.",
-    "Bell, notifications, push and Live‑Activities": "Glocke, Benachrichtigungen, Push und Live‑Aktivitäten"
+    "Bell, notifications, push and Live‑Activities": "Glocke, Benachrichtigungen, Push und Live‑Aktivitäten",
+    "Show the bell on this dashboard": "Glocke im Dashboard zeigen"
   },
   "patterns": [
     [
