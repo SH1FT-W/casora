@@ -115,6 +115,7 @@ for (const [where, g] of Object.entries(geraete.migriert || {})) {
 for (const [where, g] of Object.entries(geraete.offen || {})) {
   if (!SRC[where]) fehler.push(`geraete: ${where} gibt es nicht mehr – Liste anpassen`);
   if (!g.grund) fehler.push(`geraete: ${where} – offen ohne Grund`);
+  if (SRC[where] && MARK.test(SRC[where])) fehler.push(`geraete: ${where} hat „Weitere Einstellungen“ – von offen nach migriert verschieben`);
 }
 
 if (process.argv.includes('--stand')) {

@@ -27,7 +27,7 @@ Leer        eine Leer-Zeile genau dort, wo Inhalt fehlt                         
 Breite      552 einspaltig · 900 zwei Spalten oder Bild                                         UI.width
 ```
 
-Desktop ab 761 px: links Bedienung, rechts der Rest; die Spalten dürfen ausgleichen. Handy: eine Spalte genau in der
+Desktop ab 761 px: links Bedienung, rechts der Rest; die Spalten dürfen ausgleichen und beginnen auf derselben Höhe (Regel 12). Handy: eine Spalte genau in der
 Reihenfolge oben.
 
 ## 2. Die Regeln v2
@@ -60,6 +60,10 @@ Reihenfolge oben.
 11. **Breite und Zugang**: Breite je Popup-Art fest – 900 bei zwei Spalten oder Bild, sonst 552. Trefferflächen mindestens
     44 px, Text auf Farbe mindestens 4,5 : 1, Symbol-Knöpfe mit Namen für die Sprachausgabe, Auswahl nie nur über Farbe.
     Hell, dunkel, Blatt- und Glas-Popups: dieselben Teile, nur Farben und Platten wechseln.
+12. **Symmetrie zweier Spalten** (Desktop): beide Spalten beginnen auf derselben Höhe. Hat nur eine Spalte oben eine
+    Überschrift, hält die andere deren Höhe frei, damit die ersten Platten auf einer Linie stehen. Jedes
+    Zwei-Spalten-Layout meldet sein Spaltenpaar mit `UI.colsMark(a, b)` an; `casora-core` gleicht nach dem Öffnen und
+    bei Größenänderung aus (`UI.alignCols`). Am Handy (eine Spalte) passiert nichts.
 
 ## 3. Entscheidungen des Maintainers (26.10.2026, verbindlich)
 
@@ -108,6 +112,7 @@ den gemeinsamen bekommt.
 | Weitere Einstellungen | `UI.settingsRow(ids, { sub })`, `UI.settings(ids, rows?)`; Layout-Option `settings` in `HH.layout` (02-devices) und `K.layout` (05-weich-mehr) | letzte Zeile bzw. letzter Abschnitt; mehrere Geräte → erst die Auswahl (`devices`), dann die Geräteseite |
 | Mehr | `UI.more(id, html, { count, hint })` | „Mehr (n) ⌄“; `hint` = Unterzeile mit dem Inhalt („Lautstärke, Klingel, LED …“) |
 | Leer-Zeile | `UI.empty({ icon, text, sub, action \| entity \| studio \| out })` | eine Zeile mit Symbol, Satz und höchstens einer Aktion (Studio nur für Admins) |
+| Spaltenpaar | `UI.colsMark(a, b)` im Wrapper eines Zwei-Spalten-Layouts | `casora-core` richtet die beiden Spalten nach dem Öffnen auf eine Höhe aus (Regel 12) |
 | Breite | `UI.width('one' \| 'two' \| 'image')`, in Vorlagen `window.casoraPopupWidth(…)` | 552 bzw. 900; `style` gewinnt über die 900/920 aus `popup_styles` |
 | KI-Karte | `UI.kiCard({ title, body, foot, btnText, btnSvc, primary })` | gemeinsamer Baustein für Lüftungs-Coach, Pflanzen-Doktor, Rad-Check, KI-Blick |
 | Namen | `window.casoraCleanName(name, keepKind)` | ohne Gerätekennung („shellyswitch25-C45BB…“) für Zeilen und Seitentitel |
@@ -139,7 +144,9 @@ UI.actions([{ text: 'Alle verriegeln', primary: true, svc: lockAll },
 4. jedes migrierte Geräte-Popup hat den Abschnitt „Weitere Einstellungen“ (Liste `geraete.migriert`, offen mit Grund);
 5. kein eigener Kopf im Inhalt (28 px/800);
 6. kein eigener ›-Pfeil (SVG, `mdi:chevron-right`);
-7. keine Hauptaktion in fester Farbe (`--casora-soft-primary` ohne Gerätefarbe davor).
+7. keine Hauptaktion in fester Farbe (`--casora-soft-primary` ohne Gerätefarbe davor);
+8. Symmetrie (Regel 12): `colsMark`/`alignCols` in `casora-core`, nach `casoraPopup.open` ausgeführt, und die
+   Zwei-Spalten-Layouts in `02-devices.js`, `05-weich-mehr.js`, `05-standard-medien.js` melden ihr Paar an.
 
 Altlasten stehen in `dev/unit/popup_blaupause_ausnahmen.json` mit Anzahl und Grund (Sperrklinke): mehr ist rot, weniger
 auch – dann die Zahl senken. `node dev/unit/popup_blaupause.mjs --stand` zeigt den Stand.
@@ -156,4 +163,5 @@ auch – dann die Zahl senken. `node dev/unit/popup_blaupause.mjs --stand` zeigt
 - [ ] Geräte-Popup: `settings` im Layout (oder `UI.settings`) – „Weitere Einstellungen“ als letzter Abschnitt
 - [ ] Seltenes in einem `UI.more` mit `count` und `hint`; Leeres als `UI.empty`
 - [ ] Breite über `casoraPopupWidth`: 552 einspaltig, 900 zweispaltig oder Bild
+- [ ] Zwei Spalten: Paar mit `UI.colsMark` angemeldet, erste Platten stehen auf einer Linie
 - [ ] `node dev/unit/popup_blaupause.mjs` grün, Ausnahmeliste nicht länger geworden

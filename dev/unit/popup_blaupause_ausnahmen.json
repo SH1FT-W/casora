@@ -50,7 +50,11 @@
    "custom_components/casora/scripts/local/30-fridge.js": "Kühlschrank",
    "tpl:casora_cover": "Jalousie (einzeln)",
    "tpl:casora_popup_cover": "Jalousie aus der Gruppe (eine)",
-   "tpl:casora_light": "Leuchte (einzeln)"
+   "tpl:casora_light": "Leuchte (einzeln)",
+   "tpl:casora_thermostat": "Thermostat",
+   "tpl:casora_air_purifier": "Luftreiniger",
+   "tpl:casora_fan": "Lüfter",
+   "tpl:casora_switch": "Schalter"
   },
   "offen": {
    "custom_components/casora/scripts/local/05-standard-medien.js": { "grund": "Gerät allgemein – Stufe 2" },
@@ -58,10 +62,6 @@
    "custom_components/casora/scripts/local/13-schloss.js": { "grund": "Schloss-Ansicht – Stufe 3" },
    "custom_components/casora/scripts/local/23-frigate.js": { "grund": "Frigate – Stufe 2/3" },
    "custom_components/casora/scripts/local/31-velair.js": { "grund": "Velair – Stufe 2" },
-   "tpl:casora_thermostat": { "grund": "Thermostat – Stufe 2" },
-   "tpl:casora_air_purifier": { "grund": "Luftreiniger – Stufe 2" },
-   "tpl:casora_fan": { "grund": "Lüfter – Stufe 2" },
-   "tpl:casora_switch": { "grund": "Schalter – Stufe 2" },
    "tpl:casora_popup_lock": { "grund": "Schloss – Stufe 3" },
    "tpl:casora_now_playing_primary": { "grund": "Medien – Stufe 2" }
   }
