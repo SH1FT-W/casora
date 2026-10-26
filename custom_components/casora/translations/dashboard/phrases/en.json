@@ -2474,7 +2474,17 @@
   "Stream": "Stream",
   "Stream nicht erreichbar · Standard": "Stream not reachable · Standard",
   "Wind": "Wind",
-  "Benachrichtigung": "Notification"
+  "Benachrichtigung": "Notification",
+  "Liste": "List",
+  "Keine Einträge": "No entries",
+  "1 Einstellung": "1 setting",
+  "Nichts gewählt": "Nothing chosen",
+  "1 Liste": "1 list",
+  "1 Diagramm": "1 chart",
+  "Diagramme": "Charts",
+  "Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.": "The group no longer exists. Choose another one in the Studio.",
+  "Wähle im Studio eine Gruppe, Geräte oder ein Label.": "Choose a group, devices or a label in the Studio.",
+  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Choose groups and sensors for this tile in the Studio."
  },
  "patterns": [
   [
@@ -4484,6 +4494,18 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} from {2}"
+  ],
+  [
+   "^(\\d+) Einstellungen$",
+   "{1} settings"
+  ],
+  [
+   "^(\\d+) Listen$",
+   "{1} lists"
+  ],
+  [
+   "^(\\d+) Diagramme$",
+   "{1} charts"
   ]
  ]
 }

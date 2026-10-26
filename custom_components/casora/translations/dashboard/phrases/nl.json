@@ -2492,7 +2492,17 @@
   "Stream": "Stream",
   "Stream nicht erreichbar · Standard": "Stream niet bereikbaar · Standaard",
   "Wind": "Wind",
-  "Benachrichtigung": "Melding"
+  "Benachrichtigung": "Melding",
+  "Liste": "Lijst",
+  "Keine Einträge": "Geen items",
+  "1 Einstellung": "1 instelling",
+  "Nichts gewählt": "Niets gekozen",
+  "1 Liste": "1 lijst",
+  "1 Diagramm": "1 grafiek",
+  "Diagramme": "Grafieken",
+  "Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.": "De groep bestaat niet meer. Kies een andere in de Studio.",
+  "Wähle im Studio eine Gruppe, Geräte oder ein Label.": "Kies in de Studio een groep, apparaten of een label.",
+  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Kies in de Studio groepen en sensoren voor deze tegel."
  },
  "patterns": [
   [
@@ -4502,6 +4512,18 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} vanaf {2}"
+  ],
+  [
+   "^(\\d+) Einstellungen$",
+   "{1} instellingen"
+  ],
+  [
+   "^(\\d+) Listen$",
+   "{1} lijsten"
+  ],
+  [
+   "^(\\d+) Diagramme$",
+   "{1} grafieken"
   ]
  ]
 }
