@@ -2491,7 +2491,8 @@
   "Standard": "Padrão",
   "Stream": "Fluxo",
   "Stream nicht erreichbar · Standard": "Fluxo inacessível · Padrão",
-  "Wind": "Vento"
+  "Wind": "Vento",
+  "Benachrichtigung": "Aviso"
  },
  "patterns": [
   [

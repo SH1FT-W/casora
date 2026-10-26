@@ -2357,6 +2357,9 @@ const SECTIONS = [
         always: true, ord: 11 },
       { key: "notify_restart", sub: "system", glyph: "exclamation", tone: "var(--casora-popup-ui-warn, #FF9F0A)", label: "Restart pending", type: "bool", boolDefault: true,
         always: true, ord: 12 },
+      // #70: notifications from scripts and automations (persistent_notification.create), live from HA.
+      { key: "notify_ha", sub: "system", glyph: "bell", tone: "var(--casora-color-teal, #00C3D0)", label: "Home Assistant notifications", type: "bool", boolDefault: true,
+        always: true, ord: 12.1, hint: "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too." },
 
       { ...LIST("notification_appliances", "Appliances to watch",
         ["sensor", "binary_sensor", "switch", "vacuum"]),
