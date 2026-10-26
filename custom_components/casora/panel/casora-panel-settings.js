@@ -76,7 +76,6 @@
     { page: "home", focus: "waste", label: "Waste collection", topic: "house", kw: "abfall müll muell tonne abholung" },
     { page: "home", focus: "scenes", label: "Hidden scenes", topic: "house", kw: "szenen ausblenden verstecken" },
     { page: "home", focus: "media", label: "Now Playing", topic: "house", kw: "player medien musik wiedergabe" },
-    { page: "alerts", focus: "notify", label: "Bell: wording & exceptions", topic: "msg", kw: "zonen briefkasten akku ausnahme nicht melden" },
   ];
   const HUB_START = { id: "start", label: "Settings", hub: true, lede: "Settings by topic. What only this dashboard affects is marked." };
   const hubPage = (id) => {
