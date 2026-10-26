@@ -1279,6 +1279,12 @@
         if (self._t !== t) return null;
         var types = (caps && caps.frontend_stream_types) || [];
         if (types.indexOf('web_rtc') < 0) { fail('webrtc-fehlt'); return null; }
+        // #23 (26.10.62b5): Home Assistant 2026.11 talks itself (camera capability two_way_audio, its player's
+        // toggleMicrophone). Then HA's way: it closes its stream and opens one session with picture and microphone.
+        if (caps && caps.two_way_audio === true && self._native && self._card && typeof self._card.toggleMicrophone === 'function') {
+          self._talkNative(t, fail);
+          return null;
+        }
         return h.callWS({ type: 'camera/webrtc/get_client_config', entity_id: id }).catch(function () { return {}; });
       }).then(function (conf) {
         if (!conf || self._t !== t) return null;
@@ -1292,14 +1298,31 @@
         t.mic = mic;
         // Zeitlimit erst ab hier: die Mikrofon-Frage des Browsers darf dauern, ohne dass Sprechen abbricht.
         t.timer = setTimeout(function () { if (t.state !== 'on') fail('zeit-abgelaufen'); }, 12000);
+        // #23 (26.10.62b5): like Home Assistant's own talk – the player's stream closes and one session carries picture
+        // and microphone. A second connection next to the player kept go2rtc's back channel to the doorbell busy: the
+        // first try talked, later ones only got silence (go2rtc frees it only when the stream with it closes).
+        if (self._native) { t.own = true; self._teardown(); }
         var pc = t.pc = new RTCPeerConnection((t.conf && t.conf.configuration) || {});
-        // Nur die Tonspur – das Bild läuft schon im Player; ein zweiter Video-Empfang kostete Bandbreite.
         pc.addTransceiver(mic.getAudioTracks()[0], { direction: 'sendrecv', streams: [mic] });
+        if (t.own) pc.addTransceiver('video', { direction: 'recvonly' });
         if (t.conf && t.conf.dataChannel) { try { pc.createDataChannel(t.conf.dataChannel); } catch (e) { /* ohne */ } }
         // #23: while talking, hear the doorbell through this connection. Opening the back channel can restart the
         // doorbell's stream and take the sound out of the player; the talk connection carries it the whole time.
         pc.ontrack = function (ev) {
-          if (self._t !== t || t.ear || !ev.track || ev.track.kind !== 'audio') return;
+          if (self._t !== t || !ev.track) return;
+          // The picture of the shared session, where the player was (muted: the sound runs through t.ear).
+          if (ev.track.kind === 'video' && t.own && !t.eye) {
+            var vid = t.eye = document.createElement('video');
+            vid.autoplay = true; vid.muted = true; vid.playsInline = true;
+            vid.setAttribute('playsinline', '');
+            vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+            vid.srcObject = new MediaStream([ev.track]);
+            var mt = self._root && self._root.querySelector('.mt');
+            if (mt) mt.appendChild(vid);
+            var pv = vid.play(); if (pv && pv.catch) pv.catch(function () {});
+            return;
+          }
+          if (t.ear || ev.track.kind !== 'audio') return;
           var a = t.ear = document.createElement('audio');
           a.autoplay = true;
           a.setAttribute('playsinline', '');
@@ -1390,6 +1413,29 @@
         });
       }).catch(function (e) { fail(e && e.message); });
     };
+    // HA 2026.11: talk through HA's own player (ha-camera-stream.toggleMicrophone, event microphone-changed with
+    // state off | connecting | on | denied). The doorbell's sound comes with the player, so it plays unmuted.
+    P._talkNative = function (t, fail) {
+      var self = this, card = this._card;
+      t.native = true;
+      if (this._muted !== false) { this._muted = false; this._applyAudio(); }
+      t.onMic = function (ev) {
+        if (self._t !== t) return;
+        var st = (ev && ev.detail && ev.detail.state) || card.microphoneState;
+        if (st === 'denied') { fail('Mikrofon: denied', 'Kein Zugriff aufs Mikrofon – im Browser erlauben'); return; }
+        if (st === 'on' && t.state !== 'on') {
+          t.state = 'on';
+          clearTimeout(t.timer);
+          t.timer = setTimeout(function () { if (self._t === t) { self._talkStop(); self._note('Sprechen nach 90 Sekunden beendet', 6000); } }, TALK_MAX);
+          if (window.casoraHaptic) window.casoraHaptic('success');
+          try { console.info('casora klingel: Sprechen über Home Assistant'); } catch (e) { /* quiet */ }
+          self._paint();
+        } else if (st === 'off' && t.state === 'on') { self._talkStop(); }
+      };
+      card.addEventListener('microphone-changed', t.onMic);
+      t.timer = setTimeout(function () { if (t.state !== 'on') fail('zeit-abgelaufen'); }, 12000);
+      Promise.resolve(card.toggleMicrophone()).catch(function (e) { fail('HA: ' + (e && e.message)); });
+    };
     // Immer alles freigeben: Spur stoppen (Mikrofon-Anzeige aus), Verbindung schließen, Abo beenden.
     P._talkStop = function (quiet) {
       var t = this._t;
@@ -1401,8 +1447,15 @@
       if (t.pc) { try { t.pc.getSenders().forEach(function (s) { if (s.track) s.track.stop(); }); } catch (e) { /* zu */ } try { t.pc.close(); } catch (e) { /* zu */ } }
       if (t.unsub) { var u = t.unsub; Promise.resolve(u).then(function (fn) { try { if (typeof fn === 'function') fn(); } catch (e) { /* zu */ } }); }
       if (t.ear) { try { t.ear.pause(); t.ear.srcObject = null; t.ear.remove(); } catch (e) { /* gone */ } }
-      // #23: back to the player while listening: mount it fresh with sound, in case the stream restarted meanwhile.
-      if (t.hearing && this._muted === false && this._native && this.isConnected && this._v && !this._v.dead) {
+      if (t.eye) { try { t.eye.pause(); t.eye.srcObject = null; t.eye.remove(); } catch (e) { /* gone */ } }
+      if (t.native && this._card) {
+        if (t.onMic) this._card.removeEventListener('microphone-changed', t.onMic);
+        try { if (this._card.microphoneState && this._card.microphoneState !== 'off') this._card.toggleMicrophone(); } catch (e) { /* gone */ }
+      }
+      // #23: the session with the back channel ends with the stream – the player comes back fresh (shared session,
+      // HA's own talk), and while listening also after the talk connection had the sound.
+      var fresh = t.own || t.native || (t.hearing && this._muted === false && this._native);
+      if (fresh && this.isConnected && this._v && !this._v.dead) {
         this._teardown();
         this._mount(this._stream);
       }

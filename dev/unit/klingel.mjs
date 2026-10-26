@@ -505,6 +505,35 @@ states['camera.carport_sub'].state = 'idle';
     ['m', { type: 'media-source', kind: 'audio', audioLevel: 0.2 }]])) };
   assert.deepEqual(KL.levelLine(await KL.audioStats(both)), { klingel_bytes: 4983, klingel_pegel: 0.012, mikro_bytes: 3100, mikro_pegel: 0.2 });
   assert.deepEqual(KL.levelLine(await KL.audioStats(null)), { klingel_bytes: null, klingel_pegel: null, mikro_bytes: null, mikro_pegel: null });
+  // #23 (26.10.62b5): a shared session (picture + microphone, player closed meanwhile) brings the player back when talk
+  // ends, also when not listening, and drops its own picture.
+  lv = live(vid(null, [{ kind: 'video' }])); lv._muted = true;
+  const eye = { pause() {}, remove() { this.removed = true; } };
+  lv._t = { state: 'on', own: true, eye };
+  lv._talkStop(true);
+  assert.ok(eye.removed, 'shared session: own picture removed');
+  assert.equal(lv._mounts, 1, 'shared session: player mounted fresh (back channel freed with the stream)');
+  // HA 2026.11: talk through HA's player (toggleMicrophone + microphone-changed), off again and a fresh player at the end.
+  const mkCard = () => { const c = { muted: true, microphoneState: 'off', toggles: 0, ls: {},
+    addEventListener(t, f) { this.ls[t] = f; }, removeEventListener(t) { delete this.ls[t]; },
+    toggleMicrophone() { this.toggles++; this.microphoneState = this.microphoneState === 'off' ? 'connecting' : 'off'; return Promise.resolve(); } }; return c; };
+  lv = live(vid(null, [{ kind: 'video' }, { kind: 'audio' }])); lv._muted = true; lv._note = () => {};
+  const card = lv._card = mkCard();
+  const tn = lv._t = { state: 'connecting' };
+  lv._talkNative(tn, (why) => { throw new Error('fail ' + why); });
+  assert.equal(card.toggles, 1, 'native: microphone switched on through HA');
+  assert.equal(lv._muted, false, 'native: player unmuted (doorbell sound comes with it)');
+  card.microphoneState = 'on'; card.ls['microphone-changed']({ detail: { state: 'on' } });
+  assert.equal(tn.state, 'on', 'native: on when HA says so');
+  lv._talkStop(true);
+  assert.equal(card.toggles, 2, 'native: microphone off again');
+  assert.ok(!card.ls['microphone-changed'], 'native: listener removed');
+  assert.equal(lv._mounts, 1, 'native: fresh player afterwards');
+  clearTimeout(tn.timer);
+  // Native is chosen only when HA reports two_way_audio and its player can toggle the microphone.
+  const ksrc = src('24-klingel.js');
+  assert.match(ksrc, /caps\.two_way_audio === true && self\._native && self\._card && typeof self\._card\.toggleMicrophone === 'function'/, 'native only with HA capability');
+  assert.match(ksrc, /if \(self\._native\) \{ t\.own = true; self\._teardown\(\); \}/, 'otherwise: player closed for the shared session');
   delete globalThis.addEventListener; delete globalThis.removeEventListener;
 }
 console.log('klingel: ok');
