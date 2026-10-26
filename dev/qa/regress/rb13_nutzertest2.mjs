@@ -112,12 +112,12 @@ const pick = (H) => H(() => { const rs = window.__panel()._state.compact.rooms;
   await page.waitForTimeout(1500);
   const pv = await H(() => { const m = window.__panel().shadowRoot.getElementById('mapmount'); return m ? m.innerText.replace(/\s+/g, ' ').slice(0, 60) : ''; });
   await check('Handy: Vorschau springt zum gewählten Raum', pv.indexOf(target) === 0 || pv.indexOf(target) < 20 && pv.indexOf(target) >= 0, [target, pv]);
-  // Inhalt-Blatt: Einstellungen gilt für alle Dashboards
+  // Inhalt-Blatt: one entry "Einstellungen" leads to the settings by topic (variant B, 26.10.62b5)
   await H(() => { const p = window.__panel(); p._bRooms = false; p._sel = null; p._bOpen = true; p._renderForm(); });
   await page.waitForTimeout(900);
-  const heads = await H(() => [...window.__panel().shadowRoot.querySelectorAll('.sidehead.phonehead')].map((h) => h.innerText.replace(/\s+/g, ' ')));
-  const sett = heads.find((h) => /^Einstellungen/.test(h));
-  await check('Inhalt-Blatt: „Einstellungen“ gilt für alle Dashboards', !!sett && /alle Dashboards/.test(sett), heads);
+  const sett = await H(() => { const e = window.__panel().shadowRoot.querySelector('.cs-pagerow[data-page="start"] h2');
+    return e && e.getClientRects().length ? e.innerText.trim() : null; });
+  await check('Inhalt-Blatt: ein Eintrag „Einstellungen“', sett === 'Einstellungen', sett);
   await browser.close();
 }
 
