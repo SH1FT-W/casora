@@ -270,7 +270,7 @@ await new Promise((res) => setImmediate(res));
 assert.equal(redrawn, 1);
 assert.deepEqual(fl.list_label.dynOptions(labHass, null, null), { options: ['qa_rollo'], labels: { qa_rollo: 'Rollladen' } });
 const fm = Object.fromEntries(tMore.fields.map((f) => [f.key, f]));
-assert.deepEqual(fm.more_lists.domains, ['group']); assert.equal(fm.more_list_labels.over, 'more_lists');
+assert.ok(fm.more_lists.domains.includes('group') && fm.more_lists.domains.includes('light') && fm.more_lists.accept === 'group'); assert.equal(fm.more_list_labels.over, 'more_lists');
 assert.deepEqual(fm.more_charts.domains, ['sensor']); assert.equal(fm.more_chart_labels.over, 'more_charts');
 for (const lang of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
   const tr = JSON.parse(src('custom_components/casora/translations/panel/' + lang + '.json')).exact;
