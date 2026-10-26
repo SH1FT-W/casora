@@ -2509,7 +2509,14 @@
   "Diagramme": "Wykresy",
   "Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.": "Ta grupa już nie istnieje. Wybierz inną w Studio.",
   "Wähle im Studio eine Gruppe, Geräte oder ein Label.": "Wybierz w Studio grupę, urządzenia lub etykietę.",
-  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Wybierz w Studio grupy i czujniki dla tego kafelka."
+  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Wybierz w Studio grupy i czujniki dla tego kafelka.",
+  "Start": "Start",
+  "Hygiene+": "Higiena+",
+  "Intensivzone": "Strefa intensywna",
+  "Ausreichend": "Wystarczająco",
+  "Später nicht möglich": "Później niemożliwe",
+  "Früher nicht möglich": "Wcześniej niemożliwe",
+  "Programm wählen": "Wybierz program"
  },
  "patterns": [
   [
@@ -2641,18 +2648,6 @@
    "od {1} dni"
   ],
   [
-   "^seit (\\d+) Tag$",
-   "od {1} dnia"
-  ],
-  [
-   "^Antwortet (seit .+) nicht$",
-   "Nie odpowiada {1}"
-  ],
-  [
-   "^Still (seit .+)$",
-   "Milczy {1}"
-  ],
-  [
    "^zuletzt gemeldet gestern (.+)$",
    "ostatni raport wczoraj {1}"
   ],
@@ -2743,6 +2738,26 @@
   [
    "^startet in (.+)$",
    "start za {1}"
+  ],
+  [
+   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Start o {1}"
+  ],
+  [
+   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Start jutro o {1}"
+  ],
+  [
+   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Uruchom o {1}"
+  ],
+  [
+   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Uruchom jutro o {1}"
+  ],
+  [
+   "^(\\d+) Programme$",
+   "Programy: {1}"
   ],
   [
    "^trocken in etwa (\\d+) Tagen?$",
@@ -4531,18 +4546,6 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} od {2}"
-  ],
-  [
-   "^(\\d+) Einstellungen$",
-   "Ustawienia: {1}"
-  ],
-  [
-   "^(\\d+) Listen$",
-   "Listy: {1}"
-  ],
-  [
-   "^(\\d+) Diagramme$",
-   "Wykresy: {1}"
   ]
  ]
 }

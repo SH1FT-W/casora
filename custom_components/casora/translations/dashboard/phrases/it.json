@@ -2509,7 +2509,14 @@
   "Diagramme": "Grafici",
   "Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.": "Il gruppo non esiste più. Scegline un altro nello Studio.",
   "Wähle im Studio eine Gruppe, Geräte oder ein Label.": "Scegli nello Studio un gruppo, dei dispositivi o un'etichetta.",
-  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Scegli nello Studio gruppi e sensori per questa scheda."
+  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Scegli nello Studio gruppi e sensori per questa scheda.",
+  "Start": "Avvio",
+  "Hygiene+": "Igiene+",
+  "Intensivzone": "Zona intensiva",
+  "Ausreichend": "Sufficiente",
+  "Später nicht möglich": "Non possibile più tardi",
+  "Früher nicht möglich": "Non possibile prima",
+  "Programm wählen": "Scegli un programma"
  },
  "patterns": [
   [
@@ -2641,18 +2648,6 @@
    "da {1} giorni"
   ],
   [
-   "^seit (\\d+) Tag$",
-   "da {1} giorno"
-  ],
-  [
-   "^Antwortet (seit .+) nicht$",
-   "Non risponde {1}"
-  ],
-  [
-   "^Still (seit .+)$",
-   "In silenzio {1}"
-  ],
-  [
    "^zuletzt gemeldet gestern (.+)$",
    "ultimo rilevamento ieri {1}"
   ],
@@ -2743,6 +2738,26 @@
   [
    "^startet in (.+)$",
    "inizia tra {1}"
+  ],
+  [
+   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Parte alle {1}"
+  ],
+  [
+   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Parte domani alle {1}"
+  ],
+  [
+   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Avvia alle {1}"
+  ],
+  [
+   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Avvia domani alle {1}"
+  ],
+  [
+   "^(\\d+) Programme$",
+   "{1} programmi"
   ],
   [
    "^trocken in etwa (\\d+) Tagen?$",
@@ -4531,18 +4546,6 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} dalle {2}"
-  ],
-  [
-   "^(\\d+) Einstellungen$",
-   "{1} impostazioni"
-  ],
-  [
-   "^(\\d+) Listen$",
-   "{1} elenchi"
-  ],
-  [
-   "^(\\d+) Diagramme$",
-   "{1} grafici"
   ]
  ]
 }

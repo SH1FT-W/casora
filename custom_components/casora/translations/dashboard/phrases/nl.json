@@ -2509,7 +2509,14 @@
   "Diagramme": "Grafieken",
   "Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.": "De groep bestaat niet meer. Kies een andere in de Studio.",
   "Wähle im Studio eine Gruppe, Geräte oder ein Label.": "Kies in de Studio een groep, apparaten of een label.",
-  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Kies in de Studio groepen en sensoren voor deze tegel."
+  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Kies in de Studio groepen en sensoren voor deze tegel.",
+  "Start": "Start",
+  "Hygiene+": "Hygiëne+",
+  "Intensivzone": "Intensieve zone",
+  "Ausreichend": "Voldoende",
+  "Später nicht möglich": "Later niet mogelijk",
+  "Früher nicht möglich": "Eerder niet mogelijk",
+  "Programm wählen": "Kies een programma"
  },
  "patterns": [
   [
@@ -2641,18 +2648,6 @@
    "sinds {1} dagen"
   ],
   [
-   "^seit (\\d+) Tag$",
-   "sinds {1} dag"
-  ],
-  [
-   "^Antwortet (seit .+) nicht$",
-   "Reageert {1} niet"
-  ],
-  [
-   "^Still (seit .+)$",
-   "Stil {1}"
-  ],
-  [
    "^zuletzt gemeldet gestern (.+)$",
    "laatst gemeld gisteren {1}"
   ],
@@ -2743,6 +2738,26 @@
   [
    "^startet in (.+)$",
    "start over {1}"
+  ],
+  [
+   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Start om {1}"
+  ],
+  [
+   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Start morgen om {1}"
+  ],
+  [
+   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Starten om {1}"
+  ],
+  [
+   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Morgen starten om {1}"
+  ],
+  [
+   "^(\\d+) Programme$",
+   "{1} programma's"
   ],
   [
    "^trocken in etwa (\\d+) Tagen?$",
@@ -4531,18 +4546,6 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} vanaf {2}"
-  ],
-  [
-   "^(\\d+) Einstellungen$",
-   "{1} instellingen"
-  ],
-  [
-   "^(\\d+) Listen$",
-   "{1} lijsten"
-  ],
-  [
-   "^(\\d+) Diagramme$",
-   "{1} grafieken"
   ]
  ]
 }

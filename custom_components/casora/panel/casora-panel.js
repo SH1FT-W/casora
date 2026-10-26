@@ -4445,7 +4445,6 @@ const TILE_TYPES = [
         find: { vac: "drying" } },
       { key: "plug_entity", label: "Smart plug", domains: ["switch"], advanced: true,
         hint: "The dock's plug. The popup shows its power and cost." },
-      { key: "price_kwh", label: "Electricity price per kWh", type: "number", placeholder: "0.36", advanced: true },
       CHART_COLOR(),
     ] },
   { id: "air_purifier", label: "Air purifier", template: "casora_air_purifier",

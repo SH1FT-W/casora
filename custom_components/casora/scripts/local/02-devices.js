@@ -1359,7 +1359,7 @@
       st: st, name: V.room_name || 'Gerät', dryer: dryer,
       source: src ? src.source : null, official: !!(src && src.rank === 0),
       entry: V.washdata_entry || (src && src.entry) || null,
-      price: window.casoraPriceKwh ? window.casoraPriceKwh(V.price_kwh) : null,
+      price: window.casoraPriceKwh ? window.casoraPriceKwh() : null,
       color: V.chart_color || '#00C3D0',
       program: F.program || null, phase: F.phase || null,
       remaining: V.appliance_remaining || F.remaining || null, progress: V.appliance_progress || F.progress || null,
@@ -1566,6 +1566,12 @@
     var raw = String((states[c.st] || {}).state || '').toLowerCase();
     var stObj = states[c.st] || {};
     var mIcon = c.dryer ? 'mdi:tumble-dryer' : 'mdi:washing-machine';
+
+    /* Device data (manufacturer, model, integration, the device's other entities) the same way as the other device
+       popups: „Weitere Einstellungen“ opens Casora's device page (issue #77). */
+    if (kind === 'devset') {
+      return c.st && states[c.st] ? UI.group([{ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', entity: c.st }], 'Gerät') : '';
+    }
 
     if (kind === 'hero') {
       var at = stObj.attributes || {};
@@ -1979,10 +1985,10 @@
          the last cycles sit on the left under the cycle and the programs on the right (as when off). */
       if (run0) f2.pbar = tpl('pbar', false);   /* empty it costs a grid gap on top – only add it while running */
       f2.abort = tpl('abort', false);
-      var moreKeys = WD ? ['ctrl', 'stats', 'energy', 'maint_rest', 'tips', 'plug'] : ['energy', 'plug'];
+      var moreKeys = (WD ? ['ctrl', 'stats', 'energy', 'maint_rest', 'tips', 'plug'] : ['energy', 'plug']).concat(['devset']);
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("laundry", ' + JSON.stringify(moreKeys) + '.map(function (k) {'
-        + ' return (k === "ctrl" || k === "plug" || k === "tips") ? L.inner(k, c, states) : L.slot(k, c, states); })) : "";', c.st);
+        + ' return (k === "ctrl" || k === "plug" || k === "tips" || k === "devset") ? L.inner(k, c, states) : L.slot(k, c, states); })) : "";', c.st);
       var left, right;
       if (!WD) { left = ['run', 'act', 'dev', 'abort']; right = ['more']; }
       else if (run0) { left = ['unload', 'run', 'pick', 'act', 'cycles', 'abort']; right = ['progs', 'maint', 'more']; }
@@ -2087,7 +2093,8 @@
     dishcare_dishwasher_program_quick45: ['Schnell 45°', 'mdi:clock-fast'], dishcare_dishwasher_program_quick65: ['Schnell 65°', 'mdi:clock-fast'],
   };
   var PHASE = { prerinse: 'Vorspülen', mainwash: 'Hauptspülen', finalrinse: 'Klarspülen', drying: 'Trocknen' };
-  var LEVEL = { full: ['Voll', null, 1], nearly_empty: ['Fast leer', 'warn', 0.25], empty: ['Leer', 'bad', 0] };
+  // ok: Home Connect in HA core only reports „nearly empty“/„lacking“ events, so no event is not „full“.
+  var LEVEL = { full: ['Voll', null, 1], nearly_empty: ['Fast leer', 'warn', 0.25], empty: ['Leer', 'bad', 0], ok: ['Ausreichend', null, null] };
   var REMOTE = { monitoring: 'Nur Anzeige', manualremotestart: 'Einmalig erlaubt', permanentremotestart: 'Immer erlaubt' };
   // Problem sensors: field of the finder's dish table (00-finder.js), text, icon.
   var PROBLEMS = [
@@ -2140,7 +2147,9 @@
     // Fields from the shared source table (00-finder.js casoraLaundryFind.dish): Home Connect from HA core,
     // Home Connect Alt/WS, Miele; the German name suffix only as a last resort. Card variables win.
     var LF = window.casoraLaundryFind;
-    var F = (LF && LF.dish && st) ? LF.dish({ entities: reg, states: states }, st).f : {};
+    var LD = (LF && LF.dish && st) ? LF.dish({ entities: reg, states: states }, st) : { source: null, f: {} };
+    var F = LD.f;
+    var hcSvc = (hass && hass.services && hass.services.home_connect) || {};
     // Plug readings by unit on the plug's device.
     var onPlug = function (eid, unit) {
       var dev = reg[eid] && reg[eid].device_id, hit = null;
@@ -2161,7 +2170,7 @@
     PROBLEMS.forEach(function (p) { if (F[p[0]]) probs.push([F[p[0]], p[1], p[2]]); });
     return {
       st: st, dish: true, name: V.room_name || 'Geschirrspüler', entry: null, dryer: false,
-      price: window.casoraPriceKwh ? window.casoraPriceKwh(V.price_kwh) : null, color: V.chart_color || '#00C3D0',
+      price: window.casoraPriceKwh ? window.casoraPriceKwh() : null, color: V.chart_color || '#00C3D0',
       program: V.entity_program || F.program || null,
       sel: F.sel || null,
       phase: V.entity_phase || F.phase || null,
@@ -2177,6 +2186,13 @@
       conn: F.conn || null,
       remote: F.remote || null,
       startIn: F.startIn || null,
+      remoteStart: F.remoteStart || null,
+      saltLow: F.saltLow || null, saltLack: F.saltLack || null, rinseLow: F.rinseLow || null, rinseLack: F.rinseLack || null,
+      source: LD.source,
+      device: (reg[st] && reg[st].device_id) || null,
+      // Home Connect in HA core has no start button: the action starts the selected program with its options
+      // (HA 2026.x home_connect.start_selected_program), else the active_program select (issue #77).
+      hcStart: !!hcSvc.start_selected_program,
       power_sw: F.power_sw || null,
       light: F.light || null,
       smartFilter: F.smartFilter || null,
@@ -2187,7 +2203,9 @@
       opts: [[V.sw_extra_dry || F.extraDry, 'Extra Trocken', 'mdi:weather-sunny'],
              [V.sw_half_load || F.halfLoad, 'Halbe Ladung', 'mdi:circle-half-full'],
              [V.sw_speed || F.speed, 'Schneller fertig', 'mdi:clock-fast'],
-             [V.sw_silence || F.silence, 'Leiser', 'mdi:volume-low']].filter(function (o) { return o[0]; }),
+             [V.sw_silence || F.silence, 'Leiser', 'mdi:volume-low'],
+             [F.hygiene, 'Hygiene+', 'mdi:shield-plus-outline'],
+             [F.intensivZone, 'Intensivzone', 'mdi:fire-circle']].filter(function (o) { return o[0]; }),
       start: V.btn_start || F.start || null,
       stop: V.btn_stop || F.stop || null,
       plug: plug,
@@ -2200,19 +2218,32 @@
   };
   D.watch = function (c) {
     return [c.st, c.program, c.sel, c.phase, c.progress, c.remaining, c.energyEst, c.waterEst, c.salt, c.rinse, c.door, c.care, c.starts,
-      c.conn, c.remote, c.startIn, c.power_sw, c.light, c.smartFilter, c.filterCheck, c.machineCare, c.machineFilter,
+      c.conn, c.remote, c.startIn, c.remoteStart, c.saltLow, c.saltLack, c.rinseLow, c.rinseLack,
+      c.power_sw, c.light, c.smartFilter, c.filterCheck, c.machineCare, c.machineFilter,
       c.start, c.stop, c.plug, c.power, c.volt, c.amp, c.energy]
       .concat(c.probs.map(function (p) { return p[0]; }), c.opts.map(function (o) { return o[0]; })).filter(Boolean);
   };
 
   /* What needs refilling / care (for tile and popup) */
+  // Reminder on: binary sensor on, or Home Connect's event sensor (HA core) present.
+  var onEv = function (states, e) { var s = e && states[e] && states[e].state; return s === 'on' || s === 'present'; };
+  // Fill level: the level sensor (Home Connect Local: full / nearly_empty / empty), else the event sensors of HA core
+  // (lacking → empty, nearly empty → nearly_empty, neither → ok). null = nothing known.
+  D.fill = function (states, direct, low, lack) {
+    var s = direct && states[direct] && states[direct].state;
+    if (s && LEVEL[s]) return s;
+    if (onEv(states, lack)) return 'empty';
+    if (onEv(states, low)) return 'nearly_empty';
+    var seen = [low, lack].some(function (e) { var x = e && states[e] && states[e].state; return x && x !== 'unknown' && x !== 'unavailable'; });
+    return seen ? 'ok' : null;
+  };
   D.todo = function (c, states) {
     var out = [];
-    var on = function (e) { return e && states[e] && states[e].state === 'on'; };
+    var on = function (e) { return onEv(states, e); };
     c.probs.forEach(function (p) { if (on(p[0])) out.push([p[1], 'bad']); });
-    var lv = function (e, what) { var s = e && states[e] && states[e].state; if (s === 'empty' || s === 'nearly_empty') out.push([what + ' nachfüllen', s === 'empty' ? 'bad' : 'warn']); };
-    lv(c.salt, 'Salz');
-    lv(c.rinse, 'Klarspüler');
+    var lv = function (s, what) { if (s === 'empty' || s === 'nearly_empty') out.push([what + ' nachfüllen', s === 'empty' ? 'bad' : 'warn']); };
+    lv(D.fill(states, c.salt, c.saltLow, c.saltLack), 'Salz');
+    lv(D.fill(states, c.rinse, c.rinseLow, c.rinseLack), 'Klarspüler');
     if (on(c.smartFilter) || on(c.filterCheck)) out.push(['Filter reinigen', 'warn']);
     if (on(c.machineCare) || on(c.machineFilter) || U.num(states, c.care) === 0) out.push(['Maschinenpflege fällig', 'warn']);
     return out;
@@ -2229,6 +2260,258 @@
       fixed_period: { start_time: s0, end_time: s1 }, types: ['change'] })
       .then(function (r) { d.lastKwh = r && r.change != null ? r.change : null; L.paint(c); })
       .catch(function () {});
+  };
+
+  /* ── Program choice and start (issue #77) ──────────────────────────────────── */
+  var hassNow = function () { var ha = document.querySelector('home-assistant'); return (ha && ha.hass) || null; };
+  var two = function (n) { return (n < 10 ? '0' : '') + n; };
+  var hhmm = function (ms) { var d = new Date(ms); return two(d.getHours()) + ':' + two(d.getMinutes()); };
+  var nextDay = function (ms) { return new Date(ms).toDateString() !== new Date().toDateString(); };
+  var fin = function (x) { var n = parseFloat(x); return isFinite(n) ? n : null; };
+  D._c = {};      // last resolved card per operation state entity (start interceptor, time input)
+  D._at = {};     // chosen start as clock time: { at, value, set } per operation state entity
+
+  // The delay number (Home Connect: start_in_relative / start_in, seconds): unit factor, range, step, value.
+  D.numInfo = function (states, id) {
+    var st = id && states[id];
+    if (!st || st.state === 'unavailable') return null;
+    var a = st.attributes || {};
+    var unit = String(a.unit_of_measurement || 's').toLowerCase();
+    var u = unit === 'h' ? 3600 : unit === 'min' ? 60 : 1;
+    var v = fin(st.state);
+    return { unit: u, min: fin(a.min), max: fin(a.max), step: fin(a.step), value: v || 0, secs: Math.round((v || 0) * u) };
+  };
+
+  // Start time → value of the delay number. when: "HH:MM" (today, or tomorrow when it is not in the future) or a
+  // timestamp; info: D.numInfo. The value follows the number's step and stays within min/max (clamp 'max'/'min').
+  // → { value, secs, at (start after rounding), clamp } or null for an invalid time.
+  D.delayFor = function (when, now, info) {
+    info = info || {};
+    var u = info.unit || 1, at;
+    if (typeof when === 'number') at = when;
+    else {
+      var m = /^(\d{1,2}):(\d{2})/.exec(String(when || ''));
+      if (!m || +m[1] > 23 || +m[2] > 59) return null;
+      var d = new Date(now);
+      d.setHours(+m[1], +m[2], 0, 0);
+      if (d.getTime() <= now + 30000) d.setDate(d.getDate() + 1);
+      at = d.getTime();
+    }
+    var raw = Math.max(0, (at - now) / 1000 / u);
+    var step = info.step > 0 ? info.step : 1;
+    var lo = info.min != null ? info.min : 0, hi = info.max != null ? info.max : Infinity;
+    var v = lo + Math.round((raw - lo) / step) * step, clamp = null;
+    if (v > hi) { v = lo + Math.floor((hi - lo) / step) * step; clamp = 'max'; }
+    if (v < lo) { v = lo; clamp = 'min'; }
+    v = Math.round(v * 1e6) / 1e6;
+    // The start shown: the chosen time when the step only moved it by seconds (now is rarely on the full minute).
+    var real = now + Math.round(v * u) * 1000;
+    return { value: v, secs: Math.round(v * u), at: !clamp && Math.abs(real - at) < 60000 ? at : real, clamp: clamp };
+  };
+
+  // Chosen start time still valid: in the future and the number still holds what was set for it (a tap on
+  // „Sofort“/„2 Std.“ replaces it; right after setting, the appliance may not have reported back yet).
+  D.target = function (c, states) {
+    var t = D._at[c.st];
+    if (!t) return null;
+    var info = D.numInfo(states, c.startIn);
+    if (!info || t.at <= Date.now() || (info.value !== t.value && Date.now() - t.set > 4000)) { delete D._at[c.st]; return null; }
+    return t;
+  };
+  D.atText = function (at, clamp) {
+    return (nextDay(at) ? 'Startet morgen um ' : 'Startet um ') + U.clock(new Date(at)) + ' Uhr'
+      + (clamp === 'max' ? ' · Später nicht möglich' : clamp === 'min' ? ' · Früher nicht möglich' : '');
+  };
+
+  // Time input changed: set the delay number now (debounced: typing a time fires several changes).
+  D.onTime = function (el) {
+    var id = el && el.getAttribute('data-dw-time');
+    clearTimeout(D._tT);
+    D._tT = setTimeout(function () {
+      var h = hassNow(), c = id && D._c[id];
+      if (!h || !c) return;
+      var info = D.numInfo(h.states, c.startIn);
+      var r = info && D.delayFor(el.value, Date.now(), info);
+      var note = el.getRootNode && el.getRootNode().querySelector('[data-dw-note]');
+      if (!r) { delete D._at[id]; return; }
+      D._at[id] = { at: r.at, value: r.value, set: Date.now(), clamp: r.clamp };
+      if (note) note.textContent = window.casoraTr ? window.casoraTr(D.atText(r.at, r.clamp)) : D.atText(r.at, r.clamp);
+      Promise.resolve(h.callService('number', 'set_value', { value: r.value }, { entity_id: c.startIn })).catch(function () {});
+    }, 700);
+  };
+
+  // How this appliance starts: its start button; Home Connect in HA core the action (with the delay), else
+  // choosing the program in the active_program select. secs: delay for the action. null = cannot start remotely.
+  D.startSvc = function (c, states, secs) {
+    if (c.start && states[c.start] && states[c.start].state !== 'unavailable') {
+      return { domain: 'button', service: 'press', target: { entity_id: c.start }, dish: c.st };
+    }
+    var sel = U.str(states, c.sel);
+    if (c.hcStart && c.device) {
+      var data = { device_id: c.device };
+      if (secs > 0) data.b_s_h_common_option_start_in_relative = secs;
+      return { domain: 'home_connect', service: 'start_selected_program', data: data, dish: c.st };
+    }
+    var ap = c.program && /^select\./.test(c.program) && states[c.program];
+    if (ap && ap.state !== 'unavailable' && sel && ((ap.attributes || {}).options || []).indexOf(sel) > -1) {
+      return { domain: 'select', service: 'select_option', data: { option: sel }, target: { entity_id: c.program }, dish: c.st };
+    }
+    return null;
+  };
+
+  // Confirmed start with a chosen clock time: the delay is counted again from now (the popup may have been
+  // open for a while). Returns true when it started; false = the row's own service call goes ahead.
+  D.go = function (spec) {
+    var h = hassNow(), id = spec && spec.dish, c = id && D._c[id];
+    var t = c && h && D.target(c, h.states);
+    if (!t) return false;
+    var r = D.delayFor(t.at, Date.now(), D.numInfo(h.states, c.startIn));
+    var call = function (d, s, data, target) { return Promise.resolve(h.callService(d, s, data || {}, target)); };
+    if (spec.domain === 'home_connect') {
+      var data = Object.assign({}, spec.data);
+      if (r.secs > 0) data.b_s_h_common_option_start_in_relative = r.secs;
+      else delete data.b_s_h_common_option_start_in_relative;
+      call('home_connect', spec.service, data).catch(function () {});
+    } else {
+      call('number', 'set_value', { value: r.value }, { entity_id: c.startIn })
+        .then(function () { return call(spec.domain, spec.service, spec.data, spec.target); }).catch(function () {});
+    }
+    delete D._at[id];
+    return true;
+  };
+  // Runs before casora-core's tap handler (capture on window): the „Starten“ confirm of a dishwasher start row.
+  if (!window._casoraDishGoBound) {
+    window._casoraDishGoBound = true;
+    var tp0 = null;
+    window.addEventListener('touchstart', function (ev) {
+      var t = ev.touches && ev.touches[0];
+      tp0 = t ? { x: t.clientX, y: t.clientY } : null;
+    }, { capture: true, passive: true });
+    var goTap = function (ev) {
+      var path = (ev.composedPath && ev.composedPath()) || [ev.target], el = null;
+      for (var i = 0; i < path.length && !el; i++) {
+        var t = path[i];
+        if (t && t.classList && t.classList.contains('hui-cf') && t.dataset && /"dish"/.test(t.dataset.casoraCf || '')) el = t;
+      }
+      if (!el) return;
+      if (ev.type === 'touchend') {
+        var e0 = ev.changedTouches && ev.changedTouches[0];
+        if (tp0 && e0 && (Math.abs(e0.clientX - tp0.x) > 10 || Math.abs(e0.clientY - tp0.y) > 10)) return;
+      }
+      var spec = null;
+      try { spec = JSON.parse(el.dataset.casoraCf); } catch (e) { return; }
+      if (Date.now() - (window._casoraUILastTap || 0) < 400) {
+        if (D._goAt && Date.now() - D._goAt < 400) { ev.stopImmediatePropagation(); if (ev.cancelable) ev.preventDefault(); }
+        return;
+      }
+      if (!D.go(spec)) return;
+      D._goAt = window._casoraUILastTap = Date.now();
+      if (window.casoraHaptic) window.casoraHaptic('success');
+      var row = el.closest ? el.closest('.hui-row') : null;
+      if (row) row.classList.remove('armed');
+      ev.stopImmediatePropagation();
+      if (ev.cancelable) ev.preventDefault();
+    };
+    window.addEventListener('touchend', goTap, true);
+    window.addEventListener('click', goTap, true);
+  }
+
+  // Program choice: one row with the chosen program that opens the list (like „Mehr“: casora-core toggles
+  // .hui-more via data-casora-more-tg, the state survives redraws while the popup is open). Choosing closes it.
+  // Up to three programs stay a plain list.
+  D._picked = {};
+  D.progPick = function (c, states) {
+    var UI = window._casoraUI, sel = c.sel && states[c.sel];
+    if (!UI || !sel) return '';
+    var opts = (sel.attributes || {}).options || [];
+    var cur = sel.state, has = opts.indexOf(cur) > -1;
+    var rows = opts.map(function (o) {
+      var on = cur === o;
+      return { icon: progIcon(o), iconTone: on ? 'accent' : DIM, label: progName(o, sel),
+        svc: on ? null : { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.sel } } };
+    });
+    var pickSel = window._casoraHH ? window._casoraHH.sel : String;
+    if (opts.length <= 3) return pickSel(window._casoraSelRows(UI.group(rows, 'Programm'), progName(cur, sel)));
+    var listHtml = pickSel(window._casoraSelRows(UI.group(rows, null), progName(cur, sel)));
+    var id = 'dish-prog:' + c.sel;
+    var reg = window._casoraMoreOpen || (window._casoraMoreOpen = {});
+    if (D._picked[id] !== undefined && D._picked[id] !== cur) reg[id] = false;
+    D._picked[id] = cur;
+    var open = !!reg[id];
+    var headHtml = UI.group([{ icon: has ? progIcon(cur) : 'mdi:dishwasher', iconTone: has ? 'accent' : DIM,
+      label: has ? progName(cur, sel) : 'Programm wählen', sub: has ? opts.length + ' Programme' : null, tappable: true }], 'Programm')
+      .replace('<div class="hui-row', '<div data-casora-more-tg="" data-casora-nodismiss="" role="button" aria-expanded="'
+        + (open ? 'true' : 'false') + '" class="hui-row');
+    return '<style>.dw-pick{text-align:left;}.dw-pick>.dw-pbd{display:none;padding-top:8px;}.dw-pick.open>.dw-pbd{display:block;}'
+      + '.dw-pick>.dw-phd .hui-chev{transform:rotate(90deg);transition:transform .25s cubic-bezier(.36,0,.16,1);}'
+      + '.dw-pick.open>.dw-phd .hui-chev{transform:rotate(-90deg);}'
+      + '@media (prefers-reduced-motion:reduce){.dw-pick>.dw-phd .hui-chev{transition:none;}}</style>'
+      + '<div class="hui-more dw-pick' + (open ? ' open' : '') + '" data-casora-more="' + U.esc(id) + '">'
+      + '<div class="dw-phd">' + headHtml + '</div><div class="dw-pbd">' + listHtml + '</div></div>';
+  };
+
+  // „Start“: start row first (level with the program row), then the start time: quick choices in hours and a
+  // clock time; the row below says when the appliance starts.
+  D.startPart = function (c, states) {
+    var UI = window._casoraUI;
+    if (!UI) return '';
+    D._c[c.st] = c;
+    var H = window._casoraHH, SF = !!(H && H.on());
+    var info = D.numInfo(states, c.startIn);
+    var t = info ? D.target(c, states) : null;
+    var delay = t ? Math.max(0, Math.round((t.at - Date.now()) / 1000)) : (info ? info.secs : 0);
+    var out = '';
+    var go = D.startSvc(c, states, delay);
+    if (go) {
+      var remote = c.remote && states[c.remote] ? states[c.remote].state : null;
+      var rStart = c.remoteStart && states[c.remoteStart] ? states[c.remoteStart].state : null;
+      var why = remote === 'monitoring' || rStart === 'off' ? 'Fernstart am Gerät nicht erlaubt' : isOpen(states, c.door) ? 'Tür ist offen' : null;
+      var sp = progName(U.str(states, c.sel), states[c.sel]);
+      var lbl = t ? (nextDay(t.at) ? 'Morgen um ' : 'Um ') + U.clock(new Date(t.at)) + ' starten' : delay ? 'Zeitversetzt starten' : 'Jetzt starten';
+      out += UI.group([{ icon: 'mdi:play', iconTone: why ? DIM : 'good', label: lbl,
+        sub: why || [sp, !t && delay ? 'startet in ' + U.dur(delay / 60) : null].filter(Boolean).join(' · ') || null,
+        svc: why ? null : go, confirm: why ? null : 'Starten' }], 'Start');
+    }
+    if (info) {
+      var u = info.unit;
+      var set = function (h) { return { domain: 'number', service: 'set_value', data: { value: h * 3600 / u }, target: { entity_id: c.startIn } }; };
+      /* Like the vacuum's „Reinigungsmodus“ (25.09.): buttons in a card instead of loose in the air. Only hours the
+         appliance accepts (max of the number). */
+      var segHtml = UI.segments([0, 1, 2, 3, 4, 6].filter(function (h) { return info.max == null || h * 3600 / u <= info.max; }).map(function (h) {
+        return { label: h ? h + ' Std.' : 'Sofort', active: !t && Math.round(info.secs / 3600) === h && (h || !info.secs), svc: set(h) };
+      }));
+      var gapHtml = out ? '<div style="height:18px"></div>' : '';
+      if (SF) out += gapHtml + H.label('Startzeit') + H.dense(segHtml);
+      else out += gapHtml
+        + '<div style="font-family:var(--primary-font-family, system-ui);font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);'
+        + 'color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, #fff));text-align:left;padding:0 4px 8px;">Startzeit</div>'
+        + '<style>.hd-card .hui-seg{justify-content:flex-start;}</style>'
+        + '<div class="hd-card" style="background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
+        + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);'
+        + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);padding:14px;">'
+        + segHtml + '</div>';
+      /* Clock time (issue #77): the appliance takes seconds, people think in „22:30“. */
+      var at = t ? t.at : (info.secs > 0 ? Date.now() + info.secs * 1000 : null);
+      var note = at ? D.atText(at, t ? t.clamp : null) : null;
+      var mark = '⁣dw-time⁣';
+      var inputHtml = '<input type="time" step="60" class="dw-time-in" data-dw-time="' + U.esc(c.st) + '" value="' + U.esc(at ? hhmm(at) : '') + '"'
+        + ' aria-label="Uhrzeit" onchange="window._casoraDish&&window._casoraDish.onTime(this)"'
+        + ' ontouchstart="event.stopPropagation();" ontouchend="event.stopPropagation();" onclick="event.stopPropagation();"'
+        + ' onkeydown="event.stopPropagation();" onkeyup="event.stopPropagation();" onkeypress="event.stopPropagation();">';
+      var rowHtml = UI.group([{ icon: 'mdi:clock-outline', iconTone: at ? 'accent' : DIM, label: 'Uhrzeit', sub: note || 'Sofort', value: mark }], null)
+        .replace(U.esc(mark), inputHtml);
+      // The note can change before the redraw (time chosen, appliance not reported yet): D.onTime writes into it.
+      rowHtml = rowHtml.replace(/<div class="hui-sub"/, '<div data-dw-note="" class="hui-sub"');
+      out += '<div style="height:8px"></div>'
+        + '<style>.dw-time .hui-end{pointer-events:auto!important;}'
+        + '.dw-time-in{pointer-events:auto;min-height:40px;box-sizing:border-box;padding:0 12px;border:none;outline:none;border-radius:999px;'
+        + 'font:600 15px/1 var(--primary-font-family, system-ui);font-variant-numeric:tabular-nums;'
+        + 'color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));'
+        + 'background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));color-scheme:light dark;-webkit-appearance:none;appearance:none;}'
+        + '.dw-time-in:focus-visible{box-shadow:0 0 0 2px var(--casora-popup-ui-accent, #276B64);}</style>'
+        + '<div class="dw-time">' + rowHtml + '</div>';
+    }
+    return out;
   };
 
   D.inner = function (kind, c, states) {
@@ -2314,54 +2597,12 @@
 
     if (kind === 'd_prog' || kind === 'd_start') {
       if (active) return '';
-      var out = '';
-      /* Round 2 (column balance): in the Soft layout the program list stands alone on the left, start time
-         and start come as their own block "d_start" into the right, otherwise almost empty column. */
-      var splitStart = !!(window._casoraHH && window._casoraHH.on());
-      var sel = (kind === 'd_start') ? null : c.sel && states[c.sel];
-      if (kind === 'd_prog' && splitStart) {
-        if (!sel) return '';
-        return (window._casoraHH ? window._casoraHH.sel : String)(window._casoraSelRows(UI.group(((sel.attributes || {}).options || []).map(function (o) {
-          var on = sel.state === o;
-          return { icon: progIcon(o), iconTone: on ? 'accent' : DIM, label: progName(o, sel),
-            svc: on ? null : { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.sel } } };
-        }), 'Programm'), progName(sel.state, sel)));
-      }
-      if (sel) {
-        out += (window._casoraHH ? window._casoraHH.sel : String)(window._casoraSelRows(UI.group(((sel.attributes || {}).options || []).map(function (o) {
-          var on = sel.state === o;
-          return { icon: progIcon(o), iconTone: on ? 'accent' : DIM, label: progName(o, sel),
-            svc: on ? null : { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.sel } } };
-        }), 'Programm'), progName(sel.state, sel)));
-      }
-      var remote = c.remote && states[c.remote] ? states[c.remote].state : null;
-      var startOk = c.start && states[c.start] && states[c.start].state !== 'unavailable';
-      var delay = U.num(states, c.startIn) || 0;
-      if (c.startIn && states[c.startIn]) {
-        var set = function (h) { return { domain: 'number', service: 'set_value', data: { value: h * 3600 }, target: { entity_id: c.startIn } }; };
-        /* Like the vacuum's „Reinigungsmodus“ (25.09.): buttons in a card instead of loose in the air. */
-        var segS = UI.segments([0, 1, 2, 3, 4, 6].map(function (h) {
-          return { label: h ? h + ' Std.' : 'Sofort', active: Math.round(delay / 3600) === h, svc: set(h) };
-        }));
-        /* Soft: label + segments free, without an own card (like light colour in the light popup). */
-        if (window._casoraHH && window._casoraHH.on()) out += (out ? '<div style="height:18px"></div>' : '') + window._casoraHH.label('Startzeit') + window._casoraHH.dense(segS);
-        else out += '<div style="height:18px"></div>'
-          + '<div style="font-family:var(--primary-font-family, system-ui);font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);'
-          + 'color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, #fff));text-align:left;padding:0 4px 8px;">Startzeit</div>'
-          + '<style>.hd-card .hui-seg{justify-content:flex-start;}</style>'
-          + '<div class="hd-card" style="background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
-          + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);'
-          + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);padding:14px;">'
-          + segS + '</div>';
-      }
-      if (startOk) {
-        var why = remote === 'monitoring' ? 'Fernstart am Gerät nicht erlaubt' : doorOpen ? 'Tür ist offen' : null;
-        var sp = progName(U.str(states, c.sel), states[c.sel]);
-        out += (out ? '<div style="height:18px"></div>' : '') + UI.group([{ icon: 'mdi:play', iconTone: why ? DIM : 'good', label: delay ? 'Zeitversetzt starten' : 'Jetzt starten',
-          sub: why || [sp, delay ? 'startet in ' + U.dur(delay / 60) : null].filter(Boolean).join(' · '),
-          svc: why ? null : { domain: 'button', service: 'press', target: { entity_id: c.start } }, confirm: why ? null : 'Starten' }], null);
-      }
-      return out;
+      /* Soft: the program choice stands alone on the left, „Start“ (start row level with the program row,
+         start time below) is its own block „d_start“ on the right (issue #77). Standard: both on the left. */
+      var progHtml = kind === 'd_prog' ? D.progPick(c, states) : '';
+      if (kind === 'd_prog' && SF) return progHtml;
+      var startHtml = D.startPart(c, states);
+      return [progHtml, startHtml].filter(Boolean).join('<div style="height:18px"></div>');
     }
 
     if (kind === 'd_opts') {
@@ -2381,12 +2622,13 @@
 
     if (kind === 'd_care') {
       var rc = [];
-      [[c.salt, 'Regeneriersalz', 'mdi:shaker-outline'], [c.rinse, 'Klarspüler', 'mdi:water-opacity']].forEach(function (x) {
-        var v = x[0] && states[x[0]] && LEVEL[states[x[0]].state];
+      [[D.fill(states, c.salt, c.saltLow, c.saltLack), 'Regeneriersalz', 'mdi:shaker-outline'],
+       [D.fill(states, c.rinse, c.rinseLow, c.rinseLack), 'Klarspüler', 'mdi:water-opacity']].forEach(function (x) {
+        var v = x[0] && LEVEL[x[0]];
         if (v) rc.push({ icon: x[2], iconTone: v[1] || 'good', label: x[1], sub: v[1] ? 'Bitte nachfüllen' : null,
           value: v[0], valueTone: v[1], bar: v[2], barTone: v[1] || 'good' });
       });
-      var onB = function (e) { return e && states[e] && states[e].state === 'on'; };
+      var onB = function (e) { return onEv(states, e); };
       if (c.smartFilter || c.filterCheck) {
         var fdue = onB(c.smartFilter) || onB(c.filterCheck);
         rc.push({ icon: 'mdi:air-filter', iconTone: fdue ? 'warn' : 'good', label: 'Filter', sub: fdue ? 'Herausnehmen und ausspülen' : null,
@@ -2394,7 +2636,7 @@
       }
       var cr = U.num(states, c.care);
       var mdue = onB(c.machineCare) || onB(c.machineFilter) || cr === 0;
-      if (cr != null || c.machineCare) rc.push({ icon: 'mdi:spray-bottle', iconTone: mdue ? 'warn' : 'good', label: 'Maschinenpflege',
+      if (cr != null || c.machineCare || c.machineFilter) rc.push({ icon: 'mdi:spray-bottle', iconTone: mdue ? 'warn' : 'good', label: 'Maschinenpflege',
         sub: mdue ? 'Programm „Maschinenpflege“ mit Reiniger starten' : (cr != null ? 'In ' + Math.round(cr) + ' Durchgängen' : null),
         value: mdue ? 'Fällig' : null, valueTone: mdue ? 'warn' : null });
       /* Soft 1.1.2: on desktop/tablet the full list with fill levels (carries the right column);
@@ -2440,6 +2682,8 @@
       if (c.light && states[c.light] && states[c.light].state !== 'unavailable') { var li = states[c.light].state === 'on';
         rd.push({ icon: 'mdi:led-on', iconTone: li ? 'accent' : DIM, label: 'Info-Licht am Boden', value: li ? 'An' : 'Aus',
           svc: { domain: 'switch', service: li ? 'turn_off' : 'turn_on', target: { entity_id: c.light } } }); }
+      /* Like the other device popups: manufacturer, model, integration and the device's other entities (issue #77). */
+      if (c.st && states[c.st]) rd.push({ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', entity: c.st });
       return rd.length ? UI.group(rd, 'Gerät') : '';
     }
     return '';
@@ -2524,17 +2768,19 @@
     if (window._casoraHH && window._casoraHH.on() && window._casoraHH.layout) {
       var HH = window._casoraHH;
       var f2 = { hero: fields.hero, run: fields.run, prog: fields.prog, start: fields.start, alerts: fields.alerts, care: fields.care };
+      /* Issue #77: before the start the options belong to the chosen program – under it on the left, not in „Mehr“. */
+      if (!active) f2.opts = fields.opts;
       /* 1.1.2 (direction A): bar under the head (only added while running – empty it costs a
          grid gap on top), cancel pill at the end of the left column. */
       if (active) f2.pbar = tpl('d_pbar', false);
       f2.abort = tpl('d_abort', false);
       /* While running „Verlauf“ sits on the left under the cycle (column balance against the care list). */
       if (active) f2.stats = fields.stats;
-      var moreD = ['d_opts', 'energy'].concat(active ? [] : ['d_stats']).concat(['d_device', 'plug']);
+      var moreD = (active ? ['d_opts', 'energy'] : ['energy', 'd_stats']).concat(['d_device', 'plug']);
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("dish", ' + JSON.stringify(moreD) + '.map(function (k) {'
         + ' return (k === "energy" || k === "d_stats") ? L.slot(k, c, states) : L.inner(k, c, states); })) : "";', c.st);
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: ['run', 'stats', 'prog', 'abort'], right: ['start', 'alerts', 'care', 'more'] });
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: ['run', 'stats', 'prog', 'opts', 'abort'], right: ['start', 'alerts', 'care', 'more'] });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
@@ -2699,7 +2945,7 @@
     if (!V.entity_state && F.stage) st = F.stage;
     return {
       st: st, print: true, name: V.printer_name || devName(hass, anchor) || '3D-Drucker', entry: null, dryer: false,
-      price: window.casoraPriceKwh ? window.casoraPriceKwh(V.price_kwh) : null, color: V.chart_color || '#00C3D0',
+      price: window.casoraPriceKwh ? window.casoraPriceKwh() : null, color: V.chart_color || '#00C3D0',
       status: f('_', 'status'),
       progress: f('entity_progress', 'progress'),
       remaining: f('_', 'remaining'),
@@ -2968,6 +3214,8 @@
       var spd = U.str(states, c.speed);
       if (spd && !active) ri.push({ icon: 'mdi:speedometer', iconTone: DIM, label: 'Geschwindigkeit', value: SPEED[spd] || spd });
       if (c.fw && states[c.fw] && !(window._casoraHH && window._casoraHH.on())) ri.push({ icon: 'mdi:chip', iconTone: DIM, label: 'Firmware', value: (states[c.fw].attributes || {}).installed_version || '—' });
+      /* Like the other device popups: device data through Casora's device page (issue #77). */
+      if (c.st && states[c.st]) ri.push({ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', entity: c.st });
       return ri.length ? UI.group(ri, 'Drucker') : '';
     }
     return '';
@@ -3330,7 +3578,7 @@
     var plug = ex(VV.plug_entity);
     var c = {
       st: id, vac: true, name: VV.robot_name || 'Saugroboter', entry: null, dryer: false,
-      price: window.casoraPriceKwh ? window.casoraPriceKwh(VV.price_kwh) : null, color: VV.chart_color || '#00C3D0',
+      price: window.casoraPriceKwh ? window.casoraPriceKwh() : null, color: VV.chart_color || '#00C3D0',
       status: VV.entity_status || null, room: VV.entity_room || null, progress: VV.entity_progress || null,
       area: VV.entity_area || null, battery: VV.entity_battery || null, charging: null, time: null,
       map: VV.entity_map || null, dnd: VV.entity_dnd || null, dndStart: null, dndEnd: null,

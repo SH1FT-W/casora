@@ -2491,7 +2491,14 @@
   "Diagramme": "Charts",
   "Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.": "The group no longer exists. Choose another one in the Studio.",
   "Wähle im Studio eine Gruppe, Geräte oder ein Label.": "Choose a group, devices or a label in the Studio.",
-  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Choose groups and sensors for this tile in the Studio."
+  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Choose groups and sensors for this tile in the Studio.",
+  "Start": "Start",
+  "Hygiene+": "Hygiene+",
+  "Intensivzone": "Intensive zone",
+  "Ausreichend": "Sufficient",
+  "Später nicht möglich": "Not possible later",
+  "Früher nicht möglich": "Not possible earlier",
+  "Programm wählen": "Choose program"
  },
  "patterns": [
   [
@@ -2623,18 +2630,6 @@
    "for {1} days"
   ],
   [
-   "^seit (\\d+) Tag$",
-   "for {1} day"
-  ],
-  [
-   "^Antwortet (seit .+) nicht$",
-   "Not responding {1}"
-  ],
-  [
-   "^Still (seit .+)$",
-   "Silent {1}"
-  ],
-  [
    "^zuletzt gemeldet gestern (.+)$",
    "last reported yesterday {1}"
   ],
@@ -2725,6 +2720,26 @@
   [
    "^startet in (.+)$",
    "starts in {1}"
+  ],
+  [
+   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Starts at {1}"
+  ],
+  [
+   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Starts tomorrow at {1}"
+  ],
+  [
+   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Start at {1}"
+  ],
+  [
+   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Start tomorrow at {1}"
+  ],
+  [
+   "^(\\d+) Programme$",
+   "{1} programs"
   ],
   [
    "^trocken in etwa (\\d+) Tagen?$",
@@ -4513,18 +4528,6 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} from {2}"
-  ],
-  [
-   "^(\\d+) Einstellungen$",
-   "{1} settings"
-  ],
-  [
-   "^(\\d+) Listen$",
-   "{1} lists"
-  ],
-  [
-   "^(\\d+) Diagramme$",
-   "{1} charts"
   ]
  ]
 }

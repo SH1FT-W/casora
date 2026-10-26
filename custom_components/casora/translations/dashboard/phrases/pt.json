@@ -2509,7 +2509,14 @@
   "Diagramme": "Gráficos",
   "Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.": "O grupo já não existe. Escolhe outro no Studio.",
   "Wähle im Studio eine Gruppe, Geräte oder ein Label.": "Escolhe no Studio um grupo, dispositivos ou uma etiqueta.",
-  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Escolhe no Studio grupos e sensores para este cartão."
+  "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Escolhe no Studio grupos e sensores para este cartão.",
+  "Start": "Início",
+  "Hygiene+": "Higiene+",
+  "Intensivzone": "Zona intensiva",
+  "Ausreichend": "Suficiente",
+  "Später nicht möglich": "Não é possível mais tarde",
+  "Früher nicht möglich": "Não é possível mais cedo",
+  "Programm wählen": "Escolhe um programa"
  },
  "patterns": [
   [
@@ -2641,18 +2648,6 @@
    "há {1} dias"
   ],
   [
-   "^seit (\\d+) Tag$",
-   "há {1} dia"
-  ],
-  [
-   "^Antwortet (seit .+) nicht$",
-   "Não responde {1}"
-  ],
-  [
-   "^Still (seit .+)$",
-   "Em silêncio {1}"
-  ],
-  [
    "^zuletzt gemeldet gestern (.+)$",
    "última comunicação ontem {1}"
   ],
@@ -2743,6 +2738,26 @@
   [
    "^startet in (.+)$",
    "começa em {1}"
+  ],
+  [
+   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Começa às {1}"
+  ],
+  [
+   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Começa amanhã às {1}"
+  ],
+  [
+   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Iniciar às {1}"
+  ],
+  [
+   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Iniciar amanhã às {1}"
+  ],
+  [
+   "^(\\d+) Programme$",
+   "{1} programas"
   ],
   [
    "^trocken in etwa (\\d+) Tagen?$",
@@ -4531,18 +4546,6 @@
   [
    "^(.+) ab (\\d{1,2}:\\d\\d)$",
    "{1} a partir das {2}"
-  ],
-  [
-   "^(\\d+) Einstellungen$",
-   "{1} definições"
-  ],
-  [
-   "^(\\d+) Listen$",
-   "{1} listas"
-  ],
-  [
-   "^(\\d+) Diagramme$",
-   "{1} gráficos"
   ]
  ]
 }
