@@ -106,12 +106,10 @@
    "#f80",
    "#f8f5ef",
    "#fa0",
-   "#fa2d48",
    "#fade",
    "#faf6f0",
    "#fbf8f3",
    "#fefcf7",
-   "#ff2d55",
    "#ff375f",
    "#ff3b30",
    "#ff4245",
@@ -153,7 +151,6 @@
    "26px",
    "28px",
    "30px",
-   "34px",
    "42px",
    "99px",
    "999px",
@@ -186,7 +183,7 @@
    "cubic-bezier(.4,0,.7,1)",
    "cubic-bezier(.4,0,1,1)"
   ],
-  "halbpx": 94,
+  "halbpx": 93,
   "schatten": 69
  },
  "studio": {
@@ -354,6 +351,6 @@
    "cubic-bezier(.62,.03,.36,1)"
   ],
   "halbpx": 5,
-  "schatten": 100
+  "schatten": 97
  }
 }

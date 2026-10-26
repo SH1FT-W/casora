@@ -31,8 +31,14 @@ for (const n of ['casora_media', 'casora_now_playing_chip', 'casora_now_playing_
   assert.ok(/UI\.settings \? UI\.settings\(id, rows/.test(c), n + ': Einstellungen via UI.settings');
 }
 
+// Apple Music row: monochrome like the iOS 27.2 icon (glyph in the text colour on the page colour), no red.
+for (const n of ['casora_media', 'casora_now_playing_chip', 'casora_now_playing_primary']) {
+  const c = T[n].tap_action.casora_popup.content;
+  assert.ok(c.includes("icon: 'mdi:music', iconTone: 'mono'") && !/#FA2D48/i.test(c), n + ': Apple Music row not monochrome');
+}
 // Core: a media player counts as on in every state but off/standby.
 const core = rd('custom_components/casora/scripts/casora-core.js');
+assert.ok(/if \(t === 'mono' && String\(name\)\.indexOf\(':'\) !== -1\) return monoIcon\(name\);/.test(core) && !/#fa2d48/i.test(core), 'core: mono icon tone');
 assert.ok(/media_player\\\.\/\.test\(x\) && !\/\^\(off\|standby\|unavailable\|unknown\)\$\/\.test/.test(core), 'head switch: media on-state');
 
 // Generic entity popup: one column (552) unless buttons and values sit side by side (900).

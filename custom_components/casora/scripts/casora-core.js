@@ -8970,8 +8970,24 @@ window.casoraMenuGlass = {
     return T.accent;
   }
 
+  // Monochrome brand tile (Apple Music since iOS 27.2): glyph in the primary text colour on the page's
+  // background colour – black on white in light, white on black in dark, in every theme.
+  var MONO_BG = 'var(--casora-popup-ui-mono-tile, var(--primary-background-color, var(--card-background-color, transparent)))';
+  function monoIcon(name) {
+    var sz = soft() ? 'var(--casora-soft-icon-size, 38px)' : 'var(--casora-popup-icon-tile, 29px)';
+    var g = soft() ? '.5' : '.62';
+    var tile = 'width:' + sz + ';height:' + sz + ';border-radius:' + (soft() ? 'var(--casora-soft-icon-radius, 50%)' : '7px') + ';background:' + MONO_BG + ';flex:none;'
+      + 'box-shadow:inset 0 0 0 1px color-mix(in srgb, ' + T.ink + ' 14%, transparent);'
+      + 'display:flex;align-items:center;justify-content:center;line-height:0;pointer-events:none;';
+    var gs = 'calc(' + sz + ' * ' + g + ')';
+    var glyph = '--mdc-icon-size:' + gs + ';width:' + gs + ';height:' + gs + ';color:' + T.ink + ';display:flex;'
+      + 'align-items:center;justify-content:center;line-height:0;';
+    return '<div style="' + esc(tile) + '"><ha-icon icon="' + esc(name) + '" style="' + esc(glyph) + '"></ha-icon></div>';
+  }
+
   function icon(name, t) {
     if (!name) return '';
+    if (t === 'mono' && String(name).indexOf(':') !== -1) return monoIcon(name);
     var literal = (typeof t === 'string' && /^(var\(|#|rgb|hsl)/.test(t)) ? t : null;
     var fill = tone(t) || literal || hueFor(name);
     // Gedimmte bzw. leere Kachel: Themes können Fläche und Glyphe tauschen (helles Weich).
@@ -9017,7 +9033,7 @@ window.casoraMenuGlass = {
     '#ffd60a': '#E8B04A', '#ffcc00': '#E8B04A', '#ffd600': '#E8B04A',
     '#ff9230': '#DE8A4E', '#ff4245': '#D35A4E',
     '#bf5af2': '#4E9E95', '#af52de': '#4E9E95', '#9333ea': '#4E9E95', '#5e5ce6': '#4E9E95', '#00c3d0': '#4E9E95',
-    '#ff453a': '#D35A4E', '#ff3b30': '#D35A4E', '#fa2d48': '#FA2D48', '#ff375f': '#5B8FC9',
+    '#ff453a': '#D35A4E', '#ff3b30': '#D35A4E', '#ff375f': '#5B8FC9',
   };
   // Kaltes iOS-Grau → Grau des Looks (--casora-soft-grey-mark: Weich warm, Nebel kühl). Als
   // fertiger Farbwert (für SVG-Attribute und Canvas, die kein var() kennen).
