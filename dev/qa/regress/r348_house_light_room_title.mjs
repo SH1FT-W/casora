@@ -33,6 +33,11 @@ const room = C.find((c) => c.a === 'toggle');
 await page.mouse.click(room.x, room.y); await page.waitForTimeout(700);
 const t1 = await title();
 await check('#73: Raum gewählt → Raumname in der Überschrift', t1 === room.name, { t1, room: room.name });
+// A light switched while a room is chosen re-draws the header: the room's name must stay (26.10.2026).
+await page.evaluate(() => { const h = document.querySelector('home-assistant').hass; const id = Object.keys(h.states).find((e) => e.startsWith('light.') && h.states[e].state !== 'unavailable'); if (id) h.callService('light', 'toggle', { entity_id: id }); });
+await page.waitForTimeout(1500);
+const t1b = await title();
+await check('#73: nach Schalten eines Lichts bleibt der Raumname', t1b === room.name, { t1b, room: room.name });
 const allChip = C.find((c) => c.a === 'all');
 await page.mouse.click(allChip.x, allChip.y); await page.waitForTimeout(700);
 await check('„Alle“ → wieder „Beleuchtung“', (await title()) === 'Beleuchtung', await title());
