@@ -2668,7 +2668,12 @@
     "Hold, font, tile size and new dashboards": "Mantener, fuente, tamaño de mosaico y paneles nuevos",
     "Hold, font, tile size": "Mantener, fuente, tamaño de mosaico",
     "No match – try one of the topics below.": "Sin resultados – prueba con uno de los temas de abajo.",
-    "Bell, notifications, push and Live‑Activities": "Campana, avisos, push y actividades en vivo"
+    "Bell, notifications, push and Live‑Activities": "Campana, avisos, push y actividades en vivo",
+    "Security: covers": "Seguridad: persianas",
+    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Las persianas elegidas que no estén del todo cerradas aparecen en Inicio, en la fila de seguridad, como «Persianas» y cuentan como no seguras. Sin selección no cambia nada.",
+    "Evening and night only": "Solo por la tarde y la noche",
+    "From sunset to sunrise": "Del atardecer al amanecer",
+    "No covers found": "No se encontraron persianas"
   },
   "patterns": [
     [

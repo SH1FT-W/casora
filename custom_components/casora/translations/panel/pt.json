@@ -2668,7 +2668,12 @@
     "Hold, font, tile size and new dashboards": "Manter premido, letra, tamanho dos mosaicos e novos painéis",
     "Hold, font, tile size": "Manter premido, letra, tamanho dos mosaicos",
     "No match – try one of the topics below.": "Sem resultados – experimente um dos temas abaixo.",
-    "Bell, notifications, push and Live‑Activities": "Sino, avisos, push e atividades em direto"
+    "Bell, notifications, push and Live‑Activities": "Sino, avisos, push e atividades em direto",
+    "Security: covers": "Segurança: estores",
+    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Os estores escolhidos que não estejam totalmente fechados aparecem no Início, na linha de segurança, como «Estores» e contam como não seguros. Sem seleção, nada muda.",
+    "Evening and night only": "Só ao fim do dia e à noite",
+    "From sunset to sunrise": "Do pôr do sol ao nascer do sol",
+    "No covers found": "Nenhum estore encontrado"
   },
   "patterns": [
     [

@@ -2492,7 +2492,14 @@
   "Stream": "Flusso",
   "Stream nicht erreichbar · Standard": "Flusso non raggiungibile · Standard",
   "Wind": "Vento",
-  "Benachrichtigung": "Notifica"
+  "Benachrichtigung": "Notifica",
+  "Rollos": "Tapparelle",
+  "Rollo offen": "Tapparella aperta",
+  "Alle schließen": "Chiudi tutte",
+  "Bis Sonnenaufgang": "Fino all'alba",
+  "Ab Sonnenuntergang": "Dal tramonto",
+  "Keine Rollos ausgewählt": "Nessuna tapparella scelta",
+  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Scegli le tapparelle nello Studio in Impostazioni › Casa e dispositivi › Sicurezza."
  },
  "patterns": [
   [
@@ -3678,6 +3685,10 @@
   [
    "^(\\d+) Fenster offen$",
    "{1} finestre aperte"
+  ],
+  [
+   "^(\\d+) Rollos offen$",
+   "{1} tapparelle aperte"
   ],
   [
    "^(\\d+) Fenster gekippt$",

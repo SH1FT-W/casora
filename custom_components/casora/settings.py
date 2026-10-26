@@ -1,23 +1,22 @@
-"""Persönliche Einstellungen (Studio → „Persönliches“), gespeichert in .storage/casora.settings.
+"""Settings for the whole home (Studio → Settings), stored in .storage/casora.settings.
 
-Früher /config/www/casora/einstellungen.js (window.CASORA_SETTINGS). Die Datei gilt
-weiter, solange hier nichts gespeichert ist; das Studio übernimmt sie beim ersten
-Öffnen der Seite. Abruf über den angemeldeten WebSocket – anders als /local ist das
-nicht ohne Anmeldung lesbar.
+Formerly /config/www/casora/einstellungen.js (window.CASORA_SETTINGS). The file still
+applies while nothing is stored here; the Studio takes it over the first time the page
+opens. Read over the logged-in WebSocket – unlike /local not readable without login.
 
   casora/settings/get  → {"settings": {...}, "stored": bool, "price_kwh": float|None,
                           "price_source": "option"|"energy"|None, "price_entity": str|None,
                           "energy_price_kwh": float|None, "energy_price_entity": str|None}
-                         (jeder angemeldete Nutzer; Strompreis für Kosten in Geräte-Popups: Casora-Option,
-                          sonst Netzbezug aus HAs Energie-Dashboard, bei einer Preis-Entität deren ID)
-  casora/settings/set  ← {"settings": {...}}                    (nur Admins)
-  casora/backup/dashboard ← {"name", "url_path"[, "mobile_url_path", "title"] | "data"} → {"path"}       (nur Admins)
-  casora/backup/umzug_phones ← {["sources"]} → {"backups": [{file, url_path, title, time, mobile}]}  (nur Admins, nur lesen)
-  casora/ki/merge_template ← {"name", "mine", "casora"} → {"template", "changes"}  (nur Admins)
-  casora/ki/adapt_card ← {"card", "context"} → {"card", "changes"}  (nur Admins)
-  casora/ki/models     → {"best": {...}|None, "all": [...]}      (nur Admins; model from the device registry
+                         (every logged-in user; electricity price for costs in device popups: Casora option,
+                          else grid price from HA's energy dashboard, with a price entity its ID)
+  casora/settings/set  ← {"settings": {...}}                    (admins only)
+  casora/backup/dashboard ← {"name", "url_path"[, "mobile_url_path", "title"] | "data"} → {"path"}       (admins only)
+  casora/backup/umzug_phones ← {["sources"]} → {"backups": [{file, url_path, title, time, mobile}]}  (admins only, read only)
+  casora/ki/merge_template ← {"name", "mine", "casora"} → {"template", "changes"}  (admins only)
+  casora/ki/adapt_card ← {"card", "context"} → {"card", "changes"}  (admins only)
+  casora/ki/models     → {"best": {...}|None, "all": [...]}      (admins only; model from the device registry
                          or typed by the user, never from another integration's client)
-  casora/ki/basis      ← {"rooms", "loose"} → {"rooms"}          (nur Admins)
+  casora/ki/basis      ← {"rooms", "loose"} → {"rooms"}          (admins only)
 """
 
 from __future__ import annotations
@@ -34,8 +33,8 @@ from .const import DOMAIN
 
 STORAGE_KEY = f"{DOMAIN}.settings"
 STORAGE_VERSION = 1
-# Nur diese Bereiche kennt Casora; Unbekanntes wird nicht gespeichert.
-SECTIONS = ("waste", "calendars", "notify", "scenes", "contacts", "media", "night_entity", "ebike", "umzug", "basis", "welcome", "community")
+# Only these sections are known to Casora; anything else is not stored. security: covers in security (#76).
+SECTIONS = ("waste", "calendars", "notify", "scenes", "contacts", "security", "media", "night_entity", "ebike", "umzug", "basis", "welcome", "community")
 
 
 def ai_text_language(hass: HomeAssistant) -> str:
@@ -66,7 +65,7 @@ def _num(value: Any) -> float | None:
 
 
 def entity_price(hass: HomeAssistant, entity_id: str) -> float | None:
-    """Zustand einer Preis-Entität in €/kWh (€/MWh und €/Wh werden umgerechnet)."""
+    """State of a price entity in €/kWh (€/MWh and €/Wh are converted)."""
     st = hass.states.get(entity_id)
     if st is None:
         return None
@@ -82,11 +81,11 @@ def entity_price(hass: HomeAssistant, entity_id: str) -> float | None:
 
 
 def grid_price(prefs: dict | None) -> tuple[float | None, str | None]:
-    """Erster Netzbezugs-Preis aus HAs Energie-Einstellungen: (fester Preis, Preis-Entität).
+    """First grid price from HA's energy settings: (fixed price, price entity).
 
-    Ab HA 2026.x steht der Preis direkt an der Netzquelle (type grid, entity_energy_price /
-    number_energy_price); ältere Einstellungen haben ihn je Tarif unter flow_from. Bei mehreren
-    Netzquellen oder Tarifen gilt der erste mit Preis.
+    From HA 2026.x the price sits on the grid source itself (type grid, entity_energy_price /
+    number_energy_price); older settings have it per tariff under flow_from. With several
+    grid sources or tariffs the first with a price applies.
     """
     for src in (prefs or {}).get("energy_sources") or []:
         if not isinstance(src, dict) or src.get("type") != "grid":
@@ -102,12 +101,12 @@ def grid_price(prefs: dict | None) -> tuple[float | None, str | None]:
 
 
 async def energy_price(hass: HomeAssistant) -> tuple[float | None, str | None]:
-    """Preis aus dem Energie-Dashboard (fester Wert oder aktueller Zustand der Preis-Entität)."""
+    """Price from the energy dashboard (fixed value or current state of the price entity)."""
     try:
         from homeassistant.components.energy.data import async_get_manager
 
         manager = await async_get_manager(hass)
-    except Exception:  # noqa: BLE001 – ohne Energie-Dashboard eben kein Preis
+    except Exception:  # noqa: BLE001 – without an energy dashboard simply no price
         return None, None
     num, ent = grid_price(getattr(manager, "data", None))
     if ent:
@@ -116,10 +115,10 @@ async def energy_price(hass: HomeAssistant) -> tuple[float | None, str | None]:
 
 
 async def price_info(hass: HomeAssistant) -> dict[str, Any]:
-    """Strompreis für Kosten in Geräte-Popups: Casora-Option vor HA-Energie, sonst keiner.
+    """Electricity price for costs in device popups: Casora option before HA energy, else none.
 
-    price_kwh/price_source/price_entity gelten; energy_* zeigt das Studio als Hinweis,
-    wenn das Feld leer ist.
+    price_kwh/price_source/price_entity apply; the Studio shows energy_* as a hint
+    while the field is empty.
     """
     entries = hass.config_entries.async_entries(DOMAIN)
     opt = entries[0].options.get("price_kwh") if entries else None
@@ -166,10 +165,10 @@ async def ws_set(hass: HomeAssistant, connection: websocket_api.ActiveConnection
 })
 @websocket_api.async_response
 async def ws_backup(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
-    """Sicherung eines Dashboards vor dem Umzug: /config/casora_sicherungen/umzug_<zeit>_<name>.json.
+    """Backup of a dashboard before the migration: /config/casora_sicherungen/umzug_<time>_<name>.json.
 
-    Mit url_path liest HA das Dashboard selbst: große Dashboards (Desktop + Handy über 4 MB)
-    passen nicht in eine WebSocket-Nachricht – HA trennte dann die Verbindung."""
+    With url_path HA reads the dashboard itself: big dashboards (desktop + phone over 4 MB)
+    do not fit into one WebSocket message – HA then dropped the connection."""
     import json
     import os
     import re
@@ -203,8 +202,8 @@ async def ws_backup(hass: HomeAssistant, connection: websocket_api.ActiveConnect
     try:
         await hass.async_add_executor_job(_write)
     except OSError as err:
-        # Ordner nicht beschreibbar (oder eine Datei gleichen Namens): eigener Code, damit das Studio
-        # verständlich meldet, was zu tun ist – statt „Unknown error“.
+        # Folder not writable (or a file of the same name): a code of its own, so the Studio
+        # says clearly what to do – instead of "Unknown error".
         connection.send_error(msg["id"], "backup_failed", f"casora_sicherungen: {err.strerror or err}")
         return
     connection.send_result(msg["id"], {"path": os.path.relpath(path, hass.config.config_dir)})
@@ -214,10 +213,10 @@ UMZUG_FILE = r"^umzug_(\d{4}-\d{2}-\d{2}_\d{6})_(.+)\.json$"
 
 
 def read_umzug_phones(folder: str, sources: list[str] | None = None, limit: int = 8) -> list[dict[str, Any]]:
-    """Handy-Layouts aus den Umzugs-Sicherungen, je Quell-Dashboard die neueste.
+    """Phone layouts from the migration backups, the newest per source dashboard.
 
-    Nur die Ansichten (ohne button_card_templates): das Studio braucht daraus die Kachelgrößen
-    („Size on phone“), die ältere Umzüge nicht an die Raum-Kacheln übertragen hatten.
+    Only the views (without button_card_templates): the Studio needs the tile sizes from them
+    ("Size on phone"), which older migrations had not carried over to the room tiles.
     """
     import json
     import os
@@ -257,14 +256,14 @@ def read_umzug_phones(folder: str, sources: list[str] | None = None, limit: int 
 })
 @websocket_api.async_response
 async def ws_umzug_phones(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
-    """Handy-Layouts der Umzugs-Sicherungen (nur lesen) → {"backups": [{file, url_path, title, time, mobile}]}."""
+    """Phone layouts of the migration backups (read only) → {"backups": [{file, url_path, title, time, mobile}]}."""
     folder = hass.config.path("casora_sicherungen")
     backups = await hass.async_add_executor_job(read_umzug_phones, folder, msg.get("sources"))
     connection.send_result(msg["id"], {"backups": backups})
 
 
 def _json_obj(value: Any) -> Any:
-    """JSON-Objekt aus einer KI-Antwort – auch mit ```-Zaun oder Text davor/danach."""
+    """JSON object from an AI answer – also with a ``` fence or text before/after."""
     import json
 
     raw = str(value or "").strip()
@@ -273,7 +272,7 @@ def _json_obj(value: Any) -> Any:
     try:
         return json.loads(raw)
     except ValueError:
-        # Text vor/nach dem Objekt (z. B. „Hier die Vorlage:“) – nur das äußere {…} nehmen.
+        # Text before/after the object (e.g. "Here is the template:") – take only the outer {…}.
         start, end = raw.find("{"), raw.rfind("}")
         try:
             return json.loads(raw[start:end + 1]) if 0 <= start < end else None
@@ -291,7 +290,7 @@ MERGE_STRUCTURE = {
 
 
 def _json_list(value: Any) -> Any:
-    """JSON-Liste aus einer KI-Antwort – auch mit ```-Zaun oder Text davor/danach."""
+    """JSON list from an AI answer – also with a ``` fence or text before/after."""
     import json
 
     raw = str(value or "").strip()
@@ -308,7 +307,7 @@ def _json_list(value: Any) -> Any:
 
 
 def _apply_ops(base: dict, ops: list) -> dict:
-    """Änderungen der KI auf Casoras Vorlage anwenden: {"op": "set"|"remove", "path": "a/b/0", "value": …}."""
+    """Apply the AI's changes to Casora's template: {"op": "set"|"remove", "path": "a/b/0", "value": …}."""
     import copy
 
     out = copy.deepcopy(base)
@@ -352,7 +351,7 @@ def _apply_ops(base: dict, ops: list) -> dict:
 })
 @websocket_api.async_response
 async def ws_merge_template(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
-    """Umzug: persönliche Änderungen einer alten Hemma-Vorlage in Casoras aktuelle Fassung übertragen."""
+    """Migration: carry personal changes of an old Hemma template over into Casora's current version."""
     import json
 
     from .ki import ai_models, ask_ai
@@ -361,7 +360,7 @@ async def ws_merge_template(hass: HomeAssistant, connection: websocket_api.Activ
     if not entries:
         connection.send_error(msg["id"], "not_set_up", "Casora ist nicht eingerichtet")
         return
-    # Nur mit einem starken Modell – ein halb kaputter Umzug ist schlimmer als keiner.
+    # Only with a strong model – a half broken migration is worse than none.
     best = next((m for m in ai_models(hass) if m["ok"]), None)
     if not best:
         connection.send_error(msg["id"], "weak_ai", "Keine ausreichend starke KI eingerichtet")
@@ -397,7 +396,7 @@ async def ws_merge_template(hass: HomeAssistant, connection: websocket_api.Activ
     try:
         res = await ask_ai(hass, entries[0], "Casora Umzug: Vorlage anpassen", instructions, MERGE_STRUCTURE,
                            entity=best["entity_id"])
-    except Exception as err:  # noqa: BLE001 – dem Studio als Meldung zeigen
+    except Exception as err:  # noqa: BLE001 – show it to the Studio as a message
         connection.send_error(msg["id"], "ai_failed", str(err))
         return
     ops = _json_list((res or {}).get("ops"))
@@ -429,7 +428,7 @@ _ENTITY_ID = r"\b(?:alarm_control_panel|automation|binary_sensor|button|calendar
 
 
 def _entity_ids(card: Any) -> set[str]:
-    """Alle Entitäten, die in einer Karte vorkommen (auch in Texten und JavaScript)."""
+    """Every entity that appears in a card (also in texts and JavaScript)."""
     import json
     import re
 
@@ -437,7 +436,7 @@ def _entity_ids(card: Any) -> set[str]:
 
 
 def adapt_card_prompt(card: dict, context: dict, lang: str) -> str:
-    """Anweisung an die KI: eine eingefügte Lovelace-Karte an Casoras Popup-Stil anpassen."""
+    """Instruction to the AI: adapt a pasted Lovelace card to Casora's popup style."""
     import json
 
     ctx = {k: str(v)[:120] for k, v in (context or {}).items()
@@ -480,10 +479,10 @@ def adapt_card_prompt(card: dict, context: dict, lang: str) -> str:
 
 
 def adapt_card_result(card: dict, res: Any, lang: str) -> tuple[dict, list[str]]:
-    """Antwort der KI prüfen: gültige Karte mit type, verlorene Entitäten als Hinweis. ValueError sonst."""
+    """Check the AI's answer: valid card with type, lost entities as a hint. ValueError otherwise."""
     raw = (res or {}).get("card") if isinstance(res, dict) else None
     out = raw if isinstance(raw, dict) else _json_obj(raw)
-    # Manche Modelle packen die Karte noch einmal ein: {"card": {...}}.
+    # Some models wrap the card once more: {"card": {...}}.
     if isinstance(out, dict) and "type" not in out and isinstance(out.get("card"), dict):
         out = out["card"]
     if not isinstance(out, dict) or not isinstance(out.get("type"), str) or not out["type"].strip():
@@ -507,7 +506,7 @@ def adapt_card_result(card: dict, res: Any, lang: str) -> tuple[dict, list[str]]
 })
 @websocket_api.async_response
 async def ws_adapt_card(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
-    """Studio → Kachel → Popup: eine eingefügte Karte an Casoras Stil anpassen (Funktion bleibt)."""
+    """Studio → tile → popup: adapt a pasted card to Casora's style (its function stays)."""
     import json
 
     from .ki import ai_models, ask_ai
@@ -531,7 +530,7 @@ async def ws_adapt_card(hass: HomeAssistant, connection: websocket_api.ActiveCon
     try:
         res = await ask_ai(hass, entries[0], "Casora: Karte anpassen", adapt_card_prompt(card, msg["context"], lang),
                            ADAPT_STRUCTURE, entity=best["entity_id"])
-    except Exception as err:  # noqa: BLE001 – dem Studio als Meldung zeigen
+    except Exception as err:  # noqa: BLE001 – show it to the Studio as a message
         connection.send_error(msg["id"], "ai_failed", str(err))
         return
     try:
@@ -556,7 +555,7 @@ BASIS_STRUCTURE = {
 })
 @websocket_api.async_response
 async def ws_basis(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
-    """Neues Dashboard: die automatisch gefüllten Räume von einer KI verfeinern lassen."""
+    """New dashboard: let an AI refine the automatically filled rooms."""
     import json
 
     from .ki import ai_models, ask_ai
@@ -591,7 +590,7 @@ async def ws_basis(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
     try:
         res = await ask_ai(hass, entries[0], "Casora Einrichtung: Räume füllen", instructions, BASIS_STRUCTURE,
                            entity=best["entity_id"])
-    except Exception as err:  # noqa: BLE001 – dem Studio als Meldung zeigen
+    except Exception as err:  # noqa: BLE001 – show it to the Studio as a message
         connection.send_error(msg["id"], "ai_failed", str(err))
         return
     plan = _json_obj((res or {}).get("plan"))
@@ -605,7 +604,7 @@ async def ws_basis(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
 @websocket_api.websocket_command({vol.Required("type"): "casora/ki/models"})
 @callback
 def ws_ai_models(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
-    """Welche KI Casora für anspruchsvolle Aufgaben nähme (die stärkste ausreichende) und alle übrigen."""
+    """Which AI Casora would take for demanding tasks (the strongest sufficient one) and all the others."""
     from .ki import ai_models
 
     models = ai_models(hass)

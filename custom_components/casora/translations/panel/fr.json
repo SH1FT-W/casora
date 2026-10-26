@@ -2668,7 +2668,12 @@
     "Hold, font, tile size and new dashboards": "Appui long, police, taille des tuiles et nouveaux tableaux de bord",
     "Hold, font, tile size": "Appui long, police, taille des tuiles",
     "No match – try one of the topics below.": "Aucun résultat – essayez l'un des thèmes ci-dessous.",
-    "Bell, notifications, push and Live‑Activities": "Cloche, notifications, push et activités en direct"
+    "Bell, notifications, push and Live‑Activities": "Cloche, notifications, push et activités en direct",
+    "Security: covers": "Sécurité : volets",
+    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Les volets choisis qui ne sont pas entièrement fermés apparaissent sur Accueil dans la rangée Sécurité sous « Volets » et comptent comme non sécurisés. Sans sélection, rien ne change.",
+    "Evening and night only": "Seulement le soir et la nuit",
+    "From sunset to sunrise": "Du coucher au lever du soleil",
+    "No covers found": "Aucun volet trouvé"
   },
   "patterns": [
     [

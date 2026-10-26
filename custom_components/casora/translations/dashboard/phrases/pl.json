@@ -2492,7 +2492,14 @@
   "Stream": "Strumień",
   "Stream nicht erreichbar · Standard": "Strumień nieosiągalny · Standardowy",
   "Wind": "Wiatr",
-  "Benachrichtigung": "Powiadomienie"
+  "Benachrichtigung": "Powiadomienie",
+  "Rollos": "Rolety",
+  "Rollo offen": "Roleta otwarta",
+  "Alle schließen": "Zamknij wszystkie",
+  "Bis Sonnenaufgang": "Do wschodu słońca",
+  "Ab Sonnenuntergang": "Od zachodu słońca",
+  "Keine Rollos ausgewählt": "Nie wybrano rolet",
+  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Rolety wybierasz w Studio w Ustawienia › Dom i urządzenia › Bezpieczeństwo."
  },
  "patterns": [
   [
@@ -3678,6 +3685,10 @@
   [
    "^(\\d+) Fenster offen$",
    "Otwarte okna: {1}"
+  ],
+  [
+   "^(\\d+) Rollos offen$",
+   "{1} rolety otwarte"
   ],
   [
    "^(\\d+) Fenster gekippt$",

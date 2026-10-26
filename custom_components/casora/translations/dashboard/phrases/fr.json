@@ -2492,7 +2492,14 @@
   "Stream": "Flux",
   "Stream nicht erreichbar · Standard": "Flux injoignable · Standard",
   "Wind": "Vent",
-  "Benachrichtigung": "Notification"
+  "Benachrichtigung": "Notification",
+  "Rollos": "Volets",
+  "Rollo offen": "Volet ouvert",
+  "Alle schließen": "Tout fermer",
+  "Bis Sonnenaufgang": "Jusqu'au lever du soleil",
+  "Ab Sonnenuntergang": "Dès le coucher du soleil",
+  "Keine Rollos ausgewählt": "Aucun volet choisi",
+  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Choisis les volets dans le Studio sous Réglages › Maison et appareils › Sécurité."
  },
  "patterns": [
   [
@@ -3678,6 +3685,10 @@
   [
    "^(\\d+) Fenster offen$",
    "{1} fenêtres ouvertes"
+  ],
+  [
+   "^(\\d+) Rollos offen$",
+   "{1} volets ouverts"
   ],
   [
    "^(\\d+) Fenster gekippt$",

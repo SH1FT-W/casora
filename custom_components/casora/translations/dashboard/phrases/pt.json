@@ -2492,7 +2492,14 @@
   "Stream": "Fluxo",
   "Stream nicht erreichbar · Standard": "Fluxo inacessível · Padrão",
   "Wind": "Vento",
-  "Benachrichtigung": "Aviso"
+  "Benachrichtigung": "Aviso",
+  "Rollos": "Estores",
+  "Rollo offen": "Estore aberto",
+  "Alle schließen": "Fechar todos",
+  "Bis Sonnenaufgang": "Até ao nascer do sol",
+  "Ab Sonnenuntergang": "A partir do pôr do sol",
+  "Keine Rollos ausgewählt": "Nenhum estore escolhido",
+  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Escolhe os estores no Studio em Definições › Casa e dispositivos › Segurança."
  },
  "patterns": [
   [
@@ -3678,6 +3685,10 @@
   [
    "^(\\d+) Fenster offen$",
    "{1} janelas abertas"
+  ],
+  [
+   "^(\\d+) Rollos offen$",
+   "{1} estores abertos"
   ],
   [
    "^(\\d+) Fenster gekippt$",

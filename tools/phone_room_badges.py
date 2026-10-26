@@ -62,6 +62,8 @@ def _tx(s):
     # the house's doors and windows there and casoraHouseContactsOf lists none (Home only, #39).
     body = body.replace("casoraHasSec(variables,user,this)", "casoraHasSec(variables,user)")
     body = re.sub(r"(casoraHouseContactsOf\(hass,variables,'(?:door|window)',user),this\)", r"\1)", body)
+    # Covers in security (#76): Home only, so never on a phone room page.
+    body = body.replace("_casoraSecCovers.show(states,hass,user,variables,this)", "_casoraSecCovers.show(states,hass,user,variables)")
     body = re.sub(r"(?<![\w.$])variables(?![\w$])", "_rv", body)
     return "[[[ " + RV + body.lstrip(" ")
 

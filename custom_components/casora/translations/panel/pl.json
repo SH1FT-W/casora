@@ -2668,7 +2668,12 @@
     "Hold, font, tile size and new dashboards": "Przytrzymanie, czcionka, rozmiar kafelków i nowe pulpity",
     "Hold, font, tile size": "Przytrzymanie, czcionka, rozmiar kafelków",
     "No match – try one of the topics below.": "Brak wyników – zajrzyj do jednego z tematów poniżej.",
-    "Bell, notifications, push and Live‑Activities": "Dzwonek, powiadomienia, push i aktywności na żywo"
+    "Bell, notifications, push and Live‑Activities": "Dzwonek, powiadomienia, push i aktywności na żywo",
+    "Security: covers": "Bezpieczeństwo: rolety",
+    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Wybrane rolety, które nie są całkowicie zamknięte, pojawiają się na stronie głównej w rzędzie bezpieczeństwa jako „Rolety” i liczą się jako niezabezpieczone. Bez wyboru nic się nie zmienia.",
+    "Evening and night only": "Tylko wieczorem i w nocy",
+    "From sunset to sunrise": "Od zachodu do wschodu słońca",
+    "No covers found": "Nie znaleziono rolet"
   },
   "patterns": [
     [

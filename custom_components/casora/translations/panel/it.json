@@ -2668,7 +2668,12 @@
     "Hold, font, tile size and new dashboards": "Pressione lunga, carattere, dimensione riquadri e nuove dashboard",
     "Hold, font, tile size": "Pressione lunga, carattere, dimensione riquadri",
     "No match – try one of the topics below.": "Nessun risultato – prova uno degli argomenti qui sotto.",
-    "Bell, notifications, push and Live‑Activities": "Campanella, notifiche, push e attività live"
+    "Bell, notifications, push and Live‑Activities": "Campanella, notifiche, push e attività live",
+    "Security: covers": "Sicurezza: tapparelle",
+    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Le tapparelle scelte non del tutto chiuse compaiono in Home nella riga Sicurezza come «Tapparelle» e contano come non sicure. Senza selezione non cambia nulla.",
+    "Evening and night only": "Solo di sera e di notte",
+    "From sunset to sunrise": "Dal tramonto all'alba",
+    "No covers found": "Nessuna tapparella trovata"
   },
   "patterns": [
     [
