@@ -30,9 +30,47 @@
       + 'background:var(--casora-lps-chip, ' + ROW + ') !important;color:var(--casora-lps-chip-ink, ' + SUB + ') !important;}'
       + '.hm-src .hui-sg.on{background:var(--casora-lps-chip-on, ' + CTL + ') !important;color:var(--casora-lps-chip-on-ink, ' + INK + ') !important;}';
   };
+  // Play button in the cover's colour (owner 26.10.2026), the same colour the wave's rows take from the cover
+  // (_casoraNPSoft.tintOf, 09-weich-wiedergabe.js). Icon dark on a light colour, white on a dark one.
+  var lumOf = function (col) {
+    var m = /hsl\((\d+),(\d+)%,(\d+)%\)/.exec(col || '');
+    if (!m) return 0;
+    var h = +m[1] / 360, sa = +m[2] / 100, l = +m[3] / 100;
+    var q = l < 0.5 ? l * (1 + sa) : l + sa - l * sa, pp = 2 * l - q;
+    var ch = function (t) { t = t < 0 ? t + 1 : t > 1 ? t - 1 : t; var v = t < 1 / 6 ? pp + (q - pp) * 6 * t : t < 0.5 ? q : t < 2 / 3 ? pp + (q - pp) * (2 / 3 - t) * 6 : pp;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    return 0.2126 * ch(h + 1 / 3) + 0.7152 * ch(h) + 0.0722 * ch(h - 1 / 3);
+  };
+  var tintRule = function (col) {
+    if (!col) return '';
+    return '.hm-b.lg{background:' + col + ';}' + (lumOf(col) > 0.3 ? '.hm-b.lg > div{background-color:var(--casora-popup-ui-on-ink, #000) !important;}' : '');
+  };
+  // While the cover is still being read: a placeholder <style> that is filled in once the colour is known.
+  var tintWait = function (url) {
+    var n = 0;
+    var tick = function () {
+      var M = window._casoraNPSoft, col = M && M.tintOf ? M.tintOf(url) : '';
+      if (col === null && ++n < 40) { setTimeout(tick, 150); return; }
+      var s = window.casoraPopup && window.casoraPopup.surface;
+      if (!s || !col) return;
+      (function walk(root) {
+        root.querySelectorAll('style[data-hm-tint]').forEach(function (st) { if (st.getAttribute('data-hm-tint') === url) st.textContent = tintRule(col); });
+        root.querySelectorAll('*').forEach(function (el) { if (el.shadowRoot) walk(el.shadowRoot); });
+      })(s);
+    };
+    setTimeout(tick, 150);
+  };
+  var tintCss = function (pic) {
+    var M = window._casoraNPSoft;
+    if (!pic || !M || !M.tintOf) return '';
+    var col = M.tintOf(pic);
+    if (col === null) { tintWait(pic); return '<style data-hm-tint="' + esc(pic) + '"></style>'; }
+    return col ? '<style>' + tintRule(col) + '</style>' : '';
+  };
   window._casoraMediaSoft = {
     srcRules: srcRules,
-    css: function () {
+    // pic: the cover being shown (null without one) – tints the play button.
+    css: function (pic) {
       return '<style>'
         /* Fix-Runde 1 (B-01/B-04): Raum als Statuszeile unter dem Titel, Titel des Stücks 17/700. */
         + '.hm-lbl{font-size:15px;font-weight:500;letter-spacing:0;text-transform:none;line-height:1.35;overflow:visible;color:' + SUB + ';margin:-2px 0 20px;}'
@@ -48,8 +86,9 @@
         + '.hm-ctl{gap:22px;margin-top:18px;}'
         + '.hm-b.sm{width:56px;height:56px;background:' + CTL + ';}'
         + '.hm-b.sm > div{transform:scale(.72);}'
-        + '.hm-b.lg{width:72px;height:72px;background:' + MEDIA_ACC + ';'
-        +   'box-shadow:0 14px 30px -12px color-mix(in srgb, ' + MEDIA_ACC + ' 60%, transparent);}'
+        /* No glow: the card's body clips everything below the button, the glow ended in a hard edge (26.10.2026);
+           flat like the other main buttons. */
+        + '.hm-b.lg{width:72px;height:72px;background:' + MEDIA_ACC + ';box-shadow:none;}'
         + '.hm-b.lg > div{background-color:#fff !important;}'
         + '@media (hover:hover){.hm-b.sm:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}}'
         + '.hm-vol{min-height:66px;margin-top:24px;padding:8px 12px 8px 10px;border-radius:999px;background:' + ROW + ';color:' + SUB + ';}'
@@ -62,7 +101,7 @@
         /* Niedriges Querformat (iPad 1024×768): Cover kleiner, damit Tasten und Lautstärke ohne
            Scrollen sichtbar bleiben – vorher lag die Lautstärke beim Abspielen unter dem Rand (07.10.2026). */
         + '@media (min-width:761px) and (max-height:900px){.hm-art{width:min(240px, max(120px, calc(100vh - 640px)));}}'
-        + '</style>';
+        + '</style>' + tintCss(pic);
     },
   };
 
