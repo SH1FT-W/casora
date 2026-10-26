@@ -22,7 +22,7 @@ Collects everything from the betas 26.10.62b1 to b6, plus consistent popups.
 ### Changed
 - **Consistent popups:** every popup follows the same pattern: header with room, name and status; at most one main control; sections in a fixed order (controls, state, history, settings); › always opens a sub page with ‹ back; "More settings" with the device info at the end of every device popup; one button style; one width. Two-column popups are symmetric.
 - **Pulse popup** reorganised: short status, counts at each section, battery level on the icon.
-- **Media popups:** TVs and receivers switch on and off with the switch in the header (the extra row is gone); the "Open Apple Music" row has the monochrome icon of iOS 27.2.
+- **Media popups:** TVs and receivers switch on and off with the switch in the header (the extra row is gone); the play button takes the colour of the cover; the "Open Apple Music" row has the monochrome icon of iOS 27.2.
 - **Room energy list (#79):** every consumer of the room is listed, 0 W ones dimmed after the active ones. On the phone the Home energy badge opens the popup.
 - **Lighting badge on the phone (#80):** if the badge has its own lights, the phone shows exactly those, like the desktop.
 - **Energy:** the sources from Home Assistant's energy dashboard come first (also before Anker Solix), and the share from solar and battery also shows without the tile's solar fields.
@@ -34,6 +34,8 @@ Collects everything from the betas 26.10.62b1 to b6, plus consistent popups.
 
 ### Fixed
 - **Saving locked after adding your own card (#75).**
+- **Shading automation in the blinds popup (#81):** the switch shows its new state at once, without reopening the popup.
+- **Charts in popups** are drawn again after going back from a sub page (settings, "Details").
 - **Light popup in Firefox (#74):** the last room button was invisible.
 - **Weather popup (#67, #68):** values of every curve, chart after ‹ back.
 - **Studio "Add a tile" (#71)** and the **first chart sensor's label (#72).**

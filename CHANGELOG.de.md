@@ -22,7 +22,7 @@ Fasst alles aus den Betas 26.10.62b1 bis b6 zusammen, dazu einheitliche Popups.
 ### Geändert
 - **Einheitliche Popups:** Jedes Popup folgt demselben Muster: Kopf mit Raum, Name und Status; höchstens eine Hauptbedienung; Abschnitte in fester Reihenfolge (Bedienung, Zustand, Verlauf, Einstellungen); › öffnet immer eine Unterseite mit ‹ zurück; „Weitere Einstellungen“ mit den Geräte-Infos am Ende jedes Geräte-Popups; ein Knopfstil; eine Breite. Zweispaltige Popups sind symmetrisch.
 - **Pulse-Popup** neu geordnet: kurzer Status, Anzahl am Abschnitt, Akkustand am Symbol.
-- **Medien-Popups:** Fernseher und Receiver schalten über den Schalter im Kopf (die Extra-Zeile ist weg); die Zeile „Apple Music öffnen“ hat das einfarbige Symbol aus iOS 27.2.
+- **Medien-Popups:** Fernseher und Receiver schalten über den Schalter im Kopf (die Extra-Zeile ist weg); der Wiedergabe-Knopf nimmt die Farbe des Covers an; die Zeile „Apple Music öffnen“ hat das einfarbige Symbol aus iOS 27.2.
 - **Energieliste im Raum (#79):** alle Verbraucher des Raums, 0 W blass nach den aktiven. Am Handy öffnet das Energie-Badge auf Zuhause das Popup.
 - **Beleuchtungs-Badge am Handy (#80):** Hat das Badge eigene Lampen, zeigt das Handy genau diese, wie der Desktop.
 - **Energie:** Die Quellen aus dem Energie-Dashboard von Home Assistant haben Vorrang (auch vor Anker Solix), und der Anteil aus Solar und Akku erscheint auch ohne die Solarfelder der Kachel.
@@ -34,6 +34,8 @@ Fasst alles aus den Betas 26.10.62b1 bis b6 zusammen, dazu einheitliche Popups.
 
 ### Behoben
 - **Speichern gesperrt nach eigener Karte (#75).**
+- **Beschattungsautomatik im Jalousien-Popup (#81):** Der Schalter zeigt den neuen Zustand sofort, ohne das Popup neu zu öffnen.
+- **Diagramme in Popups** sind nach dem Zurückgehen von einer Unterseite (Einstellungen, „Details“) wieder da.
 - **Licht-Popup in Firefox (#74):** Der letzte Raum-Knopf war unsichtbar.
 - **Wetter-Popup (#67, #68):** Werte aller Kurven, Diagramm nach ‹ zurück.
 - **Studio „Kachel hinzufügen“ (#71)** und **Bezeichnung des ersten Diagramm-Sensors (#72).**
