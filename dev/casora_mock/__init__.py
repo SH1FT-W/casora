@@ -88,6 +88,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     kamerabild_setup(hass, mock)
     from .coffee import setup as coffee_setup
     coffee_setup(hass, mock)
+    # home_connect.start_selected_program for the test dishwasher (dishwasher.py, issue #77).
+    from .dishwasher import setup as dishwasher_setup
+    dishwasher_setup(hass, mock)
     # Velair's WebSocket commands and services for the test air conditioner (velair.py).
     if any(e.get("registry_platform") == "velair" for e in fixture["entities"]):
         from .velair import setup as velair_setup

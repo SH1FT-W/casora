@@ -34,13 +34,13 @@ if (!window.casoraDeviceEntities) {
   })();
 }
 
-// Electricity price for costs in device popups (1.0.3): 1) card variable price_kwh, 2) the price from
-// the Casora settings (outdoor values & electricity price), 3) grid import from HA's energy dashboard
-// (fixed price or live the state of the price entity, CASORA_PRICE_ENTITY). 2) and 3) come with
-// casora/settings/get (casora-local.js). Without any of them null: the popups then show no costs.
+// Electricity price for costs in device popups (1.0.3): 1) the price from the Casora settings (outdoor values &
+// electricity price), 2) grid import from HA's energy dashboard (fixed price or live the state of the price entity,
+// CASORA_PRICE_ENTITY). Both come with casora/settings/get (casora-local.js). Without either null: the popups then show
+// no costs. The argument (a tile's old price_kwh) is ignored since issue #77: one price for all dashboards, the Studio
+// no longer offers a price per tile; stored values stay in the dashboards untouched.
 window.casoraPriceKwh = function (v) {
   var ok = function (p) { return typeof p === 'number' && isFinite(p) && p >= 0 ? p : null; };
-  if (v != null && v !== '') return ok(Number(v));
   var ent = window.CASORA_PRICE_ENTITY;
   if (ent) {
     var ha = document.querySelector('home-assistant'), s = ha && ha.hass && ha.hass.states[ent];
@@ -1977,9 +1977,20 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         select: k('selected_program', 'select'), remaining: k('program_finish_time'), progress: k('program_progress'),
         door: k('door'), pause: k('pause_program', 'button'), resume: k('resume_program', 'button'),
         stop: k('stop_program', 'button') },
-      // HA core has no start button (the active_program select starts) and reports the finish time.
+      // HA core has no start button (the action home_connect.start_selected_program or the active_program select
+      // starts) and reports the finish time. Program options are switches/numbers of the selected program
+      // (switch.py/number.py, available only while the program offers them); refills and care reminders are
+      // event sensors (present / confirmed / off). Issue #77: none of them was read, the German name fallback
+      // below is Home Connect Local's (Start in relativ, Hygiene +, Intensivzone did not match).
       dish: { program: k('active_program', 'select'), sel: k('selected_program', 'select'), progress: k('program_progress'),
-        remaining: k('program_finish_time'), door: k('door'), stop: k('stop_program', 'button') } },
+        remaining: k('program_finish_time'), door: k('door'), stop: k('stop_program', 'button'),
+        startIn: k('start_in_relative', 'number'), power_sw: k('power', 'switch'), remoteStart: bk('remote_start'),
+        extraDry: k('extra_dry', 'switch'), halfLoad: k('half_load', 'switch'), speed: k('vario_speed_plus', 'switch'),
+        silence: k('silence_on_demand', 'switch'), hygiene: k('hygiene_plus', 'switch'), intensivZone: k('intensiv_zone', 'switch'),
+        saltLow: k('salt_nearly_empty'), saltLack: k(['salt_lack', 'program_blocked_salt_lack']),
+        rinseLow: k('rinse_aid_nearly_empty'), rinseLack: k('rinse_aid_lack'),
+        smartFilter: k('smart_filter_cleaning_reminder'), machineCare: k('machine_care_reminder'),
+        machineFilter: k(['machine_care_and_filter_cleaning_reminder', 'machine_care_and_low_maintenance_filter_cleaning_reminder']) } },
     /* Home Connect Alt (HACS, ekutner/home-connect-hass): by platform only (its keys are generic), fields by the
        end of the entity_id (hk above). Operation state and programs are Home Connect keys
        (BSH.Common.EnumType.OperationState.Run, LaundryCare.Washer.Program.Cotton) or, in translation mode "server",
@@ -1999,6 +2010,8 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         extraDry: hk('dishcare_dishwasher_option_extradry', 'switch'), halfLoad: hk('dishcare_dishwasher_option_halfload', 'switch'),
         speed: hk('dishcare_dishwasher_option_variospeedplus', 'switch'),
         silence: hk('dishcare_dishwasher_option_silenceondemand', 'switch'),
+        hygiene: hk('dishcare_dishwasher_option_hygieneplus', 'switch'), intensivZone: hk('dishcare_dishwasher_option_intensivzone', 'switch'),
+        startIn: hk('bsh_common_option_startinrelative', 'number'),
         start: hk('start_pause', 'button'), stop: hk('stop', 'button', 'stop_program') } },
     /* Home Connect Local (HACS, chris-mc1/homeconnect_local_hass, platform homeconnect_ws): translation_key = the
        entity description's key (entity.py), e.g. sensor_operation_state; entity_ids follow the (translated) names. */
@@ -2255,12 +2268,17 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     energyEst: [/_energieverbrauch_schatzung$/, 'sensor'], waterEst: [/_wasserverbrauch_schatzung$/, 'sensor'],
     salt: [/_salz$/, 'sensor'], rinse: [/_klarspuler$/, 'sensor'], door: [/_tur$/, 'binary_sensor'],
     care: [/_maschinenpflege_erinnerung$/, 'sensor'], starts: [/_startanzahl$/, 'sensor'], conn: [/_verbindung$/, 'binary_sensor'],
-    remote: [/_fernbedienung$/, 'select'], startIn: [/_start_in$/, 'number'], power_sw: [/_einschalter$/, 'switch'],
+    remote: [/_fernbedienung$/, 'select'], startIn: [/_start_in(_relativ)?$/, 'number'], power_sw: [/_einschalter$/, 'switch'],
+    remoteStart: [/_fernstart$/, 'binary_sensor'],
     light: [/_info_licht$/, 'switch'], smartFilter: [/_smarte_filterreinigung$/, 'binary_sensor'],
     filterCheck: [/_filtersystem_prufen$/, 'binary_sensor'], machineCare: [/_maschinenreinigung$/, 'binary_sensor'],
     machineFilter: [/_maschinenreinigung_filter$/, 'binary_sensor'],
     extraDry: [/_extra_trocken$/, 'switch'], halfLoad: [/_halbe_ladung$/, 'switch'], speed: [/_speed_on_demand$/, 'switch'],
     silence: [/_silence_on_demand$/, 'switch'], start: [/_start$/, 'button'], stop: [/_abbrechen$/, 'button'],
+    // Home Connect in HA core (its translations/de.json): Hygiene + → _hygiene, Intensivzone, refill events.
+    hygiene: [/_hygiene(_plus)?$/, 'switch'], intensivZone: [/_intensivzone$/, 'switch'],
+    saltLow: [/_salz_fast_leer$/, 'sensor'], saltLack: [/_salzmangel$/, 'sensor'],
+    rinseLow: [/_klarspuler_fast_leer$/, 'sensor'], rinseLack: [/_fehlender_klarspuler$/, 'sensor'],
     aquaStop: [/_aquastop_aufgetreten$/, 'binary_sensor'], drainBlocked: [/_ablaufpumpe_blockiert$/, 'binary_sensor'],
     drainImpossible: [/_abpumpen_nicht_moglich$/, 'binary_sensor'], lowPressure: [/_niedriger_wasserdruck$/, 'binary_sensor'],
     calcified: [/_wasserheizung_verkalkt$/, 'binary_sensor'], aborted: [/_programm_abgebrochen$/, 'binary_sensor'],

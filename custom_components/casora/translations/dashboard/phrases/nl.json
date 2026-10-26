@@ -2492,7 +2492,14 @@
   "Stream": "Stream",
   "Stream nicht erreichbar · Standard": "Stream niet bereikbaar · Standaard",
   "Wind": "Wind",
-  "Benachrichtigung": "Melding"
+  "Benachrichtigung": "Melding",
+  "Start": "Start",
+  "Hygiene+": "Hygiëne+",
+  "Intensivzone": "Intensieve zone",
+  "Ausreichend": "Voldoende",
+  "Später nicht möglich": "Later niet mogelijk",
+  "Früher nicht möglich": "Eerder niet mogelijk",
+  "Programm wählen": "Kies een programma"
  },
  "patterns": [
   [
@@ -2714,6 +2721,26 @@
   [
    "^startet in (.+)$",
    "start over {1}"
+  ],
+  [
+   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Start om {1}"
+  ],
+  [
+   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Start morgen om {1}"
+  ],
+  [
+   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Starten om {1}"
+  ],
+  [
+   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Morgen starten om {1}"
+  ],
+  [
+   "^(\\d+) Programme$",
+   "{1} programma's"
   ],
   [
    "^trocken in etwa (\\d+) Tagen?$",

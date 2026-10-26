@@ -2474,7 +2474,14 @@
   "Stream": "Stream",
   "Stream nicht erreichbar · Standard": "Stream not reachable · Standard",
   "Wind": "Wind",
-  "Benachrichtigung": "Notification"
+  "Benachrichtigung": "Notification",
+  "Start": "Start",
+  "Hygiene+": "Hygiene+",
+  "Intensivzone": "Intensive zone",
+  "Ausreichend": "Sufficient",
+  "Später nicht möglich": "Not possible later",
+  "Früher nicht möglich": "Not possible earlier",
+  "Programm wählen": "Choose program"
  },
  "patterns": [
   [
@@ -2696,6 +2703,26 @@
   [
    "^startet in (.+)$",
    "starts in {1}"
+  ],
+  [
+   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Starts at {1}"
+  ],
+  [
+   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Starts tomorrow at {1}"
+  ],
+  [
+   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Start at {1}"
+  ],
+  [
+   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Start tomorrow at {1}"
+  ],
+  [
+   "^(\\d+) Programme$",
+   "{1} programs"
   ],
   [
    "^trocken in etwa (\\d+) Tagen?$",

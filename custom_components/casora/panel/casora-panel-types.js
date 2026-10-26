@@ -40,14 +40,14 @@ const TITLE = { key: "room_name", label: "Popup title", type: "text", advanced: 
 const TITLE_NAME = { ...TITLE, placeholder: "The tile's name" };
 const PLUG = { key: "plug_entity", label: "Smart plug", domains: ["switch"], find: { plug: "switch" },
   advanced: true, group: "Popup", hint: "Measures power and energy; the popup shows usage and cost." };
-const PRICE = { key: "price_kwh", label: "Electricity price per kWh", type: "number", placeholder: "0.36", advanced: true };
+// No electricity price per tile (issue #77): it is set once for all dashboards (Settings › Outdoor values & electricity
+// price, else HA's energy dashboard); window.casoraPriceKwh ignores an old price_kwh of a tile.
 // Hex, because the charts write the color straight into the SVG.
 const CHART = (ph) => ({ key: "chart_color", label: "Chart color", type: "text", placeholder: ph || "#00C3D0",
   advanced: true, hint: "A hex color, e.g. #30D158." });
 const LAUNDRY = [
   ICON,
   PLUG,
-  PRICE,
   // find.laundry: the card's own source fields (casoraLaundryFind.forEntity in 00-finder.js, every integration).
   { key: "appliance_progress", label: "Progress", domains: ["sensor"], classes: ["progress"], find: { laundry: "progress" }, advanced: true },
   { key: "appliance_remaining", label: "Time remaining", domains: ["sensor"], classes: ["duration", "timestamp"], find: { laundry: "remaining" }, advanced: true },
@@ -99,7 +99,6 @@ window.CASORA_TILE_TYPES = [
       { key: "printer_name", label: "Printer name", type: "text", placeholder: "Device name",
         hint: "Empty: the printer's name in Home Assistant." },
       { ...PLUG },
-      PRICE,
       { key: "entity_camera", label: "Camera", domains: ["camera"], find: { print: "cam" }, advanced: true },
       { key: "entity_light", label: "Chamber light", domains: ["light"], find: { print: "light" }, advanced: true },
       { key: "entity_progress", label: "Progress", domains: ["sensor"], classes: ["progress"], find: { print: "progress" }, advanced: true },
@@ -113,7 +112,6 @@ window.CASORA_TILE_TYPES = [
     entityLabel: "Operation state", entityPlaceholder: "State of the dishwasher (e.g. Home Connect)", icon: "dishwasher", fields: [
       ICON,
       PLUG,
-      PRICE,
       // find.dish: the card's own lookup (00-finder.js casoraLaundryFind.dish: keys per integration, German names last).
       // Home Connect in HA core: program as select (active_program), door as enum sensor (open/closed/locked).
       { key: "entity_program", label: "Active program", domains: ["sensor", "select"], find: { dish: "program" }, advanced: true },

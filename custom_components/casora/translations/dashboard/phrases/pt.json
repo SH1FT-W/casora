@@ -2492,7 +2492,14 @@
   "Stream": "Fluxo",
   "Stream nicht erreichbar · Standard": "Fluxo inacessível · Padrão",
   "Wind": "Vento",
-  "Benachrichtigung": "Aviso"
+  "Benachrichtigung": "Aviso",
+  "Start": "Início",
+  "Hygiene+": "Higiene+",
+  "Intensivzone": "Zona intensiva",
+  "Ausreichend": "Suficiente",
+  "Später nicht möglich": "Não é possível mais tarde",
+  "Früher nicht möglich": "Não é possível mais cedo",
+  "Programm wählen": "Escolhe um programa"
  },
  "patterns": [
   [
@@ -2714,6 +2721,26 @@
   [
    "^startet in (.+)$",
    "começa em {1}"
+  ],
+  [
+   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Começa às {1}"
+  ],
+  [
+   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Começa amanhã às {1}"
+  ],
+  [
+   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Iniciar às {1}"
+  ],
+  [
+   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Iniciar amanhã às {1}"
+  ],
+  [
+   "^(\\d+) Programme$",
+   "{1} programas"
   ],
   [
    "^trocken in etwa (\\d+) Tagen?$",

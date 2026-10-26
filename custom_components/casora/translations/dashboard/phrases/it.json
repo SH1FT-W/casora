@@ -2492,7 +2492,14 @@
   "Stream": "Flusso",
   "Stream nicht erreichbar · Standard": "Flusso non raggiungibile · Standard",
   "Wind": "Vento",
-  "Benachrichtigung": "Notifica"
+  "Benachrichtigung": "Notifica",
+  "Start": "Avvio",
+  "Hygiene+": "Igiene+",
+  "Intensivzone": "Zona intensiva",
+  "Ausreichend": "Sufficiente",
+  "Später nicht möglich": "Non possibile più tardi",
+  "Früher nicht möglich": "Non possibile prima",
+  "Programm wählen": "Scegli un programma"
  },
  "patterns": [
   [
@@ -2714,6 +2721,26 @@
   [
    "^startet in (.+)$",
    "inizia tra {1}"
+  ],
+  [
+   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Parte alle {1}"
+  ],
+  [
+   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Parte domani alle {1}"
+  ],
+  [
+   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Avvia alle {1}"
+  ],
+  [
+   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Avvia domani alle {1}"
+  ],
+  [
+   "^(\\d+) Programme$",
+   "{1} programmi"
   ],
   [
    "^trocken in etwa (\\d+) Tagen?$",

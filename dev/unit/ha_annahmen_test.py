@@ -331,6 +331,15 @@ KEYS = [
      "00-finder.js casoraLaundryFind.SOURCES (fields + dish for _casoraDish), live_finder.py, 25-coffee.js"),
     ("home_connect", "select", ["active_program", "selected_program"], "00-finder.js SOURCES home_connect.dish"),
     ("home_connect", "button", ["stop_program"], "00-finder.js SOURCES home_connect.dish"),
+    ("home_connect", "number", ["start_in_relative"], "00-finder.js SOURCES home_connect.dish startIn (issue #77)"),
+    ("home_connect", "switch", ["power", "extra_dry", "half_load", "vario_speed_plus", "silence_on_demand", "hygiene_plus",
+                                "intensiv_zone"], "00-finder.js SOURCES home_connect.dish (power_sw, options, issue #77)"),
+    ("home_connect", "binary_sensor", ["remote_start"], "00-finder.js SOURCES home_connect.dish remoteStart"),
+    ("home_connect", "sensor", ["salt_nearly_empty", "salt_lack", "program_blocked_salt_lack", "rinse_aid_nearly_empty",
+                                "rinse_aid_lack", "smart_filter_cleaning_reminder", "machine_care_reminder",
+                                "machine_care_and_filter_cleaning_reminder",
+                                "machine_care_and_low_maintenance_filter_cleaning_reminder"],
+     "00-finder.js SOURCES home_connect.dish (refills/care, 02-devices.js D.fill/onEv: present = due)"),
     ("miele", "*", ["status", "program_id", "program_phase", "drying_step", "remaining_time", "finish", "elapsed_time",
                     "start", "energy_consumption", "spin_speed", "twin_dos_1_level", "pause", "stop",
                     "salt_level", "rinse_aid_level", "power_disk_level"],
@@ -383,6 +392,25 @@ class ForeignKeys(unittest.TestCase):
                 if not in_strings and not re.search(r"""['"]%s['"]""" % re.escape(k), src):
                     missing.append(f"{platform} {domain} {k} ({where})")
         self.assertEqual(missing, [], "translation keys missing:\n  " + "\n  ".join(missing))
+
+    def test_home_connect_start_selected_program(self):
+        """Home Connect (HA core) has no start button for a dishwasher: Casora starts the selected program with the
+        action home_connect.start_selected_program (device_id, optional b_s_h_common_option_start_in_relative in
+        seconds); the program options stay those set on the selected program. The event sensors report
+        present / confirmed / off. Casora: 02-devices.js _casoraDish.startSvc/go (issue #77), D.fill/onEv.
+        Red: the action or its field was renamed (start falls back to the active_program select) or the event
+        states changed (refill rows wrong)."""
+        base = os.path.join(COMPONENTS, "home_connect")
+        with open(os.path.join(base, "services.yaml"), encoding="utf-8") as f:
+            yml = f.read()
+        block = yml.split("start_selected_program:", 1)
+        self.assertEqual(len(block), 2, "start_selected_program missing in services.yaml")
+        self.assertIn("device_id:", block[1])
+        self.assertIn("b_s_h_common_option_start_in_relative:", block[1])
+        with open(os.path.join(base, "sensor.py"), encoding="utf-8") as f:
+            self.assertIn('EVENT_OPTIONS = ["confirmed", "off", "present"]', f.read())
+        with open(os.path.join(base, "number.py"), encoding="utf-8") as f:
+            self.assertIn("translation_key=\"start_in_relative\"", f.read())
 
     def test_tractive_layout(self):
         """Tractive: hardware device "Tracker <id>" (device translation "tracker"), the pet device hangs on it via

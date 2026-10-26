@@ -2492,7 +2492,14 @@
   "Stream": "Strumień",
   "Stream nicht erreichbar · Standard": "Strumień nieosiągalny · Standardowy",
   "Wind": "Wiatr",
-  "Benachrichtigung": "Powiadomienie"
+  "Benachrichtigung": "Powiadomienie",
+  "Start": "Start",
+  "Hygiene+": "Higiena+",
+  "Intensivzone": "Strefa intensywna",
+  "Ausreichend": "Wystarczająco",
+  "Später nicht möglich": "Później niemożliwe",
+  "Früher nicht möglich": "Wcześniej niemożliwe",
+  "Programm wählen": "Wybierz program"
  },
  "patterns": [
   [
@@ -2714,6 +2721,26 @@
   [
    "^startet in (.+)$",
    "start za {1}"
+  ],
+  [
+   "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Start o {1}"
+  ],
+  [
+   "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+   "Start jutro o {1}"
+  ],
+  [
+   "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Uruchom o {1}"
+  ],
+  [
+   "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+   "Uruchom jutro o {1}"
+  ],
+  [
+   "^(\\d+) Programme$",
+   "Programy: {1}"
   ],
   [
    "^trocken in etwa (\\d+) Tagen?$",
