@@ -289,7 +289,8 @@ Kreise/Flächen bleiben `--casora-color-red`. **Pfeil › in Zeilen (DP-30):** e
 ## 13. Popup-Aufbau (Kurzfassung, Details in [blaupause-popup.md](blaupause-popup.md))
 
 Gilt:
-- Breit: `--popup-min-width: 900px; --popup-max-width: 920px` (auch kleine Steuer-Popups).
+- Breite (seit Muster v2, 26.10.2026): 552 einspaltig, 900 bei zwei Spalten oder Bild (`casoraPopupWidth`), siehe
+  [popup-blaupause.md](popup-blaupause.md).
 - **Kopfzeile A** (seit 1.3, alle Popup-Arten, nur Theme „Casora“/Nebel): Kopf in einer Zeile – links die
   Symbol-Kachel 56/r16 (Handy 48/r14) in Gerätefarbe, daneben klein der Raum (Etikett), der Titel 28/800 (Handy 24)
   und die Statuszeile; rechts der Hauptschalter (nur wo es einen Gesamtschalter gibt, ersetzt eigene „Alles aus“-

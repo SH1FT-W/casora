@@ -1,5 +1,8 @@
 # Blaupause: neues Popup
 
+Was wo im Popup steht (Kopf, Hauptbereich, Aktionen, Abschnitte, Zeilenarten, „Weitere Einstellungen“, Mehr, Leer,
+Breite): [popup-blaupause.md](popup-blaupause.md) – das Muster v2 gilt vor den Angaben hier.
+
 Vorbild: Pulse-Popup (`casora_popup_pulse` + `scripts/local/14-pulse.js`) – auf dem Kern gebaut, ohne eigene
 Klassen. Neubauten mit eigenen Baukästen (`csl-`, `ct-`, `cfb-`, `--cnp-*`) haben jeweils eine eigene
 kleine Designsprache erzeugt – das nicht wiederholen.
@@ -30,8 +33,8 @@ kleine Designsprache erzeugt – das nicht wiederholen.
   `window._casoraRingHueHooks.push(fn(src, key) → farbe | { hue, off })` (DP-15).
 - Titel über `casoraPopupTitle(this, variables, 'Standard', ['Aliasse'])` (eigener Popup-Titel →
   Kachelname → Standard).
-- Breite: Standard 900–920 px (`--popup-min-width/--popup-max-width`); nur wenn der Inhalt einspaltig ist,
-  schmaler (Pulse: 552 px ohne zweite Spalte).
+- Breite (Muster v2, Regel 11): 552 einspaltig, 900 bei zwei Spalten oder Bild – über `window.casoraPopupWidth('one' | 'two' | 'image')`;
+  `style` gewinnt über die 900/920 aus `popup_styles`.
 - ≥ 761 px zwei Spalten, darunter eine Spalte in der Reihenfolge hero → full → left → right.
 
 ## 2. Dateien

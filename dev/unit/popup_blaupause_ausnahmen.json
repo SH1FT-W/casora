@@ -1,0 +1,76 @@
+{
+ "_lies_mich": "Ausnahmeliste zu dev/unit/popup_blaupause.mjs (docs/handbuch/popup-blaupause.md). Je Prüfung die Stellen, die heute noch abweichen, mit Anzahl und Grund. Mehr ist rot, weniger auch – dann die Zahl senken oder den Eintrag streichen. Stufe 2 und 3 der Popup-Vereinheitlichung leeren die Liste.",
+ "breite": {
+  "stellen": {
+   "custom_components/casora/scripts/local/18-ziele.js": { "anzahl": 2, "grund": "Kamera-Vollbild (Z.openCamera): 16:9 so groß wie der Schirm – Ausnahme Bild-Popups" },
+   "custom_components/casora/scripts/local/23-frigate.js": { "anzahl": 2, "grund": "Frigate-Vollbild wie Z.openCamera; Kamera-Aufbau ist Stufe 3" },
+   "tpl:casora_now_playing_chip": { "anzahl": 2, "grund": "browser_mod-Rückfall ohne Casora-Popup (460) – kein Casora-Popup" },
+   "tpl:casora_popup_scenes": { "anzahl": 2, "grund": "browser_mod-Rückfall ohne Casora-Popup (880); das Casora-Popup ist 552" }
+  }
+ },
+ "weitere": {
+  "stellen": {
+   "custom_components/casora/scripts/local/05-standard-medien.js": { "anzahl": 1, "grund": "Gerät allgemein (casora_appliance): Stufe 2 (mittel)" },
+   "custom_components/casora/scripts/local/31-velair.js": { "anzahl": 1, "grund": "Klimaanlage Velair: Stufe 2 (mittel)" },
+   "tpl:casora_air_purifier": { "anzahl": 1, "grund": "Luftreiniger: „Weitere Einstellungen“ mitten in der Liste, Stufe 2 (mittel)" },
+   "tpl:casora_fan": { "anzahl": 1, "grund": "Lüfter: wie Luftreiniger, Stufe 2 (mittel)" },
+   "tpl:casora_media": { "anzahl": 1, "grund": "Medien-Player: Stufe 2 (mittel)" },
+   "tpl:casora_now_playing_chip": { "anzahl": 1, "grund": "Medien (Now Playing): Stufe 2 (mittel)" },
+   "tpl:casora_now_playing_primary": { "anzahl": 1, "grund": "Medien (Now Playing): Stufe 2 (mittel)" },
+   "tpl:casora_switch": { "anzahl": 1, "grund": "Schalter: großer Schalter und Zeile ohne Überschrift, Stufe 2 (mittel)" },
+   "tpl:casora_thermostat": { "anzahl": 2, "grund": "Thermostat: ein Feld für Plus/Minus und Leiste, Stufe 2 (mittel)" }
+  }
+ },
+ "kopf": {
+  "stellen": {
+   "custom_components/casora/scripts/local/03-popups.js": { "anzahl": 1, "grund": "Licht-Popup im Standard-Design (lps-t, ohne Casora-Theme) – der Weich-Kopf kommt vom Rahmen" }
+  }
+ },
+ "pfeil": {
+  "stellen": {
+   "custom_components/casora/scripts/local/03-popups.js": { "anzahl": 2, "grund": "Rezepte/Licht im Standard-Design: eigene Pfeile, Rezepte ist Stufe 2 (mittel)" },
+   "custom_components/casora/scripts/local/06-kalender.js": { "anzahl": 1, "grund": "Abfall-Kalender: eigener Hauptbereich (Monatsraster), Stufe 2" },
+   "custom_components/casora/scripts/local/13-schloss.js": { "anzahl": 1, "grund": "Schloss-Ansicht „Ganzer Verlauf“-Pille: Stufe 3 (Schloss zusammenlegen)" },
+   "custom_components/casora/scripts/local/15-person.js": { "anzahl": 1, "grund": "Person „Ganzer Verlauf“-Pille: gemeinsamer Verlauf-Baustein mit der Messwertseite, Stufe 2" },
+   "custom_components/casora/scripts/local/16-maeher.js": { "anzahl": 1, "grund": "Mäher „Ganzer Verlauf“-Pille: gemeinsamer Verlauf-Baustein mit der Messwertseite, Stufe 2" },
+   "custom_components/casora/scripts/local/18-ziele.js": { "anzahl": 1, "grund": "Messwertseite „Ganzer Verlauf“-Pille wird Zeile, Stufe 2 (mittel)" },
+   "tpl:casora_mobile_header": { "anzahl": 1, "grund": "Handy-Kopf der Raumseite, kein Popup" }
+  }
+ },
+ "primaer": {
+  "stellen": {
+   "custom_components/casora/scripts/local/03-popups.js": { "anzahl": 1, "grund": "Rezepte „Idee der Woche“-Knöpfe: Aktionsreihe in Stufe 2 (mittel)" },
+   "custom_components/casora/scripts/local/13-schloss.js": { "anzahl": 2, "grund": "Schloss-Ansicht: Knöpfe kommen mit dem Zusammenlegen in Stufe 3" }
+  }
+ },
+ "geraete": {
+  "migriert": {
+   "custom_components/casora/scripts/local/02-devices.js": "Waschmaschine, Trockner, Geschirrspüler, 3D-Drucker, Saugroboter, Aquarium",
+   "custom_components/casora/scripts/local/03-popups.js": "Licht (Raum/Leuchte), Fußbodenheizung, Fahrzeug, E-Bike",
+   "custom_components/casora/scripts/local/16-maeher.js": "Mähroboter",
+   "custom_components/casora/scripts/local/18-ziele.js": "Messwertseite (Gerät des Messwerts)",
+   "custom_components/casora/scripts/local/19-befeuchter.js": "Luftbefeuchter",
+   "custom_components/casora/scripts/local/24-klingel.js": "Türklingel",
+   "custom_components/casora/scripts/local/25-coffee.js": "Kaffeevollautomat",
+   "custom_components/casora/scripts/local/26-haustier.js": "Haustier",
+   "custom_components/casora/scripts/local/28-free-tile.js": "Freie Kachel / eigenes Badge",
+   "custom_components/casora/scripts/local/30-fridge.js": "Kühlschrank",
+   "tpl:casora_cover": "Jalousie (einzeln)",
+   "tpl:casora_popup_cover": "Jalousie aus der Gruppe (eine)",
+   "tpl:casora_light": "Leuchte (einzeln)"
+  },
+  "offen": {
+   "custom_components/casora/scripts/local/05-standard-medien.js": { "grund": "Gerät allgemein – Stufe 2" },
+   "custom_components/casora/scripts/local/07-weich-spezial.js": { "grund": "Kamera und Medien – Stufe 2/3" },
+   "custom_components/casora/scripts/local/13-schloss.js": { "grund": "Schloss-Ansicht – Stufe 3" },
+   "custom_components/casora/scripts/local/23-frigate.js": { "grund": "Frigate – Stufe 2/3" },
+   "custom_components/casora/scripts/local/31-velair.js": { "grund": "Velair – Stufe 2" },
+   "tpl:casora_thermostat": { "grund": "Thermostat – Stufe 2" },
+   "tpl:casora_air_purifier": { "grund": "Luftreiniger – Stufe 2" },
+   "tpl:casora_fan": { "grund": "Lüfter – Stufe 2" },
+   "tpl:casora_switch": { "grund": "Schalter – Stufe 2" },
+   "tpl:casora_popup_lock": { "grund": "Schloss – Stufe 3" },
+   "tpl:casora_now_playing_primary": { "grund": "Medien – Stufe 2" }
+  }
+ }
+}

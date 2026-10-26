@@ -9,6 +9,7 @@ passt. Stand: Feinschliff-Runde 1.3 (10.10.2026). Grundlage sind Messungen über
 | [design-regeln.md](design-regeln.md) | Tokens (Radien, Abstände, Schatten, Schrift, Farben, Symbolkreise, Bewegung), Geometrie, Kontrast, Trefferflächen, Hover/Druck |
 | [blaupause-kachel.md](blaupause-kachel.md) | Neue Kachel oder neues Badge Schritt für Schritt |
 | [blaupause-popup.md](blaupause-popup.md) | Neues Popup Schritt für Schritt |
+| [popup-blaupause.md](popup-blaupause.md) | Popup-Muster v2: Aufbau, 11 Regeln, Entscheidungen, Ausnahmen, Bausteine `UI.section/actions/settings/empty/width` |
 | [blaupause-studio-flaeche.md](blaupause-studio-flaeche.md) | Neue Studio-Seite, Inspektor-Abschnitt, Ablauf oder Rückfrage |
 | [wortliste.md](wortliste.md) | Verbindliche Wörter Deutsch/Englisch, Zahlen, Einheiten |
 | [test-und-release.md](test-und-release.md) | Tests, Messwerkzeuge, Gate, Release, was in Prod ohne Neustart geht |

@@ -26,6 +26,7 @@ alles auf einmal umgebaut werden muss.
 | Studio-Felder 38/44 px | `dev/qa/regress/r19_einstellungen_feldgroesse.mjs` | Laufzeit |
 | Umzug unverändert | `r24_umzug_wie_vorher`, `rf02_raum_ablauf`, `r121`, `r122` | Laufzeit |
 | Leistung: Voll-Durchläufe, Leck, doppelte Abrufe | `dev/unit/leistung_13.mjs`, `dev/qa/leistung.mjs --grenzen dev/qa/leistung-grenzen.json` | statisch + Laufzeit (Zähler) |
+| Popup-Muster v2 ([popup-blaupause.md](popup-blaupause.md)): Bausteine da, Breite 552/900, „Weitere Einstellungen“ über `UI.settings` und in jedem migrierten Geräte-Popup, kein eigener Kopf/›-Pfeil, Hauptaktion in Gerätefarbe | `dev/unit/popup_blaupause.mjs` + `popup_blaupause_ausnahmen.json` | statisch, Sperrklinke |
 
 ## 2. Vorschlag – nächste Regeltests
 
