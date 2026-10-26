@@ -610,9 +610,9 @@
     }
     if (part === 'opts') {
       var rows = [];
-      if (F() && F().present(hass)) rows.push({ icon: 'mdi:calendar-edit', label: 'Im Velair-Panel öffnen', sub: 'Profile, Modi und Vorlagen', entity: 'velair-open:' + id });
-      rows.push({ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', entity: id });
-      return UI.group(rows, 'Einstellungen');
+      // Blueprint v2: the Velair panel leaves Casora (↗ row); „Weitere Einstellungen“ is the last row (rule 8).
+      if (F() && F().present(hass)) rows.push({ icon: 'mdi:calendar-edit', label: 'Im Velair-Panel öffnen', sub: 'Profile, Modi und Vorlagen', entity: 'velair-open:' + id, out: true });
+      return UI.settings(id, rows);
     }
     return '';
   };

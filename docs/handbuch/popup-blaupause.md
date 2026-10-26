@@ -92,8 +92,11 @@ sie übernehmen alles außer Regel 3. **Glocke** und **Halten-Menü** bleiben Me
 („Weitere Einstellungen“, „Löschen“ als Aktions-Zeile).
 
 Offene Punkte aus Stufe 1 (nächster Wert der Nachbarn, bis entschieden): das Wetter behält die 7-Tage-Platte
-(„dichte Zeilen“ mit Stufe 2), das Diagramm-Popup behält seinen Zeitraum-Umschalter, bis die Messwertseite in Stufe 2
-den gemeinsamen bekommt.
+(„dichte Zeilen“). Die Messwertseite hat seit Stufe 2 denselben Zeitraum-Umschalter wie das Diagramm-Popup.
+
+Bleibende Altlasten nach Stufe 2 (in der Ausnahmeliste mit „bleibt“): das Blättern im Abfall-Monatsraster (›) und
+der eigene Kopf des Licht-Popups im Standard-Design (ohne Casora-Theme gibt es keinen Rahmen-Kopf). Medien-Fernseher
+schalten über den Hauptschalter im Kopf (Entscheidung 2), die Alarmanlage zeigt ihren Zustand in der Statuszeile.
 
 ## 5. Bausteine (`window._casoraUI`, `casora-core.js`)
 

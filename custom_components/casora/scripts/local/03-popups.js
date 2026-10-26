@@ -294,7 +294,7 @@
       + '.hua .hl{font-size:var(--casora-popup-sub-size, 13px);color:' + INK3 + ';margin-top:1px;white-space:normal;overflow-wrap:anywhere;line-height:1.3;}'
       + '.hua .pl{flex:none;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;}'
       + '.hua .cv{flex:none;opacity:.35;transition:transform .2s;}'
-      + '.hua details[open] .cv{transform:rotate(90deg);}'
+      + '.hua details[open] .cv{transform:rotate(180deg);}'
       + '.hua .bd{padding:0 var(--casora-popup-row-pad-x, 16px) 14px calc(var(--casora-popup-row-pad-x, 16px) + 44px);'
       +   'font-size:13.5px;line-height:1.45;color:' + INK + ';white-space:normal;overflow-wrap:anywhere;}'
       + '.hua .lb{font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + INK + ';margin:10px 0 3px;}'
@@ -353,7 +353,7 @@
         + '<summary>' + lead(x.id, x.key)
         + '<div style="flex:1;min-width:0;"><div class="nm">' + esc(x.name) + '</div>'
         + (sub ? '<div class="hl">' + esc(sub) + '</div>' : '') + '</div>'
-        + pill + '<ha-icon class="cv" icon="mdi:chevron-right" style="--mdc-icon-size:20px;color:' + INK + ';"></ha-icon>'
+        + pill + '<ha-icon class="cv" icon="mdi:chevron-down" style="--mdc-icon-size:20px;color:' + INK + ';"></ha-icon>'
         + '</summary><div class="bd">' + body + '</div></details>';
     }).join('');
 
@@ -1431,7 +1431,8 @@
         return '<span ' + attr + ' style="display:inline-flex;align-items:center;cursor:pointer;font-size:14px;font-weight:600;border-radius:999px;'
           // 1.2 (P7): Weich wie alle Text-Hauptknöpfe 44 hoch, voll rund.
           + (softBtn ? 'box-sizing:border-box;min-height:44px;padding:0 18px;' : 'padding:9px 14px;')
-          + (softBtn ? (primary ? 'color:#fff;background:var(--casora-soft-primary, #B67A50);'
+          // Blueprint v2 (rule 4): the main action in the header tile's colour with dark ink.
+          + (softBtn ? (primary ? 'color:var(--casora-popup-action-ink, rgba(46,34,20,.9));background:var(--casora-popup-accent, var(--casora-soft-primary, #B67A50));'
             : 'color:' + T.ink + ';background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));')
           : primary ? (window._casoraHH && window._casoraHH.on() ? 'color:var(--casora-popup-ui-on-action, #fff);background:var(--casora-popup-ui-action, #276B64);'
             : 'color:#000;background:var(--casora-color-teal, #00C3D0);') : 'color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));background:var(--casora-popup-ui-action-tint, rgba(0,195,208,0.14));')
@@ -3184,11 +3185,11 @@
       + '.hus summary::-webkit-details-marker{display:none;}'
       + '.hus .cnt{font-weight:500;color:' + INK3 + ';}'
       + '.hus .cv{margin-left:-2px;transition:transform .2s ease;color:' + INK3 + ';}'
-      + '.hus details[open] .cv{transform:rotate(90deg);}'
+      + '.hus details[open] .cv{transform:rotate(180deg);}'
       + '</style>'
       + '<div class="hua hus"><details data-id="' + esc(id) + '"' + (OPEN[id] ? ' open' : '') + '>'
       + '<summary><span>Übersprungen</span><span class="cnt">' + sk.length + '</span>'
-      + '<ha-icon class="cv" icon="mdi:chevron-right" style="--mdc-icon-size:20px;"></ha-icon></summary>'
+      + '<ha-icon class="cv" icon="mdi:chevron-down" style="--mdc-icon-size:20px;"></ha-icon></summary>'
       + body + '</details></div>';
   };
 })();

@@ -892,11 +892,28 @@ window._hpMultiTap = function (ev, kind) {
 })();
 
 
-// ── Allgemeines Entitäts-Popup (30.09.2026) ──────────────────────────────────
-// Für Kacheln ohne eigenes Popup (Entität mit Knöpfen …): Zustand, die Knöpfe der
-// Kachel, Werte desselben Geräts und „Weitere Einstellungen“ (HA-Infos).
+// ── Generic entity popup (30.09.2026, blueprint v2 in stage 2) ──────────────
+// For tiles without an own popup (entity with buttons …): state in the header's status line, the tile's
+// buttons (Bedienung), values of the same device (Zustand) and „Weitere Einstellungen“ as the last section.
+// Two columns (900) only with buttons and values, else one column (552) – window._casoraEntityPopup.kind.
 (function () {
   if (window._casoraEntityPopup) return;
+  var siblings = function (id, states, hass) {
+    var reg = (hass && hass.entities) || {};
+    var dev = reg[id] && reg[id].device_id;
+    return dev ? Object.keys(reg).filter(function (e) {
+      var r = reg[e];
+      return e !== id && r.device_id === dev && !r.hidden && !r.entity_category && states[e] && /^(sensor|binary_sensor)\./.test(e);
+    }).slice(0, 10) : [];
+  };
+  var hasActs = function (variables) {
+    for (var i = 1; i <= 6; i++) {
+      var p = 'action_' + i + '_';
+      if (!((p + 'action') in variables) || variables[p + 'enabled'] === false) continue;
+      if (variables[p + 'entity'] || variables[p + 'service']) return true;
+    }
+    return false;
+  };
   window._casoraEntityPopup = function (entity, variables, states, hass) {
     var UI = window._casoraUI;
     var id = entity && entity.entity_id;
@@ -907,14 +924,9 @@ window._hpMultiTap = function (ev, kind) {
       try { if (hass && hass.formatEntityState) return hass.formatEntityState(s); } catch (e) {}
       return String(s && s.state != null ? s.state : '—');
     };
-    var name = (st.attributes && st.attributes.friendly_name) || id;
     var dead = !st.state || st.state === 'unavailable' || st.state === 'unknown';
     var reg = (hass && hass.entities) || {};
-    var dev = reg[id] && reg[id].device_id;
-    var sib = dev ? Object.keys(reg).filter(function (e) {
-      var r = reg[e];
-      return e !== id && r.device_id === dev && !r.hidden && !r.entity_category && states[e] && /^(sensor|binary_sensor)\./.test(e);
-    }).slice(0, 10) : [];
+    var sib = siblings(id, states, hass);
     var watch = [id].concat(sib);
 
     var acts = [];
@@ -927,10 +939,11 @@ window._hpMultiTap = function (ev, kind) {
       var icon = variables[p + 'icon'] ? String(variables[p + 'icon']) : 'mdi:gesture-tap-button';
       if (icon.indexOf(':') < 0) icon = 'mdi:' + icon;
       var row = { icon: icon, iconTone: 'accent', label: lbl || (ent && states[ent] && states[ent].attributes.friendly_name) || svc || ent };
+      // Service and toggle buttons are action rows (no arrow), an entity opens its page (›).
       if (a === 'call-service' && svc && svc.indexOf('.') > 0) {
-        row.svc = { domain: svc.split('.')[0], service: svc.split('.')[1], data: variables[p + 'service_data'] || {} };
+        row.svc = { domain: svc.split('.')[0], service: svc.split('.')[1], data: variables[p + 'service_data'] || {} }; row.noChev = true;
       } else if (a === 'toggle' && ent) {
-        row.svc = { domain: 'homeassistant', service: 'toggle', target: { entity_id: ent } };
+        row.svc = { domain: 'homeassistant', service: 'toggle', target: { entity_id: ent } }; row.noChev = true;
       } else if (ent) {
         row.entity = ent;
         if (states[ent]) row.value = fmt(states[ent]);
@@ -940,17 +953,21 @@ window._hpMultiTap = function (ev, kind) {
 
     var fields = {}, fstyle = {}, left = [], right = [];
     var add = function (k, html, side) { fields[k] = html; fstyle[k] = [{ 'justify-self': 'stretch' }]; if (side) (side === 'r' ? right : left).push(k); };
+    // Rule 1: the state goes into the header's status line (the name is the title already).
     add('hero', '[[[ const s = states[' + JSON.stringify(id) + ']; '
       + 'let v = s ? s.state : "—"; try { if (hass.formatEntityState && s) v = hass.formatEntityState(s); } catch (e) {} '
-      + 'return window._casoraUI.hero({ label: ' + JSON.stringify(name) + ', value: (!s || s.state === "unavailable" || s.state === "unknown") ? "Nicht verfügbar" : v, center: true }); ]]]');
-    if (acts.length) add('acts', UI.group(acts, 'Aktionen'), 'l');
+      + 'const dead = !s || s.state === "unavailable" || s.state === "unknown"; '
+      + 'return window._casoraUI.line(dead ? "Nicht verfügbar" : v, [], { tone: dead ? "bad" : null }); ]]]');
+    var two = acts.length && sib.length;
+    if (acts.length) add('acts', UI.section('control', acts), 'l');
     if (sib.length) {
       add('vals', '[[[ const ids = ' + JSON.stringify(sib) + '; const UI = window._casoraUI; '
-        + 'return UI.group(ids.map((e) => { const s = states[e]; let v = s.state; try { if (hass.formatEntityState) v = hass.formatEntityState(s); } catch (x) {} '
+        + 'return UI.section("state", ids.map((e) => { const s = states[e]; let v = s.state; try { if (hass.formatEntityState) v = hass.formatEntityState(s); } catch (x) {} '
         + 'return { icon: e.startsWith("binary_sensor.") ? "mdi:checkbox-blank-circle-outline" : "mdi:gauge", iconTone: "rgba(255,255,255,0.18)", '
-        + 'label: (hass.entities[e] && hass.entities[e].name) || s.attributes.friendly_name || e, value: v, entity: e }; }), "Werte"); ]]]', 'r');
+        + 'label: (hass.entities[e] && hass.entities[e].name) || s.attributes.friendly_name || e, value: v, entity: e }; })); ]]]', two ? 'r' : 'l');
     }
-    add('more', UI.group([{ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', sub: dead ? 'Gerät nicht erreichbar' : null, entity: id }], null), acts.length ? 'l' : 'r');
+    // Rule 8: „Weitere Einstellungen“ as the last section (right column with two columns).
+    add('more', UI.settings(UI.settingsRow(id, { sub: dead ? 'Gerät nicht erreichbar' : null })), two ? 'r' : 'l');
     var areas = ['hero'].concat(left, right).map(function (k) { return '"' + k + '"'; });
     var wrapperStyle = [
       ':host { --ha-card-box-shadow: none !important; --button-card-box-shadow: none !important; --button-card-box-shadow-hover: none !important; overflow: visible !important; }',
@@ -973,6 +990,30 @@ window._hpMultiTap = function (ev, kind) {
     };
     return window._casoraStd && left.length && right.length ? window._casoraStd(card, { left: left, right: right }) : card;
   };
+  // Popup kind for the width (rule 11): 'two' with buttons and values side by side, else 'one'.
+  window._casoraEntityPopup.kind = function (entity, variables, states, hass) {
+    var id = entity && entity.entity_id;
+    return id && hasActs(variables || {}) && siblings(id, states || {}, hass).length ? 'two' : 'one';
+  };
+})();
+
+// ── Media popup: header switch for TVs and receivers (blueprint v2, decision 2) ─
+// The power row in the Einstellungen section is gone; the header switch turns a TV-like player on/off.
+(function () {
+  if (window._casoraMediaHead) return;
+  window._casoraMediaHead = function (src, hass) {
+    var tpl = [].concat((src && src._config && src._config.template) || []).join(' ');
+    if (!/\bcasora_(media|now_playing_chip|now_playing_primary)\b/.test(tpl)) return null;
+    var so = src._stateObj, id = so && so.entity_id;
+    if (!id || !/^media_player\./.test(id)) return null;
+    var a = so.attributes || {}, F = a.supported_features || 0;
+    var tvLike = ['tv', 'receiver'].indexOf(a.device_class) > -1 || /apple_tv/.test(id);
+    if (!tvLike || (F & 384) !== 384) return null;
+    return { entities: [id], toggle: function (on, ids, h) {
+      (h || hass).callService('media_player', on ? 'turn_off' : 'turn_on', { entity_id: ids });
+    } };
+  };
+  (window._casoraHeadSwitchHooks = window._casoraHeadSwitchHooks || []).push(window._casoraMediaHead);
 })();
 
 // ── Medien-Popup: Apps umbrechen und Reihen füllen (04.10.2026, 1.0.5) ───────

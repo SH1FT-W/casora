@@ -7812,7 +7812,8 @@ window.casoraMenuGlass = {
       b.hidden = !ids;
       if (!ids) return;
       var S = hass.states;
-      var on = ids.some(function (x) { return S[x] && S[x].state === 'on'; });
+      // A media player is on in every state but off/standby (playing, paused, idle …).
+      var on = ids.some(function (x) { return S[x] && (S[x].state === 'on' || (/^media_player\./.test(x) && !/^(off|standby|unavailable|unknown)$/.test(S[x].state))); });
       var dead = ids.every(function (x) { return !S[x] || /^(unavailable|unknown)$/.test(S[x].state); });
       if (this._hsPending && Date.now() < this._hsPending.until) on = this._hsPending.on;
       b.setAttribute('aria-checked', on ? 'true' : 'false');

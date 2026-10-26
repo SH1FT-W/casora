@@ -10,29 +10,22 @@
  },
  "weitere": {
   "stellen": {
-   "custom_components/casora/scripts/local/05-standard-medien.js": { "anzahl": 1, "grund": "Gerät allgemein (casora_appliance): Stufe 2 (mittel)" },
-   "custom_components/casora/scripts/local/31-velair.js": { "anzahl": 1, "grund": "Klimaanlage Velair: Stufe 2 (mittel)" },
-   "tpl:casora_media": { "anzahl": 1, "grund": "Medien-Player: Stufe 2 (mittel)" },
-   "tpl:casora_now_playing_chip": { "anzahl": 1, "grund": "Medien (Now Playing): Stufe 2 (mittel)" },
-   "tpl:casora_now_playing_primary": { "anzahl": 1, "grund": "Medien (Now Playing): Stufe 2 (mittel)" }
   }
  },
  "kopf": {
   "stellen": {
-   "custom_components/casora/scripts/local/03-popups.js": { "anzahl": 1, "grund": "Licht-Popup im Standard-Design (lps-t, ohne Casora-Theme) – der Weich-Kopf kommt vom Rahmen" }
+   "custom_components/casora/scripts/local/03-popups.js": { "anzahl": 1, "grund": "Licht-Popup im Standard-Design (lps-t, ohne Casora-Theme): dort kein Rahmen-Kopf; im Weich-Design kommt der Kopf vom Rahmen – bleibt" }
   }
  },
  "pfeil": {
   "stellen": {
-   "custom_components/casora/scripts/local/03-popups.js": { "anzahl": 2, "grund": "Rezepte/Licht im Standard-Design: eigene Pfeile, Rezepte ist Stufe 2 (mittel)" },
-   "custom_components/casora/scripts/local/06-kalender.js": { "anzahl": 1, "grund": "Abfall-Kalender: eigener Hauptbereich (Monatsraster), Stufe 2" },
+   "custom_components/casora/scripts/local/06-kalender.js": { "anzahl": 1, "grund": "Abfall-Kalender: Blättern im Monatsraster (›) – eigener Hauptbereich nach Handbuch §4, bleibt" },
    "custom_components/casora/scripts/local/13-schloss.js": { "anzahl": 1, "grund": "Schloss-Ansicht „Ganzer Verlauf“-Pille: Stufe 3 (Schloss zusammenlegen)" },
    "tpl:casora_mobile_header": { "anzahl": 1, "grund": "Handy-Kopf der Raumseite, kein Popup" }
   }
  },
  "primaer": {
   "stellen": {
-   "custom_components/casora/scripts/local/03-popups.js": { "anzahl": 1, "grund": "Rezepte „Idee der Woche“-Knöpfe: Aktionsreihe in Stufe 2 (mittel)" },
    "custom_components/casora/scripts/local/13-schloss.js": { "anzahl": 2, "grund": "Schloss-Ansicht: Knöpfe kommen mit dem Zusammenlegen in Stufe 3" }
   }
  },
@@ -54,16 +47,18 @@
    "tpl:casora_thermostat": "Thermostat",
    "tpl:casora_air_purifier": "Luftreiniger",
    "tpl:casora_fan": "Lüfter",
-   "tpl:casora_switch": "Schalter"
+   "tpl:casora_switch": "Schalter",
+   "custom_components/casora/scripts/local/31-velair.js": "Klimaanlage (Velair)",
+   "custom_components/casora/scripts/local/05-standard-medien.js": "Gerät allgemein (casora_appliance)",
+   "tpl:casora_now_playing_primary": "Medien (Now Playing)",
+   "tpl:casora_now_playing_chip": "Medien (Now-Playing-Chip)",
+   "tpl:casora_media": "Medien-Player"
   },
   "offen": {
-   "custom_components/casora/scripts/local/05-standard-medien.js": { "grund": "Gerät allgemein – Stufe 2" },
    "custom_components/casora/scripts/local/07-weich-spezial.js": { "grund": "Kamera und Medien – Stufe 2/3" },
    "custom_components/casora/scripts/local/13-schloss.js": { "grund": "Schloss-Ansicht – Stufe 3" },
    "custom_components/casora/scripts/local/23-frigate.js": { "grund": "Frigate – Stufe 2/3" },
-   "custom_components/casora/scripts/local/31-velair.js": { "grund": "Velair – Stufe 2" },
-   "tpl:casora_popup_lock": { "grund": "Schloss – Stufe 3" },
-   "tpl:casora_now_playing_primary": { "grund": "Medien – Stufe 2" }
+   "tpl:casora_popup_lock": { "grund": "Schloss – Stufe 3" }
   }
  }
 }
