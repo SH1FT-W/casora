@@ -20,7 +20,7 @@ const ONLY = process.argv.slice(2);
 const TPL = process.env.CASORA_LOCAL ? (() => {
   const all = JSON.parse(fs.readFileSync(new URL('../../../custom_components/casora/panel/casora-templates.json', import.meta.url), 'utf8'));
   const B = all.templates || all;
-  return Object.fromEntries(['casora_popup_energy', 'casora_badge_energy_group', 'casora_badge_energy'].filter((k) => B[k]).map((k) => [k, B[k]]));
+  return Object.fromEntries(['casora_popup_energy', 'casora_badge_energy_group', 'casora_badge_energy', 'casora_mobile_filter_badges'].filter((k) => B[k]).map((k) => [k, B[k]]));
 })() : null;
 
 const P = (v, u = 'W', name) => ({ state: String(v), attributes: { unit_of_measurement: u, device_class: 'power', state_class: 'measurement', friendly_name: name } });
@@ -204,6 +204,9 @@ async function run(name, S, theme, { view = 0, vars, size = [1440, 900], dark = 
   const tag = `${name} · ${theme}${dark ? '' : ' hell'}${size[0] < 600 ? ' Handy' : ''}`;
   if (!(await check(`${tag}: Energie-Badge sichtbar`, b, b))) return null;
   await check(`${tag}: Badge zeigt ${badge(S.want.home)}`, b.sub === badge(S.want.home), b.sub);
+  const shotName = `${name}_${theme.replace(/\s+/g, '-')}_${dark ? 'dunkel' : 'hell'}${size[0] < 600 ? '_handy' : ''}`;
+  if (process.env.R353_SHOTS) await page.screenshot({ path: `${process.env.R353_SHOTS}/${shotName}_badge.png`,
+    clip: { x: Math.max(0, b.x - 150), y: Math.max(0, b.y - 45), width: 300, height: 90 } });
   await page.mouse.click(b.x, b.y);
   let pop = null;
   for (let i = 0; i < 25; i++) { pop = await page.evaluate(READ_POPUP); if (pop && pop.rows.length + Object.keys(pop.e1).length > 0) break; await page.waitForTimeout(400); }
@@ -211,7 +214,7 @@ async function run(name, S, theme, { view = 0, vars, size = [1440, 900], dark = 
   pop = await page.evaluate(READ_POPUP);
   if (!(await check(`${tag}: Popup offen`, pop, pop))) return null;
   // R353_SHOTS=<dir>: keep a picture of each popup (before/after comparisons of the audit).
-  if (process.env.R353_SHOTS) await page.screenshot({ path: `${process.env.R353_SHOTS}/${name}_${theme.replace(/\s+/g, '-')}_${dark ? 'dunkel' : 'hell'}${size[0] < 600 ? '_handy' : ''}.png` });
+  if (process.env.R353_SHOTS) await page.screenshot({ path: `${process.env.R353_SHOTS}/${shotName}.png` });
   // Standard and Glass print the headline in whole watts ("1200 W"), the Casora look in kW from 1000 W.
   const heads = S.want.head ? [S.want.head] : [de(S.want.home), Math.round(S.want.home) + ' W'];
   await check(`${tag}: Popup zeigt oben ${heads[0]}`, pop.texts.slice(0, 40).some((t) => heads.includes(t)), pop.texts.slice(0, 40));
@@ -244,10 +247,13 @@ for (const [name, S] of Object.entries(ROOMS)) {
   if (ONLY.length && !ONLY.includes(name)) continue;
   for (const theme of ['Casora', 'Casora Glas', 'default']) await run(name, S, theme, { view: 1, vars: { ...S.vars, room_name: undefined } });
 }
-// Phone (light) and the other looks for the full house.
+// Phone (light) and the Standard look for the full house; the phone with one house sensor (a meter feeding in).
+const PHONE = { size: [393, 852], dark: false };
 if (!ONLY.length || ONLY.includes('battery_charging')) {
-  const S = SETUPS.battery_charging;
-  await run('battery_charging', { ...S, want: { ...S.want, flow: undefined } }, 'default', { vars: S.home });
-  await run('battery_charging', S, 'Casora', { vars: S.home, size: [393, 852], dark: false });
+  const S = SETUPS.battery_charging, std = { ...S, want: { ...S.want, flow: undefined } };
+  await run('battery_charging', std, 'default', { vars: S.home });
+  await run('battery_charging', S, 'Casora', { vars: S.home, ...PHONE });
+  await run('battery_charging', std, 'default', { vars: S.home, ...PHONE });
 }
+if (!ONLY.length || ONLY.includes('meter_feed_in')) await run('meter_feed_in', SETUPS.meter_feed_in, 'Casora', { vars: SETUPS.meter_feed_in.home, ...PHONE });
 await finish();

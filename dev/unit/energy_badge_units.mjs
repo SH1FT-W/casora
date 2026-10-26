@@ -43,4 +43,12 @@ const sub = (html) => (/<div class="badge-sub">([^<]*)<\/div>/.exec(html) || [])
   assert.ok(/high-color/.test(colour(1500, 'W')), '1500 W is high');
   assert.ok(/low-color/.test(colour(150, 'W')), '150 W is low');
 }
+// Phone start page (#78): the energy badge hands the popup the desktop Home's sensor as entity_power, like the
+// desktop room badge does; without it a single house sensor opened an empty popup ("—").
+{
+  const M = T.casora_mobile_filter_badges.custom_fields.badges.card.cards.find((c) => c.template === 'casora_badge_energy_group');
+  const ep = (hv) => run(M.variables.entity_power, { states: {}, variables: { casora_hv: hv } });
+  assert.equal(ep({ energy_power_entity: 'sensor.meter' }), 'sensor.meter');
+  assert.equal(ep({ energy_power_entity: 'sensor.meter', energy_entities: ['sensor.a', 'sensor.b'] }), undefined, 'a list counts before the sensor');
+}
 console.log('ok energy_badge_units');
