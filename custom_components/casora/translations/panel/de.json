@@ -2698,7 +2698,9 @@
     "Charts": "Diagramme",
     "Add sensor …": "Sensor hinzufügen …",
     "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Jeder Sensor öffnet sich als Diagramm wie im Popup der Diagramm-Kachel: 24 Stunden, 7 oder 30 Tage oder ein Jahr.",
-    "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Ausgewählte Jalousien, die nicht ganz geschlossen sind, erscheinen auf „Zuhause“ in der Sicherheits-Reihe als „Jalousien“ und zählen als nicht sicher. Ohne Auswahl ändert sich nichts."
+    "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Ausgewählte Jalousien, die nicht ganz geschlossen sind, erscheinen auf „Zuhause“ in der Sicherheits-Reihe als „Jalousien“ und zählen als nicht sicher. Ohne Auswahl ändert sich nichts.",
+    "Which covers count as open at night": "Welche Jalousien nachts als offen zählen",
+    "Which covers count as open at night – for all dashboards.": "Welche Jalousien nachts als offen zählen – für alle Dashboards."
   },
   "patterns": [
     [

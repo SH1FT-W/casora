@@ -2698,7 +2698,9 @@
     "Charts": "Gráficos",
     "Add sensor …": "Añadir sensor …",
     "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Cada sensor se abre como gráfico, igual que la ventana de la tarjeta Gráfico: 24 horas, 7 o 30 días o un año.",
-    "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Las persianas elegidas que no estén del todo cerradas aparecen en Inicio, en la fila de seguridad, como «Persianas» y cuentan como no seguras. Sin selección no cambia nada."
+    "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Las persianas elegidas que no estén del todo cerradas aparecen en Inicio, en la fila de seguridad, como «Persianas» y cuentan como no seguras. Sin selección no cambia nada.",
+    "Which covers count as open at night": "Qué persianas cuentan como abiertas de noche",
+    "Which covers count as open at night – for all dashboards.": "Qué persianas cuentan como abiertas de noche, para todos los paneles."
   },
   "patterns": [
     [

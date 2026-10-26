@@ -2698,7 +2698,9 @@
     "Charts": "Grafieken",
     "Add sensor …": "Sensor toevoegen…",
     "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Elke sensor opent als grafiek zoals het venster van de grafiektegel: 24 uur, 7 of 30 dagen of een jaar.",
-    "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Gekozen rolluiken die niet helemaal dicht zijn, verschijnen op Thuis in de beveiligingsrij als ‘Rolluiken’ en tellen als niet veilig. Niets gekozen: er verandert niets."
+    "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Gekozen rolluiken die niet helemaal dicht zijn, verschijnen op Thuis in de beveiligingsrij als ‘Rolluiken’ en tellen als niet veilig. Niets gekozen: er verandert niets.",
+    "Which covers count as open at night": "Welke rolluiken 's nachts als open tellen",
+    "Which covers count as open at night – for all dashboards.": "Welke rolluiken 's nachts als open tellen, voor alle dashboards."
   },
   "patterns": [
     [

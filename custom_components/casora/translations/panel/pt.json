@@ -2698,7 +2698,9 @@
     "Charts": "Gráficos",
     "Add sensor …": "Adicionar sensor …",
     "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year.": "Cada sensor abre como gráfico, como a janela do cartão Gráfico: 24 horas, 7 ou 30 dias ou um ano.",
-    "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Os estores escolhidos que não estejam totalmente fechados aparecem no Início, na linha de segurança, como «Estores» e contam como não seguros. Sem seleção, nada muda."
+    "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes.": "Os estores escolhidos que não estejam totalmente fechados aparecem no Início, na linha de segurança, como «Estores» e contam como não seguros. Sem seleção, nada muda.",
+    "Which covers count as open at night": "Que estores contam como abertos à noite",
+    "Which covers count as open at night – for all dashboards.": "Que estores contam como abertos à noite, para todos os painéis."
   },
   "patterns": [
     [

@@ -2560,6 +2560,8 @@ const SECTIONS = [
       { key: "security_summary", label: "Summary", type: "select", options: ["", "detailed", "short"], always: true, ord: 7.5,
         optionLabels: { "": "Automatic", detailed: "Always detailed", short: "Always short" },
         hint: "Automatic: icons with a count on the home page, written out in rooms, where there is usually just one window or door." },
+      { key: "security_covers_link", label: "Security: covers", type: "link", page: "home", focus: "security", always: true, ord: 7.8,
+        hint: "Which covers count as open at night – for all dashboards." },
       { key: "show_security_inline", label: "Separate security badges", type: "bool",
         boolDefault: false, always: true, ord: 8,
         hint: "Shows locks, alarm, doors, windows and cameras as their own badges." },
@@ -18507,6 +18509,19 @@ class CasoraPanel extends HTMLElement {
           row.appendChild(this._optionChips(picked, avail, WEATHER_PICK_LABELS, write,
             { max: curves ? WEATHER_MAX_CURVES : 0, min: curves ? 1 : 0, order: all }));
           addDrop(row, f);
+          fs.appendChild(row);
+          addHint();
+          return;
+        }
+
+        // A row that leads to a settings page (e.g. which covers count for security, #76): one tap, with ‹ back.
+        if (f.type === "link") {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "ghost";
+          b.textContent = trLabel("Choose") + " ›";
+          b.onclick = () => { if (typeof this._csHubGo === "function") this._csHubGo({ page: f.page, focus: f.focus, back: "start" }); };
+          row.appendChild(b);
           fs.appendChild(row);
           addHint();
           return;
