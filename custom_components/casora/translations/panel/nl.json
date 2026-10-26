@@ -1534,7 +1534,6 @@
     "Scene": "Scène",
     "Hide a scene": "Een scène verbergen",
     "Doors and windows": "Deuren en ramen",
-    "Groups of contact sensors for the security popups. Empty: every door and window sensor.": "Groepen contactsensoren voor de beveiligingsvensters. Leeg: elke deur- en raamsensor.",
     "Group": "Groep",
     "Add group": "Groep toevoegen",
     "Icons are picked automatically. Set one here, or a separate volume control such as a soundbar.": "Pictogrammen worden automatisch gekozen. Stel er hier een in, of een aparte volumeregeling zoals een soundbar.",
@@ -2629,7 +2628,11 @@
     "HACS's update entry for Casora is not available right now. Try again in a moment or update in HACS.": "Het update-item van HACS voor Casora is nu niet beschikbaar. Probeer het zo nog eens of werk bij in HACS.",
     "HACS did not report the new version as installed. Check HACS.": "HACS meldt de nieuwe versie niet als geïnstalleerd. Kijk in HACS.",
     "Open in HACS": "Openen in HACS",
-    "Casora is updated through HACS. To try a beta, open it in the list below and tap Install. Betas can have bugs.": "Casora wordt via HACS bijgewerkt. Wil je een bèta proberen, open die dan in de lijst hieronder en tik op Installeren. Bèta's kunnen fouten hebben."
+    "Casora is updated through HACS. To try a beta, open it in the list below and tap Install. Betas can have bugs.": "Casora wordt via HACS bijgewerkt. Wil je een bèta proberen, open die dan in de lijst hieronder en tik op Installeren. Bèta's kunnen fouten hebben.",
+    "Hide a door or window": "Deur of raam verbergen",
+    "Own name": "Eigen naam",
+    "Rename a door or window": "Deur of raam hernoemen",
+    "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Zonder groep tellen alle deur- en raamsensoren. Verborgen sensoren en eigen namen gelden voor de beveiligingsbadges en -pop-ups."
   },
   "patterns": [
     [

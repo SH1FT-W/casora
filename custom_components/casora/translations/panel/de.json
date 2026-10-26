@@ -1535,7 +1535,6 @@
     "Scene": "Szene",
     "Hide a scene": "Szene ausblenden",
     "Doors and windows": "Türen und Fenster",
-    "Groups of contact sensors for the security popups. Empty: every door and window sensor.": "Ohne Auswahl gelten alle Tür- und Fenstersensoren.",
     "Group": "Gruppe",
     "Add group": "Gruppe hinzufügen",
     "Icons are picked automatically. Set one here, or a separate volume control such as a soundbar.": "Symbole wählt Casora selbst.",
@@ -2629,7 +2628,11 @@
     "HACS's update entry for Casora is not available right now. Try again in a moment or update in HACS.": "Der Update-Eintrag von HACS für Casora ist gerade nicht verfügbar. Versuch es gleich noch einmal oder aktualisiere in HACS.",
     "HACS did not report the new version as installed. Check HACS.": "HACS meldet die neue Version nicht als installiert. Sieh in HACS nach.",
     "Open in HACS": "In HACS öffnen",
-    "Casora is updated through HACS. To try a beta, open it in the list below and tap Install. Betas can have bugs.": "Casora wird über HACS aktualisiert. Eine Beta testest du so: in der Liste unten öffnen und auf Installieren tippen. Betas können Fehler haben."
+    "Casora is updated through HACS. To try a beta, open it in the list below and tap Install. Betas can have bugs.": "Casora wird über HACS aktualisiert. Eine Beta testest du so: in der Liste unten öffnen und auf Installieren tippen. Betas können Fehler haben.",
+    "Hide a door or window": "Tür oder Fenster ausblenden",
+    "Own name": "Eigener Name",
+    "Rename a door or window": "Tür oder Fenster umbenennen",
+    "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Ohne Gruppe gelten alle Tür- und Fenstersensoren. Ausgeblendete und eigene Namen gelten für die Sicherheits-Badges und -Popups."
   },
   "patterns": [
     [

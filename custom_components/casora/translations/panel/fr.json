@@ -1534,7 +1534,6 @@
     "Scene": "Scène",
     "Hide a scene": "Masquer une scène",
     "Doors and windows": "Portes et fenêtres",
-    "Groups of contact sensors for the security popups. Empty: every door and window sensor.": "Groupes de capteurs de contact pour les fenêtres de sécurité. Vide : tous les capteurs de portes et fenêtres.",
     "Group": "Groupe",
     "Add group": "Ajouter un groupe",
     "Icons are picked automatically. Set one here, or a separate volume control such as a soundbar.": "Les icônes sont choisies automatiquement. Définis-en une ici, ou une commande de volume séparée comme une barre de son.",
@@ -2629,7 +2628,11 @@
     "HACS's update entry for Casora is not available right now. Try again in a moment or update in HACS.": "L'entrée de mise à jour HACS pour Casora n'est pas disponible pour l'instant. Réessaie dans un moment ou mets à jour dans HACS.",
     "HACS did not report the new version as installed. Check HACS.": "HACS n'a pas signalé la nouvelle version comme installée. Vérifie HACS.",
     "Open in HACS": "Ouvrir dans HACS",
-    "Casora is updated through HACS. To try a beta, open it in the list below and tap Install. Betas can have bugs.": "Casora est mis à jour via HACS. Pour essayer une bêta, ouvre-la dans la liste ci-dessous et touche Installer. Les bêtas peuvent avoir des bugs."
+    "Casora is updated through HACS. To try a beta, open it in the list below and tap Install. Betas can have bugs.": "Casora est mis à jour via HACS. Pour essayer une bêta, ouvre-la dans la liste ci-dessous et touche Installer. Les bêtas peuvent avoir des bugs.",
+    "Hide a door or window": "Masquer une porte ou fenêtre",
+    "Own name": "Nom personnalisé",
+    "Rename a door or window": "Renommer une porte ou fenêtre",
+    "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Sans groupe, tous les capteurs de portes et fenêtres comptent. Les masqués et les noms personnalisés s'appliquent aux badges et fenêtres de sécurité."
   },
   "patterns": [
     [

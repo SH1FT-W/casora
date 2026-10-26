@@ -79,6 +79,8 @@
     s.scenes.exclude = Array.isArray(s.scenes.exclude) ? s.scenes.exclude : [];
     s.contacts = s.contacts || {};
     s.contacts.groups = Array.isArray(s.contacts.groups) ? s.contacts.groups : [];
+    s.contacts.hidden = Array.isArray(s.contacts.hidden) ? s.contacts.hidden : [];
+    s.contacts.names = s.contacts.names && typeof s.contacts.names === "object" ? s.contacts.names : {};
     s.media = s.media || {};
     s.media.players = s.media.players || {};
     s.ebike = s.ebike || {};
@@ -377,7 +379,7 @@
       if (want("contacts")) {
         // Doors and windows
         g = group("contacts", { header: "Doors and windows",
-          footer: "Groups of contact sensors for the security popups. Empty: every door and window sensor." });
+          footer: "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups." });
         S.contacts.groups.forEach((c, i) => {
           row(g, "Group", [
             ent(c.id, ["binary_sensor"], (v) => { c.id = v; }),
@@ -386,6 +388,23 @@
           ]);
         });
         addRow(g, "Add group", () => { S.contacts.groups.push({ id: "", label: "" }); });
+        // #69: single doors and windows left out of the security badge and popups, and own names for them.
+        const CONTACT = ["door", "window", "opening", "garage_door"];
+        S.contacts.hidden.forEach((id, i) => {
+          row(g, i ? "" : "Hidden", [
+            ent(id, ["binary_sensor"], (v) => { S.contacts.hidden[i] = v; }, null, CONTACT),
+            del(() => { S.contacts.hidden.splice(i, 1); }),
+          ]);
+        });
+        addRow(g, "Hide a door or window", () => { S.contacts.hidden.push(""); });
+        mapRows(S.contacts.names).forEach(([id, name], i) => {
+          row(g, i ? "" : "Own name", [
+            ent(id, ["binary_sensor"], (v) => { setMap(S.contacts.names, id, v, S.contacts.names[id] || ""); render(); }, null, CONTACT),
+            txt(name, "Name", (v) => { S.contacts.names[id] = v; }, true),
+            del(() => { delete S.contacts.names[id]; }),
+          ]);
+        });
+        addRow(g, "Rename a door or window", () => { if (!("" in S.contacts.names)) S.contacts.names[""] = ""; });
       }
 
       if (want("scenes")) {

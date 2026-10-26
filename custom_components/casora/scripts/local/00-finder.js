@@ -915,6 +915,9 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       };
       groups = [{ label: 'Türen', members: pick(['door', 'garage_door']) }, { label: 'Fenster', members: pick(['window']) }];
     }
+    // Settings › Doors and windows › Hidden (#69): left out of every group, found automatically or not.
+    var hidden = (cfg.contacts && cfg.contacts.hidden) || [];
+    if (hidden.length) groups.forEach(function (g) { g.members = (g.members || []).filter(function (x) { return hidden.indexOf(x) < 0; }); });
     // Without a configured combined sensor: detect contact + tilt sensor (+ combined) of the
     // same door (casoraOpenings) – the combined sensor stands for the single sensors, otherwise
     // the contact stays and shows the tilt position via tilt[contact].
@@ -956,6 +959,11 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     return ccShared.v;
   };
   window.casoraContacts = contactsShared;
+  // Own name of a door or window from Settings › Doors and windows (#69), '' without one.
+  window.casoraContactName = function (id) {
+    var c = (window.CASORA_SETTINGS || {}).contacts, n = c && c.names && c.names[id];
+    return typeof n === 'string' ? n.trim() : '';
+  };
   // Every door and window of the house, merged sensors left out: what the security badge counts
   // on the home view without entries of its own (#39).
   window.casoraHouseContacts = function (hass) {

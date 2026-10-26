@@ -1535,7 +1535,6 @@
     "Scene": "Cena",
     "Hide a scene": "Ocultar uma cena",
     "Doors and windows": "Portas e janelas",
-    "Groups of contact sensors for the security popups. Empty: every door and window sensor.": "Grupos de sensores de contacto para as janelas de segurança. Vazio: todos os sensores de portas e janelas.",
     "Group": "Grupo",
     "Add group": "Adicionar grupo",
     "Icons are picked automatically. Set one here, or a separate volume control such as a soundbar.": "Os ícones são escolhidos automaticamente. Define um aqui, ou um controlo de volume separado como uma barra de som.",
@@ -2629,7 +2628,11 @@
     "HACS's update entry for Casora is not available right now. Try again in a moment or update in HACS.": "A entrada de atualização do HACS para o Casora não está disponível de momento. Tenta de novo daqui a pouco ou atualiza no HACS.",
     "HACS did not report the new version as installed. Check HACS.": "O HACS não indicou a nova versão como instalada. Verifica o HACS.",
     "Open in HACS": "Abrir no HACS",
-    "Casora is updated through HACS. To try a beta, open it in the list below and tap Install. Betas can have bugs.": "O Casora é atualizado através do HACS. Para experimentar uma beta, abre-a na lista abaixo e toca em Instalar. As betas podem ter erros."
+    "Casora is updated through HACS. To try a beta, open it in the list below and tap Install. Betas can have bugs.": "O Casora é atualizado através do HACS. Para experimentar uma beta, abre-a na lista abaixo e toca em Instalar. As betas podem ter erros.",
+    "Hide a door or window": "Ocultar uma porta ou janela",
+    "Own name": "Nome próprio",
+    "Rename a door or window": "Renomear uma porta ou janela",
+    "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Sem grupo contam todos os sensores de portas e janelas. Os ocultos e os nomes próprios valem para os emblemas e janelas de segurança."
   },
   "patterns": [
     [

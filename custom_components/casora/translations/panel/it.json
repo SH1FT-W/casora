@@ -1534,7 +1534,6 @@
     "Scene": "Scena",
     "Hide a scene": "Nascondi una scena",
     "Doors and windows": "Porte e finestre",
-    "Groups of contact sensors for the security popups. Empty: every door and window sensor.": "Gruppi di sensori di contatto per le finestre di sicurezza. Vuoto: tutti i sensori di porte e finestre.",
     "Group": "Gruppo",
     "Add group": "Aggiungi gruppo",
     "Icons are picked automatically. Set one here, or a separate volume control such as a soundbar.": "Le icone vengono scelte automaticamente. Impostane una qui, o un controllo volume separato come una soundbar.",
@@ -2629,7 +2628,11 @@
     "HACS's update entry for Casora is not available right now. Try again in a moment or update in HACS.": "La voce di aggiornamento di HACS per Casora non è disponibile al momento. Riprova tra poco o aggiorna in HACS.",
     "HACS did not report the new version as installed. Check HACS.": "HACS non segnala la nuova versione come installata. Controlla HACS.",
     "Open in HACS": "Apri in HACS",
-    "Casora is updated through HACS. To try a beta, open it in the list below and tap Install. Betas can have bugs.": "Casora si aggiorna tramite HACS. Per provare una beta, aprila nell'elenco qui sotto e tocca Installa. Le beta possono avere errori."
+    "Casora is updated through HACS. To try a beta, open it in the list below and tap Install. Betas can have bugs.": "Casora si aggiorna tramite HACS. Per provare una beta, aprila nell'elenco qui sotto e tocca Installa. Le beta possono avere errori.",
+    "Hide a door or window": "Nascondi una porta o finestra",
+    "Own name": "Nome personalizzato",
+    "Rename a door or window": "Rinomina una porta o finestra",
+    "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Senza gruppo contano tutti i sensori di porte e finestre. Quelli nascosti e i nomi personalizzati valgono per i badge e i popup di sicurezza."
   },
   "patterns": [
     [

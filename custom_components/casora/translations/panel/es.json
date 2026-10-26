@@ -1535,7 +1535,6 @@
     "Scene": "Escena",
     "Hide a scene": "Ocultar una escena",
     "Doors and windows": "Puertas y ventanas",
-    "Groups of contact sensors for the security popups. Empty: every door and window sensor.": "Grupos de sensores de contacto para las ventanas de seguridad. Vacío: todos los sensores de puertas y ventanas.",
     "Group": "Grupo",
     "Add group": "Añadir grupo",
     "Icons are picked automatically. Set one here, or a separate volume control such as a soundbar.": "Los iconos se eligen automáticamente. Fija uno aquí, o un control de volumen aparte como una barra de sonido.",
@@ -2629,7 +2628,11 @@
     "HACS's update entry for Casora is not available right now. Try again in a moment or update in HACS.": "La entrada de actualización de HACS para Casora no está disponible ahora. Vuelve a intentarlo en un momento o actualiza en HACS.",
     "HACS did not report the new version as installed. Check HACS.": "HACS no indicó la nueva versión como instalada. Revisa HACS.",
     "Open in HACS": "Abrir en HACS",
-    "Casora is updated through HACS. To try a beta, open it in the list below and tap Install. Betas can have bugs.": "Casora se actualiza a través de HACS. Para probar una beta, ábrela en la lista de abajo y toca Instalar. Las betas pueden tener errores."
+    "Casora is updated through HACS. To try a beta, open it in the list below and tap Install. Betas can have bugs.": "Casora se actualiza a través de HACS. Para probar una beta, ábrela en la lista de abajo y toca Instalar. Las betas pueden tener errores.",
+    "Hide a door or window": "Ocultar una puerta o ventana",
+    "Own name": "Nombre propio",
+    "Rename a door or window": "Renombrar una puerta o ventana",
+    "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Sin grupo cuentan todos los sensores de puertas y ventanas. Los ocultos y los nombres propios se aplican a las insignias y ventanas de seguridad."
   },
   "patterns": [
     [
