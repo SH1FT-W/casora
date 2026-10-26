@@ -599,6 +599,13 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     return p ? p.then(function () { return confirmSpec(spec); }) : confirmSpec(spec);
   };
   var confirmSpec = function (spec) {
+    // Blueprint v2 (UI.actions, UI.row.toggle): a dangerous action carries its own question – asked always,
+    // not only when the tile asks first. confirm: true = „Wirklich <Verb>?“, a text = that question.
+    if (spec && spec.confirm) {
+      var cIds = [].concat((spec.target && spec.target.entity_id) || (spec.data && spec.data.entity_id) || []);
+      var cw = word({ action: 'perform-action', perform_action: spec.domain + '.' + spec.service, target: { entity_id: cIds[0] }, data: spec.data || {} }, { entity: cIds[0] });
+      return ask(Object.assign(several(cIds, cw), typeof spec.confirm === 'string' ? { text: T(spec.confirm) } : {}, { withPopup: true }));
+    }
     if (!spec || !spec.domain || !SWITCH_SVC.test(String(spec.service || ''))) return Promise.resolve(true);
     var ids = [].concat((spec.target && spec.target.entity_id) || (spec.data && spec.data.entity_id) || []);
     var id = ids.filter(function (x) { return window.casoraAsksFirst(x); })[0];
@@ -7443,6 +7450,8 @@ window.casoraMenuGlass = {
       this._cfgTitle = cfg.title || '';
       this._cfgEyebrow = cfg.eyebrow || '';
       this._hsCfg = cfg.head_switch;
+      // Blueprint v2 (rule 1): a page without a tile behind it (bell, update detail …) names its header tile itself.
+      this._cfgRing = cfg.ring && typeof cfg.ring === 'object' && typeof cfg.ring.icon === 'string' ? cfg.ring : null;
       this._headerTitle.textContent = cfg.title || '';
       this._headerEyebrow.textContent = cfg.eyebrow || '';
       this._headReset();
@@ -7589,6 +7598,10 @@ window.casoraMenuGlass = {
         ring = ringFor(src, function () { if (self._ringSrc === src) self._paintSoft(false); });
         if (ring) this._ringLast = ring;
         else ring = this._ringLast || null;
+      }
+      if (sf && !ring && this._cfgRing) {
+        ring = { hue: this._cfgRing.hue || 'var(--casora-color-teal, #4E9E95)', off: !!this._cfgRing.off,
+          html: '<ha-icon icon="' + window.casoraEsc(String(this._cfgRing.icon).replace(/[^\w:-]/g, '')) + '"></ha-icon>' };
       }
       this._headerRing.hidden = !ring;
       var rh = ring ? ring.html : '';
@@ -7977,7 +7990,7 @@ window.casoraMenuGlass = {
     }
 
     _dynamicCss(cfg) {
-      var out = ':host {\n' + (cfg.style || '') + '\n}\n';
+      var out = '';
       var list = Array.isArray(cfg.popup_styles) ? cfg.popup_styles : [];
       for (var i = 0; i < list.length; i++) {
         var e = list[i];
@@ -7985,7 +7998,9 @@ window.casoraMenuGlass = {
         var sel = (!e.style || e.style === 'all') ? ':host' : ':host([' + e.style + '])';
         out += sel + ' {\n' + retarget(e.styles) + '\n}\n';
       }
-      return out;
+      // Blueprint v2 (rule 11): the popup's own style (its width per popup kind) comes last and wins over the
+      // family default in popup_styles (900/920) – before, a 552 style was silently overridden.
+      return out + ':host {\n' + (cfg.style || '') + '\n}\n';
     }
 
     async _buildCard(config, host) {
@@ -8231,6 +8246,17 @@ window.casoraMenuGlass = {
       return el.open(data || {});
     },
     close: function () { if (_el) _el.close(); },
+    // Blueprint v2 (rule 7): sub page in the same popup – ‹ back to the page before, label = that page's
+    // title, short title of its own, never the main switch of the page before.
+    sub: function (cfg) {
+      var prev = _el && _el.hasAttribute('open') ? _el._cfgCurrent : null;
+      var prevTitle = _el && _el.hasAttribute('open') ? String((_el._headerTitle && _el._headerTitle.textContent) || '').replace(/​/g, '') : '';
+      var c = Object.assign({ dismiss_on_background: true }, cfg || {});
+      if (c.eyebrow == null) c.eyebrow = prevTitle;
+      if (c.head_switch === undefined) c.head_switch = false;
+      if (c.back === undefined) c.back = prev ? function () { window.casoraPopup.open(prev); } : null;
+      return window.casoraPopup.open(c);
+    },
     // 1.5: zuerst eine Casora-Seite (window.casoraRoute, 18-ziele.js), HAs Dialog nur als letzter Rückfall.
     moreInfo: function (entityId, view) {
       if (!view && typeof window.casoraRoute === 'function') {
@@ -9082,6 +9108,11 @@ window.casoraMenuGlass = {
     return ' aria-label="' + esc(t) + '"';
   }
 
+  // ↗ for rows that leave Casora (blueprint v2, rule 6): same size and stroke as the › arrow.
+  var outArrowSvg = function (ink, cls) {
+    return '<svg class="' + esc(cls) + '" width="11" height="11" viewBox="0 0 11 11" aria-hidden="true">'
+      + '<path d="M2 9L9 2M3.5 2H9V7.5" fill="none" stroke="' + esc(ink) + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  };
   // Zeilen als einzelne Sand-Pillen statt einer Platte mit Trennlinien. Daten-Attribute,
   // Live-Felder und Klassen (hui-row/hui-tap/hui-cf …) wie im bisherigen group().
   function softGroup(rows, label, labelAction) {
@@ -9144,8 +9175,12 @@ window.casoraMenuGlass = {
         : arming
           ? ' data-casora-arm=""'
           : (r.svc ? ' data-casora-svc="' + esc(JSON.stringify(r.svc)) + '"'
-                   : (r.entity ? ' data-casora-mi="' + esc(r.entity) + '"' : ''));
-      var tappable = arming || r.svc || r.entity || r.tappable;
+                   : (r.entity ? ' data-casora-mi="' + esc(r.entity) + '"'
+                     // Blueprint v2: empty row into the Studio, ↗ row to an address (casora-core's tap handler).
+                     : (r.studio ? ' data-casora-go="studio"' : (r.url ? ' data-casora-go="' + esc(r.url) + '"'
+                       // Blueprint v2: › row onto a module's own sub page (UI.page registers the opener).
+                       : (r.page ? ' data-casora-page="' + esc(r.page) + '"' : '')))));
+      var tappable = arming || r.svc || r.entity || r.tappable || r.page;
 
       var lead;
       if (r.image !== undefined) {
@@ -9185,6 +9220,7 @@ window.casoraMenuGlass = {
       }
 
       out += '<div class="hui-row hui-srow' + (tappable ? ' hui-tap' : '') + (r.selected ? ' hui-sel' : '') + (r.active ? ' hui-act' : '') + '"' + tap
+        + (r.bp ? ' data-casora-bp="' + esc(r.bp) + '"' : '')
         + ' style="' + (tappable ? 'cursor:pointer;' : '')
         + (r.selected ? 'background:var(--casora-soft-row-selected, var(--casora-lps-seg-on, #FFFDF9));'
           + 'box-shadow:var(--casora-soft-row-selected-shadow, var(--casora-lps-seg-on-shadow, 0 6px 16px -10px rgba(90,70,50,0.45)));' : '')
@@ -9267,7 +9303,9 @@ window.casoraMenuGlass = {
       // r.endHtml (#59): the row's own control on the right (switch, time, stepper of the entity list), built by the module
       // from escaped parts; it takes the clicks itself, the rest of the row stays as it is.
       if (r.endHtml) out += '<div class="hui-end" style="flex:none;display:flex;align-items:center;">' + r.endHtml + '</div>';
-      if ((r.entity || r.tappable) && (!r.svc || armOnAction)) {
+      // Blueprint v2: ↗ leaves Casora (r.out), select/action rows have no arrow (r.noChev).
+      if (r.out && !r.noChev) out += outArrowSvg(T.ink, 'hui-chev hui-end');
+      else if ((r.entity || r.tappable || r.page) && (!r.svc || armOnAction) && !r.noChev) {
         out += '<svg class="hui-chev hui-end" width="7" height="12" viewBox="0 0 7 12" aria-hidden="true">'
           // DP-30: Pfeil in Text 1 mit Deckkraft .6 (Text 3 · .6 lag bei 2,5 : 1).
           + '<path d="M1 1L6 6L1 11" fill="none" stroke="' + T.ink + '" stroke-width="2" '
@@ -9358,8 +9396,12 @@ window.casoraMenuGlass = {
         : arming
           ? ' data-casora-arm=""'
           : (r.svc ? ' data-casora-svc="' + esc(JSON.stringify(r.svc)) + '"'
-                   : (r.entity ? ' data-casora-mi="' + esc(r.entity) + '"' : ''));
-      var tappable = arming || r.svc || r.entity || r.tappable;
+                   : (r.entity ? ' data-casora-mi="' + esc(r.entity) + '"'
+                     // Blueprint v2: empty row into the Studio, ↗ row to an address (casora-core's tap handler).
+                     : (r.studio ? ' data-casora-go="studio"' : (r.url ? ' data-casora-go="' + esc(r.url) + '"'
+                       // Blueprint v2: › row onto a module's own sub page (UI.page registers the opener).
+                       : (r.page ? ' data-casora-page="' + esc(r.page) + '"' : '')))));
+      var tappable = arming || r.svc || r.entity || r.tappable || r.page;
 
       var lead;
       if (r.image !== undefined) {
@@ -9474,7 +9516,8 @@ window.casoraMenuGlass = {
           + (r.valueIcon ? actxInner(r.value, r.valueIcon, T.fill2) : lit(r.value, r.valueLit)) + '</div>';
       }
       if (r.endHtml) out += '<div style="flex:none;display:flex;align-items:center;">' + r.endHtml + '</div>';
-      if ((r.entity || r.tappable) && (!r.svc || armOnAction)) {
+      if (r.out && !r.noChev) out += outArrowSvg(T.ink3, 'hui-chev');
+      else if ((r.entity || r.tappable || r.page) && (!r.svc || armOnAction) && !r.noChev) {
         out += '<svg class="hui-chev" width="7" height="12" viewBox="0 0 7 12" aria-hidden="true">'
           + '<path d="M1 1L6 6L1 11" fill="none" stroke="' + T.ink3 + '" stroke-width="2" '
           + 'stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -9566,6 +9609,8 @@ window.casoraMenuGlass = {
     + '.hui-mlb{flex:1;min-width:0;font-size:var(--casora-fs-value,14px);font-weight:700;letter-spacing:-0.01em;'
     +   'color:var(--casora-soft-mehr-ink, ' + S.label + ');pointer-events:none;}'
     + '.hui-mlb .l{display:none;}'
+    + '.hui-mhint{display:block;font-size:var(--casora-fs-sub,13px);font-weight:500;color:' + S.sub + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
+    + '.hui-more.open>.hui-mhd .hui-mhint{display:none;}'
     + '.hui-more.open>.hui-mhd .hui-mlb .m{display:none;}'
     + '.hui-more.open>.hui-mhd .hui-mlb .l{display:inline;}'
     + '.hui-mct{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;min-width:22px;height:22px;'
@@ -9592,7 +9637,9 @@ window.casoraMenuGlass = {
       + (opts.remember ? ' data-casora-more-rem=""' : '') + '>'
       + '<div class="hui-mhd" data-casora-more-tg="" data-casora-nodismiss="" role="button" aria-expanded="' + (open ? 'true' : 'false') + '">'
       + '<span class="hui-mlb"><span class="m">' + esc(opts.label || 'Mehr') + '</span>'
-      + '<span class="l">' + esc(opts.less || 'Weniger') + '</span></span>'
+      + '<span class="l">' + esc(opts.less || 'Weniger') + '</span>'
+      // Blueprint v2 (rule 9): the sub line names what is inside („LED, Tag/Nacht, Akku …“).
+      + (opts.hint ? '<span class="hui-mhint">' + esc(opts.hint) + '</span>' : '') + '</span>'
       + cnt
       + '<svg class="hui-mch" width="12" height="8" viewBox="0 0 12 8" aria-hidden="true">'
       + '<path d="M1 1.5L6 6.5L11 1.5" fill="none" stroke="var(--casora-soft-mehr-ink, ' + S.label + ')" stroke-width="2" '
@@ -9628,6 +9675,33 @@ window.casoraMenuGlass = {
           window.casoraHaptic('selection');
           moreToggle(t);
           ev.preventDefault(); ev.stopPropagation();
+          return;
+        }
+        // Blueprint v2: › row onto a sub page of the module („name|arg“ → window._casoraPages[name](arg, el)).
+        if (t && t.dataset && t.dataset.casoraPage) {
+          if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
+          window._casoraUILastTap = Date.now();
+          window.casoraHaptic('light');
+          var pg = String(t.dataset.casoraPage), pcut = pg.indexOf('|');
+          var pfn = (window._casoraPages || {})[pcut < 0 ? pg : pg.slice(0, pcut)];
+          ev.preventDefault(); ev.stopPropagation();
+          window._casoraSuppressDismiss = Date.now() + 600;
+          if (typeof pfn === 'function') { try { pfn(pcut < 0 ? '' : pg.slice(pcut + 1), t); } catch (e) { console.error('casora: page', e); } }
+          return;
+        }
+        // Blueprint v2: empty row into the Studio, ↗ row to an address (same tab for Casora/HA paths).
+        if (t && t.dataset && t.dataset.casoraGo) {
+          if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
+          window._casoraUILastTap = Date.now();
+          window.casoraHaptic('light');
+          var go = t.dataset.casoraGo;
+          ev.preventDefault(); ev.stopPropagation();
+          if (go === 'studio') go = '/casora-studio';
+          if (/^\/(?!\/)/.test(go)) {
+            if (window.casoraPopup) window.casoraPopup.close();
+            history.pushState(null, '', go);
+            window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
+          } else if (/^https?:\/\//.test(go)) window.open(go, '_blank', 'noopener');
           return;
         }
         if (t && t.classList && t.classList.contains('hui-cf')) {
@@ -10558,8 +10632,9 @@ window.casoraMenuGlass = {
           ? '<span' + (o.btnSvc || '') + ' style="display:inline-flex;align-items:center;gap:7px;cursor:pointer;'
             // 1.2 (P7): Text-Hauptknopf 44 hoch, voll rund (wie Saugroboter „Start“).
             + 'box-sizing:border-box;min-height:44px;font-size:13px;font-weight:700;padding:0 20px;border-radius:999px;margin-top:16px;'
+            // Blueprint v2 (decision 6): the main action in the header tile's colour with dark ink (was a fixed teal).
             + (o.primary
-                ? 'color:var(--casora-soft-ki-ink, #fff);background:var(--casora-soft-ki, var(--casora-color-teal, #4E9E95));'
+                ? 'color:var(--casora-popup-action-ink, rgba(46,34,20,.9));background:var(--casora-popup-accent, var(--casora-soft-ki, var(--casora-color-teal, #4E9E95)));'
                   + 'box-shadow:var(--casora-soft-ki-shadow, none);'
                 : 'color:' + T.ink + ';background:' + S.ctl + ';')
             + '"><ha-icon icon="mdi:creation" style="--mdc-icon-size:16px;width:16px;height:16px;display:flex;'
@@ -10786,8 +10861,154 @@ window.casoraMenuGlass = {
     return bits.join(' · ');
   }
 
-  window._casoraUI = { line: softLine, hero: hero, headline: headline, group: group, legend: legend, note: note, kiCard: kiCard, shelf: shelf, mediaRow: mediaRow, segments: segments, slider: slider, icon: icon, esc: esc, prime: prime, plantWater: plantWater, soft: soft, label: softLabel, tokens: T, v: 148 };
+  // ── Popup blueprint v2 (26.10.2026, docs/handbuch/popup-blaupause.md) ─────────────────────────────
+  // The pieces every popup composes, top to bottom: header (frame; sub pages via casoraPopup.sub), hero
+  // (one main area, built by the module: chart, picture, slider …), action row (actions), sections in the
+  // fixed order Bedienung → Zustand → Verlauf → Einstellungen (section), the row types (row.*), the last
+  // row „Weitere Einstellungen“ (settingsRow / settings), „Mehr (n) ⌄“ (more with hint), the empty row
+  // (empty) and the two widths (width). dev/unit/popup_blaupause.mjs keeps popups on these pieces.
+  var SEC_HEAD = { control: 'Bedienung', state: 'Zustand', history: 'Verlauf', settings: 'Einstellungen' };
+  var SEC_ORDER = ['control', 'state', 'history', 'settings'];
+  var WIDTH = { one: 552, two: 900, image: 900 };
+  // Popup width per popup kind: 900 with two columns or a picture, else 552 (rule 11).
+  function width(kind) {
+    var w = WIDTH[kind] || WIDTH.two;
+    return '--popup-min-width: min(' + w + 'px, 92vw); --popup-max-width: min(' + w + 'px, 92vw);';
+  }
+  // Section: heading outside the plate, kind = control | state | history | settings. body is a row list
+  // (→ group) or ready HTML. label: speaking heading („Programm“) instead of the kind word; false = none.
+  function section(kind, body, label, labelAction) {
+    var head = label === false ? null : (label || SEC_HEAD[kind] || null);
+    var html;
+    if (Array.isArray(body)) {
+      if (!body.length) return '';
+      html = group(body, head, labelAction);
+    } else {
+      if (!body) return '';
+      html = (head ? (soft() ? softLabel(head, labelAction) : group([], head, labelAction).replace(/<style>[\s\S]*$/, '</div>')) : '') + body;
+    }
+    return '<div class="hui-sec" data-casora-sec="' + esc(SEC_ORDER.indexOf(kind) > -1 ? kind : 'state') + '">' + html + '</div>';
+  }
+  // Real switch for the end of a row (the entity list's switch, now shared). disabled: greyed out.
+  function switchHtml(on, disabled) {
+    return '<div role="switch" aria-checked="' + (on ? 'true' : 'false') + '"' + (disabled ? ' aria-disabled="true"' : '')
+      + ' style="position:relative;width:44px;height:26px;border-radius:999px;flex:none;pointer-events:none;transition:background .2s ease;'
+      + (disabled ? 'opacity:.4;' : '') + 'background:'
+      + (on ? 'var(--casora-sw-on, var(--casora-lps-switch-on, #B67A50))' : 'var(--casora-sw-off, rgba(58,50,43,0.38))') + ';">'
+      + '<div style="position:absolute;top:3px;left:' + (on ? '21px' : '3px') + ';width:20px;height:20px;border-radius:50%;'
+      + 'background:var(--casora-lps-knob, #fff);box-shadow:var(--casora-sw-ks, 0 1px 3px rgba(0,0,0,0.2));transition:left .2s ease;"></div></div>';
+  }
+  // Row types (rule 6) – each returns a row object for group()/section():
+  //   toggle  real switch on the right; tap toggles (svc), confirm asks first; disabled: grey with a reason as sub
+  //   value   value on the right, nothing to tap
+  //   next    value + › – opens a page with ‹ (entity → casoraRoute: device or measurement page)
+  //   out     ↗ – leaves Casora (url or HA dialog); value optional
+  //   action  runs something (svc, optional confirm), no arrow
+  //   select  picks something in this popup (chart, programme); selected = highlighted, no arrow
+  var row = {
+    toggle: function (o) {
+      var on = !!o.on;
+      var r = { icon: o.icon, iconTone: on ? (o.iconTone || 'accent') : 'rgba(0,0,0,0)', label: o.label, sub: o.sub,
+        labelLit: o.labelLit, active: on && !o.disabled, endHtml: switchHtml(on, o.disabled) };
+      if (o.disabled) { if (o.reason) r.sub = o.reason; }
+      else if (o.svc || o.entity) {
+        r.svc = o.svc || { domain: 'homeassistant', service: on ? 'turn_off' : 'turn_on', target: { entity_id: o.entity } };
+        if (o.confirm) r.confirm = o.confirm;
+      }
+      return r;
+    },
+    value: function (o) { return Object.assign({}, o, { entity: null, svc: null, tappable: false }); },
+    next: function (o) { return Object.assign({}, o, { tappable: o.entity ? o.tappable : true }); },
+    out: function (o) { return Object.assign({}, o, { out: true, tappable: true }); },
+    action: function (o) { return Object.assign({}, o, { noChev: true }); },
+    select: function (o) { return Object.assign({}, o, { noChev: true, active: !!o.selected, selected: false, tappable: true }); },
+  };
+  // Sub pages of a module (rule 7): page(name, fn) registers fn(arg, el); a row { page: 'name|arg' } opens it.
+  function page(name, fn) { (window._casoraPages || (window._casoraPages = {}))[name] = fn; }
+  // „Weitere Einstellungen“ (rule 8): last row of every device popup; the target is always the device
+  // page (casora-core's row handler routes the label there). ids: one entity or a list – several devices
+  // first offer the choice (sub page „devices“, 18-ziele.js), then the device page.
+  function settingsRow(id, o) {
+    o = o || {};
+    var ids = [].concat(id || []).filter(function (x, i, a) { return x && a.indexOf(x) === i; });
+    if (!ids.length) return null;
+    var r = { icon: 'mdi:tune-variant', iconTone: o.iconTone, label: 'Weitere Einstellungen', sub: o.sub || null, bp: 'settings' };
+    if (ids.length > 1) { r.page = 'devices|' + ids.join(','); r.sub = o.sub || ids.length + ' Geräte'; }
+    else r.entity = ids[0];
+    return r;
+  }
+  // Section „Einstellungen“: the given rows, then „Weitere Einstellungen“ as the last one.
+  function settings(id, rows, label) {
+    var list = (rows || []).filter(Boolean);
+    // id may be a ready settings row (settingsRow(id, { sub })).
+    var s = id && typeof id === 'object' && !Array.isArray(id) ? id : settingsRow(id);
+    if (s) list.push(s);
+    return section('settings', list, label);
+  }
+  // Action row (rule 4): 1–3 pills under the header or hero; the main one filled in the header tile's
+  // colour with dark ink, dangerous ones never filled (red ink) and always with a confirmation.
+  //   items: [{ text, sub, icon, svc, confirm, primary, danger, disabled, attrs: { 'data-x': 'y' } }]
+  var ACT_CSS = '.hui-acts{display:grid;gap:12px;grid-template-columns:repeat(var(--n,1),minmax(0,1fr));}'
+    + '.hui-act-p{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;min-height:52px;box-sizing:border-box;'
+    +   'padding:0 18px;border-radius:999px;font-family:' + T.font + ';font-size:var(--casora-fs-row,15px);font-weight:700;white-space:nowrap;'
+    +   'cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;'
+    +   'background:' + S.ctl + ';color:' + T.ink + ';transition:filter .16s ease, background-color .16s ease;}'
+    // button-card spreads the children of its fields (margin/flex): icon and words stay together in the middle.
+    + '.hui-act-p>*{pointer-events:none;flex:none;margin:0;}'
+    + '.hui-act-p small{font-size:var(--casora-fs-sub,13px);font-weight:600;opacity:.8;overflow:hidden;text-overflow:ellipsis;}'
+    + '.hui-act-p.pri{background:var(--casora-popup-accent, var(--casora-soft-primary, #94603B));color:var(--casora-popup-action-ink, rgba(46,34,20,.9));}'
+    + '.hui-act-p.dng{color:var(--casora-color-red-text, var(--casora-color-red));}'
+    + '.hui-act-p.dis{opacity:.4;cursor:default;pointer-events:none;}'
+    + '.hui-act-p:active{transform:scale(var(--casora-press-scale, .97));}'
+    + '@media (hover:hover){.hui-act-p:not(.pri):hover{background:' + S.rowHover + ';}.hui-act-p.pri:hover{filter:brightness(1.06);}}'
+    + '@media (max-width:420px){.hui-acts.n4{grid-template-columns:repeat(2,minmax(0,1fr));}}';
+  function actions(items) {
+    var list = (items || []).filter(function (x) { return x && x.text; });
+    if (!list.length) return '';
+    var actsHtml = '<style>' + ACT_CSS + '</style><div class="hui-acts' + (list.length > 3 ? ' n4' : '') + '" style="--n:' + Math.min(list.length, 3) + ';">';
+    list.forEach(function (a) {
+      var cls = 'hui-act-p' + (a.primary && !a.danger ? ' pri' : '') + (a.danger ? ' dng' : '') + (a.disabled ? ' dis' : '');
+      var attrsHtml = '';
+      if (!a.disabled && a.svc) {
+        var spec = a.danger && !a.svc.confirm ? Object.assign({}, a.svc, { confirm: a.confirm || true }) : (a.confirm ? Object.assign({}, a.svc, { confirm: a.confirm }) : a.svc);
+        attrsHtml += ' data-casora-svc="' + esc(JSON.stringify(spec)) + '"';
+      }
+      // Only data-* attribute names (checked), values escaped.
+      Object.keys(a.attrs || {}).forEach(function (k) { if (/^data-[\w-]+$/.test(k)) attrsHtml += ' ' + esc(k) + '="' + esc(a.attrs[k]) + '"'; });
+      actsHtml += '<div class="' + esc(cls) + '" role="button"' + attrsHtml + '>'
+        + (a.icon ? '<ha-icon icon="' + esc(a.icon) + '" style="--mdc-icon-size:20px;width:20px;height:20px;display:flex;"></ha-icon>' : '')
+        + '<span>' + esc(a.text) + '</span>' + (a.sub ? '<small>· ' + esc(a.sub) + '</small>' : '') + '</div>';
+    });
+    return '<div style="font-family:' + T.font + ';">' + actsHtml + '</div></div>';
+  }
+  // Empty row (rule 10): exactly where the content would be – icon, sentence, at most one action.
+  //   o = { icon, text, sub, action: { text, svc } | null, entity (→ › page), studio: true (→ Studio, admins), out: url }
+  function empty(o) {
+    o = o || {};
+    var r = { icon: o.icon || 'mdi:information-outline', iconTone: 'rgba(0,0,0,0)', label: o.text, sub: o.sub, subWrap: true, bp: 'empty' };
+    if (o.action && o.action.svc) { r.svc = o.action.svc; r.action = o.action.text; r.actionTone = 'accent'; }
+    else if (o.entity) r.entity = o.entity;
+    else if (o.studio && window.casoraIsAdmin && window.casoraIsAdmin()) { r.tappable = true; r.studio = true; }
+    else if (o.out) { r.tappable = true; r.out = true; r.url = o.out; }
+    return group([r], null);
+  }
+
+  window._casoraUI = { line: softLine, hero: hero, headline: headline, group: group, legend: legend, note: note, kiCard: kiCard, shelf: shelf, mediaRow: mediaRow, segments: segments, slider: slider, icon: icon, esc: esc, prime: prime, plantWater: plantWater, soft: soft, label: softLabel, tokens: T, v: 149 };
   window._casoraUI.more = more;
+  Object.assign(window._casoraUI, { section: section, row: row, settingsRow: settingsRow, settings: settings, actions: actions,
+    empty: empty, width: width, switchHtml: switchHtml, page: page, SEC_ORDER: SEC_ORDER, WIDTH: WIDTH });
+  window.casoraPopupWidth = width;
+  // Short, readable device names for rows and page titles (blueprint v2, rule 7: never the hardware id):
+  // „Jalousie Bad shellyswitch25-C45BBE79672F Device Power“ → „Jalousie Bad“.
+  // keepKind: page titles keep what is measured („Leistung“), consumer rows drop it.
+  window.casoraCleanName = function (name, keepKind) {
+    var t = String(name == null ? '' : name);
+    var out = t.replace(/\s+[a-z][a-z0-9]*[-_](?=[0-9a-f]*\d)[0-9a-f]{6,}\b/ig, '');
+    out = keepKind ? out.replace(/\s+device(?=\s+\S)/i, '')
+      : out.replace(/\s*(device\s+)?((aktuelle|momentane)\s+leistung|current\s+(power|consumption)|power|leistung)$/i, '');
+    out = out.replace(/\s{2,}/g, ' ').trim();
+    return out || t;
+  };
 })();
 // Zustandstext für die Oberfläche – nie ein roher englischer HA-Zustand („Unavailable“,
 // „Jammed“ …). Reihenfolge: eigene Liste der Vorlage (map) → Casoras Liste je Domäne →
@@ -11070,9 +11291,13 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       + '.cpn button:focus-visible{outline:2px solid currentColor;outline-offset:2px}</style>'
       + (stamp ? '<p class="when">' + esc0(stamp) + '</p>' : '')
       + pnHtml(n.message)
-      + '<button type="button" data-casora-pn-del="' + esc0(k) + '">Löschen</button></div>';
+      // Blueprint v2 (rule 9): „Löschen“ is an action row at the end, not a loose button.
+      + '<div style="height:8px"></div>' + window._casoraUI.group([{ icon: 'mdi:delete-outline', iconTone: 'bad', label: 'Löschen', labelTone: 'bad', tappable: true, noChev: true }], null)
+          .replace('<div class="hui-row', '<div data-casora-pn-del="' + esc0(k) + '" class="hui-row') + '</div>';
     window.casoraPopup.open({
       title: pnText(n.title) || 'Benachrichtigung', dismissable: true,
+      ring: { icon: 'mdi:bell-outline', hue: 'var(--casora-tone-alert, var(--casora-color-red, #D35A4E))' },
+      style: window.casoraPopupWidth ? window.casoraPopupWidth('one') : undefined,
       content: { type: 'custom:button-card', tap_action: { action: 'none' }, hold_action: { action: 'none' },
         show_icon: false, show_name: false, show_label: false, show_state: false,
         card_mod: { style: ':host { --ha-card-box-shadow: none !important; } ha-card { background: transparent !important; border: none !important; box-shadow: none !important; cursor: default !important; } ha-ripple { display: none !important; }' },
