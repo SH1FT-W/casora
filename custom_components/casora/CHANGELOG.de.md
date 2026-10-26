@@ -4,6 +4,41 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.62 – 26.10.2026
+
+Fasst alles aus den Betas 26.10.62b1 bis b6 zusammen, dazu einheitliche Popups.
+
+### Neu
+- **Einstellungen nach Themen im Studio:** Ein Knopf „Einstellungen“ öffnet eine Startseite mit Suche, sechs Themen (Aussehen, Meldungen, Haus & Geräte, Wetter & Klima, Bedienung, Extras) und System (Updates). Was nur für dieses Dashboard gilt, ist markiert. Das bisherige Studio ist entfernt.
+- **Energiefluss (#62):** Das Energie-Popup zeigt den Fluss wie das Energie-Dashboard von Home Assistant: Netz, Solar, Haus und Akku (und CO₂, wenn vorhanden) mit ruhigen Punkten in Richtung der aktuellen Leistung. Darunter die fünf größten Verbraucher und „Alle N anzeigen“.
+- **Kacheln Entity-Liste und „Mehr“ (#59):** eine Kachel, deren Popup Entitäten zum direkten Schalten und Einstellen zeigt (Schalter, Zeiten, Zahlen, Auswahl), aus einer Gruppe (auch Gruppen-Helfer), einer eigenen Auswahl oder einem Home-Assistant-Label; und eine Kachel für Listen und Diagramme ohne eigene Kachel.
+- **Home-Assistant-Meldungen in der Glocke (#70):** Meldungen von `persistent_notification.create` und Home Assistants eigene Hinweise erscheinen in der Glocke; Wegwischen löscht sie auch in Home Assistant, Antippen zeigt den ganzen Text mit „Löschen“.
+- **Jalousien in der Sicherheit (#76):** wählbar, welche Jalousien für die Sicherheit zählen (Einstellungen › Haus & Geräte oder am Sicherheits-Badge). Ist eine offen, steht auf Zuhause „Jalousien · N geöffnet“, standardmäßig nur von Sonnenuntergang bis Sonnenaufgang, mit Popup zum Schließen.
+- **Geschirrspüler (#77):** Home-Connect-Spüler werden über die Kennungen von Home Assistant erkannt; Hygiene+ und Intensivzone; das Programm als eine Zeile; Startverzögerung als Uhrzeit.
+- **Farbrad im Licht-Popup** und ein **Szenen-Badge in jedem Raum**.
+- **Einzelne Türen und Fenster ausblenden oder umbenennen (#69).**
+- **Energie-Badge zurück auf Automatisch (#78)** mit einem Knopf im Studio.
+
+### Geändert
+- **Einheitliche Popups:** Jedes Popup folgt demselben Muster: Kopf mit Raum, Name und Status; höchstens eine Hauptbedienung; Abschnitte in fester Reihenfolge (Bedienung, Zustand, Verlauf, Einstellungen); › öffnet immer eine Unterseite mit ‹ zurück; „Weitere Einstellungen“ mit den Geräte-Infos am Ende jedes Geräte-Popups; ein Knopfstil; eine Breite. Zweispaltige Popups sind symmetrisch.
+- **Pulse-Popup** neu geordnet: kurzer Status, Anzahl am Abschnitt, Akkustand am Symbol.
+- **Energieliste im Raum (#79):** alle Verbraucher des Raums, 0 W blass nach den aktiven. Am Handy öffnet das Energie-Badge auf Zuhause das Popup.
+- **Beleuchtungs-Badge am Handy (#80):** Hat das Badge eigene Lampen, zeigt das Handy genau diese, wie der Desktop.
+- **Energie:** Die Quellen aus dem Energie-Dashboard von Home Assistant haben Vorrang (auch vor Anker Solix), und der Anteil aus Solar und Akku erscheint auch ohne die Solarfelder der Kachel.
+- **Strompreis** nur noch aus den Einstellungen bzw. dem Energie-Dashboard; das Feld an der Kachel ist weg.
+- **Studio:** Abschnitte aus den Einstellungen behalten ihre Breite; die Vorschau flackert nicht mehr bei Änderungen, die sie nicht zeigt; größere Tippflächen am Handy; der Glocken-Schalter ist eine eigene Zeile.
+- **Sprechen an der Klingel (#23):** eine Verbindung für Bild und Mikrofon; mit Home Assistant 2026.11 spricht Casora über Home Assistants eigenen Player.
+- **Diagnose** mit anonymem Energie-Abschnitt.
+
+### Behoben
+- **Speichern gesperrt nach eigener Karte (#75).**
+- **Licht-Popup in Firefox (#74):** Der letzte Raum-Knopf war unsichtbar.
+- **Wetter-Popup (#67, #68):** Werte aller Kurven, Diagramm nach ‹ zurück.
+- **Studio „Kachel hinzufügen“ (#71)** und **Bezeichnung des ersten Diagramm-Sensors (#72).**
+- **Energie-Prüfung:** kW als W gelesen im Standard-Look, negative Leistung in W auf Badges, leeres Zuhause-Popup mit nur einem Haussensor.
+- **Smart Sort:** Eine inaktiv gewordene Kachel konnte zwischen den aktiven stehen bleiben.
+- Kleineres: Haustier-Werte liefen am Handy ineinander, „526 Std.“ in Tagen, „vor 3w“ ausgeschrieben, „connected“ übersetzt, das CO₂-Feld zeigt die echte Vorgabe 1800 ppm.
+
 ## 26.10.61 – 25.10.2026
 
 Enthält alles aus 26.10.60 und drei Fehlerbehebungen. Wer von 26.10.59 oder älter kommt, bitte zuerst den Hinweis unten lesen.
