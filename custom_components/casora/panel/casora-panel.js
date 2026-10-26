@@ -24023,7 +24023,32 @@ class CasoraPanel extends HTMLElement {
       if (token !== this._mapSwap) return;
       const prev = new Set([...(old ? old.querySelectorAll("[data-mk]") : [])]
         .map((e) => e.dataset.mk));
+      // _roomMap points the size handling (_applyMapSize, the ResizeObserver, _mapVis) at the new card.
+      const keepApply = this._applyMapSize, keepVis = this._mapVis;
       const card = this._roomMap();
+      // Same markup as the preview on screen (a state changed that it does not show): keep it.
+      // Swapping in an identical copy repainted the nav bar and tiles - a visible flicker.
+      const html = card.outerHTML;
+      const oldSlot = old && old.querySelector(".mapslot");
+      if (old && oldSlot && keepApply && !roomChanged && !shapeSwap && old.isConnected && html === this._mapHtml) {
+        this._applyMapSize = keepApply;
+        this._mapVis = keepVis;
+        if (this._sizeObs) this._sizeObs.disconnect();
+        let last = "";
+        this._sizeObs = new ResizeObserver(() => {
+          if (this._folding) return;
+          const b = oldSlot.getBoundingClientRect();
+          const key = Math.round(b.width) + "x" + Math.round(b.height);
+          if (key === last) return;
+          last = key;
+          keepApply();
+        });
+        this._sizeObs.observe(oldSlot);
+        const stageEl = oldSlot.closest(".stage");
+        if (stageEl) this._sizeObs.observe(stageEl);
+        return;
+      }
+      this._mapHtml = html;
       if (old) {
         const pool = new Map();
         old.querySelectorAll("img").forEach((was) => {

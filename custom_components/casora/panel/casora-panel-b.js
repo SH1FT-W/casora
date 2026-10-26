@@ -86,6 +86,7 @@
     :host(.bmode.bpage.bside.split:not(.flow):not(.bstack)) .main { padding-right:calc(var(--b-insp-w) + 14px); }
     :host(.bmode.bpage.bside.split:not(.flow):not(.bstack)) .stage .segrow,
     :host(.bmode.bpage.bside.split:not(.flow):not(.bstack)) .maprowhint { visibility:visible; }
+    :host(.bmode.split.binsp.bhubsec:not(.flow):not(.bpage):not(.bstack)) { --b-insp-w:min(560px, 46vw); }
     /* S-05: the preview sits in the middle of the free height (switcher on top, nothing
        empty below anymore) – even when the inspector makes it narrower. */
     :host(.bmode.split:not(.flow):not(.phone)) .stage > .canvas { align-self:stretch; box-sizing:border-box; }
@@ -499,8 +500,13 @@
       // still covers it, its banner belongs to the preview.
       const side = page && !this._cvOpen, wasSide = this.classList.contains("bside");
       this.classList.toggle("bside", side);
+      // A section opened from the settings (e.g. Look & feel › Time) keeps the settings' width,
+      // so the panel does not jump between wide and narrow on the way in and back.
+      const hubSec = on && !page && !!this._hubBackTo && !!this._sel && this._sel.group === "rooms";
+      const wasHubSec = this.classList.contains("bhubsec");
+      this.classList.toggle("bhubsec", hubSec);
       this._bTools(on);
-      if (was !== open || wasSide !== side) this._bRefit();
+      if (was !== open || wasSide !== side || wasHubSec !== hubSec) this._bRefit();
       // Newly on (or phone rotated): the preview was hidden and has measured nothing.
       const phone = this.classList.contains("phone");
       // Also after loading another dashboard: whether it has a mobile layout changes then.
