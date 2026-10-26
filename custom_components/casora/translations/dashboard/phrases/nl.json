@@ -2516,7 +2516,8 @@
   "Ausreichend": "Voldoende",
   "Später nicht möglich": "Later niet mogelijk",
   "Früher nicht möglich": "Eerder niet mogelijk",
-  "Programm wählen": "Kies een programma"
+  "Programm wählen": "Kies een programma",
+  "CO₂-neutral": "Koolstofarm"
  },
  "patterns": [
   [
@@ -4574,6 +4575,10 @@
   [
    "^(\\d+) Rollos offen$",
    "{1} rolluiken open"
+  ],
+  [
+   "^Alle (\\d+) anzeigen$",
+   "Alle {1} tonen"
   ]
  ]
 }

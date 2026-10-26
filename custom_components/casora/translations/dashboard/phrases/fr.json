@@ -2516,7 +2516,8 @@
   "Ausreichend": "Suffisant",
   "Später nicht möglich": "Pas possible plus tard",
   "Früher nicht möglich": "Pas possible plus tôt",
-  "Programm wählen": "Choisis un programme"
+  "Programm wählen": "Choisis un programme",
+  "CO₂-neutral": "Bas carbone"
  },
  "patterns": [
   [
@@ -4574,6 +4575,10 @@
   [
    "^(\\d+) Rollos offen$",
    "{1} volets ouverts"
+  ],
+  [
+   "^Alle (\\d+) anzeigen$",
+   "Voir les {1}"
   ]
  ]
 }

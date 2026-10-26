@@ -633,7 +633,12 @@ const FULL_IDS = ['sensor.energy_grid_power', 'sensor.wechselrichter_ac_power', 
     return JSON.parse('"' + code[1] + '"');
   };
   const out = E.build({ hass: h, states: h.states, variables: { power_entities: FULL_IDS }, powerId: null });
-  const srcCode = cardOf(out, 'sources');
+  // #62: with solar and a battery the popup draws the energy flow; the sources card then lists only the consumers
+  // (the sources are the flow's circles). The rows' texts are checked on the card without the flow (srcCode).
+  assert.match(JSON.stringify(out), /_casoraSoftEnergy\.flow\(/, 'the energy flow card is there');
+  const srcFlow = cardOf(out, 'sources');
+  assert.match(srcFlow, /"flowOn":true/, 'the sources card knows the flow');
+  const srcCode = srcFlow.replace('"flowOn":true', '"flowOn":false');
   assert.match(srcCode, /"auto":\{"ha":true\}/, 'the sources card lists HA\'s devices');
   const watch = JSON.stringify(out);
   assert.match(watch, /sensor\.energy_battery_soc/, 'the charge level sensor is watched');
@@ -645,7 +650,9 @@ const FULL_IDS = ['sensor.energy_grid_power', 'sensor.wechselrichter_ac_power', 
     const s = groups.find((g) => g.some((r) => r.entity === 'sensor.energy_battery_power'));
     return { s, c: groups.find((g) => g !== s) };
   };
-  let R = run(srcCode);
+  let R = run(srcFlow);
+  assert.deepEqual(labels, ['Verbraucher'], 'with the flow: no second list of the sources');
+  R = run(srcCode);
   assert.deepEqual(labels.sort(), ['Verbraucher', 'Woher kommt der Strom'], 'titles: no "Top 5"');
   const batt = R.s.find((r) => r.entity === 'sensor.energy_battery_power');
   assert.equal(batt.sub, 'Lädt · 78 %', 'battery row: charging with the charge level');

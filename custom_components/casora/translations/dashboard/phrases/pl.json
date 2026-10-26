@@ -2516,7 +2516,8 @@
   "Ausreichend": "Wystarczająco",
   "Später nicht möglich": "Później niemożliwe",
   "Früher nicht möglich": "Wcześniej niemożliwe",
-  "Programm wählen": "Wybierz program"
+  "Programm wählen": "Wybierz program",
+  "CO₂-neutral": "Niskoemisyjne"
  },
  "patterns": [
   [
@@ -4574,6 +4575,10 @@
   [
    "^(\\d+) Rollos offen$",
    "{1} rolety otwarte"
+  ],
+  [
+   "^Alle (\\d+) anzeigen$",
+   "Pokaż wszystkie {1}"
   ]
  ]
 }

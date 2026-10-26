@@ -2516,7 +2516,8 @@
   "Ausreichend": "Suficiente",
   "Später nicht möglich": "Não é possível mais tarde",
   "Früher nicht möglich": "Não é possível mais cedo",
-  "Programm wählen": "Escolhe um programa"
+  "Programm wählen": "Escolhe um programa",
+  "CO₂-neutral": "Baixo carbono"
  },
  "patterns": [
   [
@@ -4574,6 +4575,10 @@
   [
    "^(\\d+) Rollos offen$",
    "{1} estores abertos"
+  ],
+  [
+   "^Alle (\\d+) anzeigen$",
+   "Ver os {1}"
   ]
  ]
 }

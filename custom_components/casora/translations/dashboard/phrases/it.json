@@ -2516,7 +2516,8 @@
   "Ausreichend": "Sufficiente",
   "Später nicht möglich": "Non possibile più tardi",
   "Früher nicht möglich": "Non possibile prima",
-  "Programm wählen": "Scegli un programma"
+  "Programm wählen": "Scegli un programma",
+  "CO₂-neutral": "A basse emissioni"
  },
  "patterns": [
   [
@@ -4574,6 +4575,10 @@
   [
    "^(\\d+) Rollos offen$",
    "{1} tapparelle aperte"
+  ],
+  [
+   "^Alle (\\d+) anzeigen$",
+   "Mostra tutti i {1}"
   ]
  ]
 }

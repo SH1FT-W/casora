@@ -2498,7 +2498,8 @@
   "Ausreichend": "Sufficient",
   "Später nicht möglich": "Not possible later",
   "Früher nicht möglich": "Not possible earlier",
-  "Programm wählen": "Choose program"
+  "Programm wählen": "Choose program",
+  "CO₂-neutral": "Low-carbon"
  },
  "patterns": [
   [
@@ -4556,6 +4557,10 @@
   [
    "^(\\d+) Rollos offen$",
    "{1} shutters open"
+  ],
+  [
+   "^Alle (\\d+) anzeigen$",
+   "Show all {1}"
   ]
  ]
 }
