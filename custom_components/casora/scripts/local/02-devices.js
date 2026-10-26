@@ -1111,7 +1111,9 @@
       type: 'custom:button-card', entity: o.entity || undefined, triggers_update: [],
       card_mod: { style: WRAP_CSS },
       extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: ' + wide + ' !important;'
-        + ' grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: var(--casora-popup-col-gap, 26px) !important; } }',
+        + ' grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: var(--casora-popup-col-gap, 26px) !important; } }'
+        /* Rule 12 (symmetry): both columns start at the same height – casora-core aligns the marked pair. */
+        + (!one && window._casoraUI && window._casoraUI.colsMark ? window._casoraUI.colsMark('left', 'right') : ''),
       tap_action: { action: 'none' },
       show_icon: false, show_name: false, show_label: false, show_state: false,
       styles: {

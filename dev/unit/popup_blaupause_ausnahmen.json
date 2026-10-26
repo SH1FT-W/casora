@@ -16,9 +16,7 @@
    "tpl:casora_fan": { "anzahl": 1, "grund": "Lüfter: wie Luftreiniger, Stufe 2 (mittel)" },
    "tpl:casora_media": { "anzahl": 1, "grund": "Medien-Player: Stufe 2 (mittel)" },
    "tpl:casora_now_playing_chip": { "anzahl": 1, "grund": "Medien (Now Playing): Stufe 2 (mittel)" },
-   "tpl:casora_now_playing_primary": { "anzahl": 1, "grund": "Medien (Now Playing): Stufe 2 (mittel)" },
-   "tpl:casora_switch": { "anzahl": 1, "grund": "Schalter: großer Schalter und Zeile ohne Überschrift, Stufe 2 (mittel)" },
-   "tpl:casora_thermostat": { "anzahl": 2, "grund": "Thermostat: ein Feld für Plus/Minus und Leiste, Stufe 2 (mittel)" }
+   "tpl:casora_now_playing_primary": { "anzahl": 1, "grund": "Medien (Now Playing): Stufe 2 (mittel)" }
   }
  },
  "kopf": {
@@ -31,9 +29,6 @@
    "custom_components/casora/scripts/local/03-popups.js": { "anzahl": 2, "grund": "Rezepte/Licht im Standard-Design: eigene Pfeile, Rezepte ist Stufe 2 (mittel)" },
    "custom_components/casora/scripts/local/06-kalender.js": { "anzahl": 1, "grund": "Abfall-Kalender: eigener Hauptbereich (Monatsraster), Stufe 2" },
    "custom_components/casora/scripts/local/13-schloss.js": { "anzahl": 1, "grund": "Schloss-Ansicht „Ganzer Verlauf“-Pille: Stufe 3 (Schloss zusammenlegen)" },
-   "custom_components/casora/scripts/local/15-person.js": { "anzahl": 1, "grund": "Person „Ganzer Verlauf“-Pille: gemeinsamer Verlauf-Baustein mit der Messwertseite, Stufe 2" },
-   "custom_components/casora/scripts/local/16-maeher.js": { "anzahl": 1, "grund": "Mäher „Ganzer Verlauf“-Pille: gemeinsamer Verlauf-Baustein mit der Messwertseite, Stufe 2" },
-   "custom_components/casora/scripts/local/18-ziele.js": { "anzahl": 1, "grund": "Messwertseite „Ganzer Verlauf“-Pille wird Zeile, Stufe 2 (mittel)" },
    "tpl:casora_mobile_header": { "anzahl": 1, "grund": "Handy-Kopf der Raumseite, kein Popup" }
   }
  },

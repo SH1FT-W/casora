@@ -460,7 +460,9 @@ window._casoraStdLayout = function (ui, o) {
   /* Weich (01.10.2026): Spalten wie im Entwurf etwas weiter auseinander. */
   var cGap = (window._casoraSoft && window._casoraSoft()) ? 26 : 20;
   out.extra_styles = (ui.extra_styles || '') + ' @media (min-width: 761px) { #container { grid-template-areas: ' + wide.join(' ')
-    + ' !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: var(--casora-popup-col-gap, ' + cGap + 'px) !important; } }';
+    + ' !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: var(--casora-popup-col-gap, ' + cGap + 'px) !important; } }'
+    /* Rule 12 (symmetry): both columns start at the same height – casora-core aligns the marked pair. */
+    + (L.length && R.length && window._casoraUI && window._casoraUI.colsMark ? window._casoraUI.colsMark('left', 'right') : '');
   return out;
 };
 // Nur ab 761 px umbauen – Mobile behält seinen eigenen einspaltigen Aufbau unverändert.

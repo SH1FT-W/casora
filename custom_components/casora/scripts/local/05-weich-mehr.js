@@ -184,6 +184,8 @@
       custom_fields: cs,
     };
     ui.custom_fields = cf;
+    /* Rule 12 (symmetry): both columns start at the same height – casora-core aligns the marked pair. */
+    if (cf.main && cf.side && window._casoraUI && window._casoraUI.colsMark) ui.extra_styles = (ui.extra_styles || '') + window._casoraUI.colsMark('main', 'side');
     return ui;
   };
   var pill = function (UI, text, svc, tone) {

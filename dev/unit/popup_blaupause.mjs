@@ -51,6 +51,15 @@ assert.ok(/var WIDTH = \{ one: 552, two: 900, image: 900 \};/.test(core), 'width
 assert.ok(/SEC_ORDER = \['control', 'state', 'history', 'settings'\]/.test(core), 'fixed section order');
 assert.ok(/data-casora-sec=/.test(core) && /data-casora-bp=/.test(core), 'sections and settings/empty rows are marked');
 
+// 8. Symmetry (rule 12): every two-column layout helper marks its column pair, casora-core aligns the pair after
+// opening (the column without a heading on top reserves the other one's heading height).
+assert.ok(/function colsMark\(a, b\)/.test(core) && /function alignCols\(\)/.test(core) && /colsMark: |\.colsMark = colsMark/.test(core),
+  'casora-core: colsMark/alignCols missing (rule 12, symmetry)');
+assert.ok(/P\.open = function \(\) \{[\s\S]{0,200}setTimeout\(alignCols/.test(core), 'casora-core: alignCols not run after casoraPopup.open');
+for (const [file, pair] of [['02-devices.js', "'left', 'right'"], ['05-weich-mehr.js', "'main', 'side'"], ['05-standard-medien.js', "'left', 'right'"]]) {
+  assert.ok(SRC[LOCAL + file].includes('colsMark(' + pair + ')'), `${file}: two-column layout without colsMark(${pair}) (rule 12, symmetry)`);
+}
+
 // 2.–7. Counted against the exception list.
 const CHECKS = {
   breite: {

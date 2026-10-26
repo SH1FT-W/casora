@@ -6,14 +6,14 @@ custom_components/casora/scripts/local/14-pulse.js | COLOR[p[0]] | colour consta
 custom_components/casora/scripts/local/14-pulse.js | COLOR[st] | colour constant of the section's status (COLOR map) | 1
 
 # 15-person.js – history timeline (lastHtml) and phone actions
-custom_components/casora/scripts/local/15-person.js | re:^(?:font|ink|sub|row|ctl|dim)$ | CSS colour/font constants of lastHtml | 11
+custom_components/casora/scripts/local/15-person.js | re:^(?:font|ink|sub|row|ctl|dim)$ | CSS colour/font constants of lastHtml | 9
 custom_components/casora/scripts/local/15-person.js | re:^(?:head|body|info)$ | markup of lastHtml built from esc()'d parts | 3
 custom_components/casora/scripts/local/15-person.js | P.zoneHue(s.state) | colour from a fixed palette (hash of the zone name picks an entry) | 1
 custom_components/casora/scripts/local/15-person.js | kind | action key, one of the literals 'loc'/'msg'/'ring' | 1
 custom_components/casora/scripts/local/15-person.js | re:^act\('(?:loc|msg|ring)', | UI.group markup with fixed labels; act() escapes pid/notify | 3
 
 # 16-maeher.js – history timeline and buttons
-custom_components/casora/scripts/local/16-maeher.js | re:^(?:font|ink|sub|row|ctl|dim|sz|n|\(col \|\| 'currentColor'\))$ | CSS constants of histHtml, icon size numbers, fixed mdi names/colours of mdi() | 16
+custom_components/casora/scripts/local/16-maeher.js | re:^(?:font|ink|sub|row|ctl|dim|sz|n|\(col \|\| 'currentColor'\))$ | CSS constants of histHtml, icon size numbers, fixed mdi names/colours of mdi() | 14
 custom_components/casora/scripts/local/16-maeher.js | re:^(?:head|body|info)$ | markup of histHtml built from esc()'d parts | 3
 custom_components/casora/scripts/local/16-maeher.js | re:^mdi\(k\.i, | ha-icon markup with a fixed mdi: name of the key list
 custom_components/casora/scripts/local/16-maeher.js | re:^keys\.map\((?:pill|b)\)\.join\(''\)$ | button markup built from escaped parts

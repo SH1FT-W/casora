@@ -128,6 +128,9 @@ assert.equal(M.total(ses), '3 Std. · 3 Fahrten');
 assert.equal(M.total([]), null);
 assert.equal(M.dur(25 * 60000), '25 Min.'); assert.equal(M.dur(90 * 60000), '1 Std. 30 Min.');
 window._casoraUI.label = (t) => '<div>' + t + '</div>';
+window._casoraUI.row = { out: (o) => Object.assign({}, o, { out: true }) };
+window._casoraUI.group = (rows) => rows.map((r) => '<row ' + r.label + (r.out ? ' go=' + r.url : '') + '>').join('');
 const hh = M.sec('hist', c, states, Object.assign({}, hass, { callApi: () => new Promise(() => {}) }), null);
-assert.ok(/Wird geladen/.test(hh) && /data-casora-link="\/history\?entity_id=lawn_mower\.gartenzwerg_lawn_mower&amp;start_date=/.test(hh), hh);
+// „Ganzer Verlauf ↗“ is a row (blueprint rule 6) that goes to HA's history.
+assert.ok(/Wird geladen/.test(hh) && /<row Ganzer Verlauf go=\/history\?entity_id=lawn_mower\.gartenzwerg_lawn_mower&start_date=/.test(hh), hh);
 console.log('maeher: ok');

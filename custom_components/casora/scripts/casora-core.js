@@ -10635,7 +10635,7 @@ window.casoraMenuGlass = {
     if (!soft()) return null;
     o = o || {};
     var out = o.title ? softLabel(o.title) : '';
-    out += '<div style="background:' + S.row + ';border-radius:' + S.radius + ';padding:18px 20px 20px;">'
+    out += '<div class="hui-kc" style="background:' + S.row + ';border-radius:' + S.radius + ';padding:18px 20px 20px;">'
       + (o.body || '')
       + (o.foot ? '<div style="font-size:12.5px;font-weight:500;color:' + S.sub + ';margin-top:10px;">' + esc(o.foot) + '</div>' : '')
       + (o.btnText
@@ -11008,6 +11008,84 @@ window.casoraMenuGlass = {
   Object.assign(window._casoraUI, { section: section, row: row, settingsRow: settingsRow, settings: settings, actions: actions,
     empty: empty, width: width, switchHtml: switchHtml, page: page, SEC_ORDER: SEC_ORDER, WIDTH: WIDTH });
   window.casoraPopupWidth = width;
+
+  // Symmetry (rule 12, owner 26.10.2026: „Symmetrie ist wichtig!“): in a two-column popup both columns
+  // start at the same height. A layout helper marks its wrapper with colsMark(a, b) (the ids of the two
+  // column fields); after the popup opens, alignCols() finds every marked pair and gives the column whose
+  // first plate sits higher (no section heading above it, e.g. „Mehr“ beside „Messwerte“) a top padding
+  // as tall as the other column's heading – the reserved heading slot. Desktop only; one column on the phone.
+  var COLS_RE = /\/\*casora-cols:([\w-]+),([\w-]+)\*\//g;
+  var BODY_SEL = '.hui-plate,.hui-srow,.hui-mhd,.hui-acts,.hui-kc,.hui-seg,[data-casora-body]';
+  function colsMark(a, b) { return ' /*casora-cols:' + a + ',' + b + '*/'; }
+  function deepAll(root, sel, out) {
+    if (!root || !root.querySelectorAll) return out;
+    root.querySelectorAll(sel).forEach(function (n) { out.push(n); });
+    root.querySelectorAll('*').forEach(function (n) { if (n.shadowRoot) deepAll(n.shadowRoot, sel, out); });
+    return out;
+  }
+  function seen(n) { var r = n.getBoundingClientRect(); return r.width > 2 && r.height > 2 ? r : null; }
+  // Distance from the column's top edge (without our padding) to its first plate; heading height included.
+  function colLead(el) {
+    var pad = parseFloat(el.dataset.casoraColPad || '0') || 0;
+    var top = el.getBoundingClientRect().top + pad, best = null;
+    deepAll(el, BODY_SEL, []).forEach(function (n) {
+      if (n.closest && n.closest('.hui-mbd')) return;
+      var r = seen(n); if (r && (best === null || r.top < best)) best = r.top;
+    });
+    return best === null ? null : best - top;
+  }
+  function alignPair(a, b, wide) {
+    [a, b].forEach(function (el) { if (!wide && el.dataset.casoraColPad) { el.style.removeProperty('padding-top'); delete el.dataset.casoraColPad; } });
+    if (!wide) return;
+    var ra = seen(a), rb = seen(b);
+    // Only side by side (same row of the grid), never stacked.
+    if (!ra || !rb || Math.abs(ra.top + (parseFloat(a.dataset.casoraColPad || '0') || 0) - rb.top - (parseFloat(b.dataset.casoraColPad || '0') || 0)) > 4) return;
+    var la = colLead(a), lb = colLead(b);
+    if (la === null || lb === null) return;
+    var d = Math.round(la - lb);
+    var set = function (el, px) {
+      if (px > 2 && px < 72) { el.style.setProperty('padding-top', px + 'px'); el.dataset.casoraColPad = String(px); }
+      else if (el.dataset.casoraColPad) { el.style.removeProperty('padding-top'); delete el.dataset.casoraColPad; }
+    };
+    set(a, d < 0 ? -d : 0); set(b, d > 0 ? d : 0);
+  }
+  function alignCols() {
+    var s = window.casoraPopup && window.casoraPopup.surface;
+    if (!s) return 0;
+    var wide = window.innerWidth > 760, n = 0;
+    deepAll(s, 'style', []).forEach(function (st) {
+      var t = st.textContent || '';
+      if (t.indexOf('/*casora-cols:') < 0) return;
+      var root = st.getRootNode();
+      if (!root || !root.getElementById) return;
+      var m; COLS_RE.lastIndex = 0;
+      while ((m = COLS_RE.exec(t))) {
+        var a = root.getElementById(m[1]), b = root.getElementById(m[2]);
+        if (!a || !b) continue;
+        alignPair(a, b, wide); n++;
+        if (window.ResizeObserver && !a._casoraColRO) {
+          var ro = new ResizeObserver(function () { clearTimeout(alignCols._t); alignCols._t = setTimeout(alignCols, 120); });
+          ro.observe(a); ro.observe(b); a._casoraColRO = b._casoraColRO = ro;
+        }
+      }
+    });
+    return n;
+  }
+  window._casoraUI.colsMark = colsMark;
+  window._casoraUI.alignCols = alignCols;
+  (function hookCols() {
+    var P = window.casoraPopup;
+    if (!P || !P.open || P._colsWrapped) return;
+    var o = P.open;
+    P.open = function () {
+      var r = o.apply(this, arguments);
+      // Plates enter with a short 3D settle; the last passes measure after it.
+      [120, 400, 900, 1600, 2600, 4200].forEach(function (t) { setTimeout(alignCols, t); });
+      return r;
+    };
+    P._colsWrapped = true;
+    window.addEventListener('resize', function () { clearTimeout(alignCols._t); alignCols._t = setTimeout(alignCols, 150); });
+  })();
   // Short, readable device names for rows and page titles (blueprint v2, rule 7: never the hardware id):
   // „Jalousie Bad shellyswitch25-C45BBE79672F Device Power“ → „Jalousie Bad“.
   // keepKind: page titles keep what is measured („Leistung“), consumer rows drop it.

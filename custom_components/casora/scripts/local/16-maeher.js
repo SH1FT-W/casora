@@ -464,9 +464,10 @@
     var link = '/history?entity_id=' + encodeURIComponent(id) + '&start_date=' + encodeURIComponent(new Date(dayStart(now) - (DAYS - 1) * 86400000).toISOString());
     return '<div style="font-family:' + font + '">' + head
       + '<div style="background:' + row + ';border-radius:var(--casora-popup-row-radius, 24px);padding:8px 16px 8px 12px;">' + body + '</div>'
-      + '<div role="button" data-casora-link="' + esc(link) + '" style="box-sizing:border-box;width:100%;text-align:center;margin-top:10px;height:46px;min-height:46px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:6px;'
-      + 'font-size:14px;font-weight:700;cursor:pointer;background:var(--casora-soft-mehr-fill, ' + ctl + ');color:var(--casora-soft-mehr-ink, ' + ink + ');">'
-      + '<span style="flex:none;margin:0;">' + esc(T('Ganzer Verlauf')) + '</span><ha-icon icon="mdi:chevron-right" style="--mdc-icon-size:18px;display:flex;flex:none;margin:0;"></ha-icon></div></div>';
+      // Blueprint v2 (rule 6): „Ganzer Verlauf ↗“ is a row that leaves Casora for HA's history (was a wide pill).
+      + (window._casoraUI && window._casoraUI.row ? '<div style="margin-top:10px;">' + window._casoraUI.group([window._casoraUI.row.out({ icon: 'mdi:chart-timeline-variant',
+        label: 'Ganzer Verlauf', url: link })], null) + '</div>' : '')
+      + '</div>';
   };
 
   // ── Popup ─────────────────────────────────────────────────────────────────

@@ -256,6 +256,8 @@
   // Blueprint v2 (rule 8): „Weitere Einstellungen“ of several devices – first the choice, then the device page.
   var pages = window._casoraPages || (window._casoraPages = {});
   pages.device = function (id) { Z.openDevice(id); };
+  // › row onto the measurement page of an entity (switch popup „Zuletzt eingeschaltet“).
+  pages.measure = function (id) { Z.openMeasure(id); };
   pages.devices = function (arg) {
     var h = hassNow(), K = window._casoraSoftKit, UI = window._casoraUI;
     var ids = String(arg || '').split(',').filter(function (x) { return x && h && h.states[x]; });
@@ -375,10 +377,17 @@
     + '.cz-band i{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--casora-popup-accent, var(--casora-color-teal, #4E9E95));min-width:3px;}'
     + '.cz-axis{display:flex;justify-content:space-between;font-size:12px;opacity:.6;margin:6px 4px 0;}'
     + '</style>';
+  // Blueprint v2: one period switch for the chart popup and this page – the shared segments (UI.segments),
+  // each field carrying data-casora-zspan (was a row of small centred pills).
   var pills = function (id, span) {
-    return '<div class="cz-pills">' + [['24h', '24 Std.'], ['7d', '7 Tage'], ['30d', '30 Tage']].map(function (x) {
-      return '<div class="cz-pill' + (x[0] === span ? ' on' : '') + '" data-casora-zspan="' + esc(id + '|' + x[0]) + '"><span>' + esc(T(x[1])) + '</span></div>';
-    }).join('') + '</div>';
+    var UI = window._casoraUI, list = [['24h', '24 Std.'], ['7d', '7 Tage'], ['30d', '30 Tage']], i = 0;
+    if (!UI || !UI.segments || !(UI.soft && UI.soft())) {
+      return '<div class="cz-pills">' + list.map(function (x) {
+        return '<div class="cz-pill' + (x[0] === span ? ' on' : '') + '" data-casora-zspan="' + esc(id + '|' + x[0]) + '"><span>' + esc(T(x[1])) + '</span></div>';
+      }).join('') + '</div>';
+    }
+    return '<div style="margin-top:14px;">' + UI.segments(list.map(function (x) { return { label: x[1], active: x[0] === span }; }), null)
+      .replace(/<div class="hui-sg/g, function () { return '<div data-casora-zspan="' + esc(id + '|' + list[i++][0]) + '" class="hui-sg'; }) + '</div>';
   };
   var timeline = function (items, now) {
     var font = 'var(--primary-font-family, system-ui)', ink = 'var(--casora-popup-tiles-text-primary, #3A322B)',
@@ -401,12 +410,12 @@
           + (x.sub ? '<div style="font-size:13px;font-weight:500;color:' + sub + ';margin-top:1px;">' + x.sub + '</div>' : '') + '</div></div>';
       }).join('') + '</div>';
   };
+  // „Ganzer Verlauf ↗“ as a row (blueprint v2, rule 6: it leaves Casora for HA's history), was a wide pill.
   var histLink = function (id, span) {
     var start = new Date(Date.now() - (SPANS[span] || SPANS['24h'])).toISOString();
-    return '<div role="button" data-casora-link="' + esc('/history?entity_id=' + encodeURIComponent(id) + '&start_date=' + encodeURIComponent(start)) + '" '
-      + 'style="box-sizing:border-box;width:100%;margin-top:10px;height:46px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:6px;'
-      + 'font-size:14px;font-weight:700;cursor:pointer;background:var(--casora-soft-mehr-fill, var(--casora-soft-control-fill, rgba(127,127,127,.12)));">'
-      + '<span style="flex:none;margin:0;">' + esc(T('Ganzer Verlauf')) + '</span><ha-icon icon="mdi:chevron-right" style="--mdc-icon-size:18px;display:flex;flex:none;margin:0;"></ha-icon></div>';
+    var UI = window._casoraUI, url = '/history?entity_id=' + encodeURIComponent(id) + '&start_date=' + encodeURIComponent(start);
+    if (!UI || !UI.row) return '';
+    return '<div style="margin-top:10px;">' + UI.group([UI.row.out({ icon: 'mdi:chart-timeline-variant', label: 'Ganzer Verlauf', url: url })], null) + '</div>';
   };
   // Symbol je Messart/Domäne für Zeilen ohne eigenes Symbol (Geräteseite „Gehört dazu“).
   var DC_ICON = { temperature: 'mdi:thermometer', humidity: 'mdi:water-percent', carbon_dioxide: 'mdi:molecule-co2', pm25: 'mdi:blur',
