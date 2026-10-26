@@ -87,6 +87,8 @@
     s.contacts.groups = Array.isArray(s.contacts.groups) ? s.contacts.groups : [];
     s.contacts.hidden = Array.isArray(s.contacts.hidden) ? s.contacts.hidden : [];
     s.contacts.names = s.contacts.names && typeof s.contacts.names === "object" ? s.contacts.names : {};
+    s.security = s.security && typeof s.security === "object" ? s.security : {};
+    s.security.covers = Array.isArray(s.security.covers) ? s.security.covers : [];
     s.media = s.media || {};
     s.media.players = s.media.players || {};
     s.ebike = s.ebike || {};
@@ -411,6 +413,58 @@
           ]);
         });
         addRow(g, "Rename a door or window", () => { if (!("" in S.contacts.names)) S.contacts.names[""] = ""; });
+      }
+
+      if (want("security")) {
+        // Covers in security (#76, scripts/local/34-security-covers.js): which covers count on Home, and whether
+        // only from sunset to sunrise (on by default; only "off" is stored). No cover picked = feature off.
+        const sec = S.security;
+        g = group("security", { header: "Security: covers",
+          footer: "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes." });
+        const nightRow = self._flowRow(g, { title: "Evening and night only", sub: "From sunset to sunrise" });
+        if (typeof self._boolSwitch === "function") {
+          nightRow.row.appendChild(self._boolSwitch(sec.covers_night !== false, true, (v) => {
+            if (v === false) sec.covers_night = false; else delete sec.covers_night;
+          }, window.casoraI18n ? window.casoraI18n.t("Evening and night only") : "Evening and night only"));
+        }
+        // Garage doors, gates and doors already count as "gate open" in the security badge.
+        const GATE = ["garage", "gate", "door"];
+        const reg = hass.entities || {};
+        const listed = Object.keys(hass.states).filter((id) => {
+          if (!id.startsWith("cover.")) return false;
+          const e = reg[id];
+          if (e && (e.hidden || e.entity_category)) return false;
+          return !GATE.includes(String((hass.states[id].attributes || {}).device_class || "").toLowerCase());
+        });
+        // Picked ones stay in the list (also when gone or hidden) so they can be unpicked.
+        sec.covers.forEach((id) => { if (id && !listed.includes(id)) listed.push(id); });
+        const meta = (id) => (typeof self._entMeta === "function" ? self._entMeta(id) : { name: self._prettyEntity(id), area: "" });
+        listed.sort((a, b) => String(meta(a).name).localeCompare(String(meta(b).name)));
+        if (!listed.length) {
+          self._flowRow(g, { title: "No covers found", dim: true });
+        } else {
+          // Grouped by area as in the entity picker (_entGroups), areas alphabetically, "no area" last.
+          const groups = typeof self._entGroups === "function" ? self._entGroups(listed) : [["", listed]];
+          groups.sort((a, b) => (!a[0]) - (!b[0]) || String(a[0]).localeCompare(String(b[0])));
+          groups.forEach(([area, ids]) => {
+            const list = self._flowGroup(host, { header: area || "No area" });
+            if (area) list.parentElement.querySelector(".fhead").setAttribute("data-no-i18n", "");
+            list.parentElement.classList.add("casora-psec-covers");
+            ids.forEach((id) => {
+              const m = meta(id);
+              const st = hass.states[id];
+              const r = self._flowRow(list, { title: (m && (m.short || m.name)) || id, raw: true,
+                sub: st ? (m.device && m.device !== m.name ? m.device : "") : "Not found in Home Assistant",
+                check: sec.covers.includes(id), onTap: () => {
+                  const i = sec.covers.indexOf(id);
+                  if (i >= 0) sec.covers.splice(i, 1); else sec.covers.push(id);
+                  r.row.setAttribute("aria-checked", i >= 0 ? "false" : "true");
+                } });
+              const sub = r.row.querySelector(".rtext > span");
+              if (sub && st) sub.setAttribute("data-no-i18n", "");
+            });
+          });
+        }
       }
 
       if (want("scenes")) {

@@ -2492,7 +2492,14 @@
   "Stream": "Stream",
   "Stream nicht erreichbar · Standard": "Stream niet bereikbaar · Standaard",
   "Wind": "Wind",
-  "Benachrichtigung": "Melding"
+  "Benachrichtigung": "Melding",
+  "Rollos": "Rolluiken",
+  "Rollo offen": "Rolluik open",
+  "Alle schließen": "Alles sluiten",
+  "Bis Sonnenaufgang": "Tot zonsopgang",
+  "Ab Sonnenuntergang": "Vanaf zonsondergang",
+  "Keine Rollos ausgewählt": "Geen rolluiken gekozen",
+  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Kies de rolluiken in de Studio onder Instellingen › Huis en apparaten › Beveiliging."
  },
  "patterns": [
   [
@@ -3678,6 +3685,10 @@
   [
    "^(\\d+) Fenster offen$",
    "{1} ramen open"
+  ],
+  [
+   "^(\\d+) Rollos offen$",
+   "{1} rolluiken open"
   ],
   [
    "^(\\d+) Fenster gekippt$",

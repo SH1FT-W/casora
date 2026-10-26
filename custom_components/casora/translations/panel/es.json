@@ -2669,7 +2669,14 @@
     "Hold, font, tile size": "Mantener, fuente, tamaño de mosaico",
     "No match – try one of the topics below.": "Sin resultados – prueba con uno de los temas de abajo.",
     "Bell, notifications, push and Live‑Activities": "Campana, avisos, push y actividades en vivo",
-    "Show the bell on this dashboard": "Mostrar la campana en este panel"
+    "Show the bell on this dashboard": "Mostrar la campana en este panel",
+    "The design applies to all dashboards right away. Undo switches it back.": "El diseño se aplica al instante a todos los paneles. Deshacer vuelve al anterior.",
+    "How every Casora dashboard looks – the change applies right away.": "Cómo se ven todos los paneles de Casora: el cambio se aplica al instante.",
+    "Security: covers": "Seguridad: persianas",
+    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Las persianas elegidas que no estén del todo cerradas aparecen en Inicio, en la fila de seguridad, como «Persianas» y cuentan como no seguras. Sin selección no cambia nada.",
+    "Evening and night only": "Solo por la tarde y la noche",
+    "From sunset to sunrise": "Del atardecer al amanecer",
+    "No covers found": "No se encontraron persianas"
   },
   "patterns": [
     [

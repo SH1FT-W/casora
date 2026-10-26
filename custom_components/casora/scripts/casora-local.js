@@ -1,21 +1,19 @@
-// Casora – eigene Erweiterungen, Lader.
+// Casora – own extensions, loader.
 //
-// Die Logik liegt in scripts/local/*.js und wird in fester Reihenfolge
-// geladen. Die Reihenfolge ist Absicht: z. B. Geschirrspüler, Drucker und
-// Saugroboter (02) bauen auf _casoraLaundry auf, und das Nachzeichnen nach
-// spätem Laden (06) muss zuletzt laufen.
+// The logic lives in scripts/local/*.js and loads in a fixed order. The order is
+// deliberate: e.g. dishwasher, printer and robot vacuum (02) build on _casoraLaundry,
+// and redrawing after a late load (06) has to run last.
 //
-// Versionierung automatisch: Die Integration hängt an diese Datei ?v=<jüngste
-// Änderungszeit aller Module> an; der Wert wird an jedes Modul weitergereicht.
-// Nach einer Änderung also nur HA neu starten bzw. die Integration neu laden –
-// kein Hochzählen von Hand mehr. Ein Fehler in einem Modul wird gemeldet und
-// hält die übrigen nicht auf.
+// Versioning is automatic: the integration appends ?v=<newest change time of all
+// modules> to this file; the value is handed on to every module. After a change just
+// restart HA or reload the integration – no counting up by hand. An error in one
+// module is reported and does not hold up the others.
 //
-// Erstes Laden am Handy (30.09.2026): Dieser Lader ist klein und kommt vor den
-// großen Skripten an. Deshalb sitzt hier (nicht mehr in casora-core) der Schutz
-// gegen HAs „Konfigurationsfehler“ für noch unbekannte Karten, und das Ende
-// meldet er per Ereignis „casora-local-loaded“ – smart-row hält die Raum-
-// Abschnitte des Handy-Home so lange verdeckt (siehe dort).
+// First load on the phone (30.09.2026): this loader is small and arrives before the
+// big scripts. That is why the guard against HA's "configuration error" for cards
+// not known yet sits here (no longer in casora-core), and it announces its end with
+// the event "casora-local-loaded" – smart-row keeps the room sections of the phone's
+// Home covered until then (see there).
 
 // casora-esc:begin – canonical HTML escaping, the same block in every file that loads on its own
 // (checked by dev/unit/html_escape.mjs). Every value that goes into an HTML string goes through one of these:
@@ -41,11 +39,11 @@
 })();
 // casora-esc:end
 
-// HA blendet für eine noch unbekannte Karte (casora-mobile-nav kommt erst aus
-// den Modulen hier, grid-layout/button-card je nach Ladereihenfolge ebenso spät)
-// nach 2 s eine Fehlerkarte ein und ersetzt sie, sobald das Element definiert
-// ist. Solche Fehlerkarten bleiben in den ersten 30 s unsichtbar; wird das
-// Element nie definiert, erscheint der Fehler danach wie gewohnt.
+// For a card not known yet (casora-mobile-nav only comes from the modules here,
+// grid-layout/button-card just as late depending on the load order) HA shows an error
+// card after 2 s and replaces it once the element is defined. Such error cards stay
+// invisible for the first 30 s; if the element is never defined, the error shows
+// afterwards as usual.
 (function () {
   if (window._casoraBootErrorGuard) return;
   window._casoraBootErrorGuard = true;
@@ -56,10 +54,10 @@
     if (st._casoraHeld) return;
     st._casoraHeld = true;
     st.setProperty('display', 'none');
-    // HAs 2-s-Timer setzt style.display = "" – den einen Setter hier abfangen.
+    // HA's 2 s timer sets style.display = "" – catch that one setter here.
     try { Object.defineProperty(st, 'display', { configurable: true, get: function () { return 'none'; }, set: function () {} }); } catch (e) { return; }
     var release = function () {
-      try { delete st.display; } catch (e) { /* egal */ }
+      try { delete st.display; } catch (e) { /* ignore */ }
       st._casoraHeld = false;
       if (!customElements.get(tag)) st.removeProperty('display');
     };
@@ -79,7 +77,7 @@
         var m = cfg && typeof cfg.message === 'string' && RE.exec(cfg.message)
           || cfg && typeof cfg.error === 'string' && RE.exec(cfg.error);
         if (m && performance.now() < LIMIT && !customElements.get(m[1])) hide(this, m[1]);
-      } catch (e) { /* nie die Fehlerkarte selbst brechen */ }
+      } catch (e) { /* never break the error card itself */ }
       return r;
     };
   });
@@ -121,49 +119,49 @@ const MODULES = [
   '31-velair',
   '32-media-badge',
   '33-color-wheel',
+  '34-security-covers',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());
-// Stand, mit dem diese Seite geladen wurde – casora-core vergleicht ihn mit casora/version
-// („Casora wurde aktualisiert“). Seit 1.0.5 enthält er auch die übrigen Casora-Skripte.
+// Stamp this page was loaded with – casora-core compares it with casora/version
+// ("Casora was updated"). Since 1.0.5 it covers the other Casora scripts too.
 if (new URL(import.meta.url).searchParams.get('v')) window.casoraLoadedStamp = v;
 const urls = MODULES.map((m) => new URL('./local/' + m + '.js?v=' + v, import.meta.url).href);
 
-/* Alle Module sofort parallel anfordern, danach der Reihe nach ausführen. */
+/* Request every module right away in parallel, then run them in order. */
 urls.forEach((href) => {
   try {
     const l = document.createElement('link');
     l.rel = 'modulepreload';
     l.href = href;
     document.head.appendChild(l);
-  } catch (e) { /* nur Beschleunigung */ }
+  } catch (e) { /* speed-up only */ }
 });
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-/* Bis cond() wahr ist (alle 50 ms), höchstens ms lang. */
+/* Until cond() is true (every 50 ms), at most ms long. */
 const until = (cond, ms) => new Promise((resolve) => {
   const t0 = Date.now();
   (function poll() {
     let x = null;
-    try { x = cond(); } catch (e) { /* weiter warten */ }
+    try { x = cond(); } catch (e) { /* keep waiting */ }
     if (x) return resolve(x);
     if (Date.now() - t0 > ms) return resolve(null);
     setTimeout(poll, 50);
   })();
 });
 
-/* Persönliche Einstellungen (window.CASORA_SETTINGS): Studio → „Persönliches“,
-   gespeichert in der Integration. Früher /config/www/casora/einstellungen.js – die
-   Datei gilt weiter, solange im Studio nichts gespeichert ist. Fehlt beides, gelten
-   Casoras neutrale Standards.
-   Datei und Integration werden gleichzeitig gefragt (früher nacheinander). Die
-   Antwort der Integration wird gemerkt: antwortet sie nicht binnen SETTINGS_WAIT
-   (Handy im Mobilfunk, HA beschäftigt), gilt der letzte bekannte Stand, statt dass
-   das ganze Dashboard auf sie wartet. */
+/* Settings for the whole home (window.CASORA_SETTINGS): Studio → Settings, stored in
+   the integration. Formerly /config/www/casora/einstellungen.js – the file still applies
+   while nothing is stored in the Studio. Without either, Casora's neutral defaults apply.
+   File and integration are asked at the same time (formerly one after the other). The
+   integration's answer is remembered: if it does not answer within SETTINGS_WAIT (phone
+   on mobile data, HA busy), the last known state applies instead of the whole dashboard
+   waiting for it. */
 const SETTINGS_KEY = 'casora.settings.cache';
 const SETTINGS_WAIT = 4000;
-// /casora_assets liefert die Datei des Nutzers oder – ohne eigene Datei – ein
-// leeres Modul. So entsteht kein 404 in der Browser-Konsole.
+// /casora_assets serves the user's file or – without one – an empty module.
+// So there is no 404 in the browser console.
 const fileP = import('/casora_assets/einstellungen.js?t=' + Date.now()).catch((e) => {
   console.error('[casora-local] einstellungen.js konnte nicht geladen werden:', e);
 });
@@ -174,9 +172,9 @@ const wsP = (async () => {
   }, 8000);
   if (!hass) return null;
   const r = await hass.callWS({ type: 'casora/settings/get' });
-  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ stored: !!(r && r.stored), settings: (r && r.settings) || {}, price_kwh: r && r.price_kwh, price_entity: r && r.price_entity })); } catch (e) { /* privat/voll */ }
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ stored: !!(r && r.stored), settings: (r && r.settings) || {}, price_kwh: r && r.price_kwh, price_entity: r && r.price_entity })); } catch (e) { /* private mode / full */ }
   return r;
-})().catch(() => null); // Ältere Casora-Version ohne Einstellungs-Speicher: Datei (oder nichts) gilt.
+})().catch(() => null); // Older Casora without a settings store: the file (or nothing) applies.
 const cached = () => { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null'); } catch (e) { return null; } };
 
 await fileP;
@@ -187,13 +185,13 @@ if (r === TIMEOUT) {
   console.warn('[casora-local] Einstellungen: keine Antwort in ' + SETTINGS_WAIT + ' ms, ' + (r ? 'letzter bekannter Stand' : 'Datei/Standard') + ' gilt.');
 }
 if (r && r.stored) window.CASORA_SETTINGS = r.settings || {};
-// Strompreis aus den Casora-Optionen, sonst aus HAs Energie-Dashboard (Kosten in Geräte-Popups,
-// window.casoraPriceKwh). Bei einer Preis-Entität liest casoraPriceKwh deren Zustand live.
+// Electricity price from the Casora options, else from HA's energy dashboard (costs in device popups,
+// window.casoraPriceKwh). With a price entity casoraPriceKwh reads its state live.
 if (r && typeof r.price_kwh === 'number') window.CASORA_PRICE_KWH = r.price_kwh;
 if (r && typeof r.price_entity === 'string' && r.price_entity) window.CASORA_PRICE_ENTITY = r.price_entity;
 
-/* Die Module bauen auf casora-core auf (_casoraFilter, casoraMenuGlass, casoraPopup …).
-   Es ist eine eigene Ressource und kann am Handy nach diesem Lader fertig werden. */
+/* The modules build on casora-core (_casoraFilter, casoraMenuGlass, casoraPopup …).
+   It is a resource of its own and can finish after this loader on the phone. */
 await until(() => window._casoraFilter, 15000);
 
 for (let i = 0; i < urls.length; i++) {
@@ -204,4 +202,4 @@ for (let i = 0; i < urls.length; i++) {
   }
 }
 window._casoraLocalLoaded = MODULES;
-try { window.dispatchEvent(new Event('casora-local-loaded')); } catch (e) { /* alt */ }
+try { window.dispatchEvent(new Event('casora-local-loaded')); } catch (e) { /* old browser */ }

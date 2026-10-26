@@ -2669,7 +2669,14 @@
     "Hold, font, tile size": "Przytrzymanie, czcionka, rozmiar kafelków",
     "No match – try one of the topics below.": "Brak wyników – zajrzyj do jednego z tematów poniżej.",
     "Bell, notifications, push and Live‑Activities": "Dzwonek, powiadomienia, push i aktywności na żywo",
-    "Show the bell on this dashboard": "Pokaż dzwonek na tym pulpicie"
+    "Show the bell on this dashboard": "Pokaż dzwonek na tym pulpicie",
+    "The design applies to all dashboards right away. Undo switches it back.": "Styl obowiązuje od razu na wszystkich pulpitach. „Cofnij” przywraca poprzedni.",
+    "How every Casora dashboard looks – the change applies right away.": "Jak wyglądają wszystkie pulpity Casora – zmiana obowiązuje od razu.",
+    "Security: covers": "Bezpieczeństwo: rolety",
+    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Wybrane rolety, które nie są całkowicie zamknięte, pojawiają się na stronie głównej w rzędzie bezpieczeństwa jako „Rolety” i liczą się jako niezabezpieczone. Bez wyboru nic się nie zmienia.",
+    "Evening and night only": "Tylko wieczorem i w nocy",
+    "From sunset to sunrise": "Od zachodu do wschodu słońca",
+    "No covers found": "Nie znaleziono rolet"
   },
   "patterns": [
     [

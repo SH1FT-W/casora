@@ -22,7 +22,7 @@
     { id: "design", label: "Design", icon: "desktop", tone: "set-design", look: true,
       lede: "How every Casora dashboard looks." },
     { id: "home", label: "Home & Devices", icon: "home", tone: "set-home",
-      personal: ["waste", "contacts", "scenes", "media", "devices"],
+      personal: ["waste", "contacts", "security", "scenes", "media", "devices"],
       lede: "Waste collection, doors and windows, scenes and players – the same in every dashboard." },
     // Own page since issue #31: under Home & Devices the calendars were hard to find.
     { id: "calendar", label: "Calendar", icon: "calendar", tone: "set-calendar", personal: ["calendars"],
@@ -73,6 +73,9 @@
   // Only found by the search: a group inside a page, opened scrolled to it.
   const HUB_FIND = [
     { page: "home", focus: "contacts", label: "Doors and windows", topic: "house", kw: "türen tueren fenster kontakte ausblenden umbenennen" },
+    // Covers in security (#76).
+    { page: "home", focus: "security", label: "Security: covers", topic: "house",
+      kw: "rollo rollos rollladen rolllaeden rolladen jalousie jalousien sicherheit abends nachts covers shutters blinds security night" },
     { page: "home", focus: "waste", label: "Waste collection", topic: "house", kw: "abfall müll muell tonne abholung" },
     { page: "home", focus: "scenes", label: "Hidden scenes", topic: "house", kw: "szenen ausblenden verstecken" },
     { page: "home", focus: "media", label: "Now Playing", topic: "house", kw: "player medien musik wiedergabe" },

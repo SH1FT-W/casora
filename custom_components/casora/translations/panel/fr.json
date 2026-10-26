@@ -2669,7 +2669,14 @@
     "Hold, font, tile size": "Appui long, police, taille des tuiles",
     "No match – try one of the topics below.": "Aucun résultat – essayez l'un des thèmes ci-dessous.",
     "Bell, notifications, push and Live‑Activities": "Cloche, notifications, push et activités en direct",
-    "Show the bell on this dashboard": "Afficher la cloche sur ce tableau de bord"
+    "Show the bell on this dashboard": "Afficher la cloche sur ce tableau de bord",
+    "The design applies to all dashboards right away. Undo switches it back.": "Le design s'applique tout de suite à tous les tableaux de bord. Annuler revient au précédent.",
+    "How every Casora dashboard looks – the change applies right away.": "L'apparence de tous les tableaux de bord Casora – le changement s'applique tout de suite.",
+    "Security: covers": "Sécurité : volets",
+    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Les volets choisis qui ne sont pas entièrement fermés apparaissent sur Accueil dans la rangée Sécurité sous « Volets » et comptent comme non sécurisés. Sans sélection, rien ne change.",
+    "Evening and night only": "Seulement le soir et la nuit",
+    "From sunset to sunrise": "Du coucher au lever du soleil",
+    "No covers found": "Aucun volet trouvé"
   },
   "patterns": [
     [

@@ -2669,7 +2669,14 @@
     "Hold, font, tile size": "Halten, Schrift, Kachelgröße",
     "No match – try one of the topics below.": "Kein Treffer – schau in eines der Themen unten.",
     "Bell, notifications, push and Live‑Activities": "Glocke, Benachrichtigungen, Push und Live‑Aktivitäten",
-    "Show the bell on this dashboard": "Glocke im Dashboard zeigen"
+    "Show the bell on this dashboard": "Glocke im Dashboard zeigen",
+    "The design applies to all dashboards right away. Undo switches it back.": "Das Design gilt sofort für alle Dashboards. „Rückgängig“ holt das vorige Design zurück.",
+    "How every Casora dashboard looks – the change applies right away.": "Wie alle Casora-Dashboards aussehen – die Änderung gilt sofort.",
+    "Security: covers": "Sicherheit: Rollos",
+    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Ausgewählte Rollos, die nicht ganz geschlossen sind, erscheinen auf „Zuhause“ in der Sicherheits-Reihe als „Rollos“ und zählen als nicht sicher. Ohne Auswahl ändert sich nichts.",
+    "Evening and night only": "Nur abends und nachts",
+    "From sunset to sunrise": "Von Sonnenuntergang bis Sonnenaufgang",
+    "No covers found": "Keine Rollos gefunden"
   },
   "patterns": [
     [

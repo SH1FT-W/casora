@@ -2474,7 +2474,14 @@
   "Stream": "Stream",
   "Stream nicht erreichbar · Standard": "Stream not reachable · Standard",
   "Wind": "Wind",
-  "Benachrichtigung": "Notification"
+  "Benachrichtigung": "Notification",
+  "Rollos": "Shutters",
+  "Rollo offen": "Shutter open",
+  "Alle schließen": "Close all",
+  "Bis Sonnenaufgang": "Until sunrise",
+  "Ab Sonnenuntergang": "From sunset",
+  "Keine Rollos ausgewählt": "No shutters picked",
+  "Rollos wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Pick the shutters in the Studio under Settings › Home & Devices › Security."
  },
  "patterns": [
   [
@@ -3660,6 +3667,10 @@
   [
    "^(\\d+) Fenster offen$",
    "{1} windows open"
+  ],
+  [
+   "^(\\d+) Rollos offen$",
+   "{1} shutters open"
   ],
   [
    "^(\\d+) Fenster gekippt$",

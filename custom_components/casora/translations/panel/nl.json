@@ -2669,7 +2669,14 @@
     "Hold, font, tile size": "Vasthouden, lettertype, tegelgrootte",
     "No match – try one of the topics below.": "Geen resultaat – probeer een van de onderwerpen hieronder.",
     "Bell, notifications, push and Live‑Activities": "Bel, meldingen, push en live‑activiteiten",
-    "Show the bell on this dashboard": "Bel tonen op dit dashboard"
+    "Show the bell on this dashboard": "Bel tonen op dit dashboard",
+    "The design applies to all dashboards right away. Undo switches it back.": "Het design geldt meteen voor alle dashboards. Ongedaan maken zet het vorige terug.",
+    "How every Casora dashboard looks – the change applies right away.": "Hoe alle Casora-dashboards eruitzien – de wijziging geldt meteen.",
+    "Security: covers": "Beveiliging: rolluiken",
+    "Picked covers that are not fully closed show on Home in the security row as “Shutters” and count as not secure. Nothing picked: nothing changes.": "Gekozen rolluiken die niet helemaal dicht zijn, verschijnen op Thuis in de beveiligingsrij als ‘Rolluiken’ en tellen als niet veilig. Niets gekozen: er verandert niets.",
+    "Evening and night only": "Alleen 's avonds en 's nachts",
+    "From sunset to sunrise": "Van zonsondergang tot zonsopgang",
+    "No covers found": "Geen rolluiken gevonden"
   },
   "patterns": [
     [
