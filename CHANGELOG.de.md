@@ -22,11 +22,13 @@ Fasst alles aus den Betas 26.10.62b1 bis b6 zusammen, dazu einheitliche Popups.
 ### Geändert
 - **Einheitliche Popups:** Jedes Popup folgt demselben Muster: Kopf mit Raum, Name und Status; höchstens eine Hauptbedienung; Abschnitte in fester Reihenfolge (Bedienung, Zustand, Verlauf, Einstellungen); › öffnet immer eine Unterseite mit ‹ zurück; „Weitere Einstellungen“ mit den Geräte-Infos am Ende jedes Geräte-Popups; ein Knopfstil; eine Breite. Zweispaltige Popups sind symmetrisch.
 - **Pulse-Popup** neu geordnet: kurzer Status, Anzahl am Abschnitt, Akkustand am Symbol.
+- **Medien-Popups:** Fernseher und Receiver schalten über den Schalter im Kopf (die Extra-Zeile ist weg); die Zeile „Apple Music öffnen“ hat das einfarbige Symbol aus iOS 27.2.
 - **Energieliste im Raum (#79):** alle Verbraucher des Raums, 0 W blass nach den aktiven. Am Handy öffnet das Energie-Badge auf Zuhause das Popup.
 - **Beleuchtungs-Badge am Handy (#80):** Hat das Badge eigene Lampen, zeigt das Handy genau diese, wie der Desktop.
 - **Energie:** Die Quellen aus dem Energie-Dashboard von Home Assistant haben Vorrang (auch vor Anker Solix), und der Anteil aus Solar und Akku erscheint auch ohne die Solarfelder der Kachel.
 - **Strompreis** nur noch aus den Einstellungen bzw. dem Energie-Dashboard; das Feld an der Kachel ist weg.
 - **Studio:** Abschnitte aus den Einstellungen behalten ihre Breite; die Vorschau flackert nicht mehr bei Änderungen, die sie nicht zeigt; größere Tippflächen am Handy; der Glocken-Schalter ist eine eigene Zeile.
+- **Tablets quer:** Berühren die Badges die Kacheln (etwa bei offener Unterreihe), rückt der Kopf etwas hoch, statt hinter die Kacheln zu rutschen.
 - **Sprechen an der Klingel (#23):** eine Verbindung für Bild und Mikrofon; mit Home Assistant 2026.11 spricht Casora über Home Assistants eigenen Player.
 - **Diagnose** mit anonymem Energie-Abschnitt.
 
