@@ -425,7 +425,9 @@ window._casoraHouseLightsOf = function (rooms, states) {
 window.casoraLightBadgeOwn = function (v) {
   if (!v || v.light_rooms_auto === true) return false;
   for (var i = 1; i <= 10; i++) {
-    var x = v['entity_' + i];
+    // The phone's badge row evaluates the filter in its own card (casora_mobile_filter_badges): there the slots
+    // are called light_entity_N.
+    var x = v['entity_' + i] || v['light_entity_' + i];
     if (typeof x === 'string' && x.indexOf('light.') === 0) return true;
   }
   return false;

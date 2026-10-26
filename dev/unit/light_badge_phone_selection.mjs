@@ -21,6 +21,9 @@ assert.equal(own({ entity_1: 'light.lamp_a', light_rooms_auto: true }), false, '
 assert.equal(own({}), false, 'nothing picked');
 assert.equal(own(null), false);
 assert.equal(own({ entity_1: 'switch.plug' }), false, 'not a light');
+// The filter runs in casora_mobile_filter_badges, whose variables name the slots light_entity_N (found on the test HA).
+assert.equal(own({ light_entity_1: 'light.lamp_a', light_group_entity: 'light.house' }), true, 'parent card variables');
+assert.equal(own({ light_entity_1: 'light.lamp_a', light_rooms_auto: true }), false, 'parent: house from the rooms');
 
 // The phone's badge (casora_mobile_filter_badges): no filter (null → the popup opens) only with a selection and popups on.
 const tpl = JSON.parse(rd('dashboards/casora/button_card_templates.json'));
@@ -33,6 +36,7 @@ const run = (variables, cur, popups = true) => {
   return new Function('states', 'variables', src)(states, variables);
 };
 assert.equal(run({ entity_1: 'light.lamp_a', entity_2: 'light.lamp_b' }, 'all'), null, 'selection → popup, no filter');
+assert.equal(run({ light_entity_1: 'light.lamp_a', light_group_entity: 'light.house' }, 'all'), null, 'phone row variables → popup');
 assert.equal(run({ entity_1: 'light.lamp_a' }, 'all', false), 'lights', 'without Casora popups the filter stays');
 assert.equal(run({ light_group_entity: 'light.house' }, 'all'), 'lights', 'group only → room filter');
 assert.equal(run({ light_group_entity: 'light.house' }, 'lights'), 'all', 'second tap leaves the filter');
