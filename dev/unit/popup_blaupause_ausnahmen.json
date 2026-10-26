@@ -49,7 +49,7 @@
    "tpl:casora_fan": "Lüfter",
    "tpl:casora_switch": "Schalter",
    "custom_components/casora/scripts/local/31-velair.js": "Klimaanlage (Velair)",
-   "custom_components/casora/scripts/local/05-standard-medien.js": "Gerät allgemein (casora_appliance)",
+   "custom_components/casora/scripts/local/05-standard-medien.js": "Gerät allgemein (casora_entity_actions)",
    "tpl:casora_now_playing_primary": "Medien (Now Playing)",
    "tpl:casora_now_playing_chip": "Medien (Now-Playing-Chip)",
    "tpl:casora_media": "Medien-Player"

@@ -1,4 +1,4 @@
-// Popup blueprint v2, stage 2: the generic entity popup (casora_appliance), the media popups and the alarm.
+// Popup blueprint v2, stage 2: the generic entity popup (casora_entity_actions), the media popups and the alarm.
 //   node dev/unit/popup_stage2_generic_media.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -46,7 +46,7 @@ assert.equal(E.kind(ent, acts, states, reg), 'two');
 assert.equal(E.kind(ent, {}, states, reg), 'one', 'no buttons');
 assert.equal(E.kind(ent, acts, states, { entities: {} }), 'one', 'no values');
 assert.equal(E.kind(ent, { action_1_action: 'toggle', action_1_entity: 'switch.box', action_1_enabled: false }, states, reg), 'one', 'button off');
-assert.ok(/casoraPopupWidth\(k\)/.test(T.casora_appliance.tap_action.casora_popup.style), 'appliance width from kind');
+assert.ok(/casoraPopupWidth\(k\)/.test(T.casora_entity_actions.tap_action.casora_popup.style), "entity_actions width from kind");
 
 // Rendered with stub building blocks: Bedienung, Zustand, „Weitere Einstellungen“ last; state in the status line.
 const seen = [];
