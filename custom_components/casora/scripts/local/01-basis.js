@@ -46,6 +46,28 @@ window._casoraLovelaceCfg = function () {
   }
   return (ll && ll.lovelace && ll.lovelace.config) || null;
 };
+/* #78: does the open dashboard hold a tile the phone's badge filter shows for this category (same rule as
+   filter-overlay.js: variables.mobile_filter_category, else the template in CASORA_FILTER_CATEGORIES)? The phone's
+   energy badge filters only then; without such a tile the filter page said "Hier gibt es noch keine Geräte", so it
+   opens the energy popup like on the desktop. null: config not known yet (keep the filter). */
+window._casoraFilterHas = function (cat) {
+  var cfg = window._casoraLovelaceCfg && window._casoraLovelaceCfg();
+  if (!cfg) return null;
+  var memo = window._casoraFilterHasMemo;
+  if (!memo || memo.cfg !== cfg) memo = window._casoraFilterHasMemo = { cfg: cfg, hits: {} };
+  if (cat in memo.hits) return memo.hits[cat];
+  var cats = window.CASORA_FILTER_CATEGORIES || {}, hit = false;
+  (function walk(x, d) {
+    if (hit || !x || typeof x !== 'object' || d > 12) return;
+    if (Array.isArray(x)) { x.forEach(function (y) { walk(y, d + 1); }); return; }
+    var V = x.variables || {};
+    if (V.mobile_filter_category !== null && V.mobile_filter_category !== undefined) { if (V.mobile_filter_category === cat) hit = true; }
+    else [].concat(x.template || []).forEach(function (n) { if (n && cats[n] === cat) hit = true; });
+    walk(x.cards, d + 1); walk(x.card, d + 1); walk(x.sections, d + 1); walk(x.views, d + 1);
+  })(cfg.views, 0);
+  memo.hits[cat] = hit;
+  return hit;
+};
 /* Szenenfarbe aus dem Studio (06.10.2026, B-SZENE): das Studio schreibt sie beim Speichern in
    casora_scene_row.variables.scene_colors des Dashboards – die gilt (auch nach Zurücksetzen).
    Ohne diese Vorlage (YAML-Dashboards): was Leiste/Szenenreihe gemeldet haben (_casoraSC.iconColors).

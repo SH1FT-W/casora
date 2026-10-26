@@ -2535,7 +2535,10 @@
   "Verläufe, Ersatz, Einstellungen": "Cronologia, sostituzioni, impostazioni",
   "KI-Blick": "Sguardo IA",
   "Tag/Nacht": "Giorno/notte",
-  "vor 1 Woche": "1 settimana fa"
+  "vor 1 Woche": "1 settimana fa",
+  "Antwortet": "Risponde",
+  "Startet um": "Parte alle",
+  "Startet morgen um": "Parte domani alle"
  },
  "patterns": [
   [

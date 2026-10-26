@@ -2560,6 +2560,8 @@ const SECTIONS = [
       { key: "security_summary", label: "Summary", type: "select", options: ["", "detailed", "short"], always: true, ord: 7.5,
         optionLabels: { "": "Automatic", detailed: "Always detailed", short: "Always short" },
         hint: "Automatic: icons with a count on the home page, written out in rooms, where there is usually just one window or door." },
+      { key: "security_covers_link", label: "Security: covers", type: "link", page: "home", focus: "security", always: true, ord: 7.8,
+        hint: "Which covers count as open at night – for all dashboards." },
       { key: "show_security_inline", label: "Separate security badges", type: "bool",
         boolDefault: false, always: true, ord: 8,
         hint: "Shows locks, alarm, doors, windows and cameras as their own badges." },
@@ -2590,6 +2592,15 @@ const SECTIONS = [
       { ...E("energy_usage_month", "Usage this month", ["sensor"]), classes: ["energy"], auto: true, ord: 3 },
       { ...E("energy_cost_today", "Cost today", ["sensor"]), classes: ["monetary"], auto: true, ord: 4 },
       { ...E("energy_cost_month", "Cost this month", ["sensor"]), classes: ["monetary"], auto: true, ord: 5 },
+      // #78: the way back once the sensors were chosen by hand (or left out, or Home set to the rooms' sum).
+      { key: "__energy_auto", label: "Automatic", type: "action", always: true, ord: 1.5, homeOnly: true,
+        when: (V) => energyManual(V), run: function (room) { this._energyBackToAuto(room); },
+        button: "Back to automatic",
+        hint: "Your own choice stays until you tap this. Automatic takes grid, solar and battery from Home Assistant's Energy dashboard; without them a house sensor or the sum of the rooms." },
+      { key: "__energy_auto_room", label: "Automatic", type: "action", always: true, ord: 1.5, roomOnly: true,
+        when: (V) => energyManual(V), run: function (room) { this._energyBackToAuto(room); },
+        button: "Back to automatic",
+        hint: "Your own choice stays until you tap this. Automatic adds up the power sensors in this room's area and adds new ones by itself." },
     ],
     repeats: [
       R("enitem", "Sub-badge", 6, [
@@ -3044,6 +3055,53 @@ function homeEnergyEdit(V, key, value) {
   if (key === "energy_power_entity" && !value && !ownList) { V.casora_energy_auto = 2; V.casora_energy_rooms = true; return; }
   if (key === "energy_power_entity" && value) delete V.casora_energy_rooms;
   V.casora_energy_auto = false;
+}
+
+// #78: an energy badge whose sensors are no longer Casora's automatic: chosen by hand (marker false, or set before
+// the markers existed), sensors left out (energy_exclude) or Home set to the rooms' sum (casora_energy_rooms).
+// Switching the badge off and on keeps all of that, so "delete and add again" never brought the automatic back.
+const ENERGY_AUTO_KEYS = ["energy_power_entity", "energy_entities", "energy_exclude", "casora_energy_auto", "casora_energy_rooms", "casora_energy_sum"];
+function energyManual(V) {
+  if (!V || V.show_energy === false) return false;
+  const arr = (v) => (Array.isArray(v) ? v.filter(Boolean) : []);
+  const m = V.casora_energy_auto;
+  if (arr(V.energy_exclude).length || V.casora_energy_rooms) return true;
+  if (m === 2 || m === "prefs" || m === "house" || m === true) return false;
+  return m === false || !!V.energy_power_entity || arr(V.energy_entities).length > 0;
+}
+// #78: back to automatic, as a new dashboard fills it: Home from HA's energy settings, else a house sensor by its
+// name, else the sum of the rooms; a room from the power sensors of its HA area (a sensor for the whole room
+// first). Everything chosen by hand goes (sensor, list, left-out ones, the markers); names, usage, cost and the
+// sub-badges stay. When the automatic finds no power sensor at all, nothing changes (the badge would vanish).
+// Returns "changed", "same" (already what the automatic picks) or "none" (it found nothing).
+function energyBackToAuto(hass, rooms, room) {
+  const B = typeof window !== "undefined" && window.casoraBasis;
+  const list = rooms || [];
+  const V = room && room.variables;
+  if (!V || !hass) return "none";
+  const keep = ENERGY_AUTO_KEYS.map((k) => [k, V[k]]);
+  const before = JSON.stringify(keep.map((x) => x[1]));
+  ENERGY_AUTO_KEYS.forEach((k) => { delete V[k]; });
+  if (isHomeRoom(room, list)) {
+    // Marked as Casora's (2) so the settings may fill it even with usage or cost fields set.
+    V.casora_energy_auto = 2;
+    if (!prefsHomePower(hass, list)) {
+      const pick = B && B.housePower ? B.housePower(hass) : null;
+      if (pick) { V.energy_power_entity = pick; V.casora_energy_auto = "house"; }
+      else fillHomeEnergy(hass, list);
+    }
+  } else {
+    let pr = null;
+    try { pr = B && B.energyProbe ? B.energyProbe(hass, room.name || "") : null; } catch (e) { pr = null; }
+    if (pr && pr.whole) { V.energy_power_entity = pr.whole; V.casora_energy_auto = 2; }
+    else if (pr && pr.list.length) { V.energy_entities = pr.list.slice(); V.casora_energy_auto = 2; }
+  }
+  if (!V.energy_power_entity && !(Array.isArray(V.energy_entities) && V.energy_entities.some(Boolean))) {
+    ENERGY_AUTO_KEYS.forEach((k) => { delete V[k]; });
+    keep.forEach(([k, v]) => { if (v !== undefined) V[k] = v; });
+    return "none";
+  }
+  return JSON.stringify(ENERGY_AUTO_KEYS.map((k) => V[k])) !== before ? "changed" : "same";
 }
 
 function deriveEnergyRooms(rooms) {
@@ -5056,8 +5114,12 @@ function tileMissingEntity(tile, type) {
 const isWarningLevelSensor = (h, id) => /^sensor\./.test(id)
   && Number.isFinite(parseInt((((h.states || {})[id] || {}).attributes || {}).warning_count, 10));
 // Picker rules beyond domain and device class (types.js `accept`): an entity the rule accepts is offered as well.
+// Groups in any form: old group.* and the group helpers (light/switch/cover/… groups) – both list their
+// members in attributes.entity_id. accept "group" keeps ONLY those (see _entityList).
+const isGroupEntity = (hass, e) => Array.isArray((((hass && hass.states[e]) || {}).attributes || {}).entity_id);
 const ACCEPT_RULES = {
   weather_warning: isWarningLevelSensor,
+  group: isGroupEntity,
 };
 
 // The main entity a new tile suggests: by the integration's translation_key (language-independent, however
@@ -17853,6 +17915,7 @@ class CasoraPanel extends HTMLElement {
         .filter((f) => live.has(unitOf(f)) && modAvail(f) && (!f.when || f.when(room.variables || {})))
         .filter((f) => !f.phoneName || this._favSection(room))
         .filter((f) => !f.homeOnly || isHomeRoom(room, this._state.compact.rooms))
+        .filter((f) => !f.roomOnly || !isHomeRoom(room, this._state.compact.rooms))
         .map((f, i) => [f, i])
         .sort((a, b) => (ordOf(a[0]) - ordOf(b[0])) || (a[1] - b[1]))
         .map(([f]) => f);
@@ -18393,7 +18456,9 @@ class CasoraPanel extends HTMLElement {
           addHint();
           const b = document.createElement("button");
           b.type = "button"; b.className = "linkbtn"; b.textContent = f.button;
-          b.onclick = () => this._allTilesAuto();
+          b.onclick = () => (f.run ? f.run.call(this, room) : this._allTilesAuto());
+          // A space between the hint's last sentence and the button (they read as one line).
+          if (hintEl) hintEl.appendChild(document.createTextNode(" "));
           (hintEl || row).appendChild(b);
           return;
         }
@@ -18503,6 +18568,19 @@ class CasoraPanel extends HTMLElement {
           row.appendChild(this._optionChips(picked, avail, WEATHER_PICK_LABELS, write,
             { max: curves ? WEATHER_MAX_CURVES : 0, min: curves ? 1 : 0, order: all }));
           addDrop(row, f);
+          fs.appendChild(row);
+          addHint();
+          return;
+        }
+
+        // A row that leads to a settings page (e.g. which covers count for security, #76): one tap, with ‹ back.
+        if (f.type === "link") {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "ghost";
+          b.textContent = trLabel("Choose") + " ›";
+          b.onclick = () => { if (typeof this._csHubGo === "function") this._csHubGo({ page: f.page, focus: f.focus, back: "start" }); };
+          row.appendChild(b);
           fs.appendChild(row);
           addHint();
           return;
@@ -21029,6 +21107,24 @@ class CasoraPanel extends HTMLElement {
     return true;
   }
 
+  // #78: "Back to automatic" in the Energy badge (Home and rooms); the phone half follows like any field.
+  async _energyBackToAuto(room) {
+    // HA's energy settings as they are now (set up a minute ago counts too).
+    const B = window.casoraBasis;
+    if (B && B.energyPrefsReady) await B.energyPrefsReady(this._hass);
+    const rooms = (this._state && this._state.compact && this._state.compact.rooms) || [];
+    const res = room ? energyBackToAuto(this._hass, rooms, room) : "none";
+    if (res === "none") {
+      this._status("Casora found no power sensor for it, so your choice stays.", "err");
+      return;
+    }
+    ENERGY_AUTO_KEYS.forEach((k) => this._mirrorToPair(k, room.variables[k], [room]));
+    this._status("Energy badge back to automatic", "ok");
+    this._markDirty();
+    this._renderForm();
+    this._syncPreview();
+  }
+
   // 06.10.2026: unter „Geräte (zusammengezählt)“: was ausgeschlossen ist (zurückholbar) und
   // welche Leistungssensoren im Raum nicht in der Summe stehen.
   _energyListNotes(room, fs, writeList, exOf) {
@@ -21887,6 +21983,7 @@ class CasoraPanel extends HTMLElement {
       .flatMap((d) => this._entMemo.byDom.get(d))
       .concat(plus)
       .filter((e) => {
+        if (accept === "group") return acc(this._hass, e);
         if (acc && acc(this._hass, e)) return true;
         const want = perDomain ? perDomain[e.split(".")[0]] : all;
         if (!want || !want.length) return true;
@@ -28596,7 +28693,7 @@ window.__casoraPanelInternals = {
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
   linkPair, syncPairRooms, syncPairTiles, syncTwinTile, phoneCondSnapshot, condChain, condModel, condWrite, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, setInnerSize, expandMobileConfig, extractMobileConfig,
-  deriveEnergyRooms, fillHomeLights, homeLightsEdit, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
+  deriveEnergyRooms, energyManual, energyBackToAuto, fillHomeLights, homeLightsEdit, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
   CASORA_ACCENTS, accentsShown, accentLabel, swatchCss,
   condStates, condLoadSeen, isCarouselCard, isPageTile, carouselOf, carouselId, markCarousel, CAROUSEL_CARD, CAROUSEL_TILE,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)

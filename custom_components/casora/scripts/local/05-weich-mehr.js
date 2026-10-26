@@ -425,6 +425,10 @@
     // which counts a sleeping inverter as 0 W, not as a device without a value).
     var srcs = parts && window.casoraEnergySources ? window.casoraEnergySources(ctx.hass, sumIds) : null;
     if (srcs) C.sources = srcs;
+    // #79: a room's list also shows the consumers measured in its HA area that it does not add up (not excluded).
+    var pex = Array.isArray(v.power_exclude) ? v.power_exclude.filter(Boolean) : [];
+    var listArea = parts && !srcs ? E.listArea(ctx.hass, v, sumIds.concat(pex)) : null;
+    if (listArea) { C.area = listArea; if (pex.length) C.exclude = pex; }
     var f = {};
     f.hero = { card: secCard([C.home, C.grid, C.costToday, C.today, C.error].concat(sumIds), call('_casoraSoftEnergy', 'hero', C), states) };
     if (ctx.metricCard) f.metric = { card: chartCard(ctx.metricCard) };
@@ -439,7 +443,8 @@
     // settings (its solar, battery and grid sensors); "Woher kommt der Strom" then is the flow, not a list.
     var house = !!(srcs || (ctx.powerId && !area));
     var fs = (solar && has(C.solar)) || house ? E.flowSources(C, ctx.hass, states, house) : null;
-    if (fs) C.flowOn = true;
+    // Standard look (ctx.only 'top'): no E1 flow there, so the sources stay rows ("Woher kommt der Strom").
+    if (fs && ctx.only !== 'top') C.flowOn = true;
     // #44: the settings' sources, then the consumers as with a house sensor (the parts are no consumers).
     if (srcs) {
       var cand0 = { ids: [] };
@@ -451,19 +456,27 @@
       // The battery rows show the charge level: its sensor is watched too.
       var socIds = window.casoraEnergyBatterySoc ? (srcs.battery || []).map(function (id) { return window.casoraEnergyBatterySoc(ctx.hass, id); }) : [];
       f.top = { card: secCard(sumIds.concat(socIds, haIds, cand0.ids.slice(0, 60)), call('_casoraSoftEnergy', 'sources', C), states) };
-    } else if (parts) f.top = { card: secCard(sumIds, call('_casoraSoftEnergy', 'parts', C), states) };
+    } else if (parts) {
+      var extra0 = C.area ? E.roomExtras(ctx.hass, states, C) : { ids: [] };
+      f.top = { card: secCard(sumIds.concat(extra0.ids.slice(0, 60)), call('_casoraSoftEnergy', 'parts', C), states) };
+    }
     else if (typeof fl.top === 'string' && fl.top) f.top = UI.label('Verbraucher') + fl.top;
     else if (haCons) {
       C.auto = { ha: true };
       f.top = { card: secCard([C.home].concat(haIds), call('_casoraSoftEnergy', 'auto', C), states) };
     } else if (ctx.powerId && window._casoraAutoConsumers) {
       // 07.10.2026: no consumers assigned, Casora finds the largest itself (up to 5 by power).
-      // Popup of a room (sensor with an area, not a house sensor): only that area.
+      // Popup of a room (sensor with an area, not a house sensor): only that area, and there every consumer,
+      // also at 0 W (#79: the list must not depend on what the others draw); the house keeps its top 5.
       C.auto = { exclude: [C.home, C.solar, C.grid, C.charge, C.discharge, C.output, C.export, C.loadTarget]
-        .concat(C.pv).filter(Boolean), area: area, max: 5 };
+        .concat(C.pv).filter(Boolean), area: area, max: area ? 99 : 5 };
+      if (area) C.auto.zero = true;
       var cand = window._casoraAutoConsumers(ctx.hass, states, C.auto);
       if (cand.ids.length) autoTop = f.top = { card: secCard([C.home].concat(cand.ids.slice(0, 60)), call('_casoraSoftEnergy', 'auto', C), states) };
     }
+    // Standard look (casora_popup_energy): the same consumer list as here, so units, the rooms' complete list (#79),
+    // HA's individual devices and the house's sources (#44) read alike in every look.
+    if (ctx.only === 'top') return f.top && f.top.card ? own(f.top) : null;
     var inner = ctx.inner || {};
     var cj = 'const C = ' + JSON.stringify(C) + ';\n';
     if (fs) {
@@ -938,6 +951,53 @@
     return a && !HOUSE_NAME.test(nm) ? a : null;
   };
   E.autoArea = autoArea;
+  // #79: the HA area of a room's list: the area named like the room, else the one area all its sensors are in
+  // (a powercalc sensor without one counts in its source's area). Several areas (Home's sum of the rooms): none.
+  E.listArea = function (hass, v, ids) {
+    var h = hass || {}, areas = h.areas || {}, R = h.entities || {}, D = h.devices || {};
+    var norm = function (x) { return String(x || '').trim().toLowerCase(); };
+    var rn = norm(v && v.room_name);
+    if (rn) for (var k in areas) if (areas[k] && norm(areas[k].name) === rn) return k;
+    var of = function (id, deep) {
+      var e = R[id];
+      if (!e) return null;
+      var a = e.area_id || (e.device_id && D[e.device_id] && D[e.device_id].area_id) || null;
+      var src = !a && !deep && e.platform === 'powercalc' ? ((((h.states || {})[id] || {}).attributes) || {}).source_entity : null;
+      return a || (src && src !== id ? of(src, true) : null);
+    };
+    var seen = null;
+    for (var i = 0; i < (ids || []).length; i++) {
+      var a = of(ids[i]);
+      if (!a) continue;
+      if (seen && seen !== a) return null;
+      seen = a;
+    }
+    return seen;
+  };
+  // Consumers in C.area that the list neither adds up nor excludes, one per device (a device with a sensor in the
+  // list or excluded stays out): { list: [{ id, w }], ids: sensors to watch }.
+  E.roomExtras = function (hass, states, C) {
+    if (!C || !C.area || !window._casoraAutoConsumers || !window._casoraPowerIds) return { list: [], ids: [] };
+    var R = (hass && hass.entities) || {};
+    var known = window._casoraPowerIds(C.sum || {}).concat(C.exclude || []);
+    var devs = {};
+    known.forEach(function (id) { var d = (R[id] || {}).device_id; if (d) devs[d] = 1; });
+    var A = window._casoraAutoConsumers(hass, states, { area: C.area, zero: true, max: 99, exclude: known, visible: autoVisible });
+    return { list: A.top.filter(function (x) { var d = (R[x.id] || {}).device_id; return !(d && devs[d]); }), ids: A.ids };
+  };
+  // #79: one order for a room's consumers, whatever the others draw: drawing ones by power, then the ones at 0 W in
+  // the list's order, then ones measured in the room outside the sum (by power), last the ones without a value.
+  // items: { w, skip, out }. consRank > 0: the row's icon is pale (everything but the drawing ones).
+  E.consRank = function (x) { return x.skip ? 3 : x.out ? 2 : x.w > 0 ? 0 : 1; };
+  E.consOrder = function (items) {
+    return (items || []).map(function (x, i) { return { x: x, i: i }; }).sort(function (a, b) {
+      var ra = E.consRank(a.x), rb = E.consRank(b.x);
+      if (ra !== rb) return ra - rb;
+      var d = ra === 0 || ra === 2 ? (b.x.w || 0) - (a.x.w || 0) : 0;
+      return d || a.i - b.i;
+    }).map(function (o) { return o.x; });
+  };
+  var DIM = 'var(--casora-popup-ui-dim, rgba(58,50,43,0.25))';
   // „Wer sieht das?“: admins see everything; others only what the dashboard config does not hide,
   // nothing while it still loads (it is mostly there from the dashboard start).
   var autoVisible = function (ids) {
@@ -1050,8 +1110,8 @@
         var pct = x.w != null && homeH > 0 ? Math.round(x.w / homeH * 100) : null;
         var sub = pct > 0 && pct <= 100 ? pct + ' % des aktuellen Verbrauchs'
           : x.power && x.w == null ? 'Nicht erreichbar' : x.kwh != null && x.daily ? 'heute' : null;
-        return { entity: x.power || x.id, icon: 'plug', label: x.name, sub: sub,
-          value: x.w != null ? wText(x.w) : x.kwh != null ? fN(x.kwh, hass) + ' kWh' : null };
+        return { entity: x.power || x.id, icon: 'plug', iconTone: x.w != null && x.w <= 0 ? DIM : null, label: x.name, sub: sub,
+          value: x.w != null ? wText(Math.max(0, x.w)) : x.kwh != null ? fN(x.kwh, hass) + ' kWh' : null };
       });
       return hrows.length ? UI.label('Verbraucher') + consList(UI, hrows) : '';
     }
@@ -1063,13 +1123,15 @@
         var t = String(a.friendly_name || (hass && hass.entities && hass.entities[id] && hass.entities[id].name) || id);
         return window.casoraCleanName ? window.casoraCleanName(t) : (t.replace(/\s*((aktuelle|momentane)\s+leistung|current\s+(power|consumption)|power|leistung)$/i, '').trim() || t);
       };
-      var arows2 = A.top.map(function (x) {
-        var pct = home > 0 ? Math.round(x.w / home * 100) : null;
-        return { entity: x.id, icon: 'plug', label: anm(x.id),
+      var arows2 = E.consOrder(A.top.map(function (x) { return { id: x.id, w: x.w, skip: x.w == null ? 'off' : '' }; })).map(function (x) {
+        var pct = home > 0 && x.w > 0 ? Math.round(x.w / home * 100) : null;
+        return { entity: x.id, icon: 'plug', iconTone: E.consRank(x) ? DIM : null, label: anm(x.id),
           sub: pct > 0 && pct <= 100 ? pct + ' % des aktuellen Verbrauchs' : null,
-          value: wText(x.w) };
+          value: x.w == null ? 'Nicht erreichbar' : wText(Math.max(0, x.w)), valueTone: x.w == null ? 'warn' : null };
       });
-      /* #44: "Top N" says the list is the largest ones, not every consumer adding up to the total. */
+      /* #44: "Top N" says the list is the largest ones, not every consumer adding up to the total.
+         #79: a room lists all of its consumers (zero): five, the rest behind "Alle N anzeigen". */
+      if (C.auto.zero) return arows2.length ? UI.label('Verbraucher') + consList(UI, arows2) : '';
       return arows2.length ? UI.label(arows2.length > 1 ? 'Top ' + arows2.length + ' Verbraucher' : 'Verbraucher') + UI.group(arows2) : '';
     }
     if (part === 'parts' && C.sum && window._casoraPowerSum) {
@@ -1080,20 +1142,26 @@
         return t.replace(/\s*(power|leistung)$/i, '').trim() || t;
       };
       var WHY = { off: 'Nicht erreichbar', nopower: 'Keine Leistung', parent: 'Steckt hinter' };
-      var used = R.items.filter(function (x) { return !x.skip; }).sort(function (a, b) { return b.w - a.w; });
-      var skipped = R.items.filter(function (x) { return x.skip; });
-      var rows = used.map(function (x) {
-        var pct = R.sum > 0 && x.w > 0 ? Math.round(x.w / R.sum * 100) : null;
-        return { entity: x.id, icon: (C.icons || {})[x.id] || 'plug', label: nm(x.id),
-          sub: pct ? pct + ' % der Summe' : null,
-          value: x.w > 0 && x.w < 10 ? (Math.round(x.w * 10) / 10).toLocaleString(LANG(hass)) + ' W' : fW(x.w, hass) };
-      }).concat(skipped.map(function (x) {
-        return { entity: x.id, icon: (C.icons || {})[x.id] || 'plug', iconTone: 'var(--casora-popup-ui-dim, rgba(58,50,43,0.25))',
-          label: nm(x.id), sub: 'Nicht in der Summe' + (x.skip === 'parent' ? ' · ' + WHY.parent + ' ' + nm(x.parent) : ''),
-          value: x.skip === 'parent' ? '—' : WHY[x.skip], valueTone: x.skip === 'off' ? 'warn' : null };
-      }));
-      var head = 'In der Summe' + (skipped.length ? ' · ' + used.length + ' von ' + R.items.length : '');
-      return rows.length ? UI.label(head) + UI.group(rows) : '';
+      // #79: every consumer of the room, in one order that does not depend on what the others draw (E.consOrder),
+      // also the ones measured in the room's area that the list does not add up; five, the rest behind "Alle N".
+      var extra = C.area ? E.roomExtras(hass, states, C).list : [];
+      var all = E.consOrder(R.items.concat(extra.map(function (x) { return { id: x.id, w: x.w, skip: '', out: true }; })));
+      var rows = all.map(function (x) {
+        var icon = (C.icons || {})[x.id] || 'plug', dim = E.consRank(x) ? DIM : null;
+        if (x.skip) {
+          return { entity: x.id, icon: icon, iconTone: dim,
+            label: nm(x.id), sub: 'Nicht in der Summe' + (x.skip === 'parent' ? ' · ' + WHY.parent + ' ' + nm(x.parent) : ''),
+            value: x.skip === 'parent' ? '—' : WHY[x.skip], valueTone: x.skip === 'off' ? 'warn' : null };
+        }
+        var pct = !x.out && R.sum > 0 && x.w > 0 ? Math.round(x.w / R.sum * 100) : null;
+        var w = x.out && x.w != null ? Math.max(0, x.w) : x.w;
+        return { entity: x.id, icon: icon, iconTone: dim, label: nm(x.id),
+          sub: x.out ? 'Nicht in der Summe' : pct ? pct + ' % der Summe' : null,
+          value: w == null ? WHY.off : w > 0 && w < 10 ? (Math.round(w * 10) / 10).toLocaleString(LANG(hass)) + ' W' : fW(w, hass),
+          valueTone: w == null ? 'warn' : null };
+      });
+      var head = 'In der Summe' + (R.used < all.length ? ' · ' + R.used + ' von ' + all.length : '');
+      return rows.length ? UI.label(head) + consList(UI, rows) : '';
     }
     if (part === 'more') {
       var secs = [];

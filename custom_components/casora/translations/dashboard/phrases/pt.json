@@ -2535,7 +2535,10 @@
   "Verläufe, Ersatz, Einstellungen": "Histórico, substituições, definições",
   "KI-Blick": "Olhar de IA",
   "Tag/Nacht": "Dia/noite",
-  "vor 1 Woche": "há 1 semana"
+  "vor 1 Woche": "há 1 semana",
+  "Antwortet": "Responde",
+  "Startet um": "Começa às",
+  "Startet morgen um": "Começa amanhã às"
  },
  "patterns": [
   [

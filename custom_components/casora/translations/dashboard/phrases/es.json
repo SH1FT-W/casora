@@ -2535,7 +2535,10 @@
   "Verläufe, Ersatz, Einstellungen": "Historial, recambios, ajustes",
   "KI-Blick": "Vistazo de IA",
   "Tag/Nacht": "Día/noche",
-  "vor 1 Woche": "hace 1 semana"
+  "vor 1 Woche": "hace 1 semana",
+  "Antwortet": "Responde",
+  "Startet um": "Empieza a las",
+  "Startet morgen um": "Empieza mañana a las"
  },
  "patterns": [
   [

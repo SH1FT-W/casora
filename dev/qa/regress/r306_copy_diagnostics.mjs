@@ -101,7 +101,9 @@ await need('names from the test house to look for', priv.length > 50, priv.lengt
 // As a whole word: "Dishwasher" (a model) is not a leak inside the tile type id "casora_dishwasher".
 const lower = text.toLowerCase();
 const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const leaked = priv.filter((n) => new RegExp('(^|[^a-z0-9_])' + esc(n.toLowerCase()) + '($|[^a-z0-9_])').test(lower));
+// Fixed words of the diagnostics format itself, not names from the house (energy section, 26.10.62b6).
+const FORMAT_WORDS = new Set(['energy', 'power', 'battery', 'solar', 'grid', 'devices', 'house']);
+const leaked = priv.filter((n) => !FORMAT_WORDS.has(n.toLowerCase())).filter((n) => new RegExp('(^|[^a-z0-9_])' + esc(n.toLowerCase()) + '($|[^a-z0-9_])').test(lower));
 await check('no names, ids, areas or hosts of the test house in the text', leaked.length === 0, leaked.slice(0, 10));
 await check('only plain characters (no URL, address, emoji)', /^[A-Za-z0-9 _.,:()=+·–\-\n`]+$/.test(text) && !/https?:|@/.test(text));
 

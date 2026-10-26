@@ -2535,7 +2535,10 @@
   "Verläufe, Ersatz, Einstellungen": "Historia, wymiany, ustawienia",
   "KI-Blick": "Spojrzenie AI",
   "Tag/Nacht": "Dzień/noc",
-  "vor 1 Woche": "1 tydzień temu"
+  "vor 1 Woche": "1 tydzień temu",
+  "Antwortet": "Odpowiada",
+  "Startet um": "Startuje o",
+  "Startet morgen um": "Startuje jutro o"
  },
  "patterns": [
   [

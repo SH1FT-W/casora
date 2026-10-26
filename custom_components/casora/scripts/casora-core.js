@@ -1947,7 +1947,9 @@ window.casoraMenuGlass = {
 // Tretleistung, Haus-/Raum-Summen oder Gruppen; je Gerät eine Messung (Geräte-Gesamtsensor, sonst
 // der Last-Kanal mit dem höchsten Wert, Eigenverbrauch von powercalc nur ohne anderen Kanal; nie
 // Mittel/Max). Nur gültige Werte über 0 W, kW → W, sortiert nach Leistung.
-// o: { exclude: [ids], area: Bereich oder null, max: 5, visible: fn(ids) → ids }.
+// o: { exclude: [ids], area: Bereich oder null, max: 5, visible: fn(ids) → ids, zero: true }.
+// #79: zero keeps devices at 0 W (a room lists all of its consumers, whatever they draw; the house list stays
+// the largest ones). A powercalc sensor without an area of its own belongs to the area of its source_entity.
 // Rückgabe: { top: [{ id, w }], ids: alle Kandidaten (zum Beobachten) }.
 (function () {
   if (window._casoraAutoConsumers) return;
@@ -1961,7 +1963,12 @@ window.casoraMenuGlass = {
     o = o || {}; states = states || {};
     var R = (hass && hass.entities) || {}, D = (hass && hass.devices) || {};
     var ex = (o.exclude || []).filter(Boolean);
-    var areaOf = function (e) { return e.area_id || (e.device_id && D[e.device_id] && D[e.device_id].area_id) || null; };
+    var areaOf = function (e, a) {
+      var own = e.area_id || (e.device_id && D[e.device_id] && D[e.device_id].area_id) || null;
+      if (own || e.platform !== 'powercalc' || !a || !a.source_entity || !R[a.source_entity]) return own;
+      var src = R[a.source_entity];
+      return src.area_id || (src.device_id && D[src.device_id] && D[src.device_id].area_id) || null;
+    };
     var watt = function (id) {
       var s = states[id], a = (s && s.attributes) || {};
       var unit = String(a.unit_of_measurement || (a.device_class === 'power' ? 'W' : ''));
@@ -1986,7 +1993,7 @@ window.casoraMenuGlass = {
       if (NOT_POWER.test(label) || NOT_ELECTRIC.test(label)) return;
       // Haus-/Raumsummen: ohne Gerät mit solchem Namen, oder am Gerät, aber kein Geräte-Gesamtsensor.
       if (HOUSE.test(own.replace(/[\s.]+/g, '_')) && !(e.device_id && DEVICE_TOTAL.test(own))) return;
-      if (o.area && areaOf(e) !== o.area) return;
+      if (o.area && areaOf(e, a) !== o.area) return;
       var key = e.device_id || ('\u0000' + id);
       if (!groups[key]) { groups[key] = []; order.push(key); }
       groups[key].push(id);
@@ -2005,13 +2012,15 @@ window.casoraMenuGlass = {
         var w = watt(id);
         if (w != null && (!best || w > best.w)) best = { id: id, w: w };
       });
+      // #79: with zero a device without a value stays in the list (w null, "unreachable"), like in a room's sum.
+      if (!best && o.zero) best = { id: (total || c[0]), w: null };
       return best;
-    }).filter(function (x) { return x && x.w > 0; });
+    }).filter(function (x) { return x && (x.w > 0 || !!o.zero); });
     if (typeof o.visible === 'function') {
       var vis = o.visible(picks.map(function (x) { return x.id; })) || [];
       picks = picks.filter(function (x) { return vis.indexOf(x.id) >= 0; });
     }
-    picks.sort(function (a, b) { return b.w - a.w; });
+    picks.sort(function (a, b) { return (a.w == null) - (b.w == null) || (b.w || 0) - (a.w || 0); });
     return { top: picks.slice(0, o.max || 5), ids: ids };
   };
 })();
@@ -8292,7 +8301,8 @@ window.casoraMenuGlass = {
     // badge inherits its popup from casora_popup_base, and button-card merges a
     // card's tap_action over the template's rather than replacing it, so one
     // event can carry both intentions.
-    if (ev.detail.casora_filter !== undefined) return;
+    // #78: a filter of null means "no filter this time" (the phone's energy badge without energy tiles).
+    if (ev.detail.casora_filter !== undefined && ev.detail.casora_filter !== null) return;
     ev.stopPropagation();
     // Kachel, die das Popup öffnet – liefert im Weich-Design Symbol und Farbe des Rings.
     // button-card feuert ll-custom an home-assistant, die Kachel steht daher nicht im
@@ -13846,7 +13856,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       setRow(row === d.casora_phone_row ? null : d.casora_phone_row);
       return;
     }
-    if (!('casora_filter' in d)) return;
+    if (!('casora_filter' in d) || d.casora_filter === null) return;
     // Security badge on Home without entries: the list of doors and windows instead (01-basis.js, #39).
     if (d.casora_contacts_open === true) return;
     ev.stopPropagation();

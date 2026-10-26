@@ -2535,7 +2535,10 @@
   "Verläufe, Ersatz, Einstellungen": "Geschiedenis, vervangingen, instellingen",
   "KI-Blick": "AI-blik",
   "Tag/Nacht": "Dag/nacht",
-  "vor 1 Woche": "1 week geleden"
+  "vor 1 Woche": "1 week geleden",
+  "Antwortet": "Reageert",
+  "Startet um": "Start om",
+  "Startet morgen um": "Start morgen om"
  },
  "patterns": [
   [
