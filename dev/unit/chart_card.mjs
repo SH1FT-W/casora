@@ -72,6 +72,8 @@ S = M.series(states[CPU], { entity_2: 'sensor.heimserver_ram', label_2: 'RAM', c
   entity_3: 'sensor.fehlt', entity_4: CPU, chart_color: '#4A7DBA' }, hass);
 assert.deepEqual(S.map((s) => [s.entity, s.name, s.color]), [[CPU, 'heimserver cpu', '#4A7DBA'], ['sensor.heimserver_ram', 'RAM', 'var(--casora-color-green, #30D158)']]);
 assert.ok(M.sameUnit(S));
+// #72: the first sensor has its own label (label_1) too.
+assert.equal(M.series(states[CPU], { label_1: 'Prozessor' }, hass)[0].name, 'Prozessor');
 const mixed = M.series(states[CPU], { entity_2: 'sensor.heimserver_temp', entity_3: 'sensor.heimserver_ram' }, hass);
 assert.deepEqual(mixed.map((s) => s.color), ['c1', 'c2', 'c3'], 'colour steps by position');
 assert.ok(!M.sameUnit(mixed));

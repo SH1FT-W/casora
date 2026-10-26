@@ -376,6 +376,9 @@ window.CASORA_TILE_TYPES = [
       { key: "chart_span", label: "Range when opening", type: "select", options: ["", "7d", "30d", "1y"],
         optionLabels: { "": "24 hours", "7d": "7 days", "30d": "30 days", "1y": "Year" },
         hint: "The range the popup shows first. The year draws twelve months." },
+      // #72: the first sensor had no label of its own, only entity_2…4 had one.
+      { key: "label_1", label: "Label", type: "text", advanced: true, placeholder: "The sensor's name",
+        hint: "Name of this sensor in the popup's legend." },
       { key: "chart_color", label: "Line color", type: "color", advanced: true,
         hint: "Color of this sensor's line in the popup. The sparkline on the tile stays neutral." },
       { key: "entity_2", label: "Second sensor", domains: ["sensor"], group: "Popup",

@@ -109,7 +109,7 @@
       out.push({ entity: eid, name: String(name || a.friendly_name || eid).trim(), color: String(color || '').trim() || STEPS[i % 4],
         unit: String(a.unit_of_measurement || '') });
     };
-    add(entity && entity.entity_id, null, V.chart_color, 0);
+    add(entity && entity.entity_id, V.label_1, V.chart_color, 0);
     [2, 3, 4].forEach(function (n, i) { add(V['entity_' + n], V['label_' + n], V['color_' + n], i + 1); });
     return out;
   };

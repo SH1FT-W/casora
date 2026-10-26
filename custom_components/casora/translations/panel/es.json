@@ -2632,7 +2632,8 @@
     "Hide a door or window": "Ocultar una puerta o ventana",
     "Own name": "Nombre propio",
     "Rename a door or window": "Renombrar una puerta o ventana",
-    "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Sin grupo cuentan todos los sensores de puertas y ventanas. Los ocultos y los nombres propios se aplican a las insignias y ventanas de seguridad."
+    "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups.": "Sin grupo cuentan todos los sensores de puertas y ventanas. Los ocultos y los nombres propios se aplican a las insignias y ventanas de seguridad.",
+    "Name of this sensor in the popup's legend.": "Nombre de este sensor en la leyenda de la ventana emergente."
   },
   "patterns": [
     [
