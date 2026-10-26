@@ -22,6 +22,7 @@
     more: '<circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="19" cy="12" r="1.2" fill="currentColor"/>',
     x: '<path d="M6 6l12 12M18 6L6 18"/>',
     down: '<path d="M6 9l6 6 6-6"/>',
+    palette: '<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.8 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-1 .8-1.8 1.8-1.8H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11.5" r="1"/><circle cx="10.5" cy="7.5" r="1"/><circle cx="15.5" cy="8.5" r="1"/>',
     upd: '<path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/>',
     community: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.5" r="2.4"/><path d="M3.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5M14.5 14.6c2.6-.4 5 .9 6 4.4"/>',
     gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
@@ -79,6 +80,12 @@
        centered below the whole area, so half under the page, and in Rewind it slid
        (banner above the preview) to the bottom edge. Irrelevant for pages without editing. */
     :host(.bmode.bpage.split:not(.flow)) .maprowhint { visibility:hidden; }
+    /* Settings and Updates: a narrower page beside the preview, which moves left as it does for
+       the inspector (Daniel, 26.10.2026). Portrait tablets keep the page on top (bstack). */
+    :host(.bmode.bpage.bside.split:not(.flow):not(.bstack)) { --b-insp-w:min(560px, 46vw); }
+    :host(.bmode.bpage.bside.split:not(.flow):not(.bstack)) .main { padding-right:calc(var(--b-insp-w) + 14px); }
+    :host(.bmode.bpage.bside.split:not(.flow):not(.bstack)) .stage .segrow,
+    :host(.bmode.bpage.bside.split:not(.flow):not(.bstack)) .maprowhint { visibility:visible; }
     /* S-05: the preview sits in the middle of the free height (switcher on top, nothing
        empty below anymore) – even when the inspector makes it narrower. */
     :host(.bmode.split:not(.flow):not(.phone)) .stage > .canvas { align-self:stretch; box-sizing:border-box; }
@@ -385,7 +392,8 @@
       return titleIsDash.apply(this, arguments);
     };
     after0("_markDirty", function () {
-      const dirty = this._isDirty ? this._isDirty() : false;
+      // _markDirty just worked it out; ask again only when it returned early.
+      const dirty = this._dirtyNow !== undefined ? this._dirtyNow : this._isDirty ? this._isDirty() : false;
       const was = this.classList.contains("bdirty");
       this.classList.toggle("bdirty", !!dirty);
       // "Save" comes or goes: refit the header (user test 7, iPad portrait).
@@ -484,8 +492,12 @@
       const was = this.classList.contains("binsp");
       this.classList.toggle("binsp", open);
       this.classList.toggle("bpage", page);
+      // Settings and Updates sit beside the preview like the inspector (it moves left); Rewind
+      // still covers it, its banner belongs to the preview.
+      const side = page && !this._cvOpen, wasSide = this.classList.contains("bside");
+      this.classList.toggle("bside", side);
       this._bTools(on);
-      if (was !== open) this._bRefit();
+      if (was !== open || wasSide !== side) this._bRefit();
       // Newly on (or phone rotated): the preview was hidden and has measured nothing.
       const phone = this.classList.contains("phone");
       // Also after loading another dashboard: whether it has a mobile layout changes then.
@@ -639,6 +651,8 @@
         mk("rooms", "rooms", "Rooms", (b) => this._roomTitleMenu(b));
         mk("list", "list", "Content", () => this._bShowList());
         mk("add", "plus", "Add a tile", () => this._bAddTile(), "bplus");
+        // Fourth column so the "+" stays centred: the topic people open most.
+        mk("look", "palette", "Look & feel", (b) => this._bOpenSettings(b, "t-look"));
         mk("home", "gear", "Settings", (b) => this._bOpenSettings(b));
         shell.appendChild(bar);
       }
@@ -771,12 +785,12 @@
       ["ai", "AI", "assist"], ["outdoor", "Outdoor & Price", "temp-medium"], ["vent", "Ventilation", "fan"],
       ["live", "Live Activities", "iphone"], ["fuel", "Fuel prices", "car"],
     ];
-    P._bOpenSettings = function (anchor) {
+    P._bOpenSettings = function (anchor, page) {
       this._bFrom = anchor;
       this._bRooms = false;
       if (typeof this._csShow !== "function") return this._bHomeMenu(anchor);
       this._bOpen = true;
-      return this._csShow("start");
+      return this._csShow(page || "start");
     };
     P._bHomeMenu = function (anchor) {
       const items = PAGES.map(([id, l, g]) => ({ id: "page:" + id, label: l, glyph: g, plainGlyph: true,

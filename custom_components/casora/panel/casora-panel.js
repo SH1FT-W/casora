@@ -6298,10 +6298,43 @@ class CasoraPanel extends HTMLElement {
       });
     }
     this._syncMenuBtn();
-    // Docking or folding HA's sidebar moves the panel without a window resize.
-    if (this._setVph && this.isConnected && panelW(this) !== this._lastW) this._setVph();
+    // Docking or folding HA's sidebar moves the panel without a window resize. Measured only when the
+    // sidebar or narrow changed: every state change in the house arrives here, and measuring forces a layout.
+    const dock = hass.dockedSidebar + "|" + this._narrow;
+    if (this._setVph && this.isConnected && dock !== this._dockSeen) {
+      this._dockSeen = dock;
+      if (panelW(this) !== this._lastW) this._setVph();
+      // The sidebar animates its width: look once more when it has settled.
+      setTimeout(() => { if (this.isConnected && panelW(this) !== this._lastW) this._setVph(); }, 320);
+    }
     if (!this._built) { this._built = true; this._build(); }
-    else this._liveRefresh();
+    else if (this._liveRelevant(hass)) this._liveRefresh();
+  }
+
+  // Rebuilding the preview is the Studio's most expensive step, and HA calls set hass for every state
+  // change in the house. Sensors change the most (power, temperature, signal), so a sensor counts only
+  // when the dashboard names it; any other domain still counts (lights, covers, locks feed the badges).
+  // A skipped change is picked up by the next rebuild, at the latest after 30 s.
+  _liveRelevant(hass) {
+    const prev = this._liveStates;
+    this._liveStates = hass.states;
+    if (!prev || prev === hass.states) return !prev;
+    const now = Date.now();
+    if (!this._liveRefs || this._liveRefsFor !== this._state || now - this._liveRefsAt > 10000) {
+      this._liveRefsFor = this._state;
+      this._liveRefsAt = now;
+      let json = "";
+      try { json = JSON.stringify(this._state || {}); } catch (e) { /* none */ }
+      this._liveRefs = new Set(json.match(/\bsensor\.[a-z0-9_]+/g) || []);
+    }
+    let skipped = false;
+    for (const id in hass.states) {
+      if (hass.states[id] === prev[id]) continue;
+      if (!id.startsWith("sensor.") || this._liveRefs.has(id)) return true;
+      skipped = true;
+    }
+    if (skipped && now - (this._liveAt || 0) > 30000) return true;
+    return false;
   }
 
   _syncLight() {
@@ -6351,6 +6384,7 @@ class CasoraPanel extends HTMLElement {
       if (!mount || !mount.firstChild) return;
       const room = this._state && this._state.compact.rooms[this._room];
       if (!room) return;
+      this._liveAt = Date.now();
       this._swapMap(mount, room);
     }, 1500);
   }
@@ -16398,10 +16432,13 @@ class CasoraPanel extends HTMLElement {
   }
 
   _markDirty() {
+    this._dirtyNow = undefined;
     const b = this.$("save");
     if (!b) return;
+    // _print serialises the whole dashboard: once per call, shared with the dirty check below.
+    const cur = this._state ? this._print() : undefined;
     if (this._state && this._shadow && this._lastPrint !== undefined) {
-      const print = this._print();
+      const print = cur;
       if (print !== this._lastPrint) {
         this._undoStack = (this._undoStack || []).concat([this._shadow]).slice(-50);
         this._shadow = this._snap();
@@ -16410,7 +16447,8 @@ class CasoraPanel extends HTMLElement {
     }
     const u = this.$("undo");
     if (u) u.disabled = !(this._undoStack || []).length;
-    const dirty = !!this._clean && this._print() !== this._clean;
+    const dirty = !!this._clean && cur !== this._clean;
+    this._dirtyNow = dirty;
     b.classList.toggle("dirty", dirty);
     b.disabled = !!this._saveBlocked || !!this._saving || !dirty;
     const now = this.$("savenow");
@@ -25822,6 +25860,16 @@ class CasoraPanel extends HTMLElement {
           * (this.classList.contains("bmode") ? 0.78 : 0.6))) - MAP_SHADOW_ROOM;
       }
       if (this._miniSize === "phone") budget = Math.round(budget * 0.88);
+      // Studio on the phone: the frame ends above "N hidden", which floats over the bottom bar - a taller
+      // frame put its own dock under that chip (Daniel, 26.10.2026). Room for the chip is kept even
+      // without one, so the frame does not jump when the first tile is hidden.
+      if (this.classList.contains("bmode") && this.classList.contains("phone")) {
+        const bar = this.shadowRoot.querySelector(".bbar");
+        const barTop = bar && bar.getClientRects().length ? bar.getBoundingClientRect().top : window.innerHeight - 70;
+        const top = slot.getBoundingClientRect().top;
+        const room = Math.round(barTop - 14 - 44 - 10 - top) - MAP_SHADOW_ROOM;
+        if (top > 0 && room >= 240) budget = Math.min(budget, room);
+      }
       const ratio = natH / natW;
       const frame = this._miniSize === "phone" ? ratio : Math.max(MAP_TALLEST, ratio);
       const w = fitWidth(availW, budget, Infinity, frame);

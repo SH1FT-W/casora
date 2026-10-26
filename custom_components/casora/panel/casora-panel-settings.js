@@ -100,6 +100,10 @@
     + ".cs-hubback{min-height:40px;padding:8px 10px 8px 2px;box-sizing:border-box}"
     + ".cs-hublist .rtext b,.cs-hublist .rtext span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}"
     + ".cs-hubback{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin:0 6px 10px;font-size:var(--t-callout);font-weight:600;color:var(--accent)}"
+    // Updates head: its children are stacked absolutely (navrow), so the way back gets a line of its own.
+    + ".navrow.cu-head:has(> .cs-hubback){height:auto}"
+    + ".navrow.cu-head > .cs-hubback{position:static;inset:auto;margin:0 0 6px}"
+    + ".navrow.cu-head:has(> .cs-hubback) > .detailbar{position:relative;height:var(--headrow,35px)}"
     + "@media (max-width:600px){.rdetail.cs-dash{white-space:normal!important;max-width:84px;text-align:center;line-height:1.15}}"
     + ".rdetail.cs-dash{flex:none;font-size:var(--t-caption);font-weight:700;padding:3px 8px;border-radius:8px;white-space:nowrap;"
     +   "color:var(--casora-color-orange,#FF9230);background:color-mix(in srgb,var(--casora-color-orange,#FF9230) 16%,transparent)}"

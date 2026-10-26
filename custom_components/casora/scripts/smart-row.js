@@ -713,6 +713,15 @@ class CasoraSmartRow extends HTMLElement {
         this._autoSize();
       });
     }
+    // A tile can turn inactive a beat after this frame (its card re-renders later, or reads
+    // several sensors), and then nothing re-checked the row until the next change: "Warnungen"
+    // stayed among the active tiles until a reload (Daniel, 26.10.2026). Look once more.
+    if (!this._lateSortT) {
+      this._lateSortT = setTimeout(() => {
+        this._lateSortT = null;
+        if (this._initialized && this.isConnected) this._updateSort();
+      }, 1500);
+    }
   }
 
   // WebKit reports display:none for everything inside a hidden subtree.

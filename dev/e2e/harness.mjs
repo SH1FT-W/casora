@@ -16,8 +16,8 @@ function findPlaywright() {
   }
   return 'playwright';
 }
-const { chromium, webkit, devices } = await import(findPlaywright());
-export { chromium, webkit, devices };
+const { chromium, webkit, firefox, devices } = await import(findPlaywright());
+export { chromium, webkit, firefox, devices };
 
 export const BASE = process.env.CASORA_URL || 'http://localhost:8124';
 export const OUT = process.env.CASORA_OUT || '/tmp/casora-e2e';
@@ -42,18 +42,18 @@ export async function freshToken() {
 // theme: HA-Theme dieses Browsers (Standard „Casora“; bis 1.6.0 „Hemma 2“, das Design gibt es nicht mehr).
 // CASORA_THEME setzt den Standard um (eine ausdrücklich übergebene Option theme gilt weiter);
 // „default“ = Dashboard ohne Casora-Theme (Rückfall-Look).
-export async function open({ width = 1440, height = 900, mobile = false, umzug = false, safari = false,
+export async function open({ width = 1440, height = 900, mobile = false, umzug = false, safari = false, gecko = false,
   dark = true, locale = process.env.CASORA_LOCALE || 'de-DE', args = [], touch, userAgent, scale = 2, theme = process.env.CASORA_THEME || 'Casora' } = {}) {
   const tok = await freshToken();
-  // safari: WebKit statt Chromium (Safari-Eigenheiten nachstellen).
-  const browser = await (safari ? webkit : chromium).launch(safari ? {} : { args });
+  // safari: WebKit statt Chromium (Safari-Eigenheiten nachstellen); gecko: Firefox.
+  const browser = await (safari ? webkit : gecko ? firefox : chromium).launch(safari || gecko ? {} : { args });
   const context = await browser.newContext({
     viewport: { width, height }, deviceScaleFactor: scale,
     // HA speichert die Theme-Wahl je Benutzer auf dem Server; ohne festen Hell/Dunkel-Wert
     // folgt es dem System – das Farbschema des Browsers muss also zu „dark“ passen.
     colorScheme: dark ? 'dark' : 'light',
     // touch/userAgent: eigene Werte (z. B. Tablet mit Touch, aber ohne Handy-Kennung) – sonst wie mobile.
-    isMobile: mobile, hasTouch: touch ?? mobile, locale, serviceWorkers: 'block',
+    ...(gecko ? {} : { isMobile: mobile }), hasTouch: touch ?? mobile, locale, serviceWorkers: 'block',
     userAgent: userAgent || (mobile ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148' : undefined),
   });
   const version = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/manifest.json', import.meta.url), 'utf8')).version;

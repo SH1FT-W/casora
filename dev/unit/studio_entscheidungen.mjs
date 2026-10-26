@@ -58,8 +58,9 @@ const need = (keys) => keys.forEach((k) => assert.ok(de[k], 'de.json: ' + k));
   assert.ok(/\{ id: "design", label: "Design",[^}]*look: true/.test(set), 'Einstellungen-Seite „Design“');
   assert.ok(/if \(page\.look\) \{\s*if \(!\(typeof this\._casoraLookPicker === "function" && this\._casoraLookPicker\(host\)\)\)/.test(set), 'Seite zeichnet die Design-Auswahl');
   assert.ok(/\["design", "Design", "desktop"\], \["home"/.test(b), 'Menü „Einstellungen“ beginnt mit Design');
-  assert.ok(/label: "Design \(for all dashboards\) ›"/.test(b) && /if \(id === "design"\) \{[^}]*_casoraShowDesign\(\)/.test(b), 'Dashboard-Menü: Verweis springt dorthin');
-  assert.ok(/\["General", "Controls", "settings"\]/.test(b) && /label: "General", title: "Controls"/.test(main), 'im Dashboard bleibt „Bedienung“');
+  // Variant B (26.10.62b5): no dashboard menu any more – the topic "Look & feel" leads to Design, the phone bar has it too.
+  assert.ok(/\{ id: "look", label: "Look & feel"/.test(set) && /mk\("look", "palette", "Look & feel", \(b\) => this\._bOpenSettings\(b, "t-look"\)\)/.test(b), 'Thema „Aussehen“ führt zum Design');
+  assert.ok(/\{ id: "ctl", label: "Controls"/.test(set) && /label: "General", title: "Controls"/.test(main), 'Thema „Bedienung“ bleibt');
   assert.ok(!/section\.card\[data-k="General"\][\s\S]{0,400}casora-looks/.test(add), 'Design-Auswahl nicht mehr im Abschnitt „Bedienung“');
   assert.ok(/\["design", "Design", "design theme look/.test(mehr) && /way\("Settings", "Design"\)/.test(mehr), '⌘K: Design unter Einstellungen');
   // Felder unter „Bedienung“ gelten wirklich je Dashboard

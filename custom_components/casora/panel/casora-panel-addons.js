@@ -119,7 +119,8 @@
         || nav.getAttribute("data-room") !== (room ? room.name : ""))) { nav.remove(); nav = null; }
       if (!nav) nav = build(phone, room);
       const s = (phone.clientWidth || PHONE_WIDTH) / PHONE_WIDTH;
-      nav.style.transform = `translateX(-50%) scale(${s})`;
+      const tf = `translateX(-50%) scale(${s})`;
+      if (nav.style.transform !== tf) nav.style.transform = tf;
     });
   }
 
@@ -145,6 +146,10 @@
           });
           root.__casoraAddonsObs.observe(root, { childList: true, subtree: true });
         }
+        // Every state change in the house lands here; the observer already covers redraws,
+        // so sync only on the first call and when the language changed.
+        if (root.__casoraAddonsLang === lang) return;
+        root.__casoraAddonsLang = lang;
         sync(root);
       },
     });

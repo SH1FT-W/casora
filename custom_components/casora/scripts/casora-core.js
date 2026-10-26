@@ -11006,6 +11006,79 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       .replace(/\s+/g, ' ').trim();
     return s.length > 160 ? s.slice(0, 159).replace(/\s+\S*$/, '') + ' …' : s;
   }
+  // A tap on an HA notification (#70): the whole message in a popup, as HA's own list shows it, with
+  // "Delete". Markdown kept to what HA notifications use: paragraphs, lists, bold/italic, code, links.
+  function pnHtml(t) {
+    var inlineHtml = function (x) {
+      return esc0(x)
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]*)\)/g, function (_, txtHtml, urlHtml) {
+          var ext = /^https?:/.test(urlHtml.replace(/&amp;/g, '&'));
+          return '<a href="' + urlHtml + '"' + (ext ? ' target="_blank" rel="noopener"' : '') + '>' + txtHtml + '</a>';
+        })
+        .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/__([^_]+)__/g, '<b>$1</b>')
+        .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<i>$2</i>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>');
+    };
+    var out = '', list = null, flushHtml = function () { var itemsHtml = list.join(''); list = null; return '<ul>' + itemsHtml + '</ul>'; };
+    String(t == null ? '' : t).split(/\r?\n/).forEach(function (line) {
+      var m = line.match(/^\s*(?:[-*+]|\d+\.)\s+(.*)$/);
+      if (m) { if (!list) { list = []; } list.push('<li>' + inlineHtml(m[1]) + '</li>'); return; }
+      if (list) out += flushHtml();
+      var h = line.match(/^\s*#{1,6}\s+(.*)$/);
+      if (h) { out += '<p><b>' + inlineHtml(h[1]) + '</b></p>'; return; }
+      if (line.trim()) out += '<p>' + inlineHtml(line) + '</p>';
+    });
+    if (list) out += flushHtml();
+    return out;
+  }
+  function showPn(k) {
+    var n = _pn && _pn[k];
+    if (!n || !window.casoraPopup) return;
+    var when = Date.parse(n.created_at || '');
+    var stamp = when ? new Date(when).toLocaleString(document.documentElement.lang || undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '';
+    // Inline handlers do not survive the card's rendering: one listener on the page, found by the attribute.
+    if (!window._casoraPnDel) {
+      window._casoraPnDel = true;
+      document.addEventListener('click', function (ev) {
+        var path = (ev.composedPath && ev.composedPath()) || [];
+        for (var i = 0; i < path.length; i++) {
+          var n = path[i];
+          if (!n || !n.getAttribute) continue;
+          var id = n.getAttribute('data-casora-pn-del');
+          if (id == null) continue;
+          ev.preventDefault(); ev.stopPropagation();
+          var h = hassOf();
+          if (h && h.callService) h.callService('persistent_notification', 'dismiss', { notification_id: id }).catch(function () { /* stays */ });
+          window.casoraHaptic && window.casoraHaptic('light');
+          window.casoraPopup.close();
+          return;
+        }
+      }, true);
+    }
+    var html = '<div class="cpn">'
+      + '<style>.cpn{font-size:15px;line-height:1.5;color:var(--casora-popup-tiles-text-primary,var(--primary-text-color));text-align:left}'
+      + '.cpn p{margin:0 0 10px}.cpn ul{margin:0 0 10px;padding-left:20px}.cpn a{color:var(--casora-accent,var(--primary-color));word-break:break-word}'
+      + '.cpn code{font-size:.92em;padding:1px 5px;border-radius:6px;background:var(--casora-popup-row-fill,rgba(127,127,127,.14))}'
+      + '.cpn .when{font-size:13px;color:var(--casora-popup-tiles-text-secondary,var(--secondary-text-color));margin:0 0 14px}'
+      + '.cpn a,.cpn button{pointer-events:auto!important}'
+      + '.cpn button{all:unset;cursor:pointer;margin-top:8px;padding:12px 18px;border-radius:14px;font-weight:600;'
+      + 'background:var(--casora-popup-row-fill,rgba(127,127,127,.14));color:var(--casora-popup-ui-bad,#FF453A)}'
+      + '.cpn button:focus-visible{outline:2px solid currentColor;outline-offset:2px}</style>'
+      + (stamp ? '<p class="when">' + esc0(stamp) + '</p>' : '')
+      + pnHtml(n.message)
+      + '<button type="button" data-casora-pn-del="' + esc0(k) + '">Löschen</button></div>';
+    window.casoraPopup.open({
+      title: pnText(n.title) || 'Benachrichtigung', dismissable: true,
+      content: { type: 'custom:button-card', tap_action: { action: 'none' }, hold_action: { action: 'none' },
+        show_icon: false, show_name: false, show_label: false, show_state: false,
+        card_mod: { style: ':host { --ha-card-box-shadow: none !important; } ha-card { background: transparent !important; border: none !important; box-shadow: none !important; cursor: default !important; } ha-ripple { display: none !important; }' },
+        styles: { card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: 'var(--casora-soft-card-top, 6px) 26px 22px 26px' }],
+          grid: [{ 'grid-template-areas': '"b"' }, { 'grid-template-columns': '1fr' }],
+          custom_fields: { b: [{ 'justify-self': 'stretch' }] } },
+        custom_fields: { b: html } },
+    });
+  }
+  function esc0(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function rowKey(r) { return String((r && r.id) || ((r && r.entity) || '') + '|' + ((r && r.label) || '')); }
   function isHidden(r) {
     if (!r) return false;
@@ -11564,7 +11637,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       Object.keys(_pn).forEach(function (k) {
         var n = _pn[k] || {}, title = pnText(n.title), msg = pnText(n.message);
         rows.push({ id: 'ha:pn:' + k, when: Date.parse(n.created_at || '') || Date.now(), label: title || msg || 'Benachrichtigung',
-          sub: title ? msg || null : null, icon: 'bell', tone: 'accent', pn: k });
+          sub: title ? msg || null : null, icon: 'bell', tone: 'accent', pn: k, opens: 'casora:pn' });
       });
     }
 
@@ -12662,6 +12735,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           var row = n._casoraRow;
           window.casoraHaptic('light');
           if (close) close();
+          if (n.dataset.casoraOpen === 'casora:pn') { if (row && row.pn) showPn(row.pn); return; }
           openTarget(n.dataset.casoraOpen, row && row.entity);
           return;
         }
