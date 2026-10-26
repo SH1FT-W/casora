@@ -1388,6 +1388,8 @@
     "Your Dashboards": "Je dashboards",
     "The phone layout has content the editor would not preserve. Saving is disabled.": "De telefoonindeling bevat inhoud die de editor niet zou behouden. Opslaan is uitgeschakeld.",
     "This dashboard has content the editor would not preserve. Saving is disabled.": "Dit dashboard bevat inhoud die de editor niet zou behouden. Opslaan is uitgeschakeld.",
+    "A tile here has content the editor would not preserve. Saving is disabled until you remove it.": "Een tegel hier bevat inhoud die de editor niet zou behouden. Opslaan is uitgeschakeld tot je hem verwijdert.",
+    "Saving works again: the tile the editor could not keep is gone.": "Opslaan werkt weer: de tegel die de editor niet kon behouden is weg.",
     "This dashboard couldn't be opened.": "Dit dashboard kon niet worden geopend.",
     "Your desktop and phone layouts agree. Save to keep the changes.": "Je desktop- en telefoonindeling komen overeen. Sla op om de wijzigingen te behouden.",
     "These settings are shared by your desktop and phone layouts, but they're set differently. Choose what to keep.": "Deze instellingen delen je desktop- en telefoonindeling, maar ze zijn verschillend ingesteld. Kies wat blijft.",

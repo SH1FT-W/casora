@@ -293,7 +293,7 @@
               kept.push(t.card);
               const card = I.clone(t.card);
               if (card.name) card.name = tn(card.name);
-              room.tiles.push(I.wrapCustomCard(card));
+              room.tiles.push((I.hostCard || I.wrapCustomCard)(card));
               return;
             }
             if (pick && pick.indexOf("type:") === 0) {

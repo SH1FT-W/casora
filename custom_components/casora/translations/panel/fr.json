@@ -1388,6 +1388,8 @@
     "Your Dashboards": "Tes tableaux de bord",
     "The phone layout has content the editor would not preserve. Saving is disabled.": "La mise en page téléphone a du contenu que l'éditeur ne conserverait pas. L'enregistrement est désactivé.",
     "This dashboard has content the editor would not preserve. Saving is disabled.": "Ce tableau de bord a du contenu que l'éditeur ne conserverait pas. L'enregistrement est désactivé.",
+    "A tile here has content the editor would not preserve. Saving is disabled until you remove it.": "Une tuile ici a du contenu que l'éditeur ne conserverait pas. L'enregistrement est désactivé jusqu'à ce que tu la retires.",
+    "Saving works again: the tile the editor could not keep is gone.": "L'enregistrement fonctionne à nouveau : la tuile que l'éditeur ne pouvait pas conserver a disparu.",
     "This dashboard couldn't be opened.": "Ce tableau de bord n'a pas pu être ouvert.",
     "Your desktop and phone layouts agree. Save to keep the changes.": "Tes mises en page ordinateur et téléphone concordent. Enregistre pour garder les modifications.",
     "These settings are shared by your desktop and phone layouts, but they're set differently. Choose what to keep.": "Ces réglages sont communs à tes mises en page ordinateur et téléphone, mais ils sont réglés différemment. Choisis ce qu'il faut garder.",

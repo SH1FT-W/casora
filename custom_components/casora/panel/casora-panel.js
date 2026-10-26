@@ -209,6 +209,63 @@ const unhostContainers = (c) => {
 const hostBareTiles = (list) => (list || []).map(
   (c) => (isBareCard(c) ? wrapCustomCard(c) : unhostContainers(c)));
 
+// A card placed in a row by the Studio, in the form reading gives back: a container stays itself,
+// anything else gets a host. A hosted container came back unhosted on the next load, the round trip
+// differed and saving was locked for good (#75).
+const hostCard = (card) => (isContainerCard(card) ? card : wrapCustomCard(card));
+
+// #75: before 26.10.62 the Studio did host pasted containers (a swipe card, auto-entities …). Such a
+// host is exactly what wrapCustomCard makes of the card inside, so taking it off loses nothing; the
+// round trip check compares against the file with these hosts already taken off. A host with
+// anything the Studio would not have written itself still counts as a difference.
+const isStudioHostedContainer = (c) => {
+  const inner = unhostContainers(c);
+  return inner !== c && stable(wrapCustomCard(inner)) === stable(c);
+};
+function unhostStudioHosts(cfg) {
+  const walk = (x) => {
+    if (Array.isArray(x)) return x.map(walk);
+    if (!x || typeof x !== "object") return x;
+    const out = {};
+    Object.keys(x).forEach((k) => { out[k] = walk(x[k]); });
+    if (x.type === SMART_ROW && Array.isArray(out.cards)) {
+      out.cards = out.cards.map((c) => (isStudioHostedContainer(c) ? unhostContainers(c) : c));
+    }
+    return out;
+  };
+  return walk(cfg);
+}
+const roundTrips = (rebuilt, cfg) => stable(rebuilt) === stable(cfg)
+  || stable(rebuilt) === stable(unhostStudioHosts(cfg));
+
+// Saving is off when the round trip differs. If only tiles differ (everything else comes back the
+// same), the tiles that would change are returned: saving stays off while one of them is still in
+// a room and works again once they are removed in the Studio (#75). null: something else differs.
+function lossyTiles(state, cfg, rebuilt) {
+  if (!state || state.surface === "mobile") return null;
+  const rooms = (state.compact || {}).rooms || [];
+  const cv = (cfg || {}).views || [], rv = (rebuilt || {}).views || [];
+  if (cv.length !== rv.length || rv.length !== rooms.length) return null;
+  const rowOf = (v) => ((v || {}).cards || [])[2];
+  const withoutTiles = (c) => ({ ...c, views: (c.views || []).map((v) => {
+    const row = rowOf(v);
+    if (!row || !Array.isArray(row.cards)) return v;
+    return { ...v, cards: v.cards.map((x, i) => (i === 2 ? { ...row, cards: row.cards.length } : x)) };
+  }) });
+  if (stable(withoutTiles(cfg)) !== stable(withoutTiles(rebuilt))) return null;
+  const out = [];
+  rv.forEach((v, i) => {
+    const mine = (rowOf(v) || {}).cards || [];
+    const stored = (rowOf(cv[i]) || {}).cards || [];
+    mine.forEach((t, j) => { if (stable(t) !== stable(stored[j]) && rooms[i].tiles[j]) out.push(rooms[i].tiles[j]); });
+  });
+  return out.length ? out : null;
+}
+const LOSSY_TILE_MSG = "A tile here has content the editor would not preserve. Saving is disabled until you remove it.";
+// Still in a room: the very tile, or a copy of it (undo restores copies).
+const lossyLeft = (lossy, rooms) => (rooms || []).some((r) => (r.tiles || []).some(
+  (t) => lossy.tiles.has(t) || lossy.prints.has(stable(t))));
+
 function stable(x) {
   if (x === null || typeof x !== "object") return JSON.stringify(x);
   if (Array.isArray(x)) return "[" + x.map(stable).join(",") + "]";
@@ -1963,7 +2020,8 @@ function phoneCanon(cfg) {
 }
 
 const phoneRoundTrips = (back, cfg) => stable(back) === stable(cfg)
-  || stable(phoneCanon(back)) === stable(phoneCanon(cfg));
+  || stable(phoneCanon(back)) === stable(phoneCanon(cfg))
+  || stable(phoneCanon(back)) === stable(phoneCanon(unhostStudioHosts(cfg)));
 
 // Steht am Handy noch etwas, das ein Speichern im Studio neu schreiben würde (umbenannter Raum,
 // Raum-Badges)? Rechnet auf einer Kopie, ändert nichts.
@@ -15507,6 +15565,7 @@ class CasoraPanel extends HTMLElement {
     // Laufnummer: ein schneller Wechsel zu einem anderen Dashboard macht diesen Lauf ungültig.
     const seq = this._loadSeq = (this._loadSeq || 0) + 1;
     const stale = () => seq !== this._loadSeq;
+    this._lossy = null;
     // What is unsaved in the dashboard being left is kept before its state goes.
     clearTimeout(this._draftTimer);
     if (this._state && this._isDirty()) this._writeDraft();
@@ -15601,8 +15660,12 @@ class CasoraPanel extends HTMLElement {
 
       // Regenerating must reproduce the file exactly before any edit is allowed.
       const rebuilt = expandAny(this._state);
-      const safe = stable(rebuilt) === stable(cfg);
+      const safe = roundTrips(rebuilt, cfg);
       this._log(`round trip check: ${safe ? "identical" : "DIFFERS"}`, safe ? "ok" : "err");
+      // #75: only tiles differ - removing them in the Studio frees saving again (see _markDirty).
+      const lossy = safe || (this._pair && this._pair.safe === false) ? null
+        : lossyTiles(this._state, unhostStudioHosts(cfg), rebuilt);
+      this._lossy = lossy ? { state: this._state, tiles: new Set(lossy), prints: new Set(lossy.map(stable)) } : null;
 
       if (this._pair && this._pair.safe === false) {
         this._saveBlocked = true;
@@ -15613,10 +15676,15 @@ class CasoraPanel extends HTMLElement {
       if (!safe) {
         this._saveBlocked = true;
         this._markDirty();
-        this._status("This dashboard has content the editor would not preserve. Saving is disabled.", "err");
+        this._status(lossy ? LOSSY_TILE_MSG : "This dashboard has content the editor would not preserve. Saving is disabled.", "err");
         (cfg.views || []).forEach((v, i) => {
           if (stable(v) !== stable((rebuilt.views || [])[i])) this._log(`  view[${i}] "${v.path}" differs`, "err");
         });
+        if (lossy) {
+          this._state.compact.rooms.forEach((r) => (r.tiles || []).forEach((t, j) => {
+            if (this._lossy.tiles.has(t)) this._log(`  tile ${j + 1} in "${r.name || r.path}" (${((t.custom_fields || {}).card || t).type || t.template}) - removing it turns saving back on`, "err");
+          }));
+        }
       } else {
         this._saveBlocked = false;
         this._markDirty();
@@ -16064,7 +16132,8 @@ class CasoraPanel extends HTMLElement {
     // Kann das Studio dieses Dashboard nicht verlustfrei nachbauen, speichert kein Weg – auch
     // nicht Assistent, „Neue Szene“ oder die Einstellungen, die _save() direkt aufrufen.
     if (this._saveBlocked) {
-      this._status("This dashboard has content the editor would not preserve. Saving is disabled.", "err");
+      this._status(this._lossy && this._lossy.state === s ? LOSSY_TILE_MSG
+        : "This dashboard has content the editor would not preserve. Saving is disabled.", "err");
       return false;
     }
     // Läuft schon ein Speichern: erst abwarten, dann nur speichern, wenn noch etwas offen ist.
@@ -16435,6 +16504,19 @@ class CasoraPanel extends HTMLElement {
     this._dirtyNow = undefined;
     const b = this.$("save");
     if (!b) return;
+    // #75: saving was off only for tiles that would change; it follows whether one is still there.
+    const L = this._lossy;
+    if (L && L.state === this._state && this._state && !this._flowMode && !this._pairWait) {
+      const left = lossyLeft(L, this._state.compact.rooms);
+      if (!left && this._saveBlocked) {
+        this._saveBlocked = false;
+        this._status("Saving works again: the tile the editor could not keep is gone.", "ok");
+        this._log("the tile(s) that did not round trip are gone - saving is on", "ok");
+      } else if (left && !this._saveBlocked) {
+        this._saveBlocked = true;
+        this._status(LOSSY_TILE_MSG, "err");
+      }
+    }
     // _print serialises the whole dashboard: once per call, shared with the dirty check below.
     const cur = this._state ? this._print() : undefined;
     if (this._state && this._shadow && this._lastPrint !== undefined) {
@@ -22188,7 +22270,7 @@ class CasoraPanel extends HTMLElement {
         if (id === "edit") return this._editExtraCard(room, i);
         if (id === "up") {
           const [moved] = room._extraCards.splice(i, 1);
-          room.tiles = (room.tiles || []).concat([wrapCustomCard(moved)]);
+          room.tiles = (room.tiles || []).concat([hostCard(moved)]);
           this._markDirty();
           this._renderForm();
           return this._status("Moved into the tile row", "ok");
@@ -22431,7 +22513,7 @@ class CasoraPanel extends HTMLElement {
       this._status("Card added below the tiles", "ok");
       return;
     }
-    room.tiles.push(wrapCustomCard(card));
+    room.tiles.push(hostCard(card));
     this._markDirty();
     this._renderForm();
     this._status("Card added", "ok");
@@ -22509,6 +22591,12 @@ class CasoraPanel extends HTMLElement {
       Object.keys(tile).forEach((k) => delete tile[k]);
       Object.assign(tile, card);
       if (Object.keys(own).length) tile.variables = { ...(tile.variables || {}), ...own };
+    }
+    // Into the form reading gives back (a container leaves its host, a bare card gets one), in place.
+    const norm = hostBareTiles([tile])[0];
+    if (norm !== tile) {
+      Object.keys(tile).forEach((k) => delete tile[k]);
+      Object.assign(tile, norm);
     }
     this._markDirty();
     this._renderForm();
@@ -28353,7 +28441,7 @@ class CasoraPanel extends HTMLElement {
 // Casora: Bausteine des Panels für Casora-Erweiterungen (Import-Assistent, Geräte-Assistent).
 window.__casoraPanelInternals = {
   blankRoom, roomPhoto, slug, translit, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
-  applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
+  applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, hostCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
   findType, tileTypeAny, newTile, isPetTracker, petName, isStatSensor, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,

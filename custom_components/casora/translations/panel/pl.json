@@ -1388,6 +1388,8 @@
     "Your Dashboards": "Twoje pulpity",
     "The phone layout has content the editor would not preserve. Saving is disabled.": "Układ telefonu zawiera treści, których edytor by nie zachował. Zapisywanie jest zablokowane.",
     "This dashboard has content the editor would not preserve. Saving is disabled.": "Ten pulpit zawiera treści, których edytor by nie zachował. Zapisywanie jest zablokowane.",
+    "A tile here has content the editor would not preserve. Saving is disabled until you remove it.": "Kafelek tutaj zawiera treści, których edytor by nie zachował. Zapisywanie jest zablokowane, dopóki go nie usuniesz.",
+    "Saving works again: the tile the editor could not keep is gone.": "Zapisywanie znów działa: kafelek, którego edytor nie mógł zachować, został usunięty.",
     "This dashboard couldn't be opened.": "Nie udało się otworzyć tego pulpitu.",
     "Your desktop and phone layouts agree. Save to keep the changes.": "Układy komputera i telefonu są zgodne. Zapisz, aby zachować zmiany.",
     "These settings are shared by your desktop and phone layouts, but they're set differently. Choose what to keep.": "Te ustawienia są wspólne dla układu komputera i telefonu, ale ustawiono je różnie. Wybierz, co zachować.",

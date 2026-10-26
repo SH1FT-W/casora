@@ -1388,6 +1388,8 @@
     "Your Dashboards": "Le tue dashboard",
     "The phone layout has content the editor would not preserve. Saving is disabled.": "Il layout telefono contiene elementi che l'editor non conserverebbe. Il salvataggio è disattivato.",
     "This dashboard has content the editor would not preserve. Saving is disabled.": "Questa dashboard contiene elementi che l'editor non conserverebbe. Il salvataggio è disattivato.",
+    "A tile here has content the editor would not preserve. Saving is disabled until you remove it.": "Una scheda qui contiene elementi che l'editor non conserverebbe. Il salvataggio è disattivato finché non la rimuovi.",
+    "Saving works again: the tile the editor could not keep is gone.": "Il salvataggio funziona di nuovo: la scheda che l'editor non poteva conservare non c'è più.",
     "This dashboard couldn't be opened.": "Non è stato possibile aprire questa dashboard.",
     "Your desktop and phone layouts agree. Save to keep the changes.": "I layout desktop e telefono coincidono. Salva per conservare le modifiche.",
     "These settings are shared by your desktop and phone layouts, but they're set differently. Choose what to keep.": "Queste impostazioni sono condivise tra desktop e telefono, ma sono diverse. Scegli cosa conservare.",
