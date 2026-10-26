@@ -2624,6 +2624,18 @@
    "desde hace {1} días"
   ],
   [
+   "^seit (\\d+) Tag$",
+   "desde hace {1} día"
+  ],
+  [
+   "^Antwortet (seit .+) nicht$",
+   "No responde {1}"
+  ],
+  [
+   "^Still (seit .+)$",
+   "En silencio {1}"
+  ],
+  [
    "^zuletzt gemeldet gestern (.+)$",
    "último informe ayer {1}"
   ],

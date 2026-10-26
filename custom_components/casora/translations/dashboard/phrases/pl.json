@@ -2624,6 +2624,18 @@
    "od {1} dni"
   ],
   [
+   "^seit (\\d+) Tag$",
+   "od {1} dnia"
+  ],
+  [
+   "^Antwortet (seit .+) nicht$",
+   "Nie odpowiada {1}"
+  ],
+  [
+   "^Still (seit .+)$",
+   "Milczy {1}"
+  ],
+  [
    "^zuletzt gemeldet gestern (.+)$",
    "ostatni raport wczoraj {1}"
   ],

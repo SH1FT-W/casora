@@ -2624,6 +2624,18 @@
    "da {1} giorni"
   ],
   [
+   "^seit (\\d+) Tag$",
+   "da {1} giorno"
+  ],
+  [
+   "^Antwortet (seit .+) nicht$",
+   "Non risponde {1}"
+  ],
+  [
+   "^Still (seit .+)$",
+   "In silenzio {1}"
+  ],
+  [
    "^zuletzt gemeldet gestern (.+)$",
    "ultimo rilevamento ieri {1}"
   ],
