@@ -882,7 +882,8 @@
       // Everything clickable is also reachable by keyboard.
       map.querySelectorAll("[data-mk], [data-pv], .mtile.ghost, .pbadge.ghost, .mini-tab").forEach((el) => {
         if (el.tabIndex < 0 || !el.hasAttribute("tabindex")) el.tabIndex = 0;
-        el.setAttribute("role", "button");
+        // Set only on change: every write is a mutation the preview's observers react to (live patches).
+        if (el.getAttribute("role") !== "button") el.setAttribute("role", "button");
         // Name from the visible text: the tooltip is partly a hint ("Smart
         // Sort is on …") and does not work as a name for screen readers.
         const nm = el.querySelector(".mname, .plabel, .bgn");
