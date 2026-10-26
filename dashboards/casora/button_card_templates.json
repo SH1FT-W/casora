@@ -5916,7 +5916,7 @@
        "entity": "input_select.casora_mobile_filter",
        "tap_action": {
         "action": "fire-dom-event",
-        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  return cur === 'lights' ? 'all' : 'lights';\n]]]\n",
+        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  /* #80: lights picked in the badge itself (its slots, not only a group or the rooms): exactly those, in the\n     light popup, as the desktop's row shows them. No filter this time (null), the popup opens. Without a\n     selection (or without Casora popups) the start page stays filtered by rooms. */\n  if (window.casoraLightBadgeOwn && window.casoraLightBadgeOwn(variables)\n      && window.casoraPopupAction && window.casoraPopupAction() === 'fire-dom-event') return null;\n  return cur === 'lights' ? 'all' : 'lights';\n]]]\n",
         "haptic": "selection"
        },
        "template": "casora_badge_light_group",

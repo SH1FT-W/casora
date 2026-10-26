@@ -420,6 +420,16 @@ window._casoraHouseLightsOf = function (rooms, states) {
   });
   return out;
 };
+/* #80: does a light badge carry its own selection (light slots entity_1…10 of casora_badge_light_group), not only an
+   HA group or the rooms (light_rooms_auto)? Then the phone shows exactly those lights, like the desktop's row. */
+window.casoraLightBadgeOwn = function (v) {
+  if (!v || v.light_rooms_auto === true) return false;
+  for (var i = 1; i <= 10; i++) {
+    var x = v['entity_' + i];
+    if (typeof x === 'string' && x.indexOf('light.') === 0) return true;
+  }
+  return false;
+};
 /* The same from the open dashboard: the room views' casora_room variables (desktop), on the phone the desktop
    rooms the server delivers (casoraPhoneRoom.rooms). Cached per dashboard config and states object; reading
    states[...] inside a button-card template subscribes it to the lights. */

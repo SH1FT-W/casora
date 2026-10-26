@@ -119,6 +119,20 @@ assert.ok(E.flowSources.ids(F).includes('sensor.co2_fossil') && E.flowSources.id
 F = E.flowSources({ home: 'sensor.home' }, hass, states, true);
 v = E.flowValues(F, states);
 assert.deepEqual([v.solar, v.chg, v.dis, v.imp, v.exp, v.soc], [0, 804, 0, 0, 712, 64], 'HA signs; solar asleep = 0 W');
+// b7: the auto-detected Anker Solix charge/discharge sensors (C.charge/C.discharge) are only the fallback – HA's
+// battery wins for the house; without a battery in the settings (or for a room) Anker stays.
+states['sensor.anker_chg'] = st(999); states['sensor.anker_dis'] = st(0);
+F = E.flowSources({ home: 'sensor.home', charge: 'sensor.anker_chg', discharge: 'sensor.anker_dis' }, hass, states, true);
+assert.deepEqual([F.batHa, F.chg, F.dis], [['sensor.ha_bat'], undefined, undefined], 'HA battery before Anker');
+v = E.flowValues(F, states);
+assert.deepEqual([v.chg, v.dis], [804, 0], 'values from HA, not 999 W from Anker');
+window.casoraEnergyPowers = () => ({ grid: ['sensor.ha_grid'], solar: ['sensor.ha_solar'], battery: [] });
+F = E.flowSources({ home: 'sensor.home', charge: 'sensor.anker_chg', discharge: 'sensor.anker_dis' }, hass, states, true);
+assert.deepEqual([F.batHa, F.chg], [undefined, 'sensor.anker_chg'], 'no battery in the settings: Anker as fallback');
+window.casoraEnergyPowers = () => ({ grid: ['sensor.ha_grid'], solar: ['sensor.ha_solar'], battery: ['sensor.ha_bat'] });
+// A battery field of the tile (Studio) stays first.
+F = E.flowSources({ home: 'sensor.home', battery: 'sensor.bat', charge: 'sensor.anker_chg' }, hass, states, true);
+assert.deepEqual([F.batHa, F.chg], [undefined, 'sensor.anker_chg'], 'Studio battery field: settings do not replace it');
 // A room (not the house): nothing from the settings, so no flow without the tile's fields.
 assert.equal(E.flowSources({ home: 'sensor.home' }, hass, states, false), null);
 // Grid alone draws no flow (it would only repeat the house's power).
