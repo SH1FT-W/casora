@@ -13,6 +13,8 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 - **Klima-Unter-Badges:** Temperatur und Luftfeuchtigkeit nehmen die Farben der Luftqualität an: grün im Wohlfühlbereich (19–24 °C, auch bei °F-Sensoren; 40–60 %), orange knapp daneben, rot darüber hinaus, mit passenden Worten (Angenehm, Kühl, Warm, Kalt, Heiß / Gut, Etwas trocken, Etwas feucht, Sehr trocken, Sehr feucht) – an den Badges und im Klima-Popup.
 
+- **Energie-Unter-Popups „Haus“ und „Solar“:** der Energiefluss des großen Energie-Popups statt des Balkens, wenn seine Quellen da sind.
+
 ### Behoben
 - **Popups am Handy so hoch wie ihr Inhalt:** Nach dem Licht-Popup ging jedes weitere Popup bis ganz oben auf, und das Popup einer Lampe stand oben mit leerem Platz darunter.
 - **Sicherheits-Badge auf Zuhause (#76):** Sein Popup „Türen & Fenster“ listet jetzt auch die Jalousien, die es mitzählt, mit „Schließen“ und „Alle schließen“.

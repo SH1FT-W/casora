@@ -13,6 +13,8 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 - **Climate sub-badges:** Temperature and Humidity take the air quality colours: green when comfortable (19–24 °C, also for °F sensors; 40–60 %), orange a little outside, red beyond, with matching words (Comfortable, Cool, Warm, Cold, Hot / Good, Slightly dry, Slightly humid, Very dry, Very humid) – on the badges and in the Climate popup.
 
+- **Energy sub-popups "House" and "Solar":** the energy flow of the big energy popup instead of the bar, when its sources exist.
+
 ### Fixed
 - **Popups on the phone as tall as their content:** after the light popup every later popup opened full height, and a lamp's popup stood at the top with empty space below.
 - **Security badge on Home (#76):** its popup "Doors & windows" now also lists the blinds it counts, with "Close" and "Close all".

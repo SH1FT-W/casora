@@ -368,11 +368,18 @@
     f.hero = { card: K.secCard(watch, 'return window._casoraEnergyFocus ? window._casoraEnergyFocus.sec("hero", '
       + JSON.stringify(C) + ', states, hass) : "";', states) };
 
-    // Energy flow as bars: only the half this popup is about.
+    // House and solar popups: the energy flow of the big popup (E1, „Energiefluss“, owner 27.10.2026) when its sources
+    // exist (E.flowSources, HA's energy settings fill in); else the bars of the half this popup is about.
     var only = focus === 'solar' ? 'to' : focus === 'home' ? 'from' : null;
-    if (only && C.solar && states[C.solar] && C.home && states[C.home]) {
-      C.flow = { home: C.home, solar: C.solar, soc: C.soc, grid: C.grid, charge: C.charge, discharge: C.discharge,
-        output: C.output, export: null, only: only };
+    var SE = window._casoraSoftEnergy;
+    var base = { home: C.home, solar: C.solar, soc: C.soc, grid: C.grid, charge: C.charge, discharge: C.discharge, output: C.output, export: null };
+    var fs = only && SE && SE.flowSources ? SE.flowSources(base, hass, states, true) : null;
+    if (fs) {
+      C.flow = Object.assign({}, base, { fs: fs });
+      f.flow = { card: K.secCard(SE.flowSources.ids(fs),
+        'return window._casoraEnergyFocus ? window._casoraEnergyFocus.sec.call(this, "flow", ' + JSON.stringify(C) + ', states, hass) : "";', states) };
+    } else if (only && C.solar && states[C.solar] && C.home && states[C.home]) {
+      C.flow = Object.assign({}, base, { only: only });
       f.flow = { card: K.secCard([C.solar, C.charge, C.discharge, C.output, C.grid, C.home, C.soc],
         'return window._casoraEnergyFocus ? window._casoraEnergyFocus.sec.call(this, "flow", ' + JSON.stringify(C) + ', states, hass) : "";', states) };
     }
