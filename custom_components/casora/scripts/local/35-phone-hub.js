@@ -247,6 +247,9 @@
       if (id.indexOf('cover.') !== 0) return false;
       var dc = String((S[id].attributes || {}).device_class || '').toLowerCase();
       if (GATE.indexOf(dc) >= 0) return false;
+      // HA cover groups are no blinds of their own: their members are listed (27.10.2026).
+      var m = (S[id].attributes || {}).entity_id;
+      if (Array.isArray(m) && m.length) return false;
       return typeof window.casoraSeesEntity !== 'function' || window.casoraSeesEntity(id, user);
     }).sort();
   };
@@ -293,7 +296,9 @@
       // The blinds popup (casora_popup_cover) of the climate popup's blinds, ‹ back to the climate popup.
       var prevB = window.casoraPopup && window.casoraPopup.current;
       if (prevB) window._casoraBackNext = { fn: function () { window.casoraPopup.open(prevB); }, at: Date.now() };
-      if (window._casoraNotifyOpenViaCard) window._casoraNotifyOpenViaCard(item.blinds[0], function () {}, { type: 'custom:button-card',
+      // The dashboard's blinds tile popup if there is one, else the single blinds (34-security-covers.js).
+      if (window.casoraOpenBlinds) window.casoraOpenBlinds(item.blinds);
+      else if (window._casoraNotifyOpenViaCard) window._casoraNotifyOpenViaCard(item.blinds[0], function () {}, { type: 'custom:button-card',
         template: 'casora_popup_cover', entity: item.blinds[0], variables: { covers: item.blinds, room_name: 'Jalousien' } }, true);
       return;
     }
