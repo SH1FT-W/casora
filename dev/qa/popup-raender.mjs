@@ -189,6 +189,13 @@ const MEASURE = ({ phone }) => {
     // (bei Ellipsis zählt der Kasten – der Text endet sichtbar mit „…“)
     const ell = s.textOverflow === 'ellipsis' && s.overflowX !== 'visible';
     if (txt && !ell) { const rg = document.createRange(); rg.selectNodeContents(e); const q = rg.getBoundingClientRect(); if (q.width > 0) box = q; }
+    // A see-through card (no fill, border or shadow – e.g. the light popup's room bar, which the header alignment pulls
+    // up under the header by design): only its content box is visible, its padding may lie under an edge.
+    if (inter && /rgba\(0, 0, 0, 0\)|transparent/.test(s.backgroundColor) && s.backgroundImage === 'none'
+      && !(parseFloat(s.borderTopWidth) > 0) && (s.boxShadow === 'none' || !s.boxShadow)) {
+      const pt = parseFloat(s.paddingTop) || 0, pb = parseFloat(s.paddingBottom) || 0, pl = parseFloat(s.paddingLeft) || 0, pr = parseFloat(s.paddingRight) || 0;
+      if (pt || pb || pl || pr) box = { left: r.left + pl, top: r.top + pt, right: r.right - pr, bottom: r.bottom - pb, width: r.width - pl - pr, height: r.height - pt - pb };
+    }
     const cl = clipOf(e);
     // Ganz außerhalb (z. B. hinausgeschobene Seite eines Karussells): nicht sichtbar, kein Anschnitt.
     const fullyOut = box.right <= cl.L + 1 || box.left >= cl.R - 1 || box.bottom <= cl.T + 1 || box.top >= cl.B - 1;
