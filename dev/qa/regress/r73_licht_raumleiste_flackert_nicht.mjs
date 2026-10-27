@@ -34,7 +34,11 @@ const info = await page.evaluate(() => {
   if (!row) return null;
   const st = document.querySelector('home-assistant').hass.states;
   const gid = row._config.entity;
-  const rooms = (st[gid].attributes.entity_id || []);
+  // Since 26.10.63 a badge with picked rooms shows those (#80): the bar's entity is then a room, not the house group –
+  // any room group of the house serves (the bar must stay while its lights come on).
+  const mem0 = st[gid].attributes.entity_id || [];
+  const rooms = mem0.some((x) => Array.isArray(st[x] && st[x].attributes.entity_id)) ? mem0
+    : Object.keys(st).filter((x) => x.startsWith('light.') && Array.isArray(st[x].attributes.entity_id));
   const exp = (id, seen = new Set()) => { if (seen.has(id) || !st[id]) return []; seen.add(id);
     const m = st[id].attributes.entity_id; return Array.isArray(m) ? m.flatMap((x) => exp(x, seen)) : [id]; };
   const room = rooms.map((r) => ({ r, l: exp(r) })).sort((a, b) => b.l.length - a.l.length)[0];

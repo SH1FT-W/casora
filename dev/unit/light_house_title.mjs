@@ -230,7 +230,8 @@ for (const area of [true, false]) {
   const badge = { type: 'custom:button-card', template: 'casora_badge_light_group', entity: 'input_select.demo_row',
     variables: { entity_1: 'light.demo_wohnzimmer', entity_2: 'light.demo_kueche', entity_3: 'light.demo_bad_spiegel' } };
   const b = popup(h, badge);
-  assert.deepEqual([b.title, b.heading], ['Beleuchtung', 'Leuchten'], tag + 'lights badge: ' + see(b));
+  // Since 26.10.63 (#80) picked room groups show as the house view of just those rooms: still titled „Beleuchtung“.
+  assert.equal(b.title, 'Beleuchtung', tag + 'lights badge: ' + see(b));
 }
 
 // (j) A scene tile in a room does not claim the lamps of other rooms it lists.

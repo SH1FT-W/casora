@@ -22,9 +22,11 @@ assert.ok(T.casora_popup_light.tap_action.casora_popup, 'casora_popup_light lief
 const lpc = T.casora_popup_light.custom_fields.lpc_init;
 const m = lpc.match(/        let variables = __vars \|\| \{\};[\s\S]*?variables = Object\.assign\(\{\}, variables, _vx\);\n        \}\n/);
 assert.ok(m, 'Angleichung im LPC fehlt');
-const norm = (entity, vars) => new Function('__vars', 'entity', m[0] + 'return variables;')(vars, entity);
+const norm = (entity, vars) => new Function('__vars', 'entity', 'states', m[0] + 'return variables;')(vars, entity, {});
 const sel = { entity_id: 'input_select.casora_expanded_row', state: 'none' };
-assert.equal(norm(sel, { light_group_entity: 'light.alle', entity_1: 'light.a', lights: [] }).popup_group, 'light.alle', 'Gruppe zuerst');
+// #80 (26.10.63): lamps picked in the badge win over its HA group; the group alone still shows the group.
+assert.equal(norm(sel, { light_group_entity: 'light.alle', entity_1: 'light.a', lights: [] }).popup_group, 'light.a', 'picked lamp before the group');
+assert.equal(norm(sel, { light_group_entity: 'light.alle', lights: [] }).popup_group, 'light.alle', 'group alone');
 assert.equal(norm(sel, { entity_1: 'light.wz', lights: [] }).popup_group, 'light.wz', 'ein Raumlicht');
 const two = norm(sel, { entity_1: 'light.a', entity_2: 'light.b', entity_10: 'light.c', lights: [] });
 assert.deepEqual(two.lights, ['light.a', 'light.b', 'light.c'], 'mehrere Raumlichter als Liste');

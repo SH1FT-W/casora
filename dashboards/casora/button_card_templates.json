@@ -1326,7 +1326,20 @@
     "entity_id": "input_select.casora_expanded_row",
     "option": "[[[\n  return states['input_select.casora_expanded_row']?.state === 'climate' ? 'none' : 'climate';\n]]]\n"
    },
-   "haptic": "light"
+   "haptic": "light",
+   "casora_popup": {
+    "title": "[[[\n  /* Phone badge popup (26.10.63): the badge's own title, else the category's name. */\n  return String(variables.title || '').trim() || 'Klima';\n]]]\n",
+    "content": "[[[\n  /* Phone: the badge opens this popup instead of filtering the start page (26.10.63) – its sub-badges and the\n     tiles the filter page showed, as rows (scripts/local/35-phone-hub.js). The desktop's tap keeps its row:\n     a popup only opens on fire-dom-event, which only the phone's badge row sends. */\n  return window._casoraPhoneHub ? window._casoraPhoneHub.popup('climate', states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "dismiss_on_background": true,
+    "popup_styles": [
+     {
+      "style": "all",
+      "styles": "/* Eine Popup-Familie (01.10.2026): dieselbe Sheet-Fläche wie die Bedien-Popups –\n   Fläche, Blur, Schatten und Abdunklung aus dem Standard, Höhe folgt dem Inhalt,\n   Schließen-Kreuz mit demselben Abstand zur Sheet-Kante. */\n.header { padding-top: var(--casora-popup-header-gap, 10px); }\n--casora-popup-header-gap: 14px;\n--casora-popup-gutter-wide: 34px;\n--casora-popup-gutter-phone: 22px;\n\n/* No chart here, so nothing to wait for. Read by each widget for\n   itself, never by a wrapper - an animated opacity on an ancestor\n   flattens the frost inside it. */\n--casora-popup-plate-enter:\n  casora-plate-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n@media (prefers-reduced-motion: reduce) {\n  --casora-popup-plate-enter: none;\n}\n\n/* The surface is sized from the content by the style template\n   below: two columns need the full measure, one does not, and a\n   narrow card centered in a wide surface put the plate's edge 80px\n   to the right of the close control. */\n\n--casora-popup-hero-label-size: 15px;\n--casora-popup-row-radius: 26px;\n/* Frosted, not opaque. The pane's blur used to sit under these, and\n   .content still nulls --ha-card-backdrop-filter for every card in\n   the popup, so the frost has to be asked for here. The fills drop\n   to let it read. */\n/* The theme lifts every ha-card with filter: brightness(1.01) on\n   hover. A filter on an ancestor makes every descendant's\n   backdrop-filter inert, so hovering the empty space around a\n   widget - the wrapper card - knocked the frost out of both of\n   them. Killed popup-wide; the plate re-declares its own shadow. */\n--casora-card-hover-filter: none;\n--casora-hover-filter: none;\n--casora-card-hover-shadow: none;\n\n--casora-popup-row-pad-x: 26px;\n--casora-popup-row-pad-y: 15px;\n--casora-popup-plate-backdrop: blur(24px) saturate(180%);\n--casora-popup-chart-fill: var(--casora-sheet-chart-fill, rgba(10, 12, 16, 0.68));\n--casora-popup-row-fill: var(--casora-sheet-row-fill, rgba(12, 14, 19, 0.62));\n/* Lifted, not slabbed: one wide soft pass carries the height, one\n   short contact pass keeps the edge from dissolving into the room. */\n--casora-popup-plate-shadow: var(--casora-sheet-plate-shadow,\n  0 18px 40px -22px rgba(0, 0, 0, 0.50),\n  0 2px 8px -5px rgba(0, 0, 0, 0.28));\n\n/* visionOS puts nothing bare on the room: the only chrome outside a\n   window is its close control, and that control is itself a glass\n   object. The title was printed twice - here and in the widget\n   eight pixels below - so it goes, clipped rather than removed so a\n   screen reader still gets it. */\n\n/* The chrome arrives with the first plate instead of being there\n   on frame one while everything under it fades in. */\n--casora-popup-chrome-enter:\n  casora-popup-chrome-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n.content { animation: none; }\n/* The title lives in the bar now, centered and level with the\n   close control, so it is no longer hidden. */\n.header-title { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }\n/* 48px is left alone: the base sizes it so the glyph's ink lands on\n   the same left margin as the widgets below. */\n.header-close {\n  border-radius: 50%;\n  background: var(--casora-popup-row-fill, rgba(255, 255, 255, 0.10));\n  backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  -webkit-backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  box-shadow: var(--casora-popup-plate-shadow, none);\n}\n\nha-adaptive-dialog, ha-dialog, wa-drawer {\n  --ha-card-backdrop-filter: none;\n  --ha-card-background: transparent;\n  --card-background-color: transparent;\n  --ha-card-box-shadow: none;\n  --ha-card-border-width: 0px;\n}\n\n/* Popup-Standard (24.09.2026): breit wie alle Popups. */\n--popup-min-width: 900px;\n--popup-max-width: 920px;\n\n/* Popup-Standard (24.09.2026): Info-Popup - Abschnittsüberschriften in der Karte. */\n--casora-lbl-in: block;\n--casora-lbl-out: none;\n"
+     }
+    ],
+    "style": "[[[ return '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'; ]]]",
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+   }
   },
   "template": [
    "casora_badge_base"
@@ -2507,7 +2520,20 @@
     "entity_id": "input_select.casora_expanded_row",
     "option": "[[[\n  return states['input_select.casora_expanded_row']?.state === 'presence' ? 'none' : 'presence';\n]]]\n"
    },
-   "haptic": "light"
+   "haptic": "light",
+   "casora_popup": {
+    "title": "[[[\n  /* Phone badge popup (26.10.63): the badge's own title, else the category's name. */\n  return String(variables.title || '').trim() || 'Personen';\n]]]\n",
+    "content": "[[[\n  /* Phone: the badge opens this popup instead of filtering the start page (26.10.63) – its sub-badges and the\n     tiles the filter page showed, as rows (scripts/local/35-phone-hub.js). The desktop's tap keeps its row:\n     a popup only opens on fire-dom-event, which only the phone's badge row sends. */\n  return window._casoraPhoneHub ? window._casoraPhoneHub.popup('presence', states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "dismiss_on_background": true,
+    "popup_styles": [
+     {
+      "style": "all",
+      "styles": "/* Eine Popup-Familie (01.10.2026): dieselbe Sheet-Fläche wie die Bedien-Popups –\n   Fläche, Blur, Schatten und Abdunklung aus dem Standard, Höhe folgt dem Inhalt,\n   Schließen-Kreuz mit demselben Abstand zur Sheet-Kante. */\n.header { padding-top: var(--casora-popup-header-gap, 10px); }\n--casora-popup-header-gap: 14px;\n--casora-popup-gutter-wide: 34px;\n--casora-popup-gutter-phone: 22px;\n\n/* No chart here, so nothing to wait for. Read by each widget for\n   itself, never by a wrapper - an animated opacity on an ancestor\n   flattens the frost inside it. */\n--casora-popup-plate-enter:\n  casora-plate-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n@media (prefers-reduced-motion: reduce) {\n  --casora-popup-plate-enter: none;\n}\n\n/* The surface is sized from the content by the style template\n   below: two columns need the full measure, one does not, and a\n   narrow card centered in a wide surface put the plate's edge 80px\n   to the right of the close control. */\n\n--casora-popup-hero-label-size: 15px;\n--casora-popup-row-radius: 26px;\n/* Frosted, not opaque. The pane's blur used to sit under these, and\n   .content still nulls --ha-card-backdrop-filter for every card in\n   the popup, so the frost has to be asked for here. The fills drop\n   to let it read. */\n/* The theme lifts every ha-card with filter: brightness(1.01) on\n   hover. A filter on an ancestor makes every descendant's\n   backdrop-filter inert, so hovering the empty space around a\n   widget - the wrapper card - knocked the frost out of both of\n   them. Killed popup-wide; the plate re-declares its own shadow. */\n--casora-card-hover-filter: none;\n--casora-hover-filter: none;\n--casora-card-hover-shadow: none;\n\n--casora-popup-row-pad-x: 26px;\n--casora-popup-row-pad-y: 15px;\n--casora-popup-plate-backdrop: blur(24px) saturate(180%);\n--casora-popup-chart-fill: var(--casora-sheet-chart-fill, rgba(10, 12, 16, 0.68));\n--casora-popup-row-fill: var(--casora-sheet-row-fill, rgba(12, 14, 19, 0.62));\n/* Lifted, not slabbed: one wide soft pass carries the height, one\n   short contact pass keeps the edge from dissolving into the room. */\n--casora-popup-plate-shadow: var(--casora-sheet-plate-shadow,\n  0 18px 40px -22px rgba(0, 0, 0, 0.50),\n  0 2px 8px -5px rgba(0, 0, 0, 0.28));\n\n/* visionOS puts nothing bare on the room: the only chrome outside a\n   window is its close control, and that control is itself a glass\n   object. The title was printed twice - here and in the widget\n   eight pixels below - so it goes, clipped rather than removed so a\n   screen reader still gets it. */\n\n/* The chrome arrives with the first plate instead of being there\n   on frame one while everything under it fades in. */\n--casora-popup-chrome-enter:\n  casora-popup-chrome-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n.content { animation: none; }\n/* The title lives in the bar now, centered and level with the\n   close control, so it is no longer hidden. */\n.header-title { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }\n/* 48px is left alone: the base sizes it so the glyph's ink lands on\n   the same left margin as the widgets below. */\n.header-close {\n  border-radius: 50%;\n  background: var(--casora-popup-row-fill, rgba(255, 255, 255, 0.10));\n  backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  -webkit-backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  box-shadow: var(--casora-popup-plate-shadow, none);\n}\n\nha-adaptive-dialog, ha-dialog, wa-drawer {\n  --ha-card-backdrop-filter: none;\n  --ha-card-background: transparent;\n  --card-background-color: transparent;\n  --ha-card-box-shadow: none;\n  --ha-card-border-width: 0px;\n}\n\n/* Popup-Standard (24.09.2026): breit wie alle Popups. */\n--popup-min-width: 900px;\n--popup-max-width: 920px;\n\n/* Popup-Standard (24.09.2026): Info-Popup - Abschnittsüberschriften in der Karte. */\n--casora-lbl-in: block;\n--casora-lbl-out: none;\n"
+     }
+    ],
+    "style": "[[[ return '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'; ]]]",
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+   }
   },
   "template": [
    "casora_badge_base"
@@ -2783,7 +2809,20 @@
     "option": "[[[\n  return states['input_select.casora_expanded_row']?.state === 'security' ? 'none' : 'security';\n]]]\n"
    },
    "haptic": "light",
-   "casora_contacts_open": "[[[ return !!(window.casoraSecContactsTap && window.casoraSecContactsTap(variables, user, this)) ]]]"
+   "casora_contacts_open": "[[[ return !!(window.casoraSecContactsTap && window.casoraSecContactsTap(variables, user, this)) ]]]",
+   "casora_popup": {
+    "title": "[[[\n  /* Phone badge popup (26.10.63): the badge's own title, else the category's name. */\n  return String(variables.title || '').trim() || 'Sicherheit';\n]]]\n",
+    "content": "[[[\n  /* Phone: the badge opens this popup instead of filtering the start page (26.10.63) – its sub-badges and the\n     tiles the filter page showed, as rows (scripts/local/35-phone-hub.js). The desktop's tap keeps its row:\n     a popup only opens on fire-dom-event, which only the phone's badge row sends. */\n  return window._casoraPhoneHub ? window._casoraPhoneHub.popup('security', states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "dismiss_on_background": true,
+    "popup_styles": [
+     {
+      "style": "all",
+      "styles": "/* Eine Popup-Familie (01.10.2026): dieselbe Sheet-Fläche wie die Bedien-Popups –\n   Fläche, Blur, Schatten und Abdunklung aus dem Standard, Höhe folgt dem Inhalt,\n   Schließen-Kreuz mit demselben Abstand zur Sheet-Kante. */\n.header { padding-top: var(--casora-popup-header-gap, 10px); }\n--casora-popup-header-gap: 14px;\n--casora-popup-gutter-wide: 34px;\n--casora-popup-gutter-phone: 22px;\n\n/* No chart here, so nothing to wait for. Read by each widget for\n   itself, never by a wrapper - an animated opacity on an ancestor\n   flattens the frost inside it. */\n--casora-popup-plate-enter:\n  casora-plate-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n@media (prefers-reduced-motion: reduce) {\n  --casora-popup-plate-enter: none;\n}\n\n/* The surface is sized from the content by the style template\n   below: two columns need the full measure, one does not, and a\n   narrow card centered in a wide surface put the plate's edge 80px\n   to the right of the close control. */\n\n--casora-popup-hero-label-size: 15px;\n--casora-popup-row-radius: 26px;\n/* Frosted, not opaque. The pane's blur used to sit under these, and\n   .content still nulls --ha-card-backdrop-filter for every card in\n   the popup, so the frost has to be asked for here. The fills drop\n   to let it read. */\n/* The theme lifts every ha-card with filter: brightness(1.01) on\n   hover. A filter on an ancestor makes every descendant's\n   backdrop-filter inert, so hovering the empty space around a\n   widget - the wrapper card - knocked the frost out of both of\n   them. Killed popup-wide; the plate re-declares its own shadow. */\n--casora-card-hover-filter: none;\n--casora-hover-filter: none;\n--casora-card-hover-shadow: none;\n\n--casora-popup-row-pad-x: 26px;\n--casora-popup-row-pad-y: 15px;\n--casora-popup-plate-backdrop: blur(24px) saturate(180%);\n--casora-popup-chart-fill: var(--casora-sheet-chart-fill, rgba(10, 12, 16, 0.68));\n--casora-popup-row-fill: var(--casora-sheet-row-fill, rgba(12, 14, 19, 0.62));\n/* Lifted, not slabbed: one wide soft pass carries the height, one\n   short contact pass keeps the edge from dissolving into the room. */\n--casora-popup-plate-shadow: var(--casora-sheet-plate-shadow,\n  0 18px 40px -22px rgba(0, 0, 0, 0.50),\n  0 2px 8px -5px rgba(0, 0, 0, 0.28));\n\n/* visionOS puts nothing bare on the room: the only chrome outside a\n   window is its close control, and that control is itself a glass\n   object. The title was printed twice - here and in the widget\n   eight pixels below - so it goes, clipped rather than removed so a\n   screen reader still gets it. */\n\n/* The chrome arrives with the first plate instead of being there\n   on frame one while everything under it fades in. */\n--casora-popup-chrome-enter:\n  casora-popup-chrome-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n.content { animation: none; }\n/* The title lives in the bar now, centered and level with the\n   close control, so it is no longer hidden. */\n.header-title { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }\n/* 48px is left alone: the base sizes it so the glyph's ink lands on\n   the same left margin as the widgets below. */\n.header-close {\n  border-radius: 50%;\n  background: var(--casora-popup-row-fill, rgba(255, 255, 255, 0.10));\n  backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  -webkit-backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  box-shadow: var(--casora-popup-plate-shadow, none);\n}\n\nha-adaptive-dialog, ha-dialog, wa-drawer {\n  --ha-card-backdrop-filter: none;\n  --ha-card-background: transparent;\n  --card-background-color: transparent;\n  --ha-card-box-shadow: none;\n  --ha-card-border-width: 0px;\n}\n\n/* Popup-Standard (24.09.2026): breit wie alle Popups. */\n--popup-min-width: 900px;\n--popup-max-width: 920px;\n\n/* Popup-Standard (24.09.2026): Info-Popup - Abschnittsüberschriften in der Karte. */\n--casora-lbl-in: block;\n--casora-lbl-out: none;\n"
+     }
+    ],
+    "style": "[[[ return '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'; ]]]",
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+   }
   },
   "template": [
    "casora_badge_base"
@@ -5873,13 +5912,9 @@
        "tap_action": {
         "action": "fire-dom-event",
         "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  /* 26.10.63: with Casora popups the badge opens its popup (null = no filter this time); without them the page filters as before. */\n  if (window.casoraPopupAction && window.casoraPopupAction() === 'fire-dom-event') return null;\n  return cur === 'security' ? 'all' : 'security';\n]]]\n",
-        "haptic": "selection",
-        "casora_contacts_open": false
+        "haptic": "selection"
        },
-       "template": [
-        "casora_badge_security_group",
-        "casora_popup_phone_hub"
-       ],
+       "template": "casora_badge_security_group",
        "type": "custom:button-card",
        "variables": {
         "cameras": "[[[ return variables.security_cameras || [] ]]]",
@@ -5890,8 +5925,7 @@
         "locks": "[[[ return variables.security_locks || [] ]]]",
         "summary": "[[[ return variables.security_summary ]]]",
         "title": "[[[ return variables.security_title ]]]",
-        "place": "home",
-        "hub": "security"
+        "place": "home"
        }
       },
       {
@@ -5901,10 +5935,7 @@
         "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  /* 26.10.63: with Casora popups the badge opens its popup (null = no filter this time); without them the page filters as before. */\n  if (window.casoraPopupAction && window.casoraPopupAction() === 'fire-dom-event') return null;\n  return cur === 'climate' ? 'all' : 'climate';\n]]]\n",
         "haptic": "selection"
        },
-       "template": [
-        "casora_badge_climate_group",
-        "casora_popup_phone_hub"
-       ],
+       "template": "casora_badge_climate_group",
        "type": "custom:button-card",
        "variables": {
         "climate_entity": "[[[ return variables.climate_entity_1 || variables.climate_entity ]]]",
@@ -5919,8 +5950,7 @@
         "temp_sensor_5": "[[[ return variables.temp_sensor_5 ]]]",
         "temp_unit": "C",
         "climate_entity_3": "[[[ return variables.climate_entity_3 ]]]",
-        "title": "[[[ return variables.climate_title ]]]",
-        "hub": "climate"
+        "title": "[[[ return variables.climate_title ]]]"
        }
       },
       {
@@ -5956,10 +5986,7 @@
         "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  /* 26.10.63: with Casora popups the badge opens its popup (null = no filter this time); without them the page filters as before. */\n  if (window.casoraPopupAction && window.casoraPopupAction() === 'fire-dom-event') return null;\n  return cur === 'presence' ? 'all' : 'presence';\n]]]\n",
         "haptic": "selection"
        },
-       "template": [
-        "casora_badge_presence_group",
-        "casora_popup_phone_hub"
-       ],
+       "template": "casora_badge_presence_group",
        "type": "custom:button-card",
        "variables": {
         "enabled": "[[[ const _hv = variables.casora_hv; const _pi = !!(_hv && _hv.show_people_inline); return (!_hv || (window.casoraSeen?window.casoraSeen(_hv,'people',user,_hv.show_people):_hv.show_people)!==false) && !!variables.presence_entity_1 && !!variables.presence_entity_2 && !_pi ]]]",
@@ -5967,8 +5994,7 @@
         "entity_2": "[[[ return variables.presence_entity_2 ]]]",
         "entity_3": "[[[ return variables.presence_entity_3 ]]]",
         "entity_4": "[[[ return variables.presence_entity_4 ]]]",
-        "title": "[[[ return variables.people_title ]]]",
-        "hub": "presence"
+        "title": "[[[ return variables.people_title ]]]"
        }
       },
       {
@@ -19014,23 +19040,6 @@
    "icon": "velair",
    "casora_default_name": "Klima",
    "temp_sensor": null
-  }
- },
- "casora_popup_phone_hub": {
-  "tap_action": {
-   "casora_popup": {
-    "title": "[[[\n  /* Phone badge hub (26.10.63): the badge's own title, else the category's name. */\n  const t = { security: 'Sicherheit', climate: 'Klima', presence: 'Personen' }[variables.hub] || '';\n  return String(variables.title || '').trim() || t;\n]]]\n",
-    "content": "[[[\n  /* Phone badges on Home open a popup instead of filtering the page (26.10.63): the sub-badges and tiles the filter\n     page showed, as rows. window._casoraPhoneHub.popup in scripts/local/35-phone-hub.js. */\n  return window._casoraPhoneHub ? window._casoraPhoneHub.popup(variables.hub, states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
-    "dismiss_on_background": true,
-    "popup_styles": [
-     {
-      "style": "all",
-      "styles": "/* Eine Popup-Familie (01.10.2026): dieselbe Sheet-Fläche wie die Bedien-Popups –\n   Fläche, Blur, Schatten und Abdunklung aus dem Standard, Höhe folgt dem Inhalt,\n   Schließen-Kreuz mit demselben Abstand zur Sheet-Kante. */\n.header { padding-top: var(--casora-popup-header-gap, 10px); }\n--casora-popup-header-gap: 14px;\n--casora-popup-gutter-wide: 34px;\n--casora-popup-gutter-phone: 22px;\n\n/* No chart here, so nothing to wait for. Read by each widget for\n   itself, never by a wrapper - an animated opacity on an ancestor\n   flattens the frost inside it. */\n--casora-popup-plate-enter:\n  casora-plate-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n@media (prefers-reduced-motion: reduce) {\n  --casora-popup-plate-enter: none;\n}\n\n/* The surface is sized from the content by the style template\n   below: two columns need the full measure, one does not, and a\n   narrow card centered in a wide surface put the plate's edge 80px\n   to the right of the close control. */\n\n--casora-popup-hero-label-size: 15px;\n--casora-popup-row-radius: 26px;\n/* Frosted, not opaque. The pane's blur used to sit under these, and\n   .content still nulls --ha-card-backdrop-filter for every card in\n   the popup, so the frost has to be asked for here. The fills drop\n   to let it read. */\n/* The theme lifts every ha-card with filter: brightness(1.01) on\n   hover. A filter on an ancestor makes every descendant's\n   backdrop-filter inert, so hovering the empty space around a\n   widget - the wrapper card - knocked the frost out of both of\n   them. Killed popup-wide; the plate re-declares its own shadow. */\n--casora-card-hover-filter: none;\n--casora-hover-filter: none;\n--casora-card-hover-shadow: none;\n\n--casora-popup-row-pad-x: 26px;\n--casora-popup-row-pad-y: 15px;\n--casora-popup-plate-backdrop: blur(24px) saturate(180%);\n--casora-popup-chart-fill: var(--casora-sheet-chart-fill, rgba(10, 12, 16, 0.68));\n--casora-popup-row-fill: var(--casora-sheet-row-fill, rgba(12, 14, 19, 0.62));\n/* Lifted, not slabbed: one wide soft pass carries the height, one\n   short contact pass keeps the edge from dissolving into the room. */\n--casora-popup-plate-shadow: var(--casora-sheet-plate-shadow,\n  0 18px 40px -22px rgba(0, 0, 0, 0.50),\n  0 2px 8px -5px rgba(0, 0, 0, 0.28));\n\n/* visionOS puts nothing bare on the room: the only chrome outside a\n   window is its close control, and that control is itself a glass\n   object. The title was printed twice - here and in the widget\n   eight pixels below - so it goes, clipped rather than removed so a\n   screen reader still gets it. */\n\n/* The chrome arrives with the first plate instead of being there\n   on frame one while everything under it fades in. */\n--casora-popup-chrome-enter:\n  casora-popup-chrome-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n.content { animation: none; }\n/* The title lives in the bar now, centered and level with the\n   close control, so it is no longer hidden. */\n.header-title { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }\n/* 48px is left alone: the base sizes it so the glyph's ink lands on\n   the same left margin as the widgets below. */\n.header-close {\n  border-radius: 50%;\n  background: var(--casora-popup-row-fill, rgba(255, 255, 255, 0.10));\n  backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  -webkit-backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  box-shadow: var(--casora-popup-plate-shadow, none);\n}\n\nha-adaptive-dialog, ha-dialog, wa-drawer {\n  --ha-card-backdrop-filter: none;\n  --ha-card-background: transparent;\n  --card-background-color: transparent;\n  --ha-card-box-shadow: none;\n  --ha-card-border-width: 0px;\n}\n\n/* Popup-Standard (24.09.2026): breit wie alle Popups. */\n--popup-min-width: 900px;\n--popup-max-width: 920px;\n\n/* Popup-Standard (24.09.2026): Info-Popup - Abschnittsüberschriften in der Karte. */\n--casora-lbl-in: block;\n--casora-lbl-out: none;\n"
-     }
-    ],
-    "style": "[[[ return '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'; ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
-   }
   }
  }
 }

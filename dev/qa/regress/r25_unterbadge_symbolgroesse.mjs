@@ -57,7 +57,10 @@ async function run(label, opts, url) {
   await page.waitForTimeout(5000);
   const g = (await cards(page, 'casora_badge_climate_group'))[0];
   await need(label + ': Klima-Badge', g);
-  await page.mouse.click(g.x + g.w / 2, g.y + g.h / 2);
+  // Since 26.10.63 the phone badge opens a popup; the climate sub-badges are measured on the filter page, so set it.
+  const phone = await page.evaluate(() => !!(window._casoraFilter && document.querySelector('home-assistant').hass && window.innerWidth < 768));
+  if (phone) await page.evaluate(() => window._casoraFilter.set('climate'));
+  else await page.mouse.click(g.x + g.w / 2, g.y + g.h / 2);
   await page.waitForTimeout(2500);
   const subs = [];
   for (const t of SUB) subs.push(...(await cards(page, t)).map((c) => ({ ...c, tpl: t })));

@@ -7,7 +7,7 @@
 // that badge's or tile's own popup as a sub page (‹ back to the hub).
 // The rows are read from the cards Home already renders (hidden while no filter is set), so the hub always
 // shows exactly what the filter page would: same order, same words, nothing counted twice.
-//   window._casoraPhoneHub.popup(cat, states, hass, variables)  – content of casora_popup_phone_hub
+//   window._casoraPhoneHub.popup(cat, states, hass, variables)  – content of the phone group badges' popup (casora_badge_*_group)
 //   window._casoraPhoneHub.sec(cat, part, states, hass)          – live parts (hero, list)
 //   window._casoraPhoneHub.scan(cat)                             → { chips, rooms, watch, sub }
 (function () {

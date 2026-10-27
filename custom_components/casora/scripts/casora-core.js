@@ -8312,6 +8312,8 @@ window.casoraMenuGlass = {
     // event can carry both intentions.
     // #78: a filter of null means "no filter this time" (the phone's energy badge without energy tiles).
     if (ev.detail.casora_filter !== undefined && ev.detail.casora_filter !== null) return;
+    // Security badge on Home without entries of its own (#39): „Türen & Fenster“ opens instead (01-basis.js).
+    if (ev.detail.casora_contacts_open === true) return;
     ev.stopPropagation();
     // Kachel, die das Popup öffnet – liefert im Weich-Design Symbol und Farbe des Rings.
     // button-card feuert ll-custom an home-assistant, die Kachel steht daher nicht im

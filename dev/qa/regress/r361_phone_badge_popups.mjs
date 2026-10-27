@@ -75,10 +75,12 @@ await tap(page, cli);
 p = await popup(page);
 await check('Climate: the tap opens a popup „Klima“', p.open && p.title === 'Klima', p);
 await check('Climate: readings as rows (Temperatur …)', p.rows.some((r) => /^Temperatur/.test(r)), p.rows);
-const dev = p.rows.find((r) => /^Test(klima|luftreiniger|ventilator|befeuchter)/.test(r));
+// A device row: the rows after the sub-badges (whatever the house calls its devices).
+const nChips = await page.evaluate(() => ((window._casoraPhoneHub.last.climate || {}).chips || []).length);
+const dev = p.rows[nChips];
 await need('Climate: a device row', dev, p.rows);
 const s0 = await climateStates(page);
-await tap(page, await rowAt(page, dev.split(' ')[0]));
+await tap(page, await rowAt(page, dev));
 p = await popup(page);
 await check('Climate: a device row opens that device\'s popup as a sub page', p.open && p.title !== 'Klima' && p.back, p);
 await page.waitForTimeout(1500);
