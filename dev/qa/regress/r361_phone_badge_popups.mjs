@@ -6,7 +6,7 @@
 // filter page showed, as rows; a row opens that badge's or tile's own popup as a sub page (‹ back to the hub) and
 // never switches the device. Lights and Energy open their existing popups. The page is never filtered.
 // Desktop: the security badge keeps its row (no hub).
-import { open, casoraDashboard, dashboard, check, need, finish, usePage } from './lib.mjs';
+import { open, casoraDashboard, dashboard, check, need, finish, usePage, fakeStates } from './lib.mjs';
 
 const dash = await casoraDashboard((d) => (d.config.views || []).length > 1);
 await need('Casora dashboard with its phone counterpart', dash && dash.phone);
@@ -58,6 +58,19 @@ let p = await popup(page);
 await check('Security: the tap opens a popup „Sicherheit“', p.open && p.title === 'Sicherheit', p);
 await check('Security: the start page is not filtered', p.filter === 'all', p.filter);
 await check('Security: the sub-badges are rows (Schlösser, Türen, Fenster …)', p.rows.some((r) => /^Schlösser/.test(r)) && p.rows.some((r) => /^(Türen|Fenster)/.test(r)), p.rows);
+// What needs attention shows it on the icon (owner, 27.10.2026): an unlocked lock → warning tone, locked → calm.
+const locks = await page.evaluate(() => { const r = (window._casoraPhoneHub.last.security || {}).chips || [];
+  const c = r.find((x) => x.title === 'Schlösser'); return c ? c.ids.filter((id) => id.startsWith('lock.')) : []; });
+await need('Security: the locks row has locks', locks.length, locks);
+const rowTone = () => page.evaluate(() => { const s = window.casoraPopup.surface;
+  const r = window.__pierce('.hui-row', s).find((n) => /^Schlösser/.test(n.textContent.trim()));
+  return r ? (/casora-security-(warn|alarm)|--casora-color-orange|255, ?159|#FF9F0A/i.test(r.innerHTML) ? 'warn' : 'calm') : null; });
+await fakeStates(page, Object.fromEntries(locks.map((id) => [id, { state: 'unlocked' }])), { sticky: true });
+await page.waitForTimeout(1800);
+await check('Security: unlocked lock → „Schlösser“ row in the warning tone', (await rowTone()) === 'warn', await rowTone());
+await fakeStates(page, Object.fromEntries(locks.map((id) => [id, { state: 'locked' }])), { sticky: true });
+await page.waitForTimeout(1800);
+await check('Security: locked → „Schlösser“ row calm', (await rowTone()) === 'calm', await rowTone());
 const lock = await rowAt(page, 'Schlösser');
 await tap(page, lock);
 p = await popup(page);
@@ -75,6 +88,7 @@ await tap(page, cli);
 p = await popup(page);
 await check('Climate: the tap opens a popup „Klima“', p.open && p.title === 'Klima', p);
 await check('Climate: readings as rows (Temperatur …)', p.rows.some((r) => /^Temperatur/.test(r)), p.rows);
+await check('Climate: no blinds among the devices (owner, 27.10.2026)', !p.rows.some((r) => /^(Jalousie|Rollo|Testjalousie)/.test(r)), p.rows);
 // A device row: the rows after the sub-badges (whatever the house calls its devices).
 const nChips = await page.evaluate(() => ((window._casoraPhoneHub.last.climate || {}).chips || []).length);
 const dev = p.rows[nChips];

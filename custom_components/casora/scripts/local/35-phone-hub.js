@@ -110,7 +110,7 @@
       .filter(enabled)
       .map(function (b) {
         var sr = b.shadowRoot;
-        return { el: b, title: txt(sr && sr.querySelector('.badge-title')), sub: subOf(b),
+        return { el: b, tpl: tpls(b).join(','), title: txt(sr && sr.querySelector('.badge-title')), sub: subOf(b),
           icon: iconOf(b), ids: entityIds(b) };
       })
       .filter(function (c) { return c.title; });
@@ -163,9 +163,11 @@
       var tiles = (sr._wrappers || []).map(function (w) {
         return w.localName === 'button-card' ? w : (w.querySelector && w.querySelector('button-card'));
       }).filter(function (b) { return b && b._config && !offOnPhone(b._config) && catOf(b._config) === cat; })
+        // Blinds are no climate device in the popup (owner, 27.10.2026), though the old filter page listed them there.
+        .filter(function (b) { return cat !== 'climate' || !(/^cover\./.test((b._stateObj && b._stateObj.entity_id) || '') || tpls(b).some(function (t) { return /cover/.test(t); })); })
         .map(function (b) {
           var r = b.shadowRoot;
-          return { el: b, title: txt(r && r.querySelector('#name')) || String((b._stateObj && b._stateObj.attributes.friendly_name) || ''),
+          return { el: b, main: b._stateObj ? b._stateObj.entity_id : null, title: txt(r && r.querySelector('#name')) || String((b._stateObj && b._stateObj.attributes.friendly_name) || ''),
             sub: stateOf(b), icon: iconOf(b), ids: entityIds(b) };
         }).filter(function (t) { return t.title; });
       if (tiles.length) rooms.push({ name: pending, tiles: tiles });
@@ -241,10 +243,29 @@
     return K.layout({ fields: f, top: ['hero'], left: ['list'], right: [] });
   };
 
-  var tone = function (cat, item) {
-    if (cat === 'presence') return item.home ? 'accent' : null;
-    return null;
+  // What needs attention shows it on the icon (owner, 27.10.2026): Casora's own rules decide – security by
+  // casoraSecurityLevel (lock open, door/window open or tilted, camera offline, alarm off/triggered), blinds by the
+  // count of „Jalousien“ (#76), climate readings by the badge's word. Fine rows keep the calm tone.
+  var SEC_DOM = /^(lock|binary_sensor|camera|alarm_control_panel|cover)\./;
+  var CLIMATE_BAD = /^(Sehr schlecht|Sehr heiß|Sehr kalt)\b/, CLIMATE_WARN = /^(Schlecht|Mäßig|Heiß|Sehr trocken|Hoch)\b/;
+  var levelOf = function (cat, item, hass) {
+    if (cat === 'climate') return item.kind === 'c' ? (CLIMATE_BAD.test(item.sub) ? 'alarm' : CLIMATE_WARN.test(item.sub) ? 'warn' : 'ok') : 'ok';
+    if (cat !== 'security' || !hass) return 'ok';
+    if (/casora_badge_security_covers/.test(item.tpl || '')) {
+      var C = window._casoraSecCovers;
+      return C && C.count(hass.states, hass, hass.user, { place: 'home' }) > 0 ? 'warn' : 'ok';
+    }
+    var ids = (item.kind === 't' && item.main ? [item.main] : item.ids || []).filter(function (id) { return SEC_DOM.test(id); });
+    return ids.length && window.casoraSecurityLevel ? window.casoraSecurityLevel(hass, ids) : 'ok';
   };
+  var tone = function (cat, item, hass) {
+    if (cat === 'presence') return item.home ? 'accent' : null;
+    var lv = levelOf(cat, item, hass);
+    if (lv === 'ok') return null;
+    var soft = window._casoraSoft && window._casoraSoft();
+    return soft && window.casoraSecurityColor ? window.casoraSecurityColor(lv) : (lv === 'alarm' ? 'bad' : 'warn');
+  };
+  P.levelOf = levelOf;
   P.sec = function (cat, part, states, hass) {
     var UI = window._casoraUI;
     if (!UI) return '';
@@ -257,7 +278,7 @@
     if (s.chips.length) {
       out.push(UI.group(s.chips.map(function (c, i) {
         var row = { icon: c.icon || 'mdi:shield-home', label: c.title, labelLit: true, sub: c.sub, page: 'phub|' + cat + '|c|' + i };
-        var t = tone(cat, c);
+        var t = tone(cat, Object.assign({ kind: 'c' }, c), hass);
         if (t) row.iconTone = t;
         return row;
       }), cat === 'presence' ? 'Personen' : 'Übersicht'));
@@ -265,7 +286,10 @@
     var k = 0;
     s.rooms.forEach(function (r) {
       out.push(UI.group(r.tiles.map(function (t) {
-        return { icon: t.icon || 'mdi:devices', label: t.title, labelLit: true, sub: t.sub, page: 'phub|' + cat + '|t|' + (k++) };
+        var row = { icon: t.icon || 'mdi:devices', label: t.title, labelLit: true, sub: t.sub, page: 'phub|' + cat + '|t|' + (k++) };
+        var tn = tone(cat, Object.assign({ kind: 't' }, t), hass);
+        if (tn) row.iconTone = tn;
+        return row;
       }), r.name || null));
     });
     if (!out.length) {
