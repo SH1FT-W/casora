@@ -13,7 +13,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ### Fixed
 - **Popups on the phone as tall as their content:** after the light popup every later popup opened full height, and a lamp's popup stood at the top with empty space below.
 - **Security badge on Home (#76):** its popup "Doors & windows" now also lists the blinds it counts, with "Close" and "Close all".
-- **Player list on the phone:** the ⋯ menu and the bar's rooms/scenes menus hide it, like the bell.
+- **⋯ menu on the phone:** the page behind it dims like for the bell, so the player no longer stands sharp next to the menu.
 
 ## 26.10.62 – 26.10.2026
 

@@ -13,7 +13,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ### Behoben
 - **Popups am Handy so hoch wie ihr Inhalt:** Nach dem Licht-Popup ging jedes weitere Popup bis ganz oben auf, und das Popup einer Lampe stand oben mit leerem Platz darunter.
 - **Sicherheits-Badge auf Zuhause (#76):** Sein Popup „Türen & Fenster“ listet jetzt auch die Jalousien, die es mitzählt, mit „Schließen“ und „Alle schließen“.
-- **Player-Liste am Handy:** Das ⋯-Menü und die Räume-/Szenen-Menüs der Leiste blenden sie aus, wie die Glocke.
+- **⋯-Menü am Handy:** Die Seite dahinter tritt zurück wie bei der Glocke, der Player steht nicht mehr scharf neben dem Menü.
 
 ## 26.10.62 – 26.10.2026
 
