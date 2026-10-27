@@ -94,7 +94,7 @@ const nBlinds = await page.evaluate(() => (((window._casoraPhoneHub.last.climate
 await check('Climate: single blinds not among the devices (owner, 27.10.2026)', p.rows.filter((r) => /^Jalousien/.test(r)).length <= 1
   && !p.rows.some((r) => /^(Jalousie |Rollo|Testjalousie)/.test(r)), p.rows);
 if (nBlinds) {
-  await check('Climate: „Jalousien“ as an overview row', p.rows.some((r) => /^Jalousien/.test(r)), p.rows);
+  await check('Climate: „Jalousien“ as the last overview row', p.rows.length && /^Jalousien/.test(p.rows[p.rows.length - 1]), p.rows);
   await tap(page, await rowAt(page, 'Jalousien'));
   const jb = await popup(page);
   await check('Climate: „Jalousien“ opens the blinds popup with ‹', jb.open && jb.back && jb.title !== 'Klima', jb);

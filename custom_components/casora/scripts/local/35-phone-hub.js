@@ -255,6 +255,9 @@
     return cached(cat, function () {
       var chips = cat === 'presence' ? peopleOf() : chipsOf(cat);
       var rooms = roomsOf(cat);
+      // „Jalousien“ last in the overview, as in the sub-row (owner, 27.10.2026).
+      chips = chips.filter(function (c) { return !/casora_badge_climate_covers/.test(c.tpl || ''); })
+        .concat(chips.filter(function (c) { return /casora_badge_climate_covers/.test(c.tpl || ''); }));
       // Climate: the blinds as one row „Jalousien“ in the overview (owner, 27.10.2026: shading is climate and
       // security), opening the blinds popup of just those – not as single devices by room.
       if (cat === 'climate' && blindsOut.length && homeVar('climate_blinds') !== false

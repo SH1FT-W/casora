@@ -21,6 +21,11 @@ await need('Klima badge on Home', kl);
 await page.mouse.click(kl.x, kl.y);
 await page.waitForTimeout(2500);
 const sub = await at('casora_badge_climate_covers');
+// Last in the sub-row: right of every other visible climate sub-badge in the same row.
+const order = await page.evaluate(() => { const vis = window.__pierce('button-card').filter((x) => /casora_badge_(temp|humidity|air_quality|climate_covers)\b/.test([].concat(x._config?.template || []).join(',')) && x.getBoundingClientRect().width > 20);
+  const me = vis.find((x) => [].concat(x._config.template).includes('casora_badge_climate_covers')); if (!me) return null;
+  const r = me.getBoundingClientRect(); return vis.filter((x) => x !== me && Math.abs(x.getBoundingClientRect().top - r.top) < 8).every((x) => x.getBoundingClientRect().left < r.left); });
+await check('„Jalousien“ is the last sub-badge of the Klima row', order === true, order);
 await check('Klima sub-row: sub-badge „Jalousien“ with its state', sub && /Jalousien/.test(sub.text) && /(geöffnet|geschlossen)/i.test(sub.text), sub);
 if (sub) {
   await page.mouse.click(sub.x, sub.y);
