@@ -6759,7 +6759,9 @@ window.casoraMenuGlass = {
            mit festem Wunsch (--casora-sheet-height/-min) behält ihn. !important, weil viele Vorlagen
            in ihrem Popup-CSS die volle Höhe (100svh …) für .surface setzen. */
         height: var(--casora-sheet-height, auto) !important;
-        min-height: min(var(--casora-sheet-min, 0px), calc(100dvh - env(safe-area-inset-top, 0px) - var(--casora-soft-sheet-gap)));
+        /* 26.10.63: min-height !important as well – the light popup's CSS sets it to the full height with !important
+           (its old drawer rule, rewritten onto .surface), so a lamp's sheet stood at the top with empty space below. */
+        min-height: min(var(--casora-sheet-min, 0px), calc(100dvh - env(safe-area-inset-top, 0px) - var(--casora-soft-sheet-gap))) !important;
         max-height: calc(100dvh - env(safe-area-inset-top, 0px) - var(--casora-soft-sheet-gap));
         /* 1.3 Tokens: das Blatt schiebt mit der Schieber-Kurve (360 ms) statt eigener Feder. */
         animation: casora-sheet-in var(--casora-dur-slide, 360ms) var(--casora-ease-slide, cubic-bezier(.36, 0, .16, 1));
@@ -7464,6 +7466,12 @@ window.casoraMenuGlass = {
       this._headerTitle.textContent = cfg.title || '';
       this._headerEyebrow.textContent = cfg.eyebrow || '';
       this._headReset();
+      // 26.10.63: the sheet is shared by every popup – a size a popup's content wrote onto it inline (the light
+      // popup's old drawer fix) must not carry over, or every later popup opened full height on the phone.
+      if (this.surface && this.surface.style) {
+        ['height', 'min-height', '--size'].forEach(function (p) { this.surface.style.removeProperty(p); }, this);
+        this.surface.classList.remove('casora-h-auto');
+      }
       this._headerClose.hidden = cfg.close === false;
       // 1.5: Zurück (cfg.back: Funktion) und die Konfiguration, mit der das Popup gerade offen ist –
       // eine Detailseite merkt sie sich und öffnet sie mit ‹ wieder (window.casoraPopup.current).
