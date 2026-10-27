@@ -4,6 +4,17 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.63 – 27.10.2026
+
+### Geändert
+- **Badges am Handy öffnen ein Popup:** Ein Tipp auf ein Badge auf Zuhause filtert die Seite nicht mehr. Sicherheit und Klima öffnen ein Popup mit allem, was die gefilterte Seite zeigte, als Zeilen: ihre Unter-Badges (Schlösser, Kameras, Türen, Fenster, Jalousien / Temperatur, Luftfeuchtigkeit) und die Geräte nach Raum; eine Zeile öffnet das Popup dieses Badges oder Geräts mit ‹ zurück, und ein Tipp auf eine Zeile schaltet nie etwas. Beleuchtung und Energie öffnen ihre eigenen Popups. Ohne Casora-Popups filtert die Seite wie bisher.
+- **Beleuchtungs-Badge mit HA-Gruppe (#80):** Im Badge gewählte Lampen oder Räume gehen vor seiner Gruppe; das Handy zeigt genau diese (Räume mit ihren Pillen, „N von M Räumen an“).
+
+### Behoben
+- **Popups am Handy so hoch wie ihr Inhalt:** Nach dem Licht-Popup ging jedes weitere Popup bis ganz oben auf, und das Popup einer Lampe stand oben mit leerem Platz darunter.
+- **Sicherheits-Badge auf Zuhause (#76):** Sein Popup „Türen & Fenster“ listet jetzt auch die Jalousien, die es mitzählt, mit „Schließen“ und „Alle schließen“.
+- **Player-Liste am Handy:** Das ⋯-Menü und die Räume-/Szenen-Menüs der Leiste blenden sie aus, wie die Glocke.
+
 ## 26.10.62 – 26.10.2026
 
 Fasst alles aus den Betas 26.10.62b1 bis b6 zusammen, dazu einheitliche Popups.

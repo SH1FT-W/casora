@@ -4,6 +4,17 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.63 – 27.10.2026
+
+### Changed
+- **Badges on the phone open a popup:** a tap on a badge on Home no longer filters the page. Security and Climate open a popup with everything the filtered page showed, as rows: their sub-badges (locks, cameras, doors, windows, blinds / temperature, humidity) and the devices by room; a row opens that badge's or device's popup with ‹ back, and tapping a row never switches anything. Lights and Energy open their own popups. Without Casora popups the page filters as before.
+- **Lighting badge with an HA group (#80):** lights or rooms picked in the badge win over its group; the phone shows just those (rooms with their pills, "N of M rooms on").
+
+### Fixed
+- **Popups on the phone as tall as their content:** after the light popup every later popup opened full height, and a lamp's popup stood at the top with empty space below.
+- **Security badge on Home (#76):** its popup "Doors & windows" now also lists the blinds it counts, with "Close" and "Close all".
+- **Player list on the phone:** the ⋯ menu and the bar's rooms/scenes menus hide it, like the bell.
+
 ## 26.10.62 – 26.10.2026
 
 Collects everything from the betas 26.10.62b1 to b6, plus consistent popups.
