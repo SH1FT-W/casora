@@ -7541,6 +7541,7 @@ window.casoraMenuGlass = {
       }
       // Kopfzeile A: Statuszeile aus dem Inhalt in den Kopf holen (Karten bauen sich nach und nach).
       [0, 60, 250, 700, 1600].forEach((ms) => { setTimeout(() => { if (this.hasAttribute('open')) this._syncHeadLine(); }, ms); });
+      this._holdUntilLaidOut();
       this._checkEmpty(true);
       // Startet das Einblenden der Platten (popup_styles „data-casora-charts-ready“). Früher erst,
       // wenn apexcharts gezeichnet hatte; casora-chart zeichnet selbst, ohne Warten.
@@ -7775,6 +7776,31 @@ window.casoraMenuGlass = {
       this._mirrorHead();
       // Module melden ihren Hauptschalter teils erst mit dem ersten Zeichnen (Licht: aktuelle Ansicht).
       this._syncHeadSwitch();
+    }
+
+    // The status line is drawn inside the content first and lifted into the header afterwards; until then the
+    // content showed one frame (on slow devices several) with the line still in it and jumped up ~26 px when it
+    // left (27.10.2026, nearly every popup). Keep the content invisible – its layout stays – until the first
+    // frame in which the cards have rendered, lift the line and fit the gap in that frame, then show it.
+    _holdUntilLaidOut() {
+      if (!this.hasAttribute('soft') || !this.content) return;
+      var c = this.content, token = (this._holdToken = (this._holdToken || 0) + 1);
+      var show = () => { if (this._holdToken === token) c.style.removeProperty('visibility'); };
+      c.style.setProperty('visibility', 'hidden');
+      var t0 = Date.now(), quiet = 0, lastH = -1;
+      var step = () => {
+        if (this._holdToken !== token) return;
+        if (!this.hasAttribute('open') || Date.now() - t0 > 450) return show();
+        var line = this._findHeadLine();
+        if (line) { this._syncHeadLine(); this._fitHeadGap(); return show(); }
+        // No status line (yet): show once the cards stand – the same height for four frames and 150 ms at least
+        // (the hero with the line can come one card after the first, phone blinds popup).
+        var hNow = Math.round(this.container.getBoundingClientRect().height);
+        if (hNow > 8 && hNow === lastH) { if (++quiet >= 4 && Date.now() - t0 >= 150) return show(); } else quiet = 0;
+        lastH = hNow;
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
     }
 
     // Abstand Kopf → erster sichtbarer Inhalt: 28 px (Kopfzeile A). Nach dem Ausblenden der Statuszeile
