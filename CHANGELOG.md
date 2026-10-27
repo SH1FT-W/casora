@@ -7,18 +7,20 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 26.10.63 – 27.10.2026
 
 ### Changed
-- **Badges on the phone open a popup:** a tap on a badge on Home no longer filters the page. Security and Climate open an overview popup: their sub-badges as rows (locks, cameras, doors, windows, blinds / temperature, humidity); a row opens that badge's or device's popup with ‹ back, and tapping a row never switches anything. What needs attention (a lock open, a door or window open, a camera offline, blinds open while they count, a reading like "High") shows its icon in the warning colour. In Climate the blinds are one row "Blinds" in the overview, and the Climate badge's sub-row on Home has a "Blinds" sub-badge like the one under Security (Studio: climate badge › "Show blinds", on by default). Lights and Energy open their own popups. Without Casora popups the page filters as before.
-- **Security badge without entries of its own (desktop and tablet too):** a tap opens the same security overview as on the phone (doors, windows and blinds as rows) instead of "Doors & windows" directly (#39).
-- **Lighting badge with an HA group (#80):** lights or rooms picked in the badge win over its group; the phone shows just those (rooms with their pills, "N of M rooms on").
-
-- **Climate sub-badges:** Temperature and Humidity take the air quality colours: green when comfortable (19–24 °C, also for °F sensors; 40–60 %), orange a little outside, red beyond, with matching words (Comfortable, Cool, Warm, Cold, Hot / Good, Slightly dry, Slightly humid, Very dry, Very humid) – on the badges and in the Climate popup.
-
+- **Badges on the phone open a popup:** a tap on a badge on Home no longer filters the page. Security and Climate open an overview with their sub-badges as rows (locks, cameras, doors, windows, blinds / temperature, humidity, blinds last). A row opens that badge's or device's popup with ‹ back and never switches anything. What needs attention (a lock open, a door or window open or tilted, a camera offline, blinds open while they count) shows its icon in the warning colour. Lights and Energy open their own popups; on room pages the group badges still open their sub-row. Without Casora popups the page filters as before.
+- **Security badge without entries of its own (desktop and tablet too):** a tap opens the same security overview as on the phone instead of "Doors & windows" directly (#39).
+- **Blinds in Climate:** the Climate badge's sub-row on Home has a "Blinds" sub-badge (last, like under Security) that opens the dashboard's blinds tile popup. Studio: climate badge › "Show blinds" (on by default). HA cover groups are never counted as a blind.
+- **Climate sub-badges:** Temperature and Humidity take the air quality colours with matching words: green when comfortable (19 to 24 °C, also for °F sensors; 40 to 60 %), orange a little outside (Cool, Warm / Slightly dry, Slightly humid), red beyond (Cold, Hot / Very dry, Very humid).
+- **Lighting badge with an HA group (#80):** lights or rooms picked in the badge win over its group; the phone shows just those ("N of M rooms on").
 - **Energy sub-popups "House" and "Solar":** the energy flow of the big energy popup instead of the bar, when its sources exist.
+- **⋯ menu on the phone:** the page behind it dims like for the bell.
 
 ### Fixed
-- **Popups on the phone as tall as their content:** after the light popup every later popup opened full height, and a lamp's popup stood at the top with empty space below.
-- **Security badge on Home (#76):** its popup "Doors & windows" now also lists the blinds it counts, with "Close" and "Close all".
-- **⋯ menu on the phone:** the page behind it dims like for the bell, so the player no longer stands sharp next to the menu.
+- **Popups no longer jump:** the content appears once the status line, charts and columns are in place; headings no longer move after opening. The close control stayed half transparent in Safari.
+- **Popups on the phone as tall as their content:** after the light popup every later popup opened full height.
+- **Room sub-badge in the light popup:** a room with one nested group listed every lamp as a "room" named after the room.
+- **Blinds popup from the sub-badge:** full width like the tile's (names were cut off); a blind's sub-badge under Security wears the blinds icon instead of a door.
+- **Security badge on Home (#76):** "Doors & windows" also lists the blinds it counts, with "Close" and "Close all".
 
 ## 26.10.62 – 26.10.2026
 

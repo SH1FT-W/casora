@@ -7,18 +7,20 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ## 26.10.63 – 27.10.2026
 
 ### Geändert
-- **Badges am Handy öffnen ein Popup:** Ein Tipp auf ein Badge auf Zuhause filtert die Seite nicht mehr. Sicherheit und Klima öffnen ein Übersichts-Popup: ihre Unter-Badges als Zeilen (Schlösser, Kameras, Türen, Fenster, Jalousien / Temperatur, Luftfeuchtigkeit); eine Zeile öffnet das Popup dieses Badges oder Geräts mit ‹ zurück, und ein Tipp auf eine Zeile schaltet nie etwas. Was Aufmerksamkeit braucht (Schloss offen, Tür oder Fenster offen, Kamera offline, Jalousien offen, solange sie zählen, ein Wert wie „Hoch“), zeigt sein Symbol in der Warnfarbe. Im Klima-Popup stehen die Jalousien als eine Zeile „Jalousien“ in der Übersicht, und die Unter-Reihe des Klima-Badges auf Zuhause hat ein Unter-Badge „Jalousien“ wie unter Sicherheit (Studio: Klima-Badge › „Jalousien anzeigen“, standardmäßig an). Beleuchtung und Energie öffnen ihre eigenen Popups. Ohne Casora-Popups filtert die Seite wie bisher.
-- **Sicherheits-Badge ohne eigene Einträge (auch Desktop und Tablet):** Ein Tipp öffnet dieselbe Sicherheits-Übersicht wie am Handy (Türen, Fenster und Jalousien als Zeilen) statt direkt „Türen & Fenster“ (#39).
-- **Beleuchtungs-Badge mit HA-Gruppe (#80):** Im Badge gewählte Lampen oder Räume gehen vor seiner Gruppe; das Handy zeigt genau diese (Räume mit ihren Pillen, „N von M Räumen an“).
-
-- **Klima-Unter-Badges:** Temperatur und Luftfeuchtigkeit nehmen die Farben der Luftqualität an: grün im Wohlfühlbereich (19–24 °C, auch bei °F-Sensoren; 40–60 %), orange knapp daneben, rot darüber hinaus, mit passenden Worten (Angenehm, Kühl, Warm, Kalt, Heiß / Gut, Etwas trocken, Etwas feucht, Sehr trocken, Sehr feucht) – an den Badges und im Klima-Popup.
-
-- **Energie-Unter-Popups „Haus“ und „Solar“:** der Energiefluss des großen Energie-Popups statt des Balkens, wenn seine Quellen da sind.
+- **Badges am Handy öffnen ein Popup:** Ein Tipp auf ein Badge auf Zuhause filtert die Seite nicht mehr. Sicherheit und Klima öffnen eine Übersicht mit ihren Unter-Badges als Zeilen (Schlösser, Kameras, Türen, Fenster, Jalousien / Temperatur, Luftfeuchtigkeit, Jalousien als letzte Zeile). Eine Zeile öffnet das Popup des Badges oder Geräts mit ‹ zurück und schaltet nie etwas. Was Aufmerksamkeit braucht (Schloss offen, Tür oder Fenster offen oder gekippt, Kamera offline, Jalousien offen, solange sie zählen), zeigt sein Symbol in der Warnfarbe. Beleuchtung und Energie öffnen ihre eigenen Popups; auf Raumseiten klappen die Sammel-Badges weiter ihre Unter-Reihe auf. Ohne Casora-Popups filtert die Seite wie bisher.
+- **Sicherheits-Badge ohne eigene Einträge (auch Desktop und Tablet):** Ein Tipp öffnet dieselbe Sicherheits-Übersicht wie am Handy statt direkt „Türen & Fenster“ (#39).
+- **Jalousien im Klima:** Die Unter-Reihe des Klima-Badges auf Zuhause hat ein Unter-Badge „Jalousien“ (als letztes, wie unter Sicherheit); es öffnet das Popup der Jalousien-Kachel des Dashboards. Im Studio unter Klima-Badge › „Jalousien anzeigen“ (standardmäßig an). HA-Jalousiegruppen werden nie als einzelne Jalousie mitgezählt.
+- **Klima-Unter-Badges:** Temperatur und Luftfeuchtigkeit nehmen die Farben der Luftqualität an, mit passenden Worten: grün im Wohlfühlbereich (19–24 °C, auch bei °F-Sensoren; 40–60 %), orange knapp daneben (Kühl, Warm / Etwas trocken, Etwas feucht), rot darüber hinaus (Kalt, Heiß / Sehr trocken, Sehr feucht).
+- **Beleuchtungs-Badge mit HA-Gruppe (#80):** Im Badge gewählte Lampen oder Räume gehen vor seiner Gruppe; das Handy zeigt genau diese („N von M Räumen an“).
+- **Energie-Unter-Popups „Haus“ und „Solar“:** Statt des Balkens der Energiefluss des großen Energie-Popups, wenn seine Quellen da sind.
+- **⋯-Menü am Handy:** Die Seite dahinter tritt zurück wie bei der Glocke.
 
 ### Behoben
-- **Popups am Handy so hoch wie ihr Inhalt:** Nach dem Licht-Popup ging jedes weitere Popup bis ganz oben auf, und das Popup einer Lampe stand oben mit leerem Platz darunter.
-- **Sicherheits-Badge auf Zuhause (#76):** Sein Popup „Türen & Fenster“ listet jetzt auch die Jalousien, die es mitzählt, mit „Schließen“ und „Alle schließen“.
-- **⋯-Menü am Handy:** Die Seite dahinter tritt zurück wie bei der Glocke, der Player steht nicht mehr scharf neben dem Menü.
+- **Popups springen nicht mehr:** Der Inhalt erscheint erst, wenn Statuszeile, Diagramme und Spalten stehen; Überschriften rutschen nach dem Öffnen nicht mehr. Das Schließen-Kreuz blieb in Safari halb durchsichtig.
+- **Popups am Handy so hoch wie ihr Inhalt:** Nach dem Licht-Popup ging jedes weitere Popup bis ganz oben auf.
+- **Raum-Unter-Badge im Licht-Popup:** Ein Raum mit einer verschachtelten Gruppe listete jede Lampe als eigenen „Raum“ mit dem Raumnamen.
+- **Jalousien-Popup aus dem Unter-Badge:** in voller Breite wie das der Kachel (Namen wurden abgeschnitten); das Unter-Badge einer Jalousie unter Sicherheit trägt das Jalousien-Symbol statt einer Tür.
+- **Sicherheits-Badge auf Zuhause (#76):** „Türen & Fenster“ listet auch die mitgezählten Jalousien, mit „Schließen“ und „Alle schließen“.
 
 ## 26.10.62 – 26.10.2026
 

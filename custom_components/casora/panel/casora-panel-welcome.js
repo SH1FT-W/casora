@@ -27,9 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Badges öffnen Popups", n0: "Am Handy öffnet jedes Badge auf Zuhause ein Popup statt die Seite zu filtern: Sicherheit und Klima mit allem auf einen Blick.",
-      n1t: "Popups so hoch wie ihr Inhalt", n1: "Am Handy steht kein Popup mehr bis ganz oben mit leerem Platz darunter, auch nicht nach dem Licht-Popup.",
-      n2t: "Jalousien im Sicherheits-Popup", n2: "Offene Jalousien aus der Sicherheit stehen jetzt auch in „Türen & Fenster“, mit „Schließen“.",
+      n0t: "Badges öffnen Popups", n0: "Am Handy zeigen Sicherheit und Klima eine Übersicht; was Aufmerksamkeit braucht, ist orange markiert.",
+      n1t: "Klima auf einen Blick", n1: "Temperatur und Luftfeuchtigkeit in Grün, Orange und Rot mit passenden Worten, auch mit °F.",
+      n2t: "Jalousien bei Klima und Sicherheit", n2: "Ein Unter-Badge „Jalousien“ öffnet das Popup deiner Jalousien-Kachel; offene zählen in der Sicherheit mit.",
+      n3t: "Ruhigere Popups", n3: "Popups springen nicht mehr beim Öffnen und sind am Handy so hoch wie ihr Inhalt.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -39,9 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Badges open popups", n0: "On the phone every badge on Home opens a popup instead of filtering the page: Security and Climate with everything at a glance.",
-      n1t: "Popups as tall as their content", n1: "On the phone no popup stands at the very top with empty space below any more, also not after the light popup.",
-      n2t: "Blinds in the security popup", n2: "Open blinds from security now also show in \"Doors & windows\", with \"Close\".",
+      n0t: "Badges open popups", n0: "On the phone Security and Climate show an overview; what needs attention is marked orange.",
+      n1t: "Climate at a glance", n1: "Temperature and humidity in green, orange and red with matching words, also in °F.",
+      n2t: "Blinds in Climate and Security", n2: "A \"Blinds\" sub-badge opens your blinds tile popup; open ones count in security.",
+      n3t: "Calmer popups", n3: "Popups no longer jump when they open and are as tall as their content on the phone.",
     },
     // Spanish: same keys as en (dev/unit/welcome_es.mjs); a missing key falls back to English.
     es: {
@@ -52,9 +54,10 @@
       w1t: "Habitación por habitación", w1: "Diseña tu panel con los dispositivos que ya tienes en Home Assistant.",
       w2t: "Asistente de dispositivos", w2: "Casora propone las tarjetas adecuadas para cada habitación y las añade por ti.",
       w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
-      n0t: "Los badges abren ventanas", n0: "En el móvil cada badge de Inicio abre una ventana en lugar de filtrar la página: Seguridad y Clima con todo de un vistazo.",
-      n1t: "Ventanas tan altas como su contenido", n1: "En el móvil ninguna ventana llega hasta arriba con espacio vacío debajo, tampoco después de la de luces.",
-      n2t: "Persianas en la seguridad", n2: "Las persianas abiertas de la seguridad aparecen también en «Puertas y ventanas», con «Cerrar».",
+      n0t: "Los badges abren ventanas", n0: "En el móvil Seguridad y Clima muestran un resumen; lo que requiere atención aparece en naranja.",
+      n1t: "El clima de un vistazo", n1: "Temperatura y humedad en verde, naranja y rojo con palabras claras, también en °F.",
+      n2t: "Persianas en Clima y Seguridad", n2: "Un sub-badge «Persianas» abre la ventana de tu mosaico de persianas; las abiertas cuentan en la seguridad.",
+      n3t: "Ventanas más tranquilas", n3: "Las ventanas ya no saltan al abrirse y en el móvil miden lo que su contenido.",
     },
     fr: {
       welcomeTitle: "Bienvenue dans Casora",
@@ -67,9 +70,10 @@
       w2: "Casora propose les tuiles adaptées à chaque pièce et les ajoute pour toi.",
       w3t: "Ordinateur, tablette et téléphone",
       w3: "Un tableau de bord qui s'adapte à chaque écran, avec sa propre mise en page téléphone.",
-      n0t: "Les badges ouvrent des fenêtres", n0: "Sur le téléphone, chaque badge de l'accueil ouvre une fenêtre au lieu de filtrer la page : Sécurité et Climat d'un coup d'œil.",
-      n1t: "Fenêtres à la hauteur du contenu", n1: "Sur le téléphone, plus aucune fenêtre ne monte tout en haut avec du vide dessous, même après celle des lumières.",
-      n2t: "Stores dans la sécurité", n2: "Les stores ouverts de la sécurité figurent aussi dans « Portes et fenêtres », avec « Fermer ».",
+      n0t: "Les badges ouvrent des fenêtres", n0: "Sur le téléphone, Sécurité et Climat affichent un aperçu ; ce qui demande attention est en orange.",
+      n1t: "Le climat d'un coup d'œil", n1: "Température et humidité en vert, orange et rouge avec des mots clairs, aussi en °F.",
+      n2t: "Stores dans Climat et Sécurité", n2: "Un sous-badge « Stores » ouvre la fenêtre de ta tuile de stores ; les ouverts comptent pour la sécurité.",
+      n3t: "Fenêtres plus calmes", n3: "Les fenêtres ne sautent plus à l'ouverture et ont la hauteur de leur contenu sur le téléphone.",
     },
     it: {
       welcomeTitle: "Ti diamo il benvenuto in Casora",
@@ -82,9 +86,10 @@
       w2: "Casora propone le schede adatte per ogni stanza e le aggiunge per te.",
       w3t: "Desktop, tablet e telefono",
       w3: "Una dashboard che si adatta a ogni schermo, con un layout dedicato per il telefono.",
-      n0t: "I badge aprono popup", n0: "Sul telefono ogni badge della Home apre un popup invece di filtrare la pagina: Sicurezza e Clima a colpo d'occhio.",
-      n1t: "Popup alti quanto il contenuto", n1: "Sul telefono nessun popup arriva più fino in cima con spazio vuoto sotto, nemmeno dopo quello delle luci.",
-      n2t: "Tapparelle nella sicurezza", n2: "Le tapparelle aperte della sicurezza compaiono ora anche in «Porte e finestre», con «Chiudi».",
+      n0t: "I badge aprono popup", n0: "Sul telefono Sicurezza e Clima mostrano una panoramica; ciò che richiede attenzione è arancione.",
+      n1t: "Il clima a colpo d'occhio", n1: "Temperatura e umidità in verde, arancione e rosso con parole chiare, anche in °F.",
+      n2t: "Tapparelle in Clima e Sicurezza", n2: "Un sotto-badge «Tapparelle» apre il popup del tuo riquadro tapparelle; quelle aperte contano nella sicurezza.",
+      n3t: "Popup più calmi", n3: "I popup non saltano più all'apertura e sul telefono sono alti quanto il contenuto.",
     },
     nl: {
       welcomeTitle: "Welkom bij Casora",
@@ -97,9 +102,10 @@
       w2: "Casora stelt voor elke kamer passende tegels voor en bouwt ze in.",
       w3t: "Desktop, tablet en telefoon",
       w3: "Eén dashboard dat zich aan elk scherm aanpast, met een eigen telefoonweergave.",
-      n0t: "Badges openen pop-ups", n0: "Op de telefoon opent elke badge op Thuis een pop-up in plaats van de pagina te filteren: Beveiliging en Klimaat in één oogopslag.",
-      n1t: "Pop-ups zo hoog als de inhoud", n1: "Op de telefoon staat geen pop-up meer helemaal bovenaan met lege ruimte eronder, ook niet na de lichtpop-up.",
-      n2t: "Rolluiken in de beveiliging", n2: "Open rolluiken uit de beveiliging staan nu ook in \"Deuren & ramen\", met \"Sluiten\".",
+      n0t: "Badges openen pop-ups", n0: "Op de telefoon tonen Beveiliging en Klimaat een overzicht; wat aandacht vraagt is oranje.",
+      n1t: "Klimaat in één oogopslag", n1: "Temperatuur en vochtigheid in groen, oranje en rood met passende woorden, ook in °F.",
+      n2t: "Rolluiken bij Klimaat en Beveiliging", n2: "Een sub-badge \"Rolluiken\" opent de pop-up van je rolluiktegel; open rolluiken tellen mee in de beveiliging.",
+      n3t: "Rustigere pop-ups", n3: "Pop-ups springen niet meer bij het openen en zijn op de telefoon zo hoog als hun inhoud.",
     },
     pl: {
       welcomeTitle: "Witaj w Casora",
@@ -112,9 +118,10 @@
       w2: "Casora proponuje pasujące kafelki dla każdego pokoju i dodaje je za ciebie.",
       w3t: "Komputer, tablet i telefon",
       w3: "Jeden pulpit, który dopasowuje się do każdego ekranu, z własnym układem na telefon.",
-      n0t: "Odznaki otwierają okna", n0: "Na telefonie każda odznaka na stronie głównej otwiera okno zamiast filtrować stronę: Bezpieczeństwo i Klimat w jednym miejscu.",
-      n1t: "Okna tak wysokie jak treść", n1: "Na telefonie żadne okno nie sięga już samej góry z pustym miejscem pod spodem, także po oknie świateł.",
-      n2t: "Rolety w bezpieczeństwie", n2: "Otwarte rolety z bezpieczeństwa są teraz też w „Drzwi i okna”, z „Zamknij”.",
+      n0t: "Odznaki otwierają okna", n0: "Na telefonie Bezpieczeństwo i Klimat pokazują przegląd; to, co wymaga uwagi, jest pomarańczowe.",
+      n1t: "Klimat w skrócie", n1: "Temperatura i wilgotność w kolorach zielonym, pomarańczowym i czerwonym z opisem, także w °F.",
+      n2t: "Rolety w Klimacie i Bezpieczeństwie", n2: "Odznaka „Rolety” otwiera okno Twojego kafelka rolet; otwarte liczą się w bezpieczeństwie.",
+      n3t: "Spokojniejsze okna", n3: "Okna nie skaczą już przy otwieraniu, a na telefonie są tak wysokie jak ich treść.",
     },
     pt: {
       welcomeTitle: "Bem-vindo ao Casora",
@@ -127,9 +134,10 @@
       w2: "O Casora propõe os cartões certos para cada divisão e adiciona-os por ti.",
       w3t: "Computador, tablet e telemóvel",
       w3: "Um painel que se adapta a cada ecrã, com layout próprio para o telemóvel.",
-      n0t: "Os badges abrem popups", n0: "No telemóvel cada badge do Início abre um popup em vez de filtrar a página: Segurança e Clima num relance.",
-      n1t: "Popups da altura do conteúdo", n1: "No telemóvel nenhum popup vai até ao topo com espaço vazio por baixo, nem depois do das luzes.",
-      n2t: "Estores na segurança", n2: "Os estores abertos da segurança aparecem agora também em «Portas e janelas», com «Fechar».",
+      n0t: "Os badges abrem popups", n0: "No telemóvel Segurança e Clima mostram uma visão geral; o que precisa de atenção fica a laranja.",
+      n1t: "O clima num relance", n1: "Temperatura e humidade a verde, laranja e vermelho com palavras claras, também em °F.",
+      n2t: "Estores em Clima e Segurança", n2: "Um sub-badge «Estores» abre o popup do teu bloco de estores; os abertos contam na segurança.",
+      n3t: "Popups mais calmos", n3: "Os popups já não saltam ao abrir e no telemóvel têm a altura do conteúdo.",
     },
   };
   // Texts for a language: its own, English for anything it does not have (yet).
@@ -145,8 +153,9 @@
   /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
     ["mdi:gesture-tap-button", "n0t", "n0"],
-    ["mdi:arrow-collapse-vertical", "n1t", "n1"],
+    ["mdi:thermometer", "n1t", "n1"],
     ["mdi:window-shutter", "n2t", "n2"],
+    ["mdi:arrow-collapse-vertical", "n3t", "n3"],
   ];
 
   // Decide on load - before the Studio writes its own casora.* keys.
