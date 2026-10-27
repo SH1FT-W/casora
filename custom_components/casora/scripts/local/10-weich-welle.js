@@ -111,7 +111,8 @@
     var pop = window.casoraPopup && window.casoraPopup.element;
     if (pop && pop.hasAttribute('open')) return true;
     try { if (window._casoraNotify && window._casoraNotify.isOpen) return true; } catch (e) { /* egal */ }
-    return !!document.querySelector('.casora-notify-menu');
+    // 26.10.63: the ⋯ menu and the bar's rooms/scenes menu hide the list as the bell does (it floated over them).
+    return !!document.querySelector('.casora-notify-menu, .casora-settings-menu, .hmn-menu');
   }
   function autoOpen() {
     // Tests, die das Antippen der Welle prüfen, schalten das automatische Öffnen ab.
