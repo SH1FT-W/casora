@@ -4379,7 +4379,7 @@
    "{1} panelen leveren"
   ],
   [
-   "^Solaranteil am Verbrauch (\\d+) %$",
+   "^Solaranteil am Verbrauch (\\d+|< 1) %$",
    "Zonaandeel in verbruik {1}%"
   ],
   [

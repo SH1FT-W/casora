@@ -20,6 +20,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Popups am Handy so hoch wie ihr Inhalt:** Nach dem Licht-Popup ging jedes weitere Popup bis ganz oben auf.
 - **Raum-Unter-Badge im Licht-Popup:** Ein Raum mit einer verschachtelten Gruppe listete jede Lampe als eigenen „Raum“ mit dem Raumnamen.
 - **Jalousien-Popup aus dem Unter-Badge:** in voller Breite wie das der Kachel (Namen wurden abgeschnitten); das Unter-Badge einer Jalousie unter Sicherheit trägt das Jalousien-Symbol statt einer Tür.
+- **Energie-Popups: „heute“ unter 1 kWh in Wh:** 0,02 kWh Solar am Morgen standen als „0 kWh“ (und „0 %“ Solaranteil) neben der fließenden Leistung; jetzt „20 Wh“ und „< 1 %“.
 - **Sicherheits-Badge auf Zuhause (#76):** „Türen & Fenster“ listet auch die mitgezählten Jalousien, mit „Schließen“ und „Alle schließen“.
 
 ## 26.10.62 – 26.10.2026

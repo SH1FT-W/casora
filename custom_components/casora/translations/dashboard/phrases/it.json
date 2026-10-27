@@ -4379,7 +4379,7 @@
    "{1} moduli in produzione"
   ],
   [
-   "^Solaranteil am Verbrauch (\\d+) %$",
+   "^Solaranteil am Verbrauch (\\d+|< 1) %$",
    "Quota solare del consumo {1} %"
   ],
   [

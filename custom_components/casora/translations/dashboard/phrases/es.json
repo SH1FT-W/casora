@@ -4379,7 +4379,7 @@
    "{1} módulos produciendo"
   ],
   [
-   "^Solaranteil am Verbrauch (\\d+) %$",
+   "^Solaranteil am Verbrauch (\\d+|< 1) %$",
    "Parte solar del consumo {1} %"
   ],
   [

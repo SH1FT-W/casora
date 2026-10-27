@@ -20,6 +20,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Popups on the phone as tall as their content:** after the light popup every later popup opened full height.
 - **Room sub-badge in the light popup:** a room with one nested group listed every lamp as a "room" named after the room.
 - **Blinds popup from the sub-badge:** full width like the tile's (names were cut off); a blind's sub-badge under Security wears the blinds icon instead of a door.
+- **Energy popups: "today" under 1 kWh in Wh:** a morning's 0.02 kWh of solar read "0 kWh" (and "0 %" solar share) next to the power flowing; now "20 Wh" and "< 1 %".
 - **Security badge on Home (#76):** "Doors & windows" also lists the blinds it counts, with "Close" and "Close all".
 
 ## 26.10.62 – 26.10.2026

@@ -67,8 +67,12 @@
     var v = num(states, id); if (v == null) return null;
     var u = unit(states, id);
     if (u === 'Wh') v /= 1000; else if (u === 'MWh') v *= 1000;
+    // Under 1 kWh in Wh (owner, 27.10.2026): a morning's 0,02 kWh of solar read „0 kWh“ next to 32 W flowing.
+    if (v > 0 && v < 1) return Math.round(v * 1000) + ' Wh';
     return fN(v, hass) + ' kWh';
   };
+  // A share in %: something above 0 that rounds to 0 is „< 1 %“, not „0 %“.
+  var pct = function (part, all) { var x = part / all * 100; return x > 0 && x < 0.5 ? '< 1 %' : Math.round(x) + ' %'; };
   var money = function (states, id, hass) {
     var v = num(states, id); if (v == null) return null;
     var cur = unit(states, id) || '€';
@@ -293,7 +297,7 @@
       var sT = num(states, C.solarToday), gT = num(states, C.gridToday);
       out.yield = grp([
         row(C.solarToday, 'calendar-day', COL.solar, 'Heute', kwh(states, C.solarToday, hass),
-          sT != null && gT != null && sT + gT > 0 ? 'Solaranteil am Verbrauch ' + Math.round(sT / (sT + gT) * 100) + ' %' : null),
+          sT != null && gT != null && sT + gT > 0 ? 'Solaranteil am Verbrauch ' + pct(sT, sT + gT) : null),
         row(C.solarMonth, 'calendar', COL.solar, 'Diesen Monat', kwh(states, C.solarMonth, hass)),
         row(C.savings, 'mdi:piggy-bank-outline', COL.green, 'Ersparnis gesamt', money(states, C.savings, hass)),
       ], 'Ertrag');
@@ -321,7 +325,7 @@
       out.aut = grp([
         row(C.exportTotal, 'mdi:transmission-tower-export', COL.green, 'Eingespeist gesamt', kwh(states, C.exportTotal, hass)),
         sT2 != null && gT2 != null && sT2 + gT2 > 0
-          ? row(C.solarToday, 'mdi:solar-power-variant', COL.solar, 'Solaranteil heute', Math.round(sT2 / (sT2 + gT2) * 100) + ' %',
+          ? row(C.solarToday, 'mdi:solar-power-variant', COL.solar, 'Solaranteil heute', pct(sT2, sT2 + gT2),
             'Solar ' + fN(sT2, hass) + ' kWh · Netz ' + fN(gT2, hass) + ' kWh') : null,
         row(C.savings, 'mdi:piggy-bank-outline', COL.green, 'Ersparnis gesamt', money(states, C.savings, hass)),
       ], 'Einspeisung und Eigenversorgung');
