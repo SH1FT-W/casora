@@ -103,6 +103,22 @@ if (nBlinds) {
   p = await popup(page);
   await check('Climate: ‹ back to „Klima“', p.open && p.title === 'Klima', p);
 }
+// Readings in the air quality tones (owner, 27.10.2026): 27.5 °C red, 50 % humidity green.
+{
+  const ids = await page.evaluate(() => { const c = (window._casoraPhoneHub.last.climate || {}).chips || [];
+    const f = (re) => { const x = c.find((y) => re.test(y.tpl || '') && y.el && y.el._stateObj); return x ? x.el._stateObj.entity_id : null; };
+    return { t: f(/casora_badge_temp/), h: f(/casora_badge_humidity/) }; });
+  if (ids.t && ids.h) {
+    await close(page);
+    await fakeStates(page, { [ids.t]: { state: '27.5', attributes: { unit_of_measurement: '°C' } }, [ids.h]: { state: '50', attributes: { unit_of_measurement: '%' } } }, { sticky: true });
+    await page.waitForTimeout(1500);
+    await tap(page, await badgeAt(page, 'casora_badge_climate_group'));
+    const tones = await page.evaluate(() => { const s = window.casoraPopup.surface; const r = (re) => (window.__pierce('.hui-row', s).find((n) => re.test(n.textContent.trim())) || {}).innerHTML || '';
+      return { t: /air-quality-bad/.test(r(/^Temperatur/)), h: /air-quality-good/.test(r(/^Luftfeuchtigkeit/)) }; });
+    await check('Climate: 27.5 °C red, 50 % humidity green (air quality tones)', tones.t && tones.h, tones);
+    p = await popup(page);
+  }
+}
 // Owner (27.10.2026): only the overview rows – no devices by room.
 const nChips = await page.evaluate(() => ((window._casoraPhoneHub.last.climate || {}).chips || []).length);
 await check('Climate: only the overview rows (no room sections)', p.rows.length === nChips, { rows: p.rows, nChips });

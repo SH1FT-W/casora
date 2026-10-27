@@ -2221,3 +2221,31 @@ window._casoraFadeRow = function (row) {
   window.addEventListener('resize', remeasure);
   if (window.visualViewport) window.visualViewport.addEventListener('resize', remeasure);
 })();
+
+/* Klima sub-badges in the air quality badge's tones (owner, 27.10.2026): 0 good (green), 1 medium (orange), 2 bad
+   (red). Temperature in °C (a °F reading is converted first): 19–24 good, 17–19 and 24–26 medium, outside bad.
+   Humidity: 40–60 % good, 30–40 and 60–70 % medium, outside bad. null: no reading. unit: the sensor's
+   unit_of_measurement (°F/F → Fahrenheit), else °C. Used by the badges (casora_badge_temp/_humidity) and the
+   phone's Klima popup (35-phone-hub.js). dev/unit/comfort_level.mjs */
+window.casoraComfortLevel = function (kind, v, unit) {
+  var n = parseFloat(v);
+  if (!isFinite(n)) return null;
+  if (kind === 'temp') {
+    var c = /F/i.test(String(unit || '')) ? (n - 32) * 5 / 9 : n;
+    if (c >= 19 && c <= 24) return 0;
+    if (c >= 17 && c <= 26) return 1;
+    return 2;
+  }
+  if (kind === 'humidity') {
+    if (n >= 40 && n <= 60) return 0;
+    if (n >= 30 && n <= 70) return 1;
+    return 2;
+  }
+  return null;
+};
+window.casoraComfortColor = function (lv) {
+  return lv === 0 ? 'var(--casora-badge-air-quality-good-color, var(--casora-color-green, #34C759))'
+    : lv === 1 ? 'var(--casora-badge-air-quality-poor-color, var(--casora-color-orange, #FF9F0A))'
+    : lv === 2 ? 'var(--casora-badge-air-quality-bad-color, var(--casora-color-red, #FF453A))'
+    : 'var(--disabled-text-color)';
+};

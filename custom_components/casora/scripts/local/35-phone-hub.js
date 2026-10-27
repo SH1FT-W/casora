@@ -368,8 +368,29 @@
     var ids = (item.kind === 't' && item.main ? [item.main] : item.ids || []).filter(function (id) { return SEC_DOM.test(id); });
     return ids.length && window.casoraSecurityLevel ? window.casoraSecurityLevel(hass, ids) : 'ok';
   };
+  // Klima readings in the air quality badge's tones, like their sub-badges (casoraComfortLevel, 01-basis.js).
+  var AQ_WORD = { 'Ausgezeichnet': 0, 'Gut': 0, 'Mäßig': 1, 'Schlecht': 1, 'Sehr schlecht': 2 };
+  var climateTone = function (item, hass) {
+    var tpl = item.tpl || '', st = item.el && item.el._stateObj, C = window.casoraComfortColor, Lv = window.casoraComfortLevel;
+    if (!C || !Lv) return null;
+    if (/casora_badge_temp/.test(tpl) && st) {
+      var u = (st.attributes && st.attributes.unit_of_measurement) || (hass && hass.config && hass.config.unit_system && hass.config.unit_system.temperature);
+      var lt = Lv('temp', st.state, u);
+      return lt === null ? null : C(lt);
+    }
+    if (/casora_badge_humidity/.test(tpl) && st) { var lh = Lv('humidity', st.state); return lh === null ? null : C(lh); }
+    if (/casora_badge_air_quality/.test(tpl)) {
+      var w = String(item.sub || '').split(' · ')[0];
+      return w in AQ_WORD ? C(AQ_WORD[w]) : null;
+    }
+    return undefined;
+  };
   var tone = function (cat, item, hass) {
     if (cat === 'presence') return item.home ? 'accent' : null;
+    if (cat === 'climate' && item.kind === 'c' && !item.blinds) {
+      var ct = climateTone(item, hass);
+      if (ct !== undefined) return ct;
+    }
     var lv = levelOf(cat, item, hass);
     if (lv === 'ok') return null;
     var soft = window._casoraSoft && window._casoraSoft();
