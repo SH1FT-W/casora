@@ -7785,22 +7785,65 @@ window.casoraMenuGlass = {
     _holdUntilLaidOut() {
       if (!this.hasAttribute('soft') || !this.content) return;
       var c = this.content, token = (this._holdToken = (this._holdToken || 0) + 1);
-      var show = () => { if (this._holdToken === token) c.style.removeProperty('visibility'); };
+      var show = () => {
+        if (this._holdToken !== token) return;
+        // The same header work the timers do later, now – so the first visible frame is the final one.
+        if (this.hasAttribute('open')) {
+          // Entrance animations (3D settle) ran while the content was hidden; ended now, the measurements below see
+          // the resting layout – measured mid-animation the gap came out up to 11 px off and the later pass moved the
+          // sheet (27.10.2026). document.getAnimations() does not reach into shadow roots: per root.
+          (function end(root, d) {
+            if (!root || d > 14 || !root.getAnimations) return;
+            root.getAnimations().forEach(function (an) {
+              try { if (an.playState === 'running' && an.effect && isFinite(an.effect.getComputedTiming().endTime)) an.finish(); } catch (e) { /* infinite */ }
+            });
+            root.querySelectorAll('*').forEach(function (n) { if (n.shadowRoot) end(n.shadowRoot, d + 1); });
+          })(this.shadowRoot, 0);
+          this._syncHeadLine(); this._fitHeadGap();
+          // Rule 12 (symmetry) padded a column 120 ms after opening – after the reveal; align before it.
+          if (window._casoraUI && window._casoraUI.alignCols) { try { window._casoraUI.alignCols(); } catch (e) { /* layout only */ } }
+        }
+        c.style.removeProperty('visibility');
+      };
       c.style.setProperty('visibility', 'hidden');
       var t0 = Date.now(), quiet = 0, lastH = -1;
+      // Chart slots (.hp-chart-slot) are filled a little after the cards and grew from their placeholder to the drawn
+      // chart after the reveal (150 → 174 px, „Details ›“ and everything under it moved): wait for a drawn chart.
+      var chartsDrawn = () => {
+        var ok = true;
+        (function walk(root, d) {
+          if (!ok || !root || d > 12) return;
+          root.querySelectorAll('.hp-chart-slot').forEach((slot) => {
+            var ch = slot.querySelector('casora-chart'), b = ch && ch.shadowRoot && ch.shadowRoot.getElementById('b');
+            if (!b || !b.querySelector('svg')) ok = false;
+          });
+          root.querySelectorAll('*').forEach((n) => { if (n.shadowRoot) walk(n.shadowRoot, d + 1); });
+        })(this.container, 0);
+        return ok;
+      };
       var step = () => {
         if (this._holdToken !== token) return;
-        if (!this.hasAttribute('open') || Date.now() - t0 > 450) return show();
-        var line = this._findHeadLine();
-        if (line) { this._syncHeadLine(); this._fitHeadGap(); return show(); }
-        // No status line (yet): show once the cards stand – the same height for four frames and 150 ms at least
-        // (the hero with the line can come one card after the first, phone blinds popup).
+        if (!this.hasAttribute('open') || Date.now() - t0 > 700) return show();
         var hNow = Math.round(this.container.getBoundingClientRect().height);
-        if (hNow > 8 && hNow === lastH) { if (++quiet >= 4 && Date.now() - t0 >= 150) return show(); } else quiet = 0;
-        lastH = hNow;
+        var stable = hNow > 8 && hNow === lastH; quiet = stable ? quiet + 1 : 0; lastH = hNow;
+        // A status line found: lift it now; else the cards must stand – the same height for four frames, 150 ms at
+        // least (the hero with the line can come one card after the first, phone blinds popup).
+        var laid = !!this._findHeadLine() || (quiet >= 4 && Date.now() - t0 >= 150);
+        // Forecast slots still waiting (weather, .hw-wait) are filled a moment later and changed the height.
+        if (laid && chartsDrawn() && !this._deepHas('.hw-wait')) return show();
         requestAnimationFrame(step);
       };
       requestAnimationFrame(step);
+    }
+
+    _deepHas(sel) {
+      var hit = false;
+      (function walk(root, d) {
+        if (hit || !root || d > 12) return;
+        if (root.querySelector(sel)) { hit = true; return; }
+        root.querySelectorAll('*').forEach(function (n) { if (n.shadowRoot) walk(n.shadowRoot, d + 1); });
+      })(this.container, 0);
+      return hit;
     }
 
     // Abstand Kopf → erster sichtbarer Inhalt: 28 px (Kopfzeile A). Nach dem Ausblenden der Statuszeile
