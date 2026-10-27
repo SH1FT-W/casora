@@ -37,11 +37,21 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
           // Only once the sheet has arrived (the phone sheet slides in – that is no jump).
           const dlg = s && s.closest && s.closest('dialog');
           const sliding = [s, dlg].some((e) => e && e.getAnimations && e.getAnimations().some((a) => a.playState === 'running'));
-          if (s && c && !sliding && getComputedStyle(c).visibility !== 'hidden' && parseFloat(getComputedStyle(s).opacity || '1') > 0.5) {
+          // The plates' entrance (opacity + transform, replayed on the final layout since 27.10.2026) moves boxes
+          // visually, not in layout: the first visible frame is measured with those animations at their end, later
+          // frames only once they are over.
+          const anims = [];
+          if (c) { c.getAnimations({ subtree: true }).forEach((a) => anims.push(a));
+            deep(c, '*', []).forEach((n) => { if (n.shadowRoot && n.shadowRoot.getAnimations) n.shadowRoot.getAnimations().forEach((a) => anims.push(a)); }); }
+          const moving = anims.filter((a) => a.animationName && a.playState === 'running');
+          const firstFrame = !window.__jt.length;
+          if (s && c && !sliding && (firstFrame || !moving.length) && getComputedStyle(c).visibility !== 'hidden' && parseFloat(getComputedStyle(s).opacity || '1') > 0.5) {
+            const saved = firstFrame ? moving.map((a) => { const t = a.currentTime; try { a.currentTime = a.effect.getComputedTiming().endTime - 0.01; } catch (e) { /* keep */ } return t; }) : [];
             const R = s.getBoundingClientRect(), ht = P.element.shadowRoot.querySelector('.header-title');
             // Positions on the page: the sheet's top and the header title count as well (Sicherheit overview).
             window.__jt.push([[Math.round(R.top), '§sheet'], [Math.round(ht ? ht.getBoundingClientRect().top : 0), '§title']]
               .concat(deep(s, '.hui-slbl,.hui-srow', []).slice(0, 8).map((n) => [Math.round(n.getBoundingClientRect().top), (n.textContent || '').trim().slice(0, 16)])));
+            moving.forEach((a, k) => { if (firstFrame) try { a.currentTime = saved[k]; } catch (e) { /* keep */ } });
           }
           if (performance.now() - t0 < 1600) requestAnimationFrame(tick);
         };

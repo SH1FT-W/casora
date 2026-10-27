@@ -7787,23 +7787,55 @@ window.casoraMenuGlass = {
       var c = this.content, token = (this._holdToken = (this._holdToken || 0) + 1);
       var show = () => {
         if (this._holdToken !== token) return;
+        var anims = [];
+        this._replayUntil = 0;
         // The same header work the timers do later, now – so the first visible frame is the final one.
         if (this.hasAttribute('open')) {
-          // Entrance animations (3D settle) ran while the content was hidden; ended now, the measurements below see
-          // the resting layout – measured mid-animation the gap came out up to 11 px off and the later pass moved the
-          // sheet (27.10.2026). document.getAnimations() does not reach into shadow roots: per root.
-          (function end(root, d) {
+          // Entrance animations (3D settle: opacity + transform, no layout) ran while the content was hidden. Ended
+          // for the measurements below – mid-animation the gap came out up to 11 px off and a later pass moved the
+          // sheet (27.10.2026) – and played again from the start once the final layout shows, so the plates still
+          // enter (owner). document.getAnimations() does not reach into shadow roots: per root.
+          // Only the content's own CSS animations (no transitions; the header and the sheet are visible already);
+          // finished ones replay too.
+          var take = function (an) {
+            try {
+              if (an.animationName && (an.playState === 'running' || an.playState === 'finished') && an.effect && isFinite(an.effect.getComputedTiming().endTime)
+                && anims.indexOf(an) < 0) { an.finish(); anims.push(an); }
+            } catch (e) { /* infinite */ }
+          };
+          if (c.getAnimations) c.getAnimations({ subtree: true }).forEach(take);
+          (function grab(el, d) {
+            if (!el || d > 14) return;
+            el.querySelectorAll('*').forEach(function (n) {
+              if (!n.shadowRoot) return;
+              if (n.shadowRoot.getAnimations) n.shadowRoot.getAnimations().forEach(take);
+              grab(n.shadowRoot, d + 1);
+            });
+          })(c, 0);
+          // The header's own entrance (chrome) is visible and keeps playing; for the measurement only, its end state.
+          var chrome = [];
+          (function grab(root, d) {
             if (!root || d > 14 || !root.getAnimations) return;
             root.getAnimations().forEach(function (an) {
-              try { if (an.playState === 'running' && an.effect && isFinite(an.effect.getComputedTiming().endTime)) an.finish(); } catch (e) { /* infinite */ }
+              try {
+                if (an.playState === 'running' && anims.indexOf(an) < 0 && an.effect && isFinite(an.effect.getComputedTiming().endTime)) {
+                  chrome.push([an, an.currentTime]); an.currentTime = an.effect.getComputedTiming().endTime - 0.01;
+                }
+              } catch (e) { /* infinite */ }
             });
-            root.querySelectorAll('*').forEach(function (n) { if (n.shadowRoot) end(n.shadowRoot, d + 1); });
           })(this.shadowRoot, 0);
           this._syncHeadLine(); this._fitHeadGap();
+          chrome.forEach(function (x) { try { x[0].currentTime = x[1]; } catch (e) { /* gone */ } });
           // Rule 12 (symmetry) padded a column 120 ms after opening – after the reveal; align before it.
           if (window._casoraUI && window._casoraUI.alignCols) { try { window._casoraUI.alignCols(); } catch (e) { /* layout only */ } }
         }
         c.style.removeProperty('visibility');
+        var until = 0;
+        (anims || []).forEach(function (an) {
+          try { an.currentTime = 0; an.play(); until = Math.max(until, an.effect.getComputedTiming().endTime || 0); } catch (e) { /* gone */ }
+        });
+        // Later gap passes must not measure the replayed entrance (they set -11 px and back): they wait for its end.
+        this._replayUntil = Date.now() + until;
       };
       c.style.setProperty('visibility', 'hidden');
       var t0 = Date.now(), quiet = 0, lastH = -1;
@@ -7850,6 +7882,8 @@ window.casoraMenuGlass = {
     // bleiben je Layout verschiedene Ränder stehen (Kartenpolster, Rasterabstand) – gemessen und ausgeglichen.
     _fitHeadGap() {
       if (!this._headField || !this.hasAttribute('open') || this.content.scrollTop > 0) return;
+      var wait = (this._replayUntil || 0) - Date.now();
+      if (wait > 0) { clearTimeout(this._fitLater); this._fitLater = setTimeout(() => this._fitHeadGap(), wait + 30); return; }
       var bar = this.shadowRoot.querySelector('.header-bar').getBoundingClientRect();
       var top = Infinity;
       (function walk(root, d) {
