@@ -2705,7 +2705,9 @@
     "Your own choice stays until you tap this. Automatic takes grid, solar and battery from Home Assistant's Energy dashboard; without them a house sensor or the sum of the rooms.": "A tua escolha fica até tocares aqui. Automático usa rede, solar e bateria do painel Energia do Home Assistant; sem eles, um sensor da casa ou a soma das divisões.",
     "Your own choice stays until you tap this. Automatic adds up the power sensors in this room's area and adds new ones by itself.": "A tua escolha fica até tocares aqui. Automático soma os sensores de potência da área desta divisão e junta os novos sozinho.",
     "Casora found no power sensor for it, so your choice stays.": "O Casora não encontrou nenhum sensor de potência, por isso a tua escolha fica.",
-    "Energy badge back to automatic": "Distintivo de energia de novo em Automático"
+    "Energy badge back to automatic": "Distintivo de energia de novo em Automático",
+    "Show blinds": "Mostrar estores",
+    "Adds a Blinds row to the climate popup.": "Adiciona uma linha «Estores» ao popup de clima."
   },
   "patterns": [
     [

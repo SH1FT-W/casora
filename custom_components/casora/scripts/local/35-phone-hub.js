@@ -223,13 +223,26 @@
     return rooms;
   };
 
+  // A Home badge option (Studio): the phone's badge row carries Home's variables (casora_hv), the desktop its room
+  // header (casora_room).
+  var homeVar = function (k) {
+    var row = deep(haRoot(), function (n) { return n.localName === 'button-card' && tpls(n).indexOf('casora_mobile_filter_badges') >= 0; }, 1)[0];
+    var ev = row && row._evaluatedVariables && row._evaluatedVariables.casora_hv;
+    var hv = ev && typeof ev === 'object' && 'value' in ev ? ev.value : ev;
+    if (hv && typeof hv === 'object' && k in hv) return hv[k];
+    var room = !row && deep(haRoot(), function (n) { return n.localName === 'button-card' && tpls(n).indexOf('casora_room') >= 0 && n.getBoundingClientRect().width > 0; }, 1)[0];
+    var v = room && room._config && room._config.variables;
+    return v ? v[k] : undefined;
+  };
+  P.homeVar = homeVar;
+
   P.scan = function (cat) {
     return cached(cat, function () {
       var chips = cat === 'presence' ? peopleOf() : chipsOf(cat);
       var rooms = roomsOf(cat);
       // Climate: the blinds as one row „Jalousien“ in the overview (owner, 27.10.2026: shading is climate and
       // security), opening the blinds popup of just those – not as single devices by room.
-      if (cat === 'climate' && blindsOut.length) {
+      if (cat === 'climate' && blindsOut.length && homeVar('climate_blinds') !== false) {
         var h = document.querySelector('home-assistant'), S = (h && h.hass && h.hass.states) || {};
         var open = blindsOut.filter(function (id) { var st = S[id] || {}, p = Number((st.attributes || {}).current_position);
           return ['open', 'opening'].indexOf(st.state) >= 0 || (isFinite(p) && p > 0); }).length;

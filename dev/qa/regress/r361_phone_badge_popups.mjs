@@ -127,6 +127,19 @@ if (picked.n > 1 && picked.groups) {
   await close(page);
 }
 
+// Studio option „Jalousien anzeigen“ (climate_blinds, Home's climate badge) off → no row „Jalousien“ in Klima.
+if (nBlinds) {
+  const srv = await page.evaluate((u) => document.querySelector('home-assistant').hass.callWS({ type: 'casora/phone_room_badges', url_path: u }), dash.phone.url);
+  await page.evaluate((s) => window.casoraPhoneRoom.prime(s.rooms, { ...(s.home || {}), climate_blinds: false }), srv);
+  await page.waitForTimeout(1500);
+  await tap(page, await badgeAt(page, 'casora_badge_climate_group'));
+  const off = await popup(page);
+  await check('Climate: option „Jalousien anzeigen“ off → no row „Jalousien“', off.open && off.title === 'Klima' && !off.rows.some((r) => /^Jalousien/.test(r)), off.rows);
+  await close(page);
+  await page.evaluate((s) => window.casoraPhoneRoom.prime(s.rooms, s.home || {}), srv);
+  await page.waitForTimeout(1000);
+}
+
 // Lights and Energy: their own popups, no filter.
 for (const [t, title] of [['casora_badge_light_group', 'Beleuchtung'], ['casora_badge_energy_group', null]]) {
   const b = await badgeAt(page, t);

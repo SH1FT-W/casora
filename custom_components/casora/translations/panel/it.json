@@ -2705,7 +2705,9 @@
     "Your own choice stays until you tap this. Automatic takes grid, solar and battery from Home Assistant's Energy dashboard; without them a house sensor or the sum of the rooms.": "La tua scelta resta finché non tocchi qui. Automatico prende rete, solare e batteria dalla dashboard Energia di Home Assistant; senza di essi un sensore della casa o la somma delle stanze.",
     "Your own choice stays until you tap this. Automatic adds up the power sensors in this room's area and adds new ones by itself.": "La tua scelta resta finché non tocchi qui. Automatico somma i sensori di potenza dell'area di questa stanza e aggiunge da solo quelli nuovi.",
     "Casora found no power sensor for it, so your choice stays.": "Casora non ha trovato alcun sensore di potenza, quindi la tua scelta resta.",
-    "Energy badge back to automatic": "Il badge Energia torna su Automatico"
+    "Energy badge back to automatic": "Il badge Energia torna su Automatico",
+    "Show blinds": "Mostra tapparelle",
+    "Adds a Blinds row to the climate popup.": "Aggiunge una riga «Tapparelle» al popup clima."
   },
   "patterns": [
     [

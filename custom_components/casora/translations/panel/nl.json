@@ -2705,7 +2705,9 @@
     "Your own choice stays until you tap this. Automatic takes grid, solar and battery from Home Assistant's Energy dashboard; without them a house sensor or the sum of the rooms.": "Je eigen keuze blijft tot je hier tikt. Automatisch neemt net, zon en accu uit het Energie-dashboard van Home Assistant; zonder die een sensor voor het huis of de som van de ruimtes.",
     "Your own choice stays until you tap this. Automatic adds up the power sensors in this room's area and adds new ones by itself.": "Je eigen keuze blijft tot je hier tikt. Automatisch telt de vermogenssensoren in het gebied van deze ruimte op en voegt nieuwe vanzelf toe.",
     "Casora found no power sensor for it, so your choice stays.": "Casora vond geen vermogenssensor, dus je keuze blijft.",
-    "Energy badge back to automatic": "Energiebadge weer op Automatisch"
+    "Energy badge back to automatic": "Energiebadge weer op Automatisch",
+    "Show blinds": "Rolluiken tonen",
+    "Adds a Blinds row to the climate popup.": "Voegt een rij \"Rolluiken\" toe aan de klimaatpop-up."
   },
   "patterns": [
     [

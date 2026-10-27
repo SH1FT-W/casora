@@ -2482,6 +2482,10 @@ const SECTIONS = [
       { ...E("quality_sensor", "Air quality", ["sensor"]), classes: AIR_CLASSES, ord: 4 },
       { key: "temp_unit", label: "Unit", type: "select", options: ["", "F", "C"], auto: true, ord: 1,
         optionLabels: { "": "Automatic (from Home Assistant)", F: "Fahrenheit \u00b0F", C: "Celsius \u00b0C" } },
+      // 26.10.63 (owner): the climate popup's row „Jalousien“ (phone badge popup, 35-phone-hub.js); off = no blinds in Klima.
+      // The badge filter of the old phone page is not affected (casora-core.js: blinds are no climate device there).
+      { key: "climate_blinds", label: "Show blinds", type: "bool", boolDefault: true, always: true, ord: 5,
+        hint: "Adds a Blinds row to the climate popup." },
       { key: "show_climate_inline", label: "Separate climate badges", type: "bool",
         boolDefault: false, advanced: true,
         hint: "Shows temperature, humidity and air quality as their own badges." },

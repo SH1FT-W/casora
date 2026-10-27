@@ -118,9 +118,11 @@ const evalTap = (src, vars) => new Function('states', 'entity', 'user', 'hass', 
 window.casoraSecContactsTap = cw.casoraSecContactsTap;
 window.casoraSeesEntity = cw.casoraSeesEntity;
 assert.equal(evalTap(tap.action, { place: 'home' }), 'fire-dom-event');
-assert.equal(evalTap(tap.casora_contacts_open, { place: 'home' }), true);
+// Since 26.10.63 the tap opens the badge's overview popup (its rows lead to doors, windows, blinds), not
+// „Türen & Fenster“ directly: no casora_contacts_open any more, the popup is the badge's own (phone_hub).
+assert.ok(!('casora_contacts_open' in tap), 'no direct „Türen & Fenster“');
+assert.ok(tap.casora_popup && tap.casora_popup.phone_hub === true, 'the overview popup');
 assert.equal(evalTap(tap.action, { place: 'home', entities: ['binary_sensor.door_a'] }), 'call-service', 'with entries: the row');
-assert.equal(evalTap(tap.casora_contacts_open, { place: 'room' }), false);
 assert.ok(core.includes('if (d.casora_contacts_open === true) return;'), 'phone filter steps aside');
 const basis = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/01-basis.js', import.meta.url), 'utf8');
 assert.ok(basis.includes("{ type: 'custom:button-card', template: 'casora_popup_contacts' }"), 'opens the contacts popup of the house');
