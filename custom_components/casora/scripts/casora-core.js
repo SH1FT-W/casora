@@ -8314,6 +8314,8 @@ window.casoraMenuGlass = {
     if (ev.detail.casora_filter !== undefined && ev.detail.casora_filter !== null) return;
     // Security badge on Home without entries of its own (#39): „Türen & Fenster“ opens instead (01-basis.js).
     if (ev.detail.casora_contacts_open === true) return;
+    // The phone's badge hub (26.10.63) is for Home only; on a phone room page the same badge opens its sub-row.
+    if (cfg.phone_hub && ev.detail.casora_phone_row) return;
     ev.stopPropagation();
     // Kachel, die das Popup öffnet – liefert im Weich-Design Symbol und Farbe des Rings.
     // button-card feuert ll-custom an home-assistant, die Kachel steht daher nicht im
@@ -13968,7 +13970,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       // Öffnet derselbe Tipp ein Popup (Beleuchtung erbt es von casora_popup_light), bleibt die
       // Unter-Reihe zu: sie klappte sonst unsichtbar hinter dem Popup auf, und nach dem Schließen
       // war der ganze Inhalt ~110 px nach unten gerutscht (07.10.2026).
-      if (d.casora_popup && window.casoraPopup && window.casoraPopup.enabled) return;
+      if (d.casora_popup && !d.casora_popup.phone_hub && window.casoraPopup && window.casoraPopup.enabled) return;
       setRow(row === d.casora_phone_row ? null : d.casora_phone_row);
       return;
     }

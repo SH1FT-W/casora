@@ -1338,7 +1338,8 @@
      }
     ],
     "style": "[[[ return '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'; ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "phone_hub": true
    }
   },
   "template": [
@@ -2532,7 +2533,8 @@
      }
     ],
     "style": "[[[ return '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'; ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "phone_hub": true
    }
   },
   "template": [
@@ -2821,7 +2823,8 @@
      }
     ],
     "style": "[[[ return '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'; ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "phone_hub": true
    }
   },
   "template": [
