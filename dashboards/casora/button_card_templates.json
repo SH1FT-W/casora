@@ -7139,6 +7139,15 @@
         "room_name": "[[[ return variables.aqi_room_name ]]]",
         "sensors": "[[[ return variables.aqi_sensors ]]]"
        }
+      },
+      {
+       "type": "custom:button-card",
+       "template": "casora_badge_climate_covers",
+       "entity": "[[[ return (window.casoraClimateBlinds ? window.casoraClimateBlinds(hass, user, ((window.casoraPhoneRoom && window.casoraPhoneRoom.home && window.casoraPhoneRoom.home()) || {}).climate_blinds, true) : [])[0] ]]]",
+       "variables": {
+        "covers": "[[[ return window.casoraClimateBlinds ? window.casoraClimateBlinds(hass, user, ((window.casoraPhoneRoom && window.casoraPhoneRoom.home && window.casoraPhoneRoom.home()) || {}).climate_blinds, true) : [] ]]]",
+        "room_name": "Jalousien"
+       }
       }
      ],
      "layout": {
@@ -7939,6 +7948,15 @@
         "gauge_keep_bg": true,
         "room_name": "[[[ const _rv = variables.casora_rv || {}; return _rv.aqi_room_name || _rv._name || hass?.config?.location_name || \"\" ]]]",
         "sensors": "[[[ const _rv = variables.casora_rv || {}; \n  return [_rv.aqi_entity_pm25,_rv.aqi_entity_pm10,_rv.aqi_entity_voc,_rv.aqi_entity_co2].filter(Boolean);\n]]]"
+       }
+      },
+      {
+       "type": "custom:button-card",
+       "template": "casora_badge_climate_covers",
+       "entity": "[[[ const _rv = variables.casora_rv || {}; return (window.casoraClimateBlinds ? window.casoraClimateBlinds(hass, user, _rv.climate_blinds, !!(window.casoraOnHomeView && window.casoraOnHomeView(this) === true)) : [])[0] ]]]",
+       "variables": {
+        "covers": "[[[ const _rv = variables.casora_rv || {}; return window.casoraClimateBlinds ? window.casoraClimateBlinds(hass, user, _rv.climate_blinds, !!(window.casoraOnHomeView && window.casoraOnHomeView(this) === true)) : [] ]]]",
+        "room_name": "Jalousien"
        }
       }
      ],
@@ -13785,6 +13803,15 @@
         "room_name": "[[[ return variables.aqi_room_name || this._config?.name || hass?.config?.location_name || \"\" ]]]",
         "sensors": "[[[\n  return [variables.aqi_entity_pm25,variables.aqi_entity_pm10,variables.aqi_entity_voc,variables.aqi_entity_co2].filter(Boolean);\n]]]"
        }
+      },
+      {
+       "type": "custom:button-card",
+       "template": "casora_badge_climate_covers",
+       "entity": "[[[ return (window.casoraClimateBlinds ? window.casoraClimateBlinds(hass, user, variables.climate_blinds, !!(window.casoraOnHomeView && window.casoraOnHomeView(this) === true)) : [])[0] ]]]",
+       "variables": {
+        "covers": "[[[ return window.casoraClimateBlinds ? window.casoraClimateBlinds(hass, user, variables.climate_blinds, !!(window.casoraOnHomeView && window.casoraOnHomeView(this) === true)) : [] ]]]",
+        "room_name": "Jalousien"
+       }
       }
      ],
      "layout": {
@@ -19042,6 +19069,58 @@
    "icon": "velair",
    "casora_default_name": "Klima",
    "temp_sensor": null
+  }
+ },
+ "casora_badge_climate_covers": {
+  "double_tap_action": {
+   "action": "none"
+  },
+  "extra_styles": "[[[\n  const ev = variables?.enabled;\n  const enabled = (ev === undefined || ev === null) ? true :\n    (typeof ev === 'boolean') ? ev :\n    (typeof ev === 'number') ? ev !== 0 :\n    !['false','0','no','off','disabled'].includes(String(ev).trim().toLowerCase());\n  const _n = (Array.isArray(variables?.covers) ? variables.covers : []).filter((id) => { const st = states[id]; const p = Number(st?.attributes?.current_position); return !!st && (['open','opening'].includes(String(st.state)) || (Number.isFinite(p) && p > 0)); }).length;\n  const _all = (Array.isArray(variables?.covers) ? variables.covers : []).length;\n  /* Covers in security (#76): only while selected covers count and at least one is open. */\n  const URL = window.casoraIconUrl('cover_open');\n  const SIZE = variables?.icon_size || '88%';\n\n  return `:host{display:${(!enabled || !_all) ? 'none' : 'inline-block'} !important;${variables?.inline ? 'order:var(--casora-badge-order-security,1);' : ''}}\n    #img-cell, .img-cell{ position: relative; }\n\n    #img-cell #icon, .img-cell #icon{\n      color: transparent !important;\n      opacity: 0 !important;\n    }\n\n    #img-cell::before,\n    .img-cell::before{\n      content: '';\n      position: absolute;\n      inset: 0;\n      background-color: color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), var(--casora-badge-icon-color, var(--casora-badge-security-color, #00c3d0))) !important;\n      scale: var(--casora-badge-glyph-scale, none);\n      -webkit-mask: url('${URL}') no-repeat center / auto ${SIZE};\n      mask: url('${URL}') no-repeat center / auto ${SIZE};\n      transform: translateZ(0);\n    }`;\n]]]\n",
+  "icon": "mdi:window-shutter-open",
+  "name": "[[[\n  /* Klima badge's „Jalousien“ (26.10.63): the house's blinds (window.casoraClimateBlinds), open count or „Alle geschlossen“. */\n  const esc = window.casoraEsc || ((t) => String(t ?? '').replace(/[&<>\"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[c])));\n  const _n = (Array.isArray(variables?.covers) ? variables.covers : []).filter((id) => { const st = states[id]; const p = Number(st?.attributes?.current_position); return !!st && (['open','opening'].includes(String(st.state)) || (Number.isFinite(p) && p > 0)); }).length;\n  const _all = (Array.isArray(variables?.covers) ? variables.covers : []).length;\n  const sub = _n ? _n + ' geöffnet' : (_all > 1 ? 'Alle geschlossen' : 'Geschlossen');\n  return `\n    <div class=\"badge-wrap\">\n      <div class=\"badge-title\">${esc(variables?.label || 'Jalousien')}</div>\n      <div class=\"badge-sub\">${esc(sub)}</div>\n    </div>\n  `;\n]]]\n",
+  "show_icon": true,
+  "show_label": false,
+  "show_state": false,
+  "styles": {
+   "card": [
+    {
+     "display": "[[[\n  const ev = variables?.enabled;\n  const enabled = (ev === undefined || ev === null) ? true :\n    (typeof ev === 'boolean') ? ev :\n    (typeof ev === 'number') ? ev !== 0 :\n    !['false','0','no','off','disabled'].includes(String(ev).trim().toLowerCase());\n  const _n = (Array.isArray(variables?.covers) ? variables.covers : []).filter((id) => { const st = states[id]; const p = Number(st?.attributes?.current_position); return !!st && (['open','opening'].includes(String(st.state)) || (Number.isFinite(p) && p > 0)); }).length;\n  const _all = (Array.isArray(variables?.covers) ? variables.covers : []).length;\n  return (enabled && _all) ? 'inline-grid' : 'none';\n]]]\n"
+    },
+    {
+     "--casora-badge-icon-color": "[[[\n  /* Climate: shading, no warning – the climate tone (the security badge's „Jalousien“ warns instead). */\n  return 'var(--casora-badge-climate-color, var(--casora-color-teal, #00C3D0))';\n]]]\n"
+    },
+    {
+     "--icon-primary-color": "color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), var(--casora-badge-icon-color))"
+    },
+    {
+     "--paper-item-icon-color": "color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), var(--casora-badge-icon-color))"
+    },
+    {
+     "--state-icon-color": "color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), var(--casora-badge-icon-color))"
+    }
+   ],
+   "icon": [
+    {
+     "color": "color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), var(--casora-badge-icon-color))"
+    }
+   ],
+   "img_cell": [
+    {
+     "overflow": "visible !important"
+    }
+   ]
+  },
+  "template": [
+   "casora_badge_base",
+   "casora_popup_cover"
+  ],
+  "variables": {
+   "enabled": true,
+   "icon_size": null,
+   "label": null,
+   "inline": false,
+   "covers": [],
+   "room_name": "Jalousien"
   }
  }
 }

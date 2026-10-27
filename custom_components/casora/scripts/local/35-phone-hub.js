@@ -113,6 +113,8 @@
     if (!field) return [];
     return deep(field, function (n) { return n.localName === 'button-card' && /casora_badge_/.test(tpls(n).join(',')); })
       .filter(enabled)
+      // A sub-badge that hides itself (its card display none, e.g. „Jalousien“ without blinds) is no row either.
+      .filter(function (b) { var hc = b.shadowRoot && b.shadowRoot.querySelector('ha-card'); return !hc || getComputedStyle(hc).display !== 'none'; })
       .map(function (b) {
         var sr = b.shadowRoot;
         return { el: b, tpl: tpls(b).join(','), title: txt(sr && sr.querySelector('.badge-title')), sub: subOf(b),
@@ -236,13 +238,27 @@
   };
   P.homeVar = homeVar;
 
+  // The Klima badge's „Jalousien“ (26.10.63, Studio option climate_blinds, default on): the house's blinds – Home only.
+  // Garage doors, gates and doors are no blinds (as the security covers, 34-security-covers.js).
+  window.casoraClimateBlinds = function (hass, user, opt, home) {
+    if (opt === false || !home || !hass || !hass.states) return [];
+    var S = hass.states, GATE = ['garage', 'gate', 'door'];
+    return Object.keys(S).filter(function (id) {
+      if (id.indexOf('cover.') !== 0) return false;
+      var dc = String((S[id].attributes || {}).device_class || '').toLowerCase();
+      if (GATE.indexOf(dc) >= 0) return false;
+      return typeof window.casoraSeesEntity !== 'function' || window.casoraSeesEntity(id, user);
+    }).sort();
+  };
+
   P.scan = function (cat) {
     return cached(cat, function () {
       var chips = cat === 'presence' ? peopleOf() : chipsOf(cat);
       var rooms = roomsOf(cat);
       // Climate: the blinds as one row „Jalousien“ in the overview (owner, 27.10.2026: shading is climate and
       // security), opening the blinds popup of just those – not as single devices by room.
-      if (cat === 'climate' && blindsOut.length && homeVar('climate_blinds') !== false) {
+      if (cat === 'climate' && blindsOut.length && homeVar('climate_blinds') !== false
+          && !chips.some(function (c) { return /casora_badge_climate_covers/.test(c.tpl || ''); })) {
         var h = document.querySelector('home-assistant'), S = (h && h.hass && h.hass.states) || {};
         var open = blindsOut.filter(function (id) { var st = S[id] || {}, p = Number((st.attributes || {}).current_position);
           return ['open', 'opening'].indexOf(st.state) >= 0 || (isFinite(p) && p > 0); }).length;

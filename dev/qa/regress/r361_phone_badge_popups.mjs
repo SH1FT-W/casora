@@ -90,7 +90,7 @@ await tap(page, cli);
 p = await popup(page);
 await check('Climate: the tap opens a popup „Klima“', p.open && p.title === 'Klima', p);
 await check('Climate: readings as rows (Temperatur …)', p.rows.some((r) => /^Temperatur/.test(r)), p.rows);
-const nBlinds = await page.evaluate(() => { const c = ((window._casoraPhoneHub.last.climate || {}).chips || []).find((x) => x.blinds); return c ? c.blinds.length : 0; });
+const nBlinds = await page.evaluate(() => (((window._casoraPhoneHub.last.climate || {}).chips || []).find((x) => x.title === 'Jalousien') ? 1 : 0));
 await check('Climate: single blinds not among the devices (owner, 27.10.2026)', p.rows.filter((r) => /^Jalousien/.test(r)).length <= 1
   && !p.rows.some((r) => /^(Jalousie |Rollo|Testjalousie)/.test(r)), p.rows);
 if (nBlinds) {
