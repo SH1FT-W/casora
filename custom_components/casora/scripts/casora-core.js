@@ -7812,20 +7812,7 @@ window.casoraMenuGlass = {
               grab(n.shadowRoot, d + 1);
             });
           })(c, 0);
-          // The header's own entrance (chrome) is visible and keeps playing; for the measurement only, its end state.
-          var chrome = [];
-          (function grab(root, d) {
-            if (!root || d > 14 || !root.getAnimations) return;
-            root.getAnimations().forEach(function (an) {
-              try {
-                if (an.playState === 'running' && anims.indexOf(an) < 0 && an.effect && isFinite(an.effect.getComputedTiming().endTime)) {
-                  chrome.push([an, an.currentTime]); an.currentTime = an.effect.getComputedTiming().endTime - 0.01;
-                }
-              } catch (e) { /* infinite */ }
-            });
-          })(this.shadowRoot, 0);
           this._syncHeadLine(); this._fitHeadGap();
-          chrome.forEach(function (x) { try { x[0].currentTime = x[1]; } catch (e) { /* gone */ } });
           // Rule 12 (symmetry) padded a column 120 ms after opening – after the reveal; align before it.
           if (window._casoraUI && window._casoraUI.alignCols) { try { window._casoraUI.alignCols(); } catch (e) { /* layout only */ } }
         }
@@ -7908,8 +7895,13 @@ window.casoraMenuGlass = {
         }
       })(this.container, 0);
       if (!isFinite(top)) return;
+      // The sheet's own entrance (casora-sheet-in) scales the surface: measured during it, every distance came out
+      // scaled and the gap ~11 px off (27.10.2026). Back to layout pixels. (Setting the header's entrance animations
+      // to their end for the measurement instead left the close control at 30 % opacity in WebKit.)
+      var sf = this.surface, k = sf && sf.offsetHeight ? sf.getBoundingClientRect().height / sf.offsetHeight : 1;
+      if (!(k > 0.2)) k = 1;
       var cur = parseFloat(this.container.style.marginTop) || 0;
-      var want = Math.max(-80, Math.min(0, cur + (28 - (top - bar.bottom))));
+      var want = Math.max(-80, Math.min(0, cur + (28 - (top - bar.bottom) / k)));
       if (Math.abs(want - cur) >= 1) this.container.style.marginTop = Math.round(want) + 'px';
     }
 

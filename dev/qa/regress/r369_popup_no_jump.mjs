@@ -8,6 +8,8 @@
 // 27.10.2026 (prod, after the first fix): charts (air purifier, weather: the chart slot grew 150 → 174 px after the
 // reveal), rule-12 column padding (dishwasher) and the Sicherheit overview (sheet top and header moved) – also the
 // sheet's top edge and the header title must stay put.
+// 27.10.2026 (owner, iPhone): the close „X“ stayed at 30 % opacity – the header's entrance animation had been set to
+// its end for a measurement and back; WebKit kept the opacity. The close control is fully opaque after opening.
 import { open, dashboard, casoraDashboards, check, need, finish, usePage } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -74,6 +76,25 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
   await check(`${label}: Popups gemessen`, size.mobile ? seen.size >= 3 : seen.size >= 4 && ['casora_air_purifier', 'casora_weather'].some((t) => seen.has(t)), [...seen]);
   // The test house's security badge has entries of its own: the overview opens on the phone (Home), not on the desktop.
   if (size.mobile) await check(`${label}: Sicherheits-Übersicht gemessen`, seen.has('casora_badge_security_group'), [...seen]);
+  await page.context().close();
+}
+// Close control: fully there after opening – WebKit (the phone) and Chromium, a popup with a header switch.
+for (const [label, opts] of [['Handy WebKit', { safari: true }], ['Handy Chromium', {}]]) {
+  const { page } = await open({ width: 393, height: 852, mobile: true, dark: false, theme: 'Casora', ...opts });
+  usePage(page);
+  await dashboard(page, desk.url);
+  await page.waitForTimeout(2000);
+  const id = await page.evaluate(() => Object.keys(document.querySelector('home-assistant').hass.states).find((e) => e.startsWith('fan.')));
+  await need(label + ': Luftreiniger/Lüfter im Testhaus', id);
+  for (let k = 0; k < 3; k++) {
+    await page.evaluate((e) => window._casoraNotifyOpenViaCard(e, () => {}, { type: 'custom:button-card', template: 'casora_air_purifier', entity: e }, true), id);
+    await page.waitForTimeout(k === 1 ? 120 : 1500);
+    if (k === 1) { await page.evaluate(() => window.casoraPopup.close()); await page.waitForTimeout(60); continue; }
+    const st = await page.evaluate(() => { const e = window.casoraPopup.element, c = e && e.shadowRoot.querySelector('.header-close');
+      return c ? { op: Number(getComputedStyle(c).opacity), sw: !e.shadowRoot.querySelector('.header-switch').hidden } : null; });
+    await check(`${label}: Schließen-Knopf voll sichtbar (Durchgang ${k + 1})`, st && st.op > 0.99, st);
+    await page.evaluate(() => window.casoraPopup.close()); await page.waitForTimeout(500);
+  }
   await page.context().close();
 }
 await finish();
