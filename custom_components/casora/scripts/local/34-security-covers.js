@@ -13,7 +13,8 @@
 //   C.count(states, hass, user, v, where)     → open covers that count now on Home (0 elsewhere/by day/off)
 //   C.show(states, hass, user, v, where)      → sub-badge "Jalousien" visible (Home, counting, ≥ 1 open)
 //   C.popup(states, hass, variables)          – popup casora_popup_security_covers
-//   C.sec(part, cfg, states, hass)            – live parts (hero, list)
+//   C.sec(part, cfg, states, hass)            – live parts (hero, list, contacts)
+//   C.contactsCard(states, hass, user)        – section „Jalousien“ for the house's „Türen & Fenster“ popup (#76)
 (function () {
   if (window._casoraSecCovers && window._casoraSecCovers.v === 1) return;
   var C = window._casoraSecCovers = { v: 1 };
@@ -164,11 +165,35 @@
     return K.layout({ fields: f, top: ['hero'], left: ['list'], right: [] });
   };
 
+  // The security badge on Home counts the selected open covers, and its tap opens the house's „Türen & Fenster“
+  // (casora_popup_contacts): that popup lists them too, as its own section with „Schließen“ (#76, 26.10.63).
+  // Only while they count (Home, evening/night unless „Nur abends und nachts“ is off); null otherwise.
+  C.contactsCard = function (states, hass, user) {
+    var K = window._casoraSoftKit;
+    var S = states || (hass && hass.states) || {};
+    if (!K || !C.scan(S, hass, user).count) return null;
+    var c = K.secCard(C.cfg().ids.concat(['sun.sun']),
+      'return window._casoraSecCovers ? window._casoraSecCovers.sec("contacts", null, states, hass, user) : "";', S);
+    c.styles.card = [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px 22px 26px' }];
+    c.card_mod = { style: ((c.card_mod && c.card_mod.style) || '') + '\n@media (max-width: 600px) { ha-card { padding-left: 14px !important; padding-right: 14px !important; } }' };
+    return c;
+  };
+
   C.sec = function (part, cfg, states, hass, user) {
     var UI = window._casoraUI;
     if (!UI) return '';
     var R = C.rows(states, hass, user);
     var r = R.scan;
+    if (part === 'contacts') {
+      if (!r.active || !R.open.length) return '';
+      var ids = r.open.map(function (id) { return closeSvc(id, (states || {})[id]); })
+        .filter(function (x) { return x && x.service === 'close_cover'; })
+        .map(function (x) { return x.data.entity_id; });
+      var all = R.open.length > 1 && ids.length
+        ? { text: 'Alle schließen', svc: { domain: 'cover', service: 'close_cover', data: { entity_id: ids } }, tone: 'accent' }
+        : null;
+      return UI.group(R.open, 'Jalousien', all);
+    }
     if (part === 'hero') {
       var n = r.ids.length;
       var main = !n ? 'Keine Jalousien ausgewählt'
