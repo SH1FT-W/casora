@@ -105,6 +105,11 @@
     if (!row) return [];
     var host = deep(haRoot(), function (n) { return n.localName === 'button-card' && tpls(n).indexOf('casora_mobile_sensor_chips') >= 0; }, 1)[0];
     var field = host && host.shadowRoot && host.shadowRoot.querySelector('#' + row);
+    // Desktop/tablet (26.10.63): the room header's own sub-row of the badge (casora_room › badges_<cat>).
+    if (!field) {
+      var room = deep(haRoot(), function (n) { return n.localName === 'button-card' && tpls(n).indexOf('casora_room') >= 0 && n.getBoundingClientRect().width > 0; }, 1)[0];
+      field = room && room.shadowRoot && room.shadowRoot.querySelector('#badges_' + cat);
+    }
     if (!field) return [];
     return deep(field, function (n) { return n.localName === 'button-card' && /casora_badge_/.test(tpls(n).join(',')); })
       .filter(enabled)
@@ -151,7 +156,7 @@
     var ov = deep(haRoot(), function (n) { return n.localName === 'casora-filter-overlay' && n._config && n._config.filter_category === cat; }, 1)[0];
     var found = ov && typeof ov._findContainerAndSelf === 'function' ? ov._findContainerAndSelf() : null;
     var container = found && found.container;
-    if (!container) return [];
+    if (!container) return roomsFromCfg(cat);
     var rooms = [], pending = null;
     for (var i = 0; i < container.children.length; i++) {
       var kid = container.children[i];
@@ -180,6 +185,41 @@
       if (tiles.length) rooms.push({ name: pending, tiles: tiles });
       pending = null;
     }
+    return rooms;
+  };
+
+  // Desktop/tablet: no phone page to read – the tiles of the category from the dashboard's room views (by view
+  // title), each opened like a tile tap through its own config (openViaCard).
+  var DOM_ICON = { lock: 'lock', camera: 'camera', alarm_control_panel: 'shield_alarm', binary_sensor: 'door-closed', cover: 'cover_open',
+    climate: 'thermostat', fan: 'fan', humidifier: 'humidifier' };
+  var roomsFromCfg = function (cat) {
+    var cfg = window._casoraLovelaceCfg && window._casoraLovelaceCfg();
+    var ha = document.querySelector('home-assistant'), h = ha && ha.hass, S = (h && h.states) || {};
+    if (!cfg || !h) return [];
+    var rooms = [];
+    (cfg.views || []).forEach(function (v) {
+      var tiles = [], seen = {};
+      (function walk(x, d) {
+        if (!x || typeof x !== 'object' || d > 10) return;
+        if (Array.isArray(x)) { x.forEach(function (y) { walk(y, d + 1); }); return; }
+        if (x.type === 'custom:button-card' && typeof x.entity === 'string' && S[x.entity] && !offOnPhone(x) && catOf(x) === cat
+            && !(cat === 'climate' && /^cover\./.test(x.entity)) && !seen[x.entity]) {
+          seen[x.entity] = 1;
+          var st = S[x.entity], dom = x.entity.split('.')[0], vi = x.variables && x.variables.icon;
+          tiles.push({ cfg: x, main: x.entity, ids: [x.entity],
+            title: (typeof x.name === 'string' && x.name.indexOf('[[[') < 0 && x.name) || String((st.attributes && st.attributes.friendly_name) || x.entity),
+            sub: typeof h.formatEntityState === 'function' ? h.formatEntityState(st) : st.state,
+            icon: (typeof vi === 'string' && vi.indexOf('[[[') < 0 && vi) || DOM_ICON[dom] || 'mdi:devices' });
+        }
+        walk(x.cards, d + 1); walk(x.card, d + 1); walk(x.sections, d + 1);
+      })(v.cards || v.sections || [], 0);
+      // The room's name as its header shows it (casora_room), else the view's title.
+      var head = (v.cards || []).filter(function (x) { return x && [].concat(x.template || []).indexOf('casora_room') >= 0; })[0];
+      var nm = (head && typeof head.name === 'string' && head.name.indexOf('[[[') < 0 && head.name)
+        || (head && head.variables && typeof head.variables.room_name === 'string' && head.variables.room_name) || v.title || '';
+      if (!nm && v.path) nm = String(v.path).charAt(0).toUpperCase() + String(v.path).slice(1);
+      if (tiles.length) rooms.push({ name: String(nm), tiles: tiles });
+    });
     return rooms;
   };
 
@@ -223,6 +263,13 @@
       if (prevB) window._casoraBackNext = { fn: function () { window.casoraPopup.open(prevB); }, at: Date.now() };
       if (window._casoraNotifyOpenViaCard) window._casoraNotifyOpenViaCard(item.blinds[0], function () {}, { type: 'custom:button-card',
         template: 'casora_popup_cover', entity: item.blinds[0], variables: { covers: item.blinds, room_name: 'Jalousien' } }, true);
+      return;
+    }
+    if (item && item.cfg && !item.el) {
+      var prevC = window.casoraPopup && window.casoraPopup.current;
+      if (prevC) window._casoraBackNext = { fn: function () { window.casoraPopup.open(prevC); }, at: Date.now() };
+      if (window._casoraNotifyOpenViaCard) window._casoraNotifyOpenViaCard(item.main, function (ok) {
+        if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(item.main); }, JSON.parse(JSON.stringify(item.cfg)), true);
       return;
     }
     var el = item && item.el;

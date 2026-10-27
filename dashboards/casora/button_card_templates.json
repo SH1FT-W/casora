@@ -2804,14 +2804,13 @@
    ]
   },
   "tap_action": {
-   "action": "[[[\n  /* Home without entries of its own: the list of doors and windows instead of an empty row (#39). */\n  return window.casoraSecContactsTap && window.casoraSecContactsTap(variables, user, this) ? 'fire-dom-event' : 'call-service';\n]]]\n",
+   "action": "[[[\n  /* Home without entries of its own: the badge's overview popup (26.10.63, before: „Türen & Fenster“, #39) – its\n     rows lead to doors, windows and blinds; with entries the badge opens its row as before. */\n  return window.casoraSecContactsTap && window.casoraSecContactsTap(variables, user, this) ? 'fire-dom-event' : 'call-service';\n]]]\n",
    "service": "input_select.select_option",
    "service_data": {
     "entity_id": "input_select.casora_expanded_row",
     "option": "[[[\n  return states['input_select.casora_expanded_row']?.state === 'security' ? 'none' : 'security';\n]]]\n"
    },
    "haptic": "light",
-   "casora_contacts_open": "[[[ return !!(window.casoraSecContactsTap && window.casoraSecContactsTap(variables, user, this)) ]]]",
    "casora_popup": {
     "title": "[[[\n  /* Phone badge popup (26.10.63): the badge's own title, else the category's name. */\n  return String(variables.title || '').trim() || 'Sicherheit';\n]]]\n",
     "content": "[[[\n  /* Phone: the badge opens this popup instead of filtering the start page (26.10.63) – its sub-badges and the\n     tiles the filter page showed, as rows (scripts/local/35-phone-hub.js). The desktop's tap keeps its row:\n     a popup only opens on fire-dom-event, which only the phone's badge row sends. */\n  return window._casoraPhoneHub ? window._casoraPhoneHub.popup('security', states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",

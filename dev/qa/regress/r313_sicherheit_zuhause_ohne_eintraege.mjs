@@ -2,7 +2,8 @@
 // #39 follow-up (fresh install): Home without security entries of its own. The security badge counted the
 // house's doors and windows only on the phone; on a tablet/desktop it stayed hidden, and a tap led nowhere
 // (desktop: empty row, phone: a filter with nothing in it). Expected: the badge on every device, a tap
-// opens „Türen & Fenster“ of the whole house. Copies of the arbeit dashboards without security entries
+// opens „Türen & Fenster“ of the whole house; since 26.10.63 the badge's overview popup „Sicherheit“ (rows Türen,
+// Fenster, Jalousien lead there) on every device. Copies of the arbeit dashboards without security entries
 // on Home (qa-sicher-leer, deleted at the end); door and window states only faked in the browser.
 import { open, casoraDashboard, dashboard, fakeStates, stable, check, need, finish, atFinish } from './lib.mjs';
 import { ws } from '../ws.mjs';
@@ -80,7 +81,8 @@ for (const dev of [
   if (!b.length) continue;
   if (dev.o.mobile) await page.touchscreen.tap(b[0].x, b[0].y); else await page.mouse.click(b[0].x, b[0].y);
   const p = await stable(page, popup);
-  await check(`${dev.name}: tap opens „Türen & Fenster“`, !!p && /Türen & Fenster/.test(p), p);
+  // Since 26.10.63 (owner): the badge's overview popup „Sicherheit“ with Türen and Fenster as rows (was „Türen & Fenster“).
+  await check(`${dev.name}: tap opens the overview „Sicherheit“ with Türen/Fenster rows`, !!p && /Sicherheit/.test(p) && /Türen|Fenster/.test(p) && !/Türen & Fenster/.test(p), p);
   const filter = await page.evaluate(() => (document.querySelector('home-assistant').hass.states['input_select.casora_mobile_filter'] || {}).state);
   if (dev.o.mobile) await check(`${dev.name}: no filter set instead`, filter !== 'security', filter);
 }
