@@ -288,13 +288,16 @@
     var el = item && item.el;
     if (!el || typeof el._handleAction !== 'function') return;
     var done = false;
+    // No popup of its own (e.g. a blind picked as a security entry: its sub-badge only switches): the device's own
+    // tile popup – its tile's own config from the dashboard (openViaCard), else Casora's page for it.
     var fallback = function () {
-      var id = (item.ids || [])[0];
-      if (id && window.casoraPopup) {
-        var prev = window.casoraPopup.current;
-        if (prev) window._casoraBackNext = { fn: function () { window.casoraPopup.open(prev); }, at: Date.now() };
-        window.casoraPopup.moreInfo(id);
-      }
+      var id = item.main || (el && el._stateObj && el._stateObj.entity_id) || (item.ids || [])[0];
+      if (!id || !window.casoraPopup) return;
+      var prev = window.casoraPopup.current;
+      var back = function () { if (prev) window._casoraBackNext = { fn: function () { window.casoraPopup.open(prev); }, at: Date.now() }; };
+      back();
+      if (window._casoraNotifyOpenViaCard) window._casoraNotifyOpenViaCard(id, function (ok) { if (!ok) { back(); window.casoraPopup.moreInfo(id); } }, null, true);
+      else window.casoraPopup.moreInfo(id);
     };
     var take = function (ev) {
       if (done) return;
@@ -372,7 +375,8 @@
       }), cat === 'presence' ? 'Personen' : 'Übersicht'));
     }
     var k = 0;
-    s.rooms.forEach(function (r) {
+    // Owner (27.10.2026): Sicherheit and Klima show only their overview rows – the devices by room are gone.
+    (cat === 'security' || cat === 'climate' ? [] : s.rooms).forEach(function (r) {
       out.push(UI.group(r.tiles.map(function (t) {
         var row = { icon: t.icon || 'mdi:devices', label: t.title, labelLit: true, sub: t.sub, page: 'phub|' + cat + '|t|' + (k++) };
         var tn = tone(cat, Object.assign({ kind: 't' }, t), hass);

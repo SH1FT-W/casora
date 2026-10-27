@@ -57,6 +57,8 @@ await tap(page, sec);
 let p = await popup(page);
 await check('Security: the tap opens a popup „Sicherheit“', p.open && p.title === 'Sicherheit', p);
 await check('Security: the start page is not filtered', p.filter === 'all', p.filter);
+const nSec = await page.evaluate(() => ((window._casoraPhoneHub.last.security || {}).chips || []).length);
+await check('Security: only the overview rows (no room sections)', p.rows.length === nSec, { rows: p.rows, nSec });
 await check('Security: the sub-badges are rows (Schlösser, Türen, Fenster …)', p.rows.some((r) => /^Schlösser/.test(r)) && p.rows.some((r) => /^(Türen|Fenster)/.test(r)), p.rows);
 // What needs attention shows it on the icon (owner, 27.10.2026): an unlocked lock → warning tone, locked → calm.
 const locks = await page.evaluate(() => { const r = (window._casoraPhoneHub.last.security || {}).chips || [];
@@ -101,16 +103,9 @@ if (nBlinds) {
   p = await popup(page);
   await check('Climate: ‹ back to „Klima“', p.open && p.title === 'Klima', p);
 }
-// A device row: the rows after the sub-badges (whatever the house calls its devices).
+// Owner (27.10.2026): only the overview rows – no devices by room.
 const nChips = await page.evaluate(() => ((window._casoraPhoneHub.last.climate || {}).chips || []).length);
-const dev = p.rows[nChips];
-await need('Climate: a device row', dev, p.rows);
-const s0 = await climateStates(page);
-await tap(page, await rowAt(page, dev));
-p = await popup(page);
-await check('Climate: a device row opens that device\'s popup as a sub page', p.open && p.title !== 'Klima' && p.back, p);
-await page.waitForTimeout(1500);
-await check('Climate: opening it switched nothing', (await climateStates(page)) === s0, { s0, s1: await climateStates(page) });
+await check('Climate: only the overview rows (no room sections)', p.rows.length === nChips, { rows: p.rows, nChips });
 await close(page);
 
 // #80 special case: picked rooms plus an HA group – the light popup shows the picked rooms only („N Räumen“).
@@ -125,6 +120,25 @@ if (picked.n > 1 && picked.groups) {
     return (pop && pop.shadowRoot ? pop.shadowRoot.textContent : '') + ' ' + (s ? s.textContent : ''); });
   await check('#80: picked rooms (with an HA group beside them) → „von ' + picked.n + ' Räumen“', new RegExp('von ' + picked.n + ' Räumen').test(head.replace(/\s+/g, ' ')), { picked, head: head.replace(/\s+/g, ' ').slice(0, 200) });
   await close(page);
+}
+
+// A blind picked as a security entry (its sub-badge only switches): its row opens the blind's own tile popup with ‹.
+{
+  const cov = await page.evaluate(() => Object.keys(document.querySelector('home-assistant').hass.states).find((k) => k.startsWith('cover.') && !/garage|tor|gate/i.test(k)));
+  if (cov) {
+    await page.evaluate((id) => { const el = window.__pierce('button-card').find((b) => [].concat(b._config?.template || []).includes('casora_mobile_sensor_chips'));
+      const cfg = JSON.parse(JSON.stringify(el._config)); cfg.variables = { ...(cfg.variables || {}), security_entity_8: id, security_label_8: 'QA Rollo' };
+      el.setConfig(cfg); el.hass = document.querySelector('home-assistant').hass; }, cov);
+    await page.waitForTimeout(2000);
+    await tap(page, await badgeAt(page, 'casora_badge_security_group'));
+    const row = await rowAt(page, 'QA Rollo');
+    if (row) {
+      await tap(page, row);
+      const q = await popup(page);
+      await check('Security: a blind entry opens the blind\'s popup with ‹', q.open && q.title !== 'Sicherheit' && q.back, q);
+    } else console.log('  info   no row for a blind entry (badge row did not take the entry)');
+    await close(page);
+  }
 }
 
 // Studio option „Jalousien anzeigen“ (climate_blinds, Home's climate badge) off → no row „Jalousien“ in Klima.
