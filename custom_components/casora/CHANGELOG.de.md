@@ -12,7 +12,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Jalousien im Klima:** Die Unter-Reihe des Klima-Badges auf Zuhause hat ein Unter-Badge „Jalousien“ (als letztes, wie unter Sicherheit); es öffnet das Popup der Jalousien-Kachel des Dashboards. Im Studio unter Klima-Badge › „Jalousien anzeigen“ (standardmäßig an). HA-Jalousiegruppen werden nie als einzelne Jalousie mitgezählt.
 - **Klima-Unter-Badges:** Temperatur und Luftfeuchtigkeit nehmen die Farben der Luftqualität an, mit passenden Worten: grün im Wohlfühlbereich (19–24 °C, auch bei °F-Sensoren; 40–60 %), orange knapp daneben (Kühl, Warm / Etwas trocken, Etwas feucht), rot darüber hinaus (Kalt, Heiß / Sehr trocken, Sehr feucht).
 - **Beleuchtungs-Badge mit HA-Gruppe (#80):** Im Badge gewählte Lampen oder Räume gehen vor seiner Gruppe; das Handy zeigt genau diese („N von M Räumen an“).
-- **Energie-Unter-Popups „Haus“ und „Solar“:** Statt des Balkens der Energiefluss des großen Energie-Popups, wenn seine Quellen da sind.
+- **Energie-Unter-Popups „Haus“, „Solar“, „Netz“ und „Akku“:** der Energiefluss des großen Energie-Popups (bei Haus und Solar statt des Balkens), wenn seine Quellen da sind.
 - **⋯-Menü am Handy:** Die Seite dahinter tritt zurück wie bei der Glocke.
 
 ### Behoben

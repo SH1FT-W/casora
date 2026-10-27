@@ -372,12 +372,13 @@
     f.hero = { card: K.secCard(watch, 'return window._casoraEnergyFocus ? window._casoraEnergyFocus.sec("hero", '
       + JSON.stringify(C) + ', states, hass) : "";', states) };
 
-    // House and solar popups: the energy flow of the big popup (E1, „Energiefluss“, owner 27.10.2026) when its sources
+    // House, solar, grid and battery popups: the energy flow of the big popup (E1, „Energiefluss“, owner 27.10.2026) when its sources
     // exist (E.flowSources, HA's energy settings fill in); else the bars of the half this popup is about.
     var only = focus === 'solar' ? 'to' : focus === 'home' ? 'from' : null;
     var SE = window._casoraSoftEnergy;
     var base = { home: C.home, solar: C.solar, soc: C.soc, grid: C.grid, charge: C.charge, discharge: C.discharge, output: C.output, export: null };
-    var fs = only && SE && SE.flowSources ? SE.flowSources(base, hass, states, true) : null;
+    // Grid and battery popups too (owner, 27.10.2026); they have no bar half of their own as fallback.
+    var fs = (only || focus === 'grid' || focus === 'battery') && SE && SE.flowSources ? SE.flowSources(base, hass, states, true) : null;
     if (fs) {
       C.flow = Object.assign({}, base, { fs: fs });
       f.flow = { card: K.secCard(SE.flowSources.ids(fs),
@@ -413,7 +414,7 @@
     }
 
     // Popup blueprint: controls on the left, information on the right.
-    var L = { solar: ['flow', 'mods'], battery: ['ctl'], home: ['flow', 'use'], grid: ['ctl'] }[focus];
+    var L = { solar: ['flow', 'mods'], battery: ['flow', 'ctl'], home: ['flow', 'use'], grid: ['flow', 'ctl'] }[focus];
     var R = { solar: ['yield'], battery: ['batt'], home: ['top'], grid: ['use', 'aut'] }[focus];
     return K.layout({ fields: f, top: ['hero', 'chart'], left: L, right: R, moveLeft: ['top'],
       narrowOrder: L.concat(R) });

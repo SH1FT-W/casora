@@ -12,7 +12,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Blinds in Climate:** the Climate badge's sub-row on Home has a "Blinds" sub-badge (last, like under Security) that opens the dashboard's blinds tile popup. Studio: climate badge › "Show blinds" (on by default). HA cover groups are never counted as a blind.
 - **Climate sub-badges:** Temperature and Humidity take the air quality colours with matching words: green when comfortable (19 to 24 °C, also for °F sensors; 40 to 60 %), orange a little outside (Cool, Warm / Slightly dry, Slightly humid), red beyond (Cold, Hot / Very dry, Very humid).
 - **Lighting badge with an HA group (#80):** lights or rooms picked in the badge win over its group; the phone shows just those ("N of M rooms on").
-- **Energy sub-popups "House" and "Solar":** the energy flow of the big energy popup instead of the bar, when its sources exist.
+- **Energy sub-popups "House", "Solar", "Grid" and "Battery":** the energy flow of the big energy popup (instead of the bar in House and Solar), when its sources exist.
 - **⋯ menu on the phone:** the page behind it dims like for the bell.
 
 ### Fixed
