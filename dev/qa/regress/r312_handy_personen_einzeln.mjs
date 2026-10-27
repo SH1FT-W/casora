@@ -36,8 +36,10 @@ const setup = async (people, inline) => {
   }, { people, inline, rooms: server.rooms, home: server.home });
   await page.waitForTimeout(1500);
   return page.evaluate(() => window.__pierce('button-card')
-    .filter((b) => /^casora_badge_presence/.test(String([].concat(b._config?.template || [])[0])) && b.getBoundingClientRect().width > 0)
-    .map((b) => [].concat(b._config.template)[0] + (b._config.entity ? ':' + b._config.entity : '')))
+    // The template list is resolved (casora_badge_base first; since 26.10.63 the phone's group badge adds its popup).
+    .map((b) => ({ b, t: [].concat(b._config?.template || []).find((x) => /^casora_badge_presence/.test(String(x))) }))
+    .filter(({ b, t }) => t && b.getBoundingClientRect().width > 0)
+    .map(({ b, t }) => t + (b._config.entity ? ':' + b._config.entity : '')))
     // setConfig in the browser repeats the row's cards (only here, the dashboard never does this).
     .then((xs) => [...new Set(xs)]);
 };
