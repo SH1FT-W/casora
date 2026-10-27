@@ -12,7 +12,7 @@ const T = JSON.parse(read('dashboards/casora/button_card_templates.json'));
 const esc = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 globalThis.window = globalThis;
-globalThis.document = { querySelector: () => null };
+globalThis.document = { querySelector: () => null, addEventListener: () => {} };
 globalThis.customElements = { whenDefined: () => new Promise(() => {}), get: () => null };
 new Function(read('custom_components/casora/scripts/local/00-finder.js'))();
 window.casoraIconUrl = (k) => '/i/' + k + '.svg';

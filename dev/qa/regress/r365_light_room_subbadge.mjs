@@ -29,6 +29,15 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
       const m = (h.states[e]?.attributes?.entity_id || []).filter((x) => h.states[x] && !Array.isArray(h.states[x].attributes.entity_id));
       if (m.length >= 2) return { id: e, lamps: m, names: m.map((x) => h.states[x].attributes.friendly_name || x) };
     }
+    // A fresh test house may have no room group with two lamps: take the first light badge and two single lamps.
+    const lamps = Object.keys(h.states).filter((x) => /^light\./.test(x) && !Array.isArray(h.states[x].attributes.entity_id));
+    for (const b of window.__pierce('button-card')) {
+      const e = b._config && b._config.entity;
+      if (!e || !/^light\./.test(e) || !b.getBoundingClientRect().width) continue;
+      if (![].concat(b._config.template || []).includes('casora_badge_light')) continue;
+      const m = lamps.filter((x) => x !== e).slice(0, 2);
+      if (m.length >= 2) return { id: e, lamps: m, names: m.map((x) => h.states[x].attributes.friendly_name || x) };
+    }
     return null;
   });
   // Phone Home badges open a popup since 26.10.63 (no light sub-row there); the room pages keep theirs.
