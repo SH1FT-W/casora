@@ -411,6 +411,25 @@ for (const scheme of schemes) for (const vn of views) {
           }).catch(() => null);
           if (row.hoehe) console.log(`  HOEHE  ${scheme}/${vn} ${key} top=${row.hoehe.top} h=${row.hoehe.h} leer=${row.hoehe.empty}`);
         }
+        // --spalten (desktop): two plates side by side in a popup narrower than 700 px = a two-column popup squeezed
+        // into the one-column width (stage 2 regressions: floor heating group, cover group, 27.10.2026).
+        if (process.argv.includes('--spalten') && !V.phone) {
+          row.spalten = await page.evaluate(() => {
+            const s = window.casoraPopup && window.casoraPopup.surface; if (!s) return null;
+            const R = s.getBoundingClientRect();
+            const deep = (root, out) => { root.querySelectorAll('*').forEach((n) => { out.push(n); if (n.shadowRoot) deep(n.shadowRoot, out); }); return out; };
+            const plates = deep(s, []).map((n) => ({ n, q: n.getBoundingClientRect(), cs: getComputedStyle(n) }))
+              .filter(({ q, cs }) => q.width > 140 && q.width < R.width * 0.6 && q.height > 34 && q.height < 160
+                && parseFloat(cs.borderTopLeftRadius) > 6 && cs.backgroundColor && !/rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor))
+              .filter(({ n }) => !/\bhui-sg\b|\bhui-seg\b/.test(String(n.className || '')));
+            // A column = a plate with another plate stacked under it at the same left edge. Two side-by-side plates of
+            // which one starts a column = two columns (segment buttons hui-sg are no plates).
+            const col = (a) => plates.some((c) => c !== a && Math.abs(c.q.left - a.q.left) < 4 && c.q.top > a.q.bottom - 2);
+            const side = plates.some((a) => plates.some((b) => a !== b && (col(a) || col(b)) && Math.abs(a.q.top - b.q.top) < 6 && (a.q.right <= b.q.left + 2)));
+            return { w: Math.round(R.width), side };
+          }).catch(() => null);
+          if (row.spalten && row.spalten.side && row.spalten.w < 700) console.log(`  SPALTEN ${scheme}/${vn} ${key} – zwei Spalten in ${row.spalten.w} px`);
+        }
         if (process.argv.includes('--geo')) {
           row.geo = await page.evaluate(MEASURE_GEO).catch((e) => ({ n: 0, finds: [], err: String(e).slice(0, 200) }));
           row.title = await page.evaluate(() => { const s = window.casoraPopup && window.casoraPopup.surface; const t = s && s.querySelector('.header-title, .title'); return t ? t.textContent.trim().slice(0, 60) : ''; }).catch(() => '');
