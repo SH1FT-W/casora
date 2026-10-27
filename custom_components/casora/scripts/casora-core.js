@@ -8409,6 +8409,8 @@ window.casoraMenuGlass = {
     if (ev.detail.casora_filter !== undefined && ev.detail.casora_filter !== null) return;
     // Security badge on Home without entries of its own (#39): „Türen & Fenster“ opens instead (01-basis.js).
     if (ev.detail.casora_contacts_open === true) return;
+    // Klima „Jalousien“: the dashboard's blinds tile popup instead (34-security-covers.js, casoraOpenBlinds).
+    if (ev.detail.casora_blinds_open === true) return;
     // The phone's badge hub (26.10.63) is for Home only; on a phone room page the same badge opens its sub-row.
     if (cfg.phone_hub && ev.detail.casora_phone_row) return;
     ev.stopPropagation();

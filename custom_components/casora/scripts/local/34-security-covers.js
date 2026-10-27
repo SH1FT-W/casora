@@ -54,10 +54,70 @@
     return typeof window.casoraSeesEntity !== 'function' || window.casoraSeesEntity(id, user);
   };
 
+  // Single covers only (27.10.2026): an HA cover group stands for its members – expanded, each blind once, the
+  // group entity itself never listed or counted (a list held „Jalousien“ and „Jalousien Wohnzimmer“ beside them).
+  C.isGroup = function (st) { var m = st && st.attributes && st.attributes.entity_id; return Array.isArray(m) && m.length > 0; };
+  C.singles = function (S, ids) {
+    var out = [];
+    (function add(list, d) {
+      (list || []).forEach(function (id) {
+        if (typeof id !== 'string' || id.indexOf('cover.') !== 0 || d > 4) return;
+        var st = S[id];
+        if (C.isGroup(st)) return add(st.attributes.entity_id, d + 1);
+        // A missing blind stays (listed as unavailable), a group never.
+        if (out.indexOf(id) < 0) out.push(id);
+      });
+    })(ids, 0);
+    return out;
+  };
+
+  // The dashboard's blinds tile (casora_cover / casora_popup_cover over an HA cover group or a list of several
+  // blinds): the one place the blinds popup is set up – the Klima sub-badge opens exactly its popup (owner,
+  // 27.10.2026: „das sollte immer das gleiche sein, dass man nur eine Stelle einstellen muss“). null: none.
+  window.casoraBlindsTile = function () {
+    var cfg = window._casoraLovelaceCfg ? window._casoraLovelaceCfg() : null;
+    var ha = document.querySelector('home-assistant'), S = (ha && ha.hass && ha.hass.states) || {};
+    if (!cfg) return null;
+    var hit = null;
+    (function walk(x, d) {
+      if (hit || !x || typeof x !== 'object' || d > 14) return;
+      if (Array.isArray(x)) { x.forEach(function (y) { walk(y, d + 1); }); return; }
+      var t = [].concat(x.template || []);
+      if (x.type === 'custom:button-card' && t.some(function (n) { return n === 'casora_cover' || n === 'casora_popup_cover'; })) {
+        var v = x.variables || {}, e = typeof x.entity === 'string' ? x.entity : (typeof v.cover_entity === 'string' ? v.cover_entity : null);
+        if ((Array.isArray(v.covers) && v.covers.length > 1) || (e && C.isGroup(S[e]))) { hit = x; return; }
+      }
+      Object.keys(x).forEach(function (k) { if (k !== 'button_card_templates') walk(x[k], d + 1); });
+    })(cfg, 0);
+    return hit ? JSON.parse(JSON.stringify(hit)) : null;
+  };
+  // Open the blinds popup: the tile's, else one over the given single blinds.
+  window.casoraOpenBlinds = function (ids) {
+    var open = window._casoraNotifyOpenViaCard;
+    if (!open) return false;
+    var tile = window.casoraBlindsTile();
+    if (tile) { open(tile.entity || (tile.variables || {}).cover_entity, function () {}, tile, true); return true; }
+    var ha = document.querySelector('home-assistant'), S = (ha && ha.hass && ha.hass.states) || {};
+    var one = C.singles(S, ids || []);
+    if (!one.length) return false;
+    open(one[0], function () {}, { type: 'custom:button-card', template: 'casora_popup_cover', entity: one[0],
+      variables: { covers: one, room_name: 'Jalousien' } }, true);
+    return true;
+  };
+  if (!window._casoraBlindsOpen) {
+    window._casoraBlindsOpen = true;
+    document.addEventListener('ll-custom', function (e) {
+      var d = (e.detail && e.detail.event_data) ? e.detail.event_data : (e.detail || {});
+      if (d.casora_blinds_open !== true) return;
+      var v = (d.casora_popup && d.casora_popup._covers) || [];
+      if (window.casoraOpenBlinds(v)) e.stopPropagation();
+    }, true);
+  }
+
   C.scan = function (states, hass, user) {
     var S = states || (hass && hass.states) || {};
     var cfg = C.cfg();
-    var ids = cfg.ids.filter(function (id) {
+    var ids = C.singles(S, cfg.ids).filter(function (id) {
       var st = S[id];
       if (st && GATE.indexOf(low(st.attributes && st.attributes.device_class)) >= 0) return false;
       return sees(id, user);

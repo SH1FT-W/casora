@@ -19121,6 +19121,12 @@
    "inline": false,
    "covers": [],
    "room_name": "Jalousien"
+  },
+  "tap_action": {
+   "casora_blinds_open": true,
+   "casora_popup": {
+    "_covers": "[[[ return Array.isArray(variables.covers) ? variables.covers : []; ]]]"
+   }
   }
  }
 }
