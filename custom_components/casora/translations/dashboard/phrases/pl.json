@@ -2538,7 +2538,9 @@
   "vor 1 Woche": "1 tydzień temu",
   "Antwortet": "Odpowiada",
   "Startet um": "Startuje o",
-  "Startet morgen um": "Startuje jutro o"
+  "Startet morgen um": "Startuje jutro o",
+  "Übersicht": "Przegląd",
+  "Im Studio Kacheln zu Räumen hinzufügen": "Dodaj kafelki do pomieszczeń w Studio"
  },
  "patterns": [
   [

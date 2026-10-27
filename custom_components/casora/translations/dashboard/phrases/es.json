@@ -2538,7 +2538,9 @@
   "vor 1 Woche": "hace 1 semana",
   "Antwortet": "Responde",
   "Startet um": "Empieza a las",
-  "Startet morgen um": "Empieza mañana a las"
+  "Startet morgen um": "Empieza mañana a las",
+  "Übersicht": "Resumen",
+  "Im Studio Kacheln zu Räumen hinzufügen": "Añade mosaicos a las habitaciones en el Studio"
  },
  "patterns": [
   [

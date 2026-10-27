@@ -2538,7 +2538,9 @@
   "vor 1 Woche": "há 1 semana",
   "Antwortet": "Responde",
   "Startet um": "Começa às",
-  "Startet morgen um": "Começa amanhã às"
+  "Startet morgen um": "Começa amanhã às",
+  "Übersicht": "Visão geral",
+  "Im Studio Kacheln zu Räumen hinzufügen": "Adicione blocos às divisões no Studio"
  },
  "patterns": [
   [

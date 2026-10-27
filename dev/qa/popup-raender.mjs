@@ -387,6 +387,23 @@ for (const scheme of schemes) for (const vn of views) {
           m.shadow = same(m.shadow || [], m2.shadow || [], (x) => x.path + x.sides);
         }
         const row = { scheme, view: vn, page: v, room: room || undefined, key, ...(m || { error: 'kein Popup' }) };
+        // --hoehe: is the phone sheet taller than its content (empty space under the last element)?
+        if (process.argv.includes('--hoehe')) {
+          row.hoehe = await page.evaluate(() => {
+            const s = window.casoraPopup && window.casoraPopup.surface; if (!s) return null;
+            const R = s.getBoundingClientRect(); let bottom = R.top;
+            const deep = (root, out) => { root.querySelectorAll('*').forEach((n) => { out.push(n); if (n.shadowRoot) deep(n.shadowRoot, out); }); return out; };
+            deep(s, []).forEach((n) => {
+              const q = n.getBoundingClientRect(); if (!q.width || !q.height || q.height > R.height * 0.8) return;
+              const cs = getComputedStyle(n); if (cs.visibility === 'hidden' || +cs.opacity === 0) return;
+              const leaf = !n.children.length && (n.textContent || '').trim();
+              const vis = leaf || /^(img|svg|canvas|ha-icon|ha-state-icon|casora-chart)$/i.test(n.localName) || (cs.backgroundColor && !/rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor));
+              if (vis && q.bottom > bottom && q.top < R.bottom) bottom = q.bottom;
+            });
+            return { top: Math.round(R.top), h: Math.round(R.height), empty: Math.round(R.bottom - bottom), vh: innerHeight };
+          }).catch(() => null);
+          if (row.hoehe) console.log(`  HOEHE  ${scheme}/${vn} ${key} top=${row.hoehe.top} h=${row.hoehe.h} leer=${row.hoehe.empty}`);
+        }
         if (process.argv.includes('--geo')) {
           row.geo = await page.evaluate(MEASURE_GEO).catch((e) => ({ n: 0, finds: [], err: String(e).slice(0, 200) }));
           row.title = await page.evaluate(() => { const s = window.casoraPopup && window.casoraPopup.surface; const t = s && s.querySelector('.header-title, .title'); return t ? t.textContent.trim().slice(0, 60) : ''; }).catch(() => '');

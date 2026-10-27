@@ -45,3 +45,4 @@ custom_components/casora/scripts/local/07-weich-spezial.js | bindAttr | attribut
 custom_components/casora/scripts/local/05-weich-mehr.js | re:^(?:flowLbl|e1Lbl)$ | section label from UI.label (escapes its text) | 2
 custom_components/casora/scripts/local/07-weich-spezial.js | tintRule(col) | CSS for the play button from the cover colour: an hsl() string built in code (clampColor), goes into <style> where entities would not decode | 1
 custom_components/casora/scripts/local/07-weich-spezial.js | tintCss(pic) | returns <style> markup: the cover URL in the placeholder's attribute is esc()-ed, the rule comes from tintRule | 1
+custom_components/casora/scripts/local/35-phone-hub.js | out.join('') | sections built by _casoraUI.group (escapes its rows) | 1

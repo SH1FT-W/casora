@@ -121,6 +121,7 @@ const MODULES = [
   '33-color-wheel',
   '34-security-covers',
   '34-entity-list',
+  '35-phone-hub',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());

@@ -2538,7 +2538,9 @@
   "vor 1 Woche": "il y a 1 semaine",
   "Antwortet": "Répond",
   "Startet um": "Démarre à",
-  "Startet morgen um": "Démarre demain à"
+  "Startet morgen um": "Démarre demain à",
+  "Übersicht": "Aperçu",
+  "Im Studio Kacheln zu Räumen hinzufügen": "Ajoute des tuiles aux pièces dans le Studio"
  },
  "patterns": [
   [

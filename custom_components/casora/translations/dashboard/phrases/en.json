@@ -2520,7 +2520,9 @@
   "vor 1 Woche": "1 week ago",
   "Antwortet": "Responds",
   "Startet um": "Starts at",
-  "Startet morgen um": "Starts tomorrow at"
+  "Startet morgen um": "Starts tomorrow at",
+  "Übersicht": "Overview",
+  "Im Studio Kacheln zu Räumen hinzufügen": "Add tiles to rooms in the Studio"
  },
  "patterns": [
   [
