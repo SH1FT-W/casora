@@ -7,7 +7,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 26.10.63 – 27.10.2026
 
 ### Changed
-- **Badges on the phone open a popup:** a tap on a badge on Home no longer filters the page. Security and Climate open a popup with everything the filtered page showed, as rows: their sub-badges (locks, cameras, doors, windows, blinds / temperature, humidity) and the devices by room; a row opens that badge's or device's popup with ‹ back, and tapping a row never switches anything. What needs attention (a lock open, a door or window open, a camera offline, blinds open while they count, a reading like "High") shows its icon in the warning colour. Lights and Energy open their own popups. Without Casora popups the page filters as before.
+- **Badges on the phone open a popup:** a tap on a badge on Home no longer filters the page. Security and Climate open a popup with everything the filtered page showed, as rows: their sub-badges (locks, cameras, doors, windows, blinds / temperature, humidity) and the devices by room; a row opens that badge's or device's popup with ‹ back, and tapping a row never switches anything. What needs attention (a lock open, a door or window open, a camera offline, blinds open while they count, a reading like "High") shows its icon in the warning colour. In Climate the blinds are one row "Blinds" in the overview. Lights and Energy open their own popups. Without Casora popups the page filters as before.
 - **Lighting badge with an HA group (#80):** lights or rooms picked in the badge win over its group; the phone shows just those (rooms with their pills, "N of M rooms on").
 
 ### Fixed

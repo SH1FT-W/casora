@@ -144,7 +144,10 @@
     if (v === false || v === 'false' || v === 0 || v === '0') return true;
     return !!(cfg && cfg.variables && cfg.variables.surfaces === 'desktop');
   };
+  // Blinds left out of the climate devices (collected here for the „Jalousien“ row of the climate popup).
+  var blindsOut = [];
   var roomsOf = function (cat) {
+    if (cat === 'climate') blindsOut = [];
     var ov = deep(haRoot(), function (n) { return n.localName === 'casora-filter-overlay' && n._config && n._config.filter_category === cat; }, 1)[0];
     var found = ov && typeof ov._findContainerAndSelf === 'function' ? ov._findContainerAndSelf() : null;
     var container = found && found.container;
@@ -164,7 +167,11 @@
         return w.localName === 'button-card' ? w : (w.querySelector && w.querySelector('button-card'));
       }).filter(function (b) { return b && b._config && !offOnPhone(b._config) && catOf(b._config) === cat; })
         // Blinds are no climate device in the popup (owner, 27.10.2026), though the old filter page listed them there.
-        .filter(function (b) { return cat !== 'climate' || !(/^cover\./.test((b._stateObj && b._stateObj.entity_id) || '') || tpls(b).some(function (t) { return /cover/.test(t); })); })
+        .filter(function (b) {
+          var blind = cat === 'climate' && (/^cover\./.test((b._stateObj && b._stateObj.entity_id) || '') || tpls(b).some(function (t) { return /cover/.test(t); }));
+          if (blind && b._stateObj && blindsOut.indexOf(b._stateObj.entity_id) < 0) blindsOut.push(b._stateObj.entity_id);
+          return !blind;
+        })
         .map(function (b) {
           var r = b.shadowRoot;
           return { el: b, main: b._stateObj ? b._stateObj.entity_id : null, title: txt(r && r.querySelector('#name')) || String((b._stateObj && b._stateObj.attributes.friendly_name) || ''),
@@ -180,6 +187,15 @@
     return cached(cat, function () {
       var chips = cat === 'presence' ? peopleOf() : chipsOf(cat);
       var rooms = roomsOf(cat);
+      // Climate: the blinds as one row „Jalousien“ in the overview (owner, 27.10.2026: shading is climate and
+      // security), opening the blinds popup of just those – not as single devices by room.
+      if (cat === 'climate' && blindsOut.length) {
+        var h = document.querySelector('home-assistant'), S = (h && h.hass && h.hass.states) || {};
+        var open = blindsOut.filter(function (id) { var st = S[id] || {}, p = Number((st.attributes || {}).current_position);
+          return ['open', 'opening'].indexOf(st.state) >= 0 || (isFinite(p) && p > 0); }).length;
+        chips.push({ blinds: blindsOut.slice(), title: 'Jalousien', icon: 'cover_open', ids: blindsOut.slice(),
+          sub: open ? (open === 1 ? '1 geöffnet' : open + ' geöffnet') : (blindsOut.length > 1 ? 'Alle geschlossen' : 'Geschlossen') });
+      }
       var watch = [];
       var add = function (x) { (x.ids || []).forEach(function (id) { if (watch.indexOf(id) < 0) watch.push(id); }); };
       chips.forEach(add);
@@ -201,6 +217,14 @@
       for (var i = 0; i < r.rooms.length; i++) for (var j = 0; j < r.rooms[i].tiles.length; j++) { if (k === idx) return r.rooms[i].tiles[j]; k++; }
       return null;
     })());
+    if (item && item.blinds) {
+      // The blinds popup (casora_popup_cover) of the climate popup's blinds, ‹ back to the climate popup.
+      var prevB = window.casoraPopup && window.casoraPopup.current;
+      if (prevB) window._casoraBackNext = { fn: function () { window.casoraPopup.open(prevB); }, at: Date.now() };
+      if (window._casoraNotifyOpenViaCard) window._casoraNotifyOpenViaCard(item.blinds[0], function () {}, { type: 'custom:button-card',
+        template: 'casora_popup_cover', entity: item.blinds[0], variables: { covers: item.blinds, room_name: 'Jalousien' } }, true);
+      return;
+    }
     var el = item && item.el;
     if (!el || typeof el._handleAction !== 'function') return;
     var done = false;
@@ -249,6 +273,10 @@
   var SEC_DOM = /^(lock|binary_sensor|camera|alarm_control_panel|cover)\./;
   var CLIMATE_BAD = /^(Sehr schlecht|Sehr heiß|Sehr kalt)\b/, CLIMATE_WARN = /^(Schlecht|Mäßig|Heiß|Sehr trocken|Hoch)\b/;
   var levelOf = function (cat, item, hass) {
+    if (cat === 'climate' && item.blinds) {
+      var Cb = window._casoraSecCovers, sc = Cb && hass ? Cb.scan(hass.states, hass, hass.user) : null;
+      return sc && sc.count && sc.open.some(function (id) { return item.blinds.indexOf(id) >= 0; }) ? 'warn' : 'ok';
+    }
     if (cat === 'climate') return item.kind === 'c' ? (CLIMATE_BAD.test(item.sub) ? 'alarm' : CLIMATE_WARN.test(item.sub) ? 'warn' : 'ok') : 'ok';
     if (cat !== 'security' || !hass) return 'ok';
     if (/casora_badge_security_covers/.test(item.tpl || '')) {

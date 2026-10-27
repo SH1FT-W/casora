@@ -88,7 +88,19 @@ await tap(page, cli);
 p = await popup(page);
 await check('Climate: the tap opens a popup „Klima“', p.open && p.title === 'Klima', p);
 await check('Climate: readings as rows (Temperatur …)', p.rows.some((r) => /^Temperatur/.test(r)), p.rows);
-await check('Climate: no blinds among the devices (owner, 27.10.2026)', !p.rows.some((r) => /^(Jalousie|Rollo|Testjalousie)/.test(r)), p.rows);
+const nBlinds = await page.evaluate(() => { const c = ((window._casoraPhoneHub.last.climate || {}).chips || []).find((x) => x.blinds); return c ? c.blinds.length : 0; });
+await check('Climate: single blinds not among the devices (owner, 27.10.2026)', p.rows.filter((r) => /^Jalousien/.test(r)).length <= 1
+  && !p.rows.some((r) => /^(Jalousie |Rollo|Testjalousie)/.test(r)), p.rows);
+if (nBlinds) {
+  await check('Climate: „Jalousien“ as an overview row', p.rows.some((r) => /^Jalousien/.test(r)), p.rows);
+  await tap(page, await rowAt(page, 'Jalousien'));
+  const jb = await popup(page);
+  await check('Climate: „Jalousien“ opens the blinds popup with ‹', jb.open && jb.back && jb.title !== 'Klima', jb);
+  const bk = await page.evaluate(() => { const b = window.__pierce('casora-popup')[0].shadowRoot.querySelector('.header-back'); const q = b.getBoundingClientRect(); return { x: q.x + q.width / 2, y: q.y + q.height / 2 }; });
+  await tap(page, bk);
+  p = await popup(page);
+  await check('Climate: ‹ back to „Klima“', p.open && p.title === 'Klima', p);
+}
 // A device row: the rows after the sub-badges (whatever the house calls its devices).
 const nChips = await page.evaluate(() => ((window._casoraPhoneHub.last.climate || {}).chips || []).length);
 const dev = p.rows[nChips];
