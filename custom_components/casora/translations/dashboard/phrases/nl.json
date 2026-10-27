@@ -2540,7 +2540,10 @@
   "Startet um": "Start om",
   "Startet morgen um": "Start morgen om",
   "Übersicht": "Overzicht",
-  "Im Studio Kacheln zu Räumen hinzufügen": "Voeg in de Studio tegels aan kamers toe"
+  "Im Studio Kacheln zu Räumen hinzufügen": "Voeg in de Studio tegels aan kamers toe",
+  "Etwas trocken": "Wat droog",
+  "Etwas feucht": "Wat vochtig",
+  "Sehr feucht": "Zeer vochtig"
  },
  "patterns": [
   [

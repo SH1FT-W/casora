@@ -2540,7 +2540,10 @@
   "Startet um": "Começa às",
   "Startet morgen um": "Começa amanhã às",
   "Übersicht": "Visão geral",
-  "Im Studio Kacheln zu Räumen hinzufügen": "Adicione blocos às divisões no Studio"
+  "Im Studio Kacheln zu Räumen hinzufügen": "Adicione blocos às divisões no Studio",
+  "Etwas trocken": "Um pouco seco",
+  "Etwas feucht": "Um pouco húmido",
+  "Sehr feucht": "Muito húmido"
  },
  "patterns": [
   [

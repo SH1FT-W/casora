@@ -2540,7 +2540,10 @@
   "Startet um": "Empieza a las",
   "Startet morgen um": "Empieza mañana a las",
   "Übersicht": "Resumen",
-  "Im Studio Kacheln zu Räumen hinzufügen": "Añade mosaicos a las habitaciones en el Studio"
+  "Im Studio Kacheln zu Räumen hinzufügen": "Añade mosaicos a las habitaciones en el Studio",
+  "Etwas trocken": "Algo seco",
+  "Etwas feucht": "Algo húmedo",
+  "Sehr feucht": "Muy húmedo"
  },
  "patterns": [
   [

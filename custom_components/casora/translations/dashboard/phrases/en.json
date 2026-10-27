@@ -2522,7 +2522,10 @@
   "Startet um": "Starts at",
   "Startet morgen um": "Starts tomorrow at",
   "Übersicht": "Overview",
-  "Im Studio Kacheln zu Räumen hinzufügen": "Add tiles to rooms in the Studio"
+  "Im Studio Kacheln zu Räumen hinzufügen": "Add tiles to rooms in the Studio",
+  "Etwas trocken": "Slightly dry",
+  "Etwas feucht": "Slightly humid",
+  "Sehr feucht": "Very humid"
  },
  "patterns": [
   [

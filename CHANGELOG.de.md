@@ -11,7 +11,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Sicherheits-Badge ohne eigene Einträge (auch Desktop und Tablet):** Ein Tipp öffnet dieselbe Sicherheits-Übersicht wie am Handy (Türen, Fenster und Jalousien als Zeilen) statt direkt „Türen & Fenster“ (#39).
 - **Beleuchtungs-Badge mit HA-Gruppe (#80):** Im Badge gewählte Lampen oder Räume gehen vor seiner Gruppe; das Handy zeigt genau diese (Räume mit ihren Pillen, „N von M Räumen an“).
 
-- **Klima-Unter-Badges:** Temperatur und Luftfeuchtigkeit nehmen die Farben der Luftqualität an: grün im Wohlfühlbereich (19–24 °C, auch bei °F-Sensoren; 40–60 %), orange knapp daneben, rot darüber hinaus – an den Badges und im Klima-Popup.
+- **Klima-Unter-Badges:** Temperatur und Luftfeuchtigkeit nehmen die Farben der Luftqualität an: grün im Wohlfühlbereich (19–24 °C, auch bei °F-Sensoren; 40–60 %), orange knapp daneben, rot darüber hinaus, mit passenden Worten (Angenehm, Kühl, Warm, Kalt, Heiß / Gut, Etwas trocken, Etwas feucht, Sehr trocken, Sehr feucht) – an den Badges und im Klima-Popup.
 
 ### Behoben
 - **Popups am Handy so hoch wie ihr Inhalt:** Nach dem Licht-Popup ging jedes weitere Popup bis ganz oben auf, und das Popup einer Lampe stand oben mit leerem Platz darunter.

@@ -2540,7 +2540,10 @@
   "Startet um": "Startuje o",
   "Startet morgen um": "Startuje jutro o",
   "Übersicht": "Przegląd",
-  "Im Studio Kacheln zu Räumen hinzufügen": "Dodaj kafelki do pomieszczeń w Studio"
+  "Im Studio Kacheln zu Räumen hinzufügen": "Dodaj kafelki do pomieszczeń w Studio",
+  "Etwas trocken": "Nieco sucho",
+  "Etwas feucht": "Nieco wilgotno",
+  "Sehr feucht": "Bardzo wilgotno"
  },
  "patterns": [
   [

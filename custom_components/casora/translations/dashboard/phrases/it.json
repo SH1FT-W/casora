@@ -2540,7 +2540,10 @@
   "Startet um": "Parte alle",
   "Startet morgen um": "Parte domani alle",
   "Übersicht": "Panoramica",
-  "Im Studio Kacheln zu Räumen hinzufügen": "Aggiungi riquadri alle stanze nello Studio"
+  "Im Studio Kacheln zu Räumen hinzufügen": "Aggiungi riquadri alle stanze nello Studio",
+  "Etwas trocken": "Un po' secco",
+  "Etwas feucht": "Un po' umido",
+  "Sehr feucht": "Molto umido"
  },
  "patterns": [
   [

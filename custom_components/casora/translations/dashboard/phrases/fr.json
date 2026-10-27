@@ -2540,7 +2540,10 @@
   "Startet um": "Démarre à",
   "Startet morgen um": "Démarre demain à",
   "Übersicht": "Aperçu",
-  "Im Studio Kacheln zu Räumen hinzufügen": "Ajoute des tuiles aux pièces dans le Studio"
+  "Im Studio Kacheln zu Räumen hinzufügen": "Ajoute des tuiles aux pièces dans le Studio",
+  "Etwas trocken": "Un peu sec",
+  "Etwas feucht": "Un peu humide",
+  "Sehr feucht": "Très humide"
  },
  "patterns": [
   [

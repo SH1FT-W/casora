@@ -2249,3 +2249,17 @@ window.casoraComfortColor = function (lv) {
     : lv === 2 ? 'var(--casora-badge-air-quality-bad-color, var(--casora-color-red, #FF453A))'
     : 'var(--disabled-text-color)';
 };
+/* The word to a reading on the same bands (owner, 27.10.2026): temperature „Angenehm“ / „Kühl“ (17–19 °C) /
+   „Warm“ (24–26 °C) / „Kalt“ (< 17) / „Heiß“ (> 26); humidity „Gut“ / „Etwas trocken“ (30–40) / „Etwas feucht“
+   (60–70) / „Sehr trocken“ (< 30) / „Sehr feucht“ (> 70). null: no reading. */
+window.casoraComfortWord = function (kind, v, unit) {
+  var lv = window.casoraComfortLevel(kind, v, unit);
+  if (lv === null) return null;
+  var n = parseFloat(v);
+  if (kind === 'temp') {
+    var c = /F/i.test(String(unit || '')) ? (n - 32) * 5 / 9 : n;
+    return lv === 0 ? 'Angenehm' : lv === 1 ? (c < 19 ? 'Kühl' : 'Warm') : (c < 19 ? 'Kalt' : 'Heiß');
+  }
+  if (kind === 'humidity') return lv === 0 ? 'Gut' : lv === 1 ? (n < 40 ? 'Etwas trocken' : 'Etwas feucht') : (n < 40 ? 'Sehr trocken' : 'Sehr feucht');
+  return null;
+};

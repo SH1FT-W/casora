@@ -11,7 +11,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Security badge without entries of its own (desktop and tablet too):** a tap opens the same security overview as on the phone (doors, windows and blinds as rows) instead of "Doors & windows" directly (#39).
 - **Lighting badge with an HA group (#80):** lights or rooms picked in the badge win over its group; the phone shows just those (rooms with their pills, "N of M rooms on").
 
-- **Climate sub-badges:** Temperature and Humidity take the air quality colours: green when comfortable (19–24 °C, also for °F sensors; 40–60 %), orange a little outside, red beyond – on the badges and in the Climate popup.
+- **Climate sub-badges:** Temperature and Humidity take the air quality colours: green when comfortable (19–24 °C, also for °F sensors; 40–60 %), orange a little outside, red beyond, with matching words (Comfortable, Cool, Warm, Cold, Hot / Good, Slightly dry, Slightly humid, Very dry, Very humid) – on the badges and in the Climate popup.
 
 ### Fixed
 - **Popups on the phone as tall as their content:** after the light popup every later popup opened full height, and a lamp's popup stood at the top with empty space below.

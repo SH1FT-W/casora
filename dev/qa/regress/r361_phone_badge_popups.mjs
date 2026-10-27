@@ -114,8 +114,10 @@ if (nBlinds) {
     await page.waitForTimeout(1500);
     await tap(page, await badgeAt(page, 'casora_badge_climate_group'));
     const tones = await page.evaluate(() => { const s = window.casoraPopup.surface; const r = (re) => (window.__pierce('.hui-row', s).find((n) => re.test(n.textContent.trim())) || {}).innerHTML || '';
-      return { t: /air-quality-bad/.test(r(/^Temperatur/)), h: /air-quality-good/.test(r(/^Luftfeuchtigkeit/)) }; });
+      const tx = (re) => ((window.__pierce('.hui-row', s).find((n) => re.test(n.textContent.trim())) || {}).textContent || '').replace(/\s+/g, ' ');
+      return { t: /air-quality-bad/.test(r(/^Temperatur/)), h: /air-quality-good/.test(r(/^Luftfeuchtigkeit/)), tw: tx(/^Temperatur/), hw: tx(/^Luftfeuchtigkeit/) }; });
     await check('Climate: 27.5 °C red, 50 % humidity green (air quality tones)', tones.t && tones.h, tones);
+    await check('Climate: the words follow the bands („Heiß“, „Gut“)', /Heiß/.test(tones.tw) && /Gut/.test(tones.hw), tones);
     p = await popup(page);
   }
 }
