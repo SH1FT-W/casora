@@ -184,4 +184,86 @@ const bridge = (h, pre = 'ebike_bridge_1a2b3c', n = '', dev = 'bridge') => {
   add(h, 'binary_sensor.testauto_front_left_door_lock', 'off', { dev: 'car', platform: 'x' });
   assert.equal(C.tile('sensor.testauto_range_combined', h.states), 'Verriegelt');
 }
+// ── #88 follow-up: bike off or out of reach, the bridge reports unknown. Last known value from the recorder
+//    (history of 7 days, else the long-term statistics), fetched once; then the cloud's battery; else as before.
+const settle = () => new Promise((r) => setTimeout(r, 0));
+const recorder = (h, { hist = {}, day = {}, hour = {} } = {}) => {
+  const calls = [];
+  h.callWS = (m) => {
+    calls.push(m);
+    const id = (m.entity_ids || m.statistic_ids)[0];
+    if (m.type === 'history/history_during_period') return Promise.resolve(hist[id] ? { [id]: hist[id] } : {});
+    if (m.type === 'recorder/statistics_during_period') { const t = m.period === 'day' ? day : hour; return Promise.resolve(t[id] ? { [id]: t[id] } : {}); }
+    return Promise.reject(new Error('unexpected ' + m.type));
+  };
+  return calls;
+};
+const offline = (h, pre) => {
+  Object.keys(h.states).filter((k) => k.includes(pre) && !k.startsWith('binary_sensor')).forEach((k) => { h.states[k].state = 'unknown'; });
+};
+{
+  Object.keys(B._last).forEach((k) => delete B._last[k]);
+  const h = fresh();
+  cloudBike(h);
+  const soc = bridge(h, 'ebike_bridge_9f8e7d');
+  const odo = 'sensor.ebike_bridge_9f8e7d_ebike_odometer_live';
+  offline(h, 'ebike_bridge_9f8e7d');
+  const now = Date.now() / 1000;
+  const calls = recorder(h, { hist: {
+    [soc]: [{ s: '51', lu: now - 9000 }, { s: '47.6', lu: now - 7200 }, { s: 'unavailable', lu: now - 7000 }, { s: 'unknown', lu: now - 6990 }],
+    [odo]: [{ s: '1160.9', lu: now - 7300 }, { s: 'unknown', lu: now - 6990 }],
+  } });
+  const ent = h.states[soc];
+  // While loading: as before (the due service).
+  assert.equal(B.tile(h.states, ent), 'Service fällig');
+  await settle(); await settle();
+  assert.equal(B.tile(h.states, ent), 'Akku 48 % · vor 2 Std.', 'last known battery with its age');
+  assert.match(B.sec('live', h.states, ent), /^Live:Akkustand=48 % \(Zuletzt vor 2 Std\.\)/);
+  assert.equal(B.read(h.states, ent).km, 1160.9, 'last known live odometer, newer than the cloud one');
+  assert.match(B.sec('hero', h.states, ent), /Kilometerstand 1\.161 km/);
+  // Fetched once per sensor, not on every draw.
+  B.tile(h.states, ent); B.sec('live', h.states, ent); B.read(h.states, ent);
+  assert.equal(calls.filter((c) => c.type === 'history/history_during_period').length, 2, 'one history call per sensor');
+  const m = calls[0];
+  assert.equal(m.minimal_response, true); assert.equal(m.no_attributes, true);
+  assert.ok(Date.parse(m.end_time) - Date.parse(m.start_time) <= 7 * 864e5 + 1000, '7 days');
+  // The bike reports again: live value, cache dropped.
+  h.states[soc].state = '50';
+  assert.equal(B.tile(h.states, ent), 'Akku 50 %');
+  assert.ok(!(soc in B._last));
+}
+// Older than 7 days: long-term statistics (last day, then its last hour).
+{
+  Object.keys(B._last).forEach((k) => delete B._last[k]);
+  const h = fresh();
+  cloudBike(h);
+  const soc = bridge(h, 'ebike_bridge_5a5a5a');
+  offline(h, 'ebike_bridge_5a5a5a');
+  const d0 = Date.now() - 68 * 864e5;
+  recorder(h, { day: { [soc]: [{ start: d0 - 864e5, end: d0, mean: 70 }, { start: d0, end: d0 + 864e5, mean: 86.4 }] },
+    hour: { [soc]: [{ start: d0, end: d0 + 3600e3, mean: 90 }, { start: d0 + 3600e3, end: d0 + 7200e3, mean: 86 }] } });
+  B.tile(h.states, h.states[soc]);
+  for (let i = 0; i < 6; i++) await settle();
+  assert.match(B.tile(h.states, h.states[soc]), /^Akku 86 % · vor (67|68) T\.$/);
+}
+// Nothing in the recorder: the cloud bike's battery (a % sensor of device class battery), else as before.
+{
+  Object.keys(B._last).forEach((k) => delete B._last[k]);
+  const h = fresh();
+  cloudBike(h);
+  const soc = bridge(h, 'ebike_bridge_0c0c0c');
+  offline(h, 'ebike_bridge_0c0c0c');
+  recorder(h);
+  B.tile(h.states, h.states[soc]);
+  for (let i = 0; i < 6; i++) await settle();
+  assert.equal(B.tile(h.states, h.states[soc]), 'Service fällig', 'no value anywhere: as before');
+  assert.equal(B.sec('live', h.states, h.states[soc]).includes('Akkustand'), false);
+  const h2 = fresh();
+  cloudBike(h2);
+  add(h2, 'sensor.testantrieb_cx_battery_level', '63', { dev: 'bike', attrs: { unit_of_measurement: '%', device_class: 'battery' } });
+  const soc2 = bridge(h2, 'ebike_bridge_0c0c0c');
+  offline(h2, 'ebike_bridge_0c0c0c');
+  recorder(h2);
+  assert.equal(B.tile(h2.states, h2.states[soc2]), 'Akku 63 %', 'cloud battery');
+}
 console.log('studio_vs_dashboard_88_89: ok');
