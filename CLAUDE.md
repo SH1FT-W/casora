@@ -16,7 +16,9 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
 ## Bau-Handbuch
 - Vor neuen Kacheln, Popups oder Studio-Flächen `docs/handbuch/` lesen (Design-Regeln, Blaupausen, Wortliste,
   Test und Release). Was dort „OFFEN“ ist, nicht selbst entscheiden: Wert der Nachbarn übernehmen.
-- Popups nach `docs/handbuch/popup-blaupause.md` (Muster v2, Bausteine in `window._casoraUI`, Regeltest `dev/unit/popup_blaupause.mjs`).
+- Popups nach `docs/handbuch/popup-richtlinien-v3.md` (Aufbau „Bühne“, gilt vor v2) und `docs/handbuch/popup-blaupause.md`
+  (Muster v2: Zeilen, Unterseiten, Einstellungen, Bausteine in `window._casoraUI`, Regeltest `dev/unit/popup_blaupause.mjs`).
+  Umbau aller Popups: `docs/handbuch/popup-rework-v3-auftrag.md`.
 - Regeltests `dev/unit/design_zaehler.mjs`, `dev/unit/vorlagen_regeln.mjs` müssen grün bleiben.
 
 ## Vorlagen (button-card)

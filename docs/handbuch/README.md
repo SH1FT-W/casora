@@ -9,7 +9,9 @@ passt. Stand: Feinschliff-Runde 1.3 (10.10.2026). Grundlage sind Messungen über
 | [design-regeln.md](design-regeln.md) | Tokens (Radien, Abstände, Schatten, Schrift, Farben, Symbolkreise, Bewegung), Geometrie, Kontrast, Trefferflächen, Hover/Druck |
 | [blaupause-kachel.md](blaupause-kachel.md) | Neue Kachel oder neues Badge Schritt für Schritt |
 | [blaupause-popup.md](blaupause-popup.md) | Neues Popup Schritt für Schritt |
+| [popup-richtlinien-v3.md](popup-richtlinien-v3.md) | **Popup-Richtlinien v3 „Bühne“** (seit 28.10.2026): Kopf, Bühne S1–S8, Schnellwahl, gruppierte Listen – gilt vor v2 |
 | [popup-blaupause.md](popup-blaupause.md) | Popup-Muster v2: Aufbau, 11 Regeln, Entscheidungen, Ausnahmen, Bausteine `UI.section/actions/settings/empty/width` |
+| [popup-rework-v3-auftrag.md](popup-rework-v3-auftrag.md) | Arbeitsanweisung: alle Popups auf v3 umbauen (Bausteine, Pilot, Wellen, Prüfungen, Bericht) |
 | [blaupause-studio-flaeche.md](blaupause-studio-flaeche.md) | Neue Studio-Seite, Inspektor-Abschnitt, Ablauf oder Rückfrage |
 | [wortliste.md](wortliste.md) | Verbindliche Wörter Deutsch/Englisch, Zahlen, Einheiten |
 | [test-und-release.md](test-und-release.md) | Tests, Messwerkzeuge, Gate, Release, was in Prod ohne Neustart geht |
