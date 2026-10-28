@@ -105,6 +105,10 @@
     if (!row) return [];
     var host = deep(haRoot(), function (n) { return n.localName === 'button-card' && tpls(n).indexOf('casora_mobile_sensor_chips') >= 0; }, 1)[0];
     var field = host && host.shadowRoot && host.shadowRoot.querySelector('#' + row);
+    // A phone room page (its badge row #rooms_row shows): the room's own sub-row of the badge, not Home's.
+    var roomRow = host && host.shadowRoot && host.shadowRoot.querySelector('#rooms_row');
+    var roomSub = roomRow && getComputedStyle(roomRow).display !== 'none' ? host.shadowRoot.querySelector('#room_sub_' + cat) : null;
+    if (roomSub) field = roomSub;
     // Desktop/tablet (26.10.63): the room header's own sub-row of the badge (casora_room › badges_<cat>).
     if (!field) {
       var room = deep(haRoot(), function (n) { return n.localName === 'button-card' && tpls(n).indexOf('casora_room') >= 0 && n.getBoundingClientRect().width > 0; }, 1)[0];

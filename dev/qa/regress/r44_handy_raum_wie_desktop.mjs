@@ -9,6 +9,9 @@
 // am Handy. (3) Ein Handy-Schalter in room_chips wirkt nur am Handy. (4) Antippen einer Sammel-Badge
 // klappt am Handy ihre Unter-Reihe auf, ohne den gemeinsamen Helfer casora_expanded_row.
 // (5) Die Studio-Vorschau (Handy, Raumseite) zeigt dieselben Badges wie das echte Handy.
+// Seit 28.10.2026 (baeaf373) öffnet die Sammel-Badge „Sicherheit“ der Raumseite ihr Popup wie auf der
+// Startseite statt der Unter-Reihe: (4) prüft dann, dass dieses Popup die Schlösser/Kontakte des Raums (seine
+// Unter-Reihe) zeigt und der gemeinsame Helfer unberührt bleibt.
 // Es wird nichts gespeichert: abweichende Einstellungen nur im Browser (casoraPhoneRoom.prime,
 // setConfig der Karte).
 import { open, usePage, studio, dashboard, casoraDashboard, check, need, finish } from './lib.mjs';
@@ -151,7 +154,22 @@ const tapped = await page.evaluate(() => {
 await page.waitForTimeout(2000);
 if (tapped) {
   const sub = await ROW(page, 'casora_mobile_sensor_chips', 'room_sub_security');
-  await check('Antippen „Sicherheit“: Unter-Reihe mit Schlössern/Kontakten offen', !!sub && sub.length > 0, sub);
+  const pop = await page.evaluate(() => {
+    const el = window.casoraPopup && window.casoraPopup.element;
+    if (!el || !el.hasAttribute('open')) return null;
+    // The phone hub's popup (35-phone-hub.js) lists the room's sub-badges; scan() says which entities they carry.
+    const sc = window._casoraPhoneHub && window._casoraPhoneHub.scan('security');
+    const scope = sc ? [].concat(...(sc.chips || []).map((c) => c.ids || [])) : [];
+    // The room's sub-row (hidden while the popup is open) is the popup's scope.
+    const card = window.__pierce('button-card').find((b) => [].concat((b._config || {}).template || []).includes('casora_mobile_sensor_chips'));
+    const subRow = card && card.shadowRoot.querySelector('#room_sub_security');
+    const subEnts = subRow ? window.__pierce('button-card', subRow).map((b) => (b._config || {}).entity).filter((x) => typeof x === 'string' && /^(lock|binary_sensor)\./.test(x)) : [];
+    return { title: el.shadowRoot.querySelector('.header-title').textContent, rows: window.__pierce('.hui-srow', el.shadowRoot).length,
+      scope, subEnts };
+  });
+  await check('Antippen „Sicherheit“: Unter-Reihe oder Sicherheits-Popup mit den Schlössern/Kontakten des Raums',
+    (!!sub && sub.length > 0) || !!(pop && pop.rows > 0 && pop.subEnts.length && pop.subEnts.every((x) => pop.scope.includes(x))), { sub, pop });
+  await page.evaluate(() => { try { window.casoraPopup && window.casoraPopup.close(); } catch (e) { /* closed */ } });
   const after = await page.evaluate(() => document.querySelector('home-assistant').hass.states['input_select.casora_expanded_row']?.state);
   await check('gemeinsamer Helfer casora_expanded_row bleibt unberührt', after === before, { before, after });
 } else {
