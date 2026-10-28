@@ -2580,6 +2580,8 @@
     var M = {};
     Object.keys(SPEC).forEach(function (f) { var s = SPEC[f]; M[f] = byKey(s[0], s[1]) || bySuf(s[0], s[2]); });
     if (bike.capacity && states[bike.capacity]) M.capacity = bike.capacity;
+    /* Battery level of the cloud bike, if the integration has one (a % sensor of device class battery). */
+    M.soc = first(rows.filter(function (r) { var a = (states[r.id] || {}).attributes || {}; return r.dom === 'sensor' && a.device_class === 'battery' && a.unit_of_measurement === '%'; }));
     if (!M.dueDate) M.dueDate = M.dueDateSensor;
     if (!M.dueOdo) M.dueOdo = M.dueOdoSensor;
     /* Range per assist mode: „Reachable Range <mode>“ sensors (no key); the mode from the name, older ids carry the code. */
@@ -2652,6 +2654,61 @@
     var own = eid ? all.filter(function (g) { return g.ids.indexOf(eid) >= 0; })[0] : null;
     return own || (all.length === 1 && B.bikes(states).length <= 1 ? all[0] : null);
   };
+  /* Last known value of a bridge sensor (#88): with the bike off or out of reach the bridge reports unknown. Fetched
+     once per sensor from the recorder (history of 7 days, else the long-term statistics of a year: the last day, then
+     its last hour) and kept until the sensor reports again; a failed fetch is retried after 10 minutes. */
+  var LK = B._last = {};
+  var toMs = function (x) { return typeof x === 'number' ? (x < 1e11 ? x * 1000 : x) : Date.parse(x); };
+  var kick = function (ids) {
+    if (!window.casoraKick) return;
+    var walk = function (root, depth) {
+      if (!root || depth > 14 || !root.querySelectorAll) return;
+      root.querySelectorAll('*').forEach(function (el) {
+        var c = el.localName === 'button-card' && el._config;
+        if (c && ids.indexOf(c.entity) >= 0) window.casoraKick(el);
+        if (el.shadowRoot) walk(el.shadowRoot, depth + 1);
+      });
+    };
+    try { walk(document, 0); } catch (e) { /* the next state push redraws */ }
+  };
+  var fetchLast = function (id, ids) {
+    var h = hassOf(); if (!h || !h.callWS) return;
+    var now = Date.now(), iso = function (ms) { return new Date(ms).toISOString(); };
+    LK[id] = { busy: true, at: now };
+    var stats = function (start, end, period) {
+      var msg = { type: 'recorder/statistics_during_period', start_time: iso(start), statistic_ids: [id], period: period, types: ['mean', 'state'] };
+      if (end) msg.end_time = iso(end);
+      return h.callWS(msg).then(function (r) { var rows = (r && r[id]) || []; return rows[rows.length - 1] || null; });
+    };
+    var val = function (row) { var x = row && (row.state != null ? row.state : row.mean); return x == null ? null : num(x); };
+    h.callWS({ type: 'history/history_during_period', start_time: iso(now - 7 * 864e5), end_time: iso(now), entity_ids: [id],
+      minimal_response: true, no_attributes: true, significant_changes_only: false }).then(function (r) {
+      var rows = (r && r[id]) || [];
+      for (var i = rows.length - 1; i >= 0; i--) { var n = num(rows[i].s); if (n != null) return { v: n, t: toMs(rows[i].lu || rows[i].lc) }; }
+      return stats(now - 365 * 864e5, null, 'day').then(function (d) {
+        if (val(d) == null) return null;
+        return stats(toMs(d.start), toMs(d.end), 'hour').then(function (hr) {
+          var row = val(hr) != null ? hr : d;
+          return { v: val(row), t: Math.min(now, toMs(row.end)) };
+        }, function () { return { v: val(d), t: Math.min(now, toMs(d.end)) }; });
+      });
+    }).then(function (res) { LK[id] = { at: now, v: res ? res.v : null, t: res ? res.t : null }; },
+      function () { LK[id] = { at: now, v: null, failed: true }; })
+      .then(function () { kick(ids); });
+  };
+  /* {v, t} of the sensor while it reports nothing, null otherwise (also while loading). */
+  B.lastKnown = function (states, id, ids) {
+    if (!id) return null;
+    if (ok(states[id])) { delete LK[id]; return null; }
+    var e = LK[id];
+    if (!e || (e.failed && Date.now() - e.at > 600000)) { fetchLast(id, ids || [id]); e = LK[id]; }
+    return e && e.v != null ? e : null;
+  };
+  var agoMs = function (t) {
+    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
+  };
+  B.ago = agoMs;
   /* Device name of the bike (popup title), null without a bike. */
   B.name = function (states, entity) { var F = B.find(states || {}, entity); return F.bike && F.bike.name ? F.bike.name : null; };
 
@@ -2678,6 +2735,19 @@
     var live = G ? { soc: v(states, L.soc), odo: v(states, L.odo), charging: on(L.charger) === true, eta80: v(states, L.eta80), eta100: v(states, L.eta100),
       connected: on(L.connected), moving: on(L.moving) === true, speed: v(states, L.speed), cadence: v(states, L.cadence), power: v(states, L.power),
       lux: v(states, L.lux), light: on(L.light), reserve: on(L.reserve) === true, diag: on(L.diag) === true, ids: G.ids } : null;
+    if (live) {
+      /* Bike off or out of reach (#88): last known battery and odometer of the bridge, else the cloud's battery. */
+      var lkIds = G.ids.concat(F.bike ? F.bike.ids : []);
+      if (live.soc != null) delete LK[L.soc];
+      if (live.odo != null) delete LK[L.odo];
+      if (live.soc == null) {
+        var ls = B.lastKnown(states, L.soc, lkIds);
+        if (ls) { live.soc = ls.v; live.socAt = ls.t; }
+        else if (v(states, M.soc) != null) live.soc = v(states, M.soc);
+        if (live.soc != null) live.charging = false;
+      }
+      if (live.odo == null) { var lo = B.lastKnown(states, L.odo, lkIds); if (lo && (km == null || lo.v > km)) km = lo.v; }
+    }
     if (live && live.odo != null) km = live.odo;
     if (dueKm == null && dueOdo != null && km != null) dueKm = Math.round((dueOdo - km) * 10) / 10;
     return {
@@ -2718,7 +2788,7 @@
     var r = B.read(states, entity);
     if (r.theft) return 'Diebstahl gemeldet';
     /* Bridge: the live battery first (#88, as the Studio shows the tile's SoC entity); a due service keeps the orange symbol. */
-    if (r.live && r.live.soc != null) return (r.live.charging ? 'Lädt · ' : 'Akku ') + fmtN(Math.round(r.live.soc)) + ' %';
+    if (r.live && r.live.soc != null) return (r.live.charging ? 'Lädt · ' : 'Akku ') + fmtN(Math.round(r.live.soc)) + ' %' + (r.live.socAt ? ' · ' + agoMs(r.live.socAt) : '');
     if (r.serviceDue) return 'Service fällig';
     if (r.daysSince != null) return r.daysSince < 1 ? 'Heute gefahren' : r.daysSince < 2 ? 'Gestern gefahren' : 'Letzte Fahrt vor ' + fmtN(Math.round(r.daysSince)) + ' T.';
     var km = r.km != null ? r.km : r.dist;
@@ -2750,7 +2820,7 @@
       var Lv = r.live; if (!Lv) return '';
       var rowsL = [], mins = function (m) { m = Math.round(m); return m < 60 ? m + ' Min.' : Math.floor(m / 60) + ' Std. ' + (m % 60) + ' Min.'; };
       if (Lv.soc != null) rowsL.push({ icon: Lv.charging ? 'mdi:battery-charging' : 'mdi:battery', iconTone: Lv.soc <= 15 && !Lv.charging ? 'warn' : 'accent', label: 'Akkustand',
-        sub: Lv.charging ? 'Lädt' : null, value: fmtN(Math.round(Lv.soc)) + ' %' });
+        sub: Lv.socAt ? 'Zuletzt ' + agoMs(Lv.socAt) : Lv.charging ? 'Lädt' : null, value: fmtN(Math.round(Lv.soc)) + ' %' });
       if (Lv.charging && Lv.eta80 != null && Lv.soc != null && Lv.soc < 80) rowsL.push({ icon: 'mdi:timer-sand', iconTone: DIM, label: 'Bis 80 %', value: mins(Lv.eta80) });
       if (Lv.charging && Lv.eta100 != null && Lv.soc != null && Lv.soc < 100) rowsL.push({ icon: 'mdi:timer-sand-complete', iconTone: DIM, label: 'Bis 100 %', value: mins(Lv.eta100) });
       if (Lv.moving) {
