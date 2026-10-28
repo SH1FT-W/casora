@@ -3618,8 +3618,8 @@
     + '.lps-s .hui-cut{display:none!important;}'
     + '.lps-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--casora-popup-col-gap,26px);align-items:start;}'
     + '.lps-cols.one{grid-template-columns:minmax(0,1fr);}'
-    + '.lps-lbl{font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);margin:0 0 10px 6px;color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));}'
-    + '.lps-gap{margin-top:22px;}'
+    + '.lps-lbl{font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);margin:var(--casora-pv-label-m,0 0 10px 6px);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));}'
+    + '.lps-gap{margin-top:var(--casora-pv-sec-gap,22px);}'
     + '.lps-bar{position:relative;height:66px;border-radius:var(--casora-popup-row-radius,24px);overflow:hidden;cursor:ew-resize;'
     +   'background:var(--casora-lps-track);touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}'
     + '.lps-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:inherit;background:var(--casora-lps-fill);transition:width .18s cubic-bezier(.36,0,.16,1);}'
@@ -3632,12 +3632,12 @@
     + '.lps-bar b .v,.lps-bar b em{color:var(--casora-lps-fill-ink,#3A2A14);}'
     + '.lps-bar.drag b{transition:none;}'
     + '@media (prefers-reduced-motion:reduce){.lps-bar i,.lps-bar b{transition:none;}}'
-    + '.lps-seg{display:flex;gap:10px;}'
-    + '.lps-sg{flex:1;min-width:0;height:46px;border-radius:18px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;'
-    +   'font-size:13px;font-weight:600;white-space:nowrap;background:var(--casora-lps-seg);color:var(--casora-lps-seg-ink);'
+    + '.lps-seg{display:flex;gap:var(--casora-pv-seg-gap,10px);padding:var(--casora-pv-seg-pad,0px);background:var(--casora-pv-seg-track,transparent);border-radius:var(--casora-soft-seg-radius,18px);}'
+    + '.lps-sg{flex:1;min-width:0;height:var(--casora-pv-seg-h,46px);border-radius:var(--casora-soft-seg-radius,18px);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;'
+    +   'font-size:13px;font-weight:600;white-space:nowrap;background:var(--casora-pv-seg-fill,var(--casora-lps-seg));color:var(--casora-lps-seg-ink);'
     +   'transition:background .2s ease,color .2s ease,box-shadow .2s ease;-webkit-tap-highlight-color:transparent;}'
     // Gewählte Lichtfarbe wie Weißton/Effekte im Einzel-Licht-Popup: dunkle Pille, helle Schrift (07.10.2026).
-    + '.lps-sg.on{background:var(--casora-popup-tiles-text-primary,#fff);color:var(--casora-popup-ui-on-ink,#000);box-shadow:none;}'
+    + '.lps-sg.on{background:var(--casora-pv-seg-on,var(--casora-popup-tiles-text-primary,#fff));color:var(--casora-pv-seg-on-ink,var(--casora-popup-ui-on-ink,#000));box-shadow:var(--casora-pv-seg-on-shadow,none);}'
     + '.lps-dot{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px var(--casora-soft-dot-ring,var(--casora-lps-dot-ring,transparent));}'
     + '.lps-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;}'
     // 1.2 (P4): Aktions-Pille – Höhe und Fläche aus dem Theme (Casora: 40 hoch, Popup-Fläche .10).
@@ -3647,10 +3647,14 @@
     // Trefferfläche 44 px (07.10.2026): unsichtbarer Rand nur nach oben/unten – nebeneinander
     // stehende Chips überlappen so nicht (Abstand zwischen den Reihen 8 px = 2 × 4 px).
     + '.lps-chip::before{content:"";position:absolute;left:0;right:0;top:-4px;bottom:-4px;}'
-    + '.lps-rows{display:flex;flex-direction:column;gap:8px;}'
-    + '.lps-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px var(--casora-popup-col-gap,26px);}'
-    + '.lps-row{display:flex;align-items:center;gap:12px;min-height:var(--casora-soft-row-h,60px);padding:var(--casora-soft-row-pad,12px 16px 12px 12px);border-radius:var(--casora-popup-row-radius,24px);'
-    +   'background:var(--casora-soft-row-fill,var(--casora-lps-row));cursor:pointer;transition:background .2s ease;-webkit-tap-highlight-color:transparent;}'
+    // Popup rework B (casora-core :host([data-casora-pv])): rows in one plate with hairlines; fallbacks = today.
+    + '.lps-rows{display:flex;flex-direction:column;gap:var(--casora-pv-stack-gap,8px);background:var(--casora-pv-stack-fill,transparent);border-radius:var(--casora-pv-stack-radius,0px);overflow:var(--casora-pv-stack-overflow,visible);}'
+    + '.lps-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--casora-pv-stack-gap,8px) var(--casora-pv-grid-col-gap,var(--casora-popup-col-gap,26px));background:var(--casora-pv-stack-fill,transparent);border-radius:var(--casora-pv-stack-radius,0px);overflow:var(--casora-pv-stack-overflow,visible);}'
+    // Two columns: the first row of the right column starts the plate, no hairline above it.
+    + '@media (min-width:761px){.lps-grid > .lps-row:nth-child(2)::before{content:none;}}'
+    + '.lps-row{position:relative;display:flex;align-items:center;gap:12px;min-height:var(--casora-soft-row-h,60px);padding:var(--casora-soft-row-pad,12px 16px 12px 12px);border-radius:var(--casora-pv-row-radius,var(--casora-popup-row-radius,24px));'
+    +   'background:var(--casora-pv-row-fill,var(--casora-soft-row-fill,var(--casora-lps-row)));cursor:pointer;transition:background .2s ease;-webkit-tap-highlight-color:transparent;}'
+    + '.lps-row + .lps-row::before{content:"";position:absolute;top:0;right:0;height:1px;pointer-events:none;left:var(--casora-pv-divider-inset,0px);background:var(--casora-pv-divider,transparent);}'
     + '@media (hover:hover){.lps-row:hover{background:var(--casora-soft-row-hover,var(--casora-lps-row-hover));}.lps-chip:not(.on):hover,.lps-sg:not(.on):hover{filter:brightness(.98);}}'
     + '.lps-ic{width:var(--casora-soft-icon-size,36px);height:var(--casora-soft-icon-size,36px);flex:none;border-radius:var(--casora-soft-icon-radius,12px);display:grid;place-items:center;background:var(--casora-lps-icon-off);}'
     + '.lps-ic .lps-g{width:calc(var(--casora-soft-icon-size,36px) * .5);height:calc(var(--casora-soft-icon-size,36px) * .5);color:var(--casora-soft-glyph-off,var(--casora-lps-icon-off-ink));}'

@@ -12323,7 +12323,8 @@
     ],
     "style": "[[[\n  /* Two columns (Position | list) for a list or an HA cover group with several members – as the content counts them;\n     the HA-group case was squeezed into 552 since stage 2 (27.10.2026). One cover: one column. */\n  const _gid = variables.cover_entity || entity?.entity_id;\n  const _gm = _gid ? states[_gid]?.attributes?.entity_id : null;\n  const ids = Array.isArray(variables.covers) && variables.covers.length ? variables.covers\n    : (Array.isArray(_gm) && _gm.filter((x) => states[x]).length > 1 ? _gm.filter((x) => states[x]) : [_gid]);\n  return ids.length > 1\n    ? (window.casoraPopupWidth ? window.casoraPopupWidth('two') : '--popup-min-width: 900px; --popup-max-width: 900px; --popup-min-width-narrow: calc(100vw - 16px);')\n    : (window.casoraPopupWidth ? window.casoraPopupWidth('one') : '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);');\n]]]",
     "title": "[[[\n  /* Own popup title of the tile (room_name) first, otherwise as before. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', ['Zuhause'])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own && !['Zuhause'].includes(_own)) return _own;\n  return \"Jalousien\";\n]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "b"
    }
   },
   "template": [
@@ -12518,7 +12519,8 @@
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', [])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own) return _own;\n  const n = String(this._config?.name || '').trim();\n  if (n && !n.startsWith('[[[')) return n;\n  return (window.casoraClimateMembers ? window.casoraClimateMembers(entity, states).length : entity?.attributes?.member_entities) ? 'Fußbodenheizung' : (entity?.attributes?.friendly_name || 'Heizung');\n]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
-    "style": "[[[ /* Group (Modus | Räume side by side): 900 – overrides casora_thermostat's one-column 552 underneath. One room is one column: 552. */ const _g = window.casoraClimateMembers ? window.casoraClimateMembers(entity, states).length > 0 : Array.isArray(entity?.attributes?.member_entities); return window.casoraPopupWidth ? window.casoraPopupWidth(_g ? 'two' : 'one') : (_g ? '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);' : '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'); ]]]"
+    "style": "[[[ /* Group (Modus | Räume side by side): 900 – overrides casora_thermostat's one-column 552 underneath. One room is one column: 552. */ const _g = window.casoraClimateMembers ? window.casoraClimateMembers(entity, states).length > 0 : Array.isArray(entity?.attributes?.member_entities); return window.casoraPopupWidth ? window.casoraPopupWidth(_g ? 'two' : 'one') : (_g ? '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);' : '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'); ]]]",
+    "variant": "b"
    },
    "haptic": "medium"
   },
@@ -12534,7 +12536,8 @@
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', [])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own) return _own;\n  const n = String(this._config?.name || '').trim();\n  if (n && !n.startsWith('[[[')) return n;\n  return (window.casoraClimateMembers ? window.casoraClimateMembers(entity, states).length : entity?.attributes?.member_entities) ? 'Fußbodenheizung' : (entity?.attributes?.friendly_name || 'Heizung');\n]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
-    "style": "[[[ /* Group (Modus | Räume side by side): 900 – overrides casora_thermostat's one-column 552 underneath. One room is one column: 552. */ const _g = window.casoraClimateMembers ? window.casoraClimateMembers(entity, states).length > 0 : Array.isArray(entity?.attributes?.member_entities); return window.casoraPopupWidth ? window.casoraPopupWidth(_g ? 'two' : 'one') : (_g ? '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);' : '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'); ]]]"
+    "style": "[[[ /* Group (Modus | Räume side by side): 900 – overrides casora_thermostat's one-column 552 underneath. One room is one column: 552. */ const _g = window.casoraClimateMembers ? window.casoraClimateMembers(entity, states).length > 0 : Array.isArray(entity?.attributes?.member_entities); return window.casoraPopupWidth ? window.casoraPopupWidth(_g ? 'two' : 'one') : (_g ? '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);' : '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'); ]]]",
+    "variant": "b"
    },
    "haptic": "light"
   }
@@ -12730,7 +12733,8 @@
     ],
     "style": "[[[\n  const _hdr = typeof window._casoraLPC === 'function' ? window._casoraLPC(entity, states, typeof hass !== 'undefined' ? hass : null, variables, 'header') : null;\n  const _w = (_hdr && _hdr.width) || 880;\n  /* Weich (soft): Schließen rechts oben über dem Ring, Kopfzeilen-Titel nur für Screenreader. */\n  const _soft = _hdr && _hdr.soft\n    ? ' --casora-lp-head-pos: absolute; --casora-lp-head-pe: none; --casora-lp-close-order: 2;'\n      + ' --casora-lp-close-ml: auto; --casora-lp-title-vis: hidden; --casora-lp-close-dy: 0px;'\n      + ' --casora-lp-close-size: 38px; --casora-lp-close-bg: var(--casora-lps-close-bg);'\n      + ' --casora-lp-close-ink: var(--casora-lps-close-ink); --casora-lp-close-shadow: none;'\n      + ' --casora-lp-close-backdrop: none;'\n    : '';\n  return '--popup-min-width: min(' + _w + 'px, 92vw); --popup-max-width: min(' + _w + 'px, 92vw);' + _soft;\n]]]\n",
     "title": "[[[\n  const _hdr = typeof window._casoraLPC === 'function' ? window._casoraLPC(entity, states, typeof hass !== 'undefined' ? hass : null, variables, 'header') : null;\n  return (_hdr && _hdr.title) || 'Lichtsteuerung';\n]]]\n",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "b"
    }
   },
   "styles": {
@@ -12774,7 +12778,8 @@
     "style": "[[[\n  const _hdr = typeof window._casoraLPC === 'function' ? window._casoraLPC(entity, states, typeof hass !== 'undefined' ? hass : null, variables, 'header') : null;\n  const _w = (_hdr && _hdr.width) || 880;\n  /* Weich (soft): Schließen rechts oben über dem Ring, Kopfzeilen-Titel nur für Screenreader. */\n  const _soft = _hdr && _hdr.soft\n    ? ' --casora-lp-head-pos: absolute; --casora-lp-head-pe: none; --casora-lp-close-order: 2;'\n      + ' --casora-lp-close-ml: auto; --casora-lp-title-vis: hidden; --casora-lp-close-dy: 0px;'\n      + ' --casora-lp-close-size: 38px; --casora-lp-close-bg: var(--casora-lps-close-bg);'\n      + ' --casora-lp-close-ink: var(--casora-lps-close-ink); --casora-lp-close-shadow: none;'\n      + ' --casora-lp-close-backdrop: none;'\n    : '';\n  return '--popup-min-width: min(' + _w + 'px, 92vw); --popup-max-width: min(' + _w + 'px, 92vw);' + _soft;\n]]]\n",
     "title": "[[[\n  const _hdr = typeof window._casoraLPC === 'function' ? window._casoraLPC(entity, states, typeof hass !== 'undefined' ? hass : null, variables, 'header') : null;\n  return (_hdr && _hdr.title) || 'Lichtsteuerung';\n]]]\n",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
-    "eyebrow": "[[[\n  const _hdr = typeof window._casoraLPC === 'function' ? window._casoraLPC(entity, states, typeof hass !== 'undefined' ? hass : null, variables, 'header') : null;\n  return (_hdr && _hdr.eyebrow) || '';\n]]]"
+    "eyebrow": "[[[\n  const _hdr = typeof window._casoraLPC === 'function' ? window._casoraLPC(entity, states, typeof hass !== 'undefined' ? hass : null, variables, 'header') : null;\n  return (_hdr && _hdr.eyebrow) || '';\n]]]",
+    "variant": "b"
    }
   },
   "template": [

@@ -31,7 +31,8 @@ assert.ok(JSON.stringify(T.casora_badge_light.template).includes('casora_popup_l
 const pop = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/03-popups.js', import.meta.url), 'utf8');
 const on = pop.match(/'\.lps-sg\.on\{([^}]*)\}'/);
 assert.ok(on, '.lps-sg.on-Stil fehlt');
-assert.ok(/background:var\(--casora-popup-tiles-text-primary/.test(on[1]) && /color:var\(--casora-popup-ui-on-ink/.test(on[1]),
+// Fallback = today's look; popup rework variant B (--casora-pv-seg-on*) may swap it for the light thumb.
+assert.ok(/background:var\((--casora-pv-seg-on,var\()?--casora-popup-tiles-text-primary/.test(on[1]) && /color:var\((--casora-pv-seg-on-ink,var\()?--casora-popup-ui-on-ink/.test(on[1]),
   'Gruppe: dunkle Pille wie im Einzel-Licht-Popup – ' + on[1]);
 const single = T.casora_light.tap_action.casora_popup.content;
 assert.ok(single.includes(".hl-seg .hui-sg.on{background:' + T.ink + ';color:var(--casora-popup-ui-on-ink"), 'Einzel: Weißton/Effekte wie bisher');

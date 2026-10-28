@@ -6493,6 +6493,52 @@ window.casoraMenuGlass = {
       --casora-popup-more-fade: var(--casora-soft-more-fade, rgba(0, 0, 0, 0.12));
       --casora-popup-grabber: var(--casora-soft-grabber, rgba(120, 100, 80, 0.30));
     }
+    /* Popup rework, variant B ("grouped", Apple inset-grouped lists): one plate per section with hairlines
+       between the rows, quiet uppercase section labels, smaller row symbols, one track for segments.
+       Only tokens - softGroup, segments and the light popup's rows read the --casora-pv-* values; without the
+       attribute their fallbacks are today's look. Set from cfg.variant (or localStorage casora_popup_variant). */
+    :host([soft][data-casora-pv="b"]) {
+      --casora-h15-fs: var(--casora-fs-sub, 13px);
+      --casora-h15-fw: 600;
+      --casora-h15-ls: 0.04em;
+      --casora-h15-tt: uppercase;
+      --casora-h15-c: var(--casora-soft-sub, var(--secondary-text-color));
+      --casora-popup-sec-gap: var(--casora-space-6, 24px);
+      --casora-popup-col-gap: var(--casora-space-6, 24px);
+      /* Plate 20 = row inset 12 + symbol radius 8 (concentric). */
+      --casora-pv-stack-gap: 0px;
+      --casora-pv-stack-fill: var(--casora-popup-row-fill);
+      --casora-pv-stack-radius: 20px;
+      --casora-pv-stack-overflow: hidden;
+      --casora-pv-row-fill: transparent;
+      --casora-pv-row-radius: 0px;
+      --casora-pv-divider: var(--casora-pill-divider, color-mix(in srgb, var(--primary-text-color) 12%, transparent));
+      --casora-pv-divider-inset: 52px;
+      --casora-soft-icon-size: 28px;
+      --casora-soft-icon-radius: 8px;
+      --casora-soft-row-h: 52px;
+      --casora-soft-row-pad: 12px 16px 12px 12px;
+      /* Active and selected rows do not lift out of the plate: the coloured symbol and the switch say it. */
+      --casora-soft-row-active: transparent;
+      --casora-soft-row-active-shadow: none;
+      --casora-soft-row-active-ink: var(--casora-popup-tiles-text-primary, var(--primary-text-color));
+      --casora-soft-row-active-sub: var(--casora-soft-sub, var(--secondary-text-color));
+      --casora-soft-row-selected-shadow: none;
+      /* Segmented control: one track, the chosen segment as the thumb (44 = 38 + 2 × 3). */
+      --casora-pv-seg-track: var(--casora-soft-control-fill, rgba(140, 115, 90, 0.10));
+      --casora-pv-seg-pad: 3px;
+      --casora-pv-seg-gap: 2px;
+      --casora-pv-seg-fill: transparent;
+      --casora-pv-seg-h: 38px;
+      --casora-soft-seg-radius: 999px;
+      --casora-pv-seg-on: var(--casora-soft-seg-on, var(--casora-lps-seg-on, #FFFDF9));
+      --casora-pv-seg-on-ink: var(--casora-soft-seg-on-ink, var(--casora-lps-seg-on-ink, #2E2721));
+      --casora-pv-seg-on-shadow: var(--casora-soft-seg-on-shadow, var(--casora-lps-seg-on-shadow, none));
+      /* Labels flush with the text in the plate; section gap and grid on the 4 px scale. */
+      --casora-pv-label-m: 0 16px 8px 16px;
+      --casora-pv-sec-gap: var(--casora-space-6, 24px);
+      --casora-pv-grid-col-gap: 0px;
+    }
     :host([soft]) .glass {
       font-family: var(--primary-font-family, inherit);
       background: var(--casora-soft-surface, var(--casora-dialog-bg, rgb(250, 246, 240)));
@@ -7489,6 +7535,11 @@ window.casoraMenuGlass = {
       if (this._backFn && typeof this._cfgCurrent.back !== 'function') {
         this._cfgCurrent = Object.assign({}, this._cfgCurrent, { back: this._backFn });
       }
+      // Popup rework: variant per popup kind (cfg.variant), localStorage casora_popup_variant overrides for
+      // comparing ('a' = today's look everywhere, 'b' = variant B everywhere).
+      var pv = this._cfgCurrent.variant || null;
+      try { var pvLs = localStorage.getItem('casora_popup_variant'); if (pvLs === 'a') pv = null; else if (pvLs) pv = pvLs; } catch (e) { /* default */ }
+      if (pv) this.setAttribute('data-casora-pv', String(pv)); else this.removeAttribute('data-casora-pv');
       /* D-02: Bildschirmleser-Name in der Oberflächensprache (war fest „Close“) */
       this._headerClose.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Schließen') : 'Schließen');
       // Weich: Ring aus der auslösenden Kachel. Gemerkt wird die Kachel, nicht das Ergebnis –
@@ -8367,6 +8418,7 @@ window.casoraMenuGlass = {
       var c = Object.assign({ dismiss_on_background: true }, cfg || {});
       if (c.eyebrow == null) c.eyebrow = prevTitle;
       if (c.head_switch === undefined) c.head_switch = false;
+      if (c.variant === undefined && prev && prev.variant) c.variant = prev.variant;
       if (c.back === undefined) c.back = prev ? function () { window.casoraPopup.open(prev); } : null;
       return window.casoraPopup.open(c);
     },
@@ -8730,7 +8782,7 @@ window.casoraMenuGlass = {
   // kleiner Großbuchstaben – Werte über --casora-h15-* aus dem Weich-Rahmen.
   function softLabel(text, action) {
     var out = '<div class="hui-slbl" style="font-family:' + T.font + ';display:flex;align-items:baseline;'
-      + 'justify-content:space-between;gap:12px;margin:0 6px 10px;">'
+      + 'justify-content:space-between;gap:12px;margin:var(--casora-pv-label-m, 0 6px 10px);">'
       + '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);'
       + 'color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));">' + esc(text) + '</div>';
     if (action && action.text) {
@@ -9261,9 +9313,13 @@ window.casoraMenuGlass = {
       + 'to{opacity:1;transform:perspective(900px) translateZ(0);}}'
       + '.hui-plate{animation:var(--casora-popup-plate-enter, none);'
       + 'animation-delay:var(--casora-popup-plate-delay, 0ms);}'
-      + '.hui-srow{background:' + S.row + ';border-radius:' + S.radius + ';'
+      + '.hui-srow{background:var(--casora-pv-row-fill, ' + S.row + ');border-radius:var(--casora-pv-row-radius, ' + S.radius + ');'
       +   'transition:background-color .18s ease;}'
       + '.hui-srow.hui-tap:active{background:' + S.rowPress + ';}'
+      // Popup rework B: hairline between rows of one plate, from the text on; gone next to a lit row.
+      + '.hui-srow + .hui-srow::before{content:"";position:absolute;top:0;right:0;height:1px;pointer-events:none;'
+      +   'left:var(--casora-pv-divider-inset, 0px);background:var(--casora-pv-divider, transparent);}'
+      + '.hui-srow.hui-sel::before,.hui-srow.hui-sel + .hui-srow::before{opacity:0;}'
       // Aktive Zeile (z. B. Gerät lädt) wie eine aktive Kachel im Raum: heller Grund, dunkle Schrift, Zustand in Ton.
       // DP-07 (1.3): eine Art „aktiv“ – Popup-Token --casora-soft-row-active* (hell Creme, dunkel Sand 14 %).
       + '.hui-srow.hui-act{background:var(--casora-soft-row-active, var(--casora-entity-background-active, ' + S.row + '));'
@@ -9302,7 +9358,9 @@ window.casoraMenuGlass = {
       /* Hinweis-Zeilen (r.subWrap, z. B. „Noch keine Tageswerte“): ganzer Satz statt „…“ (07.10.2026). */
       + '.hui-srow .hui-sub.hui-wrap{display:block!important;white-space:normal!important;overflow:visible!important;-webkit-line-clamp:unset!important;text-overflow:clip!important;}'
       + '</style>';
-    out += '<div class="hui-plate" style="display:flex;flex-direction:column;gap:8px;">';
+    out += '<div class="hui-plate" style="display:flex;flex-direction:column;gap:var(--casora-pv-stack-gap, 8px);'
+      + 'background:var(--casora-pv-stack-fill, transparent);border-radius:var(--casora-pv-stack-radius, 0px);'
+      + 'overflow:var(--casora-pv-stack-overflow, visible);">';
     rows.forEach(function (r) {
       var arming = !!(r.svc && r.confirm);
       var armOnAction = !!(arming && r.entity && r.action);
@@ -10593,11 +10651,14 @@ window.casoraMenuGlass = {
       if (label) out += softLabel(label);
       out += '<style>'
         + 'ha-card.disabled{pointer-events:auto!important;}'
-        + '.hui-seg{display:grid;gap:' + (many ? 8 : 10) + 'px;}'
+        // Popup rework B: one track (--casora-pv-seg-track), the chosen segment is the thumb.
+        + '.hui-seg{display:grid;gap:var(--casora-pv-seg-gap, ' + (many ? 8 : 10) + 'px);'
+        +   'padding:var(--casora-pv-seg-pad, 0px);background:var(--casora-pv-seg-track, transparent);'
+        +   'border-radius:var(--casora-soft-seg-radius, 18px);}'
         + '.hui-sg{min-width:0;box-sizing:border-box;text-align:center;'
-        +   'font-size:13px;font-weight:600;min-height:46px;padding:0 ' + (many ? 6 : 12) + 'px;'
+        +   'font-size:13px;font-weight:600;min-height:var(--casora-pv-seg-h, 46px);padding:0 ' + (many ? 6 : 12) + 'px;'
         +   'display:flex;align-items:center;justify-content:center;'
-        +   'border-radius:var(--casora-soft-seg-radius, 18px);background:' + S.ctl + ';'
+        +   'border-radius:var(--casora-soft-seg-radius, 18px);background:var(--casora-pv-seg-fill, ' + S.ctl + ');'
         +   'color:' + S.sub + ';cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
         +   'transition:background-color .16s ease, box-shadow .16s ease;}'
         + '.hui-sg.on{background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, ' + T.ink + ');'
