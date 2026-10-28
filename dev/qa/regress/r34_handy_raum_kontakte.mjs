@@ -6,6 +6,8 @@
 // des Raums in room_chips, (2) die Raumseite am Handy (WebKit 390×844) zeigt sie als Badges – seit
 // 05.10.2026 wie der Raum-Kopf am Desktop (einzeln oder in der Sammel-Badge „Sicherheit“, r44).
 // Es wird nichts gespeichert: Studio nur im Speicher, am Handy nur die Karte im Browser umgestellt.
+// Seit 28.10.2026 (baeaf373) öffnet die Sammel-Badge „Sicherheit“ der Raumseite ihr Popup wie auf der
+// Startseite statt der Unter-Reihe: dann muss dieses Popup die Sicherheit des Raums samt Kontakt zeigen.
 import { open, usePage, studio, dashboard, casoraDashboard, check, need, finish } from './lib.mjs';
 
 const dash = await casoraDashboard();
@@ -97,9 +99,21 @@ if (!seen.hit && seen.group) {
     (g.shadowRoot.querySelector('ha-card') || g).click();
   });
   for (let t0 = Date.now(); Date.now() - t0 < 10000; await page.waitForTimeout(300)) {
-    sub = await look('room_sub_security', sync.contact);
+    sub = await page.evaluate((contact) => {
+      const pop = window.casoraPopup && window.casoraPopup.element;
+      if (!pop || !pop.hasAttribute('open')) return { popup: false };
+      const S = document.querySelector('home-assistant').hass.states;
+      // The phone hub's popup (35-phone-hub.js) lists the room's sub-badges; scan() says which entities they carry.
+      const sc = window._casoraPhoneHub ? window._casoraPhoneHub.scan('security') : null;
+      const ids = sc ? [].concat(...(sc.chips || []).map((c) => c.ids || [])) : [];
+      const name = (S[contact] && S[contact].attributes.friendly_name) || contact;
+      const text = window.__pierce('ha-card', pop.shadowRoot).map((e) => e.innerText).join(' ');
+      return { popup: true, title: pop.shadowRoot.querySelector('.header-title').textContent, hit: ids.includes(contact), named: text.includes(name),
+        scope: ids.length };
+    }, sync.contact);
     if (sub && sub.hit) break;
   }
+  await check('Sicherheits-Popup der Raumseite nennt den Kontakt (Zeile des Raums)', !!(sub && sub.named), sub);
 }
 await check(`Raumseite „${sync.room}“ am Handy zeigt den Kontakt ${sync.contact} als Badge (einzeln oder in „Sicherheit“)`,
   seen.hit || !!(sub && sub.hit), { seen, sub });
