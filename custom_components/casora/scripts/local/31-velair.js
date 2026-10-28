@@ -451,10 +451,19 @@
     var nowM = date.getHours() * 60 + date.getMinutes();
     var rowsHtml = V.days(z.first).map(function (w) {
       var on = w === sel;
-      var barHtml = V.daySegments(z.schedule, w).map(function (s) {
+      var segs = V.daySegments(z.schedule, w);
+      var barHtml = segs.map(function (s) {
         var col = barColor(s.block, lo, hi);
         return '<span style="position:absolute;top:0;bottom:0;left:' + esc((s.from / 14.4).toFixed(2)) + '%;width:' + esc(((s.to - s.from) / 14.4).toFixed(2)) + '%;'
           + 'background:' + esc(col.c) + ';opacity:' + esc(col.o) + ';"></span>';
+      }).join('');
+      // Each slot's target in its block (#32), when the block is wide enough (2½ h) and the word is short („21°“, „Aus“).
+      var tempHtml = segs.map(function (s) {
+        var t = V.label(s.block);
+        if (!t || t.length > 5 || s.to - s.from < 150) return '';
+        return '<span style="position:absolute;top:0;bottom:0;left:' + esc((s.from / 14.4).toFixed(2)) + '%;width:' + esc(((s.to - s.from) / 14.4).toFixed(2)) + '%;'
+          + 'display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;'
+          + 'color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));">' + esc(T(t)) + '</span>';
       }).join('');
       var markHtml = w === today ? '<span style="position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:999px;left:calc(' + esc((nowM / 14.4).toFixed(2)) + '% - 1px);'
         + 'background:var(--casora-popup-tiles-text-primary, var(--primary-text-color));"></span>' : '';
@@ -464,8 +473,8 @@
         + '<span style="flex:none;width:28px;font-size:13px;font-weight:' + (w === today || on ? 800 : 600) + ';pointer-events:none;color:'
         + (on ? 'var(--casora-soft-row-active-ink, var(--casora-popup-tiles-text-primary, var(--primary-text-color)))' : 'var(--casora-soft-sub, var(--secondary-text-color))') + ';">'
         + esc(T(SHORT[w])) + '</span>'
-        + '<span style="position:relative;flex:1;min-width:0;height:12px;border-radius:999px;overflow:visible;pointer-events:none;">'
-        + '<span style="position:absolute;inset:0;border-radius:999px;overflow:hidden;background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));">' + barHtml + '</span>'
+        + '<span style="position:relative;flex:1;min-width:0;height:18px;border-radius:999px;overflow:visible;pointer-events:none;">'
+        + '<span style="position:absolute;inset:0;border-radius:999px;overflow:hidden;background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));">' + barHtml + tempHtml + '</span>'
         + markHtml + '</span></div>';
     }).join('');
     var ticksHtml = '<div style="display:flex;justify-content:space-between;margin:4px 12px 0 52px;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;'
@@ -503,6 +512,9 @@
       rows.push({ icon: 'mdi:hand-back-right-outline', iconTone: 'warn', label: 'Manuell eingestellt', sub: 'Der Zeitplan wartet, bis du fortsetzt',
         action: 'Fortsetzen', svc: V.svc.resumeAuto(id) });
     }
+    // Velair's global mode (select „Mode“: Default, Nacht, Urlaub …, #32): which week runs and why; a tap chooses another.
+    var ms = E.mode && hass && hass.states[E.mode];
+    if (ms && !bad(ms.state)) rows.push({ icon: 'mdi:home-switch-outline', iconTone: OFF_PLATE, label: 'Velair-Modus', value: ms.state, entity: E.mode });
     var out = UI.group(rows, 'Zeitplan');
     out += GAP + weekHtml(UI, id, z, sel, today, date);
     var e = u.edit && u.edit.wd === sel ? u.edit : null;
