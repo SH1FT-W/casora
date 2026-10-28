@@ -185,8 +185,9 @@ const MV = { more_lists: ['group.qa_rollo', 'group.qa_heizung', 'kein-id', 'grou
   more_charts: ['sensor.qa_temp', 'sensor.qa_energie'], more_chart_labels: ['falsch'] };
 const M = L.moreCfg(MV);
 assert.deepEqual(M, { lists: ['group.qa_rollo', 'group.qa_heizung'], charts: ['sensor.qa_temp', 'sensor.qa_energie'],
-  listNames: { 'group.qa_heizung': 'Heizung' }, chartNames: {} });
+  tiles: [], listNames: { 'group.qa_heizung': 'Heizung' }, chartNames: {}, tileNames: {} });
 assert.equal(L.moreWord(3, 4), '3 Listen · 4 Diagramme');
+assert.equal(L.moreWord(0, 0, 2), '2 Kacheln'); assert.equal(L.moreWord(1, 0, 1), '1 Liste · 1 Kachel');
 assert.equal(L.moreWord(1, 0), '1 Liste'); assert.equal(L.moreWord(0, 1), '1 Diagramm'); assert.equal(L.moreWord(0, 0), 'Nichts gewählt');
 assert.equal(L.moreTile(hass, states, MV), '2 Listen · 2 Diagramme');
 assert.equal(L.moreTile(hass, states, { more_lists: ['group.qa_weg'] }), 'Nichts gewählt', 'missing groups do not count');
@@ -254,7 +255,7 @@ assert.ok(tList && tMore, 'Studio offers both tiles');
 assert.equal(tList.noEntity, true); assert.equal(tMore.noEntity, true);
 assert.equal(tList.community, undefined, 'core tiles, not community cards');
 assert.deepEqual(tList.fields.map((f) => f.key), ['icon', 'room_name', 'list_source', 'list_group', 'list_entities', 'list_label', 'list_layout', 'list_sections']);
-assert.deepEqual(tMore.fields.map((f) => f.key), ['icon', 'room_name', 'more_lists', 'more_list_labels', 'more_charts', 'more_chart_labels']);
+assert.deepEqual(tMore.fields.map((f) => f.key), ['icon', 'room_name', 'more_lists', 'more_list_labels', 'more_charts', 'more_chart_labels', 'more_tiles', 'more_tile_labels']);
 const fl = Object.fromEntries(tList.fields.map((f) => [f.key, f]));
 assert.equal(fl.list_source.seg, true); assert.deepEqual(fl.list_source.options, ['', 'pick', 'label']);
 assert.equal(fl.list_layout.seg, true); assert.deepEqual(fl.list_layout.options, ['1', '2', '']);
@@ -272,6 +273,9 @@ assert.deepEqual(fl.list_label.dynOptions(labHass, null, null), { options: ['qa_
 const fm = Object.fromEntries(tMore.fields.map((f) => [f.key, f]));
 assert.ok(fm.more_lists.domains.includes('group') && fm.more_lists.domains.includes('light') && fm.more_lists.accept === 'group'); assert.equal(fm.more_list_labels.over, 'more_lists');
 assert.deepEqual(fm.more_charts.domains, ['sensor']); assert.equal(fm.more_chart_labels.over, 'more_charts');
+// Tiles of the dashboard as entries (#59): only entities with a tile, a name each.
+assert.equal(fm.more_tiles.tiles, true); assert.equal(fm.more_tile_labels.over, 'more_tiles');
+assert.equal(fm.more_tile_labels.when({}), false); assert.equal(fm.more_tile_labels.when({ more_tiles: ['light.qa_x'] }), true);
 for (const lang of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
   const tr = JSON.parse(src('custom_components/casora/translations/panel/' + lang + '.json')).exact;
   const words = [tList.label, tMore.label].concat([tList, tMore].flatMap((t) => t.fields.flatMap((f) => [f.label, f.hint, f.placeholder]

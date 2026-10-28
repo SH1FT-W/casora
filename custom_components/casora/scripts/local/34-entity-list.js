@@ -386,23 +386,26 @@
     V = V || {};
     var lists = uniq((Array.isArray(V.more_lists) ? V.more_lists : []).filter(isId));
     var charts = uniq((Array.isArray(V.more_charts) ? V.more_charts : []).filter(isId));
+    var tiles = uniq((Array.isArray(V.more_tiles) ? V.more_tiles : []).filter(isId));
     var own = function (m, ids) {
       var src = labelsOf(m), out = {};
       ids.forEach(function (id) { if (typeof src[id] === 'string' && src[id].trim()) out[id] = src[id].trim(); });
       return out;
     };
-    return { lists: lists, charts: charts, listNames: own(V.more_list_labels, lists), chartNames: own(V.more_chart_labels, charts) };
+    return { lists: lists, charts: charts, tiles: tiles, listNames: own(V.more_list_labels, lists), chartNames: own(V.more_chart_labels, charts),
+      tileNames: own(V.more_tile_labels, tiles) };
   };
-  L.moreWord = function (lists, charts) {
+  L.moreWord = function (lists, charts, tiles) {
     var out = [];
     if (lists) out.push(lists === 1 ? '1 Liste' : lists + ' Listen');
     if (charts) out.push(charts === 1 ? '1 Diagramm' : charts + ' Diagramme');
+    if (tiles) out.push(tiles === 1 ? '1 Kachel' : tiles + ' Kacheln');
     return out.length ? out.join(' · ') : 'Nichts gewählt';
   };
   L.moreTile = function (hass, states, V) {
     var M = L.moreCfg(V), S = states || {};
     var have = function (id) { return !!S[id]; };
-    return L.moreWord(M.lists.filter(have).length, M.charts.filter(have).length);
+    return L.moreWord(M.lists.filter(have).length, M.charts.filter(have).length, M.tiles.filter(have).length);
   };
   // Entity list settings for a group listed in Mehr.
   L.groupCfg = function (gid) { return L.cfg({ list_source: 'group', list_group: gid }); };
@@ -411,7 +414,7 @@
     if (!K || !UI) return { type: 'vertical-stack', cards: [] };
     var S = states || {};
     var M = L.moreCfg(V);
-    var watch = M.lists.concat(M.charts);
+    var watch = M.lists.concat(M.charts, M.tiles);
     M.lists.forEach(function (g) { watch = watch.concat(L.resolve(hass, S, L.groupCfg(g))); });
     var call = function (part) {
       return 'return window._casoraEntityList ? window._casoraEntityList.moreSec(' + JSON.stringify(part) + ', ' + JSON.stringify(M) + ', states, hass) : "";';
@@ -419,7 +422,8 @@
     var f = { hero: { card: K.secCard(watch, call('hero'), S) } };
     if (M.lists.length) f.lists = { card: K.secCard(watch, call('lists'), S) };
     if (M.charts.length) f.charts = { card: K.secCard(M.charts, call('charts'), S) };
-    var ui = K.layout({ fields: f, top: ['hero', 'lists', 'charts'], left: [], right: [] });
+    if (M.tiles.length) f.tiles = { card: K.secCard(M.tiles, call('tiles'), S) };
+    var ui = K.layout({ fields: f, top: ['hero', 'lists', 'charts', 'tiles'].filter(function (k) { return k === 'hero' || f[k]; }), left: [], right: [] });
     // Marks the popup as Mehr for the row tap (moreHook): which groups and sensors open in it, and their names.
     ui.variables = Object.assign({}, ui.variables, { casora_more: M });
     return ui;
@@ -429,8 +433,9 @@
     if (!UI || !M) return '';
     var S = states || {};
     if (part === 'hero') {
-      var out = UI.line(L.moreWord(M.lists.filter(function (id) { return !!S[id]; }).length, M.charts.filter(function (id) { return !!S[id]; }).length), []);
-      if (!M.lists.length && !M.charts.length && UI.note) out += UI.note(T('Wähle im Studio Gruppen und Sensoren für diese Kachel.'));
+      var has = function (id) { return !!S[id]; };
+      var out = UI.line(L.moreWord(M.lists.filter(has).length, M.charts.filter(has).length, (M.tiles || []).filter(has).length), []);
+      if (!M.lists.length && !M.charts.length && !(M.tiles || []).length && UI.note) out += UI.note(T('Wähle im Studio Gruppen und Sensoren für diese Kachel.'));
       return out;
     }
     if (part === 'lists') {
@@ -452,6 +457,14 @@
           sub: span + ' · ' + v };
       });
       return rows2.length ? LIST_CSS + '<div data-casora-cols="auto">' + UI.group(rows2, 'Diagramme') + '</div>' : '';
+    }
+    if (part === 'tiles') {
+      // Tiles of the dashboard (#59): a tap opens that tile's own popup (moreHook → openTile).
+      var rows3 = (M.tiles || []).filter(function (id) { return !!S[id]; }).map(function (id) {
+        var st = S[id];
+        return { entity: id, icon: L.iconOf(st), iconTone: 'rgba(0,0,0,0)', label: (M.tileNames || {})[id] || L.nameOf(st, id), labelLit: true, sub: L.word(hass, st) };
+      });
+      return rows3.length ? LIST_CSS + '<div data-casora-cols="auto">' + UI.group(rows3, 'Kacheln') + '</div>' : '';
     }
     return '';
   };
@@ -484,7 +497,27 @@
     window._casoraSuppressDismiss = Date.now() + 600;
     if ((M.lists || []).indexOf(id) > -1) return L.openList(id, (M.listNames || {})[id]);
     if ((M.charts || []).indexOf(id) > -1) return L.openChart(id, (M.chartNames || {})[id]);
+    if ((M.tiles || []).indexOf(id) > -1) return L.openTile(id);
     return false;
+  };
+  // A tile of the dashboard: its own popup (the bell's way, 01-basis.js openViaCard: the tile's config found by its
+  // entity), with ‹ back to Mehr – the next popup that opens within 3 s takes the back.
+  var backNext = null;
+  L.openTile = function (id) {
+    var P = window.casoraPopup, prev = P && P.current, open = window._casoraNotifyOpenViaCard;
+    if (!P || !open) return false;
+    if (!P._casoraMoreBack) {
+      var o = P.open;
+      P.open = function (data) {
+        if (backNext && Date.now() < backNext.until && data && data.back === undefined) { data = Object.assign({}, data, { back: backNext.fn }); }
+        backNext = null;
+        return o.call(this, data);
+      };
+      P._casoraMoreBack = true;
+    }
+    backNext = prev ? { fn: function () { P.open(prev); }, until: Date.now() + 3000 } : null;
+    open(id, function (ok) { if (!ok && P.moreInfo) P.moreInfo(id); }, null, true);
+    return true;
   };
   (window._casoraMiHooks = window._casoraMiHooks || []).push(L.moreHook);
 })();

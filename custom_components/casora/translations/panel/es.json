@@ -845,6 +845,8 @@
     "Not set": "Sin configurar",
     "Popup": "Ventana",
     "Own cards in popup": "Tarjetas propias en la ventana",
+    "Add tile …": "Añadir mosaico …",
+    "Each opens the popup of its tile on this dashboard, with that tile's own settings (a Chart tile with its periods, for example).": "Cada uno abre la ventana de su mosaico en este panel, con sus propios ajustes (por ejemplo, un mosaico de gráfico con sus periodos).",
     "Entities in popup": "Entidades en la ventana",
     "Add an entity": "Añadir entidad",
     "Shown as rows in the popup's own design: switches toggle, buttons and scripts run, sensors show their value.": "Como filas con el diseño de la ventana: los interruptores conmutan, botones y scripts se ejecutan, los sensores muestran su valor.",

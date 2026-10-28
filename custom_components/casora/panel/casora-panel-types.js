@@ -556,6 +556,11 @@ window.CASORA_TILE_TYPES = [
         hint: "Each sensor opens as a chart like the Chart tile's popup: 24 hours, 7 or 30 days or a year." },
       { key: "more_chart_labels", label: "Name", type: "map", over: "more_charts", kind: "text",
         when: (v) => Array.isArray(v.more_charts) && v.more_charts.length > 0 },
+      // Tiles already on the dashboard (#59): a tap opens that tile's own popup, with its own settings.
+      { key: "more_tiles", label: "Tiles", type: "list", tiles: true, placeholder: "Add tile …",
+        hint: "Each opens the popup of its tile on this dashboard, with that tile's own settings (a Chart tile with its periods, for example)." },
+      { key: "more_tile_labels", label: "Name", type: "map", over: "more_tiles", kind: "text",
+        when: (v) => Array.isArray(v.more_tiles) && v.more_tiles.length > 0 },
     ] },
   // Aquarium overview (Hemma 1 and older versions "…_aquarium"): up to three tanks in one tile. Only for
   // editing migrated tiles – new tanks get the aquarium tile (casora_aquarium_tank).

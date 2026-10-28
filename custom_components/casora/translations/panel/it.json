@@ -845,6 +845,8 @@
     "Not set": "Non impostato",
     "Popup": "Finestra",
     "Own cards in popup": "Card proprie nella finestra",
+    "Add tile …": "Aggiungi riquadro …",
+    "Each opens the popup of its tile on this dashboard, with that tile's own settings (a Chart tile with its periods, for example).": "Ognuno apre la finestra del suo riquadro in questa dashboard, con le sue impostazioni (ad esempio un riquadro Grafico con i suoi periodi).",
     "Entities in popup": "Entità nella finestra",
     "Add an entity": "Aggiungi entità",
     "Shown as rows in the popup's own design: switches toggle, buttons and scripts run, sensors show their value.": "Come righe nello stile della finestra: gli interruttori commutano, pulsanti e script si avviano, i sensori mostrano il valore.",

@@ -845,6 +845,8 @@
     "Not set": "Non défini",
     "Popup": "Fenêtre",
     "Own cards in popup": "Cartes personnalisées dans la fenêtre",
+    "Add tile …": "Ajouter une tuile …",
+    "Each opens the popup of its tile on this dashboard, with that tile's own settings (a Chart tile with its periods, for example).": "Chacune ouvre la fenêtre de sa tuile sur ce tableau de bord, avec ses propres réglages (par exemple une tuile Graphique avec ses périodes).",
     "Entities in popup": "Entités dans la fenêtre",
     "Add an entity": "Ajouter une entité",
     "Shown as rows in the popup's own design: switches toggle, buttons and scripts run, sensors show their value.": "En lignes dans le style de la fenêtre : les interrupteurs basculent, boutons et scripts s’exécutent, les capteurs affichent leur valeur.",

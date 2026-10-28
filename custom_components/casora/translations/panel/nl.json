@@ -845,6 +845,8 @@
     "Not set": "Niet ingesteld",
     "Popup": "Venster",
     "Own cards in popup": "Eigen kaarten in venster",
+    "Add tile …": "Tegel toevoegen …",
+    "Each opens the popup of its tile on this dashboard, with that tile's own settings (a Chart tile with its periods, for example).": "Elke opent het venster van zijn tegel op dit dashboard, met de eigen instellingen van die tegel (bijvoorbeeld een grafiektegel met zijn periodes).",
     "Entities in popup": "Entiteiten in venster",
     "Add an entity": "Entiteit toevoegen",
     "Shown as rows in the popup's own design: switches toggle, buttons and scripts run, sensors show their value.": "Als rijen in de stijl van het venster: schakelaars schakelen, knoppen en scripts starten, sensoren tonen hun waarde.",
