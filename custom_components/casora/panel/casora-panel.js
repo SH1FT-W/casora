@@ -5224,6 +5224,8 @@ const TILE_MAIN_FIND = {
   // device_class "camera"; Birdseye is no single camera, as 23-frigate.js), the live camera of a Reolink doorbell
   // (casora-panel-b-ux.js bellCam). Before, adding the tile found them only as an unsure match.
   casora_lawn_mower: { domain: "lawn_mower", match: () => true },
+  // Shopping list (community card #82): Bring! lists first (platform bring), any other to-do list too.
+  casora_shopping: { domain: "todo", platform: "bring", match: () => true, like: /einkauf|shopping|bring|grocer|kaufen/i },
   casora_frigate: { domain: "camera", match: (h, id) => ((((h.states || {})[id] || {}).attributes || {}).device_class === "camera") && !/birdseye/i.test(id) },
   casora_reolink_doorbell: { domain: "camera", match: (h, id) => typeof window.__casoraBellCam === "function" && !!window.__casoraBellCam(h, id) },
   // Chart (community card #50): every numeric sensor with a state class; CPU load (System Monitor's processor_use),

@@ -2324,6 +2324,18 @@
   "funkt, schickt aber keine Werte": "trasmette, ma non invia valori",
   "meldet keinen Batteriewert": "non segnala il livello della batteria",
   "Haustier": "Animale domestico",
+  "Zur Einkaufsliste": "Aggiungi alla lista della spesa",
+  "Hinzufügen": "Aggiungi",
+  "z. B. Milch, 1 l": "es. latte, 1 l",
+  "Einkaufen": "Da comprare",
+  "Die Liste ist leer": "La lista è vuota",
+  "1 erledigt": "1 fatto",
+  "Erledigte löschen": "Elimina i completati",
+  "Erledigte löschen?": "Eliminare i completati?",
+  "Liste nicht gefunden": "Lista non trovata",
+  "Wird geladen": "Caricamento",
+  "eingekauft": "comprato",
+  "Alles": "Tutto",
   "Kacheln": "Riquadri",
   "1 Kachel": "1 riquadro",
   "Ausführen": "Esegui",
@@ -4290,6 +4302,10 @@
   [
    "^(\\d+) Sensoren nicht erreichbar$",
    "{1} sensori non raggiungibili"
+  ],
+  [
+   "^(\\d+) erledigt$",
+   "{1} fatti"
   ],
   [
    "^(.+) ist nicht erreichbar$",

@@ -2324,6 +2324,18 @@
   "funkt, schickt aber keine Werte": "nadaje, ale nie wysyła wartości",
   "meldet keinen Batteriewert": "nie zgłasza poziomu baterii",
   "Haustier": "Zwierzak",
+  "Zur Einkaufsliste": "Dodaj do listy zakupów",
+  "Hinzufügen": "Dodaj",
+  "z. B. Milch, 1 l": "np. mleko, 1 l",
+  "Einkaufen": "Do kupienia",
+  "Die Liste ist leer": "Lista jest pusta",
+  "1 erledigt": "1 zrobione",
+  "Erledigte löschen": "Usuń zrobione",
+  "Erledigte löschen?": "Usunąć zrobione?",
+  "Liste nicht gefunden": "Nie znaleziono listy",
+  "Wird geladen": "Ładowanie",
+  "eingekauft": "kupione",
+  "Alles": "Wszystko",
   "Kacheln": "Kafelki",
   "1 Kachel": "1 kafelek",
   "Ausführen": "Uruchom",
@@ -4290,6 +4302,10 @@
   [
    "^(\\d+) Sensoren nicht erreichbar$",
    "Nieosiągalne czujniki: {1}"
+  ],
+  [
+   "^(\\d+) erledigt$",
+   "{1} zrobione"
   ],
   [
    "^(.+) ist nicht erreichbar$",

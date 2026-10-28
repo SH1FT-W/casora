@@ -2332,6 +2332,18 @@
   "funkt, schickt aber keine Werte": "emite, pero no envía valores",
   "meldet keinen Batteriewert": "no informa del nivel de batería",
   "Haustier": "Mascota",
+  "Zur Einkaufsliste": "Añadir a la lista de la compra",
+  "Hinzufügen": "Añadir",
+  "z. B. Milch, 1 l": "p. ej. leche, 1 l",
+  "Einkaufen": "Por comprar",
+  "Die Liste ist leer": "La lista está vacía",
+  "1 erledigt": "1 hecho",
+  "Erledigte löschen": "Borrar los hechos",
+  "Erledigte löschen?": "¿Borrar los hechos?",
+  "Liste nicht gefunden": "Lista no encontrada",
+  "Wird geladen": "Cargando",
+  "eingekauft": "comprado",
+  "Alles": "Todo",
   "Kacheln": "Mosaicos",
   "1 Kachel": "1 mosaico",
   "Ausführen": "Ejecutar",
@@ -4290,6 +4302,10 @@
   [
    "^(\\d+) Sensoren nicht erreichbar$",
    "{1} sensores no disponibles"
+  ],
+  [
+   "^(\\d+) erledigt$",
+   "{1} hechos"
   ],
   [
    "^(.+) ist nicht erreichbar$",

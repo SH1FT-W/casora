@@ -2332,6 +2332,18 @@
   "funkt, schickt aber keine Werte": "is on the air but sends no values",
   "meldet keinen Batteriewert": "reports no battery level",
   "Haustier": "Pet",
+  "Zur Einkaufsliste": "Add to the shopping list",
+  "Hinzufügen": "Add",
+  "z. B. Milch, 1 l": "e.g. milk, 1 l",
+  "Einkaufen": "To buy",
+  "Die Liste ist leer": "The list is empty",
+  "1 erledigt": "1 done",
+  "Erledigte löschen": "Clear done items",
+  "Erledigte löschen?": "Clear done items?",
+  "Liste nicht gefunden": "List not found",
+  "Wird geladen": "Loading",
+  "eingekauft": "bought",
+  "Alles": "All",
   "Kacheln": "Tiles",
   "1 Kachel": "1 tile",
   "Ausführen": "Run",
@@ -4272,6 +4284,10 @@
   [
    "^(\\d+) Sensoren nicht erreichbar$",
    "{1} sensors unreachable"
+  ],
+  [
+   "^(\\d+) erledigt$",
+   "{1} done"
   ],
   [
    "^(.+) ist nicht erreichbar$",
