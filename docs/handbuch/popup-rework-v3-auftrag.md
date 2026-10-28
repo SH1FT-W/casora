@@ -117,7 +117,7 @@ Nicht geschafft? Eintrag in `popup_v3_offen.json` mit Grund, weiter mit dem näc
 | Popup | Vorlage / Modul | Bühne | Schnellwahl | Liste rechts |
 |---|---|---|---|---|
 | Licht (Raum, Haus, Leuchte aus der Gruppe) | `casora_popup_light`, `03-popups.js` (`.lps-*`) | S1 Helligkeit, Segment Lichtfarbe | Szenen des Raums (≤ 4) | „Leuchten · n von m an“, Einstellungen |
-| Fußbodenheizung (Haus/Raum) | `casora_popup_fbh`, `03-popups.js` (`_casoraFbh`) | S2 Ø bzw. Raumtemperatur | Modus: Auto · Heizen · Eco · Aus | „Räume · n heizen“, Einstellungen, Mehr (Coach, Hauptschalter, Verlauf) |
+| Fußbodenheizung (Haus/Raum) | `casora_popup_fbh`, `03-popups.js` (`_casoraFbh`) | S2 Ziel aller Räume bzw. Ziel des Raums (Ist-Wert in der Fußzeile); Raum aus der Liste = Unterseite nach Richtlinien §4.4 | Modus: Auto · Heizen · Eco · Aus | „Räume · n heizen“, Einstellungen, Mehr (Coach, Hauptschalter, Verlauf) |
 | Jalousien (Raum/Gruppe) | `casora_popup_cover`, `34-security-covers.js` | S3 Position | Auf · Beschatten · Zu | „Jalousien“, Automatik + Einstellungen |
 
 ### Welle 2 – Geräte mit Bedienung

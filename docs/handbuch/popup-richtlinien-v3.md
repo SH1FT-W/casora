@@ -92,7 +92,7 @@ neben der alten.
 | Typ | Name | Wofür | Aufbau |
 |---|---|---|---|
 | **S1** | Regler | Licht, Dimmer, Lautstärke als Hauptsache | links senkrechter Regler 96×236 (Handy 88×200), Radius 30, Füllung von unten in Gerätefarbe (`--casora-lps-fill`), Symbol unten im Regler; rechts groß der Wert, darunter ein Wort, unten ein Segment (z. B. Lichtfarbe) |
-| **S2** | Wert mit ± | Thermostat, Fußbodenheizung, Klima, Befeuchter-Ziel, Velair | oben klein, was gezeigt wird („Durchschnitt im Haus“); Mitte − Wert + (Knöpfe 56 rund, Wert 72/800); unten Ziel und Zustand; Leiste darunter erlaubt (v2 Entscheidung 4) |
+| **S2** | Wert mit ± | Thermostat, Fußbodenheizung, Klima, Befeuchter-Ziel, Velair | groß steht immer der **Zielwert**, den ± ändert (nie der Ist-Wert neben ±); oben klein, was er bedeutet („Heizt auf“, „Ziel aller Räume“); Mitte − Wert + (Knöpfe 56 rund, Wert 72/800); unten der Ist-Wert und ein Zusatz („Jetzt 21,5° · Ventil 64 %“); Leiste darunter erlaubt (v2 Entscheidung 4) |
 | **S3** | Position | Jalousie, Markise, Tor, Garage, Vorhang | links Grafik, die man zieht (Füllung von oben, Griff 60×6), rechts groß der Wert, darunter „2 von 3 offen“ |
 | **S4** | Programm | Waschmaschine, Trockner, Spüler, 3D-Drucker, Saugroboter, Mäher, Kaffee | groß die Restzeit oder der Zustand („1:24 Std.“, „Bereit“), darunter Fortschrittsbalken 8 hoch, Programmname; die Hauptaktion („Jetzt starten · Eco 50°“) als Pille 52 hoch über die Bühnenbreite **in** der Bühne |
 | **S5** | Bild | Kamera, Klingel, Frigate, Medien (Cover), Rezept | das Bild ist die Bühne (Kamera 16:9, Cover quadratisch), Bedienung (Wiedergabe, Sprechen) direkt darunter in derselben Platte |
@@ -120,7 +120,15 @@ neben der alten.
 ### 4.4 Mehrere Geräte
 
 Gruppen (Raum-Licht, Haus-Heizung, Jalousien eines Raums) zeigen auf der Bühne den **gemeinsamen** Wert (Mittel bzw.
-Anteil) und bedienen alle; die einzelnen Geräte stehen rechts in der Liste.
+Anteil) und bedienen alle; die einzelnen Geräte stehen rechts in der Liste. Bei S2 ist das das gemeinsame Ziel
+(„Ziel aller Räume“, bei unterschiedlichen Zielen das Mittel mit „Ø“); ein Schritt ± verschiebt alle Ziele um einen Schritt.
+
+**Ein Gerät aus der Liste antippen** (Zeile mit ›) öffnet seine **Unterseite im selben Popup** (v2 Regel 7): ‹ links,
+Etikett = Titel der Gruppe („Fußbodenheizung“), Titel = Raum bzw. Gerät, kein Hauptschalter der Gruppe. Die Unterseite ist
+ein vollständiges v3-Popup dieses einen Geräts – eigene Bühne (gleicher Typ wie die Gruppe), Schnellwahl, rechts Zustand →
+Verlauf (§7) → Einstellungen → Mehr. Sie zeigt dieselbe Seite, die das Gerät auch einzeln öffnet (ein Popup pro Ding).
+
+![Unterseite „Wohnzimmer“ aus der Fußbodenheizung: ‹ und Etikett, Bühne mit Ziel, Modus, Zustand, Verlauf, Einstellungen](bilder/popup-v3-heizung-raum.webp)
 
 ### 4.5 Aus, offline, leer
 
@@ -345,5 +353,11 @@ Jedes Diagramm hat einen Namen für die Sprachausgabe mit Zusammenfassung
 |---|---|---|
 | ![Licht v3](bilder/popup-v3-licht.webp) | ![Heizung v3](bilder/popup-v3-heizung.webp) | ![Jalousien v3](bilder/popup-v3-jalousien.webp) |
 | ![Licht v3 Handy](bilder/popup-v3-licht-handy.webp) | ![Heizung v3 Handy](bilder/popup-v3-heizung-handy.webp) | ![Jalousien v3 Handy](bilder/popup-v3-jalousien-handy.webp) |
+
+Unterseite eines Raums aus der Fußbodenheizung (Desktop und Handy):
+
+![Heizung Raum v3](bilder/popup-v3-heizung-raum.webp) ![Heizung Raum v3 Handy](bilder/popup-v3-heizung-raum-handy.webp)
+
+Im Gruppen-Mockup oben steht noch „Durchschnitt im Haus“ neben ±; gebaut wird nach §4.4 (Ziel aller Räume).
 
 Die Mockups zeigen Aufbau und Maße; Symbole und Farben im echten Popup kommen aus dem Rahmen.
