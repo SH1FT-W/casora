@@ -8332,10 +8332,16 @@ window.casoraMenuGlass = {
   window.casoraPopupExtras = function (card) {
     var v = card && card._config && card._config.variables;
     var list = v && v.popup_extra_cards;
-    if (!Array.isArray(list)) return null;
-    var cards = list.filter(function (c) {
+    var cards = (Array.isArray(list) ? list : []).filter(function (c) {
       return c && typeof c === 'object' && !Array.isArray(c) && typeof c.type === 'string';
     });
+    // Entities picked in the Studio (#32): one card of Casora rows, before the pasted cards. Until the popup
+    // system draws its own rows (<casora-popup-entities>, popup v3), HA's entities card stands in.
+    var ents = v && Array.isArray(v.popup_extra_entities) ? v.popup_extra_entities.filter(function (x) { return typeof x === 'string' && x.indexOf('.') > 0; }) : [];
+    if (ents.length) {
+      var own = !!(window.customElements && window.customElements.get && window.customElements.get('casora-popup-entities'));
+      cards.unshift(own ? { type: 'custom:casora-popup-entities', entities: ents } : { type: 'entities', entities: ents });
+    }
     if (!cards.length) return null;
     var title = typeof v.popup_extra_title === 'string' ? v.popup_extra_title.trim() : '';
     try { cards = JSON.parse(JSON.stringify(cards)); } catch (e) { return null; }

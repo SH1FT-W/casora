@@ -536,6 +536,9 @@
       self.shadowRoot.appendChild(st);
     };
     const I = () => window.__casoraPanelInternals || {};
+    // What an entity row in a popup can show: toggles, things that run, values.
+    const EXTRA_DOMAINS = ["light", "switch", "input_boolean", "fan", "automation", "siren", "humidifier", "button", "input_button",
+      "script", "scene", "sensor", "binary_sensor", "number", "input_number", "select", "input_select", "climate", "cover", "lock"];
 
     // Does the tile's template chain open a Casora popup (an action with casora_popup.content)?
     const opensPopup = (templates, tpl, seen) => {
@@ -590,7 +593,7 @@
       if (list.length) v.popup_extra_cards = list;
       else {
         delete v.popup_extra_cards;
-        delete v.popup_extra_title;
+        if (!(Array.isArray(v.popup_extra_entities) && v.popup_extra_entities.length)) delete v.popup_extra_title;
         if (!Object.keys(v).length) delete tile.variables;
       }
       // A stand-in "tile" (an own badge's popup, #60) stores its variables itself.
@@ -616,6 +619,18 @@
         add.appendChild(s);
       }
       add.appendChild(addBtn);
+      // Entities as rows in the popup's own design (#32): no YAML, the popup picks toggle, run or value by the domain
+      // (casoraPopupExtras in casora-core.js). Stored as variables.popup_extra_entities.
+      const ents = Array.isArray((tile.variables || {}).popup_extra_entities) ? tile.variables.popup_extra_entities : [];
+      const pick = this._chipPicker(ents, EXTRA_DOMAINS, (next) => {
+        const v = tile.variables || (tile.variables = {});
+        if (next.length) v.popup_extra_entities = next;
+        else { delete v.popup_extra_entities; if (!Object.keys(v).length) delete tile.variables; }
+        if (typeof tile._commit === "function") tile._commit();
+        if (this._markDirty) this._markDirty();
+        this._syncPreview();
+      }, "", { placeholder: "Add an entity" });
+      advRow("Entities in popup", pick, "Shown as rows in the popup's own design: switches toggle, buttons and scripts run, sensors show their value.");
       advRow("Own cards in popup", add);
       list.forEach((card, i) => {
         const acts = document.createElement("div");
@@ -664,7 +679,7 @@
         const rows = acts.parentNode && acts.parentNode.querySelector("label");
         if (rows) rows.setAttribute("data-no-i18n", "");
       });
-      if (list.length) {
+      if (list.length || ents.length) {
         const input = document.createElement("input");
         input.value = typeof tile.variables.popup_extra_title === "string" ? tile.variables.popup_extra_title : "";
         input.placeholder = "No heading";
