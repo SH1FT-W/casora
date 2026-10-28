@@ -1237,14 +1237,14 @@
     + '.hrk-d{min-height:104px;box-sizing:border-box;padding:12px 10px 12px 12px;border-radius:20px;display:flex;flex-direction:column;'
     + 'background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));}'
     + '.hrk-d.now{background:var(--casora-soft-row-selected, #fff);box-shadow:var(--casora-soft-row-selected-shadow, none);}'
-    + '.hrk-h{display:flex;align-items:baseline;gap:5px;color:var(--casora-soft-sub, rgba(46,39,33,0.6));}'
+    + '.hrk-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 5px;min-width:0;color:var(--casora-soft-sub, rgba(46,39,33,0.6));}'
     + '.hrk-h b{font-size:11px;font-weight:700;letter-spacing:.08em;}'
     + '.hrk-h span{font-size:17px;font-weight:700;color:var(--casora-popup-tiles-text-primary, #2E2721);font-variant-numeric:tabular-nums;}'
     + '.hrk-d.now .hrk-h b, .hrk-d.now .hrk-h span{color:var(--casora-soft-icon-on, #276B64);}'
     + '.hrk-n{margin-top:auto;padding-top:10px;font-size:13px;font-weight:700;line-height:1.25;letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary, #2E2721);'
-    /* white-space:normal: button-card vererbt nowrap – dann brach der Name nie um und wurde
-       ohne „…“ abgeschnitten (Issue #3). Zwei Zeilen, danach Ellipse. */
-    + 'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;overflow-wrap:anywhere;}'
+    /* white-space:normal: button-card inherits nowrap – the name then never wrapped and was cut without „…“
+       (issue #3). Two lines, then an ellipsis; words break at syllables, not anywhere („Ter/min“). */
+    + 'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;overflow-wrap:break-word;hyphens:auto;}'
     + '.hrk-n.off{color:var(--casora-soft-sub, rgba(46,39,33,0.45));font-weight:500;}'
     + '.hrk-m{font-size:11.5px;font-weight:500;color:var(--casora-soft-sub, rgba(46,39,33,0.6));margin-top:2px;}</style>';
   R.weekHtml = function () {

@@ -7557,6 +7557,8 @@ window.casoraMenuGlass = {
       this._dyn.textContent = this._dynamicCss(cfg);
 
       this.container.textContent = '';
+      // Every opening starts at the top (the content scroller is shared: a popup reopened showed its stage cut off).
+      if (this.content) this.content.scrollTop = 0;
       this._bridge.target = null;
       this.removeAttribute('data-casora-charts-ready');
 
