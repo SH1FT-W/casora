@@ -1866,12 +1866,26 @@
     if (r.locked === false || (r.tank != null && r.tank <= 15)) return 1;
     return 0;
   };
+  /* State text of the tile's own entity (p is an entity, not an old prefix), null when there is none. */
+  C.ownText = function (p, states) {
+    var ps = p == null ? '' : String(p), own = ps.indexOf('.') > 0 ? states[ps] : null;
+    if (!ok(own)) return null;
+    var root = document.querySelector('home-assistant');
+    if (window._casoraStateText) return window._casoraStateText(root && root.hass, own);
+    var on = num(own.state), u = (own.attributes && own.attributes.unit_of_measurement) || '';
+    return on != null ? fmtN(on, Math.abs(on) < 100 && on % 1 ? 1 : 0) + (u ? ' ' + u : '') : String(own.state);
+  };
   C.tile = function (p, states) {
     var r = C.read(p, states);
     if (r.open.length) return r.open.length === 1 ? r.open[0] + ' offen' : r.open.length + ' Öffnungen offen';
     /* Kachel zeigt den Schließzustand (Wunsch), Reichweite/Tank stehen im Popup. */
     if (r.locked === false) return 'Nicht verriegelt';
     if (r.locked === true) return 'Verriegelt';
+    /* No door or lock values (#89, e.g. BMW CarData): the tile's own entity as the Studio shows it, else range or fill level. */
+    var own = C.ownText(p, states);
+    if (own) return own;
+    if (r.range != null) return fmtN(r.range) + ' ' + r.rangeU;
+    if (r.tank != null) return (r.ev ? 'Akku ' : 'Tank ') + fmtN(Math.round(r.tank)) + ' %';
     return 'Keine Daten';
   };
 
@@ -1886,7 +1900,9 @@
       /* Weich (Entschlacken): „Reichweite 140 km“ als Hauptwert; „kommt verzögert“ als kleiner Zusatz am Datenstand. */
       if (SFh) sub = [r.open.length ? r.open.join(', ') + ' offen' : (r.locked === false ? 'Nicht verriegelt' : r.locked ? 'Verriegelt' : null),
         r.stamp ? 'Stand ' + esc(ago(r.stamp)) + ' (verzögert)' : null].filter(Boolean).join(' · ');
-      var out = UI.hero({ label: SFh ? null : 'Reichweite', value: r.range != null ? (SFh ? 'Reichweite ' : '') + fmtN(r.range) : '—', unit: r.range != null ? r.rangeU : null,
+      /* No range found (#89): the tile's own value, as on the tile. */
+      var ownH = r.range == null ? C.ownText(p, states) : null;
+      var out = UI.hero({ label: SFh || ownH ? null : 'Reichweite', value: r.range != null ? (SFh ? 'Reichweite ' : '') + fmtN(r.range) : ownH || '—', unit: r.range != null ? r.rangeU : null,
         sub: sub, subTone: lv === 2 ? 'bad' : lv === 1 ? 'warn' : 'good', center: true });
       /* Weich 1.1.2: Tank als schmale Leiste unter dem Kopf (wie die Geräte-Popups); rechts leer,
          die Reichweite steht im Kopf. Warn-Ton ab 15 %. */
@@ -2603,6 +2619,39 @@
     return { bike: bike, M: M, anchor: bike ? (M.daysSince || M.km || M.dist || M.theft || bike.ids[0] || null) : null };
   };
   B.map = function (states, entity) { return B.find(states, entity).M; };
+
+  /* eBike Bridge (ESP32 firmware of the same project, esphome/ in Xunil99/ha-bosch-ebike, #88): live BLE values on an
+     ESPHome device of its own, with fixed English names („eBike Battery SoC (Live)“, dual bridge „eBike 1 …“), so the
+     ids end in ebike[_N]_<field>. A group counts as a bridge only with one of its own fields (SoC, live odometer,
+     charger). It belongs to the tile when the tile's entity is one of its entities, else when the house has exactly
+     one bridge and at most one bike (the bridge does not say which bike it reads). */
+  var LIVE_RE = /^(?:(.*)_)?(ebike(?:_\d)?)_(battery_soc_live|odometer_live|speed|cadence|rider_power|ambient_brightness|charge_time_to_80_estimate|charge_time_to_100_estimate|connected|light|charger_connected|light_reserve|diagnosis_active|in_motion)$/;
+  var LIVE_F = { battery_soc_live: 'soc', odometer_live: 'odo', speed: 'speed', cadence: 'cadence', rider_power: 'power', ambient_brightness: 'lux',
+    charge_time_to_80_estimate: 'eta80', charge_time_to_100_estimate: 'eta100', connected: 'connected', light: 'light',
+    charger_connected: 'charger', light_reserve: 'reserve', diagnosis_active: 'diag', in_motion: 'moving' };
+  var bridgesOf = function (states) {
+    if (cache.bridges && cache.raw === ((hassOf() || {}).states || states)) return cache.bridges;
+    var G = {};
+    Object.keys(states).forEach(function (eid) {
+      var d = eid.split('.')[0], m = LIVE_RE.exec(eid.slice(d.length + 1));
+      if (!m || (d !== 'sensor' && d !== 'binary_sensor')) return;
+      var f = LIVE_F[m[3]];
+      if ((d === 'binary_sensor') !== /^(connected|light|charger|reserve|diag|moving)$/.test(f)) return;
+      var k = (m[1] || '') + '|' + m[2], g = G[k] || (G[k] = { key: k, ids: [], M: {} });
+      if (!g.M[f]) { g.M[f] = eid; g.ids.push(eid); }
+    });
+    var out = Object.keys(G).sort().map(function (k) { return G[k]; }).filter(function (g) { return g.M.soc || g.M.odo || g.M.charger; });
+    cache.bridges = out;
+    return out;
+  };
+  B.bridge = function (states, entity) {
+    states = states || {};
+    var eid = entity && (entity.entity_id || (typeof entity === 'string' ? entity : null));
+    B.bikes(states);
+    var all = bridgesOf(states);
+    var own = eid ? all.filter(function (g) { return g.ids.indexOf(eid) >= 0; })[0] : null;
+    return own || (all.length === 1 && B.bikes(states).length <= 1 ? all[0] : null);
+  };
   /* Device name of the bike (popup title), null without a bike. */
   B.name = function (states, entity) { var F = B.find(states || {}, entity); return F.bike && F.bike.name ? F.bike.name : null; };
 
@@ -2622,10 +2671,17 @@
     var dueDays = v(states, M.dueDays);
     if (dueDays == null && dueDate) dueDays = Math.round((dueDate - today) / 86400000);
     var dueKm = v(states, M.dueKm), dueOdo = v(states, M.dueOdo);
-    if (dueKm == null && dueOdo != null && km != null) dueKm = Math.round((dueOdo - km) * 10) / 10;
     var theft = M.theft && states[M.theft];
+    /* Bridge: live battery and odometer (the cloud's odometer lags behind until the next sync). */
+    var G = B.bridge(states, entity), L = (G && G.M) || {};
+    var on = function (id) { var s = id && states[id]; return ok(s) ? s.state === 'on' : null; };
+    var live = G ? { soc: v(states, L.soc), odo: v(states, L.odo), charging: on(L.charger) === true, eta80: v(states, L.eta80), eta100: v(states, L.eta100),
+      connected: on(L.connected), moving: on(L.moving) === true, speed: v(states, L.speed), cadence: v(states, L.cadence), power: v(states, L.power),
+      lux: v(states, L.lux), light: on(L.light), reserve: on(L.reserve) === true, diag: on(L.diag) === true, ids: G.ids } : null;
+    if (live && live.odo != null) km = live.odo;
+    if (dueKm == null && dueOdo != null && km != null) dueKm = Math.round((dueOdo - km) * 10) / 10;
     return {
-      found: !!F.bike, theft: !!(theft && theft.state === 'on'),
+      found: !!F.bike || !!live, theft: !!(theft && theft.state === 'on'), live: live,
       km: km, dist: dist,
       serviceDue: (dueDays != null && dueDays <= 0) || (dueKm != null && dueKm <= 0),
       dueDays: dueDays, dueKm: dueKm, dueDate: dueDate,
@@ -2661,6 +2717,8 @@
   B.tile = function (states, entity) {
     var r = B.read(states, entity);
     if (r.theft) return 'Diebstahl gemeldet';
+    /* Bridge: the live battery first (#88, as the Studio shows the tile's SoC entity); a due service keeps the orange symbol. */
+    if (r.live && r.live.soc != null) return (r.live.charging ? 'Lädt · ' : 'Akku ') + fmtN(Math.round(r.live.soc)) + ' %';
     if (r.serviceDue) return 'Service fällig';
     if (r.daysSince != null) return r.daysSince < 1 ? 'Heute gefahren' : r.daysSince < 2 ? 'Gestern gefahren' : 'Letzte Fahrt vor ' + fmtN(Math.round(r.daysSince)) + ' T.';
     var km = r.km != null ? r.km : r.dist;
@@ -2686,6 +2744,25 @@
     if (name === 'hero') {
       return UI.hero({ label: kmLabel, value: kmV != null ? fmtN(Math.round(kmV)) : '—', unit: kmV != null ? 'km' : null,
         sub: sub, subTone: r.theft ? 'bad' : r.serviceDue ? 'warn' : null, center: true }) + where;
+    }
+    if (name === 'live') {
+      /* Live values of the eBike Bridge (#88): battery and charging, light; speed, cadence and power only while riding. */
+      var Lv = r.live; if (!Lv) return '';
+      var rowsL = [], mins = function (m) { m = Math.round(m); return m < 60 ? m + ' Min.' : Math.floor(m / 60) + ' Std. ' + (m % 60) + ' Min.'; };
+      if (Lv.soc != null) rowsL.push({ icon: Lv.charging ? 'mdi:battery-charging' : 'mdi:battery', iconTone: Lv.soc <= 15 && !Lv.charging ? 'warn' : 'accent', label: 'Akkustand',
+        sub: Lv.charging ? 'Lädt' : null, value: fmtN(Math.round(Lv.soc)) + ' %' });
+      if (Lv.charging && Lv.eta80 != null && Lv.soc != null && Lv.soc < 80) rowsL.push({ icon: 'mdi:timer-sand', iconTone: DIM, label: 'Bis 80 %', value: mins(Lv.eta80) });
+      if (Lv.charging && Lv.eta100 != null && Lv.soc != null && Lv.soc < 100) rowsL.push({ icon: 'mdi:timer-sand-complete', iconTone: DIM, label: 'Bis 100 %', value: mins(Lv.eta100) });
+      if (Lv.moving) {
+        if (Lv.speed != null) rowsL.push({ icon: 'mdi:speedometer', iconTone: DIM, label: 'Geschwindigkeit', value: fmtN(Lv.speed, 1) + ' km/h' });
+        if (Lv.power != null) rowsL.push({ icon: 'mdi:arm-flex-outline', iconTone: DIM, label: 'Eigene Leistung', sub: Lv.cadence != null ? 'Trittfrequenz ' + fmtN(Lv.cadence) + ' U/min' : null, value: fmtN(Lv.power) + ' W' });
+      }
+      if (Lv.light != null) rowsL.push({ icon: Lv.light ? 'mdi:car-light-high' : 'mdi:car-light-dimmed', iconTone: DIM, label: 'Licht', value: Lv.light ? 'An' : 'Aus' });
+      if (Lv.reserve) rowsL.push({ icon: 'mdi:battery-alert-variant-outline', iconTone: 'warn', label: 'Lichtreserve', value: 'Aktiv', valueTone: 'warn' });
+      if (Lv.lux != null) rowsL.push({ icon: 'mdi:brightness-6', iconTone: DIM, label: 'Helligkeit', value: fmtN(Lv.lux) + ' lx' });
+      if (Lv.diag) rowsL.push({ icon: 'mdi:stethoscope', iconTone: DIM, label: 'Diagnose', value: 'Aktiv' });
+      if (Lv.connected != null) rowsL.push({ icon: Lv.connected ? 'mdi:bluetooth-connect' : 'mdi:bluetooth-off', iconTone: DIM, label: 'Verbindung', value: Lv.connected ? 'Verbunden' : 'Nicht verbunden' });
+      return rowsL.length ? UI.group(rowsL, 'Live') : '';
     }
     if (name === 'range') {
       var rows = (M.modes || []).map(function (m) {
@@ -2829,21 +2906,24 @@
     var F = B.find(states, entity);
     /* Anchor: the tile's entity when it belongs to the bike, else the bike's own anchor; without
        any bike some entity, so the popup still opens and the head says where the values come from. */
-    var own = entity && entity.entity_id && F.bike && F.bike.ids.indexOf(entity.entity_id) >= 0 ? entity.entity_id : null;
+    var eid0 = entity && entity.entity_id, G = B.bridge(states, entity);
+    /* A bridge entity on the tile stays the anchor, so the popup keeps that bridge (dual bridge, two bikes). */
+    var own = eid0 && ((F.bike && F.bike.ids.indexOf(eid0) >= 0) || (G && G.ids.indexOf(eid0) >= 0)) ? eid0 : null;
     var anchor = own || F.anchor || (entity && entity.entity_id && states[entity.entity_id] ? entity.entity_id : null) || Object.keys(states)[0] || null;
     if (!UI || !anchor) return { type: 'vertical-stack', cards: [] };
     entity = { entity_id: anchor };
-    var watch = B.ids(states, entity).concat(B.kiSensors(states));
+    var watch = B.ids(states, entity).concat(B.kiSensors(states), G ? G.ids : []);
     var sec = function (n) { return '[[[ return window._casoraBike ? window._casoraBike.sec(' + JSON.stringify(n) + ', states, entity) : ""; ]]]'; };
     /* Soft (declutter 01.10.2026): head with the battery, left range per mode, right service and the
        verdict of the bike check; last ride, totals, battery details, check tips and motor hours under „Mehr“. */
     var HH = window._casoraHH;
     if (HH && HH.on() && HH.layout) {
       var fb = { hero: sec('hero'), range: sec('range'), service: sec('service') };
+      if (G) fb.live = sec('live');
       if (B.hasAi(states)) fb.ai = sec('ai');
       fb.more = HH.moreCard(watch, 'const B = window._casoraBike, H = window._casoraHH;\n'
         + 'return B && H ? H.more("ebike", ["last", "total", "battery", "ai_tips", "motor"].map(function (n) { return B.sec(n, states, entity); })) : "";', entity.entity_id);
-      return HH.layout({ entity: entity.entity_id, watch: watch, fields: fb, left: ['range'], right: ['service', 'ai', 'more'], settings: entity.entity_id });
+      return HH.layout({ entity: entity.entity_id, watch: watch, fields: fb, left: G ? ['live', 'range'] : ['range'], right: ['service', 'ai', 'more'], settings: entity.entity_id });
     }
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
       + ' border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important;'
@@ -2887,7 +2967,7 @@
         grid: [{ 'grid-template-areas': '"hero" "left" "right"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'align-items': 'start' }, { 'row-gap': 'var(--casora-popup-sec-gap, 18px)' }],
         custom_fields: { hero: [{ 'justify-self': 'stretch' }], left: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }], right: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }] },
       },
-      custom_fields: (function () { var r0 = (B.hasAi(states) ? ['ai'] : []).concat(['service', 'battery']);
+      custom_fields: (function () { var r0 = (B.hasAi(states) ? ['ai'] : []).concat(G ? ['live'] : [], ['service', 'battery']);
         var sp = window._casoraSplit ? window._casoraSplit('ebike', ['range', 'last', 'total'], r0, { leftMovable: ['total'] }) : { left: ['range', 'last', 'total'], right: r0 };
         return { hero: sec('hero'), left: { card: makeCol(sp.left) }, right: { card: makeCol(sp.right) } }; })(),
     };
