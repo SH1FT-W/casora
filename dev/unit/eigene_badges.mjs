@@ -306,6 +306,22 @@ window._casoraTemplates = sharedTP;
   assert.equal(CB.tap({ tap: 'run', entity: 'button.example_bell' }).service, 'button.press');
   assert.equal(CB.tap({ tap: 'run', entity: 'scene.example_evening' }).service, 'scene.turn_on');
   assert.deepEqual(CB.tap({ tap: 'run', entity: 'sensor.example' }), { action: 'none' }, 'a sensor cannot run');
+  // Resting text like the tile (#86): "Bereit" / "Läuft" instead of "Aus" / "An".
+  const re = (id, state) => ({ entity_id: id, state, attributes: { friendly_name: 'Beispiel' } });
+  const hf = { formatEntityState: (e) => ({ off: 'Aus', on: 'An' })[e.state] || e.state };
+  let rv = CB.view({ entity: 'script.example_door', tap: 'run' }, re('script.example_door', 'off'), null, hf);
+  assert.equal(rv.sub, 'Bereit', 'idle script'); assert.equal(rv.active, false); assert.equal(rv.hide, false);
+  rv = CB.view({ entity: 'script.example_door', tap: 'run' }, re('script.example_door', 'on'), null, hf);
+  assert.equal(rv.sub, 'Läuft', 'running script'); assert.equal(rv.active, true);
+  rv = CB.view({ entity: 'scene.example_evening', tap: 'run' }, re('scene.example_evening', '2026-10-01T18:00:00+00:00'), null, hf);
+  assert.equal(rv.sub, 'Bereit', 'scene: no time stamp'); assert.equal(rv.active, true);
+  rv = CB.view({ entity: 'button.example_bell', tap: 'run' }, re('button.example_bell', 'unknown'), null, hf);
+  assert.equal(rv.hide, false, 'a never pressed button shows'); assert.equal(rv.sub, 'Bereit');
+  assert.equal(CB.view({ entity: 'script.example_door', tap: 'run' }, re('script.example_door', 'unavailable'), null, hf).hide, true, 'unavailable hides');
+  assert.equal(CB.view({ entity: 'script.example_door', tap: 'popup' }, re('script.example_door', 'off'), null, hf).sub, 'Aus', 'other taps unchanged');
+  assert.equal(CB.view({ entity: 'light.x', tap: 'run' }, re('light.x', 'off'), null, hf).sub, 'Aus', 'a light keeps its words');
+  assert.equal(CB.view({ entity: 'button.example_bell' }, re('button.example_bell', 'unknown'), null, hf).hide, true, 'without run as before');
+  assert.equal(CB.view({ name: 'Tür', entity: 'script.example_door', tap: 'run' }, re('script.example_door', 'off'), null, hf).title, 'Tür');
   // The row card: ask → the tile's switch confirm_toggle on the badge card (casora-core.js asks before the call).
   const made = [];
   const keep = window.loadCardHelpers;

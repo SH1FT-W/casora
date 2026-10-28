@@ -2729,7 +2729,9 @@
     "Tapping the tile runs the script, scene or button right away. Holding the tile still opens its popup.": "Tocar no bloco executa logo o script, a cena ou o botão. Manter premido continua a abrir a janela.",
     "Run it": "Executar",
     "A calm question before this runs. For the front door, the gate or everything off.": "Uma pergunta calma antes de executar. Para a porta de casa, o portão ou desligar tudo.",
-    "A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.": "Uma pergunta calma antes de executar, no bloco e na janela. Para a porta de casa, o portão ou desligar tudo."
+    "A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.": "Uma pergunta calma antes de executar, no bloco e na janela. Para a porta de casa, o portão ou desligar tudo.",
+    "With confirmation": "Com confirmação",
+    "A calm question before it runs. Same switch as Ask before switching.": "Uma pergunta calma antes de executar. O mesmo interruptor que «Perguntar antes de mudar»."
   },
   "patterns": [
     [

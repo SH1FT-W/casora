@@ -2729,7 +2729,9 @@
     "Tapping the tile runs the script, scene or button right away. Holding the tile still opens its popup.": "Al tocar el mosaico se ejecuta al instante el script, la escena o el botón. Mantenerlo pulsado sigue abriendo su ventana.",
     "Run it": "Ejecutar",
     "A calm question before this runs. For the front door, the gate or everything off.": "Una pregunta tranquila antes de ejecutarlo. Para la puerta de casa, el portón o apagarlo todo.",
-    "A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.": "Una pregunta tranquila antes de ejecutarlo, en el mosaico y en su ventana. Para la puerta de casa, el portón o apagarlo todo."
+    "A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.": "Una pregunta tranquila antes de ejecutarlo, en el mosaico y en su ventana. Para la puerta de casa, el portón o apagarlo todo.",
+    "With confirmation": "Con confirmación",
+    "A calm question before it runs. Same switch as Ask before switching.": "Una pregunta tranquila antes de ejecutarlo. El mismo interruptor que «Preguntar antes de activar»."
   },
   "patterns": [
     [

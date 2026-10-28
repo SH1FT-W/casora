@@ -2729,7 +2729,9 @@
     "Tapping the tile runs the script, scene or button right away. Holding the tile still opens its popup.": "Dotknięcie kafelka od razu uruchamia skrypt, scenę lub przycisk. Przytrzymanie nadal otwiera okno.",
     "Run it": "Uruchom",
     "A calm question before this runs. For the front door, the gate or everything off.": "Spokojne pytanie przed uruchomieniem. Do drzwi wejściowych, bramy lub wyłączenia wszystkiego.",
-    "A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.": "Spokojne pytanie przed uruchomieniem, na kafelku i w oknie. Do drzwi wejściowych, bramy lub wyłączenia wszystkiego."
+    "A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.": "Spokojne pytanie przed uruchomieniem, na kafelku i w oknie. Do drzwi wejściowych, bramy lub wyłączenia wszystkiego.",
+    "With confirmation": "Z potwierdzeniem",
+    "A calm question before it runs. Same switch as Ask before switching.": "Spokojne pytanie przed uruchomieniem. Ten sam przełącznik co „Pytaj przed przełączeniem”."
   },
   "patterns": [
     [
