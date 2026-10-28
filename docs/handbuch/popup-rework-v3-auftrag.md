@@ -12,6 +12,33 @@ trotzdem, gilt §8 („Wenn etwas nicht passt“), nie eine eigene Designidee.
 
 ---
 
+## 0. Die wichtigste Regel: Kein Inhalt geht verloren
+
+Der Umbau **ordnet um, er entscheidet nicht neu**. Jede Information und jede Bedienung, die ein Popup heute zeigt, ist
+nach dem Umbau noch da – höchstens an anderer Stelle (Bühne, Schnellwahl, Liste, Unterseite, „Mehr“).
+
+1. **Inhaltsliste vorher**: Bevor ein Popup angefasst wird, schreibt die Sitzung `.qa/v3/inhalt/<popup>.vorher.md`:
+   jeder sichtbare Wert, jeder Schalter, jede Aktion, jede Zeile, jede Unterseite, der Inhalt von „Mehr“, Einträge im
+   Halten-Menü, Rückfragen – je Zustand (an / aus / nicht erreichbar, einzeln / Gruppe, mit / ohne optionale Entitäten).
+2. **Inhaltsliste nachher**: `.qa/v3/inhalt/<popup>.nachher.md` mit derselben Liste und dem neuen Ort je Eintrag.
+3. **Maschinell gegenprüfen**: `dev/qa/popup-inhalt.mjs` (neu, Phase 1) liest im offenen Popup alle Bedien- und
+   Wertstellen aus – `data-casora-svc`, `data-casora-mi`, `data-casora-page`, `data-casora-go`, Schalter (`role="switch"`),
+   Regler, `data-casora-live` mit Entität und Attribut – und schreibt sie als sortierte Liste. Vorher (auf
+   `popup-rework-varianten` bzw. mit `localStorage casora_popup_variant='a'`) und nachher vergleichen: **jede fehlende
+   Stelle ist rot**, außer sie steht in der Erlaubt-Liste unten.
+4. **Darf wegfallen (Erlaubt-Liste, abschließend)**: die Symbol-Kachel im Kopf · eine doppelte Anzeige desselben Werts,
+   wenn er an anderer Stelle sichtbar bleibt · die alte Aktionen-Reihe, wenn dieselbe Aktion in der Bühne sitzt · ein
+   eigener Kopf im Inhalt · feste Farben. Alles andere bleibt.
+5. **Nichts Neues aus dem Nichts**: Neue Zeilen nur aus Entitäten, die das Popup heute schon liest oder über die
+   vorhandene Gerätesuche (`casoraDevice`, bestehende Zuordnungen im Modul) findet. Inhalte aus den Mockups
+   („Kindersicherung“, „Ventil 64 %“, „Nächster Wechsel“) sind **Beispiele**: sie erscheinen nur, wenn das Gerät die
+   Entität hat und das Popup sie schon kennt – sonst nicht, und keine neue Logik dafür.
+6. **Gleiche Dienste, gleiche Rückfragen**: Ein Tipp ruft danach denselben Dienst mit denselben Daten wie vorher;
+   „Vor dem Schalten fragen“ und `confirm` bleiben.
+7. **Passt etwas nirgends hin**: in „Mehr“ legen, nie streichen, und im Inhaltsvorschlag (§10) begründen.
+
+---
+
 ## 1. Pflichtlektüre (in dieser Reihenfolge, vor dem ersten Commit)
 
 1. `CLAUDE.md` (Stil, Vorlagen bauen, Prüfungen, nichts Persönliches, was nicht angefasst wird).
@@ -98,6 +125,13 @@ Statisch, ohne HA, Stil wie `popup_blaupause.mjs` (Sperrklinke: Zahlen dürfen n
 4. Diagramme (Richtlinien §7): in migrierten Dateien keine Hex-Farbe im `_hpChartCfg`-Aufruf, Höhen nur 120/140/160.
 5. Keine eigene Bühnen-Platte (Radius 32 + `soft-row-fill` außerhalb von `UI.stage`) in migrierten Dateien.
 6. `popup_v3_offen.json` listet die noch nicht umgebauten Popups mit Grund; leer = fertig.
+
+### 3.6 Inhaltsvergleich `dev/qa/popup-inhalt.mjs`
+
+Werkzeug nach §0.3 im Stil der übrigen `dev/qa/*.mjs` (Playwright, `CASORA_URL`, `--dash`, `--nur <popup>`,
+`--views desktop,handy`): öffnet das Popup wie `popup-raender.mjs`, geht durch alle Shadow-DOMs, schreibt
+`.qa/v3/inhalt/<popup>.<variante>.json` und vergleicht mit `--vergleich a v3` (Ausgabe: fehlt / neu / gleich, Rückgabe ≠ 0 bei
+„fehlt“ außerhalb der Erlaubt-Liste). Unterseiten und „Mehr“ werden aufgeklappt mitgezählt.
 
 Erst wenn Phase 1 grün ist: Commit `Popup v3: building blocks (stage, quick, head, layout, rule test)`.
 
@@ -209,6 +243,7 @@ Räume-Menü. Sie nehmen nur dieselben Wörter.
 ## 7. Schritte je Popup (Definition of Done)
 
 - [ ] Code des Popups gelesen (Vorlage **und** Modul), vorhandene Bedienlogik und Live-Werte notiert.
+- [ ] Inhaltsliste vorher geschrieben (§0.1) und `popup-inhalt.mjs` für Variante `a` gelaufen.
 - [ ] Bühne nach Tabelle §5 mit `UI.stage`; alter Hauptbereich (`UI.hero`, eigene Platte, `UI.actions`-Reihe) entfernt –
       nichts doppelt (Zustand nur Wort im Kopf + Wert auf der Bühne).
 - [ ] Schnellwahl mit `UI.quick`, höchstens 4, nichts Gefährliches.
@@ -223,6 +258,8 @@ Räume-Menü. Sie nehmen nur dieselben Wörter.
 - [ ] Neue Texte deutsch im Code + englisch in `phrases/en.json`, `i18ncheck` grün.
 - [ ] Prüfungen aus §2 grün, Eintrag in `popup_v3.mjs`-Liste `migriert`, aus `popup_v3_offen.json` gestrichen.
 - [ ] Bilder + Messung (§6) ohne neue Befunde.
+- [ ] Inhaltsliste nachher (§0.2), `popup-inhalt.mjs --vergleich a v3` ohne „fehlt“ außerhalb der Erlaubt-Liste (§0.4).
+- [ ] Inhaltsvorschlag für das Popup notiert (§10.6) – nur vorschlagen, nicht umsetzen.
 - [ ] Commit, eine Zeile im Bericht.
 
 ## 8. Wenn etwas nicht passt
@@ -234,6 +271,8 @@ Räume-Menü. Sie nehmen nur dieselben Wörter.
 | Ein bestehender Test wird rot, weil er altes Markup prüft | Test an die Richtlinien anpassen **nur**, wenn er Aussehen prüft; prüft er Verhalten (Dienst, Live-Wert, Rückfrage), ist der Umbau falsch |
 | WebKit verhält sich anders als Chrome | WebKit gewinnt; ohne Lösung: Popup zurück auf `variant: 'b'`, Eintrag in offen |
 | Mehr als 45 Minuten an einem Popup | Stand verwerfen (`git checkout -- .`), Eintrag in offen, nächstes Popup |
+| Ein Inhalt passt in keinen Teil des neuen Aufbaus | in „Mehr“ legen, nie streichen (§0.7) |
+| Ein Inhalt wirkt überflüssig oder es fehlt etwas Sinnvolles | **nicht** ändern – in den Inhaltsvorschlag (§10.6) |
 | Etwas würde die Richtlinien ändern | **nicht** ändern – Vorschlag in den Bericht, Abschnitt „Fragen an den Maintainer“ |
 
 ## 9. Was nicht kaputtgehen darf
@@ -243,6 +282,7 @@ Räume-Menü. Sie nehmen nur dieselben Wörter.
 - Fahrenheit, 8 Sprachen, „Vor dem Schalten fragen“, Nutzer ohne Admin (kein Studio-Link).
 - Ampelfarben für Zustände (grün/orange/rot, „Achtung“-Ton für offen/entriegelt) wie seit 26.10.63.
 - Ein Popup pro Ding: Kachel, Badge, Unter-Badge öffnen dieselbe Konfiguration.
+- Kein Inhalt geht verloren (§0) – jede Bedienung und jeder Wert von vorher ist erreichbar.
 
 ## 10. Abgabe am Morgen
 
@@ -253,6 +293,25 @@ Räume-Menü. Sie nehmen nur dieselben Wörter.
 3. **Offen**: Inhalt von `popup_v3_offen.json` mit Grund.
 4. **Fragen an den Maintainer**: kurz, mit Bild, Empfehlung zuerst.
 5. **Wie einspielen**: Zweig, `dev/haus.sh sync`, Vergleich über `localStorage casora_popup_variant = 'a' | 'v3'`.
+6. **Inhaltsvorschläge** (eigene Datei `.qa/popup-v3-inhaltsvorschlaege.md`, Grundlage für die nächste Runde): je Popup
+   eine Tabelle, was der Maintainer entscheiden soll – **nichts davon ist umgesetzt**. Spalten und Wörter fest:
+
+   | Inhalt | Heute | Vorschlag | Grund (ein Satz) |
+   |---|---|---|---|
+   | … | wo es heute steht | **Pflicht** · **Wenn vorhanden** · **Nach „Mehr“** · **Raus** · **Neu (braucht Logik)** | … |
+
+   Beispiel (Format, keine Entscheidung) – Fußbodenheizung, Raum:
+
+   | Inhalt | Heute | Vorschlag | Grund |
+   |---|---|---|---|
+   | Zieltemperatur ± | Bühne | Pflicht | Hauptgrund, das Popup zu öffnen |
+   | Ist-Temperatur | Statuszeile + Liste | Pflicht (nur Bühnen-Fußzeile) | steht heute doppelt |
+   | Luftfeuchte | Liste | Wenn vorhanden | nur mit Feuchte-Sensor sinnvoll |
+   | Batterie | Liste | Nach „Mehr“ | selten gebraucht, Warnung kommt ohnehin über die Glocke |
+   | Nächster Zeitplan-Wechsel | – | Neu (braucht Logik) | beantwortet „wann wird es wärmer?“, braucht Lesen des Zeitplans |
+
+   Am Ende eine Liste „Quer über alle Popups“ (z. B. „Batterie überall nach Mehr“), damit der Maintainer gleiche Fragen
+   einmal entscheidet. Danach anhalten – umgesetzt wird erst nach seiner Freigabe in einer eigenen Sitzung.
 
 Danach Handbuch nachziehen: [popup-blaupause.md](popup-blaupause.md) bekommt oben einen Hinweis „Aufbau seit v3:
 popup-richtlinien-v3.md“, [blaupause-popup.md](blaupause-popup.md) §1 die neue Anatomie, [regeltests.md](regeltests.md)
