@@ -77,6 +77,7 @@ custom_components/casora/scripts/local/03-popups.js | tg | attr(…) = esc(JSON.
 custom_components/casora/scripts/local/03-popups.js | glyph('light') | fixed icon markup (URL escaped) | 2
 custom_components/casora/scripts/local/03-popups.js | statusLine(sub) | statusLine() escapes every part | 1
 custom_components/casora/scripts/local/03-popups.js | barText(v) | number + escaped word | 1
-custom_components/casora/scripts/local/03-popups.js | left | brightness/colour/scene markup, escaped where built | 1
+custom_components/casora/scripts/local/03-popups.js | left | brightness/colour/scene markup, escaped where built | 2
 custom_components/casora/scripts/local/03-popups.js | S.render(el._lpsCfg, el._lpsPart, h.states, h, null) | markup builder of this file (escapes) | 1
 custom_components/casora/scripts/local/03-popups.js | re:^L\.[ct]$ | colour/label from the fixed LV table (L = LV[x.key]) | 3
+custom_components/casora/scripts/local/03-popups.js | re:^(?:v3Stage\(all, states, true\)|list)$ | light popup v3 (house): UI.stage markup and the house list built by houseBody from escaped parts | 2

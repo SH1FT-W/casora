@@ -1,13 +1,5 @@
 [
  {
-  "popup": "Licht (Raum, Haus, Leuchte aus der Gruppe)",
-  "vorlagen": [
-   "casora_popup_light"
-  ],
-  "modul": "03-popups.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Fußbodenheizung (Haus/Raum)",
   "vorlagen": [
    "casora_popup_fbh"

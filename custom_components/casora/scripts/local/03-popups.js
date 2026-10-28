@@ -3694,6 +3694,7 @@
     var r = n.replace(new RegExp('\\s*\\b' + String(room).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b\\s*', 'i'), ' ').trim();
     return r || n;
   };
+  S.short = function (n, r) { return short(n, r); };
   var nameOf = function (id, states) {
     var st = states[id];
     return (st && st.attributes && st.attributes.friendly_name) || id.split('.').pop().replace(/_/g, ' ');
@@ -3926,10 +3927,83 @@
     return [{ k: cl(2700), l: 'Warm', d: 'warm' }, { k: cl(4000), l: 'Neutral', d: 'neutral' }, { k: cl(6000), l: 'Kalt', d: 'cold' }];
   };
 
+  /* Popup v3 „Bühne“ (popup-richtlinien-v3.md §17, Licht): the frame carries data-casora-pv="v3" (template variant,
+     localStorage casora_popup_variant) – then stage S1 + scenes as quick choice on the left, the lamps on the right.
+     Without it (variant a, themes Standard/Glas) the popup stays as before. */
+  var v3On = function () {
+    var p = window.casoraPopup && window.casoraPopup.element;
+    return !!(p && p.getAttribute && p.getAttribute('data-casora-pv') === 'v3' && window._casoraUI && window._casoraUI.stage);
+  };
+  var V3_CSS = '<style>.lps-v3l{display:flex;flex-direction:column;gap:var(--casora-pv-sec-gap,24px);}</style>';
+  // Stage S1: brightness of the dimmable lamps (the ones that are on, else all), light colour as the segment.
+  var v3Stage = function (ids, states, onlyOn) {
+    var UI = window._casoraUI;
+    var dim = ids.filter(function (id) { return dimmable(states[id]); });
+    var s = stat(dim.length ? dim : ids, states);
+    var v = s.on ? (s.pct != null ? s.pct : 100) : 0;
+    var lit = dim.filter(function (id) { return states[id].state === 'on'; });
+    var target = lit.length ? lit : (onlyOn ? [] : dim);
+    var ct = ids.filter(function (id) { return hasCt(states[id]); });
+    var ctOn = ct.filter(function (id) { return states[id].state === 'on'; });
+    var cur = null;
+    ctOn.some(function (id) {
+      var a = states[id].attributes;
+      if ((!a.color_mode || a.color_mode === 'color_temp') && a.color_temp_kelvin) { cur = a.color_temp_kelvin; return true; }
+      return false;
+    });
+    var seg = null, curLbl = '';
+    if (ct.length && (!onlyOn || ctOn.length)) {
+      var pr = ctPresets(ct, states), best = -1;
+      if (cur != null) pr.forEach(function (p, i) { if (best < 0 || Math.abs(p.k - cur) < Math.abs(pr[best].k - cur)) best = i; });
+      if (best > -1) curLbl = tr(pr[best].l) + ' ' + Math.round(cur / 50) * 50 + ' K';
+      seg = pr.map(function (p, i) {
+        return { label: tr(p.l), active: i === best,
+          svc: { domain: 'light', service: 'turn_on', data: { color_temp_kelvin: p.k }, target: { entity_id: ctOn.length ? ctOn : ct } } };
+      });
+    }
+    return UI.stage('slider', { value: v, label: tr('Helligkeit'), icon: 'light', state: v ? null : 'off',
+      // Off: the stage value says „Aus“ already – no second „Aus“ under it.
+      word: v ? [word(v)].concat(curLbl ? [curLbl] : []).join(' · ') : '',
+      words: ['Aus', 'Gedimmt', 'Volle Helligkeit'],
+      svc: dim.length && target.length ? { domain: 'light', service: 'turn_on', field: 'brightness_pct', target: { entity_id: target }, zeroOff: true } : null,
+      seg: seg });
+  };
+  // Quick choice: the room's scenes (≤ 4, more: 3 + „Alle (n)“ → sub page), the last one used is active.
+  var v3Scenes = function (list, states, room) {
+    var UI = window._casoraUI;
+    if (!list.length) return '';
+    regScenes();
+    var last = null, lastT = 0;
+    list.forEach(function (id) { var t = Date.parse(states[id].state); if (!isNaN(t) && t > lastT) { lastT = t; last = id; } });
+    if (Date.now() - lastT > 12 * 3600000) last = null;
+    var items = list.map(function (id) {
+      return { icon: (states[id].attributes || {}).icon || 'mdi:palette', text: short(nameOf(id, states), room), active: id === last,
+        svc: { domain: 'scene', service: 'turn_on', target: { entity_id: id } } };
+    });
+    // The active scene stays visible among the first three.
+    if (items.length > 4 && last) items.sort(function (a, b) { return (b.active ? 1 : 0) - (a.active ? 1 : 0); });
+    return UI.quick(items, tr('Szenen'), { page: 'lightScenes|' + list.join(',') + '|' + (room || '') });
+  };
+  var regScenes = function () {
+    if (S._pg || !window._casoraUI || !window._casoraUI.page) return;
+    S._pg = true;
+    window._casoraUI.page('lightScenes', function (arg) {
+      var HH = window._casoraHH, parts = String(arg || '').split('|');
+      if (!HH || !HH.page) return;
+      var list = parts[0].split(',').filter(Boolean);
+      HH.page(tr('Szenen'), list, 'const UI = window._casoraUI, L = ' + JSON.stringify(list) + ', R = ' + JSON.stringify(parts[1] || '') + ';\n'
+        + 'return UI.section("control", L.filter(function (id) { return states[id]; }).map(function (id) {\n'
+        + '  var n = window._casoraLightSoft.short(String(states[id].attributes.friendly_name || id), R);\n'
+        + '  return UI.row.action({ icon: states[id].attributes.icon || "mdi:palette", label: n, svc: { domain: "scene", service: "turn_on", target: { entity_id: id } } });\n'
+        + '}), false);', list[0]);
+    });
+  };
+
   var roomBody = function (cfg, sc, states, h) {
     var ids = sc.lights.filter(function (id) { return states[id]; });
     // The whole house (#30): no room to name, and none to strip from lamp and scene names.
     var room = sc.house ? null : sc.name;
+    if (v3On()) return roomV3(cfg, sc, ids, room, states, h);
     var left = '';
     var dim = ids.filter(function (id) { return dimmable(states[id]); });
     if (dim.length) {
@@ -3988,6 +4062,35 @@
     }
     return '<div class="lps-cols' + (left ? '' : ' one') + '">' + (left ? '<div>' + left + '</div>' : '') + '<div>' + rightHtml + '</div></div>';
   };
+  var roomV3 = function (cfg, sc, ids, room, states, h) {
+    var UI = window._casoraUI;
+    var left = v3Stage(ids, states, false) + v3Scenes(scenesOf(h, states, sc), states, room);
+    var lampIds0 = (sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids);
+    var ls = stat(lampIds0, states);
+    var lampsHtml = lampIds0.map(function (id) {
+      return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0]);
+    }).join('');
+    // Counting heading (richtlinien §6): „Leuchten · 2 von 4 an“.
+    var head = tr(sc.house ? 'Leuchten' : 'Leuchten im Raum') + (ls.tot > 1 ? ' · ' + tr(ls.on + ' von ' + ls.tot + ' an') : '');
+    var rightHtml = '<div class="lps-lbl">' + esc(head) + '</div><div class="lps-rows">' + lampsHtml + '</div>';
+    var lampIds = (sc.room ? sc.room : ids).filter(function (id) { return states[id] && !Array.isArray((states[id].attributes || {}).entity_id); });
+    if (!lampIds.length) lampIds = ids.slice(0, 1);
+    if (!sc.house && UI.settings && lampIds.length) {
+      rightHtml += '<div style="height:var(--casora-popup-sec-gap, 24px)"></div>'
+        + UI.settings(!cfg.rooms && sc.lights.length === 1 ? sc.lights[0] : lampIds);
+    }
+    return V3_CSS + '<div class="lps-cols"><div class="lps-v3l">' + left + '</div><div>' + rightHtml + '</div></div>';
+  };
+  var houseV3 = function (cfg, states) {
+    var all = [];
+    cfg.rooms.forEach(function (r) { (r.lights || []).forEach(function (x) { if (states[x] && all.indexOf(x) < 0) all.push(x); }); });
+    // The whole house: the stage dims only lamps that are on (never switches the house on by dragging).
+    var ron = 0;
+    cfg.rooms.forEach(function (r) { if (stat(r.lights, states).on) ron++; });
+    var list = houseBody(cfg, states, true).replace('<div class="lps-lbl">' + esc(tr('Räume')) + '</div>',
+      '<div class="lps-lbl">' + esc(tr('Räume') + (cfg.rooms.length > 1 ? ' · ' + tr(ron + ' von ' + cfg.rooms.length + ' an') : '')) + '</div>');
+    return V3_CSS + '<div class="lps-cols"><div class="lps-v3l">' + v3Stage(all, states, true) + '</div><div>' + list + '</div></div>';
+  };
   var word = function (v) { return v <= 0 ? tr('Aus') : v >= 100 ? tr('Volle Helligkeit') : tr('Gedimmt'); };
   /* Value and word twice: muted on the track, in fill ink clipped to the fill. */
   var barText = function (v) {
@@ -3995,8 +4098,9 @@
     return tHtml + '<b aria-hidden="true" style="clip-path:inset(0 ' + (100 - v) + '% 0 0)">' + tHtml + '</b>';
   };
 
-  var houseBody = function (cfg, states) {
-    return '<div class="lps-lbl">' + esc(tr('Räume')) + '</div><div class="lps-grid">'
+  var houseBody = function (cfg, states, inV3) {
+    if (!inV3 && v3On()) return houseV3(cfg, states);
+    return '<div class="lps-lbl">' + esc(tr('Räume')) + '</div><div class="' + (inV3 ? 'lps-rows' : 'lps-grid') + '">'
       + cfg.rooms.map(function (r, i) {
         var s = stat(r.lights, states);
         // A room without its own HA group (house list from the rooms, light_rooms_auto): its lamps switch together.

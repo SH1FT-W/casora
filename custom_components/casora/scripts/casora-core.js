@@ -11340,7 +11340,9 @@ window.casoraMenuGlass = {
     +   'box-shadow:var(--casora-v3-pos-edge, inset 0 0 0 1px var(--casora-pill-divider, rgba(140,115,90,0.12)));}'
     + '.hui-stage .hui-vs.drag .hui-sl-fill{transition:none;}'
     + '.hui-stage .hui-vs .hui-sl-ic{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);width:28px;height:28px;'
-    +   'pointer-events:none;background-color:var(--casora-lps-fill-ink, rgba(58,42,20,.55));opacity:.55;}'
+    +   'pointer-events:none;background-color:var(--casora-lps-fill-ink, rgba(58,42,20,.55));}'
+    // Off: the symbol sits on the empty track – text 2 keeps 3 : 1 in light and dark.
+    + '.hui-stage.off .hui-vs .hui-sl-ic{background-color:' + S.sub + ';}'
     + '.hui-stage .hui-st-grip{position:absolute;left:50%;bottom:10px;width:60px;height:6px;margin-left:-30px;border-radius:999px;'
     +   'background:' + S.sub + ';opacity:.55;pointer-events:none;}'
     // S2: − value +, buttons 56 round.
@@ -11442,7 +11444,7 @@ window.casoraMenuGlass = {
       var spec = o.svc ? Object.assign({}, o.svc, words ? { words: words } : {}) : null;
       body = '<div class="hui-st-row">' + stSlider(v, spec, o, inv)
         + '<div class="hui-st-side">' + (off && code === 'S1' ? stValue(T_('Aus'), '') : stValue(v, o.unit == null ? '%' : o.unit))
-        + (o.word ? '<div class="hui-st-w">' + esc(o.word) + '</div>' : '')
+        + (o.word || words ? '<div class="hui-st-w">' + esc(o.word || '') + '</div>' : '')
         + (o.seg && o.seg.length ? '<div class="hui-st-seg">' + segments(o.seg) + '</div>' : '')
         + '</div></div>';
     } else if (code === 'S2') {
@@ -11531,7 +11533,7 @@ window.casoraMenuGlass = {
     }).join('');
     return '<style>' + QUICK_CSS + '</style><div class="hui-quick" data-casora-quick="' + list.length + '">'
       + (label ? softLabel(label) : '')
-      + '<div class="hui-qk-g' + (list.length === 4 ? ' n4' : '') + '" style="--n:' + list.length + '">' + tiles + '</div></div>';
+      + '<div class="hui-qk-g' + (list.length === 4 ? ' n4' : '') + '" style="--n:' + Math.max(3, list.length) + '">' + tiles + '</div></div>';
   }
 
   window._casoraUI = { line: softLine, hero: hero, headline: headline, group: group, legend: legend, note: note, kiCard: kiCard, shelf: shelf, mediaRow: mediaRow, segments: segments, slider: slider, icon: icon, esc: esc, prime: prime, plantWater: plantWater, soft: soft, label: softLabel, tokens: T, v: 149 };

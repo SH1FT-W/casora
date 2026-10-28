@@ -21,6 +21,8 @@ const OFFEN = JSON.parse(rd('dev/unit/popup_v3_offen.json'));
 // Migrated popups: templates, module file and the region of the module that builds it (from/to markers), the
 // number of UI.stage calls in that region.
 const MIGRIERT = [
+  { popup: 'Licht (Raum, Haus, Leuchte aus der Gruppe)', vorlagen: ['casora_popup_light'], file: '03-popups.js',
+    from: 'var S = window._casoraLightSoft = { els: {} };', to: null, stages: 1 },
 ];
 
 // 1. Pieces.

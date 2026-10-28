@@ -12734,7 +12734,7 @@
     "style": "[[[\n  const _hdr = typeof window._casoraLPC === 'function' ? window._casoraLPC(entity, states, typeof hass !== 'undefined' ? hass : null, variables, 'header') : null;\n  const _w = (_hdr && _hdr.width) || 880;\n  /* Weich (soft): Schließen rechts oben über dem Ring, Kopfzeilen-Titel nur für Screenreader. */\n  const _soft = _hdr && _hdr.soft\n    ? ' --casora-lp-head-pos: absolute; --casora-lp-head-pe: none; --casora-lp-close-order: 2;'\n      + ' --casora-lp-close-ml: auto; --casora-lp-title-vis: hidden; --casora-lp-close-dy: 0px;'\n      + ' --casora-lp-close-size: 38px; --casora-lp-close-bg: var(--casora-lps-close-bg);'\n      + ' --casora-lp-close-ink: var(--casora-lps-close-ink); --casora-lp-close-shadow: none;'\n      + ' --casora-lp-close-backdrop: none;'\n    : '';\n  return '--popup-min-width: min(' + _w + 'px, 92vw); --popup-max-width: min(' + _w + 'px, 92vw);' + _soft;\n]]]\n",
     "title": "[[[\n  const _hdr = typeof window._casoraLPC === 'function' ? window._casoraLPC(entity, states, typeof hass !== 'undefined' ? hass : null, variables, 'header') : null;\n  return (_hdr && _hdr.title) || 'Lichtsteuerung';\n]]]\n",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
-    "variant": "b"
+    "variant": "v3"
    }
   },
   "styles": {
@@ -12779,7 +12779,7 @@
     "title": "[[[\n  const _hdr = typeof window._casoraLPC === 'function' ? window._casoraLPC(entity, states, typeof hass !== 'undefined' ? hass : null, variables, 'header') : null;\n  return (_hdr && _hdr.title) || 'Lichtsteuerung';\n]]]\n",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
     "eyebrow": "[[[\n  const _hdr = typeof window._casoraLPC === 'function' ? window._casoraLPC(entity, states, typeof hass !== 'undefined' ? hass : null, variables, 'header') : null;\n  return (_hdr && _hdr.eyebrow) || '';\n]]]",
-    "variant": "b"
+    "variant": "v3"
    }
   },
   "template": [
