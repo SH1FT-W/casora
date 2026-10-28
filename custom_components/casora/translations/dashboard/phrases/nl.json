@@ -2568,9 +2568,14 @@
   "Im Studio Kacheln zu Räumen hinzufügen": "Voeg in de Studio tegels aan kamers toe",
   "Etwas trocken": "Wat droog",
   "Etwas feucht": "Wat vochtig",
-  "Sehr feucht": "Zeer vochtig"
+  "Sehr feucht": "Zeer vochtig",
+  "Beschatten": "Schaduw"
  },
  "patterns": [
+  [
+   "^(\\d+) von (\\d+) offen$",
+   "{1} van {2} open"
+  ],
   [
    "^Nächster Start (.+)$",
    "Volgende start {1}"

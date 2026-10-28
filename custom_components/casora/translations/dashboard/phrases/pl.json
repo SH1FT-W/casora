@@ -2568,9 +2568,14 @@
   "Im Studio Kacheln zu Räumen hinzufügen": "Dodaj kafelki do pomieszczeń w Studio",
   "Etwas trocken": "Nieco sucho",
   "Etwas feucht": "Nieco wilgotno",
-  "Sehr feucht": "Bardzo wilgotno"
+  "Sehr feucht": "Bardzo wilgotno",
+  "Beschatten": "Zacienij"
  },
  "patterns": [
+  [
+   "^(\\d+) von (\\d+) offen$",
+   "{1} z {2} otwarte"
+  ],
   [
    "^Nächster Start (.+)$",
    "Następny start {1}"

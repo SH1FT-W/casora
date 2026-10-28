@@ -2550,9 +2550,14 @@
   "Im Studio Kacheln zu Räumen hinzufügen": "Add tiles to rooms in the Studio",
   "Etwas trocken": "Slightly dry",
   "Etwas feucht": "Slightly humid",
-  "Sehr feucht": "Very humid"
+  "Sehr feucht": "Very humid",
+  "Beschatten": "Shade"
  },
  "patterns": [
+  [
+   "^(\\d+) von (\\d+) offen$",
+   "{1} of {2} open"
+  ],
   [
    "^Nächster Start (.+)$",
    "Next start {1}"

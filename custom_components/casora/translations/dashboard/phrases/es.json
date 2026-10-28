@@ -2568,9 +2568,14 @@
   "Im Studio Kacheln zu Räumen hinzufügen": "Añade mosaicos a las habitaciones en el Studio",
   "Etwas trocken": "Algo seco",
   "Etwas feucht": "Algo húmedo",
-  "Sehr feucht": "Muy húmedo"
+  "Sehr feucht": "Muy húmedo",
+  "Beschatten": "Sombra"
  },
  "patterns": [
+  [
+   "^(\\d+) von (\\d+) offen$",
+   "{1} de {2} abiertas"
+  ],
   [
    "^Nächster Start (.+)$",
    "Próximo inicio {1}"

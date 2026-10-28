@@ -2568,9 +2568,14 @@
   "Im Studio Kacheln zu Räumen hinzufügen": "Aggiungi riquadri alle stanze nello Studio",
   "Etwas trocken": "Un po' secco",
   "Etwas feucht": "Un po' umido",
-  "Sehr feucht": "Molto umido"
+  "Sehr feucht": "Molto umido",
+  "Beschatten": "Ombreggia"
  },
  "patterns": [
+  [
+   "^(\\d+) von (\\d+) offen$",
+   "{1} di {2} aperte"
+  ],
   [
    "^Nächster Start (.+)$",
    "Prossimo avvio {1}"

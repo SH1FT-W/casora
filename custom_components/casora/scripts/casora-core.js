@@ -7214,7 +7214,7 @@ window.casoraMenuGlass = {
         }
         if (!gN) continue;
         var gAvg = String(Math.round(gSum / gN));
-        var gKids = el.querySelectorAll('.hui-sg[data-v]');
+        var gKids = el.querySelectorAll('.hui-sg[data-v], .hui-qk[data-v]');
         for (var gk = 0; gk < gKids.length; gk++) gKids[gk].classList.toggle('on', gKids[gk].dataset.v === gAvg);
         continue;
       }
@@ -11335,7 +11335,8 @@ window.casoraMenuGlass = {
     + '.hui-stage .hui-vs .hui-sl-fill{position:absolute;left:0;right:0;bottom:0;border-radius:0;'
     +   'background:var(--casora-lps-fill, var(--casora-popup-accent, var(--casora-color-orange, #FF9F0A)));'
     +   'transition:height .18s cubic-bezier(.36,0,.16,1);}'
-    + '.hui-stage .hui-vs.inv .hui-sl-fill{top:0;bottom:auto;background:var(--casora-v3-pos-fill, ' + S.ctl + ');}'
+    // Position (S3): a strip stays at the top when fully open, so the handle can always be seen and grabbed.
+    + '.hui-stage .hui-vs.inv .hui-sl-fill{top:0;bottom:auto;min-height:26px;background:var(--casora-v3-pos-fill, ' + S.ctl + ');}'
     + '.hui-stage .hui-vs.inv{background:var(--casora-v3-pos-track, var(--casora-popup-row-fill, rgba(140,115,90,0.07)));'
     +   'box-shadow:var(--casora-v3-pos-edge, inset 0 0 0 1px var(--casora-pill-divider, rgba(140,115,90,0.12)));}'
     + '.hui-stage .hui-vs.drag .hui-sl-fill{transition:none;}'
@@ -11508,8 +11509,11 @@ window.casoraMenuGlass = {
     + '.hui-qk ha-icon.ic{background:none;}'
     + '.hui-qk b{display:block;font-size:14px;font-weight:700;line-height:1.25;overflow-wrap:normal;word-break:normal;}'
     + '.hui-qk small{display:block;font-size:12px;font-weight:500;color:' + S.sub + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
-    + '.hui-qk.on{background:var(--casora-soft-seg-on, #FFFDF9);box-shadow:var(--casora-soft-seg-on-shadow, none);}'
-    + '.hui-qk.on .ic{color:var(--casora-popup-accent, var(--casora-color-orange, #FF9F0A));}'
+    + '.hui-qk.on{background:var(--casora-soft-seg-on, #FFFDF9);box-shadow:var(--casora-soft-seg-on-shadow, none);color:var(--casora-soft-seg-on-ink, ' + T.ink + ');}'
+    // Dark themes light up the chosen tile: its words take the segment's ink, not text 2.
+    + '.hui-qk.on small{color:var(--casora-soft-seg-on-ink, ' + S.sub + ');opacity:.75;}'
+    // Device colour, darkened towards the tile's ink so the symbol keeps 3 : 1 on the light tile.
+    + '.hui-qk.on .ic{color:color-mix(in srgb, var(--casora-popup-accent, var(--casora-color-orange, #FF9F0A)) 65%, var(--casora-soft-seg-on-ink, ' + T.ink + '));}'
     + '.hui-qk:active{transform:scale(var(--casora-press-scale, .97));}'
     + '@media (hover:hover){.hui-qk:not(.on):hover{background:' + S.rowHover + ';}}'
     + '@media (max-width:760px){.hui-qk-g.n4{grid-template-columns:repeat(2,minmax(0,1fr));}}'
@@ -11522,18 +11526,22 @@ window.casoraMenuGlass = {
       var all = list.length;
       list = list.slice(0, 3).concat([{ icon: 'mdi:dots-horizontal', text: 'Alle (' + all + ')', page: o.page || null, all: true }]);
     }
+    // o.live = { entities, attr } (like segments): the active tile follows the live average (data-v = value).
+    var lvq = o.live && o.live.entities && o.live.entities.length ? o.live : null;
     var tiles = list.map(function (it) {
       var spec = it.svc ? (it.confirm ? Object.assign({}, it.svc, { confirm: it.confirm }) : it.svc) : null;
       return '<div class="hui-qk' + (it.active ? ' on' : '') + '" role="button" aria-label="' + esc(it.text) + '" aria-pressed="' + (it.active ? 'true' : 'false') + '"'
         + (spec ? ' data-casora-svc="' + esc(JSON.stringify(spec)) + '"' : '')
-        + (it.page ? ' data-casora-page="' + esc(it.page) + '"' : '') + stAttrs(it.attrs) + '>'
+        + (it.page ? ' data-casora-page="' + esc(it.page) + '"' : '') + (lvq && it.value != null ? ' data-v="' + esc(it.value) + '"' : '') + stAttrs(it.attrs) + '>'
         + stGlyph(it.icon, 'ic')
         + '<div><b>' + esc(it.text) + (it.all ? ' ›' : '') + '</b>'
         + (it.sub || it.active ? '<small>' + esc(it.sub || 'Aktiv') + '</small>' : '') + '</div></div>';
     }).join('');
     return '<style>' + QUICK_CSS + '</style><div class="hui-quick" data-casora-quick="' + list.length + '">'
       + (label ? softLabel(label) : '')
-      + '<div class="hui-qk-g' + (list.length === 4 ? ' n4' : '') + '" style="--n:' + Math.max(3, list.length) + '">' + tiles + '</div></div>';
+      + '<div class="hui-qk-g' + (list.length === 4 ? ' n4' : '') + '" style="--n:' + Math.max(3, list.length) + '"'
+      + (lvq ? ' data-casora-live="seg" data-casora-ents="' + esc(JSON.stringify(lvq.entities)) + '" data-casora-attr="' + esc(lvq.attr || 'current_position') + '"' : '')
+      + '>' + tiles + '</div></div>';
   }
 
   window._casoraUI = { line: softLine, hero: hero, headline: headline, group: group, legend: legend, note: note, kiCard: kiCard, shelf: shelf, mediaRow: mediaRow, segments: segments, slider: slider, icon: icon, esc: esc, prime: prime, plantWater: plantWater, soft: soft, label: softLabel, tokens: T, v: 149 };

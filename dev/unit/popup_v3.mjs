@@ -23,6 +23,7 @@ const OFFEN = JSON.parse(rd('dev/unit/popup_v3_offen.json'));
 const MIGRIERT = [
   { popup: 'Licht (Raum, Haus, Leuchte aus der Gruppe)', vorlagen: ['casora_popup_light'], file: '03-popups.js',
     from: 'var S = window._casoraLightSoft = { els: {} };', to: null, stages: 1 },
+  { popup: 'Jalousien (Raum/Gruppe)', vorlagen: ['casora_popup_cover'], file: null, stages: 1 },
 ];
 
 // 1. Pieces.
@@ -63,6 +64,12 @@ for (const [k, s] of Object.entries(SRC).concat(Object.keys(T).map((n) => ['tpl:
   }
 }
 
+const strings = (x, out = []) => {
+  if (typeof x === 'string') out.push(x);
+  else if (Array.isArray(x)) x.forEach((y) => strings(y, out));
+  else if (x && typeof x === 'object') Object.values(x).forEach((y) => strings(y, out));
+  return out;
+};
 // 2., 4., 5. Migrated popups.
 const popupsOf = (t, out = []) => {
   if (!t || typeof t !== 'object') return out;
@@ -74,6 +81,8 @@ const popupsOf = (t, out = []) => {
   return out;
 };
 const region = (m) => {
+  // Popups built in the template itself (casora_popup content): the region is that template.
+  if (!m.file) return m.vorlagen.map((n) => strings(T[n]).join('\n')).join('\n');
   const s = SRC[m.file];
   assert.ok(s, `${m.popup}: module ${m.file} missing`);
   const a = s.indexOf(m.from), b = m.to ? s.indexOf(m.to, a + 1) : s.length;

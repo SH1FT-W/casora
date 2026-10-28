@@ -5,15 +5,7 @@
    "casora_popup_fbh"
   ],
   "modul": "03-popups.js",
-  "grund": "noch nicht dran"
- },
- {
-  "popup": "Jalousien (Raum/Gruppe)",
-  "vorlagen": [
-   "casora_popup_cover"
-  ],
-  "modul": "34-security-covers.js",
-  "grund": "noch nicht dran"
+  "grund": "braucht neue Logik: Haus-Bühne S2 „Ziel aller Räume“ (± verschiebt jedes Raumziel um einen Schritt, Ø bei verschiedenen Zielen) gibt es seit 1.3 nicht mehr; Test-HA „arbeit“ hat keine FBH-Kachel für Bilder/Inhaltsvergleich"
  },
  {
   "popup": "Leuchte (einzeln)",

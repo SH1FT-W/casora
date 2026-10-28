@@ -91,7 +91,8 @@ const COLLECT = (prefix) => {
   const all = [];
   (function walk(n) { for (const ch of n.children || []) { all.push(ch); if (ch.shadowRoot) walk(ch.shadowRoot); walk(ch); } })(s);
   for (const e of all) {
-    if (!e.getAttribute || !visible(e)) continue;
+    // Live values count even while drawn 0 high (a fill at 0 %); everything else only when visible.
+    if (!e.getAttribute || (!e.hasAttribute('data-casora-live') && !visible(e))) continue;
     const a = (n) => e.getAttribute(n);
     if (a('data-casora-svc')) { const k = svcKey(J(a('data-casora-svc'))); if (k) out.add(k); }
     if (a('data-casora-cf')) { const k = svcKey(J(a('data-casora-cf'))); if (k) out.add(k); }

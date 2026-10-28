@@ -2568,9 +2568,14 @@
   "Im Studio Kacheln zu Räumen hinzufügen": "Adicione blocos às divisões no Studio",
   "Etwas trocken": "Um pouco seco",
   "Etwas feucht": "Um pouco húmido",
-  "Sehr feucht": "Muito húmido"
+  "Sehr feucht": "Muito húmido",
+  "Beschatten": "Sombrear"
  },
  "patterns": [
+  [
+   "^(\\d+) von (\\d+) offen$",
+   "{1} de {2} abertas"
+  ],
   [
    "^Nächster Start (.+)$",
    "Próximo início {1}"

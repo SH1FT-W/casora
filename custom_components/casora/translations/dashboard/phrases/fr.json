@@ -2568,9 +2568,14 @@
   "Im Studio Kacheln zu Räumen hinzufügen": "Ajoute des tuiles aux pièces dans le Studio",
   "Etwas trocken": "Un peu sec",
   "Etwas feucht": "Un peu humide",
-  "Sehr feucht": "Très humide"
+  "Sehr feucht": "Très humide",
+  "Beschatten": "Ombrager"
  },
  "patterns": [
+  [
+   "^(\\d+) von (\\d+) offen$",
+   "{1} sur {2} ouverts"
+  ],
   [
    "^Nächster Start (.+)$",
    "Prochain départ {1}"
