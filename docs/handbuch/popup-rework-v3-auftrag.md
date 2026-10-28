@@ -17,7 +17,7 @@ trotzdem, gilt §8 („Wenn etwas nicht passt“), nie eine eigene Designidee.
 1. `CLAUDE.md` (Stil, Vorlagen bauen, Prüfungen, nichts Persönliches, was nicht angefasst wird).
 2. [popup-richtlinien-v3.md](popup-richtlinien-v3.md) – **die** Designsprache. Bei Widerspruch gewinnt sie.
 3. [popup-blaupause.md](popup-blaupause.md) – Zeilenarten, Unterseiten, Einstellungen, Mehr, Leer, Breite, Symmetrie
-   (gelten weiter, siehe Richtlinien §14) und die Bausteine in `window._casoraUI`.
+   (gelten weiter, siehe Richtlinien §15) und die Bausteine in `window._casoraUI`.
 4. [design-regeln.md](design-regeln.md) – Tokens, 4er-Raster, Schatten nur aus Variablen.
 5. [blaupause-popup.md](blaupause-popup.md) (Dateien, Hauptschalter-Haken, Breite), [regeltests.md](regeltests.md),
    [test-und-release.md](test-und-release.md), [wortliste.md](wortliste.md).
@@ -47,7 +47,7 @@ Alles in `custom_components/casora/scripts/casora-core.js`, Kommentare englisch.
 - Den vorhandenen Schalter (`data-casora-pv`, gesetzt in `open()` aus `cfg.variant`, `localStorage casora_popup_variant`)
   um den Wert `v3` erweitern. `casoraPopup.sub` erbt schon.
 - `:host([soft][data-casora-pv="v3"])` bekommt **alle** Tokens von Variante B (Selektor-Liste
-  `:host([soft][data-casora-pv="b"]), :host([soft][data-casora-pv="v3"])`) plus die v3-Tokens aus Richtlinien §13.
+  `:host([soft][data-casora-pv="b"]), :host([soft][data-casora-pv="v3"])`) plus die v3-Tokens aus Richtlinien §14.
 - **Kopf ohne Symbol-Kachel**: im v3-Host die Kopf-Kachel ausblenden (`.header-ring` bzw. die Kachel der Kopfzeile A,
   `display:none`), Titel 24/800 (Handy 22), Etikett/Statuszeile wie Richtlinien §3, ✕ 40, Abstand Kopf → Inhalt 20.
   Der Hauptschalter bleibt wie er ist (Haken `_casoraHeadSwitchHooks`).
@@ -67,7 +67,7 @@ Die Bedienteile **wiederverwenden** die vorhandene Live- und Dienst-Logik (`data
 | `position` (S3) | `{ value, word, svc, live, invert }` | Grafik zum Ziehen + Wert |
 | `progress` (S4) | `{ value, word, progress: 0–1, program, action: {text, sub, svc, primary} }` | Restzeit/Zustand, Balken 8, Programm, Pille |
 | `image` (S5) | `{ html }` | fertiges Bild-/Player-HTML des Moduls in der Platte |
-| `chart` (S6) | `{ value, unit, trend, chart: html, range: [items] }` | Wert + Trend + Diagramm-HTML (vorhandenes `_hpChart*`) + Zeitraum-Segment |
+| `chart` (S6) | `{ value, unit, trend, chart: html, range: [items] }` | Wert + Trend + Diagramm-HTML (vorhandenes `_hpChart*`, Höhe 160/Handy 140, `readout: 'hero'`) + Zeitraum-Segment „24 Std. · 7 Tage · 30 Tage“ |
 | `status` (S7) | `{ tone: 'good'\|'warn'\|'bad', icon, text, facts: [{label, value}], action }` | Symbol 64 in Ampelfarbe, Satz, ≤ 3 Kennzahlen, eine Pille |
 | `content` (S8) | `{ html }` | eigener Hauptbereich des Moduls in der Platte |
 
@@ -95,14 +95,15 @@ Statisch, ohne HA, Stil wie `popup_blaupause.mjs` (Sperrklinke: Zahlen dürfen n
 1. Bausteine da: `UI.stage` (alle 8 Typen), `UI.quick`, `variant: 'v3'` im Rahmen, v3-Host-Selektor.
 2. Jede Vorlage/jedes Modul in der Liste `migriert` setzt `variant: 'v3'` und ruft `UI.stage` genau einmal je Popup-Art.
 3. `UI.quick` nie mit `danger`; nie mehr als 4 Kacheln im Aufruf.
-4. Keine eigene Bühnen-Platte (Radius 32 + `soft-row-fill` außerhalb von `UI.stage`) in migrierten Dateien.
-5. `popup_v3_offen.json` listet die noch nicht umgebauten Popups mit Grund; leer = fertig.
+4. Diagramme (Richtlinien §7): in migrierten Dateien keine Hex-Farbe im `_hpChartCfg`-Aufruf, Höhen nur 120/140/160.
+5. Keine eigene Bühnen-Platte (Radius 32 + `soft-row-fill` außerhalb von `UI.stage`) in migrierten Dateien.
+6. `popup_v3_offen.json` listet die noch nicht umgebauten Popups mit Grund; leer = fertig.
 
 Erst wenn Phase 1 grün ist: Commit `Popup v3: building blocks (stage, quick, head, layout, rule test)`.
 
 ## 4. Phase 2 – Pilot (die drei Mockup-Popups)
 
-Licht (Raum), Fußbodenheizung (Haus) und Jalousien (Raum) nach den Bildern in Richtlinien §16 umbauen,
+Licht (Raum), Fußbodenheizung (Haus) und Jalousien (Raum) nach den Bildern in Richtlinien §17 umbauen,
 `variant: 'b'` → `'v3'`. Dann für alle drei **Bilder und Messung** (§6). Weicht das Ergebnis sichtbar von den Mockups ab,
 erst die Bausteine korrigieren, dann weiter – die Pilot-Popups sind das Maß für alle anderen.
 
@@ -211,6 +212,8 @@ Räume-Menü. Sie nehmen nur dieselben Wörter.
 - [ ] Bühne nach Tabelle §5 mit `UI.stage`; alter Hauptbereich (`UI.hero`, eigene Platte, `UI.actions`-Reihe) entfernt –
       nichts doppelt (Zustand nur Wort im Kopf + Wert auf der Bühne).
 - [ ] Schnellwahl mit `UI.quick`, höchstens 4, nichts Gefährliches.
+- [ ] Diagramme nach Richtlinien §7: höchstens eins außerhalb von „Mehr“ (Bühne S6 **oder** Abschnitt „Verlauf“ 120 hoch),
+      Fachwerte in „Mehr“, Farben aus `--casora-color-*`/Gerätefarbe statt Hex, Zeitraum nach §7.2.
 - [ ] Listen über `UI.section`/`UI.row.*`; Reihenfolge Bedienung → Zustand → Verlauf → Einstellungen; Zähl-Überschrift
       wo sinnvoll („Räume · 2 heizen“).
 - [ ] „Weitere Einstellungen“ als letzte Zeile, „Mehr“ höchstens einmal ganz unten.

@@ -8,7 +8,7 @@ erst die Grundsätze, dann die Teile von oben nach unten, dann Maße, Zustände 
   [design-regeln.md](design-regeln.md). Neu ist nur der **Aufbau**.
 - **Löst ab**: Kopf (Regel 1, Symbol-Kachel), Hauptbereich (Regel 3) und Aktionen (Regel 4) der
   [Blaupause v2](popup-blaupause.md). Was v2 sonst sagt (Zeilenarten, Unterseiten, „Weitere Einstellungen“, Mehr, Leer,
-  Breite, Symmetrie, Zugang), gilt weiter – Übersicht in §14.
+  Breite, Symmetrie, Zugang), gilt weiter – Übersicht in §15.
 - **Arbeitsanweisung** für den Umbau aller Popups: [popup-rework-v3-auftrag.md](popup-rework-v3-auftrag.md).
 - Nichts auf dieser Seite ist „OFFEN“. Passt ein Popup in keine Regel, gilt die **Rückfallregel** in §4.7.
 
@@ -43,9 +43,9 @@ erst die Grundsätze, dann die Teile von oben nach unten, dann Maße, Zustände 
 │ SCHNELLWAHL                     └─────────────────────────────┘ │
 │ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ EINSTELLUNGEN                   │  Schnellwahl §5
 │ │     │ │     │ │     │ │     │ ┌─────────────────────────────┐ │
-│ └─────┘ └─────┘ └─────┘ └─────┘ │ Weitere Einstellungen     › │ │  Einstell.   §7
+│ └─────┘ └─────┘ └─────┘ └─────┘ │ Weitere Einstellungen     › │ │  Einstell.   §8
 │                                 └─────────────────────────────┘ │
-│                                 Mehr (3) ⌄                      │  Mehr        §7
+│                                 Mehr (3) ⌄                      │  Mehr        §8
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -181,13 +181,74 @@ Die Listen sind die gruppierten Platten aus Variante B (Commit „Popup rework v
 
 Die Überschrift darf zählen: „Leuchten · 2 von 4 an“, „Räume · 2 heizen“.
 
-## 7. Einstellungen und Mehr
+## 7. Diagramme
+
+Grundlage ist Casoras eigene Diagrammkarte `custom:casora-chart` (`scripts/casora-chart.js`, Richtung A „ruhig“), in
+Popups über `window._hpChartCfg(entity, titel, zeitraum, farbe, höhe)` (`01-basis.js`) und `HH.chart(titel, platte)`
+(`02-devices.js`). Kein anderes Diagramm in Popups (keine apexcharts-Karte, kein eigenes SVG).
+
+### 7.1 Wo ein Diagramm steht
+
+| Rolle | Wann | Wo | Höhe |
+|---|---|---|---|
+| **Bühne** (S6) | Der Verlauf ist die Hauptsache: Messwert, Energie, Pflanze, Luftqualität, Diagramm-Kachel | in der Bühne, unter dem großen Wert | 160 (Handy 140) |
+| **Abschnitt „Verlauf“** | Der Verlauf ergänzt eine andere Bühne: Temperatur bei Heizung/Thermostat, Leistung bei Waschmaschine, Trockner, Spüler, Drucker | rechte Spalte, Abschnitt „Verlauf“ nach „Zustand“ (Reihenfolge §6), eigene Platte | 120 |
+| **In „Mehr“** | Fachwerte: Spannung, Stromstärke, Düse, Druckbett, zweite und dritte Messgröße | im Mehr-Block, je Messgröße eine Platte | 120 |
+
+- **Höchstens ein Diagramm** außerhalb von „Mehr“ – entweder auf der Bühne (S6) oder als Abschnitt „Verlauf“, nie beides.
+- **Nie** ein Diagramm über oder neben einer Bühne S1–S5; nie zwei Diagramme nebeneinander.
+- **Mehrere Messgrößen** in einem Diagramm nur mit Legende und höchstens 4 Serien; sonst eine Serie und die Wahl über
+  Auswahl-Zeilen in der Liste (v2 Entscheidung 3: Zeile tippen wechselt das Diagramm, gewählte Zeile hinterlegt, ohne ›).
+
+### 7.2 Aussehen (Richtung A „ruhig“, gilt)
+
+| Teil | Regel |
+|---|---|
+| Platte | Abschnitt/Mehr: Fläche `--casora-popup-row-fill`, Radius 20 wie die Listen; Bühne: in der Bühnen-Platte ohne eigene Fläche |
+| Kopf der Platte | links Titel 15/700 („Temperatur“, „Leistung“), rechts „Details ›“ zur Messwertseite; auf der Bühne kein Titel (der Wert darüber sagt es) |
+| Linie | 2 px, Fläche darunter 12 % → 0, Hilfslinien gepunktet, Skala rechts mit 3 Werten (wie `casora-chart` heute) |
+| Balken | für Summen je Zeitraum (kWh je Tag, Verbrauch je Monat); Linie für Zustandsgrößen (Temperatur, Leistung, Feuchte) |
+| Ablesen | keine schwebende Blase: auf der Bühne liest die große Zahl mit (`readout: 'hero'`), im Abschnitt die Zahl im Plattenkopf (`readout: 'own'`) |
+| Zeitraum | Abschnitt/Mehr: fest 24 Std.; läuft ein Programm: 4 Std. Umschalter nur auf der Bühne (S6) und der Messwertseite, als Segment unter dem Diagramm: **24 Std. · 7 Tage · 30 Tage** (Diagramm-Kachel zusätzlich „Jahr“) – Wörter wie `27-chart.js` |
+| Abstände | Kopf → Diagramm 8, Diagramm → Segment 16, Innenabstand der Platte 16 |
+
+### 7.3 Farben
+
+Nur Theme-Variablen, nie feste Farben im Aufruf (heute noch `#0A84FF`, `#8E8E93`, `#FF9F0A`, `#FF453A` – beim Umbau ersetzen):
+
+| Messgröße | Farbe |
+|---|---|
+| eine Serie, die zum Gerät gehört (Leistung, Energie des Geräts, Helligkeit) | Gerätefarbe `--casora-popup-accent` |
+| Temperatur | `--casora-color-orange` |
+| Luftfeuchte, Wasser | `--casora-color-blue` |
+| Luftqualität, CO₂ | `--casora-color-teal`; Grenzwerte als gepunktete Linie, Bereiche nie farbig füllen |
+| Solar / Netz / Akku (Energie) | `--casora-color-yellow` / `--casora-color-neutral` / `--casora-color-green` |
+| Spannung, Stromstärke, Nebenwerte | `--casora-color-neutral` |
+| weitere Serien in einer Legende | `--casora-color-violet`, `--casora-color-pink`, `--casora-color-mint` in dieser Reihenfolge |
+
+Linie gegen Platte mindestens 3 : 1, hell und dunkel (`popup-geo.mjs`). Ampelfarben (grün/orange/rot) nur für
+Zustände, nie als Serienfarbe.
+
+### 7.4 Zustände
+
+- **Lädt**: Platte in Endhöhe, Fläche ruhig, keine Linie – das Popup springt nicht, wenn die Werte kommen
+  (vorhandenes `data-casora-charts-ready`).
+- **Keine Werte**: Leer-Zeile in derselben Höhe, „Noch keine Werte“ (DP-09) – keine leere Fläche, keine Achsen ohne Linie.
+- **Nicht erreichbar**: letzte Werte grau, im Kopf „zuletzt 14:42“.
+- **Fahrenheit, Einheiten, Dezimalstellen** wie die Wortliste und die Entität (`unit_of_measurement`, Anzeige-Genauigkeit).
+
+### 7.5 Zugang
+
+Jedes Diagramm hat einen Namen für die Sprachausgabe mit Zusammenfassung
+(„Temperatur, letzte 24 Std., 19,8 bis 22,1 °C, jetzt 21,2 °C“); der Zeitraum-Umschalter ist ein Segment mit `role="tab"`.
+
+## 8. Einstellungen und Mehr
 
 - **Einstellungen** ist der letzte Abschnitt der rechten Spalte: Automatik-Schalter (z. B. „Beschattung“, „Heute
   aussetzen“) und als letzte Zeile „Weitere Einstellungen ›“ (`UI.settings`, v2 Regel 8).
 - **Mehr** (`UI.more`) höchstens einmal, ganz unten, mit Anzahl und Unterzeile, was drin ist (v2 Regel 9).
 
-## 8. Zustände des ganzen Popups
+## 9. Zustände des ganzen Popups
 
 | Zustand | Verhalten |
 |---|---|
@@ -196,7 +257,7 @@ Die Überschrift darf zählen: „Leuchten · 2 von 4 an“, „Räume · 2 heiz
 | Rückfrage | wie heute (`confirm`): der Knopf wird zu „Bestätigen“, kein eigener Dialog |
 | Theme ohne Casora (Standard, Glas) | bleibt beim bisherigen Aufbau (v2); v3 gilt nur im Weich-Rahmen (`:host([soft])`) |
 
-## 9. Bewegung
+## 10. Bewegung
 
 | Was | Wert |
 |---|---|
@@ -205,27 +266,27 @@ Die Überschrift darf zählen: „Leuchten · 2 von 4 an“, „Räume · 2 heiz
 | Schnellwahl wählen | Fläche 160 ms (`--casora-dur-feedback`), Druck `scale(var(--casora-press-scale))` |
 | `prefers-reduced-motion` | alle Übergänge aus |
 
-## 10. Handy (393, WebKit)
+## 11. Handy (393, WebKit)
 
 - Eine Spalte, Reihenfolge wie §2; Sheet-Rand 16, Kopf mit Griff.
 - Bühne S1: Regler 88×200; S2: Wert 64; Schnellwahl 2 × 2 ab 4 Kacheln.
 - Alles muss mit dem Daumen erreichbar sein: Bühne und Schnellwahl stehen im oberen Drittel des Sheets.
 - **Immer in WebKit prüfen** (Safari/iPhone), nicht nur Chrome.
 
-## 11. Zugang
+## 12. Zugang
 
 - Trefferflächen mindestens 44 × 44 (Schnellwahl-Kachel und Zeilen ohnehin größer).
 - Text auf Fläche mindestens 4,5 : 1, Symbole 3 : 1 – hell und dunkel (`dev/qa/popup-geo.mjs`).
 - Regler, Schalter und ± mit Namen für die Sprachausgabe (`aria-label`, `role`, Wert).
 - Auswahl zusätzlich über Form (Hinterlegung, Schatten), nie nur über Farbe.
 
-## 12. Texte
+## 13. Texte
 
 - Wörter aus [wortliste.md](wortliste.md). Aktionen sagen, was passiert („Jetzt starten“, „Alle verriegeln“).
 - Neue sichtbare Texte deutsch im Code, englisch in `translations/dashboard/phrases/en.json`, dann `tools/i18ncheck.py`.
 - Keine Gerätekennungen in Titeln (`casoraCleanName`).
 
-## 13. Bausteine und Tokens
+## 14. Bausteine und Tokens
 
 | Baustein | Aufruf | Zweck |
 |---|---|---|
@@ -245,29 +306,32 @@ Die Überschrift darf zählen: „Leuchten · 2 von 4 an“, „Räume · 2 heiz
 | `--casora-v3-head-title-fs` | 24 (Handy 22) | Titel im Kopf |
 | `--casora-pv-*` | siehe `casora-core.js` (Variante B) | Listen, Segmente, Überschriften |
 
-## 14. Verhältnis zur Blaupause v2
+## 15. Verhältnis zur Blaupause v2
 
 | v2 | in v3 |
 |---|---|
 | Regel 1 Kopf mit Symbol-Kachel | **ersetzt** durch §3 (ohne Kachel) |
 | Regel 2 Hauptschalter | gilt |
-| Regel 3 Hauptbereich | **ersetzt** durch §4 Bühne |
+| Regel 3 Hauptbereich | **ersetzt** durch §4 Bühne; Diagramme außerhalb der Bühne nach §7 |
 | Regel 4 Aktionen-Reihe | **ersetzt**: Hauptaktion in der Bühne (S4/S7), Wahlen als Schnellwahl §5; `UI.actions` nur noch für Sammel-Popups ohne Bühnen-Aktion |
 | Regel 5 Abschnittsfolge | gilt (§6) |
 | Regel 6 Zeilenarten | gilt |
 | Regel 7 Unterseiten | gilt (‹ im Kopf) |
-| Regel 8 Weitere Einstellungen | gilt (§7) |
+| Regel 8 Weitere Einstellungen | gilt (§8) |
 | Regel 9 Lange Listen, Mehr | gilt |
 | Regel 10 Leer, aus, offline | gilt, ergänzt um §4.5 |
 | Regel 11 Breite, Zugang | gilt (552/900), ergänzt um §2 |
 | Regel 12 Symmetrie | gilt |
 | Entscheidungen 1–6 (26.10.) | gelten; „ein Knopf-Stil“ (6) jetzt als Pille in der Bühne |
 
-## 15. Richtig und falsch
+## 16. Richtig und falsch
 
 | Richtig | Falsch |
 |---|---|
 | Eine Bühne mit dem Wert, den man am häufigsten ändert | Zwei große Bereiche übereinander (Diagramm **und** Regler) |
+| Temperaturverlauf als Abschnitt „Verlauf“ rechts, 120 hoch | Temperaturverlauf über dem ±-Regler |
+| Spannung und Stromstärke in „Mehr“ | Drei Diagramme untereinander in der rechten Spalte |
+| Serienfarbe aus `--casora-color-*` bzw. Gerätefarbe | `#0A84FF`, `#8E8E93` im Aufruf |
 | Szenen als 4 Schnellwahl-Kacheln | Szenen als Textlinks oder einzelne Fuß-Pillen |
 | „Alle verriegeln“ gefüllt in der Bühne, „Alle entriegeln“ ungefüllt mit Rückfrage | Entriegeln als Schnellwahl-Kachel |
 | Geräte als gruppierte Liste mit Schalter rechts | Jedes Gerät als eigene Platte mit 8 px Lücke |
@@ -275,7 +339,7 @@ Die Überschrift darf zählen: „Leuchten · 2 von 4 an“, „Räume · 2 heiz
 | Zustand als Wort in der Statuszeile, Wert groß auf der Bühne | Zustand dreimal (Statuszeile, Bühne, Liste) |
 | Leere Bühne mit Leer-Zeile „Im Studio wählen ›“ | Popup ohne Bühne, weil ein Sensor fehlt |
 
-## 16. Bilder (Mockups vom 28.10.2026)
+## 17. Bilder (Mockups vom 28.10.2026)
 
 | Licht (Raum) | Fußbodenheizung (Haus) | Jalousien (Raum) |
 |---|---|---|
