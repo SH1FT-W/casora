@@ -19181,5 +19181,63 @@
     }
    ]
   }
+ },
+ "casora_popup_kettle": {
+  "template": [
+   "casora_popup_base"
+  ],
+  "tap_action": {
+   "casora_popup": {
+    "content": "[[[\n  /* Kettle (#87): HA's rows for its entities and the temperature history (window._casoraKettle.popup in\n     37-kettle.js) until popup v3 draws Casora's own (.qa/v3/issue-popups-fuer-v3.md). */\n  return window._casoraKettle ? window._casoraKettle.popup(entity, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "dismissable": true,
+    "dismiss_on_background": true,
+    "popup_styles": [
+     {
+      "style": "all",
+      "styles": "/* Eine Popup-Familie (01.10.2026): dieselbe Sheet-Fläche wie die Bedien-Popups –\n   Fläche, Blur, Schatten und Abdunklung aus dem Standard, Höhe folgt dem Inhalt,\n   Schließen-Kreuz mit demselben Abstand zur Sheet-Kante. */\n.header { padding-top: var(--casora-popup-header-gap, 10px); }\n--casora-popup-header-gap: 14px;\n--casora-popup-gutter-wide: 34px;\n--casora-popup-gutter-phone: 22px;\n\n/* No chart here, so nothing to wait for. Read by each widget for\n   itself, never by a wrapper - an animated opacity on an ancestor\n   flattens the frost inside it. */\n--casora-popup-plate-enter:\n  casora-plate-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n@media (prefers-reduced-motion: reduce) {\n  --casora-popup-plate-enter: none;\n}\n\n/* The surface is sized from the content by the style template\n   below: two columns need the full measure, one does not, and a\n   narrow card centered in a wide surface put the plate's edge 80px\n   to the right of the close control. */\n\n--casora-popup-hero-label-size: 15px;\n--casora-popup-row-radius: 26px;\n/* Frosted, not opaque. The pane's blur used to sit under these, and\n   .content still nulls --ha-card-backdrop-filter for every card in\n   the popup, so the frost has to be asked for here. The fills drop\n   to let it read. */\n/* The theme lifts every ha-card with filter: brightness(1.01) on\n   hover. A filter on an ancestor makes every descendant's\n   backdrop-filter inert, so hovering the empty space around a\n   widget - the wrapper card - knocked the frost out of both of\n   them. Killed popup-wide; the plate re-declares its own shadow. */\n--casora-card-hover-filter: none;\n--casora-hover-filter: none;\n--casora-card-hover-shadow: none;\n\n--casora-popup-row-pad-x: 26px;\n--casora-popup-row-pad-y: 15px;\n--casora-popup-plate-backdrop: blur(24px) saturate(180%);\n--casora-popup-chart-fill: var(--casora-sheet-chart-fill, rgba(10, 12, 16, 0.68));\n--casora-popup-row-fill: var(--casora-sheet-row-fill, rgba(12, 14, 19, 0.62));\n/* Lifted, not slabbed: one wide soft pass carries the height, one\n   short contact pass keeps the edge from dissolving into the room. */\n--casora-popup-plate-shadow: var(--casora-sheet-plate-shadow,\n  0 18px 40px -22px rgba(0, 0, 0, 0.50),\n  0 2px 8px -5px rgba(0, 0, 0, 0.28));\n\n/* visionOS puts nothing bare on the room: the only chrome outside a\n   window is its close control, and that control is itself a glass\n   object. The title was printed twice - here and in the widget\n   eight pixels below - so it goes, clipped rather than removed so a\n   screen reader still gets it. */\n\n/* The chrome arrives with the first plate instead of being there\n   on frame one while everything under it fades in. */\n--casora-popup-chrome-enter:\n  casora-popup-chrome-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n.content { animation: none; }\n/* The title lives in the bar now, centered and level with the\n   close control, so it is no longer hidden. */\n.header-title { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }\n/* 48px is left alone: the base sizes it so the glyph's ink lands on\n   the same left margin as the widgets below. */\n.header-close {\n  border-radius: 50%;\n  background: var(--casora-popup-row-fill, rgba(255, 255, 255, 0.10));\n  backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  -webkit-backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  box-shadow: var(--casora-popup-plate-shadow, none);\n}\n\nha-adaptive-dialog, ha-dialog, wa-drawer {\n  --ha-card-backdrop-filter: none;\n  --ha-card-background: transparent;\n  --card-background-color: transparent;\n  --ha-card-box-shadow: none;\n  --ha-card-border-width: 0px;\n}\n\n/* Popup-Standard (24.09.2026): breit wie alle Popups. */\n--popup-min-width: 900px;\n--popup-max-width: 920px;\n\n/* Popup-Standard (24.09.2026): Info-Popup - Abschnittsüberschriften in der Karte. */\n--casora-lbl-in: block;\n--casora-lbl-out: none;\n"
+     }
+    ],
+    "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Wasserkocher', ['Wasserkocher', 'Kettle']) : (String(variables.room_name || '').trim() || 'Wasserkocher'); ]]]",
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "style": "[[[\n  return window.casoraPopupWidth ? window.casoraPopupWidth('one') : '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);';\n]]]\n"
+   }
+  },
+  "variables": {
+   "room_name": null
+  }
+ },
+ "casora_kettle": {
+  "template": [
+   "casora_entity",
+   "casora_popup_kettle"
+  ],
+  "variables": {
+   "icon": "kettle",
+   "casora_default_name": "Wasserkocher",
+   "mobile_filter_category": "unfiltered",
+   "power_entity": null,
+   "heater_entity": null,
+   "target_entity": null,
+   "keep_warm_entity": null,
+   "active_override": "[[[\n  /* Highlighted while it heats or keeps warm (window._casoraKettle.active in 37-kettle.js). */\n  const K = window._casoraKettle;\n  return !!(K && K.active(entity, hass, variables));\n]]]\n"
+  },
+  "hold_action": {
+   "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
+   "haptic": "medium"
+  },
+  "icon_tap_action": {
+   "action": "none"
+  },
+  "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? (window.casoraEsc || String)(t);\n  /* \"92° · Heizt\" / \"24° · Aus\" (window._casoraKettle.tileState in 37-kettle.js). */\n  const K = window._casoraKettle;\n  return K ? fit(K.tileState(entity, hass, variables)) : fit(entity?.state ?? '');\n]]]\n",
+  "styles": {
+   "card": [
+    {
+     "--casora-icon-inactive-color": "var(--casora-tone-heat, var(--casora-color-orange, #FF9F0A))"
+    },
+    {
+     "--casora-icon-fallback-color": "var(--casora-tone-heat, var(--casora-color-orange, #FF9F0A))"
+    }
+   ]
+  }
  }
 }

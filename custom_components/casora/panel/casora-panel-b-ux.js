@@ -84,7 +84,9 @@
     casora_switch: "schalter steckdose switch plug", fan: "ventilator lüfter fan", casora_camera: "kamera camera", casora_alarm: "alarm sicherheit",
     casora_coffee: "kaffee kaffeemaschine vollautomat espresso coffee", casora_pet: "haustier hund katze tracker tractive pet dog cat",
     casora_chart: "diagramm chart verlauf graph statistik cpu prozessor server system monitor",
-    casora_velair: "velair zeitplan klima klimaanlage heizung thermostat schedule climate" };
+    casora_velair: "velair zeitplan klima klimaanlage heizung thermostat schedule climate",
+    casora_shopping: "einkaufsliste einkauf bring liste todo shopping list grocery",
+    casora_kettle: "wasserkocher kocher tee wasser xiaomi kettle" };
   function typeFor(entity, typeIds, suggested) {
     if (suggested && typeIds.has(suggested)) return suggested;
     const t = BY_DOMAIN[String(entity || "").split(".")[0]];
@@ -691,6 +693,13 @@
       });
       // Velair (community card #32, when added): every climate Velair plans as this card instead of the plain thermostat.
       if (typeIds.has("casora_velair") && W.casoraVelairFind) W.casoraVelairFind.climates(h).forEach((id) => push(id, "", "casora_velair"));
+      // Shopping list (community card #82, when added): Bring! lists and to-do lists named like a shopping list – other
+      // to-do lists (chores, projects) are picked in the tile's own field.
+      if (typeIds.has("casora_shopping")) Object.keys(S).forEach((id) => {
+        if (id.startsWith("todo.") && ((R[id] || {}).platform === "bring" || /einkauf|shopping|grocer|kaufen/i.test(id + " " + ((S[id].attributes || {}).friendly_name || "")))) push(id, "", "casora_shopping");
+      });
+      // Kettle (community card #87, when added): one tile per kettle on its water temperature (casoraKettleFind).
+      if (typeIds.has("casora_kettle") && W.casoraKettleFind) W.casoraKettleFind.all(h).forEach((k) => push(k.anchor, "", "casora_kettle"));
       sugg.forEach((x) => push(x.entity, x.name, x.type));
       Object.keys(S).forEach((id) => { if (ADD_DOMAINS.indexOf(id.split(".")[0]) >= 0) push(id, "", byEntity.has(id) ? byEntity.get(id).type : null); });
       // Buttons and switches of a device that already has its own card (lawn mower, coffee machine, pet with the tracker

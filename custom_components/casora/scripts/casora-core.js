@@ -3025,6 +3025,8 @@ window.casoraMenuGlass = {
       casora_vacuum:        'unfiltered',
       casora_coffee:        'unfiltered',
       casora_pet:           'unfiltered',
+      casora_shopping:      'unfiltered',
+      casora_kettle:        'unfiltered',
       casora_plant:         'unfiltered',
     };
   }

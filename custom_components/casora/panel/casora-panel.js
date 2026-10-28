@@ -648,6 +648,8 @@ const FILTER_CATEGORIES = {
   casora_vacuum: "unfiltered",
   casora_coffee: "unfiltered",
   casora_pet: "unfiltered",
+  casora_shopping: "unfiltered",
+  casora_kettle: "unfiltered",
   casora_plant: "unfiltered",
 };
 
@@ -5233,6 +5235,9 @@ const TILE_MAIN_FIND = {
   casora_lawn_mower: { domain: "lawn_mower", match: () => true },
   // Shopping list (community card #82): Bring! lists first (platform bring), any other to-do list too.
   casora_shopping: { domain: "todo", platform: "bring", match: () => true, like: /einkauf|shopping|bring|grocer|kaufen/i },
+  // Kettle (community card #87): the anchor of every kettle the shared finder knows (casoraKettleFind in 00-finder.js –
+  // the water temperature, else the water_heater); any temperature sensor would be guesswork.
+  casora_kettle: { anchors: (h) => (window.casoraKettleFind ? window.casoraKettleFind.all(h).map((k) => k.anchor) : []) },
   casora_frigate: { domain: "camera", match: (h, id) => ((((h.states || {})[id] || {}).attributes || {}).device_class === "camera") && !/birdseye/i.test(id) },
   casora_reolink_doorbell: { domain: "camera", match: (h, id) => typeof window.__casoraBellCam === "function" && !!window.__casoraBellCam(h, id) },
   // Chart (community card #50): every numeric sensor with a state class; CPU load (System Monitor's processor_use),

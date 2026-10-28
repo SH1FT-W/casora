@@ -14,6 +14,8 @@ const TEST_DEVICES = {
   casora_reolink_doorbell: ['testklingel'], // klingel.py
   casora_chart: ['testserver'], // testserver.py: System-Monitor-like CPU load, memory, temperature
   casora_velair: ['testklimaanlage'], // velair.py: air conditioner planned by Velair (zone sensors under the platform velair)
+  casora_shopping: ['testeinkauf'], // shopping.py: a to-do list named like a shopping list
+  casora_kettle: ['testkocher', 'testwasserkocher'], // kettle.py: Xiaomi-BLE-like kettle (shows only) and one with target + keep warm
 };
 
 const hass = testhaus();
