@@ -18735,7 +18735,7 @@
      }
     ],
     "style": "[[[\n  /* Zwei Spalten: links Status, rechts Verlauf (7 Tage); oben Zustand und Tasten. */\n  return '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);';\n]]]\n",
-    "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Mähroboter', ['Mähroboter', 'Lawn Mower']) : (String(variables.room_name || '').trim() || 'Mähroboter'); ]]]",
+    "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Haustier', ['Haustier', 'Pet']) : (String(variables.room_name || '').trim() || 'Haustier'); ]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
    }
   },
