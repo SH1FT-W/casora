@@ -206,4 +206,14 @@ assert.equal(V.sec('hero', ID, states, hass, null), '<div class="hui-line">20,4�
 // ── Without data for this climate: a quiet line, no empty area ──
 F._seed(response({ configured_entities: ['climate.x'], zones: { 'climate.x': { enabled: true, schedule: {} } } }));
 assert.ok(/Velair plant dieses Gerät nicht/.test(V.sec('plan', ID, states, hass, null)));
+// ── #32: the target in each wide enough block of the week, and Velair's global mode as a row ──
+F._seed(response());
+html = V.sec('plan', ID, states, hass, null);
+assert.ok(/>21°</.test(html) && />18°</.test(html), 'targets in the week bars');
+assert.ok(!rowsSeen.slice(-1)[0].rows.some((r) => r.label === 'Velair-Modus'), 'no mode row without the select');
+add('select.velair_mode', 'Nacht', { options: ['Default', 'Nacht'] }, { platform: 'velair', translation_key: 'mode' });
+rowsSeen.length = 0;
+V.sec('plan', ID, states, hass, null);
+const modeRow = rowsSeen.flatMap((g) => g.rows).find((r) => r.label === 'Velair-Modus');
+assert.ok(modeRow && modeRow.value === 'Nacht' && modeRow.entity === 'select.velair_mode', 'mode row with the select');
 console.log('velair: ok');
