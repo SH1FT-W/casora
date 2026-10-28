@@ -2324,6 +2324,7 @@
   "funkt, schickt aber keine Werte": "nadaje, ale nie wysyła wartości",
   "meldet keinen Batteriewert": "nie zgłasza poziomu baterii",
   "Haustier": "Zwierzak",
+  "1 Sensor nicht erreichbar": "1 czujnik nieosiągalny",
   "Diagramm": "Wykres",
   "Linien": "Linie",
   "Kein Zahlenwert": "Brak wartości liczbowej",
@@ -4281,6 +4282,10 @@
   [
    "^(.+) hat sich noch nicht gemeldet$",
    "{1}: brak pierwszego raportu"
+  ],
+  [
+   "^(\\d+) Sensoren nicht erreichbar$",
+   "Nieosiągalne czujniki: {1}"
   ],
   [
    "^(.+) ist nicht erreichbar$",

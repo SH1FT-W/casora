@@ -2324,6 +2324,7 @@
   "funkt, schickt aber keine Werte": "trasmette, ma non invia valori",
   "meldet keinen Batteriewert": "non segnala il livello della batteria",
   "Haustier": "Animale domestico",
+  "1 Sensor nicht erreichbar": "1 sensore non raggiungibile",
   "Diagramm": "Grafico",
   "Linien": "Linee",
   "Kein Zahlenwert": "Nessun valore numerico",
@@ -4281,6 +4282,10 @@
   [
    "^(.+) hat sich noch nicht gemeldet$",
    "{1} non ha ancora inviato dati"
+  ],
+  [
+   "^(\\d+) Sensoren nicht erreichbar$",
+   "{1} sensori non raggiungibili"
   ],
   [
    "^(.+) ist nicht erreichbar$",
