@@ -2717,7 +2717,12 @@
     "Casora found no power sensor for it, so your choice stays.": "Casora non ha trovato alcun sensore di potenza, quindi la tua scelta resta.",
     "Energy badge back to automatic": "Il badge Energia torna su Automatico",
     "Show blinds": "Mostra tapparelle",
-    "Adds a Blinds row to the climate popup.": "Aggiunge una riga «Tapparelle» al popup clima."
+    "Adds a Blinds row to the climate popup.": "Aggiunge una riga «Tapparelle» al popup clima.",
+    "Tap runs it": "Il tocco lo esegue",
+    "Tapping the tile runs the script, scene or button right away. Holding the tile still opens its popup.": "Toccando il riquadro lo script, la scena o il pulsante partono subito. Tenendo premuto si apre ancora il popup.",
+    "Run it": "Esegui",
+    "A calm question before this runs. For the front door, the gate or everything off.": "Una domanda tranquilla prima di eseguirlo. Per la porta di casa, il cancello o spegnere tutto.",
+    "A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.": "Una domanda tranquilla prima di eseguirlo, sul riquadro e nel popup. Per la porta di casa, il cancello o spegnere tutto."
   },
   "patterns": [
     [

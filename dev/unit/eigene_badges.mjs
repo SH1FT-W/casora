@@ -294,4 +294,48 @@ await flush();
 assert.equal(unsubscribed, freed + 3, 'direct subscription released');
 window._casoraTemplates = sharedTP;
 
+// ── #90: tap "Run it" for a script, scene or button, optionally after a question ──
+{
+  const core = read('custom_components/casora/scripts/casora-core.js');
+  const runSvc = core.match(/var RUN_SVC = \{[^}]+\};\n\s*window\.casoraRunService = function[^\n]+/);
+  assert.ok(runSvc, 'casoraRunService in casora-core.js');
+  new Function('window', runSvc[0])(window);
+  const t = CB.tap({ tap: 'run', entity: 'script.example_door' }, 'room');
+  assert.deepEqual(t, { action: 'call-service', service: 'script.turn_on', service_data: { entity_id: 'script.example_door' }, casora_run: true, haptic: 'medium' });
+  assert.equal(CB.tap({ tap: 'run', entity: 'button.example_bell' }).service, 'button.press');
+  assert.equal(CB.tap({ tap: 'run', entity: 'scene.example_evening' }).service, 'scene.turn_on');
+  assert.deepEqual(CB.tap({ tap: 'run', entity: 'sensor.example' }), { action: 'none' }, 'a sensor cannot run');
+  // The row card: ask → the tile's switch confirm_toggle on the badge card (casora-core.js asks before the call).
+  const made = [];
+  const keep = window.loadCardHelpers;
+  window.loadCardHelpers = () => Promise.resolve({ createCardElement: (cfg) => { made.push(cfg); return { classList: { add() {} } }; } });
+  const row = Object.create(Row.prototype); row._items = []; row._config = {}; row.style = {}; row.isConnected = false;
+  row.appendChild = () => {}; row.removeChild = () => {};
+  row.setConfig({ badges: [{ entity: 'script.example_door', tap: 'run', ask: true }, { entity: 'script.example_other', tap: 'run' }, { entity: 'light.x', tap: 'popup', ask: true }] });
+  for (let n = 0; n < 6; n++) await Promise.resolve();
+  window.loadCardHelpers = keep;
+  assert.equal(made.length, 3);
+  assert.equal(made[0].variables.confirm_toggle, true, 'run + ask: asks first');
+  assert.equal(made[0].tap_action.service, 'script.turn_on');
+  assert.equal(made[1].variables.confirm_toggle, undefined, 'run without ask: runs right away');
+  assert.equal(made[2].variables.confirm_toggle, undefined, 'ask only matters for run');
+  // Studio: "Run it" only for runnable devices; then the "Ask before switching" switch, stored as ask: true.
+  room.variables.custom_badges = [{ entity: 'script.example_door', tap: 'run' }];
+  let q = studio();
+  let rr = render(q);
+  const tapCombo = q.combos.find((c) => c.opts && c.opts.labels && c.opts.labels.run === 'Run it');
+  assert.ok(tapCombo && tapCombo.options.includes('run') && tapCombo.value === 'run', 'tap "Run it" offered and chosen');
+  assert.ok(rr.rows.includes('Ask before switching'), 'question switch under "Run it": ' + rr.rows.join(','));
+  const sw = (function find(el) { for (const c of el.children) { if (c.attrs && c.attrs.role === 'switch') return c; const d = find(c); if (d) return d; } return null; })(rr.fs);
+  assert.ok(sw && sw.onclick, 'switch');
+  sw.onclick();
+  assert.equal(room.variables.custom_badges[0].ask, true, 'ask stored');
+  room.variables.custom_badges = [{ entity: 'light.x', tap: 'run' }];
+  q = studio(); rr = render(q);
+  const c2 = q.combos.find((c) => c.opts && c.opts.labels && c.opts.labels.run === 'Run it');
+  assert.ok(!c2.options.includes('run') && c2.value === 'none', 'a light offers no "Run it"');
+  assert.ok(!rr.rows.includes('Ask before switching'));
+  room.variables.custom_badges = [];
+}
+
 console.log('ok eigene_badges');

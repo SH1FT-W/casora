@@ -4622,12 +4622,10 @@
    ]
   },
   "tap_action": {
-   "action": "[[[\n  return window._casoraActions?.isOpen(variables, states, entity?.entity_id)\n    ? 'call-service' : (window.casoraPopupAction ? window.casoraPopupAction() : 'more-info');\n]]]\n",
+   "action": "[[[\n  /* On tap: Run it (#86) – a script, scene or button runs straight away; holding still opens the popup. */\n  const _run = variables.tap_run === true && !window._casoraActions?.isOpen(variables, states, entity?.entity_id)\n    && window.casoraRunService ? window.casoraRunService(entity?.entity_id) : '';\n  if (_run) return 'call-service';\n  return window._casoraActions?.isOpen(variables, states, entity?.entity_id)\n    ? 'call-service' : (window.casoraPopupAction ? window.casoraPopupAction() : 'more-info');\n]]]\n",
    "haptic": "light",
-   "service": "casora.actions_overlay_toggle",
-   "service_data": {
-    "actions_entity_id": "[[[ return window._casoraActions?.openKey(entity?.entity_id) || entity?.entity_id; ]]]\n"
-   },
+   "service": "[[[\n  const _run = variables.tap_run === true && !window._casoraActions?.isOpen(variables, states, entity?.entity_id)\n    && window.casoraRunService ? window.casoraRunService(entity?.entity_id) : '';\n  return _run || 'casora.actions_overlay_toggle';\n]]]\n",
+   "service_data": "[[[\n  const _run = variables.tap_run === true && !window._casoraActions?.isOpen(variables, states, entity?.entity_id)\n    && window.casoraRunService ? window.casoraRunService(entity?.entity_id) : '';\n  return _run ? { entity_id: entity?.entity_id }\n    : { actions_entity_id: window._casoraActions?.openKey(entity?.entity_id) || entity?.entity_id };\n]]]\n",
    "entity": "[[[ return entity?.entity_id ]]]",
    "casora_popup": {
     "content": "[[[\n  return window._casoraEntityPopup ? window._casoraEntityPopup(entity, variables, states, hass) : { type: 'vertical-stack', cards: [] };\n]]]\n",
@@ -4640,7 +4638,8 @@
     ],
     "style": "[[[\n  /* Blueprint v2 (rule 11): 900 only with buttons and values side by side, else 552. */\n  const k = window._casoraEntityPopup && window._casoraEntityPopup.kind ? window._casoraEntityPopup.kind(entity, variables, states, hass) : 'two';\n  return window.casoraPopupWidth ? window.casoraPopupWidth(k) : '';\n]]]\n",
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', [])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own) return _own;\n  const n = String(this._config?.name || '').trim();\n  return (n.startsWith('[[[') ? '' : n) || entity?.attributes?.friendly_name || 'Gerät';\n]]]"
-   }
+   },
+   "casora_run": "[[[\n  const _run = variables.tap_run === true && !window._casoraActions?.isOpen(variables, states, entity?.entity_id)\n    && window.casoraRunService ? window.casoraRunService(entity?.entity_id) : '';\n  return !!_run;\n]]]\n"
   },
   "template": [
    "casora_entity"

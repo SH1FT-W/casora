@@ -42,6 +42,13 @@ const found = {};
   if (Array.isArray(x)) return x.forEach((v, i) => walk(v, where + '[' + i + ']'));
   if (x && typeof x === 'object') {
     const s = typeof x.service === 'string' && /^casora\.(\w+)$/.exec(x.service);
+    // A templated service that falls back to a Casora one (casora_entity_actions, #86: tap runs a script or opens
+    // the actions overlay): its templated data names the service's fields.
+    const t = !s && typeof x.service === 'string' && /^\s*\[\[\[/.test(x.service) && /'casora\.(\w+)'/.exec(x.service);
+    if (t && FIELDS[t[1]]) {
+      found[t[1]] = (found[t[1]] || 0) + 1;
+      assert.ok(typeof x.service_data === 'string' && FIELDS[t[1]].every((f) => x.service_data.includes(f + ':')), where + ': templated data without ' + FIELDS[t[1]]);
+    }
     if (s && FIELDS[s[1]]) {
       found[s[1]] = (found[s[1]] || 0) + 1;
       const keys = Object.keys(x.service_data || {});

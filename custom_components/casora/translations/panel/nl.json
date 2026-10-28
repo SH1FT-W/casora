@@ -2717,7 +2717,12 @@
     "Casora found no power sensor for it, so your choice stays.": "Casora vond geen vermogenssensor, dus je keuze blijft.",
     "Energy badge back to automatic": "Energiebadge weer op Automatisch",
     "Show blinds": "Rolluiken tonen",
-    "Adds a Blinds row to the climate popup.": "Voegt een rij \"Rolluiken\" toe aan de klimaatpop-up."
+    "Adds a Blinds row to the climate popup.": "Voegt een rij \"Rolluiken\" toe aan de klimaatpop-up.",
+    "Tap runs it": "Tikken voert uit",
+    "Tapping the tile runs the script, scene or button right away. Holding the tile still opens its popup.": "Tikken op de tegel voert het script, de scène of de knop meteen uit. Ingedrukt houden opent nog steeds de pop-up.",
+    "Run it": "Uitvoeren",
+    "A calm question before this runs. For the front door, the gate or everything off.": "Een rustige vraag voordat dit wordt uitgevoerd. Voor de voordeur, de poort of alles uit.",
+    "A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.": "Een rustige vraag voordat dit wordt uitgevoerd, op de tegel en in de pop-up. Voor de voordeur, de poort of alles uit."
   },
   "patterns": [
     [
