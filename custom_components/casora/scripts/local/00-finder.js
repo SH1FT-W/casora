@@ -73,7 +73,8 @@ window.casoraPriceKwh = function (v) {
 //                                   sensor: energy = the consumption entity when it is a Wh/kWh sensor, kwh its value,
 //                                   daily when it is today's value. The sources' own sensors never appear.
 //   casoraEnergyBatterySoc(hass, id) – charge level sensor (%) for a battery power sensor (default: the settings' first
-//                                   battery): on its device, else one whose id shares its stem. null without one.
+//                                   battery): on its device, else one whose id shares its stem (also without a
+//                                   charging/discharging word). null without one.
 (function () {
   if (window.casoraEnergyPrefs) return;
   var AGE = 5 * 60 * 1000;
@@ -256,6 +257,7 @@ window.casoraPriceKwh = function (v) {
 
   var NOT_SOC = /health|\bsoh\b|_soh(_|$)|wirkungsgrad|efficien|limit|grenze|reserve|minim|maxim|(^|_)(min|max)(_|$)|humid|feucht|signal|rssi|progress|fortschritt/i;
   var SOC_WORD = /\bsoc\b|_soc(_|$)|state.?of.?charge|ladestand|ladezustand|f(ü|ue)llstand|akku|batter|speicher|storage/i;
+  var DIRECTION = /_(charging|discharging|charge|discharge|aufladung|ladung|entladung|laden|entladen|in|out|input|output)$/i;
   var socCache = { R: null, map: {} };
   window.casoraEnergyBatterySoc = function (hass, powerId) {
     var S = (hass && hass.states) || {}, R = reg(hass);
@@ -280,8 +282,15 @@ window.casoraPriceKwh = function (v) {
     if (!cands.length) {
       var st = stem(powerId);
       if (st === powerId.replace(/^[^.]*\./, '')) st = st.replace(/_[^_]+$/, '');
-      var pre = 'sensor.' + st + '_';
-      if (st) cands = Object.keys(S).filter(function (id) { return id.indexOf(pre) === 0 && id !== powerId && pct(id); });
+      var byStem = function (st) {
+        var pre = 'sensor.' + st + '_';
+        return st ? Object.keys(S).filter(function (id) { return id.indexOf(pre) === 0 && id !== powerId && pct(id); }) : [];
+      };
+      cands = byStem(st);
+      // #91: a charge or discharge power sensor (sensor.battery_charging_power) shares the battery's stem without
+      // its direction word (sensor.battery_level).
+      var bare = st.replace(DIRECTION, '');
+      if (!cands.length && bare && bare !== st) cands = byStem(bare);
     }
     cands.sort(function (a, b) { return score(a) - score(b) || (a < b ? -1 : 1); });
     socCache.map[powerId] = cands[0] || null;
