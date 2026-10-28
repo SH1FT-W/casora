@@ -23768,6 +23768,8 @@ class CasoraPanel extends HTMLElement {
       "false", "no", "none", "0", "", "unavailable", "unknown"];
     (Array.isArray(V.custom_badges) ? V.custom_badges : []).forEach((b, i) => {
       if (!b || typeof b !== "object") return;
+      // "View as" (casora-panel-b-ux.js): a badge's own "Who sees this?" (#90), as the dashboard row filters it.
+      if (this._uxAs && Array.isArray(b.users) && b.users.length && b.users.indexOf(this._uxAs) < 0) return;
       const ic = String(b.icon || "").trim();
       const icon = ic && !/^mdi:/.test(ic) ? ic : "default";
       const color = String(b.color || "").trim() || TEAL;
@@ -26750,6 +26752,16 @@ class CasoraPanel extends HTMLElement {
       name.addEventListener("input", () => { clearTimeout(t0); t0 = setTimeout(() => { if (name.isConnected) putName(); }, 280); });
       name.onchange = putName;
       box.appendChild(rowOf("Name", name));
+
+      // #90: "Who sees this?" per badge – the tile's row and sheet (casora-panel-b-mehr.js), stored as users: [ids]
+      // on the badge; none = everyone (29-eigene-badges.js filters the row per HA user).
+      if (typeof this._mWhoRow === "function") {
+        if (this._mCss) this._mCss();
+        this._mWhoRow(box, () => { const c = list()[i]; return c && Array.isArray(c.users) ? c.users.slice() : []; }, (ids) => {
+          this._bQuiet = true;
+          try { patch(i, { users: ids.length ? ids.slice() : "" }, false); } finally { this._bQuiet = false; }
+        }, "Badge");
+      }
 
       // Icon – the Studio's icons; "Automatic" = the device's own icon.
       const ic = this._combo(b.icon && !/^mdi:/.test(b.icon) ? b.icon : "", [ICON_DEFAULT].concat(CASORA_ICONS), "Automatic",

@@ -4,7 +4,8 @@
 // result (text, "…" while loading, off-like results dim), HTML in names and results stays text, tap actions
 // (popup = more-info, go to room = navigate on the desktop and the room filter on the phone), the shared template
 // subscriber (one subscription per template, release after the last watcher), the row cards in casora_room,
-// the phone's start page and the derived phone room page, and the wrap option (badges_wrap → flex row).
+// the phone's start page and the derived phone room page, the wrap option (badges_wrap → flex row) and
+// "Who sees this?" per badge (#90).
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -335,6 +336,53 @@ window._casoraTemplates = sharedTP;
   const c2 = q.combos.find((c) => c.opts && c.opts.labels && c.opts.labels.run === 'Run it');
   assert.ok(!c2.options.includes('run') && c2.value === 'none', 'a light offers no "Run it"');
   assert.ok(!rr.rows.includes('Ask before switching'));
+  room.variables.custom_badges = [];
+}
+
+// ── #90: "Who sees this?" per own badge (users: [ids], none = everyone) ──────────────
+{
+  assert.equal(CB.sees({ entity: 'light.x' }, { id: 'u1' }), true, 'no list: everyone');
+  assert.equal(CB.sees({ entity: 'light.x', users: [] }, null), true, 'empty list: everyone');
+  assert.equal(CB.sees({ entity: 'light.x', users: ['u1'] }, { id: 'u1' }), true);
+  assert.equal(CB.sees({ entity: 'light.x', users: ['u1'] }, { id: 'u2' }), false, 'left out');
+  assert.equal(CB.sees({ entity: 'light.x', users: ['u1'] }, null), false, 'unknown user does not see a restricted badge');
+  // The row draws only what this user sees, and follows a user arriving after setConfig.
+  const made = [];
+  const keep = window.loadCardHelpers;
+  window.loadCardHelpers = () => Promise.resolve({ createCardElement: (cfg) => { made.push(cfg); return { classList: { add() {} } }; } });
+  const keepHass = hass; hass = null;
+  const row = Object.create(Row.prototype); row._items = []; row._config = {}; row.style = {}; row.isConnected = false;
+  row.appendChild = () => {}; row.removeChild = () => {};
+  const list = [{ entity: 'light.a' }, { entity: 'light.b', users: ['u1'] }, { entity: 'light.c', users: ['u2', 'u3'] }];
+  row.setConfig({ badges: list });
+  assert.deepEqual(row._config.badges.map((b) => b.entity), ['light.a'], 'no user yet: only the open badge');
+  row.hass = { user: { id: 'u1' }, states: {} };
+  assert.deepEqual(row._config.badges.map((b) => b.entity), ['light.a', 'light.b'], 'u1');
+  row.hass = { user: { id: 'u3' }, states: {} };
+  assert.deepEqual(row._config.badges.map((b) => b.entity), ['light.a', 'light.c'], 'u3');
+  for (let n = 0; n < 6; n++) await Promise.resolve();
+  assert.ok(!made.some((c) => c.entity === 'light.b' && row._items.some((it) => it.cfg === c)), 'a hidden badge has no card');
+  row.setConfig({ badges: [{ entity: 'light.b', users: ['u1'] }], enabled: false });
+  assert.deepEqual(row._config.badges, [], 'section off still hides all');
+  window.loadCardHelpers = keep; hass = keepHass;
+  // Phone: a room whose only own badge this user does not see gets no badge row (casora-core.js ownBadge).
+  const core = read('custom_components/casora/scripts/casora-core.js');
+  assert.ok(/CB\.sees\(b, hassUserOf\(\)\)/.test(core), 'phone badge row asks the badge');
+  assert.ok(/this\._uxAs && Array\.isArray\(b\.users\) && b\.users\.length && b\.users\.indexOf\(this\._uxAs\) < 0\) return;/.test(panel), 'Studio "View as" hides it too');
+  // Studio: the tile's "Who sees this?" row in every badge block, stored as users on the badge, none = removed.
+  room.variables.custom_badges = [{ entity: 'light.a', name: 'A' }, { entity: 'light.b', users: ['u1'] }];
+  const q = studio();
+  const who = [];
+  q._mWhoRow = (host, get, setIds, what) => { who.push({ host, get, setIds, what }); };
+  render(q);
+  assert.equal(who.length, 2, 'one row per badge');
+  assert.equal(who[0].what, 'Badge');
+  assert.deepEqual(who[0].get(), []); assert.deepEqual(who[1].get(), ['u1']);
+  who[0].setIds(['u2']);
+  assert.deepEqual(room.variables.custom_badges[0], { entity: 'light.a', name: 'A', users: ['u2'] }, 'stored on the badge');
+  assert.equal(q._bQuiet, false, 'quiet flag reset');
+  who[1].setIds([]);
+  assert.deepEqual(room.variables.custom_badges[1], { entity: 'light.b' }, 'everyone again: field gone');
   room.variables.custom_badges = [];
 }
 

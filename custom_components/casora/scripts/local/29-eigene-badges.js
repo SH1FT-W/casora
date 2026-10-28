@@ -1,6 +1,7 @@
 // ── Own badges (issue #53): any number of badges per room, from an entity or a Jinja template ──
 // The Studio stores them in the room's variables (custom_badges: [{name, icon, color, entity | template, tap,
-// navigate, navigate_filter, ask}]; tap 'run' runs a script, scene or button, ask: true asks first, #90). The badge
+// navigate, navigate_filter, ask, users}]; tap 'run' runs a script, scene or button, ask: true asks first, #90;
+// users: the HA user ids who see this badge, empty or missing = everyone, #90). The badge
 // row of casora_room (and, derived from it, the phone room page; the phone's start page via
 // casora_mobile_filter_badges) carries one card `custom:casora-custom-badges`, which draws one real button-card
 // per entry with the template casora_badge_custom – so every entry looks and behaves like the built-in badges
@@ -10,6 +11,7 @@
 //   window._casoraTemplates.text(template)      → last result or null (cached per template string)
 //   window._casoraCustomBadge.view(badge, entity, value, hass) → what the template draws (title, sub, active …)
 //   window._casoraCustomBadge.popupVars(badge) → the badge's own popup as the Universal tile's variables (#60)
+//   window._casoraCustomBadge.sees(badge, user) → false when the badge's "Who sees this?" leaves this user out
 //   <casora-custom-badges>  setConfig({badges, enabled, place}), .hass – the row card
 //
 // Tap "Own popup" (tap: 'own_popup', #60): the badge carries popup: {free_values, free_value_labels, free_chart,
@@ -113,6 +115,12 @@
   window._casoraCustomBadge = {
     OFF: OFF,
     esc: esc,
+    // "Who sees this?" of one badge (#90), as a tile's: users lists who sees it, none = everyone.
+    sees: function (b, user) {
+      var l = b && b.users;
+      if (!Array.isArray(l) || !l.length) return true;
+      return !!(user && user.id && l.indexOf(user.id) !== -1);
+    },
     // badge: the stored entry; entity: the state object (entity badges); value: template result or null (loading).
     view: function (b, entity, value, hass) {
       b = b && typeof b === 'object' ? b : {};
@@ -216,13 +224,25 @@
         return b && typeof b === 'object' && ((typeof b.entity === 'string' && b.entity) || (typeof b.template === 'string' && b.template.trim()));
       }) : [];
       var on = cfg.enabled === undefined || cfg.enabled === null || cfg.enabled === true || cfg.enabled === 'true' || cfg.enabled === 1;
-      this._config = { badges: on ? list : [], place: cfg.place || 'room' };
+      this._all = on ? list : [];
+      this._place = cfg.place || 'room';
+      this._seen();
       this.style.display = 'contents';
       this._sync();
+    }
+    // Only the badges this HA user sees (per badge "Who sees this?", #90); the user may arrive after setConfig.
+    _seen() {
+      var h = this._hass || hassOf();
+      var u = (h && h.user) || null;
+      this._uid = (u && u.id) || '';
+      var CB = window._casoraCustomBadge;
+      this._config = { badges: (this._all || []).filter(function (b) { return CB.sees(b, u); }), place: this._place || 'room' };
     }
     get hass() { return this._hass; }
     set hass(h) {
       this._hass = h;
+      var uid = (h && h.user && h.user.id) || '';
+      if (this._all && uid !== this._uid) { this._seen(); this._sync(); }
       this._items.forEach(function (it) { if (it.el) it.el.hass = h; });
     }
     getCardSize() { return 1; }
