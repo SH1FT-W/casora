@@ -7508,7 +7508,19 @@ window.casoraMenuGlass = {
 
       this.container.textContent = '';
       // Every opening starts at the top (the content scroller is shared: a popup reopened showed its stage cut off).
-      if (this.content) this.content.scrollTop = 0;
+      // The content arrives after this line and the browser's scroll anchoring moved it down again: anchoring off,
+      // and the top once more when the cards have drawn – unless the user scrolled meanwhile.
+      if (this.content) {
+        var sc = this.content;
+        sc.style.overflowAnchor = 'none';
+        sc.scrollTop = 0;
+        [0, 120, 400].forEach(function (ms) { setTimeout(function () { if (sc.scrollTop > 0 && !sc._casoraUserScrolled) sc.scrollTop = 0; }, ms); });
+        sc._casoraUserScrolled = false;
+        if (!sc._casoraScrollWatch) {
+          sc._casoraScrollWatch = true;
+          ['wheel', 'touchmove', 'keydown'].forEach(function (ev) { sc.addEventListener(ev, function () { sc._casoraUserScrolled = true; }, { passive: true }); });
+        }
+      }
       this._bridge.target = null;
       this.removeAttribute('data-casora-charts-ready');
 
