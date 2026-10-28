@@ -845,6 +845,8 @@
     "Not set": "Nie ustawiono",
     "Popup": "Okno",
     "Own cards in popup": "Własne karty w oknie",
+    "Add tile …": "Dodaj kafelek …",
+    "Each opens the popup of its tile on this dashboard, with that tile's own settings (a Chart tile with its periods, for example).": "Każdy otwiera okno swojego kafelka na tym pulpicie, z jego własnymi ustawieniami (np. kafelek wykresu z jego okresami).",
     "Entities in popup": "Encje w oknie",
     "Add an entity": "Dodaj encję",
     "Shown as rows in the popup's own design: switches toggle, buttons and scripts run, sensors show their value.": "Jako wiersze w stylu okna: przełączniki przełączają, przyciski i skrypty się uruchamiają, czujniki pokazują wartość.",

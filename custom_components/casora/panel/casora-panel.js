@@ -21274,7 +21274,7 @@ class CasoraPanel extends HTMLElement {
       }
 
       const options = this._entityList(domains, opts && opts.classes, opts && opts.accept)
-        .filter((e) => !list.includes(e));
+        .filter((e) => !list.includes(e) && (!(opts && opts.only) || opts.only.includes(e)));
       const ph = (opts && opts.placeholder)
         || pickHint(domains, true);
       const combo = this._combo("", options, ph, (v) => {
@@ -28395,7 +28395,21 @@ class CasoraPanel extends HTMLElement {
       }
 
       if (f.type === "list") {
-        put(f.label, this._chipPicker(cur, f.domains || ["sensor"], (items) => {
+        // tiles: true (Mehr #59) – only entities that have a tile on this dashboard (carousel pages too), not this one.
+        let only = null, doms = f.domains || ["sensor"];
+        if (f.tiles) {
+          const seen = new Set();
+          const walk = (t) => {
+            const inner = t && t.type === "conditional" && t.card ? t.card : t;
+            if (!inner || typeof inner !== "object" || inner === tile) return;
+            if (Array.isArray(inner.cards)) inner.cards.forEach(walk);
+            if (typeof inner.entity === "string" && /^[a-z_]+\.[a-z0-9_]+$/.test(inner.entity)) seen.add(inner.entity);
+          };
+          ((this._state && this._state.compact && this._state.compact.rooms) || []).forEach((r) => (r.tiles || []).forEach(walk));
+          only = [...seen];
+          doms = [...new Set(only.map((e) => e.split(".")[0]))];
+        }
+        put(f.label, this._chipPicker(cur, doms, (items) => {
           if (items.length) { if (!tile.variables) tile.variables = {}; tile.variables[f.key] = items; }
           else if (tile.variables) delete tile.variables[f.key];
           if (type.noEntity && !tile.entity && items.length) {
@@ -28405,7 +28419,7 @@ class CasoraPanel extends HTMLElement {
           // Zuordnungen je Eintrag (type "map", over: diese Liste) brauchen ein neues Formular.
           if (tfields.some((m) => m.over === f.key)) { this._syncPreview(); return this._renderForm(); }
           this._syncPreview();
-        }, undefined, { classes: f.classes, accept: f.accept, placeholder: f.placeholder }));
+        }, undefined, { classes: f.classes, accept: f.accept, placeholder: f.placeholder, only }));
         hintUnder();
         return;
       }

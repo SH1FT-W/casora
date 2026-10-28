@@ -845,6 +845,8 @@
     "Not set": "Nicht festgelegt",
     "Popup": "Popup",
     "Own cards in popup": "Eigene Karten im Popup",
+    "Add tile …": "Kachel hinzufügen …",
+    "Each opens the popup of its tile on this dashboard, with that tile's own settings (a Chart tile with its periods, for example).": "Jede öffnet das Popup ihrer Kachel auf diesem Dashboard, mit deren eigenen Einstellungen (etwa eine Diagramm-Kachel mit ihren Zeiträumen).",
     "Entities in popup": "Entitäten im Popup",
     "Add an entity": "Entität hinzufügen",
     "Shown as rows in the popup's own design: switches toggle, buttons and scripts run, sensors show their value.": "Als Zeilen im Design des Popups: Schalter schalten, Tasten und Skripte laufen, Sensoren zeigen ihren Wert.",
