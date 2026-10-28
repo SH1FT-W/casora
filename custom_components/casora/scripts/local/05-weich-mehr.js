@@ -923,7 +923,12 @@
       set(line, 'opacity', e.on ? '0.9' : '0.35');
       // The dots keep running while hidden: switching them on never starts a new animation.
       set(dot, 'opacity', e.on ? '1' : '0');
-      set(dot, 'animationDuration', e.dur + 's');
+      // A running dot changes speed through its playback rate: a new animation-duration would make it jump.
+      var an = dot && dot.isConnected && dot.getAnimations ? dot.getAnimations()[0] : null;
+      if (an && an.updatePlaybackRate && dot.style.animationDuration) {
+        var rate = (parseFloat(dot.style.animationDuration) || 2) / e.dur;
+        if (Math.abs((an.playbackRate || 1) - rate) > 0.01) an.updatePlaybackRate(rate);
+      } else set(dot, 'animationDuration', e.dur + 's');
       set(dot, 'animationDirection', e.rev ? 'reverse' : 'normal');
       if (k === 'gb' && line) {
         var col = E1_COL[e.rev ? 'battery' : 'grid'];
