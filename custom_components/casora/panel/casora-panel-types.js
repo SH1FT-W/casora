@@ -524,7 +524,7 @@ window.CASORA_TILE_TYPES = [
   // The entity is optional (ownData, emptyWord): "Add a tile" adds it straight away with the title only, the
   // preview shows no "Automatic" for it. Many domains, so the Studio suggests no device of its own.
   { id: "casora_free", label: "Universal tile", template: "casora_free", domains: FREE_DOMAINS, ownData: true, emptyWord: "",
-    icon: "default", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Entity", entityPlaceholder: "Optional – any device",
+    icon: "universal", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Entity", entityPlaceholder: "Optional – any device",
     fields: [
       ICON,
       { ...TITLE_NAME, advanced: false },
@@ -625,7 +625,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "shield_alarm", "shield_bypass", "shield_vacation", "calendar", "calendar-day", "window-open",
   "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower", "coffee-maker", "paw",
   "coffee-espresso", "coffee-doppio", "coffee-cup", "coffee-cappuccino", "coffee-latte", "coffee-tall", "coffee-water",
-  "coffee-milk", "coffee-tea", "chart", "velair", "list", "grid", "cart", "kettle",
+  "coffee-milk", "coffee-tea", "chart", "velair", "list", "grid", "cart", "universal", "kettle",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Preview: show conditional cards (type: conditional) as the dashboard does –
