@@ -80,7 +80,33 @@ def extra(now) -> dict:
         _ent(f"button.{BASE}_import_latest_gps_data", "unknown", {}, "Testrad Import Latest GPS Data"),
         _ent(f"button.{BASE}_export_track_summary_csv", "unknown", {}, "Testrad Export track summary CSV"),
     ]
+    # eBike Bridge (ESP32 firmware from the same project, an ESPHome device of its own, #88): fixed English names,
+    # so the ids read <device>_ebike_<field>. Not linked to the bike: Casora takes it when the tile's entity is one of its.
+    B, BD = "ebike_bridge_a1b2c3", "testrad_bridge"
+
+    def _br(eid, state, name, dc=None, unit=None):
+        e = _ent(eid, state, {}, "eBike Bridge a1b2c3 " + name, dc=dc, unit=unit)
+        e["device"] = BD
+        return e
+    ents += [
+        _br(f"sensor.{B}_ebike_battery_soc_live", "48", "eBike Battery SoC (Live)", dc="battery", unit="%"),
+        _br(f"sensor.{B}_ebike_odometer_live", "1141.2", "eBike Odometer (Live)", dc="distance", unit="km"),
+        _br(f"sensor.{B}_ebike_speed", "0.0", "eBike Speed", dc="speed", unit="km/h"),
+        _br(f"sensor.{B}_ebike_cadence", "0", "eBike Cadence", unit="rpm"),
+        _br(f"sensor.{B}_ebike_rider_power", "0", "eBike Rider Power", dc="power", unit="W"),
+        _br(f"sensor.{B}_ebike_ambient_brightness", "103.2", "eBike Ambient Brightness", dc="illuminance", unit="lx"),
+        _br(f"sensor.{B}_ebike_charge_time_to_80_estimate", "unknown", "eBike Charge Time to 80% (Estimate)", dc="duration", unit="min"),
+        _br(f"sensor.{B}_ebike_charge_time_to_100_estimate", "unknown", "eBike Charge Time to 100% (Estimate)", dc="duration", unit="min"),
+        _br(f"binary_sensor.{B}_ebike_connected", "on", "eBike Connected", dc="connectivity"),
+        _br(f"binary_sensor.{B}_ebike_light", "off", "eBike Light", dc="light"),
+        _br(f"binary_sensor.{B}_ebike_system_locked", "on", "eBike System Locked", dc="lock"),
+        _br(f"binary_sensor.{B}_ebike_charger_connected", "off", "eBike Charger Connected", dc="plug"),
+        _br(f"binary_sensor.{B}_ebike_light_reserve", "off", "eBike Light Reserve", dc="problem"),
+        _br(f"binary_sensor.{B}_ebike_diagnosis_active", "off", "eBike Diagnosis Active"),
+        _br(f"binary_sensor.{B}_ebike_in_motion", "off", "eBike In Motion", dc="motion"),
+    ]
     return {
-        "devices": [{"key": DEV, "name": "Testrad", "manufacturer": "Bosch", "model": "Testrad", "area": None}],
+        "devices": [{"key": DEV, "name": "Testrad", "manufacturer": "Bosch", "model": "Testrad", "area": None},
+                    {"key": BD, "name": "eBike Bridge a1b2c3", "manufacturer": "Espressif", "model": "esp32dev", "area": None}],
         "entities": ents,
     }
