@@ -14,6 +14,8 @@ Casora Glas:
   ha-card-backdrop-filter: blur(30px) saturate(1.65)
   ha-dialog-surface-backdrop-filter: blur(42px) saturate(1.65)
   casora-surface-backdrop: blur(40px) saturate(165%)
+  # The popup sheet blurs the dashboard behind it (it is see-through: tiles and headings read through the rows).
+  casora-soft-backdrop: blur(40px) saturate(165%)
   casora-glass-backdrop: blur(40px) saturate(165%)
   casora-pill-backdrop: blur(30px) saturate(1.65)
   casora-sidebar-backdrop: blur(34px) saturate(1.4)
@@ -124,7 +126,7 @@ Casora Glas:
       casora-menu-pane-webkit: rgba(34,31,28,0.58)
       casora-mnav-menu-bg: rgba(34,31,28,0.50)
       casora-mnav-over: rgba(34,31,28,0.60)
-      casora-dialog-bg: rgba(30,27,24,0.62)
+      casora-dialog-bg: rgba(30,27,24,0.74)
       casora-popup-row-fill: rgba(255,240,220,0.09)
       mdc-dialog-scrim-color: rgba(0,0,0,0.25)
       casora-sidebar-fill: rgba(30,27,24,0.55)

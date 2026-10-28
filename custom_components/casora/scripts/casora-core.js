@@ -6497,8 +6497,9 @@ window.casoraMenuGlass = {
       font-family: var(--primary-font-family, inherit);
       background: var(--casora-soft-surface, var(--casora-dialog-bg, rgb(250, 246, 240)));
       box-shadow: var(--casora-soft-shadow, var(--dialog-box-shadow, none));
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
+      /* A see-through sheet (Glas) blurs what is behind it, or the dashboard's tiles read through the rows. */
+      backdrop-filter: var(--casora-soft-backdrop, none);
+      -webkit-backdrop-filter: var(--casora-soft-backdrop, none);
     }
     :host([soft]) .glass::before, :host([soft]) .glass::after { content: none; }
     /* ── 1.3 Kopfzeile A: Kopf in EINER Zeile statt Ring-Bühne.
