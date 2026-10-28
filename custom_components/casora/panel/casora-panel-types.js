@@ -373,6 +373,14 @@ window.CASORA_TILE_TYPES = [
       needs: "tractive", needsText: "For every pet in the Tractive integration",
       needsMissing: "Tractive integration not installed yet" },
     fields: [ICON, TITLE_NAME] },
+  // Shopping list (community card, card request #82): a to-do list – Bring! or any other. Tile: open items; popup: tick off,
+  // put back, add (Casora's question with a text field, „Milch, 1 l“ = item and Bring specification), clear the ticked ones
+  // (scripts/local/36-shopping.js, HA's to-do API; the popup is HA's to-do list card until popup v3).
+  { id: "casora_shopping", label: "Bring! shopping list", template: "casora_shopping", domains: ["todo"],
+    icon: "cart", color: "var(--casora-color-green, #30D158)", entityLabel: "List", entityPlaceholder: "Choose your shopping list",
+    community: { desc: "How many items are open on the tile. The popup lists them with Bring's specification, ticks one off with a tap, adds new ones and clears the ticked ones. For Bring! and every other to-do list in Home Assistant.",
+      needs: "todo", needsText: "For every to-do list, Bring! first", needsMissing: "No to-do list yet" },
+    fields: [ICON, TITLE_NAME] },
   // Velair (community card, issue #32): a climate Velair (HACS, domain velair) plans. Tile = the thermostat tile;
   // the popup adds Velair's schedule (today, week, on/off, editing a day) from Velair's WebSocket API and services
   // (scripts/local/31-velair.js, casoraVelairFind in 00-finder.js). Only offered when an entity has the platform velair.
@@ -604,7 +612,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "shield_alarm", "shield_bypass", "shield_vacation", "calendar", "calendar-day", "window-open",
   "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower", "coffee-maker", "paw",
   "coffee-espresso", "coffee-doppio", "coffee-cup", "coffee-cappuccino", "coffee-latte", "coffee-tall", "coffee-water",
-  "coffee-milk", "coffee-tea", "chart", "velair", "list", "grid",
+  "coffee-milk", "coffee-tea", "chart", "velair", "list", "grid", "cart",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Preview: show conditional cards (type: conditional) as the dashboard does –

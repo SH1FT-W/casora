@@ -1320,6 +1320,8 @@
     for (var i = 0; i < FOOD.length; i++) if (FOOD[i][0].test(n)) return FOOD[i];
     return [null, 'mdi:basket-outline', 'rgba(255,255,255,0.55)'];
   };
+  // The shopping list card (36-shopping.js) gives its items the same icons.
+  R.foodOf = foodOf;
   R.todoHtml = function () {
     var UI = window._casoraUI, T = R.todo, K = UI.tokens;
     var head = function (t) { return '<div style="font-family:' + K.font + ';font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);text-align:left;color:var(--casora-h15-c, ' + K.ink + ');padding:0 4px 8px;">' + esc(t) + '</div>'; };

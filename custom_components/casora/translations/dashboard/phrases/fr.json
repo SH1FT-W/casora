@@ -2324,6 +2324,18 @@
   "funkt, schickt aber keine Werte": "émet, mais n'envoie aucune valeur",
   "meldet keinen Batteriewert": "ne signale aucun niveau de pile",
   "Haustier": "Animal",
+  "Zur Einkaufsliste": "Ajouter à la liste de courses",
+  "Hinzufügen": "Ajouter",
+  "z. B. Milch, 1 l": "p. ex. lait, 1 l",
+  "Einkaufen": "À acheter",
+  "Die Liste ist leer": "La liste est vide",
+  "1 erledigt": "1 fait",
+  "Erledigte löschen": "Effacer les éléments faits",
+  "Erledigte löschen?": "Effacer les éléments faits ?",
+  "Liste nicht gefunden": "Liste introuvable",
+  "Wird geladen": "Chargement",
+  "eingekauft": "acheté",
+  "Alles": "Tout",
   "Kacheln": "Tuiles",
   "1 Kachel": "1 tuile",
   "Ausführen": "Exécuter",
@@ -4290,6 +4302,10 @@
   [
    "^(\\d+) Sensoren nicht erreichbar$",
    "{1} capteurs injoignables"
+  ],
+  [
+   "^(\\d+) erledigt$",
+   "{1} faits"
   ],
   [
    "^(.+) ist nicht erreichbar$",

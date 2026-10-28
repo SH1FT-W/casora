@@ -122,6 +122,7 @@ const MODULES = [
   '34-security-covers',
   '34-entity-list',
   '35-phone-hub',
+  '36-shopping',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());

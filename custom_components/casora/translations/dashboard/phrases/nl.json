@@ -2324,6 +2324,18 @@
   "funkt, schickt aber keine Werte": "zendt, maar stuurt geen waarden",
   "meldet keinen Batteriewert": "meldt geen batterijwaarde",
   "Haustier": "Huisdier",
+  "Zur Einkaufsliste": "Toevoegen aan boodschappenlijst",
+  "Hinzufügen": "Toevoegen",
+  "z. B. Milch, 1 l": "bijv. melk, 1 l",
+  "Einkaufen": "Te kopen",
+  "Die Liste ist leer": "De lijst is leeg",
+  "1 erledigt": "1 klaar",
+  "Erledigte löschen": "Afgeronde wissen",
+  "Erledigte löschen?": "Afgeronde wissen?",
+  "Liste nicht gefunden": "Lijst niet gevonden",
+  "Wird geladen": "Laden",
+  "eingekauft": "gekocht",
+  "Alles": "Alles",
   "Kacheln": "Tegels",
   "1 Kachel": "1 tegel",
   "Ausführen": "Uitvoeren",
@@ -4290,6 +4302,10 @@
   [
    "^(\\d+) Sensoren nicht erreichbar$",
    "{1} sensoren onbereikbaar"
+  ],
+  [
+   "^(\\d+) erledigt$",
+   "{1} klaar"
   ],
   [
    "^(.+) ist nicht erreichbar$",
