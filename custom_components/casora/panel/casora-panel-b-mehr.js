@@ -1681,6 +1681,9 @@
             const sw = this._boolSwitch(V.confirm_toggle === true, false, (v) => {
               if (v) { inner.variables = inner.variables || {}; inner.variables.confirm_toggle = true; }
               else if (inner.variables) { delete inner.variables.confirm_toggle; if (!Object.keys(inner.variables).length) delete inner.variables; }
+              // "With confirmation" under "Tap runs it" is the same setting (#86): show the same state there.
+              const twin = box.querySelector('.sw[data-field="confirm_toggle"]');
+              if (twin && twin._set) twin._set(v === true);
               // Own message at the bottom – do not let the generic "Change applied" cover it.
               this._bQuiet = true;
               try { this._markDirty(); } finally { this._bQuiet = false; }

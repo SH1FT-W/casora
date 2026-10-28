@@ -2,7 +2,8 @@
 // Checks: casoraRunService (which service runs which entity), the tile "Entity with buttons" with "Tap runs it"
 // (casora_entity_actions tap_action: the service call instead of the popup, the actions overlay still closes first),
 // the confirmation (switching() sees the run past the popup config, the dialog says "Ausführen"/"Aktivieren"),
-// and the Studio field (only for scripts, scenes and buttons; phrases translated).
+// the Studio fields (only for scripts, scenes and buttons; "With confirmation" = confirm_toggle; new tiles start with
+// tap_run on; phrases translated).
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -106,6 +107,36 @@ for (const lang of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
   const ex = JSON.parse(read('custom_components/casora/translations/panel/' + lang + '.json')).exact;
   for (const k of ['Tap runs it', fieldSrc[1], 'Run it', 'A calm question before this runs. For the front door, the gate or everything off.',
     'A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.']) assert.ok(ex[k], lang + ': ' + k);
+}
+// "With confirmation" right under "Tap runs it" (#86): the same setting as "Ask before switching" (confirm_toggle).
+const confSrc = panel.match(/\{ key: "confirm_toggle", label: "With confirmation"[\s\S]*?hint: "([^"]+)" \}/);
+assert.ok(confSrc, 'field "With confirmation" writes confirm_toggle');
+assert.ok(panel.indexOf(confSrc[0]) > panel.indexOf(fieldSrc[0]) && panel.indexOf(confSrc[0]) - panel.indexOf(fieldSrc[0]) < 600, 'right under "Tap runs it"');
+assert.ok(/boolDefault: false, reveals: true/.test(confSrc[0]), 'off by default, redraws the form (Ask before switching follows)');
+const confWhen = new Function('RUN_DOMAINS', 'return (' + confSrc[0].match(/when: (\(vars, tile\) => [^\n]+),\n/)[1] + ');')(RUN);
+assert.equal(confWhen({ tap_run: true }, { entity: 'script.example_door' }), true, 'shown while "Tap runs it" is on');
+assert.equal(confWhen({}, { entity: 'script.example_door' }), false, 'hidden while it is off');
+assert.equal(confWhen({ tap_run: true }, { entity: 'light.example' }), false, 'not for a light');
+assert.ok(/if \(f\.reveals \|\| shownSig\(\) !== shown0\) this\._renderForm\(\); else this\._syncPreview\(\);\n\s*\}, f\.label\);\n\s*sw\.dataset\.field = f\.key;/.test(panel),
+  'a bool switch that shows or hides fields redraws the form');
+assert.ok(/sw\._set = \(v\) =>/.test(panel), 'a switch can follow its twin');
+assert.ok(/twin = box\.querySelector\('\.sw\[data-field="confirm_toggle"\]'\);\s*if \(twin && twin\._set\) twin\._set\(v === true\);/.test(mehr),
+  '"Ask before switching" moves "With confirmation" along');
+// New tiles on a script, scene or button run on tap from the start; existing ones keep what they have.
+const rtd = new Function('RUN_DOMAINS', panel.match(/function runTapDefault\(tile, type\) \{[\s\S]*?\n\}\n/)[0] + 'return runTapDefault;')(RUN);
+const EA = { id: 'entity_actions' };
+let nt = { entity: 'script.example_door', variables: { size: 'auto' } }; rtd(nt, EA);
+assert.equal(nt.variables.tap_run, true, 'new script tile: tap runs it');
+nt = { entity: 'scene.example_evening' }; rtd(nt, EA); assert.equal(nt.variables.tap_run, true, 'new scene tile');
+nt = { entity: 'button.example_bell', variables: { tap_run: false } }; rtd(nt, EA); assert.equal(nt.variables.tap_run, false, 'an explicit choice stays');
+nt = { entity: 'light.example', variables: {} }; rtd(nt, EA); assert.equal(nt.variables.tap_run, undefined, 'a light: nothing');
+nt = { entity: 'script.example_door', variables: {} }; rtd(nt, { id: 'entity' }); assert.equal(nt.variables.tap_run, undefined, 'other tile types: nothing');
+nt = { entity: 'script.example_door', variables: {} }; rtd(nt, EA); assert.equal(nt.variables.confirm_toggle, undefined, 'no question by default');
+assert.ok(/_fillTile\(tile, type, entity\) \{\n\s*tile\.entity = entity;\n\s*runTapDefault\(tile, type\);/.test(panel), 'set where a new tile gets its device');
+assert.ok(/if \(!prev && v && [^\n]+\n\s*runTapDefault\(tile, type\);/.test(panel), 'and when a tile added without a device gets its first one');
+for (const lang of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+  const ex = JSON.parse(read('custom_components/casora/translations/panel/' + lang + '.json')).exact;
+  for (const k of ['With confirmation', confSrc[1]]) assert.ok(ex[k], lang + ': ' + k);
 }
 for (const lang of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
   const ex = JSON.parse(read('custom_components/casora/translations/dashboard/phrases/' + lang + '.json')).exact;

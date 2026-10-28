@@ -2729,7 +2729,9 @@
     "Tapping the tile runs the script, scene or button right away. Holding the tile still opens its popup.": "Tikken op de tegel voert het script, de scène of de knop meteen uit. Ingedrukt houden opent nog steeds de pop-up.",
     "Run it": "Uitvoeren",
     "A calm question before this runs. For the front door, the gate or everything off.": "Een rustige vraag voordat dit wordt uitgevoerd. Voor de voordeur, de poort of alles uit.",
-    "A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.": "Een rustige vraag voordat dit wordt uitgevoerd, op de tegel en in de pop-up. Voor de voordeur, de poort of alles uit."
+    "A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.": "Een rustige vraag voordat dit wordt uitgevoerd, op de tegel en in de pop-up. Voor de voordeur, de poort of alles uit.",
+    "With confirmation": "Met bevestiging",
+    "A calm question before it runs. Same switch as Ask before switching.": "Een rustige vraag voordat het wordt uitgevoerd. Dezelfde schakelaar als ‘Vragen voor het schakelen’."
   },
   "patterns": [
     [

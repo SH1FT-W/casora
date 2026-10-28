@@ -4769,6 +4769,10 @@ const TILE_TYPES = [
       { key: "tap_run", label: "Tap runs it", type: "bool", boolDefault: false,
         when: (vars, tile) => RUN_DOMAINS.includes(String((tile && tile.entity) || "").split(".")[0]),
         hint: "Tapping the tile runs the script, scene or button right away. Holding the tile still opens its popup." },
+      // Same setting as "Ask before switching" below (variables.confirm_toggle, casora-core.js) – one value, two places.
+      { key: "confirm_toggle", label: "With confirmation", type: "bool", boolDefault: false, reveals: true,
+        when: (vars, tile) => vars.tap_run === true && RUN_DOMAINS.includes(String((tile && tile.entity) || "").split(".")[0]),
+        hint: "A calm question before it runs. Same switch as Ask before switching." },
       ...PROGRESS_FIELDS,
       ...actionFields(1),
       ...actionFields(2),
@@ -5319,6 +5323,16 @@ function newTile(type) {
   // Neue Kacheln: „Größe am Handy“ automatisch (1.5); bestehende bleiben, wie sie sind.
   return { type: "custom:button-card", template: type.template, entity: "", name: trLabel(type.label),
     variables: { size: "auto" } };
+}
+
+// A new "Entity with buttons" tile on a script, scene or button runs on tap from the start (#86, #90).
+// Only where the Studio gives a tile its first device; existing tiles keep what they have.
+function runTapDefault(tile, type) {
+  if (!tile || !type || type.id !== "entity_actions") return;
+  if (!RUN_DOMAINS.includes(String(tile.entity || "").split(".")[0])) return;
+  if (tile.variables && tile.variables.tap_run !== undefined) return;
+  tile.variables = tile.variables || {};
+  tile.variables.tap_run = true;
 }
 
 // Candidate for casora-panel.js: enough YAML to read a card config off the
@@ -20852,6 +20866,8 @@ class CasoraPanel extends HTMLElement {
       sw.setAttribute("aria-checked", state ? "true" : "false");
       onChange(state === def ? undefined : state);
     };
+    // Another switch on the same setting moved it: show it without calling onChange.
+    sw._set = (v) => { state = !!v; sw.setAttribute("aria-checked", state ? "true" : "false"); };
     // Nutzertest 6 (P-T3): ein Klick auf die Beschriftung („12-Stunden-Uhr“) schaltete nicht. Sobald
     // der Schalter in seiner Zeile steckt, schaltet die Beschriftung direkt davor ihn mit.
     // Nur dieses eine Geschwister und nie in Zeilen mit eigenem Klick (Kachelkopf: Name klappt auf) –
@@ -22347,6 +22363,7 @@ class CasoraPanel extends HTMLElement {
   // gleich eintragen. Vom Nutzer Gesetztes bleibt, wie es ist.
   _fillTile(tile, type, entity) {
     tile.entity = entity;
+    runTapDefault(tile, type);
     // Eine Pflanze heißt wie die Pflanze („Bogenhanf“), nicht wie der Kacheltyp.
     const fn = isPlantEntity(this._hass, entity) && this._prettyEntity(entity);
     if (fn && fn !== entity && (!tile.name || tile.name === trLabel(type.label))) tile.name = fn;
@@ -27867,6 +27884,12 @@ class CasoraPanel extends HTMLElement {
         const prev = tile.entity;
         const was = glyphNow();
         tile.entity = v;
+        // A tile added without a device gets one here for the first time: like a new tile (#86).
+        let runNew = false;
+        if (!prev && v && !(tile.variables && tile.variables.tap_run !== undefined)) {
+          runTapDefault(tile, type);
+          runNew = !!(tile.variables && tile.variables.tap_run === true);
+        }
         const held = (tile.name || "").trim();
         if (autoName && (!held || held === type.label || held === newTile(type).name
             || held === friendlyOf(prev)
@@ -27883,7 +27906,7 @@ class CasoraPanel extends HTMLElement {
           list[0] = v;
           tile.variables[grp.list] = list;
         }
-        let rebuild = false;
+        let rebuild = runNew;
         if (type.twin && v && !(tile.variables || {})[type.twin.key]) {
           const twin = this._twinOf(v, type.twin.from, type.twin.to);
           if (twin) {
@@ -28521,7 +28544,7 @@ class CasoraPanel extends HTMLElement {
         return;
       }
       if (f.type === "bool") {
-        put(f.label, this._boolSwitch(cur, f.boolDefault, (v) => {
+        const sw = this._boolSwitch(cur, f.boolDefault, (v) => {
           if (v === undefined) {
             if (tile.variables) {
               delete tile.variables[f.key];
@@ -28531,8 +28554,11 @@ class CasoraPanel extends HTMLElement {
             if (!tile.variables) tile.variables = {};
             tile.variables[f.key] = v;
           }
-          this._syncPreview();
-        }, f.label));
+          // A switch that shows or hides other fields ("Tap runs it" → "With confirmation") draws the form again.
+          if (f.reveals || shownSig() !== shown0) this._renderForm(); else this._syncPreview();
+        }, f.label);
+        sw.dataset.field = f.key;
+        put(f.label, sw);
         hintUnder();
         return;
       }
