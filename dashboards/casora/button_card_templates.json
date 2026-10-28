@@ -4621,6 +4621,7 @@
     }
    ]
   },
+  "state_display": "[[[\n  const esc = window.casoraEsc || ((t) => String(t ?? '').replace(/[&<>\"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[c])));\n  if (!entity?.state) return \"\";\n  /* Tap runs it (#90): a script reads \"Bereit\", while it runs \"Läuft\"; a scene or button \"Bereit\" instead of\n     its last-run time or \"Unbekannt\". Unavailable stays HA's word. Without tap_run as casora_entity. */\n  const _id = String(entity?.entity_id || '');\n  if (variables.tap_run === true && entity.state !== 'unavailable' && window.casoraRunService && window.casoraRunService(_id)) {\n    return /^script\\./.test(_id) && entity.state === 'on' ? 'Läuft' : 'Bereit';\n  }\n  if (entity?.state === \"ok\") return \"Gesund\";\n  return esc((() => { try { return hass.formatEntityState(entity); } catch (e) { return ''; } })() || entity?.state);\n]]]\n",
   "tap_action": {
    "action": "[[[\n  /* On tap: Run it (#86) – a script, scene or button runs straight away; holding still opens the popup. */\n  const _run = variables.tap_run === true && !window._casoraActions?.isOpen(variables, states, entity?.entity_id)\n    && window.casoraRunService ? window.casoraRunService(entity?.entity_id) : '';\n  if (_run) return 'call-service';\n  return window._casoraActions?.isOpen(variables, states, entity?.entity_id)\n    ? 'call-service' : (window.casoraPopupAction ? window.casoraPopupAction() : 'more-info');\n]]]\n",
    "haptic": "light",

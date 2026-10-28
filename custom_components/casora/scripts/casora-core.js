@@ -14147,6 +14147,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var AQI = ['aqi_entity_pm25', 'aqi_entity_pm10', 'aqi_entity_voc', 'aqi_entity_co2'];
   var LS = 'casora.phoneRooms.';
   var cache = {}, busy = {}, subscribed = false;
+  var hassUserOf = function () {
+    try { var h = document.querySelector('home-assistant'); return (h && h.hass && h.hass.user) || null; } catch (e) { return null; }
+  };
 
   // room_chips-Auszug (Studio bis 1.0.9) → Variablen wie casora_room.
   function legacy(c) {
@@ -14187,10 +14190,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       || ownBadge(o);
   }
   // Own badges (#53) count as well: a room with only those had no badge row on the phone (#57).
+  // Only those this user sees (per badge "Who sees this?", #90).
   function ownBadge(o) {
+    var CB = window._casoraCustomBadge;
     return Array.isArray(o.custom_badges) && o.custom_badges.some(function (b) {
       return !!b && typeof b === 'object' && ((typeof b.entity === 'string' && !!b.entity)
-        || (typeof b.template === 'string' && !!b.template.trim()));
+        || (typeof b.template === 'string' && !!b.template.trim())) && (!CB || !CB.sees || CB.sees(b, hassUserOf()));
     });
   }
 

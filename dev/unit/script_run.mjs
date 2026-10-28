@@ -67,6 +67,27 @@ assert.deepEqual(r, { action: 'call-service', service: 'casora.actions_overlay_t
   'open actions overlay: the tap closes it first, runs nothing');
 assert.equal(T.casora_entity_actions.hold_action.action.includes('more-info'), true, 'holding still opens the popup');
 
+// ── Resting text with "Tap runs it": Bereit / Läuft instead of Aus / An (#90) ──────────
+{
+  const sd = js(T.casora_entity_actions.state_display);
+  const hassF = { formatEntityState: (e) => ({ off: 'Aus', on: 'An', unavailable: 'Nicht verfügbar', unknown: 'Unbekannt' })[e.state] || e.state };
+  const show = (vars, id, state) => { globalThis.window = { casoraRunService: w.casoraRunService };
+    return sd(vars, { entity_id: id, state, attributes: {} }, states, hassF, null); };
+  assert.equal(show({ tap_run: true }, 'script.example_door', 'off'), 'Bereit', 'idle script: ready');
+  assert.equal(show({ tap_run: true }, 'script.example_door', 'on'), 'Läuft', 'running script');
+  assert.equal(show({ tap_run: true }, 'scene.example_evening', '2026-10-01T18:00:00+00:00'), 'Bereit', 'scene: no time stamp');
+  assert.equal(show({ tap_run: true }, 'button.example_bell', 'unknown'), 'Bereit', 'never pressed button: not "Unbekannt"');
+  assert.equal(show({ tap_run: true }, 'script.example_door', 'unavailable'), 'Nicht verfügbar', 'unavailable stays');
+  assert.equal(show({}, 'script.example_door', 'off'), 'Aus', 'without tap_run unchanged');
+  assert.equal(show({}, 'script.example_door', 'on'), 'An', 'without tap_run unchanged (on)');
+  assert.equal(show({ tap_run: true }, 'light.example', 'off'), 'Aus', 'a light ignores tap_run');
+  assert.equal(T.casora_entity.state_display.includes('Bereit'), false, 'other tiles keep their text');
+  for (const lang of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+    const ex = JSON.parse(read('custom_components/casora/translations/dashboard/phrases/' + lang + '.json')).exact;
+    for (const k of ['Bereit', 'Läuft']) assert.ok(ex[k], lang + ': ' + k);
+  }
+}
+
 // ── Studio: the field ──────────────────────────────────────────────────────────────
 const panel = read('custom_components/casora/panel/casora-panel.js');
 const fieldSrc = panel.match(/\{ key: "tap_run"[\s\S]*?hint: "([^"]+)" \}/);
