@@ -452,7 +452,7 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       : /\.turn_on$|\.open_cover$|\.open_valve$/.test(svc) ? 'Einschalten'
       : /\.turn_off$|\.close_cover$|\.close_valve$/.test(svc) ? 'Ausschalten'
       // Schlösser: dieselben Wörter wie die Knöpfe der Schloss-Ansicht (1.2.1, D2).
-      : /\.unlock$/.test(svc) ? 'Entriegeln' : /\.lock$/.test(svc) ? 'Verriegeln'
+      : /\.unlock$/.test(svc) ? 'Entriegeln' : /\.lock$/.test(svc) ? 'Verriegeln' : /^lock\.open$/.test(svc) ? 'Tür öffnen'
       : (s === 'on' || s === 'open' || s === 'playing' || s === 'unlocked') ? 'Ausschalten' : 'Einschalten';
     // Scripts, buttons and scenes run rather than switch (#86, #90); a running script's toggle stops it.
     if (/^(script|button|input_button)\./.test(id) && !(s === 'on' && !/\.turn_on$/.test(svc))) verb = 'Ausführen';
