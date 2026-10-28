@@ -171,15 +171,16 @@ console.log('ok Farben');
 }
 console.log('ok Antippen');
 
-// Größe: ausgeliefert gzip-komprimiert ≤ 14 KB (apexcharts-card: ~500 KB), unkomprimiert ≤ 43 KB
+// Größe: ausgeliefert gzip-komprimiert ≤ 14 KB (apexcharts-card: ~500 KB), unkomprimiert ≤ 44 KB
 // (bis 26.10.31: 12 KB / 36 KB; bis 26.10.59: 12,5 KB / 37 KB – Balken je Stunde/Tag/Monat mit bis zu vier Reihen
-// nebeneinander, Jahr-Spanne und Monats-Ticks (Diagramm-Karte #50) brauchten ~5 KB; bis zur Wetterauswahl #56: 13,5 KB / 42 KB – mehrere Attribut-Kurven einer Entität).
+// nebeneinander, Jahr-Spanne und Monats-Ticks (Diagramm-Karte #50) brauchten ~5 KB; bis zur Wetterauswahl #56: 13,5 KB / 42 KB – mehrere Attribut-Kurven einer Entität;
+// up to 43 KB before the chart plate got its shadow, 28.10.2026).
 {
   const zlib = await import('node:zlib');
   // The shared casora-esc block (HTML escaping, same in every standalone file) does not count against the budget.
   const own = src.replace(/\/\/ casora-esc:begin[\s\S]*?\/\/ casora-esc:end\n?/, '');
   const raw = Buffer.byteLength(own), gz = zlib.gzipSync(own).length;
-  assert.ok(raw <= 43 * 1024, 'casora-chart.js ' + raw + ' Bytes > 43 KB');
+  assert.ok(raw <= 44 * 1024, 'casora-chart.js ' + raw + ' Bytes > 44 KB');
   assert.ok(gz <= 14 * 1024, 'casora-chart.js gzip ' + gz + ' Bytes > 14 KB');
 }
 console.log('ok Größe');
