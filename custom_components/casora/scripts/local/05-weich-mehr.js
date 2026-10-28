@@ -711,7 +711,10 @@
     if (has(C.grid) || has(C.export)) { F.grid = C.grid || null; F.exp = C.export || null; }
     else if (pw.grid.length) F.gridHa = pw.grid.slice();
     if (has(C.soc)) F.soc = C.soc;
-    else if (F.batHa && window.casoraEnergyBatterySoc) F.soc = window.casoraEnergyBatterySoc(hass, F.batHa[0]) || null;
+    // #91: also for the tile's battery field and the charge/discharge sensors, not only HA's settings.
+    else if (window.casoraEnergyBatterySoc) {
+      [F.batHa && F.batHa[0], F.batTile, F.chg, F.dis].some(function (id) { return id && (F.soc = window.casoraEnergyBatterySoc(hass, id) || null); });
+    }
     var bat = !!(F.chg || F.dis || F.batTile || F.batHa || F.soc), grid = !!(F.grid || F.exp || F.gridHa);
     if (!F.solar && !bat) return null;
     if (has(C.home)) F.home = C.home; else if (C.sum) F.sum = C.sum;
@@ -1068,6 +1071,9 @@
         var aut = Math.max(0, Math.min(1, 1 - imp / p));
         bits.push(Math.round(aut * 100) + ' % aus Solar und Akku');
       }
+      // #91: the battery's charge level, like HA's energy dashboard (the flow's SoC sensor, also when found automatically).
+      var socH = fsrc && fsrc.soc ? num(states, fsrc.soc) : null;
+      if (socH != null) bits.push('Akku ' + Math.round(socH) + ' %');
       var cost = money(num(states, C.costToday), C.cur, hass);
       var kwh = num(states, C.today);
       if (cost) bits.push('heute ' + cost);
