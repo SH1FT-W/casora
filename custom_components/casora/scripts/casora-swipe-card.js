@@ -24,8 +24,8 @@
 //   cards: [...]                     # required, the slides, in order
 //   auto_swipe_interval: 10000       # ms between auto-advances; omit/0 disables
 //   show_pagination: true            # default true when cards.length > 1
-//   dot_color: 'rgba(255,255,255,0.5)'
-//   dot_active_color: 'rgba(255,255,255,0.95)'
+//   dot_color: 25 % of the text colour by default
+//   dot_active_color: 60 % of the text colour by default
 //   dot_size: 6                      # px
 //   always_active: true              # passthrough — read by smart-row.js's
 //                                     # cardFlag(), not by this card itself;
@@ -78,8 +78,13 @@ class CasoraSwipeCard extends HTMLElement {
     const root = this.shadowRoot;
     root.innerHTML = '';
 
-    const dotColor       = this._config.dot_color        || 'rgba(255,255,255,0.5)';
-    const dotActiveColor = this._config.dot_active_color  || 'rgba(255,255,255,0.95)';
+    // Default dots follow the text colour, so they show on a light tile and on a dark one. The old white
+    // defaults (written into imported carousels) count as unset: white on a light tile could not be seen.
+    const legacy = (v, old) => !v || String(v).replace(/\s/g, '') === old;
+    const dotColor       = legacy(this._config.dot_color, 'rgba(255,255,255,0.5)')
+      ? 'color-mix(in srgb, var(--primary-text-color, #000) 25%, transparent)' : this._config.dot_color;
+    const dotActiveColor = legacy(this._config.dot_active_color, 'rgba(255,255,255,0.95)')
+      ? 'color-mix(in srgb, var(--primary-text-color, #000) 60%, transparent)' : this._config.dot_active_color;
     const dotSize         = Number(this._config.dot_size) || 6;
 
     const style = document.createElement('style');
