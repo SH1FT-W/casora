@@ -137,6 +137,12 @@ assert.equal(L.stepTo(states['number.qa_max'], 1), null, 'above the maximum: not
 assert.equal(L.stepTo({ state: '0.3', attributes: { step: 0.1 } }, 1), 0.4, 'no float noise');
 r = L.row(hass, states['input_select.qa_modus'], 'input_select.qa_modus');
 assert.match(r.endHtml, /<option value="Eco" selected>Eco<\/option><option value="Komfort &lt;b&gt;">Komfort &lt;b&gt;<\/option>/, 'options escaped, current selected');
+// #85: on Android the popup section's button-card cancelled the touchend, so the choice list never opened.
+// Every field in a row keeps its touches to itself (select, time, date).
+const guarded = (html, tag) => new RegExp('<' + tag + ' [^>]*ontouchstart="event\\.stopPropagation\\(\\);" ontouchend="event\\.stopPropagation\\(\\);"').test(html);
+assert.ok(guarded(r.endHtml, 'select'), 'select: touch stays with the field (#85)');
+assert.ok(guarded(L.row(hass, states['input_datetime.qa_frueh'], 'input_datetime.qa_frueh').endHtml, 'input'), 'time: touch stays with the field');
+assert.ok(guarded(L.row(hass, states['input_datetime.qa_tag'], 'input_datetime.qa_tag').endHtml, 'input'), 'date: touch stays with the field');
 r = L.row(hass, states['sensor.qa_temp'], 'sensor.qa_temp');
 assert.equal(r.entity, 'sensor.qa_temp', 'anything else: state text, tap opens the details');
 assert.equal(r.value, '21,5 °C'); assert.equal(r.endHtml, undefined);
