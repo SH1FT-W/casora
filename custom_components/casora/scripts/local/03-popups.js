@@ -1243,8 +1243,8 @@
     + '.hrk-d.now .hrk-h b, .hrk-d.now .hrk-h span{color:var(--casora-soft-icon-on, #276B64);}'
     + '.hrk-n{margin-top:auto;padding-top:10px;font-size:13px;font-weight:700;line-height:1.25;letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary, #2E2721);'
     /* white-space:normal: button-card inherits nowrap – the name then never wrapped and was cut without „…“
-       (issue #3). Two lines, then an ellipsis; words break at syllables, not anywhere („Ter/min“). */
-    + 'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;overflow-wrap:break-word;hyphens:auto;}'
+       (issue #3). Two lines, then an ellipsis; a word longer than the cell breaks, never one that fits (no hyphenation: „Ter-min“). */
+    + 'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;overflow-wrap:break-word;hyphens:manual;}'
     + '.hrk-n.off{color:var(--casora-soft-sub, rgba(46,39,33,0.45));font-weight:500;}'
     + '.hrk-m{font-size:11.5px;font-weight:500;color:var(--casora-soft-sub, rgba(46,39,33,0.6));margin-top:2px;}</style>';
   R.weekHtml = function () {
