@@ -2324,6 +2324,7 @@
   "funkt, schickt aber keine Werte": "zendt, maar stuurt geen waarden",
   "meldet keinen Batteriewert": "meldt geen batterijwaarde",
   "Haustier": "Huisdier",
+  "1 Sensor nicht erreichbar": "1 sensor onbereikbaar",
   "Diagramm": "Grafiek",
   "Linien": "Lijnen",
   "Kein Zahlenwert": "Geen getalwaarde",
@@ -4281,6 +4282,10 @@
   [
    "^(.+) hat sich noch nicht gemeldet$",
    "{1} heeft zich nog niet gemeld"
+  ],
+  [
+   "^(\\d+) Sensoren nicht erreichbar$",
+   "{1} sensoren onbereikbaar"
   ],
   [
    "^(.+) ist nicht erreichbar$",

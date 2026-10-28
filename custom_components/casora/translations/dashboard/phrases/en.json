@@ -2332,6 +2332,7 @@
   "funkt, schickt aber keine Werte": "is on the air but sends no values",
   "meldet keinen Batteriewert": "reports no battery level",
   "Haustier": "Pet",
+  "1 Sensor nicht erreichbar": "1 sensor unreachable",
   "Diagramm": "Chart",
   "Linien": "Lines",
   "Kein Zahlenwert": "No numeric value",
@@ -4263,6 +4264,10 @@
   [
    "^(.+) hat sich noch nicht gemeldet$",
    "{1} has not reported yet"
+  ],
+  [
+   "^(\\d+) Sensoren nicht erreichbar$",
+   "{1} sensors unreachable"
   ],
   [
    "^(.+) ist nicht erreichbar$",

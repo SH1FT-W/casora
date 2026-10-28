@@ -2332,6 +2332,7 @@
   "funkt, schickt aber keine Werte": "emite, mas não envia valores",
   "meldet keinen Batteriewert": "não comunica o nível da bateria",
   "Haustier": "Animal de estimação",
+  "1 Sensor nicht erreichbar": "1 sensor inacessível",
   "Diagramm": "Diagrama",
   "Linien": "Linhas",
   "Kein Zahlenwert": "Sem valor numérico",
@@ -4281,6 +4282,10 @@
   [
    "^(.+) hat sich noch nicht gemeldet$",
    "{1} ainda não comunicou"
+  ],
+  [
+   "^(\\d+) Sensoren nicht erreichbar$",
+   "{1} sensores inacessíveis"
   ],
   [
    "^(.+) ist nicht erreichbar$",

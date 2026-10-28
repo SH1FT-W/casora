@@ -2324,6 +2324,7 @@
   "funkt, schickt aber keine Werte": "émet, mais n'envoie aucune valeur",
   "meldet keinen Batteriewert": "ne signale aucun niveau de pile",
   "Haustier": "Animal",
+  "1 Sensor nicht erreichbar": "1 capteur injoignable",
   "Diagramm": "Diagramme",
   "Linien": "Lignes",
   "Kein Zahlenwert": "Pas de valeur numérique",
@@ -4281,6 +4282,10 @@
   [
    "^(.+) hat sich noch nicht gemeldet$",
    "{1} ne s'est pas encore manifesté"
+  ],
+  [
+   "^(\\d+) Sensoren nicht erreichbar$",
+   "{1} capteurs injoignables"
   ],
   [
    "^(.+) ist nicht erreichbar$",
