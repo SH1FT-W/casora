@@ -127,7 +127,15 @@
       if (o.narrowOrder) o.narrowOrder = o.narrowOrder.filter(function (k) { return k !== 'more'; }).concat(['set', 'more']);
     }
     var has = function (k) { return o.fields[k] != null && o.fields[k] !== ''; };
-    var top = o.top.filter(has), L = o.left.filter(has), R = o.right.filter(has);
+    var top = (o.top || []).filter(has), L = (o.left || []).filter(has), R = (o.right || []).filter(has);
+    /* Popup v3 (richtlinien §2, §14): stage and quick choice on top of the left column (S5 picture: across both). */
+    var v3 = [o.stage, o.quick].filter(function (k) { return k && has(k) && top.indexOf(k) < 0; });
+    if (v3.length) {
+      L = L.filter(function (k) { return v3.indexOf(k) < 0; }); R = R.filter(function (k) { return v3.indexOf(k) < 0; });
+      if (o.stage && v3[0] === o.stage && (o.stageWide || /data-casora-stage=\\?"S5/.test(String(o.fields[o.stage])))) { top = top.concat([o.stage]); v3 = v3.slice(1); }
+      L = v3.concat(L);
+      if (o.narrowOrder) o = Object.assign({}, o, { narrowOrder: v3.concat(o.narrowOrder.filter(function (k) { return v3.indexOf(k) < 0; })) });
+    }
     if (!L.length && R.length > 1 && o.moveLeft) { L = R.filter(function (k) { return o.moveLeft.indexOf(k) > -1; }); R = R.filter(function (k) { return L.indexOf(k) < 0; }); }
     /* Wie B-11 in den Geräte-Popups (H.layout, 02-devices.js): Steht rechts nur „Mehr“, wird das Popup
        einspaltig und „Mehr“ ist die letzte Zeile. Sonst saß die Mehr-Pille oben rechts höher als das

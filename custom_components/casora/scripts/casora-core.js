@@ -6506,7 +6506,7 @@ window.casoraMenuGlass = {
        between the rows, quiet uppercase section labels, smaller row symbols, one track for segments.
        Only tokens - softGroup, segments and the light popup's rows read the --casora-pv-* values; without the
        attribute their fallbacks are today's look. Set from cfg.variant (or localStorage casora_popup_variant). */
-    :host([soft][data-casora-pv="b"]) {
+    :host([soft][data-casora-pv="b"]), :host([soft][data-casora-pv="v3"]) {
       --casora-h15-fs: var(--casora-fs-sub, 13px);
       --casora-h15-fw: 600;
       --casora-h15-ls: 0.04em;
@@ -6548,6 +6548,36 @@ window.casoraMenuGlass = {
       --casora-pv-sec-gap: var(--casora-space-6, 24px);
       --casora-pv-grid-col-gap: 0px;
     }
+    /* Popup v3 „Bühne“ (popup-richtlinien-v3.md §3, §14): variant B's lists plus the stage/quick tokens and the
+       slim header – no symbol tile, title 24/800 (phone 22), label 12/700 .06em, status 14/500 (state 14/700),
+       ✕ 40, 20 from the header to the stage. The main switch stays as it is (_casoraHeadSwitchHooks). */
+    :host([soft][data-casora-pv="v3"]) {
+      --casora-v3-stage-radius: var(--casora-r-surface, 32px);
+      --casora-v3-stage-pad: 20px;
+      --casora-v3-stage-gap: 16px;
+      --casora-v3-value-fs: 56px;
+      --casora-v3-value-fs-big: 72px;
+      --casora-v3-quick-h: 96px;
+      --casora-v3-quick-radius: 24px;
+      --casora-v3-head-title-fs: 24px;
+      --casora-head-gap: 20px;
+    }
+    :host([soft][data-casora-pv="v3"]) .header-ring { display: none !important; }
+    :host([soft][data-casora-pv="v3"]) .header-bar { grid-template-columns: minmax(0, 1fr) auto auto; }
+    :host([soft][data-casora-pv="v3"]) .header-text { grid-column: 1; }
+    :host([soft][data-casora-pv="v3"]) .header-switch, :host([soft][data-casora-pv="v3"]) .header-actions { grid-column: 2; }
+    :host([soft][data-casora-pv="v3"]) .header-nav { grid-column: 3; }
+    :host([soft][data-casora-pv="v3"][has-back]) .header-bar { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+    :host([soft][data-casora-pv="v3"][has-back]) .header-text { grid-column: 2; }
+    :host([soft][data-casora-pv="v3"][has-back]) .header-switch, :host([soft][data-casora-pv="v3"][has-back]) .header-actions { grid-column: 3; }
+    :host([soft][data-casora-pv="v3"][has-back]) .header-nav { grid-column: 4; }
+    :host([soft][data-casora-pv="v3"]) .header-eyebrow { letter-spacing: .06em; margin-bottom: 4px; }
+    :host([soft][data-casora-pv="v3"]) .header-title { font-size: var(--casora-v3-head-title-fs, 24px); letter-spacing: -0.02em; line-height: 1.2; }
+    :host([soft][data-casora-pv="v3"]) .header-status { font-size: 14px; margin-top: 4px; }
+    :host([soft][data-casora-pv="v3"]) .header-status b { font-size: 14px; }
+    :host([soft][data-casora-pv="v3"]) .header-close, :host([soft][data-casora-pv="v3"][has-back]) .header-back { width: 40px; height: 40px; }
+    :host([soft][data-casora-pv="v3"]) .header-close::before { inset: -2px; }
+    @media (max-width: 760px) { :host([soft][data-casora-pv="v3"]) { --casora-v3-head-title-fs: 22px; } }
     :host([soft]) .glass {
       font-family: var(--primary-font-family, inherit);
       background: var(--casora-soft-surface, var(--casora-dialog-bg, rgb(250, 246, 240)));
@@ -7225,7 +7255,12 @@ window.casoraMenuGlass = {
           }
           continue;
         }
+        var fSl = el.parentNode;
+        if (fSl && fSl.classList.contains('drag')) continue;
         el.style.height = (el.dataset.casoraInvert === '1' ? 100 - fAvg : fAvg) + '%';
+        // Popup v3 stage (S3 position): the big value follows the live average too.
+        var fStg = fSl && fSl.classList.contains('hui-vs') && fSl.closest && fSl.closest('.hui-stage');
+        if (fStg) { var fN = fStg.querySelector('.hui-st-n'); if (fN) fN.textContent = String(fAvg); fSl.setAttribute('aria-valuenow', String(fAvg)); }
         continue;
       }
       if (el.dataset.casoraLive === 'act') {
@@ -10221,6 +10256,28 @@ window.casoraMenuGlass = {
         return;
       }
       fill.style.height = (inv ? 100 - pct : pct) + '%';
+      stageText(el, pct);
+    };
+    // Popup v3 (UI.stage S1/S3): the stage's big value and word follow the drag live; words = [off, mid, full].
+    var stageText = function (el, pct) {
+      el.setAttribute('aria-valuenow', String(pct));
+      var stg = el.closest && el.closest('.hui-stage');
+      if (!stg) return;
+      var sp = {};
+      try { sp = JSON.parse(el.dataset.casoraSlider) || {}; } catch (e) { sp = {}; }
+      var w = Array.isArray(sp.words) ? sp.words : null;
+      var nEl = stg.querySelector('.hui-st-n'), uEl = stg.querySelector('.hui-st-u');
+      var offNow = !!sp.zeroOff && pct <= 0;
+      if (nEl) nEl.textContent = offNow ? (window.casoraTr ? window.casoraTr('Aus') : 'Aus') : String(pct);
+      if (uEl) uEl.style.display = offNow ? 'none' : '';
+      else if (nEl && !offNow && sp.zeroOff) nEl.insertAdjacentHTML('afterend', '<span class="hui-st-u">%</span>');
+      stg.classList.toggle('off', offNow);
+      var wEl = stg.querySelector('.hui-st-w');
+      if (w && wEl) {
+        var word = pct <= 0 ? w[0] : pct >= 100 ? w[2] : w[1];
+        var rest = String(wEl.textContent || '').split(' · ').slice(1);
+        wEl.textContent = [window.casoraTr ? window.casoraTr(word) : word].concat(offNow ? [] : rest).join(' · ');
+      }
     };
     document.addEventListener('pointerdown', function (ev) {
       var path = (ev.composedPath && ev.composedPath()) || [ev.target];
@@ -10246,9 +10303,18 @@ window.casoraMenuGlass = {
       var d = drag; drag = null;
       d.el.classList.remove('drag');
       window.casoraHaptic('selection');
+      commit(d);
+    };
+    var commit = function (d) {
       try {
         var spec = JSON.parse(d.el.dataset.casoraSlider);
         var ha = document.querySelector('home-assistant');
+        window._casoraSuppressDismiss = Date.now() + 600;
+        // Popup v3 S1 (lights): 0 % switches off, like the brightness bar of the light popup.
+        if (ha && ha.hass && spec && spec.domain && spec.zeroOff && d.pct <= 0) {
+          ha.hass.callService(spec.domain, 'turn_off', {}, spec.target || undefined);
+          return;
+        }
         if (ha && ha.hass && spec && spec.domain) {
           var data = Object.assign({}, spec.data || {});
           var val = d.pct;
@@ -10282,6 +10348,24 @@ window.casoraMenuGlass = {
     };
     document.addEventListener('pointerup', endDrag, true);
     document.addEventListener('pointercancel', endDrag, true);
+    // Keys on a stage slider (role="slider"): arrows ±1, page up/down ±10, home/end; the service follows
+    // 400 ms after the last key (one call for a held key).
+    var keyT = null;
+    document.addEventListener('keydown', function (ev) {
+      var el = ev.composedPath ? ev.composedPath()[0] : ev.target;
+      if (!el || !el.dataset || el.dataset.casoraSlider === undefined || el.getAttribute('role') !== 'slider') return;
+      var by = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[ev.key];
+      var cur = shown(el);
+      if (cur == null) cur = Number(el.getAttribute('aria-valuenow')) || 0;
+      var pct = ev.key === 'Home' ? 0 : ev.key === 'End' ? 100 : by != null ? cur + by : null;
+      if (pct == null) return;
+      ev.preventDefault(); ev.stopPropagation();
+      pct = Math.max(0, Math.min(100, Math.round(pct)));
+      var from = keyT ? keyT.from : cur;
+      paint(el, pct);
+      if (keyT) clearTimeout(keyT.t);
+      keyT = { from: from, t: setTimeout(function () { keyT = null; commit({ el: el, pct: pct, from: from }); }, 400) };
+    }, true);
   }
 
   function shelf(items, label) {
@@ -11219,10 +11303,242 @@ window.casoraMenuGlass = {
     return group([r], null);
   }
 
+  // ── Popup v3 „Bühne“ (docs/handbuch/popup-richtlinien-v3.md §4, §5) ──────────────────────────────
+  // UI.stage(type, o): the one stage plate under the header. The controls reuse the shared logic: the
+  // vertical slider is a data-casora-slider (pointer drag, tap, keys, service on release), ± are
+  // data-casora-svc with data-casora-step, pills are data-casora-svc (confirm as everywhere).
+  //   common o: { state: 'off' | 'na', empty: { … UI.empty } , extra: html under the stage content }
+  var STAGE_TYPES = { slider: 'S1', value: 'S2', position: 'S3', progress: 'S4', image: 'S5', chart: 'S6', status: 'S7', content: 'S8' };
+  var TONE = { good: 'var(--casora-color-green, #34C759)', warn: 'var(--casora-color-orange, #FF9F0A)', bad: 'var(--casora-color-red, #FF453A)' };
+  var STAGE_CSS = '.hui-stage{position:relative;box-sizing:border-box;font-family:' + T.font + ';text-align:left;'
+    + 'background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));border-radius:var(--casora-v3-stage-radius, 32px);'
+    + 'padding:var(--casora-v3-stage-pad, 20px);display:flex;flex-direction:column;gap:var(--casora-v3-stage-gap, 16px);'
+    + 'color:' + T.ink + ';overflow-wrap:normal;word-break:normal;hyphens:manual;}'
+    + '.hui-stage.na{opacity:.5;pointer-events:none;}'
+    + '.hui-stage *{box-sizing:border-box;}'
+    // Value 56/800 (S2 72/800), unit 22/700 in text 2 right behind it; word 15/600 text 2, 6 apart.
+    + '.hui-st-val{display:flex;align-items:baseline;gap:4px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap;}'
+    + '.hui-st-n{font-size:var(--casora-v3-value-fs, 56px);font-weight:800;letter-spacing:-0.03em;color:' + T.ink + ';}'
+    + '.hui-st-u{font-size:22px;font-weight:700;color:' + S.sub + ';}'
+    + '.hui-stage.off .hui-st-n{color:' + S.sub + ';}'
+    + '.hui-st-w{font-size:15px;font-weight:600;line-height:1.35;color:' + S.sub + ';margin-top:6px;}'
+    + '.hui-st-cap{font-size:15px;font-weight:600;color:' + S.sub + ';text-align:center;}'
+    + '.hui-st-foot{font-size:15px;font-weight:600;color:' + S.sub + ';text-align:center;font-variant-numeric:tabular-nums;}'
+    // S1/S3: control left, value right; the segment sits at the bottom of the right side.
+    + '.hui-st-row{display:flex;align-items:stretch;gap:var(--casora-v3-stage-gap, 16px);}'
+    + '.hui-st-side{flex:1;min-width:0;display:flex;flex-direction:column;}'
+    + '.hui-st-side .hui-st-seg{margin-top:auto;padding-top:16px;}'
+    + '.hui-stage .hui-vs{position:relative;flex:none;width:96px;height:236px;border-radius:30px;overflow:hidden;'
+    +   'background:var(--casora-lps-track, ' + S.ctl + ');cursor:ns-resize;touch-action:none;user-select:none;-webkit-user-select:none;'
+    +   '-webkit-tap-highlight-color:transparent;outline:none;}'
+    + '.hui-stage .hui-vs:focus-visible{outline:2px solid ' + T.ink + ';outline-offset:2px;}'
+    + '.hui-stage .hui-vs .hui-sl-fill{position:absolute;left:0;right:0;bottom:0;border-radius:0;'
+    +   'background:var(--casora-lps-fill, var(--casora-popup-accent, var(--casora-color-orange, #FF9F0A)));'
+    +   'transition:height .18s cubic-bezier(.36,0,.16,1);}'
+    + '.hui-stage .hui-vs.inv .hui-sl-fill{top:0;bottom:auto;background:var(--casora-v3-pos-fill, ' + S.ctl + ');}'
+    + '.hui-stage .hui-vs.inv{background:var(--casora-v3-pos-track, var(--casora-popup-row-fill, rgba(140,115,90,0.07)));'
+    +   'box-shadow:var(--casora-v3-pos-edge, inset 0 0 0 1px var(--casora-pill-divider, rgba(140,115,90,0.12)));}'
+    + '.hui-stage .hui-vs.drag .hui-sl-fill{transition:none;}'
+    + '.hui-stage .hui-vs .hui-sl-ic{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);width:28px;height:28px;'
+    +   'pointer-events:none;background-color:var(--casora-lps-fill-ink, rgba(58,42,20,.55));opacity:.55;}'
+    + '.hui-stage .hui-st-grip{position:absolute;left:50%;bottom:10px;width:60px;height:6px;margin-left:-30px;border-radius:999px;'
+    +   'background:' + S.sub + ';opacity:.55;pointer-events:none;}'
+    // S2: − value +, buttons 56 round.
+    + '.hui-st-pm{display:flex;align-items:center;justify-content:space-between;gap:12px;}'
+    + '.hui-st-b{flex:none;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;cursor:pointer;'
+    +   'background:' + S.ctl + ';color:' + T.ink + ';font-size:28px;font-weight:600;line-height:1;user-select:none;-webkit-user-select:none;'
+    +   '-webkit-tap-highlight-color:transparent;transition:background-color var(--casora-dur-feedback, 160ms) ease;}'
+    + '.hui-st-b > *{pointer-events:none;}'
+    + '.hui-st-b:active{transform:scale(var(--casora-press-scale, .97));}'
+    + '@media (hover:hover){.hui-st-b:hover{background:' + S.rowHover + ';}}'
+    + '.hui-st-pm .hui-st-val{justify-content:center;flex:1;min-width:0;}'
+    + '.hui-st-pm .hui-st-n{font-size:var(--casora-v3-value-fs-big, 72px);}'
+    + '.hui-st-pm .hui-st-u{align-self:flex-start;font-size:32px;margin-top:4px;}'
+    // S4: bar 8, programme, pill 52 over the stage width.
+    + '.hui-st-bar{height:8px;border-radius:999px;background:' + S.ctl + ';overflow:hidden;}'
+    + '.hui-st-bar i{display:block;height:100%;border-radius:inherit;background:var(--casora-popup-accent, var(--casora-color-teal, #4E9E95));'
+    +   'transition:width .18s cubic-bezier(.36,0,.16,1);}'
+    + '.hui-st-prog{font-size:15px;font-weight:600;color:' + S.sub + ';}'
+    + '.hui-st-act{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 20px;'
+    +   'border-radius:999px;font-size:var(--casora-fs-row, 15px);font-weight:700;white-space:nowrap;cursor:pointer;'
+    +   'user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;background:' + S.ctl + ';color:' + T.ink + ';}'
+    + '.hui-st-act > *{pointer-events:none;}'
+    + '.hui-st-act small{font-size:var(--casora-fs-sub, 13px);font-weight:600;opacity:.8;}'
+    + '.hui-st-act.pri{background:var(--casora-popup-accent, var(--casora-soft-primary, #94603B));color:var(--casora-popup-action-ink, rgba(46,34,20,.9));}'
+    + '.hui-st-act.dng{background:transparent;box-shadow:var(--casora-v3-pill-edge, inset 0 0 0 1.5px ' + S.ctl + ');color:var(--casora-color-red-text, var(--casora-color-red));}'
+    + '.hui-st-act:active{transform:scale(var(--casora-press-scale, .97));}'
+    // S6: value + trend, chart, range segment.
+    + '.hui-st-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;}'
+    + '.hui-st-trend{font-size:15px;font-weight:600;color:' + S.sub + ';white-space:nowrap;}'
+    + '.hui-st-chart{min-height:160px;}'
+    // S7: symbol 64 in the traffic-light colour, sentence 22/800, up to 3 facts.
+    + '.hui-st-stat{display:flex;align-items:center;gap:16px;}'
+    + '.hui-st-sym{flex:none;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:var(--st-tone);color:#fff;}'
+    + '.hui-st-sym .g{width:32px;height:32px;background-color:currentColor;-webkit-mask:var(--g) center / contain no-repeat;mask:var(--g) center / contain no-repeat;}'
+    + '.hui-st-text{font-size:22px;font-weight:800;letter-spacing:-0.01em;line-height:1.2;min-width:0;}'
+    + '.hui-st-facts{display:grid;grid-template-columns:repeat(var(--n,1),minmax(0,1fr));gap:12px;}'
+    + '.hui-st-facts b{display:block;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+    + '.hui-st-facts small{display:block;font-size:13px;font-weight:500;color:' + S.sub + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+    + '.hui-st-img{border-radius:calc(var(--casora-v3-stage-radius, 32px) - var(--casora-v3-stage-pad, 20px));overflow:hidden;}'
+    + '@media (max-width:760px){.hui-stage .hui-vs{width:88px;height:200px;}.hui-st-pm .hui-st-n{font-size:64px;}.hui-st-chart{min-height:140px;}}'
+    + '@media (prefers-reduced-motion:reduce){.hui-stage *{transition:none!important;}}';
+  function stGlyph(name, cls) {
+    if (!name) return '';
+    if (String(name).indexOf(':') !== -1) return '<ha-icon class="' + esc(cls) + '" icon="' + esc(name) + '" style="display:flex;"></ha-icon>';
+    var url = typeof window.casoraIconUrl === 'function' ? window.casoraIconUrl(name) : '/casora_assets/icons/' + name + '.svg';
+    return '<div class="' + esc(cls) + '" style="-webkit-mask:url(\'' + esc(url) + '\') center / contain no-repeat;mask:url(\'' + esc(url) + '\') center / contain no-repeat;"></div>';
+  }
+  // Number for the stage: German comma by locale, unit apart.
+  function stNum(v, digits) {
+    if (v == null || v === '') return '';
+    var n = Number(v);
+    if (!isFinite(n)) return String(v);
+    var loc = window.casoraLocale ? window.casoraLocale() : 'de-DE';
+    return n.toLocaleString(loc, digits != null ? { minimumFractionDigits: digits, maximumFractionDigits: digits } : { maximumFractionDigits: 1 });
+  }
+  // Only data-* attributes (checked), values escaped – like actions().
+  function stAttrs(a) {
+    var out = '';
+    Object.keys(a || {}).forEach(function (k) { if (/^data-[\w-]+$/.test(k)) out += ' ' + esc(k) + '="' + esc(a[k]) + '"'; });
+    return out;
+  }
+  function stPill(a) {
+    if (!a || !a.text) return '';
+    var spec = a.svc ? (a.danger && !a.svc.confirm ? Object.assign({}, a.svc, { confirm: a.confirm || true })
+      : (a.confirm ? Object.assign({}, a.svc, { confirm: a.confirm }) : a.svc)) : null;
+    return '<div class="hui-st-act' + (a.primary && !a.danger ? ' pri' : '') + (a.danger ? ' dng' : '') + '" role="button" aria-label="' + esc(a.text) + '"'
+      + (spec ? ' data-casora-svc="' + esc(JSON.stringify(spec)) + '"' : '') + stAttrs(a.attrs) + '>'
+      + (a.icon ? '<ha-icon icon="' + esc(a.icon) + '" style="--mdc-icon-size:20px;width:20px;height:20px;display:flex;"></ha-icon>' : '')
+      + '<span>' + esc(a.text) + '</span>' + (a.sub ? '<small>· ' + esc(a.sub) + '</small>' : '') + '</div>';
+  }
+  // Vertical slider (S1 fill from below, S3 fill from above). spec = data-casora-slider payload:
+  // { domain, service, field, target, zeroOff, words: [off, mid, full] }.
+  function stSlider(v, spec, o, inv) {
+    var stLive = o.live && o.live.entities && o.live.entities.length
+      ? ' data-casora-live="fill" data-casora-ents="' + esc(JSON.stringify(o.live.entities)) + '" data-casora-attr="' + esc(o.live.attr || 'current_position') + '"'
+        + (inv ? ' data-casora-invert="1"' : '') : '';
+    var stFill = inv ? 100 - v : v;
+    return '<div class="hui-vs hui-sl' + (inv ? ' inv' : '') + '" role="slider" tabindex="0" aria-label="' + esc(o.label || '') + '"'
+      + ' aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + esc(v) + '"'
+      + (spec ? ' data-casora-slider="' + esc(JSON.stringify(Object.assign({ invert: !!inv }, spec))) + '"' : '') + '>'
+      + '<div class="hui-sl-fill"' + stLive + ' style="height:' + stFill + '%">' + (inv ? '<span class="hui-st-grip"></span>' : '') + '</div>'
+      + (inv ? '' : stGlyph(o.icon, 'hui-sl-ic')) + '</div>';
+  }
+  function stValue(n, unit, stMod) {
+    return '<div class="hui-st-val' + (stMod ? ' ' + esc(stMod) : '') + '"><span class="hui-st-n">' + esc(n) + '</span>'
+      + (unit ? '<span class="hui-st-u">' + esc(unit) + '</span>' : '') + '</div>';
+  }
+  function stage(type, o) {
+    o = o || {};
+    var code = STAGE_TYPES[type];
+    if (!code) return '';
+    var body = '';
+    if (o.empty) body = empty(o.empty);
+    else if (code === 'S1' || code === 'S3') {
+      var v = Math.max(0, Math.min(100, Math.round(Number(o.value) || 0)));
+      var inv = code === 'S3' ? o.invert !== false : false;
+      var off = o.state === 'off' || (code === 'S1' && v <= 0);
+      var words = o.words || null;
+      var spec = o.svc ? Object.assign({}, o.svc, words ? { words: words } : {}) : null;
+      body = '<div class="hui-st-row">' + stSlider(v, spec, o, inv)
+        + '<div class="hui-st-side">' + (off && code === 'S1' ? stValue(T_('Aus'), '') : stValue(v, o.unit == null ? '%' : o.unit))
+        + (o.word ? '<div class="hui-st-w">' + esc(o.word) + '</div>' : '')
+        + (o.seg && o.seg.length ? '<div class="hui-st-seg">' + segments(o.seg) + '</div>' : '')
+        + '</div></div>';
+    } else if (code === 'S2') {
+      var pm = function (side, sign) {
+        var s = o[side];
+        if (!s) return '<div class="hui-st-b" aria-hidden="true" style="visibility:hidden"></div>';
+        var sv = s.svc || (s.domain ? s : null);
+        return '<div class="hui-st-b" role="button" aria-label="' + esc(sign < 0 ? 'Weniger' : 'Mehr') + '"'
+          + (sv ? ' data-casora-svc="' + esc(JSON.stringify(sv)) + '"' : '')
+          + (s.step != null ? ' data-casora-step="' + esc(sign * Math.abs(Number(s.step) || 0.5)) + '"' : '')
+          + (s.min != null ? ' data-casora-min="' + esc(s.min) + '"' : '') + (s.max != null ? ' data-casora-max="' + esc(s.max) + '"' : '')
+          + stAttrs(s.attrs) + '><span>' + (sign < 0 ? '−' : '+') + '</span></div>';
+      };
+      var n2 = o.state === 'off' && o.value == null ? T_('Aus') : stNum(o.value, o.digits == null ? 1 : o.digits);
+      body = (o.caption ? '<div class="hui-st-cap">' + esc(o.caption) + '</div>' : '')
+        + '<div class="hui-st-pm">' + pm('minus', -1)
+        + '<div class="hui-st-val"><span class="hui-st-n hp-st-v"><span class="n">' + esc(n2) + '</span></span>'
+        + (o.unit !== '' && n2 !== T_('Aus') ? '<span class="hui-st-u">' + esc(o.unit == null ? '°' : o.unit) + '</span>' : '') + '</div>'
+        + pm('plus', 1) + '</div>'
+        + (o.foot ? '<div class="hui-st-foot">' + esc(o.foot) + '</div>' : '');
+    } else if (code === 'S4') {
+      var p4 = Math.max(0, Math.min(1, Number(o.progress) || 0));
+      body = '<div>' + stValue(o.value, o.unit || '') + (o.word ? '<div class="hui-st-w">' + esc(o.word) + '</div>' : '') + '</div>'
+        + (o.progress != null ? '<div class="hui-st-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'
+          + Math.round(p4 * 100) + '"><i style="width:' + Math.round(p4 * 1000) / 10 + '%"></i></div>' : '')
+        + (o.program ? '<div class="hui-st-prog">' + esc(o.program) + '</div>' : '')
+        + stPill(o.action);
+    } else if (code === 'S5') {
+      body = '<div class="hui-st-img">' + (o.html || '') + '</div>' + (o.controls || '');
+    } else if (code === 'S6') {
+      body = '<div class="hui-st-head">' + stValue(o.value, o.unit || '') + (o.trend ? '<div class="hui-st-trend">' + esc(o.trend) + '</div>' : '') + '</div>'
+        + '<div class="hui-st-chart">' + (o.chart || '') + '</div>'
+        + (o.range && o.range.length ? segments(o.range) : '');
+    } else if (code === 'S7') {
+      var facts = (o.facts || []).filter(Boolean).slice(0, 3);
+      var url7 = o.icon && String(o.icon).indexOf(':') < 0 ? (typeof window.casoraIconUrl === 'function' ? window.casoraIconUrl(o.icon) : '/casora_assets/icons/' + o.icon + '.svg') : null;
+      body = '<div class="hui-st-stat"><div class="hui-st-sym" style="--st-tone:' + esc(TONE[o.tone] || TONE.good) + '">'
+        + (url7 ? '<div class="g" style="--g:url(\'' + esc(url7) + '\')"></div>'
+          : (o.icon ? '<ha-icon icon="' + esc(o.icon) + '" style="--mdc-icon-size:32px;display:flex;"></ha-icon>' : ''))
+        + '</div><div class="hui-st-text">' + esc(o.text) + '</div></div>'
+        + (facts.length ? '<div class="hui-st-facts" style="--n:' + facts.length + '">' + facts.map(function (f) {
+          return '<div><b>' + esc(f.value) + '</b><small>' + esc(f.label) + '</small></div>';
+        }).join('') + '</div>' : '')
+        + stPill(o.action);
+    } else body = o.html || '';
+    var stCls = 'hui-stage s' + code.slice(1) + (o.state === 'off' ? ' off' : '') + (o.state === 'na' ? ' na' : '');
+    return '<style>' + STAGE_CSS + '</style><div class="' + stCls + '" data-casora-stage="' + code + '"'
+      + (o.state === 'na' ? ' aria-disabled="true"' : '') + '>' + body + (o.extra || '') + '</div>';
+  }
+  var T_ = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
+  // UI.quick(items, label): 2–4 equal tiles (§5); more than 4 → the first 3 and „Alle (n)“ (o.page).
+  //   items: [{ icon, text, sub, active, svc, confirm, attrs }] – never dangerous (rule test popup_v3.mjs).
+  var QUICK_CSS = '.hui-quick{font-family:' + T.font + ';text-align:left;}'
+    + '.hui-qk-g{display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:10px;}'
+    + '.hui-qk{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:8px;min-height:var(--casora-v3-quick-h, 96px);'
+    +   'padding:14px;border-radius:var(--casora-v3-quick-radius, 24px);background:' + S.ctl + ';color:' + T.ink + ';cursor:pointer;min-width:0;'
+    +   'user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;'
+    +   'transition:background-color var(--casora-dur-feedback, 160ms) ease, box-shadow var(--casora-dur-feedback, 160ms) ease;}'
+    + '.hui-qk > *{pointer-events:none;}'
+    + '.hui-qk .ic{align-self:flex-start;margin:0;flex:none;width:24px;height:24px;color:' + S.sub + ';background-color:currentColor;--mdc-icon-size:24px;}'
+    + '.hui-qk ha-icon.ic{background:none;}'
+    + '.hui-qk b{display:block;font-size:14px;font-weight:700;line-height:1.25;overflow-wrap:normal;word-break:normal;}'
+    + '.hui-qk small{display:block;font-size:12px;font-weight:500;color:' + S.sub + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+    + '.hui-qk.on{background:var(--casora-soft-seg-on, #FFFDF9);box-shadow:var(--casora-soft-seg-on-shadow, none);}'
+    + '.hui-qk.on .ic{color:var(--casora-popup-accent, var(--casora-color-orange, #FF9F0A));}'
+    + '.hui-qk:active{transform:scale(var(--casora-press-scale, .97));}'
+    + '@media (hover:hover){.hui-qk:not(.on):hover{background:' + S.rowHover + ';}}'
+    + '@media (max-width:760px){.hui-qk-g.n4{grid-template-columns:repeat(2,minmax(0,1fr));}}'
+    + '@media (prefers-reduced-motion:reduce){.hui-qk{transition:none;}}';
+  function quick(items, label, o) {
+    o = o || {};
+    var list = (items || []).filter(function (x) { return x && x.text && !x.danger; });
+    if (!list.length) return '';
+    if (list.length > 4) {
+      var all = list.length;
+      list = list.slice(0, 3).concat([{ icon: 'mdi:dots-horizontal', text: 'Alle (' + all + ')', page: o.page || null, all: true }]);
+    }
+    var tiles = list.map(function (it) {
+      var spec = it.svc ? (it.confirm ? Object.assign({}, it.svc, { confirm: it.confirm }) : it.svc) : null;
+      return '<div class="hui-qk' + (it.active ? ' on' : '') + '" role="button" aria-label="' + esc(it.text) + '" aria-pressed="' + (it.active ? 'true' : 'false') + '"'
+        + (spec ? ' data-casora-svc="' + esc(JSON.stringify(spec)) + '"' : '')
+        + (it.page ? ' data-casora-page="' + esc(it.page) + '"' : '') + stAttrs(it.attrs) + '>'
+        + stGlyph(it.icon, 'ic')
+        + '<div><b>' + esc(it.text) + (it.all ? ' ›' : '') + '</b>'
+        + (it.sub || it.active ? '<small>' + esc(it.sub || 'Aktiv') + '</small>' : '') + '</div></div>';
+    }).join('');
+    return '<style>' + QUICK_CSS + '</style><div class="hui-quick" data-casora-quick="' + list.length + '">'
+      + (label ? softLabel(label) : '')
+      + '<div class="hui-qk-g' + (list.length === 4 ? ' n4' : '') + '" style="--n:' + list.length + '">' + tiles + '</div></div>';
+  }
+
   window._casoraUI = { line: softLine, hero: hero, headline: headline, group: group, legend: legend, note: note, kiCard: kiCard, shelf: shelf, mediaRow: mediaRow, segments: segments, slider: slider, icon: icon, esc: esc, prime: prime, plantWater: plantWater, soft: soft, label: softLabel, tokens: T, v: 149 };
   window._casoraUI.more = more;
   Object.assign(window._casoraUI, { section: section, row: row, settingsRow: settingsRow, settings: settings, actions: actions,
-    empty: empty, width: width, switchHtml: switchHtml, page: page, SEC_ORDER: SEC_ORDER, WIDTH: WIDTH });
+    empty: empty, width: width, switchHtml: switchHtml, page: page, SEC_ORDER: SEC_ORDER, WIDTH: WIDTH,
+    stage: stage, quick: quick, STAGE_TYPES: STAGE_TYPES });
   window.casoraPopupWidth = width;
 
   // Symmetry (rule 12, owner 26.10.2026: „Symmetrie ist wichtig!“): in a two-column popup both columns

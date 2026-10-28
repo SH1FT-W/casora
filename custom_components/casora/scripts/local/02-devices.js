@@ -1062,6 +1062,16 @@
   H.layout = function (o) {
     var f = o.fields, has = function (k) { return f[k] !== undefined && f[k] !== null && f[k] !== ''; };
     var top = (o.top || ['hero']).filter(has), L = (o.left || []).filter(has), R = (o.right || []).filter(has);
+    /* Popup v3 (richtlinien §2, §14): o.stage / o.quick name the fields of the stage and the quick choice – both on
+       top of the left column, then left, right, settings, more as before. A picture stage (S5, o.stageWide) spans
+       both columns. */
+    var v3 = [o.stage, o.quick].filter(function (k) { return k && has(k) && top.indexOf(k) < 0; });
+    if (v3.length) {
+      L = L.filter(function (k) { return v3.indexOf(k) < 0; }); R = R.filter(function (k) { return v3.indexOf(k) < 0; });
+      var wideSt = o.stage && v3[0] === o.stage && (o.stageWide || /data-casora-stage=\\?"S5/.test(String(f[o.stage])));
+      if (wideSt) { top = top.concat([o.stage]); v3 = v3.slice(1); }
+      L = v3.concat(L);
+    }
     /* Blueprint v2 (rule 8): o.settings = the device's entity → section „Einstellungen“ with „Weitere
        Einstellungen“ as the last section – right column before „Mehr“, or at the end of the only column. */
     var UIb = window._casoraUI;

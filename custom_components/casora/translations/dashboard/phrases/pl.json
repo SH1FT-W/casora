@@ -4654,6 +4654,10 @@
   [
    "^Alle (\\d+) anzeigen$",
    "Pokaż wszystkie {1}"
+  ],
+  [
+   "^Alle \\((\\d+)\\)$",
+   "Wszystkie ({1})"
   ]
  ]
 }

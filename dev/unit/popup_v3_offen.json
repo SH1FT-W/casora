@@ -1,0 +1,435 @@
+[
+ {
+  "popup": "Licht (Raum, Haus, Leuchte aus der Gruppe)",
+  "vorlagen": [
+   "casora_popup_light"
+  ],
+  "modul": "03-popups.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Fußbodenheizung (Haus/Raum)",
+  "vorlagen": [
+   "casora_popup_fbh"
+  ],
+  "modul": "03-popups.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Jalousien (Raum/Gruppe)",
+  "vorlagen": [
+   "casora_popup_cover"
+  ],
+  "modul": "34-security-covers.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Leuchte (einzeln)",
+  "vorlagen": [
+   "casora_light"
+  ],
+  "modul": "33-color-wheel.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Thermostat",
+  "vorlagen": [
+   "casora_thermostat"
+  ],
+  "modul": "03-popups.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Klima (Raum)",
+  "vorlagen": [
+   "casora_climate_popup"
+  ],
+  "modul": "01-basis.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Klimaanlage Velair",
+  "vorlagen": [
+   "casora_popup_velair"
+  ],
+  "modul": "31-velair.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Lüfter",
+  "vorlagen": [
+   "casora_fan"
+  ],
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Luftreiniger",
+  "vorlagen": [
+   "casora_air_purifier"
+  ],
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Luftbefeuchter",
+  "vorlagen": [
+   "casora_humidifier"
+  ],
+  "modul": "19-befeuchter.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Schalter",
+  "vorlagen": [
+   "casora_switch"
+  ],
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Jalousie (einzeln)",
+  "vorlagen": [
+   "casora_cover"
+  ],
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Medien-Player",
+  "vorlagen": [
+   "casora_media"
+  ],
+  "modul": "07-weich-spezial.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Now Playing (Kachel/Chip)",
+  "vorlagen": [
+   "casora_now_playing_primary",
+   "casora_now_playing_chip"
+  ],
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Medien-Badge",
+  "vorlagen": [
+   "casora_popup_media"
+  ],
+  "modul": "32-media-badge.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Gerät allgemein",
+  "vorlagen": [
+   "casora_entity_actions"
+  ],
+  "modul": "05-standard-medien.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Waschmaschine/Trockner",
+  "vorlagen": [
+   "casora_popup_laundry",
+   "casora_appliance"
+  ],
+  "modul": "02-devices.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Geschirrspüler",
+  "vorlagen": [
+   "casora_popup_dishwasher"
+  ],
+  "modul": "02-devices.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "3D-Drucker",
+  "vorlagen": [
+   "casora_popup_3d_printer"
+  ],
+  "modul": "02-devices.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Saugroboter",
+  "vorlagen": [
+   "casora_vacuum"
+  ],
+  "modul": "02-devices.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Mähroboter",
+  "vorlagen": [
+   "casora_popup_lawn_mower"
+  ],
+  "modul": "16-maeher.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Kaffeevollautomat",
+  "vorlagen": [
+   "casora_popup_coffee"
+  ],
+  "modul": "25-coffee.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Kühlschrank",
+  "vorlagen": [
+   "casora_popup_fridge"
+  ],
+  "modul": "30-fridge.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Aquarium, Becken, Aquarium-Licht",
+  "vorlagen": [
+   "casora_aquarium",
+   "casora_popup_aquarium_tank",
+   "casora_aquarium_light"
+  ],
+  "modul": "02-devices.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Fahrzeug",
+  "vorlagen": [
+   "casora_popup_car"
+  ],
+  "modul": "03-popups.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "E-Bike",
+  "vorlagen": [
+   "casora_popup_ebike"
+  ],
+  "modul": "03-popups.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Haustier",
+  "vorlagen": [
+   "casora_popup_pet"
+  ],
+  "modul": "26-haustier.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Sicherheit (Badge, Gruppe)",
+  "vorlagen": [
+   "casora_badge_security",
+   "casora_badge_security_group"
+  ],
+  "modul": "35-phone-hub.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Türen & Fenster",
+  "vorlagen": [
+   "casora_popup_contacts"
+  ],
+  "modul": "34-security-covers.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Jalousien in Sicherheit",
+  "vorlagen": [
+   "casora_popup_security_covers"
+  ],
+  "modul": "34-security-covers.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Schloss",
+  "vorlagen": [
+   "casora_popup_lock"
+  ],
+  "modul": "13-schloss.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Alarmanlage",
+  "vorlagen": [
+   "casora_popup_alarm"
+  ],
+  "modul": "07-weich-spezial.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Updates",
+  "vorlagen": [
+   "casora_popup_updates"
+  ],
+  "modul": "03-popups.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Netzwerk",
+  "vorlagen": [
+   "casora_network",
+   "casora_popup_network"
+  ],
+  "modul": "01-basis.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Person / Anwesenheit",
+  "vorlagen": [
+   "casora_popup_person",
+   "casora_badge_presence_group"
+  ],
+  "modul": "15-person.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Klima-Gruppe (Badge)",
+  "vorlagen": [
+   "casora_badge_climate_group"
+  ],
+  "modul": "35-phone-hub.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Batterien",
+  "vorlagen": [
+   "casora_popup_battery"
+  ],
+  "modul": "08-weich-kompakt.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Wetterwarnung",
+  "vorlagen": [
+   "casora_popup_weather_warning"
+  ],
+  "modul": "01-basis.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Lüften-Coach",
+  "vorlagen": [
+   "casora_popup_vent"
+  ],
+  "modul": "05-standard-medien.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Pulse",
+  "vorlagen": [
+   "casora_popup_pulse"
+  ],
+  "modul": "14-pulse.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Energie (mit Energiefluss)",
+  "vorlagen": [
+   "casora_popup_energy"
+  ],
+  "modul": "20-energie-fokus.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Diagramm-Kachel",
+  "vorlagen": [
+   "casora_popup_chart"
+  ],
+  "modul": "27-chart.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Messwertseite / Geräteseite",
+  "vorlagen": [],
+  "modul": "18-ziele.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Pflanze",
+  "vorlagen": [
+   "casora_popup_plant"
+  ],
+  "modul": "01-basis.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Wetter",
+  "vorlagen": [
+   "casora_weather"
+  ],
+  "modul": "01-basis.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Kamera",
+  "vorlagen": [
+   "casora_popup_camera"
+  ],
+  "modul": "07-weich-spezial.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Klingel",
+  "vorlagen": [
+   "casora_popup_reolink_doorbell"
+  ],
+  "modul": "24-klingel.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Frigate",
+  "vorlagen": [
+   "casora_popup_frigate"
+  ],
+  "modul": "23-frigate.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Kalender",
+  "vorlagen": [
+   "casora_popup_calendar"
+  ],
+  "modul": "06-kalender.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Abfall",
+  "vorlagen": [
+   "casora_trash"
+  ],
+  "modul": "06-kalender.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Fußball",
+  "vorlagen": [
+   "casora_popup_football"
+  ],
+  "modul": "11-fussball.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Rezepte",
+  "vorlagen": [
+   "casora_popup_recipe"
+  ],
+  "modul": "03-popups.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Freie Kachel / eigenes Badge",
+  "vorlagen": [
+   "casora_popup_free"
+  ],
+  "modul": "28-free-tile.js",
+  "grund": "noch nicht dran"
+ },
+ {
+  "popup": "Liste von Entitäten / „Mehr“",
+  "vorlagen": [
+   "casora_popup_entity_list",
+   "casora_popup_more"
+  ],
+  "modul": "34-entity-list.js",
+  "grund": "noch nicht dran"
+ }
+]

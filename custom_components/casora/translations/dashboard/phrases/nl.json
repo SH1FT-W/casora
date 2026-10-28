@@ -4654,6 +4654,10 @@
   [
    "^Alle (\\d+) anzeigen$",
    "Alle {1} tonen"
+  ],
+  [
+   "^Alle \\((\\d+)\\)$",
+   "Alle ({1})"
   ]
  ]
 }
