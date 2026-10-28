@@ -62,7 +62,10 @@ console.log('ok Live-Ende');
   assert.equal(d[6], new Date(2026, 9, 27).getTime());
   d.forEach((t) => { const x = new Date(t); assert.equal(x.getHours() + x.getMinutes(), 0, 'Mitternacht'); });
   const i = d.indexOf(new Date(2026, 9, 25).getTime());
-  assert.equal(d[i + 1] - d[i], 25 * H, '25.10. hat 25 Stunden');
+  // Days follow local midnights: 25 h on 25.10. in Europe/Berlin, 24 h in a zone without DST (TZ=UTC).
+  const dst = new Date(2026, 9, 26).getTime() - new Date(2026, 9, 25).getTime();
+  if (process.env.TZ === 'Europe/Berlin') assert.equal(dst, 25 * H, 'Europe/Berlin: 25.10. has 25 hours');
+  assert.equal(d[i + 1] - d[i], dst, '25.10. lasts as long as the local day');
 }
 console.log('ok Tage');
 
