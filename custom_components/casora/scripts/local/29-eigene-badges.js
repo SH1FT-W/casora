@@ -1,9 +1,10 @@
 // ── Own badges (issue #53): any number of badges per room, from an entity or a Jinja template ──
 // The Studio stores them in the room's variables (custom_badges: [{name, icon, color, entity | template, tap,
-// navigate, navigate_filter}]). The badge row of casora_room (and, derived from it, the phone room page; the
-// phone's start page via casora_mobile_filter_badges) carries one card `custom:casora-custom-badges`, which draws
-// one real button-card per entry with the template casora_badge_custom – so every entry looks and behaves like the
-// built-in badges (pill, icon circle, haptic, "Who sees this?"), and the list has no upper limit.
+// navigate, navigate_filter, ask}]; tap 'run' runs a script, scene or button, ask: true asks first, #90). The badge
+// row of casora_room (and, derived from it, the phone room page; the phone's start page via
+// casora_mobile_filter_badges) carries one card `custom:casora-custom-badges`, which draws one real button-card
+// per entry with the template casora_badge_custom – so every entry looks and behaves like the built-in badges
+// (pill, icon circle, haptic, "Who sees this?"), and the list has no upper limit.
 //
 //   window._casoraTemplates.watch(template, cb) → unsubscribe   one HA render_template subscription per template
 //   window._casoraTemplates.text(template)      → last result or null (cached per template string)
@@ -165,6 +166,10 @@
       }
       if (t === 'own_popup') return null;
       if (t === 'popup' && b.entity) return { action: 'more-info', entity: String(b.entity), haptic: 'light' };
+      // run (#90): a script, scene or button runs; casora_run lets the confirmation (casora-core.js) see past the
+      // template's popup config, which button-card merges into this tap_action.
+      var svc = t === 'run' && b.entity && window.casoraRunService ? window.casoraRunService(String(b.entity)) : '';
+      if (svc) return { action: 'call-service', service: svc, service_data: { entity_id: String(b.entity) }, casora_run: true, haptic: 'medium' };
       return { action: 'none' };
     },
   };
@@ -185,6 +190,8 @@
     };
     var tap = CB.tap(b, place);
     if (tap) cfg.tap_action = tap;
+    // Same switch as a tile's "Ask before switching" (casora-core.js reads it from the card's variables).
+    if (tap && tap.casora_run && b.ask === true) cfg.variables.confirm_toggle = true;
     if (b && typeof b.entity === 'string' && b.entity) cfg.entity = b.entity;
     return cfg;
   };

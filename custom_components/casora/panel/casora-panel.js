@@ -4310,6 +4310,9 @@ const ACTION_DOMAINS = [
   "siren", "switch", "vacuum", "valve", "water_heater",
 ];
 
+// Entities a tap can run (casoraRunService in casora-core.js).
+const RUN_DOMAINS = ["script", "scene", "button", "input_button"];
+
 const actionFields = (n) => {
   const set = (v) => !!(v && String(v).trim());
   const has = (vars) => set(vars["action_" + n + "_entity"]);
@@ -4760,6 +4763,10 @@ const TILE_TYPES = [
     glyphFromEntity: ACTION_GLYPH,
     fields: [
       ICON_FIELD,
+      // #86/#90: a script, scene or button runs on tap (template casora_entity_actions, window.casoraRunService).
+      { key: "tap_run", label: "Tap runs it", type: "bool", boolDefault: false,
+        when: (vars, tile) => RUN_DOMAINS.includes(String((tile && tile.entity) || "").split(".")[0]),
+        hint: "Tapping the tile runs the script, scene or button right away. Holding the tile still opens its popup." },
       ...PROGRESS_FIELDS,
       ...actionFields(1),
       ...actionFields(2),
@@ -26800,11 +26807,20 @@ class CasoraPanel extends HTMLElement {
       }
 
       // Tap: nothing, the device's popup, an own popup (#60) or a room's page.
-      const tap = b.tap === "navigate" || b.tap === "own_popup" || (b.tap === "popup" && src === "entity") ? b.tap : "none";
-      const tapOpts = src === "entity" ? ["none", "popup", "own_popup", "navigate"] : ["none", "own_popup", "navigate"];
+      // #90: "Run it" for a script, scene or button – optionally after a question (variables.confirm_toggle, casora-core.js).
+      const runs = src === "entity" && RUN_DOMAINS.includes(String(b.entity || "").split(".")[0]);
+      const tap = b.tap === "navigate" || b.tap === "own_popup" || (b.tap === "popup" && src === "entity") || (b.tap === "run" && runs) ? b.tap : "none";
+      const tapOpts = src === "entity" ? ["none", "popup", "own_popup", "navigate"].concat(runs ? ["run"] : []) : ["none", "own_popup", "navigate"];
       const tapPick = this._combo(tap, tapOpts, "", (v) => patch(i, { tap: v === "none" ? "" : v }, true),
-        { fixed: true, labels: { none: "Do nothing", popup: "Popup", own_popup: "Own popup", navigate: "Go to room" } });
+        { fixed: true, labels: { none: "Do nothing", popup: "Popup", own_popup: "Own popup", navigate: "Go to room", run: "Run it" } });
       box.appendChild(rowOf("On tap", tapPick.wrap));
+      if (tap === "run") {
+        box.appendChild(rowOf("Ask before switching", this._boolSwitch(b.ask === true, false, (v) => patch(i, { ask: v ? true : "" }, false), "Ask before switching")));
+        const h = document.createElement("div");
+        h.className = "hint";
+        h.textContent = "A calm question before this runs. For the front door, the gate or everything off.";
+        box.appendChild(h);
+      }
       if (tap === "own_popup") this._badgePopupFields(room, box, b, src === "entity", (popup, redraw) => patch(i, { popup }, redraw), rowOf);
       if (tap === "navigate") {
         const paths = rooms.map((r) => r.path);
@@ -28269,9 +28285,9 @@ class CasoraPanel extends HTMLElement {
 
     // Welche Felder gerade sichtbar sind (when): ändert eine Eingabe das, zeichnet after() neu –
     // sonst blieb z. B. „Akku-Hinweise“ nach dem Leeren von „Akku Lecksensor“ stehen.
-    const shownSig = () => tfields.filter((f) => !f.when || f.when(tile.variables || {})).map((f) => f.key).join("|");
+    const shownSig = () => tfields.filter((f) => !f.when || f.when(tile.variables || {}, tile)).map((f) => f.key).join("|");
     const shown0 = shownSig();
-    tfields.filter((f) => !f.when || f.when(tile.variables || {})).forEach((f) => {
+    tfields.filter((f) => !f.when || f.when(tile.variables || {}, tile)).forEach((f) => {
       const cur = (tile.variables || {})[f.key];
       let input;
       const put = f.section ? dropRow(f.section) : f.advanced ? advRow : ((label, input) => {

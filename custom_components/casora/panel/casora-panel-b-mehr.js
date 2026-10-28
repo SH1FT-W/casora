@@ -1701,7 +1701,11 @@
             h.className = "hint";
             // Since the user test every switching path of the tile asks, the popup too (casora-core.js).
             const moves = /^(cover|valve)\./.test(String(inner.entity || inner.variables && inner.variables.cover_entity || ""));
-            h.textContent = moves
+            // Scripts, scenes and buttons run rather than switch (#86, #90).
+            const runs = /^(script|scene|button|input_button)\./.test(String(inner.entity || ""));
+            h.textContent = runs
+              ? tr("A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.")
+              : moves
               ? tr("A calm question before this opens or closes – on the tile and in its popup. For the garage door, the gate or the blinds.")
               : tr("A calm question before this device turns on or off – on the tile and in its popup. For the oven, the garage or the pump.");
             h.setAttribute("data-no-i18n", "");

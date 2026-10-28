@@ -423,7 +423,8 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
   var switching = function (d) {
     var cfg = (d && d.config) || {};
     var act = cfg[((d && d.action) || 'tap') + '_action'] || {};
-    if (act.casora_popup) return null;
+    // casora_run: the tile's tap runs its script/scene/button (#86) – the popup config only rides along.
+    if (act.casora_popup && act.casora_run !== true) return null;
     var a = String(act.action || '');
     if (a === 'toggle') return act;
     if (a !== 'call-service' && a !== 'perform-action') return null;
@@ -453,6 +454,9 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       // Schlösser: dieselben Wörter wie die Knöpfe der Schloss-Ansicht (1.2.1, D2).
       : /\.unlock$/.test(svc) ? 'Entriegeln' : /\.lock$/.test(svc) ? 'Verriegeln'
       : (s === 'on' || s === 'open' || s === 'playing' || s === 'unlocked') ? 'Ausschalten' : 'Einschalten';
+    // Scripts, buttons and scenes run rather than switch (#86, #90); a running script's toggle stops it.
+    if (/^(script|button|input_button)\./.test(id) && !(s === 'on' && !/\.turn_on$/.test(svc))) verb = 'Ausführen';
+    if (/^scene\./.test(id)) verb = 'Aktivieren';
     if (/^(cover|valve)\./.test(id) && verb === 'Einschalten') verb = 'Öffnen';
     if (/^(cover|valve)\./.test(id) && verb === 'Ausschalten') verb = 'Schließen';
     return { name: name, verb: verb };
@@ -576,6 +580,9 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     return [].concat(tgt.entity_id || act.entity || (cfg && cfg.entity) || [])[0] || '';
   };
   // Auch ohne Kachel im Pfad (Popup-Schalter, Knöpfe im Popup): Entität einer Kachel mit Rückfrage.
+  // Service that runs a script, scene or button on tap (#86, #90: tile "On tap: Run it", own badge "Run it"); '' otherwise.
+  var RUN_SVC = { script: 'script.turn_on', scene: 'scene.turn_on', button: 'button.press', input_button: 'input_button.press' };
+  window.casoraRunService = function (id) { return (typeof id === 'string' && RUN_SVC[id.split('.')[0]]) || ''; };
   window.casoraAsksFirst = function (id) { return !!id && confirmIds().indexOf(id) !== -1; };
   // Eigene Rückfrage im selben Stil (07.10.2026, „Alles aus“ im Haus-Licht-Popup):
   // { title, text?, yes, input?: { placeholder } } – Promise<true> bei „Ja“ (mit input: der Text oder false);

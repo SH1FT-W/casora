@@ -2717,7 +2717,12 @@
     "Casora found no power sensor for it, so your choice stays.": "Casora hat dafür keinen Leistungssensor gefunden, deine Wahl bleibt.",
     "Energy badge back to automatic": "Energie-Badge wieder auf Automatisch",
     "Show blinds": "Jalousien anzeigen",
-    "Adds a Blinds row to the climate popup.": "Zeigt im Klima-Popup eine Zeile „Jalousien“."
+    "Adds a Blinds row to the climate popup.": "Zeigt im Klima-Popup eine Zeile „Jalousien“.",
+    "Tap runs it": "Tippen führt aus",
+    "Tapping the tile runs the script, scene or button right away. Holding the tile still opens its popup.": "Ein Tipp auf die Kachel führt das Skript, die Szene oder die Taste sofort aus. Halten öffnet weiterhin das Popup.",
+    "Run it": "Ausführen",
+    "A calm question before this runs. For the front door, the gate or everything off.": "Eine ruhige Rückfrage, bevor das ausgeführt wird. Für die Haustür, das Tor oder alles aus.",
+    "A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.": "Eine ruhige Rückfrage, bevor das ausgeführt wird – auf der Kachel und im Popup. Für die Haustür, das Tor oder alles aus."
   },
   "patterns": [
     [
