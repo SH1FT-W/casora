@@ -237,6 +237,15 @@ class CasoraSwipeCard extends HTMLElement {
     requestAnimationFrame(stamp);
     setTimeout(stamp, 400);
     setTimeout(stamp, 1200);
+    // A tile reads its size (size_large) while it renders: the slides were made before they hung in this card,
+    // so each draws once more now that it can see the large frame around it (else some stay small, text centred).
+    const kick = (el, d) => {
+      if (!el || d > 8) return;
+      if (el.tagName === 'BUTTON-CARD') { if (window.casoraKick) window.casoraKick(el); return; }
+      for (const k of [...(el.shadowRoot ? el.shadowRoot.children : []), ...(el.children || [])]) kick(k, d + 1);
+    };
+    setTimeout(() => this._cards.forEach((c) => kick(c, 0)), 450);
+    setTimeout(() => this._cards.forEach((c) => kick(c, 0)), 1500);
   }
 
   _stampFill(el, depth = 0) {
