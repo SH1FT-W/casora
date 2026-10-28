@@ -212,6 +212,9 @@
   // 16 px so Safari does not zoom in.
   var OVER = 'position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;padding:0;border:0;font-size:16px;cursor:pointer;'
     + '-webkit-appearance:none;appearance:none;';
+  // Touch stays with the field (#85): the popup section is a button-card whose action handler cancels the touchend,
+  // so Android never got the click that opens the choice list or the time wheel. Same guard as the dishwasher's time.
+  var TOUCH = ' ontouchstart="event.stopPropagation();" ontouchend="event.stopPropagation();"';
   var switchHtml = function (on) {
     return '<div role="switch" aria-checked="' + (on ? 'true' : 'false') + '" style="position:relative;width:44px;height:26px;'
       + 'border-radius:999px;flex:none;pointer-events:none;transition:background .2s ease;background:'
@@ -222,7 +225,7 @@
   var fieldHtml = function (id, type, shown, value, aria) {
     return '<label data-casora-elpill="" style="' + PILL + '"><span data-no-i18n>' + esc(shown) + '</span>'
       + '<input type="' + esc(type) + '" data-casora-el="' + esc(id) + '" value="' + esc(value) + '" aria-label="' + esc(aria) + '" style="' + OVER + '"'
-      + ' onclick="window._casoraEntityList&&window._casoraEntityList.pick(event,this)"'
+      + TOUCH + ' onclick="window._casoraEntityList&&window._casoraEntityList.pick(event,this)"'
       + ' onchange="window._casoraEntityList&&window._casoraEntityList.input(this)"></label>';
   };
   var selectHtml = function (id, st) {
@@ -231,7 +234,8 @@
       return '<option value="' + esc(o) + '"' + (String(o) === cur ? ' selected' : '') + '>' + esc(o) + '</option>';
     }).join('');
     return '<label data-casora-elpill="" style="' + PILL + 'max-width:min(180px, 40vw);"><span data-no-i18n style="overflow:hidden;text-overflow:ellipsis;">'
-      + esc(cur) + '</span><select data-casora-el="' + esc(id) + '" data-no-i18n style="' + OVER + '"'
+      + esc(cur) + '</span><select data-casora-el="' + esc(id) + '" data-no-i18n style="' + OVER + '"' + TOUCH
+      + ' onclick="event.stopPropagation();window._casoraSuppressDismiss=Date.now()+800;"'
       + ' onchange="window._casoraEntityList&&window._casoraEntityList.input(this)">' + optsHtml + '</select></label>';
   };
   var stepHtml = function (id, st, dir) {
