@@ -59,7 +59,7 @@ def vacuum_map(fixture: dict) -> None:
 def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict | None = None) -> dict:
     """Fixture plus the made-up devices, in the order async_setup_entry always used."""
     from . import (aquarium, befeuchter, coffee, dishwasher, ebike, frigate, fussball, haustier, halten, hubs, klingel, fridge,
-                   live, maeher, testserver, velair, waesche, wetter)
+                   kettle, live, maeher, shopping, testserver, velair, waesche, wetter)
     if stress:
         merge(fixture, stress)
     # Demo house (dev/demo/demo_fixture.py sets "_demo"): without the German test devices (washers A/B with
@@ -106,6 +106,10 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
         hubs.join_house_group(fixture)
         # A made-up air conditioner planned by a Velair-like scheduler (community card #32), see velair.py.
         merge(fixture, velair.extra(now), "Testklimaanlage + Velair")
+        # Two made-up kettles, BLE-like (only shows) and one with target and keep warm (community card #87), see kettle.py.
+        merge(fixture, kettle.extra(now), "Testkocher/Testwasserkocher")
+        # A made-up shopping list (community card #82), see shopping.py.
+        merge(fixture, shopping.extra(now), "Testeinkauf")
     vacuum_map(fixture)
     # Only on request: HACS-like update entity for Casora (hacs_casora.py).
     if hacs:

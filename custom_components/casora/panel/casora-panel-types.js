@@ -381,6 +381,19 @@ window.CASORA_TILE_TYPES = [
     community: { desc: "How many items are open on the tile. The popup lists them with Bring's specification, ticks one off with a tap, adds new ones and clears the ticked ones. For Bring! and every other to-do list in Home Assistant.",
       needs: "todo", needsText: "For every to-do list, Bring! first", needsMissing: "No to-do list yet" },
     fields: [ICON, TITLE_NAME] },
+  // Kettle (community card, card request #87): a kettle's water temperature – Xiaomi BLE's Smart Kettle (YM-K1501, V-SK152)
+  // or any device named like a kettle (casoraKettleFind in 00-finder.js). Tile: temperature and whether it heats; popup: ring
+  // with the water temperature, target and keep warm where the integration has them (scripts/local/37-kettle.js; HA rows until popup v3).
+  { id: "casora_kettle", label: "Kettle", template: "casora_kettle", domains: ["sensor", "water_heater"],
+    icon: "kettle", color: "var(--casora-color-orange, #FF9F0A)", entityLabel: "Water temperature", entityPlaceholder: "Your kettle's temperature",
+    onlyIf: (hass) => !!(window.casoraKettleFind && window.casoraKettleFind.present(hass)),
+    community: { desc: "Water temperature and whether it heats on the tile. The popup shows the temperature in a ring, since when it heats and its history; target temperature, modes and keep warm when your kettle's integration has them. For Xiaomi's Smart Kettle (Xiaomi BLE) and other kettles in Home Assistant." },
+    fields: [ICON,
+      { key: "power_entity", label: "Heating on/off", domains: ["binary_sensor"] },
+      { key: "heater_entity", label: "Water heater entity", domains: ["water_heater"] },
+      { key: "target_entity", label: "Target temperature", domains: ["number"] },
+      { key: "keep_warm_entity", label: "Keep warm", domains: ["switch"] },
+      TITLE_NAME] },
   // Velair (community card, issue #32): a climate Velair (HACS, domain velair) plans. Tile = the thermostat tile;
   // the popup adds Velair's schedule (today, week, on/off, editing a day) from Velair's WebSocket API and services
   // (scripts/local/31-velair.js, casoraVelairFind in 00-finder.js). Only offered when an entity has the platform velair.
@@ -612,7 +625,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "shield_alarm", "shield_bypass", "shield_vacation", "calendar", "calendar-day", "window-open",
   "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower", "coffee-maker", "paw",
   "coffee-espresso", "coffee-doppio", "coffee-cup", "coffee-cappuccino", "coffee-latte", "coffee-tall", "coffee-water",
-  "coffee-milk", "coffee-tea", "chart", "velair", "list", "grid", "cart",
+  "coffee-milk", "coffee-tea", "chart", "velair", "list", "grid", "cart", "kettle",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Preview: show conditional cards (type: conditional) as the dashboard does –

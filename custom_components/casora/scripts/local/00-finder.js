@@ -3028,3 +3028,56 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     if (t && t.unref) t.unref();
   })(0);
 })();
+
+// ── Kettle (community card „Wasserkocher“, issue #87) ──────────────────────────────────────────────────────
+// A kettle is a device. Xiaomi BLE (HA core) names the YM-K1501, YM-K1501EU and V-SK152 „Smart Kettle“ and gives each
+// a temperature sensor and a power binary_sensor (xiaomi-ble obj1005: on = heating). Other integrations (Xiaomi Home,
+// Xiaomi Miot, Tuya …) are found by the device's model or name. The roles on that device go by domain and device
+// class, never by an integration's keys:
+//   temp    sensor with device_class temperature (else the water_heater's current_temperature)
+//   power   binary_sensor with device_class power, running or heat (on = heating)
+//   heater  water_heater (target temperature, operation mode – Xiaomi Home's water-heater service)
+//   target  number in °C/°F (target or keep-warm temperature)
+//   warm    switch named like keep warm
+//   casoraKettleFind.all(hass)      → [{ device, anchor, temp, power, heater, target, warm }] (anchor = temp, else heater)
+//   casoraKettleFind.of(hass, id)   → the kettle that entity belongs to, or null
+//   casoraKettleFind.present(hass)  – any kettle in the house
+(function () {
+  if (window.casoraKettleFind) return;
+  var KETTLE = /kettle|wasserkocher|bouilloire|hervidor|bollitore|waterkoker|czajnik|chaleira|YM-K1501|V-SK152/i;
+  var WARM = /keep.?warm|warm.?halt|warmhalt|maintien|mantener|mantenere|warmhoud|podtrzym|manter/i;
+  var memo = { R: null, D: null, S: 0, list: [] };
+  var all = function (hass) {
+    var R = (hass && hass.entities) || {}, D = (hass && hass.devices) || {}, S = (hass && hass.states) || {};
+    var n = Object.keys(S).length;
+    if (memo.R === R && memo.D === D && memo.S === n) return memo.list;
+    var out = [];
+    Object.keys(D).forEach(function (did) {
+      var d = D[did] || {};
+      if (!KETTLE.test([d.name_by_user, d.name, d.model].filter(Boolean).join(' '))) return;
+      var ids = window.casoraDeviceEntities(R, did).filter(function (x) { var e = R[x]; return S[x] && !(e && (e.disabled_by || e.hidden)); });
+      var dc = function (x) { return ((S[x] || {}).attributes || {}).device_class; };
+      var name = function (x) { return x + ' ' + (((S[x] || {}).attributes || {}).friendly_name || '') + ' ' + ((R[x] || {}).translation_key || ''); };
+      var pick = function (fn) { for (var i = 0; i < ids.length; i++) if (fn(ids[i])) return ids[i]; return null; };
+      var k = { device: did,
+        temp: pick(function (x) { return /^sensor\./.test(x) && dc(x) === 'temperature'; }),
+        power: pick(function (x) { return /^binary_sensor\./.test(x) && /^(power|running|heat)$/.test(String(dc(x))); }),
+        heater: pick(function (x) { return /^water_heater\./.test(x); }),
+        target: pick(function (x) { return /^number\./.test(x) && /°[CF]/.test(String(((S[x] || {}).attributes || {}).unit_of_measurement || '')); }),
+        warm: pick(function (x) { return /^switch\./.test(x) && WARM.test(name(x)); }) };
+      k.anchor = k.temp || k.heater;
+      if (k.anchor) out.push(k);
+    });
+    memo = { R: R, D: D, S: n, list: out };
+    return out;
+  };
+  var of = function (hass, id) {
+    var list = all(hass);
+    for (var i = 0; i < list.length; i++) {
+      var k = list[i];
+      if ([k.anchor, k.temp, k.power, k.heater, k.target, k.warm].indexOf(id) >= 0) return k;
+    }
+    return null;
+  };
+  window.casoraKettleFind = { all: all, of: of, present: function (hass) { return all(hass).length > 0; } };
+})();

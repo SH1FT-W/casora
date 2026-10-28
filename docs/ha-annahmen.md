@@ -225,6 +225,23 @@ Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCE
   `dev/qa/regress/r331_velair_schedule.mjs`, Testhaus `dev/casora_mock/velair.py` (Entitäten unter `platform` `velair`,
   WebSocket-Befehle und Dienste nachgebaut). HACS, nicht im Kern prüfbar.
 
+- `xiaomi_ble` (Kern, xiaomi-ble 1.x, Stand 28.10.2026, Community-Karte „Wasserkocher“, #87): Smart Kettle YM-K1501,
+  YM-K1501EU und V-SK152 kommen als Gerät mit Modell `YM-K1501`/`YM-K1501EU`/`V-SK152` (Name „Smart Kettle …“) und, aus
+  MiBeacon-Objekt 0x1005, einem `sensor` mit `device_class` `temperature` (°C) und einem `binary_sensor` mit `device_class`
+  `power` (an = heizt). Keine `translation_key`s, keine Steuerung. Andere Integrationen (Xiaomi Home: Dienst
+  `water-heater` → `water_heater` mit `temperature`/`target-temperature`/`mode`; Xiaomi Miot, Tuya) erkennt Casora nur am
+  Modell/Namen des Geräts (Wasserkocher in sieben Sprachen) und nimmt dort `water_heater` (`current_temperature`,
+  `temperature`, `min_temp`/`max_temp`, `target_temp_step`, `operation_list`; `set_temperature`, `set_operation_mode`),
+  eine `number` in °C/°F (Ziel) und einen `switch`, der nach Warmhalten heißt. Code: `00-finder.js` `casoraKettleFind`,
+  `37-kettle.js`, `casora-panel.js` `TILE_MAIN_FIND.casora_kettle`, `casora-panel-b-ux.js`; Tests `dev/unit/kettle.mjs`,
+  `dev/unit/community_first_use.mjs`, Testhaus `dev/casora_mock/kettle.py`.
+- `todo` (Kern, Community-Karte „Bring! Einkaufsliste“, #82): Zustand einer To-do-Entität = Zahl der offenen Einträge;
+  Einträge über `todo/item/subscribe` (sonst `todo/item/list`) mit `uid`, `summary`, `description`, `status`
+  `needs_action`/`completed`; Dienste `add_item` (`item`, `description`), `update_item` (`item` = uid, `status`),
+  `remove_completed_items`. Bring!-Listen haben `platform` `bring`, die Bring-Beschreibung steht in `description`. Code:
+  `36-shopping.js`, `casora-panel.js` `TILE_MAIN_FIND.casora_shopping`, `casora-panel-b-ux.js`; Tests
+  `dev/unit/shopping_list.mjs`, `dev/unit/community_first_use.mjs`, Testhaus `dev/casora_mock/shopping.py`.
+
 Bekannt wacklig (Stand 2026.10.1, nicht im Test, weil es Rückfälle bzw. HACS-Schlüssel sind):
 
 - `reolink`: Kamera `clear`, `fluent`, `balanced` und Auswahl `day_night` gibt es im Kern nicht (nur Rückfall).
