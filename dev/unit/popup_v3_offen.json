@@ -57,14 +57,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Haustier",
-  "vorlagen": [
-   "casora_popup_pet"
-  ],
-  "modul": "26-haustier.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Sicherheit (Badge, Gruppe)",
   "vorlagen": [
    "casora_badge_security",

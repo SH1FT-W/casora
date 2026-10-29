@@ -134,6 +134,16 @@
     if (c.active || c.rest || c.sleepDay || c.sleepNight) f.today = { card: K.secCard(watch, call('today'), states) };
     var mapStyle = [{ 'border-radius': 'var(--casora-popup-row-radius, 26px)' }, { overflow: 'hidden' }, { 'isolation': 'isolate' },
       { background: 'var(--casora-soft-row-fill, rgba(140,115,90,0.07))' }];
+    /* Popup v3 „Bühne“: place stage + switches as quick choice on the left, the map on top of the right column.
+       Soft, no localStorage casora_popup_variant other than 'v3'. */
+    var v3 = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; } })();
+    if (v3) {
+      delete f.hero;
+      f.stage = { card: K.secCard(watch, call('stage'), states) };
+      f.quick = { card: K.secCard(watch, call('quick'), states) };
+      return K.layout({ fields: f, top: [], stage: 'stage', quick: 'quick', left: ['info'], right: ['map', 'today', 'hist'],
+        narrowOrder: ['stage', 'quick', 'map', 'today', 'info', 'hist'], fieldStyle: { map: mapStyle }, settings: c.tracker || id });
+    }
     return K.layout({ fields: f, top: ['hero', 'map'], left: ['info'], right: ['today', 'hist'],
       narrowOrder: ['today', 'info', 'hist'], fieldStyle: { map: mapStyle }, settings: c.tracker || id });
   };
@@ -142,7 +152,7 @@
   // Tractive makes these switches unavailable while the tracker saves power (switch.py: available = not power_saving),
   // and HA skips a service call on an unavailable entity silently - such a key is shown dimmed, without an action,
   // with one line saying why (issue #25: "buttons aren't working").
-  var buttons = function (s, c, UI, states) {
+  var buttons = function (s, c, UI, states, quick) {
     var svc = function (target) { return esc(JSON.stringify({ domain: 'switch', service: 'toggle', data: {}, target: { entity_id: target } })); };
     var mdi = function (n, sz, col) { return '<ha-icon icon="' + n + '" style="--mdc-icon-size:' + sz + 'px;width:' + sz + 'px;height:' + sz + 'px;display:block;color:' + (col || 'currentColor') + ';"></ha-icon>'; };
     var S = states || {};
@@ -158,6 +168,14 @@
       : '<div style="margin-top:10px;text-align:center;font-size:13px;line-height:1.35;color:' + (UI.tokens || {}).ink3 + ';font-family:' + (UI.tokens || {}).font + ';">'
         + esc(T(s.saving ? 'Energiesparen ist an: der Tracker reagiert erst wieder, wenn er unterwegs ist.'
           : 'Der Tracker ist gerade nicht erreichbar.')) + '</div>';
+    /* Popup v3 (richtlinien §5): the same switches as quick tiles (on = chosen); an unavailable one stays, without a
+       service, marked „Nicht verfügbar“ – the line why follows below. */
+    if (quick) {
+      return UI.quick(keys.map(function (k) {
+        return { icon: k.i, text: k.l, active: !!k.on && !k.off, sub: k.off ? 'Nicht verfügbar' : null,
+          svc: k.off ? null : { domain: 'switch', service: 'toggle', data: {}, target: { entity_id: k.id } } };
+      })) + why;
+    }
     var HH = window._casoraHH;
     if (HH && HH.on && HH.on()) {
       return HH.pillCss + '<style>.hh-pill > *{pointer-events:none;}</style><div class="hh-pills" style="margin-top:12px;">'
@@ -225,7 +243,8 @@
     var UI = window._casoraUI, PE = PER();
     if (!UI || !c) return '';
     var s = P.status(c, states, hass), st = (states || {})[c.tracker];
-    if (part === 'hero') {
+    if (part === 'quick') return s.dead ? '' : buttons(s, c, UI, states, true);
+    if (part === 'hero' || part === 'stage') {
       var rest = [];
       if (!s.dead && st && PE) {
         var now = Date.now(), since = Date.parse(st.last_changed) || now;
@@ -235,6 +254,16 @@
         if (s.away != null && s.away > 150) rest.push(PE.km(s.away) + ' ' + T('von zuhause'));
       }
       if (s.battery != null) rest.push('Akku ' + Math.round(s.battery) + ' %' + (s.charging ? ' · lädt' : ''));
+      /* Popup v3 (richtlinien §4 S7): the place as the sentence, since when / distance / battery as facts. */
+      if (part === 'stage') {
+        var lbl = [T('Seit'), T('Entfernung'), T('Akku')];
+        var factsP = rest.map(function (x) {
+          if (x.indexOf(T('seit') + ' ') === 0) return { label: lbl[0], value: x.slice(T('seit').length + 1) };
+          if (x.indexOf('Akku ') === 0) return { label: lbl[2], value: x.slice(5) };
+          return { label: lbl[1], value: x.replace(' ' + T('von zuhause'), '') };
+        });
+        return UI.stage('status', { tone: s.dead ? 'off' : 'good', icon: 'mdi:paw', text: s.place, facts: factsP, state: s.dead ? 'na' : null });
+      }
       return UI.line(s.place, rest) + (s.dead ? '' : buttons(s, c, UI, states));
     }
     if (part === 'info') {

@@ -2555,7 +2555,8 @@
   "Fährt zurück": "Returning",
   "Geparkt": "Parked",
   "Kein Akkustand": "No battery level",
-  "Tank": "Tank"
+  "Tank": "Tank",
+  "Seit": "Since"
  },
  "patterns": [
   [

@@ -2573,7 +2573,8 @@
   "Fährt zurück": "In rientro",
   "Geparkt": "Parcheggiato",
   "Kein Akkustand": "Nessun livello batteria",
-  "Tank": "Serbatoio"
+  "Tank": "Serbatoio",
+  "Seit": "Da"
  },
  "patterns": [
   [
