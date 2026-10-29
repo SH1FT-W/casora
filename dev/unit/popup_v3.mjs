@@ -27,6 +27,7 @@ const MIGRIERT = [
   // S2 while it can be set; off without heating / unavailable keep S2 greyed, a group falls back to S7 (no shared
   // target) – three branches, in tap and hold.
   { popup: 'Thermostat', vorlagen: ['casora_thermostat'], file: null, stages: 6 },
+  { popup: 'Jalousie (einzeln)', vorlagen: ['casora_cover'], file: null, stages: 1 },
 ];
 
 // 1. Pieces.

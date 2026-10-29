@@ -61,13 +61,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Jalousie (einzeln)",
-  "vorlagen": [
-   "casora_cover"
-  ],
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Medien-Player",
   "vorlagen": [
    "casora_media"
