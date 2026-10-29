@@ -486,15 +486,20 @@
     };
     var f = { hero: { card: K.secCard(watch, call('hero'), states) }, info: { card: K.secCard(watch, call('info'), states) },
       hist: { card: K.secCard(watch, call('hist'), states) } };
+    /* Popup v3 „Bühne“ (richtlinien §4 S4, §5): the head becomes the stage, its keys (Mähen/Pause · Zur Station ·
+       Parken) the quick choice. Soft and no localStorage casora_popup_variant other than 'v3'. */
+    var v3 = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; } })();
+    if (v3) { delete f.hero; f.stage = { card: K.secCard(watch, call('stage'), states) }; f.quick = { card: K.secCard(watch, call('quick'), states) }; }
     // Settings only when the source has something to set (cutting height, zone, schedule).
     if (c.cutHeight || c.zone) f.ctrl = { card: K.secCard(watch, call('ctrl'), states) };
-    return K.layout({ fields: f, top: ['hero'], left: ['info', 'ctrl'], right: ['hist'], narrowOrder: ['info', 'ctrl', 'hist'],
+    return K.layout({ fields: f, top: v3 ? [] : ['hero'], stage: v3 ? 'stage' : null, quick: v3 ? 'quick' : null, left: ['info', 'ctrl'], right: ['hist'],
+      narrowOrder: v3 ? ['stage', 'quick', 'info', 'ctrl', 'hist'] : ['info', 'ctrl', 'hist'],
       settings: hass && hass.states && hass.states[c.mower] ? c.mower : id });
   };
 
   // Keys like the vacuum (To station · Mow/Pause · Park): soft design as pills, else large round buttons.
   // "Park" = until further notice: Gardena's button, Husqvarna's schedule switch (off = park).
-  var buttons = function (s, c, UI, states) {
+  var buttons = function (s, c, UI, states, quick) {
     var esc2 = UI.esc, TK = UI.tokens;
     var svc = function (domain, service, target, data) { return { domain: domain, service: service, data: data || {}, target: { entity_id: target } }; };
     var mdi = function (n, sz, col) { return '<ha-icon icon="' + n + '" style="--mdc-icon-size:' + sz + 'px;width:' + sz + 'px;height:' + sz + 'px;display:block;color:' + (col || 'currentColor') + ';"></ha-icon>'; };
@@ -511,6 +516,16 @@
       var schedOn = states[c.schedule].state === 'on';
       keys.push(schedOn ? { s: svc('switch', 'turn_off', c.schedule), i: 'mdi:sleep', l: 'Parken', ok: true }
         : { s: svc('switch', 'turn_on', c.schedule), i: 'mdi:calendar-clock', l: 'Zeitplan', ok: true });
+    }
+    /* Popup v3: the same keys as quick tiles, the main one first; a key that cannot act now stays, marked by its
+       state word (docked: „Zur Station · Hier“), without a service. */
+    if (quick) {
+      if (s.dead) return '';
+      return UI.quick([keys[1], keys[0]].concat(keys.slice(2)).map(function (k) {
+        var okQ = k.ok && !s.dead;
+        return { icon: k.i, text: k.l, svc: okQ ? k.s : null, active: !okQ && k.l === 'Zur Station' ? s.docked || s.returning : !okQ && k.l === 'Parken',
+          sub: okQ ? null : k.l === 'Zur Station' ? (s.returning ? 'Fährt zurück' : 'In der Station') : k.l === 'Parken' ? 'Geparkt' : null };
+      }).filter(function (q) { return q.svc || q.active; }));
     }
     // Casora design (soft): pills with icon and text like the vacuum, the main action filled.
     var HH = window._casoraHH;
@@ -551,13 +566,15 @@
     var UI = window._casoraUI;
     if (!UI || !c) return '';
     var s = M.status(c, states);
-    if (part === 'hero') {
+    if (part === 'quick') return buttons(s, c, UI, states, true);
+    if (part === 'hero' || part === 'stage') {
       var sub = [];
       // "lädt" only when the state word does not say it already ("Lädt · Akku 87 % · lädt").
       if (s.battery != null) sub.push('Akku ' + Math.round(s.battery) + ' %' + (s.charging && s.label !== 'Lädt' ? ' · lädt' : ''));
       if (s.online === false) sub.push('Offline');
       else if (s.nextStart && !s.run && !s.returning) sub.push('Nächster Start ' + s.nextStart);
       else if (s.left != null && s.run) sub.push('noch ' + M.dur(s.left * 60000));
+      if (part === 'stage') return UI.stage('progress', { value: s.label, unit: '', word: sub.join(' · ') || null, state: s.dead ? 'na' : null });
       return UI.hero({ value: s.label, sub: sub.join(' · ') || null, subTone: s.online === false ? 'warn' : null, center: true })
         + (s.dead ? '' : buttons(s, c, UI, states));
     }

@@ -2551,7 +2551,9 @@
   "Etwas trocken": "Slightly dry",
   "Etwas feucht": "Slightly humid",
   "Sehr feucht": "Very humid",
-  "Beschatten": "Shade"
+  "Beschatten": "Shade",
+  "Fährt zurück": "Returning",
+  "Geparkt": "Parked"
  },
  "patterns": [
   [

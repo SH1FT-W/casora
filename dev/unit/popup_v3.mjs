@@ -40,6 +40,7 @@ const MIGRIERT = [
   { popup: 'Waschmaschine/Trockner', vorlagen: ['casora_popup_laundry'], file: '02-devices.js', from: '  var L = window._casoraLaundry = ', to: '  var D = window._casoraDish = ', stages: 1 },
   { popup: 'Geschirrspüler', vorlagen: ['casora_popup_dishwasher'], file: '02-devices.js', from: '  var D = window._casoraDish = ', to: '  var P = window._casoraPrint = ', stages: 1 },
   { popup: '3D-Drucker', vorlagen: ['casora_popup_3d_printer'], file: '02-devices.js', from: '  var P = window._casoraPrint = ', to: '  var V = window._casoraVac = ', stages: 1 },
+  { popup: 'Mähroboter', vorlagen: ['casora_popup_lawn_mower'], file: '16-maeher.js', from: '  M.popup = function', to: null, stages: 1 },
   { popup: 'Saugroboter', vorlagen: ['casora_vacuum'], file: '02-devices.js', from: '  var V = window._casoraVac = ', to: '// ── Notifications: line wrapping', stages: 1 },
 ];
 
