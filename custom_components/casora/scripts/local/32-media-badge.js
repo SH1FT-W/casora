@@ -162,6 +162,8 @@
     var empty = { type: 'vertical-stack', cards: [] };
     if (!K || !UI) return empty;
     var C = cfgOf(variables);
+    // Popup v3 „Bühne“: Soft and no localStorage casora_popup_variant other than 'v3'.
+    C.v3 = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; } })();
     var watch = C.ids.slice();
     if (C.pc) Object.keys(C.pc).forEach(function (k) { var e = C.pc[k]; if (typeof e === 'string' && e.indexOf('.') > 0) watch.push(e); });
     var call = function (part) {
@@ -174,6 +176,32 @@
     return K.layout({ fields: f, top: ['hero'], left: ['list'], right: [] });
   };
 
+  /* Popup v3 (richtlinien §4 S5): the stage shows the first running player – its cover (if any), what plays, device
+     and room, and play/pause as the stage pill (same media_play_pause as its row). Nothing running: S7 with the
+     badge's words (fallback rule, never an empty stage). */
+  B.stage = function (rows, c, n, states) {
+    var UI = window._casoraUI, esc = UI.esc;
+    var top = rows.filter(function (r) { return r.kind !== 'rest' && r.id; })[0];
+    if (!top) {
+      return UI.stage('status', { tone: c.active ? 'good' : 'off', icon: 'mdi:speaker', text: c.sub || 'Nichts läuft',
+        facts: n > 1 ? [{ label: 'Geräte', value: String(n) }] : [] });
+    }
+    var a = (states[top.id] || {}).attributes || {};
+    var pic = a.entity_picture_local || a.entity_picture || '';
+    var html = '<div style="display:flex;align-items:center;gap:16px;min-width:0;text-align:left;">'
+      + (pic ? '<div style="flex:none;width:96px;height:96px;border-radius:16px;overflow:hidden;background:var(--casora-soft-control-fill, rgba(140,115,90,0.12));">'
+        + '<img src="' + esc(pic) + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.remove()"></div>' : '')
+      + '<div style="min-width:0;flex:1;">'
+      + '<div style="font-size:17px;font-weight:700;line-height:1.3;overflow-wrap:anywhere;">' + esc(top.line || top.word) + '</div>'
+      + '<div style="font-size:14px;font-weight:500;opacity:.7;margin-top:4px;">' + esc([top.name, top.room].filter(Boolean).join(' · ')) + '</div>'
+      + '</div></div>';
+    var pill = top.toggle ? '<div class="hui-st-act pri" role="button" aria-label="' + esc(top.playing ? 'Pausieren' : 'Abspielen') + '" data-casora-svc="'
+      + esc(JSON.stringify({ domain: 'media_player', service: 'media_play_pause', data: { entity_id: top.id } })) + '">'
+      + '<ha-icon icon="' + (top.playing ? 'mdi:pause' : 'mdi:play') + '" style="--mdc-icon-size:20px;width:20px;height:20px;display:flex;"></ha-icon>'
+      + '<span>' + esc(top.playing ? 'Pausieren' : 'Abspielen') + '</span></div>' : '';
+    return UI.stage('image', { html: html, controls: pill });
+  };
+
   B.sec = function (part, C, states, hass) {
     var UI = window._casoraUI;
     if (!UI) return '';
@@ -183,6 +211,7 @@
       var pc = rows.filter(function (r) { return r.pc; }).length;
       var c = B.count(C.ids || [], states, C.timeout, pc);
       var n = (C.ids || []).length;
+      if (C.v3 && UI.stage) return B.stage(rows, c, n, states);
       return UI.line(c.sub, n > 1 ? [n + ' Geräte'] : []);
     }
     if (part !== 'list') return '';

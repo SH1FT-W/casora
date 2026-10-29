@@ -35,6 +35,7 @@ const MIGRIERT = [
     from: 'window._casoraEntityPopup = function', to: '// ── Media popup', stages: 1 },
   { popup: 'Medien-Player', vorlagen: ['casora_media'], file: null, stages: 1 },
   { popup: 'Now Playing (Kachel/Chip)', vorlagen: ['casora_now_playing_primary', 'casora_now_playing_chip'], file: null, stages: 2 },
+  { popup: 'Medien-Badge', vorlagen: ['casora_popup_media'], file: '32-media-badge.js', from: '  B.stage = function', to: '  B.sec = function', stages: 2 },
 ];
 
 // 1. Pieces.

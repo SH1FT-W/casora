@@ -12077,7 +12077,8 @@
     ],
     "style": "[[[ return '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'; ]]]",
     "title": "[[[\n  const _own = String(variables.title || '').trim();\n  if (_own && _own.indexOf('[[[') < 0) return _own;\n  return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Medien', ['Medien']) : 'Medien';\n]]]\n",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "tap_action": {
@@ -12092,7 +12093,8 @@
     ],
     "style": "[[[ return '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'; ]]]",
     "title": "[[[\n  const _own = String(variables.title || '').trim();\n  if (_own && _own.indexOf('[[[') < 0) return _own;\n  return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Medien', ['Medien']) : 'Medien';\n]]]\n",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [

@@ -39,14 +39,6 @@
   "grund": "Welle 2 nicht geschafft: S6 Luftqualität braucht einen Luftqualitäts-/PM2,5-Sensor (Testgerät hat nur Filter + Leistung) und das Diagramm ist eine eigene Karte unter dem Kopf (in die Bühne umziehen = Umbau der Kartenliste); ohne Sensor wäre es die Rückfallregel – Entscheidung offen. Steuerung wie Lüfter (S1 + Presets) wäre ohne neue Logik möglich"
  },
  {
-  "popup": "Medien-Badge",
-  "vorlagen": [
-   "casora_popup_media"
-  ],
-  "modul": "32-media-badge.js",
-  "grund": "Welle 2 nicht geschafft (Rahmen): 32-media-badge.js, S5 des laufenden Players – nach dem Medien-Player (gleiche Bühne)"
- },
- {
   "popup": "Waschmaschine/Trockner",
   "vorlagen": [
    "casora_popup_laundry",
