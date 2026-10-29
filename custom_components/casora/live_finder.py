@@ -319,8 +319,14 @@ def _matches(src: dict[str, Any], ents: list[Ent]) -> str | None:
     return "keys" if ok else None
 
 
-def classify(device_id: str, ents: list[Ent], states: Callable[[str], Any], model: str = "") -> Found | None:
-    """Classify a device – or None if it is not a live device."""
+# WashData device types that are no laundry: since 0.5.9 air fryers and bread makers become "other" with the
+# washer icon, like "generic" (as WD_NOT_LAUNDRY in 00-finder.js).
+WASHDATA_NOT_LAUNDRY = ("other", "generic")
+
+
+def classify(device_id: str, ents: list[Ent], states: Callable[[str], Any], model: str = "",
+             washdata_type: str | None = None) -> Found | None:
+    """Classify a device – or None if it is not a live device. washdata_type: WashData's device type, if known."""
     ents = [e for e in ents if states(e.entity_id) is not None]
     if not ents:
         return None
@@ -343,12 +349,23 @@ def classify(device_id: str, ents: list[Ent], states: Callable[[str], Any], mode
         role = src["role"](states, ents, model)
         if not role:
             continue
+        if src["id"] == "washdata" and washdata_type in WASHDATA_NOT_LAUNDRY:
+            continue
         f = {n: _pick(ents, s) for n, s in src["fields"].items()}
         for n, s in (src.get("extra") or {}).items():
             f[n] = _pick(ents, s)
         if not f.get("state"):
             continue
         return Found(device_id, role, src["id"], src["grade"], f, model=model, how=how)
+    return None
+
+
+def _washdata_type(hass, device) -> str | None:
+    """WashData's device type from its config entry's options (public ConfigEntry API, read only)."""
+    for entry_id in device.config_entries or ():
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if entry and entry.domain == "ha_washdata":
+            return str((entry.options or {}).get("device_type") or "") or None
     return None
 
 
@@ -370,7 +387,7 @@ def find_devices(hass) -> list[Found]:
         if not d or d.disabled_by or d.entry_type is not None:
             continue
         model = f"{d.model or ''} {d.model_id or ''}"
-        f = classify(dev_id, sorted(lst, key=lambda e: e.entity_id), hass.states.get, model)
+        f = classify(dev_id, sorted(lst, key=lambda e: e.entity_id), hass.states.get, model, _washdata_type(hass, d))
         if not f:
             continue
         f.name = d.name_by_user or d.name or ""

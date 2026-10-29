@@ -2174,6 +2174,20 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     return ok ? 'keys' : null;
   }
 
+  // WashData's device type, asked once per entry through its public phase catalog. Since 0.5.9 air fryers and bread
+  // makers become "other" with the washer icon, like "generic": those are no laundry. Until the answer the icon decides.
+  var WD_TYPE = {}, WD_NOT_LAUNDRY = ['other', 'generic'];
+  function wdType(hass, entry) {
+    if (!entry || !hass || typeof hass.callWS !== 'function') return null;
+    if (!(entry in WD_TYPE)) {
+      WD_TYPE[entry] = null;
+      hass.callWS({ type: 'ha_washdata/get_phase_catalog', entry_id: entry })
+        .then(function (r) { WD_TYPE[entry] = (r && r.device_type) || ''; })
+        .catch(function () { WD_TYPE[entry] = ''; });
+    }
+    return WD_TYPE[entry];
+  }
+
   // Classify a device: { device, source, rank, role, state, f: {program, …}, entry } or null.
   // roles: the kinds asked for; default washer and dryer (the laundry cards and the Studio's laundry lists).
   var LAUNDRY = ['washer', 'dryer'];
@@ -2188,6 +2202,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       if (!how) continue;
       var role = src.role(hass, lst, devId);
       if (!role || roles.indexOf(role) < 0) continue;
+      if (src.id === 'washdata' && WD_NOT_LAUNDRY.indexOf(wdType(hass, ((devs(hass)[devId] || {}).config_entries || [])[0])) >= 0) continue;
       var f = {};
       Object.keys(src.fields).forEach(function (name) { f[name] = pick(lst, src.fields[name]); });
       if (!f.state) continue;

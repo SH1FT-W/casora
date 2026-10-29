@@ -126,6 +126,13 @@ Nicht im Kern-Paket prüfbar (HACS), Casora liest `platform`/`translation_key`:
 Schlüssel je Quelle in `25-coffee.js` `SOURCES`, Stand Quellcode 24.10.2026, Test `dev/unit/coffee_sources.mjs`),
 Auto-Integrationen.
 
+WashData (`ha_washdata`, Stand 0.5.9, Quellcode 29.10.2026): Geräteart zuerst über das Symbol des `washer_state`-Sensors
+(`tumble-dryer`, `dishwasher`, `water-pump`, sonst `washing-machine`). Seit 0.5.9 werden Heißluftfritteuse und Brotbackautomat
+zu `other` und tragen wie `generic` das Waschmaschinen-Symbol; deshalb fragt das Dashboard den Typ über
+`ha_washdata/get_phase_catalog` (`entry_id` → `device_type`) und Python liest `options["device_type"]` des Config-Eintrags
+(öffentliche `ConfigEntry`-API, nur lesen). `other`/`generic` sind keine Wäsche (`00-finder.js` `wdType`,
+`live_finder.py` `_washdata_type`; Tests `dev/unit/waesche_quelle.mjs`, `dev/unit/live_finder_test.py`).
+
 Wetter-Integrationen (#56), Casora liest Sensoren am Gerät der Wetter-Entität nach `translation_key`
 (`00-finder.js` `WX_KEYS`; Test `dev/unit/weather_feels_like.mjs`, Testhaus `dev/casora_mock/wetter.py`):
 „Wetter & Warnungen“ (`wetter`, eigene Integration SH1FT-W/wetter-warnungen, Stand Quellcode 25.10.2026) mit
