@@ -13,7 +13,7 @@
    "casora_light"
   ],
   "modul": "33-color-wheel.js",
-  "grund": "noch nicht dran"
+  "grund": "Welle 2 nicht geschafft (Rahmen): Einzel-Pfad in casora_light (eigene innere Karte) + 33-color-wheel.js – S1 mit Weißton-Segment und Farbrad als Unterseite „Farbe ›“ heißt das Farbrad aus dem Hauptbereich in eine Unterseite umziehen; rahmt seit dem Licht-Pilot schon im v3-Kopf (erbt variant 'v3' von casora_popup_light), Inhalt noch alt. Testgerät: light.testleuchte"
  },
  {
   "popup": "Klima (Raum)",
@@ -21,7 +21,7 @@
    "casora_climate_popup"
   ],
   "modul": "01-basis.js",
-  "grund": "noch nicht dran"
+  "grund": "Welle 2 nicht geschafft (Rahmen): casora_climate_popup (51k, 01-basis.js) mischt Klima-Geräte und Messwerte; S2 nur mit genau einem Thermostat, sonst S6 – Auswahl der Bühne braucht eine Entscheidung, welches Gerät die Bühne bekommt. Keine eigene Kachel im Test-HA (Klima-Badge öffnet casora_badge_climate_group)"
  },
  {
   "popup": "Klimaanlage Velair",
@@ -29,14 +29,14 @@
    "casora_popup_velair"
   ],
   "modul": "31-velair.js",
-  "grund": "noch nicht dran"
+  "grund": "Welle 2 nicht geschafft: braucht neue Logik aus .qa/v3/issue-popups-fuer-v3.md §5 (Ziel je Block im Wochenbalken ab 2½ h, Zeile „Velair-Modus“ aus dem Select) – Quelle b6f7f9d1 auf popup-rework-varianten. Bis dahin variant 'a' (sitzt auf casora_thermostat, das schon v3 ist)"
  },
  {
   "popup": "Luftreiniger",
   "vorlagen": [
    "casora_air_purifier"
   ],
-  "grund": "noch nicht dran"
+  "grund": "Welle 2 nicht geschafft: S6 Luftqualität braucht einen Luftqualitäts-/PM2,5-Sensor (Testgerät hat nur Filter + Leistung) und das Diagramm ist eine eigene Karte unter dem Kopf (in die Bühne umziehen = Umbau der Kartenliste); ohne Sensor wäre es die Rückfallregel – Entscheidung offen. Steuerung wie Lüfter (S1 + Presets) wäre ohne neue Logik möglich"
  },
  {
   "popup": "Medien-Player",
@@ -44,7 +44,7 @@
    "casora_media"
   ],
   "modul": "07-weich-spezial.js",
-  "grund": "noch nicht dran"
+  "grund": "Welle 2 nicht geschafft (Rahmen): casora_media (23k) + 07-weich-spezial.js _casoraMediaSoft; S5 Cover + Wiedergabe über beide Spalten heißt die Teile hero/ctl/Quellen neu ordnen; Quellen als Schnellwahl (≤ 4, mehr: Unterseite) braucht die Unterseite „Alle (n)“"
  },
  {
   "popup": "Now Playing (Kachel/Chip)",
@@ -52,7 +52,7 @@
    "casora_now_playing_primary",
    "casora_now_playing_chip"
   ],
-  "grund": "noch nicht dran"
+  "grund": "Welle 2 nicht geschafft (Rahmen): zwei eigene Vorlagen (68k/46k) mit eigenem Player-Aufbau; sinnvoll erst nach dem Medien-Player (gleiche S5-Bühne)"
  },
  {
   "popup": "Medien-Badge",
@@ -60,7 +60,7 @@
    "casora_popup_media"
   ],
   "modul": "32-media-badge.js",
-  "grund": "noch nicht dran"
+  "grund": "Welle 2 nicht geschafft (Rahmen): 32-media-badge.js, S5 des laufenden Players – nach dem Medien-Player (gleiche Bühne)"
  },
  {
   "popup": "Waschmaschine/Trockner",
