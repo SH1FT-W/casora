@@ -5,7 +5,7 @@
    "casora_popup_fbh"
   ],
   "modul": "03-popups.js",
-  "grund": "braucht neue Logik: Haus-Bühne S2 „Ziel aller Räume“ (± verschiebt jedes Raumziel um einen Schritt, Ø bei verschiedenen Zielen) gibt es seit 1.3 nicht mehr; Test-HA „arbeit“ hat keine FBH-Kachel für Bilder/Inhaltsvergleich"
+  "grund": "Raum fertig (variant 'v3', Bühne S2 mit dem vorhandenen −/+ und Balken, Modus als Schnellwahl, Verlauf 120). Haus offen – braucht neue Logik: Bühne S2 „Ziel aller Räume“ (± verschiebt jedes Raumziel um einen Schritt, Ø bei verschiedenen Zielen) gibt es seit 1.3 nicht mehr; Haus bleibt Variante B. Test-HA „arbeit“ hat keine FBH-Kachel (Raum-Bilder über casoraNotifyOpenViaCard mit einem Thermostat)"
  },
  {
   "popup": "Leuchte (einzeln)",

@@ -570,9 +570,14 @@
       + '<div class="fb-st-v"><div class="l">' + esc(label) + '</div><div class="n">' + esc(fmt(value)) + '<span> ' + esc(TU()) + '</span></div></div>'
       + btn('<svg width="20" height="20" viewBox="0 0 20 20" style="display:block"><path d="M4 10H16M10 4V16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>', step, value >= hi)
       + '</div>';
-    if (withBar) {
-      var k = ((value - lo) / (hi - lo) * 100).toFixed(1);
-      out += '<style>'
+    if (withBar) out += F.bar(tgt.entity_id, value, lo, hi, step);
+    return out;
+  };
+  /* The draggable target bar on its own (stepper above, Popup v3 stage S2 below −/+). */
+  F.bar = function (eid, value, lo, hi, step) {
+    var T = window._casoraUI.tokens;
+    var k = ((value - lo) / (hi - lo) * 100).toFixed(1);
+    return '<style>'
         + '.fb-tb{margin-top:6px;padding:14px 4px 4px;cursor:pointer;touch-action:none;}'
         + '.fb-tb-t{position:relative;height:8px;border-radius:999px;pointer-events:none;'
         +   'background:var(--casora-temp-gradient, linear-gradient(90deg,#0A84FF 0%,#64D2FF 30%,#FF9F0A 65%,#FF453A 100%));}'
@@ -580,11 +585,46 @@
         +   'box-shadow:0 1px 4px rgba(0,0,0,.45);transition:left .15s ease;}'
         + '.fb-tb-s{display:flex;justify-content:space-between;font-size:12px;color:' + T.ink3 + ';margin-top:6px;font-variant-numeric:tabular-nums;}'
         + '</style>'
-        + '<div class="fb-tb" data-fb-bar="' + esc(JSON.stringify({ lo: lo, hi: hi, st: step, id: tgt.entity_id })) + '">'
+        + '<div class="fb-tb" data-fb-bar="' + esc(JSON.stringify({ lo: lo, hi: hi, st: step, id: eid })) + '">'
         + '<div class="fb-tb-t"><div class="fb-tb-k" style="left:' + esc(k) + '%"></div></div>'
         + '<div class="fb-tb-s"><span>' + esc(fmt(lo)) + ' ' + esc(TU()) + '</span><span>' + esc(fmt(hi)) + ' ' + esc(TU()) + '</span></div></div>';
-    }
-    return out;
+  };
+  /* Popup v3 „Bühne“ (popup-richtlinien-v3.md §4 S2, §4.4): one room – the target as the stage with the same −/+
+     (data-fb-step, quick taps count, one set_temperature after the pause) and the same bar; the modes as quick tiles.
+     The template gives one room variant 'v3' (the content is built before the frame takes it, so this follows the
+     same rule: Soft, no localStorage casora_popup_variant other than 'v3'); the whole house stays on variant B (its
+     stage „Ziel aller Räume“ needs new logic, popup_v3_offen.json). */
+  F.v3 = function () {
+    if (!(window._casoraHH && window._casoraHH.on() && window._casoraUI && window._casoraUI.stage)) return false;
+    try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; }
+  };
+  F.stage = function (c, states) {
+    var UI = window._casoraUI, e = states[c.id], a = e.attributes || {};
+    var step = num(a.target_temp_step) || 0.5;
+    var F_ = TU() === '°F', lo = num(a.min_temp) != null ? num(a.min_temp) : (F_ ? 41 : 5), hi = num(a.max_temp) != null ? num(a.max_temp) : (F_ ? 86 : 30);
+    var tv = num(a.temperature);
+    var pd = (window._casoraStepPend || {})[JSON.stringify(c.id)];
+    if (tv != null && pd && Date.now() - pd.t < 5000 && !(pd.sent && Math.abs(tv - pd.v) < 1e-6)) tv = pd.v;
+    var cur = F.curTemp(c, states);
+    var foot = cur != null ? 'Jetzt ' + fmt(cur) + ' ' + TU() : null;
+    var live = e.state !== 'off' && e.state !== 'unavailable' && tv != null;
+    if (!live) return UI.stage('value', { caption: 'Zieltemperatur', value: tv != null ? tv : '–', unit: tv != null ? TU() : '',
+      state: e.state === 'unavailable' ? 'na' : 'off', foot: foot });
+    var b = function (d, dis) { return { dis: dis, attrs: { 'data-fb-step': JSON.stringify({ id: c.id, d: d, v: tv, lo: lo, hi: hi, st: step }) } }; };
+    return UI.stage('value', { caption: F.heating(c, states) ? 'Heizt auf' : 'Zieltemperatur', value: tv, unit: TU(), valCls: 'fb-st-v',
+      minus: b(-step, tv <= lo), plus: b(step, tv >= hi), foot: foot, extra: F.bar(c.id, tv, lo, hi, step) });
+  };
+  F.quick = function (id, states) {
+    var UI = window._casoraUI;
+    var e = states[id]; if (!e || e.state === 'unavailable') return '';
+    var list = (e.attributes.hvac_modes || []).map(String).filter(function (m) { return MODES[m]; })
+      .sort(function (x, y) { return ORDER.indexOf(x) - ORDER.indexOf(y); });
+    if (list.length < 2) return '';
+    var ICON = { off: 'mdi:power', heat: 'mdi:heating-coil', auto: 'mdi:calendar-clock' };
+    return UI.quick(list.map(function (m) {
+      return { icon: ICON[m], text: MODES[m], active: e.state === m,
+        svc: { domain: 'climate', service: 'set_hvac_mode', data: { hvac_mode: m }, target: { entity_id: id } } };
+    }), 'Modus');
   };
 
   /* Modus als iOS-Auswahlliste mit Haken. confirmOn: Einschalten nur mit Bestätigung (Aquarium-Muster). */
@@ -663,6 +703,11 @@
       var hum = c.hum && nv(states[c.hum]) != null ? Math.round(nv(states[c.hum])) + ' % Luftfeuchtigkeit' : null;
       return UI.hero({ label: window._casoraHH && window._casoraHH.on() ? null : (c.trv ? 'Temperatur am Heizkörper' : 'Raumtemperatur'), value: cur != null ? fmt(cur) : '—', unit: cur != null ? TU() : null,
         sub: [F.status(c, states), hum].filter(Boolean).join(' · '), subTone: F.heating(c, states) ? 'warn' : null, center: true });
+    }
+
+    if (name === 'v3hero') {
+      var hum3 = c.hum && nv(states[c.hum]) != null ? Math.round(nv(states[c.hum])) + ' % Luftfeuchtigkeit' : null;
+      return UI.hero({ value: F.status(c, states), valueTone: F.heating(c, states) ? 'warn' : null, sub: hum3, center: true });
     }
 
     if (name === 'house') {
@@ -773,6 +818,8 @@
         + btn + '</div></div>';
     }
 
+    if (name === 'stage') return F.stage(c, states);
+    if (name === 'quick') return F.quick(c.id, states);
     if (name === 'ctl') {
       /* Popup-Standard (24.09.2026): Raum-Modus als Tasten-Leiste wie beim Luftreiniger – oben „Modus“,
          darunter die Zieltemperatur. Das ganze Haus behält die Liste mit Bestätigung (Schutz vor versehentlichem Einschalten). */
@@ -879,7 +926,9 @@
     add('hero', sec('hero'));
     var chartId = c.group ? c.houseTemp : c.temp;
     if (chartId && typeof window._hpChartCfg === 'function') {
-      window._hpChartCfg(chartId, c.group ? 'Temperatur im Haus' : 'Temperatur', '24h', '#FF9F0A', 150);
+      /* v3 room: Verlauf section 120 high in the palette's orange (richtlinien §7). */
+      var v3c = !c.group && F.v3();
+      window._hpChartCfg(chartId, c.group ? 'Temperatur im Haus' : 'Temperatur', '24h', v3c ? 'c2' : '#FF9F0A', v3c ? 120 : 150);
       if (window._hpSmooth) window._hpSmooth(chartId);
       add('chart', window._casoraHH && window._casoraHH.on() ? window._casoraHH.chart(window._hpChartTitle(chartId), plate)
         : '<div style="' + plate + 'padding:var(--casora-soft-plate-pad, 14px 10px 6px);">'
@@ -913,6 +962,13 @@
         var devIds = c.rooms.concat(c.trvs).map(function (x) { return x.id; }).filter(function (x) { return x && states[x]; });
         return HH.layout({ entity: id, watch: watch, fields: g, left: ['house'], right: ['allrooms', 'more'],
           settings: devIds.length ? devIds : null });
+      }
+      if (F.v3()) {
+        /* v3: state word (and humidity) in the status line, stage + quick, then Verlauf 120 high, Einstellungen, Mehr. */
+        var r3 = { hero: sec('v3hero'), stage: sec('stage'), quick: sec('quick'), chart: fields.chart,
+          more: HH.moreCard(watch, mcode(['det']), id) };
+        return HH.layout({ entity: id, watch: watch, fields: r3, top: ['hero'], stage: 'stage', quick: 'quick', left: ['chart'],
+          right: ['more'], settings: id });
       }
       var r1 = { hero: fields.hero, chart: fields.chart, ctl: fields.ctl, more: HH.moreCard(watch, mcode(['det']), id) };
       return HH.layout({ entity: id, watch: watch, fields: r1, top: ['hero', 'chart'], left: ['ctl'], right: ['more'], settings: id });
