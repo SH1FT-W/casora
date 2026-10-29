@@ -3937,7 +3937,16 @@
     var room = U.str(states, c.room);
     var HH = window._casoraHH, SF = !!(HH && HH.on());
 
-    if (kind === 'v_hero') {
+    if (kind === 'v_hero' || kind === 'v_stage' || kind === 'v_quick') {
+      /* Popup v3 (richtlinien §5): „Zum Dock“ and „Orten“ from the former action row as quick tiles (start/pause is the
+         stage pill; the rooms stay the list on the left – a › tile is not allowed in the quick choice). */
+      if (kind === 'v_quick') {
+        if (s.dead) return '';
+        var vq = function (service) { return { domain: 'vacuum', service: service, data: {}, target: { entity_id: c.st } }; };
+        var dockedQ = !s.run && !s.paused;
+        return UI.quick([{ icon: 'mdi:home-import-outline', text: 'Zum Dock', sub: dockedQ ? 'In der Station' : null, active: dockedQ, svc: vq('return_to_base') },
+          { icon: 'mdi:map-marker-radius-outline', text: 'Orten', svc: vq('locate') }]);
+      }
       var ha = document.querySelector('home-assistant');
       if (ha && ha.hass) L.fetch(c, ha.hass, false);
       var sub = [], tone = s.error ? 'bad' : null;
@@ -3963,6 +3972,17 @@
       if (SF && !(s.run || s.paused) && area != null && sub.length && sub[sub.length - 1].indexOf(lastW + ' ') === 0) sub[sub.length - 1] += ', ' + U.f(area, 1) + ' m²';
       /* Blueprint v2 (rule 1): state plus at most two extras – the rest is under „Mehr“ (Reinigung, Akku). */
       if (SF) sub = sub.slice(0, 2);
+      /* Popup v3 (richtlinien §4 S4): progress (or the state) as the value, the head's words, the bar while cleaning,
+         start/pause/continue as the stage pill (same vacuum services). */
+      if (kind === 'v_stage') {
+        var busy = s.run || s.paused;
+        return UI.stage('progress', { value: busy && pct != null ? String(Math.round(pct)) : value, unit: busy && pct != null ? '%' : '',
+          word: [busy && pct != null ? s.label : null].concat(sub).filter(Boolean).join(' · ') || null,
+          progress: busy && pct != null ? Math.max(0, Math.min(1, pct / 100)) : null,
+          action: s.dead ? null : { text: s.run ? 'Pause' : s.paused ? 'Fortsetzen' : 'Start', icon: s.run ? 'mdi:pause' : 'mdi:play', primary: true,
+            svc: { domain: 'vacuum', service: s.run ? 'pause' : 'start', data: {}, target: { entity_id: c.st } } },
+          state: s.dead ? 'na' : null });
+      }
       var out = UI.hero({ value: value, unit: unit, sub: sub.join(' · ') || null, subTone: tone, center: true });
       /* Big buttons: to dock · start/pause · locate */
       var svc = function (service) { return esc(JSON.stringify({ domain: 'vacuum', service: service, data: {}, target: { entity_id: c.st } })); };
@@ -4301,9 +4321,9 @@
 
     /* History: battery (48 h); rows switch to progress, station power or daily consumption. */
     if (typeof window._hpChartCfg === 'function' && c.battery) {
-      window._hpChartCfg(c.battery, 'Akku', '48h', '#30D158', 150);
-      if (c.progress) window._hpChartCfg(c.progress, 'Fortschritt', '24h', c.color, 150);
-      if (c.power) window._hpChartCfg(c.power, 'Leistung der Station', '24h', '#FF9F0A', 150);
+      window._hpChartCfg(c.battery, 'Akku', '48h', 'c3', 120);
+      if (c.progress) window._hpChartCfg(c.progress, 'Fortschritt', '24h', c.color, 120);
+      if (c.power) window._hpChartCfg(c.power, 'Leistung der Station', '24h', 'c2', 120);
       if (c.energy) {
         /* Consumption per day as bars (statistic change per day), 7 or 30 days. */
         [['hwd7:', '7d'], ['hwd30:', '30d']].forEach(function (x) { window._hpBarCfg(x[0] + c.energy, c.energy, 'Verbrauch pro Tag', x[1], 2); });
@@ -4349,7 +4369,11 @@
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("vacuum", ["v_dock", "v_settings", "v_care", "v_stats", "v_run", "v_power"].map(function (k) {'
         + ' return L.inner(k, c, states); })) : "";', c.st);
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, left: ['rooms', 'mode'], right: ['map', 'attn', 'more'], settings: states[c.st] ? c.st : null });
+      /* Popup v3: the head with its action row becomes the stage, „Zum Dock“/„Orten“ the quick choice. */
+      var v3V = !!(window._casoraDish && window._casoraDish.v3 && window._casoraDish.v3());
+      if (v3V) { delete f2.hero; f2.stage = tpl('v_stage', true); f2.quick = tpl('v_quick', false); }
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3V ? [] : undefined, stage: v3V ? 'stage' : null, quick: v3V ? 'quick' : null,
+        left: ['rooms', 'mode'], right: ['map', 'attn', 'more'], settings: states[c.st] ? c.st : null });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'

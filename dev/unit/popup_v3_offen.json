@@ -47,14 +47,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Saugroboter",
-  "vorlagen": [
-   "casora_vacuum"
-  ],
-  "modul": "02-devices.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Mähroboter",
   "vorlagen": [
    "casora_popup_lawn_mower"

@@ -11322,8 +11322,12 @@ window.casoraMenuGlass = {
     + '.hui-st-val{display:flex;align-items:baseline;gap:4px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap;}'
     + '.hui-st-n{font-size:var(--casora-v3-value-fs, 56px);font-weight:800;letter-spacing:-0.03em;color:' + T.ink + ';}'
     + '.hui-st-u{font-size:22px;font-weight:700;color:' + S.sub + ';}'
+    // A state word as the value (S4 „Trocknet Mopp“, „Bereit“): smaller and allowed to wrap between words, never
+    // inside one – the 56 px value ran out of the stage.
+    + '.hui-st-val.wd{white-space:normal;flex-wrap:wrap;}.hui-st-val.wd .hui-st-n{font-size:var(--casora-v3-value-word-fs, 40px);line-height:1.1;}'
     + '.hui-stage.off .hui-st-n{color:' + S.sub + ';}'
-    + '.hui-st-w{font-size:15px;font-weight:600;line-height:1.35;color:' + S.sub + ';margin-top:6px;}'
+    + '.hui-st-w{font-size:15px;font-weight:600;line-height:1.35;color:' + S.sub + ';margin-top:6px;white-space:normal;}'
+    + '.hui-stage > div{min-width:0;}'
     + '.hui-st-cap{font-size:15px;font-weight:600;color:' + S.sub + ';text-align:center;}'
     + '.hui-st-foot{font-size:15px;font-weight:600;color:' + S.sub + ';text-align:center;font-variant-numeric:tabular-nums;}'
     // S1/S3: control left, value right; the segment sits at the bottom of the right side.
@@ -11474,7 +11478,8 @@ window.casoraMenuGlass = {
         + (o.foot ? '<div class="hui-st-foot">' + esc(o.foot) + '</div>' : '');
     } else if (code === 'S4') {
       var p4 = Math.max(0, Math.min(1, Number(o.progress) || 0));
-      body = '<div>' + stValue(o.value, o.unit || '') + (o.word ? '<div class="hui-st-w">' + esc(o.word) + '</div>' : '') + '</div>'
+      var wd4 = /[A-Za-zÄÖÜäöüß]{2}/.test(String(o.value == null ? '' : o.value)) && String(o.value).length > 7;
+      body = '<div>' + stValue(o.value, o.unit || '', wd4 ? 'wd' : '') + (o.word ? '<div class="hui-st-w">' + esc(o.word) + '</div>' : '') + '</div>'
         + (o.progress != null ? '<div class="hui-st-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'
           + Math.round(p4 * 100) + '"><i style="width:' + Math.round(p4 * 1000) / 10 + '%"></i></div>' : '')
         + (o.program ? '<div class="hui-st-prog">' + esc(o.program) + '</div>' : '')

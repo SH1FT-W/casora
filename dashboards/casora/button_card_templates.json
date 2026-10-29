@@ -17799,7 +17799,8 @@
      }
     ],
     "title": "[[[\n  const n = String(this._config?.name || '').trim();\n  return (n.startsWith('[[[') ? '' : n) || 'Saugroboter';\n]]]\n",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [
