@@ -11373,6 +11373,8 @@ window.casoraMenuGlass = {
     +   'border-radius:999px;font-size:var(--casora-fs-row, 15px);font-weight:700;white-space:nowrap;cursor:pointer;'
     +   'user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;background:' + S.ctl + ';color:' + T.ink + ';}'
     + '.hui-st-act > *{pointer-events:none;}'
+    // The popup's own ha-icon rule (margin auto) pushed the pill's symbol to the middle and the word to the edge.
+    + '.hui-st-act ha-icon{margin:0 !important;flex:none;}'
     + '.hui-st-act small{font-size:var(--casora-fs-sub, 13px);font-weight:600;opacity:.8;}'
     + '.hui-st-act.pri{background:var(--casora-popup-accent, var(--casora-soft-primary, #94603B));color:var(--casora-popup-action-ink, rgba(46,34,20,.9));}'
     + '.hui-st-act.dng{background:transparent;box-shadow:var(--casora-v3-pill-edge, inset 0 0 0 1.5px ' + S.ctl + ');color:var(--casora-color-red-text, var(--casora-color-red));}'

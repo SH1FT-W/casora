@@ -46,7 +46,7 @@
    "casora_aquarium_light"
   ],
   "modul": "02-devices.js",
-  "grund": "noch nicht dran"
+  "grund": "Welle 3 nicht geschafft: S6 Wassertemperatur heißt das Diagramm (hp-chart-slot, _hpChartInit) in die Bühne legen – die Bühne ist ein Live-Feld, das bei jedem Zustand neu zeichnet; das Diagramm braucht eine eigene, nicht neu gerenderte Platte in der Bühne (neue Logik, Lehre „Diagramm beim zweiten Öffnen“). S1 Licht nur mit Leuchte."
  },
  {
   "popup": "Sicherheit (Badge, Gruppe)",
