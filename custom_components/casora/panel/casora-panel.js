@@ -3681,6 +3681,7 @@ const keepRoomGlyph = (r, name) => {
 const MENU_ICONS = {
   "home": "<path d=\"M4.2 10.6 12 4.2l7.8 6.4\"/><rect x=\"7.4\" y=\"11.6\" width=\"4\" height=\"3.7\" rx=\"1\"/><rect x=\"12.6\" y=\"11.6\" width=\"4\" height=\"3.7\" rx=\"1\"/><rect x=\"7.4\" y=\"16.4\" width=\"4\" height=\"3.7\" rx=\"1\"/><rect x=\"12.6\" y=\"16.4\" width=\"4\" height=\"3.7\" rx=\"1\"/>",
   "plus": "<path d=\"M12 5v14M5 12h14\"/>",
+  "copy": "<rect x=\"8.5\" y=\"8.5\" width=\"11\" height=\"11\" rx=\"2.4\"/><path d=\"M15.5 8.5V6.9A2.4 2.4 0 0 0 13.1 4.5H6.9A2.4 2.4 0 0 0 4.5 6.9v6.2a2.4 2.4 0 0 0 2.4 2.4h1.6\"/>",
   "pencil": "<path d=\"M5 19.5l1-4L16.5 5a2.1 2.1 0 0 1 3 3L9 18.5z\"/><path d=\"M14.5 7l3 3\"/>",
   "grid": "<rect x=\"4.5\" y=\"4.5\" width=\"6\" height=\"6\" rx=\"1.6\"/><rect x=\"13.5\" y=\"4.5\" width=\"6\" height=\"6\" rx=\"1.6\"/><rect x=\"4.5\" y=\"13.5\" width=\"6\" height=\"6\" rx=\"1.6\"/><rect x=\"13.5\" y=\"13.5\" width=\"6\" height=\"6\" rx=\"1.6\"/>",
   "trash": "<path d=\"M4.5 7h15\"/><path d=\"M9.5 7V5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2\"/><path d=\"M6.5 7l.9 12a1.5 1.5 0 0 0 1.5 1.4h6.2a1.5 1.5 0 0 0 1.5-1.4l.9-12\"/>",
@@ -3703,7 +3704,7 @@ const MENU_ICONS = {
 // (_dashSwitchMenu). Unbekanntes (Rückgängig, Öffnen am Handy) bleibt vorn, wie es kam.
 // "create" ist nur noch die Markierung, an der die Module dieses Menü erkennen.
 const DASH_MENU = [
-  ["This dashboard", "renamedash", "pencil"], ["This dashboard", "icondash", "grid"],
+  ["This dashboard", "renamedash", "pencil"], ["This dashboard", "copydash", "copy"], ["This dashboard", "icondash", "grid"],
   ["This dashboard", "addmobile", "phone"], ["This dashboard", "casora_versions", "clock"],
   ["This dashboard", "delete", "trash"],
   ["New", "casora_umzug", "move"], ["New", "import", "import"],
