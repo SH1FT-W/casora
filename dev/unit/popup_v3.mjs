@@ -24,6 +24,9 @@ const MIGRIERT = [
   { popup: 'Licht (Raum, Haus, Leuchte aus der Gruppe)', vorlagen: ['casora_popup_light'], file: '03-popups.js',
     from: 'var S = window._casoraLightSoft = { els: {} };', to: null, stages: 1 },
   { popup: 'Jalousien (Raum/Gruppe)', vorlagen: ['casora_popup_cover'], file: null, stages: 1 },
+  // S2 while it can be set; off without heating / unavailable keep S2 greyed, a group falls back to S7 (no shared
+  // target) – three branches, in tap and hold.
+  { popup: 'Thermostat', vorlagen: ['casora_thermostat'], file: null, stages: 6 },
 ];
 
 // 1. Pieces.

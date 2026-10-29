@@ -11352,8 +11352,9 @@ window.casoraMenuGlass = {
     +   'background:' + S.ctl + ';color:' + T.ink + ';font-size:28px;font-weight:600;line-height:1;user-select:none;-webkit-user-select:none;'
     +   '-webkit-tap-highlight-color:transparent;transition:background-color var(--casora-dur-feedback, 160ms) ease;}'
     + '.hui-st-b > *{pointer-events:none;}'
-    + '.hui-st-b:active{transform:scale(var(--casora-press-scale, .97));}'
-    + '@media (hover:hover){.hui-st-b:hover{background:' + S.rowHover + ';}}'
+    + '.hui-st-b.dis{opacity:.3;cursor:default;}'
+    + '.hui-st-b:not(.dis):active{transform:scale(var(--casora-press-scale, .97));}'
+    + '@media (hover:hover){.hui-st-b:not(.dis):hover{background:' + S.rowHover + ';}}'
     + '.hui-st-pm .hui-st-val{justify-content:center;flex:1;min-width:0;}'
     + '.hui-st-pm .hui-st-n{font-size:var(--casora-v3-value-fs-big, 72px);}'
     + '.hui-st-pm .hui-st-u{align-self:flex-start;font-size:32px;margin-top:4px;}'
@@ -11453,8 +11454,10 @@ window.casoraMenuGlass = {
         var s = o[side];
         if (!s) return '<div class="hui-st-b" aria-hidden="true" style="visibility:hidden"></div>';
         var sv = s.svc || (s.domain ? s : null);
-        return '<div class="hui-st-b" role="button" aria-label="' + esc(sign < 0 ? 'Weniger' : 'Mehr') + '"'
-          + (sv ? ' data-casora-svc="' + esc(JSON.stringify(sv)) + '"' : '')
+        // s.dis: at the device's limit – shown, but greyed and without a service (like the stepper before).
+        return '<div class="hui-st-b' + (s.dis ? ' dis' : '') + '" role="button" aria-label="' + esc(sign < 0 ? 'Weniger' : 'Mehr') + '"'
+          + (s.dis ? ' aria-disabled="true"' : '')
+          + (sv && !s.dis ? ' data-casora-svc="' + esc(JSON.stringify(sv)) + '"' : '')
           + (s.step != null ? ' data-casora-step="' + esc(sign * Math.abs(Number(s.step) || 0.5)) + '"' : '')
           + (s.min != null ? ' data-casora-min="' + esc(s.min) + '"' : '') + (s.max != null ? ' data-casora-max="' + esc(s.max) + '"' : '')
           + stAttrs(s.attrs) + '><span>' + (sign < 0 ? '−' : '+') + '</span></div>';
@@ -11462,7 +11465,8 @@ window.casoraMenuGlass = {
       var n2 = o.state === 'off' && o.value == null ? T_('Aus') : stNum(o.value, o.digits == null ? 1 : o.digits);
       body = (o.caption ? '<div class="hui-st-cap">' + esc(o.caption) + '</div>' : '')
         + '<div class="hui-st-pm">' + pm('minus', -1)
-        + '<div class="hui-st-val"><span class="hui-st-n hp-st-v"><span class="n">' + esc(n2) + '</span></span>'
+        // o.valCls: the module's own counter class (e.g. fb-st-v), so its −/+ handler keeps updating the number.
+        + '<div class="hui-st-val' + (o.valCls ? ' ' + esc(o.valCls) : '') + '"><span class="hui-st-n hp-st-v"><span class="n">' + esc(n2) + '</span></span>'
         + (o.unit !== '' && n2 !== T_('Aus') ? '<span class="hui-st-u">' + esc(o.unit == null ? '°' : o.unit) + '</span>' : '') + '</div>'
         + pm('plus', 1) + '</div>'
         + (o.foot ? '<div class="hui-st-foot">' + esc(o.foot) + '</div>' : '');

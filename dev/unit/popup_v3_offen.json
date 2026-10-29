@@ -16,14 +16,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Thermostat",
-  "vorlagen": [
-   "casora_thermostat"
-  ],
-  "modul": "03-popups.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Klima (Raum)",
   "vorlagen": [
    "casora_climate_popup"
