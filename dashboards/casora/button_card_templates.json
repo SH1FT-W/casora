@@ -5237,7 +5237,8 @@
      }
     ],
     "style": "[[[\n  /* Zwei Spalten: links Betrieb/Modus/Zielfeuchte, rechts Status; oben Zustand und Verlauf. */\n  return '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);';\n]]]\n",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   }
  },

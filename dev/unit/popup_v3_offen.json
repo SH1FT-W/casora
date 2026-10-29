@@ -39,14 +39,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Luftbefeuchter",
-  "vorlagen": [
-   "casora_humidifier"
-  ],
-  "modul": "19-befeuchter.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Medien-Player",
   "vorlagen": [
    "casora_media"

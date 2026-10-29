@@ -30,6 +30,7 @@ const MIGRIERT = [
   { popup: 'Jalousie (einzeln)', vorlagen: ['casora_cover'], file: null, stages: 1 },
   { popup: 'Schalter', vorlagen: ['casora_switch'], file: null, stages: 1 },
   { popup: 'Lüfter', vorlagen: ['casora_fan'], file: null, stages: 1 },
+  { popup: 'Luftbefeuchter', vorlagen: ['casora_humidifier'], file: '19-befeuchter.js', from: '  H.v3 = function () {', to: null, stages: 2 },
 ];
 
 // 1. Pieces.
