@@ -34,6 +34,7 @@ const MIGRIERT = [
   { popup: 'Gerät allgemein', vorlagen: ['casora_entity_actions'], file: '05-standard-medien.js',
     from: 'window._casoraEntityPopup = function', to: '// ── Media popup', stages: 1 },
   { popup: 'Medien-Player', vorlagen: ['casora_media'], file: null, stages: 1 },
+  { popup: 'Now Playing (Kachel/Chip)', vorlagen: ['casora_now_playing_primary', 'casora_now_playing_chip'], file: null, stages: 2 },
 ];
 
 // 1. Pieces.
