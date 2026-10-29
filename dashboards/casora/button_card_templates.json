@@ -19056,7 +19056,8 @@
     ],
     "style": "[[[\n  /* Two columns: zones with setpoints left, modes, doors and settings right. */\n  return '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);';\n]]]\n",
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Kühlschrank', ['Kühlschrank', 'Gefrierschrank', 'Kühl-Gefrier-Kombination', 'Fridge', 'Freezer', 'Refrigerator']) : (String(variables.room_name || '').trim() || 'Kühlschrank'); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [

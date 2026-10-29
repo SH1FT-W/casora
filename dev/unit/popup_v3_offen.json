@@ -47,14 +47,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Kühlschrank",
-  "vorlagen": [
-   "casora_popup_fridge"
-  ],
-  "modul": "30-fridge.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Aquarium, Becken, Aquarium-Licht",
   "vorlagen": [
    "casora_aquarium",

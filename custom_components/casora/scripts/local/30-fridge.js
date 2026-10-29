@@ -223,20 +223,27 @@
     }
     var f = { hero: { card: K.secCard(C.watch, call('hero'), S) } };
     var top = ['hero'];
+    /* Popup v3 „Bühne“ (richtlinien §4 S2, §7): the cooling zone's setpoint as the stage (status line under it),
+       the chart as „Verlauf“ (120) in the right column – never above a stage. Soft, no localStorage
+       casora_popup_variant other than 'v3'. */
+    var v3 = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; } })();
+    if (v3) { f = { stage: { card: K.secCard(C.watch, call('stage'), S) } }; top = []; }
     var curves = C.zones.filter(function (z) { return z.temp && S[z.temp] && !bad(S[z.temp].state) && num(S[z.temp].state) != null; });
     if (curves.length) {
-      f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history', height: 160, readout: 'own', plate: true,
+      f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history', height: v3 ? 120 : 160, readout: 'own', plate: true,
         // Hex, because the chart writes the colour straight into the SVG: fridge zones teal, freezer zones blue.
         switch: false, series: curves.map(function (z) {
           var cold = num(((S[z.set] || S[z.temp] || {}).state)) <= -2;
           return { entity: z.temp, name: z.label, unit: (S[z.temp].attributes || {}).unit_of_measurement || '°C', color: cold ? '#5b8fc9' : '#4e9e95' };
         }) } };
-      top.push('chart');
+      if (!v3) top.push('chart');
     }
     f.zones = { card: K.secCard(C.watch, call('zones'), S) };
     if (C.modes.length || C.zones.some(function (z) { return z.sup; })) f.modes = { card: K.secCard(C.watch, call('modes'), S) };
     if (C.doors.length) f.doors = { card: K.secCard(C.watch, call('doors'), S) };
     f.more = { card: K.secCard(C.watch, call('more'), S) };
+    if (v3) return K.layout({ fields: f, top: [], stage: 'stage', left: ['zones'], right: ['chart', 'modes', 'doors', 'more'],
+      narrowOrder: ['stage', 'zones', 'modes', 'doors', 'chart', 'more'] });
     return K.layout({ fields: f, top: top, left: ['zones'], right: ['modes', 'doors', 'more'], narrowOrder: ['zones', 'modes', 'doors', 'more'] });
   };
 
@@ -275,6 +282,14 @@
     return UI.segments(items, z.label + ' · Sollwert ' + F.fmt(cur, dz.unit));
   };
 
+  // Popup v3: the zone on the stage – the first cooling zone with a setpoint (not a freezer), else the first one.
+  F.stageZone = function (C, S) {
+    var withSet = C.zones.map(function (z, i) { return { z: z, i: i }; }).filter(function (x) {
+      var id = x.z.set || x.z.climate; return id && S[id] && !bad(S[id].state);
+    });
+    var setOf = function (x) { var st = S[x.z.set || x.z.climate]; return x.z.climate ? num((st.attributes || {}).temperature) : num(st.state); };
+    return withSet.filter(function (x) { var v = setOf(x); return v != null && v > -2; })[0] || withSet[0] || null;
+  };
   F.sec = function (part, C, states, hass) {
     var UI = window._casoraUI;
     if (!UI) return '';
@@ -292,8 +307,31 @@
       var rest = s.modesOn.length ? s.modesOn.slice() : ['Alles in Ordnung'];
       return UI.line(temps || 'Bereit', rest);
     }
+    if (part === 'stage') {
+      var line = F.sec('hero', C, S, hass);
+      var zs = s.dead ? null : F.stageZone(C, S);
+      if (!zs) return UI.stage('status', { tone: s.dead ? 'off' : s.alarms.length ? 'bad' : 'good', icon: 'mdi:fridge-outline',
+        text: s.dead ? 'Nicht verfügbar' : F.temps(s, false) || 'Bereit', state: s.dead ? 'na' : null, extra: s.dead ? '' : line });
+      var zz = zs.z, dz0 = s.zones[zs.i] || {}, idS = zz.set || zz.climate, stS = S[idS], aS = stS.attributes || {};
+      var clim = !!zz.climate;
+      var curS = clim ? num(aS.temperature) : num(stS.state);
+      var loS = num(clim ? aS.min_temp : aS.min), hiS = num(clim ? aS.max_temp : aS.max), stepS = num(clim ? aS.target_temp_step : aS.step) || 1;
+      var side = function (dir) {
+        if (curS == null) return null;
+        var v = Math.round((curS + dir * stepS) * 100) / 100;
+        var dis = (dir < 0 && loS != null && curS <= loS) || (dir > 0 && hiS != null && curS >= hiS);
+        return { dis: dis, step: clim ? stepS : null, min: loS, max: hiS,
+          svc: clim ? { domain: 'climate', service: 'set_temperature', data: { temperature: v }, target: { entity_id: idS } }
+            : { domain: 'number', service: 'set_value', data: { value: v }, target: { entity_id: idS } } };
+      };
+      return UI.stage('value', { caption: zz.label + ' · Sollwert', value: curS, digits: stepS < 1 ? 1 : 0, unit: '°',
+        minus: side(-1), plus: side(1), foot: dz0.temp != null ? 'Jetzt ' + F.fmt(dz0.temp, dz0.unit) : null, extra: line });
+    }
     if (part === 'zones') {
       var rows = [], pills = '';
+      // Popup v3: the stage zone's setpoint is set on the stage – no second set of pills for it.
+      var v3z = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; } })();
+      var stageI = v3z ? (F.stageZone(C, S) || {}).i : -1;
       C.zones.forEach(function (z, i) {
         var dz = s.zones[i];
         if (!dz) return;
@@ -305,7 +343,7 @@
         var freezer = (dz.set != null ? dz.set : dz.temp) <= -2;
         rows.push({ entity: z.temp || z.set || z.climate, icon: freezer ? 'mdi:snowflake' : 'mdi:thermometer', iconTone: dz.alarm || dz.alarmTemp ? 'bad' : 'accent',
           label: z.label, sub: sub.length ? sub.join(' · ') : null, value: val || 'Unbekannt', valueTone: dz.alarmTemp ? 'bad' : null });
-        pills += (pills ? gap : '') + setpointRow(UI, z, dz, S);
+        if (i !== stageI) pills += (pills ? gap : '') + setpointRow(UI, z, dz, S);
       });
       if (!rows.length) return '';
       return UI.group(rows, 'Temperaturen') + (pills ? gap + pills : '');
