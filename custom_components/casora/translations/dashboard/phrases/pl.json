@@ -2571,7 +2571,8 @@
   "Sehr feucht": "Bardzo wilgotno",
   "Beschatten": "Zacienij",
   "Fährt zurück": "Wraca",
-  "Geparkt": "Zaparkowany"
+  "Geparkt": "Zaparkowany",
+  "Kein Akkustand": "Brak poziomu baterii"
  },
  "patterns": [
   [

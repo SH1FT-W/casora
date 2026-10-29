@@ -2571,7 +2571,8 @@
   "Sehr feucht": "Muito húmido",
   "Beschatten": "Sombrear",
   "Fährt zurück": "A regressar",
-  "Geparkt": "Estacionado"
+  "Geparkt": "Estacionado",
+  "Kein Akkustand": "Sem nível de bateria"
  },
  "patterns": [
   [

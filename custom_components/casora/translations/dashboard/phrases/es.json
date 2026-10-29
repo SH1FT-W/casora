@@ -2571,7 +2571,8 @@
   "Sehr feucht": "Muy húmedo",
   "Beschatten": "Sombra",
   "Fährt zurück": "Regresando",
-  "Geparkt": "Aparcado"
+  "Geparkt": "Aparcado",
+  "Kein Akkustand": "Sin nivel de batería"
  },
  "patterns": [
   [

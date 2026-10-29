@@ -2862,6 +2862,21 @@
     /* Head: odometer, else the total distance of the recorded rides. */
     var kmV = r.km != null ? r.km : r.dist, kmLabel = r.km != null ? 'Kilometerstand' : 'Distanz gesamt';
     var sub = r.theft ? 'Diebstahl gemeldet' : r.serviceDue ? 'Service fällig' : (r.daysSince != null ? 'Letzte Fahrt vor ' + fmtN(Math.round(r.daysSince)) + ' Tagen' : null);
+    /* Popup v3 (richtlinien §4 S7): the battery as the stage – symbol in traffic-light colour, „Akku 80 %“ / „Lädt ·
+       80 %“ (theft and a due service first), facts odometer, battery age and the last ride. */
+    if (name === 'stage') {
+      var Lb = r.live || {}, soc = Lb.soc != null ? Lb.soc : v(states, M.soc);
+      var txt = r.theft ? 'Diebstahl gemeldet' : r.serviceDue ? 'Service fällig'
+        : soc != null ? (Lb.charging ? 'Lädt · ' : 'Akku ') + fmtN(Math.round(soc)) + ' %' : (r.found ? 'Kein Akkustand' : 'Keine Daten');
+      var facts = [];
+      if (soc != null && (r.theft || r.serviceDue)) facts.push({ label: 'Akku', value: fmtN(Math.round(soc)) + ' %' });
+      if (kmV != null) facts.push({ label: kmLabel, value: fmtN(Math.round(kmV)) + ' km' });
+      if (Lb.socAt) facts.push({ label: 'Akkustand', value: agoMs(Lb.socAt) });
+      if (r.daysSince != null) facts.push({ label: 'Letzte Fahrt', value: 'vor ' + fmtN(Math.round(r.daysSince)) + ' T.' });
+      return UI.stage('status', { tone: r.theft ? 'bad' : r.serviceDue || (soc != null && soc <= 15 && !Lb.charging) ? 'warn' : soc == null ? 'off' : 'good',
+        icon: r.theft ? 'mdi:shield-alert-outline' : Lb.charging ? 'mdi:battery-charging' : soc == null ? 'mdi:battery-unknown' : 'mdi:battery',
+        text: txt, facts: facts, state: r.found ? null : 'na' }) + where;
+    }
     /* Soft (declutter): odometer as main value, sub line „Service fällig“ or the last ride. */
     if (name === 'hero' && SF) {
       return UI.hero({ value: kmV != null ? fmtN(Math.round(kmV)) + ' km' : '—',
@@ -3045,11 +3060,15 @@
     var HH = window._casoraHH;
     if (HH && HH.on() && HH.layout) {
       var fb = { hero: sec('hero'), range: sec('range'), service: sec('service') };
+      /* Popup v3 „Bühne“: the head becomes the battery stage (Soft, no localStorage casora_popup_variant other than 'v3'). */
+      var v3B = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var vv = localStorage.getItem('casora_popup_variant'); return !vv || vv === 'v3'; } catch (e) { return true; } })();
+      if (v3B) { delete fb.hero; fb.stage = sec('stage'); }
       if (G) fb.live = sec('live');
       if (B.hasAi(states)) fb.ai = sec('ai');
       fb.more = HH.moreCard(watch, 'const B = window._casoraBike, H = window._casoraHH;\n'
         + 'return B && H ? H.more("ebike", ["last", "total", "battery", "ai_tips", "motor"].map(function (n) { return B.sec(n, states, entity); })) : "";', entity.entity_id);
-      return HH.layout({ entity: entity.entity_id, watch: watch, fields: fb, left: G ? ['live', 'range'] : ['range'], right: ['service', 'ai', 'more'], settings: entity.entity_id });
+      return HH.layout({ entity: entity.entity_id, watch: watch, fields: fb, top: v3B ? [] : undefined, stage: v3B ? 'stage' : null,
+        left: G ? ['live', 'range'] : ['range'], right: ['service', 'ai', 'more'], settings: entity.entity_id });
     }
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
       + ' border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important;'

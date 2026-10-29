@@ -12414,7 +12414,8 @@
      }
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', ['eBike'])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own && !['eBike'].includes(_own)) return _own;\n  /* Name of the bike's device (Bosch eBike integration), else the plain word. */\n  return (window._casoraBike && window._casoraBike.name(states, entity)) || \"E-Bike\";\n]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "tap_action": {
@@ -12431,7 +12432,8 @@
      }
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', ['eBike'])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own && !['eBike'].includes(_own)) return _own;\n  /* Name of the bike's device (Bosch eBike integration), else the plain word. */\n  return (window._casoraBike && window._casoraBike.name(states, entity)) || \"E-Bike\";\n]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   }
  },

@@ -2571,7 +2571,8 @@
   "Sehr feucht": "Molto umido",
   "Beschatten": "Ombreggia",
   "Fährt zurück": "In rientro",
-  "Geparkt": "Parcheggiato"
+  "Geparkt": "Parcheggiato",
+  "Kein Akkustand": "Nessun livello batteria"
  },
  "patterns": [
   [

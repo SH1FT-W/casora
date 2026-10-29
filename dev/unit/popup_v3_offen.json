@@ -73,14 +73,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "E-Bike",
-  "vorlagen": [
-   "casora_popup_ebike"
-  ],
-  "modul": "03-popups.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Haustier",
   "vorlagen": [
    "casora_popup_pet"

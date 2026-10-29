@@ -2553,7 +2553,8 @@
   "Sehr feucht": "Very humid",
   "Beschatten": "Shade",
   "Fährt zurück": "Returning",
-  "Geparkt": "Parked"
+  "Geparkt": "Parked",
+  "Kein Akkustand": "No battery level"
  },
  "patterns": [
   [

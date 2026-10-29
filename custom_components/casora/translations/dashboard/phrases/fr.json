@@ -2571,7 +2571,8 @@
   "Sehr feucht": "Très humide",
   "Beschatten": "Ombrager",
   "Fährt zurück": "Retour en cours",
-  "Geparkt": "Garé"
+  "Geparkt": "Garé",
+  "Kein Akkustand": "Pas de niveau de batterie"
  },
  "patterns": [
   [
