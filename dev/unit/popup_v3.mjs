@@ -28,6 +28,7 @@ const MIGRIERT = [
   // target) – three branches, in tap and hold.
   { popup: 'Thermostat', vorlagen: ['casora_thermostat'], file: null, stages: 6 },
   { popup: 'Jalousie (einzeln)', vorlagen: ['casora_cover'], file: null, stages: 1 },
+  { popup: 'Schalter', vorlagen: ['casora_switch'], file: null, stages: 1 },
 ];
 
 // 1. Pieces.

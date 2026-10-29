@@ -54,13 +54,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Schalter",
-  "vorlagen": [
-   "casora_switch"
-  ],
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Medien-Player",
   "vorlagen": [
    "casora_media"
