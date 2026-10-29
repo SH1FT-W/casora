@@ -758,6 +758,8 @@
     "Tablets only. Brings one back to Home after a while without use.": "Solo tabletas. Vuelve a Casa tras un rato sin uso.",
     "Temperature": "Temperatura",
     "Temperature sensor": "Sensor de temperatura",
+    "Humidity sensor": "Sensor de humedad",
+    "Chosen automatically: the average of {n} rooms' sensors. Remove one here to leave it out.": "Elegido automáticamente: la media de los sensores de {n} habitaciones. Quita uno aquí para dejarlo fuera.",
     "Text": "Texto",
     "The account's now playing or session sensor.": "El sensor de reproducción o de sesión de la cuenta.",
     "The number the Energy badge shows. Without it, the badge shows today's cost.": "El valor que muestra la insignia de energía. Sin él, la insignia muestra el coste de hoy.",
@@ -3229,6 +3231,10 @@
     [
       "^Temperature (\\d+)$",
       "Temperatura {1}"
+    ],
+    [
+      "^Humidity (\\d+)$",
+      "Humedad {1}"
     ],
     [
       "^Thermostat (\\d+)$",

@@ -2480,7 +2480,6 @@ const SECTIONS = [
     iconColor: studioIcon("badge-climate"), group: "badges",
     fields: [
       { ...T("climate_title", "Name on the badge"), always: true, ord: -1, placeholder: "Climate" },
-      { ...E("humidity_sensor", "Humidity", ["sensor"]), classes: ["humidity"], ord: 3 },
       { ...E("quality_sensor", "Air quality", ["sensor"]), classes: AIR_CLASSES, ord: 4 },
       { key: "temp_unit", label: "Unit", type: "select", options: ["", "F", "C"], auto: true, ord: 1,
         optionLabels: { "": "Automatic (from Home Assistant)", F: "Fahrenheit \u00b0F", C: "Celsius \u00b0C" } },
@@ -2503,6 +2502,8 @@ const SECTIONS = [
     repeats: [
       R("thermostat", "Thermostat", 3, [{ ...E("climate_entity_%", "Thermostat %", ["climate"]), ord: 0 }]),
       R("temp", "Temperature sensor", 5, [{ ...E("temp_sensor_%", "Temperature %", ["sensor"]), classes: ["temperature"], ord: 2 }]),
+      // #96: several humidity sensors give their average like the temperatures; the first keeps its old key.
+      R("hum", "Humidity sensor", 5, [{ ...E("humidity_sensor_%", "Humidity %", ["sensor"]), key1: "humidity_sensor", classes: ["humidity"], ord: 3 }]),
     ],
   },
   {
@@ -2671,7 +2672,7 @@ function sectionFields(sec) {
       rep.fields.forEach((f) => {
         out.push({
           ...f,
-          key: f.key.replace("%", n),
+          key: n === 1 && f.key1 ? f.key1 : f.key.replace("%", n),
           label: f.label.replace("%", n),
           needs: f.needs ? f.needs.replace("%", n) : f.needs,
           labelOf: f.labelOf ? f.labelOf.replace("%", n) : f.labelOf,
@@ -2884,7 +2885,7 @@ function fillRoomEnergy(hass, rooms) {
 // has no device for lights, climate, security or media (rooms that hit #57). casora_badges_auto marks a filled
 // room: whoever empties it afterwards does not get the devices back. Switched-off badges (show_… false) stay off.
 // Energy has its own automatic (fillRoomEnergy). Returns the rooms filled.
-const ROOM_BADGE_VAR = /^(light_entity_\d+|light_group_entity|light_rooms_auto|climate_entity_\d+|temp_sensor_\d+|humidity_sensor|quality_sensor|security_(locks|cameras|entity_\d+|lock_entity(_\d+)?)|media_player_\d+)$/;
+const ROOM_BADGE_VAR = /^(light_entity_\d+|light_group_entity|light_rooms_auto|climate_entity_\d+|temp_sensor_\d+|humidity_sensor(_\d+)?|climate_rooms_auto|quality_sensor|security_(locks|cameras|entity_\d+|lock_entity(_\d+)?)|media_player_\d+)$/;
 function roomBadgesEmpty(V) {
   return !Object.keys(V || {}).some((k) => ROOM_BADGE_VAR.test(k) && !emptyVal(V[k]));
 }
@@ -18401,6 +18402,10 @@ class CasoraPanel extends HTMLElement {
           if (value === undefined || value === "" || (Array.isArray(value) && !value.length)) delete r.variables[key];
           else r.variables[key] = value;
           if (isHomeRoom(r, this._state.compact.rooms)) {
+            if (/^(temp_sensor_\d+|humidity_sensor(_\d+)?)$/.test(key) && r.variables.climate_rooms_auto) {
+              delete r.variables.climate_rooms_auto;
+              this._mirrorToPair("climate_rooms_auto", undefined, [r]);
+            }
             const was = r.variables.light_rooms_auto;
             homeLightsEdit(r.variables, key, value);
             // The marker goes to the phone's badge row with it (also its removal).
@@ -18521,6 +18526,7 @@ class CasoraPanel extends HTMLElement {
           let w = null;
           if (/^energy_(power_entity|entities)$/.test(f.key) && B.homeEnergyWhy) w = B.homeEnergyWhy(this._hass, room.variables, f.key);
           else if (f.key === "light_group_entity" && B.homeLightsWhy) w = B.homeLightsWhy(this._hass, this._state.compact.rooms);
+          else if ((f.key === "temp_sensor_1" || f.key === "humidity_sensor") && B.homeClimateWhy) w = B.homeClimateWhy(room.variables, f.key);
           if (!w) return;
           const h = document.createElement("div");
           h.className = "hint autowhy";
@@ -23322,12 +23328,18 @@ class CasoraPanel extends HTMLElement {
 
     const thermostats = list("climate_entity_", 3);
     const temps = list("temp_sensor_", 5);
+    const hums = [V.humidity_sensor].concat(list("humidity_sensor_", 5).filter((id) => id !== V.humidity_sensor)).filter(Boolean);
+    // Several sensors: their average, as the dashboard's sub-badges (casoraAvgState, 01-basis.js).
+    const avg = (ids) => {
+      const vals = [...new Set(ids)].map(num).filter((x) => x != null);
+      return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length * 10) / 10 : null;
+    };
     // As casora_badge_climate_group: shown only with a temperature, humidity or air quality sensor - a thermostat
     // alone gave a badge in the preview that the dashboard and the phone do not have (r44, radiator in the garage).
-    const climateOn = !!(temps.length || V.humidity_sensor || V.quality_sensor);
+    const climateOn = !!(temps.length || hums.length || V.quality_sensor);
     if (on("show_climate") && climateOn) {
-      const t = num(temps[0]) ?? (st(thermostats[0]) || {}).attributes?.current_temperature;
-      const h = num(V.humidity_sensor);
+      const t = avg(temps) ?? (st(thermostats[0]) || {}).attributes?.current_temperature;
+      const h = avg(hums);
       const subs = [];
       // casora_badge_temp's own thresholds and wording.
       const tempWord = (v) => {
@@ -23363,7 +23375,7 @@ class CasoraPanel extends HTMLElement {
       };
       const clamp = (x) => Math.max(0.05, Math.min(1, x));
       if (temps[0]) {
-        const n = num(temps[0]);
+        const n = avg(temps);
         subs.push({
           icon: n != null ? tempIcon(n) : "temp-medium",
           color: n != null ? tempColor(n) : CLIMATE,
@@ -23371,7 +23383,7 @@ class CasoraPanel extends HTMLElement {
           gauge: n != null ? clamp(unit === "F" ? (n - 45) / 50 : (n - 7) / 28) : null,
           text: n != null ? tempWord(n) + " \u00b7 " + Math.round(n) + unit : "Unknown" });
       }
-      if (V.humidity_sensor) {
+      if (hums.length) {
         subs.push({ icon: "humidity", color: h != null ? humColor(h) : CLIMATE,
           label: "Humidity",
           gauge: h != null ? clamp(h / 100) : null,

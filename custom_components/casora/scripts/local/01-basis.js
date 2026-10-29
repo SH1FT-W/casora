@@ -2227,6 +2227,23 @@ window._casoraFadeRow = function (row) {
    Humidity: 40–60 % good, 30–40 and 60–70 % medium, outside bad. null: no reading. unit: the sensor's
    unit_of_measurement (°F/F → Fahrenheit), else °C. Used by the badges (casora_badge_temp/_humidity) and the
    phone's Klima popup (35-phone-hub.js). dev/unit/comfort_level.mjs */
+/* Average of a badge's sensors (#96: Home's temperature/humidity from the rooms). ids: the badge's list (avg_sensors);
+   with fewer than two readings the badge's own entity counts as before. Returns the state as text (1 decimal), like
+   entity.state, so the badge's words, colours and rounding stay the same. dev/unit/climate_average.mjs */
+window.casoraAvgState = function (hass, ids, entity) {
+  var own = entity ? entity.state : undefined;
+  if (!Array.isArray(ids) || ids.length < 2) return own;
+  var S = (hass && hass.states) || {}, seen = {}, vals = [];
+  ids.forEach(function (id) {
+    if (!id || seen[id]) return;
+    seen[id] = true;
+    var n = parseFloat((S[id] || {}).state);
+    if (isFinite(n)) vals.push(n);
+  });
+  if (vals.length < 2) return vals.length ? String(vals[0]) : own;
+  var sum = vals.reduce(function (t, n) { return t + n; }, 0);
+  return (Math.round(sum / vals.length * 10) / 10).toFixed(1);
+};
 window.casoraComfortLevel = function (kind, v, unit) {
   var n = parseFloat(v);
   if (!isFinite(n)) return null;

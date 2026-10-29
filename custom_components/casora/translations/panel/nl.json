@@ -758,6 +758,8 @@
     "Tablets only. Brings one back to Home after a while without use.": "Alleen tablets. Gaat na een tijd zonder gebruik terug naar Thuis.",
     "Temperature": "Temperatuur",
     "Temperature sensor": "Temperatuursensor",
+    "Humidity sensor": "Vochtigheidssensor",
+    "Chosen automatically: the average of {n} rooms' sensors. Remove one here to leave it out.": "Automatisch gekozen: het gemiddelde van de sensoren in {n} kamers. Verwijder er hier een om hem weg te laten.",
     "Text": "Tekst",
     "The account's now playing or session sensor.": "De speelt-nu- of sessiesensor van het account.",
     "The number the Energy badge shows. Without it, the badge shows today's cost.": "Het getal dat de energiebadge toont. Zonder dit toont de badge de kosten van vandaag.",
@@ -3229,6 +3231,10 @@
     [
       "^Temperature (\\d+)$",
       "Temperatuur {1}"
+    ],
+    [
+      "^Humidity (\\d+)$",
+      "Vochtigheid {1}"
     ],
     [
       "^Thermostat (\\d+)$",

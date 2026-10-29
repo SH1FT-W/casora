@@ -623,10 +623,13 @@
     const isPump = (id) => PUMP.test(id + " " + (((hass.states || {})[id] || {}).attributes || {}).friendly_name);
     const houseCl = p.houseClimate || [];
     put(h, "climate_entity_", [...new Set(houseCl.filter((id) => !isPump(id)).concat(all.climate, houseCl.filter(isPump)))], 3);
-    const firstRoom = (k) => (p.rooms.slice(1).find((r) => r[k]) || {})[k];
-    const ht = p.houseTemp || firstRoom("temp"), hh = p.houseHum || firstRoom("hum");
-    if (ht) h.temp_sensor_1 = ht;
-    if (hh) h.humidity_sensor = hh;
+    // Without a house sensor Home shows the average of the rooms' sensors (the ones their climate badges use, at most
+    // five each, #96); climate_rooms_auto tells the Studio it was Casora's pick (casoraBasis.homeClimateWhy).
+    const ofRooms = (k) => [...new Set(p.rooms.slice(1).map((r) => r[k]).filter(Boolean))].slice(0, 5);
+    const temps = p.houseTemp ? [p.houseTemp] : ofRooms("temp"), hums = p.houseHum ? [p.houseHum] : ofRooms("hum");
+    put(h, "temp_sensor_", temps, 5);
+    hums.forEach((id, i) => { h[i ? "humidity_sensor_" + (i + 1) : "humidity_sensor"] = id; });
+    if ((!p.houseTemp && temps.length > 1) || (!p.houseHum && hums.length > 1)) h.climate_rooms_auto = true;
     // Without a house sensor Home counts the rooms, the same sensors as their energy badges
     // (#44). casora_energy_auto 2: the Studio adds what the rooms gain later (fillHomeEnergy).
     // casora_energy_auto "house": the Studio picked the house sensor, not the user.
@@ -653,7 +656,7 @@
   // Badge categories: [category, "already set", which keys are taken over].
   const BADGE_CATS = [
     ["lights", /^(light_entity_\d+|light_group_entity|light_rooms_auto)$/, /^(light_entity_\d+|light_group_entity|light_rooms_auto)$/],
-    ["climate", /^(climate_entity_\d+|temp_sensor_\d+)$/, /^(climate_entity_\d+|temp_sensor_1|humidity_sensor)$/],
+    ["climate", /^(climate_entity_\d+|temp_sensor_\d+)$/, /^(climate_entity_\d+|temp_sensor_\d+|humidity_sensor(_\d+)?|climate_rooms_auto)$/],
     ["security", /^security_(locks|cameras|entity_\d+|lock_entity(_\d+)?)$/, /^security_(locks|cameras|entity_\d+)$/],
     ["energy", /^energy_(power_entity|entity_\d+|entities)$/, /^(energy_(power_entity|entities)|casora_energy_auto)$/],
     ["media", /^media_player_\d+$/, /^media_player_\d+$/],
@@ -796,6 +799,18 @@
   }
   // The "why" line under Home's light group field while the badge follows the rooms: English text, {n} lights
   // and {m} rooms filled in after the Studio translated it. null: the user chose, or nothing to count.
+  // Home's temperature/humidity while Casora picked the rooms' sensors (climate_rooms_auto, #96): the Studio says
+  // so under the first field. Gone once the user changes one (the list is theirs).
+  function homeClimateWhy(V, key) {
+    if (!V || V.climate_rooms_auto !== true) return null;
+    const ids = key === "humidity_sensor"
+      ? [V.humidity_sensor, V.humidity_sensor_2, V.humidity_sensor_3, V.humidity_sensor_4, V.humidity_sensor_5]
+      : [1, 2, 3, 4, 5].map((n) => V["temp_sensor_" + n]);
+    const n = ids.filter(Boolean).length;
+    if (n < 2) return null;
+    return { text: "Chosen automatically: the average of {n} rooms' sensors. Remove one here to leave it out.", n };
+  }
+
   function homeLightsWhy(hass, rooms) {
     const list = rooms || [];
     const home = list.find((r) => I() && I().isHomeRoom && I().isHomeRoom(r, list)) || list[0];
@@ -821,7 +836,7 @@
       any: (room.powersAny || []).slice() };
   }
 
-  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo, addLight, houseLights, homeLightsWhy, topUnits };
+  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo, addLight, houseLights, homeLightsWhy, homeClimateWhy, topUnits };
 
   // KI kostet: Casora schätzt vor dem ersten Einsatz grob, was es über den API-Schlüssel
   // kostet (Zeichen → Token, Listenpreise je Modellfamilie in USD pro 1 Mio. Token) und fragt nach.
