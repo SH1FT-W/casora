@@ -2572,7 +2572,8 @@
   "Beschatten": "Zacienij",
   "Fährt zurück": "Wraca",
   "Geparkt": "Zaparkowany",
-  "Kein Akkustand": "Brak poziomu baterii"
+  "Kein Akkustand": "Brak poziomu baterii",
+  "Tank": "Bak"
  },
  "patterns": [
   [

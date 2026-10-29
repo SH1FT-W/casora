@@ -2554,7 +2554,8 @@
   "Beschatten": "Shade",
   "Fährt zurück": "Returning",
   "Geparkt": "Parked",
-  "Kein Akkustand": "No battery level"
+  "Kein Akkustand": "No battery level",
+  "Tank": "Tank"
  },
  "patterns": [
   [

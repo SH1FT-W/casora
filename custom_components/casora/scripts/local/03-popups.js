@@ -1948,7 +1948,7 @@
   C.sec = function (name, p, states) {
     var UI = window._casoraUI; if (!UI) return '';
     var r = C.read(p, states);
-    if (name === 'hero') {
+    if (name === 'hero' || name === 'stage') {
       var lv = C.level(p, states);
       var sub = [r.open.length ? r.open.join(', ') + ' offen' : (r.locked === false ? 'Nicht verriegelt' : r.locked ? 'Verriegelt' : null),
         r.stamp ? 'Stand ' + ago(r.stamp) : null].filter(Boolean).join(' · ');
@@ -1958,6 +1958,19 @@
         r.stamp ? 'Stand ' + esc(ago(r.stamp)) + ' (verzögert)' : null].filter(Boolean).join(' · ');
       /* No range found (#89): the tile's own value, as on the tile. */
       var ownH = r.range == null ? C.ownText(p, states) : null;
+      /* Popup v3 (richtlinien §4 S7): range (else the tile's own value, #89) as the sentence, symbol in traffic-light
+         colour of the head's level; facts fill level (or litres), lock/doors and the data age; „Tanken“ stays under it. */
+      if (name === 'stage') {
+        var lock = r.open.length ? r.open.join(', ') + ' offen' : (r.locked === false ? 'Nicht verriegelt' : r.locked ? 'Verriegelt' : null);
+        var factsC = [];
+        if (r.tank != null) factsC.push({ label: r.ev ? 'Akku' : 'Tank', value: fmtN(Math.round(r.tank)) + ' %' });
+        else if (r.tankL != null) factsC.push({ label: 'Tankinhalt', value: fmtN(r.tankL) + ' ' + r.tankLU });
+        if (lock) factsC.push({ label: 'Schloss', value: lock });
+        if (r.stamp) factsC.push({ label: 'Datenstand', value: ago(r.stamp) });
+        return UI.stage('status', { tone: lv === 2 ? 'bad' : lv === 1 ? 'warn' : 'good', icon: r.ev ? 'mdi:car-electric' : 'mdi:car',
+          text: r.range != null ? 'Reichweite ' + fmtN(r.range) + ' ' + r.rangeU : ownH || 'Keine Daten', facts: factsC,
+          extra: tank() && SFh ? tank().row(p, states) : '' });
+      }
       var out = UI.hero({ label: SFh || ownH ? null : 'Reichweite', value: r.range != null ? (SFh ? 'Reichweite ' : '') + fmtN(r.range) : ownH || '—', unit: r.range != null ? r.rangeU : null,
         sub: sub, subTone: lv === 2 ? 'bad' : lv === 1 ? 'warn' : 'good', center: true });
       /* Weich 1.1.2: Tank als schmale Leiste unter dem Kopf (wie die Geräte-Popups); rechts leer,
@@ -2087,10 +2100,13 @@
        rechts Wartung (nur Fälliges); alle Zustandszeilen, Wartungswerte, Fahrten und Daten unter „Mehr“. */
     var HH = window._casoraHH;
     if (HH && HH.on() && HH.layout) {
-      var fc = { hero: sec('hero'), state_s: sec('state_s'), service_s: sec('service_s'),
+      /* Popup v3 „Bühne“: the head becomes the status stage (Soft, no localStorage casora_popup_variant other than 'v3'). */
+      var v3C = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var vv = localStorage.getItem('casora_popup_variant'); return !vv || vv === 'v3'; } catch (e) { return true; } })();
+      var fc = { hero: v3C ? undefined : sec('hero'), stage: v3C ? sec('stage') : undefined, state_s: sec('state_s'), service_s: sec('service_s'),
         more: HH.moreCard(watch, 'const C = window._casoraCar, H = window._casoraHH;\n'
           + 'return C && H ? H.more("car", ["state", "service", "trips"].map(function (n) { return C.sec(n, ' + JSON.stringify(p) + ', states); })) : "";', entity.entity_id) };
-      return HH.layout({ entity: entity.entity_id, watch: watch, fields: fc, left: ['state_s'], right: ['service_s', 'more'], settings: entity.entity_id });
+      return HH.layout({ entity: entity.entity_id, watch: watch, fields: fc, top: v3C ? [] : undefined, stage: v3C ? 'stage' : null,
+        left: ['state_s'], right: ['service_s', 'more'], settings: entity.entity_id });
     }
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
       + ' border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important;'

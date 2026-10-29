@@ -2572,7 +2572,8 @@
   "Beschatten": "Ombreggia",
   "Fährt zurück": "In rientro",
   "Geparkt": "Parcheggiato",
-  "Kein Akkustand": "Nessun livello batteria"
+  "Kein Akkustand": "Nessun livello batteria",
+  "Tank": "Serbatoio"
  },
  "patterns": [
   [

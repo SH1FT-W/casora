@@ -2572,7 +2572,8 @@
   "Beschatten": "Sombrear",
   "Fährt zurück": "A regressar",
   "Geparkt": "Estacionado",
-  "Kein Akkustand": "Sem nível de bateria"
+  "Kein Akkustand": "Sem nível de bateria",
+  "Tank": "Depósito"
  },
  "patterns": [
   [

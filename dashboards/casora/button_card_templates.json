@@ -12269,7 +12269,8 @@
      }
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', ['Fahrzeug'])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own && !['Fahrzeug'].includes(_own)) return _own;\n  /* Name des Auto-Geräts (Issue #17: Kachel auf …_tankstand hieß sonst „… Tankstand“), sonst wie bisher der Entitätsname ohne „Reichweite…“. */\n  const _h = hass || document.querySelector('home-assistant')?.hass;\n  const _dev = _h?.entities?.[entity?.entity_id]?.device_id;\n  const _dn = _dev && (_h?.devices?.[_dev]?.name_by_user || _h?.devices?.[_dev]?.name);\n  const n = String(_dn || entity?.attributes?.friendly_name || '').replace(/\\s+Reichweite.*$/i, '').trim();\n  return n || 'Fahrzeug';\n]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "tap_action": {
@@ -12286,7 +12287,8 @@
      }
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', ['Fahrzeug'])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own && !['Fahrzeug'].includes(_own)) return _own;\n  /* Name des Auto-Geräts (Issue #17: Kachel auf …_tankstand hieß sonst „… Tankstand“), sonst wie bisher der Entitätsname ohne „Reichweite…“. */\n  const _h = hass || document.querySelector('home-assistant')?.hass;\n  const _dev = _h?.entities?.[entity?.entity_id]?.device_id;\n  const _dn = _dev && (_h?.devices?.[_dev]?.name_by_user || _h?.devices?.[_dev]?.name);\n  const n = String(_dn || entity?.attributes?.friendly_name || '').replace(/\\s+Reichweite.*$/i, '').trim();\n  return n || 'Fahrzeug';\n]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   }
  },

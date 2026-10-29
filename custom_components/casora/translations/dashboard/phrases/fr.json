@@ -2572,7 +2572,8 @@
   "Beschatten": "Ombrager",
   "Fährt zurück": "Retour en cours",
   "Geparkt": "Garé",
-  "Kein Akkustand": "Pas de niveau de batterie"
+  "Kein Akkustand": "Pas de niveau de batterie",
+  "Tank": "Réservoir"
  },
  "patterns": [
   [

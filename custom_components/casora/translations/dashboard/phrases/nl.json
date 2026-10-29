@@ -2572,7 +2572,8 @@
   "Beschatten": "Schaduw",
   "Fährt zurück": "Keert terug",
   "Geparkt": "Geparkeerd",
-  "Kein Akkustand": "Geen accuniveau"
+  "Kein Akkustand": "Geen accuniveau",
+  "Tank": "Tank"
  },
  "patterns": [
   [

@@ -65,14 +65,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Fahrzeug",
-  "vorlagen": [
-   "casora_popup_car"
-  ],
-  "modul": "03-popups.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Haustier",
   "vorlagen": [
    "casora_popup_pet"
