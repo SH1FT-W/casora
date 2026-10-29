@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.68 – 29.10.2026
+
+### Fixed
+- **Car tile with BMW CarData (#89):** the total range instead of a plug-in hybrid's electric range, the tank level in % (the litres count as the amount), the high-voltage battery's charge instead of its 100 % target, and the doors and windows by their CarData names.
+
 ## 26.10.67 – 29.10.2026
 
 ### New

@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.68 – 29.10.2026
+
+### Behoben
+- **Auto-Kachel mit BMW CarData (#89):** die Gesamtreichweite statt der elektrischen Reichweite eines Plug-in-Hybrids, der Tankfüllstand in % (die Liter zählen als Tankinhalt), der Ladestand der Hochvoltbatterie statt ihres 100-%-Ziels, dazu Türen und Fenster mit ihren CarData-Namen.
+
 ## 26.10.67 – 29.10.2026
 
 ### Neu
