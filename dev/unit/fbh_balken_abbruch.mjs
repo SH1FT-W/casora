@@ -51,5 +51,6 @@ assert.equal(calls.length, 2, 'Haus-Balken stellt ein');
 assert.deepEqual(calls[1][3], { entity_id: ['climate.a', 'climate.b'] }, 'Haus-Balken: alle Räume als Ziel');
 // 1.3: Haus ohne gemeinsame Zieltemperatur – Räume werden einzeln eingestellt (r246); der Balken kann mehrere Ziele weiter.
 assert.doesNotMatch(src, /Räume unterschiedlich · Ø/, 'Haus: kein gemeinsamer Stepper mehr');
-assert.match(src, /id: tgt\.entity_id \}/, 'Balken übernimmt alle Ziele des Steppers');
+// v3: the bar is built by F.bar from the stepper's target (all rooms of a house stepper).
+assert.match(src, /F\.bar\(tgt\.entity_id,/, 'Balken übernimmt alle Ziele des Steppers');
 console.log('ok fbh_balken_abbruch');
