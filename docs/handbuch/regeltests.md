@@ -27,6 +27,7 @@ alles auf einmal umgebaut werden muss.
 | Umzug unverändert | `r24_umzug_wie_vorher`, `rf02_raum_ablauf`, `r121`, `r122` | Laufzeit |
 | Leistung: Voll-Durchläufe, Leck, doppelte Abrufe | `dev/unit/leistung_13.mjs`, `dev/qa/leistung.mjs --grenzen dev/qa/leistung-grenzen.json` | statisch + Laufzeit (Zähler) |
 | Popup-Muster v2 ([popup-blaupause.md](popup-blaupause.md)): Bausteine da, Breite 552/900, „Weitere Einstellungen“ über `UI.settings` und in jedem migrierten Geräte-Popup, kein eigener Kopf/›-Pfeil, Hauptaktion in Gerätefarbe | `dev/unit/popup_blaupause.mjs` + `popup_blaupause_ausnahmen.json` | statisch, Sperrklinke |
+| Popup v3 „Bühne“ ([popup-richtlinien-v3.md](popup-richtlinien-v3.md)): `UI.stage` S1–S8 und `UI.quick` da, migrierte Popups mit variant 'v3' und Bühne aus `UI.stage`, Schnellwahl ohne gefährliche Einträge und höchstens 4, Diagramme ohne Hex und nur 120/140/160 hoch, nicht migrierte Popups mit Grund in der Liste | `dev/unit/popup_v3.mjs` + `popup_v3_offen.json` | statisch, Sperrklinke |
 
 ## 2. Vorschlag – nächste Regeltests
 

@@ -1,5 +1,8 @@
 # Popup-Blaupause v2: ein Muster für alle Popups
 
+> **Aufbau seit v3: [popup-richtlinien-v3.md](popup-richtlinien-v3.md)** (Bühne S1–S8, Schnellwahl). Diese Seite gilt
+> weiter für Zeilen, Unterseiten, Einstellungen und Bausteine; wo sie dem v3-Aufbau widerspricht, gilt v3.
+
 Gilt seit 26.10.2026 (Entscheidung Maintainer: „Popup-Vorschläge komplett umsetzen“). Grundlage: Bestandsaufnahme aller
 62 Popup-Arten und der Vorschlag „Casora-Popups einheitlich“ mit den Regeln v2. Ergänzt
 [blaupause-popup.md](blaupause-popup.md) (Dateien, Live-Karten, Pflicht-Zustände) um das **Was steht wo**: jedes Popup
