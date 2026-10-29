@@ -4,6 +4,12 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.67 – 29.10.2026
+
+### New
+- **Duplicate a tile (#92):** in the Studio, a tile's ⋯ menu has "Duplicate": the copy lands right behind it in the same room, so several lamps or blinds are quick to set up. "Copy to Room…" stays for other rooms.
+- **Copy a dashboard (#92):** the dashboard's ⋯ menu in the Studio has "Copy…": a new dashboard with all rooms, tiles and badges, with its phone layout. Links into its own rooms point to the copy; the original stays as it is. Save your changes first.
+
 ## 26.10.66 – 29.10.2026
 
 ### New

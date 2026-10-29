@@ -4,6 +4,12 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.67 – 29.10.2026
+
+### Neu
+- **Kachel duplizieren (#92):** Im Studio hat das ⋯-Menü einer Kachel „Duplizieren“: Die Kopie landet direkt dahinter im selben Raum, so sind mehrere Lampen oder Jalousien schnell angelegt. „In Raum kopieren …“ bleibt für andere Räume.
+- **Dashboard kopieren (#92):** Das ⋯-Menü des Dashboards im Studio hat „Kopieren …“: ein neues Dashboard mit allen Räumen, Kacheln und Badges, samt Handy-Ansicht. Links in die eigenen Räume zeigen auf die Kopie; das Original bleibt, wie es ist. Vorher speichern.
+
 ## 26.10.66 – 29.10.2026
 
 ### Neu
