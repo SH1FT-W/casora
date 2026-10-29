@@ -958,6 +958,13 @@ window._hpMultiTap = function (ev, kind) {
       + 'let v = s ? s.state : "—"; try { if (hass.formatEntityState && s) v = hass.formatEntityState(s); } catch (e) {} '
       + 'const dead = !s || s.state === "unavailable" || s.state === "unknown"; '
       + 'return window._casoraUI.line(dead ? "Nicht verfügbar" : v, [], { tone: dead ? "bad" : null }); ]]]');
+    /* Popup v3 „Bühne“ (popup-richtlinien-v3.md §4.7 fallback): the tile's state as stage S7 without a main action
+       (green while on, the off symbol otherwise, greyed while unavailable). localStorage casora_popup_variant
+       'a'/'b' keeps the earlier body. */
+    var v3 = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; } })();
+    if (v3) {
+      add('stage', '[[[ return window._casoraEntityPopup.v3stage(' + JSON.stringify(id) + ', states, hass); ]]]', 'l');
+    }
     var two = acts.length && sib.length;
     if (acts.length) add('acts', UI.section('control', acts), 'l');
     if (sib.length) {
@@ -989,6 +996,15 @@ window._hpMultiTap = function (ev, kind) {
       custom_fields: fields,
     };
     return window._casoraStd && left.length && right.length ? window._casoraStd(card, { left: left, right: right }) : card;
+  };
+  // Popup v3 stage S7 (fallback rule): the tile's state, no main action.
+  window._casoraEntityPopup.v3stage = function (id, states, hass) {
+    var UI = window._casoraUI, s = states[id];
+    var v = s ? s.state : '—';
+    try { if (hass && hass.formatEntityState && s) v = hass.formatEntityState(s); } catch (e) { /* raw state */ }
+    var dead = !s || s.state === 'unavailable' || s.state === 'unknown';
+    var ic = s && s.attributes && s.attributes.icon && String(s.attributes.icon).indexOf(':') > 0 ? s.attributes.icon : 'mdi:devices';
+    return UI.stage('status', { tone: s && s.state === 'on' ? 'good' : 'off', state: dead ? 'na' : null, icon: ic, text: dead ? 'Nicht verfügbar' : v });
   };
   // Popup kind for the width (rule 11): 'two' with buttons and values side by side, else 'one'.
   window._casoraEntityPopup.kind = function (entity, variables, states, hass) {

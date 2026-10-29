@@ -63,14 +63,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Gerät allgemein",
-  "vorlagen": [
-   "casora_entity_actions"
-  ],
-  "modul": "05-standard-medien.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Waschmaschine/Trockner",
   "vorlagen": [
    "casora_popup_laundry",
