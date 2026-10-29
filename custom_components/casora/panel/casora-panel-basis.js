@@ -297,7 +297,7 @@
     // Room temperature and humidity for the climate badge. Plant sensors (a device with soil
     // moisture), water, appliances and outdoors do not count.
     const plantDev = new Set(Object.keys(S).filter((id) => ((S[id].attributes || {}).device_class === "moisture")).map((id) => (R[id] || {}).device_id).filter(Boolean));
-    const NOT_ROOM = /boden|soil|wasser|water|aquarium|pool|nozzle|d(ü|ue)se|bett|bed|cpu|chip|akku|batter|k(ü|ue)hl|fridge|gefrier|freezer|ofen|oven|au(ß|ss)en|outdoor|drucker|printer|ger(ä|ae)t/i;
+    const NOT_ROOM = /boden|soil|wasser|water|aquarium|pool|nozzle|d(ü|ue)se|bett|bed|cpu|chip|akku|batter|k(ü|ue)hl|fridge|gefrier|freezer|ofen|oven|au(ß|ss)en|outdoor|drucker|printer|ger(ä|ae)t|festplatte|disk|hdd|ssd|nvme|volume|\bnas\b|synology|raid|system|router|server/i;
     const numeric = (id) => Number.isFinite(parseFloat((S[id] || {}).state));
     const pickSensor = (dc, room) => Object.keys(S).find((id) => {
       if (!id.startsWith("sensor.") || ((S[id].attributes || {}).device_class) !== dc || !numeric(id)) return false;
@@ -404,9 +404,15 @@
       room.powersOld = whole ? [whole] : oldAll.slice(0, 12);
       room.powersAny = all0;
     });
-    const INDOOR = /innen|indoor|durchschnitt|average|mittel|wohnung|zuhause|haus/i;
-    const houseSensor = (dc) => Object.keys(S).find((id) => id.startsWith("sensor.") && ((S[id].attributes || {}).device_class) === dc
-      && numeric(id) && INDOOR.test(id + " " + ((S[id].attributes || {}).friendly_name || "")) && !NOT_ROOM.test(id)) || null;
+    // A house sensor sounds like the whole home. "Average" alone only counts for a helper without a device
+    // (min_max, group): a NAS's "durchschnittliche_festplattentemperatur" is no house temperature (#96).
+    const INDOOR = /innen|indoor|wohnung|zuhause|haus/i, AVERAGE = /durchschnitt|average|mittel/i;
+    const houseSensor = (dc) => Object.keys(S).find((id) => {
+      if (!id.startsWith("sensor.") || ((S[id].attributes || {}).device_class) !== dc || !numeric(id)) return false;
+      const label = id + " " + ((S[id].attributes || {}).friendly_name || "");
+      if (NOT_ROOM.test(label)) return false;
+      return INDOOR.test(label) || (AVERAGE.test(label) && !(R[id] || {}).device_id);
+    }) || null;
     return { rooms: out, loose, houseClimate, houseTemp: houseSensor("temperature"), houseHum: houseSensor("humidity"),
       housePower: housePower(hass) };
   }
@@ -612,7 +618,11 @@
     const g = lightsAll.length > 1 ? groupFor(hass, lightsAll, "light") : null;
     if (g) { h.light_group_entity = g; put(h, "light_entity_", lightsAll, 10); }
     else if (lightsAll.length) h.light_rooms_auto = true;
-    put(h, "climate_entity_", [...new Set((p.houseClimate || []).concat(all.climate))], 3);
+    // Home's thermostats: house-wide ones first, then the rooms'; a heat pump (house-wide too) only after the rooms (#96).
+    const PUMP = /w(ä|ae|a)rmepumpe|heat.?pump/i;
+    const isPump = (id) => PUMP.test(id + " " + (((hass.states || {})[id] || {}).attributes || {}).friendly_name);
+    const houseCl = p.houseClimate || [];
+    put(h, "climate_entity_", [...new Set(houseCl.filter((id) => !isPump(id)).concat(all.climate, houseCl.filter(isPump)))], 3);
     const firstRoom = (k) => (p.rooms.slice(1).find((r) => r[k]) || {})[k];
     const ht = p.houseTemp || firstRoom("temp"), hh = p.houseHum || firstRoom("hum");
     if (ht) h.temp_sensor_1 = ht;
