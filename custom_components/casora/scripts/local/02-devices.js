@@ -1103,6 +1103,8 @@
       cf[k] = H.own((typeof f[k] === 'string' && f[k].indexOf('[[[') > -1) ? { card: H.col([k], f, o.watch, o.entity) } : f[k]);
       cs[k] = [{ 'justify-self': 'stretch' }, { 'min-width': '0' }];
     });
+    /* Popup v3: the chosen quick tile's shadow must not be cut by its field (button-card fields clip). */
+    if (o.quick) o = Object.assign({}, o, { colExtra: (o.colExtra || '') + ' #container > #' + o.quick + ' { overflow: visible !important; }' });
     cf.left = H.own({ card: H.col(L, f, o.watch, o.entity, o.colExtra) });
     if (!one) cf.right = H.own({ card: H.col(R, f, o.watch, o.entity, o.colExtra) });
     cs.left = [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }, { 'min-width': '0' }];

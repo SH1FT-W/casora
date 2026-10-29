@@ -139,6 +139,8 @@
     var v3 = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; } })();
     if (v3) {
       delete f.hero;
+      // Half the width in the right column: a taller map so HA's own map buttons are not cut at the bottom.
+      f.map = { card: Object.assign({}, map, { aspect_ratio: '1.6' }) };
       f.stage = { card: K.secCard(watch, call('stage'), states) };
       f.quick = { card: K.secCard(watch, call('quick'), states) };
       return K.layout({ fields: f, top: [], stage: 'stage', quick: 'quick', left: ['info'], right: ['map', 'today', 'hist'],
