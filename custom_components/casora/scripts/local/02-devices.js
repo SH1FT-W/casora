@@ -2504,6 +2504,11 @@
   // .hui-more via data-casora-more-tg, the state survives redraws while the popup is open). Choosing closes it.
   // Up to three programs stay a plain list.
   D._picked = {};
+  // Popup v3 „Bühne“: Soft and no localStorage casora_popup_variant other than 'v3'.
+  D.v3 = function () {
+    var UI = window._casoraUI;
+    return !!(UI && UI.stage && UI.soft && UI.soft()) && (function () { try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; } })();
+  };
   D.progPick = function (c, states) {
     var UI = window._casoraUI, sel = c.sel && states[c.sel];
     if (!UI || !sel) return '';
@@ -2616,7 +2621,25 @@
     var rem = minutes(states, c.remaining);
     var doorOpen = isOpen(states, c.door);
 
-    if (kind === 'd_hero') {
+    /* „Jetzt starten · Eco 50°“ (blueprint v2 rule 4): the main action – a pill under the header (d_go) or, in
+       popup v3, the stage pill (d_stage). null while running or without a start button. */
+    var goAct = function () {
+      if (active) return null;
+      var infoG = D.numInfo(states, c.startIn);
+      var tG = infoG ? D.target(c, states) : null;
+      var delayG = tG ? Math.max(0, Math.round((tG.at - Date.now()) / 1000)) : (infoG ? infoG.secs : 0);
+      var goG = D.startSvc(c, states, delayG);
+      if (!goG) return null;
+      var remoteG = c.remote && states[c.remote] ? states[c.remote].state : null;
+      var rStartG = c.remoteStart && states[c.remoteStart] ? states[c.remoteStart].state : null;
+      var whyG = remoteG === 'monitoring' || rStartG === 'off' ? 'Fernstart am Gerät nicht erlaubt' : doorOpen ? 'Tür ist offen' : null;
+      var spG = progName(U.str(states, c.sel), states[c.sel]);
+      var lblG = tG ? (nextDay(tG.at) ? 'Morgen um ' : 'Um ') + U.clock(new Date(tG.at)) + ' starten' : delayG ? 'Zeitversetzt starten' : 'Jetzt starten';
+      return { text: lblG, sub: whyG || [spG, !tG && delayG ? 'startet in ' + U.dur(delayG / 60) : null].filter(Boolean).join(' · ') || null,
+        icon: 'mdi:play', primary: true, disabled: !!whyG, why: whyG, attrs: whyG ? null : { 'data-dish-go': JSON.stringify(goG), 'data-dish-ask': spG || lblG } };
+    };
+
+    if (kind === 'd_hero' || kind === 'd_stage') {
       var prog = progName(U.str(states, c.program), states[c.program]) || progName(U.str(states, c.sel), states[c.sel]);
       var ph = PHASE[U.str(states, c.phase)] || null;
       var sub = [], value = s[0], unit = null, tone = s[1];
@@ -2640,6 +2663,19 @@
       if (doorOpen) sub.push('Tür offen');
       var todo = D.todo(c, states);
       if (!active && todo.length) { sub.push(todo.map(function (t) { return t[0]; }).join(', ')); tone = todo.some(function (t) { return t[1] === 'bad'; }) ? 'bad' : 'warn'; }
+      /* Popup v3 (richtlinien §4 S4): time left (or the state) as the value, the head's words under it; running: the
+         bar and „% · Fertig gegen …“ from the former bar; before the start „Jetzt starten · Eco 50°“ as the pill (a
+         blocked start keeps its reason as the line under the bar). */
+      if (kind === 'd_stage') {
+        var pctS = active ? U.num(states, c.progress) : null;
+        var endS = active && rem != null && rem > 0 ? 'Fertig gegen ' + U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' : null;
+        var g = goAct();
+        return UI.stage('progress', { value: value, unit: unit || '', word: sub.join(' · ') || null,
+          progress: pctS != null ? Math.max(0, Math.min(1, pctS / 100)) : null,
+          program: active ? [pctS != null ? Math.round(pctS) + ' %' : null, endS].filter(Boolean).join(' · ') || null : (g && g.why ? g.text + ' · ' + g.why : null),
+          action: g && !g.disabled ? g : null,
+          state: raw === 'unavailable' || raw === 'unknown' || !states[c.st] ? 'na' : null });
+      }
       return UI.hero({ value: value, unit: unit, sub: sub.join(' · ') || null, subTone: tone, center: true });
     }
 
@@ -2691,24 +2727,23 @@
        under the header (before: a row on the right, on the phone below eight programmes). */
     if (kind === 'd_go') {
       if (active || !SF) return '';
-      var infoG = D.numInfo(states, c.startIn);
-      var tG = infoG ? D.target(c, states) : null;
-      var delayG = tG ? Math.max(0, Math.round((tG.at - Date.now()) / 1000)) : (infoG ? infoG.secs : 0);
-      var goG = D.startSvc(c, states, delayG);
-      if (!goG) return '';
-      var remoteG = c.remote && states[c.remote] ? states[c.remote].state : null;
-      var rStartG = c.remoteStart && states[c.remoteStart] ? states[c.remoteStart].state : null;
-      var whyG = remoteG === 'monitoring' || rStartG === 'off' ? 'Fernstart am Gerät nicht erlaubt' : doorOpen ? 'Tür ist offen' : null;
-      var spG = progName(U.str(states, c.sel), states[c.sel]);
-      var lblG = tG ? (nextDay(tG.at) ? 'Morgen um ' : 'Um ') + U.clock(new Date(tG.at)) + ' starten' : delayG ? 'Zeitversetzt starten' : 'Jetzt starten';
-      return UI.actions([{ text: lblG, sub: whyG || [spG, !tG && delayG ? 'startet in ' + U.dur(delayG / 60) : null].filter(Boolean).join(' · ') || null,
-        icon: 'mdi:play', primary: true, disabled: !!whyG, attrs: whyG ? null : { 'data-dish-go': JSON.stringify(goG), 'data-dish-ask': spG || lblG } }]);
+      var gA = goAct();
+      return gA ? UI.actions([gA]) : '';
     }
 
     if (kind === 'd_prog' || kind === 'd_start') {
       if (active) return '';
       /* Soft: the program choice stands alone on the left, „Start“ (start row level with the program row,
          start time below) is its own block „d_start“ on the right (issue #77). Standard: both on the left. */
+      /* Popup v3 (richtlinien §5): 2–4 programs as quick tiles (select_option, the chosen one marked); more keep the
+         expandable program list (its „Alle“ is the list itself). */
+      var selQ = c.sel && states[c.sel], optsQ = selQ ? ((selQ.attributes || {}).options || []) : [];
+      if (kind === 'd_prog' && SF && D.v3() && UI.quick && optsQ.length >= 2 && optsQ.length <= 4) {
+        return UI.quick(optsQ.map(function (o) {
+          return { icon: progIcon(o), text: progName(o, selQ), active: selQ.state === o,
+            svc: { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.sel } } };
+        }), 'Programm');
+      }
       var progHtml = kind === 'd_prog' ? D.progPick(c, states) : '';
       if (kind === 'd_prog' && SF) return progHtml;
       var startHtml = D.startPart(c, states);
@@ -2842,9 +2877,9 @@
 
     var active = L.state(states, c.st)[2];
     if (typeof window._hpChartCfg === 'function' && c.power) {
-      window._hpChartCfg(c.power, 'Leistung', active ? '4h' : '24h', c.color, 150);
-      if (c.volt) window._hpChartCfg(c.volt, 'Spannung', '24h', '#8E8E93', 150);
-      if (c.amp) window._hpChartCfg(c.amp, 'Stromstärke', active ? '4h' : '24h', '#0A84FF', 150);
+      window._hpChartCfg(c.power, 'Leistung', active ? '4h' : '24h', c.color, 120);
+      if (c.volt) window._hpChartCfg(c.volt, 'Spannung', '24h', 'var(--cink3)', 120);
+      if (c.amp) window._hpChartCfg(c.amp, 'Stromstärke', active ? '4h' : '24h', 'c1', 120);
       if (c.energy) {
         /* Consumption per day as bars (statistic change per day), 7 or 30 days. */
         [['hwd7:', '7d'], ['hwd30:', '30d']].forEach(function (x) { window._hpBarCfg(x[0] + c.energy, c.energy, 'Verbrauch pro Tag', x[1], 1); });
@@ -2886,13 +2921,17 @@
          grid gap on top), cancel pill at the end of the left column. */
       if (active) f2.pbar = tpl('d_pbar', false);
       f2.abort = tpl('d_abort', false);
+      /* Popup v3: head, bar and the start pill become one progress stage on top of the left column. */
+      var v3D = D.v3();
+      if (v3D) { delete f2.hero; delete f2.pbar; delete f2.go; f2.stage = tpl('d_stage', true); }
       /* While running „Verlauf“ (rule 5: right column) – the care list is one row now, the right column has room. */
       if (active) f2.stats = fields.stats;
       var moreD = (active ? ['d_opts', 'energy'] : ['energy', 'd_stats']).concat(['d_device', 'plug']);
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("dish", ' + JSON.stringify(moreD) + '.map(function (k) {'
         + ' return (k === "energy" || k === "d_stats") ? L.slot(k, c, states) : L.inner(k, c, states); })) : "";', c.st);
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: ['go', 'run', 'prog', 'opts', 'abort'], right: ['start', 'alerts', 'care', 'stats', 'more'],
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3D ? [] : ['hero', 'pbar'], stage: v3D ? 'stage' : null, quick: v3D ? 'prog' : null,
+        left: ['go', 'run', 'prog', 'opts', 'abort'], right: ['start', 'alerts', 'care', 'stats', 'more'],
         settings: states[c.st] ? c.st : null, settingsSide: active ? 'left' : 'right' });
     }
 
