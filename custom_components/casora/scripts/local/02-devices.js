@@ -3182,7 +3182,7 @@
       return window._casoraHH.pbar({ pct: pcB, left: Math.round(pcB) + ' %',
         right: rem != null && rem > 0 ? 'Fertig gegen ' + U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' : '' });
     }
-    if (kind === 'p_hero') {
+    if (kind === 'p_hero' || kind === 'p_stage') {
       /* Soft (declutter): sub line „Schicht 120/300 · PETG“. 1.1.2 (direction A): while printing the
          time left is the main value like dishwasher/laundry, percent and „Fertig gegen“ at the bar (p_pbar). */
       if (window._casoraHH && window._casoraHH.on()) {
@@ -3211,6 +3211,15 @@
           if (mH === 60) { hH++; mH = 0; }
           vH = hH ? hH + ':' + (mH < 10 ? '0' : '') + mH : String(mH);
           uH = hH ? 'Std. übrig' : 'Min. übrig';
+        }
+        /* Popup v3 (richtlinien §4 S4): time left (or the state) as the value, the head's words, the bar with
+           „% · Fertig gegen …“ from the former bar; no pill (pause/stop stay in „Steuerung“). */
+        if (kind === 'p_stage') {
+          var remS = active && rem != null && rem > 0 ? 'Fertig gegen ' + U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' : null;
+          return UI.stage('progress', { value: vH, unit: uH || '', word: sb.join(' · ') || null,
+            progress: active && pc != null ? Math.max(0, Math.min(1, pc / 100)) : null,
+            program: active ? [pc != null ? Math.round(pc) + ' %' : null, remS].filter(Boolean).join(' · ') || null : null,
+            state: raw === 'unavailable' || !states[c.st] || states[c.st].state === 'unavailable' ? 'na' : null });
         }
         return UI.hero({ value: vH, unit: uH, sub: sb.join(' · ') || null,
           valueTone: errOn || s[1] === 'bad' ? 'bad' : null, subTone: raw === 'pause' ? 'warn' : null, center: true });
@@ -3396,12 +3405,12 @@
     var active = c.st_active;
 
     if (typeof window._hpChartCfg === 'function' && c.power) {
-      window._hpChartCfg(c.power, 'Leistung', active ? '4h' : '24h', c.color, 150);
-      if (c.volt) window._hpChartCfg(c.volt, 'Spannung', '24h', '#8E8E93', 150);
-      if (c.amp) window._hpChartCfg(c.amp, 'Stromstärke', active ? '4h' : '24h', '#0A84FF', 150);
-      if (c.noz) window._hpChartCfg(c.noz, 'Düse', active ? '4h' : '24h', '#FF9F0A', 150);
-      if (c.bed) window._hpChartCfg(c.bed, 'Druckbett', active ? '4h' : '24h', '#FF453A', 150);
-      if (c.amsHum) { window._hpChartCfg(c.amsHum, 'Luftfeuchtigkeit im AMS', '7d', '#0A84FF', 150); if (window._hpSmooth) window._hpSmooth(c.amsHum); }
+      window._hpChartCfg(c.power, 'Leistung', active ? '4h' : '24h', c.color, 120);
+      if (c.volt) window._hpChartCfg(c.volt, 'Spannung', '24h', 'var(--cink3)', 120);
+      if (c.amp) window._hpChartCfg(c.amp, 'Stromstärke', active ? '4h' : '24h', 'c1', 120);
+      if (c.noz) window._hpChartCfg(c.noz, 'Düse', active ? '4h' : '24h', 'c2', 120);
+      if (c.bed) window._hpChartCfg(c.bed, 'Druckbett', active ? '4h' : '24h', 'c2', 120);
+      if (c.amsHum) { window._hpChartCfg(c.amsHum, 'Luftfeuchtigkeit im AMS', '7d', 'c1', 120); if (window._hpSmooth) window._hpSmooth(c.amsHum); }
       if (c.energy) {
         /* Consumption per day as bars (statistic change per day), 7 or 30 days. */
         [['hwd7:', '7d'], ['hwd30:', '30d']].forEach(function (x) { window._hpBarCfg(x[0] + c.energy, c.energy, 'Verbrauch pro Tag', x[1], 1); });
@@ -3454,7 +3463,11 @@
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("printer", ["p_ams", "p_temp", "p_speed", "energy", "p_info", "plug"].map(function (k) {'
         + ' return k === "energy" ? L.slot(k, c, states) : L.inner(k, c, states); })) : "";', c.st);
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: ['alerts', 'ctrl', 'job'], right: ['camlbl', 'cam', 'camai', 'more'],
+      /* Popup v3: head and bar become one progress stage on top of the left column. */
+      var v3P = !!(window._casoraDish && window._casoraDish.v3 && window._casoraDish.v3());
+      if (v3P) { delete f2.hero; delete f2.pbar; f2.stage = tpl('p_stage', true); }
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3P ? [] : ['hero', 'pbar'], stage: v3P ? 'stage' : null,
+        left: ['alerts', 'ctrl', 'job'], right: ['camlbl', 'cam', 'camai', 'more'],
         settings: states[c.st] ? c.st : null,
         colExtra: ' #container > #cam { margin-top: 0 !important; } #container > #camai:not(:empty) { margin-top: 12px !important; }' });
     }

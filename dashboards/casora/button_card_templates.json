@@ -11850,7 +11850,8 @@
      }
     ],
     "title": "[[[ return variables.printer_name || (window._casoraPrint && window._casoraPrint.name ? window._casoraPrint.name(entity, variables, hass) : '3D-Drucker'); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "tap_action": {
@@ -11867,7 +11868,8 @@
      }
     ],
     "title": "[[[ return variables.printer_name || (window._casoraPrint && window._casoraPrint.name ? window._casoraPrint.name(entity, variables, hass) : '3D-Drucker'); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [
