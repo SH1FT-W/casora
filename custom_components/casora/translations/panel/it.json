@@ -759,6 +759,8 @@
     "Temperature": "Temperatura",
     "Temperature sensor": "Sensore di temperatura",
     "Humidity sensor": "Sensore di umidità",
+    "Only if the popup should show another sensor. Empty: the badge's first temperature.": "Solo se il popup deve mostrare un altro sensore. Vuoto: la prima temperatura del badge.",
+    "Only if the popup should show another sensor. Empty: the badge's humidity.": "Solo se il popup deve mostrare un altro sensore. Vuoto: l'umidità del badge.",
     "Chosen automatically: the average of {n} rooms' sensors. Remove one here to leave it out.": "Scelto automaticamente: la media dei sensori di {n} stanze. Rimuovine uno qui per escluderlo.",
     "Text": "Testo",
     "The account's now playing or session sensor.": "Il sensore di riproduzione o di sessione dell'account.",

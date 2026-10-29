@@ -14144,7 +14144,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   if (window.casoraPhoneRoom) return;
   var OVERRIDE = ['show_climate', 'show_lights', 'show_people', 'show_media', 'show_security', 'show_energy',
     'show_climate_inline', 'show_security_inline', 'show_people_inline', 'badge_order'];
-  var AQI = ['aqi_entity_pm25', 'aqi_entity_pm10', 'aqi_entity_voc', 'aqi_entity_co2'];
+  var AQI = ['aqi_entity_pm25', 'aqi_entity_pm10', 'aqi_entity_voc', 'aqi_entity_co2', 'aqi_entity_co'];
   var LS = 'casora.phoneRooms.';
   var cache = {}, busy = {}, subscribed = false;
   var hassUserOf = function () {

@@ -787,7 +787,7 @@ const CHIPS_FROM_ROOM = {
   entity_quality: "quality_sensor",
 };
 const CHIPS_AQI_FROM_ROOM = ["aqi_entity_pm25", "aqi_entity_pm10",
-  "aqi_entity_voc", "aqi_entity_co2"];
+  "aqi_entity_voc", "aqi_entity_co2", "aqi_entity_co"];
 
 function seedChrome(card, templates, src) {
   const t = (card || {}).template;
@@ -2494,8 +2494,12 @@ const SECTIONS = [
       { ...E("aqi_entity_pm10", "PM10", ["sensor"]), classes: ["pm10"], unit: "aqi" },
       { ...E("aqi_entity_voc", "VOC", ["sensor"]), classes: ["volatile_organic_compounds", "volatile_organic_compounds_parts"], unit: "aqi" },
       { ...E("aqi_entity_co2", "CO2", ["sensor"]), classes: ["carbon_dioxide"], unit: "aqi" },
-      { ...E("aqi_entity_temp", "Temperature", ["sensor"]), classes: ["temperature"], unit: "aqi" },
-      { ...E("aqi_entity_humidity", "Humidity reading", ["sensor"]), classes: ["humidity"], unit: "aqi" },
+      // #95: carbon monoxide, e.g. Amazon's air quality monitor.
+      { ...E("aqi_entity_co", "CO", ["sensor"]), classes: ["carbon_monoxide"], unit: "aqi" },
+      { ...E("aqi_entity_temp", "Temperature", ["sensor"]), classes: ["temperature"], unit: "aqi",
+        hint: "Only if the popup should show another sensor. Empty: the badge's first temperature." },
+      { ...E("aqi_entity_humidity", "Humidity reading", ["sensor"]), classes: ["humidity"], unit: "aqi",
+        hint: "Only if the popup should show another sensor. Empty: the badge's humidity." },
       // casora_room reicht es als room_name an die Klima-Badges weiter (Überschrift im Popup).
       { ...T("aqi_room_name", "Popup title"), unit: "aqi", placeholder: "The room's name" },
     ],

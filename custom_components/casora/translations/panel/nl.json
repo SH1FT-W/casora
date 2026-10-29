@@ -759,6 +759,8 @@
     "Temperature": "Temperatuur",
     "Temperature sensor": "Temperatuursensor",
     "Humidity sensor": "Vochtigheidssensor",
+    "Only if the popup should show another sensor. Empty: the badge's first temperature.": "Alleen als de pop-up een andere sensor moet tonen. Leeg: de eerste temperatuur van de badge.",
+    "Only if the popup should show another sensor. Empty: the badge's humidity.": "Alleen als de pop-up een andere sensor moet tonen. Leeg: de vochtigheid van de badge.",
     "Chosen automatically: the average of {n} rooms' sensors. Remove one here to leave it out.": "Automatisch gekozen: het gemiddelde van de sensoren in {n} kamers. Verwijder er hier een om hem weg te laten.",
     "Text": "Tekst",
     "The account's now playing or session sensor.": "De speelt-nu- of sessiesensor van het account.",
