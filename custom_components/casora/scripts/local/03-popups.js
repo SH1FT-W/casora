@@ -1671,13 +1671,15 @@
   var ROLES = {
     reichweite_kombiniert: { d: S, k: ['cruising_range_combined', 'range_combined', 'remaining_range_total', 'total_range', 'range', 'range_km'],
       e: ['reichweite_kombiniert', 'range_combined', 'cruising_range_combined', 'remaining_range_total', 'total_range', 'range_total',
+        'total_range_last_sent',
         'range_primary', 'est_battery_range', 'battery_range', 'electric_range', 'remaining_range', 'reichweite', 'range'], x: /(scr|adblue)_(range|reichweite)$|range_secondary$/ },
     tankfullstand: { d: S, k: ['fuel_level_current_level', 'fuel_level', 'remaining_fuel_percent', 'fuel_percentage'],
-      e: ['tankfullstand', 'tankstand', 'kraftstoffstand', 'fuel_level_current_level', 'fuel_level', 'remaining_fuel_percent', 'fuel_percentage', 'fuel_level_percentage', 'tank_level'] },
+      e: ['tankfullstand', 'tankstand', 'kraftstoffstand', 'fuel_level_current_level', 'fuel_level', 'remaining_fuel_percent', 'fuel_percentage', 'fuel_level_percentage', 'tank_level',
+        'tank_level_2'] },
     // 1.4.1: Tankinhalt in Litern (Volvo fuel_amount „Kraftstoffmenge“) – gezeigt, wenn kein Füllstand in % da ist.
-    tankmenge: { d: S, k: ['fuel_amount'], e: ['kraftstoffmenge', 'tankinhalt', 'fuel_amount', 'fuel_remaining'] },
+    tankmenge: { d: S, k: ['fuel_amount'], e: ['kraftstoffmenge', 'tankinhalt', 'fuel_amount', 'fuel_remaining', 'tank_level'] },
     akku: { d: S, k: ['battery_level', 'state_of_charge', 'remaining_battery_percent', 'battery_percentage'],
-      e: ['akkustand', 'ladezustand', 'state_of_charge', 'battery_level', 'remaining_battery_percent', 'battery_percentage', 'battery_soc', 'soc'] },
+      e: ['akkustand', 'ladezustand', 'state_of_charge_last_known', 'state_of_charge', 'battery_level', 'remaining_battery_percent', 'battery_percentage', 'battery_soc', 'soc'] },
     kilometerstand: { d: S, k: ['mileage', 'odometer'], e: ['kilometerstand', 'mileage', 'odometer', 'odometer_km'] },
     scr_reichweite: { d: S, k: ['scr_range', 'adblue_range'], e: ['scr_reichweite', 'scr_range', 'adblue_range', 'adblue_reichweite'] },
     olstand: { d: S, k: ['oil_level_actual_level', 'oil_level'], e: ['olstand', 'oil_level'] },
@@ -1685,16 +1687,16 @@
       e: ['12v_batteriespannung', 'boardnetbatteryvoltageindication', '12v_battery_voltage', 'battery_voltage_12v', 'aux_battery_voltage'] },
     aussentemperatur: { d: S, k: ['outside_temperature', 'outside_temp'], e: ['aussentemperatur', 'outside_temperature', 'outside_temp', 'exterior_temperature'] },
     datenstand: { d: S, k: ['data_captured', 'last_updated', 'last_update'], e: ['datenstand', 'data_captured', 'last_data_update', 'last_updated', 'last_update'] },
-    tur_vorne_links: { d: B, k: ['open_state_front_left_door'], e: ['tur_vorne_links', 'front_left_door', 'door_front_left', 'front_driver_door'] },
-    tur_vorne_rechts: { d: B, k: ['open_state_front_right_door'], e: ['tur_vorne_rechts', 'front_right_door', 'door_front_right', 'front_passenger_door'] },
-    tur_hinten_links: { d: B, k: ['open_state_rear_left_door'], e: ['tur_hinten_links', 'rear_left_door', 'door_rear_left', 'rear_driver_door'] },
-    tur_hinten_rechts: { d: B, k: ['open_state_rear_right_door'], e: ['tur_hinten_rechts', 'rear_right_door', 'door_rear_right', 'rear_passenger_door'] },
+    tur_vorne_links: { d: B, k: ['open_state_front_left_door'], e: ['tur_vorne_links', 'front_left_door', 'door_front_left', 'front_driver_door', 'door_state_front_driver'] },
+    tur_vorne_rechts: { d: B, k: ['open_state_front_right_door'], e: ['tur_vorne_rechts', 'front_right_door', 'door_front_right', 'front_passenger_door', 'door_state_front_passenger'] },
+    tur_hinten_links: { d: B, k: ['open_state_rear_left_door'], e: ['tur_hinten_links', 'rear_left_door', 'door_rear_left', 'rear_driver_door', 'door_state_rear_driver'] },
+    tur_hinten_rechts: { d: B, k: ['open_state_rear_right_door'], e: ['tur_hinten_rechts', 'rear_right_door', 'door_rear_right', 'rear_passenger_door', 'door_state_rear_passenger'] },
     heckklappe: { d: B, k: ['open_state_tailgate', 'trunk', 'trunk_open'], e: ['heckklappe', 'kofferraum', 'tailgate', 'trunk', 'trunk_open', 'boot', 'rear_trunk', 'liftgate'] },
     motorhaube: { d: B, k: ['open_state_front_engine_bonnet', 'bonnet', 'hood'], e: ['motorhaube', 'bonnet', 'hood', 'engine_hood', 'bonnet_open', 'frunk', 'front_trunk'] },
-    fenster_vorne_links: { d: B, k: ['state_front_left_door_window_lifter'], e: ['fenster_vorne_links', 'front_left_window', 'window_front_left', 'front_driver_window'] },
-    fenster_vorne_rechts: { d: B, k: ['state_front_right_door_window_lifter'], e: ['fenster_vorne_rechts', 'front_right_window', 'window_front_right', 'front_passenger_window'] },
-    fenster_hinten_links: { d: B, k: ['state_rear_left_door_window_lifter'], e: ['fenster_hinten_links', 'rear_left_window', 'window_rear_left', 'rear_driver_window'] },
-    fenster_hinten_rechts: { d: B, k: ['state_rear_right_door_window_lifter'], e: ['fenster_hinten_rechts', 'rear_right_window', 'window_rear_right', 'rear_passenger_window'] },
+    fenster_vorne_links: { d: B, k: ['state_front_left_door_window_lifter'], e: ['fenster_vorne_links', 'front_left_window', 'window_front_left', 'front_driver_window', 'window_open_front_driver'] },
+    fenster_vorne_rechts: { d: B, k: ['state_front_right_door_window_lifter'], e: ['fenster_vorne_rechts', 'front_right_window', 'window_front_right', 'front_passenger_window', 'window_open_front_passenger'] },
+    fenster_hinten_links: { d: B, k: ['state_rear_left_door_window_lifter'], e: ['fenster_hinten_links', 'rear_left_window', 'window_rear_left', 'rear_driver_window', 'window_open_rear_driver'] },
+    fenster_hinten_rechts: { d: B, k: ['state_rear_right_door_window_lifter'], e: ['fenster_hinten_rechts', 'rear_right_window', 'window_rear_right', 'rear_passenger_window', 'window_open_rear_passenger'] },
     schiebedach: { d: B, k: ['state_sunroof_motor_hood_1', 'sunroof'], e: ['schiebedach', 'sunroof', 'sun_roof', 'sunroof_open', 'panorama_roof'] },
     // Sammelmelder (BMW, Škoda …): eine Entität für alle Türen/Fenster/Klappen.
     turen: { d: B, k: ['doors', 'doors_open'], e: ['turen', 'doors', 'doors_open', 'door_state', 'any_door_open'] },
@@ -1739,12 +1741,19 @@
   };
   /* Elektrische Reichweite nur als Ausweich-Treffer für die Reichweite: Beim Verbrenner/Hybrid gewinnt
      jede andere Reichweite (deutsche IDs „…_elektrische_reichweite“, Issue #16), beim E-Auto bleibt sie. */
-  var ELEC = /(^|_)(elektrische|electric)_(reichweite|range)$/;
+  // BMW CarData (#89): „range_ev_remaining_range“ is the electric range of a plug-in hybrid.
+  var ELEC = /(^|_)(elektrische|electric)_(reichweite|range)$|(^|_)range_ev_remaining_range$/;
   var rank = function (role, eid, x, st) {
     var R0 = ROLES[role], dom = eid.split('.')[0], obj = eid.slice(dom.length + 1);
     if (R0.d.indexOf(dom) < 0 || (R0.x && R0.x.test(obj))) return -1;
     if (x && x.platform && HELPER.test(x.platform)) return -1;
     if (R0.date && isDist(st)) return -1;
+    // A tank in % is the level, in litres or gallons the amount (BMW CarData: range_tank_level L, _2 %, #89);
+    // a target charge is no charge level.
+    var unit = String(((st && st.attributes) || {}).unit_of_measurement || '');
+    if (role === 'tankfullstand' && unit && unit !== '%') return -1;
+    if (role === 'tankmenge' && unit && !/^(l|gal)$/i.test(unit)) return -1;
+    if (role === 'akku' && /(^|_)target_(state_of_charge|soc)$/.test(obj)) return -1;
     if (x && x.translation_key && R0.k.indexOf(x.translation_key) >= 0) return 0;
     for (var i = 0; i < R0.re.length; i++) if (R0.re[i].test(obj)) return i + 1 + (role === 'reichweite_kombiniert' && ELEC.test(obj) ? 100 : 0);
     return -1;

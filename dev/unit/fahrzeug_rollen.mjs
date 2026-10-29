@@ -115,4 +115,45 @@ const st = (pairs) => Object.fromEntries(pairs.map(([id, s, attrs]) => [id, { en
   assert.equal(r.tank, null, 'Liter sind kein Füllstand in %');
   assert.equal(r.tankL, 34.5); assert.equal(r.tankLU, 'l');
 }
+// BMW CarData (#89, kvanbiesen/bmw-cardata-ha): plug-in hybrid. Total range (last sent) before the electric range,
+// tank level in % (_2) not the litres, HV charge "last known" not the 100 % target, doors/windows by their CarData names.
+{
+  const P = 'demo_bmw';
+  const ids = [
+    ['sensor.' + P + '_mileage', 'car'], ['sensor.' + P + '_range_total_range_last_sent', 'car'],
+    ['sensor.' + P + '_range_ev_remaining_range', 'car'], ['sensor.' + P + '_range_fuel_tank', 'car'],
+    ['sensor.' + P + '_range_tank_level', 'car'], ['sensor.' + P + '_range_tank_level_2', 'car'],
+    ['sensor.state_of_charge_last_known', 'car'], ['sensor.target_state_of_charge', 'car'],
+    ['sensor.' + P + '_battery_ev_predicted_state_of_charge', 'car'],
+    ['binary_sensor.' + P + '_door_state_front_driver', 'car'], ['binary_sensor.' + P + '_door_state_rear_passenger', 'car'],
+    ['binary_sensor.' + P + '_window_open_front_driver', 'car'], ['binary_sensor.' + P + '_window_open_rear_passenger', 'car'],
+  ];
+  const S = st([
+    ['sensor.' + P + '_mileage', '59903', { unit_of_measurement: 'km' }],
+    ['sensor.' + P + '_range_total_range_last_sent', '370', { unit_of_measurement: 'km', device_class: 'distance' }],
+    ['sensor.' + P + '_range_ev_remaining_range', '0', { unit_of_measurement: 'km', device_class: 'distance' }],
+    ['sensor.' + P + '_range_fuel_tank', '370', { unit_of_measurement: 'km' }],
+    ['sensor.' + P + '_range_tank_level', '31', { unit_of_measurement: 'L' }],
+    ['sensor.' + P + '_range_tank_level_2', '88', { unit_of_measurement: '%' }],
+    ['sensor.state_of_charge_last_known', '7', { unit_of_measurement: '%', device_class: 'battery' }],
+    ['sensor.target_state_of_charge', '100', { unit_of_measurement: '%', device_class: 'battery' }],
+    ['sensor.' + P + '_battery_ev_predicted_state_of_charge', '7', { unit_of_measurement: '%' }],
+  ]);
+  const window = {};
+  const document = { querySelector: () => ({ hass: { entities: reg(ids), states: S } }) };
+  new Function('window', 'document', block)(window, document);
+  const M = window._casoraCar.map(null);
+  assert.equal(M.reichweite_kombiniert, 'sensor.' + P + '_range_total_range_last_sent', 'total range before the EV range');
+  assert.equal(M.tankfullstand, 'sensor.' + P + '_range_tank_level_2', 'tank level in %');
+  assert.equal(M.tankmenge, 'sensor.' + P + '_range_tank_level', 'litres are the amount');
+  assert.equal(M.akku, 'sensor.state_of_charge_last_known', 'HV charge, not the target');
+  assert.equal(M.kilometerstand, 'sensor.' + P + '_mileage');
+  assert.equal(M.tur_vorne_links, 'binary_sensor.' + P + '_door_state_front_driver');
+  assert.equal(M.tur_hinten_rechts, 'binary_sensor.' + P + '_door_state_rear_passenger');
+  assert.equal(M.fenster_vorne_links, 'binary_sensor.' + P + '_window_open_front_driver');
+  assert.equal(M.fenster_hinten_rechts, 'binary_sensor.' + P + '_window_open_rear_passenger');
+  const r = window._casoraCar.read(null, S);
+  assert.equal(r.range, 370); assert.equal(r.tank, 88); assert.equal(r.km, 59903);
+  console.log('ok BMW CarData');
+}
 console.log('fahrzeug_rollen: ok');
