@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.65 – 29.10.2026
+
+### Behoben
+- **WashData 0.5.9:** Heißluftfritteusen und Brotbackautomaten (macht WashData seit 0.5.9 zu „Other“) und „Generic“-Geräte gelten nicht mehr als Waschmaschine, weder bei Kacheln noch bei Live-Aktivitäten. Casora fragt WashData nach dem Gerätetyp, statt nur nach dem Symbol zu gehen.
+
 ## 26.10.64 – 29.10.2026
 
 ### Neu

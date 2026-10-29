@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.65 – 29.10.2026
+
+### Fixed
+- **WashData 0.5.9:** air fryers and bread makers (WashData makes them "Other" since 0.5.9) and "Generic" devices are no longer taken for a washing machine, neither for tiles nor for live activities. Casora asks WashData for the device type instead of going by the icon alone.
+
 ## 26.10.64 – 29.10.2026
 
 ### New
