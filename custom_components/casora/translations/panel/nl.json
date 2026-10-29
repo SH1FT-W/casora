@@ -5,6 +5,11 @@
     "Diagnostics": "Diagnose",
     "Paste it into your GitHub issue. It contains only counts, versions and integrations – no names of devices, rooms or people, no addresses.": "Plak het in je GitHub-issue. Het bevat alleen aantallen, versies en integraties – geen namen van apparaten, kamers of personen, geen adressen.",
     "Copy": "Kopiëren",
+    "Duplicate": "Dupliceren",
+    "Tile duplicated": "Tegel gedupliceerd",
+    "Copy…": "Kopiëren…",
+    "Copy dashboard": "Dashboard kopiëren",
+    "Save your changes first, then copy the dashboard.": "Sla eerst je wijzigingen op en kopieer dan het dashboard.",
     "The diagnostics could not be collected.": "De diagnose kon niet worden verzameld.",
     "Copying is not possible here. The text is selected – copy it by hand.": "Kopiëren is hier niet mogelijk. De tekst is geselecteerd – kopieer hem met de hand.",
     "GitHub is open – paste the diagnostics into your issue.": "GitHub is geopend – plak de diagnose in je issue.",
@@ -2805,6 +2810,10 @@
     [
       "^Rename failed: (.+)$",
       "Hernoemen mislukt: {1}"
+    ],
+    [
+      "^Copy failed: (.+)$",
+      "Kopiëren mislukt: {1}"
     ],
     [
       "^Save failed: (.+)$",

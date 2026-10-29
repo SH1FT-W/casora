@@ -12517,6 +12517,7 @@ class CasoraPanel extends HTMLElement {
           ? [{ id: "import", label: "Import from YAML…" }] : []),
         ...(this._dashUrl && !this._flowMode
           ? [{ id: "renamedash", label: "Rename…" },
+             { id: "copydash", label: "Copy…" },
              { id: "icondash", label: "Icon…" },
              { id: "delete", label: "Delete…", danger: true }] : []),
         ...(this._canAddMobile()
@@ -12533,6 +12534,10 @@ class CasoraPanel extends HTMLElement {
         if (id === "renamedash") {
           const d = (this._dashList || []).find((x) => x.url_path === this._dashUrl);
           return d && this._renameDashboard(d);
+        }
+        if (id === "copydash") {
+          const d = (this._dashList || []).find((x) => x.url_path === this._dashUrl);
+          return d && this._copyDashboard(d);
         }
         if (id === "icondash") {
           const d = (this._dashList || []).find((x) => x.url_path === this._dashUrl);
@@ -13145,6 +13150,58 @@ class CasoraPanel extends HTMLElement {
     } catch (e) {
       this._status("Rename failed: " + e.message, "err");
       this._log("rename failed: " + e.message, "err");
+    }
+  }
+
+  // #92: a copy of the saved dashboard and its phone layout under a new name; the original stays as it is.
+  // Links into the dashboard's own rooms (/<url>/<room>) move to the copy.
+  async _copyDashboard(d) {
+    if (this._state && this._isDirty()) return this._status("Save your changes first, then copy the dashboard.", "warn");
+    const base = d.title || d.url_path;
+    const taken = new Set((this._dashList || []).map((x) => (x.title || "").trim()));
+    let free = base + " 2";
+    for (let n = 3; taken.has(free); n++) free = base + " " + n;
+    const picked = await this._ask({ title: "Copy dashboard", value: free, confirmLabel: "Copy" });
+    const title = picked && String(typeof picked === "object" ? picked.value : picked).trim();
+    if (!title) return;
+    const url_path = this._flowPath(title, "casora-dashboard", "dashboard");
+    const home = this._homes(this._dashList || []).find((h) => h.wide === d);
+    const phone = home && home.phone;
+    const esc = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const moveLinks = (cfg) => {
+      let t = JSON.stringify(cfg);
+      [[d.url_path, url_path]].concat(phone ? [[phone.url_path, url_path + "-mobile"]] : []).forEach(([from, to]) => {
+        t = t.replace(new RegExp("/" + esc(from) + "(?=[/\"?#])", "g"), "/" + to);
+      });
+      return JSON.parse(t);
+    };
+    const created = [];
+    try {
+      const cfg = await this._hass.callWS({ type: "lovelace/config", url_path: d.url_path });
+      const pcfg = phone ? await this._hass.callWS({ type: "lovelace/config", url_path: phone.url_path }) : null;
+      const made = await this._hass.callWS({ type: "lovelace/dashboards/create", url_path, title,
+        icon: d.icon || "mdi:home", show_in_sidebar: true, require_admin: !!d.require_admin });
+      created.push(made && made.id);
+      await this._hass.callWS({ type: "lovelace/config/save", url_path, config: moveLinks(cfg) });
+      if (pcfg) {
+        const pmade = await this._hass.callWS({ type: "lovelace/dashboards/create", url_path: url_path + "-mobile",
+          title: title + " Mobile", icon: (phone && phone.icon) || "mdi:cellphone", show_in_sidebar: false,
+          require_admin: !!d.require_admin });
+        created.push(pmade && pmade.id);
+        await this._hass.callWS({ type: "lovelace/config/save", url_path: url_path + "-mobile", config: moveLinks(pcfg) });
+      }
+      await this._flowRelist();
+      this._paintDashes();
+      this._log(`copied "${d.url_path}" to "${url_path}"` + (pcfg ? " with its phone layout" : ""), "ok");
+      this._status("Copied to " + title, "ok");
+    } catch (e) {
+      // Half made: remove what was created, so the name and address are free again.
+      for (const id of created.reverse()) {
+        try { if (id) await this._hass.callWS({ type: "lovelace/dashboards/delete", dashboard_id: id }); } catch (e2) { /* stays listed */ }
+      }
+      await this._flowRelist();
+      this._status("Copy failed: " + e.message, "err");
+      this._log("copy failed: " + e.message, "err");
     }
   }
 
@@ -27581,11 +27638,13 @@ class CasoraPanel extends HTMLElement {
     const grp = type && TILE_GROUP[type.id];
     const elsewhere = ((this._state && this._state.compact.rooms) || [])
       .filter((r) => r !== room).length > 0;
+    // #92: Duplicate puts a copy right behind the tile in the same room (several lamps or blinds quickly).
     const menu = elsewhere
-      ? [{ id: "move", label: "Move to Room\u2026" },
+      ? [{ id: "duplicate", label: "Duplicate" },
+         { id: "move", label: "Move to Room\u2026" },
          { id: "copy", label: "Copy to Room\u2026" },
          { id: "remove", label: "Remove tile" }]
-      : [{ id: "remove", label: "Remove tile" }];
+      : [{ id: "duplicate", label: "Duplicate" }, { id: "remove", label: "Remove tile" }];
     if (type.raw || type.id === "custom") {
       menu.unshift({ id: "edit", label: "Edit card\u2026" });
       // A phone view has no slot under the row, so it is not offered one.
@@ -27620,6 +27679,12 @@ class CasoraPanel extends HTMLElement {
       if (id === "remove") return removeTile();
       if (id === "move") return this._moveTileMenu(dots, room, shell);
       if (id === "copy") return this._copyTileMenu(dots, room, shell);
+      if (id === "duplicate") {
+        room.tiles.splice(i + 1, 0, clone(shell));
+        this._markDirty();
+        this._renderForm();
+        return this._status("Tile duplicated", "ok");
+      }
     });
     head.appendChild(dots);
     // Drag the header to reorder. Presses on the buttons are left alone.

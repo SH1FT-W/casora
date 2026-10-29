@@ -5,6 +5,11 @@
     "Diagnostics": "Diagnostyka",
     "Paste it into your GitHub issue. It contains only counts, versions and integrations – no names of devices, rooms or people, no addresses.": "Wklej ją do swojego zgłoszenia na GitHubie. Zawiera tylko liczby, wersje i integracje – żadnych nazw urządzeń, pokoi ani osób, żadnych adresów.",
     "Copy": "Kopiuj",
+    "Duplicate": "Duplikuj",
+    "Tile duplicated": "Kafelek zduplikowany",
+    "Copy…": "Kopiuj…",
+    "Copy dashboard": "Kopiuj pulpit",
+    "Save your changes first, then copy the dashboard.": "Najpierw zapisz zmiany, potem skopiuj pulpit.",
     "The diagnostics could not be collected.": "Nie udało się zebrać diagnostyki.",
     "Copying is not possible here. The text is selected – copy it by hand.": "Kopiowanie tutaj nie działa. Tekst jest zaznaczony – skopiuj go ręcznie.",
     "GitHub is open – paste the diagnostics into your issue.": "GitHub jest otwarty – wklej diagnostykę do swojego zgłoszenia.",
@@ -2805,6 +2810,10 @@
     [
       "^Rename failed: (.+)$",
       "Nie udało się zmienić nazwy: {1}"
+    ],
+    [
+      "^Copy failed: (.+)$",
+      "Kopiowanie nie powiodło się: {1}"
     ],
     [
       "^Save failed: (.+)$",
