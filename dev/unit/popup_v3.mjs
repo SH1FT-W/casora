@@ -33,6 +33,7 @@ const MIGRIERT = [
   { popup: 'Luftbefeuchter', vorlagen: ['casora_humidifier'], file: '19-befeuchter.js', from: '  H.v3 = function () {', to: null, stages: 2 },
   { popup: 'Gerät allgemein', vorlagen: ['casora_entity_actions'], file: '05-standard-medien.js',
     from: 'window._casoraEntityPopup = function', to: '// ── Media popup', stages: 1 },
+  { popup: 'Medien-Player', vorlagen: ['casora_media'], file: null, stages: 1 },
 ];
 
 // 1. Pieces.
