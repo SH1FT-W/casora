@@ -32,13 +32,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Lüfter",
-  "vorlagen": [
-   "casora_fan"
-  ],
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Luftreiniger",
   "vorlagen": [
    "casora_air_purifier"
