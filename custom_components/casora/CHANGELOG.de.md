@@ -4,6 +4,18 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.66 – 29.10.2026
+
+### Neu
+- **Klima auf Zuhause aus den Räumen (#96):** Ohne Sensor für das ganze Haus zeigt Zuhause als Temperatur und Luftfeuchtigkeit den Durchschnitt der Raumsensoren (dieselben, die die Klima-Badges der Räume nutzen, je bis zu fünf). Das Studio listet sie beim Klima-Badge auf und sagt, dass sie automatisch gewählt wurden; einen entfernen lässt ihn weg.
+- **Mehrere Luftfeuchtigkeitssensoren:** Wie bei der Temperatur nimmt das Klima-Badge bis zu fünf Luftfeuchtigkeitssensoren und zeigt ihren Durchschnitt.
+- **Kohlenmonoxid (#95):** Das Luftqualitäts-Popup nimmt einen CO-Sensor auf (Studio: Klima-Badge › CO), mit eigenen Grenzen (gut bis 9 ppm, Warnung ab 35 ppm, schlecht ab 100 ppm).
+
+### Behoben
+- **Klima-Badge auf Zuhause beim Einrichten (#96):** Eine NAS-Festplattentemperatur („durchschnittliche Festplattentemperatur“) gilt nicht mehr als Haustemperatur; Festplatten, Volumes, Router und Server zählen nie als Raumsensor. Eine Wärmepumpe steht nicht mehr an erster Stelle der Thermostate von Zuhause.
+- **CO₂-Grenzen für CO:** Ein Kohlenmonoxid-Sensor bekam die CO₂-Grenzen und war deshalb immer „gut“.
+- **Studio:** Die Felder Temperatur und Luftfeuchtigkeit im Luftqualitäts-Popup sagen, dass leer der eigene Sensor des Badges ist.
+
 ## 26.10.65 – 29.10.2026
 
 ### Behoben

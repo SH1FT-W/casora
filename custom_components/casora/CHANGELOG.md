@@ -4,6 +4,18 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.66 – 29.10.2026
+
+### New
+- **Home's climate from the rooms (#96):** without a sensor for the whole home, Home's temperature and humidity are the average of the rooms' sensors (the ones their climate badges use, up to five each). The Studio lists them under the climate badge and says they were chosen automatically; remove one to leave it out.
+- **Several humidity sensors:** like temperature, the climate badge takes up to five humidity sensors and shows their average.
+- **Carbon monoxide (#95):** the air quality popup takes a CO sensor (Studio: climate badge › CO) with its own limits (good up to 9 ppm, warning from 35 ppm, bad from 100 ppm).
+
+### Fixed
+- **Home's climate badge on setup (#96):** a NAS disk temperature ("average disk temperature") is no longer taken for the house temperature; disks, volumes, routers and servers never count as room sensors. A heat pump no longer comes first among Home's thermostats.
+- **CO2 limits for CO:** a carbon monoxide sensor got the CO2 limits and always read "good".
+- **Studio:** the air quality popup's temperature and humidity fields say that empty means the badge's own sensor.
+
 ## 26.10.65 – 29.10.2026
 
 ### Fixed
