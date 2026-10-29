@@ -36,6 +36,8 @@ const MIGRIERT = [
   { popup: 'Medien-Player', vorlagen: ['casora_media'], file: null, stages: 1 },
   { popup: 'Now Playing (Kachel/Chip)', vorlagen: ['casora_now_playing_primary', 'casora_now_playing_chip'], file: null, stages: 2 },
   { popup: 'Medien-Badge', vorlagen: ['casora_popup_media'], file: '32-media-badge.js', from: '  B.stage = function', to: '  B.sec = function', stages: 2 },
+  // casora_appliance (older generic appliance tile, own template body) keeps variant B for now.
+  { popup: 'Waschmaschine/Trockner', vorlagen: ['casora_popup_laundry'], file: '02-devices.js', from: '  var L = window._casoraLaundry = ', to: '  var D = window._casoraDish = ', stages: 1 },
 ];
 
 // 1. Pieces.

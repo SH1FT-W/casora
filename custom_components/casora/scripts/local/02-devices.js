@@ -1615,7 +1615,7 @@
       return c.st && states[c.st] ? UI.settings(c.st) : '';
     }
 
-    if (kind === 'hero') {
+    if (kind === 'hero' || kind === 'stage') {
       var at = stObj.attributes || {};
       var prog = progOf(c, states);
       var ph = phaseOf(c, states);
@@ -1644,6 +1644,17 @@
         tone = s[3] === 'done' ? 'good' : s[1] === 'bad' ? 'bad' : null;
       }
       if (doorOpen(c, states)) sub.push('Tür offen');
+      /* Popup v3 (richtlinien §4 S4): time left (or the state) as the value, the hero's words under it, the progress
+         bar, then program · % · end time from the former bar under the header. */
+      if (kind === 'stage') {
+        var pctS = active ? pctOf(c, states) : null;
+        var remS = active ? remOf(c, states) : null;
+        var progS = [prog, pctS != null ? Math.round(pctS) + ' %' : null,
+          remS != null ? 'Fertig gegen ' + clock(new Date(Date.now() + remS * 60000)) + ' Uhr' : null].filter(Boolean);
+        return UI.stage('progress', { value: value, unit: unit || '', word: sub.filter(function (x) { return x !== prog; }).join(' · ') || null,
+          progress: pctS != null ? pctS / 100 : null, program: active ? progS.join(' · ') || null : null,
+          state: raw === 'unavailable' || raw === 'unknown' || !states[c.st] ? 'na' : !active ? 'off' : null });
+      }
       return UI.hero({ value: value, unit: unit, sub: sub.join(' · ') || null, subTone: tone, center: true });
     }
 
@@ -1972,9 +1983,9 @@
     var hpOk = typeof window._hpChartCfg === 'function';
     var active = L.state(states, c.st)[2];
     if (hpOk && c.power) {
-      window._hpChartCfg(c.power, 'Leistung', active ? '4h' : '24h', c.color, 150);
-      if (c.volt) window._hpChartCfg(c.volt, 'Spannung', '24h', '#8E8E93', 150);
-      if (c.amp) window._hpChartCfg(c.amp, 'Stromstärke', active ? '4h' : '24h', '#0A84FF', 150);
+      window._hpChartCfg(c.power, 'Leistung', active ? '4h' : '24h', c.color, 120);
+      if (c.volt) window._hpChartCfg(c.volt, 'Spannung', '24h', 'var(--cink3)', 120);
+      if (c.amp) window._hpChartCfg(c.amp, 'Stromstärke', active ? '4h' : '24h', 'c1', 120);
       if (c.energy) {
         /* Consumption per day as bars (statistic change per day), 7 or 30 days. */
         [['hwd7:', '7d'], ['hwd30:', '30d']].forEach(function (x) { window._hpBarCfg(x[0] + c.energy, c.energy, 'Verbrauch pro Tag', x[1], 1); });
@@ -2026,6 +2037,11 @@
       /* 1.1.2 (direction A): bar under the head, cancel pill at the end of the column; while running
          the last cycles sit on the left under the cycle and the programs on the right (as when off). */
       if (run0) f2.pbar = tpl('pbar', false);   /* empty it costs a grid gap on top – only add it while running */
+      /* Popup v3 (richtlinien §4 S4): hero and bar become one progress stage on top of the left column
+         (localStorage casora_popup_variant 'a'/'b' keeps the earlier head). The programs are statistics and cannot be
+         started from here – no quick choice. */
+      var v3L = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; } })();
+      if (v3L) { delete f2.hero; delete f2.pbar; f2.stage = tpl('stage', true); }
       f2.abort = tpl('abort', false);
       /* „Weitere Einstellungen“ is no longer hidden in „Mehr“ – blueprint v2 puts it last (HH.layout settings). */
       var moreKeys = WD ? ['ctrl', 'stats', 'energy', 'maint_rest', 'tips', 'plug'] : ['energy', 'plug'];
@@ -2036,8 +2052,8 @@
       if (!WD) { left = ['run', 'act', 'dev', 'abort']; right = ['more']; }
       else if (run0) { left = ['unload', 'run', 'pick', 'act', 'cycles', 'abort']; right = ['progs', 'maint', 'more']; }
       else { left = ['unload', 'act', 'cycles']; right = ['progs', 'maint', 'more']; }
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: left, right: right, settings: states[c.st] ? c.st : null,
-        settingsSide: WD ? 'left' : 'right' });
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3L ? [] : ['hero', 'pbar'], stage: v3L ? 'stage' : null,
+        left: left, right: right, settings: states[c.st] ? c.st : null, settingsSide: WD ? 'left' : 'right' });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
