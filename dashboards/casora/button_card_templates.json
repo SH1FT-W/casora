@@ -18812,7 +18812,8 @@
     ],
     "style": "[[[\n  /* Zwei Spalten: links Getränke und Bezug, rechts Hinweise, Pflege, Statistik; oben Zustand und Ring. */\n  return '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);';\n]]]\n",
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Kaffee', ['Kaffee', 'Kaffeevollautomat', 'Kaffeemaschine', 'Coffee machine']) : (String(variables.room_name || '').trim() || 'Kaffee'); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [

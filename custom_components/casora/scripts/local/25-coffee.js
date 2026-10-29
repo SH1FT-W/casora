@@ -1223,7 +1223,16 @@
     var parts = ['hero', 'drinks'];
     if (c.warns.length || c.pre.length || c.fam === 'hc' || c.status) parts.push('info');
     if (c.total || c.counters.length) parts.push('stats');
+    /* Popup v3 „Bühne“ (richtlinien §4 S8): the drink grid (and the ring while brewing) is the stage – its own main
+       area on top of the left column. Soft, no localStorage casora_popup_variant other than 'v3'. */
+    var v3 = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; } })();
+    if (v3) parts[parts.indexOf('drinks')] = 'stage';
     parts.forEach(function (k) { f[k] = { card: KIT.secCard(watch, call(k), states) }; });
+    if (v3) {
+      return KIT.layout({ fields: f, top: ['hero'], stage: 'stage', left: [], right: ['info', 'stats'],
+        narrowOrder: K.status(c, states).warns.some(function (w) { return !w.soft && !CARE_NAME[w.art]; }) ? ['info', 'stage', 'stats'] : ['stage', 'info', 'stats'],
+        settings: c.anchor && states[c.anchor] ? c.anchor : id });
+    }
     return KIT.layout({ fields: f, top: ['hero'], left: ['drinks'], right: ['info', 'stats'], // Phone: notes before the drinks only when something is missing at opening (else operate first).
       narrowOrder: K.status(c, states).warns.some(function (w) { return !w.soft && !CARE_NAME[w.art]; }) ? ['info', 'drinks', 'stats'] : ['drinks', 'info', 'stats'],
       settings: c.anchor && states[c.anchor] ? c.anchor : id });
@@ -1379,6 +1388,11 @@
     var s = withPick(c, K.status(c, S, Date.now()));
     var HH = window._casoraHH;
     var a = c.anchor;
+    // Popup v3 (richtlinien §4 S8): the drinks part inside the stage plate; unavailable: S7 instead of an empty stage.
+    if (part === 'stage') {
+      if (s.dead) return UI.stage('status', { tone: 'off', icon: 'mdi:coffee-maker-outline', text: s.label || 'Nicht verfügbar', state: 'na' });
+      return UI.stage('content', { html: K.sec('drinks', c, states, hass, el) });
+    }
     if (part === 'hero') {
       // Header: at most one warning, without "+N" (all are under "Hinweise"); with a known reason the warning comes
       // first ("Wasser nachfüllen"). While brewing only a blocking warning is appended (no care reminder).
