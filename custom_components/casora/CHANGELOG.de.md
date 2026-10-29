@@ -4,6 +4,33 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.64 – 29.10.2026
+
+### Neu
+- **Skripte, Szenen und Knöpfe mit einem Tipp (#86, #90):** Die Kachel-Option „Tippen führt aus“ und ein eigenes Badge starten sie sofort; „Mit Bestätigung“ (bei neuen Kacheln an) fragt vorher. Kacheln und Badges zeigen „Bereit“/„Läuft“; eigene Badges haben ihr eigenes „Wer sieht das?“.
+- **Community-Karte „Bring! Einkaufsliste“ (#82):** für jede To-do-Liste; die Kachel zeigt die offenen Einträge. Ein Tipp öffnet vorerst die To-do-Karte von Home Assistant.
+- **Community-Karte „Wasserkocher“ (#87):** für Xiaomi-Wasserkocher und ähnliche. Ein Tipp öffnet vorerst die Karte von Home Assistant.
+- **Entitäten im Popup (#32, #83):** Im Studio gewählte Entitäten („Entitäten im Popup“) stehen unter dem Inhalt eines Popups, z. B. Skripte oder Quellen beim Mediaplayer.
+- **Velair (#32):** Die Woche zeigt das Ziel jedes Blocks im Balken; das Popup zeigt den globalen Velair-Modus als Zeile, die ihn öffnet.
+- **„Mehr“-Kachel mit Kacheln (#59):** Ein Tipp öffnet das Popup dieser Kachel mit ‹ zurück zu Mehr.
+
+### Geändert
+- **E-Bike-Kachel (#88):** liest den Live-Akku der eBike Bridge; meldet die Bridge „unbekannt“, bleiben der letzte bekannte Akkustand und Kilometerstand stehen. Am Handy zeigt die Kachel nur den Akku.
+- **Auto-Kachel (#89):** zeigt die ihr gegebene Entität, auch ohne Schlossdaten.
+- **Energie-Popup (#91):** zeigt den Ladestand des Akkus auch ohne SoC-Feld.
+- **Karussell:** Eine Kachel im großen Karussell am Handy baut sich groß auf; die Punkte folgen der Textfarbe.
+- **Raumseiten am Handy:** Sicherheits- und Klima-Badge öffnen ihr Popup (für diesen Raum) wie auf Zuhause.
+- **Glas:** Das Popup macht das Dashboard dahinter unscharf.
+
+### Behoben
+- **Entity-Liste am Handy (#85):** Auswahl-, Zeit- und Datumsfelder lassen sich wieder bedienen.
+- **Energie-Badge in Safari:** Das Symbol hat die richtige Größe.
+- **Energiefluss:** Die laufenden Punkte springen nicht mehr, wenn sich die Leistung ändert.
+- **Sicherheit:** Eine geschlossene Tür- oder Fenstergruppe mit einem Mitglied, das nicht antwortet, sagt „1 Sensor nicht erreichbar“ statt „Geschlossen“.
+- **Popups** öffnen immer oben; der Wochenstreifen der Rezepte trennt keine Silben mehr; das Haustier-Popup hat seinen Titel; die Diagramm-Platte wirft denselben Schatten wie andere Karten.
+- **Universal-Kachel** hat ihr Symbol in der Kachelauswahl des Studios.
+- **Rückfrage vor dem Öffnen eines Schlosses** sagt „Tür öffnen“.
+
 ## 26.10.63 – 27.10.2026
 
 ### Geändert

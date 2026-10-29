@@ -4,6 +4,33 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.64 – 29.10.2026
+
+### New
+- **Scripts, scenes and buttons with one tap (#86, #90):** a tile option "Tap runs it" and a badge of its own run them right away; "With confirmation" (on for new run tiles) asks first. Run tiles and badges read "Ready"/"Running"; own badges get their own "Who sees this?".
+- **Community card "Bring! Shopping list" (#82):** works with any to-do list; the tile shows the open items. For now a tap opens Home Assistant's to-do list card.
+- **Community card "Kettle" (#87):** for Xiaomi kettles and similar. For now a tap opens Home Assistant's card.
+- **Entities in popups (#32, #83):** entities picked in the Studio ("Entities in popup") show below a popup's content, e.g. scripts or sources for a media player.
+- **Velair (#32):** the week shows each block's target in its bar; the popup shows Velair's global mode as a row that opens it.
+- **"More" tile lists tiles (#59):** a tap opens that tile's own popup with ‹ back to More.
+
+### Changed
+- **E-bike tile (#88):** reads the eBike Bridge's live battery; while the bridge reports unknown, the last known battery and odometer stay visible. On the phone the tile shows just the battery.
+- **Car tile (#89):** shows the entity it was given, also without lock data.
+- **Energy popup (#91):** shows the battery's charge level even without a SoC field.
+- **Carousel:** a tile in a large carousel on the phone lays out large; the dots follow the text colour.
+- **Phone room pages:** the security and climate badges open their popup (covering that room) as on Home.
+- **Glas:** the popup sheet blurs the dashboard behind it.
+
+### Fixed
+- **Entity list on the phone (#85):** select, time and date fields can be used again.
+- **Energy badge in Safari:** the icon is sized correctly.
+- **Energy flow:** running dots no longer jump when the power changes.
+- **Security:** a closed door or window group with a member that does not answer says "1 sensor unavailable" instead of "Closed".
+- **Popups** always open at the top; the recipe week strip no longer hyphenates; the pet popup has its title; the chart plate casts the same shadow as other cards.
+- **Universal tile** has its icon in the Studio's tile picker.
+- **Question before opening a lock** says "Open door".
+
 ## 26.10.63 – 27.10.2026
 
 ### Changed
