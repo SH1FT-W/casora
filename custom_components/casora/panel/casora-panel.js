@@ -6219,7 +6219,15 @@ const tileStateWord = (kind, tile, ent, states, hass) => {
       if (g.active && g.game) return g.game;
       break;
     }
-    case "light": return lightWord(states, ent.entity_id);
+    case "light": {
+      // Same count as the dashboard's tile, badge and popup (window.casoraLightTally, scripts/local/01-basis.js).
+      const t = window.casoraLightTally ? window.casoraLightTally(ent, states || {}, hass, V) : null;
+      if (!t) return lightWord(states, ent.entity_id);
+      if (!t.tot || t.tot === 1) return t.on ? "On" : "Off";
+      if (!t.on) return "All off";
+      if (t.on === t.tot) return "All on";
+      return t.kind === "rooms" ? (t.on === 1 ? "1 room on" : t.on + " rooms on") : t.on + " on";
+    }
     case "plant": return plantWord(ent, V, states);
     case "energy_tile": return energyWord(V, ent, states);
     case "network": return networkWord(V, ent, states);

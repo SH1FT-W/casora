@@ -4174,9 +4174,12 @@
           svc: { domain: 'light', service: 'turn_on', data: { color_temp_kelvin: p.k }, target: { entity_id: ctOn.length ? ctOn : ct } } };
       });
     }
+    // Several lamps on at different brightness: the value is their average – say so (review 2, E08/fam-09).
+    var litP = lit.map(function (id) { return pct(states[id]); }).filter(function (p) { return p != null; });
+    var avg = litP.length > 1 && litP.some(function (p) { return p !== litP[0]; });
     return UI.stage('slider', { value: v, label: tr('Helligkeit'), icon: 'light', state: v ? null : 'off',
       // Off: the stage value says „Aus“ already – no second „Aus“ under it.
-      word: v ? [word(v)].concat(curLbl ? [curLbl] : []).join(' · ') : '',
+      word: v ? [avg ? tr('Ø von ' + litP.length + ' Lampen') : word(v)].concat(curLbl ? [curLbl] : []).join(' · ') : '',
       words: ['Aus', 'Gedimmt', 'Volle Helligkeit'],
       svc: dim.length && target.length ? { domain: 'light', service: 'turn_on', field: 'brightness_pct', target: { entity_id: target }, zeroOff: true } : null,
       seg: seg, moons: moons || null });
