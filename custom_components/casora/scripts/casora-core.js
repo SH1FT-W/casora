@@ -11542,33 +11542,53 @@ window.casoraMenuGlass = {
     +   'transition:cx .18s cubic-bezier(.36,0,.16,1), cy .18s cubic-bezier(.36,0,.16,1);}'
     + '.hui-dl .mk{fill:' + T.ink + ';opacity:.55;}'
     // white-space: the button-card field (.ellipsis) keeps text on one line – the centre wraps between facts.
-    + '.hui-dl-c{position:absolute;inset:18%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;white-space:normal;}'
+    // The centre is a safe inner circle: its square sits inside the ring's inner edge (radius 137 of 420), every line keeps
+    // to it and long words break (hyphens) – text must never run into the ring (popup-geo.mjs „rad“).
+    + '.hui-dl-c{position:absolute;inset:20%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;white-space:normal;'
+    +   'hyphens:auto;-webkit-hyphens:auto;overflow-wrap:break-word;}'
+    + '.hui-dl-c > *{max-width:100%;}'
     + '.hui-dl-c .hui-dl-w2 > span{white-space:nowrap;}'
     + '.hui-dl-c .hui-st-val{justify-content:center;}'
     + '.hui-dl-c .hui-st-n{font-size:clamp(48px, 19cqw, 80px);letter-spacing:-0.04em;line-height:1;}'
     + '.hui-dl-c .hui-st-u{font-size:clamp(20px, 6.7cqw, 28px);}'
-    + '.hui-dl-c .hui-st-val.wd .hui-st-n{font-size:clamp(28px, 9.5cqw, 40px);letter-spacing:-0.02em;}'
-    + '.hui-dl-c .hui-st-w{margin-top:8px;text-align:center;}'
-    + '.hui-dl-c .hui-dl-cap{font-size:15px;font-weight:600;color:' + S.sub + ';margin-bottom:4px;}'
-    + '.hui-dl-c .hui-dl-w2{font-size:13px;font-weight:600;color:' + S.sub + ';margin-top:4px;font-variant-numeric:tabular-nums;max-width:100%;}'
+    // A state word as the value („Bereit“, „Trocknet Mopp“): at most two lines; a sentence („Parkt bis zum nächsten Zeitplan“)
+    // takes the size of the S7 sentence and three lines.
+    + '.hui-dl-c .hui-st-val.wd{max-width:92%;}'
+    + '.hui-dl-c .hui-st-val.wd .hui-st-n{font-size:clamp(26px, 8.6cqw, 36px);letter-spacing:-0.02em;line-height:1.08;'
+    +   'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}'
+    + '.hui-dl-c .hui-st-val.wd.wl .hui-st-n{font-size:clamp(19px, 6.2cqw, 26px);line-height:1.15;-webkit-line-clamp:3;}'
+    + '.hui-dl-c .hui-st-w{margin-top:8px;text-align:center;max-width:86%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}'
+    + '.hui-dl-c .hui-dl-cap{font-size:15px;font-weight:600;color:' + S.sub + ';margin-bottom:4px;max-width:78%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+    // Facts sit low in the circle where it narrows: shorter lines, at most two.
+    + '.hui-dl-c .hui-dl-w2{font-size:13px;font-weight:600;color:' + S.sub + ';margin-top:4px;font-variant-numeric:tabular-nums;max-width:80%;'
+    +   'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}'
     + '.hui-dl-c .hui-dl-w2 b{font-weight:700;color:' + T.ink + ';}'
-    + '.hui-dl-c .hui-dl-t{font-size:clamp(18px, 6.2cqw, 26px);font-weight:800;letter-spacing:-0.02em;line-height:1.15;color:' + T.ink + ';max-width:100%;'
+    + '.hui-dl-c .hui-dl-t{font-size:clamp(18px, 6.2cqw, 26px);font-weight:800;letter-spacing:-0.02em;line-height:1.15;color:' + T.ink + ';max-width:92%;'
     +   'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:break-word;}'
     + '.hui-dl-c .hui-dl-sym{width:clamp(36px, 11cqw, 46px);height:clamp(36px, 11cqw, 46px);margin-bottom:6px;color:var(--dl-col);'
     +   'background-color:currentColor;-webkit-mask:var(--g) center / contain no-repeat;mask:var(--g) center / contain no-repeat;}'
     // The popup's own ha-icon rule (margin auto) pushed the symbol and the sentence to the bottom of the centre.
     + '.hui-dl-c ha-icon.hui-dl-sym{background:none;--mdc-icon-size:clamp(36px, 11cqw, 46px);margin:0 0 6px !important;}'
     + '.hui-moon ha-icon{margin:0 !important;}'
-    + '.hui-dl-pm{display:flex;gap:clamp(56px, 21cqw, 90px);margin-top:12px;pointer-events:auto;}'
+    + '.hui-dl-pm{display:flex;gap:clamp(36px, 15cqw, 76px);margin-top:10px;pointer-events:auto;}'
     + '.hui-dl-pm .hui-st-b{width:44px;height:44px;font-size:22px;background:' + S.row + ';}'
+    // The record (dial-alle.html): black vinyl with a sheen and grooves, the cover as its round label in the middle –
+    // without artwork the label is the device colour with a note, so the middle never stays an empty disc.
     + '.hui-dl-cover{position:absolute;left:24.8%;top:24.8%;width:50.4%;height:50.4%;border-radius:50%;overflow:hidden;pointer-events:none;'
-    +   'background:' + S.ctl + ';box-shadow:var(--casora-dial-cover-shadow, 0 14px 40px -12px rgba(0,0,0,.45));}'
-    + '.hui-dl-cover img{width:100%;height:100%;object-fit:cover;display:block;}'
-    // Grooves over the cover: it reads as a record (decision 31.10.2026, „Cover als drehende Schallplatte“).
+    +   'background:conic-gradient(from 0deg, var(--casora-dial-record, #2a2826), var(--casora-dial-record-deep, #121110) 10%, var(--casora-dial-record, #2a2826) 20%,'
+    +   ' var(--casora-dial-record-deep, #121110) 30%, var(--casora-dial-record, #2a2826) 40%, var(--casora-dial-record-deep, #121110) 50%, var(--casora-dial-record, #2a2826) 60%,'
+    +   ' var(--casora-dial-record-deep, #121110) 70%, var(--casora-dial-record, #2a2826) 80%, var(--casora-dial-record-deep, #121110) 90%, var(--casora-dial-record, #2a2826));'
+    +   'box-shadow:var(--casora-dial-cover-shadow, 0 14px 40px -12px rgba(0,0,0,.45));}'
     + '.hui-dl-cover::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;'
-    +   'background:repeating-radial-gradient(circle at 50% 50%, transparent 0 5px, var(--casora-dial-groove, rgba(0,0,0,.07)) 5px 6px);}'
-    + '.hui-dl-cover::after{content:"";position:absolute;left:50%;top:50%;width:9%;height:9%;margin:-4.5% 0 0 -4.5%;border-radius:50%;'
-    +   'background:' + S.ctl + ';box-shadow:var(--casora-dial-hole-ring, 0 0 0 3px rgba(0,0,0,.35));}'
+    +   'background:repeating-radial-gradient(circle at 50% 50%, transparent 0 3px, var(--casora-dial-groove, rgba(255,255,255,.05)) 3px 4px);}'
+    + '.hui-dl-lbl{position:absolute;inset:23%;border-radius:50%;overflow:hidden;display:grid;place-items:center;'
+    +   'background:var(--dl-col);color:color-mix(in srgb, var(--casora-popup-action-ink, rgba(46,34,20,.9)) 70%, black);'
+    +   'box-shadow:0 0 0 4px var(--casora-dial-record-deep, #121110);}'
+    + '.hui-dl-lbl img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}'
+    // The note sits above the spindle hole, like the print on a real label.
+    + '.hui-dl-lbl ha-icon{--mdc-icon-size:7cqw;width:7cqw;height:7cqw;margin:0 !important;display:flex;opacity:.85;transform:translateY(-62%);}'
+    + '.hui-dl-cover::after{content:"";position:absolute;left:50%;top:50%;width:7%;height:7%;margin:-3.5% 0 0 -3.5%;border-radius:50%;'
+    +   'background:var(--casora-dial-record-deep, #121110);box-shadow:var(--casora-dial-hole-ring, 0 0 0 2px rgba(255,255,255,.18));}'
     + '.hui-dl-cover.spin{animation:hui-dl-spin 8s linear infinite;}'
     + '.hui-dl-vol{font-size:15px;font-weight:700;color:' + S.sub + ';text-align:center;font-variant-numeric:tabular-nums;}'
     + '.hui-stage .hui-dl-vol .hui-st-n{font-size:inherit;letter-spacing:0;color:' + T.ink + ';}'
@@ -11712,7 +11732,9 @@ window.casoraMenuGlass = {
       if (o.seg && o.seg.length) belowHtml = '<div class="hui-st-seg">' + segments(o.seg) + '</div>';
       // With a record in the middle (media) the value stands under the wheel: „Lautstärke 35 %“.
       if (o.cover) belowHtml = '<div class="hui-dl-vol">' + esc(o.word || '') + ' <span class="hui-st-n">' + esc(v) + '</span>\u202F%</div>' + belowHtml;
-      if (o.cover) coverHtml = '<div class="hui-dl-cover' + (o.cover.spin ? ' spin' : '') + '">' + (o.cover.image ? '<img src="' + (window.casoraSafeUrl ? window.casoraSafeUrl(o.cover.image) : esc(o.cover.image)) + '" alt=""/>' : '') + '</div>';
+      if (o.cover) coverHtml = '<div class="hui-dl-cover' + (o.cover.spin ? ' spin' : '') + '"><div class="hui-dl-lbl">'
+        + (o.cover.image ? '<img src="' + (window.casoraSafeUrl ? window.casoraSafeUrl(o.cover.image) : esc(o.cover.image)) + '" alt=""/>'
+          : '<ha-icon icon="' + esc(o.cover.icon || 'mdi:music-note') + '"></ha-icon>') + '</div></div>';
     } else if (code === 'S2') {
       // Range and service: o.min/o.max/o.step, else what − / + carry (their service with one numeric field).
       var pl = o.plus || {}, mi = o.minus || {};
