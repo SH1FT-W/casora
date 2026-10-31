@@ -2793,14 +2793,13 @@
     // vor „Einstellungen“ (der Kopf meldet Störungen ohnehin auch später).
     if (F.sec('sys', c, states || {}, hass)) f.sys = { card: K.secCard(watch, call('sys'), states) };
     if (F.sec('ctl', c, states || {}, hass)) f.more = { card: K.secCard(watch, call('ctl'), states) };
-    // Popup v3 (richtlinien §4 S5, §8): the live picture is the stage over both columns (mounted once into the stage,
-    // _casoraStageCard in 01-basis.js), the detection is the header's main switch; under it left the recordings and the
-    // objects, right the alerts/detections; no settings.
+    // Popup v3 clean (richtlinien §4 S5, §8; decision 31.10.2026 „just the picture“): the live picture is the stage
+    // (mounted once into the stage, _casoraStageCard in 01-basis.js), the detection is the header's main switch, under
+    // it only the latest alerts/detections. Recordings, objects and filters stay in Frigate and the hold menu.
     if (UI.v3 && UI.v3() && UI.stage) {
-      var fv = { hero: f.hero, rec: f.rec, objs: f.objs, ev: f.ev, sys: f.sys,
+      var fv = { hero: f.hero, ev: f.ev, sys: f.sys,
         stage: { card: K.secCard([], 'return window._casoraFrigate ? window._casoraFrigate.stage(' + JSON.stringify(live) + ', this) : "";', states) } };
-      return K.layout({ fields: fv, top: ['hero'], stage: 'stage', stageWide: true, left: ['rec', 'objs'], right: ['ev', 'sys'],
-        narrowOrder: ['ev', 'rec', 'objs', 'sys'] });
+      return K.layout({ fields: fv, top: ['hero'], stage: 'stage', left: ['ev', 'sys'], right: [], narrowOrder: ['ev', 'sys'] });
     }
     // Live-Bild links, darunter die Aufnahmen der letzten Tage und die Objekte; rechts gleich die Alarme/Erkennungen
     // (mit Filtern); die Technik-Schalter stehen unten über beide Spalten unter „Einstellungen“.

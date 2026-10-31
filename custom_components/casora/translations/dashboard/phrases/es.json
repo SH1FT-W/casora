@@ -4694,5 +4694,6 @@
    "^Jetzt (-?\\d.*)$",
    "Ahora {1}"
   ]
- ]
+ ],
+ "Gerät in Home Assistant": "Dispositivo en Home Assistant"
 }

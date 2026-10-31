@@ -228,8 +228,8 @@
     // Wege: „Details“ nur, wenn Tippen nicht schon das Popup öffnet; Gerät und Bearbeiten nur für Admins.
     if (!o.tapPopup) m.rows.push({ key: 'popup', t: 'Details', ic: 'mdi:card-text-outline' });
     if (dom !== 'camera') m.rows.push({ key: 'history', t: 'Verlauf', ic: 'mdi:history' });
-    // Blueprint v2 (rule 8): the same word as the last row of every popup.
-    if (o.device && o.admin) m.rows.push({ key: 'device', t: 'Weitere Einstellungen', ic: 'mdi:tune-variant' });
+    // Admins only: the device page in HA (where the settings are).
+    if (o.device && o.admin) m.rows.push({ key: 'device', t: 'Gerät in Home Assistant', ic: 'mdi:open-in-new' });
     if (o.admin) m.rows.push({ key: 'edit', t: 'Kachel bearbeiten', ic: 'mdi:pencil-outline', sep: true });
     return m;
   };
@@ -820,7 +820,13 @@
       return;
     }
     if (k === 'history') { if (!(Z && Z.openMeasure(id, '24h', null))) navigate('/history?entity_id=' + encodeURIComponent(id)); return; }
-    if (k === 'device') { if (!(Z && Z.openDevice(id, null)) && window.casoraPopup) window.casoraPopup.nativeMoreInfo(id); return; }
+    // v3 clean (31.10.2026): popups have no settings any more, the device's settings live in HA – open its device page.
+    if (k === 'device') {
+      var dv = (((hassNow() || {}).entities || {})[id] || {}).device_id;
+      if (dv) navigate('/config/devices/device/' + encodeURIComponent(dv));
+      else if (!(Z && Z.openDevice(id, null)) && window.casoraPopup) window.casoraPopup.nativeMoreInfo(id);
+      return;
+    }
     if (k === 'edit') {
       var seg = (window.location.pathname || '').split('/').filter(Boolean);
       var dash = (seg[0] || '').replace(/[-_]mobile$/i, '');
