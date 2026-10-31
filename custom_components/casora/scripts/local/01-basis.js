@@ -796,6 +796,11 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       return window.casoraTr ? window.casoraTr(t) : t;
     };
     var popRoot = function () {
+      // The popup is a singleton that casora-core keeps (casoraPopup.element): no walk through the whole page
+      // (every 5 s while nothing was open it was ~13 000 querySelectorAll('*') a minute, Prüfung 2 DH-17).
+      var el = window.casoraPopup && window.casoraPopup.element;
+      if (el) return el;
+      if (window.casoraPopup) return null;
       var ha = document.querySelector('home-assistant');
       return find(ha && ha.shadowRoot ? ha.shadowRoot : document, 'casora-popup')[0] || null;
     };
