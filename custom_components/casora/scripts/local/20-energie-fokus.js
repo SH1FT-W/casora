@@ -252,7 +252,7 @@
       chart = '<div class="hp-chart-slot" style="min-height:' + (window.innerWidth <= 760 ? 140 : 160) + 'px;pointer-events:auto;"></div>';
     }
     var main = { solar: C.solar, battery: C.soc || C.batt, home: C.home, grid: C.grid }[C.focus];
-    return UI.stage('chart', { value: memo.n, unit: memo.u, trend: memo.l, chart: chart, read: C.chart || null,
+    return UI.stage('chart', { value: memo.n, unit: memo.u, trend: memo.l, chart: chart, read: C.read || null,
       state: main && states[main] && states[main].state === 'unavailable' && (C.asleep || []).indexOf(main) < 0 ? 'na' : null });
   }
 
@@ -367,8 +367,10 @@
   }
 
   // v3: chart colour per page (theme, richtlinien §7.3) and the one list beside the stage.
-  var V3_COL = { home: 'var(--casora-popup-accent)' };
+  var V3_COL = { home: 'var(--casora-popup-accent)', solar: 'var(--casora-color-yellow)' };
   var V3_LIST = {
+    // Solar: the yield (today, this month, savings), without daily meters the modules' power.
+    solar: function (UI, C, states, hass) { var r = rows(UI, C, states, hass); return r.yield || r.mods || null; },
     // House: the consumers (HA's individual devices, else the largest found automatically).
     home: function (UI, C, states, hass, K) {
       var HC = window.casoraEnergyConsumers ? window.casoraEnergyConsumers(hass) : null;
@@ -420,17 +422,21 @@
     // the page (V3_LIST); no energy flow beside the chart, no controls, no technical values.
     if (UI.v3 && UI.v3() && UI.stage && V3_LIST[focus]) {
       if (typeof window._hpChartCfg === 'function') {
-        var cfg3 = window._hpChartCfg(main, CH[0], CH[1], V3_COL[focus], 160);
-        cfg3.readout = 'hero';
+        // Own key: the energy popup's other charts register the same sensor with their own look.
+        var k3 = 'ef3:' + main, cfg3 = window._hpChartCfg(k3, CH[0], CH[1], V3_COL[focus], 160);
+        cfg3.series[0].entity = main; cfg3.readout = 'hero';
         if (window.innerWidth <= 760) cfg3.height = 140;
-        if (CH[1] === '24h' && window._hpSmooth) window._hpSmooth(main, '15min');
-        C.chart = main;
+        if (CH[1] === '24h' && window._hpSmooth) window._hpSmooth(k3, '15min');
+        C.chart = k3; C.read = main;
       }
       var f3 = { stage: { card: K.secCard(watch, 'return window._casoraEnergyFocus ? window._casoraEnergyFocus.sec.call(this, "stage3", '
         + JSON.stringify(C) + ', states, hass) : "";', states) } };
       var l3 = V3_LIST[focus](UI, C, states, hass, K);
       if (l3) f3.list = l3;
-      return K.layout({ fields: f3, top: [], stage: 'stage', left: [], right: ['list'], narrowOrder: ['list'] });
+      var lay3 = K.layout({ fields: f3, top: [], stage: 'stage', left: [], right: ['list'], narrowOrder: ['list'] });
+      // Without a list the page is one column: 552 wide (the energy popup's quick choice reads this).
+      if (!l3) Object.defineProperty(lay3, '_casoraNarrow', { value: true, enumerable: false });
+      return lay3;
     }
     f.hero = { card: K.secCard(watch, 'return window._casoraEnergyFocus ? window._casoraEnergyFocus.sec("hero", '
       + JSON.stringify(C) + ', states, hass) : "";', states) };

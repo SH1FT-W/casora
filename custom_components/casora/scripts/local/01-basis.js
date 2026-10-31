@@ -889,7 +889,8 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     window._hpStageChart = function (el, eid) {
       setTimeout(function () {
         var slot = el && el.shadowRoot && el.shadowRoot.querySelector('.hp-chart-slot');
-        if (slot && !slot.querySelector('casora-chart') && !window._hpPlantShow(eid, null, true)) window._hpChartInit(eid);
+        // Through _hpChartInit: it also stops an older pending mount (a popup opened before this page) taking the slot.
+        if (slot && !slot.querySelector('casora-chart')) window._hpChartInit(eid);
       }, 0);
     };
     /* Popups with a chart and „Details ›“ (air purifier, fan, plant, batteries …): ‹ back from the reading's page
