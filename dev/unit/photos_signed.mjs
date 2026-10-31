@@ -74,7 +74,7 @@ assert.equal(calls, 1);
 // Unknown name (just uploaded elsewhere): one more request, then it is there.
 await new Promise((r) => setTimeout(r, 2100));
 photos = { ...photos, neu: SIG('neu.jpg') };
-assert.equal(P('neu', hass), '/casora_assets/rooms/neu.jpg');
+assert.equal(P('neu', hass), '', 'unknown name: no guessed address (was a 404)');
 await tick(); await tick();
 assert.equal(calls, 2);
 assert.equal(P('neu', hass), SIG('neu.jpg'));
@@ -83,6 +83,12 @@ P('gibts-nicht', hass); await tick();
 const after = calls;
 P('gibts-nicht', hass); P('gibts-nicht', hass); await tick();
 assert.equal(calls, after);
+
+// Missing night photo: the day photo instead of a 404; shipped day photo likewise.
+assert.equal(P('kueche-night', hass), SIG('kueche.jpg'));
+assert.equal(P('default-night', hass), '/casora_assets/rooms/default.jpg');
+// No room name ever becomes a guessed /casora_assets/rooms address (Prüfung 2 E27/T15).
+for (const n of ['badezimmer', 'badezimmer-night', 'buro']) assert.equal(P(n, hass), '', n);
 
 // Reconnect: asks again (HA restart, new login).
 assert.equal(typeof listeners.ready, 'function', 'listens for reconnect');
@@ -99,7 +105,7 @@ window.__casoraPhotos.map = null; window.__casoraPhotos.refreshAt = 0;
 hass.callWS = () => { calls++; return Promise.reject(new Error('unknown command')); };
 P('kueche', hass); await tick(); await tick();
 const errCalls = calls;
-assert.equal(P('kueche', hass), '/casora_assets/rooms/kueche.jpg');
+assert.equal(P('kueche', hass), '');
 assert.equal(calls, errCalls);
 assert.equal(P('home-demo'), '/casora_assets/rooms/home-demo.jpg');
 

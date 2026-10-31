@@ -180,12 +180,14 @@ if (!customElements.get('casora-void')) {
   NARROW.addEventListener('change', apply);
 })();
 
+// 04-navigation right after the basics (it needs only casora-core, 00 and 01): the phone's bottom bar is
+// there before the large device and popup modules have run (Prüfung 2 DH-17: bar seconds late on a phone).
 const MODULES = [
   '00-finder',
   '01-basis',
+  '04-navigation',
   '02-devices',
   '03-popups',
-  '04-navigation',
   '05-standard-medien',
   '05-weich-mehr',
   '06-kalender',

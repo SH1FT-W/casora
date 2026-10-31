@@ -1275,7 +1275,9 @@
       // nach vorn bzw. zurück (Issue #6).
       // Kein Neustart der Wartezeit bei jedem Update: Im belebten Haus kommen ständig neue
       // Zustände, dann würde nie sortiert.
-      if (this._config?.room && this._showing && this._contentEl && filter === this._config.filter_category
+      // Prüfung 2 fam-04/E19: no longer while the room is open – the tile just used stays where it is
+      // (its colour shows the state); the room sorts again when it is opened. CASORA_LIVE_SORT = true: as before.
+      if (window.CASORA_LIVE_SORT === true && this._config?.room && this._showing && this._contentEl && filter === this._config.filter_category
         && !this._resortTimer) {
         this._resortTimer = setTimeout(() => { this._resortTimer = null; if (this._showing) this._sortSectionGrids(); }, 2500);
       }
@@ -1540,6 +1542,9 @@
           '--casora-entity-grid-gap:var(--casora-tile-row-gap-mobile,8px);' +
           'grid-auto-flow:row dense;align-items:stretch;}' +
           '.casora-entity-grid > [data-casora-size="large"]{grid-row:span 2;}}' +
+          // Prüfung 2 DH-24: the only tile of a group takes the whole row in portrait (its name was cut while
+          // the right half stayed empty).
+          '@media (max-width:767px) and (orientation:portrait){.casora-entity-grid > :only-child{grid-column:1 / -1;}}' +
           '@media (max-height:500px) and (orientation:landscape), (max-height:600px) and (orientation:landscape) and (hover: hover){' +
           '.casora-entity-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}';
         (this._appendTarget || document.head).appendChild(st);
@@ -1785,6 +1790,8 @@
         'font-family:var(--casora-body-font, var(--primary-font-family, inherit))',
         'font-size:var(--casora-mobile-section-size, 18px)', 'font-weight:700', 'letter-spacing:-0.3px', 'line-height:1.3',
         'color:var(--casora-room-group-ink, var(--casora-mobile-title-color, var(--primary-text-color)))',
+        // Readable over any part of the room photo (fam-16): the theme's halo, none without it.
+        'text-shadow:var(--casora-mobile-title-halo, none)',
         'box-sizing:border-box', 'white-space:nowrap', 'overflow:hidden', 'text-overflow:ellipsis',
       ].join(';');
       head.textContent = _roomGroupHeading(key);

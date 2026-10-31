@@ -2276,9 +2276,6 @@
   "Ab hier:": "Od tego miejsca:",
   "Anhalten": "Wstrzymaj",
   "Kein Live-Video · Standbild alle 2 s": "Brak wideo na żywo · obraz co 2 s",
-  "Hemma 2 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 2 nie ma już w Casora – używasz teraz Casora Glas, szklanego wyglądu w układzie Casora. Inne style: Studio › Ustawienia › Styl.",
-  "Hemma 1 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 1 nie ma już w Casora – używasz teraz Casora Glas, szklanego wyglądu w układzie Casora. Inne style: Studio › Ustawienia › Styl.",
-  "Das Hemma-Design gibt es nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Stylu Hemma już nie ma – używasz teraz Casora Glas, szklanego wyglądu w układzie Casora. Inne style: Studio › Ustawienia › Styl.",
   "Americano": "Americano",
   "Cappuccino": "Cappuccino",
   "Cortado": "Cortado",
@@ -2641,7 +2638,18 @@
   "Dachboden": "Strych",
   "Garage": "Garaż",
   "Wintergarten": "Ogród zimowy",
-  "Werkstatt": "Warsztat"
+  "Werkstatt": "Warsztat",
+  "Casora hat aufgeräumt": "Casora posprzątała",
+  "Alte Einträge entfernt – antippen für Details": "Usunięto stare wpisy – dotknij, aby zobaczyć szczegóły",
+  "Casora hat nach dem Update alte Einträge entfernt. Die Einzelheiten stehen unten in der Sprache von Home Assistant.": "Po aktualizacji Casora usunęła stare wpisy. Szczegóły poniżej są w języku Home Assistant.",
+  "Casora: Helfer fehlen": "Casora: brak pomocników",
+  "Einige Helfer konnten nicht angelegt werden": "Nie udało się utworzyć niektórych pomocników",
+  "Für mich ausblenden": "Ukryj dla mnie",
+  "Hemma 2 gibt es nicht mehr – du siehst jetzt Casora Glas.": "Hemma 2 już nie istnieje – teraz widzisz Casora Glas.",
+  "Hemma 1 gibt es nicht mehr – du siehst jetzt Casora Glas.": "Hemma 1 już nie istnieje – teraz widzisz Casora Glas.",
+  "Das Hemma-Design gibt es nicht mehr – du siehst jetzt Casora Glas.": "Wygląd Hemma już nie istnieje – teraz widzisz Casora Glas.",
+  "Ändern: Studio › Einstellungen › Design.": "Zmiana: Studio › Ustawienia › Wygląd.",
+  "Noch nicht verfügbar": "Jeszcze niedostępne"
  },
  "patterns": [
   [
@@ -4759,6 +4767,10 @@
   [
    "^(\\d+) klemmen$",
    "{1} zablokowane"
+  ],
+  [
+   "^(.+) in (\\d+) T\\.$",
+   "{1} za {2} dni"
   ]
  ],
  "Gerät in Home Assistant": "Urządzenie w Home Assistant"

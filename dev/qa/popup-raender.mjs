@@ -312,10 +312,20 @@ for (const scheme of schemes) for (const vn of views) {
   const roomArg = process.argv.indexOf('--handy-raeume');
   if (V.phone && roomArg > 0) {
     await H.ready(page, '/' + dash + '/' + passes[0].v, "() => !!window._casoraFilter && window.__pierce('button-card').length >= 3", 60000).catch(() => {});
-    // Die Raumleiste baut sich nach den Kacheln auf: kurz warten.
-    await page.waitForTimeout(2500);
-    const keys = [...await page.evaluate(() => { const n = window.__pierce('*').find((e) => e._rooms && typeof e._set === 'function' && e._bar);
+    // Die Handy-Leiste (casora-mobile-nav, Modul 04) kommt erst mit den Modulen: auf sie warten, nicht nur 2,5 s
+    // (Prüfung 2 DH-22: unter Last stand sie noch nicht da – „Räume (keine)“). Rückfall: die Raumseiten
+    // (casora-filter-overlay mit room) aus der Dashboard-Konfiguration.
+    await page.waitForFunction(() => !!window._casoraLocalLoaded && window.__pierce('casora-mobile-nav').some((e) => e._rooms && e._rooms.length), null, { timeout: 30000 }).catch(() => {});
+    let keys = [...await page.evaluate(() => { const n = window.__pierce('casora-mobile-nav').find((e) => e._rooms && e._rooms.length);
       return n ? n._rooms.map((r) => r.key).filter((k) => /^room_/.test(k) && k !== 'room_scenes') : []; }).catch(() => [])];
+    if (!keys.length) {
+      const cfg = cfgs[dash] || {};
+      const found = [];
+      (function walk(o) { if (!o || typeof o !== 'object') return; if (Array.isArray(o)) { o.forEach(walk); return; }
+        if (o.type === 'custom:casora-filter-overlay' && o.room && typeof o.filter_category === 'string' && /^room_/.test(o.filter_category)) found.push(o.filter_category);
+        Object.values(o).forEach(walk); })(cfg.views || []);
+      keys = [...new Set(found)].filter((k) => k !== 'room_scenes');
+    }
     console.log(`  info   ${vn}: Räume ${keys.join(', ') || '(keine)'}`);
     const lim = parseInt(process.argv[roomArg + 1], 10);
     for (const k of keys.slice(0, lim > 0 ? lim : keys.length)) passes.push({ v: passes[0].v, room: k });

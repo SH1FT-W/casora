@@ -83,20 +83,26 @@ for (const groupsOn of [true, false]) {
   });
   await check(`${tag}: übrige Kacheln behalten die Studio-Reihenfolge`, studioOk, { order: first, studio: room.ents });
 
-  // Bei offenem Raum das Licht einschalten: rückt nach vorn (in seiner Kategorie bzw. global), unter
-  // den aktiven gilt die Studio-Reihenfolge (Licht vor Jalousie).
+  // Prüfung 2 fam-04/E19 (31.10.2026): bei offenem Raum das Licht einschalten – es bleibt, wo es ist (nichts
+  // springt unter dem Finger, der Zustand zeigt sich in der Farbe). Erst beim nächsten Öffnen des Raums rückt es
+  // nach vorn, unter den aktiven gilt die Studio-Reihenfolge (Licht vor Jalousie).
   // Der feste Patch ersetzt den vorigen – deshalb Jalousie und übrige Kacheln wieder mitgeben.
   await fakeStates(page, { ...off, [room.cover]: { state: 'open' }, [room.light]: { state: 'on' } }, { sticky: true });
-  // Die Raumseite sortiert spätestens 2,5 s nach einem Update neu; bis zu 8 s warten.
+  await page.waitForTimeout(5000);
+  const still = await order();
+  await check(`${tag}: eingeschaltetes Licht bleibt bei offenem Raum an seinem Platz`, JSON.stringify(ids(still)) === JSON.stringify(ids(first)), { first, still });
   const ok = (l) => (grouped
     ? scope(l, room.light)[0] === room.light && scope(l, room.cover)[0] === room.cover
     : ids(l)[0] === room.light && ids(l)[1] === room.cover);
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('ll-custom', { detail: { casora_filter: 'all' } })));
+  await page.waitForTimeout(1200);
+  await page.evaluate((k) => window.dispatchEvent(new CustomEvent('ll-custom', { detail: { casora_filter: k } })), key);
   let after = [];
-  for (let i = 0; i < 16; i++) {
+  for (let i = 0; i < 12; i++) {
     await page.waitForTimeout(500);
     after = await order();
     if (ok(after)) break;
   }
-  await check(`${tag}: eingeschaltetes Licht rückt bei offenem Raum nach vorn`, ok(after), after);
+  await check(`${tag}: beim nächsten Öffnen des Raums steht das Licht vorn`, ok(after), after);
 }
 await finish();

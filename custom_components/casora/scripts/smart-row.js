@@ -29,6 +29,8 @@ const SORT_DELAY_MS = 2500; // hold time before a state change triggers a sort
 // (Tippen, Tasten, Mausrad) schiebt das Umsortieren, bis QUIET_MS lang nichts passiert ist; solange ein
 // Casora-Popup offen ist oder die Maus über der Reihe steht, wartet es ebenfalls.
 const QUIET_MS = 2000;
+// Load phase of a row: until then late colours (modules, sensors) still sort; afterwards the order holds.
+const SETTLE_MS = 10000;
 // Module fertig (casora-local-loaded): nach den beiden Neuzeichnungen (06: sofort, nach 1,5 s) jede
 // Reihe in der Ladephase gleich nachsortieren (_settleSort). Ein Listener für alle Reihen.
 if (!window._casoraRowSettle) {
@@ -1498,7 +1500,7 @@ class CasoraSmartRow extends HTMLElement {
   // nachsortieren – über _updateSort warteten sie SORT_DELAY_MS plus Ruhezeit hinten (Checkup 10/2026).
   _settleSort() {
     if (!this._initialized || !this.isConnected) return;
-    if (Date.now() - (this._builtAt || 0) > 10000 || (window.casoraPopup && window.casoraPopup.surface)) return this._updateSort();
+    if (Date.now() - (this._builtAt || 0) > SETTLE_MS || (window.casoraPopup && window.casoraPopup.surface)) return this._updateSort();
     if (!this._sortEnabled || !this._wrappers.length) return;
     const now = new Set();
     this._config.cards.forEach((_, i) => { if (this._isActive(i)) now.add(i); });
@@ -1511,6 +1513,10 @@ class CasoraSmartRow extends HTMLElement {
 
   _updateSort() {
     if (!this._sortEnabled || !this._wrappers.length) return;
+    // Prüfung 2 fam-04/E19: the order is settled while the page loads, then it stays for the session.
+    // A tile someone just used must not move away under the finger; its state shows in its colour.
+    // The next page load sorts again (window.CASORA_LIVE_SORT = true: re-sort as before).
+    if (this._sortSettled() && window.CASORA_LIVE_SORT !== true) return;
 
     const newActive = new Set();
     this._config.cards.forEach((_, i) => {
@@ -1527,6 +1533,9 @@ class CasoraSmartRow extends HTMLElement {
 
     this._scheduleSort();
   }
+
+  // Load phase over: SETTLE_MS after the row was built (_settleSort's window).
+  _sortSettled() { return !!this._builtAt && Date.now() - this._builtAt > SETTLE_MS; }
 
   _scheduleSort() {
     if (!this._sortEnabled) return;

@@ -446,6 +446,9 @@
     if (!headerRO) {
       try { headerRO = new ResizeObserver(queueRecompute); } catch (e) { return; }
     }
+    // Phone portrait has no hero to fit (computeAndApplyHeader returns there): no page walks for it
+    // (Prüfung 2 DH-17). Turning the phone re-runs this from the resize listener below.
+    if (!isDesktopOrTablet()) { observeEl(html); return; }
 
     var headerStack = findRoomHeaderStack();
     if (headerStack) {
@@ -466,6 +469,7 @@
   function initHeader() {
     computeAndApplyHeader();
     setupHeaderObservers();
+    if (!isDesktopOrTablet()) return;
     var attempts = 0;
     var iv = setInterval(function () {
       if (++attempts > 20) { clearInterval(iv); return; }
@@ -475,6 +479,11 @@
   }
 
   window.addEventListener('resize', queueRecompute);
+  var turnT = null;
+  window.addEventListener('resize', function () {
+    if (turnT || !isDesktopOrTablet() || headerObservedEls.length > 1) return;
+    turnT = setTimeout(function () { turnT = null; initHeader(); }, 300);
+  });
   window.addEventListener('resize', applyContentLeft);
   window.addEventListener('location-changed', function () {
     // Drop stale observations and re-discover once the new view has rendered.

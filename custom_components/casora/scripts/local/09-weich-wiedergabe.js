@@ -209,7 +209,8 @@
       })(document, 0);
     } catch (err) { /* nur Nachfassen */ }
   }
-  [600, 2500, 6000, 15000].forEach(function (t) { setTimeout(discover, t); });
+  // Two passes are enough (each walks the whole page; four cost ~6 600 querySelectorAll('*'), Prüfung 2 DH-17).
+  [600, 5000].forEach(function (t) { setTimeout(discover, t); });
 
   function teardown(e) {
     if (e.host) { if (e.host.parentNode) e.host.parentNode.removeChild(e.host); e.host = null; }
