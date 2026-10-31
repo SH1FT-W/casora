@@ -200,8 +200,13 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       st.missed[stem] = now;
       window.casoraPhotosLoad(hass, true);
     }
-    // Unknown name (deleted photo, missing night photo): the shipped one if there is one, else 404.
-    return SHIPPED + encodeURIComponent(stem) + '.jpg';
+    // Unknown name: a missing night photo takes the day photo; anything else draws no photo.
+    // Never guess an address on /casora_assets/rooms – it only holds the shipped photos, every
+    // other name was a 404 on each load (Prüfung 2 E27/T15).
+    var day = /-night$/.test(stem) ? stem.slice(0, -6) : '';
+    if (day && st.map[day]) return st.map[day];
+    if (day && isShipped(day)) return SHIPPED + encodeURIComponent(day) + '.jpg';
+    return '';
   };
 
   // CSS value: url("…"), or none while loading.
