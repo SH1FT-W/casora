@@ -196,14 +196,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Kalender",
-  "vorlagen": [
-   "casora_popup_calendar"
-  ],
-  "modul": "06-kalender.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Abfall",
   "vorlagen": [
    "casora_trash"

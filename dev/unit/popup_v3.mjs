@@ -52,6 +52,8 @@ const MIGRIERT = [
   // S6 for numbers, S7 for two-state/text sensors and the device page (opened from casoraRoute and the hold menu).
   { popup: 'Messwertseite / Geräteseite', vorlagen: [], file: '18-ziele.js', from: '  Z.openMeasure = function', to: null, stages: 3, variantInModule: true },
   { popup: 'Pflanze', vorlagen: ['casora_popup_plant'], file: null, stages: 1 },
+  // S8: the month grid in UI.stage('content') (K.stage, also the trash popup's month); the colCard wrapper names it once more.
+  { popup: 'Kalender', vorlagen: ['casora_popup_calendar'], file: '06-kalender.js', from: '  K.v3 = function', to: '  /* Antippen:', stages: 2 },
 ];
 
 // 1. Pieces.

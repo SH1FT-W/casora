@@ -12190,7 +12190,8 @@
      }
     ],
     "title": "Kalender",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "tap_action": {
@@ -12207,7 +12208,8 @@
      }
     ],
     "title": "Kalender",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   }
  },
