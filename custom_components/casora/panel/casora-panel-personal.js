@@ -374,7 +374,8 @@
           cb.onchange = () => { if (cb.checked) delete c.tile; else c.tile = false; };
           tog.appendChild(cb);
           tog.appendChild(document.createTextNode("On tile"));
-          row(g, i ? "" : "Calendar", [
+          // No row label: the group header (and on its own page the title) already says "Calendars".
+          row(g, "", [
             ent(c.entity, ["calendar"], (v) => { c.entity = v; }),
             txt(c.name, "Name", (v) => { c.name = v; }, true), col, tog,
             del(() => { S.calendars.splice(i, 1); }),
