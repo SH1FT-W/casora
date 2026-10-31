@@ -217,7 +217,47 @@
   function sec(part, C, states, hass) {
     var UI = window._casoraUI;
     if (!UI) return '';
+    if (part === 'stage3') return stage3.call(this, UI, C, states, hass);
     if (part === 'hero') {
+      var hv = heroVal(C, states, hass);
+      return UI.hero({ center: true, value: hv.value, sub: hv.bits.join(' · ') || null, read: C.chart || null });
+    }
+    if (part === 'flow') {
+      var E = window._casoraSoftEnergy;
+      if (!E || !E.flow) return '';
+      var lbl = C.flow.only === 'from' ? 'Woher kommt der Strom' : C.flow.only === 'to' ? 'Wohin geht der Solarstrom' : '';
+      return (lbl && UI.label ? UI.label(lbl) : '') + E.flow(C.flow, states, hass, this);
+    }
+    return '';
+  }
+
+  // Popup v3 (richtlinien §4 S6): the page's value now and its chart in one stage. The stage's HTML stays the same while
+  // the page is open (its card is this), so the chart is not redrawn: number, unit and the line under it are written into
+  // the drawn stage.
+  var T3 = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
+  function stage3(UI, C, states, hass) {
+    var hv = heroVal(C, states, hass), v = String(hv.value), cut = v.lastIndexOf(' ');
+    var n0 = cut > 0 ? v.slice(0, cut) : v, u0 = cut > 0 ? v.slice(cut + 1) : '', l0 = hv.bits.join(' · ');
+    var self = this && this.shadowRoot !== undefined ? this : null;
+    var memo = self ? (self._e3 || (self._e3 = { n: n0, u: u0, l: l0 })) : { n: n0, u: u0, l: l0 };
+    if (self) setTimeout(function () {
+      var r = self.shadowRoot, n = r && r.querySelector('.hui-st-n'), u = r && r.querySelector('.hui-st-u'), t = r && r.querySelector('.hui-st-trend');
+      if (n && !n.hasAttribute('data-casora-reading') && n.textContent !== n0) n.textContent = n0;
+      if (u && u.textContent !== u0) u.textContent = u0;
+      if (t && !t.hasAttribute('data-casora-reading') && t.textContent !== T3(l0)) t.textContent = T3(l0);
+    }, 0);
+    var chart = '';
+    if (C.chart && window._hpPlantCfg && window._hpPlantCfg[C.chart]) {
+      if (self && window._hpStageChart) window._hpStageChart(self, C.chart);
+      chart = '<div class="hp-chart-slot" style="min-height:' + (window.innerWidth <= 760 ? 140 : 160) + 'px;pointer-events:auto;"></div>';
+    }
+    var main = { solar: C.solar, battery: C.soc || C.batt, home: C.home, grid: C.grid }[C.focus];
+    return UI.stage('chart', { value: memo.n, unit: memo.u, trend: memo.l, chart: chart, read: C.chart || null,
+      state: main && states[main] && states[main].state === 'unavailable' && (C.asleep || []).indexOf(main) < 0 ? 'na' : null });
+  }
+
+  function heroVal(C, states, hass) {
+    {
       var value = '—', bits = [];
       var sleepy = function (id) {
         var w = watt(states, id);
@@ -255,15 +295,8 @@
         var gc = money(states, C.gridCostToday, hass);
         if (gc) bits.push('heute ' + gc);
       }
-      return UI.hero({ center: true, value: value, sub: bits.join(' · ') || null, read: C.chart || null });
+      return { value: value, bits: bits };
     }
-    if (part === 'flow') {
-      var E = window._casoraSoftEnergy;
-      if (!E || !E.flow) return '';
-      var lbl = C.flow.only === 'from' ? 'Woher kommt der Strom' : C.flow.only === 'to' ? 'Wohin geht der Solarstrom' : '';
-      return (lbl && UI.label ? UI.label(lbl) : '') + E.flow(C.flow, states, hass, this);
-    }
-    return '';
   }
 
   var PV_KEY = 'casora.energy.pvSeen';
@@ -333,6 +366,20 @@
     return out;
   }
 
+  // v3: chart colour per page (theme, richtlinien §7.3) and the one list beside the stage.
+  var V3_COL = { home: 'var(--casora-popup-accent)' };
+  var V3_LIST = {
+    // House: the consumers (HA's individual devices, else the largest found automatically).
+    home: function (UI, C, states, hass, K) {
+      var HC = window.casoraEnergyConsumers ? window.casoraEnergyConsumers(hass) : null;
+      if (HC) return { card: K.secCard([C.home].concat(window.casoraEnergyConsumers.ids(HC)), K.call('_casoraSoftEnergy', 'auto', { home: C.home, auto: { ha: true } }), states) };
+      if (!window._casoraAutoConsumers) return null;
+      var CA = { home: C.home, auto: { exclude: [C.home, C.solar, C.grid, C.batt, C.charge, C.discharge, C.output].concat(C.pv).filter(Boolean), area: null, max: 5 } };
+      var cand = window._casoraAutoConsumers(hass, states, CA.auto);
+      return cand.ids.length ? { card: K.secCard([C.home].concat(cand.ids.slice(0, 60)), K.call('_casoraSoftEnergy', 'auto', CA), states) } : null;
+    },
+  };
+
   function build(ctx) {
     var UI = window._casoraUI, E = window._casoraSoftEnergy, K = E && E.kit;
     if (!UI || !K) return null;
@@ -347,7 +394,7 @@
     // Chart: solar/house 4 h of power, battery 24 h of charge, grid 24 h (above 0 import, below 0 feed-in).
     var CH = { solar: ['Solarleistung', '4h'], battery: [C.soc ? 'Ladestand' : 'Akkuleistung', '24h'],
       home: ['Verbrauch', '4h'], grid: ['Netzleistung', '24h'] }[focus];
-    if (typeof window._hpChartCfg === 'function' && ctx.metricCard) {
+    if (typeof window._hpChartCfg === 'function' && ctx.metricCard && !(UI.v3 && UI.v3() && V3_LIST[focus])) {
       // Chart: casora-chart's checked steps (c1 blue, c2 orange, c3 teal, c4 gold) to match the kind.
       window._hpChartCfg(main, CH[0], CH[1], { solar: 'c4', battery: 'c1', home: 'c3', grid: 'c2' }[focus], 120);
       if (CH[1] === '24h' && window._hpSmooth) window._hpSmooth(main, '15min');
@@ -369,6 +416,22 @@
 
     var watch = [C.solar, C.soc, C.batt, C.charge, C.discharge, C.home, C.grid, C.state, C.energy,
       C.solarToday, C.today, C.gridCostToday].concat(C.pv);
+    // Popup v3 (richtlinien §4 S6, §7, §8): the page's value and chart as the stage, right only the list that belongs to
+    // the page (V3_LIST); no energy flow beside the chart, no controls, no technical values.
+    if (UI.v3 && UI.v3() && UI.stage && V3_LIST[focus]) {
+      if (typeof window._hpChartCfg === 'function') {
+        var cfg3 = window._hpChartCfg(main, CH[0], CH[1], V3_COL[focus], 160);
+        cfg3.readout = 'hero';
+        if (window.innerWidth <= 760) cfg3.height = 140;
+        if (CH[1] === '24h' && window._hpSmooth) window._hpSmooth(main, '15min');
+        C.chart = main;
+      }
+      var f3 = { stage: { card: K.secCard(watch, 'return window._casoraEnergyFocus ? window._casoraEnergyFocus.sec.call(this, "stage3", '
+        + JSON.stringify(C) + ', states, hass) : "";', states) } };
+      var l3 = V3_LIST[focus](UI, C, states, hass, K);
+      if (l3) f3.list = l3;
+      return K.layout({ fields: f3, top: [], stage: 'stage', left: [], right: ['list'], narrowOrder: ['list'] });
+    }
     f.hero = { card: K.secCard(watch, 'return window._casoraEnergyFocus ? window._casoraEnergyFocus.sec("hero", '
       + JSON.stringify(C) + ', states, hass) : "";', states) };
 
