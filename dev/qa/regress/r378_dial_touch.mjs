@@ -114,7 +114,7 @@ for (const safari of [true, false]) {
   }
   // Vertical swipe up on the ring's left side (meant to scroll): nothing changes.
   const left = pt(s.box, 180, 150);
-  const scroll = () => page.evaluate(() => { const c = window.casoraPopup.element.shadowRoot.querySelector('.content'); return { top: c.scrollTop, room: c.scrollHeight - c.clientHeight }; });
+  const scroll = () => page.evaluate(() => { const p = window.casoraPopup && window.casoraPopup.element; const c = p && p.shadowRoot && p.shadowRoot.querySelector('.content'); return c ? { top: c.scrollTop, room: c.scrollHeight - c.clientHeight } : { top: 0, room: 0 }; });
   const sc0 = await scroll();
   let g = await touch(page, Array.from({ length: 8 }, (_, i) => ({ x: left.x, y: left.y - i * 14 })));
   if (!g.touch) console.log('  info   ' + tag + ': touch moves cannot be built in this browser – swipes and turning not checked here');

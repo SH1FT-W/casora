@@ -57,7 +57,7 @@ const stateLine = async (cls, want) => {
   let t = null;
   for (let i = 0; i < 8; i++) {
     t = await tile(cls);
-    if (t.state === want) return t;
+    if (want instanceof RegExp ? want.test(t.state || '') : t.state === want) return t;
     await page.evaluate(() => { const ha = document.querySelector('home-assistant');
       ha.shadowRoot.querySelectorAll('.qa-group, .qa-one').forEach((el) => { el.hass = ha.hass; }); });
     await page.waitForTimeout(400);
@@ -108,8 +108,9 @@ await check('tap locks the open lock (not unlock the first one)', c.length === 1
 
 // 3) Jammed outranks the open count.
 await put({ [C]: lk('jammed', 'Shed') });
-t = await stateLine('qa-group', 'Klemmt');
-await check('a jammed lock reads „Klemmt“', t.state === 'Klemmt', t.state);
+// The group names every state on its own since review 2 (T03): „1 klemmt“, a single lock „Klemmt“.
+t = await stateLine('qa-group', /klemmt/i);
+await check('a jammed lock reads „Klemmt“', /klemmt/i.test(t.state || ''), t.state);
 
 // 4) Single lock without "Ask before switching": unlocking still asks.
 await put({ [A]: lk('locked', 'Front door') });
