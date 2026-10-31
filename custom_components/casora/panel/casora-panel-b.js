@@ -194,6 +194,9 @@
     /* "Content" list: switches right in the badge and tile rows. */
     :host(.bmode) #pane.stack #band-badges .card > .chead .sw,
     :host(.bmode) #pane.sheet #band-badges .card > .chead .sw { display:flex; }
+    /* Phone: the switch of a room section (Now Playing) too – it was hidden there, the row showed "Off" without a way
+       to turn it on. */
+    :host(.bmode) #pane.sheet #band-rooms .card > .chead .sw { display:flex; }
     :host(.bmode) #pane #band-tiles .tile > .thead .sw { display:flex; }
     :host(.bmode) #pane #band-tiles .tile > .thead .count { display:none; }
     :host(.bmode) #pane #band-badges .card > .chead .count {
