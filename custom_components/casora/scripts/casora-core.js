@@ -7234,7 +7234,7 @@ window.casoraMenuGlass = {
     for (var i = 0; i < nodes.length; i++) {
       var el = nodes[i];
       var st = hass.states[el.dataset.casoraEnt];
-      if (!st && el.dataset.casoraLive !== 'fill' && el.dataset.casoraLive !== 'seg') continue;
+      if (!st && el.dataset.casoraLive !== 'fill' && el.dataset.casoraLive !== 'seg' && el.dataset.casoraLive !== 'dial') continue;
       if (el.dataset.casoraLive === 'seg') { // Weich: aktives Segment folgt dem Mittelwert
         var gIds;
         try { gIds = JSON.parse(el.dataset.casoraEnts || '[]'); } catch (e) { continue; }
@@ -7246,7 +7246,7 @@ window.casoraMenuGlass = {
         }
         if (!gN) continue;
         var gAvg = String(Math.round(gSum / gN));
-        var gKids = el.querySelectorAll('.hui-sg[data-v], .hui-qk[data-v]');
+        var gKids = el.querySelectorAll('.hui-sg[data-v], .hui-qk[data-v], .hui-moon[data-v]');
         for (var gk = 0; gk < gKids.length; gk++) gKids[gk].classList.toggle('on', gKids[gk].dataset.v === gAvg);
         continue;
       }
@@ -7260,6 +7260,19 @@ window.casoraMenuGlass = {
         var shPct = Math.round((shV / shT) * 100);
         el.textContent = shPct > 0
           ? shPct + (el.dataset.casoraSuffix || '%') : '';
+        continue;
+      }
+      // Popup v3 dial (S1/S3): ring, knob and value follow the live average, not while it is turned.
+      if (el.dataset.casoraLive === 'dial') {
+        var dIds;
+        try { dIds = JSON.parse(el.dataset.casoraEnts || '[]'); } catch (e) { continue; }
+        var dAttr = el.dataset.casoraAttr || 'current_position', dSum = 0, dCnt = 0;
+        for (var di = 0; di < dIds.length; di++) {
+          var dSt = hass.states[dIds[di]];
+          var dv = dSt ? Number((dSt.attributes || {})[dAttr]) : NaN;
+          if (!isNaN(dv)) { dSum += dv; dCnt++; }
+        }
+        if (dCnt && window._casoraDialSet) window._casoraDialSet(el, Math.max(0, Math.min(100, Math.round(dSum / dCnt))));
         continue;
       }
       if (el.dataset.casoraLive === 'fill') {
@@ -10224,6 +10237,13 @@ window.casoraMenuGlass = {
       P[eid] = { v: v, t: Date.now() };
       spec.data.temperature = v;
       try {
+        // Popup v3 dial: the ring follows − / + too.
+        var dlEl = el.closest && el.closest('.hui-dl');
+        var dsc = dlEl && dlEl.dataset.casoraSlider ? (JSON.parse(dlEl.dataset.casoraSlider) || {}).scale : null;
+        if (dsc && window._casoraUI && window._casoraUI.dialPaint) {
+          window._casoraUI.dialPaint(dlEl, window._casoraUI.dialPct(v, Number(dsc[0]), Number(dsc[1])));
+          dlEl.setAttribute('aria-valuenow', String(v));
+        }
         var n = el.getRootNode().querySelector('.hp-st-v .n');
         if (n && n.firstChild) n.firstChild.nodeValue = v.toLocaleString(window.casoraLocale ? window.casoraLocale() : 'de-DE',
           { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -10260,6 +10280,7 @@ window.casoraMenuGlass = {
     var pctFrom = function (el, clientY, clientX) {
       var b = el.getBoundingClientRect();
       var p;
+      if (el.dataset.casoraAxis === 'dial') return dialFrom(el, b, clientX, clientY, false);
       if (el.dataset.casoraAxis === 'x') {
         if (!b.width) return 0;
         p = (clientX - b.left) / b.width * 100;
@@ -10269,8 +10290,35 @@ window.casoraMenuGlass = {
       }
       return Math.max(0, Math.min(100, Math.round(p)));
     };
+    // Dial (UI.stage, popup-richtlinien-v3.md §4.8): the angle around the centre of the square wheel (viewBox 420,
+    // 270° from 135°); the gap at the bottom snaps to the nearer end. A scaled dial snaps to the device's steps.
+    // ring: only a press on the ring starts a drag (not the middle with its buttons, not outside) → null.
+    var dialFrom = function (el, b, cx, cy, ring) {
+      if (!b.width) return null;
+      var k = 420 / b.width, x = (cx - b.left) * k - 210, y = (cy - b.top) * k - 210, r = Math.sqrt(x * x + y * y);
+      if (ring && (r < 104 || r > 196)) return null;
+      var a = Math.atan2(y, x) * 180 / Math.PI;
+      if (a < 0) a += 360;
+      var rel = a - 135;
+      if (rel < 0) rel += 360;
+      if (rel > 270) rel = rel > 315 ? 0 : 270;
+      return dialSnap(el, rel / 270 * 100);
+    };
+    var dialSpec = function (el) { try { return JSON.parse(el.dataset.casoraSlider) || {}; } catch (e) { return {}; } };
+    var dialSnap = function (el, pct) {
+      var sc = dialSpec(el).scale;
+      if (!sc) return Math.max(0, Math.min(100, Math.round(pct)));
+      var n = (Number(sc[1]) - Number(sc[0])) / (Number(sc[2]) || 1);
+      return n > 0 ? Math.max(0, Math.min(100, Math.round(pct / 100 * n) / n * 100)) : 0;
+    };
+    // One step of a dial in percent of the ring (keys, mouse wheel): the device's step, else 1 %.
+    var dialStep = function (el) {
+      var sc = dialSpec(el).scale;
+      return sc && Number(sc[1]) > Number(sc[0]) ? (Number(sc[2]) || 1) / (Number(sc[1]) - Number(sc[0])) * 100 : 1;
+    };
     // Angezeigter Stand des Reglers (für „Abbrechen“ in der Rückfrage).
     var shown = function (el) {
+      if (el.dataset.casoraAxis === 'dial') { var dp = parseFloat(el.dataset.pct); return isNaN(dp) ? null : dp; }
       var fill = el.querySelector('.hui-sl-fill');
       if (!fill) return null;
       var inv = false;
@@ -10280,6 +10328,11 @@ window.casoraMenuGlass = {
       return isNaN(hgt) ? null : (inv ? 100 - hgt : hgt);
     };
     var paint = function (el, pct) {
+      if (el.dataset.casoraAxis === 'dial') {
+        if (window._casoraUI && window._casoraUI.dialPaint) window._casoraUI.dialPaint(el, pct);
+        stageText(el, pct);
+        return;
+      }
       var fill = el.querySelector('.hui-sl-fill');
       if (!fill) return;
       var inv = false;
@@ -10297,11 +10350,25 @@ window.casoraMenuGlass = {
     };
     // Popup v3 (UI.stage S1/S3): the stage's big value and word follow the drag live; words = [off, mid, full].
     var stageText = function (el, pct) {
-      el.setAttribute('aria-valuenow', String(pct));
-      var stg = el.closest && el.closest('.hui-stage');
-      if (!stg) return;
       var sp = {};
       try { sp = JSON.parse(el.dataset.casoraSlider) || {}; } catch (e) { sp = {}; }
+      // A scaled dial (S2) shows the device value (21,5°), not the percent of the ring.
+      if (sp.scale) {
+        var smn = Number(sp.scale[0]), smx = Number(sp.scale[1]), sst = Number(sp.scale[2]) || 0;
+        var sv = smn + (smx - smn) * pct / 100;
+        if (sst > 0) sv = smn + Math.round((sv - smn) / sst) * sst;
+        sv = Math.round(sv * 100) / 100;
+        el.setAttribute('aria-valuenow', String(sv));
+        var sStg = el.closest && el.closest('.hui-stage');
+        var sN = sStg && (sStg.querySelector('.hp-st-v .n') || sStg.querySelector('.hui-st-n'));
+        if (sN) sN.textContent = sv.toLocaleString(window.casoraLocale ? window.casoraLocale() : 'de-DE',
+          { minimumFractionDigits: sp.digits || 0, maximumFractionDigits: sp.digits || 0 });
+        return;
+      }
+      el.setAttribute('aria-valuenow', String(pct));
+      if (el.dataset.casoraAxis === 'dial') el.setAttribute('aria-valuetext', sp.zeroOff && pct <= 0 ? (window.casoraTr ? window.casoraTr('Aus') : 'Aus') : pct + ' %');
+      var stg = el.closest && el.closest('.hui-stage');
+      if (!stg) return;
       var w = Array.isArray(sp.words) ? sp.words : null;
       var nEl = stg.querySelector('.hui-st-n'), uEl = stg.querySelector('.hui-st-u');
       var offNow = !!sp.zeroOff && pct <= 0;
@@ -10320,7 +10387,18 @@ window.casoraMenuGlass = {
       var path = (ev.composedPath && ev.composedPath()) || [ev.target];
       for (var i = 0; i < path.length; i++) {
         var el = path[i];
+        // A button inside the dial (moon, − / +) keeps its tap.
+        if (el && el.getAttribute && el.getAttribute('role') === 'button' && el.closest && el.closest('.hui-dl')) return;
         if (el && el.dataset && el.dataset.casoraSlider !== undefined) {
+          if (el.dataset.casoraAxis === 'dial') {
+            var dp0 = dialFrom(el, el.getBoundingClientRect(), ev.clientX, ev.clientY, true);
+            if (dp0 == null) return;
+            drag = { el: el, pct: dp0, from: shown(el) };
+            el.classList.add('drag');
+            paint(el, dp0);
+            ev.preventDefault();
+            return;
+          }
           drag = { el: el, pct: pctFrom(el, ev.clientY, ev.clientX), from: shown(el) };
           el.classList.add('drag');
           paint(el, drag.pct);
@@ -10392,17 +10470,37 @@ window.casoraMenuGlass = {
       var el = ev.composedPath ? ev.composedPath()[0] : ev.target;
       if (!el || !el.dataset || el.dataset.casoraSlider === undefined || el.getAttribute('role') !== 'slider') return;
       var by = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[ev.key];
+      var dl = el.dataset.casoraAxis === 'dial';
+      // A dial steps by the device's step (0,5° …); page up/down by ten of them.
+      if (dl && by != null) by = by * dialStep(el);
       var cur = shown(el);
       if (cur == null) cur = Number(el.getAttribute('aria-valuenow')) || 0;
       var pct = ev.key === 'Home' ? 0 : ev.key === 'End' ? 100 : by != null ? cur + by : null;
       if (pct == null) return;
       ev.preventDefault(); ev.stopPropagation();
-      pct = Math.max(0, Math.min(100, Math.round(pct)));
+      pct = dl ? dialSnap(el, pct) : Math.max(0, Math.min(100, Math.round(pct)));
       var from = keyT ? keyT.from : cur;
       paint(el, pct);
       if (keyT) clearTimeout(keyT.t);
       keyT = { from: from, t: setTimeout(function () { keyT = null; commit({ el: el, pct: pct, from: from }); }, 400) };
     }, true);
+    // Mouse wheel over a dial: one step per notch, the service 400 ms after the last one (like the keys).
+    document.addEventListener('wheel', function (ev) {
+      var path = (ev.composedPath && ev.composedPath()) || [ev.target], el = null;
+      for (var i = 0; i < path.length && !el; i++) {
+        if (path[i] && path[i].dataset && path[i].dataset.casoraAxis === 'dial' && path[i].dataset.casoraSlider !== undefined) el = path[i];
+      }
+      if (!el || !ev.deltaY) return;
+      ev.preventDefault();
+      var cur = shown(el);
+      if (cur == null) cur = 0;
+      var pct = dialSnap(el, cur + (ev.deltaY < 0 ? 1 : -1) * dialStep(el));
+      var from = keyT ? keyT.from : cur;
+      paint(el, pct);
+      if (keyT) clearTimeout(keyT.t);
+      keyT = { from: from, t: setTimeout(function () { keyT = null; commit({ el: el, pct: pct, from: from }); }, 400) };
+    }, { capture: true, passive: false });
+    window._casoraDialSet = function (el, pct) { if (!el.classList.contains('drag')) paint(el, pct); };
   }
 
   function shelf(items, label) {
@@ -11487,12 +11585,294 @@ window.casoraMenuGlass = {
     return '<div class="hui-st-val' + (stMod ? ' ' + esc(stMod) : '') + '"><span class="hui-st-n"' + (numAttrsHtml || '') + '>' + esc(n) + '</span>'
       + (unit ? '<span class="hui-st-u">' + esc(unit) + '</span>' : '') + '</div>';
   }
+  // ── Dial (decision 31.10.2026, popup-richtlinien-v3.md §4.8): the stage of S1–S4, S6 (with o.ring) and S7 is a
+  // big round wheel. 270° arc from 135°, track 26, the filled part in the device colour with a soft glow, ticks
+  // outside, a white knob at the end. Three rings: (a) a value one turns (S1, S2, S3), (b) progress or a level that
+  // only shows (S4, S6, S7 with o.progress), (c) segments green/red (S7 with o.segs). The quick choice sits around
+  // the wheel as „moons“ (o.moons, same items as UI.quick), the main action of S4/S7 is the moon at the bottom.
+  // Turning reuses the stage slider (data-casora-slider, data-casora-axis="dial"): live value while dragging, the
+  // service on release, keys ±1 step, the wheel of the mouse, the confirm question as everywhere.
+  var DIAL = { c: 210, r: 150, a0: 135, span: 270 };
+  var dialSeq = 0;
+  function dRound(x) { return Math.round(x * 10) / 10; }
+  function dPt(deg, r) { var a = deg * Math.PI / 180; return [dRound(DIAL.c + r * Math.cos(a)), dRound(DIAL.c + r * Math.sin(a))]; }
+  function dArc(a, b, r) {
+    r = r || DIAL.r;
+    var p0 = dPt(a, r), p1 = dPt(b, r);
+    return 'M' + p0[0] + ' ' + p0[1] + ' A' + r + ' ' + r + ' 0 ' + (b - a > 180 ? 1 : 0) + ' 1 ' + p1[0] + ' ' + p1[1];
+  }
+  // End angle of the filled part; a sliver stays at 0 so the knob has a start.
+  function dEnd(pct) { return DIAL.a0 + DIAL.span * Math.max(0.4, Math.min(100, pct)) / 100; }
+  var DIAL_CSS = '.hui-stage.dial{background:none;padding:0;gap:12px;align-items:center;}'
+    + '.hui-stage.dial.mb{padding-bottom:20px;}'
+    // Without a moon at the bottom the empty gap of the arc is pulled up (the ticks end at 82 % of the wheel).
+    + '.hui-stage.dial:not(.mb) > .hui-dl{margin-bottom:calc(min(400px, (100% - 78px) * 1.127) * -0.12);}'
+    + '.hui-dl{position:relative;flex:none;width:min(400px, calc((100% - 78px) * 1.127));aspect-ratio:1;container-type:inline-size;'
+    +   'touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;outline:none;}'
+    + '.hui-dl:focus-visible .hui-dl-knob{stroke:' + T.ink + ';stroke-width:3;}'
+    + '.hui-dl svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}'
+    + '.hui-dl[data-casora-slider]{cursor:grab;}.hui-dl.drag{cursor:grabbing;}'
+    + '.hui-dl .tk{stroke:' + S.sub + ';opacity:.4;stroke-linecap:round;}'
+    + '.hui-dl .tr{stroke:' + S.ctl + ';}'
+    + '.hui-dl .fl{transition:d .18s cubic-bezier(.36,0,.16,1);}'
+    + '.hui-dl.drag .fl,.hui-dl.drag .hui-dl-knob{transition:none;}'
+    + '.hui-dl-knob{fill:var(--casora-lps-knob, #fff);stroke:rgba(0,0,0,.08);filter:drop-shadow(0 2px 5px rgba(0,0,0,.22));'
+    +   'transition:cx .18s cubic-bezier(.36,0,.16,1), cy .18s cubic-bezier(.36,0,.16,1);}'
+    + '.hui-dl .mk{fill:' + T.ink + ';opacity:.55;}'
+    + '.hui-dl-c{position:absolute;inset:18%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;}'
+    + '.hui-dl-c .hui-st-val{justify-content:center;}'
+    + '.hui-dl-c .hui-st-n{font-size:clamp(48px, 19cqw, 80px);letter-spacing:-0.04em;line-height:1;}'
+    + '.hui-dl-c .hui-st-u{font-size:clamp(20px, 6.7cqw, 28px);}'
+    + '.hui-dl-c .hui-st-val.wd .hui-st-n{font-size:clamp(28px, 9.5cqw, 40px);letter-spacing:-0.02em;}'
+    + '.hui-dl-c .hui-st-w{margin-top:8px;text-align:center;}'
+    + '.hui-dl-c .hui-dl-cap{font-size:15px;font-weight:600;color:' + S.sub + ';margin-bottom:4px;}'
+    + '.hui-dl-c .hui-dl-w2{font-size:13px;font-weight:600;color:' + S.sub + ';margin-top:4px;font-variant-numeric:tabular-nums;}'
+    + '.hui-dl-c .hui-dl-t{font-size:clamp(20px, 6.2cqw, 26px);font-weight:800;letter-spacing:-0.02em;line-height:1.15;color:' + T.ink + ';max-width:100%;}'
+    + '.hui-dl-c .hui-dl-sym{width:clamp(36px, 11cqw, 46px);height:clamp(36px, 11cqw, 46px);margin-bottom:6px;color:var(--dl-col);'
+    +   'background-color:currentColor;-webkit-mask:var(--g) center / contain no-repeat;mask:var(--g) center / contain no-repeat;}'
+    + '.hui-dl-c ha-icon.hui-dl-sym{background:none;--mdc-icon-size:clamp(36px, 11cqw, 46px);}'
+    + '.hui-dl-pm{display:flex;gap:clamp(56px, 21cqw, 90px);margin-top:12px;pointer-events:auto;}'
+    + '.hui-dl-pm .hui-st-b{width:44px;height:44px;font-size:22px;background:' + S.row + ';}'
+    + '.hui-dl-cover{position:absolute;left:24.8%;top:24.8%;width:50.4%;height:50.4%;border-radius:50%;overflow:hidden;pointer-events:none;'
+    +   'background:' + S.ctl + ';box-shadow:var(--casora-dial-cover-shadow, 0 14px 40px -12px rgba(0,0,0,.45));}'
+    + '.hui-dl-cover img{width:100%;height:100%;object-fit:cover;display:block;}'
+    + '.hui-dl-cover::after{content:"";position:absolute;left:50%;top:50%;width:9%;height:9%;margin:-4.5% 0 0 -4.5%;border-radius:50%;'
+    +   'background:' + S.ctl + ';box-shadow:var(--casora-dial-hole-ring, 0 0 0 3px rgba(0,0,0,.35));}'
+    + '.hui-dl-cover.spin{animation:hui-dl-spin 8s linear infinite;}'
+    + '@keyframes hui-dl-spin{to{transform:rotate(360deg);}}'
+    // Moons: 76 round (smaller with the wheel on a phone), the chosen one with a ring in the device colour.
+    + '.hui-moon{position:absolute;width:clamp(62px, 20cqw, 76px);height:clamp(62px, 20cqw, 76px);transform:translate(-50%, -50%);border-radius:50%;'
+    +   'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:2px;text-align:center;cursor:pointer;letter-spacing:-0.01em;'
+    +   'background:' + S.ctl + ';color:' + T.ink + ';font-size:11px;font-weight:700;line-height:1.15;'
+    +   'transition:transform .25s ease, box-shadow .25s ease, background-color .25s ease;-webkit-tap-highlight-color:transparent;}'
+    + '.hui-dl-ms{position:absolute;inset:0;pointer-events:none;}.hui-dl-ms .hui-moon{pointer-events:auto;}'
+    + '.hui-moon > *{pointer-events:none;}'
+    + '.hui-moon .ic{flex:none;width:22px;height:22px;color:' + S.sub + ';background-color:currentColor;--mdc-icon-size:22px;margin:0;}'
+    + '.hui-moon ha-icon.ic{background:none;}'
+    + '.hui-moon span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:100%;overflow-wrap:anywhere;}'
+    + '.hui-moon.on{background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, ' + T.ink + ');'
+    +   'box-shadow:0 0 0 3px var(--dl-col), 0 10px 26px -6px color-mix(in srgb, var(--dl-col) 45%, transparent);}'
+    + '.hui-moon.on .ic{color:color-mix(in srgb, var(--dl-col) 65%, var(--casora-soft-seg-on-ink, ' + T.ink + '));}'
+    + '.hui-moon.go{background:var(--dl-col);color:var(--casora-popup-action-ink, rgba(46,34,20,.9));}'
+    + '.hui-moon.go .ic{color:inherit;}'
+    + '.hui-moon.dng{background:transparent;box-shadow:inset 0 0 0 2px ' + S.ctl + ';color:var(--casora-color-red-text, var(--casora-color-red));}'
+    + '.hui-moon.dng .ic{color:inherit;}'
+    + '.hui-moon:active{transform:translate(-50%, -50%) scale(var(--casora-press-scale, .97));}'
+    + '@media (hover:hover){.hui-moon:hover{transform:translate(-50%, -50%) scale(1.07);}}'
+    + '.hui-stage.dial > .hui-st-seg{width:100%;}'
+    + '.hui-stage.dial .hui-st-chart{width:100%;}'
+    + '@media (prefers-reduced-motion:reduce){.hui-dl-cover.spin{animation:none;}.hui-moon{transition:none;}.hui-dl .fl,.hui-dl-knob{transition:none;}}';
+  // Positions of the moons (degrees, 0 = right, 90 = bottom) by count, and whether the bottom holds the action.
+  function moonPos(n, act) {
+    if (act) return [[], [150], [150, 30], [-150, -30, 150], [-150, -30, 150, 30]][n] || [];
+    return [[], [150], [150, 30], [150, 90, 30], [-150, -30, 150, 30]][n] || [];
+  }
+  function moonAt(deg) {
+    var r = deg === 90 ? 44.3 : 51.2, a = deg * Math.PI / 180;
+    return 'left:' + dRound(50 + r * Math.cos(a)) + '%;top:' + dRound(50 + r * Math.sin(a)) + '%;';
+  }
+  function moonHtml(it, deg, cls) {
+    var spec = it.svc ? (it.confirm ? Object.assign({}, it.svc, { confirm: it.confirm }) : it.svc) : null;
+    return '<div class="hui-moon' + (it.active ? ' on' : '') + (cls ? ' ' + esc(cls) : '') + '" role="button" aria-label="' + esc(it.text) + '"'
+      + (cls ? '' : ' aria-pressed="' + (it.active ? 'true' : 'false') + '"')
+      + (spec ? ' data-casora-svc="' + esc(JSON.stringify(spec)) + '"' : '')
+      + (it.page ? ' data-casora-page="' + esc(it.page) + '"' : '') + (it.value != null ? ' data-v="' + esc(it.value) + '"' : '')
+      + stAttrs(it.attrs) + ' style="' + esc(moonAt(deg)) + '">'
+      + stGlyph(it.icon, 'ic') + '<span>' + esc(it.text) + (it.all ? ' ›' : '') + '</span></div>';
+  }
+  // items like UI.quick (never dangerous; more than 4 → the first 3 and „Alle (n)“); act = the stage's main action.
+  function moons(items, act, o) {
+    o = o || {};
+    var list = (items || []).filter(function (x) { return x && x.text && !x.danger; });
+    if (list.length > 4) {
+      var all = list.length;
+      list = list.slice(0, 3).concat([{ icon: 'mdi:dots-horizontal', text: T_('Alle') + ' (' + all + ')', page: o.page || null, all: true }]);
+    }
+    var hasAct = !!(act && act.text);
+    var pos = moonPos(list.length, hasAct);
+    var out = list.map(function (it, i) { return moonHtml(it, pos[i], ''); }).join('');
+    if (hasAct) {
+      var aSpec = act.svc ? (act.danger && !act.svc.confirm ? Object.assign({}, act.svc, { confirm: act.confirm || true }) : act.svc) : null;
+      var aDeg = list.length === 1 || list.length === 3 ? 30 : 90;
+      out += moonHtml({ icon: act.icon || (act.danger ? 'mdi:alert-outline' : 'mdi:play'), text: act.text, svc: aSpec, confirm: act.danger ? null : act.confirm, attrs: act.attrs },
+        aDeg, act.danger ? 'dng' : act.primary === false ? '' : 'go');
+    }
+    var lv = o.live && o.live.entities && o.live.entities.length ? o.live : null;
+    return { html: out, bottom: pos.indexOf(90) > -1 || (hasAct && (list.length !== 1 && list.length !== 3)),
+      liveHtml: lv ? ' data-casora-live="seg" data-casora-ents="' + esc(JSON.stringify(lv.entities)) + '" data-casora-attr="' + esc(lv.attr || 'current_position') + '"' : '' };
+  }
+  // The rings. ring = { kind: 'value'|'level'|'segs', pct, col, heat, marker, knob, segs: [{ ok, label, tone }] }
+  function dialSvg(ring) {
+    var id = 'hui-dlg' + (++dialSeq), svgHtml = '<defs><filter id="' + esc(id) + '" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>';
+    if (ring.heat) svgHtml += '<linearGradient id="' + esc(id) + 'h" x1="0" y1="1" x2="1" y2="0"><stop offset="0" style="stop-color:var(--casora-color-blue, #5B8FC9)"/>'
+      + '<stop offset=".55" style="stop-color:var(--casora-color-orange, #FF9F0A)"/><stop offset="1" style="stop-color:var(--casora-color-red, #D35A4E)"/></linearGradient>';
+    svgHtml += '</defs>';
+    for (var i = 0; i <= 40; i++) {
+      var a = DIAL.a0 + DIAL.span * i / 40, p0 = dPt(a, DIAL.r + 26), p1 = dPt(a, DIAL.r + (i % 10 ? 32 : 38));
+      svgHtml += '<line class="tk" x1="' + esc(p0[0]) + '" y1="' + esc(p0[1]) + '" x2="' + esc(p1[0]) + '" y2="' + esc(p1[1]) + '" stroke-width="' + (i % 10 ? 1.5 : 2.5) + '"/>';
+    }
+    if (ring.kind === 'segs') {
+      var n = ring.segs.length || 1, gap = n > 1 ? 4 : 0;
+      (ring.segs.length ? ring.segs : [{ ok: true }]).forEach(function (s, k) {
+        var sa = DIAL.a0 + DIAL.span * k / n + gap / 2, sb = DIAL.a0 + DIAL.span * (k + 1) / n - gap / 2;
+        var col = TONE[s.tone || (s.ok ? 'good' : 'bad')] || TONE.good;
+        svgHtml += '<path d="' + esc(dArc(sa, sb)) + '" fill="none" stroke-width="26" style="stroke:' + esc(col) + '"' + (n === 1 ? ' stroke-linecap="round"' : '') + '>'
+          + (s.label ? '<title>' + esc(s.label) + '</title>' : '') + '</path>';
+        if (!s.ok && s.tone !== 'off') svgHtml += '<path d="' + esc(dArc(sa, sb)) + '" fill="none" stroke-width="26" opacity=".6" filter="url(#' + esc(id) + ')" pointer-events="none" style="stroke:' + esc(col) + '"/>';
+      });
+      return '<svg viewBox="0 0 420 420" aria-hidden="true" focusable="false">' + svgHtml + '</svg>';
+    }
+    var stroke = ring.heat ? 'url(#' + esc(id) + 'h)' : ring.col;
+    var e = dEnd(ring.pct), showHtml = ring.pct > 0 ? '' : ' style="display:none"';
+    svgHtml += '<path class="tr" d="' + esc(dArc(DIAL.a0, DIAL.a0 + DIAL.span)) + '" fill="none" stroke-width="26" stroke-linecap="round"/>'
+      + '<path class="fl gl" d="' + esc(dArc(DIAL.a0, e)) + '" fill="none" stroke-width="26" stroke-linecap="round" opacity=".55" filter="url(#' + esc(id) + ')"'
+      + (ring.heat ? ' stroke="' + esc(stroke) + '"' + showHtml : ' style="stroke:' + esc(stroke) + (ring.pct > 0 ? '' : ';display:none') + '"') + '/>'
+      + '<path class="fl ln" d="' + esc(dArc(DIAL.a0, e)) + '" fill="none" stroke-width="26" stroke-linecap="round"'
+      + (ring.heat ? ' stroke="' + esc(stroke) + '"' + showHtml : ' style="stroke:' + esc(stroke) + (ring.pct > 0 ? '' : ';display:none') + '"') + '/>';
+    if (ring.marker != null && isFinite(ring.marker)) {
+      var m = dPt(DIAL.a0 + DIAL.span * Math.max(0, Math.min(100, ring.marker)) / 100, DIAL.r);
+      svgHtml += '<circle class="mk" cx="' + esc(m[0]) + '" cy="' + esc(m[1]) + '" r="6"/>';
+    }
+    if (ring.knob) { var kp = dPt(e, DIAL.r); svgHtml += '<circle class="hui-dl-knob" cx="' + esc(kp[0]) + '" cy="' + esc(kp[1]) + '" r="19"/>'; }
+    return '<svg viewBox="0 0 420 420" aria-hidden="true" focusable="false">' + svgHtml + '</svg>';
+  }
+  // Paints a turned value (drag, keys, wheel, live): the arc, its glow and the knob. Exposed for the slider code.
+  function dialPaint(el, pct) {
+    pct = Math.max(0, Math.min(100, pct));
+    el.dataset.pct = String(pct);
+    var e = dEnd(pct), d = dArc(DIAL.a0, e);
+    el.querySelectorAll('.fl').forEach(function (p) { p.setAttribute('d', d); p.style.display = pct > 0 ? '' : 'none'; });
+    var k = el.querySelector('.hui-dl-knob');
+    if (k) { var kp = dPt(e, DIAL.r); k.setAttribute('cx', kp[0]); k.setAttribute('cy', kp[1]); }
+  }
+  // Value ↔ percent of the ring for a scaled dial (S2: [min, max, step]).
+  function dialPct(v, mn, mx) { return mx > mn ? Math.max(0, Math.min(100, (Number(v) - mn) / (mx - mn) * 100)) : 0; }
+  function dialNum(v, step) {
+    var dg = step && step < 1 ? (String(step).split('.')[1] || '').length : 0;
+    return stNum(v, Math.min(dg, 2));
+  }
+  // The dial version of one stage (code S1–S7, o as for UI.stage).
+  function dial(code, o) {
+    var col = 'var(--casora-popup-accent, var(--casora-color-orange, #FF9F0A))';
+    var ring = { kind: 'value', pct: 0, col: col, knob: false }, spec = null, ariaHtml = '', centerHtml = '', coverHtml = '', belowHtml = '', cls = '';
+    var act = null, liveHtml = '';
+    if (code === 'S1' || code === 'S3') {
+      var v = Math.max(0, Math.min(100, Math.round(Number(o.value) || 0)));
+      var off = o.state === 'off' || (code === 'S1' && v <= 0);
+      ring.pct = code === 'S1' && off ? 0 : v;
+      var words = o.words || null;
+      if (o.svc) spec = Object.assign({}, o.svc, { invert: false }, words ? { words: words } : {});
+      ring.knob = !!spec;
+      centerHtml = (off && code === 'S1' ? stValue(T_('Aus'), '') : stValue(v, o.unit == null ? '%' : o.unit))
+        + (o.word || words ? '<div class="hui-st-w">' + esc(o.word || '') + '</div>' : '');
+      if (o.live && o.live.entities && o.live.entities.length) liveHtml = ' data-casora-live="dial" data-casora-ents="' + esc(JSON.stringify(o.live.entities)) + '" data-casora-attr="' + esc(o.live.attr || 'current_position') + '"';
+      ariaHtml = ' aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + esc(ring.pct) + '" aria-valuetext="' + esc(off && code === 'S1' ? T_('Aus') : v + ' %') + '"';
+      if (o.seg && o.seg.length) belowHtml = '<div class="hui-st-seg">' + segments(o.seg) + '</div>';
+      if (o.cover) coverHtml = '<div class="hui-dl-cover' + (o.cover.spin ? ' spin' : '') + '">' + (o.cover.image ? '<img src="' + (window.casoraSafeUrl ? window.casoraSafeUrl(o.cover.image) : esc(o.cover.image)) + '" alt=""/>' : '') + '</div>';
+    } else if (code === 'S2') {
+      // Range and service: o.min/o.max/o.step, else what − / + carry (their service with one numeric field).
+      var pl = o.plus || {}, mi = o.minus || {};
+      var st2 = Number(o.step || pl.step || mi.step) || 0.5;
+      var mn = o.min != null ? Number(o.min) : mi.min != null ? Number(mi.min) : (o.unit === '%' ? 0 : 5);
+      var mx = o.max != null ? Number(o.max) : pl.max != null ? Number(pl.max) : (o.unit === '%' ? 100 : 30);
+      var base = o.dialSvc || pl.svc || mi.svc || null;
+      if (base && base.domain && !o.noTurn) {
+        var fld = base.field || Object.keys(base.data || {}).filter(function (k) { return typeof base.data[k] === 'number'; })[0];
+        if (fld) {
+          var dd = Object.assign({}, base.data || {}); delete dd[fld];
+          spec = { domain: base.domain, service: base.service, target: base.target, data: dd, field: fld, scale: [mn, mx, st2], digits: st2 < 1 ? 1 : 0 };
+        }
+      }
+      var off2 = o.state === 'off';
+      ring.pct = off2 || o.value == null ? 0 : dialPct(o.value, mn, mx);
+      ring.knob = !!spec && !off2;
+      ring.heat = !!o.heat;
+      if (o.current != null && isFinite(Number(o.current))) ring.marker = dialPct(o.current, mn, mx);
+      var n2 = off2 && o.value == null ? T_('Aus') : stNum(o.value, o.digits == null ? 1 : o.digits);
+      var pmBtnHtml = function (side, sign) {
+        var s = o[side];
+        if (!s) return '<div class="hui-st-b" aria-hidden="true" style="visibility:hidden"></div>';
+        var sv = s.svc || (s.domain ? s : null);
+        return '<div class="hui-st-b' + (s.dis ? ' dis' : '') + '" role="button" aria-label="' + esc(sign < 0 ? 'Weniger' : 'Mehr') + '"'
+          + (s.dis ? ' aria-disabled="true"' : '')
+          + (sv && !s.dis ? ' data-casora-svc="' + esc(JSON.stringify(sv)) + '"' : '')
+          + (s.step != null ? ' data-casora-step="' + esc(sign * Math.abs(Number(s.step) || 0.5)) + '"' : '')
+          + (s.min != null ? ' data-casora-min="' + esc(s.min) + '"' : '') + (s.max != null ? ' data-casora-max="' + esc(s.max) + '"' : '')
+          + stAttrs(s.attrs) + '><span>' + (sign < 0 ? '−' : '+') + '</span></div>';
+      };
+      centerHtml = (o.caption ? '<div class="hui-dl-cap">' + esc(o.caption) + '</div>' : '')
+        + '<div class="hui-st-val' + (o.valCls ? ' ' + esc(o.valCls) : '') + '"><span class="hui-st-n hp-st-v"><span class="n">' + esc(n2) + '</span></span>'
+        + (o.unit !== '' && n2 !== T_('Aus') ? '<span class="hui-st-u">' + esc(o.unit == null ? '°' : o.unit) + '</span>' : '') + '</div>'
+        + (o.foot ? '<div class="hui-dl-w2">' + esc(o.foot) + '</div>' : '')
+        + (o.minus || o.plus ? '<div class="hui-dl-pm">' + pmBtnHtml('minus', -1) + pmBtnHtml('plus', 1) + '</div>' : '');
+      ariaHtml = ' aria-valuemin="' + esc(mn) + '" aria-valuemax="' + esc(mx) + '" aria-valuenow="' + esc(o.value == null ? mn : o.value) + '"'
+        + ' aria-valuetext="' + esc(n2 + (o.unit == null ? '°' : o.unit || '')) + '"';
+    } else if (code === 'S4') {
+      var p4 = Math.max(0, Math.min(1, Number(o.progress) || 0));
+      ring.kind = 'level'; ring.pct = o.progress != null ? p4 * 100 : 0;
+      var wd4 = /[A-Za-zÄÖÜäöüß]{2}/.test(String(o.value == null ? '' : o.value)) && String(o.value).length > 5;
+      centerHtml = (o.caption ? '<div class="hui-dl-cap">' + esc(o.caption) + '</div>' : '')
+        + stValue(o.value, o.unit || '', wd4 ? 'wd' : '') + (o.word ? '<div class="hui-st-w">' + esc(o.word) + '</div>' : '')
+        + (o.program ? '<div class="hui-dl-w2">' + esc(o.program) + '</div>' : '');
+      act = o.action;
+      if (o.progress != null) ariaHtml = ' role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Math.round(p4 * 100) + '"';
+    } else if (code === 'S6') {
+      var r6 = o.ring || {}, mn6 = Number(r6.min) || 0, mx6 = r6.max != null ? Number(r6.max) : 100;
+      ring.kind = 'level'; ring.pct = dialPct(o.value, mn6, mx6);
+      if (r6.marker != null) ring.marker = dialPct(r6.marker, mn6, mx6);
+      ring.heat = !!r6.heat;
+      if (r6.color) ring.col = r6.color;
+      var na6 = (o.live ? ' data-hp-live="' + esc(o.live) + '"' + (o.liveDigits != null ? ' data-hp-digits="' + esc(o.liveDigits) + '"' : '') : '');
+      centerHtml = (o.caption ? '<div class="hui-dl-cap">' + esc(o.caption) + '</div>' : '')
+        + stValue(o.value, o.unit || '', o.word ? 'wd' : '', na6)
+        + (o.trend ? '<div class="hui-st-w">' + esc(o.trend) + '</div>' : '') + (o.foot ? '<div class="hui-dl-w2">' + esc(o.foot) + '</div>' : '');
+      if (o.chart) var chartHtml = o.chart;
+      belowHtml = '<div class="hui-st-chart">' + chartHtml + '</div>' + (o.range && o.range.length ? segments(o.range) : '');
+    } else if (code === 'S7') {
+      var tone = TONE[o.tone] || TONE.good;
+      ring.col = o.tone === 'off' ? S.ctl : tone;
+      if (o.segs && o.segs.length) { ring.kind = 'segs'; ring.segs = o.segs; }
+      else if (o.progress != null) { ring.kind = 'level'; ring.pct = Math.max(0, Math.min(100, Number(o.progress) * (Number(o.progress) <= 1 ? 100 : 1))); }
+      else { ring.kind = 'segs'; ring.segs = [{ ok: o.tone !== 'bad', tone: o.tone || 'good' }]; }
+      var url7 = o.icon && String(o.icon).indexOf(':') < 0 ? (typeof window.casoraIconUrl === 'function' ? window.casoraIconUrl(o.icon) : '/casora_assets/icons/' + o.icon + '.svg') : null;
+      var facts = (o.facts || []).filter(Boolean).slice(0, 3);
+      var valHtml = o.value != null && o.value !== '' ? stValue(o.value, o.unit || '', '') : '';
+      centerHtml = (url7 ? '<div class="hui-dl-sym" style="--g:url(\'' + esc(url7) + '\')"></div>'
+          : (o.icon ? '<ha-icon class="hui-dl-sym" icon="' + esc(o.icon) + '" style="display:flex;"></ha-icon>' : ''))
+        + valHtml
+        + '<div class="hui-dl-t">' + esc(o.text) + '</div>'
+        + (facts.length ? '<div class="hui-dl-w2">' + esc(facts.map(function (f) { return f.value + ' ' + f.label; }).join(' · ')) + '</div>' : '');
+      act = o.action;
+      cls = ' tone-' + (o.tone || 'good');
+      // The symbol takes the tone, darkened towards the ink so it keeps 3 : 1 on the popup.
+      ring.symCol = o.tone === 'off' ? S.sub : 'color-mix(in srgb, ' + tone + ' 80%, ' + T.ink + ')';
+    }
+    var mq = o.moons && o.moons.items ? o.moons : { items: o.moons || [], o: {} };
+    var mo = moons(mq.items, act, { page: o.moonsPage || (mq.o || {}).page, live: o.moonsLive || (mq.o || {}).live });
+    var colVar = '--dl-col:' + (ring.heat ? 'var(--casora-color-orange, #FF9F0A)' : ring.col) + ';';
+    var symHtml = ring.symCol ? ' style="--dl-col:' + esc(ring.symCol) + '"' : '';
+    var lbl = o.label || o.text || o.caption || '';
+    var dl = '<div class="hui-dl" style="' + esc(colVar) + '"'
+      + (spec ? ' role="slider" tabindex="0" aria-label="' + esc(lbl) + '"' + ariaHtml + ' data-casora-axis="dial" data-pct="' + esc(dRound(ring.pct)) + '" data-casora-slider="' + esc(JSON.stringify(spec)) + '"' : (ariaHtml.indexOf('role=') > -1 ? ariaHtml : ''))
+      + liveHtml + '>'
+      + dialSvg(ring) + coverHtml
+      + (coverHtml && code !== 'S2' ? '' : '<div class="hui-dl-c"' + symHtml + '>' + centerHtml + '</div>')
+      + (mo.html ? '<div class="hui-dl-ms"' + mo.liveHtml + '>' + mo.html + '</div>' : '') + '</div>';
+    return { html: dl + belowHtml, cls: ' dial' + (mo.bottom ? ' mb' : '') + cls };
+  }
   function stage(type, o) {
     o = o || {};
     var code = STAGE_TYPES[type];
     if (!code) return '';
-    var body = '';
+    var body = '', dialCls = '';
+    // The dial is the look of S1–S4, S7 and of S6 with a ring range (o.dial: false keeps the plate).
+    var dialOn = o.dial !== false && (/^S[12347]$/.test(code) || (code === 'S6' && o.ring));
+    // o.moons: the quick items (array) or the popup's quick builder (function, its UI.quick call is collected).
+    if (typeof o.moons === 'function') o = Object.assign({}, o, { moons: collectQuick(o.moons) });
+    // Without a wheel (empty, S5, S6 without a ring …) the moons stay quick tiles under the stage.
+    var tilesAfterHtml = !dialOn || o.empty ? (o.moons && o.moons.items ? quick(o.moons.items, o.moons.label, o.moons.o) : (Array.isArray(o.moons) ? quick(o.moons) : '')) : '';
     if (o.empty) body = empty(o.empty);
+    else if (dialOn) { var dg = dial(code, o); body = dg.html; dialCls = dg.cls; }
     else if (code === 'S1' || code === 'S3') {
       var v = Math.max(0, Math.min(100, Math.round(Number(o.value) || 0)));
       var inv = code === 'S3' ? o.invert !== false : false;
@@ -11556,9 +11936,11 @@ window.casoraMenuGlass = {
         }).join('') + '</div>' : '')
         + stPill(o.action);
     } else body = o.html || '';
-    var stCls = 'hui-stage s' + code.slice(1) + (o.state === 'off' ? ' off' : '') + (o.state === 'na' ? ' na' : '');
-    return '<style>' + STAGE_CSS + '</style><div class="' + stCls + '" data-casora-stage="' + code + '"'
-      + (o.state === 'na' ? ' aria-disabled="true"' : '') + '>' + body + (o.extra || '') + '</div>';
+    var stCls = 'hui-stage s' + code.slice(1) + dialCls + (o.state === 'off' ? ' off' : '') + (o.state === 'na' ? ' na' : '');
+    return '<style>' + STAGE_CSS + (dialCls ? DIAL_CSS : '') + '</style><div class="' + stCls + '" data-casora-stage="' + code + '"'
+      + (dialCls ? ' data-casora-dial="' + (o.segs && o.segs.length ? 'segs' : /^S[123]$/.test(code) ? 'value' : 'level') + '"' : '')
+      + (o.state === 'na' ? ' aria-disabled="true"' : '') + '>' + body + (o.extra || '') + '</div>'
+      + (tilesAfterHtml ? '<div style="height:16px"></div>' + tilesAfterHtml : '');
   }
   var T_ = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
   // UI.quick(items, label): 2–4 equal tiles (§5); more than 4 → the first 3 and „Alle (n)“ (o.page).
@@ -11583,8 +11965,18 @@ window.casoraMenuGlass = {
     + '@media (hover:hover){.hui-qk:not(.on):hover{background:' + S.rowHover + ';}}'
     + '@media (max-width:760px){.hui-qk-g.n4{grid-template-columns:repeat(2,minmax(0,1fr));}}'
     + '@media (prefers-reduced-motion:reduce){.hui-qk{transition:none;}}';
+  // Collect mode (UI.stage o.moons as a function): the popup's own quick builder runs unchanged, its items become
+  // the dial's moons instead of tiles.
+  var qCollect = null;
+  function collectQuick(fn) {
+    var prev = qCollect, got = { items: [] };
+    qCollect = got;
+    try { fn(); } catch (e) { console.error('casora: moons', e); } finally { qCollect = prev; }
+    return got;
+  }
   function quick(items, label, o) {
     o = o || {};
+    if (qCollect) { qCollect.items = items || []; qCollect.label = label; qCollect.o = o; return ''; }
     var list = (items || []).filter(function (x) { return x && x.text && !x.danger; });
     if (!list.length) return '';
     if (list.length > 4) {
@@ -11613,7 +12005,7 @@ window.casoraMenuGlass = {
   window._casoraUI.more = more;
   Object.assign(window._casoraUI, { section: section, row: row, settingsRow: settingsRow, settings: settings, actions: actions,
     empty: empty, width: width, switchHtml: switchHtml, page: page, SEC_ORDER: SEC_ORDER, WIDTH: WIDTH,
-    stage: stage, quick: quick, STAGE_TYPES: STAGE_TYPES, v3: v3 });
+    stage: stage, quick: quick, STAGE_TYPES: STAGE_TYPES, v3: v3, dialPaint: dialPaint, dialPct: dialPct, dialNum: dialNum });
   window.casoraPopupWidth = width;
 
   // Symmetry (rule 12, owner 26.10.2026: „Symmetrie ist wichtig!“): in a two-column popup both columns
