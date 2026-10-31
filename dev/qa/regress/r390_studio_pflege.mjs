@@ -6,6 +6,8 @@
 //         showed the section switches) – there was no way to turn it on from the list.
 //   sp-02 Settings › Calendar: "Kalender" stood three times on top of each other (page title, group header, row label).
 //   sp-03 Settings › Home & Devices: "Security: covers" showed the fallback icon (question mark).
+//   sp-04 Settings start and topic pages: an empty band of ~40 px between the title and "‹ Settings" (the head kept the
+//         height of pages with an "Applies to" line).
 import { open, usePage, studio, studioDashboard, check, need, finish } from './lib.mjs';
 
 const dash = await studioDashboard();
@@ -56,5 +58,11 @@ await need('Casora-Dashboard fürs Studio', dash);
   });
   await need('Zeile „Sicherheit: Jalousien“', ic.row, ic);
   await check('sp-03 „Sicherheit: Jalousien“ mit eigenem Symbol (nicht dem Ersatzsymbol)', !ic.fallback, ic);
+  const gap = await page.evaluate(() => {
+    const R = window.__panel().shadowRoot;
+    const h = R.querySelector('.insphead .cs-head h3'), b = R.querySelector('#pane .cs-hubback');
+    return h && b ? Math.round(b.getBoundingClientRect().top - h.getBoundingClientRect().bottom) : null;
+  });
+  await check('sp-04 Themenseite: „‹ Einstellungen“ höchstens 30 px unter dem Titel', gap != null && gap <= 30, { gap });
 }
 await finish();
