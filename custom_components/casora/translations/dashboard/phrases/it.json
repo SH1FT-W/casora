@@ -2580,7 +2580,8 @@
   "Pulse: Lernt": "Pulse: Apprendimento",
   "Pulse: Beobachten": "Pulse: Osservare",
   "Pulse: Prüfen": "Pulse: Controlla",
-  "Pulse: Ausgefallen": "Pulse: Guasto"
+  "Pulse: Ausgefallen": "Pulse: Guasto",
+  "Zählt": "Conta"
  },
  "patterns": [
   [
