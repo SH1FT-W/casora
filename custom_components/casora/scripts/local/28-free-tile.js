@@ -213,6 +213,20 @@
     };
     var f = { hero: { card: K.secCard(watch, call('hero'), S) } };
     var top = ['hero'];
+    // Popup v3 (richtlinien §4.7 fallback, §7, §8): a status stage S7 with the tile's state, the controls under it, right
+    // the values and the chart as the section „Verlauf“ (120); no settings.
+    if (UI.v3 && UI.v3() && UI.stage) {
+      var fv = { stage: { card: K.secCard(watch, call('stage'), S) } };
+      if (C.controls) fv.ctl = { card: K.secCard([C.id], call('ctl'), S) };
+      if (C.values.length) fv.vals = { card: K.secCard(C.values, call('vals'), S) };
+      if (C.chart) {
+        var cst3 = S[C.chart];
+        fv.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history',
+          series: [{ entity: C.chart, name: nameOf(cst3, C.chart), unit: (cst3.attributes || {}).unit_of_measurement || '', color: 'accent' }],
+          height: 120, readout: 'own', plate: true, title: T('Verlauf') } };
+      }
+      return K.layout({ fields: fv, top: [], stage: 'stage', left: ['ctl'], right: ['vals', 'chart'], narrowOrder: ['ctl', 'vals', 'chart'] });
+    }
     if (C.chart) {
       var cst = S[C.chart], unit = (cst.attributes || {}).unit_of_measurement || '';
       f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history',
@@ -278,6 +292,23 @@
     var UI = window._casoraUI;
     if (!UI || !C) return '';
     var S = states || {}, st = C.id ? S[C.id] : null;
+    if (part === 'stage') {
+      // The tile's state as the sentence, its symbol in the traffic light (on/active green, off grey, unknown orange);
+      // a template badge without an entity: its text. Hints of the Studio as notes under it.
+      var n3 = [];
+      if (C.chartMissing && C.chartWant) n3.push(T('Kein Verlauf: {name} ist kein Zahlenwert.').replace('{name}', nameOf(S[C.chartWant], C.chartWant)));
+      if (C.empty) n3.push(T('Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.'));
+      var notesHtml = UI.note ? n3.map(function (n) { return UI.note(n); }).join('') : '';
+      if (!C.id && C.tpl) {
+        var TP3 = window._casoraTemplates, tx3 = TP3 && TP3.text ? TP3.text(C.tpl) : null;
+        return UI.stage('status', { tone: 'good', icon: 'mdi:text-box-outline', text: tx3 == null ? '…' : (String(tx3).trim() || '—'), extra: notesHtml });
+      }
+      if (!C.id) return UI.stage('status', { empty: { icon: 'mdi:shape-outline', studio: true, text: T('Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.') } });
+      if (!st) return UI.stage('status', { tone: 'warn', icon: 'mdi:help-circle-outline', text: 'Gerät fehlt', facts: [{ label: 'Status', value: C.id }] });
+      var ago3 = !bad(st.state) ? since(st.last_changed) : null;
+      return UI.stage('status', { tone: bad(st.state) ? 'warn' : F.on(st) ? 'good' : 'off', icon: iconOf(st), text: F.word(hass, st),
+        state: st.state === 'unavailable' ? 'na' : null, facts: ago3 ? [{ label: T('Zustand'), value: ago3 }] : [], extra: notesHtml });
+    }
     if (part === 'hero') {
       var notes = [];
       if (!C.id && C.tpl) {

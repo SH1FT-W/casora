@@ -12618,7 +12618,8 @@
     ],
     "style": "[[[\n  /* Two columns (controls left, values right) only when both are configured - else one column like Pulse. */\n  const F = window._casoraFree;\n  const _w = F && F.wide(entity, states, variables) ? 900 : 552;\n  return '--popup-min-width: min(' + _w + 'px, 92vw);' + ' --popup-max-width: min(' + _w + 'px, 92vw);';\n]]]\n",
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Universal-Kachel', ['Universal-Kachel', 'Universal tile']) : (String(variables.room_name || '').trim() || 'Universal-Kachel'); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [
@@ -12697,7 +12698,8 @@
   ],
   "tap_action": {
    "casora_popup": {
-    "title": "[[[\n  /* Own badge with the tap \"Own popup\" (#60): the Universal tile's popup (casora_popup_free) under the badge's name;\n     its settings arrive as the tile's variables (window._casoraCustomBadge.popupVars, 29-eigene-badges.js). */\n  const _cb = window._casoraCustomBadge;\n  return _cb ? _cb.popupTitle(variables.badge, entity) : 'Badge';\n]]]\n"
+    "title": "[[[\n  /* Own badge with the tap \"Own popup\" (#60): the Universal tile's popup (casora_popup_free) under the badge's name;\n     its settings arrive as the tile's variables (window._casoraCustomBadge.popupVars, 29-eigene-badges.js). */\n  const _cb = window._casoraCustomBadge;\n  return _cb ? _cb.popupTitle(variables.badge, entity) : 'Badge';\n]]]\n",
+    "variant": "v3"
    }
   },
   "variables": {

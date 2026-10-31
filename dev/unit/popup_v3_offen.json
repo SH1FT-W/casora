@@ -202,13 +202,5 @@
   ],
   "modul": "03-popups.js",
   "grund": "noch nicht dran"
- },
- {
-  "popup": "Freie Kachel / eigenes Badge",
-  "vorlagen": [
-   "casora_popup_free"
-  ],
-  "modul": "28-free-tile.js",
-  "grund": "noch nicht dran"
  }
 ]
