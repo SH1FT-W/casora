@@ -133,6 +133,12 @@ window.casoraEnergyPowers = () => ({ grid: ['sensor.ha_grid'], solar: ['sensor.h
 // A battery field of the tile (Studio) stays first.
 F = E.flowSources({ home: 'sensor.home', battery: 'sensor.bat', charge: 'sensor.anker_chg' }, hass, states, true);
 assert.deepEqual([F.batHa, F.chg], [undefined, 'sensor.anker_chg'], 'Studio battery field: settings do not replace it');
+// … but the charge sensor of another device (a second Solarbank) never beats the tile's own battery field.
+hass.entities['sensor.bat'] = { entity_id: 'sensor.bat', device_id: 'bank_a' };
+hass.entities['sensor.anker_chg'] = { entity_id: 'sensor.anker_chg', device_id: 'bank_b' };
+F = E.flowSources({ home: 'sensor.home', battery: 'sensor.bat', charge: 'sensor.anker_chg' }, hass, states, true);
+assert.deepEqual([F.batTile, F.chg], ['sensor.bat', undefined], 'Anker sensors of another device: the tile battery');
+delete hass.entities['sensor.bat']; delete hass.entities['sensor.anker_chg'];
 // A room (not the house): nothing from the settings, so no flow without the tile's fields.
 assert.equal(E.flowSources({ home: 'sensor.home' }, hass, states, false), null);
 // Grid alone draws no flow (it would only repeat the house's power).

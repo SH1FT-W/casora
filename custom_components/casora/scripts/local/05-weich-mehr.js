@@ -841,9 +841,14 @@
     var F = {};
     if (has(C.solar)) F.solar = [C.solar]; else if (pw.solar.length) { F.solar = pw.solar.slice(); F.solarHa = true; }
     // The battery of HA's energy settings wins over the auto-detected Anker Solix charge/discharge sensors
-    // (C.charge/C.discharge, no Studio fields); Anker only as the fallback. A battery field of the tile stays first.
+    // (C.charge/C.discharge, no Studio fields); Anker only as the fallback. A battery field of the tile stays first – its
+    // device's charge/discharge sensors (clean signs) before its power, but never those of another device: a second
+    // Solarbank's charge sensor showed 74 W instead of the tile battery's 700 W (test house 31.10.2026).
+    var devOf = function (id) { var e = id && hass && hass.entities && hass.entities[id]; return (e && e.device_id) || null; };
+    var ankerDev = devOf(C.charge || C.discharge), tileDev = devOf(C.battery);
+    var ankerOk = !has(C.battery) || !ankerDev || !tileDev || ankerDev === tileDev;
     if (pw.battery.length && !has(C.battery)) F.batHa = pw.battery.slice();
-    else if (has(C.charge) || has(C.discharge)) { F.chg = C.charge || null; F.dis = C.discharge || null; }
+    else if ((has(C.charge) || has(C.discharge)) && ankerOk) { F.chg = C.charge || null; F.dis = C.discharge || null; }
     else if (has(C.battery)) F.batTile = C.battery;
     if (has(C.grid) || has(C.export)) { F.grid = C.grid || null; F.exp = C.export || null; }
     else if (pw.grid.length) F.gridHa = pw.grid.slice();
