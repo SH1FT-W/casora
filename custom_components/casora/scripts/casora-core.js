@@ -11663,7 +11663,8 @@ window.casoraMenuGlass = {
     + '.hui-moon > *{pointer-events:none;}'
     + '.hui-moon .ic{flex:none;width:22px;height:22px;color:' + S.sub + ';background-color:currentColor;--mdc-icon-size:22px;margin:0;}'
     + '.hui-moon ha-icon.ic{background:none;}'
-    + '.hui-moon span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:100%;overflow-wrap:anywhere;}'
+    // white-space: the field's .ellipsis kept „Jetzt starten“ on one line, cut at the moon's edge.
+    + '.hui-moon span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:100%;white-space:normal;overflow-wrap:break-word;}'
     + '.hui-moon.on{background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, ' + T.ink + ');'
     +   'box-shadow:0 0 0 3px var(--dl-col), 0 10px 26px -6px color-mix(in srgb, var(--dl-col) 45%, transparent);}'
     + '.hui-moon.on .ic{color:color-mix(in srgb, var(--dl-col) 65%, var(--casora-soft-seg-on-ink, ' + T.ink + '));}'
