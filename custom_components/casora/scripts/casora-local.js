@@ -291,4 +291,12 @@ for (let i = 0; i < urls.length; i++) {
   }
 }
 window._casoraLocalLoaded = MODULES;
+// The phone's header capsule (bell, assist, ⋯) waits hidden until the bottom bar docks it (casora_mobile_chrome).
+// A phone page without casora-mobile-nav never docks it: from now on it shows where it stands.
+try {
+  const free = document.createElement('style');
+  free.id = 'casora-mchrome-free';
+  free.textContent = 'html:not(:has(.hmn-bar)){--casora-mchrome-vis:visible;}';
+  document.head.appendChild(free);
+} catch (e) { /* no :has() – the capsule stays docked-only */ }
 try { window.dispatchEvent(new Event('casora-local-loaded')); } catch (e) { /* old browser */ }
