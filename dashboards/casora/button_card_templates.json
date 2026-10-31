@@ -18903,7 +18903,8 @@
     ],
     "style": "[[[\n  /* Zwei Spalten unter dem Kopf: links Live-Bild und Schnellantworten, rechts der Verlauf. */\n  return '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);';\n]]]\n",
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Klingel', ['Klingel', 'Doorbell', 'Türklingel']) : (String(variables.room_name || '').trim() || 'Klingel'); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [

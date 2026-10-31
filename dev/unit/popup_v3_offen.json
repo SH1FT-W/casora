@@ -180,14 +180,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Klingel",
-  "vorlagen": [
-   "casora_popup_reolink_doorbell"
-  ],
-  "modul": "24-klingel.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Frigate",
   "vorlagen": [
    "casora_popup_frigate"

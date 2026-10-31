@@ -64,6 +64,8 @@ const MIGRIERT = [
   { popup: 'Freie Kachel / eigenes Badge', vorlagen: ['casora_popup_free', 'casora_popup_own_badge'], file: '28-free-tile.js', from: '  F.popup = function', to: null, stages: 4 },
   // Fallback rule S7 instead of S5: the meal plan and the idea sensor carry no picture of the recipe.
   { popup: 'Rezepte', vorlagen: ['casora_popup_recipe'], file: '03-popups.js', from: '  R.stageHtml = function', to: '  /* Weich: Speiseplan mit Datums-Plakette', stages: 2 },
+  // S5: the live card mounted into UI.stage('image') (KL.stage); the popup's stage field names it once more.
+  { popup: 'Klingel', vorlagen: ['casora_popup_reolink_doorbell'], file: '24-klingel.js', from: '  KL.popup = function', to: '  var pill = function', stages: 2 },
 ];
 
 // 1. Pieces.
