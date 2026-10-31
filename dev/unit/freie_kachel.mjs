@@ -130,7 +130,15 @@ const sec = (part, ent, vars) => F.sec(part, F.plan(ent, states, hass, vars || {
 
 assert.equal(sec('hero', null), '<line>Kein Gerät gewählt|</line><note>Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.</note>');
 assert.match(sec('hero', states['switch.qa_pumpe'], V), /^<line>An\|seit 2 Std\.<\/line>/);
-assert.match(sec('hero', states['switch.qa_pumpe'], V), /<note>Kein Verlauf: pumpe ist kein Zahlenwert\.<\/note>/, 'wanted chart of a non-number: a note');
+// DD-30 (test 2): a wanted chart of a non-number shows no technical note in the popup (§8 clean).
+assert.doesNotMatch(sec('hero', states['switch.qa_pumpe'], V), /Kein Verlauf/, 'no developer note');
+{
+  const UI0 = window._casoraUI, seen = [];
+  window._casoraUI = Object.assign({}, UI0, { stage: (t, o) => { seen.push(JSON.stringify(o)); return ''; }, note: (n) => '<note>' + n + '</note>' });
+  sec('stage', states['switch.qa_pumpe'], V);
+  window._casoraUI = UI0;
+  assert.ok(seen.length && !/Kein Verlauf/.test(seen.join()), 'stage: no developer note');
+}
 assert.equal(sec('hero', states['sensor.qa_temp']), '<line>21,5 °C|seit 2 Std.</line><note>Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.</note>');
 assert.equal(sec('hero', states['sensor.qa_weg']), '<line>Nicht verfügbar|</line><note>Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.</note>');
 assert.equal(F.sec('hero', { id: 'sensor.qa_fehlt', values: [], labels: {} }, states, hass), '<line>Gerät fehlt|sensor.qa_fehlt</line>');
@@ -220,7 +228,7 @@ for (const lang of ['de', 'es']) {
 }
 for (const lang of ['en', 'es']) {
   const ph = JSON.parse(src('custom_components/casora/translations/dashboard/phrases/' + lang + '.json')).exact;
-  for (const s of ['Universal-Kachel', 'Kein Gerät gewählt', 'Werte', 'Bedienung', 'Kein Verlauf: {name} ist kein Zahlenwert.',
+  for (const s of ['Universal-Kachel', 'Kein Gerät gewählt', 'Werte', 'Bedienung',
     'Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.', 'Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.'])
     assert.ok(ph[s], lang + ' phrase missing for: ' + s);
 }
