@@ -15,12 +15,31 @@
 // Pictures: CASORA_OUT.
 import fs from 'node:fs';
 import path from 'node:path';
-import { open, casoraDashboards, dashboard, ready, check, need, finish, atFinish, shot, usePage, BASE, hostConfigDir } from './lib.mjs';
+import { open, casoraDashboards, dashboard, ready, check, need, finish, atFinish, shot, usePage, BASE } from './lib.mjs';
 import { ws, tokens } from '../ws.mjs';
 
 const MARKER = '# Von der Casora-Integration geschrieben und bei jedem Start aktualisiert – nicht bearbeiten.';
 const OWN = 'QA r333 Moonbeam';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Config folder of the test HA on this machine. In Docker HA reports its own path (/config); the container
+// carries the host folder as label ha-docker.config (tools/ha-docker.sh), found by the port of BASE.
+async function hostConfigDir(c) {
+  const dir = (await c.cmd({ type: 'get_config' })).config_dir;
+  if (dir && fs.existsSync(path.join(dir, 'configuration.yaml'))) return dir;
+  try {
+    const { execFileSync } = await import('node:child_process');
+    const os = await import('node:os');
+    const port = new URL(BASE).port || '80';
+    const docker = ['docker', path.join(os.homedir(), '.docker/bin/docker')].find((d) => {
+      try { execFileSync(d, ['version', '--format', '{{.Client.Version}}'], { stdio: 'ignore' }); return true; } catch (e) { return false; }
+    });
+    if (!docker) return dir;
+    const id = execFileSync(docker, ['ps', '-q', '--filter', 'publish=' + port, '--filter', 'label=ha-docker.config'], { encoding: 'utf8' }).trim().split('\n')[0];
+    if (!id) return dir;
+    return execFileSync(docker, ['inspect', '-f', '{{index .Config.Labels "ha-docker.config"}}', id], { encoding: 'utf8' }).trim() || dir;
+  } catch (e) { return dir; }
+}
 
 const c = await ws();
 const CFG = await hostConfigDir(c);
