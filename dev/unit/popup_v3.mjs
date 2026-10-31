@@ -50,6 +50,7 @@ const MIGRIERT = [
   { popup: 'Saugroboter', vorlagen: ['casora_vacuum'], file: '02-devices.js', from: '  var V = window._casoraVac = ', to: '// ── Notifications: line wrapping', stages: 1 },
   { popup: 'Jalousien in Sicherheit', vorlagen: ['casora_popup_security_covers'], file: '34-security-covers.js', from: '  C.sec = function', to: null, stages: 2 },
   { popup: 'Pulse', vorlagen: ['casora_popup_pulse'], file: '14-pulse.js', from: '  P.popup = function', to: null, stages: 2 },
+  { popup: 'Klima-Gruppe (Badge)', vorlagen: ['casora_badge_climate_group'], file: '35-phone-hub.js', from: '  var stageOf = function', to: '  P.sec = function', stages: 3 },
 ];
 
 // 1. Pieces.

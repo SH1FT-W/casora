@@ -108,14 +108,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Klima-Gruppe (Badge)",
-  "vorlagen": [
-   "casora_badge_climate_group"
-  ],
-  "modul": "35-phone-hub.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Batterien",
   "vorlagen": [
    "casora_popup_battery"

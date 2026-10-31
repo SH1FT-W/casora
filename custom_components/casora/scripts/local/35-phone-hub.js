@@ -354,8 +354,12 @@
     var call = function (part) {
       return 'return window._casoraPhoneHub ? window._casoraPhoneHub.sec(' + JSON.stringify(cat) + ', ' + JSON.stringify(part) + ', states, hass) : "";';
     };
-    var f = { hero: { card: K.secCard(s.watch, call('hero'), states || {}) }, list: { card: K.secCard(s.watch, call('list'), states || {}) } };
-    return K.layout({ fields: f, top: ['hero'], left: ['list'], right: [] });
+    // Popup v3 (richtlinien §4 S7): the badge's words become the status stage; the overview rows stay as the list.
+    var v3 = !!(UI.v3 && UI.v3() && UI.stage);
+    var f = { list: { card: K.secCard(s.watch, call('list'), states || {}) } };
+    if (v3) f.stage = { card: K.secCard(s.watch, call('stage'), states || {}) };
+    else f.hero = { card: K.secCard(s.watch, call('hero'), states || {}) };
+    return K.layout({ fields: f, top: v3 ? [] : ['hero'], stage: v3 ? 'stage' : null, left: ['list'], right: [] });
   };
 
   // What needs attention shows it on the icon (owner, 27.10.2026): Casora's own rules decide – security by
@@ -409,13 +413,44 @@
     return soft && window.casoraSecurityColor ? window.casoraSecurityColor(lv) : (lv === 'alarm' ? 'bad' : 'warn');
   };
   P.levelOf = levelOf;
+  // Popup v3 stage S7: the badge's sub line as the sentence, the worst row's level as the traffic light. Security:
+  // one main action – lock the unlocked locks among its rows, else close the blinds that count (#76).
+  var STAGE_ICON = { security: 'mdi:shield-home', climate: 'mdi:home-thermometer', presence: 'mdi:account-group' };
+  var stageOf = function (cat, s, S, hass) {
+    var UI = window._casoraUI;
+    var rows = s.chips.map(function (c) { return Object.assign({ kind: 'c' }, c); });
+    if (!rows.length && !s.rooms.length) return UI.stage('status', { empty: { icon: 'mdi:information-outline',
+      text: 'Hier gibt es noch keine Geräte', sub: 'Im Studio Kacheln zu Räumen hinzufügen', studio: true } });
+    var o = { icon: STAGE_ICON[cat], text: s.sub || TITLE[cat] || '' };
+    if (cat === 'presence') {
+      var home = rows.filter(function (c) { return c.home; }).length;
+      o.tone = home ? 'good' : 'off';
+      if (rows.length) o.facts = [{ label: 'Zuhause', value: String(home) }, { label: 'Unterwegs', value: String(rows.length - home) }];
+      return UI.stage('status', o);
+    }
+    var lv = rows.map(function (c) { return levelOf(cat, c, hass); });
+    o.tone = lv.indexOf('alarm') >= 0 ? 'bad' : lv.indexOf('warn') >= 0 ? 'warn' : 'good';
+    if (cat === 'security') {
+      var ids = [];
+      rows.forEach(function (c) { (c.ids || []).forEach(function (id) { if (ids.indexOf(id) < 0) ids.push(id); }); });
+      var locks = ids.filter(function (id) { return id.indexOf('lock.') === 0 && S[id] && S[id].state === 'unlocked'; });
+      var Cv = window._casoraSecCovers, sc = Cv && hass ? Cv.scan(S, hass, hass.user) : null;
+      var covers = sc && sc.count ? sc.open.filter(function (id) { var x = Cv.closeSvc(id, S[id]); return x && x.service === 'close_cover'; }) : [];
+      if (locks.length) o.action = { text: locks.length > 1 ? 'Alle verriegeln' : 'Verriegeln', icon: 'mdi:lock', primary: true,
+        svc: { domain: 'lock', service: 'lock', data: { entity_id: locks } } };
+      else if (covers.length) o.action = { text: covers.length > 1 ? 'Alle schließen' : 'Schließen', icon: 'mdi:arrow-collapse-down', primary: true,
+        svc: { domain: 'cover', service: 'close_cover', data: { entity_id: covers } } };
+    }
+    return UI.stage('status', o);
+  };
   P.sec = function (cat, part, states, hass) {
     var UI = window._casoraUI;
     if (!UI) return '';
     // Re-read once per update (hero comes first): the cards it mirrors have drawn their new state by then.
-    if (part === 'hero') memo[cat] = null;
+    if (part === 'hero' || part === 'stage') memo[cat] = null;
     var s = P.scan(cat);
     if (part === 'hero') return UI.line(s.sub || TITLE[cat] || '', [], {});
+    if (part === 'stage') return stageOf(cat, s, states || (hass && hass.states) || {}, hass);
     if (part !== 'list') return '';
     var out = [];
     if (s.chips.length) {
