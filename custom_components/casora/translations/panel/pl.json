@@ -2748,7 +2748,9 @@
     "Tile types": "Rodzaje kafelków",
     "New tile of this type": "Nowy kafelek tego rodzaju",
     "Waste sensor": "Czujnik odpadów",
-    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Np. kalendarz Waste Collection Schedule – kafelek sam znajdzie w nim pojemniki."
+    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Np. kalendarz Waste Collection Schedule – kafelek sam znajdzie w nim pojemniki.",
+    "Bring Your Existing Dashboard": "Przenieś swój obecny pulpit",
+    "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.": "Casora znalazła pulpit Hemma, swojego poprzednika. Pokoje, kafelki i układ na telefon zostaną przeniesione."
   },
   "patterns": [
     [

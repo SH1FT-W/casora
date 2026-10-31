@@ -2748,7 +2748,9 @@
     "Tile types": "Types de tuile",
     "New tile of this type": "Nouvelle tuile de ce type",
     "Waste sensor": "Capteur de déchets",
-    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Par ex. le calendrier de Waste Collection Schedule – la tuile y trouve les bacs."
+    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Par ex. le calendrier de Waste Collection Schedule – la tuile y trouve les bacs.",
+    "Bring Your Existing Dashboard": "Reprendre ton tableau de bord",
+    "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.": "Casora a trouvé un tableau de bord Hemma, son prédécesseur. Pièces, tuiles et mise en page mobile sont reprises."
   },
   "patterns": [
     [

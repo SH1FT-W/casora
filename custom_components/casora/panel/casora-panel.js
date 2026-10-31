@@ -14078,8 +14078,9 @@ class CasoraPanel extends HTMLElement {
       let moves = [];
       try { moves = typeof this._casoraMoveCandidates === "function" ? await this._casoraMoveCandidates() : []; } catch (e) { moves = []; }
       if (!moves.length || this._flowTok !== tok || !feats.isConnected) return;
-      const h = feat(["import", studioIcon("flow-hemma"), "Bring Your Hemma",
-        "Move over from Hemma 1 or Hemma 2 – rooms, tiles and phone layout included."]);
+      // E13 (test 2): only shown when one was found – and said what Hemma is, for whoever never heard of it.
+      const h = feat(["import", studioIcon("flow-hemma"), "Bring Your Existing Dashboard",
+        "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over."]);
       h.style.setProperty("--i", 0);
       feats.replaceChild(h, screens);
     })();

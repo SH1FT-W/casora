@@ -2748,7 +2748,9 @@
     "Tile types": "Tipos de tarjeta",
     "New tile of this type": "Nueva tarjeta de este tipo",
     "Waste sensor": "Sensor de residuos",
-    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "P. ej. el calendario de Waste Collection Schedule: la tarjeta encuentra ahí los contenedores."
+    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "P. ej. el calendario de Waste Collection Schedule: la tarjeta encuentra ahí los contenedores.",
+    "Bring Your Existing Dashboard": "Trae tu panel actual",
+    "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.": "Casora ha encontrado un panel de Hemma, su predecesor. Habitaciones, tarjetas y vista de móvil se trasladan."
   },
   "patterns": [
     [

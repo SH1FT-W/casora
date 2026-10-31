@@ -254,7 +254,9 @@
     const ready = p && p._hass && Array.isArray(p._dashList);
     if (!ready && Date.now() - t0 < 15000) { setTimeout(wait, 300); return; }
     if (!p || !p.isConnected) return;
-    if (startMode === "welcome" && !(p._dashList || []).length) { markSeen(); return; }
+    // No Casora dashboard yet = a new user (E12, test 2): the Studio greets; no "New in Casora" list of changes
+    // they never knew, even when other casora.* keys made this look like an update.
+    if (!(p._dashList || []).length) { markSeen(); return; }
     show(startMode, p._hass && p._hass.language);
   };
   setTimeout(wait, 600);

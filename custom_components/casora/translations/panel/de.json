@@ -2748,7 +2748,9 @@
     "Tile types": "Kachelarten",
     "New tile of this type": "Neue Kachel dieser Art",
     "Waste sensor": "Abfall-Sensor",
-    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Z. B. der Kalender von Waste Collection Schedule – die Kachel findet die Tonnen darin."
+    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Z. B. der Kalender von Waste Collection Schedule – die Kachel findet die Tonnen darin.",
+    "Bring Your Existing Dashboard": "Vorhandenes Dashboard mitnehmen",
+    "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.": "Casora hat ein Dashboard von Hemma gefunden, dem Vorgänger. Räume, Kacheln und Handy-Layout ziehen mit um."
   },
   "patterns": [
     [

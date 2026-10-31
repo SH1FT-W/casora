@@ -2748,7 +2748,9 @@
     "Tile types": "Tipi di riquadro",
     "New tile of this type": "Nuovo riquadro di questo tipo",
     "Waste sensor": "Sensore rifiuti",
-    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Ad es. il calendario di Waste Collection Schedule: il riquadro vi trova i bidoni."
+    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Ad es. il calendario di Waste Collection Schedule: il riquadro vi trova i bidoni.",
+    "Bring Your Existing Dashboard": "Porta con te la tua dashboard",
+    "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.": "Casora ha trovato una dashboard di Hemma, il suo predecessore. Stanze, riquadri e layout per telefono vengono trasferiti."
   },
   "patterns": [
     [
