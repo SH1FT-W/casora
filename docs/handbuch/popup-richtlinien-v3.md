@@ -352,6 +352,9 @@ Nicht zurück: #35 (Jalousie-Stufen bleiben drei Monde: Auf · Beschatten · Zu)
 
 - Trefferflächen mindestens 44 × 44 (Schnellwahl-Kachel und Zeilen ohnehin größer).
 - Text auf Fläche mindestens 4,5 : 1, Symbole 3 : 1 – hell und dunkel (`dev/qa/popup-geo.mjs`).
+- Symbol auf Gerätefarbe (Listen, Bühne, Kopf, Chips): weiß, wenn Weiß dort mindestens 3 : 1 hat (Blau, Türkis, Rot), sonst
+  die dunkle Glyphe `--casora-soft-glyph-dark` (Gelb, Orange, Hellgrün) – `inkOn()` rechnet es, design-regeln.md §0.
+- Offline: Knöpfe, deren Gerät nicht erreichbar ist (Kamera, Sirene), sind ausgegraut (Deckkraft .5) und tun nichts.
 - Regler, Schalter und ± mit Namen für die Sprachausgabe (`aria-label`, `role`, Wert).
 - Auswahl zusätzlich über Form (Hinterlegung, Schatten), nie nur über Farbe.
 

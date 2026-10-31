@@ -7038,10 +7038,44 @@ window.casoraMenuGlass = {
     return { hue: hue, html: glyph, off: forcedOff != null ? forcedOff : (idle || ringOff(src)) };
   }
   // ── 1.3 Kopfzeile A ──────────────────────────────────────────────────────
-  // Symbolfarbe auf einer Akzentfläche: immer Weiß wie auf den Kacheln (1.3 entschieden, statt der
-  // Kontrast-Regel DP-17, die auf Gelb/Orange/Grün dunkle Tinte setzte und uneinheitlich wirkte).
+  // Symbol colour on a device colour (decision 01.11.2026, design-regeln §0, review 2 DD-19/DH-19): white where it keeps
+  // 3 : 1 on the fill (blue, teal, red), else the dark glyph (yellow, orange, light green) – white on yellow was 1,96 : 1.
+  // The fill is resolved to its colour where the popup's tokens live; the popup's own accent uses the ink the frame
+  // worked out for it (--casora-popup-accent-ink).
   function inkOn(fill) {
-    return fill ? 'var(--casora-soft-glyph, #fff)' : null;
+    if (!fill) return null;
+    var white = 'var(--casora-soft-glyph, #fff)', dark = 'var(--casora-soft-glyph-dark, rgba(46,34,20,.88))';
+    var f = String(fill);
+    if (/--casora-popup-accent\b/.test(f) && !/--casora-popup-accent-ink/.test(f)) return 'var(--casora-popup-accent-ink, ' + white + ')';
+    var C = inkOn.c || (inkOn.c = { at: 0, m: {} });
+    if (Date.now() - C.at > 2000) { C.m = {}; C.at = Date.now(); }
+    if (C.m[f]) return C.m[f];
+    var lum = function (col) {
+      var h = /#([0-9a-f]{6}|[0-9a-f]{3})\b/i.exec(col || ''), rgb;
+      if (h) { var x = h[1].length === 3 ? h[1].replace(/./g, '$&$&') : h[1]; rgb = [0, 2, 4].map(function (i) { return parseInt(x.substr(i, 2), 16); }); }
+      else {
+        var m = /rgba?\(([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)(?:[ ,/]+([\d.]+))?/.exec(col || '');
+        if (!m || (m[4] != null && Number(m[4]) < 0.5)) return null;
+        rgb = [m[1], m[2], m[3]];
+      }
+      var g = function (c) { c = Number(c) / 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+      return 0.2126 * g(rgb[0]) + 0.7152 * g(rgb[1]) + 0.0722 * g(rgb[2]);
+    };
+    // The colour as the browser resolves it where the popup's tokens live; else the fallback written in the fill.
+    var L = null;
+    try {
+      var pe = window.casoraPopup && window.casoraPopup.element;
+      var host = (pe && pe.shadowRoot) || document.body;
+      var pr = document.createElement('i');
+      pr.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;pointer-events:none;color:' + f;
+      host.appendChild(pr);
+      L = lum(getComputedStyle(pr).color);
+      pr.remove();
+    } catch (e) { L = null; }
+    if (L == null) L = lum(f);
+    var out = L != null && 1.05 / (L + 0.05) < 3 ? dark : white;
+    C.m[f] = out;
+    return out;
   }
   window._casoraInkOn = inkOn;
   // Room of the tapped tile (per dashboard, unique hits only) – not for house-wide popups (badges,
@@ -11898,12 +11932,15 @@ window.casoraMenuGlass = {
         + (o.liveDigits != null ? ' data-hp-digits="' + esc(o.liveDigits) + '"' : '') : '');
       body = '<div class="hui-st-head">' + stValue(o.value, o.unit || '', o.word ? 'wd' : '', na6)
         + (o.trend != null || o.read ? '<div class="hui-st-trend"' + (o.read ? ' data-casora-read-when=""' : '') + '>' + esc(o.trend || '') + '</div>' : '') + '</div>'
-        + '<div class="hui-st-chart">' + (o.chart || '') + '</div>'
+        // No chart (a reading without history): no empty 160 plate under the value.
+        + (o.chart ? '<div class="hui-st-chart">' + o.chart + '</div>' : '')
         + (o.range && o.range.length ? segments(o.range) : '');
     } else if (code === 'S7') {
       var facts = (o.facts || []).filter(Boolean).slice(0, 3);
       var url7 = o.icon && String(o.icon).indexOf(':') < 0 ? (typeof window.casoraIconUrl === 'function' ? window.casoraIconUrl(o.icon) : '/casora_assets/icons/' + o.icon + '.svg') : null;
-      body = '<div class="hui-st-stat"><div class="hui-st-sym" style="--st-tone:' + esc((TONE[o.tone] || TONE.good) + (o.tone === 'off' ? ';color:' + S.sub : '')) + '">'
+      // The symbol's ink by contrast (white on red, dark on green/orange – design-regeln §0).
+      var ink7 = o.tone === 'off' ? S.sub : ((window._casoraInkOn && window._casoraInkOn(TONE[o.tone] || TONE.good)) || '#fff');
+      body = '<div class="hui-st-stat"><div class="hui-st-sym" style="--st-tone:' + esc((TONE[o.tone] || TONE.good) + ';color:' + ink7) + '">'
         + (url7 ? '<div class="g" style="--g:url(\'' + esc(url7) + '\')"></div>'
           : (o.icon ? '<ha-icon icon="' + esc(o.icon) + '" style="--mdc-icon-size:32px;display:flex;"></ha-icon>' : ''))
         + '</div><div class="hui-st-text">' + esc(o.text) + '</div></div>'

@@ -1,6 +1,6 @@
 // Popup-Kopfzeile A (Casora 1.3 „Feinschliff“): Kopf in einer Zeile – Symbol-Kachel links, Raum klein
-// darüber, Titel + Statuszeile, Hauptschalter + X rechts; Schalter in Gerätefarbe; Symbol immer weiß
-// wie auf den Kacheln; Satz-Überschriften; Tokens im Theme.
+// darüber, Titel + Statuszeile, Hauptschalter + X rechts; Schalter in Gerätefarbe; Symbol weiß bzw. dunkel nach
+// Kontrast (01.11.2026); Satz-Überschriften; Tokens im Theme.
 //   node dev/unit/popup_kopf_a.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -18,9 +18,12 @@ const fn = (name) => {
 };
 const lib = new Function(fn('inkOn') + fn('stripRoom') + ' return { inkOn: inkOn, stripRoom: stripRoom };')();
 
-// Symbol auf Akzentfläche immer weiß wie auf den Kacheln – auch auf Gelb, Orange und Grün.
-for (const c of ['var(--casora-color-yellow, #E8B04A)', 'var(--casora-color-orange, #DE8A4E)', 'rgb(232,176,74)', 'var(--casora-color-red, #D35A4E)'])
-  assert.equal(lib.inkOn(c), 'var(--casora-soft-glyph, #fff)', c + ' → weiß');
+// Symbol on a device colour (decision 01.11.2026): white where it keeps 3 : 1, the dark glyph on light colours.
+for (const c of ['var(--casora-color-yellow, #E8B04A)', 'var(--casora-color-orange, #DE8A4E)', 'rgb(232,176,74)', 'var(--casora-color-green, #6AAE78)'])
+  assert.equal(lib.inkOn(c), 'var(--casora-soft-glyph-dark, rgba(46,34,20,.88))', c + ' → dark');
+for (const c of ['var(--casora-color-red, #D35A4E)', 'var(--casora-color-blue, #5B8FC9)', 'var(--casora-color-teal, #4E9E95)'])
+  assert.equal(lib.inkOn(c), 'var(--casora-soft-glyph, #fff)', c + ' → white');
+assert.equal(lib.inkOn('var(--casora-popup-accent)'), 'var(--casora-popup-accent-ink, var(--casora-soft-glyph, #fff))', 'popup accent: the ink of the frame');
 assert.equal(lib.inkOn(''), null, 'ohne Fläche nichts');
 
 // Raum steht als Etikett über dem Titel – nicht noch einmal im Titel.

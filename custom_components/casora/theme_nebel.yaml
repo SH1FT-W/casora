@@ -135,6 +135,7 @@ Casora Nebel:
       casora-soft-row-hover: rgba(101,114,129,0.11)
       casora-soft-row-press: rgba(101,114,129,0.16)
       casora-soft-plate-fill: rgba(101,114,129,0.05)
+      casora-soft-glyph-dark: rgba(26,33,40,0.88)
       casora-soft-glyph-off: rgba(46,50,55,0.70)
       casora-waste-rest: '#757D87'
       casora-soft-art-shadow: 0 10px 24px -14px rgba(59,69,81,0.35)
@@ -349,6 +350,7 @@ Casora Nebel:
       casora-soft-row-hover: rgba(228,237,247,0.08)
       casora-soft-row-press: rgba(228,237,247,0.11)
       casora-soft-plate-fill: rgba(228,237,247,0.04)
+      casora-soft-glyph-dark: rgba(18,22,26,0.90)
       casora-soft-glyph-off: rgba(229,233,238,0.70)
       casora-waste-rest: '#505862'
       casora-soft-more-fade: rgba(36,38,40,0.90)

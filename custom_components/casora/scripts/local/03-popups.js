@@ -1322,9 +1322,10 @@
     + 'border-radius:var(--casora-popup-row-radius, 24px);background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));}'
     + '.hrw-b{flex:none;width:var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);border-radius:var(--casora-soft-icon-radius, 50%);display:flex;flex-direction:column;align-items:center;justify-content:center;'
     + 'background:var(--casora-soft-icon-off, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, #2E2721);line-height:1;}'
-    + '.hrw-b b{font-size:9px;font-weight:700;letter-spacing:.06em;opacity:.7;}'
+    // 10 px in full ink: 9 px at .7 fell to 2,7 : 1 (review 2, DD-18).
+    + '.hrw-b b{font-size:10px;font-weight:700;letter-spacing:.04em;}'
     + '.hrw-b span{font-size:14px;font-weight:700;margin-top:1px;font-variant-numeric:tabular-nums;}'
-    + '.hrw-r.now .hrw-b{background:var(--casora-soft-icon-on, #276B64);color:var(--casora-soft-glyph, #fff);}'
+    + '.hrw-r.now .hrw-b{background:var(--casora-soft-icon-on, #276B64);color:' + ((window._casoraInkOn && window._casoraInkOn('var(--casora-soft-icon-on, #276B64)')) || 'var(--casora-soft-glyph, #fff)') + ';}'
     + '.hrw-r.now .hrw-b b{opacity:.85;}'
     + '.hrw-t{flex:1;min-width:0;}'
     + '.hrw-n{font-size:14.5px;font-weight:700;letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary, #2E2721);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
