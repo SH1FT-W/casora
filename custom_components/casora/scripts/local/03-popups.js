@@ -591,9 +591,9 @@
   };
   /* Popup v3 „Bühne“ (popup-richtlinien-v3.md §4 S2, §4.4): one room – the target as the stage with the same −/+
      (data-fb-step, quick taps count, one set_temperature after the pause) and the same bar; the modes as quick tiles.
-     The template gives one room variant 'v3' (the content is built before the frame takes it, so this follows the
-     same rule: Soft, no localStorage casora_popup_variant other than 'v3'); the whole house stays on variant B (its
-     stage „Ziel aller Räume“ needs new logic, popup_v3_offen.json). */
+     The template gives variant 'v3' (the content is built before the frame takes it, so this follows the same rule:
+     Soft, no localStorage casora_popup_variant other than 'v3'). The whole house: stage S7 with the average
+     (F.houseStage) – a shared target „Ziel aller Räume“ does not exist since 1.3. */
   F.v3 = function () {
     if (!(window._casoraHH && window._casoraHH.on() && window._casoraUI && window._casoraUI.stage)) return false;
     try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; }
@@ -614,7 +614,7 @@
     return UI.stage('value', { caption: F.heating(c, states) ? 'Heizt auf' : 'Zieltemperatur', value: tv, unit: TU(), valCls: 'fb-st-v',
       minus: b(-step, tv <= lo), plus: b(step, tv >= hi), foot: foot, extra: F.bar(c.id, tv, lo, hi, step) });
   };
-  F.quick = function (id, states) {
+  F.quick = function (id, states, confirmOn) {
     var UI = window._casoraUI;
     var e = states[id]; if (!e || e.state === 'unavailable') return '';
     var list = (e.attributes.hvac_modes || []).map(String).filter(function (m) { return MODES[m]; })
@@ -623,8 +623,25 @@
     var ICON = { off: 'mdi:power', heat: 'mdi:heating-coil', auto: 'mdi:calendar-clock' };
     return UI.quick(list.map(function (m) {
       return { icon: ICON[m], text: MODES[m], active: e.state === m,
-        svc: { domain: 'climate', service: 'set_hvac_mode', data: { hvac_mode: m }, target: { entity_id: id } } };
+        svc: { domain: 'climate', service: 'set_hvac_mode', data: { hvac_mode: m }, target: { entity_id: id } },
+        // The whole house switches every room: turning it on asks first (as the mode list of variant B did).
+        confirm: confirmOn && m !== 'off' && e.state !== m ? 'Einschalten' : null };
     }), 'Modus');
+  };
+  /* Popup v3, the whole house (§4.7 fallback rule S7): there is no shared target since 1.3, so the stage is the house
+     average (house sensor, else the rooms' mean) – the rooms are set one by one from the list. */
+  F.houseStage = function (c, states) {
+    var UI = window._casoraUI;
+    var v = c.houseTemp && states[c.houseTemp] && ok(states[c.houseTemp]) ? num(states[c.houseTemp].state) : null;
+    if (v == null) {
+      var temps = c.rooms.map(function (r) { return F.curTemp(r, states); }).filter(function (t) { return t != null && !isNaN(t); });
+      if (temps.length) v = Math.round(temps.reduce(function (a, b) { return a + b; }, 0) / temps.length * 10) / 10;
+    }
+    var all = c.rooms.concat(c.trvs);
+    var heat = all.filter(function (r) { return F.heating(r, states); }).length;
+    var e = states[c.id];
+    return UI.stage('status', { tone: heat ? 'warn' : (e && e.state !== 'off' ? 'good' : 'off'), icon: 'mdi:home-thermometer-outline',
+      text: v != null ? 'Ø ' + fmt(v) + ' ' + TU() : '–', state: e && e.state === 'unavailable' ? 'na' : null });
   };
 
   /* Modus als iOS-Auswahlliste mit Haken. confirmOn: Einschalten nur mit Bestätigung (Aquarium-Muster). */
@@ -760,7 +777,12 @@
           /* Weich: eingeschalteter Raum/Heizkörper als aktive Zeile (heller Grund, Zustand in Ton) –
              wie die Thermostat-Kachel nach hvac_mode, nicht nur solange er gerade heizt. */
           active: !!(s && s.state !== 'off' && s.state !== 'unavailable' && s.state !== 'unknown') };
-      }), name === 'trvs' ? 'Heizkörper' : 'Räume');
+      }), name === 'trvs' ? 'Heizkörper' : (function () {
+        // Popup v3: counting heading „Räume · 2 heizen“ (richtlinien §6).
+        if (name !== 'allrooms' || !F.v3()) return 'Räume';
+        var nh = list.filter(function (r) { return F.heating(r, states); }).length;
+        return nh ? 'Räume · ' + nh + ' heizen' : 'Räume';
+      })());
       list.forEach(function (r) {
         html = html.replace('data-casora-mi="' + esc(r.id) + '"', 'data-fbh-room="' + esc(JSON.stringify({ id: r.id, name: r.name })) + '"');
       });
@@ -818,8 +840,14 @@
         + btn + '</div></div>';
     }
 
-    if (name === 'stage') return F.stage(c, states);
-    if (name === 'quick') return F.quick(c.id, states);
+    if (name === 'stage') return c.group ? F.houseStage(c, states) : F.stage(c, states);
+    if (name === 'quick') return F.quick(c.id, states, c.group);
+    if (name === 'v3house') {
+      /* Status line: who heats and the range of the targets (the average is the stage). */
+      var allH = c.rooms.concat(c.trvs);
+      return UI.hero({ value: window.casoraClimateGroupLine(allH.map(function (r) { return r.id; }), states,
+        function (m) { return allH.some(function (r) { return r.id === m && F.heating(r, states); }); }), center: true });
+    }
     if (name === 'ctl') {
       /* Popup-Standard (24.09.2026): Raum-Modus als Tasten-Leiste wie beim Luftreiniger – oben „Modus“,
          darunter die Zieltemperatur. Das ganze Haus behält die Liste mit Bestätigung (Schutz vor versehentlichem Einschalten). */
@@ -955,6 +983,12 @@
         return 'const F = window._casoraFbh, H = window._casoraHH; const c = ' + cj + ';\n'
           + 'return F && H ? H.more("fbh", ' + JSON.stringify(parts) + '.map(function (n) { return F.sec(n, c, states, hass); })) : "";';
       };
+      if (c.group && F.v3()) {
+        /* v3 (clean, richtlinien §8): status line, stage S7 with the average, the house modes as quick tiles, the rooms
+           as the list (a row opens its room) – no coach, main switch, Verlauf or settings. */
+        var g3 = { hero: sec('v3house'), stage: sec('stage'), quick: sec('quick'), allrooms: sec('allrooms') };
+        return HH.layout({ entity: id, watch: watch, fields: g3, top: ['hero'], stage: 'stage', quick: 'quick', left: [], right: ['allrooms'] });
+      }
       if (c.group) {
         var g = { hero: fields.hero, house: fields.house, allrooms: sec('allrooms'),
           more: HH.moreCard(watch, mcode(['hcoach', 'master', 'history']), id) };

@@ -48,6 +48,8 @@ const MIGRIERT = [
   { popup: 'Haustier', vorlagen: ['casora_popup_pet'], file: '26-haustier.js', from: '  P.popup = function', to: null, stages: 1 },
   { popup: 'Kaffeevollautomat', vorlagen: ['casora_popup_coffee'], file: '25-coffee.js', from: '  K.popup = function', to: null, stages: 2 },
   { popup: 'Saugroboter', vorlagen: ['casora_vacuum'], file: '02-devices.js', from: '  var V = window._casoraVac = ', to: '// ── Notifications: line wrapping', stages: 1 },
+  // Room S2 (live, off/unavailable), house S7 with the average (no shared target since 1.3).
+  { popup: 'Fußbodenheizung (Haus/Raum)', vorlagen: ['casora_popup_fbh'], file: '03-popups.js', from: '  F.v3 = function () {', to: '  /* Modus als iOS', stages: 3 },
 ];
 
 // 1. Pieces.
