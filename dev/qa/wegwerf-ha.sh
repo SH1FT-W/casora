@@ -62,7 +62,7 @@ tar -xzf "$TGZ" -C "$D"
 CFG="$D/config"
 # The states were made in Docker, where the config lives at /config; YAML dashboards (Hemma test
 # dashboards) include their files by that absolute path, which does not exist without Docker.
-grep -rlE '!include[a-z_]* /config/' "$CFG/dashboards" 2>/dev/null | while IFS= read -r f; do
+[ "${CASORA_HA_BACKEND:-docker}" = docker ] || grep -rlE '!include[a-z_]* /config/' "$CFG/dashboards" 2>/dev/null | while IFS= read -r f; do
   sed -i '' -E "s#(!include[a-z_]*) /config/#\\1 $CFG/#g" "$f"
 done
 rsync -a --delete --exclude __pycache__ --exclude panel/casora-studio.js "$REPO/custom_components/casora/" "$CFG/custom_components/casora/"
