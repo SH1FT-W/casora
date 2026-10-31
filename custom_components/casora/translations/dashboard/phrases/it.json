@@ -2603,7 +2603,13 @@
   "Tankstand": "Livello carburante",
   "Gerade kein Spiel": "Nessun gioco al momento",
   "Kein Spiel": "Nessun gioco",
-  "Gruppen": "Gruppi"
+  "Gruppen": "Gruppi",
+  "Casora hat aufgeräumt": "Casora ha fatto pulizia",
+  "Alte Einträge entfernt – antippen für Details": "Voci vecchie rimosse – tocca per i dettagli",
+  "Casora hat nach dem Update alte Einträge entfernt. Die Einzelheiten stehen unten in der Sprache von Home Assistant.": "Dopo l'aggiornamento Casora ha rimosso voci vecchie. I dettagli qui sotto sono nella lingua di Home Assistant.",
+  "Casora: Helfer fehlen": "Casora: aiutanti mancanti",
+  "Einige Helfer konnten nicht angelegt werden": "Alcuni aiutanti non sono stati creati",
+  "Für mich ausblenden": "Nascondi per me"
  },
  "patterns": [
   [

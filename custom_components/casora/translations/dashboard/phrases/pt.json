@@ -2603,7 +2603,13 @@
   "Tankstand": "Nível de combustível",
   "Gerade kein Spiel": "Nenhum jogo agora",
   "Kein Spiel": "Nenhum jogo",
-  "Gruppen": "Grupos"
+  "Gruppen": "Grupos",
+  "Casora hat aufgeräumt": "O Casora fez uma limpeza",
+  "Alte Einträge entfernt – antippen für Details": "Entradas antigas removidas – toque para ver detalhes",
+  "Casora hat nach dem Update alte Einträge entfernt. Die Einzelheiten stehen unten in der Sprache von Home Assistant.": "Após a atualização, o Casora removeu entradas antigas. Os detalhes abaixo estão no idioma do Home Assistant.",
+  "Casora: Helfer fehlen": "Casora: faltam auxiliares",
+  "Einige Helfer konnten nicht angelegt werden": "Não foi possível criar alguns auxiliares",
+  "Für mich ausblenden": "Ocultar para mim"
  },
  "patterns": [
   [

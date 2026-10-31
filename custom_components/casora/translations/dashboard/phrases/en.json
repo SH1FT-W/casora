@@ -2585,7 +2585,13 @@
   "Tankstand": "Fuel level",
   "Gerade kein Spiel": "No game right now",
   "Kein Spiel": "No game",
-  "Gruppen": "Groups"
+  "Gruppen": "Groups",
+  "Casora hat aufgeräumt": "Casora cleaned up",
+  "Alte Einträge entfernt – antippen für Details": "Old entries removed – tap for details",
+  "Casora hat nach dem Update alte Einträge entfernt. Die Einzelheiten stehen unten in der Sprache von Home Assistant.": "After the update Casora removed old entries. The details below are in Home Assistant's language.",
+  "Casora: Helfer fehlen": "Casora: helpers missing",
+  "Einige Helfer konnten nicht angelegt werden": "Some helpers could not be created",
+  "Für mich ausblenden": "Hide for me"
  },
  "patterns": [
   [

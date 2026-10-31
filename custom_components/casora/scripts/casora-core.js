@@ -12184,6 +12184,19 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
   function ha() { return document.querySelector('home-assistant'); }
   function hassOf() { var h = ha(); return h && h.hass; }
+  function isAdmin(h) { return !!(h && h.user && h.user.is_admin); }
+  // HA notifications that are maintenance, not news (Prüfung 2 fam-06/DH-15): Casora's own (cleanup,
+  // helpers it could not create) and Home Assistant's system ones. Only admins see them in the bell –
+  // they need an admin to act and read like an alarm to everyone else.
+  var PN_ADMIN = /^(casora_|config_entry_discovery$|config_entry_reconfigure$|http-login$|invalid_config$|homeassistant_check_config$)/;
+  // Casora's own notices: a short line in the reader's language (the message itself is written once,
+  // in HA's system language, with file names and entity ids).
+  var PN_OWN = {
+    casora_legacy_cleanup: { label: 'Casora hat aufgeräumt', sub: 'Alte Einträge entfernt – antippen für Details',
+      lead: 'Casora hat nach dem Update alte Einträge entfernt. Die Einzelheiten stehen unten in der Sprache von Home Assistant.' },
+    casora_einrichten: { label: 'Casora: Helfer fehlen', sub: 'Einige Helfer konnten nicht angelegt werden' },
+  };
+  window._casoraPnShown = function (id, h) { return isAdmin(h || hassOf()) || !PN_ADMIN.test(String(id || '')); };
 
   var READ_ENTITY = 'input_datetime.casora_notifications_read';
 
@@ -12274,16 +12287,23 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var _hid = { all: 0, rows: {} };
   try {
     var hl = JSON.parse(localStorage.getItem(HID_KEY) || 'null');
-    if (hl && typeof hl === 'object') _hid = { all: +hl.all || 0, rows: hl.rows || {} };
+    if (hl && typeof hl === 'object') _hid = { all: +hl.all || 0, rows: hl.rows || {}, uid: hl.uid || null };
   } catch (e) { /* leer */ }
   var _hidLoaded = false;
   function loadHidden(hass) {
     if (_hidLoaded || !hass || !hass.connection || typeof hass.connection.sendMessagePromise !== 'function') return;
     _hidLoaded = true;
+    // The local copy belongs to one HA user: on a shared tablet the next user must not inherit what
+    // the previous one removed (Prüfung 2 fam-23: a child's "Remove all" also emptied the parents' bell).
+    var uid = (hass.user && hass.user.id) || null;
+    if (uid && _hid.uid && _hid.uid !== uid) {
+      _hid = { all: 0, rows: {}, uid: uid };
+    }
+    _hid.uid = uid;
     hass.connection.sendMessagePromise({ type: 'frontend/get_user_data', key: HID_KEY }).then(function (r) {
       var v = r && r.value;
       if (!v || typeof v !== 'object') return;
-      _hid = { all: Math.max(+v.all || 0, _hid.all), rows: Object.assign({}, v.rows || {}, _hid.rows) };
+      _hid = { all: Math.max(+v.all || 0, _hid.all), rows: Object.assign({}, v.rows || {}, _hid.rows), uid: uid };
       try { localStorage.setItem(HID_KEY, JSON.stringify(_hid)); } catch (e) { /* nur geteilt */ }
       _rows = _rows.filter(function (x) { return !isHidden(x); });
       announce();
@@ -12352,15 +12372,21 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           if (id == null) continue;
           ev.preventDefault(); ev.stopPropagation();
           var h = hassOf();
-          if (h && h.callService) h.callService('persistent_notification', 'dismiss', { notification_id: id }).catch(function () { /* stays */ });
+          // Not an admin: gone from this user's bell only (dismissing would remove it for everyone, fam-23).
+          if (!isAdmin(h)) hideRows(_rows.filter(function (r) { return r.pn === id; }));
+          else if (h && h.callService) h.callService('persistent_notification', 'dismiss', { notification_id: id }).catch(function () { /* stays */ });
           window.casoraHaptic && window.casoraHaptic('light');
           window.casoraPopup.close();
           return;
         }
       }, true);
     }
+    var T = window.casoraTr || function (x) { return x; };
+    var own = PN_OWN[k], admin = isAdmin(hassOf());
     var html = '<div class="cpn">'
-      + '<style>.cpn{font-size:15px;line-height:1.5;color:var(--casora-popup-tiles-text-primary,var(--primary-text-color));text-align:left}'
+      // Long file names and entity ids wrap instead of running out of the popup (fam-06).
+      + '<style>.cpn{font-size:15px;line-height:1.5;color:var(--casora-popup-tiles-text-primary,var(--primary-text-color));text-align:left;overflow-wrap:anywhere;min-width:0}'
+      + '.cpn code{word-break:break-all}'
       + '.cpn p{margin:0 0 10px}.cpn ul{margin:0 0 10px;padding-left:20px}.cpn a{color:var(--casora-accent,var(--primary-color));word-break:break-word}'
       + '.cpn code{font-size:.92em;padding:1px 5px;border-radius:6px;background:var(--casora-popup-row-fill,rgba(127,127,127,.14))}'
       + '.cpn .when{font-size:13px;color:var(--casora-popup-tiles-text-secondary,var(--secondary-text-color));margin:0 0 14px}'
@@ -12369,13 +12395,17 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       + 'background:var(--casora-popup-row-fill,rgba(127,127,127,.14));color:var(--casora-popup-ui-bad,#FF453A)}'
       + '.cpn button:focus-visible{outline:2px solid currentColor;outline-offset:2px}</style>'
       + (stamp ? '<p class="when">' + esc0(stamp) + '</p>' : '')
+      + (own && own.lead ? '<p>' + esc0(T(own.lead)) + '</p>' : '')
       + pnHtml(n.message)
       // Blueprint v2 (rule 9): „Löschen“ is an action row at the end, not a loose button.
-      + '<div style="height:8px"></div>' + window._casoraUI.group([{ icon: 'mdi:delete-outline', iconTone: 'bad', label: 'Löschen', labelTone: 'bad', tappable: true, noChev: true }], null)
+      + '<div style="height:8px"></div>' + window._casoraUI.group([admin ? { icon: 'mdi:delete-outline', iconTone: 'bad', label: 'Löschen', labelTone: 'bad', tappable: true, noChev: true }
+        : { icon: 'mdi:eye-off-outline', label: 'Für mich ausblenden', tappable: true, noChev: true }], null)
           .replace('<div class="hui-row', '<div data-casora-pn-del="' + esc0(k) + '" class="hui-row') + '</div>';
     window.casoraPopup.open({
-      title: pnText(n.title) || 'Benachrichtigung', dismissable: true,
-      ring: { icon: 'mdi:bell-outline', hue: 'var(--casora-tone-alert, var(--casora-color-red, #D35A4E))' },
+      title: (own && own.label) || pnText(n.title) || 'Benachrichtigung', dismissable: true,
+      // Casora's own maintenance notice is no alarm: the settings tone, not red (fam-06).
+      ring: own ? { icon: 'mdi:broom', hue: 'var(--casora-tone-settings, var(--casora-color-sand, #9A8672))' }
+        : { icon: 'mdi:bell-outline', hue: 'var(--casora-tone-alert, var(--casora-color-red, #D35A4E))' },
       style: window.casoraPopupWidth ? window.casoraPopupWidth('one') : undefined,
       content: { type: 'custom:button-card', tap_action: { action: 'none' }, hold_action: { action: 'none' },
         show_icon: false, show_name: false, show_label: false, show_state: false,
@@ -12400,7 +12430,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     try { localStorage.setItem(HID_KEY, JSON.stringify(_hid)); } catch (e) { /* nur geteilt */ }
     var h = hassOf();
     if (h && h.connection && typeof h.connection.sendMessagePromise === 'function') {
-      h.connection.sendMessagePromise({ type: 'frontend/set_user_data', key: HID_KEY, value: _hid }).catch(function () { /* lokal bleibt */ });
+      h.connection.sendMessagePromise({ type: 'frontend/set_user_data', key: HID_KEY, value: { all: _hid.all, rows: _hid.rows } }).catch(function () { /* lokal bleibt */ });
     }
   }
   function hideRows(list) {
@@ -12408,7 +12438,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     (list || []).forEach(function (r) {
       if (!r) return;
       _hid.rows[rowKey(r)] = r.when;
-      if (r.pn && h0 && h0.callService) h0.callService('persistent_notification', 'dismiss', { notification_id: r.pn }).catch(function () { /* stays hidden here */ });
+      // An HA notification is gone for everyone once dismissed: only admins do that, everyone else
+      // removes it from their own bell (fam-23).
+      if (r.pn && isAdmin(h0) && h0.callService) h0.callService('persistent_notification', 'dismiss', { notification_id: r.pn }).catch(function () { /* stays hidden here */ });
     });
     saveHidden();
     _rows = _rows.filter(function (x) { return !isHidden(x); });
@@ -12943,9 +12975,11 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
     if (_pn && on('ha')) {
       Object.keys(_pn).forEach(function (k) {
-        var n = _pn[k] || {}, title = pnText(n.title), msg = pnText(n.message);
+        if (!window._casoraPnShown(k, hass)) return;
+        var n = _pn[k] || {}, title = pnText(n.title), msg = pnText(n.message), own = PN_OWN[k];
+        if (own) { title = own.label; msg = own.sub; }
         rows.push({ id: 'ha:pn:' + k, when: Date.parse(n.created_at || '') || Date.now(), label: title || msg || 'Benachrichtigung',
-          sub: title ? msg || null : null, icon: 'bell', tone: 'accent', pn: k, opens: 'casora:pn' });
+          sub: title ? msg || null : null, icon: own ? 'mdi:broom' : 'bell', tone: 'accent', pn: k, opens: 'casora:pn' });
       });
     }
 
