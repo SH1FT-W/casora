@@ -237,6 +237,14 @@
     // sichtbaren Inhalt; ohne Grund nahm er „Handy“ darunter und schob alles 80 px hoch).
     var mapStyle = [{ 'border-radius': 'var(--casora-popup-row-radius, 26px)' }, { overflow: 'hidden' }, { 'isolation': 'isolate' },
       { background: 'var(--casora-soft-row-fill, rgba(140,115,90,0.07))' }];
+    // Popup v3 (richtlinien §4 S7, §8): place, since and distance as the status stage, the map under it on the left;
+    // the phone keeps only its actions, „Nach Hause“ lives in the stage's facts; the history stays on the right.
+    if (UI.v3 && UI.v3() && UI.stage) {
+      var g = { stage: { card: K.secCard(watch, call('stage'), states) }, map: { card: Object.assign({}, map, { aspect_ratio: '1.8' }) }, last: f.last };
+      if (ph.tracker && ph.notify) g.phone = f.phone;
+      return K.layout({ fields: g, top: [], stage: 'stage', left: ['map', 'phone'], right: ['last'],
+        narrowOrder: ['map', 'phone', 'last'], fieldStyle: { map: mapStyle } });
+    }
     return K.layout({ fields: f, top: ['hero', 'map'], left: ['phone'], right: ['home', 'last'], moveLeft: ['home'],
       narrowOrder: ['phone', 'home', 'last'], fieldStyle: { map: mapStyle } });
   };
@@ -298,9 +306,22 @@
       if (m != null && m > 150) rest.push(P.km(m) + ' ' + T('von zuhause'));
       return UI.line(P.place(st.state), rest);
     }
+    // Popup v3 stage S7: the place as the sentence (in its zone's symbol), facts since / distance / direction.
+    if (part === 'stage') {
+      var na = bad(st.state), m7 = P.away(hass, pid), px7 = P.proximity(hass, pid), dir7 = px7.dir && states[px7.dir];
+      return UI.stage('status', {
+        tone: st.state === 'home' ? 'good' : 'off', state: na ? 'na' : null, icon: zoneIcon(st.state, states),
+        text: P.place(st.state),
+        facts: [{ label: 'Seit', value: P.when(since, now) },
+          m7 != null && m7 > 150 ? { label: 'Von zuhause', value: P.km(m7) } : null,
+          dir7 && DIR[dir7.state] ? { label: 'Richtung', value: DIR[dir7.state] } : null],
+      });
+    }
     if (part === 'phone') {
       var ph = P.phone(hass, pid);
       if (!ph) return '';
+      // v3 (clean): no phone readings (tracker, battery, connection) – only what you can do with it.
+      var v3p = !!(UI.v3 && UI.v3());
       var S = states, rows = [];
       var tr = S[ph.tracker] || {}, ta = tr.attributes || {};
       var seen = Date.parse(tr.last_updated) || null;
@@ -326,14 +347,14 @@
           iconTone: 'var(--casora-color-blue, #5B8FC9)', label: 'Verbindung',
           sub: on ? 'WLAN' : 'kein WLAN', value: on ? ssid : (/cell|mobile/.test(nt) ? 'Mobilfunk' : nt && !bad(nt) ? net.state : 'Mobilfunk') });
       }
-      var out = UI.group(rows, 'Handy');
+      var out = v3p ? UI.label('Handy') : UI.group(rows, 'Handy');
       if (ph.notify) {
         var act = function (kind, icon, label, sub) {
           return UI.group([{ icon: icon, iconTone: 'accent', label: label, sub: sub, tappable: true }], null)
             .replace('<div class="hui-row', '<div data-casora-person-act="' + kind + '" data-casora-person="' + esc(pid)
               + '" data-casora-notify="' + esc(ph.notify) + '" class="hui-row');
         };
-        out += '<div style="height:12px"></div>'
+        out += (v3p ? '' : '<div style="height:12px"></div>')
           + act('loc', 'mdi:crosshairs-gps', 'Standort jetzt holen', 'fragt die Companion-App')
           + '<div style="height:8px"></div>' + act('msg', 'mdi:message-text-outline', 'Nachricht schicken', null)
           + '<div style="height:8px"></div>' + act('ring', 'mdi:volume-high', 'Klingeln lassen', 'auch wenn es leise ist');

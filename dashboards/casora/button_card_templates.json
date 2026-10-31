@@ -12178,7 +12178,8 @@
     "ring": {
      "icon": "mdi:account",
      "hue": "var(--casora-tone-general, var(--casora-color-teal, #4E9E95))"
-    }
+    },
+    "variant": "v3"
    }
   }
  },

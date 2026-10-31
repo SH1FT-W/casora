@@ -2564,7 +2564,8 @@
   "Pulse: Prüfen": "Pulse: Check",
   "Pulse: Ausgefallen": "Pulse: Failed",
   "Zählt": "Counts",
-  "In Ordnung": "OK"
+  "In Ordnung": "OK",
+  "Von zuhause": "From home"
  },
  "patterns": [
   [
