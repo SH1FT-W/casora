@@ -4707,6 +4707,10 @@
   [
    "^Jetzt (-?\\d.*)$",
    "Ora {1}"
+  ],
+  [
+   "^(.+) in (\\d+) T\\.$",
+   "{1} tra {2} g"
   ]
  ],
  "Gerät in Home Assistant": "Dispositivo in Home Assistant"

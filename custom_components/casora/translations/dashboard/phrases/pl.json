@@ -4707,6 +4707,10 @@
   [
    "^Jetzt (-?\\d.*)$",
    "Teraz {1}"
+  ],
+  [
+   "^(.+) in (\\d+) T\\.$",
+   "{1} za {2} dni"
   ]
  ],
  "Gerät in Home Assistant": "Urządzenie w Home Assistant"
