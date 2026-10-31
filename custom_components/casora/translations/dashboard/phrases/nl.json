@@ -2569,7 +2569,12 @@
   "Im Studio Kacheln zu Räumen hinzufügen": "Voeg in de Studio tegels aan kamers toe",
   "Etwas trocken": "Wat droog",
   "Etwas feucht": "Wat vochtig",
-  "Sehr feucht": "Zeer vochtig"
+  "Sehr feucht": "Zeer vochtig",
+  "Pulse: Gut": "Pulse: Goed",
+  "Pulse: Lernt": "Pulse: Leert",
+  "Pulse: Beobachten": "Pulse: Volgen",
+  "Pulse: Prüfen": "Pulse: Controleren",
+  "Pulse: Ausgefallen": "Pulse: Uitgevallen"
  },
  "patterns": [
   [

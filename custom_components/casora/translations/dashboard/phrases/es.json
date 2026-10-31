@@ -2569,7 +2569,12 @@
   "Im Studio Kacheln zu Räumen hinzufügen": "Añade mosaicos a las habitaciones en el Studio",
   "Etwas trocken": "Algo seco",
   "Etwas feucht": "Algo húmedo",
-  "Sehr feucht": "Muy húmedo"
+  "Sehr feucht": "Muy húmedo",
+  "Pulse: Gut": "Pulse: Bueno",
+  "Pulse: Lernt": "Pulse: Aprendiendo",
+  "Pulse: Beobachten": "Pulse: Vigilar",
+  "Pulse: Prüfen": "Pulse: Revisar",
+  "Pulse: Ausgefallen": "Pulse: Averiado"
  },
  "patterns": [
   [

@@ -2569,7 +2569,12 @@
   "Im Studio Kacheln zu Räumen hinzufügen": "Ajoute des tuiles aux pièces dans le Studio",
   "Etwas trocken": "Un peu sec",
   "Etwas feucht": "Un peu humide",
-  "Sehr feucht": "Très humide"
+  "Sehr feucht": "Très humide",
+  "Pulse: Gut": "Pulse: Bon",
+  "Pulse: Lernt": "Pulse: Apprend",
+  "Pulse: Beobachten": "Pulse: Surveiller",
+  "Pulse: Prüfen": "Pulse: Vérifier",
+  "Pulse: Ausgefallen": "Pulse: En panne"
  },
  "patterns": [
   [

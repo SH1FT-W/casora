@@ -810,32 +810,41 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   // Result shaped like the popup variables network_devices / wlan_entities /
   // latency_entities – fixed variables in the dashboard still win.
   var NET_PLATFORM = /^(unifi|fritz|tplink_omada|tplink_deco|tplink_router|asuswrt|netgear|mikrotik|luci|openwrt|ubus|keenetic_ndms2|synology_srm|huawei_lte|vodafone_station|freebox|bbox|sfr_box|eero|linksys_smart|zyxel|draytek|glinet|omada)$/;
-  var NET_MAKER = /ubiquiti|\bavm\b|fritz|tp-?link|netgear|asus|mikrotik|linksys|zyxel|draytek|eero|gl\.?inet|keenetic|huawei|openwrt|synology/i;
+  // Synology is no network maker (#98): its routers come in through synology_srm, a NAS (synology_dsm) is no
+  // router. Storage and server integrations never make a network device, whatever the maker.
+  var NET_MAKER = /ubiquiti|\bavm\b|fritz|tp-?link|netgear|asus|mikrotik|linksys|zyxel|draytek|eero|gl\.?inet|keenetic|huawei|openwrt/i;
+  var NET_NOT = /^(synology_dsm|qnap|truenas|unraid|proxmoxve|hassio)$/;
+  // Model or name of network gear (for devices that only Pulse watches; plugs of the same makers are not).
+  var NET_GEAR = /router|gateway|switch|access.?point|repeater|mesh|\bap\b|fritz!?box|\b(xmg|xgs|xs|gs|sg|usw|eap|tl-sg|tl-sx)-?\d{3,}/i;
   var NET_ROLE = {
-    state: function (x) { return x.domain === 'sensor' && /^(device_state|device_status|status|wan_status|connection_status)$/.test(x.key || ''); },
+    // The device's own state. Pulse's status sensor (translation_key "status" too) is no device state (#98).
+    state: function (x) { return x.domain === 'sensor' && x.platform !== 'pulse' && /^(device_state|device_status|status|wan_status|connection_status)$/.test(x.key || ''); },
+    pulse: function (x) { return x.platform === 'pulse' && x.key === 'status'; },
     online: function (x) { return x.domain === 'binary_sensor' && x.dc === 'connectivity'; },
-    clients: function (x) { return x.domain === 'sensor' && x.key !== 'wlan_clients' && /(^|_)(device_clients|connected_clients|clients|client_count|connected_devices)$/.test(x.key || x.entity_id); },
+    clients: function (x) { return x.domain === 'sensor' && x.key !== 'wlan_clients' && /(^|_)(device_clients|connected_clients|clients|client_count|connected_devices|devices_online|gerate_online|geraete_online)$/.test(x.key || x.entity_id); },
     cpu: function (x) { return x.domain === 'sensor' && x.dc !== 'temperature' && /cpu|prozessor/.test(x.key || x.entity_id) && x.unit === '%'; },
-    mem: function (x) { return x.domain === 'sensor' && /mem|ram\b|speicher/.test(x.key || x.entity_id) && x.unit === '%'; },
+    mem: function (x) { return x.domain === 'sensor' && /mem|(^|[._])ram(_|$)|speicher/.test(x.key || x.entity_id) && x.unit === '%'; },
     temp: function (x) { return x.domain === 'sensor' && x.dc === 'temperature'; },
     uptime: function (x) { return x.domain === 'sensor' && (x.dc === 'timestamp' || x.dc === 'uptime') && /uptime|betriebszeit|boot|last_restart/.test((x.key || '') + ' ' + x.entity_id) && !/connection|wan/.test((x.key || '') + ' ' + x.entity_id); },
     restart: function (x) { return x.domain === 'button' && (x.dc === 'restart' || /reboot|restart|neu_?start/.test((x.key || '') + ' ' + x.entity_id)); },
-    update: function (x) { return x.domain === 'update'; },
+    // update entity, or a firmware binary_sensor with device class update (FRITZ!Portal over MQTT).
+    update: function (x) { return x.domain === 'update' || (x.domain === 'binary_sensor' && x.dc === 'update'); },
     wlan: function (x) { return x.domain === 'switch' && (x.key === 'wlan_control' || /wi_?fi|wlan|ssid|guest|gast/.test((x.key || '') + ' ' + x.entity_id)); },
     wlanClients: function (x) { return x.domain === 'sensor' && x.key === 'wlan_clients'; },
     latency: function (x) { return x.domain === 'sensor' && !/speedtest/.test(x.entity_id) && (x.key === 'wan_latency' || (/latency|latenz|ping/.test(x.entity_id) && (x.dc === 'duration' || x.unit === 'ms'))); },
   };
   function network(hass) {
     var R = reg(hass), D = devs(hass), S = (hass && hass.states) || {};
-    var byDev = {}, netDev = {};
+    var byDev = {}, netDev = {}, notDev = {};
     Object.keys(R).forEach(function (eid) {
       var e = R[eid], st = S[eid];
       if (!e || !e.device_id || e.hidden || !st) return;
       var d = D[e.device_id];
+      if (NET_NOT.test(e.platform || '')) { notDev[e.device_id] = true; return; }
       if (!d || !(NET_PLATFORM.test(e.platform || '') || NET_MAKER.test(d.manufacturer || ''))) return;
       if (NET_PLATFORM.test(e.platform || '')) (netDev[e.device_id] = true);
       (byDev[e.device_id] = byDev[e.device_id] || []).push({
-        entity_id: eid, key: e.translation_key || null, domain: eid.split('.')[0],
+        entity_id: eid, key: e.translation_key || null, domain: eid.split('.')[0], platform: e.platform || null,
         dc: st.attributes.device_class, unit: st.attributes.unit_of_measurement,
         name: String(st.attributes.friendly_name || ''), state: st.state,
       });
@@ -844,6 +853,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     Object.keys(byDev).sort(function (a, b) {
       return String(D[a].name_by_user || D[a].name).localeCompare(String(D[b].name_by_user || D[b].name));
     }).forEach(function (devId) {
+      if (notDev[devId]) return;
       var list = byDev[devId].sort(function (a, b) { return a.entity_id < b.entity_id ? -1 : 1; });
       var dev = D[devId], label = String(dev.name_by_user || dev.name || '');
       var first = function (role) { var hit = list.filter(NET_ROLE[role])[0]; return hit ? hit.entity_id : null; };
@@ -854,7 +864,9 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       });
       // A WLAN as a device of its own (UniFi) – or WLAN switches on the router (FRITZ!Box, TP-Link …).
       // Orphaned entries (unavailable) are no WLAN – a switched-off one is off.
-      var wl = list.filter(function (x) { return NET_ROLE.wlan(x) && (netDev[devId] || x.key === 'wlan_control') && x.state !== 'unavailable'; }), wc = first('wlanClients');
+      // A device found by its maker only needs an internet connection of its own (FRITZ!Portal over MQTT).
+      var router = netDev[devId] || !!first('online');
+      var wl = list.filter(function (x) { return NET_ROLE.wlan(x) && (router || x.key === 'wlan_control') && x.state !== 'unavailable'; }), wc = first('wlanClients');
       wl.forEach(function (x) {
         var n = wc || wl.length === 1 ? label : x.name.replace(label, '').replace(/^[\s:–-]+/, '').trim() || x.name;
         out.wlans.push({ sw: x.entity_id, clients: wc, label: n });
@@ -863,13 +875,16 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       var d = {
         label: label, state: first('state') || first('online'), clients: first('clients'), cpu: first('cpu'),
         mem: first('mem'), temp: first('temp'), uptime: first('uptime'), restart: first('restart'), update: first('update'),
+        pulse: first('pulse'),
       };
       // Real network devices only. From a network integration restart + uptime/update is enough
       // (FRITZ!Box); devices detected only by their maker need clients, CPU or RAM –
-      // TP-Link/AVM plugs have restart and update too.
-      var strong = d.clients || d.cpu || d.mem || (d.state && first('state')) || lat.length;
-      if (!(strong || (netDev[devId] && d.restart && (d.uptime || d.update)))) return;
+      // TP-Link/AVM plugs have restart and update too. A network-maker device Pulse watches counts too
+      // (a managed switch without an integration of its own), shown with Pulse's rating.
       var model = (dev.model || '') + ' ' + label;
+      var strong = d.clients || d.cpu || d.mem || (d.state && first('state')) || lat.length
+        || (d.pulse && NET_GEAR.test(model));
+      if (!(strong || (netDev[devId] && d.restart && (d.uptime || d.update)))) return;
       d.icon = lat.length || /router|gateway|fritz!?box|udm|udr|ucg|uxg|usg|archer|\bdream/i.test(model) ? 'network'
         : /switch|usw|\bsg\d|\bgs\d|flex/i.test(model) ? 'access_point' : 'mesh';
       Object.keys(d).forEach(function (k) { if (d[k] == null) delete d[k]; });
@@ -879,6 +894,133 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     var rank = { network: 0, mesh: 1, access_point: 2 };
     out.devices.sort(function (a, b) { return rank[a.icon] - rank[b.icon]; });
     return out;
+  }
+
+  // One rating per network device for the list and the details (#98). The device's own state wins
+  // (connected/online/on, disconnected/offline/off); without one, Pulse's rating in Pulse's own words
+  // ("Gut", "Prüfen" …), so the row says what the Pulse page says. An unknown own state is "Problem" only
+  // when it really is one of the known trouble states, otherwise it is shown as it is.
+  var NET_OK = ['connected', 'on', 'online', 'up', 'ok'];
+  var NET_DOWN = ['disconnected', 'off', 'offline', 'down'];
+  var NET_TROUBLE = ['heartbeat_missed', 'inform_error', 'adoption_failed', 'isolated', 'firmware_mismatch', 'error', 'problem'];
+  var NET_STATE_WORD = {
+    connected: 'Online', disconnected: 'Offline', pending: 'Ausstehend', firmware_mismatch: 'Firmware passt nicht',
+    upgrading: 'Update läuft', provisioning: 'Wird eingerichtet', heartbeat_missed: 'Keine Rückmeldung',
+    adopting: 'Wird übernommen', deleting: 'Wird entfernt', inform_error: 'Meldefehler',
+    adoption_failed: 'Übernahme fehlgeschlagen', isolated: 'Isoliert',
+    on: 'Online', off: 'Offline', online: 'Online', offline: 'Offline', up: 'Online', down: 'Offline', ok: 'Online',
+  };
+  var PULSE_WORD = { ok: 'Gut', learning: 'Lernt', watch: 'Beobachten', check: 'Prüfen', failed: 'Ausgefallen' };
+  var PULSE_TONE = { ok: 'good', learning: 'good', watch: 'warn', check: 'warn', failed: 'bad' };
+  function netRate(states, d) {
+    var S = states || {}, raw = function (id) { return id && S[id] ? String(S[id].state) : null; };
+    var bad = function (s) { return s == null || s === 'unknown' || s === 'unavailable' || s === ''; };
+    var st = raw(d.state), ps = raw(d.pulse);
+    var upd = !!(d.update && raw(d.update) === 'on');
+    var r = { st: st, upd: upd, pulse: bad(ps) ? null : ps, entity: d.state || d.pulse || d.restart || null };
+    if (d.state && !bad(st)) {
+      var s = st.toLowerCase();
+      r.online = NET_OK.indexOf(s) > -1;
+      r.offline = NET_DOWN.indexOf(s) > -1;
+      r.text = NET_STATE_WORD[s] || st;
+      r.word = r.online ? (upd ? 'Update verfügbar' : 'Online') : r.offline ? 'Offline'
+        : NET_TROUBLE.indexOf(s) > -1 ? 'Problem' : r.text;
+      r.tone = r.online ? (upd ? 'warn' : 'good') : r.offline || NET_TROUBLE.indexOf(s) > -1 ? 'bad' : 'warn';
+      r.source = 'device';
+    } else if (r.pulse && PULSE_WORD[r.pulse]) {
+      // Pulse only says whether the device reports as usual – not "online".
+      var good = PULSE_TONE[r.pulse] === 'good';
+      r.online = good; r.offline = r.pulse === 'failed';
+      r.text = 'Pulse: ' + PULSE_WORD[r.pulse];
+      r.word = good && upd ? 'Update verfügbar' : PULSE_WORD[r.pulse];
+      r.tone = good ? (upd ? 'warn' : 'good') : PULSE_TONE[r.pulse];
+      r.source = 'pulse';
+    } else if (d.state) {
+      r.online = false; r.offline = false; r.text = 'Unbekannt'; r.word = 'Unbekannt'; r.tone = 'warn'; r.source = 'device';
+    } else {
+      // Neither an own state nor Pulse: the device answers (restart button, update) – no claim either way.
+      r.online = true; r.offline = false; r.text = 'Online'; r.word = upd ? 'Update verfügbar' : 'Online';
+      r.tone = upd ? 'warn' : 'good'; r.source = null;
+    }
+    return r;
+  }
+
+  // ── Network tile fields from the download sensor's device (#98) ─────────
+  // FRITZ!Box (fritz), FRITZ!Portal (MQTT app, German entity names), UniFi, UPnP/IGD, Synology DSM, OpenWrt
+  // (luci/openwrt/ubus) … by translation_key first, then device class, unit and the entity id/name.
+  // → { upload, status, ping, isp, isp_attr, wan_name, wan_name_attr, ipv4, ipv4_attr, ipv6, ipv6_attr }
+  // (*_attr: the value is an attribute of that entity, e.g. FRITZ!Portal's provider on the connection sensor).
+  var PERIOD = /(^|[_\s])(max|total|gesamt|heute|today|gestern|yesterday|woche|week|monat|month|vormonat|jahr|year)(?=[_\s]|$)/;
+  var NF = {
+    upload: { dom: 'sensor', keys: ['kb_s_sent', 'network_up', 'upload_speed', 'port_bandwidth_tx', 'wan_tx', 'tx_rate'],
+      ok: function (x) { return x.dc === 'data_rate' && /upload|(^|[_\s])tx(?=[_\s]|$)|sent|senden|transmit|(^|[_\s])up(?=[_\s]|$)/.test(x.text) && !PERIOD.test(x.text); } },
+    status: { dom: 'binary_sensor', keys: ['is_connected', 'wan_status'],
+      ok: function (x) { return x.dc === 'connectivity' && !/wireguard|vpn|peer|tunnel|mqtt|cloud|bluetooth/.test(x.text); },
+      better: function (x) { return /internet|wan|verbindung|connection|connected|online/.test(x.text); } },
+    ping: { dom: 'sensor', keys: ['wan_latency', 'latency', 'ping'],
+      ok: function (x) { return /latency|latenz|ping/.test(x.text) && (x.dc === 'duration' || x.unit === 'ms'); } },
+    isp: { dom: 'sensor', keys: ['isp', 'provider', 'internet_provider'], attrs: ['provider', 'isp', 'internet_provider', 'anbieter'],
+      ok: function (x) { return /(^|[_\s])(isp|provider|anbieter|internetanbieter)(?=[_\s]|$)/.test(x.text); } },
+    wan_name: { dom: 'sensor', keys: ['access_type', 'connection_type', 'wan_name'], attrs: ['access_type', 'connection_type'],
+      ok: function (x) { return /anschlussart|access_type|connection_type|verbindungsart|wan_name/.test(x.text); } },
+    ipv4: { dom: 'sensor', keys: ['external_ip', 'wan_ip', 'public_ip', 'external_ipv4'], attrs: ['external_ip', 'public_ip', 'wan_ip'],
+      ok: function (x) { return /(extern(e|al)?|public|öffentliche|wan)_?ip(v4)?(?=[_\s]|$)/.test(x.text) && !/ipv6/.test(x.text); } },
+    ipv6: { dom: 'sensor', keys: ['external_ipv6', 'wan_ipv6', 'public_ipv6'], attrs: ['external_ipv6', 'public_ipv6', 'wan_ipv6'],
+      ok: function (x) { return /(extern(e|al)?|public|öffentliche|wan)_?ipv6/.test(x.text); } },
+  };
+  function netFields(hass, anchor) {
+    var out = {};
+    var S = (hass && hass.states) || {};
+    var list = entities(hass, anchor).filter(function (x) { return S[x.entity_id] && x.domain !== 'update'; }).map(function (x) {
+      var st = S[x.entity_id], a = st.attributes || {};
+      // Object id and name, lower case, words joined by "_" (FRITZ!Portal: "Download aktuell", "Externe IP").
+      var nm = String(a.friendly_name || '').toLowerCase().replace(/[^a-z0-9äöüß]+/g, '_');
+      return Object.assign({}, x, { unit: a.unit_of_measurement, attrs: a, state: st.state,
+        text: x.entity_id.split('.')[1] + ' ' + (x.key || '') + ' ' + nm });
+    });
+    if (!list.length) return out;
+    var live = function (x) { return x.state !== 'unavailable'; };
+    Object.keys(NF).forEach(function (role) {
+      var spec = NF[role];
+      var mine = list.filter(function (x) { return x.domain === spec.dom && x.entity_id !== anchor; });
+      var hit = null;
+      for (var k = 0; k < spec.keys.length && !hit; k++) {
+        hit = mine.filter(function (x) { return x.key === spec.keys[k]; })[0] || null;
+      }
+      if (!hit) {
+        var cands = mine.filter(function (x) { return !x.category && spec.ok(x); });
+        if (spec.better) cands.sort(function (a, b) { return (spec.better(b) ? 1 : 0) - (spec.better(a) ? 1 : 0); });
+        cands.sort(function (a, b) { return (live(b) ? 1 : 0) - (live(a) ? 1 : 0); });
+        hit = cands[0] || null;
+      }
+      if (hit) { out[role] = hit.entity_id; return; }
+      // Only an attribute of another entity of the device (FRITZ!Portal: provider on "Internetverbindung").
+      (spec.attrs || []).some(function (an) {
+        var carrier = list.filter(function (x) {
+          var v = x.attrs[an];
+          return v != null && v !== '' && typeof v !== 'object';
+        }).sort(function (a, b) { return (b.dc === 'connectivity' ? 1 : 0) - (a.dc === 'connectivity' ? 1 : 0); })[0];
+        if (carrier) { out[role] = carrier.entity_id; out[role + '_attr'] = an; }
+        return !!carrier;
+      });
+    });
+    // The upload twin of the download ("…download…" → "…upload…") before any guess.
+    var a0 = String(anchor || ''), at = a0.lastIndexOf('download');
+    if (at > -1) {
+      var tw = a0.slice(0, at) + 'upload' + a0.slice(at + 8);
+      if (S[tw]) out.upload = tw;
+    }
+    return out;
+  }
+  // The value of a network field: the attribute when one is set, otherwise the state.
+  function netValue(states, id, attr) {
+    var st = id && states && states[id];
+    if (!st) return null;
+    if (attr) {
+      var v = (st.attributes || {})[attr];
+      return v == null || typeof v === 'object' ? null : String(v);
+    }
+    return st.state;
   }
 
   // ── Doors/windows for security and contact popups (27.09.2026) ────────────
@@ -1854,7 +1996,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     printerFields: PRINTER_FIELDS, printerKeys: PRINTER_KEYS, isPrinter: isPrinter, isMapName: isMapName,
     notSurveillance: notSurveillance,
     deviceOf: deviceOf, entities: entities, map: map, companionPlug: companionPlug, byKey: byKey,
-    waste: waste, wasteDates: wasteDates, wasteDown: wasteDown, siblings: siblings, dayStart: dayStart, onHours: onHours, lastOn: lastOn, keyAny: keyAny, network: network,
+    waste: waste, wasteDates: wasteDates, wasteDown: wasteDown, siblings: siblings, dayStart: dayStart, onHours: onHours, lastOn: lastOn, keyAny: keyAny, network: network, netRate: netRate, netFields: netFields, netValue: netValue,
     contacts: contacts, outdoor: outdoor, openings: openings,
     weatherSources: weatherSources, weatherChart: weatherChart, weatherRows: weatherRows, weatherChoice: weatherChoice,
     weatherOptions: weatherOptions, weatherNames: WX_NAMES, weatherMaxCurves: WX_MAX_CURVES,

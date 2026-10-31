@@ -2569,7 +2569,12 @@
   "Im Studio Kacheln zu Räumen hinzufügen": "Adicione blocos às divisões no Studio",
   "Etwas trocken": "Um pouco seco",
   "Etwas feucht": "Um pouco húmido",
-  "Sehr feucht": "Muito húmido"
+  "Sehr feucht": "Muito húmido",
+  "Pulse: Gut": "Pulse: Bom",
+  "Pulse: Lernt": "Pulse: A aprender",
+  "Pulse: Beobachten": "Pulse: Vigiar",
+  "Pulse: Prüfen": "Pulse: Verificar",
+  "Pulse: Ausgefallen": "Pulse: Avariado"
  },
  "patterns": [
   [

@@ -2741,7 +2741,9 @@
     "A calm question before this runs. For the front door, the gate or everything off.": "Uma pergunta calma antes de executar. Para a porta de casa, o portão ou desligar tudo.",
     "A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.": "Uma pergunta calma antes de executar, no bloco e na janela. Para a porta de casa, o portão ou desligar tudo.",
     "With confirmation": "Com confirmação",
-    "A calm question before it runs. Same switch as Ask before switching.": "Uma pergunta calma antes de executar. O mesmo interruptor que «Perguntar antes de mudar»."
+    "A calm question before it runs. Same switch as Ask before switching.": "Uma pergunta calma antes de executar. O mesmo interruptor que «Perguntar antes de mudar».",
+    "Value from": "Valor de",
+    "Entity state": "Estado da entidade"
   },
   "patterns": [
     [

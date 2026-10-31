@@ -966,6 +966,11 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
         const p = CD.companionPlug(hass, tile.entity);
         return (p && p[f.find.plug]) || null;
       }
+      // Network tile (#98): upload, status, ping, provider, IP … on the download sensor's device.
+      if (f.find.net) {
+        const n = CD.netFields ? CD.netFields(hass, tile.entity) : {};
+        return n[f.find.net] || null;
+      }
       const spec = Object.assign({ domain: (f.domains || [])[0] }, f.find);
       return CD.map(hass, tile.entity, { x: spec }).x || null;
     } catch (e) {
@@ -991,7 +996,10 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     if (!id) return null;
     // Only a real name, never the entity ID ("Auto" instead of "Auto: sensor.time").
     const name = nameOf(hass, id);
-    return name && name !== id ? t(hass).auto + name : t(hass).auto.replace(/:\s*$/, "");
+    // A value the finder takes from an attribute (FRITZ!Portal's provider): "Internetverbindung · provider".
+    const attr = f.find && f.find.net && window.casoraDevice && window.casoraDevice.netFields
+      ? (window.casoraDevice.netFields(hass, tile.entity) || {})[f.find.net + "_attr"] : null;
+    return name && name !== id ? t(hass).auto + name + (attr ? " · " + attr : "") : t(hass).auto.replace(/:\s*$/, "");
   };
   // Why an empty field shows that entity (the hint under it): the English line with {source} still to fill
   // (the Studio translates first), and the integration that provides it. "On the same device" also for a
