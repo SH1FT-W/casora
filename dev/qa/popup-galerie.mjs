@@ -12,6 +12,7 @@
 // + variables); templates and theme come from the house's Casora desktop dashboard (qa-arbeit), so the gallery renders
 // and refreshes like every Casora dashboard. Writes only the dashboard popup-galerie. CASORA_URL as in ws.mjs.
 import fs from 'node:fs';
+import path from 'node:path';
 import { tokens, ws } from './ws.mjs';
 
 const argv = process.argv;
@@ -472,6 +473,12 @@ async function pruefen() {
         at = null;
       }
       if (res.status === 'öffnet') { const i = await popupInfo(); if (i) { res.art = i.art; res.titel = i.titel; } }
+      // --bilder <dir>: one picture per opened popup (review page), after the open animation has settled.
+      if (res.status === 'öffnet' && arg('bilder')) {
+        await pg.waitForTimeout(1600);
+        res.bild = it.id + (HANDY ? '-handy' : '') + '.png';
+        await pg.screenshot({ path: path.join(arg('bilder'), res.bild) }).catch(() => { res.bild = null; });
+      }
     } catch (e) { res.status = 'Fehler'; res.grund = String(e.message || e).slice(0, 200); at = null; }
     await closeAll(); await pg.keyboard.press('Escape').catch(() => {});
     out.push(res);
