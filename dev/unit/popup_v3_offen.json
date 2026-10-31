@@ -196,14 +196,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Fußball",
-  "vorlagen": [
-   "casora_popup_football"
-  ],
-  "modul": "11-fussball.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Rezepte",
   "vorlagen": [
    "casora_popup_recipe"

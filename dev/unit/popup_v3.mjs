@@ -56,6 +56,8 @@ const MIGRIERT = [
   { popup: 'Kalender', vorlagen: ['casora_popup_calendar'], file: '06-kalender.js', from: '  K.v3 = function', to: '  /* Antippen:', stages: 2 },
   // S8 month (06-kalender.js) with the month calendar, else the status stage S7 here.
   { popup: 'Abfall', vorlagen: ['casora_trash'], file: null, stages: 1 },
+  // S8: the table in UI.stage('content') (K.stage); the colCard wrapper names it once more.
+  { popup: 'Fußball', vorlagen: ['casora_popup_football'], file: '11-fussball.js', from: '  K.v3 = function', to: '  /* Popup-Ring (Weich)', stages: 2 },
 ];
 
 // 1. Pieces.

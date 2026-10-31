@@ -12582,7 +12582,8 @@
      }
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst Kachelname, sonst der Sensor. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', [])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own) return _own;\n  const n = String(this._config?.name || '').trim();\n  return (n.startsWith('[[[') ? '' : n) || entity?.attributes?.friendly_name || 'Fußball';\n]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "tap_action": {
@@ -12599,7 +12600,8 @@
      }
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst Kachelname, sonst der Sensor. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', [])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own) return _own;\n  const n = String(this._config?.name || '').trim();\n  return (n.startsWith('[[[') ? '' : n) || entity?.attributes?.friendly_name || 'Fußball';\n]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   }
  },
