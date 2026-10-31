@@ -69,6 +69,9 @@ const MIGRIERT = [
   // S5: the live card mounted into UI.stage('image') (F.stage); the popup's stage field names it once more.
   { popup: 'Frigate', vorlagen: ['casora_popup_frigate'], file: '23-frigate.js', from: '  F.popup = function', to: '  var swRow = function', stages: 2 },
   { popup: 'Wetter', vorlagen: ['casora_weather'], file: null, stages: 1 },
+  // S5 for one camera's picture and controls (tap and icon tap carry the same body); the grid of several cameras stays
+  // the overview before it.
+  { popup: 'Kamera', vorlagen: ['casora_popup_camera'], file: null, stages: 2 },
 ];
 
 // 1. Pieces.

@@ -162,13 +162,5 @@
   ],
   "modul": "20-energie-fokus.js",
   "grund": "noch nicht dran"
- },
- {
-  "popup": "Kamera",
-  "vorlagen": [
-   "casora_popup_camera"
-  ],
-  "modul": "07-weich-spezial.js",
-  "grund": "noch nicht dran"
  }
 ]
