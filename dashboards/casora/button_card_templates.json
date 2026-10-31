@@ -19234,7 +19234,7 @@
   ],
   "tap_action": {
    "casora_popup": {
-    "content": "[[[\n  /* Shopping list (#82): HA's own to-do list card (tick off, put back, add, clear) until popup v3 draws Casora's\n     own list (.qa/v3/issue-popups-fuer-v3.md); the data layer is window._casoraShopping (36-shopping.js). */\n  return entity && entity.entity_id ? { type: 'todo-list', entity: entity.entity_id } : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "content": "[[[\n  /* Shopping list (#82): popup v3 draws Casora's own list (window._casoraShopping.popup, 36-shopping.js: the open items\n     as the S8 plate with „Hinzufügen“, the ticked ones below); without v3 HA's own to-do list card. */\n  if (!(entity && entity.entity_id)) return { type: 'vertical-stack', cards: [] };\n  return window._casoraShopping && window._casoraShopping.popup ? window._casoraShopping.popup(entity, states, hass)\n    : { type: 'todo-list', entity: entity.entity_id };\n]]]\n",
     "dismissable": true,
     "dismiss_on_background": true,
     "popup_styles": [
@@ -19245,7 +19245,8 @@
     ],
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Einkaufsliste', ['Einkaufsliste', 'Shopping list']) : (String(variables.room_name || '').trim() || 'Einkaufsliste'); ]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
-    "style": "[[[\n  return window.casoraPopupWidth ? window.casoraPopupWidth('one') : '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);';\n]]]\n"
+    "style": "[[[\n  return window.casoraPopupWidth ? window.casoraPopupWidth('one') : '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);';\n]]]\n",
+    "variant": "v3"
    }
   },
   "variables": {

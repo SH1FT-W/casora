@@ -1,8 +1,8 @@
 // ── Shopping list (community card „Bring! Einkaufsliste“, card request #82) ────────────────────────────────────
 // Any HA to-do list (Bring!, Local To-do, Google Tasks …). This module holds what does not depend on a popup design:
 // the tile word and the list's items from HA's to-do API (todo/item/subscribe, else todo/item/list); Bring's
-// specification is the item's description. The popup (casora_popup_shopping) shows HA's own to-do list card until
-// popup v3 draws Casora's own (.qa/v3/issue-popups-fuer-v3.md, source: popup-rework-varianten dddd8473).
+// specification is the item's description. Popup v3 (casora_popup_shopping) draws Casora's own list: the open items as
+// the S8 plate with „Hinzufügen“, the ticked ones below; without v3 HA's own to-do list card.
 //   window._casoraShopping.items(hass, id)   → { open: [...], done: [...] } | null until loaded (and loads)
 //   window._casoraShopping.tileState(st)     – tile casora_shopping („4 offen“, „Alles eingekauft“)
 //   window._casoraShopping.addItem(hass, id) – Casora's question with a text field, then todo.add_item
@@ -54,6 +54,79 @@
     if (k > 0 && txt.slice(k + 1).trim()) d.description = txt.slice(k + 1).trim();
     return d;
   };
+  // ── Popup v3 (popup-richtlinien-v3.md §4 S8, §6): open items in the plate, a tap ticks one off; „Erledigt“ below,
+  // a tap puts one back, „Erledigte löschen“ asks first. Redrawn from the subscription (S.onChange → paint).
+  var hassNow = function () { var ha = document.querySelector('home-assistant'); return (ha && ha.hass) || null; };
+  var row = function (id, it, isDone) {
+    return { icon: isDone ? 'mdi:check-circle-outline' : S.food(it.summary), iconTone: isDone ? null : 'accent', label: it.summary,
+      sub: it.description || null, svc: S.toggleSvc(id, it, isDone), noChev: true };
+  };
+  S.inner = function (part, id, hass) {
+    var UI = window._casoraUI;
+    if (!UI) return '';
+    var d = S.items(hass || hassNow(), id);
+    if (part === 'stage') {
+      var add = '<div class="hui-st-act pri" role="button" tabindex="0" aria-label="Hinzufügen" data-shop-add="' + UI.esc(id) + '">'
+        + '<ha-icon icon="mdi:plus" style="--mdc-icon-size:20px;width:20px;height:20px;display:flex;"></ha-icon><span>Hinzufügen</span></div>';
+      var body = !d ? UI.empty({ icon: 'mdi:cart-outline', text: 'Liste wird geladen …' })
+        : !d.open.length ? UI.empty({ icon: 'mdi:cart-check', text: 'Alles eingekauft', sub: d.done.length ? null : 'Neue Einträge erscheinen hier' })
+        : UI.group(d.open.map(function (it) { return row(id, it, false); }), d.open.length === 1 ? '1 offen' : d.open.length + ' offen');
+      return UI.stage('content', { html: '<style>.hui-stage{--casora-pv-stack-fill:transparent;}</style>'
+        + '<div style="display:flex;flex-direction:column;gap:16px;">' + add + body + '</div>' });
+    }
+    if (part === 'done') {
+      if (!d || !d.done.length) return '';
+      var rows = d.done.map(function (it) { return row(id, it, true); });
+      rows.push({ icon: 'mdi:delete-sweep-outline', label: 'Erledigte löschen', svc: S.clearSvc(id), confirm: 'Löschen', noChev: true });
+      return UI.group(rows, 'Erledigt · ' + d.done.length);
+    }
+    return '';
+  };
+  // The parts sit in a box of their own, so a loaded or changed list redraws them without rebuilding the popup.
+  S.box = function (part, id, hass) {
+    return '<div data-shop-box="' + (window._casoraUI ? window._casoraUI.esc(id) : id) + '" data-shop-part="' + part + '">' + S.inner(part, id, hass) + '</div>';
+  };
+  S.popup = function (entity, states, hass) {
+    var K = window._casoraSoftKit, UI = window._casoraUI, id = entity && entity.entity_id;
+    if (!id) return { type: 'vertical-stack', cards: [] };
+    if (!K || !UI || !UI.v3 || !UI.v3() || !UI.stage) return { type: 'todo-list', entity: id };
+    var call = function (part) { return 'return window._casoraShopping ? window._casoraShopping.box(' + JSON.stringify(part) + ', ' + JSON.stringify(id) + ', hass) : "";'; };
+    var f = { stage: { card: K.secCard([id], call('stage'), states || {}) }, done: { card: K.secCard([id], call('done'), states || {}) } };
+    return K.layout({ fields: f, top: [], stage: 'stage', left: ['done'], right: [] });
+  };
+  var deep = function (root, out) {
+    if (!root || !root.querySelectorAll) return out;
+    root.querySelectorAll('[data-shop-box]').forEach(function (n) { out.push(n); });
+    root.querySelectorAll('*').forEach(function (n) { if (n.shadowRoot) deep(n.shadowRoot, out); });
+    return out;
+  };
+  S.onChange(function (id) {
+    var pop = window.casoraPopup && window.casoraPopup.element;
+    if (!pop) return;
+    var tr = window.casoraTr || function (x) { return x; };
+    deep(pop.shadowRoot, deep(pop, [])).forEach(function (n) {
+      if (n.getAttribute('data-shop-box') === id) n.innerHTML = tr(S.inner(n.getAttribute('data-shop-part'), id));
+    });
+  });
+  // „Hinzufügen“: own capture like the other popup buttons (onclick in the popup's HTML is unreliable on phones).
+  var addOf = function (ev) {
+    var path = (ev.composedPath && ev.composedPath()) || [];
+    for (var i = 0; i < path.length; i++) if (path[i] && path[i].getAttribute && path[i].getAttribute('data-shop-add')) return path[i];
+    return null;
+  };
+  var lastAdd = 0;
+  var onAdd = function (ev) {
+    var el = addOf(ev);
+    if (!el || (ev.type === 'keydown' && ev.key !== 'Enter' && ev.key !== ' ')) return;
+    ev.preventDefault(); ev.stopPropagation();
+    if (Date.now() - lastAdd < 600) return;
+    lastAdd = Date.now();
+    window._casoraSuppressDismiss = Date.now() + 800;
+    S.addItem(hassNow(), el.getAttribute('data-shop-add'));
+  };
+  window.addEventListener('click', onAdd, true);
+  window.addEventListener('keydown', onAdd, true);
+
   S.addItem = function (hass, id) {
     if (!hass || !window.casoraAsk) return;
     // The question's texts in the viewer's language (casoraAsk shows them as given) and a text line, as 15-person.js.
