@@ -60,6 +60,9 @@ const MIGRIERT = [
   { popup: 'Luftreiniger', vorlagen: ['casora_air_purifier'], file: null, stages: 1 },
   // One lamp in v3 is the light popup's single-lamp case (S1 with the white tone as its segment, the room's scenes).
   { popup: 'Leuchte (einzeln)', vorlagen: ['casora_light'], file: '03-popups.js', from: '  var v3Stage = function', to: '  var v3Scenes = function', stages: 1 },
+  // Readings popup without a thermostat: air quality (else temperature) as S7 (S6 would need a chart plate in the stage),
+  // the curve as the Verlauf (120), the other readings as the list.
+  { popup: 'Klima (Raum)', vorlagen: ['casora_climate_popup'], file: null, stages: 1 },
 ];
 
 // 1. Pieces.

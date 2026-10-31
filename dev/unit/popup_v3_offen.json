@@ -1,13 +1,5 @@
 [
  {
-  "popup": "Klima (Raum)",
-  "vorlagen": [
-   "casora_climate_popup"
-  ],
-  "modul": "01-basis.js",
-  "grund": "Welle 2 nicht geschafft (Rahmen): casora_climate_popup (51k, 01-basis.js) mischt Klima-Geräte und Messwerte; S2 nur mit genau einem Thermostat, sonst S6 – Auswahl der Bühne braucht eine Entscheidung, welches Gerät die Bühne bekommt. Keine eigene Kachel im Test-HA (Klima-Badge öffnet casora_badge_climate_group)"
- },
- {
   "popup": "Sicherheit (Badge, Gruppe)",
   "vorlagen": [
    "casora_badge_security",
