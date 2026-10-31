@@ -1,13 +1,5 @@
 [
  {
-  "popup": "Leuchte (einzeln)",
-  "vorlagen": [
-   "casora_light"
-  ],
-  "modul": "33-color-wheel.js",
-  "grund": "Welle 2 nicht geschafft (Rahmen): Einzel-Pfad in casora_light (eigene innere Karte) + 33-color-wheel.js – S1 mit Weißton-Segment und Farbrad als Unterseite „Farbe ›“ heißt das Farbrad aus dem Hauptbereich in eine Unterseite umziehen; rahmt seit dem Licht-Pilot schon im v3-Kopf (erbt variant 'v3' von casora_popup_light), Inhalt noch alt. Testgerät: light.testleuchte"
- },
- {
   "popup": "Klima (Raum)",
   "vorlagen": [
    "casora_climate_popup"

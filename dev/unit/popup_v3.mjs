@@ -58,6 +58,8 @@ const MIGRIERT = [
     from: '  /* Popup v3 (popup-richtlinien-v3.md §4, §7, §8): clean – the status line, the water', to: '    const f2 = { hero: fields.hero, chart: fields.chart, glight', stages: 2 },
   // Like the fan: S1 speed, presets as quick tiles (S6 would need a chart plate in the stage); PM2,5 as the Verlauf.
   { popup: 'Luftreiniger', vorlagen: ['casora_air_purifier'], file: null, stages: 1 },
+  // One lamp in v3 is the light popup's single-lamp case (S1 with the white tone as its segment, the room's scenes).
+  { popup: 'Leuchte (einzeln)', vorlagen: ['casora_light'], file: '03-popups.js', from: '  var v3Stage = function', to: '  var v3Scenes = function', stages: 1 },
 ];
 
 // 1. Pieces.
