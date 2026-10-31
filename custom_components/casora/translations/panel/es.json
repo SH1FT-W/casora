@@ -2743,7 +2743,8 @@
     "With confirmation": "Con confirmación",
     "A calm question before it runs. Same switch as Ask before switching.": "Una pregunta tranquila antes de ejecutarlo. El mismo interruptor que «Preguntar antes de activar».",
     "Value from": "Valor de",
-    "Entity state": "Estado de la entidad"
+    "Entity state": "Estado de la entidad",
+    "1 room on": "1 habitación encendida"
   },
   "patterns": [
     [
@@ -3261,6 +3262,10 @@
     [
       "^(\\d+) hidden$",
       "{1} ocultos"
+    ],
+    [
+      "^(\\d+) rooms on$",
+      "{1} habitaciones encendidas"
     ],
     [
       "^(\\d+) on$",

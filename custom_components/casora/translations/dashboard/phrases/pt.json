@@ -2605,7 +2605,20 @@
   "Kein Spiel": "Nenhum jogo",
   "Gruppen": "Grupos",
   "Heute an": "Ativa hoje",
-  "Heute aus": "Desativada hoje"
+  "Heute aus": "Desativada hoje",
+  "1 Raum an": "1 divisão ligada",
+  "1 klemmt": "1 encravada",
+  "Schloss klemmt": "Fechadura encravada",
+  "Einschalten auf": "Ligar a",
+  "Höchste Stunde": "Hora mais alta",
+  "Niedrigste Stunde": "Hora mais baixa",
+  "Höchster Tag": "Dia mais alto",
+  "Niedrigster Tag": "Dia mais baixo",
+  "Höchster Monat": "Mês mais alto",
+  "Niedrigster Monat": "Mês mais baixo",
+  "Lange offen": "Aberta há muito",
+  "Fenster schließen?": "Fechar a janela?",
+  "Schließen?": "Fechar?"
  },
  "patterns": [
   [
@@ -2793,6 +2806,10 @@
    "{1} definições recomendadas, aplica-as no WashData"
   ],
   [
+   "^Ø von (\\d+) Lampen$",
+   "Ø de {1} lâmpadas"
+  ],
+  [
    "^Ø (.+)$",
    "Ø {1}"
   ],
@@ -2803,6 +2820,10 @@
   [
    "^(\\d+) von (\\d+) An$",
    "{1} de {2} ligadas"
+  ],
+  [
+   "^(\\d+) Räume an$",
+   "{1} divisões ligadas"
   ],
   [
    "^(\\d+) von (\\d+) Räumen an$",
@@ -4703,6 +4724,14 @@
   [
    "^Jetzt (-?\\d.*)$",
    "Agora {1}"
+  ],
+  [
+   "^(\\d+) Schlösser klemmen$",
+   "{1} fechaduras encravadas"
+  ],
+  [
+   "^(\\d+) klemmen$",
+   "{1} encravadas"
   ]
  ],
  "Gerät in Home Assistant": "Dispositivo no Home Assistant"

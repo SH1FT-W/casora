@@ -26,12 +26,22 @@
     draussen: { t: 'Außenluft belastet', tone: 'bad', r: 4 },
     bald: { t: 'Bald lüften', tone: 'accent', r: 3 },
     feucht: { t: 'Zu feucht', tone: 'warn', r: 2 },
+    // A window open for half a day or longer is no airing any more: a hint to close it (review 2, fam-05).
+    lange: { t: 'Lange offen', tone: 'warn', r: 4.5 },
     lueftet: { t: 'Lüftet', tone: 'good', r: 1 },
     ok: { t: 'Gut', tone: null, r: 0 },
   };
+  V.LONG_OPEN = 12 * 60;
+  // „Lüftet“ for a window open since 27 days, the room in green with „Raumluft gut“ (review 2, fam-05): from
+  // V.LONG_OPEN minutes on a room that airs is „Lange offen“ with the question to close it.
+  var longOpen = function (x) {
+    if (!x || x.status !== 'lueftet' || !(Number(x.offen_min) >= V.LONG_OPEN)) return x;
+    var g = String(x.grund || '');
+    return Object.assign({}, x, { status: 'lange', grund: g ? g + ' · Schließen?' : 'Fenster schließen?' });
+  };
   V.read = function (states) {
     var s = states[V.sensor(states)], a = (s && s.attributes) || {};
-    var rooms = (a.rooms || []).slice().sort(function (x, y) { return (ST[y.status] || ST.ok).r - (ST[x.status] || ST.ok).r; });
+    var rooms = (a.rooms || []).map(longOpen).sort(function (x, y) { return (ST[y.status] || ST.ok).r - (ST[x.status] || ST.ok).r; });
     return { rooms: rooms, out: a.aussen || {}, coach: states[COACH] };
   };
 
@@ -120,7 +130,7 @@
   /* 0 = gut, 1 = jetzt lüften, 2 = Fenster schließen */
   V.level = function (states, variables, here) {
     var rooms = V.model(states, variables, here).rooms;
-    if (rooms.some(function (x) { return x.status === 'schliessen'; })) return 2;
+    if (rooms.some(function (x) { return x.status === 'schliessen' || x.status === 'lange'; })) return 2;
     if (rooms.some(function (x) { return x.status === 'jetzt'; })) return 1;
     return 0;
   };
@@ -132,7 +142,7 @@
     var m = V.model(states, variables, here);
     if (m.mode === 'outdoor') return m.out.t != null ? fmt(m.out.t, 1) + ' ' + tU() : 'Außenluft';
     if (m.mode === 'empty') return 'Keine Sensoren';
-    var cl = m.rooms.filter(function (x) { return x.status === 'schliessen'; });
+    var cl = m.rooms.filter(function (x) { return x.status === 'schliessen' || x.status === 'lange'; });
     var now = m.rooms.filter(function (x) { return x.status === 'jetzt'; });
     /* Titel ist fest "Raumklima", Status = welcher Raum (was zu tun ist, zeigen Farbe + Popup).
        Priorität schließen > lüften > lüftet; ab 3 Räumen nur die Anzahl, sonst schrumpft casoraStateFit die Schrift. */
@@ -242,7 +252,7 @@
           subTone: st1.tone === 'accent' ? null : st1.tone, center: true });
       }
       var lv = V.level(states, { popup_hide: (C && C.hide) || [] }, m.scope);
-      var need = rooms.filter(function (x) { return x.status === 'jetzt' || x.status === 'schliessen'; });
+      var need = rooms.filter(function (x) { return x.status === 'jetzt' || x.status === 'schliessen' || x.status === 'lange'; });
       var value = lv === 2 ? 'Schließen' : lv === 1 ? 'Lüften' : 'Gut';
       /* One room: its reason instead of its own name. */
       var sub = need.length ? (mode === 'room' && rooms.length === 1 ? (need[0].grund || null) : need.length <= 2 ? need.map(function (x) { return x.n; }).join(', ') : need.length + ' Räume')
@@ -282,7 +292,7 @@
         var tone = st.tone || 'rgba(255,255,255,0.18)';
         return { id: x.k, icon: icon, iconTone: tone, label: x.n, sub: [x.grund || null, vals(x) || null].filter(Boolean), value: st.t, valueTone: st.tone === 'accent' ? null : st.tone,
           /* Weich: Raum mit Handlungsbedarf (lüften, schließen, zu feucht) oder der gerade lüftet als aktive Zeile. */
-          active: ['schliessen', 'jetzt', 'feucht', 'lueftet'].indexOf(x.status) > -1 };
+          active: ['schliessen', 'lange', 'jetzt', 'feucht', 'lueftet'].indexOf(x.status) > -1 };
       });
       return rows.length ? UI.group(rows, mode === 'room' ? 'Raumluft' : 'Räume') : '';
     }

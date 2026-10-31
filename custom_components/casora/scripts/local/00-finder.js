@@ -622,6 +622,20 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     if (dutyEnt && S[dutyEnt]) duty = S[dutyEnt].state === 'on';
     // Empty list = roster switched off (set to null above): as without a roster.
     else if (months) duty = months.indexOf(new Date().getMonth() + 1) > -1;
+    // The tile counts down from the same calendar the popup marks (review 2, fam-22: the calendar showed Bio and
+    // Restmüll on Monday, the tile only „Bio“): an earlier date of a bin in the waste calendar wins over its sensor.
+    var TCw = window._casoraTrashCal, t00 = new Date(); t00.setHours(0, 0, 0, 0);
+    if (calendar && TCw && TCw.id === calendar && Array.isArray(TCw.ev)) bins.forEach(function (b) {
+      if (b.cal) return;
+      TCw.ev.forEach(function (e) {
+        var s0 = e && e.start && (e.start.date || e.start.dateTime);
+        if (!s0 || !b.re.test((e && e.summary) || '')) return;
+        var d0 = new Date(String(s0).slice(0, 10) + 'T00:00:00');
+        if (isNaN(d0) || d0 < t00) return;
+        var n0 = Math.round((d0 - t00) / 86400000);
+        if (b.days == null || n0 < b.days) b.days = n0;
+      });
+    });
     var sorted = bins.filter(function (b) { return b.days != null; }).sort(function (a, b) { return a.days - b.days; });
     var days = sorted.length ? sorted[0].days : null;
     var nextBins = sorted.filter(function (b) { return b.days === days; });
@@ -1493,6 +1507,32 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     });
     return worst;
   }
+  /* Locks counted the same everywhere (review 2, T03: ring 3, list 4, tile 2): lock tile, locks badge, security
+     badge and its popup. unlocked = unlocked/open/opening/unlocking, jammed = jammed, dead = unavailable/unknown/
+     missing; locked/locking are fine. { tot, unlocked, jammed, dead, locked }. */
+  window.casoraLockTally = function (states, ids) {
+    var S = states || {}, t = { tot: 0, unlocked: 0, jammed: 0, dead: 0, locked: 0 };
+    (ids || []).forEach(function (id) {
+      if (typeof id !== 'string' || id.indexOf('lock.') !== 0) return;
+      t.tot++;
+      var s = String((S[id] || {}).state || '').toLowerCase();
+      if (!s || s === 'unavailable' || s === 'unknown') t.dead++;
+      else if (s === 'jammed') t.jammed++;
+      else if (s === 'locked' || s === 'locking') t.locked++;
+      else t.unlocked++;
+    });
+    return t;
+  };
+  // Its words, each state named apart: „2 entriegelt · 1 klemmt · 1 offline“, all fine „Alle verriegelt“.
+  window.casoraLockText = function (t) {
+    if (!t || !t.tot) return '';
+    var p = [];
+    if (t.unlocked) p.push(t.unlocked === t.tot && t.tot > 1 ? 'Alle entriegelt' : t.tot === 1 ? 'Entriegelt' : t.unlocked + ' entriegelt');
+    if (t.jammed) p.push(t.tot === 1 ? 'Klemmt' : t.jammed === 1 ? '1 klemmt' : t.jammed + ' klemmen');
+    if (t.dead) p.push(t.tot === 1 ? 'Offline' : t.dead + ' offline');
+    if (!p.length) return t.tot === 1 ? 'Verriegelt' : 'Alle verriegelt';
+    return p.join(' · ');
+  };
   window.casoraSecurityAway = securityAway;
   window.casoraSecurityLevel = securityLevel;
 
@@ -1543,6 +1583,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     if (S.doors) L.push([n(S.doors, 'Tür offen', 'Türen offen'), 'door-open', S.doors]);
     if (S.gates) L.push([n(S.gates, 'Tor offen', 'Tore offen'), 'garage', S.gates]);
     if (S.locks) L.push([n(S.locks, 'Schloss offen', 'Schlösser offen'), 'lock-open', S.locks]);
+    if (S.lockJammed) L.push([S.lockJammed === 1 ? 'Schloss klemmt' : S.lockJammed + ' Schlösser klemmen', 'lock-unlocking', S.lockJammed]);
     if (S.windows) L.push([n(S.windows, 'Fenster offen', 'Fenster offen'), 'window-open', S.windows]);
     if (S.windowsTilted) L.push([n(S.windowsTilted, 'Fenster gekippt', 'Fenster gekippt'), 'window-tilt', S.windowsTilted]);
     if (S.doorsTilted) L.push([n(S.doorsTilted, 'Tür gekippt', 'Türen gekippt'), 'window-tilt', S.doorsTilted]);
@@ -1570,6 +1611,13 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     });
     // Height = line height of the badge sub-line (.badge-sub line-height 1.2): with 1.25em the
     // security badge was 0.6 px taller than every other badge (polish 1.3, d-kacheln).
+    /* Icons alone said nothing to a newcomer (review 2, E31: „🔓1 ▢2 ▯1 ⌀1“): a short word leads – what is open,
+       else tilted, else offline. */
+    var sumOf = function (keys) { return keys.reduce(function (a, k) { return a + (Number(S[k]) || 0); }, 0); };
+    var nOpen = sumOf(['doors', 'gates', 'locks', 'windows', 'covers']), nTilt = sumOf(['windowsTilted', 'doorsTilted']);
+    var nJam = sumOf(['lockJammed']), nDead = sumOf(['lockDead', 'camDead']);
+    var lead = nOpen ? nOpen + ' offen' : nJam ? (nJam === 1 ? '1 klemmt' : nJam + ' klemmen') : nTilt ? nTilt + ' gekippt' : nDead ? nDead + ' offline' : '';
+    if (lead) items.unshift('<span class="cs-sum-lead" aria-hidden="true" style="white-space:nowrap">' + escAttr(lead) + '</span>');
     return { text: text, html: '<span class="cs-sum" style="display:inline-flex;align-items:center;gap:9px;height:1.2em;line-height:1;vertical-align:top">' + items.join('') + '</span>' };
   };
 

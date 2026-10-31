@@ -247,6 +247,16 @@
   window.casoraClimateBlinds = function (hass, user, opt, home) {
     if (opt === false || !home || !hass || !hass.states) return [];
     var S = hass.states, GATE = ['garage', 'gate', 'door'];
+    /* The dashboard's blinds tile is the one place the blinds are set up – its popup opens from this badge
+       (casoraOpenBlinds), so the badge counts exactly its blinds (review 2, T09: badge 7, popup 6). */
+    var SC = window._casoraSecCovers, tile = window.casoraBlindsTile && SC && SC.singles ? window.casoraBlindsTile() : null;
+    if (tile) {
+      var tv = tile.variables || {};
+      var list = Array.isArray(tv.covers) && tv.covers.length > 1 ? tv.covers : [tile.entity || tv.cover_entity];
+      return SC.singles(S, list).filter(function (id) {
+        return !!S[id] && (typeof window.casoraSeesEntity !== 'function' || window.casoraSeesEntity(id, user));
+      }).sort();
+    }
     return Object.keys(S).filter(function (id) {
       if (id.indexOf('cover.') !== 0) return false;
       var dc = String((S[id].attributes || {}).device_class || '').toLowerCase();
@@ -352,7 +362,7 @@
     if (!K || !UI || !BADGE[cat]) return empty;
     var s = P.scan(cat);
     var call = function (part) {
-      return 'return window._casoraPhoneHub ? window._casoraPhoneHub.sec(' + JSON.stringify(cat) + ', ' + JSON.stringify(part) + ', states, hass) : "";';
+      return 'return window._casoraPhoneHub ? window._casoraPhoneHub.sec(' + JSON.stringify(cat) + ', ' + JSON.stringify(part) + ', states, hass, this) : "";';
     };
     // Popup v3 (richtlinien §4 S7): the badge's words become the status stage; the overview rows stay as the list.
     var v3 = !!(UI.v3 && UI.v3() && UI.stage);
@@ -422,6 +432,9 @@
     if (!rows.length && !s.rooms.length) return UI.stage('status', { empty: { icon: 'mdi:information-outline',
       text: 'Hier gibt es noch keine Geräte', sub: 'Im Studio Kacheln zu Räumen hinzufügen', studio: true } });
     var o = { icon: STAGE_ICON[cat], text: s.sub || TITLE[cat] || '' };
+    // Two findings in the dial, the rest counted – a long list ended in „· T…“ there (review 2, T03).
+    var parts = String(o.text).split(' · ');
+    if (parts.length > 3) o.text = parts.slice(0, 2).join(' · ') + ' · und ' + (parts.length - 2) + ' weitere';
     if (cat === 'presence') {
       var home = rows.filter(function (c) { return c.home; }).length;
       o.tone = home ? 'good' : 'off';
@@ -440,19 +453,36 @@
       var locks = ids.filter(function (id) { return id.indexOf('lock.') === 0 && S[id] && S[id].state === 'unlocked'; });
       var Cv = window._casoraSecCovers, sc = Cv && hass ? Cv.scan(S, hass, hass.user) : null;
       var covers = sc && sc.count ? sc.open.filter(function (id) { var x = Cv.closeSvc(id, S[id]); return x && x.service === 'close_cover'; }) : [];
-      if (locks.length) o.action = { text: locks.length > 1 ? 'Alle verriegeln' : 'Verriegeln', icon: 'mdi:lock', primary: true,
+      // One word: „Alle verriegeln“ ran out of the round button (review 2, T03).
+      if (locks.length) o.action = { text: 'Verriegeln', icon: 'mdi:lock', primary: true,
         svc: { domain: 'lock', service: 'lock', data: { entity_id: locks } } };
-      else if (covers.length) o.action = { text: covers.length > 1 ? 'Alle schließen' : 'Schließen', icon: 'mdi:arrow-collapse-down', primary: true,
+      else if (covers.length) o.action = { text: 'Schließen', icon: 'mdi:arrow-collapse-down', primary: true,
         svc: { domain: 'cover', service: 'close_cover', data: { entity_id: covers } } };
     }
     return UI.stage('status', o);
   };
-  P.sec = function (cat, part, states, hass) {
+  /* The rows mirror Home's badges, which may draw their new state after this card (fam-03: locked, the sentence still
+     said „Schloss offen“). Look again shortly after each update; when the badges changed since, draw again. */
+  var sigOf = function (s) { return [s.sub].concat(s.chips.map(function (c) { return c.title + ':' + c.sub; })).join('|'); };
+  var recheck = function (cat, el, sig) {
+    if (!el || typeof el.requestUpdate !== 'function') return;
+    [350, 1200].forEach(function (ms, i) {
+      clearTimeout((el._casoraHubT || [])[i]);
+      (el._casoraHubT = el._casoraHubT || [])[i] = setTimeout(function () {
+        if (!el.isConnected) return;
+        memo[cat] = null;
+        if (sigOf(P.scan(cat)) !== sig) el.requestUpdate();
+      }, ms);
+    });
+  };
+  P.sigOf = sigOf;
+  P.sec = function (cat, part, states, hass, el) {
     var UI = window._casoraUI;
     if (!UI) return '';
     // Re-read once per update (hero comes first): the cards it mirrors have drawn their new state by then.
     if (part === 'hero' || part === 'stage') memo[cat] = null;
     var s = P.scan(cat);
+    recheck(cat, el, sigOf(s));
     if (part === 'hero') return UI.line(s.sub || TITLE[cat] || '', [], {});
     if (part === 'stage') return stageOf(cat, s, states || (hass && hass.states) || {}, hass);
     if (part !== 'list') return '';

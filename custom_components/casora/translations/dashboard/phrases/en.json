@@ -2587,7 +2587,20 @@
   "Kein Spiel": "No game",
   "Gruppen": "Groups",
   "Heute an": "On today",
-  "Heute aus": "Off today"
+  "Heute aus": "Off today",
+  "1 Raum an": "1 room on",
+  "1 klemmt": "1 jammed",
+  "Schloss klemmt": "Lock jammed",
+  "Einschalten auf": "Turn on at",
+  "Höchste Stunde": "Highest hour",
+  "Niedrigste Stunde": "Lowest hour",
+  "Höchster Tag": "Highest day",
+  "Niedrigster Tag": "Lowest day",
+  "Höchster Monat": "Highest month",
+  "Niedrigster Monat": "Lowest month",
+  "Lange offen": "Open for long",
+  "Fenster schließen?": "Close the window?",
+  "Schließen?": "Close it?"
  },
  "patterns": [
   [
@@ -2775,6 +2788,10 @@
    "{1} settings recommended, apply them in WashData"
   ],
   [
+   "^Ø von (\\d+) Lampen$",
+   "Ø of {1} lamps"
+  ],
+  [
    "^Ø (.+)$",
    "Ø {1}"
   ],
@@ -2785,6 +2802,10 @@
   [
    "^(\\d+) von (\\d+) An$",
    "{1} of {2} on"
+  ],
+  [
+   "^(\\d+) Räume an$",
+   "{1} rooms on"
   ],
   [
    "^(\\d+) von (\\d+) Räumen an$",
@@ -4685,6 +4706,14 @@
   [
    "^Jetzt (-?\\d.*)$",
    "Now {1}"
+  ],
+  [
+   "^(\\d+) Schlösser klemmen$",
+   "{1} locks jammed"
+  ],
+  [
+   "^(\\d+) klemmen$",
+   "{1} jammed"
   ]
  ],
  "Gerät in Home Assistant": "Device in Home Assistant"

@@ -2743,7 +2743,8 @@
     "With confirmation": "Met bevestiging",
     "A calm question before it runs. Same switch as Ask before switching.": "Een rustige vraag voordat het wordt uitgevoerd. Dezelfde schakelaar als ‘Vragen voor het schakelen’.",
     "Value from": "Waarde uit",
-    "Entity state": "Status van de entiteit"
+    "Entity state": "Status van de entiteit",
+    "1 room on": "1 ruimte aan"
   },
   "patterns": [
     [
@@ -3261,6 +3262,10 @@
     [
       "^(\\d+) hidden$",
       "{1} verborgen"
+    ],
+    [
+      "^(\\d+) rooms on$",
+      "{1} ruimtes aan"
     ],
     [
       "^(\\d+) on$",

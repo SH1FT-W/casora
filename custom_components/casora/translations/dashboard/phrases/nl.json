@@ -2605,7 +2605,20 @@
   "Kein Spiel": "Geen spel",
   "Gruppen": "Groepen",
   "Heute an": "Vandaag aan",
-  "Heute aus": "Vandaag uit"
+  "Heute aus": "Vandaag uit",
+  "1 Raum an": "1 ruimte aan",
+  "1 klemmt": "1 vastgelopen",
+  "Schloss klemmt": "Slot vastgelopen",
+  "Einschalten auf": "Aanzetten op",
+  "Höchste Stunde": "Hoogste uur",
+  "Niedrigste Stunde": "Laagste uur",
+  "Höchster Tag": "Hoogste dag",
+  "Niedrigster Tag": "Laagste dag",
+  "Höchster Monat": "Hoogste maand",
+  "Niedrigster Monat": "Laagste maand",
+  "Lange offen": "Al lang open",
+  "Fenster schließen?": "Raam sluiten?",
+  "Schließen?": "Sluiten?"
  },
  "patterns": [
   [
@@ -2793,6 +2806,10 @@
    "{1} instellingen aanbevolen, overnemen in WashData"
   ],
   [
+   "^Ø von (\\d+) Lampen$",
+   "Ø van {1} lichten"
+  ],
+  [
    "^Ø (.+)$",
    "Ø {1}"
   ],
@@ -2803,6 +2820,10 @@
   [
    "^(\\d+) von (\\d+) An$",
    "{1} van {2} aan"
+  ],
+  [
+   "^(\\d+) Räume an$",
+   "{1} ruimtes aan"
   ],
   [
    "^(\\d+) von (\\d+) Räumen an$",
@@ -4703,6 +4724,14 @@
   [
    "^Jetzt (-?\\d.*)$",
    "Nu {1}"
+  ],
+  [
+   "^(\\d+) Schlösser klemmen$",
+   "{1} sloten vastgelopen"
+  ],
+  [
+   "^(\\d+) klemmen$",
+   "{1} vastgelopen"
   ]
  ],
  "Gerät in Home Assistant": "Apparaat in Home Assistant"

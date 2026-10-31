@@ -144,7 +144,8 @@ console.log('ok house list: ' + ALL.length + ' lights from ' + studioList.rooms.
 // ── 3. The badge counts all of them; the room's badge entry passes the marker ───────────────────
 const bg = T.casora_badge_light_group;
 const autoVars = { enabled: true, light_rooms_auto: true };
-assert.match(run(bg.name, autoVars, h), /4 An/, 'badge counts the rooms\' lights (4 of 12 on)');
+// Review 2 (E08): the house counts rooms, like its popup („3 von 4 Räumen an“) – 4 of 12 lamps on in 3 rooms.
+assert.match(run(bg.name, autoVars, h), /3 Räume an/, 'badge counts the rooms (4 of 12 lamps on in 3 rooms)');
 const style = (k) => bg.styles.card.find((d) => k in d)[k];
 assert.equal(run(style('display'), autoVars, h), 'inline-grid', 'badge visible with the marker alone');
 assert.equal(run(style('--casora-badge-tone'), autoVars, h), 'initial', 'icon lit');
@@ -169,7 +170,7 @@ assert.equal(run(mentry.variables.light_rooms_auto, { casora_hv: { light_rooms_a
 assert.equal(run(mentry.variables.light_rooms_auto, { light_rooms_auto: true }, h), true);
 assert.equal(run(mentry.variables.light_rooms_auto, {}, h), false);
 // House tile: counts the rooms' lights live.
-assert.equal(run(T.casora_light.state_display, { house: true, light_rooms_auto: true, lights: ['light.demo_wz_1'] }, h, h.states['light.demo_wz_1']), '4 An');
+assert.equal(run(T.casora_light.state_display, { house: true, light_rooms_auto: true, lights: ['light.demo_wz_1'] }, h, h.states['light.demo_wz_1']), '3 Räume an', 'tile counts as the badge');
 console.log('ok badge: counts every light, tile too');
 
 // ── 4. The house popup: room bar from the rooms, main switch asks, rooms without a group switch their lamps ──

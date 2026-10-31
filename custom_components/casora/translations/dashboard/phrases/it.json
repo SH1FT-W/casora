@@ -2605,7 +2605,20 @@
   "Kein Spiel": "Nessun gioco",
   "Gruppen": "Gruppi",
   "Heute an": "Attiva oggi",
-  "Heute aus": "Disattivata oggi"
+  "Heute aus": "Disattivata oggi",
+  "1 Raum an": "1 stanza accesa",
+  "1 klemmt": "1 bloccata",
+  "Schloss klemmt": "Serratura bloccata",
+  "Einschalten auf": "Accendi a",
+  "Höchste Stunde": "Ora più alta",
+  "Niedrigste Stunde": "Ora più bassa",
+  "Höchster Tag": "Giorno più alto",
+  "Niedrigster Tag": "Giorno più basso",
+  "Höchster Monat": "Mese più alto",
+  "Niedrigster Monat": "Mese più basso",
+  "Lange offen": "Aperta a lungo",
+  "Fenster schließen?": "Chiudere la finestra?",
+  "Schließen?": "Chiudere?"
  },
  "patterns": [
   [
@@ -2793,6 +2806,10 @@
    "{1} impostazioni consigliate, applicale in WashData"
   ],
   [
+   "^Ø von (\\d+) Lampen$",
+   "Ø di {1} lampade"
+  ],
+  [
    "^Ø (.+)$",
    "Ø {1}"
   ],
@@ -2803,6 +2820,10 @@
   [
    "^(\\d+) von (\\d+) An$",
    "{1} di {2} accese"
+  ],
+  [
+   "^(\\d+) Räume an$",
+   "{1} stanze accese"
   ],
   [
    "^(\\d+) von (\\d+) Räumen an$",
@@ -4703,6 +4724,14 @@
   [
    "^Jetzt (-?\\d.*)$",
    "Ora {1}"
+  ],
+  [
+   "^(\\d+) Schlösser klemmen$",
+   "{1} serrature bloccate"
+  ],
+  [
+   "^(\\d+) klemmen$",
+   "{1} bloccate"
   ]
  ],
  "Gerät in Home Assistant": "Dispositivo in Home Assistant"
