@@ -400,7 +400,7 @@ window.CASORA_TILE_TYPES = [
   { id: "casora_velair", like: "thermostat", label: "Velair", template: "casora_velair", domains: ["climate"],
     icon: "velair", color: "var(--casora-color-orange, #FF9F0A)", entityLabel: "Climate", entityPlaceholder: "A climate Velair plans",
     onlyIf: (hass) => !!(window.casoraVelairFind && window.casoraVelairFind.present(hass)),
-    community: { desc: "Temperature, target and mode on the tile like the thermostat. The popup sets the target temperature and the mode; the status line says whether Velair's schedule runs. Velair's own panel plans the week. For climates planned by the Velair integration.",
+    community: { desc: "Temperature, target and mode on the tile like the thermostat. The popup sets the target temperature and the mode and shows Velair's mode; a row opens Velair's schedule: the week at a glance with each slot's target, schedule on or off and editing a day's slots. For climates planned by the Velair integration.",
       needs: "velair", needsText: "For every climate Velair plans", needsMissing: "Velair integration not installed yet" },
     // No icon field: the thermostat tile draws its own heating coil.
     fields: [

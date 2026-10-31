@@ -28,7 +28,7 @@ assert.ok(/states\[REMINDER\] && !_v3/.test(JSON.stringify(tpl.casora_trash)), '
 const desc = Object.fromEntries(types.filter((t) => t.community && t.community.desc).map((t) => [t.id, t.community.desc]));
 const promise = Object.entries(desc).filter(([id, d]) => /doorbell|frigate/i.test(id + ' ' + d)
   && /settings|camera switches|recordings of the last days/i.test(d)).map(([id]) => id)
-  // Velair (31-velair.js): target and modes only, the schedule editing moved to Velair's own panel.
-  .concat(Object.entries(desc).filter(([id, d]) => /velair/i.test(id) && /editing a day's slots|fan, presets and swing/.test(d)).map(([id]) => id));
+  // Velair (31-velair.js): the schedule is back on a sub page (#32), fan, presets and swing stay gone.
+  .concat(Object.entries(desc).filter(([id, d]) => /velair/i.test(id) && /fan, presets and swing/.test(d)).map(([id]) => id));
 assert.deepEqual(promise, [], 'descriptions promising popup parts v3 dropped');
 console.log('studio_popup_v3_clean: ok');

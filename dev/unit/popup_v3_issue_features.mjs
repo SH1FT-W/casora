@@ -4,6 +4,8 @@
 //   #98 network: section „Internet“ (provider, also from an attribute; public IPv4/IPv6; latency per target)
 //   #81 covers: the shade automation switch (and „Automatik heute“) as the last row of the cover list, redrawn live;
 //       the Studio offers its fields again
+//   #32 Velair: rows „Zeitplan ›“ (sub page with the week, editing) and „Velair-Modus“ – pinned in dev/unit/velair.mjs;
+//       here: the Studio description promises the schedule again
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -109,6 +111,16 @@ const runCard = (card, states, hass) => new Function('states', 'hass', card.cust
   assert.equal((panel.match(/\.\.\.COVER_AUTOMATION_FIELDS/g) || []).length, 2, '#81: cover and cover group');
   window._casoraUI = saved;
   globalThis.document = doc0;
+}
+
+// ── #32 Velair: the Studio description names the schedule (the popup itself: dev/unit/velair.mjs, „Popup v3 (#32 …)“) ──
+{
+  const types = rd('custom_components/casora/panel/casora-panel-types.js');
+  const m = /id: "casora_velair"[\s\S]*?community: \{ desc: "([^"]+)"/.exec(types);
+  assert.ok(m, 'Velair tile type');
+  assert.match(m[1], /schedule/, '#32: description mentions the schedule');
+  assert.match(m[1], /editing a day's slots/, '#32: and editing it');
+  assert.match(rd('dev/unit/velair.mjs'), /Popup v3 \(#32/, '#32: the v3 rows are tested in velair.mjs');
 }
 
 console.log('popup_v3_issue_features: ok');

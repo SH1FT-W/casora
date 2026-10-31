@@ -2619,7 +2619,7 @@
     "A climate Velair plans": "Un climatizzatore pianificato da Velair",
     "For every climate Velair plans": "Per ogni climatizzatore pianificato da Velair",
     "Velair integration not installed yet": "Integrazione Velair non ancora installata",
-    "Temperature, target and mode on the tile like the thermostat. The popup sets the target temperature and the mode; the status line says whether Velair's schedule runs. Velair's own panel plans the week. For climates planned by the Velair integration.": "Temperatura, obiettivo e modalità sul riquadro come per il termostato. Il popup imposta la temperatura obiettivo e la modalità; la riga di stato dice se la programmazione di Velair è attiva. La settimana si pianifica nel pannello di Velair. Per i climatizzatori pianificati dall'integrazione Velair.",
+    "Temperature, target and mode on the tile like the thermostat. The popup sets the target temperature and the mode and shows Velair's mode; a row opens Velair's schedule: the week at a glance with each slot's target, schedule on or off and editing a day's slots. For climates planned by the Velair integration.": "Temperatura, obiettivo e modalità sul riquadro come per il termostato. Il popup imposta la temperatura obiettivo e la modalità e mostra la modalità di Velair; una riga apre la programmazione di Velair: la settimana a colpo d'occhio con l'obiettivo di ogni fascia, programmazione attiva o no e modifica delle fasce di un giorno. Per i climatizzatori pianificati dall'integrazione Velair.",
     "Felt temperature": "Temperatura percepita",
     "Felt temperature sensor": "Sensore temperatura percepita",
     "Extra values": "Valori aggiuntivi",
