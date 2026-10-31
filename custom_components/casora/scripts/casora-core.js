@@ -11545,8 +11545,8 @@ window.casoraMenuGlass = {
     // The centre is a safe inner circle: its square sits inside the ring's inner edge (radius 137 of 420), every line keeps
     // to it and long words break (hyphens) – text must never run into the ring (popup-geo.mjs „rad“).
     + '.hui-dl-c{position:absolute;inset:20%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;white-space:normal;'
-    +   'hyphens:auto;-webkit-hyphens:auto;overflow-wrap:break-word;}'
-    + '.hui-dl-c > *{max-width:100%;}'
+    +   'hyphens:auto;-webkit-hyphens:auto;hyphenate-limit-chars:10 4 4;overflow-wrap:break-word;}'
+    + '.hui-dl-c > *{max-width:100%;text-wrap:balance;}'
     + '.hui-dl-c .hui-dl-w2 > span{white-space:nowrap;}'
     + '.hui-dl-c .hui-st-val{justify-content:center;}'
     + '.hui-dl-c .hui-st-n{font-size:clamp(48px, 19cqw, 80px);letter-spacing:-0.04em;line-height:1;}'
@@ -11776,7 +11776,8 @@ window.casoraMenuGlass = {
     } else if (code === 'S4') {
       var p4 = Math.max(0, Math.min(1, Number(o.progress) || 0));
       ring.kind = 'level'; ring.pct = o.progress != null ? p4 * 100 : 0;
-      var wd4 = /[A-Za-zÄÖÜäöüß]{2}/.test(String(o.value == null ? '' : o.value)) && String(o.value).length > 5;
+      // Any word as the value („Läuft“, „Bereit“) takes the word size – a 80 px word filled the whole wheel.
+      var wd4 = /[A-Za-zÄÖÜäöüß]{2}/.test(String(o.value == null ? '' : o.value));
       centerHtml = (o.caption ? '<div class="hui-dl-cap">' + esc(o.caption) + '</div>' : '')
         + stValue(o.value, o.unit || '', wd4 ? dWordCls(o.value) : '') + (o.word ? '<div class="hui-st-w">' + esc(o.word) + '</div>' : '')
         + (o.program ? '<div class="hui-dl-w2">' + esc(o.program) + '</div>' : '');
