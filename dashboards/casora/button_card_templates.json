@@ -13090,7 +13090,8 @@
      }
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', ['Raumklima'])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own && !['Raumklima'].includes(_own)) return _own;\n  return \"Raumklima\";\n]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "tap_action": {
@@ -13107,7 +13108,8 @@
      }
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', ['Raumklima'])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own && !['Raumklima'].includes(_own)) return _own;\n  return \"Raumklima\";\n]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   }
  },
