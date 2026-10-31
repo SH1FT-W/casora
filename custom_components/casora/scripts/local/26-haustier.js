@@ -142,9 +142,8 @@
       // Half the width in the right column: a taller map so HA's own map buttons are not cut at the bottom.
       f.map = { card: Object.assign({}, map, { aspect_ratio: '1.6' }) };
       f.stage = { card: K.secCard(watch, call('stage'), states) };
-      f.quick = { card: K.secCard(watch, call('quick'), states) };
-      return K.layout({ fields: f, top: [], stage: 'stage', quick: 'quick', left: ['info'], right: ['map', 'today', 'hist'],
-        narrowOrder: ['stage', 'quick', 'map', 'today', 'info', 'hist'], fieldStyle: { map: mapStyle }, settings: c.tracker || id });
+      return K.layout({ fields: f, top: [], stage: 'stage', left: ['info'], right: ['map', 'today', 'hist'],
+        narrowOrder: ['stage', 'map', 'today', 'info', 'hist'], fieldStyle: { map: mapStyle }, settings: c.tracker || id });
     }
     return K.layout({ fields: f, top: ['hero', 'map'], left: ['info'], right: ['today', 'hist'],
       narrowOrder: ['today', 'info', 'hist'], fieldStyle: { map: mapStyle }, settings: c.tracker || id });
@@ -264,7 +263,9 @@
           if (x.indexOf('Akku ') === 0) return { label: lbl[2], value: x.slice(5) };
           return { label: lbl[1], value: x.replace(' ' + T('von zuhause'), '') };
         });
-        return UI.stage('status', { tone: s.dead ? 'off' : 'good', icon: 'mdi:paw', text: s.place, facts: factsP, state: s.dead ? 'na' : null });
+        // Dial (richtlinien §4.8): the tracker's battery as the ring, its switches as moons.
+        return UI.stage('status', { tone: s.dead ? 'off' : 'good', icon: 'mdi:paw', text: s.place, facts: factsP, state: s.dead ? 'na' : null,
+          progress: s.battery != null ? s.battery / 100 : null, moons: s.dead ? null : function () { return buttons(s, c, UI, states, true); } });
       }
       return UI.line(s.place, rest) + (s.dead ? '' : buttons(s, c, UI, states));
     }

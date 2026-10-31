@@ -2731,10 +2731,16 @@
         var pctS = active ? U.num(states, c.progress) : null;
         var endS = active && rem != null && rem > 0 ? 'Fertig gegen ' + U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' : null;
         var g = goAct();
+        // Dial (richtlinien §4.8): 2–4 programmes as moons before the start, „Jetzt starten“ the bottom moon.
+        var selM = c.sel && states[c.sel], optsM = selM ? ((selM.attributes || {}).options || []) : [];
+        var moonsM = !active && optsM.length >= 2 && optsM.length <= 4 ? optsM.map(function (o) {
+          return { icon: progIcon(o), text: progName(o, selM), active: selM.state === o,
+            svc: { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.sel } } };
+        }) : null;
         return UI.stage('progress', { value: value, unit: unit || '', word: sub.join(' · ') || null,
           progress: pctS != null ? Math.max(0, Math.min(1, pctS / 100)) : null,
           program: active ? [pctS != null ? Math.round(pctS) + ' %' : null, endS].filter(Boolean).join(' · ') || null : (g && g.why ? g.text + ' · ' + g.why : null),
-          action: g && !g.disabled ? g : null,
+          action: g && !g.disabled ? g : null, moons: moonsM,
           state: raw === 'unavailable' || raw === 'unknown' || !states[c.st] ? 'na' : null });
       }
       return UI.hero({ value: value, unit: unit, sub: sub.join(' · ') || null, subTone: tone, center: true });
@@ -2799,12 +2805,8 @@
       /* Popup v3 (richtlinien §5): 2–4 programs as quick tiles (select_option, the chosen one marked); more keep the
          expandable program list (its „Alle“ is the list itself). */
       var selQ = c.sel && states[c.sel], optsQ = selQ ? ((selQ.attributes || {}).options || []) : [];
-      if (kind === 'd_prog' && SF && D.v3() && UI.quick && optsQ.length >= 2 && optsQ.length <= 4) {
-        return UI.quick(optsQ.map(function (o) {
-          return { icon: progIcon(o), text: progName(o, selQ), active: selQ.state === o,
-            svc: { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.sel } } };
-        }), 'Programm');
-      }
+      // v3: 2–4 programmes are the dial's moons (d_stage).
+      if (kind === 'd_prog' && SF && D.v3() && UI.quick && optsQ.length >= 2 && optsQ.length <= 4) return '';
       var progHtml = kind === 'd_prog' ? D.progPick(c, states) : '';
       if (kind === 'd_prog' && SF) return progHtml;
       var startHtml = D.startPart(c, states);
@@ -4052,9 +4054,11 @@
         var busy = s.run || s.paused;
         return UI.stage('progress', { value: busy && pct != null ? String(Math.round(pct)) : value, unit: busy && pct != null ? '%' : '',
           word: [busy && pct != null ? s.label : null].concat(sub).filter(Boolean).join(' · ') || null,
-          progress: busy && pct != null ? Math.max(0, Math.min(1, pct / 100)) : null,
+          // Dial (richtlinien §4.8): cleaning progress, else the battery as the ring; „Zum Dock“/„Orten“ as moons.
+          progress: busy && pct != null ? Math.max(0, Math.min(1, pct / 100)) : bat != null ? Math.max(0, Math.min(1, bat / 100)) : null,
           action: s.dead ? null : { text: s.run ? 'Pause' : s.paused ? 'Fortsetzen' : 'Start', icon: s.run ? 'mdi:pause' : 'mdi:play', primary: true,
             svc: { domain: 'vacuum', service: s.run ? 'pause' : 'start', data: {}, target: { entity_id: c.st } } },
+          moons: function () { return window._casoraLaundry.inner('v_quick', c, states); },
           state: s.dead ? 'na' : null });
       }
       var out = UI.hero({ value: value, unit: unit, sub: sub.join(' · ') || null, subTone: tone, center: true });
@@ -4445,8 +4449,9 @@
         + ' return L.inner(k, c, states); })) : "";', c.st);
       /* Popup v3: the head with its action row becomes the stage, „Zum Dock“/„Orten“ the quick choice. */
       var v3V = !!(window._casoraDish && window._casoraDish.v3 && window._casoraDish.v3());
-      if (v3V) { delete f2.hero; f2.stage = tpl('v_stage', true); f2.quick = tpl('v_quick', false); }
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3V ? [] : undefined, stage: v3V ? 'stage' : null, quick: v3V ? 'quick' : null,
+      // „Zum Dock“/„Orten“ are the dial's moons (v_stage).
+      if (v3V) { delete f2.hero; f2.stage = tpl('v_stage', true); }
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3V ? [] : undefined, stage: v3V ? 'stage' : null,
         left: ['rooms', 'mode'], right: ['map', 'attn', 'more'], settings: states[c.st] ? c.st : null });
     }
 

@@ -489,12 +489,12 @@
     /* Popup v3 „Bühne“ (richtlinien §4 S4, §5): the head becomes the stage, its keys (Mähen/Pause · Zur Station ·
        Parken) the quick choice. Soft and no localStorage casora_popup_variant other than 'v3'. */
     var v3 = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; } })();
-    if (v3) { delete f.hero; f.stage = { card: K.secCard(watch, call('stage'), states) }; f.quick = { card: K.secCard(watch, call('quick'), states) }; }
+    if (v3) { delete f.hero; f.stage = { card: K.secCard(watch, call('stage'), states) }; }
     // Settings only when the source has something to set (cutting height, zone, schedule) – not in v3, which is clean
     // (richtlinien §8: no settings section, that is set up in the Studio or in Home Assistant).
     if ((c.cutHeight || c.zone) && !v3) f.ctrl = { card: K.secCard(watch, call('ctrl'), states) };
-    return K.layout({ fields: f, top: v3 ? [] : ['hero'], stage: v3 ? 'stage' : null, quick: v3 ? 'quick' : null, left: ['info', 'ctrl'], right: ['hist'],
-      narrowOrder: v3 ? ['stage', 'quick', 'info', 'ctrl', 'hist'] : ['info', 'ctrl', 'hist'],
+    return K.layout({ fields: f, top: v3 ? [] : ['hero'], stage: v3 ? 'stage' : null, left: ['info', 'ctrl'], right: ['hist'],
+      narrowOrder: v3 ? ['stage', 'info', 'ctrl', 'hist'] : ['info', 'ctrl', 'hist'],
       settings: hass && hass.states && hass.states[c.mower] ? c.mower : id });
   };
 
@@ -575,7 +575,9 @@
       if (s.online === false) sub.push('Offline');
       else if (s.nextStart && !s.run && !s.returning) sub.push('Nächster Start ' + s.nextStart);
       else if (s.left != null && s.run) sub.push('noch ' + M.dur(s.left * 60000));
-      if (part === 'stage') return UI.stage('progress', { value: s.label, unit: '', word: sub.join(' · ') || null, state: s.dead ? 'na' : null });
+      // Dial (richtlinien §4.8): the ring is the battery, the keys are moons.
+      if (part === 'stage') return UI.stage('progress', { value: s.label, unit: '', word: sub.join(' · ') || null, state: s.dead ? 'na' : null,
+        progress: s.battery != null ? s.battery / 100 : null, moons: function () { return buttons(s, c, UI, states, true); } });
       return UI.hero({ value: s.label, sub: sub.join(' · ') || null, subTone: s.online === false ? 'warn' : null, center: true })
         + (s.dead ? '' : buttons(s, c, UI, states));
     }
