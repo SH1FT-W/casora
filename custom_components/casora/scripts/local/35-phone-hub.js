@@ -247,6 +247,16 @@
   window.casoraClimateBlinds = function (hass, user, opt, home) {
     if (opt === false || !home || !hass || !hass.states) return [];
     var S = hass.states, GATE = ['garage', 'gate', 'door'];
+    /* The dashboard's blinds tile is the one place the blinds are set up – its popup opens from this badge
+       (casoraOpenBlinds), so the badge counts exactly its blinds (review 2, T09: badge 7, popup 6). */
+    var SC = window._casoraSecCovers, tile = window.casoraBlindsTile && SC && SC.singles ? window.casoraBlindsTile() : null;
+    if (tile) {
+      var tv = tile.variables || {};
+      var list = Array.isArray(tv.covers) && tv.covers.length > 1 ? tv.covers : [tile.entity || tv.cover_entity];
+      return SC.singles(S, list).filter(function (id) {
+        return !!S[id] && (typeof window.casoraSeesEntity !== 'function' || window.casoraSeesEntity(id, user));
+      }).sort();
+    }
     return Object.keys(S).filter(function (id) {
       if (id.indexOf('cover.') !== 0) return false;
       var dc = String((S[id].attributes || {}).device_class || '').toLowerCase();
