@@ -11547,9 +11547,10 @@ window.casoraMenuGlass = {
     + '.hui-dl-c{position:absolute;inset:20%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;white-space:normal;'
     +   'hyphens:auto;-webkit-hyphens:auto;hyphenate-limit-chars:10 4 4;overflow-wrap:break-word;}'
     + '.hui-dl-c > *{max-width:100%;text-wrap:balance;}'
-    + '.hui-dl-c .hui-dl-w2 > span{white-space:nowrap;}'
+    // A fact keeps its value together, its word may move to the next line (a phone's wheel is narrow).
+    + '.hui-dl-c .hui-dl-w2 b{white-space:nowrap;}'
     + '.hui-dl-c .hui-st-val{justify-content:center;}'
-    + '.hui-dl-c .hui-st-n{font-size:clamp(48px, 19cqw, 80px);letter-spacing:-0.04em;line-height:1;}'
+    + '.hui-dl-c .hui-st-n{font-size:clamp(46px, 18cqw, 80px);letter-spacing:-0.04em;line-height:1;}'
     + '.hui-dl-c .hui-st-u{font-size:clamp(20px, 6.7cqw, 28px);}'
     // A state word as the value („Bereit“, „Trocknet Mopp“): at most two lines; a sentence („Parkt bis zum nächsten Zeitplan“)
     // takes the size of the S7 sentence and three lines.
@@ -11557,11 +11558,11 @@ window.casoraMenuGlass = {
     + '.hui-dl-c .hui-st-val.wd .hui-st-n{font-size:clamp(26px, 8.6cqw, 36px);letter-spacing:-0.02em;line-height:1.08;'
     +   'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}'
     + '.hui-dl-c .hui-st-val.wd.wl .hui-st-n{font-size:clamp(19px, 6.2cqw, 26px);line-height:1.15;-webkit-line-clamp:3;}'
-    + '.hui-dl-c .hui-st-w{margin-top:8px;text-align:center;max-width:86%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}'
-    + '.hui-dl-c .hui-dl-cap{font-size:15px;font-weight:600;color:' + S.sub + ';margin-bottom:4px;max-width:78%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
-    // Facts sit low in the circle where it narrows: shorter lines, at most two.
-    + '.hui-dl-c .hui-dl-w2{font-size:13px;font-weight:600;color:' + S.sub + ';margin-top:4px;font-variant-numeric:tabular-nums;max-width:80%;'
-    +   'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}'
+    + '.hui-dl-c .hui-st-w{margin-top:8px;text-align:center;max-width:80%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}'
+    + '.hui-dl-c .hui-dl-cap{font-size:15px;font-weight:600;color:' + S.sub + ';margin-bottom:4px;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+    // Facts sit low in the circle where it narrows: shorter lines, at most three.
+    + '.hui-dl-c .hui-dl-w2{font-size:13px;font-weight:600;color:' + S.sub + ';margin-top:4px;font-variant-numeric:tabular-nums;max-width:76%;'
+    +   'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}'
     + '.hui-dl-c .hui-dl-w2 b{font-weight:700;color:' + T.ink + ';}'
     + '.hui-dl-c .hui-dl-t{font-size:clamp(18px, 6.2cqw, 26px);font-weight:800;letter-spacing:-0.02em;line-height:1.15;color:' + T.ink + ';max-width:92%;'
     +   'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:break-word;}'

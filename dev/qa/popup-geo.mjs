@@ -183,8 +183,14 @@ export const MEASURE_GEO = () => {
     for (let t = tw.nextNode(); t; t = tw.nextNode()) {
       if (!t.data.trim() || !t.parentElement || !t.parentElement.checkVisibility()) continue;
       const rg = document.createRange(); rg.selectNodeContents(t);
-      for (const q of rg.getClientRects()) {
-        if (q.width < 1) continue;
+      // What a parent clips (ellipsis, line clamp) is not drawn: the text box ends at that parent.
+      let clip = null;
+      for (let a = t.parentElement; a && a !== c.parentElement; a = a.parentElement) {
+        if (getComputedStyle(a).overflow !== 'visible') { const r = a.getBoundingClientRect(); clip = clip ? { left: Math.max(clip.left, r.left), right: Math.min(clip.right, r.right), top: Math.max(clip.top, r.top), bottom: Math.min(clip.bottom, r.bottom) } : { left: r.left, right: r.right, top: r.top, bottom: r.bottom }; }
+      }
+      for (const q0 of rg.getClientRects()) {
+        const q = clip ? { left: Math.max(q0.left, clip.left), right: Math.min(q0.right, clip.right), top: Math.max(q0.top, clip.top), bottom: Math.min(q0.bottom, clip.bottom) } : q0;
+        if (q.right - q.left < 1 || q.bottom - q.top < 1) continue;
         const d = Math.max(out(q.left, q.top), out(q.right, q.top), out(q.left, q.bottom), out(q.right, q.bottom));
         if (d > worst) { worst = d; what = t.parentElement; }
       }
