@@ -16,13 +16,6 @@
   "grund": "Welle 2 nicht geschafft (Rahmen): casora_climate_popup (51k, 01-basis.js) mischt Klima-Geräte und Messwerte; S2 nur mit genau einem Thermostat, sonst S6 – Auswahl der Bühne braucht eine Entscheidung, welches Gerät die Bühne bekommt. Keine eigene Kachel im Test-HA (Klima-Badge öffnet casora_badge_climate_group)"
  },
  {
-  "popup": "Luftreiniger",
-  "vorlagen": [
-   "casora_air_purifier"
-  ],
-  "grund": "Welle 2 nicht geschafft: S6 Luftqualität braucht einen Luftqualitäts-/PM2,5-Sensor (Testgerät hat nur Filter + Leistung) und das Diagramm ist eine eigene Karte unter dem Kopf (in die Bühne umziehen = Umbau der Kartenliste); ohne Sensor wäre es die Rückfallregel – Entscheidung offen. Steuerung wie Lüfter (S1 + Presets) wäre ohne neue Logik möglich"
- },
- {
   "popup": "Sicherheit (Badge, Gruppe)",
   "vorlagen": [
    "casora_badge_security",

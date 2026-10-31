@@ -56,6 +56,8 @@ const MIGRIERT = [
   // without a probe; the temperature as the Verlauf (120).
   { popup: 'Aquarium, Becken, Aquarium-Licht', vorlagen: ['casora_aquarium', 'casora_popup_aquarium_tank', 'casora_aquarium_light'], file: '02-devices.js',
     from: '  /* Popup v3 (popup-richtlinien-v3.md §4, §7, §8): clean – the status line, the water', to: '    const f2 = { hero: fields.hero, chart: fields.chart, glight', stages: 2 },
+  // Like the fan: S1 speed, presets as quick tiles (S6 would need a chart plate in the stage); PM2,5 as the Verlauf.
+  { popup: 'Luftreiniger', vorlagen: ['casora_air_purifier'], file: null, stages: 1 },
 ];
 
 // 1. Pieces.
