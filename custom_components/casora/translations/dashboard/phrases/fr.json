@@ -2603,7 +2603,9 @@
   "Tankstand": "Niveau de carburant",
   "Gerade kein Spiel": "Aucun jeu en ce moment",
   "Kein Spiel": "Aucun jeu",
-  "Gruppen": "Groupes"
+  "Gruppen": "Groupes",
+  "Heute an": "Active aujourd’hui",
+  "Heute aus": "Désactivée aujourd’hui"
  },
  "patterns": [
   [

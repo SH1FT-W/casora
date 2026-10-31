@@ -2092,7 +2092,7 @@
       if (itT) rowsT.push(itT);
       return rowsT.length ? UI.group(rowsT, r.ev ? 'Akku' : 'Tank') : '';
     }
-    if (name === 'state_s') {
+    if (name === 'state_s' || name === 'state_s3') {
       /* Weich: nur Abweichungen, sonst ein Satz. */
       var dev = [];
       if (r.open.length) dev.push({ icon: 'mdi:alert', iconTone: 'bad', label: r.open.length === 1 ? r.open[0] + ' offen' : 'Offen', sub: r.open.length > 1 ? r.open.join(', ') : null });
@@ -2102,6 +2102,8 @@
       if (!dev.length && !r.known) dev.push({ icon: 'mdi:help-circle-outline', iconTone: 'rgba(255,255,255,0.18)', label: 'Keine Daten' });
       if (!dev.length) dev.push({ icon: 'mdi:check-circle-outline', iconTone: 'good', label: r.locked == null ? 'Alles zu' : 'Alles zu und verriegelt',
         sub: r.brake ? 'Feststellbremse angezogen' : null });
+      /* Popup v3 (#89, richtlinien §8 exception): the odometer users asked for (BMW CarData „mileage“ too) stays as a row. */
+      if (name === 'state_s3' && r.km != null) dev.push({ icon: 'mdi:counter', iconTone: 'rgba(255,255,255,0.18)', label: 'Kilometerstand', value: fmtN(r.km) + ' ' + r.kmU });
       return UI.group(dev, 'Zustand');
     }
     if (name === 'service_s') {
@@ -2195,7 +2197,7 @@
       /* Popup v3 „Bühne“: the head becomes the status stage (Soft, no localStorage casora_popup_variant other than 'v3'). */
       var v3C = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var vv = localStorage.getItem('casora_popup_variant'); return !vv || vv === 'v3'; } catch (e) { return true; } })();
       var fc = { hero: v3C ? undefined : sec('hero'), stage: v3C ? sec('stage') : undefined, tank_s: v3C ? sec('tank_s') : undefined,
-        state_s: sec('state_s'), service_s: sec('service_s'),
+        state_s: sec(v3C ? 'state_s3' : 'state_s'), service_s: sec('service_s'),
         more: HH.moreCard(watch, 'const C = window._casoraCar, H = window._casoraHH;\n'
           + 'return C && H ? H.more("car", ["state", "service", "trips"].map(function (n) { return C.sec(n, ' + JSON.stringify(p) + ', states); })) : "";', entity.entity_id) };
       return HH.layout({ entity: entity.entity_id, watch: watch, fields: fc, top: v3C ? [] : undefined, stage: v3C ? 'stage' : null,

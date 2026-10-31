@@ -2603,7 +2603,9 @@
   "Tankstand": "Nivel de combustible",
   "Gerade kein Spiel": "Ningún juego ahora",
   "Kein Spiel": "Ningún juego",
-  "Gruppen": "Grupos"
+  "Gruppen": "Grupos",
+  "Heute an": "Activa hoy",
+  "Heute aus": "Desactivada hoy"
  },
  "patterns": [
   [

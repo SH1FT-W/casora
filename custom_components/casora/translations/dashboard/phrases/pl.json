@@ -2603,7 +2603,9 @@
   "Tankstand": "Poziom paliwa",
   "Gerade kein Spiel": "Teraz brak gry",
   "Kein Spiel": "Brak gry",
-  "Gruppen": "Grupy"
+  "Gruppen": "Grupy",
+  "Heute an": "Dziś włączona",
+  "Heute aus": "Dziś wyłączona"
  },
  "patterns": [
   [

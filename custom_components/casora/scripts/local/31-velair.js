@@ -367,7 +367,7 @@
   // ── Popup ─────────────────────────────────────────────────────────────────
   V.watch = function (hass, id, variables) {
     var E = F() ? F().entities(hass) : { zones: [] };
-    return [id, variables && variables.temp_sensor, E.auto, E.status].concat(E.zones.map(function (x) { return x.entity_id; }))
+    return [id, variables && variables.temp_sensor, E.auto, E.status, E.mode].concat(E.zones.map(function (x) { return x.entity_id; }))
       .filter(function (x, i, a) { return x && a.indexOf(x) === i; });
   };
   V.popup = function (entity, states, hass, variables) {
@@ -385,17 +385,32 @@
         + JSON.stringify(sensor) + ') : "";';
     };
     var f = {};
-    /* Popup v3 (popup-richtlinien-v3.md §4 S2, §8): clean – the target with −/+ as the stage, the modes as quick tiles,
-       nothing else. The schedule (its state stays in the status line), fan, presets, swing and the Velair panel row go:
-       Velair's own panel plans the week. One column (552). */
+    /* Popup v3 (popup-richtlinien-v3.md §4 S2, §8): clean – the target with −/+ as the stage, the modes as moons. Under
+       it two rows users asked for in #32 (§8 exception): „Zeitplan ›“ opens the week as a sub page (view, edit, on/off,
+       the target in each block), „Velair-Modus“ is Velair's global mode. Fan, presets, swing and the Velair panel row
+       go. One column (552). */
     if (UI.v3 && UI.v3()) {
       // The modes are the dial's moons (part 'stage').
-      ['hero', 'stage'].forEach(function (k) { f[k] = { card: K.secCard(watch, call(k), states) }; });
-      return K.layout({ fields: f, top: ['hero'], stage: 'stage', left: [], right: [], narrowOrder: ['stage'] });
+      ['hero', 'stage', 'rows'].forEach(function (k) { f[k] = { card: K.secCard(watch, call(k), states) }; });
+      return K.layout({ fields: f, top: ['hero'], stage: 'stage', left: ['rows'], right: [], narrowOrder: ['stage', 'rows'] });
     }
     // "opts", not "more": the layout would stretch a trailing "more" over both columns.
     ['hero', 'ctl', 'plan', 'opts'].forEach(function (k) { f[k] = { card: K.secCard(watch, call(k), states) }; });
     return K.layout({ fields: f, top: ['hero'], left: ['ctl'], right: ['plan', 'opts'], narrowOrder: ['ctl', 'plan', 'opts'] });
+  };
+
+  // Popup v3: the week as a sub page with ‹ (#32) – the same part 'plan' as the v2 popup, live and editable there.
+  (window._casoraPages || (window._casoraPages = {}))['velair-plan'] = function (arg) {
+    var K = window._casoraSoftKit, ha = document.querySelector('home-assistant'), h = ha && ha.hass;
+    if (!K || !h || !window.casoraPopup || !window.casoraPopup.sub) return;
+    var parts = String(arg || '').split('|'), id = parts[0], sensor = parts[1] || null;
+    if (!id) return;
+    var u = uiOf(id);
+    u.day = null; u.edit = null; u.busy = false;
+    var code = 'return window._casoraVelair ? window._casoraVelair.sec("plan", ' + JSON.stringify(id) + ', states, hass, this, '
+      + JSON.stringify(sensor) + ') : "";';
+    window.casoraPopup.sub({ title: 'Zeitplan', content: K.layout({ fields: { p: { card: K.secCard(V.watch(h, id, { temp_sensor: sensor }), code, h.states) } },
+      top: [], left: ['p'], right: [] }) });
   };
 
   var OFF_PLATE = 'var(--casora-soft-icon-off, rgba(140,115,90,0.12))';
@@ -604,6 +619,21 @@
       };
       return UI.stage('value', { caption: 'Zieltemperatur', value: t3, unit: unit3, minus: pm3(-1), plus: pm3(1), foot: foot3,
         heat: true, current: rt3, moons: mn3 });
+    }
+    if (part === 'rows') {
+      // v3 (#32): „Zeitplan ›“ (status as sub, opens the week) and Velair's global mode (select „Mode“).
+      var E5 = F() ? F().entities(hass) : {}, rows5 = [];
+      if (z) {
+        var on5 = z.enabled && !z.globalOff && !z.zonePaused && z.source !== 'profile_pause';
+        rows5.push({ icon: 'mdi:calendar-clock', iconTone: on5 ? 'accent' : OFF_PLATE, label: 'Zeitplan', sub: V.status(z, date),
+          value: on5 ? 'An' : 'Aus', page: 'velair-plan|' + id + '|' + (sensor || '') });
+      } else if (F() && F().present(hass)) {
+        rows5.push({ icon: 'mdi:calendar-clock', iconTone: OFF_PLATE, label: 'Zeitplan',
+          sub: data ? 'Velair plant dieses Gerät nicht' : 'Velair lädt …' });
+      }
+      var ms5 = E5.mode && hass && hass.states[E5.mode];
+      if (ms5 && !bad(ms5.state)) rows5.push({ icon: 'mdi:home-switch-outline', iconTone: OFF_PLATE, label: 'Velair-Modus', value: ms5.state, entity: E5.mode });
+      return rows5.length ? UI.group(rows5, 'Velair') : '';
     }
     if (part === 'quick') {
       if (!st || bad(st.state)) return '';

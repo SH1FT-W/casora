@@ -216,4 +216,29 @@ rowsSeen.length = 0;
 V.sec('plan', ID, states, hass, null);
 const modeRow = rowsSeen.flatMap((g) => g.rows).find((r) => r.label === 'Velair-Modus');
 assert.ok(modeRow && modeRow.value === 'Nacht' && modeRow.entity === 'select.velair_mode', 'mode row with the select');
+
+// ── Popup v3 (#32, popup-richtlinien-v3.md §8 exception): rows „Zeitplan ›“ and „Velair-Modus“ under the dial; the row
+//    opens the week as a sub page with the same live, editable part 'plan' ──
+window._casoraUI.v3 = () => true;
+const pv3 = V.popup({ entity_id: ID }, states, hass, {});
+assert.deepEqual([pv3.o.stage, pv3.o.left], ['stage', ['rows']], 'v3: stage, then the rows');
+assert.ok(pv3.custom_fields.rows.card.watch.includes('select.velair_mode'), 'v3: the mode row follows the select');
+rowsSeen.length = 0;
+html = V.sec('rows', ID, states, hass, null);
+const v3rows = rowsSeen.flatMap((g) => g.rows);
+const planRow = v3rows.find((r) => r.label === 'Zeitplan');
+assert.ok(planRow && planRow.page === 'velair-plan|' + ID + '|', 'v3: „Zeitplan ›“ opens the week');
+assert.equal(planRow.sub, V.status(V.zone(F.data(), ID)), 'v3: the schedule state on the row');
+assert.ok(v3rows.some((r) => r.label === 'Velair-Modus' && r.value === 'Nacht' && r.entity === 'select.velair_mode'), 'v3: „Velair-Modus“');
+let sub = null;
+window.casoraPopup = { sub: (o) => { sub = o; } };
+window._casoraPages['velair-plan'](ID + '|');
+assert.equal(sub && sub.title, 'Zeitplan', 'v3: the sub page opens');
+const subCode = sub.content.custom_fields.p.card.code;
+assert.match(subCode, /_casoraVelair\.sec\("plan"/, 'v3: the sub page is the week with editing');
+rowsSeen.length = 0;
+html = new Function('states', 'hass', subCode).call(null, states, hass);
+assert.ok(/velair-day:/.test(html), 'v3: the week on the sub page');
+assert.ok(rowsSeen.flatMap((g) => g.rows).some((r) => /^velair-(edit|add):/.test(r.entity || '')), 'v3: editable slots on the sub page');
+delete window._casoraUI.v3;
 console.log('velair: ok');
