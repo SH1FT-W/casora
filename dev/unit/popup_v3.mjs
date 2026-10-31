@@ -52,6 +52,10 @@ const MIGRIERT = [
   { popup: 'Fußbodenheizung (Haus/Raum)', vorlagen: ['casora_popup_fbh'], file: '03-popups.js', from: '  F.v3 = function () {', to: '  /* Modus als iOS', stages: 3 },
   // S2 (live, off/unavailable), a heat/cool range as S7.
   { popup: 'Klimaanlage Velair', vorlagen: ['casora_popup_velair'], file: '31-velair.js', from: "    if (part === 'stage') {", to: "    if (part === 'quick') {", stages: 3 },
+  // Water temperature as S7 (fallback rule: S6 would need a chart plate in the stage that is not redrawn), S1 light
+  // without a probe; the temperature as the Verlauf (120).
+  { popup: 'Aquarium, Becken, Aquarium-Licht', vorlagen: ['casora_aquarium', 'casora_popup_aquarium_tank', 'casora_aquarium_light'], file: '02-devices.js',
+    from: '  /* Popup v3 (popup-richtlinien-v3.md §4, §7, §8): clean – the status line, the water', to: '    const f2 = { hero: fields.hero, chart: fields.chart, glight', stages: 2 },
 ];
 
 // 1. Pieces.

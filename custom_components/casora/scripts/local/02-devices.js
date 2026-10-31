@@ -816,6 +816,65 @@
      doctor and leak sensor on the right; profile/control (HeliaLux), dosing, energy and the
      probes' batteries under „Mehr“. The „Wassertemperatur“ row goes (it is in the head). */
   const HH = window._casoraHH;
+  /* Popup v3 (popup-richtlinien-v3.md §4, §7, §8): clean – the status line, the water temperature as the stage (S7, the
+     fallback rule: a chart inside the stage would be a plate that is not redrawn, new logic), the light and the
+     equipment as the list, the temperature as the one Verlauf (120). Without a probe the light is the stage (S1).
+     Light channels, control, dosing, leak sensor, energy, batteries and the aquarium doctor stay in the Studio/HA. */
+  if (HH && HH.on() && HH.layout && UI.v3 && UI.v3()) {
+    const tOk = !isNaN(parseFloat(states[cfg.temp]?.state)) && String(states[cfg.temp]?.attributes?.device_class || 'temperature') === 'temperature';
+    if (hpOk && tOk) window._hpChartCfg(cfg.temp, 'Wassertemperatur', '24h', 'c3', 120);
+    const f3 = {
+      hero: `[[[
+        const c = ${_c};
+        const ev = window._casoraAqEval ? window._casoraAqEval(states[c.temp], c.V, states, hass) : { level: 0, reasons: [] };
+        return window._casoraUI.hero({ value: ev.level ? ev.reasons.join(' · ') : 'Alles in Ordnung', valueTone: ev.level === 2 ? 'bad' : ev.level === 1 ? 'warn' : null, center: true });
+      ]]]`,
+      stage: `[[[
+        const c = ${_c};
+        const UI = window._casoraUI, t = states[c.temp], n = parseFloat(t && t.state);
+        if (${tOk ? 'true' : 'false'}) {
+          const ev = window._casoraAqEval ? window._casoraAqEval(t, c.V, states, hass) : { level: 0 };
+          const u = (t.attributes && t.attributes.unit_of_measurement) || '°C';
+          return UI.stage('status', { tone: ev.level === 2 ? 'bad' : ev.level === 1 ? 'warn' : 'good', icon: 'mdi:thermometer-water',
+            text: isNaN(n) ? '–' : n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' ' + u,
+            state: isNaN(n) ? 'na' : null });
+        }
+        const l = c.light && states[c.light];
+        if (!l) return '';
+        const on = l.state === 'on', a = l.attributes || {};
+        return UI.stage('slider', { value: on && a.brightness != null ? Math.round(a.brightness / 2.55) : (on ? 100 : 0), label: 'Helligkeit', icon: 'light',
+          state: l.state === 'unavailable' ? 'na' : (on ? null : 'off'),
+          svc: { domain: 'light', service: 'turn_on', field: 'brightness_pct', data: on ? null : (c.lightOn || null), target: { entity_id: c.light } } });
+      ]]]`,
+    };
+    if (tOk && hpOk) f3.chart = fields.chart;
+    if ((cfg.light && states[cfg.light] && tOk) || devs.length) f3.list = `[[[
+      const c = ${_c};
+      const rows = [];
+      const l = c.light && states[c.light];
+      if (l && ${tOk ? 'true' : 'false'}) {
+        const on = l.state === 'on', dead = l.state === 'unavailable';
+        rows.push({ icon: 'mdi:lightbulb', iconTone: on ? 'accent' : 'rgba(255,255,255,0.18)', label: 'Beckenlicht', value: dead ? 'Nicht verfügbar' : on ? 'An' : 'Aus',
+          svc: dead ? null : (on ? { domain: 'light', service: 'turn_off', target: { entity_id: c.light } }
+                                 : { domain: 'light', service: 'turn_on', data: c.lightOn || {}, target: { entity_id: c.light } }),
+          confirm: on ? 'Ausschalten' : null, active: on });
+      }
+      c.devs.forEach((d) => {
+        const st = states[d.entity], dead = !st || st.state === 'unavailable';
+        const on = window._casoraAqTechOn ? window._casoraAqTechOn(st) : st && st.state === 'on';
+        rows.push({ icon: d.icon || 'mdi:power-plug', iconTone: on ? 'good' : (d.alarm ? 'bad' : 'rgba(255,255,255,0.18)'), label: d.label,
+          value: dead ? 'Nicht verfügbar' : on ? 'An' : 'Aus', valueTone: !on && d.alarm ? 'bad' : null, active: on,
+          svc: dead ? null : (window._casoraAqTechSvc ? window._casoraAqTechSvc(d.entity, on)
+            : { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: d.entity } }),
+          confirm: on && d.confirm ? 'Ausschalten' : null });
+      });
+      return rows.length ? window._casoraUI.group(rows, 'Geräte') : '';
+    ]]]`;
+    // Only the light (no probe, no equipment): the stage alone across the one column.
+    const solo = !f3.chart && !f3.list;
+    return HH.layout({ entity: cfg.temp, watch: watch, fields: f3, top: solo ? ['hero', 'stage'] : ['hero'], stage: solo ? null : 'stage',
+      left: ['chart'], right: ['list'] });
+  }
   if (HH && HH.on() && HH.layout) {
     const f2 = { hero: fields.hero, chart: fields.chart, glight: fields.glight, gtech: fields.gtech, gai: fields.gai };
     if (cfg.leak && states[cfg.leak]) f2.gleak = `[[[

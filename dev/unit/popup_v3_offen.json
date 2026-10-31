@@ -23,16 +23,6 @@
   "grund": "Welle 2 nicht geschafft: S6 Luftqualität braucht einen Luftqualitäts-/PM2,5-Sensor (Testgerät hat nur Filter + Leistung) und das Diagramm ist eine eigene Karte unter dem Kopf (in die Bühne umziehen = Umbau der Kartenliste); ohne Sensor wäre es die Rückfallregel – Entscheidung offen. Steuerung wie Lüfter (S1 + Presets) wäre ohne neue Logik möglich"
  },
  {
-  "popup": "Aquarium, Becken, Aquarium-Licht",
-  "vorlagen": [
-   "casora_aquarium",
-   "casora_popup_aquarium_tank",
-   "casora_aquarium_light"
-  ],
-  "modul": "02-devices.js",
-  "grund": "Welle 3 nicht geschafft: S6 Wassertemperatur heißt das Diagramm (hp-chart-slot, _hpChartInit) in die Bühne legen – die Bühne ist ein Live-Feld, das bei jedem Zustand neu zeichnet; das Diagramm braucht eine eigene, nicht neu gerenderte Platte in der Bühne (neue Logik, Lehre „Diagramm beim zweiten Öffnen“). S1 Licht nur mit Leuchte."
- },
- {
   "popup": "Sicherheit (Badge, Gruppe)",
   "vorlagen": [
    "casora_badge_security",

@@ -553,7 +553,8 @@
   },
   "tap_action": {
    "casora_popup": {
-    "content": "[[[\n  /* Aquarien-Übersicht (alt, bis 01.10.2026 casora_popup_aquarium): öffnet das Becken-Popup\n     des ersten eingetragenen Beckens. Neue Dashboards nutzen je Becken casora_aquarium_tank. */\n  const _t = [variables.entity_saltwater, variables.entity_freshwater, variables.entity_turtle, entity?.entity_id]\n    .find((id) => id && states[id] && String(states[id].attributes?.device_class || '') === 'temperature')\n    || variables.entity_saltwater || variables.entity_freshwater || variables.entity_turtle || entity?.entity_id;\n  const _st = _t ? String(_t).replace('_temperatur_temperature', '_temperaturstatus') : null;\n  const _v = Object.assign({}, variables, { status_entity: variables.status_entity || (_st && _st !== _t && states[_st] ? _st : null) });\n  return (window._casoraAqPopup && states[_t]) ? window._casoraAqPopup(states[_t], _v, states, hass) : { type: 'vertical-stack', cards: [] };\n]]]\n"
+    "content": "[[[\n  /* Aquarien-Übersicht (alt, bis 01.10.2026 casora_popup_aquarium): öffnet das Becken-Popup\n     des ersten eingetragenen Beckens. Neue Dashboards nutzen je Becken casora_aquarium_tank. */\n  const _t = [variables.entity_saltwater, variables.entity_freshwater, variables.entity_turtle, entity?.entity_id]\n    .find((id) => id && states[id] && String(states[id].attributes?.device_class || '') === 'temperature')\n    || variables.entity_saltwater || variables.entity_freshwater || variables.entity_turtle || entity?.entity_id;\n  const _st = _t ? String(_t).replace('_temperatur_temperature', '_temperaturstatus') : null;\n  const _v = Object.assign({}, variables, { status_entity: variables.status_entity || (_st && _st !== _t && states[_st] ? _st : null) });\n  return (window._casoraAqPopup && states[_t]) ? window._casoraAqPopup(states[_t], _v, states, hass) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "variant": "v3"
    }
   }
  },
@@ -662,7 +663,9 @@
   },
   "tap_action": {
    "casora_popup": {
-    "content": "[[[\n  /* Aquarium-Licht (alt, bis 01.10.2026 casora_popup_aquarium_light): öffnet das Becken-Popup\n     mit dieser Leuchte. Wassertemperatur: variables.temp_entity, sonst ein Temperatursensor im\n     selben Bereich (Aquarium-Name bevorzugt), sonst nur die Leuchte. */\n  const _l = entity?.entity_id;\n  const _ar = (id) => { const e = hass?.entities?.[id]; return e ? (e.area_id || hass?.devices?.[e.device_id]?.area_id || null) : null; };\n  const _a = _ar(_l);\n  const _temps = Object.keys(hass?.entities || {}).filter((id) => id.indexOf('sensor.') === 0 && states[id]\n    && states[id].attributes?.device_class === 'temperature' && _a && _ar(id) === _a);\n  const _t = variables.temp_entity || _temps.find((id) => /aquari|becken|tank|reef|fluval|trigon|chihiros|juwel|terrari|schildkr/i.test(id + ' ' + (states[id].attributes?.friendly_name || ''))) || _temps[0] || _l;\n  const _v = Object.assign({}, variables, { light_entity: _l,\n    light_reachable: variables.light_reachable || (variables.warn_entity && variables.warn_equals === 'off' ? variables.warn_entity : null) });\n  return (window._casoraAqPopup && states[_t]) ? window._casoraAqPopup(states[_t], _v, states, hass) : { type: 'vertical-stack', cards: [] };\n]]]\n"
+    "content": "[[[\n  /* Aquarium-Licht (alt, bis 01.10.2026 casora_popup_aquarium_light): öffnet das Becken-Popup\n     mit dieser Leuchte. Wassertemperatur: variables.temp_entity, sonst ein Temperatursensor im\n     selben Bereich (Aquarium-Name bevorzugt), sonst nur die Leuchte. */\n  const _l = entity?.entity_id;\n  const _ar = (id) => { const e = hass?.entities?.[id]; return e ? (e.area_id || hass?.devices?.[e.device_id]?.area_id || null) : null; };\n  const _a = _ar(_l);\n  const _temps = Object.keys(hass?.entities || {}).filter((id) => id.indexOf('sensor.') === 0 && states[id]\n    && states[id].attributes?.device_class === 'temperature' && _a && _ar(id) === _a);\n  const _t = variables.temp_entity || _temps.find((id) => /aquari|becken|tank|reef|fluval|trigon|chihiros|juwel|terrari|schildkr/i.test(id + ' ' + (states[id].attributes?.friendly_name || ''))) || _temps[0] || _l;\n  const _v = Object.assign({}, variables, { light_entity: _l,\n    light_reachable: variables.light_reachable || (variables.warn_entity && variables.warn_equals === 'off' ? variables.warn_entity : null) });\n  return (window._casoraAqPopup && states[_t]) ? window._casoraAqPopup(states[_t], _v, states, hass) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "style": "[[[\n  /* Popup v3: without a water temperature the light is the only thing to show – one column (552). */\n  const U = window._casoraUI;\n  if (!(U && U.v3 && U.v3() && window.casoraPopupWidth)) return '';\n  const _l = entity?.entity_id;\n  const _ar = (id) => { const e = hass?.entities?.[id]; return e ? (e.area_id || hass?.devices?.[e.device_id]?.area_id || null) : null; };\n  const _a = _ar(_l);\n  const _temps = Object.keys(hass?.entities || {}).filter((id) => id.indexOf('sensor.') === 0 && states[id]\n    && states[id].attributes?.device_class === 'temperature' && _a && _ar(id) === _a);\n  const _t = variables.temp_entity || _temps.find((id) => /aquari|becken|tank|reef|fluval|trigon|chihiros|juwel|terrari|schildkr/i.test(id + ' ' + (states[id].attributes?.friendly_name || ''))) || _temps[0] || _l;\n  return _t === _l ? window.casoraPopupWidth('one') : '';\n]]]",
+    "variant": "v3"
    }
   }
  },
@@ -11958,7 +11961,8 @@
      }
     ],
     "title": "[[[\n  const n = String(this._config?.name || '').trim();\n  return variables.tank_name || (n.startsWith('[[[') ? '' : n) || 'Aquarium';\n]]]\n",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [
