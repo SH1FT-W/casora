@@ -2589,7 +2589,9 @@
   "Sensor offen": "Capteur ouvert",
   "Sensoren offen": "Capteurs ouverts",
   "Wirklich?": "Vraiment ?",
-  "Schloss entriegeln?": "Déverrouiller la serrure ?"
+  "Schloss entriegeln?": "Déverrouiller la serrure ?",
+  "Bis": "Jusqu’à",
+  "Gebiet": "Zone"
  },
  "patterns": [
   [

@@ -2589,7 +2589,9 @@
   "Sensor offen": "Czujnik otwarty",
   "Sensoren offen": "Czujniki otwarte",
   "Wirklich?": "Na pewno?",
-  "Schloss entriegeln?": "Odblokować zamek?"
+  "Schloss entriegeln?": "Odblokować zamek?",
+  "Bis": "Do",
+  "Gebiet": "Obszar"
  },
  "patterns": [
   [

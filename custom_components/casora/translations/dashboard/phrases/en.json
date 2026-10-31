@@ -2571,7 +2571,9 @@
   "Sensor offen": "Sensor open",
   "Sensoren offen": "Sensors open",
   "Wirklich?": "Are you sure?",
-  "Schloss entriegeln?": "Unlock the lock?"
+  "Schloss entriegeln?": "Unlock the lock?",
+  "Bis": "Until",
+  "Gebiet": "Area"
  },
  "patterns": [
   [

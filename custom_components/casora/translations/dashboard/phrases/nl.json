@@ -2589,7 +2589,9 @@
   "Sensor offen": "Sensor open",
   "Sensoren offen": "Sensoren open",
   "Wirklich?": "Zeker weten?",
-  "Schloss entriegeln?": "Slot ontgrendelen?"
+  "Schloss entriegeln?": "Slot ontgrendelen?",
+  "Bis": "Tot",
+  "Gebiet": "Gebied"
  },
  "patterns": [
   [

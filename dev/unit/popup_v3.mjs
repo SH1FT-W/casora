@@ -56,6 +56,7 @@ const MIGRIERT = [
   { popup: 'Türen & Fenster', vorlagen: ['casora_popup_contacts'], file: '34-security-covers.js', from: '  window.casoraContactsStage = function', to: '  C.sec = function', stages: 1 },
   { popup: 'Alarmanlage', vorlagen: ['casora_popup_alarm'], file: '07-weich-spezial.js', from: '  AL.stage = function', to: '  // Tippen auf data-casora-alarm', stages: 1 },
   { popup: 'Schloss', vorlagen: ['casora_popup_lock'], file: null, stages: 1 },
+  { popup: 'Wetterwarnung', vorlagen: ['casora_popup_weather_warning'], file: null, stages: 1 },
 ];
 
 // 1. Pieces.

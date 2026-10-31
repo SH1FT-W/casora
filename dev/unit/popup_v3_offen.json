@@ -83,14 +83,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Wetterwarnung",
-  "vorlagen": [
-   "casora_popup_weather_warning"
-  ],
-  "modul": "01-basis.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Energie (mit Energiefluss)",
   "vorlagen": [
    "casora_popup_energy"
