@@ -6735,7 +6735,7 @@
      "tap_action": {
       "action": "none"
      },
-     "type": "custom:button-card",
+     "type": "[[[\n  /* Casora designs (soft): 09-weich-wiedergabe.js draws the list, this card stays hidden – so draw nothing\n     instead of 9 hidden carousel slots (31.10.2026). Other designs keep the carousel. */\n  return getComputedStyle(document.documentElement).getPropertyValue('--casora-popup-layout').trim() === 'soft'\n    ? 'custom:casora-void' : 'custom:button-card';\n]]]\n",
      "variables": {
       "cfg": "[[[ return variables.cfg; ]]]"
      }
@@ -6894,7 +6894,7 @@
      "tap_action": {
       "action": "none"
      },
-     "type": "custom:button-card",
+     "type": "[[[\n  /* Casora designs (soft): 09-weich-wiedergabe.js draws the list, this card stays hidden – so draw nothing\n     instead of 9 hidden carousel slots (31.10.2026). Other designs keep the carousel. */\n  return getComputedStyle(document.documentElement).getPropertyValue('--casora-popup-layout').trim() === 'soft'\n    ? 'custom:casora-void' : 'custom:button-card';\n]]]\n",
      "variables": {
       "cfg": "[[[ return variables.cfg; ]]]"
      }

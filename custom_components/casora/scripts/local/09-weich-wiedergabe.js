@@ -12,9 +12,10 @@
 //   casora_mobile_now_playing  → 'phone' (ersetzt #media_row/#np_rail, Überschrift bleibt)
 //   casora_room                → 'room'  (ersetzt die Medien-Pillen in #badges_media; angemeldet wird
 //                                          die Raumkarte, die innere Karte wird hier gesucht)
-// Die bisherigen Karten bleiben unsichtbar im DOM: ihre Logik (Ein-/Ausblenden, Pausen-
-// Frist, Reihenfolge) läuft weiter, und ein Tipp auf eine Zeile löst genau deren Aktion
-// aus – das Medien-Popup öffnet sich also wie bisher.
+// Room card: its former media cards stay invisible in the DOM, and a tap on a row fires exactly
+// their action. Phone (since 31.10.2026): the former carousel (9 slots, about 85 hidden cards that
+// re-rendered on every state change) is not drawn at all in Casora designs; a tap builds one card of
+// the same template for that moment (open()), so the media popup opens as before.
 //
 // Seit 05.10.2026: Player mit gleichem Titel und Interpret stehen als EINE Zeile da
 // („Interpret · HomePod Küche + Büro“, Play/Pause steuert alle), und nach links gewischt gibt
@@ -297,6 +298,14 @@
       // the list is empty.
       var hide = HIDE.phone + (show ? '' : '#np_title{visibility:hidden !important}');
       if (e.style.textContent !== hide) e.style.textContent = hide;
+      // The card collapses once _casoraNPView lets go of the last list (900 ms after it emptied). The hidden carousel
+      // used to re-render the card after that; it is gone (31.10.2026), so ask for that one render here.
+      if (!list.length && !card.hasAttribute('data-casora-np-empty') && !e.collapseT) {
+        e.collapseT = setTimeout(function () {
+          e.collapseT = 0;
+          try { if (window.casoraKick) window.casoraKick(card); } catch (err) { /* next state change */ }
+        }, 1000);
+      }
     }
 
     var desk = e.kind === 'room';
@@ -610,6 +619,21 @@
       hc.dispatchEvent(new CustomEvent('action', { detail: { action: 'tap' } }));
       return;
     }
+    // Phone (31.10.2026): the old carousel cards are no longer drawn in Casora designs (casora_mobile_now_playing),
+    // so there is no hidden card to tap. A card of the same template, built for this tap, opens the same popup.
+    if (e.kind === 'phone' && rec && typeof window._casoraNotifyOpenViaCard === 'function') {
+      var src;
+      try { src = JSON.parse(JSON.stringify(rec)); } catch (err) { src = null; }
+      if (src) {
+        window._casoraNotifyOpenViaCard(null, function (ok) { if (!ok) more(rec); },
+          { type: 'custom:button-card', template: 'casora_now_playing_primary', variables: { src: src } }, true, true);
+        return;
+      }
+    }
+    more(rec);
+  }
+
+  function more(rec) {
     if (rec && rec.entity) {
       if (window.casoraPopup && window.casoraPopup.moreInfo) window.casoraPopup.moreInfo(rec.entity);
       else {

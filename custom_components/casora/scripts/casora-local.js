@@ -83,6 +83,18 @@
   });
 })();
 
+// custom:casora-void – a card that draws nothing. Templates pick it as the type of a custom field whose card is
+// not needed in the current design (casora_mobile_now_playing: the old carousel in Casora designs), so button-card
+// does not build and re-render a hidden card tree. Defined here because this loader arrives first.
+if (!customElements.get('casora-void')) {
+  customElements.define('casora-void', class extends HTMLElement {
+    setConfig() {}
+    set hass(h) { /* nothing to draw */ }
+    getCardSize() { return 0; }
+    connectedCallback() { this.style.display = 'none'; }
+  });
+}
+
 // HA's own toolbar (title, ⋮ menu) on dashboards whose kiosk_mode asks to hide it. It lived in casora-core,
 // which arrives seconds later on a phone: until then HA's menu bar stood at the top of the page, a menu
 // the dashboard does not have (31.10.2026). The loader is small and arrives first, so it hides it here.
