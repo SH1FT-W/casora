@@ -16,14 +16,6 @@
   "grund": "Welle 2 nicht geschafft (Rahmen): casora_climate_popup (51k, 01-basis.js) mischt Klima-Geräte und Messwerte; S2 nur mit genau einem Thermostat, sonst S6 – Auswahl der Bühne braucht eine Entscheidung, welches Gerät die Bühne bekommt. Keine eigene Kachel im Test-HA (Klima-Badge öffnet casora_badge_climate_group)"
  },
  {
-  "popup": "Klimaanlage Velair",
-  "vorlagen": [
-   "casora_popup_velair"
-  ],
-  "modul": "31-velair.js",
-  "grund": "Welle 2 nicht geschafft: braucht neue Logik aus .qa/v3/issue-popups-fuer-v3.md §5 (Ziel je Block im Wochenbalken ab 2½ h, Zeile „Velair-Modus“ aus dem Select) – Quelle b6f7f9d1 auf popup-rework-varianten. Bis dahin variant 'a' (sitzt auf casora_thermostat, das schon v3 ist)"
- },
- {
   "popup": "Luftreiniger",
   "vorlagen": [
    "casora_air_purifier"

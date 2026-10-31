@@ -385,6 +385,13 @@
         + JSON.stringify(sensor) + ') : "";';
     };
     var f = {};
+    /* Popup v3 (popup-richtlinien-v3.md §4 S2, §8): clean – the target with −/+ as the stage, the modes as quick tiles,
+       nothing else. The schedule (its state stays in the status line), fan, presets, swing and the Velair panel row go:
+       Velair's own panel plans the week. One column (552). */
+    if (UI.v3 && UI.v3()) {
+      ['hero', 'stage', 'quick'].forEach(function (k) { f[k] = { card: K.secCard(watch, call(k), states) }; });
+      return K.layout({ fields: f, top: ['hero'], stage: 'stage', quick: 'quick', left: [], right: [], narrowOrder: ['stage', 'quick'] });
+    }
     // "opts", not "more": the layout would stretch a trailing "more" over both columns.
     ['hero', 'ctl', 'plan', 'opts'].forEach(function (k) { f[k] = { card: K.secCard(watch, call(k), states) }; });
     return K.layout({ fields: f, top: ['hero'], left: ['ctl'], right: ['plan', 'opts'], narrowOrder: ['ctl', 'plan', 'opts'] });
@@ -570,6 +577,41 @@
       var main = V.climateText(st, roomTemp(st, S0, sensor));
       var rest = z ? [V.status(z, date)] : [];
       return UI.line(main, rest, { tone: st && st.state === 'unavailable' ? 'bad' : null });
+    }
+    if (part === 'stage') {
+      if (!st) return '';
+      var a3 = st.attributes || {}, tgt3 = { entity_id: id }, L3 = limits(st, null), step3 = tempStep(st, z);
+      var rt3 = roomTemp(st, S0, sensor), foot3 = rt3 != null ? 'Jetzt ' + nf1(rt3) + ' ' + String((z && z.unit) || a3.temperature_unit || '°C') : null;
+      var t3 = num(a3.temperature), lo3 = num(a3.target_temp_low), hi3 = num(a3.target_temp_high);
+      // A range (heat/cool): no single target to step – the range as a status stage (fallback rule §4.7).
+      if (t3 == null && lo3 != null && hi3 != null && !bad(st.state)) {
+        return UI.stage('status', { tone: st.state === 'off' ? 'off' : 'good', icon: 'mdi:thermostat',
+          text: nf1(lo3) + ' – ' + nf1(hi3) + ' °', facts: rt3 != null ? [{ label: 'Jetzt', value: nf1(rt3) + ' °' }] : [] });
+      }
+      var unit3 = String((z && z.unit) || a3.temperature_unit || '°C');
+      if (bad(st.state) || st.state === 'off' || t3 == null) {
+        return UI.stage('value', { caption: 'Zieltemperatur', value: t3 != null ? t3 : '–', unit: t3 != null ? unit3 : '',
+          state: bad(st.state) ? 'na' : 'off', foot: foot3 });
+      }
+      var pm3 = function (dir) {
+        var v = Math.round((t3 + dir * step3) * 100) / 100;
+        return { svc: { domain: 'climate', service: 'set_temperature', data: { temperature: v }, target: tgt3 },
+          step: step3, min: L3.lo, max: L3.hi, dis: dir < 0 ? t3 <= L3.lo : t3 >= L3.hi };
+      };
+      return UI.stage('value', { caption: 'Zieltemperatur', value: t3, unit: unit3, minus: pm3(-1), plus: pm3(1), foot: foot3 });
+    }
+    if (part === 'quick') {
+      if (!st || bad(st.state)) return '';
+      // „Aus“ is the head's switch; the four modes of the table (Kühlen · Heizen · Lüften · Auto) in that order.
+      var QI = { cool: 'mdi:snowflake', heat: 'mdi:fire', fan_only: 'mdi:fan', auto: 'mdi:thermostat-auto', heat_cool: 'mdi:thermostat-auto', dry: 'mdi:water-percent' };
+      var QO = ['cool', 'heat', 'fan_only', 'auto', 'heat_cool', 'dry'];
+      var qm = (st.attributes.hvac_modes || []).filter(function (m) { return QI[m]; })
+        .sort(function (x, y) { return QO.indexOf(x) - QO.indexOf(y); }).slice(0, 4);
+      if (qm.length < 2) return '';
+      return UI.quick(qm.map(function (m) {
+        return { icon: QI[m], text: m === 'fan_only' ? 'Lüften' : MODE[m], active: st.state === m,
+          svc: { domain: 'climate', service: 'set_hvac_mode', data: { hvac_mode: m }, target: { entity_id: id } } };
+      }), 'Modus');
     }
     if (part === 'ctl') {
       if (!st || bad(st.state)) return '';

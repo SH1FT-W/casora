@@ -50,6 +50,8 @@ const MIGRIERT = [
   { popup: 'Saugroboter', vorlagen: ['casora_vacuum'], file: '02-devices.js', from: '  var V = window._casoraVac = ', to: '// ── Notifications: line wrapping', stages: 1 },
   // Room S2 (live, off/unavailable), house S7 with the average (no shared target since 1.3).
   { popup: 'Fußbodenheizung (Haus/Raum)', vorlagen: ['casora_popup_fbh'], file: '03-popups.js', from: '  F.v3 = function () {', to: '  /* Modus als iOS', stages: 3 },
+  // S2 (live, off/unavailable), a heat/cool range as S7.
+  { popup: 'Klimaanlage Velair', vorlagen: ['casora_popup_velair'], file: '31-velair.js', from: "    if (part === 'stage') {", to: "    if (part === 'quick') {", stages: 3 },
 ];
 
 // 1. Pieces.
