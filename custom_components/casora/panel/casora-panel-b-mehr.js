@@ -435,7 +435,37 @@
     return scored.slice(0, max || 30).map((x) => x.it);
   }
 
-  W.__casoraStudioMehr = { qrMatrix, qrSvg, changeLines, changeItems, revertLine, searchRank, fold };
+  // ── Help topics (E20, test 2) ─────────────────────────────────────────────────────
+  // Short answers to everyday tasks right in the Studio (Help › "How do I …?" and the search) – the guide on
+  // GitHub put newcomers off. go: what "Show me" does (an action of the search, _mSearchItems).
+  const HELP_TOPICS = [
+    { id: "waste", title: "Show the waste collection", go: "addtile",
+      text: "Tap + (Add a tile), type “Waste” and pick it. The tile finds the bins and pickup days of Waste Collection Schedule or a waste calendar by itself. Under “Waste calendar” you can pick another calendar.",
+      words: "abfall müll muell tonne abfuhr abfallkalender mülltonne waste trash garbage bin calendar" },
+    { id: "photo", title: "Change a room's photo", go: "photo",
+      text: "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.",
+      words: "foto bild hintergrund hochladen eigenes foto raumbild photo picture background upload image" },
+    { id: "device", title: "Add a device", go: "addtile",
+      text: "Tap + (Add a tile) and type the device's name, e.g. “floor lamp”. Casora picks the right tile type; new devices of the room are listed right away.",
+      words: "gerät hinzufügen kachel neu lampe steckdose device add tile new" },
+    { id: "order", title: "Change the order of the tiles", go: "",
+      text: "In Content › Tiles choose “Edit” and drag the tiles. With Smart Sort on, active tiles still come first on the dashboard – “Keep my order” after dragging switches it off for this room.",
+      words: "reihenfolge sortieren ziehen verschieben ordnen intelligente sortierung order sort drag move" },
+    { id: "phone", title: "Use the dashboard on the phone", go: "qr",
+      text: "In the title menu “Open on phone” shows a QR code. Casora switches to the phone layout by itself; the Phone preview at the top shows how it looks.",
+      words: "handy telefon smartphone iphone app qr mobil phone mobile" },
+    { id: "scene", title: "Save a scene", go: "scene",
+      text: "Set the lights the way you like them, then save the current state as a scene. It appears on the Scenes badge and can be switched with one tap.",
+      words: "szene speichern stimmung licht scene save mood" },
+    { id: "undo", title: "Undo a change", go: "rewind",
+      text: "Undo (the arrow next to Save) takes back the last steps. The clock (Rewind) brings back an earlier saved version of the dashboard.",
+      words: "rückgängig zurück früher version wiederherstellen undo rewind restore back" },
+    { id: "who", title: "Hide a tile from someone", go: "whosees",
+      text: "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.",
+      words: "ausblenden verstecken sichtbar wer sieht kind gast hide who sees visibility" },
+  ];
+
+  W.__casoraStudioMehr = { qrMatrix, qrSvg, changeLines, changeItems, revertLine, searchRank, fold, HELP_TOPICS };
   if (typeof customElements === "undefined" || !W.document) return;
 
   // Menu icons (line drawings like the panel's MENU_ICONS).
@@ -991,6 +1021,21 @@
         + "saugroboter drucker fortschritt restzeit handy push benachrichtigung lock screen progress"],
       ["fuel", "Fuel prices", "tanken tankstelle sprit benzin diesel spritpreis tankerkönig"],
     ];
+    // Help › "How do I …?": the topics as a list, then the answer with "Show me" (runs the matching action).
+    P._helpTopics = async function () {
+      const res = await this._ask({ title: tr("How do I …?"), wide: true,
+        picks: HELP_TOPICS.map((h) => ({ id: h.id, title: tr(h.title) })), confirmLabel: tr("Open") });
+      const id = res && (res.pick || (typeof res === "string" ? res : null));
+      if (id) this._helpTopic(id);
+    };
+    P._helpTopic = async function (id) {
+      const h = HELP_TOPICS.find((x) => x.id === id);
+      if (!h) return;
+      const act = h.go ? (this._mSearchItems() || []).find((x) => x.id === "a:" + h.go) : null;
+      const ok = await this._ask({ title: tr(h.title), message: tr(h.text),
+        confirmLabel: act ? tr("Show me") : tr("OK"), cancelLabel: act ? tr("Close") : undefined });
+      if (ok && act) act.run();
+    };
     P._mSearchItems = function () {
       const out = [];
       const rooms = rooms$(this);
@@ -1047,6 +1092,8 @@
       A("match", "Match Desktop and Phone", "angleichen unterschiede handy desktop", () => this._reviewDifferences(), typeof this._reviewDifferences === "function" && !!this._pair);
       A("tour", "Quick tour", "einführung hilfe tour erklärung", () => this._bIntro && this._bIntro(true));
       A("updates", "Updates", "update aktualisieren version neu", () => this._cuFromMenu(), typeof this._cuFromMenu === "function");
+      // Help topics: found by their task words ("Abfall", "Foto"), open a short answer (E20).
+      HELP_TOPICS.forEach((h) => A("help-" + h.id, h.title, h.words + " hilfe help wie how", () => this._helpTopic(h.id), true, way("Help", "How do I …?")));
       A("diag", "Copy diagnostics…", "diagnose diagnostics fehler problem melden issue github support bug hilfe kopieren zwischenablage debug",
         () => this._diagShow(), typeof this._diagShow === "function", way("Help…"));
       // Rooms

@@ -2755,7 +2755,26 @@
     "no night image": "bez zdjęcia nocnego",
     "not on disk": "brak pliku",
     "Photo uploaded": "Zdjęcie przesłane",
-    "Night photo uploaded": "Zdjęcie nocne przesłane"
+    "Night photo uploaded": "Zdjęcie nocne przesłane",
+    "Help": "Pomoc",
+    "Show me": "Pokaż mi",
+    "How do I …?": "Jak …?",
+    "Keep my order": "Zachowaj moją kolejność",
+    "Show the waste collection": "Pokaż wywóz odpadów",
+    "Tap + (Add a tile), type “Waste” and pick it. The tile finds the bins and pickup days of Waste Collection Schedule or a waste calendar by itself. Under “Waste calendar” you can pick another calendar.": "Stuknij + (Dodaj kafelek), wpisz „Odpady” i wybierz. Kafelek sam znajdzie pojemniki i dni wywozu z Waste Collection Schedule lub kalendarza odpadów. W „Kalendarz odpadów” możesz wybrać inny kalendarz.",
+    "Change a room's photo": "Zmień zdjęcie pokoju",
+    "Tap + (Add a tile) and type the device's name, e.g. “floor lamp”. Casora picks the right tile type; new devices of the room are listed right away.": "Stuknij + (Dodaj kafelek) i wpisz nazwę urządzenia, np. „lampa stojąca”. Casora wybierze rodzaj kafelka; nowe urządzenia pokoju są od razu na liście.",
+    "Change the order of the tiles": "Zmień kolejność kafelków",
+    "In Content › Tiles choose “Edit” and drag the tiles. With Smart Sort on, active tiles still come first on the dashboard – “Keep my order” after dragging switches it off for this room.": "W Zawartość › Kafelki wybierz „Edytuj” i przeciągnij kafelki. Przy inteligentnym sortowaniu aktywne kafelki i tak są na początku – „Zachowaj moją kolejność” po przeciągnięciu wyłącza je w tym pokoju.",
+    "Use the dashboard on the phone": "Używaj pulpitu na telefonie",
+    "In the title menu “Open on phone” shows a QR code. Casora switches to the phone layout by itself; the Phone preview at the top shows how it looks.": "W menu tytułu „Otwórz na telefonie” pokazuje kod QR. Casora sama przełącza się na układ telefonu; podgląd Telefon u góry pokazuje, jak to wygląda.",
+    "Save a scene": "Zapisz scenę",
+    "Set the lights the way you like them, then save the current state as a scene. It appears on the Scenes badge and can be switched with one tap.": "Ustaw światła tak, jak lubisz, i zapisz bieżący stan jako scenę. Pojawi się w plakietce Sceny i włączysz ją jednym stuknięciem.",
+    "Undo a change": "Cofnij zmianę",
+    "Undo (the arrow next to Save) takes back the last steps. The clock (Rewind) brings back an earlier saved version of the dashboard.": "Cofnij (strzałka obok Zapisz) wycofuje ostatnie kroki. Zegar (Cofanie w czasie) przywraca wcześniej zapisaną wersję pulpitu.",
+    "Hide a tile from someone": "Ukryj kafelek przed kimś",
+    "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.": "Otwórz kafelek i wybierz „Widoczność, pytanie i przytrzymanie”. Tam wybierzesz, kto go widzi, na jakich ekranach i czy pyta przed przełączeniem.",
+    "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Otwórz pokój i wybierz Wygląd. „Wybierz zdjęcie” bierze zdjęcie Casora, „Prześlij własne” zdjęcie z urządzenia – drugie na noc jest opcjonalne."
   },
   "patterns": [
     [

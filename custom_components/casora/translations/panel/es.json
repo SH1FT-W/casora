@@ -2755,7 +2755,26 @@
     "no night image": "sin imagen nocturna",
     "not on disk": "falta el archivo",
     "Photo uploaded": "Foto subida",
-    "Night photo uploaded": "Foto nocturna subida"
+    "Night photo uploaded": "Foto nocturna subida",
+    "Help": "Ayuda",
+    "Show me": "Muéstramelo",
+    "How do I …?": "¿Cómo …?",
+    "Keep my order": "Mantener mi orden",
+    "Show the waste collection": "Mostrar la recogida de residuos",
+    "Tap + (Add a tile), type “Waste” and pick it. The tile finds the bins and pickup days of Waste Collection Schedule or a waste calendar by itself. Under “Waste calendar” you can pick another calendar.": "Toca + (Añadir tarjeta), escribe “Residuos” y elígelo. La tarjeta encuentra sola los contenedores y días de recogida de Waste Collection Schedule o de un calendario de residuos. En “Calendario de residuos” puedes elegir otro calendario.",
+    "Change a room's photo": "Cambiar la foto de una habitación",
+    "Tap + (Add a tile) and type the device's name, e.g. “floor lamp”. Casora picks the right tile type; new devices of the room are listed right away.": "Toca + (Añadir tarjeta) y escribe el nombre del dispositivo, p. ej. “lámpara de pie”. Casora elige el tipo de tarjeta; los dispositivos nuevos de la habitación aparecen enseguida.",
+    "Change the order of the tiles": "Cambiar el orden de las tarjetas",
+    "In Content › Tiles choose “Edit” and drag the tiles. With Smart Sort on, active tiles still come first on the dashboard – “Keep my order” after dragging switches it off for this room.": "En Contenido › Tarjetas elige “Editar” y arrastra las tarjetas. Con la ordenación inteligente, las tarjetas activas siguen primero en el panel; “Mantener mi orden” tras arrastrar la desactiva en esta habitación.",
+    "Use the dashboard on the phone": "Usar el panel en el móvil",
+    "In the title menu “Open on phone” shows a QR code. Casora switches to the phone layout by itself; the Phone preview at the top shows how it looks.": "En el menú del título, “Abrir en el móvil” muestra un código QR. Casora cambia sola a la vista de móvil; la vista previa de móvil arriba muestra cómo se ve.",
+    "Save a scene": "Guardar una escena",
+    "Set the lights the way you like them, then save the current state as a scene. It appears on the Scenes badge and can be switched with one tap.": "Ajusta las luces a tu gusto y guarda el estado actual como escena. Aparece en la insignia de escenas y se activa con un toque.",
+    "Undo a change": "Deshacer un cambio",
+    "Undo (the arrow next to Save) takes back the last steps. The clock (Rewind) brings back an earlier saved version of the dashboard.": "Deshacer (la flecha junto a Guardar) revierte los últimos pasos. El reloj (Viaje en el tiempo) recupera una versión guardada anterior del panel.",
+    "Hide a tile from someone": "Ocultar una tarjeta a alguien",
+    "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.": "Abre la tarjeta y elige “Visibilidad, confirmar y mantener”. Ahí eliges quién la ve, en qué pantallas y si pregunta antes de conmutar.",
+    "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Abre la habitación y elige Apariencia. “Elegir foto” toma una foto de Casora, “Subir la tuya” una foto de tu dispositivo; una segunda para la noche es opcional."
   },
   "patterns": [
     [

@@ -20761,6 +20761,8 @@ class CasoraPanel extends HTMLElement {
     const ISSUES = "https://github.com/SH1FT-W/casora/issues";
     const news = typeof window.casoraWelcomeShow === "function";
     this._menuAt(anchor, [
+      // E20 (test 2): short answers in the Studio first; the guide on GitHub stays below.
+      ...(typeof this._helpTopics === "function" ? [{ id: "howto", label: "How do I …?" }] : []),
       { id: "welcome", label: "Introduction to Casora" },
       ...(news ? [{ id: "whatsNew", label: "What's new" }] : []),
       { id: "docs", label: "Guide on GitHub", group: "web", quiet: true },
@@ -20770,6 +20772,7 @@ class CasoraPanel extends HTMLElement {
     ], (id) => {
       // Die Einführung ist der Willkommen-Bildschirm vom Erststart (über dem Studio als Blatt).
       if (id === "welcome") return this._welcomeScreen();
+      if (id === "howto") return this._helpTopics();
       if (id === "diag") return this._diagShow();
       if (id === "whatsNew") return window.casoraWelcomeShow(id);
       window.open(id === "issue" ? ISSUES : DOCS, "_blank", "noopener");

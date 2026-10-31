@@ -2755,7 +2755,26 @@
     "no night image": "sans image de nuit",
     "not on disk": "fichier manquant",
     "Photo uploaded": "Photo envoyée",
-    "Night photo uploaded": "Photo de nuit envoyée"
+    "Night photo uploaded": "Photo de nuit envoyée",
+    "Help": "Aide",
+    "Show me": "Montre-moi",
+    "How do I …?": "Comment … ?",
+    "Keep my order": "Garder mon ordre",
+    "Show the waste collection": "Afficher la collecte des déchets",
+    "Tap + (Add a tile), type “Waste” and pick it. The tile finds the bins and pickup days of Waste Collection Schedule or a waste calendar by itself. Under “Waste calendar” you can pick another calendar.": "Touche + (Ajouter une tuile), tape « Déchets » et choisis-le. La tuile trouve seule les bacs et jours de collecte de Waste Collection Schedule ou d'un calendrier des déchets. Sous « Calendrier des déchets », tu peux en choisir un autre.",
+    "Change a room's photo": "Changer la photo d'une pièce",
+    "Tap + (Add a tile) and type the device's name, e.g. “floor lamp”. Casora picks the right tile type; new devices of the room are listed right away.": "Touche + (Ajouter une tuile) et tape le nom de l'appareil, par ex. « lampadaire ». Casora choisit le bon type de tuile ; les nouveaux appareils de la pièce s'affichent tout de suite.",
+    "Change the order of the tiles": "Changer l'ordre des tuiles",
+    "In Content › Tiles choose “Edit” and drag the tiles. With Smart Sort on, active tiles still come first on the dashboard – “Keep my order” after dragging switches it off for this room.": "Dans Contenu › Tuiles, choisis « Modifier » et fais glisser les tuiles. Avec le tri intelligent, les tuiles actives restent devant sur le tableau de bord – « Garder mon ordre » après le glisser le désactive pour cette pièce.",
+    "Use the dashboard on the phone": "Utiliser le tableau de bord sur le téléphone",
+    "In the title menu “Open on phone” shows a QR code. Casora switches to the phone layout by itself; the Phone preview at the top shows how it looks.": "Dans le menu du titre, « Ouvrir sur le téléphone » affiche un QR code. Casora passe seul à la mise en page mobile ; l'aperçu Téléphone en haut montre le rendu.",
+    "Save a scene": "Enregistrer une scène",
+    "Set the lights the way you like them, then save the current state as a scene. It appears on the Scenes badge and can be switched with one tap.": "Règle les lumières comme tu les aimes, puis enregistre l'état actuel comme scène. Elle apparaît dans le badge Scènes et s'active d'un geste.",
+    "Undo a change": "Annuler une modification",
+    "Undo (the arrow next to Save) takes back the last steps. The clock (Rewind) brings back an earlier saved version of the dashboard.": "Annuler (la flèche à côté d'Enregistrer) reprend les dernières étapes. L'horloge (Retour) restaure une version enregistrée plus ancienne du tableau de bord.",
+    "Hide a tile from someone": "Masquer une tuile à quelqu'un",
+    "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.": "Ouvre la tuile et choisis « Visibilité, confirmation et maintien ». Tu y choisis qui la voit, sur quels écrans et si elle demande avant de basculer.",
+    "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Ouvre la pièce et choisis Apparence. « Choisir une photo » prend une photo de Casora, « Envoyer la tienne » une photo de ton appareil – une seconde pour la nuit est facultative."
   },
   "patterns": [
     [

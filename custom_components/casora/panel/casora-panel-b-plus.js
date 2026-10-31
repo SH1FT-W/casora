@@ -598,7 +598,9 @@
         }
       } else if (d.kind === "tileorder") {
         const smart = this._smartSortOn && this._smartSortOn();
-        this._bToast(tr("Tile order changed"), { action: undo, sub: smart ? tr("Smart Sort keeps active tiles in front in the preview.") : "" });
+        // E18 (test 2): with Smart Sort on, the dragged order did not show – the toast offers to keep it.
+        this._bToast(tr("Tile order changed"), { action: smart ? { label: tr("Keep my order"), run: () => this._bSmartOff() } : undo,
+          sub: smart ? tr("Smart Sort keeps active tiles in front in the preview.") : "" });
       } else if (d.kind === "room+") this._bToast(tr("Room added") + (d.label ? ": " + d.label : ""), { action: undo });
       else if (d.kind === "room-") this._bToast(tr("Room deleted") + (d.label ? ": " + d.label : ""), { action: undo, save: true, sub: tr("Gone for good once you save.") });
       else if (d.kind === "roomorder") this._bToast(tr("Room order changed"), { action: undo });
