@@ -10,6 +10,7 @@
 //         height of pages with an "Applies to" line).
 //   sp-05 Cover tile › Advanced: the icon fields showed their default as a file name ("curtain-open") instead of
 //         its name ("Vorhang offen").
+//   sp-06 Tile › Popup: the explanation under "Entities in popup" was cut off with "…".
 import { open, usePage, studio, studioDashboard, check, need, finish } from './lib.mjs';
 
 const dash = await studioDashboard();
@@ -89,5 +90,16 @@ await need('Casora-Dashboard fürs Studio', dash);
   await need('Jalousie-Kachel im Dashboard', ph && ph.length, ph);
   const raw = ph.filter((x) => /^[a-z0-9_]+(-[a-z0-9_]+)+$/.test(x));
   await check('sp-05 Symbolfelder zeigen Namen statt Dateinamen', raw.length === 0, { ph });
+  const cut = await page.evaluate(async () => {
+    const p = window.__panel();
+    for (let i = 0; i < 3; i++) {
+      p.shadowRoot.querySelectorAll('.inspector .adv:not(.open) > .advsum').forEach((s) => s.click());
+      await new Promise((r) => setTimeout(r, 400));
+    }
+    const subs = [...p.shadowRoot.querySelectorAll('.inspector .row label .lsub')].filter((e) => e.getClientRects().length);
+    return { n: subs.length, cut: subs.filter((e) => e.scrollWidth > e.clientWidth + 1).map((e) => e.textContent.slice(0, 50)) };
+  });
+  await need('Erklärungen in den Zeilen des Inspektors', cut.n > 0, cut);
+  await check('sp-06 Erklärungen unter Zeilen im Inspektor nicht abgeschnitten', cut.cut.length === 0, cut);
 }
 await finish();

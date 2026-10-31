@@ -10985,6 +10985,8 @@ class CasoraPanel extends HTMLElement {
           display:block; margin-top:2px; color:var(--lsub-ink, var(--casora-studio-lsub-ink, rgba(255,255,255,0.56))); font-size:var(--t-caption);
           overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
         }
+        /* Inspector: a row's explanation wraps like the hints under the fields ("Entities in popup" was cut off). */
+        .inspector .row label .lsub { white-space:normal; overflow:visible; text-overflow:clip; }
         .colorcell { display:block; min-width:0; }
         .colorfield {
           width:100%; height:38px; box-sizing:border-box;
