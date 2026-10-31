@@ -54,6 +54,8 @@ const MIGRIERT = [
   { popup: 'Pflanze', vorlagen: ['casora_popup_plant'], file: null, stages: 1 },
   // S8: the month grid in UI.stage('content') (K.stage, also the trash popup's month); the colCard wrapper names it once more.
   { popup: 'Kalender', vorlagen: ['casora_popup_calendar'], file: '06-kalender.js', from: '  K.v3 = function', to: '  /* Antippen:', stages: 2 },
+  // S8 month (06-kalender.js) with the month calendar, else the status stage S7 here.
+  { popup: 'Abfall', vorlagen: ['casora_trash'], file: null, stages: 1 },
 ];
 
 // 1. Pieces.
