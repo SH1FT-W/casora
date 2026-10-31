@@ -1275,7 +1275,9 @@
       // nach vorn bzw. zurück (Issue #6).
       // Kein Neustart der Wartezeit bei jedem Update: Im belebten Haus kommen ständig neue
       // Zustände, dann würde nie sortiert.
-      if (this._config?.room && this._showing && this._contentEl && filter === this._config.filter_category
+      // Prüfung 2 fam-04/E19: no longer while the room is open – the tile just used stays where it is
+      // (its colour shows the state); the room sorts again when it is opened. CASORA_LIVE_SORT = true: as before.
+      if (window.CASORA_LIVE_SORT === true && this._config?.room && this._showing && this._contentEl && filter === this._config.filter_category
         && !this._resortTimer) {
         this._resortTimer = setTimeout(() => { this._resortTimer = null; if (this._showing) this._sortSectionGrids(); }, 2500);
       }

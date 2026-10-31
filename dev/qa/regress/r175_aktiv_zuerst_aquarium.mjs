@@ -39,6 +39,9 @@ await need('Kachelreihe mit Aquarium-Sammelkarte (active_entities)', hit);
 const { page } = await open({ width: 1024, height: 768, safari: true, dark: false });
 usePage(page);
 await dashboard(page, hit.url, 5);
+// This test is about which tiles count as active, not about when the row sorts: since Prüfung 2 (fam-04) the order
+// holds after the load phase – live re-sorting as before for this check.
+await page.evaluate(() => { window.CASORA_LIVE_SORT = true; });
 const patch = { [hit.sensor]: { state: 'on' } };
 if (hit.plant) patch[hit.plant] = { state: 'problem' };
 await fakeStates(page, patch, { sticky: true });
