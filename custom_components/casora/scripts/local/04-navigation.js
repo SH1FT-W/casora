@@ -53,6 +53,19 @@
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   /* SF-Symbol-SVGs aus /casora_assets/icons (bathroom.svg selbst gezeichnet, gleicher Stil). */
   var SFI = '/casora_assets/icons/';
+  /* The bar's own glyphs travel inline (Prüfung 2 DH-17/fam-18): fetched as files they stood as empty
+     circles for a second or two on a cold start. Scenes: a wand with sparkles – the palette read as
+     "colours", not as scenes. */
+  var svgUri = function (body) {
+    return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.2 -0.2 24.4 24.4" fill="none" stroke="#000" '
+      + 'stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>');
+  };
+  var INLINE = {
+    rooms: svgUri('<rect x="3" y="3" width="18" height="18" rx="4.2"/><path d="M12.6 3v8.4M3 11.4h18M9.2 11.4V21"/>'),
+    'scenes-wand': svgUri('<path d="M4 20.5 15 9.5"/><path d="M13.2 7.7l3.1 3.1"/><path d="M18.5 2.5v4.6M16.2 4.8h4.6"/>'
+      + '<path d="M20 12.2v3M18.5 13.7h3"/><path d="M8.6 2.8v3M7.1 4.3h3"/>'),
+  };
+  window.casoraNavGlyph = function (name) { return INLINE[name] || null; };
   /* Seitenverhältnis (viewBox B/H) je SVG: gleiche optische Größe statt "contain" (Bett ist breit, Kühlschrank hoch). */
   var SF_RATIO = { 'living-room': 1.147, kitchen: 0.627, desktop: 1.144, bedroom: 1.518, bathroom: 1.048,
     'door-open': 0.716, 'laundry-room': 1.051, plant: 1.154 };
@@ -391,8 +404,8 @@
       };
       this._bHome = mk('home', 'mdi:home-variant', 'Home');
       this._homeText();
-      this._bRooms = mk('rooms', '/casora_assets/icons/rooms.svg?v=3', T('Räume'));
-      this._bScenes = mk('scenes', 'mdi:palette-outline', T('Szenen'));
+      this._bRooms = mk('rooms', SFI + 'rooms.svg?v=3', T('Räume'));
+      this._bScenes = mk('scenes', SFI + 'scenes-wand.svg', T('Szenen'));
       this._sep = document.createElement('span'); this._sep.className = 'hmn-sep';
       this._dock = document.createElement('span'); this._dock.className = 'hmn-dock';
       bar.appendChild(this._sep); bar.appendChild(this._dock);
@@ -434,9 +447,14 @@
     }
     /* Pfad statt mdi: → SF-Symbol-SVG aus /casora_assets/icons per mask-image (ha-icon hat unberechenbare Innenmaße). */
     _iconHtml(icon) {
+      var name = (String(icon).match(/^\/casora_assets\/icons\/([^/?]+)\.svg/) || [])[1];
       var r = SF_RATIO[(icon.match(/([^/]+)\.svg/) || [])[1]], G = 78;
+      /* Casora's own glyphs as data: URIs (bar glyphs here, room symbols from casora-icons.js): no
+         request, so no empty circle while it loads (DH-17, E24). */
+      var inl = name && (INLINE[name] || (window.CASORA_ICONS && window.CASORA_ICONS[name]));
       var ms = r ? ';-webkit-mask-size:' + (G * Math.sqrt(r)).toFixed(1) + '% ' + (G / Math.sqrt(r)).toFixed(1) + '%;mask-size:' + (G * Math.sqrt(r)).toFixed(1) + '% ' + (G / Math.sqrt(r)).toFixed(1) + '%' : '';
       /* Icon names/paths come from the config: escaped, and no quotes/brackets inside url(). */
+      if (inl) return '<i class="hmn-svg" style="' + esc('--hmn-svg:url("' + String(inl).replace(/"/g, '%22') + '")' + ms) + '"></i>';
       return icon.charAt(0) === '/' ? '<i class="hmn-svg" style="--hmn-svg:url(\'' + esc(String(icon).replace(/['"()\\\s]/g, '')) + '\')' + ms + '"></i>' : '<ha-icon icon="' + esc(icon) + '"></ha-icon>';
     }
     _roomIcon(r) { return r.icon || ROOM_ICON[r.key.replace(/^room_/, '')] || 'mdi:door'; }
