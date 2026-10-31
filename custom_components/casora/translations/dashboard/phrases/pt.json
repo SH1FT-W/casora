@@ -2591,7 +2591,10 @@
   "Wirklich?": "Tem certeza?",
   "Schloss entriegeln?": "Destrancar a fechadura?",
   "Bis": "Até",
-  "Gebiet": "Área"
+  "Gebiet": "Área",
+  "KI-Warnung": "Aviso IA",
+  "Backup": "Backup",
+  "Am niedrigsten": "Mais baixa"
  },
  "patterns": [
   [

@@ -12009,7 +12009,8 @@
     ],
     "style": "[[[\n  /* 500 for the main list plus the card's own 26px gutters. The\n     attention column adds 318 on top; the main list never resizes. */\n  /* Genau dieselbe Auswahl wie die Liste unten (Hemma 2.2.0, MIT): battery_entities ist ein Objekt\n     (Gerät → Akku), kein Array – vorher zählte die Breite alle Akkus im Haus statt der gezeigten. */\n  const _pairs = variables.battery_entities || {};\n  const _filter = ((l) => (Array.isArray(l) && l.some((id) => states[id]?.attributes?.device_class === 'battery') ? l : null))(variables.batteries || variables.entity_filter)\n    || (Object.keys(_pairs).length ? Object.keys(_pairs).map(k => _pairs[k]) : null);\n  const _b = (_filter ? _filter.map(id => states[id]).filter(Boolean) : Object.values(states))\n    .filter(e => e.state !== 'unavailable' && e.state !== 'unknown'\n      && !isNaN(parseFloat(e.state)) && e.attributes?.device_class === 'battery');\n  const _lo = _b.filter(e => Math.round(parseFloat(e.state)) <= 20).length;\n  const _w = (_lo > 0 && _b.length > _lo) ? 870 : 552;\n  return '--popup-min-width: min(' + _w + 'px, 92vw);'\n       + ' --popup-max-width: min(' + _w + 'px, 92vw);';\n]]]\n",
     "title": "Batteries",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "tap_action": {
@@ -12024,7 +12025,8 @@
     ],
     "style": "[[[\n  /* 500 for the main list plus the card's own 26px gutters. The\n     attention column adds 318 on top; the main list never resizes. */\n  /* Genau dieselbe Auswahl wie die Liste unten (Hemma 2.2.0, MIT): battery_entities ist ein Objekt\n     (Gerät → Akku), kein Array – vorher zählte die Breite alle Akkus im Haus statt der gezeigten. */\n  const _pairs = variables.battery_entities || {};\n  const _filter = ((l) => (Array.isArray(l) && l.some((id) => states[id]?.attributes?.device_class === 'battery') ? l : null))(variables.batteries || variables.entity_filter)\n    || (Object.keys(_pairs).length ? Object.keys(_pairs).map(k => _pairs[k]) : null);\n  const _PERSONAL = /iphone|ipad|\\bwatch\\b|ebike|e-bike|drive_unit|performance_line/i;\n  const _excl = window.casoraDevice && window.casoraDevice.byKey(hass, 'anker_solix', 'state_of_charge', 'sensor');\n  const _b = (_filter ? _filter.map(id => states[id]).filter(Boolean)\n      : Object.values(states).filter(e => e.entity_id !== _excl\n          && !_PERSONAL.test(e.entity_id + ' ' + (e.attributes?.friendly_name || ''))))\n    .filter(e => e.state !== 'unavailable' && e.state !== 'unknown'\n      && !isNaN(parseFloat(e.state)) && e.attributes?.device_class === 'battery');\n  /* Breit, sobald die Liste zweispaltig ist (ab 2 Akkus, Popup-Standard 24.09.2026). */\n  const _w = _b.length >= 2 ? 900 : 552;\n  return '--popup-min-width: min(' + _w + 'px, 92vw);'\n       + ' --popup-max-width: min(' + _w + 'px, 92vw);';\n]]]\n",
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Batterien', ['Batteries']) : (String(variables.room_name || '').trim() || 'Batterien'); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [
@@ -13072,7 +13074,8 @@
      }
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', [])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own) return _own;\n  return \"Software-Updates\";\n]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [

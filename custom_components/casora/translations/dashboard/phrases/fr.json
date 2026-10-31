@@ -2591,7 +2591,10 @@
   "Wirklich?": "Vraiment ?",
   "Schloss entriegeln?": "Déverrouiller la serrure ?",
   "Bis": "Jusqu’à",
-  "Gebiet": "Zone"
+  "Gebiet": "Zone",
+  "KI-Warnung": "Alerte IA",
+  "Backup": "Sauvegarde",
+  "Am niedrigsten": "La plus basse"
  },
  "patterns": [
   [

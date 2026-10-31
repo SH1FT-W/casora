@@ -32,7 +32,7 @@ custom_components/casora/scripts/local/07-weich-spezial.js | k | generated keyfr
 custom_components/casora/scripts/local/07-weich-spezial.js | re:^(?:AL\.code\(I\)|AL\.act\(ent, b\.svc\)|icon\(b\.ic, 22, .*\)|bar)$ | markup builders of this module (AL.act uses esc(JSON.stringify(…)), icon escapes size/color) | 4
 custom_components/casora/scripts/local/07-weich-spezial.js | re:^b\.(?:bg|ink|t|s)$ | alarm button: fixed colors and texts; b.s = fixed mode word plus the countdown <span> from AL.count | 4
 custom_components/casora/scripts/local/08-weich-kompakt.js | q | regex source for String.replace (entity id with regex specials escaped), not HTML | 1
-custom_components/casora/scripts/local/08-weich-kompakt.js | re:^tapWrap\(UI\.group\(.*\)\)$ | markup from UI.group (core, escapes) wrapped by tapWrap (fixed handlers) | 1
+custom_components/casora/scripts/local/08-weich-kompakt.js | re:^tapWrap\(UI\.group\(.*\)\)$ | markup from UI.group (core, escapes) wrapped by tapWrap (fixed handlers) | 2
 custom_components/casora/scripts/local/08-weich-kompakt.js | re:^(?:html\.slice\((?:0, i|i \+ s\.length)\)|s\.slice\((?:0, j|j \+ k\.length)\)|COL\[r\._tone\])$ | U.tint: markup from UI.group split around the escaped sub line (s = esc(r.sub)); fixed tone colors | 5
 custom_components/casora/scripts/local/08-weich-kompakt.js | re:^(?:rest|a|sk|x|X\.sys\(.*\)|X\.hist\(.*\))$ | update sections: markup from the _casoraUpd* builders (03-popups/17-update-detail, escape their values) | 6
 custom_components/casora/scripts/local/08-weich-kompakt.js | on | boolean for aria-checked | 1

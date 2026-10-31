@@ -2591,7 +2591,10 @@
   "Wirklich?": "Zeker weten?",
   "Schloss entriegeln?": "Slot ontgrendelen?",
   "Bis": "Tot",
-  "Gebiet": "Gebied"
+  "Gebiet": "Gebied",
+  "KI-Warnung": "AI-waarschuwing",
+  "Backup": "Back-up",
+  "Am niedrigsten": "Laagste"
  },
  "patterns": [
   [

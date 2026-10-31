@@ -2591,7 +2591,10 @@
   "Wirklich?": "¿Seguro?",
   "Schloss entriegeln?": "¿Abrir la cerradura?",
   "Bis": "Hasta",
-  "Gebiet": "Zona"
+  "Gebiet": "Zona",
+  "KI-Warnung": "Aviso IA",
+  "Backup": "Copia",
+  "Am niedrigsten": "Más baja"
  },
  "patterns": [
   [

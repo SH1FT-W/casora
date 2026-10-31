@@ -2591,7 +2591,10 @@
   "Wirklich?": "Na pewno?",
   "Schloss entriegeln?": "Odblokować zamek?",
   "Bis": "Do",
-  "Gebiet": "Obszar"
+  "Gebiet": "Obszar",
+  "KI-Warnung": "Ostrzeżenie AI",
+  "Backup": "Kopia",
+  "Am niedrigsten": "Najniższa"
  },
  "patterns": [
   [

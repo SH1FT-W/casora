@@ -55,8 +55,11 @@ const MIGRIERT = [
   { popup: 'Lüften-Coach', vorlagen: ['casora_popup_vent'], file: '05-standard-medien.js', from: '  V.sec = function', to: '  /* Coach auch im Klima-Popup', stages: 3 },
   { popup: 'Türen & Fenster', vorlagen: ['casora_popup_contacts'], file: '34-security-covers.js', from: '  window.casoraContactsStage = function', to: '  C.sec = function', stages: 1 },
   { popup: 'Alarmanlage', vorlagen: ['casora_popup_alarm'], file: '07-weich-spezial.js', from: '  AL.stage = function', to: '  // Tippen auf data-casora-alarm', stages: 1 },
+  { popup: 'Sicherheit (Badge, Gruppe)', vorlagen: ['casora_badge_security', 'casora_badge_security_group'], file: null, stages: 1 },
   { popup: 'Schloss', vorlagen: ['casora_popup_lock'], file: null, stages: 1 },
   { popup: 'Wetterwarnung', vorlagen: ['casora_popup_weather_warning'], file: null, stages: 1 },
+  { popup: 'Updates', vorlagen: ['casora_popup_updates'], file: '08-weich-kompakt.js', from: '  U.sec = function', to: '  // ── Alarm: Modus-Liste', stages: 1 },
+  { popup: 'Batterien', vorlagen: ['casora_popup_battery'], file: '08-weich-kompakt.js', from: '  B.sec = function', to: '  // ── Software-Updates', stages: 1 },
 ];
 
 // 1. Pieces.

@@ -2591,7 +2591,10 @@
   "Wirklich?": "Sicuro?",
   "Schloss entriegeln?": "Sbloccare la serratura?",
   "Bis": "Fino a",
-  "Gebiet": "Zona"
+  "Gebiet": "Zona",
+  "KI-Warnung": "Avviso IA",
+  "Backup": "Backup",
+  "Am niedrigsten": "La più bassa"
  },
  "patterns": [
   [

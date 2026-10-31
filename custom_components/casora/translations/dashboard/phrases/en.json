@@ -2573,7 +2573,10 @@
   "Wirklich?": "Are you sure?",
   "Schloss entriegeln?": "Unlock the lock?",
   "Bis": "Until",
-  "Gebiet": "Area"
+  "Gebiet": "Area",
+  "KI-Warnung": "AI warning",
+  "Backup": "Backup",
+  "Am niedrigsten": "Lowest"
  },
  "patterns": [
   [
