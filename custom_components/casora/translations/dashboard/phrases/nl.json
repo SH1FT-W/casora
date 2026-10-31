@@ -2583,7 +2583,12 @@
   "Pulse: Ausgefallen": "Pulse: Uitgevallen",
   "Zählt": "Telt",
   "In Ordnung": "In orde",
-  "Von zuhause": "Van huis"
+  "Von zuhause": "Van huis",
+  "Alarm beenden?": "Alarm stoppen?",
+  "Alarmanlage unscharf schalten?": "Alarmsysteem uitschakelen?",
+  "Sensor offen": "Sensor open",
+  "Sensoren offen": "Sensoren open",
+  "Wirklich?": "Zeker weten?"
  },
  "patterns": [
   [

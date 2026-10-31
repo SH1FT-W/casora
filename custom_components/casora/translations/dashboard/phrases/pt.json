@@ -2583,7 +2583,12 @@
   "Pulse: Ausgefallen": "Pulse: Avariado",
   "Zählt": "Conta",
   "In Ordnung": "OK",
-  "Von zuhause": "De casa"
+  "Von zuhause": "De casa",
+  "Alarm beenden?": "Parar o alarme?",
+  "Alarmanlage unscharf schalten?": "Desarmar o alarme?",
+  "Sensor offen": "Sensor aberto",
+  "Sensoren offen": "Sensores abertos",
+  "Wirklich?": "Tem certeza?"
  },
  "patterns": [
   [

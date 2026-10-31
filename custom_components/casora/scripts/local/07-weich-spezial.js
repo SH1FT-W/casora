@@ -219,6 +219,48 @@
     }), I.st === 'disarmed' ? 'Oder Modus wählen' : 'Modus'));
   };
 
+  // Popup v3 (richtlinien §4 S7, §5): field „stage“ – the state as the sentence in its level colour, open sensors as a
+  // fact, the code field and countdown under it; one main action as the pill: arm (filled), disarm / end the alarm
+  // unfilled with a question first. Taps go through data-casora-alarm (code from the field), as the old button.
+  var SVC_SWAP = function (html) { return String(html).replace(/data-casora-svc="/g, 'data-casora-alarm="'); };
+  AL.stage = function (ent, states) {
+    var UI = window._casoraUI; if (!UI || !UI.stage) return '';
+    var I = AL.info(ent, states), st = I.st;
+    var na = st === 'unavailable' || st === 'unknown';
+    var away = AL.ok(I, 'armed_away') ? 'armed_away' : (Object.keys(FEAT).filter(function (k) { return AL.ok(I, k); })[0] || 'armed_away');
+    var word = (window.casoraSecurityWord && window.casoraSecurityWord(ent, st))
+      || { arming: 'Wird scharf …', pending: 'Alarm läuft an', disarming: 'Wird unscharf geschaltet' }[st] || (na ? 'Nicht verfügbar' : 'Unbekannt');
+    var open = I.a.open_sensors ? Object.keys(I.a.open_sensors).length : 0;
+    var svc = function (service) { return { domain: 'alarm_control_panel', service: service, data: { entity_id: ent } }; };
+    var act = null;
+    if (st === 'disarmed') act = { text: 'Scharf schalten', sub: MODE_WORD[away], icon: 'mdi:shield-lock', primary: true, svc: svc('alarm_' + away.replace('armed_', 'arm_')) };
+    else if (st === 'triggered') act = { text: 'Alarm beenden', icon: 'mdi:shield-off', danger: true, confirm: 'Alarm beenden?', svc: svc('alarm_disarm') };
+    else if (st === 'arming') act = { text: 'Abbrechen', icon: 'mdi:close', svc: svc('alarm_disarm') };
+    else if (st === 'pending') act = { text: 'Unscharf schalten', icon: 'mdi:shield-off', svc: svc('alarm_disarm') };
+    else if (I.armed) act = { text: 'Unscharf schalten', icon: 'mdi:shield-off', danger: true, confirm: 'Alarmanlage unscharf schalten?', svc: svc('alarm_disarm') };
+    var cd = AL.count(I, st === 'pending' ? WARN : TON);
+    return SVC_SWAP(UI.stage('status', {
+      tone: na ? 'off' : st === 'triggered' ? 'bad' : I.armed ? 'good' : 'warn', state: na ? 'na' : null,
+      icon: st === 'triggered' ? 'shield_alarm' : I.armed ? 'shield_lock' : 'shield_off',
+      text: word,
+      facts: open ? [{ label: open === 1 ? 'Sensor offen' : 'Sensoren offen', value: String(open) }] : [],
+      action: na ? null : act,
+      extra: na ? '' : (cd.bar || '') + AL.code(I),
+    }));
+  };
+  // Field „quick“: Abwesend · Zuhause · Nacht (the arm modes the panel supports); „Aus“ is the stage's action only.
+  AL.quick = function (ent, states) {
+    var UI = window._casoraUI; if (!UI || !UI.quick) return '';
+    var I = AL.info(ent, states);
+    if (I.st === 'unavailable' || I.st === 'unknown') return '';
+    var aim = (I.st === 'arming' || I.st === 'pending') ? (I.a.next_state || I.a.arm_mode) : I.st;
+    var ICON = { armed_away: 'shield_lock', armed_home: 'shield_check', armed_night: 'shield_moon' };
+    return SVC_SWAP(UI.quick(['armed_away', 'armed_home', 'armed_night'].filter(function (id) { return AL.ok(I, id); }).map(function (id) {
+      return { icon: ICON[id], text: MODE_WORD[id], active: aim === id,
+        svc: { domain: 'alarm_control_panel', service: 'alarm_' + id.replace('armed_', 'arm_'), data: { entity_id: ent } } };
+    })));
+  };
+
   // Tippen auf data-casora-alarm: Dienst mit Code aus dem Feld; fehlt der Code, Feld fokussieren.
   if (!window._casoraAlarmTap) {
     window._casoraAlarmTap = true;
@@ -243,7 +285,23 @@
       if (Date.now() - (window._casoraPopupOpenedAt || 0) < 600) return;
       if (window.casoraHaptic) window.casoraHaptic('medium');
       var spec; try { spec = JSON.parse(el.dataset.casoraAlarm); } catch (e) { return; }
+      // Popup v3: a dangerous main action asks first (confirm as in the shared services).
+      var ask = spec && spec.confirm && window.casoraAsk ? spec.confirm : null;
       spec = AL.spec(spec); if (!spec) return;
+      if (ask) {
+        var el0 = el, ha0 = document.querySelector('home-assistant'), I0 = ha0 && ha0.hass ? AL.info(spec.e, ha0.hass.states) : null;
+        var r0 = el.getRootNode && el.getRootNode(), in0 = r0 && r0.querySelector ? r0.querySelector('.cal-code input') : null;
+        // Code missing: shake the field first (run does it), ask only once a code is there.
+        if (I0 && (spec.s === 'alarm_disarm' ? I0.needDis : I0.needArm) && !(in0 && String(in0.value || '').trim())) { run(spec, el); return; }
+        var tr = window.casoraTr || function (x) { return x; };
+        window.casoraAsk({ title: tr(typeof ask === 'string' ? ask : 'Wirklich?'), yes: tr(el0.getAttribute('aria-label') || 'OK') }).then(function (ok) {
+          if (ok) run(spec, el0);
+        });
+        return;
+      }
+      run(spec, el);
+    };
+    var run = function (spec, el) {
       var ha = document.querySelector('home-assistant'); var hass = ha && ha.hass; if (!hass) return;
       var I = AL.info(spec.e, hass.states);
       var need = spec.s === 'alarm_disarm' ? I.needDis : I.needArm;

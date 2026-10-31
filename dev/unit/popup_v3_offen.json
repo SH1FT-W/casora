@@ -58,27 +58,11 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Türen & Fenster",
-  "vorlagen": [
-   "casora_popup_contacts"
-  ],
-  "modul": "34-security-covers.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Schloss",
   "vorlagen": [
    "casora_popup_lock"
   ],
   "modul": "13-schloss.js",
-  "grund": "noch nicht dran"
- },
- {
-  "popup": "Alarmanlage",
-  "vorlagen": [
-   "casora_popup_alarm"
-  ],
-  "modul": "07-weich-spezial.js",
   "grund": "noch nicht dran"
  },
  {

@@ -2565,7 +2565,12 @@
   "Pulse: Ausgefallen": "Pulse: Failed",
   "Zählt": "Counts",
   "In Ordnung": "OK",
-  "Von zuhause": "From home"
+  "Von zuhause": "From home",
+  "Alarm beenden?": "Stop the alarm?",
+  "Alarmanlage unscharf schalten?": "Disarm the alarm system?",
+  "Sensor offen": "Sensor open",
+  "Sensoren offen": "Sensors open",
+  "Wirklich?": "Are you sure?"
  },
  "patterns": [
   [

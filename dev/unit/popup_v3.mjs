@@ -53,6 +53,8 @@ const MIGRIERT = [
   { popup: 'Klima-Gruppe (Badge)', vorlagen: ['casora_badge_climate_group'], file: '35-phone-hub.js', from: '  var stageOf = function', to: '  P.sec = function', stages: 3 },
   { popup: 'Person / Anwesenheit', vorlagen: ['casora_popup_person', 'casora_badge_presence_group'], file: '15-person.js', from: '  P.sec = function', to: '  // ── Aktionen', stages: 1 },
   { popup: 'Lüften-Coach', vorlagen: ['casora_popup_vent'], file: '05-standard-medien.js', from: '  V.sec = function', to: '  /* Coach auch im Klima-Popup', stages: 3 },
+  { popup: 'Türen & Fenster', vorlagen: ['casora_popup_contacts'], file: '34-security-covers.js', from: '  window.casoraContactsStage = function', to: '  C.sec = function', stages: 1 },
+  { popup: 'Alarmanlage', vorlagen: ['casora_popup_alarm'], file: '07-weich-spezial.js', from: '  AL.stage = function', to: '  // Tippen auf data-casora-alarm', stages: 1 },
 ];
 
 // 1. Pieces.

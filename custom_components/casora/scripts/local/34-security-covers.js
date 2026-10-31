@@ -241,6 +241,28 @@
     return c;
   };
 
+  // Popup v3 stage S7 of „Türen & Fenster“ (casora_popup_contacts and the contact branch of the security/alarm badge
+  // popups): the head line's sentence, Casora's security level as the traffic light, counts and the last change as facts.
+  // No main action – doors and windows close by hand.
+  window.casoraContactsStage = function (hass, openIds, allIds, tilted, text, when) {
+    var UI = window._casoraUI;
+    if (!UI || !UI.stage) return '';
+    var S = (hass && hass.states) || {};
+    var dc = function (id) { return low(S[id] && S[id].attributes && S[id].attributes.device_class); };
+    var tc = openIds.filter(tilted).length, oc = openIds.length - tc;
+    var lv = openIds.length && window.casoraSecurityLevel ? window.casoraSecurityLevel(hass, openIds) : openIds.length ? 'warn' : 'ok';
+    var win = (openIds.length ? openIds : allIds).every(function (id) { return dc(id) === 'window'; });
+    var facts = [{ label: 'Geöffnet', value: String(oc) }];
+    if (tc) facts.push({ label: 'Gekippt', value: String(tc) });
+    facts.push({ label: 'Geschlossen', value: String(allIds.length - openIds.length) });
+    if (when && facts.length < 3) facts.push({ label: 'Zuletzt', value: when });
+    return UI.stage('status', {
+      tone: !allIds.length ? 'off' : lv === 'alarm' ? 'bad' : lv === 'warn' ? 'warn' : 'good',
+      icon: win ? (openIds.length ? 'mdi:window-open-variant' : 'mdi:window-closed-variant') : (openIds.length ? 'mdi:door-open' : 'mdi:door-closed'),
+      text: text, facts: allIds.length ? facts : [],
+    });
+  };
+
   C.sec = function (part, cfg, states, hass, user) {
     var UI = window._casoraUI;
     if (!UI) return '';

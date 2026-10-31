@@ -2583,7 +2583,12 @@
   "Pulse: Ausgefallen": "Pulse: Guasto",
   "Zählt": "Conta",
   "In Ordnung": "OK",
-  "Von zuhause": "Da casa"
+  "Von zuhause": "Da casa",
+  "Alarm beenden?": "Fermare l’allarme?",
+  "Alarmanlage unscharf schalten?": "Disattivare l’allarme?",
+  "Sensor offen": "Sensore aperto",
+  "Sensoren offen": "Sensori aperti",
+  "Wirklich?": "Sicuro?"
  },
  "patterns": [
   [
