@@ -418,12 +418,14 @@
     if (KL.sec('more', c, S, hass)) f.more = { card: K.secCard(watch, call('more'), states) };
     // Popup v3 (richtlinien §4 S5, §8): the live picture with sound and talk is the stage over both columns (the card is
     // mounted into the stage, which is drawn once, _casoraStageCard in 01-basis.js); the status line above it, under it
-    // left the quick replies and the siren, right the history (v2 rule 5). No settings.
+    // left the quick replies and the siren, right the history (v2 rule 5). No settings – except the volume sliders users
+    // asked for in #23 (§8 exception): a row „Ton ›“ opens them as a sub page.
     if (UI.v3 && UI.v3() && UI.stage) {
       var fv = { hero: f.hero, hist: f.hist, stage: { card: K.secCard([], 'return window._casoraKlingel ? window._casoraKlingel.stage('
         + JSON.stringify(live) + ', this) : "";', states) } };
       if (f.say) fv.say = f.say;
-      return K.layout({ fields: fv, top: ['hero'], stage: 'stage', stageWide: true, left: ['say'], right: ['hist'], narrowOrder: ['say', 'hist'] });
+      if (KL.sec('tonrow', c, S, hass)) fv.ton = { card: K.secCard(watch, call('tonrow'), states) };
+      return K.layout({ fields: fv, top: ['hero'], stage: 'stage', stageWide: true, left: ['say', 'ton'], right: ['hist'], narrowOrder: ['say', 'ton', 'hist'] });
     }
     // Live-Bild links über den Schnellantworten (volle Breite wäre 16:9 über 850 px), rechts der Verlauf,
     // darunter über beide Spalten die Einstellungen („Mehr“).
@@ -442,6 +444,15 @@
     var c = KL.find(h, id);
     var code = 'return window._casoraKlingel ? window._casoraKlingel.sec("histall", ' + JSON.stringify(c) + ', states, hass, this) : "";';
     window.casoraPopup.sub({ title: 'Verlauf', content: K.layout({ fields: { h: { card: K.secCard(KL.watch(c), code, h.states) } }, top: [], left: ['h'], right: [] }) });
+  };
+
+  // Popup v3 (#23): „Ton ›“ opens the volume sliders (ring, talk, speaker) as a sub page with ‹, live.
+  (window._casoraPages || (window._casoraPages = {}))['klingel-ton'] = function (camId) {
+    var K = window._casoraSoftKit, ha = document.querySelector('home-assistant'), h = ha && ha.hass;
+    if (!K || !h || !window.casoraPopup || !window.casoraPopup.sub) return;
+    var c = KL.find(h, camId);
+    var code = 'return window._casoraKlingel ? window._casoraKlingel.sec("vol", ' + JSON.stringify(c) + ', states, hass, this) : "";';
+    window.casoraPopup.sub({ title: 'Ton', content: K.layout({ fields: { v: { card: K.secCard(KL.watch(c), code, h.states) } }, top: [], left: ['v'], right: [] }) });
   };
 
   var pill = function (text, mid) {
@@ -582,6 +593,15 @@
       if (media) o2 += '<div style="height:8px"></div>' + UI.group([{ icon: 'mdi:filmstrip-box-multiple', iconTone: 'accent', label: 'Aufnahmen',
         sub: 'In den Medien von Home Assistant', entity: 'klingel-go:' + media }], null);
       return o2;
+    }
+    if (part === 'vol') {
+      var vs = slider(UI, S, c.vol.bell, 'Klingelton') + slider(UI, S, c.vol.speak, 'Sprechen') + slider(UI, S, c.vol.spk, 'Lautsprecher');
+      return vs ? UI.label('Lautstärke') + vs.replace('<div style="margin-top:8px;">', '<div>') : '';
+    }
+    if (part === 'tonrow') {
+      // v3 (#23): one row onto the sliders; only when the doorbell has a volume the popup can set.
+      var any = ['bell', 'speak', 'spk'].some(function (k) { return c.vol[k] && S[c.vol[k]] && !bad(S[c.vol[k]].state); });
+      return any ? UI.group([{ icon: 'mdi:volume-high', iconTone: 'accent', label: 'Ton', sub: 'Lautstärke', page: 'klingel-ton|' + c.cam }], null) : '';
     }
     if (part === 'more') {
       var secs = [];

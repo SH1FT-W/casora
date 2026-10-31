@@ -2431,7 +2431,7 @@
     "Frigate integration not installed yet": "Intégration Frigate pas encore installée",
     "Reolink doorbell": "Sonnette Reolink",
     "Doorbell camera": "Caméra de la sonnette",
-    "Doorbell with live picture that says when someone rang. The popup has the live view with sound, quick replies, the siren and who rang lately.": "Sonnette avec image en direct qui dit quand quelqu'un a sonné. La fenêtre a la vue en direct avec le son, les réponses rapides, la sirène et qui a sonné récemment.",
+    "Doorbell with live picture that says when someone rang. The popup has the live view with sound, quick replies, the siren, who rang lately and the doorbell's volume (ring, talk, speaker).": "Sonnette avec image en direct qui dit quand quelqu'un a sonné. La fenêtre a la vue en direct avec le son, les réponses rapides, la sirène, qui a sonné récemment et le volume de la sonnette (sonnerie, parole, haut-parleur).",
     "For every Reolink doorbell": "Pour chaque sonnette Reolink",
     "Reolink integration not installed yet": "Intégration Reolink pas encore installée",
     "Talk (experiment)": "Parler (expérimental)",

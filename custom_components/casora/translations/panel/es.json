@@ -2432,7 +2432,7 @@
     "Frigate integration not installed yet": "La integración Frigate aún no está instalada",
     "Reolink doorbell": "Timbre Reolink",
     "Doorbell camera": "Cámara del timbre",
-    "Doorbell with live picture that says when someone rang. The popup has the live view with sound, quick replies, the siren and who rang lately.": "Timbre con imagen en vivo que indica cuándo ha llamado alguien. La ventana tiene la vista en vivo con sonido, respuestas rápidas, la sirena y quién llamó últimamente.",
+    "Doorbell with live picture that says when someone rang. The popup has the live view with sound, quick replies, the siren, who rang lately and the doorbell's volume (ring, talk, speaker).": "Timbre con imagen en vivo que indica cuándo ha llamado alguien. La ventana tiene la vista en vivo con sonido, respuestas rápidas, la sirena, quién llamó últimamente y el volumen del timbre (timbre, voz, altavoz).",
     "For every Reolink doorbell": "Para cada timbre Reolink",
     "Reolink integration not installed yet": "La integración Reolink aún no está instalada",
     "Talk (experiment)": "Hablar (experimental)",

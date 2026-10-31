@@ -2431,7 +2431,7 @@
     "Frigate integration not installed yet": "L'integrazione Frigate non è ancora installata",
     "Reolink doorbell": "Campanello Reolink",
     "Doorbell camera": "Telecamera del campanello",
-    "Doorbell with live picture that says when someone rang. The popup has the live view with sound, quick replies, the siren and who rang lately.": "Campanello con immagine live che indica quando qualcuno ha suonato. La finestra ha la vista live con audio, risposte rapide, la sirena e chi ha suonato di recente.",
+    "Doorbell with live picture that says when someone rang. The popup has the live view with sound, quick replies, the siren, who rang lately and the doorbell's volume (ring, talk, speaker).": "Campanello con immagine live che indica quando qualcuno ha suonato. La finestra ha la vista live con audio, risposte rapide, la sirena, chi ha suonato di recente e il volume del campanello (suoneria, voce, altoparlante).",
     "For every Reolink doorbell": "Per ogni campanello Reolink",
     "Reolink integration not installed yet": "L'integrazione Reolink non è ancora installata",
     "Talk (experiment)": "Parla (sperimentale)",

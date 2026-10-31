@@ -300,6 +300,37 @@ KL.forget(ID);
 p = KL.popup(states[ID], states, Object.assign({}, hass, { entities: Object.assign({}, entities) }), {});
 assert.ok(!p.fields.say, 'ohne Nachrichten und Sirene kein Abschnitt'); assert.equal(p.fields.live.card.talk, false, 'Sprechen standardmäßig aus');
 
+// Popup v3 (#23, popup-richtlinien-v3.md §8 exception): the volume sliders users asked for stay – a row „Ton ›“ under the
+// quick replies opens them as a sub page (ring, talk, speaker), live.
+{
+  const UIx = window._casoraUI, g0 = UIx.group;
+  UIx.v3 = () => true; UIx.stage = () => '<stage>';
+  const h3 = Object.assign({}, hass, { entities: Object.assign({}, entities) });
+  KL.forget(ID);
+  const p3 = KL.popup(states[ID], states, h3, {});
+  assert.ok(p3.fields.ton && p3.left.includes('ton'), 'v3: row „Ton ›“ in the popup');
+  assert.match(p3.fields.ton.card.code, /sec\("tonrow"/);
+  const c3 = KL.find(h3, ID);
+  let seen = null;
+  UIx.group = (rows, label) => { seen = rows; return g0(rows, label); };
+  KL.sec('tonrow', c3, states, h3);
+  assert.equal(seen[0].label, 'Ton'); assert.equal(seen[0].page, 'klingel-ton|' + ID, 'v3: „Ton ›“ opens the sub page');
+  UIx.group = g0;
+  let sub = null;
+  const q0 = globalThis.document.querySelector;
+  globalThis.document.querySelector = (q) => (q === 'home-assistant' ? { hass: h3 } : null);
+  window.casoraPopup = { sub: (o) => { sub = o; } };
+  window._casoraPages['klingel-ton'](ID);
+  assert.equal(sub && sub.title, 'Ton', 'v3: sub page „Ton“');
+  assert.match(sub.content.fields.v.card.code, /sec\("vol"/);
+  const vol = n(KL.sec('vol', c3, states, h3));
+  assert.ok(/<label Lautstärke>.*<slider Klingelton=40 \[0,100,1\]>.*<slider Sprechen=50.*<slider Lautsprecher=80/.test(vol), 'v3: the volume sliders: ' + vol);
+  // Without any volume entity: no row.
+  const cNo = Object.assign({}, c3, { vol: {} });
+  assert.equal(KL.sec('tonrow', cNo, states, h3), '', 'no volume, no row');
+  globalThis.document.querySelector = q0; delete window.casoraPopup; delete UIx.v3; delete UIx.stage;
+}
+
 // Studio-Optionen (#23): großes Bild beim Mithören/Sprechen standardmäßig an, zweite Kamera optional.
 assert.deepEqual(KL.opts({}, ID), { talk: false, big: true, cam2: null }, 'Standard: Sprechen aus, groß an, ohne zweite Kamera');
 assert.deepEqual(KL.opts({ talk: 'true', big_on_audio: false, camera2: 'camera.carport_sub' }, ID), { talk: true, big: false, cam2: 'camera.carport_sub' });
