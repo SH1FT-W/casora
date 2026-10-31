@@ -14,6 +14,8 @@
 // Umgebung: CASORA_TOKENS (sonst Anmeldung über dev/qa/token.mjs), CASORA_LOCAL=1
 // (Panel/Skripte aus diesem Checkout statt aus dem Test-HA), CASORA_QA_DASH (Dashboard
 // vorgeben), CASORA_OUT (Bilder, Standard /tmp/casora-qa).
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { tokens, ws } from '../ws.mjs';
 
@@ -41,6 +43,24 @@ export async function open(opts = {}) {
   browsers.push(o.browser);
   page = o.page;
   return o;
+}
+
+// Config folder of the test HA on this machine. In Docker HA reports its own path (/config); the container
+// carries the host folder as label ha-docker.config (tools/ha-docker.sh), found by the port of BASE.
+export async function hostConfigDir(c) {
+  const dir = (await c.cmd({ type: 'get_config' })).config_dir;
+  if (dir && fs.existsSync(path.join(dir, 'configuration.yaml'))) return dir;
+  try {
+    const { execFileSync } = await import('node:child_process');
+    const port = new URL(BASE).port || '80';
+    const docker = ['docker', path.join(os.homedir(), '.docker/bin/docker')].find((d) => {
+      try { execFileSync(d, ['version', '--format', '{{.Client.Version}}'], { stdio: 'ignore' }); return true; } catch (e) { return false; }
+    });
+    if (!docker) return dir;
+    const id = execFileSync(docker, ['ps', '-q', '--filter', 'publish=' + port, '--filter', 'label=ha-docker.config'], { encoding: 'utf8' }).trim().split('\n')[0];
+    if (!id) return dir;
+    return execFileSync(docker, ['inspect', '-f', '{{index .Config.Labels "ha-docker.config"}}', id], { encoding: 'utf8' }).trim() || dir;
+  } catch (e) { return dir; }
 }
 
 export function usePage(p) { page = p; }

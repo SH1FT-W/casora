@@ -15,7 +15,7 @@
 // Pictures: CASORA_OUT.
 import fs from 'node:fs';
 import path from 'node:path';
-import { open, casoraDashboards, dashboard, ready, check, need, finish, atFinish, shot, usePage, BASE } from './lib.mjs';
+import { open, casoraDashboards, dashboard, ready, check, need, finish, atFinish, shot, usePage, BASE, hostConfigDir } from './lib.mjs';
 import { ws, tokens } from '../ws.mjs';
 
 const MARKER = '# Von der Casora-Integration geschrieben und bei jedem Start aktualisiert – nicht bearbeiten.';
@@ -23,7 +23,7 @@ const OWN = 'QA r333 Moonbeam';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const c = await ws();
-const CFG = (await c.cmd({ type: 'get_config' })).config_dir;
+const CFG = await hostConfigDir(c);
 await need('config folder of the test HA on this machine (throwaway HA)', !!CFG && fs.existsSync(path.join(CFG, 'configuration.yaml')), CFG);
 await need('themes folder included by configuration.yaml', /themes:\s*!include_dir_merge_named\s+themes/.test(fs.readFileSync(path.join(CFG, 'configuration.yaml'), 'utf8')));
 const P = (f) => path.join(CFG, f);

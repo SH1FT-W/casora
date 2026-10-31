@@ -15,7 +15,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { open, casoraDashboards, dashboard, ready, check, need, finish, atFinish, BASE } from './lib.mjs';
+import { open, casoraDashboards, dashboard, ready, check, need, finish, atFinish, BASE, hostConfigDir } from './lib.mjs';
 import { ws, tokens } from '../ws.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -29,7 +29,7 @@ const MARKER = '# Von der Casora-Integration geschrieben';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const c = await ws();
-const CFG = (await c.cmd({ type: 'get_config' })).config_dir;
+const CFG = await hostConfigDir(c);
 await need('config folder of the test HA on this machine (throwaway HA)', !!CFG && fs.existsSync(path.join(CFG, 'configuration.yaml')), CFG);
 const P = (f) => path.join(CFG, f);
 const read = (f) => { try { return fs.readFileSync(P(f), 'utf8'); } catch (e) { return null; } };
