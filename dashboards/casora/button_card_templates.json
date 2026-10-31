@@ -5821,6 +5821,9 @@
     },
     {
      "--casora-settings-size": "var(--casora-mchrome-dots, 21px)"
+    },
+    {
+     "visibility": "[[[\n  /* Casora designs (soft) dock this capsule in the phone's bottom bar (casora-mobile-nav, 04-navigation.js).\n     Until it is docked it stays hidden: while the modules load it stood top right, a menu the phone no\n     longer has (31.10.2026). The dock, and a phone page without the bar (casora-local.js), set\n     --casora-mchrome-vis: visible. Other designs keep the capsule at the top. */\n  return getComputedStyle(document.documentElement).getPropertyValue('--casora-popup-layout').trim() === 'soft'\n    ? 'var(--casora-mchrome-vis, hidden)' : 'visible';\n]]]\n"
     }
    ],
    "custom_fields": {
@@ -6732,7 +6735,7 @@
      "tap_action": {
       "action": "none"
      },
-     "type": "custom:button-card",
+     "type": "[[[\n  /* Casora designs (soft): 09-weich-wiedergabe.js draws the list, this card stays hidden – so draw nothing\n     instead of 9 hidden carousel slots (31.10.2026). Other designs keep the carousel. */\n  return getComputedStyle(document.documentElement).getPropertyValue('--casora-popup-layout').trim() === 'soft'\n    ? 'custom:casora-void' : 'custom:button-card';\n]]]\n",
      "variables": {
       "cfg": "[[[ return variables.cfg; ]]]"
      }
@@ -6891,7 +6894,7 @@
      "tap_action": {
       "action": "none"
      },
-     "type": "custom:button-card",
+     "type": "[[[\n  /* Casora designs (soft): 09-weich-wiedergabe.js draws the list, this card stays hidden – so draw nothing\n     instead of 9 hidden carousel slots (31.10.2026). Other designs keep the carousel. */\n  return getComputedStyle(document.documentElement).getPropertyValue('--casora-popup-layout').trim() === 'soft'\n    ? 'custom:casora-void' : 'custom:button-card';\n]]]\n",
      "variables": {
       "cfg": "[[[ return variables.cfg; ]]]"
      }

@@ -141,6 +141,8 @@
          50 breit (Ziel 50 × 48), die aktive nur als weiße Pille mit Ton-Kreis – ihr Name steht schon groß
          als Seitentitel darüber („Zuhause“ doppelt, Entwurf nav-h-B). Die Kapsel liest die --casora-mchrome-*-Werte. */
       + '.hmn-sep,.hmn-dock{display:none;}'
+      /* The capsule waits hidden until it sits here (casora_mobile_chrome, 31.10.2026). */
+      + '.hmn-dock{--casora-mchrome-vis:visible;}'
       + '.hmn-bar.hmn-act .hmn-sep{display:block;flex:none;align-self:center;width:1px;height:24px;margin:0 3px;background:var(--casora-pill-divider, rgba(255,255,255,0.18));}'
       + '.hmn-bar.hmn-act .hmn-dock{display:flex;align-items:center;flex:none;height:48px;'
       +   '--casora-mchrome-glass:none;--casora-mchrome-btn-fill:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));--casora-mchrome-btn:36px;'

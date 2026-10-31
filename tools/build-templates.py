@@ -44,7 +44,10 @@ REMOVED = ("casora_badge_plex", "casora_plex_recently_added", "casora_popup_plex
            # Aquarium-Licht → casora_popup_aquarium_tank (die Kacheln casora_aquarium/_light leiten um);
            # Saugroboter/Geschirrspüler (alt, ohne Kachel) → _casoraVac in casora_vacuum, casora_popup_dishwasher.
            "casora_popup_contact", "casora_popup_aquarium", "casora_popup_aquarium_light",
-           "casora_popup_vacuum", "casora_popup_geschirrspueler")
+           "casora_popup_vacuum", "casora_popup_geschirrspueler",
+           # Phone hub popup (26.10.63): its content moved into the group badges' tap action in the same
+           # release, so no released template or card ever named it.
+           "casora_popup_phone_hub")
 for name in REMOVED:
     tpl.pop(name, None)
 # Leistung 1.3: das Bündel steckt in jeder Dashboard-Konfiguration (wird bei jedem Laden übertragen
