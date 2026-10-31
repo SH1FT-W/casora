@@ -439,7 +439,7 @@
       const out = [
         { id: "doc:rename", label: "Rename\u2026", icon: "pencil", group: g },
         { id: "doc:copy", label: "Copy\u2026", icon: "copy", group: g },
-        { id: "doc:icon", label: "Icon\u2026", icon: "grid", group: g },
+        { id: "doc:icon", label: "Change Icon\u2026", icon: "grid", group: g },
       ];
       if (typeof this._cvFromMenu === "function") out.push({ id: "doc:versions", label: "Rewind", icon: "clock", group: g });
       if (this._canAddMobile && this._canAddMobile()) out.push({ id: "doc:addmobile", label: "Phone layout", icon: "phone", group: g });
