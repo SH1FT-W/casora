@@ -302,7 +302,7 @@ window.CASORA_TILE_TYPES = [
       { key: "waste.calendar_popup", setting: true, type: "bool", boolDefault: true, advanced: true,
         label: "Calendar in the waste popup", sub: "Month with the pickup days in the bin colors",
         hint: "Applies to all waste tiles" },
-      { key: "trash_reminder", label: "Reminder automation", domains: ["automation"], advanced: true },
+      // No reminder automation: popup v3 is clean (popup-richtlinien-v3.md §8) and no longer shows its switch.
     ] },
   // Calendar (issue #31): template and popup existed, the Studio did not offer the tile. Which calendars it
   // shows, their names and colors are a Casora setting for every calendar tile (Settings → Calendar), so the

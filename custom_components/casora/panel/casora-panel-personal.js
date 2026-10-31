@@ -355,8 +355,7 @@
           row(g, "Your turn in", [chips], "Months you put the bins out");
           row(g, "Your turn sensor", [ent(S.waste.duty_entity, ["sensor", "binary_sensor", "input_boolean"],
             (v) => { S.waste.duty_entity = v; })], "Instead of fixed months");
-          row(g, "Reminder automation", [ent(S.waste.reminder, ["automation"], (v) => { S.waste.reminder = v; })],
-            "The “Push the evening before” switch in the popup");
+          // No "Reminder automation" row: the popup's "Push the evening before" switch is gone (popup v3 is clean).
         }, ["Advanced", "Advanced"]);
       }
 
