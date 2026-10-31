@@ -11018,7 +11018,10 @@ window.casoraMenuGlass = {
     return '<div style="font-family:' + T.font + ';">' + out + '</div>';
   }
 
+  // Setup hints name the Studio; only admins can open it (Prüfung 2 fam-08) – everyone else gets no hint.
+  var studioHint = function (t) { return /Studio/.test(String(t || '')) && window.casoraIsAdmin && !window.casoraIsAdmin(); };
   function note(text) {
+    if (studioHint(text)) return '';
     if (soft()) {
       return '<div style="font-family:' + T.font + ';font-size:13px;font-weight:500;line-height:1.4;color:' + S.sub
         + ';padding:4px 6px 0;text-align:left;">' + esc(text) + '</div>';
@@ -11407,6 +11410,11 @@ window.casoraMenuGlass = {
     if (o.action && o.action.svc) { r.svc = o.action.svc; r.action = o.action.text; r.actionTone = 'accent'; }
     else if (o.entity) r.entity = o.entity;
     else if (o.studio && window.casoraIsAdmin && window.casoraIsAdmin()) { r.tappable = true; r.studio = true; }
+    // Not an admin: a neutral line instead of the setup step and its Studio hint (fam-08).
+    else if (o.studio || studioHint(o.sub) || studioHint(o.text)) {
+      if (studioHint(o.text) || /(zuordnen|wählen|zuweisen|einrichten|hinzufügen)$/i.test(String(o.text || ''))) r.label = 'Noch nicht verfügbar';
+      r.sub = null;
+    }
     else if (o.out) { r.tappable = true; r.out = true; r.url = o.out; }
     return group([r], null);
   }
