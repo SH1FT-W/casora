@@ -113,7 +113,7 @@ const run = async (view) => {
   // 3. Shape "Balken".
   await tapAt(segEl, ['data-casora-cshape', 'bar']);
   p = await info((x) => x && x.kind === 'bar');
-  await check(tag + ': tap on "Balken" draws bars', p && p.kind === 'bar' && p.shapes.join('|') === 'Linie|*Balken' && p.paths > 0, p && [p.kind, p.shapes]);
+  await check(tag + ': tap on "Balken" draws bars', p && p.kind === 'bar' && p.shapes.join('|') === 'Linie|*Balken|Heatmap' && p.paths > 0, p && [p.kind, p.shapes]);
   await shot('4-bars');
   await tapAt(segEl, ['data-casora-cshape', 'line']);
   p = await info((x) => x && x.kind === 'line');

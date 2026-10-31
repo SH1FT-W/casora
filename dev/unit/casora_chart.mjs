@@ -1,4 +1,4 @@
-// casora-chart (1.2): Skala, Zusammenfassen, Zeitachse, Tagesbalken, Wochentage, Farben – ohne DOM.
+// casora-chart (1.2): scale, bucketing, time axis, day bars, weekdays, colours – without a DOM.
 //   TZ=Europe/Berlin node dev/unit/casora_chart.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -7,41 +7,41 @@ const src = fs.readFileSync(new URL('../../custom_components/casora/scripts/caso
 const win = { casoraLocale: () => 'de', casoraTr: (s) => s };
 new Function('window', 'customElements', src)(win, undefined);
 const C = win.casoraChart;
-assert.ok(C, 'window.casoraChart vorhanden');
+assert.ok(C, 'window.casoraChart present');
 const H = 36e5, DAY = 864e5;
 
 
-// Skala: schöne Schritte, 0 bei min0, flache Linie (früher Endlosschleife), kein „-0“.
+// Scale: nice steps, 0 with min0, a flat line (used to loop forever), no "-0".
 {
   let s = C.nice(19.8, 22.6, 2);
   assert.deepEqual(s.ticks, [18, 20, 22, 24]);
   s = C.nice(205, 2310, 2, true);
   assert.equal(s.lo, 0); assert.deepEqual(s.ticks, [0, 2000, 4000]);
   s = C.nice(21.399999999999995, 21.4, 2);
-  assert.ok(s.ticks.length >= 2 && s.ticks.length < 10, 'flache Linie: wenige Ticks ' + s.ticks);
+  assert.ok(s.ticks.length >= 2 && s.ticks.length < 10, 'flat line: few ticks ' + s.ticks);
   assert.ok(s.lo <= 21.4 && s.hi >= 21.4);
   s = C.nice(0, 0, 2, true);
-  assert.equal(s.lo, 0, 'flach bei 0 mit min0 bleibt ab 0');
+  assert.equal(s.lo, 0, 'flat at 0 with min0 starts at 0');
   s = C.nice(-0.3, 0.2, 2);
-  assert.ok(s.ticks.every((v) => !Object.is(v, -0)), 'kein -0 in ' + s.ticks);
+  assert.ok(s.ticks.every((v) => !Object.is(v, -0)), 'no -0 in ' + s.ticks);
   assert.equal(C.nf(-0.04, 1), '0,0');
   assert.equal(C.nf(1234.5, 1), '1.234,5');
 }
-console.log('ok Skala');
+console.log('ok scale');
 
-// Zusammenfassen: Mittel je Fenster, leere Fenster tragen den letzten Wert, letzter Punkt endet „jetzt“.
+// Bucketing: mean per window, empty windows carry the last value, the last point ends "now".
 {
   const t0 = Date.UTC(2026, 9, 8, 10), pts = [[t0 - H, 10], [t0 + 5 * 6e4, 20], [t0 + 20 * 6e4, 30], [t0 + 95 * 6e4, 40]];
   const b = C.bucket(pts, t0, t0 + 2 * H, 30 * 6e4);
   assert.deepEqual(b.map((p) => p[1]), [25, 30, 30, 40]);
-  assert.equal(b[0][0], t0 + 15 * 6e4, 'Fenstermitte');
-  assert.equal(b[b.length - 1][0], t0 + 2 * H, 'endet jetzt');
+  assert.equal(b[0][0], t0 + 15 * 6e4, 'window middle');
+  assert.equal(b[b.length - 1][0], t0 + 2 * H, 'ends now');
   assert.deepEqual(C.bucket(pts, t0, t0 + H, 30 * 6e4, 'max').map((p) => p[1]), [30, 30]);
   assert.deepEqual(C.bucket([], t0, t0 + H, 6e5), []);
-  // Vorwert allein: Linie über den ganzen Zeitraum
+  // Only an earlier value: a line over the whole range
   assert.equal(C.bucket([[t0 - 5 * H, 7]], t0, t0 + H, 30 * 6e4).length, 2);
 }
-console.log('ok Zusammenfassen');
+console.log('ok bucketing');
 
 // Live end: the last point is the current state (soil moisture 77 % after watering, 6 h stats mean ~49 %).
 {
@@ -52,22 +52,22 @@ console.log('ok Zusammenfassen');
   assert.deepEqual(C.live([[t1, 5]], t1, NaN), [[t1, 5]], 'no live value: mean stays');
   assert.deepEqual(C.live([], t1, 77), [], 'no history: nothing invented');
 }
-console.log('ok Live-Ende');
+console.log('ok live end');
 
-// Tagesbalken: lokale Mitternacht, letzter Tag = heute, Zeitumstellung 25.10.2026 (25-Stunden-Tag).
+// Day bars: local midnight, the last day = today, clock change 25.10.2026 (25-hour day).
 {
   const now = new Date(2026, 9, 27, 14, 10).getTime();
   const d = C.days(now, 7);
   assert.equal(d.length, 7);
   assert.equal(d[6], new Date(2026, 9, 27).getTime());
-  d.forEach((t) => { const x = new Date(t); assert.equal(x.getHours() + x.getMinutes(), 0, 'Mitternacht'); });
+  d.forEach((t) => { const x = new Date(t); assert.equal(x.getHours() + x.getMinutes(), 0, 'midnight'); });
   const i = d.indexOf(new Date(2026, 9, 25).getTime());
   // Days follow local midnights: 25 h on 25.10. in Europe/Berlin, 24 h in a zone without DST (TZ=UTC).
   const dst = new Date(2026, 9, 26).getTime() - new Date(2026, 9, 25).getTime();
   if (process.env.TZ === 'Europe/Berlin') assert.equal(dst, 25 * H, 'Europe/Berlin: 25.10. has 25 hours');
   assert.equal(d[i + 1] - d[i], dst, '25.10. lasts as long as the local day');
 }
-console.log('ok Tage');
+console.log('ok days');
 
 // Bucket starts for bars: whole hours (24 h), days, months (12, the last = this month); '1y' = 365 days.
 {
@@ -90,22 +90,22 @@ console.log('ok Tage');
   k = C.xTicks(now - 365 * DAY, now, 300);
   assert.ok(k.length >= 3 && k.length <= 6 && k.every((x) => x.mon), 'year narrow: ' + k.length);
 }
-console.log('ok Bucket-Starts');
+console.log('ok bucket starts');
 
-// Zeitachse: Abstand ≥ 64 px, ganze Stunden; 48 h → Wochentage um Mitternacht; 30 T → Tagesdatum.
+// Time axis: ≥ 64 px apart, whole hours; 48 h → weekdays at midnight; 30 d → the date.
 {
   const now = new Date(2026, 9, 8, 14, 10).getTime();
   let k = C.xTicks(now - 4 * H, now, 300);
   assert.ok(k.length >= 2 && k.length <= 5, '4 h: ' + k.length);
   k.forEach((x) => assert.equal(new Date(x.t).getMinutes(), 0));
   k = C.xTicks(now - 48 * H, now, 600);
-  assert.ok(k.some((x) => x.day), '48 h: Tageswechsel als Wochentag');
+  assert.ok(k.some((x) => x.day), '48 h: day change as a weekday');
   k = C.xTicks(now - 30 * DAY, now, 320);
   assert.ok(k.length >= 2 && k.length <= 6 && k.every((x) => x.day), '30 T: ' + k.length);
 }
-console.log('ok Zeitachse');
+console.log('ok time axis');
 
-// Deutsche Wochentage und Ablesetexte (früher „Thu“ aus format: 'ddd').
+// German weekdays and reading texts (used to be "Thu" from format: 'ddd').
 {
   const thu = new Date(2026, 9, 8, 20, 15).getTime();
   assert.equal(C.wd(thu), 'Do');
@@ -118,9 +118,9 @@ console.log('ok Zeitachse');
   assert.equal(C.when(thu - DAY, thu, true), 'Wed, 8:15 PM');
   win.casoraLocale = () => 'de';
 }
-console.log('ok Wochentage');
+console.log('ok weekdays');
 
-// Pfade: monotone Kurve ohne Überschwingen bei flachen Stücken, Treppe für Stufenwerte.
+// Paths: monotone curve without overshoot on flat parts, steps for stepped values.
 {
   assert.equal(C.mono([]), '');
   assert.equal(C.mono([[0, 1], [10, 2]]), 'M0,1L10,2');
@@ -128,9 +128,9 @@ console.log('ok Wochentage');
   assert.ok(/^M0,10C/.test(d) && !/NaN/.test(d), d);
   assert.equal(C.stepPath([[0, 5], [10, 2]]), 'M0.0,5.0H10.0V2.0');
 }
-console.log('ok Pfade');
+console.log('ok paths');
 
-// Farben: iOS-Töne der Aufrufer → vier geprüfte Stufen (Übergabe), Grau → Text 3.
+// Colours: the callers' iOS tones → four checked steps (handover), grey → text 3.
 {
   assert.equal(C.color('#FF9F0A'), 'var(--cc2)');
   assert.equal(C.color('#0A84FF'), 'var(--cc1)');
@@ -141,7 +141,7 @@ console.log('ok Pfade');
   assert.equal(C.color('var(--x)'), 'var(--x)');
   assert.equal(C.ms('15min'), 15 * 6e4); assert.equal(C.ms('2h'), 2 * H); assert.equal(C.ms('7d'), 7 * DAY);
 }
-console.log('ok Farben');
+console.log('ok colours');
 
 // Series switch buttons on a phone (#58): in a popup the button-card cancels the touchend, so no click follows –
 // the finger lifted in place selects; a moved finger (scrolling) does not; the click echo after a touch is dropped.
@@ -169,18 +169,19 @@ console.log('ok Farben');
   assert.equal(m, 1, 'mouse click selects');
   win._casoraSuppressDismiss = 0;
 }
-console.log('ok Antippen');
+console.log('ok tap');
 
-// Größe: ausgeliefert gzip-komprimiert ≤ 14 KB (apexcharts-card: ~500 KB), unkomprimiert ≤ 44 KB
-// (bis 26.10.31: 12 KB / 36 KB; bis 26.10.59: 12,5 KB / 37 KB – Balken je Stunde/Tag/Monat mit bis zu vier Reihen
-// nebeneinander, Jahr-Spanne und Monats-Ticks (Diagramm-Karte #50) brauchten ~5 KB; bis zur Wetterauswahl #56: 13,5 KB / 42 KB – mehrere Attribut-Kurven einer Entität;
-// up to 43 KB before the chart plate got its shadow, 28.10.2026).
+// Size: served gzipped ≤ 17.5 KB (apexcharts-card: ~500 KB), uncompressed ≤ 56 KB
+// (until 26.10.31: 12 KB / 36 KB; until 26.10.59: 12.5 KB / 37 KB – bars per hour/day/month with up to four series
+// side by side, the year range and month ticks (chart card #50) took ~5 KB; until the weather pick #56: 13.5 KB / 42 KB –
+// several attribute curves of one entity; up to 43 KB before the chart plate got its shadow, 28.10.2026; 14 KB / 44 KB until the heatmap, issue 100: grid, scale and
+// hourly rasterisation across clock changes took ~3.3 KB gzip / ~11.5 KB).
 {
   const zlib = await import('node:zlib');
   // The shared casora-esc block (HTML escaping, same in every standalone file) does not count against the budget.
   const own = src.replace(/\/\/ casora-esc:begin[\s\S]*?\/\/ casora-esc:end\n?/, '');
   const raw = Buffer.byteLength(own), gz = zlib.gzipSync(own).length;
-  assert.ok(raw <= 44 * 1024, 'casora-chart.js ' + raw + ' Bytes > 44 KB');
-  assert.ok(gz <= 14 * 1024, 'casora-chart.js gzip ' + gz + ' Bytes > 14 KB');
+  assert.ok(raw <= 56 * 1024, 'casora-chart.js ' + raw + ' Bytes > 56 KB');
+  assert.ok(gz <= 17.5 * 1024, 'casora-chart.js gzip ' + gz + ' Bytes > 17,5 KB');
 }
-console.log('ok Größe');
+console.log('ok size');
