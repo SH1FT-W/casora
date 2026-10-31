@@ -367,8 +367,19 @@
   }
 
   // v3: chart colour per page (theme, richtlinien §7.3) and the one list beside the stage.
-  var V3_COL = { home: 'var(--casora-popup-accent)', solar: 'var(--casora-color-yellow)', grid: 'var(--casora-color-neutral)' };
+  var V3_COL = { home: 'var(--casora-popup-accent)', solar: 'var(--casora-color-yellow)', grid: 'var(--casora-color-neutral)', battery: 'var(--casora-color-green)' };
   var V3_LIST = {
+    // Battery: charging and discharging now (today's discharge under it) – no capacity or temperature.
+    battery: function (UI, C, states, hass) {
+      var r = function (id, icon, label, sub) {
+        if (!id || !states[id]) return null;
+        return { entity: id, icon: icon, iconTone: COL.battery, label: label, value: fW(watt(states, id), hass), sub: sub || null,
+          liveAttr: 'state', liveSuffix: ' W' };
+      };
+      var list = [r(C.charge, 'mdi:battery-arrow-up-outline', 'Laden'),
+        r(C.discharge, 'mdi:battery-arrow-down-outline', 'Entladen', C.battToday ? 'heute ' + (kwh(states, C.battToday, hass) || '—') : null)].filter(Boolean);
+      return list.length ? UI.group(list, 'Akku') : null;
+    },
     // Grid: what was drawn from it (today, this month) – no export totals and self-supply shares.
     grid: function (UI, C, states, hass) { return rows(UI, C, states, hass).use || null; },
     // Solar: the yield (today, this month, savings), without daily meters the modules' power.
