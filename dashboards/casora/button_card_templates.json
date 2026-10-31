@@ -18802,7 +18802,8 @@
     ],
     "style": "[[[\n  /* Chart over the full width, below it lines (left) and statistics (right); one sensor: one column. */\n  return '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);';\n]]]\n",
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Diagramm', ['Diagramm', 'Chart']) : (String(variables.room_name || '').trim() || 'Diagramm'); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [

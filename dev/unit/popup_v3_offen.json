@@ -164,14 +164,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Diagramm-Kachel",
-  "vorlagen": [
-   "casora_popup_chart"
-  ],
-  "modul": "27-chart.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Messwertseite / Geräteseite",
   "vorlagen": [],
   "modul": "18-ziele.js",

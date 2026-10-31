@@ -360,6 +360,15 @@
     var call = function (part) {
       return 'return window._casoraChartCard ? window._casoraChartCard.sec(' + JSON.stringify(part) + ', ' + JSON.stringify(C) + ', states, hass, this) : "";';
     };
+    // Popup v3 (richtlinien §4 S6): value, chart and both switches in one stage; right the lines and the statistics.
+    // The stage card watches nothing – the number follows live (data-hp-live), so the chart in it is not redrawn on
+    // every new value; range, shape and the statistics redraw it (M.sec 'stage' mounts the chart again).
+    if (UI.v3 && UI.v3() && UI.stage) {
+      var fv = { stage: { card: K.secCard([], call('stage'), states) } };
+      if (series.length > 1) fv.series = { card: K.secCard(watch, call('series'), states) };
+      fv.stats = { card: K.secCard([id], call('stats'), states) };
+      return K.layout({ fields: fv, top: [], stage: 'stage', left: [], right: ['series', 'stats'], narrowOrder: ['series', 'stats'] });
+    }
     var f = { hero: { card: K.secCard(watch, call('hero'), states) }, range: { card: K.secCard([id], call('range'), states) } };
     if (kind) {
       // Static card: the chart element lives in this slot and must not be redrawn with the live parts.
@@ -404,6 +413,30 @@
       }
       return UI.hero({ center: true, value: M.value(st, hass), sub: rest.join(' · ') || null, read: C.id,
         valueTone: st && bad(st.state) ? 'warn' : null });
+    }
+    if (part === 'stage') {
+      var key = M.key(C.id, span, shape);
+      var cfg6 = window._hpPlantCfg && window._hpPlantCfg[key];
+      // On the stage the chart has no plate of its own and is 160 high (richtlinien §7.1/§7.2).
+      if (cfg6) { cfg6.plate = false; if (cfg6.kind !== 'heat') cfg6.height = window.innerWidth <= 760 ? 140 : 160; }
+      // No average/today beside the value: the statistics list on the right shows them (nothing twice); the trend slot
+      // only carries the time while the chart is read.
+      var trend6 = '';
+      var u6 = String(((st && st.attributes) || {}).unit_of_measurement || ''), v6 = M.value(st, hass), num6 = !!st && !bad(st.state) && isFinite(numOf(st.state));
+      var cut6 = num6 && u6 && v6.slice(-u6.length - 1) === ' ' + u6;
+      var k6 = 0, l6 = 0;
+      var rngHtml = UI.segments(SPANS.map(function (sp) { return { label: LABEL[sp], active: sp === span }; }), null)
+        .replace(/<div class="hui-sg/g, function () { return '<div data-casora-cspan="' + esc(C.id + '|' + SPANS[k6++]) + '" class="hui-sg'; });
+      var shpHtml = C.kind ? UI.segments(SHAPES.map(function (sh) { return { label: SHAPE_LABEL[sh], active: sh === shape }; }), null)
+        .replace(/<div class="hui-sg/g, function () { return '<div data-casora-cshape="' + esc(C.id + '|' + SHAPES[l6++]) + '" class="hui-sg'; }) : '';
+      if (C.kind && window._hpStageChart) window._hpStageChart(el, key);
+      return UI.stage('chart', { value: cut6 ? v6.slice(0, -u6.length - 1) : v6, unit: cut6 ? u6 : '', word: !num6,
+        read: C.kind ? C.id : null, live: num6 ? C.id : null,
+        liveDigits: num6 ? (Math.abs(numOf(st.state)) >= 100 ? 0 : M.precision(hass, C.id, numOf(st.state))) : null, trend: trend6, state: !st || st.state === 'unavailable' ? 'na' : null,
+        chart: C.kind ? '<div class="hp-chart-slot" style="min-height:' + (window.innerWidth <= 760 ? 140 : 160) + 'px;pointer-events:auto;"></div>'
+          : UI.empty({ icon: 'mdi:chart-line-variant', text: 'Kein Zahlenwert', sub: 'Dieser Sensor liefert keine Zahl.' }),
+        extra: C.kind ? '<div style="display:flex;flex-wrap:wrap;gap:10px 16px;align-items:start;"><div style="flex:4 1 260px;min-width:0;">' + rngHtml
+          + '</div><div style="flex:3 1 200px;min-width:0;">' + shpHtml + '</div></div>' : '' });
     }
     if (part === 'range') {
       // Each build of the popup (opening, or back from a page inside it) creates this card anew: mount the chart.

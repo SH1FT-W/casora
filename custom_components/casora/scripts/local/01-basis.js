@@ -859,6 +859,15 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       };
       setTimeout(tick, 60);
     };
+    /* Popup v3 S6 (chart on the stage): the stage is a live card – when it draws anew (range switched, statistics
+       came in) its slot is new and empty. Called from the stage's template with its card (this): mounts the chart
+       again once the new slot is in the tree. */
+    window._hpStageChart = function (el, eid) {
+      setTimeout(function () {
+        var slot = el && el.shadowRoot && el.shadowRoot.querySelector('.hp-chart-slot');
+        if (slot && !slot.querySelector('casora-chart') && !window._hpPlantShow(eid, null, true)) window._hpChartInit(eid);
+      }, 0);
+    };
     /* Popups with a chart and „Details ›“ (air purifier, fan, plant, batteries …): ‹ back from the reading's page
        reopens the popup's config, but its chart was only hung in when the tile was tapped – the card stayed empty.
        _hpPlantShow notes the chart on the open config; opening that config again mounts it once more if its slot is
@@ -960,7 +969,10 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           var st = hass.states[el.dataset.hpLive];
           var v = st ? parseFloat(st.state) : NaN;
           if (isNaN(v)) return;
-          var t = liveFmt(v, hass.locale && hass.locale.language) + (el.dataset.casoraSuffix || '');
+          // data-hp-digits: fixed decimals like the entity's own display (popup v3 stage S6).
+          var dg = el.dataset.hpDigits != null ? Number(el.dataset.hpDigits) : NaN;
+          var t = (isFinite(dg) ? v.toLocaleString((hass.locale && hass.locale.language) || 'de', { minimumFractionDigits: dg, maximumFractionDigits: dg })
+            : liveFmt(v, hass.locale && hass.locale.language)) + (el.dataset.casoraSuffix || '');
           if (el.textContent !== t) el.textContent = t;
         });
       }, 1000);
