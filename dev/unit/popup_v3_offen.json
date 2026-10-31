@@ -164,14 +164,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Pflanze",
-  "vorlagen": [
-   "casora_popup_plant"
-  ],
-  "modul": "01-basis.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Wetter",
   "vorlagen": [
    "casora_weather"

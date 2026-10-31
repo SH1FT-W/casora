@@ -51,6 +51,7 @@ const MIGRIERT = [
   { popup: 'Diagramm-Kachel', vorlagen: ['casora_popup_chart'], file: '27-chart.js', from: '  M.popup = function', to: null, stages: 1 },
   // S6 for numbers, S7 for two-state/text sensors and the device page (opened from casoraRoute and the hold menu).
   { popup: 'Messwertseite / Geräteseite', vorlagen: [], file: '18-ziele.js', from: '  Z.openMeasure = function', to: null, stages: 3, variantInModule: true },
+  { popup: 'Pflanze', vorlagen: ['casora_popup_plant'], file: null, stages: 1 },
 ];
 
 // 1. Pieces.
