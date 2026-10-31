@@ -2603,7 +2603,6 @@
   "Gruppen": "Groupes",
   "Heute an": "Active aujourd’hui",
   "Heute aus": "Désactivée aujourd’hui",
-  "1 Raum an": "1 pièce allumée",
   "1 klemmt": "1 bloquée",
   "Schloss klemmt": "Serrure bloquée",
   "Einschalten auf": "Allumer à",
@@ -2860,10 +2859,6 @@
   [
    "^(\\d+) von (\\d+) An$",
    "{1} sur {2} allumées"
-  ],
-  [
-   "^(\\d+) von (\\d+) Räumen an$",
-   "{1} pièces sur {2} allumées"
   ],
   [
    "^KI: 1 Update braucht Aufmerksamkeit$",
@@ -4768,10 +4763,6 @@
   [
    "^Ø von (\\d+) Lampen$",
    "Ø de {1} lampes"
-  ],
-  [
-   "^(\\d+) Räume an$",
-   "{1} pièces allumées"
   ],
   [
    "^(\\d+) Schlösser klemmen$",

@@ -4141,11 +4141,13 @@
       if (sc.room && sc.lights.length === 1) title = short(nameOf(sc.lights[0], states), sc.name);
       sub = subline(s, false); on = s.on > 0; id = sc.rid;
     } else {
-      var ron = 0;
-      cfg.rooms.forEach(function (r) { if (stat(r.lights, states).on) ron++; });
+      // The whole house counts lamps like its badge and tile (owner, 01.11.2026: never rooms).
+      var hall = [];
+      cfg.rooms.forEach(function (r) { (r.lights || []).forEach(function (x) { if (hall.indexOf(x) < 0) hall.push(x); }); });
+      var hs = stat(hall, states);
       title = tr('Beleuchtung');
-      sub = ron ? tr(ron + ' von ' + cfg.rooms.length + ' Räumen an') : tr('Alle aus');
-      on = ron > 0; id = cfg.gid;
+      sub = subline(hs, false);
+      on = hs.on > 0; id = cfg.gid;
     }
     /* 1.3 header A: icon, title and main switch sit in the popup header (casora-core.js); here only
        the status line - the frame mirrors it (.hui-line) under the title. „Alles aus“ is now
@@ -4355,10 +4357,8 @@
     var all = [];
     cfg.rooms.forEach(function (r) { (r.lights || []).forEach(function (x) { if (states[x] && all.indexOf(x) < 0) all.push(x); }); });
     // The whole house: the stage dims only lamps that are on (never switches the house on by dragging).
-    var ron = 0;
-    cfg.rooms.forEach(function (r) { if (stat(r.lights, states).on) ron++; });
-    var list = houseBody(cfg, states, true).replace('<div class="lps-lbl">' + esc(tr('Räume')) + '</div>',
-      '<div class="lps-lbl">' + esc(tr('Räume') + (cfg.rooms.length > 1 ? ' · ' + tr(ron + ' von ' + cfg.rooms.length + ' an') : '')) + '</div>');
+    // The rooms' heading carries no count: light counts are lamps everywhere (owner, 01.11.2026).
+    var list = houseBody(cfg, states, true);
     return V3_CSS + '<div class="lps-cols"><div class="lps-v3l">' + v3Stage(all, states, true) + '</div><div>' + list + '</div></div>';
   };
   var word = function (v) { return v <= 0 ? tr('Aus') : v >= 100 ? tr('Volle Helligkeit') : tr('Gedimmt'); };

@@ -2603,7 +2603,6 @@
   "Gruppen": "Grupy",
   "Heute an": "Dziś włączona",
   "Heute aus": "Dziś wyłączona",
-  "1 Raum an": "1 pomieszczenie wł.",
   "1 klemmt": "1 zablokowany",
   "Schloss klemmt": "Zamek zablokowany",
   "Einschalten auf": "Włącz na",
@@ -2860,10 +2859,6 @@
   [
    "^(\\d+) von (\\d+) An$",
    "{1} z {2} wł."
-  ],
-  [
-   "^(\\d+) von (\\d+) Räumen an$",
-   "{1} z {2} pokoi wł."
   ],
   [
    "^KI: 1 Update braucht Aufmerksamkeit$",
@@ -4768,10 +4763,6 @@
   [
    "^Ø von (\\d+) Lampen$",
    "Ø z {1} lamp"
-  ],
-  [
-   "^(\\d+) Räume an$",
-   "{1} pomieszczenia wł."
   ],
   [
    "^(\\d+) Schlösser klemmen$",

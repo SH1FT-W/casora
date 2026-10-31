@@ -2603,7 +2603,6 @@
   "Gruppen": "Gruppi",
   "Heute an": "Attiva oggi",
   "Heute aus": "Disattivata oggi",
-  "1 Raum an": "1 stanza accesa",
   "1 klemmt": "1 bloccata",
   "Schloss klemmt": "Serratura bloccata",
   "Einschalten auf": "Accendi a",
@@ -2860,10 +2859,6 @@
   [
    "^(\\d+) von (\\d+) An$",
    "{1} di {2} accese"
-  ],
-  [
-   "^(\\d+) von (\\d+) Räumen an$",
-   "{1} di {2} stanze accese"
   ],
   [
    "^KI: 1 Update braucht Aufmerksamkeit$",
@@ -4768,10 +4763,6 @@
   [
    "^Ø von (\\d+) Lampen$",
    "Ø di {1} lampade"
-  ],
-  [
-   "^(\\d+) Räume an$",
-   "{1} stanze accese"
   ],
   [
    "^(\\d+) Schlösser klemmen$",

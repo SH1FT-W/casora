@@ -583,26 +583,21 @@ window._casoraLightScope = function (entity, states, hass, vars) {
     rooms: rooms, roomsAuto: roomsAuto, lightIds: lightIds, expand: expand, areaName: areaName, toTitle: toTitle };
 };
 /* The count every light surface shows (badge, tile, popup status line, Studio preview), from _casoraLightScope:
-   a house or a group of rooms counts rooms (a room is on when one of its lamps is), anything else its lamps.
-   { kind: 'rooms'|'lamps', on, tot }. */
+   always lamps – for a room, a room group with sub-groups and the whole house alike (owner, 01.11.2026: rooms were
+   counted for houses and groups of rooms, and a room's own badge counted its sub-groups as rooms). { kind: 'lamps', on, tot }. */
 window.casoraLightTally = function (entity, states, hass, vars) {
   var S = states || {};
   var sc = window._casoraLightScope(entity, S, hass, vars);
-  var isOn = function (x) { return S[x] && S[x].state === 'on'; };
-  if (sc.rooms && sc.rooms.length > 1) {
-    return { kind: 'rooms', tot: sc.rooms.length, on: sc.rooms.filter(function (r) { return r.lights.some(isOn); }).length };
-  }
-  var ids = sc.lightIds.filter(function (x) { return S[x]; });
-  return { kind: 'lamps', tot: ids.length, on: ids.filter(isOn).length };
+  var ids = sc.lightIds.filter(function (x, i, a) { return S[x] && a.indexOf(x) === i; });
+  return { kind: 'lamps', tot: ids.length, on: ids.filter(function (x) { return S[x].state === 'on'; }).length };
 };
-/* The words for a tally (German, the dashboard translates): „Aus“/„An“ for one lamp, „Alle aus“/„Alle An“,
-   rooms „1 Raum an“/„2 Räume an“, lamps „2 An“ (Wortliste: Zahl + An). */
+/* The words for a tally (German, the dashboard translates; wortliste: Zahl + An): „Aus“/„An“ for one lamp,
+   „Alle aus“/„Alle An“, else „2 An“. */
 window.casoraLightTallyText = function (t) {
   if (!t || !t.tot) return 'Aus';
   if (t.tot === 1) return t.on ? 'An' : 'Aus';
   if (!t.on) return 'Alle aus';
   if (t.on === t.tot) return 'Alle An';
-  if (t.kind === 'rooms') return t.on === 1 ? '1 Raum an' : t.on + ' Räume an';
   return t.on + ' An';
 };
 /* The room temperature a thermostat stands in (review 2, E09: Klima badge 23°, thermostat 21,7 °C): the temperature

@@ -42,8 +42,8 @@ assert.equal(norm(sel, { popup_group: 'light.g', entity_1: 'light.a' }).popup_gr
 assert.ok(basis.includes("if (!lightIds.length && groupId && S[groupId] && String(groupId).indexOf('light.') === 0) lightIds.push(groupId);"),
   'nie eine Nicht-Licht-Entität als Leuchte');
 
-// One count (review 2, E08/fam-09/DH-16): rooms for a house or a group of room groups, lamps otherwise; words with
-// the unit. Badge, tile and popup status line all go through casoraLightTally.
+// One count: always lamps (owner, 01.11.2026 – a room's badge and tile said „2 Räume an“; the house counted rooms
+// too). Badge, tile, popup status line and the Studio preview all go through casoraLightTally.
 {
   const on = (id) => ({ entity_id: id, state: 'on', attributes: { brightness: 255 } });
   const off = (id) => ({ entity_id: id, state: 'off', attributes: {} });
@@ -54,29 +54,38 @@ assert.ok(basis.includes("if (!lightIds.length && groupId && S[groupId] && Strin
     'light.kueche': grp('light.kueche', ['light.ku_1'], 'on'), 'light.garage': grp('light.garage', ['light.ga_1', 'light.ga_2', 'light.ga_3'], 'on'),
     'light.wohnzimmer': grp('light.wohnzimmer', ['light.wz_1'], 'off'),
     'light.haus': grp('light.haus', ['light.kueche', 'light.garage', 'light.wohnzimmer'], 'on'),
+    // A room whose group holds sub-groups (ceiling, mirror) and a lamp.
+    'light.bad_d1': on('light.bad_d1'), 'light.bad_d2': on('light.bad_d2'), 'light.bad_s1': off('light.bad_s1'), 'light.bad_x': off('light.bad_x'),
+    'light.bad_decke': grp('light.bad_decke', ['light.bad_d1', 'light.bad_d2'], 'on'), 'light.bad_spiegel': grp('light.bad_spiegel', ['light.bad_s1'], 'off'),
+    'light.bad': grp('light.bad', ['light.bad_decke', 'light.bad_spiegel', 'light.bad_x'], 'on'),
   };
   const T1 = (e, v) => window.casoraLightTally(e, S, null, v);
   const W = window.casoraLightTallyText;
-  // House tile over a group of room groups with rooms: 2 of 3 rooms (3 lamps on).
-  assert.deepEqual(T1(S['light.haus'], { group_rooms: true }), { kind: 'rooms', tot: 3, on: 2 });
-  assert.equal(W(T1(S['light.haus'], { group_rooms: true })), '2 Räume an');
-  // The badge with the same group as its rooms counts the same.
-  assert.equal(W(T1(sel, { entity_1: 'light.kueche', entity_2: 'light.garage', entity_3: 'light.wohnzimmer' })), '2 Räume an');
+  // The house over a group of room groups: its lamps, 3 of 5.
+  assert.deepEqual(T1(S['light.haus'], { group_rooms: true }), { kind: 'lamps', tot: 5, on: 3 });
+  assert.equal(W(T1(S['light.haus'], { group_rooms: true })), '3 An');
+  // The badge with the same rooms counts the same lamps.
+  assert.equal(W(T1(sel, { entity_1: 'light.kueche', entity_2: 'light.garage', entity_3: 'light.wohnzimmer' })), '3 An');
   // A room: its lamps.
   assert.deepEqual(T1(S['light.garage'], {}), { kind: 'lamps', tot: 3, on: 2 });
   assert.equal(W(T1(S['light.garage'], {})), '2 An');
-  assert.equal(W({ kind: 'rooms', tot: 3, on: 1 }), '1 Raum an');
-  assert.equal(W({ kind: 'rooms', tot: 3, on: 0 }), 'Alle aus');
-  assert.equal(W({ kind: 'rooms', tot: 3, on: 3 }), 'Alle An');
+  // A room whose group holds sub-groups: still its lamps (2 of 4), with or without group_rooms.
+  assert.deepEqual(T1(S['light.bad'], {}), { kind: 'lamps', tot: 4, on: 2 });
+  assert.deepEqual(T1(S['light.bad'], { group_rooms: true }), { kind: 'lamps', tot: 4, on: 2 });
+  assert.equal(W(T1(S['light.bad'], { group_rooms: true })), '2 An');
+  assert.equal(W({ kind: 'lamps', tot: 3, on: 1 }), '1 An');
+  assert.equal(W({ kind: 'lamps', tot: 3, on: 0 }), 'Alle aus');
+  assert.equal(W({ kind: 'lamps', tot: 3, on: 3 }), 'Alle An');
   assert.equal(W({ kind: 'lamps', tot: 1, on: 1 }), 'An');
-  // Tile and badge templates use it; the popup's house line says the same rooms.
+  // Tile and badge templates use it; the popup's house line counts lamps, no room words anywhere.
   assert.ok(T.casora_light.state_display.includes('window.casoraLightTally('), 'tile');
   assert.ok(T.casora_badge_light_group.name.includes('window.casoraLightTally('), 'badge');
   const pop = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/03-popups.js', import.meta.url), 'utf8');
-  assert.ok(pop.includes("' von ' + cfg.rooms.length + ' Räumen an'"), 'popup: n of m rooms');
+  assert.ok(!/\b(Räumen|Räume|Raum) an\b/.test(pop), 'popup: no room counts');
+  assert.ok(!/\b(Räume|Raum) an\b/.test(basis), 'tally: no room words');
   const studio = fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel.js', import.meta.url), 'utf8');
-  assert.ok(studio.includes('window.casoraLightTally(ent, states || {}, hass, V)'), 'Studio preview');
-  console.log('ok one light count');
+  assert.ok(studio.includes('window.casoraLightTally(ent, states || {}, hass, V)') && !/rooms on/.test(studio), 'Studio preview');
+console.log('ok one light count');
 }
 assert.ok(/window\._casoraLPCv !== (\d+)/.test(lpc) && Number(lpc.match(/window\._casoraLPCv !== (\d+)/)[1]) >= 79, 'LPC-Version erhöht');
 console.log('ok licht_sammelbadge');

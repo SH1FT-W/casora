@@ -4,7 +4,8 @@
 // Review 2 (01.11.2026), group „counts & logic“: Home's light badge said „3 An“ (lamps), the light tile „2 An“ (rooms), the
 // popup „2 von 10 Räumen an“; the Klima badge's „Jalousien“ counted every cover (7), the blinds tile and popup 6.
 // Now badge, tile and popup count from one source (window.casoraLightTally / casoraClimateBlinds): rooms with the word,
-// the blinds of the tile. Desktop, Home of qa-arbeit (or CASORA_QA_DASH).
+// the blinds of the tile. Owner (01.11.2026): light counts lamps everywhere, never rooms – a room page's light badge
+// and tile said „2 Räume an“ (the room's group held sub-groups). Desktop, Home and a room of qa-arbeit (or CASORA_QA_DASH).
 import { open, ready, check, need, finish } from './lib.mjs';
 
 const DASH = process.env.CASORA_QA_DASH || 'qa-arbeit';
@@ -32,12 +33,26 @@ const read = () => page.evaluate(() => {
 });
 const r = await read();
 await need('Home: light badge and tile found', r.badge && r.tile, r);
-const word = (s) => /^(\d+ Räume an|1 Raum an|\d+ An|Alle An|Alle aus|An|Aus)$/.test(s);
-await check('light badge: a count with its unit', word(r.badge), r.badge);
-await check('light tile: a count with its unit', word(r.tile), r.tile);
-await check('badge and tile count the same kind (rooms for the house)', r.badgeT && r.tileT && r.badgeT.kind === r.tileT.kind, r);
+const word = (s) => /^(\d+ An|Alle An|Alle aus|An|Aus)$/.test(s);
+await check('light badge: lamps („n An“), never rooms', word(r.badge), r.badge);
+await check('light tile: lamps („n An“), never rooms', word(r.tile), r.tile);
+await check('badge and tile count lamps', r.badgeT && r.tileT && r.badgeT.kind === 'lamps' && r.tileT.kind === 'lamps', r);
 if (r.badgeT && r.tileT && r.badgeT.tot === r.tileT.tot) await check('same set: same number', r.badge === r.tile, r);
 if (r.tileBlinds) await check('Klima „Jalousien“: the blinds tile\'s blinds', JSON.stringify(r.blinds) === JSON.stringify(r.tileBlinds), r);
 
-// Switching a lamp: badge and tile follow at once and stay equal in kind.
+// A room page: its header's light badge and its light tile count the room's lamps.
+const views = await page.evaluate(async (d) => (await document.querySelector('home-assistant').hass.callWS({ type: 'lovelace/config', url_path: d })).views
+  .map((v, i) => ({ path: v.path || String(i), light: /casora_light\b/.test(JSON.stringify(v)) })), DASH);
+let roomDone = false;
+for (const v of views.slice(1).filter((x) => x.light)) {
+  await ready(page, '/' + DASH + '/' + v.path, () => window.__pierce && window.__pierce('button-card').length > 3);
+  await page.waitForTimeout(3000);
+  const q = await read();
+  if (!q.badge || !q.tile) continue;
+  await check('room „' + v.path + '“: light badge counts lamps', word(q.badge) && q.badgeT && q.badgeT.kind === 'lamps', q);
+  await check('room „' + v.path + '“: light tile counts lamps', word(q.tile) && q.tileT && q.tileT.kind === 'lamps', q);
+  roomDone = true;
+  break;
+}
+await check('a room with a light badge and tile found', roomDone);
 await finish();

@@ -6270,7 +6270,7 @@ const tileStateWord = (kind, tile, ent, states, hass) => {
       if (!t.tot || t.tot === 1) return t.on ? "On" : "Off";
       if (!t.on) return "All off";
       if (t.on === t.tot) return "All on";
-      return t.kind === "rooms" ? (t.on === 1 ? "1 room on" : t.on + " rooms on") : t.on + " on";
+      return t.on + " on";
     }
     case "plant": return plantWord(ent, V, states);
     case "energy_tile": return energyWord(V, ent, states);
