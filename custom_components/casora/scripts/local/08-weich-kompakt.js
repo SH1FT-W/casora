@@ -254,7 +254,10 @@
       f.upd = { card: K.secCard(all.concat([AI]), call('_casoraSoftUpd', 'list', C), states) };
       // The search is a moon of the dial (stage), not a row of its own (maintainer review 31.10.2026).
       if (U.hasWarn(states) && fl.ai) f.ai = fl.ai;
-      return K.layout({ fields: f, top: [], stage: 'stage', left: ['upd'], right: ['ai'] });
+      // Nothing to install and no restart owed: the dial alone in one column (the popup is 552 then, its style).
+      var busyU = Object.keys(states).some(function (id) { return id.indexOf('update.') === 0 && states[id]
+        && (states[id].state === 'on' || (window.casoraNeedsRestart && window.casoraNeedsRestart(states[id]))); });
+      return K.layout({ fields: f, top: [], stage: 'stage', left: [], right: busyU || f.ai ? ['upd', 'ai'] : [] });
     }
     f.hero = { card: K.secCard(all.concat(watchB), call('_casoraSoftUpd', 'hero', C), states) };
     /* 1.0.5: „Wartet auf Neustart“ steht live im Kopf (sec 'hero'), nicht als eigenes Feld – ein

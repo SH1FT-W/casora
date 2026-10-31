@@ -13105,7 +13105,8 @@
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', [])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own) return _own;\n  return \"Software-Updates\";\n]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
-    "variant": "v3"
+    "variant": "v3",
+    "style": "[[[\n  /* Popup v3: nothing to install and no restart owed – the dial alone, one column (552); else the list right of it (900). */\n  const U = window._casoraUI;\n  if (!(U && U.v3 && U.v3() && window.casoraPopupWidth)) return '';\n  const busy = Object.keys(states).some((id) => id.startsWith('update.') && (states[id]?.state === 'on' || window.casoraNeedsRestart?.(states[id])));\n  /* An AI warning keeps its column on the right (08-weich-kompakt.js). */\n  const warn = window._casoraSoftUpd && window._casoraSoftUpd.hasWarn && window._casoraSoftUpd.hasWarn(states);\n  return busy || warn ? '' : window.casoraPopupWidth('one');\n]]]\n"
    }
   },
   "template": [
