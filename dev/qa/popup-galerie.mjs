@@ -406,7 +406,7 @@ async function pruefen() {
             const k = n ? n._rooms.map((r) => r.key).filter((x) => /^room_/.test(x) && x !== 'room_scenes')[0] : null;
             if (k && window._casoraFilter) window._casoraFilter.set(k); }).catch(() => {});
           await sleep(3000); at = null; }
-        if (HANDY && !it.phone && !/now_playing/.test(it.badge) && (it.parent || it.room !== 'haus' || it.badge === 'casora_badge_scene_group')) { res.status = 'nur Desktop';
+        if (HANDY && !it.phone && (it.parent || it.room !== 'haus' || it.badge === 'casora_badge_scene_group')) { res.status = 'nur Desktop';
           res.grund = it.parent ? 'Unter-Badge im Raumkopf; am Handy zeigt das Sammel-Badge die Liste' : 'Raumkopf der Desktop-Galerie (Handy: Startseiten-Badges und Raumseiten)'; out.push(res); console.log(`${res.status.padEnd(12)} W${it.w} ${it.popup}`); continue; }
         // As a person does it: row closed, tap the group badge, wait until the sub-badges are faded in.
         await setRow('none');
