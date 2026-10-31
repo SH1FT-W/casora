@@ -2046,8 +2046,7 @@
         return UI.stage('status', { tone: lv === 2 ? 'bad' : lv === 1 ? 'warn' : 'good', icon: r.ev ? 'mdi:car-electric' : 'mdi:car',
           text: r.range != null ? 'Reichweite ' + fmtN(r.range) + ' ' + r.rangeU : ownH || 'Keine Daten', facts: factsC,
           // Dial (richtlinien §4.8): the tank or battery level fills the ring.
-          progress: r.tank != null ? Math.max(0, Math.min(1, r.tank / 100)) : null,
-          extra: tank() && SFh ? tank().row(p, states) : '' });
+          progress: r.tank != null ? Math.max(0, Math.min(1, r.tank / 100)) : null });
       }
       var out = UI.hero({ label: SFh || ownH ? null : 'Reichweite', value: r.range != null ? (SFh ? 'Reichweite ' : '') + fmtN(r.range) : ownH || '—', unit: r.range != null ? r.rangeU : null,
         sub: sub, subTone: lv === 2 ? 'bad' : lv === 1 ? 'warn' : 'good', center: true });
@@ -2077,6 +2076,21 @@
         if (tr0) out += '<div style="height:var(--casora-popup-sec-gap, 22px)"></div>' + tr0;
       }
       return out;
+    }
+    if (name === 'tank_s') {
+      /* Popup v3 (maintainer review 31.10.2026): the section „Tank“ (EV: „Akku“) – fill level with range and litres,
+         then „Tanken“ with the cheapest price when it is set up (12-tanken.js). */
+      var rowsT = [];
+      if (r.tank != null || r.tankL != null) {
+        var low = r.tank != null && r.tank <= 15;
+        rowsT.push({ icon: r.ev ? 'mdi:battery-high' : 'mdi:gas-station-outline', iconTone: low ? 'warn' : 'accent',
+          label: r.ev ? 'Ladestand' : 'Tankstand', sub: [r.range != null ? 'Reichweite ' + fmtN(r.range) + ' ' + r.rangeU : null,
+            r.tank != null && r.tankL != null ? fmtN(r.tankL) + ' ' + r.tankLU : null].filter(Boolean).join(' · ') || null,
+          value: r.tank != null ? fmtN(Math.round(r.tank)) + ' %' : fmtN(r.tankL) + ' ' + r.tankLU, valueTone: low ? 'warn' : null });
+      }
+      var itT = tank() && tank().item ? tank().item(p, states) : null;
+      if (itT) rowsT.push(itT);
+      return rowsT.length ? UI.group(rowsT, r.ev ? 'Akku' : 'Tank') : '';
     }
     if (name === 'state_s') {
       /* Weich: nur Abweichungen, sonst ein Satz. */
@@ -2180,11 +2194,12 @@
     if (HH && HH.on() && HH.layout) {
       /* Popup v3 „Bühne“: the head becomes the status stage (Soft, no localStorage casora_popup_variant other than 'v3'). */
       var v3C = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var vv = localStorage.getItem('casora_popup_variant'); return !vv || vv === 'v3'; } catch (e) { return true; } })();
-      var fc = { hero: v3C ? undefined : sec('hero'), stage: v3C ? sec('stage') : undefined, state_s: sec('state_s'), service_s: sec('service_s'),
+      var fc = { hero: v3C ? undefined : sec('hero'), stage: v3C ? sec('stage') : undefined, tank_s: v3C ? sec('tank_s') : undefined,
+        state_s: sec('state_s'), service_s: sec('service_s'),
         more: HH.moreCard(watch, 'const C = window._casoraCar, H = window._casoraHH;\n'
           + 'return C && H ? H.more("car", ["state", "service", "trips"].map(function (n) { return C.sec(n, ' + JSON.stringify(p) + ', states); })) : "";', entity.entity_id) };
       return HH.layout({ entity: entity.entity_id, watch: watch, fields: fc, top: v3C ? [] : undefined, stage: v3C ? 'stage' : null,
-        left: ['state_s'], right: ['service_s', 'more'], settings: entity.entity_id });
+        left: v3C ? ['tank_s', 'state_s'] : ['state_s'], right: ['service_s', 'more'], settings: entity.entity_id });
     }
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
       + ' border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important;'

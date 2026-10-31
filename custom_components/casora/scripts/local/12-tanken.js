@@ -120,19 +120,26 @@
   };
 
   // ── Zeile im Auto-Popup (unter dem Tankbalken) ───────────────────────────
-  K.row = function (p, states) {
-    var UI = window._casoraUI, HH = window._casoraHH;
-    if (!UI || !(HH && HH.on())) return '';
+  // The row as data (popup v3: one row of the car's „Tank“ section; the tap opens the view via the page „tanken“).
+  K.item = function (p, states) {
+    var HH = window._casoraHH;
+    if (!(HH && HH.on())) return null;
     var id = K.sensorId(p, states);
-    if (!id) return '';
+    if (!id) return null;
     var I = info(states[id]);
     var sub;
     if (I.error && !I.stations.length) sub = 'Abruf gestört';
     else if (I.price == null && !I.stations.length) sub = 'Preise werden geladen';
     else sub = I.fuel + ' · ' + adviceFor(p, states, I).short;
+    return { icon: 'mdi:gas-station', iconTone: 'accent', label: 'Tanken', sub: sub,
+      value: I.price != null ? 'ab ' + price(I.price) + ' €' : '—', page: 'tanken|' + (p || '') };
+  };
+  (window._casoraPages || (window._casoraPages = {})).tanken = function (arg) { K.open(arg || null); };
+  K.row = function (p, states) {
+    var UI = window._casoraUI, it = K.item(p, states);
+    if (!UI || !it) return '';
     return '<div style="height:10px"></div><div class="casora-tank-row" data-casora-tank="' + esc(p || '') + '">'
-      + UI.group([{ icon: 'mdi:gas-station', iconTone: 'accent', label: 'Tanken', sub: sub,
-        value: I.price != null ? 'ab ' + price(I.price) + ' €' : '—', tappable: true }], null) + '</div>';
+      + UI.group([Object.assign({}, it, { page: null, tappable: true })], null) + '</div>';
   };
 
   // ── Ansicht ──────────────────────────────────────────────────────────────
