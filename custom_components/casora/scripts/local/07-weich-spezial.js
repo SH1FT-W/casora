@@ -261,6 +261,18 @@
     })));
   };
 
+  // Popup v3: a dangerous main action asks first (confirm as in the shared services). Code missing: shake the field
+  // first (run does it), ask only once a code is there. true = handled here.
+  AL.ask = function (spec, el, ask, run) {
+    var ha0 = document.querySelector('home-assistant'), I0 = ha0 && ha0.hass ? AL.info(spec.e, ha0.hass.states) : null;
+    var r0 = el.getRootNode && el.getRootNode(), in0 = r0 && r0.querySelector ? r0.querySelector('.cal-code input') : null;
+    if (I0 && (spec.s === 'alarm_disarm' ? I0.needDis : I0.needArm) && !(in0 && String(in0.value || '').trim())) { run(spec, el); return true; }
+    var tr = window.casoraTr || function (x) { return x; };
+    window.casoraAsk({ title: tr(typeof ask === 'string' ? ask : 'Wirklich?'), yes: tr(el.getAttribute('aria-label') || 'OK') })
+      .then(function (ok) { if (ok) run(spec, el); });
+    return true;
+  };
+
   // Tippen auf data-casora-alarm: Dienst mit Code aus dem Feld; fehlt der Code, Feld fokussieren.
   if (!window._casoraAlarmTap) {
     window._casoraAlarmTap = true;
@@ -288,17 +300,7 @@
       // Popup v3: a dangerous main action asks first (confirm as in the shared services).
       var ask = spec && spec.confirm && window.casoraAsk ? spec.confirm : null;
       spec = AL.spec(spec); if (!spec) return;
-      if (ask) {
-        var el0 = el, ha0 = document.querySelector('home-assistant'), I0 = ha0 && ha0.hass ? AL.info(spec.e, ha0.hass.states) : null;
-        var r0 = el.getRootNode && el.getRootNode(), in0 = r0 && r0.querySelector ? r0.querySelector('.cal-code input') : null;
-        // Code missing: shake the field first (run does it), ask only once a code is there.
-        if (I0 && (spec.s === 'alarm_disarm' ? I0.needDis : I0.needArm) && !(in0 && String(in0.value || '').trim())) { run(spec, el); return; }
-        var tr = window.casoraTr || function (x) { return x; };
-        window.casoraAsk({ title: tr(typeof ask === 'string' ? ask : 'Wirklich?'), yes: tr(el0.getAttribute('aria-label') || 'OK') }).then(function (ok) {
-          if (ok) run(spec, el0);
-        });
-        return;
-      }
+      if (ask && AL.ask(spec, el, ask, run)) return;
       run(spec, el);
     };
     var run = function (spec, el) {
