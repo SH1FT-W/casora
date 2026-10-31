@@ -21760,7 +21760,8 @@ class CasoraPanel extends HTMLElement {
     const raw = value == null ? "" : String(value);
     const input = document.createElement("input");
     input.value = raw;
-    if (placeholder) input.placeholder = t9(placeholder);
+    // An icon field's default ("curtain-open") reads as the icon's name, like the chosen icons do.
+    if (placeholder) input.placeholder = iconMode && placeholder !== "default" && ICON_DATA[placeholder] ? iconName(placeholder, lang) : t9(placeholder);
     const menu = document.createElement("div");
     menu.className = "combo-menu";
     // Inside a dialog the overlay sits below the ask pane, so a menu mounted

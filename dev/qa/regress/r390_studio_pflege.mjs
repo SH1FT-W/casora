@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/panel/casora-panel-b.js custom_components/casora/panel/casora-panel-personal.js custom_components/casora/panel/casora-panel-settings.js
+// @deckt: custom_components/casora/panel/casora-panel.js custom_components/casora/panel/casora-panel-b.js custom_components/casora/panel/casora-panel-personal.js custom_components/casora/panel/casora-panel-settings.js
 // Found walking through the Studio (31.10.2026), nothing is saved:
 //   sp-01 Phone, "Content": the room section "Now Playing" showed "Off" without its switch (only the desktop list
 //         showed the section switches) – there was no way to turn it on from the list.
@@ -8,6 +8,8 @@
 //   sp-03 Settings › Home & Devices: "Security: covers" showed the fallback icon (question mark).
 //   sp-04 Settings start and topic pages: an empty band of ~40 px between the title and "‹ Settings" (the head kept the
 //         height of pages with an "Applies to" line).
+//   sp-05 Cover tile › Advanced: the icon fields showed their default as a file name ("curtain-open") instead of
+//         its name ("Vorhang offen").
 import { open, usePage, studio, studioDashboard, check, need, finish } from './lib.mjs';
 
 const dash = await studioDashboard();
@@ -64,5 +66,28 @@ await need('Casora-Dashboard fürs Studio', dash);
     return h && b ? Math.round(b.getBoundingClientRect().top - h.getBoundingClientRect().bottom) : null;
   });
   await check('sp-04 Themenseite: „‹ Einstellungen“ höchstens 30 px unter dem Titel', gap != null && gap <= 30, { gap });
+}
+// sp-05: a cover tile's icon fields.
+{
+  const { page } = await open({ width: 1440, height: 900, dark: true });
+  usePage(page);
+  await studio(page, dash);
+  const ph = await page.evaluate(async () => {
+    const p = window.__panel();
+    let at = null;
+    p._state.compact.rooms.some((r, ri) => (r.tiles || []).some((t) => {
+      if ([].concat(t.template || []).includes('casora_cover')) { at = { ri, key: p._tileKey(t) }; return true; }
+      return false;
+    }));
+    if (!at) return null;
+    if (p._room !== at.ri) { p._room = at.ri; p._renderTabs(); p._renderForm(); }
+    p._bOpen = true;
+    p._select({ group: 'tiles', key: at.key });
+    await new Promise((r) => setTimeout(r, 1200));
+    return [...p.shadowRoot.querySelectorAll('.inspector .combo.hasicon input')].map((i) => i.placeholder);
+  });
+  await need('Jalousie-Kachel im Dashboard', ph && ph.length, ph);
+  const raw = ph.filter((x) => /^[a-z0-9_]+(-[a-z0-9_]+)+$/.test(x));
+  await check('sp-05 Symbolfelder zeigen Namen statt Dateinamen', raw.length === 0, { ph });
 }
 await finish();
