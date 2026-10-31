@@ -11626,7 +11626,8 @@ window.casoraMenuGlass = {
     + '.hui-dl-c .hui-st-val.wd .hui-st-n{font-size:clamp(28px, 9.5cqw, 40px);letter-spacing:-0.02em;}'
     + '.hui-dl-c .hui-st-w{margin-top:8px;text-align:center;}'
     + '.hui-dl-c .hui-dl-cap{font-size:15px;font-weight:600;color:' + S.sub + ';margin-bottom:4px;}'
-    + '.hui-dl-c .hui-dl-w2{font-size:13px;font-weight:600;color:' + S.sub + ';margin-top:4px;font-variant-numeric:tabular-nums;}'
+    + '.hui-dl-c .hui-dl-w2{font-size:13px;font-weight:600;color:' + S.sub + ';margin-top:4px;font-variant-numeric:tabular-nums;max-width:100%;}'
+    + '.hui-dl-c .hui-dl-w2 b{font-weight:700;color:' + T.ink + ';}'
     + '.hui-dl-c .hui-dl-t{font-size:clamp(20px, 6.2cqw, 26px);font-weight:800;letter-spacing:-0.02em;line-height:1.15;color:' + T.ink + ';max-width:100%;}'
     + '.hui-dl-c .hui-dl-sym{width:clamp(36px, 11cqw, 46px);height:clamp(36px, 11cqw, 46px);margin-bottom:6px;color:var(--dl-col);'
     +   'background-color:currentColor;-webkit-mask:var(--g) center / contain no-repeat;mask:var(--g) center / contain no-repeat;}'
@@ -11858,7 +11859,10 @@ window.casoraMenuGlass = {
           : (o.icon ? '<ha-icon class="hui-dl-sym" icon="' + esc(o.icon) + '" style="display:flex;"></ha-icon>' : ''))
         + valHtml
         + '<div class="hui-dl-t">' + esc(o.text) + '</div>'
-        + (facts.length ? '<div class="hui-dl-w2">' + esc(facts.map(function (f) { return f.value + ' ' + f.label; }).join(' · ')) + '</div>' : '');
+        // Value and word as their own text nodes, so the dashboard translator still finds „Geöffnet“, „Seit“ …
+        + (facts.length ? '<div class="hui-dl-w2">' + facts.map(function (f) {
+          return '<span><b>' + esc(f.value) + '</b> <span>' + esc(f.label) + '</span></span>';
+        }).join(' · ') + '</div>' : '');
       act = o.action;
       cls = ' tone-' + (o.tone || 'good');
       // The symbol takes the tone, darkened towards the ink so it keeps 3 : 1 on the popup.

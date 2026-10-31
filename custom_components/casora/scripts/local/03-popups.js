@@ -651,7 +651,7 @@
     });
     return UI.stage('status', { tone: heat ? 'warn' : (e && e.state !== 'off' ? 'good' : 'off'), icon: 'mdi:home-thermometer-outline',
       text: v != null ? 'Ø ' + fmt(v) + ' ' + TU() : '–', state: e && e.state === 'unavailable' ? 'na' : null,
-      facts: [heat ? { value: String(heat), label: heat === 1 ? 'heizt' : 'heizen' } : null], segs: segs,
+      segs: segs,
       moons: function () { return F.quick(c.id, states, c.group); } });
   };
 
@@ -1165,8 +1165,11 @@
     if (v === cur) return;
     if (p) clearTimeout(p.tm);
     p = P[key] = { v: v, t: Date.now(), sent: false };
-    var box = el.parentNode, root = el.getRootNode();
+    // In the dial (richtlinien §4.8) − / + sit in the wheel's middle: the box is the stage, the ring follows.
+    var box = (el.closest && el.closest('.hui-stage')) || el.parentNode, root = el.getRootNode();
     var n = box && box.querySelector('.fb-st-v .n'); if (n && n.firstChild) n.firstChild.nodeValue = fmt(v);
+    var dlx = box && box.querySelector && box.querySelector('.hui-dl');
+    if (dlx && window._casoraUI && window._casoraUI.dialPaint) window._casoraUI.dialPaint(dlx, window._casoraUI.dialPct(v, c.lo, c.hi));
     var k = root && root.querySelector && root.querySelector('.fb-tb-k'); if (k) k.style.left = ((v - c.lo) / (c.hi - c.lo) * 100) + '%';
     if (box) box.querySelectorAll('[data-fb-step]').forEach(function (b) {
       var d; try { d = JSON.parse(b.getAttribute('data-fb-step')).d; } catch (e) { return; }
