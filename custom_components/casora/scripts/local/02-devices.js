@@ -4011,6 +4011,45 @@
   V.goLabel = function (n) { return n ? (n === 1 ? '1 Raum reinigen' : n + ' Räume reinigen') : 'Räume auswählen'; };
   V.areas = {};
 
+  /* The dial's moons (popup v3): the cleaning mode select (Roborock, Dreame, Ecovacs), else the fan speeds – up to 4,
+     more → the 3 most used (Smart, vacuum & mop, vacuum first) and „Alle (n)“ onto the page with every mode. */
+  var MOON_ORDER = ['smart_mode', 'smart', 'vacuum_and_mop', 'vac_and_mop', 'sweeping_and_mopping', 'vacuum', 'sweeping', 'mop', 'mopping'];
+  var MOON_ICON = { smart_mode: 'mdi:creation-outline', smart: 'mdi:creation-outline', vacuum: 'mdi:robot-vacuum', sweeping: 'mdi:robot-vacuum',
+    mop: 'mdi:water-outline', mopping: 'mdi:water-outline', mop_only: 'mdi:water-outline', custom: 'mdi:tune-variant' };
+  V.modeMoons = function (c, states) {
+    var sel = c.cleanMode && states[c.cleanMode], va = (states[c.st] || {}).attributes || {};
+    var item = function (o, active, svc) {
+      return { icon: MOON_ICON[o] || (/mop|wisch/i.test(o) ? 'mdi:robot-vacuum-variant' : 'mdi:robot-vacuum'), text: modeName(o), active: active, svc: svc };
+    };
+    if (sel && sel.state !== 'unavailable' && ((sel.attributes || {}).options || []).length >= 2) {
+      var opts = sel.attributes.options.slice();
+      if (opts.length > 4) opts.sort(function (a, b) {
+        var ia = MOON_ORDER.indexOf(a), ib = MOON_ORDER.indexOf(b);
+        return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+      });
+      return { src: 'mode', page: 'vacModes|' + c.cleanMode, items: opts.map(function (o) {
+        return item(o, sel.state === o, { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.cleanMode } });
+      }) };
+    }
+    var sp = Array.isArray(va.fan_speed_list) ? va.fan_speed_list : [];
+    if (sp.length >= 2 && sp.length <= 4) return { src: 'speed', page: null, items: sp.map(function (o) {
+      return { icon: 'mdi:fan', text: modeName(o), active: va.fan_speed === o, svc: { domain: 'vacuum', service: 'set_fan_speed', data: { fan_speed: o }, target: { entity_id: c.st } } };
+    }) };
+    return { src: null, page: null, items: [] };
+  };
+  // „Alle (n)“ of the mode moons: every mode as a row, the current one marked.
+  (window._casoraPages || (window._casoraPages = {})).vacModes = function (sel) {
+    var HH = window._casoraHH;
+    if (!HH || !HH.page || !sel) return;
+    HH.page('Reinigungsmodus', [sel], 'const UI = window._casoraUI, id = ' + JSON.stringify(sel) + ', st = states[id];\n'
+      + 'if (!st) return "";\n'
+      + 'return UI.section("control", (st.attributes.options || []).map(function (o) {\n'
+      + '  return UI.row.action({ icon: o === st.state ? "mdi:radiobox-marked" : "mdi:radiobox-blank", label: window._casoraVac.modeName(o), '
+      + 'value: o === st.state ? "Aktiv" : null, svc: { domain: "select", service: "select_option", data: { option: o }, target: { entity_id: id } } });\n'
+      + '}), false);', sel);
+  };
+  V.modeName = modeName;
+
   V.inner = function (kind, c, states) {
     var UI = window._casoraUI;
     if (!UI) return '';
@@ -4027,10 +4066,10 @@
          stage pill; the rooms stay the list on the left – a › tile is not allowed in the quick choice). */
       if (kind === 'v_quick') {
         if (s.dead) return '';
-        var vq = function (service) { return { domain: 'vacuum', service: service, data: {}, target: { entity_id: c.st } }; };
-        var dockedQ = !s.run && !s.paused;
-        return UI.quick([{ icon: 'mdi:home-import-outline', text: 'Zum Dock', sub: dockedQ ? 'In der Station' : null, active: dockedQ, svc: vq('return_to_base') },
-          { icon: 'mdi:map-marker-radius-outline', text: 'Orten', svc: vq('locate') }]);
+        // Popup v3 (richtlinien §4.8, maintainer review 31.10.2026): the moons are the cleaning modes – a choice, the
+        // current one marked; „Zum Dock“ and „Orten“ are commands and stand in the list („Steuerung“, v_ctl).
+        var mq = V.modeMoons(c, states);
+        return mq.items.length ? UI.quick(mq.items, null, { page: mq.page }) : '';
       }
       var ha = document.querySelector('home-assistant');
       if (ha && ha.hass) L.fetch(c, ha.hass, false);
@@ -4063,7 +4102,7 @@
         var busy = s.run || s.paused;
         return UI.stage('progress', { value: busy && pct != null ? String(Math.round(pct)) : value, unit: busy && pct != null ? '%' : '',
           word: [busy && pct != null ? s.label : null].concat(sub).filter(Boolean).join(' · ') || null,
-          // Dial (richtlinien §4.8): cleaning progress, else the battery as the ring; „Zum Dock“/„Orten“ as moons.
+          // Dial (richtlinien §4.8): cleaning progress, else the battery as the ring; the cleaning modes as moons.
           progress: busy && pct != null ? Math.max(0, Math.min(1, pct / 100)) : bat != null ? Math.max(0, Math.min(1, bat / 100)) : null,
           action: s.dead ? null : { text: s.run ? 'Pause' : s.paused ? 'Fortsetzen' : 'Start', icon: s.run ? 'mdi:pause' : 'mdi:play', primary: true,
             svc: { domain: 'vacuum', service: s.run ? 'pause' : 'start', data: {}, target: { entity_id: c.st } } },
@@ -4218,6 +4257,15 @@
         + '</div>' + btn('hv-go' + (sel.length ? '' : ' dis'), esc(V.goLabel(sel.length))) + '</div></div>';
     }
 
+    if (kind === 'v_ctl') {
+      // Popup v3: the commands that are no choice (formerly moons) as action rows.
+      if (s.dead) return '';
+      var vc = function (service) { return { domain: 'vacuum', service: service, data: {}, target: { entity_id: c.st } }; };
+      var docked3 = !s.run && !s.paused;
+      return UI.section('control', [UI.row.action({ icon: 'mdi:home-import-outline', label: 'Zum Dock', sub: docked3 ? 'In der Station' : null,
+        svc: docked3 ? null : vc('return_to_base') }), UI.row.action({ icon: 'mdi:map-marker-radius-outline', label: 'Orten', svc: vc('locate') })]);
+    }
+
     if (kind === 'v_mode') {
       /* One „Reinigungsmodus“ card with sub lines per setting instead of loose button blocks. */
       var part = function (items, cap) { return (cap ? CAP(cap) : '') + UI.segments(items); };
@@ -4231,7 +4279,9 @@
         }), cap);
       };
       var bits = [];
-      var m0 = seg(c.cleanMode, null); if (m0) bits.push(m0);
+      var v3M = !!(window._casoraDish && window._casoraDish.v3 && window._casoraDish.v3());
+      var modesAsMoons = v3M && V.modeMoons(c, states).src === 'mode';
+      var m0 = modesAsMoons ? '' : seg(c.cleanMode, null); if (m0) bits.push(m0);
       var smart = c.cleanMode && states[c.cleanMode] && states[c.cleanMode].state === 'smart_mode';
       if (!smart) {
         var va = (states[c.st] || {}).attributes || {};
@@ -4241,11 +4291,11 @@
         }), 'Saugstärke'));
         var w1 = seg(c.mopInt, 'Wasserstärke'); if (w1) bits.push(w1);
         var w2 = seg(c.mopMode, 'Wischmodus'); if (w2) bits.push(w2);
-      } else if (bits.length) {
+      } else if (bits.length && !v3M) {
         bits.push(SF ? UI.note('Smart wählt Saugstärke und Wischen je Raum selbst.')
           : '<div style="font-family:' + T.font + ';font-size:13px;color:' + T.ink3 + ';text-align:left;padding:0 2px;">Smart wählt Saugstärke und Wischen je Raum selbst.</div>');
       }
-      var outM = bits.length ? HEAD('Reinigungsmodus') + CARD(bits.join('<div style="height:16px"></div>')) : '';
+      var outM = bits.length ? HEAD(modesAsMoons ? 'Saugen und Wischen' : 'Reinigungsmodus') + CARD(bits.join('<div style="height:16px"></div>')) : '';
       var rt = c.routines.filter(ok).map(function (b) {
         var nm = String((states[b].attributes || {}).friendly_name || b);
         /* Drop device names in front: „<Roboter> Intensiv“ → „Intensiv“. */
@@ -4458,10 +4508,10 @@
         + ' return L.inner(k, c, states); })) : "";', c.st);
       /* Popup v3: the head with its action row becomes the stage, „Zum Dock“/„Orten“ the quick choice. */
       var v3V = !!(window._casoraDish && window._casoraDish.v3 && window._casoraDish.v3());
-      // „Zum Dock“/„Orten“ are the dial's moons (v_stage).
-      if (v3V) { delete f2.hero; f2.stage = tpl('v_stage', true); }
+      // The cleaning modes are the dial's moons (v_stage), „Zum Dock“/„Orten“ the list „Steuerung“ (v_ctl).
+      if (v3V) { delete f2.hero; f2.stage = tpl('v_stage', true); f2.ctl = tpl('v_ctl', false); }
       return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3V ? [] : undefined, stage: v3V ? 'stage' : null,
-        left: ['rooms', 'mode'], right: ['map', 'attn', 'more'], settings: states[c.st] ? c.st : null });
+        left: v3V ? ['ctl', 'rooms', 'mode'] : ['rooms', 'mode'], right: ['map', 'attn', 'more'], settings: states[c.st] ? c.st : null });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
