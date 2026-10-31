@@ -252,9 +252,9 @@
     if (UI.v3 && UI.v3() && UI.stage) {
       f.stage = { card: K.secCard(all.concat(watchB, [AI]), call('_casoraSoftUpd', 'stage', C), states) };
       f.upd = { card: K.secCard(all.concat([AI]), call('_casoraSoftUpd', 'list', C), states) };
-      f.chk = { card: K.secCard(all, call('_casoraSoftUpd', 'chk', C), states) };
+      // The search is a moon of the dial (stage), not a row of its own (maintainer review 31.10.2026).
       if (U.hasWarn(states) && fl.ai) f.ai = fl.ai;
-      return K.layout({ fields: f, top: [], stage: 'stage', left: ['upd', 'chk'], right: ['ai'] });
+      return K.layout({ fields: f, top: [], stage: 'stage', left: ['upd'], right: ['ai'] });
     }
     f.hero = { card: K.secCard(all.concat(watchB), call('_casoraSoftUpd', 'hero', C), states) };
     /* 1.0.5: „Wartet auf Neustart“ steht live im Kopf (sec 'hero'), nicht als eigenes Feld – ein
@@ -376,11 +376,17 @@
           svc: { domain: 'update', service: 'install', target: { entity_id: inst7 }, data: {} }, confirm: 'Alle ' + inst7.length + ' Updates jetzt installieren?' }
         : rest7 && !busy7 ? { text: 'Jetzt neu starten', icon: 'mdi:restart', svc: { domain: 'homeassistant', service: 'restart', data: {} },
           confirm: 'Home Assistant jetzt neu starten?' } : null;
+      // „Suchen“ (window._casoraUpdCheck, 03-popups.js) as a moon: the bottom one when nothing else is to do, else beside
+      // the main action; its last result stands under the wheel.
+      var UC = window._casoraUpdCheck;
+      var srch7 = UC ? { icon: 'mdi:refresh', text: 'Suchen', primary: false, attrs: { 'data-huc': '' } } : null;
       return UI.stage('status', {
+        moons: srch7 && act7 ? [srch7] : null,
+        extra: UC && UC.v3Status ? UC.v3Status() : '',
         tone: n7 ? (warn7 ? 'bad' : 'warn') : rest7 ? 'warn' : 'good',
         icon: n7 ? 'updates' : rest7 ? 'updates-restart' : 'mdi:check',
         text: n7 === 0 ? (rest7 ? 'Neustart ausstehend' : 'Alles aktuell') : n7 === 1 ? '1 Update verfügbar' : n7 + ' Updates verfügbar',
-        facts: facts7, action: act7,
+        facts: facts7, action: act7 || srch7,
         // Dial: one segment per pending update (red with an AI warning, orange otherwise), all green when up to date.
         segs: n7 ? pend.map(function (id) {
           var a = states[id].attributes || {};
