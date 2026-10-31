@@ -763,8 +763,14 @@
     return '<div class="cfb-' + esc(k) + '">' + K.html(k, entity) + '</div>';
   };
 
-  /* Spalte aus Abschnitten, wie im Kalender-Popup. */
-  var colCard = function (keys, entityId) {
+  /* Popup v3 (richtlinien §4 S8): the table is the stage – its rows sit in the stage plate without their own fill,
+     only the team's row stays lifted. */
+  K.v3 = function () { var UI = window._casoraUI; return !!(UI && UI.v3 && UI.v3() && UI.stage); };
+  K.stage = function (html) {
+    return window._casoraUI.stage('content', { html: '<style>.hui-stage .cfb-r:not(.me){background:none;}.hui-stage .cfb-t{gap:2px;}</style>' + html });
+  };
+  /* Column of sections, as in the calendar popup; stageKeys: these sections stand in the v3 stage. */
+  var colCard = function (keys, entityId, stageKeys) {
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
       + ' border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important;'
       + ' -webkit-backdrop-filter: none !important; padding: 0 !important; cursor: default !important; overflow: visible !important; }'
@@ -772,7 +778,9 @@
       + ' #container { background: transparent !important; }';
     var cf = {}, cs = {};
     keys.forEach(function (k) {
-      cf[k] = '[[[ return window._casoraFootball ? window._casoraFootball.sec(' + JSON.stringify(k) + ', entity) : ""; ]]]';
+      var inner = 'window._casoraFootball.sec(' + JSON.stringify(k) + ', entity)';
+      if (stageKeys && stageKeys.indexOf(k) > -1) inner = 'window._casoraFootball.stage(' + inner + ')';
+      cf[k] = '[[[ return window._casoraFootball ? ' + inner + ' : ""; ]]]';
       cs[k] = [{ 'justify-self': 'stretch' }];
     });
     return {
@@ -804,6 +812,25 @@
       'ha-card.disabled { pointer-events: auto !important; }',
     ].join('\n');
     var fld = function (k) { return '[[[ return window._casoraFootball ? window._casoraFootball.sec(' + JSON.stringify(k) + ', entity) : ""; ]]]'; };
+    if (K.v3()) {
+      /* v3: no hero („Platz 3 · 20 Punkte“ is the lifted row of the table); the table as the stage on the left, the
+         match and the form on the right; phone: table, match, form. */
+      return {
+        type: 'custom:button-card', entity: id, triggers_update: [id], card_mod: { style: wrapperStyle },
+        extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: "left right" !important;'
+          + ' grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: var(--casora-popup-col-gap, 26px) !important; } }'
+          + (window._casoraUI.colsMark ? window._casoraUI.colsMark('left', 'right') : ''),
+        tap_action: { action: 'none' }, show_icon: false, show_name: false, show_label: false, show_state: false,
+        styles: {
+          card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px 22px 26px' }],
+          grid: [{ 'grid-template-areas': '"left" "right"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'align-items': 'start' }, { 'row-gap': 'var(--casora-popup-sec-gap, 22px)' }],
+          custom_fields: { left: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }], right: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }] },
+        },
+        custom_fields: { left: { card: colCard(['table'], id, ['table']) }, right: { card: Object.assign(colCard(['match', 'form'], id), { extra_styles: (window._casoraColGap ? window._casoraColGap(['match', 'form']) : '')
+          /* Half the popup wide: a narrower middle so the team names keep their room. */
+          + ' @media (min-width:761px){.cfb-mr{grid-template-columns:minmax(0,1fr) 120px minmax(0,1fr) !important;}.cfb-sub span{display:block;}.cfb-sub span+span::before{content:none !important;}}' }) } },
+      };
+    }
     return {
       type: 'custom:button-card', entity: id, triggers_update: [id],
       card_mod: { style: wrapperStyle },

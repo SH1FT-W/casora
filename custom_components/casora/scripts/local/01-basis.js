@@ -859,6 +859,39 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       };
       setTimeout(tick, 60);
     };
+    /* Popup v3 S6 (chart on the stage): the stage is a live card – when it draws anew (range switched, statistics
+       came in) its slot is new and empty. Called from the stage's template with its card (this): mounts the chart
+       again once the new slot is in the tree. */
+    /* Popup v3 S5 (picture on the stage): a card (live picture, camera) in the stage's slot [data-casora-stage-card].
+       The stage card watches nothing, so it is drawn once; the card is created into its slot and follows hass itself
+       (every second while it is in the tree). Called from the stage's template with its card (this). */
+    window._casoraStageCard = function (el, cfg) {
+      setTimeout(function () {
+        var slot = el && el.shadowRoot && el.shadowRoot.querySelector('[data-casora-stage-card]');
+        if (!slot || slot._casoraCard || !cfg || !cfg.type) return;
+        slot._casoraCard = true;
+        var tag = String(cfg.type).indexOf('custom:') === 0 ? cfg.type.slice(7) : 'hui-' + cfg.type + '-card';
+        var make = customElements.get(tag) ? Promise.resolve(document.createElement(tag))
+          : (window.loadCardHelpers ? window.loadCardHelpers().then(function (h) { return h.createCardElement(cfg); }) : Promise.reject());
+        make.then(function (card) {
+          if (card.setConfig && !card._config) card.setConfig(cfg);
+          var ha = document.querySelector('home-assistant');
+          card.hass = ha && ha.hass;
+          slot.appendChild(card);
+          var tick = setInterval(function () {
+            if (!card.isConnected) { clearInterval(tick); return; }
+            var h = document.querySelector('home-assistant').hass;
+            if (h && card.hass !== h) card.hass = h;
+          }, 1000);
+        }).catch(function () { slot._casoraCard = false; });
+      }, 0);
+    };
+    window._hpStageChart = function (el, eid) {
+      setTimeout(function () {
+        var slot = el && el.shadowRoot && el.shadowRoot.querySelector('.hp-chart-slot');
+        if (slot && !slot.querySelector('casora-chart') && !window._hpPlantShow(eid, null, true)) window._hpChartInit(eid);
+      }, 0);
+    };
     /* Popups with a chart and „Details ›“ (air purifier, fan, plant, batteries …): ‹ back from the reading's page
        reopens the popup's config, but its chart was only hung in when the tile was tapped – the card stayed empty.
        _hpPlantShow notes the chart on the open config; opening that config again mounts it once more if its slot is
@@ -960,7 +993,10 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           var st = hass.states[el.dataset.hpLive];
           var v = st ? parseFloat(st.state) : NaN;
           if (isNaN(v)) return;
-          var t = liveFmt(v, hass.locale && hass.locale.language) + (el.dataset.casoraSuffix || '');
+          // data-hp-digits: fixed decimals like the entity's own display (popup v3 stage S6).
+          var dg = el.dataset.hpDigits != null ? Number(el.dataset.hpDigits) : NaN;
+          var t = (isFinite(dg) ? v.toLocaleString((hass.locale && hass.locale.language) || 'de', { minimumFractionDigits: dg, maximumFractionDigits: dg })
+            : liveFmt(v, hass.locale && hass.locale.language)) + (el.dataset.casoraSuffix || '');
           if (el.textContent !== t) el.textContent = t;
         });
       }, 1000);

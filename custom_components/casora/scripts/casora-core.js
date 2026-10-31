@@ -11482,8 +11482,9 @@ window.casoraMenuGlass = {
       + '<div class="hui-sl-fill"' + stLive + ' style="height:' + stFill + '%">' + (inv ? '<span class="hui-st-grip"></span>' : '') + '</div>'
       + (inv ? '' : stGlyph(o.icon, 'hui-sl-ic')) + '</div>';
   }
-  function stValue(n, unit, stMod) {
-    return '<div class="hui-st-val' + (stMod ? ' ' + esc(stMod) : '') + '"><span class="hui-st-n">' + esc(n) + '</span>'
+  // numAttrsHtml: ready attributes of the number (S6: data-casora-read / data-hp-live, built from escaped values).
+  function stValue(n, unit, stMod, numAttrsHtml) {
+    return '<div class="hui-st-val' + (stMod ? ' ' + esc(stMod) : '') + '"><span class="hui-st-n"' + (numAttrsHtml || '') + '>' + esc(n) + '</span>'
       + (unit ? '<span class="hui-st-u">' + esc(unit) + '</span>' : '') + '</div>';
   }
   function stage(type, o) {
@@ -11535,7 +11536,12 @@ window.casoraMenuGlass = {
     } else if (code === 'S5') {
       body = '<div class="hui-st-img">' + (o.html || '') + '</div>' + (o.controls || '');
     } else if (code === 'S6') {
-      body = '<div class="hui-st-head">' + stValue(o.value, o.unit || '') + (o.trend ? '<div class="hui-st-trend">' + esc(o.trend) + '</div>' : '') + '</div>'
+      // o.read: the chart reads along on the number (readout 'hero', the time in the trend); o.live: the number follows
+      // the entity without redrawing the stage (data-hp-live, 01-basis.js) – the chart in the stage stays mounted.
+      var na6 = (o.read ? ' data-casora-read="' + esc(o.read) + '" data-casora-read-bare=""' : '') + (o.live ? ' data-hp-live="' + esc(o.live) + '"'
+        + (o.liveDigits != null ? ' data-hp-digits="' + esc(o.liveDigits) + '"' : '') : '');
+      body = '<div class="hui-st-head">' + stValue(o.value, o.unit || '', o.word ? 'wd' : '', na6)
+        + (o.trend != null || o.read ? '<div class="hui-st-trend"' + (o.read ? ' data-casora-read-when=""' : '') + '>' + esc(o.trend || '') + '</div>' : '') + '</div>'
         + '<div class="hui-st-chart">' + (o.chart || '') + '</div>'
         + (o.range && o.range.length ? segments(o.range) : '');
     } else if (code === 'S7') {

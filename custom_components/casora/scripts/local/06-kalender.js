@@ -395,7 +395,7 @@
     K.w.sel = null; K.w.month = null; K.w.tries = 0;
     var V = {};
     Object.keys(variables || {}).forEach(function (key) { if (key.indexOf('trash_') === 0) V[key] = variables[key]; });
-    var card = colCard(keys || ['wmonth', 'wday'], null, watch || [], V, 'wsec');
+    var card = colCard(keys || ['wmonth', 'wday'], null, watch || [], V, 'wsec', K.v3() ? ['wmonth'] : null);
     /* Zweispaltig (05.10.2026): der Monat steht links allein neben Tageskarte, Tonnen und
        Rausstellen. Die Monatsplatte füllt die Spaltenhöhe, damit beide Spalten bündig enden;
        die Wochenzeilen verteilen den Platz. Schmal (eine Spalte) bleibt alles wie bisher. */
@@ -488,8 +488,14 @@
     return '<div class="hcal-' + esc(k) + '">' + K.html(k, variables) + '</div>';
   };
 
-  /* Spalte aus Abschnitten (custom_fields, je eine Hülle aus sec/wsec), für beide Popups. */
-  var colCard = function (keys, entityId, watch, vars, fn) {
+  /* Popup v3 (richtlinien §4 S8): the month grid is the stage – the plate of UI.stage instead of its own. */
+  K.v3 = function () { var UI = window._casoraUI; return !!(UI && UI.v3 && UI.v3() && UI.stage); };
+  K.stage = function (html) {
+    return window._casoraUI.stage('content', { html: '<style>.hui-stage .hs .hcal-pl{background:none;padding:0;border-radius:0;box-shadow:none;}</style>' + html });
+  };
+  /* Spalte aus Abschnitten (custom_fields, je eine Hülle aus sec/wsec), für beide Popups.
+     stageKeys: these sections stand in the v3 stage (K.stage). */
+  var colCard = function (keys, entityId, watch, vars, fn, stageKeys) {
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
       + ' border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important;'
       + ' -webkit-backdrop-filter: none !important; padding: 0 !important; cursor: default !important; overflow: visible !important; }'
@@ -497,7 +503,9 @@
       + ' #container { background: transparent !important; }';
     var cf = {}, cs = {};
     keys.forEach(function (k) {
-      cf[k] = '[[[ return window._casoraCalendar ? window._casoraCalendar.' + fn + '(' + JSON.stringify(k) + ', states, hass, variables) : ""; ]]]';
+      var inner = 'window._casoraCalendar.' + fn + '(' + JSON.stringify(k) + ', states, hass, variables)';
+      if (stageKeys && stageKeys.indexOf(k) > -1) inner = 'window._casoraCalendar.stage(' + inner + ')';
+      cf[k] = '[[[ return window._casoraCalendar ? ' + inner + ' : ""; ]]]';
       cs[k] = [{ 'justify-self': 'stretch' }];
       /* Abfall-Monat (07.10.2026): die Blätter-Pfeile ragen im Weich-Look absichtlich 6 px über die
          Überschrift hinaus (siehe monthHtml); button-card schneidet seine Felder sonst ab (overflow:
@@ -544,15 +552,18 @@
     return {
       type: 'custom:button-card', entity: eid, triggers_update: watch, variables: { calendars: variables.calendars || null },
       card_mod: { style: wrapperStyle },
-      extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: "hero hero" "left right" !important;'
-        + ' grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: 20px !important; } }',
+      extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: ' + (K.v3() ? '"left right"' : '"hero hero" "left right"') + ' !important;'
+        + ' grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: ' + (K.v3() ? 'var(--casora-popup-col-gap, 26px)' : '20px') + ' !important; } }'
+        + (K.v3() && window._casoraUI.colsMark ? window._casoraUI.colsMark('left', 'right') : ''),
       tap_action: { action: 'none' }, show_icon: false, show_name: false, show_label: false, show_state: false,
       styles: {
         card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: window._casoraHH && window._casoraHH.on() ? '0 26px 22px 26px' : '6px 26px 22px 26px' }],
-        grid: [{ 'grid-template-areas': '"hero" "left" "right"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'align-items': 'start' }, { 'row-gap': 'var(--casora-popup-sec-gap, 18px)' }],
+        grid: [{ 'grid-template-areas': K.v3() ? '"left" "right"' : '"hero" "left" "right"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'align-items': 'start' }, { 'row-gap': 'var(--casora-popup-sec-gap, 18px)' }],
         custom_fields: { hero: [{ 'justify-self': 'stretch' }], left: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }], right: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }] },
       },
       custom_fields: (function () {
+        /* Popup v3: no hero („3 Termine heute“ is the day list beside it); the month is the stage on the left. */
+        if (K.v3()) return { left: { card: colCard(['month'], eid, watch, { calendars: variables.calendars || null }, 'sec', ['month']) }, right: { card: makeCol(['day', 'up']) } };
         /* Weich (Entschlacken 01.10.2026): ohne „Diese Woche“ – sie doppelt sich mit Monat und „Demnächst“. */
         if (window._casoraHH && window._casoraHH.on()) return { hero: fld('hero'), left: { card: makeCol(['month']) }, right: { card: makeCol(['day', 'up']) } };
         var sp = window._casoraSplit ? window._casoraSplit('calendar', ['month', 'week'], ['day', 'up'], { leftMovable: ['week'] }) : { left: ['month', 'week'], right: ['day', 'up'] };

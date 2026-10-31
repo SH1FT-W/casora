@@ -416,10 +416,23 @@
     var opts = c.quick && S[c.quick] ? (S[c.quick].attributes || {}).options : null;
     if ((Array.isArray(opts) && opts.length) || c.siren) f.say = { card: K.secCard(watch, call('say'), states) };
     if (KL.sec('more', c, S, hass)) f.more = { card: K.secCard(watch, call('more'), states) };
+    // Popup v3 (richtlinien §4 S5, §8): the live picture with sound and talk is the stage over both columns (the card is
+    // mounted into the stage, which is drawn once, _casoraStageCard in 01-basis.js); the status line above it, under it
+    // left the quick replies and the siren, right the history (v2 rule 5). No settings.
+    if (UI.v3 && UI.v3() && UI.stage) {
+      var fv = { hero: f.hero, hist: f.hist, stage: { card: K.secCard([], 'return window._casoraKlingel ? window._casoraKlingel.stage('
+        + JSON.stringify(live) + ', this) : "";', states) } };
+      if (f.say) fv.say = f.say;
+      return K.layout({ fields: fv, top: ['hero'], stage: 'stage', stageWide: true, left: ['say'], right: ['hist'], narrowOrder: ['say', 'hist'] });
+    }
     // Live-Bild links über den Schnellantworten (volle Breite wäre 16:9 über 850 px), rechts der Verlauf,
     // darunter über beide Spalten die Einstellungen („Mehr“).
     return K.layout({ fields: f, top: ['hero'], left: ['live', 'say'], right: ['hist', 'more'],
       narrowOrder: ['live', 'say', 'hist', 'more'], settings: id });
+  };
+  KL.stage = function (live, el) {
+    if (window._casoraStageCard) window._casoraStageCard(el, live);
+    return window._casoraUI.stage('image', { html: '<div data-casora-stage-card="" style="min-height:120px;"></div>' });
   };
   // Blueprint v2 (rule 9): „Ganzer Verlauf ›“ opens the whole list (30 entries) as a sub page with ‹.
   (window._casoraPages || (window._casoraPages = {}))['klingel-hist'] = function (camId) {

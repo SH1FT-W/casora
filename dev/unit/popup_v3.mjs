@@ -76,6 +76,33 @@ const MIGRIERT = [
   { popup: 'Updates', vorlagen: ['casora_popup_updates'], file: '08-weich-kompakt.js', from: '  U.sec = function', to: '  // ── Alarm: Modus-Liste', stages: 1 },
   { popup: 'Batterien', vorlagen: ['casora_popup_battery'], file: '08-weich-kompakt.js', from: '  B.sec = function', to: '  // ── Software-Updates', stages: 1 },
   { popup: 'Netzwerk', vorlagen: ['casora_network', 'casora_popup_network'], file: '05-weich-mehr.js', from: '  N.sec = function', to: '  // ── Energie', stages: 1 },
+  { popup: 'Diagramm-Kachel', vorlagen: ['casora_popup_chart'], file: '27-chart.js', from: '  M.popup = function', to: null, stages: 1 },
+  // S6 for numbers, S7 for two-state/text sensors and the device page (opened from casoraRoute and the hold menu).
+  { popup: 'Messwertseite / Geräteseite', vorlagen: [], file: '18-ziele.js', from: '  Z.openMeasure = function', to: null, stages: 3, variantInModule: true },
+  { popup: 'Pflanze', vorlagen: ['casora_popup_plant'], file: null, stages: 1 },
+  // S8: the month grid in UI.stage('content') (K.stage, also the trash popup's month); the colCard wrapper names it once more.
+  { popup: 'Kalender', vorlagen: ['casora_popup_calendar'], file: '06-kalender.js', from: '  K.v3 = function', to: '  /* Antippen:', stages: 2 },
+  // S8 month (06-kalender.js) with the month calendar, else the status stage S7 here.
+  { popup: 'Abfall', vorlagen: ['casora_trash'], file: null, stages: 1 },
+  // S8: the table in UI.stage('content') (K.stage); the colCard wrapper names it once more.
+  { popup: 'Fußball', vorlagen: ['casora_popup_football'], file: '11-fussball.js', from: '  K.v3 = function', to: '  /* Popup-Ring (Weich)', stages: 2 },
+  // S8: the list (and Mehr's lists, charts, tiles) in UI.stage('content'), each also as an empty stage.
+  { popup: 'Liste von Entitäten / „Mehr“', vorlagen: ['casora_popup_entity_list', 'casora_popup_more'], file: '34-entity-list.js', from: '  L.v3 = function', to: null, stages: 4 },
+  // Fallback rule S7: template badge, nothing chosen (empty stage), entity missing, the entity's state. The own badge's
+  // popup (casora_popup_own_badge) takes variant 'v3' from casora_popup_free.
+  { popup: 'Freie Kachel / eigenes Badge', vorlagen: ['casora_popup_free'], file: '28-free-tile.js', from: '  F.popup = function', to: null, stages: 4 },
+  // Fallback rule S7 instead of S5: the meal plan and the idea sensor carry no picture of the recipe.
+  { popup: 'Rezepte', vorlagen: ['casora_popup_recipe'], file: '03-popups.js', from: '  R.stageHtml = function', to: '  /* Weich: Speiseplan mit Datums-Plakette', stages: 2 },
+  // S5: the live card mounted into UI.stage('image') (KL.stage); the popup's stage field names it once more.
+  { popup: 'Klingel', vorlagen: ['casora_popup_reolink_doorbell'], file: '24-klingel.js', from: '  KL.popup = function', to: '  var pill = function', stages: 2 },
+  // S5: the live card mounted into UI.stage('image') (F.stage); the popup's stage field names it once more.
+  { popup: 'Frigate', vorlagen: ['casora_popup_frigate'], file: '23-frigate.js', from: '  F.popup = function', to: '  var swRow = function', stages: 2 },
+  { popup: 'Wetter', vorlagen: ['casora_weather'], file: null, stages: 1 },
+  // S5 for one camera's picture and controls (tap and icon tap carry the same body); the grid of several cameras stays
+  // the overview before it.
+  { popup: 'Kamera', vorlagen: ['casora_popup_camera'], file: null, stages: 2 },
+  // S6: „Jetzt“ and the energy flow (else the power chart); quick Haus · Solar · Netz · Akku opens the focus pages.
+  { popup: 'Energie (mit Energiefluss)', vorlagen: ['casora_popup_energy'], file: '05-weich-mehr.js', from: '  // ── Popup v3: stage and quick choice', to: '  // ── Energy flow as bars', stages: 1 },
 ];
 
 // 1. Pieces.

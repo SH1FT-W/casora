@@ -408,7 +408,9 @@
     var inner = ctx.inner || {};
     var CC = focus === 'battery' ? { socMin: C.socMin, socMax: C.socMax }
       : focus === 'grid' ? { exportSwitch: C.exportSwitch } : null;
-    if (CC && inner.common && inner.ctl && Object.keys(CC).some(function (x) { return CC[x] && states[CC[x]]; })) {
+    // Popup v3 (richtlinien §8): no controls (charge limits, feed-in) – they are settings.
+    var v3 = !!(UI.v3 && UI.v3());
+    if (!v3 && CC && inner.common && inner.ctl && Object.keys(CC).some(function (x) { return CC[x] && states[CC[x]]; })) {
       var ctl = UI.soft && UI.soft() ? inner.ctl.replace("plate(title('Steuerung') + parts.join(div))", "UI.label('Steuerung') + plate(parts.join(div))") : inner.ctl;
       f.ctl = { card: K.secCard([CC.socMin, CC.socMax, CC.exportSwitch], inner.common + 'const C = ' + JSON.stringify(CC) + ';\n' + ctl, states) };
     }
