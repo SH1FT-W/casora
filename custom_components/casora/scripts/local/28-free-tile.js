@@ -199,6 +199,10 @@
   };
   F.wide = function (entity, states, variables) {
     var C = F.plan(entity, states, null, variables);
+    // Popup v3 (richtlinien §2): the stage stands left and values/chart right – any right column needs 900, else the
+    // wheel and the rows were squeezed into 552 (maintainer review 31.10.2026).
+    var UI = window._casoraUI;
+    if (UI && UI.v3 && UI.v3() && UI.stage) return !!(C.values.length || C.chart);
     return !!(C.controls && C.values.length);
   };
   F.popup = function (entity, states, hass, variables) {
