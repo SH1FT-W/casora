@@ -80,7 +80,8 @@ Zahl, die Statuszeile das Wort.
 
 ## 4. Bühne
 
-Genau **eine** Bühne pro Popup, direkt unter dem Kopf, ohne Überschrift darüber. Sie ist eine Platte:
+Genau **eine** Bühne pro Popup, direkt unter dem Kopf, ohne Überschrift darüber. Seit 31.10.2026 zeichnet sie sich bei
+S1–S4, S7 und S6 mit Bereich als **Dial** (§4.8, ohne Platte); sonst ist sie eine Platte:
 Fläche `--casora-soft-row-fill`, Radius **32** (`--casora-r-surface`), Innenabstand **20**, Abstand der Teile **16**.
 Die Bühne nimmt vorhandene Bedienlogik (Live-Werte, Dienste, Rückfrage) und ordnet sie neu – keine zweite Logik
 neben der alten.
@@ -113,7 +114,7 @@ neben der alten.
   Bild auf/ab ±10 %; `role="slider"` mit `aria-valuenow`.
 - Während des Ziehens zeigt der Wert live mit; der Dienst wird wie heute erst beim Loslassen gerufen.
 - ± in S2: ein Tipp = ein Schritt des Geräts (`target_temp_step`, sonst 0,5°), Halten wiederholt.
-- Die Bühne ist nie waagrecht scrollbar und nie höher als 280 (S5 ausgenommen).
+- Die Bühne ist nie waagrecht scrollbar und nie höher als 280 (S5 und der Dial §4.8 ausgenommen).
 
 ### 4.4 Mehrere Geräte
 
@@ -151,7 +152,54 @@ Für jedes Popup steht der Typ in der Tabelle des Auftrags
 Passt ein Popup trotz Tabelle nicht (fehlende Daten, ungewöhnliches Gerät): **S7** mit dem Zustand der Kachel und
 ohne Hauptaktion. Nie zwei Bühnen, nie eine leere Bühne.
 
+### 4.8 Dial (Entscheidung 31.10.2026)
+
+Die Bühne ist ein großes rundes Rad. Vorlage: `vergleich/2026-10-31-design/dial-alle.html` (klickbar). Baustein:
+`UI.stage(type, o)` zeichnet S1, S2, S3, S4, S7 – und S6, wenn der Wert einen Bereich hat – als Dial; kein eigener Typ,
+die Typen S1–S8 und ihre Felder bleiben. `o.dial: false` behält die Platte (nur mit Grund im Kommentar).
+
+| Teil | Regel | Maß |
+|---|---|---|
+| Rad | Quadrat, Breite `min(400, (Spalte − 78) × 1,127)` – Desktop 2 Spalten ≈ 377, 1 Spalte 400, Handy ≈ 300 | viewBox 420 |
+| Bogen | 270°, Start 135° (unten links), Ende unten rechts; Lücke unten | Radius 150, Spur 26 |
+| Spur | `--casora-soft-control-fill` | |
+| Gefüllter Teil | Gerätefarbe `--casora-popup-accent`, darunter derselbe Bogen weich verwischt (Glow, Deckkraft .55) | |
+| Teilstriche | außen, 41 Striche, jeder zehnte länger; Text 2 mit Deckkraft .4 | 26–32 bzw. 38 vom Bogen |
+| Knopf | nur bei drehbarem Wert, am Ende des Bogens; `--casora-lps-knob` | Radius 19 |
+| Mitte | (Überschrift 15/600) · Wert 80/800 (Handy ≈ 63) mit Einheit 28/700 in Text 2 · Wort 15/600 · Zusatz 13/600 | |
+| Ohne Mond unten | die leere Lücke wird hochgezogen (−12 % der Radbreite) | |
+
+**Drei Ringe**
+
+| Ring | Für | Verhalten |
+|---|---|---|
+| (a) Wert | S1 Helligkeit/Stufe/Lautstärke, S2 Zielwert, S3 Position | drehbar: Ziehen **nur auf dem Ring** (nicht in der Mitte, nicht außen), Mausrad, Tastatur (Pfeile ±1 Schritt, Bild ±10, Pos1/Ende), `role="slider"`. Der Wert zeigt live mit, der Dienst kommt erst beim Loslassen (bei Tasten/Mausrad 400 ms nach dem letzten Schritt), Rückfrage wie überall. S2: Bereich `min`/`max`/`step` des Geräts, der Ring rastet auf den Schritt; − / + (44 rund) stehen in der Mitte und nehmen den Ring mit. Heizen (`heat`): Verlauf blau → orange → rot; der Ist-Wert (`current`) ist ein Punkt auf dem Ring. Medien: das Cover dreht sich als Schallplatte in der Mitte, solange es spielt; „Lautstärke 35 %“ steht unter dem Rad. |
+| (b) Füllstand | S4 Fortschritt, Akku, Tank, Luftqualität, S6 mit Bereich (Prozent: 0–100) | nicht drehbar, kein Knopf; ohne Wert bleibt der Ring leer. Ein S6-Messwert ohne bekannten Bereich behält die Diagramm-Platte (kein Raten). Das Diagramm einer S6-Bühne steht unter dem Rad. |
+| (c) Segmente | S7 über mehrere Dinge: Türen & Fenster, Schlösser, Batterien, Updates, Räume, Personen, Pulse | je Ding ein Segment in Ampelfarbe (grün in Ordnung, orange Warnung, rot Alarm, grau aus/nicht erreichbar), Lücke 4° (ab 13 Dingen 2°, ab 25 1°), Name als Tooltip; nicht in Ordnung leuchtet weich. `w`: gewichtete Segmente (Pulse: 3 ausgefallen, 40 gut). S7 ohne Liste: ein Ring in der Ampelfarbe. |
+
+**Monde** (statt der Schnellwahl-Kacheln, sobald die Bühne ein Dial ist)
+
+| Regel | Wert |
+|---|---|
+| Form | rund, 76 (Handy ≥ 62), Fläche `--casora-soft-control-fill`, Symbol 22 in Text 2 über dem Wort 11/700 (höchstens 2 Zeilen) |
+| Gewählt | Fläche `--casora-soft-seg-on`, Ring 3 in Gerätefarbe mit weichem Schatten, Symbol in Gerätefarbe (zur Schrift hin abgedunkelt, 3 : 1) |
+| Lage (Grad, 0 = rechts) | 1: 150 · 2: 150, 30 · 3: 150, 90, 30 · 4: −150, −30, 150, 30 – Abstand 51 % der Radbreite vom Mittelpunkt, unten (90°) 44 % |
+| Hauptaktion | S4/S7-Aktion („Jetzt starten“, „Alle verriegeln“) ist der Mond unten (90°; bei 1 oder 3 Monden rechts unten 30°): gefüllt in Gerätefarbe, Gefährliches ungefüllt mit roter Schrift und Rückfrage |
+| Mehr als 4 | die 3 häufigsten + „Alle (n)“ wie §5 |
+| Verboten | wie §5 |
+
+Aufruf: `UI.stage(type, { …, moons: items | function })` – `items` wie `UI.quick`; eine Funktion ruft den vorhandenen
+Schnellwahl-Baustein des Popups auf, sein `UI.quick` wird eingesammelt (keine zweite Logik). `moonsLive` wie `UI.quick`
+`o.live` (Jalousie: der gewählte Mond folgt dem Mittel). Ohne Dial (S5, S8, leer) werden die Monde wieder Kacheln unter
+der Bühne. Das Feld „quick“ im Layout entfällt dann.
+
+Symbole: nur einfarbige MDI-Symbole (Outline, wo es sie gibt: `mdi:lock-outline`, `mdi:door-closed`,
+`mdi:window-closed-variant`, `mdi:speaker`, `mdi:spotify`, `mdi:radio`, `mdi:television`, `mdi:cast-audio`) bzw. die
+Casora-Symbole; keine Emojis. Farben nur aus Tokens (`--casora-color-*`, `--casora-soft-*`, `--casora-lps-knob`).
+
 ## 5. Schnellwahl
+
+Ist die Bühne ein Dial (§4.8), wird die Schnellwahl zu **Monden** um das Rad; die Kacheln unten gelten für Popups ohne Dial.
 
 Kacheln für die 2–4 häufigsten **Wahlen** – Modi, Szenen, Programme, Vorgaben („Auf / Beschatten / Zu“).
 
@@ -302,7 +350,7 @@ als die Kachel, dann ist Schluss. Eingestellt wird im Studio.
 | Baustein | Aufruf | Zweck |
 |---|---|---|
 | Rahmen-Schalter | `casora_popup.variant: 'v3'` in der Vorlage bzw. `variant: 'v3'` in `casoraPopup.open(cfg)` | Host-Attribut `data-casora-pv="v3"`: Kopf ohne Kachel, Tokens aus §3–§6; Unterseiten erben |
-| Bühne | `UI.stage(type, o)` | Platte mit Typ S1–S8 (Felder in §5 des Auftrags) |
+| Bühne | `UI.stage(type, o)` | Platte mit Typ S1–S8 (Felder in §5 des Auftrags); S1–S4, S7, S6 mit Bereich als Dial (§4.8: `moons`, `segs`, `progress`, `heat`, `current`, `min`/`max`/`step`, `cover`) |
 | Schnellwahl | `UI.quick(items, label?)` | `items: [{ icon, text, sub, active, svc, confirm }]` |
 | Listen | `UI.section`, `UI.row.*`, `UI.group` | wie v2, Aussehen aus den `--casora-pv-*`-Tokens |
 | Layout | `HH.layout({ …, stage: 'stage', quick: 'quick' })` und `_casoraSoftKit.layout` | Bühne + Schnellwahl links oben, Rest rechts |
@@ -314,6 +362,8 @@ als die Kachel, dann ist Schluss. Eingestellt wird im Studio.
 | `--casora-v3-stage-gap` | 16 | Teile in der Bühne |
 | `--casora-v3-value-fs` / `-value-fs-big` | 56 / 72 | Wert S1/S3/S4/S6 / S2 |
 | `--casora-v3-quick-h` / `-quick-radius` | 96 / 24 | Schnellwahl |
+| `--casora-lps-knob` | weiß (dunkel: warmweiß) | Knopf des Dials |
+| `--casora-dial-groove` / `-cover-shadow` / `-hole-ring` | Rillen, Schatten und Loch der Schallplatte | Medien-Dial |
 | `--casora-v3-head-title-fs` | 24 (Handy 22) | Titel im Kopf |
 | `--casora-pv-*` | siehe `casora-core.js` (Variante B) | Listen, Segmente, Überschriften |
 

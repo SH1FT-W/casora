@@ -6,6 +6,10 @@
 //  3. UI.quick never gets a dangerous item; the piece itself shows at most 4 tiles.
 //  4. Charts in migrated regions (richtlinien §7): no hex colour in a _hpChartCfg call, heights only 120/140/160.
 //  5. No own stage plate (radius 32 + soft-row-fill) in migrated regions – the stage comes from UI.stage.
+//  7. The dial (richtlinien §4.8, decision 31.10.2026): UI.stage draws S1–S4, S7 (S6 with a range) as the wheel – 270°
+//     from 135°, turning through the shared slider (data-casora-axis="dial", role=slider, keys and mouse wheel), moons
+//     from the quick items (never dangerous, at most 4), no emoji as a symbol anywhere in the popup code, and no popup
+//     that turns its quick choice into moons still lays out a separate quick field.
 //  6. popup_v3_offen.json lists every popup that is not migrated yet, with a reason (a ratchet: a popup leaves
 //     the list only into MIGRIERT; empty = done). Each popup is either migrated or open, never both.
 import fs from 'node:fs';
@@ -186,6 +190,30 @@ for (const m of MIGRIERT) {
     if (h) assert.ok([120, 140, 160].includes(Number(h[1])), `${m.popup}: chart height ${h[1]} (120/140/160)`);
   }
   assert.ok(!/radius:\s*32px[^"'`]{0,200}soft-row-fill|soft-row-fill[^"'`]{0,200}radius:\s*32px/.test(r), `${m.popup}: own stage plate instead of UI.stage`);
+}
+
+// 7. Dial.
+{
+  const a = core.indexOf('// ── Dial (decision 31.10.2026'), b = core.indexOf('  function stage(type, o) {', a);
+  assert.ok(a > 0 && b > a, 'dial block missing (casora-core.js)');
+  const D = core.slice(a, b);
+  assert.ok(/a0: 135, span: 270/.test(D) && /stroke-width="26"/.test(D), 'dial: 270° arc from 135° with a 26 track');
+  assert.ok(/role="slider" tabindex="0"/.test(D) && /data-casora-axis="dial"/.test(D), 'dial: turnable ring is not a slider on the shared handler');
+  assert.ok(/!x\.danger/.test(D) && /list\.length > 4[\s\S]{0,120}slice\(0, 3\)/.test(D), 'moons: danger filter or the 4-moon cap missing');
+  assert.ok(/kind === 'segs'/.test(D) && /ring\.heat/.test(D) && /ring\.marker/.test(D), 'dial: segments, heat gradient or the current dot missing');
+  assert.ok(/dialOn = o\.dial !== false && \(\/\^S\[12347\]\$\//.test(core), 'UI.stage does not draw S1–S4/S7 as the dial');
+  assert.ok(/casoraAxis === 'dial'/.test(core) && /addEventListener\('wheel'/.test(core), 'slider handler without the dial (drag on the ring, mouse wheel)');
+  // No emoji as a symbol (the mock-up's emoji were placeholders): pictographs and dingbats in the popup code.
+  const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]\u{FE0F}?/u;
+  for (const [k, s] of Object.entries(SRC)) {
+    for (const c of s.match(/(?:moons|icon)\s*:\s*['"][^'"]*['"]/g) || []) assert.ok(!EMOJI.test(c), `${k}: emoji as a symbol: ${c}`);
+  }
+  assert.ok(!EMOJI.test(D), 'dial block: emoji');
+  // A popup whose stage takes the moons must not lay out its quick field any more.
+  for (const [k, s] of Object.entries(SRC)) {
+    if (!/moons: function \(\) \{ return/.test(s)) continue;
+    assert.ok(!/stage: 'stage', quick: 'quick'/.test(s), `${k}: moons in the stage and still a quick field`);
+  }
 }
 
 // 6. Open list.

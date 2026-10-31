@@ -999,7 +999,7 @@
         /* v3 (clean, richtlinien §8): status line, stage S7 with the average, the house modes as quick tiles, the rooms
            as the list (a row opens its room) – no coach, main switch, Verlauf or settings. */
         var g3 = { hero: sec('v3house'), stage: sec('stage'), allrooms: sec('allrooms') };
-        return HH.layout({ entity: id, watch: watch, fields: g3, top: ['hero'], stage: 'stage', quick: 'quick', left: [], right: ['allrooms'] });
+        return HH.layout({ entity: id, watch: watch, fields: g3, top: ['hero'], stage: 'stage', left: [], right: ['allrooms'] });
       }
       if (c.group) {
         var g = { hero: fields.hero, house: fields.house, allrooms: sec('allrooms'),
@@ -1013,7 +1013,7 @@
         /* v3: state word (and humidity) in the status line, stage + quick, then Verlauf 120 high, Einstellungen, Mehr. */
         var r3 = { hero: sec('v3hero'), stage: sec('stage'), chart: fields.chart,
           more: HH.moreCard(watch, mcode(['det']), id) };
-        return HH.layout({ entity: id, watch: watch, fields: r3, top: ['hero'], stage: 'stage', quick: 'quick', left: ['chart'],
+        return HH.layout({ entity: id, watch: watch, fields: r3, top: ['hero'], stage: 'stage', left: ['chart'],
           right: ['more'], settings: id });
       }
       var r1 = { hero: fields.hero, chart: fields.chart, ctl: fields.ctl, more: HH.moreCard(watch, mcode(['det']), id) };
