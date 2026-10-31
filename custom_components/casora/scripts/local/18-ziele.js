@@ -66,13 +66,19 @@
     if (a.unit_of_measurement || a.state_class) return true;
     return /^-?\d+(\.\d+)?$/.test(String(st.state)) && !/^(binary_sensor|input_select|select)$/.test(st.entity_id.split('.')[0]);
   };
-  Z.fmt = function (h, id, v) {
-    var st = h.states[id] || {}, a = st.attributes || {}, e = reg(h, id);
-    var n = parseFloat(v);
-    if (!isFinite(n)) return String(v);
+  // Decimals of a value as the entity shows it (also the live number on the v3 stage).
+  Z.digits = function (h, id, n) {
+    var a = (h.states[id] || {}).attributes || {}, e = reg(h, id);
     var p = e.display_precision != null ? e.display_precision : (e.options && e.options.sensor && e.options.sensor.display_precision);
     if (p == null) p = Math.abs(n) >= 100 ? 0 : 1;
     if (Math.round(n) === n && p > 0 && !a.state_class) p = 0;
+    return p;
+  };
+  Z.fmt = function (h, id, v) {
+    var a = (h.states[id] || {}).attributes || {};
+    var n = parseFloat(v);
+    if (!isFinite(n)) return String(v);
+    var p = Z.digits(h, id, n);
     return n.toLocaleString(loc(), { minimumFractionDigits: p, maximumFractionDigits: p }) + (a.unit_of_measurement ? ' ' + a.unit_of_measurement : '');
   };
   // Zustandswort für Zweizustands-Sensoren nach Geräteklasse.
@@ -211,6 +217,25 @@
     if (back === undefined) back = backTo();
     Z._back = back;
     var watch = [id];
+    // Popup v3 (richtlinien §4, §8): numbers get the chart stage S6 (value, chart, range), two-state and text sensors
+    // the status stage S7 with the band; right the values of the range (text sensors also the timeline). No device row,
+    // no link to HA's history. A number's stage watches nothing (the value follows live) so its chart is not redrawn.
+    var UIv = window._casoraUI;
+    if (UIv && UIv.v3 && UIv.v3() && UIv.stage) {
+      if (num && window._hpPlantCfg) {
+        window._hpPlantCfg['cz:' + id + '|' + span] = { type: 'custom:casora-chart', kind: 'line', span: span, source: span === '24h' ? 'history' : 'auto',
+          series: [{ entity: id, name: Z.nameOf(h, id), unit: (st.attributes || {}).unit_of_measurement || '' }],
+          height: window.innerWidth <= 760 ? 140 : 160, readout: 'hero', plate: false };
+      }
+      var fv = { stage: { card: K.secCard(num ? [] : watch, call('m_stage', id, span), h.states) },
+        vals: { card: K.secCard(watch, call('m_vals', id, span), h.states) } };
+      if (!num) fv.tl = { card: K.secCard(watch, call('m_tl', id, span), h.states) };
+      var dv = devOf(h, id), fullV = Z.nameOf(h, id), shortV = shortName(h, id, dv);
+      if (window.casoraCleanName) shortV = window.casoraCleanName(shortV, true);
+      P.open(Object.assign(pageCfg(shortV || fullV, K.layout({ fields: fv, top: [], stage: 'stage', left: [], right: ['vals', 'tl'],
+        narrowOrder: ['vals', 'tl'] }), back, shortV && shortV !== fullV ? devName(dv) : (areaOf(h, id) || '')), { variant: 'v3' }));
+      return true;
+    }
     var f = { hero: { card: K.secCard(watch, call('m_hero', id, span), h.states) } };
     if (num) {
       f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: span, source: span === '24h' ? 'history' : 'auto',
@@ -246,6 +271,15 @@
     var d = devOf(h, id);
     var watch = [id];
     if (d) Object.keys(h.entities || {}).forEach(function (eid) { if (h.entities[eid].device_id === d.id) watch.push(eid); });
+    // Popup v3 (richtlinien §4.7, §8): status stage S7 (state, area, model) and what belongs to the device – no device
+    // data (firmware, integration), no settings or diagnostic entities, no way out to HA.
+    var UIv = window._casoraUI;
+    if (UIv && UIv.v3 && UIv.v3() && UIv.stage) {
+      var fv = { stage: { card: K.secCard(watch, call('d_stage', id), h.states) }, ents: { card: K.secCard(watch, call('d_ents', id), h.states) } };
+      P.open(Object.assign(pageCfg(devName(d) || Z.nameOf(h, id), K.layout({ fields: fv, top: [], stage: 'stage', left: [], right: ['ents'] }), back),
+        { variant: 'v3' }));
+      return true;
+    }
     var f = { hero: { card: K.secCard(watch, call('d_hero', id), h.states) }, info: { card: K.secCard(watch, call('d_info', id), h.states) },
       ents: { card: K.secCard(watch, call('d_ents', id), h.states) } };
     var lay = K.layout({ fields: f, top: ['hero'], left: ['info'], right: ['ents'], narrowOrder: ['info', 'ents'] });
@@ -457,7 +491,18 @@
     var st = states && states[id];
     if (!UI || !st || !hass) return '';
     var now = Date.now(), num = Z.isNumeric(st), bin = /^binary_sensor\./.test(id);
-    if (part === 'm_hero') {
+    var v3 = !!(UI.v3 && UI.v3() && UI.stage);
+    if (part === 'm_stage' && num) {
+      if (window._hpStageChart) window._hpStageChart(el, 'cz:' + id + '|' + span);
+      var u6 = String((st.attributes || {}).unit_of_measurement || ''), v6 = Z.stateWord(hass, id, st.state);
+      var cut6 = !bad(st.state) && u6 && v6.slice(-u6.length - 1) === ' ' + u6, i6 = 0, l6 = [['24h', '24 Std.'], ['7d', '7 Tage'], ['30d', '30 Tage']];
+      return UI.stage('chart', { value: cut6 ? v6.slice(0, -u6.length - 1) : v6, unit: cut6 ? u6 : '', word: bad(st.state),
+        read: id, live: bad(st.state) ? null : id, liveDigits: bad(st.state) ? null : Z.digits(hass, id, parseFloat(st.state)), trend: '', state: st.state === 'unavailable' ? 'na' : null,
+        chart: '<div class="hp-chart-slot" style="min-height:' + (window.innerWidth <= 760 ? 140 : 160) + 'px;pointer-events:auto;"></div>',
+        extra: UI.segments(l6.map(function (x) { return { label: x[1], active: x[0] === span }; }), null)
+          .replace(/<div class="hui-sg/g, function () { return '<div data-casora-zspan="' + esc(id + '|' + l6[i6++][0]) + '" class="hui-sg'; }) });
+    }
+    if (part === 'm_hero' || part === 'm_stage') {
       var since = Date.parse(st.last_changed);
       // The room is the label above the title (blueprint v2, rule 1), not part of the status line.
       var rest = [isFinite(since) ? T('seit') + ' ' + when(since, now) : null].filter(Boolean);
@@ -493,6 +538,15 @@
           }
           out += '<div class="cz-axis"><span>' + esc(when(t0, now)) + '</span><span>' + esc(T('Jetzt')) + '</span></div>' + leg;
         }
+      }
+      if (part === 'm_stage') {
+        // S7: the state as the sentence (traffic light: unknown/unavailable orange, an alarm class on red, off grey),
+        // the period switch and the band under it.
+        var alarm = bin && st.state === 'on' && /^(smoke|gas|moisture|problem|safety|carbon_monoxide|heat|tamper)$/.test((st.attributes || {}).device_class || '');
+        return UI.stage('status', { tone: bad(st.state) ? 'warn' : alarm ? 'bad' : bin && st.state !== 'on' ? 'off' : 'good',
+          icon: Z.iconOf(st), text: Z.stateWord(hass, id, st.state), state: st.state === 'unavailable' ? 'na' : null,
+          facts: isFinite(since) ? [{ label: T('Seit'), value: when(since, now) }] : [],
+          extra: out.replace(UI.line(Z.stateWord(hass, id, st.state), rest, { tone: bad(st.state) ? 'warn' : null }), '').replace('<div style="margin-top:14px;">', '<div>') });
       }
       return out;
     }
@@ -562,7 +616,13 @@
             color: (stateTone(hass, id, x.s) || {}).dot || (x.s === 'on' || !bin ? ACC : DIM) };
         });
       }
-      return head2 + (items.length ? timeline(items, now) : '<div style="padding:14px 4px;opacity:.65;">' + esc(T('Keine Änderung im Zeitraum')) + '</div>') + histLink(id, span);
+      return head2 + (items.length ? timeline(items, now) : '<div style="padding:14px 4px;opacity:.65;">' + esc(T('Keine Änderung im Zeitraum')) + '</div>') + (v3 ? '' : histLink(id, span));
+    }
+    if (part === 'd_stage') {
+      var dv1 = devOf(hass, id), on1 = /^(on|open|playing|home|heat|cool|heat_cool|auto|cleaning|mowing|unlocked)$/.test(st.state);
+      return UI.stage('status', { tone: bad(st.state) ? 'warn' : on1 ? 'good' : 'off', icon: Z.iconOf(st), text: Z.stateWord(hass, id, st.state),
+        state: st.state === 'unavailable' ? 'na' : null,
+        facts: [areaOf(hass, id) ? { label: T('Bereich'), value: areaOf(hass, id) } : null, dv1 && dv1.model ? { label: T('Modell'), value: dv1.model } : null] });
     }
     if (part === 'd_hero') {
       var dv2 = devOf(hass, id);
@@ -602,6 +662,7 @@
       });
       var outE = '';
       if (groups.main.length) outE += UI.group(groups.main, 'Gehört dazu');
+      if (v3) return outE;
       if (groups.config.length) outE += (outE ? '<div style="height:16px"></div>' : '') + UI.group(groups.config, 'Einstellungen');
       if (groups.diagnostic.length) outE += (outE ? '<div style="height:16px"></div>' : '') + (UI.more
         ? UI.more('cz-diag-' + id, UI.group(groups.diagnostic, null), { label: T('Diagnose'), count: groups.diagnostic.length })

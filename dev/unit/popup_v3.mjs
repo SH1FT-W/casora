@@ -49,6 +49,8 @@ const MIGRIERT = [
   { popup: 'Kaffeevollautomat', vorlagen: ['casora_popup_coffee'], file: '25-coffee.js', from: '  K.popup = function', to: null, stages: 2 },
   { popup: 'Saugroboter', vorlagen: ['casora_vacuum'], file: '02-devices.js', from: '  var V = window._casoraVac = ', to: '// ── Notifications: line wrapping', stages: 1 },
   { popup: 'Diagramm-Kachel', vorlagen: ['casora_popup_chart'], file: '27-chart.js', from: '  M.popup = function', to: null, stages: 1 },
+  // S6 for numbers, S7 for two-state/text sensors and the device page (opened from casoraRoute and the hold menu).
+  { popup: 'Messwertseite / Geräteseite', vorlagen: [], file: '18-ziele.js', from: '  Z.openMeasure = function', to: null, stages: 3, variantInModule: true },
 ];
 
 // 1. Pieces.

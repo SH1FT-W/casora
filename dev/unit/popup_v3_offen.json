@@ -164,12 +164,6 @@
   "grund": "noch nicht dran"
  },
  {
-  "popup": "Messwertseite / Geräteseite",
-  "vorlagen": [],
-  "modul": "18-ziele.js",
-  "grund": "noch nicht dran"
- },
- {
   "popup": "Pflanze",
   "vorlagen": [
    "casora_popup_plant"
