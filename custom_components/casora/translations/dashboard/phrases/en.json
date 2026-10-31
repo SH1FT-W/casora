@@ -2600,9 +2600,43 @@
   "Niedrigster Monat": "Lowest month",
   "Lange offen": "Open for long",
   "Fenster schließen?": "Close the window?",
-  "Schließen?": "Close it?"
+  "Schließen?": "Close it?",
+  "1 Gerät": "1 device",
+  "Gerade kein Sonnenstrom übrig": "No solar power to spare right now",
+  "sehr hoch": "very high",
+  "niedrig": "low",
+  "hoch": "high",
+  "extrem": "extreme",
+  "gekippt": "tilted",
+  "Im Studio wählen": "Choose in the Studio",
+  "Regen jetzt": "Rain now",
+  "Sollwert": "Setpoint"
  },
  "patterns": [
+  [
+   "^Jetzt Ø (.+)$",
+   "Now avg. {1}"
+  ],
+  [
+   "^gefühlt (.+)$",
+   "feels like {1}"
+  ],
+  [
+   "^Regen (\\d+) ?%$",
+   "Rain {1}%"
+  ],
+  [
+   "^UV (\\d+)$",
+   "UV {1}"
+  ],
+  [
+   "^Wind (\\d.*)$",
+   "Wind {1}"
+  ],
+  [
+   "^Regen ab (\\d+) Uhr$",
+   "Rain from {1}:00"
+  ],
   [
    "^(\\d+) von (\\d+) offen$",
    "{1} of {2} open"
@@ -4714,6 +4748,10 @@
   [
    "^(\\d+) klemmen$",
    "{1} jammed"
+  ],
+  [
+   "^(.+) frei$",
+   "{1} spare"
   ]
  ],
  "Gerät in Home Assistant": "Device in Home Assistant"

@@ -84,13 +84,13 @@ assert.equal(L.kind(null), 'state');
 // ── Count, tile text, active ──────────────────────────────────────────────
 const heiz = L.resolve(hass, states, L.cfg({ list_group: 'group.qa_heizung' }));
 assert.deepEqual(L.count(states, heiz), { n: 3, on: 1, toggles: 1 });
-assert.deepEqual(L.summary(L.count(states, heiz)), ['3 Einstellungen', '1 An']);
-assert.deepEqual(L.summary(L.count(states, grp)), ['6 Einstellungen', '1 An'], 'pump on');
+assert.deepEqual(L.summary(L.count(states, heiz)), ['3 Geräte', '1 An']);
+assert.deepEqual(L.summary(L.count(states, grp)), ['6 Geräte', '1 An'], 'pump on');
 states['switch.qa_pumpe'].state = 'off';
-assert.deepEqual(L.summary(L.count(states, grp)), ['6 Einstellungen', 'Aus'], 'switches all off');
-assert.deepEqual(L.summary(L.count(states, ['input_datetime.qa_frueh'])), ['1 Einstellung'], 'no switch: count only');
+assert.deepEqual(L.summary(L.count(states, grp)), ['6 Geräte', 'Aus'], 'switches all off');
+assert.deepEqual(L.summary(L.count(states, ['input_datetime.qa_frueh'])), ['1 Gerät'], 'no switch: count only');
 assert.deepEqual(L.summary(L.count(states, [])), ['Keine Einträge']);
-assert.equal(L.tileState(hass, states, { list_group: 'group.qa_rollo' }), '6 Einstellungen');
+assert.equal(L.tileState(hass, states, { list_group: 'group.qa_rollo' }), '6 Geräte');
 assert.equal(L.tileActive(hass, states, { list_group: 'group.qa_rollo' }), false);
 states['input_boolean.qa_abwesend'].state = 'on';
 states['switch.qa_pumpe'].state = 'on';
@@ -177,7 +177,7 @@ assert.ok(lay.fields.list.card.watch.includes('input_datetime.qa_feb') && lay.fi
 lay = L.popup({ list_group: 'group.qa_nichts' }, states, hass);
 assert.deepEqual(Object.keys(lay.fields), ['hero'], 'empty: no list section');
 const C1 = L.cfg({ list_group: 'group.qa_rollo', list_layout: '2', list_sections: [{ title: 'Pro Monat', before: 'input_datetime.qa_jan' }] });
-assert.equal(L.sec('hero', C1, states, hass), '<line>6 Einstellungen|1 An</line>');
+assert.equal(L.sec('hero', C1, states, hass), '<line>6 Geräte|1 An</line>');
 const html = L.sec('list', C1, states, hass);
 assert.match(html, /data-casora-cols="2"/);
 assert.match(html, /<group >:Frühestens zu um\+ctl;:Spätestens zu um\+ctl;:Andere Schließzeit wenn abwesend\+ctl<\/group>/);
@@ -202,7 +202,7 @@ assert.deepEqual(mlay.top, ['hero', 'lists', 'charts']);
 assert.deepEqual(mlay.variables.casora_more, M, 'the popup carries what its rows open');
 assert.ok(mlay.fields.lists.card.watch.includes('input_boolean.qa_sommer'), 'list previews follow their members');
 assert.equal(L.moreSec('lists', M, states, hass),
-  '<group Einstellungen>group.qa_rollo:Rollladen runter/6 Einstellungen · 1 An;group.qa_heizung:Heizung/3 Einstellungen · 1 An</group>');
+  '<group Einstellungen>group.qa_rollo:Rollladen runter/6 Geräte · 1 An;group.qa_heizung:Heizung/3 Geräte · 1 An</group>');
 window._casoraChartCard = { LABEL: { '24h': '24 Std.' }, value: () => '21,5 °C', popup: (st, S, h, V) => ({ chart: st.entity_id, V }) };
 assert.match(L.moreSec('charts', M, states, hass), /data-casora-cols="auto"><group Diagramme>sensor\.qa_temp:temp\/24 Std\. · 21,5 °C;/);
 assert.equal(L.moreSec('hero', M, states, hass), '<line>2 Listen · 2 Diagramme|</line>');
@@ -217,7 +217,7 @@ assert.ok(window._casoraMiHooks.includes(L.moreHook), 'hooked into the row tap')
 assert.equal(L.moreHook('group.qa_heizung'), true);
 assert.equal(opened[0].title, 'Heizung', 'own name from the Studio');
 assert.deepEqual(opened[0].content.top, ['hero', 'list']);
-assert.match(opened[0].style, /min\(900px, 92vw\)/);
+assert.match(opened[0].style, /min\(900px, calc\(100vw - 16px\)\)/);
 assert.equal(opened[0].popup_styles, cur.popup_styles);
 opened[0].back();
 assert.equal(opened[1], cur, '‹ reopens Mehr as it was');
@@ -248,7 +248,7 @@ for (const p of ['casora_popup_entity_list', 'casora_popup_more']) {
   assert.match(cp.extra, /casoraPopupExtras/);
 }
 assert.equal(run(TPL.casora_popup_entity_list.tap_action.casora_popup.style, { variables: { list_layout: '1' } }),
-  '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);');
+  '--popup-min-width: min(552px, calc(100vw - 16px)); --popup-max-width: min(552px, calc(100vw - 16px));');
 const built = JSON.parse(src('custom_components/casora/panel/casora-templates.json')).templates;
 assert.ok(built.casora_entity_list && built.casora_more && built.casora_popup_entity_list && built.casora_popup_more, 'built (tools/build-templates.py)');
 assert.match(src('custom_components/casora/scripts/casora-local.js'), /'34-entity-list'/, 'module is loaded');
@@ -291,11 +291,11 @@ for (const lang of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
 const phr = (lang) => JSON.parse(src('custom_components/casora/translations/dashboard/phrases/' + lang + '.json'));
 for (const lang of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
   const ph = phr(lang);
-  for (const s of ['Liste', 'Mehr', 'Keine Einträge', '1 Einstellung', 'Nichts gewählt', '1 Liste', '1 Diagramm', 'Diagramme',
+  for (const s of ['Liste', 'Mehr', 'Keine Einträge', '1 Gerät', 'Nichts gewählt', '1 Liste', '1 Diagramm', 'Diagramme',
     'Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.', 'Wähle im Studio eine Gruppe, Geräte oder ein Label.',
     'Wähle im Studio Gruppen und Sensoren für diese Kachel.'])
     assert.ok(ph.exact[s], lang + ' phrase missing for: ' + s);
-  for (const s of ['26 Einstellungen', '3 Listen', '4 Diagramme'])
+  for (const s of ['26 Geräte', '3 Listen', '4 Diagramme'])
     assert.ok(ph.patterns.some(([re]) => new RegExp(re).test(s)), lang + ' pattern missing for: ' + s);
 }
 console.log('entity_list: ok');

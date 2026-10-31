@@ -1882,7 +1882,7 @@
     return function () { window._casoraTapTile(cam, function (ok) { if (!ok && window.casoraPopup) window.casoraPopup.close(); }); };
   };
   F.camBack = camBack;
-  var WIDE = '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);';
+  var WIDE = '--popup-min-width: min(900px, calc(100vw - 16px)); --popup-max-width: min(900px, calc(100vw - 16px));';
   // Unterseiten (Detail, Aufnahmen, Laden) im Rahmen des Kamera-Popups: gleiche Ränder wie dessen Inhalt (K.layout),
   // Tippen ins Leere schließt nicht (Weg zurück über ‹ bzw. X).
   var subPage = function (o) {

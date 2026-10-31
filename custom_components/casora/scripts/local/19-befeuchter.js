@@ -131,7 +131,8 @@
       var dl = { min: lo, max: hi, step: 1, current: s.current, moons: function () { return H.sec('quick', c, states, hass); } };
       if (s.dead || tv == null) return UI.stage('value', Object.assign(dl, { caption: 'Zielfeuchte', value: tv != null ? tv : '–', unit: tv != null ? '%' : '', digits: 0,
         state: s.dead ? 'na' : 'off', foot: foot }));
-      var pm = function (v, dis) { return { dis: dis, svc: { domain: 'humidifier', service: 'set_humidity', data: { humidity: v }, target: tgt } }; };
+      // step/min/max: each quick tap counts on from the value sent last (casora-core stepSpec).
+      var pm = function (v, dis) { return { dis: dis, step: 1, min: lo, max: hi, svc: { domain: 'humidifier', service: 'set_humidity', data: { humidity: v }, target: tgt } }; };
       var segM = s.modes.length > 4 ? UI.segments(s.modes.map(function (m) { return { label: H.modeLabel(hass, st, m), active: s.on && s.mode === m, svc: modeSvc(m) }; })) : '';
       return UI.stage('value', Object.assign(dl, { caption: 'Zielfeuchte', value: Math.round(tv), unit: '%', digits: 0, state: s.on ? null : 'off',
         minus: pm(Math.max(lo, Math.round(tv) - 1), tv <= lo), plus: pm(Math.min(hi, Math.round(tv) + 1), tv >= hi), foot: foot,

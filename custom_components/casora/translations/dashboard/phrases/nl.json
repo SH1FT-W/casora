@@ -2618,9 +2618,43 @@
   "Niedrigster Monat": "Laagste maand",
   "Lange offen": "Al lang open",
   "Fenster schließen?": "Raam sluiten?",
-  "Schließen?": "Sluiten?"
+  "Schließen?": "Sluiten?",
+  "1 Gerät": "1 apparaat",
+  "Gerade kein Sonnenstrom übrig": "Nu geen zonnestroom over",
+  "sehr hoch": "zeer hoog",
+  "niedrig": "laag",
+  "hoch": "hoog",
+  "extrem": "extreem",
+  "gekippt": "gekanteld",
+  "Im Studio wählen": "Kies in de Studio",
+  "Regen jetzt": "Nu regen",
+  "Sollwert": "Instelwaarde"
  },
  "patterns": [
+  [
+   "^Jetzt Ø (.+)$",
+   "Nu gem. {1}"
+  ],
+  [
+   "^gefühlt (.+)$",
+   "gevoeld {1}"
+  ],
+  [
+   "^Regen (\\d+) ?%$",
+   "Regen {1}%"
+  ],
+  [
+   "^UV (\\d+)$",
+   "UV {1}"
+  ],
+  [
+   "^Wind (\\d.*)$",
+   "Wind {1}"
+  ],
+  [
+   "^Regen ab (\\d+) Uhr$",
+   "Regen vanaf {1}:00"
+  ],
   [
    "^(\\d+) von (\\d+) offen$",
    "{1} van {2} open"
@@ -4732,6 +4766,10 @@
   [
    "^(\\d+) klemmen$",
    "{1} vastgelopen"
+  ],
+  [
+   "^(.+) frei$",
+   "{1} over"
   ]
  ],
  "Gerät in Home Assistant": "Apparaat in Home Assistant"

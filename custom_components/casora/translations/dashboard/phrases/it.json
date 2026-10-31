@@ -2618,9 +2618,43 @@
   "Niedrigster Monat": "Mese più basso",
   "Lange offen": "Aperta a lungo",
   "Fenster schließen?": "Chiudere la finestra?",
-  "Schließen?": "Chiudere?"
+  "Schließen?": "Chiudere?",
+  "1 Gerät": "1 dispositivo",
+  "Gerade kein Sonnenstrom übrig": "Nessuna energia solare in eccesso ora",
+  "sehr hoch": "molto alto",
+  "niedrig": "basso",
+  "hoch": "alto",
+  "extrem": "estremo",
+  "gekippt": "a ribalta",
+  "Im Studio wählen": "Scegli nello Studio",
+  "Regen jetzt": "Pioggia ora",
+  "Sollwert": "Valore impostato"
  },
  "patterns": [
+  [
+   "^Jetzt Ø (.+)$",
+   "Ora media {1}"
+  ],
+  [
+   "^gefühlt (.+)$",
+   "percepita {1}"
+  ],
+  [
+   "^Regen (\\d+) ?%$",
+   "Pioggia {1}%"
+  ],
+  [
+   "^UV (\\d+)$",
+   "UV {1}"
+  ],
+  [
+   "^Wind (\\d.*)$",
+   "Vento {1}"
+  ],
+  [
+   "^Regen ab (\\d+) Uhr$",
+   "Pioggia dalle {1}:00"
+  ],
   [
    "^(\\d+) von (\\d+) offen$",
    "{1} di {2} aperte"
@@ -4732,6 +4766,10 @@
   [
    "^(\\d+) klemmen$",
    "{1} bloccate"
+  ],
+  [
+   "^(.+) frei$",
+   "{1} disponibili"
   ]
  ],
  "Gerät in Home Assistant": "Dispositivo in Home Assistant"

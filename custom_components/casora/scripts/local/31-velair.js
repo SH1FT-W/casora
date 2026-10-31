@@ -537,7 +537,7 @@
     }
     // Velair's global mode (select „Mode“: Default, Nacht, Urlaub …, #32): which week runs and why; a tap chooses another.
     var ms = E.mode && hass && hass.states[E.mode];
-    if (ms && !bad(ms.state)) rows.push({ icon: 'mdi:home-switch-outline', iconTone: OFF_PLATE, label: 'Velair-Modus', value: ms.state, entity: E.mode });
+    if (ms && !bad(ms.state)) rows.push({ icon: 'mdi:home-switch-outline', iconTone: OFF_PLATE, label: 'Velair-Modus', value: window._casoraRawWord ? window._casoraRawWord(ms.state) : ms.state, entity: E.mode });
     var out = UI.group(rows, 'Zeitplan');
     out += GAP + weekHtml(UI, id, z, sel, today, date);
     var e = u.edit && u.edit.wd === sel ? u.edit : null;
@@ -609,7 +609,8 @@
       // Dial (richtlinien §4.8): target ring blue → red with the room temperature dot, the modes as moons.
       var mn3 = function () { return V.sec('quick', id, states, hass, el, sensor); };
       if (bad(st.state) || st.state === 'off' || t3 == null) {
-        return UI.stage('value', { caption: 'Zieltemperatur', value: t3 != null ? t3 : '–', unit: t3 != null ? unit3 : '',
+        // Short caption: the wheel's top is narrow on a phone („Zieltemper…“, review 2 DH-08).
+        return UI.stage('value', { caption: 'Ziel', label: 'Zieltemperatur', value: t3 != null ? t3 : '–', unit: t3 != null ? unit3 : '',
           state: bad(st.state) ? 'na' : 'off', foot: foot3, heat: true, current: rt3, min: L3.lo, max: L3.hi, moons: mn3 });
       }
       var pm3 = function (dir) {
@@ -617,7 +618,7 @@
         return { svc: { domain: 'climate', service: 'set_temperature', data: { temperature: v }, target: tgt3 },
           step: step3, min: L3.lo, max: L3.hi, dis: dir < 0 ? t3 <= L3.lo : t3 >= L3.hi };
       };
-      return UI.stage('value', { caption: 'Zieltemperatur', value: t3, unit: unit3, minus: pm3(-1), plus: pm3(1), foot: foot3,
+      return UI.stage('value', { caption: 'Ziel', label: 'Zieltemperatur', value: t3, unit: unit3, minus: pm3(-1), plus: pm3(1), foot: foot3,
         heat: true, current: rt3, moons: mn3 });
     }
     if (part === 'rows') {
@@ -632,7 +633,7 @@
           sub: data ? 'Velair plant dieses Gerät nicht' : 'Velair lädt …' });
       }
       var ms5 = E5.mode && hass && hass.states[E5.mode];
-      if (ms5 && !bad(ms5.state)) rows5.push({ icon: 'mdi:home-switch-outline', iconTone: OFF_PLATE, label: 'Velair-Modus', value: ms5.state, entity: E5.mode });
+      if (ms5 && !bad(ms5.state)) rows5.push({ icon: 'mdi:home-switch-outline', iconTone: OFF_PLATE, label: 'Velair-Modus', value: window._casoraRawWord ? window._casoraRawWord(ms5.state) : ms5.state, entity: E5.mode });
       return rows5.length ? UI.group(rows5, 'Velair') : '';
     }
     if (part === 'quick') {

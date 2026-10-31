@@ -2618,9 +2618,43 @@
   "Niedrigster Monat": "Mois le plus bas",
   "Lange offen": "Ouverte longtemps",
   "Fenster schließen?": "Fermer la fenêtre ?",
-  "Schließen?": "Fermer ?"
+  "Schließen?": "Fermer ?",
+  "1 Gerät": "1 appareil",
+  "Gerade kein Sonnenstrom übrig": "Pas d'énergie solaire en trop pour l'instant",
+  "sehr hoch": "très élevé",
+  "niedrig": "faible",
+  "hoch": "élevé",
+  "extrem": "extrême",
+  "gekippt": "basculée",
+  "Im Studio wählen": "Choisir dans le Studio",
+  "Regen jetzt": "Pluie maintenant",
+  "Sollwert": "Consigne"
  },
  "patterns": [
+  [
+   "^Jetzt Ø (.+)$",
+   "Maintenant moy. {1}"
+  ],
+  [
+   "^gefühlt (.+)$",
+   "ressenti {1}"
+  ],
+  [
+   "^Regen (\\d+) ?%$",
+   "Pluie {1}%"
+  ],
+  [
+   "^UV (\\d+)$",
+   "UV {1}"
+  ],
+  [
+   "^Wind (\\d.*)$",
+   "Vent {1}"
+  ],
+  [
+   "^Regen ab (\\d+) Uhr$",
+   "Pluie dès {1} h"
+  ],
   [
    "^(\\d+) von (\\d+) offen$",
    "{1} sur {2} ouverts"
@@ -4732,6 +4766,10 @@
   [
    "^(\\d+) klemmen$",
    "{1} bloquées"
+  ],
+  [
+   "^(.+) frei$",
+   "{1} disponibles"
   ]
  ],
  "Gerät in Home Assistant": "Appareil dans Home Assistant"

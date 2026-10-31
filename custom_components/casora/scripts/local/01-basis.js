@@ -941,7 +941,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
   (function () {
     window._hpPlantCfg = window._hpPlantCfg || {};
     window._hpPlantMeta = window._hpPlantMeta || {};
-    var SPAN = { '2h': '2 Stunden', '4h': '4 Stunden', '24h': '24 Stunden', '48h': '48 Stunden', '7d': '7 Tage', '30d': '30 Tage' };
+    var SPAN = { '2h': '2 Std.', '4h': '4 Std.', '24h': '24 Std.', '48h': '48 Std.', '7d': '7 Tage', '30d': '30 Tage' };
     var find = function (root, sel) {
       var out = [];
       (function walk(n) {
@@ -1471,7 +1471,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           var h0 = ha();
           find(h0 && h0.shadowRoot ? h0.shadowRoot : document, 'button-card').some(function (c) {
             var ps = c._config && c._config.tap_action && c._config.tap_action.casora_popup && c._config.tap_action.casora_popup.popup_styles;
-            if (Array.isArray(ps) && ps.length) { styles = JSON.parse(JSON.stringify(ps).replace(/--popup-(min|max)-width:[^;]*;/g, '--popup-$1-width: min(552px, 92vw);')); return true; }
+            if (Array.isArray(ps) && ps.length) { styles = JSON.parse(JSON.stringify(ps).replace(/--popup-(min|max)-width:[^;]*;/g, '--popup-$1-width: min(552px, calc(100vw - 16px));')); return true; }
             return false;
           });
         } catch (e) {}

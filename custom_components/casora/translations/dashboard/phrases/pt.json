@@ -2618,9 +2618,43 @@
   "Niedrigster Monat": "Mês mais baixo",
   "Lange offen": "Aberta há muito",
   "Fenster schließen?": "Fechar a janela?",
-  "Schließen?": "Fechar?"
+  "Schließen?": "Fechar?",
+  "1 Gerät": "1 dispositivo",
+  "Gerade kein Sonnenstrom übrig": "Agora não sobra energia solar",
+  "sehr hoch": "muito alto",
+  "niedrig": "baixo",
+  "hoch": "alto",
+  "extrem": "extremo",
+  "gekippt": "basculante",
+  "Im Studio wählen": "Escolher no Studio",
+  "Regen jetzt": "Chuva agora",
+  "Sollwert": "Valor definido"
  },
  "patterns": [
+  [
+   "^Jetzt Ø (.+)$",
+   "Agora média {1}"
+  ],
+  [
+   "^gefühlt (.+)$",
+   "sensação {1}"
+  ],
+  [
+   "^Regen (\\d+) ?%$",
+   "Chuva {1}%"
+  ],
+  [
+   "^UV (\\d+)$",
+   "UV {1}"
+  ],
+  [
+   "^Wind (\\d.*)$",
+   "Vento {1}"
+  ],
+  [
+   "^Regen ab (\\d+) Uhr$",
+   "Chuva a partir das {1}:00"
+  ],
   [
    "^(\\d+) von (\\d+) offen$",
    "{1} de {2} abertas"
@@ -4732,6 +4766,10 @@
   [
    "^(\\d+) klemmen$",
    "{1} encravadas"
+  ],
+  [
+   "^(.+) frei$",
+   "{1} livres"
   ]
  ],
  "Gerät in Home Assistant": "Dispositivo no Home Assistant"

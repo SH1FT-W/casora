@@ -2618,9 +2618,43 @@
   "Niedrigster Monat": "Najniższy miesiąc",
   "Lange offen": "Długo otwarte",
   "Fenster schließen?": "Zamknąć okno?",
-  "Schließen?": "Zamknąć?"
+  "Schließen?": "Zamknąć?",
+  "1 Gerät": "1 urządzenie",
+  "Gerade kein Sonnenstrom übrig": "Teraz brak nadwyżki energii słonecznej",
+  "sehr hoch": "bardzo wysoki",
+  "niedrig": "niski",
+  "hoch": "wysoki",
+  "extrem": "ekstremalny",
+  "gekippt": "uchylone",
+  "Im Studio wählen": "Wybierz w Studio",
+  "Regen jetzt": "Teraz deszcz",
+  "Sollwert": "Wartość zadana"
  },
  "patterns": [
+  [
+   "^Jetzt Ø (.+)$",
+   "Teraz śr. {1}"
+  ],
+  [
+   "^gefühlt (.+)$",
+   "odczuwalna {1}"
+  ],
+  [
+   "^Regen (\\d+) ?%$",
+   "Deszcz {1}%"
+  ],
+  [
+   "^UV (\\d+)$",
+   "UV {1}"
+  ],
+  [
+   "^Wind (\\d.*)$",
+   "Wiatr {1}"
+  ],
+  [
+   "^Regen ab (\\d+) Uhr$",
+   "Deszcz od {1}:00"
+  ],
   [
    "^(\\d+) von (\\d+) offen$",
    "{1} z {2} otwarte"
@@ -4732,6 +4766,10 @@
   [
    "^(\\d+) klemmen$",
    "{1} zablokowane"
+  ],
+  [
+   "^(.+) frei$",
+   "{1} wolne"
   ]
  ],
  "Gerät in Home Assistant": "Urządzenie w Home Assistant"

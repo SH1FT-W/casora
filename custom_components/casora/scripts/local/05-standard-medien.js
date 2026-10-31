@@ -857,6 +857,14 @@ window._hpMultiTap = function (ev, kind) {
     var eTone = (window._casoraSoft && window._casoraSoft()) ? 'good' : undefined;
     var rows = [{ icon: 'mdi:solar-power-variant', iconTone: eTone, label: 'Sonnenstrom übrig', value: on && free ? watt(free) : 'Keiner' }];
     if (hs) rows.push({ icon: 'mdi:home-lightning-bolt-outline', iconTone: eTone, label: 'Hausverbrauch', value: watt(hw) });
+    // Popup v3 (§3, §4.7, review 2 DD-25/DH-11): head without the symbol tile, a short status line, the tip as an S7 stage.
+    if (UI.v3 && UI.v3() && UI.stage && UI.line) {
+      var tipTxt = on ? String(O.tip(st, states) || '').replace(/^≈ [^·]+ frei · /, '') : '';
+      return UI.line(on ? 'Jetzt nutzen' : 'Kein Überschuss', [on && free ? watt(free) + ' frei' : null])
+        + UI.stage('status', { tone: on ? 'good' : 'off', icon: 'mdi:solar-power-variant', text: on ? (tipTxt || 'Jetzt nutzen') : 'Gerade kein Sonnenstrom übrig',
+          facts: on && free ? [{ label: 'Frei', value: watt(free) }] : [] })
+        + '<div style="height:24px"></div>' + UI.group(rows, null);
+    }
     return UI.hero({ value: on ? 'Jetzt nutzen' : 'Kein Überschuss', sub: on ? O.tip(st, states) : 'Sobald Sonnenstrom übrig ist, steht hier, welches Gerät sich lohnt.', center: true })
       + '<div style="height:18px"></div>' + UI.group(rows, null);
   };
@@ -879,7 +887,7 @@ window._hpMultiTap = function (ev, kind) {
       if (pe && lt && Date.now() - lt.at < 2000) pe._src = lt.el;
       else if (pe && tile0) pe._src = tile0;
       window.casoraPopup.open({
-        title: 'Solar-Tipp', dismissable: true, src: (pe && pe._src) || tile0 || undefined,
+        title: 'Solar-Tipp', dismissable: true, src: (pe && pe._src) || tile0 || undefined, variant: 'v3',
         // Blueprint v2 (rule 11): one column, 552 wide.
         style: window.casoraPopupWidth ? window.casoraPopupWidth('one') : undefined,
         content: {

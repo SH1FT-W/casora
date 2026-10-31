@@ -133,7 +133,9 @@
     if (v3.length) {
       L = L.filter(function (k) { return v3.indexOf(k) < 0; }); R = R.filter(function (k) { return v3.indexOf(k) < 0; });
       if (o.stage && v3[0] === o.stage && (o.stageWide || /data-casora-stage=\\?"S5/.test(String(o.fields[o.stage])))) { top = top.concat([o.stage]); v3 = v3.slice(1); }
-      L = v3.concat(L);
+      // §2: left only the stage and its quick choice, the lists on the right (review 2, DD-13: „WLAN“ under the wheel).
+      if (v3.length) { R = L.concat(R); L = v3; }
+      else L = v3.concat(L);
       if (o.narrowOrder) o = Object.assign({}, o, { narrowOrder: v3.concat(o.narrowOrder.filter(function (k) { return v3.indexOf(k) < 0; })) });
     }
     if (!L.length && R.length > 1 && o.moveLeft) { L = R.filter(function (k) { return o.moveLeft.indexOf(k) > -1; }); R = R.filter(function (k) { return L.indexOf(k) < 0; }); }
@@ -194,6 +196,8 @@
     ui.custom_fields = cf;
     /* Rule 12 (symmetry): both columns start at the same height – casora-core aligns the marked pair. */
     if (cf.main && cf.side && window._casoraUI && window._casoraUI.colsMark) ui.extra_styles = (ui.extra_styles || '') + window._casoraUI.colsMark('main', 'side');
+    // One column on a wide screen: the frame takes 552 instead of 900 (§2, review 2 DD-12; casora-core reads it).
+    if (!narrow) ui.casora_cols = cf.main && cf.side ? 2 : 1;
     return ui;
   };
   var pill = function (UI, text, svc, tone) {
@@ -654,8 +658,8 @@
     // Two columns (stage, list): as wide as the energy popup, its sheet styles kept.
     var prev = window.casoraPopup.current;
     if (card) window.casoraPopup.sub({ title: TITLE[focus] || 'Energie', content: card, popup_styles: prev && prev.popup_styles,
-      style: card && card._casoraNarrow ? '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'
-        : '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);' });
+      style: card && card._casoraNarrow ? '--popup-min-width: min(552px, calc(100vw - 16px)); --popup-max-width: min(552px, calc(100vw - 16px));'
+        : '--popup-min-width: min(900px, calc(100vw - 16px)); --popup-max-width: min(900px, calc(100vw - 16px));' });
   };
 
   // ── Energy flow as bars (1.2.1, design B "Sankey light") ─────────────────

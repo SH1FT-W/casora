@@ -197,9 +197,11 @@
     return {
       title: title, content: content, back: back,
       // Blueprint v2 (rule 7): a page of its own never carries the main switch of the popup before it.
-      head_switch: false, eyebrow: eyebrow || undefined,
+      // A page reached with ‹ takes the title of the page before as its label (casora-core); its own label only
+      // when it opens on its own (review 2, DD-09).
+      head_switch: false, eyebrow: (back ? null : eyebrow) || undefined,
       dismiss_on_background: prev ? prev.dismiss_on_background !== false : true,
-      style: '--popup-min-width: min(900px, 92vw); --popup-max-width: min(920px, 92vw);',
+      style: '--popup-min-width: min(900px, calc(100vw - 16px)); --popup-max-width: min(920px, calc(100vw - 16px));',
       popup_styles: prev && prev.popup_styles,
     };
   };
@@ -232,6 +234,11 @@
       if (!num) fv.tl = { card: K.secCard(watch, call('m_tl', id, span), h.states) };
       var dv = devOf(h, id), fullV = Z.nameOf(h, id), shortV = shortName(h, id, dv);
       if (window.casoraCleanName) shortV = window.casoraCleanName(shortV, true);
+      // „Zustand“ says nothing as a title: the device names the page (review 2, DD-09/DD-32).
+      if (/^(zustand|status|state)$/i.test(String(shortV || '').trim()) && dv && devName(dv)) shortV = devName(dv);
+      // The same name as the page before (a switch's „Zuletzt eingeschaltet ›“): the page is its history.
+      var prevT = back && P._headerTitle ? String(P._headerTitle.textContent || '').replace(/\u200B/g, '').trim() : '';
+      if (prevT && prevT === String(shortV || fullV).trim()) shortV = T('Verlauf');
       P.open(Object.assign(pageCfg(shortV || fullV, K.layout({ fields: fv, top: [], stage: 'stage', left: [], right: ['vals', 'tl'],
         narrowOrder: ['vals', 'tl'] }), back, shortV && shortV !== fullV ? devName(dv) : (areaOf(h, id) || '')), { variant: 'v3' }));
       return true;

@@ -159,7 +159,7 @@ const newHouse = (h, d, base, name) => {
   assert.match(S.service, /Service nach Strecke=in 359 km/);
   assert.match(S.service, /Software-Update=Verfügbar/);
   assert.match(S.service, /Zuletzt gesehen=Zuhause/);
-  assert.match(S.range, /Eco=84 km \| Turbo=40 km \| Unterstützungsmodi=Eco, Auto, Sport, Turbo/);
+  assert.match(S.range, /Eco=84 km \| Turbo=40 km \| Unterstützungsmodi=.*Eco, Auto, Sport, Turbo/);
   assert.match(S.total, /Fahrten=58 \(1\.098 km aufgezeichnet\) \| Fahrzeit gesamt=73 Std\./);
   assert.match(S.battery, /Ladezyklen=12,3 \(PowerTube 750 Wh\) \| Akku-Gesundheit=96 %/);
   assert.match(S.last, /Feierabendrunde|Fahrt=23,4 km \(21\.10\.2026\)/);

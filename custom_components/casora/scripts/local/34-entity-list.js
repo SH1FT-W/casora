@@ -59,7 +59,9 @@
   L.nameOf = function (st, id) {
     var n = String((st && st.attributes && st.attributes.friendly_name) || id || '').trim();
     var m = /^\d{1,3}\s*[-–.:)]\s*(\S.*)$/.exec(n);
-    return m ? m[1] : n;
+    n = m ? m[1] : n;
+    // No device codes in names (§13, review 2 DD-31).
+    return window.casoraCleanName ? window.casoraCleanName(n, true) : n;
   };
 
   // ── Entries ─────────────────────────────────────────────────────────────────
@@ -116,7 +118,8 @@
     });
     return { n: (ids || []).length, on: on, toggles: tg };
   };
-  L.countWord = function (n) { return n === 1 ? '1 Einstellung' : n + ' Einstellungen'; };
+  // The list counts its devices (review 2, DD-31: „8 Einstellungen“ said nothing).
+  L.countWord = function (n) { return n === 1 ? '1 Gerät' : n + ' Geräte'; };
   // "26 Einstellungen · 3 An"; with switches all off "· Aus"; without switches the count only.
   L.summary = function (c) {
     if (!c || !c.n) return ['Keine Einträge'];
@@ -228,13 +231,15 @@
       + TOUCH + ' onclick="window._casoraEntityList&&window._casoraEntityList.pick(event,this)"'
       + ' onchange="window._casoraEntityList&&window._casoraEntityList.input(this)"></label>';
   };
-  var selectHtml = function (id, st) {
+  var selectHtml = function (id, st, hass) {
     var a = st.attributes || {}, cur = String(st.state);
+    // The choice in HA's words, a raw option („default“) in Casora's (review 2, DH-14).
+    var nice = function (o) { return window._casoraNiceState ? window._casoraNiceState(hass, Object.assign({}, st, { state: String(o) })) : String(o); };
     var optsHtml = (a.options || []).map(function (o) {
-      return '<option value="' + esc(o) + '"' + (String(o) === cur ? ' selected' : '') + '>' + esc(o) + '</option>';
+      return '<option value="' + esc(o) + '"' + (String(o) === cur ? ' selected' : '') + '>' + esc(nice(o)) + '</option>';
     }).join('');
     return '<label data-casora-elpill="" style="' + PILL + 'max-width:min(180px, 40vw);"><span data-no-i18n style="overflow:hidden;text-overflow:ellipsis;">'
-      + esc(cur) + '</span><select data-casora-el="' + esc(id) + '" data-no-i18n style="' + OVER + '"' + TOUCH
+      + esc(nice(cur)) + '</span><select data-casora-el="' + esc(id) + '" data-no-i18n style="' + OVER + '"' + TOUCH
       + ' onclick="event.stopPropagation();window._casoraSuppressDismiss=Date.now()+800;"'
       + ' onchange="window._casoraEntityList&&window._casoraEntityList.input(this)">' + optsHtml + '</select></label>';
   };
@@ -276,7 +281,7 @@
         + '<span style="min-width:44px;text-align:center;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;">'
         + esc(T(L.word(hass, st))) + '</span>' + stepHtml(id, st, 1) + '</div>';
     } else if (k === 'select') {
-      r.endHtml = selectHtml(id, st);
+      r.endHtml = selectHtml(id, st, hass);
     } else {
       r.entity = id;
       r.value = L.word(hass, st);
@@ -507,7 +512,7 @@
     if (!P) return false;
     P.open({ title: title, content: content, back: prev ? function () { P.open(prev); } : null,
       dismiss_on_background: prev ? prev.dismiss_on_background !== false : true,
-      style: '--popup-min-width: min(' + width + 'px, 92vw); --popup-max-width: min(' + width + 'px, 92vw);',
+      style: '--popup-min-width: min(' + width + 'px, calc(100vw - 16px)); --popup-max-width: min(' + width + 'px, calc(100vw - 16px));',
       popup_styles: prev && prev.popup_styles, variant: L.v3() ? 'v3' : undefined });
     return true;
   };

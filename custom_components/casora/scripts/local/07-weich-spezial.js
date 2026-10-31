@@ -228,16 +228,17 @@
     var I = AL.info(ent, states), st = I.st;
     var na = st === 'unavailable' || st === 'unknown';
     var away = AL.ok(I, 'armed_away') ? 'armed_away' : (Object.keys(FEAT).filter(function (k) { return AL.ok(I, k); })[0] || 'armed_away');
-    var word = (window.casoraSecurityWord && window.casoraSecurityWord(ent, st))
+    // The popup says „Aktiviert“ (word list §2, review 2 DD-16); the tile keeps its short „Aktiv · …“.
+    var word = (window.casoraSecurityWord && String(window.casoraSecurityWord(ent, st) || '').replace(/^Aktiv · /, 'Aktiviert · '))
       || { arming: 'Wird scharf …', pending: 'Alarm läuft an', disarming: 'Wird unscharf geschaltet' }[st] || (na ? 'Nicht verfügbar' : 'Unbekannt');
     var open = I.a.open_sensors ? Object.keys(I.a.open_sensors).length : 0;
     var svc = function (service) { return { domain: 'alarm_control_panel', service: service, data: { entity_id: ent } }; };
     var act = null;
-    if (st === 'disarmed') act = { text: 'Scharf schalten', sub: MODE_WORD[away], icon: 'mdi:shield-lock', primary: true, svc: svc('alarm_' + away.replace('armed_', 'arm_')) };
-    else if (st === 'triggered') act = { text: 'Alarm beenden', icon: 'mdi:shield-off', danger: true, confirm: 'Alarm beenden?', svc: svc('alarm_disarm') };
+    if (st === 'disarmed') act = { text: 'Scharf schalten', sub: MODE_WORD[away], icon: 'mdi:shield-lock-outline', primary: true, svc: svc('alarm_' + away.replace('armed_', 'arm_')) };
+    else if (st === 'triggered') act = { text: 'Alarm beenden', icon: 'mdi:shield-off-outline', danger: true, confirm: 'Alarm beenden?', svc: svc('alarm_disarm') };
     else if (st === 'arming') act = { text: 'Abbrechen', icon: 'mdi:close', svc: svc('alarm_disarm') };
-    else if (st === 'pending') act = { text: 'Unscharf schalten', icon: 'mdi:shield-off', svc: svc('alarm_disarm') };
-    else if (I.armed) act = { text: 'Unscharf schalten', icon: 'mdi:shield-off', danger: true, confirm: 'Alarmanlage unscharf schalten?', svc: svc('alarm_disarm') };
+    else if (st === 'pending') act = { text: 'Unscharf schalten', icon: 'mdi:shield-off-outline', svc: svc('alarm_disarm') };
+    else if (I.armed) act = { text: 'Unscharf schalten', icon: 'mdi:shield-off-outline', danger: true, confirm: 'Alarmanlage unscharf schalten?', svc: svc('alarm_disarm') };
     var cd = AL.count(I, st === 'pending' ? WARN : TON);
     return SVC_SWAP(UI.stage('status', {
       tone: na ? 'off' : st === 'triggered' ? 'bad' : I.armed ? 'good' : 'warn', state: na ? 'na' : null,
@@ -246,7 +247,8 @@
       facts: open ? [{ label: open === 1 ? 'Sensor offen' : 'Sensoren offen', value: String(open) }] : [],
       action: na ? null : act,
       extra: na ? '' : (cd.bar || '') + AL.code(I),
-      // Dial (richtlinien §4.8): Abwesend · Zuhause · Nacht as moons, „Unscharf schalten“ the bottom moon.
+      // Dial (richtlinien §4.8): Abwesend · Zuhause · Nacht as moons; „Unscharf schalten“ (dangerous) is the unfilled
+      // pill under the wheel with a question, never a moon.
       moons: function () { return AL.quick(ent, states); },
     }));
   };

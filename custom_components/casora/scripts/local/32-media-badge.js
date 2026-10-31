@@ -179,7 +179,7 @@
   };
 
   /* Popup v3 (richtlinien §4.8 dial): the stage shows the first running player – its volume as the wheel, its cover
-     as the record, what plays, device and room, and play/pause as the pill (same media_play_pause as its row). Nothing running: S7 with the
+     as the record, what plays, device and room (play/pause is its row in „Läuft“). Nothing running: S7 with the
      badge's words (fallback rule, never an empty stage). */
   B.stage = function (rows, c, n, states) {
     var UI = window._casoraUI, esc = UI.esc;
@@ -190,12 +190,8 @@
     }
     var a = (states[top.id] || {}).attributes || {};
     var pic = a.entity_picture_local || a.entity_picture || '';
-    var pillHtml = top.toggle ? '<div class="hui-st-act pri" role="button" aria-label="' + esc(top.playing ? 'Pausieren' : 'Abspielen') + '" data-casora-svc="'
-      + esc(JSON.stringify({ domain: 'media_player', service: 'media_play_pause', data: { entity_id: top.id } })) + '">'
-      + '<ha-icon icon="' + (top.playing ? 'mdi:pause' : 'mdi:play') + '" style="--mdc-icon-size:20px;width:20px;height:20px;display:flex;"></ha-icon>'
-      + '<span>' + esc(top.playing ? 'Pausieren' : 'Abspielen') + '</span></div>' : '';
     // Dial (richtlinien §4.8): the first running player's volume as the wheel, its cover as the turning record, what
-    // plays and play/pause as the pill under it.
+    // plays under it.
     var vol = a.volume_level != null && !isNaN(Number(a.volume_level)) ? Math.round(Number(a.volume_level) * 100) : null;
     var info = '<div style="text-align:center;min-width:0;">'
       + '<div style="font-size:17px;font-weight:700;line-height:1.3;overflow-wrap:anywhere;">' + esc(top.line || top.word) + '</div>'
@@ -203,7 +199,8 @@
     return UI.stage('slider', { value: vol || 0, label: 'Lautstärke', word: 'Lautstärke',
       cover: { image: pic || null, spin: !!top.playing },
       svc: vol != null ? { domain: 'media_player', service: 'volume_set', field: 'volume_level', scale: [0, 1, 0.01], showPct: true, target: { entity_id: top.id } } : null,
-      extra: info + (pillHtml ? '<div style="height:12px"></div>' + pillHtml : '') });
+      // One control per thing (review 2, DD-27): play/pause stays in the player's row of the list „Läuft“, no second pill.
+      extra: info });
   };
 
   B.sec = function (part, C, states, hass) {

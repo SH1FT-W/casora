@@ -1089,7 +1089,7 @@
     + 'background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));color:var(--casora-popup-tiles-text-primary, #2E2721);'
     + 'transition:background-color .16s ease, filter .16s ease;-webkit-tap-highlight-color:transparent;}'
     /* Blueprint v2 (rule 4, decision 6): the main action is filled in the header tile's colour with dark ink. */
-    + '.hh-pill.pri{background:var(--casora-popup-accent, var(--casora-soft-primary, #94603B));color:var(--casora-popup-action-ink, rgba(46,34,20,.9));}'
+    + '.hh-pill.pri{background:var(--casora-popup-accent, var(--casora-soft-primary, #94603B));color:color-mix(in srgb, var(--casora-popup-action-ink, rgba(46,34,20,.9)) 45%, black);}'
     + '.hh-pill.dis{opacity:.4;cursor:default;}'
     + '@media (hover:hover){.hh-pill:not(.dis):not(.pri):hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}'
     + '.hh-pill.pri:not(.dis):hover{filter:brightness(1.08);}}'
@@ -1154,7 +1154,10 @@
       L = L.filter(function (k) { return v3.indexOf(k) < 0; }); R = R.filter(function (k) { return v3.indexOf(k) < 0; });
       var wideSt = o.stage && v3[0] === o.stage && (o.stageWide || /data-casora-stage=\\?"S5/.test(String(f[o.stage])));
       if (wideSt) { top = top.concat([o.stage]); v3 = v3.slice(1); }
-      L = v3.concat(L);
+      // §2: left only the stage and its quick choice – every list goes to the right column (review 2, DD-13:
+      // „Letzte Durchgänge“, „Programme“ sat under the wheel while the right stayed nearly empty).
+      if (v3.length) { R = L.concat(R); L = v3; }
+      else L = v3.concat(L);
     }
     /* Blueprint v2 (rule 8): o.settings = the device's entity → section „Einstellungen“ with „Weitere
        Einstellungen“ as the last section – right column before „Mehr“, or at the end of the only column. */
@@ -1171,6 +1174,7 @@
        instead of an almost empty right column with „Mehr“ on top. */
     var one = false;
     if (L.length && R.length === 1 && R[0] === 'more') { L = L.concat(R); R = []; one = true; }
+    else if (!R.length) one = true;
     /* Even in one column (washer/dryer off) the expanded „Mehr“ spreads over two columns in the wide
        popup – otherwise statistics and consumption ran as rows across the full width. */
     if (one && f.more && f.more.card) {
@@ -1205,6 +1209,8 @@
       + (wideMore ? ' "more more"' : '');
     return {
       type: 'custom:button-card', entity: o.entity || undefined, triggers_update: [],
+      // One column: the frame takes 552 instead of 900 (§2, review 2 DD-12; casora-core reads it).
+      casora_cols: one ? 1 : 2,
       card_mod: { style: WRAP_CSS },
       extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: ' + wide + ' !important;'
         + ' grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: var(--casora-popup-col-gap, 26px) !important; } }'
@@ -3526,7 +3532,11 @@
       if (typeof window._hpChartInit === 'function') window._hpChartInit(c.power);
     }
     /* Camera image as in the previous popup (16:9, rounded); picture-entity updates itself. */
-    if (c.cam && states[c.cam]) {
+    // A camera without a picture (offline, no image yet) says so instead of an empty dark plate (review 2, DD-28).
+    var camDead = c.cam && states[c.cam] && (states[c.cam].state === 'unavailable' || !(states[c.cam].attributes || {}).entity_picture);
+    if (camDead && window._casoraUI && window._casoraUI.empty) {
+      add('cam', window._casoraUI.empty({ icon: 'mdi:cctv-off', text: 'Kamera nicht erreichbar' }));
+    } else if (c.cam && states[c.cam]) {
       add('cam', { card: { type: 'picture-entity', entity: c.cam, camera_view: 'auto', show_name: false, show_state: false, tap_action: { action: 'none' }, hold_action: { action: 'none' },
         aspect_ratio: '16:9',
         card_mod: { style: 'ha-card { border-radius: var(--casora-popup-row-radius, 20px) !important; overflow: hidden !important; border: none !important;'
@@ -3534,7 +3544,7 @@
     }
 
     /* AI look at the print (✦): same module as in the camera popup, own section. */
-    if (c.cam && states[c.cam] && window._casoraCamAi && window._casoraCamAi.inline) add('camai', window._casoraCamAi.inline(c.cam, 'KI-Blick auf den Druck', 'Druck prüfen'));
+    if (c.cam && states[c.cam] && !camDead && window._casoraCamAi && window._casoraCamAi.inline) add('camai', window._casoraCamAi.inline(c.cam, 'KI-Blick auf den Druck', 'Druck prüfen'));
     add('job', tpl('p_job', false));
     add('ctrl', tpl('p_ctrl', false));
     add('temp', tpl('p_temp', false));
@@ -3555,7 +3565,7 @@
       if (fields.cam) {
         f2.camlbl = HH.label('Kamera');
         f2.cam = fields.cam;
-        if (window._casoraCamAi) f2.camai = HH.aiButton(c.cam, 'KI-Blick: Druck prüfen');
+        if (window._casoraCamAi && !camDead) f2.camai = HH.aiButton(c.cam, 'KI-Blick: Druck prüfen');
       }
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("printer", ["p_ams", "p_temp", "p_speed", "energy", "p_info", "plug"].map(function (k) {'
