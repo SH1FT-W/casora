@@ -95,3 +95,5 @@ custom_components/casora/panel/casora-panel.js | re:^\(87\.965 - pct \* 0\.87965
 custom_components/casora/panel/casora-panel.js | (glyph ? GLYPH[glyph] : "") | fixed SVG glyphs | 1
 custom_components/casora/panel/casora-panel.js | re:^\(url \? "Replace" : "Add " \+ label\.toLowerCase\(\)\)$|^label$ | fixed English labels ("Day"/"Night") | 2
 custom_components/casora/scripts/local/36-shopping.js | tr(partHtml) | shopping list, popup v3: innerHtml() builds from UI.* builders and esc() | 1
+custom_components/casora/scripts/local/04-navigation.js | body | inline SVG glyphs of the phone bar: body is a code constant (INLINE), URI-encoded
+dashboards/casora/button_card_templates.json | re:^return label && window\.casoraStateFit \? window\.casoraStateFit\(full, undefined, | casoraStateFit escapes text and short form itself (casora-core.js) | 1
