@@ -3032,6 +3032,19 @@
       if (am) rows.push({ icon: 'mdi:bike-fast', iconTone: DIM, label: 'Unterstützungsmodi', value: am.split(/\s*,\s*/).filter(Boolean).map(modeName).join(', ') });
       return rows.length ? UI.group(rows, 'Reichweite je Modus') : '';
     }
+    if (name === 'last_s') {
+      /* Popup v3 (maintainer review 31.10.2026): the last ride in one row – distance, duration, date – only when the
+         integration reports them (Bosch eBike: last_ride_distance, last_ride_duration, last_ride_date). */
+      var dS = t(states, M.lastDate), ldS = v(states, M.lastDist), durS = v(states, M.lastDur);
+      var durU = M.lastDur && states[M.lastDur] ? String((states[M.lastDur].attributes || {}).unit_of_measurement || 'min') : 'min';
+      if (durS != null) durS = durU === 'h' ? durS * 60 : durU === 's' ? durS / 60 : durS;
+      if (ldS == null && durS == null) return '';
+      var dayS = null;
+      if (dS) { var tS = Date.parse(dS); dayS = isFinite(tS) ? new Date(tS).toLocaleDateString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { day: 'numeric', month: 'numeric', year: 'numeric' }) : dS; }
+      return UI.group([{ icon: 'mdi:bike', iconTone: 'accent', label: t(states, M.lastTitle) || 'Fahrt',
+        sub: [durS != null ? (durS >= 60 ? Math.floor(durS / 60) + ' Std. ' + Math.round(durS % 60) + ' Min.' : fmtN(Math.round(durS)) + ' Min.') : null, dayS].filter(Boolean).join(' · ') || null,
+        value: ldS != null ? fmtN(ldS, 1) + ' km' : '' }], 'Letzte Fahrt');
+    }
     if (name === 'last') {
       var d = t(states, M.lastDate), ld = v(states, M.lastDist);
       if (!d && ld == null) return '';
@@ -3173,13 +3186,13 @@
       var fb = { hero: sec('hero'), range: sec('range'), service: sec('service') };
       /* Popup v3 „Bühne“: the head becomes the battery stage (Soft, no localStorage casora_popup_variant other than 'v3'). */
       var v3B = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var vv = localStorage.getItem('casora_popup_variant'); return !vv || vv === 'v3'; } catch (e) { return true; } })();
-      if (v3B) { delete fb.hero; fb.stage = sec('stage'); }
+      if (v3B) { delete fb.hero; fb.stage = sec('stage'); fb.last_s = sec('last_s'); }
       if (G) fb.live = sec('live');
       if (B.hasAi(states)) fb.ai = sec('ai');
       fb.more = HH.moreCard(watch, 'const B = window._casoraBike, H = window._casoraHH;\n'
         + 'return B && H ? H.more("ebike", ["last", "total", "battery", "ai_tips", "motor"].map(function (n) { return B.sec(n, states, entity); })) : "";', entity.entity_id);
       return HH.layout({ entity: entity.entity_id, watch: watch, fields: fb, top: v3B ? [] : undefined, stage: v3B ? 'stage' : null,
-        left: G ? ['live', 'range'] : ['range'], right: ['service', 'ai', 'more'], settings: entity.entity_id });
+        left: G ? ['live', 'range'] : ['range'], right: v3B ? ['service', 'last_s', 'ai'] : ['service', 'ai', 'more'], settings: entity.entity_id });
     }
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
       + ' border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important;'
