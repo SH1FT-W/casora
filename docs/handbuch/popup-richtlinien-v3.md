@@ -167,13 +167,14 @@ die Typen S1–S8 und ihre Felder bleiben. `o.dial: false` behält die Platte (n
 | Teilstriche | außen, 41 Striche, jeder zehnte länger; Text 2 mit Deckkraft .4 | 26–32 bzw. 38 vom Bogen |
 | Knopf | nur bei drehbarem Wert, am Ende des Bogens; `--casora-lps-knob` | Radius 19 |
 | Mitte | (Überschrift 15/600) · Wert 80/800 (Handy ≈ 63) mit Einheit 28/700 in Text 2 · Wort 15/600 · Zusatz 13/600 | |
+| Sicherer Innenkreis | die Mitte berührt den Ring nie: jede Zeile bleibt 4 px innerhalb seines Innenrands (Radius 137 von 420); ein Wort als Wert (36, zwei Zeilen), ein Satz kleiner (26, drei Zeilen), lange Wörter trennen; Zusatz höchstens 2 Zeilen. Geprüft von `popup-geo.mjs` („rad“) | |
 | Ohne Mond unten | die leere Lücke wird hochgezogen (−12 % der Radbreite) | |
 
 **Drei Ringe**
 
 | Ring | Für | Verhalten |
 |---|---|---|
-| (a) Wert | S1 Helligkeit/Stufe/Lautstärke, S2 Zielwert, S3 Position | drehbar: Ziehen **nur auf dem Ring** (nicht in der Mitte, nicht außen), Mausrad, Tastatur (Pfeile ±1 Schritt, Bild ±10, Pos1/Ende), `role="slider"`. Der Wert zeigt live mit, der Dienst kommt erst beim Loslassen (bei Tasten/Mausrad 400 ms nach dem letzten Schritt), Rückfrage wie überall. S2: Bereich `min`/`max`/`step` des Geräts, der Ring rastet auf den Schritt; − / + (44 rund) stehen in der Mitte und nehmen den Ring mit. Heizen (`heat`): Verlauf blau → orange → rot; der Ist-Wert (`current`) ist ein Punkt auf dem Ring. Medien: das Cover dreht sich als Schallplatte in der Mitte, solange es spielt; „Lautstärke 35 %“ steht unter dem Rad. |
+| (a) Wert | S1 Helligkeit/Stufe/Lautstärke, S2 Zielwert, S3 Position | drehbar: Ziehen **nur auf dem Ring** (nicht in der Mitte, nicht außen), Mausrad, Tastatur (Pfeile ±1 Schritt, Bild ±10, Pos1/Ende), `role="slider"`. Der Wert zeigt live mit, der Dienst kommt erst beim Loslassen (bei Tasten/Mausrad 400 ms nach dem letzten Schritt), Rückfrage wie überall. S2: Bereich `min`/`max`/`step` des Geräts, der Ring rastet auf den Schritt; − / + (44 rund) stehen in der Mitte und nehmen den Ring mit. Heizen (`heat`): Verlauf blau → orange → rot; der Ist-Wert (`current`) ist ein Punkt auf dem Ring. Medien: die Schallplatte (schwarzes Vinyl mit Rillen) dreht sich in der Mitte, solange es spielt, das Cover ist ihr rundes Etikett (ohne Cover: Gerätefarbe mit Note); „Lautstärke 35 %“ steht unter dem Rad. |
 | (b) Füllstand | S4 Fortschritt, Akku, Tank, Luftqualität, S6 mit Bereich (Prozent: 0–100) | nicht drehbar, kein Knopf; ohne Wert bleibt der Ring leer. Ein S6-Messwert ohne bekannten Bereich behält die Diagramm-Platte (kein Raten). Das Diagramm einer S6-Bühne steht unter dem Rad. |
 | (c) Segmente | S7 über mehrere Dinge: Türen & Fenster, Schlösser, Batterien, Updates, Räume, Personen, Pulse | je Ding ein Segment in Ampelfarbe (grün in Ordnung, orange Warnung, rot Alarm, grau aus/nicht erreichbar), Lücke 4° (ab 13 Dingen 2°, ab 25 1°), Name als Tooltip; nicht in Ordnung leuchtet weich. `w`: gewichtete Segmente (Pulse: 3 ausgefallen, 40 gut). S7 ohne Liste: ein Ring in der Ampelfarbe. |
 
@@ -363,7 +364,7 @@ als die Kachel, dann ist Schluss. Eingestellt wird im Studio.
 | `--casora-v3-value-fs` / `-value-fs-big` | 56 / 72 | Wert S1/S3/S4/S6 / S2 |
 | `--casora-v3-quick-h` / `-quick-radius` | 96 / 24 | Schnellwahl |
 | `--casora-lps-knob` | weiß (dunkel: warmweiß) | Knopf des Dials |
-| `--casora-dial-groove` / `-cover-shadow` / `-hole-ring` | Rillen, Schatten und Loch der Schallplatte | Medien-Dial |
+| `--casora-dial-record` / `-record-deep` / `-groove` / `-cover-shadow` / `-hole-ring` | Vinyl, Rillen, Schatten und Loch der Schallplatte | Medien-Dial |
 | `--casora-v3-head-title-fs` | 24 (Handy 22) | Titel im Kopf |
 | `--casora-pv-*` | siehe `casora-core.js` (Variante B) | Listen, Segmente, Überschriften |
 
