@@ -2743,7 +2743,8 @@
     "With confirmation": "Avec confirmation",
     "A calm question before it runs. Same switch as Ask before switching.": "Une question discrète avant l’exécution. Le même interrupteur que « Demander avant de basculer ».",
     "Value from": "Valeur depuis",
-    "Entity state": "État de l'entité"
+    "Entity state": "État de l'entité",
+    "1 room on": "1 pièce allumée"
   },
   "patterns": [
     [
@@ -3261,6 +3262,10 @@
     [
       "^(\\d+) hidden$",
       "{1} masqués"
+    ],
+    [
+      "^(\\d+) rooms on$",
+      "{1} pièces allumées"
     ],
     [
       "^(\\d+) on$",

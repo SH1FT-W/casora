@@ -2603,7 +2603,20 @@
   "Tankstand": "Poziom paliwa",
   "Gerade kein Spiel": "Teraz brak gry",
   "Kein Spiel": "Brak gry",
-  "Gruppen": "Grupy"
+  "Gruppen": "Grupy",
+  "1 Raum an": "1 pomieszczenie wł.",
+  "1 klemmt": "1 zablokowany",
+  "Schloss klemmt": "Zamek zablokowany",
+  "Einschalten auf": "Włącz na",
+  "Höchste Stunde": "Najwyższa godzina",
+  "Niedrigste Stunde": "Najniższa godzina",
+  "Höchster Tag": "Najwyższy dzień",
+  "Niedrigster Tag": "Najniższy dzień",
+  "Höchster Monat": "Najwyższy miesiąc",
+  "Niedrigster Monat": "Najniższy miesiąc",
+  "Lange offen": "Długo otwarte",
+  "Fenster schließen?": "Zamknąć okno?",
+  "Schließen?": "Zamknąć?"
  },
  "patterns": [
   [
@@ -2791,6 +2804,10 @@
    "Zalecane ustawienia: {1}, zastosuj w WashData"
   ],
   [
+   "^Ø von (\\d+) Lampen$",
+   "Ø z {1} lamp"
+  ],
+  [
    "^Ø (.+)$",
    "Ø {1}"
   ],
@@ -2801,6 +2818,10 @@
   [
    "^(\\d+) von (\\d+) An$",
    "{1} z {2} wł."
+  ],
+  [
+   "^(\\d+) Räume an$",
+   "{1} pomieszczenia wł."
   ],
   [
    "^(\\d+) von (\\d+) Räumen an$",
@@ -4701,6 +4722,14 @@
   [
    "^Jetzt (-?\\d.*)$",
    "Teraz {1}"
+  ],
+  [
+   "^(\\d+) Schlösser klemmen$",
+   "{1} zamki zablokowane"
+  ],
+  [
+   "^(\\d+) klemmen$",
+   "{1} zablokowane"
   ]
  ],
  "Gerät in Home Assistant": "Urządzenie w Home Assistant"
