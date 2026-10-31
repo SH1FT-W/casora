@@ -63,7 +63,12 @@ const run = async (view, dark) => {
   const tapTile = async (cls) => {
     const at = await page.evaluate((cls) => { const r = document.querySelector('home-assistant').shadowRoot.querySelector('.' + cls).getBoundingClientRect();
       return { x: r.x + r.width * 0.3, y: r.y + r.height * 0.75 }; }, cls);
-    await page.mouse.click(at.x, at.y);
+    // On the phone the tile is ready later than its first paint: tap again until the popup opens (max 3 tries).
+    for (let i = 0; i < 3; i++) {
+      await page.mouse.click(at.x, at.y);
+      const ok = await page.waitForFunction(() => window.__pierce('casora-popup').some((p) => p.hasAttribute('open')), null, { timeout: 3000 }).then(() => true, () => false);
+      if (ok) break;
+    }
   };
   const seg = async (attr, value, until) => {
     await page.evaluate(([attr, value]) => { const s = window.__pierce('[' + attr + ']').find((x) => new RegExp('\\|' + value + '$').test(x.getAttribute(attr))); s.click(); }, [attr, value]);
