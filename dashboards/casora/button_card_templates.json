@@ -6478,6 +6478,9 @@
     },
     {
      "margin": 0
+    },
+    {
+     "text-shadow": "var(--casora-mobile-title-halo, none)"
     }
    ]
   },

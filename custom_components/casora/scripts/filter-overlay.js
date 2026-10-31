@@ -1787,6 +1787,8 @@
         'font-family:var(--casora-body-font, var(--primary-font-family, inherit))',
         'font-size:var(--casora-mobile-section-size, 18px)', 'font-weight:700', 'letter-spacing:-0.3px', 'line-height:1.3',
         'color:var(--casora-room-group-ink, var(--casora-mobile-title-color, var(--primary-text-color)))',
+        // Readable over any part of the room photo (fam-16): the theme's halo, none without it.
+        'text-shadow:var(--casora-mobile-title-halo, none)',
         'box-sizing:border-box', 'white-space:nowrap', 'overflow:hidden', 'text-overflow:ellipsis',
       ].join(';');
       head.textContent = _roomGroupHeading(key);
