@@ -58,6 +58,8 @@ const MIGRIERT = [
   { popup: 'Abfall', vorlagen: ['casora_trash'], file: null, stages: 1 },
   // S8: the table in UI.stage('content') (K.stage); the colCard wrapper names it once more.
   { popup: 'Fußball', vorlagen: ['casora_popup_football'], file: '11-fussball.js', from: '  K.v3 = function', to: '  /* Popup-Ring (Weich)', stages: 2 },
+  // S8: the list (and Mehr's lists, charts, tiles) in UI.stage('content'), each also as an empty stage.
+  { popup: 'Liste von Entitäten / „Mehr“', vorlagen: ['casora_popup_entity_list', 'casora_popup_more'], file: '34-entity-list.js', from: '  L.v3 = function', to: null, stages: 4 },
 ];
 
 // 1. Pieces.

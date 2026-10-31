@@ -210,14 +210,5 @@
   ],
   "modul": "28-free-tile.js",
   "grund": "noch nicht dran"
- },
- {
-  "popup": "Liste von Entitäten / „Mehr“",
-  "vorlagen": [
-   "casora_popup_entity_list",
-   "casora_popup_more"
-  ],
-  "modul": "34-entity-list.js",
-  "grund": "noch nicht dran"
  }
 ]

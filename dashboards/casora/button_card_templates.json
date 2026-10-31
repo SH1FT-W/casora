@@ -12646,7 +12646,8 @@
     ],
     "style": "[[[\n  /* One column: 552 px like Pulse; two columns or automatic: 900 px. */\n  const L = window._casoraEntityList;\n  const _w = L ? L.width(variables) : 900;\n  return '--popup-min-width: min(' + _w + 'px, 92vw);' + ' --popup-max-width: min(' + _w + 'px, 92vw);';\n]]]\n",
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Liste', ['Liste', 'List']) : (String(variables.room_name || '').trim() || 'Liste'); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [
@@ -12675,7 +12676,8 @@
     ],
     "style": "[[[ return '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'; ]]]",
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Mehr', ['Mehr', 'More']) : (String(variables.room_name || '').trim() || 'Mehr'); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [

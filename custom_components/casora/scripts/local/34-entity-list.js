@@ -307,6 +307,9 @@
   };
 
   // ── Popup: entity list ──────────────────────────────────────────────────────
+  // Popup v3 (richtlinien §4 S8): the list is the stage – its rows sit in the stage plate without a fill of their own.
+  L.v3 = function () { var UI = window._casoraUI; return !!(UI && UI.v3 && UI.v3() && UI.stage); };
+  var STAGE_CSS = '<style>.hui-stage{--casora-pv-stack-fill:transparent;}</style>';
   L.popup = function (V, states, hass) {
     var K = window._casoraSoftKit, UI = window._casoraUI;
     if (!K || !UI) return { type: 'vertical-stack', cards: [] };
@@ -318,6 +321,10 @@
       return 'return window._casoraEntityList ? window._casoraEntityList.sec(' + JSON.stringify(part) + ', ' + JSON.stringify(C) + ', states, hass) : "";';
     };
     var f = { hero: { card: K.secCard(watch, call('hero'), S) } };
+    if (L.v3()) {
+      f.stage = { card: K.secCard(watch, call('stage'), S) };
+      return K.layout({ fields: f, top: ['hero'], stage: 'stage', left: [], right: [] });
+    }
     if (ids.length) f.list = { card: K.secCard(watch, call('list'), S) };
     return K.layout({ fields: f, top: ['hero', 'list'], left: [], right: [] });
   };
@@ -328,13 +335,20 @@
     if (part === 'hero') {
       var s = L.summary(L.count(states, ids));
       var out = UI.line(s[0], s.slice(1));
-      if (!ids.length && UI.note) {
+      if (!ids.length && UI.note && !L.v3()) {
         out += UI.note(C.source === 'group' && C.group && !(states || {})[C.group] ? T('Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.')
           : T('Wähle im Studio eine Gruppe, Geräte oder ein Label.'));
       }
       return out;
     }
     if (part === 'list') return L.listHtml(hass, states, ids, C);
+    if (part === 'stage') {
+      if (!ids.length) {
+        return UI.stage('content', { empty: { icon: 'list', studio: true, text: C.source === 'group' && C.group && !(states || {})[C.group]
+          ? T('Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.') : T('Wähle im Studio eine Gruppe, Geräte oder ein Label.') } });
+      }
+      return UI.stage('content', { html: STAGE_CSS + L.listHtml(hass, states, ids, C) });
+    }
     return '';
   };
 
@@ -424,6 +438,13 @@
       return 'return window._casoraEntityList ? window._casoraEntityList.moreSec(' + JSON.stringify(part) + ', ' + JSON.stringify(M) + ', states, hass) : "";';
     };
     var f = { hero: { card: K.secCard(watch, call('hero'), S) } };
+    if (L.v3()) {
+      // v3: lists, charts and tiles together in one stage (S8).
+      f.stage = { card: K.secCard(watch, call('stage'), S) };
+      var ui3 = K.layout({ fields: f, top: ['hero'], stage: 'stage', left: [], right: [] });
+      ui3.variables = Object.assign({}, ui3.variables, { casora_more: M });
+      return ui3;
+    }
     if (M.lists.length) f.lists = { card: K.secCard(watch, call('lists'), S) };
     if (M.charts.length) f.charts = { card: K.secCard(M.charts, call('charts'), S) };
     if (M.tiles.length) f.tiles = { card: K.secCard(M.tiles, call('tiles'), S) };
@@ -439,8 +460,14 @@
     if (part === 'hero') {
       var has = function (id) { return !!S[id]; };
       var out = UI.line(L.moreWord(M.lists.filter(has).length, M.charts.filter(has).length, (M.tiles || []).filter(has).length), []);
-      if (!M.lists.length && !M.charts.length && !(M.tiles || []).length && UI.note) out += UI.note(T('Wähle im Studio Gruppen und Sensoren für diese Kachel.'));
+      if (!M.lists.length && !M.charts.length && !(M.tiles || []).length && UI.note && !L.v3()) out += UI.note(T('Wähle im Studio Gruppen und Sensoren für diese Kachel.'));
       return out;
+    }
+    if (part === 'stage') {
+      var parts = ['lists', 'charts', 'tiles'].map(function (k) { return L.moreSec(k, M, states, hass); }).filter(Boolean);
+      var partsHtml = parts.join('');
+      if (!parts.length) return UI.stage('content', { empty: { icon: 'list', studio: true, text: T('Wähle im Studio Gruppen und Sensoren für diese Kachel.') } });
+      return UI.stage('content', { html: STAGE_CSS + '<div style="display:flex;flex-direction:column;gap:18px;">' + partsHtml + '</div>' });
     }
     if (part === 'lists') {
       var rows = M.lists.filter(function (g) { return !!S[g]; }).map(function (g) {
@@ -480,7 +507,7 @@
     P.open({ title: title, content: content, back: prev ? function () { P.open(prev); } : null,
       dismiss_on_background: prev ? prev.dismiss_on_background !== false : true,
       style: '--popup-min-width: min(' + width + 'px, 92vw); --popup-max-width: min(' + width + 'px, 92vw);',
-      popup_styles: prev && prev.popup_styles });
+      popup_styles: prev && prev.popup_styles, variant: L.v3() ? 'v3' : undefined });
     return true;
   };
   L.openList = function (gid, name) {
