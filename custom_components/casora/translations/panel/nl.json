@@ -2703,7 +2703,7 @@
     "Evening and night only": "Alleen 's avonds en 's nachts",
     "From sunset to sunrise": "Van zonsondergang tot zonsopgang",
     "No covers found": "Geen rolluiken gevonden",
-    "Entity list": "Entiteitenlijst",
+    "Entity list": "Apparatenlijst",
     "Where do the entries come from?": "Waar komen de items vandaan?",
     "Pick": "Kiezen",
     "HA label": "HA-label",
@@ -2743,7 +2743,12 @@
     "With confirmation": "Met bevestiging",
     "A calm question before it runs. Same switch as Ask before switching.": "Een rustige vraag voordat het wordt uitgevoerd. Dezelfde schakelaar als ‘Vragen voor het schakelen’.",
     "Value from": "Waarde uit",
-    "Entity state": "Status van de entiteit"
+    "Entity state": "Status van de entiteit",
+    "Tile type": "Tegeltype",
+    "Tile types": "Tegeltypes",
+    "New tile of this type": "Nieuwe tegel van dit type",
+    "Waste sensor": "Afvalsensor",
+    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Bijv. de agenda van Waste Collection Schedule – de tegel vindt de containers daarin."
   },
   "patterns": [
     [

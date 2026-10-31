@@ -637,7 +637,10 @@
       setTimeout(() => {
         this._bFlash("t:" + key);
         const missing = !tile.entity && !(tile.card && tile.card.entity);
-        if (!missing) return;
+        // A tile that finds its own data (waste) needs no device: its picker stays shut (E05).
+        const I = W.__casoraPanelInternals || {};
+        const ty = I.tileTypeAny ? I.tileTypeAny(tile) : null;
+        if (!missing || (ty && (ty.ownData || ty.noEntity))) return;
         const box = this.shadowRoot.querySelector("#pane #band-tiles .tile.sel");
         const inp = box && box.querySelector(".combo.hasent.noent input");
         if (inp && this._sel && this._sel.key === key) {

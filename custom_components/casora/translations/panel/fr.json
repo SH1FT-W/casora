@@ -2703,7 +2703,7 @@
     "Evening and night only": "Seulement le soir et la nuit",
     "From sunset to sunrise": "Du coucher au lever du soleil",
     "No covers found": "Aucun volet trouvé",
-    "Entity list": "Liste d'entités",
+    "Entity list": "Liste d'appareils",
     "Where do the entries come from?": "D'où viennent les entrées ?",
     "Pick": "Choisir",
     "HA label": "Libellé HA",
@@ -2743,7 +2743,12 @@
     "With confirmation": "Avec confirmation",
     "A calm question before it runs. Same switch as Ask before switching.": "Une question discrète avant l’exécution. Le même interrupteur que « Demander avant de basculer ».",
     "Value from": "Valeur depuis",
-    "Entity state": "État de l'entité"
+    "Entity state": "État de l'entité",
+    "Tile type": "Type de tuile",
+    "Tile types": "Types de tuile",
+    "New tile of this type": "Nouvelle tuile de ce type",
+    "Waste sensor": "Capteur de déchets",
+    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Par ex. le calendrier de Waste Collection Schedule – la tuile y trouve les bacs."
   },
   "patterns": [
     [

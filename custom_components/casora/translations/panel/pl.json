@@ -2703,7 +2703,7 @@
     "Evening and night only": "Tylko wieczorem i w nocy",
     "From sunset to sunrise": "Od zachodu do wschodu słońca",
     "No covers found": "Nie znaleziono rolet",
-    "Entity list": "Lista encji",
+    "Entity list": "Lista urządzeń",
     "Where do the entries come from?": "Skąd pochodzą pozycje?",
     "Pick": "Wybierz",
     "HA label": "Etykieta HA",
@@ -2743,7 +2743,12 @@
     "With confirmation": "Z potwierdzeniem",
     "A calm question before it runs. Same switch as Ask before switching.": "Spokojne pytanie przed uruchomieniem. Ten sam przełącznik co „Pytaj przed przełączeniem”.",
     "Value from": "Wartość z",
-    "Entity state": "Stan encji"
+    "Entity state": "Stan encji",
+    "Tile type": "Rodzaj kafelka",
+    "Tile types": "Rodzaje kafelków",
+    "New tile of this type": "Nowy kafelek tego rodzaju",
+    "Waste sensor": "Czujnik odpadów",
+    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Np. kalendarz Waste Collection Schedule – kafelek sam znajdzie w nim pojemniki."
   },
   "patterns": [
     [

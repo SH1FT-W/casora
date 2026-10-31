@@ -5196,10 +5196,26 @@ const isWarningLevelSensor = (h, id) => /^sensor\./.test(id)
 // Groups in any form: old group.* and the group helpers (light/switch/cover/… groups) – both list their
 // members in attributes.entity_id. accept "group" keeps ONLY those (see _entityList).
 const isGroupEntity = (hass, e) => Array.isArray((((hass && hass.states[e]) || {}).attributes || {}).entity_id);
+// Waste (E05, test 2): the bin sensors and calendars the waste tile reads (Waste Collection Schedule or a sensor
+// with daysTo, as casoraDevice.waste in scripts/local/00-finder.js), plus anything named like waste.
+const WASTE_WORD = /abfall|m(ü|ue|u)ll|tonne|abfuhr|wertstoff|altpapier|bioabfall|restabfall|gelbe?r? sack|waste|trash|garbage|recycl|refuse|\bbins?\b/i;
+const isWasteEntity = (h, id, dom) => {
+  if (id.split(".")[0] !== dom) return false;
+  const st = (h.states || {})[id], e = (h.entities || {})[id];
+  if (!st) return false;
+  if (e && e.platform === "waste_collection_schedule") return true;
+  if (dom === "sensor" && (st.attributes || {}).daysTo !== undefined) return true;
+  return WASTE_WORD.test(id + " " + ((st.attributes || {}).friendly_name || ""));
+};
 const ACCEPT_RULES = {
   weather_warning: isWarningLevelSensor,
   group: isGroupEntity,
+  waste: (h, id) => isWasteEntity(h, id, "sensor"),
+  waste_calendar: (h, id) => isWasteEntity(h, id, "calendar"),
 };
+// accept rules that keep ONLY their hits (the rest add to the domain list), and rules that only sort their hits first.
+const ACCEPT_ONLY = new Set(["group", "waste"]);
+const ACCEPT_FIRST = new Set(["waste_calendar"]);
 
 // The main entity a new tile suggests: by the integration's translation_key (language-independent, however
 // renamed) – WashData, Home Connect, Bambu Lab, NINA/DWD. like/not separate devices with the same key (dryer).
@@ -22199,7 +22215,7 @@ class CasoraPanel extends HTMLElement {
       .flatMap((d) => this._entMemo.byDom.get(d))
       .concat(plus)
       .filter((e) => {
-        if (accept === "group") return acc(this._hass, e);
+        if (ACCEPT_ONLY.has(accept)) return acc(this._hass, e);
         if (acc && acc(this._hass, e)) return true;
         const want = perDomain ? perDomain[e.split(".")[0]] : all;
         if (!want || !want.length) return true;
@@ -22209,6 +22225,7 @@ class CasoraPanel extends HTMLElement {
         return !!unit && want.some((c) => (CLASS_UNITS[c] || NO_UNIT).test(unit));
       })
       .sort();
+    if (ACCEPT_FIRST.has(accept)) out.sort((a, b) => (acc(this._hass, b) ? 1 : 0) - (acc(this._hass, a) ? 1 : 0) || (a < b ? -1 : a > b ? 1 : 0));
     this._entMemo.map.set(memoKey, out);
     return out.slice();
   }
@@ -22275,6 +22292,8 @@ class CasoraPanel extends HTMLElement {
   _tileCandidates(type, room) {
     const h = this._hass;
     if (!h || !type || type.noEntity || type.raw || type.user) return [];
+    // A tile that finds its own data and keeps the optional entity under More (waste) asks for no device (E05).
+    if (type.ownData && type.entityAdvanced) return [];
     const doms = type.domains || [];
     if (!doms.length) return [];
     // A type that takes almost any entity (Entity with buttons) has nothing to suggest.
@@ -22340,7 +22359,7 @@ class CasoraPanel extends HTMLElement {
         return true;
       });
     } else {
-      ids = this._entityList(doms, type.classes);
+      ids = this._entityList(doms, type.classes, ACCEPT_ONLY.has(type.accept) ? type.accept : undefined);
     }
     ids = ids.filter(usable);
     // Network: the main entity is the download rate. Anything whose name or id says
@@ -22467,6 +22486,9 @@ class CasoraPanel extends HTMLElement {
     const rooms = ((this._state || {}).compact || {}).rooms || [];
     const overview = !sure && isHomeRoom(room, rooms) && !this._roomArea(room);
     if (overview) cands = homePickOrder(all.slice(0, 8), rooms.map((r) => this._roomArea(r)), (this._hass || {}).areas || {});
+    // A type for almost any sensor (chart, T12): three suggestions read as random – the tile's own sensor field opens
+    // with its search right away instead (_bNewTile), and the tile takes the sensor's name.
+    if (type.pickInEditor) cands = [];
     const tile = newTile(type);
     if (cands.length) {
       const tr = trLabel;
@@ -22506,6 +22528,9 @@ class CasoraPanel extends HTMLElement {
     // A pet tracker is named like the pet ("Luna"), not like its tracker hardware (issue #25).
     const pn = type.id === "casora_pet" && petName(this._hass, entity);
     if (pn && (!tile.name || tile.name === trLabel(type.label))) tile.name = pn;
+    // A chart is named like its sensor ("Processor use"), not "Chart" (T12).
+    const sn = type.pickInEditor && this._prettyEntity(entity);
+    if (sn && sn !== entity && (!tile.name || tile.name === trLabel(type.label) || tile.name === type.label)) tile.name = sn;
     const found = window.casoraFieldEntity;
     if (!found) return;
     const S = (this._hass && this._hass.states) || {};

@@ -2703,7 +2703,7 @@
     "Evening and night only": "Só ao fim do dia e à noite",
     "From sunset to sunrise": "Do pôr do sol ao nascer do sol",
     "No covers found": "Nenhum estore encontrado",
-    "Entity list": "Lista de entidades",
+    "Entity list": "Lista de dispositivos",
     "Where do the entries come from?": "De onde vêm as entradas?",
     "Pick": "Escolher",
     "HA label": "Etiqueta HA",
@@ -2743,7 +2743,12 @@
     "With confirmation": "Com confirmação",
     "A calm question before it runs. Same switch as Ask before switching.": "Uma pergunta calma antes de executar. O mesmo interruptor que «Perguntar antes de mudar».",
     "Value from": "Valor de",
-    "Entity state": "Estado da entidade"
+    "Entity state": "Estado da entidade",
+    "Tile type": "Tipo de bloco",
+    "Tile types": "Tipos de bloco",
+    "New tile of this type": "Novo bloco deste tipo",
+    "Waste sensor": "Sensor de resíduos",
+    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Ex.: o calendário do Waste Collection Schedule – o bloco encontra lá os contentores."
   },
   "patterns": [
     [

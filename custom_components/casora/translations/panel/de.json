@@ -2703,7 +2703,7 @@
     "Evening and night only": "Nur abends und nachts",
     "From sunset to sunrise": "Von Sonnenuntergang bis Sonnenaufgang",
     "No covers found": "Keine Jalousien gefunden",
-    "Entity list": "Entity-Liste",
+    "Entity list": "Geräteliste",
     "Where do the entries come from?": "Woher kommen die Einträge?",
     "Pick": "Auswählen",
     "HA label": "Label",
@@ -2743,7 +2743,12 @@
     "With confirmation": "Mit Bestätigung",
     "A calm question before it runs. Same switch as Ask before switching.": "Eine ruhige Rückfrage, bevor es ausgeführt wird. Derselbe Schalter wie „Vor dem Schalten fragen“.",
     "Value from": "Wert aus",
-    "Entity state": "Zustand der Entität"
+    "Entity state": "Zustand der Entität",
+    "Tile type": "Kachelart",
+    "Tile types": "Kachelarten",
+    "New tile of this type": "Neue Kachel dieser Art",
+    "Waste sensor": "Abfall-Sensor",
+    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Z. B. der Kalender von Waste Collection Schedule – die Kachel findet die Tonnen darin."
   },
   "patterns": [
     [
