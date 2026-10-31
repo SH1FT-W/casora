@@ -389,8 +389,9 @@
        nothing else. The schedule (its state stays in the status line), fan, presets, swing and the Velair panel row go:
        Velair's own panel plans the week. One column (552). */
     if (UI.v3 && UI.v3()) {
-      ['hero', 'stage', 'quick'].forEach(function (k) { f[k] = { card: K.secCard(watch, call(k), states) }; });
-      return K.layout({ fields: f, top: ['hero'], stage: 'stage', quick: 'quick', left: [], right: [], narrowOrder: ['stage', 'quick'] });
+      // The modes are the dial's moons (part 'stage').
+      ['hero', 'stage'].forEach(function (k) { f[k] = { card: K.secCard(watch, call(k), states) }; });
+      return K.layout({ fields: f, top: ['hero'], stage: 'stage', left: [], right: [], narrowOrder: ['stage'] });
     }
     // "opts", not "more": the layout would stretch a trailing "more" over both columns.
     ['hero', 'ctl', 'plan', 'opts'].forEach(function (k) { f[k] = { card: K.secCard(watch, call(k), states) }; });
@@ -586,19 +587,23 @@
       // A range (heat/cool): no single target to step – the range as a status stage (fallback rule §4.7).
       if (t3 == null && lo3 != null && hi3 != null && !bad(st.state)) {
         return UI.stage('status', { tone: st.state === 'off' ? 'off' : 'good', icon: 'mdi:thermostat',
-          text: nf1(lo3) + ' – ' + nf1(hi3) + ' °', facts: rt3 != null ? [{ label: 'Jetzt', value: nf1(rt3) + ' °' }] : [] });
+          text: nf1(lo3) + ' – ' + nf1(hi3) + ' °', facts: rt3 != null ? [{ label: 'Jetzt', value: nf1(rt3) + ' °' }] : [],
+          moons: function () { return V.sec('quick', id, states, hass, el, sensor); } });
       }
       var unit3 = String((z && z.unit) || a3.temperature_unit || '°C');
+      // Dial (richtlinien §4.8): target ring blue → red with the room temperature dot, the modes as moons.
+      var mn3 = function () { return V.sec('quick', id, states, hass, el, sensor); };
       if (bad(st.state) || st.state === 'off' || t3 == null) {
         return UI.stage('value', { caption: 'Zieltemperatur', value: t3 != null ? t3 : '–', unit: t3 != null ? unit3 : '',
-          state: bad(st.state) ? 'na' : 'off', foot: foot3 });
+          state: bad(st.state) ? 'na' : 'off', foot: foot3, heat: true, current: rt3, min: L3.lo, max: L3.hi, moons: mn3 });
       }
       var pm3 = function (dir) {
         var v = Math.round((t3 + dir * step3) * 100) / 100;
         return { svc: { domain: 'climate', service: 'set_temperature', data: { temperature: v }, target: tgt3 },
           step: step3, min: L3.lo, max: L3.hi, dis: dir < 0 ? t3 <= L3.lo : t3 >= L3.hi };
       };
-      return UI.stage('value', { caption: 'Zieltemperatur', value: t3, unit: unit3, minus: pm3(-1), plus: pm3(1), foot: foot3 });
+      return UI.stage('value', { caption: 'Zieltemperatur', value: t3, unit: unit3, minus: pm3(-1), plus: pm3(1), foot: foot3,
+        heat: true, current: rt3, moons: mn3 });
     }
     if (part === 'quick') {
       if (!st || bad(st.state)) return '';

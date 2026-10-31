@@ -90,15 +90,15 @@
        localStorage casora_popup_variant 'a'/'b' keeps the earlier body. */
     if (H.v3()) {
       f.stage = { card: K.secCard(watch, call('stage'), states) };
-      f.quick = { card: K.secCard(watch, call('quick'), states) };
+      // The modes are the dial's moons (part 'stage').
       var R3 = ['info'];
       if (c.humidity) {
         f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history',
           series: [{ entity: c.humidity, name: 'Luftfeuchte', unit: '%' }], height: 120, readout: 'own', plate: true } };
         R3.push('chart');
       }
-      return K.layout({ fields: f, top: ['hero'], stage: 'stage', quick: 'quick', left: [], right: R3,
-        narrowOrder: ['stage', 'quick'].concat(R3), settings: id });
+      return K.layout({ fields: f, top: ['hero'], stage: 'stage', left: [], right: R3,
+        narrowOrder: ['stage'].concat(R3), settings: id });
     }
     var top = ['hero'];
     if (c.humidity) {
@@ -127,15 +127,15 @@
     if (part === 'stage') {
       var lo = s.min == null ? 0 : s.min, hi = s.max == null ? 100 : s.max, tv = s.target;
       var foot = s.current != null ? 'Jetzt ' + Math.round(s.current) + ' %' : null;
-      if (s.dead || tv == null) return UI.stage('value', { caption: 'Zielfeuchte', value: tv != null ? tv : '–', unit: tv != null ? '%' : '', digits: 0,
-        state: s.dead ? 'na' : 'off', foot: foot });
+      // Dial (richtlinien §4.8): the target as the ring (turned in 1-% steps), the humidity now as the dot, modes as moons.
+      var dl = { min: lo, max: hi, step: 1, current: s.current, moons: function () { return H.sec('quick', c, states, hass); } };
+      if (s.dead || tv == null) return UI.stage('value', Object.assign(dl, { caption: 'Zielfeuchte', value: tv != null ? tv : '–', unit: tv != null ? '%' : '', digits: 0,
+        state: s.dead ? 'na' : 'off', foot: foot }));
       var pm = function (v, dis) { return { dis: dis, svc: { domain: 'humidifier', service: 'set_humidity', data: { humidity: v }, target: tgt } }; };
       var segM = s.modes.length > 4 ? UI.segments(s.modes.map(function (m) { return { label: H.modeLabel(hass, st, m), active: s.on && s.mode === m, svc: modeSvc(m) }; })) : '';
-      return UI.stage('value', { caption: 'Zielfeuchte', value: Math.round(tv), unit: '%', digits: 0, state: s.on ? null : 'off',
+      return UI.stage('value', Object.assign(dl, { caption: 'Zielfeuchte', value: Math.round(tv), unit: '%', digits: 0, state: s.on ? null : 'off',
         minus: pm(Math.max(lo, Math.round(tv) - 1), tv <= lo), plus: pm(Math.min(hi, Math.round(tv) + 1), tv >= hi), foot: foot,
-        extra: UI.segments(H.steps(s.min, s.max, s.target).map(function (v) {
-          return { label: v + ' %', active: Math.round(s.target) === v, svc: { domain: 'humidifier', service: 'set_humidity', data: { humidity: v }, target: tgt } };
-        })) + segM });
+        extra: segM }));
     }
     if (part === 'quick') {
       if (s.dead || !s.modes.length || s.modes.length > 4) return '';
