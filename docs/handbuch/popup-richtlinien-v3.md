@@ -308,6 +308,21 @@ als die Kachel, dann ist Schluss. Eingestellt wird im Studio.
 - Gilt für Kacheln, Badges, Chips und Unterseiten gleichermaßen. Was an diesen Stellen stand, entfällt ersatzlos
   (kein Umzug in die Liste), außer es ist die Bedienung oder Information, wegen der man das Popup öffnet.
 
+**Ausnahme (Entscheidung 01.11.2026):** Was Nutzer ausdrücklich gewünscht haben (Issue), ist Inhalt, keine Einstellung –
+es bleibt als Zeile, Abschnitt oder Unterseite („… ›“), im v3-Stil: kein „Mehr“-Aufklapper, kein „Weitere Einstellungen“.
+Ein Aufräum-Umbau entfernt so etwas nie still; jede dieser Funktionen hat einen Test, der sie im v3-Popup verlangt
+(`dev/unit/popup_v3_issue_features.mjs`, dazu `velair.mjs`, `klingel.mjs`).
+
+| Issue | Popup | Was bleibt | Wo |
+|---|---|---|---|
+| #98 | Netzwerk | Abschnitt „Internet“: Anbieter (auch aus einem Attribut, Studio „Wert aus“), öffentliche IPv4/IPv6, Latenz je Ziel | `05-weich-mehr.js`, Teil `inet` |
+| #81 | Jalousien (Raum, einzeln) | Zeile „Beschattungsautomatik“ als letzte Zeile der Jalousien-Liste, sofort aktualisierend; „Automatik heute“ als Unterzeile; Studio-Felder „Shade automation“ / „Automation today“ | Vorlagen `casora_popup_cover`, `casora_cover` |
+| #32 | Velair | Zeile „Zeitplan ›“ → Unterseite mit der Woche (ansehen, bearbeiten, an/aus, Ziel je Block); Zeile „Velair-Modus“ | `31-velair.js`, Teil `rows`, Seite `velair-plan` |
+| #23 | Türklingel | Zeile „Ton ›“ → Unterseite mit den Lautstärke-Reglern (Klingelton, Sprechen, Lautsprecher) | `24-klingel.js`, Teil `tonrow`, Seite `klingel-ton` |
+| #89 | Fahrzeug | Kilometerstand im Abschnitt „Zustand“ (auch BMW CarData) | `03-popups.js`, Teil `state_s3` |
+
+Nicht zurück: #35 (Jalousie-Stufen bleiben drei Monde: Auf · Beschatten · Zu).
+
 ## 9. Zustände des ganzen Popups
 
 | Zustand | Verhalten |
