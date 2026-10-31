@@ -2568,7 +2568,12 @@
   "Im Studio Kacheln zu Räumen hinzufügen": "Aggiungi riquadri alle stanze nello Studio",
   "Etwas trocken": "Un po' secco",
   "Etwas feucht": "Un po' umido",
-  "Sehr feucht": "Molto umido"
+  "Sehr feucht": "Molto umido",
+  "Pulse: Gut": "Pulse: Buono",
+  "Pulse: Lernt": "Pulse: Apprendimento",
+  "Pulse: Beobachten": "Pulse: Osservare",
+  "Pulse: Prüfen": "Pulse: Controlla",
+  "Pulse: Ausgefallen": "Pulse: Guasto"
  },
  "patterns": [
   [

@@ -2568,7 +2568,12 @@
   "Im Studio Kacheln zu Räumen hinzufügen": "Dodaj kafelki do pomieszczeń w Studio",
   "Etwas trocken": "Nieco sucho",
   "Etwas feucht": "Nieco wilgotno",
-  "Sehr feucht": "Bardzo wilgotno"
+  "Sehr feucht": "Bardzo wilgotno",
+  "Pulse: Gut": "Pulse: Dobra",
+  "Pulse: Lernt": "Pulse: Uczy się",
+  "Pulse: Beobachten": "Pulse: Obserwuj",
+  "Pulse: Prüfen": "Pulse: Sprawdź",
+  "Pulse: Ausgefallen": "Pulse: Awaria"
  },
  "patterns": [
   [

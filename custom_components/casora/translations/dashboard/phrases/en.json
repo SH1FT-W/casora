@@ -2550,7 +2550,12 @@
   "Im Studio Kacheln zu Räumen hinzufügen": "Add tiles to rooms in the Studio",
   "Etwas trocken": "Slightly dry",
   "Etwas feucht": "Slightly humid",
-  "Sehr feucht": "Very humid"
+  "Sehr feucht": "Very humid",
+  "Pulse: Gut": "Pulse: Good",
+  "Pulse: Lernt": "Pulse: Learning",
+  "Pulse: Beobachten": "Pulse: Watch",
+  "Pulse: Prüfen": "Pulse: Check",
+  "Pulse: Ausgefallen": "Pulse: Failed"
  },
  "patterns": [
   [

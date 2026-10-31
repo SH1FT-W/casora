@@ -118,6 +118,13 @@ Kern-Integrationen (Schlüssel im Test geprüft):
 - `cookidoo` (Rezept, `03-popups.js`, `ki.py`), `backup` (`03-popups.js`), `proximity` (`15-person.js`),
   `unifi` (Netzwerk, `00-finder.js`), `lamarzocco` (Kaffee, `25-coffee.js`), `tankerkoenig` (nur `platform`,
   `tanken.py`)
+- Netzwerk-Kachel (#98, `00-finder.js` `netFields`/`network`, Test `dev/unit/network_finder.mjs`): `fritz`
+  (`kb_s_received`/`kb_s_sent`, `is_connected`, `external_ip`/`external_ipv6`), `upnp` (`download_speed`/`upload_speed`,
+  `wan_status`, `external_ip`), `synology_dsm` (`network_up`/`network_down`; Plattform `synology_dsm` macht nie ein
+  Netzwerkgerät). FRITZ!Portal (HA-App, MQTT) hat keine Schlüssel: Erkennung über Hersteller „FRITZ!Portal“,
+  Geräteklasse, Einheit und deutsche Namen; der Anbieter steht nur als Attribut `provider` am Verbindungssensor.
+  Pulse (`pulse`, HACS): der Statussensor (`translation_key` `status`) hängt am überwachten Gerät und ist kein
+  Gerätezustand, die Netzwerkliste bewertet ihn mit Pulses eigenen Wörtern.
 
 Nicht im Kern-Paket prüfbar (HACS), Casora liest `platform`/`translation_key`:
 `waste_collection_schedule`, `frigate`, `ha_washdata`, `home_connect_alt`/`homeconnect_ws`, `bambu_lab`,

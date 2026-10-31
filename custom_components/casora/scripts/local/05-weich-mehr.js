@@ -200,7 +200,7 @@
   // Bausteine für weitere entschlackte Popups (08-weich-kompakt.js).
   window._casoraSoftKit = { secCard: secCard, layout: layout, chartCard: chartCard, bare: bare, pill: pill, CARD_CSS: CARD_CSS };
 
-  // ── Netzwerk ──────────────────────────────────────────────────────────────
+  // ── Network ───────────────────────────────────────────────────────────────
   var NET_STATE = {
     connected: 'Online', disconnected: 'Offline', pending: 'Ausstehend', firmware_mismatch: 'Firmware passt nicht',
     upgrading: 'Update läuft', provisioning: 'Wird eingerichtet', heartbeat_missed: 'Keine Rückmeldung',
@@ -208,29 +208,49 @@
     adoption_failed: 'Übernahme fehlgeschlagen', isolated: 'Isoliert',
     on: 'Online', off: 'Offline', online: 'Online', offline: 'Offline',
   };
+  // One rating for the list and the details, shared with the Standard popup (casoraDevice.netRate, #98).
   var devInfo = function (states, d) {
+    var CD = window.casoraDevice;
+    if (CD && CD.netRate) return CD.netRate(states, d);
     var st = raw(states, d.state);
     var online = d.state ? ['connected', 'on', 'online'].indexOf(st) > -1 : true;
     var offline = d.state ? ['disconnected', 'off', 'offline'].indexOf(st) > -1 : false;
     var upd = !!(d.update && raw(states, d.update) === 'on');
-    var word = online ? (upd ? 'Update verfügbar' : 'Online') : offline ? 'Offline' : ok(st) ? 'Problem' : 'Unbekannt';
-    var tone = online ? (upd ? 'warn' : 'good') : offline ? 'bad' : 'warn';
-    return { st: st, online: online, upd: upd, word: word, tone: tone };
+    return { st: st, online: online, offline: offline, upd: upd, entity: d.state || d.restart,
+      word: online ? (upd ? 'Update verfügbar' : 'Online') : offline ? 'Offline' : 'Unbekannt',
+      text: !d.state ? 'Online' : ok(st) ? (NET_STATE[st] || st) : 'Unbekannt',
+      tone: online ? (upd ? 'warn' : 'good') : offline ? 'bad' : 'warn' };
   };
 
+  // Internet fields (#98): what the Studio set (entity, optionally one of its attributes), otherwise what the
+  // finder finds on the download sensor's device (FRITZ!Box, FRITZ!Portal, UniFi …). Same in the Standard popup.
+  var netInet = function (hass, v, dl) {
+    var CD = window.casoraDevice, auto = (CD && CD.netFields && dl) ? CD.netFields(hass, dl) : {}, out = {};
+    [['isp', 'entity_isp'], ['wan_name', 'entity_wan_name'], ['ipv4', 'entity_wan_ipv4'], ['ipv6', 'entity_wan_ipv6']].forEach(function (p) {
+      if (v[p[1]]) { out[p[0]] = v[p[1]]; out[p[0] + '_attr'] = v[p[1] + '_attribute'] || null; }
+      else { out[p[0]] = auto[p[0]] || null; out[p[0] + '_attr'] = auto[p[0] + '_attr'] || null; }
+    });
+    return out;
+  };
+  var netVal = function (states, id, attr) {
+    var CD = window.casoraDevice;
+    return CD && CD.netValue ? CD.netValue(states, id, attr) : raw(states, id);
+  };
   var N = window._casoraSoftNet = {};
-  // K10 (Weich-Audit): eine Farbe je Gerätetyp – Netzwerk ist Blau. Zustand nur über Warn-/Fehlerfarbe.
+  // K10 (Weich audit): one colour per device type – network is blue. State only through warn/error colours.
   var NET_TONE = 'var(--casora-tone-media, #5B8FC9)';
   N.build = function (ctx) {
     var UI = window._casoraUI, states = ctx.states, hass = ctx.hass, v = ctx.variables || {}, ids = ctx.ids || {};
     if (!UI || !UI.more) return null;
     var net = window.casoraDevice && window.casoraDevice.network ? window.casoraDevice.network(hass) : {};
     var pick = function (k, nk) { return Array.isArray(v[k]) && v[k].length ? v[k] : (net[nk] || []); };
+    var inet = netInet(hass, v, ids.dl);
     var C = {
       dl: ids.dl, ul: ids.ul, status: ids.status, ping: ids.ping || v.entity_speedtest_ping,
       stDown: v.entity_speedtest_download, stUp: v.entity_speedtest_upload, stLast: v.entity_speedtest_last_run,
       stRunning: v.entity_speedtest_running, stButton: v.entity_speedtest_button,
-      isp: v.entity_isp, wanName: v.entity_wan_name, ip4: v.entity_wan_ipv4, ip6: v.entity_wan_ipv6,
+      isp: inet.isp, ispAttr: inet.isp_attr, wanName: inet.wan_name, wanNameAttr: inet.wan_name_attr,
+      ip4: inet.ipv4, ip4Attr: inet.ipv4_attr, ip6: inet.ipv6, ip6Attr: inet.ipv6_attr,
       tp: [[ids.wiredDl, 'LAN-Download', 'arrow-down'], [ids.wiredUl, 'LAN-Upload', 'arrow-up'],
            [ids.wifiDl, 'WLAN-Download', 'wifi'], [ids.wifiUl, 'WLAN-Upload', 'wifi']].filter(function (t) { return t[0]; }),
       latency: v.network_extended === false ? [] : pick('latency_entities', 'latency'),
@@ -246,15 +266,15 @@
     f.metric = { card: chartCard(ctx.metricCard, st) };
     if (!ctx.metricCard) delete f.metric;
     if (C.wlans.length) f.wl = { card: secCard(C.wlans.map(function (w) { return w.sw; }).concat(C.wlans.map(function (w) { return w.clients; })), call('_casoraSoftNet', 'wl', C), states) };
-    if (C.devices.filter(function (d) { return states[d.state] || states[d.restart]; }).length) {
-      f.nd = { card: secCard([].concat.apply([], C.devices.map(function (d) { return [d.state, d.update]; })), call('_casoraSoftNet', 'nd', C), states) };
+    if (C.devices.filter(function (d) { return states[d.state] || states[d.pulse] || states[d.restart]; }).length) {
+      f.nd = { card: secCard([].concat.apply([], C.devices.map(function (d) { return [d.state, d.pulse, d.update]; })), call('_casoraSoftNet', 'nd', C), states) };
     }
-    /* Mehr: CPU/RAM/Temperatur und Latenz bewusst nicht im triggers_update (ändern sich
-       ständig, eine offene Neustart-Bestätigung klappte sonst zu) – Latenz und Durchsatz
-       tauscht casora-notify-local als Text. */
+    /* More: CPU/RAM/temperature and latency deliberately not in triggers_update (they change
+       all the time, an open restart confirmation would close) – casora-notify-local swaps
+       latency and throughput as text. */
     var watch = C.locks.map(function (l) { return l.sw; })
       .concat([C.isp, C.wanName, C.ip4, C.ip6, C.stDown, C.stUp, C.stLast])
-      .concat([].concat.apply([], C.devices.map(function (d) { return [d.state, d.update, d.uptime, d.restart]; })))
+      .concat([].concat.apply([], C.devices.map(function (d) { return [d.state, d.pulse, d.update, d.uptime, d.restart]; })))
       .concat(C.acts.map(function (a) { return a[2]; }));
     if (N.sec('more', C, states, hass)) f.more = { card: secCard(watch, call('_casoraSoftNet', 'more', C), states) };
     return layout({ fields: f, top: ['hero', 'metric'], left: ['wl'], right: ['nd', 'more'], moveLeft: ['nd'] });
@@ -282,7 +302,7 @@
         + '</div>';
     }
     if (part === 'wl') {
-      /* Einschalten direkt, Ausschalten mit Bestätigung (trennt sonst womöglich das Gerät, auf dem das Popup offen ist). */
+      /* Switching on directly, off only after asking (it might cut off the device the popup is open on). */
       var rows = [];
       (C.wlans || []).forEach(function (w) {
         if (!states[w.sw]) return;
@@ -303,18 +323,18 @@
       return rows.length ? UI.group(rows, 'WLAN') : '';
     }
     if (part === 'nd') {
-      var drows = (C.devices || []).filter(function (d) { return states[d.state] || states[d.restart]; }).map(function (d) {
+      var drows = (C.devices || []).filter(function (d) { return states[d.state] || states[d.pulse] || states[d.restart]; }).map(function (d) {
         var i = devInfo(states, d);
-        return { entity: d.state || d.restart, icon: d.icon, iconTone: i.tone === 'good' ? NET_TONE : i.tone, label: d.label,
+        return { entity: i.entity, icon: d.icon, iconTone: i.tone === 'good' ? NET_TONE : i.tone, label: d.label,
           value: i.word, valueTone: i.tone === 'good' ? null : i.tone,
-          // Aktive Zeile bei Handlungsbedarf (offline, Update, Problem) wie Pflanzen-/Batterie-Popup.
+          // Active row when something needs doing (offline, update, problem), like the plant/battery popups.
           active: i.tone !== 'good' };
       });
       return drows.length ? UI.group(drows, 'Geräte') : '';
     }
     if (part === 'more') {
       var secs = [];
-      // Sperren
+      // Locks
       var lrows = [];
       (C.locks || []).forEach(function (l) {
         if (!states[l.sw]) return;
@@ -325,7 +345,7 @@
           confirm: on ? 'Aufheben' : 'Aktivieren', active: on });
       });
       if (lrows.length) secs.push(UI.group(lrows, 'Sperren'));
-      // Internet: Anbieter, Öffentliche IP, Latenz je Ziel (der Ping steht nur oben)
+      // Internet: provider, public IP, latency per target (the ping is only at the top)
       var irows = [];
       var sd = num(states, C.stDown), su = num(states, C.stUp);
       if ((sd != null || su != null) && C.stDown !== C.dl) {
@@ -333,12 +353,12 @@
         irows.push({ entity: C.stDown, icon: 'mdi:speedometer', iconTone: NET_TONE, label: 'Speedtest',
           value: fN(sd, hass) + ' ↓  ' + fN(su, hass) + ' ↑', sub: ['Mbit/s', w2].filter(Boolean).join(' · ') });
       }
-      var isp = raw(states, C.isp), wan = raw(states, C.wanName);
+      var isp = netVal(states, C.isp, C.ispAttr), wan = netVal(states, C.wanName, C.wanNameAttr);
       if (ok(isp)) {
         irows.push({ entity: C.isp, icon: 'mdi:web', iconTone: NET_TONE, label: 'Anbieter',
           value: isp.replace(/\s+(AG|GmbH|SE|KG|Inc\.?|Ltd\.?)$/i, ''), sub: ok(wan) ? wan.replace(/\s*\(.*\)\s*$/, '') : null });
       }
-      var ip4 = raw(states, C.ip4), ip6 = raw(states, C.ip6);
+      var ip4 = netVal(states, C.ip4, C.ip4Attr), ip6 = netVal(states, C.ip6, C.ip6Attr);
       if (ok(ip4) || ok(ip6)) {
         irows.push({ entity: ok(ip4) ? C.ip4 : C.ip6, icon: 'mdi:ip-network-outline', iconTone: NET_TONE,
           label: 'Öffentliche IP', value: ok(ip4) ? ip4 : '', sub: ok(ip6) ? ip6 : null });
@@ -355,23 +375,23 @@
           .join('data-hp-live-join="' + UI.esc(lat.map(function (l) { return l.id; }).join(',')) + '"');
         secs.push(ih);
       }
-      // Durchsatz LAN/WLAN
+      // Throughput LAN/Wi-Fi
       var trows = (C.tp || []).map(function (t) {
-        return { entity: t[0], icon: t[2], /* Weich-Töne wie im Diagramm (Upload petrol, Download blau) statt greller iOS-Serienfarben. */
+        return { entity: t[0], icon: t[2], /* Weich tones as in the chart (upload petrol, download blue) instead of loud iOS series colours. */
           iconTone: /upload/i.test(t[1]) ? 'var(--casora-tone-general, #4E9E95)' : 'var(--casora-tone-media, #5B8FC9)',
           label: t[1], value: num(states, t[0]) == null ? '—' : fN(num(states, t[0]), hass) + ' Mbit/s', liveAttr: 'state', liveSuffix: ' Mbit/s' };
       });
       if (trows.length) secs.push(UI.group(trows, 'Durchsatz').split('data-casora-live="text" data-casora-ent=').join('data-hp-live='));
-      // Geräte im Detail: Zustand im Klartext, Laufzeit, CPU/RAM/Temperatur, Neustart
-      var grows = (C.devices || []).filter(function (d) { return states[d.state] || states[d.restart]; }).map(function (d) {
+      // Devices in detail: state in words, uptime, CPU/RAM/temperature, restart
+      var grows = (C.devices || []).filter(function (d) { return states[d.state] || states[d.pulse] || states[d.restart]; }).map(function (d) {
         var i = devInfo(states, d);
         var cpu = num(states, d.cpu), mem = num(states, d.mem), tmp = num(states, d.temp);
         var up = ok(raw(states, d.uptime)) ? since(raw(states, d.uptime)) : null;
-        var line1 = (!d.state ? 'Online' : ok(i.st) ? (NET_STATE[i.st] || i.st) : 'Unbekannt') + (i.online && up ? ' seit ' + up : '');
+        var line1 = i.text + (i.online && up && i.source !== 'pulse' ? ' seit ' + up : '');
         var line2 = [i.upd ? 'Firmware-Update verfügbar' : null, cpu != null ? 'CPU ' + Math.round(cpu) + ' %' : null,
           mem != null ? 'RAM ' + Math.round(mem) + ' %' : null,
           tmp != null ? Math.round(tmp) + ' ' + (((states[d.temp] || {}).attributes || {}).unit_of_measurement || '°C') : null].filter(Boolean).join(' · ');
-        var r = { entity: d.state || d.restart, icon: d.icon, iconTone: i.tone === 'good' ? NET_TONE : i.tone, label: d.label, sub: [line1, line2].filter(Boolean) };
+        var r = { entity: i.entity, icon: d.icon, iconTone: i.tone === 'good' ? NET_TONE : i.tone, label: d.label, sub: [line1, line2].filter(Boolean) };
         if (d.restart && states[d.restart]) {
           r.action = 'Neu starten'; r.confirm = true;
           r.svc = { domain: 'button', service: 'press', target: { entity_id: d.restart } };
