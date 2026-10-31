@@ -1762,6 +1762,7 @@
   "Letzte 12 Monate": "Últimos 12 meses",
   "Linie": "Línea",
   "Balken": "Barras",
+  "Heatmap": "Mapa de calor",
   "Ø pro Monat": "Ø por mes",
   "Ø pro Stunde": "Ø por hora",
   "letzte 12 Monate": "últimos 12 meses",
@@ -2574,7 +2575,12 @@
   "Geparkt": "Aparcado",
   "Kein Akkustand": "Sin nivel de batería",
   "Tank": "Depósito",
-  "Seit": "Desde"
+  "Seit": "Desde",
+  "Pulse: Gut": "Pulse: Bueno",
+  "Pulse: Lernt": "Pulse: Aprendiendo",
+  "Pulse: Beobachten": "Pulse: Vigilar",
+  "Pulse: Prüfen": "Pulse: Revisar",
+  "Pulse: Ausgefallen": "Pulse: Averiado"
  },
  "patterns": [
   [

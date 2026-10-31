@@ -118,6 +118,13 @@ Kern-Integrationen (Schlüssel im Test geprüft):
 - `cookidoo` (Rezept, `03-popups.js`, `ki.py`), `backup` (`03-popups.js`), `proximity` (`15-person.js`),
   `unifi` (Netzwerk, `00-finder.js`), `lamarzocco` (Kaffee, `25-coffee.js`), `tankerkoenig` (nur `platform`,
   `tanken.py`)
+- Netzwerk-Kachel (#98, `00-finder.js` `netFields`/`network`, Test `dev/unit/network_finder.mjs`): `fritz`
+  (`kb_s_received`/`kb_s_sent`, `is_connected`, `external_ip`/`external_ipv6`), `upnp` (`download_speed`/`upload_speed`,
+  `wan_status`, `external_ip`), `synology_dsm` (`network_up`/`network_down`; Plattform `synology_dsm` macht nie ein
+  Netzwerkgerät). FRITZ!Portal (HA-App, MQTT) hat keine Schlüssel: Erkennung über Hersteller „FRITZ!Portal“,
+  Geräteklasse, Einheit und deutsche Namen; der Anbieter steht nur als Attribut `provider` am Verbindungssensor.
+  Pulse (`pulse`, HACS): der Statussensor (`translation_key` `status`) hängt am überwachten Gerät und ist kein
+  Gerätezustand, die Netzwerkliste bewertet ihn mit Pulses eigenen Wörtern.
 
 Nicht im Kern-Paket prüfbar (HACS), Casora liest `platform`/`translation_key`:
 `waste_collection_schedule`, `frigate`, `ha_washdata`, `home_connect_alt`/`homeconnect_ws`, `bambu_lab`,
@@ -125,6 +132,13 @@ Nicht im Kern-Paket prüfbar (HACS), Casora liest `platform`/`translation_key`:
 (`delonghi_primadonna`, `delonghi_coffee`, `delonghi_coffeelink`, `jura`, `jura_wifi`, `melitta_barista`, `philips_homeid`;
 Schlüssel je Quelle in `25-coffee.js` `SOURCES`, Stand Quellcode 24.10.2026, Test `dev/unit/coffee_sources.mjs`),
 Auto-Integrationen.
+
+WashData (`ha_washdata`, Stand 0.5.9, Quellcode 29.10.2026): Geräteart zuerst über das Symbol des `washer_state`-Sensors
+(`tumble-dryer`, `dishwasher`, `water-pump`, sonst `washing-machine`). Seit 0.5.9 werden Heißluftfritteuse und Brotbackautomat
+zu `other` und tragen wie `generic` das Waschmaschinen-Symbol; deshalb fragt das Dashboard den Typ über
+`ha_washdata/get_phase_catalog` (`entry_id` → `device_type`) und Python liest `options["device_type"]` des Config-Eintrags
+(öffentliche `ConfigEntry`-API, nur lesen). `other`/`generic` sind keine Wäsche (`00-finder.js` `wdType`,
+`live_finder.py` `_washdata_type`; Tests `dev/unit/waesche_quelle.mjs`, `dev/unit/live_finder_test.py`).
 
 Wetter-Integrationen (#56), Casora liest Sensoren am Gerät der Wetter-Entität nach `translation_key`
 (`00-finder.js` `WX_KEYS`; Test `dev/unit/weather_feels_like.mjs`, Testhaus `dev/casora_mock/wetter.py`):

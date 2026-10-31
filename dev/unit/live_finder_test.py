@@ -84,6 +84,34 @@ snap("d3", dw)
 pump = [E("sensor.p1_state", "washer_state", "ha_washdata", "mdi:water-pump"), E("sensor.p1_pct", "cycle_progress", "ha_washdata")]
 check("WashData pump is no live device", lf.classify("d4", pump, S.get) is None)
 snap("d4", pump)
+# WashData 0.5.9: air fryers and bread makers become "other" with the washer icon, like "generic" – no laundry
+for t in ("other", "generic"):
+    check(f"WashData {t} is no live device", lf.classify("d1", wd, S.get, washdata_type=t) is None)
+check("WashData washing_machine stays a washer", lf.classify("d1", wd, S.get, washdata_type="washing_machine").kind == "washer")
+check("WashData washer_dryer stays a washer", lf.classify("d1", wd, S.get, washdata_type="washer_dryer").kind == "washer")
+
+
+class _Entry:
+    def __init__(self, domain, options):
+        self.domain, self.options = domain, options
+
+
+class _Hass:
+    class config_entries:  # noqa: N801 - mirrors hass.config_entries
+        _e = {"e_wd": _Entry("ha_washdata", {"device_type": "other"}), "e_x": _Entry("mqtt", {"device_type": "x"})}
+
+        @classmethod
+        def async_get_entry(cls, eid):
+            return cls._e.get(eid)
+
+
+class _Dev:
+    def __init__(self, entries):
+        self.config_entries = entries
+
+
+check("WashData type from its config entry", lf._washdata_type(_Hass, _Dev(["e_x", "e_wd"])) == "other")
+check("No WashData entry, no type", lf._washdata_type(_Hass, _Dev(["e_x"])) is None)
 
 # Official Home Connect: role from the program options
 hc = [E("sensor.hc_state", "operation_state", "home_connect"), E("sensor.hc_pct", "program_progress", "home_connect"),

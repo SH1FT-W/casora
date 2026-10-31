@@ -27,10 +27,9 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Badges öffnen Popups", n0: "Am Handy zeigen Sicherheit und Klima eine Übersicht; was Aufmerksamkeit braucht, ist orange markiert.",
-      n1t: "Klima auf einen Blick", n1: "Temperatur und Luftfeuchtigkeit in Grün, Orange und Rot mit passenden Worten, auch mit °F.",
-      n2t: "Jalousien bei Klima und Sicherheit", n2: "Ein Unter-Badge „Jalousien“ öffnet das Popup deiner Jalousien-Kachel; offene zählen in der Sicherheit mit.",
-      n3t: "Ruhigere Popups", n3: "Popups springen nicht mehr beim Öffnen und sind am Handy so hoch wie ihr Inhalt.",
+      n0t: "Heatmap im Diagramm", n0: "Die Diagramm-Kachel zeigt Werte auch als Heatmap: ein Tag je Zeile, eine Stunde je Spalte.",
+      n1t: "Netzwerk-Kachel aufgeräumt", n1: "Router zuerst, Felder füllen sich vom Gerät, Liste und Pulse bewerten gleich, Werte auch aus Attributen.",
+      n2t: "Handy-Popups", n2: "„Aktuelle Wiedergabe“ zeigt den Player wieder, eigene Entitäten stehen unter dem Inhalt.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +39,9 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Badges open popups", n0: "On the phone Security and Climate show an overview; what needs attention is marked orange.",
-      n1t: "Climate at a glance", n1: "Temperature and humidity in green, orange and red with matching words, also in °F.",
-      n2t: "Blinds in Climate and Security", n2: "A \"Blinds\" sub-badge opens your blinds tile popup; open ones count in security.",
-      n3t: "Calmer popups", n3: "Popups no longer jump when they open and are as tall as their content on the phone.",
+      n0t: "Heatmap in the chart", n0: "The chart tile also shows values as a heatmap: one day per row, one hour per column.",
+      n1t: "Network tile tidied up", n1: "Router first, fields fill from the device, list and Pulse rate alike, values from attributes too.",
+      n2t: "Phone popups", n2: "\"Now playing\" shows the player again, your own entities sit below the content.",
     },
     // Spanish: same keys as en (dev/unit/welcome_es.mjs); a missing key falls back to English.
     es: {
@@ -54,10 +52,9 @@
       w1t: "Habitación por habitación", w1: "Diseña tu panel con los dispositivos que ya tienes en Home Assistant.",
       w2t: "Asistente de dispositivos", w2: "Casora propone las tarjetas adecuadas para cada habitación y las añade por ti.",
       w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
-      n0t: "Los badges abren ventanas", n0: "En el móvil Seguridad y Clima muestran un resumen; lo que requiere atención aparece en naranja.",
-      n1t: "El clima de un vistazo", n1: "Temperatura y humedad en verde, naranja y rojo con palabras claras, también en °F.",
-      n2t: "Persianas en Clima y Seguridad", n2: "Un sub-badge «Persianas» abre la ventana de tu mosaico de persianas; las abiertas cuentan en la seguridad.",
-      n3t: "Ventanas más tranquilas", n3: "Las ventanas ya no saltan al abrirse y en el móvil miden lo que su contenido.",
+      n0t: "Mapa de calor en el gráfico", n0: "El mosaico de gráfico también muestra valores como mapa de calor: un día por fila, una hora por columna.",
+      n1t: "Mosaico de red ordenado", n1: "Router primero, los campos se rellenan desde el dispositivo, lista y Pulse valoran igual, valores también de atributos.",
+      n2t: "Ventanas en el móvil", n2: "\"Reproduciendo\" vuelve a mostrar el reproductor, tus entidades quedan debajo del contenido.",
     },
     fr: {
       welcomeTitle: "Bienvenue dans Casora",
@@ -70,10 +67,9 @@
       w2: "Casora propose les tuiles adaptées à chaque pièce et les ajoute pour toi.",
       w3t: "Ordinateur, tablette et téléphone",
       w3: "Un tableau de bord qui s'adapte à chaque écran, avec sa propre mise en page téléphone.",
-      n0t: "Les badges ouvrent des fenêtres", n0: "Sur le téléphone, Sécurité et Climat affichent un aperçu ; ce qui demande attention est en orange.",
-      n1t: "Le climat d'un coup d'œil", n1: "Température et humidité en vert, orange et rouge avec des mots clairs, aussi en °F.",
-      n2t: "Stores dans Climat et Sécurité", n2: "Un sous-badge « Stores » ouvre la fenêtre de ta tuile de stores ; les ouverts comptent pour la sécurité.",
-      n3t: "Fenêtres plus calmes", n3: "Les fenêtres ne sautent plus à l'ouverture et ont la hauteur de leur contenu sur le téléphone.",
+      n0t: "Carte thermique dans le graphique", n0: "La tuile graphique affiche aussi les valeurs en carte thermique : un jour par ligne, une heure par colonne.",
+      n1t: "Tuile réseau rangée", n1: "Routeur d'abord, champs remplis depuis l'appareil, liste et Pulse évaluent pareil, valeurs aussi depuis les attributs.",
+      n2t: "Fenêtres sur mobile", n2: "« En lecture » affiche de nouveau le lecteur, tes entités restent sous le contenu.",
     },
     it: {
       welcomeTitle: "Ti diamo il benvenuto in Casora",
@@ -86,10 +82,9 @@
       w2: "Casora propone le schede adatte per ogni stanza e le aggiunge per te.",
       w3t: "Desktop, tablet e telefono",
       w3: "Una dashboard che si adatta a ogni schermo, con un layout dedicato per il telefono.",
-      n0t: "I badge aprono popup", n0: "Sul telefono Sicurezza e Clima mostrano una panoramica; ciò che richiede attenzione è arancione.",
-      n1t: "Il clima a colpo d'occhio", n1: "Temperatura e umidità in verde, arancione e rosso con parole chiare, anche in °F.",
-      n2t: "Tapparelle in Clima e Sicurezza", n2: "Un sotto-badge «Tapparelle» apre il popup del tuo riquadro tapparelle; quelle aperte contano nella sicurezza.",
-      n3t: "Popup più calmi", n3: "I popup non saltano più all'apertura e sul telefono sono alti quanto il contenuto.",
+      n0t: "Heatmap nel grafico", n0: "Il riquadro grafico mostra i valori anche come heatmap: un giorno per riga, un'ora per colonna.",
+      n1t: "Riquadro rete riordinato", n1: "Prima il router, i campi si compilano dal dispositivo, elenco e Pulse valutano allo stesso modo, valori anche dagli attributi.",
+      n2t: "Popup sul telefono", n2: "\"In riproduzione\" mostra di nuovo il lettore, le tue entità stanno sotto il contenuto.",
     },
     nl: {
       welcomeTitle: "Welkom bij Casora",
@@ -102,10 +97,9 @@
       w2: "Casora stelt voor elke kamer passende tegels voor en bouwt ze in.",
       w3t: "Desktop, tablet en telefoon",
       w3: "Eén dashboard dat zich aan elk scherm aanpast, met een eigen telefoonweergave.",
-      n0t: "Badges openen pop-ups", n0: "Op de telefoon tonen Beveiliging en Klimaat een overzicht; wat aandacht vraagt is oranje.",
-      n1t: "Klimaat in één oogopslag", n1: "Temperatuur en vochtigheid in groen, oranje en rood met passende woorden, ook in °F.",
-      n2t: "Rolluiken bij Klimaat en Beveiliging", n2: "Een sub-badge \"Rolluiken\" opent de pop-up van je rolluiktegel; open rolluiken tellen mee in de beveiliging.",
-      n3t: "Rustigere pop-ups", n3: "Pop-ups springen niet meer bij het openen en zijn op de telefoon zo hoog als hun inhoud.",
+      n0t: "Heatmap in de grafiek", n0: "De grafiektegel toont waarden ook als heatmap: één dag per rij, één uur per kolom.",
+      n1t: "Netwerktegel opgeruimd", n1: "Router eerst, velden vullen zich vanuit het apparaat, lijst en Pulse beoordelen gelijk, waarden ook uit attributen.",
+      n2t: "Pop-ups op de telefoon", n2: "\"Speelt nu\" toont de speler weer, je eigen entiteiten staan onder de inhoud.",
     },
     pl: {
       welcomeTitle: "Witaj w Casora",
@@ -118,10 +112,9 @@
       w2: "Casora proponuje pasujące kafelki dla każdego pokoju i dodaje je za ciebie.",
       w3t: "Komputer, tablet i telefon",
       w3: "Jeden pulpit, który dopasowuje się do każdego ekranu, z własnym układem na telefon.",
-      n0t: "Odznaki otwierają okna", n0: "Na telefonie Bezpieczeństwo i Klimat pokazują przegląd; to, co wymaga uwagi, jest pomarańczowe.",
-      n1t: "Klimat w skrócie", n1: "Temperatura i wilgotność w kolorach zielonym, pomarańczowym i czerwonym z opisem, także w °F.",
-      n2t: "Rolety w Klimacie i Bezpieczeństwie", n2: "Odznaka „Rolety” otwiera okno Twojego kafelka rolet; otwarte liczą się w bezpieczeństwie.",
-      n3t: "Spokojniejsze okna", n3: "Okna nie skaczą już przy otwieraniu, a na telefonie są tak wysokie jak ich treść.",
+      n0t: "Mapa cieplna na wykresie", n0: "Kafelek wykresu pokazuje wartości także jako mapę cieplną: dzień w wierszu, godzina w kolumnie.",
+      n1t: "Kafelek sieci uporządkowany", n1: "Najpierw router, pola wypełniają się z urządzenia, lista i Pulse oceniają tak samo, wartości także z atrybutów.",
+      n2t: "Okna na telefonie", n2: "\"Teraz odtwarzane\" znów pokazuje odtwarzacz, własne encje są pod treścią.",
     },
     pt: {
       welcomeTitle: "Bem-vindo ao Casora",
@@ -134,10 +127,9 @@
       w2: "O Casora propõe os cartões certos para cada divisão e adiciona-os por ti.",
       w3t: "Computador, tablet e telemóvel",
       w3: "Um painel que se adapta a cada ecrã, com layout próprio para o telemóvel.",
-      n0t: "Os badges abrem popups", n0: "No telemóvel Segurança e Clima mostram uma visão geral; o que precisa de atenção fica a laranja.",
-      n1t: "O clima num relance", n1: "Temperatura e humidade a verde, laranja e vermelho com palavras claras, também em °F.",
-      n2t: "Estores em Clima e Segurança", n2: "Um sub-badge «Estores» abre o popup do teu bloco de estores; os abertos contam na segurança.",
-      n3t: "Popups mais calmos", n3: "Os popups já não saltam ao abrir e no telemóvel têm a altura do conteúdo.",
+      n0t: "Mapa de calor no gráfico", n0: "O bloco de gráfico também mostra valores como mapa de calor: um dia por linha, uma hora por coluna.",
+      n1t: "Bloco de rede arrumado", n1: "Router primeiro, os campos preenchem-se a partir do dispositivo, lista e Pulse avaliam igual, valores também de atributos.",
+      n2t: "Popups no telemóvel", n2: "\"A reproduzir\" volta a mostrar o leitor, as tuas entidades ficam por baixo do conteúdo.",
     },
   };
   // Texts for a language: its own, English for anything it does not have (yet).
@@ -152,10 +144,9 @@
 
   /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
-    ["mdi:gesture-tap-button", "n0t", "n0"],
-    ["mdi:thermometer", "n1t", "n1"],
-    ["mdi:window-shutter", "n2t", "n2"],
-    ["mdi:arrow-collapse-vertical", "n3t", "n3"],
+    ["mdi:grid", "n0t", "n0"],
+    ["mdi:lan", "n1t", "n1"],
+    ["mdi:cellphone", "n2t", "n2"],
   ];
 
   // Decide on load - before the Studio writes its own casora.* keys.

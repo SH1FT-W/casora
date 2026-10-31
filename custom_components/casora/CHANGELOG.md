@@ -4,6 +4,74 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.69 – 31.10.2026
+
+### New
+- **Heatmap for the chart tile (#100):** a third display next to line and bars, one row per day, one column per hour, the colour shows the value. In the Studio under the chart tile's "Display" or in the popup with "Line | Bars | Heatmap". For 24 hours, 7 and 30 days and as a year overview (months × days); meters show the use per hour. Tapping shows value and time, below is the scale with the lowest and highest value; the tile shows the last 7 days as a small grid.
+
+### Changed
+- **Network tile and popup (#98):** the device list and Pulse rate a device the same way (its own state first, otherwise Pulse with Pulse's words, "Pulse: Good"); NAS and server platforms no longer show in the device list. When adding the tile the router comes first; after the download sensor, upload, internet status and ping fill in from the same device, and Casora finds provider, connection name and public IP there too (FRITZ!Box, FRITZ!Portal, UPnP, UniFi, Synology). Every entity field of a tile lists the entities of the devices the tile already uses first. Provider, connection name and IP can take their value from an attribute ("Value from").
+
+### Fixed
+- **Phone "Now playing" (#101):** the list follows this device's filter and no longer stays empty when another phone or tablet changed the filter; the heading only shows with a player below it.
+- **Own entities in popups (#97):** always below the content, no longer covering volume or source on the phone; the popup scrolls as a whole.
+- **Media titles:** titles a player sends with HTML codes (for example "&apos;") show the plain character.
+
+## 26.10.68 – 29.10.2026
+
+### Fixed
+- **Car tile with BMW CarData (#89):** the total range instead of a plug-in hybrid's electric range, the tank level in % (the litres count as the amount), the high-voltage battery's charge instead of its 100 % target, and the doors and windows by their CarData names.
+
+## 26.10.67 – 29.10.2026
+
+### New
+- **Duplicate a tile (#92):** in the Studio, a tile's ⋯ menu has "Duplicate": the copy lands right behind it in the same room, so several lamps or blinds are quick to set up. "Copy to Room…" stays for other rooms.
+- **Copy a dashboard (#92):** the dashboard's ⋯ menu in the Studio has "Copy…": a new dashboard with all rooms, tiles and badges, with its phone layout. Links into its own rooms point to the copy; the original stays as it is. Save your changes first.
+
+## 26.10.66 – 29.10.2026
+
+### New
+- **Home's climate from the rooms (#96):** without a sensor for the whole home, Home's temperature and humidity are the average of the rooms' sensors (the ones their climate badges use, up to five each). The Studio lists them under the climate badge and says they were chosen automatically; remove one to leave it out.
+- **Several humidity sensors:** like temperature, the climate badge takes up to five humidity sensors and shows their average.
+- **Carbon monoxide (#95):** the air quality popup takes a CO sensor (Studio: climate badge › CO) with its own limits (good up to 9 ppm, warning from 35 ppm, bad from 100 ppm).
+
+### Fixed
+- **Home's climate badge on setup (#96):** a NAS disk temperature ("average disk temperature") is no longer taken for the house temperature; disks, volumes, routers and servers never count as room sensors. A heat pump no longer comes first among Home's thermostats.
+- **CO2 limits for CO:** a carbon monoxide sensor got the CO2 limits and always read "good".
+- **Studio:** the air quality popup's temperature and humidity fields say that empty means the badge's own sensor.
+
+## 26.10.65 – 29.10.2026
+
+### Fixed
+- **WashData 0.5.9:** air fryers and bread makers (WashData makes them "Other" since 0.5.9) and "Generic" devices are no longer taken for a washing machine, neither for tiles nor for live activities. Casora asks WashData for the device type instead of going by the icon alone.
+
+## 26.10.64 – 29.10.2026
+
+### New
+- **Scripts, scenes and buttons with one tap (#86, #90):** a tile option "Tap runs it" and a badge of its own run them right away; "With confirmation" (on for new run tiles) asks first. Run tiles and badges read "Ready"/"Running"; own badges get their own "Who sees this?".
+- **Community card "Bring! Shopping list" (#82):** works with any to-do list; the tile shows the open items. For now a tap opens Home Assistant's to-do list card.
+- **Community card "Kettle" (#87):** for Xiaomi kettles and similar. For now a tap opens Home Assistant's card.
+- **Entities in popups (#32, #83):** entities picked in the Studio ("Entities in popup") show below a popup's content, e.g. scripts or sources for a media player.
+- **Velair (#32):** the week shows each block's target in its bar; the popup shows Velair's global mode as a row that opens it.
+- **"More" tile lists tiles (#59):** a tap opens that tile's own popup with ‹ back to More.
+
+### Changed
+- **E-bike tile (#88):** reads the eBike Bridge's live battery; while the bridge reports unknown, the last known battery and odometer stay visible. On the phone the tile shows just the battery.
+- **Car tile (#89):** shows the entity it was given, also without lock data.
+- **Energy popup (#91):** shows the battery's charge level even without a SoC field.
+- **Carousel:** a tile in a large carousel on the phone lays out large; the dots follow the text colour.
+- **Phone room pages:** the security and climate badges open their popup (covering that room) as on Home.
+- **Glas:** the popup sheet blurs the dashboard behind it.
+
+### Fixed
+- **Entity list on the phone (#85):** select, time and date fields can be used again.
+- **Energy badge in Safari:** the icon is sized correctly.
+- **Energy flow:** running dots no longer jump when the power changes.
+- **Security:** a closed door or window group with a member that does not answer says "1 sensor unavailable" instead of "Closed".
+- **Popups** always open at the top; the recipe week strip no longer hyphenates; the pet popup has its title; the chart plate casts the same shadow as other cards.
+- **Universal tile** has its icon in the Studio's tile picker.
+- **Question before opening a lock** says "Open door".
+
 ## 26.10.63 – 27.10.2026
 
 ### Changed

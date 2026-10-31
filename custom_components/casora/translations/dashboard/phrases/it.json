@@ -1754,6 +1754,7 @@
   "Letzte 12 Monate": "Ultimi 12 mesi",
   "Linie": "Linea",
   "Balken": "Barre",
+  "Heatmap": "Mappa di calore",
   "Ø pro Monat": "Ø al mese",
   "Ø pro Stunde": "Ø all'ora",
   "letzte 12 Monate": "ultimi 12 mesi",
@@ -2574,7 +2575,12 @@
   "Geparkt": "Parcheggiato",
   "Kein Akkustand": "Nessun livello batteria",
   "Tank": "Serbatoio",
-  "Seit": "Da"
+  "Seit": "Da",
+  "Pulse: Gut": "Pulse: Buono",
+  "Pulse: Lernt": "Pulse: Apprendimento",
+  "Pulse: Beobachten": "Pulse: Osservare",
+  "Pulse: Prüfen": "Pulse: Controlla",
+  "Pulse: Ausgefallen": "Pulse: Guasto"
  },
  "patterns": [
   [

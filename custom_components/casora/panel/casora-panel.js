@@ -787,7 +787,7 @@ const CHIPS_FROM_ROOM = {
   entity_quality: "quality_sensor",
 };
 const CHIPS_AQI_FROM_ROOM = ["aqi_entity_pm25", "aqi_entity_pm10",
-  "aqi_entity_voc", "aqi_entity_co2"];
+  "aqi_entity_voc", "aqi_entity_co2", "aqi_entity_co"];
 
 function seedChrome(card, templates, src) {
   const t = (card || {}).template;
@@ -2480,7 +2480,6 @@ const SECTIONS = [
     iconColor: studioIcon("badge-climate"), group: "badges",
     fields: [
       { ...T("climate_title", "Name on the badge"), always: true, ord: -1, placeholder: "Climate" },
-      { ...E("humidity_sensor", "Humidity", ["sensor"]), classes: ["humidity"], ord: 3 },
       { ...E("quality_sensor", "Air quality", ["sensor"]), classes: AIR_CLASSES, ord: 4 },
       { key: "temp_unit", label: "Unit", type: "select", options: ["", "F", "C"], auto: true, ord: 1,
         optionLabels: { "": "Automatic (from Home Assistant)", F: "Fahrenheit \u00b0F", C: "Celsius \u00b0C" } },
@@ -2495,14 +2494,20 @@ const SECTIONS = [
       { ...E("aqi_entity_pm10", "PM10", ["sensor"]), classes: ["pm10"], unit: "aqi" },
       { ...E("aqi_entity_voc", "VOC", ["sensor"]), classes: ["volatile_organic_compounds", "volatile_organic_compounds_parts"], unit: "aqi" },
       { ...E("aqi_entity_co2", "CO2", ["sensor"]), classes: ["carbon_dioxide"], unit: "aqi" },
-      { ...E("aqi_entity_temp", "Temperature", ["sensor"]), classes: ["temperature"], unit: "aqi" },
-      { ...E("aqi_entity_humidity", "Humidity reading", ["sensor"]), classes: ["humidity"], unit: "aqi" },
+      // #95: carbon monoxide, e.g. Amazon's air quality monitor.
+      { ...E("aqi_entity_co", "CO", ["sensor"]), classes: ["carbon_monoxide"], unit: "aqi" },
+      { ...E("aqi_entity_temp", "Temperature", ["sensor"]), classes: ["temperature"], unit: "aqi",
+        hint: "Only if the popup should show another sensor. Empty: the badge's first temperature." },
+      { ...E("aqi_entity_humidity", "Humidity reading", ["sensor"]), classes: ["humidity"], unit: "aqi",
+        hint: "Only if the popup should show another sensor. Empty: the badge's humidity." },
       // casora_room reicht es als room_name an die Klima-Badges weiter (Überschrift im Popup).
       { ...T("aqi_room_name", "Popup title"), unit: "aqi", placeholder: "The room's name" },
     ],
     repeats: [
       R("thermostat", "Thermostat", 3, [{ ...E("climate_entity_%", "Thermostat %", ["climate"]), ord: 0 }]),
       R("temp", "Temperature sensor", 5, [{ ...E("temp_sensor_%", "Temperature %", ["sensor"]), classes: ["temperature"], ord: 2 }]),
+      // #96: several humidity sensors give their average like the temperatures; the first keeps its old key.
+      R("hum", "Humidity sensor", 5, [{ ...E("humidity_sensor_%", "Humidity %", ["sensor"]), key1: "humidity_sensor", classes: ["humidity"], ord: 3 }]),
     ],
   },
   {
@@ -2671,7 +2676,7 @@ function sectionFields(sec) {
       rep.fields.forEach((f) => {
         out.push({
           ...f,
-          key: f.key.replace("%", n),
+          key: n === 1 && f.key1 ? f.key1 : f.key.replace("%", n),
           label: f.label.replace("%", n),
           needs: f.needs ? f.needs.replace("%", n) : f.needs,
           labelOf: f.labelOf ? f.labelOf.replace("%", n) : f.labelOf,
@@ -2884,7 +2889,7 @@ function fillRoomEnergy(hass, rooms) {
 // has no device for lights, climate, security or media (rooms that hit #57). casora_badges_auto marks a filled
 // room: whoever empties it afterwards does not get the devices back. Switched-off badges (show_… false) stay off.
 // Energy has its own automatic (fillRoomEnergy). Returns the rooms filled.
-const ROOM_BADGE_VAR = /^(light_entity_\d+|light_group_entity|light_rooms_auto|climate_entity_\d+|temp_sensor_\d+|humidity_sensor|quality_sensor|security_(locks|cameras|entity_\d+|lock_entity(_\d+)?)|media_player_\d+)$/;
+const ROOM_BADGE_VAR = /^(light_entity_\d+|light_group_entity|light_rooms_auto|climate_entity_\d+|temp_sensor_\d+|humidity_sensor(_\d+)?|climate_rooms_auto|quality_sensor|security_(locks|cameras|entity_\d+|lock_entity(_\d+)?)|media_player_\d+)$/;
 function roomBadgesEmpty(V) {
   return !Object.keys(V || {}).some((k) => ROOM_BADGE_VAR.test(k) && !emptyVal(V[k]));
 }
@@ -3676,6 +3681,7 @@ const keepRoomGlyph = (r, name) => {
 const MENU_ICONS = {
   "home": "<path d=\"M4.2 10.6 12 4.2l7.8 6.4\"/><rect x=\"7.4\" y=\"11.6\" width=\"4\" height=\"3.7\" rx=\"1\"/><rect x=\"12.6\" y=\"11.6\" width=\"4\" height=\"3.7\" rx=\"1\"/><rect x=\"7.4\" y=\"16.4\" width=\"4\" height=\"3.7\" rx=\"1\"/><rect x=\"12.6\" y=\"16.4\" width=\"4\" height=\"3.7\" rx=\"1\"/>",
   "plus": "<path d=\"M12 5v14M5 12h14\"/>",
+  "copy": "<rect x=\"8.5\" y=\"8.5\" width=\"11\" height=\"11\" rx=\"2.4\"/><path d=\"M15.5 8.5V6.9A2.4 2.4 0 0 0 13.1 4.5H6.9A2.4 2.4 0 0 0 4.5 6.9v6.2a2.4 2.4 0 0 0 2.4 2.4h1.6\"/>",
   "pencil": "<path d=\"M5 19.5l1-4L16.5 5a2.1 2.1 0 0 1 3 3L9 18.5z\"/><path d=\"M14.5 7l3 3\"/>",
   "grid": "<rect x=\"4.5\" y=\"4.5\" width=\"6\" height=\"6\" rx=\"1.6\"/><rect x=\"13.5\" y=\"4.5\" width=\"6\" height=\"6\" rx=\"1.6\"/><rect x=\"4.5\" y=\"13.5\" width=\"6\" height=\"6\" rx=\"1.6\"/><rect x=\"13.5\" y=\"13.5\" width=\"6\" height=\"6\" rx=\"1.6\"/>",
   "trash": "<path d=\"M4.5 7h15\"/><path d=\"M9.5 7V5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2\"/><path d=\"M6.5 7l.9 12a1.5 1.5 0 0 0 1.5 1.4h6.2a1.5 1.5 0 0 0 1.5-1.4l.9-12\"/>",
@@ -3698,7 +3704,7 @@ const MENU_ICONS = {
 // (_dashSwitchMenu). Unbekanntes (Rückgängig, Öffnen am Handy) bleibt vorn, wie es kam.
 // "create" ist nur noch die Markierung, an der die Module dieses Menü erkennen.
 const DASH_MENU = [
-  ["This dashboard", "renamedash", "pencil"], ["This dashboard", "icondash", "grid"],
+  ["This dashboard", "renamedash", "pencil"], ["This dashboard", "copydash", "copy"], ["This dashboard", "icondash", "grid"],
   ["This dashboard", "addmobile", "phone"], ["This dashboard", "casora_versions", "clock"],
   ["This dashboard", "delete", "trash"],
   ["New", "casora_umzug", "move"], ["New", "import", "import"],
@@ -4713,10 +4719,12 @@ const TILE_TYPES = [
         section: "Speed test" },
       { key: "entity_speedtest_server", label: "Server", domains: ["sensor"], section: "Speed test" },
       { key: "entity_speedtest_city", label: "Server location", domains: ["sensor"], section: "Speed test" },
-      { key: "entity_isp", label: "Provider", domains: ["sensor"], section: "Internet connection" },
-      { key: "entity_wan_name", label: "Connection name", domains: ["sensor"], section: "Internet connection" },
-      { key: "entity_wan_ipv4", label: "Public IPv4", domains: ["sensor"], section: "Internet connection" },
-      { key: "entity_wan_ipv6", label: "Public IPv6", domains: ["sensor"], section: "Internet connection" },
+      // Internet connection (#98): found on the download sensor's device when empty (the popup does the same);
+      // a chosen entity may give its value through one of its attributes (FRITZ!Portal: provider).
+      ...netInetField("entity_isp", "Provider", "isp"),
+      ...netInetField("entity_wan_name", "Connection name", "wan_name"),
+      ...netInetField("entity_wan_ipv4", "Public IPv4", "ipv4"),
+      ...netInetField("entity_wan_ipv6", "Public IPv6", "ipv6"),
       // Grenzwerte – leer = Standard der Vorlage (NET_LIMITS), gemessen am höheren von Down- und Upload.
       { key: "light_threshold", label: "Active from (Mbit/s)", type: "number", section: "Thresholds",
         placeholder: String(NET_LIMITS.light), hint: "From this speed the tile counts as active.", live: "net" },
@@ -5208,6 +5216,31 @@ const ACCEPT_RULES = {
 // renamed) – WashData, Home Connect, Bambu Lab, NINA/DWD. like/not separate devices with the same key (dryer).
 // laundry: the shared washer/dryer/dishwasher recognition (casoraLaundryFind in scripts/local/00-finder.js, the
 // keys only while that has not loaded); print: the printer card's field table (casoraDevice.printerFields).
+// Network tile (#98): an Internet field and, once an entity is chosen, which of its values to show – its state
+// or one of its attributes (the provider is only an attribute of FRITZ!Portal's connection sensor).
+function netInetField(key, label, role) {
+  return [
+    { key, label, domains: ["sensor", "binary_sensor"], section: "Internet connection", find: { net: role, live: true },
+      reveals: true },
+    { key: key + "_attribute", label: "Value from", type: "select", section: "Internet connection",
+      options: [""], optionLabels: { "": "Entity state" }, when: (v) => !!v[key],
+      dynOptions: (hass, ent, redraw, tile) => {
+        const id = tile && tile.variables && tile.variables[key];
+        const st = id && hass && hass.states && hass.states[id];
+        if (!st) return null;
+        const keys = Object.keys(st.attributes || {}).filter((a) => !NET_ATTR_SKIP.has(a)
+          && st.attributes[a] !== null && typeof st.attributes[a] !== "object" && String(st.attributes[a]) !== "");
+        const labels = {};
+        keys.forEach((a) => { labels[a] = a + ": " + String(st.attributes[a]).slice(0, 40); });
+        return { options: [""].concat(keys.sort()), labels };
+      } },
+  ];
+}
+// HA's own attributes are no values to show.
+const NET_ATTR_SKIP = new Set(["friendly_name", "icon", "device_class", "unit_of_measurement", "state_class",
+  "entity_picture", "supported_features", "attribution", "assumed_state", "restored", "editable", "options",
+  "display_precision", "suggested_display_precision"]);
+
 const TILE_MAIN_FIND = {
   casora_washer: { laundry: "washer", keys: ["washer_state"], domain: "sensor", not: /trockn|dryer/i },
   casora_dryer: { laundry: "dryer", keys: ["dryer_state", "washer_state"], domain: "sensor", like: /trockn|dryer/i },
@@ -12512,6 +12545,7 @@ class CasoraPanel extends HTMLElement {
           ? [{ id: "import", label: "Import from YAML…" }] : []),
         ...(this._dashUrl && !this._flowMode
           ? [{ id: "renamedash", label: "Rename…" },
+             { id: "copydash", label: "Copy…" },
              { id: "icondash", label: "Icon…" },
              { id: "delete", label: "Delete…", danger: true }] : []),
         ...(this._canAddMobile()
@@ -12528,6 +12562,10 @@ class CasoraPanel extends HTMLElement {
         if (id === "renamedash") {
           const d = (this._dashList || []).find((x) => x.url_path === this._dashUrl);
           return d && this._renameDashboard(d);
+        }
+        if (id === "copydash") {
+          const d = (this._dashList || []).find((x) => x.url_path === this._dashUrl);
+          return d && this._copyDashboard(d);
         }
         if (id === "icondash") {
           const d = (this._dashList || []).find((x) => x.url_path === this._dashUrl);
@@ -13140,6 +13178,58 @@ class CasoraPanel extends HTMLElement {
     } catch (e) {
       this._status("Rename failed: " + e.message, "err");
       this._log("rename failed: " + e.message, "err");
+    }
+  }
+
+  // #92: a copy of the saved dashboard and its phone layout under a new name; the original stays as it is.
+  // Links into the dashboard's own rooms (/<url>/<room>) move to the copy.
+  async _copyDashboard(d) {
+    if (this._state && this._isDirty()) return this._status("Save your changes first, then copy the dashboard.", "warn");
+    const base = d.title || d.url_path;
+    const taken = new Set((this._dashList || []).map((x) => (x.title || "").trim()));
+    let free = base + " 2";
+    for (let n = 3; taken.has(free); n++) free = base + " " + n;
+    const picked = await this._ask({ title: "Copy dashboard", value: free, confirmLabel: "Copy" });
+    const title = picked && String(typeof picked === "object" ? picked.value : picked).trim();
+    if (!title) return;
+    const url_path = this._flowPath(title, "casora-dashboard", "dashboard");
+    const home = this._homes(this._dashList || []).find((h) => h.wide === d);
+    const phone = home && home.phone;
+    const esc = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const moveLinks = (cfg) => {
+      let t = JSON.stringify(cfg);
+      [[d.url_path, url_path]].concat(phone ? [[phone.url_path, url_path + "-mobile"]] : []).forEach(([from, to]) => {
+        t = t.replace(new RegExp("/" + esc(from) + "(?=[/\"?#])", "g"), "/" + to);
+      });
+      return JSON.parse(t);
+    };
+    const created = [];
+    try {
+      const cfg = await this._hass.callWS({ type: "lovelace/config", url_path: d.url_path });
+      const pcfg = phone ? await this._hass.callWS({ type: "lovelace/config", url_path: phone.url_path }) : null;
+      const made = await this._hass.callWS({ type: "lovelace/dashboards/create", url_path, title,
+        icon: d.icon || "mdi:home", show_in_sidebar: true, require_admin: !!d.require_admin });
+      created.push(made && made.id);
+      await this._hass.callWS({ type: "lovelace/config/save", url_path, config: moveLinks(cfg) });
+      if (pcfg) {
+        const pmade = await this._hass.callWS({ type: "lovelace/dashboards/create", url_path: url_path + "-mobile",
+          title: title + " Mobile", icon: (phone && phone.icon) || "mdi:cellphone", show_in_sidebar: false,
+          require_admin: !!d.require_admin });
+        created.push(pmade && pmade.id);
+        await this._hass.callWS({ type: "lovelace/config/save", url_path: url_path + "-mobile", config: moveLinks(pcfg) });
+      }
+      await this._flowRelist();
+      this._paintDashes();
+      this._log(`copied "${d.url_path}" to "${url_path}"` + (pcfg ? " with its phone layout" : ""), "ok");
+      this._status("Copied to " + title, "ok");
+    } catch (e) {
+      // Half made: remove what was created, so the name and address are free again.
+      for (const id of created.reverse()) {
+        try { if (id) await this._hass.callWS({ type: "lovelace/dashboards/delete", dashboard_id: id }); } catch (e2) { /* stays listed */ }
+      }
+      await this._flowRelist();
+      this._status("Copy failed: " + e.message, "err");
+      this._log("copy failed: " + e.message, "err");
     }
   }
 
@@ -18401,6 +18491,10 @@ class CasoraPanel extends HTMLElement {
           if (value === undefined || value === "" || (Array.isArray(value) && !value.length)) delete r.variables[key];
           else r.variables[key] = value;
           if (isHomeRoom(r, this._state.compact.rooms)) {
+            if (/^(temp_sensor_\d+|humidity_sensor(_\d+)?)$/.test(key) && r.variables.climate_rooms_auto) {
+              delete r.variables.climate_rooms_auto;
+              this._mirrorToPair("climate_rooms_auto", undefined, [r]);
+            }
             const was = r.variables.light_rooms_auto;
             homeLightsEdit(r.variables, key, value);
             // The marker goes to the phone's badge row with it (also its removal).
@@ -18521,6 +18615,7 @@ class CasoraPanel extends HTMLElement {
           let w = null;
           if (/^energy_(power_entity|entities)$/.test(f.key) && B.homeEnergyWhy) w = B.homeEnergyWhy(this._hass, room.variables, f.key);
           else if (f.key === "light_group_entity" && B.homeLightsWhy) w = B.homeLightsWhy(this._hass, this._state.compact.rooms);
+          else if ((f.key === "temp_sensor_1" || f.key === "humidity_sensor") && B.homeClimateWhy) w = B.homeClimateWhy(room.variables, f.key);
           if (!w) return;
           const h = document.createElement("div");
           h.className = "hint autowhy";
@@ -20832,6 +20927,26 @@ class CasoraPanel extends HTMLElement {
   }
 
   // Einträge nach Raum gruppieren (Reihenfolge wie geliefert, „Ohne Raum“ zuletzt).
+  // Entities of the devices a tile already uses (its entity and every entity in its fields) → Map id → device
+  // name, for the entity fields of that tile: the same order in every field – this tile's devices first, then
+  // all others by room (#98: some fields seemed to offer only two devices, others all of HA).
+  _tileDevLead(tile, f) {
+    const h = this._hass || {}, R = h.entities || {}, D = h.devices || {}, S = h.states || {};
+    const used = [tile && tile.entity].concat(Object.values((tile && tile.variables) || {}))
+      .filter((v) => typeof v === "string" && /^[a-z_]+\.[a-z0-9_]+$/.test(v));
+    const devs = new Set(used.map((id) => (R[id] || {}).device_id).filter(Boolean));
+    const out = new Map();
+    if (!devs.size) return out;
+    const doms = (f && f.domains) || [];
+    Object.keys(R).forEach((id) => {
+      const e = R[id];
+      if (!e || !devs.has(e.device_id) || e.hidden || !S[id] || (doms.length && !doms.includes(id.split(".")[0]))) return;
+      const d = D[e.device_id] || {};
+      out.set(id, String(d.name_by_user || d.name || ""));
+    });
+    return out;
+  }
+
   _entGroups(ids) {
     const by = new Map();
     ids.forEach((o) => {
@@ -21785,12 +21900,21 @@ class CasoraPanel extends HTMLElement {
       menu.innerHTML = "";
       // Entitäten nach Raum gruppiert, wie in HAs Auswahl.
       let heads = null;
+      const lead = opts && opts.lead instanceof Map && opts.lead.size ? opts.lead : null;
       if (entityish && shown.length > 1) {
-        const groups = this._entGroups(shown.slice(0, 300));
+        // The tile's own devices on top, each under its name (#98), then the rest by room.
+        const top = lead ? shown.filter((o) => lead.has(o)) : [];
+        const byDev = new Map();
+        top.forEach((o) => { const k = lead.get(o); if (!byDev.has(k)) byDev.set(k, []); byDev.get(k).push(o); });
+        const groups = [...byDev.entries()].map(([k, ids]) => ["\u0000" + k, ids])
+          .concat(this._entGroups(shown.filter((o) => !lead || !lead.has(o)).slice(0, 300)));
         if (groups.length > 1) {
           heads = new Map();
           shown = [];
-          groups.forEach(([k, ids]) => { heads.set(ids[0], k || t9("Without room")); shown.push(...ids); });
+          groups.forEach(([k, ids]) => {
+            heads.set(ids[0], k && k.charAt(0) === "\u0000" ? k.slice(1) : (k || t9("Without room")));
+            shown.push(...ids);
+          });
         }
       }
 
@@ -22280,6 +22404,19 @@ class CasoraPanel extends HTMLElement {
     const A = h.areas || {};
     // Raumname im Namen („light.kueche“) zählt wie der Bereich – Gruppen haben oft keinen.
     const roomKey = room && room.path !== "home" ? foldName(room.name) : "";
+    // Devices that carry an internet connection sensor (binary_sensor, device class connectivity) – the router.
+    let gwDevs = null;
+    const netGateway = (dev) => {
+      if (!gwDevs) {
+        gwDevs = new Set();
+        Object.keys(S).forEach((x) => {
+          if (x.indexOf("binary_sensor.") !== 0 || ((S[x].attributes || {}).device_class) !== "connectivity") return;
+          const e = R[x];
+          if (e && e.device_id && !/wireguard|vpn|peer|tunnel|mqtt|bluetooth/i.test(x + " " + nameOf(x))) gwDevs.add(e.device_id);
+        });
+      }
+      return gwDevs.has(dev);
+    };
     const scored = ids.map((id, i) => {
       const text = id + " " + nameOf(id) + " " + devName(id);
       let score = 0;
@@ -22302,6 +22439,13 @@ class CasoraPanel extends HTMLElement {
       if (type.id === "energy_tile" && ENERGY_HOUSE.test(foldName(nameOf(id)))) score += 3;
       // A speed test result is not the line's live rate.
       if (type.id === "network" && /speed ?test|scan.?interval/i.test(id + " " + nameOf(id))) score -= 4;
+      // The line's rate comes from the router (#98): a device with an internet connection sensor first,
+      // a NAS or server (Synology DSM, QNAP, Proxmox …) last – its throughput is its own, not the line's.
+      if (type.id === "network") {
+        const dev = (R[id] || {}).device_id;
+        if (dev && netGateway(dev)) score += 4;
+        if (/^(synology_dsm|qnap|truenas|unraid|proxmoxve|glances|system_monitor|systemmonitor)$/.test((R[id] || {}).platform || "")) score -= 3;
+      }
       if (!used.has(id)) score += 2;
       if (S[id].state !== "unavailable" && S[id].state !== "unknown") score += 1;
       // Sure: the integration's key, the kind's name, this room's area or name, or a
@@ -22382,6 +22526,29 @@ class CasoraPanel extends HTMLElement {
       if (!tile.variables) tile.variables = {};
       tile.variables[f.key] = id;
     });
+    if (type.id === "network") this._netFill(tile, entity);
+  }
+
+  // Network tile (#98): upload, internet status and ping from the download sensor's device (FRITZ!Box,
+  // FRITZ!Portal, UniFi, UPnP …), only into empty fields. The tile reads these three itself, so they are
+  // written; provider and IP the popup finds on its own. True when something was filled.
+  _netFill(tile, entity) {
+    const CD = window.casoraDevice;
+    const S = (this._hass && this._hass.states) || {};
+    if (!CD || !CD.netFields || !entity) return false;
+    let n = {};
+    try { n = CD.netFields(this._hass, entity) || {}; } catch (e) { n = {}; }
+    let hit = false;
+    [["upload", "entity_upload", "sensor"], ["status", "entity_status", "binary_sensor"], ["ping", "entity_ping", "sensor"]]
+      .forEach(([role, key, dom]) => {
+        const id = n[role];
+        if (!id || !S[id] || id.split(".")[0] !== dom) return;
+        if (tile.variables && tile.variables[key]) return;
+        if (!tile.variables) tile.variables = {};
+        tile.variables[key] = id;
+        hit = true;
+      });
+    return hit;
   }
 
   // ── room images ───────────────────────────────────────────────────────────
@@ -23322,12 +23489,18 @@ class CasoraPanel extends HTMLElement {
 
     const thermostats = list("climate_entity_", 3);
     const temps = list("temp_sensor_", 5);
+    const hums = [V.humidity_sensor].concat(list("humidity_sensor_", 5).filter((id) => id !== V.humidity_sensor)).filter(Boolean);
+    // Several sensors: their average, as the dashboard's sub-badges (casoraAvgState, 01-basis.js).
+    const avg = (ids) => {
+      const vals = [...new Set(ids)].map(num).filter((x) => x != null);
+      return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length * 10) / 10 : null;
+    };
     // As casora_badge_climate_group: shown only with a temperature, humidity or air quality sensor - a thermostat
     // alone gave a badge in the preview that the dashboard and the phone do not have (r44, radiator in the garage).
-    const climateOn = !!(temps.length || V.humidity_sensor || V.quality_sensor);
+    const climateOn = !!(temps.length || hums.length || V.quality_sensor);
     if (on("show_climate") && climateOn) {
-      const t = num(temps[0]) ?? (st(thermostats[0]) || {}).attributes?.current_temperature;
-      const h = num(V.humidity_sensor);
+      const t = avg(temps) ?? (st(thermostats[0]) || {}).attributes?.current_temperature;
+      const h = avg(hums);
       const subs = [];
       // casora_badge_temp's own thresholds and wording.
       const tempWord = (v) => {
@@ -23363,7 +23536,7 @@ class CasoraPanel extends HTMLElement {
       };
       const clamp = (x) => Math.max(0.05, Math.min(1, x));
       if (temps[0]) {
-        const n = num(temps[0]);
+        const n = avg(temps);
         subs.push({
           icon: n != null ? tempIcon(n) : "temp-medium",
           color: n != null ? tempColor(n) : CLIMATE,
@@ -23371,7 +23544,7 @@ class CasoraPanel extends HTMLElement {
           gauge: n != null ? clamp(unit === "F" ? (n - 45) / 50 : (n - 7) / 28) : null,
           text: n != null ? tempWord(n) + " \u00b7 " + Math.round(n) + unit : "Unknown" });
       }
-      if (V.humidity_sensor) {
+      if (hums.length) {
         subs.push({ icon: "humidity", color: h != null ? humColor(h) : CLIMATE,
           label: "Humidity",
           gauge: h != null ? clamp(h / 100) : null,
@@ -27565,11 +27738,13 @@ class CasoraPanel extends HTMLElement {
     const grp = type && TILE_GROUP[type.id];
     const elsewhere = ((this._state && this._state.compact.rooms) || [])
       .filter((r) => r !== room).length > 0;
+    // #92: Duplicate puts a copy right behind the tile in the same room (several lamps or blinds quickly).
     const menu = elsewhere
-      ? [{ id: "move", label: "Move to Room\u2026" },
+      ? [{ id: "duplicate", label: "Duplicate" },
+         { id: "move", label: "Move to Room\u2026" },
          { id: "copy", label: "Copy to Room\u2026" },
          { id: "remove", label: "Remove tile" }]
-      : [{ id: "remove", label: "Remove tile" }];
+      : [{ id: "duplicate", label: "Duplicate" }, { id: "remove", label: "Remove tile" }];
     if (type.raw || type.id === "custom") {
       menu.unshift({ id: "edit", label: "Edit card\u2026" });
       // A phone view has no slot under the row, so it is not offered one.
@@ -27604,6 +27779,12 @@ class CasoraPanel extends HTMLElement {
       if (id === "remove") return removeTile();
       if (id === "move") return this._moveTileMenu(dots, room, shell);
       if (id === "copy") return this._copyTileMenu(dots, room, shell);
+      if (id === "duplicate") {
+        room.tiles.splice(i + 1, 0, clone(shell));
+        this._markDirty();
+        this._renderForm();
+        return this._status("Tile duplicated", "ok");
+      }
     });
     head.appendChild(dots);
     // Drag the header to reorder. Presses on the buttons are left alone.
@@ -27915,6 +28096,7 @@ class CasoraPanel extends HTMLElement {
             rebuild = true;
           }
         }
+        if (type.id === "network" && v && this._netFill(tile, v)) rebuild = true;
         if (type.id === "plant" && v) {
           const have = (tile.variables || {}).sensors;
           if (!Array.isArray(have) || !have.filter(Boolean).length) {
@@ -28611,7 +28793,7 @@ class CasoraPanel extends HTMLElement {
         let opts = f.options, dynLabels = null;
         if (typeof f.dynOptions === "function") {
           let dyn = null;
-          try { dyn = f.dynOptions(this._hass, this._tileEnt(tile), () => { if (this.isConnected) this._renderForm(); }); } catch (e) { dyn = null; }
+          try { dyn = f.dynOptions(this._hass, this._tileEnt(tile), () => { if (this.isConnected) this._renderForm(); }, tile); } catch (e) { dyn = null; }
           if (dyn && Array.isArray(dyn.options)) { opts = dyn.options; dynLabels = dyn.labels || null; }
           const c0 = String(cur === undefined ? "" : cur);
           if (c0 && !opts.includes(c0)) opts = opts.concat([c0]);
@@ -28747,7 +28929,7 @@ class CasoraPanel extends HTMLElement {
           let whyEl = null;
           put(f.label, this._combo(cur, this._entityList(f.domains, f.classes, f.accept),
             found || f.placeholder || pickHint(f.domains), (v) => { if (whyEl && v) { whyEl.remove(); whyEl = null; } set(v); },
-            { clearable: true }).wrap);
+            { clearable: true, lead: this._tileDevLead(tile, f) }).wrap);
           hintUnder();
           // Where the finder found it (#44: a wrong pick should be easy to spot), only while the field is empty.
           const why = found && !cur && window.casoraFieldWhy && window.casoraFieldWhy(f, tile, this._hass);

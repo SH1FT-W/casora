@@ -435,6 +435,7 @@
       const g = "This dashboard";
       const out = [
         { id: "doc:rename", label: "Rename\u2026", icon: "pencil", group: g },
+        { id: "doc:copy", label: "Copy\u2026", icon: "copy", group: g },
         { id: "doc:icon", label: "Icon\u2026", icon: "grid", group: g },
       ];
       if (typeof this._cvFromMenu === "function") out.push({ id: "doc:versions", label: "Rewind", icon: "clock", group: g });
@@ -448,6 +449,7 @@
       const k = id.slice(4);
       this._bRooms = false;
       if (k === "rename") { if (d) this._renameDashboard(d); }
+      else if (k === "copy") { if (d) this._copyDashboard(d); }
       else if (k === "icon") { if (d) this._dashIconMenu(anchor, d); }
       else if (k === "versions") { this._bOpen = true; this._cvFromMenu(); }
       else if (k === "addmobile") this._addMobileSibling();
@@ -1249,7 +1251,7 @@
       if (this._bMenuAnchor && anchor && !anchor.getClientRects().length) anchor = this._bMenuAnchor;
       // UX-03: rename, icon, Rewind, mobile layout and delete sit in the title menu in the new Studio.
       if (this.classList.contains("bmode") && Array.isArray(items) && items.some((x) => x && x.id === "hints")) {
-        const DOC = ["renamedash", "icondash", "delete", "addmobile", "casora_versions"];
+        const DOC = ["renamedash", "copydash", "icondash", "delete", "addmobile", "casora_versions"];
         items = items.filter((x) => !(x && DOC.indexOf(x.id) >= 0));
       }
       // Room menu in B: sort rooms (the sidebar's room list is missing here).

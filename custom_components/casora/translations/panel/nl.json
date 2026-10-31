@@ -5,6 +5,11 @@
     "Diagnostics": "Diagnose",
     "Paste it into your GitHub issue. It contains only counts, versions and integrations – no names of devices, rooms or people, no addresses.": "Plak het in je GitHub-issue. Het bevat alleen aantallen, versies en integraties – geen namen van apparaten, kamers of personen, geen adressen.",
     "Copy": "Kopiëren",
+    "Duplicate": "Dupliceren",
+    "Tile duplicated": "Tegel gedupliceerd",
+    "Copy…": "Kopiëren…",
+    "Copy dashboard": "Dashboard kopiëren",
+    "Save your changes first, then copy the dashboard.": "Sla eerst je wijzigingen op en kopieer dan het dashboard.",
     "The diagnostics could not be collected.": "De diagnose kon niet worden verzameld.",
     "Copying is not possible here. The text is selected – copy it by hand.": "Kopiëren is hier niet mogelijk. De tekst is geselecteerd – kopieer hem met de hand.",
     "GitHub is open – paste the diagnostics into your issue.": "GitHub is geopend – plak de diagnose in je issue.",
@@ -758,6 +763,10 @@
     "Tablets only. Brings one back to Home after a while without use.": "Alleen tablets. Gaat na een tijd zonder gebruik terug naar Thuis.",
     "Temperature": "Temperatuur",
     "Temperature sensor": "Temperatuursensor",
+    "Humidity sensor": "Vochtigheidssensor",
+    "Only if the popup should show another sensor. Empty: the badge's first temperature.": "Alleen als de pop-up een andere sensor moet tonen. Leeg: de eerste temperatuur van de badge.",
+    "Only if the popup should show another sensor. Empty: the badge's humidity.": "Alleen als de pop-up een andere sensor moet tonen. Leeg: de vochtigheid van de badge.",
+    "Chosen automatically: the average of {n} rooms' sensors. Remove one here to leave it out.": "Automatisch gekozen: het gemiddelde van de sensoren in {n} kamers. Verwijder er hier een om hem weg te laten.",
     "Text": "Tekst",
     "The account's now playing or session sensor.": "De speelt-nu- of sessiesensor van het account.",
     "The number the Energy badge shows. Without it, the badge shows today's cost.": "Het getal dat de energiebadge toont. Zonder dit toont de badge de kosten van vandaag.",
@@ -2514,7 +2523,8 @@
     "Display": "Weergave",
     "Line": "Lijn",
     "Bars": "Balken",
-    "Automatic draws bars for meters (energy, water, rainfall – sensors that count up) and a line for readings such as temperature or CPU load. Bars show one column per hour, day or month. The popup has a switch too, remembered until the page is reloaded.": "Automatisch tekent balken voor meters (energie, water, neerslag – sensoren die optellen) en een lijn voor meetwaarden zoals temperatuur of CPU-belasting. Balken tonen één kolom per uur, dag of maand. Het venster heeft ook een schakelaar, onthouden tot de pagina opnieuw wordt geladen.",
+    "Heatmap": "Heatmap",
+    "Automatic draws bars for meters (energy, water, rainfall – sensors that count up) and a line for readings such as temperature or CPU load. Bars show one column per hour, day or month. The heatmap colors every hour by its value, one row per day (the year: one row per month), and the tile then shows the last 7 days as a small grid. The popup has a switch too, remembered until the page is reloaded.": "Automatisch tekent balken voor meters (energie, water, neerslag – sensoren die optellen) en een lijn voor meetwaarden zoals temperatuur of CPU-belasting. Balken tonen één kolom per uur, dag of maand. De heatmap kleurt elk uur naar zijn waarde, één rij per dag (het jaar: één rij per maand), en de tegel toont dan de laatste 7 dagen als klein raster. Het venster heeft ook een schakelaar, onthouden tot de pagina opnieuw wordt geladen.",
     "Range when opening": "Periode bij openen",
     "24 hours": "24 uur",
     "7 days": "7 dagen",
@@ -2731,7 +2741,9 @@
     "A calm question before this runs. For the front door, the gate or everything off.": "Een rustige vraag voordat dit wordt uitgevoerd. Voor de voordeur, de poort of alles uit.",
     "A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.": "Een rustige vraag voordat dit wordt uitgevoerd, op de tegel en in de pop-up. Voor de voordeur, de poort of alles uit.",
     "With confirmation": "Met bevestiging",
-    "A calm question before it runs. Same switch as Ask before switching.": "Een rustige vraag voordat het wordt uitgevoerd. Dezelfde schakelaar als ‘Vragen voor het schakelen’."
+    "A calm question before it runs. Same switch as Ask before switching.": "Een rustige vraag voordat het wordt uitgevoerd. Dezelfde schakelaar als ‘Vragen voor het schakelen’.",
+    "Value from": "Waarde uit",
+    "Entity state": "Status van de entiteit"
   },
   "patterns": [
     [
@@ -2801,6 +2813,10 @@
     [
       "^Rename failed: (.+)$",
       "Hernoemen mislukt: {1}"
+    ],
+    [
+      "^Copy failed: (.+)$",
+      "Kopiëren mislukt: {1}"
     ],
     [
       "^Save failed: (.+)$",
@@ -3229,6 +3245,10 @@
     [
       "^Temperature (\\d+)$",
       "Temperatuur {1}"
+    ],
+    [
+      "^Humidity (\\d+)$",
+      "Vochtigheid {1}"
     ],
     [
       "^Thermostat (\\d+)$",

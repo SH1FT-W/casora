@@ -288,8 +288,15 @@
     var list = typeof window._casoraNP === 'function' ? window._casoraNP(states, e.cfg) : [];
     var show = list.length > 0;
     if (e.kind === 'phone') {
-      var f = (states['input_select.casora_mobile_filter'] || {}).state || 'all';
+      // This device's filter (issue 101): HA's own hass carries the house-wide helper, which another phone or
+      // tablet may have set to its own filter – the cards get it rewritten per device (casora-core, _casoraFilter).
+      var F = window._casoraFilter;
+      var f = (F && typeof F.get === 'function' ? F.get() : (states['input_select.casora_mobile_filter'] || {}).state) || 'all';
       show = show && (f === 'all' || f === 'media');
+      // The heading never stands without a player under it (issue 101): hidden (space kept for the collapse) while
+      // the list is empty.
+      var hide = HIDE.phone + (show ? '' : '#np_title{visibility:hidden !important}');
+      if (e.style.textContent !== hide) e.style.textContent = hide;
     }
 
     var desk = e.kind === 'room';

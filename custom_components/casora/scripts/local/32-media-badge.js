@@ -91,8 +91,10 @@
   };
   var mediaLine = function (a) {
     a = a || {};
-    var title = String(a.media_title || '').trim();
-    var artist = String(a.media_artist || a.artist || a.media_album_artist || a.media_series_title || '').trim();
+    // Entities in the metadata (#97, casora-core) as plain text.
+    var dec = window.casoraDecodeEntities || function (x) { return String(x == null ? '' : x).trim(); };
+    var title = dec(a.media_title || '');
+    var artist = dec(a.media_artist || a.artist || a.media_album_artist || a.media_series_title || '');
     var app = String(a.app_name || a.source || '').trim();
     return [title, artist].filter(Boolean).join(' – ') || app;
   };

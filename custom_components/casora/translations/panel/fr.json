@@ -5,6 +5,11 @@
     "Diagnostics": "Diagnostic",
     "Paste it into your GitHub issue. It contains only counts, versions and integrations – no names of devices, rooms or people, no addresses.": "Colle-le dans ton issue GitHub. Il ne contient que des nombres, des versions et des intégrations – aucun nom d'appareil, de pièce ou de personne, aucune adresse.",
     "Copy": "Copier",
+    "Duplicate": "Dupliquer",
+    "Tile duplicated": "Tuile dupliquée",
+    "Copy…": "Copier…",
+    "Copy dashboard": "Copier le tableau de bord",
+    "Save your changes first, then copy the dashboard.": "Enregistre d'abord tes modifications, puis copie le tableau de bord.",
     "The diagnostics could not be collected.": "Le diagnostic n'a pas pu être collecté.",
     "Copying is not possible here. The text is selected – copy it by hand.": "Impossible de copier ici. Le texte est sélectionné – copie-le à la main.",
     "GitHub is open – paste the diagnostics into your issue.": "GitHub est ouvert – colle le diagnostic dans ton issue.",
@@ -758,6 +763,10 @@
     "Tablets only. Brings one back to Home after a while without use.": "Tablettes seulement. Ramène à Maison après un moment sans utilisation.",
     "Temperature": "Température",
     "Temperature sensor": "Capteur de température",
+    "Humidity sensor": "Capteur d'humidité",
+    "Only if the popup should show another sensor. Empty: the badge's first temperature.": "Seulement si la fenêtre doit afficher un autre capteur. Vide : la première température du badge.",
+    "Only if the popup should show another sensor. Empty: the badge's humidity.": "Seulement si la fenêtre doit afficher un autre capteur. Vide : l'humidité du badge.",
+    "Chosen automatically: the average of {n} rooms' sensors. Remove one here to leave it out.": "Choisi automatiquement : la moyenne des capteurs de {n} pièces. Retire-en un ici pour l'exclure.",
     "Text": "Texte",
     "The account's now playing or session sensor.": "Le capteur de lecture en cours ou de session du compte.",
     "The number the Energy badge shows. Without it, the badge shows today's cost.": "Le nombre affiché par le badge Énergie. Sans lui, le badge montre le coût du jour.",
@@ -2514,7 +2523,8 @@
     "Display": "Affichage",
     "Line": "Ligne",
     "Bars": "Barres",
-    "Automatic draws bars for meters (energy, water, rainfall – sensors that count up) and a line for readings such as temperature or CPU load. Bars show one column per hour, day or month. The popup has a switch too, remembered until the page is reloaded.": "Automatique dessine des barres pour les compteurs (énergie, eau, précipitations – capteurs qui cumulent) et une ligne pour les mesures comme la température ou la charge CPU. Les barres montrent une colonne par heure, jour ou mois. La fenêtre a aussi un sélecteur, mémorisé jusqu'au rechargement de la page.",
+    "Heatmap": "Carte thermique",
+    "Automatic draws bars for meters (energy, water, rainfall – sensors that count up) and a line for readings such as temperature or CPU load. Bars show one column per hour, day or month. The heatmap colors every hour by its value, one row per day (the year: one row per month), and the tile then shows the last 7 days as a small grid. The popup has a switch too, remembered until the page is reloaded.": "Automatique dessine des barres pour les compteurs (énergie, eau, précipitations – capteurs qui cumulent) et une ligne pour les mesures comme la température ou la charge CPU. Les barres montrent une colonne par heure, jour ou mois. La carte thermique colore chaque heure selon sa valeur, une ligne par jour (l'année : une ligne par mois), et la tuile montre alors les 7 derniers jours en petite grille. La fenêtre a aussi un sélecteur, mémorisé jusqu'au rechargement de la page.",
     "Range when opening": "Période à l'ouverture",
     "24 hours": "24 h",
     "7 days": "7 jours",
@@ -2731,7 +2741,9 @@
     "A calm question before this runs. For the front door, the gate or everything off.": "Une question calme avant l’exécution. Pour la porte d’entrée, le portail ou tout éteindre.",
     "A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.": "Une question calme avant l’exécution, sur la tuile et dans sa fenêtre. Pour la porte d’entrée, le portail ou tout éteindre.",
     "With confirmation": "Avec confirmation",
-    "A calm question before it runs. Same switch as Ask before switching.": "Une question discrète avant l’exécution. Le même interrupteur que « Demander avant de basculer »."
+    "A calm question before it runs. Same switch as Ask before switching.": "Une question discrète avant l’exécution. Le même interrupteur que « Demander avant de basculer ».",
+    "Value from": "Valeur depuis",
+    "Entity state": "État de l'entité"
   },
   "patterns": [
     [
@@ -2801,6 +2813,10 @@
     [
       "^Rename failed: (.+)$",
       "Échec du renommage : {1}"
+    ],
+    [
+      "^Copy failed: (.+)$",
+      "Échec de la copie : {1}"
     ],
     [
       "^Save failed: (.+)$",
@@ -3229,6 +3245,10 @@
     [
       "^Temperature (\\d+)$",
       "Température {1}"
+    ],
+    [
+      "^Humidity (\\d+)$",
+      "Humidité {1}"
     ],
     [
       "^Thermostat (\\d+)$",

@@ -112,6 +112,15 @@ c = M.chartCfg(E, '7d', 'total', 'line');
 assert.deepEqual([c.kind, c.source, c.bucket], ['line', 'stats', '6h'], 'counter forced to a line');
 c = M.chartCfg(mixed, '7d', 'measurement', 'bar');
 assert.equal(c.switch, undefined, 'bars with different units: the switch, one series at a time');
+// Heatmap (issue 100): hourly statistics, one sensor at a time (several: the chart's switch even with the same unit),
+// counters as consumption per hour.
+for (const sp of ['24h', '7d', '30d', '1y']) {
+  c = M.chartCfg(S, sp, 'measurement', 'heat');
+  assert.deepEqual([c.kind, c.span, c.source, c.readout, c.plate, c.switch, c.period, c.bucket], ['heat', sp, 'stats', 'hero', true, undefined, undefined, undefined], 'heatmap ' + sp);
+  assert.equal(c.series.length, 2);
+}
+c = M.chartCfg(E, '7d', 'total', 'heat');
+assert.deepEqual([c.kind, c.source], ['heat', 'change'], 'counter heatmap: consumption per hour');
 assert.equal(M.key(CPU, '7d'), 'casora_chart:' + CPU + '|7d');
 assert.equal(M.key(CPU, '7d', 'bar'), 'casora_chart:' + CPU + '|7d|bar');
 console.log('ok chart config');
@@ -233,7 +242,8 @@ assert.match(range, /data-casora-cspan="sensor\.heimserver_cpu\|24h" class="hui-
 assert.match(range, /data-casora-cspan="sensor\.heimserver_cpu\|7d" class="hui-sg">7 Tage/);
 assert.match(range, /data-casora-cspan="sensor\.heimserver_cpu\|1y" class="hui-sg">Jahr/);
 // Shape switch beside the ranges: a reading starts as a line, a counter as bars (automatic).
-assert.equal((range.match(/data-casora-cshape="/g) || []).length, 2);
+assert.equal((range.match(/data-casora-cshape="/g) || []).length, 3);
+assert.match(range, /data-casora-cshape="sensor\.heimserver_cpu\|heat" class="hui-sg">Heatmap/);
 assert.match(range, /data-casora-cshape="sensor\.heimserver_cpu\|line" class="hui-sg on">Linie/);
 assert.match(range, /data-casora-cshape="sensor\.heimserver_cpu\|bar" class="hui-sg">Balken/);
 M.setDefaults('sensor.zaehler_energie', {}, 'total');
@@ -377,10 +387,11 @@ assert.deepEqual(lay.top, ['hero', 'range', 'chart']);
 assert.deepEqual([lay.left, lay.right], [['series'], ['stats']]);
 assert.ok(/hp-chart-slot/.test(lay.fields.chart.card.custom_fields.c), 'slot for the chart');
 const keys = [];
-['24h', '7d', '30d', '1y'].forEach((sp) => ['line', 'bar'].forEach((sh) => keys.push('casora_chart:' + CPU + '|' + sp + '|' + sh)));
+['24h', '7d', '30d', '1y'].forEach((sp) => ['line', 'bar', 'heat'].forEach((sh) => keys.push('casora_chart:' + CPU + '|' + sp + '|' + sh)));
 assert.deepEqual(Object.keys(window._hpPlantCfg).sort(), keys.sort(), 'one config per range and shape');
 assert.equal(window._hpPlantCfg['casora_chart:' + CPU + '|7d|line'].series.length, 2);
 assert.deepEqual([window._hpPlantCfg['casora_chart:' + CPU + '|1y|bar'].kind, window._hpPlantCfg['casora_chart:' + CPU + '|1y|bar'].period], ['bar', 'month']);
+assert.equal(window._hpPlantCfg['casora_chart:' + CPU + '|7d|heat'].kind, 'heat');
 assert.deepEqual(shown, [], 'the popup template mounts nothing itself (back from a page reuses the built config)');
 M.sec('range', { id: CPU, kind: 'measurement', series: [] }, states, hass, { isConnected: true });
 assert.deepEqual(shown, ['init:casora_chart:' + CPU + '|30d|line'], 'a new range card mounts the remembered range with the automatic shape');
@@ -409,6 +420,8 @@ M.popup(states['sensor.zaehler_energie'], states, hass, { chart_span: '1y' });
 assert.deepEqual([M.span('sensor.zaehler_energie'), M.shape('sensor.zaehler_energie')], ['1y', 'bar'], 'year on opening, counter → bars');
 M.popup(states['sensor.zaehler_energie'], states, hass, { chart_kind: 'line', chart_span: 'nope' });
 assert.deepEqual([M.span('sensor.zaehler_energie'), M.shape('sensor.zaehler_energie')], ['1y', 'line'], 'unknown range → 24 h… but the session choice (year) stays; line forced');
+M.popup(states['sensor.heimserver_temp'], states, hass, { chart_kind: 'heat' });
+assert.equal(M.shape('sensor.heimserver_temp'), 'heat', 'Studio "Display: Heatmap" opens the popup as a heatmap');
 M.setShape('sensor.zaehler_energie', 'bar');
 M.popup(states['sensor.zaehler_energie'], states, hass, { chart_kind: 'line' });
 assert.equal(M.shape('sensor.zaehler_energie'), 'bar', 'the popup choice wins over the Studio default');
@@ -423,7 +436,7 @@ assert.deepEqual(M.popup({ entity_id: 'sensor.fehlt' }, states, hass, {}), { typ
 for (const lang of ['en', 'es']) {
   const ph = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/translations/dashboard/phrases/' + lang + '.json', import.meta.url), 'utf8')).exact;
   for (const t of ['Noch keine Statistik', 'Statistik nicht abrufbar', 'Home Assistant sammelt sie stündlich.', 'Dieser Sensor hat keine Statistik.',
-    'Jahr', 'Letzte 12 Monate', 'Linie', 'Balken', 'Dieser Monat', 'Ø pro Monat', 'Ø pro Stunde', 'letzte 12 Monate'])
+    'Jahr', 'Letzte 12 Monate', 'Linie', 'Balken', 'Heatmap', 'Dieser Monat', 'Ø pro Monat', 'Ø pro Stunde', 'letzte 12 Monate'])
     assert.ok(ph[t], lang + ' phrase missing for: ' + t);
 }
 // Studio fields of the chart tile: display (automatic / line / bars) and the range when opening, with translations.
@@ -434,15 +447,22 @@ for (const lang of ['en', 'es']) {
   const t = w.CASORA_TILE_TYPES.find((x) => x.id === 'casora_chart');
   assert.ok(t, 'casora_chart in the Studio');
   const f = (k) => t.fields.find((x) => x.key === k);
-  assert.deepEqual([f('chart_kind').type, f('chart_kind').options, f('chart_kind').label], ['select', ['', 'line', 'bar'], 'Display']);
-  assert.deepEqual(f('chart_kind').optionLabels, { '': 'Automatic', line: 'Line', bar: 'Bars' });
+  assert.deepEqual([f('chart_kind').type, f('chart_kind').options, f('chart_kind').label], ['select', ['', 'line', 'bar', 'heat'], 'Display']);
+  assert.deepEqual(f('chart_kind').optionLabels, { '': 'Automatic', line: 'Line', bar: 'Bars', heat: 'Heatmap' });
   assert.deepEqual([f('chart_span').type, f('chart_span').options, f('chart_span').label], ['select', ['', '7d', '30d', '1y'], 'Range when opening']);
   assert.deepEqual(f('chart_span').optionLabels, { '': '24 hours', '7d': '7 days', '30d': '30 days', '1y': 'Year' });
   const tpl = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8')).casora_chart.variables;
   assert.ok('chart_kind' in tpl && 'chart_span' in tpl, 'template variables declared');
+  // The tile: sparkline as before, a small 7-day heatmap with "Display: Heatmap" (meters as consumption).
+  const spark = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8')).casora_chart.custom_fields.spark.card;
+  const run = (expr, variables, entity) => new Function('variables', 'entity', expr.replace(/^\[\[\[|\]\]\]$/g, ''))(variables, entity);
+  const sensor = { attributes: { state_class: 'measurement' } }, meter = { attributes: { state_class: 'total_increasing' } };
+  assert.deepEqual([run(spark.kind, {}, sensor), run(spark.span, {}, sensor), run(spark.mini, {}, sensor), run(spark.source, {}, meter)], ['spark', '24h', false, 'auto']);
+  assert.deepEqual([run(spark.kind, { chart_kind: 'heat' }, sensor), run(spark.span, { chart_kind: 'heat' }, sensor), run(spark.mini, { chart_kind: 'heat' }, sensor),
+    run(spark.source, { chart_kind: 'heat' }, sensor), run(spark.source, { chart_kind: 'heat' }, meter)], ['heat', '7d', true, 'auto', 'change']);
   for (const lang of ['de', 'es']) {
     const tr = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/translations/panel/' + lang + '.json', import.meta.url), 'utf8')).exact;
-    for (const k of ['Display', 'Line', 'Bars', 'Range when opening', '24 hours', '7 days', '30 days', 'Year', f('chart_kind').hint, f('chart_span').hint])
+    for (const k of ['Display', 'Line', 'Bars', 'Heatmap', 'Range when opening', '24 hours', '7 days', '30 days', 'Year', f('chart_kind').hint, f('chart_span').hint])
       assert.ok(tr[k], lang + ' Studio text missing for: ' + k);
   }
 }

@@ -1754,6 +1754,7 @@
   "Letzte 12 Monate": "Laatste 12 maanden",
   "Linie": "Lijn",
   "Balken": "Balken",
+  "Heatmap": "Heatmap",
   "Ø pro Monat": "Ø per maand",
   "Ø pro Stunde": "Ø per uur",
   "letzte 12 Monate": "laatste 12 maanden",
@@ -2574,7 +2575,12 @@
   "Geparkt": "Geparkeerd",
   "Kein Akkustand": "Geen accuniveau",
   "Tank": "Tank",
-  "Seit": "Sinds"
+  "Seit": "Sinds",
+  "Pulse: Gut": "Pulse: Goed",
+  "Pulse: Lernt": "Pulse: Leert",
+  "Pulse: Beobachten": "Pulse: Volgen",
+  "Pulse: Prüfen": "Pulse: Controleren",
+  "Pulse: Ausgefallen": "Pulse: Uitgevallen"
  },
  "patterns": [
   [

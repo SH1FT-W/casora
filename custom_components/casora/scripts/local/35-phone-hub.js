@@ -382,12 +382,15 @@
   var climateTone = function (item, hass) {
     var tpl = item.tpl || '', st = item.el && item.el._stateObj, C = window.casoraComfortColor, Lv = window.casoraComfortLevel;
     if (!C || !Lv) return null;
+    // The badge's own reading: the average of its sensors when it has several (casoraAvgState, 01-basis.js).
+    var ev = (item.el && item.el._evaledVariables) || {};
+    var val = st && window.casoraAvgState ? window.casoraAvgState(hass, ev.avg_sensors, st) : st && st.state;
     if (/casora_badge_temp/.test(tpl) && st) {
       var u = (st.attributes && st.attributes.unit_of_measurement) || (hass && hass.config && hass.config.unit_system && hass.config.unit_system.temperature);
-      var lt = Lv('temp', st.state, u);
+      var lt = Lv('temp', val, u);
       return lt === null ? null : C(lt);
     }
-    if (/casora_badge_humidity/.test(tpl) && st) { var lh = Lv('humidity', st.state); return lh === null ? null : C(lh); }
+    if (/casora_badge_humidity/.test(tpl) && st) { var lh = Lv('humidity', val); return lh === null ? null : C(lh); }
     if (/casora_badge_air_quality/.test(tpl)) {
       var w = String(item.sub || '').split(' · ')[0];
       return w in AQ_WORD ? C(AQ_WORD[w]) : null;

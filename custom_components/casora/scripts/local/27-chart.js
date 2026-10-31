@@ -5,9 +5,10 @@
 // label and color), a legend, and the main sensor's lowest, highest and average – or, for counters (total_increasing),
 // today's and the range's consumption – from the recorder's long-term statistics (recorder/statistics_during_period:
 // hourly for 24 h, daily for 7/30 days, monthly for the year). The 24 h line itself comes from the history.
-// Shape (Studio "Display": automatic / line / bars, plus a switch in the popup remembered per sensor for the session):
-// automatic draws bars for counters and a line for readings; bars have one bucket per hour (24 h), day (7/30 d)
-// or month (year), several sensors side by side. Studio "Range when opening" picks the first range.
+// Shape (Studio "Display": automatic / line / bars / heatmap, plus a switch in the popup remembered per sensor for the
+// session): automatic draws bars for counters and a line for readings; bars have one bucket per hour (24 h), day
+// (7/30 d) or month (year), several sensors side by side; the heatmap (issue 100) colours one sensor's hourly statistics
+// as days × hours (the year: months × days), the tile then shows a small grid of the last 7 days. Studio "Range when opening" picks the first range.
 //   window._casoraChartCard.kind(st)                         → 'measurement' | 'total' | null (not numeric)
 //   window._casoraChartCard.value(st, hass)                  → "23 %", "21,5 °C", "Nicht verfügbar"
 //   window._casoraChartCard.series(entity, V, hass)          → [{entity, name, color, unit}] main + entity_2…4
@@ -30,8 +31,8 @@
   var HEAD = { '24h': 'Letzte 24 Std.', '7d': 'Letzte 7 Tage', '30d': 'Letzte 30 Tage', '1y': 'Letzte 12 Monate' };
   // Statistics period = bar bucket per range.
   var PERIOD = { '24h': 'hour', '7d': 'day', '30d': 'day', '1y': 'month' };
-  var SHAPES = ['line', 'bar'];
-  var SHAPE_LABEL = { line: 'Linie', bar: 'Balken' };
+  var SHAPES = ['line', 'bar', 'heat'];
+  var SHAPE_LABEL = { line: 'Linie', bar: 'Balken', heat: 'Heatmap' };
   // casora-chart's checked colour steps (blue, orange, teal, gold) for series without a Studio colour; the same
   // tones as theme variables for rows outside the chart's shadow root.
   var STEPS = ['c1', 'c2', 'c3', 'c4'];
@@ -127,6 +128,12 @@
   M.chartCfg = function (series, span, kind, shape) {
     series = series || [];
     shape = shape || M.autoShape(kind);
+    if (shape === 'heat') {
+      // One sensor at a time (several: casora-chart's switch); hourly statistics, counters as consumption per hour.
+      return { type: 'custom:casora-chart', kind: 'heat', span: span, readout: 'hero', plate: true,
+        source: kind === 'total' ? 'change' : 'stats',
+        series: series.map(function (s) { return { entity: s.entity, name: s.name, color: s.color }; }) };
+    }
     var cfg = { type: 'custom:casora-chart', kind: shape === 'bar' ? 'bar' : 'line', span: span, height: 190, readout: 'hero', plate: true,
       series: series.map(function (s) { return { entity: s.entity, name: s.name, color: s.color }; }) };
     if (series.length > 1 && M.sameUnit(series)) cfg.switch = false;
@@ -412,8 +419,8 @@
       if (!C.kind) return out;
       var sw = UI.segments(SHAPES.map(function (sh) { return { label: SHAPE_LABEL[sh], active: sh === shape }; }), null)
         .replace(/<div class="hui-sg/g, function () { return '<div data-casora-cshape="' + esc(C.id + '|' + SHAPES[j++]) + '" class="hui-sg'; });
-      return '<div style="display:flex;flex-wrap:wrap;gap:10px 24px;align-items:start;"><div style="flex:3 1 300px;min-width:0;">' + out
-        + '</div><div style="flex:1 1 150px;min-width:0;">' + sw + '</div></div>';
+      return '<div style="display:flex;flex-wrap:wrap;gap:10px 24px;align-items:start;"><div style="flex:4 1 300px;min-width:0;">' + out
+        + '</div><div style="flex:3 1 230px;min-width:0;">' + sw + '</div></div>';
     }
     if (part === 'series') {
       var rows = (C.series || []).map(function (x) {

@@ -1,6 +1,6 @@
 #!/bin/sh
-# Wegwerf-Test-HA fürs parallele Gate (dev/qa/gate.sh): je Zustand ein eigenes HA aus der venv
-# (tools/ha-venv.sh, ohne Docker) „casora-gate-<name>“ mit einer Kopie des Zustands aus ~/casora-haus/zustaende/ – casora-test
+# Wegwerf-Test-HA fürs parallele Gate (dev/qa/gate.sh): je Zustand ein eigener Docker-Container
+# (tools/ha-docker.sh; ohne Docker: CASORA_HA_BACKEND=venv) „casora-gate-<name>“ mit einer Kopie des Zustands aus ~/casora-haus/zustaende/ – casora-test
 # (:8124) und ~/casora-haus/config bleiben unberührt.
 #
 #   dev/qa/wegwerf-ha.sh start <name> <port> arbeit|frisch|stress|demo   anlegen + starten (ohne Warten)
@@ -21,7 +21,7 @@ NODE="${NODE:-/opt/homebrew/opt/node@22/bin/node}"
 cmd="$1"; name="$2"
 case "$name" in ''|*[!a-z0-9-]*) echo "wegwerf-ha: Name nur a-z0-9-" >&2; exit 2 ;; esac
 N="casora-gate-$name"; D="$HOME/casora-agents/gate/$name"
-HAV="$REPO/tools/ha-venv.sh"
+HAV="$REPO/tools/ha-${CASORA_HA_BACKEND:-docker}.sh"
 
 case "$cmd" in
   weg)
@@ -62,7 +62,7 @@ tar -xzf "$TGZ" -C "$D"
 CFG="$D/config"
 # The states were made in Docker, where the config lives at /config; YAML dashboards (Hemma test
 # dashboards) include their files by that absolute path, which does not exist without Docker.
-grep -rlE '!include[a-z_]* /config/' "$CFG/dashboards" 2>/dev/null | while IFS= read -r f; do
+[ "${CASORA_HA_BACKEND:-docker}" = docker ] || grep -rlE '!include[a-z_]* /config/' "$CFG/dashboards" 2>/dev/null | while IFS= read -r f; do
   sed -i '' -E "s#(!include[a-z_]*) /config/#\\1 $CFG/#g" "$f"
 done
 rsync -a --delete --exclude __pycache__ --exclude panel/casora-studio.js "$REPO/custom_components/casora/" "$CFG/custom_components/casora/"
@@ -89,5 +89,5 @@ grep -q '^scene:' "$CFG/configuration.yaml" 2>/dev/null || printf '\nscene: !inc
 [ -f "$CFG/scenes.yaml" ] || echo '[]' > "$CFG/scenes.yaml"
 echo "$Z" > "$D/zustand"
 # CASORA_HA_VERSION: andere HA-Version (z. B. beta vor dem nächsten HA-Release); sonst die Standardversion.
-"$HAV" start "$CFG" "$P" "${CASORA_HA_VERSION:-}" >/dev/null
+HA_NAME="$N" "$HAV" start "$CFG" "$P" "${CASORA_HA_VERSION:-}" >/dev/null
 echo "$N gestartet: $Z auf Port $P"
