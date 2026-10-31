@@ -112,3 +112,19 @@ const SRC = read('custom_components/casora/panel/casora-panel.js');
   assert.ok(pat && /Zuhause und \{2\} Räumen/.test(pat[1]), 'German text');
   console.log('ok setup: done page');
 }
+
+// ── T11: the done page's live preview looks for HA's error stand-ins and reloads once ──
+{
+  const has = window.__casoraPanelInternals.previewHasError;
+  const el = (tag, kids, shadow, hidden) => ({ localName: tag, getClientRects: () => (hidden ? [] : [1]),
+    shadowRoot: shadow ? { querySelectorAll: () => shadow } : null, kids });
+  const doc = (list) => ({ querySelectorAll: () => list });
+  const badge = el('hui-error-badge');
+  assert.equal(has(doc([el('home-assistant', null, [el('hui-root', null, [el('div'), badge])])])), true, 'error badge inside shadow roots');
+  assert.equal(has(doc([el('home-assistant', null, [el('hui-root', null, [el('div')])])])), false, 'clean dashboard');
+  assert.equal(has(doc([el('hui-error-card', null, null, true)])), false, 'hidden error card does not count');
+  const i = SRC.indexOf('_livePreview(box, url, w, h, top) {');
+  const lp = SRC.slice(i, SRC.indexOf('_safeArea(f, top, bottom) {', i));
+  assert.ok(/previewHasError\(f\.contentDocument\)/.test(lp) && /f\._casoraReloaded = true;/.test(lp) && /location\.reload\(\)/.test(lp), 'reloads once');
+  console.log('ok setup: done page preview reloads on a config error');
+}

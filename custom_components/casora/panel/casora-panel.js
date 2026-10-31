@@ -15556,6 +15556,17 @@ class CasoraPanel extends HTMLElement {
           if (!(ha && ha.hass)) { if (Date.now() - t0 < 15000) setTimeout(tick, 200); else { restore(); box.classList.add("ready"); } return; }
           restore();
           setTimeout(() => box.classList.add("ready"), 1500);
+          // T11 (test 2): right after creating, a badge whose card script was not there yet stayed HA's red
+          // "Configuration error" in the preview (the dashboard itself was fine) – look once more and reload the frame once.
+          if (!f._casoraReloaded) [4000, 9000].forEach((ms) => setTimeout(() => {
+            if (f._casoraReloaded || !f.isConnected) return;
+            let bad = false;
+            try { bad = previewHasError(f.contentDocument); } catch (e) { bad = false; }
+            if (!bad) return;
+            f._casoraReloaded = true;
+            box.classList.remove("ready");
+            try { f.contentWindow.location.reload(); } catch (e) { f.src = url; }
+          }, ms));
         } catch (e) { restore(); box.classList.add("ready"); }
       };
       tick();
@@ -29099,11 +29110,28 @@ class CasoraPanel extends HTMLElement {
   }
 }
 
+// HA's error stand-ins (hui-error-card / hui-error-badge) anywhere in a live preview, through shadow roots (T11).
+function previewHasError(doc) {
+  let n = 0;
+  const walk = (root, d) => {
+    if (!root || d > 14 || n > 30000) return false;
+    const els = root.querySelectorAll("*");
+    for (const el of els) {
+      n++;
+      const tag = el.localName;
+      if ((tag === "hui-error-card" || tag === "hui-error-badge") && el.getClientRects().length) return true;
+      if (el.shadowRoot && walk(el.shadowRoot, d + 1)) return true;
+    }
+    return false;
+  };
+  return !!doc && walk(doc, 0);
+}
+
 // Casora: Bausteine des Panels für Casora-Erweiterungen (Import-Assistent, Geräte-Assistent).
 window.__casoraPanelInternals = {
   blankRoom, roomPhoto, slug, translit, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
   applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, hostCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
-  findType, tileTypeAny, newTile, isPetTracker, petName, isStatSensor, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
+  findType, tileTypeAny, newTile, previewHasError, isPetTracker, petName, isStatSensor, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
