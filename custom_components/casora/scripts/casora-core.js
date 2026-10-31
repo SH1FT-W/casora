@@ -10353,7 +10353,7 @@ window.casoraMenuGlass = {
       var sp = {};
       try { sp = JSON.parse(el.dataset.casoraSlider) || {}; } catch (e) { sp = {}; }
       // A scaled dial (S2) shows the device value (21,5°), not the percent of the ring.
-      if (sp.scale) {
+      if (sp.scale && !sp.showPct) {
         var smn = Number(sp.scale[0]), smx = Number(sp.scale[1]), sst = Number(sp.scale[2]) || 0;
         var sv = smn + (smx - smn) * pct / 100;
         if (sst > 0) sv = smn + Math.round((sv - smn) / sst) * sst;
@@ -11638,9 +11638,15 @@ window.casoraMenuGlass = {
     + '.hui-dl-cover{position:absolute;left:24.8%;top:24.8%;width:50.4%;height:50.4%;border-radius:50%;overflow:hidden;pointer-events:none;'
     +   'background:' + S.ctl + ';box-shadow:var(--casora-dial-cover-shadow, 0 14px 40px -12px rgba(0,0,0,.45));}'
     + '.hui-dl-cover img{width:100%;height:100%;object-fit:cover;display:block;}'
+    // Grooves over the cover: it reads as a record (decision 31.10.2026, „Cover als drehende Schallplatte“).
+    + '.hui-dl-cover::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;'
+    +   'background:repeating-radial-gradient(circle at 50% 50%, transparent 0 5px, var(--casora-dial-groove, rgba(0,0,0,.07)) 5px 6px);}'
     + '.hui-dl-cover::after{content:"";position:absolute;left:50%;top:50%;width:9%;height:9%;margin:-4.5% 0 0 -4.5%;border-radius:50%;'
     +   'background:' + S.ctl + ';box-shadow:var(--casora-dial-hole-ring, 0 0 0 3px rgba(0,0,0,.35));}'
     + '.hui-dl-cover.spin{animation:hui-dl-spin 8s linear infinite;}'
+    + '.hui-dl-vol{font-size:15px;font-weight:700;color:' + S.sub + ';text-align:center;font-variant-numeric:tabular-nums;}'
+    + '.hui-stage .hui-dl-vol .hui-st-n{font-size:inherit;letter-spacing:0;color:' + T.ink + ';}'
+    + '.hui-stage.dial > .hm-wrap, .hui-stage.dial > div:not(.hui-dl){width:100%;}'
     + '@keyframes hui-dl-spin{to{transform:rotate(360deg);}}'
     // Moons: 76 round (smaller with the wheel on a phone), the chosen one with a ring in the device colour.
     + '.hui-moon{position:absolute;width:clamp(62px, 20cqw, 76px);height:clamp(62px, 20cqw, 76px);transform:translate(-50%, -50%);border-radius:50%;'
@@ -11776,6 +11782,8 @@ window.casoraMenuGlass = {
       if (o.live && o.live.entities && o.live.entities.length) liveHtml = ' data-casora-live="dial" data-casora-ents="' + esc(JSON.stringify(o.live.entities)) + '" data-casora-attr="' + esc(o.live.attr || 'current_position') + '"';
       ariaHtml = ' aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + esc(ring.pct) + '" aria-valuetext="' + esc(off && code === 'S1' ? T_('Aus') : v + ' %') + '"';
       if (o.seg && o.seg.length) belowHtml = '<div class="hui-st-seg">' + segments(o.seg) + '</div>';
+      // With a record in the middle (media) the value stands under the wheel: „Lautstärke 35 %“.
+      if (o.cover) belowHtml = '<div class="hui-dl-vol">' + esc(o.word || '') + ' <span class="hui-st-n">' + esc(v) + '</span>\u202F%</div>' + belowHtml;
       if (o.cover) coverHtml = '<div class="hui-dl-cover' + (o.cover.spin ? ' spin' : '') + '">' + (o.cover.image ? '<img src="' + (window.casoraSafeUrl ? window.casoraSafeUrl(o.cover.image) : esc(o.cover.image)) + '" alt=""/>' : '') + '</div>';
     } else if (code === 'S2') {
       // Range and service: o.min/o.max/o.step, else what − / + carry (their service with one numeric field).
@@ -11826,14 +11834,15 @@ window.casoraMenuGlass = {
       if (o.progress != null) ariaHtml = ' role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Math.round(p4 * 100) + '"';
     } else if (code === 'S6') {
       var r6 = o.ring || {}, mn6 = Number(r6.min) || 0, mx6 = r6.max != null ? Number(r6.max) : 100;
-      ring.kind = 'level'; ring.pct = dialPct(o.value, mn6, mx6);
+      ring.kind = 'level'; ring.pct = dialPct(parseFloat(String(o.value).replace(',', '.')), mn6, mx6);
       if (r6.marker != null) ring.marker = dialPct(r6.marker, mn6, mx6);
       ring.heat = !!r6.heat;
       if (r6.color) ring.col = r6.color;
-      var na6 = (o.live ? ' data-hp-live="' + esc(o.live) + '"' + (o.liveDigits != null ? ' data-hp-digits="' + esc(o.liveDigits) + '"' : '') : '');
+      var na6 = (o.read ? ' data-casora-read="' + esc(o.read) + '" data-casora-read-bare=""' : '')
+        + (o.live ? ' data-hp-live="' + esc(o.live) + '"' + (o.liveDigits != null ? ' data-hp-digits="' + esc(o.liveDigits) + '"' : '') : '');
       centerHtml = (o.caption ? '<div class="hui-dl-cap">' + esc(o.caption) + '</div>' : '')
         + stValue(o.value, o.unit || '', o.word ? 'wd' : '', na6)
-        + (o.trend ? '<div class="hui-st-w">' + esc(o.trend) + '</div>' : '') + (o.foot ? '<div class="hui-dl-w2">' + esc(o.foot) + '</div>' : '');
+        + (o.trend || o.read ? '<div class="hui-st-w"' + (o.read ? ' data-casora-read-when=""' : '') + '>' + esc(o.trend || '') + '</div>' : '') + (o.foot ? '<div class="hui-dl-w2">' + esc(o.foot) + '</div>' : '');
       if (o.chart) var chartHtml = o.chart;
       belowHtml = '<div class="hui-st-chart">' + chartHtml + '</div>' + (o.range && o.range.length ? segments(o.range) : '');
     } else if (code === 'S7') {
@@ -11874,6 +11883,9 @@ window.casoraMenuGlass = {
     if (!code) return '';
     var body = '', dialCls = '';
     // The dial is the look of S1–S4, S7 and of S6 with a ring range (o.dial: false keeps the plate).
+    // S6: a ring needs a range – given (o.ring) or a percentage (0–100); other readings keep the chart plate (§4.8).
+    var pct6 = code === 'S6' && o.unit === '%' && isFinite(parseFloat(String(o.value).replace(',', '.')));
+    if (pct6 && !o.ring) o = Object.assign({}, o, { ring: { min: 0, max: 100 } });
     var dialOn = o.dial !== false && (/^S[12347]$/.test(code) || (code === 'S6' && o.ring));
     // o.moons: the quick items (array) or the popup's quick builder (function, its UI.quick call is collected).
     if (typeof o.moons === 'function') o = Object.assign({}, o, { moons: collectQuick(o.moons) });
