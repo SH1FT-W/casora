@@ -1,5 +1,5 @@
 #!/bin/sh
-# Ein Test-HA für Casora („casora-test“, Port 8124, ohne Docker: tools/ha-venv.sh) mit drei Zuständen:
+# Ein Test-HA für Casora („casora-test“, Port 8124, im Docker: tools/ha-docker.sh) mit drei Zuständen:
 #   arbeit – Testhaus mit Hemma-Dashboards und Einstellungen (Entwicklung, dev/e2e)
 #   frisch – wie ein neuer Nutzer: nur Hemma-Dashboards, nichts von Casora eingerichtet
 #   demo   – neutrales englisches Demo-Haus für README-/Website-Bilder
@@ -17,6 +17,7 @@
 #   sync --if-changed (nur neu starten, wenn sich der eingespielte Stand seit dem letzten
 #   Start geändert hat oder das HA nicht läuft), sync --no-restart (nur einspielen).
 # HA-Version: CASORA_HA_VERSION (z. B. 2026.11.0b0 oder beta), sonst die Standardversion von tools/ha-venv.sh.
+# Ohne Docker: CASORA_HA_BACKEND=venv (HA Core aus der venv, tools/ha-venv.sh).
 # „Bereit“ heißt: manifest.json antwortet, dann dev/qa/bereit.mjs (Anmeldung, WebSocket,
 # HA-Zustand RUNNING, einige Sekunden ohne Aufbau-Ereignisse, Casora-Befehl antwortet).
 # Geht das nicht (kein node/Zugang), wie früher 15 s Pause.
@@ -31,8 +32,8 @@ CFG="$H/config"
 AKTIV="$H/aktiv"
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 now=$(cat "$AKTIV" 2>/dev/null || echo "?")
-HAV="$REPO/tools/ha-venv.sh"
-ha_start() { "$HAV" start "$CFG" 8124 "${CASORA_HA_VERSION:-}" >/dev/null; }
+HAV="$REPO/tools/ha-${CASORA_HA_BACKEND:-docker}.sh"
+ha_start() { HA_NAME=casora-test "$HAV" start "$CFG" 8124 "${CASORA_HA_VERSION:-}" >/dev/null; }
 
 sync_repo() {
   cd "$REPO"

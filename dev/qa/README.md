@@ -50,7 +50,7 @@ Rückgabe ≠ 0 bei jedem Fehler.
 
 Bevor ein HA startet, prüft das Gate, was die Tests brauchen, aber nicht im Repo liegt:
 private Testdateien (`dev/casora_mock/fixture.json`, `scenarios.json`, `dev/e2e/testhaus.json`,
-`dev/privat-woerter.txt`, optional `skip.txt`, `einstellungen.privat.js`), `uv` (für `tools/ha-venv.sh`), Test-Zugang
+`dev/privat-woerter.txt`, optional `skip.txt`, `einstellungen.privat.js`), Docker (bzw. `uv` mit `CASORA_HA_BACKEND=venv`), Test-Zugang
 (`~/casora-haus/ZUGANG.txt`), die Zustände unter `~/casora-haus/zustaende/` und freie Ports 8301–8307.
 In einem Worktree werden fehlende private Dateien aus dem Haupt-Checkout kopiert (alle gitignored).
 Fehlt etwas ganz, startet das Gate nicht, statt später als roter Test (früher: t01/t11 ohne testhaus.json).
@@ -110,11 +110,12 @@ repariert (siehe „Wackler vermeiden“).
 
 ## Ablauf und Parallelität
 
-- **HAs**: je Zustand ein oder mehrere HA-Prozesse `casora-gate-<name>` ohne Docker (`dev/qa/wegwerf-ha.sh`
-  über `tools/ha-venv.sh`: HA Core aus `~/.cache/ha-venv/<version>`, andere Version mit `CASORA_HA_VERSION`, z. B. `beta`;
+- **HAs**: je Zustand ein oder mehrere Docker-Container `casora-gate-<name>` (`dev/qa/wegwerf-ha.sh`
+  über `tools/ha-docker.sh`, Image `ghcr.io/home-assistant/home-assistant:<version>`, Standardversion wie `tools/ha-venv.sh`,
+  andere Version mit `CASORA_HA_VERSION`, z. B. `beta`; ohne Docker `CASORA_HA_BACKEND=venv` = HA Core aus `~/.cache/ha-venv/<version>`;
   Kopie aus `~/casora-haus/zustaende/`, Daten unter `~/casora-agents/gate/`): arbeit :8301 (+ :8304,
-  :8307), stress :8302 (+ :8306), frisch :8303. Wie viele, richtet sich nach freiem Arbeitsspeicher des Macs
-  (abzüglich `GATE_RESERVE_MB`, 2000; je HA ~600 MB, `GATE_HA_MB`) und höchstens `GATE_HAS_MAX` (5) bzw. `--has N`; verteilt wird nach
+  :8307), stress :8302 (+ :8306), frisch :8303. Wie viele, richtet sich nach freiem Speicher der Docker-VM
+  (minus laufende Container und 400 MB; mit venv: Arbeitsspeicher des Macs minus `GATE_RESERVE_MB`, 2000; je HA ~600 MB, `GATE_HA_MB`) und höchstens `GATE_HAS_MAX` (5) bzw. `--has N`; verteilt wird nach
   geschätzter Arbeit (`.qa/zeiten.json`, ~7 min je HA lohnt ein weiteres). Nach den frisch-Tests (~2 min)
   wird aus dessen Speicher ein weiteres HA (:8305) für den Zustand mit der meisten Arbeit je HA.
   Die Container werden am Ende immer entfernt (auch bei Abbruch). casora-test bleibt unberührt.

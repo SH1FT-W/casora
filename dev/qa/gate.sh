@@ -32,6 +32,8 @@
 # Gate eines Vorfahren ist.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
+# Docker Desktop CLI (non-interactive shells lack it in PATH).
+export PATH="$PATH:$HOME/.docker/bin"
 cd "$REPO" || exit 2
 NODE="${NODE:-/opt/homebrew/opt/node@22/bin/node}"
 [ -x "$NODE" ] || NODE="$(command -v node)"
@@ -290,9 +292,20 @@ par_cleanup() {
   weg_all
   rm -rf "$PARDIR" "$SYNCFLAG"
 }
-# Verfügbarer Speicher in MB (frei + inaktiv + spekulativ + entleerbar laut vm_stat − GATE_RESERVE_MB).
-# Die Test-HAs laufen ohne Docker direkt auf dem Mac (tools/ha-venv.sh) und teilen ihn mit den Browsern.
+HAV="$REPO/tools/ha-${CASORA_HA_BACKEND:-docker}.sh"
+# Verfügbarer Speicher in MB. Docker (Standard): Speicher der Docker-VM minus laufende Container minus 400 MB.
+# venv (CASORA_HA_BACKEND=venv): frei + inaktiv + spekulativ + entleerbar laut vm_stat − GATE_RESERVE_MB,
+# die HAs teilen sich dann den Mac mit den Browsern.
+docker_free_mb() {
+  local total used
+  total=$(docker info --format '{{.MemTotal}}' 2>/dev/null) || return 1
+  used=$(docker stats --no-stream --format '{{.MemUsage}}' 2>/dev/null | awk '{
+    v=$1; u=v; gsub(/[0-9.]/,"",u); gsub(/[A-Za-z]/,"",v);
+    if (u=="GiB") v*=1024; else if (u=="KiB") v/=1024; else if (u=="B") v/=1048576; s+=v } END {printf "%d", s}')
+  echo $(( total / 1048576 - used - 400 ))
+}
 free_mb() {
+  [ "${CASORA_HA_BACKEND:-docker}" = docker ] && { docker_free_mb; return; }
   local s
   s=$(vm_stat 2>/dev/null) || return 1
   echo "$s" | awk -v r="${GATE_RESERVE_MB:-2000}" '
@@ -455,7 +468,11 @@ vorab() {
   done
   [ -n "$copied" ] && echo "▸ Vorab: private Testdateien aus dem Haupt-Checkout kopiert:$copied"
   if [ "$need_ha" = 1 ]; then
-    command -v uv >/dev/null 2>&1 || { echo "✗ Vorab: uv fehlt (tools/ha-venv.sh braucht es für die Test-HAs)"; bad=1; }
+    if [ "${CASORA_HA_BACKEND:-docker}" = docker ]; then
+      docker info >/dev/null 2>&1 || { echo "✗ Vorab: Docker antwortet nicht (Docker Desktop starten)"; bad=1; }
+    else
+      command -v uv >/dev/null 2>&1 || { echo "✗ Vorab: uv fehlt (tools/ha-venv.sh braucht es für die Test-HAs)"; bad=1; }
+    fi
     { [ -n "${CASORA_USER:-}" ] && [ -n "${CASORA_PASS:-}" ]; } || [ -f "$HOME/casora-haus/ZUGANG.txt" ] \
       || { echo "✗ Vorab: kein Test-Zugang (CASORA_USER/CASORA_PASS oder ~/casora-haus/ZUGANG.txt)"; bad=1; }
     for z in arbeit frisch; do [ -f "$HOME/casora-haus/zustaende/$z.tgz" ] || { echo "✗ Vorab: ~/casora-haus/zustaende/$z.tgz fehlt"; bad=1; }; done
@@ -532,7 +549,7 @@ if [ $PAR = 1 ]; then
     fi
     if [ $DRY = 0 ]; then
       # Nur die eigenen Namen zählen: Wegwerf-HAs von Agenten (andere Namen/Ports) dürfen weiterlaufen (08.10.2026).
-      if for n in arbeit arbeit2 arbeit3 stress stress2 frisch spaet; do "$REPO/tools/ha-venv.sh" laeuft "$HOME/casora-agents/gate/$n/config" && break; done; then
+      if for n in arbeit arbeit2 arbeit3 stress stress2 frisch spaet; do "$HAV" laeuft "$HOME/casora-agents/gate/$n/config" && break; done; then
         echo "Es laufen schon Gate-Test-HAs (casora-gate-arbeit/stress/frisch …) – läuft ein anderes Gate? Sonst: for n in arbeit arbeit2 arbeit3 stress stress2 frisch spaet; do dev/qa/wegwerf-ha.sh weg \$n; done" >&2
         rm -rf "$PARDIR"; exit 2
       fi
@@ -589,7 +606,7 @@ if [ $ha_needed = 1 ]; then
       if [ $RUN_FRISCH = 1 ]; then ( run_frisch ) 2>&1 | prefix frisch & PIDS="$PIDS $!"; else touch "$PARDIR/frisch-fertig"; fi
       if [ $RUN_STRESS = 1 ]; then ( run_stress; sh dev/qa/wegwerf-ha.sh weg stress; sh dev/qa/wegwerf-ha.sh weg stress2; [ "$LATE" = stress ] && sh dev/qa/wegwerf-ha.sh weg spaet ) 2>&1 | prefix stress & PIDS="$PIDS $!"; fi
       # Speicher-Protokoll alle 15 s (Container und Belegung), bis alle Zustände fertig sind.
-      ( while [ ! -e "$PARDIR/alle-fertig" ]; do printf '%s ' "$(date +%H:%M:%S)"; for n in arbeit arbeit2 arbeit3 stress stress2 frisch spaet; do c="$HOME/casora-agents/gate/$n/config"; "$REPO/tools/ha-venv.sh" laeuft "$c" 2>/dev/null && printf 'casora-gate-%s=%sMiB ' "$n" "$("$REPO/tools/ha-venv.sh" mb "$c")"; done; echo; i=0; while [ $i -lt 15 ] && [ ! -e "$PARDIR/alle-fertig" ]; do sleep 1; i=$((i+1)); done; done ) >"$LOGS/speicher.log" 2>&1 &
+      ( while [ ! -e "$PARDIR/alle-fertig" ]; do printf '%s ' "$(date +%H:%M:%S)"; for n in arbeit arbeit2 arbeit3 stress stress2 frisch spaet; do c="$HOME/casora-agents/gate/$n/config"; "$HAV" laeuft "$c" 2>/dev/null && printf 'casora-gate-%s=%sMiB ' "$n" "$("$HAV" mb "$c")"; done; echo; i=0; while [ $i -lt 15 ] && [ ! -e "$PARDIR/alle-fertig" ]; do sleep 1; i=$((i+1)); done; done ) >"$LOGS/speicher.log" 2>&1 &
       MEMPID=$!
       # shellcheck disable=SC2086
       wait $PIDS
