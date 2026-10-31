@@ -622,6 +622,20 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     if (dutyEnt && S[dutyEnt]) duty = S[dutyEnt].state === 'on';
     // Empty list = roster switched off (set to null above): as without a roster.
     else if (months) duty = months.indexOf(new Date().getMonth() + 1) > -1;
+    // The tile counts down from the same calendar the popup marks (review 2, fam-22: the calendar showed Bio and
+    // Restmüll on Monday, the tile only „Bio“): an earlier date of a bin in the waste calendar wins over its sensor.
+    var TCw = window._casoraTrashCal, t00 = new Date(); t00.setHours(0, 0, 0, 0);
+    if (calendar && TCw && TCw.id === calendar && Array.isArray(TCw.ev)) bins.forEach(function (b) {
+      if (b.cal) return;
+      TCw.ev.forEach(function (e) {
+        var s0 = e && e.start && (e.start.date || e.start.dateTime);
+        if (!s0 || !b.re.test((e && e.summary) || '')) return;
+        var d0 = new Date(String(s0).slice(0, 10) + 'T00:00:00');
+        if (isNaN(d0) || d0 < t00) return;
+        var n0 = Math.round((d0 - t00) / 86400000);
+        if (b.days == null || n0 < b.days) b.days = n0;
+      });
+    });
     var sorted = bins.filter(function (b) { return b.days != null; }).sort(function (a, b) { return a.days - b.days; });
     var days = sorted.length ? sorted[0].days : null;
     var nextBins = sorted.filter(function (b) { return b.days === days; });
