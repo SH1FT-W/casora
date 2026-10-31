@@ -2743,7 +2743,12 @@
     "With confirmation": "Met bevestiging",
     "A calm question before it runs. Same switch as Ask before switching.": "Een rustige vraag voordat het wordt uitgevoerd. Dezelfde schakelaar als ‘Vragen voor het schakelen’.",
     "Value from": "Waarde uit",
-    "Entity state": "Status van de entiteit"
+    "Entity state": "Status van de entiteit",
+    "This dashboard was changed in another window": "Dit dashboard is in een ander venster gewijzigd",
+    "Saving now replaces those changes with what you see here. Reload to get them instead - your changes here are lost.": "Nu opslaan vervangt die wijzigingen door wat je hier ziet. Herlaad om ze op te halen – je wijzigingen hier gaan dan verloren.",
+    "Save anyway": "Toch opslaan",
+    "Reload": "Herladen",
+    "Not saved - this dashboard was changed in another window.": "Niet opgeslagen – dit dashboard is in een ander venster gewijzigd."
   },
   "patterns": [
     [

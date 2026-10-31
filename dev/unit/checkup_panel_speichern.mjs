@@ -12,6 +12,7 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
 globalThis.window = globalThis;
+globalThis.trLabel = (t) => t;
 
 const src = fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel.js', import.meta.url), 'utf8');
 const method = (head) => {
@@ -66,7 +67,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
     const B = { surface: 'mobile', compact: { rooms: [] } };
     const writes = [];
     const panel = {
-      _state: s, _pair: null, _raw: { mine: 'A' }, _clean: 'alt',
+      _state: s, _pair: null, _raw: { mine: 'A' }, _clean: 'alt', _seenViews: '[]',
       _log() {}, _status() {}, _markDirty() {}, _saveFlash() {}, _resetUndo() {}, _dropDraft() {},
       _print: () => 'p', _bundleOnce: async () => { throw new Error('kein Bundle'); },
       _ws: async () => ({ views: [] }),
@@ -97,6 +98,23 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
     assert.equal(await run.call(panel, s, 'casora-a', null), true);
     assert.deepEqual(panel._raw, { views: [{ path: 'x' }] });
     assert.equal(panel._clean, 'p');
+  }
+  // T02: changed in another window since loading → ask; Cancel/Reload write nothing, Save anyway writes.
+  for (const [pick, sent, reload] of [[null, 0, undefined], ['reload', 0, true], ['save', 1, undefined]]) {
+    const { s, writes, panel } = mk();
+    const asked = [];
+    panel._ws = async () => ({ views: [{ path: 'other-window' }] });
+    panel._askSaveConflict = async () => { asked.push(1); return pick; };
+    assert.equal(await run.call(panel, s, 'casora-a', null), sent === 1, 'conflict ' + pick);
+    assert.equal(asked.length, 1, 'asked once (' + pick + ')');
+    assert.equal(writes.length, sent, 'writes (' + pick + ')');
+    assert.equal(panel._reloadAfterSave, reload, 'reload flag (' + pick + ')');
+    if (sent) assert.equal(panel._seenViews, JSON.stringify([{ path: 'x' }]), 'after saving, the saved rooms are the new reference');
+  }
+  {
+    const { s, panel } = mk();
+    panel._askSaveConflict = async () => { throw new Error('no question without a conflict'); };
+    assert.equal(await run.call(panel, s, 'casora-a', null), true, 'unchanged elsewhere: no question');
   }
   // Zwischen Bauen von cfg und Absenden liegt kein await mehr (Handy-Hälfte wird vorher gelesen).
   const body = method('async _saveRun(s, url_path, pair) {');

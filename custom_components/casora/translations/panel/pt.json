@@ -2743,7 +2743,12 @@
     "With confirmation": "Com confirmação",
     "A calm question before it runs. Same switch as Ask before switching.": "Uma pergunta calma antes de executar. O mesmo interruptor que «Perguntar antes de mudar».",
     "Value from": "Valor de",
-    "Entity state": "Estado da entidade"
+    "Entity state": "Estado da entidade",
+    "This dashboard was changed in another window": "Este painel foi alterado noutra janela",
+    "Saving now replaces those changes with what you see here. Reload to get them instead - your changes here are lost.": "Guardar agora substitui essas alterações pelo que vês aqui. Recarrega para as obter – as tuas alterações aqui perdem-se.",
+    "Save anyway": "Guardar mesmo assim",
+    "Reload": "Recarregar",
+    "Not saved - this dashboard was changed in another window.": "Não guardado – este painel foi alterado noutra janela."
   },
   "patterns": [
     [

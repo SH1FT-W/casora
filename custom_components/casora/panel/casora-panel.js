@@ -15849,6 +15849,9 @@ class CasoraPanel extends HTMLElement {
       }
 
       this._raw = cfg;
+      // T02: what the rooms looked like when loaded, before anything here touches cfg – a save compares
+      // the live dashboard with it to notice a change made in another window.
+      this._seenViews = stable(cfg.views);
       this._pair = null;
       this._state = extractAny(cfg);
       this._stateUrl = url_path;
@@ -16183,6 +16186,7 @@ class CasoraPanel extends HTMLElement {
       await h.callWS({ type: "lovelace/config/save", url_path, config: cfg });
       await h.callWS({ type: "lovelace/config/save", url_path: pair.mobileUrl, config: mcfg });
       this._raw = clone(cfg);
+      this._seenViews = stable(cfg.views);
       pair.mobileRaw = clone(mcfg);
       await mark();
       this._log(`phone tile sizes from the Hemma backup: ${r.phone} phone tile(s), ${r.desk} room tile(s)`, "ok");
@@ -16416,8 +16420,32 @@ class CasoraPanel extends HTMLElement {
       this._markDirty();
       release(ok);
     }
+    // "Reload" in the conflict question: drop what is on screen and load the dashboard as it is now.
+    if (this._reloadAfterSave) {
+      this._reloadAfterSave = false;
+      if (this._state === s) {
+        this._discardDraft();
+        await this._load();
+      }
+      return false;
+    }
     if (ok && this._state === s) await this._syncFilterOptions();
     return ok;
+  }
+
+  // T02: the dashboard was saved somewhere else since it was opened here. "save" | "reload" | null.
+  async _askSaveConflict() {
+    const tr = trLabel;
+    const res = await this._ask({
+      title: tr("This dashboard was changed in another window"),
+      message: tr("Saving now replaces those changes with what you see here. Reload to get them instead - your changes here are lost."),
+      confirmLabel: tr("Save anyway"),
+      altLabel: tr("Reload"),
+      cancelLabel: tr("Cancel"),
+      destructive: true,
+    });
+    if (res && res.alt) return "reload";
+    return res === true ? "save" : null;
   }
 
   async _saveRun(s, url_path, pair) {
@@ -16438,9 +16466,19 @@ class CasoraPanel extends HTMLElement {
     if (live) {
       templates = { ...(live.button_card_templates || {}), ...(this._ownTemplates || {}) };
       extras = omit(live, ["views", "button_card_templates"]);
-      if (this._raw && stable(live.views) !== stable(this._raw.views)) {
-        this._log("this dashboard's rooms changed somewhere else since it was "
-          + "opened - saving replaces them with what is on screen", "warn");
+      // T02 (26.10.70): changed in another window (or by anything else) since it was loaded or last
+      // saved here – ask instead of silently putting the older rooms back over it.
+      const seen = this._seenViews !== undefined ? this._seenViews : (this._raw ? stable(this._raw.views) : null);
+      if (seen !== null && stable(live.views) !== seen) {
+        this._log("this dashboard's rooms changed somewhere else since it was opened", "warn");
+        const pick = await this._askSaveConflict();
+        if (this._state !== s) return false;
+        if (pick === "reload") { this._reloadAfterSave = true; return false; }
+        if (pick !== "save") {
+          this._status(trLabel("Not saved - this dashboard was changed in another window."), "err");
+          return false;
+        }
+        this._log("saving over the other window's changes", "warn");
       }
     }
     // Handy-Hälfte schon hier lesen: zwischen dem Bauen von cfg und dem Absenden liegt kein await mehr,
@@ -16606,7 +16644,7 @@ class CasoraPanel extends HTMLElement {
       await this._hass.callWS({ type: "lovelace/config/save", url_path, config: cfg });
       // Ist inzwischen ein anderes Dashboard offen, gehört _raw zu dem – nicht überschreiben.
       const same = () => this._state === s;
-      if (same()) this._raw = clone(cfg);
+      if (same()) { this._raw = clone(cfg); this._seenViews = stable(cfg.views); }
       this._log(`saved  ${JSON.stringify(cfg).length.toLocaleString()} bytes`, "ok");
       if (mcfg) {
         await this._hass.callWS({

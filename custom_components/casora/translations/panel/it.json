@@ -2743,7 +2743,12 @@
     "With confirmation": "Con conferma",
     "A calm question before it runs. Same switch as Ask before switching.": "Una domanda tranquilla prima di eseguirlo. Lo stesso interruttore di «Chiedi prima di attivare».",
     "Value from": "Valore da",
-    "Entity state": "Stato dell'entità"
+    "Entity state": "Stato dell'entità",
+    "This dashboard was changed in another window": "Questa dashboard è stata modificata in un'altra finestra",
+    "Saving now replaces those changes with what you see here. Reload to get them instead - your changes here are lost.": "Salvando ora, quelle modifiche vengono sostituite da ciò che vedi qui. Ricarica per ottenerle: le tue modifiche qui andranno perse.",
+    "Save anyway": "Salva comunque",
+    "Reload": "Ricarica",
+    "Not saved - this dashboard was changed in another window.": "Non salvato: questa dashboard è stata modificata in un'altra finestra."
   },
   "patterns": [
     [
