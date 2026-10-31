@@ -269,7 +269,7 @@ window.CASORA_TILE_TYPES = [
       { key: "alert_window_minutes", label: "Recent activity (minutes)", type: "number", advanced: true, group: "Popup",
         placeholder: "5", hint: "A dot marks a camera with activity in this window." },
       { key: "show_stream_variants", label: "Show stream variants", type: "bool", advanced: true, group: "Popup",
-        hint: "Also list snapshot cameras and every stream of a camera (Soft design hides them)." },
+        hint: "Also list snapshot cameras and every stream of a camera (hidden by default)." },
     ] },
   { id: "casora_alarm", label: "Alarm", template: "casora_alarm", domains: ["alarm_control_panel"], icon: "shield_check",
     color: "var(--casora-color-red, #FF453A)", fields: [
@@ -302,7 +302,7 @@ window.CASORA_TILE_TYPES = [
       { key: "waste.calendar_popup", setting: true, type: "bool", boolDefault: true, advanced: true,
         label: "Calendar in the waste popup", sub: "Month with the pickup days in the bin colors",
         hint: "Applies to all waste tiles" },
-      { key: "trash_reminder", label: "Reminder automation", domains: ["automation"], advanced: true },
+      // No reminder automation: popup v3 is clean (popup-richtlinien-v3.md §8) and no longer shows its switch.
     ] },
   // Calendar (issue #31): template and popup existed, the Studio did not offer the tile. Which calendars it
   // shows, their names and colors are a Casora setting for every calendar tile (Settings → Calendar), so the
@@ -400,7 +400,7 @@ window.CASORA_TILE_TYPES = [
   { id: "casora_velair", like: "thermostat", label: "Velair", template: "casora_velair", domains: ["climate"],
     icon: "velair", color: "var(--casora-color-orange, #FF9F0A)", entityLabel: "Climate", entityPlaceholder: "A climate Velair plans",
     onlyIf: (hass) => !!(window.casoraVelairFind && window.casoraVelairFind.present(hass)),
-    community: { desc: "Temperature, target and mode on the tile like the thermostat. The popup has mode, target temperature, fan, presets and swing, plus Velair's schedule: today's slots, the week at a glance, schedule on or off, resume after a manual change and editing a day's slots. For climates planned by the Velair integration.",
+    community: { desc: "Temperature, target and mode on the tile like the thermostat. The popup sets the target temperature and the mode; the status line says whether Velair's schedule runs. Velair's own panel plans the week. For climates planned by the Velair integration.",
       needs: "velair", needsText: "For every climate Velair plans", needsMissing: "Velair integration not installed yet" },
     // No icon field: the thermostat tile draws its own heating coil.
     fields: [
@@ -444,7 +444,7 @@ window.CASORA_TILE_TYPES = [
   { id: "casora_frigate", label: "Frigate camera", template: "casora_frigate", domains: ["camera"], classes: ["camera"],
     icon: "camera", entityLabel: "Frigate camera",
     // "Seen" (frigate/reviews/viewed) applies per Frigate user = the integration's user (23-frigate.js F.mark).
-    community: { desc: "Live camera with what Frigate detected last. The popup shows the live view, alerts and detections with clip, download, share and favorite, the recordings of the last days with a timeline, objects and the camera switches. “Seen” is stored by Frigate for the user the integration signs in with – so everyone in Home Assistant shares the same state.",
+    community: { desc: "Live camera with what Frigate detected last. The popup shows the live view and the latest alerts and detections; its main switch turns detection on and off. “Seen” is stored by Frigate for the user the integration signs in with – so everyone in Home Assistant shares the same state.",
       needs: "frigate", needsText: "For every camera of the Frigate integration",
       needsMissing: "Frigate integration not installed yet", darkShots: true },
     fields: [ICON, TITLE_NAME,
@@ -480,7 +480,7 @@ window.CASORA_TILE_TYPES = [
   { id: "casora_reolink_doorbell", label: "Reolink doorbell", template: "casora_reolink_doorbell", domains: ["camera"],
     icon: "doorbell", entityLabel: "Doorbell camera",
     onlyIf: (hass) => !!(hass && hass.entities && Object.values(hass.entities).some((e) => e && e.translation_key === "visitor")),
-    community: { desc: "Doorbell with live picture that says when someone rang. The popup has the live view with sound, quick replies, the siren, who rang lately and the doorbell's settings.",
+    community: { desc: "Doorbell with live picture that says when someone rang. The popup has the live view with sound, quick replies, the siren and who rang lately.",
       needs: "reolink", needsText: "For every Reolink doorbell", needsMissing: "Reolink integration not installed yet",
       darkShots: true },
     fields: [ICON, TITLE_NAME,

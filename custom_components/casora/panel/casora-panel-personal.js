@@ -355,8 +355,7 @@
           row(g, "Your turn in", [chips], "Months you put the bins out");
           row(g, "Your turn sensor", [ent(S.waste.duty_entity, ["sensor", "binary_sensor", "input_boolean"],
             (v) => { S.waste.duty_entity = v; })], "Instead of fixed months");
-          row(g, "Reminder automation", [ent(S.waste.reminder, ["automation"], (v) => { S.waste.reminder = v; })],
-            "The “Push the evening before” switch in the popup");
+          // No "Reminder automation" row: the popup's "Push the evening before" switch is gone (popup v3 is clean).
         }, ["Advanced", "Advanced"]);
       }
 
@@ -375,7 +374,8 @@
           cb.onchange = () => { if (cb.checked) delete c.tile; else c.tile = false; };
           tog.appendChild(cb);
           tog.appendChild(document.createTextNode("On tile"));
-          row(g, i ? "" : "Calendar", [
+          // No row label: the group header (and on its own page the title) already says "Calendars".
+          row(g, "", [
             ent(c.entity, ["calendar"], (v) => { c.entity = v; }),
             txt(c.name, "Name", (v) => { c.name = v; }, true), col, tog,
             del(() => { S.calendars.splice(i, 1); }),

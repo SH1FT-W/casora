@@ -194,6 +194,9 @@
     /* "Content" list: switches right in the badge and tile rows. */
     :host(.bmode) #pane.stack #band-badges .card > .chead .sw,
     :host(.bmode) #pane.sheet #band-badges .card > .chead .sw { display:flex; }
+    /* Phone: the switch of a room section (Now Playing) too – it was hidden there, the row showed "Off" without a way
+       to turn it on. */
+    :host(.bmode) #pane.sheet #band-rooms .card > .chead .sw { display:flex; }
     :host(.bmode) #pane #band-tiles .tile > .thead .sw { display:flex; }
     :host(.bmode) #pane #band-tiles .tile > .thead .count { display:none; }
     :host(.bmode) #pane #band-badges .card > .chead .count {
@@ -436,7 +439,7 @@
       const out = [
         { id: "doc:rename", label: "Rename\u2026", icon: "pencil", group: g },
         { id: "doc:copy", label: "Copy\u2026", icon: "copy", group: g },
-        { id: "doc:icon", label: "Icon\u2026", icon: "grid", group: g },
+        { id: "doc:icon", label: "Change Icon\u2026", icon: "grid", group: g },
       ];
       if (typeof this._cvFromMenu === "function") out.push({ id: "doc:versions", label: "Rewind", icon: "clock", group: g });
       if (this._canAddMobile && this._canAddMobile()) out.push({ id: "doc:addmobile", label: "Phone layout", icon: "phone", group: g });

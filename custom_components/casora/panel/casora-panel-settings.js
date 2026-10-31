@@ -61,7 +61,7 @@
           kw: "abfall müll muell tonne türen tueren fenster kontakte player medien geräte" },
         { page: "calendar", kw: "kalender termine" },
         // #76: covers that count for security at night – a section of the "home" page, listed so it can be found.
-        { page: "home", focus: "security", label: "Security: covers", icon: "cover_closed", sub: "Which covers count as open at night",
+        { page: "home", focus: "security", label: "Security: covers", icon: "roller-shade-closed", sub: "Which covers count as open at night",
           kw: "rollo rollos rollladen jalousie jalousien sicherheit abends nachts" },
         { sec: "Scenes", label: "Scenes on this dashboard", icon: "scenes", sub: "Order and colors", kw: "szenen szene stimmung" }] },
     { id: "wx", label: "Weather & climate", icon: "temp-medium", tone: "set-outdoor", sub: "Weather, outdoor values and electricity price",
@@ -104,6 +104,9 @@
     + ".cs-hubtile b{margin-top:6px;font-size:var(--t-body);font-weight:600}"
     + ".cs-hubtile span:last-child{font-size:var(--t-foot);line-height:1.3;color:var(--ink-2)}"
     + ".cs-hubback{min-height:40px;padding:8px 10px 8px 2px;box-sizing:border-box}"
+    // Start and topic pages have no "Applies to" line under the title: the fixed head height left an empty band of
+    // ~40 px above "‹ Settings" (the pages with that line sat 16 px higher).
+    + ":host(.split:not(.flow):not(.phone)) .insphead:has(> .cs-head):not(.uxhas){height:auto!important;min-height:0!important;padding-bottom:14px!important}"
     + ".cs-hublist .rtext b,.cs-hublist .rtext span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}"
     + ".cs-hubback{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin:0 6px 10px;font-size:var(--t-callout);font-weight:600;color:var(--accent)}"
     // Updates head: its children are stacked absolutely (navrow), so the way back gets a line of its own.

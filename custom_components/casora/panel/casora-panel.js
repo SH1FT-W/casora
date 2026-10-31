@@ -4494,16 +4494,6 @@ const SPARK_FIELD = (hint) => ({ key: "sparkline", label: "Trend on tile", type:
 // Hex, weil die Diagramme die Farbe direkt ins SVG schreiben.
 const CHART_COLOR = (placeholder) => ({ key: "chart_color", label: "Chart color", type: "text",
   advanced: true, placeholder: placeholder || "#00C3D0", hint: "A hex color, e.g. #30D158." });
-// casora_cover: Schalter der Beschattungsautomatik im Popup.
-const COVER_AUTOMATION_FIELDS = [
-  { key: "smart_automation_entity", label: "Shade automation", domains: ["switch"],
-    advanced: true, group: "Popup",
-    hint: "A switch that turns your cover automation on or off. The popup shows it as a toggle." },
-  { key: "smart_automation_today_entity", label: "Automation today",
-    domains: ["sensor", "binary_sensor", "input_boolean", "switch"], advanced: true,
-    placeholder: "The shade automation",
-    hint: "What the automation does today, shown beside the toggle." },
-];
 
 const TILE_TYPES = [
   { id: "light", label: "Light", template: "casora_light",
@@ -4550,8 +4540,8 @@ const TILE_TYPES = [
   { id: "fan", label: "Fan", template: "casora_fan",
     domains: ["fan"], fields: [ICON_FIELD, TOGGLE_FIELD, POPUP_TITLE()] },
   { id: "cover", label: "Cover", template: "casora_cover",
-    domains: ["cover"], fields: [ICON_OPEN_FIELD, ICON_CLOSED_FIELD, POPUP_TITLE_NAME,
-      ...COVER_AUTOMATION_FIELDS] },
+    domains: ["cover"], fields: [ICON_OPEN_FIELD, ICON_CLOSED_FIELD, POPUP_TITLE_NAME] },
+  // No shade automation switch: popup v3 is clean (popup-richtlinien-v3.md §8), the popup no longer shows it.
   { id: "lock", 
     label: "Lock", template: "casora_lock",
     domains: ["lock"], fields: [TOGGLE_FIELD_ON, ICON_LOCKED_FIELD, ICON_UNLOCKED_FIELD, POPUP_TITLE_NAME] },
@@ -4764,7 +4754,6 @@ const TILE_TYPES = [
         boolDefault: true, advanced: true },
       ICON_OPEN_FIELD, ICON_CLOSED_FIELD,
       { key: "room_name", label: "Popup title", type: "text", advanced: true },
-      ...COVER_AUTOMATION_FIELDS,
     ] },
   { id: "entity_actions",
     label: "Entity with buttons", template: "casora_entity_actions",
@@ -10996,6 +10985,8 @@ class CasoraPanel extends HTMLElement {
           display:block; margin-top:2px; color:var(--lsub-ink, var(--casora-studio-lsub-ink, rgba(255,255,255,0.56))); font-size:var(--t-caption);
           overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
         }
+        /* Inspector: a row's explanation wraps like the hints under the fields ("Entities in popup" was cut off). */
+        .inspector .row label .lsub { white-space:normal; overflow:visible; text-overflow:clip; }
         .colorcell { display:block; min-width:0; }
         .colorfield {
           width:100%; height:38px; box-sizing:border-box;
@@ -21771,7 +21762,8 @@ class CasoraPanel extends HTMLElement {
     const raw = value == null ? "" : String(value);
     const input = document.createElement("input");
     input.value = raw;
-    if (placeholder) input.placeholder = t9(placeholder);
+    // An icon field's default ("curtain-open") reads as the icon's name, like the chosen icons do.
+    if (placeholder) input.placeholder = iconMode && placeholder !== "default" && ICON_DATA[placeholder] ? iconName(placeholder, lang) : t9(placeholder);
     const menu = document.createElement("div");
     menu.className = "combo-menu";
     // Inside a dialog the overlay sits below the ask pane, so a menu mounted
