@@ -490,8 +490,9 @@
        Parken) the quick choice. Soft and no localStorage casora_popup_variant other than 'v3'. */
     var v3 = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; } })();
     if (v3) { delete f.hero; f.stage = { card: K.secCard(watch, call('stage'), states) }; f.quick = { card: K.secCard(watch, call('quick'), states) }; }
-    // Settings only when the source has something to set (cutting height, zone, schedule).
-    if (c.cutHeight || c.zone) f.ctrl = { card: K.secCard(watch, call('ctrl'), states) };
+    // Settings only when the source has something to set (cutting height, zone, schedule) – not in v3, which is clean
+    // (richtlinien §8: no settings section, that is set up in the Studio or in Home Assistant).
+    if ((c.cutHeight || c.zone) && !v3) f.ctrl = { card: K.secCard(watch, call('ctrl'), states) };
     return K.layout({ fields: f, top: v3 ? [] : ['hero'], stage: v3 ? 'stage' : null, quick: v3 ? 'quick' : null, left: ['info', 'ctrl'], right: ['hist'],
       narrowOrder: v3 ? ['stage', 'quick', 'info', 'ctrl', 'hist'] : ['info', 'ctrl', 'hist'],
       settings: hass && hass.states && hass.states[c.mower] ? c.mower : id });
@@ -591,7 +592,9 @@
       }
       if (s.battery != null) rows.push({ entity: c.battery || c.mower, icon: s.charging ? 'mdi:battery-charging' : 'mdi:battery', iconTone: s.battery < 20 ? 'warn' : 'accent',
         label: 'Akku', value: Math.round(s.battery) + ' %', sub: s.charging ? 'Lädt' : null, valueTone: s.battery < 20 ? 'warn' : null });
-      if (s.online != null || s.rf != null) {
+      // Popup v3 is clean (richtlinien §8): no technical values – the connection only when it is lost, no operating hours.
+      var v3i = !!(UI.v3 && UI.v3());
+      if ((s.online != null || s.rf != null) && !(v3i && s.online !== false)) {
         var rfText = s.rf == null ? null : (s.rfUnit === 'dbm' || s.rfUnit === 'dBm' ? fmt(s.rf) + ' dBm' : Math.round(s.rf) + ' %');
         rows.push({ entity: c.rf || c.online || null, icon: s.online === false ? 'mdi:wifi-off' : 'mdi:wifi', iconTone: s.online === false ? 'bad' : 'accent',
           label: 'Verbindung', value: s.online === false ? 'Offline' : rfText || 'Verbunden', valueTone: s.online === false ? 'bad' : null });
@@ -606,7 +609,7 @@
       if (s.bladePct != null) rows.push({ entity: c.blade, icon: 'mdi:knife', iconTone: s.bladePct < 15 ? 'warn' : 'accent', label: 'Messer',
         value: Math.round(s.bladePct) + ' %', sub: 'Restlebensdauer', valueTone: s.bladePct < 15 ? 'warn' : null });
       else if (s.blade != null) rows.push({ entity: c.blade, icon: 'mdi:knife', iconTone: 'accent', label: 'Messer', value: fmt(s.blade) + ' h', sub: 'Einsatzzeit' });
-      if (s.hours != null) rows.push({ entity: c.hours || null, icon: 'mdi:timer-outline', iconTone: 'accent', label: 'Betriebsstunden', value: fmt(s.hours) + ' h' });
+      if (s.hours != null && !v3i) rows.push({ entity: c.hours || null, icon: 'mdi:timer-outline', iconTone: 'accent', label: 'Betriebsstunden', value: fmt(s.hours) + ' h' });
       return rows.length ? UI.group(rows, 'Status') : '';
     }
     if (part === 'ctrl') {

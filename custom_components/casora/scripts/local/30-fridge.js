@@ -383,6 +383,8 @@
       if (s.alarms.length) {
         out += UI.group(s.alarms.map(function (a) { return { icon: 'mdi:alert-outline', iconTone: 'bad', label: a.text, sub: a.where, value: 'Prüfen', valueTone: 'bad' }; }), 'Hinweise');
       }
+      // Popup v3 is clean (richtlinien §8): the hints stay, the device's other settings do not.
+      if (UI.v3 && UI.v3()) return out;
       var xr = (C.extras || []).map(function (id) {
         var st = S[id];
         if (!st) return null;

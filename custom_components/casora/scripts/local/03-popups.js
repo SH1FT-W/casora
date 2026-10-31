@@ -4175,10 +4175,9 @@
     var rightHtml = '<div class="lps-lbl">' + esc(head) + '</div><div class="lps-rows">' + lampsHtml + '</div>';
     var lampIds = (sc.room ? sc.room : ids).filter(function (id) { return states[id] && !Array.isArray((states[id].attributes || {}).entity_id); });
     if (!lampIds.length) lampIds = ids.slice(0, 1);
-    if (!sc.house && UI.settings && lampIds.length) {
-      rightHtml += '<div style="height:var(--casora-popup-sec-gap, 24px)"></div>'
-        + UI.settings(!cfg.rooms && sc.lights.length === 1 ? sc.lights[0] : lampIds);
-    }
+    // Popup v3 is clean (richtlinien §8): UI.settings gives nothing – no gap for it either.
+    var setHtml = !sc.house && UI.settings && lampIds.length ? UI.settings(!cfg.rooms && sc.lights.length === 1 ? sc.lights[0] : lampIds) : '';
+    if (setHtml) rightHtml += '<div style="height:var(--casora-popup-sec-gap, 24px)"></div>' + setHtml;
     return V3_CSS + '<div class="lps-cols"><div class="lps-v3l">' + left + '</div><div>' + rightHtml + '</div></div>';
   };
   var houseV3 = function (cfg, states) {
