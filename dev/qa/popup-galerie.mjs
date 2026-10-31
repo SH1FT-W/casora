@@ -210,6 +210,8 @@ async function anlegen() {
     h.name = title;
     // Tile views: a quiet header (image only), so its badges do not mix with the openers below.
     h.variables = vars || { image: (from.variables || {}).image, preload_rooms: [] };
+    // Tile views: a low header (room bar only) – the full-height hero hid the openers below the fold.
+    if (!vars) h.styles = { ...(h.styles || {}), card: [...(((h.styles || {}).card) || []), { height: '120px' }, { 'min-height': '0' }] };
     return h;
   };
   const md = (text) => ({ type: 'markdown', text_only: true, content: text });
