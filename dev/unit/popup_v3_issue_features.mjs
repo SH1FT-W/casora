@@ -8,6 +8,7 @@
 //       here: the Studio description promises the schedule again
 //   #23 doorbell: row „Ton ›“ (sub page with the volume sliders) – pinned in dev/unit/klingel.mjs; here: the description
 //   #89 car: the odometer in the section „Zustand“ (BMW CarData „…_mileage“ too)
+//   #56 weather: „gefühlt“ in the middle of the wheel whenever the source has a felt value (no Studio switch for it)
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -164,6 +165,22 @@ const runCard = (card, states, hass) => new Function('states', 'hass', card.cust
   const html = C.sec('state_s3', 'sensor.' + P + '_range_total_range_last_sent', S);
   assert.match(html, /^Zustand:.*Kilometerstand=59\.903 km/, '#89: odometer in „Zustand“: ' + html);
   assert.ok(!/Kilometerstand/.test(C.sec('state_s', 'sensor.' + P + '_range_total_range_last_sent', S)), 'v2 keeps it under „Mehr“');
+}
+
+// ── #56 weather: „gefühlt“ in the v3 stage whenever the source has a value ─────
+{
+  const tpl = JSON.parse(rd('dashboards/casora/button_card_templates.json'));
+  const c = tpl.casora_weather.tap_action.casora_popup.content;
+  assert.ok(/casoraDevice\.weatherSources\(hass, id, \{ feels: variables\.weather_feels_sensor/.test(c), '#56: the popup asks the source for its felt value');
+  assert.ok(/trend: feelsV != null \? 'gefühlt ' \+ r0\(feelsV\) \+ '°'/.test(c), '#56: the wheel says „gefühlt“ when there is a value');
+  assert.ok(!/feelsV[^;\n]*weather_feels\b(?!_sensor)/.test(c), '#56: no Studio switch decides it');
+  // The source: HA's attribute apparent_temperature is enough.
+  globalThis.window = globalThis;
+  load('00-finder.js');
+  const W = 'weather.station';
+  const h = { states: { [W]: { entity_id: W, state: 'cloudy', attributes: { temperature: 11, apparent_temperature: 8.4, temperature_unit: '°C' } } },
+    entities: { [W]: { entity_id: W, device_id: 'd1' } }, devices: { d1: { id: 'd1' } }, areas: {} };
+  assert.equal(window.casoraDevice.weatherSources(h, W, { feels: '' }).feels.value, 8.4, '#56: felt value from the attribute');
 }
 
 console.log('popup_v3_issue_features: ok');

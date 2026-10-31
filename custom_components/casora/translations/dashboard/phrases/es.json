@@ -2649,7 +2649,20 @@
   "Hemma 1 gibt es nicht mehr – du siehst jetzt Casora Glas.": "Hemma 1 ya no existe: ahora ves Casora Glas.",
   "Das Hemma-Design gibt es nicht mehr – du siehst jetzt Casora Glas.": "El diseño Hemma ya no existe: ahora ves Casora Glas.",
   "Ändern: Studio › Einstellungen › Design.": "Cambiarlo: Studio › Ajustes › Diseño.",
-  "Noch nicht verfügbar": "Aún no disponible"
+  "Noch nicht verfügbar": "Aún no disponible",
+  "Hemma 2 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 2 ya no forma parte de Casora – ahora usas Casora Glas, el aspecto de cristal con la estructura de Casora. Otros diseños: Studio › Ajustes › Diseño.",
+  "Hemma 1 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 1 ya no forma parte de Casora – ahora usas Casora Glas, el aspecto de cristal con la estructura de Casora. Otros diseños: Studio › Ajustes › Diseño.",
+  "Das Hemma-Design gibt es nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "El diseño Hemma ya no existe – ahora usas Casora Glas, el aspecto de cristal con la estructura de Casora. Otros diseños: Studio › Ajustes › Diseño.",
+  "1 Gerät": "1 dispositivo",
+  "Gerade kein Sonnenstrom übrig": "Ahora no sobra energía solar",
+  "sehr hoch": "muy alto",
+  "niedrig": "bajo",
+  "hoch": "alto",
+  "extrem": "extremo",
+  "gekippt": "abatida",
+  "Im Studio wählen": "Elegir en el Studio",
+  "Regen jetzt": "Lluvia ahora",
+  "Sollwert": "Consigna"
  },
  "patterns": [
   [
@@ -4771,6 +4784,34 @@
   [
    "^(.+) in (\\d+) T\\.$",
    "{1} en {2} d"
+  ],
+  [
+   "^Jetzt Ø (.+)$",
+   "Ahora media {1}"
+  ],
+  [
+   "^gefühlt (.+)$",
+   "sensación {1}"
+  ],
+  [
+   "^Regen (\\d+) ?%$",
+   "Lluvia {1}%"
+  ],
+  [
+   "^UV (\\d+)$",
+   "UV {1}"
+  ],
+  [
+   "^Wind (\\d.*)$",
+   "Viento {1}"
+  ],
+  [
+   "^Regen ab (\\d+) Uhr$",
+   "Lluvia desde las {1}:00"
+  ],
+  [
+   "^(.+) frei$",
+   "{1} libres"
   ]
  ],
  "Gerät in Home Assistant": "Dispositivo en Home Assistant"

@@ -594,8 +594,8 @@
   /* Popup v3 „Bühne“ (popup-richtlinien-v3.md §4 S2, §4.4): one room – the target as the stage with the same −/+
      (data-fb-step, quick taps count, one set_temperature after the pause) and the same bar; the modes as quick tiles.
      The template gives variant 'v3' (the content is built before the frame takes it, so this follows the same rule:
-     Soft, no localStorage casora_popup_variant other than 'v3'). The whole house: stage S7 with the average
-     (F.houseStage) – a shared target „Ziel aller Räume“ does not exist since 1.3. */
+     Soft, no localStorage casora_popup_variant other than 'v3'). The whole house (F.houseStage): stage S2 with the
+     shared target „Ziel aller Räume“ (§4.4), − / + move every room's target by one step. */
   F.v3 = function () {
     if (!(window._casoraHH && window._casoraHH.on() && window._casoraUI && window._casoraUI.stage)) return false;
     try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; }
@@ -620,18 +620,23 @@
       dialSvc: { domain: 'climate', service: 'set_temperature', field: 'temperature', target: { entity_id: c.id } },
       minus: b(-step, tv <= lo), plus: b(step, tv >= hi), foot: foot }));
   };
-  F.quick = function (id, states, confirmOn) {
+  F.quick = function (id, states, confirmOn, members) {
     var UI = window._casoraUI;
     var e = states[id]; if (!e || e.state === 'unavailable') return '';
+    // A group's mode moon is chosen only when the mode holds for every room (review 2, DD-07).
+    var isOn = function (m) {
+      if (!members || !members.length) return e.state === m;
+      return members.every(function (x) { return states[x] && states[x].state === m; });
+    };
     var list = (e.attributes.hvac_modes || []).map(String).filter(function (m) { return MODES[m]; })
       .sort(function (x, y) { return ORDER.indexOf(x) - ORDER.indexOf(y); });
     if (list.length < 2) return '';
     var ICON = { off: 'mdi:power', heat: 'mdi:heating-coil', auto: 'mdi:calendar-clock' };
     return UI.quick(list.map(function (m) {
-      return { icon: ICON[m], text: MODES[m], active: e.state === m,
+      return { icon: ICON[m], text: MODES[m], active: isOn(m),
         svc: { domain: 'climate', service: 'set_hvac_mode', data: { hvac_mode: m }, target: { entity_id: id } },
         // The whole house switches every room: turning it on asks first (as the mode list of variant B did).
-        confirm: confirmOn && m !== 'off' && e.state !== m ? 'Einschalten' : null };
+        confirm: confirmOn && m !== 'off' && !isOn(m) ? 'Einschalten' : null };
     }), 'Modus');
   };
   /* Popup v3, the whole house (§4.7 fallback rule S7): there is no shared target since 1.3, so the stage is the house
@@ -643,18 +648,36 @@
       var temps = c.rooms.map(function (r) { return F.curTemp(r, states); }).filter(function (t) { return t != null && !isNaN(t); });
       if (temps.length) v = Math.round(temps.reduce(function (a, b) { return a + b; }, 0) / temps.length * 10) / 10;
     }
-    var all = c.rooms.concat(c.trvs);
-    var heat = all.filter(function (r) { return F.heating(r, states); }).length;
+    var all = c.rooms.concat(c.trvs).filter(function (r) { return states[r.id]; });
     var e = states[c.id];
-    // Dial: one segment per room (orange heats, green holds, grey off), the house modes as moons.
-    var segs = all.filter(function (r) { return states[r.id]; }).map(function (r) {
-      var rs = states[r.id];
-      return { ok: true, tone: F.heating(r, states) ? 'warn' : rs.state === 'off' || rs.state === 'unavailable' ? 'off' : 'good', label: r.name || r.id };
-    });
-    return UI.stage('status', { tone: heat ? 'warn' : (e && e.state !== 'off' ? 'good' : 'off'), icon: 'mdi:home-thermometer-outline',
-      text: v != null ? 'Ø ' + fmt(v) + ' ' + TU() : '–', state: e && e.state === 'unavailable' ? 'na' : null,
-      segs: segs,
-      moons: function () { return F.quick(c.id, states, c.group); } });
+    var ids = all.map(function (r) { return r.id; });
+    var moons = function () { return F.quick(c.id, states, c.group, ids); };
+    // §4.4 (review 2, DD-07): the stage is the shared target of the rooms that heat or follow a plan – one target
+    // „Ziel aller Räume“, different targets their mean with „Ø“; − / + move every target by one step.
+    var on = all.filter(function (r) { var rs = states[r.id]; return rs.state !== 'off' && rs.state !== 'unavailable' && num(rs.attributes.temperature) != null; });
+    var a0 = (states[(on[0] || all[0] || {}).id] || e || {}).attributes || {};
+    var step = num(a0.target_temp_step) || 0.5;
+    var F_ = TU() === '°F', lo = num(a0.min_temp) != null ? num(a0.min_temp) : (F_ ? 41 : 5), hi = num(a0.max_temp) != null ? num(a0.max_temp) : (F_ ? 86 : 30);
+    var foot = v != null ? 'Jetzt Ø ' + fmt(v) + ' ' + TU() : null;
+    var dl = { min: lo, max: hi, step: step, heat: true, current: v, label: 'Ziel aller Räume', moons: moons };
+    if (!on.length) {
+      return UI.stage('value', Object.assign(dl, { value: null, unit: '', state: e && e.state === 'unavailable' ? 'na' : 'off', foot: foot }));
+    }
+    var tg = {};
+    on.forEach(function (r) { tg[r.id] = num(states[r.id].attributes.temperature); });
+    var vals = on.map(function (r) { return tg[r.id]; });
+    var same = vals.every(function (x) { return Math.abs(x - vals[0]) < 1e-6; });
+    var base = same ? vals[0] : Math.round(vals.reduce(function (x, y) { return x + y; }, 0) / vals.length / step) * step;
+    base = Math.round(base * 100) / 100;
+    var key = on.map(function (r) { return r.id; }).sort();
+    var shown = base;
+    var pd = (window._casoraStepPend || {})[JSON.stringify(key)];
+    if (pd && Date.now() - pd.t < 5000) shown = pd.v;
+    var b = function (d, dis) {
+      return { dis: dis, attrs: { 'data-fb-step': JSON.stringify({ id: key, d: d, v: shown, base: base, tg: tg, lo: lo, hi: hi, st: step }) } };
+    };
+    return UI.stage('value', Object.assign(dl, { caption: same ? 'Ziel aller Räume' : 'Ø Ziel aller Räume', value: shown, unit: TU(), valCls: 'fb-st-v',
+      minus: b(-step, shown <= lo), plus: b(step, shown >= hi), foot: foot }));
   };
 
   /* Modus als iOS-Auswahlliste mit Haken. confirmOn: Einschalten nur mit Bestätigung (Aquarium-Muster). */
@@ -1180,7 +1203,17 @@
     p.tm = setTimeout(function () {
       p.sent = true; p.t = Date.now();
       var ha = document.querySelector('home-assistant');
-      if (ha && ha.hass) ha.hass.callService('climate', 'set_temperature', { temperature: v }, { entity_id: c.id });
+      if (!ha || !ha.hass) return;
+      // The whole house (F.houseStage): every room's target moves by the same steps from the targets it had.
+      if (Array.isArray(c.id) && c.tg) {
+        var dv = v - c.base;
+        Object.keys(c.tg).forEach(function (rid) {
+          var t = Math.round(Math.min(c.hi, Math.max(c.lo, Math.round((Number(c.tg[rid]) + dv) / c.st) * c.st)) * 100) / 100;
+          if (Math.abs(t - Number(c.tg[rid])) > 1e-6) ha.hass.callService('climate', 'set_temperature', { temperature: t }, { entity_id: rid });
+        });
+        return;
+      }
+      ha.hass.callService('climate', 'set_temperature', { temperature: v }, { entity_id: c.id });
     }, 600);
   };
   var stepT = null, stepTouchAt = 0;
@@ -1310,9 +1343,11 @@
     var UI = window._casoraUI; if (!UI || !UI.stage) return '';
     if (!states) { var ha0 = document.querySelector('home-assistant'); states = (ha0 && ha0.hass && ha0.hass.states) || {}; }
     var nx = R.next(states) || ((R.cal.list || []).filter(function (x) { return dayStart(x.when) - dayStart(new Date()) <= 6 * 86400000; })[0] || null);
-    if (nx) return UI.stage('status', { tone: 'good', icon: 'mdi:chef-hat', text: R.short(nx.name, 40),
+    // dial: false – a ring would show nothing one can read („Termin · Heute Tag“, review 2 DD-22/DH-12): the plate with
+    // the recipe as the sentence and its day.
+    if (nx) return UI.stage('status', { dial: false, tone: 'good', icon: 'mdi:chef-hat', text: R.short(nx.name, 40),
       facts: [{ label: 'Tag', value: dayName(nx.when) }, nx.min ? { label: 'Thermomix', value: mins(nx.min) } : null] });
-    return UI.stage('status', { tone: 'off', icon: 'mdi:chef-hat', text: R.cal.list ? 'Nichts geplant' : '…',
+    return UI.stage('status', { dial: false, tone: 'off', icon: 'mdi:chef-hat', text: R.cal.list ? 'Nichts geplant' : '…',
       facts: R.cal.list ? [{ label: 'Speiseplan', value: 'Leer' }] : [] });
   };
   /* Weich: Speiseplan mit Datums-Plakette (FR / 3) statt sieben gleicher Besteck-Symbole –
@@ -1322,9 +1357,10 @@
     + 'border-radius:var(--casora-popup-row-radius, 24px);background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));}'
     + '.hrw-b{flex:none;width:var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);border-radius:var(--casora-soft-icon-radius, 50%);display:flex;flex-direction:column;align-items:center;justify-content:center;'
     + 'background:var(--casora-soft-icon-off, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, #2E2721);line-height:1;}'
-    + '.hrw-b b{font-size:9px;font-weight:700;letter-spacing:.06em;opacity:.7;}'
+    // 10 px in full ink: 9 px at .7 fell to 2,7 : 1 (review 2, DD-18).
+    + '.hrw-b b{font-size:10px;font-weight:700;letter-spacing:.04em;}'
     + '.hrw-b span{font-size:14px;font-weight:700;margin-top:1px;font-variant-numeric:tabular-nums;}'
-    + '.hrw-r.now .hrw-b{background:var(--casora-soft-icon-on, #276B64);color:var(--casora-soft-glyph, #fff);}'
+    + '.hrw-r.now .hrw-b{background:var(--casora-soft-icon-on, #276B64);color:' + ((window._casoraInkOn && window._casoraInkOn('var(--casora-soft-icon-on, #276B64)', 4.5)) || 'var(--casora-soft-glyph, #fff)') + ';}'
     + '.hrw-r.now .hrw-b b{opacity:.85;}'
     + '.hrw-t{flex:1;min-width:0;}'
     + '.hrw-n{font-size:14.5px;font-weight:700;letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary, #2E2721);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
@@ -2341,6 +2377,19 @@
           + '<span class="cam-lbl">' + (window.casoraTr ? window.casoraTr('Beschreiben') : 'Beschreiben') + '</span>';
         ctl.appendChild(b);
       }
+      // Offline (review 2, E26/fam-14): a button whose device is unavailable – or that needs the picture of a camera
+      // that is offline – is greyed and does nothing, instead of looking usable and swallowing the tap.
+      var camOff = (hass.states[id] || {}).state === 'unavailable' || [].some.call(d.querySelectorAll('.casora-cam-offline'), function (o) { return o.offsetParent !== null; });
+      [].forEach.call(ctl.children, function (btn) {
+        var ents = [];
+        [].forEach.call(btn.attributes || [], function (at) { String(at.value).split(/[^\w.]+/).forEach(function (x) { if (/^[a-z_]+\.[\w]+$/.test(x) && hass.states[x]) ents.push(x); }); });
+        var own = ents.filter(function (x) { return x.indexOf('camera.') !== 0; });
+        var dead = own.length ? own.every(function (x) { return hass.states[x].state === 'unavailable'; }) : camOff;
+        if (dead !== btn.hasAttribute('aria-disabled')) {
+          if (dead) { btn.setAttribute('aria-disabled', 'true'); btn.style.opacity = '.5'; btn.style.pointerEvents = 'none'; }
+          else { btn.removeAttribute('aria-disabled'); btn.style.opacity = ''; btn.style.pointerEvents = ''; }
+        }
+      });
       var box = d.querySelector('.cam-ai-box');
       if (!box) {
         box = document.createElement('div'); box.className = 'cam-ai-box';
@@ -2985,7 +3034,7 @@
       if (soc != null && (r.theft || r.serviceDue)) facts.push({ label: 'Akku', value: fmtN(Math.round(soc)) + ' %' });
       if (kmV != null) facts.push({ label: kmLabel, value: fmtN(Math.round(kmV)) + ' km' });
       if (Lb.socAt) facts.push({ label: 'Akkustand', value: agoMs(Lb.socAt) });
-      if (r.daysSince != null) facts.push({ label: 'Letzte Fahrt', value: 'vor ' + fmtN(Math.round(r.daysSince)) + ' T.' });
+      if (r.daysSince != null) facts.push({ label: 'Letzte Fahrt', value: Math.round(r.daysSince) === 1 ? 'vor 1 Tag' : 'vor ' + fmtN(Math.round(r.daysSince)) + ' Tagen' });
       return UI.stage('status', { tone: r.theft ? 'bad' : r.serviceDue || (soc != null && soc <= 15 && !Lb.charging) ? 'warn' : soc == null ? 'off' : 'good',
         icon: r.theft ? 'mdi:shield-alert-outline' : Lb.charging ? 'mdi:battery-charging' : soc == null ? 'mdi:battery-unknown' : 'mdi:battery',
         text: txt, facts: facts, state: r.found ? null : 'na',
@@ -3033,7 +3082,8 @@
       }
       /* Active assist modes (codes or names) as the last row. */
       var am = t(states, M.modesActive);
-      if (am) rows.push({ icon: 'mdi:bike-fast', iconTone: DIM, label: 'Unterstützungsmodi', value: am.split(/\s*,\s*/).filter(Boolean).map(modeName).join(', ') });
+      // The modes as the row's second line: as a value they cut the title to „Unterstütz…“ (review 2, DH-20).
+      if (am) rows.push({ icon: 'mdi:bike-fast', iconTone: DIM, label: 'Unterstützungsmodi', sub: am.split(/\s*,\s*/).filter(Boolean).map(modeName).join(', ') });
       return rows.length ? UI.group(rows, 'Reichweite je Modus') : '';
     }
     if (name === 'last_s') {
@@ -3157,7 +3207,7 @@
       var su = M.swUpdate && states[M.swUpdate];
       if (su && su.state === 'on') rows5.push({ icon: 'mdi:update', iconTone: 'accent', label: 'Software-Update', value: 'Verfügbar' });
       var th = M.theft && states[M.theft];
-      if (th && ok(th)) rows5.push({ icon: th.state === 'on' ? 'mdi:shield-alert' : 'mdi:shield-check', iconTone: th.state === 'on' ? 'bad' : 'good', label: 'Diebstahl', value: th.state === 'on' ? 'Gemeldet' : 'Nicht gemeldet', valueTone: th.state === 'on' ? 'bad' : null });
+      if (th && ok(th)) rows5.push({ icon: th.state === 'on' ? 'mdi:shield-alert-outline' : 'mdi:shield-check-outline', iconTone: th.state === 'on' ? 'bad' : 'good', label: 'Diebstahl', value: th.state === 'on' ? 'Gemeldet' : 'Nicht gemeldet', valueTone: th.state === 'on' ? 'bad' : null });
       var loc = M.location && states[M.location];
       if (loc && ok(loc)) rows5.push({ icon: 'mdi:map-marker-outline', iconTone: DIM, label: 'Zuletzt gesehen', value: loc.state === 'home' ? 'Zuhause' : loc.state === 'not_home' ? 'Unterwegs' : String(loc.state) });
       return rows5.length ? UI.group(rows5, 'Service & Sicherheit') : '';
@@ -3962,8 +4012,9 @@
   var subline = function (s, oneLamp) {
     var p = s.pct != null ? ' · ' + s.pct + ' %' : '';
     if (s.tot <= 1 || oneLamp) return s.on ? tr('An') + p : tr('Aus');
-    if (!s.on) return tr('Alle aus');
-    return tr(s.on + ' von ' + s.tot + ' An') + p;
+    // One word list in the popup (review 2, DD-16): „Aus“ like the rooms beside it, „2 von 3 an“ like „2 von 10 an“.
+    if (!s.on) return tr('Aus');
+    return tr(s.on + ' von ' + s.tot + ' an') + p;
   };
 
   var CSS = '<style>'

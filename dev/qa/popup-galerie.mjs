@@ -311,6 +311,9 @@ async function anlegen() {
   const people = [...persons, ...trackers];
   if (!hv.presence_entity_1 && people.length > 1) Object.assign(hv, { presence_entity_1: people[0], presence_entity_2: people[1], presence_entity_3: people[2], show_people: true, show_people_inline: false });
   if (!hv.energy_entity_1 && power.length) Object.assign(hv, { energy_entity_1: power[0], energy_entity_2: power[1], energy_power_entity: hv.energy_power_entity || power[0] });
+  // The weather popup with a felt temperature (#56): the test station's weather (apparent_temperature), when the house has it.
+  const feelsWx = ids(/^weather\./).find((x) => (S[x].attributes || {}).apparent_temperature != null);
+  if (feelsWx) hv.weather_entity = feelsWx;
   const heads = {};
   const legend = (room) => ITEMS.filter((it) => it.badge && it.room === room).map((it) => `- ${it.popup}: \`${it.badge}\`${it.parent ? ` (erst \`${it.parent}\` antippen)` : ''}${it.note ? ' – ' + it.note : ''}`).join('\n');
   heads.haus = header('Haus', homeCard, hv);
@@ -362,6 +365,8 @@ async function anlegen() {
           mine.forEach((p, n) => { v['media_player_' + (n + 1)] = p; });
         }
         if (t.includes('casora_mobile_filter_badges')) Object.assign(x.variables, clean({ presence_entity_1: hv.presence_entity_1, presence_entity_2: hv.presence_entity_2, presence_entity_3: hv.presence_entity_3, show_people: true }));
+        // The phone's weather too: the test station with a felt temperature (#56).
+        if (feelsWx && (t.includes('casora_mobile_weather') || (x.variables || {}).weather_entity !== undefined)) x.variables = Object.assign({}, x.variables, { weather_entity: feelsWx });
       });
       row.cards = [...row.cards.slice(0, cut), ...phoneTiles.flatMap(([it, card]) => [
         { type: 'custom:button-card', template: 'casora_mobile_header', name: `${wl(it.w)} · ${it.popup}` },

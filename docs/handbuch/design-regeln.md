@@ -30,7 +30,7 @@ Kacheln, Badges, Raumkarten, Menüs (Glocke, ⋯, Räume, Szenen, Raumleisten-Me
 | Menüs (abgeleitet) | `--casora-menu-row-radius` = Kreis/2 + Rand · `--casora-menu-radius` = Zeile + Rand · `--casora-menu-pad` | 18 + 8 = **26** · 26 + 8 = **34** · 8 px |
 | Druck | `--casora-press-scale` | `.97` auf Tasten (`transform: scale(var(--casora-press-scale, .97))`) |
 | Aktive Zeile (DP-07) | `--casora-soft-row-active` · `-active-shadow` · `-active-ink` · `-active-sub` | hell Creme + Ruhe-Schatten; dunkel Sand 14 %, helle Schrift |
-| Symbol auf Akzent | `--casora-soft-glyph` | immer Weiß wie auf den Kacheln (DP-17-Kontrastregel am 11.10. zurückgenommen) |
+| Symbol auf Akzent | `--casora-soft-glyph` · `--casora-soft-glyph-dark` | nach Kontrast (Entscheidung 01.11.2026, Prüfung 2): Weiß, wo es auf der Gerätefarbe mindestens 3 : 1 hat (Blau, Türkis, Rot, Rosa, Violett), sonst die dunkle Glyphe (Gelb, Orange, Hellgrün, Mint, Neutral). Rechnet `inkOn()` in `casora-core.js` (Popup-Listen, Bühnen-Symbol, Kopf-Ring, Chips); für Text auf der Farbe mit 4,5 : 1 (`inkOn(fill, 4.5)`), auf durchscheinenden Flächen die Aus-Glyphe; löst „immer Weiß“ (11.10.) ab |
 | Popup-Akzent | `--casora-popup-accent` · `--casora-popup-accent-ink` | vom Rahmen je Popup gesetzt = Gerätefarbe der Kachel (Schalter, Kopf-Kachel, aktive Symbole) |
 
 Symbol-Kacheln (abgerundetes Quadrat statt Kreis, Popups seit 1.3): Radius ≈ 30 % – Kopf 56/16, Handy 48/14,

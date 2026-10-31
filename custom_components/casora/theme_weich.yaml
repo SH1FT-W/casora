@@ -649,6 +649,7 @@ Casora:
       casora-upd-ai-neutral: rgba(92,74,58,0.92)
       casora-popup-ui-bare-glyph: var(--casora-popup-tiles-text-secondary)
       casora-popup-ui-action: "#276B64"
+      casora-popup-ui-on-action: "#FFFFFF"   # text on the action colour (confirm button), 6 : 1
       casora-popup-ui-accent: var(--casora-popup-ui-action)
       casora-popup-ui-good: "#2F7445"
       casora-popup-ui-warn: "#93551A"
@@ -778,6 +779,7 @@ Casora:
       casora-soft-control-fill: var(--casora-control-off)
       casora-soft-icon-off: var(--casora-icon-circle-bg)
       casora-soft-glyph: "#FFFFFF"
+      casora-soft-glyph-dark: rgba(46,34,20,0.88)   # symbol on light device colours (yellow, orange, light green), white < 3 : 1
       casora-soft-glyph-off: rgba(58,50,43,0.70)   # DP-17: ≥ 3 : 1 auf Sand (war .55)
       casora-waste-rest: "#8F7E6D"
       casora-soft-close-ink: var(--casora-popup-tiles-text-secondary)
@@ -1178,6 +1180,7 @@ Casora:
       casora-soft-control-fill: var(--casora-control-off)
       casora-soft-icon-off: var(--casora-icon-circle-bg)
       casora-soft-glyph: "#FFFFFF"
+      casora-soft-glyph-dark: rgba(30,22,14,0.90)   # symbol on light device colours, white < 3 : 1
       casora-soft-glyph-off: rgba(242,235,225,0.70)   # DP-17 (war .55)
       casora-waste-rest: "#6A5948"
       casora-soft-close-ink: var(--casora-popup-tiles-text-secondary)

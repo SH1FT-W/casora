@@ -2631,7 +2631,20 @@
   "Hemma 1 gibt es nicht mehr – du siehst jetzt Casora Glas.": "Hemma 1 is gone – you now see Casora Glas.",
   "Das Hemma-Design gibt es nicht mehr – du siehst jetzt Casora Glas.": "The Hemma design is gone – you now see Casora Glas.",
   "Ändern: Studio › Einstellungen › Design.": "Change it: Studio › Settings › Design.",
-  "Noch nicht verfügbar": "Not available yet"
+  "Noch nicht verfügbar": "Not available yet",
+  "Hemma 2 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 2 is no longer part of Casora – you now use Casora Glas, the glass look in Casora's layout. Other designs: Studio › Settings › Design.",
+  "Hemma 1 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 1 is no longer part of Casora – you now use Casora Glas, the glass look in Casora's layout. Other designs: Studio › Settings › Design.",
+  "Das Hemma-Design gibt es nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "The Hemma design is gone – you now use Casora Glas, the glass look in Casora's layout. Other designs: Studio › Settings › Design.",
+  "1 Gerät": "1 device",
+  "Gerade kein Sonnenstrom übrig": "No solar power to spare right now",
+  "sehr hoch": "very high",
+  "niedrig": "low",
+  "hoch": "high",
+  "extrem": "extreme",
+  "gekippt": "tilted",
+  "Im Studio wählen": "Choose in the Studio",
+  "Regen jetzt": "Rain now",
+  "Sollwert": "Setpoint"
  },
  "patterns": [
   [
@@ -4753,6 +4766,34 @@
   [
    "^(.+) in (\\d+) T\\.$",
    "{1} in {2} d"
+  ],
+  [
+   "^Jetzt Ø (.+)$",
+   "Now avg. {1}"
+  ],
+  [
+   "^gefühlt (.+)$",
+   "feels like {1}"
+  ],
+  [
+   "^Regen (\\d+) ?%$",
+   "Rain {1}%"
+  ],
+  [
+   "^UV (\\d+)$",
+   "UV {1}"
+  ],
+  [
+   "^Wind (\\d.*)$",
+   "Wind {1}"
+  ],
+  [
+   "^Regen ab (\\d+) Uhr$",
+   "Rain from {1}:00"
+  ],
+  [
+   "^(.+) frei$",
+   "{1} spare"
   ]
  ],
  "Gerät in Home Assistant": "Device in Home Assistant"

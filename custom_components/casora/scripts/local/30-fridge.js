@@ -320,11 +320,13 @@
         if (curS == null) return null;
         var v = Math.round((curS + dir * stepS) * 100) / 100;
         var dis = (dir < 0 && loS != null && curS <= loS) || (dir > 0 && hiS != null && curS >= hiS);
-        return { dis: dis, step: clim ? stepS : null, min: loS, max: hiS,
+        return { dis: dis, step: stepS, min: loS, max: hiS,
           svc: clim ? { domain: 'climate', service: 'set_temperature', data: { temperature: v }, target: { entity_id: idS } }
             : { domain: 'number', service: 'set_value', data: { value: v }, target: { entity_id: idS } } };
       };
-      return UI.stage('value', { caption: zz.label + ' · Sollwert', value: curS, digits: stepS < 1 ? 1 : 0, unit: '°',
+      // One step for − / + and the ring (the ring snapped to 0,5 while ± went by 1), the unit like every S2 (review 2, DH-21).
+      return UI.stage('value', { caption: zz.label, label: zz.label + ' · Sollwert', value: curS, digits: stepS < 1 ? 1 : 0, unit: dz0.unit || '°C',
+        step: stepS, min: loS != null ? loS : undefined, max: hiS != null ? hiS : undefined,
         minus: side(-1), plus: side(1), foot: dz0.temp != null ? 'Jetzt ' + F.fmt(dz0.temp, dz0.unit) : null, extra: line });
     }
     if (part === 'zones') {

@@ -189,9 +189,11 @@
           label: 'Alle', value: String(R.length), page: 'bat-all' }], null);
         if (!rest.length) return moreRowHtml;
       }
-      // Eine Liste über zwei Spalten (schmal eine), nach Prozent sortiert.
-      return SEL_CSS + '<style>.hp-batall .hui-plate{display:grid !important;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px 18px !important;}'
-        + '@media (max-width: 760px){.hp-batall .hui-plate{grid-template-columns:minmax(0, 1fr);}}</style>'
+      // One list, sorted by percent. Popup v3: one column with full names (§6) – two columns inside the right column cut
+      // the names („Lecksen…“, review 2 DD-17); the old look keeps two columns.
+      var v3b = !!(UI.v3 && UI.v3());
+      return SEL_CSS + (v3b ? '' : '<style>.hp-batall .hui-plate{display:grid !important;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px 18px !important;}'
+        + '@media (max-width: 760px){.hp-batall .hui-plate{grid-template-columns:minmax(0, 1fr);}}</style>')
         + '<div class="hp-batall">' + tapWrap(UI.group(rest.map(function (r) { return rowOf(states, r); }), low.length ? 'Weitere Geräte' : 'Alle Geräte')) + '</div>' + moreRowHtml;
     }
     return '';
@@ -387,7 +389,7 @@
         moons: srch7 && act7 ? [srch7] : null,
         extra: UC && UC.v3Status ? UC.v3Status() : '',
         tone: n7 ? (warn7 ? 'bad' : 'warn') : rest7 ? 'warn' : 'good',
-        icon: n7 ? 'updates' : rest7 ? 'updates-restart' : 'mdi:check',
+        icon: n7 ? 'updates' : rest7 ? 'updates-restart' : 'mdi:check-circle-outline',
         text: n7 === 0 ? (rest7 ? 'Neustart ausstehend' : 'Alles aktuell') : n7 === 1 ? '1 Update verfügbar' : n7 + ' Updates verfügbar',
         facts: facts7, action: act7 || srch7,
         // Dial: one segment per pending update (red with an AI warning, orange otherwise), all green when up to date.

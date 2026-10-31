@@ -104,9 +104,10 @@
     if (TEXTUAL.test(dom(st.entity_id))) {
       try {
         var f = hass && typeof hass.formatEntityState === 'function' ? hass.formatEntityState(st) : '';
-        if (f != null && String(f) !== '') return String(f);
+        // HA had no word for it (a raw „ready“): Casora's word (review 2, DH-14).
+        if (f != null && String(f) !== '') return String(f) === String(st.state) && window._casoraRawWord ? window._casoraRawWord(String(f)) : String(f);
       } catch (e) { /* entity half loaded */ }
-      return String(st.state);
+      return window._casoraRawWord ? window._casoraRawWord(String(st.state)) : String(st.state);
     }
     // Casora's words before HA's ("Ein"): the core would take hass.formatEntityState first.
     if (s === 'on') return 'An';

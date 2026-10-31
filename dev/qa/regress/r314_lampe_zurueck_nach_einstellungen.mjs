@@ -1,8 +1,10 @@
 // @zustand: arbeit
 // @parallel: ui
-// #43 (Casora 26.10.52): light list → a lamp (‹ back to the list) → „Weitere Einstellungen“ (device page with ‹)
-// → ‹ back to the lamp: there the ‹ back to the list was gone. Expected: the lamp popup keeps its ‹, and it
-// still leads to the light list. Casora look, tablet 1024×768, light.
+// #43 (Casora 26.10.52): light list → a lamp (‹ back to the list) → a page further in → ‹ back to the lamp: there
+// the ‹ back to the list was gone. Popup v3 is clean (no „Weitere Einstellungen“ any more, richtlinien §8), so the
+// chain is room → lamp → ‹: the lamp popup has its ‹, its label is the page before (§3, review 2 DD-09), and ‹ leads
+// to the light list with the room's own label again (it kept the lamp's before). Should a page further in come back
+// (a „… ›“ row in the lamp popup), the deeper step is checked too. Casora look, tablet 1024×768, light.
 import { open, dashboard, casoraDashboards as _cd, check, need, finish } from './lib.mjs';
 
 const desks = (await _cd()).filter((d) => !d.mobile && (d.config.views || []).length > 1);
@@ -11,7 +13,8 @@ const { page } = await open({ width: 1024, height: 768, dark: false, theme: 'Cas
 const readPopup = () => page.evaluate(() => {
   const P = window.casoraPopup; const el = P && P.element; if (!el || !P.surface) return null;
   const sw = el.shadowRoot.querySelector('.header-switch'); const bk = el.shadowRoot.querySelector('.header-back');
-  return { back: !!(bk && !bk.hidden), title: (el.shadowRoot.querySelector('.header-title') || {}).textContent || '', ids: sw && !sw.hidden ? (el._hsIds || []) : [],
+  return { back: !!(bk && !bk.hidden), title: ((el.shadowRoot.querySelector('.header-title') || {}).textContent || '').replace(/\u200B/g, ''),
+    label: (el.shadowRoot.querySelector('.header-eyebrow') || {}).textContent || '', ids: sw && !sw.hidden ? (el._hsIds || []) : [],
     rows: window.__pierce('.lps-row', P.surface).map((r) => r.getAttribute('data-lps-tap') || '') };
 });
 let done = false;
@@ -56,21 +59,26 @@ outer: for (const dash of desks) for (const [i, v] of dash.config.views.entries(
     if (bk) { await page.mouse.click(bk.x, bk.y); await page.waitForTimeout(2500); }
     return !!bk;
   };
-  const setAt = await page.evaluate(() => { const P = window.casoraPopup;
-    const r = window.__pierce('[data-casora-mi]', P.surface).find((x) => /^(Weitere Einstellungen|More settings)$/.test(String(x.textContent || '').replace(/\s+/g, ' ').trim()));
+  await check('the lamp popup is labelled with the page before', lamp && lamp.label === room.title, { lamp, room });
+  // A page further in (a „… ›“ row of the lamp popup), when there is one: ‹ from there keeps the lamp's ‹ (#43).
+  const subAt = await page.evaluate(() => { const P = window.casoraPopup;
+    const r = window.__pierce('[data-casora-page], [data-casora-mi]', P.surface).find((x) => x.getBoundingClientRect().width > 0);
     if (!r) return null; r.scrollIntoView({ block: 'center' }); const b = r.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; });
-  await need('„Weitere Einstellungen“ in the lamp popup', !!setAt, lamp);
-  await page.mouse.click(setAt.x, setAt.y);
-  await page.waitForTimeout(3000);
-  const dev = await readPopup();
-  await check('„Weitere Einstellungen“ opens the device page with ‹', dev && dev.back && dev.title !== room.title, dev);
-  await clickBack();
-  const lamp2 = await readPopup();
-  await check('‹ from the device page: the lamp popup again', lamp2 && lamp2.title === lamp.title, { lamp2, lamp });
-  await check('the lamp popup keeps its ‹ back to the list (#43)', lamp2 && lamp2.back, lamp2);
+  if (subAt) {
+    await page.mouse.click(subAt.x, subAt.y);
+    await page.waitForTimeout(3000);
+    const dev = await readPopup();
+    if (dev && dev.back && dev.title !== lamp.title) {
+      await clickBack();
+      const lamp2 = await readPopup();
+      await check('‹ from the page further in: the lamp popup again', lamp2 && lamp2.title === lamp.title, { lamp2, lamp });
+      await check('the lamp popup keeps its ‹ back to the list (#43)', lamp2 && lamp2.back, lamp2);
+    }
+  }
   await clickBack();
   const list = await readPopup();
   await check('‹ leads to the light list', list && list.rows.join() === room.rows.join(), { list, room });
+  await check('the light list has its own label again', list && list.label === room.label, { list, room });
   done = true;
   break outer;
 }

@@ -175,7 +175,16 @@ export const MEASURE_GEO = () => {
   // ring's inner edge (radius 137 of 420) with 4 px air („rad“).
   for (const dl of els.filter((e) => e.classList && e.classList.contains('hui-dl'))) {
     const dr = R.get(dl); if (!dr) continue;
-    const cx = dr.left + dr.width / 2, cy = dr.top + dr.height / 2, rin = dr.width * 137 / 420 - 4;
+    // The wheel is drawn on a square from the box's top (the box may end above the empty gap at the bottom).
+    const cx = dr.left + dr.width / 2, cy = dr.top + dr.width / 2, rin = dr.width * 137 / 420 - 4;
+    // Moons (§4.8): a side moon stays clear of the knob's path (radius 169 of 420) by 6 px – knob and moon never touch.
+    for (const m of dl.querySelectorAll('.hui-moon')) {
+      const q = m.getBoundingClientRect(); if (q.width < 2) continue;
+      const mx = q.left + q.width / 2, my = q.top + q.height / 2;
+      if (my > cy + dr.width * 0.4 && Math.abs(mx - cx) < q.width) continue;
+      const gap = Math.hypot(mx - cx, my - cy) - q.width / 2 - dr.width * 169 / 420;
+      if (gap < 6) add('rad', `Mond am Knopfweg: ${gap.toFixed(1)} px Abstand (< 6)`, m);
+    }
     const c = dl.querySelector('.hui-dl-c'); if (!c) continue;
     const out = (x, y) => Math.hypot(x - cx, y - cy) - rin;
     let worst = 0, what = null;

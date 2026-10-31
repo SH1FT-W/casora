@@ -256,10 +256,12 @@
     var tc = openIds.filter(tilted).length, oc = openIds.length - tc;
     var lv = openIds.length && window.casoraSecurityLevel ? window.casoraSecurityLevel(hass, openIds) : openIds.length ? 'warn' : 'ok';
     var win = (openIds.length ? openIds : allIds).every(function (id) { return dc(id) === 'window'; });
-    var facts = [{ label: 'Geöffnet', value: String(oc) }];
-    if (tc) facts.push({ label: 'Gekippt', value: String(tc) });
-    facts.push({ label: 'Geschlossen', value: String(allIds.length - openIds.length) });
-    if (when && facts.length < 3) facts.push({ label: 'Zuletzt', value: when });
+    // Counts after the number in small letters („2 geöffnet“, word list §2), a count of 0 left out (review 2, DD-16).
+    var facts = [];
+    if (oc) facts.push({ label: 'geöffnet', value: String(oc) });
+    if (tc) facts.push({ label: 'gekippt', value: String(tc) });
+    if (facts.length < 2) facts.push({ label: 'geschlossen', value: String(allIds.length - openIds.length) });
+    if (when && facts.length < 2) facts.push({ label: 'Zuletzt', value: when });
     return UI.stage('status', {
       tone: !allIds.length ? 'off' : lv === 'alarm' ? 'bad' : lv === 'warn' ? 'warn' : 'good',
       icon: win ? (openIds.length ? 'mdi:window-open-variant' : 'mdi:window-closed-variant') : (openIds.length ? 'mdi:door-open' : 'mdi:door-closed'),

@@ -49,12 +49,17 @@ erst die Grundsätze, dann die Teile von oben nach unten, dann Maße, Zustände 
 
 | Fläche | Desktop ≥ 761 px | Handy |
 |---|---|---|
-| Mit Liste | 900 breit, **links** Bühne + Schnellwahl, **rechts** Listen | eine Spalte: Kopf → Bühne → Schnellwahl → Listen |
+| Mit Liste | 900 breit, **links nur** Bühne + Schnellwahl, **rechts alle** Listen | eine Spalte: Kopf → Bühne → Schnellwahl → Listen |
 | Ohne Liste oder nur 1 Abschnitt | 552 breit, eine Spalte in derselben Reihenfolge | wie Desktop |
 | Bild-Bühne (S5) | 900 breit, Bühne über **beide** Spalten, darunter links Schnellwahl, rechts Listen | eine Spalte |
 
 Die Spalten beginnen auf derselben Höhe (v2 Regel 12, `UI.colsMark`). Am Handy ist das Popup ein Sheet von unten mit
 Griff (vorhanden im Rahmen).
+
+Breite (Prüfung 2, 01.11.2026): Die Layout-Bausteine (`HH.layout`, `_casoraSoftKit.layout`) legen jede Liste rechts ab;
+bleibt rechts nichts, wird das Popup einspaltig und 552 breit (`casora_cols: 1`, liest der Rahmen). Unterseiten ohne eigene
+Breite behalten die Breite der Seite davor; die Leer-Zeile allein ist immer 552. Schmale Fenster: `min(Breite, 100vw − 16)`
+für alle Popups (vorher teils 92vw – iPad hoch 754 neben 804).
 
 ## 3. Kopf
 
@@ -67,9 +72,9 @@ Zustand · Zusatz · Zusatz
 | Teil | Regel | Maß |
 |---|---|---|
 | Symbol-Kachel | **entfällt** (die Bühne zeigt Farbe und Zustand) | – |
-| Etikett | Raum; auf Unterseiten die Seite davor; bei Sammel-Popups leer | 12/700, Großbuchstaben, Sperrung .06em, Text 2 |
+| Etikett | Raum; auf Unterseiten die Seite davor (setzt der Rahmen, wenn die Seite ‹ hat); bei Sammel-Popups leer; immer **über** dem Titel | 12/700, Großbuchstaben, Sperrung .06em, Text 2 |
 | Titel | Gerätename ohne Raum, höchstens 2 Zeilen, dann „…“ | 24/800, -0.02em (Handy 22) |
-| Statuszeile | Zustand fett in Text 1, dann höchstens 2 Zusätze in Text 2, „·“ getrennt, eine Zeitform (unter 1 Std. „vor 11 Min.“, sonst „seit 14:42“) | 14/500, Zustand 14/700 |
+| Statuszeile | Zustand fett in Text 1, dann höchstens 2 Zusätze in Text 2, „·“ getrennt, eine Zeitform (unter 1 Std. „vor 11 Min.“, sonst „seit 14:42“). In **jedem** Popup: hat der Inhalt keine eigene, zeigt der Rahmen den Zustand der Kachel-Entität (HAs Wort) | 14/500, Zustand 14/700 |
 | Hauptschalter | wie v2 Regel 2: schaltet, was die Kachel schaltet; nie bei Schloss, Alarm, Tor, Sirene | 51×31, Gerätefarbe |
 | ✕ | immer, rechts außen | Kreis 40 auf Zeilenfläche, Trefferfläche 44 |
 | ‹ | nur auf Unterseiten, links vor dem Etikett | Kreis 40 |
@@ -160,15 +165,15 @@ die Typen S1–S8 und ihre Felder bleiben. `o.dial: false` behält die Platte (n
 
 | Teil | Regel | Maß |
 |---|---|---|
-| Rad | Quadrat, Breite `min(400, (Spalte − 78) × 1,127)` – Desktop 2 Spalten ≈ 377, 1 Spalte 400, Handy ≈ 300 | viewBox 420 |
+| Rad | Quadrat, Breite `min(400, Spalte / 1,18)` – Platz für die Monde links und rechts (Prüfung 2); Desktop 2 Spalten ≈ 350, 1 Spalte 400, Handy ≈ 305 | viewBox 420 |
 | Bogen | 270°, Start 135° (unten links), Ende unten rechts; Lücke unten | Radius 150, Spur 26 |
 | Spur | `--casora-soft-control-fill` | |
 | Gefüllter Teil | Gerätefarbe `--casora-popup-accent`, darunter derselbe Bogen weich verwischt (Glow, Deckkraft .55) | |
 | Teilstriche | außen, 41 Striche, jeder zehnte länger; Text 2 mit Deckkraft .4 | 26–32 bzw. 38 vom Bogen |
-| Knopf | nur bei drehbarem Wert, am Ende des Bogens; `--casora-lps-knob` | Radius 19 |
-| Mitte | (Überschrift 15/600) · Wert 80/800 (Handy ≈ 63) mit Einheit 28/700 in Text 2 · Wort 15/600 · Zusatz 13/600 | |
+| Knopf | nur bei drehbarem Wert, am Ende des Bogens; `--casora-lps-knob`. Aus: Ring leer, kein Knopf, aber Pfeiltasten, Mausrad und Ziehen beginnen beim angezeigten Ziel; Aus am Minimum (Fußbodenheizung 5,0 °C) zeigt „Aus“ statt des Werts. Ein Wert ohne Zahl (offline) zeichnet einen leeren Ring | Radius 19 |
+| Mitte | (Überschrift 13–15/600, höchstens 2 Zeilen, kurz: „Ziel“) · Wert 80/800 (Handy ≈ 63) mit Einheit 28/700 in Text 2 · Wort 15/600 · Zusatz 13/600. Teile mit „·“ stehen je in einer eigenen Zeile (nie ein „·“ am Zeilenrand); Kennzahlen lesen sich natürlich: Zahl vorn bei Zählungen („2 geöffnet“), sonst das Wort vorn („Seit 19:40“, „Zuletzt vor 7 Min.“) | |
 | Sicherer Innenkreis | die Mitte berührt den Ring nie: jede Zeile bleibt 4 px innerhalb seines Innenrands (Radius 137 von 420); ein Wort als Wert (36, zwei Zeilen), ein Satz kleiner (26, drei Zeilen), lange Wörter trennen; Zusatz höchstens 2 Zeilen. Geprüft von `popup-geo.mjs` („rad“) | |
-| Ohne Mond unten | die leere Lücke wird hochgezogen (−12 % der Radbreite) | |
+| Ohne Mond unten | die leere Lücke wird hochgezogen: die Fläche des Rads endet bei 88 % seiner Breite, die Zeichnung darunter ist abgeschnitten (kein negativer Rand – das Rad lag sonst über dem Segment darunter) | |
 
 **Drei Ringe**
 
@@ -182,11 +187,11 @@ die Typen S1–S8 und ihre Felder bleiben. `o.dial: false` behält die Platte (n
 
 | Regel | Wert |
 |---|---|
-| Form | rund, 76 (Handy ≥ 62), Fläche `--casora-soft-control-fill`, Symbol 22 in Text 2 über dem Wort 11/700 (höchstens 2 Zeilen) |
+| Form | rund, 76 (Handy ≥ 62), Fläche `--casora-soft-control-fill`, Symbol 22 in Text 2 über dem Wort 11/700 (höchstens 2 Zeilen; ein Wort ab 10 Zeichen 10 px, ab 13 Zeichen 9 px mit Silbentrennung – nie mitten im Wort umbrechen). Monde mit gleichem Anfang („WZ Dreamview An/Aus“) zeigen nur den Unterschied, der volle Name ist Tooltip und Name für die Sprachausgabe |
 | Gewählt | Fläche `--casora-soft-seg-on`, Ring 3 in Gerätefarbe mit weichem Schatten, Symbol in Gerätefarbe (zur Schrift hin abgedunkelt, 3 : 1) |
-| Lage (Grad, 0 = rechts) | 1: 150 · 2: 150, 30 · 3: 150, 90, 30 · 4: −150, −30, 150, 30 – Abstand 51 % der Radbreite vom Mittelpunkt, unten (90°) 44 % |
-| Hauptaktion | S4/S7-Aktion („Jetzt starten“, „Alle verriegeln“) ist der Mond unten (90°; bei 1 oder 3 Monden rechts unten 30°): gefüllt in Gerätefarbe, Gefährliches ungefüllt mit roter Schrift und Rückfrage |
-| Mehr als 4 | die 3 häufigsten + „Alle (n)“ wie §5 |
+| Lage (Grad, 0 = rechts) | 1: 155 · 2: 155, 25 · 3: 155, 90, 25 · 4: −150, −30, 155, 25 – Abstand 53,5 % der Radbreite vom Mittelpunkt (außerhalb des Knopfwegs, nie am Ringende), unten (90°) 44 %; die Teilstriche unter einem seitlichen Mond fallen weg. Geprüft von `popup-geo.mjs` („rad“: Mond ≥ 6 px vom Knopfweg) |
+| Hauptaktion | S4/S7-Aktion („Jetzt starten“, „Alle verriegeln“) ist der Mond unten (90°; bei 1 oder 3 Monden rechts unten 25°), gefüllt in Gerätefarbe. **Gefährliches ist nie ein Mond** (Unscharf schalten, Alarm beenden, Alle entriegeln): ungefüllte Pille mit roter Schrift unter dem Rad, mit Rückfrage |
+| Mehr als 4 | die 3 häufigsten + „Alle (n)“ wie §5 (ohne ›) |
 | Verboten | wie §5 |
 
 Aufruf: `UI.stage(type, { …, moons: items | function })` – `items` wie `UI.quick`; eine Funktion ruft den vorhandenen
@@ -196,7 +201,8 @@ der Bühne. Das Feld „quick“ im Layout entfällt dann.
 
 Symbole: nur einfarbige MDI-Symbole (Outline, wo es sie gibt: `mdi:lock-outline`, `mdi:door-closed`,
 `mdi:window-closed-variant`, `mdi:speaker`, `mdi:spotify`, `mdi:radio`, `mdi:television`, `mdi:cast-audio`) bzw. die
-Casora-Symbole; keine Emojis. Farben nur aus Tokens (`--casora-color-*`, `--casora-soft-*`, `--casora-lps-knob`).
+Casora-Symbole; keine Emojis. Ein Symbol aus einem anderen Satz (`ios:lamp-floor`) wird auf dem Mond auf MDI abgebildet.
+Medien: ein Fernseher hat keine Schallplatte (ruhige Scheibe mit `mdi:television`, aus ohne Lautstärke-Zeile). Farben nur aus Tokens (`--casora-color-*`, `--casora-soft-*`, `--casora-lps-knob`).
 
 ## 5. Schnellwahl
 
@@ -212,7 +218,7 @@ Kacheln für die 2–4 häufigsten **Wahlen** – Modi, Szenen, Programme, Vorga
 | Gewählt | Fläche `--casora-soft-row-active` mit `--casora-soft-row-active-shadow`, Symbol in Gerätefarbe, Unterzeile „Aktiv“ oder der Wert |
 | Überschrift | nur wenn die Kacheln sich nicht selbst erklären („Szenen“, „Modus“); Stil der Listen-Überschrift §6 |
 | Abstand | 16 unter der Bühne (mit Überschrift: 24 bis zur Überschrift), 10 zwischen den Kacheln |
-| Mehr als 4 | die 3 häufigsten + Kachel „Alle (n)“ → Unterseite mit Auswahl-Liste (v2 Regel 6) |
+| Mehr als 4 | die 3 häufigsten + Kachel „Alle (n)“ (ohne ›) → Unterseite mit Auswahl-Liste (v2 Regel 6) |
 | Verboten | Gefährliches (Entriegeln, Alarm aus, Sirene), An/Aus des Hauptschalters, Navigation › |
 
 Antippen wählt sofort (kein „Übernehmen“); ist das Gerät aus, schaltet die Wahl es ein (v2 Regel 2).
@@ -320,6 +326,7 @@ Ein Aufräum-Umbau entfernt so etwas nie still; jede dieser Funktionen hat einen
 | #32 | Velair | Zeile „Zeitplan ›“ → Unterseite mit der Woche (ansehen, bearbeiten, an/aus, Ziel je Block); Zeile „Velair-Modus“ | `31-velair.js`, Teil `rows`, Seite `velair-plan` |
 | #23 | Türklingel | Zeile „Ton ›“ → Unterseite mit den Lautstärke-Reglern (Klingelton, Sprechen, Lautsprecher) | `24-klingel.js`, Teil `tonrow`, Seite `klingel-ton` |
 | #89 | Fahrzeug | Kilometerstand im Abschnitt „Zustand“ (auch BMW CarData) | `03-popups.js`, Teil `state_s3` |
+| #56 | Wetter | „gefühlt“ in der Mitte des Rads, immer wenn die Quelle einen Wert hat (Attribut `apparent_temperature` oder Sensor, ohne Studio-Schalter); die gefühlte Kurve im Verlauf nach der Studio-Wahl | Vorlage `casora_weather` (Popup), `00-finder.js` `weatherSources` |
 
 Nicht zurück: #35 (Jalousie-Stufen bleiben drei Monde: Auf · Beschatten · Zu).
 
@@ -352,6 +359,9 @@ Nicht zurück: #35 (Jalousie-Stufen bleiben drei Monde: Auf · Beschatten · Zu)
 
 - Trefferflächen mindestens 44 × 44 (Schnellwahl-Kachel und Zeilen ohnehin größer).
 - Text auf Fläche mindestens 4,5 : 1, Symbole 3 : 1 – hell und dunkel (`dev/qa/popup-geo.mjs`).
+- Symbol auf Gerätefarbe (Listen, Bühne, Kopf, Chips): weiß, wenn Weiß dort mindestens 3 : 1 hat (Blau, Türkis, Rot), sonst
+  die dunkle Glyphe `--casora-soft-glyph-dark` (Gelb, Orange, Hellgrün) – `inkOn()` rechnet es, design-regeln.md §0.
+- Offline: Knöpfe, deren Gerät nicht erreichbar ist (Kamera, Sirene), sind ausgegraut (Deckkraft .5) und tun nichts.
 - Regler, Schalter und ± mit Namen für die Sprachausgabe (`aria-label`, `role`, Wert).
 - Auswahl zusätzlich über Form (Hinterlegung, Schatten), nie nur über Farbe.
 
