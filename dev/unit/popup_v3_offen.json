@@ -194,13 +194,5 @@
   ],
   "modul": "23-frigate.js",
   "grund": "noch nicht dran"
- },
- {
-  "popup": "Rezepte",
-  "vorlagen": [
-   "casora_popup_recipe"
-  ],
-  "modul": "03-popups.js",
-  "grund": "noch nicht dran"
  }
 ]

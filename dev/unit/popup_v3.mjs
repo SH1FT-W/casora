@@ -62,6 +62,8 @@ const MIGRIERT = [
   { popup: 'Liste von Entitäten / „Mehr“', vorlagen: ['casora_popup_entity_list', 'casora_popup_more'], file: '34-entity-list.js', from: '  L.v3 = function', to: null, stages: 4 },
   // Fallback rule S7: template badge, nothing chosen (empty stage), entity missing, the entity's state.
   { popup: 'Freie Kachel / eigenes Badge', vorlagen: ['casora_popup_free', 'casora_popup_own_badge'], file: '28-free-tile.js', from: '  F.popup = function', to: null, stages: 4 },
+  // Fallback rule S7 instead of S5: the meal plan and the idea sensor carry no picture of the recipe.
+  { popup: 'Rezepte', vorlagen: ['casora_popup_recipe'], file: '03-popups.js', from: '  R.stageHtml = function', to: '  /* Weich: Speiseplan mit Datums-Plakette', stages: 2 },
 ];
 
 // 1. Pieces.
