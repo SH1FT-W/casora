@@ -154,13 +154,5 @@
   ],
   "modul": "14-pulse.js",
   "grund": "noch nicht dran"
- },
- {
-  "popup": "Energie (mit Energiefluss)",
-  "vorlagen": [
-   "casora_popup_energy"
-  ],
-  "modul": "20-energie-fokus.js",
-  "grund": "noch nicht dran"
  }
 ]

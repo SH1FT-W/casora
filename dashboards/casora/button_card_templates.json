@@ -12469,7 +12469,8 @@
      }
     ],
     "title": "[[[ if (![].concat(this._config?.template || []).includes('casora_energy')) return 'Energie'; return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Energie', ['Energy']) : (() => { const r = String(variables.room_name || '').trim(); const n = String(this._config?.name || '').trim(); const own = r && r !== 'Energie' && !['Energy'].includes(r) ? r : ''; return own || (n && !n.startsWith('[[[') ? n : '') || r || 'Energie'; })(); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "icon_tap_action": {
@@ -12494,7 +12495,8 @@
      }
     ],
     "title": "[[[ if (variables.energy_focus) return variables.label || ({ solar: 'Solar', battery: 'Akku', home: 'Haus', grid: 'Netz' })[variables.energy_focus] || 'Energie';\n  if (![].concat(this._config?.template || []).includes('casora_energy')) return 'Energie'; return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Energie', ['Energy']) : (() => { const r = String(variables.room_name || '').trim(); const n = String(this._config?.name || '').trim(); const own = r && r !== 'Energie' && !['Energy'].includes(r) ? r : ''; return own || (n && !n.startsWith('[[[') ? n : '') || r || 'Energie'; })(); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [

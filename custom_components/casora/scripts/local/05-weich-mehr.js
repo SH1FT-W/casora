@@ -534,10 +534,82 @@
         label: 'Noch keine Tageswerte', sub: (!window.casoraIsAdmin || window.casoraIsAdmin()) ? 'Welche Geräte hier zählen, legst du im Studio fest.' : null, subWrap: true }], 'Verbrauch');
     }
     var wide = !!(solar || f.flow);
+    /* Popup v3 (richtlinien §4 S6, §5, §8): „Jetzt“ and the energy flow as the stage (without the flow: the power
+       chart); the quick choice opens the house, solar, grid and battery pages (20-energie-fokus.js) in this popup;
+       right the consumption and the consumers. No „Mehr“ (controls, coach, details of the solar bank). */
+    if (UI.v3 && UI.v3() && UI.stage && ctx.only !== 'top') {
+      E._ctx3 = { variables: v, inner: inner, metricCard: ctx.metricCard || null };
+      var C3 = Object.assign({}, C, fs ? { fs: fs } : {});
+      var w3 = [C.home, C.grid, C.costToday, C.today].concat(sumIds, fs ? E.flowSources.ids(fs) : []);
+      var f3 = { stage: { card: secCard(w3, 'return window._casoraSoftEnergy ? window._casoraSoftEnergy.stage3(' + JSON.stringify(C3) + ', states, hass, this) : "";', states) } };
+      var q3 = E.quick3(C3, ctx.states);
+      if (q3) f3.quick = q3;
+      if (f.use) f3.use = f.use;
+      if (f.top) f3.top = f.top;
+      return layout({ fields: f3, top: [], stage: 'stage', quick: 'quick', left: [], right: ['use', 'top'], moveLeft: [],
+        narrowOrder: ['stage', 'quick', 'top', 'use'] });
+    }
     return layout({ fields: f, top: ['hero', 'metric'], left: wide ? ['flow'] : ['top'],
       right: wide ? ['use', 'top', 'more'] : ['use', 'more'], moveLeft: ['top'],
       /* Blueprint v2: the phone reads like the desktop, left before right – the consumers before „Verbrauch“. */
       narrowOrder: ['flow', 'top', 'use', 'more'] });
+  };
+
+  // ── Popup v3: stage and quick choice ──────────────────────────────────────
+  // The stage's HTML stays the same while the popup is open (the flow writes its values into its nodes, flowLive):
+  // the number and the line under it are written into the drawn stage, so the flow is never redrawn.
+  var T = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
+  var v3Bits = function (C, states) {
+    var p = watt(states, C.home), grid = watt(states, C.grid), bits = [];
+    if (C.sum && window._casoraPowerSum) { var R0 = window._casoraPowerSum(C.sum, states); p = isFinite(R0.sum) ? R0.sum : null; }
+    var fsrc = C.fs || C.flowSrc;
+    var imp = C.solar && grid != null ? Math.max(grid, 0) : null;
+    if (imp == null && fsrc && fsrc.has && (fsrc.has.solar || fsrc.has.battery) && fsrc.has.grid) imp = E.flowValues(fsrc, states).imp;
+    if (p != null && p > 0 && imp != null) bits.push(Math.round(Math.max(0, Math.min(1, 1 - imp / p)) * 100) + ' % aus Solar und Akku');
+    if (p != null && p < -20) bits.push('Einspeisung');
+    return { p: p, line: bits.join(' · ') };
+  };
+  E.stage3 = function (C, states, hass, self) {
+    var UI = window._casoraUI;
+    var b = v3Bits(C, states), w = b.p == null ? null : (Math.abs(b.p) < 20 && b.p < 0 ? 0 : Math.abs(b.p));
+    var txt = w == null ? '—' : fW(w, hass), cut = txt.lastIndexOf(' ');
+    var num0 = cut > 0 ? txt.slice(0, cut) : txt, unit0 = cut > 0 ? txt.slice(cut + 1) : '';
+    var memo = self ? (self._e3 || (self._e3 = { n: num0, u: unit0, l: b.line })) : { n: num0, u: unit0, l: b.line };
+    if (self) setTimeout(function () {
+      var r = self.shadowRoot, n = r && r.querySelector('.hui-st-n'), u = r && r.querySelector('.hui-st-u'), t = r && r.querySelector('.hui-st-trend');
+      if (n && !n.hasAttribute('data-casora-reading') && n.textContent !== num0) n.textContent = num0;
+      if (u && u.textContent !== unit0) u.textContent = unit0;
+      if (t && !t.hasAttribute('data-casora-reading') && t.textContent !== (b.line || T('Jetzt'))) t.textContent = b.line || T('Jetzt');
+    }, 0);
+    var chart = '', flowHtml = C.fs ? E.flow(C, states, hass, self) : '';
+    if (C.fs) chart = '<style>.hui-stage [data-casora-flow]{background:none!important;box-shadow:none!important;padding:0!important;}'
+      + '.hui-stage .hui-slbl{display:none!important;}</style>' + flowHtml;
+    else if (C.home && window._hpPlantCfg && window._hpPlantCfg[C.home]) {
+      var cfg = window._hpPlantCfg[C.home];
+      cfg.height = window.innerWidth <= 760 ? 140 : 160; cfg.readout = 'hero';
+      if (window._hpStageChart) window._hpStageChart(self, C.home);
+      chart = '<div class="hp-chart-slot" style="min-height:' + Number(cfg.height) + 'px;pointer-events:auto;"></div>';
+    }
+    return UI.stage('chart', { value: memo.n, unit: memo.u, trend: memo.l || T('Jetzt'), chart: chart, read: C.fs ? null : C.home || null,
+      state: C.home && states[C.home] && states[C.home].state === 'unavailable' ? 'na' : null });
+  };
+  // Quick choice: Haus · Solar · Netz · Akku – only the parts the flow has; each opens its page in this popup.
+  E.quick3 = function (C, states) {
+    var UI = window._casoraUI, F = C.fs;
+    if (!F || !UI || !UI.quick) return '';
+    var items = [{ icon: 'mdi:home-lightning-bolt-outline', text: 'Haus', page: 'energy-focus|home' }];
+    if (F.solar) items.push({ icon: 'mdi:solar-power-variant', text: 'Solar', page: 'energy-focus|solar' });
+    if (F.grid || F.gridHa || F.exp) items.push({ icon: 'mdi:transmission-tower', text: 'Netz', page: 'energy-focus|grid' });
+    if (F.batHa || F.chg || F.dis || F.batTile || F.soc) items.push({ icon: 'mdi:home-battery-outline', text: 'Akku', page: 'energy-focus|battery' });
+    return items.length > 1 ? UI.quick(items) : '';
+  };
+  (window._casoraPages || (window._casoraPages = {}))['energy-focus'] = function (focus) {
+    var ha = document.querySelector('home-assistant'), h = ha && ha.hass, X = E._ctx3 || {}, FO = window._casoraEnergyFocus;
+    if (!h || !FO || !FO.build || !window.casoraPopup || !window.casoraPopup.sub) return;
+    var card = FO.build({ hass: h, states: h.states, variables: Object.assign({}, X.variables || {}, { energy_focus: focus }),
+      metricCard: X.metricCard, inner: X.inner });
+    var TITLE = { home: 'Haus', solar: 'Solar', grid: 'Netz', battery: 'Akku' };
+    if (card) window.casoraPopup.sub({ title: TITLE[focus] || 'Energie', content: card });
   };
 
   // ── Energy flow as bars (1.2.1, design B "Sankey light") ─────────────────

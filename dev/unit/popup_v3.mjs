@@ -73,6 +73,8 @@ const MIGRIERT = [
   // S5 for one camera's picture and controls (tap and icon tap carry the same body); the grid of several cameras stays
   // the overview before it.
   { popup: 'Kamera', vorlagen: ['casora_popup_camera'], file: null, stages: 2 },
+  // S6: „Jetzt“ and the energy flow (else the power chart); quick Haus · Solar · Netz · Akku opens the focus pages.
+  { popup: 'Energie (mit Energiefluss)', vorlagen: ['casora_popup_energy'], file: '05-weich-mehr.js', from: '  // ── Popup v3: stage and quick choice', to: '  // ── Energy flow as bars', stages: 1 },
 ];
 
 // 1. Pieces.
