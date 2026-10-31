@@ -1,13 +1,14 @@
 // Popup v3 is clean (popup-richtlinien-v3.md §8): the popups no longer show automation switches, so the Studio must not
 // offer fields that only fed them – they changed nothing any more.   node dev/unit/studio_popup_v3_clean.mjs
-//   cover / cover group: "Shade automation", "Automation today" (smart_automation_entity, smart_automation_today_entity)
+//   (The cover fields "Shade automation" / "Automation today" are back: users asked for the switch in #81, §8 exception,
+//   pinned in popup_v3_issue_features.mjs.)
 //   waste tile and Settings → Waste: "Reminder automation" (trash_reminder, waste.reminder – "Push the evening before")
 //   doorbell / Frigate descriptions: "the doorbell's settings", "recordings … and the camera switches"
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { loadPanel } from './lib/testhaus.mjs';
 
-const DEAD = ['smart_automation_entity', 'smart_automation_today_entity', 'trash_reminder'];
+const DEAD = ['trash_reminder'];
 const { I } = await loadPanel();
 const types = [].concat(I.TILE_TYPES || [], window.CASORA_TILE_TYPES || []);
 assert.ok(types.length > 20, 'tile types loaded');
@@ -21,8 +22,6 @@ assert.ok(!/row\(g, "Reminder automation"/.test(personal), 'Settings → Waste s
 
 // The popup itself really dropped them in v3 (if this fails, the popup shows them again and the fields belong back).
 const tpl = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
-const cover = JSON.stringify(tpl.casora_popup_cover);
-assert.ok(/HZ_SYS && states\[HZ_SYS\] && !_v3/.test(cover.replace(/\\n/g, ' ')), 'cover popup: shade switch only outside v3');
 assert.ok(/states\[REMINDER\] && !_v3/.test(JSON.stringify(tpl.casora_trash)), 'waste popup: reminder switch only outside v3');
 // Tile descriptions (Add a tile, Community) promise only what the v3 popup still shows: doorbell without its settings,
 // Frigate without recordings, objects and camera switches (24-klingel.js, 23-frigate.js: "No settings", "just the picture").

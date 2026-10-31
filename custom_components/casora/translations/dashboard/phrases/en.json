@@ -2585,7 +2585,9 @@
   "Tankstand": "Fuel level",
   "Gerade kein Spiel": "No game right now",
   "Kein Spiel": "No game",
-  "Gruppen": "Groups"
+  "Gruppen": "Groups",
+  "Heute an": "On today",
+  "Heute aus": "Off today"
  },
  "patterns": [
   [

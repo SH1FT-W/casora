@@ -2,6 +2,8 @@
 // setting – it stays as a row, section or subpage. This test pins each of those features in the v3 popup, so a later
 // clean-up cannot drop one silently again.   node dev/unit/popup_v3_issue_features.mjs
 //   #98 network: section „Internet“ (provider, also from an attribute; public IPv4/IPv6; latency per target)
+//   #81 covers: the shade automation switch (and „Automatik heute“) as the last row of the cover list, redrawn live;
+//       the Studio offers its fields again
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -61,6 +63,52 @@ const runCard = (card, states, hass) => new Function('states', 'hass', card.cust
   assert.ok(!/Speedtest\|/.test(html), 'v3 shows the speedtest in the stage, not as a row');
   assert.ok(inet.triggers_update.includes('binary_sensor.t_link'), '#98: the provider entity is watched');
   void f;
+}
+
+// ── #81 covers: shade automation as a live row of the cover list ───────────
+{
+  const T = JSON.parse(rd('dashboards/casora/button_card_templates.json'));
+  globalThis.localStorage = { getItem: () => null };
+  globalThis.matchMedia = () => ({ matches: false });
+  const doc0 = globalThis.document;
+  globalThis.document = { getElementById: () => true, createElement: () => ({}), head: { appendChild() {} }, querySelector: () => null };
+  window.casoraIconUrl = (n) => n;
+  const saved = window._casoraUI;
+  window._casoraUI = { esc, soft: () => true, v3: () => true, settings: () => '', hero: () => 'HERO', stage: () => 'STAGE',
+    label: (t) => t, slider: () => 'SLIDER', segments: () => 'SEG', row: { toggle: (o) => ({ ...o, toggle: true }) },
+    group: (rows, label) => 'GROUP[' + label + ']' + rows.map((r) => r.label + '=' + (r.toggle ? (r.on ? 'ON' : 'OFF') + '/' + (r.sub || '') : r.value)).join(';') };
+  window._casoraStd = (c) => c;
+  const st = (id, state, attributes = {}) => ({ entity_id: id, state, attributes });
+  const states = { 'cover.t_a': st('cover.t_a', 'open', { current_position: 100, friendly_name: 'A' }),
+    'cover.t_b': st('cover.t_b', 'closed', { current_position: 0, friendly_name: 'B' }),
+    'switch.t_shade': st('switch.t_shade', 'on', { friendly_name: 'Shade' }), 'input_boolean.t_today': st('input_boolean.t_today', 'off') };
+  const hass = { states, entities: {} };
+  const popup = (name, variables, entity) => new Function('states', 'hass', 'variables', 'entity', 'user',
+    T[name].tap_action.casora_popup.content.replace(/^\s*\[\[\[/, '').replace(/\]\]\]\s*$/, ''))(states, hass, variables, entity, {});
+  const run = (tpl) => new Function('states', 'hass', tpl.replace(/^\[\[\[/, '').replace(/\]\]\]$/, ''))(states, hass);
+  const vars = { smart_automation_entity: 'switch.t_shade', smart_automation_today_entity: 'input_boolean.t_today' };
+
+  // Group popup: the switch is the last row of the list, in the same section as the covers.
+  const g = popup('casora_popup_cover', { covers: ['cover.t_a', 'cover.t_b'], ...vars }, null).cards[0].custom_fields;
+  const list = Object.values(g).find((x) => typeof x === 'string' && x.includes('switch.t_shade'));
+  assert.ok(list && list.startsWith('[[['), '#81: the cover list with the switch is a live template');
+  assert.match(list, /states\["switch\.t_shade"\]/, '#81: button-card watches the switch (written out)');
+  assert.match(list, /states\["input_boolean\.t_today"\]/, '#81: and „Automatik heute“');
+  assert.equal(run(list), 'GROUP[Vorhänge]A=Geöffnet;B=Geschlossen;Shade=ON/Heute aus', '#81: covers, then the switch');
+  states['switch.t_shade'] = st('switch.t_shade', 'off', { friendly_name: 'Shade' });
+  assert.match(run(list), /Shade=OFF/, '#81: the row follows the helper at once');
+  // One cover (tile popup): no list, the switch stands alone under „Automatik“.
+  const one = popup('casora_cover', { ...vars }, { entity_id: 'cover.t_a' }).cards[0].custom_fields;
+  const auto = Object.values(one).find((x) => typeof x === 'string' && x.includes('switch.t_shade'));
+  assert.ok(auto, '#81: single cover popup has the switch');
+  assert.equal(run(auto), 'GROUP[Automatik]Shade=OFF/Heute aus');
+  // The Studio offers the fields again (cover tile and cover group).
+  const panel = rd('custom_components/casora/panel/casora-panel.js');
+  assert.match(panel, /key: "smart_automation_entity", label: "Shade automation"/);
+  assert.match(panel, /key: "smart_automation_today_entity", label: "Automation today"/);
+  assert.equal((panel.match(/\.\.\.COVER_AUTOMATION_FIELDS/g) || []).length, 2, '#81: cover and cover group');
+  window._casoraUI = saved;
+  globalThis.document = doc0;
 }
 
 console.log('popup_v3_issue_features: ok');

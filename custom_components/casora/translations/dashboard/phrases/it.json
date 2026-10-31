@@ -2603,7 +2603,9 @@
   "Tankstand": "Livello carburante",
   "Gerade kein Spiel": "Nessun gioco al momento",
   "Kein Spiel": "Nessun gioco",
-  "Gruppen": "Gruppi"
+  "Gruppen": "Gruppi",
+  "Heute an": "Attiva oggi",
+  "Heute aus": "Disattivata oggi"
  },
  "patterns": [
   [

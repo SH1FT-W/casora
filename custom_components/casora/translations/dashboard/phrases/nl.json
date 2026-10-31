@@ -2603,7 +2603,9 @@
   "Tankstand": "Brandstofniveau",
   "Gerade kein Spiel": "Nu geen spel",
   "Kein Spiel": "Geen spel",
-  "Gruppen": "Groepen"
+  "Gruppen": "Groepen",
+  "Heute an": "Vandaag aan",
+  "Heute aus": "Vandaag uit"
  },
  "patterns": [
   [
