@@ -97,7 +97,7 @@ const run = async (view, dark, first) => {
   await shot('1-kachel');
   let p = await openPop();
   await check(tag + ': Segmente 24 Std. (aktiv) · 7 Tage · 30 Tage · Jahr', p && p.segs.join('|') === '*24 Std.|7 Tage|30 Tage|Jahr', p && p.segs);
-  await check(tag + ': Umschalter Linie (aktiv, Messwert) · Balken', p && p.shapes.join('|') === '*Linie|Balken', p && p.shapes);
+  await check(tag + ': Umschalter Linie (aktiv, Messwert) · Balken · Heatmap', p && p.shapes.join('|') === '*Linie|Balken|Heatmap', p && p.shapes);
   await check(tag + ': Diagramm über 24 Std. mit Linien und Legende (CPU + RAM)', p && p.chart && p.span === '24h' && p.kind === 'line' && p.paths >= 2 && p.legend === 2, p && [p.chart, p.span, p.kind, p.paths, p.legend]);
   await check(tag + ': Bereich „Linien“ mit beiden Sensoren', p && /Linien .*RAM/.test(p.txt), p && p.txt);
   await check(tag + ': Statistik „Letzte 24 Std.“ mit Höchster/Tiefster Wert und Durchschnitt',
@@ -112,17 +112,17 @@ const run = async (view, dark, first) => {
     // Umschalter: Messwerte als Balken je Tag, beide Reihen nebeneinander; die Wahl bleibt beim Zeitraumwechsel.
     const pb = await seg('data-casora-cshape', 'bar', (x) => x && x.kind === 'bar' && x.span === '7d' && x.paths >= 8);
     await check(tag + ': „Balken“ – Segment aktiv, Balken je Tag über 7 Tage, beide Reihen mit Legende',
-      pb && pb.shapes.join('|') === 'Linie|*Balken' && pb.kind === 'bar' && pb.period === 'day' && pb.paths >= 8 && pb.legend === 2, pb);
+      pb && pb.shapes.join('|') === 'Linie|*Balken|Heatmap' && pb.kind === 'bar' && pb.period === 'day' && pb.paths >= 8 && pb.legend === 2, pb);
     await shot('4-popup-balken-7-tage');
     const ph = await seg('data-casora-cspan', '24h', (x) => x && x.kind === 'bar' && x.span === '24h' && x.paths > 0);
-    await check(tag + ': „24 Std.“ bleibt bei Balken – je Stunde', ph && ph.kind === 'bar' && ph.period === 'hour' && ph.paths >= 12 && ph.shapes.join('|') === 'Linie|*Balken', ph);
+    await check(tag + ': „24 Std.“ bleibt bei Balken – je Stunde', ph && ph.kind === 'bar' && ph.period === 'hour' && ph.paths >= 12 && ph.shapes.join('|') === 'Linie|*Balken|Heatmap', ph);
     await shot('5-popup-balken-24-std');
     const py = await seg('data-casora-cspan', '1y', (x) => x && x.span === '1y' && x.kind === 'bar' && /Letzte 12 Monate Höchster/.test(x.txt));
     await check(tag + ': „Jahr“ – Balken je Monat, Statistik „Letzte 12 Monate“ mit Höchster/Tiefster Wert',
       py && py.segs.join('|') === '24 Std.|7 Tage|30 Tage|*Jahr' && py.period === 'month' && py.paths >= 10 && /Letzte 12 Monate Höchster Wert .*Tiefster Wert .*Durchschnitt/.test(py.txt), py);
     await shot('6-popup-balken-jahr');
     const pl = await seg('data-casora-cshape', 'line', (x) => x && x.kind === 'line' && x.span === '1y' && x.paths > 0);
-    await check(tag + ': zurück auf „Linie“ – Jahr als Linie aus Monatsmitteln', pl && pl.kind === 'line' && pl.period === 'month' && pl.paths >= 2 && pl.shapes.join('|') === '*Linie|Balken', pl);
+    await check(tag + ': zurück auf „Linie“ – Jahr als Linie aus Monatsmitteln', pl && pl.kind === 'line' && pl.period === 'month' && pl.paths >= 2 && pl.shapes.join('|') === '*Linie|Balken|Heatmap', pl);
     await shot('7-popup-linie-jahr');
     await close();
     // Zähler: Energie des Servers öffnet automatisch als Balken (je Stunde über 24 Std.) mit Verbrauch heute.
@@ -131,7 +131,7 @@ const run = async (view, dark, first) => {
     await check(tag + ': Zähler-Kachel zeigt kWh', t && /kWh$/.test(t.state), t);
     const pe = await openPop('qa-r320e', (x) => x && x.paths > 0 && /Heute/.test(x.txt));
     await check(tag + ': Zähler – automatisch Balken je Stunde, 24 Std., „Heute“ in der Statistik',
-      pe && pe.shapes.join('|') === 'Linie|*Balken' && pe.kind === 'bar' && pe.period === 'hour' && pe.span === '24h' && pe.paths >= 12 && /Letzte 24 Std\. Heute [\d,.]+\s?kWh/.test(pe.txt), pe);
+      pe && pe.shapes.join('|') === 'Linie|*Balken|Heatmap' && pe.kind === 'bar' && pe.period === 'hour' && pe.span === '24h' && pe.paths >= 12 && /Letzte 24 Std\. Heute [\d,.]+\s?kWh/.test(pe.txt), pe);
     await shot('8-energie-balken-24-std');
     const pe7 = await seg('data-casora-cspan', '7d', (x) => x && x.span === '7d' && /Ø pro Tag/.test(x.txt));
     await check(tag + ': Zähler 7 Tage – Balken je Tag, „Heute“, „Letzte 7 Tage“, „Ø pro Tag“',

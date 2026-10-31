@@ -410,15 +410,15 @@ window.CASORA_TILE_TYPES = [
   // Chart (community card, card request #50): any numeric sensor with a state class (CPU load of System Monitor,
   // temperature, power, energy). Tile: value with unit and a 24 h sparkline; popup: Casora's own chart over
   // 24 h / 7 / 30 days / a year as a line or bars with up to four sensors and the statistics of the main one
-  // (scripts/local/27-chart.js). chart_kind: '' automatic (bars for counters, line for readings) | line | bar;
-  // chart_span: '' 24 h | 7d | 30d | 1y – the range the popup opens with.
+  // (scripts/local/27-chart.js). chart_kind: '' automatic (bars for counters, line for readings) | line | bar | heat
+  // (heatmap, issue 100: days × hours in the popup, a small 7-day grid on the tile); chart_span: '' 24 h | 7d | 30d | 1y – the range the popup opens with.
   { id: "casora_chart", label: "Chart", template: "casora_chart", domains: ["sensor"],
     icon: "chart", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Sensor", entityPlaceholder: "A sensor with numbers",
     community: { desc: "Current value with unit and a 24-hour sparkline on the tile. The popup draws Casora's own chart over 24 hours, 7 or 30 days or a year as a line or bars with up to four sensors, a legend and the lowest, highest and average value – for any numeric sensor such as CPU load, temperature, power, energy or rainfall." },
     fields: [ICON, TITLE_NAME,
-      { key: "chart_kind", label: "Display", type: "select", options: ["", "line", "bar"],
-        optionLabels: { "": "Automatic", line: "Line", bar: "Bars" },
-        hint: "Automatic draws bars for meters (energy, water, rainfall – sensors that count up) and a line for readings such as temperature or CPU load. Bars show one column per hour, day or month. The popup has a switch too, remembered until the page is reloaded." },
+      { key: "chart_kind", label: "Display", type: "select", options: ["", "line", "bar", "heat"],
+        optionLabels: { "": "Automatic", line: "Line", bar: "Bars", heat: "Heatmap" },
+        hint: "Automatic draws bars for meters (energy, water, rainfall – sensors that count up) and a line for readings such as temperature or CPU load. Bars show one column per hour, day or month. The heatmap colors every hour by its value, one row per day (the year: one row per month), and the tile then shows the last 7 days as a small grid. The popup has a switch too, remembered until the page is reloaded." },
       { key: "chart_span", label: "Range when opening", type: "select", options: ["", "7d", "30d", "1y"],
         optionLabels: { "": "24 hours", "7d": "7 days", "30d": "30 days", "1y": "Year" },
         hint: "The range the popup shows first. The year draws twelve months." },

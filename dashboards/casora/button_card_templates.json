@@ -18553,11 +18553,13 @@
    "spark": {
     "card": {
      "type": "custom:casora-chart",
-     "kind": "spark",
-     "span": "24h",
+     "kind": "[[[\n  /* Studio \"Display: Heatmap\" (issue 100): the tile shows the last 7 days as a small grid instead of the sparkline. */\n  return variables.chart_kind === 'heat' ? 'heat' : 'spark';\n]]]",
+     "span": "[[[ return variables.chart_kind === 'heat' ? '7d' : '24h'; ]]]",
      "height": 32,
      "color": "spark",
-     "entity": "[[[\n  /* Sparkline: the last 24 hours of this sensor (community card Chart, #50). */\n  return entity?.entity_id || '';\n]]]"
+     "entity": "[[[\n  /* Sparkline: the last 24 hours of this sensor (community card Chart, #50). */\n  return entity?.entity_id || '';\n]]]",
+     "mini": "[[[ return variables.chart_kind === 'heat'; ]]]",
+     "source": "[[[\n  /* Heatmap of a meter: consumption per hour, not the meter reading. */\n  const sc = entity?.attributes?.state_class;\n  return variables.chart_kind === 'heat' && (sc === 'total' || sc === 'total_increasing') ? 'change' : 'auto';\n]]]"
     }
    }
   },

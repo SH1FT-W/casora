@@ -2,7 +2,7 @@
 // Lovelace card custom:casora-chart, SVG, no third-party library. Direction A "calm":
 // 2 px line, area 12 % → 0, dotted guide lines, scale on the right, reading through the
 // big number (own or the popup's hero number) instead of a floating tooltip.
-//   { type: 'custom:casora-chart', kind: 'line'|'bar'|'spark', span: '48h' | '7d' | '1y',
+//   { type: 'custom:casora-chart', kind: 'line'|'bar'|'heat'|'spark', mini (heat on a tile), span: '48h' | '7d' | '1y',
 //     series: [{ entity, name, color, unit, decimals, map }], source: 'auto'|'history'|'stats'|'change',
 //     agg: 'mean'|'max', bucket: '1h', period: 'hour'|'day'|'month' (statistics period = bar bucket),
 //     height, y: { min, max, labels }, step, readout: 'own'|'hero'|'none', legend,
@@ -88,6 +88,55 @@
     }
     return out;
   };
+  /* Heatmap (issue 100): rows are local days with 24 hour columns (up to 60 days; 24 h = yesterday and today), or
+     months with 31 day columns (the year). plan(span) → { per: statistics period of one cell, n: rows }. */
+  C.heatPlan = function (spanMs) {
+    if (spanMs > 60 * DAY) return { per: 'day', n: 12 };
+    return { per: 'hour', n: Math.max(2, Math.round(spanMs / DAY)) };
+  };
+  C.heatStarts = function (now, per, n) { return per === 'day' ? C.starts(now, 'month', n) : C.days(now, n); };
+  /* Raster points [[t, v], …] into the heatmap grid. A cell is { t, v } (v null = gap: the hour has passed
+     without a value) or null (not drawn: still running, in the future, or an hour the clock change skipped).
+     Cells are local: the column is the local hour (or day of the month), so 23/25-hour days come out right; the
+     doubled hour of the autumn change holds both buckets (agg 'sum' adds them, else their mean). carry: a value
+     holds until the next one (raw history, where an hour without a change keeps the state). */
+  C.heat = function (pts, now, per, n, agg, carry) {
+    var starts = C.heatStarts(now, per, n), cols = per === 'day' ? 31 : 24, rows = [], lo = null, hi = null, count = 0;
+    var last = starts.length ? (per === 'day' ? new Date(new Date(starts[n - 1]).getFullYear(), new Date(starts[n - 1]).getMonth() + 1, 1)
+      : new Date(new Date(starts[n - 1]).getFullYear(), new Date(starts[n - 1]).getMonth(), new Date(starts[n - 1]).getDate() + 1)).getTime() : 0;
+    var acc = {}, sorted = (pts || []).filter(function (p) { return p && isFinite(p[0]) && p[1] != null && isFinite(p[1]); })
+      .slice().sort(function (a, b) { return a[0] - b[0]; });
+    var r = 0, prev = null;
+    sorted.forEach(function (p) {
+      if (p[0] < starts[0]) { prev = +p[1]; return; }
+      if (p[0] >= last) return;
+      while (r < n - 1 && p[0] >= starts[r + 1]) r++;
+      var d = new Date(p[0]), c = per === 'day' ? d.getDate() - 1 : d.getHours(), k = r + ':' + c;
+      var a = acc[k] || (acc[k] = { s: 0, n: 0 });
+      a.s += +p[1]; a.n++;
+    });
+    for (var i = 0; i < n; i++) {
+      var s = new Date(starts[i]), cells = [];
+      for (var c = 0; c < cols; c++) {
+        var t = per === 'day' ? new Date(s.getFullYear(), s.getMonth(), c + 1).getTime() : new Date(s.getFullYear(), s.getMonth(), s.getDate(), c).getTime();
+        var td = new Date(t);
+        // Day 31 of a 30-day month, or 02:00 on the spring change (comes out as 03:00): no such cell.
+        if (per === 'day' ? td.getMonth() !== s.getMonth() : td.getHours() !== c || td.getDate() !== s.getDate()) { cells.push(null); continue; }
+        var end = per === 'day' ? new Date(td.getFullYear(), td.getMonth(), td.getDate() + 1).getTime() : t + H;
+        // A doubled autumn hour lasts two hours.
+        if (per === 'hour' && new Date(end).getHours() === c) end += H;
+        var a = acc[i + ':' + c], v = a ? (agg === 'sum' ? a.s : a.s / a.n) : null;
+        if (end > now && v == null) { cells.push(null); continue; }
+        if (v == null && carry && prev != null && t < now) v = prev;
+        if (v != null) { prev = v; count++; if (lo == null || v < lo) lo = v; if (hi == null || v > hi) hi = v; }
+        cells.push({ t: t, v: v });
+      }
+      rows.push({ t: starts[i], cells: cells });
+    }
+    return { per: per, cols: cols, rows: rows, lo: lo, hi: hi, count: count };
+  };
+  /* Share of a value on the colour scale (0 … 1); a flat grid sits in the middle. */
+  C.heatShare = function (v, lo, hi) { return hi - lo > 1e-9 ? Math.max(0, Math.min(1, (v - lo) / (hi - lo))) : 0.5; };
   C.mono = function (p) {
     var n = p.length, f = function (v) { return Math.round(v * 10) / 10; };
     if (!n) return '';
@@ -268,11 +317,13 @@
     _src() {
       var c = this._c;
       if (c.source !== 'auto') return c.source;
+      if (c.kind === 'heat') return 'stats';
       return c.kind === 'bar' ? 'change' : this._spanMs() > 2 * DAY && !c.series.some(function (s) { return s.attribute; }) ? 'stats' : 'history';
     }
     /* Statistics period = bar bucket: hour within a day, day up to a month, month beyond (or c.period). */
     _per() {
       var c = this._c, span = this._spanMs();
+      if (c.kind === 'heat') return C.heatPlan(span).per;
       if (c.period) return c.period;
       if (c.kind !== 'bar') return 'hour';
       return span <= DAY ? 'hour' : span > 60 * DAY ? 'month' : 'day';
@@ -287,14 +338,15 @@
       if (!c || !h || !h.connection || !c.series.length || !this.isConnected) { this._draw(); return; }
       var src = this._src(), per = this._per();
       var ids = c.series.map(function (s) { return s.entity; }).filter(function (e, i, a) { return a.indexOf(e) === i; });
-      var key = c.series.map(rawKey).join(',') + '|' + c.span + '|' + src + '|' + (c.agg || '') + '|' + per + (c.kind === 'bar' ? '|bar' : '');
+      var key = c.series.map(rawKey).join(',') + '|' + c.span + '|' + src + '|' + (c.agg || '') + '|' + per + (c.kind === 'bar' || c.kind === 'heat' ? '|' + c.kind : '');
       if (!force && key === this._key && (this._sub || Date.now() - this._at < 5 * MIN)) return;
       this._key = key; this._at = Date.now();
       var hit = cache.get(key);
       if (hit && Date.now() - hit.at < 60000) { this._data = hit.data; this._draw(); if (src !== 'history') return; }
       this._unsub();
       var me = this, now = Date.now(), span = this._spanMs();
-      var start = c.kind === 'bar' ? C.starts(now, per, this._n(per))[0] : now - span;
+      var start = c.kind === 'bar' ? C.starts(now, per, this._n(per))[0]
+        : c.kind === 'heat' ? C.heatStarts(now, per, C.heatPlan(span).n)[0] : now - span;
       var put = function (data) { if (me._key !== key) return; me._data = data; cache.set(key, { at: Date.now(), data: data }); me._draw(); };
       var hist = function () {
         // One list per series: an entity can give several curves (weather attributes, #56).
@@ -342,7 +394,7 @@
         var t = typeof p.start === 'number' ? p.start : Date.parse(p.start);
         // Lines put a statistics value in the middle of its period; bars keep the bucket start.
         var mid = d.per === 'month' ? 15 * DAY : d.per === 'day' ? 12 * H : 30 * MIN;
-        if (v != null && isFinite(v)) out.push([d.src === 'change' || me._c.kind === 'bar' ? t : t + mid, +v]);
+        if (v != null && isFinite(v)) out.push([d.src === 'change' || me._c.kind === 'bar' || me._c.kind === 'heat' ? t : t + mid, +v]);
       });
       return out.sort(function (a, b) { return a[0] - b[0]; });
     }
@@ -370,13 +422,15 @@
       this._release();
       if (c.kind === 'bar' && c.points) return this._fixed(box, W);
       if (c.kind === 'bar') return this._bars(box, W);
+      if (c.kind === 'heat') return this._heat(box, W);
       return this._line(box, W);
     }
     _head(box, name, unit) {
       var c = this._c, me = this;
       // Label inside (1.2.1)
       if (c.title) box.appendChild(Object.assign(document.createElement('div'), { className: 'tt', textContent: C.tr(c.title) }));
-      if (c.kind !== 'spark' && c.series.length > 1 && c.switch !== false) {
+      // The heatmap colours one sensor: several always get the switch.
+      if (c.kind !== 'spark' && !c.mini && c.series.length > 1 && (c.switch !== false || c.kind === 'heat')) {
         var sw = document.createElement('div'); sw.className = 'sw'; sw.setAttribute('role', 'tablist');
         c.series.forEach(function (s, i) {
           var b = document.createElement('button');
@@ -388,7 +442,7 @@
         });
         box.appendChild(sw);
       }
-      if ((c.readout || 'own') !== 'own' || c.kind === 'spark') return null;
+      if ((c.readout || 'own') !== 'own' || c.kind === 'spark' || c.mini) return null;
       var ro = document.createElement('div'); ro.className = 'ro';
       ro.innerHTML = '<span class="v"></span><span class="u"></span><span class="w"></span>';
       box.appendChild(ro);
@@ -430,7 +484,7 @@
       this._touched = []; this._tg = null;
     }
     _svg(box, W, Hh, label) {
-      var spark = this._c.kind === 'spark';
+      var spark = this._c.kind === 'spark' || !!this._c.mini;
       var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + Hh, height: Hh, role: spark ? null : 'img', tabindex: spark ? null : 0,
         'aria-label': spark ? null : label, 'aria-hidden': spark ? 'true' : null });
       if (spark) svg.style.pointerEvents = 'none';
@@ -444,10 +498,11 @@
         return svg.appendChild(el('text', { x: W - padR + 10, y: y + 4 }, fmt(v)));
       });
     }
-    _bind(svg, n, show, hide) {
+    _bind(svg, n, show, hide, row) {
       var me = this, idx = -1;
       if (!n) return;
-      var at = function (ev) { var r = svg.getBoundingClientRect(); return me._near((ev.clientX - r.left) * me._w / (r.width || 1)); };
+      // The heatmap reads x and y; the others only x.
+      var at = function (ev) { var r = svg.getBoundingClientRect(), k = me._w / (r.width || 1); return me._near((ev.clientX - r.left) * k, (ev.clientY - r.top) * k); };
       var go = function (i) { idx = Math.max(0, Math.min(n - 1, i)); svg.setAttribute('data-casora-esc', ''); show(idx); };
       var off = function () { idx = -1; svg.removeAttribute('data-casora-esc'); hide(); };
       svg.addEventListener('pointerdown', function (ev) { window._casoraSuppressDismiss = Date.now() + 600; go(at(ev)); });
@@ -458,6 +513,7 @@
       svg.addEventListener('keydown', function (ev) {
         var k = ev.key;
         if (k === 'ArrowLeft' || k === 'ArrowRight') go((idx < 0 ? n : idx) + (k === 'ArrowLeft' ? -1 : 1));
+        else if (row && (k === 'ArrowUp' || k === 'ArrowDown')) go(row(idx < 0 ? n - 1 : idx, k === 'ArrowUp' ? -1 : 1));
         else if (k === 'Home') go(0); else if (k === 'End') go(n - 1);
         else if (k === 'Escape' && idx > -1) off(); else return;
         ev.preventDefault(); ev.stopPropagation();
@@ -633,6 +689,107 @@
         }));
       }, function () { bars.forEach(function (row, k) { row.forEach(function (b) { b.style.opacity = k === n - 1 ? 1 : rest; }); }); me._release(); dflt(); });
     }
+    /* Heatmap (issue 100): one row per day with 24 hours (the year: one row per month with its days), the cell's
+       colour = its value between the grid's lowest and highest, a scale with both below. Wide enough, each cell
+       shows its number; pointing or tapping reads value and time through the readout. mini (tile): the grid
+       alone, neutral, without labels. */
+    _heat(box, W) {
+      var c = this._c, me = this, now = Date.now(), d = this._data, mini = !!c.mini;
+      var plan = C.heatPlan(this._spanMs()), per = plan.per, n = plan.n;
+      var s0 = c.series[this._sel] || c.series[0] || {}, unit = s0.entity ? this._unit(s0) : '', name = C.tr(s0.name || '');
+      var ro = this._head(box, name, unit), change = !!(d && d.src === 'change');
+      var G = C.heat(this._points(s0), now, per, n, change ? 'sum' : 'mean', !!(d && d.raw)), cols = G.cols;
+      var lo = G.lo, hi = G.hi;
+      if (change && lo != null && lo > 0) lo = 0;  // consumption: none is the palest
+      var col = C.color(s0.color), dec = this._dec(s0, hi == null ? 0 : Math.max(Math.abs(lo), Math.abs(hi)));
+      var fmt = function (v) { return C.nf(v, dec); };
+      var labelOf = function (t, i) {
+        if (per === 'day') return C.mon(t);
+        if (i === n - 1) return C.tr('Heute');
+        if (i === n - 2) return C.tr('Gestern');
+        return n > 7 ? C.dm(t) : C.wd(t);
+      };
+      var labs = mini ? [] : G.rows.map(function (r, i) { return labelOf(r.t, i); });
+      var labW = mini ? 0 : Math.min(64, Math.max(30, 8 + 6.4 * Math.max.apply(null, labs.map(function (l) { return l.length; }))));
+      var gap = mini ? 1 : W < 500 ? 2 : 3, cw = (W - labW) / cols, cellW = Math.max(1, cw - gap);
+      var wide = G.count ? Math.max(fmt(lo).length, fmt(hi).length) * 6.4 : 99;
+      var showVal = !mini && cellW >= 28 && wide <= cellW - 6;
+      var rowH = mini ? Math.max(1, ((c.height || 32) - (n - 1) * gap) / n) : showVal ? 26 : Math.max(7, Math.min(24, Math.floor(240 / n) - gap));
+      var padT = mini ? 0 : 2, gridH = n * (rowH + gap) - gap, axisH = mini ? 0 : 20, legH = mini ? 0 : 34;
+      var Hh = G.count ? padT + gridH + axisH + legH : c.height || (mini ? 32 : 150);
+      var spanTxt = C.tr(per === 'day' ? 'letzte 12 Monate' : n <= 2 ? 'letzte 24 Stunden' : n > 7 ? 'letzte 30 Tage' : 'letzte 7 Tage');
+      var svg = this._svg(box, W, Hh, G.count ? name + ', ' + C.tr('Heatmap') + ', ' + spanTxt + ', ' + fmt(lo) + ' ' + C.tr('bis') + ' ' + fmt(hi) + ' ' + unit
+        : name + ', ' + C.tr('Keine Daten'));
+      var sum = 0, k = 0;
+      G.rows.forEach(function (r) { r.cells.forEach(function (x) { if (x && x.v != null) { sum += x.v; k++; } }); });
+      var avg = k ? sum / k : null;
+      this._def = C.tr(per === 'day' ? 'Ø pro Tag' : 'Ø pro Stunde');
+      var dflt = function () { me._say(ro, avg != null ? fmt(avg) : '–', unit, me._def, null); };
+      if (!G.count) { if (!mini) this._empty(svg, W, Hh); dflt(); return; }
+      var rx = mini ? Math.min(1, cellW / 3) : Math.min(4, cellW / 4, rowH / 4);
+      var X = function (ci) { return labW + ci * cw; }, Y = function (ri) { return padT + ri * (rowH + gap); };
+      var every = rowH + gap >= 14 ? 1 : Math.ceil(14 / (rowH + gap));
+      var cells = [], at = {};
+      G.rows.forEach(function (r, ri) {
+        if (!mini && (n - 1 - ri) % every === 0) {
+          svg.appendChild(el('text', { x: 0, y: Y(ri) + rowH / 2 + 4, style: ri === n - 1 ? 'fill:var(--cink);font-weight:600' : null }, labs[ri]));
+        }
+        r.cells.forEach(function (x, ci) {
+          if (!x) return;
+          var f = x.v == null ? 0 : C.heatShare(x.v, lo, hi);
+          svg.appendChild(el('rect', { x: X(ci), y: Y(ri), width: cellW, height: rowH, rx: rx,
+            style: x.v == null ? 'fill:var(--cgrid)' : 'fill:' + col + ';fill-opacity:' + (0.14 + 0.86 * f).toFixed(3) }));
+          if (showVal && x.v != null) {
+            svg.appendChild(el('text', { x: X(ci) + cellW / 2, y: Y(ri) + rowH / 2 + 4, 'text-anchor': 'middle',
+              style: 'font-weight:600;fill:' + (f > 0.6 ? 'var(--casora-soft-glyph,#fff)' : 'var(--cink)') }, fmt(x.v)));
+          }
+          at[ri * cols + ci] = cells.length;
+          cells.push({ r: ri, c: ci, t: x.t, v: x.v });
+        });
+      });
+      dflt();
+      if (mini) return;
+      // Hour (or day) numbers under the grid, as many as fit.
+      var step = per === 'day' ? (cw >= 24 ? 2 : 5) : cw >= 26 ? 2 : cw >= 13 ? 3 : 6, ay = padT + gridH + 15;
+      for (var ci = 0; ci < cols; ci++) {
+        var lab = per === 'day' ? ci + 1 : ci;
+        if (per === 'day' ? lab === 1 || lab % step === 0 : lab % step === 0) svg.appendChild(el('text', { x: X(ci) + cellW / 2, y: ay, 'text-anchor': 'middle' }, String(lab)));
+      }
+      // Scale: lowest value, the colour ramp, highest value (with unit).
+      var uid = 'h' + Math.random().toString(36).slice(2, 8), defs = el('defs'), gr = el('linearGradient', { id: uid, x1: 0, y1: 0, x2: 1, y2: 0 });
+      gr.appendChild(el('stop', { offset: 0, style: 'stop-color:' + col + ';stop-opacity:.14' }));
+      gr.appendChild(el('stop', { offset: 1, style: 'stop-color:' + col + ';stop-opacity:1' }));
+      defs.appendChild(gr); svg.appendChild(defs);
+      var lt = fmt(lo) + (unit ? ' ' + unit : ''), ht = fmt(hi) + (unit ? ' ' + unit : ''), ly = ay + 24;
+      var bx0 = labW + lt.length * 6.4 + 10, bx1 = W - ht.length * 6.4 - 10;
+      svg.appendChild(el('text', { x: labW, y: ly }, lt));
+      svg.appendChild(el('text', { x: W, y: ly, 'text-anchor': 'end' }, ht));
+      if (bx1 - bx0 > 24) svg.appendChild(el('rect', { x: bx0, y: ly - 8, width: bx1 - bx0, height: 8, rx: 4, style: 'fill:url(#' + uid + ')' }));
+      var mark = el('rect', { width: cellW + 2, height: rowH + 2, rx: rx + 1, style: 'fill:none;stroke:var(--cink);stroke-width:2;opacity:0;pointer-events:none' });
+      svg.appendChild(mark);
+      var when = function (x) {
+        if (per === 'day') return C.dayLong(x.t);
+        var i = x.r, day = i === n - 1 ? C.tr('Heute') : i === n - 2 ? C.tr('Gestern') : C.wd(x.t) + ' ' + C.dm(x.t);
+        return C.uhr(day + ', ' + C.hm(x.t, me._h12()));
+      };
+      // Nearest drawn cell to a point: its own if there is one, else the closest in that row, else the last.
+      this._near = function (x, y) {
+        var ri = Math.max(0, Math.min(n - 1, Math.floor((y - padT) / (rowH + gap)))), cc = Math.max(0, Math.min(cols - 1, Math.floor((x - labW) / cw)));
+        if (at[ri * cols + cc] != null) return at[ri * cols + cc];
+        var best = -1;
+        cells.forEach(function (q, j) { if (q.r === ri && (best < 0 || Math.abs(q.c - cc) < Math.abs(cells[best].c - cc))) best = j; });
+        return best < 0 ? cells.length - 1 : best;
+      };
+      this._bind(svg, cells.length, function (i) {
+        var x = cells[i], txt = x.v == null ? '–' : fmt(x.v);
+        mark.setAttribute('x', X(x.c) - 1); mark.setAttribute('y', Y(x.r) - 1); mark.style.opacity = 1;
+        me._say(ro, txt, unit, x.v == null ? when(x) + ' · ' + C.tr('Keine Daten') : when(x), name,
+          [{ entity: s0.entity, text: txt + (x.v == null || !unit ? '' : ' ' + unit), num: txt }]);
+      }, function () { mark.style.opacity = 0; me._release(); dflt(); }, function (i, dir) {
+        var x = cells[i], j = at[(x.r + dir) * cols + x.c];
+        return j == null ? i : j;
+      });
+    }
     /* Fixed columns (points): scale on the right from the lowest value, dotted lines, colour per column;
        reading shows value and time, the default reading is the lowest value ("Cheapest"). */
     _fixed(box, W) {
@@ -667,5 +824,5 @@
   }
   customElements.define('casora-chart', CasoraChart);
   window.customCards = window.customCards || [];
-  window.customCards.push({ type: 'casora-chart', name: 'Casora Chart', description: 'Casora history chart (line, bars, sparkline).' });
+  window.customCards.push({ type: 'casora-chart', name: 'Casora Chart', description: 'Casora history chart (line, bars, heatmap, sparkline).' });
 })();
