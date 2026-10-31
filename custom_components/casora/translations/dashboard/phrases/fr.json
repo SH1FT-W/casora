@@ -2581,7 +2581,8 @@
   "Pulse: Beobachten": "Pulse: Surveiller",
   "Pulse: Prüfen": "Pulse: Vérifier",
   "Pulse: Ausgefallen": "Pulse: En panne",
-  "Zählt": "Compte"
+  "Zählt": "Compte",
+  "In Ordnung": "OK"
  },
  "patterns": [
   [

@@ -12047,7 +12047,8 @@
     ],
     "style": "[[[\n  /* Wide only when a section has two entries side by side (P.wide), otherwise one narrow column. */\n  const P = window._casoraPulse;\n  const _w = P && P.wide(hass, states) ? 900 : 552;\n  return '--popup-min-width: min(' + _w + 'px, 92vw);'\n       + ' --popup-max-width: min(' + _w + 'px, 92vw);';\n]]]\n",
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Pulse', ['Pulse']) : (String(variables.room_name || '').trim() || 'Pulse'); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "tap_action": {
@@ -12062,7 +12063,8 @@
     ],
     "style": "[[[\n  /* Wide only when a section has two entries side by side (P.wide), otherwise one narrow column. */\n  const P = window._casoraPulse;\n  const _w = P && P.wide(hass, states) ? 900 : 552;\n  return '--popup-min-width: min(' + _w + 'px, 92vw);'\n       + ' --popup-max-width: min(' + _w + 'px, 92vw);';\n]]]\n",
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Pulse', ['Pulse']) : (String(variables.room_name || '').trim() || 'Pulse'); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [

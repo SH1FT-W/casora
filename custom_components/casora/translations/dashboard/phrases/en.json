@@ -2563,7 +2563,8 @@
   "Pulse: Beobachten": "Pulse: Watch",
   "Pulse: Prüfen": "Pulse: Check",
   "Pulse: Ausgefallen": "Pulse: Failed",
-  "Zählt": "Counts"
+  "Zählt": "Counts",
+  "In Ordnung": "OK"
  },
  "patterns": [
   [

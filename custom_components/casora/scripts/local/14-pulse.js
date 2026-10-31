@@ -313,11 +313,13 @@
     var call = function (part) {
       return 'return window._casoraPulse ? window._casoraPulse.sec(' + JSON.stringify(part) + ', null, states, hass) : "";';
     };
-    var f = { hero: { card: K.secCard(watch, call('hero'), states) } };
+    // Popup v3 (richtlinien §4 S7, §8): the subline and bar become the status stage; no way into the Pulse panel.
+    var v3 = !!(UI.v3 && UI.v3() && UI.stage);
+    var f = v3 ? { stage: { card: K.secCard(watch, call('stage'), states) } } : { hero: { card: K.secCard(watch, call('hero'), states) } };
     // Sections by content: only those with entries (an only-battery „prüfen“ still gets its row, checkup 10/2026).
     SECTIONS.forEach(function (x) { if (inSec(s, x[0]).length) f[x[0]] = { card: K.secCard(watch, call(x[0]), states) }; });
     f.more = { card: K.secCard(watch, call('more'), states) };
-    return K.layout({ fields: f, top: ['hero'], left: ['failed', 'check', 'watch', 'more'], right: [] });
+    return K.layout({ fields: f, top: v3 ? [] : ['hero'], stage: v3 ? 'stage' : null, left: ['failed', 'check', 'watch', 'more'], right: [] });
   };
 
   // Markers around the name of critical devices: replaced by a span for the name (ellipsis) and the
@@ -455,6 +457,21 @@
       var h = P.subline(s);
       return UI.line(h.main, h.rest, { tone: h.tone }) + P.bar(s);
     }
+    // Popup v3 stage S7: the subline as the sentence, the counts of the overview bar as facts.
+    if (part === 'stage') {
+      if (!s.installed) return UI.stage('status', { empty: { icon: 'mdi:heart-pulse', text: 'Pulse einrichten', sub: 'Im Pulse-Panel', out: P.PANEL } });
+      var h7 = P.subline(s);
+      return UI.stage('status', {
+        tone: !s.total ? 'off' : s.counts.failed ? 'bad' : s.problems ? 'warn' : 'good',
+        icon: 'mdi:heart-pulse', text: h7.main,
+        facts: s.total ? [
+          s.counts.failed ? { label: 'Ausgefallen', value: String(s.counts.failed) } : null,
+          s.counts.check ? { label: 'Prüfen', value: String(s.counts.check) } : null,
+          s.counts.watch ? { label: 'Beobachten', value: String(s.counts.watch) } : null,
+          { label: 'In Ordnung', value: String(s.counts.ok + s.counts.learning) },
+        ].filter(Boolean).slice(0, 3) : [],
+      });
+    }
     for (var i = 0; i < SECTIONS.length; i++) {
       if (part !== SECTIONS[i][0]) continue;
       var list = inSec(s, part);
@@ -479,6 +496,7 @@
       moreHtml = moreHtml.replace('<span class="hui-mlb">', '<span class="pls-okic" aria-hidden="true"><ha-icon icon="mdi:check"></ha-icon></span><span class="hui-mlb">');
       // Footer: into the Pulse panel (rhythm bars, replacement history, settings stay there).
       /* Blueprint v2 (rules 6, 10): the way into the Pulse panel is a ↗ row (was a text link); not installed: the empty row. */
+      if (UI.v3 && UI.v3()) return ROW_CSS + MORE_CSS + (moreHtml ? '<div class="pls-ok">' + moreHtml + '</div>' : '');
       var foot = '<div style="height:8px"></div>' + (!s.installed
         ? UI.empty({ icon: 'mdi:heart-pulse', text: 'Pulse einrichten', sub: 'Im Pulse-Panel', out: P.PANEL })
         : UI.group([{ icon: 'mdi:heart-pulse', iconTone: 'rgba(0,0,0,0)', label: 'In Pulse öffnen', sub: 'Verläufe, Ersatz, Einstellungen', out: true, url: P.PANEL }], null));
