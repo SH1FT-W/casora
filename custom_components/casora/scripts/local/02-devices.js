@@ -4595,3 +4595,53 @@
   if (!document.getElementById(css.id)) (document.head || document.documentElement).appendChild(css);
 })();
 
+
+/* Popup v3 of the generic appliance tile (casora_appliance, richtlinien §4 S4 + §4.8 dial): the state or the time
+   left as the value, the progress as the ring (only while it runs and the entity reports it), programme and phase as
+   the word, „Fertig gegen 14:30 Uhr“ under it. Same state words as the tile's popup before (template casora_appliance). */
+(function () {
+  var DISH = { run: ['Läuft', true], pause: ['Pausiert', true], actionrequired: ['Eingriff nötig', true], finished: ['Fertig', false],
+    error: ['Fehler', false], aborting: ['Stoppt …', true], delayedstart: ['Startet später', true], ready: ['Bereit', false], inactive: ['Aus', false] };
+  var GEN = { off: ['Aus', false], idle: ['Bereit', false], starting: ['Startet', true], running: ['Läuft', true], paused: ['Pausiert', false],
+    user_paused: ['Pausiert', false], ending: ['Endet', true], finished: ['Fertig', false], anti_wrinkle: ['Knitterschutz', true],
+    delay_wait: ['Startet später', false], interrupted: ['Unterbrochen', false], force_stopped: ['Gestoppt', false], rinse: ['Spülen', true],
+    clean: ['Reinigung', true], unknown: ['Unbekannt', false] };
+  var PROG = { favorite_001: 'Favorit', dishcare_dishwasher_program_auto2: 'Auto', dishcare_dishwasher_program_eco50: 'Eco 50°',
+    dishcare_dishwasher_program_intensiv70: 'Intensiv 70°', dishcare_dishwasher_program_machinecare: 'Maschinenreinigung',
+    dishcare_dishwasher_program_prerinse: 'Vorspülen', dishcare_dishwasher_program_quick45: 'Schnell 45°', dishcare_dishwasher_program_quick65: 'Schnell 65°' };
+  var PHASE = { prerinse: 'Vorspülen', mainwash: 'Hauptwäsche', finalrinse: 'Klarspülen', drying: 'Trocknen' };
+  var str = function (states, id) { var s = id && states[id] && states[id].state; return !s || s === 'unknown' || s === 'unavailable' ? null : s; };
+  var num = function (states, id) { var s = str(states, id); var n = s == null ? NaN : parseFloat(s); return isNaN(n) ? null : n; };
+  var clock = function (d) { return d.toLocaleTimeString(window.casoraLocale ? window.casoraLocale() : 'de-DE', { hour: '2-digit', minute: '2-digit' }); };
+  // ids: { st, progress, remaining, end, program, phase }
+  window._casoraApplianceStage = function (ids, states) {
+    var UI = window._casoraUI;
+    if (!UI || !UI.stage) return '';
+    var raw = (str(states, ids.st) || '').toLowerCase();
+    var m = (ids.program ? DISH : GEN)[raw] || [ids.program ? 'Bereit' : 'Unbekannt', false];
+    var active = m[1];
+    // Minutes left: the finish time first (timestamp), else the remaining-time sensor (min or h).
+    var left = null, endAt = null;
+    var endS = str(states, ids.end);
+    if (endS) { var t = Date.parse(endS); if (isFinite(t) && t > Date.now()) { endAt = new Date(t); left = (t - Date.now()) / 60000; } }
+    if (left == null) {
+      var r = num(states, ids.remaining), u = ids.remaining && states[ids.remaining] ? (states[ids.remaining].attributes || {}).unit_of_measurement : 'min';
+      if (r != null && r > 0) { left = u === 'h' ? r * 60 : u === 's' ? r / 60 : r; endAt = new Date(Date.now() + left * 60000); }
+    }
+    var progRaw = str(states, ids.program), prog = progRaw ? (PROG[progRaw] || progRaw) : null;
+    var phase = PHASE[(str(states, ids.phase) || '').toLowerCase()] || null;
+    var pct = num(states, ids.progress);
+    var value = m[0], unit = '';
+    if (active && left != null && left > 0) {
+      var h = Math.floor(left / 60), mi = Math.round(left % 60);
+      value = h ? h + ':' + (mi < 10 ? '0' : '') + mi : String(mi);
+      unit = h ? 'Std. übrig' : 'Min. übrig';
+    }
+    var word = [value !== m[0] ? m[0] : null, phase, prog].filter(Boolean).join(' · ') || null;
+    var dead = !states[ids.st] || /^(unavailable|unknown)$/.test(String(states[ids.st].state));
+    return UI.stage('progress', { value: dead ? 'Nicht verfügbar' : value, unit: unit, word: dead ? null : word,
+      progress: active && pct != null ? Math.max(0, Math.min(1, pct / 100)) : null,
+      program: active ? [pct != null ? Math.round(pct) + ' %' : null, endAt ? 'Fertig gegen ' + clock(endAt) + ' Uhr' : null].filter(Boolean).join(' · ') || null : null,
+      state: dead ? 'na' : null });
+  };
+})();
