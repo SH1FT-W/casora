@@ -1,6 +1,6 @@
 // Shopping list card (#82, 36-shopping.js): tile word, the list's open and done items from HA's to-do API, the
 // services a row calls (tick off / put back, clearing asks first), „Milch, 1 l“ as item and Bring specification;
-// the popup is HA's own to-do list card until popup v3 draws Casora's own.
+// popup v3 draws Casora's own list (S.popup), without v3 HA's own to-do list card.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -35,12 +35,21 @@ assert.deepEqual(JSON.parse(JSON.stringify(S.parse(' Milch, 1 l '))), { item: 'M
 assert.deepEqual(JSON.parse(JSON.stringify(S.parse('Brot'))), { item: 'Brot' });
 assert.equal(S.parse('  '), null);
 
-// The popup: HA's to-do list card for the tile's list, no empty popup.
+// The popup: without popup v3 (no Casora UI kit) HA's to-do list card for the tile's list, no empty popup.
 const T = JSON.parse(fs.readFileSync(ROOT + 'dashboards/casora/button_card_templates.json', 'utf8'));
 const cp = T.casora_popup_shopping.tap_action.casora_popup;
+assert.equal(cp.variant, 'v3', 'v3 frame');
 const body = cp.content.replace(/^\[\[\[|\]\]\]\s*$/g, '');
-const card = new Function('entity', body)({ entity_id: ID });
-assert.deepEqual(card, { type: 'todo-list', entity: ID });
+const card = new Function('entity', 'states', 'hass', 'window', body)({ entity_id: ID }, {}, hass, win);
+assert.deepEqual(JSON.parse(JSON.stringify(card)), { type: 'todo-list', entity: ID });
+assert.deepEqual(JSON.parse(JSON.stringify(new Function('entity', 'states', 'hass', 'window', body)(null, {}, hass, win))), { type: 'vertical-stack', cards: [] });
+// Popup v3 parts: open items with their food and specification, the ticked ones with „Erledigte löschen“ (asks first).
+const UIs = { esc: String, empty: (o) => 'EMPTY:' + o.text, group: (rows, label) => label + '|' + rows.map((r) => r.label + (r.sub ? '/' + r.sub : '') + (r.confirm ? '?' : '')).join(','),
+  stage: (t, o) => t + ':' + o.html };
+win._casoraUI = UIs;
+const st = S.innerHtml('stage', ID, hass);
+assert.match(st, /data-shop-add=/); assert.match(st, /2 offen\|Milch\/1 l,Brot/);
+assert.equal(S.innerHtml('done', ID, hass), 'Erledigt · 1|Kaffee,Erledigte löschen?');
 assert.ok(Array.isArray(cp.popup_styles), 'standard popup styles');
 assert.match(fs.readFileSync(ROOT + 'custom_components/casora/scripts/casora-local.js', 'utf8'), /'36-shopping'/, 'module is loaded');
 console.log('ok shopping_list');

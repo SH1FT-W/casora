@@ -2595,7 +2595,15 @@
   "KI-Warnung": "Avviso IA",
   "Backup": "Backup",
   "Am niedrigsten": "La più bassa",
-  "Ping": "Ping"
+  "Ping": "Ping",
+  "Liste wird geladen …": "Caricamento della lista …",
+  "Neue Einträge erscheinen hier": "I nuovi elementi compaiono qui",
+  "Saugen und Wischen": "Aspirare e lavare",
+  "Suchen": "Cerca",
+  "Tankstand": "Livello carburante",
+  "Gerade kein Spiel": "Nessun gioco al momento",
+  "Kein Spiel": "Nessun gioco",
+  "Gruppen": "Gruppi"
  },
  "patterns": [
   [

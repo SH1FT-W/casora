@@ -82,3 +82,4 @@ custom_components/casora/scripts/local/03-popups.js | S.render(el._lpsCfg, el._l
 custom_components/casora/scripts/local/03-popups.js | re:^L\.[ct]$ | colour/label from the fixed LV table (L = LV[x.key]) | 3
 custom_components/casora/scripts/local/03-popups.js | re:^(?:v3Stage\(all, states, true\)|list)$ | light popup v3 (house): UI.stage markup and the house list built by houseBody from escaped parts | 2
 custom_components/casora/scripts/local/03-popups.js | F.bar(tgt.entity_id, value, lo, hi, step) | FBH target bar markup of this file (escapes its numbers) | 1
+custom_components/casora/scripts/local/03-popups.js | tr(v3StatusHtml()) | update search, popup v3: v3StatusHtml() escapes the status words before the translation | 1

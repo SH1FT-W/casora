@@ -2595,7 +2595,15 @@
   "KI-Warnung": "AI-waarschuwing",
   "Backup": "Back-up",
   "Am niedrigsten": "Laagste",
-  "Ping": "Ping"
+  "Ping": "Ping",
+  "Liste wird geladen …": "Lijst wordt geladen …",
+  "Neue Einträge erscheinen hier": "Nieuwe items verschijnen hier",
+  "Saugen und Wischen": "Zuigen en dweilen",
+  "Suchen": "Zoeken",
+  "Tankstand": "Brandstofniveau",
+  "Gerade kein Spiel": "Nu geen spel",
+  "Kein Spiel": "Geen spel",
+  "Gruppen": "Groepen"
  },
  "patterns": [
   [

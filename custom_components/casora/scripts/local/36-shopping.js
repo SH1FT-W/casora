@@ -61,18 +61,18 @@
     return { icon: isDone ? 'mdi:check-circle-outline' : S.food(it.summary), iconTone: isDone ? null : 'accent', label: it.summary,
       sub: it.description || null, svc: S.toggleSvc(id, it, isDone), noChev: true };
   };
-  S.inner = function (part, id, hass) {
+  S.innerHtml = function (part, id, hass) {
     var UI = window._casoraUI;
     if (!UI) return '';
     var d = S.items(hass || hassNow(), id);
     if (part === 'stage') {
-      var add = '<div class="hui-st-act pri" role="button" tabindex="0" aria-label="Hinzufügen" data-shop-add="' + UI.esc(id) + '">'
+      var addHtml = '<div class="hui-st-act pri" role="button" tabindex="0" aria-label="Hinzufügen" data-shop-add="' + UI.esc(id) + '">'
         + '<ha-icon icon="mdi:plus" style="--mdc-icon-size:20px;width:20px;height:20px;display:flex;"></ha-icon><span>Hinzufügen</span></div>';
-      var body = !d ? UI.empty({ icon: 'mdi:cart-outline', text: 'Liste wird geladen …' })
+      var bodyHtml = !d ? UI.empty({ icon: 'mdi:cart-outline', text: 'Liste wird geladen …' })
         : !d.open.length ? UI.empty({ icon: 'mdi:cart-check', text: 'Alles eingekauft', sub: d.done.length ? null : 'Neue Einträge erscheinen hier' })
         : UI.group(d.open.map(function (it) { return row(id, it, false); }), d.open.length === 1 ? '1 offen' : d.open.length + ' offen');
       return UI.stage('content', { html: '<style>.hui-stage{--casora-pv-stack-fill:transparent;}</style>'
-        + '<div style="display:flex;flex-direction:column;gap:16px;">' + add + body + '</div>' });
+        + '<div style="display:flex;flex-direction:column;gap:16px;">' + addHtml + bodyHtml + '</div>' });
     }
     if (part === 'done') {
       if (!d || !d.done.length) return '';
@@ -84,7 +84,8 @@
   };
   // The parts sit in a box of their own, so a loaded or changed list redraws them without rebuilding the popup.
   S.box = function (part, id, hass) {
-    return '<div data-shop-box="' + (window._casoraUI ? window._casoraUI.esc(id) : id) + '" data-shop-part="' + part + '">' + S.inner(part, id, hass) + '</div>';
+    var esc = window.casoraEsc || function (t) { return String(t).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); };
+    return '<div data-shop-box="' + esc(id) + '" data-shop-part="' + esc(part) + '">' + S.innerHtml(part, id, hass) + '</div>';
   };
   S.popup = function (entity, states, hass) {
     var K = window._casoraSoftKit, UI = window._casoraUI, id = entity && entity.entity_id;
@@ -105,7 +106,8 @@
     if (!pop) return;
     var tr = window.casoraTr || function (x) { return x; };
     deep(pop.shadowRoot, deep(pop, [])).forEach(function (n) {
-      if (n.getAttribute('data-shop-box') === id) n.innerHTML = tr(S.inner(n.getAttribute('data-shop-part'), id));
+      if (n.getAttribute('data-shop-box') === id) var partHtml = S.innerHtml(n.getAttribute('data-shop-part'), id);
+        n.innerHTML = tr(partHtml);
     });
   });
   // „Hinzufügen“: own capture like the other popup buttons (onclick in the popup's HTML is unreliable on phones).
@@ -124,8 +126,10 @@
     window._casoraSuppressDismiss = Date.now() + 800;
     S.addItem(hassNow(), el.getAttribute('data-shop-add'));
   };
-  window.addEventListener('click', onAdd, true);
-  window.addEventListener('keydown', onAdd, true);
+  if (typeof window.addEventListener === 'function') {
+    window.addEventListener('click', onAdd, true);
+    window.addEventListener('keydown', onAdd, true);
+  }
 
   S.addItem = function (hass, id) {
     if (!hass || !window.casoraAsk) return;

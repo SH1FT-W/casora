@@ -2595,7 +2595,15 @@
   "KI-Warnung": "Aviso IA",
   "Backup": "Copia",
   "Am niedrigsten": "Más baja",
-  "Ping": "Ping"
+  "Ping": "Ping",
+  "Liste wird geladen …": "Cargando la lista …",
+  "Neue Einträge erscheinen hier": "Los nuevos elementos aparecen aquí",
+  "Saugen und Wischen": "Aspirar y fregar",
+  "Suchen": "Buscar",
+  "Tankstand": "Nivel de combustible",
+  "Gerade kein Spiel": "Ningún juego ahora",
+  "Kein Spiel": "Ningún juego",
+  "Gruppen": "Grupos"
  },
  "patterns": [
   [

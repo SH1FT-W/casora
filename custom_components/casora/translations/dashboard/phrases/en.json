@@ -2577,7 +2577,15 @@
   "KI-Warnung": "AI warning",
   "Backup": "Backup",
   "Am niedrigsten": "Lowest",
-  "Ping": "Ping"
+  "Ping": "Ping",
+  "Liste wird geladen …": "Loading the list …",
+  "Neue Einträge erscheinen hier": "New items appear here",
+  "Saugen und Wischen": "Vacuum and mop",
+  "Suchen": "Search",
+  "Tankstand": "Fuel level",
+  "Gerade kein Spiel": "No game right now",
+  "Kein Spiel": "No game",
+  "Gruppen": "Groups"
  },
  "patterns": [
   [

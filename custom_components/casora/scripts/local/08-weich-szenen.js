@@ -113,7 +113,7 @@
     }
     if (part === 'stage') {
       if (!ids.length) return UI.stage('content', { empty: { icon: 'mdi:palette-outline', studio: true, text: 'Keine Szenen gefunden. Casora zeigt alle Szenen, die in den Entitäten weder ausgeblendet noch deaktiviert sind.' } });
-      var tile = function (id) {
+      var tileHtml = function (id) {
         var svc = { domain: 'scene', service: 'turn_on', data: V.trans > 0 ? { transition: V.trans } : {}, target: { entity_id: id } };
         var on = act.indexOf(id) > -1, clr = on && window.casoraSceneColor ? window.casoraSceneColor(id) : null;
         var n = nameOf(id, states, V.room);
@@ -122,8 +122,8 @@
           + '<ha-icon icon="' + esc(outline((states[id].attributes || {}).icon)) + '"></ha-icon><b>' + esc(n) + '</b></div>';
       };
       var head = ids.slice(0, 12), rest = ids.slice(12);
-      var html = V3CSS + '<div class="zs-g">' + head.map(tile).join('') + '</div>';
-      if (rest.length && UI.more) html += '<div style="height:10px"></div>' + UI.more('zs-all', '<div class="zs-g">' + rest.map(tile).join('') + '</div>',
+      var html = V3CSS + '<div class="zs-g">' + head.map(tileHtml).join('') + '</div>';
+      if (rest.length && UI.more) html += '<div style="height:10px"></div>' + UI.more('zs-all', '<div class="zs-g">' + rest.map(tileHtml).join('') + '</div>',
         { keep: true, label: 'Alle ' + ids.length + ' anzeigen', less: 'Weniger anzeigen' });
       return UI.stage('content', { html: html });
     }

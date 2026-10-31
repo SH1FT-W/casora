@@ -37,7 +37,8 @@ const MIGRIERT = [
   { popup: 'Luftbefeuchter', vorlagen: ['casora_humidifier'], file: '19-befeuchter.js', from: '  H.v3 = function () {', to: null, stages: 2 },
   { popup: 'Gerät allgemein', vorlagen: ['casora_entity_actions'], file: '05-standard-medien.js',
     from: 'window._casoraEntityPopup = function', to: '// ── Media popup', stages: 1 },
-  { popup: 'Medien-Player', vorlagen: ['casora_media'], file: null, stages: 1 },
+  // S1 dial with the record, and S5 (the game's picture) for a game account without a player (casora_game).
+  { popup: 'Medien-Player', vorlagen: ['casora_media'], file: null, stages: 2 },
   { popup: 'Now Playing (Kachel/Chip)', vorlagen: ['casora_now_playing_primary', 'casora_now_playing_chip'], file: null, stages: 2 },
   { popup: 'Medien-Badge', vorlagen: ['casora_popup_media'], file: '32-media-badge.js', from: '  B.stage = function', to: '  B.sec = function', stages: 2 },
   // casora_appliance (older generic appliance tile, own template body) keeps variant B for now.

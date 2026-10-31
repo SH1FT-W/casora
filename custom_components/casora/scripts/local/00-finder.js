@@ -2444,6 +2444,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     machineFilter: [/_maschinenreinigung_filter$/, 'binary_sensor'],
     extraDry: [/_extra_trocken$/, 'switch'], halfLoad: [/_halbe_ladung$/, 'switch'], speed: [/_speed_on_demand$/, 'switch'],
     silence: [/_silence_on_demand$/, 'switch'], start: [/_start$/, 'button'], stop: [/_abbrechen$/, 'button'],
+    pause: [/_programm_pausieren$/, 'button'], resume: [/_programm_fortsetzen$/, 'button'],
     // Home Connect in HA core (its translations/de.json): Hygiene + → _hygiene, Intensivzone, refill events.
     hygiene: [/_hygiene(_plus)?$/, 'switch'], intensivZone: [/_intensivzone$/, 'switch'],
     saltLow: [/_salz_fast_leer$/, 'sensor'], saltLack: [/_salzmangel$/, 'sensor'],

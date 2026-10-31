@@ -477,7 +477,7 @@
         return { entity: g, icon: a.icon || 'list', iconTone: c.on ? 'accent' : 'rgba(0,0,0,0)', label: M.listNames[g] || L.nameOf(st, g),
           labelLit: true, sub: L.summary(c).join(' · ') };
       });
-      return rows.length ? UI.group(rows, L.v3() ? 'Listen' : 'Einstellungen') : '';
+      return rows.length ? UI.group(rows, L.v3() ? 'Gruppen' : 'Einstellungen') : '';
     }
     if (part === 'charts') {
       var CH = window._casoraChartCard;

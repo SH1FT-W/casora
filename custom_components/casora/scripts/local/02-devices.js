@@ -68,8 +68,8 @@
     [/^(warm|warmweiß|warmweiss|warmwhite)$/, 'Warmweiß', '#E3C08A'],
     [/^(moon|mond|mondlicht|moonlight)$/, 'Mondlicht', '#7C8BC4'],
     // Fluval reef lamps also have cyan and pink channels.
-    [/^(cyan|türkis|tuerkis)$/, 'Cyan', '#3FB7C4'],
-    [/^(pink|magenta|rosa)$/, 'Pink', '#D86BA8'],
+    [/^(cyan|türkis|tuerkis)$/, 'Cyan', '#00C3D0'],
+    [/^(pink|magenta|rosa)$/, 'Pink', '#D16E7E'],
     [/^(red|rot|r)$/, 'Rot', '#D9534F'],
     [/^(green|grün|gruen|g)$/, 'Grün', '#4E9F5D'],
     [/^(blue|blau|b)$/, 'Blau', '#4C6FD8'],

@@ -2595,7 +2595,15 @@
   "KI-Warnung": "Ostrzeżenie AI",
   "Backup": "Kopia",
   "Am niedrigsten": "Najniższa",
-  "Ping": "Ping"
+  "Ping": "Ping",
+  "Liste wird geladen …": "Wczytywanie listy …",
+  "Neue Einträge erscheinen hier": "Nowe pozycje pojawią się tutaj",
+  "Saugen und Wischen": "Odkurzanie i mycie",
+  "Suchen": "Szukaj",
+  "Tankstand": "Poziom paliwa",
+  "Gerade kein Spiel": "Teraz brak gry",
+  "Kein Spiel": "Brak gry",
+  "Gruppen": "Grupy"
  },
  "patterns": [
   [
