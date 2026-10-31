@@ -608,11 +608,15 @@
     var cur = F.curTemp(c, states);
     var foot = cur != null ? 'Jetzt ' + fmt(cur) + ' ' + TU() : null;
     var live = e.state !== 'off' && e.state !== 'unavailable' && tv != null;
-    if (!live) return UI.stage('value', { caption: 'Zieltemperatur', value: tv != null ? tv : '–', unit: tv != null ? TU() : '',
-      state: e.state === 'unavailable' ? 'na' : 'off', foot: foot });
+    // Dial (richtlinien §4.8): the ring is the target from blue to red, the dot the room temperature, the modes are moons.
+    var dl = { min: lo, max: hi, step: step, heat: true, current: cur,
+      moons: function () { return F.quick(c.id, states, c.group); } };
+    if (!live) return UI.stage('value', Object.assign(dl, { caption: 'Zieltemperatur', value: tv != null ? tv : '–', unit: tv != null ? TU() : '',
+      state: e.state === 'unavailable' ? 'na' : 'off', foot: foot }));
     var b = function (d, dis) { return { dis: dis, attrs: { 'data-fb-step': JSON.stringify({ id: c.id, d: d, v: tv, lo: lo, hi: hi, st: step }) } }; };
-    return UI.stage('value', { caption: F.heating(c, states) ? 'Heizt auf' : 'Zieltemperatur', value: tv, unit: TU(), valCls: 'fb-st-v',
-      minus: b(-step, tv <= lo), plus: b(step, tv >= hi), foot: foot, extra: F.bar(c.id, tv, lo, hi, step) });
+    return UI.stage('value', Object.assign(dl, { caption: F.heating(c, states) ? 'Heizt auf' : 'Zieltemperatur', value: tv, unit: TU(), valCls: 'fb-st-v',
+      dialSvc: { domain: 'climate', service: 'set_temperature', field: 'temperature', target: { entity_id: c.id } },
+      minus: b(-step, tv <= lo), plus: b(step, tv >= hi), foot: foot }));
   };
   F.quick = function (id, states, confirmOn) {
     var UI = window._casoraUI;
@@ -640,8 +644,15 @@
     var all = c.rooms.concat(c.trvs);
     var heat = all.filter(function (r) { return F.heating(r, states); }).length;
     var e = states[c.id];
+    // Dial: one segment per room (orange heats, green holds, grey off), the house modes as moons.
+    var segs = all.filter(function (r) { return states[r.id]; }).map(function (r) {
+      var rs = states[r.id];
+      return { ok: true, tone: F.heating(r, states) ? 'warn' : rs.state === 'off' || rs.state === 'unavailable' ? 'off' : 'good', label: r.name || r.id };
+    });
     return UI.stage('status', { tone: heat ? 'warn' : (e && e.state !== 'off' ? 'good' : 'off'), icon: 'mdi:home-thermometer-outline',
-      text: v != null ? 'Ø ' + fmt(v) + ' ' + TU() : '–', state: e && e.state === 'unavailable' ? 'na' : null });
+      text: v != null ? 'Ø ' + fmt(v) + ' ' + TU() : '–', state: e && e.state === 'unavailable' ? 'na' : null,
+      facts: [heat ? { value: String(heat), label: heat === 1 ? 'heizt' : 'heizen' } : null], segs: segs,
+      moons: function () { return F.quick(c.id, states, c.group); } });
   };
 
   /* Modus als iOS-Auswahlliste mit Haken. confirmOn: Einschalten nur mit Bestätigung (Aquarium-Muster). */
@@ -841,7 +852,8 @@
     }
 
     if (name === 'stage') return c.group ? F.houseStage(c, states) : F.stage(c, states);
-    if (name === 'quick') return F.quick(c.id, states, c.group);
+    // The modes are the dial's moons (F.stage / F.houseStage).
+    if (name === 'quick') return '';
     if (name === 'v3house') {
       /* Status line: who heats and the range of the targets (the average is the stage). */
       var allH = c.rooms.concat(c.trvs);
@@ -986,7 +998,7 @@
       if (c.group && F.v3()) {
         /* v3 (clean, richtlinien §8): status line, stage S7 with the average, the house modes as quick tiles, the rooms
            as the list (a row opens its room) – no coach, main switch, Verlauf or settings. */
-        var g3 = { hero: sec('v3house'), stage: sec('stage'), quick: sec('quick'), allrooms: sec('allrooms') };
+        var g3 = { hero: sec('v3house'), stage: sec('stage'), allrooms: sec('allrooms') };
         return HH.layout({ entity: id, watch: watch, fields: g3, top: ['hero'], stage: 'stage', quick: 'quick', left: [], right: ['allrooms'] });
       }
       if (c.group) {
@@ -999,7 +1011,7 @@
       }
       if (F.v3()) {
         /* v3: state word (and humidity) in the status line, stage + quick, then Verlauf 120 high, Einstellungen, Mehr. */
-        var r3 = { hero: sec('v3hero'), stage: sec('stage'), quick: sec('quick'), chart: fields.chart,
+        var r3 = { hero: sec('v3hero'), stage: sec('stage'), chart: fields.chart,
           more: HH.moreCard(watch, mcode(['det']), id) };
         return HH.layout({ entity: id, watch: watch, fields: r3, top: ['hero'], stage: 'stage', quick: 'quick', left: ['chart'],
           right: ['more'], settings: id });
@@ -4088,7 +4100,8 @@
   };
   var V3_CSS = '<style>.lps-v3l{display:flex;flex-direction:column;gap:var(--casora-pv-sec-gap,24px);}</style>';
   // Stage S1: brightness of the dimmable lamps (the ones that are on, else all), light colour as the segment.
-  var v3Stage = function (ids, states, onlyOn) {
+  // moons: the room's scenes as moons around the dial (a function: its UI.quick call is collected).
+  var v3Stage = function (ids, states, onlyOn, moons) {
     var UI = window._casoraUI;
     var dim = ids.filter(function (id) { return dimmable(states[id]); });
     var s = stat(dim.length ? dim : ids, states);
@@ -4118,7 +4131,7 @@
       word: v ? [word(v)].concat(curLbl ? [curLbl] : []).join(' · ') : '',
       words: ['Aus', 'Gedimmt', 'Volle Helligkeit'],
       svc: dim.length && target.length ? { domain: 'light', service: 'turn_on', field: 'brightness_pct', target: { entity_id: target }, zeroOff: true } : null,
-      seg: seg });
+      seg: seg, moons: moons || null });
   };
   // Quick choice: the room's scenes (≤ 4, more: 3 + „Alle (n)“ → sub page), the last one used is active.
   var v3Scenes = function (list, states, room) {
@@ -4216,7 +4229,7 @@
   };
   var roomV3 = function (cfg, sc, ids, room, states, h) {
     var UI = window._casoraUI;
-    var left = v3Stage(ids, states, false) + v3Scenes(scenesOf(h, states, sc), states, room);
+    var left = v3Stage(ids, states, false, function () { return v3Scenes(scenesOf(h, states, sc), states, room); });
     var lampIds0 = (sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids);
     var ls = stat(lampIds0, states);
     var lampsHtml = lampIds0.map(function (id) {
