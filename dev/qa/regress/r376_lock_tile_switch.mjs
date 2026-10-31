@@ -51,6 +51,19 @@ const put = async (patch) => {
     ha.shadowRoot.querySelectorAll('.qa-group, .qa-one').forEach((el) => { el.hass = ha.hass; }); });
   await page.waitForTimeout(800);
 };
+// The state line once it reads `want` (a real state_changed in the house can hand the tile a hass a moment
+// before the sticky fake is back in it – then hand it the current one again).
+const stateLine = async (cls, want) => {
+  let t = null;
+  for (let i = 0; i < 8; i++) {
+    t = await tile(cls);
+    if (t.state === want) return t;
+    await page.evaluate(() => { const ha = document.querySelector('home-assistant');
+      ha.shadowRoot.querySelectorAll('.qa-group, .qa-one').forEach((el) => { el.hass = ha.hass; }); });
+    await page.waitForTimeout(400);
+  }
+  return t;
+};
 const tile = (cls) => page.evaluate((cls) => {
   const el = document.querySelector('home-assistant').shadowRoot.querySelector('.' + cls);
   const sr = el && el.shadowRoot;
@@ -85,7 +98,7 @@ await check('Confirm: lock.unlock for all three locks at once', c.length === 1 &
 
 // 2) The report's case: first lock locked, garage unlocked → "1 entriegelt", switch on, tap locks the garage.
 await put({ [B]: lk('unlocked', 'Garage') });
-t = await tile('qa-group');
+t = await stateLine('qa-group', '1 entriegelt');
 await check('state line shows the group: „1 entriegelt“', t.state === '1 entriegelt', t.state);
 await check('switch follows the group (on = something unlocked)', t.on === true, t.svg);
 await tap('qa-group');
@@ -95,7 +108,7 @@ await check('tap locks the open lock (not unlock the first one)', c.length === 1
 
 // 3) Jammed outranks the open count.
 await put({ [C]: lk('jammed', 'Shed') });
-t = await tile('qa-group');
+t = await stateLine('qa-group', 'Klemmt');
 await check('a jammed lock reads „Klemmt“', t.state === 'Klemmt', t.state);
 
 // 4) Single lock without "Ask before switching": unlocking still asks.
