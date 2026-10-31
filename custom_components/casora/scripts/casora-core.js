@@ -11630,7 +11630,9 @@ window.casoraMenuGlass = {
     + '.hui-dl-c .hui-dl-t{font-size:clamp(20px, 6.2cqw, 26px);font-weight:800;letter-spacing:-0.02em;line-height:1.15;color:' + T.ink + ';max-width:100%;}'
     + '.hui-dl-c .hui-dl-sym{width:clamp(36px, 11cqw, 46px);height:clamp(36px, 11cqw, 46px);margin-bottom:6px;color:var(--dl-col);'
     +   'background-color:currentColor;-webkit-mask:var(--g) center / contain no-repeat;mask:var(--g) center / contain no-repeat;}'
-    + '.hui-dl-c ha-icon.hui-dl-sym{background:none;--mdc-icon-size:clamp(36px, 11cqw, 46px);}'
+    // The popup's own ha-icon rule (margin auto) pushed the symbol and the sentence to the bottom of the centre.
+    + '.hui-dl-c ha-icon.hui-dl-sym{background:none;--mdc-icon-size:clamp(36px, 11cqw, 46px);margin:0 0 6px !important;}'
+    + '.hui-moon ha-icon{margin:0 !important;}'
     + '.hui-dl-pm{display:flex;gap:clamp(56px, 21cqw, 90px);margin-top:12px;pointer-events:auto;}'
     + '.hui-dl-pm .hui-st-b{width:44px;height:44px;font-size:22px;background:' + S.row + ';}'
     + '.hui-dl-cover{position:absolute;left:24.8%;top:24.8%;width:50.4%;height:50.4%;border-radius:50%;overflow:hidden;pointer-events:none;'
@@ -11712,9 +11714,15 @@ window.casoraMenuGlass = {
       svgHtml += '<line class="tk" x1="' + esc(p0[0]) + '" y1="' + esc(p0[1]) + '" x2="' + esc(p1[0]) + '" y2="' + esc(p1[1]) + '" stroke-width="' + (i % 10 ? 1.5 : 2.5) + '"/>';
     }
     if (ring.kind === 'segs') {
-      var n = ring.segs.length || 1, gap = n > 1 ? 4 : 0;
-      (ring.segs.length ? ring.segs : [{ ok: true }]).forEach(function (s, k) {
-        var sa = DIAL.a0 + DIAL.span * k / n + gap / 2, sb = DIAL.a0 + DIAL.span * (k + 1) / n - gap / 2;
+      // Many segments (40 batteries) keep a hairline gap instead of eating the ring.
+      // s.w: a weighted segment (counts: 3 failed, 40 fine) takes its share of the ring.
+      var n = ring.segs.length || 1, gap = n > 1 ? (n > 24 ? 1 : n > 12 ? 2 : 4) : 0;
+      var wSum = 0, wAt = 0;
+      ring.segs.forEach(function (s) { wSum += s.w > 0 ? Number(s.w) : 1; });
+      (ring.segs.length ? ring.segs : [{ ok: true }]).forEach(function (s) {
+        var w = s.w > 0 ? Number(s.w) : 1;
+        var sa = DIAL.a0 + DIAL.span * wAt / (wSum || 1) + gap / 2, sb = DIAL.a0 + DIAL.span * (wAt + w) / (wSum || 1) - gap / 2;
+        wAt += w;
         var col = TONE[s.tone || (s.ok ? 'good' : 'bad')] || TONE.good;
         svgHtml += '<path d="' + esc(dArc(sa, sb)) + '" fill="none" stroke-width="26" style="stroke:' + esc(col) + '"' + (n === 1 ? ' stroke-linecap="round"' : '') + '>'
           + (s.label ? '<title>' + esc(s.label) + '</title>' : '') + '</path>';
