@@ -4719,10 +4719,12 @@ const TILE_TYPES = [
         section: "Speed test" },
       { key: "entity_speedtest_server", label: "Server", domains: ["sensor"], section: "Speed test" },
       { key: "entity_speedtest_city", label: "Server location", domains: ["sensor"], section: "Speed test" },
-      { key: "entity_isp", label: "Provider", domains: ["sensor"], section: "Internet connection" },
-      { key: "entity_wan_name", label: "Connection name", domains: ["sensor"], section: "Internet connection" },
-      { key: "entity_wan_ipv4", label: "Public IPv4", domains: ["sensor"], section: "Internet connection" },
-      { key: "entity_wan_ipv6", label: "Public IPv6", domains: ["sensor"], section: "Internet connection" },
+      // Internet connection (#98): found on the download sensor's device when empty (the popup does the same);
+      // a chosen entity may give its value through one of its attributes (FRITZ!Portal: provider).
+      ...netInetField("entity_isp", "Provider", "isp"),
+      ...netInetField("entity_wan_name", "Connection name", "wan_name"),
+      ...netInetField("entity_wan_ipv4", "Public IPv4", "ipv4"),
+      ...netInetField("entity_wan_ipv6", "Public IPv6", "ipv6"),
       // Grenzwerte – leer = Standard der Vorlage (NET_LIMITS), gemessen am höheren von Down- und Upload.
       { key: "light_threshold", label: "Active from (Mbit/s)", type: "number", section: "Thresholds",
         placeholder: String(NET_LIMITS.light), hint: "From this speed the tile counts as active.", live: "net" },
@@ -5214,6 +5216,31 @@ const ACCEPT_RULES = {
 // renamed) – WashData, Home Connect, Bambu Lab, NINA/DWD. like/not separate devices with the same key (dryer).
 // laundry: the shared washer/dryer/dishwasher recognition (casoraLaundryFind in scripts/local/00-finder.js, the
 // keys only while that has not loaded); print: the printer card's field table (casoraDevice.printerFields).
+// Network tile (#98): an Internet field and, once an entity is chosen, which of its values to show – its state
+// or one of its attributes (the provider is only an attribute of FRITZ!Portal's connection sensor).
+function netInetField(key, label, role) {
+  return [
+    { key, label, domains: ["sensor", "binary_sensor"], section: "Internet connection", find: { net: role, live: true },
+      reveals: true },
+    { key: key + "_attribute", label: "Value from", type: "select", section: "Internet connection",
+      options: [""], optionLabels: { "": "Entity state" }, when: (v) => !!v[key],
+      dynOptions: (hass, ent, redraw, tile) => {
+        const id = tile && tile.variables && tile.variables[key];
+        const st = id && hass && hass.states && hass.states[id];
+        if (!st) return null;
+        const keys = Object.keys(st.attributes || {}).filter((a) => !NET_ATTR_SKIP.has(a)
+          && st.attributes[a] !== null && typeof st.attributes[a] !== "object" && String(st.attributes[a]) !== "");
+        const labels = {};
+        keys.forEach((a) => { labels[a] = a + ": " + String(st.attributes[a]).slice(0, 40); });
+        return { options: [""].concat(keys.sort()), labels };
+      } },
+  ];
+}
+// HA's own attributes are no values to show.
+const NET_ATTR_SKIP = new Set(["friendly_name", "icon", "device_class", "unit_of_measurement", "state_class",
+  "entity_picture", "supported_features", "attribution", "assumed_state", "restored", "editable", "options",
+  "display_precision", "suggested_display_precision"]);
+
 const TILE_MAIN_FIND = {
   casora_washer: { laundry: "washer", keys: ["washer_state"], domain: "sensor", not: /trockn|dryer/i },
   casora_dryer: { laundry: "dryer", keys: ["dryer_state", "washer_state"], domain: "sensor", like: /trockn|dryer/i },
@@ -20900,6 +20927,26 @@ class CasoraPanel extends HTMLElement {
   }
 
   // Einträge nach Raum gruppieren (Reihenfolge wie geliefert, „Ohne Raum“ zuletzt).
+  // Entities of the devices a tile already uses (its entity and every entity in its fields) → Map id → device
+  // name, for the entity fields of that tile: the same order in every field – this tile's devices first, then
+  // all others by room (#98: some fields seemed to offer only two devices, others all of HA).
+  _tileDevLead(tile, f) {
+    const h = this._hass || {}, R = h.entities || {}, D = h.devices || {}, S = h.states || {};
+    const used = [tile && tile.entity].concat(Object.values((tile && tile.variables) || {}))
+      .filter((v) => typeof v === "string" && /^[a-z_]+\.[a-z0-9_]+$/.test(v));
+    const devs = new Set(used.map((id) => (R[id] || {}).device_id).filter(Boolean));
+    const out = new Map();
+    if (!devs.size) return out;
+    const doms = (f && f.domains) || [];
+    Object.keys(R).forEach((id) => {
+      const e = R[id];
+      if (!e || !devs.has(e.device_id) || e.hidden || !S[id] || (doms.length && !doms.includes(id.split(".")[0]))) return;
+      const d = D[e.device_id] || {};
+      out.set(id, String(d.name_by_user || d.name || ""));
+    });
+    return out;
+  }
+
   _entGroups(ids) {
     const by = new Map();
     ids.forEach((o) => {
@@ -21853,12 +21900,21 @@ class CasoraPanel extends HTMLElement {
       menu.innerHTML = "";
       // Entitäten nach Raum gruppiert, wie in HAs Auswahl.
       let heads = null;
+      const lead = opts && opts.lead instanceof Map && opts.lead.size ? opts.lead : null;
       if (entityish && shown.length > 1) {
-        const groups = this._entGroups(shown.slice(0, 300));
+        // The tile's own devices on top, each under its name (#98), then the rest by room.
+        const top = lead ? shown.filter((o) => lead.has(o)) : [];
+        const byDev = new Map();
+        top.forEach((o) => { const k = lead.get(o); if (!byDev.has(k)) byDev.set(k, []); byDev.get(k).push(o); });
+        const groups = [...byDev.entries()].map(([k, ids]) => ["\u0000" + k, ids])
+          .concat(this._entGroups(shown.filter((o) => !lead || !lead.has(o)).slice(0, 300)));
         if (groups.length > 1) {
           heads = new Map();
           shown = [];
-          groups.forEach(([k, ids]) => { heads.set(ids[0], k || t9("Without room")); shown.push(...ids); });
+          groups.forEach(([k, ids]) => {
+            heads.set(ids[0], k && k.charAt(0) === "\u0000" ? k.slice(1) : (k || t9("Without room")));
+            shown.push(...ids);
+          });
         }
       }
 
@@ -22348,6 +22404,19 @@ class CasoraPanel extends HTMLElement {
     const A = h.areas || {};
     // Raumname im Namen („light.kueche“) zählt wie der Bereich – Gruppen haben oft keinen.
     const roomKey = room && room.path !== "home" ? foldName(room.name) : "";
+    // Devices that carry an internet connection sensor (binary_sensor, device class connectivity) – the router.
+    let gwDevs = null;
+    const netGateway = (dev) => {
+      if (!gwDevs) {
+        gwDevs = new Set();
+        Object.keys(S).forEach((x) => {
+          if (x.indexOf("binary_sensor.") !== 0 || ((S[x].attributes || {}).device_class) !== "connectivity") return;
+          const e = R[x];
+          if (e && e.device_id && !/wireguard|vpn|peer|tunnel|mqtt|bluetooth/i.test(x + " " + nameOf(x))) gwDevs.add(e.device_id);
+        });
+      }
+      return gwDevs.has(dev);
+    };
     const scored = ids.map((id, i) => {
       const text = id + " " + nameOf(id) + " " + devName(id);
       let score = 0;
@@ -22370,6 +22439,13 @@ class CasoraPanel extends HTMLElement {
       if (type.id === "energy_tile" && ENERGY_HOUSE.test(foldName(nameOf(id)))) score += 3;
       // A speed test result is not the line's live rate.
       if (type.id === "network" && /speed ?test|scan.?interval/i.test(id + " " + nameOf(id))) score -= 4;
+      // The line's rate comes from the router (#98): a device with an internet connection sensor first,
+      // a NAS or server (Synology DSM, QNAP, Proxmox …) last – its throughput is its own, not the line's.
+      if (type.id === "network") {
+        const dev = (R[id] || {}).device_id;
+        if (dev && netGateway(dev)) score += 4;
+        if (/^(synology_dsm|qnap|truenas|unraid|proxmoxve|glances|system_monitor|systemmonitor)$/.test((R[id] || {}).platform || "")) score -= 3;
+      }
       if (!used.has(id)) score += 2;
       if (S[id].state !== "unavailable" && S[id].state !== "unknown") score += 1;
       // Sure: the integration's key, the kind's name, this room's area or name, or a
@@ -22450,6 +22526,29 @@ class CasoraPanel extends HTMLElement {
       if (!tile.variables) tile.variables = {};
       tile.variables[f.key] = id;
     });
+    if (type.id === "network") this._netFill(tile, entity);
+  }
+
+  // Network tile (#98): upload, internet status and ping from the download sensor's device (FRITZ!Box,
+  // FRITZ!Portal, UniFi, UPnP …), only into empty fields. The tile reads these three itself, so they are
+  // written; provider and IP the popup finds on its own. True when something was filled.
+  _netFill(tile, entity) {
+    const CD = window.casoraDevice;
+    const S = (this._hass && this._hass.states) || {};
+    if (!CD || !CD.netFields || !entity) return false;
+    let n = {};
+    try { n = CD.netFields(this._hass, entity) || {}; } catch (e) { n = {}; }
+    let hit = false;
+    [["upload", "entity_upload", "sensor"], ["status", "entity_status", "binary_sensor"], ["ping", "entity_ping", "sensor"]]
+      .forEach(([role, key, dom]) => {
+        const id = n[role];
+        if (!id || !S[id] || id.split(".")[0] !== dom) return;
+        if (tile.variables && tile.variables[key]) return;
+        if (!tile.variables) tile.variables = {};
+        tile.variables[key] = id;
+        hit = true;
+      });
+    return hit;
   }
 
   // ── room images ───────────────────────────────────────────────────────────
@@ -27997,6 +28096,7 @@ class CasoraPanel extends HTMLElement {
             rebuild = true;
           }
         }
+        if (type.id === "network" && v && this._netFill(tile, v)) rebuild = true;
         if (type.id === "plant" && v) {
           const have = (tile.variables || {}).sensors;
           if (!Array.isArray(have) || !have.filter(Boolean).length) {
@@ -28693,7 +28793,7 @@ class CasoraPanel extends HTMLElement {
         let opts = f.options, dynLabels = null;
         if (typeof f.dynOptions === "function") {
           let dyn = null;
-          try { dyn = f.dynOptions(this._hass, this._tileEnt(tile), () => { if (this.isConnected) this._renderForm(); }); } catch (e) { dyn = null; }
+          try { dyn = f.dynOptions(this._hass, this._tileEnt(tile), () => { if (this.isConnected) this._renderForm(); }, tile); } catch (e) { dyn = null; }
           if (dyn && Array.isArray(dyn.options)) { opts = dyn.options; dynLabels = dyn.labels || null; }
           const c0 = String(cur === undefined ? "" : cur);
           if (c0 && !opts.includes(c0)) opts = opts.concat([c0]);
@@ -28829,7 +28929,7 @@ class CasoraPanel extends HTMLElement {
           let whyEl = null;
           put(f.label, this._combo(cur, this._entityList(f.domains, f.classes, f.accept),
             found || f.placeholder || pickHint(f.domains), (v) => { if (whyEl && v) { whyEl.remove(); whyEl = null; } set(v); },
-            { clearable: true }).wrap);
+            { clearable: true, lead: this._tileDevLead(tile, f) }).wrap);
           hintUnder();
           // Where the finder found it (#44: a wrong pick should be easy to spot), only while the field is empty.
           const why = found && !cur && window.casoraFieldWhy && window.casoraFieldWhy(f, tile, this._hass);
