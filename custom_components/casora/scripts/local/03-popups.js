@@ -4375,7 +4375,7 @@
         var s = stat(r.lights, states);
         // A room without its own HA group (house list from the rooms, light_rooms_auto): its lamps switch together.
         var sc = r.rid && states[r.rid] ? { a: 'scope', id: r.rid } : { a: 'scope', ids: r.lights };
-        return '<div class="lps-row' + (s.on ? ' on' : '') + '" data-lps-tap="' + attr({ a: 'room', gid: cfg.gid, idx: i }) + '">'
+        return '<div class="lps-row' + (s.on ? ' on' : '') + '" data-lps-tap="' + attr({ a: 'room', gid: cfg.gid, idx: i, name: r.name }) + '">'
           + '<div class="lps-ic" data-lps-tap="' + attr(sc) + '">' + glyph('light') + '</div>'
           + '<div class="lps-tx"><b>' + esc(r.name) + '</b><small>' + esc(subline(s, false)) + '</small></div>'
           + '<div class="lps-sw" role="switch" aria-checked="' + (s.on ? 'true' : 'false') + '" data-lps-tap="' + attr(sc) + '"></div>'
@@ -4554,6 +4554,22 @@
       if (sg) sg.forEach(function (x) { x.classList.toggle('on', x === el); });
       h.callService('light', 'turn_on', { color_temp_kelvin: d.k }, { entity_id: d.ids });
     } else if (d.a === 'room') {
+      /* Popup v3 (richtlinien §4.4): a room of the house is a sub page in the same popup – ‹ back to the rooms,
+         label = the group's title, title = the room. Without v3 the room chips stay and the room is a filter.
+         Since the room chips went (review 2, DD-26) the filter alone left no way back to the room list. */
+      var P3 = window.casoraPopup, cur3 = P3 && P3.current, pop3 = P3 && P3.element;
+      if (v3On() && cur3 && P3.sub) {
+        var groupT = String((pop3 && pop3._headerTitle && pop3._headerTitle.textContent) || '').replace(/\u200B/g, '') || tr('Beleuchtung');
+        window._casoraLF = window._casoraLF || {};
+        window._casoraLF[d.gid] = d.idx;
+        P3.sub(Object.assign({}, cur3, {
+          title: d.name || cur3.title, eyebrow: groupT,
+          // The room's own main switch (S.head), never the house's.
+          head_switch: null,
+          back: function () { if (window._casoraLF) window._casoraLF[d.gid] = -1; P3.open(cur3); },
+        }));
+        return;
+      }
       document.dispatchEvent(new CustomEvent('ll-custom', { detail: { casora_lf_gid: d.gid, casora_lf_action: 'toggle', casora_lf_idx: d.idx } }));
     } else if (d.a === 'mi') {
       // Einzelne Lampe: Casoras Licht-Popup wie an der Kachel, HAs Dialog nur als Rückfall.
