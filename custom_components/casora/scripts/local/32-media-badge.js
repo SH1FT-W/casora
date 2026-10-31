@@ -178,8 +178,8 @@
     return K.layout({ fields: f, top: ['hero'], left: ['list'], right: [] });
   };
 
-  /* Popup v3 (richtlinien §4 S5): the stage shows the first running player – its cover (if any), what plays, device
-     and room, and play/pause as the stage pill (same media_play_pause as its row). Nothing running: S7 with the
+  /* Popup v3 (richtlinien §4.8 dial): the stage shows the first running player – its volume as the wheel, its cover
+     as the record, what plays, device and room, and play/pause as the pill (same media_play_pause as its row). Nothing running: S7 with the
      badge's words (fallback rule, never an empty stage). */
   B.stage = function (rows, c, n, states) {
     var UI = window._casoraUI, esc = UI.esc;
@@ -190,18 +190,20 @@
     }
     var a = (states[top.id] || {}).attributes || {};
     var pic = a.entity_picture_local || a.entity_picture || '';
-    var html = '<div style="display:flex;align-items:center;gap:16px;min-width:0;text-align:left;">'
-      + (pic ? '<div style="flex:none;width:96px;height:96px;border-radius:16px;overflow:hidden;background:var(--casora-soft-control-fill, rgba(140,115,90,0.12));">'
-        + '<img src="' + esc(pic) + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.remove()"></div>' : '')
-      + '<div style="min-width:0;flex:1;">'
-      + '<div style="font-size:17px;font-weight:700;line-height:1.3;overflow-wrap:anywhere;">' + esc(top.line || top.word) + '</div>'
-      + '<div style="font-size:14px;font-weight:500;opacity:.7;margin-top:4px;">' + esc([top.name, top.room].filter(Boolean).join(' · ')) + '</div>'
-      + '</div></div>';
-    var pill = top.toggle ? '<div class="hui-st-act pri" role="button" aria-label="' + esc(top.playing ? 'Pausieren' : 'Abspielen') + '" data-casora-svc="'
+    var pillHtml = top.toggle ? '<div class="hui-st-act pri" role="button" aria-label="' + esc(top.playing ? 'Pausieren' : 'Abspielen') + '" data-casora-svc="'
       + esc(JSON.stringify({ domain: 'media_player', service: 'media_play_pause', data: { entity_id: top.id } })) + '">'
       + '<ha-icon icon="' + (top.playing ? 'mdi:pause' : 'mdi:play') + '" style="--mdc-icon-size:20px;width:20px;height:20px;display:flex;"></ha-icon>'
       + '<span>' + esc(top.playing ? 'Pausieren' : 'Abspielen') + '</span></div>' : '';
-    return UI.stage('image', { html: html, controls: pill });
+    // Dial (richtlinien §4.8): the first running player's volume as the wheel, its cover as the turning record, what
+    // plays and play/pause as the pill under it.
+    var vol = a.volume_level != null && !isNaN(Number(a.volume_level)) ? Math.round(Number(a.volume_level) * 100) : null;
+    var info = '<div style="text-align:center;min-width:0;">'
+      + '<div style="font-size:17px;font-weight:700;line-height:1.3;overflow-wrap:anywhere;">' + esc(top.line || top.word) + '</div>'
+      + '<div style="font-size:14px;font-weight:500;opacity:.7;margin-top:4px;">' + esc([top.name, top.room].filter(Boolean).join(' · ')) + '</div></div>';
+    return UI.stage('slider', { value: vol || 0, label: 'Lautstärke', word: 'Lautstärke',
+      cover: { image: pic || null, spin: !!top.playing },
+      svc: vol != null ? { domain: 'media_player', service: 'volume_set', field: 'volume_level', scale: [0, 1, 0.01], showPct: true, target: { entity_id: top.id } } : null,
+      extra: info + (pillHtml ? '<div style="height:12px"></div>' + pillHtml : '') });
   };
 
   B.sec = function (part, C, states, hass) {
