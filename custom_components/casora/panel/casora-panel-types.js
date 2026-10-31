@@ -269,7 +269,7 @@ window.CASORA_TILE_TYPES = [
       { key: "alert_window_minutes", label: "Recent activity (minutes)", type: "number", advanced: true, group: "Popup",
         placeholder: "5", hint: "A dot marks a camera with activity in this window." },
       { key: "show_stream_variants", label: "Show stream variants", type: "bool", advanced: true, group: "Popup",
-        hint: "Also list snapshot cameras and every stream of a camera (Soft design hides them)." },
+        hint: "Also list snapshot cameras and every stream of a camera (hidden by default)." },
     ] },
   { id: "casora_alarm", label: "Alarm", template: "casora_alarm", domains: ["alarm_control_panel"], icon: "shield_check",
     color: "var(--casora-color-red, #FF453A)", fields: [

@@ -662,7 +662,7 @@
     "Quieter": "Stiller",
     "Recent activity (minutes)": "Laatste activiteit (minuten)",
     "Show stream variants": "Streamvarianten tonen",
-    "Also list snapshot cameras and every stream of a camera (Soft design hides them).": "Ook snapshotcamera's en elke stream van een camera tonen (het design Zacht verbergt ze).",
+    "Also list snapshot cameras and every stream of a camera (hidden by default).": "Ook snapshotcamera's en elke stream van een camera tonen (standaard verborgen).",
     "Resume button": "Hervattoets",
     "Robot name": "Robotnaam",
     "Room under the title": "Kamer onder de titel",

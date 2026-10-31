@@ -662,7 +662,7 @@
     "Quieter": "Ciszej",
     "Recent activity (minutes)": "Ostatnia aktywność (minuty)",
     "Show stream variants": "Pokaż warianty strumienia",
-    "Also list snapshot cameras and every stream of a camera (Soft design hides them).": "Pokazuj także kamery migawkowe i każdy strumień kamery (styl Miękki je ukrywa).",
+    "Also list snapshot cameras and every stream of a camera (hidden by default).": "Pokazuj także kamery migawkowe i każdy strumień kamery (domyślnie ukryte).",
     "Resume button": "Przycisk wznowienia",
     "Robot name": "Nazwa robota",
     "Room under the title": "Pokój pod tytułem",
