@@ -22,6 +22,30 @@
 })();
 // casora-esc:end
 
+// Media metadata as plain text (#97): some integrations (WiiM/LinkPlay UPnP metadata, for one) send titles with
+// XML/HTML entities in them ("Livin&apos; on the edge"). Escaped once for the page, that showed as "&apos;".
+// Decodes the named entities of XML/HTML plus numeric ones; everything else stays as it is. Trimmed.
+(function () {
+  if (window.casoraDecodeEntities) return;
+  var NAMED = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+  window.casoraDecodeEntities = function (v) {
+    var s = String(v == null ? '' : v);
+    if (s.indexOf('&') < 0) return s.trim();
+    // Twice at most: "&amp;apos;" (escaped twice at the source) is still an apostrophe.
+    for (var i = 0; i < 2 && s.indexOf('&') > -1; i++) {
+      s = s.replace(/&(#x[0-9a-f]{1,6}|#[0-9]{1,7}|[a-z]{2,6});/gi, function (m, e) {
+        if (e.charAt(0) === '#') {
+          var n = e.charAt(1) === 'x' || e.charAt(1) === 'X' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+          return n > 0 && n <= 0x10ffff && !(n >= 0xd800 && n <= 0xdfff) ? String.fromCodePoint(n) : m;
+        }
+        var k = e.toLowerCase();
+        return Object.prototype.hasOwnProperty.call(NAMED, k) ? NAMED[k] : m;
+      });
+    }
+    return s.trim();
+  };
+})();
+
 // button-card renders a plain name or label (text from the card config, the entity's friendly_name as fallback)
 // and its default state text as HTML. For Casora's cards these are text: escape them – only characters that are
 // not escaped yet, so a value Casora code already escaped stays as it is. Names, labels and states from a
@@ -3207,8 +3231,10 @@ window.casoraMenuGlass = {
 
         const st = low(s.state);
         const a  = s.attributes || {};
-        const rawTitle = norm(a.media_title);
-        let artist = norm(a.media_artist || a.artist || a.media_album_artist);
+        // Entities in the metadata (#97) as plain text.
+        const dec = window.casoraDecodeEntities || norm;
+        const rawTitle = dec(a.media_title);
+        let artist = dec(a.media_artist || a.artist || a.media_album_artist);
         const hasContent = !!(rawTitle || artist);
 
         const feats = Number(a.supported_features || 0);
@@ -6383,6 +6409,12 @@ window.casoraMenuGlass = {
       --ha-card-backdrop-filter: var(--casora-popup-plate-backdrop, none);
     }
     .extra[hidden] { display: none; }
+    /* The own cards stand under the content and never over it (#97). Many popup_styles make .content a flex
+       column and let .container shrink (flex 1 1 auto, min-height 0) so a sheet of fixed height fits; with own
+       cards below, the container shrank by their height and its content ran on under them. With own cards the
+       container keeps its full height and the sheet scrolls as a whole. */
+    :host([has-extra]) .content > .container { flex-shrink: 0 !important; }
+    :host([has-extra]) .content > .extra { flex-shrink: 0 !important; }
     .extra-title {
       /* Above the cards: one that pulls itself up (negative margin) must not cover it (issue #32). */
       position: relative;
@@ -8116,6 +8148,7 @@ window.casoraMenuGlass = {
         this._extraTok = (this._extraTok || 0) + 1;
         this._extra.textContent = '';
         this._extra.hidden = true;
+        this.removeAttribute('has-extra');
         this._extraCards = [];
         this._bridge.target = null;
         this._dyn.textContent = '';
@@ -8203,6 +8236,7 @@ window.casoraMenuGlass = {
       var tok = (this._extraTok = (this._extraTok || 0) + 1);
       box.textContent = '';
       box.hidden = true;
+      this.removeAttribute('has-extra');
       this._extraCards = [];
       var cards = (extra && Array.isArray(extra.cards) ? extra.cards : [])
         .filter(function (c) { return c && typeof c === 'object' && !Array.isArray(c) && c.type; });
@@ -8239,6 +8273,7 @@ window.casoraMenuGlass = {
         build(config, slot, i);
       });
       box.hidden = false;
+      this.setAttribute('has-extra', '');
     }
 
     _isSheet() {
