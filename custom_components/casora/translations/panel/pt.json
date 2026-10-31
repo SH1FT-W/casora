@@ -2752,6 +2752,14 @@
   },
   "patterns": [
     [
+      "^“(.+)” is in the sidebar with Home and 1 room\\.$",
+      "“{1}” está na barra lateral com Casa e 1 divisão."
+    ],
+    [
+      "^“(.+)” is in the sidebar with Home and (\\d+) rooms\\.$",
+      "“{1}” está na barra lateral com Casa e {2} divisões."
+    ],
+    [
       "^Phone differs in (\\d+) settings$",
       "O telemóvel difere em {1} definições"
     ],

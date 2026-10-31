@@ -3468,6 +3468,19 @@ function fixDuplicatePaths(rooms) {
 // Im Erststart gewählter Performance-Modus („“ = aus, „auto“, „on“); neue Räume übernehmen ihn.
 let firstRunPerf = null;
 let firstRunFont = null;
+// E10 (test 2): the setup assistant remembers its step and choices in this browser (a reload started over at the
+// look, with "Casora" picked again). Kept a day; cleared when a dashboard is made or the assistant is restarted.
+const SETUP_KEY = "casora.setup.progress";
+function setupLoad() {
+  try {
+    const v = JSON.parse(localStorage.getItem(SETUP_KEY) || "null");
+    return v && typeof v === "object" && Date.now() - (v.ts || 0) < 86400000 ? v : {};
+  } catch (e) { return {}; }
+}
+function setupSave(patch) {
+  try { localStorage.setItem(SETUP_KEY, JSON.stringify(Object.assign(setupLoad(), patch, { ts: Date.now() }))); } catch (e) { /* private mode */ }
+}
+function setupClear() { try { localStorage.removeItem(SETUP_KEY); } catch (e) { /* private mode */ } }
 // Was im Einrichtungsassistenten gewählt wurde (Effekte, Schrift), auch in übernommene Räume.
 function applyFirstRun(rooms) {
   (rooms || []).forEach((r) => {
@@ -13976,7 +13989,7 @@ class CasoraPanel extends HTMLElement {
   // Menü „Einrichtungsassistent …“: Look → Schrift → Effekte → [Gefunden] → Räume,
   // mit Schließen zurück ins Studio.
   async _rerunSetup() {
-    if (await this._leaveStudioOk()) this._firstRun();
+    if (await this._leaveStudioOk()) { setupClear(); this._firstRun(); }
   }
 
   // Begrüßung schon gesehen? Maßgeblich ist der Merker dieses HA in den Casora-Einstellungen
@@ -14109,6 +14122,14 @@ class CasoraPanel extends HTMLElement {
       if (f.moves.length || f.yaml.length || (f.broken || []).length) return this._setupFoundStep(f, null, perf);
       this._createForm({ back: perf });
     };
+    // E10: back where the assistant was before a reload, with what was chosen.
+    const sv = setupLoad();
+    if (sv.look) this._lookPick = sv.look;
+    if (firstRunFont === null && typeof sv.font === "string") firstRunFont = sv.font;
+    if (firstRunPerf === null && typeof sv.perf === "string") firstRunPerf = sv.perf;
+    if (sv.step === "font") return this._fontStep(perf);
+    if (sv.step === "perf") return perf();
+    if (sv.step === "rooms") return this._firstRunGo();
     this._themeStep();
   }
 
@@ -14240,6 +14261,9 @@ class CasoraPanel extends HTMLElement {
     // Ersteinrichtung: immer „Standard“ vorschlagen. Erneut gestartet (es gibt schon ein
     // Dashboard): das Design, das gerade aktiv ist.
     let pick = (this._dashUrl && ours) ? ours.name : themes[0].name;
+    // E10: a look chosen before a reload stays chosen.
+    const saved = !this._dashUrl && setupLoad().look;
+    if (saved && themes.some((x) => x.name === saved)) pick = saved;
     const dark = !(t.darkMode === false);
 
     const s = this._flowScreen({
@@ -14296,6 +14320,7 @@ class CasoraPanel extends HTMLElement {
       const btn = ev && ev.currentTarget;
       if (btn) btn.disabled = true;
       this._lookPick = pick;
+      if (!this._dashUrl) setupSave({ look: pick, step: "font" });
       if (pick !== own) await this._applyTheme(pick);
       if (btn) btn.disabled = false;
       this._fontStep(() => this._perfStep(next));
@@ -14351,7 +14376,7 @@ class CasoraPanel extends HTMLElement {
     s.box.classList.add("fwide");
     s.box.style.setProperty("--fcols", cards.length);
     paint();
-    this._flowButton(s.acts, "Continue", () => { firstRunFont = pick; next(); });
+    this._flowButton(s.acts, "Continue", () => { firstRunFont = pick; if (!this._dashUrl) setupSave({ font: pick, step: "perf" }); next(); });
   }
 
   // Glass costs a blur per layer per frame. Most devices carry it; an old wall
@@ -14419,7 +14444,7 @@ class CasoraPanel extends HTMLElement {
         + "Older wall tablets switch to reduced effects on their own."
       : "This device gets all effects. Older wall tablets switch to reduced effects on their own.";
     s.body.appendChild(note);
-    this._flowButton(s.acts, "Continue", () => { firstRunPerf = pick; next(); });
+    this._flowButton(s.acts, "Continue", () => { firstRunPerf = pick; if (!this._dashUrl) setupSave({ perf: pick, step: "rooms" }); next(); });
     // Einrichten: das gefundene Dashboard schon hier vorladen – im gewählten Look, damit die
     // Vorschau auf „Vorhandenes Dashboard gefunden“ fertig dasteht.
     const tok = this._flowTok;
@@ -14544,25 +14569,34 @@ class CasoraPanel extends HTMLElement {
         if (!fillable.size) fillable = null;
       } catch (e) { fillable = null; }
     }
-    areas.forEach((a) => addRoom(a.name, !TECH.test(a.name || "")
+    // E10: the rooms picked before a reload stay picked.
+    const savedRooms = Array.isArray(setupLoad().rooms) ? new Set(setupLoad().rooms) : null;
+    areas.forEach((a) => addRoom(a.name, savedRooms ? savedRooms.has(a.name) : !TECH.test(a.name || "")
       && (fillable ? fillable.has(a.name) : (!withDevices.size || withDevices.has(a.area_id)))));
+    if (savedRooms) [...savedRooms].filter((n) => !areas.some((a) => a.name === n)).forEach((n) => addRoom(n, true));
     if (!areas.length) ({ de: ["Wohnzimmer", "Küche", "Schlafzimmer"], es: ["Salón", "Cocina", "Dormitorio"] }[
-      String((this._hass && this._hass.language) || "").slice(0, 2)] || ["Living Room", "Kitchen", "Bedroom"]).forEach((n) => addRoom(n, false));
+      String((this._hass && this._hass.language) || "").slice(0, 2)] || ["Living Room", "Kitchen", "Bedroom"])
+      .forEach((n) => { if (!tiles().some((t) => t.dataset.name === n)) addRoom(n, false); });
 
     const dash = this._flowGroup(s.body, { header: "New Dashboard" });
+    // E22 (test 2): the name sat below every room, only reachable by scrolling – it comes first now.
+    s.body.insertBefore(dash.parentNode, head);
     // Gibt es „Casora“ schon (auch als Titel in der Seitenleiste), „Casora 2“ usw. vorschlagen – wie der Umzug.
     const takenNames = new Set((this._dashList || []).map((d) => (d.title || "").trim())
       .concat(Object.values((this._hass && this._hass.panels) || {}).map((p) => (p.title || "").trim())));
     let freeTitle = "Casora";
     for (let n = 2; takenNames.has(freeTitle); n++) freeTitle = "Casora " + n;
-    const titleIn = this._flowRow(dash, { title: "Name", input: freeTitle }).input;
+    const savedTitle = setupLoad().title;
+    const titleIn = this._flowRow(dash, { title: "Name", input: typeof savedTitle === "string" && savedTitle ? savedTitle : freeTitle }).input;
 
     this._flowCancel(s.acts);
-    this._flowButton(s.acts, "Create Dashboard", () => {
+    // E11: with "Fill your rooms" two steps follow – the button goes on, the last step creates.
+    this._flowButton(s.acts, typeof this._fillStep === "function" ? "Continue" : "Create Dashboard", () => {
       const title = (titleIn.value || "").trim() || "Casora";
       const url_path = this._flowPath(title, "casora-dashboard", "dashboard");
       const picked = [...list.querySelectorAll('[aria-checked="true"]')]
         .map((r) => r.dataset.name);
+      setupSave({ rooms: picked, title, step: "rooms" });
       // Mit dem Standardraum-Modul (casora-panel-basis.js): erst fragen, ob Casora die Räume füllt.
       if (typeof this._fillStep === "function") {
         return this._fillStep({ picked, back: () => this._createForm(o),
@@ -15115,6 +15149,8 @@ class CasoraPanel extends HTMLElement {
     const taken = new Set((this._dashList || []).map((d) => (d.title || "").trim())
       .concat(this._yamlCandidates().map((d) => (d.title || "").trim())));
     const dash = this._flowGroup(s.body, { header: "New Dashboard" });
+    // E22 (test 2): the name sat below every room, only reachable by scrolling – it comes first now.
+    s.body.insertBefore(dash.parentNode, head);
     const titleIn = this._flowRow(dash, {
       title: "Name", input: window.casoraFreeName ? window.casoraFreeName(name.trim(), taken, this._hass)
         : taken.has(name.trim()) ? name + " (imported)" : name,
@@ -15382,6 +15418,7 @@ class CasoraPanel extends HTMLElement {
   // Shared by Create and Import: the same arrival and the same two ways on.
   _flowDone(opts) {
     const rooms = opts.rooms || [];
+    setupClear();
     // Erster Eintrag in den Versionen: der Stand direkt nach Anlegen/Import/Umzug –
     // sonst stünde dort „Noch keine Versionen“, obwohl das Dashboard schon gespeichert ist.
     if (this._hass && opts.url_path) {
@@ -15390,11 +15427,15 @@ class CasoraPanel extends HTMLElement {
         mobile_url: opts.paired ? mobilePathOf(opts.url_path) : null, kind: "save", summary: JSON.stringify({ origin }) })
         .catch((e) => this._log && this._log("versions: " + e.message, "warn"));
     }
+    // E21: a new dashboard counts like step 1 ("12 rooms selected"): Home plus the chosen rooms.
+    const plusHome = !opts.fromYaml && !opts.move && rooms.length > 1 && rooms[0] && rooms[0].path === "home";
+    const nOwn = plusHome ? rooms.length - 1 : rooms.length;
     const s = this._flowScreen({
       icon: "check", tone: "ok",
       title: "Your Dashboard Is Ready",
       lede: `“${opts.title}” is in the sidebar with `
-        + `${rooms.length} room${rooms.length === 1 ? "" : "s"}.`
+        + (plusHome ? "Home and " : "")
+        + `${nOwn} room${nOwn === 1 ? "" : "s"}.`
         + (opts.fromYaml ? " Your original dashboard hasn't changed." : ""),
     });
     // The real thing, live: the desktop dashboard and, in front, the phone layout.

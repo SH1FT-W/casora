@@ -2752,6 +2752,14 @@
   },
   "patterns": [
     [
+      "^“(.+)” is in the sidebar with Home and 1 room\\.$",
+      "“{1}” staat met Thuis en 1 kamer in de zijbalk."
+    ],
+    [
+      "^“(.+)” is in the sidebar with Home and (\\d+) rooms\\.$",
+      "“{1}” staat met Thuis en {2} kamers in de zijbalk."
+    ],
+    [
       "^Phone differs in (\\d+) settings$",
       "Telefoon wijkt af bij {1} instellingen"
     ],
