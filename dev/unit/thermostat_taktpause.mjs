@@ -12,12 +12,13 @@ const body = tpl.casora_thermostat.state_display.trim().replace(/^\[\[\[/, '').r
 const tile = (state, attributes) => new Function('entity', 'window', body)({ state, attributes }, window);
 const at = (hvac_action, current_temperature, temperature = 22) => ({ hvac_action, current_temperature, temperature });
 
-assert.equal(tile('heat', at('heating', 21.5)), 'Heizt auf 22°');
-assert.equal(tile('heat', at('idle', 21.5)), 'Heizt auf 22°');   // Taktpause unter dem Ziel
-assert.equal(tile('heat', at('idle', 21.9)), 'Ziel 22°');        // innerhalb 0,2 °C = am Ziel
-assert.equal(tile('heat', at('idle', 22.4)), 'Ziel 22°');
+assert.equal(tile('heat', at('heating', 21.5)), '21,5° · Heizt auf 22°');
+assert.equal(tile('heat', at('idle', 21.5)), '21,5° · Heizt auf 22°');   // Taktpause unter dem Ziel
+assert.equal(tile('heat', at('idle', 21.9)), '21,9° · Ziel 22°');        // innerhalb 0,2 °C = am Ziel
+assert.equal(tile('heat', at('idle', 22.4)), '22,4° · Ziel 22°');
 assert.equal(tile('heat', at('idle', null)), 'Ziel 22°');        // ohne Ist-Wert nichts raten
-assert.equal(tile('cool', at('idle', 24)), 'Kühlt auf 22°');
-assert.equal(tile('cool', at('idle', 22)), 'Ziel 22°');
-assert.equal(tile('off', at('idle', 18)), 'Aus');
+assert.equal(tile('cool', at('idle', 24)), '24° · Kühlt auf 22°');
+assert.equal(tile('cool', at('idle', 22)), '22° · Ziel 22°');
+assert.equal(tile('off', at('idle', 18)), '18° · Aus');
+// Review 2 (fam-15): without a sensor the thermostat's own reading stands in front.
 console.log('ok thermostat_taktpause');

@@ -2605,7 +2605,20 @@
   "Kein Spiel": "Ningún juego",
   "Gruppen": "Grupos",
   "Heute an": "Activa hoy",
-  "Heute aus": "Desactivada hoy"
+  "Heute aus": "Desactivada hoy",
+  "1 Raum an": "1 habitación encendida",
+  "1 klemmt": "1 atascada",
+  "Schloss klemmt": "Cerradura atascada",
+  "Einschalten auf": "Encender a",
+  "Höchste Stunde": "Hora más alta",
+  "Niedrigste Stunde": "Hora más baja",
+  "Höchster Tag": "Día más alto",
+  "Niedrigster Tag": "Día más bajo",
+  "Höchster Monat": "Mes más alto",
+  "Niedrigster Monat": "Mes más bajo",
+  "Lange offen": "Abierta mucho tiempo",
+  "Fenster schließen?": "¿Cerrar la ventana?",
+  "Schließen?": "¿Cerrar?"
  },
  "patterns": [
   [
@@ -4707,6 +4720,22 @@
   [
    "^(\\d+) Schlösser entriegeln\\?$",
    "¿Abrir {1} cerraduras?"
+  ],
+  [
+   "^Ø von (\\d+) Lampen$",
+   "Ø de {1} lámparas"
+  ],
+  [
+   "^(\\d+) Räume an$",
+   "{1} habitaciones encendidas"
+  ],
+  [
+   "^(\\d+) Schlösser klemmen$",
+   "{1} cerraduras atascadas"
+  ],
+  [
+   "^(\\d+) klemmen$",
+   "{1} atascadas"
   ]
  ],
  "Gerät in Home Assistant": "Dispositivo en Home Assistant"

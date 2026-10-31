@@ -207,8 +207,9 @@
       + '@media (hover:hover){.hcal-d:hover .hcal-n{background:rgba(255,255,255,0.08);}}'
       + '.hcal-d.s .hcal-n{background:rgba(255,255,255,0.16);font-weight:600;}'
       + '.hcal-d.t .hcal-n{background:var(--casora-color-teal, #00C3D0);color:#000;font-weight:600;opacity:1;}'
-      + '.hcal-dots{display:flex;gap:3px;height:5px;pointer-events:none;}'
-      + '.hcal-dots i{width:5px;height:5px;border-radius:50%;}'
+      // Pickup dots 7 px (review 2, fam-22: ~4 px were hard to see outdoors).
+      + '.hcal-dots{display:flex;gap:3px;height:7px;pointer-events:none;}'
+      + '.hcal-dots i{width:7px;height:7px;border-radius:50%;}'
       // Trefferflächen ≥ 40 px ohne neue Optik (Design-Audit 10.10.2026): unsichtbarer Rand um Pfeile,
       // „Heute“-Knopf und Legenden-Pillen (sichtbar 32/30 px).
       + '.hcal-b,.hcal-tb,.hcal-c{position:relative;}'

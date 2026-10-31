@@ -2748,7 +2748,8 @@
     "Saving now replaces those changes with what you see here. Reload to get them instead - your changes here are lost.": "Enregistrer maintenant remplace ces modifications par ce que tu vois ici. Recharge pour les récupérer – tes modifications ici seront perdues.",
     "Save anyway": "Enregistrer quand même",
     "Reload": "Recharger",
-    "Not saved - this dashboard was changed in another window.": "Non enregistré – ce tableau de bord a été modifié dans une autre fenêtre."
+    "Not saved - this dashboard was changed in another window.": "Non enregistré – ce tableau de bord a été modifié dans une autre fenêtre.",
+    "1 room on": "1 pièce allumée"
   },
   "patterns": [
     [
@@ -3426,6 +3427,10 @@
     [
       "^(\\d+) rows hidden$",
       "{1} lignes masquées"
+    ],
+    [
+      "^(\\d+) rooms on$",
+      "{1} pièces allumées"
     ]
   ]
 }

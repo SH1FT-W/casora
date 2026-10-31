@@ -52,6 +52,12 @@ await check('Hausliste: alle Lichter (auch mehr als zehn)', [...got.ids].sort().
 
 // 2) Badge mit der Markierung zählt alle Lichter.
 const onCount = expected.ids.filter((id, i) => i % 2).length;
+// Review 2 (E08): badge and tile count rooms like the popup („3 Räume an“), a room is on when one of its lights is.
+const roomWord = await page.evaluate(() => {
+  const st = document.querySelector('home-assistant').hass.states, r = window._casoraHouseLights().rooms;
+  const n = r.filter((x) => x.lights.some((id) => st[id] && st[id].state === 'on')).length;
+  return n === r.length ? 'Alle An' : n === 1 ? '1 Raum an' : n + ' Räume an';
+});
 const badge = await page.evaluate(async () => {
   const ha = document.querySelector('home-assistant');
   const h = await window.loadCardHelpers();
@@ -63,7 +69,7 @@ const badge = await page.evaluate(async () => {
   const r = el.getBoundingClientRect();
   return { text: (el.shadowRoot && el.shadowRoot.querySelector('ha-card') || el).innerText.replace(/\s+/g, ' ').trim(), x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width };
 });
-await check('Badge zählt alle Lichter der Räume („' + onCount + ' An“)', badge.w > 0 && badge.text.includes(onCount + ' An'), badge);
+await check('Badge zählt die Räume („' + roomWord + '“)', badge.w > 0 && badge.text.includes(roomWord), badge);
 
 // 3) Halten öffnet das Haus-Popup: Raumleiste aus den Räumen, Hauptschalter fragt.
 await page.mouse.move(badge.x, badge.y); await page.mouse.down(); await page.waitForTimeout(900); await page.mouse.up();
@@ -114,7 +120,7 @@ const tile = await page.evaluate(async (first) => {
   const r = el.getBoundingClientRect();
   return { text: (el.shadowRoot.querySelector('ha-card') || el).innerText.replace(/\s+/g, ' ').trim(), x: r.x + r.width / 2, y: r.y + r.height / 2 };
 }, expected.ids[0]);
-await check('Haus-Kachel zählt die Lichter der Räume', tile.text.includes(onCount + ' An'), tile);
+await check('Haus-Kachel zählt wie das Badge („' + roomWord + '“)', tile.text.includes(roomWord), tile);
 await page.mouse.click(tile.x, tile.y);
 await page.waitForFunction(() => { const s = window.casoraPopup && window.casoraPopup.surface; return !!s && s.innerText.trim().length > 20; }, null, { timeout: 15000 }).catch(() => {});
 await page.waitForTimeout(2000);

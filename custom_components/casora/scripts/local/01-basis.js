@@ -464,6 +464,189 @@ window._casoraHouseLights = function (hass) {
     return window._casoraHouseLightsOf(rooms, S);
   } catch (e) { return { rooms: [], ids: [], subs: [] }; }
 };
+/* What a light tile, light badge or light popup stands for (review 2, E08/fam-09/DH-16): one derivation for the
+   tile's state, the badge's count, the popup's status line and the Studio preview, so all count the same. Moved out
+   of the light popup (casora_popup_light lpc_init, _casoraLPC). entity: the card's entity (a light, or the badge
+   row's helper), variables: the card's variables. Result { variables (with the badge's lights resolved), pgOff,
+   groupId, autoIdx (room to preselect), topLevelIds, hasRooms, rooms ([{ name, lights }] or null), roomsAuto,
+   lightIds (every lamp), expand }. */
+window._casoraLightScope = function (entity, states, hass, vars) {
+  var S = states || {};
+  var variables = vars || {};
+  var isArr = Array.isArray;
+  var membersOf = function (x) { var a = S[x] && S[x].attributes; return a && isArr(a.entity_id) ? a.entity_id : null; };
+  var eid = entity && entity.entity_id;
+  /* Collective badge „Beleuchtung“: its entity is the helper input_select, never a light - the lights are in the
+     badge's variables. */
+  // No entity at all (a badge rendered without its helper) counts the same way.
+  if ((!eid || String(eid).indexOf('light.') !== 0) && !variables.popup_group && !variables.group_entity
+      && !(isArr(variables.lights) && variables.lights.length > 0)) {
+    var own = [variables.light_group_entity];
+    for (var i = 1; i <= 10; i++) own.push(variables['entity_' + i]);
+    own = own.filter(function (x, k, a) { return typeof x === 'string' && x.indexOf('light.') === 0 && a.indexOf(x) === k; });
+    var vx = {};
+    // Home badge without an HA group (light_rooms_auto, 24.10.2026): the rooms' lights, live from the dashboard.
+    var hl0 = variables.light_rooms_auto === true && window._casoraHouseLights ? window._casoraHouseLights(hass) : null;
+    // #80: lamps picked in the badge win over its HA group; the group alone still shows the whole group.
+    var picked = own.filter(function (x) { return x !== variables.light_group_entity; });
+    if (hl0 && hl0.ids.length) { vx.popup_group = hl0.ids[0]; vx.lights = hl0.ids; vx.house = true; vx.house_rooms = hl0.rooms; }
+    // Picked room groups: the house view of just those rooms. Single lamps among them are a room of their own.
+    else if (picked.length > 1 && picked.some(function (x) { return isArr(membersOf(x)); })) {
+      var mm = function (x) { return (membersOf(x) || []).filter(function (y) { return typeof y === 'string' && S[y]; }); };
+      var pr = picked.filter(function (x) { return S[x]; }).map(function (x) {
+        return { name: String((S[x].attributes || {}).friendly_name || x), rid: x, lights: mm(x).length ? mm(x) : [x] };
+      });
+      var pids = pr.reduce(function (acc, r) { return acc.concat(r.lights.filter(function (y) { return acc.indexOf(y) < 0; })); }, []);
+      if (pids.length) { vx.popup_group = pids[0]; vx.lights = pids; vx.house = true; vx.house_rooms = pr; }
+    }
+    else if (picked.length > 1) { vx.popup_group = picked[0]; vx.lights = picked; }
+    else if (picked.length === 1) vx.popup_group = picked[0];
+    else if (variables.light_group_entity && String(variables.light_group_entity).indexOf('light.') === 0) vx.popup_group = variables.light_group_entity;
+    else if (own.length === 1) vx.popup_group = own[0];
+    else if (own.length > 1) { vx.popup_group = own[0]; vx.lights = own; }
+    variables = Object.assign({}, variables, vx);
+  }
+  var pgVar = variables.popup_group || variables.group_entity || null;
+  var pgOff = pgVar === 'none';
+  var groupId = (pgOff ? eid : (pgVar || eid)) || null;
+  var autoIdx = -1;
+  if (!pgOff && groupId && variables.group_rooms === true && !(isArr(variables.lights) && variables.lights.length > 0)) {
+    var m0 = membersOf(groupId);
+    if (!isArr(m0) || !isArr(membersOf(m0[0]))) {
+      var from = groupId;
+      for (var sid in S) {
+        if (sid.indexOf('light.') !== 0 || sid === from) continue;
+        var ms = membersOf(sid);
+        if (isArr(ms) && ms.indexOf(from) > -1 && ms.length > 1 && isArr(membersOf(ms[0]))) { groupId = sid; autoIdx = ms.indexOf(from); break; }
+      }
+    }
+  }
+  var expand = function (x, seen) {
+    seen = seen || {};
+    if (!x || seen[x]) return [];
+    seen[x] = 1;
+    if (!S[x]) return [];
+    var ms = membersOf(x);
+    if (isArr(ms)) {
+      // A group whose members do not exist is itself the one lamp.
+      var r = [];
+      ms.forEach(function (m) { expand(m, seen).forEach(function (y) { r.push(y); }); });
+      return r.length ? r : (String(x).indexOf('light.') === 0 ? [x] : []);
+    }
+    return String(x).indexOf('light.') === 0 ? [x] : [];
+  };
+  var topLevelIds = membersOf(groupId) || [];
+  // Rooms only when at least two members are groups themselves (27.10.2026).
+  var hasRooms = variables.group_rooms === true && topLevelIds.length > 1
+    && topLevelIds.filter(function (x) { return isArr(membersOf(x)); }).length > 1;
+  var reg = (hass && hass.entities) || {};
+  var areaName = function (x) {
+    var re = reg[x] || (reg.get && reg.get(x)) || null;
+    if (!re) return null;
+    var aid = re.area_id || (re.device_id && hass.devices && hass.devices[re.device_id] ? hass.devices[re.device_id].area_id : null);
+    return aid ? ((hass.areas && hass.areas[aid] && hass.areas[aid].name) || null) : null;
+  };
+  var toTitle = function (s) { return s.replace(/_/g, ' ').replace(/\w\S*/g, function (w) { return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); }); };
+  var rooms = hasRooms ? topLevelIds.map(function (rid) {
+    var ex = (membersOf(rid) || []).filter(function (x) { return S[x]; });
+    return {
+      name: (window._casoraRoomOf ? window._casoraRoomOf(rid) : null) || areaName(rid)
+        || (S[rid] && S[rid].attributes && S[rid].attributes.friendly_name) || toTitle(String(rid).split('.').pop()),
+      // Members that do not exist are no nameless „Aus“ row; without any, the room group is the one row.
+      lights: ex.length ? ex : (S[rid] ? [rid] : [])
+    };
+  }) : null;
+  /* The house without an HA group over its rooms (light_rooms_auto, or a house tile whose group does not hold its
+     list): the rooms' light badges of the dashboard (_casoraHouseLights), as if it were a group of room groups. */
+  var roomsAuto = false;
+  var houseGrp = (function () {
+    if (!topLevelIds.length) return false;
+    var l = isArr(variables.lights) ? variables.lights.filter(function (x) { return S[x]; }) : [];
+    if (!l.length) return true;
+    var all = expand(groupId);
+    return l.every(function (x) { return x === groupId || topLevelIds.indexOf(x) > -1 || all.indexOf(x) > -1; });
+  })();
+  if (!rooms && !pgOff && (variables.light_rooms_auto === true || (variables.house === true && !houseGrp))
+      && variables.group_rooms !== false && window._casoraHouseLights) {
+    var hl = isArr(variables.house_rooms) ? { rooms: variables.house_rooms } : window._casoraHouseLights(hass || { states: S });
+    var hr = (hl.rooms || []).map(function (r) {
+      return { name: r.name, rid: r.rid && S[r.rid] ? r.rid : null, lights: (r.lights || []).filter(function (x) { return S[x]; }) };
+    }).filter(function (r) { return r.lights.length; });
+    if (hr.length > 1) { rooms = hr; topLevelIds = hr.map(function (r) { return r.rid; }); roomsAuto = true; }
+  }
+  var lightIds = roomsAuto ? [].concat.apply([], rooms.map(function (r) { return r.lights; }))
+    : (isArr(variables.lights) && variables.lights.length > 0) ? variables.lights.filter(function (x) { return S[x]; })
+    : rooms ? [].concat.apply([], rooms.map(function (r) { return r.lights; })) : (groupId ? expand(groupId) : []);
+  // A group without existing members is itself the one row.
+  if (!lightIds.length && groupId && S[groupId] && String(groupId).indexOf('light.') === 0) lightIds.push(groupId);
+  return { variables: variables, pgOff: pgOff, groupId: groupId, autoIdx: autoIdx, topLevelIds: topLevelIds, hasRooms: hasRooms,
+    rooms: rooms, roomsAuto: roomsAuto, lightIds: lightIds, expand: expand, areaName: areaName, toTitle: toTitle };
+};
+/* The count every light surface shows (badge, tile, popup status line, Studio preview), from _casoraLightScope:
+   a house or a group of rooms counts rooms (a room is on when one of its lamps is), anything else its lamps.
+   { kind: 'rooms'|'lamps', on, tot }. */
+window.casoraLightTally = function (entity, states, hass, vars) {
+  var S = states || {};
+  var sc = window._casoraLightScope(entity, S, hass, vars);
+  var isOn = function (x) { return S[x] && S[x].state === 'on'; };
+  if (sc.rooms && sc.rooms.length > 1) {
+    return { kind: 'rooms', tot: sc.rooms.length, on: sc.rooms.filter(function (r) { return r.lights.some(isOn); }).length };
+  }
+  var ids = sc.lightIds.filter(function (x) { return S[x]; });
+  return { kind: 'lamps', tot: ids.length, on: ids.filter(isOn).length };
+};
+/* The words for a tally (German, the dashboard translates): „Aus“/„An“ for one lamp, „Alle aus“/„Alle An“,
+   rooms „1 Raum an“/„2 Räume an“, lamps „2 An“ (Wortliste: Zahl + An). */
+window.casoraLightTallyText = function (t) {
+  if (!t || !t.tot) return 'Aus';
+  if (t.tot === 1) return t.on ? 'An' : 'Aus';
+  if (!t.on) return 'Alle aus';
+  if (t.on === t.tot) return 'Alle An';
+  if (t.kind === 'rooms') return t.on === 1 ? '1 Raum an' : t.on + ' Räume an';
+  return t.on + ' An';
+};
+/* The room temperature a thermostat stands in (review 2, E09: Klima badge 23°, thermostat 21,7 °C): the temperature
+   sensors of the room whose header (casora_room) lists this climate entity – the ones its Klima badge reads – as their
+   mean, null without any. Tile and popup show the room's reading, like the badge; the thermostat's own sensor only
+   where the room has none. rooms: [{ vars }] (default: the open dashboard's rooms, on the phone the desktop rooms). */
+window.casoraRoomTempOf = function (climateId, states, rooms) {
+  var S = states || {};
+  if (typeof climateId !== 'string' || !climateId) return null;
+  try {
+    if (!rooms) {
+      var cfg = window._casoraLovelaceCfg && window._casoraLovelaceCfg();
+      var C = window._casoraRoomTempC;
+      if (C && C.cfg === cfg && cfg) rooms = C.rooms;
+      else {
+        rooms = [];
+        if (cfg && Array.isArray(cfg.views)) cfg.views.forEach(function (v) {
+          (function find(x, d) {
+            if (!x || typeof x !== 'object' || d > 6) return;
+            if (Array.isArray(x)) { x.forEach(function (y) { find(y, d + 1); }); return; }
+            if ([].concat(x.template || []).indexOf('casora_room') > -1 && x.variables) { rooms.push({ vars: x.variables }); return; }
+            find(x.cards, d + 1);
+          })(v && v.cards, 0);
+        });
+        if (cfg && rooms.length) window._casoraRoomTempC = { cfg: cfg, rooms: rooms };
+        if (!rooms.length && window.casoraPhoneRoom && window.casoraPhoneRoom.rooms) rooms = window.casoraPhoneRoom.rooms() || [];
+      }
+    }
+    for (var i = 0; i < rooms.length; i++) {
+      var V = (rooms[i] && rooms[i].vars) || {};
+      var mine = false;
+      for (var k in V) if (/^climate_entity_\d+$/.test(k) && V[k] === climateId) { mine = true; break; }
+      if (!mine) continue;
+      var vals = [];
+      for (var j = 1; j <= 10; j++) {
+        var st = S[V['temp_sensor_' + j]];
+        var n = st ? parseFloat(st.state) : NaN;
+        if (isFinite(n)) vals.push(n);
+      }
+      if (vals.length) return Math.round(vals.reduce(function (a, b) { return a + b; }, 0) / vals.length * 10) / 10;
+    }
+  } catch (e) { /* no room reading */ }
+  return null;
+};
 window.casoraPopupTitle = function (card, variables, def, defaults) {
   var V = variables || {};
   var own = String(V.room_name || '').trim();

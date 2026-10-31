@@ -2587,7 +2587,20 @@
   "Kein Spiel": "No game",
   "Gruppen": "Groups",
   "Heute an": "On today",
-  "Heute aus": "Off today"
+  "Heute aus": "Off today",
+  "1 Raum an": "1 room on",
+  "1 klemmt": "1 jammed",
+  "Schloss klemmt": "Lock jammed",
+  "Einschalten auf": "Turn on at",
+  "Höchste Stunde": "Highest hour",
+  "Niedrigste Stunde": "Lowest hour",
+  "Höchster Tag": "Highest day",
+  "Niedrigster Tag": "Lowest day",
+  "Höchster Monat": "Highest month",
+  "Niedrigster Monat": "Lowest month",
+  "Lange offen": "Open for long",
+  "Fenster schließen?": "Close the window?",
+  "Schließen?": "Close it?"
  },
  "patterns": [
   [
@@ -4689,6 +4702,22 @@
   [
    "^(\\d+) Schlösser entriegeln\\?$",
    "Unlock {1} locks?"
+  ],
+  [
+   "^Ø von (\\d+) Lampen$",
+   "Ø of {1} lamps"
+  ],
+  [
+   "^(\\d+) Räume an$",
+   "{1} rooms on"
+  ],
+  [
+   "^(\\d+) Schlösser klemmen$",
+   "{1} locks jammed"
+  ],
+  [
+   "^(\\d+) klemmen$",
+   "{1} jammed"
   ]
  ],
  "Gerät in Home Assistant": "Device in Home Assistant"

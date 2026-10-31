@@ -78,6 +78,9 @@
     var cfg = window._casoraLovelaceCfg ? window._casoraLovelaceCfg() : null;
     var ha = document.querySelector('home-assistant'), S = (ha && ha.hass && ha.hass.states) || {};
     if (!cfg) return null;
+    // The badges ask on every state change (casoraClimateBlinds): walk the config once per config and states.
+    var K = window._casoraBlindsTileC;
+    if (K && K.cfg === cfg && K.S === S) return K.hit ? JSON.parse(JSON.stringify(K.hit)) : null;
     var hit = null;
     (function walk(x, d) {
       if (hit || !x || typeof x !== 'object' || d > 14) return;
@@ -89,6 +92,7 @@
       }
       Object.keys(x).forEach(function (k) { if (k !== 'button_card_templates') walk(x[k], d + 1); });
     })(cfg, 0);
+    window._casoraBlindsTileC = { cfg: cfg, S: S, hit: hit };
     return hit ? JSON.parse(JSON.stringify(hit)) : null;
   };
   // Open the blinds popup: the tile's, else one over the given single blinds.

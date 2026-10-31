@@ -387,10 +387,15 @@
         if (map && Object.prototype.hasOwnProperty.call(map, String(v).toLowerCase())) return map[String(v).toLowerCase()];
         var n = parseFloat(v); return isFinite(n) ? n : null;
       };
+      // A meter that only counts up (total_increasing): a negative change is a reset, no consumption – it stays out
+      // of bars and the heatmap's scale (review 2, T06: scale −143,8 … 5,3 kWh, every cell the same colour).
+      var hs = me._h && me._h.states && me._h.states[s.entity];
+      var mono = d.src === 'change' && !!hs && (hs.attributes || {}).state_class === 'total_increasing';
       var out = [];
       if (d.raw) (d.raw[rawKey(s)] || []).forEach(function (p) { var v = num(p[1]); if (v != null) out.push([p[0], v]); });
       else (d.stats[s.entity] || []).forEach(function (p) {
         var v = d.src === 'change' ? p.change : p.mean != null ? p.mean : p.state;
+        if (mono && v != null && v < 0) return;
         var t = typeof p.start === 'number' ? p.start : Date.parse(p.start);
         // Lines put a statistics value in the middle of its period; bars keep the bucket start.
         var mid = d.per === 'month' ? 15 * DAY : d.per === 'day' ? 12 * H : 30 * MIN;

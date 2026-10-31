@@ -34,8 +34,14 @@ assert.equal(tile('heat', at('heating', 18, range))[0], '22,2° · Heizt auf 20�
 assert.equal(tile('cool', at('cooling', 26, range))[0], '22,2° · Kühlt auf 24°', 'range: cools to the upper bound');
 assert.deepEqual(tile('auto', at('idle', 22, range)), ['22,2° · Automatik · 20–24°', '22,2° · Automatik']);
 assert.deepEqual(tile('off', at('idle', 18)), ['22,2° · Aus', undefined]);
-assert.deepEqual(tile('heat', at('heating', 21), false), ['Heizt auf 22°', 'Heizt'], 'without a sensor');
-assert.deepEqual(tile('heat', at('idle', 22), false), ['Ziel 22°', undefined]);
+// Without a sensor (review 2, fam-15/E09): the thermostat's own reading in front, the room's (Klima badge) wins.
+assert.deepEqual(tile('heat', at('heating', 21), false), ['21° · Heizt auf 22°', '21° · Heizt'], 'without a sensor: own reading');
+assert.deepEqual(tile('heat', at('idle', 22), false), ['22° · Ziel 22°', undefined]);
+assert.deepEqual(tile('off', at('idle', 21.1), false), ['21,1° · Aus', undefined], 'off still shows the room');
+assert.deepEqual(tile('heat', at('heating', 21, { current_temperature: undefined }), false), ['Heizt auf 22°', 'Heizt'], 'no reading at all');
+win.casoraRoomTempOf = (id, st) => (st === S ? 23.3 : null);
+assert.deepEqual(tile('off', at('idle', 21.7), false), ['23,3° · Aus', undefined], 'the room reading as on the Klima badge');
+delete win.casoraRoomTempOf;
 
 // ── Tile popup (statusText, code inside the template) ──────────────────────────────
 // The popup's code sits escaped inside a string of the template: find that string, unescape the function.
