@@ -2750,7 +2750,12 @@
     "Waste sensor": "Afvalsensor",
     "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Bijv. de agenda van Waste Collection Schedule – de tegel vindt de containers daarin.",
     "Bring Your Existing Dashboard": "Je bestaande dashboard meenemen",
-    "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.": "Casora heeft een dashboard van Hemma gevonden, zijn voorganger. Kamers, tegels en telefoonindeling gaan mee."
+    "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.": "Casora heeft een dashboard van Hemma gevonden, zijn voorganger. Kamers, tegels en telefoonindeling gaan mee.",
+    "Own photo": "Eigen foto",
+    "no night image": "zonder nachtfoto",
+    "not on disk": "bestand ontbreekt",
+    "Photo uploaded": "Foto geüpload",
+    "Night photo uploaded": "Nachtfoto geüpload"
   },
   "patterns": [
     [

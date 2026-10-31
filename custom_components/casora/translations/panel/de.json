@@ -2750,7 +2750,12 @@
     "Waste sensor": "Abfall-Sensor",
     "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Z. B. der Kalender von Waste Collection Schedule – die Kachel findet die Tonnen darin.",
     "Bring Your Existing Dashboard": "Vorhandenes Dashboard mitnehmen",
-    "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.": "Casora hat ein Dashboard von Hemma gefunden, dem Vorgänger. Räume, Kacheln und Handy-Layout ziehen mit um."
+    "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.": "Casora hat ein Dashboard von Hemma gefunden, dem Vorgänger. Räume, Kacheln und Handy-Layout ziehen mit um.",
+    "Own photo": "Eigenes Foto",
+    "no night image": "ohne Nachtbild",
+    "not on disk": "Datei fehlt",
+    "Photo uploaded": "Foto hochgeladen",
+    "Night photo uploaded": "Nachtfoto hochgeladen"
   },
   "patterns": [
     [

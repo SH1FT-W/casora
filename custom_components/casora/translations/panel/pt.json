@@ -2750,7 +2750,12 @@
     "Waste sensor": "Sensor de resíduos",
     "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Ex.: o calendário do Waste Collection Schedule – o bloco encontra lá os contentores.",
     "Bring Your Existing Dashboard": "Traz o teu painel atual",
-    "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.": "O Casora encontrou um painel do Hemma, o seu antecessor. Divisões, blocos e o layout do telemóvel passam para cá."
+    "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.": "O Casora encontrou um painel do Hemma, o seu antecessor. Divisões, blocos e o layout do telemóvel passam para cá.",
+    "Own photo": "Foto própria",
+    "no night image": "sem imagem noturna",
+    "not on disk": "ficheiro em falta",
+    "Photo uploaded": "Foto carregada",
+    "Night photo uploaded": "Foto noturna carregada"
   },
   "patterns": [
     [

@@ -23144,7 +23144,11 @@ class CasoraPanel extends HTMLElement {
       // sonst der Name des HA-Bereichs („kuche“ → „Küche“), sonst der lesbare Dateiname.
       const rooms = ((this._state || {}).compact || {}).rooms || [];
       const areas = Object.values((this._hass && this._hass.areas) || {});
-      const nice = (n) => {
+      // E17 (test 2): an upload carries a random tail ("home-5007de19bd49", images.py private_name) – the list
+      // says "Own photo · Home", not the file name.
+      const TAIL = /-[0-9a-f]{12}$/;
+      const nice = (n) => (TAIL.test(n) ? trLabel("Own photo") + " \u00b7 " + nice0(n.replace(TAIL, "")) : nice0(n));
+      const nice0 = (n) => {
         if (/-demo$/.test(n)) return photoLabel(n);
         const r = rooms.find((x) => x.path === n || slug(x.name || "") === n);
         if (r && r.name) return this._roomLabel(r);
@@ -23170,12 +23174,12 @@ class CasoraPanel extends HTMLElement {
       const list = all.filter((i) => keep.has(i.name));
       const names = list.map((i) => i.name);
       const labels = {};
-      list.forEach((i) => { labels[i.name] = nice(i.name) + (i.night ? "" : "   no night image"); });
+      list.forEach((i) => { labels[i.name] = nice(i.name) + (i.night ? "" : " \u00b7 " + trLabel("no night image")); });
 
       if (cur && !names.includes(cur)) {
         names.unshift(cur);
         // Only call it missing once what is on disk is known.
-        labels[cur] = nice(cur) + (this._imgsLoaded ? "   not on disk" : "");
+        labels[cur] = nice(cur) + (this._imgsLoaded ? " \u00b7 " + trLabel("not on disk") : "");
       }
 
       sel.innerHTML = "";
@@ -23218,16 +23222,10 @@ class CasoraPanel extends HTMLElement {
       const others = (((this._state || {}).compact || {}).rooms || []).filter((r) => r !== room);
       const foreign = others.some((r) => (r.variables || {}).image === cur || r.path === cur
         || slug(r.name || "") === cur);
+      // E16 (test 2): no question for a technical file name – the room's own photo is replaced (a night photo then
+      // finds its day photo), otherwise the room's name; the server adds a random tail to a new name.
       const suggest = cur && !/-demo$/.test(cur) && !foreign ? cur : slug(room.name || room.path || "room");
-      const asked = await this._ask({
-        title: "Image name",
-        message: "Lowercase letters, digits and hyphens. Uploading the same name replaces it.",
-        value: suggest,
-        confirmLabel: "Upload",
-        validate: (v) => (/-(demo|night)$/.test(slug(v)) ? why.name : ""),
-      });
-      if (!asked) return;
-      const name = slug(typeof asked === "string" ? asked : asked.value);
+      const name = /-(demo|night)$/.test(suggest) ? suggest.replace(/-(demo|night)$/, "") + "-photo" : (suggest || "room");
       const body = new FormData();
       body.append("name", name);
       body.append("variant", variantValue);
@@ -23253,7 +23251,7 @@ class CasoraPanel extends HTMLElement {
         this._imgsLoaded = true;
         room.variables.image = data.name || name;
         this._markDirty();
-        this._status(`Uploaded ${room.variables.image} (${variantValue})`, "ok");
+        this._status(variantValue === "night" ? "Night photo uploaded" : "Photo uploaded", "ok");
         this._log(`uploaded ${room.variables.image} ${variantValue}`, "ok");
         // Der Abschnitt kann während der Namensfrage neu gezeichnet worden sein: dann neu aufbauen.
         if (sel.isConnected) fill(); else this._renderForm();

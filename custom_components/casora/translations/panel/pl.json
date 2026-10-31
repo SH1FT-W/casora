@@ -2750,7 +2750,12 @@
     "Waste sensor": "Czujnik odpadów",
     "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Np. kalendarz Waste Collection Schedule – kafelek sam znajdzie w nim pojemniki.",
     "Bring Your Existing Dashboard": "Przenieś swój obecny pulpit",
-    "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.": "Casora znalazła pulpit Hemma, swojego poprzednika. Pokoje, kafelki i układ na telefon zostaną przeniesione."
+    "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.": "Casora znalazła pulpit Hemma, swojego poprzednika. Pokoje, kafelki i układ na telefon zostaną przeniesione.",
+    "Own photo": "Własne zdjęcie",
+    "no night image": "bez zdjęcia nocnego",
+    "not on disk": "brak pliku",
+    "Photo uploaded": "Zdjęcie przesłane",
+    "Night photo uploaded": "Zdjęcie nocne przesłane"
   },
   "patterns": [
     [
