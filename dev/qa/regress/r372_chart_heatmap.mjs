@@ -48,6 +48,17 @@ const run = async (view, dark) => {
   const { page } = await open(Object.assign({ theme: 'Casora', dark }, view));
   await dashboard(page, dash.url, 3);
   await need('Testserver in the test house (mock)', await page.evaluate((ids) => ids.every((id) => !!document.querySelector('home-assistant').hass.states[id]), [ID, CPU, ENERGY]));
+  // The mock writes its hourly statistics shortly after HA starts (like r90): wait up to 60 s for a day of hours.
+  let statsOk = false;
+  for (let i = 0; i < 30 && !statsOk; i++) {
+    statsOk = await page.evaluate(async (id) => {
+      const r = await document.querySelector('home-assistant').hass.callWS({ type: 'recorder/statistics_during_period',
+        start_time: new Date(Date.now() - 2 * 864e5).toISOString(), statistic_ids: [id], period: 'hour', types: ['mean'] });
+      return (r[id] || []).length >= 12;
+    }, ID).catch(() => false);
+    if (!statsOk) await page.waitForTimeout(2000);
+  }
+  await need('hourly statistics of the test server (mock)', statsOk, ID);
   const makeTile = (cls, entity, name, variables, col) => page.evaluate(async ([cls, entity, name, variables, col]) => {
     const ha = document.querySelector('home-assistant');
     const h = await window.loadCardHelpers();
