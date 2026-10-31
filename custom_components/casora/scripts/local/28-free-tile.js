@@ -300,7 +300,8 @@
       // The tile's state as the sentence, its symbol in the traffic light (on/active green, off grey, unknown orange);
       // a template badge without an entity: its text. Hints of the Studio as notes under it.
       var n3 = [];
-      if (C.chartMissing && C.chartWant) n3.push(T('Kein Verlauf: {name} ist kein Zahlenwert.').replace('{name}', nameOf(S[C.chartWant], C.chartWant)));
+      // DD-30 (test 2): no technical note in the popup (popup-richtlinien-v3 §8 "clean") – a chart sensor without
+      // numbers just shows no chart.
       if (C.empty) n3.push(T('Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.'));
       var notesHtml = UI.note ? n3.map(function (n) { return UI.note(n); }).join('') : '';
       if (!C.id && C.tpl) {
@@ -320,7 +321,6 @@
         var TP = window._casoraTemplates;
         var txt = TP && TP.text ? TP.text(C.tpl) : null;
         var line = UI.line(txt == null ? '…' : (String(txt).trim() || '—'), []);
-        if (C.chartMissing && C.chartWant) notes.push(T('Kein Verlauf: {name} ist kein Zahlenwert.').replace('{name}', nameOf(S[C.chartWant], C.chartWant)));
         if (C.empty) notes.push(T('Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.'));
         return line + (UI.note ? notes.map(function (n) { return UI.note(n); }).join('') : '');
       }
@@ -333,7 +333,6 @@
       var ago = !bad(st.state) ? since(st.last_changed) : null;
       if (ago) rest.push(ago);
       var out = UI.line(F.word(hass, st), rest);
-      if (C.chartMissing && C.chartWant) notes.push(T('Kein Verlauf: {name} ist kein Zahlenwert.').replace('{name}', nameOf(S[C.chartWant], C.chartWant)));
       if (C.empty) notes.push(T('Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.'));
       if (notes.length && UI.note) out += notes.map(function (n) { return UI.note(n); }).join('');
       return out;

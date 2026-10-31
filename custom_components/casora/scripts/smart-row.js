@@ -1730,7 +1730,10 @@ class CasoraSmartRow extends HTMLElement {
       #arrows > .r { right: 16px; }
       :host([casora-more-l]) #arrows > .l,
       :host([casora-more-r]) #arrows > .r { opacity: 1; visibility: visible; }
-      :host([casora-row-mode]:not([casora-row-mode="arrows"])) #arrows { display: none; }
+      /* E32 (test 2): with "fade" the only hint on a desktop were two small dots – a mouse gets the arrows too;
+         touch keeps fade + dots (swiping is the way there). */
+      :host([casora-row-mode]:not([casora-row-mode="arrows"]):not([casora-row-mode="fade"])) #arrows { display: none; }
+      @media (hover: none), (pointer: coarse) { :host([casora-row-mode="fade"]) #arrows { display: none; } }
       /* Variante „fade“: Seitenpunkte mittig unter der Reihe, im unteren Zeilenabstand. */
       #track > #dots { grid-area: 1 / 1; }
       #dots {

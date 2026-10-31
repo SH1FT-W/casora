@@ -15,7 +15,12 @@
   var DAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
   var day0 = function (d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
   var diffDays = function (d, now) { return Math.round((day0(d) - day0(now || new Date())) / 86400000); };
-  var hm = function (d) { return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+  /* T17 (test 2): the time in the UI's format, like the clock ("7:30 PM" in English, "19:30" in German). */
+  var hm = function (d) {
+    var loc = window.casoraLocale ? window.casoraLocale() : 'de-DE';
+    if (/^de/i.test(loc)) return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    try { return d.toLocaleTimeString(loc, { hour: 'numeric', minute: '2-digit' }); } catch (e) { return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+  };
   var dm = function (d) { return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.'; };
   var dmy = function (d) { return dm(d) + String(d.getFullYear()).slice(-2); };
 

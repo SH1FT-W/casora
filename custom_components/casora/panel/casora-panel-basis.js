@@ -151,6 +151,18 @@
     return [...new Set(ids)].filter((id) => !inner.has(id));
   }
 
+  // Waste data the waste tile reads (as casoraDevice.waste in scripts/local/00-finder.js): WCS bins or calendar,
+  // a sensor with daysTo, or a calendar named like waste.
+  function hasWaste(hass) {
+    const S = hass.states || {}, R = hass.entities || {};
+    return Object.keys(S).some((id) => {
+      const e = R[id];
+      if (e && (e.hidden || e.disabled_by)) return false;
+      if (e && e.platform === "waste_collection_schedule" && /^(sensor|calendar)\./.test(id)) return true;
+      if (id.startsWith("sensor.") && (S[id].attributes || {}).daysTo !== undefined) return true;
+      return id.startsWith("calendar.") && /abfall|m(ü|ue)ll|waste|trash|garbage/i.test(id + " " + ((S[id].attributes || {}).friendly_name || ""));
+    });
+  }
   function typeById(id) { return (I().TILE_TYPES || []).find((t) => t.id === id) || null; }
   function tile(type, entity, name, variables) {
     const t = typeById(type);
@@ -261,6 +273,12 @@
         fav.push({ key: "fav:" + kind, type: kind, group: ids, name: tr2(name), tile: t, label: tr2(name), on: true, fav: true });
       });
       home.items = fav.concat(home.items);
+    }
+    // E04 (test 2): a waste schedule (Waste Collection Schedule or a waste calendar) gets its waste tile on Home –
+    // it finds bins and calendar itself, so the tile needs no entity.
+    if (types.some((t) => t.id === "casora_trash") && hasWaste(hass)) {
+      const w = tile("casora_trash", "", tr2("Waste collection"));
+      out[0].items.push({ key: "home:waste", type: "casora_trash", name: w.name, tile: w, label: w.name, on: true });
     }
     // Tür- und Fensterkontakte je Raum (für das Sicherheits-Badge), Klima ohne Raum für Home.
     // Fenster und Tore immer; Türkontakte nur, wenn sie nach Tür klingen (manche Sensoren

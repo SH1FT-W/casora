@@ -86,7 +86,39 @@
     casora_chart: "diagramm chart verlauf graph statistik cpu prozessor server system monitor",
     casora_velair: "velair zeitplan klima klimaanlage heizung thermostat schedule climate",
     casora_shopping: "einkaufsliste einkauf bring liste todo shopping list grocery",
-    casora_kettle: "wasserkocher kocher tee wasser xiaomi kettle" };
+    casora_kettle: "wasserkocher kocher tee wasser xiaomi kettle",
+    // E03 (test 2): "Abfall"/"Müll" found nothing – tile types are found by their everyday words as well.
+    casora_trash: "abfall müll muell mülltonne tonne biotonne restmüll restabfall bioabfall papier altpapier gelber sack wertstoff abfuhr abholung abfallkalender waste trash garbage bin recycling collection",
+    casora_calendar: "kalender termine calendar events", casora_entity_list: "liste geräteliste übersicht list entities devices overview",
+    casora_weather_warning: "unwetter warnung dwd nina wetter warning", casora_solar_tip: "solar sonne pv photovoltaik",
+    casora_vent: "lüften raumklima luft co2 vent air", casora_football: "fußball fussball verein bundesliga football soccer team",
+    casora_car: "auto fahrzeug wagen car", casora_ebike: "fahrrad e-bike ebike bike",
+    energy_tile: "energie strom verbrauch energy power", network: "internet netzwerk router wlan network wifi",
+    battery: "batterie akku batterien battery", updates: "updates aktualisierung" };
+  // A waste tile, also inside a visibility wrapper.
+  function isTrashTile(t) {
+    const v = t && t.type === "conditional" && t.card ? t.card : t;
+    const tl = v && v.template;
+    return (Array.isArray(tl) ? tl : [tl]).includes("casora_trash");
+  }
+  // Tile types whose words match every token of the query (E03): [{type, score}] best first.
+  function rankTypes(types, q, max) {
+    const toks = foldTx(q).split(/\s+/).filter(Boolean);
+    if (!toks.length) return [];
+    const out = [];
+    types.forEach((t, i) => {
+      const name = foldTx(tr(t.label)) + " " + foldTx(t.label);
+      const all = name + " " + foldTx(WORDS[t.id] || "");
+      let sc = 0;
+      for (const k of toks) {
+        if (all.indexOf(k) < 0) return;
+        sc += name.indexOf(k) === 0 ? 30 : name.indexOf(k) >= 0 ? 20 : 8;
+      }
+      out.push({ t, sc, i });
+    });
+    out.sort((a, b) => b.sc - a.sc || a.i - b.i);
+    return out.slice(0, max || 4).map((x) => x.t);
+  }
   function typeFor(entity, typeIds, suggested) {
     if (suggested && typeIds.has(suggested)) return suggested;
     const t = BY_DOMAIN[String(entity || "").split(".")[0]];
@@ -209,12 +241,12 @@
   const NEW_ORDER = ["light", "cover", "thermostat", "fan", "media", "lock", "vacuum", "humidifier", "casora_camera", "casora_alarm", "casora_switch", "entity_actions"];
   function newInRoom(all, ri, first) {
     const rank = (c) => (c.suggested || c.loose ? 0 : 1) * 100 + (NEW_ORDER.indexOf(c.type) < 0 ? 50 : NEW_ORDER.indexOf(c.type));
-    const l = all.filter((c) => c.fresh && c.roomIndex === ri)
+    const l = all.filter((c) => c.fresh && !c.scene && c.roomIndex === ri)
       .map((c, i) => [c, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map((x) => x[0]);
     const n = Math.max(first, l.filter((c) => c.suggested || c.loose).length);
     return { shown: l.slice(0, n), rest: l.slice(n) };
   }
-  W.__casoraStudioUx = { SUB, WHAT, SCOPE, scopeOf, pathOf, typeFor, rankDevices, BY_DOMAIN, newInRoom };
+  W.__casoraStudioUx = { SUB, WHAT, SCOPE, scopeOf, pathOf, typeFor, rankDevices, rankTypes, BY_DOMAIN, newInRoom, WORDS };
   if (typeof customElements === "undefined" || !W.document) return;
 
   const CSS = `
@@ -671,8 +703,12 @@
         const ri = aid && roomOfArea.has(aid) ? roomOfArea.get(aid) : -1;
         // Vom Nutzer vergebener Name aus der Entitäten-Registry zuerst („Stehlampe“ statt „Lightstrip“).
         const own = e && typeof e.name === "string" && e.name.trim();
+        const dv = e && e.device_id && D[e.device_id];
+        // A scene is a scene, not an "Entity with buttons" (E15, T14).
+        const scene = id.startsWith("scene.");
         out.push({ entity: id, name: own || name || (S[id].attributes || {}).friendly_name || id, area: aid && A[aid] ? A[aid].name : "",
-          roomIndex: ri, type, kind: label(type), fresh: !used.has(id), suggested: !!suggested, here: ri === this._room,
+          dev: dv ? String(dv.name_by_user || dv.name || "") : "", scene,
+          roomIndex: ri, type, kind: scene ? tr("Scene") : label(type), fresh: !used.has(id), suggested: !!suggested, here: ri === this._room,
           // Entität ohne Gerät, aber selbst einem Bereich zugeordnet: bewusst dorthin gelegt – zählt
           // als „neu“ (Nutzertest: Liste „Neu in Schlafzimmer“ blieb leer).
           loose: !!(e && !e.device_id && e.area_id),
@@ -700,6 +736,22 @@
       });
       // Kettle (community card #87, when added): one tile per kettle on its water temperature (casoraKettleFind).
       if (typeIds.has("casora_kettle") && W.casoraKettleFind) W.casoraKettleFind.all(h).forEach((k) => push(k.anchor, "", "casora_kettle"));
+      // Waste (E03/E04): one entry for the whole collection, found by its bins' names too ("Bioabfall"). Anchored on the
+      // waste calendar or the first bin sensor; picking it adds the waste tile, which finds bins and calendar itself.
+      if (typeIds.has("casora_trash") && !rooms.some((r) => (r.tiles || []).some((t) => isTrashTile(t)))) {
+        const bins = Object.keys(S).filter((id) => id.startsWith("sensor.") && ((R[id] || {}).platform === "waste_collection_schedule"
+          || (S[id].attributes || {}).daysTo !== undefined));
+        const cal = Object.keys(S).find((id) => id.startsWith("calendar.") && ((R[id] || {}).platform === "waste_collection_schedule"
+          || /abfall|m(ü|ue)ll|waste|trash|garbage/i.test(id + " " + ((S[id].attributes || {}).friendly_name || ""))));
+        const anchor = cal || bins.sort()[0];
+        if (anchor && !seen.has(anchor)) {
+          seen.add(anchor);
+          const home = rooms.findIndex((r) => I.isHomeRoom && I.isHomeRoom(r, rooms));
+          out.push({ entity: anchor, name: label("casora_trash"), area: "", dev: "", roomIndex: home, type: "casora_trash",
+            kind: label("casora_trash"), fresh: true, suggested: true, here: home === this._room, loose: false, waste: true,
+            words: (WORDS.casora_trash || "") + " " + bins.map((id) => (S[id].attributes || {}).friendly_name || "").join(" ") });
+        }
+      }
       sugg.forEach((x) => push(x.entity, x.name, x.type));
       Object.keys(S).forEach((id) => { if (ADD_DOMAINS.indexOf(id.split(".")[0]) >= 0) push(id, "", byEntity.has(id) ? byEntity.get(id).type : null); });
       // Buttons and switches of a device that already has its own card (lawn mower, coffee machine, pet with the tracker
@@ -762,7 +814,8 @@
         if (refocus && from && from.focus) from.focus();
         if (o.onClose && !picked) o.onClose();
       };
-      const pick = (c) => { picked = true; close(false); if (o.onPick) o.onPick(c); else this._uxAddDevice(c); };
+      const pick = (c) => { picked = true; close(false); if (c.typeOnly) this._uxAddType(c.type); else if (o.onPick) o.onPick(c); else this._uxAddDevice(c); };
+      const addTypes = ((I.TILE_TYPES || []).filter((t) => !t.hidden && (!t.onlyIf || t.onlyIf(this._hass))));
       const mark = () => {
         res.querySelectorAll(".mrow").forEach((b, k) => { b.classList.toggle("on", k === at); b.setAttribute("aria-selected", k === at ? "true" : "false"); });
         input.setAttribute("aria-activedescendant", "uxopt" + at);
@@ -778,11 +831,19 @@
         b.setAttribute("role", "option");
         b.innerHTML = '<span class="mtx"><b></b><span class="msub"></span></span><span class="mkind"></span>';
         b.querySelector("b").textContent = c.name;
-        const where = c.area || tr("No area");
-        b.querySelector(".msub").textContent = c.fresh ? where : where + " \u00b7 " + tr("already has a tile");
-        b.querySelector(".mkind").textContent = c.kind;
-        // Für Profis: die Entitäts-ID beim Zeigen.
-        b.title = c.entity;
+        if (c.typeOnly) {
+          b.querySelector(".msub").textContent = tr("New tile of this type");
+          b.querySelector(".mkind").textContent = tr("Tile type");
+        } else {
+          const where = c.area || tr("No area");
+          // Same name and area twice ("Operation state · No area"): the device tells them apart (T14).
+          const twin = c.dev && list.some((o) => o !== c && !o.typeOnly && o.name === c.name && (o.area || "") === (c.area || ""));
+          const w2 = twin ? where + " \u00b7 " + c.dev : where;
+          b.querySelector(".msub").textContent = c.fresh ? w2 : w2 + " \u00b7 " + tr("already has a tile");
+          b.querySelector(".mkind").textContent = c.kind;
+          // Für Profis: die Entitäts-ID beim Zeigen.
+          b.title = c.entity;
+        }
         b.onpointermove = () => { if (at !== k) { at = k; mark(); } };
         b.onclick = () => pick(c);
         res.appendChild(b);
@@ -791,7 +852,10 @@
         res.innerHTML = "";
         const q = input.value.trim();
         if (q) {
-          list = rankDevices(all, q, 40);
+          const devs = rankDevices(all, q, 40);
+          // Tile types by name and everyday words ("Abfall", "Diagramm"), below the devices (E03).
+          const kinds = o.onPick ? [] : rankTypes(addTypes, q, 4).map((t) => ({ typeOnly: true, type: t.id, name: tr(t.label), entity: "" }));
+          list = devs.concat(kinds);
           at = Math.min(at, Math.max(0, list.length - 1));
           if (!list.length) {
             const e = document.createElement("div");
@@ -799,10 +863,15 @@
             e.textContent = tr("No device found. Try another word, or pick a tile type below.");
             res.appendChild(e);
           }
-          list.forEach(row);
+          devs.forEach(row);
+          if (kinds.length) {
+            if (devs.length) head(tr("Tile types"));
+            kinds.forEach((c, k) => row(c, devs.length + k));
+          }
         } else {
           // Leer: was neu ist und noch keine Kachel hat – im Raum bzw. in der Übersicht nach Raum.
-          const fresh = all.filter((c) => c.fresh && (c.suggested || c.loose));
+          // Scenes are no new devices (E15): they stay findable by search.
+          const fresh = all.filter((c) => c.fresh && (c.suggested || c.loose) && !c.scene);
           if (overview) {
             list = [];
             const order = rooms$(this).map((r, i) => i);
@@ -908,7 +977,8 @@
       const type = (I.TILE_TYPES || []).find((t) => t.id === c.type);
       if (!room || !type) return;
       const tile = I.newTile ? I.newTile(type) : { type: "custom:button-card", template: type.template, entity: "", name: tr(type.label) };
-      if (this._fillTile) this._fillTile(tile, type, c.entity); else tile.entity = c.entity;
+      // Waste: the tile finds bins and calendar itself (Automatic) – no device of its own.
+      if (c.waste) { /* nothing to fill */ } else if (this._fillTile) this._fillTile(tile, type, c.entity); else tile.entity = c.entity;
       // Der Name ohne den Raum („Stehlampe Schlafzimmer“ im Schlafzimmer → „Stehlampe“).
       const B = W.casoraBasis;
       tile.name = B && B.shortName ? B.shortName(c.name, this._roomLabel(room)) : c.name;
@@ -921,6 +991,19 @@
       room.tiles.push(tile);
       // A lamp added later also goes on the Lights badge (casora-panel-basis.js addLight).
       if (c.type === "light" && B && B.addLight) B.addLight(this._hass, rooms, room, c.entity);
+      this._markDirty();
+      this._renderForm();
+      this._rebuildPreview && requestAnimationFrame(() => this._rebuildPreview());
+    };
+    // A tile type from the search (E03): as "Other tile type…" → that type, in the open room.
+    P._uxAddType = async function (id) {
+      const I = W.__casoraPanelInternals || {};
+      const room = room$(this);
+      const type = (I.TILE_TYPES || []).find((t) => t.id === id);
+      if (!room || !type || !this._addTileAsk) return;
+      room.tiles = room.tiles || [];
+      if (this.classList.contains("phone")) this._bAfterAdd = { room, n: room.tiles.length };
+      if (!(await this._addTileAsk(room, type))) return;
       this._markDirty();
       this._renderForm();
       this._rebuildPreview && requestAnimationFrame(() => this._rebuildPreview());

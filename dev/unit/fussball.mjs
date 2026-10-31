@@ -366,3 +366,14 @@ const used = [{ name: 'Zuhause', path: 'home', tiles: [{ entity: 'sensor.team_a'
 assert.equal(window.casoraAssist.suggest(hass, used, types).length, 0);
 
 console.log('fussball: ok');
+
+// T17 (test 2): English shows the kick-off like the clock ("8:45 PM"), German stays "20:45".
+{
+  const was = window.casoraLocale;
+  window.casoraLocale = () => 'en-US';
+  assert.match(K.tile(sensor()), / 8:45\s?PM · /, 'English: 12-hour time like the clock');
+  window.casoraLocale = () => 'de-DE';
+  assert.match(K.tile(sensor()), / 20:45 · /, 'German: 24-hour time');
+  window.casoraLocale = was;
+  console.log('fussball: time format ok');
+}

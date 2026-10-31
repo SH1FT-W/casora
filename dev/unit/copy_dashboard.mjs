@@ -77,3 +77,28 @@ function panel({ fail } = {}) {
   console.log('ok unsaved changes first');
 }
 console.log('copy_dashboard: ok');
+
+// T22 (test 2): a long name gives a short address (≤ 30, at a word boundary), and the copy can be opened at once.
+{
+  const s0 = src.indexOf('\n  _flowPath(title, fallback, suffix) {');
+  const b0 = src.slice(s0, src.indexOf('\n  }\n', s0) + 4).replace('_flowPath(title, fallback, suffix) {', 'function _flowPath(title, fallback, suffix) {');
+  const flowPath = new Function('translit', b0 + '\nreturn _flowPath;')(translit);
+  const fp = (t) => flowPath.call({ _freePath: (x) => x }, t, 'casora-dashboard', 'dashboard');
+  const long = fp('Marcos Zweitdashboard fuer das Erdgeschoss mit Wintergarten und Keller Test 123');
+  assert.ok(long.length <= 30 && !/-$/.test(long) && long.includes('-'), 'short address: ' + long);
+  assert.equal(long, 'marcos-zweitdashboard-fuer-das');
+  assert.equal(fp('Demo Haus 2'), 'demo-haus-2', 'short names unchanged');
+  assert.equal(fp('Wohnzimmer'), 'wohnzimmer-dashboard');
+
+  const copyT = new Function('translit', 'trLabel', body + '\nreturn _copyDashboard;')(translit, (x) => x);
+  const p = panel();
+  let toast = null, went = null;
+  p._bToast = (m, o) => { toast = [m, o]; };
+  p._remember = noopRemember; p._refreshDashboards = (u) => { went = u; };
+  function noopRemember() {}
+  await copyT.call(p, p._dashList[0]);
+  assert.ok(toast && toast[0] === 'Copied to Demo Haus 2' && toast[1].action, 'toast with an action');
+  toast[1].action.run();
+  assert.equal(went, 'demo-haus-2', 'opens the copy');
+  console.log('ok copy dashboard: short address, open the copy');
+}

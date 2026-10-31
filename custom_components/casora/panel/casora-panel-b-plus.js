@@ -380,13 +380,16 @@
     for (let sc = el.parentElement; sc && sc !== stop; sc = sc.parentElement) {
       const cs = getComputedStyle(sc);
       const r = el.getBoundingClientRect(), rs = sc.getBoundingClientRect();
+      // The preview is drawn scaled (transform): screen pixels are not scroll pixels (T12, test 2 – the new tile
+      // stayed cut off at the edge, only about two thirds of the way scrolled).
+      const kx = sc.offsetWidth ? rs.width / sc.offsetWidth || 1 : 1, ky = sc.offsetHeight ? rs.height / sc.offsetHeight || 1 : 1;
       if (sc.scrollWidth > sc.clientWidth + 1 && /(auto|scroll)/.test(cs.overflowX)) {
-        if (r.left < rs.left + 8) sc.scrollLeft -= rs.left + 8 - r.left;
-        else if (r.right > rs.right - 8) sc.scrollLeft += r.right - rs.right + 8;
+        if (r.left < rs.left + 8) sc.scrollLeft -= (rs.left + 8 - r.left) / kx;
+        else if (r.right > rs.right - 8) sc.scrollLeft += (r.right - rs.right + 8) / kx;
       }
       if (sc.scrollHeight > sc.clientHeight + 1 && /(auto|scroll)/.test(cs.overflowY)) {
-        if (r.top < rs.top + 8) sc.scrollTop -= rs.top + 8 - r.top;
-        else if (r.bottom > rs.bottom - 8) sc.scrollTop += r.bottom - rs.bottom + 8;
+        if (r.top < rs.top + 8) sc.scrollTop -= (rs.top + 8 - r.top) / ky;
+        else if (r.bottom > rs.bottom - 8) sc.scrollTop += (r.bottom - rs.bottom + 8) / ky;
       }
     }
   };
@@ -598,7 +601,9 @@
         }
       } else if (d.kind === "tileorder") {
         const smart = this._smartSortOn && this._smartSortOn();
-        this._bToast(tr("Tile order changed"), { action: undo, sub: smart ? tr("Smart Sort keeps active tiles in front in the preview.") : "" });
+        // E18 (test 2): with Smart Sort on, the dragged order did not show – the toast offers to keep it.
+        this._bToast(tr("Tile order changed"), { action: smart ? { label: tr("Keep my order"), run: () => this._bSmartOff() } : undo,
+          sub: smart ? tr("Smart Sort keeps active tiles in front in the preview.") : "" });
       } else if (d.kind === "room+") this._bToast(tr("Room added") + (d.label ? ": " + d.label : ""), { action: undo });
       else if (d.kind === "room-") this._bToast(tr("Room deleted") + (d.label ? ": " + d.label : ""), { action: undo, save: true, sub: tr("Gone for good once you save.") });
       else if (d.kind === "roomorder") this._bToast(tr("Room order changed"), { action: undo });
@@ -637,7 +642,10 @@
       setTimeout(() => {
         this._bFlash("t:" + key);
         const missing = !tile.entity && !(tile.card && tile.card.entity);
-        if (!missing) return;
+        // A tile that finds its own data (waste) needs no device: its picker stays shut (E05).
+        const I = W.__casoraPanelInternals || {};
+        const ty = I.tileTypeAny ? I.tileTypeAny(tile) : null;
+        if (!missing || (ty && (ty.ownData || ty.noEntity))) return;
         const box = this.shadowRoot.querySelector("#pane #band-tiles .tile.sel");
         const inp = box && box.querySelector(".combo.hasent.noent input");
         if (inp && this._sel && this._sel.key === key) {
@@ -653,6 +661,12 @@
         const el = root.querySelector('.card.map [data-mk="' + mk + '"]');
         if (!el || !el.getClientRects().length) { if (n > 0) setTimeout(() => go(n - 1), 140); return; }
         reveal(el, root.querySelector(".card.map") && root.querySelector(".card.map").parentElement);
+        // T12 (test 2): the preview row is redrawn once more after an add (smart sort, rebuild) – the new tile then
+        // sat out of view again ("Diagram…" cut off at the edge). Bring it back into view after that.
+        [450, 1100].forEach((ms) => setTimeout(() => {
+          const e2 = root.querySelector('.card.map [data-mk="' + mk + '"]');
+          if (e2 && e2.getClientRects().length) reveal(e2, root.querySelector(".card.map") && root.querySelector(".card.map").parentElement);
+        }, ms));
         el.classList.remove("bflash");
         void el.offsetWidth;
         el.classList.add("bflash");

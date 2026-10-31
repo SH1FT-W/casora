@@ -292,10 +292,14 @@ window.CASORA_TILE_TYPES = [
     icon: "sun", color: "var(--casora-color-yellow, #FFCC00)", fields: [ICON, TITLE] },
   { id: "casora_vent", label: "Room climate", template: "casora_vent", domains: ["binary_sensor", "sensor"], ownData: true,
     icon: "wind", color: "var(--casora-color-teal, #00C3D0)", fields: [ICON, TITLE] },
+  // E05 (test 2): the tile finds its bins and calendar itself. The calendar is the one field a newcomer needs, so it
+  // comes first; the optional bin sensor sits under More and lists only waste sensors (accept "waste"), not every sensor.
   { id: "casora_trash", label: "Waste collection", template: "casora_trash", domains: ["sensor"], ownData: true,
+    accept: "waste", entityAdvanced: true, entityLabel: "Waste sensor",
     icon: "trash", fields: [
+      { key: "trash_calendar", label: "Waste calendar", domains: ["calendar"], accept: "waste_calendar",
+        placeholder: "Automatic", hint: "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it." },
       ICON,
-      { key: "trash_calendar", label: "Waste calendar", domains: ["calendar"] },
       { ...TITLE, placeholder: "Waste" },
       // Same switch as Settings → Home & Devices → Waste collection: a Casora setting for every
       // waste tile, not a tile variable (setting: casora-panel-personal.js, _casoraSettingSwitch).
@@ -412,7 +416,7 @@ window.CASORA_TILE_TYPES = [
   // 24 h / 7 / 30 days / a year as a line or bars with up to four sensors and the statistics of the main one
   // (scripts/local/27-chart.js). chart_kind: '' automatic (bars for counters, line for readings) | line | bar | heat
   // (heatmap, issue 100: days × hours in the popup, a small 7-day grid on the tile); chart_span: '' 24 h | 7d | 30d | 1y – the range the popup opens with.
-  { id: "casora_chart", label: "Chart", template: "casora_chart", domains: ["sensor"],
+  { id: "casora_chart", label: "Chart", template: "casora_chart", domains: ["sensor"], pickInEditor: true,
     icon: "chart", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Sensor", entityPlaceholder: "A sensor with numbers",
     community: { desc: "Current value with unit and a 24-hour sparkline on the tile. The popup draws Casora's own chart over 24 hours, 7 or 30 days or a year as a line or bars with up to four sensors, a legend and the lowest, highest and average value – for any numeric sensor such as CPU load, temperature, power, energy or rainfall." },
     fields: [ICON, TITLE_NAME,
@@ -727,6 +731,10 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
           delay_wait: "Empieza más tarde", printing: "Imprimiendo", on: "Encendido" },
   };
   const OURS = new Set((window.CASORA_TILE_TYPES || []).map((t) => t.template));
+  const OWN_DATA = new Set(["casora_trash"]);
+  // T04 (test 2): lights and locks are the panel's own types (not in CASORA_TILE_TYPES), so the preview guessed
+  // "Alle an"/"Entriegelt" while the dashboard counted "24 An"/"2 entriegelt" – their templates run here too.
+  ["casora_light", "casora_lock"].forEach((n) => OURS.add(n));
   const names = (t) => (Array.isArray(t) ? t : t ? [t] : []);
   const isOurs = (tile) => names(tile && tile.template).some((n) => OURS.has(n));
   // Also tile types with a template list (underfloor heating: casora_thermostat + casora_popup_fbh).
@@ -774,9 +782,15 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   // Room climate (casora_vent) and solar tip (casora_solar_tip) build their text via
   // window._casoraVent / _casoraSolar from scripts/local/05-standard-medien.js – without the
   // module the preview only said "Off". Load it once (pure functions, no cards).
-  let medien = false, fussball = false, kaffee = false, fridge = false;
+  let medien = false, fussball = false, kaffee = false, fridge = false, finder = false;
   const needMedien = (tile) => {
     const tn = names(tile && tile.template);
+    // Waste: bins and calendar via window.casoraDevice.waste (scripts/local/00-finder.js) – without it the
+    // preview said "Automatic" while the dashboard showed "2 days · Organic" (E06).
+    if (!finder && !(window.casoraDevice && window.casoraDevice.waste) && tn.includes("casora_trash")) {
+      finder = true;
+      import("/casora_scripts/local/00-finder.js").catch(() => {});
+    }
     // Fridge: state ("7 °C · −18 °C", "Tür offen") via window._casoraFridge (scripts/local/30-fridge.js).
     if (!fridge && !window._casoraFridge && tn.includes("casora_fridge")) {
       fridge = true;
@@ -799,7 +813,17 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     import("/casora_scripts/local/05-standard-medien.js").catch(() => {});
   };
 
-  window.casoraTileState = (tile, ent, hass, templates) => {
+  // The house light tile (light_rooms_auto) counts the rooms' lights via window._casoraHouseLights, which reads the
+  // dashboard's config – in the Studio the rooms being edited (casoraBasis.houseLights, the same rule).
+  const withHouseLights = (rooms, fn) => {
+    const B = window.casoraBasis;
+    if (!rooms || !B || !B.houseLights) return fn();
+    const was = window._casoraHouseLights;
+    window._casoraHouseLights = (h) => B.houseLights(h, rooms);
+    try { return fn(); } finally { if (was === undefined) delete window._casoraHouseLights; else window._casoraHouseLights = was; }
+  };
+  window.casoraTileState = (tile, ent, hass, templates, rooms) => withHouseLights(rooms, () => tileState(tile, ent, hass, templates));
+  const tileState = (tile, ent, hass, templates) => {
     // Entity list and Mehr (#59) have no entity: their text comes from the dashboard module.
     const tl = names(tile && tile.template);
     if (hass && (tl.includes("casora_entity_list") || tl.includes("casora_more"))) {
@@ -809,11 +833,14 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       const txt = tl.includes("casora_more") ? L.moreTile(hass, hass.states, V) : L.tileState(hass, hass.states, V);
       return typeof window.casoraTr === "function" ? window.casoraTr(txt) : txt;
     }
-    if (!isOurs(tile) || !ent) return null;
+    if (!isOurs(tile)) return null;
+    // Tiles that find their data themselves (waste) have a text without an entity, as on the dashboard (E06).
+    if (!ent && !OWN_DATA.has(tl[0])) return null;
     needMedien(tile);
     try {
       const tpl = resolve(templates, tile.template);
       const fallback = () => {
+        if (!ent) return null;
         const lang = ((hass && ((hass.locale && hass.locale.language) || hass.language)) || "en").split("-")[0];
         const w = (WORDS[lang] || {})[String(ent.state).toLowerCase()];
         if (w) return w;
@@ -836,7 +863,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       if (v == null || v === "") return fallback();
       if (typeof v === "number" || /^-?\d+(\.\d+)?$/.test(String(v).trim())) return fallback();
       // A template without its module often returns just the raw state ("off") → translate.
-      if (String(v).trim() === String(ent.state)) return fallback();
+      if (ent && String(v).trim() === String(ent.state)) return fallback();
       // DOMParser instead of a div: a detached div loads <img> and runs onerror.
       // Template texts are German; the dashboard translates them in button-card (casora-i18n.js),
       // the preview does it here – otherwise an English UI showed "3 Räume" or "Bereit" (07.10.2026).

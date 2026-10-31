@@ -3468,6 +3468,19 @@ function fixDuplicatePaths(rooms) {
 // Im Erststart gewählter Performance-Modus („“ = aus, „auto“, „on“); neue Räume übernehmen ihn.
 let firstRunPerf = null;
 let firstRunFont = null;
+// E10 (test 2): the setup assistant remembers its step and choices in this browser (a reload started over at the
+// look, with "Casora" picked again). Kept a day; cleared when a dashboard is made or the assistant is restarted.
+const SETUP_KEY = "casora.setup.progress";
+function setupLoad() {
+  try {
+    const v = JSON.parse(localStorage.getItem(SETUP_KEY) || "null");
+    return v && typeof v === "object" && Date.now() - (v.ts || 0) < 86400000 ? v : {};
+  } catch (e) { return {}; }
+}
+function setupSave(patch) {
+  try { localStorage.setItem(SETUP_KEY, JSON.stringify(Object.assign(setupLoad(), patch, { ts: Date.now() }))); } catch (e) { /* private mode */ }
+}
+function setupClear() { try { localStorage.removeItem(SETUP_KEY); } catch (e) { /* private mode */ } }
 // Was im Einrichtungsassistenten gewählt wurde (Effekte, Schrift), auch in übernommene Räume.
 function applyFirstRun(rooms) {
   (rooms || []).forEach((r) => {
@@ -5207,10 +5220,26 @@ const isWarningLevelSensor = (h, id) => /^sensor\./.test(id)
 // Groups in any form: old group.* and the group helpers (light/switch/cover/… groups) – both list their
 // members in attributes.entity_id. accept "group" keeps ONLY those (see _entityList).
 const isGroupEntity = (hass, e) => Array.isArray((((hass && hass.states[e]) || {}).attributes || {}).entity_id);
+// Waste (E05, test 2): the bin sensors and calendars the waste tile reads (Waste Collection Schedule or a sensor
+// with daysTo, as casoraDevice.waste in scripts/local/00-finder.js), plus anything named like waste.
+const WASTE_WORD = /abfall|m(ü|ue|u)ll|tonne|abfuhr|wertstoff|altpapier|bioabfall|restabfall|gelbe?r? sack|waste|trash|garbage|recycl|refuse|\bbins?\b/i;
+const isWasteEntity = (h, id, dom) => {
+  if (id.split(".")[0] !== dom) return false;
+  const st = (h.states || {})[id], e = (h.entities || {})[id];
+  if (!st) return false;
+  if (e && e.platform === "waste_collection_schedule") return true;
+  if (dom === "sensor" && (st.attributes || {}).daysTo !== undefined) return true;
+  return WASTE_WORD.test(id + " " + ((st.attributes || {}).friendly_name || ""));
+};
 const ACCEPT_RULES = {
   weather_warning: isWarningLevelSensor,
   group: isGroupEntity,
+  waste: (h, id) => isWasteEntity(h, id, "sensor"),
+  waste_calendar: (h, id) => isWasteEntity(h, id, "calendar"),
 };
+// accept rules that keep ONLY their hits (the rest add to the domain list), and rules that only sort their hits first.
+const ACCEPT_ONLY = new Set(["group", "waste"]);
+const ACCEPT_FIRST = new Set(["waste_calendar"]);
 
 // The main entity a new tile suggests: by the integration's translation_key (language-independent, however
 // renamed) – WashData, Home Connect, Bambu Lab, NINA/DWD. like/not separate devices with the same key (dryer).
@@ -13236,6 +13265,11 @@ class CasoraPanel extends HTMLElement {
       this._paintDashes();
       this._log(`copied "${d.url_path}" to "${url_path}"` + (pcfg ? " with its phone layout" : ""), "ok");
       this._status("Copied to " + title, "ok");
+      // T22: the Studio stays on the original – offer to switch to the copy.
+      if (typeof this._bToast === "function") {
+        this._bToast(trLabel("Copied to {name}").replace("{name}", title), { ms: 9000,
+          action: { label: trLabel("Open the copy"), run: () => { this._remember(url_path); this._routeUsed = true; this._room = 0; this._refreshDashboards(url_path); } } });
+      }
     } catch (e) {
       // Half made: remove what was created, so the name and address are free again.
       for (const id of created.reverse()) {
@@ -13962,7 +13996,12 @@ class CasoraPanel extends HTMLElement {
   // Umlaute wie bei Räumen ausschreiben („Sonderfälle“ → sonderfaelle, nicht sonderf-lle);
   // nur für neue Dashboards, bestehende Adressen bleiben.
   _flowPath(title, fallback, suffix) {
-    const s = translit(title);
+    let s = translit(title);
+    // T22 (test 2): a long name made an 86-character address – at most 30, cut at a word boundary.
+    if (s.length > 30) {
+      const cut = s.slice(0, 31);
+      s = (cut.lastIndexOf("-") >= 8 ? cut.slice(0, cut.lastIndexOf("-")) : s.slice(0, 30)).replace(/-+$/, "");
+    }
     // HA requires a hyphen, so a single-word name earns the suffix.
     return this._freePath(!s ? fallback : s.includes("-") ? s : s + "-" + suffix);
   }
@@ -13983,7 +14022,7 @@ class CasoraPanel extends HTMLElement {
   // Menü „Einrichtungsassistent …“: Look → Schrift → Effekte → [Gefunden] → Räume,
   // mit Schließen zurück ins Studio.
   async _rerunSetup() {
-    if (await this._leaveStudioOk()) this._firstRun();
+    if (await this._leaveStudioOk()) { setupClear(); this._firstRun(); }
   }
 
   // Begrüßung schon gesehen? Maßgeblich ist der Merker dieses HA in den Casora-Einstellungen
@@ -14072,8 +14111,9 @@ class CasoraPanel extends HTMLElement {
       let moves = [];
       try { moves = typeof this._casoraMoveCandidates === "function" ? await this._casoraMoveCandidates() : []; } catch (e) { moves = []; }
       if (!moves.length || this._flowTok !== tok || !feats.isConnected) return;
-      const h = feat(["import", studioIcon("flow-hemma"), "Bring Your Hemma",
-        "Move over from Hemma 1 or Hemma 2 – rooms, tiles and phone layout included."]);
+      // E13 (test 2): only shown when one was found – and said what Hemma is, for whoever never heard of it.
+      const h = feat(["import", studioIcon("flow-hemma"), "Bring Your Existing Dashboard",
+        "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over."]);
       h.style.setProperty("--i", 0);
       feats.replaceChild(h, screens);
     })();
@@ -14116,6 +14156,14 @@ class CasoraPanel extends HTMLElement {
       if (f.moves.length || f.yaml.length || (f.broken || []).length) return this._setupFoundStep(f, null, perf);
       this._createForm({ back: perf });
     };
+    // E10: back where the assistant was before a reload, with what was chosen.
+    const sv = setupLoad();
+    if (sv.look) this._lookPick = sv.look;
+    if (firstRunFont === null && typeof sv.font === "string") firstRunFont = sv.font;
+    if (firstRunPerf === null && typeof sv.perf === "string") firstRunPerf = sv.perf;
+    if (sv.step === "font") return this._fontStep(perf);
+    if (sv.step === "perf") return perf();
+    if (sv.step === "rooms") return this._firstRunGo();
     this._themeStep();
   }
 
@@ -14247,6 +14295,9 @@ class CasoraPanel extends HTMLElement {
     // Ersteinrichtung: immer „Standard“ vorschlagen. Erneut gestartet (es gibt schon ein
     // Dashboard): das Design, das gerade aktiv ist.
     let pick = (this._dashUrl && ours) ? ours.name : themes[0].name;
+    // E10: a look chosen before a reload stays chosen.
+    const saved = !this._dashUrl && setupLoad().look;
+    if (saved && themes.some((x) => x.name === saved)) pick = saved;
     const dark = !(t.darkMode === false);
 
     const s = this._flowScreen({
@@ -14303,6 +14354,7 @@ class CasoraPanel extends HTMLElement {
       const btn = ev && ev.currentTarget;
       if (btn) btn.disabled = true;
       this._lookPick = pick;
+      if (!this._dashUrl) setupSave({ look: pick, step: "font" });
       if (pick !== own) await this._applyTheme(pick);
       if (btn) btn.disabled = false;
       this._fontStep(() => this._perfStep(next));
@@ -14358,7 +14410,7 @@ class CasoraPanel extends HTMLElement {
     s.box.classList.add("fwide");
     s.box.style.setProperty("--fcols", cards.length);
     paint();
-    this._flowButton(s.acts, "Continue", () => { firstRunFont = pick; next(); });
+    this._flowButton(s.acts, "Continue", () => { firstRunFont = pick; if (!this._dashUrl) setupSave({ font: pick, step: "perf" }); next(); });
   }
 
   // Glass costs a blur per layer per frame. Most devices carry it; an old wall
@@ -14426,7 +14478,7 @@ class CasoraPanel extends HTMLElement {
         + "Older wall tablets switch to reduced effects on their own."
       : "This device gets all effects. Older wall tablets switch to reduced effects on their own.";
     s.body.appendChild(note);
-    this._flowButton(s.acts, "Continue", () => { firstRunPerf = pick; next(); });
+    this._flowButton(s.acts, "Continue", () => { firstRunPerf = pick; if (!this._dashUrl) setupSave({ perf: pick, step: "rooms" }); next(); });
     // Einrichten: das gefundene Dashboard schon hier vorladen – im gewählten Look, damit die
     // Vorschau auf „Vorhandenes Dashboard gefunden“ fertig dasteht.
     const tok = this._flowTok;
@@ -14551,25 +14603,34 @@ class CasoraPanel extends HTMLElement {
         if (!fillable.size) fillable = null;
       } catch (e) { fillable = null; }
     }
-    areas.forEach((a) => addRoom(a.name, !TECH.test(a.name || "")
+    // E10: the rooms picked before a reload stay picked.
+    const savedRooms = Array.isArray(setupLoad().rooms) ? new Set(setupLoad().rooms) : null;
+    areas.forEach((a) => addRoom(a.name, savedRooms ? savedRooms.has(a.name) : !TECH.test(a.name || "")
       && (fillable ? fillable.has(a.name) : (!withDevices.size || withDevices.has(a.area_id)))));
+    if (savedRooms) [...savedRooms].filter((n) => !areas.some((a) => a.name === n)).forEach((n) => addRoom(n, true));
     if (!areas.length) ({ de: ["Wohnzimmer", "Küche", "Schlafzimmer"], es: ["Salón", "Cocina", "Dormitorio"] }[
-      String((this._hass && this._hass.language) || "").slice(0, 2)] || ["Living Room", "Kitchen", "Bedroom"]).forEach((n) => addRoom(n, false));
+      String((this._hass && this._hass.language) || "").slice(0, 2)] || ["Living Room", "Kitchen", "Bedroom"])
+      .forEach((n) => { if (!tiles().some((t) => t.dataset.name === n)) addRoom(n, false); });
 
     const dash = this._flowGroup(s.body, { header: "New Dashboard" });
+    // E22 (test 2): the name sat below every room, only reachable by scrolling – it comes first now.
+    s.body.insertBefore(dash.parentNode, head);
     // Gibt es „Casora“ schon (auch als Titel in der Seitenleiste), „Casora 2“ usw. vorschlagen – wie der Umzug.
     const takenNames = new Set((this._dashList || []).map((d) => (d.title || "").trim())
       .concat(Object.values((this._hass && this._hass.panels) || {}).map((p) => (p.title || "").trim())));
     let freeTitle = "Casora";
     for (let n = 2; takenNames.has(freeTitle); n++) freeTitle = "Casora " + n;
-    const titleIn = this._flowRow(dash, { title: "Name", input: freeTitle }).input;
+    const savedTitle = setupLoad().title;
+    const titleIn = this._flowRow(dash, { title: "Name", input: typeof savedTitle === "string" && savedTitle ? savedTitle : freeTitle }).input;
 
     this._flowCancel(s.acts);
-    this._flowButton(s.acts, "Create Dashboard", () => {
+    // E11: with "Fill your rooms" two steps follow – the button goes on, the last step creates.
+    this._flowButton(s.acts, typeof this._fillStep === "function" ? "Continue" : "Create Dashboard", () => {
       const title = (titleIn.value || "").trim() || "Casora";
       const url_path = this._flowPath(title, "casora-dashboard", "dashboard");
       const picked = [...list.querySelectorAll('[aria-checked="true"]')]
         .map((r) => r.dataset.name);
+      setupSave({ rooms: picked, title, step: "rooms" });
       // Mit dem Standardraum-Modul (casora-panel-basis.js): erst fragen, ob Casora die Räume füllt.
       if (typeof this._fillStep === "function") {
         return this._fillStep({ picked, back: () => this._createForm(o),
@@ -15122,6 +15183,8 @@ class CasoraPanel extends HTMLElement {
     const taken = new Set((this._dashList || []).map((d) => (d.title || "").trim())
       .concat(this._yamlCandidates().map((d) => (d.title || "").trim())));
     const dash = this._flowGroup(s.body, { header: "New Dashboard" });
+    // E22 (test 2): the name sat below every room, only reachable by scrolling – it comes first now.
+    s.body.insertBefore(dash.parentNode, head);
     const titleIn = this._flowRow(dash, {
       title: "Name", input: window.casoraFreeName ? window.casoraFreeName(name.trim(), taken, this._hass)
         : taken.has(name.trim()) ? name + " (imported)" : name,
@@ -15389,6 +15452,7 @@ class CasoraPanel extends HTMLElement {
   // Shared by Create and Import: the same arrival and the same two ways on.
   _flowDone(opts) {
     const rooms = opts.rooms || [];
+    setupClear();
     // Erster Eintrag in den Versionen: der Stand direkt nach Anlegen/Import/Umzug –
     // sonst stünde dort „Noch keine Versionen“, obwohl das Dashboard schon gespeichert ist.
     if (this._hass && opts.url_path) {
@@ -15397,11 +15461,15 @@ class CasoraPanel extends HTMLElement {
         mobile_url: opts.paired ? mobilePathOf(opts.url_path) : null, kind: "save", summary: JSON.stringify({ origin }) })
         .catch((e) => this._log && this._log("versions: " + e.message, "warn"));
     }
+    // E21: a new dashboard counts like step 1 ("12 rooms selected"): Home plus the chosen rooms.
+    const plusHome = !opts.fromYaml && !opts.move && rooms.length > 1 && rooms[0] && rooms[0].path === "home";
+    const nOwn = plusHome ? rooms.length - 1 : rooms.length;
     const s = this._flowScreen({
       icon: "check", tone: "ok",
       title: "Your Dashboard Is Ready",
       lede: `“${opts.title}” is in the sidebar with `
-        + `${rooms.length} room${rooms.length === 1 ? "" : "s"}.`
+        + (plusHome ? "Home and " : "")
+        + `${nOwn} room${nOwn === 1 ? "" : "s"}.`
         + (opts.fromYaml ? " Your original dashboard hasn't changed." : ""),
     });
     // The real thing, live: the desktop dashboard and, in front, the phone layout.
@@ -15511,6 +15579,17 @@ class CasoraPanel extends HTMLElement {
           if (!(ha && ha.hass)) { if (Date.now() - t0 < 15000) setTimeout(tick, 200); else { restore(); box.classList.add("ready"); } return; }
           restore();
           setTimeout(() => box.classList.add("ready"), 1500);
+          // T11 (test 2): right after creating, a badge whose card script was not there yet stayed HA's red
+          // "Configuration error" in the preview (the dashboard itself was fine) – look once more and reload the frame once.
+          if (!f._casoraReloaded) [4000, 9000].forEach((ms) => setTimeout(() => {
+            if (f._casoraReloaded || !f.isConnected) return;
+            let bad = false;
+            try { bad = previewHasError(f.contentDocument); } catch (e) { bad = false; }
+            if (!bad) return;
+            f._casoraReloaded = true;
+            box.classList.remove("ready");
+            try { f.contentWindow.location.reload(); } catch (e) { f.src = url; }
+          }, ms));
         } catch (e) { restore(); box.classList.add("ready"); }
       };
       tick();
@@ -20764,6 +20843,8 @@ class CasoraPanel extends HTMLElement {
     const ISSUES = "https://github.com/SH1FT-W/casora/issues";
     const news = typeof window.casoraWelcomeShow === "function";
     this._menuAt(anchor, [
+      // E20 (test 2): short answers in the Studio first; the guide on GitHub stays below.
+      ...(typeof this._helpTopics === "function" ? [{ id: "howto", label: "How do I …?" }] : []),
       { id: "welcome", label: "Introduction to Casora" },
       ...(news ? [{ id: "whatsNew", label: "What's new" }] : []),
       { id: "docs", label: "Guide on GitHub", group: "web", quiet: true },
@@ -20773,6 +20854,7 @@ class CasoraPanel extends HTMLElement {
     ], (id) => {
       // Die Einführung ist der Willkommen-Bildschirm vom Erststart (über dem Studio als Blatt).
       if (id === "welcome") return this._welcomeScreen();
+      if (id === "howto") return this._helpTopics();
       if (id === "diag") return this._diagShow();
       if (id === "whatsNew") return window.casoraWelcomeShow(id);
       window.open(id === "issue" ? ISSUES : DOCS, "_blank", "noopener");
@@ -22260,7 +22342,7 @@ class CasoraPanel extends HTMLElement {
       .flatMap((d) => this._entMemo.byDom.get(d))
       .concat(plus)
       .filter((e) => {
-        if (accept === "group") return acc(this._hass, e);
+        if (ACCEPT_ONLY.has(accept)) return acc(this._hass, e);
         if (acc && acc(this._hass, e)) return true;
         const want = perDomain ? perDomain[e.split(".")[0]] : all;
         if (!want || !want.length) return true;
@@ -22270,6 +22352,7 @@ class CasoraPanel extends HTMLElement {
         return !!unit && want.some((c) => (CLASS_UNITS[c] || NO_UNIT).test(unit));
       })
       .sort();
+    if (ACCEPT_FIRST.has(accept)) out.sort((a, b) => (acc(this._hass, b) ? 1 : 0) - (acc(this._hass, a) ? 1 : 0) || (a < b ? -1 : a > b ? 1 : 0));
     this._entMemo.map.set(memoKey, out);
     return out.slice();
   }
@@ -22336,6 +22419,8 @@ class CasoraPanel extends HTMLElement {
   _tileCandidates(type, room) {
     const h = this._hass;
     if (!h || !type || type.noEntity || type.raw || type.user) return [];
+    // A tile that finds its own data and keeps the optional entity under More (waste) asks for no device (E05).
+    if (type.ownData && type.entityAdvanced) return [];
     const doms = type.domains || [];
     if (!doms.length) return [];
     // A type that takes almost any entity (Entity with buttons) has nothing to suggest.
@@ -22401,7 +22486,7 @@ class CasoraPanel extends HTMLElement {
         return true;
       });
     } else {
-      ids = this._entityList(doms, type.classes);
+      ids = this._entityList(doms, type.classes, ACCEPT_ONLY.has(type.accept) ? type.accept : undefined);
     }
     ids = ids.filter(usable);
     // Network: the main entity is the download rate. Anything whose name or id says
@@ -22528,6 +22613,9 @@ class CasoraPanel extends HTMLElement {
     const rooms = ((this._state || {}).compact || {}).rooms || [];
     const overview = !sure && isHomeRoom(room, rooms) && !this._roomArea(room);
     if (overview) cands = homePickOrder(all.slice(0, 8), rooms.map((r) => this._roomArea(r)), (this._hass || {}).areas || {});
+    // A type for almost any sensor (chart, T12): three suggestions read as random – the tile's own sensor field opens
+    // with its search right away instead (_bNewTile), and the tile takes the sensor's name.
+    if (type.pickInEditor) cands = [];
     const tile = newTile(type);
     if (cands.length) {
       const tr = trLabel;
@@ -22567,6 +22655,9 @@ class CasoraPanel extends HTMLElement {
     // A pet tracker is named like the pet ("Luna"), not like its tracker hardware (issue #25).
     const pn = type.id === "casora_pet" && petName(this._hass, entity);
     if (pn && (!tile.name || tile.name === trLabel(type.label))) tile.name = pn;
+    // A chart is named like its sensor ("Processor use"), not "Chart" (T12).
+    const sn = type.pickInEditor && this._prettyEntity(entity);
+    if (sn && sn !== entity && (!tile.name || tile.name === trLabel(type.label) || tile.name === type.label)) tile.name = sn;
     const found = window.casoraFieldEntity;
     if (!found) return;
     const S = (this._hass && this._hass.states) || {};
@@ -23138,7 +23229,11 @@ class CasoraPanel extends HTMLElement {
       // sonst der Name des HA-Bereichs („kuche“ → „Küche“), sonst der lesbare Dateiname.
       const rooms = ((this._state || {}).compact || {}).rooms || [];
       const areas = Object.values((this._hass && this._hass.areas) || {});
-      const nice = (n) => {
+      // E17 (test 2): an upload carries a random tail ("home-5007de19bd49", images.py private_name) – the list
+      // says "Own photo · Home", not the file name.
+      const TAIL = /-[0-9a-f]{12}$/;
+      const nice = (n) => (TAIL.test(n) ? trLabel("Own photo") + " \u00b7 " + nice0(n.replace(TAIL, "")) : nice0(n));
+      const nice0 = (n) => {
         if (/-demo$/.test(n)) return photoLabel(n);
         const r = rooms.find((x) => x.path === n || slug(x.name || "") === n);
         if (r && r.name) return this._roomLabel(r);
@@ -23164,12 +23259,12 @@ class CasoraPanel extends HTMLElement {
       const list = all.filter((i) => keep.has(i.name));
       const names = list.map((i) => i.name);
       const labels = {};
-      list.forEach((i) => { labels[i.name] = nice(i.name) + (i.night ? "" : "   no night image"); });
+      list.forEach((i) => { labels[i.name] = nice(i.name) + (i.night ? "" : " \u00b7 " + trLabel("no night image")); });
 
       if (cur && !names.includes(cur)) {
         names.unshift(cur);
         // Only call it missing once what is on disk is known.
-        labels[cur] = nice(cur) + (this._imgsLoaded ? "   not on disk" : "");
+        labels[cur] = nice(cur) + (this._imgsLoaded ? " \u00b7 " + trLabel("not on disk") : "");
       }
 
       sel.innerHTML = "";
@@ -23212,16 +23307,10 @@ class CasoraPanel extends HTMLElement {
       const others = (((this._state || {}).compact || {}).rooms || []).filter((r) => r !== room);
       const foreign = others.some((r) => (r.variables || {}).image === cur || r.path === cur
         || slug(r.name || "") === cur);
+      // E16 (test 2): no question for a technical file name – the room's own photo is replaced (a night photo then
+      // finds its day photo), otherwise the room's name; the server adds a random tail to a new name.
       const suggest = cur && !/-demo$/.test(cur) && !foreign ? cur : slug(room.name || room.path || "room");
-      const asked = await this._ask({
-        title: "Image name",
-        message: "Lowercase letters, digits and hyphens. Uploading the same name replaces it.",
-        value: suggest,
-        confirmLabel: "Upload",
-        validate: (v) => (/-(demo|night)$/.test(slug(v)) ? why.name : ""),
-      });
-      if (!asked) return;
-      const name = slug(typeof asked === "string" ? asked : asked.value);
+      const name = /-(demo|night)$/.test(suggest) ? suggest.replace(/-(demo|night)$/, "") + "-photo" : (suggest || "room");
       const body = new FormData();
       body.append("name", name);
       body.append("variant", variantValue);
@@ -23247,7 +23336,7 @@ class CasoraPanel extends HTMLElement {
         this._imgsLoaded = true;
         room.variables.image = data.name || name;
         this._markDirty();
-        this._status(`Uploaded ${room.variables.image} (${variantValue})`, "ok");
+        this._status(variantValue === "night" ? "Night photo uploaded" : "Photo uploaded", "ok");
         this._log(`uploaded ${room.variables.image} ${variantValue}`, "ok");
         // Der Abschnitt kann während der Namensfrage neu gezeichnet worden sein: dann neu aufbauen.
         if (sel.isConnected) fill(); else this._renderForm();
@@ -25855,7 +25944,8 @@ class CasoraPanel extends HTMLElement {
       }
       el.querySelector(".mstate").textContent =
         // Casora: Zustandstext wie im Dashboard (state_display der Vorlage).
-        (window.casoraTileState && window.casoraTileState(tile, ent, this._hass, this._state && this._state.templates))
+        (window.casoraTileState && window.casoraTileState(tile, ent, this._hass, this._state && this._state.templates,
+          this._state && this._state.compact && this._state.compact.rooms))
         || tileStateWord(kind, tile, ent, this._hass.states, this._hass);
       // Wie in der Kachelliste: ohne Gerät zeigt das Dashboard nur den Namen.
       // Gerät fehlt in HA: wie die Dashboard-Kachel (casora_entity, Zustand casora_missing).
@@ -29081,11 +29171,28 @@ class CasoraPanel extends HTMLElement {
   }
 }
 
+// HA's error stand-ins (hui-error-card / hui-error-badge) anywhere in a live preview, through shadow roots (T11).
+function previewHasError(doc) {
+  let n = 0;
+  const walk = (root, d) => {
+    if (!root || d > 14 || n > 30000) return false;
+    const els = root.querySelectorAll("*");
+    for (const el of els) {
+      n++;
+      const tag = el.localName;
+      if ((tag === "hui-error-card" || tag === "hui-error-badge") && el.getClientRects().length) return true;
+      if (el.shadowRoot && walk(el.shadowRoot, d + 1)) return true;
+    }
+    return false;
+  };
+  return !!doc && walk(doc, 0);
+}
+
 // Casora: Bausteine des Panels für Casora-Erweiterungen (Import-Assistent, Geräte-Assistent).
 window.__casoraPanelInternals = {
   blankRoom, roomPhoto, slug, translit, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
   applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, hostCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
-  findType, tileTypeAny, newTile, isPetTracker, petName, isStatSensor, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
+  findType, tileTypeAny, newTile, previewHasError, isPetTracker, petName, isStatSensor, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,

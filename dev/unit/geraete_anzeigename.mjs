@@ -16,9 +16,9 @@ assert.ok(push.includes('loose: !!(e && !e.device_id && e.area_id)') && ux.inclu
 const S = { 'light.c2': { attributes: { friendly_name: 'Lightstrip' } }, 'light.x': { attributes: { friendly_name: 'X' } } };
 const R = { 'light.c2': { name: 'Stehlampe', area_id: 'schlafzimmer' }, 'light.x': { device_id: 'd1' } };
 const out = [];
-const mk = new Function('S', 'R', 'out', 'used', 'typeFor', 'label', 'areaOf', 'roomOfArea', 'A', 'WORDS', 'seen', 'typeIds', 'category',
+const mk = new Function('S', 'R', 'out', 'used', 'typeFor', 'label', 'areaOf', 'roomOfArea', 'A', 'WORDS', 'seen', 'typeIds', 'category', 'D',
   'return ' + push.replace('const push = ', '').replace(/;\s*$/, '').trim());
-const p = mk.call({ _room: 0 }, S, R, out, new Set(), () => 'light', (x) => x, (id) => (R[id] || {}).area_id || null, new Map([['schlafzimmer', 0]]), { schlafzimmer: { name: 'Schlafzimmer' } }, {}, new Set(), [], (id, e) => e.entity_category);
+const p = mk.call({ _room: 0 }, S, R, out, new Set(), () => 'light', (x) => x, (id) => (R[id] || {}).area_id || null, new Map([['schlafzimmer', 0]]), { schlafzimmer: { name: 'Schlafzimmer' } }, {}, new Set(), [], (id, e) => e.entity_category, {});
 p('light.c2', '', null); p('light.x', '', null);
 assert.equal(out[0].name, 'Stehlampe');
 assert.ok(out[0].loose && out[0].fresh && out[0].roomIndex === 0, 'new in Schlafzimmer');

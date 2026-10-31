@@ -2703,7 +2703,7 @@
     "Evening and night only": "Nur abends und nachts",
     "From sunset to sunrise": "Von Sonnenuntergang bis Sonnenaufgang",
     "No covers found": "Keine Jalousien gefunden",
-    "Entity list": "Entity-Liste",
+    "Entity list": "Geräteliste",
     "Where do the entries come from?": "Woher kommen die Einträge?",
     "Pick": "Auswählen",
     "HA label": "Label",
@@ -2749,7 +2749,40 @@
     "Save anyway": "Trotzdem speichern",
     "Reload": "Neu laden",
     "Not saved - this dashboard was changed in another window.": "Nicht gespeichert – dieses Dashboard wurde in einem anderen Fenster geändert.",
-    "1 room on": "1 Raum an"
+    "1 room on": "1 Raum an",
+    "Tile type": "Kachelart",
+    "Tile types": "Kachelarten",
+    "New tile of this type": "Neue Kachel dieser Art",
+    "Waste sensor": "Abfall-Sensor",
+    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Z. B. der Kalender von Waste Collection Schedule – die Kachel findet die Tonnen darin.",
+    "Bring Your Existing Dashboard": "Vorhandenes Dashboard mitnehmen",
+    "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.": "Casora hat ein Dashboard von Hemma gefunden, dem Vorgänger. Räume, Kacheln und Handy-Layout ziehen mit um.",
+    "Own photo": "Eigenes Foto",
+    "no night image": "ohne Nachtbild",
+    "not on disk": "Datei fehlt",
+    "Photo uploaded": "Foto hochgeladen",
+    "Night photo uploaded": "Nachtfoto hochgeladen",
+    "Help": "Hilfe",
+    "Show me": "Zeig es mir",
+    "How do I …?": "Wie geht …?",
+    "Keep my order": "Meine Reihenfolge behalten",
+    "Show the waste collection": "Abfallkalender anzeigen",
+    "Tap + (Add a tile), type “Waste” and pick it. The tile finds the bins and pickup days of Waste Collection Schedule or a waste calendar by itself. Under “Waste calendar” you can pick another calendar.": "Tippe auf + (Kachel hinzufügen), gib „Abfall“ ein und wähle es. Die Kachel findet Tonnen und Abholtage von Waste Collection Schedule oder einem Abfallkalender selbst. Unter „Abfallkalender“ kannst du einen anderen Kalender wählen.",
+    "Change a room's photo": "Foto eines Raums ändern",
+    "Tap + (Add a tile) and type the device's name, e.g. “floor lamp”. Casora picks the right tile type; new devices of the room are listed right away.": "Tippe auf + (Kachel hinzufügen) und gib den Namen des Geräts ein, z. B. „Stehlampe“. Casora wählt die passende Kachelart; neue Geräte des Raums stehen gleich in der Liste.",
+    "Change the order of the tiles": "Reihenfolge der Kacheln ändern",
+    "In Content › Tiles choose “Edit” and drag the tiles. With Smart Sort on, active tiles still come first on the dashboard – “Keep my order” after dragging switches it off for this room.": "Wähle in Inhalt › Kacheln „Bearbeiten“ und zieh die Kacheln. Mit intelligenter Sortierung stehen aktive Kacheln im Dashboard trotzdem vorn – „Meine Reihenfolge behalten“ nach dem Ziehen schaltet sie für diesen Raum aus.",
+    "Use the dashboard on the phone": "Dashboard auf dem Handy nutzen",
+    "In the title menu “Open on phone” shows a QR code. Casora switches to the phone layout by itself; the Phone preview at the top shows how it looks.": "Im Titelmenü zeigt „Auf Handy öffnen“ einen QR-Code. Casora wechselt von selbst ins Handy-Layout; die Handy-Vorschau oben zeigt, wie es aussieht.",
+    "Save a scene": "Szene speichern",
+    "Set the lights the way you like them, then save the current state as a scene. It appears on the Scenes badge and can be switched with one tap.": "Stell die Lichter so ein, wie du sie magst, und speichere den aktuellen Zustand als Szene. Sie erscheint im Szenen-Badge und lässt sich mit einem Tippen schalten.",
+    "Undo a change": "Änderung zurücknehmen",
+    "Undo (the arrow next to Save) takes back the last steps. The clock (Rewind) brings back an earlier saved version of the dashboard.": "Rückgängig (der Pfeil neben Speichern) nimmt die letzten Schritte zurück. Die Uhr (Zeitreise) holt eine früher gespeicherte Fassung des Dashboards zurück.",
+    "Hide a tile from someone": "Kachel vor jemandem ausblenden",
+    "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.": "Öffne die Kachel und wähle „Sichtbarkeit, Rückfrage & Halten“. Dort legst du fest, wer sie sieht, auf welchen Bildschirmen und ob sie vor dem Schalten nachfragt.",
+    "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Öffne den Raum und wähle Darstellung. „Foto wählen“ nimmt eines der Casora-Fotos, „Eigenes hochladen“ ein Foto von deinem Gerät – ein zweites für die Nacht ist freiwillig.",
+    "Copied to {name}": "Kopiert nach {name}",
+    "Open the copy": "Kopie öffnen"
   },
   "patterns": [
     [
@@ -3431,6 +3464,14 @@
     [
       "^(\\d+) rooms on$",
       "{1} Räume an"
+    ],
+    [
+      "^“(.+)” is in the sidebar with Home and 1 room\\.$",
+      "„{1}“ ist mit Zuhause und 1 Raum in der Seitenleiste."
+    ],
+    [
+      "^“(.+)” is in the sidebar with Home and (\\d+) rooms\\.$",
+      "„{1}“ ist mit Zuhause und {2} Räumen in der Seitenleiste."
     ]
   ]
 }

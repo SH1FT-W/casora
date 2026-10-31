@@ -70,8 +70,10 @@
       overflow-y:auto; overflow-x:hidden; min-height:0; overscroll-behavior:contain; touch-action:pan-y; -webkit-overflow-scrolling:touch; }
     :host(.bmode.bpage.split:not(.flow)) { --b-insp-w:min(760px, calc(100% - 28px)); }
     :host(.bmode.bpage.split:not(.flow)) .main { padding-right:0; }
-    /* Dark: the page lies over the preview's house photo: nearly opaque, otherwise it shows through in color. */
-    :host(.bmode.bpage.split:not(.flow):not(.is-light)) .inspector { background:var(--casora-studio-page-solid, rgba(22,23,28,0.95)) !important; }
+    /* Dark: the page lies over the preview's house photo: nearly opaque, otherwise it shows through in color.
+       The Studio's own dark tone (bar-solid, the slab's color opaque) – the fixed blue-gray differed from the
+       content sheet (T21, test 2). */
+    :host(.bmode.bpage.split:not(.flow):not(.is-light)) .inspector { background:var(--casora-studio-page-solid, var(--casora-studio-bar-solid, rgba(22,23,28,0.95))) !important; }
     :host(.bmode.bpage.split:not(.flow)) .inspector { top:calc(var(--top-h, 64px) + 4px) !important; margin:0 !important; }
     /* Pages (Settings, Updates, Rewind) lie over the preview: its Desktop/Tablet/Mobile
        switcher otherwise stuck out halfway over the edge. */
@@ -1483,8 +1485,18 @@
       this._bKeys = true;
       // Rotation or HA sidebar open/closed: redetermine the inspector's position (right/bottom).
       if (window.ResizeObserver) new ResizeObserver(() => { if (this.isConnected) this._bApply(); }).observe(this);
+      // T21 (test 2): the settings page (and updates) in the inspector closes with Esc as well – also when the focus
+      // left the Studio (a click on the page background), so the document listens too.
+      const pageOpen = () => !!(this._csOpen || this._cuOpen) && (this.classList.contains("contentpage") || this.classList.contains("binsp"));
+      document.addEventListener("keydown", (ev) => {
+        if (ev.key !== "Escape" || ev.defaultPrevented || !this.isConnected || !pageOpen() || this._flowMode || this._openCombo) return;
+        if (ev.composedPath && ev.composedPath().includes(this)) return;
+        if ([...this.shadowRoot.querySelectorAll(".askpane, .psheet-panel, .menu, .popmenu, [role=menu], .msearch")].some((n) => n.getClientRects().length)) return;
+        ev.preventDefault();
+        this._bClose();
+      });
       this.addEventListener("keydown", (ev) => {
-        if (ev.key !== "Escape" || !this.classList.contains("binsp")) return;
+        if (ev.key !== "Escape" || !(this.classList.contains("binsp") || pageOpen())) return;
         if (this._openCombo) return;
         // Open dialogs (confirmation, picker sheet) close themselves first.
         if ([...this.shadowRoot.querySelectorAll(".askpane, .psheet-panel")].some((n) => n.getClientRects().length)) return;

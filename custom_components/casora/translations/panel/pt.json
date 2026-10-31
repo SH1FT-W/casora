@@ -2703,7 +2703,7 @@
     "Evening and night only": "Só ao fim do dia e à noite",
     "From sunset to sunrise": "Do pôr do sol ao nascer do sol",
     "No covers found": "Nenhum estore encontrado",
-    "Entity list": "Lista de entidades",
+    "Entity list": "Lista de dispositivos",
     "Where do the entries come from?": "De onde vêm as entradas?",
     "Pick": "Escolher",
     "HA label": "Etiqueta HA",
@@ -2749,7 +2749,40 @@
     "Save anyway": "Guardar mesmo assim",
     "Reload": "Recarregar",
     "Not saved - this dashboard was changed in another window.": "Não guardado – este painel foi alterado noutra janela.",
-    "1 room on": "1 divisão ligada"
+    "1 room on": "1 divisão ligada",
+    "Tile type": "Tipo de bloco",
+    "Tile types": "Tipos de bloco",
+    "New tile of this type": "Novo bloco deste tipo",
+    "Waste sensor": "Sensor de resíduos",
+    "E.g. the calendar of Waste Collection Schedule – the tile finds the bins in it.": "Ex.: o calendário do Waste Collection Schedule – o bloco encontra lá os contentores.",
+    "Bring Your Existing Dashboard": "Traz o teu painel atual",
+    "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.": "O Casora encontrou um painel do Hemma, o seu antecessor. Divisões, blocos e o layout do telemóvel passam para cá.",
+    "Own photo": "Foto própria",
+    "no night image": "sem imagem noturna",
+    "not on disk": "ficheiro em falta",
+    "Photo uploaded": "Foto carregada",
+    "Night photo uploaded": "Foto noturna carregada",
+    "Help": "Ajuda",
+    "Show me": "Mostra-me",
+    "How do I …?": "Como …?",
+    "Keep my order": "Manter a minha ordem",
+    "Show the waste collection": "Mostrar a recolha do lixo",
+    "Tap + (Add a tile), type “Waste” and pick it. The tile finds the bins and pickup days of Waste Collection Schedule or a waste calendar by itself. Under “Waste calendar” you can pick another calendar.": "Toca em + (Adicionar bloco), escreve “Lixo” e escolhe-o. O bloco encontra sozinho os contentores e os dias de recolha do Waste Collection Schedule ou de um calendário do lixo. Em “Calendário do lixo” podes escolher outro calendário.",
+    "Change a room's photo": "Mudar a foto de uma divisão",
+    "Tap + (Add a tile) and type the device's name, e.g. “floor lamp”. Casora picks the right tile type; new devices of the room are listed right away.": "Toca em + (Adicionar bloco) e escreve o nome do dispositivo, p. ex. “candeeiro de pé”. O Casora escolhe o tipo de bloco; os dispositivos novos da divisão aparecem logo.",
+    "Change the order of the tiles": "Mudar a ordem dos blocos",
+    "In Content › Tiles choose “Edit” and drag the tiles. With Smart Sort on, active tiles still come first on the dashboard – “Keep my order” after dragging switches it off for this room.": "Em Conteúdo › Blocos escolhe “Editar” e arrasta os blocos. Com a ordenação inteligente, os blocos ativos continuam à frente no painel – “Manter a minha ordem” depois de arrastar desliga-a nesta divisão.",
+    "Use the dashboard on the phone": "Usar o painel no telemóvel",
+    "In the title menu “Open on phone” shows a QR code. Casora switches to the phone layout by itself; the Phone preview at the top shows how it looks.": "No menu do título, “Abrir no telemóvel” mostra um código QR. O Casora muda sozinho para o layout do telemóvel; a pré-visualização Telemóvel em cima mostra o aspeto.",
+    "Save a scene": "Guardar uma cena",
+    "Set the lights the way you like them, then save the current state as a scene. It appears on the Scenes badge and can be switched with one tap.": "Ajusta as luzes como gostas e guarda o estado atual como cena. Aparece no badge Cenas e liga-se com um toque.",
+    "Undo a change": "Anular uma alteração",
+    "Undo (the arrow next to Save) takes back the last steps. The clock (Rewind) brings back an earlier saved version of the dashboard.": "Anular (a seta ao lado de Guardar) desfaz os últimos passos. O relógio (Recuar) recupera uma versão guardada anterior do painel.",
+    "Hide a tile from someone": "Esconder um bloco de alguém",
+    "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.": "Abre o bloco e escolhe “Visibilidade, confirmação e manter”. Aí escolhes quem o vê, em que ecrãs e se pergunta antes de ligar.",
+    "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Abre a divisão e escolhe Aparência. “Escolher foto” usa uma foto do Casora, “Carregar a tua” uma foto do teu dispositivo – uma segunda para a noite é opcional.",
+    "Copied to {name}": "Copiado para {name}",
+    "Open the copy": "Abrir a cópia"
   },
   "patterns": [
     [
@@ -3431,6 +3464,14 @@
     [
       "^(\\d+) rooms on$",
       "{1} divisões ligadas"
+    ],
+    [
+      "^“(.+)” is in the sidebar with Home and 1 room\\.$",
+      "“{1}” está na barra lateral com Casa e 1 divisão."
+    ],
+    [
+      "^“(.+)” is in the sidebar with Home and (\\d+) rooms\\.$",
+      "“{1}” está na barra lateral com Casa e {2} divisões."
     ]
   ]
 }
