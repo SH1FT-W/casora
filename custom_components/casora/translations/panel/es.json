@@ -2774,7 +2774,9 @@
     "Undo (the arrow next to Save) takes back the last steps. The clock (Rewind) brings back an earlier saved version of the dashboard.": "Deshacer (la flecha junto a Guardar) revierte los últimos pasos. El reloj (Viaje en el tiempo) recupera una versión guardada anterior del panel.",
     "Hide a tile from someone": "Ocultar una tarjeta a alguien",
     "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.": "Abre la tarjeta y elige “Visibilidad, confirmar y mantener”. Ahí eliges quién la ve, en qué pantallas y si pregunta antes de conmutar.",
-    "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Abre la habitación y elige Apariencia. “Elegir foto” toma una foto de Casora, “Subir la tuya” una foto de tu dispositivo; una segunda para la noche es opcional."
+    "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Abre la habitación y elige Apariencia. “Elegir foto” toma una foto de Casora, “Subir la tuya” una foto de tu dispositivo; una segunda para la noche es opcional.",
+    "Copied to {name}": "Copiado en {name}",
+    "Open the copy": "Abrir la copia"
   },
   "patterns": [
     [

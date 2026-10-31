@@ -13242,6 +13242,11 @@ class CasoraPanel extends HTMLElement {
       this._paintDashes();
       this._log(`copied "${d.url_path}" to "${url_path}"` + (pcfg ? " with its phone layout" : ""), "ok");
       this._status("Copied to " + title, "ok");
+      // T22: the Studio stays on the original – offer to switch to the copy.
+      if (typeof this._bToast === "function") {
+        this._bToast(trLabel("Copied to {name}").replace("{name}", title), { ms: 9000,
+          action: { label: trLabel("Open the copy"), run: () => { this._remember(url_path); this._routeUsed = true; this._room = 0; this._refreshDashboards(url_path); } } });
+      }
     } catch (e) {
       // Half made: remove what was created, so the name and address are free again.
       for (const id of created.reverse()) {
@@ -13968,7 +13973,12 @@ class CasoraPanel extends HTMLElement {
   // Umlaute wie bei Räumen ausschreiben („Sonderfälle“ → sonderfaelle, nicht sonderf-lle);
   // nur für neue Dashboards, bestehende Adressen bleiben.
   _flowPath(title, fallback, suffix) {
-    const s = translit(title);
+    let s = translit(title);
+    // T22 (test 2): a long name made an 86-character address – at most 30, cut at a word boundary.
+    if (s.length > 30) {
+      const cut = s.slice(0, 31);
+      s = (cut.lastIndexOf("-") >= 8 ? cut.slice(0, cut.lastIndexOf("-")) : s.slice(0, 30)).replace(/-+$/, "");
+    }
     // HA requires a hyphen, so a single-word name earns the suffix.
     return this._freePath(!s ? fallback : s.includes("-") ? s : s + "-" + suffix);
   }

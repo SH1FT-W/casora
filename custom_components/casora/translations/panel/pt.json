@@ -2774,7 +2774,9 @@
     "Undo (the arrow next to Save) takes back the last steps. The clock (Rewind) brings back an earlier saved version of the dashboard.": "Anular (a seta ao lado de Guardar) desfaz os últimos passos. O relógio (Recuar) recupera uma versão guardada anterior do painel.",
     "Hide a tile from someone": "Esconder um bloco de alguém",
     "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.": "Abre o bloco e escolhe “Visibilidade, confirmação e manter”. Aí escolhes quem o vê, em que ecrãs e se pergunta antes de ligar.",
-    "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Abre a divisão e escolhe Aparência. “Escolher foto” usa uma foto do Casora, “Carregar a tua” uma foto do teu dispositivo – uma segunda para a noite é opcional."
+    "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Abre a divisão e escolhe Aparência. “Escolher foto” usa uma foto do Casora, “Carregar a tua” uma foto do teu dispositivo – uma segunda para a noite é opcional.",
+    "Copied to {name}": "Copiado para {name}",
+    "Open the copy": "Abrir a cópia"
   },
   "patterns": [
     [

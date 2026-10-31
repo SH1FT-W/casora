@@ -2774,7 +2774,9 @@
     "Undo (the arrow next to Save) takes back the last steps. The clock (Rewind) brings back an earlier saved version of the dashboard.": "Annuler (la flèche à côté d'Enregistrer) reprend les dernières étapes. L'horloge (Retour) restaure une version enregistrée plus ancienne du tableau de bord.",
     "Hide a tile from someone": "Masquer une tuile à quelqu'un",
     "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.": "Ouvre la tuile et choisis « Visibilité, confirmation et maintien ». Tu y choisis qui la voit, sur quels écrans et si elle demande avant de basculer.",
-    "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Ouvre la pièce et choisis Apparence. « Choisir une photo » prend une photo de Casora, « Envoyer la tienne » une photo de ton appareil – une seconde pour la nuit est facultative."
+    "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Ouvre la pièce et choisis Apparence. « Choisir une photo » prend une photo de Casora, « Envoyer la tienne » une photo de ton appareil – une seconde pour la nuit est facultative.",
+    "Copied to {name}": "Copié vers {name}",
+    "Open the copy": "Ouvrir la copie"
   },
   "patterns": [
     [

@@ -2774,7 +2774,9 @@
     "Undo (the arrow next to Save) takes back the last steps. The clock (Rewind) brings back an earlier saved version of the dashboard.": "Rückgängig (der Pfeil neben Speichern) nimmt die letzten Schritte zurück. Die Uhr (Zeitreise) holt eine früher gespeicherte Fassung des Dashboards zurück.",
     "Hide a tile from someone": "Kachel vor jemandem ausblenden",
     "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.": "Öffne die Kachel und wähle „Sichtbarkeit, Rückfrage & Halten“. Dort legst du fest, wer sie sieht, auf welchen Bildschirmen und ob sie vor dem Schalten nachfragt.",
-    "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Öffne den Raum und wähle Darstellung. „Foto wählen“ nimmt eines der Casora-Fotos, „Eigenes hochladen“ ein Foto von deinem Gerät – ein zweites für die Nacht ist freiwillig."
+    "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Öffne den Raum und wähle Darstellung. „Foto wählen“ nimmt eines der Casora-Fotos, „Eigenes hochladen“ ein Foto von deinem Gerät – ein zweites für die Nacht ist freiwillig.",
+    "Copied to {name}": "Kopiert nach {name}",
+    "Open the copy": "Kopie öffnen"
   },
   "patterns": [
     [
