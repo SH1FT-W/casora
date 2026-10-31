@@ -73,8 +73,77 @@
     return '';
   };
 
+  // Popup v3 (popup-richtlinien-v3.md §4 S8, maintainer review 31.10.2026): the scenes as a grid of tiles in the
+  // stage plate – symbol (MDI outline) over the name, the active one lit like a chosen quick tile with its Studio colour;
+  // more than 12 → the first 12 and „Alle n anzeigen“. The status line says which is active or the last one.
+  var V3CSS = '<style>.zs-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}'
+    + '@media (max-width:600px){.zs-g{grid-template-columns:repeat(2,minmax(0,1fr));}}'
+    + '.zs-t{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:84px;padding:14px;box-sizing:border-box;'
+    +   'border-radius:var(--casora-v3-quick-radius, 24px);background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));cursor:pointer;min-width:0;'
+    +   'font-family:var(--primary-font-family, system-ui);color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));'
+    +   'user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;transition:background-color var(--casora-dur-feedback, 160ms) ease;}'
+    + '.zs-t > *{pointer-events:none;}'
+    + '.zs-t ha-icon{--mdc-icon-size:22px;width:22px;height:22px;display:flex;margin:0 !important;color:var(--casora-soft-sub, rgba(58,50,43,0.6));}'
+    + '.zs-t b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14px;font-weight:700;line-height:1.25;overflow-wrap:break-word;hyphens:auto;}'
+    + '.zs-t.on{background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, #2E2721);'
+    +   'box-shadow:0 0 0 2px var(--zs-c, var(--casora-popup-accent, var(--casora-color-yellow))), var(--casora-soft-seg-on-shadow, none);}'
+    + '.zs-t.on ha-icon{color:color-mix(in srgb, var(--zs-c, var(--casora-popup-accent, var(--casora-color-yellow))) 65%, var(--casora-soft-seg-on-ink, #2E2721));}'
+    + '.zs-t:active{transform:scale(var(--casora-press-scale, .97));}'
+    + '@media (hover:hover){.zs-t:not(.on):hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}}'
+    + '.hui-stage{--casora-pv-stack-fill:transparent;}</style>';
+  var outline = function (ic) {
+    ic = String(ic || '');
+    if (!/^mdi:/.test(ic)) return 'mdi:palette-outline';
+    return ic;
+  };
+  Z.v3sec = function (part, V, states) {
+    var UI = window._casoraUI, SC = window._casoraSC;
+    if (!UI || !SC) return '';
+    var ids = (V.ids || []).filter(function (id) { return states[id]; });
+    var act = SC.activeList(ids, states) || [];
+    if (part === 'hero') {
+      if (act.length) {
+        var la = function (id) { return SC.lastActive ? (SC.lastActive(id, states) || NaN) : Date.parse(states[id] && states[id].state); };
+        var since = ago(la(act[0]));
+        return UI.line(nameOf(act[0], states, V.room) + (act.length > 1 ? ' +' + (act.length - 1) : ''), [since ? 'aktiv ' + since : 'aktiv'], { tone: 'good' });
+      }
+      var last = null, lastT = 0;
+      ids.forEach(function (id) { var t = SC.lastActive ? (SC.lastActive(id, states) || NaN) : Date.parse(states[id].state); if (!isNaN(t) && t > lastT) { lastT = t; last = id; } });
+      return UI.line('Keine Szene aktiv', last ? ['Zuletzt ' + nameOf(last, states, V.room) + ' ' + ago(lastT)] : []);
+    }
+    if (part === 'stage') {
+      if (!ids.length) return UI.stage('content', { empty: { icon: 'mdi:palette-outline', studio: true, text: 'Keine Szenen gefunden. Casora zeigt alle Szenen, die in den Entitäten weder ausgeblendet noch deaktiviert sind.' } });
+      var tile = function (id) {
+        var svc = { domain: 'scene', service: 'turn_on', data: V.trans > 0 ? { transition: V.trans } : {}, target: { entity_id: id } };
+        var on = act.indexOf(id) > -1, clr = on && window.casoraSceneColor ? window.casoraSceneColor(id) : null;
+        var n = nameOf(id, states, V.room);
+        return '<div class="zs-t' + (on ? ' on' : '') + '" role="button" aria-pressed="' + (on ? 'true' : 'false') + '" aria-label="' + esc(n) + '"'
+          + ' data-casora-svc="' + esc(JSON.stringify(svc)) + '"' + (clr ? ' style="--zs-c:' + esc(clr) + '"' : '') + '>'
+          + '<ha-icon icon="' + esc(outline((states[id].attributes || {}).icon)) + '"></ha-icon><b>' + esc(n) + '</b></div>';
+      };
+      var head = ids.slice(0, 12), rest = ids.slice(12);
+      var html = V3CSS + '<div class="zs-g">' + head.map(tile).join('') + '</div>';
+      if (rest.length && UI.more) html += '<div style="height:10px"></div>' + UI.more('zs-all', '<div class="zs-g">' + rest.map(tile).join('') + '</div>',
+        { keep: true, label: 'Alle ' + ids.length + ' anzeigen', less: 'Weniger anzeigen' });
+      return UI.stage('content', { html: html });
+    }
+    return '';
+  };
+  Z.v3 = function () { var UI = window._casoraUI; return !!(UI && UI.v3 && UI.v3() && UI.stage && window._casoraSoftKit); };
+
   Z.popup = function (entity, variables, states, hass) {
     var SC = window._casoraSC, HH = window._casoraHH;
+    if (SC && Z.v3()) {
+      var K = window._casoraSoftKit;
+      variables = variables || {};
+      var ids3 = SC.list(states, hass, variables) || [];
+      SC.prefetch(ids3, states);
+      var room3 = variables.room_name && variables.room_name !== 'Home' && variables.room_name !== 'Zuhause' && variables.room_name !== 'Casa' ? variables.room_name : null;
+      var cj3 = JSON.stringify({ ids: ids3, room: room3, trans: Number(variables.scene_transition != null ? variables.scene_transition : 4) });
+      var call = function (p) { return 'return window._casoraScenesSoft ? window._casoraScenesSoft.v3sec(' + JSON.stringify(p) + ', ' + cj3 + ', states) : "";'; };
+      return K.layout({ fields: { hero: { card: K.secCard(ids3, call('hero'), states) }, stage: { card: K.secCard(ids3, call('stage'), states) } },
+        top: ['hero'], stage: 'stage', left: [], right: [] });
+    }
     if (!SC || !HH || !HH.col) return { type: 'vertical-stack', cards: [] };
     variables = variables || {};
     var ids = SC.list(states, hass, variables) || [];
