@@ -83,6 +83,91 @@
   });
 })();
 
+// HA's own toolbar (title, ⋮ menu) on dashboards whose kiosk_mode asks to hide it. It lived in casora-core,
+// which arrives seconds later on a phone: until then HA's menu bar stood at the top of the page, a menu
+// the dashboard does not have (31.10.2026). The loader is small and arrives first, so it hides it here.
+(function () {
+  if (window._casoraHeaderHide) return;
+  window._casoraHeaderHide = true;
+
+  var ID = 'casora-header-hide';
+  var CSS = '.header { display: none !important; }';
+  var OFF = /[?&](casora_header=1|disable_km)/.test(location.search);
+  // kiosk-mode's breakpoint, so one dashboard reads the same under either.
+  var NARROW = window.matchMedia('(max-width: 812px)');
+
+  function findDeep(root, tag, depth) {
+    if (!root || depth > 10 || !root.querySelector) return null;
+    var hit = root.querySelector(tag);
+    if (hit) return hit;
+    var kids = root.querySelectorAll('*');
+    for (var i = 0; i < kids.length; i++) {
+      if (kids[i].shadowRoot) {
+        var f = findDeep(kids[i].shadowRoot, tag, depth + 1);
+        if (f) return f;
+      }
+    }
+    return null;
+  }
+
+  var _root = null;
+  function huiRoot() {
+    if (_root && _root.isConnected && _root.shadowRoot) return _root;
+    _root = findDeep(document, 'hui-root', 0);
+    return _root;
+  }
+
+  function wanted(cfg) {
+    var km = cfg && cfg.kiosk_mode;
+    if (!km) return false;
+    var m = km.mobile_settings;
+    if (m && m.hide_header !== undefined && NARROW.matches) return !!m.hide_header;
+    return !!km.hide_header;
+  }
+
+  var _sr = null;
+  var _head = null;
+
+  function apply() {
+    var root = huiRoot();
+    var sr = root && root.shadowRoot;
+    if (!sr) return false;
+
+    if (_sr !== sr) {
+      _sr = sr;
+      new MutationObserver(function () { apply(); }).observe(sr, { childList: true });
+    }
+    var head = sr.querySelector('.header');
+    if (head && _head !== head) {
+      _head = head;
+      new MutationObserver(function () { apply(); }).observe(head, { childList: true, subtree: true });
+    }
+
+    var ll = root.lovelace || {};
+    var on = !OFF && !ll.editMode && wanted(ll.config);
+    var el = sr.querySelector('#' + ID);
+    if (on === !!el) return true;
+    if (!on) { el.remove(); return true; }
+    var st = document.createElement('style');
+    st.id = ID;
+    st.textContent = CSS;
+    sr.appendChild(st);
+    return true;
+  }
+
+  function kick() {
+    var n = 0;
+    (function tick() {
+      apply();
+      if (++n < 12) setTimeout(tick, n < 5 ? 200 : 1200);
+    })();
+  }
+  kick();
+  window.addEventListener('location-changed', kick, true);
+  window.addEventListener('popstate', kick, true);
+  NARROW.addEventListener('change', apply);
+})();
+
 const MODULES = [
   '00-finder',
   '01-basis',
