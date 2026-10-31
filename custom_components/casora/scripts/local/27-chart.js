@@ -53,6 +53,7 @@
   var dayStart = function (ms) { var d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
   var monthStart = function (ms, back) { var d = new Date(ms); return new Date(d.getFullYear(), d.getMonth() - (back || 0), 1).getTime(); };
   // Start of the current bucket of a range: today (hours/days) or this month (year).
+  var hourStart = function (ms) { var d = new Date(ms); d.setMinutes(0, 0, 0); return d.getTime(); };
   var curStart = function (span, now) { return span === '1y' ? monthStart(now) : dayStart(now); };
   var kick = function (el) {
     try {
@@ -90,6 +91,8 @@
     if (!isFinite(n)) return String(v == null ? '' : v);
     var st = (hass && hass.states && hass.states[id]) || {}, a = st.attributes || {};
     var d = Math.abs(n) >= 100 ? 0 : M.precision(hass, id, n);
+    // Never „-0,0“: what rounds to zero is zero.
+    if (Math.round(Math.abs(n) * Math.pow(10, d)) === 0) n = 0;
     return n.toLocaleString(loc(), { minimumFractionDigits: Math.min(d, 1), maximumFractionDigits: d }) + (a.unit_of_measurement ? ' ' + a.unit_of_measurement : '');
   };
   M.value = function (st, hass) {
@@ -153,8 +156,11 @@
   // ── Statistics (one request per sensor and range, refreshed every 5 minutes) ─
   // rows: recorder/statistics_during_period answer for one sensor (hourly for 24 h, daily for 7/30 days, monthly
   // for the year). Counters: today (year: this month), the range's sum and the average per whole day / month.
-  M.summarize = function (rows, kind, span, now) {
+  // opt.mono: a counter that only counts up (total_increasing) – a negative change is a reset of the meter, no
+  // consumption (review 2, T06: „-0,0 kWh“, the heatmap's scale from −143,8 kWh).
+  M.summarize = function (rows, kind, span, now, opt) {
     now = now || Date.now();
+    var mono = !!(opt && opt.mono);
     var pts = (rows || []).map(function (p) {
       var t = typeof p.start === 'number' ? p.start : Date.parse(p.start);
       return { t: t, mean: p.mean, min: p.min, max: p.max, change: p.change };
@@ -163,12 +169,19 @@
     var out = { kind: kind, span: span, n: 0, empty: true };
     if (kind === 'total') {
       var cur = curStart(span, now), sum = 0, today = 0, n = 0, full = 0;
+      // Lowest/highest bucket (hour, day, month) and the average per whole bucket (review 2, T13: 24 h showed only
+      // „Heute“). The running bucket is not whole: it counts for the highest, never for the lowest or the average.
+      var unit = span === '24h' ? hourStart(now) : cur, bmin = null, bmax = null, bs = 0, bn = 0;
       pts.forEach(function (p) {
-        if (!ok(p.change)) return;
+        if (!ok(p.change) || (mono && p.change < 0)) return;
         n++; sum += p.change;
         if (p.t >= cur) today += p.change; else if (span !== '24h') full++;
+        if (!bmax || p.change > bmax.v) bmax = { v: p.change, t: p.t };
+        if (p.t < unit) { bs += p.change; bn++; if (!bmin || p.change < bmin.v) bmin = { v: p.change, t: p.t }; }
       });
       out.n = n; out.empty = !n; out.sum = n ? sum : null; out.today = n ? today : null;
+      // Lowest and highest only where there is something to compare.
+      out.max = n > 1 ? bmax : null; out.min = bn > 1 ? bmin : null; out.perBucket = bn ? bs / bn : null;
       // Average per whole day or month (the current one is still running).
       out.perDay = full && span !== '1y' ? (sum - today) / full : null;
       out.perMonth = full && span === '1y' ? (sum - today) / full : null;
@@ -232,7 +245,7 @@
     var units = M.units(st);
     if (units) msg.units = units;
     hass.callWS(msg)
-      .then(function (r) { cell.data = M.summarize((r && r[id]) || [], kind, span, Date.now()); },
+      .then(function (r) { cell.data = M.summarize((r && r[id]) || [], kind, span, Date.now(), { mono: (st.attributes || {}).state_class === 'total_increasing' }); },
         // A hiccup must not wipe numbers already on screen; the error shows only when there is nothing yet.
         function () { if (!cell.data) cell.data = { kind: kind, span: span, n: 0, empty: true, error: true }; })
       .then(function () {
@@ -478,6 +491,9 @@
       if (C.kind === 'total') {
         if (d.today != null) r.push({ icon: 'calendar-day', iconTone: 'accent', label: span === '1y' ? 'Dieser Monat' : 'Heute', value: M.fmt(hass, C.id, d.today) });
         if (span !== '24h' && d.sum != null) r.push({ icon: 'calendar', iconTone: 'accent', label: HEAD[span], value: M.fmt(hass, C.id, d.sum) });
+        if (d.max) r.push({ icon: 'mdi:arrow-up-bold-outline', iconTone: 'bad', label: span === '24h' ? 'Höchste Stunde' : span === '1y' ? 'Höchster Monat' : 'Höchster Tag', sub: at(d.max.t, span, now), value: M.fmt(hass, C.id, d.max.v) });
+        if (d.min) r.push({ icon: 'mdi:arrow-down-bold-outline', iconTone: 'accent', label: span === '24h' ? 'Niedrigste Stunde' : span === '1y' ? 'Niedrigster Monat' : 'Niedrigster Tag', sub: at(d.min.t, span, now), value: M.fmt(hass, C.id, d.min.v) });
+        if (span === '24h' && d.perBucket != null) r.push({ icon: 'mdi:approximately-equal', iconTone: 'accent', label: 'Ø pro Stunde', value: M.fmt(hass, C.id, d.perBucket) });
         if (d.perDay != null) r.push({ icon: 'mdi:approximately-equal', iconTone: 'accent', label: 'Ø pro Tag', value: M.fmt(hass, C.id, d.perDay) });
         if (d.perMonth != null) r.push({ icon: 'mdi:approximately-equal', iconTone: 'accent', label: 'Ø pro Monat', value: M.fmt(hass, C.id, d.perMonth) });
       } else {

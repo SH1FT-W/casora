@@ -143,7 +143,23 @@ s = M.summarize([{ start: h0 - 3 * D, change: 10 }, { start: h0 - 2 * D, change:
 assert.deepEqual([s.empty, s.sum, s.today, s.perDay], [false, 33.5, 3.5, 10]);
 s = M.summarize([{ start: h0 - 2 * H, change: 1 }, { start: h0 + 5 * H, change: 2 }, { start: h0 + 13 * H, change: 0.5 }], 'total', '24h', now);
 assert.deepEqual([s.sum, s.today, s.perDay], [3.5, 2.5, null], 'hourly: today from midnight, no per-day average');
-assert.equal(s.min, undefined);
+// Review 2 (T13): counters name their lowest/highest bucket and the average per whole hour on 24 h as well; the
+// running hour (14:00–14:10) counts for the highest only.
+s = M.summarize([{ start: h0 - 2 * H, change: 1 }, { start: h0 + 5 * H, change: 2 }, { start: h0 + 13 * H, change: 0.5 }, { start: h0 + 14 * H, change: 0.1 }], 'total', '24h', now);
+assert.deepEqual([s.max, s.min, s.perBucket], [{ v: 2, t: h0 + 5 * H }, { v: 0.5, t: h0 + 13 * H }, 3.5 / 3]);
+// Review 2 (T06): a total_increasing meter's reset (negative change) is no consumption – not in sum, today or the
+// lowest bucket; without mono (state_class total) the change stays.
+s = M.summarize([{ start: h0 - 2 * D, change: 4 }, { start: h0 - D, change: -143.8 }, { start: h0, change: 1 }], 'total', '7d', now, { mono: true });
+assert.deepEqual([s.sum, s.today, s.min, s.max.v, s.perDay], [5, 1, null, 4, 4], 'one whole day: no lowest');
+s = M.summarize([{ start: h0 - D, change: -143.8 }, { start: h0, change: 1 }], 'total', '7d', now);
+assert.equal(Math.round(s.sum * 10) / 10, -142.8, 'state_class total may go down');
+// Never „-0,0“.
+{
+  const fh = { states: { 'sensor.x': { attributes: { unit_of_measurement: 'kWh' } } }, entities: { 'sensor.x': { display_precision: 1 } } };
+  assert.equal(M.fmt(fh, 'sensor.x', -0.01), '0,0 kWh');
+  assert.equal(M.fmt(fh, 'sensor.x', -0.04), '0,0 kWh');
+  assert.equal(M.fmt(fh, 'sensor.x', -0.3), '-0,3 kWh');
+}
 // Year: monthly rows → this month, the sum, the average per whole month (no per-day figure).
 const m0 = new Date(2026, 9, 1).getTime(), mo = (k) => new Date(2026, 9 - k, 1).getTime();
 s = M.summarize([{ start: mo(2), change: 100 }, { start: mo(1), change: 120 }, { start: m0, change: 30 }], 'total', '1y', now);
@@ -298,13 +314,13 @@ answer = { 'sensor.zaehler_energie': [{ start: dayStart(today0 - 12 * 36e5), cha
 M.sec('stats', EC, states, hass, el);
 await new Promise((r) => setTimeout(r, 0));
 st = JSON.parse(M.sec('stats', EC, states, hass, el));
-assert.deepEqual(st.rows.map((r) => [r.label, r.value]), [['Heute', '3,5 kWh'], ['Letzte 7 Tage', '11,5 kWh'], ['Ø pro Tag', '8,0 kWh']]);
+assert.deepEqual(st.rows.map((r) => [r.label, r.value]), [['Heute', '3,5 kWh'], ['Letzte 7 Tage', '11,5 kWh'], ['Höchster Tag', '8,0 kWh'], ['Ø pro Tag', '8,0 kWh']]);
 hero = JSON.parse(M.sec('hero', EC, states, hass, el)).hero;
 assert.equal(hero.sub, 'Heute 3,5 kWh');
 // Year with a counter (fetched above): this month, the sum of 12 months, Ø per month; month names on the reading rows.
 M.setSpan('sensor.zaehler_energie', '1y');
 st = JSON.parse(M.sec('stats', EC, states, hass, el));
-assert.deepEqual(st.rows.map((r) => [r.label, r.value]), [['Dieser Monat', '30,0 kWh'], ['Letzte 12 Monate', '250 kWh'], ['Ø pro Monat', '110 kWh']]);
+assert.deepEqual(st.rows.map((r) => [r.label, r.value]), [['Dieser Monat', '30,0 kWh'], ['Letzte 12 Monate', '250 kWh'], ['Höchster Monat', '120 kWh'], ['Niedrigster Monat', '100 kWh'], ['Ø pro Monat', '110 kWh']]);
 hero = JSON.parse(M.sec('hero', EC, states, hass, el)).hero;
 assert.equal(hero.sub, 'Dieser Monat 30,0 kWh');
 M.setSpan(CPU, '1y');
