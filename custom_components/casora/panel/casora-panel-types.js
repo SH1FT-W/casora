@@ -732,6 +732,9 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   };
   const OURS = new Set((window.CASORA_TILE_TYPES || []).map((t) => t.template));
   const OWN_DATA = new Set(["casora_trash"]);
+  // T04 (test 2): lights and locks are the panel's own types (not in CASORA_TILE_TYPES), so the preview guessed
+  // "Alle an"/"Entriegelt" while the dashboard counted "24 An"/"2 entriegelt" – their templates run here too.
+  ["casora_light", "casora_lock"].forEach((n) => OURS.add(n));
   const names = (t) => (Array.isArray(t) ? t : t ? [t] : []);
   const isOurs = (tile) => names(tile && tile.template).some((n) => OURS.has(n));
   // Also tile types with a template list (underfloor heating: casora_thermostat + casora_popup_fbh).
@@ -810,7 +813,17 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     import("/casora_scripts/local/05-standard-medien.js").catch(() => {});
   };
 
-  window.casoraTileState = (tile, ent, hass, templates) => {
+  // The house light tile (light_rooms_auto) counts the rooms' lights via window._casoraHouseLights, which reads the
+  // dashboard's config – in the Studio the rooms being edited (casoraBasis.houseLights, the same rule).
+  const withHouseLights = (rooms, fn) => {
+    const B = window.casoraBasis;
+    if (!rooms || !B || !B.houseLights) return fn();
+    const was = window._casoraHouseLights;
+    window._casoraHouseLights = (h) => B.houseLights(h, rooms);
+    try { return fn(); } finally { if (was === undefined) delete window._casoraHouseLights; else window._casoraHouseLights = was; }
+  };
+  window.casoraTileState = (tile, ent, hass, templates, rooms) => withHouseLights(rooms, () => tileState(tile, ent, hass, templates));
+  const tileState = (tile, ent, hass, templates) => {
     // Entity list and Mehr (#59) have no entity: their text comes from the dashboard module.
     const tl = names(tile && tile.template);
     if (hass && (tl.includes("casora_entity_list") || tl.includes("casora_more"))) {

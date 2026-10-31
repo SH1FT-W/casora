@@ -25872,7 +25872,8 @@ class CasoraPanel extends HTMLElement {
       }
       el.querySelector(".mstate").textContent =
         // Casora: Zustandstext wie im Dashboard (state_display der Vorlage).
-        (window.casoraTileState && window.casoraTileState(tile, ent, this._hass, this._state && this._state.templates))
+        (window.casoraTileState && window.casoraTileState(tile, ent, this._hass, this._state && this._state.templates,
+          this._state && this._state.compact && this._state.compact.rooms))
         || tileStateWord(kind, tile, ent, this._hass.states, this._hass);
       // Wie in der Kachelliste: ohne Gerät zeigt das Dashboard nur den Namen.
       // Gerät fehlt in HA: wie die Dashboard-Kachel (casora_entity, Zustand casora_missing).
