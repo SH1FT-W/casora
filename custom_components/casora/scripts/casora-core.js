@@ -11605,11 +11605,14 @@ window.casoraMenuGlass = {
     // The popup's own ha-icon rule (margin auto) pushed the symbol and the sentence to the bottom of the centre.
     + '.hui-dl-c ha-icon.hui-dl-sym{background:none;--mdc-icon-size:clamp(36px, 11cqw, 46px);margin:0 0 6px !important;}'
     + '.hui-moon ha-icon{margin:0 !important;}'
+    + '.hui-dl-c ha-icon.hui-dl-sym6{color:' + T.ink + ';margin:0 0 2px !important;}'
+    + '.hui-dl-end{position:absolute;top:79cqw;font-size:13px;font-weight:700;color:' + S.sub + ';font-variant-numeric:tabular-nums;white-space:nowrap;transform:translateX(-50%);pointer-events:none;}'
+    + '.hui-dl-end.l{left:28%;}.hui-dl-end.r{left:72%;}'
     + '.hui-dl-pm{display:flex;gap:clamp(36px, 15cqw, 76px);margin-top:10px;pointer-events:auto;}'
     + '.hui-dl-pm .hui-st-b{width:44px;height:44px;font-size:22px;background:' + S.row + ';}'
     // The record (dial-alle.html): black vinyl with a sheen and grooves, the cover as its round label in the middle –
     // without artwork the label is the device colour with a note, so the middle never stays an empty disc.
-    + '.hui-dl-cover{position:absolute;left:24.8%;top:24.8%;width:50.4%;height:50.4%;border-radius:50%;overflow:hidden;pointer-events:none;'
+    + '.hui-dl-cover{position:absolute;left:24.8%;top:24.8cqw;width:50.4%;height:50.4cqw;border-radius:50%;overflow:hidden;pointer-events:none;'
     +   'background:conic-gradient(from 0deg, var(--casora-dial-record, #2a2a2e), var(--casora-dial-record-deep, #1c1c1e) 10%, var(--casora-dial-record, #2a2a2e) 20%,'
     +   ' var(--casora-dial-record-deep, #1c1c1e) 30%, var(--casora-dial-record, #2a2a2e) 40%, var(--casora-dial-record-deep, #1c1c1e) 50%, var(--casora-dial-record, #2a2a2e) 60%,'
     +   ' var(--casora-dial-record-deep, #1c1c1e) 70%, var(--casora-dial-record, #2a2a2e) 80%, var(--casora-dial-record-deep, #1c1c1e) 90%, var(--casora-dial-record, #2a2a2e));'
@@ -11824,13 +11827,19 @@ window.casoraMenuGlass = {
       if (r6.marker != null) ring.marker = dialPct(r6.marker, mn6, mx6);
       ring.heat = !!r6.heat;
       if (r6.color) ring.col = r6.color;
+      // r6.dot: a white dot at the end of the level (weather: where „now“ sits between the day's low and high).
+      if (r6.dot) ring.knob = true;
       var na6 = (o.read ? ' data-casora-read="' + esc(o.read) + '" data-casora-read-bare=""' : '')
         + (o.live ? ' data-hp-live="' + esc(o.live) + '"' + (o.liveDigits != null ? ' data-hp-digits="' + esc(o.liveDigits) + '"' : '') : '');
-      centerHtml = (o.caption ? '<div class="hui-dl-cap">' + esc(o.caption) + '</div>' : '')
+      // o.icon: a symbol above the value (the weather's condition).
+      centerHtml = (o.icon ? '<ha-icon class="hui-dl-sym hui-dl-sym6" icon="' + esc(o.icon) + '" style="display:flex;"></ha-icon>' : '')
+        + (o.caption ? '<div class="hui-dl-cap">' + esc(o.caption) + '</div>' : '')
         + stValue(o.value, o.unit || '', o.word ? dWordCls(o.value) : '', na6)
-        + (o.trend || o.read ? '<div class="hui-st-w"' + (o.read ? ' data-casora-read-when=""' : '') + '>' + esc(o.trend || '') + '</div>' : '') + (o.foot ? '<div class="hui-dl-w2">' + esc(o.foot) + '</div>' : '');
-      if (o.chart) var chartHtml = o.chart;
-      belowHtml = '<div class="hui-st-chart">' + chartHtml + '</div>' + (o.range && o.range.length ? segments(o.range) : '');
+        + (o.trend || o.read ? '<div class="hui-st-w"' + (o.read ? ' data-casora-read-when=""' : '') + '>' + esc(o.trend || '') + '</div>' : '') + (o.foot ? '<div class="hui-dl-w2">' + dLines(o.foot) + '</div>' : '');
+      // o.ends: the words at both ends of the ring („T 13°“ left, „H 21°“ right), in the gap at the bottom.
+      if (o.ends && o.ends.length === 2) coverHtml += '<div class="hui-dl-end l">' + esc(o.ends[0]) + '</div><div class="hui-dl-end r">' + esc(o.ends[1]) + '</div>';
+      // Without a chart nothing stands under the wheel (an empty 160 plate read „undefined“ before).
+      belowHtml = (o.chart ? '<div class="hui-st-chart">' + o.chart + '</div>' : '') + (o.range && o.range.length ? segments(o.range) : '');
     } else if (code === 'S7') {
       var tone = TONE[o.tone] || TONE.good;
       ring.col = o.tone === 'off' ? S.ctl : tone;
@@ -11844,26 +11853,38 @@ window.casoraMenuGlass = {
       centerHtml = (url7 ? '<div class="hui-dl-sym" style="--g:url(\'' + esc(url7) + '\')"></div>'
           : (o.icon ? '<ha-icon class="hui-dl-sym" icon="' + esc(o.icon) + '" style="display:flex;"></ha-icon>' : ''))
         + valHtml
-        + '<div class="hui-dl-t">' + esc(o.text) + '</div>'
+        // A sentence of several things („Schloss offen · 2 Fenster offen · Kamera offline“) takes one line per thing –
+        // never a „·“ at the start or end of a line (review 2, DH-09/fam-13).
+        + (String(o.text == null ? '' : o.text).indexOf(' · ') > -1
+          ? '<div class="hui-dl-t ln">' + String(o.text).split(' · ').slice(0, 3).map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</div>'
+          : '<div class="hui-dl-t">' + esc(o.text) + '</div>')
         // Value and word as their own text nodes, so the dashboard translator still finds „Geöffnet“, „Seit“ …
+        // A count reads „2 geöffnet“; anything else names its word first („Seit 19:40“, „Zuletzt vor 7 Min.“,
+        // „Letzte Fahrt vor 42 Tagen“) – „vor 7 Min. Zuletzt“ read backwards (review 2, DD-11/T16/fam-12).
         + (facts.length ? '<div class="hui-dl-w2">' + facts.map(function (f) {
-          return '<span><b>' + esc(f.value) + '</b> <span>' + esc(f.label) + '</span></span>';
-        }).join(' · ') + '</div>' : '');
+          return /^\d+$/.test(String(f.value)) ? '<span class="l"><b>' + esc(f.value) + '</b> <span>' + esc(f.label) + '</span></span>'
+            : '<span class="l"><span>' + esc(f.label) + '</span> <b>' + esc(f.value) + '</b></span>';
+        }).join('') + '</div>' : '');
       act = o.action;
       cls = ' tone-' + (o.tone || 'good');
       // The symbol takes the tone, darkened towards the ink so it keeps 3 : 1 on the popup.
       ring.symCol = o.tone === 'off' ? S.sub : 'color-mix(in srgb, ' + tone + ' 80%, ' + T.ink + ')';
     }
+    // Something dangerous (disarm, end the alarm, unlock all) is never a moon (§5 „Verboten“): it stands under the wheel
+    // as an unfilled pill in red with a question first (review 2, DD-20/DH-05).
+    if (act && act.text && act.danger) { belowHtml = stPill(act) + belowHtml; act = null; }
     var mq = o.moons && o.moons.items ? o.moons : { items: o.moons || [], o: {} };
     var mo = moons(mq.items, act, { page: o.moonsPage || (mq.o || {}).page, live: o.moonsLive || (mq.o || {}).live });
+    ring.moons = mo.degs;
     var colVar = '--dl-col:' + (ring.heat ? 'var(--casora-color-orange, #FF9F0A)' : ring.col) + ';';
     var symHtml = ring.symCol ? ' style="--dl-col:' + esc(ring.symCol) + '"' : '';
-    var lbl = o.label || o.text || o.caption || '';
+    var lbl = o.label || (code === 'S2' ? T_('Zieltemperatur') : '') || o.text || o.caption || '';
+    if (code === 'S2' && !o.label && o.unit === '%') lbl = o.caption || '';
     var dl = '<div class="hui-dl" style="' + esc(colVar) + '"'
-      + (spec ? ' role="slider" tabindex="0" aria-label="' + esc(lbl) + '"' + ariaHtml + ' data-casora-axis="dial" data-pct="' + esc(dRound(ring.pct)) + '" data-casora-slider="' + esc(JSON.stringify(spec)) + '"' : (ariaHtml.indexOf('role=') > -1 ? ariaHtml : ''))
+      + (spec ? ' role="slider" tabindex="0" aria-label="' + esc(lbl) + '"' + ariaHtml + ' data-casora-axis="dial" data-pct="' + esc(dRound(dataPct != null ? dataPct : ring.pct)) + '" data-casora-slider="' + esc(JSON.stringify(spec)) + '"' : (ariaHtml.indexOf('role=') > -1 ? ariaHtml : ''))
       + liveHtml + '>'
       + dialSvg(ring) + coverHtml
-      + (coverHtml && code !== 'S2' ? '' : '<div class="hui-dl-c"' + symHtml + '>' + centerHtml + '</div>')
+      + (coverHtml && code !== 'S2' && code !== 'S6' ? '' : '<div class="hui-dl-c"' + symHtml + '>' + centerHtml + '</div>')
       + (mo.html ? '<div class="hui-dl-ms"' + mo.liveHtml + '>' + mo.html + '</div>' : '') + '</div>';
     return { html: dl + belowHtml, cls: ' dial' + (mo.bottom ? ' mb' : '') + cls };
   }

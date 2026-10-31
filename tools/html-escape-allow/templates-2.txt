@@ -9,6 +9,7 @@ dashboards/casora/button_card_templates.json#casora_weather | (i === 0 ? 'Heute'
 dashboards/casora/button_card_templates.json#casora_weather | re:^(?:left|width)$ | popup: bar position, toFixed() numbers | 2
 dashboards/casora/button_card_templates.json#casora_weather | re:^(?:pills|_mh|css|chartH)$ | popup: markup/CSS of the code (labels escaped where built) | 6
 dashboards/casora/button_card_templates.json#casora_weather | key | popup: 'hw_' + id with [^a-zA-Z0-9] replaced | 3
+dashboards/casora/button_card_templates.json#casora_weather | re:^(?:\(_v3 \? '' : pills\)|line3|\(chartH \|\| ''\))$ | popup v3: markup of the code – UI.line() escapes, pills/chartH as above | 3
 dashboards/casora/button_card_templates.json#casora_weather | (hiLo || '') | popup: "H 12° · T 5°" from r0() numbers | 1
 # casora_weather_warning, casora_popup_weather_warning
 dashboards/casora/button_card_templates.json#casora_weather_warning | return isMobile ? _t : "Warnungen · " + _t | _t = casoraEsc(text) one line above | 1
