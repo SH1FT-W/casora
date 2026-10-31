@@ -251,8 +251,8 @@ def notification_text(news: dict, language: Any) -> tuple[str, str] | None:
     if parts:
         joined = parts[0] if len(parts) == 1 else f"{parts[0]} {t['and']} {parts[1]}"
         lines.append(f"{t['intro']} {joined}. {t['end']}")
-    if removed:
-        lines.append("\n".join(f"- `script.{o}`" for o in removed))
+    # E28 (test 2): what is gone is only counted – a list of script IDs means nothing to anyone (kept ones are
+    # still named, the user may act on them).
     if kept:
         rows = []
         for o, info in kept.items():

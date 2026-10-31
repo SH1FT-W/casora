@@ -61,6 +61,7 @@ check(title == "Casora hat aufgeräumt" and msg.startswith(
     "Casora braucht sie nicht mehr."), f"de, both: {msg!r}")
 _, msg = lc.notification_text({"removed": ["casora_restart_toggle"]}, "de")
 check("1 Skript aus einer früheren Version." in msg and "Datei" not in msg and "Behalten" not in msg, f"de, one script only: {msg!r}")
+check("script." not in msg and "casora_restart_toggle" not in msg, f"E28: no IDs of removed scripts: {msg!r}")
 _, msg = lc.notification_text({"theme": {"path": "themes/casora-themes.yaml", "removed": True}}, "en-GB")
 check(msg.startswith("Casora removed old entries: the file `themes/casora-themes.yaml`. Casora no longer needs them.")
       and "script" not in msg, f"en, theme only: {msg!r}")
@@ -203,7 +204,7 @@ with tempfile.TemporaryDirectory() as d:
     check(len(notes) == 1 and notes[0][0] == lc.NOTIFICATION_ID, f"one notification: {notes}")
     msg = notes[0][2]
     check("1 Skript aus einer früheren Version und die Datei `themes/casora-themes.yaml`" in msg
-          and "`script.casora_light_smart_toggle`" in msg and "wird noch verwendet (von `automation.mine`)" in msg
+          and "`script.casora_light_smart_toggle`" not in msg and "wird noch verwendet (von `automation.mine`)" in msg
           and "wurde von dir geändert" in msg and "casora_unknown" not in msg, f"notification text: {msg!r}")
     kept = issues.get(lc.ISSUE_KEPT, {})
     check(kept.get("translation_placeholders", {}).get("scripts") == "script.casora_thermostat_overlay_toggle, script.casora_restart_toggle"
