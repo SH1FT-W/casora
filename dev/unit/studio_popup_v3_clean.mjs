@@ -2,6 +2,7 @@
 // offer fields that only fed them – they changed nothing any more.   node dev/unit/studio_popup_v3_clean.mjs
 //   cover / cover group: "Shade automation", "Automation today" (smart_automation_entity, smart_automation_today_entity)
 //   waste tile and Settings → Waste: "Reminder automation" (trash_reminder, waste.reminder – "Push the evening before")
+//   doorbell / Frigate descriptions: "the doorbell's settings", "recordings … and the camera switches"
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { loadPanel } from './lib/testhaus.mjs';
@@ -23,4 +24,10 @@ const tpl = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_c
 const cover = JSON.stringify(tpl.casora_popup_cover);
 assert.ok(/HZ_SYS && states\[HZ_SYS\] && !_v3/.test(cover.replace(/\\n/g, ' ')), 'cover popup: shade switch only outside v3');
 assert.ok(/states\[REMINDER\] && !_v3/.test(JSON.stringify(tpl.casora_trash)), 'waste popup: reminder switch only outside v3');
+// Tile descriptions (Add a tile, Community) promise only what the v3 popup still shows: doorbell without its settings,
+// Frigate without recordings, objects and camera switches (24-klingel.js, 23-frigate.js: "No settings", "just the picture").
+const desc = Object.fromEntries(types.filter((t) => t.community && t.community.desc).map((t) => [t.id, t.community.desc]));
+const promise = Object.entries(desc).filter(([id, d]) => /doorbell|frigate/i.test(id + ' ' + d)
+  && /settings|camera switches|recordings of the last days/i.test(d)).map(([id]) => id);
+assert.deepEqual(promise, [], 'descriptions promising popup parts v3 dropped');
 console.log('studio_popup_v3_clean: ok');

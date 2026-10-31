@@ -444,7 +444,7 @@ window.CASORA_TILE_TYPES = [
   { id: "casora_frigate", label: "Frigate camera", template: "casora_frigate", domains: ["camera"], classes: ["camera"],
     icon: "camera", entityLabel: "Frigate camera",
     // "Seen" (frigate/reviews/viewed) applies per Frigate user = the integration's user (23-frigate.js F.mark).
-    community: { desc: "Live camera with what Frigate detected last. The popup shows the live view, alerts and detections with clip, download, share and favorite, the recordings of the last days with a timeline, objects and the camera switches. “Seen” is stored by Frigate for the user the integration signs in with – so everyone in Home Assistant shares the same state.",
+    community: { desc: "Live camera with what Frigate detected last. The popup shows the live view and the latest alerts and detections; its main switch turns detection on and off. “Seen” is stored by Frigate for the user the integration signs in with – so everyone in Home Assistant shares the same state.",
       needs: "frigate", needsText: "For every camera of the Frigate integration",
       needsMissing: "Frigate integration not installed yet", darkShots: true },
     fields: [ICON, TITLE_NAME,
@@ -480,7 +480,7 @@ window.CASORA_TILE_TYPES = [
   { id: "casora_reolink_doorbell", label: "Reolink doorbell", template: "casora_reolink_doorbell", domains: ["camera"],
     icon: "doorbell", entityLabel: "Doorbell camera",
     onlyIf: (hass) => !!(hass && hass.entities && Object.values(hass.entities).some((e) => e && e.translation_key === "visitor")),
-    community: { desc: "Doorbell with live picture that says when someone rang. The popup has the live view with sound, quick replies, the siren, who rang lately and the doorbell's settings.",
+    community: { desc: "Doorbell with live picture that says when someone rang. The popup has the live view with sound, quick replies, the siren and who rang lately.",
       needs: "reolink", needsText: "For every Reolink doorbell", needsMissing: "Reolink integration not installed yet",
       darkShots: true },
     fields: [ICON, TITLE_NAME,
