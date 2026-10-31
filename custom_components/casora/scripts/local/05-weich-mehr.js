@@ -642,7 +642,11 @@
     var card = FO.build({ hass: h, states: h.states, variables: Object.assign({}, X.variables || {}, { energy_focus: focus }),
       metricCard: X.metricCard, inner: X.inner });
     var TITLE = { home: 'Haus', solar: 'Solar', grid: 'Netz', battery: 'Akku' };
-    if (card) window.casoraPopup.sub({ title: TITLE[focus] || 'Energie', content: card });
+    // Two columns (stage, list): as wide as the energy popup, its sheet styles kept.
+    var prev = window.casoraPopup.current;
+    if (card) window.casoraPopup.sub({ title: TITLE[focus] || 'Energie', content: card, popup_styles: prev && prev.popup_styles,
+      style: card && card._casoraNarrow ? '--popup-min-width: min(552px, 92vw); --popup-max-width: min(552px, 92vw);'
+        : '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);' });
   };
 
   // ── Energy flow as bars (1.2.1, design B "Sankey light") ─────────────────
