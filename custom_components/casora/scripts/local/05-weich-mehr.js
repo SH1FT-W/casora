@@ -268,6 +268,18 @@
       acts: (ctx.actions || []).filter(function (a) { return a && a[0]; }),
     };
     var f = {};
+    // Popup v3 (richtlinien §4 S7, §8, #98): „Ist mein Internet ok, wie schnell?“ – online state, down/up and ping as the
+    // status stage with „Speedtest starten“ in it; Wi-Fi switches and the rated devices as lists, the throughput chart
+    // as the one history. Provider, public IP, latency per target, throughput per band and device details go („Mehr“).
+    if (UI.v3 && UI.v3() && UI.stage) {
+      f.stage = { card: secCard([C.dl, C.ul, C.status, C.ping, C.stDown, C.stUp, C.stButton, C.stRunning, C.stLast], call('_casoraSoftNet', 'stage', C), states) };
+      if (ctx.metricCard) f.metric = { card: chartCard(ctx.metricCard, null) };
+      if (C.wlans.length) f.wl = { card: secCard(C.wlans.map(function (w) { return w.sw; }).concat(C.wlans.map(function (w) { return w.clients; })), call('_casoraSoftNet', 'wl', C), states) };
+      if (C.devices.filter(function (d) { return states[d.state] || states[d.pulse] || states[d.restart]; }).length) {
+        f.nd = { card: secCard([].concat.apply([], C.devices.map(function (d) { return [d.state, d.pulse, d.update]; })), call('_casoraSoftNet', 'nd', C), states) };
+      }
+      return layout({ fields: f, top: [], stage: 'stage', left: ['wl'], right: ['nd', 'metric'], moveLeft: ['nd'], narrowOrder: ['wl', 'nd', 'metric'] });
+    }
     f.hero = { card: secCard([C.dl, C.ul, C.status, C.ping], call('_casoraSoftNet', 'hero', C), states) };
     var st = C.stButton && states[C.stButton]
       ? { card: secCard([C.stButton, C.stRunning, C.stLast], call('_casoraSoftNet', 'st', C), states) } : null;
@@ -299,6 +311,27 @@
       var sub = [rate ? rate + ' Mbit/s' : null, p != null && p > 0 ? (p < 1 ? '< 1' : Math.round(p)) + ' ms' : null].filter(Boolean).join(' · ');
       return UI.hero({ center: true, value: stt === 'on' ? 'Online' : stt === 'off' ? 'Offline' : '—',
         sub: stt === 'off' ? 'Keine Verbindung' : (sub || null), subTone: stt === 'off' ? 'bad' : null, read: '*' });
+    }
+    if (part === 'stage') {
+      var dl7 = num(states, C.dl), ul7 = num(states, C.ul), p7 = num(states, C.ping);
+      // Without live throughput: the last speedtest (when it is its own sensor).
+      if (dl7 == null && ul7 == null) { dl7 = num(states, C.stDown); ul7 = num(states, C.stUp); }
+      var s7 = raw(states, C.status);
+      var on7 = (s7 === 'on' || s7 === 'off') ? s7 === 'on' : ((dl7 != null || ul7 != null) ? true : null);
+      var run7 = raw(states, C.stRunning) === 'on';
+      var last7 = ok(raw(states, C.stLast)) ? ago(raw(states, C.stLast)) : null;
+      var facts7 = on7 === false ? [] : [
+        dl7 != null ? { label: 'Download', value: fN(dl7, hass) + ' Mbit/s' } : null,
+        ul7 != null ? { label: 'Upload', value: fN(ul7, hass) + ' Mbit/s' } : null,
+        p7 != null && p7 > 0 ? { label: 'Ping', value: (p7 < 1 ? '< 1' : Math.round(p7)) + ' ms' } : null];
+      var act7 = C.stButton && states[C.stButton] ? (run7 ? { text: 'Speedtest läuft …', icon: 'mdi:speedometer' }
+        : { text: 'Speedtest starten', sub: last7 ? 'Zuletzt ' + last7 : null, icon: 'mdi:speedometer',
+          svc: { domain: 'button', service: 'press', target: { entity_id: C.stButton } } }) : null;
+      return UI.stage('status', {
+        tone: on7 === true ? 'good' : on7 === false ? 'bad' : 'off', state: on7 == null ? 'na' : null,
+        icon: on7 === false ? 'mdi:web-off' : 'mdi:web', text: on7 === true ? 'Online' : on7 === false ? 'Keine Verbindung' : 'Unbekannt',
+        facts: facts7, action: act7,
+      });
     }
     if (part === 'st') {
       var running = raw(states, C.stRunning) === 'on';

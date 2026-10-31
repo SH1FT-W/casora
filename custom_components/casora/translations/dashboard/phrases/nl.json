@@ -2580,7 +2580,22 @@
   "Pulse: Lernt": "Pulse: Leert",
   "Pulse: Beobachten": "Pulse: Volgen",
   "Pulse: Prüfen": "Pulse: Controleren",
-  "Pulse: Ausgefallen": "Pulse: Uitgevallen"
+  "Pulse: Ausgefallen": "Pulse: Uitgevallen",
+  "Zählt": "Telt",
+  "In Ordnung": "In orde",
+  "Von zuhause": "Van huis",
+  "Alarm beenden?": "Alarm stoppen?",
+  "Alarmanlage unscharf schalten?": "Alarmsysteem uitschakelen?",
+  "Sensor offen": "Sensor open",
+  "Sensoren offen": "Sensoren open",
+  "Wirklich?": "Zeker weten?",
+  "Schloss entriegeln?": "Slot ontgrendelen?",
+  "Bis": "Tot",
+  "Gebiet": "Gebied",
+  "KI-Warnung": "AI-waarschuwing",
+  "Backup": "Back-up",
+  "Am niedrigsten": "Laagste",
+  "Ping": "Ping"
  },
  "patterns": [
   [

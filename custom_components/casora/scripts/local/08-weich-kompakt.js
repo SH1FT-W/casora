@@ -54,9 +54,13 @@
     var ids = list.map(function (b) { return b.id; });
     var chg = [].concat.apply([], list.map(function (b) { return b.charge || []; }));
     var hpOk = typeof window._hpChartCfg === 'function';
-    if (hpOk) list.forEach(function (b) { window._hpChartCfg(b.id, b.name, '30d', '#30D158', 140); });
+    // Popup v3 (richtlinien §4 S7, §7): status stage, the chart (a row picks it, v2 decision 3) under it on the left,
+    // the lists on the right; colour from the theme.
+    var v3 = !!(UI.v3 && UI.v3() && UI.stage);
+    if (hpOk) list.forEach(function (b) { window._hpChartCfg(b.id, b.name, '30d', v3 ? 'var(--casora-color-green)' : '#30D158', 140); });
     var f = {};
-    f.hero = { card: K.secCard(ids, call('_casoraSoftBat', 'hero', C), states) };
+    if (v3) f.stage = { card: K.secCard(ids, call('_casoraSoftBat', 'stage', C), states) };
+    else f.hero = { card: K.secCard(ids, call('_casoraSoftBat', 'hero', C), states) };
     // Leere Bereiche gar nicht erst anlegen (eine leere Karte kostet sonst einen Rasterabstand).
     var R0 = rows(states, C);
     if (hpOk && R0.length) {
@@ -74,6 +78,7 @@
     }
     if (R0.some(function (r) { return lvOf(r.v) !== 'ok'; })) f.low = { card: K.secCard(ids.concat(chg), call('_casoraSoftBat', 'low', C), states) };
     if (R0.some(function (r) { return lvOf(r.v) === 'ok'; })) f.all = { card: K.secCard(ids.concat(chg), call('_casoraSoftBat', 'all', C), states) };
+    if (v3) return K.layout({ fields: f, top: [], stage: 'stage', left: ['chart'], right: ['low', 'all'], narrowOrder: ['low', 'all', 'chart'] });
     return K.layout({ fields: f, top: ['hero', 'chart', 'low', 'all'], left: [], right: [] });
   };
   var pctOf = function (states, id) { var n = parseFloat(raw(states, id)); return isNaN(n) ? null : Math.round(n); };
@@ -144,6 +149,15 @@
       return UI.line(low.length ? (low.length === 1 ? '1 Akku schwach' : low.length + ' Akkus schwach') : 'Alle Batterien OK',
         min ? ['Am niedrigsten: ' + min.name + ' ' + min.v + ' %'] : [], { tone: low.length ? (crit ? 'bad' : 'warn') : null });
     }
+    // Popup v3 stage S7: „Alle Batterien OK“ / „n Akkus schwach“, the weakest and the counts as facts.
+    if (part === 'stage') {
+      var min7 = R[0], crit7 = low.some(function (r) { return lvOf(r.v) === 'crit'; });
+      return UI.stage('status', {
+        tone: low.length ? (crit7 ? 'bad' : 'warn') : 'good', icon: low.length ? 'mdi:battery-alert' : 'mdi:battery-check',
+        text: low.length ? (low.length === 1 ? '1 Akku schwach' : low.length + ' Akkus schwach') : 'Alle Batterien OK',
+        facts: [min7 ? { label: 'Am niedrigsten', value: min7.v + ' %' } : null, { label: 'Batterien', value: String(R.length) }],
+      });
+    }
     if (part === 'low') {
       return low.length ? SEL_CSS + tapWrap(UI.group(low.map(function (r) { return rowOf(states, r); }), 'Akku schwach')) : '';
     }
@@ -159,7 +173,15 @@
       if (!rest.length) return '';
       /* Blueprint v2 (rule 9): from 12 rows on the first 12 (weakest first) and „Alle (n) ›“ onto a page. */
       var moreRowHtml = '';
-      if (R.length > 12) {
+      // v3 (clean): the rest of the list unfolds in place („Alle n anzeigen“) instead of a sub page.
+      if (R.length > 12 && UI.v3 && UI.v3()) {
+        var tail7 = rest.slice(Math.max(0, 12 - low.length));
+        rest = rest.slice(0, Math.max(0, 12 - low.length));
+        var tailRows = tail7.map(function (r) { return rowOf(states, r); });
+        moreRowHtml = '<div style="height:8px"></div>' + UI.more('bat-all', '<div class="hp-batall">' + tapWrap(UI.group(tailRows, null)) + '</div>',
+          { keep: true, label: 'Alle ' + R.length + ' anzeigen', less: 'Weniger anzeigen' });
+        if (!rest.length) return SEL_CSS + moreRowHtml;
+      } else if (R.length > 12) {
         rest = rest.slice(0, Math.max(0, 12 - low.length));
         moreRowHtml = '<div style="height:8px"></div>' + UI.group([{ icon: 'mdi:format-list-bulleted', iconTone: 'rgba(0,0,0,0)',
           label: 'Alle', value: String(R.length), page: 'bat-all' }], null);
@@ -223,6 +245,15 @@
     var all = ctx.allIds || [];
     var watchB = [C.backupLast, C.backupState, AI];
     var f = {};
+    // Popup v3 (richtlinien §4 S7, §8): status stage with „Alle aktualisieren“ / „Jetzt neu starten“, the updates as the
+    // list (12 rows, the rest behind „Alle n anzeigen“), the search row; the AI check only with a warning. No „Mehr“.
+    if (UI.v3 && UI.v3() && UI.stage) {
+      f.stage = { card: K.secCard(all.concat(watchB, [AI]), call('_casoraSoftUpd', 'stage', C), states) };
+      f.upd = { card: K.secCard(all.concat([AI]), call('_casoraSoftUpd', 'list', C), states) };
+      f.chk = { card: K.secCard(all, call('_casoraSoftUpd', 'chk', C), states) };
+      if (U.hasWarn(states) && fl.ai) f.ai = fl.ai;
+      return K.layout({ fields: f, top: [], stage: 'stage', left: ['upd', 'chk'], right: ['ai'] });
+    }
     f.hero = { card: K.secCard(all.concat(watchB), call('_casoraSoftUpd', 'hero', C), states) };
     /* 1.0.5: „Wartet auf Neustart“ steht live im Kopf (sec 'hero'), nicht als eigenes Feld – ein
        leeres Rasterfeld kostete einen Abstand, und beim Öffnen gebaut fehlte es nach der Installation. */
@@ -322,6 +353,51 @@
       var chk = '';
       return UI.line(head, [busy ? (busy === 1 ? 'Wird installiert' : busy + ' werden installiert') : null, ki, backup],
         { tone: n ? null : restartOnly ? 'warn' : 'good' }) + chk + (rest ? '<div style="text-align:left;">' + rest + '</div>' : '');
+    }
+    if (part === 'stage') {
+      var n7 = pend.length, X7 = window._casoraUpdX;
+      var rest7 = !n7 && X7 && X7.restartIds ? X7.restartIds(states).length : 0;
+      var busy7 = pend.filter(function (id) { return states[id].attributes.in_progress; }).length;
+      var inst7 = pend.filter(function (id) {
+        var a = states[id].attributes || {};
+        return !a.in_progress && (Number(a.supported_features || 0) & 1) && !(window._casoraUpdAiBlocked && window._casoraUpdAiBlocked(id, states));
+      });
+      var lb7 = raw(states, C.backupLast), bs7 = raw(states, C.backupState);
+      var warn7 = warnCount(states);
+      var facts7 = [];
+      if (busy7) facts7.push({ label: 'Wird installiert', value: String(busy7) });
+      if (warn7) facts7.push({ label: 'KI-Warnung', value: String(warn7) });
+      if (bs7 && ok(bs7) && bs7 !== 'idle') facts7.push({ label: 'Backup', value: 'Läuft' });
+      else if (ok(lb7)) facts7.push({ label: 'Backup', value: ago(lb7) });
+      // Same services and questions as the list head's button: install all that can, else restart once owed.
+      var act7 = inst7.length > 1 ? { text: 'Alle aktualisieren', icon: 'mdi:download', primary: true,
+          svc: { domain: 'update', service: 'install', target: { entity_id: inst7 }, data: {} }, confirm: 'Alle ' + inst7.length + ' Updates jetzt installieren?' }
+        : rest7 && !busy7 ? { text: 'Jetzt neu starten', icon: 'mdi:restart', svc: { domain: 'homeassistant', service: 'restart', data: {} },
+          confirm: 'Home Assistant jetzt neu starten?' } : null;
+      return UI.stage('status', {
+        tone: n7 ? (warn7 ? 'bad' : 'warn') : rest7 ? 'warn' : 'good',
+        icon: n7 ? 'updates' : rest7 ? 'updates-restart' : 'mdi:check',
+        text: n7 === 0 ? (rest7 ? 'Neustart ausstehend' : 'Alles aktuell') : n7 === 1 ? '1 Update verfügbar' : n7 + ' Updates verfügbar',
+        facts: facts7, action: act7,
+      });
+    }
+    if (part === 'list') {
+      var Xl = window._casoraUpdX;
+      if (!pend.length) {
+        var rr = Xl && Xl.restartRows ? Xl.restartRows(states, { UI: UI, logoOf: function (id) { return logoOf(states, id); } }) : [];
+        return rr.length ? UI.group(rr, 'Wartet auf Neustart') : '';
+      }
+      if (window._casoraUpdAiSweep) window._casoraUpdAiSweep();
+      var ids = pend.slice().sort(function (a, b) { return nameOf(states, a).localeCompare(nameOf(states, b)); });
+      var lbl = 'Verfügbare Updates · ' + ids.length;
+      var head = U.rows(states, ids.slice(0, 12));
+      var out = U.tint(UI.group(head, lbl), head);
+      if (ids.length > 12) {
+        var tail = U.rows(states, ids.slice(12));
+        out += '<div style="height:8px"></div>' + UI.more('upd-all', U.tint(UI.group(tail, null), tail),
+          { keep: true, label: 'Alle ' + ids.length + ' anzeigen', less: 'Weniger anzeigen' });
+      }
+      return out;
     }
     if (part === 'chk') {
       var none = !pend.length && !(window._casoraUpdX && window._casoraUpdX.restartIds && window._casoraUpdX.restartIds(states).length);

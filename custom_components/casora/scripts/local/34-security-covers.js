@@ -219,10 +219,12 @@
     var call = function (part) {
       return 'return window._casoraSecCovers ? window._casoraSecCovers.sec(' + JSON.stringify(part) + ', null, states, hass, user) : "";';
     };
-    var f = { hero: { card: K.secCard(watch, call('hero'), states) } };
+    // Popup v3 (richtlinien §4 S7): the head line becomes the status stage with „Alle schließen“ in it.
+    var v3 = !!(UI.v3 && UI.v3() && UI.stage);
+    var f = v3 ? { stage: { card: K.secCard(watch, call('stage'), states) } } : { hero: { card: K.secCard(watch, call('hero'), states) } };
     // One live section for all lists: a cover that closes moves from "Offen" to "Geschlossen" while the popup is open.
     f.list = { card: K.secCard(watch, call('list'), states) };
-    return K.layout({ fields: f, top: ['hero'], left: ['list'], right: [] });
+    return K.layout({ fields: f, top: v3 ? [] : ['hero'], stage: v3 ? 'stage' : null, left: ['list'], right: [] });
   };
 
   // The security badge on Home counts the selected open covers, and its tap opens the house's „Türen & Fenster“
@@ -237,6 +239,28 @@
     c.styles.card = [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px 22px 26px' }];
     c.card_mod = { style: ((c.card_mod && c.card_mod.style) || '') + '\n@media (max-width: 600px) { ha-card { padding-left: 14px !important; padding-right: 14px !important; } }' };
     return c;
+  };
+
+  // Popup v3 stage S7 of „Türen & Fenster“ (casora_popup_contacts and the contact branch of the security/alarm badge
+  // popups): the head line's sentence, Casora's security level as the traffic light, counts and the last change as facts.
+  // No main action – doors and windows close by hand.
+  window.casoraContactsStage = function (hass, openIds, allIds, tilted, text, when) {
+    var UI = window._casoraUI;
+    if (!UI || !UI.stage) return '';
+    var S = (hass && hass.states) || {};
+    var dc = function (id) { return low(S[id] && S[id].attributes && S[id].attributes.device_class); };
+    var tc = openIds.filter(tilted).length, oc = openIds.length - tc;
+    var lv = openIds.length && window.casoraSecurityLevel ? window.casoraSecurityLevel(hass, openIds) : openIds.length ? 'warn' : 'ok';
+    var win = (openIds.length ? openIds : allIds).every(function (id) { return dc(id) === 'window'; });
+    var facts = [{ label: 'Geöffnet', value: String(oc) }];
+    if (tc) facts.push({ label: 'Gekippt', value: String(tc) });
+    facts.push({ label: 'Geschlossen', value: String(allIds.length - openIds.length) });
+    if (when && facts.length < 3) facts.push({ label: 'Zuletzt', value: when });
+    return UI.stage('status', {
+      tone: !allIds.length ? 'off' : lv === 'alarm' ? 'bad' : lv === 'warn' ? 'warn' : 'good',
+      icon: win ? (openIds.length ? 'mdi:window-open-variant' : 'mdi:window-closed-variant') : (openIds.length ? 'mdi:door-open' : 'mdi:door-closed'),
+      text: text, facts: allIds.length ? facts : [],
+    });
   };
 
   C.sec = function (part, cfg, states, hass, user) {
@@ -264,6 +288,27 @@
       if (n && r.night) rest.push(r.active ? 'Bis Sonnenaufgang' : 'Ab Sonnenuntergang');
       return UI.line(main, rest, { tone: r.open.length && r.active ? 'warn' : null });
     }
+    // Popup v3 stage S7: sentence as the head line, traffic light while open covers count, „Alle schließen“ as the pill.
+    if (part === 'stage') {
+      var n7 = r.ids.length;
+      if (!n7) return UI.stage('status', { empty: { icon: 'mdi:window-shutter', text: 'Noch keine Jalousien gewählt',
+        sub: 'Im Studio unter Einstellungen › Haus & Geräte › Sicherheit', studio: true } });
+      var ids7 = r.open.map(function (id) { return closeSvc(id, (states || {})[id]); })
+        .filter(function (x) { return x && x.service === 'close_cover'; })
+        .map(function (x) { return x.data.entity_id; });
+      var facts7 = [{ label: 'Geöffnet', value: String(r.open.length) }, { label: 'Geschlossen', value: String(r.closed.length) }];
+      if (r.night) facts7.push({ label: 'Zählt', value: r.active ? 'Bis Sonnenaufgang' : 'Ab Sonnenuntergang' });
+      return UI.stage('status', {
+        tone: r.open.length ? (r.active ? 'warn' : 'off') : r.closed.length ? 'good' : 'off',
+        state: !r.open.length && !r.closed.length ? 'na' : null,
+        icon: r.open.length ? 'mdi:window-shutter-open' : 'mdi:window-shutter',
+        text: r.open.length ? r.open.length + ' von ' + n7 + ' geöffnet'
+          : r.closed.length ? (r.closed.length === 1 ? 'Geschlossen' : 'Alle geschlossen') : 'Nicht verfügbar',
+        facts: facts7,
+        action: ids7.length ? { text: ids7.length > 1 ? 'Alle schließen' : 'Schließen', icon: 'mdi:arrow-collapse-down', primary: true,
+          svc: { domain: 'cover', service: 'close_cover', data: { entity_id: ids7 } } } : null,
+      });
+    }
     if (part !== 'list') return '';
     /* Blueprint v2 (rule 10): the empty row with the way into the Studio (was a grey sentence without a plate). */
     if (!r.ids.length) return UI.empty ? UI.empty({ icon: 'mdi:window-shutter', text: 'Noch keine Jalousien gewählt',
@@ -274,7 +319,8 @@
       var all = r.open.map(function (id) { return closeSvc(id, (states || {})[id]); })
         .filter(function (x) { return x && x.service === 'close_cover'; })
         .map(function (x) { return x.data.entity_id; });
-      var act = R.open.length > 1 && all.length
+      // v3: „Alle schließen“ sits in the stage.
+      var act = R.open.length > 1 && all.length && !(UI.v3 && UI.v3())
         ? { text: 'Alle schließen', svc: { domain: 'cover', service: 'close_cover', data: { entity_id: all } }, tone: 'accent' }
         : null;
       groupsHtml += UI.group(R.open, 'Offen', act);

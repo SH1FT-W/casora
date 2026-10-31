@@ -2580,7 +2580,22 @@
   "Pulse: Lernt": "Pulse: Apprendimento",
   "Pulse: Beobachten": "Pulse: Osservare",
   "Pulse: Prüfen": "Pulse: Controlla",
-  "Pulse: Ausgefallen": "Pulse: Guasto"
+  "Pulse: Ausgefallen": "Pulse: Guasto",
+  "Zählt": "Conta",
+  "In Ordnung": "OK",
+  "Von zuhause": "Da casa",
+  "Alarm beenden?": "Fermare l’allarme?",
+  "Alarmanlage unscharf schalten?": "Disattivare l’allarme?",
+  "Sensor offen": "Sensore aperto",
+  "Sensoren offen": "Sensori aperti",
+  "Wirklich?": "Sicuro?",
+  "Schloss entriegeln?": "Sbloccare la serratura?",
+  "Bis": "Fino a",
+  "Gebiet": "Zona",
+  "KI-Warnung": "Avviso IA",
+  "Backup": "Backup",
+  "Am niedrigsten": "La più bassa",
+  "Ping": "Ping"
  },
  "patterns": [
   [

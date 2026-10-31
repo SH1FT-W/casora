@@ -2580,7 +2580,22 @@
   "Pulse: Lernt": "Pulse: Uczy się",
   "Pulse: Beobachten": "Pulse: Obserwuj",
   "Pulse: Prüfen": "Pulse: Sprawdź",
-  "Pulse: Ausgefallen": "Pulse: Awaria"
+  "Pulse: Ausgefallen": "Pulse: Awaria",
+  "Zählt": "Liczy się",
+  "In Ordnung": "W porządku",
+  "Von zuhause": "Od domu",
+  "Alarm beenden?": "Zatrzymać alarm?",
+  "Alarmanlage unscharf schalten?": "Rozbroić alarm?",
+  "Sensor offen": "Czujnik otwarty",
+  "Sensoren offen": "Czujniki otwarte",
+  "Wirklich?": "Na pewno?",
+  "Schloss entriegeln?": "Odblokować zamek?",
+  "Bis": "Do",
+  "Gebiet": "Obszar",
+  "KI-Warnung": "Ostrzeżenie AI",
+  "Backup": "Kopia",
+  "Am niedrigsten": "Najniższa",
+  "Ping": "Ping"
  },
  "patterns": [
   [

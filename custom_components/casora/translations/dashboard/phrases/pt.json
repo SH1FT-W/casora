@@ -2580,7 +2580,22 @@
   "Pulse: Lernt": "Pulse: A aprender",
   "Pulse: Beobachten": "Pulse: Vigiar",
   "Pulse: Prüfen": "Pulse: Verificar",
-  "Pulse: Ausgefallen": "Pulse: Avariado"
+  "Pulse: Ausgefallen": "Pulse: Avariado",
+  "Zählt": "Conta",
+  "In Ordnung": "OK",
+  "Von zuhause": "De casa",
+  "Alarm beenden?": "Parar o alarme?",
+  "Alarmanlage unscharf schalten?": "Desarmar o alarme?",
+  "Sensor offen": "Sensor aberto",
+  "Sensoren offen": "Sensores abertos",
+  "Wirklich?": "Tem certeza?",
+  "Schloss entriegeln?": "Destrancar a fechadura?",
+  "Bis": "Até",
+  "Gebiet": "Área",
+  "KI-Warnung": "Aviso IA",
+  "Backup": "Backup",
+  "Am niedrigsten": "Mais baixa",
+  "Ping": "Ping"
  },
  "patterns": [
   [

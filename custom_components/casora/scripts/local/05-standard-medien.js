@@ -253,6 +253,23 @@
       if (SF) value = lv === 2 ? 'Fenster schließen' : lv === 1 ? 'Lüften empfohlen' : 'Raumluft gut';
       return UI.hero({ label: SF ? null : 'Raumluft', value: value, sub: sub, subTone: lv ? 'warn' : helps === false ? null : 'good', center: true });
     }
+    // Popup v3 stage S7 (richtlinien §4): the hero's statement as the sentence, outdoor air and the airing time as facts.
+    if (name === 'stage') {
+      var f7 = [];
+      if (o.t != null) f7.push({ label: 'Außentemperatur', value: fmt(o.t, 1) + ' ' + tU() });
+      if (o.rh != null) f7.push({ label: 'Luftfeuchtigkeit', value: fmt(o.rh) + ' %' });
+      var z7 = mode !== 'outdoor' && rooms[0] && rooms[0].ziel_min;
+      if (z7) f7.push({ label: 'Stoßlüften', value: 'ca. ' + z7 + ' Min.' });
+      if (mode === 'outdoor') return UI.stage('status', { tone: o.pm25 >= 35 ? 'bad' : 'good', icon: 'mdi:weather-windy', text: 'Außenluft', facts: f7 });
+      if (mode === 'empty') return UI.stage('status', { tone: 'off', icon: 'mdi:home-thermometer-outline', text: 'Keine Sensoren', facts: f7 });
+      var lv7 = V.level(states, { popup_hide: (C && C.hide) || [] }, m.scope);
+      var t7, st7 = null;
+      if (mode === 'room' && rooms.length === 1) { st7 = ST[rooms[0].status] || ST.ok; t7 = rooms[0].status === 'ok' ? 'Raumluft gut' : st7.t; }
+      else t7 = lv7 === 2 ? 'Fenster schließen' : lv7 === 1 ? 'Lüften empfohlen' : 'Raumluft gut';
+      var tone7 = st7 ? (st7.tone === 'bad' ? 'bad' : st7.tone === 'warn' ? 'warn' : 'good') : lv7 ? 'warn' : 'good';
+      return UI.stage('status', { tone: tone7, icon: lv7 === 2 ? 'mdi:window-closed-variant' : lv7 === 1 ? 'mdi:window-open-variant' : 'mdi:home-thermometer-outline',
+        text: t7, facts: f7 });
+    }
     if (name === 'rooms') {
       var rows = rooms.map(function (x) {
         var st = ST[x.status] || ST.ok;
@@ -274,13 +291,16 @@
       if (o.t != null) rows2.push({ icon: 'mdi:thermometer', iconTone: 'rgba(255,255,255,0.18)', label: 'Temperatur', value: fmt(o.t, 1) + ' ' + tU() });
       /* Weich (Entschlacken): ohne absolute Feuchte (g/m³); „hilft nicht“ nur, wenn es zutrifft. */
       var SFv = SF;
-      if (o.rh != null && (SFv || mode === 'outdoor')) rows2.push({ icon: 'mdi:water-percent', iconTone: 'rgba(255,255,255,0.18)', label: 'Luftfeuchtigkeit', value: fmt(o.rh) + ' %' });
+      // v3: temperature, humidity and the airing time stand in the stage.
+      var v3o = !!(UI.v3 && UI.v3() && UI.stage);
+      if (v3o) rows2 = [];
+      if (v3o) { /* stage */ } else if (o.rh != null && (SFv || mode === 'outdoor')) rows2.push({ icon: 'mdi:water-percent', iconTone: 'rgba(255,255,255,0.18)', label: 'Luftfeuchtigkeit', value: fmt(o.rh) + ' %' });
       else if (o.rh != null) rows2.push({ icon: 'mdi:water-percent', iconTone: 'rgba(255,255,255,0.18)', label: 'Luftfeuchtigkeit', sub: o.ah != null ? [fmt(o.ah, 1) + ' g/m³ absolut'].concat(avgAh != null ? ['drinnen Ø ' + fmt(avgAh, 1)] : []) : null, value: fmt(o.rh) + ' %' });
       if (o.pm25 != null) rows2.push({ icon: 'mdi:blur', iconTone: o.pm25 >= 35 ? 'bad' : 'rgba(255,255,255,0.18)', label: 'Feinstaub PM2.5', value: fmt(o.pm25) + ' µg/m³', valueTone: o.pm25 >= 35 ? 'bad' : null });
       /* Outdoors there is no room to air: no airing timer, no „helps against humidity“. */
       if (mode !== 'outdoor') {
         var ziel = (rooms[0] && rooms[0].ziel_min) || null;
-        if (ziel) rows2.push({ icon: 'mdi:timer-outline', iconTone: 'accent', label: 'Stoßlüften', sub: 'Fenster weit auf, nach Außentemperatur', value: 'ca. ' + ziel + ' Min.' });
+        if (ziel && !v3o) rows2.push({ icon: 'mdi:timer-outline', iconTone: 'accent', label: 'Stoßlüften', sub: 'Fenster weit auf, nach Außentemperatur', value: 'ca. ' + ziel + ' Min.' });
         if (helps != null && !(SFv && helps)) rows2.push({ icon: helps ? 'mdi:check-circle' : 'mdi:close-circle', iconTone: helps ? 'good' : 'warn', label: helps ? 'Lüften hilft gegen Feuchte' : 'Lüften hilft nicht gegen Feuchte', sub: helps ? 'Außenluft ist trockener' : 'Außenluft enthält mehr Wasser' });
       }
       return rows2.length ? UI.group(rows2, 'Außenluft') : '';
@@ -341,6 +361,18 @@
     var C = { hide: H ? H.list(variables) : [], scope: m.scope };
     var sec = function (n) { return '[[[ return window._casoraVent ? window._casoraVent.sec(' + JSON.stringify(n) + ', states, ' + JSON.stringify(C) + ') : ""; ]]]'; };
     /* Columns by mode: house and room left rooms, right outdoor air + coach; outdoor only the air; without sensors the hint. */
+    /* Popup v3 (richtlinien §4 S7): the status stage on top of the left column, the same sections below (soft kit layout). */
+    var K = window._casoraSoftKit, UIv = window._casoraUI;
+    if (K && K.layout && UIv.v3 && UIv.v3() && UIv.stage) {
+      var cardOf = function (n) { return { card: K.secCard(watch, 'return window._casoraVent ? window._casoraVent.sec(' + JSON.stringify(n) + ', states, ' + JSON.stringify(C) + ') : "";', states) }; };
+      var fv = { stage: cardOf('stage') };
+      var Lv = m.mode === 'outdoor' ? ['out'] : m.mode === 'empty' ? ['empty'] : ['rooms'];
+      var Rv = m.mode === 'outdoor' || m.mode === 'empty' ? [] : ['out', 'coach'];
+      // Sections that are empty now (no fine dust, no coach) stay out, as in the old columns.
+      Rv = Rv.filter(function (n) { return !!V.sec(n, states, C); });
+      Lv.concat(Rv).forEach(function (n) { fv[n] = cardOf(n); });
+      return K.layout({ fields: fv, top: [], stage: 'stage', left: Lv, right: Rv });
+    }
     var sp = m.mode === 'outdoor' ? { left: ['out'], right: [] } : m.mode === 'empty' ? { left: ['empty'], right: [] }
       : (window._casoraSplit ? window._casoraSplit('vent', ['rooms'], ['out', 'coach']) : { left: ['rooms'], right: ['out', 'coach'] });
     var oneCol = !sp.right.length;

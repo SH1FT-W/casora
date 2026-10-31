@@ -63,6 +63,19 @@ const MIGRIERT = [
   // Readings popup without a thermostat: air quality (else temperature) as S7 (S6 would need a chart plate in the stage),
   // the curve as the Verlauf (120), the other readings as the list.
   { popup: 'Klima (Raum)', vorlagen: ['casora_climate_popup'], file: null, stages: 1 },
+  { popup: 'Jalousien in Sicherheit', vorlagen: ['casora_popup_security_covers'], file: '34-security-covers.js', from: '  C.sec = function', to: null, stages: 2 },
+  { popup: 'Pulse', vorlagen: ['casora_popup_pulse'], file: '14-pulse.js', from: '  P.popup = function', to: null, stages: 2 },
+  { popup: 'Klima-Gruppe (Badge)', vorlagen: ['casora_badge_climate_group'], file: '35-phone-hub.js', from: '  var stageOf = function', to: '  P.sec = function', stages: 3 },
+  { popup: 'Person / Anwesenheit', vorlagen: ['casora_popup_person', 'casora_badge_presence_group'], file: '15-person.js', from: '  P.sec = function', to: '  // ── Aktionen', stages: 1 },
+  { popup: 'Lüften-Coach', vorlagen: ['casora_popup_vent'], file: '05-standard-medien.js', from: '  V.sec = function', to: '  /* Coach auch im Klima-Popup', stages: 3 },
+  { popup: 'Türen & Fenster', vorlagen: ['casora_popup_contacts'], file: '34-security-covers.js', from: '  window.casoraContactsStage = function', to: '  C.sec = function', stages: 1 },
+  { popup: 'Alarmanlage', vorlagen: ['casora_popup_alarm'], file: '07-weich-spezial.js', from: '  AL.stage = function', to: '  // Tippen auf data-casora-alarm', stages: 1 },
+  { popup: 'Sicherheit (Badge, Gruppe)', vorlagen: ['casora_badge_security', 'casora_badge_security_group'], file: null, stages: 1 },
+  { popup: 'Schloss', vorlagen: ['casora_popup_lock'], file: null, stages: 1 },
+  { popup: 'Wetterwarnung', vorlagen: ['casora_popup_weather_warning'], file: null, stages: 1 },
+  { popup: 'Updates', vorlagen: ['casora_popup_updates'], file: '08-weich-kompakt.js', from: '  U.sec = function', to: '  // ── Alarm: Modus-Liste', stages: 1 },
+  { popup: 'Batterien', vorlagen: ['casora_popup_battery'], file: '08-weich-kompakt.js', from: '  B.sec = function', to: '  // ── Software-Updates', stages: 1 },
+  { popup: 'Netzwerk', vorlagen: ['casora_network', 'casora_popup_network'], file: '05-weich-mehr.js', from: '  N.sec = function', to: '  // ── Energie', stages: 1 },
 ];
 
 // 1. Pieces.

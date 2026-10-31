@@ -2580,7 +2580,22 @@
   "Pulse: Lernt": "Pulse: Apprend",
   "Pulse: Beobachten": "Pulse: Surveiller",
   "Pulse: Prüfen": "Pulse: Vérifier",
-  "Pulse: Ausgefallen": "Pulse: En panne"
+  "Pulse: Ausgefallen": "Pulse: En panne",
+  "Zählt": "Compte",
+  "In Ordnung": "OK",
+  "Von zuhause": "De la maison",
+  "Alarm beenden?": "Arrêter l’alarme ?",
+  "Alarmanlage unscharf schalten?": "Désarmer l’alarme ?",
+  "Sensor offen": "Capteur ouvert",
+  "Sensoren offen": "Capteurs ouverts",
+  "Wirklich?": "Vraiment ?",
+  "Schloss entriegeln?": "Déverrouiller la serrure ?",
+  "Bis": "Jusqu’à",
+  "Gebiet": "Zone",
+  "KI-Warnung": "Alerte IA",
+  "Backup": "Sauvegarde",
+  "Am niedrigsten": "La plus basse",
+  "Ping": "Ping"
  },
  "patterns": [
   [
