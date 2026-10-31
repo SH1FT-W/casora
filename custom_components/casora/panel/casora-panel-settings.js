@@ -61,7 +61,7 @@
           kw: "abfall müll muell tonne türen tueren fenster kontakte player medien geräte" },
         { page: "calendar", kw: "kalender termine" },
         // #76: covers that count for security at night – a section of the "home" page, listed so it can be found.
-        { page: "home", focus: "security", label: "Security: covers", icon: "cover_closed", sub: "Which covers count as open at night",
+        { page: "home", focus: "security", label: "Security: covers", icon: "roller-shade-closed", sub: "Which covers count as open at night",
           kw: "rollo rollos rollladen jalousie jalousien sicherheit abends nachts" },
         { sec: "Scenes", label: "Scenes on this dashboard", icon: "scenes", sub: "Order and colors", kw: "szenen szene stimmung" }] },
     { id: "wx", label: "Weather & climate", icon: "temp-medium", tone: "set-outdoor", sub: "Weather, outdoor values and electricity price",
