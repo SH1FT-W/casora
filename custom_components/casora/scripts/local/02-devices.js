@@ -2329,6 +2329,7 @@
              [F.intensivZone, 'Intensivzone', 'mdi:fire-circle']].filter(function (o) { return o[0]; }),
       start: V.btn_start || F.start || null,
       stop: V.btn_stop || F.stop || null,
+      pause: F.pause || null, resume: F.resume || null,
       plug: plug,
       power: plug ? onPlug(plug, 'W') : V.entity_power || null,
       volt: plug ? onPlug(plug, 'V') : null,
@@ -2341,7 +2342,7 @@
     return [c.st, c.program, c.sel, c.phase, c.progress, c.remaining, c.energyEst, c.waterEst, c.salt, c.rinse, c.door, c.care, c.starts,
       c.conn, c.remote, c.startIn, c.remoteStart, c.saltLow, c.saltLack, c.rinseLow, c.rinseLack,
       c.power_sw, c.light, c.smartFilter, c.filterCheck, c.machineCare, c.machineFilter,
-      c.start, c.stop, c.plug, c.power, c.volt, c.amp, c.energy]
+      c.start, c.stop, c.pause, c.resume, c.plug, c.power, c.volt, c.amp, c.energy]
       .concat(c.probs.map(function (p) { return p[0]; }), c.opts.map(function (o) { return o[0]; })).filter(Boolean);
   };
 
@@ -2731,7 +2732,14 @@
         var pctS = active ? U.num(states, c.progress) : null;
         var endS = active && rem != null && rem > 0 ? 'Fertig gegen ' + U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' : null;
         var g = goAct();
-        // Dial (richtlinien §4.8): 2–4 programmes as moons before the start, „Jetzt starten“ the bottom moon.
+        // The bottom moon only says what it does: „Start“ before, „Pause“ / „Fortsetzen“ while running (when the
+        // integration has the button) – when and which programme stand in the centre, not in the moon.
+        var pausedS = s[3] === 'pause';
+        var okBtn = function (e) { return !!(e && states[e] && states[e].state !== 'unavailable'); };
+        var actS = !active ? (g && !g.disabled ? Object.assign({}, g, { text: 'Start', sub: null }) : null)
+          : pausedS ? (okBtn(c.resume) ? { text: 'Fortsetzen', icon: 'mdi:play', primary: true, svc: { domain: 'button', service: 'press', target: { entity_id: c.resume } } } : null)
+          : (okBtn(c.pause) ? { text: 'Pause', icon: 'mdi:pause', primary: true, svc: { domain: 'button', service: 'press', target: { entity_id: c.pause } } } : null);
+        // Dial (richtlinien §4.8): 2–4 programmes as moons before the start, „Start“ the bottom moon.
         var selM = c.sel && states[c.sel], optsM = selM ? ((selM.attributes || {}).options || []) : [];
         var moonsM = !active && optsM.length >= 2 && optsM.length <= 4 ? optsM.map(function (o) {
           return { icon: progIcon(o), text: progName(o, selM), active: selM.state === o,
@@ -2739,8 +2747,9 @@
         }) : null;
         return UI.stage('progress', { value: value, unit: unit || '', word: sub.join(' · ') || null,
           progress: pctS != null ? Math.max(0, Math.min(1, pctS / 100)) : null,
-          program: active ? [pctS != null ? Math.round(pctS) + ' %' : null, endS].filter(Boolean).join(' · ') || null : (g && g.why ? g.text + ' · ' + g.why : null),
-          action: g && !g.disabled ? g : null, moons: moonsM,
+          program: active ? [pctS != null ? Math.round(pctS) + ' %' : null, endS].filter(Boolean).join(' · ') || null
+            : (g && g.why ? g.text + ' · ' + g.why : g && g.text !== 'Jetzt starten' ? g.text : null),
+          action: actS, moons: moonsM,
           state: raw === 'unavailable' || raw === 'unknown' || !states[c.st] ? 'na' : null });
       }
       return UI.hero({ value: value, unit: unit, sub: sub.join(' · ') || null, subTone: tone, center: true });

@@ -2137,6 +2137,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       // below is Home Connect Local's (Start in relativ, Hygiene +, Intensivzone did not match).
       dish: { program: k('active_program', 'select'), sel: k('selected_program', 'select'), progress: k('program_progress'),
         remaining: k('program_finish_time'), door: k('door'), stop: k('stop_program', 'button'),
+        pause: k('pause_program', 'button'), resume: k('resume_program', 'button'),
         startIn: k('start_in_relative', 'number'), power_sw: k('power', 'switch'), remoteStart: bk('remote_start'),
         extraDry: k('extra_dry', 'switch'), halfLoad: k('half_load', 'switch'), speed: k('vario_speed_plus', 'switch'),
         silence: k('silence_on_demand', 'switch'), hygiene: k('hygiene_plus', 'switch'), intensivZone: k('intensiv_zone', 'switch'),
@@ -2157,7 +2158,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         stop: hk('stop', 'button', 'stop_program'), pause: hk('start_pause', 'button'), resume: hk('start_pause', 'button') },
       dish: { program: hk('active_program'), sel: hk('programs', 'select'), progress: hk('bsh_common_option_programprogress'),
         remaining: hk('bsh_common_option_remainingprogramtime'), energyEst: hk('bsh_common_option_energyforecast'),
-        waterEst: hk('bsh_common_option_waterforecast'),
+        waterEst: hk('bsh_common_option_waterforecast'), pause: hk('start_pause', 'button'), resume: hk('start_pause', 'button'),
         door: { keys: [], domain: 'binary_sensor', tail: ['bsh_common_status_doorstate'], dc: 'door' },
         conn: hk('connected', 'binary_sensor'), power_sw: hk('bsh_common_setting_powerstate', 'switch'),
         extraDry: hk('dishcare_dishwasher_option_extradry', 'switch'), halfLoad: hk('dishcare_dishwasher_option_halfload', 'switch'),
