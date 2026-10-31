@@ -2042,6 +2042,8 @@
         if (r.stamp) factsC.push({ label: 'Datenstand', value: ago(r.stamp) });
         return UI.stage('status', { tone: lv === 2 ? 'bad' : lv === 1 ? 'warn' : 'good', icon: r.ev ? 'mdi:car-electric' : 'mdi:car',
           text: r.range != null ? 'Reichweite ' + fmtN(r.range) + ' ' + r.rangeU : ownH || 'Keine Daten', facts: factsC,
+          // Dial (richtlinien §4.8): the tank or battery level fills the ring.
+          progress: r.tank != null ? Math.max(0, Math.min(1, r.tank / 100)) : null,
           extra: tank() && SFh ? tank().row(p, states) : '' });
       }
       var out = UI.hero({ label: SFh || ownH ? null : 'Reichweite', value: r.range != null ? (SFh ? 'Reichweite ' : '') + fmtN(r.range) : ownH || '—', unit: r.range != null ? r.rangeU : null,
@@ -2964,7 +2966,9 @@
       if (r.daysSince != null) facts.push({ label: 'Letzte Fahrt', value: 'vor ' + fmtN(Math.round(r.daysSince)) + ' T.' });
       return UI.stage('status', { tone: r.theft ? 'bad' : r.serviceDue || (soc != null && soc <= 15 && !Lb.charging) ? 'warn' : soc == null ? 'off' : 'good',
         icon: r.theft ? 'mdi:shield-alert-outline' : Lb.charging ? 'mdi:battery-charging' : soc == null ? 'mdi:battery-unknown' : 'mdi:battery',
-        text: txt, facts: facts, state: r.found ? null : 'na' }) + where;
+        text: txt, facts: facts, state: r.found ? null : 'na',
+        // Dial: the battery fills the ring.
+        progress: soc != null ? Math.max(0, Math.min(1, soc / 100)) : null }) + where;
     }
     /* Soft (declutter): odometer as main value, sub line „Service fällig“ or the last ride. */
     if (name === 'hero' && SF) {

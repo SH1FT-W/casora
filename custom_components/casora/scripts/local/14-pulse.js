@@ -464,6 +464,10 @@
       return UI.stage('status', {
         tone: !s.total ? 'off' : s.counts.failed ? 'bad' : s.problems ? 'warn' : 'good',
         icon: 'mdi:heart-pulse', text: h7.main,
+        // Dial (richtlinien §4.8): the devices as weighted segments – failed red, to check/watch orange, the rest green.
+        segs: s.total ? [{ ok: false, tone: 'bad', w: s.counts.failed || 0 }, { ok: false, tone: 'warn', w: (s.counts.check || 0) + (s.counts.watch || 0) },
+          { ok: true, tone: 'good', w: Math.max(0, s.total - (s.counts.failed || 0) - (s.counts.check || 0) - (s.counts.watch || 0)) }]
+          .filter(function (x) { return x.w > 0; }) : null,
         facts: s.total ? [
           s.counts.failed ? { label: 'Ausgefallen', value: String(s.counts.failed) } : null,
           s.counts.check ? { label: 'Prüfen', value: String(s.counts.check) } : null,

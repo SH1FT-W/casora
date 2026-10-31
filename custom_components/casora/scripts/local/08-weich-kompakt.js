@@ -156,6 +156,8 @@
         tone: low.length ? (crit7 ? 'bad' : 'warn') : 'good', icon: low.length ? 'mdi:battery-alert' : 'mdi:battery-check',
         text: low.length ? (low.length === 1 ? '1 Akku schwach' : low.length + ' Akkus schwach') : 'Alle Batterien OK',
         facts: [min7 ? { label: 'Am niedrigsten', value: min7.v + ' %' } : null, { label: 'Batterien', value: String(R.length) }],
+        // Dial (richtlinien §4.8): one segment per battery, green ok, orange low, red critical.
+        segs: R.map(function (r) { var l = lvOf(r.v); return { ok: l === 'ok', tone: l === 'ok' ? 'good' : l === 'crit' ? 'bad' : 'warn', label: r.name + ' ' + r.v + ' %' }; }),
       });
     }
     if (part === 'low') {
@@ -379,6 +381,11 @@
         icon: n7 ? 'updates' : rest7 ? 'updates-restart' : 'mdi:check',
         text: n7 === 0 ? (rest7 ? 'Neustart ausstehend' : 'Alles aktuell') : n7 === 1 ? '1 Update verfügbar' : n7 + ' Updates verfügbar',
         facts: facts7, action: act7,
+        // Dial: one segment per pending update (red with an AI warning, orange otherwise), all green when up to date.
+        segs: n7 ? pend.map(function (id) {
+          var a = states[id].attributes || {};
+          return { ok: false, tone: window._casoraUpdAiBlocked && window._casoraUpdAiBlocked(id, states) ? 'bad' : 'warn', label: a.title || a.friendly_name || id };
+        }) : null,
       });
     }
     if (part === 'list') {

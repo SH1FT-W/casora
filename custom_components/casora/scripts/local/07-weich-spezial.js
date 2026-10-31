@@ -246,6 +246,8 @@
       facts: open ? [{ label: open === 1 ? 'Sensor offen' : 'Sensoren offen', value: String(open) }] : [],
       action: na ? null : act,
       extra: na ? '' : (cd.bar || '') + AL.code(I),
+      // Dial (richtlinien §4.8): Abwesend · Zuhause · Nacht as moons, „Unscharf schalten“ the bottom moon.
+      moons: function () { return AL.quick(ent, states); },
     }));
   };
   // Field „quick“: Abwesend · Zuhause · Nacht (the arm modes the panel supports); „Aus“ is the stage's action only.

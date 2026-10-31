@@ -426,10 +426,14 @@
       var home = rows.filter(function (c) { return c.home; }).length;
       o.tone = home ? 'good' : 'off';
       if (rows.length) o.facts = [{ label: 'Zuhause', value: String(home) }, { label: 'Unterwegs', value: String(rows.length - home) }];
+      // Dial (richtlinien §4.8): one segment per person, green at home, grey away.
+      o.segs = rows.map(function (c) { return { ok: true, tone: c.home ? 'good' : 'off', label: c.title || c.name || '' }; });
       return UI.stage('status', o);
     }
     var lv = rows.map(function (c) { return levelOf(cat, c, hass); });
     o.tone = lv.indexOf('alarm') >= 0 ? 'bad' : lv.indexOf('warn') >= 0 ? 'warn' : 'good';
+    // Dial: one segment per row (lock, contact, room …) in its traffic-light colour.
+    o.segs = rows.map(function (c, i) { return { ok: lv[i] === 'ok', tone: lv[i] === 'alarm' ? 'bad' : lv[i] === 'warn' ? 'warn' : 'good', label: c.title || c.name || '' }; });
     if (cat === 'security') {
       var ids = [];
       rows.forEach(function (c) { (c.ids || []).forEach(function (id) { if (ids.indexOf(id) < 0) ids.push(id); }); });

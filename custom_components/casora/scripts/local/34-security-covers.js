@@ -260,6 +260,11 @@
       tone: !allIds.length ? 'off' : lv === 'alarm' ? 'bad' : lv === 'warn' ? 'warn' : 'good',
       icon: win ? (openIds.length ? 'mdi:window-open-variant' : 'mdi:window-closed-variant') : (openIds.length ? 'mdi:door-open' : 'mdi:door-closed'),
       text: text, facts: allIds.length ? facts : [],
+      // Dial (richtlinien §4.8): one segment per door/window, green closed, orange tilted, red open.
+      segs: allIds.map(function (id) {
+        var op = openIds.indexOf(id) > -1, nm = S[id] && S[id].attributes && S[id].attributes.friendly_name;
+        return { ok: !op, tone: !op ? 'good' : tilted(id) ? 'warn' : 'bad', label: nm || id };
+      }),
     });
   };
 
@@ -307,6 +312,12 @@
         facts: facts7,
         action: ids7.length ? { text: ids7.length > 1 ? 'Alle schließen' : 'Schließen', icon: 'mdi:arrow-collapse-down', primary: true,
           svc: { domain: 'cover', service: 'close_cover', data: { entity_id: ids7 } } } : null,
+        // Dial: one segment per cover, open ones orange while they count (night), grey otherwise.
+        segs: r.ids.map(function (id) {
+          var op = r.open.indexOf(id) > -1, st = (states || {})[id];
+          return { ok: !op, tone: !op ? (st && st.state !== 'unavailable' ? 'good' : 'off') : r.active ? 'warn' : 'off',
+            label: (st && st.attributes && st.attributes.friendly_name) || id };
+        }),
       });
     }
     if (part !== 'list') return '';

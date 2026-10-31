@@ -267,8 +267,13 @@
       if (mode === 'room' && rooms.length === 1) { st7 = ST[rooms[0].status] || ST.ok; t7 = rooms[0].status === 'ok' ? 'Raumluft gut' : st7.t; }
       else t7 = lv7 === 2 ? 'Fenster schließen' : lv7 === 1 ? 'Lüften empfohlen' : 'Raumluft gut';
       var tone7 = st7 ? (st7.tone === 'bad' ? 'bad' : st7.tone === 'warn' ? 'warn' : 'good') : lv7 ? 'warn' : 'good';
+      // Dial (richtlinien §4.8): one segment per room in its coach colour.
+      var segs7 = rooms.length > 1 ? rooms.map(function (x) {
+        var sx = ST[x.status] || ST.ok;
+        return { ok: x.status === 'ok', tone: sx.tone === 'bad' ? 'bad' : sx.tone === 'warn' ? 'warn' : 'good', label: x.n || x.name || '' };
+      }) : null;
       return UI.stage('status', { tone: tone7, icon: lv7 === 2 ? 'mdi:window-closed-variant' : lv7 === 1 ? 'mdi:window-open-variant' : 'mdi:home-thermometer-outline',
-        text: t7, facts: f7 });
+        text: t7, facts: f7, segs: segs7 });
     }
     if (name === 'rooms') {
       var rows = rooms.map(function (x) {
