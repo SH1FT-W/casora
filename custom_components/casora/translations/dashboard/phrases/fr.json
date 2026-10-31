@@ -2594,7 +2594,8 @@
   "Gebiet": "Zone",
   "KI-Warnung": "Alerte IA",
   "Backup": "Sauvegarde",
-  "Am niedrigsten": "La plus basse"
+  "Am niedrigsten": "La plus basse",
+  "Ping": "Ping"
  },
  "patterns": [
   [

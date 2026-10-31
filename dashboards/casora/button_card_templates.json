@@ -10075,7 +10075,8 @@
      }
     ],
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Netzwerk') : (() => { const r = String(variables.room_name || '').trim(); const n = String(this._config?.name || '').trim(); const own = r && r !== 'Netzwerk' && ![].includes(r) ? r : ''; return own || (n && !n.startsWith('[[[') ? n : '') || r || 'Netzwerk'; })(); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "state": [
@@ -12894,7 +12895,8 @@
      }
     ],
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Netzwerk') : (() => { const r = String(variables.room_name || '').trim(); const n = String(this._config?.name || '').trim(); const own = r && r !== 'Netzwerk' && ![].includes(r) ? r : ''; return own || (n && !n.startsWith('[[[') ? n : '') || r || 'Netzwerk'; })(); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "tap_action": {
@@ -12912,7 +12914,8 @@
      }
     ],
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Netzwerk') : (() => { const r = String(variables.room_name || '').trim(); const n = String(this._config?.name || '').trim(); const own = r && r !== 'Netzwerk' && ![].includes(r) ? r : ''; return own || (n && !n.startsWith('[[[') ? n : '') || r || 'Netzwerk'; })(); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [

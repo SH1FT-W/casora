@@ -60,6 +60,7 @@ const MIGRIERT = [
   { popup: 'Wetterwarnung', vorlagen: ['casora_popup_weather_warning'], file: null, stages: 1 },
   { popup: 'Updates', vorlagen: ['casora_popup_updates'], file: '08-weich-kompakt.js', from: '  U.sec = function', to: '  // ── Alarm: Modus-Liste', stages: 1 },
   { popup: 'Batterien', vorlagen: ['casora_popup_battery'], file: '08-weich-kompakt.js', from: '  B.sec = function', to: '  // ── Software-Updates', stages: 1 },
+  { popup: 'Netzwerk', vorlagen: ['casora_network', 'casora_popup_network'], file: '05-weich-mehr.js', from: '  N.sec = function', to: '  // ── Energie', stages: 1 },
 ];
 
 // 1. Pieces.

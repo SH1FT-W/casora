@@ -2576,7 +2576,8 @@
   "Gebiet": "Area",
   "KI-Warnung": "AI warning",
   "Backup": "Backup",
-  "Am niedrigsten": "Lowest"
+  "Am niedrigsten": "Lowest",
+  "Ping": "Ping"
  },
  "patterns": [
   [
