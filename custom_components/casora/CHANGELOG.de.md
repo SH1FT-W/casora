@@ -4,6 +4,19 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.69 – 31.10.2026
+
+### Neu
+- **Heatmap für die Diagramm-Kachel (#100):** neben Linie und Balken als dritte Darstellung, eine Zeile je Tag, eine Spalte je Stunde, die Farbe zeigt den Wert. Im Studio unter „Darstellung“ der Diagramm-Kachel oder im Popup über „Linie | Balken | Heatmap“. Für 24 Stunden, 7 und 30 Tage und als Jahresübersicht (Monate × Tage); Zähler zeigen den Verbrauch je Stunde. Antippen zeigt Wert und Uhrzeit, darunter die Skala mit tiefstem und höchstem Wert; die Kachel zeigt die letzten 7 Tage als kleines Raster.
+
+### Geändert
+- **Netzwerk-Kachel und Popup (#98):** Geräteliste und Pulse bewerten ein Gerät gleich (zuerst sein eigener Zustand, sonst Pulse mit Pulses Wörtern, „Pulse: Gut“); NAS- und Server-Plattformen stehen nicht mehr in der Geräteliste. Beim Hinzufügen kommt der Router zuerst; nach dem Download-Sensor füllen sich Upload, Internetstatus und Ping vom selben Gerät, Anbieter, Verbindungsname und öffentliche IP findet Casora dort ebenfalls (FRITZ!Box, FRITZ!Portal, UPnP, UniFi, Synology). Jedes Entitätsfeld einer Kachel zeigt zuerst die Entitäten der Geräte, die die Kachel schon nutzt. Anbieter, Verbindungsname und IP können ihren Wert aus einem Attribut nehmen („Wert aus“).
+
+### Behoben
+- **Handy „Aktuelle Wiedergabe“ (#101):** die Liste folgt dem Filter dieses Geräts und bleibt nicht mehr leer, wenn ein anderes Handy oder Tablet den Filter geändert hat; die Überschrift erscheint nur mit Player darunter.
+- **Eigene Entitäten in Popups (#97):** stehen immer unter dem Inhalt und überdecken am Handy nicht mehr Lautstärke oder Quelle; das Popup scrollt als Ganzes.
+- **Medientitel:** Titel, die ein Player mit HTML-Codes schickt (z. B. „&apos;“), zeigen das normale Zeichen.
+
 ## 26.10.68 – 29.10.2026
 
 ### Behoben

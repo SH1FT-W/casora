@@ -4,6 +4,19 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.69 – 31.10.2026
+
+### New
+- **Heatmap for the chart tile (#100):** a third display next to line and bars, one row per day, one column per hour, the colour shows the value. In the Studio under the chart tile's "Display" or in the popup with "Line | Bars | Heatmap". For 24 hours, 7 and 30 days and as a year overview (months × days); meters show the use per hour. Tapping shows value and time, below is the scale with the lowest and highest value; the tile shows the last 7 days as a small grid.
+
+### Changed
+- **Network tile and popup (#98):** the device list and Pulse rate a device the same way (its own state first, otherwise Pulse with Pulse's words, "Pulse: Good"); NAS and server platforms no longer show in the device list. When adding the tile the router comes first; after the download sensor, upload, internet status and ping fill in from the same device, and Casora finds provider, connection name and public IP there too (FRITZ!Box, FRITZ!Portal, UPnP, UniFi, Synology). Every entity field of a tile lists the entities of the devices the tile already uses first. Provider, connection name and IP can take their value from an attribute ("Value from").
+
+### Fixed
+- **Phone "Now playing" (#101):** the list follows this device's filter and no longer stays empty when another phone or tablet changed the filter; the heading only shows with a player below it.
+- **Own entities in popups (#97):** always below the content, no longer covering volume or source on the phone; the popup scrolls as a whole.
+- **Media titles:** titles a player sends with HTML codes (for example "&apos;") show the plain character.
+
 ## 26.10.68 – 29.10.2026
 
 ### Fixed
