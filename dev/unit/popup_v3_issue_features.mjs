@@ -7,6 +7,7 @@
 //   #32 Velair: rows „Zeitplan ›“ (sub page with the week, editing) and „Velair-Modus“ – pinned in dev/unit/velair.mjs;
 //       here: the Studio description promises the schedule again
 //   #23 doorbell: row „Ton ›“ (sub page with the volume sliders) – pinned in dev/unit/klingel.mjs; here: the description
+//   #89 car: the odometer in the section „Zustand“ (BMW CarData „…_mileage“ too)
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -131,6 +132,38 @@ const runCard = (card, states, hass) => new Function('states', 'hass', card.cust
   assert.ok(m, 'doorbell tile type');
   assert.match(m[1], /volume/, '#23: description mentions the volume');
   assert.match(rd('dev/unit/klingel.mjs'), /Popup v3 \(#23/, '#23: the v3 row is tested in klingel.mjs');
+}
+
+// ── #89 car: odometer in „Zustand“ of the v3 popup, with BMW CarData's names ──
+{
+  const src = rd('custom_components/casora/scripts/local/03-popups.js');
+  const a = src.indexOf('(function () {\n  if (window._casoraCar) return;');
+  const b = src.indexOf('\n})();', a);
+  assert.ok(a > 0 && b > a, 'car block');
+  const P = 'demo_bmw';
+  const list = [['sensor.' + P + '_mileage', '59903', { unit_of_measurement: 'km' }],
+    ['sensor.' + P + '_range_total_range_last_sent', '370', { unit_of_measurement: 'km', device_class: 'distance' }],
+    ['sensor.' + P + '_range_tank_level_2', '88', { unit_of_measurement: '%' }],
+    ['binary_sensor.' + P + '_door_state_front_driver', 'off', {}]];
+  const S = Object.fromEntries(list.map(([id, state, attributes]) => [id, { entity_id: id, state, attributes }]));
+  const R = Object.fromEntries(list.map(([id]) => [id, { entity_id: id, device_id: 'car', translation_key: null, platform: 'cardata' }]));
+  const groups = [];
+  let laid = null;
+  const w = {
+    casoraLocale: () => 'de-DE',
+    _casoraUI: { esc, soft: () => true, stage: () => 'STAGE',
+      group: (rows, label) => { groups.push({ label, rows }); return label + ':' + rows.map((r) => r.label + '=' + (r.value || '')).join(';'); } },
+    _casoraHH: { on: () => true, layout: (o) => { laid = o; return o; }, moreCard: () => ({}) },
+  };
+  globalThis.localStorage = { getItem: () => null };
+  new Function('window', 'document', src.slice(a, b + 6))(w, { querySelector: () => ({ hass: { entities: R, states: S } }) });
+  const C = w._casoraCar;
+  C.popup({ entity_id: 'sensor.' + P + '_range_total_range_last_sent' }, {}, S, { states: S, entities: R });
+  assert.ok(laid && laid.stage === 'stage', 'v3 car popup');
+  assert.match(laid.fields.state_s, /sec\("state_s3"/, '#89: the v3 popup asks for the state with the odometer');
+  const html = C.sec('state_s3', 'sensor.' + P + '_range_total_range_last_sent', S);
+  assert.match(html, /^Zustand:.*Kilometerstand=59\.903 km/, '#89: odometer in „Zustand“: ' + html);
+  assert.ok(!/Kilometerstand/.test(C.sec('state_s', 'sensor.' + P + '_range_total_range_last_sent', S)), 'v2 keeps it under „Mehr“');
 }
 
 console.log('popup_v3_issue_features: ok');
