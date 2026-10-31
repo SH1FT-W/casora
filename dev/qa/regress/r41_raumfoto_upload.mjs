@@ -45,10 +45,11 @@ const pg = s.page;
 await studio(pg, dash.url);
 
 // Raum mit mitgeliefertem Beispielfoto (kein eigenes), Darstellung offen.
-const show = () => pg.evaluate(() => {
+const show = (want) => pg.evaluate((want) => {
   const p = window.__panel();
   const rooms = p._state.compact.rooms;
-  let i = rooms.findIndex((r, n) => n > 0 && /^qa-raumfoto/.test((r.variables || {}).image || ''));
+  let i = typeof want === 'string' ? rooms.findIndex((r) => r.path === want) : -1;
+  if (i < 0) i = rooms.findIndex((r, n) => n > 0 && /^qa-raumfoto/.test((r.variables || {}).image || ''));
   if (i < 0) i = rooms.findIndex((r, n) => n > 0 && /-demo$/.test((r.variables || {}).image || ''));
   if (i < 0) i = 1;
   p._room = i; p._sel = null; p._renderTabs(); p._renderForm();
@@ -60,7 +61,7 @@ const show = () => pg.evaluate(() => {
     p._status = (m, k) => { window.__st.push([String(m || ''), k || '']); return o(m, k); };
   }
   return { i, path: rooms[i].path, image: (rooms[i].variables || {}).image };
-});
+}, want);
 const room0 = await show();
 await need('Raum mit Hintergrundbild-Feld', await pg.evaluate(() => window.__panel().shadowRoot.querySelectorAll('.shots .shot').length === 2));
 
@@ -71,19 +72,13 @@ const slot = (n) => pg.evaluate((n) => {
   return { src: img ? img.getAttribute('src') : '', connected: b.isConnected };
 }, n);
 
-// Namensfrage beantworten (Feld leeren, Namen tippen, bestätigen).
-const answer = async (name) => {
-  await pg.waitForFunction(() => !!window.__panel().shadowRoot.querySelector('.askcard input'), null, { timeout: 15000 });
-  const r = await pg.evaluate((name) => {
-    const box = window.__panel().shadowRoot.querySelector('.askcard');
-    const input = box.querySelector('input');
-    const was = input.value;
-    if (name !== null) { input.value = name; input.dispatchEvent(new Event('input', { bubbles: true })); }
-    const btns = box.querySelectorAll('.askacts button:not(.ghost)');
-    btns[btns.length - 1].click();
-    return was;
-  }, name);
-  return r;
+// E16 (test 2): no "Image name" question any more – the upload starts right away (name: the room's own photo,
+// otherwise the room's name plus the server's random tail). Records whether a question showed up.
+let asked = 0;
+const answer = async () => {
+  await pg.waitForTimeout(700);
+  if (await pg.evaluate(() => !!window.__panel().shadowRoot.querySelector('.askcard input'))) asked++;
+  return null;
 };
 
 const settled = async () => {
@@ -106,18 +101,18 @@ const settled = async () => {
 };
 
 // Hochladen per Klick: Dateiauswahl am Platz „Tag“.
-const byClick = async (n, file, name) => {
+const byClick = async (n, file) => {
   const [fc] = await Promise.all([
     pg.waitForEvent('filechooser', { timeout: 10000 }),
     pg.evaluate((n) => window.__panel().shadowRoot.querySelectorAll('.shots .shot')[n].click(), n),
   ]);
   await fc.setFiles(file);
-  const was = await answer(name);
+  const was = await answer();
   return { was, ...(await settled()) };
 };
 
 // Hochladen per Ziehen auf einen Platz (echtes drop-Ereignis mit DataTransfer).
-const byDrop = async (n, file, name, type) => {
+const byDrop = async (n, file, type) => {
   const b64 = fs.readFileSync(file).toString('base64');
   await pg.evaluate(([n, b64, fname, type]) => {
     const bin = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
@@ -128,16 +123,17 @@ const byDrop = async (n, file, name, type) => {
     b.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: dt }));
     b.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
   }, [n, b64, path.basename(file), type]);
-  const was = await answer(name);
+  const was = await answer();
   return { was, ...(await settled()) };
 };
 
-const NAME = 'qa-raumfoto';
-
 // (1) Klick, JPG, Tag
-const a = await byClick(0, F.small, NAME);
+const a = await byClick(0, F.small);
 await check('Klick-Upload (JPG, Tag) ohne Fehler', a.last && a.last[1] === 'ok', a.last);
-await check('neues Foto sofort in der Auswahl und gewählt', a.image === NAME && a.list.includes(NAME), { image: a.image, has: a.list.includes(NAME) });
+const NAME = a.image;
+await check('E16 kein Bildname gefragt', asked === 0, asked);
+await check('neues Foto sofort in der Auswahl und gewählt', !!NAME && !/-demo$/.test(NAME) && a.list.includes(NAME), { image: a.image, has: a.list.includes(NAME) });
+await check('E17 Auswahlfeld ohne Dateikennung und ohne englischen Zusatz', a.combo && !/[0-9a-f]{12}/.test(a.combo) && !/no night image/.test(a.combo), a.combo);
 await check('Beispielfotos bleiben nach dem Upload in der Auswahl', a.demo);
 await check('Auswahlfeld zeigt das neue Foto', a.combo && !/not on disk|nicht vorhanden/i.test(a.combo) && a.combo !== room0.image, a.combo);
 await check('Raum gilt als geändert (Speichern übernimmt es)', a.dirty);
@@ -145,9 +141,9 @@ const d1 = await slot(0);
 await check('Vorschau Tag zeigt das neue Foto', d1 && d1.connected && d1.src.includes(NAME + '.jpg'), d1);
 
 // (2) Ziehen, PNG mit Umlaut und Leerzeichen, Nacht (Name vorbelegt = gewähltes Foto)
-const b = await byDrop(1, F.png, null, 'image/png');
+const b = await byDrop(1, F.png, 'image/png');
 await check('Ziehen-Upload (PNG, Umlaut/Leerzeichen, Nacht) ohne Fehler', b.last && b.last[1] === 'ok', b.last);
-await check('Name beim Ziehen ist das gewählte Foto vorbelegt', b.was === NAME, b.was);
+await check('Ziehen auf „Nacht“ ergänzt das gewählte Foto (ohne Namensfrage)', b.image === NAME && asked === 0, { image: b.image, asked });
 const d2 = await slot(1);
 await check('Vorschau Nacht zeigt das neue Foto', d2 && d2.src.includes(NAME + '-night.jpg'), d2);
 await check('Foto bleibt gewählt', b.image === NAME, b.image);
@@ -176,29 +172,31 @@ const [fcN] = await Promise.all([
   })(),
 ]);
 await fcN.setFiles(F.small);
-await answer(null);
+await answer();
 const bn = await settled();
-await check('"Upload your own" → Night uploads the night photo', bn.last && /night/.test(bn.last[0]) && bn.last[1] === 'ok', bn.last);
+await check('"Upload your own" → Night uploads the night photo', bn.last && /night/i.test(bn.last[0]) && bn.last[1] === 'ok', bn.last);
 await check('"Upload your own" → Night leaves the day photo alone', (await slot(0)).src === dayBefore, { before: dayBefore, after: (await slot(0)).src });
 
 // (3) große Datei (> 12 MB) per Klick, Tag
-const c = await byClick(0, F.big, NAME);
+const c = await byClick(0, F.big);
 await check('großes Foto (' + (fs.statSync(F.big).size / 1048576).toFixed(1) + ' MB) wird angenommen', c.last && c.last[1] === 'ok', c.last);
 
 // (4) HEIC per Ziehen: umgewandelt oder klare Meldung
 if (fs.existsSync(F.heic)) {
-  const h = await byDrop(0, F.heic, 'qa-raumfoto-heic', 'image/heic');
-  const ok = h.last && (h.last[1] === 'ok' ? h.list.includes('qa-raumfoto-heic') : /JPG/i.test(h.last[0]) && /HEIC/i.test(h.last[0]));
+  const h = await byDrop(0, F.heic, 'image/heic');
+  const ok = h.last && (h.last[1] === 'ok' ? h.list.includes(NAME) : /JPG/i.test(h.last[0]) && /HEIC/i.test(h.last[0]));
   await check('HEIC: umgewandelt oder klare Meldung „als JPG exportieren“', ok, h.last);
   if (h.last && h.last[1] === 'ok') {
     await pg.evaluate((n) => { const p = window.__panel(); p._state.compact.rooms[p._room].variables.image = n; p._renderForm(); }, NAME);
   }
 }
 
-// (4b) Neuer Name nur auf den Platz „Nacht“: sofort wählbar (gilt auch tagsüber).
-const n = await byDrop(1, F.small, 'qa-raumfoto-nur nacht', 'image/jpeg');
-await check('neuer Name nur mit Nachtfoto sofort gewählt und in der Auswahl', n.last && n.last[1] === 'ok'
-  && n.image === 'qa-raumfoto-nur-nacht' && n.list.includes('qa-raumfoto-nur-nacht'), { last: n.last, image: n.image });
+// (4b) Only a night photo while a shipped photo is picked: a new own photo (automatic name), selected at once.
+await pg.evaluate((d) => { const p = window.__panel(); p._state.compact.rooms[p._room].variables.image = d; p._renderForm(); }, room0.image);
+await pg.waitForTimeout(600);
+const n = await byDrop(1, F.small, 'image/jpeg');
+await check('nur Nachtfoto: neues eigenes Foto sofort gewählt und in der Auswahl', n.last && n.last[1] === 'ok'
+  && n.image && n.image !== room0.image && !/-demo$/.test(n.image) && n.list.includes(n.image), { last: n.last, image: n.image });
 await pg.evaluate((nm) => { const p = window.__panel(); p._state.compact.rooms[p._room].variables.image = nm; p._renderForm(); }, NAME);
 
 // (5) Das Dashboard lädt <name>.jpg und <name>-night.jpg (seit HACS-Review privat: signierte Adressen).
@@ -221,7 +219,7 @@ const saved = await pg.evaluate(async () => { const p = window.__panel(); await 
 await check('gespeichert', saved);
 await pg.reload();
 await studio(pg, dash.url);
-const after = await show();
+const after = await show(room0.path);
 await check('nach Neuladen bleibt das Foto gewählt', after.image === NAME, after);
 const d3 = await slot(0);
 await check('nach Neuladen zeigt die Vorschau das Foto', d3 && d3.src.includes(NAME + '.jpg'), d3);
