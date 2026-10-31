@@ -11520,7 +11520,7 @@ window.casoraMenuGlass = {
     // The popup's own ha-icon rule (margin auto) pushed the pill's symbol to the middle and the word to the edge.
     + '.hui-st-act ha-icon{margin:0 !important;flex:none;}'
     + '.hui-st-act small{font-size:var(--casora-fs-sub, 13px);font-weight:600;opacity:.8;}'
-    + '.hui-st-act.pri{background:var(--casora-popup-accent, var(--casora-soft-primary, #94603B));color:var(--casora-popup-action-ink, rgba(46,34,20,.9));}'
+    + '.hui-st-act.pri{background:var(--casora-popup-accent, var(--casora-soft-primary, #94603B));color:color-mix(in srgb, var(--casora-popup-action-ink, rgba(46,34,20,.9)) 80%, black);}'
     + '.hui-st-act.dng{background:transparent;box-shadow:var(--casora-v3-pill-edge, inset 0 0 0 1.5px ' + S.ctl + ');color:var(--casora-color-red-text, var(--casora-color-red));}'
     + '.hui-st-act:active{transform:scale(var(--casora-press-scale, .97));}'
     // S6: value + trend, chart, range segment.
@@ -11604,6 +11604,8 @@ window.casoraMenuGlass = {
   // End angle of the filled part; a sliver stays at 0 so the knob has a start.
   function dEnd(pct) { return DIAL.a0 + DIAL.span * Math.max(0.4, Math.min(100, pct)) / 100; }
   var DIAL_CSS = '.hui-stage.dial{background:none;padding:0;gap:12px;align-items:center;}'
+    // The button-card field around the stage clips (.ellipsis): the chosen moon's ring and glow must not be cut.
+    + '.ellipsis:has(.hui-stage.dial){overflow:visible !important;}'
     + '.hui-stage.dial.mb{padding-bottom:20px;}'
     // Without a moon at the bottom the empty gap of the arc is pulled up (the ticks end at 82 % of the wheel).
     + '.hui-stage.dial:not(.mb) > .hui-dl{margin-bottom:calc(min(400px, (100% - 78px) * 1.127) * -0.12);}'
@@ -11619,7 +11621,9 @@ window.casoraMenuGlass = {
     + '.hui-dl-knob{fill:var(--casora-lps-knob, #fff);stroke:rgba(0,0,0,.08);filter:drop-shadow(0 2px 5px rgba(0,0,0,.22));'
     +   'transition:cx .18s cubic-bezier(.36,0,.16,1), cy .18s cubic-bezier(.36,0,.16,1);}'
     + '.hui-dl .mk{fill:' + T.ink + ';opacity:.55;}'
-    + '.hui-dl-c{position:absolute;inset:18%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;}'
+    // white-space: the button-card field (.ellipsis) keeps text on one line – the centre wraps between facts.
+    + '.hui-dl-c{position:absolute;inset:18%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;white-space:normal;}'
+    + '.hui-dl-c .hui-dl-w2 > span{white-space:nowrap;}'
     + '.hui-dl-c .hui-st-val{justify-content:center;}'
     + '.hui-dl-c .hui-st-n{font-size:clamp(48px, 19cqw, 80px);letter-spacing:-0.04em;line-height:1;}'
     + '.hui-dl-c .hui-st-u{font-size:clamp(20px, 6.7cqw, 28px);}'
@@ -11628,7 +11632,8 @@ window.casoraMenuGlass = {
     + '.hui-dl-c .hui-dl-cap{font-size:15px;font-weight:600;color:' + S.sub + ';margin-bottom:4px;}'
     + '.hui-dl-c .hui-dl-w2{font-size:13px;font-weight:600;color:' + S.sub + ';margin-top:4px;font-variant-numeric:tabular-nums;max-width:100%;}'
     + '.hui-dl-c .hui-dl-w2 b{font-weight:700;color:' + T.ink + ';}'
-    + '.hui-dl-c .hui-dl-t{font-size:clamp(20px, 6.2cqw, 26px);font-weight:800;letter-spacing:-0.02em;line-height:1.15;color:' + T.ink + ';max-width:100%;}'
+    + '.hui-dl-c .hui-dl-t{font-size:clamp(18px, 6.2cqw, 26px);font-weight:800;letter-spacing:-0.02em;line-height:1.15;color:' + T.ink + ';max-width:100%;'
+    +   'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:break-word;}'
     + '.hui-dl-c .hui-dl-sym{width:clamp(36px, 11cqw, 46px);height:clamp(36px, 11cqw, 46px);margin-bottom:6px;color:var(--dl-col);'
     +   'background-color:currentColor;-webkit-mask:var(--g) center / contain no-repeat;mask:var(--g) center / contain no-repeat;}'
     // The popup's own ha-icon rule (margin auto) pushed the symbol and the sentence to the bottom of the centre.
@@ -11662,7 +11667,8 @@ window.casoraMenuGlass = {
     + '.hui-moon.on{background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, ' + T.ink + ');'
     +   'box-shadow:0 0 0 3px var(--dl-col), 0 10px 26px -6px color-mix(in srgb, var(--dl-col) 45%, transparent);}'
     + '.hui-moon.on .ic{color:color-mix(in srgb, var(--dl-col) 65%, var(--casora-soft-seg-on-ink, ' + T.ink + '));}'
-    + '.hui-moon.go{background:var(--dl-col);color:var(--casora-popup-action-ink, rgba(46,34,20,.9));}'
+    // The moon's word is small (11 px): the action ink darkened to keep 4.5 : 1 on teal or blue device colours.
+    + '.hui-moon.go{background:var(--dl-col);color:color-mix(in srgb, var(--casora-popup-action-ink, rgba(46,34,20,.9)) 70%, black);}'
     + '.hui-moon.go .ic{color:inherit;}'
     + '.hui-moon.dng{background:transparent;box-shadow:inset 0 0 0 2px ' + S.ctl + ';color:var(--casora-color-red-text, var(--casora-color-red));}'
     + '.hui-moon.dng .ic{color:inherit;}'
@@ -11853,7 +11859,8 @@ window.casoraMenuGlass = {
       else if (o.progress != null) { ring.kind = 'level'; ring.pct = Math.max(0, Math.min(100, Number(o.progress) * (Number(o.progress) <= 1 ? 100 : 1))); }
       else { ring.kind = 'segs'; ring.segs = [{ ok: o.tone !== 'bad', tone: o.tone || 'good' }]; }
       var url7 = o.icon && String(o.icon).indexOf(':') < 0 ? (typeof window.casoraIconUrl === 'function' ? window.casoraIconUrl(o.icon) : '/casora_assets/icons/' + o.icon + '.svg') : null;
-      var facts = (o.facts || []).filter(Boolean).slice(0, 3);
+      // At most two facts fit the wheel's middle (the third stays in the list or the status line).
+      var facts = (o.facts || []).filter(Boolean).slice(0, 2);
       var valHtml = o.value != null && o.value !== '' ? stValue(o.value, o.unit || '', '') : '';
       centerHtml = (url7 ? '<div class="hui-dl-sym" style="--g:url(\'' + esc(url7) + '\')"></div>'
           : (o.icon ? '<ha-icon class="hui-dl-sym" icon="' + esc(o.icon) + '" style="display:flex;"></ha-icon>' : ''))

@@ -199,7 +199,7 @@
     var vol = a.volume_level != null && !isNaN(Number(a.volume_level)) ? Math.round(Number(a.volume_level) * 100) : null;
     var info = '<div style="text-align:center;min-width:0;">'
       + '<div style="font-size:17px;font-weight:700;line-height:1.3;overflow-wrap:anywhere;">' + esc(top.line || top.word) + '</div>'
-      + '<div style="font-size:14px;font-weight:500;opacity:.7;margin-top:4px;">' + esc([top.name, top.room].filter(Boolean).join(' · ')) + '</div></div>';
+      + '<div style="font-size:14px;font-weight:500;color:var(--casora-soft-sub, currentColor);margin-top:4px;">' + esc([top.name, top.room].filter(Boolean).join(' · ')) + '</div></div>';
     return UI.stage('slider', { value: vol || 0, label: 'Lautstärke', word: 'Lautstärke',
       cover: { image: pic || null, spin: !!top.playing },
       svc: vol != null ? { domain: 'media_player', service: 'volume_set', field: 'volume_level', scale: [0, 1, 0.01], showPct: true, target: { entity_id: top.id } } : null,
