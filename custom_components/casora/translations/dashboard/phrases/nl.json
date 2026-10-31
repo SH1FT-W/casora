@@ -2276,9 +2276,6 @@
   "Ab hier:": "Vanaf hier:",
   "Anhalten": "Pauzeren",
   "Kein Live-Video · Standbild alle 2 s": "Geen livevideo · stilstaand beeld elke 2 s",
-  "Hemma 2 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 2 bestaat niet meer in Casora – je gebruikt nu Casora Glas, de glaslook in de Casora-opbouw. Andere designs: Studio › Instellingen › Design.",
-  "Hemma 1 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 1 bestaat niet meer in Casora – je gebruikt nu Casora Glas, de glaslook in de Casora-opbouw. Andere designs: Studio › Instellingen › Design.",
-  "Das Hemma-Design gibt es nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Het Hemma-design bestaat niet meer – je gebruikt nu Casora Glas, de glaslook in de Casora-opbouw. Andere designs: Studio › Instellingen › Design.",
   "Americano": "Americano",
   "Cappuccino": "Cappuccino",
   "Cortado": "Cortado",
@@ -2609,7 +2606,11 @@
   "Casora hat nach dem Update alte Einträge entfernt. Die Einzelheiten stehen unten in der Sprache von Home Assistant.": "Na de update heeft Casora oude items verwijderd. De details hieronder staan in de taal van Home Assistant.",
   "Casora: Helfer fehlen": "Casora: helpers ontbreken",
   "Einige Helfer konnten nicht angelegt werden": "Sommige helpers konden niet worden aangemaakt",
-  "Für mich ausblenden": "Voor mij verbergen"
+  "Für mich ausblenden": "Voor mij verbergen",
+  "Hemma 2 gibt es nicht mehr – du siehst jetzt Casora Glas.": "Hemma 2 bestaat niet meer – je ziet nu Casora Glas.",
+  "Hemma 1 gibt es nicht mehr – du siehst jetzt Casora Glas.": "Hemma 1 bestaat niet meer – je ziet nu Casora Glas.",
+  "Das Hemma-Design gibt es nicht mehr – du siehst jetzt Casora Glas.": "Het Hemma-ontwerp bestaat niet meer – je ziet nu Casora Glas.",
+  "Ändern: Studio › Einstellungen › Design.": "Wijzigen: Studio › Instellingen › Ontwerp."
  },
  "patterns": [
   [

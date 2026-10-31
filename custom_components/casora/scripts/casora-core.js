@@ -2127,6 +2127,44 @@ window.casoraMenuGlass = {
   apply();
 })();
 
+// ── Notices (HA toasts) that keep out of the way (Prüfung 2 DH-18, fam-20, E29) ──────────────────
+// HA shows hass-notification at the bottom edge: on the phone over Casora's bar, and over an open popup sheet.
+// casoraNotice(detail) waits until no Casora popup is open; the toast stack is lifted above the phone bar
+// (--casora-toast-lift, set by the bar in 04-navigation.js) for every toast, HA's own included.
+(function () {
+  if (window.casoraNotice) return;
+  var CSS = '.stack{bottom:calc(16px + var(--casora-toast-lift, 0px)) !important;}';
+  var lift = function () {
+    var ha = document.querySelector('home-assistant');
+    var nm = ha && ha.shadowRoot && ha.shadowRoot.querySelector('notification-manager');
+    var sr = nm && nm.shadowRoot;
+    if (!sr) return false;
+    if (!sr.getElementById('casora-toast-lift')) {
+      var st = document.createElement('style');
+      st.id = 'casora-toast-lift';
+      st.textContent = CSS;
+      sr.appendChild(st);
+    }
+    return true;
+  };
+  window.casoraToastLift = lift;
+  var n = 0;
+  (function tryLift() { if (!lift() && ++n < 20) setTimeout(tryLift, 1500); })();
+  window.casoraNotice = function (detail, opts) {
+    var waited = 0;
+    (function show() {
+      var pop = window.casoraPopup && window.casoraPopup.surface;
+      if (pop && !(opts && opts.overPopup) && waited < 600000) { waited += 700; setTimeout(show, 700); return; }
+      var ha = document.querySelector('home-assistant');
+      if (!ha) return;
+      lift();
+      var ev = new Event('hass-notification', { bubbles: true, composed: true });
+      ev.detail = detail;
+      ha.dispatchEvent(ev);
+    })();
+  };
+})();
+
 // ── Notice after the design switch (Hemma 1/2 → Casora Glas) ──────────────────
 // theme.py sets the user data casora_theme_notice = { from: 'Hemma 2' | 'Hemma 1' | 'Hemma',
 // to: 'Casora Glas' } for every HA user when it takes the design over. Shown once as a message
@@ -2135,11 +2173,13 @@ window.casoraMenuGlass = {
   if (window._casoraThemeNotice) return;
   window._casoraThemeNotice = true;
   var KEY = 'casora_theme_notice';
+  // Short (fam-20/DH-18): what changed; where to change it only for admins, who have the Studio.
   var TEXT = {
-    'Hemma 2': 'Hemma 2 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.',
-    'Hemma 1': 'Hemma 1 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.',
-    'Hemma': 'Das Hemma-Design gibt es nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.',
+    'Hemma 2': 'Hemma 2 gibt es nicht mehr – du siehst jetzt Casora Glas.',
+    'Hemma 1': 'Hemma 1 gibt es nicht mehr – du siehst jetzt Casora Glas.',
+    'Hemma': 'Das Hemma-Design gibt es nicht mehr – du siehst jetzt Casora Glas.',
   };
+  var ADMIN = 'Ändern: Studio › Einstellungen › Design.';
   var tries = 0;
   function check() {
     var el = document.querySelector('home-assistant');
@@ -2156,10 +2196,9 @@ window.casoraMenuGlass = {
       // Erst löschen, dann zeigen: ein zweiter Tab oder ein Neuladen zeigt ihn nicht noch einmal.
       return conn.sendMessagePromise({ type: 'frontend/set_user_data', key: KEY, value: null }).then(function () {
         var T = window.casoraTr || function (x) { return x; };
-        var ev = new Event('hass-notification', { bubbles: true, composed: true });
-        ev.detail = { message: T(msg), duration: -1, dismissable: true,
-          action: { text: T('OK'), action: function () {} } };
-        el.dispatchEvent(ev);
+        var admin = !!(h.user && h.user.is_admin);
+        window.casoraNotice({ message: T(msg) + (admin ? ' ' + T(ADMIN) : ''), duration: 15000, dismissable: true,
+          action: { text: T('OK'), action: function () {} } });
       });
     }).catch(function () { /* ältere HA ohne Benutzerdaten: kein Hinweis */ });
   }

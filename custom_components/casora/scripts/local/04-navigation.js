@@ -82,6 +82,8 @@
       +   'background:var(--casora-mnav-bg, rgba(40,40,44,0.55));backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);'
       +   'box-shadow:0 10px 30px -10px rgba(0,0,0,0.55), inset 0 0.5px 0 rgba(255,255,255,0.22);'
       +   'font-family:var(--primary-font-family, system-ui);transition:opacity .3s ease, transform .5s cubic-bezier(.22,1.3,.36,1);}'
+      /* Toasts (HA's notification stack, casora-core.js casoraNotice) stand above the bar, not on it (fam-20). */
+      + 'html:has(.hmn-bar:not(.hmn-hidden)){--casora-toast-lift:72px;}'
       + '.hmn-bar.hmn-hidden{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(calc(100% + 40px));transition:opacity .22s ease .06s, transform .28s cubic-bezier(.4,0,1,1);}'
       + '.hmn-btn{flex:1 1 0;border:0;background:transparent;color:var(--casora-mnav-fg, rgba(255,255,255,0.72));border-radius:24px;display:flex;flex-direction:column;'
       +   'align-items:center;justify-content:center;gap:2px;font:inherit;font-size:11px;font-weight:500;letter-spacing:.01em;'

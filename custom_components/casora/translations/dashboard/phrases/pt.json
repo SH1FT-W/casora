@@ -2284,9 +2284,6 @@
   "Ab hier:": "A partir daqui:",
   "Anhalten": "Pausar",
   "Kein Live-Video · Standbild alle 2 s": "Sem vídeo em direto · imagem fixa a cada 2 s",
-  "Hemma 2 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "O Hemma 2 já não faz parte do Casora – agora usas o Casora Glas, o aspeto de vidro com a estrutura do Casora. Outros designs: Studio › Definições › Design.",
-  "Hemma 1 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "O Hemma 1 já não faz parte do Casora – agora usas o Casora Glas, o aspeto de vidro com a estrutura do Casora. Outros designs: Studio › Definições › Design.",
-  "Das Hemma-Design gibt es nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "O design Hemma já não existe – agora usas o Casora Glas, o aspeto de vidro com a estrutura do Casora. Outros designs: Studio › Definições › Design.",
   "Americano": "Americano",
   "Cappuccino": "Cappuccino",
   "Cortado": "Cortado",
@@ -2609,7 +2606,11 @@
   "Casora hat nach dem Update alte Einträge entfernt. Die Einzelheiten stehen unten in der Sprache von Home Assistant.": "Após a atualização, o Casora removeu entradas antigas. Os detalhes abaixo estão no idioma do Home Assistant.",
   "Casora: Helfer fehlen": "Casora: faltam auxiliares",
   "Einige Helfer konnten nicht angelegt werden": "Não foi possível criar alguns auxiliares",
-  "Für mich ausblenden": "Ocultar para mim"
+  "Für mich ausblenden": "Ocultar para mim",
+  "Hemma 2 gibt es nicht mehr – du siehst jetzt Casora Glas.": "O Hemma 2 já não existe – agora vê o Casora Glas.",
+  "Hemma 1 gibt es nicht mehr – du siehst jetzt Casora Glas.": "O Hemma 1 já não existe – agora vê o Casora Glas.",
+  "Das Hemma-Design gibt es nicht mehr – du siehst jetzt Casora Glas.": "O design Hemma já não existe – agora vê o Casora Glas.",
+  "Ändern: Studio › Einstellungen › Design.": "Alterar: Studio › Definições › Design."
  },
  "patterns": [
   [

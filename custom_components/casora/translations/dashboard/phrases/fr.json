@@ -2276,9 +2276,6 @@
   "Ab hier:": "À partir d'ici :",
   "Anhalten": "Pause",
   "Kein Live-Video · Standbild alle 2 s": "Pas de vidéo en direct · image fixe toutes les 2 s",
-  "Hemma 2 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 2 ne fait plus partie de Casora – tu utilises maintenant Casora Glas, le look verre dans la structure Casora. Autres designs : Studio › Réglages › Design.",
-  "Hemma 1 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 1 ne fait plus partie de Casora – tu utilises maintenant Casora Glas, le look verre dans la structure Casora. Autres designs : Studio › Réglages › Design.",
-  "Das Hemma-Design gibt es nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Le design Hemma n'existe plus – tu utilises maintenant Casora Glas, le look verre dans la structure Casora. Autres designs : Studio › Réglages › Design.",
   "Americano": "Americano",
   "Cappuccino": "Cappuccino",
   "Cortado": "Cortado",
@@ -2609,7 +2606,11 @@
   "Casora hat nach dem Update alte Einträge entfernt. Die Einzelheiten stehen unten in der Sprache von Home Assistant.": "Après la mise à jour, Casora a supprimé d'anciennes entrées. Les détails ci-dessous sont dans la langue de Home Assistant.",
   "Casora: Helfer fehlen": "Casora : assistants manquants",
   "Einige Helfer konnten nicht angelegt werden": "Certains assistants n'ont pas pu être créés",
-  "Für mich ausblenden": "Masquer pour moi"
+  "Für mich ausblenden": "Masquer pour moi",
+  "Hemma 2 gibt es nicht mehr – du siehst jetzt Casora Glas.": "Hemma 2 n'existe plus – tu vois maintenant Casora Glas.",
+  "Hemma 1 gibt es nicht mehr – du siehst jetzt Casora Glas.": "Hemma 1 n'existe plus – tu vois maintenant Casora Glas.",
+  "Das Hemma-Design gibt es nicht mehr – du siehst jetzt Casora Glas.": "Le design Hemma n'existe plus – tu vois maintenant Casora Glas.",
+  "Ändern: Studio › Einstellungen › Design.": "Pour changer : Studio › Réglages › Design."
  },
  "patterns": [
   [

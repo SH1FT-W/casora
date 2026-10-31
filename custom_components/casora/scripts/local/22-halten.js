@@ -1107,7 +1107,9 @@
     try { localStorage.setItem(TIP, '1'); } catch (e) { return; }
     setTimeout(function () {
       var fine = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-      notice(T(fine ? 'Tipp: Kachel gedrückt halten oder rechts klicken – Schnellbedienung' : 'Tipp: Kachel gedrückt halten – Schnellbedienung'));
+      var msg = T(fine ? 'Tipp: Kachel gedrückt halten oder rechts klicken – Schnellbedienung' : 'Tipp: Kachel gedrückt halten – Schnellbedienung');
+      // E29 (Prüfung 2): the tap usually opened a popup – the tip waits until it is closed instead of covering it.
+      if (window.casoraNotice) window.casoraNotice({ message: msg }); else notice(msg);
     }, 1200);
   };
 })();

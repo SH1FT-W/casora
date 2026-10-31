@@ -2284,9 +2284,6 @@
   "Ab hier:": "Desde aquí:",
   "Anhalten": "Pausar",
   "Kein Live-Video · Standbild alle 2 s": "Sin vídeo en vivo · imagen fija cada 2 s",
-  "Hemma 2 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 2 ya no forma parte de Casora – ahora usas Casora Glas, el aspecto de cristal con la estructura de Casora. Otros diseños: Studio › Ajustes › Diseño.",
-  "Hemma 1 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 1 ya no forma parte de Casora – ahora usas Casora Glas, el aspecto de cristal con la estructura de Casora. Otros diseños: Studio › Ajustes › Diseño.",
-  "Das Hemma-Design gibt es nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "El diseño Hemma ya no existe – ahora usas Casora Glas, el aspecto de cristal con la estructura de Casora. Otros diseños: Studio › Ajustes › Diseño.",
   "Americano": "Americano",
   "Cappuccino": "Cappuccino",
   "Cortado": "Cortado",
@@ -2609,7 +2606,11 @@
   "Casora hat nach dem Update alte Einträge entfernt. Die Einzelheiten stehen unten in der Sprache von Home Assistant.": "Tras la actualización, Casora eliminó entradas antiguas. Los detalles de abajo están en el idioma de Home Assistant.",
   "Casora: Helfer fehlen": "Casora: faltan ayudantes",
   "Einige Helfer konnten nicht angelegt werden": "No se pudieron crear algunos ayudantes",
-  "Für mich ausblenden": "Ocultar para mí"
+  "Für mich ausblenden": "Ocultar para mí",
+  "Hemma 2 gibt es nicht mehr – du siehst jetzt Casora Glas.": "Hemma 2 ya no existe: ahora ves Casora Glas.",
+  "Hemma 1 gibt es nicht mehr – du siehst jetzt Casora Glas.": "Hemma 1 ya no existe: ahora ves Casora Glas.",
+  "Das Hemma-Design gibt es nicht mehr – du siehst jetzt Casora Glas.": "El diseño Hemma ya no existe: ahora ves Casora Glas.",
+  "Ändern: Studio › Einstellungen › Design.": "Cambiarlo: Studio › Ajustes › Diseño."
  },
  "patterns": [
   [
