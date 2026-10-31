@@ -8079,6 +8079,17 @@ window.casoraMenuGlass = {
       try { box = this.content.getBoundingClientRect(); } catch (e) { return true; }
       if (!box || !box.width || !box.height) return true;
       if (x < box.left || x > box.right || y < box.top || y > box.bottom) return true;
+      // DD-01: an opaque popup card (Casora look, v3) is content everywhere – the gap between the dial and the
+      // list or the dial's middle are not "background"; only the dimmed scrim outside closes.
+      try {
+        var sf = this.surface, sr = sf && sf.getBoundingClientRect();
+        if (sr && sr.width && x >= sr.left && x <= sr.right && y >= sr.top && y <= sr.bottom) {
+          var scs = window.getComputedStyle(sf);
+          var sm = /^rgba?\(([^)]+)\)/.exec(scs.backgroundColor || '');
+          var sp = sm ? sm[1].split(',') : null;
+          if (sp && (sp.length > 3 ? parseFloat(sp[3]) : 1) > 0.5) return true;
+        }
+      } catch (e) { /* fall back to the walk below */ }
       var hit = false;
       (function walk(root) {
         if (hit || !root || !root.querySelectorAll) return;
@@ -8094,6 +8105,8 @@ window.casoraMenuGlass = {
           if (x < r.left || x > r.right || y < r.top || y > r.bottom) continue;
           if (el.dataset && el.dataset.casoraNodismiss !== undefined) { hit = true; return; }
           if (el.classList && el.classList.contains('hui-plate')) { hit = true; return; }
+          // The dial (S1–S3) is a control as a whole, its open middle included (§4.8).
+          if (el.classList && (el.classList.contains('hui-dl') || el.classList.contains('hui-stage'))) { hit = true; return; }
           var cs;
           try { cs = window.getComputedStyle(el); } catch (e) { continue; }
           if (!cs || cs.visibility === 'hidden' || cs.display === 'none') continue;
@@ -8303,6 +8316,8 @@ window.casoraMenuGlass = {
 
       var start = (e) => {
         if (!this._isSheet() || !this._dismissable) return;
+        // DH-01: a touch that starts on a dial's ring belongs to the dial (or to scrolling), never to the sheet.
+        if (e._casoraDialRing) { tracking = false; return; }
         var t = e.touches ? e.touches[0] : e;
         y0 = t.clientY;
         dy = 0;
@@ -10210,7 +10225,8 @@ window.casoraMenuGlass = {
     };
     // Dial (UI.stage, popup-richtlinien-v3.md §4.8): the angle around the centre of the square wheel (viewBox 420,
     // 270° from 135°); the gap at the bottom snaps to the nearer end. A scaled dial snaps to the device's steps.
-    // ring: only a press on the ring starts a drag (not the middle with its buttons, not outside) → null.
+    // ring: only a press on the ring starts a drag (not the middle with its buttons, not outside, not the open
+    // gap at the bottom between the arc's ends – fam-02: a tap there jumped to 0 or 100 %) → null.
     var dialFrom = function (el, b, cx, cy, ring) {
       if (!b.width) return null;
       var k = 420 / b.width, x = (cx - b.left) * k - 210, y = (cy - b.top) * k - 210, r = Math.sqrt(x * x + y * y);
@@ -10219,6 +10235,7 @@ window.casoraMenuGlass = {
       if (a < 0) a += 360;
       var rel = a - 135;
       if (rel < 0) rel += 360;
+      if (ring && rel > 270) return null;
       if (rel > 270) rel = rel > 315 ? 0 : 270;
       return dialSnap(el, rel / 270 * 100);
     };
@@ -10309,6 +10326,8 @@ window.casoraMenuGlass = {
         if (el && el.getAttribute && el.getAttribute('role') === 'button' && el.closest && el.closest('.hui-dl')) return;
         if (el && el.dataset && el.dataset.casoraSlider !== undefined) {
           if (el.dataset.casoraAxis === 'dial') {
+            // Fingers go through the touch gesture below (turn or scroll is decided by the first movement).
+            if (ev.pointerType === 'touch') return;
             var dp0 = dialFrom(el, el.getBoundingClientRect(), ev.clientX, ev.clientY, true);
             if (dp0 == null) return;
             drag = { el: el, pct: dp0, from: shown(el) };
@@ -10381,6 +10400,97 @@ window.casoraMenuGlass = {
     };
     document.addEventListener('pointerup', endDrag, true);
     document.addEventListener('pointercancel', endDrag, true);
+    // Dial by touch (DH-01, DH-02, fam-01, fam-02): the dial is touch-action pan-y, so the sheet scrolls over it.
+    // Turning starts only for a touch that begins on the ring (not the middle, not outside, not the gap) and
+    // then either starts at the knob, moves along the ring (tangential, not mainly up/down or across the ring)
+    // or rests for a moment first. Turning is relative to where it started – no jump to the finger. A tap
+    // without moving changes nothing. The sheet never takes a touch that began on the ring (_bindSheetDrag).
+    var DIAL_HOLD = 260, DIAL_SLOP = 6;
+    var tdial = null;
+    var dialGeom = function (el, cx, cy) {
+      var b = el.getBoundingClientRect();
+      var k = 420 / (b.width || 1), x = (cx - b.left) * k - 210, y = (cy - b.top) * k - 210;
+      return { x: x, y: y, r: Math.sqrt(x * x + y * y), a: Math.atan2(y, x) * 180 / Math.PI, k: k };
+    };
+    var dialOf = function (ev) {
+      var path = (ev.composedPath && ev.composedPath()) || [ev.target];
+      for (var i = 0; i < path.length; i++) {
+        var el = path[i];
+        if (el && el.getAttribute && el.getAttribute('role') === 'button' && el.closest && el.closest('.hui-dl')) return null;
+        if (el && el.dataset && el.dataset.casoraSlider !== undefined && el.dataset.casoraAxis === 'dial') return el;
+      }
+      return null;
+    };
+    var tdialGrab = function () {
+      if (!tdial || tdial.turning) return;
+      tdial.turning = true;
+      tdial.el.classList.add('drag');
+      window.casoraHaptic('selection');
+    };
+    document.addEventListener('touchstart', function (ev) {
+      if (tdial && tdial.hold) clearTimeout(tdial.hold);
+      tdial = null;
+      if (!ev.touches || ev.touches.length !== 1) return;
+      var el = dialOf(ev);
+      if (!el) return;
+      var t = ev.touches[0];
+      if (dialFrom(el, el.getBoundingClientRect(), t.clientX, t.clientY, true) == null) return;
+      ev._casoraDialRing = true;
+      var g = dialGeom(el, t.clientX, t.clientY);
+      var from = shown(el);
+      // The knob sits on the ring's middle line (radius 150) at the shown value.
+      var ka = (135 + (from == null ? 0 : from) / 100 * 270) * Math.PI / 180;
+      var nearKnob = Math.hypot(g.x - 150 * Math.cos(ka), g.y - 150 * Math.sin(ka)) < 52;
+      tdial = { el: el, id: t.identifier, x0: t.clientX, y0: t.clientY, a: g.a, turned: 0, from: from,
+        pct: from == null ? 0 : from, knob: nearKnob, turning: false, decided: false };
+      tdial.hold = setTimeout(function () { if (tdial && !tdial.decided) { tdial.decided = true; tdialGrab(); } }, DIAL_HOLD);
+    }, { capture: true, passive: true });
+    document.addEventListener('touchmove', function (ev) {
+      if (!tdial) return;
+      var t = null;
+      for (var i = 0; i < ev.touches.length; i++) if (ev.touches[i].identifier === tdial.id) t = ev.touches[i];
+      if (!t || ev.touches.length !== 1) { clearTimeout(tdial.hold); if (tdial.turning) tdial.el.classList.remove('drag'); tdial = null; return; }
+      var dx = t.clientX - tdial.x0, dy = t.clientY - tdial.y0;
+      if (!tdial.decided) {
+        if (Math.hypot(dx, dy) < DIAL_SLOP) return;
+        clearTimeout(tdial.hold);
+        tdial.decided = true;
+        var g0 = dialGeom(tdial.el, tdial.x0, tdial.y0);
+        var ux = g0.x / (g0.r || 1), uy = g0.y / (g0.r || 1);
+        var radial = Math.abs(dx * ux + dy * uy), tang = Math.abs(dx * uy - dy * ux);
+        // Along the ring and not mainly up/down (on the ring's sides "along" is up/down: that scrolls unless
+        // the finger started at the knob or rested first).
+        var along = tang > radial * 1.5 && Math.abs(dx) >= Math.abs(dy) * 0.5;
+        if (!(tdial.knob || along) || !ev.cancelable) { tdial = null; return; }
+        tdialGrab();
+      }
+      if (!tdial.turning) return;
+      if (!ev.cancelable) { tdial.el.classList.remove('drag'); if (tdial.from != null) paint(tdial.el, tdial.from); tdial = null; return; }
+      ev.preventDefault();
+      var g = dialGeom(tdial.el, t.clientX, t.clientY);
+      var d = g.a - tdial.a;
+      if (d > 180) d -= 360; else if (d < -180) d += 360;
+      tdial.a = g.a;
+      tdial.turned += d;
+      var base = tdial.from == null ? 0 : tdial.from;
+      tdial.pct = dialSnap(tdial.el, Math.max(0, Math.min(100, base + tdial.turned / 270 * 100)));
+      paint(tdial.el, tdial.pct);
+    }, { capture: true, passive: false });
+    var tdialEnd = function (ev) {
+      if (!tdial) return;
+      var d = tdial; tdial = null;
+      clearTimeout(d.hold);
+      if (!d.turning) return;
+      d.el.classList.remove('drag');
+      if (ev && ev.type === 'touchcancel') { if (d.from != null) paint(d.el, d.from); return; }
+      // The finger's tap after turning is not a tap on the popup's background.
+      window._casoraSuppressDismiss = Date.now() + 600;
+      if (d.from != null && d.pct === d.from) return;
+      window.casoraHaptic('selection');
+      commit({ el: d.el, pct: d.pct, from: d.from });
+    };
+    document.addEventListener('touchend', tdialEnd, true);
+    document.addEventListener('touchcancel', tdialEnd, true);
     // Keys on a stage slider (role="slider"): arrows ±1, page up/down ±10, home/end; the service follows
     // 400 ms after the last key (one call for a held key).
     var keyT = null;
@@ -11530,7 +11640,7 @@ window.casoraMenuGlass = {
     // Without a moon at the bottom the empty gap of the arc is pulled up (the ticks end at 82 % of the wheel).
     + '.hui-stage.dial:not(.mb) > .hui-dl{margin-bottom:calc(min(400px, (100% - 78px) * 1.127) * -0.12);}'
     + '.hui-dl{position:relative;flex:none;width:min(400px, calc((100% - 78px) * 1.127));aspect-ratio:1;container-type:inline-size;'
-    +   'touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;outline:none;}'
+    +   'touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;outline:none;}'
     + '.hui-dl:focus-visible .hui-dl-knob{stroke:' + T.ink + ';stroke-width:3;}'
     + '.hui-dl svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}'
     + '.hui-dl[data-casora-slider]{cursor:grab;}.hui-dl.drag{cursor:grabbing;}'
