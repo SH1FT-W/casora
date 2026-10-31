@@ -2588,7 +2588,8 @@
   "Alarmanlage unscharf schalten?": "¿Desactivar la alarma?",
   "Sensor offen": "Sensor abierto",
   "Sensoren offen": "Sensores abiertos",
-  "Wirklich?": "¿Seguro?"
+  "Wirklich?": "¿Seguro?",
+  "Schloss entriegeln?": "¿Abrir la cerradura?"
  },
  "patterns": [
   [
