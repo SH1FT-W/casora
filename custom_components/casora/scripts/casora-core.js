@@ -1649,8 +1649,10 @@ window.casoraMenuGlass = {
     if (sh) el.style.setProperty('--casora-window-shadow', sh);
     el.style.borderRadius = r;
     if (pane) el.style.backgroundColor = pane;
-    el.style.backdropFilter = 'none';
-    el.style.webkitBackdropFilter = 'none';
+    // Casora Glas keeps a blur behind its windows (--casora-window-backdrop); the other designs none.
+    var bd = cs.getPropertyValue('--casora-window-backdrop').trim() || 'none';
+    el.style.backdropFilter = bd;
+    el.style.webkitBackdropFilter = bd;
     el.style.boxShadow = sh || el.style.boxShadow;
     return true;
   },

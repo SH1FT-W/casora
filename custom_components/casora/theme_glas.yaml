@@ -20,6 +20,8 @@ Casora Glas:
   casora-pill-backdrop: blur(30px) saturate(1.65)
   casora-sidebar-backdrop: blur(34px) saturate(1.4)
   casora-scrim-backdrop: blur(8px)
+  # Fenster (Glocke, ⋯, Welle) behalten ihr Glas: Blur hinter der fast deckenden Fläche (E01)
+  casora-window-backdrop: blur(40px) saturate(165%)
   badge-blur: 26px
   # Glaskante: feine helle Linie innen, 1-px-Lichtkante oben, leichter Glanz (Casora: none)
   casora-glass-rim: inset 0 0 0 .5px rgba(255,255,255,0.45), inset 0 1px 0 rgba(255,255,255,0.65), inset 0 22px 30px -24px rgba(255,255,255,0.20)
@@ -62,10 +64,11 @@ Casora Glas:
       casora-mnav-bg: rgba(255,253,250,0.50)
       casora-mnav-press-fill: rgba(255,253,250,0.70)
       casora-room-head-fill: rgba(255,253,250,0.50)
-      # Menüs und Fenster (Glocke, ⋯, Räume/Szenen)
-      casora-menu-pane: rgba(252,249,245,0.50)
-      casora-menu-pane-webkit: rgba(252,249,245,0.58)
-      casora-mnav-menu-bg: rgba(252,249,245,0.50)
+      # Menüs und Fenster (Glocke, ⋯, Räume/Szenen). Prüfung 2 E01: bei .50/.58 lasen sich Kachel- und
+      # Chip-Texte darunter mit (Fenster ohne Blur am Handy) – jetzt fast deckend, der Blur bleibt.
+      casora-menu-pane: rgba(252,249,245,0.86)
+      casora-menu-pane-webkit: rgba(252,249,245,0.90)
+      casora-mnav-menu-bg: rgba(252,249,245,0.88)
       casora-mnav-over: rgba(252,249,245,0.62)
       # Popups: Glasblatt, Zeilen als hellere Glasplatten
       casora-dialog-bg: rgba(250,247,242,0.70)
@@ -122,9 +125,9 @@ Casora Glas:
       casora-mnav-bg: rgba(30,27,24,0.32)
       casora-mnav-press-fill: rgba(255,240,220,0.22)
       casora-room-head-fill: rgba(30,27,24,0.34)
-      casora-menu-pane: rgba(34,31,28,0.50)
-      casora-menu-pane-webkit: rgba(34,31,28,0.58)
-      casora-mnav-menu-bg: rgba(34,31,28,0.50)
+      casora-menu-pane: rgba(34,31,28,0.86)
+      casora-menu-pane-webkit: rgba(34,31,28,0.90)
+      casora-mnav-menu-bg: rgba(34,31,28,0.88)
       casora-mnav-over: rgba(34,31,28,0.60)
       casora-dialog-bg: rgba(30,27,24,0.74)
       casora-popup-row-fill: rgba(255,240,220,0.09)
