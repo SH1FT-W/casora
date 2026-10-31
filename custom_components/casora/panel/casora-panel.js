@@ -6206,8 +6206,12 @@ const tileStateWord = (kind, tile, ent, states, hass) => {
       const s = V.temp_sensor && (states || {})[V.temp_sensor];
       const sa = (s && s.attributes) || {};
       const v = s ? parseFloat(s.state) : NaN;
+      // No sensor set: the room's reading as on the dashboard (casoraRoomTempOf), else the thermostat's own (review 2).
+      const rt = !V.temp_sensor && window.casoraRoomTempOf ? window.casoraRoomTempOf(ent.entity_id, states || {}) : null;
+      const ct = parseFloat((ent.attributes || {}).current_temperature);
+      const alt = rt != null ? rt : !V.temp_sensor && mode !== "unavailable" && Number.isFinite(ct) ? Math.round(ct * 10) / 10 : null;
       const room = Number.isFinite(v) && (sa.device_class === "temperature" || /°|^K$/.test(String(sa.unit_of_measurement || "")))
-        ? Math.round(v * 10) / 10 + "° · " : "";
+        ? Math.round(v * 10) / 10 + "° · " : alt != null ? alt + "° · " : "";
       if (mode !== "cool" && mode !== "heat") return room + "Off";
       if (target == null) return room + (mode === "cool" ? "Cooling" : "Heating");
       return room + (mode === "cool" ? "Cooling to " : "Heating to ") + target + "°";

@@ -20,7 +20,7 @@ const S = { 'sensor.example_room': { state: '21.34', attributes: { device_class:
 const V = { temp_sensor: 'sensor.example_room' };
 
 assert.equal(tile(trv, V, S), '21,3° · Heizt auf 24,5°', 'sensor in front');
-assert.equal(tile(trv, {}, S), 'Heizt auf 24,5°', 'no sensor: as before');
+assert.equal(tile(trv, {}, S), '18,2° · Heizt auf 24,5°', 'no sensor: the thermostat\'s own reading (review 2, fam-15)');
 assert.equal(tile({ ...trv, state: 'off' }, V, S), '21,3° · Aus');
 assert.equal(tile({ ...trv, attributes: { ...trv.attributes, hvac_action: 'idle', current_temperature: 24.5 } }, V, S),
   '21,3° · Ziel 24,5°', 'at the target');
@@ -35,7 +35,7 @@ assert.equal(tile(trv, { temp_sensor: 'sensor.gone' }, S), 'Heizt auf 24,5°', '
 
 // Studio preview: same order, English words, German through the panel patterns.
 const panel = read('custom_components/casora/panel/casora-panel.js');
-assert.ok(/case "thermostat": \{[\s\S]{0,600}V\.temp_sensor[\s\S]{0,600}return room \+ \(mode === "cool" \? "Cooling to " : "Heating to "\)/.test(panel),
+assert.ok(/case "thermostat": \{[\s\S]{0,600}V\.temp_sensor[\s\S]{0,1400}return room \+ \(mode === "cool" \? "Cooling to " : "Heating to "\)/.test(panel),
   'preview shows the sensor too');
 const pats = JSON.parse(read('custom_components/casora/translations/panel/de.json')).patterns.map(([re, rep]) => [new RegExp(re), rep]);
 const de = (s) => { for (const [re, rep] of pats) { const m = s.match(re); if (m) return rep.replace(/\{(\d+)\}/g, (_, i) => m[+i]); } return s; };

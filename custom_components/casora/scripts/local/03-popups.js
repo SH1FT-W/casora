@@ -500,6 +500,8 @@
   F.curTemp = function (o, states) {
     var s = o.temp && states[o.temp];
     var v = s && ok(s) ? num(s.state) : null;
+    // No sensor of its own: the room's reading, as its Klima badge shows it (review 2, E09).
+    if (v == null && !o.temp && window.casoraRoomTempOf) v = window.casoraRoomTempOf(o.id, states);
     return v != null ? v : num(states[o.id] && states[o.id].attributes.current_temperature);
   };
   F.heating = function (o, states) {
