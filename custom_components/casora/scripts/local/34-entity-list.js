@@ -467,7 +467,8 @@
       var parts = ['lists', 'charts', 'tiles'].map(function (k) { return L.moreSec(k, M, states, hass); }).filter(Boolean);
       var partsHtml = parts.join('');
       if (!parts.length) return UI.stage('content', { empty: { icon: 'list', studio: true, text: T('Wähle im Studio Gruppen und Sensoren für diese Kachel.') } });
-      return UI.stage('content', { html: STAGE_CSS + '<div style="display:flex;flex-direction:column;gap:18px;">' + partsHtml + '</div>' });
+      // §6: 24 between the sections; every section one column (the stage is 552 wide, two columns squeezed the rows).
+      return UI.stage('content', { html: STAGE_CSS + '<div style="display:flex;flex-direction:column;gap:24px;">' + partsHtml + '</div>' });
     }
     if (part === 'lists') {
       var rows = M.lists.filter(function (g) { return !!S[g]; }).map(function (g) {
@@ -476,7 +477,7 @@
         return { entity: g, icon: a.icon || 'list', iconTone: c.on ? 'accent' : 'rgba(0,0,0,0)', label: M.listNames[g] || L.nameOf(st, g),
           labelLit: true, sub: L.summary(c).join(' · ') };
       });
-      return rows.length ? UI.group(rows, 'Einstellungen') : '';
+      return rows.length ? UI.group(rows, L.v3() ? 'Listen' : 'Einstellungen') : '';
     }
     if (part === 'charts') {
       var CH = window._casoraChartCard;
@@ -487,7 +488,7 @@
         return { entity: id, icon: L.iconOf(st), iconTone: 'rgba(0,0,0,0)', label: M.chartNames[id] || L.nameOf(st, id), labelLit: true,
           sub: span + ' · ' + v };
       });
-      return rows2.length ? LIST_CSS + '<div data-casora-cols="auto">' + UI.group(rows2, 'Diagramme') + '</div>' : '';
+      return rows2.length ? LIST_CSS + '<div data-casora-cols="' + (L.v3() ? '1' : 'auto') + '">' + UI.group(rows2, 'Diagramme') + '</div>' : '';
     }
     if (part === 'tiles') {
       // Tiles of the dashboard (#59): a tap opens that tile's own popup (moreHook → openTile).
@@ -495,7 +496,7 @@
         var st = S[id];
         return { entity: id, icon: L.iconOf(st), iconTone: 'rgba(0,0,0,0)', label: (M.tileNames || {})[id] || L.nameOf(st, id), labelLit: true, sub: L.word(hass, st) };
       });
-      return rows3.length ? LIST_CSS + '<div data-casora-cols="auto">' + UI.group(rows3, 'Kacheln') + '</div>' : '';
+      return rows3.length ? LIST_CSS + '<div data-casora-cols="' + (L.v3() ? '1' : 'auto') + '">' + UI.group(rows3, 'Kacheln') + '</div>' : '';
     }
     return '';
   };
