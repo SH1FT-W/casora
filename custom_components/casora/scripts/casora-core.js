@@ -649,17 +649,33 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       target: { entity_id: id }, data: spec.data || {} };
     return ask(several(ids, word(act, { entity: id })));
   };
+  // Unlocking or opening a lock always asks, whatever "Ask before switching" says (T01, 26.10.70):
+  // a tile switch must not unlock a door with one stray tap. Locking stays immediate.
+  var LOCK_ASK = /^lock\.(unlock|open)$/;
+  // Several locks in one action: the question names how many ("3 Schlösser entriegeln?") and which.
+  var lockQuestion = function (ids, w, svc) {
+    if (ids.length < 2) return w;
+    var s = several(ids, w);
+    if (svc !== 'lock.unlock' || !ids.every(function (x) { return /^lock\./.test(x); })) return s;
+    return { name: w.name, verb: w.verb, title: T(ids.length + ' Schlösser entriegeln?'), text: s.text };
+  };
   window.addEventListener('hass-action', function (ev) {
     if (passed && passed.has(ev)) return;
     var d = ev.detail || {};
     var act = switching(d);
     if (!act) return;
+    var svc = String(act.perform_action || act.service || '');
+    var always = LOCK_ASK.test(svc);
     var owner = asksFirst(ev);
     if (!owner && window.casoraAsksFirst(entityOf(act, d.config || {}))) owner = { entity: entityOf(act, d.config || {}), __byId: true };
+    if (!owner && always) owner = { entity: entityOf(act, d.config || {}) };
     if (!owner) return;
     ev.stopImmediatePropagation();
     var target = (ev.composedPath && ev.composedPath()[0]) || ev.target;
-    ask(word(act, Object.assign({}, owner, d.config || {}, owner.__byId ? { __byId: true } : {}))).then(function (ok) {
+    var tgt = act.target || act.data || act.service_data || {};
+    var w = word(act, Object.assign({}, owner, d.config || {}, owner.__byId ? { __byId: true } : {}));
+    if (always) w = lockQuestion([].concat(tgt.entity_id || []), w, svc);
+    ask(w).then(function (ok) {
       if (!ok || !target) return;
       var again = new CustomEvent('hass-action', { detail: d, bubbles: true, composed: true });
       if (passed) passed.add(again);

@@ -4683,6 +4683,10 @@
   [
    "^Jetzt (-?\\d.*)$",
    "Now {1}"
+  ],
+  [
+   "^(\\d+) Schlösser entriegeln\\?$",
+   "Unlock {1} locks?"
   ]
  ],
  "Gerät in Home Assistant": "Device in Home Assistant"
