@@ -367,8 +367,10 @@
   }
 
   // v3: chart colour per page (theme, richtlinien §7.3) and the one list beside the stage.
-  var V3_COL = { home: 'var(--casora-popup-accent)', solar: 'var(--casora-color-yellow)' };
+  var V3_COL = { home: 'var(--casora-popup-accent)', solar: 'var(--casora-color-yellow)', grid: 'var(--casora-color-neutral)' };
   var V3_LIST = {
+    // Grid: what was drawn from it (today, this month) – no export totals and self-supply shares.
+    grid: function (UI, C, states, hass) { return rows(UI, C, states, hass).use || null; },
     // Solar: the yield (today, this month, savings), without daily meters the modules' power.
     solar: function (UI, C, states, hass) { var r = rows(UI, C, states, hass); return r.yield || r.mods || null; },
     // House: the consumers (HA's individual devices, else the largest found automatically).
