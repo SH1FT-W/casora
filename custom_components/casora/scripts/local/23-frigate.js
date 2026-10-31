@@ -2793,12 +2793,28 @@
     // vor „Einstellungen“ (der Kopf meldet Störungen ohnehin auch später).
     if (F.sec('sys', c, states || {}, hass)) f.sys = { card: K.secCard(watch, call('sys'), states) };
     if (F.sec('ctl', c, states || {}, hass)) f.more = { card: K.secCard(watch, call('ctl'), states) };
+    // Popup v3 (richtlinien §4 S5, §8): the live picture is the stage over both columns (mounted once into the stage,
+    // _casoraStageCard in 01-basis.js), the detection is the header's main switch; under it left the recordings and the
+    // objects, right the alerts/detections; no settings.
+    if (UI.v3 && UI.v3() && UI.stage) {
+      var fv = { hero: f.hero, rec: f.rec, objs: f.objs, ev: f.ev, sys: f.sys,
+        stage: { card: K.secCard([], 'return window._casoraFrigate ? window._casoraFrigate.stage(' + JSON.stringify(live) + ', this) : "";', states) } };
+      return K.layout({ fields: fv, top: ['hero'], stage: 'stage', stageWide: true, left: ['rec', 'objs'], right: ['ev', 'sys'],
+        narrowOrder: ['ev', 'rec', 'objs', 'sys'] });
+    }
     // Live-Bild links, darunter die Aufnahmen der letzten Tage und die Objekte; rechts gleich die Alarme/Erkennungen
     // (mit Filtern); die Technik-Schalter stehen unten über beide Spalten unter „Einstellungen“.
     return K.layout({ fields: f, top: ['hero'], left: ['live', 'rec', 'objs'], right: ['ev', 'sys', 'more'],
       narrowOrder: ['live', 'ev', 'rec', 'objs', 'sys', 'more'] });
   };
 
+  F.stage = function (live, el) {
+    if (window._casoraStageCard) window._casoraStageCard(el, live);
+    // The live card brings the stream switch under its picture: the stage must not clip its shadow (the picture keeps
+    // its own rounded corners).
+    return window._casoraUI.stage('image', { html: '<style>.hui-stage.s5 .hui-st-img{overflow:visible;}</style>'
+      + '<div data-casora-stage-card="" style="min-height:120px;"></div>' });
+  };
   var pill = function (text, mid) {
     return '<div role="button" tabindex="0" data-casora-mi="' + esc(mid) + '" style="box-sizing:border-box;width:100%;margin-top:10px;height:46px;min-height:46px;'
       + 'border-radius:999px;display:flex;align-items:center;justify-content:center;font-family:var(--primary-font-family, system-ui);font-size:14px;font-weight:700;'

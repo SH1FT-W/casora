@@ -18862,7 +18862,8 @@
     ],
     "style": "[[[\n  /* Zwei Spalten unter dem Live-Bild: links Schalter und Objekte, rechts letzte Erkennungen. */\n  return '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);';\n]]]\n",
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Kamera', ['Kamera', 'Camera', 'Frigate']) : (String(variables.room_name || '').trim() || 'Kamera'); ]]]",
-    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
+    "variant": "v3"
    }
   },
   "template": [
