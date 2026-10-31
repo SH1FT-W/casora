@@ -67,6 +67,9 @@
     [/^(cold|cool|kalt|kaltweiß|kaltweiss|coldwhite|coolwhite)$/, 'Kaltweiß', '#B9CBE2'],
     [/^(warm|warmweiß|warmweiss|warmwhite)$/, 'Warmweiß', '#E3C08A'],
     [/^(moon|mond|mondlicht|moonlight)$/, 'Mondlicht', '#7C8BC4'],
+    // Fluval reef lamps also have cyan and pink channels.
+    [/^(cyan|türkis|tuerkis)$/, 'Cyan', '#3FB7C4'],
+    [/^(pink|magenta|rosa)$/, 'Pink', '#D86BA8'],
     [/^(red|rot|r)$/, 'Rot', '#D9534F'],
     [/^(green|grün|gruen|g)$/, 'Grün', '#4E9F5D'],
     [/^(blue|blau|b)$/, 'Blau', '#4C6FD8'],
@@ -392,6 +395,22 @@
     return soft ? out : out + gap(12) + UI.group([UI.settingsRow(c.light, { iconTone: 'rgba(255,255,255,0.18)' })], null);
   };
 
+  /* Popup v3 (maintainer review 31.10.2026): the lamp's channels as a list – per channel its name, value and its own
+     slider (number entities of Fluval/HeliaLux/Chihiros, else the light's rgb/rgbw/rgbww); the total brightness is the
+     dial. Nothing while the lamp is off or unavailable (a channel then has no meaning). */
+  window._casoraAqChanSec = function (c, states, hass) {
+    const UI = window._casoraUI;
+    const s = UI && c.light && states[c.light];
+    if (!s || s.state === 'unavailable') return '';
+    const ch = window._casoraAqChannels(c.light, { light_channels: c.lightChannels }, states, hass);
+    if (ch.length < 2) return '';
+    return UI.label((window.casoraTr ? window.casoraTr('Kanäle') : 'Kanäle') + ' · ' + ch.length)
+      + '<div class="aq-chs" style="display:flex;flex-direction:column;gap:8px;">'
+      + ch.map((k) => '<div style="min-width:0;--casora-popup-slider-fill:' + UI.esc(k.color || 'var(--casora-popup-accent, var(--casora-popup-ui-accent, #5E9E96))') + ';">'
+        + UI.slider({ value: s.state === 'on' ? k.value : 0, softHeight: 46, bar: true, small: true, label: k.name, svc: k.svc }) + '</div>').join('')
+      + '</div>';
+  };
+
   /* Control: schedule switch as two rows (active one highlighted); meaning of "on" per lamp. */
   window._casoraAqSteer = function (c, states, hass) {
     const UI = window._casoraUI;
@@ -575,6 +594,8 @@
     leak: variables.leak_entity || null, leakBat: variables.leak_battery || null,
     tempBat: variables.temp_battery || null, devs: devs, dose: dose,
     lightOn: variables.light_on_data || null,
+    // The aquarium light tile (casora_aquarium_light): its popup puts the lamp's brightness on the stage.
+    lightStage: !!variables.light_stage,
     hx: parts.light,
     /* 1.1.2: colour channels (light_channels), meaning of the schedule switch (light_schedule_on),
        target range (temp_min/temp_max). Casora no longer shows own colour presets (light_presets). */
@@ -819,7 +840,8 @@
   /* Popup v3 (popup-richtlinien-v3.md §4, §7, §8): clean – the status line, the water temperature as the stage (S7, the
      fallback rule: a chart inside the stage would be a plate that is not redrawn, new logic), the light and the
      equipment as the list, the temperature as the one Verlauf (120). Without a probe the light is the stage (S1).
-     Light channels, control, dosing, leak sensor, energy, batteries and the aquarium doctor stay in the Studio/HA. */
+     A lamp with several channels lists them with their own sliders (maintainer review 31.10.2026). Control, dosing,
+     leak sensor, energy, batteries and the aquarium doctor stay in the Studio/HA. */
   if (HH && HH.on() && HH.layout && UI.v3 && UI.v3()) {
     const tOk = !isNaN(parseFloat(states[cfg.temp]?.state)) && String(states[cfg.temp]?.attributes?.device_class || 'temperature') === 'temperature';
     if (hpOk && tOk) window._hpChartCfg(cfg.temp, 'Wassertemperatur', '24h', 'c3', 120);
@@ -832,7 +854,7 @@
       stage: `[[[
         const c = ${_c};
         const UI = window._casoraUI, t = states[c.temp], n = parseFloat(t && t.state);
-        if (${tOk ? 'true' : 'false'}) {
+        if (${tOk ? 'true' : 'false'} && !(c.lightStage && c.light && states[c.light])) {
           const ev = window._casoraAqEval ? window._casoraAqEval(t, c.V, states, hass) : { level: 0 };
           const u = (t.attributes && t.attributes.unit_of_measurement) || '°C';
           return UI.stage('status', { tone: ev.level === 2 ? 'bad' : ev.level === 1 ? 'warn' : 'good', icon: 'mdi:thermometer-water',
@@ -848,11 +870,11 @@
       ]]]`,
     };
     if (tOk && hpOk) f3.chart = fields.chart;
-    if ((cfg.light && states[cfg.light] && tOk) || devs.length) f3.list = `[[[
+    if ((cfg.light && states[cfg.light] && tOk && !cfg.lightStage) || devs.length) f3.list = `[[[
       const c = ${_c};
       const rows = [];
       const l = c.light && states[c.light];
-      if (l && ${tOk ? 'true' : 'false'}) {
+      if (l && ${tOk ? 'true' : 'false'} && !c.lightStage) {
         const on = l.state === 'on', dead = l.state === 'unavailable';
         rows.push({ icon: 'mdi:lightbulb', iconTone: on ? 'accent' : 'rgba(255,255,255,0.18)', label: 'Beckenlicht', value: dead ? 'Nicht verfügbar' : on ? 'An' : 'Aus',
           svc: dead ? null : (on ? { domain: 'light', service: 'turn_off', target: { entity_id: c.light } }
@@ -870,10 +892,13 @@
       });
       return rows.length ? window._casoraUI.group(rows, 'Geräte') : '';
     ]]]`;
-    // Only the light (no probe, no equipment): the stage alone across the one column.
-    const solo = !f3.chart && !f3.list;
+    // The lamp's channels (several): a list of their own beside the light row.
+    const nCh = cfg.light && states[cfg.light] ? window._casoraAqChannels(cfg.light, { light_channels: cfg.lightChannels }, states, hass).length : 0;
+    if (nCh >= 2) f3.chan = `[[[ return window._casoraAqChanSec ? window._casoraAqChanSec(${_c}, states, hass) : ''; ]]]`;
+    // Only the light (no probe, no equipment, one channel): the stage alone across the one column.
+    const solo = !f3.chart && !f3.list && !f3.chan;
     return HH.layout({ entity: cfg.temp, watch: watch, fields: f3, top: solo ? ['hero', 'stage'] : ['hero'], stage: solo ? null : 'stage',
-      left: ['chart'], right: ['list'] });
+      left: ['chart'], right: ['list', 'chan'] });
   }
   if (HH && HH.on() && HH.layout) {
     const f2 = { hero: fields.hero, chart: fields.chart, glight: fields.glight, gtech: fields.gtech, gai: fields.gai };
