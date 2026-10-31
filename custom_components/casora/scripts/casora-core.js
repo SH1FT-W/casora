@@ -11519,6 +11519,8 @@ window.casoraMenuGlass = {
     var p0 = dPt(a, r), p1 = dPt(b, r);
     return 'M' + p0[0] + ' ' + p0[1] + ' A' + r + ' ' + r + ' 0 ' + (b - a > 180 ? 1 : 0) + ' 1 ' + p1[0] + ' ' + p1[1];
   }
+  // A word as the dial's value: a short one stays big (two lines at most), a sentence gets the smaller sentence size.
+  function dWordCls(v) { return String(v == null ? '' : v).length > 14 ? 'wd wl' : 'wd'; }
   // End angle of the filled part; a sliver stays at 0 so the knob has a start.
   function dEnd(pct) { return DIAL.a0 + DIAL.span * Math.max(0.4, Math.min(100, pct)) / 100; }
   var DIAL_CSS = '.hui-stage.dial{background:none;padding:0;gap:12px;align-items:center;}'
@@ -11754,7 +11756,7 @@ window.casoraMenuGlass = {
       ring.kind = 'level'; ring.pct = o.progress != null ? p4 * 100 : 0;
       var wd4 = /[A-Za-zÄÖÜäöüß]{2}/.test(String(o.value == null ? '' : o.value)) && String(o.value).length > 5;
       centerHtml = (o.caption ? '<div class="hui-dl-cap">' + esc(o.caption) + '</div>' : '')
-        + stValue(o.value, o.unit || '', wd4 ? 'wd' : '') + (o.word ? '<div class="hui-st-w">' + esc(o.word) + '</div>' : '')
+        + stValue(o.value, o.unit || '', wd4 ? dWordCls(o.value) : '') + (o.word ? '<div class="hui-st-w">' + esc(o.word) + '</div>' : '')
         + (o.program ? '<div class="hui-dl-w2">' + esc(o.program) + '</div>' : '');
       act = o.action;
       if (o.progress != null) ariaHtml = ' role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Math.round(p4 * 100) + '"';
@@ -11767,7 +11769,7 @@ window.casoraMenuGlass = {
       var na6 = (o.read ? ' data-casora-read="' + esc(o.read) + '" data-casora-read-bare=""' : '')
         + (o.live ? ' data-hp-live="' + esc(o.live) + '"' + (o.liveDigits != null ? ' data-hp-digits="' + esc(o.liveDigits) + '"' : '') : '');
       centerHtml = (o.caption ? '<div class="hui-dl-cap">' + esc(o.caption) + '</div>' : '')
-        + stValue(o.value, o.unit || '', o.word ? 'wd' : '', na6)
+        + stValue(o.value, o.unit || '', o.word ? dWordCls(o.value) : '', na6)
         + (o.trend || o.read ? '<div class="hui-st-w"' + (o.read ? ' data-casora-read-when=""' : '') + '>' + esc(o.trend || '') + '</div>' : '') + (o.foot ? '<div class="hui-dl-w2">' + esc(o.foot) + '</div>' : '');
       if (o.chart) var chartHtml = o.chart;
       belowHtml = '<div class="hui-st-chart">' + chartHtml + '</div>' + (o.range && o.range.length ? segments(o.range) : '');

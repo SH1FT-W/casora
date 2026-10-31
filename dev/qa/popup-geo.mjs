@@ -10,6 +10,7 @@
 //    disabled) zählen nicht. Hintergrund = Verlauf ausgenommen (unsicher → nicht gezählt).
 //  - Trefferflächen am Handy ≥ 40 px inkl. unsichtbarem ::before/::after-Rand („treffer“).
 //  - Haken in Auswahllisten (✓ / mdi:check) statt hinterlegter Zeile („haken“).
+//  - Dial (§4.8): Text und −/+ der Mitte innerhalb des Innenkreises des Rings („rad“).
 // Rückgabe { n, finds: [{ kind, msg, label, path }] }.
 export const MEASURE_GEO = () => {
   const parentOf = (e) => e.assignedSlot || e.parentNode || (e.host || null);
@@ -169,6 +170,31 @@ export const MEASURE_GEO = () => {
   for (const [e] of R) {
     const ic = e.getAttribute && e.getAttribute('icon');
     if ((ic === 'mdi:check' || ic === 'mdi:check-bold') || ([...e.childNodes].some((n) => n.nodeType === 3 && n.data.trim() === '✓'))) add('haken', 'Haken statt hinterlegter Zeile', e);
+  }
+  // 6) Dial (§4.8): the centre never touches the ring. Every text line and every −/+ in .hui-dl-c lies inside the
+  // ring's inner edge (radius 137 of 420) with 4 px air („rad“).
+  for (const dl of els.filter((e) => e.classList && e.classList.contains('hui-dl'))) {
+    const dr = R.get(dl); if (!dr) continue;
+    const cx = dr.left + dr.width / 2, cy = dr.top + dr.height / 2, rin = dr.width * 137 / 420 - 4;
+    const c = dl.querySelector('.hui-dl-c'); if (!c) continue;
+    const out = (x, y) => Math.hypot(x - cx, y - cy) - rin;
+    let worst = 0, what = null;
+    const tw = document.createTreeWalker(c, NodeFilter.SHOW_TEXT);
+    for (let t = tw.nextNode(); t; t = tw.nextNode()) {
+      if (!t.data.trim() || !t.parentElement || !t.parentElement.checkVisibility()) continue;
+      const rg = document.createRange(); rg.selectNodeContents(t);
+      for (const q of rg.getClientRects()) {
+        if (q.width < 1) continue;
+        const d = Math.max(out(q.left, q.top), out(q.right, q.top), out(q.left, q.bottom), out(q.right, q.bottom));
+        if (d > worst) { worst = d; what = t.parentElement; }
+      }
+    }
+    for (const b of c.querySelectorAll('.hui-st-b')) {
+      const q = b.getBoundingClientRect(); if (q.width < 2 || getComputedStyle(b).visibility === 'hidden') continue;
+      const d = out(q.left + q.width / 2, q.top + q.height / 2) + q.width / 2;
+      if (d > worst) { worst = d; what = b; }
+    }
+    if (what) add('rad', `Mitte berührt den Ring: ${worst.toFixed(1)} px über den Innenkreis (${Math.round(rin)} px)`, what);
   }
   return { n: finds.length, finds };
 };
