@@ -353,6 +353,13 @@ async function pruefen() {
   const waitOpen = async (ms) => { for (const t0 = Date.now(); Date.now() - t0 < ms; await sleep(200)) if (await popupOpen()) return true; return false; };
   let at = null;
   const hold = async (b) => { await pg.mouse.move(b.x + b.w / 2, b.y + b.h / 2); await pg.mouse.down(); await sleep(900); await pg.mouse.up(); };
+  // --bilder <dir>: one picture per opened popup (review page), after the open animation has settled.
+  const snap = async (res, it) => {
+    if (!arg('bilder')) return;
+    await pg.waitForTimeout(1600);
+    res.bild = it.id + (HANDY ? '-handy' : '') + '.png';
+    await pg.screenshot({ path: path.join(arg('bilder'), res.bild) }).catch(() => { res.bild = null; });
+  };
   const setRow = async (opt) => { await pg.evaluate((o) => { const h = document.querySelector('home-assistant').hass;
     if (h.states['input_select.casora_expanded_row'] && h.states['input_select.casora_expanded_row'].state !== o)
       return h.callService('input_select', 'select_option', { entity_id: 'input_select.casora_expanded_row', option: o }); }, opt).catch(() => {}); await sleep(1600); };
@@ -447,6 +454,8 @@ async function pruefen() {
             else res.grund = 'Antippen klappt die Reihe auf' + (HANDY ? '' : '; das Popup dazu gibt es am Handy (35-phone-hub.js)');
           }
           res.status = ok ? 'öffnet' : !HANDY && ROW[it.badge] ? 'klappt auf' : 'öffnet nicht';
+          // The picture before the row is closed again (it used to show the bare header, „nothing in the picture“).
+          if (ok) await snap(res, it);
         }
         await closeAll(); await setRow('none');
       } else if (it.menu) {
@@ -477,12 +486,7 @@ async function pruefen() {
         at = null;
       }
       if (res.status === 'öffnet') { const i = await popupInfo(); if (i) { res.art = i.art; res.titel = i.titel; } }
-      // --bilder <dir>: one picture per opened popup (review page), after the open animation has settled.
-      if (res.status === 'öffnet' && arg('bilder')) {
-        await pg.waitForTimeout(1600);
-        res.bild = it.id + (HANDY ? '-handy' : '') + '.png';
-        await pg.screenshot({ path: path.join(arg('bilder'), res.bild) }).catch(() => { res.bild = null; });
-      }
+      if (res.status === 'öffnet' && !res.bild) await snap(res, it);
     } catch (e) { res.status = 'Fehler'; res.grund = String(e.message || e).slice(0, 200); at = null; }
     await closeAll(); await pg.keyboard.press('Escape').catch(() => {});
     out.push(res);
