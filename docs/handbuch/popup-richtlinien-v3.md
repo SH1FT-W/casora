@@ -7,7 +7,7 @@ erst die Grundsätze, dann die Teile von oben nach unten, dann Maße, Zustände 
 - **Theme bleibt**: Farben, Flächen, Schrift, Schatten und Radien kommen weiter aus „Casora“ (`theme_weich.yaml`) und
   [design-regeln.md](design-regeln.md). Neu ist nur der **Aufbau**.
 - **Löst ab**: Kopf (Regel 1, Symbol-Kachel), Hauptbereich (Regel 3) und Aktionen (Regel 4) der
-  [Blaupause v2](popup-blaupause.md). Was v2 sonst sagt (Zeilenarten, Unterseiten, „Weitere Einstellungen“, Mehr, Leer,
+  [Blaupause v2](popup-blaupause.md). Was v2 sonst sagt (Zeilenarten, Unterseiten, Leer,
   Breite, Symmetrie, Zugang), gilt weiter – Übersicht in §15.
 - **Arbeitsanweisung** für den Umbau aller Popups: [popup-rework-v3-auftrag.md](popup-rework-v3-auftrag.md).
 - Nichts auf dieser Seite ist „OFFEN“. Passt ein Popup in keine Regel, gilt die **Rückfallregel** in §4.7.
@@ -20,10 +20,10 @@ erst die Grundsätze, dann die Teile von oben nach unten, dann Maße, Zustände 
 
 1. **Eine Sache zuerst.** Jedes Popup beantwortet oben in einem Blick die Frage, wegen der man es öffnet
    („Wie hell?“, „Wie warm?“, „Wie weit offen?“, „Ist alles zu?“). Das ist die **Bühne**.
-2. **Gleiches steht an gleicher Stelle.** Kopf, Bühne, Schnellwahl, Listen, Einstellungen – in jedem Popup in dieser
+2. **Gleiches steht an gleicher Stelle.** Kopf, Bühne, Schnellwahl, Listen – in jedem Popup in dieser
    Reihenfolge. Wer ein Popup kennt, kennt alle.
 3. **Direkt bedienen.** Ziehen, Tippen, ± – keine Menüs, keine versteckten Gesten für Häufiges.
-4. **Ruhe vor Vollständigkeit.** Häufiges oben und groß, Seltenes unten in Listen, Seltenstes in „Mehr“.
+4. **Ruhe vor Vollständigkeit.** Häufiges oben und groß, Seltenes unten in Listen, Seltenstes gar nicht (das ist das Studio, §8).
 5. **Zustand ohne Lesen.** Farbe, Form und Wort sagen dasselbe (Gerätefarbe = an/aktiv, grau = aus).
    Auswahl nie nur über Farbe.
 6. **Nichts springt.** Das Popup erscheint erst, wenn alles sitzt; Werte ändern sich ohne Sprung der Fläche.
@@ -41,17 +41,15 @@ erst die Grundsätze, dann die Teile von oben nach unten, dann Maße, Zustände 
 │ │  (genau eine, Typ S1–S8)  │   │ Zeile                     › │ │  Listen      §6
 │ └───────────────────────────┘   │ Zeile                  [◯ ] │ │
 │ SCHNELLWAHL                     └─────────────────────────────┘ │
-│ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ EINSTELLUNGEN                   │  Schnellwahl §5
-│ │     │ │     │ │     │ │     │ ┌─────────────────────────────┐ │
-│ └─────┘ └─────┘ └─────┘ └─────┘ │ Weitere Einstellungen     › │ │  Einstell.   §8
-│                                 └─────────────────────────────┘ │
-│                                 Mehr (3) ⌄                      │  Mehr        §8
+│ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐                                 │  Schnellwahl §5
+│ │     │ │     │ │     │ │     │                                 │
+│ └─────┘ └─────┘ └─────┘ └─────┘                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 | Fläche | Desktop ≥ 761 px | Handy |
 |---|---|---|
-| Mit Liste | 900 breit, **links** Bühne + Schnellwahl, **rechts** Listen + Einstellungen + Mehr | eine Spalte: Kopf → Bühne → Schnellwahl → Listen → Einstellungen → Mehr |
+| Mit Liste | 900 breit, **links** Bühne + Schnellwahl, **rechts** Listen | eine Spalte: Kopf → Bühne → Schnellwahl → Listen |
 | Ohne Liste oder nur 1 Abschnitt | 552 breit, eine Spalte in derselben Reihenfolge | wie Desktop |
 | Bild-Bühne (S5) | 900 breit, Bühne über **beide** Spalten, darunter links Schnellwahl, rechts Listen | eine Spalte |
 
@@ -126,7 +124,7 @@ Anteil) und bedienen alle; die einzelnen Geräte stehen rechts in der Liste. Bei
 **Ein Gerät aus der Liste antippen** (Zeile mit ›) öffnet seine **Unterseite im selben Popup** (v2 Regel 7): ‹ links,
 Etikett = Titel der Gruppe („Fußbodenheizung“), Titel = Raum bzw. Gerät, kein Hauptschalter der Gruppe. Die Unterseite ist
 ein vollständiges v3-Popup dieses einen Geräts – eigene Bühne (gleicher Typ wie die Gruppe), Schnellwahl, rechts Zustand →
-Verlauf (§7) → Einstellungen → Mehr. Sie zeigt dieselbe Seite, die das Gerät auch einzeln öffnet (ein Popup pro Ding).
+Verlauf (§7). Sie zeigt dieselbe Seite, die das Gerät auch einzeln öffnet (ein Popup pro Ding).
 
 ![Unterseite „Wohnzimmer“ aus der Fußbodenheizung: ‹ und Etikett, Bühne mit Ziel, Modus, Zustand, Verlauf, Einstellungen](bilder/popup-v3-heizung-raum.webp)
 
@@ -184,7 +182,7 @@ Die Listen sind die gruppierten Platten aus Variante B (Commit „Popup rework v
 | Rechts | Schalter (51×31) **oder** Wert 14/600 **oder** Wert + › **oder** ↗ – nie zwei Bedienteile |
 | Überschrift | außen über der Platte, 13/600, Großbuchstaben, Sperrung .04em, Text 2, Einzug 16 (bündig mit dem Text), 8 bis zur Platte |
 | Abstand | 24 zwischen Abschnitten und zwischen den Spalten |
-| Reihenfolge | Bedienung → Zustand → Verlauf → Einstellungen (v2 Regel 5) |
+| Reihenfolge | Bedienung → Zustand → Verlauf (v2 Regel 5, ohne Einstellungen §8) |
 | Lange Listen | ab 12 Zeilen die ersten 12 und „Alle (n) ›“ (v2 Regel 9) |
 
 Die Überschrift darf zählen: „Leuchten · 2 von 4 an“, „Räume · 2 heizen“.
@@ -201,9 +199,8 @@ Popups über `window._hpChartCfg(entity, titel, zeitraum, farbe, höhe)` (`01-ba
 |---|---|---|---|
 | **Bühne** (S6) | Der Verlauf ist die Hauptsache: Messwert, Energie, Pflanze, Luftqualität, Diagramm-Kachel | in der Bühne, unter dem großen Wert | 160 (Handy 140) |
 | **Abschnitt „Verlauf“** | Der Verlauf ergänzt eine andere Bühne: Temperatur bei Heizung/Thermostat, Leistung bei Waschmaschine, Trockner, Spüler, Drucker | rechte Spalte, Abschnitt „Verlauf“ nach „Zustand“ (Reihenfolge §6), eigene Platte | 120 |
-| **In „Mehr“** | Fachwerte: Spannung, Stromstärke, Düse, Druckbett, zweite und dritte Messgröße | im Mehr-Block, je Messgröße eine Platte | 120 |
 
-- **Höchstens ein Diagramm** außerhalb von „Mehr“ – entweder auf der Bühne (S6) oder als Abschnitt „Verlauf“, nie beides.
+- **Höchstens ein Diagramm** – entweder auf der Bühne (S6) oder als Abschnitt „Verlauf“, nie beides.
 - **Nie** ein Diagramm über oder neben einer Bühne S1–S5; nie zwei Diagramme nebeneinander.
 - **Mehrere Messgrößen** in einem Diagramm nur mit Legende und höchstens 4 Serien; sonst eine Serie und die Wahl über
   Auswahl-Zeilen in der Liste (v2 Entscheidung 3: Zeile tippen wechselt das Diagramm, gewählte Zeile hinterlegt, ohne ›).
@@ -212,12 +209,12 @@ Popups über `window._hpChartCfg(entity, titel, zeitraum, farbe, höhe)` (`01-ba
 
 | Teil | Regel |
 |---|---|
-| Platte | Abschnitt/Mehr: Fläche `--casora-popup-row-fill`, Radius 20 wie die Listen; Bühne: in der Bühnen-Platte ohne eigene Fläche |
+| Platte | Abschnitt: Fläche `--casora-popup-row-fill`, Radius 20 wie die Listen; Bühne: in der Bühnen-Platte ohne eigene Fläche |
 | Kopf der Platte | links Titel 15/700 („Temperatur“, „Leistung“), rechts „Details ›“ zur Messwertseite; auf der Bühne kein Titel (der Wert darüber sagt es) |
 | Linie | 2 px, Fläche darunter 12 % → 0, Hilfslinien gepunktet, Skala rechts mit 3 Werten (wie `casora-chart` heute) |
 | Balken | für Summen je Zeitraum (kWh je Tag, Verbrauch je Monat); Linie für Zustandsgrößen (Temperatur, Leistung, Feuchte) |
 | Ablesen | keine schwebende Blase: auf der Bühne liest die große Zahl mit (`readout: 'hero'`), im Abschnitt die Zahl im Plattenkopf (`readout: 'own'`) |
-| Zeitraum | Abschnitt/Mehr: fest 24 Std.; läuft ein Programm: 4 Std. Umschalter nur auf der Bühne (S6) und der Messwertseite, als Segment unter dem Diagramm: **24 Std. · 7 Tage · 30 Tage** (Diagramm-Kachel zusätzlich „Jahr“) – Wörter wie `27-chart.js` |
+| Zeitraum | Abschnitt: fest 24 Std.; läuft ein Programm: 4 Std. Umschalter nur auf der Bühne (S6) und der Messwertseite, als Segment unter dem Diagramm: **24 Std. · 7 Tage · 30 Tage** (Diagramm-Kachel zusätzlich „Jahr“) – Wörter wie `27-chart.js` |
 | Abstände | Kopf → Diagramm 8, Diagramm → Segment 16, Innenabstand der Platte 16 |
 
 ### 7.3 Farben
@@ -250,11 +247,17 @@ Zustände, nie als Serienfarbe.
 Jedes Diagramm hat einen Namen für die Sprachausgabe mit Zusammenfassung
 („Temperatur, letzte 24 Std., 19,8 bis 22,1 °C, jetzt 21,2 °C“); der Zeitraum-Umschalter ist ein Segment mit `role="tab"`.
 
-## 8. Einstellungen und Mehr
+## 8. Clean: keine Einstellungen, kein Mehr (Entscheidung 31.10.2026)
 
-- **Einstellungen** ist der letzte Abschnitt der rechten Spalte: Automatik-Schalter (z. B. „Beschattung“, „Heute
-  aussetzen“) und als letzte Zeile „Weitere Einstellungen ›“ (`UI.settings`, v2 Regel 8).
-- **Mehr** (`UI.more`) höchstens einmal, ganz unten, mit Anzahl und Unterzeile, was drin ist (v2 Regel 9).
+Ein Popup ist **die nächste Stufe nach der Kachel, keine Schaltzentrale**: etwas mehr Infos und etwas mehr Bedienung
+als die Kachel, dann ist Schluss. Eingestellt wird im Studio.
+
+- **Kein** Abschnitt „Einstellungen“, **kein** „Weitere Einstellungen ›“, **kein** „Mehr (n)“ – auch nicht für
+  Fachwerte (Spannung, Firmware, Diagnose) und nicht für Automatik-Schalter („Beschattung“, „Heute aussetzen“).
+- `UI.settings`, `UI.settingsRow` und `UI.more` liefern in v3 nichts (`UI.v3()` in `casora-core.js`); nur ein Aufklapper,
+  der den Rest einer Liste zeigt, um die es im Popup geht, bleibt (`UI.more(id, html, { keep: true })`, „Alle 14 anzeigen“).
+- Gilt für Kacheln, Badges, Chips und Unterseiten gleichermaßen. Was an diesen Stellen stand, entfällt ersatzlos
+  (kein Umzug in die Liste), außer es ist die Bedienung oder Information, wegen der man das Popup öffnet.
 
 ## 9. Zustände des ganzen Popups
 
@@ -325,8 +328,8 @@ Jedes Diagramm hat einen Namen für die Sprachausgabe mit Zusammenfassung
 | Regel 5 Abschnittsfolge | gilt (§6) |
 | Regel 6 Zeilenarten | gilt |
 | Regel 7 Unterseiten | gilt (‹ im Kopf) |
-| Regel 8 Weitere Einstellungen | gilt (§8) |
-| Regel 9 Lange Listen, Mehr | gilt |
+| Regel 8 Weitere Einstellungen | **entfällt** (§8) |
+| Regel 9 Lange Listen, Mehr | Lange Listen gilt, Mehr **entfällt** (§8) |
 | Regel 10 Leer, aus, offline | gilt, ergänzt um §4.5 |
 | Regel 11 Breite, Zugang | gilt (552/900), ergänzt um §2 |
 | Regel 12 Symmetrie | gilt |
@@ -338,7 +341,7 @@ Jedes Diagramm hat einen Namen für die Sprachausgabe mit Zusammenfassung
 |---|---|
 | Eine Bühne mit dem Wert, den man am häufigsten ändert | Zwei große Bereiche übereinander (Diagramm **und** Regler) |
 | Temperaturverlauf als Abschnitt „Verlauf“ rechts, 120 hoch | Temperaturverlauf über dem ±-Regler |
-| Spannung und Stromstärke in „Mehr“ | Drei Diagramme untereinander in der rechten Spalte |
+| Spannung und Stromstärke gar nicht im Popup | Drei Diagramme untereinander in der rechten Spalte |
 | Serienfarbe aus `--casora-color-*` bzw. Gerätefarbe | `#0A84FF`, `#8E8E93` im Aufruf |
 | Szenen als 4 Schnellwahl-Kacheln | Szenen als Textlinks oder einzelne Fuß-Pillen |
 | „Alle verriegeln“ gefüllt in der Bühne, „Alle entriegeln“ ungefüllt mit Rückfrage | Entriegeln als Schnellwahl-Kachel |

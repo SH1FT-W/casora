@@ -9919,8 +9919,10 @@ window.casoraMenuGlass = {
     + '.hui-more.sub>.hui-mbd{padding-top:10px;gap:10px;}'
     + '@keyframes hui-more-in{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}'
     + '@media (prefers-reduced-motion:reduce){.hui-mch{transition:none;}.hui-more.open>.hui-mbd{animation:none;}}';
+  // In v3 only expanders that show the rest of a list the popup is about stay (opts.keep, e.g. „Alle 14 anzeigen“).
   function more(id, html, opts) {
     opts = opts || {};
+    if (!opts.keep && v3()) return '';
     id = String(id || 'more');
     var open = moreState(id, !!opts.remember);
     var cnt = opts.count != null && opts.count !== '' && Number(opts.count) > 0
@@ -11273,7 +11275,15 @@ window.casoraMenuGlass = {
   // „Weitere Einstellungen“ (rule 8): last row of every device popup; the target is always the device
   // page (casora-core's row handler routes the label there). ids: one entity or a list – several devices
   // first offer the choice (sub page „devices“, 18-ziele.js), then the device page.
+  // Popup v3 is clean (decision 31.10.2026, popup-richtlinien-v3.md §8): a popup shows more information and
+  // control than its tile and nothing else – no „Einstellungen“ section, no „Weitere Einstellungen“, no „Mehr“.
+  // v3 = Soft layout and no localStorage casora_popup_variant other than 'v3' (the same rule the modules use).
+  function v3() {
+    if (!soft()) return false;
+    try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; }
+  }
   function settingsRow(id, o) {
+    if (v3()) return null;
     o = o || {};
     var ids = [].concat(id || []).filter(function (x, i, a) { return x && a.indexOf(x) === i; });
     if (!ids.length) return null;
@@ -11284,6 +11294,7 @@ window.casoraMenuGlass = {
   }
   // Section „Einstellungen“: the given rows, then „Weitere Einstellungen“ as the last one.
   function settings(id, rows, label) {
+    if (v3()) return '';
     var list = (rows || []).filter(Boolean);
     // id may be a ready settings row (settingsRow(id, { sub })).
     var s = id && typeof id === 'object' && !Array.isArray(id) ? id : settingsRow(id);
@@ -11596,7 +11607,7 @@ window.casoraMenuGlass = {
   window._casoraUI.more = more;
   Object.assign(window._casoraUI, { section: section, row: row, settingsRow: settingsRow, settings: settings, actions: actions,
     empty: empty, width: width, switchHtml: switchHtml, page: page, SEC_ORDER: SEC_ORDER, WIDTH: WIDTH,
-    stage: stage, quick: quick, STAGE_TYPES: STAGE_TYPES });
+    stage: stage, quick: quick, STAGE_TYPES: STAGE_TYPES, v3: v3 });
   window.casoraPopupWidth = width;
 
   // Symmetry (rule 12, owner 26.10.2026: „Symmetrie ist wichtig!“): in a two-column popup both columns

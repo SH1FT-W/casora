@@ -1065,7 +1065,7 @@
     var s = E.consSplit(rows);
     return UI.group(s.top) + (s.rest.length
       ? '<div style="margin-top:var(--casora-space-2, 8px);">'
-        + UI.more('energy-cons', UI.group(s.rest), { label: 'Alle ' + rows.length + ' anzeigen', less: 'Weniger anzeigen' }) + '</div>'
+        + UI.more('energy-cons', UI.group(s.rest), { label: 'Alle ' + rows.length + ' anzeigen', less: 'Weniger anzeigen', keep: true }) + '</div>'
       : '');
   };
 

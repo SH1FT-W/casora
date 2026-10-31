@@ -475,7 +475,7 @@
       var okHtml = '<div class="' + (soft() ? '' : 'pls-std') + '" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:start;column-span:all;-webkit-column-span:all;">'
         + cols.map(function (c) { return '<div style="min-width:0;">' + plateHtml(UI, c) + '</div>'; }).join('')
         + '</div>';
-      var moreHtml = ok.length ? UI.more('pulse-ok', okHtml, { label: 'Alles ok', count: ok.length }) : '';
+      var moreHtml = ok.length ? UI.more('pulse-ok', okHtml, { label: 'Alles ok', count: ok.length, keep: true }) : '';
       moreHtml = moreHtml.replace('<span class="hui-mlb">', '<span class="pls-okic" aria-hidden="true"><ha-icon icon="mdi:check"></ha-icon></span><span class="hui-mlb">');
       // Footer: into the Pulse panel (rhythm bars, replacement history, settings stay there).
       /* Blueprint v2 (rules 6, 10): the way into the Pulse panel is a ↗ row (was a text link); not installed: the empty row. */
