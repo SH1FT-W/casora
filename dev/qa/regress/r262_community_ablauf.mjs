@@ -103,6 +103,9 @@ await wait(500);
 s = await pane();
 await check('Esc schließt nur die Vorschau, Community bleibt offen', !(await lb()) && s && /Community/.test(s.title), s && s.title);
 await check('Knopf „Popup ansehen“ sichtbar', await inPane("const b = [...a.querySelectorAll('.comlink')].find((x) => /Popup ansehen/.test(x.textContent)); return !!b && b.style.display !== 'none';"));
+// T20 (test 2): "Popup ansehen" always on its own line – never after the last word of the text (kettle).
+const inline = await inPane("return [...a.querySelectorAll('.comlink')].filter((b) => b.getClientRects().length).map((b) => { const t = b.parentElement.querySelector(':scope > span'); if (!t) return 0; const r = t.getClientRects(); const last = r[r.length - 1]; return last && b.getBoundingClientRect().top < last.bottom - 2 ? 1 : 0; }).reduce((x, y) => x + y, 0);");
+await check('T20 Popup ansehen in eigener Zeile', inline === 0, inline);
 
 // 2. Hinzufügen
 await qa();
