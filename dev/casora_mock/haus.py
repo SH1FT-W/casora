@@ -58,8 +58,8 @@ def vacuum_map(fixture: dict) -> None:
 
 def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict | None = None) -> dict:
     """Fixture plus the made-up devices, in the order async_setup_entry always used."""
-    from . import (aquarium, befeuchter, coffee, dishwasher, ebike, frigate, fussball, haustier, halten, hubs, klingel, fridge,
-                   kettle, live, maeher, shopping, testserver, testwagen, velair, waesche, wetter)
+    from . import (aquarium, befeuchter, coffee, dishwasher, ebike, energie, frigate, fussball, game_account, haustier,
+                   halten, hubs, klingel, fridge, kettle, live, maeher, shopping, testserver, testwagen, velair, waesche, wetter)
     if stress:
         merge(fixture, stress)
     # Demo house (dev/demo/demo_fixture.py sets "_demo"): without the German test devices (washers A/B with
@@ -73,6 +73,12 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
     # Two made-up aquariums (HeliaLux- and Fluval/Chihiros-like lamp, dosing pump), see aquarium.py.
     if not demo:
         merge(fixture, aquarium.extra(now), "Testbecken A/B")
+        # Three complete tanks (probe, status helper, leak sensor, plugs, lamp, dosing pump), see aquarium.tanks.
+        merge(fixture, aquarium.tanks(now), "Testriff/Testpflanzenbecken/Testschildkrötenbecken")
+        # A made-up balcony solar system with battery, grid meter and daily meters, see energie.py.
+        merge(fixture, energie.extra(now), "Testsolarbank + Teststromzähler")
+    # A made-up Steam-like game account with a running game and artwork (game tile), see game_account.py.
+    merge(fixture, game_account.extra(now), "Testspielkonto")
     # A made-up Gardena-like mower (community card), see maeher.py.
     merge(fixture, maeher.extra(now), "Testmäher")
     # A made-up e-bike like the Bosch eBike integration 1.19 (German ids with keys), see ebike.py.

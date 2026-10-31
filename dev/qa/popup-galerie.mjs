@@ -32,6 +32,27 @@ const climGroup = (c, S) => { const a = (S[c.entity] || {}).attributes || {}; re
 const first = (S, re, pred = () => true) => Object.keys(S).sort().find((id) => re.test(id) && pred(S[id]));
 const dc = (d) => (s) => (s.attributes || {}).device_class === d;
 const name = (S, e, d) => ((S[e] || {}).attributes || {}).friendly_name || d;
+// Tank tile variables for the made-up tanks of dev/casora_mock/aquarium.py (tanks()), as the Studio stores them.
+const TANK = 'sensor.testpflanzen';
+const tankVars = (e) => {
+  if (!/^sensor\.testpflanzen_/.test(e || '')) return { tank_name: 'Becken' };
+  const btn = [1, 2, 3, 4].map((n) => `button.testdosierpumpe_pumpe_${n}_dosieren`);
+  const by = (to, end) => Object.fromEntries(btn.map((b) => [b, b.replace('button.', to + '.').replace('_dosieren', end)]));
+  return { tank_name: 'Testpflanzenbecken', status_entity: TANK + '_temperaturstatus', temp_battery: TANK + '_temperatur_battery',
+    leak_entity: 'binary_sensor.testpflanzen_lecksensor_wasserleck', leak_battery: TANK + '_lecksensor_batterie', chart_color: '#30D158',
+    temp_min: 24, temp_max: 26, light_entity: 'light.testpflanzen_lampe_licht', light_profile: 'select.testpflanzen_lampe_profil',
+    light_schedule_switch: 'switch.testpflanzen_lampe_manual_color_simulation',
+    devices: [{ entity: 'switch.testpflanzen_technik', label: 'Pumpe & Technik', icon: 'mdi:pump', alarm: true, confirm: true }],
+    dosing_buttons: btn, dosing_volume: by('number', '_dosiermenge'), dosing_today: by('sensor', '_heute'), dosing_total: by('sensor', '_gesamt') };
+};
+// Energy tile variables for the made-up solar system of dev/casora_mock/energie.py.
+const SOLAR = Object.fromEntries(Object.entries({ entity_power: 'testsolarbank_hausbedarf', entity_usage_today: 'testenergie_hausbedarf_heute',
+  entity_usage_month: 'testenergie_hausbedarf_monat', entity_cost_today: 'testenergie_stromkosten_heute', entity_cost_month: 'testenergie_stromkosten_monat',
+  entity_solar_power: 'testsolarbank_solarleistung', entity_solar_today: 'testenergie_solarertrag_heute', entity_solar_month: 'testenergie_solarertrag_monat',
+  entity_battery_power: 'testsolarbank_akkuleistung', entity_battery_soc: 'testsolarbank_ladestand', entity_battery_today: 'testenergie_akku_entladen_heute',
+  entity_battery_month: 'testenergie_akku_entladen_monat', entity_netz_power: 'teststromzaehler_leistung', entity_netz_today: 'testenergie_netzbezug_heute',
+  entity_netz_month: 'testenergie_netzbezug_monat' }).map(([k, v]) => [k, 'sensor.' + v]));
+SOLAR.room_name = 'Zuhause';
 
 const ITEMS = [
   // Welle 1 – Pilot
@@ -57,7 +78,8 @@ const ITEMS = [
   { w: 2, id: 'luftreiniger', popup: 'Luftreiniger', stage: 'S6 Luftqualität', tpl: 'casora_air_purifier', pick: (c) => /testluftreiniger/.test(c.entity || ''),
     guess: (S) => first(S, /^fan\.testluftreiniger$/) || first(S, /^fan\..*(luftrein|purifier)/) },
   { w: 2, id: 'befeuchter', popup: 'Luftbefeuchter', stage: 'S2 Zielfeuchte', tpl: 'casora_humidifier', guess: (S) => first(S, /^humidifier\./) },
-  { w: 2, id: 'schalter', popup: 'Schalter', stage: 'S7', tpl: 'casora_switch' },
+  { w: 2, id: 'schalter', popup: 'Schalter', stage: 'S7', tpl: 'casora_switch', pick: (c, S) => /^switch\./.test(c.entity || ''),
+    guess: (S) => first(S, /^switch\.teststeckdose$/) || first(S, /^switch\.test/) || first(S, /^switch\./) },
   { w: 2, id: 'jalousie', popup: 'Jalousie (einzeln)', stage: 'S3', tpl: 'casora_cover', pick: (c, S) => notGroup('cover')(c, S) && ![].concat(c.template).includes('casora_popup_cover') },
   { w: 2, id: 'medien', popup: 'Medien-Player', stage: 'S5 Cover + Wiedergabe', tpl: 'casora_media', pick: (c) => [].concat(c.template).slice(-1)[0] === 'casora_media' },
   { w: 2, id: 'now-playing', popup: 'Now Playing (Desktop: Welle oben rechts; Handy: Wiedergabe oben)', stage: 'S5', badge: 'casora_now_playing_primary', room: 'sicherheit' },
@@ -76,10 +98,20 @@ const ITEMS = [
   { w: 3, id: 'kaffee', popup: 'Kaffeevollautomat', stage: 'S8 Getränke', tpl: 'casora_coffee', guess: (S) => first(S, /^sensor\.testbarista_operation_state$/) || first(S, /^sensor\.testbarista/) },
   { w: 3, id: 'kuehlschrank', popup: 'Kühlschrank', stage: 'S2 Kühlen', tpl: 'casora_fridge', guess: (S) => first(S, /^sensor\..*_top_zone$/) || first(S, /^sensor\..*(kuehl|fridge)/) },
   { w: 3, id: 'wasserkocher', popup: 'Wasserkocher', stage: '–', tpl: 'casora_kettle' },
-  { w: 3, id: 'aquarium', popup: 'Aquarium (Übersicht)', stage: 'S6 Wassertemperatur', tpl: 'casora_aquarium' },
-  { w: 3, id: 'becken', popup: 'Aquarium – Becken', stage: 'S6 Wassertemperatur', tpl: 'casora_aquarium_tank' },
-  { w: 3, id: 'aquarium-licht', popup: 'Aquarium-Licht', stage: 'S1 Licht', tpl: 'casora_aquarium_light',
-    guess: (S) => first(S, /^light\.testbecken_a_lampe$/) || first(S, /^light\..*(becken|aquar|tank)/), vars: (e, S) => ({ tank_name: name(S, e, 'Becken') }) },
+  // Aquariums: the three complete tanks of dev/casora_mock/aquarium.py (tanks()), as the Studio stores them.
+  { w: 3, id: 'aquarium', popup: 'Aquarium (Übersicht)', stage: 'S6 Wassertemperatur', tpl: 'casora_aquarium',
+    pick: (c, S) => (S[TANK + '_temperatur_temperature'] ? (c.variables || {}).entity_saltwater === 'sensor.testriff_temperatur_temperature' : !!S[(c.variables || {}).entity_freshwater]),
+    guess: (S) => first(S, /^sensor\.testpflanzen_temperatur_temperature$/),
+    vars: () => ({ entity_freshwater: 'sensor.testpflanzen_temperatur_temperature', entity_saltwater: 'sensor.testriff_temperatur_temperature',
+      entity_turtle: 'sensor.testschildi_temperatur_temperature' }) },
+  { w: 3, id: 'becken', popup: 'Aquarium – Becken', stage: 'S6 Wassertemperatur', tpl: 'casora_aquarium_tank',
+    pick: (c, S) => !S[TANK + '_temperatur_temperature'] || c.entity === TANK + '_temperatur_temperature',
+    guess: (S) => first(S, /^sensor\.testpflanzen_temperatur_temperature$/) || first(S, /^sensor\.testbecken_a_wassertemperatur$/), vars: (e) => tankVars(e) },
+  { w: 3, id: 'aquarium-licht', popup: 'Aquarium-Licht (mehrere Kanäle)', stage: 'S1 Licht', tpl: 'casora_aquarium_light',
+    pick: (c, S) => !S['light.testriff_lampe_licht'] || c.entity === 'light.testriff_lampe_licht',
+    guess: (S) => first(S, /^light\.testriff_lampe_licht$/) || first(S, /^light\.testbecken_a_lampe$/) || first(S, /^light\..*(becken|aquar|tank)/),
+    vars: (e, S) => (e === 'light.testriff_lampe_licht' ? { tank_name: 'Testriff', temp_entity: 'sensor.testriff_temperatur_temperature',
+      light_reachable: 'binary_sensor.testriff_lampe_erreichbar' } : { tank_name: name(S, e, 'Becken') }) },
   { w: 3, id: 'fahrzeug', popup: 'Fahrzeug', stage: 'S7 Reichweite/Akku', tpl: 'casora_car' },
   { w: 3, id: 'ebike', popup: 'E-Bike', stage: 'S7 Akku', tpl: 'casora_ebike' },
   { w: 3, id: 'haustier', popup: 'Haustier', stage: 'S7', tpl: 'casora_pet' },
@@ -103,7 +135,10 @@ const ITEMS = [
   { w: 4, id: 'lueften', popup: 'Lüften-Coach', stage: 'S7', tpl: 'casora_vent' },
   { w: 4, id: 'pulse', popup: 'Pulse', stage: 'S7', tpl: 'casora_pulse' },
   // Welle 5 – Verlauf, Bild, Inhalt
-  { w: 5, id: 'energie', popup: 'Energie (Kachel)', stage: 'S6 + Energiefluss', tpl: 'casora_energy' },
+  // Energy: the balcony solar system of dev/casora_mock/energie.py (HA's energy settings: dev/qa/testhaus-extras.mjs).
+  { w: 5, id: 'energie', popup: 'Energie (Kachel)', stage: 'S6 + Energiefluss', tpl: 'casora_energy',
+    pick: (c, S) => !S[SOLAR.entity_power] || c.entity === SOLAR.entity_power, guess: (S) => first(S, /^sensor\.testsolarbank_hausbedarf$/),
+    vars: () => ({ ...SOLAR }) },
   { w: 5, id: 'energie-badge', popup: 'Energie – Badge (Gruppe)', stage: 'S6', badge: 'casora_badge_energy_group', room: 'haus' },
   { w: 5, id: 'energie-badge-einzeln', popup: 'Energie – Badge (Gerät)', stage: 'S6', badge: 'casora_badge_energy', room: 'haus', parent: 'casora_badge_energy_group' },
   { w: 5, id: 'diagramm', popup: 'Diagramm-Kachel', stage: 'S6', tpl: 'casora_chart', guess: (S) => first(S, /^sensor\.testserver_processor_temperature$/) || first(S, /^sensor\./, (s) => (s.attributes || {}).state_class === 'measurement') },
@@ -130,8 +165,13 @@ const ITEMS = [
   // Outside the table of §5 (own popup templates)
   { w: 6, id: 'einkauf', popup: 'Einkaufsliste (Bring!)', stage: '–', tpl: 'casora_shopping' },
   { w: 6, id: 'szenen-kachel', popup: 'Szenen-Kachel', stage: '–', tpl: 'casora_scenes', guess: (S) => first(S, /^scene\./) },
-  { w: 6, id: 'solar-tipp', popup: 'Solar-Tipp', stage: '–', tpl: 'casora_solar_tip' },
-  { w: 6, id: 'spiel', popup: 'Spiel (Medien)', stage: '–', tpl: 'casora_game' },
+  // Casora's own solar tip (binary_sensor.casora_solar_tipp, from HA's energy settings).
+  { w: 6, id: 'solar-tipp', popup: 'Solar-Tipp', stage: '–', tpl: 'casora_solar_tip',
+    pick: (c, S) => (S['binary_sensor.casora_solar_tipp'] ? c.entity === 'binary_sensor.casora_solar_tipp' : /^binary_sensor\./.test(c.entity || '')),
+    guess: (S) => first(S, /^binary_sensor\.casora_solar_tipp$/) || first(S, /^binary_sensor\./, (s) => 'frei_w' in (s.attributes || {})) },
+  // A Steam-like account with a running game (dev/casora_mock/game_account.py).
+  { w: 6, id: 'spiel', popup: 'Spiel (Medien)', stage: '–', tpl: 'casora_game', pick: (c, S) => !S['sensor.testspielkonto'] || c.entity === 'sensor.testspielkonto',
+    guess: (S) => first(S, /^sensor\.testspielkonto$/) || first(S, /^sensor\./, (s) => !!(s.attributes || {}).game) },
   { w: 6, id: 'aktivitaet', popup: 'Aktivität – Badge', stage: '–', badge: 'casora_badge_activity', room: 'medien', parent: 'casora_badge_media_group', absent: 'im Weich-Design ersetzt Now Playing die Medien-Pillen (09-weich-wiedergabe.js); braucht außerdem PSN/Steam/Discord-Quellen' },
   { w: 6, id: 'szene-badge', popup: 'Szenen – Badge', stage: 'Szenen-Blatt', badge: 'casora_badge_scene_group', room: 'haus' },
   // Phone only (popup-galerie-mobile, top of the page)
@@ -169,7 +209,7 @@ if (CMD === 'pruefen') await pruefen();
 async function anlegen() {
   const isCas = (cfg) => cfg && /casora_room/.test(JSON.stringify(cfg.views || []));
   const cfgs = {};
-  for (const d of list) if (d.url_path !== DASH && !/^qa-matrix/.test(d.url_path)) { const cf = await cfgOf(d.url_path); if (cf) cfgs[d.url_path] = cf; }
+  for (const d of list) if (d.url_path !== DASH && d.url_path !== DASH + '-mobile' && !/^qa-matrix/.test(d.url_path)) { const cf = await cfgOf(d.url_path); if (cf) cfgs[d.url_path] = cf; }
   const DESK = arg('dash') || ['qa-arbeit', 'test-neu'].find((u) => isCas(cfgs[u])) || Object.keys(cfgs).find((u) => !/-mobile$|^dashboard-hemma/.test(u) && isCas(cfgs[u]));
   if (!DESK) throw new Error('kein Casora-Dashboard im Haus (qa-arbeit fehlt?) – erst dev/qa/stress-setup.mjs --name qa-arbeit --state arbeit');
   const base = cfgs[DESK];
