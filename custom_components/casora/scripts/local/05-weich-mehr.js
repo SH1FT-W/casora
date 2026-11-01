@@ -966,7 +966,17 @@
     var neg = function (w) { return w == null ? null : Math.max(0, -w); };
     var v = { has: F.has, solar: F.solar ? sum(F.solar, !!F.solarHa) : null };
     if (F.chg || F.dis) { v.chg = pos(watt(states, F.chg)); v.dis = pos(watt(states, F.dis)); }
-    else if (F.batTile) { var b = watt(states, F.batTile); v.chg = pos(b); v.dis = neg(b); }
+    else if (F.batTile) {
+      var b = watt(states, F.batTile); v.chg = pos(b); v.dis = neg(b);
+      // The tile's sign is positive = charging, but many integrations report HA's (positive = discharging). When solar,
+      // grid and home are known, the sign whose balance adds up wins (detail round #1: „Akku entlädt“ while charging).
+      var sB = F.solar ? sum(F.solar, !!F.solarHa) : 0, gB = watt(states, F.grid), xB = watt(states, F.exp), hB = F.home ? watt(states, F.home) : null;
+      if (b != null && b !== 0 && hB != null && gB != null) {
+        var impB = Math.max(0, gB), expB = xB != null ? Math.max(0, xB) : Math.max(0, -gB);
+        var rest = function (c, d) { return Math.abs((sB || 0) + impB - expB + d - c - hB); };
+        if (rest(neg(b), pos(b)) + 50 < rest(pos(b), neg(b))) { v.chg = neg(b); v.dis = pos(b); }
+      }
+    }
     else if (F.batHa) { var h = sum(F.batHa, true); v.dis = pos(h); v.chg = neg(h); }
     if (F.grid || F.exp) {
       var g = watt(states, F.grid), x = watt(states, F.exp);

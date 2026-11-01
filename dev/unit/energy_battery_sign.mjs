@@ -30,5 +30,16 @@ assert.equal(vh.chg, r.v.chg, 'badge and tile: same charging'); assert.equal(vh.
 // A sensor HA does not know keeps the tile's sign (positive = charging).
 r = run([]);
 assert.equal(r.F.batTile, 'sensor.bat', 'own sensor: tile sign');
-assert.equal(r.v.dis, 700, 'tile sign: −700 discharging');
+assert.equal(r.v.chg, 700, 'unknown to HA: the balance decides – −700 is charging here');
+// Without a balance (no home sensor) the tile's sign stays: −700 = discharging.
+const C2 = { solar: 'sensor.solar', battery: 'sensor.bat', grid: 'sensor.grid', home: 'sensor.none' };
+const F2 = E.flowSources(Object.assign({}, C2, { home: null, sum: null }), hass, S, false) || { batTile: 'sensor.bat', has: {} };
+const v2 = E.flowValues(Object.assign({}, F2, { home: null }), S);
+if (F2.batTile) assert.equal(v2.dis, 700, 'no balance: the tile sign');
+// A battery that discharges by the tile's sign and adds up stays discharging.
+const S3 = { 'sensor.solar': W(0), 'sensor.home': W(900), 'sensor.bat': W(-700), 'sensor.grid': W(200) };
+window.casoraEnergyPowers = () => ({ grid: [], solar: [], battery: [] });
+const F3 = E.flowSources(C, { states: S3, entities: {} }, S3, false);
+const v3 = E.flowValues(F3, S3);
+assert.equal(v3.dis, 700, 'tile sign kept when it adds up (0 + 200 + 700 = 900)');
 console.log('energy_battery_sign: ok');
