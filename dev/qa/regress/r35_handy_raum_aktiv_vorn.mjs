@@ -87,6 +87,9 @@ for (const groupsOn of [true, false]) {
   // springt unter dem Finger, der Zustand zeigt sich in der Farbe). Erst beim nächsten Öffnen des Raums rückt es
   // nach vorn, unter den aktiven gilt die Studio-Reihenfolge (Licht vor Jalousie).
   // Der feste Patch ersetzt den vorigen – deshalb Jalousie und übrige Kacheln wieder mitgeben.
+  // Since "Sort tiles" (26.11.2, default calm) an open room re-sorts after 30 s without input; someone switching the
+  // light just used the screen – an input first, as in r376 (r379 covers the quiet re-sort).
+  await page.keyboard.press('Shift');
   await fakeStates(page, { ...off, [room.cover]: { state: 'open' }, [room.light]: { state: 'on' } }, { sticky: true });
   await page.waitForTimeout(5000);
   const still = await order();
