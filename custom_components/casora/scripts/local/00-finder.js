@@ -1574,11 +1574,108 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     return 'var(--casora-security-' + (lv || 'ok') + '-color' + (fallback ? ', ' + fallback : '') + ')';
   };
 
+  // ── Order of the security sub-entries (security_sub_order, 01.11.2026) ─────────
+  // The Studio's "Order" list in the security badge: one key per kind of entry. It orders the badge's sub-line
+  // (casoraSecuritySummary, o.order), its sub-badges (expanded row, separate badges, phone rows; layout-card config
+  // casora_sec_order, hook below) and so the security popup, which reads its rows from those sub-badges
+  // (35-phone-hub.js). Without a list (or an empty one) nothing moves. Keys missing from the list follow in their
+  // usual order, unknown keys in the list are ignored.
+  //   casoraSecSub.KEYS                     – all keys, the Studio's default order (= the sub-line's)
+  //   casoraSecSub.keyOf(id, states)        → key of one entity
+  //   casoraSecSub.keyOfCard(cfg, states)   → key of a sub-badge card config, undefined for any other card
+  //   casoraSecSub.sort(list, order, keyOf) → new list, stable
+  //   casoraSecSub.cards(cards, order, states) → cards with only the security sub-badges reordered among their slots
+  if (!window.casoraSecSub) {
+    (function () {
+      var KEYS = ['alarm', 'doors', 'gates', 'locks', 'windows', 'covers', 'cameras', 'other'];
+      var GATE = ['garage', 'gate', 'door'];
+      var low = function (x) { return String(x == null ? '' : x).toLowerCase(); };
+      var keyOf = function (id, states) {
+        if (typeof id !== 'string' || id.indexOf('.') < 0) return null;
+        var S = states || {}, dom = id.split('.')[0], st = S[id] || {}, a = st.attributes || {};
+        var dc = low(a.device_class);
+        if (dom === 'alarm_control_panel') return 'alarm';
+        if (dom === 'lock') return 'locks';
+        if (dom === 'camera') return 'cameras';
+        if (dom === 'cover') return GATE.indexOf(dc) >= 0 ? 'gates' : 'covers';
+        if (dom !== 'binary_sensor') return 'other';
+        // A group helper without a class of its own: its first member's class.
+        if (!dc && Array.isArray(a.entity_id) && a.entity_id.length) dc = low(((S[a.entity_id[0]] || {}).attributes || {}).device_class);
+        var nm = id + ' ' + (a.friendly_name || '');
+        if (dc === 'window' || (dc !== 'door' && dc !== 'garage_door' && /fenster|window/i.test(nm))) return 'windows';
+        if (['door', 'garage_door', 'opening', ''].indexOf(dc) >= 0) return 'doors';
+        return 'other';
+      };
+      var TPL = { casora_badge_lock_group: 'locks', casora_badge_camera_group: 'cameras', casora_badge_security_covers: 'covers',
+        casora_badge_contact_group: null, casora_badge_security: null };
+      var keyOfCard = function (cfg, states) {
+        if (!cfg || typeof cfg !== 'object') return undefined;
+        var t = [].concat(cfg.template || []), hit;
+        for (var i = 0; i < t.length; i++) if (Object.prototype.hasOwnProperty.call(TPL, t[i])) { hit = t[i]; break; }
+        if (hit === undefined) return undefined;
+        if (TPL[hit]) return TPL[hit];
+        var kind = ((cfg.variables || {}).contacts_kind);
+        if (kind === 'door' || kind === 'window') return kind + 's';
+        return keyOf(cfg.entity, states);
+      };
+      var clean = function (order) {
+        var out = [];
+        (Array.isArray(order) ? order : []).forEach(function (k) { if (KEYS.indexOf(k) >= 0 && out.indexOf(k) < 0) out.push(k); });
+        return out;
+      };
+      var sort = function (list, order, key) {
+        var o = clean(order);
+        if (!o.length || !Array.isArray(list)) return list;
+        var rank = function (x) { var i = o.indexOf(key(x)); return i < 0 ? o.length : i; };
+        return list.map(function (x, i) { return { x: x, i: i, r: rank(x) }; })
+          .sort(function (a, b) { return a.r - b.r || a.i - b.i; })
+          .map(function (e) { return e.x; });
+      };
+      var cards = function (list, order, states) {
+        if (!clean(order).length || !Array.isArray(list)) return list;
+        var at = [], sub = [];
+        list.forEach(function (c, i) { if (keyOfCard(c, states) !== undefined) { at.push(i); sub.push(c); } });
+        var sorted = sort(sub, order, function (c) { return keyOfCard(c, states); });
+        var out = list.slice();
+        at.forEach(function (i, j) { out[i] = sorted[j]; });
+        return out;
+      };
+      window.casoraSecSub = { KEYS: KEYS, keyOf: keyOf, keyOfCard: keyOfCard, clean: clean, sort: sort, cards: cards };
+
+      // layout-card: a row of sub-badges with casora_sec_order (button_card_templates.json) gets its cards in that order
+      // before it builds them, so the DOM order is the order everywhere (also for the popup's rows).
+      var hook = function (C) {
+        if (!C || !C.prototype || C.prototype.__casoraSecOrder) return;
+        var orig = C.prototype.setConfig;
+        if (typeof orig !== 'function') return;
+        C.prototype.__casoraSecOrder = true;
+        C.prototype.setConfig = function (cfg) {
+          try {
+            if (cfg && clean(cfg.casora_sec_order).length && Array.isArray(cfg.cards)) {
+              var ha = document.querySelector('home-assistant');
+              var S = (ha && ha.hass && ha.hass.states) || {};
+              cfg = Object.assign({}, cfg, { cards: cards(cfg.cards, cfg.casora_sec_order, S) });
+            }
+          } catch (e) { /* keep the row as it is */ }
+          return orig.call(this, cfg);
+        };
+      };
+      try {
+        if (window.customElements) {
+          var LC = customElements.get('layout-card');
+          if (LC) hook(LC);
+          else customElements.whenDefined('layout-card').then(function () { hook(customElements.get('layout-card')); });
+        }
+      } catch (e) { /* no custom elements (tests) */ }
+    })();
+  }
+
   // ── Sub-line of the security group badge (Soft/Fog, 06.10.2026) ─────────
   // sec = count from casora_badge_security_group (triggered, disarmed, locks, doors, gates,
   // windows, windowsTilted, doorsTilted, covers, lockDead, camDead, insecure, problem).
   // o.summary: 'short' (default) = small icons with a number, 'detailed' = list in words.
   // o.alarmState: state of the alarm panel (for „Aktiv · Abwesend“).
+  // o.order: security_sub_order (casoraSecSub), the Studio's own order of the kinds.
   // Returns { text, html }: text is always the list in words (also for tooltip/screen reader),
   // html only for 'short' with findings, otherwise null.
   // Order by importance: alarm off, door, gate, lock, window open, tilted, covers, offline.
@@ -1591,20 +1688,22 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       var al = String(o.alarmState || '').toLowerCase();
       return { text: ALARM_MODE[al] ? 'Aktiv · ' + ALARM_MODE[al] : 'Alles sicher', html: null };
     }
-    // [word, icon, number, offline?]; words with a number are in phrases/en.json.
+    // [word, icon, number, offline?, key]; words with a number are in phrases/en.json.
     var L = [];
-    if (S.disarmed) L.push(['Alarm aus', null, 0]);
-    if (S.doors) L.push([n(S.doors, 'Tür offen', 'Türen offen'), 'door-open', S.doors]);
-    if (S.gates) L.push([n(S.gates, 'Tor offen', 'Tore offen'), 'garage', S.gates]);
-    if (S.locks) L.push([n(S.locks, 'Schloss offen', 'Schlösser offen'), 'lock-open', S.locks]);
-    if (S.lockJammed) L.push([S.lockJammed === 1 ? 'Schloss klemmt' : S.lockJammed + ' Schlösser klemmen', 'lock-unlocking', S.lockJammed]);
-    if (S.windows) L.push([n(S.windows, 'Fenster offen', 'Fenster offen'), 'window-open', S.windows]);
-    if (S.windowsTilted) L.push([n(S.windowsTilted, 'Fenster gekippt', 'Fenster gekippt'), 'window-tilt', S.windowsTilted]);
-    if (S.doorsTilted) L.push([n(S.doorsTilted, 'Tür gekippt', 'Türen gekippt'), 'window-tilt', S.doorsTilted]);
+    if (S.disarmed) L.push(['Alarm aus', null, 0, false, 'alarm']);
+    if (S.doors) L.push([n(S.doors, 'Tür offen', 'Türen offen'), 'door-open', S.doors, false, 'doors']);
+    if (S.gates) L.push([n(S.gates, 'Tor offen', 'Tore offen'), 'garage', S.gates, false, 'gates']);
+    if (S.locks) L.push([n(S.locks, 'Schloss offen', 'Schlösser offen'), 'lock-open', S.locks, false, 'locks']);
+    if (S.lockJammed) L.push([S.lockJammed === 1 ? 'Schloss klemmt' : S.lockJammed + ' Schlösser klemmen', 'lock-unlocking', S.lockJammed, false, 'locks']);
+    if (S.windows) L.push([n(S.windows, 'Fenster offen', 'Fenster offen'), 'window-open', S.windows, false, 'windows']);
+    if (S.windowsTilted) L.push([n(S.windowsTilted, 'Fenster gekippt', 'Fenster gekippt'), 'window-tilt', S.windowsTilted, false, 'windows']);
+    if (S.doorsTilted) L.push([n(S.doorsTilted, 'Tür gekippt', 'Türen gekippt'), 'window-tilt', S.doorsTilted, false, 'doors']);
     // Selected covers open in the evening/night (#76, 34-security-covers.js), Home only.
-    if (S.covers) L.push([n(S.covers, 'Jalousie offen', 'Jalousien offen'), 'cover_open', S.covers]);
-    if (S.lockDead) L.push([n(S.lockDead, 'Schloss offline', 'Schlösser offline'), 'lock', S.lockDead, true]);
-    if (S.camDead) L.push([n(S.camDead, 'Kamera offline', 'Kameras offline'), 'camera', S.camDead, true]);
+    if (S.covers) L.push([n(S.covers, 'Jalousie offen', 'Jalousien offen'), 'cover_open', S.covers, false, 'covers']);
+    if (S.lockDead) L.push([n(S.lockDead, 'Schloss offline', 'Schlösser offline'), 'lock', S.lockDead, true, 'locks']);
+    if (S.camDead) L.push([n(S.camDead, 'Kamera offline', 'Kameras offline'), 'camera', S.camDead, true, 'cameras']);
+    // Own order from the Studio (security_sub_order): by kind, the lead word stays first.
+    if (o.order && window.casoraSecSub) L = window.casoraSecSub.sort(L, o.order, function (x) { return x[4]; });
     var text = L.map(function (x) { return x[0]; }).join(' · ');
     if (o.summary === 'detailed') return { text: text, html: null };
     // Short: one icon per finding; „gekippt“ has an icon of its own, offline is struck through.

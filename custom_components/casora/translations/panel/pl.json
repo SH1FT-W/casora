@@ -2782,7 +2782,13 @@
     "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.": "Otwórz kafelek i wybierz „Widoczność, pytanie i przytrzymanie”. Tam wybierzesz, kto go widzi, na jakich ekranach i czy pyta przed przełączeniem.",
     "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Otwórz pokój i wybierz Wygląd. „Wybierz zdjęcie” bierze zdjęcie Casora, „Prześlij własne” zdjęcie z urządzenia – drugie na noc jest opcjonalne.",
     "Copied to {name}": "Skopiowano do {name}",
-    "Open the copy": "Otwórz kopię"
+    "Open the copy": "Otwórz kopię",
+    "Order": "Kolejność",
+    "Reset": "Resetuj",
+    "Gates": "Bramy",
+    "Windows": "Okna",
+    "Other sensors": "Inne czujniki",
+    "Drag to change the order of the entries in the badge and its popup.": "Przeciągnij, aby zmienić kolejność wpisów w badge'u i jego popupie."
   },
   "patterns": [
     [
