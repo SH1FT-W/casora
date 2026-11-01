@@ -18,11 +18,11 @@
     link.setAttribute("data-casora-font", "");
     document.head.appendChild(link);
   }
-  // Studio-Schrift (1.3): Inter 4.1 aus dem offiziellen Release (rsms/inter), lokal
-  // mitgeliefert – kein Abruf fremder Server. Eigener Familienname, damit das Dashboard-
-  // „Inter“ (inter-v20) unberührt bleibt. Geladen wird sie nur, wenn das Theme
-  // --casora-font-studio setzt (Casora, Nebel); eigene Themes fragen sie nie an. Die Version
-  // steckt im Dateinamen – ein Update mit neuer Schrift bekommt eine neue Adresse.
+  // Studio font (1.3): Inter 4.1 from the official release (rsms/inter), shipped locally, no
+  // third-party servers. Own family name with weights 100-900; the dashboard "Inter"
+  // (assets/fonts/hanken-grotesk.css, 400-900) uses the same file, so the Studio with its
+  // preview downloads it once. Loaded only when the theme sets --casora-font-studio (Casora,
+  // Nebel). The version is in the file name: a new font gets a new address.
   if (!document.getElementById("casora-studio-font")) {
     const face = document.createElement("style");
     face.id = "casora-studio-font";

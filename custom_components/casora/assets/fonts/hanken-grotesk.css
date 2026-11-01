@@ -48,10 +48,12 @@
 
 /* Inter, variable weight 400-900, latin subset. SIL Open Font License 1.1.
    One file covers every weight, so there is nothing to add when a new one
-   gets used. */
+   gets used. Same file as the Studio font (panel/casora-panel-addons.js), so a
+   page with both downloads it once; inter-v20-latin-variable.woff2 stays for
+   stylesheets still cached from before. */
 @font-face {
   font-family: 'Inter';
-  src: url('/casora_assets/fonts/inter-v20-latin-variable.woff2') format('woff2');
+  src: url('/casora_assets/fonts/inter-4.1-latin-var.woff2') format('woff2');
   font-weight: 400 900;
   font-style: normal;
   font-display: swap;
