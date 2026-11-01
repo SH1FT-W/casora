@@ -127,6 +127,7 @@ await check('Climate: only the overview rows (no room sections)', p.rows.length 
 await close(page);
 
 // #80 special case: picked rooms plus an HA group – the light popup shows the picked rooms only („N Räumen“).
+// v3 (01.11.2026): the status line counts in words without the noun („3 von 10 an“); the scope stays the picked entries.
 const picked = await page.evaluate(() => { const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_mobile_filter_badges'));
   const v = (b && b._config.variables) || {}; const st = document.querySelector('home-assistant').hass.states;
   const ids = []; for (let i = 1; i <= 10; i++) { const x = v['light_entity_' + i]; if (typeof x === 'string' && x.startsWith('light.') && st[x]) ids.push(x); }
@@ -136,7 +137,7 @@ if (picked.n > 1 && picked.groups) {
   await tap(page, lb);
   const head = await page.evaluate(() => { const pop = window.__pierce('casora-popup')[0]; const s = window.casoraPopup.surface;
     return (pop && pop.shadowRoot ? pop.shadowRoot.textContent : '') + ' ' + (s ? s.textContent : ''); });
-  await check('#80: picked rooms (with an HA group beside them) → „von ' + picked.n + ' Räumen“', new RegExp('von ' + picked.n + ' Räumen').test(head.replace(/\s+/g, ' ')), { picked, head: head.replace(/\s+/g, ' ').slice(0, 200) });
+  await check('#80: picked rooms (with an HA group beside them) → „von ' + picked.n + ' Räumen“', new RegExp('von ' + picked.n + ' (Räumen )?an').test(head.replace(/\s+/g, ' ')), { picked, head: head.replace(/\s+/g, ' ').replace(/[^]*\}/, '').slice(0, 200) });
   await close(page);
 }
 

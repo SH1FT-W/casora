@@ -5,6 +5,9 @@
 // „Wohin geht der Solarstrom“). With the sources of the big popup's flow present they show that flow (E1,
 // „Energiefluss“ as the heading above the card), else the bar stays. Desktop 1440 and tablet 1180 (the phone opens the big energy popup from its badge); the Home badge
 // gets energy sub-badges only in the browser (setConfig).
+// v3 (01.11.2026, richtlinien §4 S6, §7.1): a sub-page is its stage – the page's value now with its own chart – and one
+// list on the right; no energy flow beside the chart (at most one chart). The owner's complaint (the stacked bar) stays
+// checked: no bar; instead of the flow the stage with a drawn chart.
 import { open, casoraDashboard, dashboard, check, need, finish, usePage } from './lib.mjs';
 
 const dash = await casoraDashboard((d) => (d.config.views || []).length > 1);
@@ -36,13 +39,21 @@ for (const [tag, o] of [['Desktop', { width: 1440, height: 900, theme: 'Casora' 
       if (!b) return null; b.scrollIntoView({ block: 'center', inline: 'center' }); const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }, i);
     if (!q) continue;
     await tapAt(q);
-    const r = await page.evaluate(() => { const s = window.casoraPopup && window.casoraPopup.surface; const p = window.__pierce('casora-popup')[0];
-      const e1 = s ? window.__pierce('[data-casora-kind="e1"]', s)[0] : null;
-      const lbl = s ? window.__pierce('*', s).find((n) => !n.children.length && n.textContent.trim() === 'Energiefluss' && n.getBoundingClientRect().height > 0) : null;
-      return { title: p && p.shadowRoot.querySelector('.header-title').textContent.trim(), e1: !!e1, heading: !!(lbl && e1 && lbl.getBoundingClientRect().bottom <= e1.getBoundingClientRect().top + 1),
-        bar: !!(s && /Woher kommt der Strom|Wohin geht der Solarstrom/.test(s.textContent)) }; });
-    await check(tag + ': sub-popup „' + r.title + '“ shows the energy flow (E1), not the bar', r.e1 && !r.bar, r);
-    await check(tag + ': „' + r.title + '“: „Energiefluss“ is the heading above the card', r.heading, r);
+    let r = null;
+    for (let k = 0; k < 20; k++) {
+      r = await page.evaluate(() => { const s = window.casoraPopup && window.casoraPopup.surface; const p = window.__pierce('casora-popup')[0];
+        const st = s ? window.__pierce('[data-casora-stage="S6"]', s).find((n) => n.getBoundingClientRect().height > 0) : null;
+        const c = st ? window.__pierce('casora-chart', st)[0] : null;
+        const lines = c && c.shadowRoot ? [...c.shadowRoot.querySelectorAll('path')].filter((x) => (x.getAttribute('d') || '').length > 20).length : 0;
+        const val = st ? (window.__pierce('.hui-st-n', st)[0] || {}).textContent : null;
+        return { title: p && p.shadowRoot.querySelector('.header-title').textContent.trim(), stage: !!st, val: val && val.trim(), chart: !!c, lines,
+          e1: !!(s && window.__pierce('[data-casora-kind="e1"]', s)[0]),
+          bar: !!(s && /Woher kommt der Strom|Wohin geht der Solarstrom/.test(s.textContent)) }; });
+      if (r.stage && r.lines) break;
+      await page.waitForTimeout(300);
+    }
+    await check(tag + ': sub-popup „' + r.title + '“ is an S6 stage with its value, not the bar', r.stage && !!r.val && !r.bar, r);
+    await check(tag + ': „' + r.title + '“: the stage chart is drawn, no second chart (no flow beside it)', r.chart && r.lines > 0 && !r.e1, r);
     await page.evaluate(() => window.casoraPopup.close());
     await page.waitForTimeout(900);
   }

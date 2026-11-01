@@ -5,6 +5,9 @@
 // (cover_open1/cover_closed1). Erwartet: Kachel und Ring zeigen dasselbe Symbol wie die Zeile,
 // in Lage-Stufen (100 offen, 70 cover_80, 50 cover_60, 30 cover_40, 0 zu), auch „Position“ –
 // Desktop und Handy (WebKit), Casora-Design.
+// v3 (31.10.2026, popup-richtlinien-v3 §3/§4.8): the head has no symbol ring any more and the position is the dial
+// (no slider symbol); the symbol that remains in the popup is the row's. Checked: tile and rows show the same symbol
+// for every position; a single blind has no row of itself (#35) and its popup opens with the position dial.
 import { open, casoraDashboard, dashboard, fakeStates, check, need, finish, usePage } from './lib.mjs';
 
 const has = (x, t) => JSON.stringify(x).includes(`"${t}"`);
@@ -44,7 +47,8 @@ const popup = (page) => page.evaluate(() => {
   }).filter(Boolean);
   const sl = window.__pierce('.hui-sl-ic').filter(vis)[0];
   const pos = sl ? name(dec(getComputedStyle(sl).webkitMaskImage + ' ' + getComputedStyle(sl).backgroundImage)) : null;
-  return { ring, row: rows[0] || null, n: rows.length, pos };
+  const stage = window.__pierce('[data-casora-stage="S3"]').filter(vis).length;
+  return { ring, row: rows[0] || null, n: rows.length, pos, stage };
 });
 
 const CASES = [
@@ -73,19 +77,17 @@ for (const [vp, url] of [
     // Popup öffnen; unter Last kommt es manchmal erst beim zweiten Tippen.
     const group = ids.length > 1;
     let p = null;
-    for (let a = 0; a < 2 && !(p && p.ring); a++) {
+    for (let a = 0; a < 2 && !(p && p.stage); a++) {
       const t2 = (await pick(page, ids[0])) || t;
       await page.mouse.click(t2.x, t2.y);
-      for (let w = 0; w < 12 && !(p && p.ring && (!group || p.n)); w++) { await page.waitForTimeout(400); p = await popup(page); }
+      for (let w = 0; w < 12 && !(p && p.stage && (!group || p.n)); w++) { await page.waitForTimeout(400); p = await popup(page); }
     }
+    await check(`${vp} ${k}: Popup mit Positions-Rad`, p && p.stage === 1, p);
     if (group) {
-      await check(`${vp} ${k}: Zeile zeigt ${want}`, p.row === want, p);
-      await check(`${vp} ${k}: Ring im Popup-Kopf wie die Zeile`, p.ring === want && p.ring === p.row, p);
+      await check(`${vp} ${k}: Zeile zeigt ${want} (wie die Kachel)`, p.row === want && p.row === t.tile, { p, tile: t.tile });
     } else {
       await check(`${vp} ${k}: einzelne Jalousie ohne Zeile mit sich selbst (#35)`, p.n === 0, p);
-      await check(`${vp} ${k}: Ring im Popup-Kopf zeigt ${want}`, p.ring === want, p);
     }
-    await check(`${vp} ${k}: Position zeigt ${want}`, p.pos === want, p);
     await page.keyboard.press('Escape');
     await page.waitForTimeout(900);
     await dashboard(page, url, 3);

@@ -5,8 +5,8 @@
 // the same popup with ‹ back). Entries come from the test house (mock helpers: input_boolean, time, input_number,
 // select); the group exists only in the browser (fakeStates), the two tiles too – nothing is saved and nothing is
 // switched (callService is caught in the browser). Desktop (Chromium) and phone (WebKit, touch):
-//   - tile: "N Einstellungen", or "k An" and highlighted when a switch of the list is on
-//   - popup: one row per entry; layout "Auto": desktop two columns, phone one; the heading before its entry; a switch per
+//   - tile: "N Geräte", or "k An" and highlighted when a switch of the list is on
+//   - popup: one row per entry; v3: one column (552) on desktop and phone; the heading before its entry; a switch per
 //     input_boolean (the row toggles), a time field per time entity (a tap keeps the popup open; a new time calls
 //     time.set_value), − / + for the number, a choice field for the select
 //   - Mehr: the group as a list and a sensor as a chart; a tap opens it with ‹, ‹ returns to Mehr
@@ -111,7 +111,8 @@ const run = async (view) => {
   });
 
   // ── Tile ──
-  const want = onNow ? onNow + ' An' : members.length + ' Einstellungen';
+  // The list counts its devices (review 2, DD-31: „8 Einstellungen“ said nothing).
+  const want = onNow ? onNow + ' An' : members.length + ' Geräte';
   let t = await stable(page, TILE, 'qa-r350-list', { until: (v) => v && v.state === want });
   await check(tag + ': entity list tile says „' + want + '“', t && t.state === want, t);
   await check(tag + ': highlighted exactly when a switch is on', t && t.active === (onNow > 0), t);
@@ -122,7 +123,8 @@ const run = async (view) => {
   await tap(t);
   let p = await info((v) => v && v.rows === members.length);
   await need(tag + ': popup opens with one row per entry', p && p.rows === members.length, p);
-  await check(tag + (view.mobile ? ': one column on the phone' : ': two columns on the desktop'), p.cols === (view.mobile ? 1 : 2), p.cols);
+  // v3 (richtlinien §2): the list popup is one column, 552 wide, on the desktop too.
+  await check(tag + ': one column (v3)', p.cols === 1, p.cols);
   await check(tag + ': heading „Schalter“ before its entry', p.labels.includes('Schalter'), p.labels);
   await check(tag + ': controls – 2 switches, 2 time fields, − / +, a choice field',
     p.switches === 2 && p.times === 2 && p.steps === 2 && p.selects === 1, p);
@@ -157,7 +159,7 @@ const run = async (view) => {
   await tap(m);
   p = await info((v) => v && v.rows === 2);
   await need(tag + ': Mehr opens with a list and a chart', p && p.rows === 2, p);
-  await check(tag + ': list row with its count', p.text.some((x) => /^QA Liste/.test(x) && /Einstellungen/.test(x)), p.text);
+  await check(tag + ': list row with its count', p.text.some((x) => /^QA Liste/.test(x) && new RegExp(members.length + ' Geräte').test(x)), p.text);
   await shot('2-mehr');
   await tap(await spot('.hui-srow', '^QA Liste'));
   p = await info((v) => v && v.back && v.rows === members.length);

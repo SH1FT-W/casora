@@ -59,7 +59,8 @@ const popup = (pg) => pg.evaluate(() => {
   const txt = (e) => e.textContent.replace(/\s+/g, ' ').trim();
   const deep = (n) => { let t = ''; for (const c of n.childNodes) t += c.nodeType === 3 ? c.data + ' ' : c.nodeType === 1 && c.tagName !== 'STYLE' ? deep(c) : '';
     if (n.shadowRoot) t += deep(n.shadowRoot); return t; };
-  const row = P('.casora-tank-row')[0];
+  // Popup v3: „Tanken“ is a row of the car's „Tank“ section (page „tanken|…“); before v3 its own .casora-tank-row.
+  const row = P('[data-casora-page^="tanken"]')[0] || P('.casora-tank-row')[0];
   return {
     title: window.casoraPopup.element.shadowRoot.querySelector('.header-title').textContent.trim(),
     rows: P('.hui-srow').length,
@@ -104,7 +105,7 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   await check(vp.name + ': kein km-Wert als Datum (#15)', p && !/\d{1,2}\.\d{1,2}\.\d{5}|\b(2[1-9]|[3-9]\d)\d{3}\b(?! ?km)/.test(p.text), p && p.text.slice(0, 600));
   await check(vp.name + ': Tanken-Zeile mit Preis', p && /Tanken.*1,6[4-9]/.test(p.tankRow || ''), p && p.tankRow);
   await check(vp.name + ': kein Fehler-Kärtchen', p && p.errors === 0, p && p.errors);
-  await tap(page, '.casora-tank-row .hui-srow');
+  if (!await tap(page, '[data-casora-page^="tanken"]')) await tap(page, '.casora-tank-row .hui-srow');
   await page.waitForTimeout(1200);
   await tap(page, '.ct-seg .hui-sg:nth-child(3)').catch(() => {});
   await page.waitForTimeout(400);

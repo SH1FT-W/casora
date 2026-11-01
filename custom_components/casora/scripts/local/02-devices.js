@@ -857,8 +857,13 @@
         if (${tOk ? 'true' : 'false'} && !(c.lightStage && c.light && states[c.light])) {
           const ev = window._casoraAqEval ? window._casoraAqEval(t, c.V, states, hass) : { level: 0 };
           const u = (t.attributes && t.attributes.unit_of_measurement) || '°C';
+          const fr = (x) => Number(x).toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { maximumFractionDigits: 1 });
+          const okN = (x) => x != null && x !== '' && !isNaN(parseFloat(x));
+          const rng = okN(c.V.temp_min) && okN(c.V.temp_max) ? fr(c.V.temp_min) + '–' + fr(c.V.temp_max) + ' ' + u : '';
           return UI.stage('status', { tone: ev.level === 2 ? 'bad' : ev.level === 1 ? 'warn' : 'good', icon: 'mdi:thermometer-water',
             text: isNaN(n) ? '–' : n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' ' + u,
+            // The Studio's target range stays readable under the temperature (decision 08.10.2026; the v2 head said it).
+            facts: rng ? [{ label: 'Soll-Bereich', value: rng }] : [],
             state: isNaN(n) ? 'na' : null });
         }
         const l = c.light && states[c.light];
@@ -1717,7 +1722,7 @@
       return c.st && states[c.st] ? UI.settings(c.st) : '';
     }
 
-    if (kind === 'hero' || kind === 'stage') {
+    if (kind === 'hero' || kind === 'stage' || kind === 'status3') {
       var at = stObj.attributes || {};
       var prog = progOf(c, states);
       var ph = phaseOf(c, states);
@@ -1746,6 +1751,9 @@
         tone = s[3] === 'done' ? 'good' : s[1] === 'bad' ? 'bad' : null;
       }
       if (doorOpen(c, states)) sub.push('Tür offen');
+      /* Popup v3 status line: Casora's word for the state (in its tone), not HA's – a stalled drum is „Angehalten“,
+         HA only says „Pausiert“ (r92, WashData 0.5.8). */
+      if (kind === 'status3') return UI.hero({ value: s[0], valueTone: tone === 'warn' || tone === 'bad' ? tone : null, center: true });
       /* Popup v3 (richtlinien §4 S4): time left (or the state) as the value, the hero's words under it, the progress
          bar, then program · % · end time from the former bar under the header. */
       if (kind === 'stage') {
@@ -2143,7 +2151,7 @@
          (localStorage casora_popup_variant 'a'/'b' keeps the earlier head). The programs are statistics and cannot be
          started from here – no quick choice. */
       var v3L = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; } })();
-      if (v3L) { delete f2.hero; delete f2.pbar; f2.stage = tpl('stage', true); }
+      if (v3L) { delete f2.pbar; f2.hero = tpl('status3', true); f2.stage = tpl('stage', true); }
       f2.abort = tpl('abort', false);
       /* „Weitere Einstellungen“ is no longer hidden in „Mehr“ – blueprint v2 puts it last (HH.layout settings). */
       var moreKeys = WD ? ['ctrl', 'stats', 'energy', 'maint_rest', 'tips', 'plug'] : ['energy', 'plug'];
@@ -2154,7 +2162,7 @@
       if (!WD) { left = ['run', 'act', 'dev', 'abort']; right = ['more']; }
       else if (run0) { left = ['unload', 'run', 'pick', 'act', 'cycles', 'abort']; right = ['progs', 'maint', 'more']; }
       else { left = ['unload', 'act', 'cycles']; right = ['progs', 'maint', 'more']; }
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3L ? [] : ['hero', 'pbar'], stage: v3L ? 'stage' : null,
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3L ? ['hero'] : ['hero', 'pbar'], stage: v3L ? 'stage' : null,
         left: left, right: right, settings: states[c.st] ? c.st : null, settingsSide: WD ? 'left' : 'right' });
     }
 

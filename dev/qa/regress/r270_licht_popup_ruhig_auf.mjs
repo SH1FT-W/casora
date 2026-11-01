@@ -8,6 +8,8 @@
 // senkrecht, und die Leiste liegt nie über dem Inhaltsbereich (unter dem Kopf).
 // Hinweis: Der alte Sprung hing vom Timing beim Öffnen ab und ließ sich im Testhaus nicht sicher nachstellen –
 // der Test wacht über das Ergebnis, ein Gegenlauf mit dem alten Stand war hier grün.
+// Popup v3 (richtlinien §1.6, §4.4): no room bar any more – the rooms are list rows beside the dial. The same watch now
+// follows the stage (dial) and the first room row: once visible, neither moves, and neither lies under the head.
 import { open, casoraDashboard, dashboard, check, need, finish } from './lib.mjs';
 
 const d = await casoraDashboard();
@@ -38,9 +40,12 @@ await page.evaluate(() => {
   const tick = () => {
     const t = performance.now() - t0, p = window.casoraPopup && window.casoraPopup.element;
     if (p && p.hasAttribute('open')) {
-      const a = window.__pierce('*', p.shadowRoot).find((e) => e.children.length === 0 && e.textContent.trim() === 'Alle' && e.getBoundingClientRect().width > 0);
+      const a = window.__pierce('*', p.shadowRoot).find((e) => e.children.length === 0 && e.textContent.trim() === 'Alle' && e.getBoundingClientRect().width > 0)
+        || window.__pierce('.hui-stage', p.shadowRoot).find((e) => e.getBoundingClientRect().width > 0);
+      const row = window.__pierce('.lps-row', p.shadowRoot).find((e) => e.getBoundingClientRect().width > 0);
       const c = p.shadowRoot.querySelector('.content'), sf = window.casoraPopup.surface;
       if (a && c && sf) window.__rec.push({ t: Math.round(t), vis: vis(a), y: Math.round(a.getBoundingClientRect().y),
+        ry: row ? Math.round(row.getBoundingClientRect().y) : null,
         top: Math.round(c.getBoundingClientRect().y), h: Math.round(sf.getBoundingClientRect().height) });
     }
     if (t < 2500) requestAnimationFrame(tick);
@@ -51,9 +56,9 @@ await page.evaluate(() => document.querySelector('home-assistant').shadowRoot.ge
 await page.waitForTimeout(3000);
 const rec = await page.evaluate(() => window.__rec);
 const shown = rec.filter((r) => r.vis);
-await need('Raumleiste im Licht-Popup', shown.length > 0, rec.slice(0, 5));
+await need('Raumleiste bzw. Bühne im Licht-Popup', shown.length > 0, rec.slice(0, 5));
 const last = shown[shown.length - 1];
-const moved = shown.filter((r) => Math.abs(r.y - last.y) > 3 || Math.abs(r.h - last.h) > 3);
+const moved = shown.filter((r) => Math.abs(r.y - last.y) > 3 || Math.abs(r.h - last.h) > 3 || (r.ry != null && last.ry != null && Math.abs(r.ry - last.ry) > 3));
 await check('ab dem Sichtbarwerden kein Sprung (Leiste und Popup stehen)', moved.length === 0, { moved: moved.slice(0, 4), last });
-await check('Raumleiste nie unter den Kopf geschoben', rec.every((r) => r.y >= r.top), rec.filter((r) => r.y < r.top).slice(0, 3));
+await check('Raumleiste bzw. Bühne nie unter den Kopf geschoben', rec.every((r) => r.y >= r.top && (r.ry == null || r.ry >= r.top)), rec.filter((r) => r.y < r.top).slice(0, 3));
 await finish();

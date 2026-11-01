@@ -7,11 +7,12 @@
 // Expected:
 //   - Studio: with the card added, "Velair" suggests the test air conditioner as the sure first match
 //   - dashboard (copies qa-velair / qa-velair-mobile with a Velair tile and a plain thermostat tile on the home page):
-//     tap → popup with "Modus", "Lüfter", "Zeitplan" (on), "Woche" (7 days) and today's slots; desktop two columns
-//     (schedule right), phone one column (schedule below the controls)
+//     tap → v3 popup: the target on the dial with the modes as moons, the section "Velair" with "Zeitplan" (on, ›) and
+//     "Velair-Modus" (#32, popup-richtlinien-v3 §8); desktop two columns (Velair right), phone one column (below the
+//     dial). „Zeitplan ›“ opens the week as a sub page: "Woche" (7 days) and today's slots
 //   - editing: a slot of today +0,5° → Speichern → velair.set_daily_schedule changed that block; the toggle pauses
 //     the schedule (velair.pause_zone) and resumes it
-//   - Velair is optional: the plain thermostat's popup has no schedule (no "Zeitplan", no "Woche", no Velair taps)
+//   - Velair is optional: the plain thermostat's popup has no schedule (no "Velair", no "Woche", no Velair taps)
 //   Everything changed is put back at the end (casora_mock.velair_reset).
 // Pictures: CASORA_VELAIR_BILDER=<folder> stores Studio, Velair popup (with editor) and the plain thermostat per view.
 import fs from 'node:fs';
@@ -137,6 +138,8 @@ const POPUP = () => {
     days: window.__pierce('[data-casora-mi^="velair-day:"]').filter(vis).length,
     velairTaps: window.__pierce('[data-casora-mi^="velair-"]').length,
     editable: window.__pierce('[data-casora-mi^="velair-edit:"]').filter(vis).length,
+    moons: window.__pierce('.hui-stage .hui-moon').filter(vis).map((n) => n.getAttribute('aria-label') || ''),
+    stage: (() => { const n = window.__pierce('.hui-stage').find(vis); return n ? box(n) : null; })(),
   };
 };
 const lab = (p, t) => p.labels.find((l) => l.t === t || l.t.indexOf(t) === 0);
@@ -186,23 +189,35 @@ for (const [tag, o, url, mobile, act] of VIEWS) {
     if (box) await page.screenshot({ path: file('kachel'), clip: { x: Math.max(0, box.x - 40), y: Math.max(0, box.y - 30), width: box.w + 80, height: box.h + 60 } });
   }
   await need(tag + ': Velair popup opens', await openTile('casora_velair'));
-  await stable(page, POPUP, null, { until: (v) => v && v.days === 7 && v.rows.length >= 3, max: 12000 });
+  await stable(page, POPUP, null, { until: (v) => v && v.rows.some((r) => /^Zeitplan.*An$/.test(r)) && v.moons.length >= 2, max: 12000 });
   // Then until nothing moves (the plates fly in).
   const p = await stable(page, POPUP, null, { quiet: 900 });
-  await check(tag + ': "Modus" and "Lüfter" from the climate', lab(p, 'Modus') && lab(p, 'Lüfter'), p.labels);
-  await check(tag + ': "Zeitplan" on', lab(p, 'Zeitplan') && p.rows.some((r) => /^Zeitplan.*An$/.test(r)), p.rows);
-  await check(tag + ': "Woche" with 7 days', lab(p, 'Woche') && p.days === 7, p.days);
-  await check(tag + ': today\'s slots with times and temperatures', lab(p, 'Heute') && p.rows.some((r) => /^\d\d:\d\d–\d\d:\d\d.*\d°$/.test(r)) && p.editable >= 1, p.rows);
+  // v3: the modes are the dial's moons; the fan, presets and swing are gone (§8, set up in HA).
+  await check(tag + ': the modes as moons on the dial', ['Heizen', 'Kühlen'].every((m) => p.moons.includes(m)), p.moons);
+  await check(tag + ': "Velair" with "Zeitplan" (on) and "Velair-Modus" (#32)', lab(p, 'Velair') && p.rows.some((r) => /^Zeitplan.*An$/.test(r))
+    && p.rows.some((r) => /^Velair-Modus/.test(r)), p.rows);
   await check(tag + ': status line names the next slot', /ab \d\d:\d\d|Zeitplan/.test(p.line), p.line);
-  if (mobile) await check(tag + ': one column (schedule below the controls)', lab(p, 'Zeitplan').y > lab(p, 'Lüfter').y && Math.abs(lab(p, 'Zeitplan').x - lab(p, 'Modus').x) < 4, p.labels);
-  else await check(tag + ': two columns (schedule right)', lab(p, 'Zeitplan').x > lab(p, 'Modus').x + 200 && Math.abs(lab(p, 'Zeitplan').y - lab(p, 'Modus').y) < 4, p.labels);
+  if (mobile) await check(tag + ': one column (Velair below the dial)', p.stage && lab(p, 'Velair') && lab(p, 'Velair').y > p.stage.y + 200, { stage: p.stage, labels: p.labels });
+  else await check(tag + ': two columns (Velair right of the dial)', p.stage && lab(p, 'Velair') && lab(p, 'Velair').x > p.stage.x + 200, { stage: p.stage, labels: p.labels });
   if (BILDER) { await page.waitForTimeout(700); await page.screenshot({ path: file('velair-popup'), fullPage: false }); }
+  // „Zeitplan ›“ opens the week as a sub page.
+  const zrow = await page.evaluate(() => { const r = window.__pierce('.hui-srow').find((n) => /^Zeitplan/.test(n.textContent.replace(/\s+/g, ' ').trim())
+    && n.getBoundingClientRect().height > 0); if (!r) return null; r.scrollIntoView({ block: 'center' }); const b = r.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; });
+  await need(tag + ': row „Zeitplan ›“', zrow);
+  await page.waitForTimeout(700);   // taps right after opening are swallowed (ghost taps)
+  if (mobile) await page.touchscreen.tap(zrow.x, zrow.y); else await page.mouse.click(zrow.x, zrow.y);
+  const w = await stable(page, POPUP, null, { until: (v) => v && v.days === 7 && v.editable >= 1, max: 8000 });
+  await check(tag + ': „Zeitplan ›“ opens the week: "Woche" with 7 days', w && lab(w, 'Woche') && w.days === 7, w && { days: w.days, labels: w.labels });
+  await check(tag + ': today\'s slots with times and temperatures', w && lab(w, 'Heute') && w.rows.some((r) => /^\d\d:\d\d–\d\d:\d\d.*\d°$/.test(r)) && w.editable >= 1, w && w.rows);
+  await check(tag + ': the week page has the on/off row', w && w.rows.some((r) => /^Zeitplan.*An$/.test(r)), w && w.rows);
+  if (BILDER) { await page.waitForTimeout(700); await page.screenshot({ path: file('velair-woche'), fullPage: false }); }
 
   if (act) {
     // Edit: the first own slot of today, +0,5°, save.
     const before = (s0.zones[AC].schedule[today] || []).slice();
     await need(tag + ': today has slots in the test week', before.length >= 1, before);
     const idx = 0;
+    await page.waitForTimeout(800);   // taps right after the sub page opened are swallowed (ghost taps)
     await tapMi('velair-edit:' + AC + '|' + idx);
     const e = await stable(page, POPUP, null, { until: (v) => v && v.labels.some((l) => /^Zeitfenster bearbeiten/.test(l.t)), max: 5000 });
     await check(tag + ': the editor opens', e && e.labels.some((l) => /^Zeitfenster bearbeiten/.test(l.t)), e && e.labels);
@@ -240,9 +255,10 @@ for (const [tag, o, url, mobile, act] of VIEWS) {
 
   // Velair is optional: the plain thermostat keeps its popup without any schedule.
   await need(tag + ': plain thermostat popup opens', await openTile('casora_thermostat'));
-  const q = await stable(page, POPUP, null, { until: (v) => v && v.labels.length >= 1, max: 8000 });
-  await check(tag + ': plain thermostat: no "Zeitplan"/"Woche", no Velair taps', q && !lab(q, 'Zeitplan') && !lab(q, 'Woche') && q.velairTaps === 0, q);
-  await check(tag + ': plain thermostat: its own sections', q && lab(q, 'Einstellungen'), q && q.labels);
+  const q = await stable(page, POPUP, null, { until: (v) => v && v.stage && v.moons.length >= 2, max: 8000 });
+  await check(tag + ': plain thermostat: no "Velair"/"Zeitplan"/"Woche", no Velair taps', q && !lab(q, 'Velair') && !lab(q, 'Zeitplan') && !lab(q, 'Woche')
+    && !q.rows.some((r) => /^Zeitplan/.test(r)) && q.velairTaps === 0, q);
+  await check(tag + ': plain thermostat: its own dial with the modes', q && q.stage && q.moons.length >= 2, q && { stage: q.stage, moons: q.moons });
   if (BILDER) { await page.waitForTimeout(700); await page.screenshot({ path: file('thermostat-ohne-velair') }); }
 }
 c.close();

@@ -50,7 +50,7 @@ const tile = await page.evaluate((id) => { const b = window.__pierce('button-car
   b.scrollIntoView({ block: 'center' }); const r = b.getBoundingClientRect(); return { x: r.x + 40, y: r.y + r.height - 30 }; }, hit.id);
 await page.waitForTimeout(500);
 await page.touchscreen.tap(tile.x, tile.y);
-const btns = await stable(page, () => window.__pierce('.hp-st-b').map((b) => { const r = b.getBoundingClientRect();
+const btns = await stable(page, () => window.__pierce('.hui-st-b, .hp-st-b').map((b) => { const r = b.getBoundingClientRect();
   return { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width }; }).filter((b) => b.w > 0), null, { max: 5000 });
 await need('Plus/Minus sichtbar', btns && btns.length === 2, btns);
 await page.waitForTimeout(700);   // Popup-Tippschutz
@@ -61,7 +61,7 @@ let s = await settle(20 + 4 * step);
 await check('4 schnelle Finger-Tipps auf Plus: 20 → ' + (20 + 4 * step) + ' (ist ' + s.t + ')', s.t === 20 + 4 * step, s);
 const shown = await page.evaluate(() => { const n = window.__pierce('.hp-st-v .n').find((e) => e.getBoundingClientRect().width > 0); return n ? n.textContent : null; });
 await check('Anzeige zeigt das neue Ziel (' + shown + ')', shown && shown.replace(',', '.').includes(String((20 + 4 * step).toFixed(1))), shown);
-const b2 = await page.evaluate(() => window.__pierce('.hp-st-b').map((b) => { const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width }; }).filter((b) => b.w > 0));
+const b2 = await page.evaluate(() => window.__pierce('.hui-st-b, .hp-st-b').map((b) => { const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width }; }).filter((b) => b.w > 0));
 for (let k = 0; k < 4; k++) { await page.mouse.click(b2[0].x, b2[0].y); await page.waitForTimeout(150); }
 s = await settle(20);
 await check('4 schnelle Mausklicks auf Minus: zurück auf 20 (ist ' + s.t + ')', s.t === 20, s);

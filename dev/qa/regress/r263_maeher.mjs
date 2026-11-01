@@ -6,6 +6,8 @@
 //   2. „Mähen“ im Popup → echter Dienst lawn_mower.start_mowing → Kachel „Mäht · 100 %“, hinterlegt.
 //   3. Fehler (nur im Browser): Kachel „Steckt fest“, Popup zeigt den Fehler oben im Status.
 // Am Ende schickt der Test den Mäher wieder in die Station (Zustand docked).
+// Popup v3 (richtlinien §4.8, §8): the keys are moons around the battery dial (by name, any order), the status
+// keeps the battery; connection and operating hours are readings and left the popup on purpose (§8 clean).
 // MAEHER_BILDER=<ordner>: Bilder Desktop/Handy, hell/dunkel ablegen.
 import { open, casoraDashboard, dashboard, check, need, finish, atFinish, stable, fakeStates, call } from './lib.mjs';
 import { tokens } from '../ws.mjs';
@@ -56,7 +58,9 @@ const run = async (view, dark, first) => {
       walk(pop.shadowRoot);
       const txt = parts.join(' ').replace(/\s+/g, ' ');
       const btns = window.__pierce('.hm-b, .hh-pill, .hui-act-p', pop.shadowRoot).map((b) => ({ on: !b.classList.contains('dis'), svc: b.getAttribute('data-casora-svc') || '' }));
-      return { txt: txt.slice(0, 900), btns };
+      const moons = window.__pierce('.hui-moon', pop.shadowRoot).filter((b) => b.getBoundingClientRect().width > 0)
+        .map((b) => ({ name: b.getAttribute('aria-label') || b.textContent.trim(), on: !!b.getAttribute('data-casora-svc'), svc: b.getAttribute('data-casora-svc') || '' }));
+      return { txt: txt.slice(0, 900), btns, moons };
     }, null, { max: 10000, quiet: 1000 });
   };
   const close = async () => {
@@ -70,9 +74,17 @@ const run = async (view, dark, first) => {
   await check(tag + ': Kachel „Parkt bis zum nächsten Zeitplan“, ruhig', t && /Parkt bis zum nächsten Zeitplan/.test(t.state) && !t.active, t);
   await shot('1-kachel');
   let p = await openPop();
-  await check(tag + ': Popup mit Akku und Status', p && /Akku 100/.test(p.txt) && /Verbindung/.test(p.txt) && /Betriebsstunden/.test(p.txt), p && p.txt);
-  await check(tag + ': Tasten Zur Station (aus) · Mähen · Parken', p && p.btns.length === 3 && !p.btns[0].on && p.btns[1].on
-    && /start_mowing/.test(p.btns[1].svc) && p.btns[2].on && /park_until_further_notice/.test(p.btns[2].svc), p && p.btns);
+  const v3 = !!(p && p.moons.length);
+  if (v3) {
+    const m = (n) => p.moons.find((x) => x.name === n);
+    await check(tag + ': Popup mit Akku', /Akku 100/.test(p.txt), p.txt);
+    await check(tag + ': Monde Zur Station (aus) · Mähen · Parken', p.moons.length === 3 && m('Zur Station') && !m('Zur Station').on
+      && m('Mähen') && /start_mowing/.test(m('Mähen').svc) && m('Parken') && /park_until_further_notice/.test(m('Parken').svc), p.moons);
+  } else {
+    await check(tag + ': Popup mit Akku und Status', p && /Akku 100/.test(p.txt) && /Verbindung/.test(p.txt) && /Betriebsstunden/.test(p.txt), p && p.txt);
+    await check(tag + ': Tasten Zur Station (aus) · Mähen · Parken', p && p.btns.length === 3 && !p.btns[0].on && p.btns[1].on
+      && /start_mowing/.test(p.btns[1].svc) && p.btns[2].on && /park_until_further_notice/.test(p.btns[2].svc), p && p.btns);
+  }
   // Verlauf (7 Tage) aus HAs Verlauf: der Testmäher hat Fahrten der letzten Tage (dev/casora_mock/maeher.py).
   const hv = await stable(page, () => {
     const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
@@ -93,7 +105,7 @@ const run = async (view, dark, first) => {
     // Echter Dienst über die Taste im Popup.
     await page.evaluate(() => {
       const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
-      window.__pierce('.hm-b.lg, .hh-pill.pri, .hui-act-p.pri', pop.shadowRoot)[0].click();
+      (window.__pierce('.hui-moon[data-casora-svc*="start_mowing"]', pop.shadowRoot)[0] || window.__pierce('.hm-b.lg, .hh-pill.pri, .hui-act-p.pri', pop.shadowRoot)[0]).click();
     });
     await page.waitForTimeout(1500);
     const st = await page.evaluate((id) => document.querySelector('home-assistant').hass.states[id].state, ID);

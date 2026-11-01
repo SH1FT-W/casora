@@ -8,6 +8,11 @@
 // Wassertemperatur vorn und warnt aus dem Soll-Bereich (temp_min/temp_max).
 // Testbecken A/B aus dev/casora_mock/aquarium.py; die Kacheln entstehen nur im Browser, Dienstaufrufe werden
 // abgefangen (nichts wird in HA geschaltet).
+// v3 (31.10./01.11.2026, popup-richtlinien-v3 §8 and the rework of the aquarium popup): the tank popup is the water
+// temperature as the stage (S7, the target range under it), the light as a row and the lamp's channels as a list with
+// one slider each (one column). The lamp's modes/profiles and the schedule switch („Home Assistant“ / „Programm der
+// Lampe“) are control and stay in the Studio/HA (rework decision, not an issue feature) – no longer checked here.
+// The brightness is the dial of the aquarium light popup (light_stage).
 import { open, casoraDashboards, dashboard, check, need, finish, fakeStates } from './lib.mjs';
 
 const A = { entity: 'sensor.testbecken_a_wassertemperatur', name: 'Testbecken A', variables: { tank_name: 'Testbecken A',
@@ -138,38 +143,23 @@ const drag = async (pg, label, frac) => {
   await openPopup(page);
   let p = await popup(page);
   await need('Becken-Popup B offen', p && p.sliders.length, p);
-  await check('B: Kopf zeigt den Soll-Bereich („Soll-Bereich 24–26 °C“)', p.hero, p.text.slice(0, 200));
+  await check('B: Bühne zeigt den Soll-Bereich („Soll-Bereich 24–26 °C“)', p.hero, p.text.slice(0, 200));
   const labels = p.sliders.map((s) => s.label);
-  await check('B: Helligkeitsregler + 4 Kanalregler aus den number-Entitäten', p.sliders.length === 5
+  await check('B: 4 Kanalregler aus den number-Entitäten', p.sliders.length === 4
     && ['Rot', 'Grün', 'Blau', 'Weiß'].every((n) => labels.includes(n)), labels);
   const rot = p.sliders.find((s) => s.label === 'Rot'), gruen = p.sliders.find((s) => s.label === 'Grün');
-  await check('B: Kanäle zweispaltig (Rot und Grün in einer Reihe)', rot && gruen && Math.abs(rot.box.y - gruen.box.y) < 2 && gruen.box.x > rot.box.x, { rot, gruen });
-  await check('B: Lampen-Modi aus der effect_list (ohne „off“, mit „Ohne Effekt“)', ['Ohne Effekt', 'Sunrise', 'Clouds', 'Moonlight'].every((x) => p.chips.some((c) => c.t === x))
-    && !p.chips.some((c) => c.t === 'off'), p.chips);
-  await check('B: Profil-Optionen übersetzt (Manuell aktiv)', p.chips.some((c) => c.t === 'Manuell' && c.on) && !p.chips.some((c) => c.t === 'manual'), p.chips);
-  await check('B: Felder mit Trefferfläche ≥ 44 px', p.chips.every((c) => c.h >= 44), p.chips.map((c) => c.h));
-  await check('B: Auto-Modus an → „Programm der Lampe“ markiert', p.sel.length === 1 && /Programm der Lampe/.test(p.sel[0]), p.sel);
+  await check('B: Kanäle als Liste (Grün unter Rot, gleich breit)', rot && gruen && gruen.box.y > rot.box.y && Math.abs(rot.box.x - gruen.box.x) < 2
+    && Math.abs(rot.box.w - gruen.box.w) < 2, { rot, gruen });
   await check('B: kein Sprung ins Licht-Popup, keine Zeile „Lichtsteuerung“', !p.jump && !/Lichtsteuerung/.test(p.text), p.jump);
 
   await calls(page);
-  await tapText(page, '.aq-chip', 'Sunrise');
-  let c = await calls(page);
-  await check('B: Modus antippen → light.turn_on effect', c.some((x) => x.domain === 'light' && x.service === 'turn_on' && x.data.effect === 'Sunrise'
-    && [].concat(x.target.entity_id)[0] === 'light.testbecken_b_lampe'), c);
-  await tapText(page, '.aq-chip', 'Automatisch');
-  c = await calls(page);
-  await check('B: Profil antippen → select.select_option', c.some((x) => x.domain === 'select' && x.service === 'select_option' && x.data.option === 'automatic'), c);
   await drag(page, 'Rot', 0.2);
-  c = await calls(page);
+  let c = await calls(page);
   const nv = c.find((x) => x.domain === 'number' && x.service === 'set_value');
   await check('B: Kanalregler Rot → number.set_value am Rot-Kanal (~20)', nv && [].concat(nv.target.entity_id)[0] === 'number.testbecken_b_kanal_red'
     && Math.abs(nv.data.value - 20) <= 3, c);
-  await tapText(page, '.hui-row', 'Home Assistant');
-  c = await calls(page);
-  await check('B: „Home Assistant“ antippen schaltet den Auto-Modus aus', c.some((x) => x.domain === 'switch' && x.service === 'turn_off'
-    && [].concat(x.target.entity_id)[0] === 'switch.testbecken_b_auto_modus'), c);
   p = await popup(page);
-  await check('B: nach dem Bedienen weiter im Becken-Popup', p && /Testbecken B/.test(p.title + p.text) && p.sliders.length === 5, p && p.title);
+  await check('B: nach dem Bedienen weiter im Becken-Popup', p && /Testbecken B/.test(p.title + p.text) && p.sliders.length === 4, p && p.title);
 
   // Becken A: HeliaLux-Muster (RGBW-Leuchte, Schalter manuelle Farbsimulation an).
   await mount(page, A);
@@ -179,28 +169,27 @@ const drag = async (pg, label, frac) => {
   p = await popup(page);
   await need('Becken-Popup A offen', p && p.sliders.length, p);
   await check('A: Kanalregler aus rgbw der Leuchte', ['Rot', 'Grün', 'Blau', 'Weiß'].every((n) => p.sliders.some((s) => s.label === n)), p.sliders.map((s) => s.label));
-  await check('A: manuelle Farbsimulation an → „Home Assistant“ markiert', p.sel.length === 1 && /Home Assistant/.test(p.sel[0]), p.sel);
   await check('A: keine eigenen Farbvorgaben (light_presets) mehr', !/\b(Tag|Abend|Voll)\b/.test(p.text), p.text.slice(0, 300));
-  await check('A: Profil ausgeblendet, solange Home Assistant steuert', !p.chips.some((c) => /Standard|Pflanzen/.test(c.t)), p.chips);
   await calls(page);
   await drag(page, 'Weiß', 0.5);
   c = await calls(page);
   const lw = c.find((x) => x.domain === 'light' && x.data.rgbw_color);
   await check('A: Weiß-Regler → light.turn_on rgbw_color, nur Kanal 4 geändert', lw && lw.data.rgbw_color.slice(0, 3).join() === '140,76,102'
     && Math.abs(lw.data.rgbw_color[3] - 128) <= 8, c);
-  await drag(page, '', 0.3);
-  c = await calls(page);
-  await check('A: Helligkeitsregler → light.turn_on brightness_pct', c.some((x) => x.domain === 'light' && x.service === 'turn_on' && Math.abs((x.data.brightness_pct || 0) - 30) <= 3), c);
-  await tapText(page, '.hui-row', 'Programm der Lampe');
-  c = await calls(page);
-  await check('A: „Programm der Lampe“ antippen schaltet die Farbsimulation aus', c.some((x) => x.domain === 'switch' && x.service === 'turn_off'
-    && [].concat(x.target.entity_id)[0] === 'switch.testbecken_a_manuelle_farbsimulation'), c);
-  // Studio-Wahl dreht die Bedeutung um.
-  await mount(page, { ...A, variables: { ...A.variables, light_schedule_on: 'lamp' } });
+  // Aquarium light popup (light_stage): the lamp's brightness is the dial – keys step it, the service follows.
+  await mount(page, { ...A, variables: { ...A.variables, light_stage: true } });
   await openPopup(page);
-  p = await popup(page);
-  await check('A mit „an = Lampe“ aus dem Studio → „Programm der Lampe“ markiert', p && p.sel.length === 1 && /Programm der Lampe/.test(p.sel[0]), p && p.sel);
-  await check('A mit „an = Lampe“ → Lampen-Profil übersetzt zum Antippen', p && p.chips.some((c) => c.t === 'Standard' && c.on) && p.chips.some((c) => c.t === 'Pflanzen'), p && p.chips);
+  const dl = await page.evaluate(() => { const d = window.__pierce('[data-casora-stage="S1"] .hui-dl[role="slider"]', window.casoraPopup.surface)[0];
+    if (!d) return null; d.focus(); return { label: d.getAttribute('aria-label'), now: Number(d.getAttribute('aria-valuenow')) }; });
+  await check('A als Aquarium-Licht: Helligkeit ist das Rad', dl && /Helligkeit/.test(dl.label || ''), dl);
+  if (dl) {
+    await calls(page);
+    await page.keyboard.press('ArrowDown');
+    await page.waitForTimeout(900);
+    c = await calls(page);
+    await check('A als Aquarium-Licht: Rad → light.turn_on brightness_pct', c.some((x) => x.domain === 'light' && x.service === 'turn_on'
+      && [].concat(x.target.entity_id)[0] === 'light.testbecken_a_lampe' && x.data.brightness_pct != null), c);
+  }
   await page.evaluate(() => { if (window.casoraPopup) window.casoraPopup.close(); });
 }
 
@@ -215,7 +204,7 @@ const drag = async (pg, label, frac) => {
   const p = await popup(page);
   await need('Handy: Becken-Popup offen', p && p.sliders.length, p);
   const r = p.sliders.find((s) => s.label === 'Rot'), g = p.sliders.find((s) => s.label === 'Grün');
-  await check('Handy: Kanäle zweispaltig', r && g && Math.abs(r.box.y - g.box.y) < 2 && r.box.w < 200, { r, g });
+  await check('Handy: Kanäle als Liste (Grün unter Rot)', r && g && g.box.y > r.box.y && Math.abs(r.box.x - g.box.x) < 2, { r, g });
   await check('Handy: Kanalregler im Fenster (nicht abgeschnitten)', p.sliders.every((s) => s.box.x >= 0 && s.box.x + s.box.w <= 393), p.sliders.map((s) => s.box));
 }
 await finish();

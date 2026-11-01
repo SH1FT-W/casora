@@ -32,10 +32,12 @@ for (const lang of [null, 'en']) {
     el.addEventListener('hass-action', (ev) => { const act = ev.detail && ev.detail.config && (ev.detail.config.icon_tap_action || ev.detail.config.tap_action);
       if (act && act.casora_popup && window.casoraPopup) { ev.stopPropagation(); window.casoraPopup.open(act.casora_popup); } }, { capture: true, once: true });
     el._handleAction({ detail: { action: 'tap' } }, { isIcon: false });
-    for (let i = 0; i < 30 && !(window.casoraPopup && window.casoraPopup.surface && window.__pierce('.hui-sg', window.casoraPopup.surface).length); i++) await new Promise((res) => setTimeout(res, 200));
+    for (let i = 0; i < 30 && !(window.casoraPopup && window.casoraPopup.surface && window.__pierce('.hui-sg, .hui-moon', window.casoraPopup.surface).length); i++) await new Promise((res) => setTimeout(res, 200));
     await new Promise((res) => setTimeout(res, 800));
     const s = window.casoraPopup && window.casoraPopup.surface;
-    const segs = s ? window.__pierce('.hui-sg', s).map((e) => e.textContent.replace(/\s+/g, ' ').trim()) : [];
+    // Popup v3: the modes are moons around the dial (name = label, full name in aria-label); speeds stay a segment.
+    const segs = s ? window.__pierce('.hui-sg', s).map((e) => e.textContent.replace(/\s+/g, ' ').trim())
+      .concat(window.__pierce('.hui-moon', s).map((e) => (e.textContent || e.getAttribute('aria-label')).replace(/\s+/g, ' ').trim())) : [];
     if (window.casoraPopup) window.casoraPopup.close();
     el.remove();
     return { fid, segs };

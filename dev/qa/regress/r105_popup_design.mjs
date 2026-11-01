@@ -78,8 +78,11 @@ for (const dark of [false, true]) for (const V of VIEWS) {
       const g = await geo(page);
       const weak = g.finds.filter((f) => f.kind === 'kontrast' && /^Symbol/.test(f.msg) && parseFloat(f.msg.slice(7)) < 1.5);
       await check(`${tag}: DP-25 ${lab} – kein unsichtbares Symbol (< 1,5:1)`, !weak.length, weak);
+      // v3: the state word sits in the frame's status line under the title (.header-status, 14/700),
+      // never a big state headline; the old live-word marker counts as well where it still exists.
       const big = await page.evaluate(() => { const s = window.casoraPopup.surface; const out = [];
-        (function w(n) { for (const c of n.children || []) { if (c.dataset && c.dataset.casoraLive === 'word') out.push(parseFloat(getComputedStyle(c).fontSize)); if (c.shadowRoot) w(c.shadowRoot); w(c); } })(s.shadowRoot || s);
+        const sz = (c) => { const r = c.getBoundingClientRect(); if (r.width > 0 && (c.textContent || '').trim()) out.push(parseFloat(getComputedStyle(c).fontSize)); };
+        (function w(n) { for (const c of n.children || []) { if ((c.dataset && c.dataset.casoraLive === 'word') || (c.classList && c.classList.contains('header-status'))) { sz(c); c.querySelectorAll('b, span').forEach(sz); } if (c.shadowRoot) w(c.shadowRoot); w(c); } })(s.shadowRoot || s);
         return out; });
       await check(`${tag}: DP-11 ${lab} – Zustand im Weich-Kopf (≤ 17 px)`, big.length > 0 && Math.max(...big) <= 17, big);
     }

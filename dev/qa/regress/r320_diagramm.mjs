@@ -77,7 +77,8 @@ const run = async (view, dark, first) => {
     await tapTile(cls);
     return stable(page, popupInfo, null, { max: 15000, quiet: 2000, until: until || ((p) => p && p.paths > 0 && /Durchschnitt/.test(p.txt)) });
   };
-  // Segment antippen (Zeitraum „24h|7d|30d|1y“ oder Form „line|bar“) und warten, bis das Diagramm umgestellt ist.
+  // Segment antippen (Zeitraum „24h|7d|30d|1y“ oder Form „line|bar“) und warten, bis das Diagramm umgestellt ist
+  // (die Monatsstatistik des Jahres kommt manchmal nach der Statistik-Liste: auf gezeichnete Balken warten).
   const seg = async (attr, value, until) => {
     await page.evaluate(([attr, value]) => { const s = window.__pierce('[' + attr + ']').find((x) => new RegExp('\\|' + value + '$').test(x.getAttribute(attr))); s.click(); }, [attr, value]);
     return stable(page, popupInfo, null, { max: 15000, quiet: 2000, until });
@@ -102,7 +103,16 @@ const run = async (view, dark, first) => {
   await check(tag + ': Bereich „Linien“ mit beiden Sensoren', p && /Linien .*RAM/.test(p.txt), p && p.txt);
   await check(tag + ': Statistik „Letzte 24 Std.“ mit Höchster/Tiefster Wert und Durchschnitt',
     p && /Letzte 24 Std\. Höchster Wert .*Tiefster Wert .*Durchschnitt \d+\s?%/.test(p.txt), p && p.txt);
-  await check(tag + ': Kopfzeile mit Wert und Durchschnitt', p && /CPU-Last \d+\s?% · Ø \d+\s?% · 24 Std\./.test(p.txt), p && p.txt);
+  // v3: the value is big on the dial, the average stands in the statistics; the header line never repeats the value
+  // of the stage (§3) and says since when instead.
+  // The frame swaps a repeated value for „Seit …“ shortly after the stage has drawn (_dedupeHead): wait for it.
+  await page.waitForFunction(() => { const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
+    return pop && pop._headerStatus && /^Seit\b/.test(pop._headerStatus.textContent.trim()); }, null, { timeout: 5000 }).catch(() => {});
+  const head = await page.evaluate(() => { const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open')); const l = pop && pop._headerStatus;
+    const n = window.__pierce('.hui-stage .hui-st-n').find((x) => x.getBoundingClientRect().height > 0);
+    return { line: l ? l.textContent.replace(/\s+/g, ' ').trim() : '', value: n ? n.textContent.trim() : '' }; });
+  await check(tag + ': Wert groß im Rad, Durchschnitt in der Statistik', p && /^\d+$/.test(head.value) && /Durchschnitt \d+\s?%/.test(p.txt), { head, txt: p && p.txt });
+  await check(tag + ': Kopfzeile wiederholt den Wert nicht („Seit …“)', /^Seit\b/.test(head.line) && !head.line.includes(head.value + ' %'), head);
   await shot('2-popup');
   if (first) {
     const p7 = await seg('data-casora-cspan', '7d', (x) => x && x.span === '7d' && /Letzte 7 Tage Höchster/.test(x.txt));
@@ -117,7 +127,7 @@ const run = async (view, dark, first) => {
     const ph = await seg('data-casora-cspan', '24h', (x) => x && x.kind === 'bar' && x.span === '24h' && x.paths > 0);
     await check(tag + ': „24 Std.“ bleibt bei Balken – je Stunde', ph && ph.kind === 'bar' && ph.period === 'hour' && ph.paths >= 12 && ph.shapes.join('|') === 'Linie|*Balken|Heatmap', ph);
     await shot('5-popup-balken-24-std');
-    const py = await seg('data-casora-cspan', '1y', (x) => x && x.span === '1y' && x.kind === 'bar' && /Letzte 12 Monate Höchster/.test(x.txt));
+    const py = await seg('data-casora-cspan', '1y', (x) => x && x.span === '1y' && x.kind === 'bar' && x.paths > 0 && /Letzte 12 Monate Höchster/.test(x.txt));
     await check(tag + ': „Jahr“ – Balken je Monat, Statistik „Letzte 12 Monate“ mit Höchster/Tiefster Wert',
       py && py.segs.join('|') === '24 Std.|7 Tage|30 Tage|*Jahr' && py.period === 'month' && py.paths >= 10 && /Letzte 12 Monate Höchster Wert .*Tiefster Wert .*Durchschnitt/.test(py.txt), py);
     await shot('6-popup-balken-jahr');
@@ -133,13 +143,13 @@ const run = async (view, dark, first) => {
     await check(tag + ': Zähler – automatisch Balken je Stunde, 24 Std., „Heute“ in der Statistik',
       pe && pe.shapes.join('|') === 'Linie|*Balken|Heatmap' && pe.kind === 'bar' && pe.period === 'hour' && pe.span === '24h' && pe.paths >= 12 && /Letzte 24 Std\. Heute [\d,.]+\s?kWh/.test(pe.txt), pe);
     await shot('8-energie-balken-24-std');
-    const pe7 = await seg('data-casora-cspan', '7d', (x) => x && x.span === '7d' && /Ø pro Tag/.test(x.txt));
+    const pe7 = await seg('data-casora-cspan', '7d', (x) => x && x.span === '7d' && x.paths > 0 && /Ø pro Tag/.test(x.txt));
     await check(tag + ': Zähler 7 Tage – Balken je Tag, „Heute“, „Letzte 7 Tage“, „Ø pro Tag“',
-      pe7 && pe7.kind === 'bar' && pe7.period === 'day' && pe7.paths >= 6 && /Heute [\d,.]+\s?kWh Letzte 7 Tage [\d,.]+\s?kWh Ø pro Tag/.test(pe7.txt), pe7);
+      pe7 && pe7.kind === 'bar' && pe7.period === 'day' && pe7.paths >= 6 && /Heute [\d,.]+\s?kWh Letzte 7 Tage [\d,.]+\s?kWh .*Ø pro Tag/.test(pe7.txt), pe7);
     await shot('9-energie-balken-7-tage');
-    const pey = await seg('data-casora-cspan', '1y', (x) => x && x.span === '1y' && /Ø pro Monat/.test(x.txt));
+    const pey = await seg('data-casora-cspan', '1y', (x) => x && x.span === '1y' && x.paths > 0 && /Ø pro Monat/.test(x.txt));
     await check(tag + ': Zähler Jahr – Balken je Monat, „Dieser Monat“, „Letzte 12 Monate“, „Ø pro Monat“',
-      pey && pey.kind === 'bar' && pey.period === 'month' && pey.paths >= 10 && /Dieser Monat [\d,.]+\s?kWh Letzte 12 Monate [\d,.]+\s?kWh Ø pro Monat/.test(pey.txt), pey);
+      pey && pey.kind === 'bar' && pey.period === 'month' && pey.paths >= 10 && /Dieser Monat [\d,.]+\s?kWh Letzte 12 Monate [\d,.]+\s?kWh .*Ø pro Monat/.test(pey.txt), pey);
     await shot('10-energie-balken-jahr');
     await close();
     // Nicht verfügbar nur im Browser: Kachel sagt es, das Popup bleibt ruhig.

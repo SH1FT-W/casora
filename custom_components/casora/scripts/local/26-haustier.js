@@ -173,7 +173,7 @@
        service, marked „Nicht verfügbar“ – the line why follows below. */
     if (quick) {
       return UI.quick(keys.map(function (k) {
-        return { icon: k.i, text: k.l, active: !!k.on && !k.off, sub: k.off ? 'Nicht verfügbar' : null,
+        return { icon: k.i, text: k.l, active: !!k.on && !k.off, sub: k.off ? 'Nicht verfügbar' : null, dis: !!k.off,
           svc: k.off ? null : { domain: 'switch', service: 'toggle', data: {}, target: { entity_id: k.id } } };
       })) + why;
     }
@@ -264,8 +264,12 @@
           return { label: lbl[1], value: x.replace(' ' + T('von zuhause'), '') };
         });
         // Dial (richtlinien §4.8): the tracker's battery as the ring, its switches as moons.
+        // A switch the tracker made unavailable (power saving) is a greyed moon; the line why stays under the dial (#25).
+        var unav = !s.dead && [c.live, c.buzzer, c.led].some(function (id) { return id && (!states[id] || states[id].state === 'unavailable'); });
+        var whyP = unav ? '<div style="margin-top:10px;text-align:center;font-size:13px;line-height:1.35;color:' + esc((UI.tokens || {}).ink3) + ';">'
+          + esc(T(s.saving ? 'Energiesparen ist an: der Tracker reagiert erst wieder, wenn er unterwegs ist.' : 'Der Tracker ist gerade nicht erreichbar.')) + '</div>' : '';
         return UI.stage('status', { tone: s.dead ? 'off' : 'good', icon: 'mdi:paw', text: s.place, facts: factsP, state: s.dead ? 'na' : null,
-          progress: s.battery != null ? s.battery / 100 : null, moons: s.dead ? null : function () { return buttons(s, c, UI, states, true); } });
+          progress: s.battery != null ? s.battery / 100 : null, moons: s.dead ? null : function () { return buttons(s, c, UI, states, true); }, extra: whyP });
       }
       return UI.line(s.place, rest) + (s.dead ? '' : buttons(s, c, UI, states));
     }

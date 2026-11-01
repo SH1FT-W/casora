@@ -9,13 +9,14 @@
 // Expected with the test dishwasher „Testspüler“ (dev/casora_mock/dishwasher.py; service calls are caught in the
 // browser, the answers pushed with fakeStates – nothing goes to HA), desktop 1440 dark and phone 393 light:
 //   1. Program as one row that opens the list (8 programs); choosing one calls select_option and closes the list.
-//   2. „Start“ on the right, its row level with the program row (desktop); headings „Programm“/„Start“ level.
-//   3. Options Hygiene+ and Intensivzone (state shown) with the others, under the program, rows in line.
+//   2. Popup v3 (§4 S4, §4.8): the start is the dial's main moon „Start“ (above the program); the stage says the
+//      program and, with a start time, „Um 22:30 starten“.
+//   3. Options Hygiene+ and Intensivzone (state shown) with the others, rows in line.
 //   4. Start time as a clock time: 22:30 → number.set_value with the seconds until then (step 60), the start row
 //      then says „Um 22:30 starten“ (or „Morgen um …“), the note „Startet … um 22:30 Uhr“; confirming starts with
 //      home_connect.start_selected_program, the delay counted from now.
-//   5. „Mehr“ has „Weitere Einstellungen“, which opens the device page (manufacturer Siemens, integration).
-//   6. Remote start off on the appliance: no start, „Fernstart am Gerät nicht erlaubt“.
+//   5. v3 §8: no „Weitere Einstellungen“ / „Mehr“ any more (the device page was reached through it; that went with it).
+//   6. Remote start off on the appliance: no start moon, the stage says „Fernstart am Gerät nicht erlaubt“.
 // DW77_BILDER=<folder>: pictures of tile and popup (desktop dark, phone light).
 import { open, casoraDashboards, dashboard, check, need, finish, usePage, fakeStates } from './lib.mjs';
 
@@ -84,13 +85,15 @@ const look = (page) => page.evaluate(() => {
     const sw = e.querySelector('[role=switch]');
     return { t: txt(e), sw: sw ? sw.getAttribute('aria-checked') : null, ...box(e) };
   });
-  // Blueprint v2: the start is the action pill on top (UI.actions), not a row.
-  const acts = window.__pierce('.hui-act-p', s).filter(vis).map((e) => ({ t: txt(e), pri: e.classList.contains('pri'), dis: e.classList.contains('dis'), ...box(e) }));
+  // v3: the start is the dial's main moon (class go, its name in aria-label); the stage text says what and when.
+  const acts = window.__pierce('.hui-stage .hui-moon.go', s).filter(vis).map((e) => ({ t: e.getAttribute('aria-label') || txt(e), pri: true,
+    go: e.hasAttribute('data-dish-go'), dis: e.classList.contains('dis'), ...box(e) }));
+  const stage = txt(window.__pierce('.hui-stage', s).filter(vis)[0]);
   const pick = window.__pierce('.dw-pick', s)[0];
   const heads = window.__pierce('div', s).filter((e) => vis(e) && e.children.length === 0 && /^(Programm|Start|Optionen|Startzeit)$/.test(txt(e))
     && !e.closest('.hui-row')).map((e) => ({ t: txt(e), ...box(e) }));
   const inp = window.__pierce('input.dw-time-in', s)[0];
-  return { rows, acts, heads, pick: pick ? { open: pick.classList.contains('open'), list: window.__pierce('.dw-pbd .hui-row', pick).filter(vis).length } : null,
+  return { rows, acts, stage, heads, pick: pick ? { open: pick.classList.contains('open'), list: window.__pierce('.dw-pbd .hui-row', pick).filter(vis).length } : null,
     input: inp ? { value: inp.value, ...box(inp) } : null, text: txt(s) };
 });
 
@@ -157,9 +160,9 @@ for (const [tag, opts, url, name] of VIEWS) {
   await check(tag + ': Programm als eine Zeile mit Auswahl', !!(L.pick && !L.pick.open && L.pick.list === 0), L.pick);
   const progRow = L.rows.find((r) => /^Eco 50°/.test(r.t));
   await check(tag + ': gewähltes Programm „Eco 50°“ steht in der Zeile', !!progRow, L.rows.map((r) => r.t));
-  // 2. Blueprint v2 (rule 4): „Jetzt starten · Eco 50°“ is the main action on top, filled in the device colour.
-  const startAct = L.acts.find((a) => /^Jetzt starten/.test(a.t));
-  await check(tag + ': Hauptaktion „Jetzt starten · Eco 50°“', !!startAct && startAct.pri && /Eco 50°/.test(startAct.t), L.acts);
+  // 2. v3: „Start“ is the dial's main moon (it starts the programme the stage names), above the program row.
+  const startAct = L.acts.find((a) => /^Start$/.test(a.t));
+  await check(tag + ': Hauptaktion: Mond „Start“ für „Eco 50°“', !!startAct && startAct.go && /Eco 50°/.test(L.stage), { acts: L.acts, stage: L.stage });
   await check(tag + ': Hauptaktion über dem Programm', !!startAct && !!progRow && startAct.y < progRow.y, { act: startAct, prog: progRow });
   await check(tag + ': Überschrift „Startzeit“', L.heads.some((h) => h.t === 'Startzeit'), L.heads);
   // 3. Options.
@@ -168,8 +171,9 @@ for (const [tag, opts, url, name] of VIEWS) {
   await check(tag + ': Option Hygiene+ (Schalter aus)', !!hyg && hyg.sw === 'false', L.rows.map((r) => [r.t, r.sw]));
   await check(tag + ': Option Intensivzone (Schalter an)', !!iz && iz.sw === 'true', L.rows.map((r) => [r.t, r.sw]));
   const optRows = L.rows.filter((r) => /^(Extra Trocken|Halbe Ladung|Hygiene\+|Intensivzone)/.test(r.t));
-  await check(tag + ': Optionen in einer Flucht mit dem Programm', optRows.length === 4 && progRow
-    && optRows.every((r) => Math.abs(r.x - progRow.x) <= 1 && Math.abs(r.w - progRow.w) <= 1), optRows);
+  // v3: the program sits under the dial (left), the options in the list on the right – all four in one line.
+  await check(tag + ': Optionen in einer Flucht', optRows.length === 4
+    && optRows.every((r) => Math.abs(r.x - optRows[0].x) <= 1 && Math.abs(r.w - optRows[0].w) <= 1), optRows);
   await check(tag + ': Uhrzeit-Feld für die Startzeit', !!L.input, L.input);
 
   // 1b. Open the list, choose a program.
@@ -203,13 +207,12 @@ for (const [tag, opts, url, name] of VIEWS) {
   if (set) await fake({ [NUM]: { state: String(set.data.value) } });
   await wait(page, 900);
   L = await look(page);
-  const sr = L.acts.find((a) => /starten/.test(a.t) && /22:30/.test(a.t));
-  await check(tag + ': Hauptaktion „Um 22:30 starten“', !!sr && /^(Morgen u|U)m 22:30 starten/.test(sr.t), L.acts.map((a) => a.t));
+  await check(tag + ': Bühne „Um 22:30 starten“ mit dem Mond „Start“', /(Morgen u|U)m 22:30 starten/.test(L.stage) && L.acts.some((a) => /^Start$/.test(a.t)), { stage: L.stage, acts: L.acts.map((a) => a.t) });
   await check(tag + ': Hinweis „Startet … um 22:30 Uhr“', L.rows.some((r) => /^Uhrzeit\s*Startet (morgen )?um 22:30 Uhr/.test(r.t)), L.rows.map((r) => r.t));
   await check(tag + ': Feld zeigt 22:30', !!L.input && L.input.value === '22:30', L.input);
   await pic(page, name + '-startzeit');
   // Confirm the start (the pill asks „Starten?“): the action with the delay counted from now.
-  await tap(page, mobile, '.hui-act-p', /^(Morgen u|U)m 22:30 starten/);
+  await tap(page, mobile, '.hui-stage .hui-moon.go', /^Start$/);
   await wait(page, 600);
   await page.evaluate(() => { const a = document.querySelector('.casora-askfirst'); const y = a && a.shadowRoot && a.shadowRoot.querySelector('.yes'); if (y) y.click(); });
   await wait(page, 800);
@@ -223,23 +226,13 @@ for (const [tag, opts, url, name] of VIEWS) {
   await fake({ [REMOTE]: { state: 'off' }, [NUM]: { state: '0' } });
   await wait(page, 900);
   L = await look(page);
-  await check(tag + ': Fernstart aus → kein Start', L.acts.some((a) => a.dis && /^Jetzt starten\s*· Fernstart am Gerät nicht erlaubt/.test(a.t)), L.acts);
+  await check(tag + ': Fernstart aus → kein Start', !L.acts.length && /Jetzt starten\s*(· )?Fernstart am Gerät nicht erlaubt/.test(L.stage), { acts: L.acts, stage: L.stage });
   await fake({ [REMOTE]: { state: 'on' } });
   await wait(page, 600);
 
-  // 5. „Weitere Einstellungen“ as the last section (blueprint v2, no longer inside „Mehr“) → device page.
+  // 5. v3 §8: no „Weitere Einstellungen“ and no „Mehr“ in the popup.
   L = await look(page);
-  await check(tag + ': „Weitere Einstellungen“ als letzter Abschnitt', L.rows.some((r) => /^Weitere Einstellungen/.test(r.t)), L.rows.map((r) => r.t));
-  await page.evaluate(() => { const s = window.casoraPopup.surface; const r = window.__pierce('.hui-row', s).find((e) => /^Weitere Einstellungen/.test(e.textContent.trim()));
-    if (r) r.scrollIntoView({ block: 'center', behavior: 'instant' }); });
-  await wait(page, 300);
-  await pic(page, name + '-mehr');
-  await tap(page, mobile, '.hui-row', /^Weitere Einstellungen/);
-  await wait(page, 1500);
-  L = await look(page);
-  await check(tag + ': Geräteseite mit Hersteller und Integration', !!L && L.rows.some((r) => /^Hersteller\s*Siemens/.test(r.t))
-    && L.rows.some((r) => /^Integration/.test(r.t)), L && L.rows.map((r) => r.t));
-  await pic(page, name + '-geraet');
+  await check(tag + ': kein „Weitere Einstellungen“ / „Mehr“ (v3 §8)', !L.rows.some((r) => /^(Weitere Einstellungen|Mehr)\b/.test(r.t)), L.rows.map((r) => r.t));
 
   await check(tag + ': keine Fehler in der Konsole', errs.length === 0, errs);
   await page.evaluate(() => { if (window.casoraPopup) window.casoraPopup.close(); if (window.__dw77el) window.__dw77el.remove(); });

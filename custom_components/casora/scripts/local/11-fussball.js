@@ -748,7 +748,9 @@
     X.hidden = false;
     lines.forEach(function (n) { n.hidden = false; });
     var lb = L.getBoundingClientRect(), rb = R.getBoundingClientRect();
-    if (K.full || rb.left < lb.right || Math.abs(rb.top - lb.top) > 2) return;
+    // Side by side: the form starts beside the table. In v3 the match box stands above the form in the right column
+    // (the table is the stage), so the form's top is lower than the table's – only „beside, overlapping“ counts.
+    if (K.full || rb.left < lb.right || rb.top < lb.top - 2 || rb.top > lb.bottom) return;
     var rows = L.querySelectorAll('.cfb-r:not(.h)'), last = rows[rows.length - 1];
     var target = (last || L).getBoundingClientRect().bottom, best = -1, bestD = Infinity;
     for (var n = lines.length; n >= 2; n--) {

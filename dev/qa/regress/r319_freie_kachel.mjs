@@ -9,7 +9,7 @@
 // Expected on desktop and phone (light + dark, theme Casora):
 //   - tile: subline "An"/"Aus" like the other tiles, the entity-less tile shows its name with no state
 //   - tap: popup opens with the state line, a casora-chart, no own Aus/An (the header switch, blueprint v2), "Werte" with 4 rows
-//     and "Weitere Einstellungen"; desktop two columns (controls left of values), phone one column
+//     (v3: no "Weitere Einstellungen"); desktop two columns (stage + history left, values right), phone one column
 //   - the entity-less tile opens a popup that says "Kein Gerät gewählt" – never an empty popup
 // Pictures: CASORA_FREI_BILDER=<folder> stores tile, dashboard and popup pictures per view.
 import fs from 'node:fs';
@@ -110,7 +110,8 @@ const POPUP = () => {
   const rows = window.__pierce('.hui-srow').filter((r) => r.getBoundingClientRect().height > 0);
   const vals = box('.hui-slbl', /^Werte$/), ctl = box('.hui-slbl', /^(Bedienung|Schalten)$/);
   const surface = window.casoraPopup && window.casoraPopup.surface;
-  return { line: line.replace(/\s+/g, ' ').trim(), labels: txt('.hui-slbl'), segs, rows: rows.length,
+  const stage = window.__pierce('.hui-stage').find((n) => n.getBoundingClientRect().height > 0);
+  return { line: line.replace(/\s+/g, ' ').trim(), stage: stage ? stage.textContent.replace(/\s+/g, ' ').trim() : '', labels: txt('.hui-slbl'), segs, rows: rows.length,
     chart: window.__pierce('casora-chart').some((n) => n.getBoundingClientRect().height > 0),
     rowText: rows.map((r) => r.textContent.replace(/\s+/g, ' ').trim()),
     vals: vals ? { x: vals.left, y: vals.top } : null, ctl: ctl ? { x: ctl.left, y: ctl.top } : null,
@@ -169,15 +170,19 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
   const at = async (which) => { const t = (await page.evaluate(TILES, which)).find((x) => x.entity === which); await page.waitForTimeout(300); return t || (await page.evaluate(TILES, which)).find((x) => x.entity === which); };
   await tap(await at(sw.entity_id));
   await need(tag + ': popup opens', await offen());
-  const p = await stable(page, POPUP, null, { until: (v) => v && v.chart && v.rows >= 5 });
-  await check(tag + ': state line „' + WANT + '“', new RegExp('^' + WANT + '\\b').test(p.line), p.line);
+  const p = await stable(page, POPUP, null, { until: (v) => v && v.chart && v.rows >= 4 });
+  // v3 (§3): the stage says the state word, the header line says something else (since when), never the same word twice.
+  await check(tag + ': stage says „' + WANT + '“', p.stage.startsWith(WANT), p.stage);
+  await check(tag + ': state line does not repeat „' + WANT + '“ (since when instead)', p.line && !new RegExp('^' + WANT + '\\b').test(p.line) && /^Seit\b/.test(p.line), p.line);
   await check(tag + ': history chart', p.chart, p.chart);
   await check(tag + ': no own Aus/An next to the header switch (blueprint v2, decision 2)', !p.ctl && !p.segs.includes('Aus') && !p.segs.includes('An'), p.segs);
-  await check(tag + ': „Werte“ with 4 rows and „Weitere Einstellungen“', p.vals && p.rows === 5 && p.rowText.some((t) => /Weitere Einstellungen/.test(t)), p.rowText);
+  // v3 §8: no „Weitere Einstellungen“ any more – „Werte“ holds just the 4 picked rows.
+  await check(tag + ': „Werte“ with 4 rows, no „Weitere Einstellungen“', p.vals && p.rows === 4 && !p.rowText.some((t) => /Weitere Einstellungen|^Mehr/.test(t)), p.rowText);
   await check(tag + ': own label „Innen“ with the temperature', p.rowText.some((t) => /^Innen/.test(t) && /°C/.test(t)), p.rowText);
   await check(tag + ': contact row in words (Geöffnet/Geschlossen), not on/off', p.rowText.some((t) => /Geöffnet|Geschlossen/.test(t)) && !p.rowText.some((t) => /\b(on|off)$/.test(t)), p.rowText);
-  // Without controls of its own the popup is one column, 552 wide on the desktop (blueprint v2, rule 11).
-  if (!mobile) await check(tag + ': desktop one column, 552 wide', p.width && p.width <= 560, { width: p.width });
+  // v3 §2: stage + history left, the list „Werte“ right – 900 wide on the desktop, one column on the phone.
+  if (!mobile) await check(tag + ': desktop two columns, 900 wide, „Werte“ right of the stage', p.width > 860 && p.width <= 910 && p.vals && p.vals.x > 600, { width: p.width, vals: p.vals });
+  else await check(tag + ': phone one column (Werte under the stage)', p.vals && p.vals.x < 100, p.vals);
   if (BILDER) { await page.waitForTimeout(600); await page.screenshot({ path: file('popup') }); }
   await close();
 

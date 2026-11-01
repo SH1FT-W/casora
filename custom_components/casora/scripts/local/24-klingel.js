@@ -774,6 +774,9 @@
     +   'font-family:var(--primary-font-family, system-ui, sans-serif);overscroll-behavior:contain;touch-action:none;}'
     + '.st.big::backdrop{background:transparent;}'
     + '.in{width:100%;}'
+    // Popup v3 (stage S5 over both columns, richtlinien §11): in the popup the picture leaves room for the head and the
+    // keys under it (Mithören, Sprechen) – a 4:3 picture 850 wide pushed them below the window on a tablet.
+    + '.st:not(.big) .in{width:min(100%, calc((100vh - 360px) * var(--ar, 1.3333)));width:min(100%, calc((100dvh - 360px) * var(--ar, 1.3333)));margin:0 auto;}'
     + '.st.big .in{width:min(100%, 1600px, calc((100vh - var(--kl-reserve)) * var(--ar, 1.3333)));'
     +   'width:min(100%, 1600px, calc((100dvh - var(--kl-reserve)) * var(--ar, 1.3333)));'
     +   'animation:kl-big-in var(--casora-dur-enter, 320ms) var(--casora-ease-enter, cubic-bezier(.2,.8,.3,1)) both;}'

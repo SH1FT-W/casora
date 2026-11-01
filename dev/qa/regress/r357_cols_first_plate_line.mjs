@@ -4,6 +4,11 @@
 // Prod: climate badge popup „Klima“ – left „Messwerte“ with rows, right only „Mehr · Lüftungs-Coach“ without a
 // heading; „Mehr“ sat about 13 px lower than „Temperatur“. Checks every marked column pair (colsMark) of the
 // climate badge and humidifier popups on desktop 1440: tops of the first plates equal (±1 px).
+// v3 (01.11.2026): the climate badge popup is one column now (dial + history, nothing left for the right, §2), so
+// it has no pair any more. The test checks every marked pair of a set of two-column popups (lock, plant,
+// humidifier, thermostat, air purifier, climate badge) and needs at least one. A column that starts with the
+// stage (dial) lines its stage up with the other column's first block (heading or plate, „Die Spalten beginnen
+// auf derselben Höhe“); two list columns keep the old rule (first plates on one line).
 import { open, casoraDashboards, dashboard, check, need, finish, usePage, shot } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -20,9 +25,14 @@ const cases = await page.evaluate(() => {
   return [
     { name: 'Klima-Badge', tpl: 'casora_badge_temp', eid: temp },
     { name: 'Luftbefeuchter', tpl: 'casora_humidifier', eid: k.find((x) => x.startsWith('humidifier.')) },
+    { name: 'Schloss', tpl: 'casora_lock', eid: k.find((x) => x.startsWith('lock.')) },
+    { name: 'Pflanze', tpl: 'casora_popup_plant', eid: k.find((x) => x.startsWith('plant.')) },
+    { name: 'Thermostat', tpl: 'casora_thermostat', eid: k.find((x) => x.startsWith('climate.') && !(st[x].attributes.member_entities || []).length) },
+    { name: 'Luftreiniger', tpl: 'casora_air_purifier', eid: k.find((x) => x.startsWith('fan.')) },
   ].filter((c) => c.eid);
 });
-await need('Klima-Badge im Testhaus', cases.find((c) => c.name === 'Klima-Badge'), cases);
+await need('Popups im Testhaus', cases.length >= 3, cases);
+let found = 0;
 for (const c of cases) {
   const r = await page.evaluate(async (c) => {
     const ha = document.querySelector('home-assistant');
@@ -37,6 +47,7 @@ for (const c of cases) {
     const s = window.casoraPopup && window.casoraPopup.surface;
     const deep = (root, sel, out) => { root.querySelectorAll(sel).forEach((n) => out.push(n)); root.querySelectorAll('*').forEach((n) => { if (n.shadowRoot) deep(n.shadowRoot, sel, out); }); return out; };
     const BODY = '.hui-plate,.hui-srow,.hui-mhd,.hui-acts,.hui-kc,.hui-seg,[data-casora-body]';
+    const STARTS = '.hui-stage,.hui-slbl,' + BODY;
     const pairs = [];
     if (s) deep(s, 'style', []).forEach((stl) => {
       const re = /\/\*casora-cols:([\w-]+),([\w-]+)\*\//g; let m;
@@ -46,18 +57,23 @@ for (const c of cases) {
         const first = (el) => { let best = null, lbl = ''; deep(el, BODY, []).forEach((n) => { if (n.closest && n.closest('.hui-mbd')) return; const q = n.getBoundingClientRect(); if (q.width > 2 && q.height > 2 && (best === null || q.top < best)) { best = q.top; lbl = n.textContent.replace(/\s+/g, ' ').trim().slice(0, 30); } }); return { top: best, lbl }; };
         const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
         if (Math.abs(ra.top - rb.top) > 80 || ra.width < 50 || rb.width < 50) continue; // stacked, not side by side
-        pairs.push({ a: first(a), b: first(b) });
+        // A column with the stage: the stage against the other column's first block (heading or plate).
+        const stageCol = deep(a, '.hui-stage', []).concat(deep(b, '.hui-stage', [])).some((n) => n.getBoundingClientRect().width > 2);
+        const top = (el) => { let best = null, lbl = ''; deep(el, STARTS, []).forEach((n) => { const q = n.getBoundingClientRect(); if (q.width > 2 && q.height > 2 && (best === null || q.top < best)) { best = q.top; lbl = n.textContent.replace(/\s+/g, ' ').trim().slice(0, 30); } }); return { top: best, lbl }; };
+        pairs.push(stageCol ? { stage: true, a: top(a), b: top(b) } : { a: first(a), b: first(b) });
       }
     });
     window.__r357el = el;
     return { pairs };
   }, c);
   await shot(c.name + ' Desktop');
-  if (r.err || !r.pairs.length) { await check(c.name + ': zweispaltiges Popup gefunden', c.name !== 'Klima-Badge' && !r.err ? true : false, r); }
+  if (r.err) await check(c.name + ': Popup geöffnet', false, r);
   for (const p of r.pairs || []) {
     if (p.a.top == null || p.b.top == null) continue;
-    await check(c.name + ': erste Platten beider Spalten auf einer Linie (' + p.a.lbl + ' | ' + p.b.lbl + ')', Math.abs(p.a.top - p.b.top) <= 1, p);
+    found++;
+    await check(c.name + (p.stage ? ': Bühne und rechte Spalte beginnen auf einer Linie (' : ': erste Platten beider Spalten auf einer Linie (') + p.a.lbl + ' | ' + p.b.lbl + ')', Math.abs(p.a.top - p.b.top) <= 1, p);
   }
   await page.evaluate(async () => { if (window.casoraPopup) window.casoraPopup.close(); if (window.__r357el) window.__r357el.remove(); await new Promise((res) => setTimeout(res, 600)); });
 }
+await check('mindestens ein zweispaltiges Popup mit markiertem Spaltenpaar geprüft (' + found + ')', found >= 1);
 await finish();

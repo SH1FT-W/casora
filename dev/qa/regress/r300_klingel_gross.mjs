@@ -61,7 +61,9 @@ await check('Groß-Knopf: 44 px Trefferfläche, oben rechts im Bild', l && l.fsR
 const small = l && l.fr;
 await click(l.fsRect);
 l = await live();
-await check('Groß: oberste Ebene, Bild deutlich breiter, × sichtbar', l && l.big && l.top !== false && l.xShown && l.fr.w > small.w * 1.5, l && { big: l.big, top: l.top, w: l.fr.w, vorher: small && small.w });
+// Popup v3: the picture is the stage over both columns (already ~790 wide here), so „groß“ means larger than in the
+// popup and filling the window (at least two thirds of its width), not 1.5 times the old small picture.
+await check('Groß: oberste Ebene, Bild größer und fensterfüllend, × sichtbar', l && l.big && l.top !== false && l.xShown && l.fr.w > small.w + 20 && l.fr.w >= l.vw * 0.66, l && { big: l.big, top: l.top, w: l.fr.w, vorher: small && small.w, vw: l.vw });
 await page.keyboard.press('Escape');
 await page.waitForTimeout(500);
 l = await live();

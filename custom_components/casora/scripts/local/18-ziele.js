@@ -503,7 +503,12 @@
       if (window._hpStageChart) window._hpStageChart(el, 'cz:' + id + '|' + span);
       var u6 = String((st.attributes || {}).unit_of_measurement || ''), v6 = Z.stateWord(hass, id, st.state);
       var cut6 = !bad(st.state) && u6 && v6.slice(-u6.length - 1) === ' ' + u6, i6 = 0, l6 = [['24h', '24 Std.'], ['7d', '7 Tage'], ['30d', '30 Tage']];
-      return UI.stage('chart', { value: cut6 ? v6.slice(0, -u6.length - 1) : v6, unit: cut6 ? u6 : '', word: bad(st.state),
+      // button-card finds the entity id in this template and redraws the stage on every new value, which mounted the
+      // chart again each time (r303, „nichts springt“). The number follows live (data-hp-live), so the stage keeps the
+      // value it was drawn with until the unit or the state kind changes – the same HTML, no redraw.
+      var val6 = cut6 ? v6.slice(0, -u6.length - 1) : v6, sk6 = [span, u6, bad(st.state) ? st.state : 'n'].join('|');
+      if (el) { if (!el._casoraS6 || el._casoraS6.k !== sk6) el._casoraS6 = { k: sk6, v: val6 }; val6 = el._casoraS6.v; }
+      return UI.stage('chart', { value: val6, unit: cut6 ? u6 : '', word: bad(st.state),
         read: id, live: bad(st.state) ? null : id, liveDigits: bad(st.state) ? null : Z.digits(hass, id, parseFloat(st.state)), trend: '', state: st.state === 'unavailable' ? 'na' : null,
         chart: '<div class="hp-chart-slot" style="min-height:' + (window.innerWidth <= 760 ? 140 : 160) + 'px;pointer-events:auto;"></div>',
         extra: UI.segments(l6.map(function (x) { return { label: x[1], active: x[0] === span }; }), null)

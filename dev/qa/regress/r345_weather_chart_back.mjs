@@ -5,8 +5,9 @@
 // weather.testwetter, dev/casora_mock/wetter.py: Temperatur + Gefühlt).
 //   #67: pointing at the chart showed only the first curve's value. Expected: every legend entry shows its own
 //        curve's value at that time while pointing, and the values go away when the pointer leaves.
-//   #68: tapping a value row (e.g. "Gefühlt") opens its own popup with ‹; back in the weather popup the chart area
-//        stayed empty. Expected: after ‹ the chart is drawn again (curves and legend).
+//   #68: tapping a value row (e.g. "Gefühlt") opened its own popup with ‹; back in the weather popup the chart area
+//        stayed empty. Expected: after ‹ the chart is drawn again (curves and legend). v3 has no such rows; the sub
+//        page is opened through casoraPopup.sub like every „… ›“ row.
 // Desktop 1440 dark.
 import { open, casoraDashboards, dashboard, check, need, finish, usePage } from './lib.mjs';
 
@@ -56,6 +57,12 @@ await need('Diagramm mit zwei Kurven', before && before.lines >= 2, before);
 
 // #67: point at the middle of the chart.
 const hover = async () => {
+  // The frame puts a freshly drawn popup back to the top for a moment (casora-core: 0/120/400 ms after a render,
+  // unless the user scrolled): scroll the chart in, wait, and scroll again so the pointer lands on it.
+  for (let k = 0; k < 2; k++) {
+    await page.evaluate(() => window.__pierce('casora-chart', window.casoraPopup.surface)[0].shadowRoot.querySelector('svg').scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await page.waitForTimeout(600);
+  }
   const box = await page.evaluate(() => {
     const c = window.__pierce('casora-chart', window.casoraPopup.surface)[0];
     const svg = c.shadowRoot.querySelector('svg'); svg.scrollIntoView({ block: 'center', behavior: 'instant' });
@@ -72,29 +79,28 @@ await page.waitForTimeout(250);
 const gone = await page.evaluate(() => [...window.__pierce('casora-chart', window.casoraPopup.surface)[0].shadowRoot.querySelectorAll('.lg .lv')].map((b) => b.textContent));
 await check('#67: Werte verschwinden beim Verlassen', gone.every((v) => v === ''), gone);
 
-// #68: tap the row "Gefühlt", then ‹.
+// #68: a sub page of the weather popup, then ‹. Popup v3 has no value rows that open a page of their own any more
+// (§8: details are rain, wind and UV only), so the sub page is opened the way every popup row does it
+// (casoraPopup.sub, as „… ›“ rows call it); the chart must be drawn again after ‹.
 const tapped = await page.evaluate(async () => {
-  const S = window.casoraPopup.surface;
-  const row = window.__pierce('.hui-row', S).find((e) => /^\s*Gefühlt/.test(e.textContent));
-  if (!row) return 'no row';
-  row.scrollIntoView({ block: 'center', behavior: 'instant' });
-  row.click();
+  window.casoraPopup.sub({ title: 'Gefühlt', content: { type: 'custom:button-card', name: 'QA', show_icon: false } });
   for (let i = 0; i < 30; i++) {
     const el = window.casoraPopup.element, b = el && el._headerBack;
     if (b && !b.hidden && /Gefühlt/.test(el._headerTitle.textContent)) return 'ok';
     await new Promise((res) => setTimeout(res, 150));
   }
-  return 'no detail popup: ' + (window.casoraPopup.element && window.casoraPopup.element._headerTitle.textContent);
+  return 'no sub page: ' + (window.casoraPopup.element && window.casoraPopup.element._headerTitle.textContent);
 });
-await need('Zeile „Gefühlt“ öffnet ihr Popup mit ‹', tapped === 'ok', tapped);
+await need('Unterseite mit ‹ geöffnet', tapped === 'ok', tapped);
 await page.waitForTimeout(600);
 await page.evaluate(() => window.casoraPopup.element._headerBack.click());
 await page.waitForTimeout(400);
 const after = await waitChart();
 await check('#68: nach ‹ ist das Diagramm wieder gezeichnet', after && after.lines >= 2 && after.h > 60, { before, after });
 await check('#68: Legende wieder da', after && after.legend.join('|') === before.legend.join('|'), { before: before.legend, after: after && after.legend });
-const hilo = await page.evaluate(() => window.__pierce('[class*="hw-slot-hilo-"]', window.casoraPopup.surface).map((e) => e.textContent.trim()));
-await check('#68: Hoch/Tief in der Kopfzeile auch nach ‹', hilo.length && hilo.every((t) => /^H .+ · T /.test(t)), hilo);
+// v3: today's low and high are the ends of the wheel („T 5°“, „H 11°“) – from the forecast, there again after ‹.
+const hilo = await page.evaluate(() => window.__pierce('.hui-stage', window.casoraPopup.surface).map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
+await check('#68: Tief/Hoch am Rad auch nach ‹', hilo.length && hilo.some((t) => /T -?\d+°/.test(t) && /H -?\d+°/.test(t)), hilo);
 const vals2 = await hover();
 await check('#67/#68: Zeigen geht auch nach ‹', vals2.length >= 2 && vals2.every((v) => /\d/.test(v)), vals2);
 await check('keine Seitenfehler', !errs.length, errs);

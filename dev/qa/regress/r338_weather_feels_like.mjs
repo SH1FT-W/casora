@@ -8,10 +8,12 @@
 // Expected, desktop 1440 dark and phone 393 (WebKit):
 //   1. Default: the chart draws two curves at once (no switch) with a legend "Temperatur"/"Gefühlt", the felt one
 //      from the station's apparent_temperature sensor, both with history.
-//   2. "Details" lists Gefühlt first, Taupunkt after Luftfeuchtigkeit, Windböen after Wind, then Bewölkung, both rain
-//      chances, Niederschlag and Sonneneinstrahlung; no "undefined"/"NaN", no console errors.
+//   2. Popup v3 (popup-richtlinien-v3 §8, #56): „gefühlt N°“ in the middle of the wheel whenever the source has a felt
+//      value; "Details" only rain, wind and UV (the further values stay in the Studio's chart choice, no extra rows);
+//      no "undefined"/"NaN", no console errors.
 //   3. Older Studio settings "Felt temperature" and "Extra values" off (weather_feels/weather_extras false): one
-//      curve, no extra rows. Curves of other units (humidity, gusts) get their own chart behind the switch.
+//      curve, „gefühlt“ stays in the wheel (no switch for it, §8). Curves of other units (humidity, gusts) get their
+//      own chart behind the switch.
 //   4. A weather entity without these sources keeps its popup (no felt curve, no extra rows).
 //   5. Studio, Weather: "In the chart" offers the station's values; picking "Taupunkt" and removing the row
 //      "Bewölkung", then saving: the real weather card of the desktop dashboard and of the phone dashboard
@@ -134,32 +136,30 @@ for (const [tag, opts, url] of VIEWS) {
   await check(tag + ': Legende Temperatur/Gefühlt', c.legend.join('|') === 'Temperatur|Gefühlt', c.legend);
   await check(tag + ': beide Kurven mit Verlauf (viele Punkte)', c.lines.every((n) => n > 10), c.lines);
   const rows = r.rows;
-  await check(tag + ': Gefühlt als erste Zeile', label(rows, 'Gefühlt') === 0, rows);
-  await check(tag + ': Taupunkt nach Luftfeuchtigkeit', label(rows, 'Taupunkt') === label(rows, 'Luftfeuchtigkeit') + 1 && label(rows, 'Taupunkt') > 0, rows);
-  await check(tag + ': Windböen nach Wind', label(rows, 'Windböen') === label(rows, 'Wind') + 1 && label(rows, 'Windböen') > 0, rows);
-  for (const w of ['Bewölkung', 'Regenwahrscheinlichkeit', 'Regen heute', 'Niederschlag', 'Sonneneinstrahlung']) {
-    await check(tag + ': Zeile ' + w, label(rows, w) > -1, rows);
-  }
-  await check(tag + ': Werte mit Einheit (41 km/h, 0,4 mm/h, 180 W/m²)',
-    rows.some((t) => /Windböen\s*41 km\/h/.test(t)) && rows.some((t) => /Niederschlag\s*0,4 mm\/h/.test(t)) && rows.some((t) => /180 W\/m²/.test(t)), rows);
+  const feelsNow = await page.evaluate((id) => Math.round(parseFloat(document.querySelector('home-assistant').hass.states[id].state)), FEELS);
+  await check(tag + ': „gefühlt ' + feelsNow + '°“ in der Mitte des Rads (#56)', new RegExp('gefühlt ' + feelsNow + '°').test(r.text), r.text.slice(0, 200));
+  // v3 §8: the details are rain, wind and UV only – no extra rows of the station any more.
+  await check(tag + ': Details Regen und Wind mit Einheit', rows.some((t) => /^Regen\s*\d+ %/.test(t)) && rows.some((t) => /^Wind\s*[\d,]+ km\/h/.test(t)), rows);
+  await check(tag + ': keine Zusatzzeilen (v3 §8)', ['Gefühlt', 'Taupunkt', 'Windböen', 'Bewölkung', 'Niederschlag', 'Sonneneinstrahlung'].every((w) => label(rows, w) < 0), rows);
   await check(tag + ': kein undefined/NaN', !/undefined|NaN/.test(r.text), r.text.slice(0, 200));
 
   if (tag === 'Desktop') {
     const off = await probe(page, WX, { weather_feels: false, weather_extras: false });
     await check('Studio alt aus: eine Kurve', off.chart && off.chart.series.length === 1 && off.chart.legend.length === 0, off.chart);
     await check('Studio alt aus: keine Zusatzzeilen', ['Gefühlt', 'Taupunkt', 'Windböen', 'Bewölkung', 'Sonneneinstrahlung'].every((w) => label(off.rows, w) < 0), off.rows);
+    await check('Studio alt aus: „gefühlt“ bleibt im Rad (kein Schalter, §8)', /gefühlt -?\d+°/.test(off.text), off.text.slice(0, 200));
     // Other units: one chart per unit, the switch between them (humidity from the weather entity's attribute).
     const units = await probe(page, WX, { weather_chart: ['temperature', 'dew_point', 'humidity', 'gust'], weather_extras: ['gust'] });
     await check('Auswahl mit Einheiten: Temperatur + Taupunkt zusammen', units.chart && units.chart.series.map((s) => s.name).join('|') === 'Temperatur|Taupunkt', units.chart);
     await check('Auswahl mit Einheiten: Umschalter Temperatur / Luftfeuchtigkeit / Windböen',
       ['Temperatur', 'Luftfeuchtigkeit', 'Windböen'].every((w) => units.pills.includes(w)), units.pills);
-    await check('Auswahl Zeilen: nur Windböen', label(units.rows, 'Windböen') > -1 && ['Gefühlt', 'Taupunkt', 'Bewölkung'].every((w) => label(units.rows, w) < 0), units.rows);
+    await check('Auswahl Zeilen: keine Zusatzzeilen (v3 §8)', ['Gefühlt', 'Taupunkt', 'Bewölkung', 'Windböen'].every((w) => label(units.rows, w) < 0), units.rows);
     const plain = await page.evaluate((wx) => Object.keys(document.querySelector('home-assistant').hass.states)
       .filter((k) => k.startsWith('weather.') && k !== wx && document.querySelector('home-assistant').hass.states[k].attributes.apparent_temperature == null).sort()[0] || null, WX);
     if (plain) {
       const p = await probe(page, plain, {});
       await check('Wetter ohne Zusatzquellen: keine gefühlte Kurve', !p.chart || p.chart.series.length === 1, p.chart);
-      await check('Wetter ohne Zusatzquellen: keine Zeile „Gefühlt“', label(p.rows, 'Gefühlt') < 0, p.rows);
+      await check('Wetter ohne Zusatzquellen: kein „gefühlt“', label(p.rows, 'Gefühlt') < 0 && !/gefühlt/.test(p.text), p.rows);
     }
   }
   await check(tag + ': keine Fehler in der Konsole', errs.length === 0, errs.slice(0, 2));
@@ -236,7 +236,7 @@ for (const [tag, opts, url] of VIEWS) {
     await need(tag + ': Wetterkarte des Dashboards', r && !r.missing && r.chart, r);
     await check(tag + ' (Dashboard): drei Kurven mit Legende Temperatur/Gefühlt/Taupunkt',
       r.chart.series.length === 3 && r.chart.legend.join('|') === 'Temperatur|Gefühlt|Taupunkt' && r.chart.lines.length === 3, r.chart);
-    await check(tag + ' (Dashboard): keine Zeile „Bewölkung“, Taupunkt bleibt', label(r.rows, 'Bewölkung') < 0 && label(r.rows, 'Taupunkt') > -1, r.rows);
+    await check(tag + ' (Dashboard): keine Zeile „Bewölkung“ (Taupunkt ist Kurve, keine Zeile)', label(r.rows, 'Bewölkung') < 0 && label(r.rows, 'Taupunkt') < 0, r.rows);
     await browser.close().catch(() => {});
   }
 }

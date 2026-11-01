@@ -766,7 +766,12 @@
     var pad = first ? Math.max(0, Math.round(first.getBoundingClientRect().left - cr.left)) : (window.innerWidth > 760 ? 26 : 14);
     if (first && first.classList.contains('hui-line')) pad = window.innerWidth > 760 ? 26 : 14;
     var srow = first && first.classList.contains('hui-srow') ? first : null;
-    if (srow) pad = Math.max(0, Math.round(srow.getBoundingClientRect().left - cr.left));
+    // Popup v3: the first row may stand in the right column (left the stage) – the inset is the left-most content
+    // edge (stage or row), never the right column's (the view was squeezed to a sliver, r89 01.11.2026).
+    if (srow) {
+      var lefts = (window.__pierce ? window.__pierce('.hui-srow, .hui-stage', cont) : []).map(function (e) { var q = e.getBoundingClientRect(); return q.width > 0 ? q.left : Infinity; });
+      pad = Math.max(0, Math.round(Math.min.apply(null, lefts.concat([srow.getBoundingClientRect().left])) - cr.left));
+    }
     V = { pop: pop, p: p, sort: 'guenstig', hidden: [], title: sr.querySelector('.header-title').textContent };
     [].slice.call(cont.children).forEach(function (c) { V.hidden.push([c, c.style.display]); c.style.display = 'none'; });
     var ex = sr.querySelector('.extra');

@@ -9,7 +9,9 @@ import { open, casoraDashboards, dashboard, check, need, finish, usePage } from 
 const all = await casoraDashboards();
 const desk = all.find((d) => !d.mobile && d.url === 'qa-arbeit') || all.find((d) => !d.mobile);
 await need('ein Casora-Dashboard', desk, all.map((d) => d.url));
-const { page } = await open({ width: 1440, height: 900, theme: 'Casora' });
+// Popup v3 (Casora theme) lists the rooms as rows without button-card pills; the pills stay in the v2 popup of
+// the other themes (richtlinien §9), so the ripple is checked there.
+const { page } = await open({ width: 1440, height: 900, theme: 'default' });
 usePage(page);
 const warn = [];
 page.on('console', (m) => { if (/scale\(Infinity\)|Invalid keyframe/.test(m.text())) warn.push(m.text()); });

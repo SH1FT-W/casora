@@ -1069,11 +1069,12 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         }).catch(function () { slot._casoraCard = false; });
       }, 0);
     };
-    window._hpStageChart = function (el, eid) {
+    // back (energy popup): tapping the chosen row again switches back to this chart, as before v3 (r90).
+    window._hpStageChart = function (el, eid, back) {
       setTimeout(function () {
         var slot = el && el.shadowRoot && el.shadowRoot.querySelector('.hp-chart-slot');
         // Through _hpChartInit: it also stops an older pending mount (a popup opened before this page) taking the slot.
-        if (slot && !slot.querySelector('casora-chart')) window._hpChartInit(eid);
+        if (slot && !slot.querySelector('casora-chart')) window._hpChartInit(eid, back);
       }, 0);
     };
     /* Popups with a chart and „Details ›“ (air purifier, fan, plant, batteries …): ‹ back from the reading's page
@@ -1124,6 +1125,13 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         if (d0 && d0.temperature != null && d0.templow != null) find(pop.shadowRoot, '.hw-slot-hilo-' + key).forEach(function (el) {
           if (!el.textContent.trim()) el.textContent = 'H ' + Math.round(d0.temperature) + '° · T ' + Math.round(d0.templow) + '°';
         });
+        // Popup v3: the wheel (today's low and high as its ends) and „Regen ab …“ in the status line also wait for the
+        // forecast – after ‹ the wheel came back as a plate without its ring.
+        if (R && R.stage && d0) find(pop.shadowRoot, '.hw-slot-stage-' + key).forEach(function (el) {
+          var stageHtml = R.stage(); if (stageHtml && el._h3 !== stageHtml) { el._h3 = stageHtml; el.innerHTML = stageHtml; }
+        });
+        var hr = F[key + '_hourly'];
+        if (R && R.rain && hr && hr.length) find(pop.shadowRoot, '.hw-slot-rain-' + key).forEach(function (el) { el.textContent = R.rain(hr); });
       }, 80);
     };
     window._hpPlantTap = function (ev, kind) {
@@ -1140,8 +1148,10 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       ev.stopPropagation(); if (ev.cancelable) ev.preventDefault();
       window._casoraSuppressDismiss = Date.now() + 600;
       var id = row.dataset.hpMetric, pop = popRoot(), back = pop && pop._hpBack;
+      // v3: the power chart is the stage – no row of its own carries it, the stage's slot is enough (r90).
       if (back && back !== id && row.classList.contains('hp-sel') && window._hpPlantCfg[back]
-        && find(pop.shadowRoot, '[data-hp-metric]').some(function (r) { return r.dataset.hpMetric === back; })) id = back;
+        && (find(pop.shadowRoot, '[data-hp-metric]').some(function (r) { return r.dataset.hpMetric === back; })
+          || find(pop.shadowRoot, '[data-casora-stage] .hp-chart-slot').length)) id = back;
       window._hpPlantShow(id, row);
     };
     /* Live-Zahlen im offenen Popup: Elemente mit data-hp-live="<entity>"

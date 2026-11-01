@@ -315,11 +315,12 @@
     };
     // Popup v3 (richtlinien §4 S7, §8): the subline and bar become the status stage; no way into the Pulse panel.
     var v3 = !!(UI.v3 && UI.v3() && UI.stage);
-    var f = v3 ? { stage: { card: K.secCard(watch, call('stage'), states) } } : { hero: { card: K.secCard(watch, call('hero'), states) } };
+    var f = v3 ? { stage: { card: K.secCard(watch, call('stage'), states) }, hero: { card: K.secCard(watch, call('head3'), states) } }
+      : { hero: { card: K.secCard(watch, call('hero'), states) } };
     // Sections by content: only those with entries (an only-battery „prüfen“ still gets its row, checkup 10/2026).
     SECTIONS.forEach(function (x) { if (inSec(s, x[0]).length) f[x[0]] = { card: K.secCard(watch, call(x[0]), states) }; });
     f.more = { card: K.secCard(watch, call('more'), states) };
-    return K.layout({ fields: f, top: v3 ? [] : ['hero'], stage: v3 ? 'stage' : null, left: ['failed', 'check', 'watch', 'more'], right: [] });
+    return K.layout({ fields: f, top: ['hero'], stage: v3 ? 'stage' : null, left: ['failed', 'check', 'watch', 'more'], right: [] });
   };
 
   // Markers around the name of critical devices: replaced by a span for the name (ellipsis) and the
@@ -456,6 +457,14 @@
       if (!s.installed) return UI.line('Pulse ist nicht installiert', []);
       var h = P.subline(s);
       return UI.line(h.main, h.rest, { tone: h.tone }) + P.bar(s);
+    }
+    // Popup v3 status line (richtlinien §3): never the stage's sentence („3 Probleme“) – how many devices Pulse watches
+    // and the batteries due soon, in words (the frame's fallback said only the tile's count).
+    if (part === 'head3') {
+      if (!s.installed || !s.total) return '';
+      var batS = (s.list || []).filter(function (d) { return d.status === 'watch' && BATTERY[d.reason]; }).length;
+      return UI.line(s.total === 1 ? '1 Gerät' : s.total + ' Geräte',
+        batS ? [batS === 1 ? '1 Batterie bald fällig' : batS + ' Batterien bald fällig'] : []);
     }
     // Popup v3 stage S7: the subline as the sentence, the counts of the overview bar as facts.
     if (part === 'stage') {

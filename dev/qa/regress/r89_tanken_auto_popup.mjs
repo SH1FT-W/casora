@@ -20,6 +20,8 @@
 // Orte), ganz in der Fläche, ohne Überlappung, nicht auf dem OSM-Hinweis. Szene mit vielen Stationen (gleiche
 // Preise, zwei am selben Ort, eine zu, mehrere am Rand) für HA-Karte und Punktkarte.
 // Der Tank-Sensor wird nur im Browser untergeschoben (erfundene Stationen), nichts wird in HA gespeichert.
+// v3 (31.10.2026): the car popup's section „Tank“ holds the fill level row („Tankstand“) and right under it the row
+// „Tanken“ (a list row with page „tanken“, no own .casora-tank-row wrapper); the tank bar is that fill level row.
 import zlib from 'node:zlib';
 import { open, casoraDashboards, dashboard, studioDashboard, studio, check, need, finish, fakeStates, usePage, plateLabels } from './lib.mjs';
 
@@ -224,19 +226,21 @@ const openPopup = async (pg) => {
   }
   await pg.waitForTimeout(900);
 };
-const popup = (pg) => pg.evaluate(() => {
+const ROW_SEL = '.casora-tank-row, [data-casora-page^="tanken"]';
+const popup = (pg) => pg.evaluate((ROW_SEL) => {
   const s = window.casoraPopup && window.casoraPopup.surface;
   if (!s) return null;
   const P = (q) => window.__pierce(q, s).filter((e) => e.getBoundingClientRect().height > 0);
   const txt = (e) => e.textContent.replace(/\s+/g, ' ').trim();
-  const row = P('.casora-tank-row')[0];
-  const bar = P('.hui-sl, [data-casora-axis]')[0];
+  const row = P(ROW_SEL)[0];
+  // v2: the tank slider; v3: the fill level row of the section „Tank“ right above „Tanken“.
+  const bar = P('.hui-sl, [data-casora-axis]')[0] || P('.hui-srow').find((e) => /^(Tankstand|Ladestand)/.test(txt(e)));
   const sr = window.casoraPopup.element.shadowRoot;
   return {
     row: row ? txt(row.querySelector('.hui-srow') || row) : null,
     rowTop: row ? row.getBoundingClientRect().top : null,
     barBottom: bar ? bar.getBoundingClientRect().bottom : null,
-    firstRowTop: (P('.hui-srow').filter((e) => !e.closest('.casora-tank-row'))[0] || { getBoundingClientRect: () => ({ top: null }) }).getBoundingClientRect().top,
+    firstRowTop: (P('.hui-srow').filter((e) => !e.closest(ROW_SEL) && e !== bar)[0] || { getBoundingClientRect: () => ({ top: null }) }).getBoundingClientRect().top,
     view: P('.casora-tank-view').length ? txt(P('.casora-tank-view')[0]) : null,
     title: sr.querySelector('.header-title').textContent,
     back: !!sr.querySelector('.header-back:not([hidden])'),
@@ -248,7 +252,7 @@ const popup = (pg) => pg.evaluate(() => {
     dayBars: (() => { const c = P('.ct-day casora-chart')[0]; return c && c.shadowRoot ? c.shadowRoot.querySelectorAll('path[d*="Q"]').length : 0; })(),
     dayLabel: (() => { const l = P('.ct-day > div')[0]; return l ? [l.textContent, getComputedStyle(l).textTransform, getComputedStyle(l).fontSize] : null; })(),
   };
-});
+}, ROW_SEL);
 // Kopfzeile A (1.3): Zurück-Knopf neben dem Titel statt darüber, Statuszeile im Kopf gehört zur Ansicht.
 const head = (pg) => pg.evaluate(() => {
   const sr = window.casoraPopup && window.casoraPopup.element && window.casoraPopup.element.shadowRoot;
@@ -288,8 +292,8 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   p = await popup(page);
   await check(vp.name + ': Zeile „Tanken · ab 1,69 €“', p && /^Tanken/.test(p.row || '') && /ab 1,69 €/.test(p.row) && /Super E10 · Preise werden gesammelt/.test(p.row), p && p.row);
   await check(vp.name + ': Zeile direkt unter dem Tankbalken, vor Zustand/Wartung',
-    p && p.rowTop != null && (p.barBottom == null || (p.rowTop > p.barBottom && p.rowTop - p.barBottom < 24)) && p.rowTop < p.firstRowTop, p);
-  await tap(page, '.casora-tank-row');
+    p && p.rowTop != null && (p.barBottom == null || (p.rowTop >= p.barBottom - 1 && p.rowTop - p.barBottom < 24)) && p.rowTop < p.firstRowTop, p);
+  await tap(page, ROW_SEL);
   await page.waitForTimeout(800);
   p = await popup(page);
   await check(vp.name + ': Ansicht „Tanken“ mit Zurück-Knopf', p && p.title === 'Tanken' && p.back && p.view, p && { title: p.title, back: p.back });
@@ -333,7 +337,7 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
     await fakeStates(page, { ...none, [SID]: sensor(car.dev, { typical: null, low: null, high: null, days: 2, learn_days_left: 5, center: null,
       stations: logoStations, count: logoStations.length }) }, { sticky: true });
     await openPopup(page);
-    await tap(page, '.casora-tank-row');
+    await tap(page, ROW_SEL);
     await page.waitForTimeout(800);
     const L = await logoState(page);
     const row = (n) => L.find((x) => x.list && x.name.startsWith(n));
@@ -361,14 +365,16 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   // Genug Preise: Empfehlung mit Skala und Typischem Tag.
   await fakeStates(page, { ...none, [SID]: sensor(car.dev, { typical, low: 1.649, high: 1.749, days: 14, learn_days_left: 0 }) }, { sticky: true });
   await openPopup(page);
-  await tap(page, '.casora-tank-row');
+  await tap(page, ROW_SEL);
   await page.waitForTimeout(800);
   p = await popup(page);
   await check(vp.name + ': Empfehlung mit Preis-Skala und Typischem Tag', p && p.scale === 1 && p.day === 1 && /Empfehlung/.test(p.view)
     && /Tief/.test(p.view) && /jetzt 1,69 €/.test(p.view) && /Hoch/.test(p.view) && !/Die Empfehlung kommt/.test(p.view), p && p.view);
   // 1.3 (Entscheidung B, Abschnittsüberschriften): „Typischer Tag“ ist eine Überschrift 17/700 in Satzschreibung, keine Versalien mehr.
-  await check(vp.name + ': Typischer Tag als casora-chart (18 Säulen), Überschrift „Typischer Tag · Ø 14 Tage“ 17 px Satzschreibung',
-    p && p.dayBars === 18 && p.dayLabel && /Typischer Tag · Ø 14 Tage/.test(p.dayLabel[0]) && p.dayLabel[1] === 'none' && p.dayLabel[2] === '17px', p && [p.dayBars, p.dayLabel]);
+  // v3 (§6): the heading follows the theme's heading tokens (--casora-h15-*): 13 px capitals in the v3 popup.
+  await check(vp.name + ': Typischer Tag als casora-chart (18 Säulen), Überschrift „Typischer Tag · Ø 14 Tage“ im Überschriften-Stil',
+    p && p.dayBars === 18 && p.dayLabel && /Typischer Tag · Ø 14 Tage/.test(p.dayLabel[0])
+    && ((p.dayLabel[1] === 'none' && p.dayLabel[2] === '17px') || (p.dayLabel[1] === 'uppercase' && p.dayLabel[2] === '13px')), p && [p.dayBars, p.dayLabel]);
   // 1.2.1 (D1, D3): Etiketten in Empfehlung und „Typischer Tag“ 20/18 vom Kartenrand; Ø-Wert mit zwei Nachkommastellen.
   const pl = await plateLabels(page);
   // „Typischer Tag“ ist seit 1.3 keine Versalien-Etikette mehr (plateLabels findet nur Versalien): Abstand direkt messen.
@@ -421,7 +427,7 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
     // Viele Stationen auf der HA-Karte (1.2.1, Entwurf A).
     await fakeStates(page, { ...none, [SID]: sensor(car.dev, { typical, low: 1.649, high: 1.749, days: 14, learn_days_left: 0, stations: crowd, count: crowd.length }) }, { sticky: true });
     await openPopup(page);
-    await tap(page, '.casora-tank-row');
+    await tap(page, ROW_SEL);
     await page.waitForTimeout(800);
     const mc = await mapState(page);
     const gc = await geom(page, 'ha');
@@ -439,7 +445,7 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   {
     await fakeStates(page, { ...none, [SID]: sensor(car.dev, { typical, low: 1.649, high: 1.749, days: 14, learn_days_left: 0, stations: crowd, count: crowd.length, center: null }) }, { sticky: true });
     await openPopup(page);
-    await tap(page, '.casora-tank-row');
+    await tap(page, ROW_SEL);
     await page.waitForTimeout(800);
     const gp = await geom(page, 'punkt');
     const fr = gp ? Math.min(gp.area.w, gp.area.h - 20) / 2 - 8 : 0, sc = fr / 5;
@@ -453,7 +459,7 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
     await fakeStates(page, { ...none, [SID]: sensor(car.dev, { typical, low: 1.649, high: 1.749, days: 14, learn_days_left: 0 }) }, { sticky: true });
     await page.route('**/api/map_tiles/**', (r) => r.abort());
     await openPopup(page);
-    await tap(page, '.casora-tank-row');
+    await tap(page, ROW_SEL);
     await page.waitForTimeout(800);
     const fb = await mapState(page);
     await check(vp.name + ': Kartendienst gestört → Punktkarte mit Pillen statt leerer Fläche',

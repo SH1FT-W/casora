@@ -130,6 +130,9 @@ const popupInfo = () => page.evaluate(() => {
     texts: leaves.map(txt).filter(Boolean),
     track: window.__pierce('.hh-pbar-track', root).filter(vis).length,
     subColor: sub ? getComputedStyle(sub).color : null,
+    // v3: the state word stands in the head's status line (lifted from the content).
+    headColor: (() => { const st = root.querySelector('.header-status'); const b = st && [...st.querySelectorAll('*')].find((e) => /Angehalten/.test(e.textContent) && e.children.length === 0);
+      return b ? getComputedStyle(b).color : null; })(),
     done: window.__pierce('[data-hw-maint]', root).filter(vis).map((e) => { const r = e.getBoundingClientRect(); return { k: e.dataset.hwMaint, x: r.x + r.width / 2, y: r.y + r.height / 2 }; }),
   };
 });
@@ -238,9 +241,10 @@ await check('Stillstand: Kachel „Angehalten“, aktiv', ti.tile === 'Angehalte
 await check('Stillstand: Popup offen', await openPopup('casora_waschmaschine'));
 pi = await popupInfo();
 const warm = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); return !!m && +m[1] > +m[3] + 60; };
-await check('Stillstand: Kopf „Angehalten · steht still, evtl. Unwucht“ in Warnfarbe',
-  pi && pi.texts.some((t) => /Angehalten/.test(t)) && pi.texts.some((t) => /steht still, evtl\. Unwucht/.test(t)) && warm(pi.subColor),
-  pi && { sub: pi.texts.filter((t) => /Angehalten|steht still/.test(t)), color: pi.subColor });
+// v3: „Angehalten“ in the head in the warning tone, „steht still, evtl. Unwucht“ under the time on the stage.
+await check('Stillstand: Kopf „Angehalten“ in Warnfarbe, „steht still, evtl. Unwucht“ auf der Bühne',
+  pi && pi.texts.some((t) => /Angehalten/.test(t)) && pi.texts.some((t) => /steht still, evtl\. Unwucht/.test(t)) && (warm(pi.headColor) || warm(pi.subColor)),
+  pi && { sub: pi.texts.filter((t) => /Angehalten|steht still/.test(t)), color: pi.subColor, head: pi.headColor, all: pi.texts.slice(0, 30) });
 await check('Stillstand: nicht mehr „Pausiert“', pi && !pi.texts.some((t) => /Pausiert/.test(t)), pi && pi.texts.filter((t) => /Pausiert/.test(t)));
 await closePopup();
 // Normale Pause (ohne Stillstand) bleibt „Pausiert“.

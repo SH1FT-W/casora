@@ -598,7 +598,9 @@
       f3.hero = { card: secCard(w3, 'return window._casoraSoftEnergy ? window._casoraSoftEnergy.status3(' + JSON.stringify(C3) + ', states, hass) : "";', states) };
       var q3 = E.quick3(C3, ctx.states);
       if (q3) f3.quick = q3;
-      if (f.use) f3.use = f.use;
+      // With the flow as the stage there is no chart for „Heute“/„Diesen Monat“ to switch (data-hp-metric did nothing,
+      // r90 01.11.2026): the rows open the reading's own page like every other reading row.
+      if (f.use) f3.use = fs && typeof f.use === 'string' ? f.use.replace(/data-hp-metric="/g, 'data-casora-mi="') : f.use;
       if (f.top) f3.top = f.top;
       return layout({ fields: f3, top: ['hero'], stage: 'stage', quick: 'quick', left: [], right: ['use', 'top'], moveLeft: [],
         narrowOrder: ['stage', 'quick', 'top', 'use'] });
@@ -666,7 +668,7 @@
     if (self) setTimeout(function () {
       var r = self.shadowRoot, n = r && r.querySelector('.hui-st-n'), u = r && r.querySelector('.hui-st-u'), t = r && r.querySelector('.hui-st-trend');
       if (n && !n.hasAttribute('data-casora-reading') && n.textContent !== num0) n.textContent = num0;
-      if (u && u.textContent !== unit0) u.textContent = unit0;
+      if (u && !u.hasAttribute('data-casora-reading') && u.textContent !== unit0) u.textContent = unit0;
       if (t && !t.hasAttribute('data-casora-reading') && t.textContent !== (b.line || T('Jetzt'))) t.textContent = b.line || T('Jetzt');
     }, 0);
     var chart = '', flowHtml = C.fs ? E.flow(C, states, hass, self) : '';
@@ -675,7 +677,7 @@
     else if (C.home && window._hpPlantCfg && window._hpPlantCfg[C.home]) {
       var cfg = window._hpPlantCfg[C.home];
       cfg.height = window.innerWidth <= 760 ? 140 : 160; cfg.readout = 'hero';
-      if (window._hpStageChart) window._hpStageChart(self, C.home);
+      if (window._hpStageChart) window._hpStageChart(self, C.home, true);
       chart = '<div class="hp-chart-slot" style="min-height:' + Number(cfg.height) + 'px;pointer-events:auto;"></div>';
     }
     return UI.stage('chart', { value: memo.n, unit: memo.u, trend: memo.l || T('Jetzt'), chart: chart, read: C.fs ? null : C.home || null,

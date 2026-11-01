@@ -223,11 +223,11 @@
     }
     var f = { hero: { card: K.secCard(C.watch, call('hero'), S) } };
     var top = ['hero'];
-    /* Popup v3 „Bühne“ (richtlinien §4 S2, §7): the cooling zone's setpoint as the stage (status line under it),
-       the chart as „Verlauf“ (120) in the right column – never above a stage. Soft, no localStorage
-       casora_popup_variant other than 'v3'. */
+    /* Popup v3 „Bühne“ (richtlinien §4 S2, §7): the cooling zone's setpoint as the stage, the status line on top so the
+       frame lifts it into the head (§3 – under the wheel it was not found and the head showed the raw „7 °C“), the
+       chart as „Verlauf“ under the wheel. Soft, no localStorage casora_popup_variant other than 'v3'. */
     var v3 = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; } })();
-    if (v3) { f = { stage: { card: K.secCard(C.watch, call('stage'), S) } }; top = []; }
+    if (v3) f.stage = { card: K.secCard(C.watch, call('stage'), S) };
     var curves = C.zones.filter(function (z) { return z.temp && S[z.temp] && !bad(S[z.temp].state) && num(S[z.temp].state) != null; });
     if (curves.length) {
       f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history', height: v3 ? 120 : 160, readout: 'own', plate: true,
@@ -242,8 +242,8 @@
     if (C.modes.length || C.zones.some(function (z) { return z.sup; })) f.modes = { card: K.secCard(C.watch, call('modes'), S) };
     if (C.doors.length) f.doors = { card: K.secCard(C.watch, call('doors'), S) };
     f.more = { card: K.secCard(C.watch, call('more'), S) };
-    if (v3) return K.layout({ fields: f, top: [], stage: 'stage', left: ['zones'], right: ['chart', 'modes', 'doors', 'more'],
-      narrowOrder: ['stage', 'zones', 'modes', 'doors', 'chart', 'more'] });
+    if (v3) return K.layout({ fields: f, top: ['hero'], stage: 'stage', left: ['zones'], right: ['chart', 'modes', 'doors', 'more'],
+      narrowOrder: ['hero', 'stage', 'zones', 'modes', 'doors', 'chart', 'more'] });
     return K.layout({ fields: f, top: top, left: ['zones'], right: ['modes', 'doors', 'more'], narrowOrder: ['zones', 'modes', 'doors', 'more'] });
   };
 
@@ -308,10 +308,10 @@
       return UI.line(temps || 'Bereit', rest);
     }
     if (part === 'stage') {
-      var line = F.sec('hero', C, S, hass);
+      // The status line („hero“) stands on top and goes into the head – not again under the wheel.
       var zs = s.dead ? null : F.stageZone(C, S);
       if (!zs) return UI.stage('status', { tone: s.dead ? 'off' : s.alarms.length ? 'bad' : 'good', icon: 'mdi:fridge-outline',
-        text: s.dead ? 'Nicht verfügbar' : F.temps(s, false) || 'Bereit', state: s.dead ? 'na' : null, extra: s.dead ? '' : line });
+        text: s.dead ? 'Nicht verfügbar' : F.temps(s, false) || 'Bereit', state: s.dead ? 'na' : null });
       var zz = zs.z, dz0 = s.zones[zs.i] || {}, idS = zz.set || zz.climate, stS = S[idS], aS = stS.attributes || {};
       var clim = !!zz.climate;
       var curS = clim ? num(aS.temperature) : num(stS.state);
@@ -327,7 +327,7 @@
       // One step for − / + and the ring (the ring snapped to 0,5 while ± went by 1), the unit like every S2 (review 2, DH-21).
       return UI.stage('value', { caption: zz.label, label: zz.label + ' · Sollwert', value: curS, digits: stepS < 1 ? 1 : 0, unit: dz0.unit || '°C',
         step: stepS, min: loS != null ? loS : undefined, max: hiS != null ? hiS : undefined,
-        minus: side(-1), plus: side(1), foot: dz0.temp != null ? 'Jetzt ' + F.fmt(dz0.temp, dz0.unit) : null, extra: line });
+        minus: side(-1), plus: side(1), foot: dz0.temp != null ? 'Jetzt ' + F.fmt(dz0.temp, dz0.unit) : null });
     }
     if (part === 'zones') {
       var rows = [], pills = '';

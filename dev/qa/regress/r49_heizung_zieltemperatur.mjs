@@ -36,7 +36,7 @@ const tile = await page.evaluate((i) => { const b = window.__pierce('button-card
   const r = b.getBoundingClientRect(); return { x: r.x + 40, y: r.y + r.height - 30 }; }, hit.i);
 await page.waitForTimeout(500);
 await page.touchscreen.tap(tile.x, tile.y);
-const btns = await stable(page, () => window.__pierce('.hp-st-b').map((b) => { const r = b.getBoundingClientRect();
+const btns = await stable(page, () => window.__pierce('.hui-st-b').map((b) => { const r = b.getBoundingClientRect();
   return { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width }; }).filter((b) => b.w > 0), null, { max: 5000 });
 await check('Heizung aus: Zieltemperatur mit Plus/Minus sichtbar', btns && btns.length === 2, btns);
 if (btns && btns.length === 2) {
@@ -44,7 +44,7 @@ if (btns && btns.length === 2) {
   // Der Tipp muss den Knopf selbst treffen, nicht eine Fläche darüber/darunter.
   const onBtn = await page.evaluate(({ x, y }) => { let d = document.elementFromPoint(x, y);
     for (let k = 0; k < 30 && d && d.shadowRoot; k++) { const n = d.shadowRoot.elementFromPoint(x, y); if (!n || n === d) break; d = n; }
-    return !!(d && d.closest && d.closest('.hp-st-b')); }, plus);
+    return !!(d && d.closest && d.closest('.hui-st-b')); }, plus);
   await check('Plus ist antippbar (Treffer liegt auf dem Knopf)', onBtn);
   await page.waitForTimeout(700);   // Popup-Tippschutz (600 ms nach dem Öffnen)
   await page.touchscreen.tap(plus.x, plus.y);

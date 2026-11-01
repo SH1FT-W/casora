@@ -74,7 +74,9 @@ for (const [tag, o, d, mobile] of VIEWS) {
   // Vor dem Spiel (Mock: übermorgen) – Zustand fest unterschieben, damit der Test nicht von der Uhrzeit abhängt.
   const kick = new Date(Date.now() + 2 * 86400000); kick.setHours(18, 30, 0, 0);
   await fakeStates(page, { [ID]: { state: 'PRE', attributes: { date: kick.toISOString(), team_score: '0', opponent_score: '0' } } }, { sticky: true });
-  let m = await stable(page, MEASURE);
+  // Wait for the faked kick-off on the tile: the mock's own state (18:30 in the HA's zone) could still be drawn
+  // (gate 01.11.2026: „Di 19:30“ on the phone while the faked state was not yet there).
+  let m = await stable(page, MEASURE, null, { max: 8000, until: (x) => / 18:30\b/.test(x.state || '') });
   await need(tag + ': Fußball-Kachel gefunden', m);
   await check(tag + ': Wappen geladen', m.imgOk && /^data:image\/svg/.test(m.img || ''), m.img && m.img.slice(0, 30));
   await check(tag + ': Wappen sichtbar (kein Aus-Symbol darüber)', m.imgOp >= 0.95 && m.maskOp === 0, { img: m.imgOp, mask: m.maskOp });
@@ -140,19 +142,27 @@ for (const [tag, o, d, mobile] of VIEWS) {
       th: (window.__pierce('.cfb-r.h')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().top,
       fh: (window.__pierce('.cfb-f.h')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().top,
       t1: (window.__pierce('.cfb-r:not(.h)')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().top,
-      f1: (window.__pierce('.cfb-f:not(.d):not(.h)')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().top };
+      f1: (window.__pierce('.cfb-f:not(.d):not(.h)')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().top,
+      // Column tops: the table's plate (v3 stage) and the match box.
+      tt: ((window.__pierce('[data-casora-stage]').find((n) => n.querySelector && n.querySelector('.cfb-table')) || window.__pierce('.cfb-table > .cfb')[0]) || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().top,
+      mt: (window.__pierce('.cfb-m')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().top };
   }, null, { max: 10000, quiet: 900 });
   await check(tag + ': Popup – Wappen im Ring', p.ringOk && /^data:image/.test(p.ring || ''), p.ring);
   await check(tag + ': Popup – Spielkasten mit beiden Teams', /FC Nordhafen/.test(p.match) && /SV Lindenberg/.test(p.match), p.match.slice(0, 120));
   await check(tag + ': Popup – Tabelle mit eigenem Team', p.rows >= 8 && !!p.me, { rows: p.rows, me: p.me });
   await check(tag + ': Popup – „Ganze Tabelle“ ≥ 44 px', p.more >= 44, p.more);
   await check(tag + ': Popup – Form mit 5 Spielen', p.form === 5, p.form);
-  await check(tag + ': Popup – Duelle unter der Form, Zeilen gleich hoch wie die Form', p.duels >= 2 && p.duels <= 5 && Math.abs(p.hd - p.hf) <= 0.5, { n: p.duels, hf: p.hf, hd: p.hd });
+  // Desktop: as many duels as fit beside the table (K.fit, at least two, else none – v3: the match box above the form
+  // leaves no room in the test house); the phone shows all five.
+  await check(tag + ': Popup – Duelle unter der Form, Zeilen gleich hoch wie die Form',
+    (!mobile && p.duels === 0) || (p.duels >= 2 && p.duels <= 5 && Math.abs(p.hd - p.hf) <= 0.5), { n: p.duels, hf: p.hf, hd: p.hd });
   if (mobile) await check(tag + ': Popup – Handy (untereinander): alle 5 Duelle', p.duels === 5, p.duels);
   // Desktop: Unterkante rechts höchstens eine halbe Zeile (29 px) von der letzten Tabellenzeile, nie unter der Legende.
   else await check(tag + ': Popup – rechte Spalte endet auf Höhe der letzten Tabellenzeile', Math.abs(p.rb - p.last) <= 29 && p.rb <= p.lb + 0.5, { tabelle: p.last, rechts: p.rb, legende: p.lb });
-  if (!mobile) await check(tag + ': Popup – Spaltenkopf der Form auf Höhe des Tabellenkopfs, erste Zeilen bündig',
-    Math.abs(p.fh - p.th) <= 1 && Math.abs(p.f1 - p.t1) <= 1, { th: p.th, fh: p.fh, t1: p.t1, f1: p.f1 });
+  // v3 (01.11.2026): the table is the stage (left), the match box heads the right column above the form – both
+  // columns start on one line (rule 12); the form's column heads no longer line up with the table's.
+  if (!mobile) await check(tag + ': Popup – Tabelle und Spielkasten beginnen auf einer Linie',
+    Math.abs(p.mt - p.tt) <= 1, { tabelle: p.tt, spiel: p.mt });
   if (process.env.R81_BILD) await page.screenshot({ path: `${process.env.CASORA_OUT}/r81_${tag.replace(/[^a-z0-9]+/gi, '_')}.png` });
   await check(tag + ': Popup im Fenster', p.surf.l >= -1 && p.surf.r <= p.vw + 1, p);
   await check(tag + ': ESPN nur abgefangen (kein Netz)', calls.length > 0 && calls.every((u) => /site\.api\.espn\.com/.test(u)), calls.length);
