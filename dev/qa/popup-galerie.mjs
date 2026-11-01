@@ -288,6 +288,10 @@ async function anlegen() {
         card.variables = { ...(card.variables || {}), galerie_id: it.id };
         phoneTiles.push([it, card]);
         cells.push(cell(it, card)); index.push([it, vd.path, 'Kachel']);
+      } else if (it.badge && it.phone) {
+        // Phone-only badges have no badge view here (the link read „badges-undefined“): they sit on the phone gallery.
+        cells.push(md(`**${it.popup}**<br><small>${it.stage} · \`${it.badge}\`${it.note ? ' · ' + it.note : ''}</small><br>→ Handy-Galerie <b>/${DASH}-mobile</b>`));
+        index.push([it, '../' + DASH + '-mobile', 'Handy-Galerie' + (it.note ? ' (' + it.note + ')' : '')]);
       } else if (it.badge) {
         cells.push(md(`**${it.popup}**<br><small>${it.stage} · \`${it.badge}\`${it.note ? ' · ' + it.note : ''}</small><br>→ Ansicht <b>Badges ${BADGE_TAB[it.room]}</b>${it.parent ? ` (erst \`${it.parent.replace('casora_badge_', '')}\` antippen)` : ''}`));
         index.push([it, bPath(it.room), ROOMS[it.room] + (it.parent ? ' › ' + it.parent : '')]);
