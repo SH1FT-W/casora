@@ -2787,7 +2787,13 @@
     "No picture": "Geen afbeelding",
     "The car's integration has no picture.": "De integratie van de auto levert geen afbeelding.",
     "Automatic: the picture of the car's integration. Without a picture the popup stays as it is.": "Automatisch: de afbeelding uit de integratie van de auto. Zonder afbeelding blijft het venster zoals het is.",
-    "The car's integration has no picture. Upload your own photo, or leave it without one.": "De integratie van de auto levert geen afbeelding. Upload een eigen foto of laat het zonder."
+    "The car's integration has no picture. Upload your own photo, or leave it without one.": "De integratie van de auto levert geen afbeelding. Upload een eigen foto of laat het zonder.",
+    "Order": "Volgorde",
+    "Reset": "Herstellen",
+    "Gates": "Poorten",
+    "Windows": "Ramen",
+    "Other sensors": "Andere sensoren",
+    "Drag to change the order of the entries in the badge and its popup.": "Sleep om de volgorde van de items in de badge en de popup te wijzigen."
   },
   "patterns": [
     [

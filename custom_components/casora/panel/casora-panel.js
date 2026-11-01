@@ -627,6 +627,31 @@ function badgeOrderOf(saved) {
   return out;
 }
 
+// Security badge: the kinds of entries it has (security_sub_order list in the Studio), in the usual order
+// (casoraSecSub.KEYS, 00-finder.js). houseIds: Home's doors and windows (#39), covers: Home's covers (#76) count.
+const SEC_SUB_LABEL = { alarm: "Alarm", doors: "Doors", gates: "Gates", locks: "Locks", windows: "Windows",
+  covers: "Blinds", cameras: "Cameras", other: "Other sensors" };
+const SEC_SUB_ICON = { alarm: "mdi:shield-home", doors: "mdi:door", gates: "mdi:garage", locks: "mdi:lock",
+  windows: "mdi:window-closed-variant", covers: "mdi:blinds-horizontal", cameras: "mdi:cctv", other: "mdi:motion-sensor" };
+function secSubPresent(V, states, houseIds, covers) {
+  const S = window.casoraSecSub;
+  if (!S || !V) return [];
+  const have = new Set();
+  const list = (x) => (Array.isArray(x) ? x.filter(Boolean) : []);
+  if (list(V.security_locks).length || V.security_lock_entity || V.security_lock_entity_2) have.add("locks");
+  if (list(V.security_cameras).length) have.add("cameras");
+  for (let n = 1; n <= 8; n++) { const k = S.keyOf(V["security_entity_" + n], states); if (k) have.add(k); }
+  (houseIds || []).forEach((id) => { const k = S.keyOf(id, states); if (k) have.add(k); });
+  if (covers) have.add("covers");
+  return S.KEYS.filter((k) => have.has(k));
+}
+// Rows of the Studio's list: the saved order first (only kinds the badge has), then the rest in the usual order.
+function secSubRows(saved, present) {
+  const out = (Array.isArray(saved) ? saved : []).filter((k, i, a) => present.indexOf(k) >= 0 && a.indexOf(k) === i);
+  present.forEach((k) => { if (out.indexOf(k) < 0) out.push(k); });
+  return out;
+}
+
 const FILTER_CATEGORIES = {
   casora_thermostat: "climate",
   casora_velair: "climate",
@@ -2573,6 +2598,10 @@ const SECTIONS = [
         hint: "Automatic: icons with a count on the home page, written out in rooms, where there is usually just one window or door." },
       { key: "security_covers_link", label: "Security: covers", type: "link", page: "home", focus: "security", always: true, ord: 7.8,
         hint: "Which covers count as open at night – for all dashboards." },
+      // Own order of the kinds of entries (locks, doors, windows …) in the badge's sub-line, its sub-badges and
+      // its popup (security_sub_order, casoraSecSub in 00-finder.js). Empty = the usual order.
+      { key: "security_sub_order", label: "Order", type: "suborder", always: true, ord: 7.9,
+        hint: "Drag to change the order of the entries in the badge and its popup." },
       { key: "show_security_inline", label: "Separate security badges", type: "bool",
         boolDefault: false, always: true, ord: 8,
         hint: "Shows locks, alarm, doors, windows and cameras as their own badges." },
@@ -18780,6 +18809,12 @@ class CasoraPanel extends HTMLElement {
           return;
         }
 
+        if (f.type === "suborder") {
+          row.remove();
+          this._secSubOrderField(room, fs, f, setVar);
+          return;
+        }
+
         if (f.type === "action") {
           fs.appendChild(row);
           addHint();
@@ -23977,7 +24012,7 @@ class CasoraPanel extends HTMLElement {
           secSum = window.casoraSecuritySummary({ ...sec,
             insecure: sec.triggered || sec.disarmed || !!(sec.locks || sec.doors || sec.windows || sec.doorsTilted
               || sec.windowsTilted || sec.gates),
-            problem: !!(sec.lockDead || sec.camDead) }, { summary: secMode, alarmState: al });
+            problem: !!(sec.lockDead || sec.camDead) }, { summary: secMode, alarmState: al, order: V.security_sub_order });
         } catch (e) { secSum = null; }
         // Die Wörter kommen deutsch aus 00-finder.js (Dashboard-Quelltext). Das Dashboard übersetzt sie
         // über casora-i18n.js; die Vorschau tut es hier selbst (07.10.2026: „Alles sicher“ blieb in der
@@ -23994,7 +24029,7 @@ class CasoraPanel extends HTMLElement {
             const unl = locks.filter((e) =>
               String((st(e) || {}).state || "").toLowerCase() !== "locked").length;
             return {
-              icon: unl ? "lock-open-fill" : "lock-fill", color: TEAL,
+              secKey: "locks", icon: unl ? "lock-open-fill" : "lock-fill", color: TEAL,
               label: V.security_locks_label || (locks.length === 1 ? "Lock" : "Locks"),
               text: unl ? unl + " Unlocked" : (locks.length === 1 ? "Locked" : "All Locked"),
             };
@@ -24003,7 +24038,7 @@ class CasoraPanel extends HTMLElement {
             const dead = cams.filter((e) =>
               /^(unavailable|unknown|)$/i.test((st(e) || {}).state || "") || (this._camOff ? this._camOff(e) : false)).length;
             return {
-              icon: "doorbell", color: TEAL,
+              secKey: "cameras", icon: "doorbell", color: TEAL,
               label: V.security_cameras_label || (cams.length === 1 ? "Camera" : "Cameras"),
               text: dead === cams.length ? (cams.length === 1 ? "Offline" : "All Offline")
                 : dead ? dead + " Offline" : "No Alerts",
@@ -24044,16 +24079,20 @@ class CasoraPanel extends HTMLElement {
             }
             const alert = isOpen || s === "disarmed" || s === "triggered";
             return {
+              secKey: window.casoraSecSub ? window.casoraSecSub.keyOf(e, (this._hass || {}).states) : null,
               icon, color: TEAL, dim: !alert,
               label: V["security_label_" + (i + 1)] || nameOf(e),
               text,
             };
           }),
       ];
+      // Own order of the kinds (security_sub_order), else the usual one (KEYS), as the dashboard's rows (casoraSecSub.cards).
+      const secSort = (l) => (window.casoraSecSub ? window.casoraSecSub.sort(l,
+        window.casoraSecSub.clean(V.security_sub_order).length ? V.security_sub_order : window.casoraSecSub.KEYS, (x) => x.secKey) : l);
       if (V.show_security_inline && !forPhone) {
         // As casora_room with show_security_inline: locks, alarm, contacts and cameras as
         // badges of their own in the security badge's place. The phone keeps the filter badge.
-        lockSubs.concat(entSubs, camSubs)
+        secSort(lockSubs.concat(entSubs, camSubs))
           .forEach((sb, i) => out.push({ ...sb, id: "security:" + i, subs: [] }));
       } else {
         out.push({
@@ -24064,7 +24103,7 @@ class CasoraPanel extends HTMLElement {
           color: soft && (parts.length || sec.triggered) ? "var(--casora-color-orange, #FF9F0A)" : TEAL,
           text: secSum ? secSum.text : secText,
           html: secSum && secMode === "short" ? secSum.html : null,
-          subs: lockSubs.concat(camSubs, entSubs),
+          subs: secSort(lockSubs.concat(camSubs, entSubs)),
         });
       }
     }
@@ -27115,6 +27154,142 @@ class CasoraPanel extends HTMLElement {
 
   _badgeOrder(room) {
     return badgeOrderOf(((room || {}).variables || {}).badge_order);
+  }
+
+  // Security badge › Order (security_sub_order): one row per kind of entry, dragged by its grip (mouse, touch) or
+  // moved with the arrow keys on it; "Reset" goes back to the usual order. write = the section's setVar (mirrors
+  // to the phone pair). Fewer than two kinds: nothing to order, no list.
+  _secSubOrderField(room, fs, f, write) {
+    const rooms = ((this._state || {}).compact || {}).rooms || [];
+    const home = isHomeRoom(room, rooms);
+    const house = home && typeof window.casoraHouseContacts === "function" ? window.casoraHouseContacts(this._hass) : [];
+    const SC = window._casoraSecCovers;
+    const covers = home && !!(SC && SC.cfg && SC.cfg().ids.length);
+    const present = secSubPresent(room.variables || {}, (this._hass || {}).states || {}, house, covers);
+    if (present.length < 2) return;
+    const tr = trLabel;
+    const wrap = document.createElement("div");
+    wrap.className = "row scenecolors editing suborder";
+    wrap.dataset.key = f.key;
+    const head = document.createElement("div");
+    head.className = "schead";
+    const lab = document.createElement("label");
+    lab.textContent = f.label;
+    head.appendChild(lab);
+    const reset = document.createElement("button");
+    reset.type = "button";
+    reset.className = "badgeedit subreset";
+    reset.textContent = "Reset";
+    head.appendChild(reset);
+    wrap.appendChild(head);
+    const list = document.createElement("div");
+    list.className = "sclist";
+    wrap.appendChild(list);
+    fs.appendChild(wrap);
+    if (f.hint) {
+      const h = document.createElement("div");
+      h.className = "hint";
+      h.textContent = f.hint;
+      fs.appendChild(h);
+    }
+
+    const store = (ids, focusKey) => {
+      write(f.key, ids, f);
+      this._markDirty();
+      this._syncPreview();
+      paint(focusKey);
+    };
+    reset.onclick = () => store(undefined);
+    const move = (from, to, focusKey) => {
+      const ids = secSubRows(room.variables[f.key], present);
+      if (to < 0 || to >= ids.length || to === from) return;
+      const [k] = ids.splice(from, 1);
+      ids.splice(to, 0, k);
+      store(ids, focusKey);
+    };
+    // Same drag as the scene list (_renderSceneColors): the row follows the finger, the others make room.
+    const drag = (ev, row) => {
+      if (ev.button) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      const rowsNow = [...list.children];
+      const from = rowsNow.indexOf(row);
+      if (from < 0) return;
+      const step = rowsNow.length > 1 ? rowsNow[1].offsetTop - rowsNow[0].offsetTop : row.offsetHeight;
+      const y0 = ev.clientY;
+      let to = from;
+      try { row.setPointerCapture(ev.pointerId); } catch (e) { /* capture is a nicety */ }
+      row.classList.add("scdrag");
+      rowsNow.forEach((r) => { if (r !== row) r.style.transition = "transform .2s cubic-bezier(.2,.8,.2,1)"; });
+      const mv = (e) => {
+        const dy = e.clientY - y0;
+        row.style.transform = "translateY(" + dy + "px)";
+        to = Math.max(0, Math.min(rowsNow.length - 1, from + Math.round(dy / step)));
+        rowsNow.forEach((r, i) => {
+          if (r === row) return;
+          let shift = 0;
+          if (from < to && i > from && i <= to) shift = -step;
+          if (from > to && i < from && i >= to) shift = step;
+          r.style.transform = shift ? "translateY(" + shift + "px)" : "";
+        });
+      };
+      const up = () => {
+        row.removeEventListener("pointermove", mv);
+        row.removeEventListener("pointerup", up);
+        row.removeEventListener("pointercancel", up);
+        rowsNow.forEach((r) => { r.style.transition = ""; r.style.transform = ""; });
+        row.classList.remove("scdrag");
+        move(from, to);
+      };
+      row.addEventListener("pointermove", mv);
+      row.addEventListener("pointerup", up);
+      row.addEventListener("pointercancel", up);
+    };
+
+    const paint = (focusKey) => {
+      const custom = Array.isArray(room.variables[f.key]) && room.variables[f.key].length > 0;
+      reset.hidden = !custom;
+      list.innerHTML = "";
+      secSubRows(room.variables[f.key], present).forEach((k, i) => {
+        const row = document.createElement("div");
+        row.className = "scenecolor subrow";
+        row.dataset.id = k;
+        const dot = document.createElement("span");
+        dot.className = "scdot";
+        dot.style.background = studioIcon("badge-security");
+        const ic = document.createElement("ha-icon");
+        ic.className = "scicon";
+        ic.setAttribute("icon", SEC_SUB_ICON[k] || "mdi:shield-home");
+        ic.style.color = "#fff";
+        dot.appendChild(ic);
+        const nm = document.createElement("span");
+        nm.className = "scname";
+        nm.textContent = tr(SEC_SUB_LABEL[k] || k);
+        row.appendChild(dot);
+        row.appendChild(nm);
+        const grip = document.createElement("button");
+        grip.type = "button";
+        grip.className = "scgrip";
+        grip.title = tr("Drag to reorder");
+        grip.setAttribute("aria-label", tr("Drag to reorder") + ": " + nm.textContent);
+        grip.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"'
+          + ' stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"/></svg>';
+        grip.onpointerdown = (ev) => drag(ev, row);
+        grip.onkeydown = (ev) => {
+          const d = ev.key === "ArrowUp" ? -1 : ev.key === "ArrowDown" ? 1 : 0;
+          if (!d) return;
+          ev.preventDefault();
+          move(i, i + d, k);
+        };
+        row.appendChild(grip);
+        list.appendChild(row);
+      });
+      if (focusKey) {
+        const g = list.querySelector('.subrow[data-id="' + focusKey + '"] .scgrip');
+        if (g) g.focus();
+      }
+    };
+    paint();
   }
 
   // Own badges (#53): the list custom_badges in the room's variables, one block per badge – name, icon, color,

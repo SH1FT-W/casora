@@ -2787,7 +2787,13 @@
     "No picture": "Sem imagem",
     "The car's integration has no picture.": "A integração do carro não fornece imagem.",
     "Automatic: the picture of the car's integration. Without a picture the popup stays as it is.": "Automático: a imagem da integração do carro. Sem imagem, a janela fica como está.",
-    "The car's integration has no picture. Upload your own photo, or leave it without one.": "A integração do carro não fornece imagem. Envia a tua própria foto ou deixa sem imagem."
+    "The car's integration has no picture. Upload your own photo, or leave it without one.": "A integração do carro não fornece imagem. Envia a tua própria foto ou deixa sem imagem.",
+    "Order": "Ordem",
+    "Reset": "Repor",
+    "Gates": "Portões",
+    "Windows": "Janelas",
+    "Other sensors": "Outros sensores",
+    "Drag to change the order of the entries in the badge and its popup.": "Arrasta para mudar a ordem das entradas no badge e no seu popup."
   },
   "patterns": [
     [
