@@ -173,7 +173,10 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
   const p = await stable(page, POPUP, null, { until: (v) => v && v.chart && v.rows >= 4 });
   // v3 (§3): the stage says the state word, the header line says something else (since when), never the same word twice.
   await check(tag + ': stage says „' + WANT + '“', p.stage.startsWith(WANT), p.stage);
-  await check(tag + ': state line does not repeat „' + WANT + '“ (since when instead)', p.line && !new RegExp('^' + WANT + '\\b').test(p.line) && /^Seit\b/.test(p.line), p.line);
+  // Detail round #3 (26.11.2): a last change at HA's start is no change – then there is no time to say and the line
+  // stays empty rather than repeat the word (as r320).
+  await check(tag + ': state line does not repeat „' + WANT + '“ (since when, or empty)', !new RegExp('^' + WANT + '\\b').test(p.line || '')
+    && (!p.line || /^(Seit|Vor|Gerade)\b/.test(p.line)), p.line);
   await check(tag + ': history chart', p.chart, p.chart);
   await check(tag + ': no own Aus/An next to the header switch (blueprint v2, decision 2)', !p.ctl && !p.segs.includes('Aus') && !p.segs.includes('An'), p.segs);
   // v3 §8: no „Weitere Einstellungen“ any more – „Werte“ holds just the 4 picked rows.
