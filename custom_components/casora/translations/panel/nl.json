@@ -2857,7 +2857,9 @@
     "Exporting…": "Bezig met exporteren…",
     "Importing…": "Bezig met importeren…",
     "Show search": "Zoeken tonen",
-    "Pull down at the top of the phone's Home to show a search field: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search.": "Trek bovenaan Home op de telefoon omlaag voor een zoekveld: ruimtes, apparaten en scènes. Op een computer opent Cmd+K of Ctrl+K dezelfde zoekfunctie."
+    "Pull down at the top of the phone's Home to show a search field: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search.": "Trek bovenaan Home op de telefoon omlaag voor een zoekveld: ruimtes, apparaten en scènes. Op een computer opent Cmd+K of Ctrl+K dezelfde zoekfunctie.",
+    "Update prompt on open": "Updatemelding bij openen",
+    "Shows a new Casora version once on the dashboard, a few seconds after it opens. Only for administrators; applies to your user.": "Toont een nieuwe Casora-versie één keer op het dashboard, een paar seconden na het openen. Alleen voor beheerders; geldt voor jouw gebruiker."
   },
   "patterns": [
     [

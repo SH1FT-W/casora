@@ -18,12 +18,17 @@ WebSocket (admins only):
      newer version in place, HA not restarted yet), scan_hours, repo_url, notes_lang ("de"|"en"),
      groups: [{kind: "casora", title, releases: [{kind, version, date, notes_md, notes_lang, notes_html,
                summary, source: "github"|"changelog", url?, prerelease?}]}]}
+  casora/updates/prompt ← {"language"?: str} → the dashboard's update prompt (scripts/local/39-update-prompt.js):
+    {available, version, installed, entity_id, can_install (HACS' entry can install), hacs_url, release_url,
+     prerelease, pending_restart, lines: [up to 3 short lines from the release notes]}
+    Same source as casora/updates/list (update entity, beta_updates channel); checks nothing itself.
 """
 
 from __future__ import annotations
 
 import logging
 import os
+import re
 import time
 from typing import Any
 
@@ -180,6 +185,78 @@ async def async_updates_overview(hass: HomeAssistant, force: bool = False, lang:
     }
 
 
+_BULLET = re.compile(r"^[-*+]\s+(.*)$")
+_BOLD_HEAD = re.compile(r"^\*\*(.+?)\*\*")
+
+
+def _plain(text: str) -> str:
+    """Markdown inline → plain text (links keep their label, emphasis and code marks go)."""
+    text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
+    text = re.sub(r"<[^>]+>", "", text)
+    # Emphasis only in pairs (**x**, __x__, *x*, _x_ at word edges) and code marks; beta_updates stays.
+    text = re.sub(r"(\*\*|__)(.+?)\1", r"\2", text)
+    text = re.sub(r"(?<![\w*])[*_](\S(?:.*?\S)?)[*_](?![\w*])", r"\1", text)
+    return re.sub(r"\s+", " ", text.replace("`", "")).strip()
+
+
+def prompt_lines(md: str, limit: int = 3, width: int = 110) -> list[str]:
+    """Up to `limit` short lines for the update prompt: the bold start of each top-level item
+    ("**Faster popups**: …" → "Faster popups"), else the item itself, cut to `width`."""
+    out: list[str] = []
+    for raw in (md or "").splitlines():
+        if raw[:1] in (" ", "\t"):
+            continue  # nested item: details of the one above
+        m = _BULLET.match(raw.strip())
+        if not m:
+            continue
+        item = m.group(1).strip()
+        head = _BOLD_HEAD.match(item)
+        line = _plain(head.group(1)).rstrip(":.").strip() if head else _plain(item)
+        if not line:
+            continue
+        out.append(line if len(line) <= width else line[: width - 1].rstrip() + "…")
+        if len(out) >= limit:
+            break
+    if not out:
+        first = summarize(md or "")
+        if first:
+            out.append(first if len(first) <= width else first[: width - 1].rstrip() + "…")
+    return out
+
+
+def prompt_payload(overview: dict[str, Any]) -> dict[str, Any]:
+    """casora/updates/list → what the dashboard's update prompt needs (pure, tested in
+    dev/unit/update_prompt_test.py). Offers nothing while a newer version waits for a restart."""
+    latest = str(overview.get("latest") or "")
+    rels = next((g.get("releases") or [] for g in overview.get("groups") or [] if g.get("kind") == KIND_CASORA), [])
+    rel = next((r for r in rels if r.get("version") == latest), None) or {}
+    pending = overview.get("pending_restart")
+    entity_id = overview.get("entity_id")
+    return {
+        "available": bool(overview.get("update_available")) and not pending and bool(latest),
+        "version": latest,
+        "installed": overview.get("installed"),
+        "entity_id": entity_id,
+        # Casora installs nothing itself: only HACS' update entry for Casora can (studio: canInstall).
+        "can_install": bool(overview.get("hacs") and overview.get("via") == "hacs" and entity_id),
+        "hacs_url": overview.get("hacs_url"),
+        "release_url": rel.get("url") or overview.get("repo_url"),
+        "prerelease": bool(rel.get("prerelease")),
+        "pending_restart": pending,
+        "lines": prompt_lines(rel.get("notes_md") or ""),
+    }
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({
+    vol.Required("type"): "casora/updates/prompt",
+    vol.Optional("language"): vol.Any(str, None),
+})
+@websocket_api.async_response
+async def ws_prompt(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    connection.send_result(msg["id"], prompt_payload(await async_updates_overview(hass, False, msg.get("language"))))
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required("type"): "casora/updates/list",
@@ -197,4 +274,5 @@ def async_setup_updates(hass: HomeAssistant) -> None:
     if hass.data.get(DOMAIN, {}).get("updates_ws"):
         return
     websocket_api.async_register_command(hass, ws_list)
+    websocket_api.async_register_command(hass, ws_prompt)
     hass.data.setdefault(DOMAIN, {})["updates_ws"] = True

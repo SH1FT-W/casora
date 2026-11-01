@@ -224,6 +224,7 @@ const MODULES = [
   '36-shopping',
   '37-kettle',
   '38-search',
+  '39-update-prompt',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());
