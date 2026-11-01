@@ -40,7 +40,10 @@ const st = core.slice(core.indexOf('    _sinceText(cur) {'), core.indexOf('    _
 assert.ok(/norm\(mainTxt\) !== norm\(stage\)/.test(dd) && /this\._sinceText\(/.test(dd) && /var since = 'Seit ' \+/.test(st), 'frame: same text → „Seit …“');
 // A state HA has no word for (enum sensor without translations: „failed“) never stands raw in the head (final review).
 const fb = core.slice(core.indexOf('    _headFallback(again) {'), core.indexOf('    _sinceText(cur) {'));
-assert.ok(/txt === cur\.state && \/\^\(\?:\[a-z\]\[a-z0-9_\]\*\|\[A-Z\]\[A-Z0-9_\]\{2,\}\)\$\/\.test\(txt\)\) \{ txt = this\._sinceText\(cur\)/.test(fb) && /_casoraRawWord\(cur\.state\)/.test(fb),
+// The word itself comes from window.casoraStateWord (shared with the search rows): null = no word → „Seit …“.
+const sw = core.slice(core.indexOf('  window.casoraStateWord = function'), core.indexOf('  window._casoraNiceState'));
+assert.ok(/txt === cur\.state && \/\^\(\?:\[a-z\]\[a-z0-9_\]\*\|\[A-Z\]\[A-Z0-9_\]\{2,\}\)\$\/\.test\(txt\)\) return null/.test(sw) && /_casoraRawWord\(cur\.state\)/.test(sw)
+  && /window\.casoraStateWord\(h, cur\)/.test(fb) && /txt === null\) \{ txt = this\._sinceText\(cur\)/.test(fb),
   'frame: raw state word → Casora\'s word („ready“ → „Bereit“), else „Seit …“');
 assert.ok(/this\._headerStatus\.hidden = !this\._headerStatus\.textContent\.trim\(\);\n      this\._dedupeHead\(\);/.test(core), 'mirrored line compared');
 assert.ok(/if \(again\) this\._dedupeHead\(\);/.test(core), 'fallback compared');
