@@ -7,9 +7,9 @@ dashboards/casora/button_card_templates.json#casora_weather | c[1] | popup: mdi 
 dashboards/casora/button_card_templates.json#casora_weather | re:^r0\( | popup: Math.round() number or '–' | 3
 dashboards/casora/button_card_templates.json#casora_weather | (i === 0 ? 'Heute' : d.toLocaleDateString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { weekday: 'short' }).replace('.', '')) | weekday from Intl (browser), no HA text | 1
 dashboards/casora/button_card_templates.json#casora_weather | re:^(?:left|width)$ | popup: bar position, toFixed() numbers | 2
-dashboards/casora/button_card_templates.json#casora_weather | re:^(?:pills|_mh|css|chartH)$ | popup: markup/CSS of the code (labels escaped where built) | 6
+dashboards/casora/button_card_templates.json#casora_weather | re:^(?:pills|_mh|css|chartH)$ | popup: markup/CSS of the code (labels escaped where built) | 7
 dashboards/casora/button_card_templates.json#casora_weather | key | popup: 'hw_' + id with [^a-zA-Z0-9] replaced | 3
-dashboards/casora/button_card_templates.json#casora_weather | re:^(?:\(_v3 \? '' : pills\)|line3|\(chartH \|\| ''\))$ | popup v3: markup of the code – UI.line() escapes, pills/chartH as above | 3
+dashboards/casora/button_card_templates.json#casora_weather | re:^(?:\(_v3 \? '' : pills\)|line3|\(chartH \|\| ''\))$ | popup v3: markup of the code – UI.line() escapes, pills/chartH as above | 2
 dashboards/casora/button_card_templates.json#casora_weather | (hiLo || '') | popup: "H 12° · T 5°" from r0() numbers | 1
 # casora_weather_warning, casora_popup_weather_warning
 dashboards/casora/button_card_templates.json#casora_weather_warning | return isMobile ? _t : "Warnungen · " + _t | _t = casoraEsc(text) one line above | 1
