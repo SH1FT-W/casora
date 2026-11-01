@@ -158,6 +158,12 @@
     var d = Math.round(h / 24);
     return 'seit ' + d + (d === 1 ? ' Tag' : ' Tagen');
   };
+  // The same as a fact on the stage, word first („Seit 8 Min.“ – „Zustand seit 8 Min.“ read twice, prod test 01.11.2026).
+  var sinceFact = function (ts) {
+    var t = since(ts);
+    if (!t) return null;
+    return /^seit /.test(t) ? { label: 'Seit', value: t.slice(5) } : { label: 'Zuletzt', value: t };
+  };
   var iconOf = function (st) {
     var Z = window._casoraZiele;
     if (Z && Z.iconOf) return Z.iconOf(st);
@@ -221,7 +227,8 @@
     // Popup v3 (richtlinien §4.7 fallback, §7, §8): a status stage S7 with the tile's state, the controls under it, right
     // the values and the chart as the section „Verlauf“ (120); no settings.
     if (UI.v3 && UI.v3() && UI.stage) {
-      var fv = { stage: { card: K.secCard(watch, call('stage'), S) } };
+      // The status line is the popup's own (the frame's fallback said HA's „Ein“ beside „An“ on the stage, prod test 01.11.).
+      var fv = { line: { card: K.secCard(watch, call('line'), S) }, stage: { card: K.secCard(watch, call('stage'), S) } };
       if (C.controls) fv.ctl = { card: K.secCard([C.id], call('ctl'), S) };
       if (C.values.length) fv.vals = { card: K.secCard(C.values, call('vals'), S) };
       if (C.chart) {
@@ -230,7 +237,7 @@
           series: [{ entity: C.chart, name: nameOf(cst3, C.chart), unit: (cst3.attributes || {}).unit_of_measurement || '', color: 'accent' }],
           height: 120, readout: 'own', plate: true, title: T('Verlauf') } };
       }
-      return K.layout({ fields: fv, top: [], stage: 'stage', left: ['ctl'], right: ['vals', 'chart'], narrowOrder: ['ctl', 'vals', 'chart'] });
+      return K.layout({ fields: fv, top: ['line'], stage: 'stage', left: ['ctl'], right: ['vals', 'chart'], narrowOrder: ['ctl', 'vals', 'chart'] });
     }
     if (C.chart) {
       var cst = S[C.chart], unit = (cst.attributes || {}).unit_of_measurement || '';
@@ -307,13 +314,31 @@
       var notesHtml = UI.note ? n3.map(function (n) { return UI.note(n); }).join('') : '';
       if (!C.id && C.tpl) {
         var TP3 = window._casoraTemplates, tx3 = TP3 && TP3.text ? TP3.text(C.tpl) : null;
-        return UI.stage('status', { tone: 'good', icon: 'mdi:text-box-outline', text: tx3 == null ? '…' : (String(tx3).trim() || '—'), extra: notesHtml });
+        return UI.stage('status', { dial: false, tone: 'good', icon: 'mdi:text-box-outline', text: tx3 == null ? '…' : (String(tx3).trim() || '—'), extra: notesHtml });
       }
       if (!C.id) return UI.stage('status', { empty: { icon: 'mdi:shape-outline', studio: true, text: T('Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.') } });
-      if (!st) return UI.stage('status', { tone: 'warn', icon: 'mdi:help-circle-outline', text: 'Gerät fehlt', facts: [{ label: 'Status', value: C.id }] });
-      var ago3 = !bad(st.state) ? since(st.last_changed) : null;
-      return UI.stage('status', { tone: bad(st.state) ? 'warn' : F.on(st) ? 'good' : 'off', icon: iconOf(st), text: F.word(hass, st),
-        state: st.state === 'unavailable' ? 'na' : null, facts: ago3 ? [{ label: T('Zustand'), value: ago3 }] : [], extra: notesHtml });
+      if (!st) return UI.stage('status', { dial: false, tone: 'warn', icon: 'mdi:help-circle-outline', text: 'Gerät fehlt', facts: [{ label: 'Status', value: C.id }] });
+      var ago3 = !bad(st.state) ? sinceFact(st.last_changed) : null;
+      // A ring only when it measures something (prod test 01.11.2026): a percentage fills it like a level (S6 with its
+      // range); a switch, a word or a reading without a range keep the plate – a full green ring said nothing.
+      var a3 = st.attributes || {};
+      if (F.isNumeric(st) && a3.unit_of_measurement === '%') {
+        return UI.stage('chart', { value: F.fmt(hass, st).replace(/\s*%$/, ''), unit: '%', ring: { min: 0, max: 100 }, icon: iconOf(st),
+          trend: ago3 ? ago3.label + ' ' + ago3.value : null, extra: notesHtml });
+      }
+      return UI.stage('status', { dial: false, tone: bad(st.state) ? 'warn' : F.on(st) ? 'good' : 'off', icon: iconOf(st), text: F.word(hass, st),
+        // One fact read as a phrase („Seit 8 Min.“) – the plate sets value over label, which read „8 Min. / Seit“.
+        state: st.state === 'unavailable' ? 'na' : null, facts: ago3 ? [{ label: '', value: ago3.label + ' ' + ago3.value }] : [], extra: notesHtml });
+    }
+    if (part === 'line') {
+      // v3 status line: the same word as the stage (word list „An“/„Aus“), the hints stand in the stage.
+      if (!C.id && C.tpl) {
+        var TPl = window._casoraTemplates, txl = TPl && TPl.text ? TPl.text(C.tpl) : null;
+        return UI.line(txl == null ? '…' : (String(txl).trim() || '—'), []);
+      }
+      if (!C.id) return UI.line('Kein Gerät gewählt', []);
+      if (!st) return UI.line('Gerät fehlt', []);
+      return UI.line(F.word(hass, st), []);
     }
     if (part === 'hero') {
       var notes = [];

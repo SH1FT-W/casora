@@ -139,6 +139,23 @@ assert.doesNotMatch(sec('hero', states['switch.qa_pumpe'], V), /Kein Verlauf/, '
   window._casoraUI = UI0;
   assert.ok(seen.length && !/Kein Verlauf/.test(seen.join()), 'stage: no developer note');
 }
+// Popup v3 (prod test 01.11.2026): the status line says the stage's word („An“, never HA's „Ein“); a ring only when it
+// measures something – a switch keeps the plate (no meaningless full ring), a percentage fills a level; „Seit 2 Std.“.
+{
+  const UI0 = window._casoraUI, seen = [];
+  window._casoraUI = Object.assign({}, UI0, { stage: (t, o) => { seen.push([t, o]); return ''; } });
+  sec('stage', states['switch.qa_pumpe'], V);
+  sec('stage', states['sensor.qa_prozent']);
+  sec('stage', states['sensor.qa_temp']);
+  window._casoraUI = UI0;
+  const [sw, pc, tp] = seen;
+  assert.equal(sw[0], 'status'); assert.equal(sw[1].dial, false, 'switch: plate, no ring'); assert.equal(sw[1].text, 'An');
+  assert.deepEqual(sw[1].facts, [{ label: '', value: 'Seit 2 Std.' }], 'word first: „Seit 2 Std.“');
+  assert.equal(pc[0], 'chart'); assert.equal(pc[1].unit, '%'); assert.deepEqual(pc[1].ring, { min: 0, max: 100 }, 'percentage: a level ring');
+  assert.equal(tp[0], 'status'); assert.equal(tp[1].dial, false, 'reading without a range: plate');
+  assert.equal(sec('line', states['switch.qa_pumpe'], V), '<line>An|</line>', 'status line = the stage word');
+  assert.equal(sec('line', null), '<line>Kein Gerät gewählt|</line>');
+}
 assert.equal(sec('hero', states['sensor.qa_temp']), '<line>21,5 °C|seit 2 Std.</line><note>Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.</note>');
 assert.equal(sec('hero', states['sensor.qa_weg']), '<line>Nicht verfügbar|</line><note>Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.</note>');
 assert.equal(F.sec('hero', { id: 'sensor.qa_fehlt', values: [], labels: {} }, states, hass), '<line>Gerät fehlt|sensor.qa_fehlt</line>');
