@@ -2664,7 +2664,17 @@
   "Warten lohnt sich nicht.": "Waiting is not worth it.",
   "Claude sucht ein Rezept …": "Claude is looking for a recipe …",
   "kaum Unterschied": "hardly any difference",
-  "abends günstiger": "cheaper in the evening"
+  "abends günstiger": "cheaper in the evening",
+  "WLAN aus": "Wi-Fi off",
+  "1 WLAN an": "1 Wi-Fi on",
+  "Ziel aller": "All rooms",
+  "Ø Ziel": "Ø target",
+  "Lampe": "Light",
+  "Vorhanden": "Present",
+  "Fehlt": "Missing",
+  "Ja": "Yes",
+  "unbekannt": "unknown",
+  "Luftfeuchte · 24 Std.": "Humidity · 24 h"
  },
  "patterns": [
   [
@@ -4818,6 +4828,38 @@
   [
    "^(.+) frei$",
    "{1} spare"
+  ],
+  [
+   "^Nächstes Spiel (.+)$",
+   "Next match {1}"
+  ],
+  [
+   "^(\\d+) WLANs an$",
+   "{1} Wi-Fi networks on"
+  ],
+  [
+   "^Schwächste: (.+)$",
+   "Weakest: {1}"
+  ],
+  [
+   "^Zuerst wechseln: (.+)$",
+   "Replace first: {1}"
+  ],
+  [
+   "^Jetzt: (.+)$",
+   "Now: {1}"
+  ],
+  [
+   "^Zuletzt geöffnet (.+)$",
+   "Last opened {1}"
+  ],
+  [
+   "^Profil „(.+)“$",
+   "Profile “{1}”"
+  ],
+  [
+   "^(\\d+) unbekannt$",
+   "{1} unknown"
   ]
  ],
  "Gerät in Home Assistant": "Device in Home Assistant"

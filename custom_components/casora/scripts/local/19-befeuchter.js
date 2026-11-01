@@ -34,7 +34,7 @@
 
   // Modus-Namen wie in HA (Übersetzung der Integration), sonst die gängigen auf Deutsch.
   var DE = { normal: 'Normal', eco: 'Eco', away: 'Abwesend', boost: 'Boost', comfort: 'Komfort', home: 'Zuhause',
-    sleep: 'Schlaf', auto: 'Auto', baby: 'Baby', manual: 'Manuell', low: 'Niedrig', medium: 'Mittel', high: 'Hoch' };
+    sleep: 'Schlafen', auto: 'Auto', baby: 'Baby', manual: 'Manuell', low: 'Niedrig', medium: 'Mittel', high: 'Hoch' };
   H.modeLabel = function (hass, st, m) {
     var t = m;
     try { if (hass && hass.formatEntityAttributeValue) t = hass.formatEntityAttributeValue(st, 'mode', m) || m; } catch (e) { t = m; }
@@ -94,7 +94,9 @@
       var R3 = ['info'];
       if (c.humidity) {
         f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history',
-          series: [{ entity: c.humidity, name: 'Luftfeuchte', unit: '%' }], height: 120, readout: 'own', plate: true } };
+          // A head like the floor heating's Verlauf („LUFTFEUCHTE · 24 STD.“), humidity blue (§7.3) – detail round #21.
+          title: 'Luftfeuchte · 24 Std.', series: [{ entity: c.humidity, name: 'Luftfeuchte', unit: '%', color: 'var(--casora-color-blue, #5B8FC9)' }],
+          height: 120, readout: 'own', plate: true } };
         R3.push('chart');
       }
       return K.layout({ fields: f, top: ['hero'], stage: 'stage', left: [], right: R3,
@@ -123,7 +125,8 @@
     var s = H.status(c, states, hass), st = states[c.hum], tgt = { entity_id: c.hum };
     // A mode while off switches the humidifier on (as the segment before).
     var modeSvc = function (m) { return s.on ? { domain: 'humidifier', service: 'set_mode', data: { mode: m }, target: tgt } : { domain: 'humidifier', service: 'turn_on', target: tgt }; };
-    if (part === 'v3hero') return UI.hero({ value: s.label, sub: s.mode ? H.modeLabel(hass, st, s.mode) : null, center: true });
+    // The mode is the chosen moon – the head says what the device does only (detail round #21).
+    if (part === 'v3hero') return UI.hero({ value: s.label, center: true });
     if (part === 'stage') {
       var lo = s.min == null ? 0 : s.min, hi = s.max == null ? 100 : s.max, tv = s.target;
       var foot = s.current != null ? 'Jetzt ' + Math.round(s.current) + ' %' : null;
@@ -174,7 +177,8 @@
     }
     if (part === 'info') {
       var rows = [];
-      if (s.current != null) rows.push({ entity: c.humidity || null, icon: 'mdi:water-percent', iconTone: 'accent', label: 'Luftfeuchte', value: Math.round(s.current) + ' %' });
+      // v3: the humidity stands on the dial („Jetzt 41 %“) and in its chart – not a third time as a row.
+      if (s.current != null && !(H.v3() && c.humidity)) rows.push({ entity: c.humidity || null, icon: 'mdi:water-percent', iconTone: 'accent', label: 'Luftfeuchte', value: Math.round(s.current) + ' %' });
       if (s.water != null) rows.push({ entity: c.water, icon: 'mdi:cup-water', iconTone: s.water < 15 ? 'warn' : 'accent', label: 'Wassertank',
         value: Math.round(s.water) + ' %', bar: s.water / 100, barTone: s.water < 15 ? 'bad' : s.water < 30 ? 'warn' : 'good' });
       else if (s.waterLow != null) rows.push({ entity: c.waterLow, icon: 'mdi:cup-water', iconTone: s.waterLow ? 'bad' : 'accent', label: 'Wassertank',

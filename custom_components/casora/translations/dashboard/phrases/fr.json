@@ -2682,7 +2682,17 @@
   "Warten lohnt sich nicht.": "Attendre ne vaut pas la peine.",
   "Claude sucht ein Rezept …": "Claude cherche une recette …",
   "kaum Unterschied": "presque aucune différence",
-  "abends günstiger": "moins cher le soir"
+  "abends günstiger": "moins cher le soir",
+  "WLAN aus": "Wi-Fi désactivé",
+  "1 WLAN an": "1 Wi-Fi actif",
+  "Ziel aller": "Toutes",
+  "Ø Ziel": "Ø consigne",
+  "Lampe": "Lampe",
+  "Vorhanden": "Présent",
+  "Fehlt": "Manquant",
+  "Ja": "Oui",
+  "unbekannt": "inconnu",
+  "Luftfeuchte · 24 Std.": "Humidité · 24 h"
  },
  "patterns": [
   [
@@ -4836,6 +4846,38 @@
   [
    "^(.+) frei$",
    "{1} disponibles"
+  ],
+  [
+   "^Nächstes Spiel (.+)$",
+   "Prochain match {1}"
+  ],
+  [
+   "^(\\d+) WLANs an$",
+   "{1} réseaux Wi-Fi actifs"
+  ],
+  [
+   "^Schwächste: (.+)$",
+   "La plus faible : {1}"
+  ],
+  [
+   "^Zuerst wechseln: (.+)$",
+   "À remplacer d'abord : {1}"
+  ],
+  [
+   "^Jetzt: (.+)$",
+   "Maintenant : {1}"
+  ],
+  [
+   "^Zuletzt geöffnet (.+)$",
+   "Dernière ouverture {1}"
+  ],
+  [
+   "^Profil „(.+)“$",
+   "Profil « {1} »"
+  ],
+  [
+   "^(\\d+) unbekannt$",
+   "{1} inconnu"
   ]
  ],
  "Gerät in Home Assistant": "Appareil dans Home Assistant"

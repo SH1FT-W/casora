@@ -221,10 +221,16 @@
   };
 
   // ── Climate words (as the thermostat tile) ────────────────────────────────
-  V.climateText = function (st, roomTemp) {
+  // words: only the word (Popup v3 head, §3: the dial already shows target and room temperature – detail round #4).
+  V.climateText = function (st, roomTemp, words) {
     if (!st) return 'Nicht verfügbar';
     var mode = st.state, a = st.attributes || {};
     if (mode === 'unavailable') return 'Nicht verfügbar';
+    if (words) {
+      var aw = window.casoraClimateActive ? window.casoraClimateActive(st) || {} : {};
+      return aw.cooling ? 'Kühlt' : aw.heating ? 'Heizt' : mode === 'cool' || mode === 'heat' ? 'Bereit'
+        : mode === 'auto' || mode === 'heat_cool' ? 'Automatik' : mode === 'dry' ? 'Entfeuchten' : mode === 'fan_only' ? 'Nur Lüfter' : 'Aus';
+    }
     var room = roomTemp != null ? nf(Math.round(roomTemp * 10) / 10) + '° · ' : '';
     var target = a.temperature != null ? deg(a.temperature)
       : a.target_temp_low != null && a.target_temp_high != null ? nf(a.target_temp_low) + '–' + nf(a.target_temp_high) + '°' : null;
@@ -590,7 +596,7 @@
     var z = V.zone(data, id);
     var date = new Date();
     if (part === 'hero') {
-      var main = V.climateText(st, roomTemp(st, S0, sensor));
+      var main = V.climateText(st, roomTemp(st, S0, sensor), !!(UI.v3 && UI.v3()));
       var rest = z ? [V.status(z, date)] : [];
       return UI.line(main, rest, { tone: st && st.state === 'unavailable' ? 'bad' : null });
     }

@@ -213,6 +213,15 @@ assert.deepEqual(mlay.variables.casora_more, M, 'the popup carries what its rows
 assert.ok(mlay.fields.lists.card.watch.includes('input_boolean.qa_sommer'), 'list previews follow their members');
 assert.equal(L.moreSec('lists', M, states, hass),
   '<group Einstellungen>group.qa_rollo:Rollladen runter/6 Geräte · 1 An;group.qa_heizung:Heizung/3 Geräte · 1 An</group>');
+// Detail round #29: an empty group is no › row (it opened an empty page).
+{
+  const UI0 = window._casoraUI; let seen = null;
+  window._casoraUI = Object.assign({}, UI0, { group: (rows) => { seen = rows; return ''; } });
+  const st0 = Object.assign({}, states, { 'group.qa_leer': { entity_id: 'group.qa_leer', state: 'off', attributes: { entity_id: [] } } });
+  L.moreSec('lists', L.moreCfg({ more_lists: ['group.qa_leer'] }), st0, hass);
+  window._casoraUI = UI0;
+  assert.ok(seen && seen.length === 1 && seen[0].entity === null && /Keine Einträge/.test(seen[0].sub), 'empty group: no target, ' + JSON.stringify(seen));
+}
 window._casoraChartCard = { LABEL: { '24h': '24 Std.' }, value: () => '21,5 °C', popup: (st, S, h, V) => ({ chart: st.entity_id, V }) };
 assert.match(L.moreSec('charts', M, states, hass), /data-casora-cols="auto"><group Diagramme>sensor\.qa_temp:temp\/24 Std\. · 21,5 °C;/);
 assert.equal(L.moreSec('hero', M, states, hass), '<line>2 Listen · 2 Diagramme|</line>');

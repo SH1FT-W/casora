@@ -60,6 +60,8 @@
     if (hpOk) list.forEach(function (b) { window._hpChartCfg(b.id, b.name, '30d', v3 ? 'var(--casora-color-green)' : '#30D158', 140); });
     var f = {};
     if (v3) f.stage = { card: K.secCard(ids, call('_casoraSoftBat', 'stage', C), states) };
+    // The head's status line (§3): which battery comes next, in words – not the tile entity's value („23,27 °C“).
+    if (v3) f.line = { card: K.secCard(ids, call('_casoraSoftBat', 'line', C), states) };
     else f.hero = { card: K.secCard(ids, call('_casoraSoftBat', 'hero', C), states) };
     // Leere Bereiche gar nicht erst anlegen (eine leere Karte kostet sonst einen Rasterabstand).
     var R0 = rows(states, C);
@@ -80,7 +82,7 @@
     }
     if (R0.some(function (r) { return lvOf(r.v) !== 'ok'; })) f.low = { card: K.secCard(ids.concat(chg), call('_casoraSoftBat', 'low', C), states) };
     if (R0.some(function (r) { return lvOf(r.v) === 'ok'; })) f.all = { card: K.secCard(ids.concat(chg), call('_casoraSoftBat', 'all', C), states) };
-    if (v3) return K.layout({ fields: f, top: [], stage: 'stage', left: ['chart'], right: ['low', 'all'], narrowOrder: ['low', 'all', 'chart'] });
+    if (v3) return K.layout({ fields: f, top: ['line'], stage: 'stage', left: ['chart'], right: ['low', 'all'], narrowOrder: ['low', 'all', 'chart'] });
     return K.layout({ fields: f, top: ['hero', 'chart', 'low', 'all'], left: [], right: [] });
   };
   var pctOf = function (states, id) { var n = parseFloat(raw(states, id)); return isNaN(n) ? null : Math.round(n); };
@@ -150,6 +152,12 @@
       var crit = low.some(function (r) { return lvOf(r.v) === 'crit'; });
       return UI.line(low.length ? (low.length === 1 ? '1 Akku schwach' : low.length + ' Akkus schwach') : 'Alle Batterien OK',
         min ? ['Am niedrigsten: ' + min.name + ' ' + min.v + ' %'] : [], { tone: low.length ? (crit ? 'bad' : 'warn') : null });
+    }
+    if (part === 'line') {
+      // The wheel says how many are weak and the lowest percent; the head names the battery to replace first.
+      var w = R[0];
+      if (!w) return '';
+      return UI.line(low.length ? 'Zuerst wechseln: ' + w.name : 'Schwächste: ' + w.name, []);
     }
     // Popup v3 stage S7: „Alle Batterien OK“ / „n Akkus schwach“, the weakest and the counts as facts.
     if (part === 'stage') {

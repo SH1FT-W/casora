@@ -1,6 +1,6 @@
 // Issue #30: the house-wide "Lights" tile on Home (setup: entity = first light, variables.lights = all lights)
 // opened a popup titled after the room of its first light, with "Leuchten im Raum" over every light of the house
-// and that room as label. Now: "Beleuchtung", heading "Leuchten", no room label – detected at runtime for existing
+// and that room as label. Now: "Beleuchtung", heading "Leuchten", label „Zuhause“ (owner, 01.11.2026; before: none) – detected at runtime for existing
 // dashboards and marked by the setup (variables.house) for new ones. Room tiles keep their room, also when their
 // list holds lamps of other rooms; light badges keep their entity's name.
 //   node dev/unit/light_house_title.mjs
@@ -96,7 +96,7 @@ const see = (r) => JSON.stringify([r.title, r.heading, r.label]);
   const r = popup(h, old);
   assert.equal(r.title, 'Beleuchtung', '(a) title: ' + r.title);
   assert.equal(r.heading, 'Leuchten', '(a) heading: ' + r.heading);
-  assert.equal(r.label, '', '(a) no room label: ' + r.label);
+  assert.equal(r.label, 'Zuhause', '(a) label Zuhause (owner, 01.11.2026): ' + r.label);
   assert.ok(r.body.includes('>Wohnzimmer Decke<') && r.body.includes('>Beleuchtung Spiegel<'), '(a) lamp names not shortened');
   assert.ok(r.std.includes(': "Beleuchtung";') && !r.std.includes('"Wohnzimmer"'), '(a) standard look: power control label');
   // Room tile of the same dashboard (two lights, one area) keeps its room.
@@ -119,7 +119,7 @@ const see = (r) => JSON.stringify([r.title, r.heading, r.label]);
   const r = popup(h, home);
   assert.equal(r.title, 'Beleuchtung', '(b) title: ' + r.title);
   assert.equal(r.heading, 'Leuchten', '(b) heading');
-  assert.equal(r.label, '', '(b) no room label');
+  assert.equal(r.label, 'Zuhause', '(b) label Zuhause');
   // The room's group tile keeps the room's (Studio) name.
   assert.equal(popup(h, lightTile('light.demo_kueche')).title, 'Kochnische', '(b) group tile of a room');
 }
@@ -156,7 +156,7 @@ const see = (r) => JSON.stringify([r.title, r.heading, r.label]);
   const r = popup(h, home);
   assert.equal(r.title, 'Alle Lampen', '(e) own title in the popup');
   assert.equal(r.heading, 'Leuchten', '(e) heading');
-  assert.equal(r.label, '', '(e) no room label');
+  assert.equal(r.label, 'Zuhause', '(e) label Zuhause');
   const expr = T.casora_light.tap_action.casora_popup.title.trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');
   const vars = Object.assign({}, T.casora_popup_light.variables, home.variables);
   assert.equal(new Function('entity', 'states', 'variables', 'hass', expr).call({ _config: home }, h.states[home.entity], h.states, vars, h), 'Alle Lampen', '(e) tile title');
@@ -182,7 +182,7 @@ const see = (r) => JSON.stringify([r.title, r.heading, r.label]);
   const r = popup(h, home);
   assert.equal(r.title, 'Beleuchtung', '(g) title: ' + r.title);
   assert.equal(r.heading, 'Leuchten', '(g) heading');
-  assert.equal(r.label, '', '(g) no room label');
+  assert.equal(r.label, 'Zuhause', '(g) label Zuhause');
 }
 
 // (h) The setup marks the Home tile; the marker decides even where the lights look like one room.
@@ -203,7 +203,7 @@ const see = (r) => JSON.stringify([r.title, r.heading, r.label]);
   const r = popup(h, home);
   assert.equal(r.title, 'Beleuchtung', '(h) title');
   assert.equal(r.heading, 'Leuchten', '(h) heading');
-  assert.equal(r.label, '', '(h) no room label');
+  assert.equal(r.label, 'Zuhause', '(h) label Zuhause');
   assert.equal(popup(h, lightTile('light.demo_wz_decke', { lights: two }, 'Lichter')).title, 'Wohnzimmer', '(h) without marker: the room');
 }
 
@@ -221,7 +221,7 @@ for (const area of [true, false]) {
   delete old.variables.house;
   useDash([{ path: 'home', cards: [old] }].concat(p.rooms.slice(1).map((r) => room(r.name, r.items.map((x) => x.tile)))));
   const r = popup(h, old);
-  assert.deepEqual([r.title, r.heading, r.label], ['Beleuchtung', 'Leuchten', ''], tag + 'Home tile: ' + see(r));
+  assert.deepEqual([r.title, r.heading, r.label], ['Beleuchtung', 'Leuchten', 'Zuhause'], tag + 'Home tile: ' + see(r));
   assert.ok(r.std.includes(': "Beleuchtung";') && !r.std.includes('"Wohnzimmer"'), tag + 'standard look: power control label');
   const g = popup(h, lightTile('light.demo_wohnzimmer', null, 'Lights'));
   assert.deepEqual([g.title, g.heading, g.label], ['Wohnzimmer', 'Leuchten im Raum', 'Wohnzimmer'], tag + 'room group tile');
@@ -243,7 +243,7 @@ for (const area of [true, false]) {
   useDash([{ path: 'home', cards: [home] }, room('Wohnzimmer', [lightTile('light.demo_wz_decke'),
     { type: 'custom:button-card', template: 'casora_scene', entity: 'scene.demo_abend' }])]);
   const r = popup(h, home);
-  assert.deepEqual([r.title, r.heading, r.label], ['Beleuchtung', 'Leuchten', ''], '(j) Home tile: ' + see(r));
+  assert.deepEqual([r.title, r.heading, r.label], ['Beleuchtung', 'Leuchten', 'Zuhause'], '(j) Home tile: ' + see(r));
 }
 
 // (k) A room tile keeps its room when its list holds a lamp of another room: one tiled there, one from another
@@ -270,7 +270,7 @@ for (const area of [true, false]) {
     header('Bad'), lightTile('light.demo_bad_spiegel')] }]);
   assert.equal(popup(h, t).title, 'Wohnzimmer', '(k) phone: room tile');
   const r = popup(h, home);
-  assert.deepEqual([r.title, r.heading, r.label], ['Beleuchtung', 'Leuchten', ''], '(k) phone: Home tile ' + see(r));
+  assert.deepEqual([r.title, r.heading, r.label], ['Beleuchtung', 'Leuchten', 'Zuhause'], '(k) phone: Home tile ' + see(r));
 }
 
 // (l) A light badge for a group over several rooms (a floor) keeps the group's name, like the badge itself.

@@ -40,11 +40,11 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 | Wird verriegelt … / Wird entriegelt … / Wird geöffnet … **(V9)** | Locking… / Unlocking… / Opening… | – | Schloss |
 | Läuft | Running | „Aktiv“ für Geräteprogramme | Waschmaschine |
 | Zahl + läuft | „1 läuft“ (klein) | – | Medien-Gruppenbadge |
-| Bereit | Ready | „Leerlauf“, „Idle“ | Geräte im Leerlauf, Luftreiniger |
+| Bereit | Ready | „Leerlauf“, „Idle“ | Geräte im Leerlauf, Luftreiniger, Medien-Player (idle; Kopf und Popup dasselbe Wort, 01.11.2026) |
 | Pausiert | Paused | „Angehalten“ | Medien, Geräte |
 | Fertig / Fertig gegen 14:30 | Done / Done around 14:30 | „Beendet“ | Waschmaschine |
 | Lädt / Entlädt | Charging / Discharging | – | Akku |
-| Aktiv / Inaktiv | Active / Inactive | – | Netzwerk, Medien |
+| Aktiv / Inaktiv | Active / Inactive | – | Netzwerk |
 | Standby | Standby | „Bereitschaft“ (1× im Luftreiniger) | Medien, Energie |
 | Nicht verfügbar | Unavailable | „Unavailable“ roh | HA-Zustand unavailable |
 | Offline | Offline | „Nicht verfügbar“ und „?“ an Unter-Badges | Kamera, Schloss (Gerät weg); Unter-Badges, deren Sensor unavailable/unknown ist: gedämpft, Symbol der Art, „Offline“ (Entscheidung 01.11.2026, Test `badge_offline.mjs`) |

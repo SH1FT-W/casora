@@ -2682,7 +2682,17 @@
   "Warten lohnt sich nicht.": "No merece la pena esperar.",
   "Claude sucht ein Rezept …": "Claude busca una receta …",
   "kaum Unterschied": "apenas diferencia",
-  "abends günstiger": "más barato por la tarde"
+  "abends günstiger": "más barato por la tarde",
+  "WLAN aus": "Wi-Fi apagado",
+  "1 WLAN an": "1 Wi-Fi encendido",
+  "Ziel aller": "Todas",
+  "Ø Ziel": "Ø objetivo",
+  "Lampe": "Lámpara",
+  "Vorhanden": "Presente",
+  "Fehlt": "Falta",
+  "Ja": "Sí",
+  "unbekannt": "desconocido",
+  "Luftfeuchte · 24 Std.": "Humedad · 24 h"
  },
  "patterns": [
   [
@@ -4836,6 +4846,38 @@
   [
    "^(.+) frei$",
    "{1} libres"
+  ],
+  [
+   "^Nächstes Spiel (.+)$",
+   "Próximo partido {1}"
+  ],
+  [
+   "^(\\d+) WLANs an$",
+   "{1} redes Wi-Fi encendidas"
+  ],
+  [
+   "^Schwächste: (.+)$",
+   "Más baja: {1}"
+  ],
+  [
+   "^Zuerst wechseln: (.+)$",
+   "Cambiar primero: {1}"
+  ],
+  [
+   "^Jetzt: (.+)$",
+   "Ahora: {1}"
+  ],
+  [
+   "^Zuletzt geöffnet (.+)$",
+   "Última apertura {1}"
+  ],
+  [
+   "^Profil „(.+)“$",
+   "Perfil «{1}»"
+  ],
+  [
+   "^(\\d+) unbekannt$",
+   "{1} desconocido"
   ]
  ],
  "Gerät in Home Assistant": "Dispositivo en Home Assistant"

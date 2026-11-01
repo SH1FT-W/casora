@@ -49,7 +49,7 @@ assert.deepEqual(H.steps(30, 80, 50), [40, 45, 50, 55, 60]);
 assert.deepEqual(H.steps(30, 80, 52), [40, 45, 50, 52, 55, 60], 'krummes Ziel kommt dazu');
 assert.deepEqual(H.steps(60, 90, 70), [60, 70, 80, 90], 'Bereich ohne 40–60: gleichmäßig');
 assert.deepEqual(H.steps(null, null, null), [40, 45, 50, 55, 60]);
-assert.equal(H.modeLabel(hass, null, 'sleep'), 'Schlaf');
+assert.equal(H.modeLabel(hass, null, 'sleep'), 'Schlafen', 'one word with fan and purifier (detail round #14)');
 assert.equal(H.modeLabel(hass, null, 'turbo_max'), 'Turbo_max');
 
 // Bereiche
@@ -62,7 +62,7 @@ states[ID] = { entity_id: ID, state: 'on', attributes: base };
 assert.equal(H.sec('hero', c, states, hass), '<hero>|Normal|Ziel 50 %</hero>', 'room is the header label, not in the status line');
 const ctrl = H.sec('ctrl', c, states, hass);
 assert.ok(!/Betrieb|turn_off/.test(ctrl), 'on/off only in the header (blueprint v2): ' + ctrl);
-assert.ok(ctrl.includes('*Normal>set_mode{"mode":"normal"};Schlaf>set_mode{"mode":"sleep"}'), ctrl);
+assert.ok(ctrl.includes('*Normal>set_mode{"mode":"normal"};Schlafen>set_mode{"mode":"sleep"}'), ctrl);
 assert.ok(ctrl.includes('*50 %>set_humidity{"humidity":50}'), ctrl);
 const info = H.sec('info', c, states, hass);
 assert.equal(info, '<group Status>Luftfeuchte=41 %;Wassertank=12 %;Leistung=23 W</group>', 'target humidity only once (header and chips)');
@@ -77,4 +77,11 @@ delete entities['sensor.nebelchen_water_level'];
 const c2 = H.find(hass, ID);
 states[ID] = { entity_id: ID, state: 'on', attributes: base };
 assert.ok(/Wassertank=Leer/.test(H.sec('info', c2, states, hass)));
+// Detail round #21 (v3): head without the mode, chart with a head, humidity not again as a row.
+{
+  const src0 = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/19-befeuchter.js', import.meta.url), 'utf8');
+  assert.ok(src0.includes("if (part === 'v3hero') return UI.hero({ value: s.label, center: true });"), 'v3 head: the word only');
+  assert.ok(src0.includes("title: 'Luftfeuchte · 24 Std.'"), 'v3 chart head');
+  assert.ok(src0.includes('!(H.v3() && c.humidity)'), 'v3: no humidity row beside the chart');
+}
 console.log('befeuchter: ok');

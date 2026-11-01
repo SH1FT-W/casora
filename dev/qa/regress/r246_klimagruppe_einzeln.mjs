@@ -53,6 +53,8 @@ const parts = () => page.evaluate(() => {
     zahl: vis('.fb-st-v .n, .hp-st-v .n').length,
     balken: vis('.fb-tb, .hp-tb, .hui-dl[role="slider"]').length,
     rad: vis('.hui-dl').length,
+    knopf: vis('.hui-dl .hui-dl-knob').length,
+    dreht: vis('.hui-dl[role="slider"][data-casora-slider]').map((e) => { try { return JSON.parse(e.dataset.casoraSlider); } catch (x) { return null; } })[0] || null,
     cap: vis('.hui-dl-cap').map((e) => e.textContent.trim()).join(' '),
     raeume: vis('[data-fbh-room]').length + vis('.hui-row[data-casora-mi^="climate."]').length,
     text: txt.join(' | ').replace(/\s+/g, ' '),
@@ -60,15 +62,18 @@ const parts = () => page.evaluate(() => {
 });
 
 const FBH = ['casora_thermostat', 'casora_popup_fbh'];
-// shared: the floor heating popup (FBH) follows §4.4 with a shared target; the thermostat template's group view
-// still has no shared target (1.3 rule, rooms one by one) – its stage is the group line without − / +.
+// shared: the floor heating popup (FBH) follows §4.4 with a shared target; since 01.11.2026 (owner) the thermostat
+// group does the same (one logic, 03-popups.js _casoraFbhPopup).
 const groupCase = async (label, tpl, shared) => {
   await openPop(pick.grp, tpl);
   const p = await parts();
   if (shared) {
     await check(`${label}: −/+ für alle Räume (${p.plusMinus})`, p.plusMinus === 2, p);
     await check(`${label}: eine Zieltemperatur auf dem Rad (${p.zahl}/${p.rad})`, p.zahl === 1 && p.rad === 1, p);
-    await check(`${label}: Rad sagt „Ø Ziel aller Räume“ bei unterschiedlichen Zielen (${p.cap})`, /Ø Ziel aller Räume/.test(p.cap), p.cap);
+    await check(`${label}: Rad sagt „Ø Ziel“ (eine Zeile) bei unterschiedlichen Zielen (${p.cap})`, /^Ø Ziel$/.test(String(p.cap).trim()), p.cap);
+    // Final review 01.11.2026: knob and turning like a single room; on release every room that is on takes the value.
+    await check(`${label}: Knopf und Drehen am Rad`, p.knopf === 1 && p.dreht && p.dreht.service === 'set_temperature' && p.dreht.field === 'temperature', p.dreht);
+    await check(`${label}: Drehen setzt alle eingeschalteten Räume`, p.dreht && Array.isArray(p.dreht.target.entity_id) && p.dreht.target.entity_id.length >= 2, p.dreht && p.dreht.target);
   } else {
     await check(`${label}: kein −/+ (${p.plusMinus})`, p.plusMinus === 0, p);
     await check(`${label}: keine einzelne Zieltemperatur (${p.zahl})`, p.zahl === 0, p);
@@ -77,7 +82,7 @@ const groupCase = async (label, tpl, shared) => {
   await check(`${label}: Kopf fasst die Ziele zusammen („21–23°“)`, /21–23°/.test(p.text), p.text.slice(0, 300));
 };
 await groupCase('Fußbodenheizung (member_entities)', FBH, true);
-await groupCase('Thermostat-Popup Gruppe (member_entities)', ['casora_thermostat']);
+await groupCase('Thermostat-Popup Gruppe (member_entities)', ['casora_thermostat'], true);
 
 // Raum-Zeile antippen → Raum-Popup mit Stepper und Balken.
 await openPop(pick.grp, FBH);
@@ -91,6 +96,19 @@ let p = await parts();
 await check(`Raum aus der Liste: −/+ und Zieltemperatur (${p.plusMinus}/${p.zahl})`, p.plusMinus === 2 && p.zahl === 1, p);
 await check(`Raum aus der Liste: Balken (${p.balken})`, p.balken === 1, p);
 
+// Thermostat group: a room row opens that room as a thermostat (‹ back), with − / + and its target.
+await openPop(pick.grp, ['casora_thermostat']);
+const row2 = await page.evaluate(() => { const e = window.__pierce('[data-fbh-room]').find((x) => x.getBoundingClientRect().width > 0);
+  if (!e) return null; const r = e.getBoundingClientRect(); let d = null; try { d = JSON.parse(e.getAttribute('data-fbh-room')); } catch (x) {}
+  return { x: r.x + r.width / 2, y: r.y + r.height / 2, tpl: d && d.tpl }; });
+await need('Raum-Zeile im Thermostat-Gruppen-Popup', row2);
+await check('Thermostat-Gruppe: Raum öffnet als Thermostat', JSON.stringify(row2.tpl) === '["casora_thermostat"]', row2.tpl);
+await page.waitForTimeout(700);
+await page.mouse.click(row2.x, row2.y);
+await page.waitForTimeout(2600);
+p = await parts();
+await check(`Thermostat-Gruppe › Raum: −/+ und Zieltemperatur (${p.plusMinus}/${p.zahl})`, p.plusMinus === 2 && p.zahl === 1, p);
+
 // Einzel-Thermostat unverändert.
 await openPop(pick.single, ['casora_thermostat']);
 p = await parts();
@@ -102,7 +120,7 @@ await check(`Einzelraum (FBH-Popup): −/+, Zieltemperatur, Balken (${p.plusMinu
 // Gruppe im HA-Gruppen-Stil (entity_id statt member_entities).
 await fakeStates(page, { ...patch, [pick.grp]: { state: 'heat', attributes: { temperature: 22, member_entities: null, entity_id: pick.mem } } }, { sticky: true });
 await groupCase('Fußbodenheizung (entity_id)', FBH, true);
-await groupCase('Thermostat-Popup Gruppe (entity_id)', ['casora_thermostat']);
+await groupCase('Thermostat-Popup Gruppe (entity_id)', ['casora_thermostat'], true);
 
 await page.evaluate(() => window.casoraPopup && window.casoraPopup.close()).catch(() => {});
 await finish();

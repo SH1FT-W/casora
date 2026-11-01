@@ -301,11 +301,13 @@
     var gap = '<div style="height:18px"></div>';
     if (part === 'hero') {
       if (s.dead) return UI.line('Nicht verfügbar', []);
-      var temps = F.temps(s, false);
+      // v3 (§3): the wheel shows the zone's temperature – the head says in words how the fridge is, not „7 °C“ again.
+      var temps = UI.v3 && UI.v3() && UI.stage && F.stageZone(C, S) ? '' : F.temps(s, false);
       if (s.alarms.length) return UI.line(s.alarms[0].text, [s.alarms[0].where, temps], { tone: 'bad' });
       if (s.doorsOpen.length) return UI.line(doorText(s), [doorWhere(s), s.doorsOpen[0].since, temps], { tone: 'warn' });
       var rest = s.modesOn.length ? s.modesOn.slice() : ['Alles in Ordnung'];
-      return UI.line(temps || 'Bereit', rest);
+      if (!temps) return UI.line(rest[0], rest.slice(1));
+      return UI.line(temps, rest);
     }
     if (part === 'stage') {
       // The status line („hero“) stands on top and goes into the head – not again under the wheel.

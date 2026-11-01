@@ -315,7 +315,6 @@
   // ── Popup: entity list ──────────────────────────────────────────────────────
   // Popup v3 (richtlinien §4 S8): the list is the stage – its rows sit in the stage plate without a fill of their own.
   L.v3 = function () { var UI = window._casoraUI; return !!(UI && UI.v3 && UI.v3() && UI.stage); };
-  var STAGE_CSS = '<style>.hui-stage{--casora-pv-stack-fill:transparent;}</style>';
   var MORE_STAGE_CSS = '<style>.hui-stage[data-casora-stage]{background:none;padding:0;border-radius:0;}</style>';
   L.popup = function (V, states, hass) {
     var K = window._casoraSoftKit, UI = window._casoraUI;
@@ -356,7 +355,9 @@
       }
       // The v3 popup is one column, 552 wide (the frame narrows it, richtlinien §2): two columns of rows squeezed the
       // names to „Velai…“ and cut rows off (popup-raender, final review) – the stage list is one column, as in „Mehr“.
-      return UI.stage('content', { html: STAGE_CSS + L.listHtml(hass, states, ids, Object.assign({}, C, { layout: '1' })) });
+      // Final review 01.11.2026: the rows are the list of §6 – its own plate, 12 from the edge – not rows 32 deep inside the
+      // stage plate (20 padding + the rows' inset); the stage draws no plate around them (as in „Mehr“).
+      return UI.stage('content', { html: MORE_STAGE_CSS + L.listHtml(hass, states, ids, Object.assign({}, C, { layout: '1' })) });
     }
     return '';
   };
@@ -485,7 +486,8 @@
       var rows = M.lists.filter(function (g) { return !!S[g]; }).map(function (g) {
         var ids = L.resolve(hass, S, L.groupCfg(g)), c = L.count(S, ids), st = S[g];
         var a = st.attributes || {};
-        return { entity: g, icon: a.icon || 'list', iconTone: c.on ? 'accent' : 'rgba(0,0,0,0)', label: M.listNames[g] || L.nameOf(st, g),
+        // An empty group opens nothing: no › (detail round #29 – „Keine Einträge ›“ led to an empty page).
+        return { entity: c.n ? g : null, icon: a.icon || 'list', iconTone: c.on ? 'accent' : 'rgba(0,0,0,0)', label: M.listNames[g] || L.nameOf(st, g),
           labelLit: true, sub: L.summary(c).join(' · ') };
       });
       return rows.length ? UI.group(rows, L.v3() ? 'Gruppen' : 'Einstellungen') : '';

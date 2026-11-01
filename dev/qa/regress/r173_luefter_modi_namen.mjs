@@ -1,7 +1,7 @@
 // @zustand: arbeit
 // @parallel: ui
 // DP-20 (10.10.2026): Das Lüfter-Popup (casora_fan) zeigte die Modi roh („auto“, „sleep“), wenn die
-// Integration keine Übersetzung liefert. Erwartet wie beim Luftreiniger: gängige Namen (Auto, Schlaf;
+// Integration keine Übersetzung liefert. Erwartet wie beim Luftreiniger: gängige Namen (Auto, Schlafen (detail round #14: one word with the humidifier);
 // englisch Auto, Sleep), keine Rohwerte, keine Konsolenfehler. Deutsch und Englisch.
 import { open, casoraDashboards, dashboard, check, need, finish, usePage } from './lib.mjs';
 
@@ -46,7 +46,7 @@ for (const lang of [null, 'en']) {
   await need(tag + ': Lüfter mit Modi auto + sleep', r && r.fid, r);
   await check(tag + ': Modi-Schalter vorhanden', r.segs.length >= 2, r.segs);
   await check(tag + ': keine Rohwerte auto/sleep', !r.segs.some((t) => /^(auto|sleep)$/.test(t)), r.segs);
-  await check(tag + ': Schlaf-Modus benannt', r.segs.includes(lang ? 'Sleep' : 'Schlaf'), r.segs);
+  await check(tag + ': Schlaf-Modus benannt', r.segs.includes(lang ? 'Sleep' : 'Schlafen'), r.segs);
   await check(tag + ': Auto nicht „Car“', r.segs.includes('Auto') && !r.segs.includes('Car'), r.segs);
   await check(tag + ': keine Fehler in der Konsole', errs.length === 0, errs.slice(0, 2));
 }

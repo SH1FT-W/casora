@@ -31,6 +31,12 @@ assert.equal(lib.stripRoom('Licht Badezimmer', 'Badezimmer'), 'Licht');
 assert.equal(lib.stripRoom('Badezimmer', 'Badezimmer'), 'Badezimmer', 'nie leer');
 assert.equal(lib.stripRoom('Thermostat', 'Flur'), 'Thermostat');
 assert.equal(lib.stripRoom('Spots Küche Insel', 'Küche'), 'Spots Insel');
+// Detail round #38: the label a module sets (single lamp: its room) strips the title too.
+assert.equal(lib.stripRoom('G9 Spot Terrasse', 'Terrasse'), 'G9 Spot');
+{
+  const core0 = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-core.js', import.meta.url), 'utf8');
+  assert.ok(core0.includes("stripRoom(this._cfgTitle, room || this._cfgEyebrow || '')"), 'title stripped by the module\'s label too');
+}
 
 // ── Kopf-Aufbau im Kern ──
 for (const cls of ['header-ring', 'header-eyebrow', 'header-title', 'header-status hui-line', 'header-switch'])

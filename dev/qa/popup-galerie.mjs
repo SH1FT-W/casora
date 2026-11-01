@@ -135,7 +135,10 @@ const ITEMS = [
   { w: 4, id: 'anwesenheit', popup: 'Anwesenheit – Badge (Gruppe)', stage: 'S7', badge: 'casora_badge_presence_group', room: 'haus' },
   { w: 4, id: 'klima-gruppe', popup: 'Klima-Gruppe (Badge)', stage: 'S7', badge: 'casora_badge_climate_group', room: 'haus' },
   { w: 4, id: 'batterien', popup: 'Batterien', stage: 'S7', tpl: 'casora_battery' },
-  { w: 4, id: 'wetterwarnung', popup: 'Wetterwarnung', stage: 'S7 in Warnfarbe', tpl: 'casora_weather_warning' },
+  // The tile as the Studio makes it: with the DWD level sensor (the bell reads all warning sensors; without an entity the
+  // popup said „Keine Warnungen“ next to the bell's two – detail round #7).
+  { w: 4, id: 'wetterwarnung', popup: 'Wetterwarnung', stage: 'S7 in Warnfarbe', tpl: 'casora_weather_warning', pick: (c) => !!c.entity,
+    guess: (S) => first(S, /^sensor\..*wetterwarnung_stufe$/) || first(S, /^sensor\./, (s) => (s.attributes || {}).warning_count != null) || first(S, /^binary_sensor\./, (s) => (s.attributes || {}).device_class === 'safety' && (s.attributes || {}).headline != null) },
   { w: 4, id: 'lueften', popup: 'Lüften-Coach', stage: 'S7', tpl: 'casora_vent' },
   { w: 4, id: 'pulse', popup: 'Pulse', stage: 'S7', tpl: 'casora_pulse' },
   // Welle 5 – Verlauf, Bild, Inhalt
@@ -288,6 +291,10 @@ async function anlegen() {
         card.variables = { ...(card.variables || {}), galerie_id: it.id };
         phoneTiles.push([it, card]);
         cells.push(cell(it, card)); index.push([it, vd.path, 'Kachel']);
+      } else if (it.badge && it.phone) {
+        // Phone-only badges have no badge view here (the link read „badges-undefined“): they sit on the phone gallery.
+        cells.push(md(`**${it.popup}**<br><small>${it.stage} · \`${it.badge}\`${it.note ? ' · ' + it.note : ''}</small><br>→ Handy-Galerie <b>/${DASH}-mobile</b>`));
+        index.push([it, '../' + DASH + '-mobile', 'Handy-Galerie' + (it.note ? ' (' + it.note + ')' : '')]);
       } else if (it.badge) {
         cells.push(md(`**${it.popup}**<br><small>${it.stage} · \`${it.badge}\`${it.note ? ' · ' + it.note : ''}</small><br>→ Ansicht <b>Badges ${BADGE_TAB[it.room]}</b>${it.parent ? ` (erst \`${it.parent.replace('casora_badge_', '')}\` antippen)` : ''}`));
         index.push([it, bPath(it.room), ROOMS[it.room] + (it.parent ? ' › ' + it.parent : '')]);

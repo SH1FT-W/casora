@@ -241,4 +241,13 @@ html = new Function('states', 'hass', subCode).call(null, states, hass);
 assert.ok(/velair-day:/.test(html), 'v3: the week on the sub page');
 assert.ok(rowsSeen.flatMap((g) => g.rows).some((r) => /^velair-(edit|add):/.test(r.entity || '')), 'v3: editable slots on the sub page');
 delete window._casoraUI.v3;
+// Detail round #4: the v3 head is the word only (the dial shows target and room temperature).
+{
+  const st = { entity_id: ID, state: 'heat', attributes: { temperature: 21, current_temperature: 20.4, hvac_action: 'heating' } };
+  const was = window.casoraClimateActive;
+  window.casoraClimateActive = () => ({ heating: true });
+  assert.equal(V.climateText(st, 20.4, true), 'Heizt', 'v3 head: word only');
+  assert.ok(/Heizt auf/.test(V.climateText(st, 20.4)), 'earlier look keeps the numbers');
+  window.casoraClimateActive = was;
+}
 console.log('velair: ok');

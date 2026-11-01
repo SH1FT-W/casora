@@ -290,7 +290,12 @@
         var st = ST[x.status] || ST.ok;
         var icon = x.fenster ? 'mdi:window-open-variant' : x.fenster === false ? 'mdi:window-closed-variant' : 'mdi:home-thermometer-outline';
         var tone = st.tone || 'rgba(255,255,255,0.18)';
-        return { id: x.k, icon: icon, iconTone: tone, label: x.n, sub: [x.grund || null, vals(x) || null].filter(Boolean), value: st.t, valueTone: st.tone === 'accent' ? null : st.tone,
+        // „Lange offen“ says the window is open: the reason keeps only since when, one line with the values (detail round #17:
+        // „Fenster offen seit 27 Tagen · Schließen?“ cut off above the values, beside „Lange offen“).
+        var g = x.grund || null;
+        if (x.status === 'lange' && g) g = String(g).replace(/\s*·\s*Schließen\?$/, '').replace(/^Fenster offen\s+/, '') || null;
+        var sb = [g, vals(x) || null].filter(Boolean);
+        return { id: x.k, icon: icon, iconTone: tone, label: x.n, sub: x.status === 'lange' ? sb.join(' · ') : sb, value: st.t, valueTone: st.tone === 'accent' ? null : st.tone,
           /* Weich: Raum mit Handlungsbedarf (lüften, schließen, zu feucht) oder der gerade lüftet als aktive Zeile. */
           active: ['schliessen', 'lange', 'jetzt', 'feucht', 'lueftet'].indexOf(x.status) > -1 };
       });
@@ -860,10 +865,12 @@ window._hpMultiTap = function (ev, kind) {
     // Popup v3 (§3, §4.7, review 2 DD-25/DH-11): head without the symbol tile, a short status line, the tip as an S7 stage.
     if (UI.v3 && UI.v3() && UI.stage && UI.line) {
       var tipTxt = on ? String(O.tip(st, states) || '').replace(/^≈ [^·]+ frei · /, '') : '';
-      return UI.line(on ? 'Jetzt nutzen' : 'Kein Überschuss', [on && free ? watt(free) + ' frei' : null])
-        + UI.stage('status', { tone: on ? 'good' : 'off', icon: 'mdi:solar-power-variant', text: on ? (tipTxt || 'Jetzt nutzen') : 'Gerade kein Sonnenstrom übrig',
+      // Detail round #18: one place per fact – the free power is the stage's fact, not the head's or the list's again;
+      // „Kein Überschuss“ once (the frame's head then says since when); the list is the house with a heading.
+      return UI.line(on ? 'Jetzt nutzen' : 'Kein Überschuss', [])
+        + UI.stage('status', { tone: on ? 'good' : 'off', icon: 'mdi:solar-power-variant', text: on ? (tipTxt || 'Jetzt nutzen') : 'Kein Überschuss',
           facts: on && free ? [{ label: 'Frei', value: watt(free) }] : [] })
-        + '<div style="height:24px"></div>' + UI.group(rows, null);
+        + (hs ? '<div style="height:24px"></div>' + UI.group(rows.slice(1), 'Haus') : '');
     }
     return UI.hero({ value: on ? 'Jetzt nutzen' : 'Kein Überschuss', sub: on ? O.tip(st, states) : 'Sobald Sonnenstrom übrig ist, steht hier, welches Gerät sich lohnt.', center: true })
       + '<div style="height:18px"></div>' + UI.group(rows, null);
@@ -1023,8 +1030,17 @@ window._hpMultiTap = function (ev, kind) {
     var two = acts.length && sib.length;
     if (acts.length) add('acts', UI.section('control', acts), 'l');
     if (sib.length) {
-      add('vals', '[[[ const ids = ' + JSON.stringify(sib) + '; const UI = window._casoraUI; '
+      // Detail round #16: rows without a value („Unbekannt“) stay out; a problem sensor without a device class
+      // („Wassertank leer“) says „OK“ or its own word („Leer“), not „An/Aus“.
+      add('vals', '[[[ const ids = ' + JSON.stringify(sib) + '.filter((e) => states[e] && !["unknown", "unavailable", ""].includes(states[e].state)); const UI = window._casoraUI; '
+        + 'if (!ids.length) return ""; '
         + 'return UI.section("state", ids.map((e) => { const s = states[e]; let v = s.state; try { v = window._casoraNiceState ? window._casoraNiceState(hass, s) : hass.formatEntityState(s); } catch (x) {} '
+        + 'const nm0 = String((hass.entities[e] && hass.entities[e].name) || s.attributes.friendly_name || ""); '
+        + 'const ev = s.attributes.device_class === "enum" && Array.isArray(s.attributes.options) && s.attributes.options.includes("present") && s.attributes.options.includes("off"); '
+        + 'const pw = !s.attributes.device_class || ev ? /(?:^|\\s)(leer|voll|fällig|fehler|störung|empty|full|due|error)(?:\\s|$)/i.exec(nm0) : null; '
+        + 'if (s.state === "off" && (pw || ev)) v = "OK"; '
+        + 'else if ((s.state === "on" || s.state === "present") && (pw || ev)) v = pw ? pw[1].charAt(0).toUpperCase() + pw[1].slice(1).toLowerCase() : "Ja"; '
+        + 'else if (s.state === "confirmed" && ev) v = "Bestätigt"; '
         + 'return { icon: e.startsWith("binary_sensor.") ? "mdi:checkbox-blank-circle-outline" : "mdi:gauge", iconTone: "rgba(255,255,255,0.18)", '
         + 'label: (hass.entities[e] && hass.entities[e].name) || s.attributes.friendly_name || e, value: v, entity: e }; })); ]]]', two ? 'r' : 'l');
     }

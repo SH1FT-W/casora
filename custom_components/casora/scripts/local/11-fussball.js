@@ -513,7 +513,7 @@
     var ha = document.querySelector('home-assistant');
     var S = ha && ha.hass && ha.hass.states;
     if (!S || !K._id || !S[K._id]) return;
-    ['hero', 'match', 'table', 'form'].forEach(function (k) {
+    ['head', 'hero', 'match', 'table', 'form'].forEach(function (k) {
       find(ha.shadowRoot, '.cfb-' + k).forEach(function (n) {
         n.innerHTML = (window.casoraTr || function (x) { return x; })(K.html(k, S[K._id]));
       });
@@ -633,6 +633,30 @@
     if (!i) return k === 'hero' ? '<div class="cfb-e">Kein Team-Tracker-Sensor</div>' : '';
     var d = K.data[K.key(i)], tab = d && d.table, me = tab && tab.rows.filter(function (r) { return r.id === i.team.id; })[0];
     var wait = !d ? '<div class="cfb-e">Wird geladen …</div>' : null;
+    if (k === 'head') {
+      // v3 status line (§3): in words what is going on – live with minute and score, the final score, or when the next
+      // match is; never the tile entity's „Seit 09:20“ and never the table's numbers again.
+      var U = window._casoraUI;
+      if (!U || !U.line) return '';
+      if (i.phase === 'IN') return U.line('Live', [K.minute(i.clock), K.tile(st)].filter(Boolean));
+      // Owner 01.11.2026: otherwise the form – the last five results as S/U/N pills in the form list's colours, the newest
+      // on the right; without form data the next match.
+      var fm = ((d && d.form) || []).filter(function (x) { return x && /^[WDL]$/.test(x.res); }).slice(0, 5).reverse();
+      if (fm.length) {
+        var ab3 = K.abbr(), bg = { W: 'var(--casora-color-green, #6AAE78)', D: 'var(--casora-color-sand, #9A8672)', L: 'var(--casora-color-red, #D35A4E)' };
+        var pillsHtml = fm.map(function (x) {
+          var ink = window._casoraInkOn ? window._casoraInkOn(bg[x.res], 4.5) : '#fff';
+          return '<i class="cfb-hf ' + esc(x.res) + '" title="' + esc((x.home ? 'gegen ' : 'bei ') + K.name(x.opp) + ' ' + x.my + ':' + x.their) + '" style="display:inline-grid;place-items:center;'
+            + 'width:1.45em;height:1.45em;margin-left:4px;border-radius:50%;font-style:normal;font-size:.82em;font-weight:700;vertical-align:.06em;'
+            + 'background:' + esc(bg[x.res]) + ';color:' + esc(ink) + ';">' + esc(ab3[x.res] || x.res) + '</i>';
+        }).join('');
+        return U.line('Form', []).replace(/<\/div>\s*$/, '<span data-no-i18n aria-label="' + esc(fm.map(function (x) { return ab3[x.res]; }).join(' ')) + '">' + pillsHtml + '</span></div>');
+      }
+      if (i.phase === 'POST' && i.date) return U.line('Endstand', [K.tile(st)].concat(diffDays(i.date) === 0 ? [] : [K.day(i.date)]));
+      if (i.phase === 'OFF') return U.line(i.off === 'cancel' ? 'Abgesagt' : 'Verschoben', [vs(i)]);
+      if (i.phase === 'PRE' && i.date) return U.line('Nächstes Spiel ' + K.when(i.date) + (i.tbd ? '' : ' ' + hm(i.date)), [vs(i)]);
+      return U.line('Kein Spiel angesetzt', []);
+    }
     if (k === 'hero') {
       var UI = window._casoraUI;
       var lgN = K.leagueOf(i, d);
@@ -830,16 +854,17 @@
          match and the form on the right; phone: table, match, form. */
       return {
         type: 'custom:button-card', entity: id, triggers_update: [id], card_mod: { style: wrapperStyle },
-        extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: "left right" !important;'
+        extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: "head head" "left right" !important;'
           + ' grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: var(--casora-popup-col-gap, 26px) !important; } }'
           + (window._casoraUI.colsMark ? window._casoraUI.colsMark('left', 'right') : ''),
         tap_action: { action: 'none' }, show_icon: false, show_name: false, show_label: false, show_state: false,
         styles: {
           card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px 22px 26px' }],
-          grid: [{ 'grid-template-areas': '"left" "right"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'align-items': 'start' }, { 'row-gap': 'var(--casora-popup-sec-gap, 22px)' }],
-          custom_fields: { left: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }], right: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }] },
+          grid: [{ 'grid-template-areas': '"head" "left" "right"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'align-items': 'start' }, { 'row-gap': 'var(--casora-popup-sec-gap, 22px)' }],
+          custom_fields: { head: [{ 'justify-self': 'stretch' }], left: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }], right: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }] },
         },
-        custom_fields: { left: { card: colCard(['table'], id, ['table']) }, right: { card: Object.assign(colCard(['match', 'form'], id), { extra_styles: (window._casoraColGap ? window._casoraColGap(['match', 'form']) : '')
+        // head: the status line, lifted into the popup's head by the frame (§3).
+        custom_fields: { head: fld('head'), left: { card: colCard(['table'], id, ['table']) }, right: { card: Object.assign(colCard(['match', 'form'], id), { extra_styles: (window._casoraColGap ? window._casoraColGap(['match', 'form']) : '')
           /* Half the popup wide: a narrower middle so the team names keep their room. */
           + ' @media (min-width:761px){.cfb-mr{grid-template-columns:minmax(0,1fr) 120px minmax(0,1fr) !important;}.cfb-sub span{display:block;}.cfb-sub span+span::before{content:none !important;}}' }) } },
       };

@@ -6779,6 +6779,9 @@ window.casoraMenuGlass = {
        unsichtbar, eigener Schließen-Knopf) gelten nicht mehr. */
     :host([soft]) { --casora-lp-head-pos: relative; --casora-lp-head-pe: auto; --casora-lp-title-vis: visible; }
     :host([soft]) .header-status .hui-lslot:not(:empty)::before { content: "\\00a0· "; opacity: .6; }
+    /* A slot that starts a new line drops its dot (sepFixLine marks it hui-cut) – the head had no rule for it, so „SW ·“
+       hung at the end of the first line on the phone (final review 01.11.2026). */
+    :host([soft]) .header-status .hui-lslot.hui-cut:not(:empty)::before { content: none !important; }
     :host([soft]) .header-status[hidden], :host([soft]) .header-switch[hidden] { display: none; }
     :host(:not([soft])) .header-status, :host(:not([soft])) .header-switch { display: none; }
     /* Hauptschalter: Spur in Gerätefarbe (--casora-popup-accent), weißer Knopf. */
@@ -7144,6 +7147,9 @@ window.casoraMenuGlass = {
       if (h) { var x = h[1].length === 3 ? h[1].replace(/./g, '$&$&') : h[1]; rgb = [0, 2, 4].map(function (i) { return parseInt(x.substr(i, 2), 16); }); }
       else {
         var m = /rgba?\(([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)(?:[ ,/]+([\d.]+))?/.exec(col || '');
+        // A mixed colour (color-mix) resolves to color(srgb r g b) with channels 0 … 1.
+        var cs = !m && /color\(srgb ([\d.]+) ([\d.]+) ([\d.]+)(?: \/ ([\d.]+))?/.exec(col || '');
+        if (cs) m = [0, cs[1] * 255, cs[2] * 255, cs[3] * 255, cs[4]];
         if (!m) return null;
         // A see-through fill (a sand tint) shows the plate: the off glyph of the theme, never white.
         if (m[4] != null && Number(m[4]) < 0.5) { see = false; return null; }
@@ -7169,11 +7175,58 @@ window.casoraMenuGlass = {
     return out;
   }
   window._casoraInkOn = inkOn;
+  // Notification list (owner, 01.11.2026, „B: alle weiß“, then „deutlich dunkler“ like his picture B): white symbols on
+  // every coloured circle, like iOS. A tone where white stays under 3 : 1 (green, orange) is filled clearly darker – the
+  // Casora theme's own deep shades (--casora-color-green-deep / -orange-deep), else the tone mixed 75 % with black; yellow
+  // (light) keeps its dark symbol. ink(fill) answers like inkOn. Kacheln and popups keep inkOn as it is.
+  function notifyTone(tone, ink) {
+    if (!tone) return tone;
+    ink = ink || inkOn;
+    var isWhite = function (f) { return !/glyph-dark|glyph-off/.test(String(ink(f) || '')); };
+    if (isWhite(tone) || /yellow|tone-light\b/.test(tone)) return tone;
+    var mix = 'color-mix(in srgb, ' + tone + ' 75%, black)';
+    if (!isWhite(mix)) return tone;
+    var deep = /tone-energy\b|color-green\b/.test(tone) ? 'green' : /tone-heat\b|color-orange\b|sec-warn\b/.test(tone) ? 'orange' : '';
+    return deep ? 'var(--casora-color-' + deep + '-deep, ' + mix + ')' : mix;
+  }
+  window._casoraNotifyTone = notifyTone;
   // Room of the tapped tile (per dashboard, unique hits only) – not for house-wide popups (badges,
   // batteries, energy …) whose entity happens to sit in a room as well.
   var HOUSE_POPUP = /\bcasora_(badge_\w+|(popup_)?(pulse|battery|energy|network|updates|scenes|contacts|calendar|weather_warning|football|recipe|solar_tip|time)|weather|trash|now_playing_\w+)\b/;
   function roomLabelOf(src) {
     if (!src || !src._config) return '';
+    // The members of a group tile: the group entity's own members (entity_id, member_entities) and lists of entity ids
+    // in its card variables („lock_entities“ …). Rooms: the dashboard's room of each, else its HA area.
+    function groupMembersOf(src, h) {
+      var S = (h && h.states) || {}, so = src._stateObj, a = (so && so.attributes) || {};
+      var out = [].concat(Array.isArray(a.entity_id) ? a.entity_id : [], Array.isArray(a.member_entities) ? a.member_entities : []);
+      // button-card keeps the evaluated variables apart from the raw ones ([[[ … ]]] strings).
+      var V = Object.assign({}, (src._config && src._config.variables) || {}, src._evaluatedVariables || {});
+      Object.keys(V).forEach(function (k) {
+        var v = V[k];
+        if (v && !Array.isArray(v) && typeof v === 'object' && 'value' in v) v = v.value;   // button-card's { value } wrapper
+        if (Array.isArray(v) && v.length > 1 && v.every(function (x) { return typeof x === 'string' && /^[a-z_]+\.[\w-]+$/.test(x); })) out = out.concat(v);
+      });
+      return out.filter(function (x, i, l) { return S[x] && l.indexOf(x) === i; });
+    }
+    function memberRoomOf(id, h) {
+      var r = '';
+      try { r = typeof window._casoraRoomOf === 'function' ? String(window._casoraRoomOf(id) || '').trim() : ''; } catch (e) { r = ''; }
+      if (r || !h) return r;
+      var en = (h.entities || {})[id], ar = en && (en.area_id || (en.device_id && ((h.devices || {})[en.device_id] || {}).area_id));
+      return ar && (h.areas || {})[ar] ? String(h.areas[ar].name || '').trim() : '';
+    }
+    // Final review 01.11.2026: the label names a room only when every member of a group lies in it; a group over several
+    // rooms (blinds of five rooms, the locks of the house, the windows) says „Zuhause“ – like the weather and house light.
+    function spansRooms(src) {
+      var h = src._hass || (document.querySelector('home-assistant') || {}).hass;
+      var m = groupMembersOf(src, h);
+      if (m.length < 2) return false;
+      var rooms = [], none = 0;
+      m.forEach(function (id) { var r = memberRoomOf(id, h); if (!r) none++; else if (rooms.indexOf(r) < 0) rooms.push(r); });
+      // A member without a room is not „in“ the tile's room either; only when no member has one the tile's room stays.
+      return rooms.length > 1 || (rooms.length === 1 && none > 0);
+    }
     var tpl = [].concat(src._config.template || []).join(' ');
     /* Energy (owner, 01.11.2026): the label is the room of the tile's sensor, else „Zuhause“ – never empty. */
     if (/\bcasora_(popup_|badge_)?energy(_group)?\b/.test(tpl) && !/\bcasora_badge_energy\b/.test(tpl)) {
@@ -7181,15 +7234,33 @@ window.casoraMenuGlass = {
       try { er = eid && typeof window._casoraRoomOf === 'function' ? String(window._casoraRoomOf(eid) || '').trim() : ''; } catch (e) { er = ''; }
       return er || 'Zuhause';
     }
-    if (HOUSE_POPUP.test(tpl)) return '';
+    /* The house's light badge (owner, 01.11.2026): „Zuhause“ like the other groups over several rooms; a room's light
+       chip (its lamps, or the room preselected in the house group) keeps no label. */
+    if (/\bcasora_badge_light_group\b/.test(tpl) && typeof window._casoraLightScope === 'function') {
+      try {
+        var hb = src._hass || (document.querySelector('home-assistant') || {}).hass;
+        var VB = Object.assign({}, src._config.variables || {});
+        Object.keys(src._evaluatedVariables || {}).forEach(function (k) {
+          var v = src._evaluatedVariables[k];
+          VB[k] = v && !Array.isArray(v) && typeof v === 'object' && 'value' in v ? v.value : v;
+        });
+        var sb = window._casoraLightScope(src._stateObj, (hb && hb.states) || {}, hb, VB);
+        if ((sb.roomsAuto || (sb.rooms && sb.rooms.length > 1) || sb.variables.house) && sb.autoIdx < 0) return 'Zuhause';
+      } catch (e) {}
+      return '';
+    }
+    if (HOUSE_POPUP.test(tpl)) return spansRooms(src) ? 'Zuhause' : '';
     var id = src._stateObj && src._stateObj.entity_id;
     if (!id || typeof window._casoraRoomOf !== 'function') return '';
     // Lights of the whole house (#30): the tile's entity is just the first light, its room is not the tile's.
     if (/\bcasora_light\b/.test(tpl) && typeof window._casoraLightsHouse === 'function') {
       var V = src._config.variables || {}, pg = V.popup_group || V.group_entity;
       var h = src._hass || (document.querySelector('home-assistant') || {}).hass;
-      try { if (window._casoraLightsHouse(V, typeof pg === 'string' && pg !== 'none' ? pg : id, null, h)) return ''; } catch (e) {}
+      // The whole house says „Zuhause“ like every group over several rooms (owner, 01.11.2026).
+      try { if (window._casoraLightsHouse(V, typeof pg === 'string' && pg !== 'none' ? pg : id, null, h)) return 'Zuhause'; } catch (e) {}
     }
+    // Lights keep their room (a room's lamps may list one of another room, light_house_title (k)).
+    if (!/\bcasora_light\b/.test(tpl) && spansRooms(src)) return 'Zuhause';
     try { return String(window._casoraRoomOf(id) || '').trim(); } catch (e) { return ''; }
   }
   // „Licht Badezimmer“ unter dem Etikett „Badezimmer“ → „Licht“ (Raum steht schon darüber).
@@ -7873,7 +7944,9 @@ window.casoraMenuGlass = {
       }
       var room = sf && this._ringSrc ? roomLabelOf(this._ringSrc) : '';
       this._roomLabel = room;
-      var title = sf ? stripRoom(this._cfgTitle, room) : this._cfgTitle;
+      // The label a module sets (the single lamp's room) counts too: „G9 Spot Terrasse“ under „TERRASSE“ → „G9 Spot“
+      // (detail round #38, §3 title without the room).
+      var title = sf ? stripRoom(this._cfgTitle, room || this._cfgEyebrow || '') : this._cfgTitle;
       // Titel beginnt schon mit dem Raum („Wohnzimmer/Küche“): Etikett weglassen statt den Raum doppelt zu zeigen.
       if (room && title.toLowerCase().indexOf(room.toLowerCase()) === 0) room = '';
       // Lange Titel umbrechen an „/“ (Zonen wie „Wohnzimmer/Küche“), nicht mitten im Wort.
@@ -7903,29 +7976,71 @@ window.casoraMenuGlass = {
       var so = this._ringSrc && this._ringSrc._stateObj;
       var h = (document.querySelector('home-assistant') || {}).hass;
       var cur = so && h && h.states ? h.states[so.entity_id] : null;
-      if (!cur) return;
+      var self0 = this;
+      var put = function (t) { self0._headerStatus.innerHTML = '<b>' + window.casoraEsc(t) + '</b>'; self0._headerStatus.hidden = false;
+        if (again) self0._dedupeHead(); else [300, 900, 1800].forEach(function (ms) { setTimeout(function () { if (self0.hasAttribute('open') && !self0._headLine) self0._dedupeHead(); }, ms); }); };
+      // Detail round #8: a tile without an entity (waste, updates, vehicle …) or whose entity has no word and no change
+      // since HA's start says what its tile says („Restmüll morgen“, „Aktuell“) – §3: a status line in every popup.
+      if (!cur) { var tw = this._tileWord(); if (tw) put(tw); return; }
       var txt = '';
       try { txt = h.formatEntityState ? h.formatEntityState(cur) : cur.state; } catch (e) { txt = cur.state; }
-      if (cur.state === 'unavailable') txt = window.casoraTr ? window.casoraTr('Nicht verfügbar') : 'Nicht verfügbar';
+      // A camera or lock that is gone says „Offline“ like its tile (wortliste; detail round #19).
+      if (cur.state === 'unavailable') txt = /^(camera|lock)\./.test(cur.entity_id) ? (window.casoraTr ? window.casoraTr('Offline') : 'Offline')
+        : (window.casoraTr ? window.casoraTr('Nicht verfügbar') : 'Nicht verfügbar');
       txt = String(txt || '').trim();
       if (!txt || txt === 'unknown') return;
       // No raw values in the head (wortliste): a state the word list names takes Casora's word („idle“/„ready“ →
       // „Bereit“, not HA's „Leerlauf“); one HA has no word for (enum sensor without translations: „failed“) says since
       // when instead, as the S7 popups without a word of their own (§3).
+      // A group, binary_sensor or calendar without a device class has no word of its own for on/off („An“ above a wheel
+      // of windows, „Aus“ above a calendar – final review 01.11.2026): it says since when instead.
+      var dom0 = String(cur.entity_id || '').split('.')[0], grp0 = Array.isArray((cur.attributes || {}).entity_id);
+      // Detail round #5: a measurement of the tile's entity („23,27 °C“ above batteries, „55 % Luftfeuchtigkeit“ above a
+      // room's climate) is a number, not a state – the head says since when instead (the stage shows its own values).
+      var meas0 = (dom0 === 'sensor' || dom0 === 'number' || dom0 === 'input_number') && cur.state !== '' && isFinite(Number(cur.state));
+      if (meas0 || ((cur.state === 'on' || cur.state === 'off') && (grp0 || dom0 === 'binary_sensor' || dom0 === 'calendar') && !(cur.attributes || {}).device_class)) {
+        txt = this._sinceText(cur) || this._tileWord(); if (!txt) return;
+        put(txt);
+        return;
+      }
       var word = window._casoraRawWord ? window._casoraRawWord(cur.state) : cur.state;
       if (word !== cur.state) txt = window.casoraTr ? window.casoraTr(word) : word;
       else if (txt === 'Ein') txt = 'An'; // HA's German „Ein“ for on – the word list says „An“ (as the stage)
-      else if (txt === cur.state && /^(?:[a-z][a-z0-9_]*|[A-Z][A-Z0-9_]{2,})$/.test(txt)) { txt = this._sinceText(cur); if (!txt) return; } // also a code like „PRE“ (football)
+      else if (txt === cur.state && /^(?:[a-z][a-z0-9_]*|[A-Z][A-Z0-9_]{2,})$/.test(txt)) { txt = this._sinceText(cur) || this._tileWord(); if (!txt) return; } // also a code like „PRE“ (football)
       this._headerStatus.innerHTML = '<b>' + window.casoraEsc(txt) + '</b>';
       this._headerStatus.hidden = false;
       if (again) this._dedupeHead();
       else [300, 900, 1800].forEach((ms) => setTimeout(() => { if (this.hasAttribute('open') && !this._headLine) this._dedupeHead(); }, ms));
     }
+    // The state line the tile shows (#state; only its visible leaves – tiles carry a narrow and a wide variant), '' without.
+    _tileWord() {
+      try {
+        var sr = this._ringSrc && this._ringSrc.shadowRoot, el = sr && sr.querySelector('#state');
+        if (!el) return '';
+        var vis = function (n) { return !!(n.getClientRects && n.getClientRects().length); };
+        var leaves = [].filter.call(el.querySelectorAll('*'), function (k) { return !k.children.length && vis(k) && String(k.textContent || '').trim(); });
+        var t = leaves.length ? leaves.map(function (k) { return String(k.textContent).trim(); }).join(' ') : String(el.textContent || '');
+        t = t.replace(/\s+/g, ' ').trim();
+        return t.length > 60 ? '' : t;
+      } catch (e) { return ''; }
+    }
     // „Seit 14:42“ (today) or „Seit 28.10.“ from the entity's last change; '' without a time.
     _sinceText(cur) {
       var lc = cur && cur.last_changed ? new Date(cur.last_changed) : null;
       if (!lc || isNaN(lc.getTime())) return '';
+      // Detail round #3: after a restart many entities share HA's start as last_changed – that is not a change, so no
+      // „Seit 09:37“ then (a fifth of all states in the same minute counts as the start).
+      var h0 = (document.querySelector('home-assistant') || {}).hass, S0 = (h0 && h0.states) || {};
+      var C0 = CasoraPopup._startC || (CasoraPopup._startC = { at: 0, m: {}, n: 0 });
+      if (Date.now() - C0.at > 10000) {
+        C0.at = Date.now(); C0.m = {}; C0.n = 0;
+        Object.keys(S0).forEach(function (k) { var t = Date.parse(S0[k].last_changed); if (!isFinite(t)) return; var mk = Math.floor(t / 60000); C0.m[mk] = (C0.m[mk] || 0) + 1; C0.n++; });
+      }
+      if (C0.n >= 20 && (C0.m[Math.floor(lc.getTime() / 60000)] || 0) >= C0.n / 5) return '';
       var loc = window.casoraLocale ? window.casoraLocale() : 'de-DE', now = new Date();
+      // §3: under an hour „vor 11 Min.“, else „Seit 14:42“.
+      var mins = Math.round((now - lc) / 60000);
+      if (mins >= 0 && mins < 60) { var ago0 = mins < 1 ? 'Gerade eben' : 'Vor ' + mins + ' Min.'; return window.casoraTr ? window.casoraTr(ago0) : ago0; }
       var since = 'Seit ' + (lc.toDateString() === now.toDateString() ? lc.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' })
         : lc.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' }));
       return window.casoraTr ? window.casoraTr(since) : since;
@@ -7937,20 +8052,48 @@ window.casoraMenuGlass = {
       var hs = this._headerStatus;
       if (!hs || hs.hidden || !this.hasAttribute('soft') || !this.container) return;
       var norm = function (t) { return String(t || '').toLowerCase().replace(/[\s\u00a0\u202f()·.,:–-]+/g, ''); };
-      var stage = '';
+      var stage = '', stageParts = [], stageAll = '', stageVal = '';
       (function walk(root, d) {
         if (!root || d > 12 || stage) return;
         // The S7 plate (dial: false) says its sentence in .hui-st-text – the universal tile read „An“ in the head and on the plate.
         var el = root.querySelector && root.querySelector('.hui-dl-c .hui-dl-t, .hui-dl-c .hui-st-val, .hui-stage .hui-st-head .hui-st-val, .hui-stage .hui-st-stat .hui-st-text');
-        if (el) { stage = el.textContent; return; }
+        if (el) { stage = el.textContent; stageParts = [].map.call(el.querySelectorAll('span'), function (x) { return x.textContent; });
+          var c0 = el.closest && el.closest('.hui-dl-c, .hui-stage'); stageAll = c0 ? c0.textContent : stage;
+          var v0 = c0 && c0.querySelector('.hui-st-val'); stageVal = v0 ? v0.textContent : ''; return; }
         var all = root.querySelectorAll ? root.querySelectorAll('*') : [];
         for (var i = 0; i < all.length && !stage; i++) if (all[i].shadowRoot) walk(all[i].shadowRoot, d + 1);
       })(this.container, 0);
       var first = hs.querySelector('b') || hs.firstElementChild;
+      // Detail round #4: a later part that is the stage's number („3 von 16 an · 73 %“ above a wheel of 73 %, „20,4°“)
+      // goes; the head keeps its words.
+      if (norm(stageVal) && /\d/.test(stageVal)) {
+        [].slice.call(hs.children).forEach(function (sp) {
+          if (sp === first || (sp.classList && sp.classList.contains('hui-sep')) || norm(sp.textContent) !== norm(stageVal)) return;
+          var pv = sp.previousElementSibling;
+          if (pv && pv.classList && pv.classList.contains('hui-sep')) pv.remove();
+          sp.remove();
+        });
+      }
+      // The first part starting with the stage's number („60 % geöffnet“ above a wheel of 60 %): the word stays („Geöffnet“).
+      if (first && norm(stageVal) && /\d/.test(stageVal)) {
+        var ft = String(first.textContent || '').trim(), svC = String(stageVal).replace(/[\s\u00a0\u202f]/g, ''), ki = 0, ti = 0;
+        while (ti < ft.length && ki < svC.length) {
+          if (/[\s\u00a0\u202f]/.test(ft.charAt(ti))) { ti++; continue; }
+          if (ft.charAt(ti) !== svC.charAt(ki)) break;
+          ti++; ki++;
+        }
+        // Only a value with its unit („60 %“, „21°“) – a bare count („3“) is the start of „3 von 16 an“.
+        var rest0 = ki === svC.length && /\D$/.test(svC) ? ft.slice(ti).trim() : '';
+        if (rest0 && /^[a-zäöü]/i.test(rest0)) first.textContent = rest0.charAt(0).toUpperCase() + rest0.slice(1);
+      }
       var mainTxt = first ? first.textContent : String(hs.textContent || '').split('·')[0];
-      if (!stage || !norm(mainTxt) || norm(mainTxt) !== norm(stage)) return;
+      // Also a word the stage's sentence counts („Entriegelt“ above „2 entriegelt · 1 klemmt“, final review 01.11.2026):
+      // one of its parts without the leading number reads like the head's first part.
+      var parts = String(stage).split(/\s*·\s*|\n/).concat(stageParts).map(function (x) { return norm(String(x).replace(/^\s*\d+\s+/, '')); });
+      if (!stage || !norm(mainTxt) || (norm(mainTxt) !== norm(stage) && parts.indexOf(norm(mainTxt)) < 0)) return;
       var so = this._ringSrc && this._ringSrc._stateObj, h = (document.querySelector('home-assistant') || {}).hass;
-      var since = this._sinceText(so && h && h.states ? h.states[so.entity_id] : so);
+      // The stage says a time already („Zuletzt vor 2 Min.“, „Seit 19:40“): the head's part goes instead of a second one.
+      var since = /(^|\s)(seit|zuletzt|vor \d|gerade eben)/i.test(stageAll) ? '' : this._sinceText(so && h && h.states ? h.states[so.entity_id] : so);
       if (first) {
         if (since) first.textContent = since;
         else { var nx = first.nextElementSibling; if (nx && nx.classList && nx.classList.contains('hui-sep')) nx.remove(); first.remove(); }
@@ -8036,7 +8179,12 @@ window.casoraMenuGlass = {
       }
       this._headerStatus.hidden = !this._headerStatus.textContent.trim();
       this._dedupeHead();
-      if (window._casoraSepScan) { var sr = this.shadowRoot; setTimeout(function () { window._casoraSepScan(sr); }, 0); }
+      // Measured again once the popup has settled (open animation, fonts): measured at once the head's line still fit,
+      // and „SW ·“ hung at the end of the first line on the phone (final review 01.11.2026).
+      if (window._casoraSepScan) {
+        var sr = this.shadowRoot, hs0 = this._headerStatus;
+        [0, 350, 900].forEach(function (ms) { setTimeout(function () { hs0._casoraSepSig = null; window._casoraSepScan(sr); }, ms); });
+      }
     }
     _syncHeadLine() {
       if (!this.hasAttribute('soft') || !this.hasAttribute('open') || this._header.hidden) return;
@@ -11920,6 +12068,25 @@ window.casoraMenuGlass = {
   // End angle of the filled part; a sliver stays at 0 so the knob has a start.
   // A value that is no number (offline: „–“) draws an empty ring, never a NaN path (review 2, T07).
   function dEnd(pct) { pct = Number(pct); if (!isFinite(pct)) pct = 0; return DIAL.a0 + DIAL.span * Math.max(0.4, Math.min(100, pct)) / 100; }
+  // Weather (final review 01.11.2026): a fixed temperature scale, coloured by the absolute temperature – blue cold, green
+  // mild around 15–20 °C, orange from about 25, dark red from 30 –, so 10 °C never looks hot on a narrow day range.
+  // Stops in °C; between two stops the colours mix (tokens only).
+  var TEMP_STOPS = [[-10, 'color-mix(in srgb, var(--casora-color-blue, #5B8FC9) 78%, black)'], [0, 'var(--casora-color-blue, #5B8FC9)'],
+    [10, 'var(--casora-color-teal, #4E9E95)'], [17, 'var(--casora-color-green, #6AAE78)'], [22, 'var(--casora-color-yellow, #FFCC00)'],
+    [26, 'var(--casora-color-orange, #DE8A4E)'], [30, 'var(--casora-color-red, #D35A4E)'], [35, 'color-mix(in srgb, var(--casora-color-red, #D35A4E) 72%, black)']];
+  function tempColor(c) {
+    c = Number(c);
+    if (!isFinite(c) || c <= TEMP_STOPS[0][0]) return TEMP_STOPS[0][1];
+    for (var i = 1; i < TEMP_STOPS.length; i++) {
+      var a = TEMP_STOPS[i - 1], b = TEMP_STOPS[i];
+      if (c <= b[0]) {
+        var f = Math.round((c - a[0]) / (b[0] - a[0]) * 100);
+        return f <= 0 ? a[1] : f >= 100 ? b[1] : 'color-mix(in srgb, ' + b[1] + ' ' + f + '%, ' + a[1] + ')';
+      }
+    }
+    return TEMP_STOPS[TEMP_STOPS.length - 1][1];
+  }
+  window._casoraTempColor = tempColor;
   var DIAL_CSS = '.hui-stage.dial{background:none;padding:0;gap:12px;align-items:center;}'
     // The button-card field around the stage clips (.ellipsis): the chosen moon's ring and glow must not be cut.
     + '.ellipsis:has(.hui-stage.dial){overflow:visible !important;}'
@@ -11936,6 +12103,9 @@ window.casoraMenuGlass = {
     // (iPad landscape 1024×768) the keys fell below the edge (r64) – the wheel gives up height there, never below 240.
     + '@media (min-width:761px) and (max-height:900px){.hui-stage.dial:has(> .hui-dl-vol) > .hui-dl{width:min(400px, calc(100% / 1.18), max(240px, calc(100vh - 480px)));}}'
     + '.hui-dl{position:relative;flex:none;width:min(400px, calc(100% / 1.18));aspect-ratio:1;container-type:inline-size;'
+    // Desktop (final review 01.11.2026): one wheel size in every popup, one column (552) or two (900) – the size a
+    // column of the 900 popup gives (≈ 348; iPad 820: ≈ 307), so nothing jumps from a group to its room (‹).
+    + '}@media (min-width:761px){.hui-dl{width:min(calc(100% / 1.18), calc((min(900px, 100vw - 16px) - 78px) / 2 / 1.18));}}.hui-dl{'
     +   'touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;outline:none;}'
     + '.hui-dl:focus-visible .hui-dl-knob{stroke:' + T.ink + ';stroke-width:3;}'
     // Everything inside is placed on the square (cqw = 1 % of the wheel's width), not on the box, which may be shorter.
@@ -11998,6 +12168,7 @@ window.casoraMenuGlass = {
     + '.hui-dl-c ha-icon.hui-dl-sym6{color:' + T.ink + ';margin:0 0 2px !important;}'
     + '.hui-dl-end{position:absolute;top:79cqw;font-size:13px;font-weight:700;color:' + S.sub + ';font-variant-numeric:tabular-nums;white-space:nowrap;transform:translateX(-50%);pointer-events:none;}'
     + '.hui-dl-end.l{left:28%;}.hui-dl-end.r{left:72%;}'
+    + '.hui-dl-tag{position:absolute;font-size:13px;font-weight:700;color:' + S.sub + ';font-variant-numeric:tabular-nums;white-space:nowrap;transform:translate(-50%,-50%);pointer-events:none;}'
     + '.hui-dl-pm{display:flex;gap:clamp(36px, 15cqw, 76px);margin-top:10px;pointer-events:auto;}'
     + '.hui-dl-pm .hui-st-b{width:44px;height:44px;font-size:22px;background:' + S.row + ';}'
     // The record (dial-alle.html): black vinyl with a sheen and grooves, the cover as its round label in the middle –
@@ -12277,6 +12448,30 @@ window.casoraMenuGlass = {
       });
       return '<svg viewBox="0 0 420 420" aria-hidden="true" focusable="false">' + svgHtml + '</svg>';
     }
+    if (ring.temp) {
+      // Fixed scale: a thin track over the whole range, the day's range (low … high) as the band in the colours of its
+      // temperatures, the knob where „now“ is.
+      var tq = ring.temp, tC = function (p) { var v = tq.mn + (tq.mx - tq.mn) * p / 100; return tq.unit === 'F' ? (v - 32) * 5 / 9 : v; };
+      svgHtml += '<path class="tr" d="' + esc(dArc(DIAL.a0, DIAL.a0 + DIAL.span)) + '" fill="none" stroke-width="12" stroke-linecap="round"/>';
+      var bd = ring.band || [ring.pct, ring.pct], b0 = Math.min(bd[0], bd[1]), b1 = Math.max(bd[0], bd[1]);
+      var aA = DIAL.a0 + DIAL.span * b0 / 100, aB = DIAL.a0 + DIAL.span * b1 / 100;
+      if (aB - aA < 1) { aA -= 0.5; aB += 0.5; }
+      var nB = Math.max(1, Math.ceil((aB - aA) / 3)), bandSvg = '';
+      for (var j = 0; j < nB; j++) {
+        var sa = aA + (aB - aA) * j / nB, sb = aA + (aB - aA) * (j + 1) / nB + (j < nB - 1 ? 0.6 : 0);
+        bandSvg += '<path d="' + esc(dArc(sa, Math.min(sb, aB))) + '" fill="none" stroke-width="26" style="stroke:' + esc(tempColor(tC(b0 + (b1 - b0) * (j + 0.5) / nB))) + '"/>';
+      }
+      var cap = function (a, c) { var q = dPt(a, DIAL.r); return '<path d="M' + esc(q[0]) + ' ' + esc(q[1]) + ' L' + esc(q[0]) + ' ' + esc(q[1]) + '" fill="none" stroke-width="26" stroke-linecap="round" style="stroke:' + esc(c) + '"/>'; };
+      bandSvg = cap(aA, tempColor(tC(b0))) + cap(aB, tempColor(tC(b1))) + bandSvg;
+      // The band twice: soft glow under it, then the band itself.
+      svgHtml += '<g class="gl" opacity=".55" filter="url(#' + esc(id) + ')" pointer-events="none">';
+      svgHtml += bandSvg;
+      svgHtml += '</g><g class="tb" data-band="' + esc(dRound(b0)) + ' ' + esc(dRound(b1)) + '">';
+      svgHtml += bandSvg;
+      svgHtml += '</g>';
+      if (ring.knob) { var kt = dPt(dEnd(ring.pct), DIAL.r); svgHtml += '<circle class="hui-dl-knob" cx="' + esc(kt[0]) + '" cy="' + esc(kt[1]) + '" r="19"/>'; }
+      return '<svg viewBox="0 0 420 420" aria-hidden="true" focusable="false">' + svgHtml + '</svg>';
+    }
     var stroke = ring.heat ? 'url(#' + esc(id) + 'h)' : ring.col;
     var e = dEnd(ring.pct), showHtml = ring.pct > 0 ? '' : ' style="display:none"';
     svgHtml += '<path class="tr" d="' + esc(dArc(DIAL.a0, DIAL.a0 + DIAL.span)) + '" fill="none" stroke-width="26" stroke-linecap="round"/>'
@@ -12392,6 +12587,9 @@ window.casoraMenuGlass = {
     } else if (code === 'S4') {
       var p4 = Math.max(0, Math.min(1, Number(o.progress) || 0));
       ring.kind = 'level'; ring.pct = o.progress != null ? p4 * 100 : 0;
+      // A failed or faulty programme (o.tone 'bad'/'warn') fills the ring in the traffic-light colour – an empty grey
+      // ring read like „nothing“ (detail round #35: 3D printer „Fehlgeschlagen“).
+      if ((o.tone === 'bad' || o.tone === 'warn') && TONE[o.tone]) { ring.pct = 100; ring.col = TONE[o.tone]; }
       // Any word as the value („Läuft“, „Bereit“) takes the word size – a 80 px word filled the whole wheel.
       var wd4 = /[A-Za-zÄÖÜäöüß]{2}/.test(String(o.value == null ? '' : o.value));
       centerHtml = (o.caption ? '<div class="hui-dl-cap">' + esc(o.caption) + '</div>' : '')
@@ -12409,6 +12607,26 @@ window.casoraMenuGlass = {
       if (r6.color) ring.col = r6.color;
       // r6.dot: a white dot at the end of the level (weather: where „now“ sits between the day's low and high).
       if (r6.dot) ring.knob = true;
+      // r6.temp ('C'|'F'): a fixed temperature scale (min … max) coloured by the absolute temperature; r6.band: the day's
+      // low and high as the highlighted band, r6.bandLabels („T 8°“, „H 11°“) at their places outside the ring.
+      if (r6.temp) {
+        var vT = parseFloat(String(o.value).replace(',', '.'));
+        ring.temp = { unit: r6.temp === 'F' ? 'F' : 'C', mn: mn6, mx: mx6 };
+        ring.heat = false;
+        ring.col = tempColor(r6.temp === 'F' ? (vT - 32) * 5 / 9 : vT);
+        if (Array.isArray(r6.band) && r6.band.length === 2 && isFinite(Number(r6.band[0])) && isFinite(Number(r6.band[1]))) {
+          ring.band = [dialPct(r6.band[0], mn6, mx6), dialPct(r6.band[1], mn6, mx6)];
+          if (Array.isArray(r6.bandLabels) && r6.bandLabels.length === 2) {
+            var gA = DIAL.a0 + DIAL.span * ring.band[0] / 100, gB = DIAL.a0 + DIAL.span * ring.band[1] / 100;
+            // Close together (a narrow day): the two words move apart around their middle, never over each other.
+            if (gB - gA < 18) { var gm = (gA + gB) / 2; gA = gm - 9; gB = gm + 9; }
+            [[gA, r6.bandLabels[0], 'lo'], [gB, r6.bandLabels[1], 'hi']].forEach(function (t) {
+              var tp = dPt(t[0], DIAL.r + 58);
+              coverHtml += '<div class="hui-dl-tag ' + esc(t[2]) + '" style="left:' + esc(dRound(tp[0] / 4.2)) + '%;top:' + esc(dRound(tp[1] / 4.2)) + 'cqw;">' + esc(t[1]) + '</div>';
+            });
+          }
+        }
+      }
       var na6 = (o.read ? ' data-casora-read="' + esc(o.read) + '" data-casora-read-bare=""' : '')
         + (o.live ? ' data-hp-live="' + esc(o.live) + '"' + (o.liveDigits != null ? ' data-hp-digits="' + esc(o.liveDigits) + '"' : '') : '');
       // o.icon: a symbol above the value (the weather's condition).
@@ -12755,7 +12973,7 @@ window.casoraMenuGlass = {
   // („ready“ → „Bereit“, review 2 DH-14). Anything else stays as the device wrote it.
   var RAW = { ready: 'Bereit', idle: 'Bereit', 'default': 'Standard', running: 'Läuft', paused: 'Pausiert', standby: 'Standby',
     error: 'Fehler', charging: 'Lädt', discharging: 'Entlädt', auto: 'Automatik', automatic: 'Automatik', manual: 'Manuell',
-    normal: 'Normal', none: 'Keine', home: 'Zuhause', away: 'Unterwegs', sleep: 'Schlafen', done: 'Fertig', finished: 'Fertig' };
+    normal: 'Normal', none: 'Keine', home: 'Zuhause', away: 'Unterwegs', sleep: 'Schlafen', done: 'Fertig', finished: 'Fertig', present: 'Vorhanden', absent: 'Fehlt' };
   window._casoraRawWord = function (t) {
     var k = String(t == null ? '' : t).trim();
     return Object.prototype.hasOwnProperty.call(RAW, k) ? RAW[k] : (Object.prototype.hasOwnProperty.call(RAW, k.toLowerCase()) && /^[a-z_]+$/i.test(k) && k === k.toLowerCase() ? RAW[k.toLowerCase()] : t);
@@ -14383,7 +14601,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var toRow = function (r) {
       return {
         icon: r.icon,
-        iconTone: toneOf(r),
+        iconTone: window._casoraNotifyTone ? window._casoraNotifyTone(toneOf(r)) : toneOf(r),
         label: r.label,
         // Something still happening says how long, not when it started as well.
         // Weich (Runde 2): Detail und Zeit als ein Fließtext – bei langem Detail brach die Zeit sonst

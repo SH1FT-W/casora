@@ -676,7 +676,10 @@
     var b = function (d, dis) {
       return { dis: dis, attrs: { 'data-fb-step': JSON.stringify({ id: key, d: d, v: shown, base: base, tg: tg, lo: lo, hi: hi, st: step }) } };
     };
-    return UI.stage('value', Object.assign(dl, { caption: same ? 'Ziel aller Räume' : 'Ø Ziel aller Räume', value: shown, unit: TU(), valCls: 'fb-st-v',
+    // Final review 01.11.2026: the knob turns like a single room – on release every room that is on takes the chosen
+    // target (one call for all; rooms that are off stay off). The caption one line: the head already counts the rooms.
+    return UI.stage('value', Object.assign(dl, { caption: same ? 'Ziel aller' : 'Ø Ziel', value: shown, unit: TU(), valCls: 'fb-st-v',
+      dialSvc: { domain: 'climate', service: 'set_temperature', field: 'temperature', data: { temperature: shown }, target: { entity_id: on.map(function (r) { return r.id; }) } },
       minus: b(-step, shown <= lo), plus: b(step, shown >= hi), foot: foot }));
   };
 
@@ -820,7 +823,7 @@
         return nh ? 'Räume · ' + nh + ' heizen' : 'Räume';
       })());
       list.forEach(function (r) {
-        html = html.replace('data-casora-mi="' + esc(r.id) + '"', 'data-fbh-room="' + esc(JSON.stringify({ id: r.id, name: r.name })) + '"');
+        html = html.replace('data-casora-mi="' + esc(r.id) + '"', 'data-fbh-room="' + esc(JSON.stringify(c.roomTpl ? { id: r.id, name: r.name, tpl: c.roomTpl } : { id: r.id, name: r.name })) + '"');
       });
       return html;
     }
@@ -971,6 +974,8 @@
     if (members.length) {
       var infos = members.map(function (m) { return F.info(m, states, hass); });
       c = { id: id, group: true, rooms: infos.filter(function (i) { return !i.trv; }), trvs: infos.filter(function (i) { return i.trv; }),
+        // The thermostat group (casora_thermostat) opens its rooms as thermostats, the floor heating as floor heating.
+        roomTpl: Array.isArray(variables.room_tpl) ? variables.room_tpl : null,
         houseTemp: variables.temp_sensor && states[variables.temp_sensor] ? variables.temp_sensor : null,
         master: variables.master_switch || (window.casoraDevice ? window.casoraDevice.map(hass, id, { m: { keys: ['main_switch'], domain: 'switch' } }).m : null) || null };
     } else {
@@ -1117,7 +1122,7 @@
     var P = window.casoraPopup, prev = P && P.current;
     window._casoraBackNext = prev ? { fn: function () { P.open(prev); }, at: Date.now() } : null;
     open(d.id, function (okd) { if (!okd && window.casoraPopup) window.casoraPopup.moreInfo(d.id); },
-      { type: 'custom:button-card', template: ['casora_thermostat', 'casora_popup_fbh'], entity: d.id, name: d.name, variables: {} });
+      { type: 'custom:button-card', template: Array.isArray(d.tpl) ? d.tpl : ['casora_thermostat', 'casora_popup_fbh'], entity: d.id, name: d.name, variables: {} });
   };
   var ts = null, tDone = 0;
   window.addEventListener('touchstart', function (ev) {
@@ -4114,8 +4119,9 @@
     });
     return { on: on, tot: tot, pct: nb ? Math.round(sum / nb) : null };
   };
-  var subline = function (s, oneLamp) {
-    var p = s.pct != null ? ' · ' + s.pct + ' %' : '';
+  // noPct: the v3 head – the dial shows the brightness (§3, detail round #4: „3 von 16 an · 73 %“ beside 73 %).
+  var subline = function (s, oneLamp, noPct) {
+    var p = s.pct != null && !noPct ? ' · ' + s.pct + ' %' : '';
     if (s.tot <= 1 || oneLamp) return s.on ? tr('An') + p : tr('Aus');
     // One word list in the popup (review 2, DD-16): „Aus“ like the rooms beside it, „2 von 3 an“ like „2 von 10 an“.
     if (!s.on) return tr('Aus');
@@ -4244,14 +4250,15 @@
       title = /^(beleuchtung|licht|lichter|lampen|zuhause)$/i.test(String(sc.name)) ? tr('Beleuchtung') : tr('Licht') + ' ' + sc.name;
       // Single lamp with a room (sc.room): title = the lamp, otherwise „Licht <Raum>“ stood above one lamp.
       if (sc.room && sc.lights.length === 1) title = short(nameOf(sc.lights[0], states), sc.name);
-      sub = subline(s, false); on = s.on > 0; id = sc.rid;
+      var v3h = !!(window._casoraUI && window._casoraUI.v3 && window._casoraUI.v3());
+      sub = subline(s, false, v3h); on = s.on > 0; id = sc.rid;
     } else {
       // The whole house counts lamps like its badge and tile (owner, 01.11.2026: never rooms).
       var hall = [];
       cfg.rooms.forEach(function (r) { (r.lights || []).forEach(function (x) { if (hall.indexOf(x) < 0) hall.push(x); }); });
       var hs = stat(hall, states);
       title = tr('Beleuchtung');
-      sub = subline(hs, false);
+      sub = subline(hs, false, !!(window._casoraUI && window._casoraUI.v3 && window._casoraUI.v3()));
       on = hs.on > 0; id = cfg.gid;
     }
     /* 1.3 header A: icon, title and main switch sit in the popup header (casora-core.js); here only

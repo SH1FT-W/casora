@@ -588,7 +588,10 @@ window._casoraLightScope = function (entity, states, hass, vars) {
 window.casoraLightTally = function (entity, states, hass, vars) {
   var S = states || {};
   var sc = window._casoraLightScope(entity, S, hass, vars);
-  var ids = sc.lightIds.filter(function (x, i, a) { return S[x] && a.indexOf(x) === i; });
+  /* group_rooms climbs from a room to the house group above it (autoIdx: the popup preselects the room); the count
+     stays the room's own lamps (detail round #2: the bathroom chip said „3 An“ – the house's – while its one lamp was off). */
+  var own = sc.autoIdx > -1 && sc.topLevelIds[sc.autoIdx] ? sc.expand(sc.topLevelIds[sc.autoIdx]) : null;
+  var ids = (own && own.length ? own : sc.lightIds).filter(function (x, i, a) { return S[x] && a.indexOf(x) === i; });
   return { kind: 'lamps', tot: ids.length, on: ids.filter(function (x) { return S[x].state === 'on'; }).length };
 };
 /* The words for a tally (German, the dashboard translates; wortliste: Zahl + An): „Aus“/„An“ for one lamp,
@@ -659,6 +662,13 @@ window.casoraPopupTitle = function (card, variables, def, defaults) {
   if (own) return own;
   var n = String((card && card._config && card._config.name) || '').trim();
   if (n && n.indexOf('[[[') < 0) return n;
+  /* Detail round #6: the title is the tile's name as the dashboard shows it („Abschäumer“, not „Universal-Kachel“) –
+     a name template's result is only in the rendered card. */
+  try {
+    var nm = card && card.shadowRoot && card.shadowRoot.querySelector('#name');
+    var shown = nm ? String(nm.textContent || '').replace(/\s+/g, ' ').trim() : '';
+    if (shown) return shown;
+  } catch (e) { /* not rendered */ }
   return typeDef || def || '';
 };
 /* Kann die Kamera wirklich streamen? (30.09.2026) Manche melden STREAM in supported_features,
@@ -1675,11 +1685,43 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     return Object.assign({}, DEFAULTS, own, window.CASORA_NOTIFY_LOCAL || {});
   }
 
-  // A warning source: the NINA/Meteoalarm prefix from the settings or a DWD level sensor (any name).
-  function isWarning(id, st) {
+  // The sources picked in the open dashboard's weather warning tiles (entity, variables.sensors), or null without a tile
+  // (owner, 01.11.2026: the bell shows the warnings of the tile's source only; it listed every warning sensor of the
+  // house while the tile said „Keine Warnungen“ for its own). Memo per dashboard config.
+  function pickedWarnings() {
+    var lc = window._casoraLovelaceCfg && window._casoraLovelaceCfg();
+    if (!lc) return null;
+    var M = pickedWarnings.m;
+    if (M && M.cfg === lc) return M.ids;
+    var ids = [];
+    (function walk(x, d) {
+      if (!x || typeof x !== 'object' || d > 12) return;
+      if (Array.isArray(x)) { x.forEach(function (y) { walk(y, d + 1); }); return; }
+      var t = [].concat(x.template || []);
+      if (t.some(function (n) { return /^casora_(popup_)?weather_warning$/.test(n); })) {
+        var v = x.variables || {};
+        [].concat(x.entity || [], Array.isArray(v.sensors) ? v.sensors : []).forEach(function (e) {
+          if (typeof e === 'string' && e.indexOf('[[[') < 0 && ids.indexOf(e) < 0) ids.push(e);
+        });
+      }
+      Object.keys(x).forEach(function (k) { if (k !== 'variables') walk(x[k], d + 1); });
+    })(lc.views, 0);
+    pickedWarnings.m = { cfg: lc, ids: ids.length ? ids : null };
+    return pickedWarnings.m.ids;
+  }
+  window._casoraPickedWarnings = pickedWarnings;
+
+  // A warning source: the NINA/Meteoalarm prefix from the settings or a DWD level sensor (any name); with a weather
+  // warning tile on the dashboard only the source(s) it shows.
+  function isWarnSource(id, st) {
     var p = cfg().warn_prefix;
     return (!!p && id.indexOf(p) === 0)
       || (window.casoraWarnings.isLevelSensor(st, id) && !window.casoraWarnings.isAdvance(st, id));
+  }
+  function isWarning(id, st) {
+    if (!isWarnSource(id, st)) return false;
+    var picked = pickedWarnings();
+    return !picked || picked.indexOf(id) > -1;
   }
 
   // Active as a warning source: binary_sensor on, DWD level > 0 with warnings.
@@ -1805,7 +1847,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       var S = hass.states;
       rows = fixBattery(hass, rows, api, c);
       var out = rows.filter(function (r) {
-        return !(r.entity && isWarning(r.entity, S[r.entity]) && String(r.id || '').indexOf('casora:safety:') === 0);
+        // Every warning source leaves the generic safety row – also one the tile does not show (else it came back as
+        // „Sicherheitswarnung“).
+        return !(r.entity && isWarnSource(r.entity, S[r.entity]) && String(r.id || '').indexOf('casora:safety:') === 0);
       });
 
       // Kombi-Sensoren: Einzelsensoren ausblenden, Kipp-Stellung als "gekippt".

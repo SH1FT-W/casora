@@ -2682,7 +2682,17 @@
   "Warten lohnt sich nicht.": "Non conviene aspettare.",
   "Claude sucht ein Rezept …": "Claude cerca una ricetta …",
   "kaum Unterschied": "quasi nessuna differenza",
-  "abends günstiger": "più economico la sera"
+  "abends günstiger": "più economico la sera",
+  "WLAN aus": "Wi-Fi spento",
+  "1 WLAN an": "1 Wi-Fi acceso",
+  "Ziel aller": "Tutte",
+  "Ø Ziel": "Ø obiettivo",
+  "Lampe": "Lampada",
+  "Vorhanden": "Presente",
+  "Fehlt": "Manca",
+  "Ja": "Sì",
+  "unbekannt": "sconosciuto",
+  "Luftfeuchte · 24 Std.": "Umidità · 24 h"
  },
  "patterns": [
   [
@@ -4836,6 +4846,38 @@
   [
    "^(.+) frei$",
    "{1} disponibili"
+  ],
+  [
+   "^Nächstes Spiel (.+)$",
+   "Prossima partita {1}"
+  ],
+  [
+   "^(\\d+) WLANs an$",
+   "{1} reti Wi-Fi accese"
+  ],
+  [
+   "^Schwächste: (.+)$",
+   "Più scarica: {1}"
+  ],
+  [
+   "^Zuerst wechseln: (.+)$",
+   "Da sostituire prima: {1}"
+  ],
+  [
+   "^Jetzt: (.+)$",
+   "Ora: {1}"
+  ],
+  [
+   "^Zuletzt geöffnet (.+)$",
+   "Ultima apertura {1}"
+  ],
+  [
+   "^Profil „(.+)“$",
+   "Profilo «{1}»"
+  ],
+  [
+   "^(\\d+) unbekannt$",
+   "{1} sconosciuto"
   ]
  ],
  "Gerät in Home Assistant": "Dispositivo in Home Assistant"

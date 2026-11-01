@@ -73,6 +73,11 @@ assert.ok(basis.includes("if (!lightIds.length && groupId && S[groupId] && Strin
   assert.deepEqual(T1(S['light.bad'], {}), { kind: 'lamps', tot: 4, on: 2 });
   assert.deepEqual(T1(S['light.bad'], { group_rooms: true }), { kind: 'lamps', tot: 4, on: 2 });
   assert.equal(W(T1(S['light.bad'], { group_rooms: true })), '2 An');
+  // A room inside a house group with group_rooms (the popup preselects the room in the house): still the room's lamps
+  // (detail round #2: the bathroom chip counted the house, „3 An“, its one lamp off).
+  assert.deepEqual(T1(sel, { light_group_entity: 'light.garage', group_rooms: true }), { kind: 'lamps', tot: 3, on: 2 });
+  assert.deepEqual(T1(sel, { light_group_entity: 'light.lounge', group_rooms: true }), { kind: 'lamps', tot: 1, on: 0 });
+  assert.deepEqual(T1(S['light.garage'], { group_rooms: true }), { kind: 'lamps', tot: 3, on: 2 });
   assert.equal(W({ kind: 'lamps', tot: 3, on: 1 }), '1 An');
   assert.equal(W({ kind: 'lamps', tot: 3, on: 0 }), 'Alle aus');
   assert.equal(W({ kind: 'lamps', tot: 3, on: 3 }), 'Alle An');

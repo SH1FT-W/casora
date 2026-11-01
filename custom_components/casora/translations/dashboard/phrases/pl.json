@@ -2682,7 +2682,17 @@
   "Warten lohnt sich nicht.": "Czekanie się nie opłaca.",
   "Claude sucht ein Rezept …": "Claude szuka przepisu …",
   "kaum Unterschied": "prawie bez różnicy",
-  "abends günstiger": "taniej wieczorem"
+  "abends günstiger": "taniej wieczorem",
+  "WLAN aus": "Wi-Fi wyłączone",
+  "1 WLAN an": "1 Wi-Fi włączone",
+  "Ziel aller": "Wszystkie",
+  "Ø Ziel": "Ø cel",
+  "Lampe": "Lampa",
+  "Vorhanden": "Obecny",
+  "Fehlt": "Brak",
+  "Ja": "Tak",
+  "unbekannt": "nieznany",
+  "Luftfeuchte · 24 Std.": "Wilgotność · 24 h"
  },
  "patterns": [
   [
@@ -4836,6 +4846,38 @@
   [
    "^(.+) frei$",
    "{1} wolne"
+  ],
+  [
+   "^Nächstes Spiel (.+)$",
+   "Następny mecz {1}"
+  ],
+  [
+   "^(\\d+) WLANs an$",
+   "{1} sieci Wi-Fi włączone"
+  ],
+  [
+   "^Schwächste: (.+)$",
+   "Najsłabsza: {1}"
+  ],
+  [
+   "^Zuerst wechseln: (.+)$",
+   "Najpierw wymień: {1}"
+  ],
+  [
+   "^Jetzt: (.+)$",
+   "Teraz: {1}"
+  ],
+  [
+   "^Zuletzt geöffnet (.+)$",
+   "Ostatnio otwarte {1}"
+  ],
+  [
+   "^Profil „(.+)“$",
+   "Profil „{1}”"
+  ],
+  [
+   "^(\\d+) unbekannt$",
+   "{1} nieznany"
   ]
  ],
  "Gerät in Home Assistant": "Urządzenie w Home Assistant"

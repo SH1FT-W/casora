@@ -210,6 +210,16 @@
       + JSON.stringify(span || '') + ', states, hass, this) : "";';
   };
 
+  // The chart colour of a reading (richtlinien §7.3): temperature orange, humidity/water blue, air quality teal,
+  // electrical side values neutral; else the chart's own first colour.
+  Z.chartColor = function (st) {
+    var a = (st && st.attributes) || {}, dc = String(a.device_class || ''), u = String(a.unit_of_measurement || '');
+    if (dc === 'temperature' || /^°[CF]$/.test(u)) return 'var(--casora-color-orange, #DE8A4E)';
+    if (/^(humidity|moisture|precipitation|precipitation_intensity|volume_flow_rate|water)$/.test(dc)) return 'var(--casora-color-blue, #5B8FC9)';
+    if (/^(aqi|carbon_dioxide|carbon_monoxide|pm1|pm25|pm10|volatile_organic_compounds|volatile_organic_compounds_parts|nitrogen_dioxide|ozone)$/.test(dc)) return 'var(--casora-color-teal, #4E9E95)';
+    if (/^(voltage|current|frequency|signal_strength)$/.test(dc)) return 'var(--casora-color-neutral, var(--secondary-text-color))';
+    return '';
+  };
   // Messwert-Seite (Baustein 1, Entwurf A; Zwei-Zustands-Sensoren als Entwurf D).
   Z.openMeasure = function (id, span, back) {
     var P = window.casoraPopup, K = window._casoraSoftKit, h = hassNow();
@@ -226,7 +236,7 @@
     if (UIv && UIv.v3 && UIv.v3() && UIv.stage) {
       if (num && window._hpPlantCfg) {
         window._hpPlantCfg['cz:' + id + '|' + span] = { type: 'custom:casora-chart', kind: 'line', span: span, source: span === '24h' ? 'history' : 'auto',
-          series: [{ entity: id, name: Z.nameOf(h, id), unit: (st.attributes || {}).unit_of_measurement || '' }],
+          series: [{ entity: id, name: Z.nameOf(h, id), unit: (st.attributes || {}).unit_of_measurement || '', color: Z.chartColor(st) }],
           height: window.innerWidth <= 760 ? 140 : 160, readout: 'hero', plate: false };
       }
       var fv = { stage: { card: K.secCard(num ? [] : watch, call('m_stage', id, span), h.states) },
@@ -239,8 +249,11 @@
       // The same name as the page before (a switch's „Zuletzt eingeschaltet ›“): the page is its history.
       var prevT = back && P._headerTitle ? String(P._headerTitle.textContent || '').replace(/\u200B/g, '').trim() : '';
       if (prevT && prevT === String(shortV || fullV).trim()) shortV = T('Verlauf');
+      // §3 (detail round #11): the label is the room („SCHLAFZIMMER“), not the device („AIRCUBE SCHLAFZIMMER“).
+      var roomV = '';
+      try { roomV = window._casoraRoomOf ? String(window._casoraRoomOf(id) || '').trim() : ''; } catch (e) { roomV = ''; }
       P.open(Object.assign(pageCfg(shortV || fullV, K.layout({ fields: fv, top: [], stage: 'stage', left: [], right: ['vals', 'tl'],
-        narrowOrder: ['vals', 'tl'] }), back, shortV && shortV !== fullV ? devName(dv) : (areaOf(h, id) || '')), { variant: 'v3' }));
+        narrowOrder: ['vals', 'tl'] }), back, roomV || areaOf(h, id) || ''), { variant: 'v3' }));
       return true;
     }
     var f = { hero: { card: K.secCard(watch, call('m_hero', id, span), h.states) } };

@@ -284,6 +284,8 @@
     // in #98 (richtlinien §8, exception). Throughput per band and device details go („Mehr“).
     if (UI.v3 && UI.v3() && UI.stage) {
       f.stage = { card: secCard([C.dl, C.ul, C.status, C.ping, C.stDown, C.stUp, C.stButton, C.stRunning, C.stLast], call('_casoraSoftNet', 'stage', C), states) };
+      // The head's status line (§3): Wi-Fi in words – not the tile entity's value („0 kWh“) nor the wheel's rates.
+      if (N.sec('line', C, states, hass)) f.line = { card: secCard(C.wlans.map(function (w) { return w.sw; }).concat(C.wlans.map(function (w) { return w.clients; })), call('_casoraSoftNet', 'line', C), states) };
       if (ctx.metricCard) f.metric = { card: chartCard(ctx.metricCard, null) };
       if (C.wlans.length) f.wl = { card: secCard(C.wlans.map(function (w) { return w.sw; }).concat(C.wlans.map(function (w) { return w.clients; })), call('_casoraSoftNet', 'wl', C), states) };
       // Latency is not watched (it changes all the time); the rows swap it as text (data-hp-live-join).
@@ -291,7 +293,7 @@
       if (C.devices.filter(function (d) { return states[d.state] || states[d.pulse] || states[d.restart]; }).length) {
         f.nd = { card: secCard([].concat.apply([], C.devices.map(function (d) { return [d.state, d.pulse, d.update]; })), call('_casoraSoftNet', 'nd', C), states) };
       }
-      return layout({ fields: f, top: [], stage: 'stage', left: ['wl', 'inet'], right: ['nd', 'metric'], moveLeft: ['nd'], narrowOrder: ['wl', 'inet', 'nd', 'metric'] });
+      return layout({ fields: f, top: f.line ? ['line'] : [], stage: 'stage', left: ['wl', 'inet'], right: ['nd', 'metric'], moveLeft: ['nd'], narrowOrder: ['wl', 'inet', 'nd', 'metric'] });
     }
     f.hero = { card: secCard([C.dl, C.ul, C.status, C.ping], call('_casoraSoftNet', 'hero', C), states) };
     var st = C.stButton && states[C.stButton]
@@ -354,6 +356,19 @@
                    : pill(UI, 'Speedtest starten', { domain: 'button', service: 'press', target: { entity_id: C.stButton } }))
         + (when && !running ? '<span style="font-size:12.5px;font-weight:500;color:var(--casora-soft-sub, rgba(0,0,0,0.5));">Zuletzt ' + UI.esc(when) + '</span>' : '')
         + '</div>';
+    }
+    if (part === 'line') {
+      // „2 WLANs an · 66 Geräte“: how many Wi-Fi networks are on and how many devices use them.
+      var wOn = 0, wCl = 0, wHas = false;
+      (C.wlans || []).forEach(function (w) {
+        if (!states[w.sw] || raw(states, w.sw) !== 'on') return;
+        wOn++;
+        var c0 = num(states, w.clients);
+        if (c0 != null) { wCl += Math.round(c0); wHas = true; }
+      });
+      var wN = (C.wlans || []).filter(function (w) { return states[w.sw]; }).length;
+      if (!wN || !UI.line) return '';
+      return UI.line(wOn === 0 ? 'WLAN aus' : wOn === 1 ? '1 WLAN an' : wOn + ' WLANs an', wHas ? [wCl === 1 ? '1 Gerät' : wCl + ' Geräte'] : []);
     }
     if (part === 'wl') {
       /* Switching on directly, off only after asking (it might cut off the device the popup is open on). */
@@ -906,7 +921,12 @@
     var ankerOk = !has(C.battery) || !ankerDev || !tileDev || ankerDev === tileDev;
     if (pw.battery.length && !has(C.battery)) F.batHa = pw.battery.slice();
     else if ((has(C.charge) || has(C.discharge)) && ankerOk) { F.chg = C.charge || null; F.dis = C.discharge || null; }
-    else if (has(C.battery)) F.batTile = C.battery;
+    else if (has(C.battery)) {
+      // The same power sensor in HA's energy settings has HA's sign (positive = discharging): read it that way in the
+      // tile too – the tile said „Akku entlädt“ where the house badge (HA's settings) said „lädt“ (detail round #1).
+      var pwAll = window.casoraEnergyPowers ? window.casoraEnergyPowers(hass) : { battery: [] };
+      if ((pwAll.battery || []).indexOf(C.battery) > -1) F.batHa = [C.battery]; else F.batTile = C.battery;
+    }
     if (has(C.grid) || has(C.export)) { F.grid = C.grid || null; F.exp = C.export || null; }
     else if (pw.grid.length) F.gridHa = pw.grid.slice();
     if (has(C.soc)) F.soc = C.soc;
@@ -946,7 +966,17 @@
     var neg = function (w) { return w == null ? null : Math.max(0, -w); };
     var v = { has: F.has, solar: F.solar ? sum(F.solar, !!F.solarHa) : null };
     if (F.chg || F.dis) { v.chg = pos(watt(states, F.chg)); v.dis = pos(watt(states, F.dis)); }
-    else if (F.batTile) { var b = watt(states, F.batTile); v.chg = pos(b); v.dis = neg(b); }
+    else if (F.batTile) {
+      var b = watt(states, F.batTile); v.chg = pos(b); v.dis = neg(b);
+      // The tile's sign is positive = charging, but many integrations report HA's (positive = discharging). When solar,
+      // grid and home are known, the sign whose balance adds up wins (detail round #1: „Akku entlädt“ while charging).
+      var sB = F.solar ? sum(F.solar, !!F.solarHa) : 0, gB = watt(states, F.grid), xB = watt(states, F.exp), hB = F.home ? watt(states, F.home) : null;
+      if (b != null && b !== 0 && hB != null && gB != null) {
+        var impB = Math.max(0, gB), expB = xB != null ? Math.max(0, xB) : Math.max(0, -gB);
+        var rest = function (c, d) { return Math.abs((sB || 0) + impB - expB + d - c - hB); };
+        if (rest(neg(b), pos(b)) + 50 < rest(pos(b), neg(b))) { v.chg = neg(b); v.dis = pos(b); }
+      }
+    }
     else if (F.batHa) { var h = sum(F.batHa, true); v.dis = pos(h); v.chg = neg(h); }
     if (F.grid || F.exp) {
       var g = watt(states, F.grid), x = watt(states, F.exp);

@@ -125,6 +125,17 @@ const run = async (view) => {
   await need(tag + ': popup opens with one row per entry', p && p.rows === members.length, p);
   // v3 (richtlinien §2): the list popup is one column, 552 wide, on the desktop too.
   await check(tag + ': one column (v3)', p.cols === 1, p.cols);
+  // §6 (final review 01.11.2026): the rows are a list plate of their own – icon 12 from the plate's edge, the plate flush
+  // with the stage – not 32 deep inside the stage plate.
+  const inset = await page.evaluate(() => {
+    const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
+    const row = pop && window.__pierce('.hui-stage .hui-row', pop.shadowRoot).find((n) => n.getBoundingClientRect().height > 0);
+    const plate = row && row.closest('.hui-plate'), stage = row && row.closest('.hui-stage');
+    const ic = row && [...row.querySelectorAll('*')].find((n) => { const b = n.getBoundingClientRect(); return b.width >= 24 && b.width <= 32 && b.height >= 24 && b.height <= 32; });
+    if (!plate || !stage || !ic) return null;
+    return { icon: Math.round(ic.getBoundingClientRect().left - plate.getBoundingClientRect().left), plate: Math.round(plate.getBoundingClientRect().left - stage.getBoundingClientRect().left) };
+  });
+  await check(tag + ': list rows 12 from the plate, plate flush with the stage (§6)', inset && Math.abs(inset.icon - 12) <= 2 && Math.abs(inset.plate) <= 1, inset);
   await check(tag + ': heading „Schalter“ before its entry', p.labels.includes('Schalter'), p.labels);
   await check(tag + ': controls – 2 switches, 2 time fields, − / +, a choice field',
     p.switches === 2 && p.times === 2 && p.steps === 2 && p.selects === 1, p);
