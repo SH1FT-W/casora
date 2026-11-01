@@ -524,7 +524,7 @@
       return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
     const Z = { gut: ['Alles im grünen Bereich', 'var(--casora-popup-ui-good, #30D158)', 'mdi:check-circle'],
                 beobachten: ['Beobachten', 'var(--casora-popup-ui-warn, #FF9F0A)', 'mdi:eye-outline'],
-                handeln: ['Handeln', 'var(--casora-popup-ui-bad, #FF453A)', 'mdi:alert'] };
+                handeln: ['Handeln', 'var(--casora-color-red-text, var(--casora-popup-ui-bad, #FF453A))', 'mdi:alert'] };
     const running = it && it.status === 'running';
     const z = it && Z[it.zustand];
     const svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_aquarium_doktor', a))) + '"';

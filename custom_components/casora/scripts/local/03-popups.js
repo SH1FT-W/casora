@@ -837,7 +837,7 @@
       var running = ha.status === 'running', has = !!ha.fazit;
       var Zc = { gut: ['Alles im grünen Bereich', 'var(--casora-popup-ui-good, #30D158)', 'mdi:check-circle'],
                  beobachten: ['Beobachten', 'var(--casora-popup-ui-warn, #FF9F0A)', 'mdi:eye-outline'],
-                 handeln: ['Handeln', 'var(--casora-popup-ui-bad, #FF453A)', 'mdi:alert'] };
+                 handeln: ['Handeln', 'var(--casora-color-red-text, var(--casora-popup-ui-bad, #FF453A))', 'mdi:alert'] };
       var ic = function (nm, px, col) { return '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 ' + esc(px) + 'px;width:' + esc(px) + 'px;height:' + esc(px) + 'px;"><ha-icon icon="' + esc(nm) + '" style="--mdc-icon-size:' + esc(px) + 'px;width:' + esc(px) + 'px;height:' + esc(px) + 'px;display:flex;align-items:center;justify-content:center;line-height:0;color:' + esc(col) + ';"></ha-icon></span>'; };
       var li = function (arr, col) { return '<ul style="margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + esc(col) + ';white-space:normal;">' + arr.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>'; };
       var body;
@@ -2545,7 +2545,7 @@
   };
   var Z = { gut: ['Alles im grünen Bereich', 'var(--casora-popup-ui-good, #30D158)', 'mdi:check-circle'],
             beobachten: ['Beobachten', 'var(--casora-popup-ui-warn, #FF9F0A)', 'mdi:eye-outline'],
-            handeln: ['Handeln', 'var(--casora-popup-ui-bad, #FF453A)', 'mdi:alert'] };
+            handeln: ['Handeln', 'var(--casora-color-red-text, var(--casora-popup-ui-bad, #FF453A))', 'mdi:alert'] };
   PA.html = function (pid, hass, inSlot) {
     var T = (window._casoraUI && window._casoraUI.tokens) || { ink: '#fff', ink2: 'rgba(255,255,255,0.7)', ink3: 'rgba(255,255,255,0.45)', font: 'system-ui' };
     var l = (hass.states[SENSOR] && hass.states[SENSOR].attributes.pflanzen) || [];
@@ -3205,7 +3205,7 @@
       if (!ready && !a.fazit) return '';
       var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
       var ic = function (nm, px, col) { return '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 ' + esc(px) + 'px;width:' + esc(px) + 'px;height:' + esc(px) + 'px;"><ha-icon icon="' + esc(nm) + '" style="--mdc-icon-size:' + esc(px) + 'px;width:' + esc(px) + 'px;height:' + esc(px) + 'px;display:flex;align-items:center;justify-content:center;line-height:0;color:' + esc(col) + ';"></ha-icon></span>'; };
-      var Z = { gut: ['Alles im grünen Bereich', 'var(--casora-popup-ui-good, #30D158)', 'mdi:check-circle'], beobachten: ['Beobachten', 'var(--casora-popup-ui-warn, #FF9F0A)', 'mdi:eye-outline'], handeln: ['Handeln', 'var(--casora-popup-ui-bad, #FF453A)', 'mdi:alert'] };
+      var Z = { gut: ['Alles im grünen Bereich', 'var(--casora-popup-ui-good, #30D158)', 'mdi:check-circle'], beobachten: ['Beobachten', 'var(--casora-popup-ui-warn, #FF9F0A)', 'mdi:eye-outline'], handeln: ['Handeln', 'var(--casora-color-red-text, var(--casora-popup-ui-bad, #FF453A))', 'mdi:alert'] };
       var li = function (arr, col) { return '<ul style="margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + esc(col) + ';white-space:normal;">' + arr.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'; };
       var running = a.status === 'running', has = !!a.fazit, z = Z[a.zustand], body;
       /* Soft (declutter): only the verdict is visible, points and tips under „Mehr“ (ai_tips). */
