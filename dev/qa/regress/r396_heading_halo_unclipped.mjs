@@ -56,8 +56,10 @@ const measure = (page) => page.evaluate(() => {
       const cs = getComputedStyle(e);
       if (cs.overflowX === 'visible' && cs.overflowY === 'visible') continue;
       const c = e.getBoundingClientRect();
+      // A scrolling box cuts what is scrolled out of it like the screen edge does (tiles too) – not a halo box.
+      const scrollsY = /auto|scroll/.test(cs.overflowY);
       const g = {
-        top: tr.top - c.top, bottom: c.bottom - tr.bottom,
+        top: scrollsY ? 1e9 : tr.top - c.top, bottom: scrollsY ? 1e9 : c.bottom - tr.bottom,
         // At the screen edge the halo ends anyway.
         left: c.left <= 0.5 ? 1e9 : tr.left - c.left, right: c.right >= vw - 0.5 ? 1e9 : c.right - tr.right,
       };
@@ -181,6 +183,12 @@ for (const [theme, dark] of runs) {
       } else if (how === 'noscenes') {
         await check(`${tag}: ${label} – ohne Szenen keine Überschrift`, heads.length > 0 && heads.every((x) => x === '[tiles]'), heads);
       } else {
+        // The scene row comes by WebSocket after the tiles (later on a busy machine): wait for it, then read again.
+        if (!heads.includes('[scenes]')) {
+          for (let i = 0; i < 25 && !(await roomPage(page) || []).includes('[scenes]'); i++) await page.waitForTimeout(400);
+          await settle(page);
+          heads.splice(0, heads.length, ...((await roomPage(page)) || []));
+        }
         const at = heads.indexOf('[scenes]');
         await need(`${tag}: ${label} hat Szenen`, at > 0, heads);
         await check(`${tag}: ${label} – Gruppen aus`, groups.length === 0, heads);
