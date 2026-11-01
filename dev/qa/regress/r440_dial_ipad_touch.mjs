@@ -10,7 +10,10 @@
 // and when the page did not prevent it the touch scrolls the popup and every later move is non-cancelable.
 // Expected: iPad (dialog) – knob dragged straight up/down, along the ring's side, resting then dragging all
 // turn; a tap in the gap and a swipe across the middle change nothing; − / + still step (real touch taps in
-// WebKit too). Phone (sheet) – the knob turns, a tap in the gap and the middle change nothing. Desktop mouse
+// WebKit too). Phone (sheet) – the knob turns (thermostat, cover, light) while the sheet stays where it is
+// (26.11.3 candidate, phone: a single cover's popup card is "disabled" in button-card, pointer-events:none, so the
+// ring never got the finger and the sheet dragged instead); a tap in the gap and the middle change nothing; a
+// swipe down from the grab handle still closes the sheet. Desktop mouse
 // still drags the ring. A linear slider (brightness bar) follows the finger. Service calls are only recorded.
 import { open, casoraDashboard, dashboard, check, need, finish, usePage } from './lib.mjs';
 
@@ -105,7 +108,8 @@ const ios = (page, points, { gap = 16, hold = 0, jitter = false } = {}) => page.
   const target = deepAt(points[0].x, points[0].y);
   const pop = window.casoraPopup && window.casoraPopup.element;
   const content = pop && pop.shadowRoot && pop.shadowRoot.querySelector('.content');
-  let first = true, scrolling = false, last = points[0];
+  const surface = pop && pop.shadowRoot && pop.shadowRoot.querySelector('.surface');
+  let first = true, scrolling = false, last = points[0], sheetMoved = 0;
   const fire = (type, p) => {
     const t = new Touch({ identifier: 7, target, clientX: p.x, clientY: p.y, radiusX: 10, radiusY: 10 });
     const end = type === 'touchend';
@@ -116,6 +120,9 @@ const ios = (page, points, { gap = 16, hold = 0, jitter = false } = {}) => page.
       if (first) { first = false; if (!ev.defaultPrevented) scrolling = true; }
       if (scrolling && content) content.scrollTop -= p.y - last.y;
       last = p;
+      // The phone sheet follows a swipe by translateY: while the dial turns it must stay where it is.
+      const m = surface && /translateY\((-?[\d.]+)px\)/.exec(surface.style.transform || '');
+      if (m) sheetMoved = Math.max(sheetMoved, Math.abs(parseFloat(m[1])));
     }
   };
   fire('touchstart', points[0]);
@@ -126,7 +133,7 @@ const ios = (page, points, { gap = 16, hold = 0, jitter = false } = {}) => page.
   }
   for (let i = 1; i < points.length; i++) { await new Promise((r) => setTimeout(r, gap)); fire('touchmove', points[i]); }
   fire('touchend', points[points.length - 1]);
-  return { scrolled: scrolling, target: target && target.localName };
+  return { scrolled: scrolling, sheetMoved, target: target && target.localName };
 }, { points, gap, hold, jitter });
 // A straight drag: a small first step (2 px, as a real finger starts), then 12 px steps.
 const line = (p, dx, dy, n = 9) => [p, { x: p.x + Math.sign(dx) * 2 * (dx ? 1 : 0), y: p.y + Math.sign(dy) * 2 * (dy ? 1 : 0) }]
@@ -239,7 +246,7 @@ for (const [tag, ua] of [['iPad', IPAD_UA], ['iPad desktop website', MAC_UA]]) {
   await dashboard(page, dash.url, 3);
   await spy(page);
   const ids = await pick(page);
-  for (const kind of ['climate', 'light']) {
+  for (const kind of ['climate', 'cover', 'light']) {
     const ok = ids[kind] && await popupFor(page, kind, ids[kind], true);
     let s = await state(page);
     if (!(await check(`phone ${kind}: popup with a dial opens`, ok && s.box, s))) continue;
@@ -249,6 +256,17 @@ for (const [tag, ua] of [['iPad', IPAD_UA], ['iPad desktop website', MAC_UA]]) {
     let g = await ios(page, line(k0, 0, right ? -12 : 12));
     await settle(page); s = await state(page);
     await check(`phone ${kind}: knob dragged straight up/down turns the dial`, s.open && s.pct !== p0 && !g.scrolled, { p0, s, g });
+    // Reported (phone, 26.11.3 candidate): trying to turn the dial dragged the sheet along – the ring of a dial
+    // in a "disabled" popup card (pointer-events:none) never got the finger. Knob dragged down, then along the ring.
+    p0 = s.pct;
+    const k1 = knobAt(s);
+    g = await ios(page, line(k1, 0, 12));
+    await settle(page); s = await state(page);
+    await check(`phone ${kind}: turning the dial downwards leaves the sheet where it is`, s.open && !g.scrolled && g.sheetMoved === 0, { p0, s, g });
+    p0 = s.pct;
+    g = await ios(page, arc(s.box, p0 > 50 ? 340 : 200, p0 > 50 ? 380 : 160));
+    await settle(page); s = await state(page);
+    await check(`phone ${kind}: turning along the ring leaves the sheet where it is`, s.open && !g.scrolled && g.sheetMoved === 0, { p0, s, g });
     await page.waitForTimeout(800);
     s = await state(page); p0 = s.pct;
     const calls0 = s.calls.length;
@@ -259,6 +277,17 @@ for (const [tag, ua] of [['iPad', IPAD_UA], ['iPad desktop website', MAC_UA]]) {
     await page.waitForTimeout(700);
     s = await state(page);
     await check(`phone ${kind}: tap in the gap and swipe over the middle change nothing`, s.open && s.pct === p0 && s.calls.length === calls0, { p0, s, calls0 });
+  }
+  // Off the dial the sheet still follows the finger: a swipe down from the grab handle closes it.
+  if (ids.cover && await popupFor(page, 'cover', ids.cover, true)) {
+    const gr = await page.evaluate(() => { const g = window.casoraPopup.element.shadowRoot.querySelector('.grab'); const r = g && g.getBoundingClientRect();
+      return r && r.width ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : null; });
+    if (await check('phone cover: grab handle of the sheet found', !!gr, gr)) {
+      await ios(page, line(gr, 0, 30, 10));
+      await page.waitForTimeout(900);
+      const s = await state(page);
+      await check('phone cover: a swipe down from the grab handle still closes the sheet', !s.open, s);
+    }
   }
 }
 

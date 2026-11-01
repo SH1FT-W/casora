@@ -29,6 +29,9 @@ assert.equal(press(80, 150, false), 100, 'dragging into the gap snaps to the nea
 assert.ok(/\.hui-dl\{[^}]*touch-action:pan-y/.test(core) && !/\.hui-dl\{[^}]*touch-action:none/.test(core), 'dial lets the sheet scroll');
 assert.ok(core.includes("if (ev.pointerType === 'touch') return;"), 'fingers do not start the pointer drag');
 assert.ok(/_bindSheetDrag\(surface, grab, content\) \{[\s\S]{0,400}if \(e\._casoraDialRing\) \{ tracking = false; return; \}/.test(core), 'sheet ignores ring touches');
+// A popup card with tap_action none is "disabled" in button-card (pointer-events:none); the stage takes the
+// pointer events back, or the ring never gets the finger and the phone sheet drags instead (single cover).
+assert.ok(/var STAGE_CSS = 'ha-card\.disabled\{pointer-events:auto!important;\}'/.test(core), 'stage re-enables a disabled popup card');
 assert.ok(/_overWidget\(ev\) \{[\s\S]*?contains\('hui-dl'\)/.test(core), 'dial is content for the background tap');
 // A tap without turning commits nothing; turning is relative to the start (no jump to the finger).
 const gest = cut("    var DIAL_HOLD = 260", "    document.addEventListener('touchcancel', tdialEnd, true);");
