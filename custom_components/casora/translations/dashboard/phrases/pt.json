@@ -4924,5 +4924,7 @@
    "{1} desconhecido"
   ]
  ],
- "Gerät in Home Assistant": "Dispositivo no Home Assistant"
+ "Gerät in Home Assistant": "Dispositivo no Home Assistant",
+  "Vergrößern": "Ampliar",
+  "Verkleinern": "Reduzir"
 }

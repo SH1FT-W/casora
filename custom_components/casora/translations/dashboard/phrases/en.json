@@ -4906,5 +4906,7 @@
    "{1} unknown"
   ]
  ],
- "Gerät in Home Assistant": "Device in Home Assistant"
+ "Gerät in Home Assistant": "Device in Home Assistant",
+  "Vergrößern": "Enlarge",
+  "Verkleinern": "Shrink"
 }
