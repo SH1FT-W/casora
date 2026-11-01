@@ -3625,7 +3625,7 @@
     // A camera without a picture (offline, no image yet) says so instead of an empty dark plate (review 2, DD-28).
     var camDead = c.cam && states[c.cam] && (states[c.cam].state === 'unavailable' || !(states[c.cam].attributes || {}).entity_picture);
     if (camDead && window._casoraUI && window._casoraUI.empty) {
-      add('cam', window._casoraUI.empty({ icon: 'mdi:cctv-off', text: 'Kamera nicht erreichbar' }));
+      add('cam', window._casoraUI.empty({ icon: 'mdi:cctv-off', text: 'Kamera offline' }));
     } else if (c.cam && states[c.cam]) {
       add('cam', { card: { type: 'picture-entity', entity: c.cam, camera_view: 'auto', show_name: false, show_state: false, tap_action: { action: 'none' }, hold_action: { action: 'none' },
         aspect_ratio: '16:9',

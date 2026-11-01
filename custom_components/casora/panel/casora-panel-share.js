@@ -225,6 +225,8 @@
       this._flowRow(inside, { title: t("{n} tiles").replace("{n}", pv.tiles), raw: true, icon: "devices",
         sub: pv.phone ? t("Phone layout with {n} tiles").replace("{n}", pv.phone_tiles) : t("No phone layout") });
       if (pv.photos) this._flowRow(inside, { title: t("{n} photos").replace("{n}", pv.photos), raw: true, icon: "photo" });
+      // Own room symbols always travel with the file (a name taken here gets „-2“).
+      if (pv.icons) this._flowRow(inside, { title: t("{n} own symbols").replace("{n}", pv.icons), raw: true, icon: "home" });
 
       // Where it goes.
       const where = this._flowGroup(s.body, { header: "Where To" });

@@ -188,6 +188,43 @@ write, ren = sh.photo_plan(PHOTOS, {"kitchen-0123456789ab.jpg": b"\xff\xd8\xffOT
 check(ren.get("kitchen-0123456789ab") == "kitchen-111111111111" and not any(n.startswith("kitchen") for n in write),
       f"photos imported before are reused, not copied again: {ren} {sorted(write)}")
 
+print("own room symbols")
+ICON_CFG = {"views": [{"path": "kitchen", "cards": [
+    {"type": "custom:button-card", "template": "casora_room",
+     "variables": {"room_icon": "/local/casora/icons/eigene/sofa.svg"}},
+    {"type": "custom:button-card", "template": "casora_room",
+     "variables": {"room_icon": "/local/casora/icons/eigene/plant-2.png", "style": "url('/local/casora/icons/eigene/sofa.svg')"}},
+    {"type": "custom:button-card", "template": "casora_room", "variables": {"room_icon": "kitchen"}}]}],
+    "button_card_templates": {"x": {"icon": "/local/casora/icons/eigene/template-only.svg"}}}
+check(sh.icon_names([ICON_CFG, None]) == {"sofa.svg", "plant-2.png"}, f"symbols named: {sh.icon_names([ICON_CFG])}")
+ICONS = {"sofa.svg": b"<svg>SOFA</svg>", "plant-2.png": b"PNGPLANT"}
+data = export(config=ICON_CFG, mobile=None, icons=ICONS)
+z = zipfile.ZipFile(io.BytesIO(data))
+check({"icons/sofa.svg", "icons/plant-2.png"} <= set(z.namelist()), f"symbols in the file: {z.namelist()}")
+check(json.loads(z.read("manifest.json"))["icons"] == ["plant-2.png", "sofa.svg"], "manifest lists the symbols")
+got = sh.read_file(data)
+check(got["icons"] == ICONS, f"symbols read back: {sorted(got['icons'])}")
+check(sh.preview(got, set())["icons"] == 2, "preview counts the symbols")
+bad = sh.read_file(zip_of({"manifest.json": json.dumps({"format": 1, "kind": "casora-dashboard"}),
+                           "dashboard.json": json.dumps({"views": []}), "icons/../evil.svg": "x",
+                           "icons/Big.SVG": "x", "icons/sofa.svg": "x" * (sh.MAX_ICON + 1)}))
+check(bad["icons"] == {}, f"no paths outside, no odd names, no giants: {sorted(bad['icons'])}")
+# Import: same symbol stays, a name taken by another symbol is renamed, a symbol here under another name is reused.
+write, ren = sh.icon_plan(ICONS, {"sofa.svg": b"<svg>SOFA</svg>"})
+check(write == {"plant-2.png": b"PNGPLANT"} and not ren, f"same symbol not written twice: {sorted(write)} {ren}")
+write, ren = sh.icon_plan(ICONS, {"sofa.png": b"OTHER", "sofa-2.svg": b"OTHER2", "plant-2.png": b"OTHER3"})
+check(ren == {"sofa.svg": "sofa-3.svg", "plant-2.png": "plant-3.png"} and sorted(write) == ["plant-3.png", "sofa-3.svg"],
+      f"clash gets the next free name: {ren} {sorted(write)}")
+write, ren = sh.icon_plan(ICONS, {"couch.svg": b"<svg>SOFA</svg>"})
+check(ren == {"sofa.svg": "couch.svg"} and "sofa.svg" not in write and "couch.svg" not in write,
+      f"symbol here under another name is reused: {ren} {sorted(write)}")
+staged = {"manifest": {"url_path": "casora-home"}, "config": ICON_CFG, "mobile": None, "settings": {}, "photos": {}, "icons": ICONS}
+out = sh.prepare(staged, url_path="casora-home", mobile_url=None, mapping={}, renames={}, with_settings=False,
+                 icon_renames={"sofa.svg": "sofa-3.svg"})
+txt = json.dumps(out["config"])
+check(txt.count("/local/casora/icons/eigene/sofa-3.svg") == 2 and "eigene/sofa.svg" not in txt
+      and "eigene/plant-2.png" in txt, f"paths point at the new name: {txt}")
+
 print("staging")
 store: dict = {}
 tok = sh.stage(store, {"x": 1}, now=0)
