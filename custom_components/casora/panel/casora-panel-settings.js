@@ -1020,6 +1020,13 @@
       }
       return r;
     };
+    // The block title already names it: a first group heading with the same words goes.
+    // (Headings may still be English here when the page translates after drawing.)
+    const dedupe = (box, b) => {
+      const fh = box.querySelector(".fgroup > .fhead");
+      const same = (x) => !!fh && fh.textContent.trim().toLowerCase() === String(x).trim().toLowerCase();
+      if (same(b.title) || same(t(b.title))) fh.remove();
+    };
     P._csNeuBlock = function (host, tile, b, rerender) {
       const box = el("section", "cn-block");
       box.dataset.pkey = "nb-" + b.k;
@@ -1050,13 +1057,11 @@
       if (b.personal) {
         if (typeof this._casoraPersonalGroups === "function") this._casoraPersonalGroups(box, cs.S, b.personal, rerender);
         // A section with nothing to show (e.g. no devices found) leaves no empty heading behind.
-        if (!box.querySelector(".fgroup")) box.remove();
+        if (!box.querySelector(".fgroup")) box.remove(); else dedupe(box, b);
         return;
       }
       if (b.opt) this._csFillOptions(box, b.opt);
-      // The block title already names it: a first group heading with the same words goes.
-      const fh = box.querySelector(".fgroup > .fhead");
-      if (fh && fh.textContent.trim().toLowerCase() === t(b.title).trim().toLowerCase()) fh.remove();
+      dedupe(box, b);
     };
     P._csFillNeu = function (host, page) {
       if (page.tile) {
