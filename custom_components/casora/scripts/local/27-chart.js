@@ -110,7 +110,9 @@
     var add = function (eid, name, color, i) {
       if (!eid || !S[eid] || out.some(function (x) { return x.entity === eid; })) return;
       var a = S[eid].attributes || {};
-      out.push({ entity: eid, name: String(name || a.friendly_name || eid).trim(), color: String(color || '').trim() || STEPS[i % 4],
+      // Without a chosen colour the first series takes its reading's colour (§7.3, detail round #11: temperature orange).
+      var auto = !i && window._casoraZiele && window._casoraZiele.chartColor ? window._casoraZiele.chartColor(S[eid]) : '';
+      out.push({ entity: eid, name: String(name || a.friendly_name || eid).trim(), color: String(color || '').trim() || auto || STEPS[i % 4],
         unit: String(a.unit_of_measurement || '') });
     };
     add(entity && entity.entity_id, V.label_1, V.chart_color, 0);
