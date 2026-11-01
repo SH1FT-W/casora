@@ -11443,6 +11443,8 @@ window.casoraMenuGlass = {
         out += '<div class="hui-sg' + (it.active ? ' on' : '') + '"'
           + (lv && it.value != null ? ' data-v="' + esc(it.value) + '"' : '')
           + (it.svc ? ' data-casora-svc="' + esc(JSON.stringify(it.svc)) + '"' : '')
+          // it.attrs: the popup's own data-* (the light's „Farbe“ field opens the colour wheel, data-casora-wheel).
+          + stAttrs(it.attrs)
           + '>' + esc(it.label) + '</div>';
       });
       return '<div style="font-family:' + T.font + ';text-align:left;">' + out + '</div></div>';

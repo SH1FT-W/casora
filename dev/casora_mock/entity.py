@@ -183,6 +183,11 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
                 if k in kw and cm in sup:
                     attrs["color_mode"] = cm
                     break
+            # A plain colour ends a scene on lamps without an "off" effect (Govee, Tuya); lamps with one keep it (Hue).
+            fl = self.a.get("effect_list") or []
+            if "effect" not in kw and self.a.get("effect") and "color_mode" in attrs \
+                    and not any(str(e).lower() in ("off", "none", "solid") for e in fl):
+                self.a.pop("effect", None)
             self.put("on", **attrs)
 
         async def async_turn_off(self, **kw) -> None:

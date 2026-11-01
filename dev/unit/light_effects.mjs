@@ -52,10 +52,35 @@ assert.equal(m.menu[1].icon, 'mdi:candle');
 // HA's own word wins (entity translation), the raw key only without one.
 const named = S.fxName(hue, 'candle', { formatEntityAttributeValue: () => 'Kerze' });
 assert.equal(named, 'Kerze');
-// A lamp without a none/off effect: no „Ohne Effekt“ row; off: nothing chosen.
+// WLED: „Solid“ is its no-effect entry; off: nothing chosen.
 const w = S.fxMoon('light.strip', states, null);
-assert.deepEqual(w.menu.map((r) => r.text), ['Solid', 'Rainbow', 'Fireworks']);
+assert.deepEqual(w.menu.map((r) => r.text), ['Ohne Effekt', 'Rainbow', 'Fireworks']);
+assert.deepEqual(w.menu[0].svc.data, { effect: 'Solid' });
 assert.ok(w.menu.every((r) => !r.active) && !w.active, 'lamp off: no effect marked');
+// Owner report 01.11.2026: a scene lamp without any none entry (Govee/Tuya) still gets „Ohne Effekt“, which sends a
+// plain colour: the one remembered before the effect, else the current white tone, else warm white / colour / brightness.
+const govee = (attrs) => ({ entity_id: 'light.govee', state: 'on', attributes: { supported_color_modes: ['color_temp', 'rgb'],
+  min_color_temp_kelvin: 2700, max_color_temp_kelvin: 6500, effect_list: ['Aurora', 'Sunrise'], ...attrs } });
+S._plain = {};
+let g = S.fxMoon('light.govee', { 'light.govee': govee({ color_mode: 'color_temp', color_temp_kelvin: 3000 }) }, null);
+assert.deepEqual(g.menu.map((r) => r.text), ['Ohne Effekt', 'Aurora', 'Sunrise'], 'no none entry: „Ohne Effekt“ all the same');
+assert.equal(g.menu[0].active, true, 'nothing runs: „Ohne Effekt“ chosen');
+g = S.fxMoon('light.govee', { 'light.govee': govee({ color_mode: 'onoff', effect: 'Aurora' }) }, null);
+assert.equal(g.active, true);
+assert.deepEqual(g.menu.map((r) => r.active), [false, true, false], 'the running scene marked');
+assert.deepEqual(g.menu[0].svc, { domain: 'light', service: 'turn_on', data: { color_temp_kelvin: 3000 }, target: { entity_id: 'light.govee' } },
+  'back to the white tone seen before the effect');
+S._plain = {};
+assert.deepEqual(S.fxPlain('light.govee', govee({ color_mode: 'onoff', effect: 'Aurora' })), { color_temp_kelvin: 2700 }, 'unknown: warm white');
+assert.deepEqual(S.fxPlain('light.x', { attributes: { supported_color_modes: ['rgb'], hs_color: [200, 80] } }), { hs_color: [200, 80] });
+assert.deepEqual(S.fxPlain('light.x', { attributes: { supported_color_modes: ['brightness'], brightness: 90 } }), { brightness: 90 });
+// Zigbee2MQTT „stop_effect“ and ESPHome „None“ count as the none entry; HA's „off“ wins.
+assert.equal(S.fxNone({ attributes: { effect_list: ['blink', 'stop_effect', 'finish_effect'] } }), 'stop_effect');
+assert.equal(S.fxNone({ attributes: { effect_list: ['None', 'Rainbow', 'off'] } }), 'off');
+// A white tone or colour ends a running effect: the none entry goes along when every target knows the same one.
+assert.equal(S.fxEnd(['light.desk'], states), 'off', 'Hue lamp with fire running');
+assert.equal(S.fxEnd(['light.desk'], { 'light.desk': { ...hue, attributes: { ...hue.attributes, effect: 'off' } } }), null, 'nothing runs');
+assert.equal(S.fxEnd(['light.desk', 'light.ceiling'], states), null, 'targets without the same entry: nothing sent');
 assert.equal(S.fxMoon('light.ceiling', states, null), null);
 // Effect off: „Ohne Effekt“ is the chosen row, the moon not.
 const off = S.fxMoon('light.desk', { 'light.desk': { ...hue, attributes: { ...hue.attributes, effect: 'off' } } }, null);

@@ -4138,6 +4138,7 @@
   var modes = function (st) { return (st && st.attributes && st.attributes.supported_color_modes) || []; };
   var dimmable = function (st) { var m = modes(st); return m.length > 0 && !(m.length === 1 && m[0] === 'onoff'); };
   var hasCt = function (st) { return modes(st).indexOf('color_temp') > -1; };
+  var hasCol = function (st) { return modes(st).some(function (m) { return ['hs', 'rgb', 'rgbw', 'rgbww', 'xy'].indexOf(m) > -1; }); };
   var pct = function (st) {
     var b = st && st.attributes && st.attributes.brightness;
     return (st && st.state === 'on' && typeof b === 'number') ? Math.max(1, Math.round(b / 2.55)) : null;
@@ -4435,14 +4436,35 @@
       return false;
     });
     var seg = null, curLbl = '';
+    // Colour lamps (hs/rgb/rgbw/rgbww/xy; an HA group lists its members' modes): „Farbe“ in the segment opens the colour
+    // wheel page (33-color-wheel.js) for the ones that are on, else all (owner, 01.11.2026: no colour in the v3 popup).
+    var col = ids.filter(function (id) { return hasCol(states[id]); });
+    var colOn = col.filter(function (id) { return states[id].state === 'on'; });
+    var colCur = colOn.some(function (id) { return COL_MODES.indexOf((states[id].attributes || {}).color_mode) > -1 && !fxRuns(states[id]); });
+    // A white tone or colour also ends a running effect (S.fxEnd: the lamp's none entry along with it).
+    var ctData = function (k, tg) { var d = { color_temp_kelvin: k }, e = S.fxEnd(tg, states); if (e) d.effect = e; return d; };
     if (ct.length && (!onlyOn || ctOn.length)) {
       var pr = ctPresets(ct, states), best = -1;
       if (cur != null) pr.forEach(function (p, i) { if (best < 0 || Math.abs(p.k - cur) < Math.abs(pr[best].k - cur)) best = i; });
       if (best > -1) curLbl = tr(pr[best].l) + ' ' + Math.round(cur / 50) * 50 + ' K';
+      var ctT = ctOn.length ? ctOn : ct;
       seg = pr.map(function (p, i) {
         return { label: tr(p.l), active: i === best,
-          svc: { domain: 'light', service: 'turn_on', data: { color_temp_kelvin: p.k }, target: { entity_id: ctOn.length ? ctOn : ct } } };
+          svc: { domain: 'light', service: 'turn_on', data: ctData(p.k, ctT), target: { entity_id: ctT } } };
       });
+    }
+    if (col.length && (!onlyOn || colOn.length)) {
+      var colT = colOn.length ? colOn : col;
+      // A colour lamp without white tones: „Weiß“ (saturation 0) next to „Farbe“, never a lone field.
+      if (!seg) {
+        var wd = { hs_color: [0, 0] }, we = S.fxEnd(colT, states);
+        if (we) wd.effect = we;
+        seg = [{ label: tr('Weiß'), active: colOn.some(function (id) { var a = states[id].attributes || {}; return Array.isArray(a.hs_color) && Number(a.hs_color[1]) < 5; }),
+          svc: { domain: 'light', service: 'turn_on', data: wd, target: { entity_id: colT } } }];
+        if (seg[0].active) colCur = false;
+      }
+      seg = seg.concat([{ label: tr('Farbe'), active: colCur, attrs: { 'data-casora-wheel': colT.join(',') } }]);
+      if (colCur && !curLbl) curLbl = tr('Farbe');
     }
     // Several lamps on at different brightness: the value is their average – say so (review 2, E08/fam-09).
     var litP = lit.map(function (id) { return pct(states[id]); }).filter(function (p) { return p != null; });
@@ -4457,8 +4479,15 @@
   /* The lamp's own effects (Hue scenes/effects, WLED, Govee …; Marco, 01.11.2026): one moon „Effekte“ that opens the
      small menu at the moon (richtlinien §4.8, as „Alle (n)“) with every effect, the running one hinterlegt and
      „Ohne Effekt“ first when the lamp knows a none/off effect. A row calls light.turn_on with the effect. The moon is
-     kept (UI.stage keep): never folded into „Alle (n)“ – the scenes make room instead. */
-  var FX_NONE = /^(none|off|aus|kein( effekt)?|no[ _]effect)$/i;
+     kept (UI.stage keep): never folded into „Alle (n)“ – the scenes make room instead.
+     „Ohne Effekt“ is always there (owner, 01.11.2026: an effect started from the menu could not be stopped on lamps
+     without a none entry, Govee/Tuya scene lists). The lamp's own none entry when it has one (HA's „off“, Hue; „None“,
+     ESPHome; „Solid“, WLED; „stop_effect“, Zigbee2MQTT), else light.turn_on with a plain colour (fxPlain), which ends
+     the scene on those integrations (docs/ha-annahmen.md). */
+  var FX_NONE = /^(none|off|aus|kein( effekt)?|no[ _]effect|solid|stop[ _]effect)$/i;
+  var COL_MODES = ['hs', 'rgb', 'rgbw', 'rgbww', 'xy'];
+  // The lamp's plain colour while no effect runs, remembered per lamp so „Ohne Effekt“ can return to it.
+  S._plain = S._plain || {};
   var fxList = function (st) {
     var l = st && st.attributes && st.attributes.effect_list;
     return (Array.isArray(l) ? l : []).filter(function (e, i, a) { return typeof e === 'string' && e && a.indexOf(e) === i; });
@@ -4483,14 +4512,57 @@
       : /sunrise|sunset|sonnen/.test(k) ? 'mdi:weather-sunset' : /breath|pulse|atmen/.test(k) ? 'mdi:heart-pulse'
       : /strobe|blink|flash/.test(k) ? 'mdi:flash-outline' : /night|nacht|moon/.test(k) ? 'mdi:weather-night' : 'mdi:auto-fix';
   };
+  // The lamp's own „no effect“ entry: HA's „off“ first, then the other words.
+  S.fxNone = function (st) {
+    var all = fxList(st), w = all.filter(function (e) { return FX_NONE.test(e); });
+    return w.filter(function (e) { return /^off$/i.test(e); })[0] || w[0] || null;
+  };
+  // A plain colour for light.turn_on that ends a running effect on lamps without a none entry: the colour remembered
+  // before the effect, else the lamp's current white tone / colour, else a warm white, else the brightness only.
+  S.fxPlain = function (id, st) {
+    var a = (st && st.attributes) || {}, m = a.supported_color_modes || [], mem = S._plain[id];
+    if (mem) return Object.assign({}, mem);
+    if (m.indexOf('color_temp') > -1) {
+      var lo = a.min_color_temp_kelvin || 2000, hi = a.max_color_temp_kelvin || 6500;
+      var k = a.color_mode === 'color_temp' && a.color_temp_kelvin ? a.color_temp_kelvin : 2700;
+      return { color_temp_kelvin: Math.max(lo, Math.min(hi, k)) };
+    }
+    if (m.some(function (x) { return COL_MODES.indexOf(x) > -1; })) {
+      var hs = Array.isArray(a.hs_color) ? a.hs_color : [30, 70];
+      return { hs_color: [Number(hs[0]) || 0, Number(hs[1]) || 0] };
+    }
+    return a.brightness ? { brightness: a.brightness } : {};
+  };
+  var plainOf = function (st) {
+    var a = (st && st.attributes) || {};
+    if (a.color_mode === 'color_temp' && a.color_temp_kelvin) return { color_temp_kelvin: a.color_temp_kelvin };
+    if (COL_MODES.indexOf(a.color_mode) > -1 && Array.isArray(a.hs_color)) return { hs_color: [Number(a.hs_color[0]) || 0, Number(a.hs_color[1]) || 0] };
+    return null;
+  };
+  // An effect runs on the lamp (a real one, not its none entry).
+  var fxRuns = function (st) {
+    var e = st && st.state === 'on' && (st.attributes || {}).effect;
+    return !!(e && !FX_NONE.test(e) && fxList(st).indexOf(e) > -1);
+  };
+  // The none entry to send along with a new white tone or colour, so it ends a running effect too (Hue keeps its
+  // effect on a plain colour change): only when an effect runs on a target and every target knows the same entry.
+  S.fxEnd = function (ids, states) {
+    ids = [].concat(ids || []);
+    if (!ids.some(function (x) { return fxRuns(states[x]); })) return null;
+    var n = ids.map(function (x) { return S.fxNone(states[x]); });
+    return n[0] && n.every(function (x) { return x === n[0]; }) ? n[0] : null;
+  };
   S.fxMoon = function (id, states, h) {
     var st = states[id];
     if (!hasFx(st)) return null;
-    var all = fxList(st), none = all.filter(function (e) { return FX_NONE.test(e); })[0];
+    var all = fxList(st), none = S.fxNone(st);
     var fx = all.filter(function (e) { return !FX_NONE.test(e); });
     var on = st.state === 'on', cur = on ? (st.attributes || {}).effect : null;
+    var running = on && fx.indexOf(cur) > -1;
+    if (on && !running && plainOf(st)) S._plain[id] = plainOf(st);
     var svc = function (e) { return { domain: 'light', service: 'turn_on', data: { effect: e }, target: { entity_id: id } }; };
-    var rows = (none ? [{ icon: 'mdi:close-circle-outline', text: tr('Ohne Effekt'), active: on && (!cur || cur === none), svc: svc(none) }] : [])
+    var noneSvc = none ? svc(none) : { domain: 'light', service: 'turn_on', data: S.fxPlain(id, st), target: { entity_id: id } };
+    var rows = [{ icon: 'mdi:close-circle-outline', text: tr('Ohne Effekt'), active: on && !running, svc: noneSvc }]
       .concat(fx.map(function (e) { return { icon: fxIcon(e), text: S.fxName(st, e, h), active: on && cur === e, svc: svc(e) }; }));
     return { icon: 'mdi:auto-fix', text: tr('Effekte'), keep: true, menu: rows, active: on && fx.indexOf(cur) > -1 };
   };

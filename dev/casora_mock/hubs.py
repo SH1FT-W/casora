@@ -51,6 +51,12 @@ FX = {"effect_list": ["off", "candle", "fire", "prism", "sparkle", "opal", "glis
                       "enchant"], "supported_features": 32 | 4}
 
 
+# Colour lamp (white tones and RGB) whose effects are scenes without an "off" entry.
+RGB = {"supported_color_modes": ["color_temp", "rgb"], "min_color_temp_kelvin": 2700, "max_color_temp_kelvin": 6500,
+       "supported_features": 32}
+SCENES = {"effect_list": ["Aurora", "Sunrise", "Rainbow", "Forest"], "supported_features": 32 | 4}
+
+
 def _on(base, brightness, **extra):
     return {**base, "color_mode": "color_temp" if "color_temp" in base["supported_color_modes"] else "brightness",
             "brightness": brightness, **extra}
@@ -105,7 +111,9 @@ def extra(now) -> dict:
     ents = [
         # Hue-like bridge: one device per lamp, behind the bridge.
         _e("light.werkbanklampe", "on", "testhue_werkbank", "Werkbanklampe", _on({**CT, **FX}, 204, color_temp_kelvin=4000, effect="off")),
-        _e("light.palmenleuchte", "off", "testhue_palme", "Palmenleuchte", _off({**CT, **FX})),
+        # Colour lamp with a scene list and no "off" entry, like Govee or Tuya lamps (light popup: „Ohne Effekt“ ends
+        # the scene with a plain colour, „Farbe“ opens the colour wheel; dev/qa/regress/r448_light_effect_off_colour.mjs).
+        _e("light.palmenleuchte", "off", "testhue_palme", "Palmenleuchte", _off({**RGB, **SCENES})),
         # Zigbee coordinator: lamp and thermostat behind it, with diagnostic and config entities.
         _e("light.deckenlicht_garage", "off", "testzb_decke", "Deckenlicht Garage", _off(CT)),
         _e("sensor.deckenlicht_garage_linkquality", "142", "testzb_decke", "Deckenlicht Garage Linkquality",
