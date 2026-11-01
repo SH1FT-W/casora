@@ -261,7 +261,12 @@
       // Nothing to install and no restart owed: the dial alone in one column (the popup is 552 then, its style).
       var busyU = Object.keys(states).some(function (id) { return id.indexOf('update.') === 0 && states[id]
         && (states[id].state === 'on' || (window.casoraNeedsRestart && window.casoraNeedsRestart(states[id]))); });
-      return K.layout({ fields: f, top: [], stage: 'stage', left: [], right: busyU || f.ai ? ['upd', 'ai'] : [] });
+      var lay = K.layout({ fields: f, top: [], stage: 'stage', left: [], right: busyU || f.ai ? ['upd', 'ai'] : [] });
+      // Laid out without the list: an update found while the popup is open (the search moon, HA's own check) would
+      // only show its rows after reopening (reported 11.10.2026, r253). The stage notices it and lays out again.
+      U._oneCol = null;
+      if (lay && !(busyU || f.ai)) { lay.casora_upd_onecol = true; U._oneCol = ctx; }
+      return lay;
     }
     f.hero = { card: K.secCard(all.concat(watchB), call('_casoraSoftUpd', 'hero', C), states) };
     /* 1.0.5: „Wartet auf Neustart“ steht live im Kopf (sec 'hero'), nicht als eigenes Feld – ein
@@ -330,6 +335,24 @@
     });
     return html;
   };
+  // The popup was laid out in one column (nothing pending) and an update or an owed restart turned up: open it again
+  // with the list on the right (900), unless the open popup is something else by now.
+  U.relayout = function (states, hass) {
+    var ctx = U._oneCol;
+    if (!ctx) return;
+    setTimeout(function () {
+      if (U._oneCol !== ctx) return;
+      U._oneCol = null;
+      var P = window.casoraPopup, el = P && P.element;
+      var cur = el && el.hasAttribute('open') ? el._cfgCurrent : null;
+      var top = cur && cur.content, card = top && top.cards && top.cards[0];
+      if (!card || !card.casora_upd_onecol) return;
+      var su = U.build(Object.assign({}, ctx, { states: states, hass: hass || ctx.hass }));
+      if (!su || su.casora_upd_onecol) { U._oneCol = null; return; } // still nothing for the list (e.g. restart rules differ)
+      P.open(Object.assign({}, cur, { content: { type: 'vertical-stack', cards: [su] },
+        style: window.casoraPopupWidth ? window.casoraPopupWidth('two') : '' }));
+    }, 0);
+  };
   U.sec = function (part, C, states, hass) {
     var UI = window._casoraUI; if (!UI) return '';
     var pend = pending(states);
@@ -366,6 +389,7 @@
     if (part === 'stage') {
       var n7 = pend.length, X7 = window._casoraUpdX;
       var rest7 = !n7 && X7 && X7.restartIds ? X7.restartIds(states).length : 0;
+      if ((n7 || rest7) && U._oneCol) U.relayout(states, hass);
       var busy7 = pend.filter(function (id) { return states[id].attributes.in_progress; }).length;
       var inst7 = pend.filter(function (id) {
         var a = states[id].attributes || {};

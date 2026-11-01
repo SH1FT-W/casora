@@ -2,7 +2,9 @@
 // @parallel: allein   (speichert das Dashboard und stellt es am Ende wieder her)
 // Gemeldet (11.10.2026): Updates-Popup bei „Aktuell“ geöffnet, dann „Nach Updates suchen“ – neue Einträge
 // erschienen erst nach erneutem Öffnen (die Liste wurde nur gebaut, wenn beim Öffnen schon etwas offen war).
-// Erwartet: „Aktuell“ verschwindet und das neue Update steht im offenen Popup. Zustände nur im Browser.
+// Erwartet: „Alles aktuell“ verschwindet und das neue Update steht im offenen Popup. Zustände nur im Browser.
+// Popup v3 (26.11): ohne offene Updates ist das Popup einspaltig (nur das Rad); kommt eins dazu, legt es sich mit
+// der Liste „Verfügbare Updates“ neu an (08-weich-kompakt.js U.relayout).
 import { open, casoraDashboard, dashboard, fakeStates, check, need, finish, atFinish } from './lib.mjs';
 import { ws } from '../ws.mjs';
 
@@ -37,7 +39,8 @@ const text = () => page.evaluate(() => { const p = window.__pierce('casora-popup
   return p ? t(p).replace(/\s+/g, ' ') : null; });
 const a = await text();
 await need('Popup offen', a);
-await check('beim Öffnen „Aktuell“', /Aktuell/.test(a), a.slice(0, 300));
+// Popup v3: the stage says „Alles aktuell“ (before: „Aktuell“); laid out in one column, without the list.
+await check('beim Öffnen „Alles aktuell“', /Alles aktuell/.test(a), a.slice(0, 300));
 
 // „Nach Updates suchen“ findet etwas: ein Update wird verfügbar.
 const NEW = ids[0];
