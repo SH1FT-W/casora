@@ -5,7 +5,10 @@
 
   var html = document.documentElement;
 
-  // One walk serves all three lookups and holds until the next microtask (was six per tick).
+  // Rows and nav bars register themselves (window._casoraSmartRows in smart-row.js,
+  // window._casoraNavBars in casora-core.js), so the page is only walked for the room
+  // header, and only while the last one found is gone or hidden. One walk serves all
+  // lookups and holds until the next microtask.
   var scanned = null;
   function scan() {
     if (scanned) return scanned;
@@ -23,6 +26,15 @@
       for (i = 0; i < sr.length; i++) walk(sr[i], depth + 1);
     })(document, 0);
     Promise.resolve().then(function () { scanned = null; });
+    return out;
+  }
+
+  // Registered elements, or a walk when the registry is not there (older scripts in the cache).
+  function registered(name, key) {
+    var set = window[name];
+    if (!set) return scan()[key];
+    var out = [];
+    set.forEach(function (el) { if (el.isConnected) out.push(el); });
     return out;
   }
 
@@ -159,17 +171,20 @@
     }
   }
 
+  var lastHeaderStack = null;
   function findRoomHeaderStack() {
+    if (lastHeaderStack && lastHeaderStack.isConnected && isVisible(lastHeaderStack)) return lastHeaderStack;
+    lastHeaderStack = null;
     var found = scan().badges;
     for (var i = 0; i < found.length; i++) {
       var container = found[i].closest('#container');
-      if (container && isVisible(container)) return container;
+      if (container && isVisible(container)) return (lastHeaderStack = container);
     }
     return null;
   }
 
   function findActiveEntityRow() {
-    var found = scan().rows;
+    var found = registered('_casoraSmartRows', 'rows');
     for (var i = 0; i < found.length; i++) {
       var el = found[i];
       if (el._scrollMode === false && isVisible(el)) return el;
@@ -179,7 +194,7 @@
 
   // The casora-nav-bar host is a zero-height fixed anchor; .bar is the real box.
   function findNavbar() {
-    var found = scan().navs;
+    var found = registered('_casoraNavBars', 'navs');
     for (var i = 0; i < found.length; i++) {
       var nb = found[i];
       var inner = nb.shadowRoot ? nb.shadowRoot.querySelector('.bar') : null;

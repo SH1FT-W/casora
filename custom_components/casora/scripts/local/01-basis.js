@@ -2077,6 +2077,14 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     root.querySelectorAll(sel).forEach(function (e) { out.push(e); });
     root.querySelectorAll('*').forEach(function (e) { if (e.shadowRoot) walk(e.shadowRoot, sel, out, d + 1); });
   }
+  function lovelacePanel() {
+    try {
+      var ha = document.querySelector('home-assistant');
+      var main = ha && ha.shadowRoot && ha.shadowRoot.querySelector('home-assistant-main');
+      var res = main && main.shadowRoot && main.shadowRoot.querySelector('partial-panel-resolver');
+      return (res && (res.querySelector('ha-panel-lovelace') || (res.shadowRoot && res.shadowRoot.querySelector('ha-panel-lovelace')))) || null;
+    } catch (e) { return null; }
+  }
   var cache = { host: null, panel: null, at: 0 }, t0 = Date.now();
   setInterval(function () {
     if (document.hidden) return;
@@ -2093,8 +2101,12 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     if (age > 30000 || (!cache.host && (age > 3000 || Date.now() - t0 < 20000)) || (cache.host && !cache.host.isConnected)
         || (cache.panel && !cache.panel.isConnected)) {
       var h = [], p = [];
-      walk(document, 'casora-nav-bar', h, 0);
-      walk(document, 'ha-panel-lovelace', p, 0);
+      // Nav bars register themselves (casora-core.js); the panel sits at a fixed place in HA's tree.
+      // Walk the page only when either is not found that way.
+      if (window._casoraNavBars) window._casoraNavBars.forEach(function (b) { h.push(b); });
+      else walk(document, 'casora-nav-bar', h, 0);
+      var lp = lovelacePanel();
+      if (lp) p.push(lp); else walk(document, 'ha-panel-lovelace', p, 0);
       cache = { host: h.filter(function (x) { return x.isConnected; })[0] || null, panel: p[0] || null, at: Date.now() };
     }
     var host = cache.host;

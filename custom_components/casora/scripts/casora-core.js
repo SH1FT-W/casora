@@ -4417,28 +4417,33 @@ window.casoraMenuGlass = {
     if (pal.meshB) h.style.setProperty(`--casora-sampled-${slot}-mesh-b`, pal.meshB);
   }
 
-  function sampleInto(slot, url) {
-    if (!url) return;
+  // A palette cached for this photo is published without loading the photo. Otherwise the photo is
+  // loaded only when load is true: the photo on screen (the browser fetches it anyway), never the
+  // other one of day/night, which costs a second photo on every phone open. Returns true when done.
+  function sampleInto(slot, url, load) {
+    if (!url) return true;
+    const key = `${CACHE_PREFIX}${url}|${slot}|${handoffRow().toFixed(2)}`;
+    try {
+      const hit = JSON.parse(localStorage.getItem(key) || 'null');
+      if (hit && CACHE_FIELDS.every((f) => typeof hit[f] === 'string')) { publish(slot, hit); return true; }
+    } catch (e) {}
+    if (!load) return false;
     const img = new Image();
     img.decoding = 'async';
     img.onload = () => {
-      const key = `${CACHE_PREFIX}${url}|${slot}|${handoffRow().toFixed(2)}`;
-      let pal = null;
-      try {
-        const hit = JSON.parse(localStorage.getItem(key) || 'null');
-        if (hit && CACHE_FIELDS.every((f) => typeof hit[f] === 'string')) pal = hit;
-      } catch (e) {}
-      if (!pal) {
-        pal = paletteFrom(img, slot);
-        try { if (pal) localStorage.setItem(key, JSON.stringify(pal)); } catch (e) {}
-      }
+      const pal = paletteFrom(img, slot);
+      try { if (pal) localStorage.setItem(key, JSON.stringify(pal)); } catch (e) {}
       publish(slot, pal);
     };
     img.onerror = () => {};
     img.src = url;
+    return true;
   }
 
+  // Slots sampled for the current photos: the other slot follows when the theme switches to it
+  // (light/dark mode; HA puts the theme inline on <html>, watched below).
   let _sampledFor = null;
+  let _sampledSlots = {};
   function sampleWallpapers(attempt) {
     if (!MOBILE_MQ.matches) return;
     const day = readVarUrl('--casora-mobile-hero-img-day');
@@ -4448,11 +4453,21 @@ window.casoraMenuGlass = {
       return;
     }
     const sig = `${day}|${night}|${handoffRow().toFixed(2)}`;
-    if (sig === _sampledFor) return;
-    _sampledFor = sig;
-    sampleInto('day', day);
-    sampleInto('night', night);
+    if (sig !== _sampledFor) { _sampledFor = sig; _sampledSlots = {}; }
+    // Without a readable current photo (theme without --casora-mobile-hero-img) both, as before.
+    const now = readVarUrl('--casora-mobile-hero-img');
+    [['day', day], ['night', night]].forEach(([slot, url]) => {
+      if (_sampledSlots[slot]) return;
+      if (sampleInto(slot, url, !now || now === url)) _sampledSlots[slot] = true;
+    });
   }
+  let _modeT = null;
+  try {
+    new MutationObserver(() => {
+      if (_modeT || !MOBILE_MQ.matches || (_sampledSlots.day && _sampledSlots.night)) return;
+      _modeT = setTimeout(() => { _modeT = null; sampleWallpapers(); }, 400);
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+  } catch (e) {}
 
   // ── Boot ─────────────────────────────────────────────────────────────────────
   function init() {
@@ -4488,7 +4503,7 @@ window.casoraMenuGlass = {
   LANDSCAPE_MQ.addEventListener('change', applyHtmlBackground);
   // The wallpaper is keyed on dark mode, so repaint when the OS flips it.
   window.matchMedia('(prefers-color-scheme: dark)')
-    .addEventListener('change', applyHtmlBackground);
+    .addEventListener('change', () => { applyHtmlBackground(); sampleWallpapers(); });
 })();
 
 
@@ -4626,6 +4641,8 @@ window.casoraMenuGlass = {
     getCardSize() { return 1; }
 
     connectedCallback() {
+      // Registry of connected bars: layout-offsets.js reads it instead of walking the page.
+      (window._casoraNavBars = window._casoraNavBars || new Set()).add(this);
       window.addEventListener('location-changed', this._onRoute, true);
       window.addEventListener('popstate', this._onRoute, true);
       window.addEventListener('resize', this._onResize);
@@ -4647,6 +4664,7 @@ window.casoraMenuGlass = {
     }
 
     disconnectedCallback() {
+      if (window._casoraNavBars) window._casoraNavBars.delete(this);
       window.removeEventListener('location-changed', this._onRoute, true);
       window.removeEventListener('popstate', this._onRoute, true);
       window.removeEventListener('resize', this._onResize);
