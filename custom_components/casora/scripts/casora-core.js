@@ -11966,6 +11966,9 @@ window.casoraMenuGlass = {
     +   'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}'
     + '.hui-dl-c .hui-dl-w2 b{font-weight:700;color:' + T.ink + ';}'
     + '.hui-stage.off .hui-dl-c .hui-st-n, .hui-stage.off .hui-dl-c .hui-st-n .n{color:' + S.sub + ';}'
+    // Two facts may take two lines each („Kilometerstand / 1.192 km“, „Letzte Fahrt / vor 86 Tagen“): three lines cut the
+    // second one to „Letzte Fahrt …“ (final review); the facts sit high enough in the circle for four.
+    + '.hui-dl-c .hui-dl-w2.fx{-webkit-line-clamp:4;}'
     + '.hui-dl-c .l{display:block;}.hui-dl-c .hui-dl-t.ln span{display:block;}.hui-dl-c .hui-dl-t.ln{font-size:clamp(16px, 5.2cqw, 22px);}'
     + '.hui-dl-c .hui-dl-t{font-size:clamp(18px, 6.2cqw, 26px);font-weight:800;letter-spacing:-0.02em;line-height:1.15;color:' + T.ink + ';max-width:92%;'
     +   'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:break-word;}'
@@ -12391,7 +12394,8 @@ window.casoraMenuGlass = {
       centerHtml = (o.icon ? '<ha-icon class="hui-dl-sym hui-dl-sym6" icon="' + esc(o.icon) + '" style="display:flex;"></ha-icon>' : '')
         + (o.caption ? '<div class="hui-dl-cap">' + esc(o.caption) + '</div>' : '')
         + stValue(o.value, o.unit || '', o.word ? dWordCls(o.value) : '', na6)
-        + (o.trend || o.read ? '<div class="hui-st-w"' + (o.read ? ' data-casora-read-when=""' : '') + '>' + esc(o.trend || '') + '</div>' : '') + (o.foot ? '<div class="hui-dl-w2">' + dLines(o.foot) + '</div>' : '');
+        // A word with parts („Bodenfeuchte · 7 Tage“) one part per line – the „·“ started the second line (final review).
+        + (o.trend || o.read ? '<div class="hui-st-w"' + (o.read ? ' data-casora-read-when=""' : '') + '>' + (o.read ? esc(o.trend || '') : dLines(o.trend)) + '</div>' : '') + (o.foot ? '<div class="hui-dl-w2">' + dLines(o.foot) + '</div>' : '');
       // o.ends: the words at both ends of the ring („T 13°“ left, „H 21°“ right), in the gap at the bottom.
       if (o.ends && o.ends.length === 2) coverHtml += '<div class="hui-dl-end l">' + esc(o.ends[0]) + '</div><div class="hui-dl-end r">' + esc(o.ends[1]) + '</div>';
       // Without a chart nothing stands under the wheel (an empty 160 plate read „undefined“ before).
@@ -12417,7 +12421,7 @@ window.casoraMenuGlass = {
         // Value and word as their own text nodes, so the dashboard translator still finds „Geöffnet“, „Seit“ …
         // A count reads „2 geöffnet“; anything else names its word first („Seit 19:40“, „Zuletzt vor 7 Min.“,
         // „Letzte Fahrt vor 42 Tagen“) – „vor 7 Min. Zuletzt“ read backwards (review 2, DD-11/T16/fam-12).
-        + (facts.length ? '<div class="hui-dl-w2">' + facts.map(function (f) {
+        + (facts.length ? '<div class="hui-dl-w2 fx">' + facts.map(function (f) {
           return /^\d+$/.test(String(f.value)) ? '<span class="l"><b>' + esc(f.value) + '</b> <span>' + esc(f.label) + '</span></span>'
             : '<span class="l"><span>' + esc(f.label) + '</span> <b>' + esc(f.value) + '</b></span>';
         }).join('') + '</div>' : '');
