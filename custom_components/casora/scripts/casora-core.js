@@ -9587,6 +9587,7 @@ window.casoraMenuGlass = {
       + '.hui-srow + .hui-srow::before{content:"";position:absolute;top:0;right:0;height:1px;pointer-events:none;'
       +   'left:var(--casora-pv-divider-inset, 0px);background:var(--casora-pv-divider, transparent);}'
       + '.hui-srow.hui-sel::before,.hui-srow.hui-sel + .hui-srow::before{opacity:0;}'
+      + '.hui-srow.hp-sel .hui-vq{color:' + T.ink + '!important;}'
       // Aktive Zeile (z. B. Gerät lädt) wie eine aktive Kachel im Raum: heller Grund, dunkle Schrift, Zustand in Ton.
       // DP-07 (1.3): eine Art „aktiv“ – Popup-Token --casora-soft-row-active* (hell Creme, dunkel Sand 14 %).
       + '.hui-srow.hui-act{background:var(--casora-soft-row-active, var(--casora-entity-background-active, ' + S.row + '));'
@@ -9757,8 +9758,9 @@ window.casoraMenuGlass = {
             + '" data-casora-attr="' + esc(r.liveAttr) + '"'
             + ' data-casora-suffix="' + esc(r.liveSuffix || '') + '"';
         }
-        out += '<div' + vlive + (r.valueIcon ? ' class="hui-end hui-actx"' + actxLabel(r.value) : ' class="hui-end"') + ' style="font-size:14px;font-weight:600;'
-          // On a chosen (hinterlegt) row the value takes the full ink: text 2 on the lighter fill was 4,3 : 1 in dark.
+        // A value without a tone is marked (hui-vq): on a chosen row (hinterlegt, also set later as .hp-sel by the chart
+        // pickers) it takes the full ink – text 2 on the lighter fill was 4,3 : 1 in dark.
+        out += '<div' + vlive + (r.valueIcon ? ' class="hui-end hui-actx"' + actxLabel(r.value) : ' class="hui-end' + (alertTone(r.valueTone) ? '' : ' hui-vq') + '"') + ' style="font-size:14px;font-weight:600;'
           + 'font-variant-numeric:tabular-nums;color:' + esc(alertTone(r.valueTone) || (r.selected ? T.ink : T.ink2))
           + ';white-space:nowrap;pointer-events:none;">'
           + (r.valueIcon ? actxInner(r.value, r.valueIcon, S.iconOff) : lit(r.value, r.valueLit)) + '</div>';
