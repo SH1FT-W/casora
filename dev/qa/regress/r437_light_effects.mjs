@@ -52,7 +52,13 @@ const menuState = (pg) => pg.evaluate(() => {
     const b = x.getBoundingClientRect();
     return { t: x.textContent.trim(), on: x.classList.contains('on'), x: b.x + b.width / 2, y: b.y + b.height / 2, vis: b.y >= r.y - 1 && b.bottom <= r.bottom + 1 };
   });
-  return { rows, inside: r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight, w: r.width };
+  // The popup's head and surface (desktop 01.11.2026: a long list opened upwards over the title).
+  const pop = window.__pierce('casora-popup', document)[0];
+  const hd = pop && pop.shadowRoot.querySelector('.header'), sf = pop && pop.shadowRoot.querySelector('.surface');
+  const h = hd && !hd.hidden ? hd.getBoundingClientRect() : null, s = sf ? sf.getBoundingClientRect() : null;
+  return { rows, inside: r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight, w: r.width,
+    clearOfHead: !h || !h.height || r.top >= h.bottom - 1, inPopup: !s || !s.width || (r.top >= s.top - 1 && r.bottom <= s.bottom + 1),
+    pane: { top: r.top, bottom: r.bottom }, head: h ? { bottom: h.bottom } : null, surf: s ? { top: s.top, bottom: s.bottom } : null };
 });
 const fxNow = (pg) => pg.evaluate((id) => { const s = document.querySelector('home-assistant').hass.states[id]; return s && s.attributes.effect; }, LAMP);
 const setFx = (pg, e) => pg.evaluate(([id, e]) => document.querySelector('home-assistant').hass.callService('light', 'turn_on', { entity_id: id, effect: e }), [LAMP, e]);
@@ -75,6 +81,8 @@ const run = async (label, pg, tap, pickName) => {
   await check(label + ': „Ohne Effekt“ first and chosen, effects as words', menu.rows[0].t === 'Ohne Effekt' && menu.rows[0].on
     && menu.rows.some((r) => r.t === 'Candle') && menu.rows.some((r) => r.t === 'Fire') && !menu.rows.some((r) => /^[a-z]/.test(r.t)), menu.rows.map((r) => r.t));
   await check(label + ': menu stays inside the window', menu.inside, menu);
+  await check(label + ': menu stays inside the popup and leaves its head free', menu.clearOfHead && menu.inPopup,
+    { pane: menu.pane, head: menu.head, surf: menu.surf });
   await keep(pg, label + '_menu');
   const row = menu.rows.find((r) => r.t === pickName);
   if (!row.vis) {
