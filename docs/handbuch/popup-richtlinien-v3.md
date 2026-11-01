@@ -83,6 +83,12 @@ Zustand · Zusatz · Zusatz
 Der Zustand steht nicht noch einmal groß auf der Bühne, **außer** als Wert (68 %, 21,2°) – die Bühne zeigt die
 Zahl, die Statuszeile das Wort.
 
+**Die Statuszeile wiederholt nie den Bühnenwert** (Entscheidung 01.11.2026): weder die Zahl der Bühne („513 W“) noch den
+Satz in der Rad-Mitte („Aktiviert · Zuhause“). Sie sagt etwas anderes in Worten – Energie: woher der Strom kommt („Bezug
+aus dem Netz · Akku bereit“, „Solar deckt 80 %“, „Netz offline“); Alarm und andere S7 ohne eigenes Wort: seit wann
+(„Seit 14:42“). Der Rückfall des Rahmens (HAs Zustandswort) gilt nur, wo er nicht mit der Bühne übereinstimmt. Geprüft
+von `popup-geo.mjs` („doppelt“: erster Teil der Kopfzeile = Wert bzw. Satz der Bühne).
+
 ## 4. Bühne
 
 Genau **eine** Bühne pro Popup, direkt unter dem Kopf, ohne Überschrift darüber. Seit 31.10.2026 zeichnet sie sich bei

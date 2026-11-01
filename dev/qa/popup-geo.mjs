@@ -11,6 +11,7 @@
 //  - Trefferflächen am Handy ≥ 40 px inkl. unsichtbarem ::before/::after-Rand („treffer“).
 //  - Haken in Auswahllisten (✓ / mdi:check) statt hinterlegter Zeile („haken“).
 //  - Dial (§4.8): Text und −/+ der Mitte innerhalb des Innenkreises des Rings („rad“).
+//  - Statuszeile im Kopf wiederholt nie den Wert bzw. Satz der Bühne („doppelt“, §3).
 // Rückgabe { n, finds: [{ kind, msg, label, path }] }.
 export const MEASURE_GEO = () => {
   const parentOf = (e) => e.assignedSlot || e.parentNode || (e.host || null);
@@ -210,6 +211,19 @@ export const MEASURE_GEO = () => {
       if (d > worst) { worst = d; what = b; }
     }
     if (what) add('rad', `Mitte berührt den Ring: ${worst.toFixed(1)} px über den Innenkreis (${Math.round(rin)} px)`, what);
+  }
+  // 7) Status line never repeats the stage's value (richtlinien §3, owner 01.11.2026: „Aktiviert (Zuhause)“ in the head
+  // and in the wheel, „513 W“ in the energy head and on the stage) – „doppelt“.
+  const norm = (t) => String(t || '').toLowerCase().replace(/[\s\u00a0\u202f()·.,:–-]+/g, '');
+  const head = els.find((e) => e.classList && e.classList.contains('header-status') && R.get(e));
+  if (head) {
+    const b = head.querySelector('b');
+    const main = norm(b ? b.textContent : String(head.textContent || '').split('·')[0]);
+    const stageMain = els.filter((e) => e.classList && R.get(e) && (e.classList.contains('hui-dl-t')
+      || (e.classList.contains('hui-st-val') && e.closest && e.closest('.hui-stage, .hui-dl'))));
+    for (const e of stageMain) {
+      if (main && norm(e.textContent) === main) { add('doppelt', `Statuszeile wiederholt die Bühne: „${String(e.textContent).trim()}“`, e); break; }
+    }
   }
   return { n: finds.length, finds };
 };
