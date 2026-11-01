@@ -7944,7 +7944,9 @@ window.casoraMenuGlass = {
       }
       var room = sf && this._ringSrc ? roomLabelOf(this._ringSrc) : '';
       this._roomLabel = room;
-      var title = sf ? stripRoom(this._cfgTitle, room) : this._cfgTitle;
+      // The label a module sets (the single lamp's room) counts too: „G9 Spot Terrasse“ under „TERRASSE“ → „G9 Spot“
+      // (detail round #38, §3 title without the room).
+      var title = sf ? stripRoom(this._cfgTitle, room || this._cfgEyebrow || '') : this._cfgTitle;
       // Titel beginnt schon mit dem Raum („Wohnzimmer/Küche“): Etikett weglassen statt den Raum doppelt zu zeigen.
       if (room && title.toLowerCase().indexOf(room.toLowerCase()) === 0) room = '';
       // Lange Titel umbrechen an „/“ (Zonen wie „Wohnzimmer/Küche“), nicht mitten im Wort.
