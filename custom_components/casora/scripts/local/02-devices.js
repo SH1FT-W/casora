@@ -1241,7 +1241,13 @@
       // „Letzte Durchgänge“, „Programme“ sat under the wheel while the right stayed nearly empty).
       // §7.1 (01.11.2026): the one Verlauf sits under the wheel, the right column holds lists only.
       var hist = wideSt ? null : H.histKey(o, has);
-      if (v3.length) { R = L.concat(R).filter(function (k) { return k !== hist; }); L = v3.concat(hist ? [hist] : []); }
+      // o.underStage: fields that stay in the left column under the stage (and its Verlauf), e.g. the printer's
+      // camera image with its AI button – the phone then reads stage → camera → lists.
+      var under = wideSt ? [] : (o.underStage || []).filter(function (k) { return has(k) && k !== hist && v3.indexOf(k) < 0; });
+      if (v3.length) {
+        R = L.concat(R).filter(function (k) { return k !== hist && under.indexOf(k) < 0; });
+        L = v3.concat(hist ? [hist] : [], under);
+      }
       else L = v3.concat(L);
     }
     /* Blueprint v2 (rule 8): o.settings = the device's entity → section „Einstellungen“ with „Weitere
@@ -3669,10 +3675,15 @@
       /* Popup v3: head and bar become one progress stage on top of the left column. */
       var v3P = !!(window._casoraDish && window._casoraDish.v3 && window._casoraDish.v3());
       if (v3P) { delete f2.hero; delete f2.pbar; f2.stage = tpl('p_stage', true); }
+      /* Popup v3 (owner request 01.11.2026): the camera sits in the left column right under the dial, full column
+         width, the AI button directly below it; no „Kamera“ heading and no camera section on the right. The phone
+         reads dial → camera → lists. Without a camera nothing moves. */
+      if (v3P) delete f2.camlbl;
       return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3P ? [] : ['hero', 'pbar'], stage: v3P ? 'stage' : null,
         left: ['alerts', 'ctrl', 'job'], right: ['camlbl', 'cam', 'camai', 'more'],
+        underStage: v3P ? ['cam', 'camai'] : null,
         settings: states[c.st] ? c.st : null,
-        colExtra: ' #container > #cam { margin-top: 0 !important; } #container > #camai:not(:empty) { margin-top: 12px !important; }' });
+        colExtra: (v3P ? '' : ' #container > #cam { margin-top: 0 !important; }') + ' #container > #camai:not(:empty) { margin-top: 12px !important; }' });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
