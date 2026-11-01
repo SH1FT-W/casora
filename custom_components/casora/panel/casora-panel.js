@@ -23383,11 +23383,19 @@ class CasoraPanel extends HTMLElement {
     const cur = V[f.key] == null || V[f.key] === "" ? "" : String(V[f.key]);
     const hass = this._hass || {};
     const R = hass.entities || {};
-    const anchor = tile.entity || (V.car && String(V.car).indexOf(".") > 0 ? String(V.car) : "");
-    const dev = anchor && R[anchor] ? R[anchor].device_id : null;
-    const hint = /(^|_)(vehicle_image|vehicle|car_image|car|fahrzeugbild|fahrzeug|picture|bild)(_|$)/;
-    const imgEnt = dev ? Object.keys(R).filter((e) => e.startsWith("image.") && R[e].device_id === dev && !R[e].hidden && !R[e].disabled_by)
-      .sort((a, b) => (hint.test(b.slice(6)) ? 1 : 0) - (hint.test(a.slice(6)) ? 1 : 0) || (a < b ? -1 : 1))[0] : null;
+    const anchor = tile.entity || (V.car ? String(V.car) : "");
+    // The dashboard's own lookup (03-popups.js, also finds the automatic car of a tile without an entity); until that
+    // has loaded the image entity on the device of the tile's entity.
+    const CC = window._casoraCar;
+    let imgEnt = null;
+    if (CC && typeof CC.imageEntity === "function") {
+      try { imgEnt = CC.imageEntity(anchor || null); } catch (e) { imgEnt = null; }
+    } else {
+      const dev = anchor && R[anchor] ? R[anchor].device_id : null;
+      const hint = /(^|_)(vehicle_image|vehicle|car_image|car|fahrzeugbild|fahrzeug|picture|bild)(_|$)/;
+      imgEnt = dev ? Object.keys(R).filter((e) => e.startsWith("image.") && R[e].device_id === dev && !R[e].hidden && !R[e].disabled_by)
+        .sort((a, b) => (hint.test(b.slice(6)) ? 1 : 0) - (hint.test(a.slice(6)) ? 1 : 0) || (a < b ? -1 : 1))[0] : null;
+    }
     const mode = this._vimgOwn === tile ? "own" : cur === "none" ? "none" : cur ? "own" : imgEnt ? "auto" : "none";
     const box = document.createElement("div");
     box.className = "vimg";
@@ -23424,7 +23432,7 @@ class CasoraPanel extends HTMLElement {
       if (blob.size > 16 * 1024 * 1024) return this._status("This photo is larger than 16 MB. Please choose a smaller one.", "err");
       const body = new FormData();
       // Own name space "vehicle-…", so the room photo list can leave it out; the server adds a random tail.
-      body.append("name", cur && cur !== "none" ? cur : "vehicle-" + slug(tile.name || anchor.split(".").pop() || "car"));
+      body.append("name", cur && cur !== "none" ? cur : "vehicle-" + slug(tile.name || String(anchor).split(".").pop() || "car"));
       body.append("variant", "day");
       body.append("file", blob, "photo");
       this._status("Uploading…");

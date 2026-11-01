@@ -11984,8 +11984,16 @@ window.casoraMenuGlass = {
     +   'background-color:currentColor;-webkit-mask:var(--g) center / contain no-repeat;mask:var(--g) center / contain no-repeat;}'
     // The popup's own ha-icon rule (margin auto) pushed the symbol and the sentence to the bottom of the centre.
     + '.hui-dl-c ha-icon.hui-dl-sym{background:none;--mdc-icon-size:clamp(36px, 11cqw, 46px);margin:0 0 6px !important;}'
-    + '.hui-dl-c .hui-dl-pic{display:block;width:58cqw;max-width:none;height:25cqw;object-fit:contain;margin:0 0 6px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.28));}'
-    + '.hui-dl-c .hui-dl-pic.own{width:44cqw;height:26cqw;object-fit:cover;border-radius:4cqw;filter:none;}'
+    // The car's picture (#89): the ring's inner edge is 137 of 420 (32.6 cqw) from the middle. The picture's box (60 × 30, its
+    // middle 6 cqw above the wheel's) is clipped to 30 cqw around the wheel's middle, so nothing reaches the track; the own
+    // photo is a circle of 38 (its edge 27 from the middle). Value and word sit below, where the circle is still wide enough.
+    + '.hui-dl-c.pic{justify-content:flex-start;}'
+    + '.hui-dl-c.pic .hui-dl-pic{display:block;flex:none;width:60cqw;max-width:none;height:30cqw;margin-top:9cqw;object-fit:contain;'
+    +   'clip-path:circle(30cqw at 50% 21cqw);filter:drop-shadow(0 1.5cqw 2.5cqw rgba(0,0,0,.28));}'
+    + '.hui-dl-c.pic .hui-dl-pic.own{width:38cqw;height:38cqw;margin-top:3cqw;object-fit:cover;object-position:50% 50%;border-radius:50%;clip-path:none;filter:none;}'
+    + '.hui-dl-c.pic .hui-dl-pv{margin-top:3cqw;font-size:clamp(20px, 8cqw, 32px);font-weight:800;letter-spacing:-0.02em;line-height:1;color:' + T.ink + ';font-variant-numeric:tabular-nums;white-space:nowrap;}'
+    + '.hui-dl-c.pic .hui-dl-pv span{font-size:.6em;font-weight:700;margin-left:.15em;}'
+    + '.hui-dl-c.pic .hui-dl-pw{margin-top:1cqw;font-size:clamp(12px, 3.6cqw, 14px);font-weight:600;line-height:1.2;color:' + S.sub + ';}'
     + '.hui-moon ha-icon{margin:0 !important;}'
     + '.hui-dl-c ha-icon.hui-dl-sym6{color:' + T.ink + ';margin:0 0 2px !important;}'
     + '.hui-dl-end{position:absolute;top:79cqw;font-size:13px;font-weight:700;color:' + S.sub + ';font-variant-numeric:tabular-nums;white-space:nowrap;transform:translateX(-50%);pointer-events:none;}'
@@ -12307,7 +12315,7 @@ window.casoraMenuGlass = {
   function dial(code, o) {
     var col = 'var(--casora-popup-accent, var(--casora-color-orange, #FF9F0A))';
     var ring = { kind: 'value', pct: 0, col: col, knob: false }, spec = null, ariaHtml = '', centerHtml = '', coverHtml = '', belowHtml = '', cls = '';
-    var act = null, liveHtml = '', dataPct = null;
+    var act = null, liveHtml = '', dataPct = null, picCls = '';
     if (code === 'S1' || code === 'S3') {
       var v = Math.max(0, Math.min(100, Math.round(Number(o.value) || 0)));
       var off = o.state === 'off' || (code === 'S1' && v <= 0);
@@ -12426,9 +12434,7 @@ window.casoraMenuGlass = {
       var said = String(o.text == null ? '' : o.text).toLowerCase().split(' · ').map(function (x) { return x.trim(); });
       var facts = (o.facts || []).filter(function (f) { return f && said.indexOf((String(f.value) + ' ' + String(f.label)).toLowerCase().trim()) < 0; }).slice(0, 2);
       var valHtml = o.value != null && o.value !== '' ? stValue(o.value, o.unit || '', '') : '';
-      // o.image: a picture in the symbol's place (the car's photo, #89); o.imageOwn: a photo with a background (rounded, cover).
-      centerHtml = (o.image ? '<img class="hui-dl-pic' + (o.imageOwn ? ' own' : '') + '" src="' + esc(o.image) + '" alt="">'
-        : url7 ? '<div class="hui-dl-sym" style="--g:url(\'' + esc(url7) + '\')"></div>'
+      centerHtml = (url7 ? '<div class="hui-dl-sym" style="--g:url(\'' + esc(url7) + '\')"></div>'
           : (o.icon ? '<ha-icon class="hui-dl-sym" icon="' + esc(o.icon) + '" style="display:flex;"></ha-icon>' : ''))
         + valHtml
         // A sentence of several things („Schloss offen · 2 Fenster offen · Kamera offline“) takes one line per thing –
@@ -12443,6 +12449,15 @@ window.casoraMenuGlass = {
           return /^\d+$/.test(String(f.value)) ? '<span class="l"><b>' + esc(f.value) + '</b> <span>' + esc(f.label) + '</span></span>'
             : '<span class="l"><span>' + esc(f.label) + '</span> <b>' + esc(f.value) + '</b></span>';
         }).join('') + '</div>' : '');
+      // o.image (the car's picture, #89): the picture large in the middle, under it only the value and its word
+      // (o.value/o.unit/o.caption, else o.text) – the facts go to the head's status line. o.imageOwn: a photo with a
+      // background, cut to a circle from its middle.
+      if (o.image) {
+        picCls = ' pic';
+        centerHtml = '<img class="hui-dl-pic' + (o.imageOwn ? ' own' : '') + '" src="' + esc(o.image) + '" alt="">'
+          + '<div class="hui-dl-pv">' + (o.value != null && o.value !== '' ? '<b>' + esc(o.value) + '</b>' + (o.unit ? '<span>' + esc(o.unit) + '</span>' : '') : esc(o.text)) + '</div>'
+          + (o.caption ? '<div class="hui-dl-pw">' + esc(o.caption) + '</div>' : '');
+      }
       act = o.action;
       cls = ' tone-' + (o.tone || 'good');
       // The symbol takes the tone, darkened towards the ink so it keeps 3 : 1 on the popup.
@@ -12462,7 +12477,7 @@ window.casoraMenuGlass = {
       + (spec ? ' role="slider" tabindex="0" aria-label="' + esc(lbl) + '"' + ariaHtml + ' data-casora-axis="dial" data-pct="' + esc(dRound(dataPct != null ? dataPct : ring.pct)) + '" data-casora-slider="' + esc(JSON.stringify(spec)) + '"' : (ariaHtml.indexOf('role=') > -1 ? ariaHtml : ''))
       + liveHtml + '>'
       + dialSvg(ring) + coverHtml
-      + (coverHtml && code !== 'S2' && code !== 'S6' ? '' : '<div class="hui-dl-c"' + symHtml + '>' + centerHtml + '</div>')
+      + (coverHtml && code !== 'S2' && code !== 'S6' ? '' : '<div class="hui-dl-c' + esc(picCls) + '"' + symHtml + '>' + centerHtml + '</div>')
       + (mo.html ? '<div class="hui-dl-ms"' + mo.liveHtml + '>' + mo.html + '</div>' : '') + '</div>';
     return { html: dl + belowHtml, cls: ' dial' + (mo.bottom ? ' mb' : '') + cls };
   }

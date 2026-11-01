@@ -318,12 +318,9 @@ window.CASORA_TILE_TYPES = [
         hint: "Which calendars the tile and popup show, with name and color – the same for every calendar tile." },
       { ...TITLE, placeholder: "Calendar" },
     ] },
-  // Vehicle picture (#89): the integration's image entity, an own photo or none; the layout only matters with a picture.
+  // Vehicle picture (#89): the integration's image entity, an own photo or none (in the middle of the popup's wheel).
   { id: "casora_car", label: "Car", template: "casora_car", domains: ["sensor"], ownData: true, icon: "car_side_w2", fields: [ICON,
-    { key: "vehicle_image", label: "Vehicle picture", type: "vehicleimage" },
-    { key: "vehicle_image_layout", label: "Picture layout", type: "select", seg: true, options: ["", "ring"],
-      optionLabels: { "": "Large on top", ring: "In the ring" }, when: (V) => V.vehicle_image !== "none" },
-    TITLE] },
+    { key: "vehicle_image", label: "Vehicle picture", type: "vehicleimage" }, TITLE] },
   { id: "casora_ebike", label: "E-bike", template: "casora_ebike", domains: ["sensor"], ownData: true, icon: "ebike", fields: [ICON, TITLE] },
   // Underfloor heating: thermostat tile with a Casora popup – behaves like a thermostat
   // (like) but has its own name and id, otherwise "Thermostat" would appear twice in the picker.
