@@ -1791,8 +1791,12 @@
       const left = `calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})`;
       const right = `calc(var(--casora-rail-left, 16px) + ${LANDSCAPE_GUTTER_CALC})`;
       const head = document.createElement('div');
+      // The halo below reaches HALO px; this heading clips (ellipsis), so it gets that much extra room on top and
+      // bottom, taken back by negative margins – otherwise the halo ended in a straight-edged box (01.11.2026).
+      // pointer-events:none so the enlarged box never catches taps meant for the tiles around it.
+      const HALO = 28;
       head.style.cssText = [
-        `padding:${first ? 14 : 24}px ${right} 10px ${left}`,
+        `padding:${(first ? 14 : 24) + HALO}px ${right} ${10 + HALO}px ${left}`, `margin:-${HALO}px 0`, 'pointer-events:none',
         'font-family:var(--casora-body-font, var(--primary-font-family, inherit))',
         'font-size:var(--casora-mobile-section-size, 18px)', 'font-weight:700', 'letter-spacing:-0.3px', 'line-height:1.3',
         'color:var(--casora-room-group-ink, var(--casora-mobile-title-color, var(--primary-text-color)))',
