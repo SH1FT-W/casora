@@ -64,5 +64,9 @@ assert.ok(/Die Statuszeile wiederholt nie den Bühnenwert/.test(rl), 'richtlinie
   assert.equal(run('Heizt', '21°'), 'Heizt');
   assert.equal(run('21° · x', '21°'), '21° · x', 'no word after the value: unchanged');
 }
+// Detail round #8: every popup has a status line – without an own line or entity word the tile's state line.
+assert.ok(/if \(!cur\) \{ var tw = this\._tileWord\(\); if \(tw\) put\(tw\); return; \}/.test(fb), 'frame: tile without entity → its state line');
+assert.ok(/this\._sinceText\(cur\) \|\| this\._tileWord\(\)/.test(fb), 'frame: no change known → the tile\'s line');
+assert.ok(/    _tileWord\(\) \{/.test(core), 'frame: _tileWord');
 console.log('status_line_not_stage: ok');
 process.exit(0);
