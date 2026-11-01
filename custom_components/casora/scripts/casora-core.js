@@ -12027,6 +12027,9 @@ window.casoraMenuGlass = {
     // (iPad landscape 1024×768) the keys fell below the edge (r64) – the wheel gives up height there, never below 240.
     + '@media (min-width:761px) and (max-height:900px){.hui-stage.dial:has(> .hui-dl-vol) > .hui-dl{width:min(400px, calc(100% / 1.18), max(240px, calc(100vh - 480px)));}}'
     + '.hui-dl{position:relative;flex:none;width:min(400px, calc(100% / 1.18));aspect-ratio:1;container-type:inline-size;'
+    // Desktop (final review 01.11.2026): one wheel size in every popup, one column (552) or two (900) – the size a
+    // column of the 900 popup gives (≈ 348; iPad 820: ≈ 307), so nothing jumps from a group to its room (‹).
+    + '}@media (min-width:761px){.hui-dl{width:min(calc(100% / 1.18), calc((min(900px, 100vw - 16px) - 78px) / 2 / 1.18));}}.hui-dl{'
     +   'touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;outline:none;}'
     + '.hui-dl:focus-visible .hui-dl-knob{stroke:' + T.ink + ';stroke-width:3;}'
     // Everything inside is placed on the square (cqw = 1 % of the wheel's width), not on the box, which may be shorter.

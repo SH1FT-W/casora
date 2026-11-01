@@ -131,7 +131,7 @@ neben der alten.
 
 Gruppen (Raum-Licht, Haus-Heizung, Jalousien eines Raums) zeigen auf der Bühne den **gemeinsamen** Wert (Mittel bzw.
 Anteil) und bedienen alle; die einzelnen Geräte stehen rechts in der Liste. Bei S2 ist das das gemeinsame Ziel
-(„Ziel aller Räume“, bei unterschiedlichen Zielen das Mittel mit „Ø“); ein Schritt ± verschiebt alle Ziele um einen Schritt.
+(„Ziel aller Räume“, bei unterschiedlichen Zielen das Mittel mit „Ø“; im Rad einzeilig „Ziel aller“ bzw. „Ø Ziel“); ein Schritt ± verschiebt alle Ziele um einen Schritt, Drehen am Knopf setzt beim Loslassen alle eingeschalteten Räume auf den gewählten Wert (ausgeschaltete bleiben aus).
 
 **Ein Gerät aus der Liste antippen** (Zeile mit ›) öffnet seine **Unterseite im selben Popup** (v2 Regel 7): ‹ links,
 Etikett = Titel der Gruppe („Fußbodenheizung“), Titel = Raum bzw. Gerät, kein Hauptschalter der Gruppe. Die Unterseite ist
@@ -171,7 +171,7 @@ die Typen S1–S8 und ihre Felder bleiben. `o.dial: false` behält die Platte (n
 
 | Teil | Regel | Maß |
 |---|---|---|
-| Rad | Quadrat, Breite `min(400, Spalte / 1,18)` – Platz für die Monde links und rechts (Prüfung 2); Desktop 2 Spalten ≈ 350, 1 Spalte 400, Handy ≈ 305 | viewBox 420 |
+| Rad | Quadrat, Breite `min(400, Spalte / 1,18)` – Platz für die Monde links und rechts (Prüfung 2); Desktop (ab 761) in **jedem** Popup gleich groß, so groß wie eine Spalte des 900-Popups es zulässt (≈ 348, iPad 820 ≈ 307), ein- wie zweispaltig – beim Wechsel Gruppe → Raum (‹) springt nichts (01.11.2026); Handy ≈ 305 | viewBox 420 |
 | Bogen | 270°, Start 135° (unten links), Ende unten rechts; Lücke unten | Radius 150, Spur 26 |
 | Spur | `--casora-soft-control-fill` | |
 | Gefüllter Teil | Gerätefarbe `--casora-popup-accent`, darunter derselbe Bogen weich verwischt (Glow, Deckkraft .55) | |
