@@ -7174,6 +7174,37 @@ window.casoraMenuGlass = {
   var HOUSE_POPUP = /\bcasora_(badge_\w+|(popup_)?(pulse|battery|energy|network|updates|scenes|contacts|calendar|weather_warning|football|recipe|solar_tip|time)|weather|trash|now_playing_\w+)\b/;
   function roomLabelOf(src) {
     if (!src || !src._config) return '';
+    // The members of a group tile: the group entity's own members (entity_id, member_entities) and lists of entity ids
+    // in its card variables („lock_entities“ …). Rooms: the dashboard's room of each, else its HA area.
+    function groupMembersOf(src, h) {
+      var S = (h && h.states) || {}, so = src._stateObj, a = (so && so.attributes) || {};
+      var out = [].concat(Array.isArray(a.entity_id) ? a.entity_id : [], Array.isArray(a.member_entities) ? a.member_entities : []);
+      // button-card keeps the evaluated variables apart from the raw ones ([[[ … ]]] strings).
+      var V = Object.assign({}, (src._config && src._config.variables) || {}, src._evaluatedVariables || {});
+      Object.keys(V).forEach(function (k) {
+        var v = V[k];
+        if (Array.isArray(v) && v.length > 1 && v.every(function (x) { return typeof x === 'string' && /^[a-z_]+\.[\w-]+$/.test(x); })) out = out.concat(v);
+      });
+      return out.filter(function (x, i, l) { return S[x] && l.indexOf(x) === i; });
+    }
+    function memberRoomOf(id, h) {
+      var r = '';
+      try { r = typeof window._casoraRoomOf === 'function' ? String(window._casoraRoomOf(id) || '').trim() : ''; } catch (e) { r = ''; }
+      if (r || !h) return r;
+      var en = (h.entities || {})[id], ar = en && (en.area_id || (en.device_id && ((h.devices || {})[en.device_id] || {}).area_id));
+      return ar && (h.areas || {})[ar] ? String(h.areas[ar].name || '').trim() : '';
+    }
+    // Final review 01.11.2026: the label names a room only when every member of a group lies in it; a group over several
+    // rooms (blinds of five rooms, the locks of the house, the windows) says „Zuhause“ – like the weather and house light.
+    function spansRooms(src) {
+      var h = src._hass || (document.querySelector('home-assistant') || {}).hass;
+      var m = groupMembersOf(src, h);
+      if (m.length < 2) return false;
+      var rooms = [], none = 0;
+      m.forEach(function (id) { var r = memberRoomOf(id, h); if (!r) none++; else if (rooms.indexOf(r) < 0) rooms.push(r); });
+      // A member without a room is not „in“ the tile's room either; only when no member has one the tile's room stays.
+      return rooms.length > 1 || (rooms.length === 1 && none > 0);
+    }
     var tpl = [].concat(src._config.template || []).join(' ');
     /* Energy (owner, 01.11.2026): the label is the room of the tile's sensor, else „Zuhause“ – never empty. */
     if (/\bcasora_(popup_|badge_)?energy(_group)?\b/.test(tpl) && !/\bcasora_badge_energy\b/.test(tpl)) {
@@ -7181,7 +7212,7 @@ window.casoraMenuGlass = {
       try { er = eid && typeof window._casoraRoomOf === 'function' ? String(window._casoraRoomOf(eid) || '').trim() : ''; } catch (e) { er = ''; }
       return er || 'Zuhause';
     }
-    if (HOUSE_POPUP.test(tpl)) return '';
+    if (HOUSE_POPUP.test(tpl)) return spansRooms(src) ? 'Zuhause' : '';
     var id = src._stateObj && src._stateObj.entity_id;
     if (!id || typeof window._casoraRoomOf !== 'function') return '';
     // Lights of the whole house (#30): the tile's entity is just the first light, its room is not the tile's.
@@ -7190,6 +7221,8 @@ window.casoraMenuGlass = {
       var h = src._hass || (document.querySelector('home-assistant') || {}).hass;
       try { if (window._casoraLightsHouse(V, typeof pg === 'string' && pg !== 'none' ? pg : id, null, h)) return ''; } catch (e) {}
     }
+    // Lights keep their room (a room's lamps may list one of another room, light_house_title (k)).
+    if (!/\bcasora_light\b/.test(tpl) && spansRooms(src)) return 'Zuhause';
     try { return String(window._casoraRoomOf(id) || '').trim(); } catch (e) { return ''; }
   }
   // „Licht Badezimmer“ unter dem Etikett „Badezimmer“ → „Licht“ (Raum steht schon darüber).
