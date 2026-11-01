@@ -25,7 +25,7 @@
   const CSS = ".csh-note{margin:6px 4px 14px;font-size:var(--t-foot);line-height:1.45;color:var(--ink-2)}"
     + ".csh-ent .rtext span{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--t-caption)}"
     + ".csh-ent .rdetail{max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}"
-    + ".csh-ent .rdetail.miss{color:var(--casora-studio-warn, #ff9f0a)}";
+    + ".csh-ent .rdetail.warn{flex:0 0 auto;max-width:none}";
   const css = (self) => {
     if (self.shadowRoot.getElementById("casora-share-css")) return;
     const st = document.createElement("style");
@@ -79,9 +79,12 @@
         return this._status("Save your changes first, then export the dashboard.", "warn");
       }
       css(this);
-      const d = (this._dashList || []).find((x) => x.url_path === this._dashUrl);
+      const cur = (this._dashList || []).find((x) => x.url_path === this._dashUrl);
+      // The phone layout open on its own: export it with its desktop, as a pair.
+      const pair = this._homes(this._dashList || []).find((h) => h.wide === cur || h.phone === cur);
+      const d = pair ? pair.wide : cur;
       if (!d) return;
-      const home = this._homes(this._dashList || []).find((h) => h.wide === d);
+      const home = pair;
       const phone = home && home.phone;
       const o = { photos: true, settings: true };
       const s = this._flowScreen({ icon: "share", title: "Export Dashboard",
@@ -248,13 +251,14 @@
       if (pv.photos || (pv.settings || []).length) {
         const opt = this._flowGroup(s.body, { header: "Options" });
         if (pv.photos) this._flowRow(opt, { title: "Take Photos Along", sub: "Photos with the same name stay; the file's get a new name",
-          check: st.photos, onTap: () => { st.photos = !st.photos; again(); } });
+          check: st.photos, onTap: () => { st.photos = !st.photos; again(); } }).row.classList.add("wrap2");
         if ((pv.settings || []).length) {
           const r = this._flowRow(opt, { title: "Take Settings Along", raw: false,
             sub: t("Replaces your settings for: {list}").replace("{list}", pv.settings.map((k) => t(SECTION_LABEL[k] || k)).join(", ")),
             check: st.settings, onTap: () => { st.settings = !st.settings; again(); } });
           const sp = r.row.querySelector(".rtext span");
           if (sp) sp.setAttribute("data-no-i18n", "");
+          r.row.classList.add("wrap2");
         }
       }
 
@@ -267,7 +271,7 @@
         missing.forEach((id) => {
           const to = st.mapping[id];
           const r = this._flowRow(mg, { title: missingName(id), raw: true, sub: id,
-            detail: to ? nameOf(hass, to) : t("Missing"), detailTone: to ? "" : "miss", chevron: true,
+            detail: to ? nameOf(hass, to) : t("Missing"), detailTone: to ? "" : "warn", chevron: true,
             onTap: () => this._shMapMenu(r.row, id, st, again) });
           r.row.classList.add("csh-ent");
           r.row.dataset.k = "map-" + id;
