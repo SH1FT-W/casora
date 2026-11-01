@@ -12414,7 +12414,10 @@ window.casoraMenuGlass = {
       else { ring.kind = 'segs'; ring.segs = [{ ok: o.tone !== 'bad', tone: o.tone || 'good' }]; }
       var url7 = o.icon && String(o.icon).indexOf(':') < 0 ? (typeof window.casoraIconUrl === 'function' ? window.casoraIconUrl(o.icon) : '/casora_assets/icons/' + o.icon + '.svg') : null;
       // At most two facts fit the wheel's middle (the third stays in the list or the status line).
-      var facts = (o.facts || []).filter(Boolean).slice(0, 2);
+      // A count the sentence already says is not repeated as a fact („2 entriegelt · 1 klemmt“ above „Entriegelt 2 ·
+      // Klemmt 1“, final review 01.11.2026); the next fact takes its place.
+      var said = String(o.text == null ? '' : o.text).toLowerCase().split(' · ').map(function (x) { return x.trim(); });
+      var facts = (o.facts || []).filter(function (f) { return f && said.indexOf((String(f.value) + ' ' + String(f.label)).toLowerCase().trim()) < 0; }).slice(0, 2);
       var valHtml = o.value != null && o.value !== '' ? stValue(o.value, o.unit || '', '') : '';
       centerHtml = (url7 ? '<div class="hui-dl-sym" style="--g:url(\'' + esc(url7) + '\')"></div>'
           : (o.icon ? '<ha-icon class="hui-dl-sym" icon="' + esc(o.icon) + '" style="display:flex;"></ha-icon>' : ''))
