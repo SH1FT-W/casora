@@ -167,8 +167,9 @@ for (const [tag, o, url, mobile, act] of VIEWS) {
     for (let w = 0; w < 24 && !(await offen()); w++) await page.waitForTimeout(250);
   }
   await need(tag + ': popup opens', await offen());
-  const p = await stable(page, POPUP, null, { until: (v) => v && v.chart && v.rows.length >= 6 && v.segs.length >= 5 && /·/.test(v.line) });
-  await check(tag + ': status line with both zones', /7 °C · −18 °C/.test(p.line), p.line);
+  const p = await stable(page, POPUP, null, { until: (v) => v && v.chart && v.rows.length >= 6 && v.segs.length >= 5 && /\S/.test(v.line) });
+  // §3: the wheel shows the top zone's temperature – the head says in words how the fridge is, never „7 °C“ again.
+  await check(tag + ': status line in words ("Alles in Ordnung", no temperature)', /Alles in Ordnung/.test(p.line) && !/°C/.test(p.line), p.line);
   await check(tag + ': 24 h chart', p.chart);
   await check(tag + ': "Temperaturen" with both zones', p.rows.some((r) => /^Obere Zone/.test(r) && /7 °C/.test(r)) && p.rows.some((r) => /^Untere Zone/.test(r) && /−18 °C/.test(r)), p.rows);
   await check(tag + ': modes as rows', ['SuperCool', 'SuperFrost', 'Nachtmodus', 'Partymodus'].every((m) => p.rows.some((r) => r.startsWith(m))), p.rows);
