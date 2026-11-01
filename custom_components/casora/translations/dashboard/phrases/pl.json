@@ -2686,7 +2686,8 @@
   "WLAN aus": "Wi-Fi wyłączone",
   "1 WLAN an": "1 Wi-Fi włączone",
   "Ziel aller": "Wszystkie",
-  "Ø Ziel": "Ø cel"
+  "Ø Ziel": "Ø cel",
+  "Lampe": "Lampa"
  },
  "patterns": [
   [
@@ -4864,6 +4865,10 @@
   [
    "^Zuletzt geöffnet (.+)$",
    "Ostatnio otwarte {1}"
+  ],
+  [
+   "^Profil „(.+)“$",
+   "Profil „{1}”"
   ]
  ],
  "Gerät in Home Assistant": "Urządzenie w Home Assistant"

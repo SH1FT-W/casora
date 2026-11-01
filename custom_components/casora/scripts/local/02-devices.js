@@ -439,6 +439,61 @@
     ], 'Steuerung'), haCtl ? 'Home Assistant' : 'Programm der Lampe');
   };
 
+  /* Popup v3, the aquarium light (owner, 01.11.2026, draft C2): the lamp's profiles (light_profile, a select) – else its
+     own modes (the light's effects) – as the dial's moons (more than 4: „Alle (n)“), and „Programm ›“ (Home Assistant or
+     the lamp's own program, the schedule switch) as one row with a sub page. The Studio fields stay. */
+  const aqIcon = (t) => {
+    const k = String(t || '').toLowerCase();
+    return /mond|moon|nacht|night/.test(k) ? 'mdi:weather-night' : /abend|evening|sunset|unter/.test(k) ? 'mdi:weather-sunset-down'
+      : /morgen|morning|sunrise|auf/.test(k) ? 'mdi:weather-sunset-up' : /pflanz|plant/.test(k) ? 'mdi:sprout'
+      : /auto|program|zeitplan|schedule/.test(k) ? 'mdi:calendar-clock' : /manu/.test(k) ? 'mdi:hand-back-right-outline'
+      : /tag|day|standard|sun|sonne/.test(k) ? 'mdi:white-balance-sunny' : 'mdi:palette-outline';
+  };
+  window._casoraAqMoons = function (c, states, hass) {
+    const l = c.light && states[c.light];
+    const sel = c.hx && c.hx.sel && states[c.hx.sel];
+    if (sel && sel.state !== 'unavailable') {
+      const nm = (o) => { try { if (hass && hass.formatEntityState) return hass.formatEntityState(sel, o) || o; } catch (x) {} return o; };
+      const seen = new Set();
+      return (sel.attributes.options || []).filter((o) => { const k = nm(o); if (seen.has(k)) return false; seen.add(k); return true; })
+        .map((o) => ({ icon: aqIcon(o + ' ' + nm(o)), text: nm(o), active: sel.state === o,
+          svc: { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.hx.sel } } }));
+    }
+    if (!l || l.state === 'unavailable') return [];
+    const a = l.attributes || {};
+    const fx = (Array.isArray(a.effect_list) ? a.effect_list : []).filter((e) => typeof e === 'string' && e && !/^(none|off|aus|kein)$/i.test(e));
+    const fxName = (e) => { try { if (hass && hass.formatEntityAttributeValue) return hass.formatEntityAttributeValue(l, 'effect', e) || e; } catch (x) {} return e; };
+    return fx.length >= 2 ? fx.map((e) => ({ icon: aqIcon(e + ' ' + fxName(e)), text: fxName(e), active: l.state === 'on' && a.effect === e,
+      svc: { domain: 'light', service: 'turn_on', data: { effect: e }, target: { entity_id: c.light } } })) : [];
+  };
+  // Who sets the colours: 'ha' | 'lamp' | null (no schedule switch).
+  window._casoraAqCtl = function (c, states, hass) {
+    const sw = c.hx && c.hx.sw && states[c.hx.sw] ? c.hx.sw : null;
+    if (!sw || states[sw].state === 'unavailable') return null;
+    const mean = window._casoraAqSwitchMeaning(sw, { light_schedule_on: c.swOn }, hass);
+    return (mean === 'ha') === (states[sw].state === 'on') ? 'ha' : 'lamp';
+  };
+  window._casoraAqProgRow = function (c, states, hass) {
+    const UI = window._casoraUI, ctl = window._casoraAqCtl(c, states, hass);
+    if (!UI || !ctl) return '';
+    return UI.group([{ icon: 'mdi:calendar-clock', label: 'Programm', value: ctl === 'ha' ? 'Home Assistant' : 'Lampe',
+      page: 'aqProgram|' + JSON.stringify({ sw: c.hx.sw, swOn: c.swOn || null }) }], null);
+  };
+  (window._casoraPages || (window._casoraPages = {})).aqProgram = function (arg) {
+    const HH = window._casoraHH;
+    let o; try { o = JSON.parse(arg); } catch (e) { return; }
+    if (!HH || !HH.page || !o || !o.sw) return;
+    HH.page('Programm', [o.sw], 'const UI = window._casoraUI, o = ' + JSON.stringify(o) + ', st = states[o.sw];\n'
+      + 'if (!st) return "";\n'
+      + 'const mean = window._casoraAqSwitchMeaning(o.sw, { light_schedule_on: o.swOn }, hass);\n'
+      + 'const ha = (mean === "ha") === (st.state === "on");\n'
+      + 'const to = (h) => ({ domain: "switch", service: (mean === "ha") === h ? "turn_on" : "turn_off", target: { entity_id: o.sw } });\n'
+      + 'return UI.section("control", [\n'
+      + '  UI.row.action({ icon: ha ? "mdi:radiobox-marked" : "mdi:radiobox-blank", label: "Home Assistant", sub: "Farben nach deiner Automation", value: ha ? "Aktiv" : null, svc: ha ? null : to(true) }),\n'
+      + '  UI.row.action({ icon: !ha ? "mdi:radiobox-marked" : "mdi:radiobox-blank", label: "Programm der Lampe", sub: "Eigener Tagesablauf der Lampe", value: !ha ? "Aktiv" : null, svc: !ha ? null : to(false) })\n'
+      + '], false);', o.sw);
+  };
+
   window._casoraAqEval = function (entity, variables, states, hass) {
   /* Three states: Alles ok / Prüfen (orange) / Alarm (red), followed by the most important reason. */
   const num = (e) => { const n = parseFloat(states[e]?.state); return isNaN(n) ? null : n; };
@@ -849,6 +904,15 @@
       hero: `[[[
         const c = ${_c};
         const ev = window._casoraAqEval ? window._casoraAqEval(states[c.temp], c.V, states, hass) : { level: 0, reasons: [] };
+        // The aquarium light (detail round #37): the head speaks of the lamp – its profile and who runs it – not the tank.
+        if (c.lightStage && c.light && states[c.light]) {
+          const l = states[c.light], sel = c.hx && c.hx.sel && states[c.hx.sel];
+          const nm = (o) => { try { if (hass && hass.formatEntityState) return hass.formatEntityState(sel, o) || o; } catch (x) {} return o; };
+          const ctl = window._casoraAqCtl ? window._casoraAqCtl(c, states, hass) : null;
+          const parts = l.state === 'unavailable' ? ['Nicht verfügbar'] : [l.state === 'on' ? (sel && sel.state !== 'unavailable' ? 'Profil „' + nm(sel.state) + '“' : 'An') : 'Aus'];
+          if (ctl && l.state !== 'unavailable') parts.push(ctl === 'ha' ? 'Home Assistant' : 'Programm der Lampe');
+          return window._casoraUI.hero({ value: parts.join(' · '), center: true });
+        }
         return window._casoraUI.hero({ value: ev.level ? ev.reasons.join(' · ') : 'Alles in Ordnung', valueTone: ev.level === 2 ? 'bad' : ev.level === 1 ? 'warn' : null, center: true });
       ]]]`,
       stage: `[[[
@@ -871,6 +935,7 @@
         const on = l.state === 'on', a = l.attributes || {};
         return UI.stage('slider', { value: on && a.brightness != null ? Math.round(a.brightness / 2.55) : (on ? 100 : 0), label: 'Helligkeit', icon: 'light',
           state: l.state === 'unavailable' ? 'na' : (on ? null : 'off'),
+          moons: c.lightStage && window._casoraAqMoons ? window._casoraAqMoons(c, states, hass) : [],
           svc: { domain: 'light', service: 'turn_on', field: 'brightness_pct', data: on ? null : (c.lightOn || null), target: { entity_id: c.light } } });
       ]]]`,
     };
@@ -900,10 +965,12 @@
     // The lamp's channels (several): a list of their own beside the light row.
     const nCh = cfg.light && states[cfg.light] ? window._casoraAqChannels(cfg.light, { light_channels: cfg.lightChannels }, states, hass).length : 0;
     if (nCh >= 2) f3.chan = `[[[ return window._casoraAqChanSec ? window._casoraAqChanSec(${_c}, states, hass) : ''; ]]]`;
+    // The aquarium light: „Programm ›“ (Home Assistant / the lamp's program) as a row (owner, 01.11.2026).
+    if (cfg.lightStage && cfg.hx && cfg.hx.sw && states[cfg.hx.sw]) f3.prog = `[[[ return window._casoraAqProgRow ? window._casoraAqProgRow(${_c}, states, hass) : ''; ]]]`;
     // Only the light (no probe, no equipment, one channel): the stage alone across the one column.
-    const solo = !f3.chart && !f3.list && !f3.chan;
+    const solo = !f3.chart && !f3.list && !f3.chan && !f3.prog;
     return HH.layout({ entity: cfg.temp, watch: watch, fields: f3, top: solo ? ['hero', 'stage'] : ['hero'], stage: solo ? null : 'stage',
-      left: ['chart'], right: ['list', 'chan'] });
+      left: ['chart'], right: ['prog', 'list', 'chan'] });
   }
   if (HH && HH.on() && HH.layout) {
     const f2 = { hero: fields.hero, chart: fields.chart, glight: fields.glight, gtech: fields.gtech, gai: fields.gai };

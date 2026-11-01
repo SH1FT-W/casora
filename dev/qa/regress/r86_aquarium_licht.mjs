@@ -11,7 +11,8 @@
 // v3 (31.10./01.11.2026, popup-richtlinien-v3 §8 and the rework of the aquarium popup): the tank popup is the water
 // temperature as the stage (S7, the target range under it), the light as a row and the lamp's channels as a list with
 // one slider each (one column). The lamp's modes/profiles and the schedule switch („Home Assistant“ / „Programm der
-// Lampe“) are control and stay in the Studio/HA (rework decision, not an issue feature) – no longer checked here.
+// Lampe“) stay in the Studio/HA for the tank; the aquarium light popup (light_stage) shows them since 01.11.2026
+// (owner, draft C2): the profiles as moons, „Programm ›“ as a row.
 // The brightness is the dial of the aquarium light popup (light_stage).
 import { open, casoraDashboards, dashboard, check, need, finish, fakeStates } from './lib.mjs';
 
@@ -190,6 +191,25 @@ const drag = async (pg, label, frac) => {
     await check('A als Aquarium-Licht: Rad → light.turn_on brightness_pct', c.some((x) => x.domain === 'light' && x.service === 'turn_on'
       && [].concat(x.target.entity_id)[0] === 'light.testbecken_a_lampe' && x.data.brightness_pct != null), c);
   }
+  // Owner, 01.11.2026 (draft C2): the lamp's profiles are the dial's moons, „Programm ›“ (Home Assistant / the lamp's
+  // program) a row with a sub page; the head speaks of the lamp, not the tank.
+  const mo = await page.evaluate(() => { const s = window.casoraPopup.surface;
+    return { moons: window.__pierce('.hui-moon', s).map((m) => ({ t: m.getAttribute('aria-label'), on: m.classList.contains('on'), svc: m.dataset.casoraSvc || '' })),
+      prog: window.__pierce('[data-casora-page^="aqProgram|"]', s).map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
+      head: window.__pierce('.hui-hero, [class*="hero"]', s).map((e) => e.textContent.replace(/\s+/g, ' ').trim()).join(' | ') }; });
+  await check('A als Aquarium-Licht: Profile als Monde (3, eins gewählt, select_option)', mo.moons.length === 3 && mo.moons.filter((m) => m.on).length === 1
+    && mo.moons.every((m) => /select_option/.test(m.svc)), mo.moons);
+  await check('A als Aquarium-Licht: Zeile „Programm ›“ mit Home Assistant', mo.prog.length === 1 && /Programm/.test(mo.prog[0]) && /Home Assistant/.test(mo.prog[0]), mo.prog);
+  await check('A als Aquarium-Licht: Kopf nennt nicht das Becken („Alles in Ordnung“)', !/Alles in Ordnung/.test(mo.head), mo.head);
+  await calls(page);
+  if (await tapText(page, '.hui-moon', 'Pflanzen') || await tapText(page, '.hui-moon', 'pflanzen')) {
+    c = await calls(page);
+    await check('A als Aquarium-Licht: Mond → select.select_option', c.some((x) => x.domain === 'select' && x.service === 'select_option'), c);
+  } else await check('A als Aquarium-Licht: Mond „Pflanzen“ da', false, mo.moons);
+  await tapText(page, '[data-casora-page^="aqProgram|"]', 'Programm');
+  await page.waitForTimeout(1200);
+  const sub = await page.evaluate(() => window.__pierce('.hui-row', window.casoraPopup.surface).map((e) => e.textContent.replace(/\s+/g, ' ').trim()).join(' | '));
+  await check('A als Aquarium-Licht: Unterseite „Programm“ mit beiden Wegen', /Home Assistant/.test(sub) && /Programm der Lampe/.test(sub), sub);
   await page.evaluate(() => { if (window.casoraPopup) window.casoraPopup.close(); });
 }
 

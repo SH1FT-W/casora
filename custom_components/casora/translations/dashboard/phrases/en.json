@@ -2668,7 +2668,8 @@
   "WLAN aus": "Wi-Fi off",
   "1 WLAN an": "1 Wi-Fi on",
   "Ziel aller": "All rooms",
-  "Ø Ziel": "Ø target"
+  "Ø Ziel": "Ø target",
+  "Lampe": "Light"
  },
  "patterns": [
   [
@@ -4846,6 +4847,10 @@
   [
    "^Zuletzt geöffnet (.+)$",
    "Last opened {1}"
+  ],
+  [
+   "^Profil „(.+)“$",
+   "Profile “{1}”"
   ]
  ],
  "Gerät in Home Assistant": "Device in Home Assistant"

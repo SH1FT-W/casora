@@ -2686,7 +2686,8 @@
   "WLAN aus": "Wi-Fi apagado",
   "1 WLAN an": "1 Wi-Fi encendido",
   "Ziel aller": "Todas",
-  "Ø Ziel": "Ø objetivo"
+  "Ø Ziel": "Ø objetivo",
+  "Lampe": "Lámpara"
  },
  "patterns": [
   [
@@ -4864,6 +4865,10 @@
   [
    "^Zuletzt geöffnet (.+)$",
    "Última apertura {1}"
+  ],
+  [
+   "^Profil „(.+)“$",
+   "Perfil «{1}»"
   ]
  ],
  "Gerät in Home Assistant": "Dispositivo en Home Assistant"

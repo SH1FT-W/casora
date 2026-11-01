@@ -2686,7 +2686,8 @@
   "WLAN aus": "Wifi uit",
   "1 WLAN an": "1 wifi aan",
   "Ziel aller": "Alle kamers",
-  "Ø Ziel": "Ø doel"
+  "Ø Ziel": "Ø doel",
+  "Lampe": "Lamp"
  },
  "patterns": [
   [
@@ -4864,6 +4865,10 @@
   [
    "^Zuletzt geöffnet (.+)$",
    "Laatst geopend {1}"
+  ],
+  [
+   "^Profil „(.+)“$",
+   "Profiel „{1}”"
   ]
  ],
  "Gerät in Home Assistant": "Apparaat in Home Assistant"
