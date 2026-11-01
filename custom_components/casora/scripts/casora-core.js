@@ -12222,6 +12222,8 @@ window.casoraMenuGlass = {
     +   'background:var(--casora-dial-record-deep, #1c1c1e);box-shadow:var(--casora-dial-hole-ring, 0 0 0 2px rgba(255,255,255,.18));}'
     + '.hui-dl-cover.spin{animation:hui-dl-spin 8s linear infinite;}'
     + '.hui-dl-cover.tv{background:' + S.ctl + ';box-shadow:none;}.hui-dl-cover.tv::before,.hui-dl-cover.tv::after{display:none;}'
+    + '.hui-dl-cover.video{background:' + S.ctl + ';}.hui-dl-cover.video::before,.hui-dl-cover.video::after{display:none;}'
+    + '.hui-dl-cover.video img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block;}'
     + '.hui-dl-cover.tv .hui-dl-lbl{inset:0;background:none;box-shadow:none;color:' + S.sub + ';}'
     + '.hui-dl-cover.tv .hui-dl-lbl ha-icon{--mdc-icon-size:16cqw;width:16cqw;height:16cqw;transform:none;opacity:1;}'
     + '.hui-dl-vol{font-size:15px;font-weight:700;color:' + S.sub + ';text-align:center;font-variant-numeric:tabular-nums;}'
@@ -12579,7 +12581,11 @@ window.casoraMenuGlass = {
       // A television has no record (review 2, E25): a quiet disc with the TV symbol; off, no volume line.
       if (o.cover && !(o.cover.tv && off)) belowHtml = '<div class="hui-dl-vol">' + esc(o.word || '') + ' <span class="hui-st-n">' + esc(v) + '</span>\u202F%</div>' + belowHtml;
       if (o.cover && o.cover.tv && !o.cover.image) coverHtml = '<div class="hui-dl-cover tv"><div class="hui-dl-lbl"><ha-icon icon="mdi:television"></ha-icon></div></div>';
-      else if (o.cover) coverHtml = '<div class="hui-dl-cover' + (o.cover.spin && !o.cover.tv ? ' spin' : '') + '"><div class="hui-dl-lbl">'
+      // Music on a TV (Spotify, Apple Music) is a record and turns; everything else on it is video.
+      // Video: the cover is the whole disc (same size and circle as the record), no grooves, no turning.
+      else if (o.cover && o.cover.video && o.cover.image) coverHtml = '<div class="hui-dl-cover video"><img src="'
+        + (window.casoraSafeUrl ? window.casoraSafeUrl(o.cover.image) : esc(o.cover.image)) + '" alt=""/></div>';
+      else if (o.cover) coverHtml = '<div class="hui-dl-cover' + (o.cover.spin && !o.cover.video ? ' spin' : '') + '"><div class="hui-dl-lbl">'
         + (o.cover.image ? '<img src="' + (window.casoraSafeUrl ? window.casoraSafeUrl(o.cover.image) : esc(o.cover.image)) + '" alt=""/>'
           : '<ha-icon icon="' + esc(o.cover.icon || 'mdi:music-note') + '"></ha-icon>') + '</div></div>';
     } else if (code === 'S2') {
@@ -12748,6 +12754,24 @@ window.casoraMenuGlass = {
       + (mo.html ? '<div class="hui-dl-ms"' + mo.liveHtml + '>' + mo.html + '</div>' : '') + '</div>';
     return { html: dl + belowHtml, cls: ' dial' + (mo.bottom ? ' mb' : '') + cls };
   }
+  // Video or music (owner decision 01.11.2026): a film, series or TV channel fills the wheel's middle with its cover; music and
+  // podcasts keep the turning record. An explicit content type wins; then a known video app, then the device (TV,
+  // Apple TV, streaming box). Anything unclear stays a record.
+  var VIDEO_TYPES = /^(movie|tvshow|tv_show|episode|season|video|channel|tv|tvchannel)$/;
+  var AUDIO_TYPES = /^(music|podcast|track|album|artist|playlist|radio|audiobook)$/;
+  var VIDEO_APPS = /prime ?video|amazon (instant|video)|netflix|disney|youtube|magenta ?tv|paramount|hbo|^max$|apple ?tv|waipu|zattoo|joyn|rtl\+|ard ?mediathek|zdf|arte|dazn|sky ?(go|q|ticket)|wow|plex|jellyfin|emby|infuse|kodi|crunchyroll|twitch|com\.amazon\.aiv|com\.netflix|com\.google\.ios\.youtube|com\.apple\.tvapp|com\.disney/i;
+  var AUDIO_APPS = /spotify|apple ?music|deezer|tidal|tunein|radio|podcast|audible|soundcloud|amazon ?music|youtube ?music|sonos|com\.apple\.music|com\.spotify/i;
+  function mediaVideo(a, id) {
+    a = a || {};
+    var t = String(a.media_content_type || '').toLowerCase().replace(/^.*\./, '');
+    if (AUDIO_TYPES.test(t)) return false;
+    if (VIDEO_TYPES.test(t)) return true;
+    var app = [a.app_name, a.app_id, a.source].filter(function (x) { return typeof x === 'string' && x; }).join(' ');
+    if (app && AUDIO_APPS.test(app)) return false;
+    if (app && VIDEO_APPS.test(app)) return true;
+    if (a.device_class === 'tv') return true;
+    return /^media_player\.[^.]*(apple_?tv|appletv|_tv$|_tv_|fernseh|fire_?tv|chromecast|shield|roku)/i.test(String(id || ''));
+  }
   function stage(type, o) {
     o = o || {};
     var code = STAGE_TYPES[type];
@@ -12900,7 +12924,7 @@ window.casoraMenuGlass = {
   window._casoraUI.more = more;
   Object.assign(window._casoraUI, { section: section, row: row, settingsRow: settingsRow, settings: settings, actions: actions,
     empty: empty, width: width, switchHtml: switchHtml, page: page, SEC_ORDER: SEC_ORDER, WIDTH: WIDTH,
-    stage: stage, quick: quick, STAGE_TYPES: STAGE_TYPES, v3: v3, dialPaint: dialPaint, dialPct: dialPct, dialNum: dialNum });
+    stage: stage, mediaVideo: mediaVideo, quick: quick, STAGE_TYPES: STAGE_TYPES, v3: v3, dialPaint: dialPaint, dialPct: dialPct, dialNum: dialNum });
   window.casoraPopupWidth = width;
 
   // Symmetry (rule 12, owner 26.10.2026: „Symmetrie ist wichtig!“): in a two-column popup both columns
