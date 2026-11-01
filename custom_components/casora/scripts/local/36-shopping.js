@@ -82,7 +82,8 @@
       var bodyHtml = !d ? UI.empty({ icon: 'mdi:cart-outline', text: 'Liste wird geladen …' })
         // „Alles eingekauft“ is the status line's word – the plate does not say it again (§3).
         : !d.open.length ? UI.empty({ icon: 'mdi:cart-check', text: 'Neue Einträge erscheinen hier' })
-        : UI.group(d.open.map(function (it) { return row(id, it, false); }), d.open.length === 1 ? '1 offen' : d.open.length + ' offen');
+        // The count („2 offen“) is the status line's – the heading only names the list (§3).
+        : UI.group(d.open.map(function (it) { return row(id, it, false); }), 'Offen');
       return UI.stage('content', { html: '<style>.hui-stage{--casora-pv-stack-fill:transparent;}</style>'
         + '<div style="display:flex;flex-direction:column;gap:16px;">' + addHtml + bodyHtml + '</div>' });
     }
@@ -90,7 +91,7 @@
       if (!d || !d.done.length) return '';
       var rows = d.done.map(function (it) { return row(id, it, true); });
       rows.push({ icon: 'mdi:delete-sweep-outline', label: 'Erledigte löschen', svc: S.clearSvc(id), confirm: 'Löschen', noChev: true });
-      return UI.group(rows, 'Erledigt · ' + d.done.length);
+      return UI.group(rows, 'Erledigt');
     }
     return '';
   };

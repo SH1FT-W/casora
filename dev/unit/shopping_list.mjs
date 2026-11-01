@@ -48,8 +48,8 @@ const UIs = { esc: String, empty: (o) => 'EMPTY:' + o.text, group: (rows, label)
   stage: (t, o) => t + ':' + o.html };
 win._casoraUI = UIs;
 const st = S.innerHtml('stage', ID, hass);
-assert.match(st, /data-shop-add=/); assert.match(st, /2 offen\|Milch\/1 l,Brot/);
-assert.equal(S.innerHtml('done', ID, hass), 'Erledigt · 1|Kaffee,Erledigte löschen?');
+assert.match(st, /data-shop-add=/); assert.match(st, /Offen\|Milch\/1 l,Brot/); assert.ok(!/2 offen/.test(st), 'the count is the status line\'s, not the heading\'s (§3)');
+assert.equal(S.innerHtml('done', ID, hass), 'Erledigt|Kaffee,Erledigte löschen?');
 assert.ok(Array.isArray(cp.popup_styles), 'standard popup styles');
 assert.match(fs.readFileSync(ROOT + 'custom_components/casora/scripts/casora-local.js', 'utf8'), /'36-shopping'/, 'module is loaded');
 // Status line (prod test 01.11.2026): words, never the raw count „0“; „Alles eingekauft“ only there, not on the plate.
