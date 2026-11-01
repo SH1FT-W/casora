@@ -2150,6 +2150,18 @@ const CLASS_UNITS = {
   // Keine echte device_class: Fortschritt steht als Prozent ohne Klasse im Sensor.
   progress: /^%$/,
 };
+// #95: air sensors without device_class and without unit that only their id or name reveal (a VOC index 0–500 of
+// Amazon's air quality monitor or a Sensirion SGP40/41, a CO2 or PM sensor of a template/MQTT setup). Tested on
+// entity id + friendly name, lower case; the state has to be a number (_entityList).
+const CLASS_NAMES = {
+  volatile_organic_compounds: /(^|[^a-z])t?vocs?([^a-z]|$)|volatile.organic/,
+  volatile_organic_compounds_parts: /(^|[^a-z])t?vocs?([^a-z]|$)|volatile.organic/,
+  carbon_dioxide: /(^|[^a-z])e?co2([^0-9]|$)|co₂|carbon.dioxide|kohlendioxid/,
+  carbon_monoxide: /(^|[^a-z])co([^a-z0-9₂]|$)|carbon.monoxide|kohlenmonoxid/,
+  pm25: /(^|[^a-z])pm[ _.]?2[ _.,]?5([^0-9]|$)/,
+  pm10: /(^|[^a-z])pm[ _.]?10([^0-9]|$)/,
+  pm1: /(^|[^a-z])pm[ _.]?1([ _.,]0)?([^0-9 _.,]|[ _.,][^0-9]|$)/,
+};
 // Kontakte an Türen, Fenstern und Toren.
 const CONTACT_CLASSES = ["door", "window", "opening", "garage_door"];
 const AIR_CLASSES = ["aqi", "pm25", "pm10", "pm1", "carbon_dioxide", "volatile_organic_compounds",
@@ -22417,8 +22429,8 @@ class CasoraPanel extends HTMLElement {
     return { wrap, input };
   }
 
-  // classes: Liste für alle Domains oder {domain: [...]} je Domain. Ohne device_class
-  // zählt ein Sensor nur, wenn seine Einheit zur gesuchten Art passt (CLASS_UNITS).
+  // classes: a list for all domains or {domain: [...]} per domain. Without device_class a sensor counts when its
+  // unit fits the wanted kind (CLASS_UNITS); without unit too, when its id or name does (CLASS_NAMES).
   // accept: name of an ACCEPT_RULES entry – an entity it accepts is offered regardless of class (DWD level sensor).
   _entityList(domains, classes, accept) {
     // Jedes Gerätefeld eines Raums fragt beim Zeichnen dieselben Listen ab – je Stand von
@@ -22455,7 +22467,10 @@ class CasoraPanel extends HTMLElement {
         const at = this._hass.states[e]?.attributes || {};
         if (at.device_class) return want.includes(at.device_class);
         const unit = String(at.unit_of_measurement || "");
-        return !!unit && want.some((c) => (CLASS_UNITS[c] || NO_UNIT).test(unit));
+        if (unit) return want.some((c) => (CLASS_UNITS[c] || NO_UNIT).test(unit));
+        // No class, no unit: the id or name tells the kind, if the state is a number (#95, VOC index).
+        const text = (e + " " + (at.friendly_name || "")).toLowerCase();
+        return !isNaN(parseFloat(this._hass.states[e].state)) && want.some((c) => CLASS_NAMES[c] && CLASS_NAMES[c].test(text));
       })
       .sort();
     if (ACCEPT_FIRST.has(accept)) out.sort((a, b) => (acc(this._hass, b) ? 1 : 0) - (acc(this._hass, a) ? 1 : 0) || (a < b ? -1 : a > b ? 1 : 0));
