@@ -60,7 +60,8 @@ const settings = read('panel/casora-panel-settings.js');
 assert.ok(/\{ id: "live", label: "Live Activities", icon: "iphone", tone: "set-live", live: true,/.test(settings), 'PAGES-Eintrag');
 assert.ok(settings.indexOf('id: "live"') > settings.indexOf('id: "vent"') && settings.indexOf('id: "live"') < settings.indexOf('id: "fuel"'),
   'zwischen Lüften und Tanken');
-assert.ok(/if \(typeof this\._csLiveLoad === "function"\) await this\._csLiveLoad\(cs\);/.test(settings), 'wird mit den Einstellungen geladen');
+// Loaded with the settings (since 02.11.2026 side by side with the other stores: Promise.all).
+assert.ok(/typeof this\._csLiveLoad === "function" \? this\._csLiveLoad\(cs\)/.test(settings) && /await Promise\.all\(\[[^\]]*live\]\)/.test(settings), 'wird mit den Einstellungen geladen');
 assert.ok(/liveDirty\(this\)/.test(settings) && /await this\._csLiveSave\(\);/.test(settings), 'ein Speichern für alles');
 assert.ok(/if \(page\.live\) \{\s*if \(typeof this\._csFillLive === "function"\) this\._csFillLive\(host\);\s*return;/.test(settings), 'Seite füllt sich aus casora-panel-live.js');
 const live = read('panel/casora-panel-live.js');

@@ -93,8 +93,9 @@
   // Behind a switch (localStorage "casora.settings.neu" = "1", or the route "n-start"): a few big tiles named by
   // what people want to do, at most two levels (tile → its page). A tile page renders the existing controls of its
   // blocks directly (same draft, same "Save settings"); blocks marked adv sit in a folded "Advanced" part that is
-  // only drawn when opened. Blocks with sec link to the dashboard's own section (saved with "Done"), sub scrolls
-  // there. Every block has one plain sentence; kw holds the field labels and everyday words for the search.
+  // only drawn when opened. Blocks with sec show the fields of a section of this dashboard (sub: one part of it, keys:
+  // only these fields), drawn by the Studio's own section code; one bar saves everything (settings and dashboard).
+  // Every block has one plain sentence; kw holds the field labels and everyday words for the search.
   // window.casoraSettingsMap exposes this table for the regress test that walks every block.
   const NEU = [
     { id: "look", label: "Look & feel", icon: "desktop", tone: "set-design",
@@ -106,7 +107,8 @@
           kw: "uhr uhrzeit zeit 12 stunden 24 clock time zeitsensor suffix" },
         { k: "font", sec: "General", sub: "text", title: "Font", plain: "The typeface of this dashboard, or a font you bring yourself.",
           kw: "schrift schriftart font inter hanken eigene schrift hochladen" },
-        { k: "chrome", sec: "General", sub: "chrome", title: "Top bar and badges", adv: true,
+        { k: "chrome", sec: "General", sub: "chrome", keys: ["show_assist", "badges_wrap", "casora_hide_header"],
+          title: "Top bar and badges", adv: true,
           plain: "Assist button, the Home Assistant title bar and badges on several lines.",
           kw: "kopfzeile header assist taste badges umbrechen zeilen leiste" },
       ] },
@@ -116,7 +118,7 @@
         { k: "hold", sec: "General", sub: "hold", title: "Hold and sort tiles",
           plain: "What happens when you hold a tile, and when busy tiles move to the front.",
           kw: "halten gedrückt halten schnellmenü popup sortieren reihenfolge hold sort" },
-        { k: "screen", sec: "General", sub: "chrome", title: "Wall tablet",
+        { k: "screen", sec: "General", sub: "chrome", keys: ["casora_idle_home"], title: "Wall tablet",
           plain: "Go back to Home after a while without use.",
           kw: "tablet inaktivität zurück zuhause idle kiosk wand" },
         { k: "dialogs", sec: "General", sub: "dialogs", title: "Home Assistant detail windows", adv: true,
@@ -227,7 +229,9 @@
   const NEU_KEY = "casora.settings.neu";
   const neuOn = () => { try { return localStorage.getItem(NEU_KEY) === "1"; } catch (e) { return false; } };
   const neuSet = (on) => { try { if (on) localStorage.setItem(NEU_KEY, "1"); else localStorage.removeItem(NEU_KEY); } catch (e) { /* private mode */ } };
-  window.casoraSettingsMap = { tiles: NEU };
+  // The dashboard sections the tiles show (scope "dashboard" in casora-panel.js SECTIONS).
+  const DASH_SECS = ["General", "Weather", "Time", "Notifications", "Scenes"];
+  window.casoraSettingsMap = { tiles: NEU, dashSections: DASH_SECS };
   const pageOf = (id) => neuPage(id) || hubPage(id) || PAGES.find((p) => p.id === id) || PAGES[0];
 
   const CSS = ".cs-wrap{padding:4px 0 28px}"
@@ -257,6 +261,9 @@
     + ".cn-adv:focus-within>summary{outline:none}.cn-adv>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:inherit}"
     + ".cn-advbody{padding:4px 4px 2px}"
     + ".cn-grid .cs-hubtile{min-height:96px}"
+    // Dashboard sections inside a block: no card frame of their own, scope sign beside the title.
+    + ".cn-block>section.cn-card{margin:0;padding:0;background:none;box-shadow:none;border:0}"
+    + ".cn-bhead b .cn-only{display:inline-block;margin-left:8px;vertical-align:2px;white-space:nowrap!important;max-width:none!important}"
     // Start and topic pages have no "Applies to" line under the title: the fixed head height left an empty band of
     // ~40 px above "‹ Settings" (the pages with that line sat 16 px higher).
     + ":host(.split:not(.flow):not(.phone)) .insphead:has(> .cs-head):not(.uxhas){height:auto!important;min-height:0!important;padding-bottom:14px!important}"
@@ -402,9 +409,20 @@
     // Fuel prices: draft without the key; F.key is only there when a new one was typed (or "" = remove).
     const tankenDirty = (cs) => !!cs.tk && JSON.stringify(cs.F) !== cs.F0;
     const liveDirty = (self) => typeof self._csLiveDirty === "function" && self._csLiveDirty();
-    P._csDirty = function () {
+    // Settings for all dashboards (drafts above).
+    P._csOwnDirty = function () {
       const cs = this._cs;
       return !!cs && (settingsDirty(cs) || optionsDirty(cs) || tankenDirty(cs) || liveDirty(this));
+    };
+    // New structure: this dashboard's settings belong to the same bar – when they were changed on one of its pages
+    // (_csDashTouched, set in _markDirty below). Edits elsewhere in the Studio keep "Done" as before.
+    const dashSetDirty = (self) => neuOn() && !!self._csDashTouched && !!self._state && !!self._isDirty && self._isDirty();
+    P._csDirty = function () {
+      return this._csOwnDirty() || dashSetDirty(this);
+    };
+    // For the leave guards in casora-panel.js: only with the new structure (the previous one keeps its behaviour).
+    P._csLeaveDirty = function () {
+      return neuOn() && this._csDirty();
     };
     const takeTanken = (cs, r) => {
       cs.tk = r;
@@ -432,6 +450,8 @@
       const hass = this._hass;
       let stored = false, data = {};
       cs.readErr = null;
+      // The four stores load side by side; each one keeps its own error.
+      const own = (async () => {
       try {
         const r = await hass.callWS({ type: "casora/settings/get" });
         stored = !!r.stored;
@@ -449,6 +469,8 @@
         if (f && Object.keys(f).length) { data = f; cs.fromFile = true; }
       }
       takeSettings(cs, data, stored || !cs.fromFile);
+      })();
+      const opts = (async () => {
       try {
         takeOptions(cs, await hass.callWS({ type: "casora/options/get" }));
         cs.optErr = null;
@@ -465,6 +487,8 @@
         cs.opt = null;
         cs.optErr = e && e.code === "unknown_command" ? "old" : ((e && e.message) || String(e));
       }
+      })();
+      const fuel = (async () => {
       try {
         takeTanken(cs, await hass.callWS({ type: "casora/tanken/get" }));
         cs.tkErr = null;
@@ -472,20 +496,23 @@
         cs.tk = null;
         cs.tkErr = e && e.code === "unknown_command" ? "old" : ((e && e.message) || String(e));
       }
-      if (typeof this._csLiveLoad === "function") await this._csLiveLoad(cs);
+      })();
+      const live = typeof this._csLiveLoad === "function" ? this._csLiveLoad(cs) : null;
+      await Promise.all([own, opts, fuel, live]);
       cs.loaded = true;
       cs.at = Date.now();
       return true;
     };
 
     P._csSave = async function () {
-      const cs = this._cs;
-      if (!cs || cs.busy || !this._csDirty()) return;
+      const cs = this._cs || (this._cs = {});
+      if (cs.busy) return false;
+      if (!this._csDirty()) return true;
       const price = cs.O && cs.O.price_kwh;
       if (price !== undefined && (typeof price !== "number" || isNaN(price) || price < 0 || price > 2)) {
         cs.err = t("The electricity price must be between 0 and 2 €/kWh.");
         this._csRepaint();
-        return;
+        return false;
       }
       cs.busy = true;
       cs.err = null;
@@ -533,12 +560,21 @@
           await this._csLiveSave();
           done.push(t("Saved – live activities follow the devices from now on"));
         }
+        // New structure: the same bar saves this dashboard (its settings live there), as "Save" would.
+        if (neuOn() && this._state && this._isDirty() && !this._saveBlocked) {
+          if (!(await this._save())) throw new Error(t("The dashboard could not be saved. Your changes are still here."));
+          this._csDashTouched = false;
+          done.push(t("Saved"));
+        }
       } catch (e) {
         cs.err = (e && e.message) || String(e);
       }
       cs.busy = false;
       this._csRepaint();
       if (done.length && !cs.err) this._status(done[done.length - 1], "ok");
+      // Said where the user is, also when the page is not open (asked on "Done", a dashboard switch …).
+      if (cs.err) this._status(cs.err, "err");
+      return !cs.err;
     };
 
     // ── Option building blocks ───────────────────────────────────────────────
@@ -1006,19 +1042,80 @@
       if (b && b.adv) (this._nAdv = this._nAdv || new Set()).add(tile.id);
       return this._csShow("n-" + tile.id, b ? "nb-" + b.k : undefined);
     };
-    // A block that lives elsewhere (dashboard section, updates) opens there; ‹ leads back to the tile.
+    // Updates are a page of their own (install, versions); ‹ leads back to the tile.
     P._csNeuLink = function (tile, b) {
-      const back = "n-" + tile.id;
-      if (b.updates) return this._csHubGo({ updates: true, back });
-      const r = this._csHubGo({ sec: b.sec, back });
-      if (b.sub) {
-        setTimeout(() => {
-          const pane = this.$("pane");
-          const at = pane && pane.querySelector('.card[data-k="' + b.sec + '"] .subtitle[data-sub="' + b.sub + '"]');
-          if (at) at.scrollIntoView({ block: "start", behavior: "smooth" });
-        }, 450);
+      return this._csHubGo({ updates: true, back: "n-" + tile.id });
+    };
+    // One dashboard section, drawn by the Studio's own code (_renderForm) into a detached pane: same fields, same
+    // storage, undo and phone sync as in the inspector. Only that section is drawn (no tiles or badges), for the
+    // home room – the dashboard-wide fields are the same in every room, and the scenes list exists only there.
+    P._csDashCard = function (label) {
+      const st = this._state;
+      if (!st || !st.compact || !(st.compact.rooms || []).length) return null;
+      const rooms = st.compact.rooms;
+      const home = Math.max(0, rooms.findIndex((r) => I().isHomeRoom ? I().isHomeRoom(r, rooms) : r.path === "home"));
+      const fake = document.createElement("div");
+      fake.id = "pane";
+      const had = Object.prototype.hasOwnProperty.call(this, "$");
+      const keep = { room: this._room, sel: this._sel, $: this.$ };
+      const KEEP = ["_cardsRoom", "_scrollRoom", "_switches", "_foldables", "_mapSig", "_toLevelTop", "_toListScroll",
+        "_toPageTop", "_bRoomSeen", "_countFor", "_bSwapped", "_listScroll"];
+      const kept = KEEP.map((k) => [k, this[k]]);
+      this.$ = (id) => (id === "pane" ? fake : this.shadowRoot.getElementById(id));
+      this._csOnly = new Set([label]);
+      this._room = home;
+      this._sel = null;
+      // Through the whole chain of _renderForm, so the extensions (e.g. "Show as" for scenes) add their rows.
+      this._csHarvesting = true;
+      try { P._renderForm.call(this); } catch (e) { /* drawn as far as it got */ }
+      finally {
+        this._csHarvesting = false;
+        this._csOnly = null;
+        this._room = keep.room;
+        this._sel = keep.sel;
+        kept.forEach(([k, v]) => { this[k] = v; });
+        if (had) this.$ = keep.$; else delete this.$;
+        this._csHarvested = true;
       }
-      return r;
+      return fake.querySelector('section.card[data-k="' + label + '"]');
+    };
+    // Trim a drawn section to one block: its own head goes (the block has a title; a section switch becomes a
+    // labelled first row), sub keeps one part, keys keeps only those fields (and the hint under the last one).
+    const DASH_SWITCH = { Scenes: "Show scenes on this dashboard" };
+    const trimCard = (self, card, b) => {
+      card.classList.remove("shut", "sel");
+      card.classList.add("cn-card");
+      const head = card.querySelector(":scope > .chead");
+      const sw = head && head.querySelector(".sw");
+      if (sw && !card.querySelector(":scope > .togglecard")) self._toggleRowFor(head, sw, card._toggleRow || t(DASH_SWITCH[b.sec] || "On"));
+      if (head) head.remove();
+      // Links into the previous settings pages (personal.js, addons.js) do not belong on the new pages.
+      card.querySelectorAll(".casora-looklink, .casora-plink").forEach((x) => x.remove());
+      // A section switch (bell, scenes) folds or greys the card in the inspector: here the page draws itself again.
+      if (sw) sw.addEventListener("click", () => setTimeout(() => { if (self._csOpen) self._csRender(); }, 0));
+      if (b.sub) {
+        let mine = false;
+        [...card.children].forEach((c) => {
+          if (c.classList.contains("subtitle")) { mine = c.dataset.sub === b.sub; c.remove(); return; }
+          if (c.classList.contains("togglecard") || c.classList.contains("cdesc")) return;
+          if (!mine) c.remove();
+        });
+      }
+      if (b.keys) {
+        [...card.children].forEach((c) => {
+          if (!c.classList.contains("subcard")) return;
+          const rows = [...c.querySelectorAll(":scope > .row[data-key]")];
+          if (!rows.length) return;
+          const lastGone = !b.keys.includes(rows[rows.length - 1].dataset.key);
+          rows.forEach((r) => { if (!b.keys.includes(r.dataset.key)) r.remove(); });
+          const next = c.nextElementSibling;
+          if (lastGone && next && next.classList.contains("hint")) next.remove();
+          if (!c.querySelector(".row")) c.remove();
+        });
+      }
+      // The "Add a field" button comes a beat later (microtask): it belongs to the whole section, keep it only
+      // where the whole section is shown.
+      if (b.sub || b.keys) queueMicrotask(() => card.querySelectorAll(":scope > .fieldadd").forEach((x) => x.remove()));
     };
     // The block title already names it: a first group heading with the same words goes.
     // (Headings may still be English here when the page translates after drawing.)
@@ -1035,15 +1132,18 @@
       box.appendChild(head);
       host.appendChild(box);
       const cs = this._cs;
-      if (b.sec || b.updates) {
+      if (b.updates) {
         const list = this._flowGroup(box);
-        // Where it leads, in the words of the section: "Controls › Tiles".
-        const sec = b.sec && (I().SECTIONS || []).find((x) => x.group === "rooms" && x.label === b.sec);
-        const sub = sec && b.sub && (sec.subs || []).find((x) => x.id === b.sub);
-        const where = sec ? [t(sec.title || sec.label), sub && sub.label ? t(sub.label) : null].filter(Boolean).join(" › ") : null;
-        this._flowRow(list, { title: b.sec ? t("Open on this dashboard") : t("Open updates"), sub: where,
-          detail: b.sec ? t("Only this dashboard") : undefined, detailTone: b.sec ? "cs-dash" : undefined,
-          chevron: true, onTap: () => this._csNeuLink(tile, b) });
+        this._flowRow(list, { title: t("Open updates"), chevron: true, onTap: () => this._csNeuLink(tile, b) });
+        return;
+      }
+      if (b.sec) {
+        // Applies only here: said on the block, where the eye already is.
+        head.querySelector("b").appendChild(el("span", "rdetail cs-dash cn-only", t("Only this dashboard")));
+        const card = this._csDashCard(b.sec);
+        if (!card) { box.appendChild(el("p", "cs-lede", t("Open a dashboard in the Studio to change this."))); return; }
+        trimCard(this, card, b);
+        box.appendChild(card);
         return;
       }
       if (b.page === "design") {
@@ -1309,6 +1409,93 @@
       if (inp.value) find();
     };
 
+    // Unsaved settings when leaving: save, discard or stay. "save" | "discard" | "back".
+    P._csAskUnsaved = async function () {
+      const res = await this._ask({
+        title: t("Save your changes?"),
+        message: t("Some changes are not saved yet. Discard takes back everything not saved, also on this dashboard."),
+        confirmLabel: t("Save"), altLabel: t("Discard"), cancelLabel: t("Back"),
+      });
+      return res === true ? "save" : res && res.alt ? "discard" : "back";
+    };
+    // Throw away every unsaved change: the drafts of the settings (read again) and this dashboard's edits (read again
+    // from Home Assistant, without offering the local copy back).
+    P._csDiscardAll = async function () {
+      const cs = this._cs;
+      if (cs) { cs.loaded = false; cs.err = null; await this._csLoad(); }
+      if (this._state && this._isDirty && this._isDirty()) {
+        this._discardDraft();
+        await this._load();
+      } else if (this._state && typeof this._dropDraft === "function") {
+        // Changed and changed back: a local copy written in between is not offered later.
+        this._dropDraft();
+      }
+      this._csDashTouched = false;
+      this._csRepaint();
+    };
+    // Ask, then act. true = go on, false = stay.
+    P._csLeaveOk = async function () {
+      if (!this._csLeaveDirty()) return true;
+      if (this._csAsking) return false;
+      this._csAsking = true;
+      try {
+        const r = await this._csAskUnsaved();
+        if (r === "back") return false;
+        if (r === "save") return !!(await this._csSave());
+        await this._csDiscardAll();
+        return true;
+      } catch (e) {
+        this._status((e && e.message) || String(e), "err");
+        return false;
+      } finally {
+        this._csAsking = false;
+      }
+    };
+    const done = P._done;
+    P._done = async function () {
+      if (this._csLeaveDirty() && !(await this._csLeaveOk())) return undefined;
+      return done.apply(this, arguments);
+    };
+    const leaveOk = P._leaveStudioOk;
+    P._leaveStudioOk = async function () {
+      if (this._csLeaveDirty()) return this._csLeaveOk();
+      return leaveOk.apply(this, arguments);
+    };
+    // Switching dashboards (title menu, dashboard list): the switch already set the new address; ask first.
+    const load = P._load;
+    P._load = async function () {
+      const from = this._stateUrl, to = this._dashUrl;
+      if (from && to && from !== to && this._state && this._csLeaveDirty() && !this._csSwitching) {
+        this._setDash(from);
+        this._csSwitching = true;
+        let ok = false;
+        try { ok = await this._csLeaveOk(); } finally { this._csSwitching = false; }
+        if (!ok) { if (typeof this._remember === "function") this._remember(from); return false; }
+        this._setDash(to);
+        if (typeof this._remember === "function") this._remember(to);
+      }
+      this._csLoadingDash = true;
+      try { return await load.apply(this, arguments); } finally {
+        this._csLoadingDash = false;
+        this._csDashTouched = false;
+      }
+    };
+    // A change to the dashboard while a page of the new structure is open belongs to the bar.
+    const markDirty = P._markDirty;
+    P._markDirty = function () {
+      const before = this._lastPrint;
+      const r = markDirty.apply(this, arguments);
+      if (this._csOpen && !this._csLoadingDash && /^n-/.test(String(this._csPage || "")) && this._lastPrint !== before && before !== undefined) this._csDashTouched = true;
+      // A field may change without an event the bar listens to (a menu picks on mousedown, a slider writes a beat
+      // after the last move): the bar follows every change of the dashboard.
+      if (this._csOpen && this._lastPrint !== before && typeof this._csBar === "function") this._csBar();
+      return r;
+    };
+    const resetUndo = P._resetUndo;
+    if (typeof resetUndo === "function") {
+      P._resetUndo = function () { this._csDashTouched = false; return resetUndo.apply(this, arguments); };
+    }
+
     // Update the save bar and the dot in the sidebar.
     // "Save settings" instead of "Save": "Done" saves the dashboard, this button only
     // the settings for all dashboards (user test: three similar-sounding ways to save).
@@ -1321,6 +1508,7 @@
       });
       this.shadowRoot.querySelectorAll(".cs-state").forEach((s) => {
         s.textContent = dirty ? t("Unsaved changes") : t("Applies to all dashboards");
+        s.dataset.dash = dashSetDirty(this) ? "1" : "";
       });
       // No bar without changes; while saving it stays until the end.
       this.shadowRoot.querySelectorAll(".cs-bar").forEach((b) => {
@@ -1822,6 +2010,14 @@
       wrap.appendChild(bar);
       pane.replaceChildren(wrap);
       this._csFill(body, page.id, () => this._csRender());
+      // Drawing a dashboard section (new structure) ran the Studio's after-render steps for the home room: run them
+      // again for the real room and selection, and keep the inspector's own head hidden.
+      if (this._csHarvested) {
+        this._csHarvested = false;
+        if (typeof this._bApply === "function") this._bApply();
+        if (typeof this._bRoomsPaint === "function") this._bRoomsPaint();
+      }
+      if (head) [...head.children].forEach((c) => { if (!c.classList.contains("cs-head")) c.style.display = "none"; });
       pane.scrollTop = keep;
       this._csRefocus(pane, page.id);
       this._csBar();
@@ -1922,6 +2118,14 @@
 
     const renderForm = P._renderForm;
     P._renderForm = function () {
+      // Drawing one section for a settings page (_csDashCard): only the Studio's own drawing.
+      if (this._csHarvesting) return renderForm.apply(this, arguments);
+      // A page of the new structure shows dashboard sections itself: redraw it instead of the inspector (the
+      // inspector would replace the page and lose its scroll position).
+      if (this._csOpen && !this._csLeaving && /^n-/.test(String(this._csPage || ""))) {
+        this._csRender();
+        return undefined;
+      }
       const r = renderForm.apply(this, arguments);
       if (this._csOpen && !this._csLeaving) this._csRender();
       else if (this._hubBackTo) this._csHubDecorate();

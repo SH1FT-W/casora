@@ -2918,7 +2918,6 @@
     "Whether Casora looks for old Hemma dashboards to take over.": "Ob Casora nach alten Hemma-Dashboards sucht, um sie zu übernehmen.",
     "Which calendars the calendar tiles show, with name and color.": "Welche Kalender die Kalender-Kacheln zeigen, mit Name und Farbe.",
     "Top bar and badges": "Kopfzeile und Badges",
-    "Open on this dashboard": "Auf diesem Dashboard öffnen",
     "Back to the previous settings": "Zurück zu den bisherigen Einstellungen",
     "Search at the top, rooms by category, how soft the room photo is, tile size.": "Suche oben, Räume nach Kategorien, wie weich das Raumfoto ist, Kachelgröße.",
     "Waste days, doors and windows, scenes, music and calendars.": "Abfuhrtage, Türen und Fenster, Szenen, Musik und Kalender.",
@@ -2946,7 +2945,12 @@
     "Scenes Casora should never offer.": "Szenen, die Casora nie anbieten soll.",
     "Hold and sort tiles": "Kacheln halten und sortieren",
     "What the windows of Home Assistant itself show: logbook, history, attributes.": "Was die Fenster von Home Assistant selbst zeigen: Logbuch, Verlauf, Attribute.",
-    "Gas stations nearby in the car window: price, distance, open or closed.": "Tankstellen in der Nähe im Auto-Fenster: Preis, Entfernung, offen oder zu."
+    "Gas stations nearby in the car window: price, distance, open or closed.": "Tankstellen in der Nähe im Auto-Fenster: Preis, Entfernung, offen oder zu.",
+    "Open a dashboard in the Studio to change this.": "Öffne im Studio ein Dashboard, um das zu ändern.",
+    "The dashboard could not be saved. Your changes are still here.": "Das Dashboard ließ sich nicht speichern. Deine Änderungen sind noch da.",
+    "Show scenes on this dashboard": "Szenen auf diesem Dashboard zeigen",
+    "Save your changes?": "Änderungen speichern?",
+    "Some changes are not saved yet. Discard takes back everything not saved, also on this dashboard.": "Manches ist noch nicht gespeichert. „Verwerfen“ nimmt alles Ungespeicherte zurück, auch auf diesem Dashboard."
   },
   "patterns": [
     [
