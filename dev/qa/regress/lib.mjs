@@ -249,9 +249,13 @@ export async function fakeStates(pg, patch, { sticky = false } = {}) {
     const ha = document.querySelector('home-assistant');
     const hass = ha.hass;
     if (sticky && typeof ha._updateHass === 'function') {
+      // Sticky patches add up: a later one must not drop an earlier (r376: fake locks vanished as „Gerät fehlt“
+      // when a real state_changed came after the second patch).
+      ha.__qaSticky = { ...(ha.__qaSticky || {}), ...p };
+      const all = ha.__qaSticky;
       const apply = (st) => {
         const out = { ...st };
-        for (const [id, v] of Object.entries(p)) {
+        for (const [id, v] of Object.entries(all)) {
           if (v === null) { delete out[id]; continue; }
           const old = out[id] || { entity_id: id, attributes: {}, context: { id: 'qa' } };
           out[id] = { ...old, state: v.state, attributes: { ...old.attributes, ...(v.attributes || {}) },
