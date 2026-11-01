@@ -283,7 +283,8 @@
       + '.hs .hcal-e{background:' + row + ';border-radius:' + rad + ';padding:16px;font-size:14px;font-weight:500;color:' + sub + ';}'
       /* Tage unter „Demnächst“ (03.10.2026): untergeordnete Zwischenzeilen wie in der iOS-Kalenderliste,
          nicht in Versalien wie die Abschnitts-Überschrift; der erste Tag rückt an die Überschrift heran. */
-      + '.hs .hcal-dh{font-size:13px;font-weight:600;letter-spacing:-0.01em;text-transform:none;color:' + sub + ';padding:14px 8px 6px;}'
+      // The day's word under „Demnächst“ in line with the section heading above it (16 in, §6).
+      + '.hs .hcal-dh{font-size:13px;font-weight:600;letter-spacing:-0.01em;text-transform:none;color:' + sub + ';padding:14px 16px 6px;}'
       + '.hs .hcal-dh:first-child{padding-top:0;}'
       + '.hs .hcal-wd{background:' + row + ';border-radius:' + rad + ';padding:12px 16px;margin:0;transition:background-color .18s ease;}'
       + '.hs .hcal-wd + .hcal-wd{border-top:none;margin-top:8px;}'
