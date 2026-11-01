@@ -9,12 +9,17 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 A big round from your feedback: switches and colour in the popups, a clearer history, a faster start and a calm update prompt.
 
 ### New
+- **Big camera picture:** tap the camera picture in its popup to see it big over the popup (live view keeps running); the minimize button, Esc, swipe down or back return to the preview.
 - **Update prompt on the dashboard:** when a new Casora version is out, admins see one calm popup a few seconds after the dashboard opens, with its highlights and "Install", "Later" (asks again in 24 hours) or "Skip this version". Turn it off per user in the Studio under Updates ("Update prompt on open").
 - **Switches in popups (#105):** on/off entities (fridge modes such as SuperFrost, plugs, aquarium gear, thermostat options, camera, doorbell and network switches, device page) show a switch you can tap instead of the text "On"/"Off".
 - **Seek in the media popup:** the progress bar has a knob and can be moved (drag, tap or arrow keys) for players that support seeking.
 - **Mixed light colours:** in a room with lamps in different colours the ring blends their colours.
 
 ### Changed
+- **Weather popup on desktop and tablet:** the 48 h outdoor temperature chart sits under the dial, the next hours under the 7 days.
+- **3D printer on desktop and tablet:** the camera sits in the left column under the dial, with the AI button below it.
+- **More (n) on the dial:** dials with more than four choices call the last moon "More (n)" and its menu lists only the choices that are not already moons; the menu always fits inside the popup.
+- **Camera pictures without frame:** camera, doorbell, Frigate and game pictures stand free without the extra frame around them.
 - **Faster start:** the optional settings file is only fetched when it exists and is then cached, modules no longer wait for the settings, the phone shows its rooms as soon as the core modules are ready, Casora's core scripts load in parallel with Home Assistant's frontend, the layout script no longer searches the whole page (about half the full page searches on desktop), the phone's start page loads only the photo it shows, and the Studio loads its font once and all scripts from the cache.
 - **History page (#104):** active states get a filled dot and idle ones an empty ring, the band only colours the active time, the ring stays empty while off, and every row says how long that state lasted ("for 1 h 32 min"). Applies to lights, switches, doors, motion, persons, locks and other on/off entities.
 - **Climate header in words (#103):** the line under "Climate" says the comfort in words in every view (for example "Comfortable · slightly humid") and no longer repeats a reading from the dial or the list.
@@ -30,6 +35,7 @@ A big round from your feedback: switches and colour in the popups, a clearer his
 - **Car popup:** range and tank or battery only in the dial, not again in the list.
 
 ### Fixed
+- **Window, door and lock pages (#106):** no more two different "since" times, the label above the title shows the room instead of repeating the title, and the history and its 24 h figures always end on the current state, also when Home Assistant's history lags behind.
 - **AI update check:** it now fetches release notes itself (from the update, its GitHub releases or its changelog page) instead of answering "Unclear" for almost every update; without notes it judges by the version jump.
 - **VOC index sensors (#95):** sensors without unit or device class can be picked in the climate badge and are read on the index scale (100 = usual indoor air); CO2, PM and CO sensors without unit are found by their name too.
 - **Scenes in the light popup:** a scene is no longer shown as active once a lamp in the room was changed after it.
