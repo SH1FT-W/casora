@@ -11,7 +11,7 @@
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ago = function (ts) {
     var t = typeof ts === 'number' ? ts : Date.parse(ts); if (isNaN(t)) return null;
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var nameOf = function (id, states, room) {

@@ -30,7 +30,7 @@
   };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return null;
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     // Kalendertage statt 24-h-Blöcke (#11): vor 36 Stunden ist „vor 1 T.“, nicht „vor 2 T.“.
     var dd = Math.round((new Date(new Date().setHours(0, 0, 0, 0)) - new Date(new Date(t).setHours(0, 0, 0, 0))) / 86400000);
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 || dd < 1 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + dd + ' T.';

@@ -8,6 +8,8 @@ const NOW = new Date(2026, 9, 6, 21, 0, 0).getTime();   // heute 21:00 Ortszeit
 const RealDate = Date;
 class FakeDate extends RealDate { constructor(...a) { super(...(a.length ? a : [NOW])); } static now() { return NOW; } static parse(x) { return RealDate.parse(x); } }
 const H = 3600000;
+// The modules' minute counts go through window.casoraAgoMin (casora-core.js); without it they round as before.
+globalThis.window = globalThis.window || {};
 const pick = (src, re) => { const m = src.match(re); assert.ok(m, String(re)); return m[0]; };
 
 const core = new Function('Date', pick(read('casora-core.js'), /  function ago\(ms\) \{[\s\S]*?\n  \}\n/) + ' return ago;')(FakeDate);

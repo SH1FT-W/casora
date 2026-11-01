@@ -71,7 +71,7 @@
   };
   // „vor 2 Min.“
   P.ago = function (ms, now) {
-    var m = Math.round(((now || Date.now()) - ms) / 60000);
+    var m = (window.casoraAgoMin ? window.casoraAgoMin((now || Date.now()) - ms) : Math.round(((now || Date.now()) - ms) / 60000));
     if (m < 1) return 'gerade eben';
     if (m < 60) return 'vor ' + m + ' Min.';
     var h = Math.round(m / 60);

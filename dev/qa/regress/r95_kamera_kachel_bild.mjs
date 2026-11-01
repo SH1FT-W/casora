@@ -208,6 +208,7 @@ for (const mobile of [false, true]) {
 
   // 6) Abstand aus der Kachel (refresh_s 5): in 11 s mindestens zwei neue Abrufe, Text ruhig „Aktuell“.
   //    Liefert die Schnappschuss-Kamera nicht mehr, wird ohne neues Bild das Alter in Warnfarbe angezeigt.
+  //    Under a minute that age reads „gerade eben“ (owner, 01.11.2026; was „vor 26 s“).
   if (!mobile) {
     const n0 = S[R3M].n;
     await page.waitForTimeout(11000);
@@ -215,7 +216,7 @@ for (const mobile of [false, true]) {
     await check(`${tag}: Abstand 5 s aus der Kachel-Einstellung`, S[R3M].n - n0 >= 2 && f && /Aktuell/.test(f.text) && !f.warn,
       { ...f, abrufe: S[R3M].n - n0 });
     S[R3M].fail = 1000;
-    const g = await until(page, async () => { const l = await look(page, R3); return { ok: !!(l && l.shown && /vor \d+ s/.test(l.text) && l.warn), ...l }; }, 26000);
+    const g = await until(page, async () => { const l = await look(page, R3); return { ok: !!(l && l.shown && /gerade eben|vor \d+ Min\./.test(l.text) && l.warn), ...l }; }, 26000);
     await check(`${tag}: hängende Kamera zeigt das Alter in Warnfarbe`, g.ok && !/Live|Aktuell/.test(g.text || ''), g);
     S[R3M].fail = 0;
     const h = await until(page, async () => { const l = await look(page, R3); return { ok: !!(l && /Aktuell/.test(l.text) && !l.warn), ...l }; }, 35000);

@@ -150,7 +150,7 @@
   // Elapsed time for the status line ("seit 5 Min.", "seit 3 Std.", "seit 2 Tagen").
   var since = function (ts) {
     var t = Date.parse(ts); if (!isFinite(t)) return null;
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     if (m < 1) return 'gerade eben';
     if (m < 60) return 'seit ' + m + ' Min.';
     var h = Math.round(m / 60);

@@ -1293,7 +1293,8 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     if (!isFinite(ms)) return '';
     if (window.casoraCamFresh(ms, refreshS)) return 'Aktuell';
     var s = Math.max(0, Math.floor(ms / 1000));
-    if (s < 60) return 'vor ' + s + ' s';
+    // Under a minute „gerade eben“, as every relative time (owner, 01.11.2026; was „vor 40 s“).
+    if (s < 60) return 'gerade eben';
     var m = Math.floor(s / 60);
     if (m < 60) return 'vor ' + m + ' Min.';
     if (m < 1440) return 'vor ' + Math.floor(m / 60) + ' Std.';
@@ -8068,7 +8069,7 @@ window.casoraMenuGlass = {
       if (C0.n >= 20 && (C0.m[Math.floor(lc.getTime() / 60000)] || 0) >= C0.n / 5) return '';
       var loc = window.casoraLocale ? window.casoraLocale() : 'de-DE', now = new Date();
       // §3: under an hour „vor 11 Min.“, else „Seit 14:42“.
-      var mins = Math.round((now - lc) / 60000);
+      var mins = now - lc < 0 ? -1 : window.casoraAgoMin ? window.casoraAgoMin(now - lc) : Math.round((now - lc) / 60000);
       if (mins >= 0 && mins < 60) { var ago0 = mins < 1 ? 'Gerade eben' : 'Vor ' + mins + ' Min.'; return window.casoraTr ? window.casoraTr(ago0) : ago0; }
       var since = 'Seit ' + (lc.toDateString() === now.toDateString() ? lc.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' })
         : lc.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' }));
@@ -13586,6 +13587,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
   /* Kalendertage seit „vor m Minuten“ (#11): vor 36 Stunden ist gestern, nicht „vor 2 Tagen“.
      Für alle „vor X T.“/„vor X Tagen“ der Module (statt Math.round(m / 1440)). */
+  /* Whole minutes for a relative time („vor 2 Min.“): under one minute 0 – „gerade eben“ (owner, 01.11.2026), also
+     where rounding said „vor 1 Min.“ from 30 s on; from one minute on rounded as before. ms: time since, in ms. */
+  window.casoraAgoMin = function (ms) {
+    var d = Number(ms);
+    return d >= 60000 ? Math.round(d / 60000) : 0;
+  };
   window.casoraDaysAgo = function (m) {
     var now = new Date(Date.now()), then = new Date(Date.now() - Math.max(0, Number(m) || 0) * 60000);
     return Math.max(1, Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate())

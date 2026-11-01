@@ -485,7 +485,7 @@
         return { key: r.key, icon: self._roomIcon(r), label: r.label || r.name, on: cur === r.key, run: function () { self._set(r.key); } };
       });
       /* Szenen: nur die Szenen aus window.casoraNavScenes (gemeinsame Liste oben), ohne "Alle Szenen" (24.09.2026). */
-      var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = Math.max(0, Math.round((Date.now() - q) / 60000));
+      var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - q) : Math.max(0, Math.round((Date.now() - q) / 60000)));
         return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
       var list = [];
       /* Auswahl der Szenen-Badge (Desktop/Tablet), 1.0.5: das Studio schreibt sie beim Speichern an
@@ -663,7 +663,7 @@
       /* Zuletzt aktiv inkl. Status-Schalter der Szene (#11), ohne neuen Szenen-Kern wie bisher. */
       var t = SC && SC.lastActive ? (SC.lastActive(id, S) || NaN) : Date.parse(st && st.state), tr = window.casoraTr || function (x) { return x; };
       if (!isFinite(t)) return tr('noch nie');
-      var m = Math.round((Date.now() - t) / 60000);
+      var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.round((Date.now() - t) / 60000));
       if (m < 1) return tr('gerade eben');
       if (m < 60) return tr('vor ' + m + ' Min.');
       var h = Math.round(m / 60);

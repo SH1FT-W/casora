@@ -20,7 +20,7 @@
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var OPEN = window._casoraUpdAiOpen = window._casoraUpdAiOpen || {};
@@ -878,7 +878,7 @@
       // Trefferfläche 44 px: unsichtbarer Rand (3 px, Fläche nur im Innern), Lage unverändert.
       + 'border:3px solid transparent;background-clip:padding-box;margin-bottom:-3px;'
         + (has ? 'color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));background:var(--casora-popup-ui-action-tint, rgba(0,195,208,0.14));' : 'color:#000;background:var(--casora-color-teal, #00C3D0);') + '">' + (has ? 'Neu auswerten' : 'Jetzt auswerten') + '</span>';
-      var ago = function (ts) { var t = Date.parse(ts); if (isNaN(t)) return ''; var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+      var ago = function (ts) { var t = Date.parse(ts); if (isNaN(t)) return ''; var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
         return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
       var hcHead = '<div style="font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, ' + T.ink + ');padding:0 4px 8px;display:flex;align-items:center;gap:6px;">'
         + ic('mdi:creation', 16, 'var(--casora-color-teal, #00C3D0)') + '<span style="flex:1 1 auto;text-align:left;">Heizungs-Coach</span>'
@@ -1965,7 +1965,7 @@
   var fmtN = function (n, d) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return null;
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var DOORS = [['tur_vorne_links', 'Fahrertür'], ['tur_vorne_rechts', 'Beifahrertür'], ['tur_hinten_links', 'Tür hinten links'], ['tur_hinten_rechts', 'Tür hinten rechts'], ['heckklappe', 'Heckklappe'], ['motorhaube', 'Motorhaube']];
@@ -2527,7 +2527,7 @@
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var deep = function (root, sel, out) {
@@ -2686,7 +2686,7 @@
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var deep = function (root, sel, out) {
@@ -2786,7 +2786,7 @@
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var deep = function (root, sel, out) {
@@ -3134,7 +3134,7 @@
     return e && e.v != null ? e : null;
   };
   var agoMs = function (t) {
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   B.ago = agoMs;
@@ -3381,7 +3381,7 @@
         + ((a.punkte || []).length ? li(a.punkte, T.ink2) : '')
         + ((a.tipps || []).length ? '<div style="font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + T.ink + ';margin:12px 0 0;">Tipps</div>' + li(a.tipps, T.ink) : '');
       else body = '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink2 + ';white-space:normal;">Claude prüft Service, Verschleißteile nach Kilometern und die Akku-Pflege passend zur Jahreszeit.</div>';
-      var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = Math.max(0, Math.round((Date.now() - q) / 60000)); return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
+      var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - q) : Math.max(0, Math.round((Date.now() - q) / 60000))); return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
       var svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_ebike_check', { entities: B.ids(states, entity) }))) + '"';
       /* Blueprint v2: the shared AI card (✦ heading, verdict, text, time, „Neu prüfen“ – main action in the device colour). */
       if (SF && UI.kiCard) {
@@ -3526,7 +3526,7 @@
   var RED = 'var(--casora-popup-ui-bad, #FF453A)', ORG = 'var(--casora-popup-ui-warn, #FF9F0A)';
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var agoMs = function (t) {
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.'
       : (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) === 1 ? 'gestern' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' Tagen';
   };
@@ -3835,7 +3835,7 @@
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var tr = function (x) { return (window.casoraTr || function (y) { return y; })(x); };
   var agoMs = function (t) {
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     if (m < 1) return 'gerade eben';
     if (m < 60) return 'vor ' + m + ' Min.';
     if (m < 1440) return 'vor ' + Math.round(m / 60) + ' Std.';
@@ -4158,7 +4158,7 @@
   };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     if (m < 1) return tr('gerade eben');
     if (m < 60) return tr('vor ' + m + ' Min.');
     if (m < 1440) return tr('vor ' + Math.round(m / 60) + ' Std.');
