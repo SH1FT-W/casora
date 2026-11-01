@@ -4301,6 +4301,11 @@
     + '.lps-row.sel,.lps-row.sel.on,.lps-row.sel:hover{cursor:default;background:var(--casora-soft-seg-on,var(--casora-entity-background-active,rgba(255,253,249,1)));}'
     + '.lps-row.sel .lps-tx b{color:var(--casora-soft-seg-on-ink,var(--casora-entity-name-active,rgba(46,39,33,0.94)));}'
     + '.lps-row.sel .lps-tx small{color:var(--casora-entity-state-active-color,rgba(132,88,56,0.96));}'
+    // Off on the light fill: icon and switch in the ink's tint, else they vanish (light-on-light in dark mode).
+    + '.lps-row.sel:not(.on) .lps-ic{background:color-mix(in srgb, var(--casora-soft-seg-on-ink,rgba(46,39,33,0.94)) 10%, transparent);}'
+    + '.lps-row.sel:not(.on) .lps-ic .lps-g{color:color-mix(in srgb, var(--casora-soft-seg-on-ink,rgba(46,39,33,0.94)) 60%, transparent);}'
+    + '.lps-row.sel:not(.on) .lps-sw{background:color-mix(in srgb, var(--casora-soft-seg-on-ink,rgba(46,39,33,0.94)) 22%, transparent);}'
+    + '.lps-row.sel:not(.on) .lps-sw::after{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);}'
     + '@media (max-width:760px){.lps-cols,.lps-grid{grid-template-columns:minmax(0,1fr);}.lps-cols{gap:22px;}.lps-t{font-size:24px;margin-top:12px;}'
     +   '.lps-ring{width:66px;height:66px;}.lps-ring .lps-g{width:29px;height:29px;}}'
     + '@media (prefers-reduced-motion:reduce){.lps-r *{transition:none!important;}}'

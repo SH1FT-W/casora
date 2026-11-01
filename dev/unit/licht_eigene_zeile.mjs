@@ -45,3 +45,6 @@ const house = S.render({ gid: 'light.all', init: 1, rooms: [
 ] }, 'body', states, hass);
 assert.deepEqual(opens(house), ['light.c'], 'room with one lamp in the house popup: the lamp opens');
 console.log('ok licht_eigene_zeile');
+// The selected row while the lamp is off: icon and switch get the ink's tint so they stay visible on the light fill.
+assert.ok(/\.lps-row\.sel:not\(\.on\) \.lps-sw\{background:color-mix/.test(one) && /\.lps-row\.sel:not\(\.on\) \.lps-ic\{background:color-mix/.test(one), 'off selected row: icon and switch visible');
+console.log('ok licht_eigene_zeile (off on light fill)');
