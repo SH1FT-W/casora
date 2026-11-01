@@ -7915,7 +7915,7 @@ window.casoraMenuGlass = {
       var word = window._casoraRawWord ? window._casoraRawWord(cur.state) : cur.state;
       if (word !== cur.state) txt = window.casoraTr ? window.casoraTr(word) : word;
       else if (txt === 'Ein') txt = 'An'; // HA's German „Ein“ for on – the word list says „An“ (as the stage)
-      else if (txt === cur.state && /^[a-z][a-z0-9_]*$/.test(txt)) { txt = this._sinceText(cur); if (!txt) return; }
+      else if (txt === cur.state && /^(?:[a-z][a-z0-9_]*|[A-Z][A-Z0-9_]{2,})$/.test(txt)) { txt = this._sinceText(cur); if (!txt) return; } // also a code like „PRE“ (football)
       this._headerStatus.innerHTML = '<b>' + window.casoraEsc(txt) + '</b>';
       this._headerStatus.hidden = false;
       if (again) this._dedupeHead();

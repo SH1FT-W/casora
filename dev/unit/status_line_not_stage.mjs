@@ -40,7 +40,7 @@ const st = core.slice(core.indexOf('    _sinceText(cur) {'), core.indexOf('    _
 assert.ok(/norm\(mainTxt\) !== norm\(stage\)/.test(dd) && /this\._sinceText\(/.test(dd) && /var since = 'Seit ' \+/.test(st), 'frame: same text → „Seit …“');
 // A state HA has no word for (enum sensor without translations: „failed“) never stands raw in the head (final review).
 const fb = core.slice(core.indexOf('    _headFallback(again) {'), core.indexOf('    _sinceText(cur) {'));
-assert.ok(/txt === cur\.state && \/\^\[a-z\]\[a-z0-9_\]\*\$\/\.test\(txt\)\) \{ txt = this\._sinceText\(cur\)/.test(fb) && /_casoraRawWord\(cur\.state\)/.test(fb),
+assert.ok(/txt === cur\.state && \/\^\(\?:\[a-z\]\[a-z0-9_\]\*\|\[A-Z\]\[A-Z0-9_\]\{2,\}\)\$\/\.test\(txt\)\) \{ txt = this\._sinceText\(cur\)/.test(fb) && /_casoraRawWord\(cur\.state\)/.test(fb),
   'frame: raw state word → Casora\'s word („ready“ → „Bereit“), else „Seit …“');
 assert.ok(/this\._headerStatus\.hidden = !this\._headerStatus\.textContent\.trim\(\);\n      this\._dedupeHead\(\);/.test(core), 'mirrored line compared');
 assert.ok(/if \(again\) this\._dedupeHead\(\);/.test(core), 'fallback compared');
