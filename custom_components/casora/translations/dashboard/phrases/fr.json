@@ -2687,7 +2687,10 @@
   "1 WLAN an": "1 Wi-Fi actif",
   "Ziel aller": "Toutes",
   "Ø Ziel": "Ø consigne",
-  "Lampe": "Lampe"
+  "Lampe": "Lampe",
+  "Vorhanden": "Présent",
+  "Fehlt": "Manquant",
+  "Ja": "Oui"
  },
  "patterns": [
   [

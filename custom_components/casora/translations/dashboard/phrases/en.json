@@ -2669,7 +2669,10 @@
   "1 WLAN an": "1 Wi-Fi on",
   "Ziel aller": "All rooms",
   "Ø Ziel": "Ø target",
-  "Lampe": "Light"
+  "Lampe": "Light",
+  "Vorhanden": "Present",
+  "Fehlt": "Missing",
+  "Ja": "Yes"
  },
  "patterns": [
   [

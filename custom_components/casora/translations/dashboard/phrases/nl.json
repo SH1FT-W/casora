@@ -2687,7 +2687,10 @@
   "1 WLAN an": "1 wifi aan",
   "Ziel aller": "Alle kamers",
   "Ø Ziel": "Ø doel",
-  "Lampe": "Lamp"
+  "Lampe": "Lamp",
+  "Vorhanden": "Aanwezig",
+  "Fehlt": "Ontbreekt",
+  "Ja": "Ja"
  },
  "patterns": [
   [

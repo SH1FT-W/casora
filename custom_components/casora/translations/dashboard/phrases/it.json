@@ -2687,7 +2687,10 @@
   "1 WLAN an": "1 Wi-Fi acceso",
   "Ziel aller": "Tutte",
   "Ø Ziel": "Ø obiettivo",
-  "Lampe": "Lampada"
+  "Lampe": "Lampada",
+  "Vorhanden": "Presente",
+  "Fehlt": "Manca",
+  "Ja": "Sì"
  },
  "patterns": [
   [

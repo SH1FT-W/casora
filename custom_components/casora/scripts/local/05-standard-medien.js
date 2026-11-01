@@ -1025,8 +1025,17 @@ window._hpMultiTap = function (ev, kind) {
     var two = acts.length && sib.length;
     if (acts.length) add('acts', UI.section('control', acts), 'l');
     if (sib.length) {
-      add('vals', '[[[ const ids = ' + JSON.stringify(sib) + '; const UI = window._casoraUI; '
+      // Detail round #16: rows without a value („Unbekannt“) stay out; a problem sensor without a device class
+      // („Wassertank leer“) says „OK“ or its own word („Leer“), not „An/Aus“.
+      add('vals', '[[[ const ids = ' + JSON.stringify(sib) + '.filter((e) => states[e] && !["unknown", "unavailable", ""].includes(states[e].state)); const UI = window._casoraUI; '
+        + 'if (!ids.length) return ""; '
         + 'return UI.section("state", ids.map((e) => { const s = states[e]; let v = s.state; try { v = window._casoraNiceState ? window._casoraNiceState(hass, s) : hass.formatEntityState(s); } catch (x) {} '
+        + 'const nm0 = String((hass.entities[e] && hass.entities[e].name) || s.attributes.friendly_name || ""); '
+        + 'const ev = s.attributes.device_class === "enum" && Array.isArray(s.attributes.options) && s.attributes.options.includes("present") && s.attributes.options.includes("off"); '
+        + 'const pw = !s.attributes.device_class || ev ? /(?:^|\\s)(leer|voll|fällig|fehler|störung|empty|full|due|error)(?:\\s|$)/i.exec(nm0) : null; '
+        + 'if (s.state === "off" && (pw || ev)) v = "OK"; '
+        + 'else if ((s.state === "on" || s.state === "present") && (pw || ev)) v = pw ? pw[1].charAt(0).toUpperCase() + pw[1].slice(1).toLowerCase() : "Ja"; '
+        + 'else if (s.state === "confirmed" && ev) v = "Bestätigt"; '
         + 'return { icon: e.startsWith("binary_sensor.") ? "mdi:checkbox-blank-circle-outline" : "mdi:gauge", iconTone: "rgba(255,255,255,0.18)", '
         + 'label: (hass.entities[e] && hass.entities[e].name) || s.attributes.friendly_name || e, value: v, entity: e }; })); ]]]', two ? 'r' : 'l');
     }

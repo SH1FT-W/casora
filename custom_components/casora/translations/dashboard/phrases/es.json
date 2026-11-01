@@ -2687,7 +2687,10 @@
   "1 WLAN an": "1 Wi-Fi encendido",
   "Ziel aller": "Todas",
   "Ø Ziel": "Ø objetivo",
-  "Lampe": "Lámpara"
+  "Lampe": "Lámpara",
+  "Vorhanden": "Presente",
+  "Fehlt": "Falta",
+  "Ja": "Sí"
  },
  "patterns": [
   [

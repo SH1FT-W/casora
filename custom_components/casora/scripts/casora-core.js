@@ -12949,7 +12949,7 @@ window.casoraMenuGlass = {
   // („ready“ → „Bereit“, review 2 DH-14). Anything else stays as the device wrote it.
   var RAW = { ready: 'Bereit', idle: 'Bereit', 'default': 'Standard', running: 'Läuft', paused: 'Pausiert', standby: 'Standby',
     error: 'Fehler', charging: 'Lädt', discharging: 'Entlädt', auto: 'Automatik', automatic: 'Automatik', manual: 'Manuell',
-    normal: 'Normal', none: 'Keine', home: 'Zuhause', away: 'Unterwegs', sleep: 'Schlafen', done: 'Fertig', finished: 'Fertig' };
+    normal: 'Normal', none: 'Keine', home: 'Zuhause', away: 'Unterwegs', sleep: 'Schlafen', done: 'Fertig', finished: 'Fertig', present: 'Vorhanden', absent: 'Fehlt' };
   window._casoraRawWord = function (t) {
     var k = String(t == null ? '' : t).trim();
     return Object.prototype.hasOwnProperty.call(RAW, k) ? RAW[k] : (Object.prototype.hasOwnProperty.call(RAW, k.toLowerCase()) && /^[a-z_]+$/i.test(k) && k === k.toLowerCase() ? RAW[k.toLowerCase()] : t);
