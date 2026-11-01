@@ -41,13 +41,17 @@ const keys = () => stable(page, () => {
   if (!pop) return null;
   const round = window.__pierce('.hp-b', pop.shadowRoot), pills = window.__pierce('.hh-pill', pop.shadowRoot);
   const caps = window.__pierce('.hp-cap span', pop.shadowRoot).map((s) => s.textContent.trim());
-  const list = round.length ? round.map((b, i) => ({ l: caps[i], on: b.classList.contains('on'), svc: !!b.getAttribute('data-casora-svc'),
+  // Popup v3: the keys are moons around the battery dial (label = aria-label, chosen = .on).
+  const moons = window.__pierce('.hui-moon', pop.shadowRoot).filter((b) => b.getBoundingClientRect().width > 0);
+  const list = moons.length ? moons.map((b) => ({ l: b.getAttribute('aria-label'), on: b.classList.contains('on'), svc: !!b.getAttribute('data-casora-svc'),
+    dim: b.getAttribute('aria-disabled') === 'true' }))
+    : round.length ? round.map((b, i) => ({ l: caps[i], on: b.classList.contains('on'), svc: !!b.getAttribute('data-casora-svc'),
     dim: b.getAttribute('aria-disabled') === 'true' }))
     : pills.map((b) => ({ l: b.textContent.trim(), on: b.classList.contains('pri'), svc: !!b.getAttribute('data-casora-svc'),
       dim: b.getAttribute('aria-disabled') === 'true' }));
   if (!list.length) return null;
   const txt = window.__pierce('div', pop.shadowRoot).map((d) => d.textContent).join(' ');
-  return { list, hint: /Energiesparen ist an|Power saving is on/.test(txt) };
+  return { list, hint: /Energiesparen ist an|Power saving is on|Tracker ist gerade nicht erreichbar|tracker cannot be reached/i.test(txt) };
 }, null, { max: 10000, quiet: 1000 });
 const key = (r, re) => r && r.list.find((k) => re.test(k.l || ''));
 
@@ -67,4 +71,5 @@ await check('light still on after another update', key(r, /Licht|Light/) && key(
 await fakeStates(page, { [LED]: { state: 'unavailable' }, [BUZ]: { state: 'unavailable' }, [LIVE]: { state: 'unavailable' } }, { sticky: true });
 r = await keys();
 await check('unavailable: keys dimmed, no action', r && r.list.length === 3 && r.list.every((k) => k.dim && !k.svc), r && r.list);
+await check('unavailable: one line says why', r && r.hint, r);
 await finish();

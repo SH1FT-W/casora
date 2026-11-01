@@ -12034,6 +12034,8 @@ window.casoraMenuGlass = {
     + '.hui-moon.go{background:var(--dl-col);color:color-mix(in srgb, var(--casora-popup-action-ink, rgba(46,34,20,.9)) 45%, black);}'
     + '.hui-moon.go .ic{color:inherit;}'
     + '.hui-moon.dng{background:transparent;box-shadow:inset 0 0 0 2px ' + S.ctl + ';color:var(--casora-color-red-text, var(--casora-color-red));}'
+    // A choice whose device cannot be reached (it.dis): greyed out and without an action (richtlinien §12 offline).
+    + '.hui-moon.dis{opacity:.5;cursor:default;box-shadow:none;}'
     + '.hui-moon.dng .ic{color:inherit;}'
     + '.hui-moon:active{transform:translate(-50%, -50%) scale(var(--casora-press-scale, .97));}'
     + '@media (hover:hover){.hui-moon:hover{transform:translate(-50%, -50%) scale(1.07);}}'
@@ -12080,8 +12082,8 @@ window.casoraMenuGlass = {
     var spec = it.svc ? (it.confirm ? Object.assign({}, it.svc, { confirm: it.confirm }) : it.svc) : null;
     var shown = it.short || it.text;
     if (it.menu) return moonMenuHtml(it, deg);
-    return '<div class="hui-moon' + (it.active ? ' on' : '') + (cls ? ' ' + esc(cls) : '') + moonWordCls(shown) + '" role="button" aria-label="' + esc(it.text) + '"'
-      + (it.short ? ' title="' + esc(it.text) + '"' : '')
+    return '<div class="hui-moon' + (it.active ? ' on' : '') + (it.dis ? ' dis' : '') + (cls ? ' ' + esc(cls) : '') + moonWordCls(shown) + '" role="button" aria-label="' + esc(it.text + (it.dis && it.sub ? ' – ' + it.sub : '')) + '"'
+      + (it.dis ? ' aria-disabled="true"' : '') + (it.short ? ' title="' + esc(it.text) + '"' : '')
       + (cls ? '' : ' aria-pressed="' + (it.active ? 'true' : 'false') + '"')
       + (spec ? ' data-casora-svc="' + esc(JSON.stringify(spec)) + '"' : '')
       + (it.page ? ' data-casora-page="' + esc(it.page) + '"' : '') + (it.value != null ? ' data-v="' + esc(it.value) + '"' : '')
