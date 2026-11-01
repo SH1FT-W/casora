@@ -390,9 +390,9 @@
         + '\n.casora-cam-tile { border-radius: var(--casora-popup-row-radius, 24px) !important; box-shadow: var(--casora-soft-cam-tile-shadow, 0 10px 24px -16px rgba(90,70,50,0.45)) !important; }'
         + '\n.cam-stream-mount { border-radius: var(--casora-soft-cam-radius, 28px) !important; box-shadow: var(--casora-soft-cam-shadow, 0 18px 40px -24px rgba(90,70,50,0.55)) !important; }'
         + '\n.cam-frame { max-height: 58vh; }'
-        /* v3 image stage (S5): the picture sits in the stage plate, which clips it concentric (32 − 20 = 12) – its own
-           radius 28 and drop shadow belonged to the free-standing picture and were cut off there (popup-raender). */
-        + '\n.hui-st-img .cam-stream-mount { border-radius: calc(var(--casora-v3-stage-radius, 32px) - var(--casora-v3-stage-pad, 20px)) !important; box-shadow: none !important; }'
+        /* v3 image stage (S5): the picture stands free on the stage (no plate) and is clipped to the popup row radius –
+           its own radius 28 and drop shadow belonged to the old free-standing picture and were cut off there (popup-raender). */
+        + '\n.hui-st-img .cam-stream-mount { border-radius: var(--casora-popup-row-radius, 24px) !important; box-shadow: none !important; }'
         /* Fix round 1 (B-06/B-18): error area warm anthracite instead of black, type as everywhere. */
         + '\n.cam-stream-mount { background: var(--casora-soft-cam-fail, #24211E) !important; }'
         + '\n.casora-cam-offline { background: transparent !important; font-family: var(--primary-font-family, system-ui) !important; }'

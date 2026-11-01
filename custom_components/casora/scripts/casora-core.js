@@ -12388,7 +12388,26 @@ window.casoraMenuGlass = {
     + '.hui-st-facts{display:grid;grid-template-columns:repeat(var(--n,1),minmax(0,1fr));gap:12px;}'
     + '.hui-st-facts b{display:block;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
     + '.hui-st-facts small{display:block;font-size:13px;font-weight:500;color:' + S.sub + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
-    + '.hui-st-img{border-radius:calc(var(--casora-v3-stage-radius, 32px) - var(--casora-v3-stage-pad, 20px));overflow:hidden;}'
+    // S5 (camera, doorbell, Frigate, game picture): the picture is free – no plate, no padding around it; it keeps its
+    // own rounded corners (popup row radius) over the content width, the controls sit under it without a plate.
+    + '.hui-stage.s5{background:none;padding:0;border-radius:0;}'
+    + '.hui-st-img{border-radius:var(--casora-popup-row-radius, 24px);overflow:hidden;}'
+    // S5 big view (o.zoom): tapping the picture lifts it into the top layer (popover, nothing is moved, so a live
+    // stream keeps running) over a dark backdrop, fitted to the screen in its own aspect ratio; × / Esc / swipe down /
+    // back return it to the popup.
+    + '.hui-st-img[data-casora-zoom]{cursor:zoom-in;-webkit-tap-highlight-color:transparent;}'
+    + '.hui-st-img[data-casora-zoom]:focus-visible{outline:2px solid ' + T.ink + ';outline-offset:2px;}'
+    + '.hui-st-zx{display:none;}'
+    + '.hui-st-img.big{position:fixed;inset:0;z-index:2147483000;width:auto;height:auto;max-width:none;max-height:none;margin:0;border:0;'
+    +   'border-radius:0;box-sizing:border-box;padding:max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));'
+    +   'display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgb(0,0,0);cursor:default;overscroll-behavior:contain;touch-action:none;}'
+    + '.hui-st-img.big::backdrop{background:transparent;}'
+    + '.hui-st-img.big > :not(.hui-st-zx){flex:none;width:min(100%, calc((100vh - 32px) * var(--ar, 1.7778)));width:min(100%, calc((100dvh - 32px) * var(--ar, 1.7778)));}'
+    + '.hui-st-img.big .hui-st-zx{display:flex;position:absolute;top:max(12px, env(safe-area-inset-top));right:max(12px, env(safe-area-inset-right));z-index:3;'
+    +   'width:44px;height:44px;border-radius:50%;align-items:center;justify-content:center;cursor:pointer;background:rgba(255,255,255,0.16);color:#fff;'
+    +   '-webkit-tap-highlight-color:transparent;touch-action:manipulation;}'
+    + '.hui-st-zx ha-icon{--mdc-icon-size:24px;display:flex;pointer-events:none;}'
+    + '@media (hover:hover){.hui-st-img.big .hui-st-zx:hover{background:rgba(255,255,255,0.24);}}'
     + '@media (max-width:760px){.hui-stage .hui-vs{width:88px;height:200px;}.hui-st-pm .hui-st-n{font-size:64px;}.hui-st-chart{min-height:140px;}}'
     + '@media (prefers-reduced-motion:reduce){.hui-stage *{transition:none!important;}}';
   function stGlyph(name, cls) {
@@ -13275,7 +13294,11 @@ window.casoraMenuGlass = {
         + (o.program ? '<div class="hui-st-prog">' + esc(o.program) + '</div>' : '')
         + stPill(o.action);
     } else if (code === 'S5') {
-      body = '<div class="hui-st-img">' + (o.html || '') + '</div>' + (o.controls || '');
+      // o.zoom: the picture can be made big (stageZoom); the minimize key only shows in the big view.
+      body = '<div class="hui-st-img"' + (o.zoom ? ' data-casora-zoom="" role="button" tabindex="0" aria-label="' + esc(T_('Vergrößern')) + '"' : '') + '>'
+        + (o.html || '')
+        + (o.zoom ? '<div class="hui-st-zx" role="button" tabindex="0" aria-label="' + esc(T_('Verkleinern')) + '"><ha-icon icon="mdi:fullscreen-exit"></ha-icon></div>' : '')
+        + '</div>' + (o.controls || '');
     } else if (code === 'S6') {
       // o.read: the chart reads along on the number (readout 'hero', the time in the trend); o.live: the number follows
       // the entity without redrawing the stage (data-hp-live, 01-basis.js) – the chart in the stage stays mounted.
@@ -13307,6 +13330,124 @@ window.casoraMenuGlass = {
       + (tilesAfterHtml ? '<div style="height:16px"></div>' + tilesAfterHtml : '');
   }
   var T_ = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
+  // S5 big view (o.zoom). Only with a picture: an offline / placeholder area stays as it is.
+  var zoomHasPic = function (z) {
+    if (z.querySelector('.casora-cam-offline')) return false;
+    return !!z.querySelector('video, img, canvas, ha-camera-stream, ha-hls-player, ha-web-rtc-player, hui-image, hui-picture-entity-card, hui-picture-glance-card');
+  };
+  var stageZoom = function (z, on) {
+    on = !!on;
+    if (!z || on === z.classList.contains('big')) return;
+    if (on && !zoomHasPic(z)) return;
+    if (on) {
+      z.style.setProperty('--ar', String((z.offsetWidth / Math.max(1, z.offsetHeight)) || 1.7778));
+      z.classList.add('big');
+      z.setAttribute('role', 'dialog'); z.setAttribute('aria-modal', 'true');
+      z.setAttribute('aria-label', T_('Live-Bild')); z.setAttribute('data-casora-esc', '');
+      z.removeAttribute('tabindex');
+      if (typeof z.showPopover === 'function') {
+        try { z.setAttribute('popover', 'manual'); z.showPopover(); } catch (e) { z.removeAttribute('popover'); }
+      }
+      // Esc before the popup (window capture runs before its document listener).
+      z._zKey = function (ev) {
+        if (ev.key !== 'Escape' && ev.key !== 'Esc') return;
+        ev.preventDefault(); ev.stopPropagation(); stageZoom(z, false);
+      };
+      window.addEventListener('keydown', z._zKey, true);
+      // Back gesture: an own history entry on the same path – the popup only closes on a path change.
+      z._zHist = true;
+      try { history.pushState(Object.assign({}, history.state || {}, { casoraZoom: 1 }), ''); } catch (e) { z._zHist = false; }
+      z._zPop = function () { z._zHist = false; stageZoom(z, false); };
+      window.addEventListener('popstate', z._zPop);
+      // Swipe down closes the big view; touches never reach the popup sheet below (its swipe would close the popup).
+      var y0 = null;
+      z._zTs = function (ev) { ev.stopPropagation(); y0 = ev.touches && ev.touches.length === 1 ? ev.touches[0].clientY : null; };
+      z._zTm = function (ev) { ev.stopPropagation(); };
+      z._zTe = function (ev) {
+        ev.stopPropagation();
+        var t = ev.changedTouches && ev.changedTouches[0];
+        if (y0 != null && t && t.clientY - y0 > 80) stageZoom(z, false);
+        y0 = null;
+      };
+      z.addEventListener('touchstart', z._zTs, { passive: true });
+      z.addEventListener('touchmove', z._zTm, { passive: true });
+      z.addEventListener('touchend', z._zTe);
+    } else {
+      window.removeEventListener('keydown', z._zKey, true);
+      window.removeEventListener('popstate', z._zPop);
+      z.removeEventListener('touchstart', z._zTs); z.removeEventListener('touchmove', z._zTm); z.removeEventListener('touchend', z._zTe);
+      if (z.hasAttribute('popover')) {
+        try { if (z.matches(':popover-open')) z.hidePopover(); } catch (e) { /* already closed */ }
+        z.removeAttribute('popover');
+      }
+      z.classList.remove('big');
+      ['aria-modal', 'data-casora-esc'].forEach(function (a) { z.removeAttribute(a); });
+      z.setAttribute('role', 'button'); z.setAttribute('tabindex', '0'); z.setAttribute('aria-label', T_('Vergrößern'));
+      if (z._zHist) { z._zHist = false; try { history.back(); } catch (e) { /* no history */ } }
+    }
+    if (window.casoraHaptic) window.casoraHaptic('light');
+    try { (on ? z.querySelector('.hui-st-zx') : z).focus({ preventScroll: true }); } catch (e) { /* without focus */ }
+  };
+  // One listener for every zoomable stage (the stages live in shadow roots: composedPath). A double click keeps its
+  // own meaning on the picture (camera: fill ↔ fit), so a single click waits a moment before it opens.
+  (function zoomListen() {
+    if (window._casoraZoomBound) return;
+    window._casoraZoomBound = true;
+    var pend = null;
+    var find = function (ev) {
+      var path = ev.composedPath ? ev.composedPath() : [];
+      for (var i = 0; i < path.length; i++) {
+        var n = path[i];
+        if (!n || !n.getAttribute) continue;
+        if (n.classList && n.classList.contains('hui-st-zx')) return { close: n.closest('.hui-st-img') };
+        if (n.hasAttribute('data-casora-zoom')) return { z: n };
+        // A key inside the picture (fullscreen, retry, mode) keeps its own action.
+        if (n.matches && n.matches('button, a, [role=button], [data-bind], .cam-fs, .cam-retry')) return null;
+      }
+      return null;
+    };
+    // Capture: the picture card inside (hui-picture-entity-card) would open its more-info on the same tap.
+    document.addEventListener('action', function (ev) { if (find(ev)) ev.stopPropagation(); }, true);
+    // Touch: HA's actionHandler on the picture card cancels touchend, so no click follows a tap – the tap itself
+    // opens (a second tap within 320 ms is the camera's double tap: fill ↔ fit).
+    var t0 = null, lastTap = 0, touchAt = 0;
+    document.addEventListener('touchstart', function (ev) {
+      var f = find(ev); var t = ev.touches && ev.touches[0];
+      t0 = f && f.z && !f.z.classList.contains('big') && ev.touches.length === 1 ? { x: t.clientX, y: t.clientY } : null;
+    }, { capture: true, passive: true });
+    document.addEventListener('touchend', function (ev) {
+      var f = find(ev); var t = ev.changedTouches && ev.changedTouches[0];
+      if (!f || !t) return;
+      touchAt = Date.now();
+      if (f.close) { stageZoom(f.close, false); return; }
+      if (!t0 || f.z.classList.contains('big') || Math.abs(t.clientX - t0.x) > 10 || Math.abs(t.clientY - t0.y) > 10) return;
+      t0 = null;
+      var now = Date.now(), z = f.z;
+      clearTimeout(pend);
+      if (now - lastTap < 320) { lastTap = 0; return; }
+      lastTap = now;
+      pend = setTimeout(function () { stageZoom(z, true); }, 330);
+    }, true);
+    document.addEventListener('click', function (ev) {
+      var f = find(ev); if (!f) return;
+      ev.stopPropagation();
+      if (Date.now() - touchAt < 800) return;
+      if (f.close) { stageZoom(f.close, false); return; }
+      if (f.z.classList.contains('big')) return;
+      clearTimeout(pend);
+      if (ev.detail > 1) return;
+      var z = f.z;
+      pend = setTimeout(function () { stageZoom(z, true); }, 260);
+    }, true);
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'Enter' && ev.key !== ' ') return;
+      var f = find(ev); if (!f) return;
+      if (f.close) { ev.preventDefault(); stageZoom(f.close, false); return; }
+      var tgt = ev.composedPath ? ev.composedPath()[0] : ev.target;
+      if (tgt !== f.z || f.z.classList.contains('big')) return;
+      ev.preventDefault(); stageZoom(f.z, true);
+    });
+  })();
   // UI.quick(items, label): 2–4 equal tiles (§5); more than 4 → the first 3 and „Alle (n)“ (o.page).
   //   items: [{ icon, text, sub, active, svc, confirm, attrs }] – never dangerous (rule test popup_v3.mjs).
   var QUICK_CSS = '.hui-quick{font-family:' + T.font + ';text-align:left;}'
@@ -13370,7 +13511,7 @@ window.casoraMenuGlass = {
   window._casoraUI.more = more;
   Object.assign(window._casoraUI, { section: section, row: row, settingsRow: settingsRow, settings: settings, actions: actions,
     empty: empty, width: width, switchHtml: switchHtml, page: page, SEC_ORDER: SEC_ORDER, WIDTH: WIDTH,
-    stage: stage, mediaVideo: mediaVideo, quick: quick, STAGE_TYPES: STAGE_TYPES, v3: v3, dialPaint: dialPaint, dialPct: dialPct, dialNum: dialNum });
+    stage: stage, stageZoom: stageZoom, mediaVideo: mediaVideo, quick: quick, STAGE_TYPES: STAGE_TYPES, v3: v3, dialPaint: dialPaint, dialPct: dialPct, dialNum: dialNum });
   window.casoraPopupWidth = width;
 
   // Symmetry (rule 12, owner 26.10.2026: „Symmetrie ist wichtig!“): in a two-column popup both columns

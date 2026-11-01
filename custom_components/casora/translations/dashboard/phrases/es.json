@@ -4920,5 +4920,7 @@
    "{1} desconocido"
   ]
  ],
- "Gerät in Home Assistant": "Dispositivo en Home Assistant"
+ "Gerät in Home Assistant": "Dispositivo en Home Assistant",
+  "Vergrößern": "Ampliar",
+  "Verkleinern": "Reducir"
 }
