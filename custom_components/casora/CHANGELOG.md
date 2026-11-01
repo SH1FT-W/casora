@@ -4,6 +4,30 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.3 – 01.11.2026
+
+Fixes from your feedback on 26.11.2, above all for iPad and iPhone, and a faster Studio.
+
+### New
+- **Movies and series in the media popup:** while a movie or series plays, the cover fills the whole circle instead of a small record; music keeps the record.
+
+### Changed
+- **Faster loading:** the Studio checks your dashboards through Home Assistant instead of loading all of them, and translations only come in your language. The Studio opens much faster, the dashboard loads less and redraws less often while starting.
+- **"Devices" as a heading:** without grouping, a room with scenes shows "Devices" above the tiles; without scenes there is no heading.
+- **Room search:** states in Casora's words ("On", "Ready"), an opaque header, long names wrap, rooms with their icon.
+- **Robot vacuum:** the dial shows the whole room ("Kitchen"), "Cleaning" only stands at the top; picking rooms explains itself.
+
+### Fixed
+- **iPad and iPhone: dials turn again.** Dials and sliders (thermostat, covers, light …) could not be dragged on the iPad, the page scrolled instead. The knob can now also be grabbed at the ends.
+- **Square box behind headings:** "Favourites", "Scenes" and other headings on the phone showed a visible box.
+- **Light in a room:** the room badge counts the same lamps as the light tile.
+- **HomePod and others:** tile and popup say "Ready" instead of "Idle".
+- **iPad and iPhone: − and + at the dial respond again** (underfloor heating and thermostat).
+- **Room search on the phone:** tapping now really opens the search; the field appears when you pull down on Home.
+- **Moon menu:** "All (n)" and "Effects" stay inside the popup and no longer cover the title.
+- **Cameras:** "Offline" everywhere instead of "not reachable".
+- **Export:** your own room icons come along.
+
 ## 26.11.2 – 01.11.2026
 
 Polish for the new popups from 26.11.1, plus three wishes from your feedback. Thanks for everything you reported so far; keep telling us when something is missing in a popup.

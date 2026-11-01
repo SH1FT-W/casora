@@ -4,6 +4,30 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.3 – 01.11.2026
+
+Fixes aus euren Rückmeldungen zu 26.11.2 – vor allem für iPad und iPhone – und ein schnelleres Studio.
+
+### Neu
+- **Filme und Serien im Medien-Popup:** Läuft ein Film oder eine Serie, füllt das Cover den ganzen Kreis statt als kleine Schallplatte; bei Musik bleibt die Platte.
+
+### Geändert
+- **Schneller laden:** Das Studio prüft eure Dashboards über Home Assistant, statt alle komplett zu laden, und Übersetzungen kommen nur noch in eurer Sprache. Das Studio öffnet dadurch deutlich schneller, das Dashboard lädt weniger und zeichnet beim Start seltener neu.
+- **„Geräte“ als Überschrift:** Ohne Gruppierung steht in einem Raum mit Szenen „Geräte“ über den Kacheln; ohne Szenen gibt es keine Überschrift.
+- **Raumsuche:** Zustände in Casoras Worten („An“, „Bereit“), deckender Kopf, lange Namen brechen um, Räume mit ihrem Symbol.
+- **Saugroboter:** Das Rad zeigt den Raum vollständig („Küche“), „Reinigt“ steht nur oben; die Raumauswahl erklärt sich selbst.
+
+### Behoben
+- **iPad und iPhone: Regler drehen wieder.** Rad und Regler (Thermostat, Jalousie, Licht …) ließen sich am iPad nicht ziehen, die Seite scrollte stattdessen. Der Knopf ist jetzt auch an den Enden greifbar.
+- **Eckiger Kasten hinter Überschriften:** „Favoriten“, „Szenen“ und andere Überschriften am Handy hatten einen sichtbaren Kasten.
+- **Licht im Raum:** Das Raum-Badge zählt dieselben Lampen wie die Licht-Kachel.
+- **HomePod & Co.:** Kachel und Popup sagen „Bereit“ statt „Inaktiv“.
+- **iPad und iPhone: −/+ am Rad reagieren wieder** (Fußbodenheizung und Thermostat).
+- **Raumsuche am Handy:** Antippen öffnet die Suche jetzt wirklich; das Feld erscheint beim Herunterziehen auf Zuhause.
+- **Mond-Menü:** „Alle (n)“ und „Effekte“ bleiben im Popup und verdecken den Titel nicht mehr.
+- **Kameras:** überall „Offline“ statt „nicht erreichbar“.
+- **Export:** eigene Raum-Symbole kommen mit.
+
 ## 26.11.2 – 01.11.2026
 
 Feinschliff für die neuen Popups aus 26.11.1, dazu drei Wünsche aus euren Rückmeldungen. Danke für alles, was ihr schon gemeldet habt – sagt weiter Bescheid, wenn in einem Popup etwas fehlt.
