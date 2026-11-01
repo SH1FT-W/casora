@@ -8006,6 +8006,9 @@ window.casoraMenuGlass = {
       var hasHeader = !!(cfg.title || cfg.eyebrow);
       this._cfgTitle = cfg.title || '';
       this._cfgEyebrow = cfg.eyebrow || '';
+      // issue 106: a page about another entity than the tile's (a single window under the window group) names it, so the
+      // head's „Seit …“ is that entity's time, the same as its stage – not the group's.
+      this._cfgHeadEntity = typeof cfg.head_entity === 'string' ? cfg.head_entity : null;
       this._hsCfg = cfg.head_switch;
       // Blueprint v2 (rule 1): a page without a tile behind it (bell, update detail …) names its header tile itself.
       this._cfgRing = cfg.ring && typeof cfg.ring === 'object' && typeof cfg.ring.icon === 'string' ? cfg.ring : null;
@@ -8237,7 +8240,10 @@ window.casoraMenuGlass = {
       if (room && title.toLowerCase().indexOf(room.toLowerCase()) === 0) room = '';
       // Lange Titel umbrechen an „/“ (Zonen wie „Wohnzimmer/Küche“), nicht mitten im Wort.
       this._headerTitle.textContent = sf ? String(title || '').replace(/\/(?=\S)/g, '/\u200B') : (title || '');
-      this._headerEyebrow.textContent = sf ? (this._cfgEyebrow || this._subEyebrow || room) : this._cfgEyebrow;
+      var brow = sf ? (this._cfgEyebrow || this._subEyebrow || room) : this._cfgEyebrow;
+      // issue 106: a label that only repeats the title („FENSTER“ over „Fenster“) says nothing.
+      if (sf && brow && String(brow).trim().toLowerCase() === String(title || '').trim().toLowerCase()) brow = '';
+      this._headerEyebrow.textContent = brow;
       this._header.hidden = !this._hasHeader && !ring;
       this._syncHeadSwitch();
     }
@@ -8259,9 +8265,8 @@ window.casoraMenuGlass = {
     // the head does not jump when the content's line arrives (same height, one line).
     _headFallback(again) {
       if (!this._headerStatus || !this.hasAttribute('soft')) return;
-      var so = this._ringSrc && this._ringSrc._stateObj;
       var h = (document.querySelector('home-assistant') || {}).hass;
-      var cur = so && h && h.states ? h.states[so.entity_id] : null;
+      var cur = this._headCur(h);
       var self0 = this;
       var put = function (t) { self0._headerStatus.innerHTML = '<b>' + window.casoraEsc(t) + '</b>'; self0._headerStatus.hidden = false;
         if (again) self0._dedupeHead(); else [300, 900, 1800].forEach(function (ms) { setTimeout(function () { if (self0.hasAttribute('open') && !self0._headLine) self0._dedupeHead(); }, ms); }); };
@@ -8292,19 +8297,18 @@ window.casoraMenuGlass = {
         return t.length > 60 ? '' : t;
       } catch (e) { return ''; }
     }
+    // The entity the head speaks for: the page's own (cfg.head_entity, issue 106), else the tile's.
+    _headCur(h) {
+      var so = this._ringSrc && this._ringSrc._stateObj;
+      var id = this._cfgHeadEntity || (so && so.entity_id);
+      if (!id) return null;
+      return h && h.states ? (h.states[id] || null) : (so && so.entity_id === id ? so : null);
+    }
     // „Seit 14:42“ (today) or „Seit 28.10.“ from the entity's last change; '' without a time.
     _sinceText(cur) {
-      var lc = cur && cur.last_changed ? new Date(cur.last_changed) : null;
-      if (!lc || isNaN(lc.getTime())) return '';
-      // Detail round #3: after a restart many entities share HA's start as last_changed – that is not a change, so no
-      // „Seit 09:37“ then (a fifth of all states in the same minute counts as the start).
-      var h0 = (document.querySelector('home-assistant') || {}).hass, S0 = (h0 && h0.states) || {};
-      var C0 = CasoraPopup._startC || (CasoraPopup._startC = { at: 0, m: {}, n: 0 });
-      if (Date.now() - C0.at > 10000) {
-        C0.at = Date.now(); C0.m = {}; C0.n = 0;
-        Object.keys(S0).forEach(function (k) { var t = Date.parse(S0[k].last_changed); if (!isFinite(t)) return; var mk = Math.floor(t / 60000); C0.m[mk] = (C0.m[mk] || 0) + 1; C0.n++; });
-      }
-      if (C0.n >= 20 && (C0.m[Math.floor(lc.getTime() / 60000)] || 0) >= C0.n / 5) return '';
+      var ms = window.casoraSinceMs(cur);
+      if (ms == null) return '';
+      var lc = new Date(ms);
       var loc = window.casoraLocale ? window.casoraLocale() : 'de-DE', now = new Date();
       // §3: under an hour „vor 11 Min.“, else „Seit 14:42“.
       var mins = now - lc < 0 ? -1 : window.casoraAgoMin ? window.casoraAgoMin(now - lc) : Math.round((now - lc) / 60000);
@@ -8359,9 +8363,9 @@ window.casoraMenuGlass = {
       // one of its parts without the leading number reads like the head's first part.
       var parts = String(stage).split(/\s*·\s*|\n/).concat(stageParts).map(function (x) { return norm(String(x).replace(/^\s*\d+\s+/, '')); });
       if (!stage || !norm(mainTxt) || (norm(mainTxt) !== norm(stage) && parts.indexOf(norm(mainTxt)) < 0)) return;
-      var so = this._ringSrc && this._ringSrc._stateObj, h = (document.querySelector('home-assistant') || {}).hass;
+      var h = (document.querySelector('home-assistant') || {}).hass;
       // The stage says a time already („Zuletzt vor 2 Min.“, „Seit 19:40“): the head's part goes instead of a second one.
-      var since = /(^|\s)(seit|zuletzt|vor \d|gerade eben)/i.test(stageAll) ? '' : this._sinceText(so && h && h.states ? h.states[so.entity_id] : so);
+      var since = /(^|\s)(seit|zuletzt|vor \d|gerade eben)/i.test(stageAll) ? '' : this._sinceText(this._headCur(h));
       if (first) {
         if (since) first.textContent = since;
         else { var nx = first.nextElementSibling; if (nx && nx.classList && nx.classList.contains('hui-sep')) nx.remove(); first.remove(); }
@@ -13658,6 +13662,21 @@ window.casoraMenuGlass = {
   // gone says „Offline“. '' = nothing to say (unknown). null = no word of its own: a measurement of the entity, on/off of
   // a group, binary_sensor or calendar without a device class, a raw code („failed“, „PRE“) – the caller says something
   // else (the popup head: since when).
+  // When the entity's current state began (ms), the one time the head and every stage say („Seit …“, issue 106):
+  // last_changed, or null when there is none or it is only HA's start. Detail round #3: after a restart many entities
+  // share HA's start as last_changed – that is not a change (a fifth of all states in the same minute counts as the start).
+  var startC = { at: 0, m: {}, n: 0 };
+  window.casoraSinceMs = function (cur, hass) {
+    var t = cur && cur.last_changed ? Date.parse(cur.last_changed) : NaN;
+    if (!isFinite(t)) return null;
+    var h0 = hass || (document.querySelector('home-assistant') || {}).hass, S0 = (h0 && h0.states) || {};
+    if (Date.now() - startC.at > 10000) {
+      startC.at = Date.now(); startC.m = {}; startC.n = 0;
+      Object.keys(S0).forEach(function (k) { var x = Date.parse(S0[k].last_changed); if (!isFinite(x)) return; var mk = Math.floor(x / 60000); startC.m[mk] = (startC.m[mk] || 0) + 1; startC.n++; });
+    }
+    if (startC.n >= 20 && (startC.m[Math.floor(t / 60000)] || 0) >= startC.n / 5) return null;
+    return t;
+  };
   window.casoraStateWord = function (h, cur) {
     if (!cur) return '';
     var tr = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };

@@ -117,9 +117,9 @@
     if (!st) return null;
     var key = id + '|' + span + '|' + st.last_changed;
     var hit = hist[id + '|' + span];
-    if (hit && hit.key === key) { if (el && hit.busy) hit.wait.push(el); return hit.rows; }
-    var cell = hist[id + '|' + span] = { key: key, rows: hit ? hit.rows : null, busy: true, wait: el ? [el] : [] };
+    if (hit && hit.key === key) { if (el && hit.busy) hit.wait.push(el); return Z.withNow(hit.rows, st, hit.start); }
     var now = Date.now(), start = now - (SPANS[span] || SPANS['24h']);
+    var cell = hist[id + '|' + span] = { key: key, rows: hit ? hit.rows : null, start: hit ? hit.start : start, busy: true, wait: el ? [el] : [] };
     h.callApi('GET', 'history/period/' + new Date(start).toISOString() + '?filter_entity_id=' + id
       + '&end_time=' + encodeURIComponent(new Date(now).toISOString()) + '&minimal_response&no_attributes')
       .then(function (r) {
@@ -130,6 +130,7 @@
           rows.push({ s: x.state, t: Math.max(t, start) });
         });
         cell.rows = rows;
+        cell.start = start;
         // Just changed: the recorder writes with a delay (commit interval 5 s by default), and the new state was
         // missing from "Changes" and "History" until the next change. Reload until it is there (2.5, 6, 12 s).
         var lc = Date.parse(st.last_changed), last = rows.length ? rows[rows.length - 1].t : 0;
@@ -153,7 +154,25 @@
           }, cell.again);
         }
       });
-    return cell.rows;
+    return Z.withNow(cell.rows, st, cell.start);
+  };
+  // issue 106: the newest row is always the state the entity has now. The recorder can lag behind (commit interval, a busy
+  // or locked database) or not record the entity at all; HA's history then ended on an older state, the list read
+  // „Geöffnet · seitdem“ under a closed window and the 24 h figures counted the whole day as open.
+  Z.withNow = function (rows, st, start) {
+    if (!rows || !st || st.state == null) return rows;
+    var last = rows[rows.length - 1];
+    if (last && last.s === st.state) return rows;
+    var lc = Date.parse(st.last_changed);
+    var t = Math.max(isFinite(lc) ? lc : Date.now(), start || 0, last ? last.t : 0);
+    return rows.concat([{ s: st.state, t: t }]);
+  };
+  // When the current state began (ms) – the same time the popup head says (casora-core casoraSinceMs, issue 106);
+  // null after HA's start, then neither says a time.
+  Z.sinceMs = function (st, h) {
+    if (window.casoraSinceMs) return window.casoraSinceMs(st, h);
+    var t = Date.parse(st && st.last_changed);
+    return isFinite(t) ? t : null;
   };
   // Zahlen: Höchster, Tiefster (mit Zeit) und zeitgewichteter Durchschnitt.
   Z.stats = function (rows, now) {
@@ -271,8 +290,14 @@
       // §3 (detail round #11): the label is the room („SCHLAFZIMMER“), not the device („AIRCUBE SCHLAFZIMMER“).
       var roomV = '';
       try { roomV = window._casoraRoomOf ? String(window._casoraRoomOf(id) || '').trim() : ''; } catch (e) { roomV = ''; }
-      P.open(Object.assign(pageCfg(shortV || fullV, K.layout({ fields: fv, top: [], stage: 'stage', left: [], right: ['vals', 'tl'],
-        narrowOrder: ['vals', 'tl'] }), back, roomV || areaOf(h, id) || ''), { variant: 'v3' }));
+      roomV = roomV || areaOf(h, id) || '';
+      // issue 106: the head speaks for this entity (its „Seit …“ is the stage's), and the label is its room also when the
+      // page is reached with ‹ – „FENSTER“ (the group's title) over „Fenster“ said nothing. Without a room the label
+      // of the page before stays; casora-core drops a label equal to the title.
+      var cfgV = Object.assign(pageCfg(shortV || fullV, K.layout({ fields: fv, top: [], stage: 'stage', left: [], right: ['vals', 'tl'],
+        narrowOrder: ['vals', 'tl'] }), back, roomV), { variant: 'v3', head_entity: id });
+      if (roomV) cfgV.eyebrow = roomV;
+      P.open(cfgV);
       return true;
     }
     var f = { hero: { card: K.secCard(watch, call('m_hero', id, span), h.states) } };
@@ -550,7 +575,8 @@
           .replace(/<div class="hui-sg/g, function () { return '<div data-casora-zspan="' + esc(id + '|' + l6[i6++][0]) + '" class="hui-sg'; }) });
     }
     if (part === 'm_hero' || part === 'm_stage') {
-      var since = Date.parse(st.last_changed);
+      var since = Z.sinceMs(st, hass);
+      if (since == null) since = NaN;
       // The room is the label above the title (blueprint v2, rule 1), not part of the status line.
       var rest = [isFinite(since) ? T('seit') + ' ' + when(since, now) : null].filter(Boolean);
       var out = CSS + UI.line(Z.stateWord(hass, id, st.state), rest, { tone: bad(st.state) ? 'warn' : null }) + pills(id, span);
