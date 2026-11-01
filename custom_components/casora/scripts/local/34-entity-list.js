@@ -486,7 +486,8 @@
       var rows = M.lists.filter(function (g) { return !!S[g]; }).map(function (g) {
         var ids = L.resolve(hass, S, L.groupCfg(g)), c = L.count(S, ids), st = S[g];
         var a = st.attributes || {};
-        return { entity: g, icon: a.icon || 'list', iconTone: c.on ? 'accent' : 'rgba(0,0,0,0)', label: M.listNames[g] || L.nameOf(st, g),
+        // An empty group opens nothing: no › (detail round #29 – „Keine Einträge ›“ led to an empty page).
+        return { entity: c.n ? g : null, icon: a.icon || 'list', iconTone: c.on ? 'accent' : 'rgba(0,0,0,0)', label: M.listNames[g] || L.nameOf(st, g),
           labelLit: true, sub: L.summary(c).join(' · ') };
       });
       return rows.length ? UI.group(rows, L.v3() ? 'Gruppen' : 'Einstellungen') : '';
