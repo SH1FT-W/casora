@@ -10,11 +10,14 @@ await fakeStates(page, { [mp]: { state: 'playing', attributes: { media_title: 'T
 await page.waitForTimeout(4000);
 const m = await page.evaluate(() => {
   const txt = (re) => window.__pierce('*').filter((e) => { let o = ''; for (const c of e.childNodes) if (c.nodeType === 3) o += c.textContent; return re.test(o.trim()) && e.getBoundingClientRect().height > 0; })[0];
+  // Where the heading sits in the layout: a heading may carry extra padding for its halo (r396), taken back by a
+  // negative margin, so its box starts that much higher than the heading itself.
+  const textTop = (e) => e.getBoundingClientRect().top - Math.min(0, parseFloat(getComputedStyle(e).marginTop) || 0);
   const badges = window.__pierce('button-card').filter((b) => [].concat((b._config || {}).template || []).some((t) => /^casora_badge/.test(t)) && b.getBoundingClientRect().height > 0);
   const bb = Math.max(...badges.map((b) => { const c = b.shadowRoot.querySelector('ha-card'); return (c || b).getBoundingClientRect().bottom; }));
   // sichtbare Player-Zeile: größtes Element mit Text „Testlied“ im Vorfahren mit Hintergrund
   let row = txt(/^Testlied$/); for (let i = 0; i < 8 && row; i++) { const cs = getComputedStyle(row); if (cs.backgroundColor !== 'rgba(0, 0, 0, 0)' && row.getBoundingClientRect().height > 50) break; row = row.parentElement || (row.parentNode && row.parentNode.host); }
-  return { badges_bis_Wiedergabe: Math.round(txt(/^Aktuelle Wiedergabe$/).getBoundingClientRect().top - bb), player_bis_Favoriten: Math.round(txt(/^Favoriten$/).getBoundingClientRect().top - row.getBoundingClientRect().bottom) };
+  return { badges_bis_Wiedergabe: Math.round(textTop(txt(/^Aktuelle Wiedergabe$/)) - bb), player_bis_Favoriten: Math.round(textTop(txt(/^Favoriten$/)) - row.getBoundingClientRect().bottom) };
 });
 await check('Player → „Favoriten“ wie Badges → „Aktuelle Wiedergabe“', Math.abs(m.player_bis_Favoriten - m.badges_bis_Wiedergabe) <= 2, { badges: m.badges_bis_Wiedergabe, player: m.player_bis_Favoriten });
 await finish();
