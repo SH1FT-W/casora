@@ -16,6 +16,7 @@ from .assets import CasoraAssetsView
 from .scripts_view import STUDIO_LOADER, STUDIO_LOADER_KEY, CasoraPanelView, CasoraScriptsView, studio_loader, studio_stamp
 from .actions import SERVICES as ACTION_SERVICES, async_setup_actions
 from .helfer import async_setup_helfer, async_unload_helfer
+from .preload import async_set_preload, async_unload_preload
 from .theme import async_setup_theme, async_unload_theme, remove_old_theme_file
 from .lueften_push import async_start as async_start_lueften_push
 from .update_push import async_start as async_start_update_push
@@ -83,6 +84,13 @@ def _lovelace_resources(hass: HomeAssistant):
         return None
 
 
+async def _set_preload(hass: HomeAssistant, scripts_dir: str, urls: dict[str, str] | None) -> None:
+    try:
+        await async_set_preload(hass, scripts_dir, urls)
+    except Exception:  # noqa: BLE001 - a speed-up only, never block setup
+        _LOGGER.exception("Casora: early script fetch not set up")
+
+
 async def _sync_script_resources(hass: HomeAssistant, scripts_dir: str, keep_hemma: bool = False) -> None:
     """Point Lovelace at the scripts this integration serves.
 
@@ -126,6 +134,7 @@ async def _sync_script_resources(hass: HomeAssistant, scripts_dir: str, keep_hem
             "Casora: no shared scripts found in %s; the dashboard needs them",
             scripts_dir,
         )
+        await _set_preload(hass, scripts_dir, None)
         return
 
     wanted = {n: f"{SCRIPTS_URL_BASE}/{n}?v={stamps[n]}" for n in names}
@@ -136,6 +145,7 @@ async def _sync_script_resources(hass: HomeAssistant, scripts_dir: str, keep_hem
     set_frontend_stamp(hass, stamps.get(LOCAL_LOADER) if writable else None)
 
     if not writable:
+        await _set_preload(hass, scripts_dir, None)
         _LOGGER.warning(
             "Casora: Lovelace resources are not writable (yaml mode). Add these "
             "under lovelace: resources: as type module: %s",
@@ -149,6 +159,7 @@ async def _sync_script_resources(hass: HomeAssistant, scripts_dir: str, keep_hem
             res.loaded = True
     except Exception:  # noqa: BLE001 - a resource list must never block setup
         _LOGGER.exception("Casora: could not read the Lovelace resource list")
+        await _set_preload(hass, scripts_dir, None)
         return
 
     items = list(res.async_items())
@@ -201,6 +212,14 @@ async def _sync_script_resources(hass: HomeAssistant, scripts_dir: str, keep_hem
                 added.append(name)
         except Exception:  # noqa: BLE001
             _LOGGER.exception("Casora: could not register %s", url)
+
+    # Fetch the core scripts early on dashboard pages (preload.py), with the URLs the resources now have.
+    try:
+        # Module resources only: a classic one is a different fetch, a module preload would not be used.
+        final = {str(i.get("url", "")) for i in res.async_items() if i.get("type", i.get("res_type")) == "module"}
+    except Exception:  # noqa: BLE001 - a speed-up only
+        final = set()
+    await _set_preload(hass, scripts_dir, {n: u for n, u in wanted.items() if u in final})
 
     orphans = [
         str(i.get("url", ""))
@@ -419,6 +438,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_remove_panel(hass, PANEL_URL, warn_if_unknown=False)
     async_unload_helfer(hass)
     async_unload_theme(hass)
+    async_unload_preload(hass)
     # Otherwise they stay callable until the restart, even after removing Casora.
     for name in ("einrichten", "umstellen", *ACTION_SERVICES):
         hass.services.async_remove(DOMAIN, name)
