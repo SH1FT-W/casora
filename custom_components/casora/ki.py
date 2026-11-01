@@ -48,9 +48,8 @@ from homeassistant.helpers.script import Script, async_validate_actions_config
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import load_yaml
 
-from .const import DOMAIN, UPDATE_REPO, VERSION
-from .release_notes import notes_for_ai
-from .update_source import fetch_releases
+from .const import DOMAIN
+from .update_notes import notes_for_updates
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1278,16 +1277,18 @@ class KiRunner:
                                   "from": str(attrs.get("installed_version") or ""),
                                   "version": str(attrs.get("latest_version") or "")}, web=True):
             return
-        # Casoras eigene Release-Notes gleich mitgeben: die KI kommt per web_fetch nicht
-        # verlässlich an GitHubs Release-Seite („Release-Notes nicht abrufbar“).
+        # Release notes are fetched here, not by the AI: its web_fetch rarely reaches release pages
+        # (every check ended "unknown"). update_notes.py: entity notes, summary, GitHub API, page text.
+        sensor = _sensor_of(self.hass, "update") or ""
+        sst = self.hass.states.get(sensor) if sensor else None
         try:
-            notes = notes_for_ai(await fetch_releases(self.hass), VERSION, self.hass.config.language)
-        except Exception as err:  # noqa: BLE001 – dann wie bisher per Web-Abruf
-            _LOGGER.debug("Casora: Release-Notes für die Update-Prüfung nicht geladen: %s", err)
-            notes = ""
-        await self._run("update", {"request": request, "sensor_id": _sensor_of(self.hass, "update") or "",
+            notes = await notes_for_updates(self.hass, request, list((sst.attributes.get("analysen") if sst else None) or []))
+        except Exception as err:  # noqa: BLE001 - the AI then judges without notes
+            _LOGGER.debug("Casora: release notes for the update check not loaded: %s", err)
+            notes = {}
+        await self._run("update", {"request": request, "sensor_id": sensor,
                                    "ai_web_entity": ai_entity(self.hass, self.entry, web=True),
-                                   "casora_repo": UPDATE_REPO, "casora_notes": notes})
+                                   "release_notes": notes})
 
     async def _update(self, call: ServiceCall) -> None:
         self._bg(self._run_update(call.data.get("entity_id") or ""))
