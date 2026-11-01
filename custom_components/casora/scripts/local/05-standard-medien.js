@@ -290,7 +290,12 @@
         var st = ST[x.status] || ST.ok;
         var icon = x.fenster ? 'mdi:window-open-variant' : x.fenster === false ? 'mdi:window-closed-variant' : 'mdi:home-thermometer-outline';
         var tone = st.tone || 'rgba(255,255,255,0.18)';
-        return { id: x.k, icon: icon, iconTone: tone, label: x.n, sub: [x.grund || null, vals(x) || null].filter(Boolean), value: st.t, valueTone: st.tone === 'accent' ? null : st.tone,
+        // „Lange offen“ says the window is open: the reason keeps only since when, one line with the values (detail round #17:
+        // „Fenster offen seit 27 Tagen · Schließen?“ cut off above the values, beside „Lange offen“).
+        var g = x.grund || null;
+        if (x.status === 'lange' && g) g = String(g).replace(/\s*·\s*Schließen\?$/, '').replace(/^Fenster offen\s+/, '') || null;
+        var sb = [g, vals(x) || null].filter(Boolean);
+        return { id: x.k, icon: icon, iconTone: tone, label: x.n, sub: x.status === 'lange' ? sb.join(' · ') : sb, value: st.t, valueTone: st.tone === 'accent' ? null : st.tone,
           /* Weich: Raum mit Handlungsbedarf (lüften, schließen, zu feucht) oder der gerade lüftet als aktive Zeile. */
           active: ['schliessen', 'lange', 'jetzt', 'feucht', 'lueftet'].indexOf(x.status) > -1 };
       });

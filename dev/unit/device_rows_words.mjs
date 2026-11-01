@@ -26,4 +26,6 @@ const window = { _casoraUI: { section: (k, r) => { rows = r; return 'x'; } }, _c
 new Function('window', 'states', 'hass', body)(window, states, { entities: {} });
 const v = Object.fromEntries(rows.map((r) => [r.label, r.value]));
 assert.deepEqual(v, { 'Wassertank leer': 'OK', 'Tropfschale voll': 'Bestätigt', 'Entkalken in 10 Tassen': 'Ja', Fernstart: 'An', 'Bohnenbehälter leer': 'Leer' }, JSON.stringify(v));
+// Detail round #17 (ventilation coach): a room open long keeps one line – since when and the values.
+assert.ok(src.includes("replace(/^Fenster offen\\s+/, '')") && src.includes("sub: x.status === 'lange' ? sb.join(' · ') : sb"), 'ventilation: one line for „Lange offen“');
 console.log('device_rows_words: ok');
