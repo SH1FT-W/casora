@@ -217,7 +217,7 @@
     if (dc === 'temperature' || /^°[CF]$/.test(u)) return 'var(--casora-color-orange, #DE8A4E)';
     if (/^(humidity|moisture|precipitation|precipitation_intensity|volume_flow_rate|water)$/.test(dc)) return 'var(--casora-color-blue, #5B8FC9)';
     if (/^(aqi|carbon_dioxide|carbon_monoxide|pm1|pm25|pm10|volatile_organic_compounds|volatile_organic_compounds_parts|nitrogen_dioxide|ozone)$/.test(dc)) return 'var(--casora-color-teal, #4E9E95)';
-    if (/^(voltage|current|frequency|signal_strength)$/.test(dc)) return 'var(--casora-color-neutral, #8C8279)';
+    if (/^(voltage|current|frequency|signal_strength)$/.test(dc)) return 'var(--casora-color-neutral, var(--secondary-text-color))';
     return '';
   };
   // Messwert-Seite (Baustein 1, Entwurf A; Zwei-Zustands-Sensoren als Entwurf D).
