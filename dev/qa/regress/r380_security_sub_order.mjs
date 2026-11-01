@@ -4,7 +4,7 @@
 // Owner (01.11.2026): the entries inside the security badge (locks, doors, windows, cameras …) had a fixed order.
 // Studio › Security badge › "Order" lists the kinds the badge has; dragged (mouse) or moved with the arrow keys and
 // saved, the order holds for the badge's sub-line, its sub-badges on the desktop, the phone's sub-badges and the
-// phone's security popup. Without an order everything stays as before. The dashboard pair is restored at the end.
+// phone's security popup. Without an order everything follows the sub-line's usual order (owner, 01.11.2026). The dashboard pair is restored at the end.
 //   CASORA_QA_SHOTS=<dir>: before/after pictures there as well.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -84,6 +84,8 @@ await fakeStates(page, patch, { sticky: true });
 await openRow(page);
 const before = await deskState(page);
 await need('desktop: security sub-line and sub-row', before.sub.length >= 2 && before.row.length >= 2, before);
+// Owner (01.11.2026): without an order the sub-badges follow the sub-line's usual order (alarm, doors, gates, locks …).
+await check('desktop: without an order the sub-row follows the usual order', JSON.stringify(before.row) === JSON.stringify(window_keys(before.row)), before.row);
 await keep(page, 'vorher_desktop_badge', await headClip(page));
 
 // Phone: Home's security sub-row and the hub popup's rows.
@@ -119,6 +121,12 @@ const phoneState = async () => {
   return { row, rows };
 };
 const phoneBefore = await phoneState();
+const NAME = [[/^Schl(o|ö)ss/, 'locks'], [/^Kamera/, 'cameras'], [/^T(ü|ue)r/, 'doors'], [/^Fenster/, 'windows'],
+  [/^Jalousie/, 'covers'], [/^Tor/, 'gates'], [/^Alarm/, 'alarm']];
+const keysOf = (rows) => rows.map((t) => (NAME.find(([re]) => re.test(t)) || [])[1]).filter(Boolean);
+await check('phone: without an order Home\'s sub-row follows the usual order', JSON.stringify(phoneBefore.row) === JSON.stringify(window_keys(phoneBefore.row)), phoneBefore.row);
+await check('phone: without an order the popup rows follow the usual order', keysOf(phoneBefore.rows).length >= 2
+  && JSON.stringify(keysOf(phoneBefore.rows)) === JSON.stringify(window_keys(keysOf(phoneBefore.rows))), phoneBefore.rows);
 await need('phone: security popup with rows', phoneBefore.rows.length >= 2, phoneBefore);
 await keep(phone.page, 'vorher_handy_popup');
 await P(() => window.casoraPopup && window.casoraPopup.close());
@@ -225,9 +233,7 @@ await keep(page, 'nachher_desktop_badge', await headClip(page));
 await shot('desktop_after');
 
 const phoneAfter = await phoneState();
-const NAME = [[/^Schl(o|ö)ss/, 'locks'], [/^Kamera/, 'cameras'], [/^T(ü|ue)r/, 'doors'], [/^Fenster/, 'windows'],
-  [/^Jalousie/, 'covers'], [/^Tor/, 'gates'], [/^Alarm/, 'alarm']];
-const popupKeys = phoneAfter.rows.map((t) => (NAME.find(([re]) => re.test(t)) || [])[1]).filter(Boolean);
+const popupKeys = keysOf(phoneAfter.rows);
 await check('phone: Home sub-row follows the order', follows(phoneAfter.row), { before: phoneBefore.row, after: phoneAfter.row, want });
 await check('phone: security popup rows follow the order', popupKeys.length >= 2 && follows(popupKeys),
   { before: phoneBefore.rows, after: phoneAfter.rows, want });
@@ -242,5 +248,5 @@ await finish();
 // The Studio's usual order: casoraSecSub.KEYS filtered to what is there.
 function window_keys(rows) {
   const K = ['alarm', 'doors', 'gates', 'locks', 'windows', 'covers', 'cameras', 'other'];
-  return K.filter((k) => (rows || []).includes(k));
+  return (rows || []).slice().sort((a, b) => (K.indexOf(a) < 0 ? 99 : K.indexOf(a)) - (K.indexOf(b) < 0 ? 99 : K.indexOf(b)));
 }

@@ -23969,8 +23969,9 @@ class CasoraPanel extends HTMLElement {
             };
           }),
       ];
-      // Own order of the kinds (security_sub_order), as the dashboard's rows (casoraSecSub.cards).
-      const secSort = (l) => (window.casoraSecSub ? window.casoraSecSub.sort(l, V.security_sub_order, (x) => x.secKey) : l);
+      // Own order of the kinds (security_sub_order), else the usual one (KEYS), as the dashboard's rows (casoraSecSub.cards).
+      const secSort = (l) => (window.casoraSecSub ? window.casoraSecSub.sort(l,
+        window.casoraSecSub.clean(V.security_sub_order).length ? V.security_sub_order : window.casoraSecSub.KEYS, (x) => x.secKey) : l);
       if (V.show_security_inline && !forPhone) {
         // As casora_room with show_security_inline: locks, alarm, contacts and cameras as
         // badges of their own in the security badge's place. The phone keeps the filter badge.

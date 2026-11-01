@@ -1,5 +1,6 @@
 // Own order of the security badge's entries (security_sub_order, 01.11.2026): the Studio's "Order" list orders the
-// badge's sub-line, its sub-badges (layout-card rows with casora_sec_order) and so its popup.
+// badge's sub-line, its sub-badges (layout-card rows with casora_sec_order) and so its popup. Without one the rows
+// follow the sub-line's usual order (KEYS).
 //   node dev/unit/security_sub_order.mjs
 // Checks without a browser: casoraSecSub (00-finder.js), the sub-line with and without an order, the Studio's
 // list (secSubPresent/secSubRows) and that every row of sub-badges in the templates carries the order.
@@ -40,13 +41,14 @@ assert.equal(K('cover.garage'), 'gates');
 assert.equal(K('cover.living_blind'), 'covers');
 assert.equal(K(null), null);
 
-// ── Sort: stable, missing kinds after, unknown keys ignored, no order = same list ──
+// ── Sort: stable, missing kinds after (usual order), unknown keys ignored, no order = same list ──
 const L = ['a:doors', 'b:locks', 'c:windows', 'd:doors', 'e:cameras'];
 const key = (x) => x.split(':')[1];
 assert.equal(S.sort(L, null, key), L, 'no order: the very same list');
 assert.equal(S.sort(L, [], key), L);
 assert.equal(S.sort(L, ['nonsense'], key), L, 'only unknown keys: unchanged');
-assert.deepEqual(S.sort(L, ['cameras', 'windows'], key), ['e:cameras', 'c:windows', 'a:doors', 'b:locks', 'd:doors']);
+// Kinds missing from the list follow in the usual order (doors before locks), stable within a kind.
+assert.deepEqual(S.sort(L, ['cameras', 'windows'], key), ['e:cameras', 'c:windows', 'a:doors', 'd:doors', 'b:locks']);
 assert.deepEqual(S.sort(L, ['locks', 'bogus', 'doors', 'locks'], key), ['b:locks', 'a:doors', 'd:doors', 'c:windows', 'e:cameras']);
 
 // ── Cards: only the security sub-badges move, among their own slots ─────────
@@ -60,7 +62,12 @@ const cards = [
   { template: ['casora_badge_security', 'casora_popup_contacts'], entity: 'binary_sensor.front_door' },
   { template: 'casora_badge_security_covers' },
 ];
-assert.equal(S.cards(cards, undefined, states), cards);
+// No order: the usual one (KEYS = the sub-line's order), owner 01.11.2026.
+const usual = S.cards(cards, undefined, states);
+assert.deepEqual([1, 2, 3, 5, 6, 7].map((i) => S.keyOfCard(usual[i], states)),
+  ['alarm', 'doors', 'locks', 'windows', 'covers', 'cameras']);
+assert.deepEqual(S.cards(cards, [], states), usual);
+assert.equal(usual[0], cards[0]);
 const out = S.cards(cards, ['windows', 'doors', 'alarm', 'covers', 'locks', 'cameras'], states);
 assert.equal(out[0], cards[0], 'group badge stays first');
 assert.equal(out[4], cards[4], 'other badges keep their slot');

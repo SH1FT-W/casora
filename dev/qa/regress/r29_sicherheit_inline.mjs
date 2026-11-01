@@ -125,9 +125,10 @@ const st = await H(async () => {
   return { ids: model.map((b) => b.id), labels: model.map((b) => b.label), sw: /Einzeln anzeigen/.test(txt), pills };
 });
 await check('Studio: Schalter „Einzeln anzeigen“', st.sw, st);
-await check('Studio-Vorschau: Einzel-Badges Fenster, Terrassentür, Kamera',
+// Usual order of the kinds (owner, 01.11.2026): doors before windows before cameras.
+await check('Studio-Vorschau: Einzel-Badges Terrassentür, Fenster, Kamera',
   JSON.stringify(st.ids) === JSON.stringify(['security:0', 'security:1', 'security:2'])
-  && st.labels[0] === 'Fenster' && st.pills.some((t) => /Fenster/.test(t)), st);
+  && JSON.stringify(st.labels) === JSON.stringify(['Terrassentür', 'Fenster', 'Camera']) && st.pills.some((t) => /Fenster/.test(t)), st);
 console.log('  📸', await shot('studio_dunkel'));
 usePage(light.page);
 await studio(light.page, URL_PATH);

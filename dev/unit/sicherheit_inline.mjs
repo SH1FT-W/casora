@@ -111,4 +111,16 @@ assert.equal(rowJs(rowStyle.display)({ ...room, show_security_inline: true }, gl
 assert.equal(rowJs(rowStyle.display)(room, globalThis.states), 'block');
 assert.equal(R.variables.show_security_inline, false, 'Standardwert');
 
+// With the dashboard's casoraSecSub (00-finder.js): the usual order of the kinds (owner, 01.11.2026) – alarm,
+// doors, locks, windows, cameras – and an own order (security_sub_order) wins.
+globalThis.document = globalThis.document || { querySelector: () => null };
+globalThis.customElements = globalThis.customElements || { whenDefined: () => new Promise(() => {}), get: () => null };
+new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8'))();
+assert.deepEqual(model({ ...room, show_security_inline: true }).filter((b) => String(b.id).startsWith('security')).map((b) => b.label),
+  ['Alarm', 'Terrassentür', 'Lock', 'Fenster', 'Camera']);
+assert.deepEqual(model(room).find((b) => b.id === 'security').subs.map((b) => b.label),
+  ['Alarm', 'Terrassentür', 'Lock', 'Fenster', 'Camera']);
+assert.deepEqual(model({ ...room, security_sub_order: ['cameras', 'windows'] }).find((b) => b.id === 'security').subs.map((b) => b.label),
+  ['Camera', 'Fenster', 'Alarm', 'Terrassentür', 'Lock']);
+
 console.log('sicherheit_inline: ok');
