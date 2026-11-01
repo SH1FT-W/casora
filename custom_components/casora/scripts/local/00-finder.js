@@ -1161,17 +1161,31 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     if (!ccMemo.has(hass)) ccMemo.set(hass, contactsShared(hass));
     return ccMemo.get(hass);
   };
-  // Kinds of door/window the badge lists itself (security_entity_1…8): contacts, or groups of them.
-  // Other binary sensors (smoke, leak, motion …), missing ones and ones this user does not see do not count.
+  // Kinds of door/window the badge lists itself (security_entity_1…8): contacts, or groups of them – by the slot's
+  // own device class, its members' or its label („Türen“/„Fenster“), available or not (owner, 01.11.2026: an
+  // unavailable door group in slot 2 stood beside Casora's own „Türen“). Other binary sensors (smoke, leak,
+  // motion …) and ones this user does not see do not count.
+  var KIND_WORD = { door: /^(t(ü|ue)ren|t(ü|ue)r|doors?)$/i, window: /^(fenster|windows?)$/i };
   function ownKinds(S, v, sees) {
     var out = {};
     var kindOf = function (x) { return OWN_KIND[String(((S[x] || {}).attributes || {}).device_class || '')]; };
+    var tr = function (t) { return typeof window.casoraTr === 'function' ? window.casoraTr(t) : t; };
+    var byWord = function (w) {
+      w = String(w || '').trim();
+      if (!w) return null;
+      if (KIND_WORD.door.test(w) || w === tr('Türen')) return 'door';
+      if (KIND_WORD.window.test(w) || w === tr('Fenster')) return 'window';
+      return null;
+    };
     for (var i = 1; i <= 8; i++) {
       var x = v['security_entity_' + i];
-      if (typeof x !== 'string' || x.indexOf('binary_sensor.') !== 0 || !S[x] || !sees(x)) continue;
-      var m = (S[x].attributes || {}).entity_id;
+      if (typeof x !== 'string' || x.indexOf('binary_sensor.') !== 0 || (S[x] && !sees(x))) continue;
+      var a = (S[x] || {}).attributes || {};
+      var w = byWord(v['security_label_' + i]) || byWord(a.friendly_name);
+      if (w) out[w] = true;
+      if (kindOf(x)) out[kindOf(x)] = true;
+      var m = a.entity_id;
       if (Array.isArray(m) && m.length) m.forEach(function (y) { var k = kindOf(y); if (k) out[k] = true; });
-      else if (kindOf(x)) out[kindOf(x)] = true;
     }
     return out;
   }

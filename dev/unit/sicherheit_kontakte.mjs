@@ -171,6 +171,18 @@ assert.equal(of({ security_entity_1: 'binary_sensor.gone' }, 'door', 'home').len
 assert.equal(of({ security_entity_1: 'binary_sensor.door_a' }, 'window', 'home').length, 3, 'own door: the windows stay');
 assert.deepEqual(of({ security_entity_1: 'binary_sensor.door_a' }, 'door', 'home'), [], 'own door: no door twins');
 assert.equal(of({ security_entity_2: 'binary_sensor.doors_group' }, 'window', 'home').length, 3, 'own door group: the windows stay');
+// Owner (01.11.2026): an unavailable door group in a slot (no device class, no members while unavailable) stood beside
+// Casora's own „Türen“. Its device class, its members or its label („Türen“/„Fenster“) make it the same kind.
+hs.states['binary_sensor.doors_dead'] = { entity_id: 'binary_sensor.doors_dead', state: 'unavailable', attributes: { friendly_name: 'Türen' } };
+hs.states['binary_sensor.grp_x'] = { entity_id: 'binary_sensor.grp_x', state: 'unavailable', attributes: { friendly_name: 'Gruppe X' } };
+hs.states['binary_sensor.doors_cls'] = { entity_id: 'binary_sensor.doors_cls', state: 'unavailable', attributes: { device_class: 'door' } };
+assert.deepEqual(of({ security_entity_2: 'binary_sensor.doors_dead' }, 'door', 'home'), [], 'unavailable door group named „Türen“: no twin');
+assert.equal(of({ security_entity_2: 'binary_sensor.doors_dead' }, 'window', 'home').length, 3, '… the windows stay');
+assert.deepEqual(of({ security_entity_2: 'binary_sensor.doors_cls' }, 'door', 'home'), [], 'unavailable group with class door: no twin');
+assert.deepEqual(of({ security_entity_2: 'binary_sensor.grp_x', security_label_2: 'Türen' }, 'door', 'home'), [], 'slot labelled „Türen“: no twin');
+assert.deepEqual(of({ security_entity_3: 'binary_sensor.grp_x', security_label_3: 'Fenster' }, 'window', 'home'), [], 'slot labelled „Fenster“: no twin');
+assert.equal(of({ security_entity_2: 'binary_sensor.grp_x' }, 'door', 'home').length, 2, 'unnamed unknown group: still the house');
+['doors_dead', 'grp_x', 'doors_cls'].forEach((k) => delete hs.states['binary_sensor.' + k]);
 delete hs.states['binary_sensor.smoke'];
 
 // button-card hands its templates a states proxy that lives as long as the card, and a new hass object per
