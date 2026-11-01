@@ -73,6 +73,13 @@ assert.ok(basis.includes("if (!lightIds.length && groupId && S[groupId] && Strin
   assert.deepEqual(T1(S['light.bad'], {}), { kind: 'lamps', tot: 4, on: 2 });
   assert.deepEqual(T1(S['light.bad'], { group_rooms: true }), { kind: 'lamps', tot: 4, on: 2 });
   assert.equal(W(T1(S['light.bad'], { group_rooms: true })), '2 An');
+  // A room's tile whose popup opens the house group (entity: the room group, popup_group: the house, no group_rooms):
+  // the room's lamps, like the room's badge – prod 01.11.2026: badge „Aus“, tile „1 An“ (a lamp elsewhere in the house).
+  assert.deepEqual(T1(S['light.lounge'], { popup_group: 'light.haus' }), { kind: 'lamps', tot: 1, on: 0 });
+  assert.equal(W(T1(S['light.lounge'], { popup_group: 'light.haus' })), W(T1(sel, { entity_1: 'light.lounge' })));
+  assert.deepEqual(T1(S['light.garage'], { popup_group: 'light.haus' }), { kind: 'lamps', tot: 3, on: 2 });
+  // A single lamp standing for a house group (#30, the group's first lamp) still counts the house.
+  assert.deepEqual(T1(S['light.ku_1'], { popup_group: 'light.haus' }), { kind: 'lamps', tot: 5, on: 3 });
   // A room inside a house group with group_rooms (the popup preselects the room in the house): still the room's lamps
   // (detail round #2: the bathroom chip counted the house, „3 An“, its one lamp off).
   assert.deepEqual(T1(sel, { light_group_entity: 'light.garage', group_rooms: true }), { kind: 'lamps', tot: 3, on: 2 });
