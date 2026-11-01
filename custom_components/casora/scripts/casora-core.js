@@ -7974,7 +7974,12 @@ window.casoraMenuGlass = {
       var so = this._ringSrc && this._ringSrc._stateObj;
       var h = (document.querySelector('home-assistant') || {}).hass;
       var cur = so && h && h.states ? h.states[so.entity_id] : null;
-      if (!cur) return;
+      var self0 = this;
+      var put = function (t) { self0._headerStatus.innerHTML = '<b>' + window.casoraEsc(t) + '</b>'; self0._headerStatus.hidden = false;
+        if (again) self0._dedupeHead(); else [300, 900, 1800].forEach(function (ms) { setTimeout(function () { if (self0.hasAttribute('open') && !self0._headLine) self0._dedupeHead(); }, ms); }); };
+      // Detail round #8: a tile without an entity (waste, updates, vehicle …) or whose entity has no word and no change
+      // since HA's start says what its tile says („Restmüll morgen“, „Aktuell“) – §3: a status line in every popup.
+      if (!cur) { var tw = this._tileWord(); if (tw) put(tw); return; }
       var txt = '';
       try { txt = h.formatEntityState ? h.formatEntityState(cur) : cur.state; } catch (e) { txt = cur.state; }
       // A camera or lock that is gone says „Offline“ like its tile (wortliste; detail round #19).
@@ -7992,19 +7997,30 @@ window.casoraMenuGlass = {
       // room's climate) is a number, not a state – the head says since when instead (the stage shows its own values).
       var meas0 = (dom0 === 'sensor' || dom0 === 'number' || dom0 === 'input_number') && cur.state !== '' && isFinite(Number(cur.state));
       if (meas0 || ((cur.state === 'on' || cur.state === 'off') && (grp0 || dom0 === 'binary_sensor' || dom0 === 'calendar') && !(cur.attributes || {}).device_class)) {
-        txt = this._sinceText(cur); if (!txt) return;
-        this._headerStatus.innerHTML = '<b>' + window.casoraEsc(txt) + '</b>';
-        this._headerStatus.hidden = false;
+        txt = this._sinceText(cur) || this._tileWord(); if (!txt) return;
+        put(txt);
         return;
       }
       var word = window._casoraRawWord ? window._casoraRawWord(cur.state) : cur.state;
       if (word !== cur.state) txt = window.casoraTr ? window.casoraTr(word) : word;
       else if (txt === 'Ein') txt = 'An'; // HA's German „Ein“ for on – the word list says „An“ (as the stage)
-      else if (txt === cur.state && /^(?:[a-z][a-z0-9_]*|[A-Z][A-Z0-9_]{2,})$/.test(txt)) { txt = this._sinceText(cur); if (!txt) return; } // also a code like „PRE“ (football)
+      else if (txt === cur.state && /^(?:[a-z][a-z0-9_]*|[A-Z][A-Z0-9_]{2,})$/.test(txt)) { txt = this._sinceText(cur) || this._tileWord(); if (!txt) return; } // also a code like „PRE“ (football)
       this._headerStatus.innerHTML = '<b>' + window.casoraEsc(txt) + '</b>';
       this._headerStatus.hidden = false;
       if (again) this._dedupeHead();
       else [300, 900, 1800].forEach((ms) => setTimeout(() => { if (this.hasAttribute('open') && !this._headLine) this._dedupeHead(); }, ms));
+    }
+    // The state line the tile shows (#state; only its visible leaves – tiles carry a narrow and a wide variant), '' without.
+    _tileWord() {
+      try {
+        var sr = this._ringSrc && this._ringSrc.shadowRoot, el = sr && sr.querySelector('#state');
+        if (!el) return '';
+        var vis = function (n) { return !!(n.getClientRects && n.getClientRects().length); };
+        var leaves = [].filter.call(el.querySelectorAll('*'), function (k) { return !k.children.length && vis(k) && String(k.textContent || '').trim(); });
+        var t = leaves.length ? leaves.map(function (k) { return String(k.textContent).trim(); }).join(' ') : String(el.textContent || '');
+        t = t.replace(/\s+/g, ' ').trim();
+        return t.length > 60 ? '' : t;
+      } catch (e) { return ''; }
     }
     // „Seit 14:42“ (today) or „Seit 28.10.“ from the entity's last change; '' without a time.
     _sinceText(cur) {
