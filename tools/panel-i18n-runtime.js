@@ -11,7 +11,15 @@
   if (window.__casoraPanelI18n) return;
   window.__casoraPanelI18n = true;
 
+  // English ships inline; every other language is panel/i18n/<lang>.json, fetched for the language shown
+  // (Ladezeit stage 1: all 8 languages were 1.4 MB / ~500 KB gzip on every Studio start).
   const TABLES = /*__TABLES__*/{};
+  const AVAIL = /*__AVAIL__*/[];
+  // URL of this module (with the Studio's ?v=), filled in by the build; null when evaluated elsewhere.
+  const SELF = /*__SELF__*/null;
+  const REMEMBER = "casora.i18n.lang";
+  const loading = new Map();
+  const failed = new Map();
   const ATTRS = ["placeholder", "title", "aria-label", "label", "helper", "heading"];
   const PROPS = ["label", "helper", "heading", "placeholder"];
   const SKIP = new Set(["INPUT", "TEXTAREA", "SCRIPT", "STYLE", "CODE", "PRE"]);
@@ -27,9 +35,57 @@
   let queued = false;
   const dirty = new Set();
 
+  // Which table serves language l (own, else its base language), or null.
+  function pick(l) {
+    const b = String(l).split("-")[0];
+    if (TABLES[l] || AVAIL.includes(l)) return l;
+    if (TABLES[b] || AVAIL.includes(b)) return b;
+    return null;
+  }
+
+  // Fetch a language's table once; resolves when it is there (or could not be loaded).
+  function load(w) {
+    if (!w || TABLES[w] || !AVAIL.includes(w)) return Promise.resolve();
+    if (loading.has(w)) return loading.get(w);
+    if (failed.has(w) && Date.now() - failed.get(w) < 30000) return Promise.resolve();
+    let url;
+    try {
+      const v = SELF ? new URL(SELF).searchParams.get("v") : null;
+      url = new URL(w + ".json" + (v ? "?v=" + encodeURIComponent(v) : ""), SELF ? new URL("./i18n/", SELF) : new URL("/casora_panel/i18n/", location.href)).href;
+    } catch (e) { return Promise.resolve(); }
+    const p = fetch(url, { credentials: "same-origin" })
+      .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then((t) => {
+        TABLES[w] = { exact: (t && t.exact) || {}, patterns: (t && t.patterns) || [] };
+        compiled = null;
+        memo = null;
+        // Translate what is already drawn (the panel rendered untranslated while it loaded).
+        if (root && pick(lang) === w) walk(root);
+      })
+      .catch((e) => { failed.set(w, Date.now()); console.warn("[casora-panel-i18n] " + w + " not loaded:", e && e.message || e); })
+      .finally(() => loading.delete(w));
+    loading.set(w, p);
+    return p;
+  }
+
+  // Start fetching before the panel knows its language: HA's language, else last time's, else the browser's.
+  (function prefetch() {
+    let g = null;
+    try {
+      const h = document.querySelector("home-assistant")?.hass;
+      g = h && ((h.locale && h.locale.language) || h.language);
+    } catch (e) { /* no DOM */ }
+    if (!g) { try { g = localStorage.getItem(REMEMBER) || JSON.parse(localStorage.getItem("selectedLanguage") || "null"); } catch (e) { /* private mode */ } }
+    if (!g && typeof navigator !== "undefined") g = navigator.language;
+    if (g) load(pick(g));
+  })();
+
   function table() {
     if (compiled && compiled.lang === lang) return compiled.t;
-    const t = TABLES[lang] || TABLES[lang.split("-")[0]] || null;
+    const w = pick(lang);
+    // Still loading: untranslated for now (load() walks the panel once it is there).
+    if (w && !TABLES[w]) { load(w); return null; }
+    const t = (w && TABLES[w]) || null;
     compiled = { lang, t: t && { exact: t.exact, patterns: (t.patterns || []).map(([re, rep]) => [new RegExp(re), rep]) } };
     return compiled.t;
   }
@@ -181,11 +237,22 @@
       set(h) {
         desc.set.call(this, h);
         const next = (h && ((h.locale && h.locale.language) || h.language)) || "en";
-        attach(this.shadowRoot);
         if (next !== lang) {
           lang = next;
+          try { if (h && localStorage.getItem(REMEMBER) !== next) localStorage.setItem(REMEMBER, next); } catch (e) { /* private mode */ }
+          const w = pick(next);
+          // The language's table is not here yet: keep the panel hidden until it is (at most 3 s), so it
+          // does not show English first and then switch.
+          if (w && !TABLES[w] && !this.__casoraI18nHeld) {
+            this.__casoraI18nHeld = true;
+            this.style.visibility = "hidden";
+            const show = () => { if (this.__casoraI18nHeld) { this.__casoraI18nHeld = false; this.style.visibility = ""; } };
+            const t = setTimeout(show, 3000);
+            load(w).then(() => { clearTimeout(t); show(); });
+          }
+          attach(this.shadowRoot);
           if (this.shadowRoot) walk(this.shadowRoot);
-        }
+        } else attach(this.shadowRoot);
       },
     });
   });
