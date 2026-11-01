@@ -525,7 +525,9 @@
   var head = function (t, right, inner) {
     var T = UIT();
     if (SOFT()) {
-      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:' + (inner ? '0 0 12px' : '0 6px 10px') + ';min-height:20px;">'
+      // Over a plate the popup's label margin (v3: 16 in, 8 to the plate – „Form“, „Letzte Duelle“ sat 6 in, popup-geo
+      // „etikett“); inside a plate (inner) as before.
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:' + (inner ? '0 0 12px;min-height:20px' : 'var(--casora-pv-label-m, 0 6px 10px)') + ';">'
         + '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));text-align:left;">'
         + t + '</div>' + (right || '') + '</div>';
     }
@@ -571,7 +573,8 @@
       + '.cfb-r.h{background:none;min-height:18px;font-size:11px;font-weight:600;letter-spacing:.04em;color:' + T.ink3 + ';}'
       + '.cfb-r.me{background:' + on + ';box-shadow:' + onSh + ';color:' + onInk + ';}'
       + '.cfb-r .k{color:' + sub + ';font-weight:600;text-align:center;}'
-      + '.cfb-r.me .k,.cfb-r.me .c{color:inherit;opacity:.62;}'
+      // On the lit row the numbers keep 4,5 : 1 (at .62 they were 3,5 : 1 on the cream of the dark theme).
+      + '.cfb-r.me .k,.cfb-r.me .c{color:inherit;opacity:.8;}'
       + '.cfb-r img{width:22px;height:22px;object-fit:contain;}'
       + '.cfb-r img.fl,.cfb-f img.fl{width:20px;height:15px;justify-self:center;object-fit:cover;border-radius:3px;box-shadow:0 0 0 .5px ' + hair + ';}'
       + '.cfb-r .n{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
@@ -598,7 +601,10 @@
       /* Spaltenkopf der Form wie „# Team Sp. …“ der Tabelle daneben (08.10.2026): gleiche Höhe, Zeilen fluchten. */
       + '.cfb-f.h{background:none;min-height:18px;padding-top:0;padding-bottom:0;font-size:11px;font-weight:600;letter-spacing:.04em;color:' + T.ink3 + ';}'
       + '.cfb-f{display:grid;grid-template-columns:28px 22px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:44px;padding:4px 14px 4px 8px;border-radius:' + rad + ';background:' + row + ';font-size:14.5px;}'
+      // The letter on the result colour: the ink inkOn picks for 4,5 : 1 (white on green was 2,6 : 1, on sand 4,1, on red 3,9).
       + '.cfb-res{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12.5px;}'
+      + (window._casoraInkOn ? esc('.cfb-res.W{color:' + window._casoraInkOn('var(--casora-color-green, #6AAE78)', 4.5) + ';}.cfb-res.D{color:'
+        + window._casoraInkOn('var(--casora-color-sand, #9A8672)', 4.5) + ';}.cfb-res.L{color:' + window._casoraInkOn('var(--casora-color-red, #D35A4E)', 4.5) + ';}') : '')
       + '.cfb-res.W{background:var(--casora-color-green, #6AAE78);}.cfb-res.D{background:var(--casora-color-sand, #9A8672);}.cfb-res.L{background:var(--casora-color-red, #D35A4E);}'
       + '.cfb-f img{width:22px;height:22px;object-fit:contain;}'
       + '.cfb-f .o{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2;}'
