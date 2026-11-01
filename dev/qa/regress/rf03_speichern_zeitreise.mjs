@@ -18,6 +18,20 @@ const saved0 = {};
 { const c = await ws(); for (const u of URLS) saved0[u] = await c.cmd({ type: 'lovelace/config', url_path: u }); c.close(); }
 atFinish(async () => { const c = await ws();
   for (const u of URLS) await c.cmd({ type: 'lovelace/config/save', url_path: u, config: saved0[u] }); c.close(); });
+// The time travel groups plain saves within 2 minutes into one entry (casora-panel-versions.js, GROUP_MS): a Studio
+// test just before (r42 in the gate for 26.11.2) put its saves in the same group as ours, and „the state before“ was
+// the state before that test (energy_subs_auto missing). The starting state is recorded and named here – a named
+// entry stays on its own – and the name is removed at the end.
+let startVid = null;
+{ const c = await ws();
+  try {
+    await c.cmd({ type: 'casora/versions/snap', url_path: dash.url, mobile_url: (dash.phone && dash.phone.url) || null, kind: 'initial' });
+    const L = await c.cmd({ type: 'casora/versions/list', url_path: dash.url });
+    startVid = L && L.versions && L.versions[0] && L.versions[0].id;
+    if (startVid) await c.cmd({ type: 'casora/versions/label', url_path: dash.url, version: startVid, name: 'QA rf03 Start' });
+  } finally { c.close(); } }
+atFinish(async () => { if (!startVid) return; const c = await ws();
+  try { await c.cmd({ type: 'casora/versions/label', url_path: dash.url, version: startVid, name: '' }); } catch (e) { /* gone */ } finally { c.close(); } });
 const cfgOf = async (u) => { const c = await ws(); try { return await c.cmd({ type: 'lovelace/config', url_path: u }); } finally { c.close(); } };
 
 const o = await open({ width: 1600, height: 1000, dark: false });
@@ -87,11 +101,14 @@ try {
   await pg.waitForTimeout(2500);
   // Einträge der Liste: „hh:mm …“ mit Beschreibung; der erste ist „Jetzt“, der zweite der Stand davor.
   const entries = await H(() => window.__pierce('button, [role=button], li, .zitem, .vrow').filter((b) => b.getClientRects().length
-    && /^\d\d:\d\d\s*\S/.test(b.textContent.trim()) && b.textContent.trim().length > 8)
+    && /^(\d\d:\d\d|QA rf03 Start)\s*\S/.test(b.textContent.trim()) && b.textContent.trim().length > 8)
     .filter((b, i, all) => !all.some((o) => o !== b && o.contains(b)))
     .map((b) => { const r = b.getBoundingClientRect(); return { t: b.textContent.trim().slice(0, 60), x: r.x + r.width / 2, y: r.y + r.height / 2 }; }));
   await need('Zeitreise mit mindestens zwei Ständen', entries.length >= 2, entries);
-  await pg.mouse.click(entries[1].x, entries[1].y);
+  // The starting state named above (it stands right under „Jetzt“), else the second entry.
+  const pick = entries.find((e) => e.t.startsWith('QA rf03 Start')) || entries[1];
+  await check('Zeitreise: der Stand davor ist der benannte Start', pick === entries[1], entries.slice(0, 3).map((e) => e.t));
+  await pg.mouse.click(pick.x, pick.y);
   await pg.waitForTimeout(2000);
   await tapBtn(pg.locator('button:visible').filter({ hasText: /^(Diesen Stand wiederherstellen|Restore this version)$/ }).first());
   await pg.waitForTimeout(1200);
