@@ -377,7 +377,7 @@
       if (bs7 && ok(bs7) && bs7 !== 'idle') facts7.push({ label: 'Backup', value: 'Läuft' });
       else if (ok(lb7)) facts7.push({ label: 'Backup', value: ago(lb7) });
       // Same services and questions as the list head's button: install all that can, else restart once owed.
-      var act7 = inst7.length > 1 ? { text: 'Alle aktualisieren', icon: 'mdi:download', primary: true,
+      var act7 = inst7.length > 1 ? { text: 'Alle aktualisieren', short: 'Alle', icon: 'mdi:download', primary: true,
           svc: { domain: 'update', service: 'install', target: { entity_id: inst7 }, data: {} }, confirm: 'Alle ' + inst7.length + ' Updates jetzt installieren?' }
         : rest7 && !busy7 ? { text: 'Jetzt neu starten', icon: 'mdi:restart', svc: { domain: 'homeassistant', service: 'restart', data: {} },
           confirm: 'Home Assistant jetzt neu starten?' } : null;

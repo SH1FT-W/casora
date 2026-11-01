@@ -252,17 +252,41 @@
       moons: function () { return AL.quick(ent, states); },
     }));
   };
-  // Field „quick“: Abwesend · Zuhause · Nacht (the arm modes the panel supports); „Aus“ is the stage's action only.
+  // Field „quick“: every arm mode the panel supports (supported_features: away, home, night, vacation, custom bypass) –
+  // up to 4 as moons, more: the first 3 and „Alle (n)“ → a sub page with every mode (richtlinien §5, owner 01.11.2026:
+  // Urlaub and Bypass were missing). „Aus“ is the stage's action only (the pill under the wheel).
+  var ARM_ORDER = ['armed_away', 'armed_home', 'armed_night', 'armed_vacation', 'armed_custom_bypass'];
+  var ARM_ICON = { armed_away: 'shield_lock', armed_home: 'shield_check', armed_night: 'shield_moon',
+    armed_vacation: 'mdi:airplane', armed_custom_bypass: 'mdi:shield-edit-outline' };
+  AL.armModes = function (I) { return ARM_ORDER.filter(function (id) { return AL.ok(I, id); }); };
   AL.quick = function (ent, states) {
     var UI = window._casoraUI; if (!UI || !UI.quick) return '';
     var I = AL.info(ent, states);
     if (I.st === 'unavailable' || I.st === 'unknown') return '';
     var aim = (I.st === 'arming' || I.st === 'pending') ? (I.a.next_state || I.a.arm_mode) : I.st;
-    var ICON = { armed_away: 'shield_lock', armed_home: 'shield_check', armed_night: 'shield_moon' };
-    return SVC_SWAP(UI.quick(['armed_away', 'armed_home', 'armed_night'].filter(function (id) { return AL.ok(I, id); }).map(function (id) {
-      return { icon: ICON[id], text: MODE_WORD[id], active: aim === id,
+    var ids = AL.armModes(I);
+    if (ids.length > 4) regModes();
+    return SVC_SWAP(UI.quick(ids.map(function (id) {
+      return { icon: ARM_ICON[id], text: MODE_WORD[id], active: aim === id,
         svc: { domain: 'alarm_control_panel', service: 'alarm_' + id.replace('armed_', 'arm_'), data: { entity_id: ent } } };
-    })));
+    }), null, { page: 'alarmModes|' + ent }));
+  };
+  // Sub page „Modus“: every supported arm mode as a row (the chosen one marked), taps through data-casora-alarm.
+  var regModes = function () {
+    if (AL._pg || !window._casoraUI || !window._casoraUI.page) return;
+    AL._pg = true;
+    window._casoraUI.page('alarmModes', function (ent) {
+      var HH = window._casoraHH; if (!HH || !HH.page || !ent) return;
+      HH.page('Modus', [ent], 'const A = window._casoraAlarmSoft, E = ' + JSON.stringify(ent) + ';\n'
+        + 'return A && A.modeRows ? A.modeRows(E, states) : "";', ent);
+    });
+  };
+  window._casoraAlarmSoft.modeRows = function (ent, states) {
+    var I = AL.info(ent, states);
+    return window._casoraAlarmSoft.modes(ent, AL.armModes(I).map(function (id) {
+      return { id: id, icon: { armed_away: 'mdi:shield-lock-outline', armed_home: 'mdi:shield-home-outline', armed_night: 'mdi:shield-moon-outline' }[id] || ARM_ICON[id],
+        label: MODE_WORD[id] };
+    }), states);
   };
 
   // Popup v3: a dangerous main action asks first (confirm as in the shared services). Code missing: shake the field

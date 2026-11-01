@@ -1066,8 +1066,9 @@
     /* wrap: wrap instead of equal-width columns (robot vacuum: „Saugen & wischen“ was clipped otherwise). */
     /* D-07: rows fill the full width (empty grid columns used to remain on the right), each field
        at least as wide as its text – desktop all in one row, on the phone 3 + 2. */
-    if (wrap) return '<style>.hh-wrap .hui-seg{display:flex!important;flex-wrap:wrap;}'
-      + '.hh-wrap .hui-sg{flex:1 1 0;min-width:max-content;padding:0 14px;overflow:visible;}</style><div class="hh-wrap">' + html + '</div>';
+    /* 01.11.2026: no flex wrap any more – it broke the one track into uneven rows with the chosen pill sticking out of
+       it. UI.segments lays many fields out itself (grid of pills from 6, labels on two lines instead of clipped). */
+    if (wrap) return '<div class="hh-wrap">' + html + '</div>';
     return '<style>.hh-dense .hui-sg{flex:0 1 auto;min-width:0;padding:0 16px;}</style><div class="hh-dense">' + html + '</div>';
   };
   /* White glass tones (rgba(255,255,255,…)) would be invisible on cream: in the Soft design a dimmed circle. */

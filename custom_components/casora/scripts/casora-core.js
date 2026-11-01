@@ -11097,12 +11097,14 @@ window.casoraMenuGlass = {
     items = items || [];
     var out = '';
     if (soft()) {
-      // Segment-Umschalter wie „Warm / Neutral / Kalt“: gleich breite Sand-Felder in EINER
-      // Reihe (Raster statt Umbruch – am Handy stand „Öffnen“ sonst allein darunter),
-      // das aktive hell mit weichem Schatten. Erst ab 7 Feldern wird umbrochen.
+      // Segmented control like „Warm / Neutral / Kalt“: equal fields in ONE row on one track, the chosen one
+      // light with a soft shadow. From 6 fields (vacuum suction/water levels, 8 each) a clean grid of pills instead:
+      // no shared track (a 999 px track over two rows let the corner pills stick out of it), every pill on its own
+      // fill, equal widths, rows filled evenly (6 → 3 + 3, 7 → 4 + 3, 8 → 4 + 4), the chosen pill a pill like the rest.
       var n = items.length;
       var many = n >= 5;
-      var cols = n >= 7 ? 'repeat(auto-fill, minmax(88px, 1fr))' : 'repeat(' + Math.max(1, n) + ', minmax(0, 1fr))';
+      var grid = n >= 6;
+      var cols = grid ? 'repeat(' + Math.ceil(n / Math.ceil(n / 4)) + ', minmax(0, 1fr))' : 'repeat(' + Math.max(1, n) + ', minmax(0, 1fr))';
       var lv = opts && opts.live && opts.live.entities && opts.live.entities.length ? opts.live : null;
       if (label) out += softLabel(label);
       out += '<style>'
@@ -11121,9 +11123,15 @@ window.casoraMenuGlass = {
         + '.hui-sg.on{background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, ' + T.ink + ');'
         +   'box-shadow:var(--casora-soft-seg-on-shadow, none);}'
         + (many ? '@media (max-width: 480px){.hui-seg{gap:6px;}.hui-sg{font-size:12.5px;padding:0 2px;letter-spacing:-0.01em;}}' : '')
+        // Grid of pills: the track's colour moves onto every pill, 6 px between them in both directions.
+        + '.hui-seg.grid{gap:6px;padding:0;background:transparent;border-radius:0;}'
+        + '.hui-seg.grid .hui-sg{background:var(--casora-pv-seg-track, var(--casora-pv-seg-fill, ' + S.ctl + '));}'
+        + '.hui-seg.grid .hui-sg.on{background:var(--casora-soft-seg-on, #FFFDF9);}'
+        // Many fields: a long label („Eigene Wassermenge“, „Saugen & wischen“) takes two lines instead of „…“.
+        + (many ? '.hui-sg{white-space:normal;text-overflow:clip;line-height:1.15;padding-block:4px;overflow-wrap:break-word;hyphens:auto;}' : '')
         + '@media (hover:hover){.hui-sg:not(.on):hover{background:' + S.rowHover + ';}}'
         + '@media (prefers-reduced-motion:reduce){.hui-sg{transition:none;}}'
-        + '</style><div class="hui-seg" style="grid-template-columns:' + cols + ';"'
+        + '</style><div class="hui-seg' + (grid ? ' grid' : '') + '" style="grid-template-columns:' + cols + ';"'
         + (lv ? ' data-casora-live="seg" data-casora-ents="' + esc(JSON.stringify(lv.entities)) + '"'
             + ' data-casora-attr="' + esc(lv.attr || 'current_position') + '"' : '')
         + '>';
@@ -12021,7 +12029,8 @@ window.casoraMenuGlass = {
       var aSpec = act.svc ? (act.danger && !act.svc.confirm ? Object.assign({}, act.svc, { confirm: act.confirm || true }) : act.svc) : null;
       var aDeg = list.length === 1 || list.length === 3 ? 25 : 90;
       degs.push(aDeg);
-      out += moonHtml({ icon: act.icon || (act.danger ? 'mdi:alert-outline' : 'mdi:play'), text: act.text, svc: aSpec, confirm: act.danger ? null : act.confirm, attrs: act.attrs },
+      // act.short: a short word on the moon, the full text stays its name and tooltip („Alle“ for „Alle aktualisieren“).
+      out += moonHtml({ icon: act.icon || (act.danger ? 'mdi:alert-outline' : 'mdi:play'), text: act.text, short: act.short || null, svc: aSpec, confirm: act.danger ? null : act.confirm, attrs: act.attrs },
         aDeg, act.danger ? 'dng' : act.primary === false ? '' : 'go');
     }
     var lv = o.live && o.live.entities && o.live.entities.length ? o.live : null;
@@ -12031,7 +12040,9 @@ window.casoraMenuGlass = {
   // The rings. ring = { kind: 'value'|'level'|'segs', pct, col, heat, marker, knob, segs: [{ ok, label, tone }] }
   // ring.moons: the moons' angles – the ticks under a side moon are left out (review 2, DH-23).
   function dialSvg(ring) {
-    var id = 'hui-dlg' + (++dialSeq), svgHtml = '<defs><filter id="' + esc(id) + '" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>';
+    // The glow's filter region is the whole drawing (user space), not the path's box: a short segment at the top has a
+    // box only a few units high, and its glow was cut off straight along it (Updates popup, 01.11.2026).
+    var id = 'hui-dlg' + (++dialSeq), svgHtml = '<defs><filter id="' + esc(id) + '" filterUnits="userSpaceOnUse" x="-60" y="-60" width="540" height="540"><feGaussianBlur stdDeviation="9"/></filter>';
     if (ring.heat) svgHtml += '<linearGradient id="' + esc(id) + 'h" x1="0" y1="1" x2="1" y2="0"><stop offset="0" style="stop-color:var(--casora-color-blue, #5B8FC9)"/>'
       + '<stop offset=".55" style="stop-color:var(--casora-color-orange, #FF9F0A)"/><stop offset="1" style="stop-color:var(--casora-color-red, #D35A4E)"/></linearGradient>';
     svgHtml += '</defs>';
