@@ -3,7 +3,7 @@
 Lamps behind a bridge were not found by the setup from 1.0.3 until 26.10.41, and the test house had none, so
 nobody noticed. This module adds the usual shapes of a real home:
   * a Hue-like bridge (no area) with two lamps, each lamp its own device behind the bridge (via_device),
-    one in "Garage", one in "Garten";
+    one in "Garage", one in "Garten", both with the bridge's effects (effect_list);
   * a Zigbee coordinator (no area) with a ceiling lamp and a radiator thermostat behind it, both in "Garage",
     with the noise such devices bring (link quality as diagnostic, start-up behaviour and calibration as config);
   * a two-channel dimmer (Shelly-like): the dimmer itself in "Garage", each channel its own device behind it
@@ -45,6 +45,10 @@ def _dev(key, name, manufacturer, model, area=None, via=None):
 CT = {"supported_color_modes": ["color_temp", "xy"], "min_color_temp_kelvin": 2200, "max_color_temp_kelvin": 6500,
       "supported_features": 32}
 DIM = {"supported_color_modes": ["brightness"], "supported_features": 32}
+# Hue-like lamps also bring the bridge's effects (supported_features 4 = effect), "off" among them like Hue; raw keys
+# as HA's Hue integration has them (light popup: moon "Effekte", dev/qa/regress/r437_light_effects.mjs).
+FX = {"effect_list": ["off", "candle", "fire", "prism", "sparkle", "opal", "glisten", "underwater", "cosmos", "sunbeam",
+                      "enchant"], "supported_features": 32 | 4}
 
 
 def _on(base, brightness, **extra):
@@ -100,8 +104,8 @@ def join_house_group(fixture: dict) -> list[str]:
 def extra(now) -> dict:
     ents = [
         # Hue-like bridge: one device per lamp, behind the bridge.
-        _e("light.werkbanklampe", "on", "testhue_werkbank", "Werkbanklampe", _on(CT, 204, color_temp_kelvin=4000)),
-        _e("light.palmenleuchte", "off", "testhue_palme", "Palmenleuchte", _off(CT)),
+        _e("light.werkbanklampe", "on", "testhue_werkbank", "Werkbanklampe", _on({**CT, **FX}, 204, color_temp_kelvin=4000, effect="off")),
+        _e("light.palmenleuchte", "off", "testhue_palme", "Palmenleuchte", _off({**CT, **FX})),
         # Zigbee coordinator: lamp and thermostat behind it, with diagnostic and config entities.
         _e("light.deckenlicht_garage", "off", "testzb_decke", "Deckenlicht Garage", _off(CT)),
         _e("sensor.deckenlicht_garage_linkquality", "142", "testzb_decke", "Deckenlicht Garage Linkquality",

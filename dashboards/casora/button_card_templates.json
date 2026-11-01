@@ -6349,7 +6349,8 @@
    "light_rooms_auto": null,
    "custom_badges": null,
    "badges_wrap": null,
-   "security_sub_order": null
+   "security_sub_order": null,
+   "climate_sub_order": null
   }
  },
  "casora_mobile_header": {
@@ -7203,7 +7204,8 @@
       "padding": 0
      },
      "layout_type": "custom:grid-layout",
-     "type": "custom:layout-card"
+     "type": "custom:layout-card",
+     "casora_clim_order": "[[[ return variables.climate_sub_order || null ]]]"
     }
    },
    "security_row": {
@@ -7945,7 +7947,8 @@
      },
      "layout_type": "custom:grid-layout",
      "type": "custom:layout-card",
-     "casora_sec_order": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_sub_order || null ]]]"
+     "casora_sec_order": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_sub_order || null ]]]",
+     "casora_clim_order": "[[[ const _rv = variables.casora_rv || {}; return _rv.climate_sub_order || null ]]]"
     }
    },
    "room_sub_climate": {
@@ -8020,6 +8023,7 @@
      },
      "layout_type": "custom:grid-layout",
      "type": "custom:layout-card",
+     "casora_clim_order": "[[[ const _rv = variables.casora_rv || {}; return _rv.climate_sub_order || null ]]]",
      "card_mod": {
       "style": "ha-card { background: transparent !important; box-shadow: none !important; overflow: visible !important; padding: 0 !important; contain: none !important; isolation: auto !important; will-change: auto !important; width: max-content !important; min-width: 100% !important; }\n"
      }
@@ -9773,7 +9777,8 @@
    "energy_popup_focus_4": null,
    "energy_popup_focus_5": null,
    "energy_popup_focus_6": null,
-   "security_sub_order": null
+   "security_sub_order": null,
+   "climate_sub_order": null
   }
  },
  "casora_mobile_weather": {
@@ -13874,7 +13879,8 @@
      },
      "layout_type": "custom:grid-layout",
      "type": "custom:layout-card",
-     "casora_sec_order": "[[[ return variables.security_sub_order || null ]]]"
+     "casora_sec_order": "[[[ return variables.security_sub_order || null ]]]",
+     "casora_clim_order": "[[[ return variables.climate_sub_order || null ]]]"
     }
    },
    "badges_climate": {
@@ -13948,7 +13954,8 @@
       "justify-items": "start"
      },
      "layout_type": "custom:grid-layout",
-     "type": "custom:layout-card"
+     "type": "custom:layout-card",
+     "casora_clim_order": "[[[ return variables.climate_sub_order || null ]]]"
     }
    },
    "badges_presence": {
@@ -16152,7 +16159,8 @@
    "weather_extras": null,
    "weather_feels": null,
    "weather_feels_sensor": null,
-   "security_sub_order": null
+   "security_sub_order": null,
+   "climate_sub_order": null
   }
  },
  "casora_scene_core": {

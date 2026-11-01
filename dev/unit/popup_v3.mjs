@@ -64,7 +64,7 @@ const MIGRIERT = [
   // Like the fan: S1 speed, presets as quick tiles (S6 would need a chart plate in the stage); PM2,5 as the Verlauf.
   { popup: 'Luftreiniger', vorlagen: ['casora_air_purifier'], file: null, stages: 1 },
   // One lamp in v3 is the light popup's single-lamp case (S1 with the white tone as its segment, the room's scenes).
-  { popup: 'Leuchte (einzeln)', vorlagen: ['casora_light'], file: '03-popups.js', from: '  var v3Stage = function', to: '  var v3Scenes = function', stages: 1 },
+  { popup: 'Leuchte (einzeln)', vorlagen: ['casora_light'], file: '03-popups.js', from: '  var v3Stage = function', to: '  var FX_NONE = ', stages: 1 },
   // Readings popup without a thermostat: air quality (else temperature) as S7 (S6 would need a chart plate in the stage),
   // the curve as the Verlauf (120), the other readings as the list.
   // The wheel follows the tapped badge: temperature or humidity (S6 with a range), air quality (S7).
@@ -201,7 +201,7 @@ for (const m of MIGRIERT) {
   const D = core.slice(a, b);
   assert.ok(/a0: 135, span: 270/.test(D) && /stroke-width="26"/.test(D), 'dial: 270° arc from 135° with a 26 track');
   assert.ok(/role="slider" tabindex="0"/.test(D) && /data-casora-axis="dial"/.test(D), 'dial: turnable ring is not a slider on the shared handler');
-  assert.ok(/!x\.danger/.test(D) && /list\.length > 4[\s\S]{0,120}slice\(0, 3\)/.test(D), 'moons: danger filter or the 4-moon cap missing');
+  assert.ok(/!x\.danger/.test(D) && /list\.length \+ kept\.length > 4[\s\S]{0,160}nShow = Math\.max\(0, 3 - kept\.length\)[\s\S]{0,80}slice\(0, nShow\)/.test(D), 'moons: danger filter or the 4-moon cap missing (a kept moon counts)');
   assert.ok(/kind === 'segs'/.test(D) && /ring\.heat/.test(D) && /ring\.marker/.test(D), 'dial: segments, heat gradient or the current dot missing');
   assert.ok(/dialOn = o\.dial !== false && \(\/\^S\[12347\]\$\//.test(core), 'UI.stage does not draw S1–S4/S7 as the dial');
   assert.ok(/casoraAxis === 'dial'/.test(core) && /addEventListener\('wheel'/.test(core), 'slider handler without the dial (drag on the ring, mouse wheel)');
