@@ -1182,8 +1182,8 @@
   window.addEventListener('mousemove', function (ev) { if (bar) { bar.v = barVal(bar, ev.clientX); barPaint(bar, bar.v); } }, true);
   window.addEventListener('mouseup', function () { barEnd(); }, true);
 
-  /* −/+ der Zieltemperatur: jeder Tipp zählt sofort weiter (Anzeige, Balken, Grenzen),
-     set_temperature geht erst 600 ms nach dem letzten Tipp raus – ein Aufruf statt einer Kette. */
+  /* − / + of the target: every tap counts at once (display, bar, limits), set_temperature goes out 600 ms
+     after the last tap – one call instead of a chain. */
   var stepTap = function (el) {
     if (el.classList.contains('dis')) return;
     if (window._casoraPopupOpenedAt && Date.now() - window._casoraPopupOpenedAt < 600) return;
@@ -1221,23 +1221,102 @@
       ha.hass.callService('climate', 'set_temperature', { temperature: v }, { entity_id: c.id });
     }, 600);
   };
-  var stepT = null, stepTouchAt = 0;
+  /* One gesture on − / + (iPad/iPhone 26.11.2: the floor heating's − / + did nothing). The FBH popup is a
+     button-card inside a button-card: the outer one stops the touchstart and dispatches a copy from its own
+     container (isTrusted false, path without the button), which used to reset the touch – the touchend then
+     found nothing. Now a gesture starts on the first trusted pointerdown (touch/pen) or touchstart on a
+     button, re-sent copies of the same touch never reset it, and whichever end comes first (pointerup or
+     touchend, both arrive on iOS) steps once; the other end and the click echo are swallowed. A finger may
+     wander STEP_SLOP px or stay on the button. */
+  var STEP_SLOP = 16;
+  var stepG = null, stepTouchAt = 0;
+  // Opt-in diagnostics for a real device: localStorage 'casora-debug-touch' = '1' writes what − / + saw to
+  // the HA log (logger casora.touch, level warning), a few lines bundled per second.
+  var dbgBuf = [], dbgT = null, dbgN = 0, dbgMin = 0;
+  var dbg = window._casoraTouchDbg = window._casoraTouchDbg || function (msg) {
+    var on = false; try { on = window.localStorage.getItem('casora-debug-touch') === '1'; } catch (e) { on = false; }
+    if (!on) return;
+    dbgBuf.push(new Date().toISOString().slice(11, 23) + ' ' + msg);
+    if (dbgT) return;
+    dbgT = setTimeout(function () {
+      dbgT = null;
+      var now = Date.now(); if (now - dbgMin > 60000) { dbgMin = now; dbgN = 0; }
+      var lines = dbgBuf.splice(0, dbgBuf.length);
+      if (++dbgN > 30) return;   // at most 30 log entries a minute
+      var ha = document.querySelector('home-assistant');
+      if (ha && ha.hass) ha.hass.callService('system_log', 'write', { level: 'warning', logger: 'casora.touch', message: lines.join('\n') }).catch(function () {});
+    }, 1000);
+  };
+  var stepWhy = function (el) {
+    if (el.classList.contains('dis')) return 'disabled';
+    if (window._casoraPopupOpenedAt && Date.now() - window._casoraPopupOpenedAt < 600) return 'popup just opened';
+    return '';
+  };
+  var stepNear = function (g, x, y) {
+    if (x == null) return true;
+    if (Math.abs(x - g.x) < STEP_SLOP && Math.abs(y - g.y) < STEP_SLOP) return true;
+    var r = g.el.isConnected && g.el.getBoundingClientRect();
+    return !!(r && r.width && x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8);
+  };
+  var stepStart = function (ev, x, y, src) {
+    var el = pathFind(ev, 'data-fb-step');
+    if (!el) {
+      // A copy of the running touch (button-card re-dispatch) or the touchstart after its pointerdown: keep it.
+      if (stepG && !stepG.done && (!ev.isTrusted || Date.now() - stepG.at < 400)) { dbg('fb-step ' + ev.type + ' ignored (' + (ev.isTrusted ? 'other target' : 're-sent copy') + ')'); return; }
+      stepG = null; return;
+    }
+    if (stepG && !stepG.done && stepG.el === el && Date.now() - stepG.at < 400) { dbg('fb-step ' + src + ' joins gesture'); return; }
+    stepG = { el: el, x: x, y: y, at: Date.now(), done: false };
+    dbg('fb-step ' + src + ' start ' + (el.getAttribute('aria-label') || '') + ' @' + Math.round(x) + ',' + Math.round(y) + (ev.isTrusted ? '' : ' (synthetic)'));
+  };
+  // Returns true when the event belonged to a − / + gesture (the caller swallows it).
+  var stepEnd = function (ev, x, y, src) {
+    var g = stepG; if (!g) return false;
+    if (g.done) { stepG = null; dbg('fb-step ' + src + ' end (already stepped)'); return true; }
+    g.done = true;
+    stepTouchAt = Date.now();
+    if (!stepNear(g, x, y)) { dbg('fb-step ' + src + ' moved away (' + Math.round(x - g.x) + ',' + Math.round(y - g.y) + ')'); return true; }
+    // Redrawn while the finger was down (a state update): the button now under the finger takes the tap.
+    if (!g.el.isConnected && x != null) {
+      var hit = document.elementFromPoint(x, y);
+      while (hit && hit.shadowRoot) { var inner = hit.shadowRoot.elementFromPoint(x, y); if (!inner || inner === hit) break; hit = inner; }
+      var nb = hit && hit.closest && hit.closest('[data-fb-step]');
+      if (nb) g.el = nb;
+    }
+    var why = stepWhy(g.el);
+    dbg('fb-step ' + src + ' tap ' + (why ? 'blocked: ' + why : 'steps') + (g.el.isConnected ? '' : ' (button detached)'));
+    stepTap(g.el);
+    return true;
+  };
+  window.addEventListener('pointerdown', function (ev) {
+    if (ev.pointerType !== 'touch' && ev.pointerType !== 'pen') return;
+    if (!ev.isTrusted) return;
+    stepStart(ev, ev.clientX, ev.clientY, 'pointerdown');
+  }, { capture: true, passive: true });
+  window.addEventListener('pointerup', function (ev) {
+    if (ev.pointerType !== 'touch' && ev.pointerType !== 'pen') return;
+    if (stepEnd(ev, ev.clientX, ev.clientY, 'pointerup')) ev.stopPropagation();
+  }, true);
+  window.addEventListener('pointercancel', function (ev) {
+    if (stepG && !stepG.done && ev.pointerType !== 'mouse') { dbg('fb-step pointercancel'); stepG = null; }
+  }, { capture: true, passive: true });
   window.addEventListener('touchstart', function (ev) {
-    var el = pathFind(ev, 'data-fb-step'), t = ev.touches && ev.touches[0];
-    stepT = el && t ? { el: el, x: t.clientX, y: t.clientY } : null;
+    var t = ev.touches && ev.touches[0];
+    if (t) stepStart(ev, t.clientX, t.clientY, 'touchstart');
   }, { capture: true, passive: true });
   window.addEventListener('touchend', function (ev) {
-    if (!stepT) return; var s = stepT; stepT = null;
+    if (!stepG) return;
     var t = ev.changedTouches && ev.changedTouches[0];
+    if (!stepEnd(ev, t ? t.clientX : null, t ? t.clientY : null, 'touchend')) return;
+    stepG = null; stepTouchAt = Date.now();
     ev.stopPropagation(); if (ev.cancelable) ev.preventDefault();
-    stepTouchAt = Date.now();
-    if (t && Math.abs(t.clientX - s.x) < 10 && Math.abs(t.clientY - s.y) < 10) stepTap(s.el);
   }, { capture: true, passive: false });
-  window.addEventListener('touchcancel', function () { stepT = null; }, { capture: true, passive: true });
+  window.addEventListener('touchcancel', function () { if (stepG) dbg('fb-step touchcancel'); stepG = null; }, { capture: true, passive: true });
   window.addEventListener('click', function (ev) {
     var el = pathFind(ev, 'data-fb-step'); if (!el) return;
     ev.preventDefault(); ev.stopPropagation();
     if (Date.now() - stepTouchAt < 700) return;
+    dbg('fb-step click ' + (stepWhy(el) || 'steps'));
     stepTap(el);
   }, true);
 })();

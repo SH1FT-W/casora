@@ -10445,6 +10445,8 @@ window.casoraMenuGlass = {
           // Hier nur das Klick-Echo eines Fingertipps auslassen und vom zuletzt gesendeten Ziel weiterzählen.
           var stepBy = t.dataset.casoraStep != null ? parseFloat(t.dataset.casoraStep) : NaN;
           if (isFinite(stepBy)) {
+            // Opt-in diagnostics on a real device (localStorage 'casora-debug-touch' = '1', 03-popups.js).
+            if (window._casoraTouchDbg) window._casoraTouchDbg('svc-step ' + ev.type + (ev.isTrusted ? '' : ' (synthetic)') + ' ' + (t.getAttribute('aria-label') || ''));
             if (ev.type === 'touchend') window._casoraStepTouch = Date.now();
             else if (Date.now() - (window._casoraStepTouch || 0) < 700) { ev.preventDefault(); ev.stopPropagation(); return; }
           } else if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
@@ -10581,6 +10583,10 @@ window.casoraMenuGlass = {
     document.addEventListener('touchend', function (ev) {
       var moved = !!(tp && tp.moved);
       tp = null;
+      if (moved && window._casoraTouchDbg) {
+        var mp = (ev.composedPath && ev.composedPath()) || [];
+        if (mp.some(function (n) { return n && n.dataset && n.dataset.casoraStep != null; })) window._casoraTouchDbg('svc-step touchend ignored: finger moved > ' + TAP_SLOP + ' px');
+      }
       if (moved) return;
       fire(ev);
     }, true);
