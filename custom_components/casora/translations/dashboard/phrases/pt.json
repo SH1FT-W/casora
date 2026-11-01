@@ -2692,7 +2692,18 @@
   "Fehlt": "Falta",
   "Ja": "Sim",
   "unbekannt": "desconhecido",
-  "Luftfeuchte · 24 Std.": "Umidade · 24 h"
+  "Luftfeuchte · 24 Std.": "Umidade · 24 h",
+  "Räume, Geräte, Szenen": "Divisões, dispositivos, cenas",
+  "Räume, Geräte, Szenen suchen": "Procurar divisões, dispositivos, cenas",
+  "Räume, Geräte und Szenen suchen": "Procurar divisões, dispositivos e cenas",
+  "Suche": "Procurar",
+  "Eingabe löschen": "Limpar",
+  "Ergebnisse": "Resultados",
+  "Keine Treffer": "Sem resultados",
+  "1 Treffer": "1 resultado",
+  "{n} Treffer": "{n} resultados",
+  "Raum öffnen": "Abrir divisão",
+  "Szene starten": "Iniciar cena"
  },
  "patterns": [
   [

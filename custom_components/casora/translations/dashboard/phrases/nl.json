@@ -2692,7 +2692,18 @@
   "Fehlt": "Ontbreekt",
   "Ja": "Ja",
   "unbekannt": "onbekend",
-  "Luftfeuchte · 24 Std.": "Luchtvochtigheid · 24 u"
+  "Luftfeuchte · 24 Std.": "Luchtvochtigheid · 24 u",
+  "Räume, Geräte, Szenen": "Ruimtes, apparaten, scènes",
+  "Räume, Geräte, Szenen suchen": "Zoek ruimtes, apparaten, scènes",
+  "Räume, Geräte und Szenen suchen": "Zoek ruimtes, apparaten en scènes",
+  "Suche": "Zoeken",
+  "Eingabe löschen": "Wissen",
+  "Ergebnisse": "Resultaten",
+  "Keine Treffer": "Geen resultaten",
+  "1 Treffer": "1 resultaat",
+  "{n} Treffer": "{n} resultaten",
+  "Raum öffnen": "Ruimte openen",
+  "Szene starten": "Scène starten"
  },
  "patterns": [
   [

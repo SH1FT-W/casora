@@ -2692,7 +2692,18 @@
   "Fehlt": "Brak",
   "Ja": "Tak",
   "unbekannt": "nieznany",
-  "Luftfeuchte · 24 Std.": "Wilgotność · 24 h"
+  "Luftfeuchte · 24 Std.": "Wilgotność · 24 h",
+  "Räume, Geräte, Szenen": "Pokoje, urządzenia, sceny",
+  "Räume, Geräte, Szenen suchen": "Szukaj pokoi, urządzeń, scen",
+  "Räume, Geräte und Szenen suchen": "Szukaj pokoi, urządzeń i scen",
+  "Suche": "Szukaj",
+  "Eingabe löschen": "Wyczyść",
+  "Ergebnisse": "Wyniki",
+  "Keine Treffer": "Brak wyników",
+  "1 Treffer": "1 wynik",
+  "{n} Treffer": "Wyniki: {n}",
+  "Raum öffnen": "Otwórz pokój",
+  "Szene starten": "Uruchom scenę"
  },
  "patterns": [
   [

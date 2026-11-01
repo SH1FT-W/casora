@@ -9803,12 +9803,13 @@
       "weather_feels_sensor": "[[[ return variables.weather_feels_sensor || ''; ]]]"
      }
     }
-   }
+   },
+   "search": "[[[\n  /* Search field of the phone's Home (Raumsuche variant A, 38-search.js opens the sheet on a tap). Studio:\n     Controls › Phone › Show search (show_search, default on); only on Home (filter \"all\"). */\n  const f = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  const S = window._casoraSearch;\n  const on = f === 'all' && (S ? S.shown(variables) : variables.show_search !== false && String(variables.show_search) !== 'false');\n  if (!on) return '';\n  const tr = window.casoraTr || ((x) => x);\n  const esc = window.casoraEsc || ((x) => String(x ?? '').replace(/[&<>\"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[c])));\n  const ph = tr('Räume, Geräte, Szenen');\n  return '<div class=\"casora-sfield\" data-casora-search role=\"button\" tabindex=\"0\" aria-label=\"' + esc(tr('Suche') + ': ' + ph) + '\">'\n    + '<svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><circle cx=\"8.5\" cy=\"8.5\" r=\"6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\"/><path d=\"M13 13l5 5\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"/></svg>'\n    + '<span>' + esc(ph) + '</span></div>';\n]]]\n"
   },
   "double_tap_action": {
    "action": "none"
   },
-  "extra_styles": "@keyframes titleFadeIn {\n  from { opacity: 0; transform: translateY(4px); }\n  to   { opacity: 0.9; transform: translateY(0); }\n}\n#name { animation: titleFadeIn 0.3s ease-out both; }\nha-card.button-card-main {\n  align-items: stretch !important;\n  justify-content: flex-start !important;\n  text-align: left !important;\n}\n#container, .button-card-content { width: 100% !important; }\n#name { justify-self: start !important; }\n",
+  "extra_styles": "@keyframes titleFadeIn {\n  from { opacity: 0; transform: translateY(4px); }\n  to   { opacity: 0.9; transform: translateY(0); }\n}\n#name { animation: titleFadeIn 0.3s ease-out both; }\nha-card.button-card-main {\n  align-items: stretch !important;\n  justify-content: flex-start !important;\n  text-align: left !important;\n}\n#container, .button-card-content { width: 100% !important; }\n#name { justify-self: start !important; }\n.casora-sfield {\n  display: flex; align-items: center; gap: var(--casora-space-2, 8px);\n  height: 44px; padding: 0 12px; box-sizing: border-box; width: 100%;\n  border-radius: var(--casora-r-element, 18px);\n  background: var(--casora-search-field, var(--casora-entity-background, rgba(251,248,243,0.92)));\n  color: var(--casora-entity-state, var(--secondary-text-color));\n  box-shadow:var(--casora-shadow-rest, 0 2px 8px rgba(0,0,0,0.08));\n  -webkit-backdrop-filter: var(--casora-entity-backdrop, none); backdrop-filter: var(--casora-entity-backdrop, none);\n  font-size: var(--casora-fs-row, 15px); cursor: text; -webkit-tap-highlight-color: transparent;\n}\n.casora-sfield svg { width: 17px; height: 17px; flex: none; opacity: 0.75; }\n.casora-sfield span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n.casora-sfield:active { transform: scale(var(--casora-press-scale, 0.97)); }\n.casora-sfield:focus-visible { outline: 2px solid var(--casora-popup-ui-action, #4E9E95); outline-offset: 2px; }\n",
   "full_width": true,
   "hold_action": {
    "action": "none"
@@ -9904,6 +9905,17 @@
      {
       "z-index": 1
      }
+    ],
+    "search": [
+     {
+      "display": "[[[\n  const f = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  const S = window._casoraSearch;\n  return f === 'all' && (S ? S.shown(variables) : variables.show_search !== false && String(variables.show_search) !== 'false') ? 'block' : 'none';\n]]]\n"
+     },
+     {
+      "margin-top": "var(--casora-space-3, 12px)"
+     },
+     {
+      "width": "100%"
+     }
     ]
    },
    "grid": [
@@ -9967,7 +9979,8 @@
    "weather_chart": null,
    "weather_extras": null,
    "weather_feels": null,
-   "weather_feels_sensor": null
+   "weather_feels_sensor": null,
+   "show_search": true
   }
  },
  "casora_motion": {
