@@ -9969,8 +9969,35 @@ window.casoraMenuGlass = {
     return '<div style="font-family:' + T.font + ';text-align:left;">' + out + '</div>';
   }
 
+  /* Owner, 01.11.2026: when every name of a list starts with the same word(s) („Jalousie Bad“, „Jalousie Küche“), the
+     rows show only what differs („Bad“, „Küche“). Display only; never when a name would be left empty or a bare number
+     („Lampe 1“, „Lampe 2“ keep their word), and only for two names or more. Returns the names (unchanged without a prefix). */
+  window.casoraDropCommonPrefix = function (names) {
+    var list = (names || []).map(function (n) { return String(n == null ? '' : n); });
+    if (list.length < 2) return list;
+    var words = list.map(function (n) { return n.trim().split(/\s+/); });
+    var k = words[0].length;
+    words.forEach(function (w) {
+      var i = 0;
+      while (i < k && i < w.length && w[i].toLowerCase() === words[0][i].toLowerCase()) i++;
+      k = i;
+    });
+    if (!k) return list;
+    var rest = words.map(function (w) { return w.slice(k).join(' '); });
+    if (rest.some(function (r) { return !r || /^[\d\W_]+$/.test(r); })) return list;
+    return rest;
+  };
+  // List rows that name a device (an entity or a sub page) lose the shared leading words of their names.
+  function dropRowPrefix(rows) {
+    var named = rows.filter(function (r) { return r && typeof r.label === 'string' && (r.entity || r.page); });
+    if (named.length < 2 || named.length !== rows.length) return rows;
+    var cut = window.casoraDropCommonPrefix(named.map(function (r) { return r.label; }));
+    if (cut[0] === named[0].label) return rows;
+    return rows.map(function (r, i) { return Object.assign({}, r, { label: cut[i] }); });
+  }
+
   function group(rows, label, labelAction, opts) {
-    rows = rows || [];
+    rows = dropRowPrefix(rows || []);
     if (soft()) return softGroup(rows, label, labelAction);
     var inside = !!(opts && opts.labelInside);
     var out = '';

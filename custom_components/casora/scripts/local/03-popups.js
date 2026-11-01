@@ -4319,7 +4319,7 @@
   var glyph = function (n) { return '<span class="lps-g" style="--lps-ic:url(\'' + esc(icon(n)) + '\')"></span>'; };
 
   // self: the lamp whose popup this is - its row still switches but does not open the same popup again.
-  var lampRow = function (id, states, roomName, self) {
+  var lampRow = function (id, states, roomName, self, shown) {
     var st = states[id];
     var on = st && st.state === 'on';
     var na = !st || st.state === 'unavailable' || st.state === 'unknown';
@@ -4333,7 +4333,7 @@
     var tg = attr({ a: 'toggle', id: id });
     return '<div class="lps-row' + (on ? ' on' : '') + (na ? ' na' : '') + '"' + (self ? '' : ' data-lps-tap="' + attr({ a: 'mi', id: id }) + '"') + '>'
       + '<div class="lps-ic" data-lps-tap="' + tg + '">' + glyph('light') + '</div>'
-      + '<div class="lps-tx"><b>' + esc(short(nameOf(id, states), roomName)) + '</b><small>' + esc(sub) + '</small></div>'
+      + '<div class="lps-tx"><b>' + esc(shown != null ? shown : short(nameOf(id, states), roomName)) + '</b><small>' + esc(sub) + '</small></div>'
       + '<div class="lps-sw" role="switch" aria-checked="' + (on ? 'true' : 'false') + '" data-lps-tap="' + tg + '"></div>'
       + '</div>';
   };
@@ -4539,6 +4539,12 @@
     });
   };
 
+  // The lamps' names as the list shows them: without the room, and without leading words all of them share
+  // („Spot Decke“, „Spot Wand“ → „Decke“, „Wand“; owner, 01.11.2026 – casoraDropCommonPrefix, casora-core.js).
+  var lampNamesOf = function (list, states, room) {
+    var names = list.map(function (id) { return short(nameOf(id, states), room); });
+    return window.casoraDropCommonPrefix ? window.casoraDropCommonPrefix(names) : names;
+  };
   var roomBody = function (cfg, sc, states, h) {
     var ids = sc.lights.filter(function (id) { return states[id]; });
     // The whole house (#30): no room to name, and none to strip from lamp and scene names.
@@ -4586,9 +4592,11 @@
           + esc(short(nameOf(id, states), room)) + '</div>';
       }).join('') + '</div>';
     }
-    var lampsHtml = (sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids).map(function (id) {
+    var lampList = sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids;
+    var lampNames = lampNamesOf(lampList, states, room);
+    var lampsHtml = lampList.map(function (id, i) {
       // Own row only in the popup of this one lamp - a room picked in the house popup is not its popup.
-      return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0]);
+      return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0], lampNames[i]);
     }).join('');
     var rightHtml = '<div class="lps-lbl">' + esc(tr(sc.house ? 'Leuchten' : 'Leuchten im Raum')) + '</div><div class="lps-rows">'
       + lampsHtml + '</div>';
@@ -4610,8 +4618,9 @@
     var fxId = fxLampOf(single ? [sc.lights[0]] : lampIds0, states);
     var left = v3Stage(ids, states, false, function () { return v3Moons(scenesOf(h, states, sc), states, room, fxId, h); });
     var ls = stat(lampIds0, states);
-    var lampsHtml = lampIds0.map(function (id) {
-      return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0]);
+    var lampNames0 = lampNamesOf(lampIds0, states, room);
+    var lampsHtml = lampIds0.map(function (id, i) {
+      return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0], lampNames0[i]);
     }).join('');
     // Counting heading (richtlinien §6): „Leuchten · 2 von 4 an“.
     var head = tr(sc.house ? 'Leuchten' : 'Leuchten im Raum') + (ls.tot > 1 ? ' · ' + tr(ls.on + ' von ' + ls.tot + ' an') : '');
