@@ -4297,10 +4297,10 @@
     + '.lps-row.on .lps-tx b{color:var(--casora-soft-row-active-ink,var(--casora-entity-name-active,var(--casora-lps-title)));}'
     + '.lps-row.on .lps-tx small{color:var(--casora-soft-row-active-sub,var(--casora-entity-state-active-color,var(--casora-lps-sub)));}'
     + '.lps-row.na{opacity:.55;}'
-    // The lamp this popup is for: an accent ring inside the row (light and dark), no tap target of its own.
-    + '.lps-row.sel{cursor:default;}'
-    + '.lps-row.sel::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;'
-    +   'box-shadow:inset 0 0 0 2px var(--casora-popup-accent,var(--casora-lps-switch-on));}'
+    // The lamp this popup is for: filled like an active tile (the selected segment's look), no tap target of its own.
+    + '.lps-row.sel,.lps-row.sel.on,.lps-row.sel:hover{cursor:default;background:var(--casora-soft-seg-on,var(--casora-entity-background-active,rgba(255,253,249,1)));}'
+    + '.lps-row.sel .lps-tx b{color:var(--casora-soft-seg-on-ink,var(--casora-entity-name-active,rgba(46,39,33,0.94)));}'
+    + '.lps-row.sel .lps-tx small{color:var(--casora-entity-state-active-color,rgba(132,88,56,0.96));}'
     + '@media (max-width:760px){.lps-cols,.lps-grid{grid-template-columns:minmax(0,1fr);}.lps-cols{gap:22px;}.lps-t{font-size:24px;margin-top:12px;}'
     +   '.lps-ring{width:66px;height:66px;}.lps-ring .lps-g{width:29px;height:29px;}}'
     + '@media (prefers-reduced-motion:reduce){.lps-r *{transition:none!important;}}'

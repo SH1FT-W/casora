@@ -31,7 +31,7 @@ const rowsOf = (html) => [...html.matchAll(/<div class="lps-row( [^"]*)?"([^>]*)
 const r1 = rowsOf(one);
 assert.ok(/\bsel\b/.test(r1[0].cls) && /aria-current="true"/.test(r1[0].attrs), 'open lamp row is marked selected');
 assert.ok(!/\bsel\b/.test(r1[1].cls) && !/aria-current/.test(r1[1].attrs), 'other rows are not marked');
-assert.ok(/\.lps-row\.sel::after\{[^}]*box-shadow:inset 0 0 0 2px var\(--casora-popup-accent/.test(one), 'selection ring in the accent colour');
+assert.ok(/\.lps-row\.sel[^{]*\{[^}]*background:var\(--casora-soft-seg-on/.test(one) && !/\.lps-row\.sel::after/.test(one), 'selected row filled like an active tile, no ring');
 
 // Without a room group: only the lamp itself, not tappable either.
 const alone = S.render({ gid: 'light.c', rooms: null, flat: { name: 'Room', rid: 'light.c', lights: ['light.c'], room: null } }, 'body', states, hass);
