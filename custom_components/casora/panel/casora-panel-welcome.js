@@ -27,9 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Heatmap im Diagramm", n0: "Die Diagramm-Kachel zeigt Werte auch als Heatmap: ein Tag je Zeile, eine Stunde je Spalte.",
-      n1t: "Netzwerk-Kachel aufgeräumt", n1: "Router zuerst, Felder füllen sich vom Gerät, Liste und Pulse bewerten gleich, Werte auch aus Attributen.",
-      n2t: "Handy-Popups", n2: "„Aktuelle Wiedergabe“ zeigt den Player wieder, eigene Entitäten stehen unter dem Inhalt.",
+      n0t: "Neue Popups", n0: "Ruhiger und überall gleich: ein großes Rad, Szenen und Modi als Monde, kein Ballast. Fehlt dir etwas? Sag es uns.",
+      n1t: "Wetter und Klima", n1: "Das Wetter zeigt den Tag als Rad mit gefühlter Temperatur, das Klima folgt Temperatur, Feuchte oder Luftqualität.",
+      n2t: "Gleiche Zahlen überall", n2: "Badge, Kachel und Popup zählen dasselbe; fehlende Sensoren zeigen „Offline“.",
+      n3t: "Hilfe im Studio", n3: "„Wie geht …?“ erklärt Abfall, Fotos, Geräte und mehr in kurzen Schritten.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -39,9 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Heatmap in the chart", n0: "The chart tile also shows values as a heatmap: one day per row, one hour per column.",
-      n1t: "Network tile tidied up", n1: "Router first, fields fill from the device, list and Pulse rate alike, values from attributes too.",
-      n2t: "Phone popups", n2: "\"Now playing\" shows the player again, your own entities sit below the content.",
+      n0t: "New popups", n0: "Calmer and the same everywhere: one large dial, scenes and modes as moons, no clutter. Missing something? Tell us.",
+      n1t: "Weather and climate", n1: "Weather shows the day as a dial with the feels-like temperature, climate follows temperature, humidity or air quality.",
+      n2t: "The same numbers everywhere", n2: "Badge, tile and popup count the same; missing sensors show \"Offline\".",
+      n3t: "Help in the Studio", n3: "\"How do I …?\" explains waste, photos, devices and more in short steps.",
     },
     // Spanish: same keys as en (dev/unit/welcome_es.mjs); a missing key falls back to English.
     es: {
@@ -52,9 +54,10 @@
       w1t: "Habitación por habitación", w1: "Diseña tu panel con los dispositivos que ya tienes en Home Assistant.",
       w2t: "Asistente de dispositivos", w2: "Casora propone las tarjetas adecuadas para cada habitación y las añade por ti.",
       w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
-      n0t: "Mapa de calor en el gráfico", n0: "El mosaico de gráfico también muestra valores como mapa de calor: un día por fila, una hora por columna.",
-      n1t: "Mosaico de red ordenado", n1: "Router primero, los campos se rellenan desde el dispositivo, lista y Pulse valoran igual, valores también de atributos.",
-      n2t: "Ventanas en el móvil", n2: "\"Reproduciendo\" vuelve a mostrar el reproductor, tus entidades quedan debajo del contenido.",
+      n0t: "Nuevos popups", n0: "Más tranquilos e iguales en todas partes: una gran rueda, escenas y modos como lunas, sin relleno. ¿Echas algo en falta? Dínoslo.",
+      n1t: "Tiempo y clima", n1: "El tiempo muestra el día como rueda con la sensación térmica; el clima sigue temperatura, humedad o calidad del aire.",
+      n2t: "Los mismos números en todas partes", n2: "Insignia, tarjeta y popup cuentan lo mismo; los sensores que faltan muestran \"Sin conexión\".",
+      n3t: "Ayuda en el Studio", n3: "\"¿Cómo se hace…?\" explica basura, fotos, dispositivos y más en pasos cortos.",
     },
     fr: {
       welcomeTitle: "Bienvenue dans Casora",
@@ -67,9 +70,10 @@
       w2: "Casora propose les tuiles adaptées à chaque pièce et les ajoute pour toi.",
       w3t: "Ordinateur, tablette et téléphone",
       w3: "Un tableau de bord qui s'adapte à chaque écran, avec sa propre mise en page téléphone.",
-      n0t: "Carte thermique dans le graphique", n0: "La tuile graphique affiche aussi les valeurs en carte thermique : un jour par ligne, une heure par colonne.",
-      n1t: "Tuile réseau rangée", n1: "Routeur d'abord, champs remplis depuis l'appareil, liste et Pulse évaluent pareil, valeurs aussi depuis les attributs.",
-      n2t: "Fenêtres sur mobile", n2: "« En lecture » affiche de nouveau le lecteur, tes entités restent sous le contenu.",
+      n0t: "Nouvelles fenêtres", n0: "Plus calmes et identiques partout : une grande molette, scènes et modes en lunes, sans surcharge. Il vous manque quelque chose ? Dites-le-nous.",
+      n1t: "Météo et climat", n1: "La météo montre la journée en molette avec la température ressentie ; le climat suit température, humidité ou qualité de l'air.",
+      n2t: "Les mêmes chiffres partout", n2: "Badge, tuile et fenêtre comptent pareil ; les capteurs absents affichent « Hors ligne ».",
+      n3t: "Aide dans le Studio", n3: "« Comment faire… ? » explique déchets, photos, appareils et plus en quelques étapes.",
     },
     it: {
       welcomeTitle: "Ti diamo il benvenuto in Casora",
@@ -82,9 +86,10 @@
       w2: "Casora propone le schede adatte per ogni stanza e le aggiunge per te.",
       w3t: "Desktop, tablet e telefono",
       w3: "Una dashboard che si adatta a ogni schermo, con un layout dedicato per il telefono.",
-      n0t: "Heatmap nel grafico", n0: "Il riquadro grafico mostra i valori anche come heatmap: un giorno per riga, un'ora per colonna.",
-      n1t: "Riquadro rete riordinato", n1: "Prima il router, i campi si compilano dal dispositivo, elenco e Pulse valutano allo stesso modo, valori anche dagli attributi.",
-      n2t: "Popup sul telefono", n2: "\"In riproduzione\" mostra di nuovo il lettore, le tue entità stanno sotto il contenuto.",
+      n0t: "Nuovi popup", n0: "Più calmi e uguali ovunque: una grande ghiera, scene e modalità come lune, niente superfluo. Ti manca qualcosa? Diccelo.",
+      n1t: "Meteo e clima", n1: "Il meteo mostra la giornata come ghiera con la temperatura percepita; il clima segue temperatura, umidità o qualità dell'aria.",
+      n2t: "Gli stessi numeri ovunque", n2: "Badge, riquadro e popup contano lo stesso; i sensori mancanti mostrano \"Offline\".",
+      n3t: "Aiuto nello Studio", n3: "\"Come si fa…?\" spiega rifiuti, foto, dispositivi e altro in pochi passi.",
     },
     nl: {
       welcomeTitle: "Welkom bij Casora",
@@ -97,9 +102,10 @@
       w2: "Casora stelt voor elke kamer passende tegels voor en bouwt ze in.",
       w3t: "Desktop, tablet en telefoon",
       w3: "Eén dashboard dat zich aan elk scherm aanpast, met een eigen telefoonweergave.",
-      n0t: "Heatmap in de grafiek", n0: "De grafiektegel toont waarden ook als heatmap: één dag per rij, één uur per kolom.",
-      n1t: "Netwerktegel opgeruimd", n1: "Router eerst, velden vullen zich vanuit het apparaat, lijst en Pulse beoordelen gelijk, waarden ook uit attributen.",
-      n2t: "Pop-ups op de telefoon", n2: "\"Speelt nu\" toont de speler weer, je eigen entiteiten staan onder de inhoud.",
+      n0t: "Nieuwe pop-ups", n0: "Rustiger en overal hetzelfde: één grote draaiknop, scènes en standen als manen, geen overvolle schermen. Mis je iets? Laat het ons weten.",
+      n1t: "Weer en klimaat", n1: "Het weer toont de dag als draaiknop met de gevoelstemperatuur; klimaat volgt temperatuur, vochtigheid of luchtkwaliteit.",
+      n2t: "Overal dezelfde getallen", n2: "Badge, tegel en pop-up tellen hetzelfde; ontbrekende sensoren tonen \"Offline\".",
+      n3t: "Hulp in de Studio", n3: "\"Hoe doe ik…?\" legt afval, foto's, apparaten en meer uit in korte stappen.",
     },
     pl: {
       welcomeTitle: "Witaj w Casora",
@@ -112,9 +118,10 @@
       w2: "Casora proponuje pasujące kafelki dla każdego pokoju i dodaje je za ciebie.",
       w3t: "Komputer, tablet i telefon",
       w3: "Jeden pulpit, który dopasowuje się do każdego ekranu, z własnym układem na telefon.",
-      n0t: "Mapa cieplna na wykresie", n0: "Kafelek wykresu pokazuje wartości także jako mapę cieplną: dzień w wierszu, godzina w kolumnie.",
-      n1t: "Kafelek sieci uporządkowany", n1: "Najpierw router, pola wypełniają się z urządzenia, lista i Pulse oceniają tak samo, wartości także z atrybutów.",
-      n2t: "Okna na telefonie", n2: "\"Teraz odtwarzane\" znów pokazuje odtwarzacz, własne encje są pod treścią.",
+      n0t: "Nowe okna", n0: "Spokojniejsze i wszędzie takie same: jedno duże pokrętło, sceny i tryby jako księżyce, bez nadmiaru. Czegoś brakuje? Daj nam znać.",
+      n1t: "Pogoda i klimat", n1: "Pogoda pokazuje dzień jako pokrętło z temperaturą odczuwalną; klimat podąża za temperaturą, wilgotnością lub jakością powietrza.",
+      n2t: "Wszędzie te same liczby", n2: "Plakietka, kafelek i okno liczą tak samo; brakujące czujniki pokazują „Offline”.",
+      n3t: "Pomoc w Studio", n3: "„Jak to zrobić…?” wyjaśnia odpady, zdjęcia, urządzenia i więcej w krótkich krokach.",
     },
     pt: {
       welcomeTitle: "Bem-vindo ao Casora",
@@ -127,9 +134,10 @@
       w2: "O Casora propõe os cartões certos para cada divisão e adiciona-os por ti.",
       w3t: "Computador, tablet e telemóvel",
       w3: "Um painel que se adapta a cada ecrã, com layout próprio para o telemóvel.",
-      n0t: "Mapa de calor no gráfico", n0: "O bloco de gráfico também mostra valores como mapa de calor: um dia por linha, uma hora por coluna.",
-      n1t: "Bloco de rede arrumado", n1: "Router primeiro, os campos preenchem-se a partir do dispositivo, lista e Pulse avaliam igual, valores também de atributos.",
-      n2t: "Popups no telemóvel", n2: "\"A reproduzir\" volta a mostrar o leitor, as tuas entidades ficam por baixo do conteúdo.",
+      n0t: "Novos popups", n0: "Mais calmos e iguais em todo o lado: um grande seletor, cenas e modos como luas, sem excesso. Falta-te algo? Diz-nos.",
+      n1t: "Tempo e clima", n1: "O tempo mostra o dia como seletor com a sensação térmica; o clima segue temperatura, humidade ou qualidade do ar.",
+      n2t: "Os mesmos números em todo o lado", n2: "Emblema, mosaico e popup contam o mesmo; sensores em falta mostram \"Offline\".",
+      n3t: "Ajuda no Studio", n3: "\"Como faço…?\" explica resíduos, fotos, dispositivos e mais em passos curtos.",
     },
   };
   // Texts for a language: its own, English for anything it does not have (yet).
@@ -144,9 +152,10 @@
 
   /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
-    ["mdi:grid", "n0t", "n0"],
-    ["mdi:lan", "n1t", "n1"],
-    ["mdi:cellphone", "n2t", "n2"],
+    ["mdi:gauge", "n0t", "n0"],
+    ["mdi:weather-partly-cloudy", "n1t", "n1"],
+    ["mdi:equal", "n2t", "n2"],
+    ["mdi:help-circle-outline", "n3t", "n3"],
   ];
 
   // Decide on load - before the Studio writes its own casora.* keys.

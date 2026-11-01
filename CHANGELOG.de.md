@@ -4,6 +4,50 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.1 – 01.11.2026
+
+Die Popups sind neu: ruhiger, aufgeräumter und überall gleich aufgebaut. Sie zeigen mehr als die Kachel, aber nicht alles – Einstellungen gehören ins Studio. Die neuen Popups werden in den nächsten Versionen weiter verfeinert. Fehlt dir etwas, das du im Alltag wirklich brauchst, sag es gern in einem Issue – Ziel bleibt, die Popups clean zu halten und nicht zu überfüllen.
+
+### Neu
+- **Neue Popups im Rad-Design:** Jedes Popup hat oben einen schlanken Kopf (Raum, Name, Zustand) und eine Hauptsache, meist ein großes Rad.
+  - **Drehen:** Licht (Helligkeit), Heizung, Thermostat und Fußbodenheizung (Zieltemperatur mit − / +), Jalousien (Position), Lüfter, Luftreiniger, Befeuchter, Velair, Kühlschrank, Medien (Lautstärke, das Cover dreht sich als Schallplatte in der Mitte).
+  - **Fortschritt:** Waschmaschine, Trockner, Spüler, 3D-Drucker, Saug- und Mähroboter, Kaffee, Wasserkocher, Auto und E-Bike (Tank/Akku), Pflanze, Messwerte.
+  - **Abschnitte:** Sicherheit, Türen und Fenster, Schlösser, Alarm, Updates, Batterien, Anwesenheit, Pulse, Lüften – jedes Ding ein Abschnitt im Ring, grün oder rot.
+  - **Monde:** Szenen, Modi und Programme sitzen als runde Knöpfe um das Rad; sind es mehr als vier, öffnet „Alle (n)“ ein kleines Menü direkt am Mond.
+  - **Ein Verlauf**, wo er hilft, steht unter dem Rad, rechts nur noch Listen.
+  - Kamera, Klingel, Frigate, Kalender, Abfall, Fußball und Listen behalten ihr Bild bzw. ihre Tabelle.
+- **Wetter:** neues Popup – das Rad zeigt die Temperatur zwischen Tagestief und -hoch, in der Mitte immer die gefühlte Temperatur (#56), darunter die nächsten Stunden, daneben 7 Tage und der Verlauf mit Temperatur, Feuchte und Luftdruck.
+- **Klima:** das Rad folgt dem angetippten Badge – Temperatur, Luftfeuchtigkeit (mit Wohlfühlbereich 40–60 %) oder Luftqualität; bei Luftqualität zeigt der Verlauf alle Messwerte als umschaltbare Kurven.
+- **Rezepte (Cookidoo):** das Gericht von heute bzw. die Idee der Woche steht groß und vollständig lesbar im Popup, daneben Speiseplan und Einkaufsliste.
+- **Einkaufsliste (Bring!, #82):** eigene Casora-Liste mit Hinzufügen, Abhaken und „Erledigte löschen“.
+- **Alarm:** alle Modi deiner Alarmanlage (auch Urlaub und Bypass) als Monde, „Unscharf schalten“ immer mit Rückfrage.
+- **Hilfe im Studio:** „Wie geht …?“ mit kurzen Anleitungen (Abfall, Foto, Gerät, Reihenfolge, Handy) und „Zeig es mir“.
+- **Zurück zu Home Assistant:** neuer Eintrag „Home Assistant“ im ⋯-Menü, auch mit kiosk-mode. Im Halten-Menü öffnet „Gerät in Home Assistant“ die Geräteseite von HA.
+
+### Geändert
+- **Popups ohne Ballast:** kein „Mehr“, keine „Weiteren Einstellungen“ und keine Fachwerte mehr im Popup. Was ihr euch in Issues gewünscht habt, bleibt: Internet-Abschnitt beim Netzwerk (#98), Beschattungsautomatik bei den Jalousien (#81), Zeitplan und Modus bei Velair (#32), Lautstärken bei der Klingel (#23), Kilometerstand beim Auto (#89), gefühlte Temperatur (#56).
+- **Gleiche Zahlen überall:** Badge, Kachel, Popup und Studio-Vorschau zählen dasselbe – Licht zählt Lampen („2 An“), Schlösser nennen jeden Zustand („2 entriegelt · 1 klemmt · 1 offline“), Jalousien und Sicherheit stimmen überein.
+- **Offline statt verschwunden:** Unter-Badges mit fehlendem Sensor bleiben sichtbar, gedämpft mit „Offline“ (z. B. „Netz“ bei der Energie).
+- **Kopfzeile in Worten:** oben steht, was gerade passiert („Bezug aus dem Netz · Akku bereit“, „Seit 14:42“), die Zahl steht groß im Popup – nichts doppelt.
+- **Szenen:** jede Szene mit ihrem eigenen Symbol.
+- **Symbole:** auf Gelb, Orange und Hellgrün dunkel statt weiß – besser lesbar.
+- **Handy:** Kacheln springen beim Bedienen nicht mehr um (sortiert wird beim Öffnen), die Leiste zeigt ihre Symbole sofort, Überschriften auf Raumfotos sind besser lesbar, im Glas-Design sind Menüs und Glocke deckend.
+- **Familienkonten (kein Admin):** keine Wartungsmeldungen, keine Studio-Hinweise, kein „Dashboard bearbeiten“; Meldungen lassen sich nur für sich selbst ausblenden.
+- **Studio:** Abfall findet man über „Abfall“ oder „Müll“, die Abfall-Kachel fragt zuerst nach dem Abfallkalender, der Einrichtungsassistent merkt sich Schritt und Auswahl und schlägt eine Abfall-Kachel vor, Szenen heißen „Szene“, Fotos laden ohne Namensfrage hoch, neue Diagramme fragen gleich nach dem Sensor, die Vorschau zeigt dieselben Werte wie das Dashboard, Esc schließt die Einstellungen.
+- **Lüften:** ein Fenster, das seit 12 Stunden oder länger offen ist, heißt „Lange offen“ statt „Raumluft gut“.
+- **Diagramm:** Zähler-Rücksetzer verfälschen Balken, Heatmap und Summen nicht mehr; dazu höchste und niedrigste Stunde, Tag bzw. Monat.
+
+### Behoben
+- **Schloss-Kachel:** Entriegeln über den Schalter fragt immer nach; bei mehreren Schlössern wirkt der Schalter auf alle, „klemmt“ wird angezeigt.
+- **Zwei Studio-Fenster:** Speichern über eine Änderung aus einem anderen Fenster fragt vorher, statt sie still zu überschreiben.
+- **Licht-Popup:** ein Raum aus der Haus-Liste öffnet sich als eigene Seite mit ‹ zurück.
+- **Sicherheit:** ein selbst gesetztes Türen- oder Fenster-Badge ersetzt Casoras automatisches, statt doppelt zu erscheinen.
+- **Energie:** der Akku zeigt seinen eigenen Wert, nicht den einer anderen Solarbank.
+- **Luftqualität:** CO₂ eines VOC-Sensors (eCO2) galt schon bei 400 ppm als „sehr schlecht“.
+- **Segment-Leisten mit vielen Optionen** (z. B. Saugstärke) brechen sauber als Raster um.
+- **Raumfotos:** keine Fehlermeldungen mehr beim Laden fehlender Nachtfotos.
+- Viele kleine Korrekturen an Texten, Kontrasten, Abständen und Übersetzungen.
+
 ## 26.10.69 – 31.10.2026
 
 ### Neu

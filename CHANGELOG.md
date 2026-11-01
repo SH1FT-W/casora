@@ -4,6 +4,50 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.1 – 01.11.2026
+
+The popups are new: calmer, tidier and built the same way everywhere. They show more than the tile, but not everything; settings belong in the Studio. The new popups will keep being refined in the next versions. If something you really need in everyday use is missing, please tell us in an issue. The goal stays to keep the popups clean and not to overload them.
+
+### New
+- **New popups with a dial:** every popup has a slim header (room, name, state) and one main thing, usually a large dial.
+  - **Turn:** lights (brightness), heating, thermostat and underfloor heating (target temperature with − / +), blinds (position), fan, air purifier, humidifier, Velair, fridge, media (volume, the cover spins as a record in the middle).
+  - **Progress:** washing machine, dryer, dishwasher, 3D printer, robot vacuum and mower, coffee machine, kettle, car and e-bike (tank/battery), plant, readings.
+  - **Segments:** security, doors and windows, locks, alarm, updates, batteries, presence, Pulse, airing; every item is a segment of the ring, green or red.
+  - **Moons:** scenes, modes and programs sit as round buttons around the dial; with more than four, "All (n)" opens a small menu right at the moon.
+  - **One history chart**, where it helps, sits under the dial; the right side only holds lists.
+  - Camera, doorbell, Frigate, calendar, waste, football and lists keep their picture or table.
+- **Weather:** a new popup. The dial shows the temperature between today's low and high, the middle always shows the feels-like temperature (#56), below it the next hours, next to it 7 days and the history with temperature, humidity and pressure.
+- **Climate:** the dial follows the badge you tapped: temperature, humidity (with the 40–60 % comfort range) or air quality; for air quality the history shows every reading as a curve to switch between.
+- **Recipes (Cookidoo):** today's meal or the idea of the week sits large and fully readable in the popup, next to the meal plan and the shopping list.
+- **Shopping list (Bring!, #82):** Casora's own list with Add, ticking off and "Delete completed".
+- **Alarm:** every mode of your alarm panel (vacation and bypass too) as moons, "Disarm" always asks first.
+- **Help in the Studio:** "How do I …?" with short guides (waste, photo, device, order, phone) and "Show me".
+- **Back to Home Assistant:** a new "Home Assistant" entry in the ⋯ menu, kiosk-mode included. In the hold menu, "Device in Home Assistant" opens HA's device page.
+
+### Changed
+- **Popups without clutter:** no "More", no "More settings" and no technical values in the popup. What you asked for in issues stays: the internet section of the network popup (#98), shade automation for blinds (#81), schedule and mode for Velair (#32), volumes for the doorbell (#23), mileage for the car (#89), feels-like temperature (#56).
+- **The same numbers everywhere:** badge, tile, popup and Studio preview count the same; lights count lamps ("2 On"), locks name every state ("2 unlocked · 1 jammed · 1 offline"), blinds and security agree.
+- **Offline instead of gone:** sub-badges whose sensor is missing stay visible, dimmed, with "Offline" (for example "Grid" in energy).
+- **Header in words:** the header says what is happening ("Drawing from the grid · Battery ready", "Since 14:42"), the number sits large in the popup; nothing twice.
+- **Scenes:** every scene with its own icon.
+- **Icons:** dark instead of white on yellow, orange and light green, easier to read.
+- **Phone:** tiles no longer jump around while you use them (sorting happens on opening), the bar shows its icons right away, headings on room photos read better, in the Glass design menus and the bell are opaque.
+- **Family accounts (no admin):** no maintenance notifications, no Studio hints, no "Edit dashboard"; notifications can only be hidden for yourself.
+- **Studio:** waste is found with "waste" or "trash", the waste tile asks for the waste calendar first, the setup assistant remembers its step and choices and suggests a waste tile, scenes are called "Scene", photos upload without asking for a name, new charts ask for the sensor right away, the preview shows the same values as the dashboard, Esc closes the settings.
+- **Airing:** a window open for 12 hours or longer reads "Open for long" instead of "Room air good".
+- **Chart:** meter resets no longer distort bars, heatmap and totals; plus the highest and lowest hour, day or month.
+
+### Fixed
+- **Lock tile:** unlocking with the switch always asks first; with several locks the switch acts on all of them, "jammed" shows.
+- **Two Studio windows:** saving over a change made in another window asks first instead of overwriting it silently.
+- **Light popup:** a room from the house list opens as its own page with ‹ back.
+- **Security:** a doors or windows badge you set yourself replaces Casora's automatic one instead of showing twice.
+- **Energy:** the battery shows its own value, not the one of another Solarbank.
+- **Air quality:** CO₂ from a VOC sensor (eCO2) counted as "very bad" already at 400 ppm.
+- **Segment bars with many options** (for example suction power) wrap neatly as a grid.
+- **Room photos:** no more errors while loading missing night photos.
+- Many small fixes to wording, contrast, spacing and translations.
+
 ## 26.10.69 – 31.10.2026
 
 ### New
