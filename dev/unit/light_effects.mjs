@@ -101,7 +101,7 @@ assert.ok(/var fxId = fxLampOf\(single \? \[sc\.lights\[0\]\] : lampIds0, states
 assert.ok(/v3Moons\(scenesOf\(h, states, sc\), states, room, fxId, h, ids\)/.test(pop), 'room popup: scenes + effects');
 assert.ok(/var fxId = fxLampOf\(all, states\);[\s\S]{0,200}v3Stage\(all, states, true, fxId \? function \(\) \{ return v3Moons\(\[\], states, null, fxId\); \} : null\)/.test(pop), 'house popup');
 
-// ── casora-core: the kept moon stays, the others fold into „Alle (n)“ ───────
+// ── casora-core: the kept moon stays, the others fold into „Mehr (n)“ ───────
 const core = read('custom_components/casora/scripts/casora-core.js');
 const src = cut(core, '  // Positions of the moons (degrees', '  // The rings. ring = ');
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -110,30 +110,30 @@ const { moons } = new Function('window', 'esc', 'dRound', 'stGlyph', 'stAttrs', 
   (a) => Object.keys(a || {}).map((k) => ' ' + k + '="' + esc(a[k]) + '"').join(''), (x) => x);
 const scene = (t, active) => ({ icon: 'mdi:palette', text: t, active: !!active, svc: { domain: 'scene', service: 'turn_on', target: { entity_id: 'scene.' + t } } });
 const parts = (html) => html.split('<div class="hui-moon').slice(1);
-// 5 scenes + Effekte: 2 scenes, „Alle (5)“, „Effekte“ – 4 moons.
+// 5 scenes + Effekte: 2 scenes, „Mehr (3)“, „Effekte“ – 4 moons.
 let mo = parts(moons([1, 2, 3, 4, 5].map((i) => scene('S' + i, i === 4)).concat([m]), null, {}).html);
 assert.equal(mo.length, 4, 'never more than 4 moons');
 assert.ok(/aria-label="S1"/.test(mo[0]) && /aria-label="S2"/.test(mo[1]), 'two scenes');
-assert.ok(/aria-label="Alle \(5\)"/.test(mo[2]) && /^ on/.test(mo[2]), '„Alle (5)“ holds the rest, the chosen S4 marks it');
+assert.ok(/aria-label="Mehr \(3\)"/.test(mo[2]) && /^ on/.test(mo[2]), '„Mehr (3)“ holds the rest, the chosen S4 marks it');
 assert.ok(/aria-label="Effekte"/.test(mo[3]) && /data-casora-moonmenu=""/.test(mo[3]), '„Effekte“ is its own menu moon');
 assert.ok(/^ on/.test(mo[3]), 'running effect: moon chosen');
 const rows = JSON.parse(mo[3].match(/data-casora-mm="([^"]*)"/)[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&'));
 assert.deepEqual(rows.map((r) => r.text), ['Ohne Effekt', 'Candle', 'Fire', 'Partly cloudy', 'Sunrise']);
 assert.ok(/data-casora-mm-i="2" data-casora-svc="[^"]*&quot;effect&quot;:&quot;fire&quot;/.test(mo[3]), 'row proxy carries light.turn_on with the effect');
 const allRows = JSON.parse(mo[2].match(/data-casora-mm="([^"]*)"/)[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&'));
-assert.deepEqual(allRows.map((r) => r.text), ['S1', 'S2', 'S3', 'S4', 'S5'], 'no menu inside a menu: „Effekte“ is not a row of „Alle“');
-// 3 scenes + Effekte = 4: no „Alle“.
+assert.deepEqual(allRows.map((r) => r.text), ['S3', 'S4', 'S5'], 'only the scenes that are no moon; no menu inside a menu: „Effekte“ is not a row of „Mehr“');
+// 3 scenes + Effekte = 4: no „Mehr“.
 mo = parts(moons([1, 2, 3].map((i) => scene('S' + i)).concat([m]), null, {}).html);
 assert.equal(mo.length, 4);
-assert.ok(!mo.some((x) => /Alle/.test(x)));
+assert.ok(!mo.some((x) => /Mehr|Alle/.test(x)));
 // Effekte alone: one moon with its menu.
 mo = parts(moons([m], null, {}).html);
 assert.equal(mo.length, 1);
 assert.ok(/data-casora-moonmenu/.test(mo[0]));
-// Without a kept moon nothing changes: 5 → 3 + „Alle (5)“.
+// Without a kept moon: 5 → 3 + „Mehr (2)“.
 mo = parts(moons([1, 2, 3, 4, 5].map((i) => scene('S' + i)), null, {}).html);
 assert.equal(mo.length, 4);
-assert.ok(/aria-label="S3"/.test(mo[2]) && /Alle \(5\)/.test(mo[3]));
+assert.ok(/aria-label="S3"/.test(mo[2]) && /Mehr \(2\)/.test(mo[3]));
 // UI.quick (no wheel): a menu-only moon gives no dead tile.
 assert.ok(/!\(x\.menu && !x\.svc && !x\.page\)/.test(core), 'quick tiles skip a menu-only item');
 
