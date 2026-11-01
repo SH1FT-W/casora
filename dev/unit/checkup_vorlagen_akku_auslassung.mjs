@@ -2,6 +2,7 @@
 //   node dev/unit/checkup_vorlagen_akku_auslassung.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import { phrases } from './lib/i18n_phrases.mjs';
 const T = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/panel/casora-templates.json', import.meta.url), 'utf8')).templates;
 
 // 1) Schloss-Popup: Akku-Prozent aus unavailable/unknown ist null, nicht NaN.
@@ -34,7 +35,7 @@ console.log('ok Akku ohne NaN');
   }
 
   const src = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-i18n.js', import.meta.url), 'utf8');
-  const win = {};
+  const win = { __casoraI18nPhrases: phrases() };
   const doc = { querySelector: (q) => (q === 'home-assistant' ? { hass: { locale: { language: 'en' } } } : null), addEventListener() {} };
   try { new Function('window', 'document', 'customElements', 'MutationObserver', src)(win, doc, { whenDefined: () => new Promise(() => {}), get: () => null }, class { observe() {} }); } catch (e) { /* DOM-Wächter ohne Browser */ }
   const tr = win.casoraTr;

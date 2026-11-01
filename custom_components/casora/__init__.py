@@ -24,6 +24,7 @@ from .settings import async_setup_settings
 from .kachelart import async_setup_kachelart
 from .versions import async_setup_versions
 from .frontend_version import async_setup_frontend_version, set_frontend_stamp
+from .dashboard_kinds import async_setup_dashboard_kinds
 from .updates import async_setup_updates
 from .options import async_setup_options
 from .template_refresh import async_setup_template_refresh
@@ -44,6 +45,8 @@ from .const import (
     LEGACY_PANEL_URL,
     LEGACY_RESOURCES,
     LEGACY_SCRIPT_BASES,
+    I18N_DIR,
+    I18N_SCRIPT,
     LOCAL_LOADER,
     LOCAL_MODULES_DIR,
     PANEL_URL,
@@ -96,6 +99,12 @@ async def _sync_script_resources(hass: HomeAssistant, scripts_dir: str, keep_hem
             path = os.path.join(scripts_dir, n)
             if os.path.isfile(path):
                 found[n] = int(os.path.getmtime(path))
+        # casora-i18n.js fetches its language files (scripts/i18n/*.json) with its own ?v=: count them in.
+        i18n_dir = os.path.join(scripts_dir, I18N_DIR)
+        if I18N_SCRIPT in found and os.path.isdir(i18n_dir):
+            for m in os.listdir(i18n_dir):
+                if m.endswith(".json"):
+                    found[I18N_SCRIPT] = max(found[I18N_SCRIPT], int(os.path.getmtime(os.path.join(i18n_dir, m))))
         # Der Lader reicht seine Version an die Module weiter: jüngste Änderung zählt.
         # Seit 1.0.5 auch die der übrigen Casora-Skripte – so steht im ?v= des Laders der
         # Stand des ganzen Dashboard-Codes, und der Hinweis „Casora wurde aktualisiert“
@@ -302,6 +311,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_setup_kachelart(hass)
     async_setup_versions(hass)
     async_setup_frontend_version(hass)
+    async_setup_dashboard_kinds(hass)
     # Studio → „Updates“: Versionen und Versionshinweise (updates.py).
     async_setup_updates(hass)
     # Studio → „Einstellungen“: die Optionen der Integration auch im Studio (options.py).

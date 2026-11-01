@@ -39,6 +39,11 @@ SHARED_SCRIPTS = (
     "casora-kompat.js",
 )
 
+# Dashboard translation: the runtime plus one phrases file per language (scripts/i18n/<lang>.json),
+# fetched with the runtime's ?v= – its stamp counts the language files too.
+I18N_SCRIPT = "casora-i18n.js"
+I18N_DIR = "i18n"
+
 # Lader, dessen ?v= aus der jüngsten Änderung seiner Module berechnet wird.
 LOCAL_LOADER = "casora-local.js"
 LOCAL_MODULES_DIR = "local"

@@ -3,9 +3,10 @@
 //   node dev/unit/prozent_de.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import { phrases } from './lib/i18n_phrases.mjs';
 const src = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-i18n.js', import.meta.url), 'utf8');
 const load = (language) => {
-  const win = {};
+  const win = { __casoraI18nPhrases: phrases() };
   const doc = { querySelector: (q) => (q === 'home-assistant' ? { hass: { locale: { language } } } : null), addEventListener() {} };
   try { new Function('window', 'document', 'customElements', 'MutationObserver', src)(win, doc, { whenDefined: () => new Promise(() => {}), get: () => null }, class { observe() {} }); } catch (e) { /* DOM-Wächter */ }
   return win.casoraTr;
