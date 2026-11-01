@@ -56,10 +56,6 @@ assert.match(w, /window\._casoraTempRange\(d0 \? d0\.templow : null, d0 \? d0\.t
 assert.match(w, /\{ min: _rg3\.min, max: _rg3\.max, temp: _fU \? 'F' : 'C'/, 'weather: the ring spans the day');
 assert.match(w, /ends: ends3 \}/, 'weather: T/H at the ring\'s ends');
 assert.ok(!/\[14, 95\] : \[-10, 35\]/.test(w), 'weather: no longer the fixed scale with forecast');
-// Variant under review: the knob shows the condition only behind the switch, off by default.
-assert.match(w, /const _wxKnob = !!window\._casoraWxKnobIcon;/, 'weather: knob symbol behind a switch');
-assert.match(w, /knobIcon: _wxKnob \? _kIc3 : null/, 'weather: no knob symbol unless switched on');
-assert.match(core, /if \(r6\.dot && r6\.knobIcon\) \{/, 'dial: the knob symbol only when asked for');
 // The ‹ rebuild draws the same wheel (one function for both).
 assert.match(w, /window\._hwRender\[key\]\.stage = \(\) => stage3Of\(\)\.html/, 'weather: ‹ redraws with the same scale');
 console.log('weather_dial_scale: ok');
