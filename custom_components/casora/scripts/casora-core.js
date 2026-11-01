@@ -10563,16 +10563,22 @@ window.casoraMenuGlass = {
     };
     var TAP_SLOP = 10;
     var tp = null;
+    // − / + (data-casora-step) forgive a finger that wanders a little more (iPad/iPhone 26.11.2).
+    var STEP_SLOP = 16;
     document.addEventListener('touchstart', function (ev) {
       var t0 = ev.touches && ev.touches[0];
-      tp = t0 ? { x: t0.clientX, y: t0.clientY, moved: false } : null;
+      // A copy of the running touch re-sent by button-card from further out (nested cards): keep the touch.
+      if (!ev.isTrusted && tp && t0 && t0.clientX === tp.x && t0.clientY === tp.y) return;
+      var sp = (ev.composedPath && ev.composedPath()) || [];
+      var onStep = sp.some(function (n) { return n && n.dataset && n.dataset.casoraStep != null; });
+      tp = t0 ? { x: t0.clientX, y: t0.clientY, moved: false, slop: onStep ? STEP_SLOP : TAP_SLOP } : null;
     }, { capture: true, passive: true });
     document.addEventListener('touchmove', function (ev) {
       if (!tp) return;
       var t1 = ev.touches && ev.touches[0];
       if (!t1) return;
-      if (Math.abs(t1.clientX - tp.x) > TAP_SLOP
-        || Math.abs(t1.clientY - tp.y) > TAP_SLOP) {
+      if (Math.abs(t1.clientX - tp.x) > tp.slop
+        || Math.abs(t1.clientY - tp.y) > tp.slop) {
         tp.moved = true;
         window._casoraLastScrollTs = Date.now();
       }
@@ -10585,7 +10591,7 @@ window.casoraMenuGlass = {
       tp = null;
       if (moved && window._casoraTouchDbg) {
         var mp = (ev.composedPath && ev.composedPath()) || [];
-        if (mp.some(function (n) { return n && n.dataset && n.dataset.casoraStep != null; })) window._casoraTouchDbg('svc-step touchend ignored: finger moved > ' + TAP_SLOP + ' px');
+        if (mp.some(function (n) { return n && n.dataset && n.dataset.casoraStep != null; })) window._casoraTouchDbg('svc-step touchend ignored: finger moved > ' + STEP_SLOP + ' px');
       }
       if (moved) return;
       fire(ev);

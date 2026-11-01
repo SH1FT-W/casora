@@ -1227,7 +1227,7 @@
      found nothing. Now a gesture starts on the first trusted pointerdown (touch/pen) or touchstart on a
      button, re-sent copies of the same touch never reset it, and whichever end comes first (pointerup or
      touchend, both arrive on iOS) steps once; the other end and the click echo are swallowed. A finger may
-     wander STEP_SLOP px or stay on the button. */
+     wander STEP_SLOP px. */
   var STEP_SLOP = 16;
   var stepG = null, stepTouchAt = 0;
   // Opt-in diagnostics for a real device: localStorage 'casora-debug-touch' = '1' writes what − / + saw to
@@ -1252,11 +1252,9 @@
     if (window._casoraPopupOpenedAt && Date.now() - window._casoraPopupOpenedAt < 600) return 'popup just opened';
     return '';
   };
+  // Measured from where the finger came down, not from the button: the phone sheet follows a dragging finger.
   var stepNear = function (g, x, y) {
-    if (x == null) return true;
-    if (Math.abs(x - g.x) < STEP_SLOP && Math.abs(y - g.y) < STEP_SLOP) return true;
-    var r = g.el.isConnected && g.el.getBoundingClientRect();
-    return !!(r && r.width && x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8);
+    return x == null || (Math.abs(x - g.x) < STEP_SLOP && Math.abs(y - g.y) < STEP_SLOP);
   };
   var stepStart = function (ev, x, y, src) {
     var el = pathFind(ev, 'data-fb-step');
