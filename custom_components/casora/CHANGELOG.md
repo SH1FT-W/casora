@@ -17,7 +17,7 @@ Polish for the new popups from 26.11.1, plus three wishes from your feedback. Th
 
 ### Changed
 - **Phone rooms without categories:** rooms list their devices on the phone in one list again, without automatic groups (Light, Climate …). If you want groups, turn them on in the Studio under Design & controls, Phone. No tile takes the full width on the phone any more.
-- **KI check on the update page:** "Check now" or "Check again" starts the AI check right on an update's detail page.
+- **AI check on the update page:** "Check now" or "Check again" starts the AI check right on an update's detail page.
 - **Headers in words:** every popup says at the top what is going on instead of raw values like "On", "Off" or "0 kWh", and without repeating the dial. For example windows "Bedroom window · since 14:20", calendar "Next: Tomorrow 11:00 · Waste collection", network "2 WiFis on · 66 devices", football the form of the last five matches.
 - **Weather:** the dial has a fixed scale from −10 to 35 °C; 10 °C now looks cool, not hot. Today's low and high are marks on the ring. The Studio's "Extra values" (#56) are back in the details.
 - **"Home" above groups:** groups across several rooms (covers, locks, windows, lights in the house) say "Home" at the top instead of a single room.
