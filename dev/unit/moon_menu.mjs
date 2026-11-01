@@ -45,4 +45,8 @@ assert.ok(/ev\.key === 'Escape'/.test(src) && /\.veil'\)\.addEventListener\('cli
 assert.ok(/Math\.max\(8, Math\.min\(W - pw - 8,/.test(src) && /max-width:min\(280px, calc\(100vw - 16px\)\)/.test(src), 'inside the window');
 assert.ok(/\.row\.on\{background:var\(--casora-soft-row-active/.test(src) && !/mdi:check/.test(src), 'chosen row hinterlegt, no check mark');
 assert.ok(/px\.click\(\)/.test(src), 'a row clicks its proxy');
+// Rows like every Casora menu (design-regeln §0): 52 high, circle 36, pill 26, pane 34 (26 + 8 concentric).
+assert.ok(/\.row\{[^}]*min-height:var\(--casora-menu-row-h, 52px\)[^}]*border-radius:var\(--casora-menu-row-radius, 26px\)/.test(src), 'menu row 52 / 26');
+assert.ok(/\.ic\{[^}]*width:var\(--casora-ic-row, 36px\)/.test(src), 'circle 36');
+assert.ok(/border-radius:var\(--casora-menu-radius, 34px\)/.test(src), 'pane 34');
 console.log('moon_menu: ok');
