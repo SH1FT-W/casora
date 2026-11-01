@@ -2691,7 +2691,8 @@
   "Vorhanden": "Présent",
   "Fehlt": "Manquant",
   "Ja": "Oui",
-  "unbekannt": "inconnu"
+  "unbekannt": "inconnu",
+  "Luftfeuchte · 24 Std.": "Humidité · 24 h"
  },
  "patterns": [
   [

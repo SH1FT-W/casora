@@ -2673,7 +2673,8 @@
   "Vorhanden": "Present",
   "Fehlt": "Missing",
   "Ja": "Yes",
-  "unbekannt": "unknown"
+  "unbekannt": "unknown",
+  "Luftfeuchte · 24 Std.": "Humidity · 24 h"
  },
  "patterns": [
   [

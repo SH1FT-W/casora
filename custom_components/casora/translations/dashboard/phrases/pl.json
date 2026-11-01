@@ -2691,7 +2691,8 @@
   "Vorhanden": "Obecny",
   "Fehlt": "Brak",
   "Ja": "Tak",
-  "unbekannt": "nieznany"
+  "unbekannt": "nieznany",
+  "Luftfeuchte · 24 Std.": "Wilgotność · 24 h"
  },
  "patterns": [
   [

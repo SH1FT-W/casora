@@ -2691,7 +2691,8 @@
   "Vorhanden": "Aanwezig",
   "Fehlt": "Ontbreekt",
   "Ja": "Ja",
-  "unbekannt": "onbekend"
+  "unbekannt": "onbekend",
+  "Luftfeuchte · 24 Std.": "Luchtvochtigheid · 24 u"
  },
  "patterns": [
   [
