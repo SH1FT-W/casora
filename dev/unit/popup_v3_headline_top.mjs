@@ -15,6 +15,8 @@ for (const [name, tpl] of Object.entries(T)) {
   for (const s of strings(tpl)) {
     if (!/add\('hero'/.test(s)) continue;
     for (const m of s.matchAll(/_casoraStd\(uiCard,([^\n]*)/g)) {
+      // A layout that puts „hero“ first in the left column uses it as the stage (contacts v3), not as the status line.
+      if (/left: \['hero'/.test(m[1])) continue;
       for (const t of m[1].matchAll(/top: \[([^\]]*)\]/g)) {
         n++;
         assert.ok(/'hero'/.test(t[1]), `${name}: layout top [${t[1]}] leaves the status line „hero“ below the stage`);
