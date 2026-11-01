@@ -676,7 +676,10 @@
     var b = function (d, dis) {
       return { dis: dis, attrs: { 'data-fb-step': JSON.stringify({ id: key, d: d, v: shown, base: base, tg: tg, lo: lo, hi: hi, st: step }) } };
     };
-    return UI.stage('value', Object.assign(dl, { caption: same ? 'Ziel aller Räume' : 'Ø Ziel aller Räume', value: shown, unit: TU(), valCls: 'fb-st-v',
+    // Final review 01.11.2026: the knob turns like a single room – on release every room that is on takes the chosen
+    // target (one call for all; rooms that are off stay off). The caption one line: the head already counts the rooms.
+    return UI.stage('value', Object.assign(dl, { caption: same ? 'Ziel aller' : 'Ø Ziel', value: shown, unit: TU(), valCls: 'fb-st-v',
+      dialSvc: { domain: 'climate', service: 'set_temperature', field: 'temperature', data: { temperature: shown }, target: { entity_id: on.map(function (r) { return r.id; }) } },
       minus: b(-step, shown <= lo), plus: b(step, shown >= hi), foot: foot }));
   };
 

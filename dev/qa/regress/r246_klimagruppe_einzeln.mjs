@@ -53,6 +53,8 @@ const parts = () => page.evaluate(() => {
     zahl: vis('.fb-st-v .n, .hp-st-v .n').length,
     balken: vis('.fb-tb, .hp-tb, .hui-dl[role="slider"]').length,
     rad: vis('.hui-dl').length,
+    knopf: vis('.hui-dl .hui-dl-knob').length,
+    dreht: vis('.hui-dl[role="slider"][data-casora-slider]').map((e) => { try { return JSON.parse(e.dataset.casoraSlider); } catch (x) { return null; } })[0] || null,
     cap: vis('.hui-dl-cap').map((e) => e.textContent.trim()).join(' '),
     raeume: vis('[data-fbh-room]').length + vis('.hui-row[data-casora-mi^="climate."]').length,
     text: txt.join(' | ').replace(/\s+/g, ' '),
@@ -68,7 +70,10 @@ const groupCase = async (label, tpl, shared) => {
   if (shared) {
     await check(`${label}: −/+ für alle Räume (${p.plusMinus})`, p.plusMinus === 2, p);
     await check(`${label}: eine Zieltemperatur auf dem Rad (${p.zahl}/${p.rad})`, p.zahl === 1 && p.rad === 1, p);
-    await check(`${label}: Rad sagt „Ø Ziel aller Räume“ bei unterschiedlichen Zielen (${p.cap})`, /Ø Ziel aller Räume/.test(p.cap), p.cap);
+    await check(`${label}: Rad sagt „Ø Ziel“ (eine Zeile) bei unterschiedlichen Zielen (${p.cap})`, /^Ø Ziel$/.test(String(p.cap).trim()), p.cap);
+    // Final review 01.11.2026: knob and turning like a single room; on release every room that is on takes the value.
+    await check(`${label}: Knopf und Drehen am Rad`, p.knopf === 1 && p.dreht && p.dreht.service === 'set_temperature' && p.dreht.field === 'temperature', p.dreht);
+    await check(`${label}: Drehen setzt alle eingeschalteten Räume`, p.dreht && Array.isArray(p.dreht.target.entity_id) && p.dreht.target.entity_id.length >= 2, p.dreht && p.dreht.target);
   } else {
     await check(`${label}: kein −/+ (${p.plusMinus})`, p.plusMinus === 0, p);
     await check(`${label}: keine einzelne Zieltemperatur (${p.zahl})`, p.zahl === 0, p);

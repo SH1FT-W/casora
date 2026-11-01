@@ -2684,7 +2684,9 @@
   "kaum Unterschied": "presque aucune différence",
   "abends günstiger": "moins cher le soir",
   "WLAN aus": "Wi-Fi désactivé",
-  "1 WLAN an": "1 Wi-Fi actif"
+  "1 WLAN an": "1 Wi-Fi actif",
+  "Ziel aller": "Toutes",
+  "Ø Ziel": "Ø consigne"
  },
  "patterns": [
   [
