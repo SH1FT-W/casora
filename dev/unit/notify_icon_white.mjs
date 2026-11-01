@@ -11,6 +11,8 @@ assert.ok(a > 0 && b > a, 'notifyTone in casora-core.js');
 const notifyTone = new Function('inkOn', core.slice(a, b) + '\nreturn notifyTone;')(null);
 // The colour as a browser resolves it: the token's fallback, mixed with black.
 const rgbOf = (f) => {
+  const deep = /^var\(--casora-color-\w+-deep, (.+)\)$/.exec(f);
+  if (deep) return rgbOf(deep[1]);
   const mix = /^color-mix\(in srgb, (.+) (\d+)%, black\)$/.exec(f);
   if (mix) return rgbOf(mix[1]).map((c) => c * Number(mix[2]) / 100);
   const h = /#([0-9a-f]{6})/i.exec(f);
@@ -30,11 +32,16 @@ for (const k of ['green', 'orange', 'blue', 'teal', 'red']) {
   assert.ok(white(t) >= 3, k + ': white ≥ 3 : 1 (' + white(t).toFixed(2) + ' on ' + t + ')');
 }
 assert.equal(notifyTone(tones.blue, ink), tones.blue, 'blue keeps its fill (white already 3 : 1)');
-assert.match(notifyTone(tones.green, ink), /^color-mix\(in srgb, var\(--casora-color-green, #6AAE78\) \d+%, black\)$/, 'green a step darker');
-assert.match(notifyTone(tones.orange, ink), /^color-mix\(in srgb, var\(--casora-color-orange, #DE8A4E\) \d+%, black\)$/, 'orange a step darker');
-const g = Number(/(\d+)%/.exec(notifyTone(tones.green, ink))[1]);
-assert.ok(g >= 78, 'green only a step darker, not muddy (' + g + ' %)');
+// Owner, 01.11.2026 (picture B): clearly darker – the Casora theme's deep shades, else 75 % with black.
+assert.equal(notifyTone(tones.green, ink), 'var(--casora-color-green-deep, color-mix(in srgb, var(--casora-color-green, #6AAE78) 75%, black))', 'green clearly darker');
+assert.equal(notifyTone(tones.orange, ink), 'var(--casora-color-orange-deep, color-mix(in srgb, var(--casora-color-orange, #DE8A4E) 75%, black))', 'orange clearly darker');
+assert.equal(notifyTone('var(--casora-tone-energy)', (f) => (/color-mix/.test(f) ? 'var(--casora-soft-glyph)' : 'var(--casora-soft-glyph-dark)')).slice(0, 30), 'var(--casora-color-green-deep,', 'tone tokens too');
+const theme = fs.readFileSync(new URL('../../custom_components/casora/theme_weich.yaml', import.meta.url), 'utf8');
+assert.match(theme, /casora-color-green-deep: "#4F8F5D"/, 'Casora theme: deep green');
+assert.match(theme, /casora-color-orange-deep: "#B96A33"/, 'Casora theme: deep orange');
+for (const hx of ['#4F8F5D', '#B96A33']) assert.ok(white(hx) >= 3, hx + ': white ≥ 3 : 1 (' + white(hx).toFixed(2) + ')');
 assert.equal(notifyTone(tones.yellow, ink), tones.yellow, 'yellow (light) keeps the dark symbol');
+assert.equal(notifyTone('var(--casora-color-yellow, #E8B04A)', ink), 'var(--casora-color-yellow, #E8B04A)', 'theme yellow too (white would reach 3 : 1 at 75 %)');
 // Only the notification rows use it.
 assert.match(core, /iconTone: window\._casoraNotifyTone \? window\._casoraNotifyTone\(toneOf\(r\)\)/, 'notification rows');
 assert.equal((core.match(/_casoraNotifyTone\(/g) || []).length, 1, 'nowhere else but the list');

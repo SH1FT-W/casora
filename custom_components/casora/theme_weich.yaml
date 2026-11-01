@@ -20,6 +20,9 @@ Casora:
   casora-color-yellow-dark: "#DCA43E"
   casora-color-green: "#6AAE78"
   casora-color-orange: "#DE8A4E"
+  # Notification list (owner, 01.11.2026): green/orange circles clearly darker under a white symbol.
+  casora-color-green-deep: "#4F8F5D"
+  casora-color-orange-deep: "#B96A33"
   casora-color-red: "#D35A4E"
   # dk-08 (1.3): Rot für Schrift auf Creme (aktive Kachel) – 4,9:1 statt 3,3:1; Kreise/Flächen bleiben casora-color-red.
   casora-color-red-text: "#A8443A"
