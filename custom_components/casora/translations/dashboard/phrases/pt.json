@@ -2682,7 +2682,9 @@
   "Warten lohnt sich nicht.": "Não compensa esperar.",
   "Claude sucht ein Rezept …": "O Claude procura uma receita …",
   "kaum Unterschied": "quase sem diferença",
-  "abends günstiger": "mais barato à noite"
+  "abends günstiger": "mais barato à noite",
+  "WLAN aus": "Wi-Fi desligado",
+  "1 WLAN an": "1 Wi-Fi ligado"
  },
  "patterns": [
   [
@@ -4836,6 +4838,30 @@
   [
    "^(.+) frei$",
    "{1} livres"
+  ],
+  [
+   "^Nächstes Spiel (.+)$",
+   "Próximo jogo {1}"
+  ],
+  [
+   "^(\\d+) WLANs an$",
+   "{1} redes Wi-Fi ligadas"
+  ],
+  [
+   "^Schwächste: (.+)$",
+   "Mais fraca: {1}"
+  ],
+  [
+   "^Zuerst wechseln: (.+)$",
+   "Trocar primeiro: {1}"
+  ],
+  [
+   "^Jetzt: (.+)$",
+   "Agora: {1}"
+  ],
+  [
+   "^Zuletzt geöffnet (.+)$",
+   "Última abertura {1}"
   ]
  ],
  "Gerät in Home Assistant": "Dispositivo no Home Assistant"

@@ -181,7 +181,7 @@
   K.repaint = function () {
     var ha = document.querySelector('home-assistant');
     if (ha && ha.hass) K.w.hass = ha.hass;
-    ['month', 'week', 'day', 'up', 'hero', 'wmonth', 'wday'].forEach(function (k) {
+    ['month', 'week', 'day', 'up', 'hero', 'head', 'wmonth', 'wday'].forEach(function (k) {
       find(ha && ha.shadowRoot, '.hcal-' + k).forEach(function (n) { n.innerHTML = (window.casoraTr || function (x) { return x; })(K.html(k, K._vars)); });
     });
   };
@@ -432,6 +432,17 @@
     var T = UIT(), cals = K.cals(variables), today = day0(new Date());
     var sel = K.sel ? parseYmd(K.sel) : today;
     var wait = !K.ev ? '<div class="hcal-e">' + (K.err ? 'Kalender nicht erreichbar' : 'Wird geladen …') + '</div>' : null;
+    if (k === 'head') {
+      // v3 status line (§3, final review 01.11.2026): what is on now or next, in words – never the calendar's raw „Aus“.
+      var U = window._casoraUI, now0 = new Date();
+      if (!U || !U.line || !K.ev) return '';
+      var vis = K.ev.filter(function (e) { return !K.hide[e.cal] && e.end > now0; });
+      var cur = vis.filter(function (e) { return !e.allDay && e.start <= now0; })[0];
+      if (cur) return U.line('Jetzt: ' + cur.name, ['bis ' + hm(cur.end)]);
+      var nx0 = vis.filter(function (e) { return e.start > now0; })[0];
+      if (!nx0) return U.line('Keine Termine', []);
+      return U.line('Als Nächstes: ' + dayWord(nx0.start, false) + (nx0.allDay ? '' : ' ' + hm(nx0.start)), [nx0.name]);
+    }
     if (k === 'hero') {
       var n = K.ev ? onDay(today).length : null;
       var nx = (K.ev || []).filter(function (e) { return !K.hide[e.cal] && e.end > new Date() && day0(e.start) > today; })[0];
@@ -556,18 +567,19 @@
     return {
       type: 'custom:button-card', entity: eid, triggers_update: watch, variables: { calendars: variables.calendars || null },
       card_mod: { style: wrapperStyle },
-      extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: ' + (K.v3() ? '"left right"' : '"hero hero" "left right"') + ' !important;'
+      extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: "hero hero" "left right" !important;'
         + ' grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: ' + (K.v3() ? 'var(--casora-popup-col-gap, 26px)' : '20px') + ' !important; } }'
         + (K.v3() && window._casoraUI.colsMark ? window._casoraUI.colsMark('left', 'right') : ''),
       tap_action: { action: 'none' }, show_icon: false, show_name: false, show_label: false, show_state: false,
       styles: {
         card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: window._casoraHH && window._casoraHH.on() ? '0 26px 22px 26px' : '6px 26px 22px 26px' }],
-        grid: [{ 'grid-template-areas': K.v3() ? '"left" "right"' : '"hero" "left" "right"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'align-items': 'start' }, { 'row-gap': 'var(--casora-popup-sec-gap, 18px)' }],
+        grid: [{ 'grid-template-areas': '"hero" "left" "right"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'align-items': 'start' }, { 'row-gap': 'var(--casora-popup-sec-gap, 18px)' }],
         custom_fields: { hero: [{ 'justify-self': 'stretch' }], left: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }], right: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }] },
       },
       custom_fields: (function () {
         /* Popup v3: no hero („3 Termine heute“ is the day list beside it); the month is the stage on the left. */
-        if (K.v3()) return { left: { card: colCard(['month'], eid, watch, { calendars: variables.calendars || null }, 'sec', ['month']) }, right: { card: makeCol(['day', 'up']) } };
+        // hero: the status line (part „head“) the frame lifts into the popup's head.
+        if (K.v3()) return { hero: fld('head'), left: { card: colCard(['month'], eid, watch, { calendars: variables.calendars || null }, 'sec', ['month']) }, right: { card: makeCol(['day', 'up']) } };
         /* Weich (Entschlacken 01.10.2026): ohne „Diese Woche“ – sie doppelt sich mit Monat und „Demnächst“. */
         if (window._casoraHH && window._casoraHH.on()) return { hero: fld('hero'), left: { card: makeCol(['month']) }, right: { card: makeCol(['day', 'up']) } };
         var sp = window._casoraSplit ? window._casoraSplit('calendar', ['month', 'week'], ['day', 'up'], { leftMovable: ['week'] }) : { left: ['month', 'week'], right: ['day', 'up'] };

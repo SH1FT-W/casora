@@ -633,6 +633,17 @@
     if (!i) return k === 'hero' ? '<div class="cfb-e">Kein Team-Tracker-Sensor</div>' : '';
     var d = K.data[K.key(i)], tab = d && d.table, me = tab && tab.rows.filter(function (r) { return r.id === i.team.id; })[0];
     var wait = !d ? '<div class="cfb-e">Wird geladen …</div>' : null;
+    if (k === 'head') {
+      // v3 status line (§3): in words what is going on – live with minute and score, the final score, or when the next
+      // match is; never the tile entity's „Seit 09:20“ and never the table's numbers again.
+      var U = window._casoraUI;
+      if (!U || !U.line) return '';
+      if (i.phase === 'IN') return U.line('Live', [K.minute(i.clock), K.tile(st)].filter(Boolean));
+      if (i.phase === 'POST' && i.date) return U.line('Endstand', [K.tile(st)].concat(diffDays(i.date) === 0 ? [] : [K.day(i.date)]));
+      if (i.phase === 'OFF') return U.line(i.off === 'cancel' ? 'Abgesagt' : 'Verschoben', [vs(i)]);
+      if (i.phase === 'PRE' && i.date) return U.line('Nächstes Spiel ' + K.when(i.date) + (i.tbd ? '' : ' ' + hm(i.date)), [vs(i)]);
+      return U.line('Kein Spiel angesetzt', []);
+    }
     if (k === 'hero') {
       var UI = window._casoraUI;
       var lgN = K.leagueOf(i, d);
@@ -830,16 +841,17 @@
          match and the form on the right; phone: table, match, form. */
       return {
         type: 'custom:button-card', entity: id, triggers_update: [id], card_mod: { style: wrapperStyle },
-        extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: "left right" !important;'
+        extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: "head head" "left right" !important;'
           + ' grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: var(--casora-popup-col-gap, 26px) !important; } }'
           + (window._casoraUI.colsMark ? window._casoraUI.colsMark('left', 'right') : ''),
         tap_action: { action: 'none' }, show_icon: false, show_name: false, show_label: false, show_state: false,
         styles: {
           card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px 22px 26px' }],
-          grid: [{ 'grid-template-areas': '"left" "right"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'align-items': 'start' }, { 'row-gap': 'var(--casora-popup-sec-gap, 22px)' }],
-          custom_fields: { left: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }], right: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }] },
+          grid: [{ 'grid-template-areas': '"head" "left" "right"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'align-items': 'start' }, { 'row-gap': 'var(--casora-popup-sec-gap, 22px)' }],
+          custom_fields: { head: [{ 'justify-self': 'stretch' }], left: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }], right: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }] },
         },
-        custom_fields: { left: { card: colCard(['table'], id, ['table']) }, right: { card: Object.assign(colCard(['match', 'form'], id), { extra_styles: (window._casoraColGap ? window._casoraColGap(['match', 'form']) : '')
+        // head: the status line, lifted into the popup's head by the frame (§3).
+        custom_fields: { head: fld('head'), left: { card: colCard(['table'], id, ['table']) }, right: { card: Object.assign(colCard(['match', 'form'], id), { extra_styles: (window._casoraColGap ? window._casoraColGap(['match', 'form']) : '')
           /* Half the popup wide: a narrower middle so the team names keep their room. */
           + ' @media (min-width:761px){.cfb-mr{grid-template-columns:minmax(0,1fr) 120px minmax(0,1fr) !important;}.cfb-sub span{display:block;}.cfb-sub span+span::before{content:none !important;}}' }) } },
       };

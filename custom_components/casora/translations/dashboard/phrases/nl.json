@@ -2682,7 +2682,9 @@
   "Warten lohnt sich nicht.": "Wachten loont niet.",
   "Claude sucht ein Rezept …": "Claude zoekt een recept …",
   "kaum Unterschied": "nauwelijks verschil",
-  "abends günstiger": "'s avonds goedkoper"
+  "abends günstiger": "'s avonds goedkoper",
+  "WLAN aus": "Wifi uit",
+  "1 WLAN an": "1 wifi aan"
  },
  "patterns": [
   [
@@ -4836,6 +4838,30 @@
   [
    "^(.+) frei$",
    "{1} over"
+  ],
+  [
+   "^Nächstes Spiel (.+)$",
+   "Volgende wedstrijd {1}"
+  ],
+  [
+   "^(\\d+) WLANs an$",
+   "{1} wifi-netwerken aan"
+  ],
+  [
+   "^Schwächste: (.+)$",
+   "Zwakste: {1}"
+  ],
+  [
+   "^Zuerst wechseln: (.+)$",
+   "Eerst vervangen: {1}"
+  ],
+  [
+   "^Jetzt: (.+)$",
+   "Nu: {1}"
+  ],
+  [
+   "^Zuletzt geöffnet (.+)$",
+   "Laatst geopend {1}"
   ]
  ],
  "Gerät in Home Assistant": "Apparaat in Home Assistant"
