@@ -4,7 +4,9 @@
 // (docs/handbuch/popup-rework-v3-auftrag.md §5), each with a label. For walking through all popups by hand.
 //
 //   node dev/qa/popup-galerie.mjs anlegen            builds (or rebuilds) the dashboard /popup-galerie
-//   node dev/qa/popup-galerie.mjs pruefen [--handy] [--nur <regex>] [--md <file>] [--json <file>]
+//   node dev/qa/popup-galerie.mjs pruefen [--handy|--ipad] [--hell] [--nur <regex>] [--md <file>] [--json <file>] [--bilder <dir>]
+//                                                    --ipad: iPad portrait 820 (desktop dashboard), --hell: light scheme,
+//                                                    --konsole: print page and console errors
 //                                                    taps every opener (Playwright) and lists: opens / does not open / device missing
 //
 // Like dev/qa/matrix-bilder.mjs --vorbereiten: cards are taken from the house's own dashboards (the Studio's output) when a
@@ -386,7 +388,14 @@ async function pruefen() {
   const H = await import('../e2e/harness.mjs');
   const HANDY = flag('handy');
   const NUR = arg('nur') ? new RegExp(arg('nur')) : null;
-  const { browser, page: pg } = await H.open(HANDY ? { width: 393, height: 852, mobile: true, safari: true } : { width: 1440, height: 900 });
+  const IPAD = flag('ipad'), DARK = !flag('hell');
+  const { browser, page: pg } = await H.open(HANDY ? { width: 393, height: 852, mobile: true, safari: true, dark: DARK }
+    : IPAD ? { width: 820, height: 1180, dark: DARK } : { width: 1440, height: 900, dark: DARK });
+  // --konsole: print page errors and console errors as they come (why does a popup not open?).
+  if (flag('konsole')) {
+    pg.on('pageerror', (e) => console.log('  [pageerror] ' + String(e.message || e).slice(0, 300)));
+    pg.on('console', (m) => { if (m.type() === 'error') console.log('  [console] ' + m.text().slice(0, 300)); });
+  }
   const sleep = (ms) => pg.waitForTimeout(ms);
   const tap = async (x, y) => { if (HANDY) await pg.touchscreen.tap(x, y); else await pg.mouse.click(x, y); };
   const popupOpen = () => pg.evaluate(() => !!(window.casoraPopup && window.casoraPopup.surface) || window.__pierce('ha-dialog, ha-adaptive-dialog, ha-md-dialog, ha-wa-dialog, ha-more-info-dialog').some((d) => { const r = d.getBoundingClientRect(); return r.width > 80 && r.height > 80; })).catch(() => false);
@@ -402,7 +411,7 @@ async function pruefen() {
   const snap = async (res, it) => {
     if (!arg('bilder')) return;
     await pg.waitForTimeout(1600);
-    res.bild = it.id + (HANDY ? '-handy' : '') + '.png';
+    res.bild = it.id + (HANDY ? '-handy' : IPAD ? '-ipad' : '') + (DARK ? '' : '-hell') + '.png';
     await pg.screenshot({ path: path.join(arg('bilder'), res.bild) }).catch(() => { res.bild = null; });
   };
   const setRow = async (opt) => { await pg.evaluate((o) => { const h = document.querySelector('home-assistant').hass;

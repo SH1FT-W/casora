@@ -110,7 +110,10 @@ export const MEASURE_GEO = () => {
     const own = [...e.childNodes].some((n) => n.nodeType === 3 && n.data.trim().length > 0);
     const s = cs(e);
     // Trennpunkt „·“ ist Zierde, kein Inhalt.
-    if (own && !inactive(e) && !/^[·•|\s]+$/.test(e.textContent)) {
+    // Slider value in two layers (UI.slider): the ink copy (.hui-sl-ink) is clipped to the fill and sits on it, not on the
+    // track the walk finds – the copy on the track is measured on its own.
+    const onFill = !!(e.closest && e.closest('.hui-sl-ink'));
+    if (own && !onFill && !inactive(e) && !/^[·•|\s]+$/.test(e.textContent)) {
       const c = col(s.color); const B = bgOf(e, true); if (!c || B.unsure) continue;
       const fg = over([c[0], c[1], c[2], c[3] * B.opacity], B.bg);
       const fs = parseFloat(s.fontSize), fw = Number(s.fontWeight) || 400;
@@ -220,10 +223,10 @@ export const MEASURE_GEO = () => {
     const b = head.querySelector('b');
     const main = norm(b ? b.textContent : String(head.textContent || '').split('·')[0]);
     const stageMain = els.filter((e) => e.classList && R.get(e) && (e.classList.contains('hui-dl-t')
+      || (e.classList.contains('hui-st-text') && e.closest && e.closest('.hui-stage'))
       || (e.classList.contains('hui-st-val') && e.closest && e.closest('.hui-stage, .hui-dl'))));
     for (const e of stageMain) {
       if (main && norm(e.textContent) === main) { add('doppelt', `Statuszeile wiederholt die Bühne: „${String(e.textContent).trim()}“`, e); break; }
-      || (e.classList.contains('hui-st-text') && e.closest && e.closest('.hui-stage'))
     }
   }
   return { n: finds.length, finds };
