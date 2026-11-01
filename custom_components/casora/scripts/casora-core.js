@@ -8056,6 +8056,18 @@ window.casoraMenuGlass = {
           sp.remove();
         });
       }
+      // The first part starting with the stage's number („60 % geöffnet“ above a wheel of 60 %): the word stays („Geöffnet“).
+      if (first && norm(stageVal) && /\d/.test(stageVal)) {
+        var ft = String(first.textContent || '').trim(), svC = String(stageVal).replace(/[\s\u00a0\u202f]/g, ''), ki = 0, ti = 0;
+        while (ti < ft.length && ki < svC.length) {
+          if (/[\s\u00a0\u202f]/.test(ft.charAt(ti))) { ti++; continue; }
+          if (ft.charAt(ti) !== svC.charAt(ki)) break;
+          ti++; ki++;
+        }
+        // Only a value with its unit („60 %“, „21°“) – a bare count („3“) is the start of „3 von 16 an“.
+        var rest0 = ki === svC.length && /\D$/.test(svC) ? ft.slice(ti).trim() : '';
+        if (rest0 && /^[a-zäöü]/i.test(rest0)) first.textContent = rest0.charAt(0).toUpperCase() + rest0.slice(1);
+      }
       var mainTxt = first ? first.textContent : String(hs.textContent || '').split('·')[0];
       // Also a word the stage's sentence counts („Entriegelt“ above „2 entriegelt · 1 klemmt“, final review 01.11.2026):
       // one of its parts without the leading number reads like the head's first part.

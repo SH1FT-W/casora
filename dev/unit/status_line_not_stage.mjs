@@ -52,5 +52,17 @@ const geo = fs.readFileSync(new URL('../qa/popup-geo.mjs', import.meta.url), 'ut
 assert.ok(/add\('doppelt'/.test(geo), 'popup-geo: check „doppelt“');
 const rl = fs.readFileSync(new URL('../../docs/handbuch/popup-richtlinien-v3.md', import.meta.url), 'utf8');
 assert.ok(/Die Statuszeile wiederholt nie den Bühnenwert/.test(rl), 'richtlinien §3: rule');
+// Detail round #4: a head starting with the stage's value keeps only its word („60 % geöffnet“ → „Geöffnet“); a bare
+// count is no such value („3 von 16 an“ stays).
+{
+  const blk = dd.slice(dd.indexOf("      // The first part starting with the stage's number"), dd.indexOf('      var mainTxt = first'));
+  assert.ok(blk.length > 50, 'frame: strips the stage value from the first part');
+  const run = (head, val) => { const first = { textContent: head }; new Function('first', 'stageVal', 'norm', blk)(first, val, norm); return first.textContent; };
+  assert.equal(run('60 % geöffnet', '60%'), 'Geöffnet');
+  assert.equal(run('60\u202f% geöffnet', '60 %'), 'Geöffnet');
+  assert.equal(run('3 von 16 an', '3'), '3 von 16 an', 'bare count stays');
+  assert.equal(run('Heizt', '21°'), 'Heizt');
+  assert.equal(run('21° · x', '21°'), '21° · x', 'no word after the value: unchanged');
+}
 console.log('status_line_not_stage: ok');
 process.exit(0);
