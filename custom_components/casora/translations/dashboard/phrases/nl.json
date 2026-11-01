@@ -3003,6 +3003,10 @@
    "{1} beschikbaar"
   ],
   [
+   "^(\\d+) verfügbar$",
+   "{1} beschikbaar"
+  ],
+  [
    "^Heute (.+) kWh$",
    "Vandaag {1} kWh"
   ],
@@ -4069,6 +4073,10 @@
   [
    "^(\\d+) Schwach$",
    "{1} Laag"
+  ],
+  [
+   "^(\\d+) schwach$",
+   "{1} laag"
   ],
   [
    "^(.+) Akku fast leer$",

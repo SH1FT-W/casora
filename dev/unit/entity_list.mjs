@@ -1,6 +1,6 @@
 // Entity list and "Mehr" (card request #59, scripts/local/34-entity-list.js) without HA: Studio settings, entries
 // from a group (its order), a hand-picked list or an HA label (by name), row kinds and their controls, the count on
-// the tile ("3 An" / "26 Einstellungen"), section headings, columns, popup assembly, Mehr's lists and charts and its
+// the tile ("3 an" / "26 Einstellungen"), section headings, columns, popup assembly, Mehr's lists and charts and its
 // row tap, template and Studio entries. All devices and names are invented.   node dev/unit/entity_list.mjs
 import assert from 'node:assert/strict';
 import { freeTileEnv, load, src } from './lib/free_tile_env.mjs';
@@ -84,8 +84,8 @@ assert.equal(L.kind(null), 'state');
 // ── Count, tile text, active ──────────────────────────────────────────────
 const heiz = L.resolve(hass, states, L.cfg({ list_group: 'group.qa_heizung' }));
 assert.deepEqual(L.count(states, heiz), { n: 3, on: 1, toggles: 1 });
-assert.deepEqual(L.summary(L.count(states, heiz)), ['3 Geräte', '1 An']);
-assert.deepEqual(L.summary(L.count(states, grp)), ['6 Geräte', '1 An'], 'pump on');
+assert.deepEqual(L.summary(L.count(states, heiz)), ['3 Geräte', '1 an']);
+assert.deepEqual(L.summary(L.count(states, grp)), ['6 Geräte', '1 an'], 'pump on');
 states['switch.qa_pumpe'].state = 'off';
 assert.deepEqual(L.summary(L.count(states, grp)), ['6 Geräte', 'Aus'], 'switches all off');
 assert.deepEqual(L.summary(L.count(states, ['input_datetime.qa_frueh'])), ['1 Gerät'], 'no switch: count only');
@@ -94,7 +94,7 @@ assert.equal(L.tileState(hass, states, { list_group: 'group.qa_rollo' }), '6 Ger
 assert.equal(L.tileActive(hass, states, { list_group: 'group.qa_rollo' }), false);
 states['input_boolean.qa_abwesend'].state = 'on';
 states['switch.qa_pumpe'].state = 'on';
-assert.equal(L.tileState(hass, states, { list_group: 'group.qa_rollo' }), '2 An', 'something on: the number on ("2 An", word list)');
+assert.equal(L.tileState(hass, states, { list_group: 'group.qa_rollo' }), '2 an', 'something on: the number on ("2 an", word list)');
 assert.equal(L.tileActive(hass, states, { list_group: 'group.qa_rollo' }), true);
 assert.equal(L.tileState(hass, states, {}), 'Keine Einträge');
 states['input_boolean.qa_abwesend'].state = 'off';
@@ -177,7 +177,7 @@ assert.ok(lay.fields.list.card.watch.includes('input_datetime.qa_feb') && lay.fi
 lay = L.popup({ list_group: 'group.qa_nichts' }, states, hass);
 assert.deepEqual(Object.keys(lay.fields), ['hero'], 'empty: no list section');
 const C1 = L.cfg({ list_group: 'group.qa_rollo', list_layout: '2', list_sections: [{ title: 'Pro Monat', before: 'input_datetime.qa_jan' }] });
-assert.equal(L.sec('hero', C1, states, hass), '<line>6 Geräte|1 An</line>');
+assert.equal(L.sec('hero', C1, states, hass), '<line>6 Geräte|1 an</line>');
 const html = L.sec('list', C1, states, hass);
 assert.match(html, /data-casora-cols="2"/);
 assert.match(html, /<group >:Frühestens zu um\+ctl;:Spätestens zu um\+ctl;:Andere Schließzeit wenn abwesend\+ctl<\/group>/);
@@ -212,7 +212,7 @@ assert.deepEqual(mlay.top, ['hero', 'lists', 'charts']);
 assert.deepEqual(mlay.variables.casora_more, M, 'the popup carries what its rows open');
 assert.ok(mlay.fields.lists.card.watch.includes('input_boolean.qa_sommer'), 'list previews follow their members');
 assert.equal(L.moreSec('lists', M, states, hass),
-  '<group Einstellungen>group.qa_rollo:Rollladen runter/6 Geräte · 1 An;group.qa_heizung:Heizung/3 Geräte · 1 An</group>');
+  '<group Einstellungen>group.qa_rollo:Rollladen runter/6 Geräte · 1 an;group.qa_heizung:Heizung/3 Geräte · 1 an</group>');
 // Detail round #29: an empty group is no › row (it opened an empty page).
 {
   const UI0 = window._casoraUI; let seen = null;
@@ -269,7 +269,7 @@ assert.equal(el.variables.icon, 'list'); assert.equal(more.variables.icon, 'grid
 assert.deepEqual(el.icon_tap_action, { action: 'none' }, 'nothing to switch from the icon: the tap opens the popup');
 window.casoraStateFit = (t) => t;
 const ctx = { hass, states, variables: { list_group: 'group.qa_rollo' }, entity: undefined, user: {}, html: '' };
-assert.equal(run(el.state_display, ctx), '1 An');
+assert.equal(run(el.state_display, ctx), '1 an');
 assert.equal(run(el.variables.active_override, ctx), true);
 assert.equal(run(more.state_display, { ...ctx, variables: MV }), '2 Listen · 2 Diagramme');
 for (const p of ['casora_popup_entity_list', 'casora_popup_more']) {

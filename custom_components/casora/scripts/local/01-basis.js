@@ -600,14 +600,14 @@ window.casoraLightTally = function (entity, states, hass, vars) {
   var ids = (own && own.length ? own : sc.lightIds).filter(function (x, i, a) { return S[x] && a.indexOf(x) === i; });
   return { kind: 'lamps', tot: ids.length, on: ids.filter(function (x) { return S[x].state === 'on'; }).length };
 };
-/* The words for a tally (German, the dashboard translates; wortliste: Zahl + An): „Aus“/„An“ for one lamp,
-   „Alle aus“/„Alle An“, else „2 An“. */
+/* The words for a tally (German, the dashboard translates): „Aus“/„An“ for one lamp, „Alle aus“/„Alle An“, else
+   „2 an“ – a count in small letters (owner, 01.11.2026; wortliste §2). */
 window.casoraLightTallyText = function (t) {
   if (!t || !t.tot) return 'Aus';
   if (t.tot === 1) return t.on ? 'An' : 'Aus';
   if (!t.on) return 'Alle aus';
   if (t.on === t.tot) return 'Alle An';
-  return t.on + ' An';
+  return t.on + ' an';
 };
 /* The room temperature a thermostat stands in (review 2, E09: Klima badge 23°, thermostat 21,7 °C): the temperature
    sensors of the room whose header (casora_room) lists this climate entity – the ones its Klima badge reads – as their

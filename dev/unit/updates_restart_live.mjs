@@ -35,7 +35,7 @@ const show = tpl(tile.state_display), idle = tpl(tile.variables.idle), icon = tp
 const tileOf = (states) => ({ text: show(states, undefined, {}, { states }, {}), idle: idle(states, undefined, {}, { states }, {}),
   icon: icon(states, undefined, {}, { states }, {}) });
 let st = { 'update.a': upd('update.a'), 'update.b': upd('update.b', { installed_version: '2.0', latest_version: '2.0' }, 'off') };
-assert.deepEqual(tileOf(st), { text: '1 Verfügbar', idle: false, icon: 'updates' });
+assert.deepEqual(tileOf(st), { text: '1 verfügbar', idle: false, icon: 'updates' });
 st['update.a'] = upd('update.a', { installed_version: '1.1.0', release_summary: RESTART }, 'off');
 assert.deepEqual(tileOf(st), { text: 'Neustart ausstehend', idle: false, icon: 'updates-restart' }, 'tile: installed via HACS');
 // Skipped (HA: state off) is neither open nor restart.
@@ -43,7 +43,7 @@ st = { 'update.s': upd('update.s', { skipped_version: '1.1.0' }, 'off') };
 assert.deepEqual(tileOf(st), { text: 'Aktuell', idle: true, icon: 'updates' }, 'tile: skipped');
 // A non-standard restart_type attribute no longer makes a pending update read as "restart".
 st = { 'update.r': upd('update.r', { restart_type: 'restart' }) };
-assert.equal(tileOf(st).text, '1 Verfügbar', 'tile: restart_type ignored');
+assert.equal(tileOf(st).text, '1 verfügbar', 'tile: restart_type ignored');
 
 // ── Popup: built once at open, nested templates re-evaluated later ──
 const popup = tpl(T.casora_popup_updates.tap_action.casora_popup.content);

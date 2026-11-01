@@ -27,7 +27,7 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 | Begriff DE | EN | nicht verwenden | Beispiel |
 |---|---|---|---|
 | An / Aus | On / Off | Ein, Eingeschaltet/Ausgeschaltet als Zustand (als Verb im Satz ok: „Kachel eingeschaltet“) | Licht „An“, Steckdose „Aus“ |
-| Zahl + An | „1 An“, „3 An“ (**groß**, Entscheidung 23.09.) | „1 an“ | Licht-Gruppenbadge |
+| Zahl + Zustandswort | „1 an“, „3 an“, „2 offen“, „2 schwach“, „3 verfügbar“ (**klein**, Entscheidung 01.11.2026: Zählung ist eine Wortgruppe; allein stehend bleibt „An“/„Offen“ groß) | „3 An“, „2 Offen“ | Licht-Gruppenbadge, Batterie-Badge, Updates (EN „3 on“) |
 | Alle An / Alle Aus | All On / All Off | „Alle an“ | Licht-Popup |
 | Zahl + aktiv | „2 aktiv“, „Keine aktiv“ (**klein**, Entscheidung 08.10. D13c) | „2 Aktiv“, „Keine Aktiv“ | Szenen-Badge |
 | Geöffnet / Geschlossen | Open / Closed | „Zu“ als Zustand (= Knopf „Close“) | Jalousie, Tür, Fenster, Garage |
@@ -53,7 +53,7 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 | Zuhause / Unterwegs | Home / Away | „Daheim“, „Abwesend“ für Personen | Personen-Badge |
 | Alle zuhause / Alle unterwegs / 2 unterwegs | All home / All away / 2 away **(V5)** | – | Personen-Gruppe |
 | Abwesend | Away | – | nur Alarm-Modus („Aktiviert · Abwesend“) |
-| Schwach / Fast leer / OK | Low / Almost empty / OK | – | Akku-Stufen (`casoraBattery`), „2 Schwach“ groß |
+| Schwach / Fast leer / OK | Low / Almost empty / OK | – | Akku-Stufen (`casoraBattery`), gezählt „2 schwach“ klein |
 
 ## 3. Dinge in der Oberfläche
 
