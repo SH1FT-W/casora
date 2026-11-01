@@ -1,13 +1,7 @@
 {
-<<<<<<< HEAD
- "_hinweis": "Messgrenzen für dev/qa/leistung.mjs --grenzen (Zustand arbeit, Dashboard test-neu). Nur Zähler, keine Zeiten (unter Last zu unruhig). Stand 1.3: Voll-Durchläufe beim Laden 150k → 37k (Desktop), 94k → 58k (Handy); Popup-Leck 56/56 → 0. Ladezeit Stufe 1 (01.11.2026): Studio-Start 30 MB WebSocket → ~6 MB (Dashboard-Art vom Server, nur das geöffnete Dashboard ganz), Übersetzung je Sprache: Dashboard Laufzeit + höchstens eine Sprachdatei, Studio Studio- und Dashboard-Laufzeit + eine Sprachdatei (vorher 291 KB bzw. 764 KB gzip, jetzt 7 bzw. 79 KB bei Deutsch). Ladezeit Stufe 2 (01.11.2026): späte Neuzeichnen-Wellen beim Laden gebündelt (casoraKickAll), Voll-Durchläufe beim Laden 39,5k → 30k (Desktop), 16,6k → 13,3k (Handy), „steht“ ~2,7 s → ~1,5 s; Grenzen mit Luft für Last im Gate. Danach (01.11.2026): layout-offsets findet Kachelreihen und Navigationsleisten über ihre Registrierung statt über Seiten-Durchläufe und merkt sich den Raumkopf, Voll-Durchläufe beim Laden Desktop 30k → 15k (Grenze 45k → 25k).",
- "zusammenfassung.desktop.laden_vollDurchlaeufe": { "max": 25000 },
- "zusammenfassung.handy.laden_vollDurchlaeufe": { "max": 25000 },
-=======
  "_hinweis": "Messgrenzen für dev/qa/leistung.mjs --grenzen (Zustand arbeit, Dashboard test-neu). Nur Zähler, keine Zeiten (unter Last zu unruhig). Stand 1.3: Voll-Durchläufe beim Laden 150k → 37k (Desktop), 94k → 58k (Handy); Popup-Leck 56/56 → 0. Ladezeit Stufe 1 (01.11.2026): Studio-Start 30 MB WebSocket → ~6 MB (Dashboard-Art vom Server, nur das geöffnete Dashboard ganz), Übersetzung je Sprache: Dashboard Laufzeit + höchstens eine Sprachdatei, Studio Studio- und Dashboard-Laufzeit + eine Sprachdatei (vorher 291 KB bzw. 764 KB gzip, jetzt 7 bzw. 79 KB bei Deutsch). Ladezeit Stufe 2 (01.11.2026): späte Neuzeichnen-Wellen beim Laden gebündelt (casoraKickAll), Voll-Durchläufe beim Laden 39,5k → 30k (Desktop), 16,6k → 13,3k (Handy), „steht“ ~2,7 s → ~1,5 s; Grenzen mit Luft für Last im Gate. Ladezeit Stufe 1.3/3 (01.11.2026): einstellungen.js nur noch, wenn es sie gibt (versioniert, gecacht), Module warten nicht mehr auf die Einstellungen, Start-Module zuerst (Handy-Schleier nach 00/01/04/02/03), Kernskripte per modulepreload früh: Handy Schleier weg ~2,4 s → ~1,8 s, „steht“ ~2,6 s → ~2,2 s, Desktop „steht“ ~1,9 s → ~1,5 s; Voll-Durchläufe 27k (Desktop) / 12,6k (Handy), button-card-Renders beim Laden ~1,2k / ~1,1k.",
- "zusammenfassung.desktop.laden_vollDurchlaeufe": { "max": 38000 },
+ "zusammenfassung.desktop.laden_vollDurchlaeufe": { "max": 25000 },
  "zusammenfassung.handy.laden_vollDurchlaeufe": { "max": 18000 },
->>>>>>> r5-ladezeit3
  "zusammenfassung.desktop.ruhe60s_vollDurchlaeufe": { "max": 120000 },
  "zusammenfassung.desktop.ruhe60s_requestUpdateLeer": { "max": 0 },
  "geraete.desktop.leck.alive": { "max": 7 },
