@@ -58,6 +58,8 @@ SECRET_KEY = re.compile(r"(?:^|_)(?:token|access_token|password|passwd|secret|ap
 OLD_PHOTO = re.compile(
     r"^(?:https?://[^/]+)?/(?:casora_assets/rooms|local/casora/rooms|local/hemma/rooms|api/casora/photo)/([^?#]+)", re.I)
 USERINFO = re.compile(r"([a-z][a-z0-9+.-]*://)[^/@\s:]+:[^/@\s]*@", re.I)
+# Keys whose plain values ("kueche") name a photo (room card image/image_night, phone wallpaper …).
+PHOTO_KEY = re.compile(r"image|photo|picture|background|wallpaper|(?:^|_)bg(?:_|$)", re.I)
 AUTH_SIG = re.compile(r"([?&])authSig=[^&#]*&?")
 
 # Domains whose IDs are entities (services like light.turn_on sit under SERVICE_KEYS and are skipped).
@@ -157,7 +159,11 @@ def rename_photos(obj: Any, renames: dict[str, str]) -> Any:
     if not renames:
         return obj
 
-    def fn(s: str, _key):
+    def fn(s: str, key):
+        # Only photo values: a room path "kueche" is no photo, even if a photo has that name.
+        if not (OLD_PHOTO.match(s) or re.search(r"\.(jpe?g|png|webp)$", s, re.I)
+                or (isinstance(key, str) and PHOTO_KEY.search(key))):
+            return s
         stem = photo_stem(s)
         if not stem:
             return s
@@ -388,7 +394,8 @@ def preview(staged: dict, known: set[str] | frozenset[str]) -> dict:
     }
 
 
-def photo_plan(photos: dict[str, bytes], existing: dict[str, bytes | None]) -> tuple[dict[str, bytes], dict[str, str]]:
+def photo_plan(photos: dict[str, bytes], existing: dict[str, bytes | None],
+               known: dict[str, str] | None = None) -> tuple[dict[str, bytes], dict[str, str]]:
     """Which photo files to write and which names change.
 
     existing: file name → bytes of a photo with that name already in this home (None = none). A
@@ -411,6 +418,11 @@ def photo_plan(photos: dict[str, bytes], existing: dict[str, bytes | None]) -> t
                 clash = True
         target = base
         if clash:
+            # The same photos are already here under another name (an earlier import): use those.
+            same = _known_base(slots, known or {})
+            if same:
+                renames[base] = same
+                continue
             target = re.sub(r"-[0-9a-f]{12}$", "", base)[:51] + "-" + secrets.token_hex(6)
             renames[base] = target
         for slot, (ext, data) in slots.items():
@@ -419,6 +431,24 @@ def photo_plan(photos: dict[str, bytes], existing: dict[str, bytes | None]) -> t
                 continue  # same photo is already here
             write[name] = data
     return write, renames
+
+
+def _sha(data: bytes) -> str:
+    return hashlib.sha1(data).hexdigest()
+
+
+def _known_base(slots: dict, known: dict[str, str]) -> str | None:
+    """known: content hash → file name of photos in this home. The base all slots exist under, or None."""
+    day = slots.get("day")
+    if not day or _sha(day[1]) not in known:
+        return None
+    stem = known[_sha(day[1])].rsplit(".", 1)[0]
+    if stem.endswith(NIGHT):
+        return None
+    night = slots.get("night")
+    if night and known.get(_sha(night[1]), "").rsplit(".", 1)[0] != stem + NIGHT:
+        return None
+    return stem
 
 
 def prepare(staged: dict, *, url_path: str, mobile_url: str | None, mapping: dict[str, str] | None,
@@ -474,20 +504,32 @@ _STAGE = "share_stage"
 
 
 def _photo_files(config_dir: str, bases: set[str]) -> dict[str, bytes]:
-    """Own photo files (day and night) for these names. Blocking."""
+    """Own photo files (day and night) for these names. Blocking.
+
+    The folders are listed once: the candidates are every plain value of the dashboard, and a stat
+    per candidate and extension is slow on some file systems."""
     import os
 
-    from .images import EXTENSIONS, photo_file
+    from .images import EXTENSIONS, LEGACY_ROOMS_DIR, ROOMS_DIR
 
+    found: dict[str, str] = {}
+    for folder in (ROOMS_DIR, LEGACY_ROOMS_DIR):  # own folder first, like photo_file
+        base_dir = os.path.join(config_dir, folder)
+        try:
+            names = sorted(os.listdir(base_dir))
+        except OSError:
+            continue
+        for name in names:
+            stem, ext = os.path.splitext(name)
+            if ext.lower() in EXTENSIONS and stem not in found and os.path.isfile(os.path.join(base_dir, name)):
+                found[stem] = os.path.join(base_dir, name)
     out: dict[str, bytes] = {}
     for base in sorted(bases):
         for stem in (base, base + NIGHT):
-            for ext in EXTENSIONS:
-                path = photo_file(config_dir, stem + ext)
-                if path:
-                    with open(path, "rb") as fh:
-                        out[os.path.basename(path)] = fh.read()
-                    break
+            path = found.get(stem)
+            if path and PHOTO_FILE.match(os.path.basename(path)):
+                with open(path, "rb") as fh:
+                    out[os.path.basename(path)] = fh.read()
     return out
 
 
@@ -502,6 +544,29 @@ def _existing_photos(config_dir: str, names: list[str]) -> dict[str, bytes | Non
                 out[n] = fh.read()
         else:
             out[n] = None
+    return out
+
+
+def _own_photo_hashes(config_dir: str) -> dict[str, str]:
+    """Content hash → file name of the own photos (to find a photo imported before)."""
+    import os
+
+    from .const import PHOTOS_DIR
+
+    folder = os.path.join(config_dir, PHOTOS_DIR)
+    out: dict[str, str] = {}
+    try:
+        names = sorted(os.listdir(folder))
+    except OSError:
+        return out
+    for name in names:
+        if not PHOTO_FILE.match(name):
+            continue
+        try:
+            with open(os.path.join(folder, name), "rb") as fh:
+                out.setdefault(_sha(fh.read()), name)
+        except OSError:
+            continue
     return out
 
 
@@ -645,7 +710,8 @@ async def _apply(hass, msg: dict) -> dict:
     renames: dict[str, str] = {}
     if msg.get("photos") and staged["photos"]:
         existing = await hass.async_add_executor_job(_existing_photos, hass.config.config_dir, sorted(staged["photos"]))
-        write, renames = photo_plan(staged["photos"], existing)
+        known = await hass.async_add_executor_job(_own_photo_hashes, hass.config.config_dir)
+        write, renames = photo_plan(staged["photos"], existing, known)
     out = prepare(staged, url_path=url_path, mobile_url=mobile_url, mapping=msg.get("mapping") or {},
                   renames=renames, with_settings=bool(msg.get("settings")) and bool(staged["settings"]))
 

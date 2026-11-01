@@ -159,6 +159,10 @@ t = json.dumps(out["config"])
 check("/casora-copy/kitchen" in t and "/casora-home/" not in t, "links moved to the new dashboard (templates too)")
 check("/casora-copy-mobile/kitchen" in json.dumps(out["mobile"]), "phone links moved")
 check('"kitchen-ffffffffffff"' in t and '"kitchen-ffffffffffff-night"' in t, "renamed photo, day and night")
+ren = sh.rename_photos({"path": "kitchen", "image": "kitchen", "x": "/api/casora/photo/kitchen.jpg?v=1", "name": "kitchen"},
+                       {"kitchen": "kitchen-ffffffffffff"})
+check(ren == {"path": "kitchen", "image": "kitchen-ffffffffffff", "x": "kitchen-ffffffffffff", "name": "kitchen"},
+      f"only photo values renamed, never a room path: {ren}")
 check(out["settings"]["security"]["covers"] == ["cover.living_blind"], "settings mapped")
 check(sh.prepare(staged, url_path="x", mobile_url=None, mapping={}, renames={}, with_settings=False)["settings"] is None
       and sh.prepare(staged, url_path="x", mobile_url=None, mapping={}, renames={}, with_settings=False)["mobile"] is None,
@@ -179,6 +183,10 @@ nb = ren.get("kitchen-0123456789ab", "")
 check(nb.startswith("kitchen-") and nb != "kitchen-0123456789ab", f"clash gets a new name: {ren}")
 check(nb + ".jpg" in write and nb + "-night.jpg" in write, "day and night move together")
 check("kitchen-0123456789ab.jpg" not in write, "never overwrites a different photo")
+known = {sh._sha(b"\xff\xd8\xffDAY"): "kitchen-111111111111.jpg", sh._sha(b"\xff\xd8\xffNIGHT"): "kitchen-111111111111-night.jpg"}
+write, ren = sh.photo_plan(PHOTOS, {"kitchen-0123456789ab.jpg": b"\xff\xd8\xffOTHER"}, known)
+check(ren.get("kitchen-0123456789ab") == "kitchen-111111111111" and not any(n.startswith("kitchen") for n in write),
+      f"photos imported before are reused, not copied again: {ren} {sorted(write)}")
 
 print("staging")
 store: dict = {}

@@ -2852,7 +2852,9 @@
     "Replaced “{name}”": "«{name}» substituído",
     "Imported as “{name}”": "Importado como «{name}»",
     "{n} missing": "{n} em falta",
-    "The dashboard could not be imported.": "Não foi possível importar o painel."
+    "The dashboard could not be imported.": "Não foi possível importar o painel.",
+    "Exporting…": "A exportar…",
+    "Importing…": "A importar…"
   },
   "patterns": [
     [

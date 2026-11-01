@@ -105,6 +105,7 @@
       this._flowCancel(s.acts);
       const btn = this._flowButton(s.acts, "Export", async () => {
         btn.disabled = true;
+        btn.textContent = t("Exporting…");
         this._flowError("");
         const q = new URLSearchParams({ url_path: d.url_path, title: d.title || d.url_path,
           photos: o.photos ? "1" : "0", settings: o.settings ? "1" : "0" });
@@ -130,6 +131,7 @@
           this._status(t("Exported as {file}").replace("{file}", name), "ok");
         } catch (e) {
           btn.disabled = false;
+          btn.textContent = t("Export");
           this._flowError(reasonOf(e.code, t("The dashboard could not be exported.")) + (e.code ? "" : " " + e.message));
         }
       });
@@ -284,8 +286,10 @@
       this._flowCancel(s.acts);
       const go = this._flowButton(s.acts, st.mode === "replace" ? "Replace" : "Import", async () => {
         go.disabled = true;
+        const label = go.textContent;
+        go.textContent = t("Importing…");
         const ok = await this._shApply(pv, st);
-        if (!ok && go.isConnected) go.disabled = false;
+        if (!ok && go.isConnected) { go.disabled = false; go.textContent = label; }
       });
     };
 

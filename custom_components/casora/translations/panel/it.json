@@ -2852,7 +2852,9 @@
     "Replaced “{name}”": "«{name}» sostituita",
     "Imported as “{name}”": "Importata come «{name}»",
     "{n} missing": "{n} mancanti",
-    "The dashboard could not be imported.": "Impossibile importare la dashboard."
+    "The dashboard could not be imported.": "Impossibile importare la dashboard.",
+    "Exporting…": "Esportazione…",
+    "Importing…": "Importazione…"
   },
   "patterns": [
     [
