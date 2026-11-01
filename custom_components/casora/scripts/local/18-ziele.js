@@ -186,6 +186,23 @@
     });
     return { segs: segs, count: on.length, total: total, longest: longest };
   };
+  // Active or not in a history (issue 104): Casora's shared active states plus a person at home. An active state gets
+  // the filled dot, the coloured band and the full ring; an inactive one the empty ring and the bare track.
+  Z.isActive = function (s) {
+    var A = window.CASORA_ACTIVE_STATES;
+    s = String(s == null ? '' : s).toLowerCase();
+    return s === 'home' || (A && A.has ? A.has(s) : /^(on|open|opening|unlocked|unlocking|playing)$/.test(s));
+  };
+  // Two-state history (issue 104): binary sensors and entities that switch between an active and an idle state
+  // (light, switch, plug, lock, cover, person …), not numbers or free text.
+  var IDLE = /^(off|closed|closing|locked|locking|not_home|away|idle|paused|standby|docked)$/;
+  Z.isTwoState = function (st, rows) {
+    var id = String((st && st.entity_id) || '');
+    if (/^binary_sensor\./.test(id)) return true;
+    if (!st || Z.isNumeric(st)) return false;
+    var seen = [st.state].concat((rows || []).map(function (r) { return r.s; })).filter(function (x) { return !bad(x); });
+    return seen.length > 0 && seen.every(function (x) { return Z.isActive(x) || IDLE.test(String(x).toLowerCase()); });
+  };
 
   // ── Seiten öffnen ──────────────────────────────────────────────────────────
   var backTo = function () {
@@ -454,12 +471,15 @@
         var dd = Math.round((today - d) / 86400000);
         var day = first ? (dd === 1 ? T('Gestern') : new Date(x.t).toLocaleDateString(loc(), { weekday: 'short' }).replace(/\.$/, '')) : '';
         var last = i === items.length - 1;
+        // Idle state of a two-state history: an empty ring instead of the filled dot.
+        var dot = x.ring ? row + ';border:2px solid ' + sub : (x.color || dim);
         return '<div style="display:grid;grid-template-columns:minmax(46px,max-content) 22px minmax(0,1fr);align-items:start;column-gap:8px;padding:9px 0;">'
           + '<div style="font-size:13px;font-weight:600;color:' + sub + ';font-variant-numeric:tabular-nums;padding-top:2px;white-space:nowrap;">'
           + (day ? '<div style="font-size:12px;font-weight:700;margin:-1px 0 1px;">' + esc(day) + '</div>' : '') + esc(hm(x.t)) + '</div>'
           + '<div style="position:relative;height:100%;display:flex;justify-content:center;">'
           + (last ? '' : '<div style="position:absolute;top:16px;bottom:-18px;width:2px;border-radius:2px;background:' + dim + ';"></div>')
-          + '<div style="position:relative;width:12px;height:12px;border-radius:50%;margin-top:4px;background:' + (x.color || dim) + ';box-shadow:0 0 0 3px ' + row + ';"></div></div>'
+          + '<div class="cz-dot ' + (x.ring ? 'off' : 'on') + '" style="position:relative;box-sizing:border-box;width:12px;height:12px;border-radius:50%;margin-top:4px;background:'
+          + dot + ';box-shadow:0 0 0 3px ' + row + ';"></div></div>'
           + '<div style="min-width:0;"><div style="font-size:15px;font-weight:700;color:' + ink + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(T(x.title)) + '</div>'
           + (x.sub ? '<div style="font-size:13px;font-weight:500;color:' + sub + ';margin-top:1px;">' + x.sub + '</div>' : '') + '</div></div>';
       }).join('') + '</div>';
@@ -510,7 +530,7 @@
     var UI = window._casoraUI;
     var st = states && states[id];
     if (!UI || !st || !hass) return '';
-    var now = Date.now(), num = Z.isNumeric(st), bin = /^binary_sensor\./.test(id);
+    var now = Date.now(), num = Z.isNumeric(st), bin = /^binary_sensor\./.test(id), duo = !num && Z.isTwoState(st);
     var v3 = !!(UI.v3 && UI.v3() && UI.stage);
     if (part === 'm_stage' && num) {
       if (window._hpStageChart) window._hpStageChart(el, 'cz:' + id + '|' + span);
@@ -535,11 +555,11 @@
       if (!num) {
         // Band: wann „an“ (offen, Bewegung …) über den Zeitraum.
         var rows = Z.history(hass, id, span, el), t0 = now - SPANS[span];
-        if (rows && (bin || rows.length)) {
+        if (rows && (duo || rows.length)) {
           var sg = Z.segments(rows, now);
           var C3 = stateTone(hass, id, st.state) || (sg.segs[0] && stateTone(hass, id, sg.segs[0].s));
           var sum = {};
-          out += '<div class="cz-band"' + (C3 ? ' style="height:44px;"' : '') + '>' + sg.segs.filter(function (x) { return bin ? x.s === 'on' : true; }).map(function (x, k) {
+          out += '<div class="cz-band"' + (C3 ? ' style="height:44px;"' : '') + '>' + sg.segs.filter(function (x) { return duo ? Z.isActive(x.s) : true; }).map(function (x, k) {
             var l = (x.start - t0) / (now - t0) * 100, w = ((x.end || now) - x.start) / (now - t0) * 100;
             var tn = stateTone(hass, id, x.s);
             sum[x.s] = (sum[x.s] || 0) + ((x.end || now) - Math.max(x.start, t0));
@@ -548,7 +568,8 @@
                 + 'outline:1.5px solid var(--casora-popup-row-fill, rgba(127,127,127,.10));'
                 + (C3 ? 'top:auto;height:' + HGT[x.s] + '%;' : '') + '"></i>';
             }
-            return '<i style="left:' + l.toFixed(2) + '%;width:' + Math.max(0.4, w).toFixed(2) + '%;' + (bin ? '' : 'opacity:' + (0.35 + 0.65 * ((k % 2) ? 0.5 : 1)) + ';') + '"></i>';
+            // Two states: only the active spans are drawn (accent), the idle time stays the bare track (issue 104).
+            return '<i' + (duo ? ' class="on"' : '') + ' style="left:' + l.toFixed(2) + '%;width:' + Math.max(0.4, w).toFixed(2) + '%;' + (duo ? '' : 'opacity:' + (0.35 + 0.65 * ((k % 2) ? 0.5 : 1)) + ';') + '"></i>';
           }).join('') + '</div>';
           var leg = '';
           // Legende erst ab drei Zuständen im Zeitraum – bei „immer Gut“ wäre sie nur Rauschen.
@@ -568,7 +589,7 @@
         // S7: the state as the sentence (traffic light: unknown/unavailable orange, an alarm class on red, off grey),
         // the period switch and the band under it.
         var alarm = bin && st.state === 'on' && /^(smoke|gas|moisture|problem|safety|carbon_monoxide|heat|tamper)$/.test((st.attributes || {}).device_class || '');
-        return UI.stage('status', { tone: bad(st.state) ? 'warn' : alarm ? 'bad' : bin && st.state !== 'on' ? 'off' : 'good',
+        return UI.stage('status', { tone: bad(st.state) ? 'warn' : alarm ? 'bad' : duo && !Z.isActive(st.state) ? 'off' : 'good',
           icon: Z.iconOf(st), text: Z.stateWord(hass, id, st.state), state: st.state === 'unavailable' ? 'na' : null,
           facts: isFinite(since) ? [{ label: T('Seit'), value: when(since, now) }] : [],
           extra: out.replace(UI.line(Z.stateWord(hass, id, st.state), rest, { tone: bad(st.state) ? 'warn' : null }), '').replace('<div style="margin-top:14px;">', '<div>') });
@@ -637,8 +658,11 @@
         var segs = Z.segments(rows2, now).segs.slice().reverse().slice(0, 8);
         items = segs.map(function (x) {
           var word = Z.stateWord(hass, id, x.s);
-          return { t: x.start, title: word, sub: x.end ? esc(T('nach')) + ' ' + esc(T(dur(x.end - x.start))) : esc(T('seitdem')),
-            color: (stateTone(hass, id, x.s) || {}).dot || (x.s === 'on' || !bin ? ACC : DIM) };
+          // Each row says how long THIS state lasted, the newest one „seitdem“ (issue 104: „nach“ read as the time since
+          // the previous change). Two states: active a filled accent dot, idle an empty ring.
+          var tone = stateTone(hass, id, x.s), off = !tone && duo && !Z.isActive(x.s);
+          return { t: x.start, title: word, sub: x.end ? esc(T('für')) + ' ' + esc(T(dur(x.end - x.start))) : esc(T('seitdem')),
+            color: tone ? tone.dot : off ? null : ACC, ring: off };
         });
       }
       return head2 + (items.length ? timeline(items, now) : '<div style="padding:14px 4px;opacity:.65;">' + esc(T('Keine Änderung im Zeitraum')) + '</div>') + (v3 ? '' : histLink(id, span));

@@ -19,7 +19,7 @@ custom_components/casora/scripts/local/16-maeher.js | re:^mdi\(k\.i, | ha-icon m
 custom_components/casora/scripts/local/16-maeher.js | re:^keys\.map\((?:pill|b)\)\.join\(''\)$ | button markup built from escaped parts
 
 # 18-ziele.js – timeline and state band
-custom_components/casora/scripts/local/18-ziele.js | re:^(?:font|ink|sub|row|dim|\(x\.color \|\| dim\))$ | CSS constants of timeline(); x.color is a fixed colour of the code | 8
+custom_components/casora/scripts/local/18-ziele.js | re:^(?:font|ink|sub|row|dim|dot|\(x\.color \|\| dim\))$ | CSS constants of timeline(); x.color and dot are fixed colours of the code | 8
 custom_components/casora/scripts/local/18-ziele.js | x.sub | timeline sub line, escaped where the items are built (esc(Z.fmt …), esc(T(…))) | 1
 custom_components/casora/scripts/local/18-ziele.js | re:^t[nk]\.fill$ | stateTone(): Pulse colour constants | 2
 custom_components/casora/scripts/local/18-ziele.js | (C3 ? 'top:auto;height:' + HGT[x.s] + '%;' : '') | HGT: fixed height per state (number) | 1
