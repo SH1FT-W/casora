@@ -26,9 +26,15 @@ const findVac = (pg) => pg.evaluate(() => {
 
 // Ging das Popup trotz allem nicht auf (09.10.2026 im Gate: Seite stand danach wieder auf „Zuhause“,
 // unter Last lädt das Dashboard nach einem Verbindungsabbruch neu), den ganzen Weg einmal wiederholen.
+// Gate 02.11.2026: on the phone the tap landed on a neighbouring tile that was still moving (the football popup opened
+// instead), so no map was there to measure. A popup without a map image is the wrong one: close it and go the way again.
 async function openVac(page, d, mobile) {
   const at = await openVacOnce(page, d, mobile);
-  if (at && !(await page.evaluate(() => !!(window.casoraPopup && window.casoraPopup.surface)).catch(() => false))) return openVacOnce(page, d, mobile);
+  const mapShown = () => page.evaluate(() => window.__pierce('img[data-map]').some((i) => i.getBoundingClientRect().width > 0)).catch(() => false);
+  if (at && !(await mapShown())) {
+    await page.evaluate(() => window.casoraPopup && window.casoraPopup.close && window.casoraPopup.close()).catch(() => {});
+    return openVacOnce(page, d, mobile);
+  }
   return at;
 }
 async function openVacOnce(page, d, mobile) {

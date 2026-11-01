@@ -272,8 +272,11 @@
   AL.line = function (ent, states) {
     var UI = window._casoraUI, s = states && states[ent];
     if (!UI || !UI.line || !s) return '';
-    // issue 106: the same time the other popups say (casoraSinceMs: nothing after HA's start).
-    var w = AL.since(window.casoraSinceMs ? window.casoraSinceMs(s) : s.last_changed);
+    // issue 106: the same time the other popups say (casoraSinceMs: nothing after HA's start). An alarm unchanged since
+    // HA's start still says its last_changed: the head's fallback word („Aktiviert · Zuhause“) repeats the wheel and is
+    // dropped (§3), so without this line the alarm and security heads stood empty (gate 02.11.2026, r105 DP-11).
+    var ms = window.casoraSinceMs ? window.casoraSinceMs(s) : null;
+    var w = AL.since(ms != null ? ms : s.last_changed);
     return w ? UI.line(w, []) : '';
   };
   // Field „quick“: every arm mode the panel supports (supported_features: away, home, night, vacation, custom bypass) –
