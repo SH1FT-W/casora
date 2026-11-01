@@ -12569,10 +12569,11 @@ window.casoraMenuGlass = {
       // A television has no record (review 2, E25): a quiet disc with the TV symbol; off, no volume line.
       if (o.cover && !(o.cover.tv && off)) belowHtml = '<div class="hui-dl-vol">' + esc(o.word || '') + ' <span class="hui-st-n">' + esc(v) + '</span>\u202F%</div>' + belowHtml;
       if (o.cover && o.cover.tv && !o.cover.image) coverHtml = '<div class="hui-dl-cover tv"><div class="hui-dl-lbl"><ha-icon icon="mdi:television"></ha-icon></div></div>';
+      // Music on a TV (Spotify, Apple Music) is a record and turns; everything else on it is video.
       // Video: the cover is the whole disc (same size and circle as the record), no grooves, no turning.
       else if (o.cover && o.cover.video && o.cover.image) coverHtml = '<div class="hui-dl-cover video"><img src="'
         + (window.casoraSafeUrl ? window.casoraSafeUrl(o.cover.image) : esc(o.cover.image)) + '" alt=""/></div>';
-      else if (o.cover) coverHtml = '<div class="hui-dl-cover' + (o.cover.spin && !o.cover.tv ? ' spin' : '') + '"><div class="hui-dl-lbl">'
+      else if (o.cover) coverHtml = '<div class="hui-dl-cover' + (o.cover.spin && !o.cover.video ? ' spin' : '') + '"><div class="hui-dl-lbl">'
         + (o.cover.image ? '<img src="' + (window.casoraSafeUrl ? window.casoraSafeUrl(o.cover.image) : esc(o.cover.image)) + '" alt=""/>'
           : '<ha-icon icon="' + esc(o.cover.icon || 'mdi:music-note') + '"></ha-icon>') + '</div></div>';
     } else if (code === 'S2') {
