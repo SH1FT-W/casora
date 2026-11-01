@@ -7,9 +7,9 @@
 //   - Studio: "Kachel hinzufügen" → "Kühlschrank" suggests the fridge as the matching device without any choice
 //     ("Passendes Gerät gefunden"), the new tile takes its zone sensor and shows "7 °C · −18 °C" (nothing saved)
 //   - dashboard (copies qa-fridge / qa-fridge-mobile with the tile on the home page): tile "7 °C · −18 °C";
-//     tap → popup with status line, 24 h chart, "Temperaturen" (both zones), setpoint pills, "Modi"
+//     tap → popup with status line, 24 h chart, "Temperaturen" (both zones), the top zone's setpoint on the dial (v3), "Modi"
 //     (SuperCool, SuperFrost, Nachtmodus, Partymodus); toggling SuperFrost switches it and the tile says
-//     "SuperFrost · …"; a setpoint pill sets the number. Desktop two columns, phone one column.
+//     "SuperFrost · …"; − on the dial sets the number. Desktop two columns, phone one column.
 //   Everything changed is put back at the end.
 // Pictures: CASORA_FRIDGE_BILDER=<folder> stores Studio, tile and popup pictures per view.
 import fs from 'node:fs';
@@ -132,7 +132,12 @@ const TILES = () => window.__pierce('button-card').filter((b) => [].concat((b._c
 const POPUP = () => {
   const vis = (n) => n.getBoundingClientRect().height > 0;
   const labels = window.__pierce('.hui-slbl').filter(vis).map((n) => ({ t: n.textContent.trim(), x: n.getBoundingClientRect().left, y: n.getBoundingClientRect().top }));
-  return { line: ((window.__pierce('.hui-line')[0] || {}).textContent || '').replace(/\s+/g, ' ').trim(), labels,
+  // v3: the status line is the head's (the frame lifts the content's line into it); the top zone's setpoint is the dial.
+  const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
+  const st = window.__pierce('.hui-stage').find(vis), sr = st && st.getBoundingClientRect();
+  const val = window.__pierce('.hui-stage .hui-st-n').find(vis);
+  return { line: ((pop && pop._headerStatus && pop._headerStatus.textContent) || '').replace(/\s+/g, ' ').trim(), labels,
+    stage: sr ? { x: sr.left, w: sr.width, value: val ? val.textContent.trim() : '', pm: window.__pierce('.hui-stage .hui-st-b').filter(vis).length } : null,
     rows: window.__pierce('.hui-srow').filter(vis).map((r) => r.textContent.replace(/\s+/g, ' ').trim()),
     segs: window.__pierce('.hui-sg').filter(vis).map((n) => n.textContent.trim()),
     chart: window.__pierce('casora-chart').some(vis) };
@@ -162,15 +167,17 @@ for (const [tag, o, url, mobile, act] of VIEWS) {
     for (let w = 0; w < 24 && !(await offen()); w++) await page.waitForTimeout(250);
   }
   await need(tag + ': popup opens', await offen());
-  const p = await stable(page, POPUP, null, { until: (v) => v && v.chart && v.rows.length >= 6 && v.segs.length >= 10 });
+  const p = await stable(page, POPUP, null, { until: (v) => v && v.chart && v.rows.length >= 6 && v.segs.length >= 5 && /·/.test(v.line) });
   await check(tag + ': status line with both zones', /7 °C · −18 °C/.test(p.line), p.line);
   await check(tag + ': 24 h chart', p.chart);
   await check(tag + ': "Temperaturen" with both zones', p.rows.some((r) => /^Obere Zone/.test(r) && /7 °C/.test(r)) && p.rows.some((r) => /^Untere Zone/.test(r) && /−18 °C/.test(r)), p.rows);
   await check(tag + ': modes as rows', ['SuperCool', 'SuperFrost', 'Nachtmodus', 'Partymodus'].every((m) => p.rows.some((r) => r.startsWith(m))), p.rows);
-  await check(tag + ': setpoint pills', p.segs.includes('5°') && p.segs.includes('−18°'), p.segs);
+  await check(tag + ': top zone setpoint on the dial (5 with − / +)', p.stage && p.stage.value === '5' && p.stage.pm === 2, p.stage);
+  await check(tag + ': setpoint pills of the lower zone', p.segs.includes('−18°') && !p.segs.includes('5°'), p.segs);
   const lab = (t) => p.labels.find((l) => l.t === t);
   if (mobile) await check(tag + ': one column (Temperaturen above Modi)', lab('Temperaturen') && lab('Modi') && Math.abs(lab('Temperaturen').x - lab('Modi').x) < 4 && lab('Modi').y > lab('Temperaturen').y, p.labels);
-  else await check(tag + ': two columns (zones left, modes right)', lab('Temperaturen') && lab('Modi') && lab('Modi').x > lab('Temperaturen').x + 200, p.labels);
+  else await check(tag + ': two columns (dial left, zones and modes right)', p.stage && lab('Temperaturen') && lab('Modi') && lab('Temperaturen').x > p.stage.x + 200
+    && Math.abs(lab('Modi').x - lab('Temperaturen').x) < 4, { stage: p.stage, labels: p.labels });
   if (BILDER) { await page.waitForTimeout(800); await page.screenshot({ path: file('popup') }); }
 
   if (act) {
@@ -186,10 +193,10 @@ for (const [tag, o, url, mobile, act] of VIEWS) {
     await check(tag + ': tapping SuperFrost switches it', fs1 !== before.frost, fs1);
     const p2 = await stable(page, POPUP, null, { until: (v) => v && v.rows.some((r) => /^SuperFrost.*An/.test(r)), max: 8000 });
     await check(tag + ': popup shows SuperFrost on', p2.rows.some((r) => /^SuperFrost.*An/.test(r)), p2.rows);
-    // Setpoint: the "4°" pill of the top zone.
-    const pill = await page.evaluate(() => { const n = window.__pierce('.hui-sg').find((x) => x.textContent.trim() === '4°' && x.getBoundingClientRect().height > 0);
+    // Setpoint: „−“ on the dial of the top zone (5 → 4).
+    const pill = await page.evaluate(() => { const n = window.__pierce('.hui-stage .hui-st-b').find((x) => /Weniger/.test(x.getAttribute('aria-label') || '') && x.getBoundingClientRect().height > 0);
       if (!n) return null; n.scrollIntoView({ block: 'center' }); const b = n.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; });
-    await need(tag + ': setpoint pill 4°', pill);
+    await need(tag + ': − on the dial', pill);
     // The popup ignores a second tap within 400 ms of the last one: wait, then tap (again, if the first was swallowed).
     let sv = before.set;
     for (let t = 0; t < 3 && parseFloat(sv) !== 4; t++) {
@@ -197,7 +204,7 @@ for (const [tag, o, url, mobile, act] of VIEWS) {
       await page.mouse.click(pill.x, pill.y);
       for (let i = 0; i < 10 && parseFloat(sv) !== 4; i++) { await page.waitForTimeout(300); sv = await stateOf(SET_TOP); }
     }
-    await check(tag + ': setpoint pill sets the top zone to 4 °C', parseFloat(sv) === 4, sv);
+    await check(tag + ': − on the dial sets the top zone to 4 °C', parseFloat(sv) === 4, sv);
     if (BILDER) { await page.waitForTimeout(800); await page.screenshot({ path: file('popup-superfrost') }); }
     for (let t = 0; t < 4 && (await offen()); t++) { await page.keyboard.press('Escape'); await page.waitForTimeout(400); }
     const t2 = await stable(page, TILES, null, { until: (v) => v && v.length && /SuperFrost/.test(v[0].state), max: 8000 });
