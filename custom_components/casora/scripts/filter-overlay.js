@@ -50,6 +50,12 @@
   }
   const LANDSCAPE_GUTTER_CALC = `calc(60px * var(${LANDSCAPE_PHONE_VAR}, 0))`;
 
+  // "Sort tiles" for open rooms: same setting as the tile row (smart-row.js); without it only on opening.
+  const roomSortMode = () => {
+    if (window._casoraSortModeNow) { try { return window._casoraSortModeNow(); } catch (_) {} }
+    return window.CASORA_LIVE_SORT === true ? 'now' : 'open';
+  };
+
   const isLandscapePhone = () => {
     try {
       return (getComputedStyle(document.documentElement)
@@ -1275,11 +1281,11 @@
       // nach vorn bzw. zurück (Issue #6).
       // Kein Neustart der Wartezeit bei jedem Update: Im belebten Haus kommen ständig neue
       // Zustände, dann würde nie sortiert.
-      // Prüfung 2 fam-04/E19: no longer while the room is open – the tile just used stays where it is
-      // (its colour shows the state); the room sorts again when it is opened. CASORA_LIVE_SORT = true: as before.
-      if (window.CASORA_LIVE_SORT === true && this._config?.room && this._showing && this._contentEl && filter === this._config.filter_category
-        && !this._resortTimer) {
-        this._resortTimer = setTimeout(() => { this._resortTimer = null; if (this._showing) this._sortSectionGrids(); }, 2500);
+      // Prüfung 2 fam-04/E19: the tile just used must not move under the finger. "Sort tiles" (smart-row.js
+      // sortMode): 'open' sorts only when the room opens, 'calm' after a quiet spell (_resortWhenQuiet), 'now' as before.
+      if (this._config?.room && this._showing && this._contentEl && filter === this._config.filter_category
+        && !this._resortTimer && roomSortMode() !== 'open') {
+        this._resortTimer = setTimeout(() => this._resortWhenQuiet(), 2500);
       }
 
       if (this._pendingBlurFade && filter === 'all' && prevFilter !== 'all') {
@@ -1861,7 +1867,22 @@
       }
     }
 
-    _sortSectionGrids() {
+    _resortWhenQuiet() {
+      this._resortTimer = null;
+      if (!this._showing) return;
+      const mode = roomSortMode();
+      if (mode === 'now') return this._sortSectionGrids();
+      const decide = window._casoraSortDecide;
+      if (mode === 'open' || !decide) return;
+      // An open room has no load phase: always "settled".
+      const d = decide({ mode, settled: true, idle: Date.now() - (window._casoraLastInput || 0),
+        popup: !!(window.casoraPopup && window.casoraPopup.surface), hover: false, noAnim: false });
+      if (d.act === 'wait') { this._resortTimer = setTimeout(() => this._resortWhenQuiet(), d.ms); return; }
+      if (d.act === 'sort') this._sortSectionGrids(true);
+    }
+
+    // animate: a live re-sort slides the moved tiles (FLIP) unless reduced motion is asked for.
+    _sortSectionGrids(animate) {
       if (!this._hass?.states || !this._contentEl) return;
       // Raumseiten (04.10.2026, Issue #6): aktive Kacheln vorn wie in der Reihe am Desktop und am
       // Handy-Home (casora-smart-row), innerhalb der Gruppen die Studio-Reihenfolge. Vorher blieb die
@@ -1891,7 +1912,26 @@
         // Sort active cards first, maintaining relative order within each group.
         const active   = items.filter(x => x.active);
         const inactive = items.filter(x => !x.active);
-        [...active, ...inactive].forEach(({ card }, idx) => { card.style.order = idx; });
+        const next = [...active, ...inactive];
+        const moved = next.some(({ card }, idx) => String(card.style.order) !== String(idx));
+        let reduce = true;
+        try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) {}
+        const flip = animate && moved && !reduce;
+        const before = flip ? next.map(({ card }) => card.getBoundingClientRect()) : null;
+        next.forEach(({ card }, idx) => { card.style.order = idx; });
+        if (!flip) continue;
+        next.forEach(({ card }, k) => {
+          const r = card.getBoundingClientRect();
+          const dx = before[k].left - r.left, dy = before[k].top - r.top;
+          if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+          card.style.transition = 'none';
+          card.style.transform = `translate(${dx}px, ${dy}px)`;
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            card.style.transition = 'transform 450ms cubic-bezier(0.4, 0, 0.2, 1)';
+            card.style.transform = '';
+            setTimeout(() => { card.style.transition = ''; }, 500);
+          }));
+        });
       }
     }
 

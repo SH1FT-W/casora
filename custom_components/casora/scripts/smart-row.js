@@ -42,9 +42,39 @@ if (!window._casoraRowSettle) {
 if (!window._casoraLastInput) {
   window._casoraLastInput = 0;
   const markInput = () => { window._casoraLastInput = Date.now(); };
-  ['pointerdown', 'pointerup', 'keydown', 'wheel', 'touchstart', 'touchend'].forEach((t) =>
+  ['pointerdown', 'pointerup', 'keydown', 'wheel', 'touchstart', 'touchmove', 'touchend', 'scroll'].forEach((t) =>
     window.addEventListener(t, markInput, { capture: true, passive: true }));
 }
+// "Sort tiles" (Studio › Controls › Tiles, variable tile_sort; read by casora-core.js). After the load phase:
+//   calm (default) – re-sort only after CALM_MS without any use, no popup open, pointer not over the row;
+//   open – keep the order until the page opens again (Prüfung 2 fam-04/E19);
+//   now  – re-sort after QUIET_MS like before E19.
+// window.CASORA_SORT_MODE overrides the setting; window.CASORA_LIVE_SORT = true means 'now'.
+const CALM_MS = 30000;
+function sortMode() {
+  if (window.CASORA_LIVE_SORT === true) return 'now';
+  let m = window.CASORA_SORT_MODE;
+  if (m !== 'calm' && m !== 'open' && m !== 'now') {
+    try { m = window._casoraSortModeRefresh ? window._casoraSortModeRefresh() : window._casoraSortMode; }
+    catch (e) { m = window._casoraSortMode; }
+  }
+  return m === 'open' || m === 'now' ? m : 'calm';
+}
+// Pure decision for a pending re-sort (unit test: dev/unit/kachelreihe_sortiermodus.mjs).
+// s = { mode, settled, idle (ms since the last input), popup, hover, noAnim } →
+// { act: 'skip' } | { act: 'wait', ms } | { act: 'sort', keep } (keep = hold the visible tile in place).
+function sortDecision(s) {
+  const live = !!s.settled;
+  if (live && s.mode === 'open') return { act: 'skip' };
+  if (s.noAnim) return { act: 'sort', keep: false };
+  const calm = live && s.mode !== 'now';
+  const quiet = calm ? CALM_MS : QUIET_MS;
+  if (s.popup || s.hover) return { act: 'wait', ms: calm ? 2000 : 600 };
+  if (s.idle < quiet) return { act: 'wait', ms: Math.max(250, quiet - s.idle) };
+  return { act: 'sort', keep: calm };
+}
+window._casoraSortDecide = sortDecision;
+window._casoraSortModeNow = sortMode;
 const SORT_MS       = 450;  // FLIP slide duration
 const EASE_FORWARD  = 'cubic-bezier(0.4, 0, 0.2, 1)';
 const EASE_BACK     = 'cubic-bezier(0.4, 0, 0.2, 1)';
@@ -411,6 +441,8 @@ class CasoraSmartRow extends HTMLElement {
       edges();
     };
     this.addEventListener('scroll', () => {
+      // Swiping the row counts as use: no re-sort while it moves (sortDecision; not composed, so window misses it).
+      window._casoraLastInput = Date.now();
       // Kein Hover beim Wischen: am Touchpad steht der Zeiger über der Reihe, jede durchlaufende
       // Kachel startete ihren Hover-Übergang (Anheben, Schatten) mitten in der Bewegung.
       if (!this.hasAttribute('casora-scrolling')) this.setAttribute('casora-scrolling', '');
@@ -1330,6 +1362,7 @@ class CasoraSmartRow extends HTMLElement {
       const order = [...active, ...inactive];
 
       this._activeSet       = new Set(active);
+      this._shownActive     = new Set(active);
       this._activationOrder = [...active];
       this._autoSize();
 
@@ -1513,10 +1546,10 @@ class CasoraSmartRow extends HTMLElement {
 
   _updateSort() {
     if (!this._sortEnabled || !this._wrappers.length) return;
-    // Prüfung 2 fam-04/E19: the order is settled while the page loads, then it stays for the session.
-    // A tile someone just used must not move away under the finger; its state shows in its colour.
-    // The next page load sorts again (window.CASORA_LIVE_SORT = true: re-sort as before).
-    if (this._sortSettled() && window.CASORA_LIVE_SORT !== true) return;
+    // Prüfung 2 fam-04/E19: a tile someone just used must not move away under the finger. After the load
+    // phase the mode decides (sortMode): 'open' keeps the order until the next page load, 'calm' re-sorts
+    // only after a quiet spell (_sortWhenQuiet), 'now' as before.
+    if (this._sortSettled() && sortMode() === 'open') return;
 
     const newActive = new Set();
     this._config.cards.forEach((_, i) => {
@@ -1547,18 +1580,16 @@ class CasoraSmartRow extends HTMLElement {
   // Umsortieren erst, wenn niemand bedient (P-V2): sonst in kleinen Schritten neu versuchen.
   _sortWhenQuiet() {
     this._sortTimer = null;
-    if (!window._casoraNoFilterAnim) {
-      const idle = Date.now() - (window._casoraLastInput || 0);
-      const popup = !!(window.casoraPopup && window.casoraPopup.surface);
-      let hover = false;
-      try { hover = isDesktop() && this.matches(':hover'); } catch (e) { /* alter Browser */ }
-      if (idle < QUIET_MS || popup || hover) {
-        const wait = Math.max(250, popup || hover ? 600 : QUIET_MS - idle);
-        this._sortTimer = setTimeout(() => this._sortWhenQuiet(), wait);
-        return;
-      }
-    }
-    this._applyOrder(true);
+    let hover = false;
+    try { hover = isDesktop() && this.matches(':hover'); } catch (e) { /* alter Browser */ }
+    const d = sortDecision({
+      mode: sortMode(), settled: this._sortSettled(), noAnim: !!window._casoraNoFilterAnim, hover,
+      idle: Date.now() - (window._casoraLastInput || 0),
+      popup: !!(window.casoraPopup && window.casoraPopup.surface),
+    });
+    if (d.act === 'skip') return;
+    if (d.act === 'wait') { this._sortTimer = setTimeout(() => this._sortWhenQuiet(), d.ms); return; }
+    this._applyOrder(true, d.keep);
   }
 
   // ── FLIP animation ──────────────────────────────────────────────────────────
@@ -1582,35 +1613,61 @@ class CasoraSmartRow extends HTMLElement {
     setTimeout(go, 450);
   }
 
-  _applyOrder(animate) {
+  // Live re-sort ('calm'): the tile someone looks at stays where it is. Anchor = the first visible tile that
+  // keeps its group (active/idle); null when the row stands at its start (then it stays at the start).
+  _sortAnchor() {
+    if (this.scrollLeft <= 10) return null;
+    const box = this.getBoundingClientRect();
+    const shown = this._shownActive || new Set();
+    let first = null;
+    const seen = this._wrappers.map((w, i) => ({ w, i, r: w.getBoundingClientRect() }))
+      .filter((x) => x.r.width > 0 && x.r.right > box.left + 1 && x.r.left < box.right - 1)
+      .sort((a, b) => a.r.left - b.r.left);
+    for (const x of seen) {
+      if (!first) first = x;
+      if (shown.has(x.i) === this._activeSet.has(x.i)) return { w: x.w, left: x.r.left };
+    }
+    return first ? { w: first.w, left: first.r.left } : null;
+  }
+
+  _keepAnchor(anchor) {
+    if (!anchor) { if (this.scrollLeft > 0) this.scrollTo({ left: 0, behavior: 'instant' }); return; }
+    const dx = anchor.w.getBoundingClientRect().left - anchor.left;
+    if (Math.abs(dx) >= 1) this.scrollTo({ left: this.scrollLeft + dx, behavior: 'instant' });
+  }
+
+  _applyOrder(animate, keep) {
     if (!this._wrappers.length) return;
-    rowLog('applyOrder', { animate: !!animate,
+    rowLog('applyOrder', { animate: !!animate, keep: !!keep,
       sinceBuilt: Date.now() - (this._builtAt || 0),
       noFilterAnim: !!window._casoraNoFilterAnim });
 
     const inactive = this._config.cards.map((_, i) => i).filter(i => !this._activeSet.has(i));
     const newOrder  = [...this._activationOrder, ...inactive];
-
-    if (!animate || window._casoraNoFilterAnim) {
+    const anchor = keep ? this._sortAnchor() : null;
+    this._shownActive = new Set(this._activeSet);
+    // Order + scroll: a live re-sort keeps the visible tile, the load phase goes back to the start (desktop).
+    const place = () => {
       newOrder.forEach((origIdx, pos) => { this._wrappers[origIdx].style.order = pos; });
+      if (keep) { this._keepAnchor(anchor); return; }
       if (isDesktop()) this.scrollTo({ left: 0, behavior: 'instant' });
       this._casoraSnapBack();
-      return;
-    }
+    };
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      newOrder.forEach((origIdx, pos) => { this._wrappers[origIdx].style.order = pos; });
-      if (isDesktop()) this.scrollTo({ left: 0, behavior: 'instant' });
-      this._casoraSnapBack();
+    if (!animate || window._casoraNoFilterAnim || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      place();
       return;
     }
 
     const firstRects = this._wrappers.map(w => w.getBoundingClientRect());
-    newOrder.forEach((origIdx, pos) => { this._wrappers[origIdx].style.order = pos; });
-    this._casoraSnapBack();
+    if (keep) place();
+    else {
+      newOrder.forEach((origIdx, pos) => { this._wrappers[origIdx].style.order = pos; });
+      this._casoraSnapBack();
+    }
     const lastRects = this._wrappers.map(w => w.getBoundingClientRect());
 
-    if (isDesktop() && this.scrollLeft > 10) {
+    if (!keep && isDesktop() && this.scrollLeft > 10) {
       this.scrollTo({ left: 0, behavior: 'smooth' });
     }
 
