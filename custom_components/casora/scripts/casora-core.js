@@ -12270,6 +12270,8 @@ window.casoraMenuGlass = {
     + '.hui-dl-c ha-icon.hui-dl-sym6{color:' + T.ink + ';margin:0 0 2px !important;}'
     + '.hui-dl-end{position:absolute;top:79cqw;font-size:13px;font-weight:700;color:' + S.sub + ';font-variant-numeric:tabular-nums;white-space:nowrap;transform:translateX(-50%);pointer-events:none;}'
     + '.hui-dl-end.l{left:28%;}.hui-dl-end.r{left:72%;}'
+    + '.hui-dl-kic{position:absolute;width:9cqw;height:9cqw;transform:translate(-50%,-50%);display:grid;place-items:center;pointer-events:none;color:' + T.ink + ';}'
+    + '.hui-dl-kic ha-icon{--mdc-icon-size:6.6cqw;width:6.6cqw;height:6.6cqw;margin:0 !important;display:flex;}'
     + '.hui-dl-tag{position:absolute;font-size:13px;font-weight:700;color:' + S.sub + ';font-variant-numeric:tabular-nums;white-space:nowrap;transform:translate(-50%,-50%);pointer-events:none;}'
     + '.hui-dl-pm{display:flex;gap:clamp(36px, 15cqw, 76px);margin-top:10px;pointer-events:auto;}'
     + '.hui-dl-pm .hui-st-b{width:44px;height:44px;font-size:22px;background:' + S.row + ';}'
@@ -12626,7 +12628,7 @@ window.casoraMenuGlass = {
       svgHtml += '</g><g class="tb" data-band="' + esc(dRound(b0)) + ' ' + esc(dRound(b1)) + '">';
       svgHtml += bandSvg;
       svgHtml += '</g>';
-      if (ring.knob) { var kt = dPt(dEnd(ring.pct), DIAL.r); svgHtml += '<circle class="hui-dl-knob" cx="' + esc(kt[0]) + '" cy="' + esc(kt[1]) + '" r="19"/>'; }
+      if (ring.knob) { var kt = dPt(dEnd(ring.pct), DIAL.r); svgHtml += '<circle class="hui-dl-knob" cx="' + esc(kt[0]) + '" cy="' + esc(kt[1]) + '" r="' + esc(ring.knobR || 19) + '"/>'; }
       return '<svg viewBox="0 0 420 420" aria-hidden="true" focusable="false">' + svgHtml + '</svg>';
     }
     var stroke = ring.heat ? 'url(#' + esc(id) + 'h)' : ring.col;
@@ -12787,6 +12789,14 @@ window.casoraMenuGlass = {
             });
           }
         }
+      }
+      // r6.knobIcon (variant under review, weather): the knob shows the current condition – a small symbol in r6.knobTone
+      // inside a slightly larger white dot.
+      if (r6.dot && r6.knobIcon) {
+        var kp6 = dPt(dEnd(ring.pct), DIAL.r);
+        ring.knobR = 23;
+        coverHtml += '<div class="hui-dl-kic" style="left:' + esc(dRound(kp6[0] / 4.2)) + '%;top:' + esc(dRound(kp6[1] / 4.2)) + 'cqw;'
+          + (r6.knobTone ? 'color:' + esc(r6.knobTone) + ';' : '') + '"><ha-icon icon="' + esc(r6.knobIcon) + '"></ha-icon></div>';
       }
       var na6 = (o.read ? ' data-casora-read="' + esc(o.read) + '" data-casora-read-bare=""' : '')
         + (o.live ? ' data-hp-live="' + esc(o.live) + '"' + (o.liveDigits != null ? ' data-hp-digits="' + esc(o.liveDigits) + '"' : '') : '');
