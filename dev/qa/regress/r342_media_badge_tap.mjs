@@ -77,7 +77,9 @@ const STATE = {
     [IDS[1]]: { state: 'standby', attributes: { friendly_name: NAME.b, media_title: '', media_artist: '' }, last_changed: now },
     [IDS[3]]: { state: 'off', attributes: { friendly_name: NAME.c, media_title: '', media_artist: '' }, last_changed: now } },
 };
-STATE.playing = { [IDS[1]]: { state: 'playing', attributes: { friendly_name: NAME.b, media_title: 'QA Lied', media_artist: 'QA Band', supported_features: 21437 }, last_changed: now } };
+// A sticky patch replaces the one before: the TV stays on in it, else a real update of the test HA's TV turned it
+// back off and the count read „1 läuft“ (flaky on the tablet, gates 26.11.1 and 26.11.2).
+STATE.playing = { ...STATE.tvOn, [IDS[1]]: { state: 'playing', attributes: { friendly_name: NAME.b, media_title: 'QA Lied', media_artist: 'QA Band', supported_features: 21437 }, last_changed: now } };
 STATE.nothing = { [tv.entity_id]: { state: 'off', attributes: { friendly_name: NAME.tv, source: '' }, last_changed: now },
   [IDS[1]]: { state: 'idle', attributes: { friendly_name: NAME.b, media_title: '', media_artist: '' }, last_changed: now } };
 
