@@ -178,6 +178,9 @@ export async function open({ width = 1440, height = 900, mobile = false, umzug =
   // Nur „Object“ als Text sagt nichts: dann Inhalt und Herkunft anhängen (Gate 1.1.1).
   page.on('console', async (m) => {
     if (m.type() !== 'error') return;
+    // "Failed to load resource: … 404" names no address (WebKit logs every one): the resource is the message's
+    // location – append it, so a report says which file was missing (gate 26.11.1, crawler „konsole“).
+    if (/^Failed to load resource/.test(m.text())) { errors.push(m.text() + ((m.location() || {}).url ? ' @ ' + m.location().url : '')); return; }
     if (!/^(Object|JSHandle@object)$/.test(m.text())) { errors.push(m.text()); return; }
     // Herkunft sofort (synchron), Inhalt danach; errors.pending lässt Prüfer darauf warten.
     const where = ' @ ' + (m.location().url || '?') + ':' + m.location().lineNumber;
