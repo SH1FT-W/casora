@@ -3003,6 +3003,10 @@
    "{1} disponíveis"
   ],
   [
+   "^(\\d+) verfügbar$",
+   "{1} disponíveis"
+  ],
+  [
    "^Heute (.+) kWh$",
    "Hoje {1} kWh"
   ],
@@ -4068,6 +4072,10 @@
   ],
   [
    "^(\\d+) Schwach$",
+   "{1} fracas"
+  ],
+  [
+   "^(\\d+) schwach$",
    "{1} fracas"
   ],
   [

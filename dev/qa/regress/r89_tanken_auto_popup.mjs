@@ -20,8 +20,8 @@
 // Orte), ganz in der Fläche, ohne Überlappung, nicht auf dem OSM-Hinweis. Szene mit vielen Stationen (gleiche
 // Preise, zwei am selben Ort, eine zu, mehrere am Rand) für HA-Karte und Punktkarte.
 // Der Tank-Sensor wird nur im Browser untergeschoben (erfundene Stationen), nichts wird in HA gespeichert.
-// v3 (31.10.2026): the car popup's section „Tank“ holds the fill level row („Tankstand“) and right under it the row
-// „Tanken“ (a list row with page „tanken“, no own .casora-tank-row wrapper); the tank bar is that fill level row.
+// v3 (31.10.2026): the car popup's section „Tank“ holds the row „Tanken“ (a list row with page „tanken“, no own
+// .casora-tank-row wrapper). Since 01.11.2026 the fill level stands in the dial only (no „Tankstand“ row any more).
 import zlib from 'node:zlib';
 import { open, casoraDashboards, dashboard, studioDashboard, studio, check, need, finish, fakeStates, usePage, plateLabels } from './lib.mjs';
 

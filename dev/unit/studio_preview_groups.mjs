@@ -1,5 +1,5 @@
 // Studio preview = dashboard (test 2, T04): lock and light tiles run their templates in the preview – a lock group says
-// "2 entriegelt" (not "Entriegelt"), the house light tile counts the rooms' lights ("2 An", not "Alle an").
+// "2 entriegelt" (not "Entriegelt"), the house light tile counts the rooms' lights ("2 an", not "Alle an").
 //   node dev/unit/studio_preview_groups.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -58,6 +58,6 @@ const rooms = [{ path: 'home', name: 'Home', variables: {} },
 const house = { type: 'custom:button-card', template: 'casora_light', entity: 'light.a', name: 'Beleuchtung',
   variables: { house: true, light_rooms_auto: true, lights: ['light.a'] } };
 const txt = state(house, rooms);
-assert.ok(/^2 An/.test(txt), 'house light tile counts the rooms\' lights: ' + txt);
+assert.ok(/^2 an/.test(txt), 'house light tile counts the rooms\' lights: ' + txt);
 assert.equal(window._casoraHouseLights, undefined, 'the Studio stand-in is removed again');
 console.log('ok preview: lock and light groups as on the dashboard');

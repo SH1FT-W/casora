@@ -40,7 +40,7 @@ for (const k of ['casora_popup_light', 'casora_popup_camera', 'casora_climate_po
 }
 const lpc = T.casora_popup_light.custom_fields.lpc_init;
 assert.ok(lpc.includes('_casoraLPRstEl[_pgid] = this') && lpc.includes("querySelector('.lp-st')"), 'Licht-Kopfzahl folgt der Raumauswahl');
-assert.ok(lpc.includes("oc + ' An'") && !lpc.includes("oc + ' an'"), 'Licht-Kopf: „1 An“ groß');
+assert.ok(lpc.includes("oc + ' an'") && !lpc.includes("oc + ' An'"), 'Licht-Kopf: „1 an“ klein (01.11.2026)');
 
 // ── V6 ──
 const cam = T.casora_popup_camera.tap_action.casora_popup.content;

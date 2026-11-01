@@ -20,7 +20,7 @@
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var OPEN = window._casoraUpdAiOpen = window._casoraUpdAiOpen || {};
@@ -596,6 +596,20 @@
      The template gives variant 'v3' (the content is built before the frame takes it, so this follows the same rule:
      Soft, no localStorage casora_popup_variant other than 'v3'). The whole house (F.houseStage): stage S2 with the
      shared target „Ziel aller Räume“ (§4.4), − / + move every room's target by one step. */
+  /* Single thermostat popup v3 (owner, 01.11.2026): the temperature history under the dial, as the floor heating room
+     has it – the room sensor set on the tile, else the thermostat's own reading (current_temperature). Returns the
+     chart plate ('' without a reading); the slot is filled by _hpChartInit once the popup is open. */
+  window._casoraThermoChart = function (id, sensor, states) {
+    var st = states && states[id];
+    if (!st || typeof window._hpChartCfg !== 'function' || !(window._casoraHH && window._casoraHH.on())) return '';
+    var key = sensor && states[sensor] ? sensor : id;
+    if (key === id && num((st.attributes || {}).current_temperature) == null) return '';
+    var cfg = window._hpChartCfg(key, 'Temperatur', '24h', 'c2', 120);
+    if (key === id) { cfg.series[0].attribute = 'current_temperature'; cfg.series[0].unit = TU(); }
+    if (window._hpSmooth) window._hpSmooth(key);
+    if (typeof window._hpChartInit === 'function') window._hpChartInit(key);
+    return window._casoraHH.chart(window._hpChartTitle(key), plate);
+  };
   F.v3 = function () {
     if (!(window._casoraHH && window._casoraHH.on() && window._casoraUI && window._casoraUI.stage)) return false;
     try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; }
@@ -864,7 +878,7 @@
       // Trefferfläche 44 px: unsichtbarer Rand (3 px, Fläche nur im Innern), Lage unverändert.
       + 'border:3px solid transparent;background-clip:padding-box;margin-bottom:-3px;'
         + (has ? 'color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));background:var(--casora-popup-ui-action-tint, rgba(0,195,208,0.14));' : 'color:#000;background:var(--casora-color-teal, #00C3D0);') + '">' + (has ? 'Neu auswerten' : 'Jetzt auswerten') + '</span>';
-      var ago = function (ts) { var t = Date.parse(ts); if (isNaN(t)) return ''; var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+      var ago = function (ts) { var t = Date.parse(ts); if (isNaN(t)) return ''; var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
         return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
       var hcHead = '<div style="font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, ' + T.ink + ');padding:0 4px 8px;display:flex;align-items:center;gap:6px;">'
         + ic('mdi:creation', 16, 'var(--casora-color-teal, #00C3D0)') + '<span style="flex:1 1 auto;text-align:left;">Heizungs-Coach</span>'
@@ -1951,7 +1965,7 @@
   var fmtN = function (n, d) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return null;
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var DOORS = [['tur_vorne_links', 'Fahrertür'], ['tur_vorne_rechts', 'Beifahrertür'], ['tur_hinten_links', 'Tür hinten links'], ['tur_hinten_rechts', 'Tür hinten rechts'], ['heckklappe', 'Heckklappe'], ['motorhaube', 'Motorhaube']];
@@ -2306,16 +2320,9 @@
       return UI.line(bitsL[0], bitsL.slice(1, 3), { tone: lockL && lvL ? (lvL === 2 ? 'bad' : 'warn') : null });
     }
     if (name === 'tank_s') {
-      /* Popup v3 (maintainer review 31.10.2026): the section „Tank“ (EV: „Akku“) – fill level with range and litres,
-         then „Tanken“ with the cheapest price when it is set up (12-tanken.js). */
+      /* Popup v3: range and fill level (or litres) live in the dial only (owner, 01.11.2026) – the section „Tank“
+         (EV: „Akku“) keeps „Tanken“ with the cheapest price when it is set up (12-tanken.js), else it is left out. */
       var rowsT = [];
-      if (r.tank != null || r.tankL != null) {
-        var low = r.tank != null && r.tank <= 15;
-        rowsT.push({ icon: r.ev ? 'mdi:battery-high' : 'mdi:gas-station-outline', iconTone: low ? 'warn' : 'accent',
-          label: r.ev ? 'Ladestand' : 'Tankstand', sub: [r.range != null ? 'Reichweite ' + fmtN(r.range) + ' ' + r.rangeU : null,
-            r.tank != null && r.tankL != null ? fmtN(r.tankL) + ' ' + r.tankLU : null].filter(Boolean).join(' · ') || null,
-          value: r.tank != null ? fmtN(Math.round(r.tank)) + ' %' : fmtN(r.tankL) + ' ' + r.tankLU, valueTone: low ? 'warn' : null });
-      }
       var itT = tank() && tank().item ? tank().item(p, states) : null;
       if (itT) rowsT.push(itT);
       return rowsT.length ? UI.group(rowsT, r.ev ? 'Akku' : 'Tank') : '';
@@ -2325,7 +2332,9 @@
       var dev = [];
       if (r.open.length) dev.push({ icon: 'mdi:alert', iconTone: 'bad', label: r.open.length === 1 ? r.open[0] + ' offen' : 'Offen', sub: r.open.length > 1 ? r.open.join(', ') : null });
       if (r.locked === false) dev.push({ icon: 'mdi:lock-open-variant', iconTone: 'warn', label: 'Nicht verriegelt' });
-      if (r.tank != null && r.tank <= 15) dev.push({ icon: r.ev ? 'mdi:battery-10' : 'mdi:gas-station', iconTone: 'warn', label: r.ev ? 'Akku fast leer' : 'Tank fast leer', value: fmtN(r.tank) + ' %', valueTone: 'warn' });
+      // v3: the level itself stands in the dial – the warning row does not repeat the number (owner, 01.11.2026).
+      if (r.tank != null && r.tank <= 15) dev.push({ icon: r.ev ? 'mdi:battery-10' : 'mdi:gas-station', iconTone: 'warn', label: r.ev ? 'Akku fast leer' : 'Tank fast leer',
+        value: name === 'state_s3' ? null : fmtN(r.tank) + ' %', valueTone: 'warn' });
       /* Keine Tür-/Fenster-/Schlosswerte (alles „unavailable“, Integration ohne Melder): kein „Alles zu“. */
       if (!dev.length && !r.known) dev.push({ icon: 'mdi:help-circle-outline', iconTone: 'rgba(255,255,255,0.18)', label: 'Keine Daten' });
       if (!dev.length) dev.push({ icon: 'mdi:check-circle-outline', iconTone: 'good', label: r.locked == null ? 'Alles zu' : 'Alles zu und verriegelt',
@@ -2513,7 +2522,7 @@
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var deep = function (root, sel, out) {
@@ -2672,7 +2681,7 @@
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var deep = function (root, sel, out) {
@@ -2772,7 +2781,7 @@
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var deep = function (root, sel, out) {
@@ -3120,7 +3129,7 @@
     return e && e.v != null ? e : null;
   };
   var agoMs = function (t) {
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   B.ago = agoMs;
@@ -3367,7 +3376,7 @@
         + ((a.punkte || []).length ? li(a.punkte, T.ink2) : '')
         + ((a.tipps || []).length ? '<div style="font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + T.ink + ';margin:12px 0 0;">Tipps</div>' + li(a.tipps, T.ink) : '');
       else body = '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink2 + ';white-space:normal;">Claude prüft Service, Verschleißteile nach Kilometern und die Akku-Pflege passend zur Jahreszeit.</div>';
-      var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = Math.max(0, Math.round((Date.now() - q) / 60000)); return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
+      var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - q) : Math.max(0, Math.round((Date.now() - q) / 60000))); return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
       var svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_ebike_check', { entities: B.ids(states, entity) }))) + '"';
       /* Blueprint v2: the shared AI card (✦ heading, verdict, text, time, „Neu prüfen“ – main action in the device colour). */
       if (SF && UI.kiCard) {
@@ -3512,7 +3521,7 @@
   var RED = 'var(--casora-popup-ui-bad, #FF453A)', ORG = 'var(--casora-popup-ui-warn, #FF9F0A)';
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var agoMs = function (t) {
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.'
       : (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) === 1 ? 'gestern' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' Tagen';
   };
@@ -3821,7 +3830,7 @@
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var tr = function (x) { return (window.casoraTr || function (y) { return y; })(x); };
   var agoMs = function (t) {
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     if (m < 1) return 'gerade eben';
     if (m < 60) return 'vor ' + m + ' Min.';
     if (m < 1440) return 'vor ' + Math.round(m / 60) + ' Std.';
@@ -4145,7 +4154,7 @@
   };
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
     if (m < 1) return tr('gerade eben');
     if (m < 60) return tr('vor ' + m + ' Min.');
     if (m < 1440) return tr('vor ' + Math.round(m / 60) + ' Std.');
@@ -4315,7 +4324,7 @@
   var glyph = function (n) { return '<span class="lps-g" style="--lps-ic:url(\'' + esc(icon(n)) + '\')"></span>'; };
 
   // self: the lamp whose popup this is - its row still switches but does not open the same popup again.
-  var lampRow = function (id, states, roomName, self) {
+  var lampRow = function (id, states, roomName, self, shown) {
     var st = states[id];
     var on = st && st.state === 'on';
     var na = !st || st.state === 'unavailable' || st.state === 'unknown';
@@ -4331,7 +4340,7 @@
     return '<div class="lps-row' + (on ? ' on' : '') + (na ? ' na' : '') + (self ? ' sel' : '') + '"'
       + (self ? ' aria-current="true"' : ' data-lps-tap="' + attr({ a: 'mi', id: id }) + '"') + '>'
       + '<div class="lps-ic" data-lps-tap="' + tg + '">' + glyph('light') + '</div>'
-      + '<div class="lps-tx"><b>' + esc(short(nameOf(id, states), roomName)) + '</b><small>' + esc(sub) + '</small></div>'
+      + '<div class="lps-tx"><b>' + esc(shown != null ? shown : short(nameOf(id, states), roomName)) + '</b><small>' + esc(sub) + '</small></div>'
       + '<div class="lps-sw" role="switch" aria-checked="' + (on ? 'true' : 'false') + '" data-lps-tap="' + tg + '"></div>'
       + '</div>';
   };
@@ -4625,6 +4634,12 @@
     });
   };
 
+  // The lamps' names as the list shows them: without the room, and without leading words all of them share
+  // („Spot Decke“, „Spot Wand“ → „Decke“, „Wand“; owner, 01.11.2026 – casoraDropCommonPrefix, casora-core.js).
+  var lampNamesOf = function (list, states, room) {
+    var names = list.map(function (id) { return short(nameOf(id, states), room); });
+    return window.casoraDropCommonPrefix ? window.casoraDropCommonPrefix(names) : names;
+  };
   var roomBody = function (cfg, sc, states, h) {
     var ids = sc.lights.filter(function (id) { return states[id]; });
     // The whole house (#30): no room to name, and none to strip from lamp and scene names.
@@ -4672,9 +4687,11 @@
           + esc(short(nameOf(id, states), room)) + '</div>';
       }).join('') + '</div>';
     }
-    var lampsHtml = (sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids).map(function (id) {
+    var lampList = sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids;
+    var lampNames = lampNamesOf(lampList, states, room);
+    var lampsHtml = lampList.map(function (id, i) {
       // Own row only in the popup of this one lamp - a room picked in the house popup is not its popup.
-      return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0]);
+      return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0], lampNames[i]);
     }).join('');
     var rightHtml = '<div class="lps-lbl">' + esc(tr(sc.house ? 'Leuchten' : 'Leuchten im Raum')) + '</div><div class="lps-rows">'
       + lampsHtml + '</div>';
@@ -4696,8 +4713,9 @@
     var fxId = fxLampOf(single ? [sc.lights[0]] : lampIds0, states);
     var left = v3Stage(ids, states, false, function () { return v3Moons(scenesOf(h, states, sc), states, room, fxId, h); });
     var ls = stat(lampIds0, states);
-    var lampsHtml = lampIds0.map(function (id) {
-      return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0]);
+    var lampNames0 = lampNamesOf(lampIds0, states, room);
+    var lampsHtml = lampIds0.map(function (id, i) {
+      return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0], lampNames0[i]);
     }).join('');
     // Counting heading (richtlinien §6): „Leuchten · 2 von 4 an“.
     var head = tr(sc.house ? 'Leuchten' : 'Leuchten im Raum') + (ls.tot > 1 ? ' · ' + tr(ls.on + ' von ' + ls.tot + ' an') : '');

@@ -145,13 +145,13 @@ console.log('ok house list: ' + ALL.length + ' lights from ' + studioList.rooms.
 const bg = T.casora_badge_light_group;
 const autoVars = { enabled: true, light_rooms_auto: true };
 // Light counts lamps everywhere, the house too (owner, 01.11.2026): 4 of 12 lamps on.
-assert.match(run(bg.name, autoVars, h), /4 An/, 'badge counts the lamps (4 of 12 on)');
+assert.match(run(bg.name, autoVars, h), /4 an/, 'badge counts the lamps (4 of 12 on)');
 const style = (k) => bg.styles.card.find((d) => k in d)[k];
 assert.equal(run(style('display'), autoVars, h), 'inline-grid', 'badge visible with the marker alone');
 assert.equal(run(style('--casora-badge-tone'), autoVars, h), 'initial', 'icon lit');
 assert.match(run(bg.extra_styles, autoVars, h), /display:inline-block/);
 assert.equal(run(style('display'), { enabled: true }, h), 'none', 'without anything: hidden as before');
-assert.match(run(bg.name, { enabled: true, entity_1: 'light.demo_wz_1', entity_2: 'light.demo_wz_2' }, h), /1 An/, 'slots as before');
+assert.match(run(bg.name, { enabled: true, entity_1: 'light.demo_wz_1', entity_2: 'light.demo_wz_2' }, h), /1 an/, 'slots as before');
 const entry = T.casora_room.custom_fields.badges.card.cards.find((c) => c.template === 'casora_badge_light_group');
 assert.equal(run(entry.variables.enabled, { light_rooms_auto: true }, h), true, 'room badge row: on with the marker');
 assert.equal(run(entry.variables.light_rooms_auto, { light_rooms_auto: true }, h), true);
@@ -170,7 +170,7 @@ assert.equal(run(mentry.variables.light_rooms_auto, { casora_hv: { light_rooms_a
 assert.equal(run(mentry.variables.light_rooms_auto, { light_rooms_auto: true }, h), true);
 assert.equal(run(mentry.variables.light_rooms_auto, {}, h), false);
 // House tile: counts the rooms' lights live.
-assert.equal(run(T.casora_light.state_display, { house: true, light_rooms_auto: true, lights: ['light.demo_wz_1'] }, h, h.states['light.demo_wz_1']), '4 An', 'tile counts as the badge');
+assert.equal(run(T.casora_light.state_display, { house: true, light_rooms_auto: true, lights: ['light.demo_wz_1'] }, h, h.states['light.demo_wz_1']), '4 an', 'tile counts as the badge');
 console.log('ok badge: counts every light, tile too');
 
 // ── 4. The house popup: room bar from the rooms, main switch asks, rooms without a group switch their lamps ──

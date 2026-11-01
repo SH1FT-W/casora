@@ -10,8 +10,8 @@
 //                                                             label entries by name)
 //   window._casoraEntityList.kind(st)                        → 'toggle' | 'time' | 'date' | 'number' | 'select' | 'state'
 //   window._casoraEntityList.count(states, ids)              → {n, on, toggles}
-//   window._casoraEntityList.countWord(n) / summary(c)       → "26 Einstellungen" / ["26 Einstellungen", "3 An"]
-//   window._casoraEntityList.tileState(hass, states, V)      – tile casora_entity_list ("3 An" or "26 Einstellungen")
+//   window._casoraEntityList.countWord(n) / summary(c)       → "26 Einstellungen" / ["26 Einstellungen", "3 an"]
+//   window._casoraEntityList.tileState(hass, states, V)      – tile casora_entity_list ("3 an" or "26 Einstellungen")
 //   window._casoraEntityList.tileActive(hass, states, V)     – something on: the tile is highlighted
 //   window._casoraEntityList.split(ids, sections)            → [{title, ids}] (a heading starts before its entity)
 //   window._casoraEntityList.cols(layout)                    → '1' | '2' | 'auto' (CSS decides auto: phone 1, else 2)
@@ -120,11 +120,11 @@
   };
   // The list counts its devices (review 2, DD-31: „8 Einstellungen“ said nothing).
   L.countWord = function (n) { return n === 1 ? '1 Gerät' : n + ' Geräte'; };
-  // "26 Einstellungen · 3 An"; with switches all off "· Aus"; without switches the count only.
+  // "26 Einstellungen · 3 an"; with switches all off "· Aus"; without switches the count only.
   L.summary = function (c) {
     if (!c || !c.n) return ['Keine Einträge'];
     var out = [L.countWord(c.n)];
-    if (c.on) out.push(c.on + ' An');
+    if (c.on) out.push(c.on + ' an');
     else if (c.toggles) out.push('Aus');
     return out;
   };
@@ -133,7 +133,7 @@
     var C = L.cfg(V);
     var c = L.count(states, L.resolve(hass, states, C));
     if (!c.n) return 'Keine Einträge';
-    return c.on ? c.on + ' An' : L.countWord(c.n);
+    return c.on ? c.on + ' an' : L.countWord(c.n);
   };
   L.tileActive = function (hass, states, V) {
     return L.count(states, L.resolve(hass, states, L.cfg(V))).on > 0;

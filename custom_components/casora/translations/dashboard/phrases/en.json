@@ -2985,6 +2985,10 @@
    "{1} available"
   ],
   [
+   "^(\\d+) verfügbar$",
+   "{1} available"
+  ],
+  [
    "^Heute (.+) kWh$",
    "Today {1} kWh"
   ],
@@ -4051,6 +4055,10 @@
   [
    "^(\\d+) Schwach$",
    "{1} Low"
+  ],
+  [
+   "^(\\d+) schwach$",
+   "{1} low"
   ],
   [
    "^(.+) Akku fast leer$",

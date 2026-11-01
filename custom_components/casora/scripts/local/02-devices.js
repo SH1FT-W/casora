@@ -577,7 +577,7 @@
     const ready = window._casoraAiReady(states);
     if (!ready && !it) return '';
     const esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-    const ago = (ts) => { const t = Date.parse(ts); if (isNaN(t)) return ''; const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    const ago = (ts) => { const t = Date.parse(ts); if (isNaN(t)) return ''; const m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
       return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
     const Z = { gut: ['Alles im grünen Bereich', 'var(--casora-popup-ui-good, #30D158)', 'mdi:check-circle'],
                 beobachten: ['Beobachten', 'var(--casora-popup-ui-warn, #FF9F0A)', 'mdi:eye-outline'],
@@ -1482,7 +1482,7 @@
     return d.toLocaleDateString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { weekday: 'short', day: '2-digit', month: '2-digit' });
   };
   var ago = function (d) {
-    var m = Math.round((Date.now() - d.getTime()) / 60000);
+    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - d.getTime()) : Math.round((Date.now() - d.getTime()) / 60000));
     if (m < 1) return 'gerade eben';
     if (m < 60) return 'vor ' + m + ' Min.';
     var h = Math.round(m / 60);

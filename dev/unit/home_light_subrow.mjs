@@ -1,5 +1,5 @@
 // #64 (lights): Home without an HA light group covering the house (light_rooms_auto, 26.10.59). The badge
-// "Beleuchtung · 1 An" counted the rooms' lights and its tap set casora_expanded_row to "lights", but the sub-row
+// "Beleuchtung · 1 an" counted the rooms' lights and its tap set casora_expanded_row to "lights", but the sub-row
 // badges_lights of casora_room only showed for light_entity_1 / light_group_entity – with light_rooms_auto alone it
 // stayed display:none, so the tap opened nothing (desktop and tablet). Now the sub-row follows the badge's own rule.
 // Also checks that every group badge of the room header shows its sub-row under the same condition as the badge.
@@ -38,7 +38,7 @@ const badgeCard = room.custom_fields.badges.card.cards.find((c) => c.template ==
 assert.equal(run(badgeCard.variables.enabled, ctx), true, 'Home light badge shown');
 const grp = T.casora_badge_light_group;
 const name = run(grp.name, { variables: Object.assign({}, variables, { title: null }), states, hass, user: hass.user });
-assert.match(name, /1 An/, 'badge says "1 An"');
+assert.match(name, /1 an/, 'badge says "1 an"');
 
 // Its sub-badges exist …
 const subs = room.custom_fields.badges_lights.card.cards.filter((c) => run(c.variables.enabled, ctx));

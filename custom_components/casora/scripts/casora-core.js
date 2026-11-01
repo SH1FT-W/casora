@@ -1293,7 +1293,8 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     if (!isFinite(ms)) return '';
     if (window.casoraCamFresh(ms, refreshS)) return 'Aktuell';
     var s = Math.max(0, Math.floor(ms / 1000));
-    if (s < 60) return 'vor ' + s + ' s';
+    // Under a minute „gerade eben“, as every relative time (owner, 01.11.2026; was „vor 40 s“).
+    if (s < 60) return 'gerade eben';
     var m = Math.floor(s / 60);
     if (m < 60) return 'vor ' + m + ' Min.';
     if (m < 1440) return 'vor ' + Math.floor(m / 60) + ' Std.';
@@ -8071,7 +8072,7 @@ window.casoraMenuGlass = {
       if (C0.n >= 20 && (C0.m[Math.floor(lc.getTime() / 60000)] || 0) >= C0.n / 5) return '';
       var loc = window.casoraLocale ? window.casoraLocale() : 'de-DE', now = new Date();
       // §3: under an hour „vor 11 Min.“, else „Seit 14:42“.
-      var mins = Math.round((now - lc) / 60000);
+      var mins = now - lc < 0 ? -1 : window.casoraAgoMin ? window.casoraAgoMin(now - lc) : Math.round((now - lc) / 60000);
       if (mins >= 0 && mins < 60) { var ago0 = mins < 1 ? 'Gerade eben' : 'Vor ' + mins + ' Min.'; return window.casoraTr ? window.casoraTr(ago0) : ago0; }
       var since = 'Seit ' + (lc.toDateString() === now.toDateString() ? lc.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' })
         : lc.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' }));
@@ -9972,8 +9973,35 @@ window.casoraMenuGlass = {
     return '<div style="font-family:' + T.font + ';text-align:left;">' + out + '</div>';
   }
 
+  /* Owner, 01.11.2026: when every name of a list starts with the same word(s) („Jalousie Bad“, „Jalousie Küche“), the
+     rows show only what differs („Bad“, „Küche“). Display only; never when a name would be left empty or a bare number
+     („Lampe 1“, „Lampe 2“ keep their word), and only for two names or more. Returns the names (unchanged without a prefix). */
+  window.casoraDropCommonPrefix = function (names) {
+    var list = (names || []).map(function (n) { return String(n == null ? '' : n); });
+    if (list.length < 2) return list;
+    var words = list.map(function (n) { return n.trim().split(/\s+/); });
+    var k = words[0].length;
+    words.forEach(function (w) {
+      var i = 0;
+      while (i < k && i < w.length && w[i].toLowerCase() === words[0][i].toLowerCase()) i++;
+      k = i;
+    });
+    if (!k) return list;
+    var rest = words.map(function (w) { return w.slice(k).join(' '); });
+    if (rest.some(function (r) { return !r || /^[\d\W_]+$/.test(r); })) return list;
+    return rest;
+  };
+  // List rows that name a device (an entity or a sub page) lose the shared leading words of their names.
+  function dropRowPrefix(rows) {
+    var named = rows.filter(function (r) { return r && typeof r.label === 'string' && (r.entity || r.page); });
+    if (named.length < 2 || named.length !== rows.length) return rows;
+    var cut = window.casoraDropCommonPrefix(named.map(function (r) { return r.label; }));
+    if (cut[0] === named[0].label) return rows;
+    return rows.map(function (r, i) { return Object.assign({}, r, { label: cut[i] }); });
+  }
+
   function group(rows, label, labelAction, opts) {
-    rows = rows || [];
+    rows = dropRowPrefix(rows || []);
     if (soft()) return softGroup(rows, label, labelAction);
     var inside = !!(opts && opts.labelInside);
     var out = '';
@@ -13566,6 +13594,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
   /* Kalendertage seit „vor m Minuten“ (#11): vor 36 Stunden ist gestern, nicht „vor 2 Tagen“.
      Für alle „vor X T.“/„vor X Tagen“ der Module (statt Math.round(m / 1440)). */
+  /* Whole minutes for a relative time („vor 2 Min.“): under one minute 0 – „gerade eben“ (owner, 01.11.2026), also
+     where rounding said „vor 1 Min.“ from 30 s on; from one minute on rounded as before. ms: time since, in ms. */
+  window.casoraAgoMin = function (ms) {
+    var d = Number(ms);
+    return d >= 60000 ? Math.round(d / 60000) : 0;
+  };
   window.casoraDaysAgo = function (m) {
     var now = new Date(Date.now()), then = new Date(Date.now() - Math.max(0, Number(m) || 0) * 60000);
     return Math.max(1, Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate())

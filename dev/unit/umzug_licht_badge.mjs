@@ -27,7 +27,7 @@ for (const [name, tpls] of [['Quelle', T], ['Paket', B]]) {
   const v = { enabled: true, light_group_entity: 'light.alle_lichter_test' };
   assert.equal(run(style('display'), v, states), 'inline-grid', name + ': Badge mit nur Lichtgruppe sichtbar');
   assert.match(run(t.extra_styles, v, states), /display:inline-block/, name + ': extra_styles blendet nicht aus');
-  assert.match(run(t.name, v, states), /1 An/, name + ': zählt die Lichter der Gruppe');
+  assert.match(run(t.name, v, states), /1 an/, name + ': zählt die Lichter der Gruppe');
   assert.equal(run(style('--casora-badge-tone'), v, states), 'initial', name + ': Symbol leuchtet bei einem Licht an');
   // Ohne alles bleibt es aus, mit Einzel-Lichtern wie bisher.
   assert.equal(run(style('display'), { enabled: true }, states), 'none', name + ': ohne Lichter aus');
