@@ -251,6 +251,8 @@
     + '.w{font-size:13px;font-weight:500;color:var(--cink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
     // Switch like hui-sg: fields 46 high, radius 18, the active one light.
     + '.sw{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;margin:2px var(--casora-chart-inset,6px) 10px}'
+    // Four curves (room air quality): two rows of two – in one row the names were cut to „C…“ on the phone.
+    + '.sw.g2{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr))}'
     + '.sw button{all:unset;box-sizing:border-box;min-width:0;min-height:46px;border-radius:var(--casora-soft-seg-radius,18px);padding:0 12px;display:flex;align-items:center;justify-content:center;gap:6px;'
     + 'background:var(--casora-soft-control-fill,rgba(140,115,90,.10));font-size:13px;font-weight:600;color:var(--casora-soft-sub,var(--cink2));cursor:pointer;white-space:nowrap;overflow:hidden;-webkit-tap-highlight-color:transparent;transition:background-color .16s ease}'
     // Name centred if it fits, else "…" at the end (#58)
@@ -436,7 +438,7 @@
       if (c.title) box.appendChild(Object.assign(document.createElement('div'), { className: 'tt', textContent: C.tr(c.title) }));
       // The heatmap colours one sensor: several always get the switch.
       if (c.kind !== 'spark' && !c.mini && c.series.length > 1 && (c.switch !== false || c.kind === 'heat')) {
-        var sw = document.createElement('div'); sw.className = 'sw'; sw.setAttribute('role', 'tablist');
+        var sw = document.createElement('div'); sw.className = c.series.length > 3 ? 'sw g2' : 'sw'; sw.setAttribute('role', 'tablist');
         c.series.forEach(function (s, i) {
           var b = document.createElement('button');
           b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(i === me._sel));

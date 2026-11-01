@@ -12077,10 +12077,11 @@ window.casoraMenuGlass = {
       + (ring.heat ? ' stroke="' + esc(stroke) + '"' + showHtml : ' style="stroke:' + esc(stroke) + (ring.pct > 0 ? '' : ';display:none') + '"') + '/>'
       + '<path class="fl ln" d="' + esc(dArc(DIAL.a0, e)) + '" fill="none" stroke-width="26" stroke-linecap="round"'
       + (ring.heat ? ' stroke="' + esc(stroke) + '"' + showHtml : ' style="stroke:' + esc(stroke) + (ring.pct > 0 ? '' : ';display:none') + '"') + '/>';
-    if (ring.marker != null && isFinite(ring.marker)) {
-      var m = dPt(DIAL.a0 + DIAL.span * Math.max(0, Math.min(100, ring.marker)) / 100, DIAL.r);
+    [ring.marker].concat(ring.marks || []).forEach(function (mk) {
+      if (mk == null || !isFinite(mk)) return;
+      var m = dPt(DIAL.a0 + DIAL.span * Math.max(0, Math.min(100, mk)) / 100, DIAL.r);
       svgHtml += '<circle class="mk" cx="' + esc(m[0]) + '" cy="' + esc(m[1]) + '" r="6"/>';
-    }
+    });
     if (ring.knob) { var kp = dPt(e, DIAL.r); svgHtml += '<circle class="hui-dl-knob" cx="' + esc(kp[0]) + '" cy="' + esc(kp[1]) + '" r="19"/>'; }
     return '<svg viewBox="0 0 420 420" aria-hidden="true" focusable="false">' + svgHtml + '</svg>';
   }
@@ -12194,6 +12195,8 @@ window.casoraMenuGlass = {
       var r6 = o.ring || {}, mn6 = Number(r6.min) || 0, mx6 = r6.max != null ? Number(r6.max) : 100;
       ring.kind = 'level'; ring.pct = dialPct(parseFloat(String(o.value).replace(',', '.')), mn6, mx6);
       if (r6.marker != null) ring.marker = dialPct(r6.marker, mn6, mx6);
+      // r6.marks: several marks on the ring (the edges of a comfort band, humidity 40–60 %).
+      if (Array.isArray(r6.marks)) ring.marks = r6.marks.map(function (v) { return dialPct(v, mn6, mx6); });
       ring.heat = !!r6.heat;
       if (r6.color) ring.col = r6.color;
       // r6.dot: a white dot at the end of the level (weather: where „now“ sits between the day's low and high).

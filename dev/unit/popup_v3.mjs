@@ -67,7 +67,8 @@ const MIGRIERT = [
   { popup: 'Leuchte (einzeln)', vorlagen: ['casora_light'], file: '03-popups.js', from: '  var v3Stage = function', to: '  var v3Scenes = function', stages: 1 },
   // Readings popup without a thermostat: air quality (else temperature) as S7 (S6 would need a chart plate in the stage),
   // the curve as the Verlauf (120), the other readings as the list.
-  { popup: 'Klima (Raum)', vorlagen: ['casora_climate_popup'], file: null, stages: 1 },
+  // The wheel follows the tapped badge: temperature or humidity (S6 with a range), air quality (S7).
+  { popup: 'Klima (Raum)', vorlagen: ['casora_climate_popup'], file: null, stages: 3 },
   { popup: 'Jalousien in Sicherheit', vorlagen: ['casora_popup_security_covers'], file: '34-security-covers.js', from: '  C.sec = function', to: null, stages: 2 },
   { popup: 'Pulse', vorlagen: ['casora_popup_pulse'], file: '14-pulse.js', from: '  P.popup = function', to: null, stages: 2 },
   { popup: 'Klima-Gruppe (Badge)', vorlagen: ['casora_badge_climate_group'], file: '35-phone-hub.js', from: '  var stageOf = function', to: '  P.sec = function', stages: 3 },
