@@ -43,3 +43,9 @@ dashboards/casora/button_card_templates.json#casora_weather | re:^return map\[co
 dashboards/casora/button_card_templates.json#casora_light | re:^JSON\.stringify\((?:_cs|_rb)\)$ | color row: JS source of the live card; colors, light id and service data escaped where built (esc) | 2
 dashboards/casora/button_card_templates.json#casora_trash | re:^\(\(window\._casoraInkOn && window\._casoraInkOn\( | CSS colour from inkOn() (one of two fixed token strings) or a constant | 1
 dashboards/casora/button_card_templates.json#casora_weather | h3 | popup v3: the wheel redrawn by its own builder (UI.stage escapes) when the forecast arrives | 1
+dashboards/casora/button_card_templates.json#casora_badge_air_quality | re:^window\.casoraBadgeOfflineName | offline sub-badge: casoraBadgeOfflineName (01-basis.js) escapes the title itself | 1
+dashboards/casora/button_card_templates.json#casora_badge_energy | re:^window\.casoraBadgeOfflineName | offline sub-badge: casoraBadgeOfflineName (01-basis.js) escapes the title itself | 1
+dashboards/casora/button_card_templates.json#casora_badge_humidity | re:^window\.casoraBadgeOfflineName | offline sub-badge: casoraBadgeOfflineName (01-basis.js) escapes the title itself | 1
+dashboards/casora/button_card_templates.json#casora_badge_light | re:^window\.casoraBadgeOfflineName | offline sub-badge: casoraBadgeOfflineName (01-basis.js) escapes the title itself | 1
+dashboards/casora/button_card_templates.json#casora_badge_presence | re:^window\.casoraBadgeOfflineName | offline sub-badge: casoraBadgeOfflineName (01-basis.js) escapes the title itself | 1
+dashboards/casora/button_card_templates.json#casora_badge_temp | re:^window\.casoraBadgeOfflineName | offline sub-badge: casoraBadgeOfflineName (01-basis.js) escapes the title itself | 1
