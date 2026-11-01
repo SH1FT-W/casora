@@ -2,7 +2,8 @@
 // @deckt: custom_components/casora/scripts/local/38-search.js
 // Room search (variant A, 01.11.2026): a field under the title of the phone's Home opens a sheet; typing lists rooms,
 // devices and scenes. Expected on the phone (WebKit, 393 wide): the field sits between the title and the badges, a tap
-// opens the sheet with the keyboard's field focused, "kuche" finds the kitchen (no umlaut), a room opens its page,
+// opens the sheet with the keyboard's field focused (a real finger tap: 26.11.2 did nothing in the Companion app),
+// the field is hidden until one pulls down at the top, "kuche" finds the kitchen (no umlaut), a room opens its page,
 // a device's switch switches it, a scene starts, Esc / "Abbrechen" close. Desktop: Cmd+K opens the same search as a
 // dialog with the same results, Esc closes it.
 import { open, usePage, casoraDashboard, dashboard, check, need, shot, finish } from './lib.mjs';
@@ -31,30 +32,62 @@ const typeIn = async (page, q) => {
 const rowsOf = (r, kind) => ((r && r.groups) || []).flatMap((g) => g.rows).filter((x) => x.kind === kind);
 
 // ── Phone (WebKit) ──────────────────────────────────────────────────────────────────────────────────────────
-const { page } = await open({ width: 393, height: 852, mobile: true, safari: true });
+// As the Companion app on an iPhone (its user agent carries „Home Assistant/“).
+const { page } = await open({ width: 393, height: 852, mobile: true, safari: true,
+  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Home Assistant/2026.10 (io.robbie.HomeAssistant; build:1; iOS 18.0.0)' });
 usePage(page);
 await page.addInitScript(() => { try { localStorage.removeItem('casora.search.recent'); localStorage.setItem('casora_mobile_filter', 'all'); } catch (e) { /* none */ } });
 await dashboard(page, phoneUrl);
 await page.waitForFunction(() => window.__pierce('[data-casora-search]').length > 0, null, { timeout: 20000 }).catch(() => {});
-const field = await page.evaluate(() => {
+// The field starts hidden (iOS style): pulling down at the top of Home shows it.
+const fieldBox = () => page.evaluate(() => {
   const f = window.__pierce('[data-casora-search]')[0];
   if (!f) return null;
-  const r = f.getBoundingClientRect();
+  const r = f.getBoundingClientRect(), c = f.parentElement.getBoundingClientRect();
   const title = window.__pierce('button-card').find((b) => [].concat(b._config?.template || []).includes('casora_mobile_weather'));
   const name = title && title.shadowRoot.querySelector('#name').getBoundingClientRect();
   const badges = window.__pierce('button-card').find((b) => [].concat(b._config?.template || []).includes('casora_mobile_filter_badges'));
   const br = badges && badges.getBoundingClientRect();
-  return { x: r.x, y: r.y, w: r.width, h: r.height, text: f.textContent.trim(), nameBottom: name && name.bottom, badgesTop: br && br.top };
+  return { x: r.x, y: r.y, w: r.width, h: r.height, shown: Math.round(c.height), op: Number(getComputedStyle(f.parentElement).opacity),
+    text: f.textContent.trim(), nameBottom: name && name.bottom, badgesTop: br && br.top };
 });
-await check('Suchfeld auf der Startseite', field && field.h >= 40 && field.w > 300, field);
+// A finger drag from y0 to y1 (WebKit's touchscreen only taps): touch events on the element under the finger.
+// WebKit here has no Touch constructor: plain events carrying the touch lists the page reads.
+const drag = (y0, y1) => page.evaluate(async ([y0, y1]) => {
+  const x = 200, target = document.elementFromPoint(x, y0) || document.body;
+  const ev = (type, y) => { const t = { identifier: 1, target, clientX: x, clientY: y, pageX: x, pageY: y };
+    const e = new Event(type, { bubbles: true, cancelable: true, composed: true });
+    Object.defineProperty(e, 'touches', { value: type === 'touchend' ? [] : [t] });
+    Object.defineProperty(e, 'changedTouches', { value: [t] });
+    target.dispatchEvent(e); };
+  ev('touchstart', y0);
+  for (let i = 1; i <= 8; i++) { ev('touchmove', y0 + (y1 - y0) * i / 8); await new Promise((r) => setTimeout(r, 16)); }
+  ev('touchend', y1);
+}, [y0, y1]);
+let field = await fieldBox();
+await check('Suchfeld da, aber zuerst versteckt', field && field.shown <= 1, field);
+await drag(320, 460);
+await page.waitForTimeout(500);
+field = await fieldBox();
+await check('Herunterziehen oben zeigt das Suchfeld', field && field.shown >= 50 && field.op > 0.95 && field.h >= 40 && field.w > 300, field);
 await check('Suchfeld unter dem Titel, über den Badges', field && field.y >= field.nameBottom - 1 && (!field.badgesTop || field.y + field.h <= field.badgesTop + 1), field);
 await check('Platzhalter „Räume, Geräte, Szenen“', field && /Räume, Geräte, Szenen/.test(field.text), field && field.text);
 await shot('handy-start');
-
-await page.mouse.click(field.x + field.w / 2, field.y + field.h / 2);
+await drag(460, 330);
 await page.waitForTimeout(500);
+await check('Hochschieben versteckt es wieder', (await fieldBox()).shown <= 1);
+
+// A real finger tap (touch events, not a mouse click): the card's action handler cancels touchend, no click follows.
+const openSheet = async () => {
+  await page.evaluate(() => window._casoraSearch.reveal(true));
+  await page.waitForTimeout(450);
+  const b = await fieldBox();
+  await page.touchscreen.tap(b.x + b.w / 2, b.y + b.h / 2);
+  await page.waitForTimeout(500);
+};
+await openSheet();
 let r = await results(page);
-await check('Tipp öffnet die Suche, Feld hat den Fokus', r && r.focus, r);
+await check('Finger-Tipp öffnet die Suche, Feld hat den Fokus (Tastatur)', r && r.focus, r);
 
 r = await typeIn(page, 'kuche');
 const kitchen = rowsOf(r, 'room').find((x) => /Küche/.test(x.name));
@@ -78,7 +111,10 @@ await check('Blatt und Kopfzeile der Suche deckend', look.panel === 1 && /^rgb\(
 await check('Lange Namen umbrechen statt abgeschnitten', look.cut.length === 0, look.cut);
 
 // Room opens its page
-await page.evaluate(() => [...document.querySelectorAll('.cs-row[data-kind="room"] .cs-main')].find((b) => /Küche/.test(b.textContent))?.click());
+// With a finger too: the sheet's rows take a real tap.
+const roomAt = await page.evaluate(() => { const b = [...document.querySelectorAll('.cs-row[data-kind="room"] .cs-main')].find((x) => /Küche/.test(x.textContent));
+  const r = b && b.getBoundingClientRect(); return r ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : null; });
+if (roomAt) await page.touchscreen.tap(roomAt.x, roomAt.y);
 await page.waitForTimeout(1500);
 const filt = await page.evaluate(() => ({ f: window._casoraFilter && window._casoraFilter.get(), open: !!document.querySelector('.cs-root') }));
 await check('Raum öffnen: Raumseite „Küche“, Suche zu', /^room_k/.test(filt.f || '') && !filt.open, filt);
@@ -93,9 +129,7 @@ const lamp = await page.evaluate(() => {
   return d ? { id: d.id, name: d.name, state: h.states[d.id].state } : null;
 });
 await need('schaltbares Gerät im Handy-Dashboard', lamp);
-const f2 = await page.evaluate(() => { const f = window.__pierce('[data-casora-search]')[0]; const r = f.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
-await page.mouse.click(f2.x, f2.y);
-await page.waitForTimeout(400);
+await openSheet();
 r = await typeIn(page, lamp.name.split(/\s+/)[0].slice(0, 5));
 const row = rowsOf(r, 'device').find((x) => x.id === lamp.id);
 await check('Gerät gefunden, mit Schalter', row && row.sw !== null, r && r.groups);
@@ -121,8 +155,7 @@ const scene = await page.evaluate(() => {
   return idx.scenes[0] ? { id: idx.scenes[0].id, name: idx.scenes[0].name } : null;
 });
 if (scene) {
-  await page.mouse.click(f2.x, f2.y);
-  await page.waitForTimeout(400);
+  await openSheet();
   // The sheet shows recently opened results while the field is empty.
   r = await results(page);
   await check('Leeres Feld: zuletzt Geöffnetes oben', rowsOf(r, 'device').some((x) => x.id === lamp.id), r && r.groups);
@@ -140,8 +173,7 @@ if (scene) {
 }
 
 // Cancel closes
-await page.mouse.click(f2.x, f2.y);
-await page.waitForTimeout(400);
+await openSheet();
 await page.evaluate(() => document.querySelector('.cs-cancel').click());
 await page.waitForTimeout(300);
 await check('„Abbrechen“ schließt die Suche', !(await page.evaluate(() => !!document.querySelector('.cs-root'))));
