@@ -9758,7 +9758,8 @@ window.casoraMenuGlass = {
             + ' data-casora-suffix="' + esc(r.liveSuffix || '') + '"';
         }
         out += '<div' + vlive + (r.valueIcon ? ' class="hui-end hui-actx"' + actxLabel(r.value) : ' class="hui-end"') + ' style="font-size:14px;font-weight:600;'
-          + 'font-variant-numeric:tabular-nums;color:' + esc(alertTone(r.valueTone) || T.ink2)
+          // On a chosen (hinterlegt) row the value takes the full ink: text 2 on the lighter fill was 4,3 : 1 in dark.
+          + 'font-variant-numeric:tabular-nums;color:' + esc(alertTone(r.valueTone) || (r.selected ? T.ink : T.ink2))
           + ';white-space:nowrap;pointer-events:none;">'
           + (r.valueIcon ? actxInner(r.value, r.valueIcon, S.iconOff) : lit(r.value, r.valueLit)) + '</div>';
       }
