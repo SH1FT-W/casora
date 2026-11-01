@@ -167,7 +167,17 @@ for (const [tag, o, url, mobile, act] of VIEWS) {
     for (let w = 0; w < 24 && !(await offen()); w++) await page.waitForTimeout(250);
   }
   await need(tag + ': popup opens', await offen());
-  const p = await stable(page, POPUP, null, { until: (v) => v && v.chart && v.rows.length >= 6 && v.segs.length >= 5 && /\S/.test(v.line) });
+  let p = await stable(page, POPUP, null, { until: (v) => v && v.chart && v.rows.length >= 6 && v.segs.length >= 5 && /\S/.test(v.line) });
+  // The plates' entrance (opacity + transform) replays after the reveal; on a busy machine (gate 26.11.2) „Modi“ was
+  // measured mid-slide 8 px off. Positions are read once the entrance is over.
+  await page.waitForFunction(() => {
+    const s = window.casoraPopup && window.casoraPopup.surface;
+    if (!s) return true;
+    const run = (a) => a.animationName && a.playState === 'running';
+    const roots = window.__pierce('*', s).filter((n) => n.shadowRoot).map((n) => n.shadowRoot);
+    return !(s.getAnimations({ subtree: true }).some(run) || roots.some((r) => r.getAnimations && r.getAnimations().some(run)));
+  }, null, { timeout: 10000, polling: 200 }).catch(() => {});
+  p = (await page.evaluate(POPUP)) || p;
   // §3: the wheel shows the top zone's temperature – the head says in words how the fridge is, never „7 °C“ again.
   await check(tag + ': status line in words ("Alles in Ordnung", no temperature)', /Alles in Ordnung/.test(p.line) && !/°C/.test(p.line), p.line);
   await check(tag + ': 24 h chart', p.chart);
