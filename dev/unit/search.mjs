@@ -8,10 +8,13 @@ import vm from 'node:vm';
 
 const src = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/38-search.js', import.meta.url), 'utf8');
 const store = {};
+const listeners = {};
 const box = {
   localStorage: { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: (k) => { delete store[k]; } },
-  document: { querySelector: () => null, addEventListener() {}, getElementById: () => null },
-  addEventListener() {}, history: { pushState() {} }, location: { pathname: '/qa-haus-mobile/home' },
+  document: { querySelector: () => null, addEventListener() {}, getElementById: () => null,
+    documentElement: { style: { vars: {}, setProperty(k, v) { this.vars[k] = v; } }, scrollTop: 0 } },
+  // The module's window listeners, to drive the pull-down below.
+  addEventListener(type, fn) { (listeners[type] = listeners[type] || []).push(fn); }, scrollY: 0, scrollBy(x, y) { box.scrollY += y; }, history: { pushState() {} }, location: { pathname: '/qa-haus-mobile/home' },
   CustomEvent: class {}, setTimeout, clearInterval, setInterval, customElements: { get: () => null },
 };
 box.window = box;
@@ -200,5 +203,42 @@ const deskIcons = { views: [
 ] };
 deq(S.index(deskIcons, hass, { id: ME }, { url: 'qa-haus' }).rooms.map((r) => r.icon),
   ['/casora_assets/icons/kitchen.svg', '/local/own/bad.svg', null]);
+
+// ── Pull down on Home shows the field (iOS style), scrolling past it hides it again ──
+const vars = box.document.documentElement.style.vars;
+const fire = (type, y, extra = {}) => (listeners[type] || []).forEach((fn) => fn({ type, touches: type === 'touchend' ? [] : [{ clientX: 200, clientY: y }],
+  composedPath: () => [], preventDefault() {}, stopPropagation() {}, ...extra }));
+const pullTo = (y0, y1) => { fire('touchstart', y0); for (let i = 1; i <= 6; i++) fire('touchmove', y0 + (y1 - y0) * i / 6); fire('touchend', y1); };
+assert.equal(vars['--casora-search-reveal'], '0px', 'hidden at first');
+pullTo(300, 340);
+assert.equal(vars['--casora-search-reveal'], '0px', 'not on Home (no field): nothing');
+box._casoraSearchHead = { isConnected: true };
+box._casoraSearchOn = true;
+pullTo(300, 330);
+assert.equal(vars['--casora-search-reveal'], '0px', 'pulled a little: back to hidden');
+pullTo(300, 360);
+assert.equal(vars['--casora-search-reveal'], S.REVEAL + 'px', 'pulled past half: shown');
+assert.equal(S.revealed(), true);
+pullTo(400, 330);
+assert.equal(vars['--casora-search-reveal'], '0px', 'pushed back up: hidden');
+pullTo(300, 450);
+box.scrollY = 200;
+fire('scroll', 0);
+assert.equal(vars['--casora-search-reveal'], '0px', 'scrolled down past it: hidden');
+assert.equal(box.scrollY, 200 - S.REVEAL, 'the content keeps its place');
+box.scrollY = 0;
+pullTo(300, 450);
+pullTo(300, 450);
+assert.equal(S.revealed(), true);
+box._casoraSearchOn = false;
+S.reveal(false);
+pullTo(300, 450);
+assert.equal(S.revealed(), false, 'switched off in the Studio: no pull-down');
+pullTo(300, 450);
+box._casoraSearchOn = true;
+box.scrollY = 120;
+pullTo(300, 450);
+assert.equal(S.revealed(), false, 'not at the top: no pull-down');
+box.scrollY = 0;
 
 console.log('search: ok');

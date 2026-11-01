@@ -896,6 +896,23 @@
   };
   window.addEventListener('click', handle, true);
   window.addEventListener('keydown', handle, true);
+  // Touch: the card's action handler (HA's actionHandler on ha-card) cancels touchend, so on a phone no click ever
+  // follows a tap on the field (26.11.2: tapping did nothing in the Companion app). The field opens on touchend
+  // itself – in the gesture, so WebKit lets the input take the focus and opens the keyboard.
+  var tap0 = null;
+  window.addEventListener('touchstart', function (e) {
+    var t = e.touches && e.touches[0];
+    tap0 = t && e.touches.length === 1 && fromField(e) ? { x: t.clientX, y: t.clientY } : null;
+  }, { capture: true, passive: true });
+  window.addEventListener('touchmove', function (e) {
+    var t = e.touches && e.touches[0];
+    if (tap0 && t && (Math.abs(t.clientX - tap0.x) > 10 || Math.abs(t.clientY - tap0.y) > 10)) tap0 = null;
+  }, { capture: true, passive: true });
+  window.addEventListener('touchend', function (e) {
+    var ok = tap0;
+    tap0 = null;
+    if (ok) handle(e);
+  }, { capture: true, passive: false });
   window.addEventListener('keydown', function (e) {
     if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey || String(e.key).toLowerCase() !== 'k') return;
     if (S.isOpen()) { e.preventDefault(); e.stopPropagation(); S.close(); return; }
@@ -905,6 +922,86 @@
     e.preventDefault(); e.stopPropagation();
     S.open({ desk: true, config: cfg });
   }, true);
+  // ── Pull down on Home to show the field (iOS style, variant A) ─────────────────────────────────────────────
+  // The field starts hidden (height 0 in casora_mobile_weather: --casora-search-reveal). Pulling down at the top of
+  // Home shows it as far as one pulls, let go past half and it stays; scrolling down past it hides it again (the
+  // page keeps its place). A keyboard focus on it (Tab) shows it too. The template marks its card and whether the
+  // field is on (window._casoraSearchHead / _casoraSearchOn).
+  var REVEAL = 56, reveal = 0, pull = null, scroller = null;
+  function setReveal(px, drag) {
+    reveal = Math.max(0, Math.min(REVEAL, px));
+    var st = document.documentElement.style;
+    st.setProperty('--casora-search-reveal', Math.round(reveal) + 'px');
+    st.setProperty('--casora-search-reveal-o', String(Math.round(Math.min(1, reveal / REVEAL) * 100) / 100));
+    st.setProperty('--casora-search-reveal-t', drag ? '0ms' : '280ms');
+    st.setProperty('--casora-search-reveal-of', reveal >= REVEAL ? 'visible' : 'hidden');
+  }
+  S.reveal = function (on) { setReveal(on ? REVEAL : 0); };
+  S.revealed = function () { return reveal >= REVEAL; };
+  S.REVEAL = REVEAL;
+  function headNow() {
+    var h = window._casoraSearchHead;
+    return h && h.isConnected && window._casoraSearchOn && (!window._casoraFilter || window._casoraFilter.get() === 'all') ? h : null;
+  }
+  function scrollerOf(el) {
+    var node = el;
+    for (var i = 0; node && i < 40; i++) {
+      if (node.nodeType === 1) {
+        try {
+          var cs = getComputedStyle(node);
+          if ((cs.overflowY === 'auto' || cs.overflowY === 'scroll') && node.scrollHeight > node.clientHeight + 40) return node;
+        } catch (e) { /* ignore */ }
+      }
+      node = node.parentNode || node.host || null;
+    }
+    return window;
+  }
+  function topNow(head) {
+    if (!scroller || (scroller !== window && !scroller.isConnected)) scroller = scrollerOf(head);
+    return scroller === window ? (window.scrollY || document.documentElement.scrollTop || 0) : scroller.scrollTop;
+  }
+  window.addEventListener('touchstart', function (e) {
+    pull = null;
+    var head = headNow(), t = e.touches && e.touches[0];
+    if (!head || !t || e.touches.length !== 1 || S.isOpen() || fromField(e)) return;
+    if (window.casoraPopup && window.casoraPopup.current) return;
+    if (topNow(head) > 2) return;
+    pull = { x: t.clientX, y: t.clientY, base: reveal, on: false };
+  }, { capture: true, passive: true });
+  window.addEventListener('touchmove', function (e) {
+    var t = e.touches && e.touches[0];
+    if (!pull || !t) return;
+    var dx = t.clientX - pull.x, dy = t.clientY - pull.y;
+    if (!pull.on) {
+      if (Math.abs(dy) < 6) return;
+      if (Math.abs(dx) > Math.abs(dy) || (dy < 0 && pull.base === 0)) { pull = null; return; }
+      pull.on = true;
+    }
+    setReveal(pull.base + (dy > 0 ? dy * 0.6 : dy), true);
+  }, { capture: true, passive: true });
+  var settle = function () {
+    if (pull && pull.on) setReveal(reveal > REVEAL * 0.45 ? REVEAL : 0);
+    pull = null;
+  };
+  window.addEventListener('touchend', settle, { capture: true, passive: true });
+  window.addEventListener('touchcancel', settle, { capture: true, passive: true });
+  // Scrolled down past the field: hide it, the content stays where it is.
+  window.addEventListener('scroll', function () {
+    if (!reveal || pull) return;
+    var head = headNow();
+    if (!head) return;
+    var top = topNow(head);
+    if (top <= REVEAL + 8) return;
+    setReveal(0, true);
+    try { if (scroller === window) window.scrollBy(0, -REVEAL); else scroller.scrollTop = top - REVEAL; } catch (e) { /* ignore */ }
+  }, { capture: true, passive: true });
+  window.addEventListener('focusin', function (e) { if (fromField(e) && !S.revealed()) S.reveal(true); }, true);
+  // Another filter (a room, a category) or another page: hidden again on the way back.
+  var hideAgain = function () { if (reveal && !pull) setReveal(0); };
+  window.addEventListener('location-changed', hideAgain);
+  if (window._casoraFilter && window._casoraFilter.onChange) window._casoraFilter.onChange(function (v) { if (v !== 'all') hideAgain(); });
+  setReveal(0);
+
   // A room change or another page closes the sheet.
   window.addEventListener('location-changed', function () { if (S.isOpen()) S.close(true); });
   window.addEventListener('popstate', function () { if (S.isOpen()) S.close(true); });
