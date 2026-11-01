@@ -21,6 +21,8 @@
 // no doubled phase/program rows, forecast as one row, care right (only what is due), lists right (§2: left only the
 // stage), the calm two-step „Programm abbrechen“ pill, the phone in one column without scrolling far. Dropped with v3:
 // bar geometry and the column balance (left holds only the stage).
+// 01.11.2026 (owner): the car's tank/battery level stands in the dial only (ring + fact, orange at 15 % and below), the
+// printer's percent only as the ring, its text „Fertig um HH:MM Uhr“ (r446).
 import { open, casoraDashboards, dashboard, cards, fakeStates, check, need, finish } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -145,6 +147,14 @@ const measure = (pg) => pg.evaluate(() => {
     out.stage = { ...box(st), dial: st.getAttribute('data-casora-dial'), pct: dl ? Number(dl.getAttribute('aria-valuenow')) : null,
       text: [...st.querySelectorAll('*')].filter((e) => e.children.length === 0 && vis(e)).map((e) => e.textContent.trim()).filter(Boolean).join(' | ') };
   }
+  // Any v3 stage (the car is S7): code, ring colour (--dl-col of the dial) and the text in the dial.
+  const sa = window.__pierce('[data-casora-stage]', root).filter(vis)[0];
+  if (sa) {
+    const dla = sa.querySelector('.hui-dl');
+    out.anyStage = { code: sa.getAttribute('data-casora-stage'), dial: sa.getAttribute('data-casora-dial'),
+      col: dla ? (dla.getAttribute('style') || '').replace(/^.*--dl-col:\s*([^;]+);?.*$/, '$1') : null,
+      text: [...sa.querySelectorAll('*')].filter((e) => e.children.length === 0 && vis(e)).map((e) => e.textContent.trim()).filter(Boolean).join(' | ') };
+  }
   return out;
 });
 // Sand = fast durchsichtig (Alpha < 0,5) oder wenig Farbe; Rot = kräftig und rot.
@@ -224,8 +234,11 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
       await page.waitForTimeout(800);
       await check('Auto ' + v + ' %: Popup offen', await openPopup(page, 'casora_car', false));
       const m = await measure(page);
-      // v3: the tank level is in the popup's text (stage/list, r89 checks the car popup itself); no fake slider block.
-      await check('Auto ' + v + ' %: Tank/Akku ' + v + ' % im Popup', m && new RegExp('\\b' + v + '\\s?%').test(m.text || ''), m && m.text);
+      // v3 (owner, 01.11.2026): range and fill level live in the dial only, the list no longer repeats them – the
+      // level fills the ring and stands as a fact („Tank 40 %“) in the dial; at 15 % and below the ring is orange.
+      const sg = m && m.anyStage;
+      await check('Auto ' + v + ' %: Tank/Akku ' + v + ' % im Dial', sg && sg.dial === 'level' && new RegExp('(Tank|Akku)\\b.*\\b' + v + '\\s?%').test(sg.text), sg);
+      await check('Auto ' + v + ' %: Ring ' + (warn ? 'im Warn-Ton (orange)' : 'nicht im Warn-Ton'), sg && /orange/.test(sg.col || '') === warn, sg && sg.col);
       await check('Auto ' + v + ' %: kein Verlaufsblock', m && m.blocks === 0 && m.block66 === 0, m && { blocks: m.blocks, block66: m.block66 });
       await closePopup(page);
     }
@@ -256,7 +269,8 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
     const m = await measure(page);
     await check('Drucker: Restzeit groß auf der Bühne', m && m.stage && /Std\. übrig/.test(m.stage.text), m && m.stage);
     await check('Drucker: Fortschritt 42 als Ring der Bühne', m && m.stage && m.stage.dial === 'level' && Math.abs(m.stage.pct - 42) <= 1, m && m.stage);
-    await check('Drucker: „42 %“ und „Fertig gegen“ auf der Bühne', m && m.stage && /42\s%/.test(m.stage.text) && /Fertig gegen \d\d:\d\d Uhr/.test(m.stage.text), m && m.stage && m.stage.text);
+    // r446 (owner, 01.11.2026): the ring shows the percent (checked above), the text says „Fertig um HH:MM Uhr“.
+    await check('Drucker: „Fertig um … Uhr“ auf der Bühne', m && m.stage && /Fertig um \d\d:\d\d Uhr/.test(m.stage.text), m && m.stage && m.stage.text);
     await check('Drucker: keine Zeile „Fertig gegen“ unter „Druck“', m && !m.rows.some((r) => /^Fertig gegen/.test(r)), m && m.rows);
     await closePopup(page);
   } else await check('Drucker: Kachel im Dashboard', false);
