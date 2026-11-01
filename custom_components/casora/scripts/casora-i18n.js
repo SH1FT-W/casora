@@ -348,6 +348,8 @@
 
   var patched = false;
   function redraw() {
+    // casora-core batches it with the other late load events; the own walk is for a core not there yet.
+    if (typeof window.casoraKickAll === 'function') { window.casoraKickAll('i18n'); return; }
     var out = [];
     (function walk(root, d) {
       if (!root || d > 30 || !root.querySelectorAll) return;
@@ -451,7 +453,14 @@
       // erst noch (i18n/<lang>.json), zeichnet arrived() neu.
       if (!phTable()) return;
       setTimeout(redraw, 0);
-      setTimeout(redraw, 2000);
+      // Second pass for a language that changed while loading (HA reports the server's first,
+      // then the profile's). With the same language and table every card since then drew translated.
+      var first = { lang: ph.lang, table: ph.table };
+      setTimeout(function () {
+        phTable();
+        if (ph.lang === first.lang && ph.table === first.table) return;
+        redraw();
+      }, 2000);
     });
   }
 
@@ -471,6 +480,6 @@
   var w = window._casoraCoreWaiters || window._casoraKicked;
   if (!w || typeof window.casoraKick !== 'function') return;
   setTimeout(function () {
-    w.forEach(function (el) { window.casoraKick(el); });
+    w.forEach(function (el) { if (window.casoraKickSoon) window.casoraKickSoon(el); else window.casoraKick(el); });
   }, 0);
 })();
