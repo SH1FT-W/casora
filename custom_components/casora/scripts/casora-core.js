@@ -12310,8 +12310,8 @@ window.casoraMenuGlass = {
       + stGlyph(moonIcon(it.icon), 'ic') + '<span' + moonWordFit(it.text) + '>' + esc(it.text) + '</span>'
       + '<div class="hui-mm-src" style="display:none !important;">' + proxies + '</div></div>';
   }
-  // The menu itself: a plate on the page (above the popup), next to the moon and always inside the window – below
-  // the moon, else above; on the phone the same, at most the window's width less 16. Hinterlegt = chosen (no check mark,
+  // The menu itself: a plate on the page (above the popup), next to the moon, inside the popup below its head and
+  // always inside the window – below the moon, else above, else scrolling (moonMenuPlace); on the phone the same, at most the window's width less 16. Hinterlegt = chosen (no check mark,
   // popup-geo „haken“). Tap beside it (veil) or Esc closes; arrows move, Enter/Space picks.
   var MM_CSS = ':host{all:initial;position:fixed;inset:0;z-index:2147483000;font-family:var(--primary-font-family, Inter, system-ui, sans-serif);}'
     + '.veil{position:fixed;inset:0;background:transparent;}'
@@ -12337,6 +12337,43 @@ window.casoraMenuGlass = {
     + '.ic .g{width:20px;height:20px;background-color:currentColor;--mdc-icon-size:20px;}.ic ha-icon.g{background:none;}'
     + '.t{flex:1;min-width:0;}'
     + '@media (prefers-reduced-motion:reduce){.pane{animation:none;}.row{transition:none;}}';
+  // Where the menu may lie: inside the popup's surface and below its head (desktop, 01.11.2026: a long effects list
+  // opened upwards over the popup title), always inside the window. Without a popup the window less 8.
+  function moonMenuBounds(moon) {
+    var W = window.innerWidth, H = window.innerHeight, b = { left: 8, top: 8, right: W - 8, bottom: H - 8 };
+    var n = moon, pop = null;
+    for (var i = 0; n && i < 80; i++) {
+      if (n.nodeType === 1 && n.localName === 'casora-popup') { pop = n; break; }
+      n = n.parentNode || n.host || null;
+    }
+    var sr = pop && pop.shadowRoot;
+    var surf = sr && sr.querySelector('.surface'), head = sr && sr.querySelector('.header');
+    var s = surf && surf.getBoundingClientRect();
+    if (s && s.width && s.height) {
+      b.left = Math.max(b.left, s.left + 8); b.right = Math.min(b.right, s.right - 8);
+      b.top = Math.max(b.top, s.top + 8); b.bottom = Math.min(b.bottom, s.bottom - 8);
+    }
+    var h = head && !head.hidden && head.getBoundingClientRect();
+    if (h && h.height) b.top = Math.max(b.top, h.bottom + 4);
+    return b;
+  }
+  // Below the moon when it fits, else above when that fits, else on the side with more room with a limited height
+  // (the pane scrolls). Horizontally centred on the moon, kept inside the bounds.
+  function moonMenuPlace(mr, pw, ph, b) {
+    var gap = 8, cx = mr.left + mr.width / 2;
+    var left = Math.max(b.left, Math.min(b.right - pw, cx - pw / 2));
+    var roomB = b.bottom - (mr.bottom + gap), roomA = (mr.top - gap) - b.top;
+    if (ph <= roomB) return { left: left, top: mr.bottom + gap, below: true, maxH: 0 };
+    if (ph <= roomA) return { left: left, top: mr.top - gap - ph, below: false, maxH: 0 };
+    // Not enough room on either side of the moon: the larger side, at least 120 high (then overlapping the moon
+    // rather than the head).
+    if (roomB >= roomA) {
+      var hB = Math.max(Math.min(120, b.bottom - b.top), roomB);
+      return { left: left, top: Math.max(b.top, Math.min(mr.bottom + gap, b.bottom - hB)), below: true, maxH: hB };
+    }
+    var hA = Math.max(Math.min(120, b.bottom - b.top), roomA);
+    return { left: left, top: b.top, below: false, maxH: hA };
+  }
   var mmOpen = null;
   function moonMenuClose() {
     if (!mmOpen) return;
@@ -12365,11 +12402,10 @@ window.casoraMenuGlass = {
       }).join('') + '</div>';
     document.body.appendChild(host);
     var pane = sr.querySelector('.pane'), mr = moon.getBoundingClientRect();
-    var pw = pane.offsetWidth, ph = pane.offsetHeight, W = window.innerWidth, H = window.innerHeight;
-    var left = Math.max(8, Math.min(W - pw - 8, mr.left + mr.width / 2 - pw / 2));
-    var below = mr.bottom + 8 + ph <= H - 8, top = below ? mr.bottom + 8 : Math.max(8, mr.top - 8 - ph);
-    pane.style.left = left + 'px'; pane.style.top = top + 'px';
-    pane.style.setProperty('--o', (mr.left + mr.width / 2 - left) + 'px ' + (below ? 'top' : 'bottom'));
+    var pl = moonMenuPlace(mr, pane.offsetWidth, pane.offsetHeight, moonMenuBounds(moon));
+    pane.style.left = pl.left + 'px'; pane.style.top = pl.top + 'px';
+    if (pl.maxH) pane.style.maxHeight = pl.maxH + 'px';
+    pane.style.setProperty('--o', (mr.left + mr.width / 2 - pl.left) + 'px ' + (pl.below ? 'top' : 'bottom'));
     moon.setAttribute('aria-expanded', 'true');
     var items = Array.prototype.slice.call(sr.querySelectorAll('.row'));
     var pick = function (k) {
@@ -12407,7 +12443,7 @@ window.casoraMenuGlass = {
     if (viaKey) { var first = items.filter(function (x) { return x.classList.contains('on'); })[0] || items[0]; if (first) try { first.focus({ preventScroll: true }); } catch (e) {} }
     return true;
   }
-  window._casoraMoonMenu = { open: moonMenuOpen, close: moonMenuClose };
+  window._casoraMoonMenu = { open: moonMenuOpen, close: moonMenuClose, place: moonMenuPlace };
   // Moons named alike („WZ Dreamview An“, „WZ Dreamview Aus“) lose their common leading words, so the word that tells
   // them apart is the one on the moon (review 2, E07/T05); the full name stays the label and the tooltip.
   function moonShort(list) {

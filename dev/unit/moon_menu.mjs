@@ -42,7 +42,7 @@ assert.ok(!/moonmenu/.test(moons(items.slice(0, 4), null, {}).html), 'no menu up
 assert.ok(/t\.dataset\.casoraMoonmenu !== undefined[\s\S]{0,400}_casoraMoonMenu\.open\(t, ev\.detail === 0\)/.test(core), 'fire() opens the menu');
 assert.ok(core.indexOf('t.dataset.casoraMoonmenu !== undefined') < core.indexOf('if (t && t.dataset && t.dataset.casoraPage) {'), 'menu before the page handler');
 assert.ok(/ev\.key === 'Escape'/.test(src) && /\.veil'\)\.addEventListener\('click'/.test(src), 'Esc and a tap beside close');
-assert.ok(/Math\.max\(8, Math\.min\(W - pw - 8,/.test(src) && /max-width:min\(280px, calc\(100vw - 16px\)\)/.test(src), 'inside the window');
+assert.ok(/var W = window\.innerWidth, H = window\.innerHeight, b = \{ left: 8, top: 8, right: W - 8, bottom: H - 8 \}/.test(src) && /max-width:min\(280px, calc\(100vw - 16px\)\)/.test(src), 'inside the window');
 assert.ok(/\.row\.on\{background:var\(--casora-soft-row-active/.test(src) && !/mdi:check/.test(src), 'chosen row hinterlegt, no check mark');
 assert.ok(/px\.click\(\)/.test(src), 'a row clicks its proxy');
 // Rows like every Casora menu (design-regeln §0): 52 high, circle 36, pill 26, pane 34 (26 + 8 concentric).
@@ -50,3 +50,28 @@ assert.ok(/\.row\{[^}]*min-height:var\(--casora-menu-row-h, 52px\)[^}]*border-ra
 assert.ok(/\.ic\{[^}]*width:var\(--casora-ic-row, 36px\)/.test(src), 'circle 36');
 assert.ok(/border-radius:var\(--casora-menu-radius, 34px\)/.test(src), 'pane 34');
 console.log('moon_menu: ok');
+
+// Placement (desktop, 01.11.2026: a long effects list opened upwards over the popup title): the menu stays inside
+// the popup below its head – below the moon, else above, else the larger side with a limited height that scrolls.
+{
+  const place = win._casoraMoonMenu.place;
+  assert.equal(typeof place, 'function', 'place API');
+  const b = { left: 100, top: 160, right: 700, bottom: 900 }; // surface less 8, top = below the head
+  const moon = (top) => ({ left: 380, width: 76, top, bottom: top + 76 });
+  // Room below: opens below.
+  let p = place(moon(300), 240, 400, b);
+  assert.ok(p.below && p.top === 384 && !p.maxH, 'below when it fits');
+  // Moon low, room above: opens above, never above the head.
+  p = place(moon(760), 240, 400, b);
+  assert.ok(!p.below && p.top === 752 - 400 && p.top >= b.top && !p.maxH, 'above when it fits');
+  // Long list (16 effects, 52 each): neither side fits – the larger side, limited, inside the bounds.
+  p = place(moon(560), 240, 16 * 52 + 16, b);
+  assert.ok(!p.below && p.top === b.top && p.maxH === 560 - 8 - b.top, 'above side limited, starts below the head');
+  assert.ok(p.top + p.maxH <= 560 - 8, 'does not cover the moon');
+  p = place(moon(300), 240, 16 * 52 + 16, b);
+  assert.ok(p.below && p.top === 384 && p.maxH === 900 - 384 && p.top + p.maxH <= b.bottom, 'below side limited');
+  // Horizontally inside the popup.
+  p = place({ left: 640, width: 76, top: 300, bottom: 376 }, 240, 200, b);
+  assert.ok(p.left + 240 <= b.right && p.left >= b.left, 'inside left/right');
+}
+console.log('moon_menu placement ok');
