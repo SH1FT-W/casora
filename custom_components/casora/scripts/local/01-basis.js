@@ -666,7 +666,9 @@ window.casoraPopupTitle = function (card, variables, def, defaults) {
      a name template's result is only in the rendered card. */
   try {
     var nm = card && card.shadowRoot && card.shadowRoot.querySelector('#name');
-    var shown = nm ? String(nm.textContent || '').replace(/\s+/g, ' ').trim() : '';
+    /* A badge's name holds its title and its state line („Schlösser“ + „Verriegelt“): only the title (r361). */
+    var bt = nm && nm.querySelector ? nm.querySelector('.badge-title') : null;
+    var shown = nm ? String((bt || nm).textContent || '').replace(/\s+/g, ' ').trim() : '';
     if (shown) return shown;
   } catch (e) { /* not rendered */ }
   return typeDef || def || '';

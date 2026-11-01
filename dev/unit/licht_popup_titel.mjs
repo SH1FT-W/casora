@@ -40,5 +40,10 @@ assert.equal(title({}, { group: true }), 'Licht Wohnzimmer (Gruppe)', 'Gruppe oh
   assert.equal(window.casoraPopupTitle(card(''), {}, 'Universal-Kachel', ['Universal-Kachel']), 'Universal-Kachel', 'nothing shown: the type word');
   assert.equal(window.casoraPopupTitle(card('Abschäumer'), { room_name: 'Mein Titel' }, 'Universal-Kachel', []), 'Mein Titel', 'own title first');
   assert.equal(window.casoraPopupTitle(null, {}, 'Gerät', []), 'Gerät', 'no card');
+  // A badge's #name holds its title and its state line: the sub page of the phone's security hub read
+  // „Schlösser Verriegelt“ (gate 26.11.2, r361) – only the badge title.
+  const badge = { _config: { name: '[[[ return 1 ]]]' }, shadowRoot: { querySelector: (q) => (q === '#name'
+    ? { textContent: 'Schlösser Verriegelt', querySelector: (q2) => (q2 === '.badge-title' ? { textContent: 'Schlösser' } : null) } : null) } };
+  assert.equal(window.casoraPopupTitle(badge, {}, 'Schlösser', ['Locks']), 'Schlösser', 'badge: title without its state line');
 }
 console.log('ok licht_popup_titel');
