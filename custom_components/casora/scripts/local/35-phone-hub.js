@@ -450,6 +450,18 @@
       o.segs = rows.map(function (c) { return { ok: true, tone: c.home ? 'good' : 'off', label: c.title || c.name || '' }; });
       return UI.stage('status', o);
     }
+    // Climate (detail round #22): the badge's sub is a bare number („21°“, small and without a word) – the dial says how
+    // it is („Angenehm“, from the temperature row) and the readings as facts („Temperatur 21°“, „Luftfeuchtigkeit 55 %“).
+    if (cat === 'climate' && /^[\d−-]/.test(String(o.text).trim())) {
+      var wordC = null, factsC = [];
+      rows.forEach(function (c) {
+        var pp = String(c.sub || '').split(' · ');
+        if (pp.length < 2 || !/\d/.test(pp[pp.length - 1])) return;
+        if (!wordC && /[A-Za-zÄÖÜäöü]/.test(pp[0]) && !/\d/.test(pp[0])) wordC = pp[0];
+        if (factsC.length < 3) factsC.push({ label: c.title || '', value: pp[pp.length - 1] });
+      });
+      if (wordC) { o.text = wordC; o.facts = factsC; }
+    }
     var lv = rows.map(function (c) { return levelOf(cat, c, hass); });
     o.tone = lv.indexOf('alarm') >= 0 ? 'bad' : lv.indexOf('warn') >= 0 ? 'warn' : 'good';
     // Dial: one segment per row (lock, contact, room …) in its traffic-light colour.
