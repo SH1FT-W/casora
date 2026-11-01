@@ -399,7 +399,7 @@
     + 'padding:calc(env(safe-area-inset-top, 0px) + 12px) max(env(safe-area-inset-right, 0px), var(--casora-rail-left, 16px)) 12px max(env(safe-area-inset-left, 0px), var(--casora-rail-left, 16px));}'
     + '.cs-bar{display:flex;align-items:center;gap:var(--casora-space-3, 12px);}'
     + '.cs-field{flex:1;min-width:0;display:flex;align-items:center;gap:var(--casora-space-2, 8px);height:44px;padding:0 12px;border-radius:var(--casora-r-element, 18px);'
-    + 'background:var(--casora-search-field, var(--casora-entity-background, rgba(251,248,243,.95)));color:var(--casora-entity-name, #3a322b);box-shadow:var(--casora-shadow-rest, 0 2px 8px rgba(0,0,0,.08));}'
+    + 'background:var(--casora-search-field, var(--casora-window-pane, var(--casora-menu-pane-webkit, var(--casora-entity-background))));color:var(--casora-entity-name, var(--primary-text-color));box-shadow:var(--casora-shadow-rest, 0 2px 8px rgba(0,0,0,.08));}'
     + '.cs-field svg{flex:none;width:18px;height:18px;opacity:.6;}'
     + '.cs-in{flex:1;min-width:0;height:100%;border:0;outline:0;background:transparent;color:inherit;font:inherit;font-size:var(--casora-fs-row, 16px);-webkit-appearance:none;appearance:none;padding:0;}'
     + '.cs-in::-webkit-search-cancel-button{display:none;}'
