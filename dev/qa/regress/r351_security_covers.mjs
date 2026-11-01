@@ -25,6 +25,11 @@ const covers = S.filter((s) => s.entity_id.startsWith('cover.') && !['garage', '
 await need('four covers in the test house', covers.length === 4, covers.map((s) => s.entity_id));
 const IDS = covers.map((s) => s.entity_id);
 const NAME = ['QA Rollo Terrasse', 'QA Rollo Küche', 'QA Rollo Schlafzimmer', 'QA Rollo Büro'];
+// Popup rows drop the leading words all names share (owner, 01.11.2026, casoraDropCommonPrefix): „QA Rollo Terrasse“ → „Terrasse“.
+// The row text starts with the name, the room (sub line) follows, so rows are matched by their start.
+const SHORT = NAME.map((n) => n.replace(/^QA Rollo /, ''));
+// A group of one row keeps the full name (the prefix rule needs two names), so a lone open cover reads „QA Rollo Küche“.
+const isRow = (row, i) => row.startsWith(NAME[i]) || row.startsWith(SHORT[i]);
 
 const dash = await casoraDashboard((d) => (d.config.views || []).length > 1);
 await need('Casora dashboard with its phone counterpart', dash && dash.phone);
@@ -108,11 +113,12 @@ const run = async (tag, page, mobile, pre) => {
   await need(tag + ': tap opens the covers popup', await offen(page));
   let p = await stable(page, POPUP, null, { max: 10000, until: (v) => v && v.rows.length >= 4 });
   await check(tag + ': title „Jalousien“', p && /^Jalousien/.test(p.title), p && p.title);
-  const at = (n) => (p ? p.rows.findIndex((r) => r.includes(n)) : -1);
-  await check(tag + ': open ones first with „Schließen“', p && at(NAME[0]) === 0 && at(NAME[1]) === 1
+  const at = (n) => (p ? p.rows.findIndex((r) => r.startsWith(n)) : -1);
+  await check(tag + ': rows drop the shared „QA Rollo“', p && p.rows.length >= 4 && !p.rows.some((r) => r.includes('QA Rollo')), p && p.rows);
+  await check(tag + ': open ones first with „Schließen“', p && at(SHORT[0]) === 0 && at(SHORT[1]) === 1
     && /Schließen$/.test(p.rows[0]) && /40 % geöffnet/.test(p.rows[1]), p && p.rows);
   await check(tag + ': sections „Offen“, „Geschlossen“ and „Alle schließen“', p && ['Offen', 'Geschlossen', 'Alle schließen'].every((x) => p.labels.includes(x)), p && p.labels);
-  await check(tag + ': closed ones below with „Geschlossen“', p && at(NAME[2]) > 1 && /Geschlossen$/.test(p.rows[at(NAME[2])]), p && p.rows);
+  await check(tag + ': closed ones below with „Geschlossen“', p && at(SHORT[2]) > 1 && /Geschlossen$/.test(p.rows[at(SHORT[2])]), p && p.rows);
   await check(tag + ': stage „2 von 4 geöffnet“, status line „Bis Sonnenaufgang“', p && /2 von 4 geöffnet/.test(p.stage) && /Bis Sonnenaufgang/.test(p.text), p && { stage: p.stage, line: p.text });
   await shoot(page, pre + '-2-popup.png');
   // „Schließen“ calls cover.close_cover for that cover; „Alle schließen“ for both open ones.
@@ -121,11 +127,12 @@ const run = async (tag, page, mobile, pre) => {
   await stub(page);
   const rowAt = await page.evaluate((n) => {
     const s = window.casoraPopup.surface;
-    const r = window.__pierce('.hui-row', s).find((x) => x.textContent.includes(n) && x.getBoundingClientRect().height > 0);
+    const r = window.__pierce('.hui-row', s).find((x) => x.textContent.replace(/\s+/g, ' ').trim().startsWith(n) && x.getBoundingClientRect().height > 0);
     if (!r) return null;
     const q = r.getBoundingClientRect();
     return { x: q.x + q.width - 40, y: q.y + q.height / 2 };
-  }, NAME[0]);
+  }, SHORT[0]);
+  await check(tag + ': row „' + SHORT[0] + '“ found', !!rowAt);
   if (rowAt) await tap(rowAt);
   await page.waitForTimeout(700);
   const allAt = await page.evaluate(() => {
@@ -144,8 +151,8 @@ const run = async (tag, page, mobile, pre) => {
     && JSON.stringify(x[2].entity_id) === JSON.stringify([IDS[0], IDS[1]])), calls);
   // Closing while the popup is open: the cover moves to „Geschlossen“.
   await fake(cov(0, 'closed', 0));
-  p = await stable(page, POPUP, null, { max: 8000, until: (v) => v && v.rows[0] && v.rows[0].includes(NAME[1]) });
-  await check(tag + ': live: a closed cover leaves „Offen“', p && p.rows[0].includes(NAME[1]) && !p.labels.includes('Alle schließen'), p && p.rows);
+  p = await stable(page, POPUP, null, { max: 8000, until: (v) => v && v.rows[0] && isRow(v.rows[0], 1) });
+  await check(tag + ': live: a closed cover leaves „Offen“', p && isRow(p.rows[0], 1) && !p.labels.includes('Alle schließen'), p && p.rows);
   await page.evaluate(() => window.casoraPopup && window.casoraPopup.close && window.casoraPopup.close());
   await page.waitForTimeout(900);
   const b1 = await stable(page, look, 'casora_badge_security_covers', { max: 8000, until: (v) => v && v.sub === '1 geöffnet' });
