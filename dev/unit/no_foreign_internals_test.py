@@ -37,6 +37,10 @@ ALLOWED = {
         "recorder's documented statistics API, read only",
     ("ki.py", "import homeassistant.components.recorder.history"):
         "recorder's documented history API, read only",
+    # Update entities' full release notes: HA offers them only via websocket update/release_notes, which reads
+    # the entity from the update component the same way; called read only for the AI update check.
+    ("update_notes.py", "hass.data.get(DATA_COMPONENT)"):
+        "update entities' release notes (websocket update/release_notes has no Python API), read only",
     # Energy preferences: no websocket from Python; async_get_manager is the energy integration's accessor
     # (used by core's analytics too). Read only, never written.
     ("ki.py", "import homeassistant.components.energy.data.async_get_manager"):

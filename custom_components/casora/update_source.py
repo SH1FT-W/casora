@@ -28,7 +28,8 @@ from .const import DOMAIN, UPDATE_REPO, VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
-GITHUB_API = "https://api.github.com/repos/" + UPDATE_REPO
+GITHUB_REPOS = "https://api.github.com/repos/"
+GITHUB_API = GITHUB_REPOS + UPDATE_REPO
 # Former options (update server/token) – no longer read, only removed.
 LEGACY_OPTIONS = ("update_key", "update_server", "update_token")
 # Option "Beta versions" (Studio → Updates): the update entity also reports pre-releases.
@@ -86,12 +87,12 @@ def _pause_until(headers: Any) -> float:
     return now + RATE_PAUSE_S
 
 
-async def _get(hass: HomeAssistant, path: str, *, timeout: int = 20) -> Any:
-    """GET JSON from GitHub. Errors → UpdateSourceError."""
+async def _get(hass: HomeAssistant, path: str, *, timeout: int = 20, repo: str = UPDATE_REPO) -> Any:
+    """GET JSON from GitHub (repo: owner/name, default Casora's). Errors → UpdateSourceError."""
     data = hass.data.setdefault(DOMAIN, {})
     if time.time() < data.get(_PAUSE, 0):
         raise UpdateSourceError("rate_limited")  # limit reached: do not ask before the reset
-    url, headers = GITHUB_API + path, gh_headers()
+    url, headers = (GITHUB_API if repo == UPDATE_REPO else GITHUB_REPOS + repo) + path, gh_headers()
     etags: dict = data.setdefault(_ETAGS, {})
     cached = etags.get(url)
     if cached:
@@ -131,6 +132,18 @@ async def _releases(hass: HomeAssistant) -> list[dict]:
         if err.code != "not_found":
             raise
         _LOGGER.debug("Casora: %s nicht öffentlich erreichbar (404) – keine Updates", UPDATE_REPO)
+        return []
+    return body if isinstance(body, list) else []
+
+
+async def fetch_repo_releases(hass: HomeAssistant, repo: str, per_page: int = 30) -> list[dict]:
+    """Releases of any public GitHub repo (AI update check, update_notes.py); same ETag cache and
+    rate-limit pause as Casora's own requests. 404 = no releases."""
+    try:
+        body = await _get(hass, f"/releases?per_page={per_page}", repo=repo)
+    except UpdateSourceError as err:
+        if err.code != "not_found":
+            raise
         return []
     return body if isinstance(body, list) else []
 

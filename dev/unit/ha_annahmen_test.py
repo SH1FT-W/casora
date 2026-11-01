@@ -469,6 +469,26 @@ class Frontend(unittest.TestCase):
         self.assertEqual({k: found.get(k) for k in want}, want)
 
 
+class UpdateReleaseNotes(unittest.TestCase):
+    def test_release_notes_from_python(self):
+        """Full release notes of an update entity: the update component in hass.data[DATA_COMPONENT] finds the
+        entity, RELEASE_NOTES (16) says it has notes, async_release_notes() returns them - exactly what the
+        websocket command update/release_notes does.
+
+        Casora: update_notes.py entity_notes() collects them for the AI update check (ki/update.yaml) before
+        GitHub and the release page. Red: notes come another way now, adapt entity_notes()."""
+        from homeassistant.components import update as ha_update
+        from homeassistant.components.update import DATA_COMPONENT, UpdateEntity, UpdateEntityFeature
+
+        self.assertEqual(int(UpdateEntityFeature.RELEASE_NOTES), 16)
+        self.assertTrue(inspect.iscoroutinefunction(UpdateEntity.async_release_notes))
+        src = inspect.getsource(ha_update.websocket_release_notes)
+        self.assertIn("hass.data[DATA_COMPONENT].get_entity(", src)
+        self.assertIn("UpdateEntityFeature.RELEASE_NOTES", src)
+        self.assertIn("await entity.async_release_notes()", src)
+        self.assertEqual(str(DATA_COMPONENT), "update")
+
+
 class WeatherAttributes(unittest.TestCase):
     """Weather popup (#56). Casora: scripts/local/00-finder.js casoraDevice.weatherSources reads the felt temperature
     and the extra values from the weather entity's state attributes by these names, with the units in

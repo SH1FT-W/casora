@@ -1,5 +1,6 @@
 # Casora: KI-Einschätzung anstehender Updates (Dienst casora.update_pruefen; täglich, falls eingestellt).
-# Variablen: request (update.* oder leer = alle), sensor_id, ai_web_entity, sprache.
+# Variablen: request (update.* oder leer = alle), sensor_id, ai_web_entity, sprache,
+# release_notes ({entity_id: {text, source}}, von ki.py vorab geladen).
 - event: casora_update_ai_prune
   event_data: {}
 - variables:
@@ -43,9 +44,11 @@
           \ %} Release-URL: {{ url or 'keine' }} {% if summ %}Kurzfassung der Integration: {{ summ }}{% endif %} {% if ns.m\
           \ %}Passende installierte Integration: {{ ns.m }} ({{ integration_entities(ns.m) | count }} Entitäten, z. B.: {{\
           \ integration_entities(ns.m)[:40] | join(', ') }}){% endif %}"
+    # Notes collected by ki.py (update_notes.py) per entity: {"text", "source"}. The text is read inside
+    # the instructions template, not as a variable: HA parses rendered variables (JSON-like notes would
+    # turn into a list or a number).
     - variables:
-        notizen: "{% set url = state_attr(repeat.item, 'release_url') or '' %}{{ casora_notes | default('') if casora_repo\
-          \ | default('') and casora_repo in url else '' }}"
+        quelle: "{{ ((release_notes | default({})).get(repeat.item) or {}).get('source', '') }}"
     - event: casora_update_ai_result
       event_data:
         entity_id: '{{ eid }}'
@@ -60,7 +63,7 @@
       data:
         entity_id: '{{ ai_web_entity }}'
         task_name: Casora Update-Analyse {{ name }}
-        instructions: 'Du prüfst ein anstehendes Update für ein bestimmtes Home-Assistant-System auf Breaking Changes und
+        instructions: '{% set notizen = ((release_notes | default({})).get(eid) or {}).get(''text'', '''') %}Du prüfst ein anstehendes Update für ein bestimmtes Home-Assistant-System auf Breaking Changes und
           nötige Schritte, die GENAU DIESES System betreffen. Antworte auf {{ sprache | default(''Deutsch'') }}, knapp, ohne Markdown.
 
 
@@ -72,19 +75,25 @@
 
           {{ kontext }}
 
-          {% if notizen %}RELEASE-NOTES (vollständig, alle Versionen nach der installierten; nur Versionen bis einschließlich
+          {% if notizen %}RELEASE-NOTES (Quelle: {{ quelle }}; nur Versionen nach {{ v_from }} bis einschließlich
           {{ v_to }} zählen)
 
           {{ notizen }}
+
+          {% else %}RELEASE-NOTES: keine gefunden (die Update-Entität liefert keine, keine Kurzfassung, kein
+          GitHub-Release, Release-URL nicht lesbar).
 
           {% endif %}
 
 
           VORGEHEN
 
-          - {% if notizen %}Die Release-Notes stehen oben unter RELEASE-NOTES, kein Abruf nötig. Werte nur sie aus.{% else
-          %}Lies die Release-Notes (web_fetch auf die Release-URL; bei Home Assistant Core den Blogpost und dort den Abschnitt
-          "Backward-incompatible changes"; sonst per web_search).{% endif %}
+          - {% if notizen %}Die Release-Notes stehen oben unter RELEASE-NOTES, kein Abruf nötig. Werte sie aus.{% else
+          %}Es liegen keine Release-Notes vor. Hast du Web-Zugriff, darfst du sie suchen (web_search). Sonst schätze
+          nach Versionssprung (Patch, Minor, Major, übersprungene Versionen), Art des Updates und betroffener Integration
+          bzw. Gerät: kleiner Patch- oder Firmware-Sprung ohne Hinweise = info, großer Sprung (neue Hauptversion,
+          viele übersprungene Versionen) = action mit dem Schritt, die Release-Notes vor dem Update selbst zu lesen.
+          Sag in summary ausdrücklich, dass keine Release-Notes vorlagen und die Einschätzung daraus folgt.{% endif %}
 
           - Überspringt das Update Versionen (z. B. 2026.8 → 2026.10 oder v6.3 → v7.1), berücksichtige ALLE Zwischenversionen.
 
@@ -109,7 +118,7 @@
 
           - info: Änderungen ohne Handlungsbedarf für dieses System (auch: Breaking Changes nur für nicht installierte Integrationen)
 
-          - unknown: keine Release-Notes auffindbar
+          - unknown: nur wenn weder Release-Notes noch Versionen und Art des Updates eine Einschätzung erlauben
 
           In ''affects'' nur Dinge nennen, die in diesem System tatsächlich vorkommen (Integration, Entität, Gerät). In ''todo''
           konkrete Schritte, leer wenn nichts zu tun ist. ''headline'' höchstens 60 Zeichen.'
