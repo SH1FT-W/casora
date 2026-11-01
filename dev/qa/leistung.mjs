@@ -184,7 +184,8 @@ async function metrics(page, cdp) {
 }
 
 async function openBrowser(name) {
-  const o = await H.open({ ...VIEWS[name] });
+  // httpCache: ohne Routing, sonst misst „warm“ nicht warm (Playwright schaltet mit jeder Route den Cache ab).
+  const o = await H.open({ ...VIEWS[name], httpCache: true });
   await o.context.addInitScript(INSTR, { stacks: !!process.env.LEISTUNG_STAPEL });
   await o.context.addInitScript(() => { window.CASORA_QA_NO_WELLE_AUTO = true; });
   // LEISTUNG_INIT=<datei.js>: zusätzliches Skript vor allem anderen (A/B-Versuch ohne HA-Änderung).
@@ -199,7 +200,7 @@ async function load(page, url, net) {
   const wsBytes = { n: 0, max: 0, sum: 0 };
   const onWs = (w) => w.on('framereceived', (f) => { const l = typeof f.payload === 'string' ? Buffer.byteLength(f.payload) : f.payload.length; wsBytes.n++; wsBytes.sum += l; wsBytes.max = Math.max(wsBytes.max, l); });
   page.on('websocket', onWs);
-  await page.goto(BASE + url, { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + url, { waitUntil: 'domcontentloaded', timeout: 120000 });
   await page.addScriptTag({ content: H.PIERCE });
   await page.waitForFunction(() => window.__lp && window.__lp.firstTile !== null && window._casoraLocalLoaded, null, { timeout: 90000 });
   const settled = await quiet(page, 0, { quietMs: 1000, max: 25000 });
@@ -230,7 +231,7 @@ function netRecorder(page) {
 }
 const group = (p) => /casora-templates\.json|\/api\/casora\/templates/.test(p) ? 'Vorlagen (Studio)'
   : /\/casora_scripts\/local\//.test(p) ? 'scripts/local/*.js' : /casora-core\.js/.test(p) ? 'casora-core.js'
-    : /casora-i18n|\/i18n|phrases|translations/.test(p) ? 'i18n' : /\/casora_scripts\//.test(p) ? 'übrige Casora-Skripte'
+    : /casora-(panel-)?i18n|\/casora_(scripts|panel)\/i18n\//.test(p) ? 'i18n' : /\/casora_scripts\//.test(p) ? 'übrige Casora-Skripte'
       : /\/casora_panel\/|casora-studio/.test(p) ? 'Studio (Panel)' : /\/casora_(assets|images|fonts|room_icons)/.test(p) ? 'Casora-Bilder/Schriften'
         : /\/local\/community\/|\/hacsfiles\/|\/uix\//.test(p) ? 'Fremdkarten (HACS)' : /\/frontend_(latest|es5)\//.test(p) ? 'HA-Frontend' : 'sonstiges';
 function sumNet(rows) {
@@ -448,13 +449,20 @@ for (const g of GERAETE) {
       const o = await openBrowser(g);
       try {
         await o.context.addInitScript((d) => localStorage.setItem('casora_panel_last_dashboard', d), DASH);
-        await o.page.goto(BASE + '/casora-studio', { waitUntil: 'domcontentloaded' });
+        // Bytes beim Öffnen (kalt, neuer Browser): WebSocket-Antworten und HTTP über die Leitung.
+        const wsB = { n: 0, sum: 0, max: 0 };
+        o.page.on('websocket', (w) => w.on('framereceived', (f) => { const l = typeof f.payload === 'string' ? Buffer.byteLength(f.payload) : f.payload.length; wsB.n++; wsB.sum += l; wsB.max = Math.max(wsB.max, l); }));
+        const rowsS = netRecorder(o.page);
+        await o.page.goto(BASE + '/casora-studio', { waitUntil: 'domcontentloaded', timeout: 120000 });
         await o.page.addScriptTag({ content: H.PIERCE });
         await o.page.waitForFunction(() => { const p = window.__panel && window.__panel(); return !!(p && p._state && p._state.compact && p._state.compact.rooms); }, null, { timeout: 90000 });
         const tState = await o.page.evaluate(() => performance.now());
         const settled = await quiet(o.page, 0, { quietMs: 1000, max: 25000 });
         const lt = await o.page.evaluate(() => ({ n: window.__lp.longtasks.length, ms: window.__lp.longtasks.reduce((s, x) => s + x[1], 0), max: Math.max(0, ...window.__lp.longtasks.map((x) => x[1])) }));
-        res.studio.push({ geladen: +tState.toFixed(0), steht: +Math.max(settled, tState).toFixed(0), longN: lt.n, longMs: lt.ms, longMax: lt.max });
+        const netS = sumNet(rowsS);
+        const wire = Object.values(netS.gruppen).reduce((a, x) => a + x.wireKB, 0);
+        res.studio.push({ geladen: +tState.toFixed(0), steht: +Math.max(settled, tState).toFixed(0), longN: lt.n, longMs: lt.ms, longMax: lt.max,
+          wsKB: Math.round(wsB.sum / 1024), wsMaxKB: Math.round(wsB.max / 1024), netKB: wire, i18nKB: (netS.gruppen.i18n || {}).wireKB || 0, i18nN: (netS.gruppen.i18n || {}).n || 0 });
         console.log(`  Studio ${i + 1}: geladen ${tState.toFixed(0)} ms, steht ${Math.max(settled, tState).toFixed(0)} ms`);
       } finally { await o.browser.close(); }
     }
@@ -498,12 +506,19 @@ for (const [g, r] of Object.entries(R.geraete)) {
   if (r.raum.length) {
     s.raum_steht = median(r.raum.flat().map((x) => x.settled)); s.raum_renderMs = median(r.raum.flat().map((x) => x.renderMs)); s.raum_renders = median(r.raum.flat().map((x) => x.bc));
   }
-  if (r.studio.length) { s.studio_geladen = median(r.studio.map((x) => x.geladen)); s.studio_steht = median(r.studio.map((x) => x.steht)); s.studio_longMs = median(r.studio.map((x) => x.longMs)); }
+  if (r.studio.length) {
+    s.studio_geladen = median(r.studio.map((x) => x.geladen)); s.studio_steht = median(r.studio.map((x) => x.steht)); s.studio_longMs = median(r.studio.map((x) => x.longMs));
+    s.studio_wsKB = median(r.studio.map((x) => x.wsKB)); s.studio_wsMaxKB = median(r.studio.map((x) => x.wsMaxKB)); s.studio_netKB = median(r.studio.map((x) => x.netKB));
+    s.studio_i18nKB = median(r.studio.map((x) => x.i18nKB)); s.studio_i18nDateien = median(r.studio.map((x) => x.i18nN));
+  }
   if (r.update && r.update.ruhe60s) { s.ruhe60s_renders = r.update.ruhe60s.bc; s.ruhe60s_vollDurchlaeufe = r.update.ruhe60s.qsaStar; s.ruhe60s_requestUpdateLeer = r.update.ruhe60s.ruLeer; s.ruhe60s_timeouts = r.update.ruhe60s.timeouts; }
   if (r.update) for (const k of ['fremd', 'leistung', 'licht']) if (r.update[k]) { s['update_' + k + '_renders'] = r.update[k].bc; s['update_' + k + '_renderMs'] = r.update[k].renderMs; s['update_' + k + '_vollDurchlaeufe'] = r.update[k].qsaStar; }
   if (r.timer) { s.intervalle = r.timer.intervalle; s.mutationObserver = r.timer.mutationObserver.observing; }
   if (r.leck) { s.leck_popupKartenLebendig = r.leck.made ? `${r.leck.alive}/${r.leck.made}` : null; s.leck_listener = r.leck.nach65s.listeners - r.leck.vorher.listeners; s.leck_knoten = r.leck.nach65s.nodes - r.leck.vorher.nodes; s.leck_heapMB = +(r.leck.nach65s.heapMB - r.leck.vorher.heapMB).toFixed(1); }
-  if (r.netz) { s.requests = r.netz.requests; for (const [k, v] of Object.entries(r.netz.gruppen)) if (/Casora|casora|Vorlagen|i18n|Studio|local/.test(k)) s['kB_' + k] = `${v.rawKB}→${v.wireKB}`; }
+  if (r.netz) {
+    // Übersetzung beim Laden des Dashboards: Dateien und kB über die Leitung (Ziel: aktive Sprache, höchstens + Rückfall).
+    const i18n = r.netz.gruppen.i18n || { n: 0, wireKB: 0 }; s.laden_i18nDateien = i18n.n; s.laden_i18nKB = i18n.wireKB;
+    s.requests = r.netz.requests; for (const [k, v] of Object.entries(r.netz.gruppen)) if (/Casora|casora|Vorlagen|i18n|Studio|local/.test(k)) s['kB_' + k] = `${v.rawKB}→${v.wireKB}`; }
 }
 // Ausgelieferter Code (Dateien im Checkout, roh)
 const CC = new URL('../../custom_components/casora/', import.meta.url).pathname;

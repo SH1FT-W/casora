@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { espnRoute } from '../qa/fussball-espn.mjs';
+import { espnRoute, espnInit } from '../qa/fussball-espn.mjs';
 
 function findPlaywright() {
   if (process.env.PLAYWRIGHT_PATH) return process.env.PLAYWRIGHT_PATH;
@@ -54,7 +54,7 @@ export async function open({ width = 1440, height = 900, mobile = false, umzug =
     colorScheme: dark ? 'dark' : 'light',
     // touch/userAgent: eigene Werte (z. B. Tablet mit Touch, aber ohne Handy-Kennung) – sonst wie mobile.
     ...(gecko ? {} : { isMobile: mobile }), hasTouch: touch ?? mobile, locale, serviceWorkers: 'block',
-    userAgent: userAgent || (mobile ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148' : undefined),
+    userAgent: userAgent || (mobile ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148' : undefined),
   });
   const version = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/manifest.json', import.meta.url), 'utf8')).version;
   await context.addInitScript(([t, base, version, umzug, dark, theme]) => {
@@ -120,7 +120,10 @@ export async function open({ width = 1440, height = 900, mobile = false, umzug =
   // Fußball-Kachel im Testhaus: ESPN-Aufrufe immer fest beantworten. Ohne das fragt der
   // erfundene Verein die echte ESPN-Seite, die blockt Headless-Chrome per CORS und die
   // Konsole meldet Fehler (Gate 1.1.1). CASORA_ESPN_LIVE=1 lässt echte Aufrufe durch.
-  if (!process.env.CASORA_ESPN_LIVE) await espnRoute(context);
+  // httpCache: true (dev/qa/leistung.mjs, „warm“ laden): ohne Playwright-Routing, denn jede Route schaltet den
+  // HTTP-Cache des Browsers ab – ESPN dann per fetch-Ersatz in der Seite.
+  if (process.env.CASORA_ESPN_LIVE) { /* echte Aufrufe */ } else if (arguments[0] && arguments[0].httpCache && !process.env.CASORA_LOCAL) await espnInit(context);
+  else await espnRoute(context);
   // Eigenes Theme je Testbrowser (Gate 1.1.1): HA hält die Theme-Wahl auch je Benutzer auf dem
   // Server (frontend/subscribe_user_data, key „theme“). Setzt ein paralleler Test sie (z. B. der
   // Assistent „Wähle dein Design“), sprangen alle anderen Browser desselben Benutzers mit um –

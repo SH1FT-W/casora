@@ -227,7 +227,7 @@ async function newPage(browser, side, t) {
   const ctx = await browser.newContext({
     viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: vp.scale, colorScheme: t.dark ? 'dark' : 'light',
     isMobile: vp.mobile, hasTouch: vp.touch, locale: 'de-DE', timezoneId: 'Europe/Berlin', reducedMotion: 'reduce', serviceWorkers: 'block',
-    userAgent: vp.mobile ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148' : undefined,
+    userAgent: vp.mobile ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148' : undefined,
   });
   if (side === SIDES.neu && flag('neu-lokal')) {
     const CC = path.join(SIDES.neu.dir, 'custom_components/casora/');

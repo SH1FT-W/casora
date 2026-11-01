@@ -74,3 +74,22 @@ export async function espnRoute(target, { next = null } = {}) {
   });
   return calls;
 }
+
+// Same answers without Playwright routing: any route switches the browser's HTTP cache off, so a
+// "warm" load (dev/qa/leistung.mjs) fetched every file again. This wraps fetch in the page instead.
+export async function espnInit(context, { next = null } = {}) {
+  await context.addInitScript(([bodies]) => {
+    const orig = window.fetch;
+    if (!orig || orig.__casoraEspn) return;
+    const wrapped = function (input, init) {
+      const u = String((input && input.url) || input || '');
+      if (/^https:\/\/site\.api\.espn\.com\//.test(u)) {
+        const body = /\/standings/.test(u) ? bodies.standings : /\/summary\?/.test(u) ? bodies.summary : /\/teams\//.test(u) ? bodies.team : {};
+        return Promise.resolve(new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } }));
+      }
+      return orig.call(this, input, init);
+    };
+    wrapped.__casoraEspn = true;
+    window.fetch = wrapped;
+  }, [{ standings, summary, team: team(next) }]);
+}
