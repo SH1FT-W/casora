@@ -1574,22 +1574,63 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     return 'var(--casora-security-' + (lv || 'ok') + '-color' + (fallback ? ', ' + fallback : '') + ')';
   };
 
-  // ── Order of the security sub-entries (security_sub_order, 01.11.2026) ─────────
-  // The Studio's "Order" list in the security badge: one key per kind of entry. It orders the badge's sub-line
-  // (casoraSecuritySummary, o.order), its sub-badges (expanded row, separate badges, phone rows; layout-card config
-  // casora_sec_order, hook below) and so the security popup, which reads its rows from those sub-badges
-  // (35-phone-hub.js). Keys missing from the list follow in their usual order, unknown keys in the list are ignored.
-  // Without a list (or an empty one) the sub-line keeps its own order and the sub-badges follow KEYS – the
-  // sub-line's order (owner, 01.11.2026: one usual order everywhere).
-  //   casoraSecSub.KEYS                     – all keys, the Studio's default order (= the sub-line's)
-  //   casoraSecSub.keyOf(id, states)        → key of one entity
-  //   casoraSecSub.keyOfCard(cfg, states)   → key of a sub-badge card config, undefined for any other card
-  //   casoraSecSub.sort(list, order, keyOf) → new list, stable
-  //   casoraSecSub.cards(cards, order, states) → cards with only the security sub-badges reordered among their slots
-  //                                             (no order: KEYS)
-  if (!window.casoraSecSub) {
+  // ── Order of a group badge's sub-entries (security_sub_order 01.11.2026, climate_sub_order 01.11.2026) ─────────
+  // The Studio's "Order" list in the security and the climate badge: one key per kind of entry. It orders the badge's
+  // sub-line (security: casoraSecuritySummary, o.order), its sub-badges (expanded row, separate badges, phone rows;
+  // layout-card config casora_sec_order / casora_clim_order, hook below) and so the badge's popup, which reads its rows
+  // from those sub-badges (35-phone-hub.js). Keys missing from the list follow in their usual order, unknown keys in
+  // the list are ignored. Without a list (or an empty one) the sub-line keeps its own order and the sub-badges follow
+  // KEYS – the usual order (owner, 01.11.2026: one usual order everywhere).
+  // window.casoraSubOrder(KEYS, keyOfCard) builds one such API; casoraSecSub and casoraClimSub are the two of them:
+  //   .KEYS                     – all keys, the Studio's default order
+  //   .keyOfCard(cfg, states)   → key of a sub-badge card config, undefined for any other card
+  //   .clean(order)             → the known keys of a saved list, each once
+  //   .sort(list, order, keyOf) → new list, stable
+  //   .cards(cards, order, states) → cards with only this badge's sub-badges reordered among their slots (no order: KEYS)
+  //   casoraSecSub.keyOf(id, states) → key of one security entity
+  if (!window.casoraSecSub || !window.casoraClimSub) {
     (function () {
-      var KEYS = ['alarm', 'doors', 'gates', 'locks', 'windows', 'covers', 'cameras', 'other'];
+      var make = function (KEYS, keyOfCard) {
+        var clean = function (order) {
+          var out = [];
+          (Array.isArray(order) ? order : []).forEach(function (k) { if (KEYS.indexOf(k) >= 0 && out.indexOf(k) < 0) out.push(k); });
+          return out;
+        };
+        var sort = function (list, order, key) {
+          var o = clean(order);
+          if (!o.length || !Array.isArray(list)) return list;
+          // Kinds missing from the list follow in the usual order (KEYS), entries without a kind last.
+          var rank = function (x) {
+            var k = key(x), i = o.indexOf(k);
+            if (i >= 0) return i;
+            var j = KEYS.indexOf(k);
+            return o.length + (j < 0 ? KEYS.length : j);
+          };
+          return list.map(function (x, i) { return { x: x, i: i, r: rank(x) }; })
+            .sort(function (a, b) { return a.r - b.r || a.i - b.i; })
+            .map(function (e) { return e.x; });
+        };
+        var cards = function (list, order, states) {
+          if (!Array.isArray(list)) return list;
+          if (!clean(order).length) order = KEYS;
+          var at = [], sub = [];
+          list.forEach(function (c, i) { if (keyOfCard(c, states) !== undefined) { at.push(i); sub.push(c); } });
+          var sorted = sort(sub, order, function (c) { return keyOfCard(c, states); });
+          var out = list.slice();
+          at.forEach(function (i, j) { out[i] = sorted[j]; });
+          return out;
+        };
+        return { KEYS: KEYS, keyOfCard: keyOfCard, clean: clean, sort: sort, cards: cards };
+      };
+      window.casoraSubOrder = make;
+      var tplHit = function (cfg, TPL) {
+        if (!cfg || typeof cfg !== 'object') return undefined;
+        var t = [].concat(cfg.template || []);
+        for (var i = 0; i < t.length; i++) if (Object.prototype.hasOwnProperty.call(TPL, t[i])) return t[i];
+        return undefined;
+      };
+
+      // Security: alarm, doors, gates, locks, windows, blinds, cameras, other (the sub-line's order).
       var GATE = ['garage', 'gate', 'door'];
       var low = function (x) { return String(x == null ? '' : x).toLowerCase(); };
       var keyOf = function (id, states) {
@@ -1608,62 +1649,48 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         if (['door', 'garage_door', 'opening', ''].indexOf(dc) >= 0) return 'doors';
         return 'other';
       };
-      var TPL = { casora_badge_lock_group: 'locks', casora_badge_camera_group: 'cameras', casora_badge_security_covers: 'covers',
+      var SEC_TPL = { casora_badge_lock_group: 'locks', casora_badge_camera_group: 'cameras', casora_badge_security_covers: 'covers',
         casora_badge_contact_group: null, casora_badge_security: null };
-      var keyOfCard = function (cfg, states) {
-        if (!cfg || typeof cfg !== 'object') return undefined;
-        var t = [].concat(cfg.template || []), hit;
-        for (var i = 0; i < t.length; i++) if (Object.prototype.hasOwnProperty.call(TPL, t[i])) { hit = t[i]; break; }
+      var secCard = function (cfg, states) {
+        var hit = tplHit(cfg, SEC_TPL);
         if (hit === undefined) return undefined;
-        if (TPL[hit]) return TPL[hit];
+        if (SEC_TPL[hit]) return SEC_TPL[hit];
         var kind = ((cfg.variables || {}).contacts_kind);
         if (kind === 'door' || kind === 'window') return kind + 's';
         return keyOf(cfg.entity, states);
       };
-      var clean = function (order) {
-        var out = [];
-        (Array.isArray(order) ? order : []).forEach(function (k) { if (KEYS.indexOf(k) >= 0 && out.indexOf(k) < 0) out.push(k); });
-        return out;
-      };
-      var sort = function (list, order, key) {
-        var o = clean(order);
-        if (!o.length || !Array.isArray(list)) return list;
-        // Kinds missing from the list follow in the usual order (KEYS), entries without a kind last.
-        var rank = function (x) {
-          var k = key(x), i = o.indexOf(k);
-          if (i >= 0) return i;
-          var j = KEYS.indexOf(k);
-          return o.length + (j < 0 ? KEYS.length : j);
-        };
-        return list.map(function (x, i) { return { x: x, i: i, r: rank(x) }; })
-          .sort(function (a, b) { return a.r - b.r || a.i - b.i; })
-          .map(function (e) { return e.x; });
-      };
-      var cards = function (list, order, states) {
-        if (!Array.isArray(list)) return list;
-        if (!clean(order).length) order = KEYS;
-        var at = [], sub = [];
-        list.forEach(function (c, i) { if (keyOfCard(c, states) !== undefined) { at.push(i); sub.push(c); } });
-        var sorted = sort(sub, order, function (c) { return keyOfCard(c, states); });
-        var out = list.slice();
-        at.forEach(function (i, j) { out[i] = sorted[j]; });
-        return out;
-      };
-      window.casoraSecSub = { KEYS: KEYS, keyOf: keyOf, keyOfCard: keyOfCard, clean: clean, sort: sort, cards: cards };
+      window.casoraSecSub = make(['alarm', 'doors', 'gates', 'locks', 'windows', 'covers', 'cameras', 'other'], secCard);
+      window.casoraSecSub.keyOf = keyOf;
 
-      // layout-card: a row of sub-badges with casora_sec_order (button_card_templates.json) gets its cards in that order
-      // before it builds them, so the DOM order is the order everywhere (also for the popup's rows).
+      // Climate: temperature, humidity, air quality, blinds (the sub-row's order in button_card_templates.json).
+      var CLIM_TPL = { casora_badge_temp: 'temp', casora_badge_humidity: 'humidity', casora_badge_air_quality: 'quality',
+        casora_badge_climate_covers: 'covers' };
+      window.casoraClimSub = make(['temp', 'humidity', 'quality', 'covers'], function (cfg) {
+        var hit = tplHit(cfg, CLIM_TPL);
+        return hit === undefined ? undefined : CLIM_TPL[hit];
+      });
+
+      // layout-card: a row of sub-badges with casora_sec_order / casora_clim_order (button_card_templates.json) gets its
+      // cards in that order before it builds them, so the DOM order is the order everywhere (also for the popup's
+      // rows). The order used stays on the element (__casoraSubOrder) for the popup's extra rows (35-phone-hub.js).
+      var ROWS = { casora_sec_order: window.casoraSecSub, casora_clim_order: window.casoraClimSub };
       var hook = function (C) {
-        if (!C || !C.prototype || C.prototype.__casoraSecOrder) return;
+        if (!C || !C.prototype || C.prototype.__casoraSubOrderHook) return;
         var orig = C.prototype.setConfig;
         if (typeof orig !== 'function') return;
-        C.prototype.__casoraSecOrder = true;
+        C.prototype.__casoraSubOrderHook = true;
         C.prototype.setConfig = function (cfg) {
           try {
-            if (cfg && Object.prototype.hasOwnProperty.call(cfg, 'casora_sec_order') && Array.isArray(cfg.cards)) {
-              var ha = document.querySelector('home-assistant');
-              var S = (ha && ha.hass && ha.hass.states) || {};
-              cfg = Object.assign({}, cfg, { cards: cards(cfg.cards, cfg.casora_sec_order, S) });
+            if (cfg && Array.isArray(cfg.cards)) {
+              var ha = null, S = null;
+              Object.keys(ROWS).forEach(function (prop) {
+                if (!Object.prototype.hasOwnProperty.call(cfg, prop)) return;
+                if (!S) { ha = document.querySelector('home-assistant'); S = (ha && ha.hass && ha.hass.states) || {}; }
+                cfg = Object.assign({}, cfg, { cards: ROWS[prop].cards(cfg.cards, cfg[prop], S) });
+                var used = Object.assign({}, this.__casoraSubOrder);
+                used[prop] = cfg[prop];
+                this.__casoraSubOrder = used;
+              }, this);
             }
           } catch (e) { /* keep the row as it is */ }
           return orig.call(this, cfg);

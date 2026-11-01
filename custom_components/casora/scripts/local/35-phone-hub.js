@@ -99,6 +99,7 @@
     return out;
   };
 
+  var rowOrder = {};
   // Sub-badges of the category on Home (casora_mobile_sensor_chips › security_row / climate_row).
   var chipsOf = function (cat) {
     var row = CHIP_ROW[cat];
@@ -115,6 +116,9 @@
       field = room && room.shadowRoot && room.shadowRoot.querySelector('#badges_' + cat);
     }
     if (!field) return [];
+    // The order the row was built in (climate_sub_order, 00-finder.js hook): for the popup's own blinds row.
+    var lc = deep(field, function (n) { return n.localName === 'layout-card'; }, 1)[0];
+    rowOrder[cat] = (lc && lc.__casoraSubOrder) || {};
     return deep(field, function (n) { return n.localName === 'button-card' && /casora_badge_/.test(tpls(n).join(',')); })
       .filter(enabled)
       // A sub-badge that hides itself (its card display none, e.g. „Jalousien“ without blinds) is no row either.
@@ -271,11 +275,19 @@
 
   P.scan = function (cat) {
     return cached(cat, function () {
+      rowOrder[cat] = {};
       var chips = cat === 'presence' ? peopleOf() : chipsOf(cat);
       var rooms = roomsOf(cat);
-      // „Jalousien“ last in the overview, as in the sub-row (owner, 27.10.2026).
-      chips = chips.filter(function (c) { return !/casora_badge_climate_covers/.test(c.tpl || ''); })
-        .concat(chips.filter(function (c) { return /casora_badge_climate_covers/.test(c.tpl || ''); }));
+      // Climate: the rows in the sub-row's order – the usual one puts „Jalousien“ last (owner, 27.10.2026), an own
+      // order from the Studio (climate_sub_order, casoraClimSub in 00-finder.js) wherever it says.
+      var CS = window.casoraClimSub;
+      var climKey = function (c) { return c.blinds ? 'covers' : CS.keyOfCard({ template: (c.tpl || '').split(',') }); };
+      var climSort = function (list) {
+        if (cat !== 'climate' || !CS) return list;
+        var o = rowOrder.climate.casora_clim_order;
+        return CS.sort(list, CS.clean(o).length ? o : CS.KEYS, climKey);
+      };
+      chips = climSort(chips);
       // Climate: the blinds as one row „Jalousien“ in the overview (owner, 27.10.2026: shading is climate and
       // security), opening the blinds popup of just those – not as single devices by room.
       if (cat === 'climate' && blindsOut.length && homeVar('climate_blinds') !== false
@@ -285,6 +297,7 @@
           return ['open', 'opening'].indexOf(st.state) >= 0 || (isFinite(p) && p > 0); }).length;
         chips.push({ blinds: blindsOut.slice(), title: 'Jalousien', icon: 'cover_open', ids: blindsOut.slice(),
           sub: open ? (open === 1 ? '1 geöffnet' : open + ' geöffnet') : (blindsOut.length > 1 ? 'Alle geschlossen' : 'Geschlossen') });
+        chips = climSort(chips);
       }
       var watch = [];
       var add = function (x) { (x.ids || []).forEach(function (id) { if (watch.indexOf(id) < 0) watch.push(id); }); };

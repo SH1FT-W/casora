@@ -645,6 +645,22 @@ function secSubPresent(V, states, houseIds, covers) {
   if (covers) have.add("covers");
   return S.KEYS.filter((k) => have.has(k));
 }
+// Climate badge: its sub-badges (climate_sub_order list in the Studio) in the usual order (casoraClimSub.KEYS,
+// 00-finder.js) – temperature, humidity, air quality, and on Home the blinds (climate_blinds, casoraClimateBlinds).
+const CLIM_SUB_LABEL = { temp: "Temperature", humidity: "Humidity", quality: "Air Quality", covers: "Blinds" };
+const CLIM_SUB_ICON = { temp: "mdi:thermometer", humidity: "mdi:water-percent", quality: "mdi:air-filter",
+  covers: "mdi:blinds-horizontal" };
+function climSubPresent(V, blinds) {
+  const S = window.casoraClimSub;
+  if (!S || !V) return [];
+  const have = new Set();
+  for (let n = 1; n <= 5; n++) if (V["temp_sensor_" + n]) have.add("temp");
+  if (V.humidity_sensor) have.add("humidity");
+  for (let n = 1; n <= 5; n++) if (V["humidity_sensor_" + n]) have.add("humidity");
+  if (V.quality_sensor) have.add("quality");
+  if (blinds) have.add("covers");
+  return S.KEYS.filter((k) => have.has(k));
+}
 // Rows of the Studio's list: the saved order first (only kinds the badge has), then the rest in the usual order.
 function secSubRows(saved, present) {
   const out = (Array.isArray(saved) ? saved : []).filter((k, i, a) => present.indexOf(k) >= 0 && a.indexOf(k) === i);
@@ -2518,6 +2534,10 @@ const SECTIONS = [
       // The badge filter of the old phone page is not affected (casora-core.js: blinds are no climate device there).
       { key: "climate_blinds", label: "Show blinds", type: "bool", boolDefault: true, always: true, ord: 5,
         hint: "Adds a Blinds row to the climate popup." },
+      // Own order of the sub-badges (temperature, humidity, air quality, blinds) in the expanded row, the separate
+      // badges, the phone's rows and the climate popup (climate_sub_order, casoraClimSub in 00-finder.js). Empty = usual.
+      { key: "climate_sub_order", label: "Order", type: "suborder", sub: "climate", always: true, ord: 5.5,
+        hint: "Drag to change the order of the entries in the badge and its popup." },
       { key: "show_climate_inline", label: "Separate climate badges", type: "bool",
         boolDefault: false, advanced: true,
         hint: "Shows temperature, humidity and air quality as their own badges." },
@@ -2606,7 +2626,7 @@ const SECTIONS = [
         hint: "Which covers count as open at night – for all dashboards." },
       // Own order of the kinds of entries (locks, doors, windows …) in the badge's sub-line, its sub-badges and
       // its popup (security_sub_order, casoraSecSub in 00-finder.js). Empty = the usual order.
-      { key: "security_sub_order", label: "Order", type: "suborder", always: true, ord: 7.9,
+      { key: "security_sub_order", label: "Order", type: "suborder", sub: "security", always: true, ord: 7.9,
         hint: "Drag to change the order of the entries in the badge and its popup." },
       { key: "show_security_inline", label: "Separate security badges", type: "bool",
         boolDefault: false, always: true, ord: 8,
@@ -18817,7 +18837,7 @@ class CasoraPanel extends HTMLElement {
 
         if (f.type === "suborder") {
           row.remove();
-          this._secSubOrderField(room, fs, f, setVar);
+          this._subOrderField(room, fs, f, setVar);
           return;
         }
 
@@ -23840,13 +23860,13 @@ class CasoraPanel extends HTMLElement {
         const n = avg(temps);
         subs.push({
           icon: n != null ? tempIcon(n) : "temp-medium",
-          color: n != null ? tempColor(n) : CLIMATE,
+          color: n != null ? tempColor(n) : CLIMATE, climKey: "temp",
           label: "Temperature",
           gauge: n != null ? clamp(unit === "F" ? (n - 45) / 50 : (n - 7) / 28) : null,
           text: n != null ? tempWord(n) + " \u00b7 " + Math.round(n) + unit : "Unknown" });
       }
       if (hums.length) {
-        subs.push({ icon: "humidity", color: h != null ? humColor(h) : CLIMATE,
+        subs.push({ icon: "humidity", color: h != null ? humColor(h) : CLIMATE, climKey: "humidity",
           label: "Humidity",
           gauge: h != null ? clamp(h / 100) : null,
           text: h != null ? humWord(h) + " \u00b7 " + Math.round(h) + "%" : "Unknown" });
@@ -23858,7 +23878,7 @@ class CasoraPanel extends HTMLElement {
           poor: 0.3, bad: 0.15, "very bad": 0.15, "very poor": 0.15 };
         subs.push({
           icon: ["poor", "bad", "very bad"].includes(low) ? "aqi-high" : "aqi-medium",
-          color: aqiColor(raw), label: "Air Quality",
+          color: aqiColor(raw), label: "Air Quality", climKey: "quality",
           gauge: AQI_GAUGE[low] != null ? AQI_GAUGE[low] : 0.5,
           text: raw.charAt(0).toUpperCase() + raw.slice(1) });
       }
@@ -23869,6 +23889,9 @@ class CasoraPanel extends HTMLElement {
             ? Math.min(...readings) + unit
             : Math.min(...readings) + "\u2013" + Math.max(...readings) + unit)
         : null;
+      // Own order of the sub-badges (climate_sub_order), as the dashboard's rows (casoraClimSub.cards).
+      const CS = window.casoraClimSub;
+      if (CS && CS.clean(V.climate_sub_order).length) subs.splice(0, subs.length, ...CS.sort(subs, V.climate_sub_order, (x) => x.climKey));
       // The phone's start page keeps the climate filter badge (casora_mobile_filter_badges).
       if (V.show_climate_inline && !forPhone) {
         subs.forEach((sb, i) => out.push({ ...sb, id: "climate:" + i, subs: [] }));
@@ -27162,16 +27185,27 @@ class CasoraPanel extends HTMLElement {
     return badgeOrderOf(((room || {}).variables || {}).badge_order);
   }
 
-  // Security badge › Order (security_sub_order): one row per kind of entry, dragged by its grip (mouse, touch) or
-  // moved with the arrow keys on it; "Reset" goes back to the usual order. write = the section's setVar (mirrors
-  // to the phone pair). Fewer than two kinds: nothing to order, no list.
-  _secSubOrderField(room, fs, f, write) {
+  // Security / Climate badge › Order (security_sub_order, climate_sub_order; f.sub names the badge): one row per kind
+  // of entry, dragged by its grip (mouse, touch) or moved with the arrow keys on it; "Reset" goes back to the usual
+  // order. write = the section's setVar (mirrors to the phone pair). Fewer than two kinds: nothing to order, no list.
+  _subOrderField(room, fs, f, write) {
     const rooms = ((this._state || {}).compact || {}).rooms || [];
     const home = isHomeRoom(room, rooms);
-    const house = home && typeof window.casoraHouseContacts === "function" ? window.casoraHouseContacts(this._hass) : [];
-    const SC = window._casoraSecCovers;
-    const covers = home && !!(SC && SC.cfg && SC.cfg().ids.length);
-    const present = secSubPresent(room.variables || {}, (this._hass || {}).states || {}, house, covers);
+    const V = room.variables || {};
+    let present, LABEL, ICON, dotIcon;
+    if (f.sub === "climate") {
+      // The blinds row only on Home (casoraClimateBlinds, 35-phone-hub.js), as the dashboard.
+      const blinds = home && typeof window.casoraClimateBlinds === "function"
+        && window.casoraClimateBlinds(this._hass, null, V.climate_blinds, true).length > 0;
+      present = climSubPresent(V, blinds);
+      LABEL = CLIM_SUB_LABEL; ICON = CLIM_SUB_ICON; dotIcon = "badge-climate";
+    } else {
+      const house = home && typeof window.casoraHouseContacts === "function" ? window.casoraHouseContacts(this._hass) : [];
+      const SC = window._casoraSecCovers;
+      const covers = home && !!(SC && SC.cfg && SC.cfg().ids.length);
+      present = secSubPresent(V, (this._hass || {}).states || {}, house, covers);
+      LABEL = SEC_SUB_LABEL; ICON = SEC_SUB_ICON; dotIcon = "badge-security";
+    }
     if (present.length < 2) return;
     const tr = trLabel;
     const wrap = document.createElement("div");
@@ -27262,15 +27296,15 @@ class CasoraPanel extends HTMLElement {
         row.dataset.id = k;
         const dot = document.createElement("span");
         dot.className = "scdot";
-        dot.style.background = studioIcon("badge-security");
+        dot.style.background = studioIcon(dotIcon);
         const ic = document.createElement("ha-icon");
         ic.className = "scicon";
-        ic.setAttribute("icon", SEC_SUB_ICON[k] || "mdi:shield-home");
+        ic.setAttribute("icon", ICON[k] || "mdi:dots-horizontal");
         ic.style.color = "#fff";
         dot.appendChild(ic);
         const nm = document.createElement("span");
         nm.className = "scname";
-        nm.textContent = tr(SEC_SUB_LABEL[k] || k);
+        nm.textContent = tr(LABEL[k] || k);
         row.appendChild(dot);
         row.appendChild(nm);
         const grip = document.createElement("button");
