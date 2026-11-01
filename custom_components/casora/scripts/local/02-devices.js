@@ -4127,7 +4127,9 @@
         /* D-08: translate parts one by one (the whole sentence matched no entry) and „Uhr“ only in German. */
         var trV = window.casoraTr || function (x) { return x; };
         var deV = !window.casoraLocale || /^de/i.test(String(window.casoraLocale()));
-        if (bat != null) sub.push(trV('Akku ' + Math.round(bat) + ' %') + (on(c.charging) ? ' · ' + trV('lädt') : ''));
+        // „lädt“ only when the state does not say it already (owner 01.11.2026: „Lädt“ in the wheel and „Akku 100 % · lädt…“ under it).
+        var chgSaid = /^lädt/i.test(String(s.label || ''));
+        if (bat != null) sub.push(trV('Akku ' + Math.round(bat) + ' %') + (on(c.charging) && !chgSaid ? ' · ' + trV('lädt') : ''));
         var le = U.str(states, c.lastEnd);
         var lastW = trV('zuletzt');
         if (le) sub.push(lastW + ' ' + trV(U.day(new Date(le))).replace(/^(Heute|Gestern|Today|Yesterday)$/, function (x) { return x.toLowerCase(); }) + ', ' + U.clock(new Date(le)) + (deV ? ' Uhr' : ''));
