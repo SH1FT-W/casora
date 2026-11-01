@@ -10788,7 +10788,23 @@ window.casoraMenuGlass = {
     // then either starts at the knob, moves along the ring (tangential, not mainly up/down or across the ring)
     // or rests for a moment first. Turning is relative to where it started – no jump to the finger. A tap
     // without moving changes nothing. The sheet never takes a touch that began on the ring (_bindSheetDrag).
-    var DIAL_HOLD = 260, DIAL_SLOP = 6;
+    // iOS/iPadOS (WebKit) decides scroll vs. page on the FIRST touchmove: if that one is not prevented, the page
+    // scrolls and every later touchmove is non-cancelable (iPad 26.11.1: the dial never turned, the page
+    // scrolled). So the dial claims the touch from its first move: a touch at the knob (finger-sized, at least
+    // 30 px around it, also the half of it past the ring's end at 0 / 100 %) or on the ring of a popup dialog
+    // (iPad) always turns; otherwise (phone sheet) the first real move decides (along the ring turns, else the
+    // sheet scrolls), and finger jitter below the slop is held for the dial so resting first still works.
+    var DIAL_HOLD = 260, DIAL_SLOP = 6, DIAL_KNOB_PX = 30;
+    // Is the dial free to take every touch on its ring? In a popup dialog (iPad, desktop) yes – the dialog scrolls
+    // from anywhere off the ring; the phone sheet keeps its swipe rules (DH-02).
+    var dialFree = function (el) {
+      var n = el.parentNode || el.host;
+      for (var i = 0; n && i < 60; i++) {
+        if (n.nodeType === 1 && n.localName === 'casora-popup') return !(n._isSheet && n._isSheet());
+        n = n.parentNode || n.host || null;
+      }
+      return false;
+    };
     var tdial = null;
     var dialGeom = function (el, cx, cy) {
       var b = el.getBoundingClientRect();
@@ -10811,21 +10827,25 @@ window.casoraMenuGlass = {
       window.casoraHaptic('selection');
     };
     document.addEventListener('touchstart', function (ev) {
+      // The same touch dispatched again from further out (button-card stops a touchstart on a card with actions
+      // and sends its own – the cover's stage): not a new touch, keep the dial's (iPad: the cover never turned).
+      var t0 = ev.touches && ev.touches.length === 1 && ev.touches[0];
+      if (tdial && t0 && t0.identifier === tdial.id && t0.clientX === tdial.x0 && t0.clientY === tdial.y0 && !dialOf(ev)) return;
       if (tdial && tdial.hold) clearTimeout(tdial.hold);
       tdial = null;
       if (!ev.touches || ev.touches.length !== 1) return;
       var el = dialOf(ev);
       if (!el) return;
       var t = ev.touches[0];
-      if (dialFrom(el, el.getBoundingClientRect(), t.clientX, t.clientY, true) == null) return;
-      ev._casoraDialRing = true;
       var g = dialGeom(el, t.clientX, t.clientY);
       var from = shown(el);
       // The knob sits on the ring's middle line (radius 150) at the shown value.
       var ka = (135 + (from == null ? 0 : from) / 100 * 270) * Math.PI / 180;
-      var nearKnob = Math.hypot(g.x - 150 * Math.cos(ka), g.y - 150 * Math.sin(ka)) < 52;
+      var nearKnob = Math.hypot(g.x - 150 * Math.cos(ka), g.y - 150 * Math.sin(ka)) < Math.max(52, DIAL_KNOB_PX * g.k);
+      if (!nearKnob && dialFrom(el, el.getBoundingClientRect(), t.clientX, t.clientY, true) == null) return;
+      ev._casoraDialRing = true;
       tdial = { el: el, id: t.identifier, x0: t.clientX, y0: t.clientY, a: g.a, turned: 0, from: from,
-        pct: from == null ? 0 : from, knob: nearKnob, turning: false, decided: false };
+        pct: from == null ? 0 : from, knob: nearKnob, own: nearKnob || dialFree(el), turning: false, decided: false };
       tdial.hold = setTimeout(function () { if (tdial && !tdial.decided) { tdial.decided = true; tdialGrab(); } }, DIAL_HOLD);
     }, { capture: true, passive: true });
     document.addEventListener('touchmove', function (ev) {
@@ -10835,18 +10855,34 @@ window.casoraMenuGlass = {
       if (!t || ev.touches.length !== 1) { clearTimeout(tdial.hold); if (tdial.turning) tdial.el.classList.remove('drag'); tdial = null; return; }
       var dx = t.clientX - tdial.x0, dy = t.clientY - tdial.y0;
       if (!tdial.decided) {
-        if (Math.hypot(dx, dy) < DIAL_SLOP) return;
-        clearTimeout(tdial.hold);
-        tdial.decided = true;
-        var g0 = dialGeom(tdial.el, tdial.x0, tdial.y0);
-        var ux = g0.x / (g0.r || 1), uy = g0.y / (g0.r || 1);
-        var radial = Math.abs(dx * ux + dy * uy), tang = Math.abs(dx * uy - dy * ux);
-        // Along the ring and not mainly up/down (on the ring's sides "along" is up/down: that scrolls unless
-        // the finger started at the knob or rested first).
-        var along = tang > radial * 1.5 && Math.abs(dx) >= Math.abs(dy) * 0.5;
-        if (!(tdial.knob || along) || !ev.cancelable) { tdial = null; return; }
-        tdialGrab();
+        if (!ev.cancelable) { clearTimeout(tdial.hold); tdial = null; return; }
+        if (tdial.own) {
+          clearTimeout(tdial.hold);
+          tdial.decided = true;
+          tdialGrab();
+        } else if (Math.hypot(dx, dy) < DIAL_SLOP) {
+          // Jitter (or the first tiny step): keep the touch for the dial – letting it go would hand iOS the scroll.
+          ev.preventDefault();
+          tdial.held = true;
+          return;
+        } else {
+          clearTimeout(tdial.hold);
+          tdial.decided = true;
+          var g0 = dialGeom(tdial.el, tdial.x0, tdial.y0);
+          var ux = g0.x / (g0.r || 1), uy = g0.y / (g0.r || 1);
+          var radial = Math.abs(dx * ux + dy * uy), tang = Math.abs(dx * uy - dy * ux);
+          // Along the ring and not mainly up/down (on the ring's sides "along" is up/down: that scrolls unless
+          // the finger started at the knob or rested first).
+          var along = tang > radial * 1.5 && Math.abs(dx) >= Math.abs(dy) * 0.5;
+          if (!along) {
+            // Held for the dial already (see above): the page cannot scroll any more on iOS – swallow the rest.
+            if (tdial.held) { tdial.skip = true; ev.preventDefault(); return; }
+            tdial = null; return;
+          }
+          tdialGrab();
+        }
       }
+      if (tdial.skip) { if (ev.cancelable) ev.preventDefault(); return; }
       if (!tdial.turning) return;
       if (!ev.cancelable) { tdial.el.classList.remove('drag'); if (tdial.from != null) paint(tdial.el, tdial.from); tdial = null; return; }
       ev.preventDefault();
