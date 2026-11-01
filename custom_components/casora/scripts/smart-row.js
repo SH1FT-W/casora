@@ -70,7 +70,8 @@ function sortDecision(s) {
   const calm = live && s.mode !== 'now';
   const quiet = calm ? CALM_MS : QUIET_MS;
   if (s.popup || s.hover) return { act: 'wait', ms: calm ? 2000 : 600 };
-  if (s.idle < quiet) return { act: 'wait', ms: Math.max(250, quiet - s.idle) };
+  // Look again at least every 5 s: a mode switched meanwhile (Studio, CASORA_LIVE_SORT) takes effect soon.
+  if (s.idle < quiet) return { act: 'wait', ms: Math.max(250, Math.min(5000, quiet - s.idle)) };
   return { act: 'sort', keep: calm };
 }
 window._casoraSortDecide = sortDecision;
