@@ -111,9 +111,17 @@ const st = await H(async () => {
   p.shadowRoot.querySelectorAll('#pane .tile.sel .adv:not(.open) .advsum').forEach((s) => s.click());
   await new Promise((r) => setTimeout(r, 500));
   const txt = (p.shadowRoot.querySelector('#pane .tile.sel') || p.shadowRoot).textContent;
+  // Under load (gate 26.11.2, busy machine) the Studio's states arrive later than its model: read the preview again
+  // for up to 10 s until it counts the camera (the dashboard already did above).
   const room = p._state.compact.rooms[0];
-  const sec = p._miniModel(room).find((x) => String(x.id) === 'security');
-  return { field: /Status von|Status from/.test(txt), sec: sec && [sec.label, sec.sub, sec.text].join(' | ') };
+  let secTxt = '';
+  for (let i = 0; i < 20; i++) {
+    const sec = p._miniModel(room).find((x) => String(x.id) === 'security');
+    secTxt = sec ? [sec.label, sec.sub, sec.text].join(' | ') : '';
+    if (/Kamera offline|Camera offline/.test(secTxt)) break;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return { field: /Status von|Status from/.test(txt), sec: secTxt };
 });
 await check('Studio: Feld „Status von“ an der Kamera-Kachel', st.field, st);
 await check('Studio-Vorschau: „Kamera offline“ wie das Dashboard', /Kamera offline|Camera offline/.test(st.sec || ''), st);

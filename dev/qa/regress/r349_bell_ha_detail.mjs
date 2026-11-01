@@ -20,7 +20,7 @@ for (const phone of [false, true]) {
   await svc('create', { notification_id: ID, title: 'Waschmaschine', message: 'Die **Wäsche** ist fertig.\n\n- Programm: Baumwolle 60°\n- Dauer: 2:14 h\n\n[Bedienungsanleitung](https://example.org)' });
   const { page } = await open(phone ? { width: 393, height: 852, mobile: true, scale: 3, dark: false } : { width: 1440, height: 900, dark: false });
   usePage(page);
-  await ready(page, '/' + dash.url + '/' + (dash.config.views[0].path || '0'), '() => !!window._casoraNotify && !!window._casoraLocalLoaded', 60000);
+  await ready(page, '/' + dash.url + '/' + (dash.config.views[0].path || '0'), () => !!window._casoraNotify && !!window._casoraLocalLoaded, 60000);
   for (const t0 = Date.now(); Date.now() - t0 < 8000;) {
     if (await page.evaluate((id) => window._casoraNotify.rows.some((r) => r.id === 'ha:pn:' + id), ID)) break;
     await page.waitForTimeout(300);

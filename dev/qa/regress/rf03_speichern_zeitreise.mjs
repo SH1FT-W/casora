@@ -94,6 +94,15 @@ try {
   await check('HA: neue Badge-Reihenfolge gespeichert', viewOf(await cfgOf(dash.url)) !== before);
 
   // (4) Zeitreise zum Stand davor – Knopf mit der Uhr neben Rückgängig (vorher im Titelmenü).
+  // Under load the save's own version arrives a moment after the save (gate 26.11.2, machine busy): wait until the
+  // newest version is no longer the named start before opening the time travel list.
+  for (let i = 0; i < 40; i++) {
+    const c = await ws();
+    let top = null;
+    try { const L = await c.cmd({ type: 'casora/versions/list', url_path: dash.url }); top = L && L.versions && L.versions[0] && L.versions[0].id; } finally { c.close(); }
+    if (top && top !== startVid) break;
+    await pg.waitForTimeout(500);
+  }
   const zr = await H(() => { const e = window.__pierce('#brewind').find((x) => x.getClientRects().length);
     if (!e) return null; const b = e.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; });
   await need('Knopf „Zeitreise“ neben Rückgängig', zr);
@@ -113,8 +122,10 @@ try {
   await tapBtn(pg.locator('button:visible').filter({ hasText: /^(Diesen Stand wiederherstellen|Restore this version)$/ }).first());
   await pg.waitForTimeout(1200);
   await tapBtn(pg.locator('button:visible').filter({ hasText: /^(Wiederherstellen|Restore)$/ }).last());
-  await pg.waitForTimeout(5000);
-  await check('Zeitreise: HA hat wieder die alte Reihenfolge', viewOf(await cfgOf(dash.url)) === before);
+  // The restore writes both dashboards and records two versions – under load that takes longer than a few seconds.
+  let back = false;
+  for (let i = 0; i < 30 && !back; i++) { await pg.waitForTimeout(1000); back = viewOf(await cfgOf(dash.url)) === before; }
+  await check('Zeitreise: HA hat wieder die alte Reihenfolge', back);
 } catch (e) {
   await check('Ablauf ohne Abbruch', false, String(e && e.message || e).split('\n')[0]);
 }

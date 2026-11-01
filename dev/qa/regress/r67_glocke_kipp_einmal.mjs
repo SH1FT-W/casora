@@ -12,7 +12,7 @@ await need('Casora-Dashboard (Desktop)', dash);
 const { page, context } = await open({ width: 1600, height: 1000 });
 usePage(page);
 await context.route(/\/casora-local\.js(\?|$)/, async (r) => { await new Promise((x) => setTimeout(x, 20000)); r.fallback(); });
-await ready(page, '/' + dash.url + '/' + (dash.config.views[0].path || '0'), '() => !!window._casoraNotify', 60000);
+await ready(page, '/' + dash.url + '/' + (dash.config.views[0].path || '0'), () => !!window._casoraNotify, 60000);
 
 const openRows = () => page.evaluate(() => (window._casoraNotify ? window._casoraNotify.rows : [])
   .filter((r) => /^casora:open:/.test(r.id)).map((r) => ({ id: r.entity, label: r.label })));
