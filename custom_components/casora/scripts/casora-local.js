@@ -182,6 +182,9 @@ if (!customElements.get('casora-void')) {
 
 // 04-navigation right after the basics (it needs only casora-core, 00 and 01): the phone's bottom bar is
 // there before the large device and popup modules have run (Prüfung 2 DH-17: bar seconds late on a phone).
+// The first START_MODULES.length entries are the start modules (stage 3.1): finder, basics, navigation,
+// devices and popups – what the first picture and the first tap need. They also run before the phone's
+// veil goes. The others follow one by one, each in a task of its own.
 const MODULES = [
   '00-finder',
   '01-basis',
@@ -226,6 +229,9 @@ const MODULES = [
   '38-search',
 ];
 
+const START_MODULES = MODULES.slice(0, 5);
+window.casoraLocalModules = { start: START_MODULES, all: MODULES };
+
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());
 // Stamp this page was loaded with – casora-core compares it with casora/version
 // ("Casora was updated"). Since 1.0.5 it covers the other Casora scripts too.
@@ -242,7 +248,6 @@ urls.forEach((href) => {
   } catch (e) { /* speed-up only */ }
 });
 
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 /* Until cond() is true (every 50 ms), at most ms long. */
 const until = (cond, ms) => new Promise((resolve) => {
   const t0 = Date.now();
@@ -258,39 +263,22 @@ const until = (cond, ms) => new Promise((resolve) => {
 /* Settings for the whole home (window.CASORA_SETTINGS): Studio → Settings, stored in
    the integration. Formerly /config/www/casora/einstellungen.js – the file still applies
    while nothing is stored in the Studio. Without either, Casora's neutral defaults apply.
-   File and integration are asked at the same time. The integration's answer is remembered
-   in this browser; with a remembered answer the modules start right away on it and the fresh
-   answer follows (Ladezeit stage 1: the modules waited for both requests on every open). Only
-   if it differs are the tiles drawn again. Without one (first open here) the modules wait as
-   before, at most SETTINGS_WAIT. */
+   The integration's answer is remembered in this browser and the modules start right away on
+   the remembered one (or on the defaults the very first time); the fresh answer follows and,
+   only if it differs, the tiles are drawn again. The modules never wait for the WebSocket.
+   The file: the integration's answer says whether there is one and its version key ("file");
+   it is loaded only then, with that key in the URL, so the browser keeps it (Ladezeit stage 1.3:
+   it was fetched with no-store and ?t= on every open). Only without a remembered answer that
+   names the key (first open here, older Casora) is it asked for the old way. */
 const SETTINGS_KEY = 'casora.settings.cache';
-const SETTINGS_WAIT = 4000;
-// /casora_assets serves the user's file or – without one – an empty module.
-// So there is no 404 in the browser console.
-let fromFile;            // what the file set (undefined: no file, or not run yet)
-// The file runs whenever it arrives; stored settings stay in force over it (as when it was awaited first).
-// settle() is defined below, before the first await – this cannot run earlier.
-const fileP = import('/casora_assets/einstellungen.js?t=' + Date.now()).then(() => {
-  fromFile = window.CASORA_SETTINGS;
-  settle();
-}, (e) => {
-  console.error('[casora-local] einstellungen.js konnte nicht geladen werden:', e);
-});
-const wsP = (async () => {
-  const hass = await until(() => {
-    const h = document.querySelector('home-assistant');
-    return h && h.hass && h.hass.connection ? h.hass : null;
-  }, 8000);
-  if (!hass) return null;
-  const r = await hass.callWS({ type: 'casora/settings/get' });
-  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ stored: !!(r && r.stored), settings: (r && r.settings) || {}, price_kwh: r && r.price_kwh, price_entity: r && r.price_entity })); } catch (e) { /* private mode / full */ }
-  return r;
-})().catch(() => null); // Older Casora without a settings store: the file (or nothing) applies.
 const cached = () => { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null'); } catch (e) { return null; } };
-// What the modules see of an answer (the part that changes tiles).
-const sig = (x) => JSON.stringify(x ? [!!x.stored, x.stored ? x.settings || {} : null, x.price_kwh, x.price_entity] : null);
+const known = (() => { const k = cached(); return k && typeof k === 'object' ? k : null; })();
+// Whether the answer carries the file's version key (Casora 26.11 and newer).
+const hasStamp = (x) => !!x && Object.prototype.hasOwnProperty.call(x, 'file');
 
-let best = null;         // newest answer of the integration (or the remembered one)
+let fromFile;            // what the file set (undefined: no file, or not run yet)
+let fileKey = null;      // version key of the file that ran ('' for the unversioned one)
+let best = known;        // newest answer of the integration (or the remembered one)
 // Stored settings win over the file; electricity price from the Casora options, else from HA's energy dashboard
 // (costs in device popups, window.casoraPriceKwh). With a price entity casoraPriceKwh reads its state live.
 const settle = () => {
@@ -300,59 +288,107 @@ const settle = () => {
   if (r && typeof r.price_kwh === 'number') window.CASORA_PRICE_KWH = r.price_kwh;
   if (r && typeof r.price_entity === 'string' && r.price_entity) window.CASORA_PRICE_ENTITY = r.price_entity;
 };
-
-const known = cached();
-let started = null;      // sig() of what the modules started with
-if (known && typeof known === 'object') {
-  // Settings from the file: those are needed before the modules run (the file is small).
-  if (!known.stored) await fileP;
-  best = known;
-  settle();
-  started = sig(known);
-  wsP.then((r) => {
-    if (!r) return;
-    best = r;
+// Runs the settings file (key: version key; null: unversioned, the old way). Resolves when it ran.
+// /casora_assets serves the user's file or – without one – an empty module, so no 404 in the console.
+const loadFile = (key) => {
+  const url = '/casora_assets/einstellungen.js?' + (key ? 'v=' + encodeURIComponent(key) : 't=' + Date.now());
+  return import(url).then(() => {
+    fileKey = key || '';
+    fromFile = window.CASORA_SETTINGS;
     settle();
-    if (sig(r) === started) return;
-    started = sig(r);
-    // Changed since this browser last saw them: draw the tiles once more, after the modules are there.
-    const redraw = () => {
-      try { window.dispatchEvent(new Event('casora-settings-changed')); } catch (e) { /* old browser */ }
-      if (typeof window.casoraKickAll === 'function') { window.casoraKickAll('settings'); return; }
-      if (typeof window.casoraKick !== 'function') return;
-      const out = [];
-      (function walk(root, d) {
-        if (!root || d > 30 || !root.querySelectorAll) return;
-        const all = root.querySelectorAll('*');
-        for (let i = 0; i < all.length; i++) {
-          if (all[i].localName === 'button-card') out.push(all[i]);
-          if (all[i].shadowRoot) walk(all[i].shadowRoot, d + 1);
-        }
-      })(document, 0);
-      out.forEach((el) => window.casoraKick(el));
-    };
-    if (window._casoraLocalLoaded) redraw();
-    else window.addEventListener('casora-local-loaded', redraw, { once: true });
+  }, (e) => {
+    console.error('[casora-local] einstellungen.js konnte nicht geladen werden:', e);
   });
-} else {
-  await fileP;
-  const TIMEOUT = {};
-  let r = await Promise.race([wsP, wait(SETTINGS_WAIT).then(() => TIMEOUT)]);
-  if (r === TIMEOUT) {
-    console.warn('[casora-local] Einstellungen: keine Antwort in ' + SETTINGS_WAIT + ' ms, Datei/Standard gilt.');
-    r = null;
-    // Arrives later: in force from then on (as the remembered state is on the next open).
-    wsP.then((x) => { if (x) { best = x; settle(); } });
-  }
-  best = r;
-  settle();
+};
+
+const wsP = (async () => {
+  const hass = await until(() => {
+    const h = document.querySelector('home-assistant');
+    return h && h.hass && h.hass.connection ? h.hass : null;
+  }, 8000);
+  if (!hass) return null;
+  const r = await hass.callWS({ type: 'casora/settings/get' });
+  const keep = { stored: !!(r && r.stored), settings: (r && r.settings) || {}, price_kwh: r && r.price_kwh, price_entity: r && r.price_entity };
+  if (hasStamp(r)) keep.file = r.file || null;
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(keep)); } catch (e) { /* private mode / full */ }
+  return r;
+})().catch(() => null); // Older Casora without a settings store: the file (or nothing) applies.
+// What the modules see of an answer (the part that changes tiles).
+const sig = (x) => JSON.stringify(x ? [!!x.stored, x.stored ? x.settings || {} : null, x.price_kwh, x.price_entity, x.stored ? null : x.file || null] : null);
+
+// The file is needed before the modules run only while nothing is stored (stored settings win over it).
+if (!(known && known.stored)) {
+  if (hasStamp(known)) { if (known.file) await loadFile(known.file); }
+  else await loadFile(null);
 }
+settle();
+// sig() of what the modules started with (nothing remembered: Casora's defaults, or the file that just ran).
+let started = sig(known || { stored: false });
+wsP.then(async (r) => {
+  if (!r) return;
+  best = r;
+  if (!r.stored && hasStamp(r)) {
+    if (fileKey === '' && r.file) {
+      // The file ran unversioned on this page (first open here, or a remembered answer without the key):
+      // it is the current one. Nothing to load again, and nothing changed for the modules on its account.
+      fileKey = r.file;
+      if (!known || !hasStamp(known)) started = sig(Object.assign({}, known || { stored: false }, { file: r.file }));
+    } else if (r.file && r.file !== fileKey) {
+      // The file appeared or changed since this browser last saw it.
+      await loadFile(r.file);
+    } else if (!r.file) {
+      // No file (any more), nothing stored (any more): Casora's defaults.
+      fromFile = undefined;
+      window.CASORA_SETTINGS = undefined;
+    }
+  }
+  settle();
+  if (sig(r) === started) return;
+  started = sig(r);
+  // Changed since this browser last saw them: draw the tiles once more, after the modules are there.
+  const redraw = () => {
+    try { window.dispatchEvent(new Event('casora-settings-changed')); } catch (e) { /* old browser */ }
+    if (typeof window.casoraKickAll === 'function') { window.casoraKickAll('settings'); return; }
+    if (typeof window.casoraKick !== 'function') return;
+    const out = [];
+    (function walk(root, d) {
+      if (!root || d > 30 || !root.querySelectorAll) return;
+      const all = root.querySelectorAll('*');
+      for (let i = 0; i < all.length; i++) {
+        if (all[i].localName === 'button-card') out.push(all[i]);
+        if (all[i].shadowRoot) walk(all[i].shadowRoot, d + 1);
+      }
+    })(document, 0);
+    out.forEach((el) => window.casoraKick(el));
+  };
+  if (window._casoraLocalLoaded) redraw();
+  else window.addEventListener('casora-local-loaded', redraw, { once: true });
+});
 
 /* The modules build on casora-core (_casoraFilter, casoraMenuGlass, casoraPopup …).
    It is a resource of its own and can finish after this loader on the phone. */
 await until(() => window._casoraFilter, 15000);
 
+// Ladezeit stage 3.1: the start modules run back to back; then the phone's veil may go (smart-row listens
+// for "casora-local-started"). The other modules follow, still in order, each in a task of its own, so the
+// browser can paint and take a tap in between instead of running all 40 in one go. Cards drawn before a late
+// module show its fallbacks until the redraw after the last one (as they always did on a desktop).
+// Where a veil waits (phone Home, _casoraHomeSlim) the cards are drawn once more right away, with the start
+// modules' helpers: they are about to be seen. Elsewhere that pass would only add a redraw wave.
+const yieldToPage = () => new Promise((resolve) => {
+  try {
+    const ch = new MessageChannel();
+    ch.port1.onmessage = () => resolve();
+    ch.port2.postMessage(0);
+  } catch (e) { setTimeout(resolve, 0); }
+});
 for (let i = 0; i < urls.length; i++) {
+  if (i === START_MODULES.length) {
+    window._casoraLocalStarted = START_MODULES;
+    try { window.dispatchEvent(new Event('casora-local-started')); } catch (e) { /* old browser */ }
+    try { if (window._casoraHomeSlim && typeof window.casoraKickAll === 'function') window.casoraKickAll('modules-started'); } catch (e) { /* the next state push redraws */ }
+  }
+  if (i >= START_MODULES.length) await yieldToPage();
   try {
     await import(urls[i]);
   } catch (e) {

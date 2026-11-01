@@ -269,7 +269,8 @@ function isDesktop() {
 // Nur wenn die Ansicht eine casora-mobile-nav mit Aufräumen hat – Desktop,
 // Tablet und die Studio-Vorschau bleiben unberührt.
 const BOOT_MAX_MS = 8000;
-const bootPending = () => !(window._casoraHomeSlim && window._casoraLocalLoaded);
+// Ladezeit stage 3.1: the loader's start modules are enough (casora-local-started); the others follow idle.
+const bootPending = () => !(window._casoraHomeSlim && (window._casoraLocalStarted || window._casoraLocalLoaded));
 
 function tplList(cfg) {
   const t = cfg && cfg.template;
@@ -1097,6 +1098,7 @@ class CasoraSmartRow extends HTMLElement {
     this.setAttribute('casora-boot', '');
     this._bootCheck = () => { if (!bootPending()) this._bootRelease(); };
     window.addEventListener('casora-home-slim', this._bootCheck);
+    window.addEventListener('casora-local-started', this._bootCheck);
     window.addEventListener('casora-local-loaded', this._bootCheck);
     this._bootTimer = setTimeout(() => this._bootRelease(), BOOT_MAX_MS);
   }
@@ -1118,6 +1120,7 @@ class CasoraSmartRow extends HTMLElement {
     if (this._bootTimer) { clearTimeout(this._bootTimer); this._bootTimer = null; }
     if (this._bootCheck) {
       window.removeEventListener('casora-home-slim', this._bootCheck);
+      window.removeEventListener('casora-local-started', this._bootCheck);
       window.removeEventListener('casora-local-loaded', this._bootCheck);
       this._bootCheck = null;
     }
