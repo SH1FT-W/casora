@@ -131,12 +131,19 @@
       .filter(function (c) { return c.title; });
   };
 
-  // People badge: its single person badges in the phone's badge row.
+  // A person entity (person.*), not a device tracker (phone, watch) that a presence slot may hold.
+  var isPerson = function (id) { return /^person\./.test(String(id || '')); };
+  P.isPerson = isPerson;
+  // People badge: its single person badges in the phone's badge row. Only persons are rows (owner, 01.11.2026): a
+  // device tracker (phone, watch) in a presence slot or a room's presence row is no extra row. Only trackers set up:
+  // they stand for the people, as on the badge.
   var peopleOf = function () {
     var row = deep(haRoot(), function (n) { return n.localName === 'button-card' && tpls(n).indexOf('casora_mobile_filter_badges') >= 0; }, 1)[0];
     if (!row) return [];
-    return deep(row.shadowRoot || row, function (n) { return n.localName === 'button-card' && tpls(n).indexOf('casora_badge_presence') >= 0 && !!n._stateObj; })
-      .filter(function (b, i, a) { return a.findIndex(function (x) { return x._stateObj.entity_id === b._stateObj.entity_id; }) === i; })
+    var found = deep(row.shadowRoot || row, function (n) { return n.localName === 'button-card' && tpls(n).indexOf('casora_badge_presence') >= 0 && !!n._stateObj; })
+      .filter(function (b, i, a) { return a.findIndex(function (x) { return x._stateObj.entity_id === b._stateObj.entity_id; }) === i; });
+    if (found.some(function (b) { return isPerson(b._stateObj.entity_id); })) found = found.filter(function (b) { return isPerson(b._stateObj.entity_id); });
+    return found
       .map(function (b) {
         var s = b._stateObj, ha = document.querySelector('home-assistant'), h = ha && ha.hass;
         var word = h && typeof h.formatEntityState === 'function' ? h.formatEntityState(s) : s.state;
@@ -278,6 +285,13 @@
       rowOrder[cat] = {};
       var chips = cat === 'presence' ? peopleOf() : chipsOf(cat);
       var rooms = roomsOf(cat);
+      // People: the tiles by room are persons only too, and none listed twice (owner, 01.11.2026).
+      if (cat === 'presence') {
+        var listed = chips.map(function (c) { return (c.ids || [])[0]; });
+        rooms = rooms.map(function (r) {
+          return { name: r.name, tiles: r.tiles.filter(function (t) { return isPerson(t.main) && listed.indexOf(t.main) < 0; }) };
+        }).filter(function (r) { return r.tiles.length; });
+      }
       // Climate: the rows in the sub-row's order – the usual one puts „Jalousien“ last (owner, 27.10.2026), an own
       // order from the Studio (climate_sub_order, casoraClimSub in 00-finder.js) wherever it says.
       var CS = window.casoraClimSub;
