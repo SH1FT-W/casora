@@ -2798,7 +2798,9 @@
     "After a short pause": "Na een korte pauze",
     "Only when opening": "Alleen bij openen",
     "Right away": "Meteen",
-    "When active tiles move to the front while a page is open: after half a minute without use, only when it opens, or right away.": "Wanneer actieve tegels naar voren gaan terwijl een pagina open is: na een halve minuut zonder bediening, alleen bij openen of meteen."
+    "When active tiles move to the front while a page is open: after half a minute without use, only when it opens, or right away.": "Wanneer actieve tegels naar voren gaan terwijl een pagina open is: na een halve minuut zonder bediening, alleen bij openen of meteen.",
+    "Show search": "Zoeken tonen",
+    "A search field under the title of the phone's Home: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search.": "Een zoekveld onder de titel van Home op de telefoon: ruimtes, apparaten en scènes. Op een computer opent Cmd+K of Ctrl+K dezelfde zoekfunctie."
   },
   "patterns": [
     [

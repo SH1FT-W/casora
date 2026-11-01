@@ -2798,7 +2798,9 @@
     "After a short pause": "Après une courte pause",
     "Only when opening": "Seulement à l’ouverture",
     "Right away": "Immédiatement",
-    "When active tiles move to the front while a page is open: after half a minute without use, only when it opens, or right away.": "Quand les tuiles actives passent devant lorsqu’une page est ouverte : après une demi-minute sans utilisation, seulement à l’ouverture ou immédiatement."
+    "When active tiles move to the front while a page is open: after half a minute without use, only when it opens, or right away.": "Quand les tuiles actives passent devant lorsqu’une page est ouverte : après une demi-minute sans utilisation, seulement à l’ouverture ou immédiatement.",
+    "Show search": "Afficher la recherche",
+    "A search field under the title of the phone's Home: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search.": "Un champ de recherche sous le titre de l'accueil sur le téléphone : pièces, appareils et scènes. Sur un ordinateur, Cmd+K ou Ctrl+K ouvre la même recherche."
   },
   "patterns": [
     [
