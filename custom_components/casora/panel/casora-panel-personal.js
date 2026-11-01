@@ -130,8 +130,17 @@
     const ids = [];
     let list = [];
     try { list = await hass.callWS({ type: "lovelace/dashboards/list" }); } catch (e) { return ids; }
+    // The integration reads the players from the configurations it has in memory (casora/dashboards/kinds);
+    // only without that answer each whole configuration is fetched here.
+    let kinds = null;
+    try { kinds = (await hass.callWS({ type: "casora/dashboards/kinds" })).dashboards || null; } catch (e) { /* older integration */ }
     for (const d of list) {
       if (!/^casora/.test(d.url_path || "") && d.mode !== "storage") continue;
+      const k = kinds && kinds[d.url_path];
+      if (k) {
+        (k.players || []).forEach((v) => { if (hass.states[v] && !ids.includes(v)) ids.push(v); });
+        continue;
+      }
       let cfg;
       try { cfg = await hass.callWS({ type: "lovelace/config", url_path: d.url_path }); } catch (e) { continue; }
       if (!/"casora_(room|mobile_now_playing)"/.test(JSON.stringify(cfg.views || []))) continue;

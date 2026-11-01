@@ -59,6 +59,10 @@ ALLOWED = {
         "Lovelace dashboards, read only: phone room badges/partner data for every user (no public Python API)",
     ("phone_badges.py", "hass.data.get(LOVELACE_DATA)"):
         "as above",
+    ("dashboard_kinds.py", "import homeassistant.components.lovelace.const.LOVELACE_DATA"):
+        "Lovelace dashboards: tell the Studio which are Casora dashboards (read only) instead of sending it every whole configuration",
+    ("dashboard_kinds.py", "hass.data.get(LOVELACE_DATA)"):
+        "as above",
     ("template_refresh.py", "import homeassistant.components.lovelace.const.LOVELACE_DATA"):
         "Lovelace dashboards: refresh Casora's own unchanged templates after an update, at start (no browser)",
     ("template_refresh.py", "hass.data.get(LOVELACE_DATA)"):
