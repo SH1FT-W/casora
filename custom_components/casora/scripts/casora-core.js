@@ -12667,6 +12667,8 @@ window.casoraMenuGlass = {
       if (o.svc) spec = Object.assign({}, o.svc, { invert: false }, words ? { words: words } : {});
       // Off (S1): the ring stays empty and has no knob (§4.8, as S2); drag, keys and wheel still switch it on.
       ring.knob = !!spec && !(off && code === 'S1');
+      // o.ringColor: the ring in a given colour (a lamp shows its own colour or white tone, owner 01.11.2026).
+      if (o.ringColor && !off) ring.col = o.ringColor;
       centerHtml = (off && code === 'S1' ? stValue(T_('Aus'), '') : stValue(v, o.unit == null ? '%' : o.unit))
         + (o.word || words ? '<div class="hui-st-w">' + dLines(o.word || '') + '</div>' : '');
       if (o.live && o.live.entities && o.live.entities.length) liveHtml = ' data-casora-live="dial" data-casora-ents="' + esc(JSON.stringify(o.live.entities)) + '" data-casora-attr="' + esc(o.live.attr || 'current_position') + '"';
@@ -12708,8 +12710,6 @@ window.casoraMenuGlass = {
       if (off2 && hasV2) dataPct = dialPct(o.value, mn, mx);
       ring.knob = !!spec && !off2;
       ring.heat = !!o.heat;
-      // o.ringColor: the ring in a given colour (a colour lamp shows its own colour, owner 01.11.2026).
-      if (o.ringColor && !off2) ring.col = o.ringColor;
       if (o.current != null && isFinite(Number(o.current))) ring.marker = dialPct(o.current, mn, mx);
       // Off at the device's minimum (a floor heating parks at 5,0 °C): the wheel says „Aus“, not the frost value
       // (review 2, DH-13); keys and drag still start there.
