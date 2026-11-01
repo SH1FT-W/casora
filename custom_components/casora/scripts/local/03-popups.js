@@ -823,7 +823,7 @@
         return nh ? 'Räume · ' + nh + ' heizen' : 'Räume';
       })());
       list.forEach(function (r) {
-        html = html.replace('data-casora-mi="' + esc(r.id) + '"', 'data-fbh-room="' + esc(JSON.stringify({ id: r.id, name: r.name })) + '"');
+        html = html.replace('data-casora-mi="' + esc(r.id) + '"', 'data-fbh-room="' + esc(JSON.stringify(c.roomTpl ? { id: r.id, name: r.name, tpl: c.roomTpl } : { id: r.id, name: r.name })) + '"');
       });
       return html;
     }
@@ -974,6 +974,8 @@
     if (members.length) {
       var infos = members.map(function (m) { return F.info(m, states, hass); });
       c = { id: id, group: true, rooms: infos.filter(function (i) { return !i.trv; }), trvs: infos.filter(function (i) { return i.trv; }),
+        // The thermostat group (casora_thermostat) opens its rooms as thermostats, the floor heating as floor heating.
+        roomTpl: Array.isArray(variables.room_tpl) ? variables.room_tpl : null,
         houseTemp: variables.temp_sensor && states[variables.temp_sensor] ? variables.temp_sensor : null,
         master: variables.master_switch || (window.casoraDevice ? window.casoraDevice.map(hass, id, { m: { keys: ['main_switch'], domain: 'switch' } }).m : null) || null };
     } else {
@@ -1120,7 +1122,7 @@
     var P = window.casoraPopup, prev = P && P.current;
     window._casoraBackNext = prev ? { fn: function () { P.open(prev); }, at: Date.now() } : null;
     open(d.id, function (okd) { if (!okd && window.casoraPopup) window.casoraPopup.moreInfo(d.id); },
-      { type: 'custom:button-card', template: ['casora_thermostat', 'casora_popup_fbh'], entity: d.id, name: d.name, variables: {} });
+      { type: 'custom:button-card', template: Array.isArray(d.tpl) ? d.tpl : ['casora_thermostat', 'casora_popup_fbh'], entity: d.id, name: d.name, variables: {} });
   };
   var ts = null, tDone = 0;
   window.addEventListener('touchstart', function (ev) {
