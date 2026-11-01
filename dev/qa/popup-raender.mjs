@@ -187,7 +187,11 @@ const MEASURE = ({ phone }) => {
     // Inhalt („Tinte“) statt Box für Texte
     let box = r;
     // (bei Ellipsis zählt der Kasten – der Text endet sichtbar mit „…“)
-    const ell = s.textOverflow === 'ellipsis' && s.overflowX !== 'visible';
+    // Also a span inside a block that ends with „…“ (row title with a lit() span): the block's „…“ is the visible end.
+    const ellOf = (x) => { const t = getComputedStyle(x); return t.textOverflow === 'ellipsis' && t.overflowX !== 'visible'; };
+    const ellUp = !!(txt && s.display === 'inline' && e.parentElement && ellOf(e.parentElement));
+    const ell = (s.textOverflow === 'ellipsis' && s.overflowX !== 'visible') || ellUp;
+    if (ellUp) box = e.parentElement.getBoundingClientRect();
     if (txt && !ell) { const rg = document.createRange(); rg.selectNodeContents(e); const q = rg.getBoundingClientRect(); if (q.width > 0) box = q; }
     // A see-through card (no fill, border or shadow – e.g. the light popup's room bar, which the header alignment pulls
     // up under the header by design): only its content box is visible, its padding may lie under an edge.
