@@ -580,6 +580,21 @@
     if (dom === 'binary_sensor' && /door|window|tuer|tür|fenster|kontakt|contact/i.test(ent)) return 'security';
     return ROOM_GROUP_BY_DOMAIN[dom] || 'other';
   }
+  // „Geräte“ heading of a room page (after its scenes, tiles not grouped).
+  function _devicesHeadCfg() {
+    return {
+      type:       'custom:button-card',
+      template:   'casora_mobile_header',
+      full_width: true,
+      name:       'Geräte',
+      variables:  { hide_caret: true, mobile_filter_categories: null },
+      styles:     {
+        card:          [{ padding: `18px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})` }],
+        custom_fields: { arrow: [{ display: 'none' }] },
+      },
+    };
+  }
+
   function _roomGroupOn(cfg) {
     let v = '';
     try { v = getComputedStyle(document.documentElement).getPropertyValue('--casora-room-groups').trim(); } catch (_) {}
@@ -1609,7 +1624,8 @@
         _flushRender(sb);
       }
       const sbOk = !sb || sb.getBoundingClientRect().height > 0;
-      if (n < 16 && (!this._autoSectionsDone || !sbOk)) setTimeout(() => this._settleRoom(n + 1), 300);
+      if (this._lateScenes) this._insertLateScenes();
+      if ((n < 16 && (!this._autoSectionsDone || !sbOk)) || (this._lateScenes && n < 100)) setTimeout(() => this._settleRoom(n + 1), 300);
     }
 
     // #9: Der gezeigte Raum hat immer seine Hintergrundebene (Raumfoto + Schleier): eingehängt,
@@ -1693,38 +1709,13 @@
       }
       // The „Geräte“ heading below only follows scenes (the room head and its chips are content too).
       let scenesShown = false;
-      if (roomMode && this._config.scenes !== false && window._casoraSC) {
-        let sceneCount = 0;
-        try {
-          const c = this._config;
-          const vars = { room: roomMode, area: c.area || null, room_entities: roomEntities, scenes: c.scenes, scene_exclude: c.scene_exclude, scene_order: c.scene_order };
-          sceneCount = window._casoraSC.list(this._hass?.states || {}, this._hass, vars).length;
-          // P-V6 (1.3): dieselbe Raum-Szenenliste für das Szenen-Menü der Handy-Leiste (04-navigation.js).
-          const key = window._casoraFilter && window._casoraFilter.get ? window._casoraFilter.get() : null;
-          window._casoraRoomScenes = { key, list: (h) => window._casoraSC.list((h && h.states) || {}, h, vars) };
-        } catch (_) { sceneCount = 0; }
-        if (sceneCount) {
-          // dk-06 (1.3): Überschriften der Raumseite fluchten mit Kacheln und Titel (16 px, früher D5 +2 px).
-          this._appendRevealCard({
-            type:       'custom:button-card',
-            template:   'casora_mobile_header',
-            full_width: true,
-            name:       'Szenen',
-            variables:  { hide_caret: true, mobile_filter_categories: null },
-            styles:     {
-              card:          [{ padding: `24px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})` }],
-              custom_fields: { arrow: [{ display: 'none' }] },
-            },
-          }, this._contentEl, 0);
-          scenesShown = true;
-          this._appendRevealCard({
-            type:       'custom:button-card',
-            template:   'casora_scene_row',
-            full_width: true,
-            variables:  { layout: 'grid', room: roomMode, area: this._config.area || null, room_entities: roomEntities }, // casora-local-patch: 2-Spalten-Raster statt Scroll-Reihe
-            styles:     { card: [{ '--casora-scene-row-gap': '18px' }, { '--casora-scene-grid-col-gap': '8px' }, { '--casora-scene-grid-row-gap': '8px' }] },
-          }, this._contentEl, 0);
-        }
+      this._lateScenes = null;
+      if (roomMode && this._config.scenes !== false) {
+        if (window._casoraSC) scenesShown = this._appendRoomScenes(roomMode, roomEntities, this._contentEl, 0);
+        // The scene list (window._casoraSC) comes from a template (casora_scene_core) on its first render. On a busy
+        // device the room page can be built before that: then the scenes are added once it is there (_settleRoom),
+        // instead of the room staying without scenes until it is opened again.
+        else this._lateScenes = { roomMode, roomEntities, at: this._contentEl.children.length, before: null, flat: false };
       }
 
       for (const room of rooms) {
@@ -1759,27 +1750,65 @@
             i++;
           }
         } else {
-          if (roomMode && scenesShown) { // devices heading only after the scenes, as in the Studio preview
-            this._appendRevealCard({
-              type:       'custom:button-card',
-              template:   'casora_mobile_header',
-              full_width: true,
-              name:       'Geräte',
-              variables:  { hide_caret: true, mobile_filter_categories: null },
-              styles:     {
-                card:          [{ padding: `18px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})` }],
-                custom_fields: { arrow: [{ display: 'none' }] },
-              },
-            }, this._contentEl, i);
-          }
+          if (roomMode && scenesShown) this._appendRevealCard(_devicesHeadCfg(), this._contentEl, i); // only after the scenes, as in the Studio preview
+          if (roomMode && this._lateScenes) this._lateScenes.flat = true;
           this._appendEntityGrid(roomCards, this._contentEl, i);
           if (room.sort === false) this._contentEl.lastElementChild._casoraNoSort = true;
           i++;
         }
       }
+      // The late scenes go in front of the first element built here (the room head and chips may come later).
+      if (this._lateScenes) this._lateScenes.before = this._contentEl.children[this._lateScenes.at] || null;
       if (this._hass) {
         for (const el of this._cardEls) { try { el.hass = this._hass; } catch (_) {} }
       }
+    }
+
+    // The room's scenes: „Szenen“ heading and the scene grid into parent; false when the room has none.
+    _appendRoomScenes(roomMode, roomEntities, parent, animIndex) {
+      let sceneCount = 0;
+      try {
+        const c = this._config;
+        const vars = { room: roomMode, area: c.area || null, room_entities: roomEntities, scenes: c.scenes, scene_exclude: c.scene_exclude, scene_order: c.scene_order };
+        sceneCount = window._casoraSC.list(this._hass?.states || {}, this._hass, vars).length;
+        // P-V6 (1.3): the same room scene list for the scene menu of the phone bar (04-navigation.js).
+        const key = window._casoraFilter && window._casoraFilter.get ? window._casoraFilter.get() : null;
+        window._casoraRoomScenes = { key, list: (h) => window._casoraSC.list((h && h.states) || {}, h, vars) };
+      } catch (_) { sceneCount = 0; }
+      if (!sceneCount) return false;
+      // dk-06 (1.3): room page headings line up with tiles and title (16 px).
+      this._appendRevealCard({
+        type:       'custom:button-card',
+        template:   'casora_mobile_header',
+        full_width: true,
+        name:       'Szenen',
+        variables:  { hide_caret: true, mobile_filter_categories: null },
+        styles:     {
+          card:          [{ padding: `24px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})` }],
+          custom_fields: { arrow: [{ display: 'none' }] },
+        },
+      }, parent, animIndex);
+      this._appendRevealCard({
+        type:       'custom:button-card',
+        template:   'casora_scene_row',
+        full_width: true,
+        variables:  { layout: 'grid', room: roomMode, area: this._config.area || null, room_entities: roomEntities }, // casora-local-patch: 2-column grid instead of a scrolling row
+        styles:     { card: [{ '--casora-scene-row-gap': '18px' }, { '--casora-scene-grid-col-gap': '8px' }, { '--casora-scene-grid-row-gap': '8px' }] },
+      }, parent, animIndex);
+      return true;
+    }
+
+    // Scenes of a room page built before the scene list existed (see _ensureAutoSections): at their place below the
+    // room head, with the „Geräte“ heading when the tiles are not grouped.
+    _insertLateScenes() {
+      const L = this._lateScenes;
+      if (!L || !window._casoraSC || !this._contentEl) return;
+      this._lateScenes = null;
+      const frag = document.createDocumentFragment();
+      if (!this._appendRoomScenes(L.roomMode, L.roomEntities, frag, null)) return;
+      if (L.flat) this._appendRevealCard(_devicesHeadCfg(), frag, null);
+      const ref = L.before && L.before.parentNode === this._contentEl ? L.before : null;
+      this._contentEl.insertBefore(frag, ref);
     }
 
     // Raum-Kategorien: Überschrift einer Gruppe – seit dem Weich-Audit (M4, 05.10.2026) in derselben

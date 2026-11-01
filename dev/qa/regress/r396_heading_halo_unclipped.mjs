@@ -16,6 +16,7 @@ import { open, casoraDashboard, dashboard, check, need, finish, usePage, shot } 
 const dash = await casoraDashboard();
 await need('Casora-Dashboard mit Handy-Gegenstück', dash && dash.phone);
 const SHOTS = process.env.R396_SHOTS;
+let lateTried = false;
 
 // All visible section headings with their halo reach and the room left up to the nearest clipping ancestor.
 const measure = (page) => page.evaluate(() => {
@@ -171,6 +172,12 @@ for (const [theme, dark] of runs) {
     const plan = grouping === 'off' ? [[all[0], null], [all[1], 'noscenes']] : [[all[all.length > 2 ? 2 : 0], 'many']];
     for (const [label, how] of plan) {
       if (how) await need(`${tag}: ${label} vorbereitet (${how})`, (await prepare(page, label, how)) === 'ok');
+      // Once: the room page is built before the scene list (window._casoraSC, defined by the first scene card)
+      // exists, as on a busy phone (gate 01.11.2026: the room stayed without scenes). The scenes come afterwards.
+      if (!how && !lateTried) {
+        lateTried = true;
+        await page.evaluate(() => { const sc = window._casoraSC; delete window._casoraSC; setTimeout(() => { if (!window._casoraSC) window._casoraSC = sc; }, 1500); });
+      }
       await openRoom(page, label);
       await settle(page);
       const heads = await roomPage(page);
