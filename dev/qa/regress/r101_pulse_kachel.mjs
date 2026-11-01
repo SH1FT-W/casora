@@ -8,10 +8,11 @@
 // Erwartet am Desktop und Handy (hell + dunkel, Theme Casora):
 //   - alles ok: Kachel „Alles ok“, nicht hinterlegt; nur „bald fällig“: „N bald fällig“, hinterlegt (1.4)
 //   - Probleme: „3 Probleme · 1 Batterie bald fällig · 1 beobachten“ (seit 1.4.2 Batterie getrennt), hinterlegt, Symbol rot
-//   - Popup (restyle 26.10.): short subline „3 Probleme · 2 ok“ on one line, thin bar without legend,
-//     „Ausgefallen 1“/„Prüfen 2“/„Beobachten 2“ stacked with count pills centred on the heading, entries of a
-//     section side by side on the desktop (one column on the phone), the time in the subline („seit 2 Tagen“),
-//     battery as a badge at the icon's bottom right, „Alles ok“ collapsed (count centred), „In Pulse öffnen ↗“ as a way-out row (blueprint v2)
+//   - Popup (v3 since 26.11, 99683cfc): status stage „3 Probleme“ with „1 Ausgefallen“/„2 Prüfen“ instead of subline
+//     and bar, a status line in the head on one line that does not repeat the stage, „Ausgefallen 1“/„Prüfen 2“/
+//     „Beobachten 2“ stacked with count pills centred on the heading, on the desktop as a list right of the stage
+//     (one column on the phone), the time in the subline („seit 2 Tagen“), battery as a badge at the icon's bottom
+//     right, „Alles ok“ collapsed (count centred), no way out into the Pulse panel any more (guidelines v3 §8)
 //   - ✓ „Batterie gewechselt“ → Bestätigen → pulse.mark_replaced mit der device_id des Geräts, danach ein Hinweis
 // Bilder fürs Ergebnis: CASORA_PULSE_BILDER=<ordner> legt dort je Ansicht Kachel- und Popup-Bilder ab.
 import fs from 'node:fs';
@@ -203,6 +204,8 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
     const mhd = more && more.querySelector('.hui-mhd'), mct = more && more.querySelector('.hui-mct'), mlb = more && more.querySelector('.hui-mlb');
     const link = window.__pierce('[data-casora-go="/pulse"]')[0];
     const bar = window.__pierce('.pls-bar span').length;
+    const stageEl = window.__pierce('.hui-dl-c, .hui-stage').find((n) => n.getBoundingClientRect().height > 0);
+    const stageTxt = stageEl ? stageEl.textContent.replace(/\s+/g, ' ').trim() : '';
     const leg = window.__pierce('.pls-leg').length;
     const status = window.__pierce('.header-status').find((n) => !n.hidden && n.getBoundingClientRect().height > 0);
     const line = (status || window.__pierce('.hui-line')[0] || {}).textContent || '';
@@ -213,7 +216,7 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
     const lh = status ? parseFloat(getComputedStyle(status).lineHeight) || parseFloat(getComputedStyle(status).fontSize) * 1.4 : null;
     // Not ready yet (header line not mirrored, sections missing): null keeps stable() waiting.
     if (!status || heads.length < 3) return null;
-    return { heads, rows: rows.length, line: line.replace(/\s+/g, ' ').trim(), bar, leg,
+    return { heads, rows: rows.length, line: line.replace(/\s+/g, ' ').trim(), bar, leg, stageTxt, stage: box(stageEl),
       lineH: status ? status.getBoundingClientRect().height : null, lh,
       win: box(win), stairs: box(stairs), single: smoke && win ? box(smoke).r - box(smoke).l - (box(win).r - box(win).l) : null,
       smokeSub: smoke ? (smoke.querySelector('.hui-sub') || {}).textContent : '',
@@ -228,24 +231,26 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
       ring: ring && !ring.hidden ? getComputedStyle(ring).backgroundColor : null };
   }, undefined, { max: 9000 });
   await need(tag + ': Popup-Inhalt vollständig', p, p);
-  await check(tag + ': Unterzeile kurz „3 Probleme · 2 ok“', /3 Probleme/.test(p.line) && /2 ok/.test(p.line) && !/beobachten/.test(p.line), p.line);
-  await check(tag + ': Unterzeile auf einer Zeile', p.lineH !== null && p.lineH < p.lh * 1.6, { h: p.lineH, lh: p.lh });
-  await check(tag + ': Übersichtsleiste mit 4 Teilen, ohne Legende', p.bar === 4 && p.leg === 0, p);
+  await check(tag + ': Statuszeile im Kopf, wiederholt die Bühne nicht', !!p.line && !/3 Probleme/.test(p.line) && !/beobachten/.test(p.line), p.line);
+  await check(tag + ': Statuszeile auf einer Zeile', p.lineH !== null && p.lineH < p.lh * 1.6, { h: p.lineH, lh: p.lh });
+  await check(tag + ': Status-Bühne „3 Probleme“ · „1 Ausgefallen“ · „2 Prüfen“ statt Übersichtsleiste, ohne Legende',
+    /3 Probleme/.test(p.stageTxt) && /1 Ausgefallen/.test(p.stageTxt) && /2 Prüfen/.test(p.stageTxt) && p.bar === 0 && p.leg === 0, p);
   await check(tag + ': Abschnitte „Ausgefallen 1“, „Prüfen 2“, „Beobachten 2“ untereinander', JSON.stringify(p.heads.map((h) => h.t + ' ' + h.n)) === JSON.stringify(['Ausgefallen 1', 'Prüfen 2', 'Beobachten 2'])
     && p.heads.every((h) => Math.abs(h.x - p.heads[0].x) < 1), p.heads);
   await check(tag + ': Zahl mittig zur Überschrift (±1 px)', p.heads.every((h) => h.dy !== null && Math.abs(h.dy) <= 1), p.heads.map((h) => h.dy));
-  await check(tag + ': 5 sichtbare Zeilen (3 Probleme, 2 beobachten) und die Weg-Zeile „In Pulse öffnen ↗“', p.rows === 6 && p.linkRow, p.rows);
+  await check(tag + ': 5 sichtbare Zeilen (3 Probleme, 2 beobachten), keine Weg-Zeile', p.rows === 5 && !p.linkRow, p.rows);
   await check(tag + ': Zeit im Satz („Antwortet seit 2 Tagen nicht“)', /Antwortet seit 2 Tagen nicht/.test(p.smokeSub || ''), p.smokeSub);
   await check(tag + ': rechts nur ✓ und › (kein Text)', p.right && p.right.every((t) => !t), p.right);
   await check(tag + ': Akku-Schild „7 %“ unten rechts am Symbol (6 px Versatz, unter der Glyphe)', p.pct && /^7\s?%$/.test(p.pct.t.replace(/[  ]/g, ' '))
     && Math.abs(p.pct.dr - 6) <= 1 && Math.abs(p.pct.db - 6) <= 1 && p.pct.top >= p.pct.icH * 0.75 - 1, p.pct);
   await check(tag + ': „Alles ok“ eingeklappt, Zahl mittig', p.moreOpen === false && /Alles ok/i.test(p.moreTxt) && Math.abs(p.moreDy) <= 1 && Math.abs(p.moreLbDy) <= 1, p);
-  await check(tag + ': „In Pulse öffnen“ führt ins Pulse-Panel', p.link, p.link);
+  await check(tag + ': kein Weg ins Pulse-Panel (v3 §8)', !p.link, p.link);
   await check(tag + ': „Wichtig“ neben dem Namen', p.chip, p.chip);
   await check(tag + ': Ring in Alarmfarbe', red(p.ring), p.ring);
-  if (mobile) await check(tag + ': Handy einspaltig', p.win && p.stairs && Math.abs(p.win.l - p.stairs.l) < 2 && p.win.t > p.stairs.b, p);
-  else await check(tag + ': Desktop: Einträge eines Abschnitts nebeneinander, ein einzelner über die volle Breite', p.win && p.stairs
-    && Math.abs(p.win.t - p.stairs.t) < 2 && p.win.l > p.stairs.r && p.single > 200, p);
+  // Rows of a section touch each other (one grouped list): the next starts at the bottom of the one before (±1 px).
+  if (mobile) await check(tag + ': Handy einspaltig', p.win && p.stairs && Math.abs(p.win.l - p.stairs.l) < 2 && p.win.t >= p.stairs.b - 1, p);
+  else await check(tag + ': Desktop: Liste rechts neben der Bühne, Einträge untereinander, gleich breit', p.win && p.stairs && p.stage
+    && p.stage.r <= p.stairs.l && Math.abs(p.win.l - p.stairs.l) < 2 && p.win.t >= p.stairs.b - 1 && Math.abs(p.single) < 2, p);
   // Gemeldet 11.10.2026: aufgeklappt stand „Alles ok“ am Desktop nur in der linken Hälfte, einspaltig.
   if (!mobile) {
     for (let i = 0; i < 3; i++) {

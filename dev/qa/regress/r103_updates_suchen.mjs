@@ -7,6 +7,8 @@
 // HACS-Repo hacs/repository/refresh), danach „Zuletzt gesucht: gerade eben“; Popup bleibt offen.
 // Alles nur im Browser: Dienst- und WS-Aufrufe werden abgefangen, Supervisor/HACS nur für die
 // Suche vorgetäuscht (eigenes hass-Objekt), nichts geht an HA.
+// Popup v3 (c69b0636, 26.11): die Suche ist ein Mond „Suchen“ am Rad, ihr Ergebnis steht unter dem Rad (.huc-v3)
+// – kein eigener Zeilen-Knopf mehr. Während der Suche dreht der Mond (huc-busy) und unter dem Rad steht „Suche …“.
 import { open, casoraDashboard, dashboard, shot, check, need, finish } from './lib.mjs';
 
 const dash = await casoraDashboard();
@@ -78,8 +80,8 @@ for (const R of RUNS) {
     const b = window.__pierce('[data-huc]').find((x) => { const r = x.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
     if (!b) return null;
     const r = b.getBoundingClientRect();
-    const s = b.parentNode && b.parentNode.querySelector('.huc-s');
-    return { text: b.innerText.trim(), busy: b.classList.contains('busy'), x: r.x + r.width / 2, y: r.y + r.height / 2,
+    const s = (b.parentNode && b.parentNode.querySelector('.huc-s')) || window.__pierce('.huc-v3').find((x) => x.getBoundingClientRect().height > 0);
+    return { text: b.innerText.trim(), busy: b.classList.contains('busy') || b.classList.contains('huc-busy'), x: r.x + r.width / 2, y: r.y + r.height / 2,
       w: r.width, h: r.height, inView: r.right <= innerWidth && r.left >= 0 && r.bottom <= innerHeight, status: s ? s.innerText.trim() : '' };
   });
   // Warten, bis der Knopf da ist und still steht (Handy: das Blatt fährt erst herein).
@@ -89,21 +91,21 @@ for (const R of RUNS) {
     if (b0 && prev && Math.abs(b0.y - prev.y) < 1) break;
     prev = b0; await page.waitForTimeout(300);
   }
-  await check(R.tag + ': Knopf „Jetzt nach Updates suchen“ sichtbar', b0 && /Jetzt nach Updates suchen/.test(b0.text), b0);
+  await check(R.tag + ': Mond „Suchen“ am Rad sichtbar', b0 && /^Suchen$/.test(b0.text), b0);
   if (!b0) { await page.context().browser().close().catch(() => {}); continue; }
-  await check(R.tag + ': Knopf ganz im Bild und antippbar groß', b0.inView && b0.h >= 18 && b0.w >= 120, b0);
+  await check(R.tag + ': Mond ganz im Bild und antippbar groß (≥ 44 px)', b0.inView && b0.h >= 44 && b0.w >= 44, b0);
   await shot(R.tag + '_1_vorher');
 
   if (R.mobile) await page.touchscreen.tap(b0.x, b0.y); else await page.mouse.click(b0.x, b0.y);
   await page.waitForTimeout(400);
   const b1 = await btn();
-  await check(R.tag + ': während der Suche „Suche …“', b1 && b1.busy && /Suche/.test(b1.text), b1);
+  await check(R.tag + ': während der Suche dreht der Mond, unter dem Rad „Suche …“', b1 && b1.busy && /Suche …/.test(b1.status), b1);
   await shot(R.tag + '_2_suche');
 
   // Auf das Ergebnis warten, nicht auf die Uhr.
   await page.waitForFunction(() => {
     const b = window.__pierce('[data-huc]').find((x) => x.getBoundingClientRect().width > 0);
-    return b && !b.classList.contains('busy');
+    return b && !b.classList.contains('busy') && !b.classList.contains('huc-busy');
   }, null, { timeout: 20000 }).catch(() => {});
   const b2 = await btn();
   const calls = await page.evaluate(() => ({ chk: window.__qaChk,

@@ -170,8 +170,9 @@ const notes = await c.cmd({ type: 'persistent_notification/get' });
 const note = notes.find((n) => n.notification_id === 'casora_legacy_cleanup');
 await check('one notification about the cleanup', !!note, notes.map((n) => n.notification_id));
 const text = note ? note.message : '';
-await check('notification names 2 removed scripts and the theme file', /\b2 /.test(text) && text.includes('themes/casora-themes.yaml')
-  && gone.every((o) => text.includes('script.' + o)), text);
+// Since 26.11 (E28) removed scripts are only counted, their IDs mean nothing to the user; kept ones stay named.
+await check('notification counts 2 removed scripts (no IDs) and names the theme file', /\b2 /.test(text) && text.includes('themes/casora-themes.yaml')
+  && gone.every((o) => !text.includes('script.' + o)), text);
 await check('notification names the kept scripts and why', KEPT.every((o) => text.includes('script.' + o))
   && text.includes('automation.qa_r332') && text.includes('`dashboard '), text);
 const issues = (await c.cmd({ type: 'repairs/list_issues' })).issues.filter((i) => i.domain === 'casora');

@@ -2,7 +2,7 @@
 // @deckt: custom_components/casora/scripts/local/18-ziele.js
 // Casora-Seiten statt HAs Dialog (1.5): casoraRoute öffnet für Messwerte die Messwert-Seite (Zeitraum, Diagramm,
 // Höchst/Tiefst/Ø, Verlauf), für Kontakte die Seite mit Offen-Band, für Geräte ihr Casora-Popup und sonst die
-// Geräteseite (Gerätedaten, „Gehört dazu“, „In Home Assistant öffnen“). Halten auf Casora-Kacheln öffnet kein
+// Geräteseite (seit Popup v3: Status-Bühne und „Gehört dazu“, kein „In Home Assistant öffnen“ mehr). Halten auf Casora-Kacheln öffnet kein
 // HA-Dialog und schaltet nichts. Es wird nichts gespeichert und nichts geschaltet.
 import { open, casoraDashboard, dashboard, check, need, finish, stable } from './lib.mjs';
 
@@ -60,7 +60,8 @@ await close();
 // 3. Geräteseite mit bewusstem Ausweg
 await page.evaluate((id) => window._casoraZiele.openDevice(id), ids.num);
 s = await look();
-await check('Geräteseite: Gerätedaten, „Gehört dazu“, „In Home Assistant öffnen“', s.open && /Gehört dazu/.test(s.text) && /In Home Assistant öffnen/.test(s.text), s.text && s.text.slice(0, 400));
+// Popup v3 (602703dd): status stage and „Gehört dazu“; no device data and no way out to HA's dialog any more.
+await check('Geräteseite (v3): „Gehört dazu“, kein HA-Dialog, kein Ausweg „In Home Assistant öffnen“', s.open && !s.native && /Gehört dazu/.test(s.text) && !/In Home Assistant öffnen/.test(s.text), s.text && s.text.slice(0, 400));
 await close();
 
 // 3b. Geräte-Zeile (Thermostat) → Casora-Popup des Geräts mit ‹ zurück, kein HA-Dialog
@@ -104,7 +105,7 @@ for (const [tpl, dom] of [['casora_air_purifier', 'fan.'], ['casora_media', 'med
     if (r) { r.scrollIntoView({ block: 'center' }); r.click(); } return !!r; });
   if (hit) {
     s = await look();
-    await check(tpl + ': „Weitere Einstellungen“ öffnet die Geräteseite', s.open && !s.native && s.back && /In Home Assistant öffnen/.test(s.text), { t0, title: s.title, back: s.back });
+    await check(tpl + ': „Weitere Einstellungen“ öffnet die Geräteseite', s.open && !s.native && s.back && /Gehört dazu/.test(s.text), { t0, title: s.title, back: s.back });
   }
   await close();
   await page.evaluate(() => document.querySelector('home-assistant').shadowRoot.getElementById('qa-r266s').remove());
