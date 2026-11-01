@@ -50,13 +50,14 @@ MAX_ENTRIES = 400
 MAX_UNPACKED = 96 * 1024 * 1024
 MAX_PHOTO = 16 * 1024 * 1024
 PHOTO_EXT = (".jpg", ".jpeg", ".png", ".webp")
-PHOTO_FILE = re.compile(r"^[a-z0-9][a-z0-9-]{0,80}\.(?:jpe?g|png|webp)$")
+PHOTO_FILE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,80}\.(?:jpe?g|png|webp)$")
 NIGHT = "-night"
 # Keys whose values are credentials in any card we know of; dropped on export.
 SECRET_KEY = re.compile(r"(?:^|_)(?:token|access_token|password|passwd|secret|api_?key|auth|authorization)$", re.I)
 # Same addresses as casoraPhotoUrl (scripts/casora-core.js).
 OLD_PHOTO = re.compile(
     r"^(?:https?://[^/]+)?/(?:casora_assets/rooms|local/casora/rooms|local/hemma/rooms|api/casora/photo)/([^?#]+)", re.I)
+USERINFO = re.compile(r"([a-z][a-z0-9+.-]*://)[^/@\s:]+:[^/@\s]*@", re.I)
 AUTH_SIG = re.compile(r"([?&])authSig=[^&#]*&?")
 
 # Domains whose IDs are entities (services like light.turn_on sit under SERVICE_KEYS and are skipped).
@@ -111,8 +112,11 @@ def scrub(obj: Any) -> Any:
         return {k: scrub(v) for k, v in obj.items() if not (isinstance(k, str) and SECRET_KEY.search(k))}
     if isinstance(obj, list):
         return [scrub(v) for v in obj]
-    if isinstance(obj, str) and "authSig=" in obj:
-        return AUTH_SIG.sub(lambda m: m.group(1) if m.group(0).endswith("&") else "", obj).rstrip("?&")
+    if isinstance(obj, str):
+        if "authSig=" in obj:
+            obj = AUTH_SIG.sub(lambda m: m.group(1) if m.group(0).endswith("&") else "", obj).rstrip("?&")
+        if "@" in obj and "://" in obj:
+            obj = USERINFO.sub(r"\1", obj)  # rtsp://user:password@host → rtsp://host
     return obj
 
 
@@ -133,7 +137,7 @@ def photo_stem(ref: Any) -> str:
     elif "/" in s or ":" in s:
         return ""
     s = re.sub(r"\.(jpe?g|png|webp)$", "", s, flags=re.I)
-    return s if re.fullmatch(r"[a-z0-9][a-z0-9-]{0,80}", s) else ""
+    return s if re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,80}", s) else ""
 
 
 def photo_bases(cfgs: list[Any]) -> set[str]:
@@ -208,7 +212,8 @@ def move_links(cfg: Any, moves: list[tuple[str, str]]) -> Any:
     text = json.dumps(cfg, ensure_ascii=False)
     for old, new in moves:
         if old and new and old != new:
-            text = re.sub("/" + re.escape(old) + r'(?=[/"?#\\])', lambda _m, n=new: "/" + n, text)
+            # Not inside another address: "/api/casora/photo" stays when the old dashboard is "casora".
+            text = re.sub(r"(?<![\w.\-/])/" + re.escape(old) + r"(?=[/\"'?#\\`])", lambda _m, n=new: "/" + n, text)
     return json.loads(text)
 
 

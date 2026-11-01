@@ -164,6 +164,12 @@ check(sh.prepare(staged, url_path="x", mobile_url=None, mapping={}, renames={}, 
       and sh.prepare(staged, url_path="x", mobile_url=None, mapping={}, renames={}, with_settings=False)["mobile"] is None,
       "without settings/phone: none")
 
+moved = sh.move_links({"a": "/casora/kitchen", "b": "/api/casora/photo/x.jpg", "c": "[[[ nav('/casora/office') ]]]",
+                       "d": "/casora-mobile/x", "e": "/casora"}, [("casora", "new-home")])
+check(moved == {"a": "/new-home/kitchen", "b": "/api/casora/photo/x.jpg", "c": "[[[ nav('/new-home/office') ]]]",
+                "d": "/casora-mobile/x", "e": "/new-home"}, f"links only where they are the dashboard: {moved}")
+check(sh.scrub({"u": "rtsp://user:secret@example.com/stream"}) == {"u": "rtsp://example.com/stream"}, "credentials in URLs removed")
+
 print("import: photos")
 write, ren = sh.photo_plan(PHOTOS, {"kitchen-0123456789ab.jpg": b"\xff\xd8\xffDAY",
                                     "kitchen-0123456789ab-night.jpg": b"\xff\xd8\xffNIGHT", "office-aaaaaaaaaaaa.jpg": None})
