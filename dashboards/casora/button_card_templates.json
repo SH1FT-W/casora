@@ -7786,7 +7786,7 @@
         "entity_9": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'lights',user,_rv.show_lights):_rv.show_lights)!==false&&(!!_rv.light_entity_1||!!_rv.light_group_entity||_rv.light_rooms_auto===true)) ? _rv.light_entity_9 : null ]]]",
         "light_group_entity": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'lights',user,_rv.show_lights):_rv.show_lights)!==false&&(!!_rv.light_entity_1||!!_rv.light_group_entity||_rv.light_rooms_auto===true)) ? _rv.light_group_entity : null ]]]",
         "title": "[[[ const _rv = variables.casora_rv || {}; return _rv.lights_title ]]]",
-        "light_rooms_auto": "[[[ const _rv = variables.casora_rv || {}; return _rv.light_rooms_auto === true ]]]"
+        "light_rooms_auto": "[[[ const _rv = variables.casora_rv || {}; \n  /* A room with lamps of its own counts those, never the whole house (detail round #2: „3 An“ in a dark bathroom). */\n  return _rv.light_rooms_auto === true && !_rv.light_entity_1 && !_rv.light_group_entity ]]]"
        },
        "tap_action": {
         "action": "fire-dom-event",
@@ -13730,7 +13730,7 @@
         "entity_9": "[[[ return ((window.casoraSeen?window.casoraSeen(variables,'lights',user,variables.show_lights):variables.show_lights)!==false&&(!!variables.light_entity_1||!!variables.light_group_entity||variables.light_rooms_auto===true)) ? variables.light_entity_9 : null ]]]",
         "light_group_entity": "[[[ return ((window.casoraSeen?window.casoraSeen(variables,'lights',user,variables.show_lights):variables.show_lights)!==false&&(!!variables.light_entity_1||!!variables.light_group_entity||variables.light_rooms_auto===true)) ? variables.light_group_entity : null ]]]",
         "title": "[[[ return variables.lights_title ]]]",
-        "light_rooms_auto": "[[[ return variables.light_rooms_auto === true ]]]"
+        "light_rooms_auto": "[[[\n  /* A room with lamps of its own counts those, never the whole house (detail round #2: „3 An“ in a dark bathroom). */\n  return variables.light_rooms_auto === true && !variables.light_entity_1 && !variables.light_group_entity ]]]"
        }
       },
       {
