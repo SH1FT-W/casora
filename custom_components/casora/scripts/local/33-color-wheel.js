@@ -3,7 +3,10 @@
 // the page „Farbe“ in the same popup, with ‹ back to the light: a hue/saturation wheel like Home Assistant's
 // (hue around, red at the right and clockwise, saturation from the white centre to the edge) and the
 // brightness bar below. Tap or drag on the wheel sets hs_color; while dragging it sends at most every 250 ms.
-//   window._casoraColorWheel.open(id)        → opens the page (false without popup or light)
+//   window._casoraColorWheel.open(id)        → opens the page (false without popup or light); id may list several
+//                                              lamps ("a,b": the v3 light popup's „Farbe“ for a room), the first shows
+//   window._casoraColorWheel.data(hs, ids, states) → light.turn_on data: hs_color, and the lamps' none effect while
+//                                              one runs (a colour ends the effect, _casoraLightSoft.fxEnd)
 //   window._casoraColorWheel.hsAt(dx, dy)    → [hue, saturation] for a point, dx/dy from the centre in radii
 //   window._casoraColorWheel.posOf(hs)       → { x, y } in % of the wheel for [hue, saturation]
 //   window._casoraColorWheel.hsOf(attrs)     → [hue, saturation] of a light: from rgb_color (some integrations
@@ -67,15 +70,24 @@
     };
   };
 
-  CW.open = function (id) {
+  CW.data = function (hs, ids, states) {
+    var d = { hs_color: hs }, LS = window._casoraLightSoft;
+    var e = LS && LS.fxEnd && states ? LS.fxEnd(ids, states) : null;
+    if (e) d.effect = e;
+    return d;
+  };
+
+  CW.open = function (list) {
     var P = window.casoraPopup, h = hassNow();
-    if (!P || !h || !h.states[id]) return false;
+    var ids = String(list || '').split(',').filter(function (x) { return x && h && h.states[x]; });
+    var id = ids[0];
+    if (!P || !h || !id) return false;
     var prev = P.current;
     var st = h.states[id];
     P.open({
       title: 'Farbe', eyebrow: (st.attributes && st.attributes.friendly_name) || id,
       content: { type: 'vertical-stack', cards: [
-        { type: 'custom:casora-color-wheel', entity: id },
+        { type: 'custom:casora-color-wheel', entity: id, targets: ids },
         card(id, '[[[ return window._casoraColorWheel ? window._casoraColorWheel.bright(entity) : ""; ]]]', '0 26px 22px 26px'),
       ] },
       back: prev ? function () { P.open(prev); } : null,
@@ -97,7 +109,7 @@
     + '@media (prefers-reduced-motion:reduce){.k{transition:none;}}';
 
   class CasoraColorWheel extends HTMLElement {
-    setConfig(c) { this._id = c && c.entity; }
+    setConfig(c) { this._id = c && c.entity; this._ids = c && Array.isArray(c.targets) && c.targets.length ? c.targets : [this._id]; }
     getCardSize() { return 6; }
     connectedCallback() {
       if (this._w) return;
@@ -117,7 +129,7 @@
         var go = function () {
           wait = null; sendT = Date.now();
           var h = self._hass || hassNow();
-          if (h && self._id) h.callService('light', 'turn_on', { hs_color: last }, { entity_id: self._id });
+          if (h && self._id) h.callService('light', 'turn_on', CW.data(last, self._ids, h.states), { entity_id: self._ids.length > 1 ? self._ids : self._id });
         };
         if (now || Date.now() - sendT > 250) { clearTimeout(wait); go(); }
         else if (!wait) wait = setTimeout(go, 250 - (Date.now() - sendT));
