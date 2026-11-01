@@ -1678,11 +1678,41 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     return Object.assign({}, DEFAULTS, own, window.CASORA_NOTIFY_LOCAL || {});
   }
 
-  // A warning source: the NINA/Meteoalarm prefix from the settings or a DWD level sensor (any name).
+  // The sources picked in the open dashboard's weather warning tiles (entity, variables.sensors), or null without a tile
+  // (owner, 01.11.2026: the bell shows the warnings of the tile's source only; it listed every warning sensor of the
+  // house while the tile said „Keine Warnungen“ for its own). Memo per dashboard config.
+  function pickedWarnings() {
+    var lc = window._casoraLovelaceCfg && window._casoraLovelaceCfg();
+    if (!lc) return null;
+    var M = pickedWarnings.m;
+    if (M && M.cfg === lc) return M.ids;
+    var ids = [];
+    (function walk(x, d) {
+      if (!x || typeof x !== 'object' || d > 12) return;
+      if (Array.isArray(x)) { x.forEach(function (y) { walk(y, d + 1); }); return; }
+      var t = [].concat(x.template || []);
+      if (t.some(function (n) { return /^casora_(popup_)?weather_warning$/.test(n); })) {
+        var v = x.variables || {};
+        [].concat(x.entity || [], Array.isArray(v.sensors) ? v.sensors : []).forEach(function (e) {
+          if (typeof e === 'string' && e.indexOf('[[[') < 0 && ids.indexOf(e) < 0) ids.push(e);
+        });
+      }
+      Object.keys(x).forEach(function (k) { if (k !== 'variables') walk(x[k], d + 1); });
+    })(lc.views, 0);
+    pickedWarnings.m = { cfg: lc, ids: ids.length ? ids : null };
+    return pickedWarnings.m.ids;
+  }
+  window._casoraPickedWarnings = pickedWarnings;
+
+  // A warning source: the NINA/Meteoalarm prefix from the settings or a DWD level sensor (any name); with a weather
+  // warning tile on the dashboard only the source(s) it shows.
   function isWarning(id, st) {
     var p = cfg().warn_prefix;
-    return (!!p && id.indexOf(p) === 0)
+    var src = (!!p && id.indexOf(p) === 0)
       || (window.casoraWarnings.isLevelSensor(st, id) && !window.casoraWarnings.isAdvance(st, id));
+    if (!src) return false;
+    var picked = pickedWarnings();
+    return !picked || picked.indexOf(id) > -1;
   }
 
   // Active as a warning source: binary_sensor on, DWD level > 0 with warnings.
