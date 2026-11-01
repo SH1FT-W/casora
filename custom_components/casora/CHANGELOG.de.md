@@ -30,6 +30,8 @@ Feinschliff für die neuen Popups aus 26.11.1, dazu drei Wünsche aus euren Rüc
 - **„Seit …“ nach einem Neustart:** Die Uhrzeit des Home-Assistant-Starts erscheint nicht mehr als „Seit“.
 - **Updates-Popup:** Ein Update, das bei offenem Popup gefunden wird, zeigt gleich seine Liste.
 - **YAML-Import im Studio:** Namensfeld und „Importieren“ fehlten.
+- **Glocke und Pulse:** Pulse-Meldungen zählen als neu, auch wenn der Ausfall vor dem letzten Öffnen der Glocke begann (mit Pulse ab 26.11).
+- **Popups springen nicht:** Schlösser- und Medien-Popup verschoben sich kurz nach dem Öffnen bzw. beim Start der Wiedergabe.
 - Viele kleine Korrekturen an Texten, Abständen und Übersetzungen.
 
 ## 26.11.1 – 01.11.2026

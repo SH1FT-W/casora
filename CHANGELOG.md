@@ -30,6 +30,8 @@ Polish for the new popups from 26.11.1, plus three wishes from your feedback. Th
 - **"Since …" after a restart:** the time Home Assistant started no longer shows as "since".
 - **Updates popup:** an update found while the popup is open shows its list right away.
 - **YAML import in the Studio:** the name field and "Import" were missing.
+- **Bell and Pulse:** Pulse notices count as new even when the outage began before the bell was last opened (with Pulse 26.11 or later).
+- **Popups no longer jump:** the locks and media popups moved shortly after opening or when playback started.
 - Many small fixes to wording, spacing and translations.
 
 ## 26.11.1 – 01.11.2026
