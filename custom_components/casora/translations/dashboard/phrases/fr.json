@@ -2669,7 +2669,19 @@
   "Netz offline": "Réseau hors ligne",
   "Bezug aus dem Netz": "Prélèvement sur le réseau",
   "Einspeisung ins Netz": "Injection dans le réseau",
-  "Verbraucht Strom": "Consomme de l’électricité"
+  "Verbraucht Strom": "Consomme de l’électricité",
+  "Lampen": "Lampes",
+  "Insgesamt": "Au total",
+  "Gerät in Home Assistant": "Appareil dans Home Assistant",
+  "Lichter im Haus ausschalten?": "Éteindre les lumières de la maison ?",
+  "Updates jetzt installieren?": "Installer les mises à jour maintenant ?",
+  "Keine Werte": "Aucune valeur",
+  "Solaranteil am Verbrauch": "Part solaire de la consommation",
+  "Preise werden gesammelt": "Collecte des prix",
+  "Warten lohnt sich nicht.": "Attendre ne vaut pas la peine.",
+  "Claude sucht ein Rezept …": "Claude cherche une recette …",
+  "kaum Unterschied": "presque aucune différence",
+  "abends günstiger": "moins cher le soir"
  },
  "patterns": [
   [

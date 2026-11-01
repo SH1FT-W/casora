@@ -2669,7 +2669,19 @@
   "Netz offline": "Net offline",
   "Bezug aus dem Netz": "Afname van het net",
   "Einspeisung ins Netz": "Teruglevering aan het net",
-  "Verbraucht Strom": "Verbruikt stroom"
+  "Verbraucht Strom": "Verbruikt stroom",
+  "Lampen": "Lichten",
+  "Insgesamt": "In totaal",
+  "Gerät in Home Assistant": "Apparaat in Home Assistant",
+  "Lichter im Haus ausschalten?": "Lampen in huis uitschakelen?",
+  "Updates jetzt installieren?": "Updates nu installeren?",
+  "Keine Werte": "Geen waarden",
+  "Solaranteil am Verbrauch": "Zonaandeel in verbruik",
+  "Preise werden gesammelt": "Prijzen worden verzameld",
+  "Warten lohnt sich nicht.": "Wachten loont niet.",
+  "Claude sucht ein Rezept …": "Claude zoekt een recept …",
+  "kaum Unterschied": "nauwelijks verschil",
+  "abends günstiger": "'s avonds goedkoper"
  },
  "patterns": [
   [

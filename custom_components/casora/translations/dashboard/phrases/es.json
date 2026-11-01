@@ -2669,7 +2669,19 @@
   "Netz offline": "Red sin conexión",
   "Bezug aus dem Netz": "Consumo de la red",
   "Einspeisung ins Netz": "Inyección a la red",
-  "Verbraucht Strom": "Consumiendo energía"
+  "Verbraucht Strom": "Consumiendo energía",
+  "Lampen": "Lámparas",
+  "Insgesamt": "En total",
+  "Gerät in Home Assistant": "Dispositivo en Home Assistant",
+  "Lichter im Haus ausschalten?": "¿Apagar las luces de la casa?",
+  "Updates jetzt installieren?": "¿Instalar las actualizaciones ahora?",
+  "Keine Werte": "Sin valores",
+  "Solaranteil am Verbrauch": "Parte solar del consumo",
+  "Preise werden gesammelt": "Recopilando precios",
+  "Warten lohnt sich nicht.": "No merece la pena esperar.",
+  "Claude sucht ein Rezept …": "Claude busca una receta …",
+  "kaum Unterschied": "apenas diferencia",
+  "abends günstiger": "más barato por la tarde"
  },
  "patterns": [
   [

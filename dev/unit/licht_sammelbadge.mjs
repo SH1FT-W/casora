@@ -52,8 +52,8 @@ assert.ok(basis.includes("if (!lightIds.length && groupId && S[groupId] && Strin
     'light.ku_1': on('light.ku_1'), 'light.ga_1': on('light.ga_1'), 'light.ga_2': on('light.ga_2'), 'light.ga_3': off('light.ga_3'),
     'light.wz_1': off('light.wz_1'),
     'light.kueche': grp('light.kueche', ['light.ku_1'], 'on'), 'light.garage': grp('light.garage', ['light.ga_1', 'light.ga_2', 'light.ga_3'], 'on'),
-    'light.wohnzimmer': grp('light.wohnzimmer', ['light.wz_1'], 'off'),
-    'light.haus': grp('light.haus', ['light.kueche', 'light.garage', 'light.wohnzimmer'], 'on'),
+    'light.lounge': grp('light.lounge', ['light.wz_1'], 'off'),
+    'light.haus': grp('light.haus', ['light.kueche', 'light.garage', 'light.lounge'], 'on'),
     // A room whose group holds sub-groups (ceiling, mirror) and a lamp.
     'light.bad_d1': on('light.bad_d1'), 'light.bad_d2': on('light.bad_d2'), 'light.bad_s1': off('light.bad_s1'), 'light.bad_x': off('light.bad_x'),
     'light.bad_decke': grp('light.bad_decke', ['light.bad_d1', 'light.bad_d2'], 'on'), 'light.bad_spiegel': grp('light.bad_spiegel', ['light.bad_s1'], 'off'),
@@ -65,7 +65,7 @@ assert.ok(basis.includes("if (!lightIds.length && groupId && S[groupId] && Strin
   assert.deepEqual(T1(S['light.haus'], { group_rooms: true }), { kind: 'lamps', tot: 5, on: 3 });
   assert.equal(W(T1(S['light.haus'], { group_rooms: true })), '3 An');
   // The badge with the same rooms counts the same lamps.
-  assert.equal(W(T1(sel, { entity_1: 'light.kueche', entity_2: 'light.garage', entity_3: 'light.wohnzimmer' })), '3 An');
+  assert.equal(W(T1(sel, { entity_1: 'light.kueche', entity_2: 'light.garage', entity_3: 'light.lounge' })), '3 An');
   // A room: its lamps.
   assert.deepEqual(T1(S['light.garage'], {}), { kind: 'lamps', tot: 3, on: 2 });
   assert.equal(W(T1(S['light.garage'], {})), '2 An');

@@ -2651,7 +2651,19 @@
   "Netz offline": "Grid offline",
   "Bezug aus dem Netz": "Drawing from the grid",
   "Einspeisung ins Netz": "Feeding into the grid",
-  "Verbraucht Strom": "Using power"
+  "Verbraucht Strom": "Using power",
+  "Lampen": "Lamps",
+  "Insgesamt": "In total",
+  "Gerät in Home Assistant": "Device in Home Assistant",
+  "Lichter im Haus ausschalten?": "Turn off the lights in the house?",
+  "Updates jetzt installieren?": "Install updates now?",
+  "Keine Werte": "No values",
+  "Solaranteil am Verbrauch": "Solar share of consumption",
+  "Preise werden gesammelt": "Collecting prices",
+  "Warten lohnt sich nicht.": "Waiting is not worth it.",
+  "Claude sucht ein Rezept …": "Claude is looking for a recipe …",
+  "kaum Unterschied": "hardly any difference",
+  "abends günstiger": "cheaper in the evening"
  },
  "patterns": [
   [

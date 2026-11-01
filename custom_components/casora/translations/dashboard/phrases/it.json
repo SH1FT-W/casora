@@ -2669,7 +2669,19 @@
   "Netz offline": "Rete offline",
   "Bezug aus dem Netz": "Prelievo dalla rete",
   "Einspeisung ins Netz": "Immissione in rete",
-  "Verbraucht Strom": "Consuma energia"
+  "Verbraucht Strom": "Consuma energia",
+  "Lampen": "Lampade",
+  "Insgesamt": "In totale",
+  "Gerät in Home Assistant": "Dispositivo in Home Assistant",
+  "Lichter im Haus ausschalten?": "Spegnere le luci della casa?",
+  "Updates jetzt installieren?": "Installare gli aggiornamenti ora?",
+  "Keine Werte": "Nessun valore",
+  "Solaranteil am Verbrauch": "Quota solare del consumo",
+  "Preise werden gesammelt": "Raccolta dei prezzi",
+  "Warten lohnt sich nicht.": "Non conviene aspettare.",
+  "Claude sucht ein Rezept …": "Claude cerca una ricetta …",
+  "kaum Unterschied": "quasi nessuna differenza",
+  "abends günstiger": "più economico la sera"
  },
  "patterns": [
   [

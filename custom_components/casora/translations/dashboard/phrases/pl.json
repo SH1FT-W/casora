@@ -2669,7 +2669,19 @@
   "Netz offline": "Sieć offline",
   "Bezug aus dem Netz": "Pobór z sieci",
   "Einspeisung ins Netz": "Oddawanie do sieci",
-  "Verbraucht Strom": "Zużywa prąd"
+  "Verbraucht Strom": "Zużywa prąd",
+  "Lampen": "Lampy",
+  "Insgesamt": "Łącznie",
+  "Gerät in Home Assistant": "Urządzenie w Home Assistant",
+  "Lichter im Haus ausschalten?": "Wyłączyć światła w domu?",
+  "Updates jetzt installieren?": "Zainstalować aktualizacje teraz?",
+  "Keine Werte": "Brak wartości",
+  "Solaranteil am Verbrauch": "Udział słońca w zużyciu",
+  "Preise werden gesammelt": "Zbieranie cen",
+  "Warten lohnt sich nicht.": "Czekanie się nie opłaca.",
+  "Claude sucht ein Rezept …": "Claude szuka przepisu …",
+  "kaum Unterschied": "prawie bez różnicy",
+  "abends günstiger": "taniej wieczorem"
  },
  "patterns": [
   [
