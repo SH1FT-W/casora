@@ -135,7 +135,10 @@ const ITEMS = [
   { w: 4, id: 'anwesenheit', popup: 'Anwesenheit – Badge (Gruppe)', stage: 'S7', badge: 'casora_badge_presence_group', room: 'haus' },
   { w: 4, id: 'klima-gruppe', popup: 'Klima-Gruppe (Badge)', stage: 'S7', badge: 'casora_badge_climate_group', room: 'haus' },
   { w: 4, id: 'batterien', popup: 'Batterien', stage: 'S7', tpl: 'casora_battery' },
-  { w: 4, id: 'wetterwarnung', popup: 'Wetterwarnung', stage: 'S7 in Warnfarbe', tpl: 'casora_weather_warning' },
+  // The tile as the Studio makes it: with the DWD level sensor (the bell reads all warning sensors; without an entity the
+  // popup said „Keine Warnungen“ next to the bell's two – detail round #7).
+  { w: 4, id: 'wetterwarnung', popup: 'Wetterwarnung', stage: 'S7 in Warnfarbe', tpl: 'casora_weather_warning', pick: (c) => !!c.entity,
+    guess: (S) => first(S, /^sensor\..*wetterwarnung_stufe$/) || first(S, /^sensor\./, (s) => (s.attributes || {}).warning_count != null) || first(S, /^binary_sensor\./, (s) => (s.attributes || {}).device_class === 'safety' && (s.attributes || {}).headline != null) },
   { w: 4, id: 'lueften', popup: 'Lüften-Coach', stage: 'S7', tpl: 'casora_vent' },
   { w: 4, id: 'pulse', popup: 'Pulse', stage: 'S7', tpl: 'casora_pulse' },
   // Welle 5 – Verlauf, Bild, Inhalt
