@@ -35,6 +35,7 @@ const { page } = await open({ width: 393, height: 852, mobile: true, safari: tru
 usePage(page);
 await page.addInitScript(() => { try { localStorage.removeItem('casora.search.recent'); localStorage.setItem('casora_mobile_filter', 'all'); } catch (e) { /* none */ } });
 await dashboard(page, phoneUrl);
+await page.waitForFunction(() => window.__pierce('[data-casora-search]').length > 0, null, { timeout: 20000 }).catch(() => {});
 const field = await page.evaluate(() => {
   const f = window.__pierce('[data-casora-search]')[0];
   if (!f) return null;
@@ -60,6 +61,21 @@ const kitchen = rowsOf(r, 'room').find((x) => /Küche/.test(x.name));
 await check('„kuche“ findet den Raum „Küche“ (ohne Umlaut), Treffer markiert', kitchen && /^Küche$/i.test(kitchen.mark || ''), r && r.groups);
 await check('Gruppen höchstens 8 Einträge', (r.groups || []).every((g) => g.rows.length <= 8), r.groups.map((g) => g.rows.length));
 await shot('handy-treffer');
+const look = await page.evaluate(() => {
+  const root = document.querySelector('.cs-root');
+  const alpha = (el) => { const m = getComputedStyle(el).backgroundColor.match(/rgba?\(([^)]+)\)/); const p = m ? m[1].split(/[\s,/]+/).filter(Boolean).map(Number) : []; return p.length > 3 ? p[3] : (p.length ? 1 : 0); };
+  const strip = getComputedStyle(root.querySelector('.cs-bar'), '::before');
+  return {
+    subs: [...root.querySelectorAll('.cs-row[data-kind="device"] .cs-sub')].map((x) => x.textContent),
+    panel: alpha(root.querySelector('.cs-panel')),
+    strip: strip.backgroundColor,
+    cut: [...root.querySelectorAll('.cs-name')].filter((n) => n.scrollWidth > n.clientWidth + 1).map((n) => n.textContent),
+  };
+});
+// Words as everywhere in Casora (wortliste): no HA words like „Ein“/„Leerlauf“, no raw English states.
+await check('Zustände in Casoras Worten (kein „Ein“, „Leerlauf“, Rohwert)', look.subs.every((t) => !/(^|· )(Ein|Leerlauf|ready|idle|on|off)$/.test(t)), look.subs);
+await check('Blatt und Kopfzeile der Suche deckend', look.panel === 1 && /^rgb\(/.test(look.strip), look);
+await check('Lange Namen umbrechen statt abgeschnitten', look.cut.length === 0, look.cut);
 
 // Room opens its page
 await page.evaluate(() => [...document.querySelectorAll('.cs-row[data-kind="room"] .cs-main')].find((b) => /Küche/.test(b.textContent))?.click());

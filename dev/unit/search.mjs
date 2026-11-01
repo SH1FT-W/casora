@@ -172,4 +172,33 @@ assert.equal(S.shown({}), true, 'default on');
 assert.equal(S.shown({ show_search: false }), false);
 box.casoraPhoneRoom = { home: () => ({ show_search: false }) };
 assert.equal(S.shown({}), false, 'switched off in the Studio, before the phone was saved');
+// ── State words as the popup head says them (casoraStateWord in casora-core.js) ──
+const core = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-core.js', import.meta.url), 'utf8');
+const stI = core.indexOf('if (window._casoraStateText) return;');
+vm.runInContext(core.slice(core.lastIndexOf('(function () {', stI), core.indexOf('})();', stI) + 5), box);
+assert.equal(typeof box.casoraStateWord, 'function', 'core state word loaded');
+const fmt = { on: 'Ein', off: 'Aus', idle: 'Leerlauf', playing: 'Wiedergabe', ready: 'ready', heat: 'Heizen', '21.5': '21,5 °C' };
+const hz = { formatEntityState: (e) => fmt[e.state] ?? e.state };
+const sword = (id, state, attrs = {}) => S.stateWord(hz, { entity_id: id, state, attributes: attrs });
+assert.equal(sword('light.qa_a', 'on'), 'An', 'HA\'s „Ein“ → „An“');
+assert.equal(sword('switch.qa_a', 'off'), 'Aus');
+assert.equal(sword('media_player.qa_a', 'idle'), 'Bereit', '„Leerlauf“ → „Bereit“');
+assert.equal(sword('sensor.qa_spueler', 'ready'), 'Bereit', 'raw „ready“ → „Bereit“');
+assert.equal(sword('media_player.qa_a', 'playing'), 'Wiedergabe', 'HA\'s word where the list has none');
+assert.equal(sword('sensor.qa_temp', '21.5'), '21,5 °C', 'a measurement shows its value');
+assert.equal(sword('light.qa_gruppe', 'on', { entity_id: ['light.qa_a'] }), 'An', 'a group on/off: its word');
+assert.equal(sword('sensor.qa_code', 'pre_wash_x'), '', 'a raw code: nothing');
+assert.equal(sword('lock.qa_tor', 'unavailable'), 'Offline');
+assert.equal(sword('light.qa_a', 'unavailable'), 'Nicht verfügbar');
+
+// ── Room symbols: the Studio's own (room_icon), else the bar's, else none (the sheet draws a house) ──
+const deskIcons = { views: [
+  { path: 'home', cards: [{ type: 'custom:button-card', template: 'casora_room', name: 'Home' }] },
+  { path: 'kueche', cards: [{ type: 'custom:button-card', template: 'casora_room', name: 'Küche', variables: { room_icon: 'kitchen' } }] },
+  { path: 'bad', cards: [{ type: 'custom:button-card', template: 'casora_room', name: 'Bad', variables: { room_icon: '/local/own/bad.svg' } }] },
+  { path: 'flur', cards: [{ type: 'custom:button-card', template: 'casora_room', name: 'Flur' }] },
+] };
+deq(S.index(deskIcons, hass, { id: ME }, { url: 'qa-haus' }).rooms.map((r) => r.icon),
+  ['/casora_assets/icons/kitchen.svg', '/local/own/bad.svg', null]);
+
 console.log('search: ok');

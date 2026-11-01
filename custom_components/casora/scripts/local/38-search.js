@@ -265,7 +265,7 @@
         var hv = (hero && hero.variables) || {};
         var home = path === 'home' || (route && route.auto === 'home') || (!routes && i === 0);
         var nm = plain(hero && hero.name) || plain(route && route.label) || plain(v.title) || path;
-        if (!home) idx.rooms.push({ kind: 'room', id: url, url: url, name: nm, icon: (route && route.icon) || null });
+        if (!home) idx.rooms.push({ kind: 'room', id: url, url: url, name: nm, icon: roomIcon(hv.room_icon) || (route && route.icon) || null });
         var room = home ? null : nm;
         cards.forEach(function (c) { if (c !== hero) collect(c, room, 0); });
         badgeEntities(hv).forEach(function (id) { addDevice(id, null, room); });
@@ -294,6 +294,13 @@
     return idx;
   };
 
+  // A room's own symbol from the Studio (variables.room_icon: a glyph name or a path), as the phone's bar shows it.
+  function roomIcon(g) {
+    if (typeof g !== 'string' || !g.trim()) return null;
+    g = g.trim();
+    if (/^mdi:/.test(g) || g.charAt(0) === '/') return g;
+    return /^[a-z0-9-]+$/.test(g) ? '/casora_assets/icons/' + g + '.svg' : null;
+  }
   function areaName(hass, id) {
     var e = (hass && hass.entities && hass.entities[id]) || null;
     var aid = e && (e.area_id || (e.device_id && hass.devices && hass.devices[e.device_id] ? hass.devices[e.device_id].area_id : null));
@@ -397,9 +404,13 @@
     + '.cs-root.in .cs-scrim{opacity:1;}'
     + '.cs-wrap{position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;gap:var(--casora-space-2, 8px);'
     + 'padding:calc(env(safe-area-inset-top, 0px) + 12px) max(env(safe-area-inset-right, 0px), var(--casora-rail-left, 16px)) 12px max(env(safe-area-inset-left, 0px), var(--casora-rail-left, 16px));}'
-    + '.cs-bar{display:flex;align-items:center;gap:var(--casora-space-3, 12px);}'
+    + '.cs-bar{position:relative;isolation:isolate;display:flex;align-items:center;gap:var(--casora-space-3, 12px);}'
+    // Phone: the header strip behind field and "Abbrechen" is the sheet's own opaque pane, edge to edge.
+    + '.cs-root:not(.desk) .cs-bar::before{content:"";position:absolute;z-index:-1;left:calc(-1 * max(env(safe-area-inset-left, 0px), var(--casora-rail-left, 16px)));'
+    + 'right:calc(-1 * max(env(safe-area-inset-right, 0px), var(--casora-rail-left, 16px)));top:calc(-12px - env(safe-area-inset-top, 0px));bottom:-8px;'
+    + 'background:var(--cs-pane, var(--primary-background-color));box-shadow:var(--casora-shadow-rest, none);}'
     + '.cs-field{flex:1;min-width:0;display:flex;align-items:center;gap:var(--casora-space-2, 8px);height:44px;padding:0 12px;border-radius:var(--casora-r-element, 18px);'
-    + 'background:var(--casora-search-field, var(--casora-window-pane, var(--casora-menu-pane-webkit, var(--casora-entity-background))));color:var(--casora-entity-name, var(--primary-text-color));box-shadow:var(--casora-shadow-rest, 0 2px 8px rgba(0,0,0,.08));}'
+    + 'background:var(--casora-search-field, color-mix(in srgb, currentColor 9%, transparent));color:inherit;}'
     + '.cs-field svg{flex:none;width:18px;height:18px;opacity:.6;}'
     + '.cs-in{flex:1;min-width:0;height:100%;border:0;outline:0;background:transparent;color:inherit;font:inherit;font-size:var(--casora-fs-row, 16px);-webkit-appearance:none;appearance:none;padding:0;}'
     + '.cs-in::-webkit-search-cancel-button{display:none;}'
@@ -422,8 +433,8 @@
     + 'background:color-mix(in srgb, var(--cs-tone, var(--casora-color-teal, #4E9E95)) 22%, transparent);color:var(--cs-tone, var(--casora-color-teal, #4E9E95));--mdc-icon-size:20px;}'
     + '.cs-ic i{display:block;width:20px;height:20px;background:currentColor;-webkit-mask:var(--cs-svg) center/contain no-repeat;mask:var(--cs-svg) center/contain no-repeat;}'
     + '.cs-tx{flex:1;min-width:0;display:flex;flex-direction:column;}'
-    + '.cs-name{font-size:var(--casora-fs-row, 15px);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
-    + '.cs-sub{font-size:var(--casora-fs-sub, 13px);opacity:.62;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+    + '.cs-name{font-size:var(--casora-fs-row, 15px);font-weight:600;line-height:1.25;overflow-wrap:anywhere;}'
+    + '.cs-sub{font-size:var(--casora-fs-sub, 13px);opacity:.62;line-height:1.3;overflow-wrap:anywhere;}'
     + '.cs-go{flex:none;opacity:.45;font-size:20px;padding:0 4px;}'
     + '.cs-start{flex:none;font-size:var(--casora-fs-sub, 13px);font-weight:600;color:var(--casora-popup-ui-action, var(--casora-color-teal, #4E9E95));padding:0 4px;}'
     + '.cs-root mark{background:color-mix(in srgb, var(--casora-color-yellow, #E8B04A) 45%, transparent);color:inherit;border-radius:3px;padding:0 1px;}'
@@ -440,8 +451,7 @@
     + '.cs-root.desk .cs-wrap{left:50%;top:12vh;right:auto;width:min(640px, calc(100vw - 32px));transform:translateX(-50%);padding:0;gap:0;'
     + 'border-radius:var(--casora-menu-radius, 34px);overflow:hidden;}'
     + '.cs-root.desk .cs-bar{padding:var(--casora-menu-pad, 8px) var(--casora-menu-pad, 8px) 0;}'
-    + '.cs-root.desk .cs-field{box-shadow:none;}'
-    + '.cs-root.desk .cs-scrim{background:var(--casora-search-scrim-desk, rgba(0,0,0,.28));}'
+        + '.cs-root.desk .cs-scrim{background:var(--casora-search-scrim-desk, rgba(0,0,0,.28));}'
     + '.cs-root.desk .cs-cancel{display:none;}'
     + '.cs-root.desk .cs-esc{display:inline-block;margin-right:6px;}'
     + '.cs-root.desk .cs-panel{max-height:min(60vh, 560px);transform:none;}'
@@ -487,18 +497,33 @@
       return box;
     }
     var hi = document.createElement('ha-icon');
-    hi.setAttribute('icon', it.kind === 'room' ? (it.icon && /^mdi:/.test(it.icon) ? it.icon : 'mdi:door') : it.kind === 'scene' ? ((st && st.attributes && st.attributes.icon) || 'mdi:palette-outline') : 'mdi:devices');
+    hi.setAttribute('icon', it.kind === 'room' ? (it.icon && /^mdi:/.test(it.icon) ? it.icon : 'mdi:home-variant') : it.kind === 'scene' ? ((st && st.attributes && st.attributes.icon) || 'mdi:palette-outline') : 'mdi:devices');
     box.appendChild(hi);
     return box;
   }
+  // The state as the popup head says it (casoraStateWord, wortliste: „An“, „Bereit“, never HA's raw words). Where the
+  // head says since when instead: a measurement shows its value, on/off of a group its word, a raw code nothing.
+  S.stateWord = function (hass, st) {
+    if (!st) return '';
+    var tr = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
+    var w = window.casoraStateWord ? window.casoraStateWord(hass, st) : undefined;
+    if (typeof w === 'string') return w;
+    if (st.state === 'on' || st.state === 'off') return tr(st.state === 'on' ? 'An' : 'Aus');
+    var dom = st.entity_id.split('.')[0];
+    if (w === null && (dom === 'sensor' || dom === 'number' || dom === 'input_number') && st.state !== '' && isFinite(Number(st.state))) {
+      try { return hass.formatEntityState ? String(hass.formatEntityState(st)) : st.state; } catch (e) { return st.state; }
+    }
+    if (w === null) return '';
+    // Without the core (tests): HA's word, a raw English token in Casora's words.
+    return window._casoraNiceState ? window._casoraNiceState(hass, st) : st.state;
+  };
   function subFor(it, hass) {
     if (it.kind === 'room') return [];
     var st = hass && hass.states && hass.states[it.id];
     var parts = [];
     if (it.room) parts.push(it.room);
     if (it.kind === 'device' && st) {
-      var txt = '';
-      try { txt = hass.formatEntityState ? hass.formatEntityState(st) : st.state; } catch (e) { txt = st.state; }
+      var txt = S.stateWord(hass, st);
       if (txt) parts.push(txt);
     }
     return parts;
@@ -766,6 +791,20 @@
     }
   }
 
+  // The sheet and its header strip are opaque (nothing of the page – weather, title – shows through, also in Glas):
+  // the window pane with its alpha at 1, shared with the header strip as --cs-pane.
+  function solidify(pane) {
+    var bg = '';
+    try { bg = getComputedStyle(pane).backgroundColor || ''; } catch (e) { bg = ''; }
+    var m = bg.match(/rgba?\(([^)]+)\)/);
+    var p = m ? m[1].split(/[\s,/]+/).filter(Boolean).map(Number) : null;
+    if (!p || p.length < 3) return;
+    var solid = 'rgb(' + Math.round(p[0]) + ', ' + Math.round(p[1]) + ', ' + Math.round(p[2]) + ')';
+    pane.style.backgroundColor = solid;
+    pane.style.backdropFilter = 'none';
+    pane.style.webkitBackdropFilter = 'none';
+    ui.root.style.setProperty('--cs-pane', solid);
+  }
   function dashUrl() { return (String(location.pathname || '').split('/').filter(Boolean)[0]) || ''; }
   function configNow() {
     var root = null;
@@ -803,6 +842,7 @@
       if (o.desk) { u.panel.style.background = 'transparent'; u.panel.style.boxShadow = 'none'; u.panel.style.backdropFilter = 'none'; u.panel.style.webkitBackdropFilter = 'none'; }
     }
     if (!u.root.isConnected) document.body.appendChild(u.root);
+    solidify(o.desk ? u.wrap : u.panel);
     render();
     fitViewport();
     // Focus in the same tap (WebKit only opens the keyboard then).
