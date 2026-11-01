@@ -15,6 +15,11 @@ Feinschliff für die neuen Popups aus 26.11.1, dazu drei Wünsche aus euren Rüc
 - **Heizungsgruppen drehen:** Fußbodenheizungs- und Thermostat-Gruppen haben am Rad einen Knopf. Drehen setzt alle eingeschalteten Räume auf einmal.
 - **Aquarium-Licht:** Profile der Lampe als Monde am Rad, dazu „Programm ›“ (Home Assistant oder Programm der Lampe).
 
+- **Raumsuche:** Am Handy steht auf „Zuhause“ oben ein Suchfeld für Räume, Geräte und Szenen – Geräte mit Schalter direkt in der Liste, Szenen mit Start; „kuche“ findet „Küche“. Am Desktop öffnet ⌘K bzw. Strg+K dieselbe Suche. Im Studio unter Bedienung → Handy abschaltbar.
+- **Dashboard exportieren und importieren:** Im Studio über ⋯ → „Exportieren …“ bzw. „Neu → Aus Datei importieren …“ – als Datei sichern oder weitergeben, wahlweise mit Fotos und Einstellungen. Beim Import zeigt Casora eine Vorschau, ordnet fehlende Geräte zu und fragt vor dem Ersetzen nach; der alte Stand bleibt in der Zeitreise.
+- **Klima sortieren:** Wie bei der Sicherheit lässt sich im Studio die Reihenfolge der Einträge im Klima-Badge ziehen.
+- **Licht-Effekte:** Lampen mit Effekten (z. B. Hue, WLED) haben im Popup einen Mond „Effekte“ mit kleinem Menü am Rad.
+
 ### Geändert
 - **Handy-Räume ohne Kategorien:** Räume zeigen ihre Geräte am Handy wieder in einer Liste, ohne automatische Gruppen (Licht, Klima …). Wer Gruppen möchte, schaltet sie im Studio unter Design & Bedienung → Handy ein. Keine Kachel nimmt am Handy mehr die ganze Breite ein.
 - **KI-Check auf der Update-Seite:** „Jetzt prüfen“ bzw. „Neu prüfen“ startet die KI-Prüfung auch direkt auf der Detailseite eines Updates.

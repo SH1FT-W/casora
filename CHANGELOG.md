@@ -15,6 +15,11 @@ Polish for the new popups from 26.11.1, plus three wishes from your feedback. Th
 - **Turn heating groups:** underfloor heating and thermostat groups have a knob on the dial. Turning it sets every room that is on at once.
 - **Aquarium light:** the lamp's profiles as moons on the dial, plus "Program ›" (Home Assistant or the lamp's own program).
 
+- **Room search:** on the phone, Home has a search field at the top for rooms, devices and scenes: devices with a switch right in the list, scenes with Start; "kuche" finds "Küche". On the desktop Cmd+K or Ctrl+K opens the same search. Can be turned off in the Studio under Controls, Phone.
+- **Export and import a dashboard:** in the Studio via ⋯, "Export …" or "New, Import from file …": save it as a file or pass it on, with photos and settings if you like. On import Casora shows a preview, maps missing devices and asks before replacing; the old state stays in the time travel.
+- **Sort climate:** like security, the Studio lets you drag the order of the entries in the climate badge.
+- **Light effects:** lamps with effects (e.g. Hue, WLED) get a moon "Effects" with a small menu at the dial in the popup.
+
 ### Changed
 - **Phone rooms without categories:** rooms list their devices on the phone in one list again, without automatic groups (Light, Climate …). If you want groups, turn them on in the Studio under Design & controls, Phone. No tile takes the full width on the phone any more.
 - **AI check on the update page:** "Check now" or "Check again" starts the AI check right on an update's detail page.
