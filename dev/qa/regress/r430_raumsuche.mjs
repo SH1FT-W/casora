@@ -5,7 +5,8 @@
 // opens the sheet with the keyboard's field focused (a real finger tap: 26.11.2 did nothing in the Companion app),
 // the field is hidden until one pulls down at the top, "kuche" finds the kitchen (no umlaut), a room opens its page,
 // a device's switch switches it, a scene starts, Esc / "Abbrechen" close. Desktop: Cmd+K opens the same search as a
-// dialog with the same results, Esc closes it.
+// dialog with the same results, Esc closes it. Android (Chromium): a finger tap opens it and typing reaches the field;
+// the desktop finds its scenes, the weather and a tile by its entity's own name (#102).
 import { open, usePage, casoraDashboard, dashboard, check, need, shot, finish } from './lib.mjs';
 
 const dash = await casoraDashboard((d) => true);
@@ -181,6 +182,27 @@ await page.evaluate(() => document.querySelector('.cs-cancel').click());
 await page.waitForTimeout(300);
 await check('„Abbrechen“ schließt die Suche', !(await page.evaluate(() => !!document.querySelector('.cs-root'))));
 
+// ── Android (Chromium, Companion app's user agent): a finger tap opens the sheet and typing reaches the field (#102:
+// 26.11.2's field took no input on Android, the card's action handler cancelled touchend, so no click followed) ──
+{
+  const a = await open({ width: 412, height: 915, mobile: true,
+    userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/130.0.0.0 Mobile Safari/537.36 Home Assistant/2026.10.1-1 (Android 14; Pixel 8)' });
+  usePage(a.page);
+  await a.page.addInitScript(() => { try { localStorage.removeItem('casora.search.recent'); localStorage.setItem('casora_mobile_filter', 'all'); } catch (e) { /* none */ } });
+  await dashboard(a.page, phoneUrl);
+  await a.page.waitForFunction(() => window.__pierce('[data-casora-search]').length > 0, null, { timeout: 20000 }).catch(() => {});
+  await a.page.evaluate(() => window._casoraSearch.reveal(true));
+  await a.page.waitForTimeout(450);
+  const fb = await a.page.evaluate(() => { const f = window.__pierce('[data-casora-search]')[0]; const b = f && f.getBoundingClientRect(); return b ? { x: b.x + b.width / 2, y: b.y + b.height / 2 } : null; });
+  if (fb) await a.page.touchscreen.tap(fb.x, fb.y);
+  await a.page.waitForTimeout(500);
+  await a.page.keyboard.type('kuche', { delay: 30 });
+  await a.page.waitForTimeout(300);
+  const ar = await results(a.page);
+  const val = await a.page.evaluate(() => document.querySelector('.cs-in')?.value ?? null);
+  await check('Android: Finger-Tipp öffnet, Tippen landet im Feld und findet „Küche“', ar && ar.focus && val === 'kuche' && rowsOf(ar, 'room').some((x) => /Küche/.test(x.name)), { val, ar });
+}
+
 // ── Desktop: Cmd+K ──────────────────────────────────────────────────────────────────────────────────────────
 const d = await open({ width: 1440, height: 900 });
 usePage(d.page);
@@ -192,6 +214,21 @@ await check('⌘K öffnet die Suche als Dialog, Feld hat den Fokus', r && r.focu
 r = await typeIn(d.page, 'kuche');
 await check('Desktop: „kuche“ findet „Küche“', rowsOf(r, 'room').some((x) => /Küche/.test(x.name)), r && r.groups);
 await shot('desktop-cmdk');
+// #102: on the desktop the scenes (Home room's badge), the weather (room's head) and a tile by its entity's own name.
+const desk = await d.page.evaluate(() => {
+  const S = window._casoraSearch, h = document.querySelector('home-assistant').hass;
+  const idx = S.index(S._configNow(), h, h.user, { url: location.pathname.split('/')[1] });
+  const fold = (x) => S.fold(x).s;
+  const dev = idx.devices.find((x) => (x.alias || []).some((a) => fold(a).split(/[^a-z0-9]+/).some((w) => w.length > 2 && !fold(x.name).includes(w) && !fold(x.room || '').includes(w))));
+  return { scene: idx.scenes[0] ? { id: idx.scenes[0].id, name: idx.scenes[0].name } : null, weather: idx.devices.find((x) => /^weather\./.test(x.id))?.id || null,
+    alias: dev ? { id: dev.id, q: dev.alias[0] } : null };
+});
+await check('Desktop: Szenen im Suchindex (Szenen-Badge von Home)', !!desk.scene, desk);
+if (desk.scene) { r = await typeIn(d.page, desk.scene.name); await check('Desktop: Szene gefunden', rowsOf(r, 'scene').some((x) => x.id === desk.scene.id), r && r.groups); }
+r = await typeIn(d.page, 'wetter');
+await check('Desktop: „wetter“ findet das Wetter', !!desk.weather && rowsOf(r, 'device').some((x) => x.id === desk.weather), { desk, groups: r && r.groups });
+if (desk.alias) { r = await typeIn(d.page, desk.alias.q); await check('Desktop: Kachel über den Namen ihrer Entität gefunden', rowsOf(r, 'device').some((x) => x.id === desk.alias.id), { desk, groups: r && r.groups }); }
+await typeIn(d.page, 'kuche');
 await d.page.keyboard.press('ArrowDown');
 await d.page.keyboard.press('Enter');
 await d.page.waitForTimeout(1500);

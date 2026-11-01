@@ -148,6 +148,43 @@ deq(ids('scenes'), ['scene.qa_film'], 'the scene row\'s own selection');
 idx = S.index(deskCfg, hass, { id: KID }, { url: 'qa-haus' });
 assert.ok(idx.rooms.some((r) => r.name === 'Geheim') && ids('devices').includes('light.qa_geheim'), 'the child sees its view');
 
+// ── Desktop as the Studio builds it (#102): scenes as the Home room's badge (show_scenes), no scene row; the weather
+// in the room's head (weather_entity), no tile of its own; a tile named without its room ("Markise" in Schlafzimmer)
+// whose entity is called "SZ Markise". All three were missing from the search.
+Object.assign(states, { 'weather.qa_station': st('weather.qa_station', 'sunny', 'Messpunkt Nord'),
+  'cover.qa_markise': st('cover.qa_markise', 'open', 'SZ Markise'), 'scene.qa_kino': st('scene.qa_kino', 'scening', 'Kinoabend') });
+const deskStudio = { views: [
+  { path: 'home', cards: [{ type: 'custom:button-card', template: 'casora_room', name: 'Home',
+    variables: { show_scenes: true, scene_entities: '[[[ return []; ]]]', scene_exclude: ['scene.qa_versteckt'], weather_entity: 'weather.qa_station' } },
+  { type: 'vertical-stack', cards: [{ type: 'conditional', conditions: [], card: { type: 'custom:casora-nav', routes: [
+    { url: '/qa-haus/home', label: 'Home', auto: 'home' }, { url: '/qa-haus/schlafen', label: 'Schlafzimmer' }] } }] },
+  row([tile('casora_switch', 'switch.qa_kaffee')])] },
+  { path: 'schlafen', cards: [{ type: 'custom:button-card', template: 'casora_room', name: 'Schlafzimmer', variables: { weather_entity: 'weather.qa_station' } },
+    { type: 'vertical-stack', cards: [] }, row([tile('casora_cover', 'cover.qa_markise', { name: 'Markise' })])] },
+] };
+idx = S.index(deskStudio, hass, { id: ME }, { url: 'qa-haus' });
+assert.ok(ids('scenes').includes('scene.qa_kino'), 'scenes of the Home badge (show_scenes) are searchable');
+assert.ok(!ids('scenes').includes('scene.qa_versteckt'), 'with the badge\'s exclusions');
+assert.equal(S.query(idx, 'kino').scenes[0]?.item.id, 'scene.qa_kino', '"kino" finds the scene');
+assert.equal(S.query(idx, 'wetter').devices[0]?.item.id, 'weather.qa_station', '"wetter" finds the weather of the room\'s head');
+assert.equal(S.query(idx, 'messpunkt').devices[0]?.item.id, 'weather.qa_station', 'and by its own name');
+assert.equal(S.query(idx, 'sz markise').devices[0]?.item.id, 'cover.qa_markise', 'the entity\'s name finds a tile named otherwise');
+assert.equal(S.query(idx, 'markise').devices[0]?.item.name, 'Markise', 'shown with the tile\'s name');
+deq(S.query(idx, 'markise').devices[0].m.name, [[0, 7]], 'a hit in the tile\'s name is marked there');
+assert.ok(S.match('Markise', 'markise').score > S.match('Rollo', 'markise', null, 'Markise').score, 'the name ranks before another name');
+assert.equal(S.query(idx, 'sz kino').total, 0, 'every word must still be found');
+// A desktop scene menu in the bar (casora-nav route menu: scenes) counts as well.
+const deskMenu = JSON.parse(JSON.stringify(deskStudio));
+delete deskMenu.views[0].cards[0].variables.show_scenes;
+assert.equal(S.index(deskMenu, hass, { id: ME }, { url: 'qa-haus' }).scenes.length, 0, 'no scene surface: no scenes');
+deskMenu.views[0].cards[1].cards[0].card.routes.push({ label: 'Szenen', menu: 'scenes' });
+assert.ok(S.index(deskMenu, hass, { id: ME }, { url: 'qa-haus' }).scenes.some((x) => x.id === 'scene.qa_kino'), 'scene menu in the bar');
+// The phone's title carries the weather too.
+const phoneW = JSON.parse(JSON.stringify(phoneCfg));
+phoneW.views[0].cards[1].cards[0].variables = { weather_entity: 'weather.qa_station' };
+assert.equal(S.query(S.index(phoneW, hass, { id: ME }), 'wetter').devices[0]?.item.id, 'weather.qa_station', 'phone: "wetter" finds the weather');
+['weather.qa_station', 'cover.qa_markise', 'scene.qa_kino'].forEach((k) => { delete states[k]; });
+
 // ── Toggle only for switchable domains, not with "ask before switching" ──
 assert.equal(S.canToggle(hass, 'light.qa_spiegel_bad'), true);
 assert.equal(S.canToggle(hass, 'cover.qa_jalousie_bad'), false, 'covers open their popup');

@@ -60,10 +60,21 @@
     return out;
   }
 
-  // Every word of the query must be found, in the name or (weaker) in the room's name.
-  S.match = function (name, query, room) {
+  // Every word of the query must be found, in the name or (weaker) in the room's name. alias: other names of the
+  // item (the entity's own name when the tile is named otherwise, "Wetter" for the weather) – a hit there counts a
+  // little less than in the name and marks nothing (the row shows the name).
+  S.match = function (name, query, room, alias) {
     var toks = Array.isArray(query) ? query : tokensOf(query);
     if (!toks.length) return null;
+    var best = matchOne(name, toks, room);
+    [].concat(alias || []).forEach(function (a) {
+      if (!a || a === name) return;
+      var m = matchOne(a, toks, room);
+      if (m && (!best || m.score - 5 > best.score)) best = { score: m.score - 5, name: [], room: m.room };
+    });
+    return best;
+  };
+  function matchOne(name, toks, room) {
     var variants = [S.fold(name), S.fold(name, true)];
     var rvariants = room ? [S.fold(room), S.fold(room, true)] : [];
     var total = 0, nr = [], rr = [], inName = 0;
@@ -85,7 +96,7 @@
     total -= Math.min(15, whole.length / 4);
     if (!inName) total -= 10;
     return { score: total, name: merge(nr), room: merge(rr) };
-  };
+  }
 
   // ── What the dashboard shows ──────────────────────────────────────────────────────────────────────────────
   var userOf = function () { try { var h = document.querySelector('home-assistant'); return (h && h.hass && h.hass.user) || null; } catch (e) { return null; } };
@@ -144,14 +155,19 @@
     var idx = { phone: phone, rooms: [], devices: [], scenes: [] };
     var seen = {}, sceneSeen = {};
     var sees = function (id) { return !window.casoraSeesEntity || window.casoraSeesEntity(id, user); };
-    var nameOf = function (id, card) {
-      var st = states[id];
-      return plain(card && card.name) || (st && st.attributes && plain(st.attributes.friendly_name)) || id;
+    var ownName = function (id) { var st = states[id]; return (st && st.attributes && plain(st.attributes.friendly_name)) || ''; };
+    var nameOf = function (id, card) { return plain(card && card.name) || ownName(id) || id; };
+    // Also found by the entity's own name ("WZ Rollo" for a tile named "Rollo" in its room) and the weather by "Wetter".
+    var aliasOf = function (id, name) {
+      var out = [ownName(id)];
+      if (id.indexOf('weather.') === 0) out.push(T('Wetter'));
+      return out.filter(function (a) { return a && a !== name; });
     };
     var addScene = function (id, card, room) {
       if (sceneSeen[id] || !states[id] || !sees(id)) return;
       sceneSeen[id] = true;
-      idx.scenes.push({ kind: 'scene', id: id, name: nameOf(id, card), room: room || areaName(hass, id) });
+      var nm = nameOf(id, card);
+      idx.scenes.push({ kind: 'scene', id: id, name: nm, alias: aliasOf(id, nm), room: room || areaName(hass, id) });
     };
     var addDevice = function (id, card, room) {
       if (typeof id !== 'string' || !states[id] || !sees(id)) return;
@@ -159,7 +175,8 @@
       if (RUN.indexOf(dom) >= 0) { addScene(id, card, room); return; }
       var had = seen[id];
       if (had) { if (!had.room && room) had.room = room; if (!had.card && card) had.card = card; return; }
-      var d = seen[id] = { kind: 'device', id: id, name: nameOf(id, card), room: room || null, card: card || null };
+      var nm = nameOf(id, card);
+      var d = seen[id] = { kind: 'device', id: id, name: nm, alias: aliasOf(id, nm), room: room || null, card: card || null };
       idx.devices.push(d);
     };
     var collect = function (c, room, depth) {
@@ -272,12 +289,26 @@
       });
     }
 
-    // Scenes: the scene menu's (same selection and exclusions), when the dashboard has scenes at all.
+    // The weather: in the room's head (casora_room) and the phone's title (casora_mobile_weather), no tile of its own.
+    (function find(x, d) {
+      if (!x || typeof x !== 'object' || d > 8) return;
+      if (Array.isArray(x)) { x.forEach(function (y) { find(y, d + 1); }); return; }
+      var t = tpls(x), w = x.variables && x.variables.weather_entity;
+      if ((t.indexOf('casora_room') >= 0 || t.indexOf('casora_mobile_weather') >= 0) && typeof w === 'string' && /^weather\.[a-z0-9_]+$/.test(w)) addDevice(w, null, null);
+      ['cards', 'card'].forEach(function (k) { if (x[k]) find(x[k], d + 1); });
+    })(views.map(function (v) { return v && v.cards; }), 0);
+
+    // Scenes: the scene menu's (same selection and exclusions), when the dashboard has scenes at all: a scene row, the
+    // phone's bar, the desktop bar's scene menu or the scenes badge of the desktop's Home room (show_scenes, the Studio's
+    // default on the desktop, which has no scene row).
     var sc = null, hasScenes = false;
+    var onOf = function (v) { return v === true || v === 'true'; };
     (function find(x, d) {
       if (!x || typeof x !== 'object' || d > 8) return;
       if (Array.isArray(x)) { x.forEach(function (y) { find(y, d + 1); }); return; }
       if (tpls(x).indexOf('casora_scene_row') >= 0 || x.type === 'custom:casora-mobile-nav') hasScenes = true;
+      if (tpls(x).indexOf('casora_room') >= 0 && x.variables && onOf(x.variables.show_scenes)) hasScenes = true;
+      if (x.type === 'custom:casora-nav' && Array.isArray(x.routes) && x.routes.some(function (r) { return r && r.menu === 'scenes'; })) hasScenes = true;
       var vv = x.variables && typeof x.variables === 'object' ? x.variables : null;
       [x, vv].forEach(function (s) {
         if (!sc && s && (Array.isArray(s.scenes) || Array.isArray(s.scene_exclude))) sc = s;
@@ -315,7 +346,7 @@
     ['rooms', 'devices', 'scenes'].forEach(function (g) {
       var hits = [];
       (idx[g] || []).forEach(function (it) {
-        var m = S.match(it.name, toks, g === 'rooms' ? null : it.room);
+        var m = S.match(it.name, toks, g === 'rooms' ? null : it.room, it.alias);
         if (m) hits.push({ item: it, m: m });
       });
       hits.sort(function (a, b) { return b.m.score - a.m.score || String(a.item.name).localeCompare(String(b.item.name)); });
