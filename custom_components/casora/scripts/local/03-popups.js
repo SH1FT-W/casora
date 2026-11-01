@@ -738,12 +738,12 @@
     return window._casoraHH ? window._casoraHH.sel(html) : html;
   };
 
+  // issue 105: a switch on the right (the shared UI.row.toggle), greyed out while the entity is unavailable.
   var toggleRow = function (eid, icon, label, sub, states) {
     var s = states[eid]; if (!s) return null;
     var on = s.state === 'on';
-    return { icon: icon, iconTone: on ? 'accent' : 'rgba(255,255,255,0.18)', label: label, sub: sub || null,
-      value: s.state === 'unavailable' ? '—' : (on ? 'An' : 'Aus'),
-      svc: ok(s) ? { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: eid } } : null };
+    return window._casoraUI.row.toggle({ icon: icon, label: label, sub: sub || null, on: on && ok(s), disabled: !ok(s), reason: 'Nicht verfügbar',
+      svc: { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: eid } } });
   };
 
   /* ── Abschnitte (werden in [[[ ]]]-Feldern mit triggers_update aufgerufen) ── */
@@ -789,10 +789,10 @@
       /* Weich (Entschlacken): Hauptschalter steht unter „Mehr“ (sec 'master'). */
       if (ms && !(window._casoraHH && window._casoraHH.on())) {
         var mon = ms.state === 'on';
-        out += '<div style="height:12px"></div>' + UI.group([{ icon: 'mdi:power-plug-outline', iconTone: mon ? 'accent' : 'rgba(255,255,255,0.18)',
-          label: 'Hauptschalter', sub: mon ? 'Heizkreise mit Strom versorgt' : 'Heizkreise stromlos', value: mon ? 'An' : 'Aus',
-          svc: ok(ms) ? { domain: 'switch', service: mon ? 'turn_off' : 'turn_on', target: { entity_id: c.master } } : null,
-          confirm: mon ? 'Ausschalten' : 'Einschalten' }]);
+        out += '<div style="height:12px"></div>' + UI.group([UI.row.toggle({ icon: 'mdi:power-plug-outline', on: mon, disabled: !ok(ms), reason: 'Nicht verfügbar',
+          label: 'Hauptschalter', sub: mon ? 'Heizkreise mit Strom versorgt' : 'Heizkreise stromlos',
+          svc: { domain: 'switch', service: mon ? 'turn_off' : 'turn_on', target: { entity_id: c.master } },
+          confirm: mon ? 'Ausschalten' : 'Einschalten' })]);
       }
       return out;
     }
@@ -801,10 +801,10 @@
       var ms2 = c.master && states[c.master];
       if (!ms2) return '';
       var mon2 = ms2.state === 'on';
-      return UI.group([{ icon: 'mdi:power-plug-outline', iconTone: mon2 ? 'accent' : 'rgba(255,255,255,0.18)',
-        label: 'Hauptschalter', sub: mon2 ? 'Heizkreise mit Strom versorgt' : 'Heizkreise stromlos', value: mon2 ? 'An' : 'Aus',
-        svc: ok(ms2) ? { domain: 'switch', service: mon2 ? 'turn_off' : 'turn_on', target: { entity_id: c.master } } : null,
-        confirm: mon2 ? 'Ausschalten' : 'Einschalten' }], 'Strom');
+      return UI.group([UI.row.toggle({ icon: 'mdi:power-plug-outline', on: mon2, disabled: !ok(ms2), reason: 'Nicht verfügbar',
+        label: 'Hauptschalter', sub: mon2 ? 'Heizkreise mit Strom versorgt' : 'Heizkreise stromlos',
+        svc: { domain: 'switch', service: mon2 ? 'turn_off' : 'turn_on', target: { entity_id: c.master } },
+        confirm: mon2 ? 'Ausschalten' : 'Einschalten' })], 'Strom');
     }
 
     if (name === 'history') {

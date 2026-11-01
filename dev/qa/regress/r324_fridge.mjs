@@ -8,7 +8,7 @@
 //     ("Passendes Gerät gefunden"), the new tile takes its zone sensor and shows "7 °C · −18 °C" (nothing saved)
 //   - dashboard (copies qa-fridge / qa-fridge-mobile with the tile on the home page): tile "7 °C · −18 °C";
 //     tap → popup with status line, 24 h chart, "Temperaturen" (both zones), the top zone's setpoint on the dial (v3), "Modi"
-//     (SuperCool, SuperFrost, Nachtmodus, Partymodus); toggling SuperFrost switches it and the tile says
+//     (SuperCool, SuperFrost, Nachtmodus, Partymodus as switch rows, #105); toggling SuperFrost switches it and the tile says
 //     "SuperFrost · …"; − on the dial sets the number. Desktop two columns, phone one column.
 //   Everything changed is put back at the end.
 // Pictures: CASORA_FRIDGE_BILDER=<folder> stores Studio, tile and popup pictures per view.
@@ -138,7 +138,9 @@ const POPUP = () => {
   const val = window.__pierce('.hui-stage .hui-st-n').find(vis);
   return { line: ((pop && pop._headerStatus && pop._headerStatus.textContent) || '').replace(/\s+/g, ' ').trim(), labels,
     stage: sr ? { x: sr.left, w: sr.width, value: val ? val.textContent.trim() : '', pm: window.__pierce('.hui-stage .hui-st-b').filter(vis).length } : null,
-    rows: window.__pierce('.hui-srow').filter(vis).map((r) => r.textContent.replace(/\s+/g, ' ').trim()),
+    // Switch rows (#105) carry their switch's state as „[true]“/„[false]“.
+    rows: window.__pierce('.hui-srow').filter(vis).map((r) => { const sw = r.querySelector('[role="switch"]');
+      return r.textContent.replace(/\s+/g, ' ').trim() + (sw ? ' [' + sw.getAttribute('aria-checked') + ']' : ''); }),
     segs: window.__pierce('.hui-sg').filter(vis).map((n) => n.textContent.trim()),
     chart: window.__pierce('casora-chart').some(vis) };
 };
@@ -202,8 +204,8 @@ for (const [tag, o, url, mobile, act] of VIEWS) {
     let fs1 = before.frost;
     for (let i = 0; i < 20 && fs1 === before.frost; i++) { await page.waitForTimeout(300); fs1 = await stateOf(FROST); }
     await check(tag + ': tapping SuperFrost switches it', fs1 !== before.frost, fs1);
-    const p2 = await stable(page, POPUP, null, { until: (v) => v && v.rows.some((r) => /^SuperFrost.*An/.test(r)), max: 8000 });
-    await check(tag + ': popup shows SuperFrost on', p2.rows.some((r) => /^SuperFrost.*An/.test(r)), p2.rows);
+    const p2 = await stable(page, POPUP, null, { until: (v) => v && v.rows.some((r) => /^SuperFrost.*\[true\]$/.test(r)), max: 8000 });
+    await check(tag + ': popup shows SuperFrost on', p2.rows.some((r) => /^SuperFrost.*\[true\]$/.test(r)), p2.rows);
     // Setpoint: „−“ on the dial of the top zone (5 → 4).
     const pill = await page.evaluate(() => { const n = window.__pierce('.hui-stage .hui-st-b').find((x) => /Weniger/.test(x.getAttribute('aria-label') || '') && x.getBoundingClientRect().height > 0);
       if (!n) return null; n.scrollIntoView({ block: 'center' }); const b = n.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; });

@@ -529,9 +529,10 @@
     var u = uiOf(id), today = V.weekday(date), sel = u.day || today, E = F().entities(hass);
     // Schedule on/off = Velair's zone pause (what Velair's card does).
     var on = z.enabled && !z.globalOff && !z.zonePaused && z.source !== 'profile_pause';
-    var head = { icon: 'mdi:calendar-clock', iconTone: on ? 'accent' : OFF_PLATE, label: 'Zeitplan', sub: V.status(z, date), active: on,
-      value: on ? 'An' : 'Aus' };
-    if (z.enabled && !z.globalOff && !z.blocked && z.source !== 'profile_pause' && !z.external) head.svc = on ? V.svc.pause(id) : V.svc.resume(id);
+    // issue 105: the schedule's on/off as a switch (UI.row.toggle); greyed out where Velair does not let it switch here.
+    var can = z.enabled && !z.globalOff && !z.blocked && z.source !== 'profile_pause' && !z.external;
+    var head = UI.row.toggle({ icon: 'mdi:calendar-clock', label: 'Zeitplan', sub: V.status(z, date), on: on, disabled: !can,
+      svc: can ? (on ? V.svc.pause(id) : V.svc.resume(id)) : null });
     var rows = [head];
     if (z.globalPaused && E.auto) {
       rows.push({ icon: 'mdi:pause-circle-outline', iconTone: 'warn', label: 'Velair pausiert', sub: 'Alle Zeitpläne warten', action: 'Fortsetzen',

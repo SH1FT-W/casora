@@ -10349,6 +10349,42 @@ window.casoraMenuGlass = {
 
   if (!window._casoraUIBound) {
     window._casoraUIBound = true;
+    // Switch rows (UI.row.toggle, issue 105): flip the switch at once while Home Assistant switches (pending), as the light
+    // popup's lamp rows do. The next tap sends the other service; the card's redraw with the real state replaces the
+    // row, and when nothing changed within 6 s the switch goes back to what the entity says.
+    var flipSwitch = function (rowEl, spec) {
+      var sw = rowEl && rowEl.querySelector && rowEl.querySelector('.hui-sw');
+      var UIx = window._casoraUI;
+      if (!sw || !UIx || !UIx.switchHtml || sw.getAttribute('aria-disabled') === 'true') return;
+      var was = sw.getAttribute('aria-checked') === 'true';
+      var put = function (on) {
+        var cur = rowEl.querySelector('.hui-sw');
+        if (!cur) return;
+        cur.outerHTML = UIx.switchHtml(on, false);
+        rowEl.classList.toggle('hui-act', on);
+        var sv = rowEl.getAttribute('data-casora-svc'), cf = rowEl.querySelector(':scope > .hui-cf');
+        var swap = function (j) {
+          try {
+            var o = JSON.parse(j);
+            if (o && /^turn_(on|off)$/.test(o.service)) { o.service = on ? 'turn_off' : 'turn_on'; return JSON.stringify(o); }
+          } catch (e) { /* not ours */ }
+          return j;
+        };
+        if (sv) rowEl.setAttribute('data-casora-svc', swap(sv));
+        if (cf && cf.dataset.casoraCf) cf.dataset.casoraCf = swap(cf.dataset.casoraCf);
+      };
+      put(!was);
+      rowEl.setAttribute('data-casora-pending', '1');
+      var id = spec && spec.target && spec.target.entity_id;
+      clearTimeout(rowEl._casoraSwT);
+      rowEl._casoraSwT = setTimeout(function () {
+        rowEl.removeAttribute('data-casora-pending');
+        if (!rowEl.isConnected || typeof id !== 'string') return;
+        var h = document.querySelector('home-assistant'), st = h && h.hass && h.hass.states && h.hass.states[id];
+        if (st && (st.state === 'on') !== !was) put(st.state === 'on');
+      }, 6000);
+    };
+    window._casoraFlipSwitch = flipSwitch;
     var closeMediaOverlay = function (ov) {
       if (!ov || ov.hidden) return;
       if (ov._casoraHidX) {
@@ -10424,6 +10460,7 @@ window.casoraMenuGlass = {
             var ha3 = document.querySelector('home-assistant');
             if (ha3 && ha3.hass && cs && cs.domain) {
               var cp = ha3.hass.callService(cs.domain, cs.service, cs.data || {}, cs.target || undefined);
+              flipSwitch(t.parentNode, cs);
               // Rückmeldung (Pulse „Gewechselt“): cs.done als kurzer HA-Hinweis, sobald der Dienst durch ist.
               if (cs.done && cp && cp.then) {
                 cp.then(function () {
@@ -10559,6 +10596,7 @@ window.casoraMenuGlass = {
               // „Vor dem Schalten fragen“ der Kachel gilt auch für die Knöpfe im Popup.
               var go2 = function () {
                 ha2.hass.callService(spec.domain, spec.service, spec.data || {}, spec.target || undefined);
+                if (t.classList && t.classList.contains('hui-row')) flipSwitch(t, spec);
                 // ⏮/⏭ in the media popup: bar restarts from 0 until HA reports (casora-np-progress).
                 var skEnt = spec.domain === 'media_player' && /^media_(previous|next)_track$/.test(spec.service)
                   && ((spec.target && spec.target.entity_id) || (spec.data && spec.data.entity_id));
@@ -11911,7 +11949,7 @@ window.casoraMenuGlass = {
   }
   // Real switch for the end of a row (the entity list's switch, now shared). disabled: greyed out.
   function switchHtml(on, disabled) {
-    return '<div role="switch" aria-checked="' + (on ? 'true' : 'false') + '"' + (disabled ? ' aria-disabled="true"' : '')
+    return '<div class="hui-sw" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"' + (disabled ? ' aria-disabled="true"' : '')
       + ' style="position:relative;width:44px;height:26px;border-radius:999px;flex:none;pointer-events:none;transition:background .2s ease;'
       + (disabled ? 'opacity:.4;' : '') + 'background:'
       + (on ? 'var(--casora-sw-on, var(--casora-lps-switch-on, #B67A50))' : 'var(--casora-sw-off, rgba(58,50,43,0.38))') + ';">'
@@ -11928,7 +11966,8 @@ window.casoraMenuGlass = {
   var row = {
     toggle: function (o) {
       var on = !!o.on;
-      var r = { icon: o.icon, iconTone: on ? (o.iconTone || 'accent') : 'rgba(0,0,0,0)', label: o.label, sub: o.sub,
+      // offTone: the icon's tone while off (an aquarium pump that must run: 'bad'); default no plate.
+      var r = { icon: o.icon, iconTone: on ? (o.iconTone || 'accent') : (o.offTone || 'rgba(0,0,0,0)'), label: o.label, sub: o.sub,
         labelLit: o.labelLit, active: on && !o.disabled, endHtml: switchHtml(on, o.disabled) };
       if (o.disabled) { if (o.reason) r.sub = o.reason; }
       else if (o.svc || o.entity) {
@@ -11936,6 +11975,17 @@ window.casoraMenuGlass = {
         if (o.confirm) r.confirm = o.confirm;
       }
       return r;
+    },
+    // Switch row for one on/off entity (issue 105): the state decides the switch, unavailable or unknown greys it out.
+    // st: the entity's state object; o as toggle (svc overrides the default homeassistant.turn_on/turn_off).
+    // Returns null without a state, so callers can filter.
+    entity: function (st, o) {
+      if (!st) return null;
+      o = o || {};
+      var gone = st.state === 'unavailable' || st.state === 'unknown';
+      var on = o.on != null ? !!o.on : st.state === 'on';
+      return row.toggle(Object.assign({}, o, { on: on && !gone, entity: st.entity_id, disabled: gone || o.disabled,
+        reason: gone ? (o.reason || 'Nicht verfügbar') : o.reason, svc: gone ? null : o.svc }));
     },
     value: function (o) { return Object.assign({}, o, { entity: null, svc: null, tappable: false }); },
     next: function (o) { return Object.assign({}, o, { tappable: o.entity ? o.tappable : true }); },

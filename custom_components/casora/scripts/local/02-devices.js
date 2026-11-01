@@ -343,14 +343,14 @@
     const lbl = (t) => soft ? UI.label(t)
       : '<div style="font-family:var(--primary-font-family,system-ui);font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);'
         + 'letter-spacing:var(--casora-h15-ls,-0.01em);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary,#fff));padding:0 4px 8px;text-align:left;">' + UI.esc(t) + '</div>';
-    let out = UI.group([{ icon: 'mdi:lightbulb', iconTone: on ? null : 'rgba(255,255,255,0.18)', label: 'Beckenlicht',
-      sub: far ? 'Per Bluetooth nicht erreichbar' : blip ? 'Bluetooth-Verbindung kurz unterbrochen' : (dead ? 'Nicht verfügbar' : null),
-      value: dead ? '—' : on ? 'An' : 'Aus', valueTone: far ? 'warn' : null,
+    /* issue 105: a switch on the right (UI.row.toggle), not the word „An“/„Aus“. */
+    let out = UI.group([UI.row.toggle({ icon: 'mdi:lightbulb', label: 'Beckenlicht', on: on, disabled: dead, reason: 'Nicht verfügbar',
+      sub: far ? 'Per Bluetooth nicht erreichbar' : blip ? 'Bluetooth-Verbindung kurz unterbrochen' : null,
       /* Turn on with colour values (light_on_data): a bare turn_on left the Juwel lamp dark. */
-      svc: dead ? null : (on ? { domain: 'light', service: 'turn_off', target: { entity_id: c.light } }
-                             : { domain: 'light', service: 'turn_on', data: c.lightOn || {}, target: { entity_id: c.light } }),
+      svc: on ? { domain: 'light', service: 'turn_off', target: { entity_id: c.light } }
+              : { domain: 'light', service: 'turn_on', data: c.lightOn || {}, target: { entity_id: c.light } },
       /* Turn off only after confirmation, like pump/skimmer. */
-      confirm: on ? 'Ausschalten' : null }], 'Licht');
+      confirm: on ? 'Ausschalten' : null })], 'Licht');
     if (dead) return out;
     const modes = Array.isArray(a.supported_color_modes) ? a.supported_color_modes : [];
     if (modes.some((m) => m !== 'onoff')) {
@@ -755,17 +755,17 @@
       const dead = s === 'unavailable' || s == null;
       const p = d.power ? parseFloat(states[d.power]?.state) : NaN;
       const nopow = d.alarm && on && !isNaN(p) && p < 2;
-      return {
+      /* issue 105: a switch on the right (UI.row.toggle), not the word „An“/„Aus“. */
+      return window._casoraUI.row.toggle({
         icon: d.icon || 'mdi:power-plug',
-        iconTone: on ? (nopow ? 'bad' : 'good') : (d.alarm ? 'bad' : 'rgba(255,255,255,0.18)'),
+        iconTone: nopow ? 'bad' : 'good', offTone: d.alarm ? 'bad' : null,
         label: d.label,
         sub: !isNaN(p) ? f(p) + ' W' + (nopow ? ' · keine Leistung' : '') : null,
-        value: dead ? 'Nicht verfügbar' : on ? 'An' : 'Aus',
-        valueTone: (!on && d.alarm) || nopow ? 'bad' : null,
-        svc: dead ? null : (window._casoraAqTechSvc ? window._casoraAqTechSvc(d.entity, on)
-          : { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: d.entity } }),
+        on: on, disabled: dead, reason: 'Nicht verfügbar',
+        svc: window._casoraAqTechSvc ? window._casoraAqTechSvc(d.entity, on)
+          : { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: d.entity } },
         confirm: on && d.confirm ? 'Ausschalten' : null,
-      };
+      });
     });
     return window._casoraUI.group(rows, 'Technik');
   ]]]`);
@@ -948,19 +948,20 @@
       const l = c.light && states[c.light];
       if (l && ${tOk ? 'true' : 'false'} && !c.lightStage) {
         const on = l.state === 'on', dead = l.state === 'unavailable';
-        rows.push({ icon: 'mdi:lightbulb', iconTone: on ? 'accent' : 'rgba(255,255,255,0.18)', label: 'Beckenlicht', value: dead ? 'Nicht verfügbar' : on ? 'An' : 'Aus',
-          svc: dead ? null : (on ? { domain: 'light', service: 'turn_off', target: { entity_id: c.light } }
-                                 : { domain: 'light', service: 'turn_on', data: c.lightOn || {}, target: { entity_id: c.light } }),
-          confirm: on ? 'Ausschalten' : null, active: on });
+        /* issue 105: switch rows (UI.row.toggle) instead of the word „An“/„Aus“. */
+        rows.push(window._casoraUI.row.toggle({ icon: 'mdi:lightbulb', label: 'Beckenlicht', on: on, disabled: dead, reason: 'Nicht verfügbar',
+          svc: on ? { domain: 'light', service: 'turn_off', target: { entity_id: c.light } }
+                  : { domain: 'light', service: 'turn_on', data: c.lightOn || {}, target: { entity_id: c.light } },
+          confirm: on ? 'Ausschalten' : null }));
       }
       c.devs.forEach((d) => {
         const st = states[d.entity], dead = !st || st.state === 'unavailable';
         const on = window._casoraAqTechOn ? window._casoraAqTechOn(st) : st && st.state === 'on';
-        rows.push({ icon: d.icon || 'mdi:power-plug', iconTone: on ? 'good' : (d.alarm ? 'bad' : 'rgba(255,255,255,0.18)'), label: d.label,
-          value: dead ? 'Nicht verfügbar' : on ? 'An' : 'Aus', valueTone: !on && d.alarm ? 'bad' : null, active: on,
-          svc: dead ? null : (window._casoraAqTechSvc ? window._casoraAqTechSvc(d.entity, on)
-            : { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: d.entity } }),
-          confirm: on && d.confirm ? 'Ausschalten' : null });
+        rows.push(window._casoraUI.row.toggle({ icon: d.icon || 'mdi:power-plug', iconTone: 'good', offTone: d.alarm ? 'bad' : null, label: d.label,
+          on: on, disabled: dead, reason: 'Nicht verfügbar',
+          svc: window._casoraAqTechSvc ? window._casoraAqTechSvc(d.entity, on)
+            : { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: d.entity } },
+          confirm: on && d.confirm ? 'Ausschalten' : null }));
       });
       return rows.length ? window._casoraUI.group(rows, 'Geräte') : '';
     ]]]`;
@@ -1989,11 +1990,12 @@
       if (sw) {
         var on = sw.state === 'on';
         var dead = sw.state === 'unavailable';
-        rowsP.push({ icon: 'mdi:power-plug', iconTone: on ? 'good' : DIM, label: 'Strom',
-          sub: dead ? 'Steckdose nicht erreichbar' : (on && active ? (c.print ? 'Druck läuft gerade' : 'Maschine läuft gerade') : null),
-          value: dead ? 'Offline' : on ? 'An' : 'Aus', valueTone: dead ? 'bad' : null,
-          svc: dead ? null : { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: c.plug } },
-          confirm: on ? (active ? 'Trotzdem aus' : 'Ausschalten') : null });
+        /* issue 105: switch rows (UI.row.toggle) instead of the word „An“/„Aus“. */
+        rowsP.push(UI.row.toggle({ icon: 'mdi:power-plug', iconTone: 'good', offTone: DIM, label: 'Strom', on: on, disabled: dead,
+          reason: 'Steckdose nicht erreichbar',
+          sub: on && active ? (c.print ? 'Druck läuft gerade' : 'Maschine läuft gerade') : null,
+          svc: { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: c.plug } },
+          confirm: on ? (active ? 'Trotzdem aus' : 'Ausschalten') : null }));
       }
       /* Soft (declutter): only the switches (power, button lock), no readings. */
       var pw = SF ? null : num(states, c.power), v = SF ? null : num(states, c.volt), a = SF ? null : num(states, c.amp);
@@ -2002,9 +2004,9 @@
       if (v != null) rowsP.push({ icon: 'mdi:sine-wave', iconTone: DIM, label: 'Spannung', value: f(v, 0) + ' V', entity: c.volt });
       if (a != null) rowsP.push({ icon: 'mdi:current-ac', iconTone: DIM, label: 'Stromstärke', value: f(a, 2) + ' A', entity: c.amp });
       var lk = c.lock && states[c.lock];
-      if (lk && lk.state !== 'unavailable') rowsP.push({ icon: 'mdi:lock-outline', iconTone: lk.state === 'on' ? 'accent' : DIM,
-        label: 'Tastensperre', sub: 'Taste an der Steckdose', value: lk.state === 'on' ? 'An' : 'Aus',
-        svc: { domain: 'switch', service: lk.state === 'on' ? 'turn_off' : 'turn_on', target: { entity_id: c.lock } } });
+      if (lk && lk.state !== 'unavailable') rowsP.push(UI.row.toggle({ icon: 'mdi:lock-outline', offTone: DIM, on: lk.state === 'on',
+        label: 'Tastensperre', sub: 'Taste an der Steckdose',
+        svc: { domain: 'switch', service: lk.state === 'on' ? 'turn_off' : 'turn_on', target: { entity_id: c.lock } } }));
       if (SF) return rowsP.length ? UI.group(rowsP, 'Steckdose') : '';
       return rowsP.length ? L.wrap(UI.group(rowsP, 'Steckdose').replace(/data-casora-mi="/g, 'data-hp-metric="')) : '';
     }
@@ -4504,9 +4506,10 @@
         var sw0 = c.plug && states[c.plug];
         if (!sw0) return '';
         var po0 = sw0.state === 'on', dead0 = sw0.state === 'unavailable';
-        return UI.group([{ icon: 'mdi:power-plug', iconTone: po0 ? 'good' : DIM, label: 'Station', sub: dead0 ? 'Steckdose nicht erreichbar' : (po0 ? null : 'Roboter lädt nicht'),
-          value: dead0 ? 'Offline' : po0 ? 'An' : 'Aus', valueTone: dead0 || !po0 ? 'bad' : null,
-          svc: dead0 ? null : { domain: 'switch', service: po0 ? 'turn_off' : 'turn_on', target: { entity_id: c.plug } }, confirm: po0 ? 'Ausschalten' : null }], 'Strom');
+        /* issue 105: a switch on the right (UI.row.toggle), not the word „An“/„Aus“. */
+        return UI.group([UI.row.toggle({ icon: 'mdi:power-plug', iconTone: 'good', offTone: 'bad', label: 'Station', on: po0, disabled: dead0,
+          reason: 'Steckdose nicht erreichbar', sub: po0 ? null : 'Roboter lädt nicht',
+          svc: { domain: 'switch', service: po0 ? 'turn_off' : 'turn_on', target: { entity_id: c.plug } }, confirm: po0 ? 'Ausschalten' : null })], 'Strom');
       }
       // Battery levels (casoraBattery): ≤ 10 % red, ≤ 20 % orange – the bar stays honest while charging too.
       var blv = (window.casoraBattery ? window.casoraBattery.level(bat) : (bat) <= 10 ? 'crit' : (bat) <= 20 ? 'low' : 'ok'), btn = (window.casoraBattery ? window.casoraBattery.tone(blv) : null);
@@ -4515,9 +4518,9 @@
       var sw = c.plug && states[c.plug];
       if (sw) {
         var po = sw.state === 'on', dead = sw.state === 'unavailable';
-        rb.push({ icon: 'mdi:power-plug', iconTone: po ? 'good' : DIM, label: 'Station', sub: dead ? 'Steckdose nicht erreichbar' : (po ? null : 'Roboter lädt nicht'),
-          value: dead ? 'Offline' : po ? 'An' : 'Aus', valueTone: dead || !po ? 'bad' : null,
-          svc: dead ? null : { domain: 'switch', service: po ? 'turn_off' : 'turn_on', target: { entity_id: c.plug } }, confirm: po ? 'Ausschalten' : null });
+        rb.push(UI.row.toggle({ icon: 'mdi:power-plug', iconTone: 'good', offTone: 'bad', label: 'Station', on: po, disabled: dead,
+          reason: 'Steckdose nicht erreichbar', sub: po ? null : 'Roboter lädt nicht',
+          svc: { domain: 'switch', service: po ? 'turn_off' : 'turn_on', target: { entity_id: c.plug } }, confirm: po ? 'Ausschalten' : null }));
       }
       var pw = U.num(states, c.power);
       if (pw != null) rb.push({ icon: 'mdi:flash', iconTone: pw > 5 ? 'good' : DIM, label: 'Leistung', value: U.f(pw, pw < 10 ? 1 : 0) + ' W', entity: c.power });

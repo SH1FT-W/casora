@@ -9,7 +9,8 @@ const b = src.indexOf('\n})();', a);
 const groups = [];
 const w = {
   addEventListener() {},
-  _casoraUI: { tokens: { font: 'x', ink: '#000', ink2: '#111', ink3: '#222' }, group: (rows, title) => { groups.push({ rows, title }); return 'G'; } },
+  // Switch rows (UI.row.toggle, issue 105): the stub shows the switch's state as „An“/„Aus“; markup in popup_switch_rows.mjs.
+  _casoraUI: { row: { toggle: (o) => Object.assign({}, o, { value: o.disabled ? undefined : o.on ? 'An' : 'Aus', sub: o.disabled && o.reason ? o.reason : o.sub }) }, tokens: { font: 'x', ink: '#000', ink2: '#111', ink3: '#222' }, group: (rows, title) => { groups.push({ rows, title }); return 'G'; } },
 };
 const doc = { querySelector: () => ({ hass: { config: { unit_system: { temperature: '°C' } } } }) };
 new Function('window', 'document', src.slice(a, b + 6))(w, doc);

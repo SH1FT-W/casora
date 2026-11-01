@@ -179,7 +179,9 @@ assert.deepEqual(KL.hold(hass, ID).map((x) => x.t), [], 'Privatsphäre: weder Mi
 states['switch.pforte_privat'].state = 'off'; states[ID].state = 'idle';
 
 // Popup-Bereiche (UI-Bausteine als Platzhalter)
+// Switch rows (UI.row.toggle, issue 105): the stub shows the switch's state as „An“/„Aus“; the real markup is checked in popup_switch_rows.mjs.
 window._casoraUI = {
+  row: { toggle: (o) => Object.assign({}, o, { value: o.disabled ? undefined : o.on ? 'An' : 'Aus', sub: o.disabled && o.reason ? o.reason : o.sub }) },
   esc: (t) => String(t), tokens: {},
   line: (m, r) => '<line>' + m + '|' + [].concat(r || []).map((x) => (typeof x === 'object' ? x.text + '!' + x.tone : x)).join(';') + '</line>',
   group: (rows, label) => '<group ' + label + '>' + rows.map((r) => r.label + '=' + (r.value || '') + '~' + (r.sub || '') + (r.confirm ? '!' + r.confirm : '')

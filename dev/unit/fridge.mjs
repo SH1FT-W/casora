@@ -78,6 +78,8 @@ assert.deepEqual(K.steps(-18, -26, -16, 1), [-20, -19, -18, -17, -16]);
 window._casoraUI = {
   line: (m, r, o) => '<line ' + ((o && o.tone) || '') + '>' + m + '|' + (r || []).filter(Boolean).join('|') + '</line>',
   group: (rows, l) => '<group ' + l + '>' + rows.map((r) => r.label + '=' + (r.value || '') + (r.sub ? '(' + r.sub + ')' : '') + (r.svc ? '>' + r.svc.service : '')).join(';') + '</group>',
+  // #105: switch rows (casora-core.js UI.row.toggle) – shown here as the switch's state instead of a value.
+  row: { toggle: (o) => Object.assign({}, o, { value: o.on ? '[on]' : '[off]' }), entity: (st, o) => Object.assign({}, o, { value: st.state === 'on' ? '[on]' : '[off]' }) },
   segments: (items, l) => '<seg ' + l + '>' + items.map((i) => (i.active ? '*' : '') + i.label + '>' + JSON.stringify(i.svc.data)).join(';') + '</seg>',
   note: (t) => '<note>' + t + '</note>',
   // Blueprint v2: the row comes from the shared builder (casora-core.js).
@@ -89,7 +91,7 @@ assert.ok(zones.includes('<group Temperaturen>Obere Zone=7 °C(Sollwert 5 °C);U
 assert.ok(zones.includes('<seg Obere Zone · Sollwert 5 °C>3°>{"value":3};4°>{"value":4};*5°>{"value":5};6°>{"value":6};7°>{"value":7}</seg>'), zones);
 assert.ok(zones.includes('<seg Untere Zone · Sollwert −18 °C>−20°'), zones);
 assert.equal(K.sec('modes', C, states, hass()),
-  '<group Modi>SuperCool=Aus(Obere Zone)>turn_on;SuperFrost=Aus(Untere Zone)>turn_on;Nachtmodus=Aus>turn_on;Partymodus=Aus>turn_on</group>');
+  '<group Modi>SuperCool=[off](Obere Zone)>turn_on;SuperFrost=[off](Untere Zone)>turn_on;Nachtmodus=[off]>turn_on;Partymodus=[off]>turn_on</group>');
 assert.equal(K.sec('doors', C, states, hass()), '');
 assert.ok(/Weitere Einstellungen/.test(K.sec('more', C, states, hass())));
 

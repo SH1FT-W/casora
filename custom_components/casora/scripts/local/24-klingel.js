@@ -468,9 +468,10 @@
     // Aus = Sand-Symbol wie ausgeschaltete Zeilen (ohne Ton färbte hueFor das Symbol trotzdem).
     // Domain aus der Entität (Status-LED ist light.*, nicht switch.*). ask: true = Ausschalten fragt,
     // 'both' = beide Richtungen fragen (Privatsphäre: an und aus mit derselben Logik).
-    return { icon: icon, iconTone: isOn ? 'accent' : 'rgba(0,0,0,0)', label: label, sub: sub || null, value: isOn ? 'An' : 'Aus',
+    // issue 105: a switch on the right (the shared UI.row.toggle), not the word „An“/„Aus“.
+    return window._casoraUI.row.toggle({ icon: icon, label: label, sub: sub || null, on: isOn,
       svc: { domain: id.split('.')[0], service: isOn ? 'turn_off' : 'turn_on', target: { entity_id: id } },
-      confirm: ask && (ask === 'both' || isOn) ? (isOn ? 'Ausschalten' : 'Einschalten') : null };
+      confirm: ask && (ask === 'both' || isOn) ? (isOn ? 'Ausschalten' : 'Einschalten') : null });
   };
   var slider = function (UI, S, id, label) {
     var st = id && S[id];

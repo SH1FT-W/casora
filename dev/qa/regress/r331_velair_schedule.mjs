@@ -134,7 +134,9 @@ const POPUP = () => {
   return {
     line: ((window.__pierce('.hui-line').filter(vis)[0] || {}).textContent || '').replace(/\s+/g, ' ').trim(),
     labels: window.__pierce('.hui-slbl').filter(vis).map((n) => Object.assign({ t: n.textContent.replace(/\s+/g, ' ').trim() }, box(n))),
-    rows: window.__pierce('.hui-srow').filter(vis).map((r) => r.textContent.replace(/\s+/g, ' ').trim()),
+    // A switch row (issue 105: the week page's „Zeitplan“) ends in its switch's state „[an]“/„[aus]“.
+    rows: window.__pierce('.hui-srow').filter(vis).map((r) => { const sw = r.querySelector('[role="switch"]');
+      return r.textContent.replace(/\s+/g, ' ').trim() + (sw ? ' [' + (sw.getAttribute('aria-checked') === 'true' ? 'an' : 'aus') + ']' : ''); }),
     days: window.__pierce('[data-casora-mi^="velair-day:"]').filter(vis).length,
     velairTaps: window.__pierce('[data-casora-mi^="velair-"]').length,
     editable: window.__pierce('[data-casora-mi^="velair-edit:"]').filter(vis).length,
@@ -209,7 +211,7 @@ for (const [tag, o, url, mobile, act] of VIEWS) {
   const w = await stable(page, POPUP, null, { until: (v) => v && v.days === 7 && v.editable >= 1, max: 8000 });
   await check(tag + ': „Zeitplan ›“ opens the week: "Woche" with 7 days', w && lab(w, 'Woche') && w.days === 7, w && { days: w.days, labels: w.labels });
   await check(tag + ': today\'s slots with times and temperatures', w && lab(w, 'Heute') && w.rows.some((r) => /^\d\d:\d\d–\d\d:\d\d.*\d°$/.test(r)) && w.editable >= 1, w && w.rows);
-  await check(tag + ': the week page has the on/off row', w && w.rows.some((r) => /^Zeitplan.*An$/.test(r)), w && w.rows);
+  await check(tag + ': the week page has the on/off row', w && w.rows.some((r) => /^Zeitplan.*\[an\]$/.test(r)), w && w.rows);
   if (BILDER) { await page.waitForTimeout(700); await page.screenshot({ path: file('velair-woche'), fullPage: false }); }
 
   if (act) {
@@ -245,8 +247,8 @@ for (const [tag, o, url, mobile, act] of VIEWS) {
     let rs = null;
     for (let i = 0; i < 20 && rs !== 'paused'; i++) { await page.waitForTimeout(300); rs = ((await sched()).zone_runtime[AC] || {}).state; }
     await check(tag + ': tapping "Zeitplan" pauses it (velair.pause_zone)', rs === 'paused', rs);
-    const p3 = await stable(page, POPUP, null, { until: (v) => v && v.rows.some((r) => /^Zeitplan.*Aus$/.test(r)), max: 6000 });
-    await check(tag + ': popup shows the schedule off', p3 && p3.rows.some((r) => /^Zeitplan.*Aus$/.test(r)), p3 && p3.rows);
+    const p3 = await stable(page, POPUP, null, { until: (v) => v && v.rows.some((r) => /^Zeitplan.*(Aus|\[aus\])$/.test(r)), max: 6000 });
+    await check(tag + ': popup shows the schedule off', p3 && p3.rows.some((r) => /^Zeitplan.*(Aus|\[aus\])$/.test(r)), p3 && p3.rows);
     await page.waitForTimeout(700);
     await page.mouse.click(row.x, row.y);
     for (let i = 0; i < 20 && rs === 'paused'; i++) { await page.waitForTimeout(300); rs = ((await sched()).zone_runtime[AC] || {}).state; }
