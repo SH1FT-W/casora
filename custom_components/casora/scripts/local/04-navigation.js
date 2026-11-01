@@ -14,6 +14,12 @@
   var SCENE_EXCLUDE = (((window.CASORA_SETTINGS || {}).scenes || {}).exclude || []).slice();
   var RESTORE = /(^|_)restore(_|$)/;
   window.casoraSceneExclude = SCENE_EXCLUDE;
+  // The loader may start on the remembered settings and get newer ones later (casora-local.js): same array, new content.
+  window.addEventListener('casora-settings-changed', function () {
+    var now = (((window.CASORA_SETTINGS || {}).scenes || {}).exclude || []);
+    SCENE_EXCLUDE.length = 0;
+    Array.prototype.push.apply(SCENE_EXCLUDE, now);
+  });
   window.casoraNavScenes = function (hass, extra) {
     var states = (hass && hass.states) || {};
     var reg = (hass && hass.entities) || {};

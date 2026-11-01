@@ -13,6 +13,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import * as CHK from '../../tools/html-escape-check.mjs';
+import { phrases } from './lib/i18n_phrases.mjs';
 
 const { lex, safeOperand, run, isHtmlText } = CHK;
 
@@ -326,7 +327,7 @@ const leaked = (s) => /<xss-|" xss-e=|' xss-f=/.test(s);
 
 // ── 4. Translator and escaped text ────────────────────────────────────────────────────────────────────────────────
 {
-  const w = { document: { querySelector: (q) => (q === 'home-assistant' ? { hass: { language: 'en', locale: { language: 'en' } } } : null) } };
+  const w = { __casoraI18nPhrases: phrases(), document: { querySelector: (q) => (q === 'home-assistant' ? { hass: { language: 'en', locale: { language: 'en' } } } : null) } };
   const src = read('custom_components/casora/scripts/casora-i18n.js');
   new Function('window', 'document', 'customElements', 'setTimeout', src)(w, w.document, undefined, () => 0);
   const tr = w.casoraTr;

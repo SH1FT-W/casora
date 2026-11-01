@@ -6,6 +6,7 @@
 process.env.TZ = 'Europe/Berlin';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import { phraseTable } from './lib/i18n_phrases.mjs';
 
 const root = new URL('../../', import.meta.url);
 const read = (p) => fs.readFileSync(new URL(p, root), 'utf8');
@@ -65,11 +66,7 @@ NOW = new RealDate(2026, 10, 1, 9, 0).getTime();
 assert.equal(window.casoraDaysAgo(Math.round((NOW - new RealDate(2026, 9, 24, 23, 0).getTime()) / 60000)), 8);
 
 // Englisch: dieselben Wortlaute über die Phrasen-Tabelle.
-const i18n = read('custom_components/casora/scripts/casora-i18n.js');
-const m = i18n.match(/var PHRASES = (\{.*?\});\n/s);
-assert.ok(m, 'PHRASES nicht gefunden');
-const EN0 = JSON.parse(m[1]).en;
-const EN = typeof EN0 === 'string' ? JSON.parse(EN0) : EN0;  // shipped as a JSON string (parsed on use)
+const EN = phraseTable('en');  // scripts/i18n/en.json (fetched by casora-i18n.js when English is shown)
 const tr = (s) => {
   if (typeof EN.exact[s] === 'string') return EN.exact[s];
   for (const [re, out] of EN.patterns) { const x = s.match(new RegExp(re)); if (x) return out.replace(/\{(\d)\}/g, (_, n) => x[+n]); }

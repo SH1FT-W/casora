@@ -566,7 +566,7 @@
   // seconds, a failed call leaves the name rules.
   async function energyPrefsReady(hass, ms) {
     try {
-      if (!window.casoraEnergyPrefs) await import("/casora_scripts/local/00-finder.js");
+      if (!window.casoraEnergyPrefs) await (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/00-finder.js");
       if (!window.casoraEnergyPrefs || !hass) return null;
       return await Promise.race([window.casoraEnergyPrefs.load(hass, true), new Promise((r) => setTimeout(() => r(null), ms || 4000))]);
     } catch (e) { return null; }

@@ -13018,8 +13018,22 @@ class CasoraPanel extends HTMLElement {
     return (all || []).filter((d) => d.mode === "storage" && v.get(d.url_path) !== false);
   }
 
+  // Kinds of all dashboards in one small answer from the integration (casora/dashboards/kinds) instead of
+  // every whole configuration (Ladezeit stage 1: 14 dashboards were 28 MB of JSON on a cold start).
+  // fresh: ask again (a later check round). null when the integration cannot answer (then as before).
+  _dashKinds(fresh) {
+    if (fresh || !this._kindsP) {
+      this._kindsP = this._hass.callWS({ type: "casora/dashboards/kinds" })
+        .then((r) => (r && r.dashboards) || null, () => null);
+    }
+    return this._kindsP;
+  }
+
   // true/false; null = nicht lesbar (zählt wie „nein“, wird aber nicht als geprüft gemerkt).
   async _isCasoraDash(d) {
+    const kinds = await this._dashKinds();
+    const k = kinds && kinds[d.url_path];
+    if (k) return k.kind === null || k.kind === undefined ? null : k.kind !== "none";
     try {
       const cfg = await this._hass.callWS({ type: "lovelace/config", url_path: d.url_path });
       return isMobileConfig(cfg)
@@ -13030,6 +13044,7 @@ class CasoraPanel extends HTMLElement {
   }
 
   async _pruneDashboards(all) {
+    if (all.some((d) => d.url_path !== this._dashUrl && !this._verdictFresh(d.url_path))) await this._dashKinds(true);
     for (const d of all) {
       if (d.url_path === this._dashUrl) continue;
       // Vor Kurzem geprüft (auch gerade eben vor dem Laden): nicht erneut ganz herunterladen.
@@ -13569,6 +13584,7 @@ class CasoraPanel extends HTMLElement {
       // erst prüfen – sonst öffnet ein neuer Nutzer ein fremdes Dashboard im
       // Editor statt der Begrüßung.
       const v = this._verdicts();
+      if (all.some((d) => !v.has(d.url_path))) await this._dashKinds(true);
       for (const d of all) {
         if (v.has(d.url_path)) continue;
         const got = await this._isCasoraDash(d);
@@ -25558,7 +25574,7 @@ class CasoraPanel extends HTMLElement {
       const RG = window.casoraRoomGroups;
       if (!RG && !this._roomGroupsLoading) {
         this._roomGroupsLoading = true;
-        import("/casora_scripts/filter-overlay.js")
+        (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("filter-overlay.js")
           .then(() => { if (window.casoraRoomGroups) this._rebuildPreview(); })
           .catch(() => {});
       }

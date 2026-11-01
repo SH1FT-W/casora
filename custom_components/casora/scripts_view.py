@@ -42,11 +42,19 @@ STUDIO_MODULES = (
     "casora-panel-share.js",
 )
 
+STUDIO_I18N_DIR = "i18n"
+
 
 def studio_stamp(panel_dir: str) -> int:
     """Newest change of the Studio's modules (blocking) - part of every ?v=, so no cache serves old parts."""
     stamps = []
-    for name in STUDIO_MODULES:
+    # The translation fetches its language files (panel/i18n/<lang>.json) with the same ?v=.
+    try:
+        extra = [os.path.join(STUDIO_I18N_DIR, n) for n in os.listdir(os.path.join(panel_dir, STUDIO_I18N_DIR))
+                 if n.endswith(".json")]
+    except OSError:
+        extra = []
+    for name in (*STUDIO_MODULES, *extra):
         try:
             stamps.append(int(os.path.getmtime(os.path.join(panel_dir, name))))
         except OSError:

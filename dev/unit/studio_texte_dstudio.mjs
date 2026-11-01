@@ -24,7 +24,9 @@ assert.ok(flat.some((s) => s.includes('z. B.')), 'z. B. mit geschütztem Leerz
 const assist = read('panel/casora-panel-assist.js');
 assert.ok(!/placeholder: de \? "z\. B\./.test(assist), 'Geräte-Assistent: Platzhalter ohne geschütztes Leerzeichen');
 // Die gebaute Laufzeit-Tabelle trägt dieselben Texte (tools/build-panel-i18n.py).
-const i18n = read('panel/casora-panel-i18n.js');
+// The runtime carries English; every other language is panel/i18n/<lang>.json, fetched for the language shown.
+const i18nDir = new URL('../../custom_components/casora/panel/i18n/', import.meta.url);
+const i18n = read('panel/casora-panel-i18n.js') + fs.readdirSync(i18nDir).filter((f) => f.endsWith('.json')).map((f) => fs.readFileSync(new URL(f, i18nDir), 'utf8')).join('\n');
 assert.ok(!/z\. B\./.test(i18n.replace(/\\u00a0/g, ' ')), 'casora-panel-i18n.js nicht neu gebaut');
 
 console.log('studio_texte_dstudio: ok');

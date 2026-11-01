@@ -6,13 +6,14 @@
 // survives unless English keeps it as well (names like Tankerkönig).
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import { phrases } from './lib/i18n_phrases.mjs';
 
 const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
 const J = (p) => JSON.parse(read('custom_components/casora/translations/' + p));
 const SRC = read('custom_components/casora/scripts/casora-i18n.js');
 
 function loadTr(language) {
-  const win = {};
+  const win = { __casoraI18nPhrases: phrases() };
   const doc = { querySelector: (q) => (q === 'home-assistant' ? { hass: { locale: { language } } } : null), addEventListener() {} };
   try {
     new Function('window', 'document', 'customElements', 'MutationObserver', SRC)(

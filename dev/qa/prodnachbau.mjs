@@ -158,7 +158,7 @@ const PIERCE = `
 const VP = {
   desktop: { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 },
   handy: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true,
-    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148' },
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148' },
 };
 async function page(vp, { filter, dark = false, theme = 'Casora' } = {}) {
   const ctx = await browser.newContext({ ...VP[vp], colorScheme: dark ? 'dark' : 'light', locale: 'de-DE', timezoneId: 'Europe/Berlin', serviceWorkers: 'block' });

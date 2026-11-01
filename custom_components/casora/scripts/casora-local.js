@@ -258,15 +258,22 @@ const until = (cond, ms) => new Promise((resolve) => {
 /* Settings for the whole home (window.CASORA_SETTINGS): Studio → Settings, stored in
    the integration. Formerly /config/www/casora/einstellungen.js – the file still applies
    while nothing is stored in the Studio. Without either, Casora's neutral defaults apply.
-   File and integration are asked at the same time (formerly one after the other). The
-   integration's answer is remembered: if it does not answer within SETTINGS_WAIT (phone
-   on mobile data, HA busy), the last known state applies instead of the whole dashboard
-   waiting for it. */
+   File and integration are asked at the same time. The integration's answer is remembered
+   in this browser; with a remembered answer the modules start right away on it and the fresh
+   answer follows (Ladezeit stage 1: the modules waited for both requests on every open). Only
+   if it differs are the tiles drawn again. Without one (first open here) the modules wait as
+   before, at most SETTINGS_WAIT. */
 const SETTINGS_KEY = 'casora.settings.cache';
 const SETTINGS_WAIT = 4000;
 // /casora_assets serves the user's file or – without one – an empty module.
 // So there is no 404 in the browser console.
-const fileP = import('/casora_assets/einstellungen.js?t=' + Date.now()).catch((e) => {
+let fromFile;            // what the file set (undefined: no file, or not run yet)
+// The file runs whenever it arrives; stored settings stay in force over it (as when it was awaited first).
+// settle() is defined below, before the first await – this cannot run earlier.
+const fileP = import('/casora_assets/einstellungen.js?t=' + Date.now()).then(() => {
+  fromFile = window.CASORA_SETTINGS;
+  settle();
+}, (e) => {
   console.error('[casora-local] einstellungen.js konnte nicht geladen werden:', e);
 });
 const wsP = (async () => {
@@ -280,19 +287,65 @@ const wsP = (async () => {
   return r;
 })().catch(() => null); // Older Casora without a settings store: the file (or nothing) applies.
 const cached = () => { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null'); } catch (e) { return null; } };
+// What the modules see of an answer (the part that changes tiles).
+const sig = (x) => JSON.stringify(x ? [!!x.stored, x.stored ? x.settings || {} : null, x.price_kwh, x.price_entity] : null);
 
-await fileP;
-const TIMEOUT = {};
-let r = await Promise.race([wsP, wait(SETTINGS_WAIT).then(() => TIMEOUT)]);
-if (r === TIMEOUT) {
-  r = cached();
-  console.warn('[casora-local] Einstellungen: keine Antwort in ' + SETTINGS_WAIT + ' ms, ' + (r ? 'letzter bekannter Stand' : 'Datei/Standard') + ' gilt.');
+let best = null;         // newest answer of the integration (or the remembered one)
+// Stored settings win over the file; electricity price from the Casora options, else from HA's energy dashboard
+// (costs in device popups, window.casoraPriceKwh). With a price entity casoraPriceKwh reads its state live.
+const settle = () => {
+  const r = best;
+  if (r && r.stored) window.CASORA_SETTINGS = r.settings || {};
+  else if (fromFile !== undefined) window.CASORA_SETTINGS = fromFile;
+  if (r && typeof r.price_kwh === 'number') window.CASORA_PRICE_KWH = r.price_kwh;
+  if (r && typeof r.price_entity === 'string' && r.price_entity) window.CASORA_PRICE_ENTITY = r.price_entity;
+};
+
+const known = cached();
+let started = null;      // sig() of what the modules started with
+if (known && typeof known === 'object') {
+  // Settings from the file: those are needed before the modules run (the file is small).
+  if (!known.stored) await fileP;
+  best = known;
+  settle();
+  started = sig(known);
+  wsP.then((r) => {
+    if (!r) return;
+    best = r;
+    settle();
+    if (sig(r) === started) return;
+    started = sig(r);
+    // Changed since this browser last saw them: draw the tiles once more, after the modules are there.
+    const redraw = () => {
+      try { window.dispatchEvent(new Event('casora-settings-changed')); } catch (e) { /* old browser */ }
+      if (typeof window.casoraKick !== 'function') return;
+      const out = [];
+      (function walk(root, d) {
+        if (!root || d > 30 || !root.querySelectorAll) return;
+        const all = root.querySelectorAll('*');
+        for (let i = 0; i < all.length; i++) {
+          if (all[i].localName === 'button-card') out.push(all[i]);
+          if (all[i].shadowRoot) walk(all[i].shadowRoot, d + 1);
+        }
+      })(document, 0);
+      out.forEach((el) => window.casoraKick(el));
+    };
+    if (window._casoraLocalLoaded) redraw();
+    else window.addEventListener('casora-local-loaded', redraw, { once: true });
+  });
+} else {
+  await fileP;
+  const TIMEOUT = {};
+  let r = await Promise.race([wsP, wait(SETTINGS_WAIT).then(() => TIMEOUT)]);
+  if (r === TIMEOUT) {
+    console.warn('[casora-local] Einstellungen: keine Antwort in ' + SETTINGS_WAIT + ' ms, Datei/Standard gilt.');
+    r = null;
+    // Arrives later: in force from then on (as the remembered state is on the next open).
+    wsP.then((x) => { if (x) { best = x; settle(); } });
+  }
+  best = r;
+  settle();
 }
-if (r && r.stored) window.CASORA_SETTINGS = r.settings || {};
-// Electricity price from the Casora options, else from HA's energy dashboard (costs in device popups,
-// window.casoraPriceKwh). With a price entity casoraPriceKwh reads its state live.
-if (r && typeof r.price_kwh === 'number') window.CASORA_PRICE_KWH = r.price_kwh;
-if (r && typeof r.price_entity === 'string' && r.price_entity) window.CASORA_PRICE_ENTITY = r.price_entity;
 
 /* The modules build on casora-core (_casoraFilter, casoraMenuGlass, casoraPopup …).
    It is a resource of its own and can finish after this loader on the phone. */

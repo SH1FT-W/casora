@@ -14,6 +14,29 @@
 //          {laundry: field} = the washer/dryer card's source fields, casoraLaundryFind.forEntity).
 //          The Studio shows the match as a placeholder ("Auto: …"); the
 //          AI helper only fills what the finder does not find.
+// Dashboard scripts in the Studio with the ?v= a dashboard loads them with (its Lovelace resource, local modules
+// with the loader's stamp): cached for a year instead of asked again on every open, and the same module
+// instance as on a dashboard opened in this page (a different URL would run the module a second time).
+// casoraImportScript("local/00-finder.js") / ("casora-i18n.js"); without the resource list the plain path.
+if (!window.casoraImportScript) {
+  let resP = null;
+  const resources = () => resP || (resP = (async () => {
+    try {
+      const h = document.querySelector("home-assistant")?.hass;
+      return (h && h.callWS && (await h.callWS({ type: "lovelace/resources" }))) || [];
+    } catch (e) { return []; }
+  })());
+  window.casoraScriptUrl = async (path) => {
+    const list = await resources();
+    const find = (name) => list.map((r) => String((r && r.url) || "")).find((u) => u.split("?")[0] === "/casora_scripts/" + name);
+    const own = find(path);
+    if (own) return own;
+    let v = window.casoraLoadedStamp || null;
+    if (!v) { try { const l = find("casora-local.js"); v = l && new URL(l, location.href).searchParams.get("v"); } catch (e) { v = null; } }
+    return "/casora_scripts/" + path + (v && path.startsWith("local/") ? "?v=" + encodeURIComponent(v) : "");
+  };
+  window.casoraImportScript = (path) => window.casoraScriptUrl(path).then((u) => import(u));
+}
 const ICON = { key: "icon", label: "Icon", type: "icon" };
 // Frigate stream fields (#61): choices = the camera's go2rtc streams from the Frigate integration
 // (23-frigate.js F.streamChoices; the Studio loads the module once if no dashboard did). Until the list
@@ -24,7 +47,7 @@ const frigateStreams = (phone) => (hass, id, redraw) => {
   const t = (s) => (W.casoraI18n && typeof W.casoraI18n.t === "function" ? W.casoraI18n.t(s) : s);
   const F = W._casoraFrigate;
   if (!F || typeof F.streamChoices !== "function") {
-    if (!frigateLoad) frigateLoad = import("/casora_scripts/local/23-frigate.js").then(() => { if (redraw) redraw(); }, () => {});
+    if (!frigateLoad) frigateLoad = (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/23-frigate.js").then(() => { if (redraw) redraw(); }, () => {});
     return null;
   }
   const ch = F.streamChoices(hass, id, redraw);
@@ -116,7 +139,7 @@ let listLoad = null;
 window.casoraListEntries = (hass, V, redraw) => {
   const L = window._casoraEntityList;
   if (L && hass) return L.resolve(hass, hass.states, L.cfg(V || {}));
-  if (!listLoad) listLoad = import("/casora_scripts/local/34-entity-list.js").then(() => { if (redraw) redraw(); }, () => {});
+  if (!listLoad) listLoad = (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/34-entity-list.js").then(() => { if (redraw) redraw(); }, () => {});
   return null;
 };
 window.CASORA_TILE_TYPES = [
@@ -791,28 +814,28 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     // preview said "Automatic" while the dashboard showed "2 days · Organic" (E06).
     if (!finder && !(window.casoraDevice && window.casoraDevice.waste) && tn.includes("casora_trash")) {
       finder = true;
-      import("/casora_scripts/local/00-finder.js").catch(() => {});
+      (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/00-finder.js").catch(() => {});
     }
     // Fridge: state ("7 °C · −18 °C", "Tür offen") via window._casoraFridge (scripts/local/30-fridge.js).
     if (!fridge && !window._casoraFridge && tn.includes("casora_fridge")) {
       fridge = true;
-      import("/casora_scripts/local/30-fridge.js").catch(() => {});
+      (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/30-fridge.js").catch(() => {});
     }
     // Coffee machine: state ("Ready", "Cappuccino · 40 %") via window._casoraCoffee (scripts/local/25-coffee.js);
     // without the module the preview showed the integration's raw state ("Brewing").
     if (!kaffee && !window._casoraCoffee && tn.includes("casora_coffee")) {
       kaffee = true;
-      import("/casora_scripts/local/25-coffee.js").catch(() => {});
+      (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/25-coffee.js").catch(() => {});
     }
     // Football: text ("Sat 18:30 · vs …") from window._casoraFootball (scripts/local/11-fussball.js).
     if (!fussball && !window._casoraFootball && tn.includes("casora_football")) {
       fussball = true;
-      import("/casora_scripts/local/11-fussball.js").catch(() => {});
+      (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/11-fussball.js").catch(() => {});
     }
     if (medien || (window._casoraVent && window._casoraSolar)) return;
     if (!tn.some((n) => n === "casora_vent" || n === "casora_solar_tip")) return;
     medien = true;
-    import("/casora_scripts/local/05-standard-medien.js").catch(() => {});
+    (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/05-standard-medien.js").catch(() => {});
   };
 
   // The house light tile (light_rooms_auto) counts the rooms' lights via window._casoraHouseLights, which reads the
@@ -927,12 +950,12 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
 // Editor helpers for Casora tiles: device finder as placeholder and "Complete with AI".
 (() => {
   // The same finder as on the dashboard (scripts/local/00-finder.js) – no DOM, registry only.
-  if (!window.casoraDevice) import("/casora_scripts/local/00-finder.js").catch(() => {});
+  if (!window.casoraDevice) (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/00-finder.js").catch(() => {});
   // Dashboard translation (German → user language) for texts the preview takes over from the
   // dashboard scripts (e.g. security subline "Alles sicher", 07.10.2026).
-  if (!window.casoraTr) import("/casora_scripts/casora-i18n.js").catch(() => {});
+  if (!window.casoraTr) (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("casora-i18n.js").catch(() => {});
   // Chart card (1.2) for the optional sparklines in the preview.
-  if (!window.casoraChart) import("/casora_scripts/casora-chart.js").catch(() => {});
+  if (!window.casoraChart) (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("casora-chart.js").catch(() => {});
 
   const lang = (hass) => (((hass && ((hass.locale && hass.locale.language) || hass.language)) || "en").split("-")[0]);
   const T = {
