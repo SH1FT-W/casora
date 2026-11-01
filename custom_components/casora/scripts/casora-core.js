@@ -12184,6 +12184,17 @@ window.casoraMenuGlass = {
     if (/\s/.test(w) || w.length < 10 || w.length > 18) return '';
     return ' style="font-size:min(36px, ' + dRound(55 / (w.length * 0.62)) + 'cqw);hyphens:manual;-webkit-hyphens:manual;"';
   }
+  // A long unit („Std. übrig“, „Min. übrig“) next to the big number made the row wider than the inner circle: the
+  // number ran into the ring and the unit wrapped beside it (printer, owner report 01.11.2026). In the dial it stands
+  // as its own line under the number; short units („%“, „°C“, „kWh“) stay beside it.
+  function dUnitCls(u) { return String(u == null ? '' : u).length > 4 ? 'us' : ''; }
+  // A long number („11:54“, „1.192“) at the full size touched the ring with its corners: from five characters it is set
+  // smaller, about 46 % of the wheel wide (a digit about .6 em).
+  function dNumFit(v) {
+    var w = String(v == null ? '' : v);
+    if (w.length < 5 || w.length > 9) return '';
+    return ' style="font-size:min(80px, ' + dRound(46 / (w.length * 0.6)) + 'cqw);"';
+  }
   // End angle of the filled part; a sliver stays at 0 so the knob has a start.
   // A value that is no number (offline: „–“) draws an empty ring, never a NaN path (review 2, T07).
   function dEnd(pct) { pct = Number(pct); if (!isFinite(pct)) pct = 0; return DIAL.a0 + DIAL.span * Math.max(0.4, Math.min(100, pct)) / 100; }
@@ -12264,6 +12275,8 @@ window.casoraMenuGlass = {
     + '.hui-dl-c .hui-st-val{justify-content:center;}'
     + '.hui-dl-c .hui-st-n{font-size:clamp(46px, 18cqw, 80px);letter-spacing:-0.04em;line-height:1;}'
     + '.hui-dl-c .hui-st-u{font-size:clamp(20px, 6.7cqw, 28px);}'
+    + '.hui-dl-c .hui-st-val.us{flex-direction:column;align-items:center;gap:4px;}'
+    + '.hui-dl-c .hui-st-val.us .hui-st-u{font-size:clamp(15px, 5.2cqw, 22px);white-space:nowrap;line-height:1.1;}'
     // A state word as the value („Bereit“, „Trocknet Mopp“): at most two lines; a sentence („Parkt bis zum nächsten Zeitplan“)
     // takes the size of the S7 sentence and three lines.
     + '.hui-dl-c .hui-st-val.wd{max-width:92%;}'
@@ -12789,7 +12802,7 @@ window.casoraMenuGlass = {
       // Any word as the value („Läuft“, „Bereit“) takes the word size – a 80 px word filled the whole wheel.
       var wd4 = /[A-Za-zÄÖÜäöüß]{2}/.test(String(o.value == null ? '' : o.value));
       centerHtml = (o.caption ? '<div class="hui-dl-cap">' + esc(o.caption) + '</div>' : '')
-        + stValue(o.value, o.unit || '', wd4 ? dWordCls(o.value) : '', wd4 ? dWordFit(o.value) : '') + (o.word ? '<div class="hui-st-w">' + dLines(o.word) + '</div>' : '')
+        + stValue(o.value, o.unit || '', wd4 ? dWordCls(o.value) : dUnitCls(o.unit), wd4 ? dWordFit(o.value) : dNumFit(o.value)) + (o.word ? '<div class="hui-st-w">' + dLines(o.word) + '</div>' : '')
         + (o.program ? '<div class="hui-dl-w2">' + dLines(o.program) + '</div>' : '');
       act = o.action;
       if (o.progress != null) ariaHtml = ' role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Math.round(p4 * 100) + '"';
@@ -12828,7 +12841,7 @@ window.casoraMenuGlass = {
       // o.icon: a symbol above the value (the weather's condition).
       centerHtml = (o.icon ? '<ha-icon class="hui-dl-sym hui-dl-sym6" icon="' + esc(o.icon) + '" style="display:flex;"></ha-icon>' : '')
         + (o.caption ? '<div class="hui-dl-cap">' + esc(o.caption) + '</div>' : '')
-        + stValue(o.value, o.unit || '', o.word ? dWordCls(o.value) : '', na6)
+        + stValue(o.value, o.unit || '', o.word ? dWordCls(o.value) : dUnitCls(o.unit), na6)
         // A word with parts („Bodenfeuchte · 7 Tage“) one part per line – the „·“ started the second line (final review).
         + (o.trend || o.read ? '<div class="hui-st-w"' + (o.read ? ' data-casora-read-when=""' : '') + '>' + dLines(o.trend || '') + '</div>' : '') + (o.foot ? '<div class="hui-dl-w2">' + dLines(o.foot) + '</div>' : '');
       // o.ends: the words at both ends of the ring („T 13°“ left, „H 21°“ right), in the gap at the bottom.
@@ -12847,7 +12860,7 @@ window.casoraMenuGlass = {
       // Klemmt 1“, final review 01.11.2026); the next fact takes its place.
       var said = String(o.text == null ? '' : o.text).toLowerCase().split(' · ').map(function (x) { return x.trim(); });
       var facts = (o.facts || []).filter(function (f) { return f && said.indexOf((String(f.value) + ' ' + String(f.label)).toLowerCase().trim()) < 0; }).slice(0, 2);
-      var valHtml = o.value != null && o.value !== '' ? stValue(o.value, o.unit || '', '') : '';
+      var valHtml = o.value != null && o.value !== '' ? stValue(o.value, o.unit || '', dUnitCls(o.unit)) : '';
       centerHtml = (url7 ? '<div class="hui-dl-sym" style="--g:url(\'' + esc(url7) + '\')"></div>'
           : (o.icon ? '<ha-icon class="hui-dl-sym" icon="' + esc(o.icon) + '" style="display:flex;"></ha-icon>' : ''))
         + valHtml
