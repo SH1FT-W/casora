@@ -1713,11 +1713,13 @@ window._casoraColGap = window._casoraColGap || function (keys) {
 
   // A warning source: the NINA/Meteoalarm prefix from the settings or a DWD level sensor (any name); with a weather
   // warning tile on the dashboard only the source(s) it shows.
-  function isWarning(id, st) {
+  function isWarnSource(id, st) {
     var p = cfg().warn_prefix;
-    var src = (!!p && id.indexOf(p) === 0)
+    return (!!p && id.indexOf(p) === 0)
       || (window.casoraWarnings.isLevelSensor(st, id) && !window.casoraWarnings.isAdvance(st, id));
-    if (!src) return false;
+  }
+  function isWarning(id, st) {
+    if (!isWarnSource(id, st)) return false;
     var picked = pickedWarnings();
     return !picked || picked.indexOf(id) > -1;
   }
@@ -1845,7 +1847,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       var S = hass.states;
       rows = fixBattery(hass, rows, api, c);
       var out = rows.filter(function (r) {
-        return !(r.entity && isWarning(r.entity, S[r.entity]) && String(r.id || '').indexOf('casora:safety:') === 0);
+        // Every warning source leaves the generic safety row – also one the tile does not show (else it came back as
+        // „Sicherheitswarnung“).
+        return !(r.entity && isWarnSource(r.entity, S[r.entity]) && String(r.id || '').indexOf('casora:safety:') === 0);
       });
 
       // Kombi-Sensoren: Einzelsensoren ausblenden, Kipp-Stellung als "gekippt".

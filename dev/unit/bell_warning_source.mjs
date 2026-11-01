@@ -25,4 +25,6 @@ assert.deepEqual(on([{ type: 'custom:button-card', template: ['casora_popup_weat
   variables: { sensors: ['sensor.dwd_current_warning_level'] } }]), ['binary_sensor.warnung_nina', 'sensor.dwd_current_warning_level'], 'tile with two sources');
 assert.deepEqual(on([{ type: 'custom:button-card', template: 'casora_weather_warning', entity: 'sensor.dwd_current_warning_level' }]),
   ['sensor.dwd_current_warning_level'], 'tile with DWD: only DWD');
+// A source the tile does not show still leaves the generic safety row (it came back as „Sicherheitswarnung“).
+assert.ok(src.includes("return !(r.entity && isWarnSource(r.entity, S[r.entity]) && String(r.id || '').indexOf('casora:safety:') === 0);"), 'safety rows: every warning source');
 console.log('bell_warning_source: ok');
