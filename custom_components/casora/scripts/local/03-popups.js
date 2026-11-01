@@ -1328,7 +1328,7 @@
         return { name: ev.summary, when: new Date(String(st).length === 10 ? st + 'T12:00:00' : st), min: parseMin(ev.description) };
       }).sort(function (a, b) { return a.when - b.when; }); C.err = false; })
       .catch(function () { C.err = true; })
-      .then(function () { C.busy = false; C.ts = Date.now(); repaint('hr-cal', R.calHtml); repaint('hr-week', R.weekHtml); repaint('hr-hero', function () { return R.heroHtml(); }); repaint('hr-stage', function () { return R.stageHtml(); }); });
+      .then(function () { C.busy = false; C.ts = Date.now(); repaint('hr-cal', R.calHtml); repaint('hr-week', R.weekHtml); repaint('hr-hero', function () { return R.heroHtml(); }); repaint('hr-stage', function () { return R.stageHtml(); }); repaint('hr-line', function () { return R.lineHtml(); }); });
   };
   R.heroHtml = function (states) {
     var UI = window._casoraUI; if (!UI) return '';
@@ -1337,18 +1337,64 @@
     if (!nx) return UI.hero({ value: R.cal.list ? 'Nichts geplant' : '…', sub: R.cal.list ? 'Speiseplan der nächsten 7 Tage ist leer' : null, center: true });
     return UI.hero({ value: dayName(nx.when) + ': ' + R.short(nx.name), sub: nx.min ? mins(nx.min) : null, center: true });
   };
-  /* Popup v3 (richtlinien §4.7): no picture of the recipe in the data (Cookidoo's meal plan and the idea sensor carry
-     none), so the fallback rule – a status stage S7 with the next planned recipe (else the idea of the week). */
+  /* Popup v3 (prod test 01.11.2026): the stage is the dish of today from the meal plan, else the idea of the week – its
+     name large and wrapping (3 lines, then „…“, like issue #3), the time, the reason and the idea's actions as pills.
+     The right column holds only the meal plan and the shopping list, so nothing stands twice. */
+  R.today = function (states) {
+    var n = R.next(states);
+    if (n && dayName(n.when) === 'Heute') return n;
+    return (R.cal.list || []).filter(function (x) { return dayName(x.when) === 'Heute'; })[0] || null;
+  };
+  var STAGE_CSS = '<style>.hrs{display:flex;flex-direction:column;gap:6px;min-width:0;}'
+    + '.hrs-cap{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--casora-soft-sub, rgba(46,39,33,0.6));}'
+    + '.hrs-cap ha-icon{--mdc-icon-size:16px;width:16px;height:16px;display:flex;margin:0 !important;flex:none;color:color-mix(in srgb, var(--casora-color-teal, #4E9E95) 70%, var(--casora-popup-tiles-text-primary, #2E2721));}'
+    // white-space:normal – button-card inherits nowrap and the name was cut hard at the plate's edge (prod test 01.11.).
+    + '.hrs-n{font-size:26px;font-weight:800;line-height:1.2;letter-spacing:-0.02em;color:var(--casora-popup-tiles-text-primary, #2E2721);'
+    + 'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;overflow-wrap:break-word;hyphens:manual;}'
+    + '.hrs-m{font-size:15px;font-weight:600;color:var(--casora-soft-sub, rgba(46,39,33,0.6));}'
+    + '.hrs-w{margin-top:6px;font-size:15px;font-weight:500;line-height:1.45;white-space:normal;color:var(--casora-popup-tiles-text-primary, #2E2721);}'
+    + '.hrs-b{display:flex;flex-wrap:wrap;gap:10px;}.hrs-b .hui-st-act{flex:0 0 auto;}</style>';
   R.stageHtml = function (states) {
     var UI = window._casoraUI; if (!UI || !UI.stage) return '';
     if (!states) { var ha0 = document.querySelector('home-assistant'); states = (ha0 && ha0.hass && ha0.hass.states) || {}; }
-    var nx = R.next(states) || ((R.cal.list || []).filter(function (x) { return dayStart(x.when) - dayStart(new Date()) <= 6 * 86400000; })[0] || null);
-    // dial: false – a ring would show nothing one can read („Termin · Heute Tag“, review 2 DD-22/DH-12): the plate with
-    // the recipe as the sentence and its day.
-    if (nx) return UI.stage('status', { dial: false, tone: 'good', icon: 'mdi:chef-hat', text: R.short(nx.name, 40),
-      facts: [{ label: 'Tag', value: dayName(nx.when) }, nx.min ? { label: 'Thermomix', value: mins(nx.min) } : null] });
-    return UI.stage('status', { dial: false, tone: 'off', icon: 'mdi:chef-hat', text: R.cal.list ? 'Nichts geplant' : '…',
-      facts: R.cal.list ? [{ label: 'Speiseplan', value: 'Leer' }] : [] });
+    var capHtml = function (icon, text) { return '<div class="hrs-cap"><ha-icon icon="' + esc(icon) + '"></ha-icon><span>' + esc(text) + '</span></div>'; };
+    var pillHtml = function (text, attrHtml, primary) {
+      return '<div class="hui-st-act' + (primary ? ' pri' : '') + '" role="button" tabindex="0" aria-label="' + esc(text) + '" ' + attrHtml + '><span>' + esc(text) + '</span></div>';
+    };
+    var html;
+    var td = R.today(states);
+    if (td) {
+      // „Heute geplant“ is the status line – the caption names the source instead of saying it twice.
+      html = capHtml('mdi:chef-hat', 'Speiseplan') + '<div class="hrs-n">' + esc(td.name) + '</div>'
+        + (td.min ? '<div class="hrs-m">' + esc(mins(td.min) + ' · Thermomix') + '</div>' : '');
+    } else {
+      var s = states[IDEA], a = (s && s.attributes) || {};
+      var running = a.status === 'running';
+      var has = !!s && s.state !== 'unknown' && s.state !== 'unavailable';
+      html = capHtml('mdi:creation', 'Vorschlag von Claude');
+      if (running) html += '<div class="hrs-n">Claude sucht ein Rezept …</div>';
+      else if (has) {
+        html += '<div class="hrs-n">' + esc(s.state) + '</div>'
+          + '<div class="hrs-m">' + esc([mins(a.minuten), 'Thermomix'].filter(Boolean).join(' · ')) + '</div>'
+          + (a.warum ? '<div class="hrs-w">' + esc(a.warum) + '</div>' : '');
+      } else html += '<div class="hrs-n">' + (a.status === 'error' ? 'Keine Idee gefunden' : 'Noch keine Idee') + '</div>';
+      var link = has && !running && /^https:\/\/cookidoo\./.test(a.link || '');
+      var pillsHtml = (link ? pillHtml('Rezept öffnen', 'data-casora-link="' + esc(a.link) + '"', true) : '')
+        + (has && !running && (a.zutaten || []).length && window.casoraSvc ? pillHtml('Auf die Einkaufsliste', 'data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_rezept_auf_liste'))) + '"', false) : '')
+        + (!running && window.casoraSvc ? pillHtml(has ? 'Andere Idee' : 'Idee holen', 'data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_rezept_neu'))) + '"', !has && !link) : '');
+      if (pillsHtml) html += '<div class="hrs-b" style="margin-top:10px;">' + pillsHtml + '</div>';
+    }
+    return UI.stage('content', { html: STAGE_CSS + '<div class="hrs">' + html + '</div>' });
+  };
+  /* Status line (§3): a short word – what the stage is – never the recipe's name again (prod test 01.11.2026: the name
+     stood in the head a second time). */
+  R.lineHtml = function (states) {
+    var UI = window._casoraUI; if (!UI || !UI.line) return '';
+    if (!states) { var ha0 = document.querySelector('home-assistant'); states = (ha0 && ha0.hass && ha0.hass.states) || {}; }
+    if (R.today(states)) return UI.line('Heute geplant', []);
+    var s = states[IDEA], a = (s && s.attributes) || {};
+    if (a.status === 'running') return UI.line('Sucht ein Rezept …', []);
+    return UI.line(s && s.state !== 'unknown' && s.state !== 'unavailable' ? 'Idee der Woche' : 'Nichts geplant', []);
   };
   /* Weich: Speiseplan mit Datums-Plakette (FR / 3) statt sieben gleicher Besteck-Symbole –
      der Tag ist die eigentliche Information. Heute in Akzentfarbe, Zeilen schlanker. */
@@ -1555,6 +1601,7 @@
       return '<div class="hr-hero">' + R.heroHtml(states) + '</div>';
     }
     if (name === 'stage') return '<div class="hr-stage">' + R.stageHtml(states) + '</div>';
+    if (name === 'line') return '<div class="hr-line">' + R.lineHtml(states) + '</div>';
     if (name === 'app' && SF) {
       /* Weich: als beschriftete Zeile wie „Zutaten der Idee“ – steht im breiten „Mehr“ bündig daneben. */
       return '<div style="font-family:' + T.font + ';text-align:left;">' + window._casoraHH.label('Cookidoo')
@@ -1675,11 +1722,11 @@
     /* Weich (Entschlacken 01.10.2026): Kopf „Heute: …“, Speiseplan als Wochenleiste, Idee der Woche
        als breites Band, Einkaufsliste zweispaltig; Zutaten der Idee und „Cookidoo-App öffnen“ unter „Mehr“. */
     var HH = window._casoraHH;
-    /* Popup v3: the status stage, the idea of the week under it (its actions), right the meal plan and the shopping
-       list; no „Mehr“ (ingredients of the idea, „Cookidoo-App öffnen“). */
+    /* Popup v3: own status line, the stage (today's dish, else the idea of the week with its actions), right the meal
+       plan and the shopping list; no „Mehr“ (ingredients of the idea, „Cookidoo-App öffnen“). */
     if (HH && HH.on() && HH.layout && UI.v3 && UI.v3() && UI.stage) {
-      add('stage');
-      return HH.layout({ entity: entity.entity_id, watch: watch, fields: fields, top: [], stage: 'stage', left: ['idea'], right: ['cal', 'todo'] });
+      add('stage'); add('line');
+      return HH.layout({ entity: entity.entity_id, watch: watch, fields: fields, top: ['line'], stage: 'stage', left: [], right: ['cal', 'todo'] });
     }
     if (HH && HH.on() && HH.layout) {
       add('hero');

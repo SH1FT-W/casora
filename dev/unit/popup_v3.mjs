@@ -96,8 +96,8 @@ const MIGRIERT = [
   // Fallback rule S7: template badge, nothing chosen (empty stage), entity missing, the entity's state. The own badge's
   // popup (casora_popup_own_badge) takes variant 'v3' from casora_popup_free.
   { popup: 'Freie Kachel / eigenes Badge', vorlagen: ['casora_popup_free'], file: '28-free-tile.js', from: '  F.popup = function', to: null, stages: 4 },
-  // Fallback rule S7 instead of S5: the meal plan and the idea sensor carry no picture of the recipe.
-  { popup: 'Rezepte', vorlagen: ['casora_popup_recipe'], file: '03-popups.js', from: '  R.stageHtml = function', to: '  /* Weich: Speiseplan mit Datums-Plakette', stages: 2 },
+  // S8 instead of S5 (no picture in the data): today's dish, else the idea of the week with its actions (prod test 01.11.).
+  { popup: 'Rezepte', vorlagen: ['casora_popup_recipe'], file: '03-popups.js', from: '  R.stageHtml = function', to: '  /* Weich: Speiseplan mit Datums-Plakette', stages: 1 },
   // S5: the live card mounted into UI.stage('image') (KL.stage); the popup's stage field names it once more.
   { popup: 'Klingel', vorlagen: ['casora_popup_reolink_doorbell'], file: '24-klingel.js', from: '  KL.popup = function', to: '  var pill = function', stages: 2 },
   // S5: the live card mounted into UI.stage('image') (F.stage); the popup's stage field names it once more.
