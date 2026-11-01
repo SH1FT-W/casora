@@ -12359,6 +12359,18 @@ window.casoraMenuGlass = {
     var items = Array.prototype.slice.call(sr.querySelectorAll('.row'));
     var pick = function (k) {
       moonMenuClose();
+      // The popup may have drawn itself anew while the menu was open (a lamp's state changed): a detached moon's proxy
+      // reaches no handler, so the same moon as it is now (same name) gets the click.
+      if (!moon.isConnected) {
+        var lab = moon.getAttribute('aria-label'), now = null;
+        (function walk(n, d) {
+          if (!n || now || d > 40) return;
+          if (n.nodeType === 1 && n.hasAttribute && n.hasAttribute('data-casora-moonmenu') && n.getAttribute('aria-label') === lab) { now = n; return; }
+          if (n.shadowRoot) walk(n.shadowRoot, d + 1);
+          for (var c = n.firstElementChild; c; c = c.nextElementSibling) walk(c, d + 1);
+        })(document.body, 0);
+        if (now) moon = now;
+      }
       var px = moon.querySelector('[data-casora-mm-i="' + k + '"]');
       window._casoraUILastTap = 0;
       if (px) px.click();
@@ -12384,7 +12396,7 @@ window.casoraMenuGlass = {
   // Moons named alike („WZ Dreamview An“, „WZ Dreamview Aus“) lose their common leading words, so the word that tells
   // them apart is the one on the moon (review 2, E07/T05); the full name stays the label and the tooltip.
   function moonShort(list) {
-    var named = list.filter(function (it) { return !it.all; });
+    var named = list.filter(function (it) { return !it.all && !it.keep; });
     if (named.length < 2) return;
     var ws = named.map(function (it) { return String(it.text).trim().split(/\s+/); });
     var k = 0;
@@ -12398,11 +12410,16 @@ window.casoraMenuGlass = {
     var list = (items || []).filter(function (x) { return x && x.text && !x.danger; }).map(function (x) { return Object.assign({}, x); });
     // More than 4: „Alle (n)“ opens a small menu at the moon (moonMenuOpen) with every choice; the chosen one among the
     // hidden ones marks the moon. o.page stays the fallback where no menu can open.
-    if (list.length > 4) {
-      var all = list.length, full = list;
-      list = list.slice(0, 3).concat([{ icon: 'mdi:dots-horizontal', text: T_('Alle') + ' (' + all + ')', page: o.page || null, all: true,
-        menu: full, active: full.slice(3).some(function (x) { return x.active; }) }]);
+    // A moon with its own menu and keep (the lamp's „Effekte“) stays a moon of its own: the others share what is left
+    // (2 + „Alle (n)“ + it) – a menu never opens from a menu row.
+    var kept = list.filter(function (x) { return x.keep && x.menu; });
+    list = list.filter(function (x) { return !(x.keep && x.menu); });
+    if (list.length + kept.length > 4) {
+      var all = list.length, full = list, nShow = Math.max(0, 3 - kept.length);
+      list = list.slice(0, nShow).concat([{ icon: 'mdi:dots-horizontal', text: T_('Alle') + ' (' + all + ')', page: o.page || null, all: true,
+        menu: full, active: full.slice(nShow).some(function (x) { return x.active; }) }]);
     }
+    list = list.concat(kept);
     moonShort(list);
     var hasAct = !!(act && act.text);
     var pos = moonPos(list.length, hasAct);
@@ -12827,7 +12844,8 @@ window.casoraMenuGlass = {
   function quick(items, label, o) {
     o = o || {};
     if (qCollect) { qCollect.items = items || []; qCollect.label = label; qCollect.o = o; return ''; }
-    var list = (items || []).filter(function (x) { return x && x.text && !x.danger; });
+    // A moon's own menu (the lamp's „Effekte“, it.menu without svc or page) only opens at a moon: no tile for it.
+    var list = (items || []).filter(function (x) { return x && x.text && !x.danger && !(x.menu && !x.svc && !x.page); });
     if (!list.length) return '';
     if (list.length > 4) {
       var all = list.length;

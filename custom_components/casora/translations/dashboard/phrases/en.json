@@ -2674,7 +2674,8 @@
   "Fehlt": "Missing",
   "Ja": "Yes",
   "unbekannt": "unknown",
-  "Luftfeuchte · 24 Std.": "Humidity · 24 h"
+  "Luftfeuchte · 24 Std.": "Humidity · 24 h",
+  "Effekte": "Effects"
  },
  "patterns": [
   [

@@ -4363,10 +4363,64 @@
       svc: dim.length && target.length ? { domain: 'light', service: 'turn_on', field: 'brightness_pct', target: { entity_id: target }, zeroOff: true } : null,
       seg: seg, moons: moons || null });
   };
-  // Quick choice: the room's scenes (≤ 4, more: 3 + „Alle (n)“ → sub page), the last one used is active.
-  var v3Scenes = function (list, states, room) {
+  /* The lamp's own effects (Hue scenes/effects, WLED, Govee …; Marco, 01.11.2026): one moon „Effekte“ that opens the
+     small menu at the moon (richtlinien §4.8, as „Alle (n)“) with every effect, the running one hinterlegt and
+     „Ohne Effekt“ first when the lamp knows a none/off effect. A row calls light.turn_on with the effect. The moon is
+     kept (UI.stage keep): never folded into „Alle (n)“ – the scenes make room instead. */
+  var FX_NONE = /^(none|off|aus|kein( effekt)?|no[ _]effect)$/i;
+  var fxList = function (st) {
+    var l = st && st.attributes && st.attributes.effect_list;
+    return (Array.isArray(l) ? l : []).filter(function (e, i, a) { return typeof e === 'string' && e && a.indexOf(e) === i; });
+  };
+  // A lamp with at least one real effect; HA light groups (entity_id) are no lamp of their own.
+  var hasFx = function (st) {
+    if (!st || st.state === 'unavailable' || st.state === 'unknown' || Array.isArray((st.attributes || {}).entity_id)) return false;
+    return fxList(st).some(function (e) { return !FX_NONE.test(e); });
+  };
+  // The effect's name as HA shows it; a raw key HA has no word for („partly_cloudy“, „colorloop“) reads as words
+  // („Partly cloudy“, „Colorloop“) – never the raw value (as the aquarium light, 02-devices.js).
+  S.fxName = function (st, e, h) {
+    var t = e;
+    try { if (h && h.formatEntityAttributeValue) t = h.formatEntityAttributeValue(st, 'effect', e) || e; } catch (x) { t = e; }
+    return t === e && /^[a-z0-9_]+$/.test(e) ? (e.charAt(0).toUpperCase() + e.slice(1)).replace(/_+/g, ' ') : t;
+  };
+  var fxIcon = function (e) {
+    var k = String(e || '').toLowerCase();
+    return /candle|kerze/.test(k) ? 'mdi:candle' : /fire|kamin|flame/.test(k) ? 'mdi:fire'
+      : /rainbow|regenbogen|prism|colou?r_?loop|colorloop/.test(k) ? 'mdi:looks'
+      : /sparkle|glisten|twinkle|glitter|star|funkel/.test(k) ? 'mdi:shimmer'
+      : /sunrise|sunset|sonnen/.test(k) ? 'mdi:weather-sunset' : /breath|pulse|atmen/.test(k) ? 'mdi:heart-pulse'
+      : /strobe|blink|flash/.test(k) ? 'mdi:flash-outline' : /night|nacht|moon/.test(k) ? 'mdi:weather-night' : 'mdi:auto-fix';
+  };
+  S.fxMoon = function (id, states, h) {
+    var st = states[id];
+    if (!hasFx(st)) return null;
+    var all = fxList(st), none = all.filter(function (e) { return FX_NONE.test(e); })[0];
+    var fx = all.filter(function (e) { return !FX_NONE.test(e); });
+    var on = st.state === 'on', cur = on ? (st.attributes || {}).effect : null;
+    var svc = function (e) { return { domain: 'light', service: 'turn_on', data: { effect: e }, target: { entity_id: id } }; };
+    var rows = (none ? [{ icon: 'mdi:close-circle-outline', text: tr('Ohne Effekt'), active: on && (!cur || cur === none), svc: svc(none) }] : [])
+      .concat(fx.map(function (e) { return { icon: fxIcon(e), text: S.fxName(st, e, h), active: on && cur === e, svc: svc(e) }; }));
+    return { icon: 'mdi:auto-fix', text: tr('Effekte'), keep: true, menu: rows, active: on && fx.indexOf(cur) > -1 };
+  };
+  // The one lamp whose effects get a moon: the lamp of a single-lamp popup, else the only lamp of the room / house with
+  // effects (several: each lamp's own popup has them, one tap on its row – no lamp picker on the wheel).
+  var fxLampOf = function (ids, states) {
+    var w = ids.filter(function (id, i, a) { return a.indexOf(id) === i && hasFx(states[id]); });
+    return w.length === 1 ? w[0] : null;
+  };
+  // Moons of the light stage: the room's scenes and the lamp's „Effekte“ (fxId), as one quick call (collected by UI.stage).
+  var v3Moons = function (sceneList, states, room, fxId, h) {
     var UI = window._casoraUI;
-    if (!list.length) return '';
+    var sc = v3SceneItems(sceneList, states, room);
+    var fxm = fxId ? S.fxMoon(fxId, states, h || hassNow()) : null;
+    var items = (sc ? sc.items : []).concat(fxm ? [fxm] : []);
+    if (!items.length) return '';
+    return UI.quick(items, tr('Szenen'), { page: sc ? sc.page : null });
+  };
+  // Quick choice: the room's scenes (≤ 4, more: 3 + „Alle (n)“ → sub page), the last one used is active.
+  var v3SceneItems = function (list, states, room) {
+    if (!list.length) return null;
     regScenes();
     var last = null, lastT = 0;
     list.forEach(function (id) { var t = Date.parse(states[id].state); if (!isNaN(t) && t > lastT) { lastT = t; last = id; } });
@@ -4377,7 +4431,7 @@
     });
     // The active scene stays visible among the first three.
     if (items.length > 4 && last) items.sort(function (a, b) { return (b.active ? 1 : 0) - (a.active ? 1 : 0); });
-    return UI.quick(items, tr('Szenen'), { page: 'lightScenes|' + list.join(',') + '|' + (room || '') });
+    return { items: items, page: 'lightScenes|' + list.join(',') + '|' + (room || '') };
   };
   var regScenes = function () {
     if (S._pg || !window._casoraUI || !window._casoraUI.page) return;
@@ -4459,8 +4513,11 @@
   };
   var roomV3 = function (cfg, sc, ids, room, states, h) {
     var UI = window._casoraUI;
-    var left = v3Stage(ids, states, false, function () { return v3Scenes(scenesOf(h, states, sc), states, room); });
     var lampIds0 = (sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids);
+    // Effects: the lamp of its own popup, else the room's only lamp with effects.
+    var single = !cfg.rooms && sc.lights.length === 1;
+    var fxId = fxLampOf(single ? [sc.lights[0]] : lampIds0, states);
+    var left = v3Stage(ids, states, false, function () { return v3Moons(scenesOf(h, states, sc), states, room, fxId, h); });
     var ls = stat(lampIds0, states);
     var lampsHtml = lampIds0.map(function (id) {
       return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0]);
@@ -4481,7 +4538,10 @@
     // The whole house: the stage dims only lamps that are on (never switches the house on by dragging).
     // The rooms' heading carries no count: light counts are lamps everywhere (owner, 01.11.2026).
     var list = houseBody(cfg, states, true);
-    return V3_CSS + '<div class="lps-cols"><div class="lps-v3l">' + v3Stage(all, states, true) + '</div><div>' + list + '</div></div>';
+    // The house's only lamp with effects gets the moon „Effekte“ (several: each lamp's own popup).
+    var fxId = fxLampOf(all, states);
+    var stageHtml = v3Stage(all, states, true, fxId ? function () { return v3Moons([], states, null, fxId); } : null);
+    return V3_CSS + '<div class="lps-cols"><div class="lps-v3l">' + stageHtml + '</div><div>' + list + '</div></div>';
   };
   var word = function (v) { return v <= 0 ? tr('Aus') : v >= 100 ? tr('Volle Helligkeit') : tr('Gedimmt'); };
   /* Value and word twice: muted on the track, in fill ink clipped to the fill. */
