@@ -4345,6 +4345,8 @@
       if (sc.room && sc.lights.length === 1) title = short(nameOf(sc.lights[0], states), sc.name);
       var v3h = !!(window._casoraUI && window._casoraUI.v3 && window._casoraUI.v3());
       sub = subline(s, false, v3h); on = s.on > 0; id = sc.rid;
+      // v3, one lamp: the dial says „An“/„Aus“ – no status line under its name (owner, 01.11.2026).
+      if (v3h && sc.room && sc.lights.length === 1) sub = '';
     } else {
       // The whole house counts lamps like its badge and tile (owner, 01.11.2026: never rooms).
       var hall = [];
@@ -4358,7 +4360,7 @@
        the status line - the frame mirrors it (.hui-line) under the title. „Alles aus“ is now
        the main switch top right (S.head, hook below). */
     void title; void on; void id;
-    return '<div class="lps-head"><div class="lps-s hui-line">' + statusLine(sub) + '</div></div>';
+    return sub ? '<div class="lps-head"><div class="lps-s hui-line">' + statusLine(sub) + '</div></div>' : '<div class="lps-head"></div>';
   };
 
   var houseQ = function (n) {
