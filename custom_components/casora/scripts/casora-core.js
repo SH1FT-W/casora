@@ -7977,7 +7977,9 @@ window.casoraMenuGlass = {
       if (!cur) return;
       var txt = '';
       try { txt = h.formatEntityState ? h.formatEntityState(cur) : cur.state; } catch (e) { txt = cur.state; }
-      if (cur.state === 'unavailable') txt = window.casoraTr ? window.casoraTr('Nicht verfügbar') : 'Nicht verfügbar';
+      // A camera or lock that is gone says „Offline“ like its tile (wortliste; detail round #19).
+      if (cur.state === 'unavailable') txt = /^(camera|lock)\./.test(cur.entity_id) ? (window.casoraTr ? window.casoraTr('Offline') : 'Offline')
+        : (window.casoraTr ? window.casoraTr('Nicht verfügbar') : 'Nicht verfügbar');
       txt = String(txt || '').trim();
       if (!txt || txt === 'unknown') return;
       // No raw values in the head (wortliste): a state the word list names takes Casora's word („idle“/„ready“ →
