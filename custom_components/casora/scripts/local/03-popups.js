@@ -2320,16 +2320,9 @@
       return UI.line(bitsL[0], bitsL.slice(1, 3), { tone: lockL && lvL ? (lvL === 2 ? 'bad' : 'warn') : null });
     }
     if (name === 'tank_s') {
-      /* Popup v3 (maintainer review 31.10.2026): the section „Tank“ (EV: „Akku“) – fill level with range and litres,
-         then „Tanken“ with the cheapest price when it is set up (12-tanken.js). */
+      /* Popup v3: range and fill level (or litres) live in the dial only (owner, 01.11.2026) – the section „Tank“
+         (EV: „Akku“) keeps „Tanken“ with the cheapest price when it is set up (12-tanken.js), else it is left out. */
       var rowsT = [];
-      if (r.tank != null || r.tankL != null) {
-        var low = r.tank != null && r.tank <= 15;
-        rowsT.push({ icon: r.ev ? 'mdi:battery-high' : 'mdi:gas-station-outline', iconTone: low ? 'warn' : 'accent',
-          label: r.ev ? 'Ladestand' : 'Tankstand', sub: [r.range != null ? 'Reichweite ' + fmtN(r.range) + ' ' + r.rangeU : null,
-            r.tank != null && r.tankL != null ? fmtN(r.tankL) + ' ' + r.tankLU : null].filter(Boolean).join(' · ') || null,
-          value: r.tank != null ? fmtN(Math.round(r.tank)) + ' %' : fmtN(r.tankL) + ' ' + r.tankLU, valueTone: low ? 'warn' : null });
-      }
       var itT = tank() && tank().item ? tank().item(p, states) : null;
       if (itT) rowsT.push(itT);
       return rowsT.length ? UI.group(rowsT, r.ev ? 'Akku' : 'Tank') : '';
@@ -2339,7 +2332,9 @@
       var dev = [];
       if (r.open.length) dev.push({ icon: 'mdi:alert', iconTone: 'bad', label: r.open.length === 1 ? r.open[0] + ' offen' : 'Offen', sub: r.open.length > 1 ? r.open.join(', ') : null });
       if (r.locked === false) dev.push({ icon: 'mdi:lock-open-variant', iconTone: 'warn', label: 'Nicht verriegelt' });
-      if (r.tank != null && r.tank <= 15) dev.push({ icon: r.ev ? 'mdi:battery-10' : 'mdi:gas-station', iconTone: 'warn', label: r.ev ? 'Akku fast leer' : 'Tank fast leer', value: fmtN(r.tank) + ' %', valueTone: 'warn' });
+      // v3: the level itself stands in the dial – the warning row does not repeat the number (owner, 01.11.2026).
+      if (r.tank != null && r.tank <= 15) dev.push({ icon: r.ev ? 'mdi:battery-10' : 'mdi:gas-station', iconTone: 'warn', label: r.ev ? 'Akku fast leer' : 'Tank fast leer',
+        value: name === 'state_s3' ? null : fmtN(r.tank) + ' %', valueTone: 'warn' });
       /* Keine Tür-/Fenster-/Schlosswerte (alles „unavailable“, Integration ohne Melder): kein „Alles zu“. */
       if (!dev.length && !r.known) dev.push({ icon: 'mdi:help-circle-outline', iconTone: 'rgba(255,255,255,0.18)', label: 'Keine Daten' });
       if (!dev.length) dev.push({ icon: 'mdi:check-circle-outline', iconTone: 'good', label: r.locked == null ? 'Alles zu' : 'Alles zu und verriegelt',
