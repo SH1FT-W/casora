@@ -266,7 +266,7 @@
     // A count the sentence already says („1 gekippt“ as the sentence and as a fact) is not repeated under it.
     var same = function (f) { return low(f.value + ' ' + f.label).replace(/\s+/g, ' ') === low(text).replace(/\s+/g, ' ').trim(); };
     facts = facts.filter(function (f) { return !same(f); });
-    if (facts.length < 2) facts.push({ label: 'geschlossen', value: String(allIds.length - openIds.length) });
+    if (facts.length < 2 && allIds.length > openIds.length) facts.push({ label: 'geschlossen', value: String(allIds.length - openIds.length) });
     if (when && facts.length < 2) facts.push({ label: 'Zuletzt', value: when });
     return UI.stage('status', {
       tone: !allIds.length ? 'off' : lv === 'alarm' ? 'bad' : lv === 'warn' ? 'warn' : 'good',
