@@ -644,13 +644,13 @@
       var fm = ((d && d.form) || []).filter(function (x) { return x && /^[WDL]$/.test(x.res); }).slice(0, 5).reverse();
       if (fm.length) {
         var ab3 = K.abbr(), bg = { W: 'var(--casora-color-green, #6AAE78)', D: 'var(--casora-color-sand, #9A8672)', L: 'var(--casora-color-red, #D35A4E)' };
-        var pills = fm.map(function (x) {
+        var pillsHtml = fm.map(function (x) {
           var ink = window._casoraInkOn ? window._casoraInkOn(bg[x.res], 4.5) : '#fff';
           return '<i class="cfb-hf ' + esc(x.res) + '" title="' + esc((x.home ? 'gegen ' : 'bei ') + K.name(x.opp) + ' ' + x.my + ':' + x.their) + '" style="display:inline-grid;place-items:center;'
             + 'width:1.45em;height:1.45em;margin-left:4px;border-radius:50%;font-style:normal;font-size:.82em;font-weight:700;vertical-align:.06em;'
             + 'background:' + esc(bg[x.res]) + ';color:' + esc(ink) + ';">' + esc(ab3[x.res] || x.res) + '</i>';
         }).join('');
-        return U.line('Form', []).replace(/<\/div>\s*$/, '<span data-no-i18n aria-label="' + esc(fm.map(function (x) { return ab3[x.res]; }).join(' ')) + '">' + pills + '</span></div>');
+        return U.line('Form', []).replace(/<\/div>\s*$/, '<span data-no-i18n aria-label="' + esc(fm.map(function (x) { return ab3[x.res]; }).join(' ')) + '">' + pillsHtml + '</span></div>');
       }
       if (i.phase === 'POST' && i.date) return U.line('Endstand', [K.tile(st)].concat(diffDays(i.date) === 0 ? [] : [K.day(i.date)]));
       if (i.phase === 'OFF') return U.line(i.off === 'cancel' ? 'Abgesagt' : 'Verschoben', [vs(i)]);
