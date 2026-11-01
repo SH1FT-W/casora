@@ -596,6 +596,20 @@
      The template gives variant 'v3' (the content is built before the frame takes it, so this follows the same rule:
      Soft, no localStorage casora_popup_variant other than 'v3'). The whole house (F.houseStage): stage S2 with the
      shared target „Ziel aller Räume“ (§4.4), − / + move every room's target by one step. */
+  /* Single thermostat popup v3 (owner, 01.11.2026): the temperature history under the dial, as the floor heating room
+     has it – the room sensor set on the tile, else the thermostat's own reading (current_temperature). Returns the
+     chart plate ('' without a reading); the slot is filled by _hpChartInit once the popup is open. */
+  window._casoraThermoChart = function (id, sensor, states) {
+    var st = states && states[id];
+    if (!st || typeof window._hpChartCfg !== 'function' || !(window._casoraHH && window._casoraHH.on())) return '';
+    var key = sensor && states[sensor] ? sensor : id;
+    if (key === id && num((st.attributes || {}).current_temperature) == null) return '';
+    var cfg = window._hpChartCfg(key, 'Temperatur', '24h', 'c2', 120);
+    if (key === id) { cfg.series[0].attribute = 'current_temperature'; cfg.series[0].unit = TU(); }
+    if (window._hpSmooth) window._hpSmooth(key);
+    if (typeof window._hpChartInit === 'function') window._hpChartInit(key);
+    return window._casoraHH.chart(window._hpChartTitle(key), plate);
+  };
   F.v3 = function () {
     if (!(window._casoraHH && window._casoraHH.on() && window._casoraUI && window._casoraUI.stage)) return false;
     try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; }
