@@ -11966,10 +11966,10 @@ window.casoraMenuGlass = {
     + '.hui-dl-c .hui-dl-w2{font-size:13px;font-weight:600;color:' + S.sub + ';margin-top:4px;font-variant-numeric:tabular-nums;max-width:76%;'
     +   'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}'
     + '.hui-dl-c .hui-dl-w2 b{font-weight:700;color:' + T.ink + ';}'
-    + '.hui-stage.off .hui-dl-c .hui-st-n, .hui-stage.off .hui-dl-c .hui-st-n .n{color:' + S.sub + ';}'
     // Two facts may take two lines each („Kilometerstand / 1.192 km“, „Letzte Fahrt / vor 86 Tagen“): three lines cut the
     // second one to „Letzte Fahrt …“ (final review); the facts sit high enough in the circle for four.
     + '.hui-dl-c .hui-dl-w2.fx{-webkit-line-clamp:4;}'
+    + '.hui-stage.off .hui-dl-c .hui-st-n, .hui-stage.off .hui-dl-c .hui-st-n .n{color:' + S.sub + ';}'
     + '.hui-dl-c .l{display:block;}.hui-dl-c .hui-dl-t.ln span{display:block;}.hui-dl-c .hui-dl-t.ln{font-size:clamp(16px, 5.2cqw, 22px);}'
     + '.hui-dl-c .hui-dl-t{font-size:clamp(18px, 6.2cqw, 26px);font-weight:800;letter-spacing:-0.02em;line-height:1.15;color:' + T.ink + ';max-width:92%;'
     +   'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:break-word;}'
@@ -12305,7 +12305,8 @@ window.casoraMenuGlass = {
       ring.pct = code === 'S1' && off ? 0 : v;
       var words = o.words || null;
       if (o.svc) spec = Object.assign({}, o.svc, { invert: false }, words ? { words: words } : {});
-      ring.knob = !!spec;
+      // Off (S1): the ring stays empty and has no knob (§4.8, as S2); drag, keys and wheel still switch it on.
+      ring.knob = !!spec && !(off && code === 'S1');
       centerHtml = (off && code === 'S1' ? stValue(T_('Aus'), '') : stValue(v, o.unit == null ? '%' : o.unit))
         + (o.word || words ? '<div class="hui-st-w">' + dLines(o.word || '') + '</div>' : '');
       if (o.live && o.live.entities && o.live.entities.length) liveHtml = ' data-casora-live="dial" data-casora-ents="' + esc(JSON.stringify(o.live.entities)) + '" data-casora-attr="' + esc(o.live.attr || 'current_position') + '"';
