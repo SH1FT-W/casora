@@ -6779,6 +6779,9 @@ window.casoraMenuGlass = {
        unsichtbar, eigener Schließen-Knopf) gelten nicht mehr. */
     :host([soft]) { --casora-lp-head-pos: relative; --casora-lp-head-pe: auto; --casora-lp-title-vis: visible; }
     :host([soft]) .header-status .hui-lslot:not(:empty)::before { content: "\\00a0· "; opacity: .6; }
+    /* A slot that starts a new line drops its dot (sepFixLine marks it hui-cut) – the head had no rule for it, so „SW ·“
+       hung at the end of the first line on the phone (final review 01.11.2026). */
+    :host([soft]) .header-status .hui-lslot.hui-cut:not(:empty)::before { content: none !important; }
     :host([soft]) .header-status[hidden], :host([soft]) .header-switch[hidden] { display: none; }
     :host(:not([soft])) .header-status, :host(:not([soft])) .header-switch { display: none; }
     /* Hauptschalter: Spur in Gerätefarbe (--casora-popup-accent), weißer Knopf. */
@@ -7945,6 +7948,15 @@ window.casoraMenuGlass = {
       // No raw values in the head (wortliste): a state the word list names takes Casora's word („idle“/„ready“ →
       // „Bereit“, not HA's „Leerlauf“); one HA has no word for (enum sensor without translations: „failed“) says since
       // when instead, as the S7 popups without a word of their own (§3).
+      // A group, binary_sensor or calendar without a device class has no word of its own for on/off („An“ above a wheel
+      // of windows, „Aus“ above a calendar – final review 01.11.2026): it says since when instead.
+      var dom0 = String(cur.entity_id || '').split('.')[0], grp0 = Array.isArray((cur.attributes || {}).entity_id);
+      if ((cur.state === 'on' || cur.state === 'off') && (grp0 || dom0 === 'binary_sensor' || dom0 === 'calendar') && !(cur.attributes || {}).device_class) {
+        txt = this._sinceText(cur); if (!txt) return;
+        this._headerStatus.innerHTML = '<b>' + window.casoraEsc(txt) + '</b>';
+        this._headerStatus.hidden = false;
+        return;
+      }
       var word = window._casoraRawWord ? window._casoraRawWord(cur.state) : cur.state;
       if (word !== cur.state) txt = window.casoraTr ? window.casoraTr(word) : word;
       else if (txt === 'Ein') txt = 'An'; // HA's German „Ein“ for on – the word list says „An“ (as the stage)
@@ -7970,18 +7982,21 @@ window.casoraMenuGlass = {
       var hs = this._headerStatus;
       if (!hs || hs.hidden || !this.hasAttribute('soft') || !this.container) return;
       var norm = function (t) { return String(t || '').toLowerCase().replace(/[\s\u00a0\u202f()·.,:–-]+/g, ''); };
-      var stage = '';
+      var stage = '', stageParts = [];
       (function walk(root, d) {
         if (!root || d > 12 || stage) return;
         // The S7 plate (dial: false) says its sentence in .hui-st-text – the universal tile read „An“ in the head and on the plate.
         var el = root.querySelector && root.querySelector('.hui-dl-c .hui-dl-t, .hui-dl-c .hui-st-val, .hui-stage .hui-st-head .hui-st-val, .hui-stage .hui-st-stat .hui-st-text');
-        if (el) { stage = el.textContent; return; }
+        if (el) { stage = el.textContent; stageParts = [].map.call(el.querySelectorAll('span'), function (x) { return x.textContent; }); return; }
         var all = root.querySelectorAll ? root.querySelectorAll('*') : [];
         for (var i = 0; i < all.length && !stage; i++) if (all[i].shadowRoot) walk(all[i].shadowRoot, d + 1);
       })(this.container, 0);
       var first = hs.querySelector('b') || hs.firstElementChild;
       var mainTxt = first ? first.textContent : String(hs.textContent || '').split('·')[0];
-      if (!stage || !norm(mainTxt) || norm(mainTxt) !== norm(stage)) return;
+      // Also a word the stage's sentence counts („Entriegelt“ above „2 entriegelt · 1 klemmt“, final review 01.11.2026):
+      // one of its parts without the leading number reads like the head's first part.
+      var parts = String(stage).split(/\s*·\s*|\n/).concat(stageParts).map(function (x) { return norm(String(x).replace(/^\s*\d+\s+/, '')); });
+      if (!stage || !norm(mainTxt) || (norm(mainTxt) !== norm(stage) && parts.indexOf(norm(mainTxt)) < 0)) return;
       var so = this._ringSrc && this._ringSrc._stateObj, h = (document.querySelector('home-assistant') || {}).hass;
       var since = this._sinceText(so && h && h.states ? h.states[so.entity_id] : so);
       if (first) {
@@ -8069,7 +8084,12 @@ window.casoraMenuGlass = {
       }
       this._headerStatus.hidden = !this._headerStatus.textContent.trim();
       this._dedupeHead();
-      if (window._casoraSepScan) { var sr = this.shadowRoot; setTimeout(function () { window._casoraSepScan(sr); }, 0); }
+      // Measured again once the popup has settled (open animation, fonts): measured at once the head's line still fit,
+      // and „SW ·“ hung at the end of the first line on the phone (final review 01.11.2026).
+      if (window._casoraSepScan) {
+        var sr = this.shadowRoot, hs0 = this._headerStatus;
+        [0, 350, 900].forEach(function (ms) { setTimeout(function () { hs0._casoraSepSig = null; window._casoraSepScan(sr); }, ms); });
+      }
     }
     _syncHeadLine() {
       if (!this.hasAttribute('soft') || !this.hasAttribute('open') || this._header.hidden) return;
