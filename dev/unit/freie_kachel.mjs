@@ -155,6 +155,7 @@ assert.doesNotMatch(sec('hero', states['switch.qa_pumpe'], V), /Kein Verlauf/, '
   assert.equal(tp[0], 'status'); assert.equal(tp[1].dial, false, 'reading without a range: plate');
   assert.equal(sec('line', states['switch.qa_pumpe'], V), '<line>An|</line>', 'status line = the stage word');
   assert.equal(sec('line', null), '<line>Kein Gerät gewählt|</line>');
+  assert.match(sec('line', states['sensor.qa_prozent']), /^<line>Seit /, 'percentage: the line says since when, the value is on the wheel');
 }
 assert.equal(sec('hero', states['sensor.qa_temp']), '<line>21,5 °C|seit 2 Std.</line><note>Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.</note>');
 assert.equal(sec('hero', states['sensor.qa_weg']), '<line>Nicht verfügbar|</line><note>Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.</note>');

@@ -311,7 +311,9 @@
       // DD-30 (test 2): no technical note in the popup (popup-richtlinien-v3 §8 "clean") – a chart sensor without
       // numbers just shows no chart.
       if (C.empty) n3.push(T('Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.'));
-      var notesHtml = UI.note ? n3.map(function (n) { return UI.note(n); }).join('') : '';
+      // white-space normal: under the wheel the note ran out of the popup in one line (button-card's nowrap).
+      var noteHtml = UI.note ? n3.map(function (n) { return UI.note(n); }).join('') : '';
+      var notesHtml = noteHtml ? '<div style="white-space:normal;">' + noteHtml + '</div>' : '';
       if (!C.id && C.tpl) {
         var TP3 = window._casoraTemplates, tx3 = TP3 && TP3.text ? TP3.text(C.tpl) : null;
         return UI.stage('status', { dial: false, tone: 'good', icon: 'mdi:text-box-outline', text: tx3 == null ? '…' : (String(tx3).trim() || '—'), extra: notesHtml });
@@ -323,8 +325,8 @@
       // range); a switch, a word or a reading without a range keep the plate – a full green ring said nothing.
       var a3 = st.attributes || {};
       if (F.isNumeric(st) && a3.unit_of_measurement === '%') {
-        return UI.stage('chart', { value: F.fmt(hass, st).replace(/\s*%$/, ''), unit: '%', ring: { min: 0, max: 100 }, icon: iconOf(st),
-          trend: ago3 ? ago3.label + ' ' + ago3.value : null, extra: notesHtml });
+        // The value is on the wheel – the status line says since when (§3: it never repeats the stage's value).
+        return UI.stage('chart', { value: F.fmt(hass, st).replace(/\s*%$/, ''), unit: '%', ring: { min: 0, max: 100 }, extra: notesHtml });
       }
       return UI.stage('status', { dial: false, tone: bad(st.state) ? 'warn' : F.on(st) ? 'good' : 'off', icon: iconOf(st), text: F.word(hass, st),
         // One fact read as a phrase („Seit 8 Min.“) – the plate sets value over label, which read „8 Min. / Seit“.
@@ -338,6 +340,10 @@
       }
       if (!C.id) return UI.line('Kein Gerät gewählt', []);
       if (!st) return UI.line('Gerät fehlt', []);
+      if (F.isNumeric(st) && (st.attributes || {}).unit_of_measurement === '%') {
+        var agoL = sinceFact(st.last_changed);
+        return UI.line(agoL ? agoL.label + ' ' + agoL.value : '', []);
+      }
       return UI.line(F.word(hass, st), []);
     }
     if (part === 'hero') {
