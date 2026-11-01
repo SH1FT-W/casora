@@ -88,7 +88,7 @@ const waitStep = (sel, what, timeout = 30000) =>
   page.waitForFunction((s) => window.__pierce(s).some((e) => e.offsetParent), sel, { timeout })
     .catch(() => { throw new Error('Schritt nicht erreicht: ' + what + ' (' + sel + ')'); });
 
-await clickPrimary(/^(Dashboard erstellen|Create Dashboard)$/, '1/3 Räume');
+await clickPrimary(/^(Weiter|Continue)$/, '1/3 Räume');
 
 // 2) Räume füllen: automatisch.
 await waitStep('.themecard[data-k=auto]', '2/3 Räume füllen');

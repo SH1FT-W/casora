@@ -35,15 +35,20 @@ for (let attempt = 1; ; attempt++) {
     console.log('Seite während des Ladens neu navigiert – zweiter Versuch:', String(e.message).split('\n')[0]);
   }
 }
-const rooms = await H(() => window.__pierce('.flowin .frow').map((r) => r.textContent.replace(/\s+/g, ' ').trim()).slice(0, 20));
+const rooms = await H(() => window.__pierce('.rp-room').map((r) => r.dataset.name + (r.getAttribute('aria-checked') === 'true' ? ' ✓' : '')).slice(0, 20));
 console.log('Räume zur Auswahl:', rooms);
 const nameDefault = await H(() => window.__pierce('.flowin input.fin').pop()?.value);
 console.log('Vorgabe-Name:', nameDefault);
 await H(() => { const i = window.__pierce('.flowin input.fin').pop(); i.value = 'Test Neu'; i.dispatchEvent(new Event('input', { bubbles: true })); });
 await step('n1_raeume');
-const btn = await H(() => window.__pierce('.flowin button, .facts button, button').filter((b) => b.offsetParent && /Dashboard erstellen|Create Dashboard/.test(b.textContent)).map((b) => b.textContent.trim()));
+// Step 1 of 3 goes on to "Räume füllen" ("Weiter"; until 26.10.69 it said "Dashboard erstellen"): the main button of
+// the flow foot, the last one that is not a ghost.
+const btn = await H(() => { const f = window.__pierce('.flowfoot').filter((x) => x.offsetParent).pop();
+  return f ? [...f.querySelectorAll('button')].filter((b) => b.offsetParent && !b.classList.contains('ghost') && !b.disabled).map((b) => b.textContent.trim()) : []; });
 console.log('Knopf:', btn);
-await page.getByText(btn[0], { exact: true }).click();
+if (!/^(Weiter|Continue)$/.test(btn[btn.length - 1] || '')) throw new Error('Schritt 1/3: Hauptknopf „Weiter“ fehlt: ' + JSON.stringify(btn));
+await H(() => { const f = window.__pierce('.flowfoot').filter((x) => x.offsetParent).pop();
+  [...f.querySelectorAll('button')].filter((b) => b.offsetParent && !b.classList.contains('ghost') && !b.disabled).pop().click(); });
 await page.waitForTimeout(2500);
 // Seit dem Standardraum: erst „Räume füllen“ – hier leer beginnen, damit der Rest wie bisher prüft.
 const fill = await H(() => window.__pierce('.themecard[data-k=empty]').length > 0);

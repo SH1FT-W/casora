@@ -56,6 +56,8 @@ const WELCOME = /^Willkommen bei Casora$/;
 const LOOK = /Design|Look/;
 const ROOMS = /Räume wählen/;
 const FOUND = /^Vorhandene(s)? Dashboards? gefunden$/;
+const HEMMA_LINE = 'Vorhandenes Dashboard mitnehmen';
+const SCREENS_LINE = 'Für jeden Bildschirm';
 
 // Hilfs-Dashboard „qa-start“: nur anlegen, wenn es kein Casora-Dashboard gibt; am Ende löschen.
 const FIX = 'qa-start';
@@ -129,6 +131,7 @@ const toWelcome = async () => {
 // ── 1. Neu, mit Hemma → Assistent ────────────────────────────────────────────────────────
 console.log(`\n== Erststart mit Hemma (${WIDTH}px${SAFARI ? ', WebKit' : ''})`);
 await setFlags({ 'qa-casora': 0, 'qa-welcome': 0, 'qa-none': 0 });
+await H(() => localStorage.removeItem('casora.setup.progress')); // first start: no remembered assistant step
 await reload();
 let f = await toWelcome();
 const moves = await H(async () => (await window.__panel()._casoraMoveCandidates()).map((m) => m.title || m.url_path));
@@ -139,7 +142,8 @@ check(/Dashboard-Studio für Home Assistant/.test(f.lede), 'Willkommen: ein Satz
 check(f.feats.length === 3 && f.feats.includes('Raum für Raum'), 'Willkommen: drei Zeilen', f.feats.join(' | '));
 await page.waitForTimeout(1500);
 f = await flow();
-check(f.feats.includes('Hemma mitnehmen') && f.feats.length === 3, 'Hemma-Zeile statt Bildschirm-Zeile, weil Hemma gefunden', f.feats.join(' | '));
+// Seit 26.11 heißt die Hemma-Zeile „Vorhandenes Dashboard mitnehmen“ und erklärt Hemma im Text (E13).
+check(f.feats.includes(HEMMA_LINE) && !f.feats.includes(SCREENS_LINE) && f.feats.length === 3, 'Hemma-Zeile statt Bildschirm-Zeile, weil Hemma gefunden', f.feats.join(' | '));
 check(await H(() => { const b = window.__panel().shadowRoot.getElementById('brand'); return !b || getComputedStyle(b).visibility === 'hidden' || getComputedStyle(b).display === 'none'; }),
   'Willkommen: kein zweites „Casora“ in der Kopfzeile');
 check(f.foot.join('|') === 'Los geht’s', 'Knopf „Los geht’s“', f.foot.join('|'));
@@ -190,7 +194,8 @@ await reload();
 f = await toWelcome();
 check(WELCOME.test(f.title), 'Neu: „Willkommen bei Casora“', f.title);
 await page.waitForTimeout(1500);
-check(!(await flow()).feats.includes('Hemma mitnehmen'), 'keine Hemma-Zeile ohne Hemma');
+{ const ff = (await flow()).feats;
+  check(!ff.includes(HEMMA_LINE) && ff.includes(SCREENS_LINE), 'keine Hemma-Zeile ohne Hemma (Bildschirm-Zeile bleibt)', ff.join(' | ')); }
 await foot(/Los geht/);
 if (await reached(ROOMS, '„Los geht’s“ → gleich „Räume wählen“ (kein Assistent)', 30000)) {
   f = await flow();
@@ -207,8 +212,14 @@ await H(() => localStorage.setItem('casora.welcomed', '1'));
 await reload();
 await reached(ROOMS, 'schon begrüßt, nichts gefunden: gleich „Räume wählen“', 30000);
 check(!(await flow()).nav.length, 'ohne Dashboard kein Zurück/Schließen', (await flow()).nav.join(','));
-// Schon begrüßt, mit Hemma: gleich der Assistent.
+// Schon begrüßt, mit Hemma: Der Assistent merkt sich seit 26.11 Schritt und Auswahl (E10) – oben ging es schon
+// über Look, Schrift und Effekte hinaus, also geht es nach dem Neuladen dort weiter („Vorhandene Dashboards gefunden“).
 await setFlags({ 'qa-none': 0 });
+check(await H(() => /"step":"rooms"/.test(localStorage.getItem('casora.setup.progress') || '')), 'Assistent hat sich den Schritt gemerkt (casora.setup.progress)');
+await reload();
+await reached(FOUND, 'schon begrüßt, Hemma gefunden, Assistent schon durchlaufen: weiter bei „Vorhandene Dashboards gefunden“', 30000);
+// Ohne gemerkten Fortschritt: gleich der Assistent von vorn (Look).
+await H(() => localStorage.removeItem('casora.setup.progress'));
 await reload();
 await reached(LOOK, 'schon begrüßt, Hemma gefunden: gleich der Assistent (Look)', 30000);
 

@@ -33,7 +33,7 @@ const LAMPS = {
 const have = await H((ids) => ids.filter((id) => document.querySelector('home-assistant').hass.states[id]), Object.keys(LAMPS));
 await need('hub lamps in the test house (dev/casora_mock/hubs.py)', have.length === Object.keys(LAMPS).length, have);
 
-// 1) Rooms: all.
+// 1) Rooms: all. Step 1 of 3 says "Weiter" since 26.11 (two steps follow; it said "Dashboard erstellen" before).
 await H(() => window.__panel()._createForm());
 await page.waitForFunction(() => window.__pierce('.rp-room').length > 0, null, { timeout: 30000 });
 const pre = await H(() => window.__pierce('.rp-room').filter((r) => r.getAttribute('aria-checked') === 'true').map((r) => r.dataset.name));
@@ -47,7 +47,7 @@ const primary = (re) => H((src) => {
   return !!b;
 }, re.source);
 const until = (fn, arg, timeout = 30000) => page.waitForFunction(fn, arg, { timeout }).then(() => true, () => false);
-await need('step 1/3 rooms', await primary(/^(Dashboard erstellen|Create Dashboard)$/));
+await need('step 1/3 rooms', await primary(/^(Weiter|Continue)$/));
 
 // 2) Fill rooms: automatically.
 await need('step 2/3 fill rooms', await until(() => window.__pierce('.themecard[data-k=auto]').some((e) => e.offsetParent)));

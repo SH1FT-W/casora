@@ -50,7 +50,7 @@ async function create(name, how) {
   await page.waitForFunction(() => window.__pierce('.rp-room').length > 0, null, { timeout: 30000 });
   await H(() => window.__pierce('.rp-room').forEach((r) => r.setAttribute('aria-checked', 'true')));
   await H((n) => { const i = window.__pierce('.flowin input').filter((x) => x.offsetParent).pop(); i.value = n; i.dispatchEvent(new Event('input', { bubbles: true })); }, name);
-  await clickPrimary(/^(Dashboard erstellen|Create Dashboard)$/);
+  await clickPrimary(/^(Weiter|Continue)$/);
   await waitFor('.themecard[data-k=' + how + ']');
   await H((k) => window.__pierce('.themecard[data-k=' + k + ']')[0].click(), how);
   await clickPrimary(/^(Weiter|Continue)$/);
