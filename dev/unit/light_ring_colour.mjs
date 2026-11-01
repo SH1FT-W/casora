@@ -9,3 +9,6 @@ assert.ok(/var rgb = \(states\[id\]\.attributes \|\| \{\}\)\.rgb_color;/.test(po
 const i = pop.indexOf('var ringColor = null;');
 assert.ok(i > 0 && /if \(colCur\) colOn\.some/.test(pop.slice(i, i + 200)), 'only in colour mode (colCur)');
 console.log('ok light_ring_colour');
+// White tones: warm, neutral and cold colour the ring by Kelvin.
+assert.ok(/if \(!ringColor && cur != null\) \{/.test(pop) && /\[2200, \[232, 168, 72\]\], \[4000, \[242, 226, 196\]\], \[6500, \[200, 222, 245\]\]/.test(pop), 'white tone colours the ring by Kelvin');
+console.log('ok light_ring_colour (kelvin)');

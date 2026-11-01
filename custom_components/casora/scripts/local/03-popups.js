@@ -4473,6 +4473,13 @@
       if (Array.isArray(rgb) && rgb.length >= 3) { ringColor = 'rgb(' + rgb.slice(0, 3).map(function (x) { return Math.round(Number(x) || 0); }).join(',') + ')'; return true; }
       return false;
     });
+    // A white tone: the ring from warm amber over neutral white to cool blue-white, by the lamp's Kelvin (owner, 01.11.2026).
+    if (!ringColor && cur != null) {
+      var KS = [[2200, [232, 168, 72]], [4000, [242, 226, 196]], [6500, [200, 222, 245]]];
+      var kk = Math.max(KS[0][0], Math.min(KS[2][0], Number(cur)));
+      var j = kk <= KS[1][0] ? 0 : 1, f = (kk - KS[j][0]) / (KS[j + 1][0] - KS[j][0]);
+      ringColor = 'rgb(' + [0, 1, 2].map(function (c) { return Math.round(KS[j][1][c] + (KS[j + 1][1][c] - KS[j][1][c]) * f); }).join(',') + ')';
+    }
     // Several lamps on at different brightness: the value is their average – say so (review 2, E08/fam-09).
     var litP = lit.map(function (id) { return pct(states[id]); }).filter(function (p) { return p != null; });
     var avg = litP.length > 1 && litP.some(function (p) { return p !== litP[0]; });
