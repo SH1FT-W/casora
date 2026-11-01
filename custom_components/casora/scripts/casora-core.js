@@ -7970,7 +7970,10 @@ window.casoraMenuGlass = {
       // A group, binary_sensor or calendar without a device class has no word of its own for on/off („An“ above a wheel
       // of windows, „Aus“ above a calendar – final review 01.11.2026): it says since when instead.
       var dom0 = String(cur.entity_id || '').split('.')[0], grp0 = Array.isArray((cur.attributes || {}).entity_id);
-      if ((cur.state === 'on' || cur.state === 'off') && (grp0 || dom0 === 'binary_sensor' || dom0 === 'calendar') && !(cur.attributes || {}).device_class) {
+      // Detail round #5: a measurement of the tile's entity („23,27 °C“ above batteries, „55 % Luftfeuchtigkeit“ above a
+      // room's climate) is a number, not a state – the head says since when instead (the stage shows its own values).
+      var meas0 = (dom0 === 'sensor' || dom0 === 'number' || dom0 === 'input_number') && cur.state !== '' && isFinite(Number(cur.state));
+      if (meas0 || ((cur.state === 'on' || cur.state === 'off') && (grp0 || dom0 === 'binary_sensor' || dom0 === 'calendar') && !(cur.attributes || {}).device_class)) {
         txt = this._sinceText(cur); if (!txt) return;
         this._headerStatus.innerHTML = '<b>' + window.casoraEsc(txt) + '</b>';
         this._headerStatus.hidden = false;
@@ -8013,17 +8016,28 @@ window.casoraMenuGlass = {
       var hs = this._headerStatus;
       if (!hs || hs.hidden || !this.hasAttribute('soft') || !this.container) return;
       var norm = function (t) { return String(t || '').toLowerCase().replace(/[\s\u00a0\u202f()·.,:–-]+/g, ''); };
-      var stage = '', stageParts = [], stageAll = '';
+      var stage = '', stageParts = [], stageAll = '', stageVal = '';
       (function walk(root, d) {
         if (!root || d > 12 || stage) return;
         // The S7 plate (dial: false) says its sentence in .hui-st-text – the universal tile read „An“ in the head and on the plate.
         var el = root.querySelector && root.querySelector('.hui-dl-c .hui-dl-t, .hui-dl-c .hui-st-val, .hui-stage .hui-st-head .hui-st-val, .hui-stage .hui-st-stat .hui-st-text');
         if (el) { stage = el.textContent; stageParts = [].map.call(el.querySelectorAll('span'), function (x) { return x.textContent; });
-          var c0 = el.closest && el.closest('.hui-dl-c, .hui-stage'); stageAll = c0 ? c0.textContent : stage; return; }
+          var c0 = el.closest && el.closest('.hui-dl-c, .hui-stage'); stageAll = c0 ? c0.textContent : stage;
+          var v0 = c0 && c0.querySelector('.hui-st-val'); stageVal = v0 ? v0.textContent : ''; return; }
         var all = root.querySelectorAll ? root.querySelectorAll('*') : [];
         for (var i = 0; i < all.length && !stage; i++) if (all[i].shadowRoot) walk(all[i].shadowRoot, d + 1);
       })(this.container, 0);
       var first = hs.querySelector('b') || hs.firstElementChild;
+      // Detail round #4: a later part that is the stage's number („3 von 16 an · 73 %“ above a wheel of 73 %, „20,4°“)
+      // goes; the head keeps its words.
+      if (norm(stageVal) && /\d/.test(stageVal)) {
+        [].slice.call(hs.children).forEach(function (sp) {
+          if (sp === first || (sp.classList && sp.classList.contains('hui-sep')) || norm(sp.textContent) !== norm(stageVal)) return;
+          var pv = sp.previousElementSibling;
+          if (pv && pv.classList && pv.classList.contains('hui-sep')) pv.remove();
+          sp.remove();
+        });
+      }
       var mainTxt = first ? first.textContent : String(hs.textContent || '').split('·')[0];
       // Also a word the stage's sentence counts („Entriegelt“ above „2 entriegelt · 1 klemmt“, final review 01.11.2026):
       // one of its parts without the leading number reads like the head's first part.

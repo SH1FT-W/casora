@@ -22,4 +22,7 @@ assert.equal(since({ last_changed: iso(start + 5000) }), '', 'the restart minute
 assert.match(since({ last_changed: iso(now - 11 * 60000) }), /^Vor 11 Min\.$/, 'under an hour: „Vor 11 Min.“');
 assert.match(since({ last_changed: iso(now - 5 * 3600000) }), /^Seit /, 'a real change hours ago: „Seit …“');
 assert.match(core, /\(seit\|zuletzt\|vor \\d\|gerade eben\)\/i\.test\(stageAll\)/, 'the head drops its part when the stage says a time');
+// #4/#5: the head drops a later part that is the stage's number, and a measurement of the tile's entity is no state word.
+assert.match(core, /norm\(sp\.textContent\) !== norm\(stageVal\)/, 'a head part equal to the stage value goes');
+assert.match(core, /var meas0 = \(dom0 === 'sensor'/, 'a measurement is not shown as the head word');
 console.log('head_since_start: ok');
