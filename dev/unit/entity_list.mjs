@@ -186,6 +186,16 @@ assert.equal(L.sec('hero', L.cfg({ list_group: 'group.qa_nichts' }), states, has
   '<line>Keine Einträge|</line><note>Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.</note>');
 assert.equal(L.sec('hero', L.cfg({ list_source: 'pick' }), states, hass), '<line>Keine Einträge|</line><note>Wähle im Studio eine Gruppe, Geräte oder ein Label.</note>');
 
+// v3 (final review 01.11.2026): the list is the stage of a 552 popup – one column whatever the layout, and 552 from the start.
+{
+  const UI0 = window._casoraUI;
+  window._casoraUI = Object.assign({}, UI0, { v3: () => true, stage: (t, o) => '<stage ' + t + '>' + (o.html || '') });
+  const st = L.sec('stage', C1, states, hass);
+  assert.match(st, /data-casora-cols="1"/, 'v3 stage list: one column');
+  assert.equal(L.width({ list_layout: '2' }), 552, 'v3: narrow popup');
+  window._casoraUI = UI0;
+}
+
 // ── Mehr ──────────────────────────────────────────────────────────────────
 const MV = { more_lists: ['group.qa_rollo', 'group.qa_heizung', 'kein-id', 'group.qa_rollo'], more_list_labels: { 'group.qa_heizung': ' Heizung ', x: 'y' },
   more_charts: ['sensor.qa_temp', 'sensor.qa_energie'], more_chart_labels: ['falsch'] };

@@ -155,7 +155,8 @@
     return out.filter(function (s) { return s.ids.length; });
   };
   L.cols = function (layout) { return LAYOUTS[String(layout == null ? '' : layout)] || 'auto'; };
-  L.width = function (V) { return L.cfg(V).layout === '1' ? 552 : 900; };
+  // v3: the list is the stage, one column – 552 from the start (no 900 that the frame narrows after opening).
+  L.width = function (V) { return L.v3() || L.cfg(V).layout === '1' ? 552 : 900; };
 
   // ── Rows ────────────────────────────────────────────────────────────────────
   var ICON = { input_boolean: 'mdi:toggle-switch-outline', input_number: 'mdi:numeric', input_select: 'mdi:format-list-bulleted',
@@ -353,7 +354,9 @@
         return UI.stage('content', { empty: { icon: 'list', studio: true, text: C.source === 'group' && C.group && !(states || {})[C.group]
           ? T('Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.') : T('Wähle im Studio eine Gruppe, Geräte oder ein Label.') } });
       }
-      return UI.stage('content', { html: STAGE_CSS + L.listHtml(hass, states, ids, C) });
+      // The v3 popup is one column, 552 wide (the frame narrows it, richtlinien §2): two columns of rows squeezed the
+      // names to „Velai…“ and cut rows off (popup-raender, final review) – the stage list is one column, as in „Mehr“.
+      return UI.stage('content', { html: STAGE_CSS + L.listHtml(hass, states, ids, Object.assign({}, C, { layout: '1' })) });
     }
     return '';
   };
