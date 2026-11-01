@@ -19,15 +19,36 @@ await need('a Casora dashboard', dash);
 const IPAD_UA = 'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
 const MAC_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15';
 
-// Record service calls instead of sending them (again after each page load).
+// Record service calls instead of sending them (again after each page load). A cover's position follows the
+// recorded call as a real cover would: the cover dial shows the reported position, so without this any state_changed
+// in the house (a busy gate) redrew the dial at the old, never-changed position and the test read that as a change.
 const spy = (page) => page.evaluate(() => {
-  const conn = document.querySelector('home-assistant').hass.connection;
+  const ha = document.querySelector('home-assistant');
+  const conn = ha.hass.connection;
   window.__qaCalls = [];
+  window.__qaPos = {};
   const orig = conn.sendMessagePromise.bind(conn);
   conn.sendMessagePromise = (m) => {
-    if (m && m.type === 'call_service') { window.__qaCalls.push(m.domain + '.' + m.service + ':' + JSON.stringify(m.service_data || {})); return Promise.resolve({ context: { id: 'qa' } }); }
+    if (m && m.type === 'call_service') {
+      window.__qaCalls.push(m.domain + '.' + m.service + ':' + JSON.stringify(m.service_data || {}));
+      const d = m.service_data || {}, ids = [].concat(d.entity_id || (m.target || {}).entity_id || []);
+      if (m.domain === 'cover' && m.service === 'set_cover_position') ids.forEach((id) => { window.__qaPos[id] = d.position; });
+      return Promise.resolve({ context: { id: 'qa' } });
+    }
     return orig(m);
   };
+  if (typeof ha._updateHass === 'function' && !ha.__qaPosWrap) {
+    ha.__qaPosWrap = true;
+    const up = ha._updateHass;
+    ha._updateHass = function (obj) {
+      if (obj && obj.states && window.__qaPos && Object.keys(window.__qaPos).length) {
+        const st = { ...obj.states };
+        for (const [id, pos] of Object.entries(window.__qaPos)) if (st[id]) st[id] = { ...st[id], attributes: { ...st[id].attributes, current_position: pos } };
+        obj = { ...obj, states: st };
+      }
+      return up.call(this, obj);
+    };
+  }
 });
 
 // One entity per kind from the house (a dial each): heating thermostat, cover with a position, dimmable light.
