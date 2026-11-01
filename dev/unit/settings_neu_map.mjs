@@ -1,0 +1,64 @@
+// Settings in the new structure (prototype, casora-panel-settings.js NEU) without a browser.  node dev/unit/settings_neu_map.mjs
+// Nothing lost: every page and personal section of the previous settings, every dashboard section the topics link
+// to and every sub of "Controls" has a block in a tile; at most two levels (tile → blocks); every block has a title,
+// a plain sentence and search words; every visible text has a German translation.
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+
+const read = (p) => fs.readFileSync(new URL('../../custom_components/casora/' + p, import.meta.url), 'utf8');
+const de = JSON.parse(read('translations/panel/de.json')).exact;
+const src = read('panel/casora-panel-settings.js');
+const win = {};
+const doc = { createElement: () => ({ style: {}, classList: { add() {}, toggle() {}, contains() { return false; } }, setAttribute() {}, appendChild() {} }), getElementById: () => null };
+new Function('window', 'document', 'customElements', 'localStorage', src)(win, doc, { whenDefined: () => ({ then() {} }), get: () => null }, { getItem: () => null });
+const NEU = win.casoraSettingsMap && win.casoraSettingsMap.tiles;
+assert.ok(Array.isArray(NEU) && NEU.length >= 6 && NEU.length <= 9, 'a few big tiles');
+
+// The previous pages and sections, read from the source (PAGES and HUB).
+const slice = (from, to) => src.slice(src.indexOf(from), src.indexOf(to, src.indexOf(from)));
+const pagesSrc = slice('const PAGES = [', 'const HUB = [');
+const hubSrc = slice('const HUB = [', 'const HUB_FIND');
+const pageIds = [...pagesSrc.matchAll(/\{ id: "(\w+)"/g)].map((m) => m[1]);
+const personal = [...pagesSrc.matchAll(/personal: \[([^\]]+)\]/g)].flatMap((m) => [...m[1].matchAll(/"(\w+)"/g)].map((x) => x[1]));
+const secs = [...new Set([...hubSrc.matchAll(/sec: "(\w+)"/g)].map((m) => m[1]))];
+assert.ok(pageIds.length >= 10 && personal.length >= 10 && secs.length >= 5, 'previous structure found');
+
+const blocks = NEU.flatMap((tl) => tl.blocks.map((b) => ({ ...b, tile: tl.id })));
+const has = (pred, what) => assert.ok(blocks.some(pred), 'no block for ' + what);
+personal.forEach((k) => has((b) => (b.personal || []).includes(k), 'personal section ' + k));
+// Option pages, own pages and the alert page's version push.
+['ai', 'outdoor', 'vent', 'update_push'].forEach((k) => has((b) => b.opt === k, 'options ' + k));
+has((b) => b.page === 'design', 'design');
+has((b) => b.page === 'live', 'live activities');
+has((b) => b.fuel, 'fuel prices');
+has((b) => b.hemma, 'remove Hemma');
+has((b) => b.updates, 'updates');
+secs.forEach((s) => has((b) => b.sec === s, 'dashboard section ' + s));
+// Every sub of "Controls" (General) is reachable.
+const general = read('panel/casora-panel.js').match(/label: "General", title: "Controls"[\s\S]*?subs: \[([\s\S]*?)\]/);
+const subs = [...general[1].matchAll(/id: "(\w+)"/g)].map((m) => m[1]);
+assert.ok(subs.length >= 6, 'subs of Controls');
+subs.forEach((s) => has((b) => b.sec === 'General' && b.sub === s, 'Controls › ' + s));
+// Each page of the previous settings maps somewhere (personal pages through their sections).
+pageIds.forEach((id) => assert.ok(['home', 'calendar', 'alerts', 'dashboards'].includes(id) || blocks.some((b) => b.page === id || b.opt === id
+  || (id === 'fuel' && b.fuel)), 'page ' + id));
+
+// Shape: unique keys, plain sentence, search words, at most two levels (blocks carry no children).
+const keys = blocks.map((b) => b.k);
+assert.equal(new Set(keys).size, keys.length, 'block keys unique');
+blocks.forEach((b) => {
+  assert.ok(b.title && b.plain && b.kw && b.kw.split(' ').length >= 2, 'title, plain sentence and words: ' + b.k);
+  assert.ok(!b.blocks && !b.items, 'no third level: ' + b.k);
+  assert.ok(!/\b(entity|entities|helper|template|yaml)\b/i.test(b.plain), 'no jargon in the plain sentence: ' + b.k);
+});
+NEU.forEach((tl) => assert.ok(tl.blocks.some((b) => !b.adv), 'tile opens with something frequent: ' + tl.id));
+
+// German for every visible text.
+const texts = new Set(['Open on this dashboard', 'Open updates', 'Advanced', 'Search: e.g. clock, waste, push…',
+  'Preview of the new settings. Everything is saved as before.', 'Back to the previous settings',
+  'Same settings, sorted by what you want to do. You can switch back any time.', 'Try the new settings (preview)',
+  'What do you want to set up? Pick a topic or search for a word.']);
+NEU.forEach((tl) => { texts.add(tl.label); texts.add(tl.sub); tl.blocks.forEach((b) => { texts.add(b.title); texts.add(b.plain); }); });
+texts.forEach((s) => assert.ok(de[s], 'German missing: ' + s));
+texts.forEach((s) => assert.ok(src.includes(JSON.stringify(s).slice(1, -1)) || src.includes(s), 'text in source: ' + s));
+console.log('ok settings_neu_map: ' + NEU.length + ' tiles, ' + blocks.length + ' blocks, ' + blocks.filter((b) => b.adv).length + ' advanced');
