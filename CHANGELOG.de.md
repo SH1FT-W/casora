@@ -4,6 +4,23 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.4 – 01.11.2026
+
+Das Licht-Popup, überarbeitet nach euren Rückmeldungen zu 26.11.3.
+
+### Neu
+- **Farbe im Licht-Popup:** Farbfähige Lampen bekommen „Farbe“ neben Warm, Neutral und Kalt, das öffnet das Farbrad (Räume und Gruppen: sobald eine Lampe Farbe kann).
+- **Der Kreis zeigt das Licht:** Im Farbmodus nimmt der Kreis die Farbe der Lampe an; Warm, Neutral und Kalt färben ihn von Bernstein bis Blauweiß.
+
+### Geändert
+- **Lichtgruppen als eine Lampe:** Eine Lichtgruppe im Raum (etwa Deckenspots) öffnet sich wie eine einzelne Lampe, mit einem Rad für die ganze Gruppe, statt in ihre einzelnen Lampen zu zerfallen.
+- **Die geöffnete Lampe ist markiert:** In „Leuchten im Raum“ ist die Lampe, die das Rad steuert, wie eine aktive Kachel gefüllt.
+- **Kein zweites Zustandswort:** Das Popup einer Lampe zeigt unter dem Namen kein „An“ oder „Aus“ mehr, das sagt das Rad.
+
+### Behoben
+- **Einzelne Lampen öffnen wieder sich selbst:** Ein Tipp auf eine Lampe im Licht-Popup eines Raums öffnete wieder das Raum-Popup statt das der Lampe.
+- **Effekt beenden:** Ein laufender Effekt lässt sich immer mit „Ohne Effekt“ beenden, auch bei Lampen ohne Aus-Eintrag in der Effektliste (Govee, Tuya-Szenen); Weißton oder Farbe beenden ihn ebenfalls.
+
 ## 26.11.3 – 01.11.2026
 
 Fixes aus euren Rückmeldungen zu 26.11.2 – vor allem für iPad und iPhone – und ein schnelleres Studio.

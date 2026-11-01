@@ -4,6 +4,23 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.4 – 01.11.2026
+
+The light popup, reworked from your feedback on 26.11.3.
+
+### New
+- **Colour in the light popup:** lamps that support colour get "Color" next to Warm, Neutral and Cold, which opens the colour wheel (rooms and groups: as soon as one lamp supports colour).
+- **The ring shows the light:** in colour mode the dial's ring takes the lamp's colour; warm, neutral and cold tint it from amber to blue-white.
+
+### Changed
+- **Light groups as one lamp:** a light group inside a room (such as ceiling spots) opens like a single lamp, with one dial for the whole group, instead of being split into its member lamps.
+- **The open lamp is marked:** in "Lights in this room" the lamp the dial controls is filled like an active tile.
+- **No second state word:** a lamp's popup shows no "On" or "Off" under its name, the dial says it.
+
+### Fixed
+- **Single lamps open themselves again:** tapping a lamp in a room's light popup opened the room's popup again instead of the lamp's own.
+- **Ending an effect:** a running effect can always be ended with "No effect", also on lamps whose effect list has no off entry (Govee, Tuya scenes); choosing a white tone or colour ends it too.
+
 ## 26.11.3 – 01.11.2026
 
 Fixes from your feedback on 26.11.2, above all for iPad and iPhone, and a faster Studio.
