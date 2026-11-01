@@ -10138,7 +10138,7 @@ window.casoraMenuGlass = {
           window.casoraHaptic('light');
           ev.preventDefault(); ev.stopPropagation();
           window._casoraSuppressDismiss = Date.now() + 600;
-          if (!(window._casoraMoonMenu && window._casoraMoonMenu.open(t)) && t.dataset.casoraMmPage) {
+          if (!(window._casoraMoonMenu && window._casoraMoonMenu.open(t, ev.detail === 0)) && t.dataset.casoraMmPage) {
             var mp = String(t.dataset.casoraMmPage), mcut = mp.indexOf('|'), mfn = (window._casoraPages || {})[mcut < 0 ? mp : mp.slice(0, mcut)];
             if (typeof mfn === 'function') { try { mfn(mcut < 0 ? '' : mp.slice(mcut + 1), t); } catch (e) { console.error('casora: page', e); } }
           }
@@ -12121,7 +12121,7 @@ window.casoraMenuGlass = {
     try { m.moon.setAttribute('aria-expanded', 'false'); } catch (e) {}
     if (m.host.parentNode) m.host.parentNode.removeChild(m.host);
   }
-  function moonMenuOpen(moon) {
+  function moonMenuOpen(moon, viaKey) {
     moonMenuClose();
     var rows = [];
     try { rows = JSON.parse(moon.getAttribute('data-casora-mm') || '[]'); } catch (e) { rows = []; }
@@ -12166,8 +12166,8 @@ window.casoraMenuGlass = {
     document.addEventListener('keydown', key, true);
     window.addEventListener('resize', close);
     mmOpen = { host: host, moon: moon, key: key, close: close };
-    var first = items.filter(function (x) { return x.classList.contains('on'); })[0] || items[0];
-    if (first) try { first.focus({ preventScroll: true }); } catch (e) {}
+    // Focus moves into the menu only when it was opened from the keyboard (no ring after a tap).
+    if (viaKey) { var first = items.filter(function (x) { return x.classList.contains('on'); })[0] || items[0]; if (first) try { first.focus({ preventScroll: true }); } catch (e) {} }
     return true;
   }
   window._casoraMoonMenu = { open: moonMenuOpen, close: moonMenuClose };

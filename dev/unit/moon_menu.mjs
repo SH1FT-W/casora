@@ -39,7 +39,7 @@ assert.ok(/data-casora-mm-i="4"[^>]*data-x="y"/.test(all), 'proxy keeps the item
 assert.ok(!/moonmenu/.test(moons(items.slice(0, 4), null, {}).html), 'no menu up to 4');
 
 // The click handler opens the menu before pages; the menu closes on Esc / the veil, stays in the window, hinterlegt.
-assert.ok(/t\.dataset\.casoraMoonmenu !== undefined[\s\S]{0,400}_casoraMoonMenu\.open\(t\)/.test(core), 'fire() opens the menu');
+assert.ok(/t\.dataset\.casoraMoonmenu !== undefined[\s\S]{0,400}_casoraMoonMenu\.open\(t, ev\.detail === 0\)/.test(core), 'fire() opens the menu');
 assert.ok(core.indexOf('t.dataset.casoraMoonmenu !== undefined') < core.indexOf('if (t && t.dataset && t.dataset.casoraPage) {'), 'menu before the page handler');
 assert.ok(/ev\.key === 'Escape'/.test(src) && /\.veil'\)\.addEventListener\('click'/.test(src), 'Esc and a tap beside close');
 assert.ok(/Math\.max\(8, Math\.min\(W - pw - 8,/.test(src) && /max-width:min\(280px, calc\(100vw - 16px\)\)/.test(src), 'inside the window');
