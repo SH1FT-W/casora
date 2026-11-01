@@ -1692,6 +1692,8 @@
         rooms.forEach((r) => (r.cards || []).forEach((c) => add(c && c.entity)));
         rooms.forEach((r) => walk(r.cards, 0));
       }
+      // The „Geräte“ heading below only follows scenes (the room head and its chips are content too).
+      let scenesShown = false;
       if (roomMode && this._config.scenes !== false && window._casoraSC) {
         let sceneCount = 0;
         try {
@@ -1715,6 +1717,7 @@
               custom_fields: { arrow: [{ display: 'none' }] },
             },
           }, this._contentEl, 0);
+          scenesShown = true;
           this._appendRevealCard({
             type:       'custom:button-card',
             template:   'casora_scene_row',
@@ -1757,7 +1760,7 @@
             i++;
           }
         } else {
-          if (roomMode && this._contentEl.children.length) { // casora-local-patch: Trenner nach den Szenen
+          if (roomMode && scenesShown) { // devices heading only after the scenes, as in the Studio preview
             this._appendRevealCard({
               type:       'custom:button-card',
               template:   'casora_mobile_header',
