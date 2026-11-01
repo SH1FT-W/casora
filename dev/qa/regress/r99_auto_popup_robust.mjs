@@ -146,9 +146,11 @@ for (const run of RUNS) {
     await check(tag + ' · ' + name + ': keine Fehler in der Konsole', errs.length === 0, errs.slice(0, 3));
   }
   // Kein Auto im Haus (Kachel „Automatisch“): Registereinträge mit Fahrzeug-Rollen nur im Browser ausblenden.
+  // Gate 26.11.2: auch „state_of_charge“ (Mock-Testlimousine, #89) – sonst blieb sie mit Akku/Schloss/Türen/Fenster
+  // als Auto übrig und war „nur Kombi“ gar nicht allein.
   await page.evaluate(() => {
     const ha = document.querySelector('home-assistant'), R = {};
-    for (const [k, v] of Object.entries(ha.hass.entities)) if (!/(range|reichweite|odometer|mileage|kilometerstand|fuel|tank|battery|akku|soc|ladezustand)/.test(k)) R[k] = v;
+    for (const [k, v] of Object.entries(ha.hass.entities)) if (!/(range|reichweite|odometer|mileage|kilometerstand|fuel|tank|battery|akku|soc|state_of_charge|ladezustand|ladestand)/.test(k)) R[k] = v;
     ha._updateHass({ entities: R });
   });
   // Nur das Kombi mit drei Sensoren im Haus, Kachel „Automatisch“: findet das Auto trotzdem.
