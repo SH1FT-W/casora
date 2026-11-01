@@ -438,7 +438,10 @@
     if (cat === 'presence') {
       var home = rows.filter(function (c) { return c.home; }).length;
       o.tone = home ? 'good' : 'off';
-      if (rows.length) o.facts = [{ label: 'Zuhause', value: String(home) }, { label: 'Unterwegs', value: String(rows.length - home) }];
+      // Counts in small letters after the number („2 unterwegs“, wortliste §2); the one the sentence already says
+      // („1 unterwegs“ as the sentence and as a fact) is not repeated under it (final review, 01.11.2026).
+      if (rows.length) o.facts = [{ label: 'zuhause', value: String(home) }, { label: 'unterwegs', value: String(rows.length - home) }]
+        .filter(function (f) { return (f.value + ' ' + f.label).toLowerCase() !== String(o.text).trim().toLowerCase(); });
       // Dial (richtlinien §4.8): one segment per person, green at home, grey away.
       o.segs = rows.map(function (c) { return { ok: true, tone: c.home ? 'good' : 'off', label: c.title || c.name || '' }; });
       return UI.stage('status', o);
