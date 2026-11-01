@@ -87,14 +87,49 @@
     + '.zs-t b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14px;font-weight:700;line-height:1.25;overflow-wrap:break-word;hyphens:auto;}'
     + '.zs-t.on{background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, #2E2721);'
     +   'box-shadow:0 0 0 2px var(--zs-c, var(--casora-popup-accent, var(--casora-color-yellow))), var(--casora-soft-seg-on-shadow, none);}'
+    + '.zs-m{width:22px;height:22px;display:block;flex:none;background:var(--casora-soft-sub, rgba(58,50,43,0.6));-webkit-mask:no-repeat center/contain;mask:no-repeat center/contain;}'
+    + '.zs-t.on .zs-m{background:color-mix(in srgb, var(--zs-c, var(--casora-popup-accent, var(--casora-color-yellow))) 65%, var(--casora-soft-seg-on-ink, #2E2721));}'
     + '.zs-t.on ha-icon{color:color-mix(in srgb, var(--zs-c, var(--casora-popup-accent, var(--casora-color-yellow))) 65%, var(--casora-soft-seg-on-ink, #2E2721));}'
     + '.zs-t:active{transform:scale(var(--casora-press-scale, .97));}'
     + '@media (hover:hover){.zs-t:not(.on):hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}}'
     + '.hui-stage{--casora-pv-stack-fill:transparent;}</style>';
-  var outline = function (ic) {
-    ic = String(ic || '');
-    if (!/^mdi:/.test(ic)) return 'mdi:palette-outline';
-    return ic;
+  // The scene's own symbol (prod test 01.11.2026: every tile showed the same palette): the Studio's choice
+  // (scene_icons of the tile or of the dashboard's scene row), then HA's (entity registry, then the state), else a calm
+  // default. A picture path as a mask; nothing else.
+  // One symbol set on the tiles (§4.8: MDI): a symbol from another set („ios:moon-stars“) is mapped by its name; an
+  // unknown one stays only when its set is installed.
+  var MAP = [[/lamp-floor|floor-lamp/, 'mdi:floor-lamp-outline'], [/lamp/, 'mdi:lamp-outline'], [/bulb|light/, 'mdi:lightbulb-outline'],
+    [/moon|night|sleep|bed/, 'mdi:weather-night'], [/sun|sunrise|morning/, 'mdi:weather-sunny'], [/sunset|evening/, 'mdi:weather-sunset'],
+    [/wand|sparkle|magic|clean|broom/, 'mdi:creation-outline'], [/tv|television|appletv|movie|film|cinema/, 'mdi:television'],
+    [/music|note|speaker/, 'mdi:music-note'], [/book|read/, 'mdi:book-open-variant'], [/party|celebrat/, 'mdi:party-popper'],
+    [/heart|love|romant/, 'mdi:heart-outline'], [/candle|flame|fire/, 'mdi:candle'], [/home|house/, 'mdi:home-outline'],
+    [/leaf|plant|nature/, 'mdi:leaf'], [/dinner|food|fork|cook|kitchen/, 'mdi:silverware-fork-knife'], [/coffee|cup/, 'mdi:coffee-outline'],
+    [/power|off/, 'mdi:power']];
+  var toMdi = function (ic) {
+    var m = /^([a-z0-9_-]+):([\w-]+)$/i.exec(ic);
+    if (!m) return null;
+    if (m[1] === 'mdi') return ic;
+    for (var i = 0; i < MAP.length; i++) if (MAP[i][0].test(m[2])) return MAP[i][1];
+    return (window.customIcons && window.customIcons[m[1]]) || (window.customIconsets && window.customIconsets[m[1]]) ? ic : null;
+  };
+  Z.iconOf = function (id, states, V) {
+    var studio = (V && V.icons) || {};
+    var reg = (((typeof document !== 'undefined' && document.querySelector('home-assistant')) || {}).hass || {}).entities || {};
+    var st = states[id];
+    var cand = [studio[id], (reg[id] || {}).icon, st && st.attributes && st.attributes.icon];
+    for (var i = 0; i < cand.length; i++) {
+      var c = typeof cand[i] === 'string' ? cand[i].trim() : '';
+      if (!c) continue;
+      var mi = toMdi(c);
+      if (mi) return { icon: mi };
+      if (/^(\/|https?:)[^"'<>()\s]+\.(svg|png|webp)$/i.test(c)) return { url: c };
+    }
+    return { icon: 'mdi:palette-outline' };
+  };
+  var iconHtml = function (id, states, V) {
+    var o = Z.iconOf(id, states, V);
+    if (o.url) return '<span class="zs-m" style="-webkit-mask-image:url(\'' + esc(o.url) + '\');mask-image:url(\'' + esc(o.url) + '\');"></span>';
+    return '<ha-icon icon="' + esc(o.icon) + '"></ha-icon>';
   };
   Z.v3sec = function (part, V, states) {
     var UI = window._casoraUI, SC = window._casoraSC;
@@ -119,7 +154,7 @@
         var n = nameOf(id, states, V.room);
         return '<div class="zs-t' + (on ? ' on' : '') + '" role="button" aria-pressed="' + (on ? 'true' : 'false') + '" aria-label="' + esc(n) + '"'
           + ' data-casora-svc="' + esc(JSON.stringify(svc)) + '"' + (clr ? ' style="--zs-c:' + esc(clr) + '"' : '') + '>'
-          + '<ha-icon icon="' + esc(outline((states[id].attributes || {}).icon)) + '"></ha-icon><b>' + esc(n) + '</b></div>';
+          + iconHtml(id, states, V) + '<b>' + esc(n) + '</b></div>';
       };
       var head = ids.slice(0, 12), rest = ids.slice(12);
       var html = V3CSS + '<div class="zs-g">' + head.map(tileHtml).join('') + '</div>';
@@ -128,6 +163,18 @@
       return UI.stage('content', { html: html });
     }
     return '';
+  };
+  // Symbols chosen in the Studio: the tile's own scene_icons, then the dashboard's scene row (like casoraSceneColor).
+  Z.studioIcons = function (variables) {
+    var out = {};
+    var add = function (m) { if (m && typeof m === 'object' && !Array.isArray(m)) Object.keys(m).forEach(function (k) { if (out[k] == null && typeof m[k] === 'string') out[k] = m[k]; }); };
+    add(variables && variables.scene_icons);
+    try {
+      var cfg = window._casoraLovelaceCfg && window._casoraLovelaceCfg();
+      var row = cfg && cfg.button_card_templates && cfg.button_card_templates.casora_scene_row;
+      add(row && row.variables && row.variables.scene_icons);
+    } catch (e) { /* YAML dashboard */ }
+    return out;
   };
   Z.v3 = function () { var UI = window._casoraUI; return !!(UI && UI.v3 && UI.v3() && UI.stage && window._casoraSoftKit); };
 
@@ -139,7 +186,7 @@
       var ids3 = SC.list(states, hass, variables) || [];
       SC.prefetch(ids3, states);
       var room3 = variables.room_name && variables.room_name !== 'Home' && variables.room_name !== 'Zuhause' && variables.room_name !== 'Casa' ? variables.room_name : null;
-      var cj3 = JSON.stringify({ ids: ids3, room: room3, trans: Number(variables.scene_transition != null ? variables.scene_transition : 4) });
+      var cj3 = JSON.stringify({ ids: ids3, room: room3, trans: Number(variables.scene_transition != null ? variables.scene_transition : 4), icons: Z.studioIcons(variables) });
       var call = function (p) { return 'return window._casoraScenesSoft ? window._casoraScenesSoft.v3sec(' + JSON.stringify(p) + ', ' + cj3 + ', states) : "";'; };
       return K.layout({ fields: { hero: { card: K.secCard(ids3, call('hero'), states) }, stage: { card: K.secCard(ids3, call('stage'), states) } },
         top: ['hero'], stage: 'stage', left: [], right: [] });
