@@ -2146,6 +2146,11 @@
     var pic = s && s.state !== 'unavailable' && s.attributes && s.attributes.entity_picture;
     return pic ? { url: pic, id: id, own: false } : null;
   };
+  /* Fill level as words („Akku 64 %“, „Tank 55 %“, „Tankinhalt 40 l“), null without one. */
+  C.fillText = function (r) {
+    return r.tank != null ? (r.ev ? 'Akku ' : 'Tank ') + fmtN(Math.round(r.tank)) + ' %'
+      : r.tankL != null ? 'Tankinhalt ' + fmtN(r.tankL) + ' ' + r.tankLU : null;
+  };
   C.sec = function (name, p, states, o) {
     var UI = window._casoraUI; if (!UI) return '';
     o = o || {};
@@ -2165,8 +2170,12 @@
       if (name === 'stage') {
         var im = C.image(p, states, o.img);
         var lock = r.open.length ? r.open.join(', ') + ' offen' : (r.locked === false ? 'Nicht verriegelt' : r.locked ? 'Verriegelt' : null);
+        /* Neither range nor an own value: the fill level is the sentence, as on the tile – „Keine Daten“ stood next
+           to a known battery level (gate 26.11.2); then it is no fact of its own. */
+        var fillS = r.range == null && !ownH ? C.fillText(r) : null;
         var factsC = [];
-        if (r.tank != null) factsC.push({ label: r.ev ? 'Akku' : 'Tank', value: fmtN(Math.round(r.tank)) + ' %' });
+        if (fillS) { /* already the sentence */ }
+        else if (r.tank != null) factsC.push({ label: r.ev ? 'Akku' : 'Tank', value: fmtN(Math.round(r.tank)) + ' %' });
         else if (r.tankL != null) factsC.push({ label: 'Tankinhalt', value: fmtN(r.tankL) + ' ' + r.tankLU });
         if (lock) factsC.push({ label: 'Schloss', value: lock });
         if (r.stamp) factsC.push({ label: 'Datenstand', value: ago(r.stamp) });
@@ -2175,7 +2184,7 @@
         return UI.stage('status', { tone: lv === 2 ? 'bad' : lv === 1 ? 'warn' : 'good', icon: r.ev ? 'mdi:car-electric' : 'mdi:car',
           image: im ? im.url : null, imageOwn: !!(im && im.own),
           value: im && r.range != null ? fmtN(r.range) : null, unit: im && r.range != null ? r.rangeU : null, caption: im && r.range != null ? 'Reichweite' : null,
-          text: r.range != null ? 'Reichweite ' + fmtN(r.range) + ' ' + r.rangeU : ownH || 'Keine Daten', facts: factsC,
+          text: r.range != null ? 'Reichweite ' + fmtN(r.range) + ' ' + r.rangeU : ownH || fillS || 'Keine Daten', facts: factsC,
           // Dial (richtlinien §4.8): the tank or battery level fills the ring.
           progress: r.tank != null ? Math.max(0, Math.min(1, r.tank / 100)) : null });
       }
@@ -2212,7 +2221,8 @@
       /* Head status line of the popup with a picture (#89, §3): lock first, then fill level and data age – the wheel
          shows the range, the line never repeats it. */
       var lockL = r.open.length ? r.open.join(', ') + ' offen' : (r.locked === false ? 'Nicht verriegelt' : r.locked ? 'Verriegelt' : null);
-      var fillL = r.tank != null ? (r.ev ? 'Akku ' : 'Tank ') + fmtN(Math.round(r.tank)) + ' %' : r.tankL != null ? 'Tankinhalt ' + fmtN(r.tankL) + ' ' + r.tankLU : null;
+      /* Without range and own value the wheel says the fill level (stage above), the line does not repeat it. */
+      var fillL = r.range == null && !C.ownText(p, states) ? null : C.fillText(r);
       var bitsL = [lockL, fillL, r.stamp ? 'Stand ' + ago(r.stamp) : null].filter(Boolean);
       if (!bitsL.length) return '';
       var lvL = C.level(p, states);
