@@ -135,7 +135,9 @@ for (const [tag, o, d, mobile] of VIEWS) {
     const rows = window.__pierce('.cfb-r:not(.h)');
     const me = rows.find((r) => /FC Nordhafen/.test(r.textContent));
     const more = window.__pierce('.cfb-more')[0];
+    const hs = window.casoraPopup.element && window.casoraPopup.element._headerStatus;
     return { surf: { l: S.left, r: S.right }, vw: innerWidth,
+      head: hs ? hs.textContent.replace(/\s+/g, ' ').trim() : '', headPills: hs ? [...hs.querySelectorAll('.cfb-hf')].map((n) => n.textContent) : [],
       ring: ring ? ring.getAttribute('src').slice(0, 20) : null, ringOk: !!(ring && ring.complete && ring.naturalWidth > 0),
       match: (window.__pierce('.cfb-m')[0] || {}).textContent || '', rows: rows.length, me: me ? me.className : null,
       more: more ? more.getBoundingClientRect().height : 0, form: window.__pierce('.cfb-f:not(.d):not(.h)').length,
@@ -160,6 +162,8 @@ for (const [tag, o, d, mobile] of VIEWS) {
   await check(tag + ': Popup – Tabelle mit eigenem Team', p.rows >= 8 && !!p.me, { rows: p.rows, me: p.me });
   await check(tag + ': Popup – „Ganze Tabelle“ ≥ 44 px', p.more >= 44, p.more);
   await check(tag + ': Popup – Form mit 5 Spielen', p.form === 5, p.form);
+  // Owner 01.11.2026: the head shows the form – five S/U/N pills, the newest on the right (no „Seit …“).
+  await check(tag + ': Kopf – Form mit 5 Ergebnissen (S/U/N)', /^Form/.test(p.head) && p.headPills.length === 5 && p.headPills.every((x) => /^[SUN]$/.test(x)) && !/Seit/.test(p.head), { head: p.head, pills: p.headPills });
   // Desktop: as many duels as fit beside the table (K.fit, at least two, else none – v3: the match box above the form
   // leaves no room in the test house); the phone shows all five.
   await check(tag + ': Popup – Duelle unter der Form, Zeilen gleich hoch wie die Form',

@@ -513,7 +513,7 @@
     var ha = document.querySelector('home-assistant');
     var S = ha && ha.hass && ha.hass.states;
     if (!S || !K._id || !S[K._id]) return;
-    ['hero', 'match', 'table', 'form'].forEach(function (k) {
+    ['head', 'hero', 'match', 'table', 'form'].forEach(function (k) {
       find(ha.shadowRoot, '.cfb-' + k).forEach(function (n) {
         n.innerHTML = (window.casoraTr || function (x) { return x; })(K.html(k, S[K._id]));
       });
@@ -639,6 +639,19 @@
       var U = window._casoraUI;
       if (!U || !U.line) return '';
       if (i.phase === 'IN') return U.line('Live', [K.minute(i.clock), K.tile(st)].filter(Boolean));
+      // Owner 01.11.2026: otherwise the form – the last five results as S/U/N pills in the form list's colours, the newest
+      // on the right; without form data the next match.
+      var fm = ((d && d.form) || []).filter(function (x) { return x && /^[WDL]$/.test(x.res); }).slice(0, 5).reverse();
+      if (fm.length) {
+        var ab3 = K.abbr(), bg = { W: 'var(--casora-color-green, #6AAE78)', D: 'var(--casora-color-sand, #9A8672)', L: 'var(--casora-color-red, #D35A4E)' };
+        var pills = fm.map(function (x) {
+          var ink = window._casoraInkOn ? window._casoraInkOn(bg[x.res], 4.5) : '#fff';
+          return '<i class="cfb-hf ' + esc(x.res) + '" title="' + esc((x.home ? 'gegen ' : 'bei ') + K.name(x.opp) + ' ' + x.my + ':' + x.their) + '" style="display:inline-grid;place-items:center;'
+            + 'width:1.45em;height:1.45em;margin-left:4px;border-radius:50%;font-style:normal;font-size:.82em;font-weight:700;vertical-align:.06em;'
+            + 'background:' + esc(bg[x.res]) + ';color:' + esc(ink) + ';">' + esc(ab3[x.res] || x.res) + '</i>';
+        }).join('');
+        return U.line('Form', []).replace(/<\/div>\s*$/, '<span data-no-i18n aria-label="' + esc(fm.map(function (x) { return ab3[x.res]; }).join(' ')) + '">' + pills + '</span></div>');
+      }
       if (i.phase === 'POST' && i.date) return U.line('Endstand', [K.tile(st)].concat(diffDays(i.date) === 0 ? [] : [K.day(i.date)]));
       if (i.phase === 'OFF') return U.line(i.off === 'cancel' ? 'Abgesagt' : 'Verschoben', [vs(i)]);
       if (i.phase === 'PRE' && i.date) return U.line('Nächstes Spiel ' + K.when(i.date) + (i.tbd ? '' : ' ' + hm(i.date)), [vs(i)]);
