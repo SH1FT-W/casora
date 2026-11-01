@@ -132,11 +132,17 @@
     var v3 = [o.stage, o.quick].filter(function (k) { return k && has(k) && top.indexOf(k) < 0; });
     if (v3.length) {
       L = L.filter(function (k) { return v3.indexOf(k) < 0; }); R = R.filter(function (k) { return v3.indexOf(k) < 0; });
-      if (o.stage && v3[0] === o.stage && (o.stageWide || /data-casora-stage=\\?"S5/.test(String(o.fields[o.stage])))) { top = top.concat([o.stage]); v3 = v3.slice(1); }
+      var wideSt = o.stage && v3[0] === o.stage && (o.stageWide || /data-casora-stage=\\?"S5/.test(String(o.fields[o.stage])));
+      if (wideSt) { top = top.concat([o.stage]); v3 = v3.slice(1); }
       // §2: left only the stage and its quick choice, the lists on the right (review 2, DD-13: „WLAN“ under the wheel).
-      if (v3.length) { R = L.concat(R); L = v3; }
+      // §7.1 (01.11.2026): the one Verlauf sits under the wheel (phone: stage → Verlauf → lists).
+      var H = window._casoraHH, hist = !wideSt && H && H.histKey ? H.histKey(o, has) : null;
+      if (hist && top.indexOf(hist) > -1) hist = null;
+      if (v3.length) { R = L.concat(R).filter(function (k) { return k !== hist; }); L = v3.concat(hist ? [hist] : []); }
       else L = v3.concat(L);
-      if (o.narrowOrder) o = Object.assign({}, o, { narrowOrder: v3.concat(o.narrowOrder.filter(function (k) { return v3.indexOf(k) < 0; })) });
+      var head = v3.concat(hist ? [hist] : []);
+      if (o.narrowOrder) o = Object.assign({}, o, { narrowOrder: head.concat(o.narrowOrder.filter(function (k) { return head.indexOf(k) < 0; })) });
+      else if (hist) o = Object.assign({}, o, { narrowOrder: L.concat(R) });
     }
     if (!L.length && R.length > 1 && o.moveLeft) { L = R.filter(function (k) { return o.moveLeft.indexOf(k) > -1; }); R = R.filter(function (k) { return L.indexOf(k) < 0; }); }
     /* Wie B-11 in den Geräte-Popups (H.layout, 02-devices.js): Steht rechts nur „Mehr“, wird das Popup

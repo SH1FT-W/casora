@@ -49,7 +49,7 @@ erst die Grundsätze, dann die Teile von oben nach unten, dann Maße, Zustände 
 
 | Fläche | Desktop ≥ 761 px | Handy |
 |---|---|---|
-| Mit Liste | 900 breit, **links nur** Bühne + Schnellwahl, **rechts alle** Listen | eine Spalte: Kopf → Bühne → Schnellwahl → Listen |
+| Mit Liste | 900 breit, **links nur** Bühne + Schnellwahl (+ der eine Verlauf, §7.1), **rechts alle** Listen | eine Spalte: Kopf → Bühne → Schnellwahl → Verlauf → Listen |
 | Ohne Liste oder nur 1 Abschnitt | 552 breit, eine Spalte in derselben Reihenfolge | wie Desktop |
 | Bild-Bühne (S5) | 900 breit, Bühne über **beide** Spalten, darunter links Schnellwahl, rechts Listen | eine Spalte |
 
@@ -129,8 +129,8 @@ Anteil) und bedienen alle; die einzelnen Geräte stehen rechts in der Liste. Bei
 
 **Ein Gerät aus der Liste antippen** (Zeile mit ›) öffnet seine **Unterseite im selben Popup** (v2 Regel 7): ‹ links,
 Etikett = Titel der Gruppe („Fußbodenheizung“), Titel = Raum bzw. Gerät, kein Hauptschalter der Gruppe. Die Unterseite ist
-ein vollständiges v3-Popup dieses einen Geräts – eigene Bühne (gleicher Typ wie die Gruppe), Schnellwahl, rechts Zustand →
-Verlauf (§7). Sie zeigt dieselbe Seite, die das Gerät auch einzeln öffnet (ein Popup pro Ding).
+ein vollständiges v3-Popup dieses einen Geräts – eigene Bühne (gleicher Typ wie die Gruppe), Schnellwahl, der Verlauf unter dem Rad (§7.1), rechts
+der Zustand. Sie zeigt dieselbe Seite, die das Gerät auch einzeln öffnet (ein Popup pro Ding).
 
 ![Unterseite „Wohnzimmer“ aus der Fußbodenheizung: ‹ und Etikett, Bühne mit Ziel, Modus, Zustand, Verlauf, Einstellungen](bilder/popup-v3-heizung-raum.webp)
 
@@ -253,8 +253,13 @@ Popups über `window._hpChartCfg(entity, titel, zeitraum, farbe, höhe)` (`01-ba
 | Rolle | Wann | Wo | Höhe |
 |---|---|---|---|
 | **Bühne** (S6) | Der Verlauf ist die Hauptsache: Messwert, Energie, Pflanze, Luftqualität, Diagramm-Kachel | in der Bühne, unter dem großen Wert | 160 (Handy 140) |
-| **Abschnitt „Verlauf“** | Der Verlauf ergänzt eine andere Bühne: Temperatur bei Heizung/Thermostat, Leistung bei Waschmaschine, Trockner, Spüler, Drucker | rechte Spalte, Abschnitt „Verlauf“ nach „Zustand“ (Reihenfolge §6), eigene Platte | 120 |
+| **Abschnitt „Verlauf“** | Der Verlauf ergänzt eine andere Bühne: Temperatur bei Heizung/Thermostat, Leistung bei Waschmaschine, Trockner, Spüler, Drucker, Durchsatz beim Netzwerk | Desktop: **linke Spalte unter dem Rad** (nach den Monden bzw. der Schnellwahl), eigene Platte; rechts stehen nur Listen. Handy: Bühne → Verlauf → Listen | 120 |
 
+- **Verlauf unter das Rad (Entscheidung 01.11.2026):** Hat ein Popup eine Bühne und einen Verlauf, steht der Verlauf links
+  unter der Bühne, rechts nur Listen (Netzwerk: WLANs, Geräte, Internet). Bleibt rechts nichts, wird das Popup einspaltig
+  (552). Die Layout-Bausteine machen das selbst (`HH.layout`, `_casoraSoftKit.layout`: Feld `chart` bzw. `metric` oder
+  `history: '<feld>'`; `history: false` nur mit Grund). Ausnahme Bild-Bühne S5 (über beide Spalten). Regeltest
+  `dev/unit/popup_v3_history_left.mjs`.
 - **Höchstens ein Diagramm** – entweder auf der Bühne (S6) oder als Abschnitt „Verlauf“, nie beides.
 - **Nie** ein Diagramm über oder neben einer Bühne S1–S5; nie zwei Diagramme nebeneinander.
 - **Mehrere Messgrößen** in einem Diagramm nur mit Legende und höchstens 4 Serien; sonst eine Serie und die Wahl über
@@ -416,7 +421,7 @@ Nicht zurück: #35 (Jalousie-Stufen bleiben drei Monde: Auf · Beschatten · Zu)
 | Richtig | Falsch |
 |---|---|
 | Eine Bühne mit dem Wert, den man am häufigsten ändert | Zwei große Bereiche übereinander (Diagramm **und** Regler) |
-| Temperaturverlauf als Abschnitt „Verlauf“ rechts, 120 hoch | Temperaturverlauf über dem ±-Regler |
+| Temperaturverlauf als Abschnitt „Verlauf“ links unter dem Rad, 120 hoch | Temperaturverlauf über dem ±-Regler oder rechts zwischen den Listen |
 | Spannung und Stromstärke gar nicht im Popup | Drei Diagramme untereinander in der rechten Spalte |
 | Serienfarbe aus `--casora-color-*` bzw. Gerätefarbe | `#0A84FF`, `#8E8E93` im Aufruf |
 | Szenen als 4 Schnellwahl-Kacheln | Szenen als Textlinks oder einzelne Fuß-Pillen |
