@@ -315,6 +315,7 @@
   // Popup v3 (richtlinien §4 S8): the list is the stage – its rows sit in the stage plate without a fill of their own.
   L.v3 = function () { var UI = window._casoraUI; return !!(UI && UI.v3 && UI.v3() && UI.stage); };
   var STAGE_CSS = '<style>.hui-stage{--casora-pv-stack-fill:transparent;}</style>';
+  var MORE_STAGE_CSS = '<style>.hui-stage[data-casora-stage]{background:none;padding:0;border-radius:0;}</style>';
   L.popup = function (V, states, hass) {
     var K = window._casoraSoftKit, UI = window._casoraUI;
     if (!K || !UI) return { type: 'vertical-stack', cards: [] };
@@ -473,7 +474,9 @@
       var partsHtml = parts.join('');
       if (!parts.length) return UI.stage('content', { empty: { icon: 'list', studio: true, text: T('Wähle im Studio Gruppen und Sensoren für diese Kachel.') } });
       // §6: 24 between the sections; every section one column (the stage is 552 wide, two columns squeezed the rows).
-      return UI.stage('content', { html: STAGE_CSS + '<div style="display:flex;flex-direction:column;gap:24px;">' + partsHtml + '</div>' });
+      // Prod test 01.11.2026: the sections are the lists of §6 – each its own plate with the heading outside, 16 in like
+      // the other v3 popups –, so the stage draws no plate around them (headings sat inside it, 36 in).
+      return UI.stage('content', { html: MORE_STAGE_CSS + '<div style="display:flex;flex-direction:column;gap:24px;">' + partsHtml + '</div>' });
     }
     if (part === 'lists') {
       var rows = M.lists.filter(function (g) { return !!S[g]; }).map(function (g) {

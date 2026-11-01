@@ -207,6 +207,18 @@ window._casoraChartCard = { LABEL: { '24h': '24 Std.' }, value: () => '21,5 °C'
 assert.match(L.moreSec('charts', M, states, hass), /data-casora-cols="auto"><group Diagramme>sensor\.qa_temp:temp\/24 Std\. · 21,5 °C;/);
 assert.equal(L.moreSec('hero', M, states, hass), '<line>2 Listen · 2 Diagramme|</line>');
 assert.equal(L.moreSec('hero', L.moreCfg({}), states, hass), '<line>Nichts gewählt|</line><note>Wähle im Studio Gruppen und Sensoren für diese Kachel.</note>');
+// Popup v3 (prod test 01.11.2026): Mehr's sections are §6 lists – each its own plate with the heading outside, 16 in –
+// so the stage draws no plate around them (headings sat inside it).
+{
+  const UI0 = window._casoraUI;
+  window._casoraUI = Object.assign({}, UI0, { v3: () => true, stage: (t, o) => '<stage ' + t + '>' + (o.html || '') });
+  const st3 = L.moreSec('stage', M, states, hass);
+  window._casoraUI = UI0;
+  assert.match(st3, /^<stage content>/);
+  assert.match(st3, /\.hui-stage\[data-casora-stage\]\{background:none;padding:0;border-radius:0;\}/, 'no plate around the sections');
+  assert.ok(!/--casora-pv-stack-fill:transparent/.test(st3), 'the sections keep their own plates');
+  assert.match(st3, /<group Gruppen>/);
+}
 
 // A tapped row in Mehr opens its list or chart in the same popup with ‹ back to Mehr.
 const opened = [];
