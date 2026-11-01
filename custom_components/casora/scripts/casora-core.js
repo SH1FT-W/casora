@@ -11920,6 +11920,25 @@ window.casoraMenuGlass = {
   // End angle of the filled part; a sliver stays at 0 so the knob has a start.
   // A value that is no number (offline: „–“) draws an empty ring, never a NaN path (review 2, T07).
   function dEnd(pct) { pct = Number(pct); if (!isFinite(pct)) pct = 0; return DIAL.a0 + DIAL.span * Math.max(0.4, Math.min(100, pct)) / 100; }
+  // Weather (final review 01.11.2026): a fixed temperature scale, coloured by the absolute temperature – blue cold, green
+  // mild around 15–20 °C, orange from about 25, dark red from 30 –, so 10 °C never looks hot on a narrow day range.
+  // Stops in °C; between two stops the colours mix (tokens only).
+  var TEMP_STOPS = [[-10, 'color-mix(in srgb, var(--casora-color-blue, #5B8FC9) 78%, black)'], [0, 'var(--casora-color-blue, #5B8FC9)'],
+    [10, 'var(--casora-color-teal, #4E9E95)'], [17, 'var(--casora-color-green, #6AAE78)'], [22, 'var(--casora-color-yellow, #FFCC00)'],
+    [26, 'var(--casora-color-orange, #DE8A4E)'], [30, 'var(--casora-color-red, #D35A4E)'], [35, 'color-mix(in srgb, var(--casora-color-red, #D35A4E) 72%, black)']];
+  function tempColor(c) {
+    c = Number(c);
+    if (!isFinite(c) || c <= TEMP_STOPS[0][0]) return TEMP_STOPS[0][1];
+    for (var i = 1; i < TEMP_STOPS.length; i++) {
+      var a = TEMP_STOPS[i - 1], b = TEMP_STOPS[i];
+      if (c <= b[0]) {
+        var f = Math.round((c - a[0]) / (b[0] - a[0]) * 100);
+        return f <= 0 ? a[1] : f >= 100 ? b[1] : 'color-mix(in srgb, ' + b[1] + ' ' + f + '%, ' + a[1] + ')';
+      }
+    }
+    return TEMP_STOPS[TEMP_STOPS.length - 1][1];
+  }
+  window._casoraTempColor = tempColor;
   var DIAL_CSS = '.hui-stage.dial{background:none;padding:0;gap:12px;align-items:center;}'
     // The button-card field around the stage clips (.ellipsis): the chosen moon's ring and glow must not be cut.
     + '.ellipsis:has(.hui-stage.dial){overflow:visible !important;}'
@@ -11988,6 +12007,7 @@ window.casoraMenuGlass = {
     + '.hui-dl-c ha-icon.hui-dl-sym6{color:' + T.ink + ';margin:0 0 2px !important;}'
     + '.hui-dl-end{position:absolute;top:79cqw;font-size:13px;font-weight:700;color:' + S.sub + ';font-variant-numeric:tabular-nums;white-space:nowrap;transform:translateX(-50%);pointer-events:none;}'
     + '.hui-dl-end.l{left:28%;}.hui-dl-end.r{left:72%;}'
+    + '.hui-dl-tag{position:absolute;font-size:13px;font-weight:700;color:' + S.sub + ';font-variant-numeric:tabular-nums;white-space:nowrap;transform:translate(-50%,-50%);pointer-events:none;}'
     + '.hui-dl-pm{display:flex;gap:clamp(36px, 15cqw, 76px);margin-top:10px;pointer-events:auto;}'
     + '.hui-dl-pm .hui-st-b{width:44px;height:44px;font-size:22px;background:' + S.row + ';}'
     // The record (dial-alle.html): black vinyl with a sheen and grooves, the cover as its round label in the middle –
@@ -12267,6 +12287,30 @@ window.casoraMenuGlass = {
       });
       return '<svg viewBox="0 0 420 420" aria-hidden="true" focusable="false">' + svgHtml + '</svg>';
     }
+    if (ring.temp) {
+      // Fixed scale: a thin track over the whole range, the day's range (low … high) as the band in the colours of its
+      // temperatures, the knob where „now“ is.
+      var tq = ring.temp, tC = function (p) { var v = tq.mn + (tq.mx - tq.mn) * p / 100; return tq.unit === 'F' ? (v - 32) * 5 / 9 : v; };
+      svgHtml += '<path class="tr" d="' + esc(dArc(DIAL.a0, DIAL.a0 + DIAL.span)) + '" fill="none" stroke-width="12" stroke-linecap="round"/>';
+      var bd = ring.band || [ring.pct, ring.pct], b0 = Math.min(bd[0], bd[1]), b1 = Math.max(bd[0], bd[1]);
+      var aA = DIAL.a0 + DIAL.span * b0 / 100, aB = DIAL.a0 + DIAL.span * b1 / 100;
+      if (aB - aA < 1) { aA -= 0.5; aB += 0.5; }
+      var nB = Math.max(1, Math.ceil((aB - aA) / 3)), bandSvg = '';
+      for (var j = 0; j < nB; j++) {
+        var sa = aA + (aB - aA) * j / nB, sb = aA + (aB - aA) * (j + 1) / nB + (j < nB - 1 ? 0.6 : 0);
+        bandSvg += '<path d="' + esc(dArc(sa, Math.min(sb, aB))) + '" fill="none" stroke-width="26" style="stroke:' + esc(tempColor(tC(b0 + (b1 - b0) * (j + 0.5) / nB))) + '"/>';
+      }
+      var cap = function (a, c) { var q = dPt(a, DIAL.r); return '<path d="M' + esc(q[0]) + ' ' + esc(q[1]) + ' L' + esc(q[0]) + ' ' + esc(q[1]) + '" fill="none" stroke-width="26" stroke-linecap="round" style="stroke:' + esc(c) + '"/>'; };
+      bandSvg = cap(aA, tempColor(tC(b0))) + cap(aB, tempColor(tC(b1))) + bandSvg;
+      // The band twice: soft glow under it, then the band itself.
+      svgHtml += '<g class="gl" opacity=".55" filter="url(#' + esc(id) + ')" pointer-events="none">';
+      svgHtml += bandSvg;
+      svgHtml += '</g><g class="tb" data-band="' + esc(dRound(b0)) + ' ' + esc(dRound(b1)) + '">';
+      svgHtml += bandSvg;
+      svgHtml += '</g>';
+      if (ring.knob) { var kt = dPt(dEnd(ring.pct), DIAL.r); svgHtml += '<circle class="hui-dl-knob" cx="' + esc(kt[0]) + '" cy="' + esc(kt[1]) + '" r="19"/>'; }
+      return '<svg viewBox="0 0 420 420" aria-hidden="true" focusable="false">' + svgHtml + '</svg>';
+    }
     var stroke = ring.heat ? 'url(#' + esc(id) + 'h)' : ring.col;
     var e = dEnd(ring.pct), showHtml = ring.pct > 0 ? '' : ' style="display:none"';
     svgHtml += '<path class="tr" d="' + esc(dArc(DIAL.a0, DIAL.a0 + DIAL.span)) + '" fill="none" stroke-width="26" stroke-linecap="round"/>'
@@ -12399,6 +12443,26 @@ window.casoraMenuGlass = {
       if (r6.color) ring.col = r6.color;
       // r6.dot: a white dot at the end of the level (weather: where „now“ sits between the day's low and high).
       if (r6.dot) ring.knob = true;
+      // r6.temp ('C'|'F'): a fixed temperature scale (min … max) coloured by the absolute temperature; r6.band: the day's
+      // low and high as the highlighted band, r6.bandLabels („T 8°“, „H 11°“) at their places outside the ring.
+      if (r6.temp) {
+        var vT = parseFloat(String(o.value).replace(',', '.'));
+        ring.temp = { unit: r6.temp === 'F' ? 'F' : 'C', mn: mn6, mx: mx6 };
+        ring.heat = false;
+        ring.col = tempColor(r6.temp === 'F' ? (vT - 32) * 5 / 9 : vT);
+        if (Array.isArray(r6.band) && r6.band.length === 2 && isFinite(Number(r6.band[0])) && isFinite(Number(r6.band[1]))) {
+          ring.band = [dialPct(r6.band[0], mn6, mx6), dialPct(r6.band[1], mn6, mx6)];
+          if (Array.isArray(r6.bandLabels) && r6.bandLabels.length === 2) {
+            var gA = DIAL.a0 + DIAL.span * ring.band[0] / 100, gB = DIAL.a0 + DIAL.span * ring.band[1] / 100;
+            // Close together (a narrow day): the two words move apart around their middle, never over each other.
+            if (gB - gA < 18) { var gm = (gA + gB) / 2; gA = gm - 9; gB = gm + 9; }
+            [[gA, r6.bandLabels[0], 'lo'], [gB, r6.bandLabels[1], 'hi']].forEach(function (t) {
+              var tp = dPt(t[0], DIAL.r + 58);
+              coverHtml += '<div class="hui-dl-tag ' + esc(t[2]) + '" style="left:' + esc(dRound(tp[0] / 4.2)) + '%;top:' + esc(dRound(tp[1] / 4.2)) + 'cqw;">' + esc(t[1]) + '</div>';
+            });
+          }
+        }
+      }
       var na6 = (o.read ? ' data-casora-read="' + esc(o.read) + '" data-casora-read-bare=""' : '')
         + (o.live ? ' data-hp-live="' + esc(o.live) + '"' + (o.liveDigits != null ? ' data-hp-digits="' + esc(o.liveDigits) + '"' : '') : '');
       // o.icon: a symbol above the value (the weather's condition).
