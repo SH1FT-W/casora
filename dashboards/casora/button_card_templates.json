@@ -5717,7 +5717,8 @@
    "room_groups": null,
    "font": null,
    "font_family": null,
-   "hold_mode": null
+   "hold_mode": null,
+   "tile_sort": null
   }
  },
  "casora_mobile_chrome": {
@@ -16119,6 +16120,7 @@
    "energy_popup_focus_5": null,
    "energy_popup_focus_6": null,
    "hold_mode": null,
+   "tile_sort": null,
    "light_rooms_auto": null,
    "custom_badges": null,
    "badges_wrap": null,

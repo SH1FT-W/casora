@@ -2782,7 +2782,12 @@
     "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.": "Apri il riquadro e scegli “Visibilità, conferma e pressione”. Lì scegli chi lo vede, su quali schermi e se chiede prima di commutare.",
     "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Apri la stanza e scegli Aspetto. “Scegli foto” usa una foto di Casora, “Carica la tua” una foto dal tuo dispositivo; una seconda per la notte è facoltativa.",
     "Copied to {name}": "Copiato in {name}",
-    "Open the copy": "Apri la copia"
+    "Open the copy": "Apri la copia",
+    "Sort tiles": "Ordina schede",
+    "After a short pause": "Dopo una breve pausa",
+    "Only when opening": "Solo all’apertura",
+    "Right away": "Subito",
+    "When active tiles move to the front while a page is open: after half a minute without use, only when it opens, or right away.": "Quando le schede attive passano davanti con una pagina aperta: dopo mezzo minuto senza utilizzo, solo all’apertura o subito."
   },
   "patterns": [
     [

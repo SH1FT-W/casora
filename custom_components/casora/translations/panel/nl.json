@@ -2782,7 +2782,12 @@
     "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.": "Open de tegel en kies „Zichtbaarheid, eerst vragen & vasthouden”. Daar kies je wie hem ziet, op welke schermen en of hij vraagt voor het schakelen.",
     "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Open de kamer en kies Weergave. „Foto kiezen” neemt een foto van Casora, „Eigen uploaden” een foto van je apparaat – een tweede voor de nacht is optioneel.",
     "Copied to {name}": "Gekopieerd naar {name}",
-    "Open the copy": "Het duplicaat openen"
+    "Open the copy": "Het duplicaat openen",
+    "Sort tiles": "Tegels sorteren",
+    "After a short pause": "Na een korte pauze",
+    "Only when opening": "Alleen bij openen",
+    "Right away": "Meteen",
+    "When active tiles move to the front while a page is open: after half a minute without use, only when it opens, or right away.": "Wanneer actieve tegels naar voren gaan terwijl een pagina open is: na een halve minuut zonder bediening, alleen bij openen of meteen."
   },
   "patterns": [
     [

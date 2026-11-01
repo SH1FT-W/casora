@@ -2782,7 +2782,12 @@
     "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.": "Abre o bloco e escolhe “Visibilidade, confirmação e manter”. Aí escolhes quem o vê, em que ecrãs e se pergunta antes de ligar.",
     "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Abre a divisão e escolhe Aparência. “Escolher foto” usa uma foto do Casora, “Carregar a tua” uma foto do teu dispositivo – uma segunda para a noite é opcional.",
     "Copied to {name}": "Copiado para {name}",
-    "Open the copy": "Abrir a cópia"
+    "Open the copy": "Abrir a cópia",
+    "Sort tiles": "Ordenar cartões",
+    "After a short pause": "Após uma breve pausa",
+    "Only when opening": "Só ao abrir",
+    "Right away": "De imediato",
+    "When active tiles move to the front while a page is open: after half a minute without use, only when it opens, or right away.": "Quando os cartões ativos passam para a frente com uma página aberta: após meio minuto sem utilização, só ao abrir ou de imediato."
   },
   "patterns": [
     [
