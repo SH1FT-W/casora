@@ -39,6 +39,7 @@ STUDIO_MODULES = (
     "casora-panel-popups.js", "casora-panel-kachelart.js", "casora-panel-addons.js", "casora-panel-welcome.js",
     "casora-panel-b.js", "casora-panel-b-plus.js", "casora-panel-b-mehr.js", "casora-panel-b-ux.js",
     "casora-panel-community.js", "casora-panel-live.js", "casora-panel-diagnostics.js",
+    "casora-panel-share.js",
 )
 
 
