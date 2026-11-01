@@ -214,8 +214,11 @@
       var pc = rows.filter(function (r) { return r.pc; }).length;
       var c = B.count(C.ids || [], states, C.timeout, pc);
       var n = (C.ids || []).length;
-      if (C.v3 && UI.stage) return B.stage(rows, c, n, states);
-      return UI.line(c.sub, n > 1 ? [n + ' Geräte'] : []);
+      var line = UI.line(c.sub, n > 1 ? [n + ' Geräte'] : []);
+      // v3: the line stays on top so the frame lifts it into the head (§3) – without it the head showed the tile
+      // entity's raw state („Keine“) while two players ran.
+      if (C.v3 && UI.stage) return line + B.stage(rows, c, n, states);
+      return line;
     }
     if (part !== 'list') return '';
     if (!rows.length) return UI.note ? UI.note('Noch kein Gerät zugeordnet') : '';
