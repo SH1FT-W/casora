@@ -2782,7 +2782,15 @@
     "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.": "Open de tegel en kies „Zichtbaarheid, eerst vragen & vasthouden”. Daar kies je wie hem ziet, op welke schermen en of hij vraagt voor het schakelen.",
     "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Open de kamer en kies Weergave. „Foto kiezen” neemt een foto van Casora, „Eigen uploaden” een foto van je apparaat – een tweede voor de nacht is optioneel.",
     "Copied to {name}": "Gekopieerd naar {name}",
-    "Open the copy": "Het duplicaat openen"
+    "Open the copy": "Het duplicaat openen",
+    "Vehicle picture": "Voertuigafbeelding",
+    "Picture layout": "Afbeeldingsindeling",
+    "Large on top": "Groot bovenaan",
+    "In the ring": "In de ring",
+    "No picture": "Geen afbeelding",
+    "The car's integration has no picture.": "De integratie van de auto levert geen afbeelding.",
+    "Automatic: the picture of the car's integration. Without a picture the popup stays as it is.": "Automatisch: de afbeelding uit de integratie van de auto. Zonder afbeelding blijft het venster zoals het is.",
+    "The car's integration has no picture. Upload your own photo, or leave it without one.": "De integratie van de auto levert geen afbeelding. Upload een eigen foto of laat het zonder."
   },
   "patterns": [
     [

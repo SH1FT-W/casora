@@ -2782,7 +2782,15 @@
     "Open the tile and choose “Visibility, ask first & hold”. There you pick who sees it, on which screens, and whether it asks before switching.": "Abre la tarjeta y elige “Visibilidad, confirmar y mantener”. Ahí eliges quién la ve, en qué pantallas y si pregunta antes de conmutar.",
     "Open the room and choose Appearance. “Choose a photo” picks one of Casora's photos, “Upload your own” takes a photo from your device – a second one for the night is optional.": "Abre la habitación y elige Apariencia. “Elegir foto” toma una foto de Casora, “Subir la tuya” una foto de tu dispositivo; una segunda para la noche es opcional.",
     "Copied to {name}": "Copiado en {name}",
-    "Open the copy": "Abrir la copia"
+    "Open the copy": "Abrir la copia",
+    "Vehicle picture": "Imagen del vehículo",
+    "Picture layout": "Disposición de la imagen",
+    "Large on top": "Grande arriba",
+    "In the ring": "En el anillo",
+    "No picture": "Sin imagen",
+    "The car's integration has no picture.": "La integración del coche no ofrece ninguna imagen.",
+    "Automatic: the picture of the car's integration. Without a picture the popup stays as it is.": "Automático: la imagen de la integración del coche. Sin imagen, la ventana queda como está.",
+    "The car's integration has no picture. Upload your own photo, or leave it without one.": "La integración del coche no ofrece ninguna imagen. Sube tu propia foto o déjalo sin imagen."
   },
   "patterns": [
     [

@@ -59,7 +59,7 @@ def vacuum_map(fixture: dict) -> None:
 def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict | None = None) -> dict:
     """Fixture plus the made-up devices, in the order async_setup_entry always used."""
     from . import (aquarium, befeuchter, coffee, dishwasher, ebike, energie, frigate, fussball, game_account, haustier,
-                   halten, hubs, klingel, fridge, kettle, live, maeher, shopping, testserver, testwagen, velair, waesche, wetter)
+                   halten, hubs, klingel, fridge, kettle, live, maeher, shopping, testlimousine, testserver, testwagen, velair, waesche, wetter)
     if stress:
         merge(fixture, stress)
     # Demo house (dev/demo/demo_fixture.py sets "_demo"): without the German test devices (washers A/B with
@@ -118,6 +118,8 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
         merge(fixture, shopping.extra(now), "Testeinkauf")
         # A made-up electric car like BMW CarData, without door or lock values (#89), see testwagen.py.
         merge(fixture, testwagen.extra(now), "Testwagen")
+        # A made-up electric car with a picture of the car (image entity, #89), see testlimousine.py.
+        merge(fixture, testlimousine.extra(now), "Testlimousine")
     vacuum_map(fixture)
     # Only on request: HACS-like update entity for Casora (hacs_casora.py).
     if hacs:

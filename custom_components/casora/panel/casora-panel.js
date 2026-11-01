@@ -12226,6 +12226,10 @@ class CasoraPanel extends HTMLElement {
         .shot:not(.empty):hover .cap, .shot:not(.empty).over .cap { opacity:0; }
         .shot.empty .shotover { padding-bottom:18px; box-sizing:border-box; }
         .shothint { color:var(--ink-3); font-size:var(--t-caption); padding:0 0 14px; }
+        .vimg { display:flex; flex-direction:column; gap:10px; min-width:0; flex:1 1 auto; }
+        .vimg .vimgshot { width:100%; max-width:260px; }
+        .vimg .vimgshot.auto { cursor:default; background:var(--chip, rgba(118,118,128,0.12)); }
+        .vimg .vimgshot.auto img { object-fit:contain; padding:8px; box-sizing:border-box; }
 
         .tile {
           box-sizing:border-box;
@@ -23254,7 +23258,8 @@ class CasoraPanel extends HTMLElement {
       const keep = new Set();
       const mark = (i) => { seen.add(foldName(trLabel(nice(i.name)))); keep.add(i.name); };
       all.filter((i) => i.name === cur).forEach(mark);
-      all.filter((i) => i.name !== cur && !isDemo(i) && !scratch.test(i.name))
+      // Car pictures (#89, "vehicle-…") are no room photos.
+      all.filter((i) => i.name !== cur && !isDemo(i) && !scratch.test(i.name) && !/^vehicle-/.test(i.name))
         .concat(all.filter((i) => i.name !== cur && isDemo(i)))
         .forEach((i) => { if (!seen.has(foldName(trLabel(nice(i.name))))) mark(i); });
       const list = all.filter((i) => keep.has(i.name));
@@ -23369,6 +23374,110 @@ class CasoraPanel extends HTMLElement {
         this._log("could not list images: " + e.message, "warn");
         this._status("Image list unavailable. Restart Home Assistant to load the Casora image endpoint.", "warn");
       });
+  }
+
+  // Vehicle picture of the car tile (#89): Automatic (the car integration's image entity, greyed when there is none) /
+  // Own photo (uploaded like a room photo, private, variables.vehicle_image = its name) / No picture ("none").
+  _vehicleImageField(tile, f, put) {
+    const V = tile.variables || {};
+    const cur = V[f.key] == null || V[f.key] === "" ? "" : String(V[f.key]);
+    const hass = this._hass || {};
+    const R = hass.entities || {};
+    const anchor = tile.entity || (V.car && String(V.car).indexOf(".") > 0 ? String(V.car) : "");
+    const dev = anchor && R[anchor] ? R[anchor].device_id : null;
+    const hint = /(^|_)(vehicle_image|vehicle|car_image|car|fahrzeugbild|fahrzeug|picture|bild)(_|$)/;
+    const imgEnt = dev ? Object.keys(R).filter((e) => e.startsWith("image.") && R[e].device_id === dev && !R[e].hidden && !R[e].disabled_by)
+      .sort((a, b) => (hint.test(b.slice(6)) ? 1 : 0) - (hint.test(a.slice(6)) ? 1 : 0) || (a < b ? -1 : 1))[0] : null;
+    const mode = this._vimgOwn === tile ? "own" : cur === "none" ? "none" : cur ? "own" : imgEnt ? "auto" : "none";
+    const box = document.createElement("div");
+    box.className = "vimg";
+    const seg = document.createElement("div");
+    seg.className = "seg fieldseg";
+    seg.setAttribute("role", "group");
+    seg.setAttribute("aria-label", f.label);
+    seg.appendChild(document.createElement("span")).className = "segthumb";
+    [["auto", "Automatic"], ["own", "Own photo"], ["none", "No picture"]].forEach(([v, label]) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "segopt";
+      b.dataset.v = v;
+      b.textContent = label;
+      if (v === "auto" && !imgEnt) { b.disabled = true; b.title = "The car's integration has no picture."; }
+      seg.appendChild(b);
+    });
+    box.appendChild(seg);
+    const set = (v) => {
+      if (v === "") { if (tile.variables) delete tile.variables[f.key]; }
+      else { if (!tile.variables) tile.variables = {}; tile.variables[f.key] = v; }
+      if (tile.variables && !Object.keys(tile.variables).length) delete tile.variables;
+      this._vimgOwn = null;
+      this._markDirty();
+      this._renderForm();
+    };
+    const file = document.createElement("input");
+    file.type = "file";
+    file.accept = "image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp";
+    file.hidden = true;
+    box.appendChild(file);
+    const upload = async (blob) => {
+      if (!blob) return;
+      if (blob.size > 16 * 1024 * 1024) return this._status("This photo is larger than 16 MB. Please choose a smaller one.", "err");
+      const body = new FormData();
+      // Own name space "vehicle-…", so the room photo list can leave it out; the server adds a random tail.
+      body.append("name", cur && cur !== "none" ? cur : "vehicle-" + slug(tile.name || anchor.split(".").pop() || "car"));
+      body.append("variant", "day");
+      body.append("file", blob, "photo");
+      this._status("Uploading…");
+      try {
+        const res = hass.fetchWithAuth ? await hass.fetchWithAuth("/api/casora/images", { method: "POST", body })
+          : await fetch("/api/casora/images", { method: "POST", body });
+        let data = {};
+        try { data = await res.json(); } catch (e) { data = {}; }
+        if (!res.ok) throw new Error(data.message || String(res.status));
+        this._imgs = data.images || []; this._imgsAt = Date.now(); this._imgsLoaded = true;
+        this._status("Photo uploaded", "ok");
+        set(data.name);
+      } catch (e) {
+        this._status("Upload failed: " + e.message, "err");
+      }
+    };
+    const pickFile = () => { file.value = ""; file.onchange = () => { if (file.files && file.files[0]) upload(file.files[0]); }; file.click(); };
+    this._wireSeg(seg, "v", mode, (v) => {
+      if (v === "auto") set("");
+      else if (v === "none") set("none");
+      else if (cur && cur !== "none") set(cur);
+      else { this._vimgOwn = tile; this._renderForm(); }
+    });
+    // Preview: the integration's picture, or the own photo as a slot to replace (empty slot: choose one).
+    const wantOwn = mode === "own" || this._vimgOwn === tile;
+    if (wantOwn) {
+      const shot = document.createElement("button");
+      shot.type = "button";
+      shot.className = "shot vimgshot" + (cur && cur !== "none" ? "" : " empty");
+      const mine = cur && cur !== "none" ? (this._imgs || []).find((i) => i.name === cur) : null;
+      const url = mine && mine.day;
+      shot.innerHTML = (url ? `<img src="${window.casoraSafeUrl(url)}" alt="">` : "")
+        + '<span class="shotover"><span class="shotglyph"></span><span></span></span>';
+      shot.querySelector(".shotover span:last-child").textContent = url ? "Replace" : "Choose a photo";
+      shot.onclick = pickFile;
+      shot.ondragover = (ev) => { ev.preventDefault(); shot.classList.add("over"); };
+      shot.ondragleave = () => shot.classList.remove("over");
+      shot.ondrop = (ev) => { ev.preventDefault(); shot.classList.remove("over"); const x = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0]; if (x) upload(x); };
+      box.appendChild(shot);
+      if (cur && cur !== "none" && !mine && !this._imgsLoaded) this._images().then(() => { if (this.isConnected) this._renderForm(); }).catch(() => {});
+    } else if (mode === "auto" && imgEnt) {
+      const st = (hass.states || {})[imgEnt];
+      const pic = st && st.attributes && st.attributes.entity_picture;
+      if (pic) {
+        const shot = document.createElement("div");
+        shot.className = "shot vimgshot auto";
+        shot.innerHTML = `<img src="${window.casoraSafeUrl(pic)}" alt="">`;
+        box.appendChild(shot);
+      }
+    }
+    put(f.label, box);
+    return imgEnt ? "Automatic: the picture of the car's integration. Without a picture the popup stays as it is."
+      : "The car's integration has no picture. Upload your own photo, or leave it without one.";
   }
 
   _setHints(on, animate) {
@@ -28890,6 +28999,15 @@ class CasoraPanel extends HTMLElement {
       }
       const after = () => { if (f.reveals || shownSig() !== shown0) this._renderForm(); else this._syncPreview(); };
       // A few fixed choices as segments (seg: true, entity list #59) – one tap, all choices visible.
+      if (f.type === "vehicleimage") {
+        const vh = document.createElement("div");
+        vh.className = "hint";
+        vh.textContent = this._vehicleImageField(tile, f, put);
+        if (!f.advanced && !f.section) vh.dataset.opt = "1";
+        const drop = f.section && drops.get(f.section);
+        (drop ? drop.body : f.advanced && advBody ? advBody : body).appendChild(vh);
+        return;
+      }
       if (f.type === "select" && f.seg) {
         const seg = document.createElement("div");
         seg.className = "seg fieldseg";

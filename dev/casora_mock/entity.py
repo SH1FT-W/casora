@@ -9,6 +9,7 @@ the base classes are bypassed on purpose, so the values match the snapshot 1:1.
 """
 from __future__ import annotations
 
+import os
 import re
 import struct
 import zlib
@@ -573,6 +574,8 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             self._is_map = bool(dev) and any(
                 e.get("device") == dev and k.startswith("vacuum.") for k, e in mock.entities.items())
             self._attr_image_last_updated = dt_util.utcnow()
+            # A picture file next to the mock (bilder/<name>, not in the repo): the car's picture (#89, testlimousine.py).
+            self._file = mock.entities[eid].get("picture_file")
             # Frigate snapshot (frigate.py): last hit per object, age from the fixture.
             self._frigate = mock.entities[eid].get("frigate_label")
             if self._frigate:
@@ -590,6 +593,11 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
                     picture, stimmung(self.hass, self._attr_image_last_updated), self._frigate, int(self._attr_image_last_updated.timestamp()) % 997, 1280, 720, stamp, True)
                 if img:
                     return img
+            if self._file:
+                path = os.path.join(os.path.dirname(__file__), "bilder", os.path.basename(self._file))
+                data = await self.hass.async_add_executor_job(_read_file, path)
+                if data:
+                    return data
             return MAP_PNG if self._is_map else PLACEHOLDER_PNG
 
     class MTodo(MockEntity, TodoListEntity):
@@ -832,6 +840,15 @@ def _png(w: int, h: int, rgb: tuple[int, int, int]) -> bytes:
 
 
 PLACEHOLDER_PNG = _png(640, 360, (58, 62, 70))
+
+
+def _read_file(path: str) -> bytes | None:
+    """A picture file's bytes, None when it is missing."""
+    try:
+        with open(path, "rb") as fh:
+            return fh.read()
+    except OSError:
+        return None
 
 
 def _map_png(w: int, h: int) -> bytes:

@@ -11984,6 +11984,8 @@ window.casoraMenuGlass = {
     +   'background-color:currentColor;-webkit-mask:var(--g) center / contain no-repeat;mask:var(--g) center / contain no-repeat;}'
     // The popup's own ha-icon rule (margin auto) pushed the symbol and the sentence to the bottom of the centre.
     + '.hui-dl-c ha-icon.hui-dl-sym{background:none;--mdc-icon-size:clamp(36px, 11cqw, 46px);margin:0 0 6px !important;}'
+    + '.hui-dl-c .hui-dl-pic{display:block;width:58cqw;max-width:none;height:25cqw;object-fit:contain;margin:0 0 6px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.28));}'
+    + '.hui-dl-c .hui-dl-pic.own{width:44cqw;height:26cqw;object-fit:cover;border-radius:4cqw;filter:none;}'
     + '.hui-moon ha-icon{margin:0 !important;}'
     + '.hui-dl-c ha-icon.hui-dl-sym6{color:' + T.ink + ';margin:0 0 2px !important;}'
     + '.hui-dl-end{position:absolute;top:79cqw;font-size:13px;font-weight:700;color:' + S.sub + ';font-variant-numeric:tabular-nums;white-space:nowrap;transform:translateX(-50%);pointer-events:none;}'
@@ -12424,7 +12426,9 @@ window.casoraMenuGlass = {
       var said = String(o.text == null ? '' : o.text).toLowerCase().split(' · ').map(function (x) { return x.trim(); });
       var facts = (o.facts || []).filter(function (f) { return f && said.indexOf((String(f.value) + ' ' + String(f.label)).toLowerCase().trim()) < 0; }).slice(0, 2);
       var valHtml = o.value != null && o.value !== '' ? stValue(o.value, o.unit || '', '') : '';
-      centerHtml = (url7 ? '<div class="hui-dl-sym" style="--g:url(\'' + esc(url7) + '\')"></div>'
+      // o.image: a picture in the symbol's place (the car's photo, #89); o.imageOwn: a photo with a background (rounded, cover).
+      centerHtml = (o.image ? '<img class="hui-dl-pic' + (o.imageOwn ? ' own' : '') + '" src="' + esc(o.image) + '" alt="">'
+        : url7 ? '<div class="hui-dl-sym" style="--g:url(\'' + esc(url7) + '\')"></div>'
           : (o.icon ? '<ha-icon class="hui-dl-sym" icon="' + esc(o.icon) + '" style="display:flex;"></ha-icon>' : ''))
         + valHtml
         // A sentence of several things („Schloss offen · 2 Fenster offen · Kamera offline“) takes one line per thing –

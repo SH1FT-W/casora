@@ -2113,8 +2113,70 @@
     return 'Keine Daten';
   };
 
-  C.sec = function (name, p, states) {
+  /* Vehicle picture (#89). variables.vehicle_image: 'auto' (default) = an image entity on the car's device (BMW CarData
+     „…_vehicle_image“ and the like), 'none' = no picture, anything else = the name of a photo uploaded in the Studio
+     (private, signed through casoraPhotoUrl like the room photos). Without a picture the popup stays as before. */
+  var IMG_HINT = /(^|_)(vehicle_image|vehicle|car_image|car|fahrzeugbild|fahrzeug|picture|bild)(_|$)/;
+  C.imageEntity = function (p) {
+    p = p == null || p === '' ? null : String(p);
+    var root = document.querySelector('home-assistant'), R = (root && root.hass && root.hass.entities) || {};
+    var dev = p && p.indexOf('.') > 0 && R[p] ? R[p].device_id : null;
+    if (!dev) {
+      var M = C.map(p);
+      Object.keys(M).some(function (k) { var x = R[M[k]]; dev = x && x.device_id; return !!dev; });
+    }
+    if (!dev) return null;
+    var ids = Object.keys(R).filter(function (e) { var x = R[e]; return e.indexOf('image.') === 0 && x && x.device_id === dev && !x.hidden && !x.disabled_by; });
+    ids.sort(function (a, b) { return (IMG_HINT.test(b.slice(6)) ? 1 : 0) - (IMG_HINT.test(a.slice(6)) ? 1 : 0) || (a < b ? -1 : 1); });
+    return ids[0] || null;
+  };
+  C.image = function (p, states, v) {
+    v = v == null || v === '' ? 'auto' : String(v);
+    if (v === 'none') return null;
+    if (v !== 'auto') {
+      var u = window.casoraPhotoUrl ? window.casoraPhotoUrl(v) : '';
+      return u ? { url: u, own: true } : null;
+    }
+    var id = C.imageEntity(p), s = id && states[id];
+    var pic = s && s.state !== 'unavailable' && s.attributes && s.attributes.entity_picture;
+    return pic ? { url: pic, id: id, own: false } : null;
+  };
+  /* Layout B „stage“: the picture large on the stage plate, under it range, fill bar and odometer. */
+  var CAR_CSS = '.hui-car-pic{display:flex;align-items:center;justify-content:center;height:clamp(150px, 34vw, 210px);}'
+    + '.hui-car-pic img{display:block;max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 10px 14px rgba(0,0,0,.28));}'
+    + '.hui-car-pic.own{height:auto;aspect-ratio:16 / 9;}'
+    + '.hui-car-pic.own img{width:100%;height:100%;max-height:none;object-fit:cover;filter:none;}'
+    + '.hui-car-info{display:flex;flex-direction:column;gap:8px;padding:0 4px;}'
+    + '.hui-car-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}'
+    + '.hui-car-top b{font-size:clamp(26px, 7vw, 32px);font-weight:800;letter-spacing:-0.03em;line-height:1.05;font-variant-numeric:tabular-nums;}'
+    + '.hui-car-top b small{font-size:.55em;font-weight:700;margin-left:3px;}'
+    + '.hui-car-top span{font-size:14px;font-weight:600;text-align:right;}'
+    + '.hui-car-bar{height:10px;border-radius:999px;overflow:hidden;}'
+    + '.hui-car-bar i{display:block;height:100%;border-radius:999px;}'
+    + '.hui-car-facts{display:flex;justify-content:space-between;gap:12px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;}'
+    + '.hui-car-facts b{font-weight:700;}';
+  var carStage = function (UI, r, im, lv, sub) {
+    var T = UI.tokens || {}, ink = T.ink || '#fff', ink2 = 'var(--casora-soft-sub, ' + (T.ink2 || 'rgba(255,255,255,0.7)') + ')';
+    var tone = lv === 2 ? 'var(--casora-color-red, #FF453A)' : lv === 1 ? 'var(--casora-color-orange, #FF9F0A)' : 'var(--casora-color-green, #34C759)';
+    var low = r.tank != null && r.tank <= 15;
+    var pic = '<div class="hui-car-pic' + (im.own ? ' own' : '') + '"><img src="' + esc(im.url) + '" alt="' + esc('Fahrzeug') + '" loading="lazy"></div>';
+    var topHtml = '<div class="hui-car-top" style="color:' + esc(ink) + '"><b>' + (r.range != null ? esc(fmtN(r.range)) + '<small>' + esc(r.rangeU) + '</small>' : '—') + '</b>'
+      + '<span style="color:' + esc(tone) + '">' + esc(sub || 'Reichweite') + '</span></div>';
+    var barHtml = r.tank != null ? '<div class="hui-car-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + esc(Math.round(r.tank)) + '"'
+      + ' style="background:var(--casora-soft-control-fill, rgba(140,115,90,0.10))"><i style="width:' + esc(Math.max(2, Math.min(100, r.tank))) + '%;background:'
+      + esc(low ? 'var(--casora-color-orange, #FF9F0A)' : 'var(--casora-color-green, #34C759)') + '"></i></div>' : '';
+    var factsHtml = '';
+    if (r.tank != null) factsHtml += '<span>' + esc(r.ev ? 'Akku' : 'Tank') + ' <b style="color:' + esc(ink) + '">' + esc(fmtN(Math.round(r.tank))) + ' %</b></span>';
+    else if (r.tankL != null) factsHtml += '<span>' + esc('Tankinhalt') + ' <b style="color:' + esc(ink) + '">' + esc(fmtN(r.tankL) + ' ' + r.tankLU) + '</b></span>';
+    if (r.km != null) factsHtml += '<span>' + esc('Kilometerstand') + ' <b style="color:' + esc(ink) + '">' + esc(fmtN(r.km) + ' ' + r.kmU) + '</b></span>';
+    var info = '<style>' + CAR_CSS + '</style><div class="hui-car-info">' + topHtml + barHtml
+      + (factsHtml ? '<div class="hui-car-facts" style="color:' + esc(ink2) + '">' + factsHtml + '</div>' : '') + '</div>';
+    return UI.stage('image', { html: pic, controls: info });
+  };
+
+  C.sec = function (name, p, states, o) {
     var UI = window._casoraUI; if (!UI) return '';
+    o = o || {};
     var r = C.read(p, states);
     if (name === 'hero' || name === 'stage') {
       var lv = C.level(p, states);
@@ -2129,13 +2191,20 @@
       /* Popup v3 (richtlinien §4 S7): range (else the tile's own value, #89) as the sentence, symbol in traffic-light
          colour of the head's level; facts fill level (or litres), lock/doors and the data age; „Tanken“ stays under it. */
       if (name === 'stage') {
+        var im = C.image(p, states, o.img);
+        if (im && o.layout !== 'ring') {
+          return carStage(UI, r, im, lv, r.open.length ? r.open.join(', ') + ' offen' : (r.locked === false ? 'Nicht verriegelt' : r.locked ? 'Verriegelt' : 'Reichweite'));
+        }
         var lock = r.open.length ? r.open.join(', ') + ' offen' : (r.locked === false ? 'Nicht verriegelt' : r.locked ? 'Verriegelt' : null);
         var factsC = [];
         if (r.tank != null) factsC.push({ label: r.ev ? 'Akku' : 'Tank', value: fmtN(Math.round(r.tank)) + ' %' });
         else if (r.tankL != null) factsC.push({ label: 'Tankinhalt', value: fmtN(r.tankL) + ' ' + r.tankLU });
         if (lock) factsC.push({ label: 'Schloss', value: lock });
         if (r.stamp) factsC.push({ label: 'Datenstand', value: ago(r.stamp) });
+        /* Layout A „ring“ (#89): the picture takes the symbol's place in the middle of the wheel, one fact under the range. */
+        if (im) factsC = factsC.slice(0, 1);
         return UI.stage('status', { tone: lv === 2 ? 'bad' : lv === 1 ? 'warn' : 'good', icon: r.ev ? 'mdi:car-electric' : 'mdi:car',
+          image: im ? im.url : null, imageOwn: !!(im && im.own),
           text: r.range != null ? 'Reichweite ' + fmtN(r.range) + ' ' + r.rangeU : ownH || 'Keine Daten', facts: factsC,
           // Dial (richtlinien §4.8): the tank or battery level fills the ring.
           progress: r.tank != null ? Math.max(0, Math.min(1, r.tank / 100)) : null });
@@ -2281,7 +2350,12 @@
     var M = C.map(p);
     Object.keys(M).forEach(function (k) { var id = M[k]; if (id && states[id] && watch.indexOf(id) < 0) watch.push(id); });
     if (tank()) tank().watch(p, states).forEach(function (id) { watch.push(id); });
-    var sec = function (n) { return '[[[ return window._casoraCar ? window._casoraCar.sec(' + JSON.stringify(n) + ', ' + JSON.stringify(p) + ', states) : ""; ]]]'; };
+    /* Vehicle picture (#89): source and layout from the tile (Studio „Fahrzeugbild“). */
+    var vo = { img: variables.vehicle_image == null || variables.vehicle_image === '' ? 'auto' : String(variables.vehicle_image),
+      layout: variables.vehicle_image_layout === 'ring' ? 'ring' : 'stage' };
+    var imgEnt = vo.img === 'auto' ? C.imageEntity(p) : null;
+    if (imgEnt && watch.indexOf(imgEnt) < 0) watch.push(imgEnt);
+    var sec = function (n) { return '[[[ return window._casoraCar ? window._casoraCar.sec(' + JSON.stringify(n) + ', ' + JSON.stringify(p) + ', states, ' + JSON.stringify(vo) + ') : ""; ]]]'; };
     /* Weich (Entschlacken 01.10.2026): Kopf mit Reichweite und Tankbalken, links Zustand (nur Abweichungen),
        rechts Wartung (nur Fälliges); alle Zustandszeilen, Wartungswerte, Fahrten und Daten unter „Mehr“. */
     var HH = window._casoraHH;
