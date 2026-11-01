@@ -532,8 +532,8 @@
   // Apples „Klima zuerst“. Jalousien sind kein Klima-Gerät (wie in den Badge-Filtern): eigene Gruppe
   // „Jalousien“ nach Klima (06.10.2026); Garagen- und Hoftore zählen zu Sicherheit.
   // Innerhalb einer Gruppe bleibt die Studio-Reihenfolge.
-  // Standard an. Schalter: Studio → Design & Bedienung → Handy (room_groups, setzt über
-  // casora_mobile_bg --casora-room-groups: off), Raumseiten-Option group_by_category (true/false),
+  // Default off since 01.11.2026 (owner: show everything, no automatic grouping). Switch: Studio → Design &
+  // Bedienung → Handy (room_groups, sets --casora-room-groups: on via casora_mobile_bg), Raumseiten-Option group_by_category (true/false),
   // je Gerät überschreibbar per localStorage 'casora-room-groups' (on | off).
   const ROOM_GROUP_ORDER = ['lights', 'climate', 'covers', 'security', 'media', 'water', 'other'];
   const ROOM_GROUP_LABEL = {
@@ -586,7 +586,7 @@
     if (cfg?.group_by_category === true) v = 'on';
     if (cfg?.group_by_category === false) v = 'off';
     try { const ls = localStorage.getItem('casora-room-groups'); if (ls) v = ls; } catch (_) {}
-    return v !== 'off' && v !== 'false';
+    return v === 'on' || v === 'true';
   }
   // Kacheln eines Raums in Gruppen teilen: [{ key, cards }] in ROOM_GROUP_ORDER, oder null, wenn
   // der Raum flach bleibt (zu wenige Kacheln oder nur eine Kategorie).
@@ -1548,9 +1548,8 @@
           '--casora-entity-grid-gap:var(--casora-tile-row-gap-mobile,8px);' +
           'grid-auto-flow:row dense;align-items:stretch;}' +
           '.casora-entity-grid > [data-casora-size="large"]{grid-row:span 2;}}' +
-          // Prüfung 2 DH-24: the only tile of a group takes the whole row in portrait (its name was cut while
-          // the right half stayed empty).
-          '@media (max-width:767px) and (orientation:portrait){.casora-entity-grid > :only-child{grid-column:1 / -1;}}' +
+          // Phone tiles never span the full width, also when a group has a single tile (owner decision
+          // 01.11.2026 – DH-24 let the only tile of a group fill the row; reverted).
           '@media (max-height:500px) and (orientation:landscape), (max-height:600px) and (orientation:landscape) and (hover: hover){' +
           '.casora-entity-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}';
         (this._appendTarget || document.head).appendChild(st);
