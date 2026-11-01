@@ -896,6 +896,23 @@
   };
   window.addEventListener('click', handle, true);
   window.addEventListener('keydown', handle, true);
+  // Touch: the card's action handler (HA's actionHandler on ha-card) cancels touchend, so on a phone no click ever
+  // follows a tap on the field (26.11.2: tapping did nothing in the Companion app). The field opens on touchend
+  // itself – in the gesture, so WebKit lets the input take the focus and opens the keyboard.
+  var tap0 = null;
+  window.addEventListener('touchstart', function (e) {
+    var t = e.touches && e.touches[0];
+    tap0 = t && e.touches.length === 1 && fromField(e) ? { x: t.clientX, y: t.clientY } : null;
+  }, { capture: true, passive: true });
+  window.addEventListener('touchmove', function (e) {
+    var t = e.touches && e.touches[0];
+    if (tap0 && t && (Math.abs(t.clientX - tap0.x) > 10 || Math.abs(t.clientY - tap0.y) > 10)) tap0 = null;
+  }, { capture: true, passive: true });
+  window.addEventListener('touchend', function (e) {
+    var ok = tap0;
+    tap0 = null;
+    if (ok) handle(e);
+  }, { capture: true, passive: false });
   window.addEventListener('keydown', function (e) {
     if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey || String(e.key).toLowerCase() !== 'k') return;
     if (S.isOpen()) { e.preventDefault(); e.stopPropagation(); S.close(); return; }
