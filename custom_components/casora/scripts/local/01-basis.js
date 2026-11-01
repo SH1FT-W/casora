@@ -591,6 +591,12 @@ window.casoraLightTally = function (entity, states, hass, vars) {
   /* group_rooms climbs from a room to the house group above it (autoIdx: the popup preselects the room); the count
      stays the room's own lamps (detail round #2: the bathroom chip said „3 An“ – the house's – while its one lamp was off). */
   var own = sc.autoIdx > -1 && sc.topLevelIds[sc.autoIdx] ? sc.expand(sc.topLevelIds[sc.autoIdx]) : null;
+  /* A room's tile whose popup opens the house group (entity: the room group, popup_group: the house): the room's
+     lamps, like the room's badge (prod 01.11.2026: badge „Aus“, tile „1 An“ for a lamp in another room). Only a group
+     that is a member of the popup's group; a single lamp standing for a house group (#30) keeps the house. */
+  var eid = entity && entity.entity_id;
+  if (!own && eid && eid !== sc.groupId && String(eid).indexOf('light.') === 0 && sc.topLevelIds.indexOf(eid) > -1
+      && S[eid] && S[eid].attributes && Array.isArray(S[eid].attributes.entity_id)) own = sc.expand(eid);
   var ids = (own && own.length ? own : sc.lightIds).filter(function (x, i, a) { return S[x] && a.indexOf(x) === i; });
   return { kind: 'lamps', tot: ids.length, on: ids.filter(function (x) { return S[x].state === 'on'; }).length };
 };

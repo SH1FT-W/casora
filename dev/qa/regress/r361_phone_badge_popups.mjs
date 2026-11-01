@@ -126,18 +126,24 @@ const nChips = await page.evaluate(() => ((window._casoraPhoneHub.last.climate |
 await check('Climate: only the overview rows (no room sections)', p.rows.length === nChips, { rows: p.rows, nChips });
 await close(page);
 
-// #80 special case: picked rooms plus an HA group – the light popup shows the picked rooms only („N Räumen“).
+// #80 special case: picked rooms plus an HA group – the light popup shows the picked rooms only (their lamps).
 // v3 (01.11.2026): the status line counts in words without the noun („3 von 10 an“); the scope stays the picked entries.
 const picked = await page.evaluate(() => { const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_mobile_filter_badges'));
   const v = (b && b._config.variables) || {}; const st = document.querySelector('home-assistant').hass.states;
   const ids = []; for (let i = 1; i <= 10; i++) { const x = v['light_entity_' + i]; if (typeof x === 'string' && x.startsWith('light.') && st[x]) ids.push(x); }
-  return { n: ids.length, groups: ids.filter((x) => Array.isArray(st[x].attributes.entity_id)).length, group: v.light_group_entity || null }; });
+  // Lamps, never rooms (167c2eb4, owner 01.11.2026): the picked rooms' lamps.
+  // As _casoraLightScope: a group whose members do not exist is itself the one lamp.
+  const ex = (x, d) => { if (!st[x]) return []; const m = st[x].attributes.entity_id;
+    const r = Array.isArray(m) && d < 5 ? m.flatMap((y) => ex(y, d + 1)) : [];
+    return r.length ? r : [x]; };
+  const lamps = new Set(ids.flatMap((x) => ex(x, 0)));
+  return { n: ids.length, lamps: lamps.size, groups: ids.filter((x) => Array.isArray(st[x].attributes.entity_id)).length, group: v.light_group_entity || null }; });
 if (picked.n > 1 && picked.groups) {
   const lb = await badgeAt(page, 'casora_badge_light_group');
   await tap(page, lb);
   const head = await page.evaluate(() => { const pop = window.__pierce('casora-popup')[0]; const s = window.casoraPopup.surface;
     return (pop && pop.shadowRoot ? pop.shadowRoot.textContent : '') + ' ' + (s ? s.textContent : ''); });
-  await check('#80: picked rooms (with an HA group beside them) → „von ' + picked.n + ' Räumen“', new RegExp('von ' + picked.n + ' (Räumen )?an').test(head.replace(/\s+/g, ' ')), { picked, head: head.replace(/\s+/g, ' ').replace(/[^]*\}/, '').slice(0, 200) });
+  await check('#80: picked rooms (with an HA group beside them) → their lamps „von ' + picked.lamps + ' an“', new RegExp('von ' + picked.lamps + ' an').test(head.replace(/\s+/g, ' ')), { picked, head: head.replace(/\s+/g, ' ').replace(/[^]*\}/, '').slice(0, 200) });
   await close(page);
 }
 
