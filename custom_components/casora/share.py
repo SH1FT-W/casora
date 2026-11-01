@@ -3,11 +3,12 @@
 The file (casora-<name>-<date>.casora) is a ZIP archive:
 
   manifest.json   {"format": 1, "kind": "casora-dashboard", "casora": "<version>", "exported": "<iso>",
-                   "title", "url_path", "mobile_url", "rooms", "tiles", "photos", "settings"}
+                   "title", "url_path", "mobile_url", "rooms", "tiles", "photos", "icons", "settings"}
   dashboard.json  the desktop dashboard as stored by HA (templates included, so own templates travel)
   mobile.json     the phone layout (optional)
   settings.json   Casora settings that belong to the dashboard (optional, SHARE_SECTIONS only)
   photos/<file>   own room and vehicle photos the dashboard points to (optional)
+  icons/<file>    own room symbols (/api/casora/room_icons) the dashboard points to (optional)
 
 No access tokens, passwords or HA secrets: the dashboard and the chosen settings only, with keys that
 look like credentials removed and signed photo URLs reduced to the photo's name.
@@ -20,7 +21,7 @@ casora/share/apply writes it into a dashboard the Studio created (new) or into a
   GET  /api/casora/share/export?url_path=…[&mobile_url=…][&photos=1][&settings=1] → the file
   POST /api/casora/share/import   multipart "file" → preview (see _preview)
   casora/share/apply ← {"token", "url_path", "mobile_url"?, "mode": "new"|"replace", "mapping"?,
-                        "photos"?, "settings"?} → {"url_path", "photos", "mapped"}
+                        "photos"?, "settings"?} → {"url_path", "photos", "icons", "mapped"}
 
 The core below is plain Python without HA imports (dev/unit/share_test.py).
 """
@@ -61,6 +62,11 @@ USERINFO = re.compile(r"([a-z][a-z0-9+.-]*://)[^/@\s:]+:[^/@\s]*@", re.I)
 # Keys whose plain values ("kueche") name a photo (room card image/image_night, phone wallpaper …).
 PHOTO_KEY = re.compile(r"image|photo|picture|background|wallpaper|(?:^|_)bg(?:_|$)", re.I)
 AUTH_SIG = re.compile(r"([?&])authSig=[^&#]*&?")
+# Own room symbols (room_icons.py): file names as room_icons.SAFE_FILE, referenced by their public path.
+ICON_BASE = "/local/casora/icons/eigene/"
+ICON_FILE = re.compile(r"^[a-z0-9][a-z0-9-]{0,47}\.(?:svg|png)$")
+ICON_REF = re.compile(r"/local/casora/icons/eigene/([a-z0-9][a-z0-9-]{0,47}\.(?:svg|png))(?![a-z0-9.-])")
+MAX_ICON = 200 * 1024
 
 # Domains whose IDs are entities (services like light.turn_on sit under SERVICE_KEYS and are skipped).
 ENTITY_DOMAINS = frozenset((
@@ -175,6 +181,62 @@ def rename_photos(obj: Any, renames: dict[str, str]) -> Any:
     return _map_strings(obj, fn)
 
 
+# ─── Own room symbols ─────────────────────────────────────────────────────────
+
+def icon_names(cfgs: list[Any]) -> set[str]:
+    """File names of the own room symbols the configs point to."""
+    out: set[str] = set()
+    for cfg in cfgs:
+        for s, _key in _strings(without_templates(cfg) if isinstance(cfg, dict) else cfg):
+            if ICON_BASE in s:
+                out.update(m.group(1) for m in ICON_REF.finditer(s))
+    return out
+
+
+def icon_plan(icons: dict[str, bytes], existing: dict[str, bytes]) -> tuple[dict[str, bytes], dict[str, str]]:
+    """Which symbol files to write and which names change.
+
+    existing: file name → bytes of every own symbol in this home. The same symbol (same bytes) is never
+    written twice, also under another name; a name taken by another symbol gets the next free „-2“, „-3“
+    (as an upload in room_icons.store). → ({file name: bytes to write}, {old file: new file}).
+    """
+    by_hash = {}
+    for name in sorted(existing):
+        by_hash.setdefault(_sha(existing[name]), name)
+    taken = {n.rsplit(".", 1)[0] for n in existing}
+    write: dict[str, bytes] = {}
+    renames: dict[str, str] = {}
+    for name, data in sorted(icons.items()):
+        same = by_hash.get(_sha(data))
+        if same:
+            if same != name:
+                renames[name] = same
+            continue
+        stem, ext = name.rsplit(".", 1)
+        target, n = stem, 2
+        while target in taken:
+            target = f"{re.sub(r'-[0-9]+$', '', stem)[:44]}-{n}"
+            n += 1
+        taken.add(target)
+        by_hash[_sha(data)] = target + "." + ext
+        write[target + "." + ext] = data
+        if target != stem:
+            renames[name] = target + "." + ext
+    return write, renames
+
+
+def rename_icons(obj: Any, renames: dict[str, str]) -> Any:
+    """Point symbol paths at new file names ({old file: new file})."""
+    if not renames:
+        return obj
+
+    def fn(s: str, _key):
+        if ICON_BASE not in s:
+            return s
+        return ICON_REF.sub(lambda m: ICON_BASE + renames.get(m.group(1), m.group(1)), s)
+    return _map_strings(obj, fn)
+
+
 # ─── Entities ─────────────────────────────────────────────────────────────────
 
 def entity_refs(cfgs: list[Any]) -> list[str]:
@@ -274,19 +336,21 @@ def file_name(title: str, day: str) -> str:
 
 
 def build_export(*, title: str, url_path: str, mobile_url: str | None, config: dict, mobile: dict | None,
-                 settings: dict | None, photos: dict[str, bytes] | None, version: str, exported: str) -> bytes:
-    """The export file. photos: file name → bytes (already chosen by the caller)."""
+                 settings: dict | None, photos: dict[str, bytes] | None, version: str, exported: str,
+                 icons: dict[str, bytes] | None = None) -> bytes:
+    """The export file. photos / icons: file name → bytes (already chosen by the caller)."""
     if not isinstance(config, dict) or not isinstance(config.get("views"), list):
         raise ShareError("broken", "dashboard has no views")
     cfg = scrub(config)
     mob = scrub(mobile) if isinstance(mobile, dict) else None
     sets = {k: scrub(v) for k, v in (settings or {}).items() if k in SHARE_SECTIONS and v not in (None, "", [], {})}
     names = sorted(n for n in (photos or {}) if PHOTO_FILE.match(n))
+    icon_files = sorted(n for n in (icons or {}) if ICON_FILE.match(n))
     manifest = {
         "format": FORMAT, "kind": KIND, "casora": version, "exported": exported,
         "title": title, "url_path": url_path, "mobile_url": mobile_url if mob is not None else None,
         "rooms": rooms_of(cfg), "tiles": tiles_of(cfg), "phone": mob is not None,
-        "photos": names, "settings": sorted(sets),
+        "photos": names, "icons": icon_files, "settings": sorted(sets),
     }
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
@@ -300,6 +364,9 @@ def build_export(*, title: str, url_path: str, mobile_url: str | None, config: d
             # Photos are JPEG already: storing them compressed again only costs time.
             z.writestr(zipfile.ZipInfo("photos/" + n, date_time=(2026, 1, 1, 0, 0, 0)), photos[n],
                        compress_type=zipfile.ZIP_STORED)
+        for n in icon_files:
+            z.writestr(zipfile.ZipInfo("icons/" + n, date_time=(2026, 1, 1, 0, 0, 0)), icons[n],
+                       compress_type=zipfile.ZIP_DEFLATED)
     return buf.getvalue()
 
 
@@ -321,7 +388,8 @@ def _is_dashboard(cfg: Any) -> bool:
 def read_file(data: bytes) -> dict:
     """Check an export file and unpack it.
 
-    → {"manifest", "config", "mobile", "settings", "photos": {file: bytes}}; ShareError otherwise:
+    → {"manifest", "config", "mobile", "settings", "photos": {file: bytes}, "icons": {file: bytes}};
+      ShareError otherwise:
       not_casora (no Casora export at all), newer_format (made by a newer Casora), broken (damaged).
     """
     if not data:
@@ -366,10 +434,18 @@ def read_file(data: bytes) -> dict:
                 if not PHOTO_FILE.match(name) or info.file_size > MAX_PHOTO:
                     continue  # never a path outside, never a giant
                 photos[name] = z.read(info)
+            icons: dict[str, bytes] = {}
+            for info in infos:
+                if not info.filename.startswith("icons/") or info.is_dir():
+                    continue
+                name = info.filename[len("icons/"):]
+                if not ICON_FILE.match(name) or info.file_size > MAX_ICON:
+                    continue  # checked again (SVG cleaned, PNG checked) before it is written
+                icons[name] = z.read(info)
     except zipfile.BadZipFile:
         raise ShareError("broken", "the file is damaged") from None
     return {"manifest": manifest, "config": scrub(config), "mobile": scrub(mobile) if mobile else None,
-            "settings": scrub(settings), "photos": photos}
+            "settings": scrub(settings), "photos": photos, "icons": icons}
 
 
 def preview(staged: dict, known: set[str] | frozenset[str]) -> dict:
@@ -388,6 +464,7 @@ def preview(staged: dict, known: set[str] | frozenset[str]) -> dict:
         "phone": mob is not None,
         "phone_tiles": tiles_of(mob) if mob else 0,
         "photos": len({n.rsplit(".", 1)[0].removesuffix(NIGHT) for n in photo_names}),
+        "icons": len(staged.get("icons") or {}),
         "settings": sorted(sets),
         "entities": len(refs),
         "missing": missing,
@@ -452,8 +529,8 @@ def _known_base(slots: dict, known: dict[str, str]) -> str | None:
 
 
 def prepare(staged: dict, *, url_path: str, mobile_url: str | None, mapping: dict[str, str] | None,
-            renames: dict[str, str] | None, with_settings: bool) -> dict:
-    """Configs to save: links moved to the new address, entities mapped, photos renamed."""
+            renames: dict[str, str] | None, with_settings: bool, icon_renames: dict[str, str] | None = None) -> dict:
+    """Configs to save: links moved to the new address, entities mapped, photos and symbols renamed."""
     m = staged["manifest"]
     moves = [(str(m.get("url_path") or ""), url_path)]
     if m.get("mobile_url") and mobile_url:
@@ -466,11 +543,12 @@ def prepare(staged: dict, *, url_path: str, mobile_url: str | None, mapping: dic
             return None
         out = move_links(copy.deepcopy(cfg), moves)
         out = apply_mapping(out, mapping or {})
-        return rename_photos(out, renames or {})
+        return rename_icons(rename_photos(out, renames or {}), icon_renames or {})
     return {
         "config": fix(staged["config"]),
         "mobile": fix(staged["mobile"]) if mobile_url else None,
-        "settings": rename_photos(apply_mapping(copy.deepcopy(staged["settings"]), mapping or {}), renames or {})
+        "settings": rename_icons(rename_photos(apply_mapping(copy.deepcopy(staged["settings"]), mapping or {}),
+                                              renames or {}), icon_renames or {})
         if with_settings else None,
     }
 
@@ -587,6 +665,63 @@ def _write_photos(config_dir: str, files: dict[str, bytes]) -> None:
         os.replace(tmp, target)
 
 
+def _icon_files(config_dir: str, names: set[str]) -> dict[str, bytes]:
+    """Own symbol files with these names (export) or all of them (names empty → import check). Blocking."""
+    import os
+
+    from .room_icons import ICONS_DIR
+
+    folder = os.path.join(config_dir, ICONS_DIR)
+    out: dict[str, bytes] = {}
+    try:
+        files = sorted(os.listdir(folder))
+    except OSError:
+        return out
+    for name in files:
+        if not ICON_FILE.match(name) or (names and name not in names):
+            continue
+        try:
+            with open(os.path.join(folder, name), "rb") as fh:
+                out[name] = fh.read()
+        except OSError:
+            continue
+    return out
+
+
+def _clean_icons(icons: dict[str, bytes]) -> dict[str, bytes]:
+    """Symbols from a file, checked like an upload: SVG rewritten, PNG with transparency; others dropped."""
+    from .room_icons import IconError, check_png, sanitize_svg
+
+    out: dict[str, bytes] = {}
+    for name, data in icons.items():
+        try:
+            if name.endswith(".svg"):
+                out[name] = sanitize_svg(data)
+            else:
+                check_png(data)
+                out[name] = data
+        except IconError:
+            continue
+    return out
+
+
+def _write_icons(config_dir: str, files: dict[str, bytes]) -> None:
+    import os
+
+    from .room_icons import ICONS_DIR
+
+    folder = os.path.join(config_dir, ICONS_DIR)
+    os.makedirs(folder, exist_ok=True)
+    for name, data in files.items():
+        if not ICON_FILE.match(name):
+            continue
+        target = os.path.join(folder, name)
+        tmp = target + ".part"
+        with open(tmp, "wb") as fh:
+            fh.write(data)
+        os.replace(tmp, target)
+
+
 def _known_entities(hass) -> set[str]:
     from homeassistant.helpers import entity_registry as er
 
@@ -627,12 +762,16 @@ def _http_views():
             if q.get("photos") == "1":
                 bases = photo_bases([config, mobile, settings])
                 photos = await hass.async_add_executor_job(_photo_files, hass.config.config_dir, bases)
+            # Own room symbols always travel: without them the rooms show an empty symbol.
+            wanted = icon_names([config, mobile, settings])
+            icons = await hass.async_add_executor_job(_icon_files, hass.config.config_dir, wanted) if wanted else {}
             title = q.get("title") or url_path
             now = dt_util.now()
             try:
                 body = await hass.async_add_executor_job(lambda: build_export(
                     title=title, url_path=url_path, mobile_url=mobile_url, config=config, mobile=mobile,
-                    settings=settings, photos=photos, version=VERSION, exported=now.isoformat(timespec="seconds")))
+                    settings=settings, photos=photos, version=VERSION, exported=now.isoformat(timespec="seconds"),
+                    icons=icons))
             except ShareError as err:
                 return self.json({"code": err.code, "message": str(err)}, status_code=400)
             name = file_name(title, now.strftime("%Y-%m-%d"))
@@ -712,8 +851,15 @@ async def _apply(hass, msg: dict) -> dict:
         existing = await hass.async_add_executor_job(_existing_photos, hass.config.config_dir, sorted(staged["photos"]))
         known = await hass.async_add_executor_job(_own_photo_hashes, hass.config.config_dir)
         write, renames = photo_plan(staged["photos"], existing, known)
+    icon_write: dict[str, bytes] = {}
+    icon_renames: dict[str, str] = {}
+    if staged.get("icons"):
+        clean = await hass.async_add_executor_job(_clean_icons, staged["icons"])
+        have = await hass.async_add_executor_job(_icon_files, hass.config.config_dir, set())
+        icon_write, icon_renames = icon_plan(clean, have)
     out = prepare(staged, url_path=url_path, mobile_url=mobile_url, mapping=msg.get("mapping") or {},
-                  renames=renames, with_settings=bool(msg.get("settings")) and bool(staged["settings"]))
+                  renames=renames, with_settings=bool(msg.get("settings")) and bool(staged["settings"]),
+                  icon_renames=icon_renames)
 
     # Templates as this Casora ships them; own templates of the file stay (refresh_dashboard keeps them).
     got = await hass.async_add_executor_job(_read_bundle, hass.config.config_dir)
@@ -733,6 +879,8 @@ async def _apply(hass, msg: dict) -> dict:
         await _snap(hass, url_path, mobile_url, {"kind": "save", "summary": ""})
     if write:
         await hass.async_add_executor_job(_write_photos, hass.config.config_dir, write)
+    if icon_write:
+        await hass.async_add_executor_job(_write_icons, hass.config.config_dir, icon_write)
     if out["settings"]:
         store = settings_store(hass)
         cur = await store.async_load() or {}
@@ -751,6 +899,7 @@ async def _apply(hass, msg: dict) -> dict:
         await mob_dash.async_save(mob)
     await _snap(hass, url_path, mobile_url, {"kind": "save", "summary": json.dumps({"origin": "imported"})})
     return {"url_path": url_path, "mobile_url": mobile_url, "photos": len(write), "renamed": len(renames),
+            "icons": len(icon_write),
             "mapped": len([1 for o, n in (msg.get("mapping") or {}).items() if n and n != o])}
 
 
