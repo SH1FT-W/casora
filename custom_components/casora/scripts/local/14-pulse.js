@@ -157,7 +157,7 @@
       var snooze = Date.parse(a.snoozed_until);
       var d = {
         device: dev, name: name, area: area, status: st.state, reason: a.reason_key || null,
-        silentSince: a.silent_since || null, typical: a.typical_interval, critical: !!a.critical,
+        silentSince: a.silent_since || null, problemSince: a.problem_since || null, typical: a.typical_interval, critical: !!a.critical,
         snoozed: !isNaN(snooze) && snooze > (now || Date.now()), battery: pct,
         statusId: x.status, problemId: x.problem || null, lastId: x.last_report || null,
       };
@@ -188,7 +188,8 @@
   // popup, just as the battery source only reports from „schwach“ on. Not for paused reminders
   // (snoozed) or exceptions (ex: entity → true, „Nicht melden“). Up to BELL_SINGLE devices one row each,
   // above that a summary row (otherwise e.g. a radio outage floods the bell).
-  // Time: start of the silence (silent_since, kept by Pulse across restarts), otherwise last_changed
+  // Time: since when Pulse reports it (problem_since), with older Pulse the start of the silence (silent_since,
+  // both kept by Pulse across restarts), otherwise last_changed
   // of the status; plus `seen` per device + status + reason – after an HA restart read stays
   // read (settleSeen in casora-core.js), a new reason is new.
   // → { rows, devices } – devices: devices (device_id → true) whose problem Pulse reports or that are
@@ -222,7 +223,10 @@
     });
     if (!shown.length) return out;
     var at = function (d) {
-      var t = d.silentSince ? Date.parse(d.silentSince) : NaN;
+      // Since when Pulse reports the problem (Pulse ≥ 26.11, kept across restarts). The start of the silence or
+      // outage lies before Pulse's wait: a bell opened in between had already marked it read (Pulse #4).
+      var t = d.problemSince ? Date.parse(d.problemSince) : NaN;
+      if (isNaN(t) && d.silentSince) t = Date.parse(d.silentSince);
       if (isNaN(t)) t = Date.parse((S[d.statusId] || {}).last_changed || '');
       return isNaN(t) ? (now || Date.now()) : Math.min(t, now || Date.now());
     };

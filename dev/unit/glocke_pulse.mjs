@@ -142,6 +142,26 @@ list = await rows();
 assert.equal(N.count, 1, 'neuer Grund = neue Mitteilung');
 assert.equal(pulseRows(list).find((r) => r.id === 'casora:pulse:d2').label, 'Fensterkontakt Atelier ist still');
 
+// (5b) Pulse issue #4: an important plug went unreachable 12 minutes ago, Pulse reports it now ("prüfen" after
+//      its wait). The bell was opened in between: the notice must still be new.
+//      Pulse ≥ 26.11 sends problem_since (since when it reports the problem); silent_since is the outage start.
+list = await rows();
+store.casora_notify_read_v1 = String(Date.now() - 5 * MIN);
+dev(9, 'Steckdose Server', 'check', { reason_key: 'unavailable', silent_since: iso(12 * MIN), problem_since: iso(0), critical: true }, null, null);
+hass.entities = { ...entities };
+list = await rows();
+const plug = pulseRows(list).find((r) => r.id === 'casora:pulse:d9');
+assert.ok(plug, 'Steckdose in der Glocke');
+assert.ok(Math.abs(plug.when - Date.now()) < 5000, 'Zeitpunkt = seit Pulse es meldet, nicht der Ausfallbeginn');
+assert.equal(N.count, 2, 'neu, obwohl der Ausfall vor dem letzten Lesen begann (Steckdose + neuer Grund von oben)');
+// Older Pulse without problem_since: as before, the start of the silence
+delete states['sensor.p9_status'].attributes.problem_since;
+store.casora_notify_seen_v1 = '{}';
+list = await rows();
+assert.ok(Math.abs(pulseRows(list).find((r) => r.id === 'casora:pulse:d9').when - (Date.now() - 12 * MIN)) < 5000);
+delete entities['sensor.p9_status']; delete states['sensor.p9_status']; delete devices.d9;
+hass.entities = { ...entities };
+
 // (6) Mehr als 3 Probleme: eine Sammelzeile.
 dev(6, 'Bewegung Garage', 'check', { reason_key: 'unavailable' });
 dev(7, 'Wassermelder Bad', 'failed', { reason_key: 'silent', silent_since: iso(60 * MIN) });
