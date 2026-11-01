@@ -32,6 +32,16 @@ const v3 = c.slice(c.indexOf('if (_v3a) {'));
 assert.ok(v3.indexOf("add('hero'") > -1 && v3.indexOf("add('hero'") < v3.indexOf("add('stage'"), 'alarm v3: status line field before the stage');
 assert.ok(/_casoraAlarmSoft\.line\(/.test(v3), 'alarm v3: uses AL.line');
 
+// The frame replaces a head that reads like the stage (fallback „Aus“/„Verriegelt“ …) with since when.
+const core = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-core.js', import.meta.url), 'utf8');
+const dd = core.slice(core.indexOf('    _dedupeHead() {'), core.indexOf('    _findHeadLine() {'));
+assert.ok(dd.length > 100, 'frame: _dedupeHead');
+assert.ok(/norm\(mainTxt\) !== norm\(stage\)/.test(dd) && /since = 'Seit ' \+/.test(dd), 'frame: same text → „Seit …“');
+assert.ok(/this\._headerStatus\.hidden = !this\._headerStatus\.textContent\.trim\(\);\n      this\._dedupeHead\(\);/.test(core), 'mirrored line compared');
+assert.ok(/if \(again\) this\._dedupeHead\(\);/.test(core), 'fallback compared');
+const norm = (t) => String(t || '').toLowerCase().replace(/[\s\u00a0\u202f()·.,:–-]+/g, '');
+assert.equal(norm('Aktiviert (Zuhause)'), norm('Aktiviert · Zuhause'), 'HA word and stage sentence count as the same');
+assert.equal(norm('513 W'), norm('513\u202fW'));
 // popup-geo carries the check, and the rule is written down.
 const geo = fs.readFileSync(new URL('../qa/popup-geo.mjs', import.meta.url), 'utf8');
 assert.ok(/add\('doppelt'/.test(geo), 'popup-geo: check „doppelt“');

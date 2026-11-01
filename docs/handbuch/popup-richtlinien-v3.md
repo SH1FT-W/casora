@@ -86,7 +86,7 @@ Zahl, die Statuszeile das Wort.
 **Die Statuszeile wiederholt nie den Bühnenwert** (Entscheidung 01.11.2026): weder die Zahl der Bühne („513 W“) noch den
 Satz in der Rad-Mitte („Aktiviert · Zuhause“). Sie sagt etwas anderes in Worten – Energie: woher der Strom kommt („Bezug
 aus dem Netz · Akku bereit“, „Solar deckt 80 %“, „Netz offline“); Alarm und andere S7 ohne eigenes Wort: seit wann
-(„Seit 14:42“). Der Rückfall des Rahmens (HAs Zustandswort) gilt nur, wo er nicht mit der Bühne übereinstimmt. Geprüft
+(„Seit 14:42“). Liest sich der erste Teil der Kopfzeile wie der Wert bzw. Satz der Bühne (auch HAs Zustandswort als Rückfall: „Aus“ im Kopf und im Rad, „Verriegelt“ zweimal), setzt der Rahmen „Seit 14:42“ dafür ein (`_dedupeHead`, Zeit der Kachel-Entität). Geprüft
 von `popup-geo.mjs` („doppelt“: erster Teil der Kopfzeile = Wert bzw. Satz der Bühne).
 
 ## 4. Bühne

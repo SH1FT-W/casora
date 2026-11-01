@@ -7443,6 +7443,8 @@ window.casoraMenuGlass = {
       if (pop && pop._syncHeadSwitch && pop.hasAttribute('open')) {
         pop._syncHeadSwitch(h);
         if (!pop._headLine || !pop._headLine.isConnected) setTimeout(function () { if (pop.hasAttribute('open')) pop._syncHeadLine(); }, 120);
+        // The stage may now read like the head (§3, _dedupeHead): compare again once the cards have redrawn.
+        if (pop._dedupeHead) { clearTimeout(pop._ddT); pop._ddT = setTimeout(function () { if (pop.hasAttribute('open')) { pop._headHtml = null; if (pop._headLine) pop._mirrorHead(); else pop._headFallback(true); } }, 350); }
       }
       // Auch ohne An/Aus-Wechsel: ändert sich das Gerät (Jalousie-Position → anderes Symbol), Kopf nachziehen.
       var rso = pop && pop._ringSrc && pop._ringSrc._stateObj, rnow = rso && h && h.states ? h.states[rso.entity_id] : null;
@@ -7896,7 +7898,7 @@ window.casoraMenuGlass = {
     // §3 (review 2, DD-08): every popup has a status line. Until the content lifts its own (.hui-line) into the head,
     // the head shows the state of the tile's entity in HA's words – a popup without a line of its own keeps that, and
     // the head does not jump when the content's line arrives (same height, one line).
-    _headFallback() {
+    _headFallback(again) {
       if (!this._headerStatus || !this.hasAttribute('soft')) return;
       var so = this._ringSrc && this._ringSrc._stateObj;
       var h = (document.querySelector('home-assistant') || {}).hass;
@@ -7909,6 +7911,42 @@ window.casoraMenuGlass = {
       if (!txt || txt === 'unknown') return;
       this._headerStatus.innerHTML = '<b>' + window.casoraEsc(txt) + '</b>';
       this._headerStatus.hidden = false;
+      if (again) this._dedupeHead();
+      else [300, 900, 1800].forEach((ms) => setTimeout(() => { if (this.hasAttribute('open') && !this._headLine) this._dedupeHead(); }, ms));
+    }
+    // §3 (owner, 01.11.2026): the status line never repeats the stage's value or sentence („Aus“ in the head and in the
+    // wheel, „Verriegelt“ twice, „513 W“ twice). When the head's first part reads like the stage's main text, it says
+    // since when instead („Seit 14:42“, from the tile's entity); without a time that part goes. popup-geo „doppelt“.
+    _dedupeHead() {
+      var hs = this._headerStatus;
+      if (!hs || hs.hidden || !this.hasAttribute('soft') || !this.container) return;
+      var norm = function (t) { return String(t || '').toLowerCase().replace(/[\s\u00a0\u202f()·.,:–-]+/g, ''); };
+      var stage = '';
+      (function walk(root, d) {
+        if (!root || d > 12 || stage) return;
+        var el = root.querySelector && root.querySelector('.hui-dl-c .hui-dl-t, .hui-dl-c .hui-st-val, .hui-stage .hui-st-head .hui-st-val');
+        if (el) { stage = el.textContent; return; }
+        var all = root.querySelectorAll ? root.querySelectorAll('*') : [];
+        for (var i = 0; i < all.length && !stage; i++) if (all[i].shadowRoot) walk(all[i].shadowRoot, d + 1);
+      })(this.container, 0);
+      var first = hs.querySelector('b') || hs.firstElementChild;
+      var mainTxt = first ? first.textContent : String(hs.textContent || '').split('·')[0];
+      if (!stage || !norm(mainTxt) || norm(mainTxt) !== norm(stage)) return;
+      var so = this._ringSrc && this._ringSrc._stateObj, h = (document.querySelector('home-assistant') || {}).hass;
+      var cur = so && h && h.states ? h.states[so.entity_id] : so, lc = cur && cur.last_changed ? new Date(cur.last_changed) : null;
+      var since = '';
+      if (lc && !isNaN(lc.getTime())) {
+        var loc = window.casoraLocale ? window.casoraLocale() : 'de-DE', now = new Date();
+        since = 'Seit ' + (lc.toDateString() === now.toDateString() ? lc.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' })
+          : lc.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' }));
+        if (window.casoraTr) since = window.casoraTr(since);
+      }
+      if (first) {
+        if (since) first.textContent = since;
+        else { var nx = first.nextElementSibling; if (nx && nx.classList && nx.classList.contains('hui-sep')) nx.remove(); first.remove(); }
+      } else hs.innerHTML = since ? '<b>' + window.casoraEsc(since) + '</b>' : '';
+      // The mirrored line is compared again on its next change (its html no longer equals what the head shows).
+      hs.hidden = !hs.textContent.trim();
     }
     // Erste Statuszeile (.hui-line, UI.line/hero/headline) oben im Inhalt suchen – durch alle Shadow-DOMs.
     _findHeadLine() {
@@ -7987,6 +8025,7 @@ window.casoraMenuGlass = {
         }
       }
       this._headerStatus.hidden = !this._headerStatus.textContent.trim();
+      this._dedupeHead();
       if (window._casoraSepScan) { var sr = this.shadowRoot; setTimeout(function () { window._casoraSepScan(sr); }, 0); }
     }
     _syncHeadLine() {
