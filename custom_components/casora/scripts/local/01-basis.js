@@ -588,7 +588,10 @@ window._casoraLightScope = function (entity, states, hass, vars) {
 window.casoraLightTally = function (entity, states, hass, vars) {
   var S = states || {};
   var sc = window._casoraLightScope(entity, S, hass, vars);
-  var ids = sc.lightIds.filter(function (x, i, a) { return S[x] && a.indexOf(x) === i; });
+  /* group_rooms climbs from a room to the house group above it (autoIdx: the popup preselects the room); the count
+     stays the room's own lamps (detail round #2: the bathroom chip said „3 An“ – the house's – while its one lamp was off). */
+  var own = sc.autoIdx > -1 && sc.topLevelIds[sc.autoIdx] ? sc.expand(sc.topLevelIds[sc.autoIdx]) : null;
+  var ids = (own && own.length ? own : sc.lightIds).filter(function (x, i, a) { return S[x] && a.indexOf(x) === i; });
   return { kind: 'lamps', tot: ids.length, on: ids.filter(function (x) { return S[x].state === 'on'; }).length };
 };
 /* The words for a tally (German, the dashboard translates; wortliste: Zahl + An): „Aus“/„An“ for one lamp,
