@@ -4068,8 +4068,9 @@
     });
     return { on: on, tot: tot, pct: nb ? Math.round(sum / nb) : null };
   };
-  var subline = function (s, oneLamp) {
-    var p = s.pct != null ? ' · ' + s.pct + ' %' : '';
+  // noPct: the v3 head – the dial shows the brightness (§3, detail round #4: „3 von 16 an · 73 %“ beside 73 %).
+  var subline = function (s, oneLamp, noPct) {
+    var p = s.pct != null && !noPct ? ' · ' + s.pct + ' %' : '';
     if (s.tot <= 1 || oneLamp) return s.on ? tr('An') + p : tr('Aus');
     // One word list in the popup (review 2, DD-16): „Aus“ like the rooms beside it, „2 von 3 an“ like „2 von 10 an“.
     if (!s.on) return tr('Aus');
@@ -4198,14 +4199,15 @@
       title = /^(beleuchtung|licht|lichter|lampen|zuhause)$/i.test(String(sc.name)) ? tr('Beleuchtung') : tr('Licht') + ' ' + sc.name;
       // Single lamp with a room (sc.room): title = the lamp, otherwise „Licht <Raum>“ stood above one lamp.
       if (sc.room && sc.lights.length === 1) title = short(nameOf(sc.lights[0], states), sc.name);
-      sub = subline(s, false); on = s.on > 0; id = sc.rid;
+      var v3h = !!(window._casoraUI && window._casoraUI.v3 && window._casoraUI.v3());
+      sub = subline(s, false, v3h); on = s.on > 0; id = sc.rid;
     } else {
       // The whole house counts lamps like its badge and tile (owner, 01.11.2026: never rooms).
       var hall = [];
       cfg.rooms.forEach(function (r) { (r.lights || []).forEach(function (x) { if (hall.indexOf(x) < 0) hall.push(x); }); });
       var hs = stat(hall, states);
       title = tr('Beleuchtung');
-      sub = subline(hs, false);
+      sub = subline(hs, false, !!(window._casoraUI && window._casoraUI.v3 && window._casoraUI.v3()));
       on = hs.on > 0; id = cfg.gid;
     }
     /* 1.3 header A: icon, title and main switch sit in the popup header (casora-core.js); here only
