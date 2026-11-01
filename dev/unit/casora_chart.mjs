@@ -171,17 +171,18 @@ console.log('ok colours');
 }
 console.log('ok tap');
 
-// Size: served gzipped ≤ 17.5 KB (apexcharts-card: ~500 KB), uncompressed ≤ 56 KB
+// Size: served gzipped ≤ 18 KB (apexcharts-card: ~500 KB), uncompressed ≤ 56 KB
 // (until 26.10.31: 12 KB / 36 KB; until 26.10.59: 12.5 KB / 37 KB – bars per hour/day/month with up to four series
 // side by side, the year range and month ticks (chart card #50) took ~5 KB; until the weather pick #56: 13.5 KB / 42 KB –
 // several attribute curves of one entity; up to 43 KB before the chart plate got its shadow, 28.10.2026; 14 KB / 44 KB until the heatmap, issue 100: grid, scale and
-// hourly rasterisation across clock changes took ~3.3 KB gzip / ~11.5 KB).
+// hourly rasterisation across clock changes took ~3.3 KB gzip / ~11.5 KB; 17.5 KB until 26.11.1: the energy stage's unit
+// follows the read bar, and CI's zlib packs ~75 bytes more than a local Node).
 {
   const zlib = await import('node:zlib');
   // The shared casora-esc block (HTML escaping, same in every standalone file) does not count against the budget.
   const own = src.replace(/\/\/ casora-esc:begin[\s\S]*?\/\/ casora-esc:end\n?/, '');
   const raw = Buffer.byteLength(own), gz = zlib.gzipSync(own).length;
   assert.ok(raw <= 56 * 1024, 'casora-chart.js ' + raw + ' Bytes > 56 KB');
-  assert.ok(gz <= 17.5 * 1024, 'casora-chart.js gzip ' + gz + ' Bytes > 17,5 KB');
+  assert.ok(gz <= 18 * 1024, 'casora-chart.js gzip ' + gz + ' Bytes > 18 KB');
 }
 console.log('ok size');
