@@ -223,12 +223,15 @@
     var call = function (part) {
       return 'return window._casoraSecCovers ? window._casoraSecCovers.sec(' + JSON.stringify(part) + ', null, states, hass, user) : "";';
     };
-    // Popup v3 (richtlinien §4 S7): the head line becomes the status stage with „Alle schließen“ in it.
+    // Popup v3 (richtlinien §4 S7): the sentence becomes the status stage with „Alle schließen“ in it. The line stays on
+    // top for the head (§3): its first part reads like the stage and goes, „Bis Sonnenaufgang“ remains – the wheel's
+    // middle holds two facts only, and without the line the head stayed empty.
     var v3 = !!(UI.v3 && UI.v3() && UI.stage);
-    var f = v3 ? { stage: { card: K.secCard(watch, call('stage'), states) } } : { hero: { card: K.secCard(watch, call('hero'), states) } };
+    var f = { hero: { card: K.secCard(watch, call('hero'), states) } };
+    if (v3) f.stage = { card: K.secCard(watch, call('stage'), states) };
     // One live section for all lists: a cover that closes moves from "Offen" to "Geschlossen" while the popup is open.
     f.list = { card: K.secCard(watch, call('list'), states) };
-    return K.layout({ fields: f, top: v3 ? [] : ['hero'], stage: v3 ? 'stage' : null, left: ['list'], right: [] });
+    return K.layout({ fields: f, top: ['hero'], stage: v3 ? 'stage' : null, left: ['list'], right: [] });
   };
 
   // The security badge on Home counts the selected open covers, and its tap opens the house's „Türen & Fenster“

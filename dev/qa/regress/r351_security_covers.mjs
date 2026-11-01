@@ -69,8 +69,10 @@ const POPUP = () => {
   const title = pop && pop.shadowRoot ? (pop.shadowRoot.querySelector('.header-title') || {}).textContent || '' : '';
   const rows = window.__pierce('.hui-row', s).filter(vis).map((r) => r.textContent.replace(/\s+/g, ' ').trim());
   const labels = window.__pierce('*', s).filter((n) => vis(n) && !n.children.length).map((n) => n.textContent.trim()).filter(Boolean);
-  const text = window.__pierce('.hui-line', s).filter(vis).map((n) => n.textContent.replace(/\s+/g, ' ').trim()).join(' | ');
-  return { title: title.replace(/\s+/g, ' ').trim(), rows, labels, text };
+  // v3: the status line is the head's (the frame lifts the content's line into it), the sentence is the stage's.
+  const text = ((pop && pop._headerStatus && !pop._headerStatus.hidden && pop._headerStatus.textContent) || '').replace(/\s+/g, ' ').trim();
+  const stage = (window.__pierce('.hui-stage', s).filter(vis).map((n) => n.textContent.replace(/\s+/g, ' ').trim())[0]) || '';
+  return { title: title.replace(/\s+/g, ' ').trim(), rows, labels, text, stage };
 };
 const offen = (page) => page.evaluate(() => !!(window.casoraPopup && window.casoraPopup.surface)).catch(() => false);
 const shoot = async (page, file) => { if (BILDER) { await page.waitForTimeout(800); await page.screenshot({ path: BILDER + '/' + file }); } };
@@ -111,7 +113,7 @@ const run = async (tag, page, mobile, pre) => {
     && /Schließen$/.test(p.rows[0]) && /40 % geöffnet/.test(p.rows[1]), p && p.rows);
   await check(tag + ': sections „Offen“, „Geschlossen“ and „Alle schließen“', p && ['Offen', 'Geschlossen', 'Alle schließen'].every((x) => p.labels.includes(x)), p && p.labels);
   await check(tag + ': closed ones below with „Geschlossen“', p && at(NAME[2]) > 1 && /Geschlossen$/.test(p.rows[at(NAME[2])]), p && p.rows);
-  await check(tag + ': status line „2 von 4 geöffnet · Bis Sonnenaufgang“', p && /2 von 4 geöffnet/.test(p.text) && /Bis Sonnenaufgang/.test(p.text), p && p.text);
+  await check(tag + ': stage „2 von 4 geöffnet“, status line „Bis Sonnenaufgang“', p && /2 von 4 geöffnet/.test(p.stage) && /Bis Sonnenaufgang/.test(p.text), p && { stage: p.stage, line: p.text });
   await shoot(page, pre + '-2-popup.png');
   // „Schließen“ calls cover.close_cover for that cover; „Alle schließen“ for both open ones.
   // Popup buttons ignore taps in the first 600 ms after opening (OPEN_LOCK, 02-devices.js) – wait like a person would.
@@ -128,7 +130,8 @@ const run = async (tag, page, mobile, pre) => {
   await page.waitForTimeout(700);
   const allAt = await page.evaluate(() => {
     const s = window.casoraPopup.surface;
-    const a = window.__pierce('.hui-ga', s).find((x) => x.textContent.trim() === 'Alle schließen' && x.getBoundingClientRect().height > 0);
+    // v3: „Alle schließen“ is the dial's main moon (formerly a pill .hui-ga).
+    const a = window.__pierce('.hui-moon, .hui-ga', s).find((x) => ((x.getAttribute('aria-label') || x.textContent).replace(/\s+/g, ' ').trim() === 'Alle schließen') && x.getBoundingClientRect().height > 0);
     if (!a) return null;
     const q = a.getBoundingClientRect();
     return { x: q.x + q.width / 2, y: q.y + q.height / 2 };
