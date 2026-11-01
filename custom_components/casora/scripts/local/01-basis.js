@@ -510,7 +510,32 @@ window._casoraLightScope = function (entity, states, hass, vars) {
   var pgOff = pgVar === 'none';
   var groupId = (pgOff ? eid : (pgVar || eid)) || null;
   var autoIdx = -1;
-  if (!pgOff && groupId && variables.group_rooms === true && !(isArr(variables.lights) && variables.lights.length > 0)) {
+  /* A light group inside a room (ceiling spots: the room's group holds the spots' group) is one light of that room,
+     put there on purpose (owner, 01.11.2026): its row and its own tile open it like a lamp – one dial for the group,
+     the room's lights beside it – never split into its members. A room group in the house stays a scope. Room = a
+     group holding it (also as its only member) whose lights sit in one area (without areas: one with fewer than two
+     sub-groups). */
+  var unit = false;
+  if (eid && eid === groupId && isArr(membersOf(eid)) && !pgVar && !(isArr(variables.lights) && variables.lights.length > 0)
+      && variables.house !== true && variables.light_rooms_auto !== true) {
+    var E0 = (hass && hass.entities) || {}, D0 = (hass && hass.devices) || {};
+    var area0 = function (x) { var e = E0[x] || {}; return e.area_id || (e.device_id && D0[e.device_id] && D0[e.device_id].area_id) || null; };
+    var flat = function (x, seen) {
+      seen = seen || {}; if (seen[x]) return []; seen[x] = 1;
+      var m = membersOf(x); if (!isArr(m)) return [x];
+      return m.reduce(function (acc, y) { return acc.concat(flat(y, seen)); }, []);
+    };
+    for (var pid in S) {
+      if (pid.indexOf('light.') !== 0 || pid === eid) continue;
+      var pm = membersOf(pid);
+      if (!isArr(pm) || pm.indexOf(eid) < 0) continue;
+      var areas = {}, nA = 0;
+      flat(pid).forEach(function (x) { var a = area0(x); if (a && !areas[a]) { areas[a] = 1; nA++; } });
+      var subs = pm.filter(function (x) { return isArr(membersOf(x)); }).length;
+      if (nA ? nA === 1 : subs < 2) { unit = true; break; }
+    }
+  }
+  if (!unit && !pgOff && groupId && variables.group_rooms === true && !(isArr(variables.lights) && variables.lights.length > 0)) {
     var m0 = membersOf(groupId);
     // Only a room group climbs to the house above it. A single lamp stays itself: it climbed into its room when the
     // room group's first member was a sub-group, and a lamp row opened the room's popup again (01.11.2026).
@@ -539,7 +564,7 @@ window._casoraLightScope = function (entity, states, hass, vars) {
   };
   var topLevelIds = membersOf(groupId) || [];
   // Rooms only when at least two members are groups themselves (27.10.2026).
-  var hasRooms = variables.group_rooms === true && topLevelIds.length > 1
+  var hasRooms = !unit && variables.group_rooms === true && topLevelIds.length > 1
     && topLevelIds.filter(function (x) { return isArr(membersOf(x)); }).length > 1;
   var reg = (hass && hass.entities) || {};
   var areaName = function (x) {
@@ -568,7 +593,7 @@ window._casoraLightScope = function (entity, states, hass, vars) {
     var all = expand(groupId);
     return l.every(function (x) { return x === groupId || topLevelIds.indexOf(x) > -1 || all.indexOf(x) > -1; });
   })();
-  if (!rooms && !pgOff && (variables.light_rooms_auto === true || (variables.house === true && !houseGrp))
+  if (!rooms && !unit && !pgOff && (variables.light_rooms_auto === true || (variables.house === true && !houseGrp))
       && variables.group_rooms !== false && window._casoraHouseLights) {
     var hl = isArr(variables.house_rooms) ? { rooms: variables.house_rooms } : window._casoraHouseLights(hass || { states: S });
     var hr = (hl.rooms || []).map(function (r) {
@@ -576,12 +601,12 @@ window._casoraLightScope = function (entity, states, hass, vars) {
     }).filter(function (r) { return r.lights.length; });
     if (hr.length > 1) { rooms = hr; topLevelIds = hr.map(function (r) { return r.rid; }); roomsAuto = true; }
   }
-  var lightIds = roomsAuto ? [].concat.apply([], rooms.map(function (r) { return r.lights; }))
+  var lightIds = unit ? [eid] : roomsAuto ? [].concat.apply([], rooms.map(function (r) { return r.lights; }))
     : (isArr(variables.lights) && variables.lights.length > 0) ? variables.lights.filter(function (x) { return S[x]; })
     : rooms ? [].concat.apply([], rooms.map(function (r) { return r.lights; })) : (groupId ? expand(groupId) : []);
   // A group without existing members is itself the one row.
   if (!lightIds.length && groupId && S[groupId] && String(groupId).indexOf('light.') === 0) lightIds.push(groupId);
-  return { variables: variables, pgOff: pgOff, groupId: groupId, autoIdx: autoIdx, topLevelIds: topLevelIds, hasRooms: hasRooms,
+  return { variables: variables, unit: unit, pgOff: pgOff, groupId: groupId, autoIdx: autoIdx, topLevelIds: topLevelIds, hasRooms: hasRooms,
     rooms: rooms, roomsAuto: roomsAuto, lightIds: lightIds, expand: expand, areaName: areaName, toTitle: toTitle };
 };
 /* The count every light surface shows (badge, tile, popup status line, Studio preview), from _casoraLightScope:

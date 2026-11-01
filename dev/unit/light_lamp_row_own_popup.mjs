@@ -26,6 +26,10 @@ const S = {
   'light.hall_lamp': lamp('light.hall_lamp'), 'light.hall_lamp_2': lamp('light.hall_lamp_2'),
   'light.hall': grp('light.hall', ['light.hall_lamp', 'light.hall_lamp_2']),
   'light.home': grp('light.home', ['light.den', 'light.hall']),
+  // A hallway whose room group holds only its spots group.
+  'light.way_1': lamp('light.way_1'), 'light.way_2': lamp('light.way_2'),
+  'light.way_spots': grp('light.way_spots', ['light.way_1', 'light.way_2']),
+  'light.way': grp('light.way', ['light.way_spots']),
 };
 // The variables the lamp popup sees: the light template's own and casora_popup_light's (group_rooms: true).
 const T = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
@@ -46,4 +50,32 @@ assert.equal(room.groupId, 'light.home', 'room group climbs to the house');
 assert.equal(room.autoIdx, 1, 'the room is preselected');
 // The tally of a lamp tile counts the lamp alone.
 assert.deepEqual(window.casoraLightTally(S['light.den_strip'], S, null, V), { kind: 'lamps', tot: 1, on: 0 });
+
+// A light group inside a room (the den's spots) is one light of that room, put there on purpose (owner, 01.11.2026):
+// its row opens it like a lamp – one dial for the group, the room's lights beside it – not split into its two spots.
+for (const hass of [null, { entities: Object.fromEntries(Object.keys(S).filter((x) => !Array.isArray(S[x].attributes.entity_id))
+  .map((x) => [x, { entity_id: x, area_id: x.startsWith('light.den') ? 'den' : x.startsWith('light.way') ? 'way' : 'hall' }])), devices: {} }]) {
+  const how = hass ? ' (areas)' : ' (no areas)';
+  const sp = window._casoraLightScope(S['light.den_spots'], S, hass, V);
+  assert.equal(sp.unit, true, 'spots group is one light' + how);
+  assert.equal(sp.groupId, 'light.den_spots', 'spots popup stands for the group' + how);
+  assert.deepEqual(sp.lightIds, ['light.den_spots'], 'spots not split into members' + how);
+  assert.equal(sp.rooms, null, 'spots: no rooms' + how);
+  assert.deepEqual(window._casoraLightScope(S['light.way_spots'], S, hass, V).lightIds, ['light.way_spots'], 'spots as a room\'s only member' + how);
+  assert.deepEqual(window.casoraLightTally(S['light.den_spots'], S, hass, V), { kind: 'lamps', tot: 1, on: 1 }, 'spots count as one' + how);
+  // Room groups stay scopes: the room climbs to its house, the house keeps its rooms.
+  const den = window._casoraLightScope(S['light.den'], S, hass, V);
+  assert.ok(!den.unit && den.lightIds.length === 4, 'room group stays the room with its lamps' + how);
+  const hall = window._casoraLightScope(S['light.hall'], S, hass, V);
+  assert.ok(!hall.unit && hall.groupId === 'light.home' && hall.autoIdx === 1, 'room group still opens the house' + how);
+  assert.ok(!window._casoraLightScope(S['light.home'], S, hass, V).unit, 'house is no light' + how);
+  // A room tile opening the house (popup_group) is no light either.
+  assert.ok(!window._casoraLightScope(S['light.den'], S, hass, Object.assign({}, V, { popup_group: 'light.home' })).unit, 'popup_group wins' + how);
+}
+// The popup names the group like a lamp and looks up its room (03-popups.js roomOf with group).
+const lpc = T.casora_popup_light.custom_fields.lpc_init;
+assert.ok(lpc.includes('_LS.roomOf(lightIds[0], states, hass, !!_sc.unit)') && lpc.includes('(_sc.unit || !Array.isArray('), 'popup treats a unit like a lamp');
+const pops = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/03-popups.js', import.meta.url), 'utf8');
+assert.ok(pops.includes('S.roomOf = function (id, states, hass, group)') && pops.includes("if (!group && Array.isArray((states[id].attributes || {}).entity_id)) return null;"), 'roomOf takes a group');
+assert.ok(pops.includes('if (own.length === 1 && (!grp(own[0]) || sc.room)) return false;'), 'no head switch over the room for a unit');
 console.log('ok light_lamp_row_own_popup');

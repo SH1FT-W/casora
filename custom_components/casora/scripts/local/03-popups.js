@@ -4363,10 +4363,11 @@
   /* Room of a single lamp (popup of a lamp, 07.10.2026): the smallest light group holding it
      and at least two lamps. Never a group across several areas (the house's „alle Lichter“) -
      otherwise the whole house stood under „Leuchten im Raum“ and „Alles aus“ switched it off without
-     asking (review 1.1.1). No matching group: null, then only this lamp. */
-  S.roomOf = function (id, states, hass) {
+     asking (review 1.1.1). No matching group: null, then only this lamp.
+     group: a light group standing as one light of its room (_casoraLightScope unit) has a room the same way. */
+  S.roomOf = function (id, states, hass, group) {
     if (!id || String(id).indexOf('light.') !== 0 || !states || !states[id]) return null;
-    if (Array.isArray((states[id].attributes || {}).entity_id)) return null;
+    if (!group && Array.isArray((states[id].attributes || {}).entity_id)) return null;
     var E = (hass && hass.entities) || {}, D = (hass && hass.devices) || {};
     var areaOf = function (x) { var e = E[x] || {}; return e.area_id || (e.device_id && D[e.device_id] && D[e.device_id].area_id) || null; };
     var best = null;
@@ -4702,7 +4703,8 @@
       // Kopfschalter schaltete aus einem Raum heraus den ganzen Raum (17.10.2026). Gruppen und Räume behalten ihn.
       var own = lights(sc.lights);
       var grp = function (x) { var a = states[x] && states[x].attributes; return !!(a && Array.isArray(a.entity_id) && a.entity_id.length); };
-      if (own.length === 1 && !grp(own[0])) return false;
+      // A group standing as one light of its room (sc.room) is such a lamp too.
+      if (own.length === 1 && (!grp(own[0]) || sc.room)) return false;
       var ids = lights(sc.room || sc.lights);
       if (!ids.length) return null;
       return { entities: ids, toggle: function (on) {
