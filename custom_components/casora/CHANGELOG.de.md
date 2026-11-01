@@ -16,6 +16,8 @@ Feinschliff für die neuen Popups aus 26.11.1, dazu drei Wünsche aus euren Rüc
 - **Aquarium-Licht:** Profile der Lampe als Monde am Rad, dazu „Programm ›“ (Home Assistant oder Programm der Lampe).
 
 ### Geändert
+- **Handy-Räume ohne Kategorien:** Räume zeigen ihre Geräte am Handy wieder in einer Liste, ohne automatische Gruppen (Licht, Klima …). Wer Gruppen möchte, schaltet sie im Studio unter Design & Bedienung → Handy ein. Keine Kachel nimmt am Handy mehr die ganze Breite ein.
+- **KI-Check auf der Update-Seite:** „Jetzt prüfen“ bzw. „Neu prüfen“ startet die KI-Prüfung auch direkt auf der Detailseite eines Updates.
 - **Kopfzeilen in Worten:** Jedes Popup sagt oben, was los ist, statt Rohwerte wie „An“, „Aus“ oder „0 kWh“ zu zeigen und ohne zu wiederholen, was im Rad steht – z. B. Fenster „Schlafzimmerfenster · seit 14:20“, Kalender „Als Nächstes: Morgen 11:00 · Müllabfuhr“, Netzwerk „2 WLANs an · 66 Geräte“, Fußball die Form der letzten fünf Spiele.
 - **Wetter:** Das Rad hat eine feste Skala von −10 bis 35 °C; 10 °C sieht jetzt kühl aus, nicht heiß. Tagestief und -hoch stehen als Marken auf dem Ring. Die „Zusätzlichen Werte“ aus dem Studio (#56) stehen wieder in den Details.
 - **„Zuhause“ über Gruppen:** Gruppen über mehrere Räume (Jalousien, Schlösser, Fenster, Licht im Haus) heißen oben „Zuhause“ statt nach einem einzelnen Raum.
