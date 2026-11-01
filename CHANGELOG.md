@@ -23,7 +23,8 @@ Fixes from your feedback on 26.11.2, above all for iPad and iPhone, and a faster
 - **Light in a room:** the room badge counts the same lamps as the light tile.
 - **HomePod and others:** tile and popup say "Ready" instead of "Idle".
 - **iPad and iPhone: − and + at the dial respond again** (underfloor heating and thermostat).
-- **Room search on the phone:** tapping now really opens the search; the field appears when you pull down on Home, smoothly, and without an empty bubble below it.
+- **Room search on the phone:** tapping now really opens the search (iPhone and Android, #102); the field appears when you pull down on Home, smoothly, and without an empty bubble below it.
+- **Room search on the desktop (#102):** finds scenes from the scene menu and the Home badge, the weather (also as "Weather") and devices by their name in Home Assistant, not only by the tile's name.
 - **iPhone: the popup no longer moves while turning.** Turning the dial of a single cover or thermostat dragged the whole popup along.
 - **Scenes in a room:** on a busy phone a room could open without its scenes until it was opened again.
 - **Moon menu:** "All (n)" and "Effects" stay inside the popup and no longer cover the title.

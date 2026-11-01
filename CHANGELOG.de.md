@@ -23,7 +23,8 @@ Fixes aus euren Rückmeldungen zu 26.11.2 – vor allem für iPad und iPhone –
 - **Licht im Raum:** Das Raum-Badge zählt dieselben Lampen wie die Licht-Kachel.
 - **HomePod & Co.:** Kachel und Popup sagen „Bereit“ statt „Inaktiv“.
 - **iPad und iPhone: −/+ am Rad reagieren wieder** (Fußbodenheizung und Thermostat).
-- **Raumsuche am Handy:** Antippen öffnet die Suche jetzt wirklich; das Feld erscheint beim Herunterziehen auf Zuhause, flüssig und ohne leere Blase darunter.
+- **Raumsuche am Handy:** Antippen öffnet die Suche jetzt wirklich (iPhone und Android, #102); das Feld erscheint beim Herunterziehen auf Zuhause, flüssig und ohne leere Blase darunter.
+- **Raumsuche am Desktop (#102):** findet Szenen aus dem Szenenmenü und dem Zuhause-Badge, das Wetter (auch als „Wetter“) und Geräte unter ihrem Namen in Home Assistant, nicht nur unter dem Kachelnamen.
 - **iPhone: Das Popup bewegt sich beim Drehen nicht mehr.** Beim Drehen am Rad einer einzelnen Jalousie oder eines Thermostats zog das ganze Popup mit.
 - **Szenen im Raum:** Auf einem ausgelasteten Handy konnte sich ein Raum ohne seine Szenen öffnen, bis man ihn erneut aufrief.
 - **Mond-Menü:** „Alle (n)“ und „Effekte“ bleiben im Popup und verdecken den Titel nicht mehr.
