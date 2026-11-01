@@ -87,7 +87,7 @@ assert.ok(basis.includes("if (!lightIds.length && groupId && S[groupId] && Strin
   assert.deepEqual(T1(S['light.garage'], { group_rooms: true }), { kind: 'lamps', tot: 3, on: 2 });
   assert.equal(W({ kind: 'lamps', tot: 3, on: 1 }), '1 an');
   assert.equal(W({ kind: 'lamps', tot: 3, on: 0 }), 'Alle aus');
-  assert.equal(W({ kind: 'lamps', tot: 3, on: 3 }), 'Alle An');
+  assert.equal(W({ kind: 'lamps', tot: 3, on: 3 }), 'Alle an');
   assert.equal(W({ kind: 'lamps', tot: 1, on: 1 }), 'An');
   // Tile and badge templates use it; the popup's house line counts lamps, no room words anywhere.
   assert.ok(T.casora_light.state_display.includes('window.casoraLightTally('), 'tile');

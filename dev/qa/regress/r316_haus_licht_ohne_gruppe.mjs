@@ -53,8 +53,8 @@ await check('Hausliste: alle Lichter (auch mehr als zehn)', [...got.ids].sort().
 
 // 2) Badge mit der Markierung zählt alle Lichter.
 const onCount = expected.ids.filter((id, i) => i % 2).length;
-// Owner's decision 01.11.2026 (167c2eb4): every light surface counts lamps („n An“, „Alle An“), never rooms.
-const roomWord = onCount === expected.ids.length ? 'Alle An' : onCount + ' An';
+// Owner's decision 01.11.2026 (167c2eb4): every light surface counts lamps („n an“, „Alle an“), never rooms.
+const roomWord = onCount === expected.ids.length ? 'Alle an' : onCount + ' An';
 const badge = await page.evaluate(async () => {
   const ha = document.querySelector('home-assistant');
   const h = await window.loadCardHelpers();

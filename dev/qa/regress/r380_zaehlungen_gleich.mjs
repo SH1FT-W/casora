@@ -33,7 +33,7 @@ const read = () => page.evaluate(() => {
 });
 const r = await read();
 await need('Home: light badge and tile found', r.badge && r.tile, r);
-const word = (s) => /^(\d+ An|Alle An|Alle aus|An|Aus)$/.test(s);
+const word = (s) => /^(\d+ an|Alle an|Alle aus|An|Aus)$/.test(s);
 await check('light badge: lamps („n An“), never rooms', word(r.badge), r.badge);
 await check('light tile: lamps („n An“), never rooms', word(r.tile), r.tile);
 await check('badge and tile count lamps', r.badgeT && r.tileT && r.badgeT.kind === 'lamps' && r.tileT.kind === 'lamps', r);
