@@ -142,7 +142,8 @@
       // Half the width in the right column: a taller map so HA's own map buttons are not cut at the bottom.
       f.map = { card: Object.assign({}, map, { aspect_ratio: '1.6' }) };
       f.stage = { card: K.secCard(watch, call('stage'), states) };
-      return K.layout({ fields: f, top: [], stage: 'stage', left: ['info'], right: ['map', 'today', 'hist'],
+      f.line = { card: K.secCard(watch, call('line'), states) };
+      return K.layout({ fields: f, top: ['line'], stage: 'stage', left: ['info'], right: ['map', 'today', 'hist'],
         narrowOrder: ['stage', 'map', 'today', 'info', 'hist'], fieldStyle: { map: mapStyle }, settings: c.tracker || id });
     }
     return K.layout({ fields: f, top: ['hero', 'map'], left: ['info'], right: ['today', 'hist'],
@@ -245,6 +246,15 @@
     if (!UI || !c) return '';
     var s = P.status(c, states, hass), st = (states || {})[c.tracker];
     if (part === 'quick') return s.dead ? '' : buttons(s, c, UI, states, true);
+    if (part === 'line') {
+      // v3 head (§3, final review 01.11.2026): since when, from the same history as before – one source; the wheel no
+      // longer says it too (the frame's fallback took the tracker's last change: „Seit 05:41“ above „Seit 00:29“).
+      if (s.dead || !st || !PE) return '';
+      var now1 = Date.now(), since1 = Date.parse(st.last_changed) || now1;
+      var seg1 = (PE.history(hass, c.tracker, el) || [])[0];
+      if (seg1 && seg1.state === st.state && seg1.start < since1) since1 = seg1.start;
+      return UI.line(T('Seit') + ' ' + PE.when(since1, now1), []);
+    }
     if (part === 'hero' || part === 'stage') {
       var rest = [];
       if (!s.dead && st && PE) {
@@ -258,7 +268,8 @@
       /* Popup v3 (richtlinien §4 S7): the place as the sentence, since when / distance / battery as facts. */
       if (part === 'stage') {
         var lbl = [T('Seit'), T('Entfernung'), T('Akku')];
-        var factsP = rest.map(function (x) {
+        // Since when stands in the head (part „line“), not again in the wheel.
+        var factsP = rest.filter(function (x) { return x.indexOf(T('seit') + ' ') !== 0; }).map(function (x) {
           if (x.indexOf(T('seit') + ' ') === 0) return { label: lbl[0], value: x.slice(T('seit').length + 1) };
           if (x.indexOf('Akku ') === 0) return { label: lbl[2], value: x.slice(5) };
           return { label: lbl[1], value: x.replace(' ' + T('von zuhause'), '') };
