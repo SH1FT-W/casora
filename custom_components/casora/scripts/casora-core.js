@@ -12397,7 +12397,7 @@ window.casoraMenuGlass = {
         + (o.caption ? '<div class="hui-dl-cap">' + esc(o.caption) + '</div>' : '')
         + stValue(o.value, o.unit || '', o.word ? dWordCls(o.value) : '', na6)
         // A word with parts („Bodenfeuchte · 7 Tage“) one part per line – the „·“ started the second line (final review).
-        + (o.trend || o.read ? '<div class="hui-st-w"' + (o.read ? ' data-casora-read-when=""' : '') + '>' + (o.read ? esc(o.trend || '') : dLines(o.trend)) + '</div>' : '') + (o.foot ? '<div class="hui-dl-w2">' + dLines(o.foot) + '</div>' : '');
+        + (o.trend || o.read ? '<div class="hui-st-w"' + (o.read ? ' data-casora-read-when=""' : '') + '>' + dLines(o.trend || '') + '</div>' : '') + (o.foot ? '<div class="hui-dl-w2">' + dLines(o.foot) + '</div>' : '');
       // o.ends: the words at both ends of the ring („T 13°“ left, „H 21°“ right), in the gap at the bottom.
       if (o.ends && o.ends.length === 2) coverHtml += '<div class="hui-dl-end l">' + esc(o.ends[0]) + '</div><div class="hui-dl-end r">' + esc(o.ends[1]) + '</div>';
       // Without a chart nothing stands under the wheel (an empty 160 plate read „undefined“ before).

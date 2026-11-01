@@ -53,7 +53,7 @@ custom_components/casora/scripts/local/03-popups.js | strip | week markup, escap
 custom_components/casora/scripts/local/03-popups.js | R.calSoft() | markup builder of this file (escapes) | 1
 custom_components/casora/scripts/local/03-popups.js | re:^(window\._casoraHH|HH)\.(label|pbar)\( | 02-devices.js H.label/H.pbar escape their text | 7
 custom_components/casora/scripts/local/03-popups.js | (window._casoraHH ? window._casoraHH.pillCss : '') | fixed CSS | 1
-custom_components/casora/scripts/local/03-popups.js | re:^f\[[12]\]$ | icon/colour from the fixed FOOD table (foodOf) | 3
+custom_components/casora/scripts/local/03-popups.js | re:^f\[[12]\]$ | icon/colour from the fixed FOOD table (foodOf) | 2
 custom_components/casora/scripts/local/03-popups.js | tick(isDone) | fixed icon markup | 1
 custom_components/casora/scripts/local/03-popups.js | okC | fixed colour | 1
 custom_components/casora/scripts/local/03-popups.js | (sf ? 'color-mix(in srgb, ' + okC + ' 22%, transparent)' : 'rgba(48,209,88,0.2)') | fixed colours | 1
@@ -83,4 +83,3 @@ custom_components/casora/scripts/local/03-popups.js | re:^L\.[ct]$ | colour/labe
 custom_components/casora/scripts/local/03-popups.js | re:^(?:v3Stage\(all, states, true\)|list)$ | light popup v3 (house): UI.stage markup and the house list built by houseBody from escaped parts | 2
 custom_components/casora/scripts/local/03-popups.js | F.bar(tgt.entity_id, value, lo, hi, step) | FBH target bar markup of this file (escapes its numbers) | 1
 custom_components/casora/scripts/local/03-popups.js | tr(v3StatusHtml()) | update search, popup v3: v3StatusHtml() escapes the status words before the translation | 1
-custom_components/casora/scripts/local/03-popups.js | re:^\(\(window\._casoraInkOn && window\._casoraInkOn\( | CSS colour from inkOn() (one of two fixed token strings) or a constant | 1

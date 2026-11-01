@@ -1408,10 +1408,10 @@
     + '.hrw-b span{font-size:14px;font-weight:700;margin-top:1px;font-variant-numeric:tabular-nums;}'
     // Today's plaque: the ink inkOn picks; the dark one is darkened further, and the weekday keeps full ink – the
     // see-through dark glyph at .85 was 3,4 : 1 on teal (10 px text needs 4,5 : 1).
-    + '.hrw-r.now .hrw-b{background:var(--casora-soft-icon-on, #276B64);color:' + (function () {
+    + '.hrw-r.now .hrw-b{background:var(--casora-soft-icon-on, #276B64);color:' + esc((function () {
       var ink = (window._casoraInkOn && window._casoraInkOn('var(--casora-soft-icon-on, #276B64)', 4.5)) || 'var(--casora-soft-glyph, #fff)';
       return /glyph-dark/.test(ink) ? 'color-mix(in srgb, ' + ink + ' 45%, black)' : ink;
-    })() + ';}'
+    })()) + ';}'
     + '.hrw-t{flex:1;min-width:0;}'
     + '.hrw-n{font-size:14.5px;font-weight:700;letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary, #2E2721);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
     + '.hrw-s{font-size:12.5px;font-weight:500;color:var(--casora-soft-sub, rgba(46,39,33,0.6));margin-top:1px;}'
@@ -1579,7 +1579,7 @@
         // Soft: the symbol leans to the text colour (as a chosen moon's symbol) – light green and blue on their own
         // tint were 2,1 and 2,7 : 1 on the light plate (3 : 1 needed).
         + '<div class="hrl-i" style="background:color-mix(in srgb, ' + f[2] + ' 22%, transparent);"><ha-icon icon="' + f[1] + '" style="--mdc-icon-size:19px;width:19px;height:19px;display:flex;color:'
-        + (sf ? 'color-mix(in srgb, ' + f[2] + ' 65%, ' + K.ink + ')' : f[2]) + ';"></ha-icon></div>'
+        + esc(sf ? 'color-mix(in srgb, ' + f[2] + ' 65%, ' + K.ink + ')' : f[2]) + ';"></ha-icon></div>'
         + '<div class="hrl-t"><div class="hrl-n">' + esc(i.summary) + '</div>' + (i.description ? '<div class="hrl-s">' + esc(i.description) + '</div>' : '') + '</div>'
         + '<span class="hrl-c">' + tick(isDone) + '</span></div>';
     };
