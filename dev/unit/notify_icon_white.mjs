@@ -36,8 +36,8 @@ const g = Number(/(\d+)%/.exec(notifyTone(tones.green, ink))[1]);
 assert.ok(g >= 78, 'green only a step darker, not muddy (' + g + ' %)');
 assert.equal(notifyTone(tones.yellow, ink), tones.yellow, 'yellow (light) keeps the dark symbol');
 // Only the notification rows use it.
-assert.match(core, /iconTone: notifyTone\(toneOf\(r\)\)/, 'notification rows');
-assert.equal((core.match(/notifyTone\(/g) || []).length, 2, 'nowhere else (definition + the list)');
+assert.match(core, /iconTone: window\._casoraNotifyTone \? window\._casoraNotifyTone\(toneOf\(r\)\)/, 'notification rows');
+assert.equal((core.match(/_casoraNotifyTone\(/g) || []).length, 1, 'nowhere else but the list');
 // inkOn reads a mixed colour (color(srgb …)) instead of falling back to the token's own hex.
 assert.match(core, /color\\\(srgb/, 'inkOn parses color(srgb …)');
 console.log('notify_icon_white: ok');

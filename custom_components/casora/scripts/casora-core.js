@@ -14532,7 +14532,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var toRow = function (r) {
       return {
         icon: r.icon,
-        iconTone: notifyTone(toneOf(r)),
+        iconTone: window._casoraNotifyTone ? window._casoraNotifyTone(toneOf(r)) : toneOf(r),
         label: r.label,
         // Something still happening says how long, not when it started as well.
         // Weich (Runde 2): Detail und Zeit als ein Fließtext – bei langem Detail brach die Zeit sonst
