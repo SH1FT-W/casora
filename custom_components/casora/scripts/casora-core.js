@@ -7235,6 +7235,21 @@ window.casoraMenuGlass = {
       try { er = eid && typeof window._casoraRoomOf === 'function' ? String(window._casoraRoomOf(eid) || '').trim() : ''; } catch (e) { er = ''; }
       return er || 'Zuhause';
     }
+    /* The house's light badge (owner, 01.11.2026): „Zuhause“ like the other groups over several rooms; a room's light
+       chip (its lamps, or the room preselected in the house group) keeps no label. */
+    if (/\bcasora_badge_light_group\b/.test(tpl) && typeof window._casoraLightScope === 'function') {
+      try {
+        var hb = src._hass || (document.querySelector('home-assistant') || {}).hass;
+        var VB = Object.assign({}, src._config.variables || {});
+        Object.keys(src._evaluatedVariables || {}).forEach(function (k) {
+          var v = src._evaluatedVariables[k];
+          VB[k] = v && !Array.isArray(v) && typeof v === 'object' && 'value' in v ? v.value : v;
+        });
+        var sb = window._casoraLightScope(src._stateObj, (hb && hb.states) || {}, hb, VB);
+        if ((sb.roomsAuto || (sb.rooms && sb.rooms.length > 1) || sb.variables.house) && sb.autoIdx < 0) return 'Zuhause';
+      } catch (e) {}
+      return '';
+    }
     if (HOUSE_POPUP.test(tpl)) return spansRooms(src) ? 'Zuhause' : '';
     var id = src._stateObj && src._stateObj.entity_id;
     if (!id || typeof window._casoraRoomOf !== 'function') return '';
@@ -7242,7 +7257,8 @@ window.casoraMenuGlass = {
     if (/\bcasora_light\b/.test(tpl) && typeof window._casoraLightsHouse === 'function') {
       var V = src._config.variables || {}, pg = V.popup_group || V.group_entity;
       var h = src._hass || (document.querySelector('home-assistant') || {}).hass;
-      try { if (window._casoraLightsHouse(V, typeof pg === 'string' && pg !== 'none' ? pg : id, null, h)) return ''; } catch (e) {}
+      // The whole house says „Zuhause“ like every group over several rooms (owner, 01.11.2026).
+      try { if (window._casoraLightsHouse(V, typeof pg === 'string' && pg !== 'none' ? pg : id, null, h)) return 'Zuhause'; } catch (e) {}
     }
     // Lights keep their room (a room's lamps may list one of another room, light_house_title (k)).
     if (!/\bcasora_light\b/.test(tpl) && spansRooms(src)) return 'Zuhause';

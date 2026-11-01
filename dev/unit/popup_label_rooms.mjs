@@ -31,4 +31,9 @@ h.states['binary_sensor.fenster'] = st('binary_sensor.fenster', { entity_id: ['c
 assert.equal(lab('casora_popup_contacts', 'binary_sensor.fenster'), 'Zuhause', 'windows of several rooms: Zuhause');
 assert.equal(lab('casora_popup_contacts', 'lock.flur'), '', 'house popup of one thing: no label');
 assert.equal(lab('casora_cover', 'cover.wz_l'), 'Wohnzimmer', 'a single device: its room');
+// The house's light badge says „Zuhause“ (owner, 01.11.2026); a room's chip (room preselected in the house group) none.
+window._casoraLightScope = (e, S, hh, V) => V.house_like ? { rooms: [{}, {}], autoIdx: V.pre ? 1 : -1, variables: {} } : { rooms: null, autoIdx: -1, variables: {} };
+assert.equal(lab('casora_badge_light_group', 'lock.ohne', { house_like: true }), 'Zuhause', 'house light badge');
+assert.equal(lab('casora_badge_light_group', 'lock.ohne', { house_like: true, pre: true }), '', 'room chip inside the house group');
+assert.equal(lab('casora_badge_light_group', 'lock.ohne', {}), '', 'room light badge');
 console.log('popup_label_rooms: ok');
