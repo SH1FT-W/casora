@@ -241,4 +241,38 @@ pullTo(300, 450);
 assert.equal(S.revealed(), false, 'not at the top: no pull-down');
 box.scrollY = 0;
 
+// While pulling, only the field's card gets the values (a custom property on the page's root restyles every card on
+// each move: the field stuttered on the iPhone); at rest the root follows, for a card drawn anew.
+const cardVars = {};
+box._casoraSearchHead = { isConnected: true, style: { setProperty(k, v) { cardVars[k] = v; } } };
+S.reveal(false);
+fire('touchstart', 300);
+fire('touchmove', 320);
+fire('touchmove', 360);
+assert.equal(cardVars['--casora-search-reveal'], '36px', 'the card follows the finger');
+assert.equal(vars['--casora-search-reveal'], '0px', 'the root stays untouched while pulling');
+fire('touchend', 360);
+assert.equal(cardVars['--casora-search-reveal'], S.REVEAL + 'px', 'let go past half: shown on the card');
+assert.equal(vars['--casora-search-reveal'], S.REVEAL + 'px', 'and on the root');
+// With frames: several moves in one frame draw once, with the latest position.
+const frames = [];
+box.requestAnimationFrame = (fn) => { frames.push(fn); return frames.length; };
+box.cancelAnimationFrame = () => {};
+S.reveal(false);
+fire('touchstart', 300);
+fire('touchmove', 310);
+fire('touchmove', 320);
+fire('touchmove', 330);
+assert.equal(frames.length, 1, 'one frame for three moves');
+assert.equal(cardVars['--casora-search-reveal'], '0px', 'nothing drawn before the frame');
+frames.shift()();
+assert.equal(cardVars['--casora-search-reveal'], '18px', 'the frame draws the latest position');
+fire('touchmove', 360);
+fire('touchend', 360);
+assert.equal(cardVars['--casora-search-reveal'], S.REVEAL + 'px', 'let go before the next frame: the latest position decides');
+delete box.requestAnimationFrame;
+delete box.cancelAnimationFrame;
+S.reveal(false);
+box._casoraSearchHead = null;
+
 console.log('search: ok');

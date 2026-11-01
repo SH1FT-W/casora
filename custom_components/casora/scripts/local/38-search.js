@@ -929,14 +929,34 @@
   // Home shows it as far as one pulls, let go past half and it stays; scrolling down past it hides it again (the
   // page keeps its place). A keyboard focus on it (Tab) shows it too. The template marks its card and whether the
   // field is on (window._casoraSearchHead / _casoraSearchOn).
-  var REVEAL = 56, reveal = 0, pull = null, scroller = null;
-  function setReveal(px, drag) {
-    reveal = Math.max(0, Math.min(REVEAL, px));
-    var st = document.documentElement.style;
+  // While the finger pulls, the values go only onto the field's own card (a custom property changed on the page's
+  // root restyles every card of the dashboard on each move: the field stuttered on the iPhone), at most once per
+  // frame. At rest they go onto the root as well, so a card drawn anew (another render) starts where the field is.
+  var REVEAL = 56, reveal = 0, pull = null, scroller = null, frame = 0, pendingPx = null;
+  function revealVars(st, drag) {
     st.setProperty('--casora-search-reveal', Math.round(reveal) + 'px');
     st.setProperty('--casora-search-reveal-o', String(Math.round(Math.min(1, reveal / REVEAL) * 100) / 100));
     st.setProperty('--casora-search-reveal-t', drag ? '0ms' : '280ms');
     st.setProperty('--casora-search-reveal-of', reveal >= REVEAL ? 'visible' : 'hidden');
+  }
+  function setReveal(px, drag, cardOnly) {
+    if (frame) { (window.cancelAnimationFrame || clearTimeout)(frame); frame = 0; }
+    pendingPx = null;
+    reveal = Math.max(0, Math.min(REVEAL, px));
+    var head = window._casoraSearchHead;
+    var card = head && head.isConnected && head.style && head.style.setProperty ? head.style : null;
+    if (card) revealVars(card, drag);
+    if (!cardOnly || !card) revealVars(document.documentElement.style, drag);
+  }
+  // A move of the finger: drawn with the next frame, only the latest position counts.
+  function dragReveal(px) {
+    if (typeof window.requestAnimationFrame !== 'function') { setReveal(px, true, true); return; }
+    pendingPx = px;
+    if (frame) return;
+    frame = window.requestAnimationFrame(function () {
+      frame = 0;
+      if (pendingPx != null) setReveal(pendingPx, true, true);
+    });
   }
   S.reveal = function (on) { setReveal(on ? REVEAL : 0); };
   S.revealed = function () { return reveal >= REVEAL; };
@@ -979,10 +999,13 @@
       if (Math.abs(dx) > Math.abs(dy) || (dy < 0 && pull.base === 0)) { pull = null; return; }
       pull.on = true;
     }
-    setReveal(pull.base + (dy > 0 ? dy * 0.6 : dy), true);
+    dragReveal(pull.base + (dy > 0 ? dy * 0.6 : dy));
   }, { capture: true, passive: true });
   var settle = function () {
-    if (pull && pull.on) setReveal(reveal > REVEAL * 0.45 ? REVEAL : 0);
+    if (pull && pull.on) {
+      var at = pendingPx != null ? Math.max(0, Math.min(REVEAL, pendingPx)) : reveal;
+      setReveal(at > REVEAL * 0.45 ? REVEAL : 0);
+    }
     pull = null;
   };
   window.addEventListener('touchend', settle, { capture: true, passive: true });
