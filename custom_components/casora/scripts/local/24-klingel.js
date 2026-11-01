@@ -1035,7 +1035,7 @@
           + esc(tr('Kamera und Ton der Klingel sind aus.')) + '</small><button class="ob" type="button">' + esc(tr('Ausschalten')) + '</button>';
         this._obFn = function () { self._call('switch', 'turn_off', cfg.privacy); };
       } else if (idx) {
-        ov.innerHTML = '<ha-icon icon="mdi:cctv"></ha-icon><b>' + esc(tr('Kamera nicht erreichbar')) + '</b>';
+        ov.innerHTML = '<ha-icon icon="mdi:cctv"></ha-icon><b>' + esc(tr('Kamera offline')) + '</b>';
         this._obFn = null;
       } else {
         ov.innerHTML = '<ha-icon icon="mdi:doorbell-video"></ha-icon><b>' + esc(tr('Klingel nicht erreichbar')) + '</b><small>'

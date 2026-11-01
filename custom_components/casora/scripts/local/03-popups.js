@@ -2451,7 +2451,7 @@
     for (var i = 0; i < l.length; i++) if (l[i] && l[i].id === id) return l[i];
     return null;
   };
-  /* Ohne Bild nichts zu beschreiben: Kamera fehlt, ist aus oder nicht erreichbar – für jede Integration gleich. */
+  /* Ohne Bild nichts zu beschreiben: Kamera fehlt, ist aus oder offline – für jede Integration gleich. */
   var noImage = function (hass, id) {
     var st = hass.states[id];
     return !st || ['unavailable', 'unknown', 'off'].indexOf(String(st.state || '').toLowerCase()) >= 0;
@@ -2470,7 +2470,7 @@
     }
     var running = it.status === 'running';
     var col = it.alert ? 'var(--casora-popup-ui-warn, #FF9F0A)' : 'rgba(255,255,255,0.92)';
-    var text = running ? 'Claude schaut sich das Bild an …' : it.status === 'error' ? (it.error || 'Kein Bild – die Kamera ist aus, schläft oder ist nicht erreichbar.') : it.text;
+    var text = running ? 'Claude schaut sich das Bild an …' : it.status === 'error' ? (it.error || 'Kein Bild – die Kamera ist aus, schläft oder ist offline.') : it.text;
     return '<div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:16px;'
       + 'background:var(--casora-glass-pill-fill, rgba(255,255,255,0.10));font-family:var(--primary-font-family, system-ui);text-align:left;">'
       + '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 18px;width:18px;height:18px;margin-top:1px;"><ha-icon icon="mdi:creation" style="--mdc-icon-size:18px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;line-height:0;color:var(--casora-color-teal, #00C3D0);"></ha-icon></span>'
