@@ -12575,6 +12575,9 @@ window.casoraMenuGlass = {
     } else if (code === 'S4') {
       var p4 = Math.max(0, Math.min(1, Number(o.progress) || 0));
       ring.kind = 'level'; ring.pct = o.progress != null ? p4 * 100 : 0;
+      // A failed or faulty programme (o.tone 'bad'/'warn') fills the ring in the traffic-light colour – an empty grey
+      // ring read like „nothing“ (detail round #35: 3D printer „Fehlgeschlagen“).
+      if ((o.tone === 'bad' || o.tone === 'warn') && TONE[o.tone]) { ring.pct = 100; ring.col = TONE[o.tone]; }
       // Any word as the value („Läuft“, „Bereit“) takes the word size – a 80 px word filled the whole wheel.
       var wd4 = /[A-Za-zÄÖÜäöüß]{2}/.test(String(o.value == null ? '' : o.value));
       centerHtml = (o.caption ? '<div class="hui-dl-cap">' + esc(o.caption) + '</div>' : '')

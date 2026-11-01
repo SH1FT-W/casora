@@ -3407,6 +3407,7 @@
         if (kind === 'p_stage') {
           var remS = active && rem != null && rem > 0 ? 'Fertig gegen ' + U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' : null;
           return UI.stage('progress', { value: vH, unit: uH || '', word: sb.join(' · ') || null,
+            tone: errOn || raw === 'failed' ? 'bad' : null,
             progress: active && pc != null ? Math.max(0, Math.min(1, pc / 100)) : null,
             program: active ? [pc != null ? Math.round(pc) + ' %' : null, remS].filter(Boolean).join(' · ') || null : null,
             state: raw === 'unavailable' || !states[c.st] || states[c.st].state === 'unavailable' ? 'na' : null });
