@@ -4120,9 +4120,10 @@
       if (!sel.length) return;
       var ha = document.querySelector('home-assistant');
       if (ha && ha.hass) ha.hass.callService('vacuum', 'clean_area', { cleaning_area_id: sel.slice() }, { entity_id: vid });
+      V.started[vid] = { t: Date.now(), n: sel.map(function (a) { var ar = ha && ha.hass && ha.hass.areas && ha.hass.areas[a]; return ar ? ar.name : null; }).filter(Boolean) };
       V.sel[vid] = [];
       box.querySelectorAll('.hv-room.on').forEach(function (r) { r.classList.remove('on'); });
-      el.classList.add('dis'); el.textContent = 'Reinigung gestartet';
+      el.classList.add('hint'); el.textContent = 'Reinigung gestartet';
       return;
     }
     var a = el.getAttribute('data-area');
@@ -4130,10 +4131,28 @@
     if (i === -1) sel.push(a); else sel.splice(i, 1);
     el.classList.toggle('on', i === -1);
     var go = box.querySelector('.hv-go');
-    go.classList.toggle('dis', !sel.length);
+    go.classList.toggle('hint', !sel.length);
     go.textContent = V.goLabel(sel.length);
   };
-  V.goLabel = function (n) { return n ? (n === 1 ? '1 Raum reinigen' : n + ' Räume reinigen') : 'Räume auswählen'; };
+  // Nothing chosen: a hint, not a greyed-out button („Räume auswählen“ read as disabled, owner 01.11.2026).
+  V.goLabel = function (n) { return n ? (n === 1 ? '1 Raum reinigen' : n + ' Räume reinigen') : 'Räume antippen'; };
+  /* Rooms of the running cleaning, as started from this popup; forgotten once the robot is idle again (a minute of
+     grace, the state lags behind the start). */
+  V.started = V.started || {};
+  V.startedRooms = function (vid, busy) {
+    var r = V.started[vid];
+    if (!r) return [];
+    if (!busy && Date.now() - r.t > 60000) { delete V.started[vid]; return []; }
+    return r.n || [];
+  };
+  /* The wheel's room word: „Küche“, „Küche, Bad“, longer lists „Küche +2“ – short enough for the wheel, never cut. */
+  V.roomsWord = function (names) {
+    var tr = window.casoraTr || function (x) { return x; };
+    names = (names || []).filter(Boolean).map(function (x) { return tr(String(x)); });
+    if (!names.length) return '';
+    var all = names.join(', ');
+    return names.length === 1 || all.length <= 16 ? all : names[0] + ' +' + (names.length - 1);
+  };
   V.areas = {};
 
   /* The dial's moons (popup v3): the cleaning mode select (Roborock, Dreame, Ecovacs), else the fan speeds – up to 4,
@@ -4228,12 +4247,17 @@
       if (kind === 'v_stage') {
         var busy = s.run || s.paused;
         var subW = sub.map(function (x) { var ch = (window.casoraTr || String)('lädt'); return String(x).replace(' · ' + ch, ', ' + ch); });
+        // While cleaning the head already says „Reinigt“ (richtlinien §3: head and wheel do not repeat), so the wheel's
+        // word is only the room(s) – whole, never cut („Reinigt Küc…“, owner 01.11.2026) – and area/time the small line.
+        var startedR = V.startedRooms(c.st, busy);
+        var busyW = busy ? V.roomsWord(startedR.length > 1 || !room ? startedR : [room]) : null;
+        var busyP = busy ? [area != null ? U.f(area, 1) + ' m²' : null, mins != null ? U.dur(mins) : null].filter(Boolean).join(', ') : null;
         return UI.stage('progress', { value: busy && pct != null ? String(Math.round(pct)) : value, unit: busy && pct != null ? '%' : '',
-          // The wheel's word has two lines (one per „·“ part): „Akku 93 %, lädt“ stays one part, and when docked the last
+          // Docked, the wheel's word has two lines (one per „·“ part): „Akku 93 %, lädt“ stays one part, and the last
           // cleaning („zuletzt Sa. 26.09., 12:02 Uhr, 20,2 m²“) is the small line under it – as a third part it was cut
           // to „lädt…“ (final review, 01.11.2026).
-          word: [busy && pct != null ? s.label : null].concat(subW.slice(0, busy ? subW.length : 1)).filter(Boolean).join(' · ') || null,
-          program: busy ? null : subW.slice(1).join(' · ') || null,
+          word: busy ? busyW || null : subW.slice(0, 1).join(' · ') || null,
+          program: busy ? busyP || null : subW.slice(1).join(' · ') || null,
           // Dial (richtlinien §4.8): cleaning progress, else the battery as the ring; the cleaning modes as moons.
           progress: busy && pct != null ? Math.max(0, Math.min(1, pct / 100)) : bat != null ? Math.max(0, Math.min(1, bat / 100)) : null,
           action: s.dead ? null : { text: s.run ? 'Pause' : s.paused ? 'Fortsetzen' : 'Start', icon: s.run ? 'mdi:pause' : 'mdi:play', primary: true,
@@ -4377,16 +4401,17 @@
         + '.hv-room.on{background:' + T.ink + ';color:var(--casora-popup-ui-on-ink, #000);}'
         + '.hv-go{margin-top:12px;text-align:center;font-size:16px;font-weight:600;padding:14px;border-radius:var(--casora-popup-row-radius, 20px);cursor:pointer;'
         + 'background:var(--casora-color-teal, #00C3D0);color:#fff;transition:opacity .16s ease;user-select:none;-webkit-user-select:none;}'
-        + '.hv-go.dis{opacity:.35;pointer-events:none;}</style>'
+        // No room chosen yet: the button is a quiet hint („Räume antippen“) – greyed out it looked broken.
+        + '.hv-go.hint{background:none;color:' + T.ink3 + ';font-size:14px;font-weight:500;padding:10px 4px 0;text-align:left;pointer-events:none;}</style>'
         /* Soft: room chips like the scene chips in the light popup, start as a round pill. */
         + (SF ? '<style>.hv-rw{gap:8px;}.hv-room{font-size:13px;font-weight:600;padding:10px 16px;background:var(--casora-lps-chip, var(--casora-soft-row-fill));'
           + 'color:var(--casora-lps-chip-ink, var(--casora-soft-sub));}.hv-room.on{background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, ' + T.ink + ');'
           + 'box-shadow:var(--casora-soft-seg-on-shadow, none);}.hv-go{border-radius:999px;font-size:14px;padding:13px;background:var(--casora-popup-ui-action, #276B64);'
-          + 'color:var(--casora-popup-ui-on-action, #fff);}</style>' : '')
+          + 'color:var(--casora-popup-ui-on-action, #fff);}.hv-go.hint{background:none;color:var(--casora-soft-sub, ' + T.ink3 + ');font-size:13px;padding:10px 4px 0;}</style>' : '')
         + '<div class="hv-rooms" data-vac="' + esc(c.st) + '">' + (SF ? HH.label('Räume reinigen') + '<div><div class="hv-rw">'
           : '<div class="hv-rl">Räume reinigen</div><div style="' + PL + '"><div class="hv-rw">')
         + ids.map(function (a) { return btn('hv-room' + (sel.indexOf(a) !== -1 ? ' on' : ''), esc(hass.areas[a].name), ' data-area="' + esc(a) + '"'); }).join('')
-        + '</div>' + btn('hv-go' + (sel.length ? '' : ' dis'), esc(V.goLabel(sel.length))) + '</div></div>';
+        + '</div>' + btn('hv-go' + (sel.length ? '' : ' hint'), esc(V.goLabel(sel.length))) + '</div></div>';
     }
 
     if (kind === 'v_ctl') {
