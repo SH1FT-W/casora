@@ -193,8 +193,10 @@
     // Dial (richtlinien §4.8): the first running player's volume as the wheel, its cover as the turning record, what
     // plays under it.
     var vol = a.volume_level != null && !isNaN(Number(a.volume_level)) ? Math.round(Number(a.volume_level) * 100) : null;
-    var info = '<div style="text-align:center;min-width:0;">'
-      + '<div style="font-size:17px;font-weight:700;line-height:1.3;overflow-wrap:anywhere;">' + esc(top.line || top.word) + '</div>'
+    // white-space: the button-card field keeps text on one line – a long title ran out of the popup (stress house).
+    // The title takes two lines at most, then „…“.
+    var info = '<div style="text-align:center;min-width:0;white-space:normal;">'
+      + '<div style="font-size:17px;font-weight:700;line-height:1.3;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + esc(top.line || top.word) + '</div>'
       + '<div style="font-size:14px;font-weight:500;color:var(--casora-soft-sub, currentColor);margin-top:4px;">' + esc([top.name, top.room].filter(Boolean).join(' · ')) + '</div></div>';
     return UI.stage('slider', { value: vol || 0, label: 'Lautstärke', word: 'Lautstärke',
       cover: { image: pic || null, spin: !!top.playing },
