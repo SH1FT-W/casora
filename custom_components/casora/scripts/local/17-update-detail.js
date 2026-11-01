@@ -258,6 +258,11 @@
           svc: null, attr: ' data-casora-upd-install="' + esc(id) + '" data-casora-upd-spec="' + esc(JSON.stringify(installSpec(id, st))) + '"' });
       }
       if (!busy) keys.push({ icon: 'mdi:debug-step-over', label: 'Überspringen', svc: { domain: 'update', service: 'skip', data: {}, target: { entity_id: id } } });
+      // KI-Check from the detail page too (before only in the overview's KI section): „Nicht geprüft“ was a dead end.
+      if (!busy && states[AI] && k !== 'running' && typeof window.casoraSvc === 'function') {
+        keys.push({ icon: 'mdi:robot-outline', label: k === 'none' ? 'Jetzt prüfen' : 'Neu prüfen',
+          svc: window.casoraSvc('casora_update_ki_pruefen', { entity_id: id }) });
+      }
       return keys.length ? pills(keys) : '';
     }
     if (part === 'notes') {
