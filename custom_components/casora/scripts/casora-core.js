@@ -8032,6 +8032,9 @@ window.casoraMenuGlass = {
       // Detail round #8: a tile without an entity (waste, updates, vehicle …) or whose entity has no word and no change
       // since HA's start says what its tile says („Restmüll morgen“, „Aktuell“) – §3: a status line in every popup.
       if (!cur) { var tw = this._tileWord(); if (tw) put(tw); return; }
+      // A lamp's popup: its dial already says „An“/„Aus“ and the brightness, and the lamp is marked in its room's list
+      // – no second state word under the name (owner, 01.11.2026).
+      if (String(cur.entity_id || '').indexOf('light.') === 0) return;
       // The word as in the word list (window.casoraStateWord, also the search rows); null = says since when instead.
       var txt = window.casoraStateWord(h, cur);
       if (txt === '') return;
