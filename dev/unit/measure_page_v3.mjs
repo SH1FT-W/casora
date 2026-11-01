@@ -13,7 +13,7 @@ assert.match(chartColor({ attributes: { device_class: 'humidity' } }), /casora-c
 assert.match(chartColor({ attributes: { device_class: 'carbon_dioxide' } }), /casora-color-teal/);
 assert.equal(chartColor({ attributes: { device_class: 'power' } }), '', 'else the chart\'s own colour');
 assert.ok(src.includes("color: Z.chartColor(st) }]"), 'measurement page uses it');
-assert.ok(/back, roomV \|\| areaOf\(h, id\) \|\| ''\)/.test(src), 'label: the room, else the HA area');
+assert.ok(/roomV = roomV \|\| areaOf\(h, id\) \|\| '';/.test(src) && /if \(roomV\) cfgV\.eyebrow = roomV;/.test(src), 'label: the room, else the HA area (also behind ‹, issue 106)');
 const ch = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/27-chart.js', import.meta.url), 'utf8');
 assert.ok(ch.includes("String(color || '').trim() || auto || STEPS[i % 4]"), 'chart tile: first series without a colour');
 console.log('measure_page_v3: ok');

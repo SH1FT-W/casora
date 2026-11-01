@@ -16,9 +16,14 @@ for (let i = 0; i < 40; i++) states['sensor.s' + i] = { last_changed: iso(start 
 for (let i = 0; i < 10; i++) states['sensor.t' + i] = { last_changed: iso(now - (i + 2) * 3600000 - 7 * 60000) };
 globalThis.window = {};
 globalThis.document = { querySelector: () => ({ hass: { states } }) };
+// The start-time rule lives in the shared casoraSinceMs (issue 106: head and stages say the same time).
+const c0 = core.indexOf('  var startC = '), c1 = core.indexOf('  window.casoraStateWord = ', c0);
+assert.ok(c0 > 0 && c1 > c0, 'casoraSinceMs');
+new Function(core.slice(c0, c1))();
 const CasoraPopup = {};
 const since = new Function('CasoraPopup', 'return function (cur) {' + body + '\n};')(CasoraPopup);
 assert.equal(since({ last_changed: iso(start + 5000) }), '', 'the restart minute: no „Seit“');
+assert.equal(window.casoraSinceMs({ last_changed: iso(start + 5000) }), null, 'stages get no time for the restart minute either');
 assert.match(since({ last_changed: iso(now - 11 * 60000) }), /^Vor 11 Min\.$/, 'under an hour: „Vor 11 Min.“');
 assert.match(since({ last_changed: iso(now - 5 * 3600000) }), /^Seit /, 'a real change hours ago: „Seit …“');
 assert.match(core, /\(seit\|zuletzt\|vor \\d\|gerade eben\)\/i\.test\(stageAll\)/, 'the head drops its part when the stage says a time');

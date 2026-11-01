@@ -211,7 +211,8 @@
     var k = T(), UI = k.UI, S = states(), e = S[id] || { state: 'unavailable', attributes: {} };
     var s = String(e.state || '').toLowerCase(), a = e.attributes || {};
     var lv = level(id, s);
-    var since = L.when(e.last_changed);
+    // issue 106: the same time as the popup head (casoraSinceMs: nothing after HA's start).
+    var since = L.when(window.casoraSinceMs ? window.casoraSinceMs(e) : e.last_changed);
     var today = dayStart().getTime();
     // Statuszeile: Zustand · seit … · wer (nur wenn der letzte Eintrag den jetzigen Zustand belegt).
     var lastEv = ev && ev.length ? ev[ev.length - 1] : null;

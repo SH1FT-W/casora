@@ -173,7 +173,7 @@
     if (!st) return null;
     var key = pid + '|' + st.last_changed;
     var hit = hist[pid];
-    if (hit && hit.key === key) { if (el && hit.busy) hit.wait.push(el); return hit.list; }
+    if (hit && hit.key === key) { if (el && hit.busy) hit.wait.push(el); return P.withNow(hit.list, st); }
     hist[pid] = { key: key, list: hit ? hit.list : null, busy: true, wait: el ? [el] : [] };
     if (!hass.callApi) return hist[pid].list;
     var start = new Date(Date.now() - 3 * 86400000), now = Date.now();
@@ -201,7 +201,16 @@
         });
         h.wait = [];
       }).catch(function () { if (hist[pid] && hist[pid].key === key) hist[pid].busy = false; });
-    return hist[pid].list;
+    return P.withNow(hist[pid].list, st);
+  };
+  // issue 106: the newest place is always where the person is now, also when the recorder has not written it yet.
+  P.withNow = function (list, st) {
+    if (!list || !st || bad(st.state)) return list;
+    var top = list[0];
+    if (top && top.state === st.state) return list;
+    var lc = Date.parse(st.last_changed), t = Math.max(isFinite(lc) ? lc : Date.now(), top ? top.start : 0);
+    var prev = top ? [Object.assign({}, top, { end: t })] : [];
+    return [{ state: st.state, start: t, end: null }].concat(prev, list.slice(1));
   };
 
   // ── Popup ─────────────────────────────────────────────────────────────────

@@ -272,7 +272,8 @@
   AL.line = function (ent, states) {
     var UI = window._casoraUI, s = states && states[ent];
     if (!UI || !UI.line || !s) return '';
-    var w = AL.since(s.last_changed);
+    // issue 106: the same time the other popups say (casoraSinceMs: nothing after HA's start).
+    var w = AL.since(window.casoraSinceMs ? window.casoraSinceMs(s) : s.last_changed);
     return w ? UI.line(w, []) : '';
   };
   // Field „quick“: every arm mode the panel supports (supported_features: away, home, night, vacation, custom bypass) –
