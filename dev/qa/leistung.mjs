@@ -212,11 +212,7 @@ async function load(page, url, net) {
   // LEISTUNG_STAPEL=1: where the full walks during loading come from (top 10).
   const herkunft = process.env.LEISTUNG_STAPEL ? await page.evaluate(() => Object.entries(window.__lp.qsaBy || {}).sort((x, y) => y[1] - x[1]).slice(0, 10)) : undefined;
   page.off('websocket', onWs);
-<<<<<<< HEAD
-  return { herkunft, firstTile: +r.firstTile.toFixed(0), localLoaded: r.localLoaded && +r.localLoaded.toFixed(0), settled: +settled.toFixed(0), dcl: r.dcl && +r.dcl.toFixed(0),
-=======
-  return { firstTile: +r.firstTile.toFixed(0), localLoaded: r.localLoaded && +r.localLoaded.toFixed(0), localStarted: r.localStarted && +r.localStarted.toFixed(0), settled: +settled.toFixed(0), dcl: r.dcl && +r.dcl.toFixed(0),
->>>>>>> r5-ladezeit3
+  return { herkunft, firstTile: +r.firstTile.toFixed(0), localLoaded: r.localLoaded && +r.localLoaded.toFixed(0), localStarted: r.localStarted && +r.localStarted.toFixed(0), settled: +settled.toFixed(0), dcl: r.dcl && +r.dcl.toFixed(0),
     renders: Object.values(s.renders).reduce((a, b) => a + b, 0), bc: s.renders['button-card'] || 0, renderMs: +Object.values(s.rtime).reduce((a, b) => a + b, 0).toFixed(0),
     evalN: s.evalN, evalMs: +s.evalMs.toFixed(0), longN: r.longN, longMs: r.longMs, ws: wsBytes, qsaStar: s.qsaStar, ruLeer: s.ruLeer, abgewiesen: s.perform - (s.renders['button-card'] || 0) };
 }
