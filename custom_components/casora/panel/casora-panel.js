@@ -2384,7 +2384,7 @@ const SECTIONS = [
       // phone's header, casoraPhoneRoom.home() carries it before the next save. Empty = on.
       { key: "show_search", sub: "phone", label: "Show search", type: "bool",
         boolDefault: true, auto: true, scope: "dashboard",
-        hint: "A search field under the title of the phone's Home: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search." },
+        hint: "Pull down at the top of the phone's Home to show a search field: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search." },
       { key: "room_groups", sub: "phone", label: "Group rooms by category on the phone", type: "bool",
         boolDefault: false, auto: true, scope: "dashboard",
         hint: "Like Apple's Home app: Light, Climate, Security … each with a small heading. Off shows all devices under one heading." },

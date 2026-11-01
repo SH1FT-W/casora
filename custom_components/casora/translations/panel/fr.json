@@ -2856,7 +2856,7 @@
     "Exporting…": "Exportation…",
     "Importing…": "Importation…",
     "Show search": "Afficher la recherche",
-    "A search field under the title of the phone's Home: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search.": "Un champ de recherche sous le titre de l'accueil sur le téléphone : pièces, appareils et scènes. Sur un ordinateur, Cmd+K ou Ctrl+K ouvre la même recherche."
+    "Pull down at the top of the phone's Home to show a search field: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search.": "Tirez vers le bas en haut de l'accueil sur le téléphone pour afficher un champ de recherche : pièces, appareils et scènes. Sur un ordinateur, Cmd+K ou Ctrl+K ouvre la même recherche."
   },
   "patterns": [
     [

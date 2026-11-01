@@ -2856,7 +2856,7 @@
     "Exporting…": "Eksportowanie…",
     "Importing…": "Importowanie…",
     "Show search": "Pokaż wyszukiwanie",
-    "A search field under the title of the phone's Home: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search.": "Pole wyszukiwania pod tytułem strony głównej na telefonie: pokoje, urządzenia i sceny. Na komputerze Cmd+K lub Ctrl+K otwiera to samo wyszukiwanie."
+    "Pull down at the top of the phone's Home to show a search field: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search.": "Pociągnij w dół u góry strony głównej na telefonie, aby pokazać pole wyszukiwania: pokoje, urządzenia i sceny. Na komputerze Cmd+K lub Ctrl+K otwiera to samo wyszukiwanie."
   },
   "patterns": [
     [
