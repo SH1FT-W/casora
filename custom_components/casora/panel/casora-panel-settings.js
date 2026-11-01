@@ -1507,36 +1507,6 @@
       this._csBar();
     };
 
-    // Bring a search hit (data-pkey) to the top of its page. A smooth scroll stops where it is when the page below
-    // it is drawn again (the sheet fills twice: once at once, once after loading), so on the phone the hit stayed
-    // far below. Checked again while the page settles; a finger or wheel on the page ends it (the user scrolls).
-    const focusScroll = (at) => {
-      const scroller = (() => {
-        for (let e = at.parentElement; e; e = e.parentElement) {
-          if (e.scrollHeight > e.clientHeight + 4 && /auto|scroll/.test(getComputedStyle(e).overflowY)) return e;
-        }
-        return null;
-      })();
-      let user = false;
-      const mine = () => { user = true; };
-      const opts = { passive: true, capture: true };
-      if (scroller) ["touchstart", "wheel", "pointerdown", "keydown"].forEach((ev) => scroller.addEventListener(ev, mine, opts));
-      const go = (smooth) => {
-        if (user || !at.isConnected) return;
-        const box = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: innerHeight };
-        const r = at.getBoundingClientRect();
-        if (smooth || r.top < box.top - 2 || r.top > box.top + (box.bottom - box.top) / 3) {
-          at.scrollIntoView({ block: "start", behavior: smooth ? "smooth" : "auto" });
-        }
-      };
-      requestAnimationFrame(() => go(true));
-      setTimeout(() => go(false), 900);
-      setTimeout(() => {
-        go(false);
-        if (scroller) ["touchstart", "wheel", "pointerdown", "keydown"].forEach((ev) => scroller.removeEventListener(ev, mine, opts));
-      }, 1800);
-    };
-
     P._csOpenPage = async function (pageId, focus) {
       if (this._cvOpen && this._cvClose) {
         this._cvLeaving = true;
@@ -1566,11 +1536,11 @@
       if (!this._csOpen) return;
       if (focus) {
         const at = this.$("pane").querySelector('[data-pkey="' + focus + '"]');
-        if (at) {
-          focusScroll(at);
+        if (at) requestAnimationFrame(() => {
+          at.scrollIntoView({ block: "start", behavior: "smooth" });
           at.classList.add("casora-pfocus");
           setTimeout(() => at.classList.remove("casora-pfocus"), 1600);
-        }
+        });
       }
     };
 
@@ -1801,7 +1771,7 @@
       if ((await this._csLoad()) && this._csSheetPage === page.id && host.isConnected) { fill(); this._csBar(); }
       if (focus) {
         const at = host.querySelector('[data-pkey="' + focus + '"]');
-        if (at) focusScroll(at);
+        if (at) requestAnimationFrame(() => at.scrollIntoView({ block: "start", behavior: "smooth" }));
       }
     };
 
