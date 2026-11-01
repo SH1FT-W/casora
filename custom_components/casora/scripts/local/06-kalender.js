@@ -256,7 +256,7 @@
   // Section heading over a plate: the popup's label margin (v3: 16 in, 8 to the plate – like „Tonnen“ under it, popup-geo
   // „etikett“); the month's title inside its own plate keeps 6 / 10 (inPlate).
   var sHead = function (t, right, inPlate) {
-    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:' + (inPlate ? '0 6px 10px' : 'var(--casora-pv-label-m, 0 6px 10px)') + ';min-height:20px;">'
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:' + (inPlate ? '0 6px 10px;min-height:20px' : 'var(--casora-pv-label-m, 0 6px 10px)') + ';">'
       + '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));text-align:left;">'
       + t + '</div>' + (right || '') + '</div>';
   };
