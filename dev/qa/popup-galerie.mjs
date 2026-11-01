@@ -7,6 +7,8 @@
 //   node dev/qa/popup-galerie.mjs pruefen [--handy|--ipad] [--hell] [--nur <regex>] [--md <file>] [--json <file>] [--bilder <dir>]
 //                                                    --ipad: iPad portrait 820 (desktop dashboard), --hell: light scheme,
 //                                                    --konsole: print page and console errors
+//                                                    --groesse WxH: other desktop/tablet window; --spalten: column balance
+//                                                    per popup (dev/qa/popup-spalten.mjs) into the --json results
 //                                                    taps every opener (Playwright) and lists: opens / does not open / device missing
 //
 // Like dev/qa/matrix-bilder.mjs --vorbereiten: cards are taken from the house's own dashboards (the Studio's output) when a
@@ -16,6 +18,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { tokens, ws } from './ws.mjs';
+import { MEASURE_COLS, WEATHER_ORDER } from './popup-spalten.mjs';
 
 const argv = process.argv;
 const arg = (k, d) => { const i = argv.indexOf('--' + k); return i > 0 ? argv[i + 1] : d; };
@@ -396,8 +399,10 @@ async function pruefen() {
   const HANDY = flag('handy');
   const NUR = arg('nur') ? new RegExp(arg('nur')) : null;
   const IPAD = flag('ipad'), DARK = !flag('hell');
+  // --groesse WxH: any desktop/tablet window (e.g. 1024x768, 1180x820) instead of 1440x900.
+  const GR = (arg('groesse') || '').match(/^(\d+)x(\d+)$/);
   const { browser, page: pg } = await H.open(HANDY ? { width: 393, height: 852, mobile: true, safari: true, dark: DARK }
-    : IPAD ? { width: 820, height: 1180, dark: DARK } : { width: 1440, height: 900, dark: DARK });
+    : IPAD ? { width: 820, height: 1180, dark: DARK } : GR ? { width: +GR[1], height: +GR[2], dark: DARK } : { width: 1440, height: 900, dark: DARK });
   // --konsole: print page errors and console errors as they come (why does a popup not open?).
   if (flag('konsole')) {
     pg.on('pageerror', (e) => console.log('  [pageerror] ' + String(e.message || e).slice(0, 300)));
@@ -416,6 +421,10 @@ async function pruefen() {
   const hold = async (b) => { await pg.mouse.move(b.x + b.w / 2, b.y + b.h / 2); await pg.mouse.down(); await sleep(900); await pg.mouse.up(); };
   // --bilder <dir>: one picture per opened popup (review page), after the open animation has settled.
   const snap = async (res, it) => {
+    // --spalten: column balance of the two-column layout (dev/qa/popup-spalten.mjs), after the plates settled.
+    if (flag('spalten') && res.spalten === undefined) { await sleep(2200); res.spalten = await pg.evaluate(MEASURE_COLS).catch((e) => ({ err: String(e) })); }
+    // --wetter-spalten: the weather popup's column order (dev/qa/regress/r452_popup_spalten.mjs).
+    if (flag('wetter-spalten') && res.wetterSpalten === undefined) { await sleep(2200); res.wetterSpalten = await pg.evaluate(WEATHER_ORDER).catch(() => null); }
     if (!arg('bilder')) return;
     await pg.waitForTimeout(1600);
     res.bild = it.id + (HANDY ? '-handy' : IPAD ? '-ipad' : '') + (DARK ? '' : '-hell') + '.png';
@@ -547,11 +556,12 @@ async function pruefen() {
         at = null;
       }
       if (res.status === 'öffnet') { const i = await popupInfo(); if (i) { res.art = i.art; res.titel = i.titel; } }
-      if (res.status === 'öffnet' && !res.bild) await snap(res, it);
+      if (res.status === 'öffnet' && !res.bild && res.spalten === undefined && res.wetterSpalten === undefined) await snap(res, it);
     } catch (e) { res.status = 'Fehler'; res.grund = String(e.message || e).slice(0, 200); at = null; }
     await closeAll(); await pg.keyboard.press('Escape').catch(() => {});
     out.push(res);
     console.log(`${res.status.padEnd(12)} W${it.w} ${it.popup}${res.art ? ' – ' + res.art : ''}${res.grund ? ' (' + res.grund + ')' : ''}`);
+    if (arg('json')) fs.writeFileSync(arg('json'), JSON.stringify(out, null, 1)); // partial results survive an abort
   }
   await browser.close();
   const n = (s) => out.filter((r) => r.status === s).length;

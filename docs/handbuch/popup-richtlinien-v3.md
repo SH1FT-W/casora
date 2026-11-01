@@ -56,6 +56,11 @@ erst die Grundsätze, dann die Teile von oben nach unten, dann Maße, Zustände 
 Die Spalten beginnen auf derselben Höhe (v2 Regel 12, `UI.colsMark`). Am Handy ist das Popup ein Sheet von unten mit
 Griff (vorhanden im Rahmen).
 
+Leere Flächen (01.11.2026): Unter der kürzeren Spalte soll kein großer leerer Block stehen. Gemessen wird mit
+`dev/qa/popup-galerie.mjs pruefen --spalten` (Unterkanten beider Spalten, `dev/qa/popup-spalten.mjs`); der Regeltest
+`dev/qa/regress/r452_popup_spalten.mjs` lässt höchstens 200 px zu, die am 01.11. gemessenen Ausreißer stehen dort als
+Obergrenze, die nicht wachsen darf. Unter dem Rad steht immer zuerst der Verlauf (§7.1), auch beim Wetter.
+
 Breite (Prüfung 2, 01.11.2026): Die Layout-Bausteine (`HH.layout`, `_casoraSoftKit.layout`) legen jede Liste rechts ab;
 bleibt rechts nichts, wird das Popup einspaltig und 552 breit (`casora_cols: 1`, liest der Rahmen). Unterseiten ohne eigene
 Breite behalten die Breite der Seite davor; die Leer-Zeile allein ist immer 552. Schmale Fenster: `min(Breite, 100vw − 16)`
