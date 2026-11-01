@@ -708,7 +708,7 @@
     // so Studio and popup never disagree. LOAD names the script of a module the Studio does not load
     // by itself; the finder (00-finder.js) comes first, it holds the registry.
     // New automatic popup: filter its rows in the module + register() there, add its script here if needed.
-    const LOAD = { casora_vent: "/casora_scripts/local/05-standard-medien.js" };
+    const LOAD = { casora_vent: "local/05-standard-medien.js" };
     const loading = new Set();
     P._popupHideRows = function (tile, type, advRow) {
       const tpl = tile && typeof tile.template === "string" ? tile.template : null;
@@ -720,7 +720,7 @@
         if (!loading.has(tpl)) {
           loading.add(tpl);
           const steps = (H ? Promise.resolve() : (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/00-finder.js"))
-            .then(() => (LOAD[tpl] ? import(LOAD[tpl]) : null));
+            .then(() => (LOAD[tpl] ? (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))(LOAD[tpl]) : null));
           steps.then(() => { loading.delete(tpl); this._renderForm(); }, () => { /* without the module no list */ });
         }
         const h = document.createElement("span");
