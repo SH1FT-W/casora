@@ -15,6 +15,12 @@
 // Dazu Auto und 3D-Drucker: Auto zeigt den Tank als dieselbe Leiste („Tank 19 %“, rechts leer, ab 15 % im
 // Warn-Ton) statt des Blocks; der Drucker zeigt die Restzeit groß im Kopf und „42 %“/„Fertig gegen“ an der
 // Leiste, die Zeile „Fertig gegen“ unter „Druck“ entfällt.
+// v3 (31.10.2026, popup-richtlinien-v3 §4 S4/§4.8): the 6-px bar under the head is replaced by the stage – the progress
+// is the ring of the dial (level, not turnable), the remaining time large in its middle with the program, „25 %“ and
+// „Fertig gegen … Uhr“ under it. Still checked: progress visible without a fake slider block, percent and finish time,
+// no doubled phase/program rows, forecast as one row, care right (only what is due), lists right (§2: left only the
+// stage), the calm two-step „Programm abbrechen“ pill, the phone in one column without scrolling far. Dropped with v3:
+// bar geometry and the column balance (left holds only the stage).
 import { open, casoraDashboards, dashboard, cards, fakeStates, check, need, finish } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -24,7 +30,6 @@ const phone = desk && all.find((d) => d.mobile && d.url === desk.url + '-mobile'
 await need('Dashboard mit Geschirrspüler und Waschmaschine (Desktop + Handy)', desk && phone, all.map((d) => d.url));
 
 const TPL = { dish: 'casora_geschirrspueler', wash: 'casora_waschmaschine', dry: 'casora_trockner' };
-const ROW = 58, GAP = 8;
 
 // Entitäten der Kachel über die Module auflösen (keine festen IDs), dann „läuft“ nur im Browser unterschieben.
 const runningPatch = (pg, tpl) => pg.evaluate((t) => {
@@ -133,6 +138,13 @@ const measure = (pg) => pg.evaluate(() => {
     if (/^(NACHFÜLLEN & PFLEGE|LETZTE DURCHGÄNGE|PROGRAMME|DURCHGANG|VERLAUF|DRUCK)$/.test(t) && !out.labels[t]) out.labels[t] = box(e);
   });
   out.careLabel = out.labels['NACHFÜLLEN & PFLEGE'] || null;
+  // v3 stage (S4 dial): box, ring level (data-pct), text of its middle and under it.
+  const st = window.__pierce('[data-casora-stage="S4"]', root).filter(vis)[0];
+  if (st) {
+    const dl = st.querySelector('.hui-dl[role="progressbar"]');
+    out.stage = { ...box(st), dial: st.getAttribute('data-casora-dial'), pct: dl ? Number(dl.getAttribute('aria-valuenow')) : null,
+      text: [...st.querySelectorAll('*')].filter((e) => e.children.length === 0 && vis(e)).map((e) => e.textContent.trim()).filter(Boolean).join(' | ') };
+  }
   return out;
 });
 // Sand = fast durchsichtig (Alpha < 0,5) oder wenig Farbe; Rot = kräftig und rot.
@@ -156,15 +168,13 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
     const m = await measure(page);
     await check(dev + ': Weich-Aufbau mit Spalten', m && m.areas.left && m.areas.right, m && m.areas);
     if (!m || !m.areas.left) { await closePopup(page); continue; }
-    await check(dev + ': Leiste unter dem Kopf, 6 px hoch', m.track && m.track.h === 6, m.track);
-    await check(dev + ': Leiste so breit wie der Inhalt (±20 px)', m.track && m.grid && Math.abs(m.track.w - m.grid.w) <= 20, { track: m.track, grid: m.grid });
-    await check(dev + ': Leiste zwischen Kopf und Spalten', m.track && m.areas.hero && m.track.y > m.areas.hero.y + m.areas.hero.h - 1 && m.track.y < m.areas.left.y, { track: m.track, hero: m.areas.hero, left: m.areas.left });
-    await check(dev + ': Prozent links und „Fertig gegen“ rechts an der Leiste', /^\d+ %\s*Fertig gegen \d\d:\d\d Uhr$/.test(m.pbarText || ''), m.pbarText);
+    const want = Number((Object.values(pr.p).find((x) => /^\d+(\.\d+)?$/.test(x.state) && +x.state > 10) || {}).state);
+    await check(dev + ': Fortschritt als Ring der Bühne (S4, nicht drehbar)', m.stage && m.stage.dial === 'level' && m.stage.x < m.areas.right.x
+      && (!want || Math.abs(m.stage.pct - want) <= 2), { stage: m.stage, want });
+    await check(dev + ': Prozent und „Fertig gegen … Uhr“ auf der Bühne', m.stage && /\d+\s%/.test(m.stage.text) && /Fertig gegen \d\d:\d\d Uhr/.test(m.stage.text), m.stage && m.stage.text);
+    await check(dev + ': Restzeit groß auf der Bühne', m.stage && /übrig/.test(m.stage.text), m.stage && m.stage.text);
     await check(dev + ': kein Verlaufsblock (HH.bar) mehr', m.blocks === 0 && m.block66 === 0, { blocks: m.blocks, block66: m.block66 });
     await check(dev + ': Zeilen „Phase“/„Programm“ nicht doppelt zur Kopfzeile', !m.rows.some((r) => /^(Phase|Programm) (?!abbrechen)/.test(r)), m.rows.filter((r) => /^(Phase|Programm) (?!abbrechen)/.test(r)));
-    const diff = Math.abs(m.areas.left.h - m.areas.right.h);
-    const limit = 1.5 * ROW + 2 * GAP;
-    await check(dev + ': Spalten ausgeglichen (Differenz ≤ ' + Math.round(limit) + ' px)', diff <= limit, { left: m.areas.left.h, right: m.areas.right.h, diff });
     if (dev === 'dish') {
       if (pr.estimates) {
         const lv = m.labels['VERLAUF'];
@@ -178,11 +188,12 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
     } else {
       if (pr.washdata) {
         const lc = m.labels['LETZTE DURCHGÄNGE'], lp = m.labels['PROGRAMME'];
-        await check(dev + ': letzte Durchgänge links, Programme rechts', lc && lp && lc.x < m.areas.right.x && lp.x >= m.areas.right.x - 2, { cycles: lc, progs: lp, right: m.areas.right });
+        await check(dev + ': letzte Durchgänge und Programme als Listen rechts (links nur die Bühne)', lc && lp && lc.x >= m.areas.right.x - 2 && lp.x >= m.areas.right.x - 2, { cycles: lc, progs: lp, right: m.areas.right });
       }
     }
     if (pr.stop) {
-      await check(dev + ': „Programm abbrechen“ als Pille am Ende der linken Spalte', m.leftLast && m.leftLast.hasPill && m.pill && m.pill.h >= 46 && m.pill.h <= 50, { last: m.leftLast, pill: m.pill });
+      await check(dev + ': „Programm abbrechen“ als Pille (46–50 hoch), nicht auf der Bühne', m.pill && m.pill.h >= 46 && m.pill.h <= 50
+        && !(m.stage && m.pill.y >= m.stage.y && m.pill.y < m.stage.y + m.stage.h && m.pill.x < m.stage.x + m.stage.w), { pill: m.pill, stage: m.stage });
       await check(dev + ': Pille ruhig (Sand, nicht rot), Radius rund', m.pill && !red(m.pill.bg) && sand(m.pill.bg) && parseFloat(m.pill.radius) >= 24, m.pill);
       // Antippen: Bestätigen fährt rechts herein, erst dort die Warnfarbe; nichts wird ausgelöst.
       await page.mouse.click(m.pill.x + m.pill.w / 2, m.pill.y + m.pill.h / 2);
@@ -213,13 +224,9 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
       await page.waitForTimeout(800);
       await check('Auto ' + v + ' %: Popup offen', await openPopup(page, 'casora_car', false));
       const m = await measure(page);
-      await check('Auto ' + v + ' %: Leiste 6 px unter dem Kopf, volle Breite', m && m.track && m.track.h === 6 && m.grid && Math.abs(m.track.w - m.grid.w) <= 20, m && { track: m.track, grid: m.grid });
-      await check('Auto ' + v + ' %: „Tank/Akku ' + v + ' %“ links, rechts leer', m && new RegExp('^(Tank|Akku) ' + v + ' %$').test(m.pbarText || ''), m && m.pbarText);
+      // v3: the tank level is in the popup's text (stage/list, r89 checks the car popup itself); no fake slider block.
+      await check('Auto ' + v + ' %: Tank/Akku ' + v + ' % im Popup', m && new RegExp('\\b' + v + '\\s?%').test(m.text || ''), m && m.text);
       await check('Auto ' + v + ' %: kein Verlaufsblock', m && m.blocks === 0 && m.block66 === 0, m && { blocks: m.blocks, block66: m.block66 });
-      const rgb = String(m && m.fill).match(/(\d+)\D+(\d+)\D+(\d+)/);
-      // Warn-Ton = warmer Ton (Rot > Grün > Blau), Akzent ist Petrol (Grün/Blau vorn).
-      const orange = !!rgb && +rgb[1] > +rgb[2] && +rgb[2] > +rgb[3] && +rgb[1] - +rgb[3] > 80;
-      await check('Auto ' + v + ' %: ' + (warn ? 'Warn-Ton' : 'Akzent, kein Warn-Ton'), warn ? orange : !orange, m && m.fill);
       await closePopup(page);
     }
   } else console.log('  info   Auto: kein Dashboard mit Auto-Kachel in diesem Testhaus – Auto-Leiste nicht geprüft (Auto-Popup prüft r89)');
@@ -247,9 +254,9 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
     await page.waitForTimeout(800);
     await check('Drucker: Popup offen', await openPopup(page, 'casora_3d_printer', false));
     const m = await measure(page);
-    await check('Drucker: Restzeit groß im Kopf', m && /Std\. übrig$/.test(m.heroUnit || ''), m && m.heroUnit);
-    await check('Drucker: Leiste 6 px unter dem Kopf', m && m.track && m.track.h === 6 && m.areas.hero && m.track.y > m.areas.hero.y + m.areas.hero.h - 1, m && { track: m.track, hero: m.areas.hero });
-    await check('Drucker: „42 %“ links, „Fertig gegen“ rechts', m && /^42 %\s*Fertig gegen \d\d:\d\d Uhr$/.test(m.pbarText || ''), m && m.pbarText);
+    await check('Drucker: Restzeit groß auf der Bühne', m && m.stage && /Std\. übrig/.test(m.stage.text), m && m.stage);
+    await check('Drucker: Fortschritt 42 als Ring der Bühne', m && m.stage && m.stage.dial === 'level' && Math.abs(m.stage.pct - 42) <= 1, m && m.stage);
+    await check('Drucker: „42 %“ und „Fertig gegen“ auf der Bühne', m && m.stage && /42\s%/.test(m.stage.text) && /Fertig gegen \d\d:\d\d Uhr/.test(m.stage.text), m && m.stage && m.stage.text);
     await check('Drucker: keine Zeile „Fertig gegen“ unter „Druck“', m && !m.rows.some((r) => /^Fertig gegen/.test(r)), m && m.rows);
     await closePopup(page);
   } else await check('Drucker: Kachel im Dashboard', false);
@@ -284,12 +291,13 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
     await check(dev + ' Handy: Popup offen', await openPopup(page, tpl, true));
     const m = await measure(page);
     await check(dev + ' Handy: einspaltig (rechte Spalte unter der linken)', m && m.grid && m.grid.cols === 1 && m.areas.left && (!m.areas.right || m.areas.right.y >= m.areas.left.y + m.areas.left.h - 1), m && { grid: m.grid, areas: m.areas });
-    await check(dev + ' Handy: Leiste 6 px, volle Breite', m && m.track && m.track.h === 6 && m.grid && Math.abs(m.track.w - m.grid.w) <= 20, m && { track: m.track, grid: m.grid });
+    await check(dev + ' Handy: Fortschritt als Ring der Bühne, Prozent und „Fertig gegen“', m && m.stage && m.stage.dial === 'level' && /\d+\s%/.test(m.stage.text)
+      && /Fertig gegen/.test(m.stage.text), m && m.stage);
     await check(dev + ' Handy: kein Verlaufsblock', m && m.blocks === 0 && m.block66 === 0, m && { blocks: m.blocks, block66: m.block66 });
     if (dev === 'dish') {
       await check('dish Handy: Pflege nur Fälliges oder „Alles aufgefüllt“ (keine volle Liste)', m && !(['Regeneriersalz', 'Klarspüler', 'Filter', 'Maschinenpflege'].every((w) => m.rows.some((r) => r.indexOf(w) === 0))), m && m.rows);
-      // Muster v2 (Regel 8): „Einstellungen · Weitere Einstellungen“ als letzter Abschnitt – höchstens dieser Abschnitt liegt unter dem Rand.
-      await check('dish Handy: laufender Geschirrspüler scrollt höchstens um den Einstellungen-Abschnitt', m && m.scrollH != null && m.scrollH <= m.clientH + 110, m && { scrollH: m.scrollH, clientH: m.clientH });
+      // v3: no settings section any more; the sheet holds stage and lists – at most the last list section lies below the edge.
+      await check('dish Handy: laufender Geschirrspüler scrollt höchstens um einen Listenabschnitt', m && m.scrollH != null && m.scrollH <= m.clientH + 140, m && { scrollH: m.scrollH, clientH: m.clientH });
     }
     await closePopup(page);
   }

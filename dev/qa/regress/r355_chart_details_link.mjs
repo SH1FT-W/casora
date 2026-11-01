@@ -4,6 +4,8 @@
 // tapping it did nothing. Expected: „Details ›“ opens the reading's own page (Casora measurement page, header changes,
 // ‹ back) – air purifier and fan (plant and batteries for the back step too), desktop 1440 and phone 393. Then (owner, prod): after ‹ back the chart card stayed
 // empty – expected: the chart is drawn again (a curve, like #68 in the weather popup).
+// v3 (01.11.2026): the plant popup is an S6 stage – its chart sits on the stage without a head (no „Details ›“,
+// §7.2); the way to the reading's page is the reading row in „Messwerte“. For the plant the test taps that row.
 import { open, casoraDashboards, dashboard, check, need, finish, usePage, shot } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -14,7 +16,8 @@ for (const [w, h, dev] of [[1440, 900, 'Desktop'], [393, 852, 'Handy']]) {
   usePage(page);
   await dashboard(page, desk.url);
   for (const tpl of ['casora_air_purifier', 'casora_fan', 'casora_popup_plant', 'casora_popup_battery']) {
-    const r = await page.evaluate(async (tpl) => {
+    const SEL = tpl === 'casora_popup_plant' ? '.hui-row[data-casora-mi^="sensor."]' : '.hp-det';
+    const r = await page.evaluate(async ([tpl, SEL]) => {
       const ha = document.querySelector('home-assistant');
       const st = ha.hass.states;
       const ids = Object.keys(st).filter((k) => tpl === 'casora_popup_plant' ? k.startsWith('plant.')
@@ -29,7 +32,7 @@ for (const [w, h, dev] of [[1440, 900, 'Desktop'], [393, 852, 'Handy']]) {
           if (act && act.casora_popup && window.casoraPopup) { ev.stopPropagation(); window.casoraPopup.open(act.casora_popup); } }, { capture: true, once: true });
         el._handleAction({ detail: { action: 'tap' } }, { isIcon: false });
         let det = null;
-        for (let i = 0; i < 40 && !det; i++) { await new Promise((res) => setTimeout(res, 200)); det = window.casoraPopup && window.casoraPopup.surface && window.__pierce('.hp-det', window.casoraPopup.surface)[0]; }
+        for (let i = 0; i < 40 && !det; i++) { await new Promise((res) => setTimeout(res, 200)); det = window.casoraPopup && window.casoraPopup.surface && window.__pierce(SEL, window.casoraPopup.surface)[0]; }
         if (!det) { if (window.casoraPopup) window.casoraPopup.close(); el.remove(); await new Promise((res) => setTimeout(res, 500)); continue; }
         await new Promise((res) => setTimeout(res, 900));
         const pop = window.casoraPopup.element;
@@ -38,10 +41,10 @@ for (const [w, h, dev] of [[1440, 900, 'Desktop'], [393, 852, 'Handy']]) {
         return { fid, t0, mi, el: true };
       }
       return null;
-    }, tpl);
-    if (!r) { await check(dev + ' ' + tpl + ': Popup mit „Details ›“ gefunden', false, r); continue; }
+    }, [tpl, SEL]);
+    if (!r) { await check(dev + ' ' + tpl + ': Popup mit „Details ›“ (Pflanze: Messwert-Zeile) gefunden', false, r); continue; }
     // A real tap, like a finger/mouse (centre of the link).
-    const box = await page.evaluate(() => { const d = window.__pierce('.hp-det', window.casoraPopup.surface)[0]; const b = d.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; });
+    const box = await page.evaluate((SEL) => { const d = window.__pierce(SEL, window.casoraPopup.surface)[0]; d.scrollIntoView({ block: 'center' }); const b = d.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; }, SEL);
     await page.mouse.click(box.x, box.y);
     await page.waitForTimeout(1200);
     const after = await page.evaluate(() => {

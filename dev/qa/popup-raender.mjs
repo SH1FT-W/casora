@@ -435,7 +435,9 @@ for (const scheme of schemes) for (const vn of views) {
             const plates = deep(s, []).map((n) => ({ n, q: n.getBoundingClientRect(), cs: getComputedStyle(n) }))
               .filter(({ q, cs }) => q.width > 140 && q.width < R.width * 0.6 && q.height > 34 && q.height < 160
                 && parseFloat(cs.borderTopLeftRadius) > 6 && cs.backgroundColor && !/rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor))
-              .filter(({ n }) => !/\bhui-sg\b|\bhui-seg\b/.test(String(n.className || '')));
+              .filter(({ n }) => !/\bhui-sg\b|\bhui-seg\b/.test(String(n.className || '')))
+              // Pills (radius ≥ half the height: assistant question chips, filter chips) flow and wrap; they are no plates.
+              .filter(({ q, cs }) => parseFloat(cs.borderTopLeftRadius) < q.height / 2 - 1);
             // A column = a plate with another plate stacked under it at the same left edge. Two side-by-side plates of
             // which one starts a column = two columns (segment buttons hui-sg are no plates).
             const col = (a) => plates.some((c) => c !== a && Math.abs(c.q.left - a.q.left) < 4 && c.q.top > a.q.bottom - 2);

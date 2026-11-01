@@ -128,7 +128,7 @@ async function haus() {
   await page.waitForTimeout(800);
 }
 
-await run('Thermostat', false, '.hp-st-b');
+await run('Thermostat', false, '.hui-st-b');
 await run('Fußbodenheizung', true, '.fb-st-b');
 await haus();
 await finish();

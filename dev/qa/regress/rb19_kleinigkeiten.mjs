@@ -108,12 +108,12 @@ const toolbar = (pg) => pg.evaluate(() => { const p = window.__panel(); const l 
   await tap(pg, '.segopt[data-size="desktop"]');
   await W(pg, 1000);
 
-  // 5) „Neu in <Raum>“: Raum mit den meisten Geräten ohne Kachel
+  // 5) „Neu in <Raum>“: Raum mit den meisten Geräten ohne Kachel (scenes are no devices – they stand under scenes, 6838a87e)
   const room = await P(() => { const p = window.__panel(); const all = p._uxDevices();
-    let best = -1, n = 0; p._state.compact.rooms.forEach((r, i) => { const c = all.filter((x) => x.fresh && x.roomIndex === i).length; if (c > n) { n = c; best = i; } });
+    let best = -1, n = 0; p._state.compact.rooms.forEach((r, i) => { const c = all.filter((x) => x.fresh && !x.scene && x.roomIndex === i).length; if (c > n) { n = c; best = i; } });
     if (best >= 0) { p._room = best; p._renderTabs(); p._renderForm(); p._rebuildPreview && p._rebuildPreview(); }
     const U = window.__casoraStudioUx; const part = best >= 0 ? U.newInRoom(all, best, 6) : { shown: [], rest: [] };
-    return { best, n, shown: part.shown.length, rest: part.rest.length, recognized: all.filter((x) => x.fresh && x.roomIndex === best && (x.suggested || x.loose)).length }; });
+    return { best, n, shown: part.shown.length, rest: part.rest.length, recognized: all.filter((x) => x.fresh && !x.scene && x.roomIndex === best && (x.suggested || x.loose)).length }; });
   await need('Raum mit Geräten ohne Kachel', room.best >= 0 && room.n > 0, room);
   await W(pg, 800);
   await check('5: „+“ der Leiste geklickt', await tap(pg, '.btools .btool.uxplus'));

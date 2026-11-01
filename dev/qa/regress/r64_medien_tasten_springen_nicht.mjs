@@ -6,6 +6,8 @@
 // zudem unter dem Rand. Erwartet im Casora-Look (hell): der Wiedergabe-Knopf steht vor und nach dem
 // Start an derselben Stelle (Handy 390×844 und Tablet 1024×768); am Tablet sind Tasten und
 // Lautstärke ohne Scrollen ganz zu sehen. Zustände nur im Browser (fakeStates), am HA spielt nichts.
+// v3 (01.11.2026): the volume is the dial's ring, „Lautstärke 40 %“ stands under the wheel (.hui-dl-vol); the
+// keys under title and progress. On the tablet the keys and the volume line must both be on screen.
 import { open, usePage, dashboard, casoraDashboards, fakeStates, check, need, finish } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -41,13 +43,13 @@ for (const [name, opts, mobile] of VIEWS) {
   await page.waitForTimeout(2500);
   const m = () => page.evaluate(() => { const s = window.casoraPopup && window.casoraPopup.surface; if (!s) return null;
     const one = (q) => { const e = window.__pierce(q, s).find((x) => x.getBoundingClientRect().width > 0); if (!e) return null; const r = e.getBoundingClientRect(); return { top: Math.round(r.top), bottom: Math.round(r.bottom) }; };
-    return { play: one('.hm-b.lg'), vol: one('.hm-vol'), h: innerHeight }; });
+    return { play: one('.hm-b.lg'), vol: one('.hm-vol, .hui-dl-vol'), h: innerHeight }; });
   const vor = await m();
   if (!vor || !vor.play) { await check(`${name}: Medien-Popup mit Wiedergabe-Knopf`, false, vor); continue; }
   await fakeStates(page, { [ent]: { state: 'playing', attributes: { ...base, media_title: 'Beispiel-Titel', media_artist: 'Beispiel', media_duration: 200, media_position: 20, media_position_updated_at: new Date().toISOString() } } }, { sticky: true });
   await page.waitForTimeout(1500);
   const nach = await m();
   await check(`${name}: Wiedergabe-Knopf bleibt nach dem Start an seiner Stelle`, nach && nach.play && Math.abs(nach.play.top - vor.play.top) <= 2, { vor: vor.play, nach: nach && nach.play });
-  if (!mobile) await check(`${name}: Tasten und Lautstärke beim Abspielen ohne Scrollen sichtbar`, nach && nach.vol && nach.vol.bottom <= nach.h, nach);
+  if (!mobile) await check(`${name}: Tasten und Lautstärke beim Abspielen ohne Scrollen sichtbar`, nach && nach.vol && nach.vol.bottom <= nach.h && nach.play && nach.play.bottom <= nach.h, nach);
 }
 await finish();

@@ -11,6 +11,9 @@
 // Zeilen schalten es um; Wetter-Diagramm mit Etikett in der Karte; ein Popup ohne Diagramm-Platz
 // hängt sein Diagramm nicht mehr ins nächste Popup; Dünger-Säulen mit Etikett; Etiketten 20/18 vom Kartenrand (D1).
 // Die Kacheln werden nur im Browser erzeugt (Sensoren aus dem Testhaus), gespeichert wird nichts.
+// v3 (31.10.2026): the energy popup's stage is „Jetzt“ with the energy flow when the popup is the house's (HA energy
+// settings), else the power chart. The chart checks use a room's power sensor (one with an area); the house sensor
+// checks the flow stage, and that its „Heute“ row then opens the reading's page (no chart to switch).
 import { open, casoraDashboard, dashboard, check, need, finish, stable, plateLabels } from './lib.mjs';
 
 const dash = await casoraDashboard();
@@ -23,8 +26,11 @@ const ids = await page.evaluate(() => {
   const S = document.querySelector('home-assistant').hass.states;
   const all = Object.keys(S).filter((e) => e.startsWith('sensor.') && isFinite(parseFloat(S[e].state)));
   const by = (dc, f = () => true) => all.find((e) => S[e].attributes.device_class === dc && f(e, parseFloat(S[e].state)));
+  const H = document.querySelector('home-assistant').hass;
+  const area = (e) => { const r = H.entities[e]; return !!(r && (r.area_id || (r.device_id && H.devices[r.device_id] && H.devices[r.device_id].area_id))); };
   return {
-    power: by('power', (e, v) => v > 50 && S[e].attributes.state_class === 'measurement'),
+    power: by('power', (e, v) => v > 50 && S[e].attributes.state_class === 'measurement' && area(e)),
+    house: by('power', (e, v) => v > 50 && S[e].attributes.state_class === 'measurement' && !area(e)),
     today: by('energy', (e) => /heute|today/.test(e) && S[e].attributes.state_class === 'total_increasing'),
     month: by('energy', (e) => /monat|month/.test(e)),
     dl: by('data_rate', (e) => /download/.test(e)), ul: by('data_rate', (e) => /upload/.test(e)),
@@ -79,12 +85,29 @@ async function popup(cfg) {
 const chartIn = () => window.__pierce('casora-chart', window.__pierce('casora-popup').find((p) => p.hasAttribute('open')).shadowRoot)
   .find((c) => c.getBoundingClientRect().width > 50);
 
-// Energie: Kurve, Ablesen (Tastatur + Touch) über die Hero-Zahl.
+// Energie des Hauses (v3): „Jetzt“ mit dem Energiefluss als Bühne; „Heute“ öffnet die Messwert-Seite.
+if (ids.house) {
+  await popup({ type: 'custom:button-card', template: 'casora_energy', entity: ids.house, variables: { entity_usage_today: ids.today } });
+  const hs = await stable(page, () => { const pop = window.__pierce('casora-popup').find((p) => p.hasAttribute('open'));
+    if (!pop) return null;
+    const vis = (q) => window.__pierce(q, pop.shadowRoot).filter((e) => e.getBoundingClientRect().width > 0);
+    const row = vis('.hui-srow').find((e) => /^Heute/.test(e.textContent.trim()));
+    return { stage: vis('[data-casora-stage="S6"]').length, flow: vis('[data-casora-kind="e1"]').length,
+      row: row ? { mi: row.getAttribute('data-casora-mi'), metric: row.getAttribute('data-hp-metric') } : null }; }, null, { max: 8000 });
+  if (hs && hs.flow) {
+    await check('Energie Haus: Bühne „Jetzt“ mit Energiefluss', hs.stage === 1, hs);
+    await check('Energie Haus: „Heute“ öffnet die Messwert-Seite (kein totes Diagramm-Umschalten)', hs.row && hs.row.mi && !hs.row.metric, hs);
+  } else console.log('  info   Energie Haus: kein Energiefluss im Testhaus (' + JSON.stringify(hs) + ')');
+}
+
+// Energie (Raum): Kurve, Ablesen (Tastatur + Touch) über die Hero-Zahl.
 let r = await popup({ type: 'custom:button-card', template: 'casora_energy', entity: ids.power,
   variables: { entity_usage_today: ids.today } });
 await check('Energie: casora-chart gezeichnet', r && r.drawn >= 1, r);
 await check('Energie: kein apexcharts-card im DOM', r && r.apex === 0, r);
-const hero = () => page.evaluate(() => { const n = window.__pierce('[data-casora-read]')[0]; return n ? n.textContent.trim() : null; });
+// v3: the stage's number and its unit are two elements (.hui-st-val) – the reading reads both.
+const hero = () => page.evaluate(() => { const n = window.__pierce('[data-casora-read]')[0]; const v = n && n.closest && n.closest('.hui-st-val');
+  return n ? (v || n).textContent.replace(/\s+/g, ' ').trim() : null; });
 const before = await hero();
 await check('Energie: Hero-Zahl liest mit (data-casora-read)', before != null, before);
 await page.evaluate((f) => { const c = eval(f)(); c.shadowRoot.querySelector('svg').focus(); }, chartIn.toString());
@@ -290,8 +313,10 @@ await popupIn(P, { type: 'custom:button-card', template: 'casora_battery', entit
 let b1 = await stable(P, look, null, { max: 12000, quiet: 1200 });
 await check('Batterie (Casora-Look): casora-chart gleich sichtbar, in der Sand-Karte, kein apexcharts-card', b1 && b1.plate && b1.apex === 0, b1);
 // 1.3 (Entscheidung B): Überschriften in Satzschreibung (17/700) statt Versalien.
-await check('Batterie (Casora-Look): Überschrift innen (Satzschreibung, 700) mit Zeitraum, „Jetzt“-Zeile', b1 && b1.label && /30 Tage/.test(b1.label.t)
-  && b1.label.tt === 'none' && b1.label.fw === '700' && b1.ro, b1);
+// v3 (§6, variant B tokens --casora-h15-*): headings in popups are 13/600 capitals; before v3 17/700 sentence case.
+const headStyle = (l) => !!l && ((l.tt === 'none' && (l.fw === undefined || l.fw === '700')) || (l.tt === 'uppercase' && (l.fw === undefined || l.fw === '600')));
+await check('Batterie (Casora-Look): Überschrift innen (Überschriften-Stil) mit Zeitraum, „Jetzt“-Zeile', b1 && b1.label && /30 Tage/.test(b1.label.t)
+  && headStyle(b1.label) && b1.ro, b1);
 { const L = (await plateLabels(P, { satz: true })).find((l) => /30 Tage/.test(l.t));
   await check('Batterie (Casora-Look): Etikett 20/18 vom Rand der Sand-Karte (D1)', L && L.dx === 20 && L.dy === 18, L); }
 await check('Batterie (Casora-Look): niedrigste Batterie gewählt und hinterlegt', b1 && b1.sel.length === 1 && b1.sel[0] === b1.entity, b1);
@@ -318,8 +343,8 @@ const weather = await P.evaluate((pw) => {
 await popupIn(P, { type: 'custom:button-card', template: 'casora_weather', entity: weather });
 const w = await stable(P, look, null, { max: 12000, quiet: 1500 });
 await check('Wetter (Casora-Look): Diagramm mit Etikett in der Sand-Karte, kein fremdes Diagramm aus dem vorigen Popup',
-  w && w.plate && w.label && !/Leistung/.test(w.label.t) && w.entity !== ids.power && w.label.tt === 'none', w);
-{ const L = (await plateLabels(P, { satz: true })).find((l) => /48 Stunden/.test(l.t));
+  w && w.plate && w.label && !/Leistung/.test(w.label.t) && w.entity !== ids.power && headStyle(w.label), w);
+{ const L = (await plateLabels(P, { satz: true })).find((l) => /48 (Stunden|Std\.)/.test(l.t));
   await check('Wetter (Casora-Look): Etikett 20/18 vom Rand der Sand-Karte (D1)', L && L.dx === 20 && L.dy === 18, L); }
 
 // Dünger: Säulen mit Etikett in der eigenen Karte (casora-chart title + plate).
