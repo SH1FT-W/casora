@@ -1504,10 +1504,26 @@
       pane.replaceChildren(wrap);
       this._csFill(body, page.id, () => this._csRender());
       pane.scrollTop = keep;
+      this._csRefocus(pane, page.id);
       this._csBar();
     };
 
+    // A page opened at a group (search hit, link) scrolls there smoothly. A redraw shortly after (a late
+    // answer such as the dashboards' players) replaces the content and cancels that scroll, so for a
+    // moment after opening every redraw of the same page jumps to the group again (instantly).
+    P._csFocusAt = function (pageId, key) {
+      this._csFocusWant = key ? { page: pageId, key, until: Date.now() + 2500 } : null;
+    };
+    P._csRefocus = function (root, pageId) {
+      const f = this._csFocusWant;
+      if (!f) return;
+      if (f.page !== pageId || Date.now() > f.until) { this._csFocusWant = null; return; }
+      const at = root && root.querySelector('[data-pkey="' + f.key + '"]');
+      if (at) at.scrollIntoView({ block: "start" });
+    };
+
     P._csOpenPage = async function (pageId, focus) {
+      this._csFocusWant = null;
       if (this._cvOpen && this._cvClose) {
         this._cvLeaving = true;
         try { this._cvClose(); } finally { this._cvLeaving = false; }
@@ -1534,6 +1550,7 @@
       // Reloaded: redraw, the fields hang on the draft.
       if ((await this._csLoad()) && this._csOpen && this._csPage === want) this._csRender();
       if (!this._csOpen) return;
+      this._csFocusAt(want, focus);
       if (focus) {
         const at = this.$("pane").querySelector('[data-pkey="' + focus + '"]');
         if (at) requestAnimationFrame(() => {
@@ -1714,6 +1731,7 @@
 
     // ── Phone: sheet with subpages, reachable in the section list ─────────────
     P._csSheet = async function (pageId, focus, quiet) {
+      this._csFocusWant = null;
       css(this);
       watch(this);
       // New Studio: the topics; the previous layout (tests only) keeps its list.
@@ -1756,6 +1774,7 @@
         this._csFill(host, page.id, fill);
         const l = host.querySelector(".cs-lede");
         if (l) l.remove();
+        if (this._csSheetPage === page.id) this._csRefocus(host, page.id);
       };
       if (s.lede) s.lede.textContent = t(page.lede);
       else {
@@ -1769,6 +1788,7 @@
       save.classList.add("cs-save");
       this._csBar();
       if ((await this._csLoad()) && this._csSheetPage === page.id && host.isConnected) { fill(); this._csBar(); }
+      this._csFocusAt(page.id, focus);
       if (focus) {
         const at = host.querySelector('[data-pkey="' + focus + '"]');
         if (at) requestAnimationFrame(() => at.scrollIntoView({ block: "start", behavior: "smooth" }));
