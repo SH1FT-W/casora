@@ -2500,3 +2500,15 @@ window.casoraComfortWord = function (kind, v, unit) {
   if (kind === 'humidity') return lv === 0 ? 'Gut' : lv === 1 ? (n < 40 ? 'Etwas trocken' : 'Etwas feucht') : (n < 40 ? 'Sehr trocken' : 'Sehr feucht');
   return null;
 };
+/* Sub-badges with a sensor that is unavailable/unknown stay visible, muted, with their kind's icon and „Offline“
+   (owner, 01.11.2026) – no longer hidden, no „?“ and no „Nicht verfügbar“. */
+window.casoraBadgeOffline = function (state) {
+  var s = String(state == null ? '' : state).trim().toLowerCase();
+  return !s || s === 'unknown' || s === 'unavailable';
+};
+window.casoraBadgeOfflineColor = 'var(--casora-badge-offline-color, var(--disabled-text-color))';
+window.casoraBadgeOfflineName = function (title) {
+  var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t); };
+  return '<div class="badge-wrap casora-badge-offline"><div class="badge-title">' + esc(title) + '</div>'
+    + '<div class="badge-sub">' + esc('Offline') + '</div></div>';
+};

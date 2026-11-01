@@ -2663,9 +2663,25 @@
   "gekippt": "uchylone",
   "Im Studio wählen": "Wybierz w Studio",
   "Regen jetzt": "Teraz deszcz",
-  "Sollwert": "Wartość zadana"
+  "Sollwert": "Wartość zadana",
+  "Netz offline": "Sieć offline",
+  "Bezug aus dem Netz": "Pobór z sieci",
+  "Einspeisung ins Netz": "Oddawanie do sieci",
+  "Verbraucht Strom": "Zużywa prąd"
  },
  "patterns": [
+  [
+   "^Solar deckt (\\d+) ?%$",
+   "Słońce pokrywa {1}%"
+  ],
+  [
+   "^Akku deckt (\\d+) ?%$",
+   "Akumulator pokrywa {1}%"
+  ],
+  [
+   "^Solar und Akku decken (\\d+) ?%$",
+   "Słońce i akumulator pokrywają {1}%"
+  ],
   [
    "^(\\d+) von (\\d+) offen$",
    "{1} z {2} otwarte"

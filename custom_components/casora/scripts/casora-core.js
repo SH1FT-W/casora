@@ -7175,6 +7175,12 @@ window.casoraMenuGlass = {
   function roomLabelOf(src) {
     if (!src || !src._config) return '';
     var tpl = [].concat(src._config.template || []).join(' ');
+    /* Energy (owner, 01.11.2026): the label is the room of the tile's sensor, else „Zuhause“ – never empty. */
+    if (/\bcasora_(popup_|badge_)?energy(_group)?\b/.test(tpl) && !/\bcasora_badge_energy\b/.test(tpl)) {
+      var eid = src._stateObj && src._stateObj.entity_id, er = '';
+      try { er = eid && typeof window._casoraRoomOf === 'function' ? String(window._casoraRoomOf(eid) || '').trim() : ''; } catch (e) { er = ''; }
+      return er || 'Zuhause';
+    }
     if (HOUSE_POPUP.test(tpl)) return '';
     var id = src._stateObj && src._stateObj.entity_id;
     if (!id || typeof window._casoraRoomOf !== 'function') return '';
@@ -7437,6 +7443,8 @@ window.casoraMenuGlass = {
       if (pop && pop._syncHeadSwitch && pop.hasAttribute('open')) {
         pop._syncHeadSwitch(h);
         if (!pop._headLine || !pop._headLine.isConnected) setTimeout(function () { if (pop.hasAttribute('open')) pop._syncHeadLine(); }, 120);
+        // The stage may now read like the head (§3, _dedupeHead): compare again once the cards have redrawn.
+        if (pop._dedupeHead) { clearTimeout(pop._ddT); pop._ddT = setTimeout(function () { if (pop.hasAttribute('open')) { pop._headHtml = null; if (pop._headLine) pop._mirrorHead(); else pop._headFallback(true); } }, 350); }
       }
       // Auch ohne An/Aus-Wechsel: ändert sich das Gerät (Jalousie-Position → anderes Symbol), Kopf nachziehen.
       var rso = pop && pop._ringSrc && pop._ringSrc._stateObj, rnow = rso && h && h.states ? h.states[rso.entity_id] : null;
@@ -7890,7 +7898,7 @@ window.casoraMenuGlass = {
     // §3 (review 2, DD-08): every popup has a status line. Until the content lifts its own (.hui-line) into the head,
     // the head shows the state of the tile's entity in HA's words – a popup without a line of its own keeps that, and
     // the head does not jump when the content's line arrives (same height, one line).
-    _headFallback() {
+    _headFallback(again) {
       if (!this._headerStatus || !this.hasAttribute('soft')) return;
       var so = this._ringSrc && this._ringSrc._stateObj;
       var h = (document.querySelector('home-assistant') || {}).hass;
@@ -7903,6 +7911,42 @@ window.casoraMenuGlass = {
       if (!txt || txt === 'unknown') return;
       this._headerStatus.innerHTML = '<b>' + window.casoraEsc(txt) + '</b>';
       this._headerStatus.hidden = false;
+      if (again) this._dedupeHead();
+      else [300, 900, 1800].forEach((ms) => setTimeout(() => { if (this.hasAttribute('open') && !this._headLine) this._dedupeHead(); }, ms));
+    }
+    // §3 (owner, 01.11.2026): the status line never repeats the stage's value or sentence („Aus“ in the head and in the
+    // wheel, „Verriegelt“ twice, „513 W“ twice). When the head's first part reads like the stage's main text, it says
+    // since when instead („Seit 14:42“, from the tile's entity); without a time that part goes. popup-geo „doppelt“.
+    _dedupeHead() {
+      var hs = this._headerStatus;
+      if (!hs || hs.hidden || !this.hasAttribute('soft') || !this.container) return;
+      var norm = function (t) { return String(t || '').toLowerCase().replace(/[\s\u00a0\u202f()·.,:–-]+/g, ''); };
+      var stage = '';
+      (function walk(root, d) {
+        if (!root || d > 12 || stage) return;
+        var el = root.querySelector && root.querySelector('.hui-dl-c .hui-dl-t, .hui-dl-c .hui-st-val, .hui-stage .hui-st-head .hui-st-val');
+        if (el) { stage = el.textContent; return; }
+        var all = root.querySelectorAll ? root.querySelectorAll('*') : [];
+        for (var i = 0; i < all.length && !stage; i++) if (all[i].shadowRoot) walk(all[i].shadowRoot, d + 1);
+      })(this.container, 0);
+      var first = hs.querySelector('b') || hs.firstElementChild;
+      var mainTxt = first ? first.textContent : String(hs.textContent || '').split('·')[0];
+      if (!stage || !norm(mainTxt) || norm(mainTxt) !== norm(stage)) return;
+      var so = this._ringSrc && this._ringSrc._stateObj, h = (document.querySelector('home-assistant') || {}).hass;
+      var cur = so && h && h.states ? h.states[so.entity_id] : so, lc = cur && cur.last_changed ? new Date(cur.last_changed) : null;
+      var since = '';
+      if (lc && !isNaN(lc.getTime())) {
+        var loc = window.casoraLocale ? window.casoraLocale() : 'de-DE', now = new Date();
+        since = 'Seit ' + (lc.toDateString() === now.toDateString() ? lc.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' })
+          : lc.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' }));
+        if (window.casoraTr) since = window.casoraTr(since);
+      }
+      if (first) {
+        if (since) first.textContent = since;
+        else { var nx = first.nextElementSibling; if (nx && nx.classList && nx.classList.contains('hui-sep')) nx.remove(); first.remove(); }
+      } else hs.innerHTML = since ? '<b>' + window.casoraEsc(since) + '</b>' : '';
+      // The mirrored line is compared again on its next change (its html no longer equals what the head shows).
+      hs.hidden = !hs.textContent.trim();
     }
     // Erste Statuszeile (.hui-line, UI.line/hero/headline) oben im Inhalt suchen – durch alle Shadow-DOMs.
     _findHeadLine() {
@@ -7981,6 +8025,7 @@ window.casoraMenuGlass = {
         }
       }
       this._headerStatus.hidden = !this._headerStatus.textContent.trim();
+      this._dedupeHead();
       if (window._casoraSepScan) { var sr = this.shadowRoot; setTimeout(function () { window._casoraSepScan(sr); }, 0); }
     }
     _syncHeadLine() {
@@ -10086,6 +10131,19 @@ window.casoraMenuGlass = {
           ev.preventDefault(); ev.stopPropagation();
           return;
         }
+        // „Alle (n)“ moon: its small menu (moonMenuOpen); without rows the sub page as before.
+        if (t && t.dataset && t.dataset.casoraMoonmenu !== undefined) {
+          if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
+          window._casoraUILastTap = Date.now();
+          window.casoraHaptic('light');
+          ev.preventDefault(); ev.stopPropagation();
+          window._casoraSuppressDismiss = Date.now() + 600;
+          if (!(window._casoraMoonMenu && window._casoraMoonMenu.open(t, ev.detail === 0)) && t.dataset.casoraMmPage) {
+            var mp = String(t.dataset.casoraMmPage), mcut = mp.indexOf('|'), mfn = (window._casoraPages || {})[mcut < 0 ? mp : mp.slice(0, mcut)];
+            if (typeof mfn === 'function') { try { mfn(mcut < 0 ? '' : mp.slice(mcut + 1), t); } catch (e) { console.error('casora: page', e); } }
+          }
+          return;
+        }
         // Blueprint v2: › row onto a sub page of the module („name|arg“ → window._casoraPages[name](arg, el)).
         if (t && t.dataset && t.dataset.casoraPage) {
           if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
@@ -11946,9 +12004,11 @@ window.casoraMenuGlass = {
     + '.hui-moon .ic{flex:none;width:22px;height:22px;color:' + S.sub + ';background-color:currentColor;--mdc-icon-size:22px;margin:0;}'
     + '.hui-moon ha-icon.ic{background:none;}'
     // white-space: the field's .ellipsis kept „Jetzt starten“ on one line, cut at the moon's edge.
-    + '.hui-moon span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:100%;white-space:normal;overflow-wrap:break-word;}'
+    // Never a break inside a word (owner, 01.11.2026: „Alle aktualisie-ren“): lines break at spaces only, a long
+    // word is set smaller to fit the moon (moonWordFit), or the item brings a short word (it.short).
+    + '.hui-moon span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:100%;white-space:normal;'
+    +   'overflow-wrap:normal;word-break:keep-all;hyphens:manual;-webkit-hyphens:manual;}'
     + '.hui-moon.lw{font-size:10px;letter-spacing:-0.02em;}.hui-moon.xw{font-size:9px;letter-spacing:-0.02em;}'
-    + '.hui-moon.xw span{hyphens:auto;-webkit-hyphens:auto;}'
     + '.hui-moon.on{background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, ' + T.ink + ');'
     +   'box-shadow:0 0 0 3px var(--dl-col), 0 10px 26px -6px color-mix(in srgb, var(--dl-col) 45%, transparent);}'
     + '.hui-moon.on .ic{color:color-mix(in srgb, var(--dl-col) 65%, var(--casora-soft-seg-on-ink, ' + T.ink + '));}'
@@ -11982,6 +12042,14 @@ window.casoraMenuGlass = {
     String(text || '').split(/\s+/).forEach(function (w) { lw = Math.max(lw, w.length); });
     return lw >= 13 ? ' xw' : lw >= 10 ? ' lw' : '';
   }
+  // The longest word fits the moon's inner width on one line (bold ≈ .56 em per letter): from 10 letters the size
+  // follows the moon (62–76 px, cqw of the wheel), never below 7 px.
+  function moonWordFit(text) {
+    var lw = 0;
+    String(text || '').split(/\s+/).forEach(function (w) { lw = Math.max(lw, w.length); });
+    if (lw < 10) return '';
+    return ' style="font-size:max(7px, min(' + (lw >= 13 ? 9 : 10) + 'px, calc((clamp(62px, 20cqw, 76px) - 8px) / ' + dRound(lw * 0.56) + ')))"';
+  }
   // Moons show one symbol set (§4.8: MDI, outline): a lamp's icon from another set („ios:lamp-floor“) is mapped.
   function moonIcon(ic) {
     var m = /^([a-z0-9_-]+):(.+)$/.exec(String(ic || ''));
@@ -11993,14 +12061,116 @@ window.casoraMenuGlass = {
   function moonHtml(it, deg, cls) {
     var spec = it.svc ? (it.confirm ? Object.assign({}, it.svc, { confirm: it.confirm }) : it.svc) : null;
     var shown = it.short || it.text;
+    if (it.menu) return moonMenuHtml(it, deg);
     return '<div class="hui-moon' + (it.active ? ' on' : '') + (cls ? ' ' + esc(cls) : '') + moonWordCls(shown) + '" role="button" aria-label="' + esc(it.text) + '"'
       + (it.short ? ' title="' + esc(it.text) + '"' : '')
       + (cls ? '' : ' aria-pressed="' + (it.active ? 'true' : 'false') + '"')
       + (spec ? ' data-casora-svc="' + esc(JSON.stringify(spec)) + '"' : '')
       + (it.page ? ' data-casora-page="' + esc(it.page) + '"' : '') + (it.value != null ? ' data-v="' + esc(it.value) + '"' : '')
       + stAttrs(it.attrs) + ' style="' + esc(moonAt(deg)) + '">'
-      + stGlyph(moonIcon(it.icon), 'ic') + '<span>' + esc(shown) + '</span></div>';
+      + stGlyph(moonIcon(it.icon), 'ic') + '<span' + moonWordFit(shown) + '>' + esc(shown) + '</span></div>';
   }
+  // „Alle (n)“ with its menu: the rows are shown by moonMenuOpen; each row clicks its hidden proxy here (same attributes
+  // as a moon: data-casora-svc, data-casora-page, the popup's own data-*), so services, confirmations, the alarm code
+  // and pages run through the popup's existing handlers – no second logic.
+  function moonMenuHtml(it, deg) {
+    var rows = it.menu.map(function (x) { return { icon: moonIcon(x.icon), text: x.text, on: !!x.active }; });
+    var proxies = it.menu.map(function (x, k) {
+      var sp = x.svc ? (x.confirm ? Object.assign({}, x.svc, { confirm: x.confirm }) : x.svc) : null;
+      return '<i data-casora-mm-i="' + esc(k) + '"' + (sp ? ' data-casora-svc="' + esc(JSON.stringify(sp)) + '"' : '')
+        + (x.page ? ' data-casora-page="' + esc(x.page) + '"' : '') + stAttrs(x.attrs) + '></i>';
+    }).join('');
+    return '<div class="hui-moon' + (it.active ? ' on' : '') + moonWordCls(it.text) + '" role="button" aria-haspopup="menu" aria-expanded="false"'
+      + ' aria-label="' + esc(it.text) + '" data-casora-moonmenu="" data-casora-mm="' + esc(JSON.stringify(rows)) + '"'
+      + (it.page ? ' data-casora-mm-page="' + esc(it.page) + '"' : '') + ' style="' + esc(moonAt(deg)) + '">'
+      + stGlyph(moonIcon(it.icon), 'ic') + '<span' + moonWordFit(it.text) + '>' + esc(it.text) + '</span>'
+      + '<div class="hui-mm-src" style="display:none !important;">' + proxies + '</div></div>';
+  }
+  // The menu itself: a plate on the page (above the popup), next to the moon and always inside the window – below
+  // the moon, else above; on the phone the same, at most the window's width less 16. Hinterlegt = chosen (no check mark,
+  // popup-geo „haken“). Tap beside it (veil) or Esc closes; arrows move, Enter/Space picks.
+  var MM_CSS = ':host{all:initial;position:fixed;inset:0;z-index:2147483000;font-family:var(--primary-font-family, Inter, system-ui, sans-serif);}'
+    + '.veil{position:fixed;inset:0;background:transparent;}'
+    + '.pane{position:fixed;box-sizing:border-box;min-width:200px;max-width:min(280px, calc(100vw - 16px));max-height:calc(100vh - 16px);overflow:auto;'
+    +   'padding:var(--casora-menu-pad, 8px);border-radius:var(--casora-menu-radius, 26px);'
+    +   'background:var(--casora-menu-pane, var(--ha-card-background, var(--card-background-color, rgb(251,248,243))));'
+    +   '-webkit-backdrop-filter:blur(24px) saturate(1.2);backdrop-filter:blur(24px) saturate(1.2);'
+    +   'box-shadow:var(--casora-window-shadow, 0 18px 44px -14px rgba(60,40,20,0.35));color:var(--casora-menu-fg, var(--primary-text-color, rgba(46,39,33,0.95)));'
+    +   'transform-origin:var(--o, top center);animation:mm-in var(--casora-dur-feedback, .16s) var(--casora-ease-enter, ease) both;}'
+    + '@supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.pane{background:var(--casora-menu-pane-webkit, var(--casora-menu-pane, rgb(248,244,237)));}}'
+    + '@keyframes mm-in{from{opacity:0;transform:scale(.96);}to{opacity:1;transform:none;}}'
+    + '.row{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 16px 0 8px;box-sizing:border-box;border-radius:var(--casora-menu-row-radius, 20px);'
+    +   'cursor:pointer;user-select:none;-webkit-user-select:none;outline:none;font-size:15px;font-weight:600;line-height:1.2;'
+    +   'transition:transform var(--casora-dur-feedback, .16s) ease, background-color var(--casora-dur-feedback, .16s) ease;-webkit-tap-highlight-color:transparent;}'
+    + '@media (hover:hover){.row:hover{background:var(--casora-menu-hover, rgba(140,115,90,0.08));}}'
+    + '.row:focus-visible{outline:2px solid var(--casora-focus-ring, var(--casora-color-teal, #4E9E95));outline-offset:-2px;}'
+    + '.row:active{transform:scale(var(--casora-press-scale, .97));}'
+    + '.row.on{background:var(--casora-soft-row-active, rgba(127,127,127,0.10));box-shadow:var(--casora-soft-row-active-shadow, none);color:var(--casora-soft-row-active-ink, inherit);}'
+    + '.ic{flex:none;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;'
+    +   'background:var(--casora-soft-icon-off, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, currentColor);}'
+    + '.row.on .ic{background:var(--mm-col, var(--casora-color-teal, #4E9E95));color:var(--mm-ink, #fff);}'
+    + '.ic .g{width:20px;height:20px;background-color:currentColor;--mdc-icon-size:20px;}.ic ha-icon.g{background:none;}'
+    + '.t{flex:1;min-width:0;}'
+    + '@media (prefers-reduced-motion:reduce){.pane{animation:none;}.row{transition:none;}}';
+  var mmOpen = null;
+  function moonMenuClose() {
+    if (!mmOpen) return;
+    var m = mmOpen; mmOpen = null;
+    document.removeEventListener('keydown', m.key, true);
+    window.removeEventListener('resize', m.close);
+    try { m.moon.setAttribute('aria-expanded', 'false'); } catch (e) {}
+    if (m.host.parentNode) m.host.parentNode.removeChild(m.host);
+  }
+  function moonMenuOpen(moon, viaKey) {
+    moonMenuClose();
+    var rows = [];
+    try { rows = JSON.parse(moon.getAttribute('data-casora-mm') || '[]'); } catch (e) { rows = []; }
+    if (!rows.length) return false;
+    var host = document.createElement('div');
+    host.setAttribute('data-casora-moonmenu-pane', '');
+    var col = '', ink = '';
+    try { var cs = getComputedStyle(moon); col = cs.getPropertyValue('--dl-col').trim(); ink = cs.getPropertyValue('--casora-popup-accent-ink').trim(); } catch (e) {}
+    if (col) host.style.setProperty('--mm-col', col);
+    if (ink) host.style.setProperty('--mm-ink', ink);
+    var sr = host.attachShadow ? host.attachShadow({ mode: 'open' }) : host;
+    sr.innerHTML = '<style>' + MM_CSS + '</style><div class="veil"></div><div class="pane" role="menu" aria-label="' + esc(moon.getAttribute('aria-label') || '') + '">'
+      + rows.map(function (x, k) {
+        return '<div class="row' + (x.on ? ' on' : '') + '" role="menuitemradio" aria-checked="' + (x.on ? 'true' : 'false') + '" tabindex="-1" data-k="' + esc(k) + '">'
+          + '<span class="ic">' + stGlyph(x.icon, 'g') + '</span><span class="t">' + esc(x.text) + '</span></div>';
+      }).join('') + '</div>';
+    document.body.appendChild(host);
+    var pane = sr.querySelector('.pane'), mr = moon.getBoundingClientRect();
+    var pw = pane.offsetWidth, ph = pane.offsetHeight, W = window.innerWidth, H = window.innerHeight;
+    var left = Math.max(8, Math.min(W - pw - 8, mr.left + mr.width / 2 - pw / 2));
+    var below = mr.bottom + 8 + ph <= H - 8, top = below ? mr.bottom + 8 : Math.max(8, mr.top - 8 - ph);
+    pane.style.left = left + 'px'; pane.style.top = top + 'px';
+    pane.style.setProperty('--o', (mr.left + mr.width / 2 - left) + 'px ' + (below ? 'top' : 'bottom'));
+    moon.setAttribute('aria-expanded', 'true');
+    var items = Array.prototype.slice.call(sr.querySelectorAll('.row'));
+    var pick = function (k) {
+      moonMenuClose();
+      var px = moon.querySelector('[data-casora-mm-i="' + k + '"]');
+      window._casoraUILastTap = 0;
+      if (px) px.click();
+      try { moon.focus(); } catch (e) {}
+    };
+    var close = function () { moonMenuClose(); };
+    var key = function (ev) {
+      var i = items.indexOf(sr.activeElement);
+      if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); close(); try { moon.focus(); } catch (e) {} return; }
+      if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') { ev.preventDefault(); ev.stopPropagation(); var n = items[(i + (ev.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length]; if (n) n.focus(); return; }
+      if ((ev.key === 'Enter' || ev.key === ' ') && i > -1) { ev.preventDefault(); ev.stopPropagation(); pick(items[i].getAttribute('data-k')); }
+    };
+    sr.querySelector('.veil').addEventListener('click', function (ev) { ev.stopPropagation(); close(); });
+    items.forEach(function (row) { row.addEventListener('click', function (ev) { ev.stopPropagation(); window.casoraHaptic && window.casoraHaptic('selection'); pick(row.getAttribute('data-k')); }); });
+    document.addEventListener('keydown', key, true);
+    window.addEventListener('resize', close);
+    mmOpen = { host: host, moon: moon, key: key, close: close };
+    // Focus moves into the menu only when it was opened from the keyboard (no ring after a tap).
+    if (viaKey) { var first = items.filter(function (x) { return x.classList.contains('on'); })[0] || items[0]; if (first) try { first.focus({ preventScroll: true }); } catch (e) {} }
+    return true;
+  }
+  window._casoraMoonMenu = { open: moonMenuOpen, close: moonMenuClose };
   // Moons named alike („WZ Dreamview An“, „WZ Dreamview Aus“) lose their common leading words, so the word that tells
   // them apart is the one on the moon (review 2, E07/T05); the full name stays the label and the tooltip.
   function moonShort(list) {
@@ -12016,9 +12186,12 @@ window.casoraMenuGlass = {
   function moons(items, act, o) {
     o = o || {};
     var list = (items || []).filter(function (x) { return x && x.text && !x.danger; }).map(function (x) { return Object.assign({}, x); });
+    // More than 4: „Alle (n)“ opens a small menu at the moon (moonMenuOpen) with every choice; the chosen one among the
+    // hidden ones marks the moon. o.page stays the fallback where no menu can open.
     if (list.length > 4) {
-      var all = list.length;
-      list = list.slice(0, 3).concat([{ icon: 'mdi:dots-horizontal', text: T_('Alle') + ' (' + all + ')', page: o.page || null, all: true }]);
+      var all = list.length, full = list;
+      list = list.slice(0, 3).concat([{ icon: 'mdi:dots-horizontal', text: T_('Alle') + ' (' + all + ')', page: o.page || null, all: true,
+        menu: full, active: full.slice(3).some(function (x) { return x.active; }) }]);
     }
     moonShort(list);
     var hasAct = !!(act && act.text);

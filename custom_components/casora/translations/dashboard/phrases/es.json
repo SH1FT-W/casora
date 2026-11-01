@@ -2663,9 +2663,25 @@
   "gekippt": "abatida",
   "Im Studio wählen": "Elegir en el Studio",
   "Regen jetzt": "Lluvia ahora",
-  "Sollwert": "Consigna"
+  "Sollwert": "Consigna",
+  "Netz offline": "Red sin conexión",
+  "Bezug aus dem Netz": "Consumo de la red",
+  "Einspeisung ins Netz": "Inyección a la red",
+  "Verbraucht Strom": "Consumiendo energía"
  },
  "patterns": [
+  [
+   "^Solar deckt (\\d+) ?%$",
+   "Solar cubre {1}%"
+  ],
+  [
+   "^Akku deckt (\\d+) ?%$",
+   "Batería cubre {1}%"
+  ],
+  [
+   "^Solar und Akku decken (\\d+) ?%$",
+   "Solar y batería cubren {1}%"
+  ],
   [
    "^(\\d+) von (\\d+) offen$",
    "{1} de {2} abiertas"

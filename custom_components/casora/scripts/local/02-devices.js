@@ -1144,6 +1144,13 @@
   H.own = function (f) {
     return f && f.card && f.card.type === 'custom:button-card' && f.do_not_eval === undefined ? Object.assign({}, f, { do_not_eval: true }) : f;
   };
+  /* Popup v3 §7.1: the field holding the one Verlauf – o.history, else a field named „chart“ or „metric“
+     (o.history: false keeps it among the lists). */
+  H.histKey = function (o, has) {
+    if (o.history === false) return null;
+    var k = o.history || ['chart', 'metric'].filter(has)[0] || null;
+    return k && has(k) && k !== o.stage && (o.top || []).indexOf(k) < 0 ? k : null;
+  };
   H.layout = function (o) {
     var f = o.fields, has = function (k) { return f[k] !== undefined && f[k] !== null && f[k] !== ''; };
     var top = (o.top || ['hero']).filter(has), L = (o.left || []).filter(has), R = (o.right || []).filter(has);
@@ -1157,7 +1164,9 @@
       if (wideSt) { top = top.concat([o.stage]); v3 = v3.slice(1); }
       // §2: left only the stage and its quick choice – every list goes to the right column (review 2, DD-13:
       // „Letzte Durchgänge“, „Programme“ sat under the wheel while the right stayed nearly empty).
-      if (v3.length) { R = L.concat(R); L = v3; }
+      // §7.1 (01.11.2026): the one Verlauf sits under the wheel, the right column holds lists only.
+      var hist = wideSt ? null : H.histKey(o, has);
+      if (v3.length) { R = L.concat(R).filter(function (k) { return k !== hist; }); L = v3.concat(hist ? [hist] : []); }
       else L = v3.concat(L);
     }
     /* Blueprint v2 (rule 8): o.settings = the device's entity → section „Einstellungen“ with „Weitere
@@ -4118,7 +4127,9 @@
         /* D-08: translate parts one by one (the whole sentence matched no entry) and „Uhr“ only in German. */
         var trV = window.casoraTr || function (x) { return x; };
         var deV = !window.casoraLocale || /^de/i.test(String(window.casoraLocale()));
-        if (bat != null) sub.push(trV('Akku ' + Math.round(bat) + ' %') + (on(c.charging) ? ' · ' + trV('lädt') : ''));
+        // „lädt“ only when the state does not say it already (owner 01.11.2026: „Lädt“ in the wheel and „Akku 100 % · lädt…“ under it).
+        var chgSaid = /^lädt/i.test(String(s.label || ''));
+        if (bat != null) sub.push(trV('Akku ' + Math.round(bat) + ' %') + (on(c.charging) && !chgSaid ? ' · ' + trV('lädt') : ''));
         var le = U.str(states, c.lastEnd);
         var lastW = trV('zuletzt');
         if (le) sub.push(lastW + ' ' + trV(U.day(new Date(le))).replace(/^(Heute|Gestern|Today|Yesterday)$/, function (x) { return x.toLowerCase(); }) + ', ' + U.clock(new Date(le)) + (deV ? ' Uhr' : ''));

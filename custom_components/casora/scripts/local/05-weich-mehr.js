@@ -132,11 +132,17 @@
     var v3 = [o.stage, o.quick].filter(function (k) { return k && has(k) && top.indexOf(k) < 0; });
     if (v3.length) {
       L = L.filter(function (k) { return v3.indexOf(k) < 0; }); R = R.filter(function (k) { return v3.indexOf(k) < 0; });
-      if (o.stage && v3[0] === o.stage && (o.stageWide || /data-casora-stage=\\?"S5/.test(String(o.fields[o.stage])))) { top = top.concat([o.stage]); v3 = v3.slice(1); }
+      var wideSt = o.stage && v3[0] === o.stage && (o.stageWide || /data-casora-stage=\\?"S5/.test(String(o.fields[o.stage])));
+      if (wideSt) { top = top.concat([o.stage]); v3 = v3.slice(1); }
       // §2: left only the stage and its quick choice, the lists on the right (review 2, DD-13: „WLAN“ under the wheel).
-      if (v3.length) { R = L.concat(R); L = v3; }
+      // §7.1 (01.11.2026): the one Verlauf sits under the wheel (phone: stage → Verlauf → lists).
+      var H = window._casoraHH, hist = !wideSt && H && H.histKey ? H.histKey(o, has) : null;
+      if (hist && top.indexOf(hist) > -1) hist = null;
+      if (v3.length) { R = L.concat(R).filter(function (k) { return k !== hist; }); L = v3.concat(hist ? [hist] : []); }
       else L = v3.concat(L);
-      if (o.narrowOrder) o = Object.assign({}, o, { narrowOrder: v3.concat(o.narrowOrder.filter(function (k) { return v3.indexOf(k) < 0; })) });
+      var head = v3.concat(hist ? [hist] : []);
+      if (o.narrowOrder) o = Object.assign({}, o, { narrowOrder: head.concat(o.narrowOrder.filter(function (k) { return head.indexOf(k) < 0; })) });
+      else if (hist) o = Object.assign({}, o, { narrowOrder: L.concat(R) });
     }
     if (!L.length && R.length > 1 && o.moveLeft) { L = R.filter(function (k) { return o.moveLeft.indexOf(k) > -1; }); R = R.filter(function (k) { return L.indexOf(k) < 0; }); }
     /* Wie B-11 in den Geräte-Popups (H.layout, 02-devices.js): Steht rechts nur „Mehr“, wird das Popup
@@ -588,11 +594,13 @@
       var C3 = Object.assign({}, C, fs ? { fs: fs } : {});
       var w3 = [C.home, C.grid, C.costToday, C.today].concat(sumIds, fs ? E.flowSources.ids(fs) : []);
       var f3 = { stage: { card: secCard(w3, 'return window._casoraSoftEnergy ? window._casoraSoftEnergy.stage3(' + JSON.stringify(C3) + ', states, hass, this) : "";', states) } };
+      // Status line in words (lifted into the head), never the stage's watts (richtlinien §3).
+      f3.hero = { card: secCard(w3, 'return window._casoraSoftEnergy ? window._casoraSoftEnergy.status3(' + JSON.stringify(C3) + ', states, hass) : "";', states) };
       var q3 = E.quick3(C3, ctx.states);
       if (q3) f3.quick = q3;
       if (f.use) f3.use = f.use;
       if (f.top) f3.top = f.top;
-      return layout({ fields: f3, top: [], stage: 'stage', quick: 'quick', left: [], right: ['use', 'top'], moveLeft: [],
+      return layout({ fields: f3, top: ['hero'], stage: 'stage', quick: 'quick', left: [], right: ['use', 'top'], moveLeft: [],
         narrowOrder: ['stage', 'quick', 'top', 'use'] });
     }
     return layout({ fields: f, top: ['hero', 'metric'], left: wide ? ['flow'] : ['top'],
@@ -611,9 +619,43 @@
     var fsrc = C.fs || C.flowSrc;
     var imp = C.solar && grid != null ? Math.max(grid, 0) : null;
     if (imp == null && fsrc && fsrc.has && (fsrc.has.solar || fsrc.has.battery) && fsrc.has.grid) imp = E.flowValues(fsrc, states).imp;
-    if (p != null && p > 0 && imp != null) bits.push(Math.round(Math.max(0, Math.min(1, 1 - imp / p)) * 100) + ' % aus Solar und Akku');
+    // The share of solar and battery is said in words in the status line (E.status3); the stage keeps „Jetzt“.
     if (p != null && p < -20) bits.push('Einspeisung');
     return { p: p, line: bits.join(' · ') };
+  };
+  // Status line in words (owner, 01.11.2026: never the stage's watts again): where the power comes from, the
+  // battery, else today's use. Pure for dev/unit/energy_status_words.mjs: { main, rest, tone }.
+  var OFFL = function (st) { return ['unavailable', 'unknown', ''].indexOf(String(st == null ? '' : st).toLowerCase()) > -1; };
+  E.statusWords = function (C, states, hass) {
+    var p = watt(states, C.home);
+    if (C.sum && window._casoraPowerSum) { var R0 = window._casoraPowerSum(C.sum, states); p = isFinite(R0.sum) ? R0.sum : null; }
+    var F = C.fs || C.flowSrc, v = F && F.has ? E.flowValues(F, states) : null, h = (v && v.has) || {};
+    var act = function (w) { return w != null && w > FLOW_ON; };
+    var rest = [], main = null, tone = null;
+    if (!C.sum && C.home && states[C.home] && OFFL(states[C.home].state) && !(v && (act(v.solar) || act(v.imp)))) return { main: 'Offline', rest: [], tone: null };
+    if (h.battery && v) {
+      if (v.lade) rest.push(act(v.chg) ? 'Akku lädt' : act(v.dis) ? 'Akku entlädt' : 'Akku bereit');
+      else if (v.soc != null) rest.push('Akku ' + Math.round(v.soc) + ' %');
+    }
+    if (v && v.gridOff) main = 'Netz offline';
+    else if (v && act(v.exp) && !act(v.imp)) main = 'Einspeisung ins Netz';
+    else if (v && p != null && p > FLOW_ON && (h.solar || h.battery) && h.grid && v.imp != null) {
+      var share = Math.round(Math.max(0, Math.min(1, 1 - v.imp / p)) * 100);
+      var sol = h.solar && act(v.solar), bat = h.battery && act(v.dis);
+      if (share >= 50 && (sol || bat)) main = (sol && bat ? 'Solar und Akku decken ' : sol ? 'Solar deckt ' : 'Akku deckt ') + share + ' %';
+      else main = 'Bezug aus dem Netz';
+    } else if (v && act(v.imp)) main = 'Bezug aus dem Netz';
+    if (!main) {
+      var kwh = num(states, C.today), cost = money(num(states, C.costToday), C.cur, hass);
+      if (p != null && p < -20) main = 'Einspeisung ins Netz';
+      else if (kwh != null) { main = 'Heute ' + fN(kwh, hass) + ' kWh'; if (cost) rest.push(cost); }
+      else main = p == null ? 'Noch keine Werte' : p <= FLOW_ON ? 'Kein Verbrauch' : 'Verbraucht Strom';
+    }
+    return { main: main, rest: rest.slice(0, 2), tone: tone };
+  };
+  E.status3 = function (C, states, hass) {
+    var UI = window._casoraUI, w = E.statusWords(C, states, hass);
+    return UI && UI.line ? UI.line(w.main, w.rest, { tone: w.tone }) : '';
   };
   E.stage3 = function (C, states, hass, self) {
     var UI = window._casoraUI;
@@ -908,6 +950,10 @@
       var g = watt(states, F.grid), x = watt(states, F.exp);
       v.imp = pos(g); v.exp = x != null ? pos(x) : neg(g);
     } else if (F.gridHa) { var gh = sum(F.gridHa, false); v.imp = pos(gh); v.exp = neg(gh); }
+    // Grid sensors there but none with a value (unavailable/unknown): „Offline“, not „—“ (owner, 01.11.2026).
+    var gIds = [F.grid, F.exp].concat(F.gridHa || []).filter(function (id) { return id && states[id]; });
+    v.gridOff = gIds.length > 0 && v.imp == null && v.exp == null
+      && gIds.every(function (id) { return ['unavailable', 'unknown', ''].indexOf(String(states[id].state || '').toLowerCase()) > -1; });
     v.lade = !!(F.chg || F.dis || F.batTile || F.batHa);
     v.soc = num(states, F.soc);
     if (F.home) v.home = watt(states, F.home);
@@ -957,7 +1003,7 @@
       top: !!(h.solar || (h.co2 && h.grid)), bottom: !!h.battery,
       nodes: {
         grid: { show: !!h.grid, w: !known(v.imp) && !known(v.exp) ? null : exporting ? exp : imp,
-          label: exporting ? 'Einspeisung' : 'Netz' },
+          off: !!v.gridOff, label: exporting ? 'Einspeisung' : 'Netz' },
         solar: { show: !!h.solar, w: known(v.solar) ? solar : null, label: 'Solar' },
         battery: { show: !!h.battery, soc: known(v.soc) ? v.soc : null,
           w: !known(v.chg) && !known(v.dis) ? null : act(chg) ? chg : act(dis) ? dis : 0,
@@ -1074,7 +1120,7 @@
       else if (k === 'battery') {
         txt(q('[data-e1-v]', el), n.soc != null ? Math.round(n.soc) + ' %' : fW(n.w, hass));
         txt(q('[data-e1-s]', el), n.soc != null && n.w != null ? fW(n.w, hass) : '');
-      } else txt(q('[data-e1-v]', el), fW(n.w, hass));
+      } else txt(q('[data-e1-v]', el), n.w == null && n.off ? 'Offline' : fW(n.w, hass));
     });
     Object.keys(m.edges).forEach(function (k) {
       var e = m.edges[k], line = q('[data-e1-line="' + esc(k) + '"]'), dot = q('[data-e1-dot="' + esc(k) + '"]');

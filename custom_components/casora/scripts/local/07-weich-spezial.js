@@ -252,6 +252,22 @@
       moons: function () { return AL.quick(ent, states); },
     }));
   };
+  // Status line (richtlinien §3, owner 01.11.2026): never the stage's sentence again („Aktiviert · Zuhause“ stood in the
+  // head and in the wheel) – the head says since when: „Seit 14:42“ today, else „Seit 28.10.“.
+  AL.since = function (iso, now) {
+    var t = iso ? new Date(iso) : null;
+    if (!t || isNaN(t.getTime())) return '';
+    var n = now || new Date(), loc = window.casoraLocale ? window.casoraLocale() : 'de-DE';
+    var same = t.toDateString() === n.toDateString();
+    return 'Seit ' + (same ? t.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' })
+      : t.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' }));
+  };
+  AL.line = function (ent, states) {
+    var UI = window._casoraUI, s = states && states[ent];
+    if (!UI || !UI.line || !s) return '';
+    var w = AL.since(s.last_changed);
+    return w ? UI.line(w, []) : '';
+  };
   // Field „quick“: every arm mode the panel supports (supported_features: away, home, night, vacation, custom bypass) –
   // up to 4 as moons, more: the first 3 and „Alle (n)“ → a sub page with every mode (richtlinien §5, owner 01.11.2026:
   // Urlaub and Bypass were missing). „Aus“ is the stage's action only (the pill under the wheel).
