@@ -11932,6 +11932,9 @@ window.casoraMenuGlass = {
     // Width: the moons reach 8.7 % beyond the square on each side (§4.8 positions), so the wheel is the column / 1.18.
     + '.hui-stage.dial:not(.mb) > .hui-dl{aspect-ratio:1 / .88;}'
     + '.hui-stage.dial:not(.mb) > .hui-dl > svg{clip-path:inset(-20% -20% 12% -20%);}'
+    // Media (record + „Lautstärke“, title, progress and the playback keys under the wheel): on a short wide screen
+    // (iPad landscape 1024×768) the keys fell below the edge (r64) – the wheel gives up height there, never below 240.
+    + '@media (min-width:761px) and (max-height:900px){.hui-stage.dial:has(> .hui-dl-vol) > .hui-dl{width:min(400px, calc(100% / 1.18), max(240px, calc(100vh - 480px)));}}'
     + '.hui-dl{position:relative;flex:none;width:min(400px, calc(100% / 1.18));aspect-ratio:1;container-type:inline-size;'
     +   'touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;outline:none;}'
     + '.hui-dl:focus-visible .hui-dl-knob{stroke:' + T.ink + ';stroke-width:3;}'
@@ -12031,11 +12034,11 @@ window.casoraMenuGlass = {
     +   'box-shadow:0 0 0 3px var(--dl-col), 0 10px 26px -6px color-mix(in srgb, var(--dl-col) 45%, transparent);}'
     + '.hui-moon.on .ic{color:color-mix(in srgb, var(--dl-col) 65%, var(--casora-soft-seg-on-ink, ' + T.ink + '));}'
     // The moon's word is small (11 px): the action ink darkened to keep 4.5 : 1 on teal or blue device colours.
+    // A choice whose device cannot be reached (it.dis): greyed out and without an action (richtlinien §12 offline).
+    + '.hui-moon.dis{opacity:.5;cursor:default;box-shadow:none;}'
     + '.hui-moon.go{background:var(--dl-col);color:color-mix(in srgb, var(--casora-popup-action-ink, rgba(46,34,20,.9)) 45%, black);}'
     + '.hui-moon.go .ic{color:inherit;}'
     + '.hui-moon.dng{background:transparent;box-shadow:inset 0 0 0 2px ' + S.ctl + ';color:var(--casora-color-red-text, var(--casora-color-red));}'
-    // A choice whose device cannot be reached (it.dis): greyed out and without an action (richtlinien §12 offline).
-    + '.hui-moon.dis{opacity:.5;cursor:default;box-shadow:none;}'
     + '.hui-moon.dng .ic{color:inherit;}'
     + '.hui-moon:active{transform:translate(-50%, -50%) scale(var(--casora-press-scale, .97));}'
     + '@media (hover:hover){.hui-moon:hover{transform:translate(-50%, -50%) scale(1.07);}}'

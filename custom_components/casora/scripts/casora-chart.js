@@ -481,6 +481,13 @@
         if (n._casoraOrig == null) { n._casoraOrig = n.innerHTML; me._touched.push(n); }
         n.setAttribute('data-casora-reading', '');
         n.textContent = txt;
+        // v3: the unit beside a bare number follows.
+        var u = n.hasAttribute('data-casora-read-bare') && n.nextElementSibling, x = vals[0], s = x && String(x.text);
+        if (e != null && u && u.classList.contains('hui-st-u') && s && !s.indexOf(x.num)) {
+          if (u._casoraOrig == null) { u._casoraOrig = u.innerHTML; me._touched.push(u); }
+          u.setAttribute('data-casora-reading', '');
+          u.textContent = s.slice(String(x.num).length).trim();
+        }
       });
     }
     _release() {
