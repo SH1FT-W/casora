@@ -12,7 +12,7 @@ await need('Casora-Dashboard mit Handy-Gegenstück', dash && dash.phone);
 
 // ── Dashboard: welches offene Fenster meldet die Glocke gerade? ─────────────────────────────
 const bell = async (page, url) => {
-  await ready(page, '/' + url, '() => !!window._casoraNotify && !!window._casoraLocalLoaded', 60000);
+  await ready(page, '/' + url, () => !!window._casoraNotify && !!window._casoraLocalLoaded, 60000);
   await page.waitForFunction(() => window._casoraNotify.rows.length > 0, null, { timeout: 20000 }).catch(() => {});
 };
 // Glocke noch nicht (wieder) geladen → leere Liste statt Abbruch; rowsUntil wartet dann weiter.

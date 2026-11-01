@@ -20,7 +20,9 @@ atFinish(async () => { for (const id of ['qa_r347_a', 'qa_r347_b', 'qa_r347_c'])
 
 const { page } = await open({ width: 1440, height: 900, dark: true });
 usePage(page);
-await ready(page, '/' + dash.url + '/' + (dash.config.views[0].path || '0'), '() => !!window._casoraNotify && !!window._casoraLocalLoaded', 60000);
+// A function, not its source as a string: Playwright evaluates a string as an expression, and the arrow function itself
+// is truthy – the test went on at once and, with the scripts still loading (busy machine, gate 26.11.2), found no bell.
+await ready(page, '/' + dash.url + '/' + (dash.config.views[0].path || '0'), () => !!window._casoraNotify && !!window._casoraLocalLoaded, 60000);
 const rows = () => page.evaluate(() => window._casoraNotify.rows.filter((r) => /^ha:pn:qa_r347/.test(r.id)).map((r) => ({ id: r.id, label: r.label, sub: r.sub })));
 const until = async (want) => { let r = await rows(); for (const t0 = Date.now(); !want(r) && Date.now() - t0 < 8000;) { await page.waitForTimeout(300); r = await rows(); } return r; };
 
