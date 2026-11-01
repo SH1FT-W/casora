@@ -77,4 +77,11 @@ delete entities['sensor.nebelchen_water_level'];
 const c2 = H.find(hass, ID);
 states[ID] = { entity_id: ID, state: 'on', attributes: base };
 assert.ok(/Wassertank=Leer/.test(H.sec('info', c2, states, hass)));
+// Detail round #21 (v3): head without the mode, chart with a head, humidity not again as a row.
+{
+  const src0 = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/19-befeuchter.js', import.meta.url), 'utf8');
+  assert.ok(src0.includes("if (part === 'v3hero') return UI.hero({ value: s.label, center: true });"), 'v3 head: the word only');
+  assert.ok(src0.includes("title: 'Luftfeuchte · 24 Std.'"), 'v3 chart head');
+  assert.ok(src0.includes('!(H.v3() && c.humidity)'), 'v3: no humidity row beside the chart');
+}
 console.log('befeuchter: ok');
