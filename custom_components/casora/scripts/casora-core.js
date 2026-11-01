@@ -11760,6 +11760,8 @@ window.casoraMenuGlass = {
     + 'padding:var(--casora-v3-stage-pad, 20px);display:flex;flex-direction:column;gap:var(--casora-v3-stage-gap, 16px);'
     + 'color:' + T.ink + ';overflow-wrap:normal;word-break:normal;hyphens:manual;}'
     + '.hui-stage.na{opacity:.5;pointer-events:none;}'
+    // A heading in an S8 plate (coffee „Getränke“) keeps 8 to what follows, like every heading (§6), not 8 + the gap.
+    + '.hui-stage > .hui-slbl{margin-bottom:calc(8px - var(--casora-v3-stage-gap, 16px)) !important;}'
     + '.hui-stage *{box-sizing:border-box;}'
     // Value 56/800 (S2 72/800), unit 22/700 in text 2 right behind it; word 15/600 text 2, 6 apart.
     + '.hui-st-val{display:flex;align-items:baseline;gap:4px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap;}'
