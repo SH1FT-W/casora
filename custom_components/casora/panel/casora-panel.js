@@ -27194,9 +27194,15 @@ class CasoraPanel extends HTMLElement {
     const V = room.variables || {};
     let present, LABEL, ICON, dotIcon;
     if (f.sub === "climate") {
-      // The blinds row only on Home (casoraClimateBlinds, 35-phone-hub.js), as the dashboard.
-      const blinds = home && typeof window.casoraClimateBlinds === "function"
-        && window.casoraClimateBlinds(this._hass, null, V.climate_blinds, true).length > 0;
+      // The blinds row only on Home (casoraClimateBlinds, 35-phone-hub.js), as the dashboard. That script may not be
+      // loaded yet when the Studio draws: then its own fallback – a cover that is no gate, door or HA group.
+      const H = this._hass || {};
+      const S = H.states || {};
+      const anyBlind = () => Object.keys(S).some((id) => id.startsWith("cover.")
+        && !["garage", "gate", "door"].includes(String((S[id].attributes || {}).device_class || "").toLowerCase())
+        && !Array.isArray((S[id].attributes || {}).entity_id));
+      const blinds = home && V.climate_blinds !== false && (typeof window.casoraClimateBlinds === "function"
+        ? window.casoraClimateBlinds(H, H.user, V.climate_blinds, true).length > 0 : anyBlind());
       present = climSubPresent(V, blinds);
       LABEL = CLIM_SUB_LABEL; ICON = CLIM_SUB_ICON; dotIcon = "badge-climate";
     } else {
