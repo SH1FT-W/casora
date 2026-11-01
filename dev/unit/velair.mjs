@@ -16,7 +16,9 @@ globalThis.history = { pushState: () => {} };
 const esc = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // Stand-in for casora-core's _casoraUI: same escaping, rows kept for the assertions.
 const rowsSeen = [];
+// Switch rows (UI.row.toggle, issue 105): the stub shows the switch's state as „An“/„Aus“; the real markup is checked in popup_switch_rows.mjs.
 window._casoraUI = {
+  row: { toggle: (o) => Object.assign({}, o, { value: o.disabled ? undefined : o.on ? 'An' : 'Aus', sub: o.disabled && o.reason ? o.reason : o.sub }) },
   esc, tokens: { font: 'x', ink: 'i', ink2: 'i2' },
   line: (main, rest) => '<div class="hui-line">' + esc(main) + (rest || []).map((r) => ' · ' + esc(r)).join('') + '</div>',
   group: (rows, label) => { rowsSeen.push({ label, rows }); return '<div class="g">' + esc(label || '') + rows.map((r) => '<div>' + esc(r.label) + '|' + esc(r.sub || '') + '|' + esc(r.value || '') + '</div>').join('') + '</div>'; },

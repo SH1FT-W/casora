@@ -15,6 +15,8 @@
   var MEAS = /^(sensor|binary_sensor|number|input_number|counter|input_select|select|input_text|event|weather|sun)$/;
   var DEVICE = /^(light|cover|climate|fan|media_player|vacuum|lawn_mower|switch|lock|alarm_control_panel|camera|humidifier|water_heater|valve|siren|input_boolean|person|remote)$/;
   var SETTINGS_ROW = /^(Weitere Einstellungen|More settings)$/i;
+  // On/off entities that a device page switches directly (issue 105); locks, covers, alarms stay rows that open their page.
+  var SWITCH_ROW = /^(switch|input_boolean|light|fan)$/;
 
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var T = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
@@ -681,8 +683,10 @@
       var groups = { main: [], config: [], diagnostic: [] };
       ids.sort().forEach(function (eid) {
         var s5 = states[eid];
-        var row = { entity: eid, icon: Z.iconOf(s5), iconTone: 'accent', label: shortName(hass, eid, dv4),
-          value: Z.stateWord(hass, eid, s5.state) };
+        // issue 105: an on/off entity is a switch row (UI.row.entity), switched here instead of shown as „An“/„Aus“.
+        var row = SWITCH_ROW.test(eid.split('.')[0]) && UI.row && UI.row.entity && /^(on|off|unavailable|unknown)$/.test(s5.state)
+          ? UI.row.entity(s5, { icon: Z.iconOf(s5), label: shortName(hass, eid, dv4) })
+          : { entity: eid, icon: Z.iconOf(s5), iconTone: 'accent', label: shortName(hass, eid, dv4), value: Z.stateWord(hass, eid, s5.state) };
         (groups[catOf(hass, eid)] || groups.main).push(row);
       });
       var outE = '';

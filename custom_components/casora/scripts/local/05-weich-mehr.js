@@ -378,16 +378,12 @@
         var on = raw(states, w.sw) === 'on';
         var cl = num(states, w.clients);
         /* Blueprint v2 (rule 6): a real switch instead of the word „An“; switching off still asks first. */
-        var tr0 = UI.row ? UI.row.toggle({ icon: 'wifi', label: w.label, on: on,
+        var tr0 = UI.row.toggle({ icon: 'wifi', label: w.label, on: on,
           sub: on ? (cl != null ? Math.round(cl) + ' Clients' : 'Aktiv') : 'Ausgeschaltet',
-          svc: { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: w.sw } },
-          confirm: on ? 'Ausschalten' : undefined }) : null;
-        if (tr0) { tr0.iconTone = on ? NET_TONE : null; rows.push(tr0); return; }
-        rows.push({ icon: 'wifi', iconTone: on ? NET_TONE : null, label: w.label,
-          sub: on ? (cl != null ? Math.round(cl) + ' Clients' : 'Aktiv') : 'Ausgeschaltet',
-          action: on ? 'An' : 'Aus', actionTone: null,
           svc: { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: w.sw } },
           confirm: on ? 'Ausschalten' : undefined });
+        tr0.iconTone = on ? NET_TONE : null;
+        rows.push(tr0);
       });
       return rows.length ? UI.group(rows, 'WLAN') : '';
     }
@@ -442,10 +438,11 @@
       (C.locks || []).forEach(function (l) {
         if (!states[l.sw]) return;
         var on = raw(states, l.sw) === 'on';
-        lrows.push({ icon: on ? 'mdi:shield-lock-outline' : 'mdi:shield-off-outline', iconTone: on ? 'warn' : null,
-          label: l.label, sub: on ? 'Aktiv' : 'Aufgehoben', action: on ? 'An' : 'Aus', actionTone: on ? 'warn' : null,
+        // issue 105: a switch on the right (UI.row.toggle) instead of the word „An“/„Aus“; both directions still ask.
+        lrows.push(UI.row.toggle({ icon: on ? 'mdi:shield-lock-outline' : 'mdi:shield-off-outline', iconTone: 'warn', on: on,
+          label: l.label, sub: on ? 'Aktiv' : 'Aufgehoben',
           svc: { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: l.sw } },
-          confirm: on ? 'Aufheben' : 'Aktivieren', active: on });
+          confirm: on ? 'Aufheben' : 'Aktivieren' }));
       });
       if (lrows.length) secs.push(UI.group(lrows, 'Sperren'));
       var ih = N.sec('inet', C, states, hass, true);

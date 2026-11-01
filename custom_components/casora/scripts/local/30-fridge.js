@@ -354,19 +354,21 @@
     }
     if (part === 'modes') {
       var mr = [];
+      // issue 105: each mode is a switch row (the shared one in casora-core.js), the switch toggles it directly.
+      var swRow = function (id, o) {
+        var isOn = on(S[id]);
+        var svc = { domain: id.split('.')[0], service: isOn ? 'turn_off' : 'turn_on', target: { entity_id: id } };
+        return UI.row.toggle(Object.assign({ on: isOn, svc: svc }, o));
+      };
       C.zones.forEach(function (z, i) {
         if (!z.sup || !S[z.sup] || bad(S[z.sup].state)) return;
-        var isOn = on(S[z.sup]);
-        mr.push({ icon: z.supKind === 'frost' ? 'mdi:snowflake-variant' : 'mdi:snowflake', iconTone: isOn ? 'accent' : OFF_PLATE, label: z.supLabel || 'Super',
-          sub: C.zones.filter(function (x) { return x.sup; }).length > 1 || C.zones.length > 1 ? z.label : null, value: isOn ? 'An' : 'Aus', active: isOn,
-          svc: { domain: 'switch', service: isOn ? 'turn_off' : 'turn_on', target: { entity_id: z.sup } } });
+        mr.push(swRow(z.sup, { icon: z.supKind === 'frost' ? 'mdi:snowflake-variant' : 'mdi:snowflake', label: z.supLabel || 'Super',
+          sub: C.zones.filter(function (x) { return x.sup; }).length > 1 || C.zones.length > 1 ? z.label : null }));
       });
       C.modes.forEach(function (m) {
         var st = S[m.id];
         if (!st || bad(st.state)) return;
-        var isOn = on(st);
-        mr.push({ icon: m.icon, iconTone: isOn ? 'accent' : OFF_PLATE, label: m.label, value: isOn ? 'An' : 'Aus', active: isOn,
-          svc: { domain: m.id.split('.')[0], service: isOn ? 'turn_off' : 'turn_on', target: { entity_id: m.id } } });
+        mr.push(swRow(m.id, { icon: m.icon, label: m.label }));
       });
       return mr.length ? UI.group(mr, 'Modi') : '';
     }
@@ -401,6 +403,8 @@
         var dn = dev ? String(dev.name_by_user || dev.name || '') : '';
         var lbl = String(a.friendly_name || id);
         if (dn && lbl.toLowerCase().indexOf(dn.toLowerCase() + ' ') === 0) lbl = lbl.slice(dn.length + 1);
+        // issue 105: an on/off setting is a switch row, as the modes above.
+        if (/^(switch|input_boolean)\./.test(id) && UI.row && UI.row.entity) return UI.row.entity(st, { icon: a.icon || 'mdi:tune-variant', label: lbl });
         return { entity: id, icon: a.icon || 'mdi:tune-variant', iconTone: 'accent', label: lbl, value: word };
       }).filter(Boolean);
       if (C.anchor && UI.settingsRow) xr.push(UI.settingsRow(C.anchor));

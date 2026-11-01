@@ -178,7 +178,9 @@ assert.equal(F.media(hass), '/media-browser/browser/app%2Cmedia-source%3A%2F%2Ff
 assert.equal(F.media({ config: { components: ['media_source'] } }), null);
 
 // Popup-Bereiche (UI-Bausteine als Platzhalter)
+// Switch rows (UI.row.toggle, issue 105): the stub shows the switch's state as „An“/„Aus“; the real markup is checked in popup_switch_rows.mjs.
 window._casoraUI = {
+  row: { toggle: (o) => Object.assign({}, o, { value: o.disabled ? undefined : o.on ? 'An' : 'Aus', sub: o.disabled && o.reason ? o.reason : o.sub }) },
   esc: (t) => String(t), tokens: {},
   line: (m, r) => '<line>' + m + '|' + [].concat(r || []).join(';') + '</line>',
   group: (rows, label) => '<group ' + label + '>' + rows.map((r) => r.label + '=' + (r.value || '') + '~' + (r.sub || '') + (r.confirm ? '!' : '') + (r.entity ? '@' + r.entity : '')).join(';') + '</group>',

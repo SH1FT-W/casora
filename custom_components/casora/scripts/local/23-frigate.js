@@ -2826,8 +2826,9 @@
   var swRow = function (S, id, icon, label, ask) {
     if (!id || !S[id] || S[id].state === 'unavailable') return null;
     var isOn = S[id].state === 'on';
-    return { icon: icon, iconTone: isOn ? 'accent' : null, label: label, value: isOn ? 'An' : 'Aus',
-      svc: { domain: 'switch', service: isOn ? 'turn_off' : 'turn_on', target: { entity_id: id } }, confirm: isOn && ask ? 'Ausschalten' : null };
+    // issue 105: a switch on the right (the shared UI.row.toggle), not the word „An“/„Aus“.
+    return window._casoraUI.row.toggle({ icon: icon, label: label, on: isOn,
+      svc: { domain: 'switch', service: isOn ? 'turn_off' : 'turn_on', target: { entity_id: id } }, confirm: isOn && ask ? 'Ausschalten' : null });
   };
   var reg = function (c, el, hass) {
     if (!el) return;
