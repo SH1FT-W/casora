@@ -3736,6 +3736,7 @@ const MENU_ICONS = {
   "undo": "<path d=\"M9 14 4 9l5-5\"/><path d=\"M4 9h10.5a5.5 5.5 0 0 1 0 11H12\"/>",
   "open": "<rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"4.5\"/><path d=\"M10 14l4.5-4.5M10.5 9.5h4v4\"/>",
   "import": "<path d=\"M12 4v10M8 10.5l4 3.5 4-3.5\"/><path d=\"M5 14.5v2.5a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-2.5\"/>",
+  "share": "<path d=\"M12 14V4M8 7.5l4-3.5 4 3.5\"/><path d=\"M5 14.5v2.5a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-2.5\"/>",
   "phone": "<rect x=\"7\" y=\"3\" width=\"10\" height=\"18\" rx=\"2.6\"/><path d=\"M11 17.5h2\"/>",
   "move": "<path d=\"M4 11.5 12 5l8 6.5\"/><path d=\"M6 10v8.5a1 1 0 0 0 1 1h4\"/><path d=\"M14.5 16.5h6M18 13.5l3 3-3 3\"/>",
   "clock": "<path d=\"M3.5 12a8.5 8.5 0 1 0 2.5-6\"/><path d=\"M3 4.5V9h4.5\"/><path d=\"M12 7.5V12l3 2\"/>",
@@ -3754,8 +3755,9 @@ const MENU_ICONS = {
 const DASH_MENU = [
   ["This dashboard", "renamedash", "pencil"], ["This dashboard", "copydash", "copy"], ["This dashboard", "icondash", "grid"],
   ["This dashboard", "addmobile", "phone"], ["This dashboard", "casora_versions", "clock"],
+  ["This dashboard", "casora_export", "share"],
   ["This dashboard", "delete", "trash"],
-  ["New", "casora_umzug", "move"], ["New", "import", "import"],
+  ["New", "casora_umzug", "move"], ["New", "import", "import"], ["New", "casora_import_file", "import"],
   ["Setup & Help", "casora_assist", "devices"],
   ["Setup & Help", "setup", "setup"], ["Setup & Help", "hints", "hints"], ["Setup & Help", "help", "help"],
   ["Casora", "casora_updates", "update"],
@@ -6479,6 +6481,9 @@ const FLOW_GLYPH = {
   rewind: FLOW_SVG('<path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3 4.5V9h4.5"/><path d="M12 7.5V12l3 2"/>', 1.9),
   update: FLOW_SVG('<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4.5V9h-4.5"/><path d="M12 8v7M9 12.5l3 3 3-3"/>', 1.9),
   phone: FLOW_SVG('<rect x="7" y="3" width="10" height="18" rx="2.4"/><path d="M11 18h2"/>', 1.9),
+  // Export / import from file (casora-panel-share.js).
+  share: FLOW_SVG('<path d="M12 14.2V3.8m0 0-4 4m4-4 4 4"/><path d="M4.6 14.6v2.9a2 2 0 0 0 2 2h10.8a2 2 0 0 0 2-2v-2.9"/>'),
+  photo: FLOW_SVG('<rect x="3.5" y="5" width="17" height="14" rx="2.4"/><circle cx="9" cy="10" r="1.8"/><path d="m20.5 16-5-5-8.5 8"/>', 1.9),
   // „Aa“ für die Schriftwahl: großes A, kleines a.
   font: FLOW_SVG('<path d="M2.8 19.2 8.6 4.8l5.8 14.4"/><path d="M4.9 14.4h7.4"/><circle cx="17.9" cy="15.6" r="3.3"/><path d="M21.2 11.9v7.3"/>', 1.9),
   doc: FLOW_SVG('<path d="M7 3.6h6.4L18 8.2v12.2H7z"/><path d="M13.4 3.6v4.6H18"/>', 1.8),

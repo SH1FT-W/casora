@@ -1096,6 +1096,11 @@
       HELP_TOPICS.forEach((h) => A("help-" + h.id, h.title, h.words + " hilfe help wie how", () => this._helpTopic(h.id), true, way("Help", "How do I …?")));
       A("diag", "Copy diagnostics…", "diagnose diagnostics fehler problem melden issue github support bug hilfe kopieren zwischenablage debug",
         () => this._diagShow(), typeof this._diagShow === "function", way("Help…"));
+      // Dashboard as a file (casora-panel-share.js).
+      A("export", "Export…", "exportieren export teilen share datei sichern weitergeben dashboard speichern sicherung backup",
+        () => this._shExport(), typeof this._shExport === "function" && !!this._dashUrl, way("This dashboard"));
+      A("importfile", "Import from file…", "importieren import datei file dashboard laden teilen share einlesen",
+        () => this._shImportPick(), typeof this._shImportPick === "function", way("New"));
       // Rooms
       rooms.forEach((r, i) => {
         const V = r.variables || {};
