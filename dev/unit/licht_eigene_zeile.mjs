@@ -26,6 +26,12 @@ const opens = (html) => [...html.matchAll(/<div class="lps-row(?: [^"]*)?"([^>]*
 // Popup of light.a alone (badge), its room light.a + light.b.
 const one = S.render({ gid: 'light.a', rooms: null, flat: { name: 'Room', rid: 'light.a', lights: ['light.a'], room: ['light.a', 'light.b'] } }, 'body', states, hass);
 assert.deepEqual(opens(one), [null, 'light.b'], 'own row does not open, the other lamp does');
+// The open lamp stays listed and is marked as the one in the dial (owner, 01.11.2026); the others are not.
+const rowsOf = (html) => [...html.matchAll(/<div class="lps-row( [^"]*)?"([^>]*)>/g)].map((m) => ({ cls: m[1] || "", attrs: m[2] }));
+const r1 = rowsOf(one);
+assert.ok(/\bsel\b/.test(r1[0].cls) && /aria-current="true"/.test(r1[0].attrs), 'open lamp row is marked selected');
+assert.ok(!/\bsel\b/.test(r1[1].cls) && !/aria-current/.test(r1[1].attrs), 'other rows are not marked');
+assert.ok(/\.lps-row\.sel::after\{[^}]*box-shadow:inset 0 0 0 2px var\(--casora-popup-accent/.test(one), 'selection ring in the accent colour');
 
 // Without a room group: only the lamp itself, not tappable either.
 const alone = S.render({ gid: 'light.c', rooms: null, flat: { name: 'Room', rid: 'light.c', lights: ['light.c'], room: null } }, 'body', states, hass);
