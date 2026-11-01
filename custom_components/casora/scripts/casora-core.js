@@ -7205,6 +7205,7 @@ window.casoraMenuGlass = {
       var V = Object.assign({}, (src._config && src._config.variables) || {}, src._evaluatedVariables || {});
       Object.keys(V).forEach(function (k) {
         var v = V[k];
+        if (v && !Array.isArray(v) && typeof v === 'object' && 'value' in v) v = v.value;   // button-card's { value } wrapper
         if (Array.isArray(v) && v.length > 1 && v.every(function (x) { return typeof x === 'string' && /^[a-z_]+\.[\w-]+$/.test(x); })) out = out.concat(v);
       });
       return out.filter(function (x, i, l) { return S[x] && l.indexOf(x) === i; });

@@ -24,7 +24,7 @@ assert.equal(lab('casora_popup_lock', 'lock.flur', { locks: ['lock.flur', 'lock.
 assert.equal(lab('casora_popup_lock', 'lock.flur', { locks: ['lock.flur', 'lock.ohne'] }), 'Zuhause', 'a member without a room is not in Flur');
 assert.equal(lab('casora_popup_lock', 'lock.flur', { locks: ['lock.flur', 'lock.flur2'] }), 'Flur', 'both locks in Flur');
 // Evaluated variables (button-card keeps [[[ … ]]] results apart).
-assert.equal(roomLabelOf({ _config: { template: 'casora_popup_lock', variables: { locks: '[[[ return [] ]]]' } }, _evaluatedVariables: { locks: ['lock.flur', 'lock.haus'] },
+assert.equal(roomLabelOf({ _config: { template: 'casora_popup_lock', variables: { locks: '[[[ return [] ]]]' } }, _evaluatedVariables: { locks: { value: ['lock.flur', 'lock.haus'] } },
   _stateObj: h.states['lock.flur'], _hass: h }), 'Zuhause', 'evaluated variables count');
 // House popups (contacts …): Zuhause over several rooms, still no label for one thing.
 h.states['binary_sensor.fenster'] = st('binary_sensor.fenster', { entity_id: ['cover.wz_l', 'cover.bad'] });
