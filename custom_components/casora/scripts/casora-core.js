@@ -12708,6 +12708,8 @@ window.casoraMenuGlass = {
       if (off2 && hasV2) dataPct = dialPct(o.value, mn, mx);
       ring.knob = !!spec && !off2;
       ring.heat = !!o.heat;
+      // o.ringColor: the ring in a given colour (a colour lamp shows its own colour, owner 01.11.2026).
+      if (o.ringColor && !off2) ring.col = o.ringColor;
       if (o.current != null && isFinite(Number(o.current))) ring.marker = dialPct(o.current, mn, mx);
       // Off at the device's minimum (a floor heating parks at 5,0 °C): the wheel says „Aus“, not the frost value
       // (review 2, DH-13); keys and drag still start there.

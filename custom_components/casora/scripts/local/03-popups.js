@@ -4466,6 +4466,13 @@
       seg = seg.concat([{ label: tr('Farbe'), active: colCur, attrs: { 'data-casora-wheel': colT.join(',') } }]);
       if (colCur && !curLbl) curLbl = tr('Farbe');
     }
+    // In colour mode the ring takes the lamp's colour (the first lamp that is on in colour).
+    var ringColor = null;
+    if (colCur) colOn.some(function (id) {
+      var rgb = (states[id].attributes || {}).rgb_color;
+      if (Array.isArray(rgb) && rgb.length >= 3) { ringColor = 'rgb(' + rgb.slice(0, 3).map(function (x) { return Math.round(Number(x) || 0); }).join(',') + ')'; return true; }
+      return false;
+    });
     // Several lamps on at different brightness: the value is their average – say so (review 2, E08/fam-09).
     var litP = lit.map(function (id) { return pct(states[id]); }).filter(function (p) { return p != null; });
     var avg = litP.length > 1 && litP.some(function (p) { return p !== litP[0]; });
@@ -4474,7 +4481,7 @@
       word: v ? [avg ? tr('Ø von ' + litP.length + ' Lampen') : word(v)].concat(curLbl ? [curLbl] : []).join(' · ') : '',
       words: ['Aus', 'Gedimmt', 'Volle Helligkeit'],
       svc: dim.length && target.length ? { domain: 'light', service: 'turn_on', field: 'brightness_pct', target: { entity_id: target }, zeroOff: true } : null,
-      seg: seg, moons: moons || null });
+      seg: seg, moons: moons || null, ringColor: ringColor });
   };
   /* The lamp's own effects (Hue scenes/effects, WLED, Govee …; Marco, 01.11.2026): one moon „Effekte“ that opens the
      small menu at the moon (richtlinien §4.8, as „Alle (n)“) with every effect, the running one hinterlegt and
