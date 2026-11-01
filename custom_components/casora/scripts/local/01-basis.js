@@ -512,7 +512,9 @@ window._casoraLightScope = function (entity, states, hass, vars) {
   var autoIdx = -1;
   if (!pgOff && groupId && variables.group_rooms === true && !(isArr(variables.lights) && variables.lights.length > 0)) {
     var m0 = membersOf(groupId);
-    if (!isArr(m0) || !isArr(membersOf(m0[0]))) {
+    // Only a room group climbs to the house above it. A single lamp stays itself: it climbed into its room when the
+    // room group's first member was a sub-group, and a lamp row opened the room's popup again (01.11.2026).
+    if (isArr(m0) && !isArr(membersOf(m0[0]))) {
       var from = groupId;
       for (var sid in S) {
         if (sid.indexOf('light.') !== 0 || sid === from) continue;
