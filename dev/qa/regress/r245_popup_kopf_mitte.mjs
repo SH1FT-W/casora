@@ -10,6 +10,8 @@
 //  - im selben Popup alle Kombinationen Etikett ja/nein × Titel ein-/zweizeilig × Statuszeile ja/nein;
 //  - X (und Hauptschalter, falls da) stehen auf derselben Mitte wie die Kachel.
 // Mittig = Mitte Kachel − Mitte Textbox (oberste Box oben … unterste unten) ≤ 1 px.
+// Popup v3 (Bühne, richtlinien §3): no symbol tile – X and main switch on the middle of the text block, label above
+// title above status line, in every combination.
 import { open, casoraDashboard, dashboard, check, need, finish } from './lib.mjs';
 
 process.env.CASORA_THEME = 'Casora';
@@ -47,10 +49,15 @@ const MESS = (v) => {
   const R = (n) => n.getBoundingClientRect();
   const parts = [eb, ti, st].filter(vis).map(R);
   const ring = sr.querySelector('.header-ring');
-  const out = { soft: el.hasAttribute('soft') };
-  if (parts.length && ring && R(ring).height) {
+  const out = { soft: el.hasAttribute('soft'), v3: el.getAttribute('data-casora-pv') === 'v3' };
+  const ringOn = !!(ring && R(ring).height);
+  // Popup v3 (richtlinien §3): no symbol tile; X and main switch sit on the middle of the text block instead,
+  // and the label stays above the title above the status line.
+  if (parts.length && (ringOn || out.v3)) {
     const top = Math.min(...parts.map((r) => r.top)), bot = Math.max(...parts.map((r) => r.bottom));
-    const rr = R(ring), rc = rr.top + rr.height / 2;
+    const rr = ringOn ? R(ring) : { top, height: bot - top }, rc = rr.top + rr.height / 2;
+    out.ring = ringOn;
+    out.order = parts.every((r, i) => !i || r.top >= parts[i - 1].bottom - 1);
     const lh = parseFloat(getComputedStyle(ti).lineHeight) || 30;
     const mid = (q) => { const n = sr.querySelector(q); if (!n || n.hidden || !R(n).height) return null; const r = R(n); return Math.round((r.top + r.height / 2 - rc) * 10) / 10; };
     Object.assign(out, { d: Math.round((rc - (top + bot) / 2) * 10) / 10, lines: Math.round(R(ti).height / lh), eyebrow: vis(eb) ? 1 : 0, status: vis(st) ? 1 : 0,
@@ -77,15 +84,16 @@ for (const V of VIEWS) {
     const ok = await openPop(page, c.id, c.cfg);
     await settle(page);
     const m = await page.evaluate(MESS, null);
-    await need(`${V.name} ${c.name}: Popup im Kopf A offen`, ok && m && m.soft && m.d != null, m);
-    await check(`${V.name} ${c.name}: Kachel mittig zum Textblock (≤ 1 px)`, Math.abs(m.d) <= 1, m);
+    await need(`${V.name} ${c.name}: Popup im Kopf A bzw. v3 offen`, ok && m && m.soft && m.d != null, m);
+    if (m.v3) await check(`${V.name} ${c.name}: v3-Kopf ohne Symbol-Kachel, Etikett › Titel › Status untereinander`, !m.ring && m.order, m);
+    else await check(`${V.name} ${c.name}: Kachel mittig zum Textblock (≤ 1 px)`, Math.abs(m.d) <= 1, m);
     await check(`${V.name} ${c.name}: X auf derselben Mitte (≤ 1 px)`, m.x != null && Math.abs(m.x) <= 1, m);
     if (m.sw != null) await check(`${V.name} ${c.name}: Hauptschalter auf derselben Mitte (≤ 1 px)`, Math.abs(m.sw) <= 1, m);
     if (c.cfg) {
       const bad = [];
       for (const v of COMBOS) {
         const r = await page.evaluate(MESS, v);
-        if (!r || r.d == null || Math.abs(r.d) > 1 || (r.x != null && Math.abs(r.x) > 1)) bad.push({ ...v, t: v.t.length > 10 ? 'lang' : v.t, ...r });
+        if (!r || r.d == null || Math.abs(r.d) > 1 || (r.x != null && Math.abs(r.x) > 1) || (r.v3 && (r.ring || !r.order))) bad.push({ ...v, t: v.t.length > 10 ? 'lang' : v.t, ...r });
         else if (v.t === LONG && V.name === 'Handy' && r.lines < 2) bad.push({ hinweis: 'langer Titel nicht zweizeilig', ...r });
       }
       await check(`${V.name}: alle ${COMBOS.length} Kombinationen Etikett/Titel 1–2 Zeilen/Status mittig (≤ 1 px)`, !bad.length, bad);

@@ -17,6 +17,9 @@
 //   8. Fix-Runde 3: Herunterladen = Review-Zeitraum mit Kachelnamen und Länge im Dateinamen, Vorschaubilder über den
 //      Clips-Proxy, Proxy aus + HLS an, „Live ansehen“ ohne Stream (Standbild), Abo nach WebSocket-Neuverbindung.
 // Die Kacheln entstehen nur im Browser (nicht gespeichert).
+// Popup v3 clean (decision 31.10.2026 „just the picture“, richtlinien §4 S5, §8): the main popup is the live picture as
+// the stage plus the latest detections; the recordings list, objects and settings left it on purpose. The recordings
+// view itself stays (step 4, also the hold menu).
 import { open, casoraDashboard, dashboard, check, need, finish, stable, BASE } from './lib.mjs';
 import { tokens } from '../ws.mjs';
 
@@ -64,7 +67,7 @@ const popText = () => stable(page, () => {
   return { txt: parts.join(' ').replace(/\s+/g, ' ').slice(0, 3000), hs: hs && !hs.hidden ? hs.title : null,
     chips: P('[data-casora-mi^="frigate-f:"][aria-pressed]').map((x) => x.textContent.trim()),
     rv: P('[data-casora-mi^="frigate-rv:"]').length, ev: P('[data-casora-mi^="frigate-ev:"]').length,
-    rec: P('[data-casora-mi^="frigate-rec:"]').length,
+    rec: P('[data-casora-mi^="frigate-rec:"]').length, stage: P('.hui-stage[data-casora-stage="S5"]').length,
     thumbs: P('img').filter((i) => /\/api\/frigate\/.+\/(review_thumbnail\.webp|thumbnail\/.+|clips\/review\/thumb-.+\.webp)\?authSig=/.test(i.src)).length,
     clipThumbs: P('img').filter((i) => /\/clips\/review\/thumb-testhof-.+\.webp\?authSig=/.test(i.src) && i.complete && i.naturalWidth > 0).length };
 }, null, { max: 12000, quiet: 1200 });
@@ -88,8 +91,8 @@ await check('Kachel: „2 neue Alarme“ (ungesehene Alarme)', t && t.text === '
 const at = await tileAt();
 await page.mouse.click(at.x, at.y);
 let p = await popText();
-await check('Popup: Kopf, Aufnahmen, Objekte, Einstellungen', p && /2 neue Alarme/.test(p.txt) && /Aufnahmen/.test(p.txt) && /Einstellungen/.test(p.txt)
-  && /Objekte/.test(p.txt) && /Letzte Erkennungen/.test(p.txt), p && p.txt);
+await check('Popup: Kopf, Bild als Bühne, letzte Erkennungen, keine Einstellungen (v3 clean)', p && /2 neue Alarme/.test(p.txt) && p.stage === 1
+  && /Letzte Erkennungen/.test(p.txt) && !/Einstellungen/.test(p.txt), p && { stage: p.stage, txt: p.txt.slice(0, 400) });
 await check('Hauptschalter im Kopf heißt „Objekterkennung“', p && p.hs === 'Objekterkennung', p && p.hs);
 await check('Chips: eine Reihe Alle · Alarme · Erkennungen · Neu 2 (wie Kachel/Kopf), Filter zu', p && ['Alle', 'Alarme', 'Erkennungen']
   .every((x) => p.chips.includes(x)) && p.chips.some((x) => /^Neu\s*2$/.test(x)) && !p.chips.includes('Heute'), p && p.chips);
@@ -99,7 +102,6 @@ p = await popText();
 await check('Filter aufgeklappt: Zeitraum, Favoriten, Objekte, Zonen, Gesichter', p && ['7 Tage', 'Heute', 'Nur Favoriten', 'Einfahrt', 'Garten', 'Unbekannt']
   .every((x) => p.chips.includes(x)), p && p.chips);
 await check('Reviews mit signierten Vorschaubildern (zuerst Frigates Review-Bild über den Clips-Proxy)', p && p.rv >= 6 && p.thumbs >= 6 && p.clipThumbs >= 6, p && { rv: p.rv, thumbs: p.thumbs, clip: p.clipThumbs });
-await check('Aufnahmen: drei Tage', p && p.rec >= 3, p && p.rec);
 await clickMi('frigate-f:' + ID + '|kind|alert');
 await page.waitForTimeout(800);
 p = await popText();

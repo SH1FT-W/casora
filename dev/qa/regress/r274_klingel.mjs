@@ -2,7 +2,7 @@
 // @deckt: custom_components/casora/scripts/local/24-klingel.js dev/casora_mock/klingel.py
 // Community-Karte Reolink-Türklingel (#23) an der erfundenen Testklingel camera.testklingel_sub (dev/casora_mock/klingel.py):
 //   1. Kachel: „Bereit“ (nach dem Start steht der Klingelknopf frisch auf „aus“ – das ist kein Klingeln).
-//   2. Popup: Kopf, Bild (Testklingel ohne Stream: kein „Mithören“), Schnellantworten, Sirene, Verlauf aus HAs Recorder, Einstellungen.
+//   2. Popup: Kopf, Bild (Testklingel ohne Stream: kein „Mithören“), Schnellantworten, Sirene, Verlauf aus HAs Recorder, Zeile „Ton ›“ (v3, #23).
 //   3. Klingeln (Testdienst casora_mock.klingel_druecken, Knopf nur 2 s an) → Kachel „Hat geklingelt“ mit rotem
 //      Punkt, auch nachdem der Knopf wieder aus ist; Popup-Kopf „Hat geklingelt“, im Verlauf oben mit „Neu“.
 //   4. Mit Stream (untergeschoben) und Ton an der Klingel aus → „Mithören“ gesperrt, Hinweis mit „Einschalten“.
@@ -63,8 +63,9 @@ await check('Kachel: „Bereit“ oder ein früheres Klingeln (kein Fehltext)', 
 await page.mouse.click(at.x, at.y);
 let p = await popText();
 await check('Popup: Bild ohne „Mithören“ (Standbild-Kamera), ohne Sprechen (Standard aus)', p && p.live && !p.sound && !p.talk, p);
-await check('Popup: Schnellantworten, Sirene, Verlauf mit früherem Klingeln, Einstellungen', p && /Schnellantworten/.test(p.txt) && /Bin gleich da/.test(p.txt)
-  && /Sirene/.test(p.txt) && /Verlauf/.test(p.txt) && /Hat geklingelt/.test(p.txt) && /Einstellungen/.test(p.txt), p && p.txt);
+// Popup v3 (richtlinien §8): no „Einstellungen“ section; the volumes users asked for (#23) stay as the row „Ton ›“.
+await check('Popup: Schnellantworten, Sirene, Verlauf mit früherem Klingeln, Zeile „Ton“ (#23)', p && /Schnellantworten/.test(p.txt) && /Bin gleich da/.test(p.txt)
+  && /Sirene/.test(p.txt) && /Verlauf/.test(p.txt) && /Hat geklingelt/.test(p.txt) && /\bTon Lautstärke\b/.test(p.txt) && !/Einstellungen/.test(p.txt), p && p.txt);
 await closePop();
 
 await svc('casora_mock', 'klingel_druecken', { dauer: 2, person: 20 });

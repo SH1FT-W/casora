@@ -4,6 +4,8 @@
 // 1.4 (Wunsch 12.10.2026): Tipp auf eine Person öffnete HAs Kartendialog. Erwartet: Casoras Personen-Popup
 // (Entwurf B): Kopf mit Ort und „seit …“, HAs Karte, „Verlauf“ als Zeitleiste (seit 1.4.2, vorher „Zuletzt“), unterwegs „Nach Hause“ mit
 // Entfernung; Karte direkt unter dem Kopf (nicht hochgeschoben). Zustände nur vorübergehend im Wegwerf-HA.
+// Popup v3 (richtlinien §4 S7, §3): the place is the stage's sentence, „seit“ and the distance home („Von zuhause“,
+// formerly the section „Nach Hause“) are its facts; the head says „Seit …“ instead of repeating the place.
 import { open, casoraDashboard, dashboard, check, need, finish, usePage, atFinish } from './lib.mjs';
 
 const dash = await casoraDashboard();
@@ -43,14 +45,23 @@ const r = await page.evaluate(() => {
   return { open: !!sf, haDialog: !!(mi && mi.shadowRoot && mi.shadowRoot.querySelector('ha-dialog, ha-adaptive-dialog, [open]')),
     status: sr && (sr.querySelector('.header-status') || {}).textContent, map: !!map,
     gap: map && bar ? Math.round(map.getBoundingClientRect().top - bar.getBoundingClientRect().bottom) : null,
-    zuletzt: /Verlauf/.test(txt) && window.__pierce('.cpe-verlauf').length > 0, nachHause: /Nach Hause/.test(txt), ring: !!(sr && sr.querySelector('.header-ring:not([hidden]) .g, .header-ring:not([hidden]) .im')) };
+    zuletzt: /Verlauf/.test(txt) && window.__pierce('.cpe-verlauf').length > 0, nachHause: /Nach Hause/.test(txt), ring: !!(sr && sr.querySelector('.header-ring:not([hidden]) .g, .header-ring:not([hidden]) .im')),
+    stage: (() => { const st = window.__pierce('.hui-stage[data-casora-stage="S7"]', sf).find((e) => e.getBoundingClientRect().width > 0);
+      return st ? { text: deep(st).replace(/\s+/g, ' '), icon: !!st.querySelector('ha-icon, .hui-st-ic, svg') } : null; })() };
 });
 await check('Casoras Popup offen, kein HA-Dialog', r.open && !r.haDialog, r);
-await check('Kopf: Ort und „seit …“', /QA Arbeit/.test(r.status || '') && /seit/.test(r.status || ''), r.status);
-await check('Kopf mit Symbol', r.ring, r);
+const v3 = !!r.stage;
+if (v3) {
+  await check('Bühne: Ort als Satz, „Seit …“ (Kopf oder Bühne)', /QA Arbeit/.test(r.stage.text) && /seit/i.test((r.status || '') + ' ' + r.stage.text), { status: r.status, stage: r.stage.text });
+  await check('Bühne mit Symbol', r.stage.icon, r.stage);
+} else {
+  await check('Kopf: Ort und „seit …“', /QA Arbeit/.test(r.status || '') && /seit/.test(r.status || ''), r.status);
+  await check('Kopf mit Symbol', r.ring, r);
+}
 await check('Karte (HAs Kartenkarte)', r.map, r);
 await check('Karte nicht unter den Kopf geschoben (Abstand ≥ 0)', r.gap !== null && r.gap >= 0, r.gap);
-await check('„Verlauf“ (Zeitleiste) und unterwegs „Nach Hause“', r.zuletzt && r.nachHause, r);
+if (v3) await check('„Verlauf“ (Zeitleiste) und unterwegs „Von zuhause“ mit Entfernung', r.zuletzt && /Von zuhause/i.test(r.stage.text) && /\d\s?(km|m)\b/.test(r.stage.text), { zuletzt: r.zuletzt, stage: r.stage.text });
+else await check('„Verlauf“ (Zeitleiste) und unterwegs „Nach Hause“', r.zuletzt && r.nachHause, r);
 // 1.5: Tipp auf den Marker der Karte öffnet weder HAs Dialog noch dasselbe Popup ein zweites Mal (mit ‹).
 const mk = await page.evaluate(() => { const m = window.__pierce('ha-entity-marker')[0]; if (!m) return null; const b = m.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; });
 if (mk) {

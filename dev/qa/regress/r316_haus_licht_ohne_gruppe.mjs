@@ -10,6 +10,7 @@
 // eingeschalteten; die Haus-Kachel öffnet dasselbe Popup. Das Studio stellt ein Dashboard, dessen Übersicht nur
 // Casoras Zehnerliste trägt, beim Öffnen auf die Räume um (nur im Speicher). Badge und Kachel werden hier als
 // Karten im Browser angelegt (das Prüf-Dashboard hat eine Hausgruppe), Zustände nur im Browser; nichts wird gespeichert.
+// Popup v3 (01.11.2026): the rooms are list rows instead of the room bar; badge and tile count lamps (owner's decision).
 import { open, casoraDashboard, dashboard, studio, fakeStates, check, need, finish } from './lib.mjs';
 
 const dash = await casoraDashboard((d) => (d.config.views || []).length > 2);
@@ -52,12 +53,8 @@ await check('Hausliste: alle Lichter (auch mehr als zehn)', [...got.ids].sort().
 
 // 2) Badge mit der Markierung zählt alle Lichter.
 const onCount = expected.ids.filter((id, i) => i % 2).length;
-// Review 2 (E08): badge and tile count rooms like the popup („3 Räume an“), a room is on when one of its lights is.
-const roomWord = await page.evaluate(() => {
-  const st = document.querySelector('home-assistant').hass.states, r = window._casoraHouseLights().rooms;
-  const n = r.filter((x) => x.lights.some((id) => st[id] && st[id].state === 'on')).length;
-  return n === r.length ? 'Alle An' : n === 1 ? '1 Raum an' : n + ' Räume an';
-});
+// Owner's decision 01.11.2026 (167c2eb4): every light surface counts lamps („n An“, „Alle An“), never rooms.
+const roomWord = onCount === expected.ids.length ? 'Alle An' : onCount + ' An';
 const badge = await page.evaluate(async () => {
   const ha = document.querySelector('home-assistant');
   const h = await window.loadCardHelpers();
@@ -69,7 +66,7 @@ const badge = await page.evaluate(async () => {
   const r = el.getBoundingClientRect();
   return { text: (el.shadowRoot && el.shadowRoot.querySelector('ha-card') || el).innerText.replace(/\s+/g, ' ').trim(), x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width };
 });
-await check('Badge zählt die Räume („' + roomWord + '“)', badge.w > 0 && badge.text.includes(roomWord), badge);
+await check('Badge zählt die Lampen („' + roomWord + '“)', badge.w > 0 && badge.text.includes(roomWord), badge);
 
 // 3) Halten öffnet das Haus-Popup: Raumleiste aus den Räumen, Hauptschalter fragt.
 await page.mouse.move(badge.x, badge.y); await page.mouse.down(); await page.waitForTimeout(900); await page.mouse.up();
@@ -81,13 +78,16 @@ const pop = await page.evaluate(() => {
   // Pills are nested button-cards: their name sits in the card config (text in a shadow root).
   const pills = row ? [...row.shadowRoot.querySelectorAll('[id^=pill_]')].filter((p) => p.id !== 'pill_all' && p.id !== 'pill_sp' && p.getBoundingClientRect().width > 0)
     .map((p) => { const bc = p.querySelector('button-card'); return bc && bc._config ? String(bc._config.name || '') : (p.innerText || '').trim(); }) : [];
+  // Popup v3 (§4.4): no room bar – the rooms are list rows (.lps-row) that open their room as a sub page.
+  const rr = window.__pierce('.lps-row', pop && pop.shadowRoot).filter((x) => x.getBoundingClientRect().width > 0).map((x) => (x.querySelector('b') || x).textContent.trim());
+  if (!row) pills.push(...rr);
   const b = pop && pop.shadowRoot.querySelector('.header-switch');
   const title = pop && pop.shadowRoot.querySelector('.header-title') ? pop.shadowRoot.querySelector('.header-title').textContent.trim() : '';
   const surf = P && P.surface ? P.surface.innerText : '';
   const r = b ? b.getBoundingClientRect() : null;
-  return { title, pills, rows: (surf.match(/Räume/g) || []).length, btn: !!b && !b.hidden, house: !!(pop && pop._hsOff), dis: b && b.disabled, at: r ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : null };
+  return { title, pills, rows: rr.length || (surf.match(/Räume/g) || []).length, btn: !!b && !b.hidden, house: !!(pop && pop._hsOff), dis: b && b.disabled, at: r ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : null };
 });
-await check('Popup „Beleuchtung“ mit Raumleiste aus den Räumen', pop.title === 'Beleuchtung' && pop.pills.length === expected.rooms.length && pop.pills.every((p, i) => p === expected.rooms[i]), pop);
+await check('Popup „Beleuchtung“ mit den Räumen (Raumleiste bzw. v3-Zeilen)', pop.title === 'Beleuchtung' && pop.pills.length === expected.rooms.length && pop.pills.every((p, i) => p === expected.rooms[i]), pop);
 await check('Räume als Zeilen', pop.rows > 0, pop);
 await need('Hauptschalter (Haus: nur aus)', pop.btn && pop.house && !pop.dis, pop);
 await page.mouse.click(pop.at.x, pop.at.y);
@@ -127,10 +127,11 @@ await page.waitForTimeout(2000);
 const tp = await page.evaluate(() => {
   const P = window.casoraPopup, pop = P && P.element;
   const row = window.__pierce('button-card').find((x) => x.shadowRoot && x.shadowRoot.querySelector('#pill_all') && x.getBoundingClientRect().width > 0);
-  const n = row ? [...row.shadowRoot.querySelectorAll('[id^=pill_]')].filter((p) => p.id !== 'pill_all' && p.id !== 'pill_sp' && p.getBoundingClientRect().width > 0).length : 0;
+  const n = row ? [...row.shadowRoot.querySelectorAll('[id^=pill_]')].filter((p) => p.id !== 'pill_all' && p.id !== 'pill_sp' && p.getBoundingClientRect().width > 0).length
+    : window.__pierce('.lps-row', pop && pop.shadowRoot).filter((x) => x.getBoundingClientRect().width > 0).length;
   return { title: pop && pop.shadowRoot.querySelector('.header-title') ? pop.shadowRoot.querySelector('.header-title').textContent.trim() : '', n, house: !!(pop && pop._hsOff) };
 });
-await check('Kachel: Popup „Beleuchtung“ mit Raumleiste und Haus-Schalter', tp.title === 'Beleuchtung' && tp.n === expected.rooms.length && tp.house, tp);
+await check('Kachel: Popup „Beleuchtung“ mit den Räumen und Haus-Schalter', tp.title === 'Beleuchtung' && tp.n === expected.rooms.length && tp.house, tp);
 await page.evaluate(() => { const P = window.casoraPopup; if (P && P.close) P.close(); const e = document.querySelector('home-assistant').shadowRoot.getElementById('qa-r316-tile'); if (e) e.remove(); });
 
 // 5) Studio: Übersicht mit Casoras Zehnerliste und ohne Gruppe wird beim Laden auf die Räume umgestellt (im Speicher).
