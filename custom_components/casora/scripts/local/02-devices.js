@@ -4148,7 +4148,10 @@
       if (kind === 'v_stage') {
         var busy = s.run || s.paused;
         return UI.stage('progress', { value: busy && pct != null ? String(Math.round(pct)) : value, unit: busy && pct != null ? '%' : '',
-          word: [busy && pct != null ? s.label : null].concat(sub).filter(Boolean).join(' · ') || null,
+          // The wheel's word has two lines (one per „·“ part): „Akku 93 %, lädt“ stays one part, so „zuletzt …“ is not cut
+          // to „lädt…“ (final review, 01.11.2026).
+          word: [busy && pct != null ? s.label : null].concat(sub.map(function (x) { var ch = (window.casoraTr || String)('lädt'); return String(x).replace(' · ' + ch, ', ' + ch); }))
+            .filter(Boolean).join(' · ') || null,
           // Dial (richtlinien §4.8): cleaning progress, else the battery as the ring; the cleaning modes as moons.
           progress: busy && pct != null ? Math.max(0, Math.min(1, pct / 100)) : bat != null ? Math.max(0, Math.min(1, bat / 100)) : null,
           action: s.dead ? null : { text: s.run ? 'Pause' : s.paused ? 'Fortsetzen' : 'Start', icon: s.run ? 'mdi:pause' : 'mdi:play', primary: true,
