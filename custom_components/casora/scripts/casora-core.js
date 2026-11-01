@@ -12048,7 +12048,7 @@ window.casoraMenuGlass = {
       + '<div class="hui-mm-src" style="display:none !important;">' + proxies + '</div></div>';
   }
   // The menu itself: a plate on the page (above the popup), next to the moon and always inside the window – below
-  // the moon, else above; on the phone the same, at most the window's width less 16. Hinterlegt = chosen (no ✓,
+  // the moon, else above; on the phone the same, at most the window's width less 16. Hinterlegt = chosen (no check mark,
   // popup-geo „haken“). Tap beside it (veil) or Esc closes; arrows move, Enter/Space picks.
   var MM_CSS = ':host{all:initial;position:fixed;inset:0;z-index:2147483000;font-family:var(--primary-font-family, Inter, system-ui, sans-serif);}'
     + '.veil{position:fixed;inset:0;background:transparent;}'
@@ -12147,10 +12147,10 @@ window.casoraMenuGlass = {
   function moons(items, act, o) {
     o = o || {};
     var list = (items || []).filter(function (x) { return x && x.text && !x.danger; }).map(function (x) { return Object.assign({}, x); });
+    // More than 4: „Alle (n)“ opens a small menu at the moon (moonMenuOpen) with every choice; the chosen one among the
+    // hidden ones marks the moon. o.page stays the fallback where no menu can open.
     if (list.length > 4) {
       var all = list.length, full = list;
-      // „Alle (n)“ opens a small menu at the moon (moonMenuOpen) with every choice; the chosen one among the hidden
-      // ones marks the moon. o.page stays the fallback where no menu can open.
       list = list.slice(0, 3).concat([{ icon: 'mdi:dots-horizontal', text: T_('Alle') + ' (' + all + ')', page: o.page || null, all: true,
         menu: full, active: full.slice(3).some(function (x) { return x.active; }) }]);
     }
