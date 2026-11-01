@@ -2354,13 +2354,13 @@ const SECTIONS = [
         auto: true, scope: "dashboard",
         hint: "How soft the room photo behind an open room looks. Sharp shows the room clearly." },
       // Raumseite am Handy nach Kategorien gliedern (filter-overlay.js, --casora-room-groups).
-      // Geht wie room_photo_blur über casora_mobile_bg ans Handy; leer = an.
+      // Geht wie room_photo_blur über casora_mobile_bg ans Handy; leer = aus (01.11.2026).
       // 1.5: alle Kacheln dieses Dashboards auf „Größe am Handy: Automatisch“ (_allTilesAuto).
       { key: "__all_auto", sub: "phone", label: "Tile size on the phone", type: "action", auto: true, scope: "dashboard",
         button: "Set all tiles to Automatic",
         hint: "Tiles get large on the phone while something is going on and small again afterwards. You can still set single tiles to Small or Large." },
       { key: "room_groups", sub: "phone", label: "Group rooms by category on the phone", type: "bool",
-        boolDefault: true, auto: true, scope: "dashboard",
+        boolDefault: false, auto: true, scope: "dashboard",
         hint: "Like Apple's Home app: Light, Climate, Security … each with a small heading. Off shows all devices under one heading." },
       { key: "performance", sub: "perf", label: "Performance mode", type: "select",
         auto: true, scope: "dashboard",
@@ -25499,7 +25499,7 @@ class CasoraPanel extends HTMLElement {
           .catch(() => {});
       }
       const rgRaw = [((home || {}).variables || {}).room_groups, sv.room_groups].find(isSet);
-      const rgOn = rgRaw !== false && rgRaw !== "false" && rgRaw !== "off";
+      const rgOn = rgRaw === true || rgRaw === "true" || rgRaw === "on";
       const groups = RG && rgOn ? RG.split(roomTiles) : null;
       if (groups) {
         const de = /^de\b/i.test(String(((this._hass || {}).locale || {}).language
