@@ -921,7 +921,12 @@
     var ankerOk = !has(C.battery) || !ankerDev || !tileDev || ankerDev === tileDev;
     if (pw.battery.length && !has(C.battery)) F.batHa = pw.battery.slice();
     else if ((has(C.charge) || has(C.discharge)) && ankerOk) { F.chg = C.charge || null; F.dis = C.discharge || null; }
-    else if (has(C.battery)) F.batTile = C.battery;
+    else if (has(C.battery)) {
+      // The same power sensor in HA's energy settings has HA's sign (positive = discharging): read it that way in the
+      // tile too – the tile said „Akku entlädt“ where the house badge (HA's settings) said „lädt“ (detail round #1).
+      var pwAll = window.casoraEnergyPowers ? window.casoraEnergyPowers(hass) : { battery: [] };
+      if ((pwAll.battery || []).indexOf(C.battery) > -1) F.batHa = [C.battery]; else F.batTile = C.battery;
+    }
     if (has(C.grid) || has(C.export)) { F.grid = C.grid || null; F.exp = C.export || null; }
     else if (pw.grid.length) F.gridHa = pw.grid.slice();
     if (has(C.soc)) F.soc = C.soc;
