@@ -462,7 +462,9 @@
     if (!l || l.state === 'unavailable') return [];
     const a = l.attributes || {};
     const fx = (Array.isArray(a.effect_list) ? a.effect_list : []).filter((e) => typeof e === 'string' && e && !/^(none|off|aus|kein)$/i.test(e));
-    const fxName = (e) => { try { if (hass && hass.formatEntityAttributeValue) return hass.formatEntityAttributeValue(l, 'effect', e) || e; } catch (x) {} return e; };
+    // A raw effect key HA has no word for („partly_cloudy“) reads as words („Partly cloudy“) – never the raw value.
+    const fxName = (e) => { let t = e; try { if (hass && hass.formatEntityAttributeValue) t = hass.formatEntityAttributeValue(l, 'effect', e) || e; } catch (x) {}
+      return t === e && /^[a-z0-9_]+$/.test(e) ? (e.charAt(0).toUpperCase() + e.slice(1)).replace(/_/g, ' ') : t; };
     return fx.length >= 2 ? fx.map((e) => ({ icon: aqIcon(e + ' ' + fxName(e)), text: fxName(e), active: l.state === 'on' && a.effect === e,
       svc: { domain: 'light', service: 'turn_on', data: { effect: e }, target: { entity_id: c.light } } })) : [];
   };
