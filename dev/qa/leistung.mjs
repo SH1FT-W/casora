@@ -68,9 +68,11 @@ const LIGHT = (views[0].json.match(/light\.[a-z0-9_]+/) || [])[0] || null;
 const INSTR = (opt) => {
   if (window.__lp) return;
   const now = () => performance.now();
-  const L = window.__lp = { renders: {}, rtime: {}, evalN: 0, evalMs: 0, firstTile: null, lastRender: 0, localLoaded: null,
+  const L = window.__lp = { renders: {}, rtime: {}, evalN: 0, evalMs: 0, firstTile: null, lastRender: 0, localLoaded: null, localStarted: null,
     intervals: new Map(), timeouts: 0, ruLeer: 0, perform: 0, qsaStar: 0, mo: { created: 0, observing: 0 }, ls: {}, longtasks: [], down: null, renderLog: null };
-  window.addEventListener('casora-local-loaded', () => { L.localLoaded = now(); });
+  window.addEventListener('casora-local-loaded', () => { L.localLoaded = now(); if (L.localStarted == null) L.localStarted = L.localLoaded; });
+  // Ladezeit stage 3.1: start modules done (the phone's veil goes); older loaders only send casora-local-loaded.
+  window.addEventListener('casora-local-started', () => { L.localStarted = now(); });
   const sI = window.setInterval, cI = window.clearInterval, sT = window.setTimeout;
   const origin = () => { const s = (new Error().stack || '').split('\n').slice(3, 6).map((x) => x.trim().replace(/^at /, '').replace(/https?:\/\/[^/]+/g, '').replace(/\?[^:)]*/g, '')); return s.join(' < '); };
   window.setInterval = function (f, ms, ...a) { const id = sI.call(this, f, ms, ...a); L.intervals.set(id, { ms: ms | 0, at: origin() }); return id; };
@@ -205,12 +207,16 @@ async function load(page, url, net) {
   await page.waitForFunction(() => window.__lp && window.__lp.firstTile !== null && window._casoraLocalLoaded, null, { timeout: 90000 });
   const settled = await quiet(page, 0, { quietMs: 1000, max: 25000 });
   const r = await page.evaluate(() => { const L = window.__lp; const nav = performance.getEntriesByType('navigation')[0];
-    return { firstTile: L.firstTile, localLoaded: L.localLoaded, dcl: nav && nav.domContentLoadedEventEnd, longN: L.longtasks.length, longMs: L.longtasks.reduce((s, x) => s + x[1], 0), long50: L.longtasks.filter((x) => x[1] > 200).length }; });
+    return { firstTile: L.firstTile, localLoaded: L.localLoaded, localStarted: L.localStarted, dcl: nav && nav.domContentLoadedEventEnd, longN: L.longtasks.length, longMs: L.longtasks.reduce((s, x) => s + x[1], 0), long50: L.longtasks.filter((x) => x[1] > 200).length }; });
   const s = await page.evaluate(SNAP);
   // LEISTUNG_STAPEL=1: where the full walks during loading come from (top 10).
   const herkunft = process.env.LEISTUNG_STAPEL ? await page.evaluate(() => Object.entries(window.__lp.qsaBy || {}).sort((x, y) => y[1] - x[1]).slice(0, 10)) : undefined;
   page.off('websocket', onWs);
+<<<<<<< HEAD
   return { herkunft, firstTile: +r.firstTile.toFixed(0), localLoaded: r.localLoaded && +r.localLoaded.toFixed(0), settled: +settled.toFixed(0), dcl: r.dcl && +r.dcl.toFixed(0),
+=======
+  return { firstTile: +r.firstTile.toFixed(0), localLoaded: r.localLoaded && +r.localLoaded.toFixed(0), localStarted: r.localStarted && +r.localStarted.toFixed(0), settled: +settled.toFixed(0), dcl: r.dcl && +r.dcl.toFixed(0),
+>>>>>>> r5-ladezeit3
     renders: Object.values(s.renders).reduce((a, b) => a + b, 0), bc: s.renders['button-card'] || 0, renderMs: +Object.values(s.rtime).reduce((a, b) => a + b, 0).toFixed(0),
     evalN: s.evalN, evalMs: +s.evalMs.toFixed(0), longN: r.longN, longMs: r.longMs, ws: wsBytes, qsaStar: s.qsaStar, ruLeer: s.ruLeer, abgewiesen: s.perform - (s.renders['button-card'] || 0) };
 }
@@ -496,7 +502,7 @@ const S = R.zusammenfassung = {};
 for (const [g, r] of Object.entries(R.geraete)) {
   const s = S[g] = {};
   if (r.kalt.length) {
-    s.kalt_ersteKachel = median(r.kalt.map((x) => x.firstTile)); s.kalt_module = median(r.kalt.map((x) => x.localLoaded)); s.kalt_steht = median(r.kalt.map((x) => x.settled));
+    s.kalt_ersteKachel = median(r.kalt.map((x) => x.firstTile)); s.kalt_module = median(r.kalt.map((x) => x.localLoaded)); s.kalt_startModule = median(r.kalt.map((x) => x.localStarted)); s.kalt_steht = median(r.kalt.map((x) => x.settled));
     s.warm_ersteKachel = median(r.warm.map((x) => x.firstTile)); s.warm_steht = median(r.warm.map((x) => x.settled));
     s.laden_renders = median(r.kalt.map((x) => x.bc)); s.laden_renderMs = median(r.kalt.map((x) => x.renderMs)); s.laden_evalMs = median(r.kalt.map((x) => x.evalMs));
     s.laden_longMs = median(r.kalt.map((x) => x.longMs)); s.laden_vollDurchlaeufe = median(r.kalt.map((x) => x.qsaStar)); s.ws_kB = median(r.kalt.map((x) => Math.round(x.ws.sum / 1024)));

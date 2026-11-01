@@ -45,8 +45,13 @@ def st(state, unit=None):
 
 def make_hass(options, prefs, states=None):
     entry = SimpleNamespace(options=options)
+    async def executor(fn, *args):
+        return fn(*args)
+
     return SimpleNamespace(
         data={},
+        async_add_executor_job=executor,
+        config=SimpleNamespace(config_dir="/nonexistent-casora-config"),
         states=States(states or {}),
         config_entries=SimpleNamespace(async_entries=lambda d: [entry]),
     ), prefs
@@ -134,7 +139,7 @@ handler = getattr(settings.ws_get, "__wrapped__", settings.ws_get)
 asyncio.run(handler(hass, conn, {"id": 1, "type": "casora/settings/get"}))
 got = conn.results[-1] if conn.results else None
 check("settings/get: price_kwh und price_source", bool(got) and got["price_kwh"] == 0.36 and got["price_source"] == "energy"
-      and got["stored"] is False and got["settings"] == {})
+      and got["stored"] is False and got["settings"] == {} and got["file"] is None)
 
 print("strompreis_energie: " + ("ok" if not fails else f"{len(fails)} Fehler"))
 sys.exit(1 if fails else 0)

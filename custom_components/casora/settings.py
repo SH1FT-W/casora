@@ -7,6 +7,7 @@ opens. Read over the logged-in WebSocket – unlike /local not readable without 
   casora/settings/get  → {"settings": {...}, "stored": bool, "price_kwh": float|None,
                           "price_source": "option"|"energy"|None, "price_entity": str|None,
                           "energy_price_kwh": float|None, "energy_price_entity": str|None}
+                         "file": str|None  version key of www/casora/einstellungen.js, None without the file
                          (every logged-in user; electricity price for costs in device popups: Casora option,
                           else grid price from HA's energy dashboard, with a price entity its ID)
   casora/settings/set  ← {"settings": {...}}                    (admins only)
@@ -29,6 +30,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 
+from .assets import settings_file_stamp
 from .const import DOMAIN
 
 STORAGE_KEY = f"{DOMAIN}.settings"
@@ -138,7 +140,8 @@ async def price_info(hass: HomeAssistant) -> dict[str, Any]:
 @websocket_api.async_response
 async def ws_get(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
     data = await async_load_settings(hass)
-    connection.send_result(msg["id"], {"settings": data or {}, "stored": data is not None,
+    file_stamp = await hass.async_add_executor_job(settings_file_stamp, hass.config.config_dir)
+    connection.send_result(msg["id"], {"settings": data or {}, "stored": data is not None, "file": file_stamp,
                                        **(await price_info(hass))})
 
 

@@ -33,7 +33,24 @@ PHONE_RE = re.compile(r"iPhone|iPod|Android.*Mobile|Mobile.*Android", re.I)
 # replaced at any time: always revalidate (ETag, usually 304).
 _SHIPPED_CC = "public, max-age=86400"
 _OWN_CC = "no-cache"
+_VERSIONED_CC = "public, max-age=31536000, immutable"
 _lock = threading.Lock()
+
+
+def settings_file_stamp(config_dir: str) -> str | None:
+    """Version key of the user's settings file (www/casora, else the former place), None without one.
+
+    The dashboard loader asks for the file only when there is one, and with this key in the URL,
+    so the browser may keep it (Ladezeit stage 1.3: it was fetched with no-store on every open).
+    A hash of the content: an edit within the same mtime tick and of the same size still changes it.
+    """
+    for rel in (USER_ASSETS_DIR, LEGACY_USER_ASSETS_DIR):
+        try:
+            with open(os.path.join(config_dir, rel, SETTINGS_FILE), "rb") as handle:
+                return hashlib.sha1(handle.read()).hexdigest()[:16]
+        except OSError:
+            continue
+    return None
 
 
 def _under(base: str, rel: str) -> str | None:
@@ -131,6 +148,12 @@ class CasoraAssetsView(HomeAssistantView):
             return web.Response(status=404, text="not found")
         shipped = found.startswith(os.path.normpath(self._shipped) + os.sep)
         headers = {"Cache-Control": _SHIPPED_CC if shipped else _OWN_CC}
+        if path == SETTINGS_FILE and request.query.get("v"):
+            # Versioned by settings_file_stamp(): a changed file gets a new URL. Only the current key may be
+            # kept for good; an outdated one (remembered by a browser) is revalidated.
+            current = await hass.async_add_executor_job(settings_file_stamp, hass.config.config_dir)
+            if request.query.get("v") == current:
+                headers["Cache-Control"] = _VERSIONED_CC
         if path.startswith("rooms/") and found.lower().endswith(PHOTO_EXT):
             headers["Vary"] = "Accept, User-Agent"
             if "image/webp" in request.headers.get("Accept", ""):
