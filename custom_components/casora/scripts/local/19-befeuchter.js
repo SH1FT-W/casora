@@ -34,7 +34,7 @@
 
   // Modus-Namen wie in HA (Übersetzung der Integration), sonst die gängigen auf Deutsch.
   var DE = { normal: 'Normal', eco: 'Eco', away: 'Abwesend', boost: 'Boost', comfort: 'Komfort', home: 'Zuhause',
-    sleep: 'Schlaf', auto: 'Auto', baby: 'Baby', manual: 'Manuell', low: 'Niedrig', medium: 'Mittel', high: 'Hoch' };
+    sleep: 'Schlafen', auto: 'Auto', baby: 'Baby', manual: 'Manuell', low: 'Niedrig', medium: 'Mittel', high: 'Hoch' };
   H.modeLabel = function (hass, st, m) {
     var t = m;
     try { if (hass && hass.formatEntityAttributeValue) t = hass.formatEntityAttributeValue(st, 'mode', m) || m; } catch (e) { t = m; }
