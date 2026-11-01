@@ -719,7 +719,7 @@
       if (!ready) {
         if (!loading.has(tpl)) {
           loading.add(tpl);
-          const steps = (H ? Promise.resolve() : import("/casora_scripts/local/00-finder.js"))
+          const steps = (H ? Promise.resolve() : (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/00-finder.js"))
             .then(() => (LOAD[tpl] ? import(LOAD[tpl]) : null));
           steps.then(() => { loading.delete(tpl); this._renderForm(); }, () => { /* without the module no list */ });
         }

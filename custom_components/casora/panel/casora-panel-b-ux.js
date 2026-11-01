@@ -151,7 +151,7 @@
   function bellCam(h, id) {
     const KL = W._casoraKlingel;
     if (KL && KL.liveCam) return KL.liveCam(h, id);
-    if (!klingelLoad) { klingelLoad = true; import("/casora_scripts/local/24-klingel.js").catch(() => {}); }
+    if (!klingelLoad) { klingelLoad = true; (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/24-klingel.js").catch(() => {}); }
     const R = (h && h.entities) || {}, S = (h && h.states) || {}, e = R[id];
     const tk = String((e && e.translation_key) || "");
     if (!e || !e.device_id || !/^(sub|main)$/.test(tk)) return false;

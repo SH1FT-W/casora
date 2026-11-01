@@ -199,7 +199,7 @@
     if (P.__casoraGlocke) return;
     P.__casoraGlocke = true;
     // Gleicher Finder wie im Dashboard; im Studio sonst erst über casora-panel-types.js geladen.
-    if (!W.casoraNotifySources) import("/casora_scripts/local/00-finder.js").catch(() => {});
+    if (!W.casoraNotifySources) (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/00-finder.js").catch(() => {});
 
     P._casoraBellExclude = function (host, S, render) {
       const hass = this._hass || {};
