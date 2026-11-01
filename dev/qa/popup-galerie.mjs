@@ -423,7 +423,7 @@ async function pruefen() {
   const snap = async (res, it) => {
     // --spalten: column balance of the two-column layout (dev/qa/popup-spalten.mjs), after the plates settled.
     if (flag('spalten') && res.spalten === undefined) { await sleep(2200); res.spalten = await pg.evaluate(MEASURE_COLS).catch((e) => ({ err: String(e) })); }
-    // --wetter-spalten: the weather popup's column order (dev/qa/regress/r452_popup_spalten.mjs).
+    // --wetter-spalten: the weather popup's column order (dev/qa/regress/r457_popup_spalten.mjs).
     if (flag('wetter-spalten') && res.wetterSpalten === undefined) { await sleep(2200); res.wetterSpalten = await pg.evaluate(WEATHER_ORDER).catch(() => null); }
     if (!arg('bilder')) return;
     await pg.waitForTimeout(1600);

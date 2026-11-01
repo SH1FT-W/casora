@@ -58,7 +58,7 @@ Griff (vorhanden im Rahmen).
 
 Leere Flächen (01.11.2026): Unter der kürzeren Spalte soll kein großer leerer Block stehen. Gemessen wird mit
 `dev/qa/popup-galerie.mjs pruefen --spalten` (Unterkanten beider Spalten, `dev/qa/popup-spalten.mjs`); der Regeltest
-`dev/qa/regress/r452_popup_spalten.mjs` lässt höchstens 200 px zu, die am 01.11. gemessenen Ausreißer stehen dort als
+`dev/qa/regress/r457_popup_spalten.mjs` lässt höchstens 200 px zu, die am 01.11. gemessenen Ausreißer stehen dort als
 Obergrenze, die nicht wachsen darf. Unter dem Rad steht immer zuerst der Verlauf (§7.1), auch beim Wetter.
 
 Breite (Prüfung 2, 01.11.2026): Die Layout-Bausteine (`HH.layout`, `_casoraSoftKit.layout`) legen jede Liste rechts ab;

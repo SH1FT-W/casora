@@ -1,7 +1,7 @@
 // Weather popup v3 columns (owner 01.11.2026, popup-richtlinien-v3 §7.1), static: left the dial and under it the one
 // Verlauf, right „7 Tage“, then „Nächste Stunden“, then the details – before, the next hours sat under the dial and the
 // Verlauf at the end of the right column (455 px left against 1211 px right). On the phone the order stays: stage,
-// next hours, 7 days, Verlauf, details. The geometry is measured with a test HA: dev/qa/regress/r452_popup_spalten.mjs.
+// next hours, 7 days, Verlauf, details. The geometry is measured with a test HA: dev/qa/regress/r457_popup_spalten.mjs.
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
