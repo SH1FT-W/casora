@@ -3406,12 +3406,16 @@
         }
         /* Popup v3 (richtlinien §4 S4): time left (or the state) as the value, the head's words, the bar with
            „% · Fertig gegen …“ from the former bar; no pill (pause/stop stay in „Steuerung“). */
+        /* Dial (owner report 01.11.2026): the centre holds the time left, one fact (error, pause, step or the layer)
+           and the end time („Fertig um“, short enough for one line) – two facts plus „53 %“ and „Fertig gegen …“ ran
+           into the ring. The percent is the arc,
+           the filament stands in „AMS“. */
         if (kind === 'p_stage') {
-          var remS = active && rem != null && rem > 0 ? 'Fertig gegen ' + U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' : null;
-          return UI.stage('progress', { value: vH, unit: uH || '', word: sb.join(' · ') || null,
+          var remS = active && rem != null && rem > 0 ? 'Fertig um ' + U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' : null;
+          return UI.stage('progress', { value: vH, unit: uH || '', word: sb[0] || null,
             tone: errOn || raw === 'failed' ? 'bad' : null,
             progress: active && pc != null ? Math.max(0, Math.min(1, pc / 100)) : null,
-            program: active ? [pc != null ? Math.round(pc) + ' %' : null, remS].filter(Boolean).join(' · ') || null : null,
+            program: remS,
             state: raw === 'unavailable' || !states[c.st] || states[c.st].state === 'unavailable' ? 'na' : null });
         }
         return UI.hero({ value: vH, unit: uH, sub: sb.join(' · ') || null,
