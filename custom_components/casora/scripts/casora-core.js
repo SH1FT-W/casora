@@ -7909,10 +7909,26 @@ window.casoraMenuGlass = {
       if (cur.state === 'unavailable') txt = window.casoraTr ? window.casoraTr('Nicht verfügbar') : 'Nicht verfügbar';
       txt = String(txt || '').trim();
       if (!txt || txt === 'unknown') return;
+      // No raw values in the head (wortliste): a state the word list names takes Casora's word („idle“/„ready“ →
+      // „Bereit“, not HA's „Leerlauf“); one HA has no word for (enum sensor without translations: „failed“) says since
+      // when instead, as the S7 popups without a word of their own (§3).
+      var word = window._casoraRawWord ? window._casoraRawWord(cur.state) : cur.state;
+      if (word !== cur.state) txt = window.casoraTr ? window.casoraTr(word) : word;
+      else if (txt === 'Ein') txt = 'An'; // HA's German „Ein“ for on – the word list says „An“ (as the stage)
+      else if (txt === cur.state && /^[a-z][a-z0-9_]*$/.test(txt)) { txt = this._sinceText(cur); if (!txt) return; }
       this._headerStatus.innerHTML = '<b>' + window.casoraEsc(txt) + '</b>';
       this._headerStatus.hidden = false;
       if (again) this._dedupeHead();
       else [300, 900, 1800].forEach((ms) => setTimeout(() => { if (this.hasAttribute('open') && !this._headLine) this._dedupeHead(); }, ms));
+    }
+    // „Seit 14:42“ (today) or „Seit 28.10.“ from the entity's last change; '' without a time.
+    _sinceText(cur) {
+      var lc = cur && cur.last_changed ? new Date(cur.last_changed) : null;
+      if (!lc || isNaN(lc.getTime())) return '';
+      var loc = window.casoraLocale ? window.casoraLocale() : 'de-DE', now = new Date();
+      var since = 'Seit ' + (lc.toDateString() === now.toDateString() ? lc.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' })
+        : lc.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' }));
+      return window.casoraTr ? window.casoraTr(since) : since;
     }
     // §3 (owner, 01.11.2026): the status line never repeats the stage's value or sentence („Aus“ in the head and in the
     // wheel, „Verriegelt“ twice, „513 W“ twice). When the head's first part reads like the stage's main text, it says
@@ -7924,7 +7940,8 @@ window.casoraMenuGlass = {
       var stage = '';
       (function walk(root, d) {
         if (!root || d > 12 || stage) return;
-        var el = root.querySelector && root.querySelector('.hui-dl-c .hui-dl-t, .hui-dl-c .hui-st-val, .hui-stage .hui-st-head .hui-st-val');
+        // The S7 plate (dial: false) says its sentence in .hui-st-text – the universal tile read „An“ in the head and on the plate.
+        var el = root.querySelector && root.querySelector('.hui-dl-c .hui-dl-t, .hui-dl-c .hui-st-val, .hui-stage .hui-st-head .hui-st-val, .hui-stage .hui-st-stat .hui-st-text');
         if (el) { stage = el.textContent; return; }
         var all = root.querySelectorAll ? root.querySelectorAll('*') : [];
         for (var i = 0; i < all.length && !stage; i++) if (all[i].shadowRoot) walk(all[i].shadowRoot, d + 1);
@@ -7933,14 +7950,7 @@ window.casoraMenuGlass = {
       var mainTxt = first ? first.textContent : String(hs.textContent || '').split('·')[0];
       if (!stage || !norm(mainTxt) || norm(mainTxt) !== norm(stage)) return;
       var so = this._ringSrc && this._ringSrc._stateObj, h = (document.querySelector('home-assistant') || {}).hass;
-      var cur = so && h && h.states ? h.states[so.entity_id] : so, lc = cur && cur.last_changed ? new Date(cur.last_changed) : null;
-      var since = '';
-      if (lc && !isNaN(lc.getTime())) {
-        var loc = window.casoraLocale ? window.casoraLocale() : 'de-DE', now = new Date();
-        since = 'Seit ' + (lc.toDateString() === now.toDateString() ? lc.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' })
-          : lc.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' }));
-        if (window.casoraTr) since = window.casoraTr(since);
-      }
+      var since = this._sinceText(so && h && h.states ? h.states[so.entity_id] : so);
       if (first) {
         if (since) first.textContent = since;
         else { var nx = first.nextElementSibling; if (nx && nx.classList && nx.classList.contains('hui-sep')) nx.remove(); first.remove(); }

@@ -223,6 +223,7 @@ export const MEASURE_GEO = () => {
       || (e.classList.contains('hui-st-val') && e.closest && e.closest('.hui-stage, .hui-dl'))));
     for (const e of stageMain) {
       if (main && norm(e.textContent) === main) { add('doppelt', `Statuszeile wiederholt die Bühne: „${String(e.textContent).trim()}“`, e); break; }
+      || (e.classList.contains('hui-st-text') && e.closest && e.closest('.hui-stage'))
     }
   }
   return { n: finds.length, finds };

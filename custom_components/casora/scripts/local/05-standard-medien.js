@@ -1010,7 +1010,7 @@ window._hpMultiTap = function (ev, kind) {
     var add = function (k, html, side) { fields[k] = html; fstyle[k] = [{ 'justify-self': 'stretch' }]; if (side) (side === 'r' ? right : left).push(k); };
     // Rule 1: the state goes into the header's status line (the name is the title already).
     add('hero', '[[[ const s = states[' + JSON.stringify(id) + ']; '
-      + 'let v = s ? s.state : "—"; try { if (hass.formatEntityState && s) v = hass.formatEntityState(s); } catch (e) {} '
+      + 'let v = s ? s.state : "—"; try { if (s) v = window._casoraNiceState ? window._casoraNiceState(hass, s) : hass.formatEntityState(s); } catch (e) {} '
       + 'const dead = !s || s.state === "unavailable" || s.state === "unknown"; '
       + 'return window._casoraUI.line(dead ? "Nicht verfügbar" : v, [], { tone: dead ? "bad" : null }); ]]]');
     /* Popup v3 „Bühne“ (popup-richtlinien-v3.md §4.7 fallback): the tile's state as stage S7 without a main action
@@ -1024,7 +1024,7 @@ window._hpMultiTap = function (ev, kind) {
     if (acts.length) add('acts', UI.section('control', acts), 'l');
     if (sib.length) {
       add('vals', '[[[ const ids = ' + JSON.stringify(sib) + '; const UI = window._casoraUI; '
-        + 'return UI.section("state", ids.map((e) => { const s = states[e]; let v = s.state; try { if (hass.formatEntityState) v = hass.formatEntityState(s); } catch (x) {} '
+        + 'return UI.section("state", ids.map((e) => { const s = states[e]; let v = s.state; try { v = window._casoraNiceState ? window._casoraNiceState(hass, s) : hass.formatEntityState(s); } catch (x) {} '
         + 'return { icon: e.startsWith("binary_sensor.") ? "mdi:checkbox-blank-circle-outline" : "mdi:gauge", iconTone: "rgba(255,255,255,0.18)", '
         + 'label: (hass.entities[e] && hass.entities[e].name) || s.attributes.friendly_name || e, value: v, entity: e }; })); ]]]', two ? 'r' : 'l');
     }
@@ -1056,7 +1056,8 @@ window._hpMultiTap = function (ev, kind) {
   window._casoraEntityPopup.v3stage = function (id, states, hass) {
     var UI = window._casoraUI, s = states[id];
     var v = s ? s.state : '—';
-    try { if (hass && hass.formatEntityState && s) v = hass.formatEntityState(s); } catch (e) { /* raw state */ }
+    // Raw English states HA has no word for („ready“) in Casora's words (wortliste: no raw values).
+    try { if (s) v = window._casoraNiceState ? window._casoraNiceState(hass, s) : hass.formatEntityState(s); } catch (e) { /* raw state */ }
     var dead = !s || s.state === 'unavailable' || s.state === 'unknown';
     var ic = s && s.attributes && s.attributes.icon && String(s.attributes.icon).indexOf(':') > 0 ? s.attributes.icon : 'mdi:devices';
     return UI.stage('status', { tone: s && s.state === 'on' ? 'good' : 'off', state: dead ? 'na' : null, icon: ic, text: dead ? 'Nicht verfügbar' : v });
