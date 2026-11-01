@@ -1,9 +1,9 @@
-// ── Weich-Gestaltung der Spezial-Popups (01.10.2026) ─────────────────────────
-// Die Kamera (casora_popup_camera), Medien und Alarm-Schalter im Weich-Design: Ring-Kopf, Sand-Pillen, Etiketten,
-// runde Balken und Knöpfe. Nur aktiv, wenn das Theme --casora-popup-layout: soft setzt
-// (window._casoraSoft); Standard und Glas bauen weiter ihr bisheriges HTML.
-// Die Vorlagen rufen nur window._casoraCamSoft / _casoraMediaSoft / _casoraAlarmSoftToggle auf.
-// (Aquarien-Übersicht und Aquarium-Licht: am 01.10.2026 entfernt, Nachfolger ist das Becken-Popup.)
+// ── Soft look of the special popups (01.10.2026) ────────────────────────────
+// Camera (casora_popup_camera), media and the alarm switch in the soft design: ring head, sand pills, labels,
+// round bars and buttons. Only active when the theme sets --casora-popup-layout: soft
+// (window._casoraSoft); standard and glass keep building their previous HTML.
+// The templates only call window._casoraCamSoft / _casoraMediaSoft / _casoraAlarmSoftToggle.
+// (Aquarium overview and aquarium light: removed on 01.10.2026, the tank popup replaces them.)
 (function () {
   if (window._casoraWeichSpezial) return;
   window._casoraWeichSpezial = true;
@@ -15,13 +15,13 @@
   var ROW = 'var(--casora-soft-row-fill, rgba(140,115,90,0.07))';
   var CTL = 'var(--casora-soft-control-fill, rgba(140,115,90,0.10))';
 
-  // ── Medien (casora_media, casora_now_playing_chip/_primary) ───────────────
-  // Zusatzregeln hinter dem bisherigen <style> des Medien-Popups (nur Weich):
-  // Etikett, große runde Cover-Ecke, runde Fortschritts- und Lautstärke-Balken,
-  // Sand-Kreise für die Knöpfe, Wiedergabe-Knopf in Ton, Quellen als Sand-Pillen.
-  // Fix-Runde 1: Medien = Blau (feste Farbzuordnung), über --casora-soft-media-hue.
+  // ── Media (casora_media, casora_now_playing_chip/_primary) ─────────────────
+  // Extra rules after the media popup's own <style> (soft only):
+  // label, large round cover corner, round progress and volume bars,
+  // sand circles for the buttons, play button in colour, sources as sand pills.
+  // Fix round 1: media = blue (fixed colour mapping), via --casora-soft-media-hue.
   var MEDIA_HUE = 'var(--casora-soft-media-hue, var(--casora-soft-media, var(--casora-color-pink, #D16E7E)))';
-  /* 1.2 (P6): Wiedergabe-Knopf, Fortschritt und Lautstärke im Medien-Popup in der Medien-Farbe der Kachel (Rosa). */
+  /* 1.2 (P6): play button, progress and volume in the media popup in the tile's media colour (pink). */
   var MEDIA_ACC = 'var(--casora-tile-media-color, ' + MEDIA_HUE + ')';
   var srcRules = function () {
     return '.hm-src-l{font-size:var(--casora-h15-fs,17px) !important;font-weight:700 !important;letter-spacing:-0.01em !important;text-transform:none;'
@@ -41,9 +41,14 @@
       return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
     return 0.2126 * ch(h + 1 / 3) + 0.7152 * ch(h) + 0.0722 * ch(h - 1 / 3);
   };
+  // One accent from the cover for the whole player (owner 01.11.2026): the dial's ring (--casora-popup-accent on the
+  // stage), the progress fill, its knob's glow and the play button (--hm-acc). Before, only the play button took the
+  // cover's colour and ring and bar kept the fixed media pink. The play icon stays white while it keeps 3 : 1 on the
+  // colour (WCAG non-text contrast: relative luminance up to 0.3), else it turns dark.
   var tintRule = function (col) {
     if (!col) return '';
-    return '.hm-b.lg{background:' + col + ';}' + (lumOf(col) > 0.3 ? '.hm-b.lg > div{background-color:var(--casora-popup-ui-on-ink, #000) !important;}' : '');
+    return '.hui-stage{--casora-popup-accent:' + col + ';}.hm-wrap{--hm-acc:' + col + ';}'
+      + (lumOf(col) > 0.3 ? '.hm-b.lg > div{background-color:var(--casora-popup-ui-on-ink, #000) !important;}' : '');
   };
   // While the cover is still being read: a placeholder <style> that is filled in once the colour is known.
   var tintWait = function (url) {
@@ -72,7 +77,7 @@
     // pic: the cover being shown (null without one) – tints the play button.
     css: function (pic) {
       return '<style>'
-        /* Fix-Runde 1 (B-01/B-04): Raum als Statuszeile unter dem Titel, Titel des Stücks 17/700. */
+        /* Fix round 1 (B-01/B-04): room as the status line under the title, the track's title 17/700. */
         + '.hm-lbl{font-size:15px;font-weight:500;letter-spacing:0;text-transform:none;line-height:1.35;overflow:visible;color:' + SUB + ';margin:-2px 0 20px;}'
         + '.hm-art{border-radius:28px;background:' + CTL + ';box-shadow:var(--casora-soft-art-shadow, 0 18px 40px -22px rgba(90,70,50,0.45));}'
         + '.hm-art::after{box-shadow:none;}'
@@ -80,39 +85,41 @@
         + '.hm-s{font-weight:500;color:' + SUB + ';}'
         + '.hm-prog{margin-top:18px;}'
         + '.hm-track{height:8px;background:' + CTL + ';}'
-        /* Fortschritt wie der Wiedergabe-Knopf in der Medien-Farbe (P6). */
-        + '.hm-fill{background:' + MEDIA_ACC + ';}'
+        /* Progress like the play button in the media colour (P6). */
+        /* One accent for bar, knob glow and play button: the media colour, in v3 the dial's (the cover's once read). */
+        + '.hm-wrap{--hm-acc:' + MEDIA_ACC + ';}.hui-stage .hm-wrap{--hm-acc:var(--casora-popup-accent, ' + MEDIA_ACC + ');}'
+        + '.hm-fill{background:var(--hm-acc);}'
         + '.hm-times{font-weight:600;color:' + SUB + ';margin-top:7px;}'
         + '.hm-ctl{gap:22px;margin-top:18px;}'
         + '.hm-b.sm{width:56px;height:56px;background:' + CTL + ';}'
         + '.hm-b.sm > div{transform:scale(.72);}'
         /* No glow: the card's body clips everything below the button, the glow ended in a hard edge (26.10.2026);
            flat like the other main buttons. */
-        + '.hm-b.lg{width:72px;height:72px;background:' + MEDIA_ACC + ';box-shadow:none;}'
+        + '.hm-b.lg{width:72px;height:72px;background:var(--hm-acc);box-shadow:none;}'
         + '.hm-b.lg > div{background-color:#fff !important;}'
         + '@media (hover:hover){.hm-b.sm:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}}'
         + '.hm-vol{min-height:66px;margin-top:24px;padding:8px 12px 8px 10px;border-radius:999px;background:' + ROW + ';color:' + SUB + ';}'
         + '.hm-vol .hm-b{width:44px;height:44px;background:' + CTL + ';}'
         + '.hm-vol .hm-track{height:10px;}'
-        /* Lautstärke wie der Fortschritt (P6). */
-        + '.hm-vol .hm-fill{background:' + MEDIA_ACC + ';}'
+        /* Volume like the progress (P6). */
+        + '.hm-vol .hm-fill{background:var(--hm-acc);}'
         + '.hm-vol .pct{font-size:14px;font-weight:700;color:' + INK + ';min-width:44px;}'
         + srcRules()
-        /* Niedriges Querformat (iPad 1024×768): Cover kleiner, damit Tasten und Lautstärke ohne
-           Scrollen sichtbar bleiben – vorher lag die Lautstärke beim Abspielen unter dem Rand (07.10.2026). */
+        /* Low landscape (iPad 1024×768): smaller cover, so keys and volume stay visible without
+           scrolling – before, the volume lay below the edge while playing (07.10.2026). */
         + '@media (min-width:761px) and (max-height:900px){.hm-art{width:min(240px, max(120px, calc(100vh - 640px)));}}'
         + '</style>' + tintCss(pic);
     },
   };
 
-  // ── Alarm-Popup: Bedienung (06.10.2026, nur Weich) ──────────────────────────
-  // Statt An/Aus-Schalter: großer Haupt-Knopf (Scharf/Unscharf/Abbrechen/Alarm beenden) + Modus-Zeilen
-  // darunter. Code-Feld, wenn Alarmo einen Code verlangt (code_format /
-  // code_arm_required), Countdown bei arming/pending aus dem Alarmo-Attribut delay, Hinweis bei ausgelöst.
-  // Die Vorlage ruft _casoraAlarmSoftToggle (Feld „toggle“) und _casoraSoftAlarm (Feld „modes“).
+  // ── Alarm popup: controls (06.10.2026, soft only) ──────────────────────────
+  // Instead of an on/off switch: a large main button (arm/disarm/cancel/end alarm) + mode rows
+  // below. Code field when Alarmo asks for a code (code_format /
+  // code_arm_required), countdown for arming/pending from Alarmo's delay attribute, a hint when triggered.
+  // The template calls _casoraAlarmSoftToggle (field „toggle“) and _casoraSoftAlarm (field „modes“).
   var AL = window._casoraAlarmSoft = {};
-  // Zahl im Countdown läuft per CSS (registrierte Ganzzahl-Eigenschaft) – kein Timer nötig.
-  try { if (window.CSS && CSS.registerProperty) CSS.registerProperty({ name: '--cal-n', syntax: '<integer>', inherits: true, initialValue: '0' }); } catch (e) { /* schon registriert */ }
+  // The countdown number runs in CSS (registered integer property) – no timer needed.
+  try { if (window.CSS && CSS.registerProperty) CSS.registerProperty({ name: '--cal-n', syntax: '<integer>', inherits: true, initialValue: '0' }); } catch (e) { /* already registered */ }
   var FEAT = { armed_home: 1, armed_away: 2, armed_night: 4, armed_custom_bypass: 16, armed_vacation: 32 };
   var MODE_WORD = { armed_home: 'Zuhause', armed_away: 'Abwesend', armed_night: 'Nacht', armed_vacation: 'Urlaub', armed_custom_bypass: 'Bypass' };
   var GOOD = 'var(--casora-security-ok-color, var(--casora-color-green, #5E9E6E))';
@@ -139,19 +146,19 @@
       armed: !!MODE_WORD[st], numeric: a.code_format === 'number' };
   };
   AL.ok = function (I, id) { return !FEAT[id] || (I.feat & FEAT[id]) === FEAT[id]; };
-  // Bedien-Element: data-casora-alarm statt data-casora-svc – der Code aus dem Feld wird beim Tippen ergänzt.
+  // Control: data-casora-alarm instead of data-casora-svc – the code from the field is added on the tap.
   AL.act = function (ent, service) {
     return ' role="button" tabindex="0" data-casora-alarm="' + esc(JSON.stringify({ e: ent, s: service })) + '"';
   };
-  // Zwei Formen kommen an: {e, s} vom Haupt-Knopf und {domain, service, data:{entity_id}} aus den
-  // Modus-Zeilen (UI.group, nur Attribut umbenannt). Ohne Angleichen fehlte bei Modus-Zeilen der Dienst.
+  // Two shapes arrive: {e, s} from the main button and {domain, service, data:{entity_id}} from the
+  // mode rows (UI.group, only the attribute renamed). Without aligning them the mode rows had no service.
   AL.spec = function (sp) {
     if (!sp || typeof sp !== 'object') return null;
     var s = sp.s || sp.service, e = sp.e || (sp.data && sp.data.entity_id) || (sp.target && sp.target.entity_id);
     if (Array.isArray(e)) e = e[0];
     return s && e ? { e: e, s: s } : null;
   };
-  // Code-Feld (nur wenn die nächste Aktion einen Code braucht).
+  // Code field (only when the next action needs a code).
   AL.code = function (I) {
     var need = I.st === 'disarmed' ? I.needArm : I.needDis;
     if (!need) return '';
@@ -163,7 +170,7 @@
       + ' style="width:220px;height:48px;box-sizing:border-box;border:none;outline:none;border-radius:999px;text-align:center;'
       + 'font:600 18px/1 ' + FONT + ';letter-spacing:.3em;color:' + INK + ';background:' + CTL + ';-webkit-appearance:none;appearance:none;"></div>';
   };
-  // Countdown-Balken + Zahl (arming = bis scharf, pending = bis Alarm).
+  // Countdown bar + number (arming = until armed, pending = until the alarm).
   AL.count = function (I, color) {
     if (I.left == null) return { bar: '', n: '' };
     var pct = I.total ? Math.max(0, Math.min(100, 100 - I.left / I.total * 100)) : 0;
@@ -176,7 +183,7 @@
       n: '<span class="cal-n" style="font-variant-numeric:tabular-nums;animation:' + k + 'n ' + I.left + 's steps(' + Math.max(1, I.left) + ', end) forwards;"></span>',
     };
   };
-  // Feld „toggle“ (oben, mittig)
+  // Field „toggle“ (top, centred)
   window._casoraAlarmSoftToggle = function (ent, states) {
     var I = AL.info(ent, states);
     var away = AL.ok(I, 'armed_away') ? 'armed_away' : (Object.keys(FEAT).filter(function (k) { return AL.ok(I, k); })[0] || 'armed_away');
@@ -195,15 +202,15 @@
       + 'border-radius:999px;background:' + b.bg + ';color:' + b.ink + ';font-family:' + FONT + ';text-align:left;cursor:pointer;'
       + (b.bg === CTL ? '' : 'box-shadow:0 12px 26px -14px rgba(90,60,40,0.55);') + '">'
       + '<div style="width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;background:' + (b.bg === CTL ? 'var(--casora-lps-seg-on, #FFFDF9)' : 'rgba(255,255,255,0.2)') + ';">'
-      /* Symbol auf dem hellen Kreis (seg-on) mit dessen Schrift-Token: INK ist im dunklen Design hell und
-         verschwand dort auf dem Creme-Kreis (Design-Audit 10.10.2026). */
+      /* Symbol on the light circle (seg-on) with its ink token: INK is light in the dark design and
+         vanished there on the cream circle (design audit 10.10.2026). */
       + icon(b.ic, 22, b.bg === CTL ? 'var(--casora-lps-seg-on-ink, #2E2721)' : '#fff') + '</div>'
       + '<div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;letter-spacing:-0.01em;">' + b.t + '</div>'
       + (b.s ? '<div style="font-size:13px;font-weight:600;opacity:.82;margin-top:1px;">' + b.s + '</div>' : '')
       + bar + '</div></div></div></div>';
   };
 
-  // Feld „modes“ (unten, volle Breite)
+  // Field „modes“ (bottom, full width)
   window._casoraAlarmSoft.modes = function (ent, modes, states) {
     var UI = window._casoraUI; if (!UI) return '';
     var I = AL.info(ent, states);
@@ -317,7 +324,7 @@
     return true;
   };
 
-  // Tippen auf data-casora-alarm: Dienst mit Code aus dem Feld; fehlt der Code, Feld fokussieren.
+  // Tap on data-casora-alarm: the service with the code from the field; without a code, focus the field.
   if (!window._casoraAlarmTap) {
     window._casoraAlarmTap = true;
     var tp = null, lastTouch = 0;
@@ -373,10 +380,10 @@
     }, true);
   }
 
-  // ── Kamera ────────────────────────────────────────────────────────────────
-  // Zusatz-CSS für casora_popup_camera (nur Weich): Knöpfe als Sand-Kreise mit Etikett,
-  // aktive Knöpfe hell erhaben wie die Segmente, Kacheln und Livebild mit Weich-Rundung,
-  // dazu eine Statuszeile (.cam-mode: Live / Bild / Offline / Letzte Aufnahme).
+  // ── Camera ────────────────────────────────────────────────────────────────
+  // Extra CSS for casora_popup_camera (soft only): buttons as sand circles with a label,
+  // active buttons light and raised like the segments, tiles and live picture with the soft rounding,
+  // plus a status line (.cam-mode: live / picture / offline / last recording).
   window._casoraCamSoft = {
     css: function () {
       return '\n/* Weich (01.10.2026) */'
@@ -386,11 +393,11 @@
         /* v3 image stage (S5): the picture sits in the stage plate, which clips it concentric (32 − 20 = 12) – its own
            radius 28 and drop shadow belonged to the free-standing picture and were cut off there (popup-raender). */
         + '\n.hui-st-img .cam-stream-mount { border-radius: calc(var(--casora-v3-stage-radius, 32px) - var(--casora-v3-stage-pad, 20px)) !important; box-shadow: none !important; }'
-        /* Fix-Runde 1 (B-06/B-18): Fehlerfläche warmes Anthrazit statt Schwarz, Schrift wie überall. */
+        /* Fix round 1 (B-06/B-18): error area warm anthracite instead of black, type as everywhere. */
         + '\n.cam-stream-mount { background: var(--casora-soft-cam-fail, #24211E) !important; }'
         + '\n.casora-cam-offline { background: transparent !important; font-family: var(--primary-font-family, system-ui) !important; }'
         + '\n.casora-cam-offline .cam-retry { font-family: var(--primary-font-family, system-ui) !important; font-weight: 600 !important; }'
-        /* Etiketten sind breiter als die 52-px-Knöpfe: bei 16 px stießen „Aufnahme“ und „Beschreiben“ aneinander. */
+        /* Labels are wider than the 52 px buttons: at 16 px „Aufnahme“ and „Beschreiben“ touched. */
         + '\n.cam-controls { gap: 34px 24px !important; padding-bottom: 26px !important; }'
         + '\n.cam-controls > * { --cam-rim: none; box-shadow: none !important;'
         + ' background: var(--casora-soft-control-fill, rgba(140,115,90,0.10)) !important;'
@@ -410,15 +417,15 @@
         + '\n.cam-mode::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--casora-color-orange, #DE8A4E); }'
         + '\n.cam-mode:empty { display: none; }';
     },
-    // Statuszeile unter dem Livebild; _casoraCAM.setMode füllt .cam-mode.
+    // Status line under the live picture; _casoraCAM.setMode fills .cam-mode.
     mode: function () {
       return '<div class="cam-mode-row"><span class="cam-mode"></span></div>';
     },
 
-    // ── Entschlacken (E3, 01.10.2026) ──
-    // Technische Varianten ausblenden: „Schnappschüsse …“ und je Gerät nur ein Stream
-    // (Reolink legt main/sub/ext und Schnappschuss-Kameras an). Nur ohne eigene Auswahl
-    // (variables.cameras); variables.show_stream_variants: true zeigt wieder alle.
+    // ── Declutter (E3, 01.10.2026) ──
+    // Hide technical variants: „Schnappschüsse …“ and only one stream per device
+    // (Reolink creates main/sub/ext and snapshot cameras). Only without an own selection
+    // (variables.cameras); variables.show_stream_variants: true shows all again.
     filter: function (ids, hass, variables) {
       var v = variables || {};
       if (v.show_stream_variants === true || (Array.isArray(v.cameras) && v.cameras.filter(Boolean).length)) return ids;
@@ -442,7 +449,7 @@
       });
       return out.filter(function (id) { var d = (R[id] || {}).device_id; return !d || best[d] === id; });
     },
-    // Anzeigename ohne Stream-Technik: „Küche CamProxy_Kueche_main“ → „Küche“.
+    // Display name without stream technics: „Küche CamProxy_Kueche_main“ → „Küche“.
     label: function (id, st, hass, fallback) {
       var R = (hass && hass.entities) || {}, D = (hass && hass.devices) || {};
       var e = R[id] || {};
@@ -455,19 +462,19 @@
       if (/_/.test(fn)) return dn;
       return fn;
     },
-    // „vor 41 Min.“ statt „41m“; Bewegungssensor als Quelle: „Bewegung vor 2 Min.“
+    // „vor 41 Min.“ instead of „41m“; a motion sensor as the source: „Bewegung vor 2 Min.“
     age: function (ms, motion) {
       if (!isFinite(ms) || ms < 0) return '';
       var m = Math.floor(ms / 60000);
       var t = m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.floor(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.floor(m / 1440)) + ' T.';
       return motion ? 'Bewegung ' + t : t;
     },
-    // Zurück zur Übersicht – sichtbarer Pfeil über dem Livebild.
+    // Back to the overview – a visible arrow over the live picture.
     back: function (bindAttr) {
       return '<div class="cam-back-row"><div class="cam-back" role="button" aria-label="Zurück"' + bindAttr + '>'
         + '<ha-icon icon="mdi:chevron-left" style="--mdc-icon-size:22px;"></ha-icon><span>Alle Kameras</span></div></div>';
     },
-    // Doppelklick bzw. Doppeltipp aufs Bild: Ausfüllen ↔ Einpassen (statt eigenem Knopf).
+    // Double click or double tap on the picture: fill ↔ fit (instead of an own button).
     dtap: function (ev, el) {
       var C = window._casoraCAM; if (!C || !el) return;
       var now = Date.now();

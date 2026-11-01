@@ -75,7 +75,7 @@ const MIGRIERT = [
   { popup: 'Person / Anwesenheit', vorlagen: ['casora_popup_person', 'casora_badge_presence_group'], file: '15-person.js', from: '  P.sec = function', to: '  // ── Aktionen', stages: 1 },
   { popup: 'Lüften-Coach', vorlagen: ['casora_popup_vent'], file: '05-standard-medien.js', from: '  V.sec = function', to: '  /* Coach auch im Klima-Popup', stages: 3 },
   { popup: 'Türen & Fenster', vorlagen: ['casora_popup_contacts'], file: '34-security-covers.js', from: '  window.casoraContactsStage = function', to: '  C.sec = function', stages: 1 },
-  { popup: 'Alarmanlage', vorlagen: ['casora_popup_alarm'], file: '07-weich-spezial.js', from: '  AL.stage = function', to: '  // Tippen auf data-casora-alarm', stages: 1 },
+  { popup: 'Alarmanlage', vorlagen: ['casora_popup_alarm'], file: '07-weich-spezial.js', from: '  AL.stage = function', to: '  // Tap on data-casora-alarm', stages: 1 },
   { popup: 'Sicherheit (Badge, Gruppe)', vorlagen: ['casora_badge_security', 'casora_badge_security_group'], file: null, stages: 1 },
   { popup: 'Schloss', vorlagen: ['casora_popup_lock'], file: null, stages: 1 },
   { popup: 'Wetterwarnung', vorlagen: ['casora_popup_weather_warning'], file: null, stages: 1 },
