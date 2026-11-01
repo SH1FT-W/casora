@@ -10628,7 +10628,7 @@ window.casoraMenuGlass = {
           ev.preventDefault(); ev.stopPropagation();
           return;
         }
-        // „Alle (n)“ moon: its small menu (moonMenuOpen); without rows the sub page as before.
+        // „Mehr (n)“ moon: its small menu (moonMenuOpen); without rows the sub page as before.
         if (t && t.dataset && t.dataset.casoraMoonmenu !== undefined) {
           if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
           window._casoraUILastTap = Date.now();
@@ -12709,7 +12709,7 @@ window.casoraMenuGlass = {
       + stAttrs(it.attrs) + ' style="' + esc(moonAt(deg)) + '">'
       + stGlyph(moonIcon(it.icon), 'ic') + '<span' + moonWordFit(shown) + '>' + esc(shown) + '</span></div>';
   }
-  // „Alle (n)“ with its menu: the rows are shown by moonMenuOpen; each row clicks its hidden proxy here (same attributes
+  // „Mehr (n)“ with its menu: the rows are shown by moonMenuOpen; each row clicks its hidden proxy here (same attributes
   // as a moon: data-casora-svc, data-casora-page, the popup's own data-*), so services, confirmations, the alarm code
   // and pages run through the popup's existing handlers – no second logic.
   function moonMenuHtml(it, deg) {
@@ -12726,7 +12726,7 @@ window.casoraMenuGlass = {
       + '<div class="hui-mm-src" style="display:none !important;">' + proxies + '</div></div>';
   }
   // The menu itself: a plate on the page (above the popup), next to the moon, inside the popup below its head and
-  // always inside the window – below the moon, else above, else scrolling (moonMenuPlace); on the phone the same, at most the window's width less 16. Hinterlegt = chosen (no check mark,
+  // always inside the window – below the moon, else above, else beside it, else scrolling (moonMenuPlace); on the phone the same, at most the window's width less 16. Hinterlegt = chosen (no check mark,
   // popup-geo „haken“). Tap beside it (veil) or Esc closes; arrows move, Enter/Space picks.
   var MM_CSS = ':host{all:initial;position:fixed;inset:0;z-index:2147483000;font-family:var(--primary-font-family, Inter, system-ui, sans-serif);}'
     + '.veil{position:fixed;inset:0;background:transparent;}'
@@ -12772,7 +12772,7 @@ window.casoraMenuGlass = {
     if (h && h.height) b.top = Math.max(b.top, h.bottom + 4);
     return b;
   }
-  // Below the moon when it fits, else above when that fits, else on the side with more room with a limited height
+  // Below the moon when it fits, else above when that fits, else beside it (whole), else on the side with more room with a limited height
   // (the pane scrolls). Horizontally centred on the moon, kept inside the bounds.
   function moonMenuPlace(mr, pw, ph, b) {
     var gap = 8, cx = mr.left + mr.width / 2;
@@ -12780,6 +12780,16 @@ window.casoraMenuGlass = {
     var roomB = b.bottom - (mr.bottom + gap), roomA = (mr.top - gap) - b.top;
     if (ph <= roomB) return { left: left, top: mr.bottom + gap, below: true, maxH: 0 };
     if (ph <= roomA) return { left: left, top: mr.top - gap - ph, below: false, maxH: 0 };
+    // Owner (01.11.2026, security popup): a menu that fits the popup but neither side of the moon was squeezed into a
+    // scrolling pane with its last row cut off. It lies whole beside the moon instead (right, else left), level with
+    // it and kept inside the bounds; only where that is no room either it may cover the moon.
+    if (ph <= b.bottom - b.top) {
+      var top = Math.max(b.top, Math.min(b.bottom - ph, (mr.top + mr.bottom) / 2 - ph / 2));
+      var rl = mr.left + mr.width + gap, ll = mr.left - gap - pw;
+      if (rl + pw <= b.right) return { left: rl, top: top, below: true, maxH: 0, side: 'right' };
+      if (ll >= b.left) return { left: ll, top: top, below: true, maxH: 0, side: 'left' };
+      return { left: left, top: Math.max(b.top, Math.min(mr.bottom + gap, b.bottom - ph)), below: true, maxH: 0 };
+    }
     // Not enough room on either side of the moon: the larger side, at least 120 high (then overlapping the moon
     // rather than the head).
     if (roomB >= roomA) {
@@ -12820,7 +12830,8 @@ window.casoraMenuGlass = {
     var pl = moonMenuPlace(mr, pane.offsetWidth, pane.offsetHeight, moonMenuBounds(moon));
     pane.style.left = pl.left + 'px'; pane.style.top = pl.top + 'px';
     if (pl.maxH) pane.style.maxHeight = pl.maxH + 'px';
-    pane.style.setProperty('--o', (mr.left + mr.width / 2 - pl.left) + 'px ' + (pl.below ? 'top' : 'bottom'));
+    pane.style.setProperty('--o', pl.side ? (pl.side === 'right' ? 'left ' : 'right ') + ((mr.top + mr.bottom) / 2 - pl.top) + 'px'
+      : (mr.left + mr.width / 2 - pl.left) + 'px ' + (pl.below ? 'top' : 'bottom'));
     moon.setAttribute('aria-expanded', 'true');
     var items = Array.prototype.slice.call(sr.querySelectorAll('.row'));
     var pick = function (k) {
@@ -12870,20 +12881,23 @@ window.casoraMenuGlass = {
     if (!k) return;
     named.forEach(function (it, i) { it.short = ws[i].slice(k).join(' '); });
   }
-  // items like UI.quick (never dangerous; more than 4 → the first 3 and „Alle (n)“); act = the stage's main action.
+  // items like UI.quick (never dangerous; more than 4 → the first 3 and „Mehr (n)“ with the rest); act = the stage's main action.
   function moons(items, act, o) {
     o = o || {};
     var list = (items || []).filter(function (x) { return x && x.text && !x.danger; }).map(function (x) { return Object.assign({}, x); });
-    // More than 4: „Alle (n)“ opens a small menu at the moon (moonMenuOpen) with every choice; the chosen one among the
-    // hidden ones marks the moon. o.page stays the fallback where no menu can open.
+    // More than 4: „Mehr (n)“ opens a small menu at the moon (moonMenuOpen) with the choices that are no moon; the
+    // chosen one among them marks the moon. o.page stays the fallback where no menu can open.
     // A moon with its own menu and keep (the lamp's „Effekte“) stays a moon of its own: the others share what is left
-    // (2 + „Alle (n)“ + it) – a menu never opens from a menu row.
+    // (2 + „Mehr (n)“ + it) – a menu never opens from a menu row.
     var kept = list.filter(function (x) { return x.keep && x.menu; });
     list = list.filter(function (x) { return !(x.keep && x.menu); });
+    // Owner (01.11.2026, security popup): the menu lists only the choices that are no moon, so the moon is „Mehr (n)“
+    // with n = rows in the menu (no such moon when nothing is left over).
     if (list.length + kept.length > 4) {
-      var all = list.length, full = list, nShow = Math.max(0, 3 - kept.length);
-      list = list.slice(0, nShow).concat([{ icon: 'mdi:dots-horizontal', text: T_('Alle') + ' (' + all + ')', page: o.page || null, all: true,
-        menu: full, active: full.slice(nShow).some(function (x) { return x.active; }) }]);
+      var nShow = Math.max(0, 3 - kept.length), rest = list.slice(nShow);
+      list = list.slice(0, nShow);
+      if (rest.length) list.push({ icon: 'mdi:dots-horizontal', text: T_('Mehr') + ' (' + rest.length + ')', page: o.page || null, all: true,
+        menu: rest, active: rest.some(function (x) { return x.active; }) });
     }
     list = list.concat(kept);
     moonShort(list);
