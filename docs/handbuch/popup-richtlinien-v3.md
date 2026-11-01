@@ -197,7 +197,7 @@ die Typen S1–S8 und ihre Felder bleiben. `o.dial: false` behält die Platte (n
 | Gewählt | Fläche `--casora-soft-seg-on`, Ring 3 in Gerätefarbe mit weichem Schatten, Symbol in Gerätefarbe (zur Schrift hin abgedunkelt, 3 : 1) |
 | Lage (Grad, 0 = rechts) | 1: 155 · 2: 155, 25 · 3: 155, 90, 25 · 4: −150, −30, 155, 25 – Abstand 53,5 % der Radbreite vom Mittelpunkt (außerhalb des Knopfwegs, nie am Ringende), unten (90°) 44 %; die Teilstriche unter einem seitlichen Mond fallen weg. Geprüft von `popup-geo.mjs` („rad“: Mond ≥ 6 px vom Knopfweg) |
 | Hauptaktion | S4/S7-Aktion („Jetzt starten“, „Alle verriegeln“) ist der Mond unten (90°; bei 1 oder 3 Monden rechts unten 25°), gefüllt in Gerätefarbe. **Gefährliches ist nie ein Mond** (Unscharf schalten, Alarm beenden, Alle entriegeln): ungefüllte Pille mit roter Schrift unter dem Rad, mit Rückfrage |
-| Mehr als 4 | die 3 häufigsten + „Alle (n)“ wie §5 (ohne ›) |
+| Mehr als 4 | die 3 häufigsten + Mond „Alle (n)“ (ohne ›); er öffnet ein **kleines Menü direkt am Mond** (Entscheidung 01.11.2026): Platte im Casora-Stil mit Schatten, Zeilen Symbol + Wort, die gewählte hinterlegt, Antippen wählt sofort und schließt, Tipp daneben oder Esc schließt; bleibt immer im Fenster (Handy: Breite höchstens Fenster − 16). Test `moon_menu.mjs` |
 | Verboten | wie §5 |
 
 Aufruf: `UI.stage(type, { …, moons: items | function })` – `items` wie `UI.quick`; eine Funktion ruft den vorhandenen

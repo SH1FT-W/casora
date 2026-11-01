@@ -10092,6 +10092,19 @@ window.casoraMenuGlass = {
           ev.preventDefault(); ev.stopPropagation();
           return;
         }
+        // „Alle (n)“ moon: its small menu (moonMenuOpen); without rows the sub page as before.
+        if (t && t.dataset && t.dataset.casoraMoonmenu !== undefined) {
+          if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
+          window._casoraUILastTap = Date.now();
+          window.casoraHaptic('light');
+          ev.preventDefault(); ev.stopPropagation();
+          window._casoraSuppressDismiss = Date.now() + 600;
+          if (!(window._casoraMoonMenu && window._casoraMoonMenu.open(t)) && t.dataset.casoraMmPage) {
+            var mp = String(t.dataset.casoraMmPage), mcut = mp.indexOf('|'), mfn = (window._casoraPages || {})[mcut < 0 ? mp : mp.slice(0, mcut)];
+            if (typeof mfn === 'function') { try { mfn(mcut < 0 ? '' : mp.slice(mcut + 1), t); } catch (e) { console.error('casora: page', e); } }
+          }
+          return;
+        }
         // Blueprint v2: › row onto a sub page of the module („name|arg“ → window._casoraPages[name](arg, el)).
         if (t && t.dataset && t.dataset.casoraPage) {
           if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
@@ -12009,6 +12022,7 @@ window.casoraMenuGlass = {
   function moonHtml(it, deg, cls) {
     var spec = it.svc ? (it.confirm ? Object.assign({}, it.svc, { confirm: it.confirm }) : it.svc) : null;
     var shown = it.short || it.text;
+    if (it.menu) return moonMenuHtml(it, deg);
     return '<div class="hui-moon' + (it.active ? ' on' : '') + (cls ? ' ' + esc(cls) : '') + moonWordCls(shown) + '" role="button" aria-label="' + esc(it.text) + '"'
       + (it.short ? ' title="' + esc(it.text) + '"' : '')
       + (cls ? '' : ' aria-pressed="' + (it.active ? 'true' : 'false') + '"')
@@ -12017,6 +12031,107 @@ window.casoraMenuGlass = {
       + stAttrs(it.attrs) + ' style="' + esc(moonAt(deg)) + '">'
       + stGlyph(moonIcon(it.icon), 'ic') + '<span' + moonWordFit(shown) + '>' + esc(shown) + '</span></div>';
   }
+  // „Alle (n)“ with its menu: the rows are shown by moonMenuOpen; each row clicks its hidden proxy here (same attributes
+  // as a moon: data-casora-svc, data-casora-page, the popup's own data-*), so services, confirmations, the alarm code
+  // and pages run through the popup's existing handlers – no second logic.
+  function moonMenuHtml(it, deg) {
+    var rows = it.menu.map(function (x) { return { icon: moonIcon(x.icon), text: x.text, on: !!x.active }; });
+    var proxies = it.menu.map(function (x, k) {
+      var sp = x.svc ? (x.confirm ? Object.assign({}, x.svc, { confirm: x.confirm }) : x.svc) : null;
+      return '<i data-casora-mm-i="' + esc(k) + '"' + (sp ? ' data-casora-svc="' + esc(JSON.stringify(sp)) + '"' : '')
+        + (x.page ? ' data-casora-page="' + esc(x.page) + '"' : '') + stAttrs(x.attrs) + '></i>';
+    }).join('');
+    return '<div class="hui-moon' + (it.active ? ' on' : '') + moonWordCls(it.text) + '" role="button" aria-haspopup="menu" aria-expanded="false"'
+      + ' aria-label="' + esc(it.text) + '" data-casora-moonmenu="" data-casora-mm="' + esc(JSON.stringify(rows)) + '"'
+      + (it.page ? ' data-casora-mm-page="' + esc(it.page) + '"' : '') + ' style="' + esc(moonAt(deg)) + '">'
+      + stGlyph(moonIcon(it.icon), 'ic') + '<span' + moonWordFit(it.text) + '>' + esc(it.text) + '</span>'
+      + '<div class="hui-mm-src" style="display:none !important;">' + proxies + '</div></div>';
+  }
+  // The menu itself: a plate on the page (above the popup), next to the moon and always inside the window – below
+  // the moon, else above; on the phone the same, at most the window's width less 16. Hinterlegt = chosen (no ✓,
+  // popup-geo „haken“). Tap beside it (veil) or Esc closes; arrows move, Enter/Space picks.
+  var MM_CSS = ':host{all:initial;position:fixed;inset:0;z-index:2147483000;font-family:var(--primary-font-family, Inter, system-ui, sans-serif);}'
+    + '.veil{position:fixed;inset:0;background:transparent;}'
+    + '.pane{position:fixed;box-sizing:border-box;min-width:200px;max-width:min(280px, calc(100vw - 16px));max-height:calc(100vh - 16px);overflow:auto;'
+    +   'padding:var(--casora-menu-pad, 8px);border-radius:var(--casora-menu-radius, 26px);'
+    +   'background:var(--casora-menu-pane, var(--ha-card-background, var(--card-background-color, rgb(251,248,243))));'
+    +   '-webkit-backdrop-filter:blur(24px) saturate(1.2);backdrop-filter:blur(24px) saturate(1.2);'
+    +   'box-shadow:var(--casora-window-shadow, 0 18px 44px -14px rgba(60,40,20,0.35));color:var(--casora-menu-fg, var(--primary-text-color, rgba(46,39,33,0.95)));'
+    +   'transform-origin:var(--o, top center);animation:mm-in var(--casora-dur-feedback, .16s) var(--casora-ease-enter, ease) both;}'
+    + '@supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.pane{background:var(--casora-menu-pane-webkit, var(--casora-menu-pane, rgb(248,244,237)));}}'
+    + '@keyframes mm-in{from{opacity:0;transform:scale(.96);}to{opacity:1;transform:none;}}'
+    + '.row{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 16px 0 8px;box-sizing:border-box;border-radius:var(--casora-menu-row-radius, 20px);'
+    +   'cursor:pointer;user-select:none;-webkit-user-select:none;outline:none;font-size:15px;font-weight:600;line-height:1.2;'
+    +   'transition:transform var(--casora-dur-feedback, .16s) ease, background-color var(--casora-dur-feedback, .16s) ease;-webkit-tap-highlight-color:transparent;}'
+    + '@media (hover:hover){.row:hover{background:var(--casora-menu-hover, rgba(140,115,90,0.08));}}'
+    + '.row:focus-visible{outline:2px solid var(--casora-focus-ring, var(--casora-color-teal, #4E9E95));outline-offset:-2px;}'
+    + '.row:active{transform:scale(var(--casora-press-scale, .97));}'
+    + '.row.on{background:var(--casora-soft-row-active, rgba(127,127,127,0.10));box-shadow:var(--casora-soft-row-active-shadow, none);color:var(--casora-soft-row-active-ink, inherit);}'
+    + '.ic{flex:none;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;'
+    +   'background:var(--casora-soft-icon-off, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, currentColor);}'
+    + '.row.on .ic{background:var(--mm-col, var(--casora-color-teal, #4E9E95));color:var(--mm-ink, #fff);}'
+    + '.ic .g{width:20px;height:20px;background-color:currentColor;--mdc-icon-size:20px;}.ic ha-icon.g{background:none;}'
+    + '.t{flex:1;min-width:0;}'
+    + '@media (prefers-reduced-motion:reduce){.pane{animation:none;}.row{transition:none;}}';
+  var mmOpen = null;
+  function moonMenuClose() {
+    if (!mmOpen) return;
+    var m = mmOpen; mmOpen = null;
+    document.removeEventListener('keydown', m.key, true);
+    window.removeEventListener('resize', m.close);
+    try { m.moon.setAttribute('aria-expanded', 'false'); } catch (e) {}
+    if (m.host.parentNode) m.host.parentNode.removeChild(m.host);
+  }
+  function moonMenuOpen(moon) {
+    moonMenuClose();
+    var rows = [];
+    try { rows = JSON.parse(moon.getAttribute('data-casora-mm') || '[]'); } catch (e) { rows = []; }
+    if (!rows.length) return false;
+    var host = document.createElement('div');
+    host.setAttribute('data-casora-moonmenu-pane', '');
+    var col = '', ink = '';
+    try { var cs = getComputedStyle(moon); col = cs.getPropertyValue('--dl-col').trim(); ink = cs.getPropertyValue('--casora-popup-accent-ink').trim(); } catch (e) {}
+    if (col) host.style.setProperty('--mm-col', col);
+    if (ink) host.style.setProperty('--mm-ink', ink);
+    var sr = host.attachShadow ? host.attachShadow({ mode: 'open' }) : host;
+    sr.innerHTML = '<style>' + MM_CSS + '</style><div class="veil"></div><div class="pane" role="menu" aria-label="' + esc(moon.getAttribute('aria-label') || '') + '">'
+      + rows.map(function (x, k) {
+        return '<div class="row' + (x.on ? ' on' : '') + '" role="menuitemradio" aria-checked="' + (x.on ? 'true' : 'false') + '" tabindex="-1" data-k="' + esc(k) + '">'
+          + '<span class="ic">' + stGlyph(x.icon, 'g') + '</span><span class="t">' + esc(x.text) + '</span></div>';
+      }).join('') + '</div>';
+    document.body.appendChild(host);
+    var pane = sr.querySelector('.pane'), mr = moon.getBoundingClientRect();
+    var pw = pane.offsetWidth, ph = pane.offsetHeight, W = window.innerWidth, H = window.innerHeight;
+    var left = Math.max(8, Math.min(W - pw - 8, mr.left + mr.width / 2 - pw / 2));
+    var below = mr.bottom + 8 + ph <= H - 8, top = below ? mr.bottom + 8 : Math.max(8, mr.top - 8 - ph);
+    pane.style.left = left + 'px'; pane.style.top = top + 'px';
+    pane.style.setProperty('--o', (mr.left + mr.width / 2 - left) + 'px ' + (below ? 'top' : 'bottom'));
+    moon.setAttribute('aria-expanded', 'true');
+    var items = Array.prototype.slice.call(sr.querySelectorAll('.row'));
+    var pick = function (k) {
+      moonMenuClose();
+      var px = moon.querySelector('[data-casora-mm-i="' + k + '"]');
+      window._casoraUILastTap = 0;
+      if (px) px.click();
+      try { moon.focus(); } catch (e) {}
+    };
+    var close = function () { moonMenuClose(); };
+    var key = function (ev) {
+      var i = items.indexOf(sr.activeElement);
+      if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); close(); try { moon.focus(); } catch (e) {} return; }
+      if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') { ev.preventDefault(); ev.stopPropagation(); var n = items[(i + (ev.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length]; if (n) n.focus(); return; }
+      if ((ev.key === 'Enter' || ev.key === ' ') && i > -1) { ev.preventDefault(); ev.stopPropagation(); pick(items[i].getAttribute('data-k')); }
+    };
+    sr.querySelector('.veil').addEventListener('click', function (ev) { ev.stopPropagation(); close(); });
+    items.forEach(function (row) { row.addEventListener('click', function (ev) { ev.stopPropagation(); window.casoraHaptic && window.casoraHaptic('selection'); pick(row.getAttribute('data-k')); }); });
+    document.addEventListener('keydown', key, true);
+    window.addEventListener('resize', close);
+    mmOpen = { host: host, moon: moon, key: key, close: close };
+    var first = items.filter(function (x) { return x.classList.contains('on'); })[0] || items[0];
+    if (first) try { first.focus({ preventScroll: true }); } catch (e) {}
+    return true;
+  }
+  window._casoraMoonMenu = { open: moonMenuOpen, close: moonMenuClose };
   // Moons named alike („WZ Dreamview An“, „WZ Dreamview Aus“) lose their common leading words, so the word that tells
   // them apart is the one on the moon (review 2, E07/T05); the full name stays the label and the tooltip.
   function moonShort(list) {
@@ -12033,8 +12148,11 @@ window.casoraMenuGlass = {
     o = o || {};
     var list = (items || []).filter(function (x) { return x && x.text && !x.danger; }).map(function (x) { return Object.assign({}, x); });
     if (list.length > 4) {
-      var all = list.length;
-      list = list.slice(0, 3).concat([{ icon: 'mdi:dots-horizontal', text: T_('Alle') + ' (' + all + ')', page: o.page || null, all: true }]);
+      var all = list.length, full = list;
+      // „Alle (n)“ opens a small menu at the moon (moonMenuOpen) with every choice; the chosen one among the hidden
+      // ones marks the moon. o.page stays the fallback where no menu can open.
+      list = list.slice(0, 3).concat([{ icon: 'mdi:dots-horizontal', text: T_('Alle') + ' (' + all + ')', page: o.page || null, all: true,
+        menu: full, active: full.slice(3).some(function (x) { return x.active; }) }]);
     }
     moonShort(list);
     var hasAct = !!(act && act.text);
