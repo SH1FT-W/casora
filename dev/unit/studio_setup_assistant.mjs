@@ -92,6 +92,34 @@ const SRC = read('custom_components/casora/panel/casora-panel.js');
   console.log('ok setup: step 1');
 }
 
+// ── E22 in the YAML import: the name comes first and the screen still gets its Import button ─────────
+// (The import review moved its name group before an undefined "head": a ReferenceError left the screen
+// without name field and button – t07 found it.)
+{
+  const labels = [];
+  const moved = [];
+  const p = Object.create(P);
+  p._hass = { states: {} };
+  p._dashList = [];
+  p._yamlCandidates = () => [];
+  p._importCounts = () => ({ rooms: [{ path: 'a', tiles: [] }], tiles: 1, ex: {} });
+  p._importIssues = () => [];
+  p._importRooms = noop;
+  const group = { parentNode: { k: 'name-group' } };
+  p._flowScreen = () => ({ body: { firstChild: { k: 'rooms' }, insertBefore: (a, b) => moved.push([a.k, b && b.k]) }, acts: {} });
+  p._flowGroup = () => group;
+  p._flowRow = () => ({ input: { value: 'X' } });
+  p._flowCancel = noop;
+  p._flowButton = (acts, label) => labels.push(label);
+  const saved = window.casoraLegacy;
+  window.casoraLegacy = null;
+  p._importReview({ title: 'Old', url_path: 'old', cfg: { views: [] } }, [], [], {});
+  window.casoraLegacy = saved;
+  assert.deepEqual(moved, [['name-group', 'rooms']], 'name group above the room list');
+  assert.deepEqual(labels, ['Import'], 'Import button there');
+  console.log('ok import: name first, Import button');
+}
+
 // ── E21: done page counts Home plus the chosen rooms ─────────────────────────
 {
   let lede = null;

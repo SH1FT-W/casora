@@ -15184,7 +15184,8 @@ class CasoraPanel extends HTMLElement {
       .concat(this._yamlCandidates().map((d) => (d.title || "").trim())));
     const dash = this._flowGroup(s.body, { header: "New Dashboard" });
     // E22 (test 2): the name sat below every room, only reachable by scrolling – it comes first now.
-    s.body.insertBefore(dash.parentNode, head);
+    // (This screen has no room-picker head: put the name above the room list.)
+    s.body.insertBefore(dash.parentNode, s.body.firstChild);
     const titleIn = this._flowRow(dash, {
       title: "Name", input: window.casoraFreeName ? window.casoraFreeName(name.trim(), taken, this._hass)
         : taken.has(name.trim()) ? name + " (imported)" : name,
