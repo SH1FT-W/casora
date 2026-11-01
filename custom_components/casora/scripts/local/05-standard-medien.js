@@ -860,10 +860,12 @@ window._hpMultiTap = function (ev, kind) {
     // Popup v3 (§3, §4.7, review 2 DD-25/DH-11): head without the symbol tile, a short status line, the tip as an S7 stage.
     if (UI.v3 && UI.v3() && UI.stage && UI.line) {
       var tipTxt = on ? String(O.tip(st, states) || '').replace(/^≈ [^·]+ frei · /, '') : '';
-      return UI.line(on ? 'Jetzt nutzen' : 'Kein Überschuss', [on && free ? watt(free) + ' frei' : null])
-        + UI.stage('status', { tone: on ? 'good' : 'off', icon: 'mdi:solar-power-variant', text: on ? (tipTxt || 'Jetzt nutzen') : 'Gerade kein Sonnenstrom übrig',
+      // Detail round #18: one place per fact – the free power is the stage's fact, not the head's or the list's again;
+      // „Kein Überschuss“ once (the frame's head then says since when); the list is the house with a heading.
+      return UI.line(on ? 'Jetzt nutzen' : 'Kein Überschuss', [])
+        + UI.stage('status', { tone: on ? 'good' : 'off', icon: 'mdi:solar-power-variant', text: on ? (tipTxt || 'Jetzt nutzen') : 'Kein Überschuss',
           facts: on && free ? [{ label: 'Frei', value: watt(free) }] : [] })
-        + '<div style="height:24px"></div>' + UI.group(rows, null);
+        + (hs ? '<div style="height:24px"></div>' + UI.group(rows.slice(1), 'Haus') : '');
     }
     return UI.hero({ value: on ? 'Jetzt nutzen' : 'Kein Überschuss', sub: on ? O.tip(st, states) : 'Sobald Sonnenstrom übrig ist, steht hier, welches Gerät sich lohnt.', center: true })
       + '<div style="height:18px"></div>' + UI.group(rows, null);
