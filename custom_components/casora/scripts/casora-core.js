@@ -11985,7 +11985,11 @@ window.casoraMenuGlass = {
   var TONE = { good: 'var(--casora-color-green, #34C759)', warn: 'var(--casora-color-orange, #FF9F0A)', bad: 'var(--casora-color-red, #FF453A)',
     // off: a device that is simply off (not a problem) – the off symbol of the lists, its glyph in text 2.
     off: 'var(--casora-soft-icon-off, rgba(140,115,90,0.12))' };
-  var STAGE_CSS = '.hui-stage{position:relative;box-sizing:border-box;font-family:' + T.font + ';text-align:left;'
+  // A popup card with tap_action none is "disabled" in button-card (pointer-events:none): like every other control
+  // here the stage takes its pointer events back, else the dial's ring never gets the finger and the phone sheet
+  // drags instead (e.g. a single cover on the phone; moons and − / + set their own pointer-events).
+  var STAGE_CSS = 'ha-card.disabled{pointer-events:auto!important;}'
+    + '.hui-stage{position:relative;box-sizing:border-box;font-family:' + T.font + ';text-align:left;'
     + 'background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));border-radius:var(--casora-v3-stage-radius, 32px);'
     + 'padding:var(--casora-v3-stage-pad, 20px);display:flex;flex-direction:column;gap:var(--casora-v3-stage-gap, 16px);'
     + 'color:' + T.ink + ';overflow-wrap:normal;word-break:normal;hyphens:manual;}'
