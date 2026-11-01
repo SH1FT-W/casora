@@ -6395,6 +6395,9 @@
     },
     {
      "-webkit-tap-highlight-color": "transparent"
+    },
+    {
+     "overflow": "visible"
     }
    ],
    "custom_fields": {
@@ -6491,13 +6494,16 @@
      "line-height": "1.3"
     },
     {
-     "padding": 0
+     "padding": "28px"
     },
     {
-     "margin": 0
+     "margin": "-28px"
     },
     {
      "text-shadow": "var(--casora-mobile-title-halo, none)"
+    },
+    {
+     "pointer-events": "none"
     }
    ]
   },
