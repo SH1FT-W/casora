@@ -71,6 +71,8 @@
         + 'letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary,#fff));'
         + 'text-align:left;padding:0 6px;display:flex;align-items:baseline;gap:12px;"><span class="hp-ct-t" style="flex:1;min-width:0;">' + esc(window._hpChartTitle(B.cur)) + '</span>'
         /* Decision 3 (variant A): a row picks the chart (no ›), the chosen battery's own page through „Details ›“. */
+        // Hit area 44 high on the phone (the link itself is 16): an invisible ::before around it (popup-geo „treffer“).
+        + '<style>.hp-det{position:relative;}.hp-det::before{content:"";position:absolute;inset:-14px -8px;}</style>'
         + '<span class="hp-det" role="button" data-casora-mi="' + esc(B.cur) + '" style="font-size:var(--casora-fs-sub,13px);font-weight:700;cursor:pointer;'
         + 'color:var(--casora-popup-ui-action, var(--casora-color-teal));white-space:nowrap;"><span>' + esc('Details') + '</span> ›</span></div>'
         + '<div class="hp-chart-slot" style="min-height:150px;margin:6px 0 0;"></div></div>';
