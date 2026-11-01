@@ -2643,9 +2643,25 @@
   "gekippt": "tilted",
   "Im Studio wählen": "Choose in the Studio",
   "Regen jetzt": "Rain now",
-  "Sollwert": "Setpoint"
+  "Sollwert": "Setpoint",
+  "Netz offline": "Grid offline",
+  "Bezug aus dem Netz": "Drawing from the grid",
+  "Einspeisung ins Netz": "Feeding into the grid",
+  "Verbraucht Strom": "Using power"
  },
  "patterns": [
+  [
+   "^Solar deckt (\\d+) ?%$",
+   "Solar covers {1}%"
+  ],
+  [
+   "^Akku deckt (\\d+) ?%$",
+   "Battery covers {1}%"
+  ],
+  [
+   "^Solar und Akku decken (\\d+) ?%$",
+   "Solar and battery cover {1}%"
+  ],
   [
    "^(\\d+) von (\\d+) offen$",
    "{1} of {2} open"

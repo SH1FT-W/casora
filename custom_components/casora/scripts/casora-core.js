@@ -7175,6 +7175,12 @@ window.casoraMenuGlass = {
   function roomLabelOf(src) {
     if (!src || !src._config) return '';
     var tpl = [].concat(src._config.template || []).join(' ');
+    /* Energy (owner, 01.11.2026): the label is the room of the tile's sensor, else „Zuhause“ – never empty. */
+    if (/\bcasora_(popup_|badge_)?energy(_group)?\b/.test(tpl) && !/\bcasora_badge_energy\b/.test(tpl)) {
+      var eid = src._stateObj && src._stateObj.entity_id, er = '';
+      try { er = eid && typeof window._casoraRoomOf === 'function' ? String(window._casoraRoomOf(eid) || '').trim() : ''; } catch (e) { er = ''; }
+      return er || 'Zuhause';
+    }
     if (HOUSE_POPUP.test(tpl)) return '';
     var id = src._stateObj && src._stateObj.entity_id;
     if (!id || typeof window._casoraRoomOf !== 'function') return '';

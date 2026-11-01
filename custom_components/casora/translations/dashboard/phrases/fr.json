@@ -2661,9 +2661,25 @@
   "gekippt": "basculée",
   "Im Studio wählen": "Choisir dans le Studio",
   "Regen jetzt": "Pluie maintenant",
-  "Sollwert": "Consigne"
+  "Sollwert": "Consigne",
+  "Netz offline": "Réseau hors ligne",
+  "Bezug aus dem Netz": "Prélèvement sur le réseau",
+  "Einspeisung ins Netz": "Injection dans le réseau",
+  "Verbraucht Strom": "Consomme de l’électricité"
  },
  "patterns": [
+  [
+   "^Solar deckt (\\d+) ?%$",
+   "Le solaire couvre {1}%"
+  ],
+  [
+   "^Akku deckt (\\d+) ?%$",
+   "La batterie couvre {1}%"
+  ],
+  [
+   "^Solar und Akku decken (\\d+) ?%$",
+   "Solaire et batterie couvrent {1}%"
+  ],
   [
    "^(\\d+) von (\\d+) offen$",
    "{1} sur {2} ouverts"

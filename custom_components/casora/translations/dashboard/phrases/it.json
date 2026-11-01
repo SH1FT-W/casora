@@ -2661,9 +2661,25 @@
   "gekippt": "a ribalta",
   "Im Studio wählen": "Scegli nello Studio",
   "Regen jetzt": "Pioggia ora",
-  "Sollwert": "Valore impostato"
+  "Sollwert": "Valore impostato",
+  "Netz offline": "Rete offline",
+  "Bezug aus dem Netz": "Prelievo dalla rete",
+  "Einspeisung ins Netz": "Immissione in rete",
+  "Verbraucht Strom": "Consuma energia"
  },
  "patterns": [
+  [
+   "^Solar deckt (\\d+) ?%$",
+   "Il solare copre il {1}%"
+  ],
+  [
+   "^Akku deckt (\\d+) ?%$",
+   "La batteria copre il {1}%"
+  ],
+  [
+   "^Solar und Akku decken (\\d+) ?%$",
+   "Solare e batteria coprono il {1}%"
+  ],
   [
    "^(\\d+) von (\\d+) offen$",
    "{1} di {2} aperte"

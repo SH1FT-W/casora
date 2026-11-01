@@ -58,8 +58,8 @@ const SETUPS = {
     states: { 'sensor.qa_e_grid': P(300), 'sensor.qa_e_pv': P(1500), 'sensor.qa_e_bat': P(-0.6, 'kW'), 'sensor.qa_e_bat_soc': SOC(64),
       'sensor.qa_e_wm': P(2100, 'W', 'Waschmaschine Leistung'), 'sensor.qa_e_tv': P(0.12, 'kW', 'Fernseher Leistung'),
       'sensor.qa_e_wm_energy': E(3.2), 'sensor.qa_e_tv_energy': E(800, 'Wh', 'Fernseher Energie'), 'sensor.qa_e_pump_energy': E(1500, 'Wh', 'Teichpumpe Energie heute') },
-    // b7: "x % aus Solar und Akku" in the header with only HA's energy settings (no solar fields on the tile).
-    want: { home: 1200, share: '75 % aus Solar und Akku', flow: { grid: ['300 W', 'Netz'], solar: ['1,5 kW'], battery: ['64 %', '600 W', 'Akku lädt'], home: ['1,2 kW'] },
+    // b7: the solar share in the header with only HA's energy settings (no solar fields on the tile); in words since 01.11.2026.
+    want: { home: 1200, share: 'Solar deckt 75 %', flow: { grid: ['300 W', 'Netz'], solar: ['1,5 kW'], battery: ['64 %', '600 W', 'Akku lädt'], home: ['1,2 kW'] },
       rows: [['Waschmaschine', ['2,1 kW', '2100 W']], ['Fernseher', '120 W'], ['Teichpumpe', '1,5 kWh']] },
   },
   battery_discharging_night: {
@@ -82,7 +82,7 @@ const SETUPS = {
 SETUPS.prefs_over_anker = {
   prefs: SETUPS.battery_charging.prefs, home: SETUPS.battery_charging.home, states: SETUPS.battery_charging.states,
   anker: { bat_charge_power: P(999), bat_discharge_power: P(0), state_of_charge: SOC(12), battery_power_signed: P(999), charging_status_desc: { state: 'charge', attributes: {} } },
-  want: { home: 1200, share: '75 % aus Solar und Akku', flow: { battery: ['64 %', '600 W', 'Akku lädt'], home: ['1,2 kW'] } },
+  want: { home: 1200, share: 'Solar deckt 75 %', flow: { battery: ['64 %', '600 W', 'Akku lädt'], home: ['1,2 kW'] } },
 };
 // A grid meter as Home's own sensor (#44, Westerloer) while the plant feeds in: the badge in kW with its sign, the
 // popup's headline as the amount with "Einspeisung".

@@ -2661,9 +2661,25 @@
   "gekippt": "gekanteld",
   "Im Studio wählen": "Kies in de Studio",
   "Regen jetzt": "Nu regen",
-  "Sollwert": "Instelwaarde"
+  "Sollwert": "Instelwaarde",
+  "Netz offline": "Net offline",
+  "Bezug aus dem Netz": "Afname van het net",
+  "Einspeisung ins Netz": "Teruglevering aan het net",
+  "Verbraucht Strom": "Verbruikt stroom"
  },
  "patterns": [
+  [
+   "^Solar deckt (\\d+) ?%$",
+   "Zon dekt {1}%"
+  ],
+  [
+   "^Akku deckt (\\d+) ?%$",
+   "Accu dekt {1}%"
+  ],
+  [
+   "^Solar und Akku decken (\\d+) ?%$",
+   "Zon en accu dekken {1}%"
+  ],
   [
    "^(\\d+) von (\\d+) offen$",
    "{1} van {2} open"
