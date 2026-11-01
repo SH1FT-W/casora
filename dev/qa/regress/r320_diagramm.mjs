@@ -107,12 +107,15 @@ const run = async (view, dark, first) => {
   // of the stage (§3) and says since when instead.
   // The frame swaps a repeated value for „Seit …“ shortly after the stage has drawn (_dedupeHead): wait for it.
   await page.waitForFunction(() => { const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
-    return pop && pop._headerStatus && /^Seit\b/.test(pop._headerStatus.textContent.trim()); }, null, { timeout: 5000 }).catch(() => {});
+    return pop && pop._headerStatus && /^Seit\b/.test(pop._headerStatus.textContent.trim()); }, null, { timeout: 2500 }).catch(() => {});
   const head = await page.evaluate(() => { const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open')); const l = pop && pop._headerStatus;
     const n = window.__pierce('.hui-stage .hui-st-n').find((x) => x.getBoundingClientRect().height > 0);
     return { line: l ? l.textContent.replace(/\s+/g, ' ').trim() : '', value: n ? n.textContent.trim() : '' }; });
   await check(tag + ': Wert groß im Rad, Durchschnitt in der Statistik', p && /^\d+$/.test(head.value) && /Durchschnitt \d+\s?%/.test(p.txt), { head, txt: p && p.txt });
-  await check(tag + ': Kopfzeile wiederholt den Wert nicht („Seit …“)', /^Seit\b/.test(head.line) && !head.line.includes(head.value + ' %'), head);
+  // Detail round #3 (26.11.2): a last change at HA's start is no change – then the head has no time to say and stays
+  // empty rather than repeat the value (the mock's server in a fresh test HA).
+  await check(tag + ': Kopfzeile wiederholt den Wert nicht („Seit …“ oder leer)', !head.line.includes(head.value + ' %')
+    && (head.line === '' || /^(Seit|Vor|Gerade)\b/.test(head.line)), head);
   await shot('2-popup');
   if (first) {
     const p7 = await seg('data-casora-cspan', '7d', (x) => x && x.span === '7d' && /Letzte 7 Tage Höchster/.test(x.txt));
