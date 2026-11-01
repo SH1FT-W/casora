@@ -4,6 +4,34 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.2 – 01.11.2026
+
+Feinschliff für die neuen Popups aus 26.11.1, dazu drei Wünsche aus euren Rückmeldungen. Danke für alles, was ihr schon gemeldet habt – sagt weiter Bescheid, wenn in einem Popup etwas fehlt.
+
+### Neu
+- **Fahrzeugbild (#89):** Das Auto-Popup zeigt dein Auto in der Mitte des Rads. Liefert die Integration ein Bild (z. B. BMW CarData), nimmt Casora es automatisch; sonst lädst du im Studio bei der Fahrzeug-Kachel unter „Fahrzeugbild“ ein eigenes Foto hoch. Ohne Bild bleibt alles wie bisher.
+- **Sicherheit sortieren:** Im Studio unter Sicherheit → „Reihenfolge“ ziehst du Alarm, Türen, Tore, Schlösser, Fenster, Jalousien und Kameras in die Reihenfolge, die du willst. Sie gilt für Unterzeile, Unter-Badges, Handy und Popup gleich.
+- **Kacheln sortieren:** Aktive Kacheln rücken jetzt nach kurzer Ruhe (30 Sekunden ohne Bedienung) an ihren Platz, nichts springt unter dem Finger. Im Studio unter Bedienung → Kacheln: „Nach kurzer Ruhe“, „Nur beim Öffnen“ oder „Sofort“.
+- **Heizungsgruppen drehen:** Fußbodenheizungs- und Thermostat-Gruppen haben am Rad einen Knopf. Drehen setzt alle eingeschalteten Räume auf einmal.
+- **Aquarium-Licht:** Profile der Lampe als Monde am Rad, dazu „Programm ›“ (Home Assistant oder Programm der Lampe).
+
+### Geändert
+- **Kopfzeilen in Worten:** Jedes Popup sagt oben, was los ist, statt Rohwerte wie „An“, „Aus“ oder „0 kWh“ zu zeigen und ohne zu wiederholen, was im Rad steht – z. B. Fenster „Schlafzimmerfenster · seit 14:20“, Kalender „Als Nächstes: Morgen 11:00 · Müllabfuhr“, Netzwerk „2 WLANs an · 66 Geräte“, Fußball die Form der letzten fünf Spiele.
+- **Wetter:** Das Rad hat eine feste Skala von −10 bis 35 °C; 10 °C sieht jetzt kühl aus, nicht heiß. Tagestief und -hoch stehen als Marken auf dem Ring. Die „Zusätzlichen Werte“ aus dem Studio (#56) stehen wieder in den Details.
+- **„Zuhause“ über Gruppen:** Gruppen über mehrere Räume (Jalousien, Schlösser, Fenster, Licht im Haus) heißen oben „Zuhause“ statt nach einem einzelnen Raum.
+- **Gleich große Räder:** Das Rad ist am Desktop in allen Popups gleich groß.
+- **Glocke:** Alle Symbole weiß, Grün und Orange dafür etwas dunkler. Wetterwarnungen kommen nur noch aus der Quelle, die deine Wetterwarn-Kachel zeigt.
+- **Titel:** Popups heißen wie ihre Kachel (z. B. „Abschäumer“ statt „Universal-Kachel“).
+- **Einheitliche Wörter:** „Automatik“ und „Schlafen“ überall gleich, Messwerte in ihrer Farbe (Temperatur orange, Feuchte blau).
+
+### Behoben
+- **Energie:** Die Kachel zeigte den Akku in die falsche Richtung („entlädt“ statt „lädt“).
+- **Licht im Raum:** Der Raum-Chip zählte die Lampen des ganzen Hauses statt die des Raums.
+- **„Seit …“ nach einem Neustart:** Die Uhrzeit des Home-Assistant-Starts erscheint nicht mehr als „Seit“.
+- **Updates-Popup:** Ein Update, das bei offenem Popup gefunden wird, zeigt gleich seine Liste.
+- **YAML-Import im Studio:** Namensfeld und „Importieren“ fehlten.
+- Viele kleine Korrekturen an Texten, Abständen und Übersetzungen.
+
 ## 26.11.1 – 01.11.2026
 
 Die Popups sind neu: ruhiger, aufgeräumter und überall gleich aufgebaut. Sie zeigen mehr als die Kachel, aber nicht alles – Einstellungen gehören ins Studio. Die neuen Popups werden in den nächsten Versionen weiter verfeinert. Fehlt dir etwas, das du im Alltag wirklich brauchst, sag es gern in einem Issue – Ziel bleibt, die Popups clean zu halten und nicht zu überfüllen.

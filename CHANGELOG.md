@@ -4,6 +4,34 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.2 – 01.11.2026
+
+Polish for the new popups from 26.11.1, plus three wishes from your feedback. Thanks for everything you reported so far; keep telling us when something is missing in a popup.
+
+### New
+- **Vehicle picture (#89):** the car popup shows your car in the middle of the dial. If the integration provides a picture (e.g. BMW CarData), Casora uses it automatically; otherwise upload your own photo in the Studio under the car tile's "Vehicle picture". Without a picture everything stays as before.
+- **Sort security:** in the Studio under Security, "Order" lets you drag alarm, doors, gates, locks, windows, covers and cameras into the order you want. It applies to the summary line, sub-badges, phone and popup alike.
+- **Sort tiles:** active tiles now move into place after a short calm (30 seconds without input), nothing jumps under your finger. In the Studio under Controls, Tiles: "After a short calm", "Only on opening" or "Immediately".
+- **Turn heating groups:** underfloor heating and thermostat groups have a knob on the dial. Turning it sets every room that is on at once.
+- **Aquarium light:** the lamp's profiles as moons on the dial, plus "Program ›" (Home Assistant or the lamp's own program).
+
+### Changed
+- **Headers in words:** every popup says at the top what is going on instead of raw values like "On", "Off" or "0 kWh", and without repeating the dial. For example windows "Bedroom window · since 14:20", calendar "Next: Tomorrow 11:00 · Waste collection", network "2 WiFis on · 66 devices", football the form of the last five matches.
+- **Weather:** the dial has a fixed scale from −10 to 35 °C; 10 °C now looks cool, not hot. Today's low and high are marks on the ring. The Studio's "Extra values" (#56) are back in the details.
+- **"Home" above groups:** groups across several rooms (covers, locks, windows, lights in the house) say "Home" at the top instead of a single room.
+- **Same size dials:** on desktop the dial has the same size in every popup.
+- **Bell:** all icons white, green and orange a bit darker for that. Weather warnings only come from the source your weather warning tile shows.
+- **Titles:** popups are named like their tile (e.g. "Skimmer" instead of "Universal tile").
+- **Same words:** "Auto" and "Sleep" the same everywhere, readings in their colour (temperature orange, humidity blue).
+
+### Fixed
+- **Energy:** the tile showed the battery in the wrong direction ("discharging" instead of "charging").
+- **Light in a room:** the room chip counted the lamps of the whole house instead of the room's.
+- **"Since …" after a restart:** the time Home Assistant started no longer shows as "since".
+- **Updates popup:** an update found while the popup is open shows its list right away.
+- **YAML import in the Studio:** the name field and "Import" were missing.
+- Many small fixes to wording, spacing and translations.
+
 ## 26.11.1 – 01.11.2026
 
 The popups are new: calmer, tidier and built the same way everywhere. They show more than the tile, but not everything; settings belong in the Studio. The new popups will keep being refined in the next versions. If something you really need in everyday use is missing, please tell us in an issue. The goal stays to keep the popups clean and not to overload them.
