@@ -756,26 +756,39 @@ if (typeof window.casoraClimateActive !== 'function') {
     }
   }
 
+  // Does this card read helpers from the modules (window._casora…, casoraDevice)?
+  function wants(el) {
+    var cfg = el._config;
+    if (!cfg) return false;
+    // Only the tile's own fields, not the (large) popups.
+    var parts = [cfg.state_display, cfg.label, cfg.name];
+    var cf = cfg.custom_fields || {};
+    Object.keys(cf).forEach(function (k) { if (typeof cf[k] === 'string') parts.push(cf[k]); });
+    // Casora: also variables that ask the device finder (printer, solar battery …).
+    var vars = cfg.variables || {};
+    Object.keys(vars).forEach(function (k) { if (typeof vars[k] === 'string') parts.push(vars[k]); });
+    return parts.some(function (t) { return typeof t === 'string' && (t.indexOf('window._casora') !== -1 || t.indexOf('window.casoraDevice') !== -1); });
+  }
+
   function kick() {
+    // casora-core batches it with the other late load events (one walk, each card once).
+    if (typeof window.casoraKickAll === 'function') { window.casoraKickAll('modules', wants); return; }
     var els = [];
     collect(document, els, 0);
     els.forEach(function (el) {
-      var cfg = el._config;
-      if (!cfg) return;
-      // Nur die Felder der Kachel selbst ansehen, nicht die (großen) Popups.
-      var parts = [cfg.state_display, cfg.label, cfg.name];
-      var cf = cfg.custom_fields || {};
-      Object.keys(cf).forEach(function (k) { if (typeof cf[k] === 'string') parts.push(cf[k]); });
-      // Casora: auch Variablen, die den Geräte-Finder fragen (Drucker, Solarspeicher …).
-      var vars = cfg.variables || {};
-      Object.keys(vars).forEach(function (k) { if (typeof vars[k] === 'string') parts.push(vars[k]); });
-      if (!parts.some(function (t) { return typeof t === 'string' && (t.indexOf('window._casora') !== -1 || t.indexOf('window.casoraDevice') !== -1); })) return;
+      if (!wants(el)) return;
       if (typeof window.casoraKick === 'function') window.casoraKick(el);
       else if (typeof el.requestUpdate === 'function') el.requestUpdate('_config', undefined);
     });
   }
 
-  // Zwei Durchgänge: sofort und nachdem noch montierende Ansichten stehen.
+  // Two passes: now, and once all modules (and their helpers) are there. The loader says so with
+  // casora-local-loaded, which also lets the pass share its walk with the settings redraw. Without
+  // the loader (Studio) or when it is still busy, the old pass after 1.5 s stays as well.
   setTimeout(kick, 0);
-  setTimeout(kick, 1500);
+  if (window._casoraLocalLoaded) setTimeout(kick, 0);
+  else {
+    try { window.addEventListener('casora-local-loaded', kick, { once: true }); } catch (e) { /* old browser */ }
+    setTimeout(function () { if (!window._casoraLocalLoaded) kick(); }, 1500);
+  }
 })();

@@ -137,7 +137,8 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
         if (el.shadowRoot) walk(el.shadowRoot, depth + 1);
       }
     };
-    try { walk(document, 0); } catch (e) { /* the next state push redraws */ }
+    // Shares one walk with the other late load events (casoraKickAll); the plain walk is the fallback.
+    try { if (window.casoraKickAll) window.casoraKickAll('photos'); else walk(document, 0); } catch (e) { /* the next state push redraws */ }
     try { if (window.casoraWallpaperRefresh) window.casoraWallpaperRefresh(); } catch (e) { /* ignore */ }
     try { window.dispatchEvent(new CustomEvent('casora-photos-changed')); } catch (e) { /* ignore */ }
   };
@@ -3004,6 +3005,55 @@ window.casoraMenuGlass = {
       const changed = state && state.last_changed ? Date.parse(state.last_changed) : 0;
       if (changed && changed >= p.at) { delete PENDING[key]; return actual; }
       return p.value;
+    };
+  }
+
+  // One batched redraw for the late load events (Ladezeit Stufe 2): photo list arrived, modules or
+  // translations ready, settings changed, early cards waiting for this file. Each of them used to
+  // walk the whole DOM and kick every button-card on its own, so a tile was drawn once per event.
+  // Requests that come in within a short window share one walk, and every card is kicked once.
+  //   casoraKickAll(reason)          all button-cards
+  //   casoraKickAll(reason, filter)  only the cards filter(el) accepts
+  //   casoraKickSoon(el)             this card
+  if (typeof window.casoraKickAll !== 'function') {
+    // While the modules still load, the events come a few hundred ms apart (photos, then modules):
+    // a wider window lets them share one redraw. Afterwards a short one, so a change shows at once.
+    const WINDOW_MS = 50, LOADING_MS = 250;
+    let all = false, filters = [], els = new Set(), timer = 0;
+    const collect = (root, out, depth) => {
+      if (!root || depth > 30 || !root.querySelectorAll) return;
+      const list = root.querySelectorAll('*');
+      for (let i = 0; i < list.length; i++) {
+        const el = list[i];
+        if (el.localName === 'button-card') out.push(el);
+        if (el.shadowRoot) collect(el.shadowRoot, out, depth + 1);
+      }
+    };
+    const flush = () => {
+      timer = 0;
+      const wantAll = all, want = filters, picked = els;
+      all = false; filters = []; els = new Set();
+      if (wantAll || want.length) {
+        const found = [];
+        try { collect(document, found, 0); } catch (e) { /* the next state push redraws */ }
+        found.forEach((el) => {
+          if (wantAll || want.some((f) => { try { return f(el); } catch (e) { return true; } })) picked.add(el);
+        });
+      }
+      picked.forEach((el) => window.casoraKick(el));
+    };
+    // A plain timer, not requestAnimationFrame: that one stops in a hidden tab, and a tab
+    // opened in the background would otherwise keep the raw values until the next event.
+    const schedule = (ms) => { if (!timer) timer = setTimeout(flush, ms); };
+    window.casoraKickAll = (reason, filter) => {
+      if (typeof filter === 'function') filters.push(filter); else all = true;
+      schedule(window._casoraLocalLoaded ? WINDOW_MS : LOADING_MS);
+    };
+    window.casoraKickSoon = (el) => {
+      if (!el) return;
+      els.add(el);
+      // Single cards (drawn before this file) are fixed right away, not held for the load window.
+      schedule(WINDOW_MS);
     };
   }
 
@@ -15659,7 +15709,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   window._casoraKicked = waiting;
   if (!waiting || typeof window.casoraKick !== 'function') return;
   setTimeout(function () {
-    waiting.forEach(function (el) { window.casoraKick(el); });
+    waiting.forEach(function (el) { if (window.casoraKickSoon) window.casoraKickSoon(el); else window.casoraKick(el); });
   }, 0);
 })();
 

@@ -318,6 +318,7 @@ if (known && typeof known === 'object') {
     // Changed since this browser last saw them: draw the tiles once more, after the modules are there.
     const redraw = () => {
       try { window.dispatchEvent(new Event('casora-settings-changed')); } catch (e) { /* old browser */ }
+      if (typeof window.casoraKickAll === 'function') { window.casoraKickAll('settings'); return; }
       if (typeof window.casoraKick !== 'function') return;
       const out = [];
       (function walk(root, d) {
@@ -368,3 +369,7 @@ try {
   document.head.appendChild(free);
 } catch (e) { /* no :has() – the capsule stays docked-only */ }
 try { window.dispatchEvent(new Event('casora-local-loaded')); } catch (e) { /* old browser */ }
+// Cards drawn before a module was there show its helpers' fallbacks (e.g. casoraBadgeOffline from
+// 01-basis): draw every card once more, now that all modules ran. casora-core batches it with the
+// other passes that come with this event (module 06, changed settings), so it costs one redraw.
+try { if (typeof window.casoraKickAll === 'function') window.casoraKickAll('modules-loaded'); } catch (e) { /* the next state push redraws */ }

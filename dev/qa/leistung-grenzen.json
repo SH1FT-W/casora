@@ -1,7 +1,7 @@
 {
- "_hinweis": "Messgrenzen für dev/qa/leistung.mjs --grenzen (Zustand arbeit, Dashboard test-neu). Nur Zähler, keine Zeiten (unter Last zu unruhig). Stand 1.3: Voll-Durchläufe beim Laden 150k → 37k (Desktop), 94k → 58k (Handy); Popup-Leck 56/56 → 0. Ladezeit Stufe 1 (01.11.2026): Studio-Start 30 MB WebSocket → ~6 MB (Dashboard-Art vom Server, nur das geöffnete Dashboard ganz), Übersetzung je Sprache: Dashboard Laufzeit + höchstens eine Sprachdatei, Studio Studio- und Dashboard-Laufzeit + eine Sprachdatei (vorher 291 KB bzw. 764 KB gzip, jetzt 7 bzw. 79 KB bei Deutsch).",
- "zusammenfassung.desktop.laden_vollDurchlaeufe": { "max": 60000 },
- "zusammenfassung.handy.laden_vollDurchlaeufe": { "max": 75000 },
+ "_hinweis": "Messgrenzen für dev/qa/leistung.mjs --grenzen (Zustand arbeit, Dashboard test-neu). Nur Zähler, keine Zeiten (unter Last zu unruhig). Stand 1.3: Voll-Durchläufe beim Laden 150k → 37k (Desktop), 94k → 58k (Handy); Popup-Leck 56/56 → 0. Ladezeit Stufe 1 (01.11.2026): Studio-Start 30 MB WebSocket → ~6 MB (Dashboard-Art vom Server, nur das geöffnete Dashboard ganz), Übersetzung je Sprache: Dashboard Laufzeit + höchstens eine Sprachdatei, Studio Studio- und Dashboard-Laufzeit + eine Sprachdatei (vorher 291 KB bzw. 764 KB gzip, jetzt 7 bzw. 79 KB bei Deutsch). Ladezeit Stufe 2 (01.11.2026): späte Neuzeichnen-Wellen beim Laden gebündelt (casoraKickAll), Voll-Durchläufe beim Laden 39,5k → 30k (Desktop), 16,6k → 13,3k (Handy), „steht“ ~2,7 s → ~1,5 s; Grenzen mit Luft für Last im Gate.",
+ "zusammenfassung.desktop.laden_vollDurchlaeufe": { "max": 45000 },
+ "zusammenfassung.handy.laden_vollDurchlaeufe": { "max": 25000 },
  "zusammenfassung.desktop.ruhe60s_vollDurchlaeufe": { "max": 120000 },
  "zusammenfassung.desktop.ruhe60s_requestUpdateLeer": { "max": 0 },
  "geraete.desktop.leck.alive": { "max": 7 },
