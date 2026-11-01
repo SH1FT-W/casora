@@ -11952,9 +11952,11 @@ window.casoraMenuGlass = {
     + '.hui-moon .ic{flex:none;width:22px;height:22px;color:' + S.sub + ';background-color:currentColor;--mdc-icon-size:22px;margin:0;}'
     + '.hui-moon ha-icon.ic{background:none;}'
     // white-space: the field's .ellipsis kept „Jetzt starten“ on one line, cut at the moon's edge.
-    + '.hui-moon span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:100%;white-space:normal;overflow-wrap:break-word;}'
+    // Never a break inside a word (owner, 01.11.2026: „Alle aktualisie-ren“): lines break at spaces only, a long
+    // word is set smaller to fit the moon (moonWordFit), or the item brings a short word (it.short).
+    + '.hui-moon span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:100%;white-space:normal;'
+    +   'overflow-wrap:normal;word-break:keep-all;hyphens:manual;-webkit-hyphens:manual;}'
     + '.hui-moon.lw{font-size:10px;letter-spacing:-0.02em;}.hui-moon.xw{font-size:9px;letter-spacing:-0.02em;}'
-    + '.hui-moon.xw span{hyphens:auto;-webkit-hyphens:auto;}'
     + '.hui-moon.on{background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, ' + T.ink + ');'
     +   'box-shadow:0 0 0 3px var(--dl-col), 0 10px 26px -6px color-mix(in srgb, var(--dl-col) 45%, transparent);}'
     + '.hui-moon.on .ic{color:color-mix(in srgb, var(--dl-col) 65%, var(--casora-soft-seg-on-ink, ' + T.ink + '));}'
@@ -11988,6 +11990,14 @@ window.casoraMenuGlass = {
     String(text || '').split(/\s+/).forEach(function (w) { lw = Math.max(lw, w.length); });
     return lw >= 13 ? ' xw' : lw >= 10 ? ' lw' : '';
   }
+  // The longest word fits the moon's inner width on one line (bold ≈ .56 em per letter): from 10 letters the size
+  // follows the moon (62–76 px, cqw of the wheel), never below 7 px.
+  function moonWordFit(text) {
+    var lw = 0;
+    String(text || '').split(/\s+/).forEach(function (w) { lw = Math.max(lw, w.length); });
+    if (lw < 10) return '';
+    return ' style="font-size:max(7px, min(' + (lw >= 13 ? 9 : 10) + 'px, calc((clamp(62px, 20cqw, 76px) - 8px) / ' + dRound(lw * 0.56) + ')))"';
+  }
   // Moons show one symbol set (§4.8: MDI, outline): a lamp's icon from another set („ios:lamp-floor“) is mapped.
   function moonIcon(ic) {
     var m = /^([a-z0-9_-]+):(.+)$/.exec(String(ic || ''));
@@ -12005,7 +12015,7 @@ window.casoraMenuGlass = {
       + (spec ? ' data-casora-svc="' + esc(JSON.stringify(spec)) + '"' : '')
       + (it.page ? ' data-casora-page="' + esc(it.page) + '"' : '') + (it.value != null ? ' data-v="' + esc(it.value) + '"' : '')
       + stAttrs(it.attrs) + ' style="' + esc(moonAt(deg)) + '">'
-      + stGlyph(moonIcon(it.icon), 'ic') + '<span>' + esc(shown) + '</span></div>';
+      + stGlyph(moonIcon(it.icon), 'ic') + '<span' + moonWordFit(shown) + '>' + esc(shown) + '</span></div>';
   }
   // Moons named alike („WZ Dreamview An“, „WZ Dreamview Aus“) lose their common leading words, so the word that tells
   // them apart is the one on the moon (review 2, E07/T05); the full name stays the label and the tooltip.
