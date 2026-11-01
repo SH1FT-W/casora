@@ -12,6 +12,8 @@ import fs from 'node:fs';
 
 const SRC = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-local.js', import.meta.url), 'utf8');
 const ROW = fs.readFileSync(new URL('../../custom_components/casora/scripts/smart-row.js', import.meta.url), 'utf8');
+// Number of local modules in the loader's list (one per '00-name' entry), not a fixed number.
+const NMOD = (SRC.match(/^\s*'\d\d-[a-z0-9-]+',?\s*$/gm) || []).length;
 const BASE = 'http://ha.test/casora_scripts/casora-local.js?v=123';
 
 // The loader as a function: import() and import.meta.url replaced, run with top-level await inside.
@@ -78,7 +80,7 @@ const fileReqs = (log) => log.filter((x) => x.includes('einstellungen.js'));
   await t.done;
   assert.deepEqual(fileReqs(t.log), [], 'stored settings: the file is not fetched');
   assert.deepEqual(t.win.CASORA_SETTINGS, { scenes: { exclude: ['scene.a'] } }, 'remembered settings in force');
-  assert.equal(mods(t.log).length, 41, 'all modules ran without the WebSocket');
+  assert.equal(mods(t.log).length, NMOD, 'all modules ran without the WebSocket');
   assert.ok(Array.isArray(t.win._casoraLocalLoaded), 'loader finished');
 }
 
@@ -104,7 +106,7 @@ const fileReqs = (log) => log.filter((x) => x.includes('einstellungen.js'));
   const f = fileReqs(t.log);
   assert.equal(f.length, 1, 'one file request');
   assert.match(f[0], /einstellungen\.js\?t=\d+$/, 'unversioned the first time');
-  assert.equal(mods(t.log).length, 41, 'modules ran without the WebSocket');
+  assert.equal(mods(t.log).length, NMOD, 'modules ran without the WebSocket');
 }
 
 // 5) Order: start modules, then casora-local-started (+ one redraw), then the rest with a yield before each.
@@ -117,7 +119,7 @@ const fileReqs = (log) => log.filter((x) => x.includes('einstellungen.js'));
   const iSixth = t.log.findIndex((x) => x.includes('/local/' + m[5] + '.js'));
   const iFifth = t.log.findIndex((x) => x.includes('/local/03-popups.js'));
   assert.ok(iFifth < iStart && iStart < iSixth, 'casora-local-started between the start modules and the rest');
-  assert.equal(t.log.filter((x) => x === 'idle').length, 41 - 5, 'a yield before every late module');
+  assert.equal(t.log.filter((x) => x === 'idle').length, NMOD - 5, 'a yield before every late module');
   assert.ok(t.log.indexOf('event:casora-local-loaded') > t.log.lastIndexOf('idle'), 'casora-local-loaded after the last module');
   assert.deepEqual(t.win._casoraLocalStarted, m.slice(0, 5), 'start flag names the start modules');
   assert.deepEqual(t.kicks, ['modules-loaded'], 'no veil: one redraw at the end only');
