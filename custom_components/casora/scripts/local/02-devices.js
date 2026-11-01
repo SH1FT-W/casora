@@ -2750,7 +2750,7 @@
         icon: 'mdi:play', primary: true, disabled: !!whyG, why: whyG, attrs: whyG ? null : { 'data-dish-go': JSON.stringify(goG), 'data-dish-ask': spG || lblG } };
     };
 
-    if (kind === 'd_hero' || kind === 'd_stage') {
+    if (kind === 'd_hero' || kind === 'd_stage' || kind === 'd_status3') {
       var prog = progName(U.str(states, c.program), states[c.program]) || progName(U.str(states, c.sel), states[c.sel]);
       var ph = PHASE[U.str(states, c.phase)] || null;
       var sub = [], value = s[0], unit = null, tone = s[1];
@@ -2777,6 +2777,8 @@
       /* Popup v3 (richtlinien §4 S4): time left (or the state) as the value, the head's words under it; running: the
          bar and „% · Fertig gegen …“ from the former bar; before the start „Jetzt starten · Eco 50°“ as the pill (a
          blocked start keeps its reason as the line under the bar). */
+      /* Popup v3 status line like laundry (status3): Casora's word for the state in its tone, not HA's („Run“). */
+      if (kind === 'd_status3') return UI.hero({ value: s[0], valueTone: tone === 'warn' || tone === 'bad' ? tone : null, center: true });
       if (kind === 'd_stage') {
         var pctS = active ? U.num(states, c.progress) : null;
         var endS = active && rem != null && rem > 0 ? 'Fertig gegen ' + U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' : null;
@@ -3044,14 +3046,14 @@
       f2.abort = tpl('d_abort', false);
       /* Popup v3: head, bar and the start pill become one progress stage on top of the left column. */
       var v3D = D.v3();
-      if (v3D) { delete f2.hero; delete f2.pbar; delete f2.go; f2.stage = tpl('d_stage', true); }
+      if (v3D) { delete f2.pbar; delete f2.go; f2.hero = tpl('d_status3', true); f2.stage = tpl('d_stage', true); }
       /* While running „Verlauf“ (rule 5: right column) – the care list is one row now, the right column has room. */
       if (active) f2.stats = fields.stats;
       var moreD = (active ? ['d_opts', 'energy'] : ['energy', 'd_stats']).concat(['d_device', 'plug']);
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("dish", ' + JSON.stringify(moreD) + '.map(function (k) {'
         + ' return (k === "energy" || k === "d_stats") ? L.slot(k, c, states) : L.inner(k, c, states); })) : "";', c.st);
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3D ? [] : ['hero', 'pbar'], stage: v3D ? 'stage' : null, quick: v3D ? 'prog' : null,
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3D ? ['hero'] : ['hero', 'pbar'], stage: v3D ? 'stage' : null, quick: v3D ? 'prog' : null,
         left: ['go', 'run', 'prog', 'opts', 'abort'], right: ['start', 'alerts', 'care', 'stats', 'more'],
         settings: states[c.st] ? c.st : null, settingsSide: active ? 'left' : 'right' });
     }
