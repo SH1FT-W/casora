@@ -2506,7 +2506,7 @@ window.casoraBadgeOffline = function (state) {
   var s = String(state == null ? '' : state).trim().toLowerCase();
   return !s || s === 'unknown' || s === 'unavailable';
 };
-window.casoraBadgeOfflineColor = 'var(--casora-badge-offline-color, var(--disabled-text-color, #9E9E9E))';
+window.casoraBadgeOfflineColor = 'var(--casora-badge-offline-color, var(--disabled-text-color))';
 window.casoraBadgeOfflineName = function (title) {
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t); };
   return '<div class="badge-wrap casora-badge-offline"><div class="badge-title">' + esc(title) + '</div>'
