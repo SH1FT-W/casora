@@ -183,6 +183,18 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
                 if k in kw and cm in sup:
                     attrs["color_mode"] = cm
                     break
+            # Like HA's light state: a colour also reports rgb_color and hs_color (the light popup's ring and segment
+            # read them; dev/qa/regress/r449_light_mixed_room.mjs).
+            try:
+                from homeassistant.util import color as cu
+                if "xy_color" in attrs:
+                    attrs["hs_color"] = list(cu.color_xy_to_hs(*attrs["xy_color"]))
+                if "hs_color" in attrs and "rgb_color" not in attrs:
+                    attrs["rgb_color"] = list(cu.color_hs_to_RGB(*attrs["hs_color"]))
+                elif "rgb_color" in attrs and "hs_color" not in attrs:
+                    attrs["hs_color"] = list(cu.color_RGB_to_hs(*attrs["rgb_color"][:3]))
+            except Exception:  # noqa: BLE001 - only the mock's convenience
+                pass
             # A plain colour ends a scene on lamps without an "off" effect (Govee, Tuya); lamps with one keep it (Hue).
             fl = self.a.get("effect_list") or []
             if "effect" not in kw and self.a.get("effect") and "color_mode" in attrs \

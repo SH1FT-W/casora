@@ -4418,6 +4418,36 @@
     return !!(p && p.getAttribute && p.getAttribute('data-casora-pv') === 'v3' && window._casoraUI && window._casoraUI.stage);
   };
   var V3_CSS = '<style>.lps-v3l{display:flex;flex-direction:column;gap:var(--casora-pv-sec-gap,24px);}</style>';
+  // White tone → ring colour: warm amber over neutral white to cool blue-white (owner, 01.11.2026).
+  var KS = [[2200, [232, 168, 72]], [4000, [242, 226, 196]], [6500, [200, 222, 245]]];
+  S.kColor = function (k) {
+    var kk = Math.max(KS[0][0], Math.min(KS[2][0], Number(k)));
+    var j = kk <= KS[1][0] ? 0 : 1, f = (kk - KS[j][0]) / (KS[j + 1][0] - KS[j][0]);
+    return 'rgb(' + [0, 1, 2].map(function (c) { return Math.round(KS[j][1][c] + (KS[j + 1][1][c] - KS[j][1][c]) * f); }).join(',') + ')';
+  };
+  // Each lit lamp with a white tone or colour, in list order: { id, kind, k, rgb } – kind „ct<i>“ (nearest preset of pr),
+  // „white“ (colour mode at saturation < 5), „col“ or „fx“ (an effect runs: no segment fits, the ring keeps its colour).
+  S.lampTones = function (ids, states, pr) {
+    var out = [];
+    ids.forEach(function (id, i) {
+      var st = states[id];
+      if (!st || st.state !== 'on' || ids.indexOf(id) !== i) return;
+      var a = st.attributes || {}, m = a.color_mode, rgb = null, kind = null, k = null;
+      var rc = Array.isArray(a.rgb_color) && a.rgb_color.length >= 3 ? 'rgb(' + a.rgb_color.slice(0, 3).map(function (x) { return Math.round(Number(x) || 0); }).join(',') + ')' : null;
+      if ((!m || m === 'color_temp') && a.color_temp_kelvin) {
+        k = Number(a.color_temp_kelvin); rgb = S.kColor(k);
+        var best = -1;
+        (pr || []).forEach(function (p, n) { if (best < 0 || Math.abs(p.k - k) < Math.abs(pr[best].k - k)) best = n; });
+        kind = best > -1 ? 'ct' + best : 'white';
+      } else if (COL_MODES.indexOf(m) > -1) {
+        rgb = rc;
+        kind = Array.isArray(a.hs_color) && Number(a.hs_color[1]) < 5 ? 'white' : 'col';
+      } else return;
+      if (fxRuns(st)) kind = 'fx';
+      out.push({ id: id, kind: kind, k: k, rgb: rgb });
+    });
+    return out;
+  };
   // Stage S1: brightness of the dimmable lamps (the ones that are on, else all), light colour as the segment.
   // moons: the room's scenes as moons around the dial (a function: its UI.quick call is collected).
   var v3Stage = function (ids, states, onlyOn, moons) {
@@ -4429,27 +4459,28 @@
     var target = lit.length ? lit : (onlyOn ? [] : dim);
     var ct = ids.filter(function (id) { return hasCt(states[id]); });
     var ctOn = ct.filter(function (id) { return states[id].state === 'on'; });
-    var cur = null;
-    ctOn.some(function (id) {
-      var a = states[id].attributes;
-      if ((!a.color_mode || a.color_mode === 'color_temp') && a.color_temp_kelvin) { cur = a.color_temp_kelvin; return true; }
-      return false;
-    });
     var seg = null, curLbl = '';
     // Colour lamps (hs/rgb/rgbw/rgbww/xy; an HA group lists its members' modes): „Farbe“ in the segment opens the colour
     // wheel page (33-color-wheel.js) for the ones that are on, else all (owner, 01.11.2026: no colour in the v3 popup).
     var col = ids.filter(function (id) { return hasCol(states[id]); });
     var colOn = col.filter(function (id) { return states[id].state === 'on'; });
-    var colCur = colOn.some(function (id) { return COL_MODES.indexOf((states[id].attributes || {}).color_mode) > -1 && !fxRuns(states[id]); });
-    // A white tone or colour also ends a running effect (S.fxEnd: the lamp's none entry along with it).
+    var pr = ct.length ? ctPresets(ct, states) : null;
+    // What each lit lamp shows (owner, 01.11.2026, a room in mixed colours): its white tone („ct0..2“ = nearest preset),
+    // white in colour mode („white“), a colour („col“) or a running effect („fx“), and its colour for the ring.
+    var tones = S.lampTones(ids, states, pr);
+    var same = tones.length && tones.every(function (t) { return t.kind === tones[0].kind; }) ? tones[0].kind : null;
+    // A white tone also ends running effects: the lamp's none entry along (S.fxEnd), and colour-only lamps take the tone
+    // too (HA emulates color_temp_kelvin as a colour on them, docs/ha-annahmen.md).
     var ctData = function (k, tg) { var d = { color_temp_kelvin: k }, e = S.fxEnd(tg, states); if (e) d.effect = e; return d; };
     if (ct.length && (!onlyOn || ctOn.length)) {
-      var pr = ctPresets(ct, states), best = -1;
-      if (cur != null) pr.forEach(function (p, i) { if (best < 0 || Math.abs(p.k - cur) < Math.abs(pr[best].k - cur)) best = i; });
-      if (best > -1) curLbl = tr(pr[best].l) + ' ' + Math.round(cur / 50) * 50 + ' K';
-      var ctT = ctOn.length ? ctOn : ct;
+      var colOnly = colOn.filter(function (id) { return !hasCt(states[id]); });
+      var ctT = ctOn.length ? ctOn.concat(colOnly) : ct;
+      if (same && same.indexOf('ct') === 0) {
+        var k0 = tones[0].k;
+        curLbl = tr(pr[Number(same.slice(2))].l) + ' ' + Math.round(k0 / 50) * 50 + ' K';
+      }
       seg = pr.map(function (p, i) {
-        return { label: tr(p.l), active: i === best,
+        return { label: tr(p.l), active: same === 'ct' + i,
           svc: { domain: 'light', service: 'turn_on', data: ctData(p.k, ctT), target: { entity_id: ctT } } };
       });
     }
@@ -4459,27 +4490,20 @@
       if (!seg) {
         var wd = { hs_color: [0, 0] }, we = S.fxEnd(colT, states);
         if (we) wd.effect = we;
-        seg = [{ label: tr('Weiß'), active: colOn.some(function (id) { var a = states[id].attributes || {}; return Array.isArray(a.hs_color) && Number(a.hs_color[1]) < 5; }),
+        seg = [{ label: tr('Weiß'), active: same === 'white',
           svc: { domain: 'light', service: 'turn_on', data: wd, target: { entity_id: colT } } }];
-        if (seg[0].active) colCur = false;
       }
-      seg = seg.concat([{ label: tr('Farbe'), active: colCur, attrs: { 'data-casora-wheel': colT.join(',') } }]);
-      if (colCur && !curLbl) curLbl = tr('Farbe');
+      // Only one field is chosen: the one every lit lamp shows; lamps in different modes – none.
+      seg = seg.concat([{ label: tr('Farbe'), active: same === 'col', attrs: { 'data-casora-wheel': colT.join(',') } }]);
+      if (same === 'col' && !curLbl) curLbl = tr('Farbe');
     }
-    // In colour mode the ring takes the lamp's colour (the first lamp that is on in colour).
-    var ringColor = null;
-    if (colCur) colOn.some(function (id) {
-      var rgb = (states[id].attributes || {}).rgb_color;
-      if (Array.isArray(rgb) && rgb.length >= 3) { ringColor = 'rgb(' + rgb.slice(0, 3).map(function (x) { return Math.round(Number(x) || 0); }).join(',') + ')'; return true; }
-      return false;
-    });
-    // A white tone: the ring from warm amber over neutral white to cool blue-white, by the lamp's Kelvin (owner, 01.11.2026).
-    if (!ringColor && cur != null) {
-      var KS = [[2200, [232, 168, 72]], [4000, [242, 226, 196]], [6500, [200, 222, 245]]];
-      var kk = Math.max(KS[0][0], Math.min(KS[2][0], Number(cur)));
-      var j = kk <= KS[1][0] ? 0 : 1, f = (kk - KS[j][0]) / (KS[j + 1][0] - KS[j][0]);
-      ringColor = 'rgb(' + [0, 1, 2].map(function (c) { return Math.round(KS[j][1][c] + (KS[j + 1][1][c] - KS[j][1][c]) * f); }).join(',') + ')';
-    }
+    // The ring in the lamps' colours: one colour when they agree, else blended along the ring in list order.
+    var rc = tones.map(function (t) { return t.rgb; }).filter(function (c, i, arr) { return c && (i === 0 || c !== arr[i - 1]); });
+    var ringColor = rc[0] || null;
+    // Blend only colours that differ visibly (2700 K next to 2650 K stays one colour).
+    var rgbOf = function (c) { return String(c).replace(/[^\d,]/g, '').split(',').map(Number); };
+    var far = rc.some(function (c) { var p = rgbOf(c), q = rgbOf(rc[0]); return Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) + Math.abs(p[2] - q[2]) > 30; });
+    var ringColors = far ? rc : null;
     // Several lamps on at different brightness: the value is their average – say so (review 2, E08/fam-09).
     var litP = lit.map(function (id) { return pct(states[id]); }).filter(function (p) { return p != null; });
     var avg = litP.length > 1 && litP.some(function (p) { return p !== litP[0]; });
@@ -4488,7 +4512,7 @@
       word: v ? [avg ? tr('Ø von ' + litP.length + ' Lampen') : word(v)].concat(curLbl ? [curLbl] : []).join(' · ') : '',
       words: ['Aus', 'Gedimmt', 'Volle Helligkeit'],
       svc: dim.length && target.length ? { domain: 'light', service: 'turn_on', field: 'brightness_pct', target: { entity_id: target }, zeroOff: true } : null,
-      seg: seg, moons: moons || null, ringColor: ringColor });
+      seg: seg, moons: moons || null, ringColor: ringColor, ringColors: ringColors });
   };
   /* The lamp's own effects (Hue scenes/effects, WLED, Govee …; Marco, 01.11.2026): one moon „Effekte“ that opens the
      small menu at the moon (richtlinien §4.8, as „Alle (n)“) with every effect, the running one hinterlegt and
@@ -4587,21 +4611,25 @@
     return w.length === 1 ? w[0] : null;
   };
   // Moons of the light stage: the room's scenes and the lamp's „Effekte“ (fxId), as one quick call (collected by UI.stage).
-  var v3Moons = function (sceneList, states, room, fxId, h) {
+  var v3Moons = function (sceneList, states, room, fxId, h, lamps) {
     var UI = window._casoraUI;
-    var sc = v3SceneItems(sceneList, states, room);
+    var sc = v3SceneItems(sceneList, states, room, lamps);
     var fxm = fxId ? S.fxMoon(fxId, states, h || hassNow()) : null;
     var items = (sc ? sc.items : []).concat(fxm ? [fxm] : []);
     if (!items.length) return '';
     return UI.quick(items, tr('Szenen'), { page: sc ? sc.page : null });
   };
   // Quick choice: the room's scenes (≤ 4, more: 3 + „Alle (n)“ → sub page), the last one used is active.
-  var v3SceneItems = function (list, states, room) {
+  // lamps: the room's lamps – a lamp changed later than the scene (2 min to settle, an automation behind the scene may
+  // set the lamps a moment later) means the scene no longer holds: not active (owner, 01.11.2026: „Polarlicht“ stayed
+  // marked after Warm).
+  var v3SceneItems = function (list, states, room, lamps) {
     if (!list.length) return null;
     regScenes();
     var last = null, lastT = 0;
     list.forEach(function (id) { var t = Date.parse(states[id].state); if (!isNaN(t) && t > lastT) { lastT = t; last = id; } });
     if (Date.now() - lastT > 12 * 3600000) last = null;
+    if (last && (lamps || []).some(function (id) { var t = states[id] && Date.parse(states[id].last_updated || states[id].last_changed); return t > lastT + 120000; })) last = null;
     var items = list.map(function (id) {
       return { icon: (states[id].attributes || {}).icon || 'mdi:palette', text: short(nameOf(id, states), room), active: id === last,
         svc: { domain: 'scene', service: 'turn_on', target: { entity_id: id } } };
@@ -4694,7 +4722,7 @@
     // Effects: the lamp of its own popup, else the room's only lamp with effects.
     var single = !cfg.rooms && sc.lights.length === 1;
     var fxId = fxLampOf(single ? [sc.lights[0]] : lampIds0, states);
-    var left = v3Stage(ids, states, false, function () { return v3Moons(scenesOf(h, states, sc), states, room, fxId, h); });
+    var left = v3Stage(ids, states, false, function () { return v3Moons(scenesOf(h, states, sc), states, room, fxId, h, ids); });
     var ls = stat(lampIds0, states);
     var lampsHtml = lampIds0.map(function (id) {
       return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0]);

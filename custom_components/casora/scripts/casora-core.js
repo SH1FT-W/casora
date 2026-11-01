@@ -12569,6 +12569,11 @@ window.casoraMenuGlass = {
     var id = 'hui-dlg' + (++dialSeq), svgHtml = '<defs><filter id="' + esc(id) + '" filterUnits="userSpaceOnUse" x="-60" y="-60" width="540" height="540"><feGaussianBlur stdDeviation="9"/></filter>';
     if (ring.heat) svgHtml += '<linearGradient id="' + esc(id) + 'h" x1="0" y1="1" x2="1" y2="0"><stop offset="0" style="stop-color:var(--casora-color-blue, #5B8FC9)"/>'
       + '<stop offset=".55" style="stop-color:var(--casora-color-orange, #FF9F0A)"/><stop offset="1" style="stop-color:var(--casora-color-red, #D35A4E)"/></linearGradient>';
+    // ring.grad: several colours blended along the fill from its start (left) to its end (right), e.g. the lamps of a
+    // room in different colours (owner, 01.11.2026). The gradient spans the fill's own box, so every colour shows.
+    var grad = !ring.heat && Array.isArray(ring.grad) && ring.grad.length > 1 ? ring.grad : null;
+    if (grad) svgHtml += '<linearGradient id="' + esc(id) + 'g" x1="0" y1="0" x2="1" y2="0">'
+      + grad.map(function (c, k) { return '<stop offset="' + esc(dRound(k / (grad.length - 1))) + '" style="stop-color:' + esc(c) + '"/>'; }).join('') + '</linearGradient>';
     svgHtml += '</defs>';
     var mDegs = (ring.moons || []).filter(function (d) { return d !== 90; });
     for (var i = 0; i <= 40; i++) {
@@ -12618,13 +12623,13 @@ window.casoraMenuGlass = {
       if (ring.knob) { var kt = dPt(dEnd(ring.pct), DIAL.r); svgHtml += '<circle class="hui-dl-knob" cx="' + esc(kt[0]) + '" cy="' + esc(kt[1]) + '" r="19"/>'; }
       return '<svg viewBox="0 0 420 420" aria-hidden="true" focusable="false">' + svgHtml + '</svg>';
     }
-    var stroke = ring.heat ? 'url(#' + esc(id) + 'h)' : ring.col;
+    var stroke = ring.heat ? 'url(#' + esc(id) + 'h)' : grad ? 'url(#' + esc(id) + 'g)' : ring.col;
     var e = dEnd(ring.pct), showHtml = ring.pct > 0 ? '' : ' style="display:none"';
     svgHtml += '<path class="tr" d="' + esc(dArc(DIAL.a0, DIAL.a0 + DIAL.span)) + '" fill="none" stroke-width="26" stroke-linecap="round"/>'
       + '<path class="fl gl" d="' + esc(dArc(DIAL.a0, e)) + '" fill="none" stroke-width="26" stroke-linecap="round" opacity=".55" filter="url(#' + esc(id) + ')"'
-      + (ring.heat ? ' stroke="' + esc(stroke) + '"' + showHtml : ' style="stroke:' + esc(stroke) + (ring.pct > 0 ? '' : ';display:none') + '"') + '/>'
+      + (ring.heat || grad ? ' stroke="' + esc(stroke) + '"' + showHtml : ' style="stroke:' + esc(stroke) + (ring.pct > 0 ? '' : ';display:none') + '"') + '/>'
       + '<path class="fl ln" d="' + esc(dArc(DIAL.a0, e)) + '" fill="none" stroke-width="26" stroke-linecap="round"'
-      + (ring.heat ? ' stroke="' + esc(stroke) + '"' + showHtml : ' style="stroke:' + esc(stroke) + (ring.pct > 0 ? '' : ';display:none') + '"') + '/>';
+      + (ring.heat || grad ? ' stroke="' + esc(stroke) + '"' + showHtml : ' style="stroke:' + esc(stroke) + (ring.pct > 0 ? '' : ';display:none') + '"') + '/>';
     [ring.marker].concat(ring.marks || []).forEach(function (mk) {
       if (mk == null || !isFinite(mk)) return;
       var m = dPt(DIAL.a0 + DIAL.span * Math.max(0, Math.min(100, mk)) / 100, DIAL.r);
@@ -12669,6 +12674,8 @@ window.casoraMenuGlass = {
       ring.knob = !!spec && !(off && code === 'S1');
       // o.ringColor: the ring in a given colour (a lamp shows its own colour or white tone, owner 01.11.2026).
       if (o.ringColor && !off) ring.col = o.ringColor;
+      // o.ringColors: lamps in different colours – the ring blends them (ring.grad); --dl-col keeps the first.
+      if (Array.isArray(o.ringColors) && o.ringColors.length > 1 && !off) { ring.grad = o.ringColors.slice(0, 12); ring.col = ring.col || o.ringColors[0]; }
       centerHtml = (off && code === 'S1' ? stValue(T_('Aus'), '') : stValue(v, o.unit == null ? '%' : o.unit))
         + (o.word || words ? '<div class="hui-st-w">' + dLines(o.word || '') + '</div>' : '');
       if (o.live && o.live.entities && o.live.entities.length) liveHtml = ' data-casora-live="dial" data-casora-ents="' + esc(JSON.stringify(o.live.entities)) + '" data-casora-attr="' + esc(o.live.attr || 'current_position') + '"';
