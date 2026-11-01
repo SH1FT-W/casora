@@ -23,6 +23,7 @@ from .raumklima import async_start as async_start_raumklima
 from .settings import async_setup_settings
 from .kachelart import async_setup_kachelart
 from .versions import async_setup_versions
+from .share import async_setup_share
 from .frontend_version import async_setup_frontend_version, set_frontend_stamp
 from .updates import async_setup_updates
 from .options import async_setup_options
@@ -301,6 +302,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_setup_settings(hass)
     async_setup_kachelart(hass)
     async_setup_versions(hass)
+    # Studio → ⋯ → Export / Import from file: a dashboard as one file (share.py).
+    async_setup_share(hass)
     async_setup_frontend_version(hass)
     # Studio → „Updates“: Versionen und Versionshinweise (updates.py).
     async_setup_updates(hass)
