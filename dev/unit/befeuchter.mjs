@@ -49,7 +49,7 @@ assert.deepEqual(H.steps(30, 80, 50), [40, 45, 50, 55, 60]);
 assert.deepEqual(H.steps(30, 80, 52), [40, 45, 50, 52, 55, 60], 'krummes Ziel kommt dazu');
 assert.deepEqual(H.steps(60, 90, 70), [60, 70, 80, 90], 'Bereich ohne 40–60: gleichmäßig');
 assert.deepEqual(H.steps(null, null, null), [40, 45, 50, 55, 60]);
-assert.equal(H.modeLabel(hass, null, 'sleep'), 'Schlaf');
+assert.equal(H.modeLabel(hass, null, 'sleep'), 'Schlafen', 'one word with fan and purifier (detail round #14)');
 assert.equal(H.modeLabel(hass, null, 'turbo_max'), 'Turbo_max');
 
 // Bereiche
