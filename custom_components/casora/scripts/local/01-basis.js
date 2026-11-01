@@ -662,6 +662,13 @@ window.casoraPopupTitle = function (card, variables, def, defaults) {
   if (own) return own;
   var n = String((card && card._config && card._config.name) || '').trim();
   if (n && n.indexOf('[[[') < 0) return n;
+  /* Detail round #6: the title is the tile's name as the dashboard shows it („Abschäumer“, not „Universal-Kachel“) –
+     a name template's result is only in the rendered card. */
+  try {
+    var nm = card && card.shadowRoot && card.shadowRoot.querySelector('#name');
+    var shown = nm ? String(nm.textContent || '').replace(/\s+/g, ' ').trim() : '';
+    if (shown) return shown;
+  } catch (e) { /* not rendered */ }
   return typeDef || def || '';
 };
 /* Kann die Kamera wirklich streamen? (30.09.2026) Manche melden STREAM in supported_features,

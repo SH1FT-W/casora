@@ -32,4 +32,13 @@ assert.equal(title({}), 'Licht Wohnzimmer', 'ohne eigenen Titel: Gerätename');
 assert.equal(title({}, { name: 'Decke' }), 'Decke', 'ohne eigenen Titel: Kachelname');
 assert.equal(title({ room_name: 'Wohnzimmer' }), 'Licht Wohnzimmer', 'Raumname ist kein Titel');
 assert.equal(title({}, { group: true }), 'Licht Wohnzimmer (Gruppe)', 'Gruppe ohne eigenen Titel: Gruppenkopf');
+// Detail round #6: a tile whose name is a template (Universal tile, appliance, e-bike) – the title is the name the
+// dashboard shows (the rendered #name), not the type's word („Universal-Kachel“, „Gerät“).
+{
+  const card = (shown) => ({ _config: { name: '[[[ return entity.attributes.friendly_name ]]]' }, shadowRoot: { querySelector: (q) => (q === '#name' && shown != null ? { textContent: shown } : null) } });
+  assert.equal(window.casoraPopupTitle(card(' Abschäumer '), {}, 'Universal-Kachel', ['Universal-Kachel']), 'Abschäumer', 'shown name');
+  assert.equal(window.casoraPopupTitle(card(''), {}, 'Universal-Kachel', ['Universal-Kachel']), 'Universal-Kachel', 'nothing shown: the type word');
+  assert.equal(window.casoraPopupTitle(card('Abschäumer'), { room_name: 'Mein Titel' }, 'Universal-Kachel', []), 'Mein Titel', 'own title first');
+  assert.equal(window.casoraPopupTitle(null, {}, 'Gerät', []), 'Gerät', 'no card');
+}
 console.log('ok licht_popup_titel');
