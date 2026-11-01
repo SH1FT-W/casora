@@ -20,8 +20,12 @@ for (const v of [
   usePage(page);
   await studio(page, dash);
   await page.evaluate(() => window.__panel()._cvFromMenu());
-  await page.waitForTimeout(2500);
-  const rows = await page.evaluate(() => window.__pierce('.cv-row').filter((b) => b.getClientRects().length).length);
+  // The list loads over the websocket – under load (gate 26.11.2) it came after 2.5 s: wait for it, up to 20 s.
+  let rows = 0;
+  for (let i = 0; i < 40 && rows < 2; i++) {
+    await page.waitForTimeout(500);
+    rows = await page.evaluate(() => window.__pierce('.cv-row').filter((b) => b.getClientRects().length).length);
+  }
   await need(`[${v.name}] Zeitreise mit mindestens zwei Ständen`, rows >= 2, rows);
   // Ältesten Stand wählen (zeigt die Vorschau samt Banner, wie auf dem Website-Bild).
   await page.evaluate(() => { const r = window.__pierce('.cv-row').filter((b) => b.getClientRects().length).pop();
