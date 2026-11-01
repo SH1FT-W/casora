@@ -1548,9 +1548,8 @@
           '--casora-entity-grid-gap:var(--casora-tile-row-gap-mobile,8px);' +
           'grid-auto-flow:row dense;align-items:stretch;}' +
           '.casora-entity-grid > [data-casora-size="large"]{grid-row:span 2;}}' +
-          // Prüfung 2 DH-24: the only tile of a group takes the whole row in portrait (its name was cut while
-          // the right half stayed empty).
-          '@media (max-width:767px) and (orientation:portrait){.casora-entity-grid > :only-child{grid-column:1 / -1;}}' +
+          // Phone tiles never span the full width, also when a group has a single tile (owner decision
+          // 01.11.2026 – DH-24 let the only tile of a group fill the row; reverted).
           '@media (max-height:500px) and (orientation:landscape), (max-height:600px) and (orientation:landscape) and (hover: hover){' +
           '.casora-entity-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}';
         (this._appendTarget || document.head).appendChild(st);
