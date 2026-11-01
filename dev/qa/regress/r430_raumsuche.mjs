@@ -88,6 +88,9 @@ const openSheet = async () => {
 await openSheet();
 let r = await results(page);
 await check('Finger-Tipp öffnet die Suche, Feld hat den Fokus (Tastatur)', r && r.focus, r);
+// Nothing typed, nothing opened yet: no extra bubble under the field (the placeholder says it already).
+const bubble = await page.evaluate(() => { const p = document.querySelector('.cs-root .cs-panel'); return p ? { hidden: p.hidden, h: Math.round(p.getBoundingClientRect().height) } : null; });
+await check('Leeres Feld ohne Verlauf: keine Blase unter dem Feld', bubble && bubble.hidden && bubble.h === 0, bubble);
 
 r = await typeIn(page, 'kuche');
 const kitchen = rowsOf(r, 'room').find((x) => /Küche/.test(x.name));

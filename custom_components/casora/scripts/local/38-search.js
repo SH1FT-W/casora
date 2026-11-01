@@ -726,10 +726,12 @@
     var p = ui.panel;
     while (p.firstChild) p.removeChild(p.firstChild);
     var q = state.q.trim();
+    // Nothing typed and nothing opened recently: no panel at all (the field's placeholder already says it).
+    p.hidden = false;
     if (!q) {
       var rec = S.recentItems(state.idx);
       if (!rec.length) {
-        p.appendChild(el('div', 'cs-empty', T('Räume, Geräte und Szenen suchen')));
+        p.hidden = true;
         ui.live.textContent = '';
         return;
       }
