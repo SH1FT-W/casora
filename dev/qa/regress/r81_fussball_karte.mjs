@@ -76,7 +76,15 @@ for (const [tag, o, d, mobile] of VIEWS) {
   await fakeStates(page, { [ID]: { state: 'PRE', attributes: { date: kick.toISOString(), team_score: '0', opponent_score: '0' } } }, { sticky: true });
   // Wait for the faked kick-off on the tile: the mock's own state (18:30 in the HA's zone) could still be drawn
   // (gate 01.11.2026: „Di 19:30“ on the phone while the faked state was not yet there).
-  let m = await stable(page, MEASURE, null, { max: 8000, until: (x) => / 18:30\b/.test(x.state || '') });
+  // The tile may format the kick-off in the browser's zone or in HA's time zone (WebKit on the phone: HA's zone,
+  // so the gate's TZ=UTC 18:30 reads 19:30 in Europe/Berlin) – accept either rendering of the same instant.
+  const kickTimes = await page.evaluate((iso) => {
+    const d = new Date(iso), f = (tz) => new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: tz }).format(d);
+    const ha = document.querySelector('home-assistant'), tz = ha && ha.hass && ha.hass.config && ha.hass.config.time_zone;
+    return [...new Set([f(undefined), tz ? f(tz) : null, '18:30'].filter(Boolean))];
+  }, kick.toISOString());
+  const kickRe = new RegExp('(' + kickTimes.map((t) => t.replace(':', '\\:')).join('|') + ')');
+  let m = await stable(page, MEASURE, null, { max: 8000, until: (x) => kickRe.test(x.state || '') });
   await need(tag + ': Fußball-Kachel gefunden', m);
   await check(tag + ': Wappen geladen', m.imgOk && /^data:image\/svg/.test(m.img || ''), m.img && m.img.slice(0, 30));
   await check(tag + ': Wappen sichtbar (kein Aus-Symbol darüber)', m.imgOp >= 0.95 && m.maskOp === 0, { img: m.imgOp, mask: m.maskOp });
@@ -91,7 +99,7 @@ for (const [tag, o, d, mobile] of VIEWS) {
   }
   await check(tag + ': Zustandszeile einzeilig', m.stateH > 0 && m.stateH <= m.stateLine * 1.5 + 1, { h: m.stateH, lh: m.stateLine, t: m.state });
   // Kleine Handy-Kachel: nur Tag und Anstoß (Gegner als Wappen am Kreis).
-  await check(tag + ': vor dem Spiel Tag, Anstoß' + (mobile ? '' : ', Gegner'), mobile ? /^\S+ 18:30$/.test(m.state) : /18:30 · gegen (SV Lindenberg|LIN)/.test(m.state), m.state);
+  await check(tag + ': vor dem Spiel Tag, Anstoß' + (mobile ? '' : ', Gegner'), mobile ? new RegExp('^\\S+ ' + kickRe.source + '$').test(m.state) : new RegExp(kickRe.source + ' · gegen (SV Lindenberg|LIN)').test(m.state), { state: m.state, erwartet: kickTimes });
 
   // Live: 2:1 in der 67. Minute.
   await fakeStates(page, { [ID]: { state: 'IN', attributes: { date: new Date(Date.now() - 70 * 60000).toISOString(), team_score: '2', opponent_score: '1', clock: "67'" } } }, { sticky: true });
