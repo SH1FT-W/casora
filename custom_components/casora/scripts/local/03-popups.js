@@ -4617,19 +4617,20 @@
     var single = !cfg.rooms && sc.lights.length === 1;
     var fxId = fxLampOf(single ? [sc.lights[0]] : lampIds0, states);
     var left = v3Stage(ids, states, false, function () { return v3Moons(scenesOf(h, states, sc), states, room, fxId, h); });
-    var ls = stat(lampIds0, states);
-    var lampNames0 = lampNamesOf(lampIds0, states, room);
-    var lampsHtml = lampIds0.map(function (id, i) {
-      return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0], lampNames0[i]);
-    }).join('');
+    // The lamp open in the dial is not listed again under „Leuchten im Raum“ (owner, 01.11.2026): the list holds the
+    // room's other lamps, its count too.
+    var listIds = single ? lampIds0.filter(function (id) { return id !== sc.lights[0]; }) : lampIds0;
+    var ls = stat(listIds, states);
+    var lampNames0 = lampNamesOf(listIds, states, room);
+    var lampsHtml = listIds.map(function (id, i) { return lampRow(id, states, room, false, lampNames0[i]); }).join('');
     // Counting heading (richtlinien §6): „Leuchten · 2 von 4 an“.
     var head = tr(sc.house ? 'Leuchten' : 'Leuchten im Raum') + (ls.tot > 1 ? ' · ' + tr(ls.on + ' von ' + ls.tot + ' an') : '');
-    var rightHtml = '<div class="lps-lbl">' + esc(head) + '</div><div class="lps-rows">' + lampsHtml + '</div>';
+    var rightHtml = listIds.length ? '<div class="lps-lbl">' + esc(head) + '</div><div class="lps-rows">' + lampsHtml + '</div>' : '';
     var lampIds = (sc.room ? sc.room : ids).filter(function (id) { return states[id] && !Array.isArray((states[id].attributes || {}).entity_id); });
     if (!lampIds.length) lampIds = ids.slice(0, 1);
     // Popup v3 is clean (richtlinien §8): UI.settings gives nothing – no gap for it either.
     var setHtml = !sc.house && UI.settings && lampIds.length ? UI.settings(!cfg.rooms && sc.lights.length === 1 ? sc.lights[0] : lampIds) : '';
-    if (setHtml) rightHtml += '<div style="height:var(--casora-popup-sec-gap, 24px)"></div>' + setHtml;
+    if (setHtml) rightHtml += (rightHtml ? '<div style="height:var(--casora-popup-sec-gap, 24px)"></div>' : '') + setHtml;
     return V3_CSS + '<div class="lps-cols"><div class="lps-v3l">' + left + '</div><div>' + rightHtml + '</div></div>';
   };
   var houseV3 = function (cfg, states) {
