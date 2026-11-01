@@ -96,7 +96,15 @@ const rooms = (page) => page.evaluate(() => (window.__pierce('casora-mobile-nav'
 const prepare = (page, label, how) => page.evaluate(([label, how]) => {
   const ov = window.__pierce('casora-filter-overlay').find((o) => o._config && o._config.room === label);
   if (!ov || ov._autoSectionsDone) return 'built';
-  if (how === 'noscenes') { ov._config = { ...ov._config, scenes: false }; return 'ok'; }
+  if (how === 'noscenes') {
+    // This room's scene list comes back empty (the overlay config may be set again before the page is built).
+    const sc = window._casoraSC;
+    if (!sc || sc._r396) return sc ? 'ok' : 'no scene list';
+    const list = sc.list.bind(sc);
+    sc.list = (st, h, vars) => (vars && vars.room === label ? [] : list(st, h, vars));
+    sc._r396 = true;
+    return 'ok';
+  }
   const rows = [];
   let pending = null;
   for (const kid of ov._container.children) {
