@@ -647,7 +647,8 @@
     } else if (v && act(v.imp)) main = 'Bezug aus dem Netz';
     if (!main) {
       var kwh = num(states, C.today), cost = money(num(states, C.costToday), C.cur, hass);
-      if (kwh != null) { main = 'Heute ' + fN(kwh, hass) + ' kWh'; if (cost) rest.push(cost); }
+      if (p != null && p < -20) main = 'Einspeisung ins Netz';
+      else if (kwh != null) { main = 'Heute ' + fN(kwh, hass) + ' kWh'; if (cost) rest.push(cost); }
       else main = p == null ? 'Noch keine Werte' : p <= FLOW_ON ? 'Kein Verbrauch' : 'Verbraucht Strom';
     }
     return { main: main, rest: rest.slice(0, 2), tone: tone };

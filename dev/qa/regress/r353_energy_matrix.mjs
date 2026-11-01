@@ -232,7 +232,9 @@ async function run(name, S, theme, { view = 0, vars, size = [1440, 900], dark = 
   if (process.env.R353_SHOTS) await page.screenshot({ path: `${process.env.R353_SHOTS}/${shotName}.png` });
   // Standard and Glass print the headline in whole watts ("1200 W"), the Casora look in kW from 1000 W.
   const heads = S.want.head ? [S.want.head] : [de(S.want.home), Math.round(S.want.home) + ' W'];
-  await check(`${tag}: Popup zeigt oben ${heads[0]}`, pop.texts.slice(0, 40).some((t) => heads.includes(t)), pop.texts.slice(0, 40));
+  // v3 stage: number and unit are separate texts („850“, „W“) – the head says it in words (richtlinien §3, 01.11.2026).
+  const tx = pop.texts.slice(0, 40), pairs = tx.slice(0, -1).map((t, i) => t + ' ' + tx[i + 1]);
+  await check(`${tag}: Popup zeigt oben ${heads[0]}`, tx.concat(pairs).some((t) => heads.includes(t.replace(/[\u00a0\u202f]/g, ' '))), tx);
   if (S.want.share && theme === 'Casora') await check(`${tag}: Kopf „${S.want.share}“`, pop.texts.slice(0, 40).some((t) => t.replace(/[\u00a0\u202f]/g, ' ').includes(S.want.share)), pop.texts.slice(0, 40));
   if (theme === 'Casora' && S.want.flow !== undefined) {
     if (S.want.flow === null) await check(`${tag}: kein Energiefluss`, !Object.keys(pop.e1).length, pop.e1);

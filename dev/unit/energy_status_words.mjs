@@ -32,6 +32,7 @@ for (const S of [st({ 'sensor.home': 513, 'sensor.solar': 0, 'sensor.grid': 513,
 // Only a power sensor: today's use, else a word.
 assert.equal(E.statusWords({ home: 'sensor.home', today: 'sensor.today' }, Object.assign(st({ 'sensor.home': 300 }), { 'sensor.today': { state: '3.2', attributes: {} } }), null).main, 'Heute 3,2 kWh');
 assert.equal(E.statusWords({ home: 'sensor.home' }, st({ 'sensor.home': 2 }), null).main, 'Kein Verbrauch');
+assert.equal(E.statusWords({ home: 'sensor.home' }, st({ 'sensor.home': -1500 }), null).main, 'Einspeisung ins Netz', 'a grid meter feeding in');
 assert.equal(E.statusWords({ home: 'sensor.home' }, st({ 'sensor.home': 'unavailable' }), null).main, 'Offline');
 
 // Flow: the grid circle says „Offline“, not „—“.
