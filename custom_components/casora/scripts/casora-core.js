@@ -7989,7 +7989,19 @@ window.casoraMenuGlass = {
     _sinceText(cur) {
       var lc = cur && cur.last_changed ? new Date(cur.last_changed) : null;
       if (!lc || isNaN(lc.getTime())) return '';
+      // Detail round #3: after a restart many entities share HA's start as last_changed – that is not a change, so no
+      // „Seit 09:37“ then (a fifth of all states in the same minute counts as the start).
+      var h0 = (document.querySelector('home-assistant') || {}).hass, S0 = (h0 && h0.states) || {};
+      var C0 = CasoraPopup._startC || (CasoraPopup._startC = { at: 0, m: {}, n: 0 });
+      if (Date.now() - C0.at > 10000) {
+        C0.at = Date.now(); C0.m = {}; C0.n = 0;
+        Object.keys(S0).forEach(function (k) { var t = Date.parse(S0[k].last_changed); if (!isFinite(t)) return; var mk = Math.floor(t / 60000); C0.m[mk] = (C0.m[mk] || 0) + 1; C0.n++; });
+      }
+      if (C0.n >= 20 && (C0.m[Math.floor(lc.getTime() / 60000)] || 0) >= C0.n / 5) return '';
       var loc = window.casoraLocale ? window.casoraLocale() : 'de-DE', now = new Date();
+      // §3: under an hour „vor 11 Min.“, else „Seit 14:42“.
+      var mins = Math.round((now - lc) / 60000);
+      if (mins >= 0 && mins < 60) { var ago0 = mins < 1 ? 'Gerade eben' : 'Vor ' + mins + ' Min.'; return window.casoraTr ? window.casoraTr(ago0) : ago0; }
       var since = 'Seit ' + (lc.toDateString() === now.toDateString() ? lc.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' })
         : lc.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' }));
       return window.casoraTr ? window.casoraTr(since) : since;
@@ -8001,12 +8013,13 @@ window.casoraMenuGlass = {
       var hs = this._headerStatus;
       if (!hs || hs.hidden || !this.hasAttribute('soft') || !this.container) return;
       var norm = function (t) { return String(t || '').toLowerCase().replace(/[\s\u00a0\u202f()·.,:–-]+/g, ''); };
-      var stage = '', stageParts = [];
+      var stage = '', stageParts = [], stageAll = '';
       (function walk(root, d) {
         if (!root || d > 12 || stage) return;
         // The S7 plate (dial: false) says its sentence in .hui-st-text – the universal tile read „An“ in the head and on the plate.
         var el = root.querySelector && root.querySelector('.hui-dl-c .hui-dl-t, .hui-dl-c .hui-st-val, .hui-stage .hui-st-head .hui-st-val, .hui-stage .hui-st-stat .hui-st-text');
-        if (el) { stage = el.textContent; stageParts = [].map.call(el.querySelectorAll('span'), function (x) { return x.textContent; }); return; }
+        if (el) { stage = el.textContent; stageParts = [].map.call(el.querySelectorAll('span'), function (x) { return x.textContent; });
+          var c0 = el.closest && el.closest('.hui-dl-c, .hui-stage'); stageAll = c0 ? c0.textContent : stage; return; }
         var all = root.querySelectorAll ? root.querySelectorAll('*') : [];
         for (var i = 0; i < all.length && !stage; i++) if (all[i].shadowRoot) walk(all[i].shadowRoot, d + 1);
       })(this.container, 0);
@@ -8017,7 +8030,8 @@ window.casoraMenuGlass = {
       var parts = String(stage).split(/\s*·\s*|\n/).concat(stageParts).map(function (x) { return norm(String(x).replace(/^\s*\d+\s+/, '')); });
       if (!stage || !norm(mainTxt) || (norm(mainTxt) !== norm(stage) && parts.indexOf(norm(mainTxt)) < 0)) return;
       var so = this._ringSrc && this._ringSrc._stateObj, h = (document.querySelector('home-assistant') || {}).hass;
-      var since = this._sinceText(so && h && h.states ? h.states[so.entity_id] : so);
+      // The stage says a time already („Zuletzt vor 2 Min.“, „Seit 19:40“): the head's part goes instead of a second one.
+      var since = /(^|\s)(seit|zuletzt|vor \d|gerade eben)/i.test(stageAll) ? '' : this._sinceText(so && h && h.states ? h.states[so.entity_id] : so);
       if (first) {
         if (since) first.textContent = since;
         else { var nx = first.nextElementSibling; if (nx && nx.classList && nx.classList.contains('hui-sep')) nx.remove(); first.remove(); }
