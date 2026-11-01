@@ -137,7 +137,8 @@
         var s = b._stateObj, ha = document.querySelector('home-assistant'), h = ha && ha.hass;
         var word = h && typeof h.formatEntityState === 'function' ? h.formatEntityState(s) : s.state;
         return { el: b, title: String((s.attributes && s.attributes.friendly_name) || s.entity_id), sub: word,
-          icon: 'mdi:account', picture: s.attributes && s.attributes.entity_picture, ids: [s.entity_id], home: s.state === 'home' };
+          icon: 'mdi:account', picture: s.attributes && s.attributes.entity_picture, ids: [s.entity_id], home: s.state === 'home',
+          unk: !s.state || s.state === 'unknown' || s.state === 'unavailable' };
       });
   };
 
@@ -440,7 +441,10 @@
       o.tone = home ? 'good' : 'off';
       // Counts in small letters after the number („2 unterwegs“, wortliste §2); the one the sentence already says
       // („1 unterwegs“ as the sentence and as a fact) is not repeated under it (final review, 01.11.2026).
-      if (rows.length) o.facts = [{ label: 'zuhause', value: String(home) }, { label: 'unterwegs', value: String(rows.length - home) }]
+      // A person HA does not know is counted as „unbekannt“, not „unterwegs“ (detail round #9).
+      var unk = rows.filter(function (c) { return c.unk; }).length;
+      if (rows.length) o.facts = [{ label: 'zuhause', value: String(home) }, { label: 'unterwegs', value: String(rows.length - home - unk) }]
+        .concat(unk ? [{ label: 'unbekannt', value: String(unk) }] : [])
         .filter(function (f) { return (f.value + ' ' + f.label).toLowerCase() !== String(o.text).trim().toLowerCase(); });
       // Dial (richtlinien §4.8): one segment per person, green at home, grey away.
       o.segs = rows.map(function (c) { return { ok: true, tone: c.home ? 'good' : 'off', label: c.title || c.name || '' }; });

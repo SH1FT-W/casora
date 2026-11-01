@@ -2690,7 +2690,8 @@
   "Lampe": "Luminária",
   "Vorhanden": "Presente",
   "Fehlt": "Falta",
-  "Ja": "Sim"
+  "Ja": "Sim",
+  "unbekannt": "desconhecido"
  },
  "patterns": [
   [
@@ -4872,6 +4873,10 @@
   [
    "^Profil „(.+)“$",
    "Perfil “{1}”"
+  ],
+  [
+   "^(\\d+) unbekannt$",
+   "{1} desconhecido"
   ]
  ],
  "Gerät in Home Assistant": "Dispositivo no Home Assistant"

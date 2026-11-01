@@ -2690,7 +2690,8 @@
   "Lampe": "Lamp",
   "Vorhanden": "Aanwezig",
   "Fehlt": "Ontbreekt",
-  "Ja": "Ja"
+  "Ja": "Ja",
+  "unbekannt": "onbekend"
  },
  "patterns": [
   [
@@ -4872,6 +4873,10 @@
   [
    "^Profil „(.+)“$",
    "Profiel „{1}”"
+  ],
+  [
+   "^(\\d+) unbekannt$",
+   "{1} onbekend"
   ]
  ],
  "Gerät in Home Assistant": "Apparaat in Home Assistant"

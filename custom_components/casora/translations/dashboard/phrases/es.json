@@ -2690,7 +2690,8 @@
   "Lampe": "Lámpara",
   "Vorhanden": "Presente",
   "Fehlt": "Falta",
-  "Ja": "Sí"
+  "Ja": "Sí",
+  "unbekannt": "desconocido"
  },
  "patterns": [
   [
@@ -4872,6 +4873,10 @@
   [
    "^Profil „(.+)“$",
    "Perfil «{1}»"
+  ],
+  [
+   "^(\\d+) unbekannt$",
+   "{1} desconocido"
   ]
  ],
  "Gerät in Home Assistant": "Dispositivo en Home Assistant"
