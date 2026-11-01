@@ -62,7 +62,7 @@ states[ID] = { entity_id: ID, state: 'on', attributes: base };
 assert.equal(H.sec('hero', c, states, hass), '<hero>|Normal|Ziel 50 %</hero>', 'room is the header label, not in the status line');
 const ctrl = H.sec('ctrl', c, states, hass);
 assert.ok(!/Betrieb|turn_off/.test(ctrl), 'on/off only in the header (blueprint v2): ' + ctrl);
-assert.ok(ctrl.includes('*Normal>set_mode{"mode":"normal"};Schlaf>set_mode{"mode":"sleep"}'), ctrl);
+assert.ok(ctrl.includes('*Normal>set_mode{"mode":"normal"};Schlafen>set_mode{"mode":"sleep"}'), ctrl);
 assert.ok(ctrl.includes('*50 %>set_humidity{"humidity":50}'), ctrl);
 const info = H.sec('info', c, states, hass);
 assert.equal(info, '<group Status>Luftfeuchte=41 %;Wassertank=12 %;Leistung=23 W</group>', 'target humidity only once (header and chips)');
