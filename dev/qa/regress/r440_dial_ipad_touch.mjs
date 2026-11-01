@@ -1,7 +1,7 @@
 // @zustand: arbeit
 // @parallel: ui
 // @deckt: custom_components/casora/scripts/casora-core.js
-// Reported (Daniel, real iPad and iPhone, 26.11.1): in the v3 popups the dial (thermostat, cover, light) could
+// Reported (the owner, real iPad and iPhone, 26.11.1): in the v3 popups the dial (thermostat, cover, light) could
 // not be turned by finger – dragging scrolled the page. iOS/iPadOS WebKit decides scroll vs. page on the FIRST
 // touchmove: if that one is not prevented, the page scrolls and every later touchmove is non-cancelable. The
 // dial only claimed the touch after 6 px (DIAL_SLOP), so the first small move always went to the page.

@@ -1,5 +1,5 @@
 // Update detail page: „Nicht geprüft“ must not be a dead end – the action row offers „Jetzt prüfen“ (KI-Check),
-// „Neu prüfen“ after a check, nothing while the check runs (Daniel 01.11.2026, FLODE update without a button).
+// „Neu prüfen“ after a check, nothing while the check runs (owner report 01.11.2026, an update without a button).
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
