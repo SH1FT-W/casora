@@ -337,7 +337,7 @@ Ein Aufräum-Umbau entfernt so etwas nie still; jede dieser Funktionen hat einen
 | #32 | Velair | Zeile „Zeitplan ›“ → Unterseite mit der Woche (ansehen, bearbeiten, an/aus, Ziel je Block); Zeile „Velair-Modus“ | `31-velair.js`, Teil `rows`, Seite `velair-plan` |
 | #23 | Türklingel | Zeile „Ton ›“ → Unterseite mit den Lautstärke-Reglern (Klingelton, Sprechen, Lautsprecher) | `24-klingel.js`, Teil `tonrow`, Seite `klingel-ton` |
 | #89 | Fahrzeug | Kilometerstand im Abschnitt „Zustand“ (auch BMW CarData) | `03-popups.js`, Teil `state_s3` |
-| #56 | Wetter | „gefühlt“ in der Mitte des Rads, immer wenn die Quelle einen Wert hat (Attribut `apparent_temperature` oder Sensor, ohne Studio-Schalter); die gefühlte Kurve im Verlauf nach der Studio-Wahl | Vorlage `casora_weather` (Popup), `00-finder.js` `weatherSources` |
+| #56 | Wetter | „gefühlt“ in der Mitte des Rads, immer wenn die Quelle einen Wert hat (Attribut `apparent_temperature` oder Sensor, ohne Studio-Schalter); die gefühlte Kurve im Verlauf nach der Studio-Wahl; Zusätzliche Werte aus dem Studio (`weather_extras`: Taupunkt, Windböen, Bewölkung, Niederschlag, Sonneneinstrahlung …) als Zeilen in „Details“ nach Regen, Wind und UV (was Rad und diese drei zeigen, nicht doppelt) | Vorlage `casora_weather` (Popup), `00-finder.js` `weatherSources` |
 
 Nicht zurück: #35 (Jalousie-Stufen bleiben drei Monde: Auf · Beschatten · Zu).
 

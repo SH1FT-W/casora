@@ -9,16 +9,18 @@
 //   1. Default: the chart draws two curves at once (no switch) with a legend "Temperatur"/"Gefühlt", the felt one
 //      from the station's apparent_temperature sensor, both with history.
 //   2. Popup v3 (popup-richtlinien-v3 §8, #56): „gefühlt N°“ in the middle of the wheel whenever the source has a felt
-//      value; "Details" only rain, wind and UV (the further values stay in the Studio's chart choice, no extra rows);
-//      no "undefined"/"NaN", no console errors.
+//      value; "Details" starts with rain, wind (and UV), then the Studio's "Extra values" (default: all the station
+//      has – Taupunkt, Windböen, Bewölkung, Niederschlag, Sonneneinstrahlung), never a row "Gefühlt" (the wheel shows
+//      it); no "undefined"/"NaN", no console errors.
 //   3. Older Studio settings "Felt temperature" and "Extra values" off (weather_feels/weather_extras false): one
-//      curve, „gefühlt“ stays in the wheel (no switch for it, §8). Curves of other units (humidity, gusts) get their
-//      own chart behind the switch.
+//      curve, no extra rows, „gefühlt“ stays in the wheel (no switch for it, §8). Curves of other units (humidity,
+//      gusts) get their own chart behind the switch; extra values ['gust'] show only the row Windböen.
 //   4. A weather entity without these sources keeps its popup (no felt curve, no extra rows).
 //   5. Studio, Weather: "In the chart" offers the station's values; picking "Taupunkt" and removing the row
 //      "Bewölkung", then saving: the real weather card of the desktop dashboard and of the phone dashboard
-//      (casora_mobile_weather) draws three curves with the legend Temperatur/Gefühlt/Taupunkt and has no row
-//      "Bewölkung". Writes both dashboards (test HA only) and restores them.
+//      (casora_mobile_weather) draws three curves with the legend Temperatur/Gefühlt/Taupunkt, shows the row
+//      "Taupunkt" in "Details" but no row "Bewölkung", and „gefühlt“ in the wheel's middle. Writes both dashboards
+//      (test HA only) and restores them.
 // WX56_BILDER=<folder>: pictures of the popup (chart and details) on desktop and phone, and of the Studio section.
 import { open, casoraDashboards, dashboard, studio, check, need, finish, usePage, atFinish } from './lib.mjs';
 import { ws } from '../ws.mjs';
@@ -138,9 +140,15 @@ for (const [tag, opts, url] of VIEWS) {
   const rows = r.rows;
   const feelsNow = await page.evaluate((id) => Math.round(parseFloat(document.querySelector('home-assistant').hass.states[id].state)), FEELS);
   await check(tag + ': „gefühlt ' + feelsNow + '°“ in der Mitte des Rads (#56)', new RegExp('gefühlt ' + feelsNow + '°').test(r.text), r.text.slice(0, 200));
-  // v3 §8: the details are rain, wind and UV only – no extra rows of the station any more.
-  await check(tag + ': Details Regen und Wind mit Einheit', rows.some((t) => /^Regen\s*\d+ %/.test(t)) && rows.some((t) => /^Wind\s*[\d,]+ km\/h/.test(t)), rows);
-  await check(tag + ': keine Zusatzzeilen (v3 §8)', ['Gefühlt', 'Taupunkt', 'Windböen', 'Bewölkung', 'Niederschlag', 'Sonneneinstrahlung'].every((w) => label(rows, w) < 0), rows);
+  // #56: rain and wind first, then the Studio's extra values (default: all the station has); the felt value is in the wheel.
+  await check(tag + ': Details Regen und Wind mit Einheit zuerst', label(rows, 'Regen') === 0 && rows.some((t) => /^Regen\s*\d+ %/.test(t))
+    && rows.some((t) => /^Wind\s*[\d,]+ km\/h/.test(t)), rows);
+  for (const w of ['Taupunkt', 'Windböen', 'Bewölkung', 'Niederschlag', 'Sonneneinstrahlung']) {
+    await check(tag + ': Zusätzlicher Wert ' + w + ' nach Wind (#56)', label(rows, w) > label(rows, 'Wind'), rows);
+  }
+  await check(tag + ': Werte mit Einheit (41 km/h, 0,4 mm/h, 180 W/m²)',
+    rows.some((t) => /Windböen\s*41 km\/h/.test(t)) && rows.some((t) => /Niederschlag\s*0,4 mm\/h/.test(t)) && rows.some((t) => /180 W\/m²/.test(t)), rows);
+  await check(tag + ': keine Zeile „Gefühlt“ und keine zweite Regenwahrscheinlichkeit', label(rows, 'Gefühlt') < 0 && label(rows, 'Regenwahrscheinlichkeit') < 0, rows);
   await check(tag + ': kein undefined/NaN', !/undefined|NaN/.test(r.text), r.text.slice(0, 200));
 
   if (tag === 'Desktop') {
@@ -153,7 +161,7 @@ for (const [tag, opts, url] of VIEWS) {
     await check('Auswahl mit Einheiten: Temperatur + Taupunkt zusammen', units.chart && units.chart.series.map((s) => s.name).join('|') === 'Temperatur|Taupunkt', units.chart);
     await check('Auswahl mit Einheiten: Umschalter Temperatur / Luftfeuchtigkeit / Windböen',
       ['Temperatur', 'Luftfeuchtigkeit', 'Windböen'].every((w) => units.pills.includes(w)), units.pills);
-    await check('Auswahl Zeilen: keine Zusatzzeilen (v3 §8)', ['Gefühlt', 'Taupunkt', 'Bewölkung', 'Windböen'].every((w) => label(units.rows, w) < 0), units.rows);
+    await check('Auswahl Zeilen: nur Windböen', label(units.rows, 'Windböen') > -1 && ['Gefühlt', 'Taupunkt', 'Bewölkung'].every((w) => label(units.rows, w) < 0), units.rows);
     const plain = await page.evaluate((wx) => Object.keys(document.querySelector('home-assistant').hass.states)
       .filter((k) => k.startsWith('weather.') && k !== wx && document.querySelector('home-assistant').hass.states[k].attributes.apparent_temperature == null).sort()[0] || null, WX);
     if (plain) {
@@ -236,7 +244,8 @@ for (const [tag, opts, url] of VIEWS) {
     await need(tag + ': Wetterkarte des Dashboards', r && !r.missing && r.chart, r);
     await check(tag + ' (Dashboard): drei Kurven mit Legende Temperatur/Gefühlt/Taupunkt',
       r.chart.series.length === 3 && r.chart.legend.join('|') === 'Temperatur|Gefühlt|Taupunkt' && r.chart.lines.length === 3, r.chart);
-    await check(tag + ' (Dashboard): keine Zeile „Bewölkung“ (Taupunkt ist Kurve, keine Zeile)', label(r.rows, 'Bewölkung') < 0 && label(r.rows, 'Taupunkt') < 0, r.rows);
+    await check(tag + ' (Dashboard): Studio-Auswahl Taupunkt in Details, abgewählte Bewölkung nicht', label(r.rows, 'Taupunkt') > -1 && label(r.rows, 'Bewölkung') < 0, r.rows);
+    await check(tag + ' (Dashboard): „gefühlt“ in der Mitte des Rads', /gefühlt -?\d+°/.test(r.text), r.text.slice(0, 200));
     await browser.close().catch(() => {});
   }
 }
