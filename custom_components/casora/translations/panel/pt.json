@@ -2854,7 +2854,9 @@
     "{n} missing": "{n} em falta",
     "The dashboard could not be imported.": "Não foi possível importar o painel.",
     "Exporting…": "A exportar…",
-    "Importing…": "A importar…"
+    "Importing…": "A importar…",
+    "Show search": "Mostrar pesquisa",
+    "A search field under the title of the phone's Home: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search.": "Um campo de pesquisa sob o título do Início no telemóvel: divisões, dispositivos e cenas. No computador, Cmd+K ou Ctrl+K abre a mesma pesquisa."
   },
   "patterns": [
     [

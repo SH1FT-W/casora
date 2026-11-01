@@ -155,4 +155,14 @@ assert.ok(/delete added\.variables\.casora_auto_name;/.test(src), 'Neuer Raum �
 assert.ok(/markAutoHome\(r\)/.test(src), 'Umzug (Hemma 2) markiert');
 assert.ok(/I\.markAutoHome\(room\)/.test(read('custom_components/casora/panel/casora-panel-import.js')), 'Umzug (Hemma 1) markiert');
 
+// Search on the phone's Home (Studio: Controls › Phone › Show search): the overview room's switch goes to the header.
+{
+  const head = (vars, rooms) => S.markPhoneManaged({ views: [{ cards: [{ type: 'custom:button-card', template: 'casora_mobile_weather', variables: vars }] }] },
+    true, true, rooms).views[0].cards[0].variables;
+  const home = (v) => [{ path: 'home', name: 'Home', variables: { casora_auto_name: 'home', ...v } }];
+  assert.equal(head({}, home({ show_search: false })).show_search, false, 'switched off: false on the header');
+  assert.equal('show_search' in head({ show_search: false }, home({})), false, 'on again: the key goes');
+  assert.equal(head({ show_search: false }, undefined).show_search, false, 'rooms unknown: left as it is');
+}
+
 console.log('uebersicht_name: ok');

@@ -2692,7 +2692,18 @@
   "Fehlt": "Manca",
   "Ja": "Sì",
   "unbekannt": "sconosciuto",
-  "Luftfeuchte · 24 Std.": "Umidità · 24 h"
+  "Luftfeuchte · 24 Std.": "Umidità · 24 h",
+  "Räume, Geräte, Szenen": "Stanze, dispositivi, scene",
+  "Räume, Geräte, Szenen suchen": "Cerca stanze, dispositivi, scene",
+  "Räume, Geräte und Szenen suchen": "Cerca stanze, dispositivi e scene",
+  "Suche": "Cerca",
+  "Eingabe löschen": "Cancella",
+  "Ergebnisse": "Risultati",
+  "Keine Treffer": "Nessun risultato",
+  "1 Treffer": "1 risultato",
+  "{n} Treffer": "{n} risultati",
+  "Raum öffnen": "Apri stanza",
+  "Szene starten": "Avvia scena"
  },
  "patterns": [
   [

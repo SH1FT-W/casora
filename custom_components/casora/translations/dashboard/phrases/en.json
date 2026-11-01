@@ -2674,7 +2674,18 @@
   "Fehlt": "Missing",
   "Ja": "Yes",
   "unbekannt": "unknown",
-  "Luftfeuchte · 24 Std.": "Humidity · 24 h"
+  "Luftfeuchte · 24 Std.": "Humidity · 24 h",
+  "Räume, Geräte, Szenen": "Rooms, devices, scenes",
+  "Räume, Geräte, Szenen suchen": "Search rooms, devices, scenes",
+  "Räume, Geräte und Szenen suchen": "Search rooms, devices and scenes",
+  "Suche": "Search",
+  "Eingabe löschen": "Clear",
+  "Ergebnisse": "Results",
+  "Keine Treffer": "No results",
+  "1 Treffer": "1 result",
+  "{n} Treffer": "{n} results",
+  "Raum öffnen": "Open room",
+  "Szene starten": "Start scene"
  },
  "patterns": [
   [

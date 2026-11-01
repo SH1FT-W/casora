@@ -7982,31 +7982,10 @@ window.casoraMenuGlass = {
       // Detail round #8: a tile without an entity (waste, updates, vehicle …) or whose entity has no word and no change
       // since HA's start says what its tile says („Restmüll morgen“, „Aktuell“) – §3: a status line in every popup.
       if (!cur) { var tw = this._tileWord(); if (tw) put(tw); return; }
-      var txt = '';
-      try { txt = h.formatEntityState ? h.formatEntityState(cur) : cur.state; } catch (e) { txt = cur.state; }
-      // A camera or lock that is gone says „Offline“ like its tile (wortliste; detail round #19).
-      if (cur.state === 'unavailable') txt = /^(camera|lock)\./.test(cur.entity_id) ? (window.casoraTr ? window.casoraTr('Offline') : 'Offline')
-        : (window.casoraTr ? window.casoraTr('Nicht verfügbar') : 'Nicht verfügbar');
-      txt = String(txt || '').trim();
-      if (!txt || txt === 'unknown') return;
-      // No raw values in the head (wortliste): a state the word list names takes Casora's word („idle“/„ready“ →
-      // „Bereit“, not HA's „Leerlauf“); one HA has no word for (enum sensor without translations: „failed“) says since
-      // when instead, as the S7 popups without a word of their own (§3).
-      // A group, binary_sensor or calendar without a device class has no word of its own for on/off („An“ above a wheel
-      // of windows, „Aus“ above a calendar – final review 01.11.2026): it says since when instead.
-      var dom0 = String(cur.entity_id || '').split('.')[0], grp0 = Array.isArray((cur.attributes || {}).entity_id);
-      // Detail round #5: a measurement of the tile's entity („23,27 °C“ above batteries, „55 % Luftfeuchtigkeit“ above a
-      // room's climate) is a number, not a state – the head says since when instead (the stage shows its own values).
-      var meas0 = (dom0 === 'sensor' || dom0 === 'number' || dom0 === 'input_number') && cur.state !== '' && isFinite(Number(cur.state));
-      if (meas0 || ((cur.state === 'on' || cur.state === 'off') && (grp0 || dom0 === 'binary_sensor' || dom0 === 'calendar') && !(cur.attributes || {}).device_class)) {
-        txt = this._sinceText(cur) || this._tileWord(); if (!txt) return;
-        put(txt);
-        return;
-      }
-      var word = window._casoraRawWord ? window._casoraRawWord(cur.state) : cur.state;
-      if (word !== cur.state) txt = window.casoraTr ? window.casoraTr(word) : word;
-      else if (txt === 'Ein') txt = 'An'; // HA's German „Ein“ for on – the word list says „An“ (as the stage)
-      else if (txt === cur.state && /^(?:[a-z][a-z0-9_]*|[A-Z][A-Z0-9_]{2,})$/.test(txt)) { txt = this._sinceText(cur) || this._tileWord(); if (!txt) return; } // also a code like „PRE“ (football)
+      // The word as in the word list (window.casoraStateWord, also the search rows); null = says since when instead.
+      var txt = window.casoraStateWord(h, cur);
+      if (txt === '') return;
+      if (txt === null) { txt = this._sinceText(cur) || this._tileWord(); if (!txt) return; put(txt); return; }
       this._headerStatus.innerHTML = '<b>' + window.casoraEsc(txt) + '</b>';
       this._headerStatus.hidden = false;
       if (again) this._dedupeHead();
@@ -12982,6 +12961,28 @@ window.casoraMenuGlass = {
   window._casoraRawWord = function (t) {
     var k = String(t == null ? '' : t).trim();
     return Object.prototype.hasOwnProperty.call(RAW, k) ? RAW[k] : (Object.prototype.hasOwnProperty.call(RAW, k.toLowerCase()) && /^[a-z_]+$/i.test(k) && k === k.toLowerCase() ? RAW[k.toLowerCase()] : t);
+  };
+  // The state word of a popup head and of the search rows (wortliste): the words of HA in the language of the user, but a
+  // state the word list names takes the Casora word („idle“/„ready“ → „Bereit“, German „Ein“ of HA → „An“), a camera or lock that is
+  // gone says „Offline“. '' = nothing to say (unknown). null = no word of its own: a measurement of the entity, on/off of
+  // a group, binary_sensor or calendar without a device class, a raw code („failed“, „PRE“) – the caller says something
+  // else (the popup head: since when).
+  window.casoraStateWord = function (h, cur) {
+    if (!cur) return '';
+    var tr = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
+    var txt = '';
+    try { txt = h && h.formatEntityState ? h.formatEntityState(cur) : cur.state; } catch (e) { txt = cur.state; }
+    if (cur.state === 'unavailable') txt = /^(camera|lock)\./.test(cur.entity_id) ? tr('Offline') : tr('Nicht verfügbar');
+    txt = String(txt || '').trim();
+    if (!txt || txt === 'unknown') return '';
+    var dom0 = String(cur.entity_id || '').split('.')[0], grp0 = Array.isArray((cur.attributes || {}).entity_id);
+    var meas0 = (dom0 === 'sensor' || dom0 === 'number' || dom0 === 'input_number') && cur.state !== '' && isFinite(Number(cur.state));
+    if (meas0 || ((cur.state === 'on' || cur.state === 'off') && (grp0 || dom0 === 'binary_sensor' || dom0 === 'calendar') && !(cur.attributes || {}).device_class)) return null;
+    var word = window._casoraRawWord ? window._casoraRawWord(cur.state) : cur.state;
+    if (word !== cur.state) return tr(word);
+    if (txt === 'Ein') return 'An';
+    if (txt === cur.state && /^(?:[a-z][a-z0-9_]*|[A-Z][A-Z0-9_]{2,})$/.test(txt)) return null;
+    return txt;
   };
   // The state as shown in a list: the words of HA, a raw English token in the words of Casora.
   window._casoraNiceState = function (hass, e) {

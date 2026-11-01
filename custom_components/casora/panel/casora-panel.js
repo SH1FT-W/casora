@@ -891,6 +891,11 @@ function markPhoneManaged(cfg, showBell, showAssist, rooms) {
         else delete c.variables.show_notifications;
         if (showAssist === false) c.variables.show_assist = false;
         else delete c.variables.show_assist;
+        // Search field on Home (Studio: Controls › Phone › Show search), only when the rooms are known.
+        if (Array.isArray(rooms)) {
+          if (home && home.variables && home.variables.show_search === false) c.variables.show_search = false;
+          else delete c.variables.show_search;
+        }
         if (Array.isArray(rooms)) {
           if (home && home.name && !isDefaultHome(home, rooms)) {
             c.variables.home_name = home.name;
@@ -2359,6 +2364,11 @@ const SECTIONS = [
       { key: "__all_auto", sub: "phone", label: "Tile size on the phone", type: "action", auto: true, scope: "dashboard",
         button: "Set all tiles to Automatic",
         hint: "Tiles get large on the phone while something is going on and small again afterwards. You can still set single tiles to Small or Large." },
+      // Search field on the phone's Home (38-search.js, casora_mobile_weather): markPhoneManaged writes it to the
+      // phone's header, casoraPhoneRoom.home() carries it before the next save. Empty = on.
+      { key: "show_search", sub: "phone", label: "Show search", type: "bool",
+        boolDefault: true, auto: true, scope: "dashboard",
+        hint: "A search field under the title of the phone's Home: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search." },
       { key: "room_groups", sub: "phone", label: "Group rooms by category on the phone", type: "bool",
         boolDefault: false, auto: true, scope: "dashboard",
         hint: "Like Apple's Home app: Light, Climate, Security … each with a small heading. Off shows all devices under one heading." },
@@ -9535,6 +9545,15 @@ class CasoraPanel extends HTMLElement {
         }
         .miniphone .mp-badges::-webkit-scrollbar { display:none; }
         .miniphone .mp-badges { margin-top:6px; }
+        .miniphone .mp-search {
+          display:flex; align-items:center; gap:8px; height:40px; margin-top:10px; padding:0 12px;
+          border-radius:var(--casora-r-element, 18px); box-sizing:border-box;
+          background:var(--casora-search-field, var(--casora-entity-background, rgba(251,248,243,0.92)));
+          color:var(--casora-entity-state, var(--secondary-text-color)); font-size:14px;
+          box-shadow:var(--casora-shadow-rest, 0 2px 8px rgba(0,0,0,0.08));
+        }
+        .miniphone .mp-search svg { width:15px; height:15px; flex:none; opacity:.75; }
+        .miniphone .mp-search span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         .miniphone .mp-chips .pbadge,
         .miniphone .mp-badges .pbadge {
           --bmh:var(--ph-badge-h); --bgl:var(--ph-badge-i);
@@ -25102,6 +25121,23 @@ class CasoraPanel extends HTMLElement {
       if (!this._phoneFilter) trow.appendChild(wwrap);
     }
     body.appendChild(trow);
+
+    // Search field under the title (38-search.js), as on the phone: only on Home, Controls › Phone › Show search.
+    {
+      const dh = (((this._pair || {}).desktop || {}).compact || {}).rooms || [];
+      const hv = ((dh.find((r) => r.path === "home") || dh[0] || {}).variables) || {};
+      if (!this._phoneFilter && hv.show_search !== false) {
+        const sf = document.createElement("div");
+        sf.className = "mp-search";
+        sf.dataset.jump = "General";
+        sf.innerHTML = '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6" fill="none" stroke="currentColor" stroke-width="2.2"/>'
+          + '<path d="M13 13l5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+        const st = document.createElement("span");
+        st.textContent = typeof window.casoraTr === "function" ? window.casoraTr("Räume, Geräte, Szenen") : "Räume, Geräte, Szenen";
+        sf.appendChild(st);
+        body.appendChild(sf);
+      }
+    }
 
     const bcard = cardOf("casora_mobile_filter_badges");
     const bv = (bcard && bcard.variables) || {};

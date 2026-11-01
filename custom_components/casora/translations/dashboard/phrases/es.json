@@ -2692,7 +2692,18 @@
   "Fehlt": "Falta",
   "Ja": "Sí",
   "unbekannt": "desconocido",
-  "Luftfeuchte · 24 Std.": "Humedad · 24 h"
+  "Luftfeuchte · 24 Std.": "Humedad · 24 h",
+  "Räume, Geräte, Szenen": "Habitaciones, dispositivos, escenas",
+  "Räume, Geräte, Szenen suchen": "Buscar habitaciones, dispositivos, escenas",
+  "Räume, Geräte und Szenen suchen": "Buscar habitaciones, dispositivos y escenas",
+  "Suche": "Buscar",
+  "Eingabe löschen": "Borrar",
+  "Ergebnisse": "Resultados",
+  "Keine Treffer": "Sin resultados",
+  "1 Treffer": "1 resultado",
+  "{n} Treffer": "{n} resultados",
+  "Raum öffnen": "Abrir habitación",
+  "Szene starten": "Iniciar escena"
  },
  "patterns": [
   [

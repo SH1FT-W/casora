@@ -2692,7 +2692,18 @@
   "Fehlt": "Manquant",
   "Ja": "Oui",
   "unbekannt": "inconnu",
-  "Luftfeuchte · 24 Std.": "Humidité · 24 h"
+  "Luftfeuchte · 24 Std.": "Humidité · 24 h",
+  "Räume, Geräte, Szenen": "Pièces, appareils, scènes",
+  "Räume, Geräte, Szenen suchen": "Rechercher pièces, appareils, scènes",
+  "Räume, Geräte und Szenen suchen": "Rechercher des pièces, appareils et scènes",
+  "Suche": "Rechercher",
+  "Eingabe löschen": "Effacer",
+  "Ergebnisse": "Résultats",
+  "Keine Treffer": "Aucun résultat",
+  "1 Treffer": "1 résultat",
+  "{n} Treffer": "{n} résultats",
+  "Raum öffnen": "Ouvrir la pièce",
+  "Szene starten": "Lancer la scène"
  },
  "patterns": [
   [
