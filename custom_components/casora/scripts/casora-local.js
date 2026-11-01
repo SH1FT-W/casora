@@ -223,6 +223,7 @@ const MODULES = [
   '35-phone-hub',
   '36-shopping',
   '37-kettle',
+  '38-search',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());
