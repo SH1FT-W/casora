@@ -8255,7 +8255,12 @@ window.casoraMenuGlass = {
               grab(n.shadowRoot, d + 1);
             });
           })(c, 0);
-          this._syncHeadLine(); this._fitHeadGap();
+          this._syncHeadLine();
+          // A head without a line of the content (the fallback word, e.g. „Entriegelt“ over the lock wheel) is
+          // deduped against the stage now, not by the 300/900 ms timers: they removed it after the reveal and the
+          // whole content moved up 16 px (gate 26.11.2, r369 lock popup).
+          if (!this._headLine) this._dedupeHead();
+          this._fitHeadGap();
           // Rule 12 (symmetry) padded a column 120 ms after opening – after the reveal; align before it.
           if (window._casoraUI && window._casoraUI.alignCols) { try { window._casoraUI.alignCols(); } catch (e) { /* layout only */ } }
         }
