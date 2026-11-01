@@ -7147,6 +7147,9 @@ window.casoraMenuGlass = {
       if (h) { var x = h[1].length === 3 ? h[1].replace(/./g, '$&$&') : h[1]; rgb = [0, 2, 4].map(function (i) { return parseInt(x.substr(i, 2), 16); }); }
       else {
         var m = /rgba?\(([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)(?:[ ,/]+([\d.]+))?/.exec(col || '');
+        // A mixed colour (color-mix) resolves to color(srgb r g b) with channels 0 … 1.
+        var cs = !m && /color\(srgb ([\d.]+) ([\d.]+) ([\d.]+)(?: \/ ([\d.]+))?/.exec(col || '');
+        if (cs) m = [0, cs[1] * 255, cs[2] * 255, cs[3] * 255, cs[4]];
         if (!m) return null;
         // A see-through fill (a sand tint) shows the plate: the off glyph of the theme, never white.
         if (m[4] != null && Number(m[4]) < 0.5) { see = false; return null; }
@@ -7172,6 +7175,22 @@ window.casoraMenuGlass = {
     return out;
   }
   window._casoraInkOn = inkOn;
+  // Notification list (owner, 01.11.2026, „B: alle weiß“): white symbols on every coloured circle, like iOS. A tone where
+  // white stays under 3 : 1 (green, orange) is filled a step darker until it reaches it; yellow (light) would need so
+  // much it keeps the dark symbol. ink(fill) answers like inkOn. Kacheln and popups keep inkOn as it is.
+  function notifyTone(tone, ink) {
+    if (!tone) return tone;
+    ink = ink || inkOn;
+    var isWhite = function (f) { return !/glyph-dark|glyph-off/.test(String(ink(f) || '')); };
+    if (isWhite(tone)) return tone;
+    var steps = [92, 85, 78];
+    for (var i = 0; i < steps.length; i++) {
+      var c = 'color-mix(in srgb, ' + tone + ' ' + steps[i] + '%, black)';
+      if (isWhite(c)) return c;
+    }
+    return tone;
+  }
+  window._casoraNotifyTone = notifyTone;
   // Room of the tapped tile (per dashboard, unique hits only) – not for house-wide popups (badges,
   // batteries, energy …) whose entity happens to sit in a room as well.
   var HOUSE_POPUP = /\bcasora_(badge_\w+|(popup_)?(pulse|battery|energy|network|updates|scenes|contacts|calendar|weather_warning|football|recipe|solar_tip|time)|weather|trash|now_playing_\w+)\b/;
@@ -14481,7 +14500,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var toRow = function (r) {
       return {
         icon: r.icon,
-        iconTone: toneOf(r),
+        iconTone: notifyTone(toneOf(r)),
         label: r.label,
         // Something still happening says how long, not when it started as well.
         // Weich (Runde 2): Detail und Zeit als ein Fließtext – bei langem Detail brach die Zeit sonst
