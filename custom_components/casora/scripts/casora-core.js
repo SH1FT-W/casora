@@ -4626,6 +4626,8 @@ window.casoraMenuGlass = {
     getCardSize() { return 1; }
 
     connectedCallback() {
+      // Registry of connected bars: layout-offsets.js reads it instead of walking the page.
+      (window._casoraNavBars = window._casoraNavBars || new Set()).add(this);
       window.addEventListener('location-changed', this._onRoute, true);
       window.addEventListener('popstate', this._onRoute, true);
       window.addEventListener('resize', this._onResize);
@@ -4647,6 +4649,7 @@ window.casoraMenuGlass = {
     }
 
     disconnectedCallback() {
+      if (window._casoraNavBars) window._casoraNavBars.delete(this);
       window.removeEventListener('location-changed', this._onRoute, true);
       window.removeEventListener('popstate', this._onRoute, true);
       window.removeEventListener('resize', this._onResize);

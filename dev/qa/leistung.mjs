@@ -11,7 +11,7 @@
 //     --json <datei>            Ergebnis schreiben
 //     --vergleich <datei>       Tabelle vorher (Datei) / nachher (dieser Lauf)
 //     LEISTUNG_INIT=<datei.js>  Versuchs-Skript vor allem anderen einspielen (A/B ohne HA-Änderung)
-//     LEISTUNG_STAPEL=1         Herkunft der Voll-Durchläufe (querySelectorAll('*')) im Leerlauf sammeln
+//     LEISTUNG_STAPEL=1         Herkunft der Voll-Durchläufe (querySelectorAll('*')) beim Laden (kalt[].herkunft) und im Leerlauf sammeln
 //     --grenzen <datei>         Messgrenzen prüfen ({ "pfad.im.ergebnis": { "max": n } }), Rückgabe 1 bei Überschreitung
 //
 // Gemessen wird im Browser über eine Instrumentierung vor dem ersten Skript (addInitScript):
@@ -83,7 +83,7 @@ const INSTR = (opt) => {
       if (sel === '*') {
         L.qsaStar++;
         // LEISTUNG_STAPEL=1: Herkunft der Voll-Durchläufe sammeln (teuer, nur zur Ursachensuche).
-        if (opt && opt.stacks) { const k = (new Error().stack || '').split('\n').slice(2, 12).map((x) => x.trim().replace(/^at /, '').replace(/https?:\/\/[^/]+/g, '').replace(/\?[^:)]*/g, '')).filter((x) => !/^(walk|deep|findDeep|NodeList|Array)/.test(x)).slice(0, 3).join(' < '); L.qsaBy = L.qsaBy || {}; L.qsaBy[k] = (L.qsaBy[k] || 0) + 1; }
+        if (opt && opt.stacks) { Error.stackTraceLimit = 50; const k = (new Error().stack || '').split('\n').slice(2, 40).map((x) => x.trim().replace(/^at /, '').replace(/https?:\/\/[^/]+/g, '').replace(/\?[^:)]*/g, '')).filter((x) => !/^(walk|deep|findDeep|NodeList|Array)/.test(x)).slice(0, 3).join(' < '); L.qsaBy = L.qsaBy || {}; L.qsaBy[k] = (L.qsaBy[k] || 0) + 1; }
       }
       return q.call(this, sel);
     };
@@ -207,8 +207,10 @@ async function load(page, url, net) {
   const r = await page.evaluate(() => { const L = window.__lp; const nav = performance.getEntriesByType('navigation')[0];
     return { firstTile: L.firstTile, localLoaded: L.localLoaded, dcl: nav && nav.domContentLoadedEventEnd, longN: L.longtasks.length, longMs: L.longtasks.reduce((s, x) => s + x[1], 0), long50: L.longtasks.filter((x) => x[1] > 200).length }; });
   const s = await page.evaluate(SNAP);
+  // LEISTUNG_STAPEL=1: where the full walks during loading come from (top 10).
+  const herkunft = process.env.LEISTUNG_STAPEL ? await page.evaluate(() => Object.entries(window.__lp.qsaBy || {}).sort((x, y) => y[1] - x[1]).slice(0, 10)) : undefined;
   page.off('websocket', onWs);
-  return { firstTile: +r.firstTile.toFixed(0), localLoaded: r.localLoaded && +r.localLoaded.toFixed(0), settled: +settled.toFixed(0), dcl: r.dcl && +r.dcl.toFixed(0),
+  return { herkunft, firstTile: +r.firstTile.toFixed(0), localLoaded: r.localLoaded && +r.localLoaded.toFixed(0), settled: +settled.toFixed(0), dcl: r.dcl && +r.dcl.toFixed(0),
     renders: Object.values(s.renders).reduce((a, b) => a + b, 0), bc: s.renders['button-card'] || 0, renderMs: +Object.values(s.rtime).reduce((a, b) => a + b, 0).toFixed(0),
     evalN: s.evalN, evalMs: +s.evalMs.toFixed(0), longN: r.longN, longMs: r.longMs, ws: wsBytes, qsaStar: s.qsaStar, ruLeer: s.ruLeer, abgewiesen: s.perform - (s.renders['button-card'] || 0) };
 }
