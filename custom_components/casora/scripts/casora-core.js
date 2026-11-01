@@ -3615,6 +3615,8 @@ window.casoraMenuGlass = {
   // as "reported" as soon as either value differs from the one seen at the tap.
   {
     const SKIP_MS = 5000;
+    // Seek (_casoraNPSeekMark): the target holds until HA reports a position within SEEK_NEAR s of it, at most SEEK_MS.
+    const SEEK_MS = 10000, SEEK_NEAR = 3;
     const skips = window._casoraNPSkips = window._casoraNPSkips || {};
     const same = (x, y) => x === y || (x !== x && y !== y); // NaN-safe
     const toMs = (v) => {
@@ -3634,9 +3636,16 @@ window.casoraMenuGlass = {
       let skip = false;
       const sk = r.entity ? skips[r.entity] : null;
       if (sk) {
-        const reported = !same(pos, sk.pos) || !same(posAt, sk.posAt);
-        if (reported || now - sk.at > SKIP_MS || now < sk.at) delete skips[r.entity];
-        else { pos = r.playing ? (now - sk.at) / 1000 : 0; skip = true; }
+        let reported = !same(pos, sk.pos) || !same(posAt, sk.posAt);
+        // A seek waits for a position near its target: a periodic report from before the seek landed must not
+        // pull the bar back to the old place.
+        if (sk.seek && reported && Number.isFinite(pos)) {
+          const rep = pos + (r.playing && Number.isFinite(posAt) && posAt > 0 ? Math.max(0, (now - posAt) / 1000) : 0);
+          const exp = sk.to + (r.playing ? Math.max(0, (now - sk.at) / 1000) : 0);
+          reported = Math.abs(rep - exp) <= SEEK_NEAR;
+        }
+        if (reported || now - sk.at > (sk.ms || SKIP_MS) || now < sk.at) delete skips[r.entity];
+        else { pos = (sk.to || 0) + (r.playing ? (now - sk.at) / 1000 : 0); skip = true; }
       }
       if (!Number.isFinite(pos)) return null;
       // Paused: the position stands. Playing: extrapolate from HA's timestamp (never backwards when
@@ -3653,6 +3662,14 @@ window.casoraMenuGlass = {
       skips[entity] = { at: Date.now(), pos: pos, posAt: toMs(a.media_position_updated_at) };
       try { window.dispatchEvent(new CustomEvent('casora-np-skip', { detail: { entity: entity } })); } catch (e) { /* no DOM */ }
     };
+    // Seek to `to` seconds for a player: the bars show the target at once and run on from there until HA reports it.
+    window._casoraNPSeekMark = function (entity, to, states) {
+      if (!entity || !Number.isFinite(Number(to))) return;
+      const a = (states && states[entity] && states[entity].attributes) || {};
+      const pos = (a.media_position === null || a.media_position === undefined) ? NaN : Number(a.media_position);
+      skips[entity] = { at: Date.now(), pos: pos, posAt: toMs(a.media_position_updated_at), to: Math.max(0, Number(to)), seek: true, ms: SEEK_MS };
+    };
+    window._casoraNPSeekMs = SEEK_MS;
     // Popup bar (.hm-fill with data-np-*): set it from _casoraNPPos without waiting for a re-render.
     // A jump backwards is applied at once (no transition), then the bar runs on linearly.
     window._casoraNPBarSync = function (el) {
@@ -3694,7 +3711,8 @@ window.casoraMenuGlass = {
           if (!n || depth > 12 || !n.querySelectorAll) return;
           n.querySelectorAll('.hm-pos[data-np-ent]').forEach((sp) => {
             const d = sp.dataset;
-            if (d.npPlay !== '1') return;
+            // While a finger or the mouse moves the bar (seek), the label shows the target time.
+            if (d.npPlay !== '1' || d.npHold) return;
             const p = window._casoraNPPos({ entity: d.npEnt, pos: d.npPos, dur: d.npDur, posAt: Number(d.npAt), playing: true });
             if (p) { const t = mmss(p.pos); if (sp.textContent !== t) sp.textContent = t; }
           });
@@ -3705,6 +3723,205 @@ window.casoraMenuGlass = {
       if (window._casoraNPPosTick && typeof window._casoraNPPosTick.unref === 'function') window._casoraNPPosTick.unref();
     }
   }
+
+  // casora-np-seek:start
+  // Seekable progress bar of the media popup (.hm-seek role="slider" with data-np-seek = entity, data-np-dur = seconds;
+  // only drawn when the player supports SEEK and reports a duration). Mouse/pen drag, a tap or click on the bar jumps,
+  // a finger drags along the bar; keys: arrows ±5 s, page up/down ±10 s, Home/End. While moving, the fill, the knob
+  // and the time label show the target; on release media_player.media_seek is called and _casoraNPSeekMark keeps
+  // the bar at the target until HA reports it.
+  // iOS/iPadOS (WebKit) decides scroll vs. page on the first touchmove (see the dial below): the bar claims the
+  // touch on its first move unless that move is clearly vertical (then the sheet scrolls); a touchstart that
+  // button-card re-dispatches for the same finger is not a new touch.
+  if (typeof document !== 'undefined' && !window._casoraNPSeekUI) {
+    window._casoraNPSeekUI = true;
+    const KEY_MS = 400, SLOP = 6;
+    const mmss = (x) => { x = Math.max(0, Math.round(x)); const h = Math.floor(x / 3600), m = Math.floor((x % 3600) / 60), r = x % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(r).padStart(2, '0'); };
+    const seekOf = (ev) => {
+      const path = (ev.composedPath && ev.composedPath()) || [ev.target];
+      for (let i = 0; i < path.length; i++) {
+        const n = path[i];
+        if (n && n.dataset && n.dataset.npSeek !== undefined && n.classList && n.classList.contains('hm-seek')) return n;
+      }
+      return null;
+    };
+    const durOf = (el) => Number(el.dataset.npDur) || 0;
+    // A re-render (new state) may replace the bar while it is moved: continue on the new one.
+    const live = (el) => {
+      if (el.isConnected) return el;
+      const root = el._npRoot, ent = el.dataset.npSeek;
+      const fresh = root && root.querySelectorAll ? [].filter.call(root.querySelectorAll('.hm-seek[data-np-seek]'), (n) => n.dataset.npSeek === ent)[0] : null;
+      if (fresh) { fresh._npRoot = root; return fresh; }
+      return el;
+    };
+    const secAt = (el, clientX) => {
+      const tr = el.querySelector('.hm-track') || el;
+      const b = tr.getBoundingClientRect();
+      if (!b.width) return 0;
+      return Math.max(0, Math.min(1, (clientX - b.left) / b.width)) * durOf(el);
+    };
+    const shownSec = (el) => {
+      const f = el.querySelector('.hm-fill[data-np-ent]');
+      const d = f ? f.dataset : null;
+      const p = d && window._casoraNPPos ? window._casoraNPPos({ entity: d.npEnt, pos: d.npPos, dur: d.npDur, posAt: Number(d.npAt), playing: d.npPlay === '1' }) : null;
+      return p ? p.pos : 0;
+    };
+    const label = (el) => { const pr = el.closest && el.closest('.hm-prog'); return pr ? pr.querySelector('.hm-pos') : null; };
+    const aria = (el, sec) => {
+      el.setAttribute('aria-valuenow', String(Math.round(sec)));
+      el.setAttribute('aria-valuetext', mmss(sec) + ' / ' + mmss(durOf(el)));
+    };
+    // Shows `sec` on the bar without HA (hold: keep the time label from the 1-s tick).
+    const paint = (el, sec, hold) => {
+      const dur = durOf(el);
+      if (!(dur > 0)) return;
+      const f = el.querySelector('.hm-fill');
+      if (f) {
+        if (f._npAnim) { try { f._npAnim.cancel(); } catch (e) { /* gone */ } f._npAnim = null; }
+        f.style.animation = 'none';
+        f.style.transition = 'none';
+        f.style.width = (Math.max(0, Math.min(1, sec / dur)) * 100).toFixed(2) + '%';
+      }
+      const lb = label(el);
+      if (lb) { lb.textContent = mmss(sec); if (hold) lb.dataset.npHold = '1'; else delete lb.dataset.npHold; }
+      aria(el, sec);
+    };
+    // Back to what HA (and a pending seek) says.
+    const restore = (el) => {
+      el.classList.remove('drag');
+      const lb = label(el);
+      if (lb) delete lb.dataset.npHold;
+      const f = el.querySelector('.hm-fill[data-np-ent]');
+      if (f && window._casoraNPBarSync) window._casoraNPBarSync(f);
+      const s = shownSec(el);
+      if (lb) lb.textContent = mmss(s);
+      aria(el, s);
+    };
+    const commit = (el, sec) => {
+      el = live(el);
+      const ent = el.dataset.npSeek, dur = durOf(el);
+      el.classList.remove('drag');
+      if (!ent || !(dur > 0)) return;
+      sec = Math.round(Math.max(0, Math.min(dur, sec)));
+      const ha = document.querySelector('home-assistant');
+      const hass = ha && ha.hass;
+      if (!hass) { restore(el); return; }
+      window._casoraSuppressDismiss = Date.now() + 600;
+      if (window.casoraHaptic) window.casoraHaptic('selection');
+      if (window._casoraNPSeekMark) window._casoraNPSeekMark(ent, sec, hass.states);
+      hass.callService('media_player', 'media_seek', { seek_position: sec }, { entity_id: ent });
+      const sync = () => {
+        (window._casoraNPBarsFor ? window._casoraNPBarsFor(ent) : []).forEach((f) => {
+          window._casoraNPBarSync(f);
+          const sk = f.closest && f.closest('.hm-seek');
+          if (sk) restore(sk);
+        });
+      };
+      sync();
+      setTimeout(sync, (window._casoraNPSeekMs || 10000) + 100);
+    };
+    // Mouse and pen: press (jumps there), drag, release seeks.
+    let pdrag = null;
+    document.addEventListener('pointerdown', (ev) => {
+      if (ev.pointerType === 'touch' || ev.button > 0) return;
+      const el = seekOf(ev);
+      if (!el) return;
+      el._npRoot = el.getRootNode();
+      pdrag = { el: el, sec: secAt(el, ev.clientX) };
+      el.classList.add('drag');
+      paint(el, pdrag.sec, true);
+      try { el.focus({ preventScroll: true }); } catch (e) { /* old browser */ }
+      ev.preventDefault();
+    }, true);
+    document.addEventListener('pointermove', (ev) => {
+      if (!pdrag || ev.pointerType === 'touch') return;
+      pdrag.el = live(pdrag.el);
+      pdrag.sec = secAt(pdrag.el, ev.clientX);
+      paint(pdrag.el, pdrag.sec, true);
+      ev.preventDefault();
+    }, true);
+    document.addEventListener('pointerup', (ev) => {
+      if (!pdrag || ev.pointerType === 'touch') return;
+      const d = pdrag; pdrag = null;
+      commit(d.el, d.sec);
+    }, true);
+    document.addEventListener('pointercancel', (ev) => {
+      if (!pdrag || ev.pointerType === 'touch') return;
+      const d = pdrag; pdrag = null;
+      restore(live(d.el));
+    }, true);
+    // Finger.
+    let ts = null;
+    document.addEventListener('touchstart', (ev) => {
+      const t0 = ev.touches && ev.touches[0];
+      if (ts && t0 && t0.identifier === ts.id && t0.clientX === ts.x0 && t0.clientY === ts.y0 && !seekOf(ev)) return;
+      ts = null;
+      if (!ev.touches || ev.touches.length !== 1) return;
+      const el = seekOf(ev);
+      if (!el) return;
+      // The sheet never takes a touch that began on the bar (_bindSheetDrag).
+      ev._casoraDialRing = true;
+      el._npRoot = el.getRootNode();
+      ts = { el: el, id: t0.identifier, x0: t0.clientX, y0: t0.clientY, x: t0.clientX, decided: false, drag: false, held: false, skip: false };
+    }, { capture: true, passive: true });
+    document.addEventListener('touchmove', (ev) => {
+      if (!ts) return;
+      let t = null;
+      for (let i = 0; i < ev.touches.length; i++) if (ev.touches[i].identifier === ts.id) t = ev.touches[i];
+      if (!t || ev.touches.length !== 1) { if (ts.drag) restore(live(ts.el)); ts = null; return; }
+      const dx = t.clientX - ts.x0, dy = t.clientY - ts.y0;
+      ts.x = t.clientX;
+      if (!ts.decided) {
+        if (!ev.cancelable) { ts = null; return; }
+        if (Math.hypot(dx, dy) < SLOP) { ev.preventDefault(); ts.held = true; return; }
+        ts.decided = true;
+        if (Math.abs(dy) > Math.abs(dx) * 1.5) {
+          // Mainly vertical: the sheet scrolls – unless the touch was already held for the bar (iOS cannot scroll now).
+          if (ts.held) { ts.skip = true; ev.preventDefault(); return; }
+          ts = null; return;
+        }
+        ts.drag = true;
+        ts.el.classList.add('drag');
+        if (window.casoraHaptic) window.casoraHaptic('selection');
+      }
+      if (ts.skip) { if (ev.cancelable) ev.preventDefault(); return; }
+      if (!ts.drag) return;
+      if (ev.cancelable) ev.preventDefault();
+      ts.el = live(ts.el);
+      ts.sec = secAt(ts.el, t.clientX);
+      paint(ts.el, ts.sec, true);
+    }, { capture: true, passive: false });
+    const tend = (ev) => {
+      if (!ts) return;
+      const d = ts; ts = null;
+      if (ev.type === 'touchcancel') { if (d.drag) restore(live(d.el)); return; }
+      if (d.skip) return;
+      // A tap (no move beyond the slop) jumps to where the finger was.
+      const sec = d.drag ? d.sec : secAt(live(d.el), d.x0);
+      if (ev.cancelable) ev.preventDefault();
+      commit(d.el, sec);
+    };
+    document.addEventListener('touchend', tend, true);
+    document.addEventListener('touchcancel', tend, true);
+    // Keys: the service follows KEY_MS after the last key (one call for a held key).
+    let keyT = null;
+    document.addEventListener('keydown', (ev) => {
+      const el = ev.composedPath ? ev.composedPath()[0] : ev.target;
+      if (!el || !el.classList || !el.classList.contains('hm-seek') || el.dataset.npSeek === undefined) return;
+      const by = { ArrowRight: 5, ArrowUp: 5, ArrowLeft: -5, ArrowDown: -5, PageUp: 10, PageDown: -10 }[ev.key];
+      const dur = durOf(el);
+      const base = keyT && keyT.el === el ? keyT.sec : shownSec(el);
+      const sec = ev.key === 'Home' ? 0 : ev.key === 'End' ? dur : by != null ? base + by : null;
+      if (sec == null || !(dur > 0)) return;
+      ev.preventDefault(); ev.stopPropagation();
+      const to = Math.max(0, Math.min(dur, sec));
+      el._npRoot = el.getRootNode();
+      paint(el, to, true);
+      if (keyT) clearTimeout(keyT.t);
+      keyT = { el: el, sec: to, t: setTimeout(() => { keyT = null; commit(el, to); }, KEY_MS) };
+    }, true);
+  }
+  // casora-np-seek:end
 
   // casora-np-hidden:start
   // Weich (05.10.2026): Wiedergaben „ausblenden“ – nur auf diesem Gerät (localStorage), je Player
