@@ -74,7 +74,7 @@ Zustand · Zusatz · Zusatz
 | Symbol-Kachel | **entfällt** (die Bühne zeigt Farbe und Zustand) | – |
 | Etikett | Raum; auf Unterseiten die Seite davor (setzt der Rahmen, wenn die Seite ‹ hat); bei Sammel-Popups leer; immer **über** dem Titel | 12/700, Großbuchstaben, Sperrung .06em, Text 2 |
 | Titel | Gerätename ohne Raum, höchstens 2 Zeilen, dann „…“ | 24/800, -0.02em (Handy 22) |
-| Statuszeile | Zustand fett in Text 1, dann höchstens 2 Zusätze in Text 2, „·“ getrennt, eine Zeitform (unter 1 Std. „vor 11 Min.“, sonst „seit 14:42“). In **jedem** Popup: hat der Inhalt keine eigene, zeigt der Rahmen den Zustand der Kachel-Entität (HAs Wort) | 14/500, Zustand 14/700 |
+| Statuszeile | Zustand fett in Text 1, dann höchstens 2 Zusätze in Text 2, „·“ getrennt, eine Zeitform (unter 1 Std. „vor 11 Min.“, sonst „seit 14:42“). In **jedem** Popup: hat der Inhalt keine eigene, zeigt der Rahmen den Zustand der Kachel-Entität (HAs Wort; ein Zustand der Wortliste in deren Wort – „Bereit“ statt „Leerlauf“, „An“ statt „Ein“ –, ein Rohwert ohne Übersetzung nie, dann „Seit 14:42“) | 14/500, Zustand 14/700 |
 | Hauptschalter | wie v2 Regel 2: schaltet, was die Kachel schaltet; nie bei Schloss, Alarm, Tor, Sirene | 51×31, Gerätefarbe |
 | ✕ | immer, rechts außen | Kreis 40 auf Zeilenfläche, Trefferfläche 44 |
 | ‹ | nur auf Unterseiten, links vor dem Etikett | Kreis 40 |
