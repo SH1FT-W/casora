@@ -4,6 +4,36 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.5 – 02.11.2026
+
+Eine große Runde aus euren Rückmeldungen: Schalter und Farbe in den Popups, ein klarerer Verlauf, ein schnellerer Start und ein ruhiger Update-Hinweis.
+
+### Neu
+- **Update-Hinweis auf dem Dashboard:** Gibt es eine neue Casora-Version, sehen Admins ein paar Sekunden nach dem Öffnen einmal ein ruhiges Popup mit den wichtigsten Neuerungen und „Installieren“, „Später“ (fragt nach 24 Stunden wieder) oder „Diese Version überspringen“. Abschalten je Benutzer im Studio unter Updates („Update-Hinweis beim Öffnen“).
+- **Schalter in Popups (#105):** An/Aus-Entitäten (Kühlschrank-Modi wie SuperFrost, Steckdosen, Aquarium-Technik, Thermostat-Optionen, Kamera-, Klingel- und Netzwerk-Schalter, Geräteseite) zeigen einen Schalter statt des Textes „An“/„Aus“.
+- **Spulen im Medien-Popup:** Der Fortschrittsbalken hat einen Knopf und lässt sich verschieben (ziehen, antippen oder Pfeiltasten), bei Playern, die das können.
+- **Gemischte Lichtfarben:** In einem Raum mit Lampen in verschiedenen Farben zeigt der Ring die Mischung.
+
+### Geändert
+- **Schnellerer Start:** Die optionale Einstellungsdatei wird nur noch geladen, wenn es sie gibt, und dann zwischengespeichert, die Module warten nicht mehr auf die Einstellungen, das Handy zeigt die Räume, sobald die Kernmodule bereit sind, Casoras Kernskripte laden parallel zum Home-Assistant-Frontend, das Layout-Skript durchsucht nicht mehr die ganze Seite (am Desktop etwa halb so viele Durchläufe), die Startseite am Handy lädt nur das Foto, das sie zeigt, und das Studio lädt seine Schrift einmal und alle Skripte aus dem Cache.
+- **Verlauf (#104):** Aktive Zustände haben einen gefüllten Punkt, ruhende einen leeren Ring, das Band färbt nur die aktive Zeit, der Ring bleibt bei Aus leer, und jede Zeile sagt, wie lange genau dieser Zustand dauerte („für 1 Std. 32 Min.“). Gilt für Licht, Schalter, Türen, Bewegung, Personen, Schlösser und andere An/Aus-Entitäten.
+- **Klima-Kopf in Worten (#103):** Die Zeile unter „Klima“ nennt das Raumklima in jeder Ansicht in Worten (z. B. „Angenehm · etwas feucht“) und wiederholt keinen Messwert aus Rad oder Liste.
+- **Wetter-Rad:** Der Ring reicht vom heutigen Tiefst- zum Höchstwert, der Knopf steht bei der aktuellen Temperatur.
+- **3D-Drucker-Rad:** Restzeit mit Einheit in eigener Zeile, darunter ein Fakt und die Endzeit; lange Einheiten und Zeiten laufen in keinem Rad mehr in den Ring.
+- **Medienfarben:** Ring, Fortschrittsbalken und Play-Knopf haben eine gemeinsame Farbe aus dem Cover.
+- **Licht-Segmente:** Nur eines von Warm, Neutral, Kalt und Farbe ist hervorgehoben, keines, solange die Lampen unterschiedlich sind; Warm, Neutral und Kalt erreichen jede eingeschaltete Lampe, auch reine Farblampen.
+- **Personen-Popup:** zeigt nur Personen, keine Gerätetracker als zusätzliche Zeilen.
+- **Thermostat-Popup:** zeigt den Temperaturverlauf unter dem Rad, wie die Fußbodenheizung.
+- **Zählungen klein:** „3 an“, „Alle an“, „Alle aus“, „2 schwach“.
+- **Listen:** Popup-Listen lassen einen Namensanfang weg, den alle Zeilen teilen (aus „Jalousie Bad“ und „Jalousie Küche“ wird „Bad“ und „Küche“).
+- **Gerade eben:** Relative Zeiten unter einer Minute heißen überall „gerade eben“.
+- **Auto-Popup:** Reichweite und Tank bzw. Akku nur im Rad, nicht noch einmal in der Liste.
+
+### Behoben
+- **KI-Update-Prüfung:** Sie holt die Release-Notes jetzt selbst (vom Update, aus den GitHub-Releases oder von der Changelog-Seite), statt bei fast jedem Update „Unklar“ zu melden; ohne Notes schätzt sie nach dem Versionssprung.
+- **VOC-Index-Sensoren (#95):** Sensoren ohne Einheit und Geräteklasse lassen sich im Klima-Badge wählen und werden auf der Index-Skala gelesen (100 = übliche Raumluft); CO₂-, Feinstaub- und CO-Sensoren ohne Einheit werden auch über ihren Namen gefunden.
+- **Szenen im Licht-Popup:** Eine Szene gilt nicht mehr als aktiv, sobald eine Lampe im Raum danach verändert wurde.
+
 ## 26.11.4 – 01.11.2026
 
 Das Licht-Popup, überarbeitet nach euren Rückmeldungen zu 26.11.3.

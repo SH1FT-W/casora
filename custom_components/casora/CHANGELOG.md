@@ -4,6 +4,36 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.5 – 02.11.2026
+
+A big round from your feedback: switches and colour in the popups, a clearer history, a faster start and a calm update prompt.
+
+### New
+- **Update prompt on the dashboard:** when a new Casora version is out, admins see one calm popup a few seconds after the dashboard opens, with its highlights and "Install", "Later" (asks again in 24 hours) or "Skip this version". Turn it off per user in the Studio under Updates ("Update prompt on open").
+- **Switches in popups (#105):** on/off entities (fridge modes such as SuperFrost, plugs, aquarium gear, thermostat options, camera, doorbell and network switches, device page) show a switch you can tap instead of the text "On"/"Off".
+- **Seek in the media popup:** the progress bar has a knob and can be moved (drag, tap or arrow keys) for players that support seeking.
+- **Mixed light colours:** in a room with lamps in different colours the ring blends their colours.
+
+### Changed
+- **Faster start:** the optional settings file is only fetched when it exists and is then cached, modules no longer wait for the settings, the phone shows its rooms as soon as the core modules are ready, Casora's core scripts load in parallel with Home Assistant's frontend, the layout script no longer searches the whole page (about half the full page searches on desktop), the phone's start page loads only the photo it shows, and the Studio loads its font once and all scripts from the cache.
+- **History page (#104):** active states get a filled dot and idle ones an empty ring, the band only colours the active time, the ring stays empty while off, and every row says how long that state lasted ("for 1 h 32 min"). Applies to lights, switches, doors, motion, persons, locks and other on/off entities.
+- **Climate header in words (#103):** the line under "Climate" says the comfort in words in every view (for example "Comfortable · slightly humid") and no longer repeats a reading from the dial or the list.
+- **Weather dial:** the ring runs from today's low to today's high, the knob sits at the current temperature.
+- **3D printer dial:** the time left with its unit on its own line, one fact and the end time underneath; long units and times no longer run into the ring on any dial.
+- **Media colours:** ring, progress bar and play button share one colour from the cover.
+- **Light segments:** only one of Warm, Neutral, Cold and Color is highlighted, none while the lamps differ; Warm, Neutral and Cold reach every lamp that is on, colour-only lamps too.
+- **People popup:** lists only persons, no device trackers as extra rows.
+- **Thermostat popup:** shows the temperature history under the dial, like floor heating.
+- **Counts in lower case:** "3 on", "All on", "All off", "2 low".
+- **Lists:** popup lists drop a leading word all names share ("Blind Bathroom" and "Blind Kitchen" become "Bathroom" and "Kitchen").
+- **Just now:** relative times under one minute say "just now" everywhere.
+- **Car popup:** range and tank or battery only in the dial, not again in the list.
+
+### Fixed
+- **AI update check:** it now fetches release notes itself (from the update, its GitHub releases or its changelog page) instead of answering "Unclear" for almost every update; without notes it judges by the version jump.
+- **VOC index sensors (#95):** sensors without unit or device class can be picked in the climate badge and are read on the index scale (100 = usual indoor air); CO2, PM and CO sensors without unit are found by their name too.
+- **Scenes in the light popup:** a scene is no longer shown as active once a lamp in the room was changed after it.
+
 ## 26.11.4 – 01.11.2026
 
 The light popup, reworked from your feedback on 26.11.3.
