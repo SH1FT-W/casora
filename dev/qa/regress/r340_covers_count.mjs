@@ -97,7 +97,9 @@ for (const [tag, opts, url] of VIEWS) {
   await check(tag + ': Kachel "Alle geöffnet · Ø 70 %"', r.full === 'Alle geöffnet · Ø 70 %' || r.full === 'Alle geöffnet · Ø 70 %', r);
   await check(tag + ': Kachel zeigt nie die 85 der HA-Gruppe', !/85/.test(r.card), r.card);
   await check(tag + ': Popup-Kopf wie die Kachel', /Alle geöffnet · Ø 70/.test(r.popup.text), r.popup.text.slice(0, 200));
-  await check(tag + ': Popup-Position 70 %', /70\s? ?%/.test(r.popup.text) && !/85/.test(r.popup.text), r.popup.text.slice(0, 300));
+  // „85“ as a number, not inside the dial's CSS (opacity:.85).
+  await check(tag + ': Popup-Position 70 %', /70\s? ?%/.test(r.popup.text) && !/(?<![\d.,])85(?!\d)/.test(r.popup.text),
+    r.popup.text.match(/.{0,80}(?<![\d.,])85(?!\d).{0,40}/g) || r.popup.text.slice(0, 300));
   await check(tag + ': eine Zeile je Jalousie der Liste', r.popup.rows.length === 6, r.popup.rows);
 
   // 3: mixed, two closed: (100+100+100+0+0+0+... ) -> 4 open of 6.

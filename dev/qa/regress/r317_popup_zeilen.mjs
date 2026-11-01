@@ -68,8 +68,12 @@ const hasAny = (txt, names) => names.filter((n) => new RegExp('(^|\\s)' + n.repl
 const { page } = await open({ width: 1440, height: 900, theme: 'Casora' });
 const openPopup = async (url, mobile) => {
   await dashboard(page, url);
-  const t = await stable(page, tile);
+  let t = await stable(page, tile);
   await need('Room climate tile on ' + url, t.length, t);
+  // A tile half outside the row only scrolls into view when tapped; bring it fully in first.
+  await page.evaluate(() => { const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_vent')
+    && x.getBoundingClientRect().width > 0); if (b) b.scrollIntoView({ block: 'center', inline: 'center' }); });
+  t = await stable(page, tile);
   if (mobile) await page.touchscreen.tap(t[0].x, t[0].y); else await page.mouse.click(t[0].x, t[0].y);
   const txt = await stable(page, popup, undefined, { max: 9000, quiet: 900 });
   await page.keyboard.press('Escape');

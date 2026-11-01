@@ -172,6 +172,7 @@ const POPUP = () => {
   const rows = window.__pierce('.hui-srow').filter(vis);
   const vals = box('.hui-slbl', /^Werte$/), ctl = box('.hui-slbl', /^Bedienung$/);
   return { title: title.replace(/\s+/g, ' ').trim(), line: ((window.__pierce('.hui-line')[0] || {}).textContent || '').replace(/\s+/g, ' ').trim(),
+    stage: ((window.__pierce('.hui-stage').find(vis) || {}).textContent || '').replace(/\s+/g, ' ').trim(),
     segs: txt('.hui-sg'), rowText: rows.map((r) => r.textContent.replace(/\s+/g, ' ').trim()),
     chart: window.__pierce('casora-chart').some(vis),
     card: window.__pierce('ha-markdown').some((m) => vis(m) && /QA Karte im Badge-Popup/.test(m.textContent || (m.shadowRoot && m.shadowRoot.textContent) || '')),
@@ -197,7 +198,9 @@ const run = async (tag, page, mobile, file) => {
   await need(tag + ': tap opens the Casora popup', await offen());
   const p = await stable(page, POPUP, null, { max: 12000, until: (v) => v && v.chart && v.rowText.length >= 3 && v.card });
   await check(tag + ': title is the badge name', /QA Pumpe/.test(p.title), p.title);
-  await check(tag + ': state line „' + WANT + '“', new RegExp('^' + WANT + '\\b').test(p.line), p.line);
+  // v3 (§3): the stage says the state word, the header line says since when – never the same word twice.
+  await check(tag + ': stage says „' + WANT + '“', p.stage.startsWith(WANT), p.stage);
+  await check(tag + ': state line does not repeat „' + WANT + '“ (since when instead)', /^Seit\b/.test(p.line), p.line);
   await check(tag + ': history chart', p.chart);
   await check(tag + ': no own Aus/An next to the header switch (blueprint v2, decision 2)', !p.ctl && !p.segs.includes('Aus') && !p.segs.includes('An'), p.segs);
   await check(tag + ': „Werte“ with the own label and the second value', !!p.vals && p.rowText.some((t) => /^QA Innen/.test(t) && /°C/.test(t))

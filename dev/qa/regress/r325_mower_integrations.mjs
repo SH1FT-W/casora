@@ -5,7 +5,9 @@
 // For each: tile state, popup rows the integration has (and none it lacks), then one real command from the popup:
 //   Gardena    – "Mähen" → lawn_mower.start_mowing → mowing
 //   Husqvarna  – "Parken" → switch.turn_off on the schedule switch (park until further notice)
-//   Landroid   – segment "Zone 2" → select.select_option → zone 2
+//   Landroid   – "Mähen" → lawn_mower.start_mowing → mowing
+// Popup v3 is clean (richtlinien §8): no connection while online, no operating hours, no cutting height and no zone
+// choice (set up in the Studio or in HA) – the test asks for them to be gone.
 // At the end every mower goes back to the station and the switches/selects back to their start values.
 // MAEHER_BILDER=<folder>: tile + popup per mower, desktop dark and phone.
 import { open, casoraDashboard, dashboard, check, need, finish, atFinish, stable, call } from './lib.mjs';
@@ -13,14 +15,14 @@ import { tokens } from '../ws.mjs';
 
 const MOWERS = [
   { id: 'lawn_mower.testmaeher_lawn_mower', tag: 'gardena', tile: /Parkt bis zum nächsten Zeitplan/,
-    rows: ['Akku', 'Verbindung', 'Betriebsstunden'], not: ['Nächster Start', 'Schnitthöhe', 'Zone', 'Messer'],
+    rows: ['Akku'], not: ['Nächster Start', 'Schnitthöhe', 'Zone', 'Messer', 'Verbindung', 'Betriebsstunden'],
     cmd: { sel: '"start_mowing"', check: (s) => s['lawn_mower.testmaeher_lawn_mower'].state === 'mowing', what: 'Mähen startet (lawn_mower.start_mowing)' } },
   { id: 'lawn_mower.rasenpilot', tag: 'husqvarna', tile: /Lädt · 87/,
-    rows: ['Akku', 'Nächster Start', 'Modus', 'Hauptbereich', 'Bereich', 'Vorgarten', 'Messer', 'Betriebsstunden', 'Schnitthöhe'], not: ['Zone', 'Regen'],
+    rows: ['Akku', 'Nächster Start', 'Modus', 'Hauptbereich', 'Bereich', 'Vorgarten', 'Messer'], not: ['Zone', 'Regen', 'Betriebsstunden', 'Schnitthöhe'],
     cmd: { sel: '"switch.rasenpilot_enable_schedule"', check: (s) => s['switch.rasenpilot_enable_schedule'].state === 'off', what: 'Parken schaltet den Zeitplan aus' } },
   { id: 'lawn_mower.grasfuchs', tag: 'landroid', tile: /In der Station/,
-    rows: ['Akku', 'Verbindung', '-67 dBm', 'Nächster Start', 'Regen', 'Messer', 'Betriebsstunden', 'Schnitthöhe', 'Zone 1', 'Zone 4'], not: ['Modus', 'Bereich'],
-    cmd: { sel: '"option":"2"', check: (s) => s['select.grasfuchs_zone'].state === '2', what: 'Zone 2 wählt die Zone (select.select_option)' } },
+    rows: ['Akku', 'Nächster Start', 'Regen', 'Messer'], not: ['Modus', 'Bereich', 'Verbindung', '-67 dBm', 'Betriebsstunden', 'Schnitthöhe', 'Zone 1'],
+    cmd: { sel: '"start_mowing"', check: (s) => s['lawn_mower.grasfuchs'].state === 'mowing', what: 'Mähen startet (lawn_mower.start_mowing)' } },
 ];
 const dash = await casoraDashboard();
 await need('ein Casora-Dashboard', dash);
