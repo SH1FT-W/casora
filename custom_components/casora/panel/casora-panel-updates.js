@@ -484,6 +484,7 @@
       if (errTx) hero.appendChild(el("div", "cu-err", errTx));
       wrap.appendChild(hero);
       wrap.appendChild(this._cuBetaBox(d));
+      wrap.appendChild(this._cuPromptBox());
 
       // Alle Versionen
       wrap.appendChild(el("div", "cu-h", t("All Versions")));
@@ -582,6 +583,59 @@
       }
       box.appendChild(row);
       return box;
+    };
+
+    // ── Update prompt on the dashboard (scripts/local/39-update-prompt.js) ───
+    // Per HA user (frontend user data casora_update_prompt, field "off"), default on; the dashboard
+    // reads it on its next load. Only this field changes: seen/skip/later stay as they are.
+    const PROMPT_KEY = "casora_update_prompt";
+    P._cuPromptLoad = async function () {
+      try {
+        const r = await this._hass.callWS({ type: "frontend/get_user_data", key: PROMPT_KEY });
+        this._cuPrompt = (r && r.value && typeof r.value === "object") ? r.value : {};
+      } catch (e) {
+        this._cuPrompt = {};
+      }
+      this._cuRepaint();
+    };
+    P._cuPromptBox = function () {
+      const box = el("div", "cu-box cu-beta cu-prompt");
+      const row = el("div", "cu-kv");
+      const tx = el("span", "cu-kvtx");
+      tx.append(el("b", "", t("Update prompt on open")),
+        el("small", "", t("Shows a new Casora version once on the dashboard, a few seconds after it opens. Only for administrators; applies to your user.")));
+      row.appendChild(tx);
+      if (this._cuPrompt === undefined) {
+        this._cuPrompt = null;
+        this._cuPromptLoad();
+      }
+      if (this._boolSwitch) {
+        const on = !(this._cuPrompt && this._cuPrompt.off === true);
+        const sw = this._boolSwitch(on, false, (v) => this._cuPromptSet(!!v), t("Update prompt on open"));
+        sw.disabled = this._cuPrompt === null || this._cuBusy === "prompt";
+        row.appendChild(sw);
+      }
+      box.appendChild(row);
+      return box;
+    };
+    P._cuPromptSet = async function (on) {
+      if (this._cuBusy) return;
+      const was = this._cuPrompt || {};
+      this._cuBusy = "prompt";
+      this._cuErr = null;
+      try {
+        // Read again first: another device may have written seen/skip meanwhile.
+        const r = await this._hass.callWS({ type: "frontend/get_user_data", key: PROMPT_KEY });
+        const cur = (r && r.value && typeof r.value === "object") ? r.value : {};
+        const next = { ...cur, off: !on };
+        await this._hass.callWS({ type: "frontend/set_user_data", key: PROMPT_KEY, value: next });
+        this._cuPrompt = next;
+      } catch (e) {
+        this._cuPrompt = was;
+        this._cuErr = t("Saving didn't work.") + " " + ((e && e.message) || e);
+      }
+      this._cuBusy = null;
+      this._cuRepaint();
     };
 
     P._cuBeta = async function (on) {

@@ -2708,7 +2708,23 @@
   "{n} Treffer": "{n} risultati",
   "Raum öffnen": "Apri stanza",
   "Szene starten": "Avvia scena",
-  "Effekte": "Effetti"
+  "Effekte": "Effetti",
+  "Casora {v} ist da": "Casora {v} è disponibile",
+  "Später": "Più tardi",
+  "Diese Version überspringen": "Salta questa versione",
+  "In HACS öffnen": "Apri in HACS",
+  "Release-Seite öffnen": "Apri la pagina della versione",
+  "Wird über HACS installiert. Danach braucht Home Assistant einen Neustart.": "Si installa tramite HACS. Dopo, Home Assistant deve riavviarsi.",
+  "Neue Versionen installierst du über HACS.": "Le nuove versioni si installano tramite HACS.",
+  "Casora {v} installieren?": "Installare Casora {v}?",
+  "HACS lädt die neue Version. Danach muss Home Assistant neu starten.": "HACS scarica la nuova versione. Dopo, Home Assistant deve riavviarsi.",
+  "Der Update-Eintrag von HACS für Casora ist gerade nicht verfügbar. Versuche es gleich noch einmal oder aktualisiere in HACS.": "La voce di aggiornamento HACS per Casora non è disponibile al momento. Riprova tra poco o aggiorna in HACS.",
+  "Jetzt neu starten?": "Riavviare ora?",
+  "Casora {v} ist installiert. Home Assistant ist beim Neustart kurz nicht erreichbar.": "Casora {v} è installato. Home Assistant non è raggiungibile per un momento durante il riavvio.",
+  "Der Neustart hat nicht geklappt.": "Il riavvio non è riuscito.",
+  "Installieren hat nicht geklappt.": "L'installazione non è riuscita.",
+  "Wird installiert …": "Installazione…",
+  "HACS hat die neue Version nicht als installiert gemeldet. Sieh in HACS nach.": "HACS non ha segnalato la nuova versione come installata. Controlla HACS."
  },
  "patterns": [
   [

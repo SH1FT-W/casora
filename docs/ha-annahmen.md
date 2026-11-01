@@ -196,6 +196,17 @@ Version. „Installiert, Neustart fehlt“ = `off`, `installed_version == latest
 `casoraNeedsRestart`. Test: `dev/unit/updates_restart_live.mjs`; der HACS-Text nicht im Kern prüfbar (Testhaus
 `dev/casora_mock/entity.py` spielt ihn nach).
 
+Update-Hinweis auf dem Dashboard (`scripts/local/39-update-prompt.js`, `updates.py` `casora/updates/prompt`):
+nimmt dieselbe Quelle wie das Studio (Update-Entität, Kanal `beta_updates`) und installiert genauso (`update.install`
+an HACS' Entität, mit `version` = `v<version>`, wenn es nicht HACS' neueste ist). Annahmen dazu: `homeassistant.restart`
+trennt die WebSocket-Verbindung, der Aufruf endet mit Fehlercode 3 (kein Fehler, wie `_cuRestart` im Studio);
+`frontend/get_user_data`/`frontend/set_user_data` speichern die Wahl je Benutzer (Schlüssel `casora_update_prompt`,
+auch der Studio-Schalter „Update-Hinweis beim Öffnen“); `hass.panelUrl` + `hass.panels[url].component_name ===
+"lovelace"` erkennen eine Dashboard-Seite (nur dort erscheint der Hinweis); `hass.user.is_admin` (nur Admins, der
+WS-Befehl ist zusätzlich `require_admin`). Tests: `dev/unit/update_prompt.mjs` (Entscheidung, Speicher je Benutzer,
+Attrappe), `dev/unit/update_prompt_test.py` (Antwort des WS-Befehls), `dev/qa/regress/r451_update_hinweis.mjs`
+(echtes HA: Benutzerdaten, Dashboard-Erkennung, Studio-Schalter); Neustart-Code 3 und HACS selbst nicht im Test.
+
 Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCES`, `live_finder.py`, Zustand/Programm
 `02-devices.js`, `live_activity.py`; Tests `dev/unit/dishwasher_sources.mjs`, `dev/unit/live_finder_test.py`,
 `dev/unit/live_activity_test.py`, Häuser `dev/unit/haeuser/hc_*.json`), Stand 23.10.2026:

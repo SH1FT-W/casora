@@ -2857,7 +2857,9 @@
     "Exporting…": "Exportation…",
     "Importing…": "Importation…",
     "Show search": "Afficher la recherche",
-    "Pull down at the top of the phone's Home to show a search field: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search.": "Tirez vers le bas en haut de l'accueil sur le téléphone pour afficher un champ de recherche : pièces, appareils et scènes. Sur un ordinateur, Cmd+K ou Ctrl+K ouvre la même recherche."
+    "Pull down at the top of the phone's Home to show a search field: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search.": "Tirez vers le bas en haut de l'accueil sur le téléphone pour afficher un champ de recherche : pièces, appareils et scènes. Sur un ordinateur, Cmd+K ou Ctrl+K ouvre la même recherche.",
+    "Update prompt on open": "Avis de mise à jour à l'ouverture",
+    "Shows a new Casora version once on the dashboard, a few seconds after it opens. Only for administrators; applies to your user.": "Affiche une nouvelle version de Casora une fois sur le tableau de bord, quelques secondes après son ouverture. Seulement pour les administrateurs ; s'applique à ton utilisateur."
   },
   "patterns": [
     [
