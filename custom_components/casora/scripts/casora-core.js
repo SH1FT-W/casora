@@ -15417,36 +15417,43 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 // Desktop: Raumvariable der Raumkarte jeder Ansicht (wie casora_idle_home). Handy: casora_mobile_bg –
 // dorthin spiegelt das Studio den Wert der Übersicht. Gelesen beim Laden, beim Seitenwechsel und vor
 // jedem Drücken/jeder Taste (ein Halten folgt immer einem pointerdown), je Konfiguration einmal ausgewertet.
+// Same reader for "Sort tiles" (Controls › Tiles, variable tile_sort): window._casoraSortMode =
+// 'calm' (default, re-sort after a quiet spell) | 'open' (only when the page opens) | 'now'; smart-row.js and
+// filter-overlay.js ask _casoraSortModeRefresh before a live re-sort.
 (function () {
   if (window._casoraHoldWatch) return;
   window._casoraHoldWatch = true;
   if (!window._casoraHoldMode) window._casoraHoldMode = 'menu';
+  if (!window._casoraSortMode) window._casoraSortMode = 'calm';
 
   var MODES = /^(menu|popup|ha)$/;
   var norm = function (v) { return typeof v === 'string' && MODES.test(v) ? v : 'menu'; };
+  var normSort = function (v) { return v === 'open' || v === 'now' ? v : 'calm'; };
   var isSet = function (v) { return v !== undefined && v !== null && v !== ''; };
   var isShell = function (c) { return [].concat((c && c.template) || []).indexOf('casora_mobile_bg') !== -1; };
 
   // Nur die Ansichten, nie die Vorlagen (button_card_templates erklären hold_mode: null).
-  var fromConfig = function (cfg) {
+  var pick = function (cfg, name, fix) {
     var views = (cfg && cfg.views) || [];
     for (var i = 0; i < views.length; i++) {
       var hero = ((views[i] || {}).cards || [])[0];
-      var v = hero && hero.variables && hero.variables.hold_mode;
-      if (isSet(v)) return norm(v);
+      var v = hero && hero.variables && hero.variables[name];
+      if (isSet(v)) return fix(v);
     }
     var hit = null;
     var walk = function (o, d) {
       if (hit !== null || !o || typeof o !== 'object' || d > 14) return;
       if (Array.isArray(o)) { for (var k = 0; k < o.length && hit === null; k++) walk(o[k], d + 1); return; }
-      if (isShell(o)) { hit = norm(o.variables && o.variables.hold_mode); return; }
+      if (isShell(o)) { hit = fix(o.variables && o.variables[name]); return; }
       for (var key in o) {
         if (key !== 'variables' && Object.prototype.hasOwnProperty.call(o, key)) walk(o[key], d + 1);
       }
     };
     walk(views, 0);
-    return hit || 'menu';
+    return hit || fix(null);
   };
+  var fromConfig = function (cfg) { return pick(cfg, 'hold_mode', norm); };
+  var sortOf = function (cfg) { return pick(cfg, 'tile_sort', normSort); };
 
   var deep = function (root, tag, depth) {
     if (!root || depth > 10 || !root.querySelector) return null;
@@ -15477,12 +15484,15 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var cfg = root && root.lovelace && root.lovelace.config;
     if (!cfg) return window._casoraHoldMode;
     var m = memo && memo.get(cfg);
-    if (!m) { m = fromConfig(cfg); if (memo) memo.set(cfg, m); }
-    window._casoraHoldMode = m;
-    return m;
+    if (!m) { m = { hold: fromConfig(cfg), sort: sortOf(cfg) }; if (memo) memo.set(cfg, m); }
+    window._casoraHoldMode = m.hold;
+    window._casoraSortMode = m.sort;
+    return m.hold;
   };
   window._casoraHoldModeOf = fromConfig;
   window._casoraHoldModeRefresh = refresh;
+  window._casoraSortModeOf = sortOf;
+  window._casoraSortModeRefresh = function () { refresh(); return window._casoraSortMode; };
 
   ['pointerdown', 'keydown'].forEach(function (t) {
     window.addEventListener(t, function () { try { refresh(); } catch (e) { /* bleibt beim letzten Wert */ } }, { capture: true, passive: true });

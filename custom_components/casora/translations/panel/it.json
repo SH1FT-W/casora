@@ -2793,7 +2793,12 @@
     "Gates": "Cancelli",
     "Windows": "Finestre",
     "Other sensors": "Altri sensori",
-    "Drag to change the order of the entries in the badge and its popup.": "Trascina per cambiare l'ordine delle voci nel badge e nel suo popup."
+    "Drag to change the order of the entries in the badge and its popup.": "Trascina per cambiare l'ordine delle voci nel badge e nel suo popup.",
+    "Sort tiles": "Ordina schede",
+    "After a short pause": "Dopo una breve pausa",
+    "Only when opening": "Solo all’apertura",
+    "Right away": "Subito",
+    "When active tiles move to the front while a page is open: after half a minute without use, only when it opens, or right away.": "Quando le schede attive passano davanti con una pagina aperta: dopo mezzo minuto senza utilizzo, solo all’apertura o subito."
   },
   "patterns": [
     [

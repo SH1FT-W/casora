@@ -2793,7 +2793,12 @@
     "Gates": "Portails",
     "Windows": "Fenêtres",
     "Other sensors": "Autres capteurs",
-    "Drag to change the order of the entries in the badge and its popup.": "Glisse pour changer l'ordre des entrées dans le badge et son popup."
+    "Drag to change the order of the entries in the badge and its popup.": "Glisse pour changer l'ordre des entrées dans le badge et son popup.",
+    "Sort tiles": "Trier les tuiles",
+    "After a short pause": "Après une courte pause",
+    "Only when opening": "Seulement à l’ouverture",
+    "Right away": "Immédiatement",
+    "When active tiles move to the front while a page is open: after half a minute without use, only when it opens, or right away.": "Quand les tuiles actives passent devant lorsqu’une page est ouverte : après une demi-minute sans utilisation, seulement à l’ouverture ou immédiatement."
   },
   "patterns": [
     [

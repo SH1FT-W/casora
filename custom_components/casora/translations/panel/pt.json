@@ -2793,7 +2793,12 @@
     "Gates": "Portões",
     "Windows": "Janelas",
     "Other sensors": "Outros sensores",
-    "Drag to change the order of the entries in the badge and its popup.": "Arrasta para mudar a ordem das entradas no badge e no seu popup."
+    "Drag to change the order of the entries in the badge and its popup.": "Arrasta para mudar a ordem das entradas no badge e no seu popup.",
+    "Sort tiles": "Ordenar cartões",
+    "After a short pause": "Após uma breve pausa",
+    "Only when opening": "Só ao abrir",
+    "Right away": "De imediato",
+    "When active tiles move to the front while a page is open: after half a minute without use, only when it opens, or right away.": "Quando os cartões ativos passam para a frente com uma página aberta: após meio minuto sem utilização, só ao abrir ou de imediato."
   },
   "patterns": [
     [

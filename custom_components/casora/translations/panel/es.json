@@ -2793,7 +2793,12 @@
     "Gates": "Portones",
     "Windows": "Ventanas",
     "Other sensors": "Otros sensores",
-    "Drag to change the order of the entries in the badge and its popup.": "Arrastra para cambiar el orden de las entradas en el badge y en su popup."
+    "Drag to change the order of the entries in the badge and its popup.": "Arrastra para cambiar el orden de las entradas en el badge y en su popup.",
+    "Sort tiles": "Ordenar tarjetas",
+    "After a short pause": "Tras una breve pausa",
+    "Only when opening": "Solo al abrir",
+    "Right away": "Al instante",
+    "When active tiles move to the front while a page is open: after half a minute without use, only when it opens, or right away.": "Cuándo pasan delante las tarjetas activas con una página abierta: tras medio minuto sin uso, solo al abrirla o al instante."
   },
   "patterns": [
     [

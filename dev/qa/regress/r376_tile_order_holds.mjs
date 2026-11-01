@@ -3,7 +3,7 @@
 // @deckt: custom_components/casora/scripts/smart-row.js
 // Prüfung 2 fam-04/E19 (31.10.2026): Favorites on the phone (lock unlocked, lights, blinds) – lock it, the lock tile
 // moved to the back and the next tap hit the wrong tile; on the desktop the heating jumped to the front after
-// switching it on. Expected: after the load phase a tile row keeps its order for the session, a state change only
+// switching it on. Expected: after the load phase a tile row keeps its order right after use, a state change only
 // changes colours (phone WebKit 393 and desktop 1440). Nothing is saved: states are faked in the browser.
 import { open, usePage, casoraDashboard, dashboard, fakeStates, check, need, finish } from './lib.mjs';
 
@@ -33,7 +33,9 @@ for (const phone of [true, false]) {
     return { before, n: r._wrappers.length };
   });
   await need(tag + ': sortierende Kachelreihe', info, info);
-  // A state update reaches the row as usual (HA's own path), the row re-checks its active tiles.
+  // Someone just used a tile (input), then its state update reaches the row as usual (HA's own path).
+  // Since "Sort tiles" (01.11.2026, default calm) the order holds until 30 s after the last input (r379).
+  await page.keyboard.press('Shift');
   await fakeStates(page, { 'sensor.casora_qa_r376': { state: String(Date.now()) } });
   await page.waitForTimeout(7000);  // SORT_DELAY + quiet time would have re-sorted by now
   const after = await page.evaluate(() => window.__qaOrder());

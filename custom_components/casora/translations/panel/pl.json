@@ -2793,7 +2793,12 @@
     "Gates": "Bramy",
     "Windows": "Okna",
     "Other sensors": "Inne czujniki",
-    "Drag to change the order of the entries in the badge and its popup.": "Przeciągnij, aby zmienić kolejność wpisów w badge'u i jego popupie."
+    "Drag to change the order of the entries in the badge and its popup.": "Przeciągnij, aby zmienić kolejność wpisów w badge'u i jego popupie.",
+    "Sort tiles": "Sortowanie kafelków",
+    "After a short pause": "Po krótkiej przerwie",
+    "Only when opening": "Tylko przy otwieraniu",
+    "Right away": "Od razu",
+    "When active tiles move to the front while a page is open: after half a minute without use, only when it opens, or right away.": "Kiedy aktywne kafelki przesuwają się na początek przy otwartej stronie: po pół minuty bez obsługi, tylko przy otwieraniu albo od razu."
   },
   "patterns": [
     [
