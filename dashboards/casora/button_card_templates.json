@@ -19290,7 +19290,7 @@
   "icon_tap_action": {
    "action": "none"
   },
-  "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? (window.casoraEsc || String)(t);\n  /* \"4 offen\" / \"Alles eingekauft\" (window._casoraShopping.tileState in 36-shopping.js). */\n  const S = window._casoraShopping;\n  return S ? fit(S.tileState(entity)) : fit(entity?.state ?? '');\n]]]\n",
+  "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? (window.casoraEsc || String)(t);\n  /* \"4 offen\" / \"Alles eingekauft\" (window._casoraShopping.tileState in 36-shopping.js). */\n  const S = window._casoraShopping;\n  /* Load the list with the tile, so its popup knows at once whether there are ticked items (one or two columns). */\n  if (S && S.items && typeof hass !== 'undefined' && entity?.entity_id) S.items(hass, entity.entity_id);\n  return S ? fit(S.tileState(entity)) : fit(entity?.state ?? '');\n]]]\n",
   "styles": {
    "card": [
     {

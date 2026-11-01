@@ -61,15 +61,27 @@
     return { icon: isDone ? 'mdi:check-circle-outline' : S.food(it.summary), iconTone: isDone ? null : 'accent', label: it.summary,
       sub: it.description || null, svc: S.toggleSvc(id, it, isDone), noChev: true };
   };
+  // Open items by the to-do entity's state (HA counts the open ones) – known before the list has loaded.
+  S.openCount = function (st) {
+    var n = st ? parseInt(st.state, 10) : NaN;
+    return isFinite(n) ? n : null;
+  };
   S.innerHtml = function (part, id, hass) {
     var UI = window._casoraUI;
     if (!UI) return '';
-    var d = S.items(hass || hassNow(), id);
+    var h = hass || hassNow();
+    var d = S.items(h, id);
+    if (part === 'line') {
+      // Status line (§3, prod test 01.11.2026): words, never the entity's raw count („0“).
+      if (!d) return UI.line(S.tileState(h && h.states ? h.states[id] : null) || '…', []);
+      return UI.line(d.open.length ? d.open.length + ' offen' : 'Alles eingekauft', d.done.length ? [d.done.length + ' erledigt'] : []);
+    }
     if (part === 'stage') {
       var addHtml = '<div class="hui-st-act pri" role="button" tabindex="0" aria-label="Hinzufügen" data-shop-add="' + UI.esc(id) + '">'
         + '<ha-icon icon="mdi:plus" style="--mdc-icon-size:20px;width:20px;height:20px;display:flex;"></ha-icon><span>Hinzufügen</span></div>';
       var bodyHtml = !d ? UI.empty({ icon: 'mdi:cart-outline', text: 'Liste wird geladen …' })
-        : !d.open.length ? UI.empty({ icon: 'mdi:cart-check', text: 'Alles eingekauft', sub: d.done.length ? null : 'Neue Einträge erscheinen hier' })
+        // „Alles eingekauft“ is the status line's word – the plate does not say it again (§3).
+        : !d.open.length ? UI.empty({ icon: 'mdi:cart-check', text: 'Neue Einträge erscheinen hier' })
         : UI.group(d.open.map(function (it) { return row(id, it, false); }), d.open.length === 1 ? '1 offen' : d.open.length + ' offen');
       return UI.stage('content', { html: '<style>.hui-stage{--casora-pv-stack-fill:transparent;}</style>'
         + '<div style="display:flex;flex-direction:column;gap:16px;">' + addHtml + bodyHtml + '</div>' });
@@ -92,8 +104,14 @@
     if (!id) return { type: 'vertical-stack', cards: [] };
     if (!K || !UI || !UI.v3 || !UI.v3() || !UI.stage) return { type: 'todo-list', entity: id };
     var call = function (part) { return 'return window._casoraShopping ? window._casoraShopping.box(' + JSON.stringify(part) + ', ' + JSON.stringify(id) + ', hass) : "";'; };
-    var f = { stage: { card: K.secCard([id], call('stage'), states || {}) }, done: { card: K.secCard([id], call('done'), states || {}) } };
-    return K.layout({ fields: f, top: [], stage: 'stage', left: ['done'], right: [] });
+    var f = { line: { card: K.secCard([id], call('line'), states || {}) }, stage: { card: K.secCard([id], call('stage'), states || {}) },
+      done: { card: K.secCard([id], call('done'), states || {}) } };
+    // §2 (prod test 01.11.2026): with open and ticked items, open left and ticked right, both columns from the top;
+    // otherwise one column (552): „Hinzufügen“ and the items, below it „Erledigt“ – no nearly empty column beside them.
+    // The list is usually loaded already (the tile loads it); until then the entity's count decides.
+    var d0 = data[id], two = d0 ? d0.open.length > 0 && d0.done.length > 0 : S.openCount((states || {})[id]) !== 0;
+    if (!two) return K.layout({ fields: f, top: ['line', 'stage', 'done'], stage: 'stage', left: [], right: [] });
+    return K.layout({ fields: f, top: ['line'], stage: 'stage', left: [], right: ['done'] });
   };
   var deep = function (root, out) {
     if (!root || !root.querySelectorAll) return out;
@@ -106,8 +124,10 @@
     if (!pop) return;
     var tr = window.casoraTr || function (x) { return x; };
     deep(pop.shadowRoot, deep(pop, [])).forEach(function (n) {
-      if (n.getAttribute('data-shop-box') === id) var partHtml = S.innerHtml(n.getAttribute('data-shop-part'), id);
-        n.innerHTML = tr(partHtml);
+      // Only the boxes of this list (another list's box kept its content; it was overwritten with „undefined“).
+      if (n.getAttribute('data-shop-box') !== id) return;
+      var partHtml = S.innerHtml(n.getAttribute('data-shop-part'), id);
+      n.innerHTML = tr(partHtml);
     });
   });
   // „Hinzufügen“: own capture like the other popup buttons (onclick in the popup's HTML is unreliable on phones).

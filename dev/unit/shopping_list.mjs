@@ -52,4 +52,25 @@ assert.match(st, /data-shop-add=/); assert.match(st, /2 offen\|Milch\/1 l,Brot/)
 assert.equal(S.innerHtml('done', ID, hass), 'Erledigt · 1|Kaffee,Erledigte löschen?');
 assert.ok(Array.isArray(cp.popup_styles), 'standard popup styles');
 assert.match(fs.readFileSync(ROOT + 'custom_components/casora/scripts/casora-local.js', 'utf8'), /'36-shopping'/, 'module is loaded');
+// Status line (prod test 01.11.2026): words, never the raw count „0“; „Alles eingekauft“ only there, not on the plate.
+UIs.line = (m, r) => m + (r.length ? ' · ' + r.join(' · ') : '');
+assert.equal(S.innerHtml('line', ID, hass), '2 offen · 1 erledigt');
+push({ items: [{ uid: 'c', summary: 'Kaffee', status: 'completed' }, { uid: 'd', summary: 'Tee', status: 'completed' }, { uid: 'e', summary: 'Brot', status: 'completed' }] });
+assert.equal(S.innerHtml('line', ID, hass), 'Alles eingekauft · 3 erledigt');
+assert.ok(!/Alles eingekauft/.test(S.innerHtml('stage', ID, hass)), 'the plate does not repeat the status word');
+// Layout: open and ticked items → two columns from the top; otherwise one column (552): stage, then „Erledigt“.
+UIs.v3 = () => true;
+win._casoraSoftKit = { secCard: (w, code) => ({ code }), layout: (o) => o };
+// (the list above is loaded: 0 open, 3 done → one column whatever the count says)
+assert.deepEqual(JSON.parse(JSON.stringify(S.popup({ entity_id: ID }, { [ID]: { state: '2' } }, hass))).top, ['line', 'stage', 'done']);
+push({ items: [{ uid: 'a', summary: 'Milch', status: 'needs_action' }] });
+assert.deepEqual(JSON.parse(JSON.stringify(S.popup({ entity_id: ID }, {}, hass))).top, ['line', 'stage', 'done'], 'open but nothing ticked: one column');
+push({ items: [{ uid: 'a', summary: 'Milch', status: 'needs_action' }, { uid: 'c', summary: 'Kaffee', status: 'completed' }] });
+const layB = JSON.parse(JSON.stringify(S.popup({ entity_id: ID }, {}, hass)));
+assert.deepEqual(layB.top, ['line']); assert.deepEqual(layB.right, ['done'], 'open and ticked: two columns');
+const ID2 = 'todo.zweite';
+const lay0 = JSON.parse(JSON.stringify(S.popup({ entity_id: ID2 }, { [ID2]: { state: '0' } }, { states: {}, connection: null })));
+assert.deepEqual(lay0.top, ['line', 'stage', 'done']); assert.deepEqual(lay0.right, []);
+const lay2 = JSON.parse(JSON.stringify(S.popup({ entity_id: ID2 }, { [ID2]: { state: '2' } }, { states: {}, connection: null })));
+assert.deepEqual(lay2.top, ['line']); assert.equal(lay2.stage, 'stage'); assert.deepEqual(lay2.left, []); assert.deepEqual(lay2.right, ['done']);
 console.log('ok shopping_list');
