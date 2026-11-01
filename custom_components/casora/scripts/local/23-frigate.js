@@ -2509,7 +2509,9 @@
       + '</div>';
   };
   var CHIP_CSS = '<style>.frig-chips{display:flex;flex-wrap:nowrap;gap:var(--casora-space-2, 8px);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;'
-    + 'margin:0;padding:0 2px;font-family:var(--primary-font-family, system-ui);min-width:0;'
+    // The scroller clips in both directions: room for the chosen chip's soft shadow (popup-raender: cut 9 px below,
+    // 3 px left), given back by the margin so the row stays where it was.
+    + 'margin:-4px -4px -12px;padding:4px 6px 12px;font-family:var(--primary-font-family, system-ui);min-width:0;'
     // Weicher Auslauf an beiden Rändern, solange dort etwas verborgen ist (F.fixChips setzt .ov rechts, .ovl links).
     + '--fl:0px;--fr:0px;-webkit-mask-image:linear-gradient(to right, transparent 0, black var(--fl), black calc(100% - var(--fr)), transparent 100%);'
     + 'mask-image:linear-gradient(to right, transparent 0, black var(--fl), black calc(100% - var(--fr)), transparent 100%);}'
