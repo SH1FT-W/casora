@@ -8,6 +8,8 @@
 // the phone's badge row, only in memory and shown as unsaved; HA keeps the old config until the user saves; after
 // one save and a reload nothing is offered again, and every lamp of the rooms' light badges is in a room of the
 // house light popup. Also the old full list of ten or fewer units (fewer rooms, another order) is emptied; a phone
+// row that lists other lights than Home's old slots stays as it is. Case D: the old ten slots beside a house group that
+// holds more than the rooms (the test house's own): the badge follows the rooms instead (no group, no slots). The phone
 // row that lists other lights than Home's old slots stays as it is (phoneSlotsMatch; on load syncHomeShared already
 // writes Home's set values to the phone row, so only lights the phone lists beyond them can differ).
 // Versions: casora/versions has no delete, the fixed qa-r506-* names keep it to KEEP states each (throwaway HA).
@@ -17,7 +19,7 @@
 import { open, casoraDashboard, dashboard, studio, check, need, finish, usePage, atFinish } from './lib.mjs';
 import { ws, tokens } from '../ws.mjs';
 
-const URL = 'qa-r506-licht', URL_B = 'qa-r506-licht-b';
+const URL = 'qa-r506-licht', URL_B = 'qa-r506-licht-b', URL_D = 'qa-r506-licht-d';
 const SLOTS = Array.from({ length: 10 }, (_, i) => 'light_entity_' + (i + 1));
 const multi = (d) => (d.config.views || []).length > 2;
 const src = await casoraDashboard((d) => d.url === 'test-neu' && multi(d)) || await casoraDashboard(multi);
@@ -121,6 +123,17 @@ const GB = await lightGroup('QA r506 Haus B', unitsB);
 await need('case B: its light group helper', GB, null);
 HB.light_group_entity = GB; delete HB.light_rooms_auto;
 await save(URL_B, cfgB, 'QA r506 Licht B');
+// Case D: a light group in the test house holding every room lamp and more (smallest such group).
+const lampsOf = (id, seen = new Set()) => { if (seen.has(id)) return []; seen.add(id); const m = members(id); return m.length ? m.flatMap((x) => lampsOf(x, seen)) : [id]; };
+const roomLampSet = new Set(units.flatMap((id) => lampsOf(id)));
+const wide = Object.keys(states).filter((id) => id.startsWith('light.') && members(id).length && !id.startsWith('light.qa_r506'))
+  .map((id) => ({ id, lamps: new Set(lampsOf(id)) }))
+  .filter((g) => [...roomLampSet].every((x) => g.lamps.has(x)) && g.lamps.size > roomLampSet.size && OLD.every((x) => deep(g.id).includes(x)))
+  .sort((a, b) => a.lamps.size - b.lamps.size)[0];
+const cfgD = JSON.parse(JSON.stringify(cfg));
+const HD = roomCard(cfgD.views[0]).variables;
+await need('case D: a light group in the test house holding every room lamp and more', wide, { roomLamps: roomLampSet.size });
+HD.light_group_entity = wide.id; await save(URL_D, cfgD, 'QA r506 Licht D');
 c.close();
 const live = async (url) => { const c3 = await ws(); try { return await c3.cmd({ type: 'lovelace/config', url_path: url }); } finally { c3.close(); } };
 const liveHome = async (url = URL) => roomCard((await live(url)).views[0]).variables;
@@ -159,7 +172,7 @@ if (phone) {
   // The real check against the loaded pair: the phone row (now empty) matches empty old slots, not other ones.
   const pm = await pg.evaluate(() => { const I = window.__casoraPanelInternals, p = window.__panel();
     return { same: I.phoneSlotsMatch(p._pair, {}), other: I.phoneSlotsMatch(p._pair, { light_entity_1: 'light.qa_r506_other' }) }; });
-  await check('phone row is only emptied when it holds the old slots (phoneSlotsMatch)', pm.same === true && pm.other === false, pm);
+  await check('phone row is only emptied when it holds the old slots (phoneSlotsMatch)', pm.same === 'same' && pm.other === 'differs', pm);
 }
 
 // ── Dashboard: the house light popup lists every room lamp (as r505) ──
@@ -210,7 +223,13 @@ await pg.evaluate(() => window.casoraPopup && window.casoraPopup.close && window
 await studio(pg, URL_B);
 const sb = await studioState();
 await check('case B (' + unitsB.length + ' units, all listed): emptied, group stays', sb.group === HB.light_group_entity && sb.left === 0 && sb.mark === true && sb.dirty, sb);
+// ── Case D: the ten slots beside a group that holds more than the rooms → follows the rooms ──
+{
+  await studio(pg, URL_D);
+  const sd = await studioState();
+  await check('case D: group and slots gone, the badge follows the rooms, marked', sd.group === undefined && sd.left === 0 && sd.auto === true && sd.mark === true && sd.dirty, sd);
+}
 // The local drafts of the unsaved copies go with them.
 await pg.evaluate((urls) => { const p = window.__panel();
-  urls.forEach((u) => { try { localStorage.removeItem(p._draftKey(u)); } catch (e) { /* none */ } }); }, [URL, URL_B]);
+  urls.forEach((u) => { try { localStorage.removeItem(p._draftKey(u)); } catch (e) { /* none */ } }); }, [URL, URL_B, URL_D]);
 await finish();

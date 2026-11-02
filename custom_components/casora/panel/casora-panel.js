@@ -3046,16 +3046,22 @@ function homeLightsEdit(V, key, value) {
 }
 // Setups before 26.11.9 gave Home's light badge the house's HA light group AND its lights in the slots
 // (light_entity_1…10, the first ten when there were more). Picked lights win over the group in the popup (#80): rooms
-// past the tenth were missing from the house light popup, and lights added later never joined. Today's setup writes
-// the group alone. On load the Studio empties the slots (the group stays, light_slots_checked marks it done) when
-// they are exactly what that setup wrote. Units = the rooms' light slots (rooms in dashboard order, their slots in
-// order, each once, casoraBasis.topUnits as the setup); the slots must be filled from 1 without a gap and either
+// past the tenth were missing from the house light popup, and lights added later never joined. On load the Studio
+// moves such a badge to what today's setup writes (casoraBasis badgesOf), when the slots are exactly what the old
+// setup wrote. Units = the rooms' light slots (rooms in dashboard order, their slots in order, each once,
+// casoraBasis.topUnits as the setup); the slots must be filled from 1 without a gap and either
 //   all units, order aside (ten or fewer units), or
 //   the first ten units in exactly that order (more than ten units),
-// every slot inside the group's tree as HA reports it (unknown group or a lamp outside it: nothing). Anything else
-// (#80: other lamps, a gap, fewer, another order of a longer list), a badge switched off or marked: untouched.
-// Restoring a version from before brings the old slots back without the marker: the fix offers itself again; a light
-// the user picks on Home sets the marker (homeLightsEdit) and keeps the list for good.
+// every slot inside the group's tree as HA reports it (unknown group or a lamp outside it: nothing). Then, with the
+// group's lamps (members resolved down to lamps) and the rooms' lamps:
+//   group lamps all in the rooms → "group": the slots go, the group stays alone;
+//   more than ten units and the group holds every room lamp and more (garden, lamps in no room) → "rooms": group
+//   and slots go, the badge follows the rooms (light_rooms_auto) – alone that group would switch the others too;
+//   anything else (ten or fewer with such a group: the listed lights win and show every room) → nothing.
+// Anything else (#80: other lamps, a gap, fewer, another order of a longer list), a badge switched off or marked:
+// untouched. Restoring a version from before brings the old slots back without the marker: the fix offers itself
+// again; a light the user picks on Home sets the marker (homeLightsEdit) and keeps the list for good.
+// Returns { home, mode: "group" | "rooms" } or null.
 function homeLightsOldPick(hass, rooms) {
   const B = typeof window !== "undefined" && window.casoraBasis;
   const list = rooms || [];
@@ -3083,34 +3089,37 @@ function homeLightsOldPick(hass, rooms) {
   const tree = new Set();
   (function walk(id) { members(id).forEach((x) => { if (!tree.has(x)) { tree.add(x); walk(x); } }); })(V.light_group_entity);
   if (!tree.size || !listed.every((id) => tree.has(id))) return null;
-  // The group alone must not switch more than the rooms hold: its lamps (members resolved down to lamps) all
-  // belong to the rooms' units. A group with more (garden, lamps in no room) keeps the list.
   const lamps = (id, seen) => { if (seen.has(id)) return []; seen.add(id); const m = members(id); return m.length ? m.flatMap((x) => lamps(x, seen)) : [id]; };
   const roomLamps = new Set(units.flatMap((id) => lamps(id, new Set())));
-  if (!lamps(V.light_group_entity, new Set()).every((id) => roomLamps.has(id))) return null;
-  return home;
+  const groupLamps = new Set(lamps(V.light_group_entity, new Set()));
+  if ([...groupLamps].every((id) => roomLamps.has(id))) return { home, mode: "group" };
+  if (units.length > 10 && [...roomLamps].every((id) => groupLamps.has(id))) return { home, mode: "rooms" };
+  return null;
 }
-// Empties the slots of homeLightsOldPick and marks the badge. Returns { home, old } (old: the slots before,
-// light_entity_n → id) or null.
+// Applies homeLightsOldPick and marks the badge (light_slots_checked). Returns { home, mode, old } (old: the
+// non-empty values before, light_entity_n / light_group_entity → id) or null.
 function fixHomeLightSlots(hass, rooms) {
-  const home = homeLightsOldPick(hass, rooms);
-  if (!home) return null;
-  const old = {};
-  LIGHT_SLOTS.forEach((k) => { if (home.variables[k] !== undefined) old[k] = home.variables[k]; delete home.variables[k]; });
-  home.variables.light_slots_checked = true;
-  return { home, old };
+  const pick = homeLightsOldPick(hass, rooms);
+  if (!pick) return null;
+  const V = pick.home.variables, old = {};
+  const keys = pick.mode === "rooms" ? LIGHT_SLOTS.concat("light_group_entity") : LIGHT_SLOTS;
+  keys.forEach((k) => { if (!emptyVal(V[k])) old[k] = V[k]; delete V[k]; });
+  if (pick.mode === "rooms") V.light_rooms_auto = true;
+  V.light_slots_checked = true;
+  return { home: pick.home, mode: pick.mode, old };
 }
-// The phone's badge row carries Home's lights too: true when its slots are exactly the desktop's old ones (then the
-// fix goes there too). Different slots on the phone stay; the pair view shows the difference.
-function phoneSlotsMatch(pair, old) {
-  if (!pair || pair.safe === false || !pair.mobile) return false;
+// The phone's badge row carries Home's lights too. "same": its values for the keys are exactly the desktop's old
+// ones (then the fix goes there too); "differs": they are not (the phone stays, the pair view shows the difference);
+// null: no phone half or no badge row for them.
+function phoneSlotsMatch(pair, old, keys) {
+  if (!pair || pair.safe === false || !pair.mobile) return null;
   let seen = 0;
-  const ok = LIGHT_SLOTS.every((k) => mobileHoldersOf(pair.mobile, k, pair.templates).every((h) => {
+  const same = (keys || LIGHT_SLOTS).every((k) => mobileHoldersOf(pair.mobile, k, pair.templates).every((h) => {
     seen++;
     const v = (h.card.variables || {})[h.key];
     return (emptyVal(v) ? undefined : v) === old[k];
   }));
-  return ok && seen > 0;
+  return !seen ? null : same ? "same" : "differs";
 }
 
 // #44: a Home sensor that the old rule picked (exactly casoraBasis.oldHouseTotal, a device's
@@ -16317,10 +16326,16 @@ class CasoraPanel extends HTMLElement {
       const litHome = this._state.surface !== "mobile" && !this._saveBlocked && !locked ? fixHomeLightSlots(this._hass, this._state.compact.rooms) : null;
       if (litHome) {
         // The phone's badge row carries Home's lights too (as every edit of them, see setVar): only where it holds
-        // the same old slots.
-        if (phoneSlotsMatch(this._pair, litHome.old)) LIGHT_SLOTS.forEach((k) => this._mirrorToPair(k, undefined, [litHome.home]));
-        else if (this._pair) this._log("lights: the phone's badge row lists other lights than Home, left as it is", "warn");
-        this._log("lights: Home's Lights badge listed the house group's lights beside it, now the group alone", "ok");
+        // the same old values.
+        const rooms = litHome.mode === "rooms";
+        const keys = rooms ? LIGHT_SLOTS.concat("light_group_entity") : LIGHT_SLOTS;
+        const phone = phoneSlotsMatch(this._pair, litHome.old, keys);
+        if (phone === "same") {
+          keys.forEach((k) => this._mirrorToPair(k, undefined, [litHome.home]));
+          if (rooms) this._mirrorToPair("light_rooms_auto", true, [litHome.home]);
+        } else if (phone === "differs") this._log("lights: the phone's badge row lists other lights than Home, left as it is", "warn");
+        this._log(rooms ? "lights: Home's Lights badge listed ten of the house group's lights, now it follows the rooms (the group holds more than they do)"
+          : "lights: Home's Lights badge listed the house group's lights beside it, now the group alone", "ok");
         this._markDirty();
       }
       if (this._state.surface !== "mobile" && !this._saveBlocked && prefsHomePower(this._hass, this._state.compact.rooms)) {

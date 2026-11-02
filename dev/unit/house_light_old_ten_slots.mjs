@@ -33,9 +33,11 @@ assert.notEqual(OLD, B);
 const panelSrc = read('custom_components/casora/panel/casora-panel.js');
 const mig = panelSrc.match(/const LIGHT_SLOTS = [\s\S]*?\nfunction fixHomeLightSlots[\s\S]*?\n}\n/);
 assert.ok(mig, 'fixHomeLightSlots in casora-panel.js');
-const { fixHomeLightSlots, fillHomeLights, homeLightsEdit } = new Function('window', 'isHomeRoom', mig[0] + '\nreturn { fixHomeLightSlots, fillHomeLights, homeLightsEdit };')(window, isHomeRoom);
-const load = panelSrc.slice(panelSrc.indexOf('const litHome = '), panelSrc.indexOf('const litHome = ') + 1000);
-assert.ok(/this\._clean = this\._print\(\);[\s\S]*const litHome = /.test(panelSrc) && /if \(phoneSlotsMatch\(this\._pair, litHome\.old\)\) LIGHT_SLOTS\.forEach\(\(k\) => this\._mirrorToPair\(k, undefined, \[litHome\.home\]\)\)/.test(load) && /this\._markDirty\(\);/.test(load)
+const emptyVal = (v) => v === undefined || v === null || v === '' || (Array.isArray(v) && !v.length);
+const { fixHomeLightSlots, fillHomeLights, homeLightsEdit } = new Function('window', 'isHomeRoom', 'emptyVal', mig[0] + '\nreturn { fixHomeLightSlots, fillHomeLights, homeLightsEdit };')(window, isHomeRoom, emptyVal);
+const load = panelSrc.slice(panelSrc.indexOf('const litHome = '), panelSrc.indexOf('const litHome = ') + 1600);
+assert.ok(/this\._clean = this\._print\(\);[\s\S]*const litHome = /.test(panelSrc) && /const phone = phoneSlotsMatch\(this\._pair, litHome\.old, keys\);\s*if \(phone === "same"\) \{\s*keys\.forEach\(\(k\) => this\._mirrorToPair\(k, undefined, \[litHome\.home\]\)\);\s*if \(rooms\) this\._mirrorToPair\("light_rooms_auto", true, \[litHome\.home\]\);/.test(load)
+  && /else if \(phone === "differs"\) this\._log/.test(load) && /this\._markDirty\(\);/.test(load)
   && !/_save\(/.test(load), 'load: after _clean, phone row mirrored, shown as unsaved (_markDirty), nothing saved');
 assert.ok(/const litHome = [^\n]*!locked/.test(panelSrc) && /const locked = !!lock && new RegExp\(lock\)\.test\(url_path/.test(panelSrc), 'load: not on a dashboard locked against saving');
 
@@ -77,6 +79,7 @@ assert.deepEqual(listed(setup(h, B)[0].variables), [], 'today\'s setup: the grou
   const r = copy(old);
   const res = fixHomeLightSlots(h, r);
   assert.equal(res.home, r[0], 'old pattern: fixed, returns Home');
+  assert.equal(res.mode, 'group', 'group mode');
   assert.deepEqual(res.old, Object.fromEntries(listed(H0).map((id, i) => ['light_entity_' + (i + 1), id])), 'and the old slots');
   assert.deepEqual(listed(r[0].variables), [], 'slots emptied');
   assert.equal(r[0].variables.light_group_entity, 'light.demo_alle', 'group stays');
@@ -188,14 +191,30 @@ function withGarden(perRoom) {
   return hh;
 }
 {
-  // Migration: the old pattern with such a group stays (emptying would switch the garden with the house).
+  // Migration, more than ten units: the group alone would switch the garden with the house – the badge moves to
+  // what today's setup writes (no group, no slots, follows the rooms), marked.
   const hg = withGarden([3, 3, 0, 4]);
-  const r = setup(hg, OLD); const before = copy(r);
+  const r = setup(hg, OLD);
   assert.equal(listed(r[0].variables).length, 10);
-  assert.equal(fixed(hg, r), false, 'group with more than the rooms: untouched');
-  assert.deepEqual(r, before);
+  const res = fixHomeLightSlots(hg, r);
+  assert.equal(res && res.mode, 'rooms', 'group with more than the rooms, eleven units: follows the rooms');
+  assert.deepEqual(res.old, Object.fromEntries(listed(setup(hg, OLD)[0].variables).map((id, i) => ['light_entity_' + (i + 1), id]).concat([['light_group_entity', 'light.demo_alle']])), 'old values (non-empty only)');
+  const RV = r[0].variables;
+  assert.equal(RV.light_group_entity, undefined, 'group gone'); assert.deepEqual(listed(RV), [], 'slots gone');
+  assert.equal(RV.light_rooms_auto, true, 'follows the rooms'); assert.equal(RV.light_slots_checked, true, 'marked');
+  const now = copy(RV); delete now.light_slots_checked;
+  assert.deepEqual(now, copy(setup(hg, B)[0].variables), 'Home now as today\'s setup makes it (marker aside)');
+  assert.equal(fixed(hg, r), false, 'once');
+  assert.equal(fillHomeLights(hg, r), false, 'the no-group migration leaves it alone (already follows the rooms)');
+  // Ten or fewer units with such a group: the listed lights win and show every room – untouched.
   const h8g = withGarden([3, 2, 0, 2]);
-  assert.equal(fixed(h8g, setup(h8g, OLD)), false, 'full list, group with more than the rooms: untouched');
+  const r8 = setup(h8g, OLD); const before8 = copy(r8);
+  assert.equal(fixed(h8g, r8), false, 'full list, group with more than the rooms: untouched');
+  assert.deepEqual(r8, before8);
+  // A group that holds neither all room lamps nor only them (one room lamp missing, the garden in): untouched.
+  const hx = withGarden([3, 3, 0, 4]);
+  hx.states['light.demo_alle'].attributes.entity_id = hx.states['light.demo_alle'].attributes.entity_id.filter((id) => id !== 'light.demo_r3_4');
+  assert.equal(fixed(hx, setup(withGarden([3, 3, 0, 4]), OLD)), false, 'group neither inside nor around the rooms: untouched');
   // Setup: never that group alone. Ten or fewer: listed beside it (they win); more: the badge follows the rooms.
   const few = setup(h8g, B)[0].variables;
   assert.equal(few.light_group_entity, 'light.demo_alle', 'superset group, eight units: the group');
