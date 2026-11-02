@@ -420,9 +420,10 @@
         : rest7 && !busy7 ? { text: 'Jetzt neu starten', icon: 'mdi:restart', svc: { domain: 'homeassistant', service: 'restart', data: {} },
           confirm: 'Home Assistant jetzt neu starten?' } : null;
       // „Suchen“ (window._casoraUpdCheck, 03-popups.js) as a moon: the bottom one when nothing else is to do, else beside
-      // the main action; its last result stands under the wheel.
+      // the main action; its last result stands under the wheel. While it searches the moon's arrow turns (busy, drawn
+      // with the moon so the next render keeps it) – no „Suche …“ text (maintainer review 02.11.2026).
       var UC = window._casoraUpdCheck;
-      var srch7 = UC ? { icon: 'mdi:refresh', text: 'Suchen', primary: false, attrs: { 'data-huc': '' } } : null;
+      var srch7 = UC ? { icon: 'mdi:refresh', text: 'Suchen', primary: false, busy: !!UC.busy, attrs: { 'data-huc': '' } } : null;
       return UI.stage('status', {
         moons: srch7 && act7 ? [srch7] : null,
         extra: UC && UC.v3Status ? UC.v3Status() : '',

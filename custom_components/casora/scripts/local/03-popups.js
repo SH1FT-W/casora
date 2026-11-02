@@ -3980,12 +3980,12 @@
     + '@media (hover:hover){.huc.row:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}.huc.row .huc-b:not(.busy):hover{opacity:1;}}'
     + '</style>';
   // Popup v3: the search is a moon of the dial (data-huc on the moon, 08-weich-kompakt.js); its result under the wheel.
-  var v3StatusHtml = function () { return esc(K.busy ? 'Suche …' : K.status().join(' · ')); };
+  // While searching the moon's arrow turns (busy moon, casora-core.js) and nothing stands under the wheel – the turning
+  // arrow is the signal (maintainer review 02.11.2026); K.status() is empty while busy.
+  var v3StatusHtml = function () { return esc(K.status().join(' · ')); };
   K.v3Status = function () {
     return '<style>.huc-v3{font-family:var(--primary-font-family, system-ui);font-size:13px;font-weight:600;text-align:center;'
-      + 'color:var(--casora-soft-sub, var(--secondary-text-color));min-height:18px;}'
-      + '.hui-moon.huc-busy .ic{animation:huc-spin 1s linear infinite;}@keyframes huc-spin{to{transform:rotate(360deg);}}'
-      + '@media (prefers-reduced-motion:reduce){.hui-moon.huc-busy .ic{animation:none;}}</style>'
+      + 'color:var(--casora-soft-sub, var(--secondary-text-color));min-height:18px;}</style>'
       + '<div class="huc-v3" aria-live="polite">' + v3StatusHtml() + '</div>';
   };
   // HTML für die Vorlage (Statuskarte) bzw. die Weich-Kopfzeile.
@@ -4008,7 +4008,7 @@
     var list = pop ? deep(pop.shadowRoot, deep(pop)) : deep(ha && ha.shadowRoot);
     list.forEach(function (n) {
       if (n.classList.contains('huc-v3')) n.innerHTML = tr(v3StatusHtml());
-      else if (n.classList.contains('hui-moon')) { n.classList.toggle('huc-busy', !!K.busy); if (K.busy) n.setAttribute('aria-busy', 'true'); else n.removeAttribute('aria-busy'); }
+      else if (n.classList.contains('hui-moon')) { n.classList.toggle('busy', !!K.busy); if (K.busy) n.setAttribute('aria-busy', 'true'); else n.removeAttribute('aria-busy'); }
       else n.innerHTML = tr(inner());
     });
   };
