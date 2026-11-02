@@ -360,9 +360,22 @@ def classify(device_id: str, ents: list[Ent], states: Callable[[str], Any], mode
     return None
 
 
+def _device_entry_ids(device) -> tuple:
+    """Config entry ids of a device registry entry.
+
+    HA 2026.10 gives a device a single config entry (DeviceEntry.config_entry_id); reading the old
+    DeviceEntry.config_entries logs a deprecation warning and stops working in 2027.10. Older HA
+    (minimum 2026.9) only has config_entries.
+    """
+    if hasattr(type(device), "config_entry_id") or "config_entry_id" in getattr(device, "__dict__", {}):
+        eid = getattr(device, "config_entry_id", None)
+        return (eid,) if eid else ()
+    return tuple(getattr(device, "config_entries", None) or ())
+
+
 def _washdata_type(hass, device) -> str | None:
     """WashData's device type from its config entry's options (public ConfigEntry API, read only)."""
-    for entry_id in device.config_entries or ():
+    for entry_id in _device_entry_ids(device):
         entry = hass.config_entries.async_get_entry(entry_id)
         if entry and entry.domain == "ha_washdata":
             return str((entry.options or {}).get("device_type") or "") or None

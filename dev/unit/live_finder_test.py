@@ -113,6 +113,29 @@ class _Dev:
 check("WashData type from its config entry", lf._washdata_type(_Hass, _Dev(["e_x", "e_wd"])) == "other")
 check("No WashData entry, no type", lf._washdata_type(_Hass, _Dev(["e_x"])) is None)
 
+
+# HA 2026.10+: a device has one config entry (config_entry_id); reading config_entries logs a deprecation
+# warning (prod log 02.11.2026, live_finder.py) and stops working in 2027.10. The finder must not touch it.
+class _DevNew:
+    def __init__(self, eid):
+        self.config_entry_id = eid
+
+    @property
+    def config_entries(self):
+        raise AssertionError("deprecated DeviceEntry.config_entries read")
+
+
+def _wd(dev):
+    try:
+        return lf._washdata_type(_Hass, dev)
+    except AssertionError as err:
+        return "raised: %s" % err
+
+
+check("WashData type via config_entry_id (HA 2026.10+)", _wd(_DevNew("e_wd")) == "other")
+check("config_entry_id of another integration, no type", _wd(_DevNew("e_x")) is None)
+check("device without config entry, no type", _wd(_DevNew(None)) is None)
+
 # Official Home Connect: role from the program options
 hc = [E("sensor.hc_state", "operation_state", "home_connect"), E("sensor.hc_pct", "program_progress", "home_connect"),
       E("sensor.hc_end", "program_finish_time", "home_connect"), E("select.hc_prog", "active_program", "home_connect")]
