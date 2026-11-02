@@ -160,6 +160,11 @@ Nicht im Kern-Paket prüfbar (HACS), Casora liest `platform`/`translation_key`:
 Schlüssel je Quelle in `25-coffee.js` `SOURCES`, Stand Quellcode 24.10.2026, Test `dev/unit/coffee_sources.mjs`),
 Auto-Integrationen.
 
+Waste Collection Schedule (`waste_collection_schedule`): Zustand bzw. `daysTo` = Tage bis zur Abholung, Abholtermine als
+Attribute `{Datum: Art}` (oder `{Art: Datum}`). Der Countdown kann am Abholtag schon weiterzählen oder veralten; Kachel,
+Popup-Kopf und Tonnen-Liste nehmen deshalb das nächste Datum ab heute, den Countdown nur ohne Datum (`00-finder.js`
+`waste`/`wasteDates`; Tests `dev/unit/waste_date_first.mjs`, `dev/unit/abfall_wcs.mjs`, `dev/qa/regress/r510_waste_head_date_first.mjs`).
+
 WashData (`ha_washdata`, Stand 0.5.9, Quellcode 29.10.2026): Geräteart zuerst über das Symbol des `washer_state`-Sensors
 (`tumble-dryer`, `dishwasher`, `water-pump`, sonst `washing-machine`). Seit 0.5.9 werden Heißluftfritteuse und Brotbackautomat
 zu `other` und tragen wie `generic` das Waschmaschinen-Symbol; deshalb fragt das Dashboard den Typ über

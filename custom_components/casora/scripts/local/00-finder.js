@@ -582,13 +582,14 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       var st = S[id] || { state: String(fromCal[id].days), attributes: {} };
       // A date as state is a date, not a number of days (parseInt would give the year).
       var stDays = daysUntil(st.state);
-      var days = stDays != null ? (stDays >= 0 ? stDays : NaN) : parseInt(st.state, 10);
-      if (isNaN(days)) days = parseInt(st.attributes && st.attributes.daysTo, 10);
-      // WCS default sensors ('on Thu, 12.11.2026', no daysTo): the nearest date from today among the
-      // date attributes, as the popup lists them (wasteDates). Only when those dates are one bin's
-      // ({date: type} with one type, or one {type: date}): an overview sensor for every type would
-      // otherwise join the next pickup of the real bin.
-      if (isNaN(days) && !fromCal[id]) {
+      // The pickup date wins over the countdown (02.11.2026: tile and popup head said „Bio in 2 T.“ while the
+      // bins list said „Restmüll · Heute“ – the countdown had already moved on on pickup day, or was stale).
+      // Dates: an ISO date as state and the nearest date from today among the date attributes, as the popup
+      // lists them (wasteDates). Attributes only when those dates are one bin's ({date: type} with one type,
+      // or one {type: date}): an overview sensor for every type would otherwise join the next pickup of the
+      // real bin. The countdown (state number, daysTo) only without a date from today on.
+      var days = stDays != null && stDays >= 0 ? stDays : NaN;
+      if (!fromCal[id]) {
         var a1 = st.attributes || {}, near = NaN, kinds = {};
         Object.keys(a1).forEach(function (k) {
           var byKey = WASTE_DAY.test(k), n1 = byKey ? daysUntil(k) : typeof a1[k] === 'string' && WASTE_DAY.test(a1[k]) ? daysUntil(a1[k]) : null;
@@ -596,8 +597,10 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
           kinds[byKey ? String(a1[k]).trim().toLowerCase() : k] = 1;
           if (isNaN(near) || n1 < near) near = n1;
         });
-        if (Object.keys(kinds).length === 1) days = near;
+        if (Object.keys(kinds).length === 1 && (isNaN(days) || near < days)) days = near;
       }
+      if (isNaN(days) && stDays == null) days = parseInt(st.state, 10);
+      if (isNaN(days)) days = parseInt(st.attributes && st.attributes.daysTo, 10);
       var r = parseInt(color.slice(1, 3), 16), g = parseInt(color.slice(3, 5), 16), b = parseInt(color.slice(5, 7), 16);
       var tint = 'rgba(' + r + ',' + g + ',' + b + ',0.25)';
       if (weich && !word) {
