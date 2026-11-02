@@ -305,9 +305,13 @@
     var UI = window._casoraUI;
     if (!UI) return '';
     var S = states || {};
-    var secHtml = L.split(ids, C.sections).map(function (s) {
-      return UI.group(s.ids.map(function (id) { return L.row(hass, S[id], id); }), s.title);
-    }).join('');
+    // One cut of the names over all sections of the list (UI.popupNames), not one per section.
+    var secs = L.split(ids, C.sections).map(function (s) {
+      return { title: s.title, rows: s.ids.map(function (id) { return L.row(hass, S[id], id); }) };
+    });
+    var nm = UI.popupNames && secs.length > 1 ? UI.popupNames([].concat.apply([], secs.map(function (s) { return s.rows; })))
+      : function (x) { return x; };
+    var secHtml = secs.map(function (s) { return UI.group(s.rows.map(nm), s.title); }).join('');
     return LIST_CSS + '<div data-casora-cols="' + esc(L.cols(C.layout)) + '" style="display:flex;flex-direction:column;gap:18px;">'
       + secHtml + '</div>';
   };

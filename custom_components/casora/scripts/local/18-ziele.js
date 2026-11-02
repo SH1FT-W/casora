@@ -748,6 +748,11 @@
           : { entity: eid, icon: Z.iconOf(s5), iconTone: 'accent', label: shortName(hass, eid, dv4), value: Z.stateWord(hass, eid, s5.state) };
         (groups[catOf(hass, eid)] || groups.main).push(row);
       });
+      // One cut of the names over all three lists of the device (UI.popupNames), not one per list.
+      if (UI.popupNames) {
+        var nmD = UI.popupNames(groups.main.concat(groups.config, groups.diagnostic));
+        Object.keys(groups).forEach(function (g) { groups[g] = groups[g].map(nmD); });
+      }
       var outE = '';
       if (groups.main.length) outE += UI.group(groups.main, 'Gehört dazu');
       if (v3) return outE;

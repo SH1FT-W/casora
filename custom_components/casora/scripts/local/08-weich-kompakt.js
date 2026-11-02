@@ -170,8 +170,12 @@
         segs: R.map(function (r) { var l = lvOf(r.v); return { ok: l === 'ok', tone: l === 'ok' ? 'good' : l === 'crit' ? 'bad' : 'warn', label: r.name + ' ' + r.v + ' %' }; }),
       });
     }
+    // „Akku schwach“ and the rest are cards of their own: each cuts the names over all batteries (UI.popupNames), so a
+    // battery that runs low keeps its name.
+    var nm = UI.popupNames ? UI.popupNames(R.map(function (r) { return rowOf(states, r); })) : function (x) { return x; };
+    var rowsOf = function (list) { return list.map(function (r) { return nm(rowOf(states, r)); }); };
     if (part === 'low') {
-      return low.length ? SEL_CSS + tapWrap(UI.group(low.map(function (r) { return rowOf(states, r); }), 'Akku schwach')) : '';
+      return low.length ? SEL_CSS + tapWrap(UI.group(rowsOf(low), 'Akku schwach')) : '';
     }
     if (part === 'list') {
       // Sub page „Alle Batterien“: every battery as a row with › onto its own page.
@@ -189,7 +193,7 @@
       if (R.length > 12 && UI.v3 && UI.v3()) {
         var tail7 = rest.slice(Math.max(0, 12 - low.length));
         rest = rest.slice(0, Math.max(0, 12 - low.length));
-        var tailRows = tail7.map(function (r) { return rowOf(states, r); });
+        var tailRows = rowsOf(tail7);
         moreRowHtml = '<div style="height:8px"></div>' + UI.more('bat-all', '<div class="hp-batall">' + tapWrap(UI.group(tailRows, null)) + '</div>',
           { keep: true, label: 'Alle ' + R.length + ' anzeigen', less: 'Weniger anzeigen' });
         if (!rest.length) return SEL_CSS + moreRowHtml;
@@ -204,7 +208,7 @@
       var v3b = !!(UI.v3 && UI.v3());
       return SEL_CSS + (v3b ? '' : '<style>.hp-batall .hui-plate{display:grid !important;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px 18px !important;}'
         + '@media (max-width: 760px){.hp-batall .hui-plate{grid-template-columns:minmax(0, 1fr);}}</style>')
-        + '<div class="hp-batall">' + tapWrap(UI.group(rest.map(function (r) { return rowOf(states, r); }), low.length ? 'Weitere Geräte' : 'Alle Geräte')) + '</div>' + moreRowHtml;
+        + '<div class="hp-batall">' + tapWrap(UI.group(rowsOf(rest), low.length ? 'Weitere Geräte' : 'Alle Geräte')) + '</div>' + moreRowHtml;
     }
     return '';
   };
@@ -442,10 +446,13 @@
       if (window._casoraUpdAiSweep) window._casoraUpdAiSweep();
       var ids = pend.slice().sort(function (a, b) { return nameOf(states, a).localeCompare(nameOf(states, b)); });
       var lbl = 'Verfügbare Updates · ' + ids.length;
-      var head = U.rows(states, ids.slice(0, 12));
+      // The first twelve and „Alle anzeigen“ share one cut of the names (UI.popupNames): an update that moves across
+      // the twelfth place keeps its name.
+      var nmU = UI.popupNames ? UI.popupNames(U.rows(states, ids)) : function (x) { return x; };
+      var head = U.rows(states, ids.slice(0, 12)).map(nmU);
       var out = U.tint(UI.group(head, lbl), head);
       if (ids.length > 12) {
-        var tail = U.rows(states, ids.slice(12));
+        var tail = U.rows(states, ids.slice(12)).map(nmU);
         out += '<div style="height:8px"></div>' + UI.more('upd-all', U.tint(UI.group(tail, null), tail),
           { keep: true, label: 'Alle ' + ids.length + ' anzeigen', less: 'Weniger anzeigen' });
       }
