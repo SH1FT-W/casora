@@ -12,10 +12,15 @@ const esc = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&':
 
 globalThis.window = globalThis;
 const groups = [];
+// The real list helpers of UI.group (casora-core.js): each list drops the leading words its rows share, unless the
+// caller passes keepNames.
+const core = read('custom_components/casora/scripts/casora-core.js');
+const dropRowPrefix = new Function('window', core.slice(core.indexOf('  window.casoraDropCommonPrefix = function'),
+  core.indexOf('  function group(rows, label')) + '\nreturn dropRowPrefix;')(window);
 window._casoraUI = {
   esc,
   line: (main, rest) => '<div class="hui-line">' + esc(main) + (rest || []).map((r) => ' · ' + esc(r)).join('') + '</div>',
-  group: (rows, label) => { groups.push({ label, rows }); return '<div class="g">' + esc(label) + rows.map((r) => '<div>' + esc(r.label) + '|' + esc(r.sub || '') + '|' + esc(r.value || r.action || '') + '</div>').join('') + '</div>'; },
+  group: (rows, label, labelAction, opts) => { rows = opts && opts.keepNames ? rows : dropRowPrefix(rows); groups.push({ label, rows }); return '<div class="g">' + esc(label) + rows.map((r) => '<div>' + esc(r.label) + '|' + esc(r.sub || '') + '|' + esc(r.value || r.action || '') + '</div>').join('') + '</div>'; },
   note: (t) => '<div class="note">' + esc(t) + '</div>',
 };
 window._casoraSoftKit = { secCard: (watch, code) => ({ watch, code }), layout: (o) => ({ o }) };
@@ -128,6 +133,29 @@ assert.equal(groups[1].rows[0].value, 'Bereit');
 assert.equal(groups[1].rows[0].sub, undefined, 'a resting player does not show its old title');
 assert.ok(list.indexOf('LG webOS TV') < list.indexOf('Echo Dot'));
 assert.equal(B.sec('hero', C, states, hass), '<div class="hui-line">2 laufen · 6 Geräte</div>');
+
+// Shared leading words go across the whole popup, not per list: a player keeps its name when it moves from
+// „Weitere Geräte“ to „Läuft“ (gate 02.11.2026: „QA Echo Bad“ read „Echo Bad“ in one state, „Bad“ in another).
+{
+  const qa = {
+    'media_player.qa_tv': mk('on', { friendly_name: 'QA Fernseher', source: 'HDMI 1' }),
+    'media_player.qa_k': mk('idle', { friendly_name: 'QA Echo Küche' }),
+    'media_player.qa_b': mk('standby', { friendly_name: 'QA Echo Bad' }),
+    'media_player.qa_s': mk('off', { friendly_name: 'QA Echo Schlafzimmer' }),
+  };
+  const ids = Object.keys(qa);
+  const names = () => Object.fromEntries(groups.flatMap((g) => g.rows.map((r) => [r.entity, r.label])));
+  groups.length = 0;
+  B.sec('list', { ids, timeout: 10 }, qa, hass);
+  const before = names();
+  qa['media_player.qa_b'] = mk('playing', { friendly_name: 'QA Echo Bad', media_title: 'Lied', supported_features: PLAY_PAUSE });
+  groups.length = 0;
+  B.sec('list', { ids, timeout: 10 }, qa, hass);
+  assert.deepEqual(groups.map((g) => g.rows.length), [2, 2], 'two running, two resting');
+  assert.deepEqual(names(), before, 'every player keeps its name when it moves between the lists');
+  assert.deepEqual(before, { 'media_player.qa_tv': 'Fernseher', 'media_player.qa_k': 'Echo Küche', 'media_player.qa_b': 'Echo Bad',
+    'media_player.qa_s': 'Echo Schlafzimmer' }, 'only the words all players share are dropped');
+}
 
 // Nothing plays: the popup still lists the devices (with Aus/Bereit) instead of opening nothing.
 groups.length = 0;

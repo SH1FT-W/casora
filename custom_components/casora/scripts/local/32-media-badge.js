@@ -138,7 +138,7 @@
 
   var rowOf = function (r) {
     var sub = [r.line, r.room].filter(Boolean).join(' · ');
-    var o = { icon: r.icon, iconTone: r.kind === 'run' ? 'accent' : undefined, label: r.name, labelLit: true, sub: sub || undefined };
+    var o = { icon: r.icon, iconTone: r.kind === 'run' ? 'accent' : undefined, label: r.shown || r.name, labelLit: true, sub: sub || undefined };
     if (r.toggle) {
       o.entity = r.id;
       o.svc = { domain: 'media_player', service: 'media_play_pause', data: { entity_id: r.id } };
@@ -224,9 +224,16 @@
     if (!rows.length) return UI.note ? UI.note('Noch kein Gerät zugeordnet') : '';
     var live = rows.filter(function (r) { return r.kind !== 'rest'; });
     var rest = rows.filter(function (r) { return r.kind === 'rest'; });
+    // Shared leading words (owner, 01.11.2026) are dropped across all players of the popup, not per list: a player
+    // that starts or stops moves between „Läuft“ and „Weitere Geräte“ and must keep the same name (it read „QA Echo
+    // Bad“, then „Echo Bad“, then „Bad“ depending on who else was in its list).
+    var dev = rows.filter(function (r) { return r.id; });
+    var cut = window.casoraDropCommonPrefix && dev.length > 1 ? window.casoraDropCommonPrefix(dev.map(function (r) { return r.name; })) : null;
+    if (cut) dev.forEach(function (r, i) { r.shown = cut[i]; });
+    var keep = { keepNames: true };
     var groupsHtml = '';
-    if (live.length) groupsHtml += UI.group(live.map(rowOf), 'Läuft');
-    if (rest.length) groupsHtml += UI.group(rest.map(rowOf), live.length ? 'Weitere Geräte' : 'Geräte');
+    if (live.length) groupsHtml += UI.group(live.map(rowOf), 'Läuft', null, keep);
+    if (rest.length) groupsHtml += UI.group(rest.map(rowOf), live.length ? 'Weitere Geräte' : 'Geräte', null, keep);
     return '<div style="display:flex;flex-direction:column;gap:var(--casora-popup-sec-gap, 22px);">' + groupsHtml + '</div>';
   };
 })();

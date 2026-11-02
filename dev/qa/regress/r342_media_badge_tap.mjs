@@ -29,6 +29,10 @@ const speakers = mp.filter((s) => s !== tv && !/apple|playstation|test/i.test(s.
 await need('a TV and three speakers in the house', tv && speakers.length === 3, mp.map((s) => s.entity_id));
 const IDS = [speakers[0].entity_id, speakers[1].entity_id, tv.entity_id, speakers[2].entity_id];
 const NAME = { tv: 'QA Fernseher', a: 'QA Echo Küche', b: 'QA Echo Bad', c: 'QA Echo Schlafzimmer' };
+// The popup drops the leading word(s) all its players share (owner, 01.11.2026, casoraDropCommonPrefix), across the
+// whole popup so a player keeps its name when it moves between „Läuft“ and „Weitere Geräte“.
+const SHOWN = { tv: 'Fernseher', a: 'Echo Küche', b: 'Echo Bad', c: 'Echo Schlafzimmer' };
+const label = (row, name) => row.startsWith(name) ? name : null;
 
 const dash = await casoraDashboard((d) => (d.config.views || []).length > 1);
 await need('Casora dashboard with its phone counterpart', dash && dash.phone);
@@ -125,16 +129,18 @@ const run = async (tag, page, mobile, pre) => {
   await need(tag + ': tap on the badge opens the media popup', await tapBadge(page, mobile));
   let p = await stable(page, POPUP, null, { max: 10000, until: (v) => v && v.rows.length >= 4 });
   await check(tag + ': title „Medien“', p && /^Medien/.test(p.title), p && p.title);
-  await check(tag + ': all four players listed', p && [NAME.tv, NAME.a, NAME.b, NAME.c].every((n) => idx(p.rows, n) > -1), p && p.rows);
-  await check(tag + ': „Läuft“ = the TV with „An“, first', p && idx(p.rows, NAME.tv) === 0 && /An$/.test(p.rows[0]) && p.labels.includes('Läuft'), p && { rows: p.rows, labels: p.labels });
-  await check(tag + ': the rest with their state (Bereit, Standby, Aus)', p && /Bereit/.test(p.rows[idx(p.rows, NAME.a)] || '')
-    && /Standby/.test(p.rows[idx(p.rows, NAME.b)] || '') && /Aus/.test(p.rows[idx(p.rows, NAME.c)] || ''), p && p.rows);
+  await check(tag + ': all four players listed', p && [SHOWN.tv, SHOWN.a, SHOWN.b, SHOWN.c].every((n) => idx(p.rows, n) > -1), p && p.rows);
+  await check(tag + ': „Läuft“ = the TV with „An“, first', p && idx(p.rows, SHOWN.tv) === 0 && /An$/.test(p.rows[0]) && p.labels.includes('Läuft'), p && { rows: p.rows, labels: p.labels });
+  await check(tag + ': the rest with their state (Bereit, Standby, Aus)', p && /Bereit/.test(p.rows[idx(p.rows, SHOWN.a)] || '')
+    && /Standby/.test(p.rows[idx(p.rows, SHOWN.b)] || '') && /Aus/.test(p.rows[idx(p.rows, SHOWN.c)] || ''), p && p.rows);
   await check(tag + ': hero says „1 läuft“ like the badge', p && /1 läuft/.test(p.text), p && p.text);
   await shoot(page, pre + '-2-popup-tv-on.png');
   // A speaker starts while the popup is open: it moves to the top, with play/pause.
   await fakeStates(page, STATE.playing, { sticky: true });
-  p = await stable(page, POPUP, null, { max: 10000, until: (v) => v && idx(v.rows, NAME.b) === 0 });
-  await check(tag + ': playing speaker listed first, live', p && idx(p.rows, NAME.b) === 0 && idx(p.rows, NAME.tv) === 1, p && p.rows);
+  p = await stable(page, POPUP, null, { max: 10000, until: (v) => v && idx(v.rows, SHOWN.b) === 0 });
+  await check(tag + ': playing speaker listed first, live', p && idx(p.rows, SHOWN.b) === 0 && idx(p.rows, SHOWN.tv) === 1, p && p.rows);
+  await check(tag + ': every player keeps its name in both lists (prefix dropped across the popup)',
+    p && Object.values(SHOWN).every((n) => p.rows.some((r) => label(r, n))), p && p.rows);
   await check(tag + ': playing row shows title and „Pausieren“', p && /QA Lied – QA Band/.test(p.rows[0]) && /Pausieren/.test(p.rows[0]), p && p.rows[0]);
   await check(tag + ': hero „2 laufen“', p && /2 laufen/.test(p.text), p && p.text);
   await shoot(page, pre + '-3-popup-playing.png');

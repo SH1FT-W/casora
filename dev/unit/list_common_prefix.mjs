@@ -29,7 +29,8 @@ assert.equal(rows[0].label, 'Jalousie Bad', 'the rows given stay untouched');
 assert.deepEqual(dropRowPrefix([{ label: 'Letzte Fahrt' }, { label: 'Letzte Wartung' }]).map((r) => r.label),
   ['Letzte Fahrt', 'Letzte Wartung'], 'rows that name no device keep their words');
 assert.deepEqual(dropRowPrefix([{ page: 'x|1', label: 'Sensor Flur' }, { page: 'x|2', label: 'Sensor Bad' }]).map((r) => r.label), ['Flur', 'Bad']);
-assert.ok(/function group\(rows, label, labelAction, opts\) \{\n    rows = dropRowPrefix\(rows \|\| \[\]\);/.test(core), 'UI.group uses it');
+assert.ok(/function group\(rows, label, labelAction, opts\) \{\n(?:    \/\/.*\n)*    rows = opts && opts\.keepNames \? \(rows \|\| \[\]\) : dropRowPrefix\(rows \|\| \[\]\);/.test(core),
+  'UI.group uses it, unless the caller shortened the names itself (keepNames)');
 
 const pop = rd('custom_components/casora/scripts/local/03-popups.js');
 assert.equal((pop.match(/= lampNamesOf\(/g) || []).length, 2, 'light popup: both lamp lists use it');
