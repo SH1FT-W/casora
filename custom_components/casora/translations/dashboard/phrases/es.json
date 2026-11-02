@@ -2724,7 +2724,9 @@
   "Der Neustart hat nicht geklappt.": "El reinicio no ha funcionado.",
   "Installieren hat nicht geklappt.": "La instalación no ha funcionado.",
   "Wird installiert …": "Instalando…",
-  "HACS hat die neue Version nicht als installiert gemeldet. Sieh in HACS nach.": "HACS no ha indicado la nueva versión como instalada. Revisa HACS."
+  "HACS hat die neue Version nicht als installiert gemeldet. Sieh in HACS nach.": "HACS no ha indicado la nueva versión como instalada. Revisa HACS.",
+  "Vergrößern": "Ampliar",
+  "Verkleinern": "Reducir"
  },
  "patterns": [
   [
@@ -4923,8 +4925,5 @@
    "^(\\d+) unbekannt$",
    "{1} desconocido"
   ]
- ],
- "Gerät in Home Assistant": "Dispositivo en Home Assistant",
-  "Vergrößern": "Ampliar",
-  "Verkleinern": "Reducir"
+ ]
 }

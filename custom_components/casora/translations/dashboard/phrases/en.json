@@ -2706,7 +2706,9 @@
   "Der Neustart hat nicht geklappt.": "The restart didn't work.",
   "Installieren hat nicht geklappt.": "Installing didn't work.",
   "Wird installiert …": "Installing…",
-  "HACS hat die neue Version nicht als installiert gemeldet. Sieh in HACS nach.": "HACS did not report the new version as installed. Check HACS."
+  "HACS hat die neue Version nicht als installiert gemeldet. Sieh in HACS nach.": "HACS did not report the new version as installed. Check HACS.",
+  "Vergrößern": "Enlarge",
+  "Verkleinern": "Shrink"
  },
  "patterns": [
   [
@@ -4905,8 +4907,5 @@
    "^(\\d+) unbekannt$",
    "{1} unknown"
   ]
- ],
- "Gerät in Home Assistant": "Device in Home Assistant",
-  "Vergrößern": "Enlarge",
-  "Verkleinern": "Shrink"
+ ]
 }
