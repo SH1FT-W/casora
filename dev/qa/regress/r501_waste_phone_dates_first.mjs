@@ -94,7 +94,7 @@ await check('Handy: keine Tageskarte über den Tonnen (wday ausgeblendet)', !ph.
 
 // Tap a day of the shown month that is not today (prefer one with a pickup): its card shows right under the month,
 // nothing jumps up; tapping it again closes it.
-const pickDay = () => ph.page.evaluate(() => {
+const pickDay0 = () => ph.page.evaluate(() => {
   const S = window.casoraPopup && window.casoraPopup.surface;
   const ds = window.__pierce('.hcal-d', S).filter((n) => /^wday:/.test(n.dataset.hcal || '') && !n.classList.contains('t')
     && !n.classList.contains('o') && n.getBoundingClientRect().width > 0);
@@ -104,8 +104,20 @@ const pickDay = () => ph.page.evaluate(() => {
   if (!d) return null;
   d.scrollIntoView({ block: 'center' });
   const r = d.getBoundingClientRect();
-  return { key: d.dataset.hcal, x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  return { key: d.dataset.hcal, x: r.x + r.width / 2, y: r.y + r.height / 2, vh: innerHeight };
 });
+// Tap only a visible target: right after opening (gate state) the sheet ignored the first scrollIntoView and the tap
+// went below the window. Scroll again until the day sits inside the window and stays put.
+const pickDay = async () => {
+  let d = null, prev = null;
+  for (let i = 0; i < 20; i++) {
+    d = await pickDay0();
+    if (d && d.y > 80 && d.y < d.vh - 40 && prev && Math.abs(prev.y - d.y) < 1) return d;
+    prev = d;
+    await ph.page.waitForTimeout(250);
+  }
+  return d && d.y > 80 && d.y < d.vh - 40 ? d : null;
+};
 const sections = async () => (await ph.page.evaluate(() => {
   const S = window.casoraPopup && window.casoraPopup.surface;
   const card = window.__pierce('button-card', S).find((b) => b.shadowRoot && b.shadowRoot.querySelector('#cal') && b.shadowRoot.querySelector('#right'));
@@ -114,7 +126,7 @@ const sections = async () => (await ph.page.evaluate(() => {
   return { cal: q('cal'), wpick: q('wpick'), vh: innerHeight, sel };
 }));
 const day = await pickDay();
-await need('Handy: ein Tag im Monat zum Antippen', day, day);
+await need('Handy: ein Tag im Monat zum Antippen, sichtbar im Fenster', day, day);
 await ph.page.waitForTimeout(400);
 const before = await sections();
 await ph.page.touchscreen.tap(day.x, day.y);
@@ -128,6 +140,7 @@ await check('Handy: das Popup springt nicht nach oben', after.cal.top <= before.
 await check('Handy: der getippte Tag ist markiert', after.sel.includes(day.key), after.sel);
 if (DIR) await ph.page.screenshot({ path: path.join(DIR, (LOCAL ? 'nachher' : 'vorher') + '-handy-tipp.png') });
 const again = await pickDay();
+await need('Handy: derselbe Tag noch einmal sichtbar', again, again);
 await ph.page.touchscreen.tap(again.x, again.y);
 let closed = null;
 for (let i = 0; i < 20; i++) { await ph.page.waitForTimeout(150); closed = await sections(); if (!closed.wpick || closed.wpick.h < 5) break; }
