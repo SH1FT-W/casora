@@ -12321,6 +12321,24 @@ window.casoraMenuGlass = {
   var TONE = { good: 'var(--casora-color-green, #34C759)', warn: 'var(--casora-color-orange, #FF9F0A)', bad: 'var(--casora-color-red, #FF453A)',
     // off: a device that is simply off (not a problem) – the off symbol of the lists, its glyph in text 2.
     off: 'var(--casora-soft-icon-off, rgba(140,115,90,0.12))' };
+  // S5 big view (o.zoom): tapping the picture lifts it into the top layer (popover, nothing is moved, so a live
+  // stream keeps running) over a dark backdrop, fitted to the screen in its own aspect ratio; × / Esc / swipe down /
+  // back return it to the popup.
+  // Shared with other zoomable pictures (robot vacuum map): UI.zoomCss.
+  var ZOOM_CSS = ''
+    + '.hui-st-img[data-casora-zoom]{cursor:zoom-in;-webkit-tap-highlight-color:transparent;}'
+    + '.hui-st-img[data-casora-zoom]:focus-visible{outline:2px solid ' + T.ink + ';outline-offset:2px;}'
+    + '.hui-st-zx{display:none;}'
+    + '.hui-st-img.big{position:fixed;inset:0;z-index:2147483000;width:auto;height:auto;max-width:none;max-height:none;margin:0;border:0;'
+    +   'border-radius:0;box-sizing:border-box;padding:max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));'
+    +   'display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgb(0,0,0);cursor:default;overscroll-behavior:contain;touch-action:none;}'
+    + '.hui-st-img.big::backdrop{background:transparent;}'
+    + '.hui-st-img.big > :not(.hui-st-zx){flex:none;width:min(100%, calc((100vh - 32px) * var(--ar, 1.7778)));width:min(100%, calc((100dvh - 32px) * var(--ar, 1.7778)));}'
+    + '.hui-st-img.big .hui-st-zx{display:flex;position:absolute;top:max(12px, env(safe-area-inset-top));right:max(12px, env(safe-area-inset-right));z-index:3;'
+    +   'width:44px;height:44px;border-radius:50%;align-items:center;justify-content:center;cursor:pointer;background:rgba(255,255,255,0.16);color:#fff;'
+    +   '-webkit-tap-highlight-color:transparent;touch-action:manipulation;}'
+    + '.hui-st-zx ha-icon{--mdc-icon-size:24px;display:flex;pointer-events:none;}'
+    + '@media (hover:hover){.hui-st-img.big .hui-st-zx:hover{background:rgba(255,255,255,0.24);}}';
   // A popup card with tap_action none is "disabled" in button-card (pointer-events:none): like every other control
   // here the stage takes its pointer events back, else the dial's ring never gets the finger and the phone sheet
   // drags instead (e.g. a single cover on the phone; moons and − / + set their own pointer-events).
@@ -12410,22 +12428,7 @@ window.casoraMenuGlass = {
     // own rounded corners (popup row radius) over the content width, the controls sit under it without a plate.
     + '.hui-stage.s5{background:none;padding:0;border-radius:0;}'
     + '.hui-st-img{border-radius:var(--casora-popup-row-radius, 24px);overflow:hidden;}'
-    // S5 big view (o.zoom): tapping the picture lifts it into the top layer (popover, nothing is moved, so a live
-    // stream keeps running) over a dark backdrop, fitted to the screen in its own aspect ratio; × / Esc / swipe down /
-    // back return it to the popup.
-    + '.hui-st-img[data-casora-zoom]{cursor:zoom-in;-webkit-tap-highlight-color:transparent;}'
-    + '.hui-st-img[data-casora-zoom]:focus-visible{outline:2px solid ' + T.ink + ';outline-offset:2px;}'
-    + '.hui-st-zx{display:none;}'
-    + '.hui-st-img.big{position:fixed;inset:0;z-index:2147483000;width:auto;height:auto;max-width:none;max-height:none;margin:0;border:0;'
-    +   'border-radius:0;box-sizing:border-box;padding:max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));'
-    +   'display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgb(0,0,0);cursor:default;overscroll-behavior:contain;touch-action:none;}'
-    + '.hui-st-img.big::backdrop{background:transparent;}'
-    + '.hui-st-img.big > :not(.hui-st-zx){flex:none;width:min(100%, calc((100vh - 32px) * var(--ar, 1.7778)));width:min(100%, calc((100dvh - 32px) * var(--ar, 1.7778)));}'
-    + '.hui-st-img.big .hui-st-zx{display:flex;position:absolute;top:max(12px, env(safe-area-inset-top));right:max(12px, env(safe-area-inset-right));z-index:3;'
-    +   'width:44px;height:44px;border-radius:50%;align-items:center;justify-content:center;cursor:pointer;background:rgba(255,255,255,0.16);color:#fff;'
-    +   '-webkit-tap-highlight-color:transparent;touch-action:manipulation;}'
-    + '.hui-st-zx ha-icon{--mdc-icon-size:24px;display:flex;pointer-events:none;}'
-    + '@media (hover:hover){.hui-st-img.big .hui-st-zx:hover{background:rgba(255,255,255,0.24);}}'
+    + ZOOM_CSS
     + '@media (max-width:760px){.hui-stage .hui-vs{width:88px;height:200px;}.hui-st-pm .hui-st-n{font-size:64px;}.hui-st-chart{min-height:140px;}}'
     + '@media (prefers-reduced-motion:reduce){.hui-stage *{transition:none!important;}}';
   function stGlyph(name, cls) {
@@ -13377,7 +13380,7 @@ window.casoraMenuGlass = {
       z.style.setProperty('--ar', String((z.offsetWidth / Math.max(1, z.offsetHeight)) || 1.7778));
       z.classList.add('big');
       z.setAttribute('role', 'dialog'); z.setAttribute('aria-modal', 'true');
-      z.setAttribute('aria-label', T_('Live-Bild')); z.setAttribute('data-casora-esc', '');
+      z.setAttribute('aria-label', T_(z.getAttribute('data-casora-zoom') || 'Live-Bild')); z.setAttribute('data-casora-esc', '');
       z.removeAttribute('tabindex');
       if (typeof z.showPopover === 'function') {
         try { z.setAttribute('popover', 'manual'); z.showPopover(); } catch (e) { z.removeAttribute('popover'); }
@@ -13444,12 +13447,16 @@ window.casoraMenuGlass = {
     document.addEventListener('action', function (ev) { if (find(ev)) ev.stopPropagation(); }, true);
     // Touch: HA's actionHandler on the picture card cancels touchend, so no click follows a tap – the tap itself
     // opens (a second tap within 320 ms is the camera's double tap: fill ↔ fit).
+    // Only real touches: button-card sends a copy of a touch from further out (a card with actions, e.g. the robot
+    // vacuum popup), which must not reset the tap that started on the picture.
     var t0 = null, lastTap = 0, touchAt = 0;
     document.addEventListener('touchstart', function (ev) {
+      if (!ev.isTrusted) return;
       var f = find(ev); var t = ev.touches && ev.touches[0];
       t0 = f && f.z && !f.z.classList.contains('big') && ev.touches.length === 1 ? { x: t.clientX, y: t.clientY } : null;
     }, { capture: true, passive: true });
     document.addEventListener('touchend', function (ev) {
+      if (!ev.isTrusted) return;
       var f = find(ev); var t = ev.changedTouches && ev.changedTouches[0];
       if (!f || !t) return;
       touchAt = Date.now();
@@ -13545,7 +13552,7 @@ window.casoraMenuGlass = {
   window._casoraUI.more = more;
   Object.assign(window._casoraUI, { section: section, row: row, settingsRow: settingsRow, settings: settings, actions: actions,
     empty: empty, width: width, switchHtml: switchHtml, page: page, SEC_ORDER: SEC_ORDER, WIDTH: WIDTH,
-    stage: stage, stageZoom: stageZoom, mediaVideo: mediaVideo, quick: quick, STAGE_TYPES: STAGE_TYPES, v3: v3, dialPaint: dialPaint, dialPct: dialPct, dialNum: dialNum });
+    stage: stage, stageZoom: stageZoom, zoomCss: ZOOM_CSS, mediaVideo: mediaVideo, quick: quick, STAGE_TYPES: STAGE_TYPES, v3: v3, dialPaint: dialPaint, dialPct: dialPct, dialNum: dialNum });
   window.casoraPopupWidth = width;
 
   // Symmetry (rule 12, owner 26.10.2026: „Symmetrie ist wichtig!“): in a two-column popup both columns

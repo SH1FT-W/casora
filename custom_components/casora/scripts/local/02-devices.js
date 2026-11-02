@@ -4093,10 +4093,12 @@
      The previous image stays until the new one has loaded (token/update without flicker). */
   V._mapCss = V._mapCss || {};
   V._mapUrl = V._mapUrl || {};
+  V._mapBox = V._mapBox || {};
   V.fit = function (i) {
     var p = i.parentNode;
     if (!p) return;
     var key = i.getAttribute('data-map') || '';
+    V._mapBox[key] = p;
     var W = p.clientWidth, H = p.clientHeight;
     var done = function () {
       V._mapUrl[key] = i.getAttribute('src');
@@ -4323,17 +4325,46 @@
       var url = c.map && states[c.map] && (states[c.map].attributes || {}).entity_picture;
       if (!url) return '';
       var mapCss = V._mapCss[c.map] || 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;';
+      /* Big view open (core stageZoom): a new markup would tear the enlarged element down, so the card keeps its last
+         markup and the new picture is swapped into the live box (same double buffer as below). */
+      var box = V._mapBox[c.map], bigBox = box && box.isConnected && box.parentNode && box.parentNode.classList.contains('big');
+      if (bigBox && V._mapHtml && V._mapHtml[c.map]) {
+        var cur = box.querySelector('img[data-map]:not([data-old])');
+        if (!cur || cur.getAttribute('src') !== url) {
+          if (cur) cur.setAttribute('data-old', '1');
+          var ni = document.createElement('img');
+          ni.setAttribute('data-map', c.map); ni.alt = ''; ni.style.cssText = mapCss + 'opacity:0;';
+          ni.onload = function () { V.fit(ni); };
+          ni.onerror = function () { ni.remove(); };
+          ni.src = url;
+          box.appendChild(ni);
+        }
+        return V._mapHtml[c.map];
+      }
       var prevUrl = V._mapUrl[c.map];
       /* Keep the previous image underneath, show the new one only once loaded. */
       var under = prevUrl && prevUrl !== url
         ? '<img data-old="1" src="' + esc(prevUrl) + '" alt="" style="' + mapCss + '">' : '';
       var fresh = !!under || !V._mapCss[c.map];
+      /* Tap enlarges the map (core big view, like the camera picture): the outer box is the zoom element, the inner
+         box keeps 16:10 so the fitted percentages hold at any size. */
+      var zcss = (window._casoraUI && window._casoraUI.zoomCss) || '';
       /* Heading like all sections (24.09.: otherwise the map sits higher than the first heading on the left). */
-      return (SF ? HH.label('Karte') : '<div style="font-family:var(--primary-font-family,system-ui);font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);'
+      var html = (SF ? HH.label('Karte') : '<div style="font-family:var(--primary-font-family,system-ui);font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);'
         + 'color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary,#fff));text-align:left;padding:0 4px 8px;">Karte</div>')
-        + '<div class="cv-map" style="position:relative;width:100%;aspect-ratio:16/10;border-radius:var(--casora-popup-row-radius, 20px);overflow:hidden;'
-        + 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));box-shadow:var(--casora-popup-plate-shadow, none);">'
-        + under + '<img data-map="' + esc(c.map) + '" src="' + esc(url) + '" alt="" style="' + mapCss + (fresh ? 'opacity:0;' : '') + '" onload="window._casoraVac&&window._casoraVac.fit(this)" onerror="this.remove()"></div>';
+        + '<style>' + zcss + '.cv-map{position:relative;width:100%;border-radius:var(--casora-popup-row-radius, 20px);overflow:hidden;'
+        + 'box-shadow:var(--casora-popup-plate-shadow, none);}'
+        + '.cv-map-in{position:relative;width:100%;aspect-ratio:16/10;overflow:hidden;border-radius:var(--casora-popup-row-radius, 20px);'
+        + 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));}'
+        + '.cv-map.big{box-shadow:none;}.cv-map.big .cv-map-in{background:none;border-radius:0;}</style>'
+        + '<div class="cv-map hui-st-img"' + (zcss ? ' data-casora-zoom="Karte" role="button" tabindex="0" aria-label="' + esc(window.casoraTr ? window.casoraTr('Vergrößern') : 'Vergrößern') + '"' : '') + '>'
+        + '<div class="cv-map-in">'
+        + under + '<img data-map="' + esc(c.map) + '" src="' + esc(url) + '" alt="" style="' + mapCss + (fresh ? 'opacity:0;' : '') + '" onload="window._casoraVac&&window._casoraVac.fit(this)" onerror="this.remove()"></div>'
+        + (zcss ? '<div class="hui-st-zx" role="button" tabindex="0" aria-label="' + esc(window.casoraTr ? window.casoraTr('Verkleinern') : 'Verkleinern') + '"><ha-icon icon="mdi:fullscreen-exit"></ha-icon></div>' : '')
+        + '</div>';
+      V._mapHtml = V._mapHtml || {};
+      V._mapHtml[c.map] = html;
+      return html;
     }
 
     if (kind === 'v_attn') {
