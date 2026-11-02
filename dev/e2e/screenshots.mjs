@@ -9,8 +9,8 @@
 //   CASORA_SHOTS_MODES=light,dark   nur bestimmte Modi
 //   CASORA_SHOTS_DIR=…              Zielordner der .webp (Standard: docs/images im Repo)
 //   CASORA_SHOTS_DASH=home-dashboard  Desktop-Dashboard des Demo-Hauses (Handy: <dash>-mobile)
-//   CASORA_SHOTS_ROOM=living-room   Raum für die Studio-Bilder
-//   CASORA_SHOTS_DESK_ROOM=bedroom  Raum fürs Desktop-Raumbild
+//   CASORA_SHOTS_ROOM=home          Raum für die Studio-Bilder
+//   CASORA_SHOTS_DESK_ROOM=bathroom Raum fürs Desktop-Raumbild
 //   CASORA_SHOTS_CLOCK=0            Uhr nicht auf 9:41 stellen
 //   CASORA_SHOTS_THEME="Casora"  Design der Bilder (Standard: Casora, das Hauptdesign)
 //   CASORA_URL=http://localhost:<port>  eigenes Wegwerf-HA mit dem Demo-Haus statt casora-test (8124);
@@ -36,9 +36,10 @@ const DIR = process.env.CASORA_SHOTS_DIR || path.join(REPO, 'docs/images');
 const RAW = path.join(OUT, 'shots');
 const DASH = process.env.CASORA_SHOTS_DASH || 'home-dashboard';
 const MOBILE = DASH + '-mobile';
-const ROOM = process.env.CASORA_SHOTS_ROOM || 'living-room';
-// Raum fürs Desktop-Raumbild: im Demo-Haus hat das Schlafzimmer die ruhigste Kachelreihe.
-const DESK_ROOM = process.env.CASORA_SHOTS_DESK_ROOM || 'bedroom';
+// Maintainer wish (02.11.2026): no air purifier in README/website pictures, plants instead. Home has the plant tile
+// and no air purifier; the bathroom is the calmest desktop room without one.
+const ROOM = process.env.CASORA_SHOTS_ROOM || 'home';
+const DESK_ROOM = process.env.CASORA_SHOTS_DESK_ROOM || 'bathroom';
 const THEME = process.env.CASORA_SHOTS_THEME || 'Casora';
 const MODES = (process.env.CASORA_SHOTS_MODES || 'light,dark').split(',').filter(Boolean);
 const ONLY = process.argv.slice(2);
@@ -64,13 +65,15 @@ const SHOTS = [
   { name: 'desktop-room', kind: 'dash', url: () => `/${DASH}/${DESK_ROOM}` },
   { name: 'popup-lights', kind: 'dash', popup: 'casora_light', url: () => `/${DASH}/home` },
   // Der Temperatur-Badge liegt in der Klima-Gruppe: erst die Gruppe aufklappen (pre), dann antippen.
-  { name: 'popup-climate', kind: 'dash', pre: 'casora_badge_climate_group', popup: 'casora_badge_temp', url: () => `/${DASH}/living-room` },
+  { name: 'popup-climate', kind: 'dash', pre: 'casora_badge_climate_group', popup: 'casora_badge_temp', url: () => `/${DASH}/kitchen` },
   // Weitere Popups der Startseite: Energie, Wäsche (läuft, siehe Zustände vor dem Lauf),
   // Sicherheit (Schloss) und Pflanzen.
   { name: 'popup-energy', kind: 'dash', popup: 'casora_energy', url: () => `/${DASH}/home` },
   { name: 'popup-laundry', kind: 'dash', popup: 'casora_waschmaschine', url: () => `/${DASH}/home` },
   { name: 'popup-security', kind: 'dash', pre: 'casora_badge_security_group', popup: 'casora_badge_contact_group', url: () => `/${DASH}/home` },
   { name: 'popup-plants', kind: 'dash', popup: 'casora_plant', url: () => `/${DASH}/home` },
+  // Weather popup with its dial (26.11.1), from the weather in the home header.
+  { name: 'popup-weather', kind: 'dash', popup: 'casora_weather', url: () => `/${DASH}/home` },
   // 1.2.1: Tanken im Auto-Popup (Ansicht „Tanken“ mit Karte und Preisen). Auto-Kachel und
   // Tank-Sensor gibt es im Demo-Haus nicht – beides nur im Browser, mit erfundenen Stationen.
   { name: 'popup-fuel', kind: 'dash', after: fuelView, url: () => `/${DASH}/home` },
@@ -82,6 +85,7 @@ const SHOTS = [
   { name: 'phone-popup-laundry', kind: 'phone', popup: 'casora_waschmaschine', url: () => `/${MOBILE}/home` },
   { name: 'phone-popup-plants', kind: 'phone', popup: 'casora_plant', url: () => `/${MOBILE}/home` },
   { name: 'phone-popup-fuel', kind: 'phone', after: fuelView, url: () => `/${MOBILE}/home` },
+  { name: 'phone-popup-weather', kind: 'phone', popup: 'casora_weather', url: () => `/${MOBILE}/home` },
   { name: 'studio', kind: 'studio', run: studioRoom },
   { name: 'studio-tile', kind: 'studio', run: studioTile },
   { name: 'studio-phone', kind: 'studio', run: studioPhone },
@@ -91,10 +95,10 @@ const SHOTS = [
   { name: 'move', kind: 'studio', run: moveFromHemma },
 ].filter((s) => !ONLY.length || ONLY.includes(s.name));
 
-// Echte Geräte: Safari-Engine, Pixeldichte, Touch und Kennung von Playwright. Das iPhone
-// liefert nur den Bereich zwischen Statusleiste (59 pt) und Home-Balken (34 pt), wie eine
-// Web-App auf dem Home-Bildschirm – Playwright kennt keine Safe Areas, die Kamera-Insel läge
-// sonst über der Navigation. readme-compose.mjs setzt Statusleiste und Balken wieder dazu.
+// Echte Geräte: Pixeldichte, Touch und Kennung von Playwright. Tablet in WebKit; das iPhone in Chromium, weil nur
+// Chromium Safe Areas nachstellen kann (CDP Emulation.setSafeAreaInsetsOverride: Statusleiste 59 pt, Home-Balken 34 pt).
+// Casora rückt damit selbst über env(safe-area-inset-*) ein wie auf dem echten iPhone; readme-compose.mjs setzt
+// Kamera-Insel, Statusleiste (9:41) und Balken darüber.
 const IPAD = devices['iPad Pro 11 landscape'];
 const IPHONE = devices['iPhone 15 Pro'];
 const VIEW = {
@@ -103,7 +107,7 @@ const VIEW = {
   tablet: { ...IPAD.viewport, scale: IPAD.deviceScaleFactor, mobile: true, touch: true, userAgent: IPAD.userAgent,
     safari: true, maxW: 1600 },
   phone: { width: IPHONE.screen.width, height: IPHONE.screen.height, scale: IPHONE.deviceScaleFactor,
-    mobile: true, touch: true, userAgent: IPHONE.userAgent, safari: true, maxW: 800 },
+    mobile: true, touch: true, userAgent: IPHONE.userAgent, safeArea: { top: 59, bottom: 34 }, maxW: 800 },
 };
 
 // ── PNG → WebP im Browser (kein cwebp nötig) ────────────────────────────────
@@ -209,21 +213,6 @@ async function dashShot(page, shot, touch) {
     url = `/${dash}/${v}`;
   }
   await ready(page, url, tilesReady, 60000);
-  // Ganzer iPhone-Bildschirm: Playwright kennt keine Safe Areas – Casoras Mobil-Chrome wird
-  // um die Statusleiste (59 px) nach unten versetzt, das Hintergrundbild reicht bis ganz oben.
-  if (shot.kind === 'phone') {
-    await page.evaluate(() => {
-      document.documentElement.style.setProperty('--casora-mobile-chrome-drop', '63px');
-      // Popup-Blatt beginnt wie auf dem iPhone unter der Statusleiste (59 px) plus Abstand (44 px), nicht an der Insel.
-      document.documentElement.style.setProperty('--casora-soft-sheet-top', '103px');
-      // Unten der Home-Balken (34 px): Navigationsleiste so hoch wie auf dem iPhone.
-      (function walk(r) {
-        if (!r) return;
-        r.querySelectorAll('.hmn-bar').forEach((b) => { b.style.setProperty('bottom', '32px', 'important'); });
-        r.querySelectorAll('*').forEach((e) => { if (e.shadowRoot) walk(e.shadowRoot); });
-      })(document);
-    });
-  }
   await page.evaluate(() => document.fonts && document.fonts.ready);
   await settle(page);
   await sleep(page, 3000);  // Raumfotos, Diagramme, Einblend-Animationen
@@ -359,7 +348,7 @@ async function studioTile(page, mode) {
   const picked = await page.evaluate(() => {
     const p = window.__panel();
     const room = p._state.compact.rooms[p._room || 0];
-    const order = ['casora_air_purifier', 'casora_thermostat', 'casora_light', 'casora_cover'];
+    const order = ['casora_plant', 'casora_thermostat', 'casora_light', 'casora_cover'];
     const tpl = (t) => [].concat(t.template || []);
     const tile = order.map((o) => (room.tiles || []).find((t) => tpl(t).includes(o))).find(Boolean) || (room.tiles || [])[0];
     if (!tile) return null;
@@ -434,6 +423,24 @@ for (const mode of MODES) {
       // Eigener Browser je Bild: Studio-Abläufe und Popups beeinflussen sich so nicht.
       const v = VIEW[kind];
       const { browser, context, page, errors } = await open({ ...v, dark: mode === 'dark', theme: THEME, locale: 'en-US', args: ['--hide-scrollbars'] });
+      if (v.safeArea) {
+        const { top, bottom } = v.safeArea;
+        const cdp = await context.newCDPSession(page);
+        await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: { top, topMax: top, bottom, bottomMax: bottom, left: 0, leftMax: 0, right: 0, rightMax: 0 } });
+      }
+      // TEMPORARY (02.11.2026): in scripts/i18n/<lang>.json catch-all patterns such as "^Ø (.+)$" and "^(.+) Uhr$"
+      // come before specific ones ("^Ø von (\d+) Lampen$", "^Regen ab (\d+) Uhr$"), so the light and weather popups
+      // show German ("Ø von 8 Lampen", "Regen ab 12"). Only in this browser: specific patterns first, so the pictures
+      // show the English the phrase table already has. Remove once the phrase order is fixed in the product.
+      await context.route(/scripts\/i18n\/[a-z]{2}\.json/, async (route) => {
+        const res = await route.fetch();
+        try {
+          const j = await res.json();
+          const generic = (p) => /\(\.[+*]\)/.test(p[0]);
+          if (Array.isArray(j.patterns)) j.patterns = j.patterns.filter((p) => !generic(p)).concat(j.patterns.filter(generic));
+          await route.fulfill({ response: res, json: j });
+        } catch (e) { await route.fulfill({ response: res }); }
+      });
       await context.addInitScript(() => {
         localStorage.setItem('dockedSidebar', JSON.stringify('always_hidden'));
         localStorage.setItem('casora.aiCost.skip', '1');

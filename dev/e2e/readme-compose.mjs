@@ -78,7 +78,8 @@ const SCENES = {
   screens: { out: 'readme-screens', gap: 40, html: (m) => display(src('desktop-room', m), 760) + tablet(src('tablet', m), 480) + phone(src('phone', m), 206, m) },
   // Popups: ganzer Bildschirm mit dem Popup in echter Größe, daneben dasselbe Popup am Handy.
   popups: { out: 'readme-popups', html: (m) => display(src('popup-lights', m), 1060) + phone(src('phone-popup-lights', m), 300, m) },
-  popups2: { out: 'readme-popups2', html: (m) => display(src('popup-energy', m), 1060) + phone(src('phone-popup-energy', m), 300, m) },
+  // Since 26.11.1 the second popup picture is the weather dial (before: energy).
+  popups2: { out: 'readme-popups2', html: (m) => display(src('popup-weather', m), 1060) + phone(src('phone-popup-weather', m), 300, m) },
   studio: { out: 'readme-studio', html: (m) => display(src('studio-tile', m), 1240) },
   // Werkzeuge: Geräte-Assistent und Umzug als Display-Ausschnitt des Dialogs, gleich hoch.
   tools: { out: 'readme-tools', gap: 48, html: (m) => display(src('assistant', m), fit(TOOL_CROP.assistant, 9999, 700), TOOL_CROP.assistant)
@@ -86,7 +87,7 @@ const SCENES = {
   // Nur Website
   room: { out: 'site-room', h: 1000, html: (m) => display(src('desktop-room', m), 1240) },
   'pop-lights': popScene('lights'), 'pop-climate': popScene('climate'), 'pop-energy': popScene('energy'),
-  'pop-laundry': popScene('laundry'), 'pop-fuel': popScene('fuel'), 'pop-plants': popScene('plants'),
+  'pop-laundry': popScene('laundry'), 'pop-fuel': popScene('fuel'), 'pop-plants': popScene('plants'), 'pop-weather': popScene('weather'),
   'studio-phone': { out: 'site-studio-phone', h: 1000, html: (m) => display(src('studio-phone', m), fit(TOOL_CROP.studioPhone, 1240, 800), TOOL_CROP.studioPhone) },
   versions: { out: 'site-versions', h: 1000, html: (m) => display(src('versions', m), 1240) },
   assistant: { out: 'site-assistant', h: 1000, html: (m) => display(src('assistant', m), 1240) },
@@ -97,7 +98,7 @@ const SCENES = {
 // Dialoge des Studios (Geräte-Assistent, Umzug) liegen fest mittig: Ausschnitt mit 10 px Rand.
 // Handy-Vorschau des Studios: Ausschnitt um die Vorschau samt Umschalter darüber.
 const TOOL_CROP = { assistant: [468, 61, 664, 939], move: [257, 61, 1086, 939], studioPhone: [430, 70, 740, 860] };
-const POPUPS = ['popup-lights', 'popup-climate', 'popup-energy', 'popup-laundry', 'popup-fuel', 'popup-plants'];
+const POPUPS = ['popup-lights', 'popup-climate', 'popup-energy', 'popup-laundry', 'popup-fuel', 'popup-plants', 'popup-weather'];
 
 // Bühne im Look „Casora“: hell Leinen/Sand mit hellem Kern, dunkel warmes Dunkelbraun.
 // Schatten warm statt blau, Geräterahmen in derselben Familie.
