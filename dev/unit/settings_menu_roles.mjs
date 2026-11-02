@@ -1,5 +1,6 @@
 // ⋯ menu (casora_settings_button): "Dashboard bearbeiten" opens the Studio, so only admins see it
-// (Prüfung 2 fam-07); everyone gets "Home Assistant", the way back to HA's sidebar (E14).
+// (Prüfung 2 fam-07). The "Home Assistant" entry (E14, opened HA's sidebar) is gone for everyone since
+// 02.11.2026: in the Companion app a swipe from the edge opens that sidebar anyway.
 //   node dev/unit/settings_menu_roles.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -28,8 +29,9 @@ const run = (user) => {
 
 const admin = run({ is_admin: true, id: 'a' });
 assert.ok(admin.includes('Dashboard bearbeiten'), 'admin keeps the Studio entry');
-assert.ok(admin.includes('Home Assistant'), 'admin: way back to HA');
+assert.ok(!admin.includes('Home Assistant'), 'admin: no "Home Assistant" entry');
 const kid = run({ is_admin: false, id: 'k' });
 assert.ok(!kid.includes('Dashboard bearbeiten'), 'non-admin: no Studio entry (it did nothing)');
-assert.ok(kid.includes('Aktualisieren') && kid.includes('Home Assistant'), 'non-admin keeps the rest');
+assert.ok(!kid.includes('Home Assistant'), 'non-admin: no "Home Assistant" entry');
+assert.deepEqual(kid, ['Aktualisieren'], 'non-admin: only "Aktualisieren" is left');
 console.log('settings_menu_roles: ok');

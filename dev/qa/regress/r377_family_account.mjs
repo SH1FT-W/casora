@@ -5,7 +5,8 @@
 // with file names in the bell, "Dashboard bearbeiten" in the ⋯ menu (it did nothing), and "Löschen" on an HA notification
 // removed it for everyone. Expected on the phone (WebKit 393):
 //  - non-admin: no Casora/HA maintenance notice in the bell, a normal HA notification is there; its popup offers
-//    "Für mich ausblenden" and that leaves it in HA; the ⋯ menu has no "Dashboard bearbeiten" but "Home Assistant";
+//    "Für mich ausblenden" and that leaves it in HA; the ⋯ menu has no "Dashboard bearbeiten" (and, since
+//    02.11.2026, no "Home Assistant" entry for anyone: the Companion app's edge swipe opens HA's sidebar);
 //  - admin: the Casora notice is there under a German line ("Casora hat aufgeräumt"), the ⋯ menu has both entries.
 // Without the account "Kind" (dev/qa/wegwerf-ha.sh konten) only the admin part runs.
 import { open, casoraDashboard, check, need, finish, atFinish, dashboard, BASE } from './lib.mjs';
@@ -63,7 +64,7 @@ for (const who of kind ? ['admin', 'kind'] : ['admin']) {
   if (who === 'admin') await check('admin: Casora-Wartungsmeldung mit deutscher Zeile', !!own && own.label === 'Casora hat aufgeräumt', rows);
   else await check('kind: keine Casora-Wartungsmeldung', !own, rows);
   const items = await menuOf(page);
-  await check(`${who}: ⋯-Menü hat „Home Assistant“`, !!items && items.includes('Home Assistant'), items);
+  await check(`${who}: ⋯-Menü ohne „Home Assistant“`, !!items && !items.includes('Home Assistant'), items);
   await check(`${who}: „Dashboard bearbeiten“ nur für Admins`, !!items && items.includes('Dashboard bearbeiten') === (who === 'admin'), items);
   if (who === 'kind') {
     // The popup of the HA notification: "Für mich ausblenden" – it stays in HA.
