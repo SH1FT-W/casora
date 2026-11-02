@@ -644,7 +644,11 @@
       return out;
     });
     wrap("_bDocPick", (orig) => function (id) {
-      if (id === "doc:open") { this._bRooms = false; if (this._openDash) this._openDash(true); return true; }
+      if (id === "doc:open") {
+        this._bRooms = false;
+        if (this._openDash) this._leaveSettingsOk().then((ok) => ok && this._openDash(true));
+        return true;
+      }
       return orig.apply(this, arguments);
     });
     P._uxMore = function () {

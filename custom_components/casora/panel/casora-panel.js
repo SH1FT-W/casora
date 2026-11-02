@@ -12711,7 +12711,7 @@ class CasoraPanel extends HTMLElement {
         }
         if (id === "delete") return this._deleteDashboard();
         if (id === "addmobile") return this._addMobileSibling();
-        if (id === "open") return this._openDash(true);
+        if (id === "open") return this._leaveSettingsOk().then((ok) => ok && this._openDash(true));
         if (id === "hints") return this._setHints(this._hints === false, true);
         if (id === "setup") return this._rerunSetup();
       });
@@ -14128,6 +14128,28 @@ class CasoraPanel extends HTMLElement {
     });
     if (ok) this._discardDraft();
     return ok;
+  }
+
+  // Global settings (saved with "Save settings") are not part of the dashboard: before leaving the
+  // Studio, unsaved ones are saved or dropped on purpose. false = stay (Back, or saving failed).
+  async _leaveSettingsOk() {
+    if (!(typeof this._csDirty === "function" && this._csDirty())) return true;
+    const res = await this._ask({
+      title: trLabel("Save settings?"),
+      message: trLabel("Your changes to the settings have not been saved yet."),
+      confirmLabel: trLabel("Save"),
+      altLabel: trLabel("Discard"),
+      cancelLabel: trLabel("Back"),
+    });
+    if (res && res.alt) {
+      // Dropped: the next visit to Settings reads what HA has.
+      this._cs = null;
+      if (this._csOpen && this._csClose) this._csClose();
+      return true;
+    }
+    if (res !== true) return false;
+    await this._csSave();
+    return !this._csDirty();
   }
 
   // Menü „Einrichtungsassistent …“: Look → Schrift → Effekte → [Gefunden] → Räume,
@@ -16924,6 +16946,7 @@ class CasoraPanel extends HTMLElement {
   async _done() {
     const btn = this.$("donebtn");
     if (btn && btn.disabled) return;
+    if (!(await this._leaveSettingsOk())) return;
     if (this._isDirty()) {
       // Ein Speichermodell: „Fertig“ sichert ohne Rückfrage. Zurück geht es über Rückgängig
       // (vor dem Fertig) oder die Zeitreise (danach).
@@ -17170,7 +17193,8 @@ class CasoraPanel extends HTMLElement {
   _wireLeaveGuard() {
     if (this._leaveGuard) return;
     this._leaveGuard = (ev) => {
-      if (this._leaving || !this.isConnected || !this._isDirty()) return;
+      const cs = typeof this._csDirty === "function" && this._csDirty();
+      if (this._leaving || !this.isConnected || !(this._isDirty() || cs)) return;
       // A last copy right away, then the browser's own "leave page?" question.
       this._writeDraft();
       ev.preventDefault();
@@ -17180,7 +17204,8 @@ class CasoraPanel extends HTMLElement {
     // per-08 (10.10.2026): Verlassen über die HA-Seitenleiste lud nichts neu – kein beforeunload, die
     // Änderung war ohne Rückfrage weg. Jetzt dieselbe Rückfrage wie beim Verlassen aus dem Studio.
     this._leaveNav = (ev) => {
-      if (this._leaving || this._leaveAsking || !this.isConnected || !this._state || !this._isDirty()) return;
+      const cs = typeof this._csDirty === "function" && this._csDirty();
+      if (this._leaving || this._leaveAsking || !this.isConnected || !((this._state && this._isDirty()) || cs)) return;
       if (ev.button || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
       const path = ev.composedPath ? ev.composedPath() : [];
       if (!path.some((n) => n && n.localName === "ha-sidebar")) return;
@@ -17190,8 +17215,8 @@ class CasoraPanel extends HTMLElement {
       ev.preventDefault();
       ev.stopImmediatePropagation();
       this._leaveAsking = true;
-      this._writeDraft();
-      this._leaveStudioOk().then((ok) => {
+      if (this._state && this._isDirty()) this._writeDraft();
+      this._leaveSettingsOk().then((ok) => ok && this._leaveStudioOk()).then((ok) => {
         this._leaveAsking = false;
         if (!ok) return;
         this._leaving = true;
