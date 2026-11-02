@@ -12725,11 +12725,14 @@ window.casoraMenuGlass = {
     + '.hui-moon.go .ic{color:inherit;}'
     + '.hui-moon.dng{background:transparent;box-shadow:inset 0 0 0 2px ' + S.ctl + ';color:var(--casora-color-red-text, var(--casora-color-red));}'
     + '.hui-moon.dng .ic{color:inherit;}'
+    // A moon at work (it.busy, e.g. the updates search): its symbol turns until the work is done – the turning symbol is
+    // the signal, no text beside it (maintainer review 02.11.2026). Drawn with the moon, so a re-render keeps it.
+    + '.hui-moon.busy{cursor:default;}.hui-moon.busy .ic{animation:hui-dl-spin 1s linear infinite;}'
     + '.hui-moon:active{transform:translate(-50%, -50%) scale(var(--casora-press-scale, .97));}'
     + '@media (hover:hover){.hui-moon:hover{transform:translate(-50%, -50%) scale(1.07);}}'
     + '.hui-stage.dial > .hui-st-seg{width:100%;}'
     + '.hui-stage.dial .hui-st-chart{width:100%;}'
-    + '@media (prefers-reduced-motion:reduce){.hui-dl-cover.spin{animation:none;}.hui-moon{transition:none;}.hui-dl .fl,.hui-dl-knob{transition:none;}}';
+    + '@media (prefers-reduced-motion:reduce){.hui-dl-cover.spin{animation:none;}.hui-moon.busy .ic{animation:none;opacity:.45;}.hui-moon{transition:none;}.hui-dl .fl,.hui-dl-knob{transition:none;}}';
   // Positions of the moons (degrees, 0 = right, 90 = bottom) by count, and whether the bottom holds the action.
   // The lower side moons sit at 155° / 25°, clear of the ring's ends (135° / 45°) where the knob rests at 0 and 100 %
   // (review 2: knob and moon touched at 150°).
@@ -12770,8 +12773,8 @@ window.casoraMenuGlass = {
     var spec = it.svc ? (it.confirm ? Object.assign({}, it.svc, { confirm: it.confirm }) : it.svc) : null;
     var shown = it.short || it.text;
     if (it.menu) return moonMenuHtml(it, deg);
-    return '<div class="hui-moon' + (it.active ? ' on' : '') + (it.dis ? ' dis' : '') + (cls ? ' ' + esc(cls) : '') + moonWordCls(shown) + '" role="button" aria-label="' + esc(it.text + (it.dis && it.sub ? ' – ' + it.sub : '')) + '"'
-      + (it.dis ? ' aria-disabled="true"' : '') + (it.short ? ' title="' + esc(it.text) + '"' : '')
+    return '<div class="hui-moon' + (it.active ? ' on' : '') + (it.dis ? ' dis' : '') + (it.busy ? ' busy' : '') + (cls ? ' ' + esc(cls) : '') + moonWordCls(shown) + '" role="button" aria-label="' + esc(it.text + (it.dis && it.sub ? ' – ' + it.sub : '')) + '"'
+      + (it.dis ? ' aria-disabled="true"' : '') + (it.busy ? ' aria-busy="true"' : '') + (it.short ? ' title="' + esc(it.text) + '"' : '')
       + (cls ? '' : ' aria-pressed="' + (it.active ? 'true' : 'false') + '"')
       + (spec ? ' data-casora-svc="' + esc(JSON.stringify(spec)) + '"' : '')
       + (it.page ? ' data-casora-page="' + esc(it.page) + '"' : '') + (it.value != null ? ' data-v="' + esc(it.value) + '"' : '')
@@ -12979,7 +12982,7 @@ window.casoraMenuGlass = {
       var aDeg = list.length === 1 || list.length === 3 ? 25 : 90;
       degs.push(aDeg);
       // act.short: a short word on the moon, the full text stays its name and tooltip („Alle“ for „Alle aktualisieren“).
-      out += moonHtml({ icon: act.icon || (act.danger ? 'mdi:alert-outline' : 'mdi:play'), text: act.text, short: act.short || null, svc: aSpec, confirm: act.danger ? null : act.confirm, attrs: act.attrs },
+      out += moonHtml({ icon: act.icon || (act.danger ? 'mdi:alert-outline' : 'mdi:play'), text: act.text, short: act.short || null, svc: aSpec, confirm: act.danger ? null : act.confirm, attrs: act.attrs, busy: act.busy },
         aDeg, act.danger ? 'dng' : act.primary === false ? '' : 'go');
     }
     var lv = o.live && o.live.entities && o.live.entities.length ? o.live : null;
