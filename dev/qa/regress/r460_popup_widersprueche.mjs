@@ -31,14 +31,7 @@
 import { open, casoraDashboard, dashboard, check, need, finish, atFinish, BASE } from './lib.mjs';
 import { tokens } from '../ws.mjs';
 
-const KNOWN = [
-  // Stage „Seit …“ of the history popup and the head's „Seit …“/„Vor N Min.“ name HA's start as a change; the newest
-  // history row names the start of the 24 h window as a change (window popup of #106: head 15:25, dial 18:14).
-  { issue: 106, popup: /^(verlauf|verlauf-alt|kachel):/, rule: 'zeit', text: /nennt HAs Start/ },
-  { issue: 106, popup: /^verlauf-alt:/, rule: 'verlauf', text: /Beginn des 24-Std\.-Zeitraums/ },
-  // Group badge popups (phone) take their head time from the UI helper the tile is bound to.
-  { issue: 106, popup: /^kachel:casora_badge_\w+_group/, rule: 'zeit', text: /Bedien-Helfers/ },
-];
+const KNOWN = [];
 const STRICT = process.env.CASORA_QA_STRENG === '1';
 
 // ── REST ────────────────────────────────────────────────────────────────────
