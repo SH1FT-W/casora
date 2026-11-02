@@ -281,9 +281,14 @@ async function fuelView(page) {
       if (a && a.casora_popup && window.casoraPopup) { ev.stopPropagation(); window.casoraPopup.open(a.casora_popup); } }, { capture: true, once: true });
     // Seit 1.3 (Bündel schlank) fehlt icon_tap_action, wo sie dasselbe Popup öffnet: ein Tipp aufs Symbol löst dann die tap_action aus.
     el._handleAction({ detail: { action: 'tap' } }, { isIcon: !!el._hasIconActions });
+    // Popup v3: "Tanken" is a › row of the section "Tank" that opens the sub page „tanken|…“
+    // (12-tanken.js K.item); the old layout had the row under the tank bar (.casora-tank-row).
     for (let i = 0; i < 40; i++) {
       const s = window.casoraPopup && window.casoraPopup.surface;
-      const row = s && window.__pierce('.casora-tank-row', s).find((e) => e.getBoundingClientRect().height > 0);
+      const vis = (e) => e.getBoundingClientRect().height > 0;
+      const v3 = s && window.__pierce('[data-casora-page^="tanken"]', s).find(vis);
+      if (v3) { v3.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true })); return null; }
+      const row = s && window.__pierce('.casora-tank-row', s).find(vis);
       if (row) { (row.querySelector('.hui-srow') || row).dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true })); return null; }
       await new Promise((res) => setTimeout(res, 250));
     }
