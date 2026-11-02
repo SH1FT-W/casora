@@ -2981,6 +2981,14 @@
       "{1} · Desligado"
     ],
     [
+      "^(-?[\\d.]+°) · Ready$",
+      "{1} · Pronto"
+    ],
+    [
+      "^(-?[\\d.]+°) · Automatic$",
+      "{1} · Auto"
+    ],
+    [
       "^(-?[\\d.]+°) · Heating to (.+)$",
       "{1} · Aquece até {2}"
     ],

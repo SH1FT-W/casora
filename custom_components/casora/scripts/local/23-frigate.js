@@ -2561,7 +2561,7 @@
     return out;
   };
   var chipRoots = function () {
-    var P = window.casoraPopup, el = P && P.element;
+    var P = window.casoraPopup, el = P && P.shown;
     return el && el.shadowRoot ? findAll(el.shadowRoot, '.frig-chips', 0) : [];
   };
   F.saveChips = function () { chipRoots().forEach(function (r) { var k = r.getAttribute('data-row'); if (k) rowPos[k] = r.scrollLeft; }); };

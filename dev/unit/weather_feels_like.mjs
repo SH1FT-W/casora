@@ -82,7 +82,8 @@ const house = ({ attrs = {}, sensors = [], dev = 'd1' } = {}) => {
   const s = D.weatherSources(h, W);
   assert.equal(s.feels.entity, 'sensor.station_gefuehlt');
   assert.equal(s.feels.attribute, undefined);
-  assert.equal(s.dew_point.attribute, 'dew_point', 'display values: the chosen entity\'s attribute first');
+  assert.equal(s.dew_point.entity, 'sensor.station_taupunkt', 'display values: the device\'s sensor first (owner 02.11.2026)');
+  assert.equal(s.dew_point.attribute, undefined);
   const c = D.weatherChart(h, W, 'sensor.outdoor', {});
   assert.deepEqual(c.series.map((x) => [x.entity, x.attribute, x.name]), [
     ['sensor.station_temperatur', undefined, 'Temperatur'], ['sensor.station_gefuehlt', undefined, 'Gefühlt']]);
@@ -243,5 +244,63 @@ const house = ({ attrs = {}, sensors = [], dev = 'd1' } = {}) => {
   const f = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8');
   assert.deepEqual(pc, keys(/var WX_CURVES = (\[[^\]]+\])/.exec(f)[1]), 'Studio and dashboard know the same curves');
   assert.deepEqual(pr, keys(/var WX_ROWS = (\[[^\]]+\])/.exec(f)[1]), 'Studio and dashboard know the same rows');
+}
+// 11. Issue #115: an own temperature sensor (Studio, weather_temp_sensor) is the temperature curve in every case, also
+//     next to the felt curve where the station's own temperature was taken before; unknown: the old choice.
+{
+  const h = house({ sensors: [['sensor.station_temperatur', '5.0', 'temperature', '°C'], ['sensor.station_gefuehlt', '6.2', 'apparent_temperature', '°C']] });
+  h.states['sensor.own_temp'] = { entity_id: 'sensor.own_temp', state: '6.2', attributes: { unit_of_measurement: '°C', device_class: 'temperature' } };
+  const ids = (o, out = 'sensor.outdoor') => D.weatherChart(h, W, out, o).series.map((x) => x.entity);
+  assert.deepEqual(ids({ temp: 'sensor.own_temp', curves: ['temperature', 'feels'] }), ['sensor.own_temp', 'sensor.station_gefuehlt']);
+  assert.deepEqual(ids({ temp: 'sensor.own_temp', curves: ['temperature'] }), ['sensor.own_temp']);
+  assert.deepEqual(ids({ temp: 'sensor.own_temp', curves: ['temperature', 'feels'] }, null), ['sensor.own_temp', 'sensor.station_gefuehlt']);
+  assert.equal(D.weatherSources(h, W, { temp: 'sensor.own_temp' }).temperature.value, 6.2);
+  h.states['sensor.own_temp'].state = 'unavailable';
+  assert.deepEqual(ids({ temp: 'sensor.own_temp', curves: ['temperature', 'feels'] }), ['sensor.station_temperatur', 'sensor.station_gefuehlt']);
+  const tpl = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
+  assert.ok(tpl.casora_weather.tap_action.casora_popup.content.includes("temp: tsId || ''"), 'popup hands the own sensor to the chart');
+}
+// 12. Owner 02.11.2026: every value with an own sensor on the weather device is that sensor (value + › onto it), the
+//     attribute only fills in - extra rows and the template's standard rows (rain, wind + direction, humidity,
+//     pressure, UV, visibility), v2 and v3. Before, attribute rows (dew point, gusts, cloud, wind) had no ›.
+{
+  const h = house({
+    attrs: { dew_point: 6, wind_gust_speed: 13, wind_speed: 18.4, wind_bearing: 225, wind_speed_unit: 'km/h', cloud_coverage: 75,
+      pressure: 1013, pressure_unit: 'hPa', visibility: 24, visibility_unit: 'km', uv_index: 2 },
+    sensors: [
+      ['sensor.wx_taupunkt', '5.4', 'dew_point', '°C'], ['sensor.wx_boen', '12.6', 'wind_gust', 'km/h'],
+      ['sensor.wx_bewoelkung', '58', 'cloud_cover', '%'], ['sensor.wx_wind', '12.3', 'wind_speed', 'km/h'],
+      ['sensor.wx_richtung', '90', 'wind_bearing', '°'], ['sensor.wx_feuchte', '64', 'humidity', '%'],
+      ['sensor.wx_druck', '1008.4', 'pressure', 'hPa'], ['sensor.wx_sicht', '17.5', 'visibility', 'km'],
+      ['sensor.wx_regen_chance', '35', 'precipitation_probability', '%'], ['sensor.wx_uv', '3', 'uv_index', ''],
+    ],
+  });
+  const s = D.weatherSources(h, W);
+  const ent = (k) => s[k] && !s[k].attribute ? s[k].entity : null;
+  assert.deepEqual(['dew_point', 'gust', 'cloud', 'wind', 'bearing', 'humidity', 'pressure', 'visibility', 'rain_chance', 'uv'].map(ent),
+    ['sensor.wx_taupunkt', 'sensor.wx_boen', 'sensor.wx_bewoelkung', 'sensor.wx_wind', 'sensor.wx_richtung', 'sensor.wx_feuchte',
+      'sensor.wx_druck', 'sensor.wx_sicht', 'sensor.wx_regen_chance', 'sensor.wx_uv']);
+  assert.equal(s.gust.value, 12.6, 'the sensor\'s value, not the attribute\'s 13');
+  const rows = D.weatherRows(h, W, {});
+  const by = Object.fromEntries(rows.map((r) => [r.key, r]));
+  assert.deepEqual(['dew_point', 'gust', 'cloud', 'rain_chance'].map((k) => by[k].entity),
+    ['sensor.wx_taupunkt', 'sensor.wx_boen', 'sensor.wx_bewoelkung', 'sensor.wx_regen_chance'], 'extra rows open their sensor');
+  assert.equal(by.dew_point.value, '5 °C');
+  assert.equal(by.uv, undefined, 'the entity has uv_index: the template\'s UV row, not a second one');
+  // Without a sensor the attribute fills in (no ›); an unavailable sensor too.
+  h.states['sensor.wx_boen'].state = 'unavailable';
+  assert.deepEqual(D.weatherSources(h, W).gust, { entity: W, attribute: 'wind_gust_speed', value: 13, unit: 'km/h' });
+  assert.equal(D.weatherRows(h, W, {}).find((r) => r.key === 'gust').entity, undefined);
+  // The template takes its standard rows from weatherSources and hands each sensor on as the row's entity.
+  const tpl = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
+  const c = tpl.casora_weather.tap_action.casora_popup.content;
+  assert.ok(/const _wxS = window\.casoraDevice\.weatherSources|const _wxS = window\.casoraDevice && window\.casoraDevice\.weatherSources \? window\.casoraDevice\.weatherSources\(hass, id, \{ feels: variables\.weather_feels_sensor \|\| '', temp: tsId \|\| '' \}\)/.test(c), 'popup asks weatherSources for its standard rows');
+  for (const [label, v] of [['Luftfeuchtigkeit', '_wH'], ['Wind', '_wW'], ['Luftdruck', '_wP'], ['UV-Index', '_wU'], ['Sichtweite', '_wVis']]) {
+    assert.ok(new RegExp("label: '" + label + "', value: [^\\n]*entity: _wxE\\(" + v + '\\) \\}').test(c), 'v2 row ' + label + ' opens its sensor');
+  }
+  assert.ok(/label: 'Regen', value: [^\n]*entity: _wxE\(_rc\) \}/.test(c), 'v3 Regen opens the rain chance sensor');
+  assert.ok(/label: 'Wind', value: windTxt[^\n]*entity: _wxE\(_wW\) \}/.test(c), 'v3 Wind opens the wind speed sensor');
+  assert.ok(/label: 'UV-Index', value: Math\.round\(uvV\)[^\n]*entity: _wxE\(_srcW3\.uv\) \}/.test(c), 'v3 UV opens its sensor');
+  assert.ok(/const wdir = _wB \?/.test(c) && /const windTxt = _wW \?/.test(c), 'wind and its direction from the sources');
 }
 console.log('weather_feels_like: ok');

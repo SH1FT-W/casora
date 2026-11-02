@@ -102,9 +102,9 @@ def parse_changelog(text: str, lang: str = "en") -> list[dict]:
     return out
 
 
-# Komplette Casora-Releases heißen „vX.Y.Z“; andere Tags (Karten-Updates „karten-…“,
-# card_updates.py) sind nie eine Casora-Version.
-CASORA_TAG = re.compile(r"^v\d")
+# Full Casora releases are tagged "vX.Y.Z" or just "X.Y.Z"; other tags (card updates "karten-…",
+# card_updates.py) are never a Casora version.
+CASORA_TAG = re.compile(r"^v?\d+\.\d")
 
 
 def is_casora_tag(tag: Any) -> bool:
@@ -162,7 +162,7 @@ version_key = functools.cmp_to_key(compare_versions)
 
 
 def latest_casora(releases: list[dict], beta: bool = False) -> dict | None:
-    """Neuestes Casora-Release (kein Entwurf, Tag „v…“).
+    """Neuestes Casora-Release (kein Entwurf, Tag „v…“ oder „…“ ohne v).
 
     Vorabversionen (prerelease) zählen nur mit beta=True; dann gewinnt die höchste
     Version, eine stabile 1.1.0 also vor 1.1.0-beta.2.

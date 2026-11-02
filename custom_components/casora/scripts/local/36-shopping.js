@@ -121,7 +121,7 @@
     return out;
   };
   S.onChange(function (id) {
-    var pop = window.casoraPopup && window.casoraPopup.element;
+    var pop = window.casoraPopup && window.casoraPopup.shown;
     if (!pop) return;
     var tr = window.casoraTr || function (x) { return x; };
     deep(pop.shadowRoot, deep(pop, [])).forEach(function (n) {

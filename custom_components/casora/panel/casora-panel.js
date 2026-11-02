@@ -5931,6 +5931,8 @@ const tileActive = (kind, ent, V, states) => {
     }
     case "game": return gameActivity(ent).active;
     case "battery": return batteryPack(V, states).low;
+    // Like casora_thermostat (active_states): every mode but off is on – Automatik too (owner, 02.11.2026).
+    case "thermostat": return !["off", "unavailable", "unknown", ""].includes(state);
     default: break;
   }
   const extra = Array.isArray(V.active_states)
@@ -6320,7 +6322,6 @@ const tileStateWord = (kind, tile, ent, states, hass) => {
   switch (kind) {
     case "thermostat": {
       const mode = String(ent.state).toLowerCase();
-      const target = ent.attributes && ent.attributes.temperature;
       // Room temperature from the "Temperature sensor" in front, as casora_thermostat shows it (issue #32).
       const s = V.temp_sensor && (states || {})[V.temp_sensor];
       const sa = (s && s.attributes) || {};
@@ -6331,9 +6332,16 @@ const tileStateWord = (kind, tile, ent, states, hass) => {
       const alt = rt != null ? rt : !V.temp_sensor && mode !== "unavailable" && Number.isFinite(ct) ? Math.round(ct * 10) / 10 : null;
       const room = Number.isFinite(v) && (sa.device_class === "temperature" || /°|^K$/.test(String(sa.unit_of_measurement || "")))
         ? Math.round(v * 10) / 10 + "° · " : alt != null ? alt + "° · " : "";
-      if (mode !== "cool" && mode !== "heat") return room + "Off";
-      if (target == null) return room + (mode === "cool" ? "Cooling" : "Heating");
-      return room + (mode === "cool" ? "Cooling to " : "Heating to ") + target + "°";
+      // Same calm words as casora_thermostat: room · state, no target (owner, 02.11.2026).
+      const act = (typeof window.casoraClimateActive === "function" && window.casoraClimateActive(ent)) || {};
+      const action = (ent.attributes || {}).hvac_action;
+      const auto = mode === "auto" || mode === "heat_cool";
+      if (act.cooling || (auto && action === "cooling")) return room + "Cooling";
+      if (act.heating || (auto && action === "heating")) return room + "Heating";
+      if (mode === "cool" || mode === "heat") return room + "Ready";
+      if (auto) return room + "Automatic";
+      if (mode === "unavailable") return "Unavailable";
+      return room + "Off";
     }
     case "cameras": return cameraWord(V, states, hass);
     case "media": return mediaWord(ent);
@@ -26136,10 +26144,12 @@ class CasoraPanel extends HTMLElement {
         const g = el.querySelector(".mglyph");
         g.style.setProperty("--i", "url('" + iconUrl("heating_coil") + "')");
         if (!active) g.style.setProperty("--ic", "color-mix(in srgb, var(--casora-icon-off-ink, transparent) var(--casora-icon-off-mix, 0%), var(--casora-puck-heat-color, #FF4245))");
+        // Cool tint for cooling modes (and Automatik while it cools), the heat tint for every other mode but off.
+        const cools = mode === "cool" || mode === "dry" || mode === "fan_only" || (ent.attributes || {}).hvac_action === "cooling";
         circle.style.setProperty("--sc",
-          mode === "cool" ? "var(--casora-puck-cool-color, var(--casora-color-teal, #00C3D0))"
-          : mode === "heat" ? "var(--casora-puck-heat-color, var(--casora-color-yellow, #FFCC00))"
-          : (TILE_COLOR[kind] || TILE_TINT));
+          !active ? (TILE_COLOR[kind] || TILE_TINT)
+          : cools ? "var(--casora-puck-cool-color, var(--casora-color-teal, #00C3D0))"
+          : "var(--casora-puck-heat-color, var(--casora-color-yellow, #FFCC00))");
       } else {
         const face = (tile.variables || {}).entity_picture;
         const art = kind === "media" ? mediaArtUrl(ent, this._hass.states)

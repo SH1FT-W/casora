@@ -2981,6 +2981,14 @@
       "{1} · Uit"
     ],
     [
+      "^(-?[\\d.]+°) · Ready$",
+      "{1} · Gereed"
+    ],
+    [
+      "^(-?[\\d.]+°) · Automatic$",
+      "{1} · Automatisch"
+    ],
+    [
       "^(-?[\\d.]+°) · Heating to (.+)$",
       "{1} · Verwarmt naar {2}"
     ],

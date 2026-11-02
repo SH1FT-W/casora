@@ -2878,7 +2878,7 @@ window.casoraMenuGlass = {
     };
 
     /* alt: the tile's own short form for narrow tiles ("22,2° · Heizt" instead of "22,2° +1"); without it the
-       first part and a counter as below. */
+       first part and a counter as below. alt equal to text: no counter, the text itself ends with "…" (thermostat). */
     window.casoraStateFit = function (text, weight, alt) {
       const t = text == null ? '' : String(text);
       if (!t) return '';
@@ -2886,7 +2886,7 @@ window.casoraMenuGlass = {
       const escHtml = window.casoraEsc || ((x) => String(x == null ? '' : x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
       if (!(em > 0)) return escHtml(t);
       const a = alt == null ? '' : String(alt);
-      if (a && a !== t) {
+      if (a) {
         return '<casora-statefit data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
           + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
           + '<span class="sf-f">' + escHtml(t) + '</span><span class="sf-s" style="display:none;max-width:100%">'
@@ -3714,7 +3714,7 @@ window.casoraMenuGlass = {
     // in the open popup.
     if (!window._casoraNPPosTick) {
       window._casoraNPPosTick = setInterval(function () {
-        const P = window.casoraPopup, el = P && P.element;
+        const P = window.casoraPopup, el = P && P.shown;
         if (!el || !el.hasAttribute || !el.hasAttribute('open')) return;
         const mmss = (x) => { x = Math.round(x); const h = Math.floor(x / 3600), m = Math.floor((x % 3600) / 60), r = x % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(r).padStart(2, '0'); };
         (function walk(n, depth) {
@@ -4827,6 +4827,15 @@ window.casoraMenuGlass = {
       this._menu    = null;
       this._onRoute  = () => this._syncRoute();
       this._onResize = () => { this._syncHeaderOffset(); if (this._pagedMode) this._queueLayout(); else this._placeIndicator(true); };
+      // The labels are translated once in _build. A language's phrases arrive later on a fresh load (casora-i18n.js
+      // fetches them on first use): build again then, or the room names stay German (gate 26.11.7, r68/r502).
+      this._onI18n = () => {
+        if (!this._config || !this._built || !this.isConnected) return;
+        this.setConfig(this._config);
+        if (this._hass) this._syncBadges();
+        this._syncRoute();
+        this._syncHeaderOffset();
+      };
     }
 
     static getStubConfig() { return { variant: 'desktop', routes: [] }; }
@@ -4873,6 +4882,7 @@ window.casoraMenuGlass = {
       window.addEventListener('location-changed', this._onRoute, true);
       window.addEventListener('popstate', this._onRoute, true);
       window.addEventListener('resize', this._onResize);
+      window.addEventListener('casora-i18n-ready', this._onI18n);
       if (this._config && !this._built) this._build();
       this._syncRoute();
       this._syncHeaderOffset();
@@ -4895,6 +4905,7 @@ window.casoraMenuGlass = {
       window.removeEventListener('location-changed', this._onRoute, true);
       window.removeEventListener('popstate', this._onRoute, true);
       window.removeEventListener('resize', this._onResize);
+      window.removeEventListener('casora-i18n-ready', this._onI18n);
       this._closeMenu();
     }
 
@@ -7562,6 +7573,17 @@ window.casoraMenuGlass = {
     if (!/\bcasora_light\b/.test(tpl) && spansRooms(src)) return 'Zuhause';
     try { return String(window._casoraRoomOf(id) || '').trim(); } catch (e) { return ''; }
   }
+  /* r487: the title a device's sub page takes from the row tapped for it. Only in a popup over several rooms (its label
+     „Zuhause“ or none): there the row's name is what tells the devices apart („Küche“ of „Jalousie Küche“) and no room
+     stands above the page, so cutting the room off the device's name left just „Jalousie“. A room's popup keeps its
+     pages as before (the device's name without the room). rowName: the row's data-casora-rn; pop: the open popup. */
+  window.casoraSubTitle = function (rowName, pop) {
+    var n = String(rowName || '').trim();
+    // Only the soft design cuts names by room (stripRoom); the classic one keeps the device's own title.
+    if (!n || !pop || !(window._casoraSoft && window._casoraSoft())) return null;
+    var room = String(pop._roomLabel || '').trim();
+    return !room || room === 'Zuhause' ? n : null;
+  };
   // „Licht Badezimmer“ unter dem Etikett „Badezimmer“ → „Licht“ (Raum steht schon darüber).
   function stripRoom(title, room) {
     var t = String(title || '');
@@ -8018,6 +8040,8 @@ window.casoraMenuGlass = {
       this.toggleAttribute('flat', cfg.flat === true);
       var hasHeader = !!(cfg.title || cfg.eyebrow);
       this._cfgTitle = cfg.title || '';
+      // A title taken from the tapped row (row_title) is shown as it is, never cut by a room (r487).
+      this._rowTitle = cfg.row_title === true;
       this._cfgEyebrow = cfg.eyebrow || '';
       // issue 106: a page about another entity than the tile's (a single window under the window group) names it, so the
       // head's „Seit …“ is that entity's time, the same as its stage – not the group's.
@@ -8040,13 +8064,24 @@ window.casoraMenuGlass = {
       this._backFn = typeof cfg.back === 'function' ? cfg.back : null;
       // Über eine Kachel geöffnet (casoraRoute → openViaCard): der Weg zurück liegt vorgemerkt bereit.
       var bn = window._casoraBackNext;
-      if (!this._backFn && bn && Date.now() - bn.at < 4000) this._backFn = bn.fn;
+      if (!this._backFn && bn && Date.now() - bn.at < 4000) {
+        this._backFn = bn.fn;
+        // A device row of a popup over several rooms names its sub page (r487): the row's name, not the device's own
+        // name cut by its room (no room stands above it there). Kept in the config, so ‹ from a page further in keeps it.
+        if (typeof bn.title === 'string' && bn.title) {
+          this._cfgTitle = bn.title; this._rowTitle = true;
+          this._headerTitle.textContent = bn.title;
+        }
+      }
       window._casoraBackNext = null;
       this._headerBack.hidden = !this._backFn;
       this._subEyebrow = this._backFn && prevTitle ? prevTitle : null;
       this._headerBack.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Zurück') : 'Zurück');
       this.toggleAttribute('has-back', !!this._backFn);
       this._cfgCurrent = data || {};
+      if (this._rowTitle && this._cfgCurrent.title !== this._cfgTitle) {
+        this._cfgCurrent = Object.assign({}, this._cfgCurrent, { title: this._cfgTitle, row_title: true });
+      }
       // A back noted beforehand belongs to this config: reopened from a page further in (‹ from the device
       // page of „Weitere Einstellungen“), the popup keeps its own ‹, e.g. back to the light list (#43).
       if (this._backFn && typeof this._cfgCurrent.back !== 'function') {
@@ -8248,7 +8283,7 @@ window.casoraMenuGlass = {
       this._roomLabel = room;
       // The label a module sets (the single lamp's room) counts too: „G9 Spot Terrasse“ under „TERRASSE“ → „G9 Spot“
       // (detail round #38, §3 title without the room).
-      var title = sf ? stripRoom(this._cfgTitle, room || this._cfgEyebrow || '') : this._cfgTitle;
+      var title = sf && !this._rowTitle ? stripRoom(this._cfgTitle, room || this._cfgEyebrow || '') : this._cfgTitle;
       // Titel beginnt schon mit dem Raum („Wohnzimmer/Küche“): Etikett weglassen statt den Raum doppelt zu zeigen.
       if (room && title.toLowerCase().indexOf(room.toLowerCase()) === 0) room = '';
       // Lange Titel umbrechen an „/“ (Zonen wie „Wohnzimmer/Küche“), nicht mitten im Wort.
@@ -9064,6 +9099,9 @@ window.casoraMenuGlass = {
   }
 
   var _el = null;
+  // The Studio's popup preview (casora-panel-popups.js _cpOpen) is a casora-popup of its own; the panel registers it
+  // here while it is shown, so modules that hang content into the open popup (charts, plant doctor …) find it too.
+  var _preview = null;
   function instance() {
     if (!_el) _el = document.createElement('casora-popup');
     var host = popupHost();
@@ -9150,6 +9188,15 @@ window.casoraMenuGlass = {
       }));
     },
     get element() { return _el; },
+    // The popup on screen, for modules that fill its content: the dashboard's while it is open, else the Studio's
+    // preview, else the dashboard's element as before. Closing, back, history and current stay with `element`.
+    get shown() {
+      if (_el && _el.hasAttribute('open')) return _el;
+      if (_preview && _preview.isConnected) return _preview;
+      return _el;
+    },
+    get preview() { return _preview; },
+    setPreview: function (el) { _preview = el || null; },
     // 1.5: Konfiguration des offenen Popups (für Detailseiten mit ‹ zurück).
     get current() { return _el && _el.hasAttribute('open') ? _el._cfgCurrent : null; },
     get entity() { return _el && _el.hasAttribute('open') ? _el._casoraEntity || null : null; },
@@ -10127,6 +10174,8 @@ window.casoraMenuGlass = {
       }
 
       out += '<div class="hui-row hui-srow' + (tappable ? ' hui-tap' : '') + (r.selected ? ' hui-sel' : '') + (r.active ? ' hui-act' : '') + '"' + tap
+        // The name the row shows (after the list's cut): the sub page it opens can carry it (r487, casoraSubTitle).
+        + (r.entity && typeof r.label === 'string' && r.label.trim() ? ' data-casora-rn="' + esc(r.label.trim()) + '"' : '')
         + (r.bp ? ' data-casora-bp="' + esc(r.bp) + '"' : '')
         + ' style="' + (tappable ? 'cursor:pointer;' : '')
         + (r.selected ? 'background:var(--casora-soft-row-selected, var(--casora-lps-seg-on, #FFFDF9));'
@@ -10234,7 +10283,7 @@ window.casoraMenuGlass = {
   /* Owner, 01.11.2026: when every name of a list starts with the same word(s) („Jalousie Bad“, „Jalousie Küche“), the
      rows show only what differs („Bad“, „Küche“). Display only; never when a name would be left empty or a bare number
      („Lampe 1“, „Lampe 2“ keep their word), and only for two names or more. Returns the names (unchanged without a prefix). */
-  window.casoraDropCommonPrefix = function (names) {
+  window.casoraDropCommonPrefix = function (names, ids) {
     var list = (names || []).map(function (n) { return String(n == null ? '' : n); });
     if (list.length < 2) return list;
     var words = list.map(function (n) { return n.trim().split(/\s+/); });
@@ -10244,19 +10293,49 @@ window.casoraMenuGlass = {
       while (i < k && i < w.length && w[i].toLowerCase() === words[0][i].toLowerCase()) i++;
       k = i;
     });
-    if (!k) return list;
-    var rest = words.map(function (w) { return w.slice(k).join(' '); });
-    if (rest.some(function (r) { return !r || /^[\d\W_]+$/.test(r); })) return list;
-    return rest;
+    var rest = k ? words.map(function (w) { return w.slice(k).join(' '); }) : null;
+    if (!rest || rest.some(function (r) { return !r || /^[\d\W_]+$/.test(r); })) rest = list;
+    return ids ? roomForTwins(rest, ids) : rest;
   };
+  // The room of an entity: its area, else its device's area (HA's registry), else the dashboard room it sits in.
+  function roomOfEntity(id) {
+    if (!id || !/^[a-z_]+\.[\w-]+$/.test(String(id))) return '';
+    var h = null;
+    try { h = (document.querySelector('home-assistant') || {}).hass; } catch (e) { h = null; }
+    var en = h && (h.entities || {})[id];
+    var aid = en && (en.area_id || (en.device_id && ((h.devices || {})[en.device_id] || {}).area_id));
+    var a = aid && (h.areas || {})[aid];
+    if (a && a.name) return String(a.name).trim();
+    try { return typeof window._casoraRoomOf === 'function' ? String(window._casoraRoomOf(id) || '').trim() : ''; } catch (e) { return ''; }
+  }
+  /* Issue 116 (owner decision „Variante C“): a name a list would show twice for devices of different rooms
+     („Links“, „Rechts“ of „Jalousie Links“ in the living room and in the bedroom) gets its room in front
+     („Wohnzimmer Links“) – only when the name does not contain the room already. Unique names and a room's own
+     list (all twins in one room) stay as they are. ids: the rows' entity ids (same order as names). */
+  function roomForTwins(names, ids) {
+    if (!Array.isArray(ids) || ids.length !== names.length) return names;
+    var key = function (n) { return String(n).trim().toLowerCase(); };
+    var rooms = null;
+    return names.map(function (n, i) {
+      var twins = [];
+      names.forEach(function (m, j) { if (key(m) === key(n)) twins.push(j); });
+      if (twins.length < 2) return n;
+      rooms = rooms || ids.map(roomOfEntity);
+      var r = rooms[i];
+      if (!r || twins.every(function (j) { return rooms[j] === r; })) return n;
+      var rx = r.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      if (new RegExp('(^|\\s)' + rx + '(?=\\s|$)', 'i').test(n)) return n;
+      return r + ' ' + n;
+    });
+  }
   // List rows that name a device (an entity or a sub page) lose the shared leading words of their names.
   // A list whose rows already carry their popup-wide name (popupNames) is not cut a second time.
   function dropRowPrefix(rows) {
     if (rows.some(function (r) { return r && r.popupNamed; })) return rows;
     var named = rows.filter(function (r) { return r && typeof r.label === 'string' && (r.entity || r.page); });
     if (named.length < 2 || named.length !== rows.length) return rows;
-    var cut = window.casoraDropCommonPrefix(named.map(function (r) { return r.label; }));
-    if (cut[0] === named[0].label) return rows;
+    var cut = window.casoraDropCommonPrefix(named.map(function (r) { return r.label; }), named.map(function (r) { return r.entity || null; }));
+    if (cut.every(function (c, i) { return c === named[i].label; })) return rows;
     return rows.map(function (r, i) { return Object.assign({}, r, { label: cut[i] }); });
   }
   /* Owner decision 02.11.2026 (option B): in a popup with several lists of the same devices (Offen / Geschlossen,
@@ -10268,13 +10347,13 @@ window.casoraMenuGlass = {
      single list: a row among them that names no device (a message, an action) keeps every name whole. */
   function popupNames(rows) {
     var keyOf = function (r) { return r && typeof r.label === 'string' && (r.entity || r.page) ? String(r.entity || r.page) : null; };
-    var keys = [], labels = [], mixed = false;
+    var keys = [], labels = [], ents = [], mixed = false;
     (rows || []).forEach(function (r) {
       var k = keyOf(r);
       if (!k) { if (r) mixed = true; return; }
-      if (keys.indexOf(k) < 0) { keys.push(k); labels.push(r.label); }
+      if (keys.indexOf(k) < 0) { keys.push(k); labels.push(r.label); ents.push(r.entity || null); }
     });
-    var cut = mixed ? labels : window.casoraDropCommonPrefix(labels);
+    var cut = mixed ? labels : window.casoraDropCommonPrefix(labels, ents);
     return function (r) {
       if (!r || typeof r !== 'object') return r;
       var i = keys.indexOf(keyOf(r));
@@ -10392,6 +10471,8 @@ window.casoraMenuGlass = {
       }
 
       out += '<div class="hui-row' + (tappable ? ' hui-tap' : '') + '"' + tap
+        // The name the row shows (after the list's cut): the sub page it opens can carry it (r487, casoraSubTitle).
+        + (r.entity && typeof r.label === 'string' && r.label.trim() ? ' data-casora-rn="' + esc(r.label.trim()) + '"' : '')
         + ' style="' + (tappable ? 'cursor:pointer;' : '')
         + 'display:flex;align-items:center;gap:12px;'
         + 'min-height:var(--casora-popup-row-min, 52px);'
@@ -10907,7 +10988,8 @@ window.casoraMenuGlass = {
             window._casoraSuppressDismiss = Date.now() + 600;
             // 1.5: ‹ zurück ins Popup, aus dem die Lampe geöffnet wurde.
             var prevCfg = window.casoraPopup && window.casoraPopup.current;
-            if (prevCfg) window._casoraBackNext = { fn: function () { window.casoraPopup.open(prevCfg); }, at: Date.now() };
+            if (prevCfg) window._casoraBackNext = { fn: function () { window.casoraPopup.open(prevCfg); }, at: Date.now(),
+              title: window.casoraSubTitle(t.getAttribute('data-casora-rn'), window.casoraPopup.element) };
             window._casoraNotifyOpenViaCard(mid, function (ok) { if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(mid); }, null, true);
             ev.preventDefault(); ev.stopPropagation();
             return;

@@ -36,7 +36,8 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
   `dev/qa/regress/` mit Test-HA – siehe `dev/qa/README.md`).
 
 ## Version
-- Kalender-Versionen **YY.M.N** (z. B. 26.10.31), Tag/Titel „vYY.M.N“. N = laufende Nummer des Releases
+- Kalender-Versionen **YY.M.N** (z. B. 26.10.31), Tag/Titel „vYY.M.N“ (Casora bleibt vorerst bei „v“, anders als die
+  übrigen Repos: bisher veröffentlichte Casora-Versionen erkennen nur v-Tags, siehe `tools/release.sh`). N = laufende Nummer des Releases
   im Monat; jedes Release ist die nächste Nummer (kein Patch/Minor mehr). Nächste Nummer: `tools/next-version`,
   `tools/release.sh` schlägt sie vor und prüft sie. Release-Gate standardmäßig voll (`dev/qa/gate.sh --voll`);
   Patch-Gate nur bewusst für echte Notfall-Hotfixes (`dev/qa/gate.sh --patch` + `tools/release.sh --patch`), nie automatisch.

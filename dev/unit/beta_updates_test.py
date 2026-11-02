@@ -91,6 +91,12 @@ r, latest = pick_latest(RELS, "1.1.0-beta.1", beta=True)
 check("Beta installiert + an: nächste Beta", latest == "1.1.0-beta.2", latest)
 r, latest = pick_latest([rel("karten-2026-10-03")], "1.0.3", beta=True)
 check("kein Casora-Release: nichts", r is None and latest == "1.0.3")
+# Tags without "v" (the other SH1FT-W repos use them) are Casora releases too; "karten-…" still never is.
+r, latest = pick_latest([rel("v26.11.6"), rel("26.11.7"), rel("karten-2026-11-03")], "26.11.6", beta=False)
+check("tag without v: 26.11.7 offered", r and r["tag_name"] == "26.11.7" and latest == "26.11.7", (r, latest))
+check("tag without v: in the Studio list",
+      [e["version"] for e in from_github([rel("26.11.7"), rel("v26.11.6"), rel("karten-2026-11-03")])] == ["26.11.7", "26.11.6"])
+check("date-like tag is no Casora release", latest_casora([rel("2026-11-03"), rel("v26.11.6")])["tag_name"] == "v26.11.6")
 
 # ── Option ─────────────────────────────────────────────────────────────────
 check("Option Standard aus", not beta_enabled(SimpleNamespace(options={})) and not beta_enabled(None))

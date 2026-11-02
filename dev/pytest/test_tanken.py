@@ -8,6 +8,7 @@ Keine echten Abrufe: aioclient_mock beantwortet list.php mit erfundenen Statione
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import random
 from datetime import timedelta
@@ -165,6 +166,13 @@ async def _ws(hass: HomeAssistant, handler, msg: dict):
     conn.user.is_admin = True
     handler(hass, conn, {"id": 1, **msg})
     await hass.async_block_till_done()
+    # Async handlers (settings/get reads files in the executor) can answer after one settle under load
+    # (gate 26.11.6, also the first 26.11.5 gate): settle again until an answer is there.
+    for _ in range(50):
+        if conn.send_result.call_args or conn.send_error.call_args:
+            break
+        await asyncio.sleep(0.02)
+        await hass.async_block_till_done()
     if conn.send_result.call_args:
         return conn.send_result.call_args.args[1]
     return {"error": conn.send_error.call_args.args[1:]}

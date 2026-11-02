@@ -102,12 +102,17 @@ const tap = async (page, mobile, sel, re) => {
   const b = await page.evaluate(async ([sel, src]) => {
     const s = window.casoraPopup && window.casoraPopup.surface;
     const re = new RegExp(src);
-    const el = window.__pierce(sel, s).find((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && re.test(e.textContent.replace(/\s+/g, ' ').trim()); });
+    const pick = () => window.__pierce(sel, s).find((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && re.test(e.textContent.replace(/\s+/g, ' ').trim()); });
+    const el = pick();
     if (!el) return null;
     el.scrollIntoView({ block: 'center', behavior: 'instant' });
     // casora-core ignores taps within 400 ms of a scroll.
     await new Promise((res) => setTimeout(res, 650));
-    const r = el.getBoundingClientRect();
+    // The stage may have drawn anew meanwhile (a state pushed just before): the old element is then out of the tree,
+    // its box 0/0, and the tap went to the scrim and closed the popup (r352 wobbled). Measure the element now there.
+    const now = el.isConnected ? el : pick();
+    if (!now) return null;
+    const r = now.getBoundingClientRect();
     return { x: r.x + Math.min(r.width / 2, 60), y: r.y + r.height / 2 };
   }, [sel, re.source]);
   if (!b) return false;
@@ -135,7 +140,9 @@ for (const [tag, opts, url, name] of VIEWS) {
   const { page } = await open(opts);
   usePage(page);
   const errs = [];
-  page.on('pageerror', (e) => errs.push('pageerror: ' + String(e && e.message || e)));
+  // Only Casora's own errors count (the test HA also runs other plugins: kiosk-mode throws on a node without
+  // aria-label, which made the console check red on casora-test).
+  page.on('pageerror', (e) => { const t = String(e && e.stack || e); if (/casora|button-card/i.test(t)) errs.push('pageerror: ' + t.slice(0, 300)); });
   await dashboard(page, url, 3);
   const have = await page.evaluate((ids) => ids.map((id) => !!document.querySelector('home-assistant').hass.states[id]), [ST, SEL, NUM]);
   await need(tag + ': Testspüler im Testhaus', have.every(Boolean), have);

@@ -2565,7 +2565,7 @@
       + '</div></div>';
   };
   var sweep = function () {
-    var P = window.casoraPopup, el = P && P.element;
+    var P = window.casoraPopup, el = P && P.shown;
     if (!el || !el.isConnected) return;
     var ha = document.querySelector('home-assistant'); var hass = ha && ha.hass; if (!hass) return;
     deep(el.shadowRoot || el, '.cam-detail[data-cam]', []).forEach(function (d) {
@@ -2622,7 +2622,7 @@
       + '<div class="cam-ai-box" style="display:none;"></div></div>';
   };
   var sweepInline = function () {
-    var P = window.casoraPopup, el = P && P.element;
+    var P = window.casoraPopup, el = P && P.shown;
     if (!el || !el.isConnected) return;
     var ha = document.querySelector('home-assistant'); var hass = ha && ha.hass; if (!hass) return;
     deep(el.shadowRoot || el, '.cam-ai-inline[data-cam]', []).forEach(function (d) {
@@ -2748,7 +2748,7 @@
   };
   PA.plantOf = plantOf;
   var sweep = function () {
-    var P = window.casoraPopup, el = P && P.element;
+    var P = window.casoraPopup, el = P && P.shown;
     if (!el || !el.isConnected) return;
     var ha = document.querySelector('home-assistant'); var hass = ha && ha.hass; if (!hass || !hass.states[SENSOR]) return;
     var row = deep(el.shadowRoot || el, '[data-hp-metric]', [])[0]; if (!row) return;
@@ -2828,7 +2828,7 @@
       + btn + '</div></div>';
   };
   var sweep = function () {
-    var P = window.casoraPopup, el = P && P.element;
+    var P = window.casoraPopup, el = P && P.shown;
     if (!el || !el.isConnected) return;
     var ha = document.querySelector('home-assistant'); var hass = ha && ha.hass; if (!hass) return;
     var s = hass.states[SENSOR]; if (!s) return;
@@ -4002,10 +4002,14 @@
     root.querySelectorAll('*').forEach(function (n) { if (n.shadowRoot) deep(n.shadowRoot, out); });
     return out;
   };
-  // Nur das offene Popup durchsuchen (der ganze Baum wäre teuer).
+  // Only the open popup is searched (the whole tree would be costly). With only the Studio's preview on screen (no
+  // dashboard popup open) the Studio's room preview may show update cards too: then the HA tree as well, as before.
   K.paint = function () {
-    var pop = window.casoraPopup && window.casoraPopup.element, ha = document.querySelector('home-assistant');
-    var list = pop ? deep(pop.shadowRoot, deep(pop)) : deep(ha && ha.shadowRoot);
+    var P = window.casoraPopup, pop = P && P.shown, ha = document.querySelector('home-assistant');
+    var list = pop ? deep(pop.shadowRoot, deep(pop)) : [];
+    if (!pop || (pop === P.preview && pop !== P.element)) {
+      deep(ha && ha.shadowRoot).forEach(function (n) { if (list.indexOf(n) < 0) list.push(n); });
+    }
     list.forEach(function (n) {
       if (n.classList.contains('huc-v3')) n.innerHTML = tr(v3StatusHtml());
       else if (n.classList.contains('hui-moon')) { n.classList.toggle('busy', !!K.busy); if (K.busy) n.setAttribute('aria-busy', 'true'); else n.removeAttribute('aria-busy'); }
@@ -4423,7 +4427,7 @@
      localStorage casora_popup_variant) – then stage S1 + scenes as quick choice on the left, the lamps on the right.
      Without it (variant a, themes Standard/Glas) the popup stays as before. */
   var v3On = function () {
-    var p = window.casoraPopup && window.casoraPopup.element;
+    var p = window.casoraPopup && window.casoraPopup.shown;
     return !!(p && p.getAttribute && p.getAttribute('data-casora-pv') === 'v3' && window._casoraUI && window._casoraUI.stage);
   };
   var V3_CSS = '<style>.lps-v3l{display:flex;flex-direction:column;gap:var(--casora-pv-sec-gap,24px);}</style>';
@@ -4442,7 +4446,10 @@
       var st = states[id];
       if (!st || st.state !== 'on' || ids.indexOf(id) !== i) return;
       var a = st.attributes || {}, m = a.color_mode, rgb = null, kind = null, k = null;
-      var rc = Array.isArray(a.rgb_color) && a.rgb_color.length >= 3 ? 'rgb(' + a.rgb_color.slice(0, 3).map(function (x) { return Math.round(Number(x) || 0); }).join(',') + ')' : null;
+      // rgb_color is the colour at full brightness, so a real colour has a bright channel. Black ([0, 0, 0], Govee in a
+      // scene or segment mode, owner 02.11.2026) or near black is no colour: no ring colour, the ring keeps the accent.
+      var c3 = Array.isArray(a.rgb_color) && a.rgb_color.length >= 3 ? a.rgb_color.slice(0, 3).map(function (x) { return Math.round(Number(x) || 0); }) : null;
+      var rc = c3 && Math.max(c3[0], c3[1], c3[2]) >= 16 ? 'rgb(' + c3.join(',') + ')' : null;
       if ((!m || m === 'color_temp') && a.color_temp_kelvin) {
         k = Number(a.color_temp_kelvin); rgb = S.kColor(k);
         var best = -1;
@@ -4463,8 +4470,12 @@
     var UI = window._casoraUI;
     var dim = ids.filter(function (id) { return dimmable(states[id]); });
     var s = stat(dim.length ? dim : ids, states);
-    var v = s.on ? (s.pct != null ? s.pct : 100) : 0;
     var lit = dim.filter(function (id) { return states[id].state === 'on'; });
+    // Only on/off lamps lit beside dimmable ones (a device's status LED, owner 02.11.2026): the head said „1 von n an“
+    // while the dial said „Aus“ with an empty ring. An on/off lamp is fully on – the dial shows 100 % with „An“; turning
+    // still sets the dimmable lamps.
+    var plainOn = dim.length > 0 && !lit.length && ids.some(function (id) { return states[id] && states[id].state === 'on' && !dimmable(states[id]); });
+    var v = s.on ? (s.pct != null ? s.pct : 100) : plainOn ? 100 : 0;
     var target = lit.length ? lit : (onlyOn ? [] : dim);
     var ct = ids.filter(function (id) { return hasCt(states[id]); });
     var ctOn = ct.filter(function (id) { return states[id].state === 'on'; });
@@ -4518,7 +4529,7 @@
     var avg = litP.length > 1 && litP.some(function (p) { return p !== litP[0]; });
     return UI.stage('slider', { value: v, label: tr('Helligkeit'), icon: 'light', state: v ? null : 'off',
       // Off: the stage value says „Aus“ already – no second „Aus“ under it.
-      word: v ? [avg ? tr('Ø von ' + litP.length + ' Lampen') : word(v)].concat(curLbl ? [curLbl] : []).join(' · ') : '',
+      word: v ? [plainOn ? tr('An') : avg ? tr('Ø von ' + litP.length + ' Lampen') : word(v)].concat(curLbl ? [curLbl] : []).join(' · ') : '',
       words: ['Aus', 'Gedimmt', 'Volle Helligkeit'],
       svc: dim.length && target.length ? { domain: 'light', service: 'turn_on', field: 'brightness_pct', target: { entity_id: target }, zeroOff: true } : null,
       seg: seg, moons: moons || null, ringColor: ringColor, ringColors: ringColors });
@@ -4666,7 +4677,7 @@
   // („Spot Decke“, „Spot Wand“ → „Decke“, „Wand“; owner, 01.11.2026 – casoraDropCommonPrefix, casora-core.js).
   var lampNamesOf = function (list, states, room) {
     var names = list.map(function (id) { return short(nameOf(id, states), room); });
-    return window.casoraDropCommonPrefix ? window.casoraDropCommonPrefix(names) : names;
+    return window.casoraDropCommonPrefix ? window.casoraDropCommonPrefix(names, list) : names;   // list: issue 116, twins get their room
   };
   var roomBody = function (cfg, sc, states, h) {
     var ids = sc.lights.filter(function (id) { return states[id]; });
@@ -4799,7 +4810,7 @@
     if (part === 'hero') {
       S.cur = cfg; innerHtml = hero(cfg, states);
       // Hauptschalter im Kopf kennt die Ansicht erst jetzt.
-      var pop0 = window.casoraPopup && window.casoraPopup.element;
+      var pop0 = window.casoraPopup && window.casoraPopup.shown;
       if (pop0 && pop0._syncHeadSwitch) setTimeout(function () { pop0._syncHeadSwitch(); }, 0);
     }
     else { var sc = scopeOf(cfg); innerHtml = sc ? roomBody(cfg, sc, states, h) : houseBody(cfg, states); }
@@ -4818,7 +4829,7 @@
       var nr = tmp.querySelector('.lps-r');
       if (nr) r.replaceWith(nr);
     });
-    var pop = window.casoraPopup && window.casoraPopup.element;
+    var pop = window.casoraPopup && window.casoraPopup.shown;
     if (pop && pop._syncHeadSwitch) pop._syncHeadSwitch(h);
   };
 
@@ -4983,7 +4994,11 @@
         window._casoraSuppressDismiss = Date.now() + 600;
         // ‹ zurück ins Raum-Popup (17.10.2026), wie Raum → Heizkörper (openRoom) und Liste → Detail (casora-core.js).
         var P = window.casoraPopup, prev = P && P.current;
-        window._casoraBackNext = prev ? { fn: function () { P.open(prev); }, at: Date.now() } : null;
+        // r487: a lamp listed on the house's own page (no room page in between) names its page as its row does;
+        // on a room's page (‹ back to the rooms) the room stands above and the lamp keeps its name without it.
+        var shownL = !(prev && typeof prev.back === 'function') && el.querySelector && el.querySelector('.lps-tx b');
+        var titleL = shownL && window.casoraSubTitle ? window.casoraSubTitle(shownL.textContent, P.element) : null;
+        window._casoraBackNext = prev ? { fn: function () { P.open(prev); }, at: Date.now(), title: titleL } : null;
         window._casoraNotifyOpenViaCard(d.id, function (ok) { if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(d.id); }, null, true);
         return;
       }

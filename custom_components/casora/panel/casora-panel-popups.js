@@ -408,6 +408,9 @@
         });
         box.appendChild(pop);
       }
+      // Modules that fill the open popup (charts, plant doctor …) find it through casoraPopup.shown; registered
+      // before open(), as the content mounts its parts while it is built. _cpDrop takes it out again.
+      if (window.casoraPopup && window.casoraPopup.setPreview) window.casoraPopup.setPreview(pop);
       try { await pop.open(cfg); } catch (e) { note(t("This popup can't be shown in the preview.")); return; }
       // Its document-wide Escape trap would swallow the Studio's own Escape (menus, pickers).
       if (pop._onKey) document.removeEventListener("keydown", pop._onKey, true);
@@ -421,6 +424,8 @@
     // Tear a private popup down through its own close(), so its listeners go too.
     P._cpDrop = function (pop) {
       pop._cpDropping = true;
+      const cp = window.casoraPopup;
+      if (cp && cp.setPreview && cp.preview === pop) cp.setPreview(null);
       try { pop.close(); } catch (e) { /* already gone */ }
       setTimeout(() => pop.remove(), 450);
       pop.style.display = "none";

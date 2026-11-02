@@ -17,7 +17,7 @@ const UI = { stage: (t, o) => { stages.push(o); if (typeof o.moons === 'function
 const pop = { getAttribute: (k) => (k === 'data-casora-pv' ? 'v3' : null) };
 const states = {};
 const hass = { states, entities: {}, devices: {}, areas: { office: { area_id: 'office', name: 'Office' } } };
-globalThis.window = { addEventListener: () => {}, _casoraUI: UI, casoraPopup: { element: pop } };
+globalThis.window = { addEventListener: () => {}, _casoraUI: UI, casoraPopup: { element: pop, shown: pop } };
 globalThis.document = { querySelector: () => ({ hass }), documentElement: {}, addEventListener: () => {} };
 globalThis.getComputedStyle = () => ({ getPropertyValue: () => 'soft' });
 new Function('window', 'document', src.slice(a, b))(window, document);
@@ -69,6 +69,28 @@ const sceneOn = () => { render(['light.spots', 'light.strip']); const it = (quic
 assert.equal(sceneOn(), true, 'scene 10 min ago, lamps unchanged since: marked');
 states['light.strip'].last_updated = iso(60000);
 assert.equal(sceneOn(), false, 'a lamp changed after the scene: no longer marked');
+
+// 4. Owner (02.11.2026): the ring was black – a lit lamp reported rgb_color [0, 0, 0] (Govee in a scene/segment mode).
+//    A lamp without a usable colour (black, on/off-only, brightness-only) gives no ring colour: the ring keeps the accent.
+const only = (attrs, modes) => { lamp('light.dark', modes || ['color_temp', 'rgb'], attrs); delete states['light.dark'].attributes.min_color_temp_kelvin; return render(['light.dark']).o; };
+let o = only({ color_mode: 'rgb', rgb_color: [0, 0, 0], hs_color: [0, 0], effect: 'Sunrise', effect_list: ['Sunrise'] });
+assert.equal(o.ringColor, null, 'black lamp with an effect: no ring colour');
+assert.equal(o.ringColors, null);
+o = only({ color_mode: 'rgb', rgb_color: [3, 2, 0] });
+assert.equal(o.ringColor, null, 'near black: no ring colour');
+o = only({ color_mode: 'hs', hs_color: [0, 0] });
+assert.equal(o.ringColor, null, 'colour mode without rgb_color: no ring colour');
+const bare = (attrs, modes) => { states['light.dark'] = { entity_id: 'light.dark', state: 'on', last_updated: iso(3600000), attributes: { friendly_name: 'dark', supported_color_modes: modes, ...attrs } }; return render(['light.dark']).o; };
+assert.equal(bare({ color_mode: 'onoff' }, ['onoff']).ringColor, null, 'on/off-only lamp: no ring colour');
+assert.equal(bare({ color_mode: 'brightness', brightness: 128 }, ['brightness']).ringColor, null, 'brightness-only lamp: no ring colour');
+// A light group reporting black next to a red lamp: the red lamp alone, no blend with black.
+states['light.dark'] = { entity_id: 'light.dark', state: 'on', last_updated: iso(3600000),
+  attributes: { friendly_name: 'group', entity_id: ['light.bulb'], supported_color_modes: ['rgb'], color_mode: 'rgb', rgb_color: [0, 0, 0], brightness: 255 } };
+states['light.bulb'].attributes = { ...states['light.bulb'].attributes, effect: null };
+o = render(['light.dark', 'light.bulb']).o;
+assert.equal(o.ringColor, 'rgb(255,30,30)', 'black group next to a red lamp: the red');
+assert.equal(o.ringColors, null, 'no blend with black');
+assert.equal(S.lampTones(['light.dark'], states, null)[0].rgb, null, 'lampTones: black is no colour');
 
 // casora-core: ring.grad draws a gradient along the fill.
 const core = read('custom_components/casora/scripts/casora-core.js');

@@ -4,6 +4,23 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.7 – 02.11.2026
+
+Calmer thermostat tiles, a weather popup with history behind every value and fixes from your reports.
+
+### Changed
+- **Calmer thermostat and floor heating tiles:** the tile shows only the room reading and the state ("21.4° · Heating", "Ready", "Auto", "Off"), the target is in the popup. Auto counts as on; the icon is grey only when off.
+- **Weather details with history:** when your weather station has its own sensors (dew point, gusts, cloud, rain, wind, pressure, visibility …), the rows show their values and › opens the page with their history.
+- **Unique names in house popups (#116):** when a shortened device name would appear more than once (for example "Links" in two rooms), Casora puts the room in front: "Wohnzimmer Links", "Schlafzimmer Links". Unique names and room popups stay as they are.
+
+### Fixed
+- **Own temperature sensor in the weather chart (#115):** the dial, the temperature curve, the "now" value and the legend all use the sensor chosen in the Studio, also when the felt temperature runs as a second curve.
+- **Black ring in the light popup:** when a lamp reports black (for example Govee in a scene or effect), the ring keeps the accent colour; so do the colour wheel and the brightness bar.
+- **Only an on/off lamp on:** when the only lamp lit in a room has no dimmer (for example a status LED), the light dial says "On" instead of "Off", like the header.
+- **Studio preview:** the popup preview next to the tile editor shows charts, the plant doctor, coaches and other parts that load later, like on the dashboard.
+- **Pages opened from house popups:** a blind or lamp opened from a house popup carries its row's name ("Küche") instead of just "Jalousie".
+- **Chart popup:** the chart is no longer rebuilt on every new reading (no flicker).
+
 ## 26.11.6 – 02.11.2026
 
 Fixes from your reports on 26.11.5, mostly on the phone.

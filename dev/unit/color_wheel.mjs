@@ -23,6 +23,15 @@ assert.ok(Math.abs(p.x) < 1e-9 && Math.abs(p.y - 50) < 1e-9, 'cyan at the left e
 assert.deepEqual(CW.hsOf({ hs_color: [0, 0], rgb_color: [255, 128, 0] }), [30, 100], 'hue from rgb_color, not hs [0,0]');
 assert.deepEqual(CW.hsOf({ hs_color: [200, 40] }), [200, 40], 'hs_color without rgb');
 assert.equal(CW.hsOf({}), null);
+// A lamp reporting black (Govee scene/effect: rgb_color [0,0,0]) has no colour: the brightness bar keeps its default
+// fill instead of turning black (same rule as the light popup's ring, r485).
+assert.equal(CW.rgbCss([0, 0, 0]), null, 'black is no colour');
+assert.equal(CW.rgbCss([10, 12, 15]), null, 'near black is no colour');
+assert.equal(CW.rgbCss(undefined), null);
+assert.equal(CW.rgbCss([255, 128, 0]), 'rgb(255,128,0)');
+window._casoraUI = { esc: (s) => String(s), slider: () => '' };
+assert.ok(!/rgb\(0,0,0\)/.test(CW.bright({ entity_id: 'light.x', state: 'on', attributes: { brightness: 255, rgb_color: [0, 0, 0] } })), 'bar not black');
+assert.ok(/#FFCC00/.test(CW.bright({ entity_id: 'light.x', state: 'on', attributes: { brightness: 255, rgb_color: [0, 0, 0] } })), 'bar keeps the default fill');
 
 const tpl = JSON.parse(R('custom_components/casora/panel/casora-templates.json')).templates.casora_light.tap_action.casora_popup.content;
 assert.ok(tpl.includes('data-casora-wheel=') && tpl.includes('hl-rb'), 'rainbow circle in the color row');

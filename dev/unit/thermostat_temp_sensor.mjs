@@ -1,5 +1,5 @@
 // Thermostat tile with a "Temperature sensor" (issue #32): the room temperature stands in front of the state,
-// "21,3° · Heizt auf 24,5°", as the aquarium tile shows it. Reported: the sensor set in the Studio did not
+// "21,3° · Heizt" (calm tile 02.11.2026: no target), as the aquarium tile shows it. Reported: the sensor set in the Studio did not
 // appear on the tile (only in the popup). Without a sensor, or with an unusable one, the line stays as it was.
 //   node dev/unit/thermostat_temp_sensor.mjs
 import fs from 'node:fs';
@@ -19,28 +19,29 @@ const trv = { entity_id: 'climate.example_trv', state: 'heat',
 const S = { 'sensor.example_room': { state: '21.34', attributes: { device_class: 'temperature', unit_of_measurement: '°C' } } };
 const V = { temp_sensor: 'sensor.example_room' };
 
-assert.equal(tile(trv, V, S), '21,3° · Heizt auf 24,5°', 'sensor in front');
-assert.equal(tile(trv, {}, S), '18,2° · Heizt auf 24,5°', 'no sensor: the thermostat\'s own reading (review 2, fam-15)');
+assert.equal(tile(trv, V, S), '21,3° · Heizt', 'sensor in front');
+assert.equal(tile(trv, {}, S), '18,2° · Heizt', 'no sensor: the thermostat\'s own reading (review 2, fam-15)');
 assert.equal(tile({ ...trv, state: 'off' }, V, S), '21,3° · Aus');
 assert.equal(tile({ ...trv, attributes: { ...trv.attributes, hvac_action: 'idle', current_temperature: 24.5 } }, V, S),
-  '21,3° · Ziel 24,5°', 'at the target');
+  '21,3° · Bereit', 'at the target');
 assert.equal(tile({ ...trv, state: 'unavailable' }, V, S), 'Nicht verfügbar', 'unavailable stays short');
 assert.equal(tile(trv, V, { 'sensor.example_room': { state: 'unavailable', attributes: { device_class: 'temperature' } } }),
-  'Heizt auf 24,5°', 'sensor unavailable: no number');
+  'Heizt', 'sensor unavailable: no number');
 assert.equal(tile(trv, V, { 'sensor.example_room': { state: '55', attributes: { unit_of_measurement: '%' } } }),
-  'Heizt auf 24,5°', 'not a temperature: ignored');
+  'Heizt', 'not a temperature: ignored');
 assert.equal(tile(trv, V, { 'sensor.example_room': { state: '21', attributes: { unit_of_measurement: '°F' } } }),
-  '21° · Heizt auf 24,5°', 'a ° unit counts without device class');
-assert.equal(tile(trv, { temp_sensor: 'sensor.gone' }, S), 'Heizt auf 24,5°', 'missing sensor');
+  '21° · Heizt', 'a ° unit counts without device class');
+assert.equal(tile(trv, { temp_sensor: 'sensor.gone' }, S), 'Heizt', 'missing sensor');
 
 // Studio preview: same order, English words, German through the panel patterns.
 const panel = read('custom_components/casora/panel/casora-panel.js');
-assert.ok(/case "thermostat": \{[\s\S]{0,600}V\.temp_sensor[\s\S]{0,1400}return room \+ \(mode === "cool" \? "Cooling to " : "Heating to "\)/.test(panel),
+assert.ok(/case "thermostat": \{[\s\S]{0,600}V\.temp_sensor[\s\S]{0,1600}return room \+ "Heating";[\s\S]{0,200}return room \+ "Ready";/.test(panel),
   'preview shows the sensor too');
 const pats = JSON.parse(read('custom_components/casora/translations/panel/de.json')).patterns.map(([re, rep]) => [new RegExp(re), rep]);
 const de = (s) => { for (const [re, rep] of pats) { const m = s.match(re); if (m) return rep.replace(/\{(\d+)\}/g, (_, i) => m[+i]); } return s; };
-assert.equal(de('21.3° · Heating to 24.5°'), '21.3° · Heizt auf 24.5°');
+assert.equal(de('21.3° · Heating'), '21.3° · Heizt');
+assert.equal(de('21.3° · Ready'), '21.3° · Bereit');
+assert.equal(de('21.3° · Automatic'), '21.3° · Automatik');
 assert.equal(de('21.3° · Off'), '21.3° · Aus');
-assert.equal(de('Heating to 24.5°'), 'Heizt auf 24.5°', 'without a sensor as before');
 
 console.log('ok thermostat_temp_sensor');

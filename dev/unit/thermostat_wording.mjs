@@ -1,7 +1,8 @@
-// Thermostat wording (21.10.2026): the tile read "22,2° · An · 22°" – two numbers and a switch word. Now
-// "22,2° · Heizt auf 22°" / "22,2° · Ziel 22°", on narrow tiles the own short form "22,2° · Heizt" (instead
-// of "22,2° +1"). Tile, tile popup (statusText) and the popup head (03-popups.js F.status) use the same words;
-// with a range heating aims at the lower and cooling at the upper bound; the popup never shows the raw mode.
+// Thermostat wording (21.10.2026): the tile read "22,2° · An · 22°" – two numbers and a switch word. Calm tile
+// (owner, 02.11.2026): every tile width reads "<room> · <state>" – "22,2° · Heizt", "Kühlt", "Bereit" (idle at the
+// target), "Automatik", "Aus"; no target, no range. The text is its own short form (ends with "…" instead of a
+// counter). The icon circle is coloured in every mode but off. The tile popup (statusText) and the popup head
+// (03-popups.js F.status) keep "Heizt auf 22°"; with a range heating aims at the lower and cooling at the upper bound.
 //   node dev/unit/thermostat_wording.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -26,22 +27,83 @@ const tile = (state, attributes, sensor = true) => {
 const at = (action, cur, more = {}) => ({ hvac_action: action, current_temperature: cur, temperature: 22, ...more });
 const range = { temperature: undefined, target_temp_low: 20, target_temp_high: 24 };
 
-assert.deepEqual(tile('heat', at('heating', 21)), ['22,2° · Heizt auf 22°', '22,2° · Heizt'], 'heating, short keeps the word');
-assert.deepEqual(tile('heat', at('idle', 22)), ['22,2° · Ziel 22°', undefined], 'at the target: "Ziel", no "An"');
-assert.deepEqual(tile('heat', at('idle', 22, { temperature: undefined })), ['22,2° · Bereit', undefined], 'no target: no number');
-assert.deepEqual(tile('cool', at('cooling', 25)), ['22,2° · Kühlt auf 22°', '22,2° · Kühlt']);
-assert.equal(tile('heat', at('heating', 18, range))[0], '22,2° · Heizt auf 20°', 'range: heats to the lower bound');
-assert.equal(tile('cool', at('cooling', 26, range))[0], '22,2° · Kühlt auf 24°', 'range: cools to the upper bound');
-assert.deepEqual(tile('auto', at('idle', 22, range)), ['22,2° · Automatik · 20–24°', '22,2° · Automatik']);
-assert.deepEqual(tile('off', at('idle', 18)), ['22,2° · Aus', undefined]);
+// Every case: full text and the short form are the same, so narrow tiles keep the word.
+const same = (t) => [t, t];
+assert.deepEqual(tile('heat', at('heating', 21)), same('22,2° · Heizt'), 'heating: no "auf 22°"');
+assert.deepEqual(tile('heat', at('idle', 22)), same('22,2° · Bereit'), 'at the target: "Bereit", no "Ziel"');
+assert.deepEqual(tile('heat', at('idle', 22, { temperature: undefined })), same('22,2° · Bereit'), 'no target: no number');
+assert.deepEqual(tile('cool', at('cooling', 25)), same('22,2° · Kühlt'));
+assert.deepEqual(tile('heat', at('heating', 18, range)), same('22,2° · Heizt'), 'range: no bound on the tile');
+assert.deepEqual(tile('cool', at('cooling', 26, range)), same('22,2° · Kühlt'));
+assert.deepEqual(tile('auto', at('idle', 22, range)), same('22,2° · Automatik'), 'auto: no range');
+assert.deepEqual(tile('heat_cool', at('idle', 22, range)), same('22,2° · Automatik'));
+assert.deepEqual(tile('auto', at('heating', 19, range)), same('22,2° · Heizt'), 'auto while heating says so');
+assert.deepEqual(tile('heat_cool', at('cooling', 26, range)), same('22,2° · Kühlt'), 'auto while cooling says so');
+assert.deepEqual(tile('off', at('idle', 18)), same('22,2° · Aus'), 'off with the room reading');
 // Without a sensor (review 2, fam-15/E09): the thermostat's own reading in front, the room's (Klima badge) wins.
-assert.deepEqual(tile('heat', at('heating', 21), false), ['21° · Heizt auf 22°', '21° · Heizt'], 'without a sensor: own reading');
-assert.deepEqual(tile('heat', at('idle', 22), false), ['22° · Ziel 22°', undefined]);
-assert.deepEqual(tile('off', at('idle', 21.1), false), ['21,1° · Aus', undefined], 'off still shows the room');
-assert.deepEqual(tile('heat', at('heating', 21, { current_temperature: undefined }), false), ['Heizt auf 22°', 'Heizt'], 'no reading at all');
+assert.deepEqual(tile('heat', at('heating', 21), false), same('21° · Heizt'), 'without a sensor: own reading');
+assert.deepEqual(tile('heat', at('idle', 22), false), same('22° · Bereit'));
+assert.deepEqual(tile('auto', at('idle', 21, range), false), same('21° · Automatik'));
+assert.deepEqual(tile('off', at('idle', 21.1), false), same('21,1° · Aus'), 'off still shows the room');
+assert.deepEqual(tile('off', at('off', undefined), false), same('Aus'), 'off without a reading: only "Aus"');
+assert.deepEqual(tile('heat', at('heating', 21, { current_temperature: undefined }), false), same('Heizt'), 'no reading at all');
+assert.equal(tile('unavailable', at(null, 21), false)[0], 'Nicht verfügbar');
 win.casoraRoomTempOf = (id, st) => (st === S ? 23.3 : null);
-assert.deepEqual(tile('off', at('idle', 21.7), false), ['23,3° · Aus', undefined], 'the room reading as on the Klima badge');
+assert.deepEqual(tile('off', at('idle', 21.7), false), same('23,3° · Aus'), 'the room reading as on the Klima badge');
 delete win.casoraRoomTempOf;
+for (const [st, act] of [['heat', 'heating'], ['heat', 'idle'], ['auto', 'idle'], ['cool', 'cooling'], ['off', 'off']]) {
+  const t = tile(st, at(act, 21, range))[0];
+  assert.ok(!/ auf |Ziel|–/.test(t) && (t.match(/°/g) || []).length === 1, 'one number only: ' + t);
+}
+
+// ── Tile icon (temp_puck): coloured circle + white icon in every mode but off ─────
+{
+  const puckSrc = T.casora_thermostat.custom_fields.temp_puck.trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');
+  const w = { casoraIconUrl: () => 'x.svg', casoraEsc: (t) => String(t), casoraEscJs: (t) => String(t) };
+  const puck = (state, attributes = {}) => new Function('states', 'entity', 'variables', 'window', puckSrc)({},
+    { entity_id: 'climate.x', state, attributes: { hvac_modes: ['off', 'heat', 'cool', 'auto'], ...attributes } }, { has_controls: true }, w);
+  const grey = 'var(--casora-puck-off-bg';
+  const white = 'background-color:rgba(255,255,255,0.9)';
+  for (const [st, a, tint] of [['heat', { hvac_action: 'heating' }, 'puck-heat-color'], ['heat', { hvac_action: 'idle' }, 'puck-heat-color'],
+    ['auto', { hvac_action: 'idle' }, 'puck-heat-color'], ['heat_cool', { hvac_action: 'idle' }, 'puck-heat-color'],
+    ['heat_cool', { hvac_action: 'cooling' }, 'puck-cool-color'], ['cool', { hvac_action: 'cooling' }, 'puck-cool-color']]) {
+    const h = puck(st, a);
+    assert.ok(!h.includes(grey) && h.includes('--casora-icon-circle-bg:var(--casora-' + tint) && h.includes(white), 'coloured: ' + st + ' ' + a.hvac_action);
+  }
+  const off = puck('off', { hvac_action: 'off' });
+  assert.ok(off.includes(grey) && !off.includes(white), 'off: grey circle, tinted icon');
+  assert.ok(puck('unavailable').includes(grey), 'unavailable: grey');
+}
+
+// ── Tile on/off: switch and active surface (owner, 02.11.2026: Automatik is „An“, only off is inactive) ──────
+{
+  // casora_entity decides both from its built-in active states plus the template's variables.active_states.
+  const ent = JSON.stringify(T.casora_entity);
+  const lists = [...ent.matchAll(/const (?:activeStates|defaults) = (\[\\"on[^\]]*\]);/g)].map((m) => JSON.parse(m[1].replace(/\\"/g, '"')));
+  assert.equal(lists.length, 2, 'toggle and surface lists in casora_entity');
+  const extra = T.casora_thermostat.variables.active_states || [];
+  for (const L of lists) {
+    const on = (st) => [...L, ...extra].includes(st);
+    for (const m of ['heat', 'cool', 'auto', 'heat_cool', 'dry', 'fan_only']) assert.ok(on(m), 'on: ' + m);
+    for (const m of ['off', 'unavailable', 'unknown']) assert.ok(!on(m), 'off: ' + m);
+  }
+  // The thermostat's own on-colours (overlay controls, name/state ink) follow the same rule, not only heat/cool.
+  assert.ok(!JSON.stringify(T.casora_thermostat).includes("['cool','heat'].includes(entity?.state)"), 'no heat/cool-only rule left');
+  const nameInk = T.casora_thermostat.styles.card.find((x) => x['--thermostat-overlay-text-name'])['--thermostat-overlay-text-name']
+    .trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');
+  const ink = (state) => new Function('entity', nameInk)({ state });
+  assert.equal(ink('auto'), ink('heat'), 'auto: active ink like heat');
+  assert.notEqual(ink('off'), ink('heat'), 'off: inactive ink');
+
+  // Studio preview: tileActive (the "on" class) and the puck colour.
+  const panel = read('custom_components/casora/panel/casora-panel.js');
+  const fn = cut(panel, 'const tileActive = (kind, ent, V, states) => {', '\n};\n') + '\n};';
+  const tileActive = new Function('ENTITY_ACTIVE_STATES', fn + ' return tileActive;')(['on', 'cool', 'heat']);
+  const pv = (state) => tileActive('thermostat', { state }, {}, {});
+  for (const m of ['heat', 'cool', 'auto', 'heat_cool', 'dry', 'fan_only']) assert.ok(pv(m), 'preview on: ' + m);
+  for (const m of ['off', 'unavailable', 'unknown']) assert.ok(!pv(m), 'preview off: ' + m);
+  assert.ok(/!active \? \(TILE_COLOR\[kind\] \|\| TILE_TINT\)\s*: cools \?/.test(panel), 'preview puck: coloured whenever on');
+}
 
 // ── Tile popup (statusText, code inside the template) ──────────────────────────────
 // The popup's code sits escaped inside a string of the template: find that string, unescape the function.
@@ -88,6 +150,9 @@ assert.equal(statusText(E('off', at(null, 22))), 'Aus');
   const own = w.casoraStateFit('22,2° · Heizt auf 22°', undefined, '22,2° · Heizt');
   assert.ok(own.includes('<span class="sf-f">22,2° · Heizt auf 22°</span>') && own.includes('>22,2° · Heizt</span>'), 'both forms');
   assert.ok(!own.includes('+1'), 'no counter with an own short form');
+  // The calm thermostat passes its text as its own short form: cut with "…", never "22,2° +1".
+  const self = w.casoraStateFit('22,2° · Automatik', undefined, '22,2° · Automatik');
+  assert.ok(self.includes('<span class="sf-f">22,2° · Automatik</span>') && self.includes('>22,2° · Automatik</span>') && !self.includes('+1'), 'same text: no counter');
   assert.ok(w.casoraStateFit('Trocknet Mopp · Station', undefined).includes('+1'), 'without one: counter as before');
 }
 console.log('ok thermostat_wording');

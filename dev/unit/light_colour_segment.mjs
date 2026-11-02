@@ -16,7 +16,7 @@ const UI = { stage: (t, o) => { stages.push(o); return ''; }, quick: () => '', s
 const pop = { getAttribute: (k) => (k === 'data-casora-pv' ? 'v3' : null) };
 const states = {};
 const hass = { states, entities: {}, devices: {}, areas: {} };
-globalThis.window = { addEventListener: () => {}, _casoraUI: UI, casoraPopup: { element: pop } };
+globalThis.window = { addEventListener: () => {}, _casoraUI: UI, casoraPopup: { element: pop, shown: pop } };
 globalThis.document = { querySelector: () => ({ hass }), documentElement: {}, addEventListener: () => {} };
 globalThis.getComputedStyle = () => ({ getPropertyValue: () => 'soft' });
 new Function('window', 'document', src.slice(a, b))(window, document);

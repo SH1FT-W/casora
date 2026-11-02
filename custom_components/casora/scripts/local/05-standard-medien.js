@@ -359,7 +359,7 @@
     return out;
   };
   setInterval(function () {
-    var P = window.casoraPopup, el = P && P.element;
+    var P = window.casoraPopup, el = P && P.shown;
     if (!el || !el.isConnected) return;
     var ha = document.querySelector('home-assistant'); var hass = ha && ha.hass; if (!hass) return;
     var s = hass.states[COACH]; if (!s) return;

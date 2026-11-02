@@ -1019,9 +1019,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       return window.casoraTr ? window.casoraTr(t) : t;
     };
     var popRoot = function () {
-      // The popup is a singleton that casora-core keeps (casoraPopup.element): no walk through the whole page
-      // (every 5 s while nothing was open it was ~13 000 querySelectorAll('*') a minute, Prüfung 2 DH-17).
-      var el = window.casoraPopup && window.casoraPopup.element;
+      // The popup casora-core keeps (casoraPopup.shown: the dashboard's, or the Studio's preview): no walk through the
+      // whole page (every 5 s while nothing was open it was ~13 000 querySelectorAll('*') a minute, Prüfung 2 DH-17).
+      var el = window.casoraPopup && window.casoraPopup.shown;
       if (el) return el;
       if (window.casoraPopup) return null;
       var ha = document.querySelector('home-assistant');
@@ -1059,7 +1059,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       find(pop.shadowRoot, '.hp-ct').forEach(function (t) { var tt = t.querySelector('.hp-ct-t'); (tt || t).textContent = window._hpChartTitle(eid); });
       find(pop.shadowRoot, '.hp-det').forEach(function (d) { if (!/^hwd\d+:/.test(eid)) d.setAttribute('data-casora-mi', eid); });
       find(pop.shadowRoot, '[data-hp-metric]').forEach(function (r) { r.classList.toggle('hp-sel', r.dataset.hpMetric === eid); });
-      window._hpShown = eid;
+      // Only the dashboard's popup notes its choice: a pick in the Studio's preview (casoraPopup.shown) must not carry
+      // over into a later dashboard popup (battery list, 08-weich-kompakt.js, reads _hpShown).
+      if (!window.casoraPopup || pop === window.casoraPopup.element) window._hpShown = eid;
       if (window.casoraPopup && window.casoraPopup.current) window.casoraPopup.current._hpEid = eid;
       if (!noScroll) {
         var sc = pop.shadowRoot.querySelector('.content') || null;
@@ -1152,7 +1154,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
        mounts the chart again and fills forecast slots still waiting from the cache. */
     window._hwReopen = function (key, chartId) {
       setTimeout(function () {
-        var pop = window.casoraPopup && window.casoraPopup.element;
+        var pop = window.casoraPopup && window.casoraPopup.shown;
         if (!pop || !pop.shadowRoot || !pop.hasAttribute('open') || pop._hwGen === pop._openGen) return;
         var slot = find(pop.shadowRoot, '.hp-chart-slot')[0];
         if (chartId && !slot) return;

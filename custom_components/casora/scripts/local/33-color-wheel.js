@@ -42,13 +42,20 @@
     return Array.isArray(a.hs_color) ? [Number(a.hs_color[0]) || 0, Number(a.hs_color[1]) || 0] : null;
   };
 
+  // rgb_color as CSS, or null when the lamp reports no real colour (missing, or black/near black like [0,0,0]).
+  CW.rgbCss = function (c) {
+    if (!Array.isArray(c) || c.length < 3) return null;
+    var n = c.slice(0, 3).map(function (x) { return Math.round(Number(x) || 0); });
+    return Math.max(n[0], n[1], n[2]) >= 16 ? 'rgb(' + n.join(',') + ')' : null;
+  };
   // Brightness bar of the page: the same slider as the light popup, filled in the lamp's color.
   CW.bright = function (entity) {
     var UI = window._casoraUI;
     if (!UI || !entity) return '';
     var a = entity.attributes || {}, on = entity.state === 'on';
     var pct = on && a.brightness != null ? Math.max(1, Math.round(a.brightness / 2.55)) : 0;
-    var fill = Array.isArray(a.rgb_color) ? 'rgb(' + a.rgb_color.map(Number).join(',') + ')' : 'var(--casora-color-yellow, #FFCC00)';
+    // A lamp that reports black (Govee scene/effect: rgb_color [0,0,0]) has no colour to show – keep the default fill (r485).
+    var fill = CW.rgbCss(a.rgb_color) || 'var(--casora-color-yellow, #FFCC00)';
     return '<style>ha-card.disabled{pointer-events:auto!important;}</style>'
       + '<div style="margin-top:22px;--casora-popup-slider-fill:' + UI.esc(fill) + ';--casora-popup-slider-icon:' + (on ? 'rgba(0,0,0,0.55)' : '#ffffff') + ';">'
       + UI.slider({ value: pct, icon: 'light', svc: { domain: 'light', service: 'turn_on', field: 'brightness_pct', target: { entity_id: entity.entity_id } } })
@@ -176,7 +183,7 @@
       var a = (st && st.attributes) || {};
       var hs = CW.hsOf(a);
       if (!hs) { this._k.hidden = true; return; }
-      this._place(hs, Array.isArray(a.rgb_color) ? 'rgb(' + a.rgb_color.map(Number).join(',') + ')' : '#fff');
+      this._place(hs, CW.rgbCss(a.rgb_color) || '#fff');
       this._w.style.opacity = st.state === 'on' ? '' : '.55';
     }
   }

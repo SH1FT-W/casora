@@ -171,7 +171,9 @@ Wetter-Integrationen (#56), Casora liest Sensoren am Gerät der Wetter-Entität 
 (`00-finder.js` `WX_KEYS`; Test `dev/unit/weather_feels_like.mjs`, Testhaus `dev/casora_mock/wetter.py`):
 „Wetter & Warnungen“ (`wetter`, eigene Integration SH1FT-W/wetter-warnungen, Stand Quellcode 25.10.2026) mit
 `temperature`, `dew_point`, `wind_gust`, `cloud_cover`, `precipitation` (mm/h), `precipitation_probability`,
-`precipitation_probability_today`, `solar` (W/m²); eine gefühlte Temperatur liefert sie noch nicht (weder Sensor
+`precipitation_probability_today`, `solar` (W/m²), `wind_speed`, `wind_bearing` (°), `humidity`, `pressure`, `visibility`.
+Hat das Gerät für einen Wert einen eigenen Sensor, nimmt das Popup ihn vor dem Attribut der Wetter-Entität (Wert und ›
+zur Detailseite mit Verlauf, alle Zeilen in „Details“; Test `dev/qa/regress/r500_weather_details_sensors.mjs`); eine gefühlte Temperatur liefert sie noch nicht (weder Sensor
 noch `native_apparent_temperature`). Gefühlte Temperatur anderer Quellen: `apparent_temperature`,
 `feels_like_temperature`, `feels_like`, `realfeel_temperature`.
 

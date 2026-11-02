@@ -31,7 +31,7 @@ except ImportError:
 import voluptuous as vol
 
 from homeassistant import bootstrap, config_entries, loader
-from homeassistant.core import HomeAssistant, SupportsResponse
+from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
@@ -254,7 +254,9 @@ class Real(unittest.IsolatedAsyncioTestCase):
 
         ki.register_ai_generate(self.hass)
         fired = []
-        self.hass.bus.async_listen("casora_recipe_result", lambda ev: fired.append(dict(ev.data)))
+        # A @callback runs in the event loop in firing order. A plain lambda went to the executor: under load the
+        # "running" append could land after "done"/"error" (gate 26.11.7: 'running' != 'error').
+        self.hass.bus.async_listen("casora_recipe_result", callback(lambda ev: fired.append(dict(ev.data))))
         seqs = await ki._load_sequences(self.hass)
         script = Script(self.hass, seqs[name], "test", "casora", script_mode="parallel")
         await script.async_run(run_variables=variables, context=None)

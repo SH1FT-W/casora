@@ -4,6 +4,23 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.7 – 02.11.2026
+
+Ruhigere Thermostat-Kacheln, ein Wetter-Popup mit Verlauf hinter jedem Wert und Fixes aus euren Meldungen.
+
+### Geändert
+- **Thermostat- und Fußbodenheizungs-Kacheln ruhiger:** Die Kachel zeigt nur noch Raumtemperatur und Zustand („21,4° · Heizt“, „Bereit“, „Automatik“, „Aus“), das Ziel steht im Popup. Automatik gilt als an; grau ist das Symbol nur bei Aus.
+- **Wetter-Details mit Verlauf:** Hat deine Wetterstation eigene Sensoren (Taupunkt, Windböen, Bewölkung, Regen, Wind, Luftdruck, Sichtweite …), zeigen die Zeilen deren Werte und führen mit › zur Seite mit Verlauf.
+- **Eindeutige Namen in Haus-Popups (#116):** Gäbe es einen gekürzten Gerätenamen mehrfach (z. B. „Links“ in Wohnzimmer und Schlafzimmer), setzt Casora den Raum davor: „Wohnzimmer Links“, „Schlafzimmer Links“. Eindeutige Namen und Raum-Popups bleiben, wie sie sind.
+
+### Behoben
+- **Eigener Temperatursensor im Wetter-Diagramm (#115):** Rad, Temperaturkurve, „Jetzt“-Wert und Legende nutzen alle den im Studio gewählten Sensor, auch wenn die gefühlte Temperatur als zweite Kurve mitläuft.
+- **Schwarzer Ring im Licht-Popup:** Meldet eine Lampe die Farbe Schwarz (z. B. Govee in einer Szene oder einem Effekt), bleibt der Ring in der Akzentfarbe; ebenso Farbrad und Helligkeitsregler.
+- **Nur eine An/Aus-Lampe an:** Brennt im Raum nur eine Lampe ohne Dimmer (z. B. eine Status-LED), zeigt das Licht-Rad „An“ statt „Aus“, passend zum Kopf.
+- **Studio-Vorschau:** Die Popup-Vorschau neben dem Kachel-Editor zeigt Diagramme, Pflanzen-Doktor, Coaches und andere nachgeladene Teile wie auf dem Dashboard.
+- **Unterseiten aus Haus-Popups:** Eine Jalousie oder Lampe, aus dem Haus-Popup geöffnet, heißt wie ihre Zeile („Küche“) statt nur „Jalousie“.
+- **Diagramm-Popup:** Das Diagramm wird bei neuen Messwerten nicht mehr jedes Mal neu aufgebaut (kein Flackern).
+
 ## 26.11.6 – 02.11.2026
 
 Fixes aus euren Meldungen zu 26.11.5, vor allem am Handy.

@@ -445,9 +445,19 @@
       var shpHtml = C.kind ? UI.segments(SHAPES.map(function (sh) { return { label: SHAPE_LABEL[sh], active: sh === shape }; }), null)
         .replace(/<div class="hui-sg/g, function () { return '<div data-casora-cshape="' + esc(C.id + '|' + SHAPES[l6++]) + '" class="hui-sg'; }) : '';
       if (C.kind && window._hpStageChart) window._hpStageChart(el, key);
-      return UI.stage('chart', { value: cut6 ? v6.slice(0, -u6.length - 1) : v6, unit: cut6 ? u6 : '', word: !num6,
+      // The stage card is drawn again on every new value; a new value in the HTML meant a new, empty slot and the chart
+      // mounted anew each time (r488, as r303 on the reading page). The number follows live (data-hp-live), so the
+      // stage keeps the value and decimals it was drawn with until range, shape, unit or the state kind change – the
+      // same HTML. Not for a percentage: UI.stage draws it as a wheel whose ring shows the value, which must not stand.
+      var val6 = cut6 ? v6.slice(0, -u6.length - 1) : v6, sk6 = [key, u6, num6 ? 'n' : v6].join('|');
+      var dig6 = num6 ? (Math.abs(numOf(st.state)) >= 100 ? 0 : M.precision(hass, C.id, numOf(st.state))) : null;
+      if (el && u6 !== '%') {
+        if (!el._casoraS6 || el._casoraS6.k !== sk6) el._casoraS6 = { k: sk6, v: val6, d: dig6 };
+        val6 = el._casoraS6.v; dig6 = el._casoraS6.d;
+      }
+      return UI.stage('chart', { value: val6, unit: cut6 ? u6 : '', word: !num6,
         read: C.kind ? C.id : null, live: num6 ? C.id : null,
-        liveDigits: num6 ? (Math.abs(numOf(st.state)) >= 100 ? 0 : M.precision(hass, C.id, numOf(st.state))) : null, trend: trend6, state: !st || st.state === 'unavailable' ? 'na' : null,
+        liveDigits: dig6, trend: trend6, state: !st || st.state === 'unavailable' ? 'na' : null,
         chart: C.kind ? '<div class="hp-chart-slot" style="min-height:' + (window.innerWidth <= 760 ? 140 : 160) + 'px;pointer-events:auto;"></div>'
           : UI.empty({ icon: 'mdi:chart-line-variant', text: 'Kein Zahlenwert', sub: 'Dieser Sensor liefert keine Zahl.' }),
         extra: C.kind ? '<div style="display:flex;flex-wrap:wrap;gap:10px 16px;align-items:start;"><div style="flex:4 1 260px;min-width:0;">' + rngHtml

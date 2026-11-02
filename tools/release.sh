@@ -4,6 +4,9 @@
 # Versionen sind Kalender-Versionen YY.M.N (Jahr zweistellig, Monat ohne Null, N = laufende Nummer des
 # Releases im Monat ab 1, veröffentlichte GitHub-Releases des Monats zählen, auch alte X.Y.Z) – Tag „vYY.M.N“, z. B. v26.10.31.
 # Die nächste Nummer rechnet tools/next-version aus.
+# The tag keeps its "v" for now: every Casora version released so far only recognises "v…" tags in its own update
+# entity and in the Studio (release_notes.CASORA_TAG). tools/next-version counts tags with and without "v" and prints
+# the bare number; the checks below treat both spellings as taken.
 #
 #   tools/release.sh                   Version von tools/next-version, prüft alles, zeigt die Befehle
 #   tools/release.sh 26.10.31          dasselbe mit ausdrücklicher Version (muss = tools/next-version sein)
@@ -54,7 +57,7 @@ NEXT="$(tools/next-version)" || fail "tools/next-version fehlgeschlagen"
 if [ $BETA = 1 ]; then
   # Beta: bK hinter der nächsten Nummer, K = höchste schon vergebene Beta dieser Nummer + 1.
   git fetch -q --tags origin 2>/dev/null || true
-  K=$(git tag -l "v${NEXT}b*" | sed -n "s/^v${NEXT}b\([0-9][0-9]*\)$/\1/p" | sort -n | tail -1)
+  K=$(git tag -l "v${NEXT}b*" "${NEXT}b*" | sed -n "s/^v\{0,1\}${NEXT}b\([0-9][0-9]*\)$/\1/p" | sort -n | tail -1)
   WANT="${NEXT}b$(( ${K:-0} + 1 ))"
   [ -z "$VER" ] && VER="$WANT"
   [ "$VER" = "$WANT" ] || fail "Beta-Version $VER ≠ $WANT (nächste Beta)"
@@ -73,6 +76,7 @@ fi
 ok "Version $VER"
 fi
 TAG="v$VER"
+tag_taken() { git rev-parse -q --verify "refs/tags/$VER" >/dev/null || git rev-parse -q --verify "refs/tags/v$VER" >/dev/null; }
 
 # 0b) Release-Paket casora.zip aus HEAD (= dem Commit, der den Tag bekommt), nicht aus dem Arbeitsstand
 ZIP=".qa/release-$VER/casora.zip"
@@ -103,7 +107,7 @@ ZV="$(python3 -c 'import json,sys,zipfile;print(json.loads(zipfile.ZipFile(sys.a
 ok "Paket-Version: $ZV"
 
 if [ $BETA = 1 ]; then
-  git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && fail "Tag $TAG gibt es schon"
+  tag_taken && fail "Tag $VER bzw. v$VER gibt es schon"
   NOTES=".qa/release-notes-$VER.md"
   [ -s "$NOTES" ] || fail "Beta-Notizen fehlen: $NOTES (englisch, kurz: was testen)"
   ok "Beta-Notizen: $NOTES"
@@ -127,7 +131,7 @@ fi
 WV="$(grep -o 'id="casora-version">Version [0-9.]*' docs/index.html | grep -o '[0-9][0-9.]*$')"
 [ "$WV" = "$VER" ] || fail "docs/index.html zeigt als Fallback Version $WV, nicht $VER (Versionszeile im Hero anpassen)"
 ok "docs/index.html Fallback: $WV"
-git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && fail "Tag $TAG gibt es schon"
+tag_taken && fail "Tag $VER bzw. v$VER gibt es schon"
 
 # 4) CHANGELOG-Abschnitte → Versionshinweise auf GitHub nur englisch (seit 26.10.34). CHANGELOG.de.md bleibt Pflicht:
 #    Casora liest bei deutscher Oberfläche die deutsche Fassung aus CHANGELOG.de.md (Updates-Popup).
@@ -162,7 +166,12 @@ m = re.search(r"const WHATS_NEW = \[(.*?)\n\s*\];", s, re.S)
 print("\n".join(l.strip() for l in (m.group(1) if m else "").splitlines() if l.strip() and not l.strip().startswith("//")))'; }
 NOW="$(wn <"$WN_FILE")"
 [ -n "$NOW" ] || fail "WHATS_NEW in $WN_FILE ist leer"
-LAST="$(git tag -l 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || true)"
+# Last stable release, tag with or without "v"
+LASTV="$(git tag -l | sed -n 's/^v\{0,1\}\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\)$/\1/p' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)"
+LAST=""
+for t in "v$LASTV" "$LASTV"; do
+  [ -n "$LASTV" ] && git rev-parse -q --verify "refs/tags/$t" >/dev/null && LAST="$t"
+done
 if [ -n "$LAST" ] && [ $SAME_WN = 0 ]; then
   BEFORE="$(git show "$LAST:$WN_FILE" 2>/dev/null | wn || true)"
   if [ "$NOW" = "$BEFORE" ]; then

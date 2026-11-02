@@ -1,5 +1,6 @@
-// 09.10.2026: Fußbodenheizung taktet (hvac_action wechselt minutenweise heating/idle). In der
-// Pause unter dem Ziel stand „Bereit“, das klang nach „Ziel erreicht“. Jetzt „Heizt auf“, am Ziel „Ziel 22°“.
+// 09.10.2026: floor heating cycles (hvac_action switches heating/idle every few minutes). In the pause below the
+// target the tile said „Bereit“, which sounded like „target reached“. It says „Heizt“; „Bereit“ only at the target
+// (calm tile 02.11.2026: no target number).
 //   node dev/unit/thermostat_taktpause.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -12,13 +13,13 @@ const body = tpl.casora_thermostat.state_display.trim().replace(/^\[\[\[/, '').r
 const tile = (state, attributes) => new Function('entity', 'window', body)({ state, attributes }, window);
 const at = (hvac_action, current_temperature, temperature = 22) => ({ hvac_action, current_temperature, temperature });
 
-assert.equal(tile('heat', at('heating', 21.5)), '21,5° · Heizt auf 22°');
-assert.equal(tile('heat', at('idle', 21.5)), '21,5° · Heizt auf 22°');   // Taktpause unter dem Ziel
-assert.equal(tile('heat', at('idle', 21.9)), '21,9° · Ziel 22°');        // innerhalb 0,2 °C = am Ziel
-assert.equal(tile('heat', at('idle', 22.4)), '22,4° · Ziel 22°');
-assert.equal(tile('heat', at('idle', null)), 'Ziel 22°');        // ohne Ist-Wert nichts raten
-assert.equal(tile('cool', at('idle', 24)), '24° · Kühlt auf 22°');
-assert.equal(tile('cool', at('idle', 22)), '22° · Ziel 22°');
+assert.equal(tile('heat', at('heating', 21.5)), '21,5° · Heizt');
+assert.equal(tile('heat', at('idle', 21.5)), '21,5° · Heizt');   // pause below the target
+assert.equal(tile('heat', at('idle', 21.9)), '21,9° · Bereit');  // within 0.2 °C = at the target
+assert.equal(tile('heat', at('idle', 22.4)), '22,4° · Bereit');
+assert.equal(tile('heat', at('idle', null)), 'Bereit');          // no reading: no guess
+assert.equal(tile('cool', at('idle', 24)), '24° · Kühlt');
+assert.equal(tile('cool', at('idle', 22)), '22° · Bereit');
 assert.equal(tile('off', at('idle', 18)), '18° · Aus');
 // Review 2 (fam-15): without a sensor the thermostat's own reading stands in front.
 console.log('ok thermostat_taktpause');
