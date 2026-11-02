@@ -181,7 +181,7 @@
   K.repaint = function () {
     var ha = document.querySelector('home-assistant');
     if (ha && ha.hass) K.w.hass = ha.hass;
-    ['month', 'week', 'day', 'up', 'hero', 'head', 'wmonth', 'wday'].forEach(function (k) {
+    ['month', 'week', 'day', 'up', 'hero', 'head', 'wmonth', 'wday', 'wtoday', 'wpick'].forEach(function (k) {
       find(ha && ha.shadowRoot, '.hcal-' + k).forEach(function (n) { n.innerHTML = (window.casoraTr || function (x) { return x; })(K.html(k, K._vars)); });
     });
   };
@@ -315,7 +315,7 @@
   /* Monat mit Punkten, Blättern und Legende: gemeinsam für das Kalender- und das Abfall-Popup.
      pre: Vorsilbe der Tipp-Aktionen ('' Kalender, 'w' Abfall), dots(d) → Farben des Tages,
      legend: [{ key, color, name, off }]. */
-  var monthHtml = function (m, sel, pre, dots, legend) {
+  var monthHtml = function (m, sel, pre, dots, legend, selAuto) {
     var today = day0(new Date()), gs = gridStart(m);
     var isCur = m.getFullYear() === today.getFullYear() && m.getMonth() === today.getMonth();
     /* Abfall (05.10.2026): die Blätter-Knöpfe machen die Überschrift nicht höher als „Heute“
@@ -328,7 +328,7 @@
     for (var i = 0; i < 42; i++) {
       var d = addD(gs, i), cols = dots(d);
       var cls = 'hcal-d' + (d.getMonth() !== m.getMonth() ? ' o' : '') + (d.getDay() % 6 === 0 ? ' we' : '')
-        + (ymd(d) === ymd(today) ? ' t' : '') + (ymd(d) === ymd(sel) ? ' s' : '');
+        + (ymd(d) === ymd(today) ? ' t' : '') + (ymd(d) === ymd(sel) ? (selAuto ? ' sa' : '') + ' s' : '');
       g += '<div class="' + cls + '" data-hcal="' + pre + 'day:' + ymd(d) + '"><div class="hcal-n">' + d.getDate() + '</div>'
         + '<div class="hcal-dots">' + cols.slice(0, 3).map(function (cc) { return '<i style="background:' + esc(cc) + ';"></i>'; }).join('') + '</div></div>';
     }
@@ -369,19 +369,36 @@
       sel = first || today;
     }
     if (k === 'wmonth') {
+      // pickAuto: the day is not picked but the next pickup (desktop day card); the phone does not mark it (issue 117).
       return monthHtml(K.w.month || new Date(sel.getFullYear(), sel.getMonth(), 1), sel, 'w',
         function (d) { return on(d).map(function (b) { return b.color; }); },
-        data.list.map(function (b) { return { key: 'wbin:' + b.id, color: b.color, name: b.label, off: !!K.w.hide[b.id] }; }));
+        data.list.map(function (b) { return { key: 'wbin:' + b.id, color: b.color, name: b.label, off: !!K.w.hide[b.id] }; }), !K.w.sel);
+    }
+    var subOf = function (n) { return n === 0 ? 'Abholung heute' : n === 1 ? 'Abholung morgen · heute Abend raus' : n > 1 ? 'Abholung in ' + n + ' Tagen' : 'Abholung'; };
+    var dayCardHtml = function (t, rows, empty) {
+      var body = rows.length ? rows.map(function (r) {
+        return '<div class="hcal-r"><div class="hcal-bar" style="background:' + esc(r.b.color) + ';"></div>'
+          + '<div class="hcal-tx"><div class="hcal-tt">' + esc(r.b.label) + '</div><div class="hcal-ts">' + esc(r.sub) + '</div></div></div>';
+      }).join('') : '<div class="hcal-e">' + (data.loading && !data.list.length ? 'Wird geladen …' : esc(empty)) + '</div>';
+      return CSS() + (SOFT() ? '<div class="hcal hs">' + sHead(esc(t)) : '<div class="hcal">' + head(esc(t))) + body + '</div>';
+    };
+    var dayTitle = function (d, n) { return n === 0 ? 'Heute' : n === 1 ? 'Morgen' : DAYL[d.getDay()] + ', ' + d.getDate() + '. ' + MON[d.getMonth()]; };
+    var rowsOf = function (d, n) { var s = subOf(n); return on(d).map(function (b) { return { b: b, sub: s }; }); };
+    if (k === 'wtoday') {
+      /* Phone (issue 117): a fixed card for today on top – today's pickups, else tomorrow's bins to put out tonight. */
+      var rows = rowsOf(today, 0);
+      if (!rows.length) rows = rowsOf(addD(today, 1), 1);
+      return dayCardHtml('Heute', rows, 'Keine Abholung');
+    }
+    if (k === 'wpick') {
+      /* Phone (issue 117): the tapped day right below the month; nothing until a day other than today is tapped. */
+      var pk = K.w.sel ? parseYmd(K.w.sel) : null;
+      if (!pk || diffDays(pk) === 0) return '';
+      var pn = diffDays(pk);
+      return '<div style="padding-top:var(--casora-popup-sec-gap, 18px);">' + dayCardHtml(dayTitle(pk, pn), rowsOf(pk, pn), 'Keine Abholung') + '</div>';
     }
     var n = diffDays(sel);
-    var t = n === 0 ? 'Heute' : n === 1 ? 'Morgen' : DAYL[sel.getDay()] + ', ' + sel.getDate() + '. ' + MON[sel.getMonth()];
-    var hits = on(sel);
-    var sub = n === 0 ? 'Abholung heute' : n === 1 ? 'Abholung morgen · heute Abend raus' : n > 1 ? 'Abholung in ' + n + ' Tagen' : 'Abholung';
-    var body = hits.length ? hits.map(function (b) {
-      return '<div class="hcal-r"><div class="hcal-bar" style="background:' + esc(b.color) + ';"></div>'
-        + '<div class="hcal-tx"><div class="hcal-tt">' + esc(b.label) + '</div><div class="hcal-ts">' + esc(sub) + '</div></div></div>';
-    }).join('') : '<div class="hcal-e">' + (data.loading && !data.list.length ? 'Wird geladen …' : 'Keine Abholung') + '</div>';
-    return CSS() + (SOFT() ? '<div class="hcal hs">' + sHead(esc(t)) : '<div class="hcal">' + head(esc(t))) + body + '</div>';
+    return dayCardHtml(dayTitle(sel, n), rowsOf(sel, n), 'Keine Abholung');
   };
   /* Abschnitt im Abfall-Popup; lädt der Abfall-Kalender noch, wird ein paar Mal nachgezeichnet. */
   K.wsec = function (k, states, hass, variables) {
@@ -395,7 +412,7 @@
   };
   /* Spalte fürs Abfall-Popup: Monat und gewählter Tag; beim Öffnen auf den nächsten Abholtag.
      keys (Issue #7, 04.10.2026): nur einzelne Abschnitte, z. B. ['wmonth'] links und ['wday'] rechts. */
-  K.wcol = function (variables, watch, keys) {
+  K.wcol = function (variables, watch, keys, opts) {
     K.w.sel = null; K.w.month = null; K.w.tries = 0;
     var V = {};
     Object.keys(variables || {}).forEach(function (key) { if (key.indexOf('trash_') === 0) V[key] = variables[key]; });
@@ -411,12 +428,32 @@
         + ' .hcal.hs .hcal-pl { flex: 1 1 auto; display: flex; flex-direction: column; }'
         + ' .hcal.hs .hcal-g { flex: 1 1 auto; grid-template-rows: auto repeat(6, minmax(0, 1fr)); }'
         + ' .hcal.hs .hcal-d { justify-content: center; } }';
+      /* Phone with its own picked-day card under the month (opts.pick, issue 117): only a tapped day is marked, not
+         the next pickup the desktop day card starts on. */
+      if (opts && opts.pick) {
+        card.card_mod.style += ' @media (max-width: 760px) { .hcal-d.s.sa:not(.t) .hcal-n { background: none !important;'
+          + ' box-shadow: none !important; font-weight: inherit !important; color: inherit; } }';
+      }
     }
     return card;
   };
-  /* Handy (Issue #7): nach dem Antippen eines Tages weich zur Tageskarte, falls sie außer Sicht ist. */
+  // The phone's picked-day card under the month (issue 117), null where the layout has none (desktop, v2).
+  var wpickEl = function () {
+    if (!window.matchMedia || !window.matchMedia('(max-width: 760px)').matches) return null;
+    var ha = document.querySelector('home-assistant');
+    return find(ha && ha.shadowRoot, '.hcal-wpick').filter(function (x) { return x.getClientRects().length; })[0] || null;
+  };
+  /* Phone (issue 7): after tapping a day, scroll softly to the day card if it is out of sight. With the card under the
+     month (issue 117) only down, as far as needed to show it – never up, away from the month. */
   var wdayIntoView = function () {
     if (!window.matchMedia || !window.matchMedia('(max-width: 760px)').matches) return;
+    var reduce0 = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var pk = wpickEl();
+    if (pk) {
+      var pr = pk.getBoundingClientRect(), vh0 = window.innerHeight || document.documentElement.clientHeight;
+      if (pr.height > 0 && pr.bottom > vh0) pk.scrollIntoView({ behavior: reduce0 ? 'auto' : 'smooth', block: 'end' });
+      return;
+    }
     var ha = document.querySelector('home-assistant');
     var n = find(ha && ha.shadowRoot, '.hcal-wday').filter(function (x) { return x.getClientRects().length; })[0];
     if (!n || !n.getBoundingClientRect) return;
@@ -428,7 +465,7 @@
   };
 
   K.html = function (k, variables) {
-    if (k === 'wmonth' || k === 'wday') return wasteHtml(k);
+    if (k === 'wmonth' || k === 'wday' || k === 'wtoday' || k === 'wpick') return wasteHtml(k);
     var T = UIT(), cals = K.cals(variables), today = day0(new Date());
     var sel = K.sel ? parseYmd(K.sel) : today;
     var wait = !K.ev ? '<div class="hcal-e">' + (K.err ? 'Kalender nicht erreichbar' : 'Wird geladen …') + '</div>' : null;
@@ -604,6 +641,8 @@
       else { var m = K.month || new Date(t.getFullYear(), t.getMonth(), 1); K.month = new Date(m.getFullYear(), m.getMonth() + Number(v), 1); }
     } else if (p[0] === 'cal') { K.hide[v] = !K.hide[v]; }
     else if (p[0] === 'wday') {
+      // Phone with the picked-day card (issue 117): tapping the picked day again or today closes it (today is on top).
+      if (wpickEl() && (v === K.w.sel || v === ymd(new Date()))) { K.w.sel = null; K.repaint(); return; }
       K.w.sel = v; var wd = parseYmd(v), wm = K.w.month;
       if (!wm || wd.getMonth() !== wm.getMonth() || wd.getFullYear() !== wm.getFullYear()) K.w.month = new Date(wd.getFullYear(), wd.getMonth(), 1);
     } else if (p[0] === 'wnav') {
