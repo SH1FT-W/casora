@@ -56,6 +56,6 @@ const tpl = JSON.parse(rd('custom_components/casora/panel/casora-templates.json'
 assert.ok(/stage\('image', \{ html: streamHtml, zoom: true,/.test(JSON.stringify(tpl)), 'camera popup does not ask for the big view');
 for (const l of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
   const ph = JSON.parse(rd(`custom_components/casora/translations/dashboard/phrases/${l}.json`));
-  assert.ok(ph['Vergrößern'] && ph['Verkleinern'], `phrases ${l}: Vergrößern/Verkleinern missing`);
+  assert.ok(ph.exact['Vergrößern'] && ph.exact['Verkleinern'], `phrases ${l}: Vergrößern/Verkleinern missing`);
 }
 console.log('stage_image_free (big view): ok');
