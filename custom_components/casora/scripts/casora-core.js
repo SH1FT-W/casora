@@ -13758,6 +13758,8 @@ window.casoraMenuGlass = {
     if (cur.state === 'unavailable') txt = /^(camera|lock)\./.test(cur.entity_id) ? tr('Offline') : tr('Nicht verfügbar');
     txt = String(txt || '').trim();
     if (!txt || txt === 'unknown') return '';
+    // A tilted door/window is „Gekippt“, as its dial, its list row and its tile say – not HA's „Offen“.
+    if (window.casoraContactTilted && window.casoraContactTilted(h, String(cur.entity_id || ''), cur)) return tr('Gekippt');
     var dom0 = String(cur.entity_id || '').split('.')[0], grp0 = Array.isArray((cur.attributes || {}).entity_id);
     var meas0 = (dom0 === 'sensor' || dom0 === 'number' || dom0 === 'input_number') && cur.state !== '' && isFinite(Number(cur.state));
     if (meas0 || ((cur.state === 'on' || cur.state === 'off') && (grp0 || dom0 === 'binary_sensor' || dom0 === 'calendar') && !(cur.attributes || {}).device_class)) return null;
