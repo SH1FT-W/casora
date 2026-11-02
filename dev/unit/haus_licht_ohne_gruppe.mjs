@@ -96,7 +96,16 @@ assert.deepEqual(listed(rooms[3].variables), ['light.demo_bad_alle'], 'Bad: its 
 const hg = house({ houseGroup: true });
 const withGroup = setup(hg);
 assert.equal(withGroup.rooms[0].variables.light_group_entity, 'light.demo_alle', 'with a group: the group');
-assert.equal(listed(withGroup.rooms[0].variables).length, 10, 'with a group: ten slots as before');
+// Eleven lights for ten slots: the group alone. Picked lights win over the group in the popup (#80), so ten slots
+// cut the eleventh room's lights off the house popup (gate, 02.11.2026).
+assert.deepEqual(listed(withGroup.rooms[0].variables), [], 'with a group and more lights than slots: the group alone');
+// Lights that fit the ten slots: listed beside the group as before.
+const h9 = house({ houseGroup: true });
+['light.demo_flur_3', 'light.demo_flur_4'].forEach((id) => { delete h9.states[id]; delete h9.entities[id]; });
+h9.states['light.demo_alle'].attributes.entity_id = h9.states['light.demo_alle'].attributes.entity_id.filter((id) => h9.states[id]);
+const fewer = setup(h9);
+assert.equal(fewer.rooms[0].variables.light_group_entity, 'light.demo_alle', 'nine lights: the group');
+assert.equal(listed(fewer.rooms[0].variables).length, 9, 'nine lights: listed as before');
 assert.equal(withGroup.rooms[0].variables.light_rooms_auto, undefined, 'with a group: no marker');
 assert.equal(withGroup.tile.entity, 'light.demo_alle', 'with a group: the tile is the group');
 assert.equal(withGroup.tile.variables.light_rooms_auto, undefined);
