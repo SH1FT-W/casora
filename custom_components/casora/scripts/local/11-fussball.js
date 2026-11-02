@@ -851,7 +851,8 @@
     var fld = function (k) { return '[[[ return window._casoraFootball ? window._casoraFootball.sec(' + JSON.stringify(k) + ', entity) : ""; ]]]'; };
     if (K.v3()) {
       /* v3: no hero („Platz 3 · 20 Punkte“ is the lifted row of the table); the table as the stage on the left, the
-         match and the form on the right; phone: table, match, form. */
+         match and the form on the right; phone (one column): match, form, table – the match is what the popup is
+         opened for, the table would push it below the fold (issue 107). */
       return {
         type: 'custom:button-card', entity: id, triggers_update: [id], card_mod: { style: wrapperStyle },
         extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: "head head" "left right" !important;'
@@ -860,7 +861,7 @@
         tap_action: { action: 'none' }, show_icon: false, show_name: false, show_label: false, show_state: false,
         styles: {
           card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px 22px 26px' }],
-          grid: [{ 'grid-template-areas': '"head" "left" "right"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'align-items': 'start' }, { 'row-gap': 'var(--casora-popup-sec-gap, 22px)' }],
+          grid: [{ 'grid-template-areas': '"head" "right" "left"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'align-items': 'start' }, { 'row-gap': 'var(--casora-popup-sec-gap, 22px)' }],
           custom_fields: { head: [{ 'justify-self': 'stretch' }], left: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }], right: [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }] },
         },
         // head: the status line, lifted into the popup's head by the frame (§3).
