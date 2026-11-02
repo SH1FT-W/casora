@@ -1,6 +1,7 @@
 """AI update check gets release notes for every update, fetched server-side (update_notes.py, ki.py).
 
-  "$(tools/ha-venv.sh install)/bin/python" dev/unit/update_ai_notes_test.py
+  uv run --python 3.14 --with homeassistant python dev/unit/update_ai_notes_test.py
+  (or "$(tools/ha-venv.sh install)/bin/python" dev/unit/update_ai_notes_test.py)
 
 @ha-venv: needs the real homeassistant package (update's DATA_COMPONENT, UpdateEntityFeature).
 
