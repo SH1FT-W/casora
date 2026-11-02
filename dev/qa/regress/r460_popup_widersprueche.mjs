@@ -51,6 +51,8 @@ const api = async (method, p, body) => {
   return r.json();
 };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const hm = (ms) => { const d = new Date(ms); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+let HA_START = 0;
 const BAD = (s) => s == null || s === 'unknown' || s === 'unavailable';
 
 // One entity per two-state kind: [label, filter, active, idle, preferred id]. Otherwise the first fitting one by id
@@ -91,6 +93,19 @@ atFinish(async () => {
   }
 });
 
+// HA's start: the minute most entities share as last_changed (Casora UI helpers left out, as casoraSinceMs does).
+// casoraSinceMs takes the start minute and the minutes around it (2 before, 3 after) for the start: on a fresh test HA
+// the toggles wait until that window is over, otherwise the test's own changes would read as HA's start.
+{
+  const m = {};
+  for (const x of all) {
+    if (/^input_\w+\.casora_/.test(x.entity_id)) continue;
+    const k = Math.floor(Date.parse(x.last_changed) / 60e3); m[k] = (m[k] || 0) + 1;
+  }
+  HA_START = +Object.entries(m).sort((a, b) => b[1] - a[1])[0][0] * 60e3;
+  const wait = HA_START + 5 * 60e3 - Date.now();
+  if (wait > 0) { console.log(`  info   HA erst ${hm(HA_START)} gestartet – warte ${Math.round(wait / 1000)} s`); await sleep(wait); }
+}
 // Toggle every picked entity three times; it ends in the state opposite to the one it had (so last_changed is fresh
 // and differs from HA's start). Writes go to the state machine (and the recorder), like an integration would.
 const t0 = Date.now();
@@ -218,7 +233,6 @@ const DOMAIN_STATES = { binary_sensor: ['on', 'off'], switch: ['on', 'off'], lig
 const norm = (t) => String(t || '').toLowerCase().replace(/[\s  ]+/g, ' ').trim();
 const hasWord = (text, w) => { const n = norm(text), x = norm(w); if (!x) return false; const i = n.indexOf(x); if (i < 0) return false;
   const a = n[i - 1], b = n[i + x.length]; return !(a && /[a-zäöüß]/.test(a)) && !(b && /[a-zäöüß]/.test(b)); };
-const hm = (ms) => { const d = new Date(ms); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
 // A „Seit …“ text → the moment it names (ms), or null. Ranges for „vor N Min.“ (rounded).
 const parseSince = (t, now) => {
   const s = norm(t);
@@ -237,7 +251,6 @@ const parseDur = (t) => { const s = norm(t); let ms = 0, hit = false;
   return hit ? ms : null; };
 const READING = /(?<![\d,.])-?\d+(?:[.,]\d+)?\s?(?:%|°C|°F|°|kWh|kW|W|lx|ppm|µg\/m³|hPa|mbar|V|A|mm|dB)(?![\wäöü])/g;
 
-let HA_START = 0;
 const findings = [];
 const evaluate = (popup, view, s, rec) => {
   const out = [];
@@ -286,7 +299,7 @@ const evaluate = (popup, view, s, rec) => {
     if (m) sinces.push(['Kopfzeile', m[0]]);
   }
   for (const t of (s.stage && s.stage.since) || []) sinces.push(['Bühne', t]);
-  const atStart = isFinite(s.last) && Math.abs(s.last - HA_START) < 90e3;
+  const atStart = isFinite(s.last) && s.last >= HA_START - 120e3 && s.last < HA_START + 240e3;
   const parsed = sinces.map(([w, t]) => [w, t, parseSince(t, now)]).filter((x) => x[2]);
   for (let i = 1; i < parsed.length; i++) {
     const a = parsed[0][2], b = parsed[i][2];
@@ -345,12 +358,6 @@ const evaluate = (popup, view, s, rec) => {
 };
 
 // ── run ──────────────────────────────────────────────────────────────────────
-// HA's start: the minute most entities share as last_changed
-{
-  const m = {};
-  for (const x of all) { const k = Math.floor(Date.parse(x.last_changed) / 60e3); m[k] = (m[k] || 0) + 1; }
-  HA_START = +Object.entries(m).sort((a, b) => b[1] - a[1])[0][0] * 60e3;
-}
 
 const dash = await casoraDashboard();
 await need('ein Casora-Dashboard', dash);

@@ -112,6 +112,12 @@
   // ── Verlauf holen (je Entität und Zeitraum einmal je Zustandswechsel) ───────
   var SPANS = { '24h': 864e5, '7d': 7 * 864e5, '30d': 30 * 864e5 };
   var hist = {}, retried = {}, RETRY = [2500, 6000, 12000];
+  // The start of the period the cached history of `id` covers (ms), null before the first answer. HA names the state
+  // the entity had then with that time – no change happened there.
+  Z.historyStart = function (id, span) {
+    var c = hist[id + '|' + span];
+    return c && c.rows ? c.start : null;
+  };
   Z.history = function (h, id, span, el) {
     var st = h && h.states && h.states[id];
     if (!st) return null;
@@ -494,7 +500,7 @@
     var today = dayStart(now);
     return '<div style="font-family:' + font + ';background:' + row + ';border-radius:var(--casora-popup-row-radius, 24px);padding:8px 16px 8px 12px;">'
       + items.map(function (x, i) {
-        var d = dayStart(x.t), prev = items[i - 1], first = d !== today && (!prev || dayStart(prev.t) !== d);
+        var d = dayStart(x.t), prev = items[i - 1], first = !x.early && d !== today && (!prev || dayStart(prev.t) !== d);
         var dd = Math.round((today - d) / 86400000);
         var day = first ? (dd === 1 ? T('Gestern') : new Date(x.t).toLocaleDateString(loc(), { weekday: 'short' }).replace(/\.$/, '')) : '';
         var last = i === items.length - 1;
@@ -502,7 +508,7 @@
         var dot = x.ring ? row + ';border:2px solid ' + sub : (x.color || dim);
         return '<div style="display:grid;grid-template-columns:minmax(46px,max-content) 22px minmax(0,1fr);align-items:start;column-gap:8px;padding:9px 0;">'
           + '<div style="font-size:13px;font-weight:600;color:' + sub + ';font-variant-numeric:tabular-nums;padding-top:2px;white-space:nowrap;">'
-          + (day ? '<div style="font-size:12px;font-weight:700;margin:-1px 0 1px;">' + esc(day) + '</div>' : '') + esc(hm(x.t)) + '</div>'
+          + (day ? '<div style="font-size:12px;font-weight:700;margin:-1px 0 1px;">' + esc(day) + '</div>' : '') + esc(x.early ? T('Früher') : hm(x.t)) + '</div>'
           + '<div style="position:relative;height:100%;display:flex;justify-content:center;">'
           + (last ? '' : '<div style="position:absolute;top:16px;bottom:-18px;width:2px;border-radius:2px;background:' + dim + ';"></div>')
           + '<div class="cz-dot ' + (x.ring ? 'off' : 'on') + '" style="position:relative;box-sizing:border-box;width:12px;height:12px;border-radius:50%;margin-top:4px;background:'
@@ -684,13 +690,16 @@
         }
       } else {
         var segs = Z.segments(rows2, now).segs.slice().reverse().slice(0, 8);
+        // A state already held when the period began starts at the period's start, which is no change: its row says
+        // „Früher“ instead of that time.
+        var w0 = Z.historyStart(id, span);
         items = segs.map(function (x) {
           var word = Z.stateWord(hass, id, x.s);
           // Each row says how long THIS state lasted, the newest one „seitdem“ (issue 104: „nach“ read as the time since
           // the previous change). Two states: active a filled accent dot, idle an empty ring.
           var tone = stateTone(hass, id, x.s), off = !tone && duo && !Z.isActive(x.s);
           return { t: x.start, title: word, sub: x.end ? esc(T('für')) + ' ' + esc(T(dur(x.end - x.start))) : esc(T('seitdem')),
-            color: tone ? tone.dot : off ? null : ACC, ring: off };
+            color: tone ? tone.dot : off ? null : ACC, ring: off, early: w0 != null && x.start <= w0 + 60000 };
         });
       }
       return head2 + (items.length ? timeline(items, now) : '<div style="padding:14px 4px;opacity:.65;">' + esc(T('Keine Änderung im Zeitraum')) + '</div>') + (v3 ? '' : histLink(id, span));

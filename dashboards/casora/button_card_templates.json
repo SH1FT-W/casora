@@ -11934,7 +11934,8 @@
     ],
     "title": "[[[ return variables.printer_name || (window._casoraPrint && window._casoraPrint.name ? window._casoraPrint.name(entity, variables, hass) : '3D-Drucker'); ]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
-    "variant": "v3"
+    "variant": "v3",
+    "head_entity": "[[[\n  return window._casoraPrint && window._casoraPrint.headEntity ? window._casoraPrint.headEntity(entity, variables, states, hass) : null;\n]]]\n"
    }
   },
   "tap_action": {
@@ -11952,7 +11953,8 @@
     ],
     "title": "[[[ return variables.printer_name || (window._casoraPrint && window._casoraPrint.name ? window._casoraPrint.name(entity, variables, hass) : '3D-Drucker'); ]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
-    "variant": "v3"
+    "variant": "v3",
+    "head_entity": "[[[\n  return window._casoraPrint && window._casoraPrint.headEntity ? window._casoraPrint.headEntity(entity, variables, states, hass) : null;\n]]]\n"
    }
   },
   "template": [

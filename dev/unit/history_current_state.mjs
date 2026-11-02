@@ -58,6 +58,13 @@ for (const [id, s] of CASES) {
   assert.equal(r[0].sub, 'seitdem', id + ': newest row runs until now');
   assert.match(r[1] ? r[1].sub : '', /^für 20 Std\./, id + ': the active span ended with the change 4 h ago');
 }
+// The oldest row is the state held when the 24 h began: it names no time (the period's start is no change), the
+// newest row keeps its real time.
+for (const [id] of CASES) {
+  const times = [...Z.sec('m_tl', id, '24h', states, hass, null).matchAll(/tabular-nums;[^>]*>(?:<div[^>]*>[^<]*<\/div>)?([^<]*)<\/div>/g)].map((m) => m[1]);
+  assert.equal(times[times.length - 1], 'Früher', id + ': the row from the window start says „Früher“, not its time');
+  assert.match(times[0], /^\d\d:\d\d$/, id + ': the newest row keeps its time');
+}
 // 24 h figures of a binary sensor: open once, for 20 h – not the whole day.
 const vals = Z.sec('m_vals', 'binary_sensor.window', '24h', states, hass, null);
 assert.match(vals, /=1×/, 'window: opened once');

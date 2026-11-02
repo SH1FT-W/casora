@@ -13665,16 +13665,30 @@ window.casoraMenuGlass = {
   // When the entity's current state began (ms), the one time the head and every stage say („Seit …“, issue 106):
   // last_changed, or null when there is none or it is only HA's start. Detail round #3: after a restart many entities
   // share HA's start as last_changed – that is not a change (a fifth of all states in the same minute counts as the start).
-  var startC = { at: 0, m: {}, n: 0 };
+  // A Casora UI helper (input_*.casora_*: phone filter, expanded row …) is no device: its last change is never a
+  // „since“ time, and it does not count towards HA's start either. HA's start: the minute most states share as
+  // last_changed (at least a fifth of them); a time within a few minutes of it is the start too (states restored a
+  // minute before the bulk, integrations that come up a little later).
+  var startC = { at: 0, m: {}, n: 0, start: null };
+  var CASORA_HELPER = /^input_[a-z_]+\.casora_/;
+  var START_BEFORE = 2 * 60000, START_AFTER = 3 * 60000;
   window.casoraSinceMs = function (cur, hass) {
-    var t = cur && cur.last_changed ? Date.parse(cur.last_changed) : NaN;
+    if (!cur || CASORA_HELPER.test(String(cur.entity_id || ''))) return null;
+    var t = cur.last_changed ? Date.parse(cur.last_changed) : NaN;
     if (!isFinite(t)) return null;
     var h0 = hass || (document.querySelector('home-assistant') || {}).hass, S0 = (h0 && h0.states) || {};
     if (Date.now() - startC.at > 10000) {
-      startC.at = Date.now(); startC.m = {}; startC.n = 0;
-      Object.keys(S0).forEach(function (k) { var x = Date.parse(S0[k].last_changed); if (!isFinite(x)) return; var mk = Math.floor(x / 60000); startC.m[mk] = (startC.m[mk] || 0) + 1; startC.n++; });
+      startC.at = Date.now(); startC.m = {}; startC.n = 0; startC.start = null;
+      Object.keys(S0).forEach(function (k) {
+        if (CASORA_HELPER.test(k)) return;
+        var x = Date.parse(S0[k].last_changed); if (!isFinite(x)) return;
+        var mk = Math.floor(x / 60000); startC.m[mk] = (startC.m[mk] || 0) + 1; startC.n++;
+      });
+      var best = null;
+      Object.keys(startC.m).forEach(function (mk) { if (best == null || startC.m[mk] > startC.m[best]) best = mk; });
+      if (startC.n >= 20 && best != null && startC.m[best] >= startC.n / 5) startC.start = Number(best) * 60000;
     }
-    if (startC.n >= 20 && (startC.m[Math.floor(t / 60000)] || 0) >= startC.n / 5) return null;
+    if (startC.start != null && t >= startC.start - START_BEFORE && t < startC.start + 60000 + START_AFTER) return null;
     return t;
   };
   window.casoraStateWord = function (h, cur) {
