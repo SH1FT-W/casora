@@ -1,9 +1,10 @@
-// Setups before 26.11.8 gave Home's light badge the house's HA light group AND the first ten lights
-// (light_entity_1…10). Picked lights win over the group in the popup (#80), so rooms past the tenth were missing
-// from the house light popup; 26.11.8 fixed the setup only (unit haus_licht_ohne_gruppe, regress r505). The Studio
-// now empties those ten slots on load (fixHomeLightSlots, the group stays) when they are exactly the old setup's
-// pick; a list the user picked (other lamps, fewer, another order), ten or fewer lights, no group: untouched.
-// The old setup is the real casora-panel-basis.js with the 26.11.8 guard taken out. Regress r506.
+// Setups before 26.11.9 gave Home's light badge the house's HA light group AND its lights in the slots (light_entity_1…10,
+// the first ten when there were more). Picked lights win over the group in the popup (#80): rooms past the tenth were
+// missing from the house light popup (r505), lights added later never joined. Today's setup writes the group alone
+// (unit haus_licht_ohne_gruppe). The Studio empties such slots on load (fixHomeLightSlots, the group stays, marker
+// light_slots_checked) when they are exactly what the old setup wrote: all units (ten or fewer, order aside) or the
+// first ten in order (more). A list the user picked, an unknown group, a marked badge: untouched.
+// The old setup is the real casora-panel-basis.js with the group's line from before put back. Regress r506.
 //   node dev/unit/house_light_old_ten_slots.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -19,10 +20,10 @@ globalThis.addEventListener = () => {};
 const isHomeRoom = (room, rooms) => !!room && (room.path === 'home' || (Array.isArray(rooms) && rooms[0] === room && !rooms.some((r) => r && r.path === 'home')));
 window.__casoraPanelInternals = { TILE_TYPES: [{ id: 'light', template: 'casora_light' }], clone: (x) => JSON.parse(JSON.stringify(x)), isHomeRoom };
 const basisSrc = read('custom_components/casora/panel/casora-panel-basis.js');
-const GUARD = 'if (lightsAll.length <= 10) put(h, "light_entity_", lightsAll, 10);';
-assert.ok(basisSrc.includes(GUARD), 'the 26.11.8 guard in badgesOf');
-// The setup before 26.11.8 (the guard out) and today's.
-new Function(basisSrc.replace(GUARD, 'put(h, "light_entity_", lightsAll, 10);'))();
+const NOW = 'if (g) h.light_group_entity = g;';
+assert.ok(basisSrc.includes(NOW), 'the group line in badgesOf');
+// The setup before 26.11.8 (group plus the first ten lights) and today's.
+new Function(basisSrc.replace(NOW, 'if (g) { h.light_group_entity = g; put(h, "light_entity_", lightsAll, 10); }'))();
 const OLD = window.casoraBasis;
 delete window.casoraBasis; // the file loads once per page
 new Function(basisSrc)();
@@ -32,9 +33,11 @@ assert.notEqual(OLD, B);
 const panelSrc = read('custom_components/casora/panel/casora-panel.js');
 const mig = panelSrc.match(/const LIGHT_SLOTS = [\s\S]*?\nfunction fixHomeLightSlots[\s\S]*?\n}\n/);
 assert.ok(mig, 'fixHomeLightSlots in casora-panel.js');
-const { fixHomeLightSlots, fillHomeLights } = new Function('window', 'isHomeRoom', mig[0] + '\nreturn { fixHomeLightSlots, fillHomeLights };')(window, isHomeRoom);
-assert.ok(/fixHomeLightSlots\(this\._hass, this\._state\.compact\.rooms\)\) \{\s*this\._log\([^\n]*\);\s*this\._markDirty\(\);/.test(panelSrc),
-  'load: the fix shows as unsaved (_markDirty), nothing is saved');
+const { fixHomeLightSlots, fillHomeLights, homeLightsEdit } = new Function('window', 'isHomeRoom', mig[0] + '\nreturn { fixHomeLightSlots, fillHomeLights, homeLightsEdit };')(window, isHomeRoom);
+const load = panelSrc.slice(panelSrc.indexOf('const litHome = '), panelSrc.indexOf('const litHome = ') + 700);
+assert.ok(/this\._clean = this\._print\(\);[\s\S]*const litHome = /.test(panelSrc) && /_mirrorToPair\(k, undefined, \[litHome\]\)/.test(load) && /this\._markDirty\(\);/.test(load)
+  && !/_save\(/.test(load), 'load: after _clean, phone row mirrored, shown as unsaved (_markDirty), nothing saved');
+assert.ok(/const litHome = [^\n]*!locked/.test(panelSrc) && /const locked = !!lock && new RegExp\(lock\)\.test\(url_path/.test(panelSrc), 'load: not on a dashboard locked against saving');
 
 // A made-up house: four areas, lights per room, Bad's two behind one HA group, an HA group over the house.
 const AREAS = ['Wohnzimmer', 'Küche', 'Bad', 'Flur'];
@@ -61,7 +64,9 @@ function setup(h, basis) {
 }
 const copy = (x) => JSON.parse(JSON.stringify(x));
 
-// ── 1. The old pattern (11 lights, group + first ten) is recognised and emptied, the group stays ──
+const fixed = (hh, r) => !!fixHomeLightSlots(hh, r);
+
+// ── 1. Old prefix pattern (11 units: group + first ten in order): emptied, group stays, marked ────────
 const h = house();
 const old = setup(h, OLD);
 const H0 = old[0].variables;
@@ -70,87 +75,102 @@ assert.equal(listed(H0).length, 10, 'old setup: ten slots beside the group (the 
 assert.deepEqual(listed(setup(h, B)[0].variables), [], 'today\'s setup: the group alone');
 {
   const r = copy(old);
-  assert.equal(fixHomeLightSlots(h, r), true, 'old pattern: fixed');
+  assert.equal(fixHomeLightSlots(h, r), r[0], 'old pattern: fixed, returns Home');
   assert.deepEqual(listed(r[0].variables), [], 'slots emptied');
   assert.equal(r[0].variables.light_group_entity, 'light.demo_alle', 'group stays');
+  assert.equal(r[0].variables.light_slots_checked, true, 'marked');
   assert.equal(r[0].variables.light_rooms_auto, undefined, 'no rooms marker');
   assert.deepEqual(r.slice(1), old.slice(1), 'rooms untouched');
-  assert.deepEqual(copy(r[0].variables), copy(setup(h, B)[0].variables), 'Home now as today\'s setup makes it');
-  assert.equal(fixHomeLightSlots(h, r), false, 'once');
+  const now = copy(r[0].variables); delete now.light_slots_checked;
+  assert.deepEqual(now, copy(setup(h, B)[0].variables), 'Home now as today\'s setup makes it (marker aside)');
+  assert.equal(fixed(h, r), false, 'once');
   assert.equal(fillHomeLights(h, r), false, 'the no-group migration leaves it alone afterwards');
 }
-// Many lights (30): the same.
 {
   const hb = house([10, 10, 0, 10]);
   const r = setup(hb, OLD);
   assert.equal(listed(r[0].variables).length, 10);
-  assert.equal(fixHomeLightSlots(hb, r), true, '30 lights: fixed');
-  assert.deepEqual(listed(r[0].variables), []);
+  assert.equal(fixed(hb, r), true, '30 lights: fixed');
 }
-// One room with more than ten lights (its badge holds ten): the group's units say "more than ten".
-{
-  const hs = house([12, 0, 0, 0]);
-  delete hs.states['light.demo_bad_alle']; delete hs.states['light.demo_bad_1']; delete hs.states['light.demo_bad_2'];
-  hs.states['light.demo_alle'].attributes.entity_id = Object.keys(hs.states).filter((id) => /demo_r0_/.test(id));
-  const r = setup(hs, OLD);
-  assert.equal(listed(r[0].variables).length, 10);
-  assert.equal(fixHomeLightSlots(hs, r), true, 'one room with twelve lights: fixed');
-}
-console.log('ok old pattern: emptied, group stays');
+console.log('ok prefix pattern: emptied, group stays, marked');
 
-// ── 2. Lists the user picked stay ──────────────────────────────────────────────────────────────
-const user = (fn) => { const r = copy(old); fn(r[0].variables); const before = copy(r); return { r, before }; };
-for (const [label, fn] of [
-  ['another order', (V) => { const a = V.light_entity_1; V.light_entity_1 = V.light_entity_2; V.light_entity_2 = a; }],
-  ['fewer than ten', (V) => { delete V.light_entity_10; }],
-  ['a gap', (V) => { delete V.light_entity_4; }],
-  ['the eleventh instead of the tenth', (V) => { V.light_entity_10 = 'light.demo_r3_4'; }],
-  ['a lamp from nowhere', (V) => { V.light_entity_10 = 'light.demo_fremd'; }],
-  ['badge switched off', (V) => { V.show_lights = false; }],
-  ['no group (the user cleared it)', (V) => { delete V.light_group_entity; }],
+// ── 2. Old full list (ten or fewer units, order aside): emptied ─────────────────────────────────────
+{
+  const h8 = house([3, 2, 0, 2]); // seven lamps + Bad's group = eight units
+  const r = setup(h8, OLD);
+  assert.equal(listed(r[0].variables).length, 8, 'old setup: all eight units listed');
+  assert.deepEqual(listed(setup(h8, B)[0].variables), [], 'today\'s setup: the group alone');
+  const rev = copy(r); const L = listed(rev[0].variables).reverse(); L.forEach((id, i) => { rev[0].variables['light_entity_' + (i + 1)] = id; });
+  assert.equal(fixed(h8, r), true, 'eight units: fixed');
+  assert.deepEqual(listed(r[0].variables), []);
+  assert.equal(fixed(h8, rev), true, 'eight units in another order: fixed (all of them, order aside)');
+  const h10 = house([3, 3, 0, 3]); // ten units
+  const r10 = setup(h10, OLD);
+  assert.equal(listed(r10[0].variables).length, 10);
+  assert.equal(fixed(h10, r10), true, 'ten units: fixed');
+  // One room with twelve lamps: its badge holds ten, so do Home's slots – all units the dashboard lists.
+  const hs = house([12, 0, 0, 0]);
+  ['light.demo_bad_alle', 'light.demo_bad_1', 'light.demo_bad_2'].forEach((id) => delete hs.states[id]);
+  hs.states['light.demo_alle'].attributes.entity_id = Object.keys(hs.states).filter((id) => /demo_r0_/.test(id));
+  assert.equal(fixed(hs, setup(hs, OLD)), true, 'one room with twelve lamps: fixed');
+}
+console.log('ok full list: emptied');
+
+// ── 3. Lists the user picked stay ──────────────────────────────────────────────────────────────────
+const user = (fn, base = old) => { const r = copy(base); fn(r[0].variables); return r; };
+const h8 = house([3, 2, 0, 2]), old8 = setup(h8, OLD);
+for (const [label, hh, base, fn] of [
+  ['prefix in another order', h, old, (V) => { const a = V.light_entity_1; V.light_entity_1 = V.light_entity_2; V.light_entity_2 = a; }],
+  ['prefix minus one', h, old, (V) => { delete V.light_entity_10; }],
+  ['a gap', h, old, (V) => { delete V.light_entity_4; }],
+  ['the eleventh instead of the tenth', h, old, (V) => { V.light_entity_10 = 'light.demo_r3_4'; }],
+  ['a lamp from nowhere', h, old, (V) => { V.light_entity_10 = 'light.demo_fremd'; }],
+  ['badge switched off', h, old, (V) => { V.show_lights = false; }],
+  ['no group (the user cleared it)', h, old, (V) => { delete V.light_group_entity; }],
+  ['marked', h, old, (V) => { V.light_slots_checked = true; }],
+  ['full list minus one', h8, old8, (V) => { delete V.light_entity_8; }],
+  ['full list with one twice', h8, old8, (V) => { V.light_entity_8 = V.light_entity_1; }],
+  ['full list plus one', h8, old8, (V) => { V.light_entity_9 = 'light.demo_fremd'; }],
+  ['a single lamp', h8, old8, (V) => { for (let i = 2; i <= 10; i++) delete V['light_entity_' + i]; }],
 ]) {
-  const { r, before } = user(fn);
-  assert.equal(fixHomeLightSlots(h, r), false, label + ': untouched');
+  const r = user(fn, base); const before = copy(r);
+  assert.equal(fixed(hh, r), false, label + ': untouched');
   assert.deepEqual(r, before, label + ': nothing changed');
 }
-// A slot outside the group (the group does not hold it).
 {
   const hx = house();
   hx.states['light.demo_alle'].attributes.entity_id = hx.states['light.demo_alle'].attributes.entity_id.filter((id) => id !== 'light.demo_r0_1');
-  const r = copy(old);
-  assert.equal(fixHomeLightSlots(hx, r), false, 'slot outside the group: untouched');
-}
-// The group HA does not know (removed): untouched.
-{
-  const hx = house(); delete hx.states['light.demo_alle'];
-  assert.equal(fixHomeLightSlots(hx, copy(old)), false, 'unknown group: untouched');
-}
-// Rooms reordered after the setup: the list no longer is the setup's order – stays (conservative).
-{
+  assert.equal(fixed(hx, copy(old)), false, 'slot outside the group: untouched');
+  const hu = house(); delete hu.states['light.demo_alle'];
+  assert.equal(fixed(hu, copy(old)), false, 'group HA does not report: untouched');
+  const he = house(); he.states['light.demo_alle'].attributes = {};
+  assert.equal(fixed(he, copy(old)), false, 'group without members: untouched');
   const r = copy(old); const [x] = r.splice(1, 1); r.push(x);
-  assert.equal(fixHomeLightSlots(h, r), false, 'rooms reordered: untouched');
-}
-console.log('ok user lists stay');
-
-// ── 3. Ten or fewer lights, or no group: the old setup was right, untouched ─────────────────────
-{
-  const h10 = house([3, 3, 0, 3]); // nine lamps + Bad's group = ten units
-  const r = setup(h10, OLD);
-  assert.equal(listed(r[0].variables).length, 10, 'ten units: ten slots');
-  const before = copy(r);
-  assert.equal(fixHomeLightSlots(h10, r), false, 'ten units: untouched');
-  assert.deepEqual(r, before);
-  const h9 = house([3, 3, 0, 2]);
-  const r9 = setup(h9, OLD);
-  assert.equal(listed(r9[0].variables).length, 9);
-  assert.equal(fixHomeLightSlots(h9, r9), false, 'nine units: untouched');
+  assert.equal(fixed(h, r), false, 'rooms reordered (prefix no longer the setup\'s): untouched');
 }
 {
   const hn = house([3, 3, 0, 4], { group: false });
   const r = setup(hn, OLD);
   assert.equal(r[0].variables.light_group_entity, undefined);
-  const before = copy(r);
-  assert.equal(fixHomeLightSlots(hn, r), false, 'no group: untouched');
-  assert.deepEqual(r, before);
+  assert.equal(fixed(hn, r), false, 'no group: untouched');
 }
-console.log('ok ten or fewer / no group: untouched');
+console.log('ok user lists stay');
+
+// ── 4. The way out: the user's pick on Home marks the slots, the fix never comes back ──────────────
+{
+  const r = copy(old);
+  assert.equal(fixed(h, r), true);
+  // The user lists lamps again (Studio editor → homeLightsEdit), even exactly the old ones.
+  const V = r[0].variables; delete V.light_slots_checked;
+  listed(H0).forEach((id, i) => { homeLightsEdit(V, 'light_entity_' + (i + 1), id); V['light_entity_' + (i + 1)] = id; });
+  assert.equal(V.light_slots_checked, true, 'a picked light marks the slots');
+  assert.equal(fixed(h, r), false, 'the user\'s list stays, also when it is the old one');
+  const g = { light_group_entity: 'light.demo_alle' };
+  homeLightsEdit(g, 'light_group_entity', 'light.demo_alle');
+  assert.equal(g.light_slots_checked, undefined, 'picking the group alone does not mark');
+  // A version from before the fix (old slots, no marker) gets the fix offered again – once, then it is marked.
+  const restored = copy(old);
+  assert.equal(fixed(h, restored), true, 'restored version: fixed again');
+  assert.equal(fixed(h, restored), false, 'and only once');
+}
+console.log('ok marker: user pick stays, restored version once');

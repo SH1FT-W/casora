@@ -3036,49 +3036,62 @@ function fillHomeLights(hass, rooms) {
   return true;
 }
 // The user picks a light group or a light on Home: the badge is theirs (marker gone). Clearing the last one
-// without a group: the badge follows the rooms again (it used to vanish).
+// without a group: the badge follows the rooms again (it used to vanish). A light the user picks also marks the
+// slots as theirs (light_slots_checked): fixHomeLightSlots never empties them.
 function homeLightsEdit(V, key, value) {
   if (!V || !/^(light_group_entity|light_entity_\d+)$/.test(key)) return;
+  if (value && key !== "light_group_entity") V.light_slots_checked = true;
   if (value) { delete V.light_rooms_auto; return; }
   if (!V.light_group_entity && !LIGHT_SLOTS.some((k) => V[k])) V.light_rooms_auto = true;
 }
-// Setups before 26.11.8 gave Home's light badge the house's HA light group AND the first ten lights (light_entity_1…10).
-// Picked lights win over the group in the popup (#80), so rooms past the tenth were missing from the house light
-// popup; 26.11.8 fixed the setup only. On load the Studio empties the ten slots (the group stays) when they are
-// exactly that setup's pick: group set, all ten slots filled, slot k is the k-th light the rooms' light badges list
-// (rooms in dashboard order, their slots in order, the setup's topUnits), every slot lies inside the group, and there
-// are more than ten such lights (the rooms list more, or the group holds more than ten units). Anything else is the
-// user's list (#80: other lamps, fewer, another order) and stays. Returns whether Home changed; the Studio shows it
-// as unsaved, one save writes it (with the version before it in Versions).
+// Setups before 26.11.9 gave Home's light badge the house's HA light group AND its lights in the slots
+// (light_entity_1…10, the first ten when there were more). Picked lights win over the group in the popup (#80): rooms
+// past the tenth were missing from the house light popup, and lights added later never joined. Today's setup writes
+// the group alone. On load the Studio empties the slots (the group stays, light_slots_checked marks it done) when
+// they are exactly what that setup wrote. Units = the rooms' light slots (rooms in dashboard order, their slots in
+// order, each once, casoraBasis.topUnits as the setup); the slots must be filled from 1 without a gap and either
+//   all units, order aside (ten or fewer units), or
+//   the first ten units in exactly that order (more than ten units),
+// every slot inside the group's tree as HA reports it (unknown group or a lamp outside it: nothing). Anything else
+// (#80: other lamps, a gap, fewer, another order of a longer list), a badge switched off or marked: untouched.
+// Restoring a version from before brings the old slots back without the marker: the fix offers itself again; a light
+// the user picks on Home sets the marker (homeLightsEdit) and keeps the list for good.
 function homeLightsOldPick(hass, rooms) {
   const B = typeof window !== "undefined" && window.casoraBasis;
   const list = rooms || [];
   const home = list.find((r) => isHomeRoom(r, list));
   const V = home && home.variables;
-  if (!B || !B.topUnits || !hass || !hass.states || !V || V.show_lights === false || !V.light_group_entity) return null;
-  const listed = LIGHT_SLOTS.map((k) => V[k]);
-  if (!listed.every((id) => typeof id === "string" && id)) return null;
+  if (!B || !B.topUnits || !hass || !hass.states || !V || V.show_lights === false || !V.light_group_entity
+    || V.light_slots_checked) return null;
+  const slot = (x) => (typeof x === "string" && x ? x : null);
+  const n = LIGHT_SLOTS.findIndex((k) => !slot(V[k]));
+  const listed = LIGHT_SLOTS.slice(0, n < 0 ? 10 : n).map((k) => V[k]);
+  if (!listed.length || LIGHT_SLOTS.slice(listed.length).some((k) => slot(V[k]))) return null;
   const roomLights = [];
   list.forEach((r) => {
     if (r === home || !r || r.path === "home" || !r.variables) return;
-    LIGHT_SLOTS.forEach((k) => { const id = r.variables[k]; if (typeof id === "string" && id && !roomLights.includes(id)) roomLights.push(id); });
+    LIGHT_SLOTS.forEach((k) => { const id = slot(r.variables[k]); if (id && !roomLights.includes(id)) roomLights.push(id); });
   });
   const units = B.topUnits(hass, roomLights);
-  if (units.length < 10 || !listed.every((id, i) => id === units[i])) return null;
-  // The group's tree from HA (members of members); a group HA does not know leaves the badge alone.
+  const ok = units.length <= 10
+    ? listed.length === units.length && new Set(listed).size === listed.length && listed.every((id) => units.includes(id))
+    : listed.length === 10 && listed.every((id, i) => id === units[i]);
+  if (!ok) return null;
+  // The group's tree from HA (members of members); a group HA does not report leaves the badge alone.
   const S = hass.states;
   const members = (id) => [].concat(((S[id] || {}).attributes || {}).entity_id || []).filter((x) => typeof x === "string");
   const tree = new Set();
   (function walk(id) { members(id).forEach((x) => { if (!tree.has(x)) { tree.add(x); walk(x); } }); })(V.light_group_entity);
   if (!tree.size || !listed.every((id) => tree.has(id))) return null;
-  if (units.length <= 10 && B.topUnits(hass, [...tree]).length <= 10) return null;
   return home;
 }
+// Empties the slots of homeLightsOldPick and marks the badge. Returns Home (changed) or null.
 function fixHomeLightSlots(hass, rooms) {
   const home = homeLightsOldPick(hass, rooms);
-  if (!home) return false;
+  if (!home) return null;
   LIGHT_SLOTS.forEach((k) => { delete home.variables[k]; });
-  return true;
+  home.variables.light_slots_checked = true;
+  return home;
 }
 
 // #44: a Home sensor that the old rule picked (exactly casoraBasis.oldHouseTotal, a device's
@@ -16277,10 +16290,16 @@ class CasoraPanel extends HTMLElement {
         this._log(`badges: ${filledRooms.length} room(s) without badge devices filled from their area`, "ok");
         this._markDirty();
       }
-      // Setups before 26.11.8: Home's light badge held the house group and its first ten lights (after _clean: one
-      // save fixes the dashboard, the version before it stays in Versions).
-      if (this._state.surface !== "mobile" && !this._saveBlocked && fixHomeLightSlots(this._hass, this._state.compact.rooms)) {
-        this._log("lights: Home's Lights badge held the house group and its first ten lights, now the group alone", "ok");
+      // Setups before 26.11.9: Home's light badge listed the house group's lights beside it (after _clean: one
+      // save fixes the dashboard, the version before it stays in Versions). Not on a dashboard the test frame locks
+      // against saving (CASORA_STUDIO_SAVE_LOCK, see _save): a fix that cannot be saved would only leave it unsaved.
+      const lock = window.CASORA_STUDIO_SAVE_LOCK;
+      const locked = !!lock && new RegExp(lock).test(url_path || "") && !window.CASORA_STUDIO_SAVE_OK;
+      const litHome = this._state.surface !== "mobile" && !this._saveBlocked && !locked ? fixHomeLightSlots(this._hass, this._state.compact.rooms) : null;
+      if (litHome) {
+        // The phone's badge row carries Home's lights too (as every edit of them, see setVar).
+        LIGHT_SLOTS.forEach((k) => this._mirrorToPair(k, undefined, [litHome]));
+        this._log("lights: Home's Lights badge listed the house group's lights beside it, now the group alone", "ok");
         this._markDirty();
       }
       if (this._state.surface !== "mobile" && !this._saveBlocked && prefsHomePower(this._hass, this._state.compact.rooms)) {

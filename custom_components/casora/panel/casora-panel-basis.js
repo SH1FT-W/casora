@@ -630,13 +630,14 @@
     });
     const h = {};
     const lightsAll = topUnits(hass, all.light);
-    // The badge counts the single lights; the HA group is for the popup. Without a group covering the house the
+    // An HA group covering the house stands for it (badge and popup). Without one the
     // badge follows the rooms (light_rooms_auto): the dashboard derives the list from the rooms' light badges
     // (every light, also ones added later), the popup gets its room bar from them (24.10.2026).
     const g = lightsAll.length > 1 ? groupFor(hass, lightsAll, "light") : null;
-    // More lights than the ten slots: the group alone. Picked lights win over the group in the popup (#80), so ten of
-    // them cut the rest of the house off – rooms past the tenth were missing from the house popup (02.11.2026).
-    if (g) { h.light_group_entity = g; if (lightsAll.length <= 10) put(h, "light_entity_", lightsAll, 10); }
+    // With a group: the group alone, whatever the number of lights. Picked lights win over the group in the popup
+    // (#80), so ten of them cut the rest of the house off (rooms past the tenth were missing from the house popup),
+    // and a full list of fewer would not grow with lights added later (02.11.2026).
+    if (g) h.light_group_entity = g;
     else if (lightsAll.length) h.light_rooms_auto = true;
     // Home's thermostats: house-wide ones first, then the rooms'; a heat pump (house-wide too) only after the rooms (#96).
     const PUMP = /w(ä|ae|a)rmepumpe|heat.?pump/i;
