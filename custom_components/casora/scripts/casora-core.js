@@ -16389,17 +16389,17 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 // dorthin spiegelt das Studio den Wert der Übersicht. Gelesen beim Laden, beim Seitenwechsel und vor
 // jedem Drücken/jeder Taste (ein Halten folgt immer einem pointerdown), je Konfiguration einmal ausgewertet.
 // Same reader for "Sort tiles" (Controls › Tiles, variable tile_sort): window._casoraSortMode =
-// 'calm' (default, re-sort after a quiet spell) | 'open' (only when the page opens) | 'now'; smart-row.js and
+// 'now' (default since 26.11.6) | 'calm' (re-sort after a quiet spell) | 'open' (only when the page opens); smart-row.js and
 // filter-overlay.js ask _casoraSortModeRefresh before a live re-sort.
 (function () {
   if (window._casoraHoldWatch) return;
   window._casoraHoldWatch = true;
   if (!window._casoraHoldMode) window._casoraHoldMode = 'menu';
-  if (!window._casoraSortMode) window._casoraSortMode = 'calm';
+  if (!window._casoraSortMode) window._casoraSortMode = 'now';
 
   var MODES = /^(menu|popup|ha)$/;
   var norm = function (v) { return typeof v === 'string' && MODES.test(v) ? v : 'menu'; };
-  var normSort = function (v) { return v === 'open' || v === 'now' ? v : 'calm'; };
+  var normSort = function (v) { return v === 'open' || v === 'calm' ? v : 'now'; };
   var isSet = function (v) { return v !== undefined && v !== null && v !== ''; };
   var isShell = function (c) { return [].concat((c && c.template) || []).indexOf('casora_mobile_bg') !== -1; };
 

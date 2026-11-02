@@ -3,8 +3,9 @@
 // @deckt: custom_components/casora/scripts/smart-row.js
 // "Sort tiles" (01.11.2026, owner decision "C und Schalter"): since E19 a tile that turned idle stayed in front between the
 // active ones until a reload. Expected after the load phase (phone WebKit 393 and desktop 1440):
-//   calm (default) – while someone uses the page the order holds; 30 s after the last input the tile moves back;
-//   open – no re-sort while the page is open; now – re-sorts within seconds (as before E19).
+//   now (default again since 26.11.6, owner request) – re-sorts within seconds (as before E19);
+//   calm – while someone uses the page the order holds; 30 s after the last input the tile moves back;
+//   open – no re-sort while the page is open.
 // The mode is set with the code switch CASORA_SORT_MODE (the Studio value is unit-tested). Nothing is saved.
 import { open, usePage, casoraDashboard, dashboard, fakeStates, check, need, finish } from './lib.mjs';
 
@@ -33,11 +34,12 @@ for (const phone of [true, false]) {
     return { before, front, n: r._wrappers.length, mode: window._casoraSortModeNow && window._casoraSortModeNow() };
   });
   await need(tag + ': sortierende Kachelreihe', info, info);
-  await check(`${tag}: Standard ist „Nach kurzer Ruhe“`, info.mode === 'calm', info);
+  await check(`${tag}: Standard ist „Sofort“`, info.mode === 'now', info);
   const order = () => page.evaluate(() => window.__qaOrder());
   const nudge = (n) => fakeStates(page, { 'sensor.casora_qa_r379': { state: String(Date.now() + n) } });
 
   // ── calm ──
+  await page.evaluate(() => { window.CASORA_SORT_MODE = 'calm'; });
   await page.evaluate(() => { window.__qaFlip(true); });
   await nudge(0);  // settle the faked state as "front tile active" (it already is)
   await page.evaluate(() => { window.__qaFlip(false); });

@@ -58,7 +58,7 @@ function sortMode() {
     try { m = window._casoraSortModeRefresh ? window._casoraSortModeRefresh() : window._casoraSortMode; }
     catch (e) { m = window._casoraSortMode; }
   }
-  return m === 'open' || m === 'now' ? m : 'calm';
+  return m === 'open' || m === 'calm' ? m : 'now';
 }
 // Pure decision for a pending re-sort (unit test: dev/unit/kachelreihe_sortiermodus.mjs).
 // s = { mode, settled, idle (ms since the last input), popup, hover, noAnim } →
