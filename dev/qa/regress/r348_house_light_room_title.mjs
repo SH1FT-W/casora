@@ -4,7 +4,7 @@
 // House lights popup (tile "Beleuchtung" on Home): the header says "Beleuchtung"; #73 had put the chosen room's name
 // there and it flipped back on every light change (reverted 26.10.2026). Popup v3 (§4.4): a room is a sub page with ‹,
 // label „Beleuchtung“, title the room. Expected: "Beleuchtung" first, the room's page keeps its title when a light
-// switches, ‹ brings "Beleuchtung" back.
+// switches, ‹ brings "Beleuchtung" back. Rooms of one lamp open the lamp's page instead (issue 118, r504): not this test.
 import { open, casoraDashboards, dashboard, check, need, finish, usePage } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -25,8 +25,13 @@ await page.mouse.click(tile.x, tile.y);
 // v3 (§4.4): the rooms are rows on the right; tapping one opens its sub page in the same popup (‹, label
 // „Beleuchtung“ over the room's name). The header must stay put while lights change.
 const rows = async () => page.evaluate(() => { const s = window.casoraPopup && window.casoraPopup.surface; if (!s) return [];
+  // Issue 118: a room of one lamp opens that lamp's page (r504), so only rooms with a room page count here – by the
+  // popup's own rule (S.oneLampOf). The test house's room groups list no existing members: each of them is one lamp.
+  const LS = window._casoraLightSoft, st = document.querySelector('home-assistant').hass.states;
   return window.__pierce('.lps-row', s).filter((r) => /"a":"room"/.test(r.getAttribute('data-lps-tap') || '') && r.getBoundingClientRect().width > 20)
-    .map((r) => { const t = r.querySelector('.lps-tx') || r, b = t.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2, name: ((r.querySelector('.lps-tx b') || {}).textContent || '').trim() }; }); });
+    .map((r) => { const t = r.querySelector('.lps-tx') || r, b = t.getBoundingClientRect(); let d = {}; try { d = JSON.parse(r.getAttribute('data-lps-tap')); } catch (e) { /* none */ }
+      return { x: b.x + b.width / 2, y: b.y + b.height / 2, name: ((r.querySelector('.lps-tx b') || {}).textContent || '').trim(),
+        page: !(LS && LS.oneLampOf && LS.oneLampOf(d.gid, d.idx, st)) }; }); });
 let C = [];
 for (let i = 0; i < 30 && C.length < 2; i++) { await page.waitForTimeout(250); C = await rows(); }
 await need('Raum-Zeilen im Popup', C.length >= 2, C);
@@ -36,7 +41,8 @@ const head = () => page.evaluate(() => { const e = window.casoraPopup.element; i
     eyebrow: eb && eb.getBoundingClientRect().height > 0 ? eb.textContent.trim() : '' }; });
 let h = await head();
 await check('zuerst „Beleuchtung“ ohne ‹', h && h.title === 'Beleuchtung' && !h.back, h);
-const room = C[0];
+const room = C.find((r) => r.page);
+await need('ein Raum mit eigener Unterseite (zwei Lampen oder mehr)', room, C);
 await page.waitForTimeout(700);   // taps right after opening are swallowed (ghost taps)
 await page.mouse.click(room.x, room.y);
 for (let i = 0; i < 20 && !((h = await head()) && h.back); i++) await page.waitForTimeout(200);
