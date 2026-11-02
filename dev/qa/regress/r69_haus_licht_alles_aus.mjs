@@ -7,7 +7,8 @@
 // eingeschalteten, sichtbaren Lichter auf. Dienstaufrufe werden im Browser abgefangen.
 import { open, casoraDashboard, dashboard, fakeStates, check, need, finish } from './lib.mjs';
 
-const dash = await casoraDashboard((d) => /casora_badge_light_group|light_group_entity/.test(JSON.stringify((d.config.views || [])[0] || {})));
+// Home's light badge: the house group, or (setup since 26.11.9 when the house group holds more than the rooms) the rooms.
+const dash = await casoraDashboard((d) => /casora_badge_light_group|light_group_entity|light_rooms_auto/.test(JSON.stringify((d.config.views || [])[0] || {})));
 await need('Casora-Dashboard mit Beleuchtungs-Badge auf der Startseite', dash);
 const { page } = await open({ width: 1024, height: 768, dark: false, theme: 'Casora' });
 const home = dash.config.views[0];
