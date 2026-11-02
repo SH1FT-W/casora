@@ -461,6 +461,8 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     var svc = String(act.perform_action || act.service || '');
     return svc && svc !== 'none' ? act : null;
   };
+  var SVC_VERB = { 'homeassistant.restart': 'Neu starten', 'update.install': 'Installieren', 'update.skip': 'Überspringen',
+    'todo.remove_completed_items': 'Löschen' };
   var word = function (act, cfg) {
     var h = document.querySelector('home-assistant');
     var states = (h && h.hass && h.hass.states) || {};
@@ -483,6 +485,13 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       : /\.turn_off$|\.close_cover$|\.close_valve$/.test(svc) ? 'Ausschalten'
       // Schlösser: dieselben Wörter wie die Knöpfe der Schloss-Ansicht (1.2.1, D2).
       : /\.unlock$/.test(svc) ? 'Entriegeln' : /\.lock$/.test(svc) ? 'Verriegeln' : /^lock\.open$/.test(svc) ? 'Tür öffnen'
+      // Services that run something rather than switch it (issue 108): the button names what the service does,
+      // the entity's state says nothing about it (a restart has no entity, updates to install are "on").
+      : SVC_VERB[svc] ? SVC_VERB[svc]
+      : svc === 'alarm_control_panel.alarm_disarm' ? (s === 'triggered' ? 'Alarm beenden' : 'Unscharf schalten')
+      : /^alarm_control_panel\.alarm_arm_/.test(svc) ? 'Scharf schalten'
+      // Any other service without an entity: neutral rather than a made-up "Einschalten".
+      : svc && !st && !/\.toggle$/.test(svc) ? 'Bestätigen'
       : (s === 'on' || s === 'open' || s === 'playing' || s === 'unlocked') ? 'Ausschalten' : 'Einschalten';
     // Scripts, buttons and scenes run rather than switch (#86, #90); a running script's toggle stops it.
     if (/^(script|button|input_button)\./.test(id) && !(s === 'on' && !/\.turn_on$/.test(svc))) verb = 'Ausführen';
