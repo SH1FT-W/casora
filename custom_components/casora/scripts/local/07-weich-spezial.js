@@ -494,7 +494,9 @@
       C.toggleFit(el);
     },
     css2: function () {
-      return '\n.cam-back-row { display: flex; margin: -6px 0 -6px; }'
+      // No negative top margin: the row is the first child of the button-card's ha-card (overflow: hidden),
+      // a pull upwards cut the pill's top edge off (issue 112). The bottom pull only tightens the gap to the picture.
+      return '\n.cam-back-row { display: flex; margin: 0 0 -6px; }'
         + '\n.cam-back { display: inline-flex; align-items: center; gap: 2px; min-height: 40px; padding: 0 16px 0 8px; border-radius: 999px; cursor: pointer;'
         + ' pointer-events: auto; touch-action: manipulation; -webkit-tap-highlight-color: transparent;'
         + ' font-family: var(--primary-font-family, system-ui); font-size: 14px; font-weight: 700;'
