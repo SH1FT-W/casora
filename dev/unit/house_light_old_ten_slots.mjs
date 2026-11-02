@@ -20,10 +20,10 @@ globalThis.addEventListener = () => {};
 const isHomeRoom = (room, rooms) => !!room && (room.path === 'home' || (Array.isArray(rooms) && rooms[0] === room && !rooms.some((r) => r && r.path === 'home')));
 window.__casoraPanelInternals = { TILE_TYPES: [{ id: 'light', template: 'casora_light' }], clone: (x) => JSON.parse(JSON.stringify(x)), isHomeRoom };
 const basisSrc = read('custom_components/casora/panel/casora-panel-basis.js');
-const NOW = 'if (g) h.light_group_entity = g;';
-assert.ok(basisSrc.includes(NOW), 'the group line in badgesOf');
-// The setup before 26.11.8 (group plus the first ten lights) and today's.
-new Function(basisSrc.replace(NOW, 'if (g) { h.light_group_entity = g; put(h, "light_entity_", lightsAll, 10); }'))();
+const EXACT = 'const exact = g ? groupFor(hass, lightsAll, "light", true) : null;', SUPER = 'else if (g && lightsAll.length <= 10) {';
+assert.ok(basisSrc.includes(EXACT) && basisSrc.includes(SUPER), 'the group lines in badgesOf');
+// The setup before 26.11.9 (any covering group plus the first ten lights) and today's.
+new Function(basisSrc.replace(EXACT, 'const exact = null;').replace(SUPER, 'else if (g) {'))();
 const OLD = window.casoraBasis;
 delete window.casoraBasis; // the file loads once per page
 new Function(basisSrc)();
@@ -34,8 +34,8 @@ const panelSrc = read('custom_components/casora/panel/casora-panel.js');
 const mig = panelSrc.match(/const LIGHT_SLOTS = [\s\S]*?\nfunction fixHomeLightSlots[\s\S]*?\n}\n/);
 assert.ok(mig, 'fixHomeLightSlots in casora-panel.js');
 const { fixHomeLightSlots, fillHomeLights, homeLightsEdit } = new Function('window', 'isHomeRoom', mig[0] + '\nreturn { fixHomeLightSlots, fillHomeLights, homeLightsEdit };')(window, isHomeRoom);
-const load = panelSrc.slice(panelSrc.indexOf('const litHome = '), panelSrc.indexOf('const litHome = ') + 700);
-assert.ok(/this\._clean = this\._print\(\);[\s\S]*const litHome = /.test(panelSrc) && /_mirrorToPair\(k, undefined, \[litHome\]\)/.test(load) && /this\._markDirty\(\);/.test(load)
+const load = panelSrc.slice(panelSrc.indexOf('const litHome = '), panelSrc.indexOf('const litHome = ') + 1000);
+assert.ok(/this\._clean = this\._print\(\);[\s\S]*const litHome = /.test(panelSrc) && /if \(phoneSlotsMatch\(this\._pair, litHome\.old\)\) LIGHT_SLOTS\.forEach\(\(k\) => this\._mirrorToPair\(k, undefined, \[litHome\.home\]\)\)/.test(load) && /this\._markDirty\(\);/.test(load)
   && !/_save\(/.test(load), 'load: after _clean, phone row mirrored, shown as unsaved (_markDirty), nothing saved');
 assert.ok(/const litHome = [^\n]*!locked/.test(panelSrc) && /const locked = !!lock && new RegExp\(lock\)\.test\(url_path/.test(panelSrc), 'load: not on a dashboard locked against saving');
 
@@ -75,7 +75,9 @@ assert.equal(listed(H0).length, 10, 'old setup: ten slots beside the group (the 
 assert.deepEqual(listed(setup(h, B)[0].variables), [], 'today\'s setup: the group alone');
 {
   const r = copy(old);
-  assert.equal(fixHomeLightSlots(h, r), r[0], 'old pattern: fixed, returns Home');
+  const res = fixHomeLightSlots(h, r);
+  assert.equal(res.home, r[0], 'old pattern: fixed, returns Home');
+  assert.deepEqual(res.old, Object.fromEntries(listed(H0).map((id, i) => ['light_entity_' + (i + 1), id])), 'and the old slots');
   assert.deepEqual(listed(r[0].variables), [], 'slots emptied');
   assert.equal(r[0].variables.light_group_entity, 'light.demo_alle', 'group stays');
   assert.equal(r[0].variables.light_slots_checked, true, 'marked');
@@ -108,11 +110,12 @@ console.log('ok prefix pattern: emptied, group stays, marked');
   const r10 = setup(h10, OLD);
   assert.equal(listed(r10[0].variables).length, 10);
   assert.equal(fixed(h10, r10), true, 'ten units: fixed');
-  // One room with twelve lamps: its badge holds ten, so do Home's slots – all units the dashboard lists.
+  // One room with twelve lamps: its badge holds ten, so do Home's slots – but the group holds two lamps no badge
+  // lists: emptying would switch lamps the dashboard does not show, so it stays (group lamps ⊆ the rooms' units).
   const hs = house([12, 0, 0, 0]);
   ['light.demo_bad_alle', 'light.demo_bad_1', 'light.demo_bad_2'].forEach((id) => delete hs.states[id]);
   hs.states['light.demo_alle'].attributes.entity_id = Object.keys(hs.states).filter((id) => /demo_r0_/.test(id));
-  assert.equal(fixed(hs, setup(hs, OLD)), true, 'one room with twelve lamps: fixed');
+  assert.equal(fixed(hs, setup(hs, OLD)), false, 'one room with twelve lamps (two listed nowhere): untouched');
 }
 console.log('ok full list: emptied');
 
@@ -174,3 +177,54 @@ console.log('ok user lists stay');
   assert.equal(fixed(h, restored), false, 'and only once');
 }
 console.log('ok marker: user pick stays, restored version once');
+
+// ── 5. A house group holding more than the rooms (garden, lamps in no room) ────────────────────────
+// groupFor without exact picks the smallest group covering the ticked lights; alone it would switch the others too.
+function withGarden(perRoom) {
+  const hh = house(perRoom);
+  hh.entities['light.demo_garten'] = { entity_id: 'light.demo_garten', device_id: null, area_id: null, platform: 'template' };
+  hh.states['light.demo_garten'] = { entity_id: 'light.demo_garten', state: 'off', attributes: { friendly_name: 'Garten', supported_color_modes: ['brightness'] } };
+  hh.states['light.demo_alle'].attributes.entity_id = hh.states['light.demo_alle'].attributes.entity_id.concat('light.demo_garten');
+  return hh;
+}
+{
+  // Migration: the old pattern with such a group stays (emptying would switch the garden with the house).
+  const hg = withGarden([3, 3, 0, 4]);
+  const r = setup(hg, OLD); const before = copy(r);
+  assert.equal(listed(r[0].variables).length, 10);
+  assert.equal(fixed(hg, r), false, 'group with more than the rooms: untouched');
+  assert.deepEqual(r, before);
+  const h8g = withGarden([3, 2, 0, 2]);
+  assert.equal(fixed(h8g, setup(h8g, OLD)), false, 'full list, group with more than the rooms: untouched');
+  // Setup: never that group alone. Ten or fewer: listed beside it (they win); more: the badge follows the rooms.
+  const few = setup(h8g, B)[0].variables;
+  assert.equal(few.light_group_entity, 'light.demo_alle', 'superset group, eight units: the group');
+  assert.equal(listed(few).length, 8, 'superset group, eight units: the lights listed beside it');
+  const many = setup(hg, B)[0].variables;
+  assert.equal(many.light_group_entity, undefined, 'superset group, eleven units: no group');
+  assert.deepEqual(listed(many), [], 'superset group, eleven units: no slots');
+  assert.equal(many.light_rooms_auto, true, 'superset group, eleven units: follows the rooms');
+  // The exact group stays the group alone (also with ten or fewer).
+  const ex = setup(h8, B)[0].variables;
+  assert.equal(ex.light_group_entity, 'light.demo_alle'); assert.deepEqual(listed(ex), []); assert.equal(ex.light_rooms_auto, undefined);
+}
+console.log('ok group with more than the rooms: setup and migration');
+
+// ── 6. The Studio editor's real setVar marks Home's slots (homeLightsEdit) ─────────────────────────
+{
+  const m = panelSrc.match(/\n( *)const ENERGY_SLOT = [^\n]*\n\1const setVar = \(key, value, f\) => \{[\s\S]*?\n\1\};\n/);
+  assert.ok(m, 'setVar in casora-panel.js');
+  const r = copy(old); assert.equal(fixed(h, r), true);
+  delete r[0].variables.light_slots_checked; // as a version restored with the fix undone by hand
+  const mirrored = [];
+  const self = { _state: { compact: { rooms: r } }, _hass: h, _mirrorToPair: (k, v) => mirrored.push(k) };
+  const setVar = new Function('targets', 'homeEnergyEdit', 'isHomeRoom', 'homeLightsEdit', 'fillHomeEnergy',
+    m[0] + '\nreturn setVar;').call(self, () => [r[0]], () => {}, isHomeRoom, homeLightsEdit, () => {});
+  setVar('light_entity_1', 'light.demo_r0_1', {});
+  assert.equal(r[0].variables.light_entity_1, 'light.demo_r0_1', 'setVar wrote the slot');
+  assert.equal(r[0].variables.light_slots_checked, true, 'setVar marked the slots (homeLightsEdit)');
+  assert.ok(mirrored.includes('light_entity_1'), 'and mirrored the slot to the phone');
+  assert.equal(fixed(h, r), false, 'the marked list is never emptied');
+}
+console.log('ok setVar marks the slots');
+

@@ -3083,15 +3083,34 @@ function homeLightsOldPick(hass, rooms) {
   const tree = new Set();
   (function walk(id) { members(id).forEach((x) => { if (!tree.has(x)) { tree.add(x); walk(x); } }); })(V.light_group_entity);
   if (!tree.size || !listed.every((id) => tree.has(id))) return null;
+  // The group alone must not switch more than the rooms hold: its lamps (members resolved down to lamps) all
+  // belong to the rooms' units. A group with more (garden, lamps in no room) keeps the list.
+  const lamps = (id, seen) => { if (seen.has(id)) return []; seen.add(id); const m = members(id); return m.length ? m.flatMap((x) => lamps(x, seen)) : [id]; };
+  const roomLamps = new Set(units.flatMap((id) => lamps(id, new Set())));
+  if (!lamps(V.light_group_entity, new Set()).every((id) => roomLamps.has(id))) return null;
   return home;
 }
-// Empties the slots of homeLightsOldPick and marks the badge. Returns Home (changed) or null.
+// Empties the slots of homeLightsOldPick and marks the badge. Returns { home, old } (old: the slots before,
+// light_entity_n → id) or null.
 function fixHomeLightSlots(hass, rooms) {
   const home = homeLightsOldPick(hass, rooms);
   if (!home) return null;
-  LIGHT_SLOTS.forEach((k) => { delete home.variables[k]; });
+  const old = {};
+  LIGHT_SLOTS.forEach((k) => { if (home.variables[k] !== undefined) old[k] = home.variables[k]; delete home.variables[k]; });
   home.variables.light_slots_checked = true;
-  return home;
+  return { home, old };
+}
+// The phone's badge row carries Home's lights too: true when its slots are exactly the desktop's old ones (then the
+// fix goes there too). Different slots on the phone stay; the pair view shows the difference.
+function phoneSlotsMatch(pair, old) {
+  if (!pair || pair.safe === false || !pair.mobile) return false;
+  let seen = 0;
+  const ok = LIGHT_SLOTS.every((k) => mobileHoldersOf(pair.mobile, k, pair.templates).every((h) => {
+    seen++;
+    const v = (h.card.variables || {})[h.key];
+    return (emptyVal(v) ? undefined : v) === old[k];
+  }));
+  return ok && seen > 0;
 }
 
 // #44: a Home sensor that the old rule picked (exactly casoraBasis.oldHouseTotal, a device's
@@ -16297,8 +16316,10 @@ class CasoraPanel extends HTMLElement {
       const locked = !!lock && new RegExp(lock).test(url_path || "") && !window.CASORA_STUDIO_SAVE_OK;
       const litHome = this._state.surface !== "mobile" && !this._saveBlocked && !locked ? fixHomeLightSlots(this._hass, this._state.compact.rooms) : null;
       if (litHome) {
-        // The phone's badge row carries Home's lights too (as every edit of them, see setVar).
-        LIGHT_SLOTS.forEach((k) => this._mirrorToPair(k, undefined, [litHome]));
+        // The phone's badge row carries Home's lights too (as every edit of them, see setVar): only where it holds
+        // the same old slots.
+        if (phoneSlotsMatch(this._pair, litHome.old)) LIGHT_SLOTS.forEach((k) => this._mirrorToPair(k, undefined, [litHome.home]));
+        else if (this._pair) this._log("lights: the phone's badge row lists other lights than Home, left as it is", "warn");
         this._log("lights: Home's Lights badge listed the house group's lights beside it, now the group alone", "ok");
         this._markDirty();
       }
@@ -29715,7 +29736,7 @@ window.__casoraPanelInternals = {
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
   linkPair, syncPairRooms, syncPairTiles, syncTwinTile, phoneCondSnapshot, condChain, condModel, condWrite, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, setInnerSize, expandMobileConfig, extractMobileConfig,
-  deriveEnergyRooms, energyManual, energyBackToAuto, fillHomeLights, homeLightsEdit, homeLightsOldPick, fixHomeLightSlots, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
+  deriveEnergyRooms, energyManual, energyBackToAuto, fillHomeLights, homeLightsEdit, homeLightsOldPick, fixHomeLightSlots, phoneSlotsMatch, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
   CASORA_ACCENTS, accentsShown, accentLabel, swatchCss,
   condStates, condLoadSeen, isCarouselCard, isPageTile, carouselOf, carouselId, markCarousel, CAROUSEL_CARD, CAROUSEL_TILE,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)

@@ -630,14 +630,18 @@
     });
     const h = {};
     const lightsAll = topUnits(hass, all.light);
-    // An HA group covering the house stands for it (badge and popup). Without one the
+    // An HA group holding exactly the ticked lights stands for the house (badge and popup). Without one the
     // badge follows the rooms (light_rooms_auto): the dashboard derives the list from the rooms' light badges
     // (every light, also ones added later), the popup gets its room bar from them (24.10.2026).
     const g = lightsAll.length > 1 ? groupFor(hass, lightsAll, "light") : null;
-    // With a group: the group alone, whatever the number of lights. Picked lights win over the group in the popup
-    // (#80), so ten of them cut the rest of the house off (rooms past the tenth were missing from the house popup),
-    // and a full list of fewer would not grow with lights added later (02.11.2026).
-    if (g) h.light_group_entity = g;
+    const exact = g ? groupFor(hass, lightsAll, "light", true) : null;
+    // The exact group alone, whatever the number of lights: picked lights win over the group in the popup (#80), so
+    // ten of them cut the rest of the house off (rooms past the tenth were missing) and a full list of fewer would
+    // not grow with lights added later (02.11.2026). A group holding more than the ticked lights (garden, lamps in no
+    // room) would switch those too: with ten or fewer the lights stay listed beside it (as before, they win), with
+    // more the badge follows the rooms instead – every ticked room, nothing else, as without a group.
+    if (exact) h.light_group_entity = exact;
+    else if (g && lightsAll.length <= 10) { h.light_group_entity = g; put(h, "light_entity_", lightsAll, 10); }
     else if (lightsAll.length) h.light_rooms_auto = true;
     // Home's thermostats: house-wide ones first, then the rooms'; a heat pump (house-wide too) only after the rooms (#96).
     const PUMP = /w(ä|ae|a)rmepumpe|heat.?pump/i;
