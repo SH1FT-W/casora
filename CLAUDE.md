@@ -39,8 +39,13 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
 - Kalender-Versionen **YY.M.N** (z. B. 26.10.31), Tag/Titel „vYY.M.N“ (Casora bleibt vorerst bei „v“, anders als die
   übrigen Repos: bisher veröffentlichte Casora-Versionen erkennen nur v-Tags, siehe `tools/release.sh`). N = laufende Nummer des Releases
   im Monat; jedes Release ist die nächste Nummer (kein Patch/Minor mehr). Nächste Nummer: `tools/next-version`,
-  `tools/release.sh` schlägt sie vor und prüft sie. Release-Gate standardmäßig voll (`dev/qa/gate.sh --voll`);
-  Patch-Gate nur bewusst für echte Notfall-Hotfixes (`dev/qa/gate.sh --patch` + `tools/release.sh --patch`), nie automatisch.
+  `tools/release.sh` schlägt sie vor und prüft sie. Zwei Gate-Stufen (Maintainer, 02.11.2026): **Fix-Releases unter der
+  Woche** mit Patch-Gate (`dev/qa/gate.sh --patch` + `tools/release.sh --patch`); **volles Gate** (`dev/qa/gate.sh --voll`)
+  freitags und bei großen Umbauten (viele Module, Vorlagen-Umbau, Migration, gespeicherte Daten).
+- Release-Kandidat einfrieren: Sind Version/CHANGELOG committet, kommt nichts mehr dazu; Weiteres ins nächste Release.
+- Neue Regressionstests vor dem Merge einmal im Gate-Zustand prüfen: `dev/qa/probe.sh rNNN_name …` (frisches
+  Wegwerf-HA „arbeit“ mit qa-arbeit, ~2–3 Min.). casora-test allein reicht nicht. `tools/release.sh --publish` syncht
+  casora-test danach selbst.
 - Betas für Tester (Fix auf Verdacht, Gerät nicht nachstellbar): `tools/release.sh --beta --publish` – nächste Nummer mit
   `bK` (26.10.58b1), Vorabversion, Patch-Gate reicht, nur `.qa/release-notes-<version>.md` (englisch) nötig, manifest auf die
   Beta-Nummer. Betas zählen nicht als Release-Nummer; das stabile Release danach bündelt und bekommt das volle Gate.

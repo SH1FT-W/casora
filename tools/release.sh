@@ -194,6 +194,12 @@ if [ $PUBLISH = 1 ]; then
   git push origin HEAD "$TAG"
   gh release create "$TAG" --title "$TAG" --notes-file "$NOTES" "$ZIP"
   ok "Release $TAG veröffentlicht"
+  # The test HA follows every release (owner, 02.11.2026: casora-test still ran 26.11.1, so new tests were green there
+  # and red in the gate). Only the files of this checkout, no state switch; skipped without Docker/test HA.
+  if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx casora-test; then
+    sh dev/haus.sh sync --if-changed --no-wait >/dev/null 2>&1 && ok "casora-test auf $VER gebracht" \
+      || echo "  Hinweis: casora-test nicht gesynct – dev/haus.sh sync von Hand"
+  fi
 else
   echo "(nichts ausgeführt – mit --publish ausführen)"
 fi
