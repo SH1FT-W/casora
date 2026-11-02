@@ -17,7 +17,10 @@ const MAX_GAP = 200;
 // Layouts measured above MAX_GAP on 01.11.2026 (test house „arbeit“): the empty block may not grow beyond this cap
 // (measured + 40 px). Lower or drop an entry when its popup is evened out.
 const KNOWN = {
-  'licht-raum': 283, 'licht-badge': 328, 'klima-raum': 512, 'klima-feuchte': 512, 'befeuchter': 434, 'drucker': 437,
+  'licht-raum': 283,
+  // 26.11.8: the house light popup lists every room again (setup no longer caps it at ten lights) – the list grows,
+  // 400 px under the dial in the gate house. Back to 328 or lower once the column rule (branch fix-spaltenregel) is in.
+  'licht-badge': 440, 'klima-raum': 512, 'klima-feuchte': 512, 'befeuchter': 434, 'drucker': 437,
   'sauger': 382, 'kaffee': 609, 'aquarium-licht': 276, 'ebike': 582, 'sicherheit': 328, 'schloss': 325, 'schloss-badge': 325,
   'lueften': 256, 'diagramm': 241, 'pflanze': 296, 'wetter': 420, 'frigate': 358, 'kalender': 844, 'abfall': 463, 'rezept': 669,
   // Gate 02.11.2026 (after the light popup changes of 01.11.): the house light popup – dial left (359 px), the rooms'
