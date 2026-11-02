@@ -8971,11 +8971,16 @@ window.casoraMenuGlass = {
       catch (e) { return window.innerWidth <= SHEET_MAX; }
     }
 
+    // A drag belongs to an open sheet only. One still under the finger when the popup closed (a second flick
+    // while the first slides out) ended after the teardown and left swipe-out and translateY(100%) on the shared
+    // sheet: the next popup opened off screen, only its blurred scrim showing.
     _bindSheetDrag(surface, grab, content) {
       var y0 = 0, dy = 0, tracking = false, dragging = false;
+      var live = () => this.hasAttribute('open') && !this.hasAttribute('closing');
 
       var start = (e) => {
-        if (!this._isSheet() || !this._dismissable) return;
+        tracking = false;
+        if (!live() || !this._isSheet() || !this._dismissable) return;
         // DH-01: a touch that starts on a dial's ring belongs to the dial (or to scrolling), never to the sheet.
         if (e._casoraDialRing) { tracking = false; return; }
         var t = e.touches ? e.touches[0] : e;
@@ -8988,6 +8993,7 @@ window.casoraMenuGlass = {
 
       var move = (e) => {
         if (!tracking) return;
+        if (!live()) { tracking = false; dragging = false; return; }
         var t = e.touches ? e.touches[0] : e;
         var d = t.clientY - y0;
         if (!dragging) {
@@ -9006,7 +9012,7 @@ window.casoraMenuGlass = {
         var moved = dragging, traveled = dy;
         tracking = false;
         dragging = false;
-        if (!moved) return;
+        if (!moved || !live()) return;
 
         if (traveled > Math.min(120, surface.offsetHeight * 0.25)) {
           this.setAttribute('swipe-out', '');
@@ -15785,7 +15791,11 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
   function lift(anchor, on) {
     if (!anchor || !anchor.style) return;
-    if (isPhone() && docked(anchor)) {
+    // Closing undoes what opening did, even if the bell has left the bar meanwhile (a rebuilt dashboard moves the
+    // capsule back and draws a new one): asked again, docked() said no and the bar's scrim stayed on the page.
+    var wasDocked = !on && anchor._casoraBellDocked;
+    if (wasDocked || (isPhone() && docked(anchor))) {
+      anchor._casoraBellDocked = !!on;
       /* Aktiv wie Zuhause/Räume/Szenen: Ton-Kreis mit weißem Symbol in heller Pille (Ring 7 px = 50 breit). */
       if (on) {
         anchor.style.setProperty('--casora-bell-fill', 'var(--primary-color, #B67A50)');

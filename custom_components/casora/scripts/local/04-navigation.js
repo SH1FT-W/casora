@@ -278,7 +278,7 @@
       document.documentElement.style.setProperty('--casora-mobile-nav-space', 'calc(84px + env(safe-area-inset-bottom, 0px))');
       /* Die jeweils letzte verbundene Leiste besitzt die Werte am <html>: beim Neuladen räumte die alte Leiste
          (verzögert) erst auf, nachdem die neue sie gesetzt hatte – oben blieb der alte, große Kopfabstand (11.10.2026). */
-      window._hmnOwner = this;
+      this._takeOver();
       window._hmnExt = function (kind, on) { var o = window._hmnOwner; if (o && o.isConnected && o._bar) o._ext(kind, on); };
       var me = this;
       [0, 300, 1000, 2500, 4000].forEach(function (t) { setTimeout(function () { if (me.isConnected && me._bar) me._syncDock(); }, t); });
@@ -352,11 +352,28 @@
         });
       });
     }
+    /* Becomes the bar the bell talks to (window._hmnExt). A rebuilt dashboard (HA's lovelace_updated) connects a new
+       bar while the bell's window may still be open: the new bar takes over that scrim, or closing the bell asked the
+       new bar, which held none, and the old scrim stayed blurred over the whole page. */
+    _takeOver() {
+      var prev = window._hmnOwner;
+      window._hmnOwner = this;
+      if (!prev || prev === this || !prev._extKind) return;
+      var kind = prev._extKind, sc = prev._scrim;
+      prev._scrim = null; prev._extKind = null;
+      if (this._scrim || this._extKind) { if (sc && sc !== this._scrim && sc.parentNode) sc.remove(); return; }
+      this._extKind = kind;
+      this._scrim = sc || null;
+      if (this._scrim && this._bar) this._bar.classList.add('hmn-up');
+      this._render();
+    }
     _hide(on) { if (this._bar) this._bar.classList.toggle('hmn-hidden', !!on); }
     disconnectedCallback() {
       var self = this;
       /* Nur entfernen, wenn die Karte wirklich weg ist (Dashboard gewechselt), nicht bei kurzem Umhängen. */
       setTimeout(function () { if (!self.isConnected) { self._closeMenu(); if (self._bar && self._bar.parentNode) self._bar.remove();
+        // A scrim held for the bell's window that no new bar took over (dashboard left): never leave it on the page.
+        if (self._scrim) { if (self._scrim.parentNode) self._scrim.remove(); self._scrim = null; self._extKind = null; }
         if (window._hmnOwner === self) {
           window._hmnOwner = null;
           document.documentElement.style.removeProperty('--casora-mobile-nav-space');
@@ -447,7 +464,7 @@
       var dockedAny = soft && !!document.querySelector('.hmn-dock button-card');
       this._bar.classList.toggle('hmn-act', on);
       if (window._hmnOwner && window._hmnOwner !== this && window._hmnOwner.isConnected) return;
-      window._hmnOwner = this;
+      this._takeOver();
       // Casora/Nebel setzen 8px schon im Design; ohne Leisten-Kapsel braucht der Kopf oben wieder Platz (52).
       if (dockedAny) root.style.setProperty('--casora-mhead-reserve', '8px');
       else if (soft) root.style.setProperty('--casora-mhead-reserve', '52px');
