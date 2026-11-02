@@ -11,7 +11,9 @@ const cam = rd('custom_components/casora/scripts/local/07-weich-spezial.js');
 
 const m = core.match(/var STAGE_CSS = ([\s\S]*?);\n/);
 assert.ok(m, 'STAGE_CSS missing');
-const css = m[1];
+// The big view's rules moved into ZOOM_CSS (shared with the robot vacuum map as UI.zoomCss); STAGE_CSS includes it.
+const z = core.match(/var ZOOM_CSS = ([\s\S]*?);\n/);
+const css = m[1] + (z ? z[1] : '');
 const rule = (sel) => { const r = css.match(new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}')); return r ? r[1] : null; };
 
 // The base plate is still there for the other stage types.
