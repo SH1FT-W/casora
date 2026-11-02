@@ -4,6 +4,19 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.8 – 02.11.2026
+
+Fixes from your reports: waste on the phone, house lighting and steadier numbers in charts.
+
+### Changed
+- **Waste on the phone (#117):** today's pickup comes first, then the bins' next dates and the put-out duty, the calendar last. Tapping a day shows its pickup right under the calendar, without jumping up.
+- **House lighting (#118):** when a room has just one lamp, tapping it in the "Lighting" popup opens that lamp directly; back returns to the list.
+
+### Fixed
+- **Waste tile:** on pickup day the tile and the header say "Today general waste" even when the countdown sensor has already moved on; the date wins.
+- **House lighting after setup:** with a light group for the whole house and more than ten lights, rooms were missing from the "Lighting" popup; newly set up dashboards now show all of them.
+- **Chart popup:** values, highest/lowest and average keep their decimals instead of jumping between "44.38" and "47.4".
+
 ## 26.11.7 – 02.11.2026
 
 Calmer thermostat tiles, a weather popup with history behind every value and fixes from your reports.

@@ -4,6 +4,19 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.8 – 02.11.2026
+
+Fixes aus euren Meldungen: Abfall am Handy, Licht im Haus und ruhigere Zahlen in Diagrammen.
+
+### Geändert
+- **Abfall am Handy (#117):** Oben steht, was heute abgeholt wird, darunter die nächsten Termine der Tonnen und Rausstellen, der Kalender ganz am Ende. Ein Tipp auf einen Tag zeigt dessen Abholung direkt unter dem Kalender, ohne Sprung nach oben.
+- **Licht im Haus (#118):** Hat ein Raum nur eine Lampe, öffnet der Tipp im Popup „Beleuchtung“ gleich diese Lampe; Zurück führt direkt zur Liste.
+
+### Behoben
+- **Abfall-Kachel:** Am Abholtag sagt Kachel und Kopf „Heute Restmüll“, auch wenn der Countdown-Sensor schon weiterzählt; das Datum hat Vorrang.
+- **Licht im Haus nach der Einrichtung:** Mit einer Lichtgruppe für das ganze Haus und mehr als zehn Lampen fehlten Räume im Popup „Beleuchtung“; neu eingerichtete Dashboards zeigen jetzt alle.
+- **Diagramm-Popup:** Werte, Höchster/Tiefster Wert und Durchschnitt behalten ihre Nachkommastellen, statt zwischen „44,38“ und „47,4“ zu springen.
+
 ## 26.11.7 – 02.11.2026
 
 Ruhigere Thermostat-Kacheln, ein Wetter-Popup mit Verlauf hinter jedem Wert und Fixes aus euren Meldungen.
