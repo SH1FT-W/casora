@@ -1231,6 +1231,23 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         tilt: open > 0 && tilted === open, entity_id: ids.slice() },
     };
   };
+  // Is this door/window tilted right now? The one answer for every place that names its state (popup head, dial,
+  // newest history row, tile, list rows): a combined sensor that is on with attribute tilt, a tilt sensor of its own
+  // that is on, or a contact whose tilt sensor (contact + tilt sensor of one opening, casoraContacts) is on.
+  // cur: the state to judge instead of hass.states[id] (same entity). Same rules as openings() below.
+  window.casoraContactTilted = function (hass, id, cur) {
+    if (typeof id !== 'string' || id.indexOf('binary_sensor.') !== 0) return false;
+    var S = (hass && hass.states) || {}, e = cur || S[id];
+    if (!e) return false;
+    var a = e.attributes || {}, s = String(e.state || '').toLowerCase();
+    // Only doors and windows (a vacuum's „tilted“ problem sensor is none); groups count through their members.
+    if (Array.isArray(a.entity_id) || ['door', 'window', 'garage_door', 'opening', ''].indexOf(String(a.device_class || '')) < 0) return false;
+    var on =s === 'on' || s === 'open' || s === 'opening';
+    if (isCombo(hass, id)) return on && (a.tilt === true || a.tilt === 'true');
+    if (isTiltSensor(hass, id)) return on;
+    var t = (contactsOnce(hass).tilt || {})[id];
+    return !!t && String((S[t] || {}).state || '').toLowerCase() === 'on';
+  };
 
   // ── Openings: contact, tilt sensor and combined sensor = one door/window (30.09.2026) ──
   // Some doors/windows have two sensors (contact for open/closed, tilt sensor for

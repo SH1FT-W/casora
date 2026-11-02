@@ -106,6 +106,14 @@
     if (!l || l === s) return RAW_WORD[String(s).toLowerCase()] || l || String(s);
     return l;
   };
+  // The word for the entity's state right now: a tilted door/window is „Gekippt“ (casoraContactTilted, the same answer
+  // as the head, the contacts list and the tile), whatever its contact says. Past states keep Z.stateWord – the
+  // recorder's on/off does not say whether an earlier opening was tilted.
+  Z.nowWord = function (h, id) {
+    var st = h.states[id];
+    if (st && window.casoraContactTilted && window.casoraContactTilted(h, id)) return 'Gekippt';
+    return Z.stateWord(h, id, st ? st.state : null);
+  };
   var RAW_WORD = { connected: 'Verbunden', disconnected: 'Getrennt', online: 'Online', offline: 'Offline', idle: 'Bereit',
     on: 'An', off: 'Aus', open: 'Geöffnet', closed: 'Geschlossen', home: 'Zuhause', not_home: 'Unterwegs' };
 
@@ -585,7 +593,7 @@
       if (since == null) since = NaN;
       // The room is the label above the title (blueprint v2, rule 1), not part of the status line.
       var rest = [isFinite(since) ? T('seit') + ' ' + when(since, now) : null].filter(Boolean);
-      var out = CSS + UI.line(Z.stateWord(hass, id, st.state), rest, { tone: bad(st.state) ? 'warn' : null }) + pills(id, span);
+      var out = CSS + UI.line(Z.nowWord(hass, id), rest, { tone: bad(st.state) ? 'warn' : null }) + pills(id, span);
       if (!num) {
         // Band: wann „an“ (offen, Bewegung …) über den Zeitraum.
         var rows = Z.history(hass, id, span, el), t0 = now - SPANS[span];
@@ -624,9 +632,9 @@
         // the period switch and the band under it.
         var alarm = bin && st.state === 'on' && /^(smoke|gas|moisture|problem|safety|carbon_monoxide|heat|tamper)$/.test((st.attributes || {}).device_class || '');
         return UI.stage('status', { tone: bad(st.state) ? 'warn' : alarm ? 'bad' : duo && !Z.isActive(st.state) ? 'off' : 'good',
-          icon: Z.iconOf(st), text: Z.stateWord(hass, id, st.state), state: st.state === 'unavailable' ? 'na' : null,
+          icon: Z.iconOf(st), text: Z.nowWord(hass, id), state: st.state === 'unavailable' ? 'na' : null,
           facts: isFinite(since) ? [{ label: T('Seit'), value: when(since, now) }] : [],
-          extra: out.replace(UI.line(Z.stateWord(hass, id, st.state), rest, { tone: bad(st.state) ? 'warn' : null }), '').replace('<div style="margin-top:14px;">', '<div>') });
+          extra: out.replace(UI.line(Z.nowWord(hass, id), rest, { tone: bad(st.state) ? 'warn' : null }), '').replace('<div style="margin-top:14px;">', '<div>') });
       }
       return out;
     }
@@ -694,7 +702,8 @@
         // „Früher“ instead of that time.
         var w0 = Z.historyStart(id, span);
         items = segs.map(function (x) {
-          var word = Z.stateWord(hass, id, x.s);
+          // The ongoing row is the state right now (a tilted window „Gekippt“ as the dial says).
+          var word = !x.end && x.s === st.state ? Z.nowWord(hass, id) : Z.stateWord(hass, id, x.s);
           // Each row says how long THIS state lasted, the newest one „seitdem“ (issue 104: „nach“ read as the time since
           // the previous change). Two states: active a filled accent dot, idle an empty ring.
           var tone = stateTone(hass, id, x.s), off = !tone && duo && !Z.isActive(x.s);
@@ -706,7 +715,7 @@
     }
     if (part === 'd_stage') {
       var dv1 = devOf(hass, id), on1 = /^(on|open|playing|home|heat|cool|heat_cool|auto|cleaning|mowing|unlocked)$/.test(st.state);
-      return UI.stage('status', { tone: bad(st.state) ? 'warn' : on1 ? 'good' : 'off', icon: Z.iconOf(st), text: Z.stateWord(hass, id, st.state),
+      return UI.stage('status', { tone: bad(st.state) ? 'warn' : on1 ? 'good' : 'off', icon: Z.iconOf(st), text: Z.nowWord(hass, id),
         state: st.state === 'unavailable' ? 'na' : null,
         facts: [areaOf(hass, id) ? { label: T('Bereich'), value: areaOf(hass, id) } : null, dv1 && dv1.model ? { label: T('Modell'), value: dv1.model } : null] });
     }
@@ -745,7 +754,7 @@
         // issue 105: an on/off entity is a switch row (UI.row.entity), switched here instead of shown as „An“/„Aus“.
         var row = SWITCH_ROW.test(eid.split('.')[0]) && UI.row && UI.row.entity && /^(on|off|unavailable|unknown)$/.test(s5.state)
           ? UI.row.entity(s5, { icon: Z.iconOf(s5), label: shortName(hass, eid, dv4) })
-          : { entity: eid, icon: Z.iconOf(s5), iconTone: 'accent', label: shortName(hass, eid, dv4), value: Z.stateWord(hass, eid, s5.state) };
+          : { entity: eid, icon: Z.iconOf(s5), iconTone: 'accent', label: shortName(hass, eid, dv4), value: Z.nowWord(hass, eid) };
         (groups[catOf(hass, eid)] || groups.main).push(row);
       });
       var outE = '';
