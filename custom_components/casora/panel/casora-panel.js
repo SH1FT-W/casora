@@ -3042,6 +3042,44 @@ function homeLightsEdit(V, key, value) {
   if (value) { delete V.light_rooms_auto; return; }
   if (!V.light_group_entity && !LIGHT_SLOTS.some((k) => V[k])) V.light_rooms_auto = true;
 }
+// Setups before 26.11.8 gave Home's light badge the house's HA light group AND the first ten lights (light_entity_1…10).
+// Picked lights win over the group in the popup (#80), so rooms past the tenth were missing from the house light
+// popup; 26.11.8 fixed the setup only. On load the Studio empties the ten slots (the group stays) when they are
+// exactly that setup's pick: group set, all ten slots filled, slot k is the k-th light the rooms' light badges list
+// (rooms in dashboard order, their slots in order, the setup's topUnits), every slot lies inside the group, and there
+// are more than ten such lights (the rooms list more, or the group holds more than ten units). Anything else is the
+// user's list (#80: other lamps, fewer, another order) and stays. Returns whether Home changed; the Studio shows it
+// as unsaved, one save writes it (with the version before it in Versions).
+function homeLightsOldPick(hass, rooms) {
+  const B = typeof window !== "undefined" && window.casoraBasis;
+  const list = rooms || [];
+  const home = list.find((r) => isHomeRoom(r, list));
+  const V = home && home.variables;
+  if (!B || !B.topUnits || !hass || !hass.states || !V || V.show_lights === false || !V.light_group_entity) return null;
+  const listed = LIGHT_SLOTS.map((k) => V[k]);
+  if (!listed.every((id) => typeof id === "string" && id)) return null;
+  const roomLights = [];
+  list.forEach((r) => {
+    if (r === home || !r || r.path === "home" || !r.variables) return;
+    LIGHT_SLOTS.forEach((k) => { const id = r.variables[k]; if (typeof id === "string" && id && !roomLights.includes(id)) roomLights.push(id); });
+  });
+  const units = B.topUnits(hass, roomLights);
+  if (units.length < 10 || !listed.every((id, i) => id === units[i])) return null;
+  // The group's tree from HA (members of members); a group HA does not know leaves the badge alone.
+  const S = hass.states;
+  const members = (id) => [].concat(((S[id] || {}).attributes || {}).entity_id || []).filter((x) => typeof x === "string");
+  const tree = new Set();
+  (function walk(id) { members(id).forEach((x) => { if (!tree.has(x)) { tree.add(x); walk(x); } }); })(V.light_group_entity);
+  if (!tree.size || !listed.every((id) => tree.has(id))) return null;
+  if (units.length <= 10 && B.topUnits(hass, [...tree]).length <= 10) return null;
+  return home;
+}
+function fixHomeLightSlots(hass, rooms) {
+  const home = homeLightsOldPick(hass, rooms);
+  if (!home) return false;
+  LIGHT_SLOTS.forEach((k) => { delete home.variables[k]; });
+  return true;
+}
 
 // #44: a Home sensor that the old rule picked (exactly casoraBasis.oldHouseTotal, a device's
 // "total" in one of the rooms, casoraBasis.wrongHousePower) becomes the house sensor, else the
@@ -16237,6 +16275,12 @@ class CasoraPanel extends HTMLElement {
         ? fillNewRoomBadges(this._hass, this._state.compact.rooms) : [];
       if (filledRooms.length) {
         this._log(`badges: ${filledRooms.length} room(s) without badge devices filled from their area`, "ok");
+        this._markDirty();
+      }
+      // Setups before 26.11.8: Home's light badge held the house group and its first ten lights (after _clean: one
+      // save fixes the dashboard, the version before it stays in Versions).
+      if (this._state.surface !== "mobile" && !this._saveBlocked && fixHomeLightSlots(this._hass, this._state.compact.rooms)) {
+        this._log("lights: Home's Lights badge held the house group and its first ten lights, now the group alone", "ok");
         this._markDirty();
       }
       if (this._state.surface !== "mobile" && !this._saveBlocked && prefsHomePower(this._hass, this._state.compact.rooms)) {
@@ -29652,7 +29696,7 @@ window.__casoraPanelInternals = {
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
   linkPair, syncPairRooms, syncPairTiles, syncTwinTile, phoneCondSnapshot, condChain, condModel, condWrite, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, setInnerSize, expandMobileConfig, extractMobileConfig,
-  deriveEnergyRooms, energyManual, energyBackToAuto, fillHomeLights, homeLightsEdit, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
+  deriveEnergyRooms, energyManual, energyBackToAuto, fillHomeLights, homeLightsEdit, homeLightsOldPick, fixHomeLightSlots, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
   CASORA_ACCENTS, accentsShown, accentLabel, swatchCss,
   condStates, condLoadSeen, isCarouselCard, isPageTile, carouselOf, carouselId, markCarousel, CAROUSEL_CARD, CAROUSEL_TILE,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)
