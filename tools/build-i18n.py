@@ -17,6 +17,8 @@ Two layers:
     output and window.casoraTr), from phrases/<lang>.json:
         {"exact": {"<German>": "<translation>"},
          "patterns": [["^<regex on the German text>$", "… {1} …"]]}
+    Patterns are written in any order; the build puts a specific pattern before a general one
+    that would also match its text (tools/i18n_patterns.py), since the runtime takes the first match.
     A language without its own table falls back to English. Text that looks
     German but has no entry is collected: casoraTrMissing() in the console.
 """
@@ -24,6 +26,9 @@ Two layers:
 import json
 import os
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import i18n_patterns  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "custom_components/casora/translations/dashboard")
@@ -447,9 +452,19 @@ def main() -> int:
             if bad:
                 # Nicht still verwerfen: zwei verschmolzene Muster gingen sonst unbemerkt verloren.
                 raise SystemExit("%s: Muster muss [Regex, Text] sein: %s" % (name, json.dumps(bad[0], ensure_ascii=False)))
+            pats = data.get("patterns") or []
+            # The runtime takes the first matching pattern: a specific one goes before a general one
+            # that also matches its texts ("^Ø von (\\d+) Lampen$" before "^Ø (.+)$").
+            try:
+                pats = [pats[i] for i in i18n_patterns.order([p[0] for p in pats])]
+            except ValueError as e:
+                raise SystemExit("%s: %s" % (name, e))
+            left = i18n_patterns.shadowed([p[0] for p in pats])
+            if left:
+                raise SystemExit("%s: pattern %r hides %r (%r)" % ((name,) + left[0]))
             phrases[name[: -len(".json")]] = {
                 "exact": {k: v for k, v in sorted((data.get("exact") or {}).items()) if isinstance(v, str)},
-                "patterns": data.get("patterns") or [],
+                "patterns": pats,
             }
 
     body = json.dumps(tables, ensure_ascii=False, indent=2, sort_keys=True)

@@ -3519,14 +3519,6 @@
    "à {1} h"
   ],
   [
-   "^heute (\\d{1,2}:\\d{2})$",
-   "aujourd'hui {1}"
-  ],
-  [
-   "^morgen (\\d{1,2}:\\d{2})$",
-   "demain {1}"
-  ],
-  [
    "^gestern (\\d{1,2}:\\d{2})$",
    "hier {1}"
   ],
@@ -4163,16 +4155,8 @@
    "Prochaine révision {1}"
   ],
   [
-   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
-   "Les dates de collecte reviendront dès que {1} répondra."
-  ],
-  [
    "^(\\d+) Termine$",
    "{1} événements"
-  ],
-  [
-   "^(\\d+) an$",
-   "{1} allumées"
   ],
   [
    "^in (\\d+) Wochen$",
@@ -4471,6 +4455,10 @@
    "Autonomie {1}"
   ],
   [
+   "^Reichweite (\\d[\\d.,]*) (\\S+)$",
+   "Autonomie {1} {2}"
+  ],
+  [
    "^(\\d+) Geräte brauchen Aufmerksamkeit$",
    "{1} appareils à vérifier"
   ],
@@ -4743,10 +4731,6 @@
    "Dans 1 jour"
   ],
   [
-   "^In (\\d+)[  ]Tagen$",
-   "Dans {1} jours"
-  ],
-  [
    "^In ([\\d.,]+)[  ]l$",
    "Dans {1} l"
   ],
@@ -4761,10 +4745,6 @@
   [
    "^Sollwert (.+)$",
    "Consigne {1}"
-  ],
-  [
-   "^Zone (\\d+)$",
-   "Zone {1}"
   ],
   [
    "^Zeitplan pausiert bis (\\d{1,2}:\\d\\d)$",

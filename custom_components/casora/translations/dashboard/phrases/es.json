@@ -3519,14 +3519,6 @@
    "a las {1}:00"
   ],
   [
-   "^heute (\\d{1,2}:\\d{2})$",
-   "hoy {1}"
-  ],
-  [
-   "^morgen (\\d{1,2}:\\d{2})$",
-   "mañana {1}"
-  ],
-  [
    "^gestern (\\d{1,2}:\\d{2})$",
    "ayer {1}"
   ],
@@ -4163,16 +4155,8 @@
    "Próxima revisión {1}"
   ],
   [
-   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
-   "Las fechas de recogida volverán en cuanto responda {1}."
-  ],
-  [
    "^(\\d+) Termine$",
    "{1} eventos"
-  ],
-  [
-   "^(\\d+) an$",
-   "{1} encendidas"
   ],
   [
    "^in (\\d+) Wochen$",
@@ -4471,6 +4455,10 @@
    "Autonomía {1}"
   ],
   [
+   "^Reichweite (\\d[\\d.,]*) (\\S+)$",
+   "Autonomía {1} {2}"
+  ],
+  [
    "^(\\d+) Geräte brauchen Aufmerksamkeit$",
    "{1} dispositivos requieren atención"
   ],
@@ -4743,10 +4731,6 @@
    "En 1 día"
   ],
   [
-   "^In (\\d+)[  ]Tagen$",
-   "En {1} días"
-  ],
-  [
    "^In ([\\d.,]+)[  ]l$",
    "En {1} l"
   ],
@@ -4761,10 +4745,6 @@
   [
    "^Sollwert (.+)$",
    "Consigna {1}"
-  ],
-  [
-   "^Zone (\\d+)$",
-   "Zona {1}"
   ],
   [
    "^Zeitplan pausiert bis (\\d{1,2}:\\d\\d)$",

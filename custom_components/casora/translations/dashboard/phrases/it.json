@@ -3519,14 +3519,6 @@
    "alle {1}:00"
   ],
   [
-   "^heute (\\d{1,2}:\\d{2})$",
-   "oggi {1}"
-  ],
-  [
-   "^morgen (\\d{1,2}:\\d{2})$",
-   "domani {1}"
-  ],
-  [
    "^gestern (\\d{1,2}:\\d{2})$",
    "ieri {1}"
   ],
@@ -4163,16 +4155,8 @@
    "Prossima revisione {1}"
   ],
   [
-   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
-   "Le date di raccolta torneranno appena {1} risponde."
-  ],
-  [
    "^(\\d+) Termine$",
    "{1} eventi"
-  ],
-  [
-   "^(\\d+) an$",
-   "{1} accese"
   ],
   [
    "^in (\\d+) Wochen$",
@@ -4471,6 +4455,10 @@
    "Autonomia {1}"
   ],
   [
+   "^Reichweite (\\d[\\d.,]*) (\\S+)$",
+   "Autonomia {1} {2}"
+  ],
+  [
    "^(\\d+) Geräte brauchen Aufmerksamkeit$",
    "{1} dispositivi richiedono attenzione"
   ],
@@ -4743,10 +4731,6 @@
    "Tra 1 giorno"
   ],
   [
-   "^In (\\d+)[  ]Tagen$",
-   "Tra {1} giorni"
-  ],
-  [
    "^In ([\\d.,]+)[  ]l$",
    "Tra {1} l"
   ],
@@ -4761,10 +4745,6 @@
   [
    "^Sollwert (.+)$",
    "Setpoint {1}"
-  ],
-  [
-   "^Zone (\\d+)$",
-   "Zona {1}"
   ],
   [
    "^Zeitplan pausiert bis (\\d{1,2}:\\d\\d)$",

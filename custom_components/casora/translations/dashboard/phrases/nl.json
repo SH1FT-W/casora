@@ -3519,14 +3519,6 @@
    "om {1} uur"
   ],
   [
-   "^heute (\\d{1,2}:\\d{2})$",
-   "vandaag {1}"
-  ],
-  [
-   "^morgen (\\d{1,2}:\\d{2})$",
-   "morgen {1}"
-  ],
-  [
    "^gestern (\\d{1,2}:\\d{2})$",
    "gisteren {1}"
   ],
@@ -4163,16 +4155,8 @@
    "Volgende inspectie {1}"
   ],
   [
-   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
-   "De ophaaldagen komen terug zodra {1} reageert."
-  ],
-  [
    "^(\\d+) Termine$",
    "{1} afspraken"
-  ],
-  [
-   "^(\\d+) an$",
-   "{1} aan"
   ],
   [
    "^in (\\d+) Wochen$",
@@ -4471,6 +4455,10 @@
    "Bereik {1}"
   ],
   [
+   "^Reichweite (\\d[\\d.,]*) (\\S+)$",
+   "Bereik {1} {2}"
+  ],
+  [
    "^(\\d+) Geräte brauchen Aufmerksamkeit$",
    "{1} apparaten hebben aandacht nodig"
   ],
@@ -4743,10 +4731,6 @@
    "Over 1 dag"
   ],
   [
-   "^In (\\d+)[  ]Tagen$",
-   "Over {1} dagen"
-  ],
-  [
    "^In ([\\d.,]+)[  ]l$",
    "Over {1} l"
   ],
@@ -4761,10 +4745,6 @@
   [
    "^Sollwert (.+)$",
    "Setpoint {1}"
-  ],
-  [
-   "^Zone (\\d+)$",
-   "Zone {1}"
   ],
   [
    "^Zeitplan pausiert bis (\\d{1,2}:\\d\\d)$",
