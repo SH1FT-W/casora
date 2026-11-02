@@ -547,8 +547,9 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
         + '<div class="row"><button type="button" class="no"></button><button type="button" class="yes"></button></div></div>';
       // w.title/w.text/w.yes: eigener Wortlaut (Alarm scharf schalten), sonst „Wirklich …?“.
       root.querySelector('h2').textContent = w.title || w.name;
-      // w.text === '': nur Titel und Knöpfe (die Frage steht schon im Titel).
-      if (w.text === '') { root.querySelector('p').remove(); root.querySelector('h2').style.marginBottom = '18px'; }
+      // w.text === '' (or a custom question without text or verb, as the alarm's): title and buttons only.
+      // Without a verb the default text used to throw, so the question never showed (issue 109).
+      if (w.text === '' || (!w.text && !w.verb)) { root.querySelector('p').remove(); root.querySelector('h2').style.marginBottom = '18px'; }
       else root.querySelector('p').textContent = w.text || T('Wirklich ' + w.verb.toLowerCase() + '?');
       root.querySelector('.no').textContent = T('Abbrechen');
       root.querySelector('.yes').textContent = w.yes || T(w.verb);

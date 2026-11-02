@@ -2723,6 +2723,7 @@
   "Casora {v} ist installiert. Home Assistant ist beim Neustart kurz nicht erreichbar.": "Casora {v} está instalado. Home Assistant no estará disponible un momento mientras se reinicia.",
   "Der Neustart hat nicht geklappt.": "El reinicio no ha funcionado.",
   "Installieren hat nicht geklappt.": "La instalación no ha funcionado.",
+  "Alarmanlage: Schalten hat nicht geklappt.": "Sistema de alarma: no se pudo cambiar.",
   "Wird installiert …": "Instalando…",
   "HACS hat die neue Version nicht als installiert gemeldet. Sieh in HACS nach.": "HACS no ha indicado la nueva versión como instalada. Revisa HACS.",
   "Vergrößern": "Ampliar",

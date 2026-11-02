@@ -2723,6 +2723,7 @@
   "Casora {v} ist installiert. Home Assistant ist beim Neustart kurz nicht erreichbar.": "Casora {v} jest zainstalowana. Home Assistant będzie przez chwilę niedostępny podczas ponownego uruchamiania.",
   "Der Neustart hat nicht geklappt.": "Ponowne uruchomienie nie powiodło się.",
   "Installieren hat nicht geklappt.": "Instalacja nie powiodła się.",
+  "Alarmanlage: Schalten hat nicht geklappt.": "System alarmowy: przełączenie nie powiodło się.",
   "Wird installiert …": "Instalowanie…",
   "HACS hat die neue Version nicht als installiert gemeldet. Sieh in HACS nach.": "HACS nie zgłosił nowej wersji jako zainstalowanej. Sprawdź HACS.",
   "Vergrößern": "Powiększ",

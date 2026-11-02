@@ -324,8 +324,15 @@
     if (I0 && (spec.s === 'alarm_disarm' ? I0.needDis : I0.needArm) && !(in0 && String(in0.value || '').trim())) { run(spec, el); return true; }
     var tr = window.casoraTr || function (x) { return x; };
     window.casoraAsk({ title: tr(typeof ask === 'string' ? ask : 'Wirklich?'), yes: tr(el.getAttribute('aria-label') || 'OK') })
-      .then(function (ok) { if (ok) run(spec, el); });
+      .then(function (ok) { if (ok) run(spec, el); }, function (e) { AL.fail(e); });
     return true;
+  };
+
+  // The question itself failing says so (issue 109: casoraAsk threw, the tap left no trace).
+  AL.fail = function (e) {
+    var tr = window.casoraTr || function (x) { return x; };
+    var why = e && (e.message || e.code);
+    if (window.casoraNotice) window.casoraNotice({ message: tr('Alarmanlage: Schalten hat nicht geklappt.') + (why ? ' ' + why : ''), duration: 8000 }, { overPopup: true });
   };
 
   // Tap on data-casora-alarm: the service with the code from the field; without a code, focus the field.
@@ -371,6 +378,7 @@
       }
       var data = { entity_id: spec.e }; if (code) data.code = code;
       hass.callService('alarm_control_panel', spec.s, data).catch(function () {
+        // HA's callService shows its own error toast; the field only says why when a code was given.
         if (inp) { inp.value = ''; inp.placeholder = 'Code falsch'; inp.focus(); }
       });
       if (inp) inp.value = '';
