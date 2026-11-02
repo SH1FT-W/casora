@@ -44,6 +44,9 @@ const api = async (method, p, body) => {
   return r.json();
 };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// Times on the page are in Home Assistant's time zone: read it and use it for every Date here (and the browser this
+// process starts), whatever TZ the gate runs with (the unit tests run in UTC).
+try { const cfg = await api('GET', 'config'); if (cfg && cfg.time_zone) process.env.TZ = cfg.time_zone; } catch (e) { /* keep TZ */ }
 const hm = (ms) => { const d = new Date(ms); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
 let HA_START = 0;
 const BAD = (s) => s == null || s === 'unknown' || s === 'unavailable';
