@@ -35,6 +35,11 @@ A big round from your feedback: switches and colour in the popups, a clearer his
 - **Car popup:** range and tank or battery only in the dial, not again in the list.
 
 ### Fixed
+- **Player names in the media popup:** a player keeps the same short name in every list of the popup.
+- **Alarm popup:** the head shows its time again when the alarm has not changed since Home Assistant started.
+- **Times in popups:** Casora's own helpers and Home Assistant's start no longer show up as "since" or "last changed" times; the oldest history row says "Earlier" instead of the start of the 24 h window; the 3D printer head follows the print status like the dial.
+- **Scenes on room pages:** rooms show their scenes also on dashboards without a scene row (for example from the setup wizard).
+- **Studio: "Done" with unsaved settings:** "Done" and leaving the Studio no longer silently drop unsaved settings; they ask "Save settings?" (Save, Discard, Back).
 - **Window, door and lock pages (#106):** no more two different "since" times, the label above the title shows the room instead of repeating the title, and the history and its 24 h figures always end on the current state, also when Home Assistant's history lags behind.
 - **AI update check:** it now fetches release notes itself (from the update, its GitHub releases or its changelog page) instead of answering "Unclear" for almost every update; without notes it judges by the version jump.
 - **VOC index sensors (#95):** sensors without unit or device class can be picked in the climate badge and are read on the index scale (100 = usual indoor air); CO2, PM and CO sensors without unit are found by their name too.

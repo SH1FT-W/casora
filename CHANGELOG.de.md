@@ -35,6 +35,11 @@ Eine große Runde aus euren Rückmeldungen: Schalter und Farbe in den Popups, ei
 - **Auto-Popup:** Reichweite und Tank bzw. Akku nur im Rad, nicht noch einmal in der Liste.
 
 ### Behoben
+- **Player-Namen im Medien-Popup:** Ein Player behält in jeder Liste des Popups denselben kurzen Namen.
+- **Alarm-Popup:** Der Kopf zeigt wieder seine Zeit, auch wenn sich der Alarm seit dem Start von Home Assistant nicht geändert hat.
+- **Zeiten in Popups:** Casoras eigene Helfer und der Start von Home Assistant erscheinen nicht mehr als „Seit“- oder „Zuletzt“-Zeit; die älteste Verlaufszeile heißt „Früher“ statt des Beginns des 24-Std.-Zeitraums; der Kopf des 3D-Druckers folgt wie das Rad dem Druckstatus.
+- **Szenen in der Raumseite:** Räume zeigen ihre Szenen auch auf Dashboards ohne Szenenreihe (z. B. aus dem Einrichtungsassistenten).
+- **Studio: „Fertig“ mit ungespeicherten Einstellungen:** „Fertig“ und das Verlassen des Studios verwerfen ungespeicherte Einstellungen nicht mehr still, sondern fragen „Einstellungen speichern?“ (Speichern, Verwerfen, Zurück).
 - **Fenster-, Tür- und Schloss-Seiten (#106):** keine zwei verschiedenen „Seit“-Zeiten mehr, über dem Titel steht der Raum statt noch einmal der Titel, und Verlauf und 24-Std.-Zahlen enden immer auf dem aktuellen Zustand, auch wenn der Verlauf von Home Assistant hinterherhängt.
 - **KI-Update-Prüfung:** Sie holt die Release-Notes jetzt selbst (vom Update, aus den GitHub-Releases oder von der Changelog-Seite), statt bei fast jedem Update „Unklar“ zu melden; ohne Notes schätzt sie nach dem Versionssprung.
 - **VOC-Index-Sensoren (#95):** Sensoren ohne Einheit und Geräteklasse lassen sich im Klima-Badge wählen und werden auf der Index-Skala gelesen (100 = übliche Raumluft); CO₂-, Feinstaub- und CO-Sensoren ohne Einheit werden auch über ihren Namen gefunden.
