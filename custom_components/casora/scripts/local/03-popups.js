@@ -4211,6 +4211,15 @@
     var s = selOf(cfg);
     return (s >= 0 && cfg.rooms[s]) ? cfg.rooms[s] : null;
   };
+  // Issue 118: the one lamp of room idx in the house popup gid, or null (none, several, or a group with lamps).
+  S.oneLampOf = function (gid, idx, states) {
+    var cfg = ((S.els[gid] || []).filter(function (x) { return x._lpsCfg; })[0] || {})._lpsCfg || (S.cur && S.cur.gid === gid ? S.cur : null);
+    var r = cfg && cfg.rooms && cfg.rooms[idx];
+    var ids = r ? (r.lights || []).filter(function (x) { return states[x]; }) : [];
+    if (ids.length !== 1) return null;
+    var m = (states[ids[0]].attributes || {}).entity_id;
+    return Array.isArray(m) && m.some(function (x) { return states[x]; }) ? null : ids[0];
+  };
   var stat = function (ids, states) {
     var on = 0, sum = 0, nb = 0, tot = 0;
     ids.forEach(function (id) {
@@ -4976,6 +4985,18 @@
          Since the room chips went (review 2, DD-26) the filter alone left no way back to the room list. */
       var P3 = window.casoraPopup, cur3 = P3 && P3.current, pop3 = P3 && P3.element;
       if (v3On() && cur3 && P3.sub) {
+        /* Issue 118 (maintainer, 02.11.2026): a room of one lamp opens that lamp's page straight away \u2013 the room's page
+           only repeated it. Kicker = the room, title = the lamp, as from the room's page; \u2039 goes back to the house's
+           list. One lamp: the room's only light that is no group with lamps of its own (a room group of one member is
+           expanded to it already, a group without existing members is itself the lamp). */
+        var one = S.oneLampOf(d.gid, d.idx, h.states);
+        if (one && window._casoraNotifyOpenViaCard) {
+          window._casoraLF = window._casoraLF || {};
+          window._casoraLF[d.gid] = -1;
+          window._casoraBackNext = { fn: function () { P3.open(cur3); }, at: Date.now(), eyebrow: d.name || '' };
+          window._casoraNotifyOpenViaCard(one, function (ok) { if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(one); }, null, true);
+          return;
+        }
         var groupT = String((pop3 && pop3._headerTitle && pop3._headerTitle.textContent) || '').replace(/\u200B/g, '') || tr('Beleuchtung');
         window._casoraLF = window._casoraLF || {};
         window._casoraLF[d.gid] = d.idx;
