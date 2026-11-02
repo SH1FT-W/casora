@@ -1,6 +1,6 @@
 // "Sort tiles" (Studio › Controls › Tiles, variable tile_sort), 01.11.2026: after the load phase a tile row
-// re-sorts only after 30 s without use (default 'calm'), only when the page opens ('open', the E19 behaviour)
-// or after 2 s like before E19 ('now'). Also: casora-core reads the setting, Studio field, phone mirror, texts.
+// re-sorts only after 30 s without use ('calm'), only when the page opens ('open', the E19 behaviour)
+// or after 2 s like before E19 ('now', the default again since 26.11.6 at the maintainer's request). Also: casora-core reads the setting, Studio field, phone mirror, texts.
 //   node dev/unit/kachelreihe_sortiermodus.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -44,10 +44,10 @@ assert.deepEqual(D({ ...base, mode: 'calm', idle: 0, noAnim: true }), { act: 'so
 
 // ── Mode: setting, code switches ──────────────────────────────────────────────
 const M = win._casoraSortModeNow;
-assert.equal(M(), 'calm', 'default: after a quiet spell');
+assert.equal(M(), 'now', 'default: right away');
 win._casoraSortMode = 'open'; assert.equal(M(), 'open');
 win._casoraSortModeRefresh = () => 'now'; assert.equal(M(), 'now', 'asks casora-core first');
-win._casoraSortModeRefresh = () => 'quatsch'; assert.equal(M(), 'calm', 'unknown = calm');
+win._casoraSortModeRefresh = () => 'quatsch'; assert.equal(M(), 'now', 'unknown = now');
 win.CASORA_SORT_MODE = 'open'; assert.equal(M(), 'open', 'CASORA_SORT_MODE overrides');
 win.CASORA_LIVE_SORT = true; assert.equal(M(), 'now', 'CASORA_LIVE_SORT = now');
 delete win.CASORA_LIVE_SORT; delete win.CASORA_SORT_MODE; delete win._casoraSortModeRefresh; delete win._casoraSortMode;
@@ -124,11 +124,11 @@ delete win.CASORA_SORT_MODE;
   const root = { isConnected: true, get lovelace() { return { config }; } };
   const doc = { querySelector: (s) => (s === 'hui-root' ? root : null), querySelectorAll: () => [] };
   new Function('window', 'document', 'setTimeout', 'location', block)(w, doc, () => {}, { pathname: '/casora/home' });
-  assert.equal(w._casoraSortMode, 'calm', 'default calm');
+  assert.equal(w._casoraSortMode, 'now', 'default now');
   const view = (vars) => ({ path: 'home', cards: [{ type: 'custom:button-card', template: 'casora_room', variables: vars }] });
   assert.equal(w._casoraSortModeOf({ views: [view({ tile_sort: 'open' })] }), 'open', 'desktop: room card');
-  assert.equal(w._casoraSortModeOf({ views: [view({})] }), 'calm', 'nothing set');
-  assert.equal(w._casoraSortModeOf({ views: [view({ tile_sort: 'x' })] }), 'calm', 'unknown = calm');
+  assert.equal(w._casoraSortModeOf({ views: [view({})] }), 'now', 'nothing set');
+  assert.equal(w._casoraSortModeOf({ views: [view({ tile_sort: 'x' })] }), 'now', 'unknown = now');
   const phone = { views: [{ path: 'home', cards: [{ type: 'custom:layout-card', cards: [
     { type: 'custom:button-card', template: 'casora_mobile_bg', variables: { tile_sort: 'now' } }] }] }] };
   assert.equal(w._casoraSortModeOf(phone), 'now', 'phone: casora_mobile_bg');
@@ -144,7 +144,7 @@ delete win.CASORA_SORT_MODE;
   assert.ok(i > 0, 'Studio field tile_sort');
   const field = panel.slice(i, panel.indexOf('},\n', panel.indexOf('hint:', i)) + 1);
   assert.ok(/sub: "hold"/.test(field) && /scope: "dashboard"/.test(field) && /type: "select"/.test(field), 'Controls › Tiles, dashboard-wide select');
-  assert.ok(field.includes('options: ["", "open", "now"]'), 'empty = after a quiet spell');
+  assert.ok(field.includes('options: ["", "calm", "open"]'), 'empty = right away');
   const T = JSON.parse(read('dashboards/casora/button_card_templates.json'));
   const B = JSON.parse(read('custom_components/casora/panel/casora-templates.json')).templates;
   for (const tpl of [T, B]) {

@@ -2354,10 +2354,10 @@ const SECTIONS = [
         optionLabels: { "": "Quick menu", popup: "Open popup", ha: "Home Assistant dialog" },
         hint: "What holding a tile does. A single tile can do something else – set it on the tile under Visibility, ask first & hold." },
       // Live re-sort of tile rows and rooms (smart-row.js sortMode, filter-overlay.js); casora-core.js reads it
-      // into window._casoraSortMode, the phone gets it through casora_mobile_bg. Empty = after a quiet spell.
+      // into window._casoraSortMode, the phone gets it through casora_mobile_bg. Empty = right away (default since 26.11.6).
       { key: "tile_sort", sub: "hold", label: "Sort tiles", type: "select", auto: true, scope: "dashboard",
-        options: ["", "open", "now"],
-        optionLabels: { "": "After a short pause", open: "Only when opening", now: "Right away" },
+        options: ["", "calm", "open"],
+        optionLabels: { "": "Right away", calm: "After a short pause", open: "Only when opening" },
         hint: "When active tiles move to the front while a page is open: after half a minute without use, only when it opens, or right away." },
       // Stored as casora_hide_* (true = hidden); shown the other way round,
       // so an on switch means "visible".
