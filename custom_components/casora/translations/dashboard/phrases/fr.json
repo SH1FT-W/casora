@@ -4905,6 +4905,14 @@
   [
    "^(\\d+) unbekannt$",
    "{1} inconnu"
+  ],
+  [
+   "^Heute ([A-ZÄÖÜ][^\\d·:]*)$",
+   "{1} aujourd'hui"
+  ],
+  [
+   "^Morgen ([A-ZÄÖÜ][^\\d·:]*)$",
+   "{1} demain"
   ]
  ]
 }

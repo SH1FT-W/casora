@@ -4905,6 +4905,14 @@
   [
    "^(\\d+) unbekannt$",
    "{1} onbekend"
+  ],
+  [
+   "^Heute ([A-ZÄÖÜ][^\\d·:]*)$",
+   "{1} vandaag"
+  ],
+  [
+   "^Morgen ([A-ZÄÖÜ][^\\d·:]*)$",
+   "{1} morgen"
   ]
  ]
 }
