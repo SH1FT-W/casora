@@ -25,7 +25,10 @@ const KNOWN = {
   'lueften': 256, 'diagramm': 241, 'pflanze': 296, 'wetter': 420, 'frigate': 358, 'kalender': 844, 'abfall': 463, 'rezept': 669,
   // Gate 02.11.2026 (after the light popup changes of 01.11.): the house light popup – dial left (359 px), the rooms'
   // list right (602 px), 243 px empty under the dial. Open: rebalance it (list partly under the dial).
-  'licht-haus': 283,
+  // 26.11.8 light migration (r9): Home's light badge is the house group alone, so this opener now shows the same
+  // popup as 'licht-badge' above – every room listed, 400 px under the dial in the gate house. Same cap as there until
+  // the column rule (branch fix-spaltenregel) is in, then back to 283 or lower.
+  'licht-haus': 440,
 };
 const tool = fileURLToPath(new URL('../popup-galerie.mjs', import.meta.url));
 const run = (args) => spawnSync(process.execPath, [tool, ...args], { encoding: 'utf8', env: process.env, timeout: 40 * 60 * 1000 });
