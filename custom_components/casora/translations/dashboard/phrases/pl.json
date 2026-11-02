@@ -3519,14 +3519,6 @@
    "o {1}:00"
   ],
   [
-   "^heute (\\d{1,2}:\\d{2})$",
-   "dziś {1}"
-  ],
-  [
-   "^morgen (\\d{1,2}:\\d{2})$",
-   "jutro {1}"
-  ],
-  [
    "^gestern (\\d{1,2}:\\d{2})$",
    "wczoraj {1}"
   ],
@@ -4163,16 +4155,8 @@
    "Następny przegląd {1}"
   ],
   [
-   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
-   "Terminy odbioru wrócą, gdy tylko {1} odpowie."
-  ],
-  [
    "^(\\d+) Termine$",
    "Wydarzenia: {1}"
-  ],
-  [
-   "^(\\d+) an$",
-   "{1} wł."
   ],
   [
    "^in (\\d+) Wochen$",
@@ -4471,6 +4455,10 @@
    "Zasięg {1}"
   ],
   [
+   "^Reichweite (\\d[\\d.,]*) (\\S+)$",
+   "Zasięg {1} {2}"
+  ],
+  [
    "^(\\d+) Geräte brauchen Aufmerksamkeit$",
    "Urządzenia wymagające uwagi: {1}"
   ],
@@ -4743,10 +4731,6 @@
    "Za 1 dzień"
   ],
   [
-   "^In (\\d+)[  ]Tagen$",
-   "Za {1} dni"
-  ],
-  [
    "^In ([\\d.,]+)[  ]l$",
    "Za {1} l"
   ],
@@ -4761,10 +4745,6 @@
   [
    "^Sollwert (.+)$",
    "Wartość zadana {1}"
-  ],
-  [
-   "^Zone (\\d+)$",
-   "Strefa {1}"
   ],
   [
    "^Zeitplan pausiert bis (\\d{1,2}:\\d\\d)$",

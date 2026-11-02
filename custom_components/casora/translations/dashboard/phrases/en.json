@@ -3501,14 +3501,6 @@
    "at {1}:00"
   ],
   [
-   "^heute (\\d{1,2}:\\d{2})$",
-   "today {1}"
-  ],
-  [
-   "^morgen (\\d{1,2}:\\d{2})$",
-   "tomorrow {1}"
-  ],
-  [
    "^gestern (\\d{1,2}:\\d{2})$",
    "yesterday {1}"
   ],
@@ -4145,16 +4137,8 @@
    "Next inspection {1}"
   ],
   [
-   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
-   "Pickup dates will be back as soon as {1} responds."
-  ],
-  [
    "^(\\d+) Termine$",
    "{1} events"
-  ],
-  [
-   "^(\\d+) an$",
-   "{1} on"
   ],
   [
    "^in (\\d+) Wochen$",
@@ -4453,6 +4437,10 @@
    "Range {1}"
   ],
   [
+   "^Reichweite (\\d[\\d.,]*) (\\S+)$",
+   "Range {1} {2}"
+  ],
+  [
    "^(\\d+) Geräte brauchen Aufmerksamkeit$",
    "{1} devices need attention"
   ],
@@ -4725,10 +4713,6 @@
    "In 1 day"
   ],
   [
-   "^In (\\d+)[  ]Tagen$",
-   "In {1} days"
-  ],
-  [
    "^In ([\\d.,]+)[  ]l$",
    "In {1} l"
   ],
@@ -4743,10 +4727,6 @@
   [
    "^Sollwert (.+)$",
    "Setpoint {1}"
-  ],
-  [
-   "^Zone (\\d+)$",
-   "Zone {1}"
   ],
   [
    "^Zeitplan pausiert bis (\\d{1,2}:\\d\\d)$",

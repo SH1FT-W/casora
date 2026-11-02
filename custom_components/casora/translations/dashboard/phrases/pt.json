@@ -3519,14 +3519,6 @@
    "às {1}:00"
   ],
   [
-   "^heute (\\d{1,2}:\\d{2})$",
-   "hoje {1}"
-  ],
-  [
-   "^morgen (\\d{1,2}:\\d{2})$",
-   "amanhã {1}"
-  ],
-  [
    "^gestern (\\d{1,2}:\\d{2})$",
    "ontem {1}"
   ],
@@ -4163,16 +4155,8 @@
    "Próxima revisão {1}"
   ],
   [
-   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
-   "As datas de recolha voltam assim que {1} responder."
-  ],
-  [
    "^(\\d+) Termine$",
    "{1} eventos"
-  ],
-  [
-   "^(\\d+) an$",
-   "{1} ligadas"
   ],
   [
    "^in (\\d+) Wochen$",
@@ -4471,6 +4455,10 @@
    "Autonomia {1}"
   ],
   [
+   "^Reichweite (\\d[\\d.,]*) (\\S+)$",
+   "Autonomia {1} {2}"
+  ],
+  [
    "^(\\d+) Geräte brauchen Aufmerksamkeit$",
    "{1} dispositivos requerem atenção"
   ],
@@ -4743,10 +4731,6 @@
    "Em 1 dia"
   ],
   [
-   "^In (\\d+)[  ]Tagen$",
-   "Em {1} dias"
-  ],
-  [
    "^In ([\\d.,]+)[  ]l$",
    "Em {1} l"
   ],
@@ -4761,10 +4745,6 @@
   [
    "^Sollwert (.+)$",
    "Valor alvo {1}"
-  ],
-  [
-   "^Zone (\\d+)$",
-   "Zona {1}"
   ],
   [
    "^Zeitplan pausiert bis (\\d{1,2}:\\d\\d)$",
