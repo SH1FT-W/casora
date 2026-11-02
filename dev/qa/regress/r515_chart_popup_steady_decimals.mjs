@@ -20,6 +20,17 @@ const { page } = await open({ width: 1440, height: 1000, theme: 'Casora' });
 await dashboard(page, dash.url, 3);
 await need('Testserver in the test house (mock)', await page.evaluate((ids) => ids.every((id) => !!document.querySelector('home-assistant').hass.states[id]),
   CASES.map((c) => c.id)));
+// The mock writes its hourly statistics shortly after HA starts (as r372): wait up to 60 s for a day of hours.
+let statsOk = false;
+for (let i = 0; i < 30 && !statsOk; i++) {
+  statsOk = await page.evaluate(async (ids) => {
+    const r = await document.querySelector('home-assistant').hass.callWS({ type: 'recorder/statistics_during_period',
+      start_time: new Date(Date.now() - 2 * 864e5).toISOString(), statistic_ids: ids, period: 'hour', types: ['mean'] });
+    return ids.every((id) => (r[id] || []).length >= 12);
+  }, CASES.map((c) => c.id)).catch(() => false);
+  if (!statsOk) await page.waitForTimeout(2000);
+}
+await need('hourly statistics of the test server (mock)', statsOk, CASES.map((c) => c.id));
 await need('Testserver sensors without a display precision (the case of the fault)', await page.evaluate((ids) => {
   const ents = document.querySelector('home-assistant').hass.entities || {};
   return ids.every((id) => !ents[id] || ents[id].display_precision == null);
