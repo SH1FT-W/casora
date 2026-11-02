@@ -9,9 +9,8 @@
 // Every state is faked in the browser only (fakeStates), nothing is switched or saved.
 import { open, casoraDashboard, dashboard, fakeStates, check, need, finish, usePage } from './lib.mjs';
 
-// test-neu first (as r425): its house light badge covers every room. The gate's qa-arbeit (CASORA_QA_DASH, ranked
-// first there) keeps the setup's own ten-lamp selection on the house badge, without the room group's room (Terrasse),
-// so the faked lamp never reached the house popup (gate 26.11.7: „Aus“, empty head and room row).
+// test-neu first (as r425): rooms with a room group of their own. The house popup comes from a badge made in the
+// browser below, so neither dashboard's own house badge matters.
 const multi = (d) => (d.config.views || []).length > 1;
 const dash = await casoraDashboard((d) => d.url === 'test-neu' && multi(d)) || await casoraDashboard(multi);
 await need('Casora dashboard with a phone layout', dash && dash.phone, dash && dash.url);
@@ -65,14 +64,25 @@ const ringOk = (l) => l && !l.none && l.shown && (l.stops.length ? l.stops.every
 const red = (l) => l && l.shown && !l.stops.length && /^rgb\(255, 0, 0\)$/.test(l.stroke);
 
 const closeAll = () => pg.evaluate(async () => { if (window.casoraPopup && window.casoraPopup.close) window.casoraPopup.close(); await new Promise((r) => setTimeout(r, 700)); });
+// The house light popup from a house light badge made in the browser (light_rooms_auto: the rooms of the dashboard,
+// as _casoraHouseLights lists them above). The dashboard's own badge may carry a fixed lamp list without the chosen
+// room (gate 26.11.7: e2e t03 rebuilds test-neu with the setup's ten-lamp list), then the faked lamp never reached it.
+// Held like the badge (hold_action opens the popup); nothing saved.
+const holdHouseBadge = (id) => pg.evaluate(async (id) => {
+  const ha = document.querySelector('home-assistant');
+  const old = ha.shadowRoot.getElementById(id); if (old) old.remove();
+  const h = await window.loadCardHelpers();
+  const el = h.createCardElement({ type: 'custom:button-card', template: 'casora_badge_light_group', entity: 'input_select.casora_expanded_row',
+    variables: { enabled: true, light_rooms_auto: true } });
+  el.id = id; el.hass = ha.hass; el.style.cssText = 'position:fixed;left:10px;top:500px;z-index:0;opacity:0;';
+  ha.shadowRoot.appendChild(el);
+  await new Promise((r) => setTimeout(r, 1500));
+  el._handleAction({ detail: { action: 'hold' } }, { isIcon: false });
+  return true;
+}, id);
 const openHouse = async () => {
   await closeAll();
-  const at = await pg.evaluate(() => {
-    const b = window.__pierce('button-card').find((x) => /casora_badge_light_group\b/.test([].concat((x._config || {}).template || []).join(' ')) && x.getBoundingClientRect().width > 20);
-    if (!b) return null; b.scrollIntoView({ block: 'center' }); const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
-  });
-  if (!at) return null;
-  await pg.touchscreen.tap(at.x, at.y);
+  await holdHouseBadge('qa-r485-badge');
   for (let i = 0; i < 20; i++) { await pg.waitForTimeout(300); const l = await look(); if (l && !l.none && /\d/.test(l.value)) return l; }
   return look();
 };
