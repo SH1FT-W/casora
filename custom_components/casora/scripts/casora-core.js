@@ -12642,10 +12642,12 @@ window.casoraMenuGlass = {
     +   'background:var(--dl-col);color:color-mix(in srgb, var(--casora-popup-action-ink, rgba(46,34,20,.9)) 70%, black);'
     +   'box-shadow:0 0 0 4px var(--casora-dial-record-deep, #1c1c1e);}'
     + '.hui-dl-lbl img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}'
-    // The note sits above the spindle hole, like the print on a real label.
-    + '.hui-dl-lbl ha-icon{--mdc-icon-size:7cqw;width:7cqw;height:7cqw;margin:0 !important;display:flex;opacity:.85;transform:translateY(-62%);}'
+    // Without artwork the note sits in the exact middle of the label (issue 111: lifted above the hole it looked off-centre
+    // and half off the label on a phone), so that record has no spindle hole (.bare) drawn over it.
+    + '.hui-dl-lbl ha-icon{--mdc-icon-size:7cqw;width:7cqw;height:7cqw;margin:0 !important;display:flex;opacity:.85;}'
     + '.hui-dl-cover::after{content:"";position:absolute;left:50%;top:50%;width:7%;height:7%;margin:-3.5% 0 0 -3.5%;border-radius:50%;'
     +   'background:var(--casora-dial-record-deep, #1c1c1e);box-shadow:var(--casora-dial-hole-ring, 0 0 0 2px rgba(255,255,255,.18));}'
+    + '.hui-dl-cover.bare::after{display:none;}'
     + '.hui-dl-cover.spin{animation:hui-dl-spin 8s linear infinite;}'
     + '.hui-dl-cover.tv{background:' + S.ctl + ';box-shadow:none;}.hui-dl-cover.tv::before,.hui-dl-cover.tv::after{display:none;}'
     + '.hui-dl-cover.video{background:' + S.ctl + ';}.hui-dl-cover.video::before,.hui-dl-cover.video::after{display:none;}'
@@ -13070,7 +13072,7 @@ window.casoraMenuGlass = {
       // Video: the cover is the whole disc (same size and circle as the record), no grooves, no turning.
       else if (o.cover && o.cover.video && o.cover.image) coverHtml = '<div class="hui-dl-cover video"><img src="'
         + (window.casoraSafeUrl ? window.casoraSafeUrl(o.cover.image) : esc(o.cover.image)) + '" alt=""/></div>';
-      else if (o.cover) coverHtml = '<div class="hui-dl-cover' + (o.cover.spin && !o.cover.video ? ' spin' : '') + '"><div class="hui-dl-lbl">'
+      else if (o.cover) coverHtml = '<div class="hui-dl-cover' + (o.cover.spin && !o.cover.video ? ' spin' : '') + (o.cover.image ? '' : ' bare') + '"><div class="hui-dl-lbl">'
         + (o.cover.image ? '<img src="' + (window.casoraSafeUrl ? window.casoraSafeUrl(o.cover.image) : esc(o.cover.image)) + '" alt=""/>'
           : '<ha-icon icon="' + esc(o.cover.icon || 'mdi:music-note') + '"></ha-icon>') + '</div></div>';
     } else if (code === 'S2') {

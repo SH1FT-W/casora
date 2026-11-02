@@ -48,7 +48,7 @@ assert.match(vid, /<img src="\/api\/media_player_proxy\/x"/);
 const rec = render({ image: '/api/media_player_proxy/y', spin: true, video: false });
 assert.match(rec, /class="hui-dl-cover spin"><div class="hui-dl-lbl"><img/, 'music: turning record with the label');
 assert.match(render({ image: '/x', spin: true, tv: true, video: false }), /hui-dl-cover spin"/, 'music on a TV: the record turns');
-assert.match(render({ image: null, spin: true, video: true }), /hui-dl-cover"><div class="hui-dl-lbl"><ha-icon/, 'video without a cover: a still record with a note');
+assert.match(render({ image: null, spin: true, video: true }), /hui-dl-cover bare"><div class="hui-dl-lbl"><ha-icon/, "video without a cover: a still record with a note, no spindle hole");
 
 // 3. CSS: the video disc hides grooves and hole, fills with object-fit cover, never animates.
 assert.match(core, /\.hui-dl-cover\.video::before,\.hui-dl-cover\.video::after\{display:none;\}/);
