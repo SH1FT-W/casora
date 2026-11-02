@@ -337,6 +337,8 @@
     if (!r.ids.length) return UI.empty ? UI.empty({ icon: 'mdi:window-shutter', text: 'Noch keine Jalousien gewählt',
       sub: 'Im Studio unter Einstellungen › Haus & Geräte › Sicherheit', studio: true })
       : (UI.note ? UI.note('Jalousien wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.') : '');
+    // One name per cover across „Offen“, „Geschlossen“ and „Nicht verfügbar“ (UI.popupNames): a cover that closes keeps it.
+    var nm = UI.popupNames ? UI.popupNames(R.open.concat(R.closed, R.dead)) : function (x) { return x; };
     var groupsHtml = '';
     if (R.open.length) {
       var all = r.open.map(function (id) { return closeSvc(id, (states || {})[id]); })
@@ -346,10 +348,10 @@
       var act = R.open.length > 1 && all.length && !(UI.v3 && UI.v3())
         ? { text: 'Alle schließen', svc: { domain: 'cover', service: 'close_cover', data: { entity_id: all } }, tone: 'accent' }
         : null;
-      groupsHtml += UI.group(R.open, 'Offen', act);
+      groupsHtml += UI.group(R.open.map(nm), 'Offen', act);
     }
-    if (R.closed.length) groupsHtml += UI.group(R.closed, 'Geschlossen');
-    if (R.dead.length) groupsHtml += UI.group(R.dead, 'Nicht verfügbar');
+    if (R.closed.length) groupsHtml += UI.group(R.closed.map(nm), 'Geschlossen');
+    if (R.dead.length) groupsHtml += UI.group(R.dead.map(nm), 'Nicht verfügbar');
     return '<div style="display:flex;flex-direction:column;gap:var(--casora-popup-sec-gap, 22px);">' + groupsHtml + '</div>';
   };
 })();

@@ -1264,7 +1264,10 @@
     return rows.length > n ? { top: rows.slice(0, n), rest: rows.slice(n) } : { top: rows, rest: [] };
   };
   var consList = function (UI, rows) {
-    var s = E.consSplit(rows);
+    // The largest five and „Alle anzeigen“ share one cut of the names (UI.popupNames): a consumer that moves into the
+    // first five keeps its name.
+    var nm = UI.popupNames ? UI.popupNames(rows) : function (x) { return x; };
+    var s = E.consSplit(rows.map(nm));
     return UI.group(s.top) + (s.rest.length
       ? '<div style="margin-top:var(--casora-space-2, 8px);">'
         + UI.more('energy-cons', UI.group(s.rest), { label: 'Alle ' + rows.length + ' anzeigen', less: 'Weniger anzeigen', keep: true }) + '</div>'

@@ -10244,12 +10244,38 @@ window.casoraMenuGlass = {
     return rest;
   };
   // List rows that name a device (an entity or a sub page) lose the shared leading words of their names.
+  // A list whose rows already carry their popup-wide name (popupNames) is not cut a second time.
   function dropRowPrefix(rows) {
+    if (rows.some(function (r) { return r && r.popupNamed; })) return rows;
     var named = rows.filter(function (r) { return r && typeof r.label === 'string' && (r.entity || r.page); });
     if (named.length < 2 || named.length !== rows.length) return rows;
     var cut = window.casoraDropCommonPrefix(named.map(function (r) { return r.label; }));
     if (cut[0] === named[0].label) return rows;
     return rows.map(function (r, i) { return Object.assign({}, r, { label: cut[i] }); });
+  }
+  /* Owner decision 02.11.2026 (option B): in a popup with several lists of the same devices (Offen / Geschlossen,
+     Akku schwach / Weitere Geräte, the first rows and „Alle anzeigen“, groups) the shared leading words are dropped
+     once across the whole popup, not per list – a device keeps its name whichever list it is in, and a list with a
+     single row is cut too. rows: every device row of the popup, from all its lists (a row twice counts once). Returns
+     a function for list.map(): the row with its popup-wide name, marked so UI.group does not cut its list again.
+     Same safeguards as casoraDropCommonPrefix (never empty, never a bare number, nothing for one device) and as a
+     single list: a row among them that names no device (a message, an action) keeps every name whole. */
+  function popupNames(rows) {
+    var keyOf = function (r) { return r && typeof r.label === 'string' && (r.entity || r.page) ? String(r.entity || r.page) : null; };
+    var keys = [], labels = [], mixed = false;
+    (rows || []).forEach(function (r) {
+      var k = keyOf(r);
+      if (!k) { if (r) mixed = true; return; }
+      if (keys.indexOf(k) < 0) { keys.push(k); labels.push(r.label); }
+    });
+    var cut = mixed ? labels : window.casoraDropCommonPrefix(labels);
+    return function (r) {
+      if (!r || typeof r !== 'object') return r;
+      var i = keys.indexOf(keyOf(r));
+      var o = Object.assign({}, r, { popupNamed: true });
+      if (i > -1 && r.label === labels[i]) o.label = cut[i];
+      return o;
+    };
   }
 
   function group(rows, label, labelAction, opts) {
@@ -13542,7 +13568,7 @@ window.casoraMenuGlass = {
       + '>' + tiles + '</div></div>';
   }
 
-  window._casoraUI = { line: softLine, hero: hero, headline: headline, group: group, legend: legend, note: note, kiCard: kiCard, shelf: shelf, mediaRow: mediaRow, segments: segments, slider: slider, icon: icon, esc: esc, prime: prime, plantWater: plantWater, soft: soft, label: softLabel, tokens: T, v: 149 };
+  window._casoraUI = { line: softLine, hero: hero, headline: headline, group: group, popupNames: popupNames, legend: legend, note: note, kiCard: kiCard, shelf: shelf, mediaRow: mediaRow, segments: segments, slider: slider, icon: icon, esc: esc, prime: prime, plantWater: plantWater, soft: soft, label: softLabel, tokens: T, v: 149 };
   window._casoraUI.more = more;
   Object.assign(window._casoraUI, { section: section, row: row, settingsRow: settingsRow, settings: settings, actions: actions,
     empty: empty, width: width, switchHtml: switchHtml, page: page, SEC_ORDER: SEC_ORDER, WIDTH: WIDTH,
@@ -15369,11 +15395,13 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     };
 
     var opts = { labelInside: true };
+    // „Neu“ and „Früher“ share one cut of the names (UI.popupNames): an entry that ages into „Früher“ keeps its name.
+    var nm = UI.popupNames ? UI.popupNames(g.fresh.concat(g.old).map(toRow)) : function (x) { return x; };
     var out = '';
-    if (g.fresh.length) out += UI.group(g.fresh.map(toRow), g.old.length ? 'Neu' : null, null, opts);
+    if (g.fresh.length) out += UI.group(g.fresh.map(toRow).map(nm), g.old.length ? 'Neu' : null, null, opts);
     // Weich: „Früher“ klebte ohne Abstand an der letzten neuen Zeile – Abschnitte brauchen Luft davor.
     if (g.old.length && g.fresh.length && toned) out += '<div style="height:16px"></div>';
-    if (g.old.length) out += UI.group(g.old.map(toRow), g.fresh.length ? 'Früher' : null, null, opts);
+    if (g.old.length) out += UI.group(g.old.map(toRow).map(nm), g.fresh.length ? 'Früher' : null, null, opts);
     return out;
   }
 
