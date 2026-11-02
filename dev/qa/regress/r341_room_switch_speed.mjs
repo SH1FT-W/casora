@@ -27,7 +27,10 @@ await need('Casora dashboard with rooms', d, null);
 const views = (d.config.views || []).map((v, i) => v.path || String(i));
 
 const instrument = () => {
-  const L = window.__qaLag = { uh: 0, themes: 0, keys: {}, last: 0, draws: 0 };
+  const L = window.__qaLag = { uh: 0, themes: 0, keys: {}, last: 0, draws: 0, tok: 0 };
+  // HA renews the access token of every camera and image entity at once every 5 minutes (one state per entity,
+  // 19 in the test house): a burst of HA's own states updates that is no work of Casora's (gate 02.11.2026).
+  const TOK = /^(camera|image)\./;
   const hook = () => {
     const H = customElements.get('home-assistant');
     if (H && !H.prototype.__qaLag) {
@@ -37,6 +40,11 @@ const instrument = () => {
         L.uh++;
         for (const k of Object.keys(obj || {})) L.keys[k] = (L.keys[k] || 0) + 1;
         if (obj && obj.themes) L.themes++;
+        const prev = this.hass && this.hass.states;
+        if (obj && obj.states && prev && Object.keys(obj).length === 1) {
+          const changed = Object.keys(obj.states).filter((k) => obj.states[k] !== prev[k]);
+          if (changed.length && changed.every((k) => TOK.test(k))) L.tok++;
+        }
         return o.apply(this, arguments);
       };
     }
@@ -50,7 +58,7 @@ const instrument = () => {
   customElements.whenDefined('home-assistant').then(hook);
   customElements.whenDefined('button-card').then(hook);
 };
-const snap = (pg) => pg.evaluate(() => ({ uh: window.__qaLag.uh, themes: window.__qaLag.themes, keys: { ...window.__qaLag.keys } }));
+const snap = (pg) => pg.evaluate(() => ({ uh: window.__qaLag.uh, themes: window.__qaLag.themes, tok: window.__qaLag.tok, keys: { ...window.__qaLag.keys } }));
 const extra = (a, b) => { const o = {}; for (const k in b.keys) { const n = b.keys[k] - (a.keys[k] || 0); if (n && k !== 'panelUrl' && k !== 'states') o[k] = n; } return o; };
 // Switch, then wait until no button-card redrew for 600 ms.
 const settle = (pg, t0) => pg.evaluate(async (t0) => {
@@ -95,8 +103,8 @@ const median = (a) => { const s = [...a].sort((x, y) => x - y); return s[Math.fl
   await check(`desktop: ${targets.length} room switches settle within ${MAX_SWITCH} ms each, median < ${MAX_MEDIAN} ms (${ms.join(', ')})`,
     ms.every((x) => x < MAX_SWITCH) && median(ms) < MAX_MEDIAN, ms);
   await check(`room switches: no theme list handed to HA (${b.themes - a.themes})`, b.themes === a.themes);
-  await check(`room switches: _updateHass only HA's own (${b.uh - a.uh} calls, other: ${JSON.stringify(extra(a, b))})`,
-    !Object.keys(extra(a, b)).length && b.uh - a.uh <= targets.length + 5, b.keys);
+  await check(`room switches: _updateHass only HA's own (${b.uh - a.uh} calls, ${b.tok - a.tok} of them camera/image tokens, other: ${JSON.stringify(extra(a, b))})`,
+    !Object.keys(extra(a, b)).length && b.uh - a.uh - (b.tok - a.tok) <= targets.length + 5, b.keys);
 
   // Back on the first view: no card watches a large part of the house.
   const wide = await page.evaluate(() => {

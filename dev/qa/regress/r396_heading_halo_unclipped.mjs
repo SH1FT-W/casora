@@ -190,9 +190,11 @@ for (const [theme, dark] of runs) {
       } else if (how === 'noscenes') {
         await check(`${tag}: ${label} – ohne Szenen keine Überschrift`, heads.length > 0 && heads.every((x) => x === '[tiles]'), heads);
       } else {
-        // The scene row comes by WebSocket after the tiles (later on a busy machine): wait for it, then read again.
+        // The scene row comes after the tiles, once the scene list (window._casoraSC) is there – on a dashboard
+        // without any scene card the room page builds a hidden one for it (gate 02.11.2026: qa-arbeit has none, the
+        // room stayed without scenes). Later on a busy machine: wait up to 15 s, then read again.
         if (!heads.includes('[scenes]')) {
-          for (let i = 0; i < 25 && !(await roomPage(page) || []).includes('[scenes]'); i++) await page.waitForTimeout(400);
+          for (let i = 0; i < 38 && !(await roomPage(page) || []).includes('[scenes]'); i++) await page.waitForTimeout(400);
           await settle(page);
           heads.splice(0, heads.length, ...((await roomPage(page)) || []));
         }

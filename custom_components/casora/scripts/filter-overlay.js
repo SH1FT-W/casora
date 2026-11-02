@@ -148,6 +148,9 @@
     return shift;
   }
 
+  // Hidden card that defines window._casoraSC on a dashboard without scene cards (_primeSceneList).
+  let _scenePrimer = null;
+
   // button-card renders on lit's microtask, after this callback.
   function _flushRender(el) {
     try {
@@ -1715,7 +1718,10 @@
         // The scene list (window._casoraSC) comes from a template (casora_scene_core) on its first render. On a busy
         // device the room page can be built before that: then the scenes are added once it is there (_settleRoom),
         // instead of the room staying without scenes until it is opened again.
-        else this._lateScenes = { roomMode, roomEntities, at: this._contentEl.children.length, before: null, flat: false };
+        else {
+          this._lateScenes = { roomMode, roomEntities, at: this._contentEl.children.length, before: null, flat: false };
+          this._primeSceneList(roomMode);
+        }
       }
 
       for (const room of rooms) {
@@ -1796,6 +1802,33 @@
         styles:     { card: [{ '--casora-scene-row-gap': '18px' }, { '--casora-scene-grid-col-gap': '8px' }, { '--casora-scene-grid-row-gap': '8px' }] },
       }, parent, animIndex);
       return true;
+    }
+
+    // window._casoraSC is defined by the first card built on casora_scene_core (scene row, scene badge). A dashboard
+    // without any such card (phone start page without a scene row, as the setup wizard builds it) never got it, so its
+    // room pages waited for scenes forever (gate 02.11.2026). Then one hidden scene card, outside the room page,
+    // defines it; it goes away once the list is there.
+    _primeSceneList(roomMode) {
+      if (window._casoraSC || !this._helpers) return;
+      if (_scenePrimer && _scenePrimer.isConnected) { if (this._hass) { try { _scenePrimer.firstChild.hass = this._hass; } catch (_) {} } return; }
+      const el = this._helpers.createCardElement({ type: 'custom:button-card', template: 'casora_scene_row',
+        variables: { layout: 'grid', room: roomMode, area: this._config.area || null, room_entities: [] } });
+      if (!el) return;
+      const box = document.createElement('div');
+      box.setAttribute('data-casora-scene-primer', '');
+      box.setAttribute('aria-hidden', 'true');
+      box.style.cssText = 'position:fixed;left:-10000px;top:0;width:360px;height:1px;overflow:hidden;opacity:0;pointer-events:none;contain:strict;';
+      box.appendChild(el);
+      document.body.appendChild(box);
+      _scenePrimer = box;
+      if (this._hass) { try { el.hass = this._hass; } catch (_) {} }
+      const done = () => {
+        if (window._casoraSC || !box.isConnected) { box.remove(); if (_scenePrimer === box) _scenePrimer = null; return; }
+        setTimeout(done, 300);
+      };
+      setTimeout(done, 300);
+      // Without the template (YAML dashboard without Casora's templates) the card never defines it: give up.
+      setTimeout(() => { box.remove(); if (_scenePrimer === box) _scenePrimer = null; }, 30000);
     }
 
     // Scenes of a room page built before the scene list existed (see _ensureAutoSections): at their place below the
