@@ -4,6 +4,32 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.6 – 02.11.2026
+
+Fixes from your reports on 26.11.5, mostly on the phone.
+
+### New
+- **Big robot vacuum map (#113):** tap the map in the vacuum popup to see it big; the minimize button, Esc, swipe down or back return.
+
+### Changed
+- **Football on the phone (#107):** match and form sit above the table.
+- **Confirm says what happens (#108):** questions name the action ("Restart", "Install", "Disarm", "Delete") instead of "Turn on" or "Turn off".
+- **Settings menu:** the "Home Assistant" entry is gone (in the app a swipe from the edge opens the sidebar); non-admins see only "Update".
+- **Device names in popups:** a shared leading word is cut once per popup, not per list; a device keeps the same name in every list.
+- **Sort tiles:** "Right away" is the default again; "After a short pause" and "Only when opening" stay as choices in the Studio.
+- **Search for updates:** the moon spins while searching, no extra text.
+
+### Fixed
+- **Disarm the alarm (#109):** "Disarm" asks again and turns the alarm off.
+- **Closing a popup on the phone (#110):** tapping outside and the close button slide it down like the swipe.
+- **Record without artwork (#111):** the note is centred, no spindle hole over it.
+- **Cameras (#112):** the back chip "All cameras" is no longer clipped.
+- **Blur on the phone:** after a dashboard rebuild (for example saved on another device) or a drag across the close button the page no longer stays blurred and locked.
+- **Tilted windows and doors:** head, dial and tile say "tilted" instead of "open".
+- **Translations:** 19 phrases per language stayed German (for example "Ø von 8 Lampen", "Regen ab 12 Uhr"); they are translated now.
+- **AI update check:** a restart after installing is info, no longer "action needed".
+- **Home Assistant 2027.10:** Casora reads a device's config entry the new way; the warning in the log is gone.
+
 ## 26.11.5 – 02.11.2026
 
 A big round from your feedback: switches and colour in the popups, a clearer history, a faster start and a calm update prompt.

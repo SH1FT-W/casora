@@ -4,6 +4,32 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.6 – 02.11.2026
+
+Fixes aus euren Meldungen zu 26.11.5, vor allem am Handy.
+
+### Neu
+- **Saugroboter-Karte groß (#113):** Ein Tipp auf die Karte im Saugroboter-Popup zeigt sie groß; Verkleinern-Knopf, Esc, Wischen nach unten oder Zurück führen zurück.
+
+### Geändert
+- **Fußball am Handy (#107):** Spiel und Form stehen über der Tabelle.
+- **Bestätigen sagt, was passiert (#108):** Rückfragen nennen die Aktion („Neu starten“, „Installieren“, „Alarm beenden“, „Unscharf schalten“, „Löschen“) statt „Einschalten“ oder „Ausschalten“.
+- **Einstellungsmenü:** Der Eintrag „Home Assistant“ ist weg (in der App öffnet ein Wischen vom Rand die Seitenleiste); wer kein Admin ist, sieht nur „Aktualisieren“.
+- **Gerätenamen in Popups:** Ein gemeinsamer Namensanfang wird einmal je Popup gekürzt, nicht je Liste; ein Gerät heißt in allen Listen gleich.
+- **Kacheln sortieren:** Standard ist wieder „Sofort“; „Nach kurzer Ruhe“ und „Nur beim Öffnen“ bleiben im Studio wählbar.
+- **Updates suchen:** Der Mond dreht sich während der Suche, ohne zusätzlichen Text.
+
+### Behoben
+- **Alarm unscharf schalten (#109):** „Alarm beenden“ und „Unscharf schalten“ fragen wieder nach und schalten den Alarm aus.
+- **Popup schließen am Handy (#110):** Tippen neben das Popup und der Schließen-Knopf schieben es wie beim Wischen nach unten weg.
+- **Platte ohne Cover (#111):** Die Note sitzt mittig, ohne Loch darüber.
+- **Kameras (#112):** Der Zurück-Chip „Alle Kameras“ wird nicht mehr abgeschnitten.
+- **Unschärfe am Handy:** Nach einem Neuaufbau des Dashboards (z. B. auf einem anderen Gerät gespeichert) oder einem Wischen über den Schließen-Knopf bleibt die Seite nicht mehr verschwommen und gesperrt.
+- **Gekippte Fenster und Türen:** Kopf, Rad und Kachel sagen „gekippt“ statt „offen“.
+- **Übersetzungen:** 19 Wendungen je Sprache blieben deutsch (z. B. „Ø von 8 Lampen“, „Regen ab 12 Uhr“), jetzt sind sie übersetzt.
+- **KI-Update-Prüfung:** Ein Neustart nach der Installation gilt als Hinweis, nicht mehr als „Handeln nötig“.
+- **Home Assistant 2027.10:** Casora liest den Config-Eintrag eines Geräts auf dem neuen Weg; die Warnung im Log ist weg.
+
 ## 26.11.5 – 02.11.2026
 
 Eine große Runde aus euren Rückmeldungen: Schalter und Farbe in den Popups, ein klarerer Verlauf, ein schnellerer Start und ein ruhiger Update-Hinweis.
