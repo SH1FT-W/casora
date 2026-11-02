@@ -634,7 +634,9 @@
     // badge follows the rooms (light_rooms_auto): the dashboard derives the list from the rooms' light badges
     // (every light, also ones added later), the popup gets its room bar from them (24.10.2026).
     const g = lightsAll.length > 1 ? groupFor(hass, lightsAll, "light") : null;
-    if (g) { h.light_group_entity = g; put(h, "light_entity_", lightsAll, 10); }
+    // More lights than the ten slots: the group alone. Picked lights win over the group in the popup (#80), so ten of
+    // them cut the rest of the house off – rooms past the tenth were missing from the house popup (02.11.2026).
+    if (g) { h.light_group_entity = g; if (lightsAll.length <= 10) put(h, "light_entity_", lightsAll, 10); }
     else if (lightsAll.length) h.light_rooms_auto = true;
     // Home's thermostats: house-wide ones first, then the rooms'; a heat pump (house-wide too) only after the rooms (#96).
     const PUMP = /w(ä|ae|a)rmepumpe|heat.?pump/i;

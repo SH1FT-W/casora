@@ -8072,6 +8072,14 @@ window.casoraMenuGlass = {
           this._cfgTitle = bn.title; this._rowTitle = true;
           this._headerTitle.textContent = bn.title;
         }
+        // Issue 118: a lamp opened straight from the house's room row (a room of one lamp) is labelled with that room
+        // when its popup knows no room of its own (label empty or just its name). Kept in the config, so ‹ from a page
+        // further in keeps it.
+        var ownBrow = String(this._cfgEyebrow || '').trim().toLowerCase();
+        if (typeof bn.eyebrow === 'string' && bn.eyebrow && (!ownBrow || ownBrow === String(this._cfgTitle || '').trim().toLowerCase())) {
+          this._cfgEyebrow = bn.eyebrow;
+          this._headerEyebrow.textContent = bn.eyebrow;
+        }
       }
       window._casoraBackNext = null;
       this._headerBack.hidden = !this._backFn;
@@ -8081,6 +8089,9 @@ window.casoraMenuGlass = {
       this._cfgCurrent = data || {};
       if (this._rowTitle && this._cfgCurrent.title !== this._cfgTitle) {
         this._cfgCurrent = Object.assign({}, this._cfgCurrent, { title: this._cfgTitle, row_title: true });
+      }
+      if (this._cfgEyebrow && this._cfgCurrent.eyebrow !== this._cfgEyebrow) {
+        this._cfgCurrent = Object.assign({}, this._cfgCurrent, { eyebrow: this._cfgEyebrow });
       }
       // A back noted beforehand belongs to this config: reopened from a page further in (‹ from the device
       // page of „Weitere Einstellungen“), the popup keeps its own ‹, e.g. back to the light list (#43).
