@@ -7178,6 +7178,9 @@ window.casoraMenuGlass = {
         /* 1.3 Tokens: das Blatt schiebt mit der Schieber-Kurve (360 ms) statt eigener Feder. */
         animation: casora-sheet-in var(--casora-dur-slide, 360ms) var(--casora-ease-slide, cubic-bezier(.36, 0, .16, 1));
       }
+      /* #110: the entrance above outranks the generic [closing] slide-out, so scrim tap and ✕ closed without moving.
+         Every close slides out like the swipe ([swipe-out] and reduced motion still switch it off). */
+      :host([soft][closing]) .surface { animation: casora-sheet-out 220ms ease-in forwards; }
       /* K9: dieselben Vorlagen strecken den Inhalt per min-height (100svh …) auf volle Höhe. */
       :host([soft]) .content .container { min-height: 0 !important; }
       /* Runde 2: Die Fläche (.glass) ist absolut positioniert und lag über dem statischen Greifer. */
