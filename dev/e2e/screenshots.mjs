@@ -9,8 +9,8 @@
 //   CASORA_SHOTS_MODES=light,dark   nur bestimmte Modi
 //   CASORA_SHOTS_DIR=…              Zielordner der .webp (Standard: docs/images im Repo)
 //   CASORA_SHOTS_DASH=home-dashboard  Desktop-Dashboard des Demo-Hauses (Handy: <dash>-mobile)
-//   CASORA_SHOTS_ROOM=living-room   Raum für die Studio-Bilder
-//   CASORA_SHOTS_DESK_ROOM=bedroom  Raum fürs Desktop-Raumbild
+//   CASORA_SHOTS_ROOM=home          Raum für die Studio-Bilder
+//   CASORA_SHOTS_DESK_ROOM=bathroom Raum fürs Desktop-Raumbild
 //   CASORA_SHOTS_CLOCK=0            Uhr nicht auf 9:41 stellen
 //   CASORA_SHOTS_THEME="Casora"  Design der Bilder (Standard: Casora, das Hauptdesign)
 //   CASORA_URL=http://localhost:<port>  eigenes Wegwerf-HA mit dem Demo-Haus statt casora-test (8124);
@@ -36,9 +36,10 @@ const DIR = process.env.CASORA_SHOTS_DIR || path.join(REPO, 'docs/images');
 const RAW = path.join(OUT, 'shots');
 const DASH = process.env.CASORA_SHOTS_DASH || 'home-dashboard';
 const MOBILE = DASH + '-mobile';
-const ROOM = process.env.CASORA_SHOTS_ROOM || 'living-room';
-// Raum fürs Desktop-Raumbild: im Demo-Haus hat das Schlafzimmer die ruhigste Kachelreihe.
-const DESK_ROOM = process.env.CASORA_SHOTS_DESK_ROOM || 'bedroom';
+// Maintainer wish (02.11.2026): no air purifier in README/website pictures, plants instead. Home has the plant tile
+// and no air purifier; the bathroom is the calmest desktop room without one.
+const ROOM = process.env.CASORA_SHOTS_ROOM || 'home';
+const DESK_ROOM = process.env.CASORA_SHOTS_DESK_ROOM || 'bathroom';
 const THEME = process.env.CASORA_SHOTS_THEME || 'Casora';
 const MODES = (process.env.CASORA_SHOTS_MODES || 'light,dark').split(',').filter(Boolean);
 const ONLY = process.argv.slice(2);
@@ -64,7 +65,7 @@ const SHOTS = [
   { name: 'desktop-room', kind: 'dash', url: () => `/${DASH}/${DESK_ROOM}` },
   { name: 'popup-lights', kind: 'dash', popup: 'casora_light', url: () => `/${DASH}/home` },
   // Der Temperatur-Badge liegt in der Klima-Gruppe: erst die Gruppe aufklappen (pre), dann antippen.
-  { name: 'popup-climate', kind: 'dash', pre: 'casora_badge_climate_group', popup: 'casora_badge_temp', url: () => `/${DASH}/living-room` },
+  { name: 'popup-climate', kind: 'dash', pre: 'casora_badge_climate_group', popup: 'casora_badge_temp', url: () => `/${DASH}/kitchen` },
   // Weitere Popups der Startseite: Energie, Wäsche (läuft, siehe Zustände vor dem Lauf),
   // Sicherheit (Schloss) und Pflanzen.
   { name: 'popup-energy', kind: 'dash', popup: 'casora_energy', url: () => `/${DASH}/home` },
@@ -347,7 +348,7 @@ async function studioTile(page, mode) {
   const picked = await page.evaluate(() => {
     const p = window.__panel();
     const room = p._state.compact.rooms[p._room || 0];
-    const order = ['casora_air_purifier', 'casora_thermostat', 'casora_light', 'casora_cover'];
+    const order = ['casora_plant', 'casora_thermostat', 'casora_light', 'casora_cover'];
     const tpl = (t) => [].concat(t.template || []);
     const tile = order.map((o) => (room.tiles || []).find((t) => tpl(t).includes(o))).find(Boolean) || (room.tiles || [])[0];
     if (!tile) return null;

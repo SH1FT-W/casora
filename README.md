@@ -64,7 +64,7 @@ Every screen gets a layout made for it. Not a shrunken copy.
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-screens-dark.webp" />
-    <img src="docs/images/readme-screens-light.webp" alt="Casora on three screens side by side: a bedroom on a desktop display, the home view on a wall tablet and the phone layout." />
+    <img src="docs/images/readme-screens-light.webp" alt="Casora on three screens side by side: a bathroom on a desktop display, the home view on a wall tablet and the phone layout." />
   </picture>
 </p>
 
@@ -102,6 +102,7 @@ Every popup answers the question you opened it for at a glance. A slim header sa
 <table>
 <tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/tune-dark.svg"><img src="docs/images/icons/tune-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Turn</b><br>Lights, heating, thermostats, blinds, fans, purifiers and media volume. Drag the knob, or tap − and + for a temperature.</td><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/timer-outline-dark.svg"><img src="docs/images/icons/timer-outline-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Progress</b><br>Washer, dryer, dishwasher, 3D printer, robot vacuum and mower, coffee machine, car and e-bike: how far, and when it is done.</td></tr>
 <tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/shield-home-outline-dark.svg"><img src="docs/images/icons/shield-home-outline-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Segments</b><br>Security, doors and windows, locks, batteries and updates. Every item is a piece of the ring, green when all is well.</td><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/auto-fix-dark.svg"><img src="docs/images/icons/auto-fix-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Moons</b><br>Scenes, modes and programs as round buttons around the dial. With more than four, the last one opens the rest right there.</td></tr>
+<tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/gas-station-outline-dark.svg"><img src="docs/images/icons/gas-station-outline-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Fuel</b><br>When to refuel, and where it is cheapest right now, on a map with the stations nearby.</td><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/icons/sprout-outline-dark.svg"><img src="docs/images/icons/sprout-outline-light.svg" width="22" height="22" align="absmiddle" alt=""></picture> <b>Plants</b><br>Soil moisture on the dial, the readings beside it and what the plant needs, in plain words.</td></tr>
 </table>
 <!-- /cards:popups -->
 
@@ -173,7 +174,7 @@ A visual editor in the Home Assistant sidebar. Rooms, tiles, badges and popups, 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-studio-dark.webp" />
-    <img src="docs/images/readme-studio-light.webp" alt="Casora Studio on a desktop display: the tile editor next to a live preview of the dashboard and the tile's popup." />
+    <img src="docs/images/readme-studio-light.webp" alt="Casora Studio on a desktop display: the editor of a plant tile next to the live preview of its popup with the soil moisture dial and the readings." />
   </picture>
   <br/><sub><b>Casora Studio.</b> Rooms, tiles, badges and popups, edited in place. Nothing is written until you click Save.</sub>
 </p>

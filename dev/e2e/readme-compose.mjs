@@ -87,7 +87,7 @@ const SCENES = {
   // Nur Website
   room: { out: 'site-room', h: 1000, html: (m) => display(src('desktop-room', m), 1240) },
   'pop-lights': popScene('lights'), 'pop-climate': popScene('climate'), 'pop-energy': popScene('energy'),
-  'pop-laundry': popScene('laundry'), 'pop-fuel': popScene('fuel'), 'pop-plants': popScene('plants'), 'pop-weather': popScene('weather'), 'pop-security': popScene('security'),
+  'pop-laundry': popScene('laundry'), 'pop-fuel': popScene('fuel'), 'pop-plants': popScene('plants'), 'pop-weather': popScene('weather'),
   'studio-phone': { out: 'site-studio-phone', h: 1000, html: (m) => display(src('studio-phone', m), fit(TOOL_CROP.studioPhone, 1240, 800), TOOL_CROP.studioPhone) },
   versions: { out: 'site-versions', h: 1000, html: (m) => display(src('versions', m), 1240) },
   assistant: { out: 'site-assistant', h: 1000, html: (m) => display(src('assistant', m), 1240) },
@@ -98,7 +98,7 @@ const SCENES = {
 // Dialoge des Studios (Geräte-Assistent, Umzug) liegen fest mittig: Ausschnitt mit 10 px Rand.
 // Handy-Vorschau des Studios: Ausschnitt um die Vorschau samt Umschalter darüber.
 const TOOL_CROP = { assistant: [468, 61, 664, 939], move: [257, 61, 1086, 939], studioPhone: [430, 70, 740, 860] };
-const POPUPS = ['popup-lights', 'popup-climate', 'popup-energy', 'popup-laundry', 'popup-fuel', 'popup-plants', 'popup-weather', 'popup-security'];
+const POPUPS = ['popup-lights', 'popup-climate', 'popup-energy', 'popup-laundry', 'popup-fuel', 'popup-plants', 'popup-weather'];
 
 // Bühne im Look „Casora“: hell Leinen/Sand mit hellem Kern, dunkel warmes Dunkelbraun.
 // Schatten warm statt blau, Geräterahmen in derselben Familie.
