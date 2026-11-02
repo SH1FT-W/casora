@@ -27,16 +27,32 @@ ACCOUNT = re.compile(r"\b[A-Za-z0-9._%+-]+@(?!\d+x\.|example\.(com|org)\b|users\
 SKIP = (".woff2", ".woff", ".ttf", ".png", ".jpg", ".jpeg", ".webp", ".ico", ".gif", ".zip")
 
 
+def private(rel):
+    """A private (gitignored) file: here, or in the main checkout when this is a git worktree.
+
+    Agent worktrees have no copy of the private lists; without this fallback the check ran with
+    "0 Wörter" there and real entity IDs slipped into r487/r488 (02.11.2026)."""
+    if os.path.exists(rel):
+        return rel
+    try:
+        common = subprocess.run(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+                                capture_output=True, text=True).stdout.strip()
+    except OSError:
+        return rel
+    main = os.path.join(os.path.dirname(common), rel) if common else ""
+    return main if main and os.path.exists(main) else rel
+
+
 def private_terms():
     words = set()
-    p = "dev/privat-woerter.txt"
+    p = private("dev/privat-woerter.txt")
     if os.path.exists(p):
         words |= {w.strip() for w in open(p, encoding="utf-8") if w.strip() and not w.startswith("#")}
-    p = "dev/demo/privat.json"
+    p = private("dev/demo/privat.json")
     if os.path.exists(p):
         words |= {a for a, _ in json.load(open(p, encoding="utf-8")).get("ersetzen", []) if len(a) > 3}
     ids = set()
-    p = "dev/casora_mock/fixture.json"
+    p = private("dev/casora_mock/fixture.json")
     if os.path.exists(p):
         ids = {e["entity_id"] for e in json.load(open(p, encoding="utf-8"))["entities"]
                if not GENERIC.search(e["entity_id"])}
