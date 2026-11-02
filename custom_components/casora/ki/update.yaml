@@ -113,10 +113,14 @@
           - breaking: etwas in diesem System hört ohne Eingriff auf zu funktionieren (entfernte Entität/Option, geänderte
           Entity-IDs, entfernte YAML-Konfiguration, eingestelltes Gerät o. Ä.)
 
-          - action: nichts bricht sofort, aber ein manueller Schritt ist nötig oder dringend empfohlen (Neukonfiguration,
-          Neustart, Migration prüfen)
+          - action: nichts bricht sofort, aber ein manueller Schritt über die Installation hinaus ist nötig oder dringend
+          empfohlen (Neukonfiguration, Migration prüfen, Einstellung ändern)
 
           - info: Änderungen ohne Handlungsbedarf für dieses System (auch: Breaking Changes nur für nicht installierte Integrationen)
+
+          - Installieren und der Neustart von Home Assistant danach sind nie ein eigener Schritt: Nach dem Update einer
+          Integration (HACS oder Kern) ist ein Neustart immer nötig, und Casora zeigt ihn selbst an. Ein Hinweis wie
+          „nach dem Update neu starten“ allein ergibt info, nicht action, und gehört nicht in ''todo''.
 
           - unknown: nur wenn weder Release-Notes noch Versionen und Art des Updates eine Einschätzung erlauben
 
