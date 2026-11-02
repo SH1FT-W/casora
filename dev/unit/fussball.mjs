@@ -312,6 +312,18 @@ assert.deepEqual(Object.keys(cfg.custom_fields), ['hero', 'match', 'left', 'righ
 assert.deepEqual(Object.keys(cfg.custom_fields.left.card.custom_fields), ['table']);
 assert.deepEqual(Object.keys(cfg.custom_fields.right.card.custom_fields), ['form']);
 assert.match(cfg.extra_styles, /"hero hero" "match match" "left right"/);
+{ // #107 v3 popup: phone (one column) shows match and form above the table; desktop keeps table left, match right.
+  const keepUI = window._casoraUI;
+  window._casoraUI = Object.assign({}, keepUI, { v3: () => true, stage: (t, o) => o.html, colsMark: () => '' });
+  const c3 = K.popup(S);
+  window._casoraUI = keepUI;
+  assert.deepEqual(Object.keys(c3.custom_fields.left.card.custom_fields), ['table']);
+  assert.deepEqual(Object.keys(c3.custom_fields.right.card.custom_fields), ['match', 'form']);
+  const areas = c3.styles.grid.find((g) => g['grid-template-areas'])['grid-template-areas'];
+  const rows = areas.match(/"[^"]+"/g).map((r) => r.slice(1, -1));
+  assert.ok(rows.indexOf('right') > -1 && rows.indexOf('right') < rows.indexOf('left'), 'phone: match/form before the table (#107), got ' + areas);
+  assert.match(c3.extra_styles, /min-width: 761px\) \{ #container \{ grid-template-areas: "head head" "left right" !important/, 'desktop: two columns unchanged');
+}
 assert.match(K.html('hero', S), /Platz 7\|Serie A · 14 Punkte/);
 assert.ok(!/TV/.test(K.html('match', S)), 'kein US-TV-Sender');
 const tHtml = K.html('table', S);
