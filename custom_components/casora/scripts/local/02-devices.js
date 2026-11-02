@@ -3590,6 +3590,13 @@
   var prevInner = L.inner;
   L.inner = function (kind, c, states) { return kind.indexOf('p_') === 0 ? P.inner(kind, c, states) : prevInner(kind, c, states); };
 
+  // The entity the popup head speaks for (casora_popup.head_entity): the print status the stage shows (P.state), not
+  // the job stage the tile is bound to – the head said „Bereit“ (stage idle) over a „Fehlgeschlagen“ stage.
+  P.headEntity = function (entity, variables, states, hass) {
+    if (!entity) return null;
+    var c = P.resolve(entity, variables || {}, states || {}, hass);
+    return c.status && states && states[c.status] ? c.status : null;
+  };
   P.popup = function (entity, variables, states, hass) {
     var UI = window._casoraUI;
     if (!UI || !entity) return { type: 'vertical-stack', cards: [] };
