@@ -4,7 +4,7 @@
 #
 #   dev/qa/probe.sh r501_waste_phone_dates_first [r502_… …]     tests by name (dev/qa/regress/<name>.mjs)
 #   PROBE_PORT=8333 dev/qa/probe.sh …                             other port (default 8336)
-#   PROBE_KEEP=1 dev/qa/probe.sh …                                keep the throwaway HA (remove: wegwerf-ha.sh weg probe)
+#   PROBE_KEEP=1 dev/qa/probe.sh …                                keep the throwaway HA (remove: wegwerf-ha.sh weg probe<port>)
 #
 # What it does, like dev/qa/gate.sh for the state „arbeit“:
 #   1. builds the i18n files and starts a throwaway HA „casora-gate-probe“ from this checkout (state arbeit)
@@ -18,7 +18,7 @@ cd "$(dirname "$0")/../.."
 NODE="${NODE:-/opt/homebrew/opt/node@22/bin/node}"
 PY="uv run --python 3.14"
 PORT="${PROBE_PORT:-8336}"
-NAME=probe
+NAME="probe$PORT"   # one name per port: parallel probes must not remove each other (02.11.2026)
 [ $# -ge 1 ] || { sed -n '2,8p' "$0"; exit 2; }
 for t in "$@"; do [ -f "dev/qa/regress/${t%.mjs}.mjs" ] || { echo "fehlt: dev/qa/regress/${t%.mjs}.mjs"; exit 2; }; done
 
