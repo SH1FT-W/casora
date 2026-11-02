@@ -10240,7 +10240,9 @@ window.casoraMenuGlass = {
   }
 
   function group(rows, label, labelAction, opts) {
-    rows = dropRowPrefix(rows || []);
+    // opts.keepNames: the caller already shortened the names across the whole popup (a row that moves between two
+    // lists keeps its name, media popup), so this list must not cut them a second time.
+    rows = opts && opts.keepNames ? (rows || []) : dropRowPrefix(rows || []);
     if (soft()) return softGroup(rows, label, labelAction);
     var inside = !!(opts && opts.labelInside);
     var out = '';

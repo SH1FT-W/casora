@@ -52,11 +52,28 @@ const attrsFor = async (page, extra) => ({ volume_level: 0.35, supported_feature
   media_content_type: 'music', device_class: 'speaker', media_title: 'Example title', media_artist: 'Example', media_duration: DUR, media_position: 11,
   media_position_updated_at: new Date().toISOString(), ...(extra || {}) });
 async function openPopup(page, ent, mobile) {
-  const pos = await page.evaluate((id) => { const b = window.__pierce('button-card').find((x) => x._config && x._config.entity === id && x.getBoundingClientRect().width > 50);
-    b.scrollIntoView({ block: 'center' }); const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }, ent);
-  await page.waitForTimeout(700);
-  if (mobile) await page.touchscreen.tap(pos.x, pos.y); else await page.mouse.click(pos.x, pos.y);
-  await page.waitForFunction(() => { const s = window.casoraPopup && window.casoraPopup.surface; return s && window.__pierce('.hm-prog', s).some((x) => x.getBoundingClientRect().width > 0); }, null, { timeout: 15000 }).catch(() => {});
+  // The tile can sit on the second page of the room's tile row (qa-arbeit: HomePod in Badezimmer): scroll it into
+  // view, wait until the row stopped moving, measure again and tap; retry until the popup shows its bar (a tap on the
+  // still scrolling row went beside the tile in the gate).
+  // Only the media tile itself: with input_select.casora_expanded_row on „media“ (the gate's base state) another
+  // button-card of the same player exists outside the tile row, and the tap went there.
+  const where = () => page.evaluate((id) => { const b = window.__pierce('button-card').find((x) => x._config && x._config.entity === id
+    && [].concat(x._config.template || []).includes('casora_media') && x.getBoundingClientRect().width > 50);
+    if (!b) return null; b.scrollIntoView({ block: 'center', inline: 'center' }); const r = b.getBoundingClientRect();
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2, in: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight }; }, ent);
+  const hasBar = () => page.evaluate(() => { const s = window.casoraPopup && window.casoraPopup.surface; return !!s && window.__pierce('.hm-prog', s).some((x) => x.getBoundingClientRect().width > 0); }).catch(() => false);
+  const isOpen = () => page.evaluate(() => !!(window.casoraPopup && window.casoraPopup.surface)).catch(() => false);
+  for (let t = 0; t < 4 && !(await hasBar()); t++) {
+    if (!(await isOpen())) {
+      let pos = await where(), last = null;
+      for (let w = 0; w < 20 && pos && !(last && pos.in && Math.abs(pos.x - last.x) < 1 && Math.abs(pos.y - last.y) < 1); w++) {
+        await page.waitForTimeout(150); last = pos; pos = await where();
+      }
+      if (!pos) break;
+      if (mobile) await page.touchscreen.tap(pos.x, pos.y); else await page.mouse.click(pos.x, pos.y);
+    }
+    await page.waitForFunction(() => { const s = window.casoraPopup && window.casoraPopup.surface; return s && window.__pierce('.hm-prog', s).some((x) => x.getBoundingClientRect().width > 0); }, null, { timeout: 8000 }).catch(() => {});
+  }
   await page.waitForTimeout(1500);
 }
 // Bar, knob, label, colours of the open popup.

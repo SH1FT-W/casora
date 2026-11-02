@@ -20,6 +20,9 @@ const KNOWN = {
   'licht-raum': 283, 'licht-badge': 328, 'klima-raum': 512, 'klima-feuchte': 512, 'befeuchter': 434, 'drucker': 437,
   'sauger': 382, 'kaffee': 609, 'aquarium-licht': 276, 'ebike': 582, 'sicherheit': 328, 'schloss': 325, 'schloss-badge': 325,
   'lueften': 256, 'diagramm': 241, 'pflanze': 296, 'wetter': 420, 'frigate': 358, 'kalender': 844, 'abfall': 463, 'rezept': 669,
+  // Gate 02.11.2026 (after the light popup changes of 01.11.): the house light popup – dial left (359 px), the rooms'
+  // list right (602 px), 243 px empty under the dial. Open: rebalance it (list partly under the dial).
+  'licht-haus': 283,
 };
 const tool = fileURLToPath(new URL('../popup-galerie.mjs', import.meta.url));
 const run = (args) => spawnSync(process.execPath, [tool, ...args], { encoding: 'utf8', env: process.env, timeout: 40 * 60 * 1000 });
