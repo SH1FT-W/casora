@@ -16,9 +16,19 @@ const dropWelcome = () => page.evaluate(() => { for (const h of document.body.ch
 const hasPlant = (cfg) => { let hit = false; (function f(x) { if (hit || !x || typeof x !== 'object') return;
   if (Array.isArray(x)) { x.forEach(f); return; } if ([].concat(x.template || []).includes('casora_plant') && x.entity) { hit = true; return; }
   Object.values(x).forEach(f); })(cfg && cfg.views); return hit; };
-const dash = ((await casoraDashboards()).find((d) => !d.mobile && hasPlant(d.config)) || {}).url || await studioDashboard();
+// The first one whose plant tile the Studio shows in a room: r457 builds the popup gallery (dev/qa/popup-galerie.mjs,
+// one opener per popup, a plant among them) on the same HA, a Casora dashboard ranked before the imported copies, but
+// without Studio rooms – the gate's HA 2 then found no plant tile (02.11.2026).
+const studioHasPlant = () => page.evaluate(() => { const p = window.__panel(), st = p && p._state;
+  return !!(st && st.compact && (st.compact.rooms || []).some((r) => (r.tiles || []).some((t) => [].concat(t.template || []).includes('casora_plant')))); });
+let dash = null;
+for (const d of (await casoraDashboards()).filter((x) => !x.mobile && hasPlant(x.config))) {
+  await studio(page, d.url);
+  if (await studioHasPlant()) { dash = d.url; break; }
+  console.log('  info   ' + d.url + ': plant tile not in a Studio room, next dashboard');
+}
+if (!dash) { dash = await studioDashboard(); if (dash) await studio(page, dash); }
 await need('Casora-Dashboard', dash);
-await studio(page, dash);
 
 // Every element under a root, through shadow roots.
 const WALK = `(r) => { const out = []; const w = (n) => { for (const e of n.querySelectorAll('*')) { out.push(e); if (e.shadowRoot) w(e.shadowRoot); } }; w(r); return out; }`;
