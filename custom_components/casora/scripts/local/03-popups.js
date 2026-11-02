@@ -4794,29 +4794,64 @@
     var left = v3Stage(ids, states, false, function () { return v3Moons(scenesOf(h, states, sceneScope(sc)), states, room, fxId, h, sc.lamp && sc.room ? sc.room : ids); });
     var ls = stat(lampIds0, states);
     var lampNames0 = lampNamesOf(lampIds0, states, room);
-    var lampsHtml = lampIds0.map(function (id, i) {
+    var lampRows = lampIds0.map(function (id, i) {
       return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0], lampNames0[i]);
-    }).join('');
+    });
     // Counting heading (richtlinien §6), the only count of the page (owner, 03.11.2026): „Lampen im Raum · 2 von 4 an“.
     var head = tr(sc.house ? 'Lampen' : 'Lampen im Raum') + (ls.tot > 1 ? ' · ' + tr(ls.on + ' von ' + ls.tot + ' an') : '');
-    var rightHtml = '<div class="lps-lbl">' + esc(head) + '</div><div class="lps-rows">' + lampsHtml + '</div>';
     var lampIds = (sc.room ? sc.room : ids).filter(function (id) { return states[id] && !Array.isArray((states[id].attributes || {}).entity_id); });
     if (!lampIds.length) lampIds = ids.slice(0, 1);
     // Popup v3 is clean (richtlinien §8): UI.settings gives nothing – no gap for it either.
     var setHtml = !sc.house && UI.settings && lampIds.length ? UI.settings(!cfg.rooms && sc.lights.length === 1 ? sc.lights[0] : lampIds) : '';
-    if (setHtml) rightHtml += '<div style="height:var(--casora-popup-sec-gap, 24px)"></div>' + setHtml;
-    return V3_CSS + '<div class="lps-cols"><div class="lps-v3l">' + left + '</div><div>' + rightHtml + '</div></div>';
+    return v3Cols(cfg.gid, 'lps:' + cfg.gid + ':' + lampIds0.join(','), left, '<div class="lps-lbl">' + esc(head) + '</div>', lampRows,
+      setHtml ? '<div style="height:var(--casora-popup-sec-gap, 24px)"></div>' + setHtml : '');
+  };
+  /* v3 columns: the stage left, the list right. Column balance (casora-core colBalance, owner 02.11.2026): when the list
+     is the long column its first rows (with the heading) continue under the stage, the rest stays right – the phone's
+     reading order. The heights are measured in the open popup (v3Measure); S.refresh draws the new split. */
+  var v3Cols = function (gid, id, stageHtml, lblHtml, rows, tailHtml) {
+    var CB = window._casoraUI && window._casoraUI.colBalance;
+    var k = CB ? CB.split(id, rows.length, { noOne: true }).k : 0;
+    var movedHtml = rows.slice(0, k).join(''), restHtml = rows.slice(k).join('');
+    var leftHtml = stageHtml + (k ? '<div class="lps-v3m">' + lblHtml + '<div class="lps-rows">' + movedHtml + '</div></div>' : '');
+    var rightHtml = (k ? '' : lblHtml) + '<div class="lps-rows">' + restHtml + '</div>' + (tailHtml || '');
+    var balMark = CB ? CB.reg(id, { k: k, noOne: true, reuse: true, measure: v3Measure, apply: function () { S.refresh(gid); } }) : '';
+    var markHtml = balMark ? '<style>' + balMark + '</style>' : '';
+    return V3_CSS + markHtml + '<div class="lps-cols"><div class="lps-v3l">' + leftHtml + '</div><div>' + rightHtml + '</div></div>';
+  };
+  // head = the stage (left column without moved rows), items = the rows (the first with its heading), tail = what follows
+  // the rows in the right column (settings).
+  var v3Measure = function (root) {
+    var cols = root.querySelector('.lps-cols'), l = cols && cols.children[0], r = cols && cols.children[1];
+    if (!l || !r) return null;
+    var box = function (e) { return e.getBoundingClientRect(); };
+    var top = box(l).top, head = 0;
+    [].forEach.call(l.children, function (c) {
+      if (c.classList.contains('lps-v3m') || c.tagName === 'STYLE') return;
+      var b = box(c); if (b.height > 1) head = Math.max(head, b.bottom - top);
+    });
+    var rows = [].slice.call(cols.querySelectorAll('.lps-rows > .lps-row'));
+    if (!head || !rows.length) return null;
+    var rb = rows.map(box), items = rb.map(function (b) { return Math.round(b.height); });
+    var lbl = cols.querySelector('.lps-lbl');
+    if (lbl) items[0] = Math.round(rb[0].bottom - box(lbl).top);
+    var gap = 0;
+    for (var i = 1; i < rb.length && !gap; i++) if (Math.abs(rb[i].left - rb[i - 1].left) < 4) gap = Math.round(rb[i].top - rb[i - 1].bottom);
+    var last = rb[rb.length - 1], end = last.bottom;
+    [].forEach.call(r.children, function (c) { var b = box(c); if (b.height > 1 && b.bottom > end && c.tagName !== 'STYLE') end = b.bottom; });
+    // The stage and the moved rows stand in .lps-v3l with its own gap (24 px), the rows with theirs (8 px).
+    var hgap = parseFloat(getComputedStyle(l).rowGap) || 24;
+    return { head: Math.round(head), items: items, gap: gap || 8, hgap: hgap, tail: Math.max(0, Math.round(end - last.bottom) - (gap || 8)) };
   };
   var houseV3 = function (cfg, states) {
     var all = [];
     cfg.rooms.forEach(function (r) { (r.lights || []).forEach(function (x) { if (states[x] && all.indexOf(x) < 0) all.push(x); }); });
     // The whole house: the stage dims only lamps that are on (never switches the house on by dragging).
     // The rooms' heading counts lamps, never rooms (owner, 01.11. and 03.11.2026).
-    var list = houseBody(cfg, states, true);
     // The house's only lamp with effects gets the moon „Effekte“ (several: each lamp's own popup).
     var fxId = fxLampOf(all, states);
     var stageHtml = v3Stage(all, states, true, fxId ? function () { return v3Moons([], states, null, fxId); } : null);
-    return V3_CSS + '<div class="lps-cols"><div class="lps-v3l">' + stageHtml + '</div><div>' + list + '</div></div>';
+    return v3Cols(cfg.gid, 'lps:' + cfg.gid + ':house:' + cfg.rooms.map(function (r) { return r.rid || r.name; }).join(','), stageHtml, houseLblHtml(cfg, states, true), houseRows(cfg, states), '');
   };
   var word = function (v) { return v <= 0 ? tr('Aus') : v >= 100 ? tr('Volle Helligkeit') : tr('Gedimmt'); };
   /* Value and word twice: muted on the track, in fill ink clipped to the fill. */
@@ -4825,13 +4860,19 @@
     return tHtml + '<b aria-hidden="true" style="clip-path:inset(0 ' + (100 - v) + '% 0 0)">' + tHtml + '</b>';
   };
 
-  var houseBody = function (cfg, states, inV3) {
-    if (!inV3 && v3On()) return houseV3(cfg, states);
-    // v3: the house's count stands here, the only one of the page (owner, 03.11.2026) – lamps, as everywhere.
+  var houseBody = function (cfg, states) {
+    if (v3On()) return houseV3(cfg, states);
+    var rowsHtml = houseRows(cfg, states).join('');
+    return houseLblHtml(cfg, states, false) + '<div class="lps-grid">' + rowsHtml + '</div>';
+  };
+  // v3: the house's count stands in this heading, the only one of the page (owner, 03.11.2026) – lamps, as everywhere.
+  var houseLblHtml = function (cfg, states, inV3) {
     var hs = inV3 ? stat([].concat.apply([], cfg.rooms.map(function (r) { return r.lights || []; })).filter(function (x, i, a) { return a.indexOf(x) === i; }), states) : null;
     var hHead = tr('Räume') + (hs && hs.tot > 1 ? ' · ' + tr(hs.on + ' von ' + hs.tot + ' Lampen an') : '');
-    return '<div class="lps-lbl">' + esc(hHead) + '</div><div class="' + (inV3 ? 'lps-rows' : 'lps-grid') + '">'
-      + cfg.rooms.map(function (r, i) {
+    return '<div class="lps-lbl">' + esc(hHead) + '</div>';
+  };
+  var houseRows = function (cfg, states) {
+    return cfg.rooms.map(function (r, i) {
         var s = stat(r.lights, states);
         // A room without its own HA group (house list from the rooms, light_rooms_auto): its lamps switch together.
         var sc = r.rid && states[r.rid] ? { a: 'scope', id: r.rid } : { a: 'scope', ids: r.lights };
@@ -4840,7 +4881,7 @@
           + '<div class="lps-tx"><b>' + esc(r.name) + '</b><small>' + esc(subline(s, false)) + '</small></div>'
           + '<div class="lps-sw" role="switch" aria-checked="' + (s.on ? 'true' : 'false') + '" data-lps-tap="' + attr(sc) + '"></div>'
           + '</div>';
-      }).join('') + '</div>';
+      });
   };
 
   S.render = function (cfg, part, states, h, el) {

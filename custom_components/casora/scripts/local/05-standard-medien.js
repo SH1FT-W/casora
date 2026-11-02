@@ -465,7 +465,17 @@ window._casoraStdLayout = function (ui, o) {
   if (!o.single && o.balance !== false && !L.length && R.length > 1) { L = R.slice(0, Math.ceil(R.length / 2)); R = R.slice(L.length); }
   if (!o.single && o.balance !== false && !R.length && L.length > 1) { R = L.slice(Math.ceil(L.length / 2)); L = L.slice(0, L.length - R.length); }
   /* Spalten nach gemessener Höhe ausgleichen (25.09.2026). */
-  if (!o.single && L.length && R.length && window._casoraSplit) { var sp0 = window._casoraSplit(o.id || ('std:' + L.concat(R).join(',')), L, R, { pinRight: o.pinRight }); L = sp0.left; R = sp0.right; }
+  var CB = window._casoraUI && window._casoraUI.colBalance, bal = null;
+  if (!CB && !o.single && L.length && R.length && window._casoraSplit) { var sp0 = window._casoraSplit(o.id || ('std:' + L.concat(R).join(',')), L, R, { pinRight: o.pinRight }); L = sp0.left; R = sp0.right; }
+  /* Column balance (casora-core colBalance, owner 02.11.2026): from the measured heights the right column's first
+     sections continue under the left ones (rule A), or a short right column joins the left one (rule B, one column). */
+  if (!o.single && L.length && R.length && CB && !o.noBalance) {
+    bal = { id: CB.id('std', f, L.join(',') + '|' + R.join(','), ui.entity), head: L.slice(), items: R.slice() };
+    var plan = CB.split(bal.id, R.length);
+    bal.k = plan.k; bal.one = plan.one;
+    if (plan.one) { L = L.concat(R); R = []; }
+    else if (plan.k) { L = L.concat(R.slice(0, plan.k)); R = R.slice(plan.k); }
+  }
   var pick = function (src, keys) { var r = {}; keys.forEach(function (k) { if (src[k] !== undefined) r[k] = src[k]; }); return r; };
   var colStyle = ':host { --ha-card-box-shadow: none !important; --button-card-box-shadow: none !important; --button-card-box-shadow-hover: none !important; overflow: visible !important; }'
     + '\nha-card { background: transparent !important; border: none !important; border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; cursor: default !important; overflow: visible !important; will-change: auto !important; pointer-events: auto !important; }'
@@ -515,6 +525,12 @@ window._casoraStdLayout = function (ui, o) {
     + ' !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: var(--casora-popup-col-gap, ' + cGap + 'px) !important; } }'
     /* Rule 12 (symmetry): both columns start at the same height – casora-core aligns the marked pair. */
     + (L.length && R.length && window._casoraUI && window._casoraUI.colsMark ? window._casoraUI.colsMark('left', 'right') : '');
+  if (bal) {
+    // Rule B: one column is 552 wide (casora-core reads casora_cols, also on the only card of a vertical stack).
+    if (bal.one) { out.casora_cols = 1; out.casora_bal_one = true; }
+    out.extra_styles += CB.reg(bal.id, { k: bal.k, one: bal.one, head: bal.head, items: bal.items, cols: ['left', 'right'], cfg: out,
+      rebuild: function () { return window._casoraStdLayout(ui, o); } });
+  }
   return out;
 };
 // Nur ab 761 px umbauen – Mobile behält seinen eigenen einspaltigen Aufbau unverändert.

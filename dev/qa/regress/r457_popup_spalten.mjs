@@ -1,7 +1,8 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: dashboards/casora/button_card_templates.json dev/qa/popup-galerie.mjs dev/qa/popup-spalten.mjs
-// Owner 01.11.2026: two-column popups on desktop/tablet must not leave a large empty block under the shorter column.
+// @deckt: dashboards/casora/button_card_templates.json dev/qa/popup-galerie.mjs dev/qa/popup-spalten.mjs custom_components/casora/scripts/casora-core.js custom_components/casora/scripts/local/02-devices.js custom_components/casora/scripts/local/03-popups.js custom_components/casora/scripts/local/05-weich-mehr.js custom_components/casora/scripts/local/05-standard-medien.js
+// Owner 01.11.2026: two-column popups on desktop/tablet must not leave a large empty block under the shorter column
+// (02.11.2026: one rule for all, casora-core colBalance; the popups it evens out fail here without it).
 // Builds the popup gallery, opens every popup at 1440×900 and the tablet size 1180×820 and measures both columns'
 // bottom edges (dev/qa/popup-spalten.mjs): the empty block may be at most MAX_GAP px tall; the layouts measured above
 // that on 01.11.2026 are a ratchet (KNOWN, may not grow). Also the weather popup's order (owner, §7.1): left under the
@@ -16,19 +17,15 @@ import { check, need, finish } from './lib.mjs';
 const MAX_GAP = 200;
 // Layouts measured above MAX_GAP on 01.11.2026 (test house „arbeit“): the empty block may not grow beyond this cap
 // (measured + 40 px). Lower or drop an entry when its popup is evened out.
+// 02.11.2026: the column balance (casora-core colBalance, popup-richtlinien-v3 „Spaltenausgleich“) evened out the light
+// popups (rooms list partly under the dial), climate, humidifier, vacuum, e-bike, security, lock, Lüften-Coach and chart
+// popups – they left this list. What stays cannot be evened out by moving whole sections: a long left part with more
+// than 200 px on the right (printer camera, coffee drinks, aquarium light, plant), one long list (calendar, rezept's
+// shopping list) or layouts of their own (weather §7.1, Frigate, trash calendar). licht-badge and schloss-badge do not
+// open in the gallery's badge path (not measurable), they keep their caps.
 const KNOWN = {
-  'licht-raum': 283,
-  // 26.11.8: the house light popup lists every room again (setup no longer caps it at ten lights) – the list grows,
-  // 400 px under the dial in the gate house. Back to 328 or lower once the column rule (branch fix-spaltenregel) is in.
-  'licht-badge': 440, 'klima-raum': 512, 'klima-feuchte': 512, 'befeuchter': 434, 'drucker': 437,
-  'sauger': 382, 'kaffee': 609, 'aquarium-licht': 276, 'ebike': 582, 'sicherheit': 328, 'schloss': 325, 'schloss-badge': 325,
-  'lueften': 256, 'diagramm': 241, 'pflanze': 296, 'wetter': 420, 'frigate': 358, 'kalender': 844, 'abfall': 463, 'rezept': 669,
-  // Gate 02.11.2026 (after the light popup changes of 01.11.): the house light popup – dial left (359 px), the rooms'
-  // list right (602 px), 243 px empty under the dial. Open: rebalance it (list partly under the dial).
-  // 26.11.8 light migration (r9): Home's light badge is the house group alone, so this opener now shows the same
-  // popup as 'licht-badge' above – every room listed, 400 px under the dial in the gate house. Same cap as there until
-  // the column rule (branch fix-spaltenregel) is in, then back to 283 or lower.
-  'licht-haus': 440,
+  'licht-badge': 328, 'drucker': 437, 'kaffee': 609, 'aquarium-licht': 276, 'schloss-badge': 325, 'pflanze': 296,
+  'wetter': 420, 'frigate': 358, 'kalender': 844, 'abfall': 463, 'rezept': 343,
 };
 const tool = fileURLToPath(new URL('../popup-galerie.mjs', import.meta.url));
 const run = (args) => spawnSync(process.execPath, [tool, ...args], { encoding: 'utf8', env: process.env, timeout: 40 * 60 * 1000 });

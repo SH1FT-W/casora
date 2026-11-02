@@ -8139,7 +8139,11 @@ window.casoraMenuGlass = {
       // dropped to the frame's 580 and the popup jumped, review 2 DD-14).
       var dynCss = this._dynamicCss(cfg);
       // v3 (§2, review 2 DD-12): content laid out in one column (casora_cols from the layout helpers) is 552 wide.
-      if (cfg.variant === 'v3' && cfg.content && typeof cfg.content === 'object' && cfg.content.casora_cols === 1) {
+      // Column balance rule B (colBalance) marks its one-column layout also when it is the only card of a stack.
+      var cc0 = cfg.content, cc1 = cc0 && cc0.type === 'vertical-stack' && Array.isArray(cc0.cards) && cc0.cards.length === 1 ? cc0.cards[0] : null;
+      if (cfg.variant === 'v3' && cc1 && cc1.casora_bal_one) {
+        dynCss += ':host {\n--popup-min-width: min(552px, calc(100vw - 16px)); --popup-max-width: min(552px, calc(100vw - 16px));\n}\n';
+      } else if (cfg.variant === 'v3' && cfg.content && typeof cfg.content === 'object' && cfg.content.casora_cols === 1) {
         dynCss += ':host {\n--popup-min-width: min(552px, calc(100vw - 16px)); --popup-max-width: min(552px, calc(100vw - 16px));\n}\n';
       } else if (cfg.variant === 'v3' && cfg.content && typeof cfg.content === 'object' && cfg.content.casora_cols === 2) {
         // Two columns are 900 (§2): in 552 the wheel shrank to 200 px and the moons sat on it (Velair).
@@ -13775,6 +13779,190 @@ window.casoraMenuGlass = {
     });
     return n;
   }
+  // Column balance (owner 02.11.2026: no large empty block under the shorter column – one rule for every two-column
+  // popup). A layout helper (HH.layout, _casoraSoftKit.layout, the light popup) hands its split to colBalance:
+  //   head  = the left column's fixed part (stage, quick choice, the Verlauf, underStage – §2, §7.1),
+  //   items = the right column's sections (or a list's rows) in reading order.
+  // When the popup is open (desktop/tablet only) the parts are measured and remembered per popup and entity
+  // (localStorage casora_col_bal); every build reads them and places the parts:
+  //   rule A – the right column is the long one: its first items continue under the head, as many as give the
+  //            lowest popup (reading order stays the phone's: head, items, rest);
+  //   rule B – the left column is the long one and the whole right column is short (≤ ONE_MAX): one column
+  //            (552, v3 only) with the right column's parts under the head.
+  // Nothing moves while the gap stays ≤ BAL_OK. On the first opening (nothing remembered yet) the open popup is
+  // rebuilt once, after two passes measured the same heights (async sections – charts, lists – have settled).
+  var BAL_KEY = 'casora_col_bal', BAL_OK = 120, BAL_GAIN = 40, BAL_ONE_MAX = 200, BAL_MAX = 120, BAL_STEADY = 6;
+  var BAL = {}, BAL_REG = {}, BAL_TOK = {}, balSeq = 0, balPrev = {}, balDone = {};
+  try { BAL = JSON.parse(localStorage.getItem(BAL_KEY) || '{}') || {}; } catch (e) { BAL = {}; }
+  // Heights depend on the column width: one bucket per 40 px of popup width (900 wide or the window minus 16).
+  function balBucket() { return Math.round(Math.min(window.innerWidth - 16, 900) / 40); }
+  function balSave() {
+    try {
+      var ids = Object.keys(BAL);
+      if (ids.length > BAL_MAX) ids.sort(function (a, b) { return (BAL[a].t || 0) - (BAL[b].t || 0); })
+        .slice(0, ids.length - BAL_MAX).forEach(function (k) { delete BAL[k]; });
+      localStorage.setItem(BAL_KEY, JSON.stringify(BAL));
+    } catch (e) { /* memory only */ }
+  }
+  // m = { head, items: [px], gap, hgap, tail } – hgap: the gap between the head and the first moved item.
+  function balSum(m, a) { var g = m.gap > 0 ? m.gap : 22, s = 0, c = 0; a.forEach(function (h) { if (h > 0) { s += h; c++; } }); return c ? s + (c - 1) * g : 0; }
+  function balL(m, k) { var s = balSum(m, m.items.slice(0, k)); return m.head + (s ? (m.hgap > 0 ? m.hgap : (m.gap > 0 ? m.gap : 22)) + s : 0); }
+  function balR(m, k) { var s = balSum(m, m.items.slice(k)); return s + (s && m.tail ? (m.gap > 0 ? m.gap : 22) : 0) + (m.tail || 0); }
+  // The popup's height (the taller column) with the first k items under the head.
+  function balH(m, k) { return Math.max(balL(m, k), balR(m, k)); }
+  // → { k: items under the head, one: one column }.
+  function balPlan(m, allowOne) {
+    var none = { k: 0, one: false };
+    if (!m || !Array.isArray(m.items) || !m.items.length || !(m.head > 0)) return none;
+    var L0 = balL(m, 0), R0 = balR(m, 0);
+    if (Math.abs(L0 - R0) <= BAL_OK || R0 <= 0) return none;
+    if (R0 > L0) {
+      var best = none, bestH = R0;
+      for (var k = 1; k < m.items.length; k++) {
+        if (!(balR(m, k) > 0)) break;
+        var hk = balH(m, k);
+        if (hk < bestH) { bestH = hk; best = { k: k, one: false }; }
+      }
+      return R0 - bestH >= BAL_GAIN ? best : none;
+    }
+    return allowOne && R0 <= BAL_ONE_MAX ? { k: 0, one: true } : none;
+  }
+  // Ids carry only [\w.:,|-] (they stand in a CSS comment); a long id is shortened with a hash of its whole text.
+  function balHash(t) { var h = 5381; for (var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
+  function balSafe(id) { var t = String(id).replace(/[^\w.:,|-]/g, '_'); return t.length > 160 ? t.slice(0, 120) + '~' + balHash(String(id)) : t; }
+  var colBalance = {
+    // A popup's id: kind, the layout's keys and the entities its fields watch (entity / triggers_update of the field
+    // cards) – so two free tiles or two persons never share their heights.
+    id: function (kind, fields, keys, entity) {
+      var ents = [], seen = [];
+      var walk = function (v, d) {
+        if (!v || typeof v !== 'object' || d > 4 || seen.indexOf(v) > -1) return;
+        seen.push(v);
+        if (typeof v.entity === 'string') ents.push(v.entity);
+        if (Array.isArray(v.triggers_update)) v.triggers_update.forEach(function (e) { if (typeof e === 'string') ents.push(e); });
+        Object.keys(v).forEach(function (k) { if (k !== 'triggers_update') walk(v[k], d + 1); });
+      };
+      walk(fields, 0);
+      ents = ents.filter(function (e, i) { return ents.indexOf(e) === i; }).sort();
+      return balSafe(kind + ':' + (entity || '') + ':' + keys + ':' + (ents.length ? balHash(ents.join(',')) : ''));
+    },
+    // The placement for a layout with n movable items, from the remembered heights (none: as built).
+    split: function (id, n, opt) {
+      var m = BAL[balSafe(id)];
+      if (!m || window.innerWidth <= 760 || m.b !== balBucket() || !m.items || m.items.length !== n) return { k: 0, one: false };
+      return balPlan(m, !(opt && opt.noOne) && !!(window._casoraUI.v3 && window._casoraUI.v3()));
+    },
+    // spec: { k, one, head: [keys], items: [keys], cols: [field ids of the columns], rebuild: () → card config,
+    //         cfg: the config object the popup holds } – or { measure(root) → m, apply(plan, root) } for HTML layouts.
+    // → the CSS comment that lets the measurement find this very build (wrapper's extra_styles or a <style> of the HTML).
+    // spec.reuse: one token per id (HTML that redraws on every state change keeps its token).
+    reg: function (id, spec) {
+      var sid = balSafe(id), tok = spec.reuse && BAL_TOK[sid] && BAL_REG[BAL_TOK[sid]] ? BAL_TOK[sid] : sid + '#' + (++balSeq);
+      spec.id = sid;
+      BAL_REG[tok] = spec; BAL_TOK[sid] = tok;
+      var all = Object.keys(BAL_REG);
+      if (all.length > 300) all.slice(0, all.length - 300).forEach(function (k) { if (BAL_TOK[BAL_REG[k].id] !== k) delete BAL_REG[k]; });
+      return ' /*casora-bal:' + tok + '*/';
+    },
+    plan: balPlan,
+    get data() { return BAL; },
+  };
+  // Heights of the keyed sections: a field of the wrapper itself (one column) or of a column card inside it.
+  function balMeasureCols(root, spec) {
+    var boxes = {};
+    var look = function (sr, k) { var e = sr && sr.getElementById && sr.getElementById(k); return e ? e.getBoundingClientRect() : null; };
+    var colRoots = (spec.cols || []).map(function (c) {
+      var f = root.getElementById(c), card = f && (f.querySelector('button-card') || f.firstElementChild);
+      return card && card.shadowRoot;
+    }).filter(Boolean);
+    spec.head.concat(spec.items).forEach(function (k) {
+      var r = null;
+      colRoots.some(function (sr) { r = look(sr, k); return !!r; });
+      if (!r) r = look(root, k);
+      boxes[k] = r;
+    });
+    if (!spec.head.every(function (k) { return boxes[k]; })) return null;
+    var h = function (k) { var r = boxes[k]; return r && r.height > 1 ? Math.round(r.height) : 0; };
+    // The gap between two sections as laid out (column gap rule or grid row gap).
+    var gap = 0, seq = spec.head.concat(spec.items).filter(function (k) { return h(k) > 0; });
+    for (var i = 1; i < seq.length && !gap; i++) {
+      var a = boxes[seq[i - 1]], b = boxes[seq[i]];
+      if (Math.abs(a.left - b.left) < 4 && b.top > a.bottom - 1) gap = Math.round(b.top - a.bottom);
+    }
+    var hs = spec.head.filter(function (k) { return h(k) > 0; });
+    var head = hs.reduce(function (s, k) { return s + h(k); }, 0) + Math.max(0, hs.length - 1) * (gap || 22);
+    return { head: head, items: spec.items.map(h), gap: gap || 22, tail: 0 };
+  }
+  function balWidth(cols) {
+    var el = window.casoraPopup && window.casoraPopup.element, cur = window.casoraPopup && window.casoraPopup.current;
+    if (!el || !el._dyn || !cur || cur.variant !== 'v3') return;
+    var w = cols === 1 ? 552 : 900;
+    var decl = '--popup-min-width: min(' + w + 'px, calc(100vw - 16px)); --popup-max-width: min(' + w + 'px, calc(100vw - 16px));';
+    el._dyn.textContent = el._dyn.textContent.replace(/:host \{\n--popup-min-width: min\((552|900)px[^}]*\}\n/g, '') + ':host {\n' + decl + '\n}\n';
+    el._lastWidthDecl = decl;
+  }
+  function balSteady(a, b) {
+    if (!a || !b || a.items.length !== b.items.length || Math.abs(a.head - b.head) > BAL_STEADY) return false;
+    return a.items.every(function (h, i) { return Math.abs(h - b.items[i]) <= BAL_STEADY; });
+  }
+  function balance() {
+    var s = window.casoraPopup && window.casoraPopup.surface;
+    if (!s || window.innerWidth <= 760) return 0;
+    var n = 0, dirty = false;
+    deepAll(s, 'style', []).forEach(function (st) {
+      var t = st.textContent || '', re = /\/\*casora-bal:([\w.:,|~-]+#\d+)\*\//g, m;
+      if (t.indexOf('/*casora-bal:') < 0) return;
+      var root = st.getRootNode();
+      if (!root || !root.getElementById || !root.host || !root.host.getBoundingClientRect().width) return;
+      while ((m = re.exec(t))) {
+        var tok = m[1], spec = BAL_REG[tok];
+        if (!spec || balDone[spec.id]) continue;
+        var meas = null;
+        try { meas = spec.measure ? spec.measure(root) : balMeasureCols(root, spec); } catch (e) { meas = null; }
+        if (!meas) continue;
+        n++;
+        // Act only on heights that held between two passes: sections that still load would mislead the plan.
+        var prev = balPrev[spec.id];
+        balPrev[spec.id] = meas;
+        if (!balSteady(prev, meas)) continue;
+        var p, id = spec.id;
+        if (spec.one) {
+          // One column (rule B) is wider: its heights do not hold for two columns, keep what was measured there. Only
+          // a right part that has grown well past ONE_MAX (more entries since) brings the two columns back, measured anew.
+          if (BAL[id]) { BAL[id].t = Date.now(); dirty = true; }
+          if (balR(meas, 0) <= BAL_ONE_MAX + 80) continue;
+          delete BAL[id]; dirty = true;
+          p = { k: 0, one: false };
+        } else {
+          meas.b = balBucket(); meas.t = Date.now();
+          BAL[id] = meas; dirty = true;
+          p = balPlan(meas, !spec.noOne && !!(window._casoraUI.v3 && window._casoraUI.v3()));
+          if (p.k === (spec.k || 0) && p.one === !!spec.one) continue;
+          // From one placement to another only for a clearly lower popup (no back and forth on a few pixels).
+          if (!p.one && spec.k && balH(meas, p.k) > balH(meas, spec.k) - BAL_GAIN) continue;
+        }
+        balDone[id] = true;
+        if (spec.apply) { try { spec.apply(p, root); } catch (e) { /* stays as built */ } continue; }
+        if (!spec.rebuild || typeof root.host.setConfig !== 'function') continue;
+        var next = null;
+        try { next = spec.rebuild(); root.host.setConfig(Object.assign({}, next)); } catch (e) { next = null; }
+        if (!next) continue;
+        // The popup holds cfg (‹ back, sub pages): it becomes the new layout too.
+        var cfg = spec.cfg;
+        if (cfg && typeof cfg === 'object' && cfg !== next) {
+          Object.keys(cfg).forEach(function (k) { delete cfg[k]; }); Object.assign(cfg, next);
+          // The new build's spec rebuilds the held object from now on (‹ back reopens it).
+          var nt = String(next.extra_styles || '').match(/\/\*casora-bal:([\w.:,|~-]+#\d+)\*\//);
+          if (nt && BAL_REG[nt[1]]) BAL_REG[nt[1]].cfg = cfg;
+        }
+        if (p.one !== !!spec.one) balWidth(p.one ? 1 : 2);
+      }
+    });
+    if (dirty) balSave();
+    return n;
+  }
+  window._casoraUI.colBalance = colBalance;
+  window._casoraUI.balance = balance;
   window._casoraUI.colsMark = colsMark;
   window._casoraUI.alignCols = alignCols;
   (function hookCols() {
@@ -13785,6 +13973,9 @@ window.casoraMenuGlass = {
       var r = o.apply(this, arguments);
       // Plates enter with a short 3D settle; the last passes measure after it.
       [120, 400, 900, 1600, 2600, 4200].forEach(function (t) { setTimeout(alignCols, t); });
+      // Column balance: measured once the plates stand, acted on when two passes agree, at most once per opening.
+      balPrev = {}; balDone = {};
+      [700, 1100, 1700, 2600].forEach(function (t) { setTimeout(balance, t); });
       return r;
     };
     P._colsWrapped = true;
