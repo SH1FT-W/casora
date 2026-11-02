@@ -38,6 +38,9 @@ for (const groupsOn of [true, false]) {
   const tag = groupsOn ? 'mit Kategorien' : 'ohne Kategorien';
   const { page, context } = await open({ width: 390, height: 844, mobile: true, safari: true });
   await context.addInitScript((v) => localStorage.setItem('casora-room-groups', v), groupsOn ? 'on' : 'off');
+  // The checks below are the "only when opening" mode (stays while open, front on the next open). Since 26.11.6
+  // "Sort tiles" defaults to right away (r379 covers it), so pin that mode here.
+  await context.addInitScript(() => { window.CASORA_SORT_MODE = 'open'; });
   usePage(page);
   await dashboard(page, dash.phone.url + '/' + (dash.phone.config.views[0].path || '0'), 3);
 

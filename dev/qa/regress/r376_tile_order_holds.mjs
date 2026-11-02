@@ -15,6 +15,8 @@ for (const phone of [true, false]) {
   const url = phone && dash.phone ? dash.phone.url : dash.url;
   const cfg = phone && dash.phone ? dash.phone.config : dash.config;
   const { page } = await open(phone ? { width: 393, height: 852, mobile: true, safari: true, dark: false } : { width: 1440, height: 900, dark: false });
+  // This test checks the calm mode. Since 26.11.6 "Sort tiles" defaults to right away (r379 covers it), so pin calm.
+  await page.context().addInitScript(() => { window.CASORA_SORT_MODE = 'calm'; });
   usePage(page);
   await dashboard(page, url + '/' + ((cfg.views[0] || {}).path || '0'), 3);
   // A sorting row with at least two tiles, visible on screen.
