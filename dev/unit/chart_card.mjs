@@ -63,6 +63,23 @@ assert.equal(M.value(states['sensor.pumpe_strom'], hass), '0,004 A');
 assert.equal(M.fmt(hass, 'sensor.pumpe_strom', 0.0043), '0,004 A', 'derived value of a small sensor');
 assert.equal(M.fmt(hass, 'sensor.pumpe_strom', 0.5), '0,5 A', 'from 0.1 on two decimals at most');
 assert.equal(M.fmt(hass, 'sensor.zaehler_energie', 0.05), '0,05 kWh', 'three decimals only when the state has them');
+// r515: the decimals do not follow the raw state ("44.38" then "47.4" read "44,38 %" then "47,4 %"); derived values
+// (average, highest) carry the same fixed decimals ("54,0 %", not "54 %" beside "47,15 %").
+{
+  const hs = { states: { 'sensor.flur_feuchte': { entity_id: 'sensor.flur_feuchte', state: '44.38', attributes: { state_class: 'measurement', unit_of_measurement: '%' } } }, entities: {} };
+  const set = (s) => { hs.states['sensor.flur_feuchte'] = Object.assign({}, hs.states['sensor.flur_feuchte'], { state: s }); };
+  assert.equal(M.value(hs.states['sensor.flur_feuchte'], hs), '44,4 %', 'opened at 44.38: one decimal');
+  assert.equal(M.fmt(hs, 'sensor.flur_feuchte', 47.15), '47,2 %', 'average: one decimal');
+  assert.equal(M.fmt(hs, 'sensor.flur_feuchte', 54), '54,0 %', 'highest value keeps its decimal');
+  set('47.4');
+  assert.equal(M.value(hs.states['sensor.flur_feuchte'], hs), '47,4 %');
+  assert.equal(M.precision(hs, 'sensor.flur_feuchte', 47.4), 1, 'same decimals after a value with fewer');
+  set('48');
+  assert.equal(M.value(hs.states['sensor.flur_feuchte'], hs), '48,0 %', 'a whole value of a decimal sensor keeps its decimal');
+  const ht = { states: { 'sensor.flur_temp': { entity_id: 'sensor.flur_temp', state: '21.25', attributes: { state_class: 'measurement', unit_of_measurement: '°C' } } },
+    entities: { 'sensor.flur_temp': { display_precision: 2 } } };
+  assert.equal(M.fmt(ht, 'sensor.flur_temp', 21.5), '21,50 °C', "the registry's display precision is fixed too");
+}
 console.log('ok kind/value');
 
 // Series: main first, entity_2…4 with label and colour, duplicates and missing entities dropped, default colour steps.

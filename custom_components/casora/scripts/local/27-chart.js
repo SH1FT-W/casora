@@ -73,18 +73,22 @@
     // No state class: a plain number with a unit still draws a line (statistics stay empty).
     return a.unit_of_measurement && isFinite(numOf(st.state)) ? 'measurement' : null;
   };
-  // Number with unit. Decimals: the registry's display precision, else those of the sensor's own state (at most
-  // two, three for small values under 0.1 so "0.004 A" does not read "0") – CPU "23" stays "23 %", a temperature
-  // "48.5" keeps one decimal; values from 100 on have none, derived values (average, consumption) at least one
-  // when the sensor has any.
+  // Number with unit. Decimals: the registry's display precision, else Casora's rule (like the free tile and the live
+  // number): one decimal for a sensor whose state has shown decimals, none for a whole-number sensor (CPU "23" stays
+  // "23 %"), none from 100 on; small values under 0.1 up to three ("0.004 A" must not read "0"). Never the decimals of
+  // the current raw state: "44.38" then "47.4" read "44,38 %" then "47,4 %" in the open popup (r515). Whether a sensor
+  // has decimals is remembered per entity, so a later "47" does not drop them either.
+  var dotted = {};
   M.precision = function (hass, id, v) {
     var e = ((hass && hass.entities) || {})[id] || {};
     var p = e.display_precision != null ? e.display_precision : (e.options && e.options.sensor && e.options.sensor.display_precision);
     if (p != null && isFinite(p)) return Math.max(0, Math.min(4, +p));
     var st = (hass && hass.states && hass.states[id]) || {};
     var m = /\.(\d+)$/.exec(String(st.state == null ? '' : st.state).trim());
-    var cap = v != null && isFinite(v) && Math.abs(v) < 0.1 ? 3 : 2;
-    return m ? Math.min(cap, m[1].replace(/0+$/, '').length) : 0;
+    if (m) dotted[id] = Math.max(dotted[id] || 0, m[1].length);
+    var seen = dotted[id] || 0;
+    if (!seen) return 0;
+    return v != null && isFinite(v) && Math.abs(v) < 0.1 ? Math.min(3, seen) : 1;
   };
   M.fmt = function (hass, id, v) {
     var n = parseFloat(v);
@@ -93,7 +97,9 @@
     var d = Math.abs(n) >= 100 ? 0 : M.precision(hass, id, n);
     // Never „-0,0“: what rounds to zero is zero.
     if (Math.round(Math.abs(n) * Math.pow(10, d)) === 0) n = 0;
-    return n.toLocaleString(loc(), { minimumFractionDigits: Math.min(d, 1), maximumFractionDigits: d }) + (a.unit_of_measurement ? ' ' + a.unit_of_measurement : '');
+    // Fixed decimals ("54,0 %" beside "47,2 %"), only a small value drops trailing zeros ("0,05 kWh").
+    var small = Math.abs(n) < 0.1 && n !== 0;
+    return n.toLocaleString(loc(), { minimumFractionDigits: small ? Math.min(d, 1) : d, maximumFractionDigits: d }) + (a.unit_of_measurement ? ' ' + a.unit_of_measurement : '');
   };
   M.value = function (st, hass) {
     if (!st) return 'Nicht verfügbar';
