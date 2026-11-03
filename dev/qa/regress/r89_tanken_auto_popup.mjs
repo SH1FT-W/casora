@@ -476,7 +476,7 @@ await need('ein Dashboard fürs Studio', sd);
 const { page } = await open({ width: 1600, height: 1000, theme: 'Casora', dark: false });
 usePage(page);
 await studio(page, sd);
-await page.evaluate(() => window.__panel()._csOpenPage('fuel'));
+await page.evaluate(() => window.__panel()._csOpenPage('n-wx', 'nb-fuel'));
 await page.waitForTimeout(2500);
 const st = await page.evaluate(() => {
   const P = (q) => window.__pierce(q).filter((e) => e.offsetParent);

@@ -1,7 +1,8 @@
 // @zustand: arbeit
 // @parallel: ui
 // @deckt: custom_components/casora/panel/casora-panel-settings.js custom_components/casora/panel/casora-panel-personal.js custom_components/casora/panel/casora-panel-b-ux.js custom_components/casora/panel/casora-panel-live.js custom_components/casora/panel/casora-panel.js
-// Settings in the new structure (beta, behind localStorage "casora.settings.neu", default off). Walks the map
+// Settings in eight tiles (since 03.11.2026 the only structure: the topics of 26.10., their subpages and the preview
+// switch are gone). Walks the map
 // (window.casoraSettingsMap) and clicks through every tile:
 //   - the gear opens the start with eight tiles; every tile shows its frequent blocks, "Advanced" draws its blocks only
 //     when opened; dashboard sections are drawn in the tile (no links) and say "Only this dashboard";
@@ -10,7 +11,8 @@
 //     selects, a text, a range and an option field the same way;
 //   - unsaved changes: "Done" asks (Back stays, Discard leaves without saving, Save saves), switching dashboards and
 //     the HA sidebar ask as well;
-//   - search, way back to the previous settings, phone width without sideways scrolling.
+//   - search; every earlier way in (topic ids, subpage ids with a focus) lands on its tile and block, no preview switch;
+//     phone width without sideways scrolling.
 // Whatever happens, the dashboards, settings and options are written back at the end (atFinish).
 import { ws } from '../ws.mjs';
 import { open, usePage, studio, studioDashboard, casoraDashboards, check, need, finish, atFinish } from './lib.mjs';
@@ -44,7 +46,6 @@ atFinish(async () => {
 });
 
 const o = await open({ width: 1440, height: 900, dark: true });
-await o.context.addInitScript(() => { if (!sessionStorage.getItem('qa-neu-off')) localStorage.setItem('casora.settings.neu', '1'); });
 const page = o.page;
 usePage(page);
 const errors = [];
@@ -293,28 +294,26 @@ await check('Glocke aus- und wieder einschalten: Karte bleibt offen, Zeilen blei
 await P(`await p._csDiscardAll();`);
 });
 
-// ── Way back to the previous settings; switch off = the previous behaviour ───────────
-await part('Rückweg', async () => {
-await P(`p._csShow('n-start'); await new Promise((r) => setTimeout(r, 900)); [...p.shadowRoot.querySelectorAll('#pane .frow')].pop().click();`);
-await wait(1200);
-const old = await P(`return { page: p._csPage, flag: localStorage.getItem('casora.settings.neu') };`);
-await check('„Zurück zu den bisherigen Einstellungen“ zeigt die alte Startseite', old.page === 'start' && !old.flag, old);
-await page.evaluate(() => sessionStorage.setItem('qa-neu-off', '1'));
-await reopen();
-await P(`p._csShow('t-look'); await new Promise((r) => setTimeout(r, 900)); [...p.shadowRoot.querySelectorAll('#pane .cs-hublist .frow')][1].click(); await new Promise((r) => setTimeout(r, 1500));
-  const sw = p.shadowRoot.querySelector('#pane .card[data-k="Time"] .row[data-key="use_12h"] .sw'); if (sw) sw.click();`);
-await wait(500);
-await check('Ohne Schalter: Dashboard-Abschnitt wie bisher, Einstellungsleiste bleibt still', await P('return !p._csDirty() && p._isDirty();'));
-await P(`setTimeout(() => p.$('donebtn').click(), 0);`);
-await wait(2500);
-const oldAsk = /casora-studio/.test(page.url()) ? await P(`return !!p.shadowRoot.querySelector('.askcard');`).catch(() => false) : false;
-await check('Ohne Schalter: „Fertig“ speichert ohne Rückfrage wie bisher', !oldAsk && !/casora-studio/.test(page.url()), { url: page.url(), oldAsk });
+// ── Earlier ways in: topic and subpage ids (Studio rows, the bell, ⌘K, saved links) land on the tile and block ─────
+await part('Alte Wege', async () => {
+const at = (id, focus) => P(`p._csShow(${JSON.stringify(id)}${focus ? ', ' + JSON.stringify(focus) : ''}); await new Promise((r) => setTimeout(r, 1300));
+  const pane = p.shadowRoot.querySelector('#pane');
+  return { page: p._csPage, topics: pane.querySelectorAll('.cs-hublist .frow').length, adv: !!(pane.querySelector('.cn-adv') || {}).open,
+    blocks: [...pane.querySelectorAll('.cn-block')].filter((b) => b.getClientRects().length).map((b) => b.dataset.pkey) };`);
+const start = await at('start');
+const rows = await P(`return [...p.shadowRoot.querySelectorAll('#pane .frow')].filter((r) => r.getClientRects().length).map((r) => r.textContent.replace(/\\s+/g, ' ').trim());`);
+await check('„start“ zeigt die acht Kacheln, keinen Schalter zurück', start.page === 'n-start' && !rows.some((t) => /bisherig|previous/i.test(t)), { start, rows });
+for (const [id, focus, page, blk, adv] of [['t-look', null, 'n-look', null, false], ['t-ctl', null, 'n-use', null, false], ['t-msg', null, 'n-bell', null, false],
+  ['live', null, 'n-phone', 'nb-live', false], ['fuel', null, 'n-wx', 'nb-fuel', false], ['calendar', null, 'n-house', 'nb-calendars', false],
+  ['home', 'security', 'n-house', 'nb-security', true], ['alerts', null, 'n-bell', 'nb-notify', true]]) {
+  const r = await at(id, focus);
+  await check(`${id}${focus ? ' › ' + focus : ''} → ${page}${blk ? ' › ' + blk : ''}`, r.page === page && r.topics === 0 && (!blk || r.blocks.includes(blk)) && (!adv || r.adv), r);
+}
 });
 
 // ── Phone width ────────────────────────────────────────────────────────────────
 await part('Handy', async () => {
 const ph = await open({ width: 390, height: 844, mobile: true, dark: true });
-await ph.context.addInitScript(() => localStorage.setItem('casora.settings.neu', '1'));
 usePage(ph.page);
 await studio(ph.page, dash);
 const PP = (src) => ph.page.evaluate((src) => new Function('p', 'return (async () => {' + src + '})()')(window.__panel()), src);

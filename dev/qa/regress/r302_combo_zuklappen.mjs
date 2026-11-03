@@ -9,7 +9,7 @@ for (const browser of ['chromium', 'webkit']) {
   const { page } = await open({ width: 1400, height: 900, browser });
   usePage(page);
   await studio(page, dash);
-  await page.evaluate(() => window.__panel()._csOpenPage('live'));
+  await page.evaluate(() => window.__panel()._csOpenPage('n-phone', 'nb-live'));
   await page.waitForFunction(() => window.__pierce('.cs-wrap .cs-live-row').some((r) => r.offsetParent !== null), null, { timeout: 30000 });
   await page.waitForTimeout(800);
   const row = await page.evaluateHandle(() => window.__pierce('.cs-wrap .cs-live-row').find((r) => r.offsetParent !== null));

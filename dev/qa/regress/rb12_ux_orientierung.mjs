@@ -23,14 +23,15 @@ await page.waitForTimeout(500);
 const list = await H(() => { const b = window.__panel().shadowRoot.querySelector('.btools [data-b="list"]'); return { t: b.innerText, tip: b.title }; });
 await check('Werkzeugleiste: „Inhalt“ mit Untertitel', /Inhalt/.test(list.t) && /Foto, Badges, Kacheln und Popups/.test(list.tip), list);
 
-// V-01: what a setting applies to – since 26.10.62b5 on the row of the topic page.
+// V-01: what a setting applies to – since 03.11.2026 on the block of the tile (eight tiles).
 await tool('home');
 await page.waitForTimeout(1200);
-await H(() => window.__panel()._csShow('t-msg'));
-await page.waitForTimeout(1000);
-const rows = await H(() => [...window.__panel().shadowRoot.querySelectorAll('#pane .frow')].map((r) => r.textContent.replace(/\s+/g, ' ').trim()));
-await check('Thema Meldungen: „Glocke auf diesem Dashboard“ mit „Nur dieses Dashboard“, „Glocke: Wortlaut & Ausnahmen“ ohne',
-  rows.some((t) => /^Glocke auf diesem Dashboard.*Nur dieses Dashboard/.test(t)) && rows.some((t) => /^Glocke: Wortlaut & Ausnahmen/.test(t) && !/Nur dieses Dashboard/.test(t)), rows);
+await H(() => window.__panel()._csShow('n-bell', 'nb-notify'));
+await page.waitForTimeout(1800);
+const heads = await H(() => Object.fromEntries([...window.__panel().shadowRoot.querySelectorAll('#pane .cn-block')]
+  .map((b) => [b.dataset.pkey, b.querySelector('.cn-bhead b').textContent.replace(/\s+/g, ' ').trim()])));
+await check('Glocke & Meldungen: „Glocke auf diesem Dashboard“ mit „Nur dieses Dashboard“, „Texte und Ausnahmen“ ohne',
+  /^Glocke auf diesem Dashboard.*Nur dieses Dashboard/.test(heads['nb-bell'] || '') && /^Texte und Ausnahmen$/.test(heads['nb-notify'] || ''), heads);
 await H(() => window.__panel()._bClose());
 await page.waitForTimeout(500);
 

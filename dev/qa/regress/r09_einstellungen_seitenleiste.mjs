@@ -1,6 +1,7 @@
 // @zustand: frisch
 // Einstellungen für alle Dashboards stehen in der Studio-Seitenleiste unter der Überschrift „Einstellungen“
-// (vor „Updates“); der alte Menüeintrag „Zuhause-Einstellungen …“ im ⋯-Menü ist weg.
+// (vor „Updates“); der alte Menüeintrag „Zuhause-Einstellungen …“ im ⋯-Menü ist weg. Seit 03.11.2026 sind die Zeilen
+// die acht Kacheln der Einstellungen (die alten Unterseiten gibt es nicht mehr).
 import { open, studio, studioDashboard, check, need, finish } from './lib.mjs';
 
 const dash = await studioDashboard();
@@ -21,12 +22,14 @@ await check('Überschrift „Einstellungen“ in der Seitenleiste', head >= 0 &&
 await check('keine eigene Zeile „Einstellungen“ (Unterseiten direkt unter der Überschrift)', !side.some((k) => /cs-side/.test(k.cls)), side.map((k) => k.cls));
 await check('Unterseiten direkt unter der Überschrift', cs === head + 1, side.map((k) => k.text));
 await check('Unterseiten vor „Updates“', cu < 0 || cs < cu, { cs, cu });
+const subs = side.filter((k) => /cs-sub/.test(k.cls)).map((k) => k.text);
+await check('die acht Kacheln als Zeilen (Aussehen zuerst)', subs.length === 8 && /^Aussehen/.test(subs[0]), subs);
 
 await page.evaluate(() => window.__pierce('.cs-sub')[0].click());
 await page.waitForTimeout(2500);
 const page1 = await page.evaluate(() => ({ open: !!window.__panel()._csOpen, page: window.__panel()._csPage,
-  title: window.__pierce('h3').filter((h) => h.offsetParent).map((h) => h.textContent.trim()) }));
-await check('Einstellungen-Seite öffnet sich (erste Unterseite)', page1.open && page1.title.length > 0, page1);
+  blocks: window.__pierce('.cn-block').filter((b) => b.offsetParent).length }));
+await check('Einstellungen öffnen sich in der ersten Kachel (Aussehen) mit ihren Blöcken', page1.open && page1.page === 'n-look' && page1.blocks > 0, page1);
 
 await page.evaluate(() => window.__pierce('#more')[0].click());
 await page.waitForTimeout(800);

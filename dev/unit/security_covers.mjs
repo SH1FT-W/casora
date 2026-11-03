@@ -200,11 +200,12 @@ assert.match(C.sec('hero', null, day, hass), /Alle geschlossen · Ab Sonnenunter
 set({ covers: ['cover.bed'], covers_night: false });
 assert.equal(C.sec('hero', null, day, hass), '<div class="hui-line" data-tone="">Geschlossen</div>');
 
-// ── Studio and storage: section "security" is stored by the integration and listed under Home & Devices ──
+// ── Studio and storage: section "security" is stored by the integration; since 03.11.2026 a block of the tile
+// "Home & devices" (under "Advanced"), found by everyday words, and the earlier jump (page "home", focus) lands there ──
 assert.match(read('custom_components/casora/settings.py'), /SECTIONS = \([^)]*"security"/);
 const st = read('custom_components/casora/panel/casora-panel-settings.js');
-assert.match(st, /personal: \["waste", "contacts", "security"/);
-assert.match(st, /focus: "security"[^}]*kw: "[^"]*rollo[^"]*rollladen[^"]*jalousie/);
+assert.match(st, /\{ k: "security", personal: \["security"\], title: "Shutters at night", adv: true,[^}]*kw: "[^"]*rollo[^"]*rollladen[^"]*jalousie/);
+assert.match(st, /security: "security"/);
 const pers = read('custom_components/casora/panel/casora-panel-personal.js');
 assert.match(pers, /want\("security"\)/);
 assert.match(pers, /covers_night = false/);

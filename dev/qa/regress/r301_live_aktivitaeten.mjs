@@ -58,12 +58,12 @@ const read = () => page.evaluate(() => {
 });
 
 let s = await studioRetry(page, dash, async () => {
-  await page.evaluate(() => window.__panel()._csOpenPage('live'));
+  await page.evaluate(() => window.__panel()._csOpenPage('n-phone', 'nb-live'));
   await page.waitForFunction(() => window.__pierce('.cs-wrap .cs-live-row').some((r) => r.offsetParent !== null), null, { timeout: 30000 }).catch(() => {});
   await page.waitForTimeout(800);
   return read();
 });
-await need('Seite „Live-Aktivitäten“ offen', s.page === 'live', s);
+await need('Kachel „Handy“ mit dem Block „Sperrbildschirm (Live-Aktivitäten)“ offen', s.page === 'n-phone', s);
 await check('Überschriften Empfänger · Geräte · Probe · Testlauf · Zuletzt gesendet (in dieser Reihenfolge)',
   ['Empfänger', 'Geräte', 'Probe', 'Testlauf', 'Zuletzt gesendet'].every((h, i, a) => s.heads.includes(h) && (!i || s.heads.indexOf(a[i - 1]) < s.heads.indexOf(h))), s.heads);
 await check('Fund 10: „Aktualisieren“ im Kopf des Protokolls, keine Zeile „Protokoll“ unter den Einträgen', s.refresh && !s.protoRow, s);
@@ -178,7 +178,7 @@ await check('Fund 7: Sauger „Fertig“ mit Fläche und Dauer', vac.some((l) =>
 {
   const { page: ph } = await open({ width: 393, height: 852, mobile: true });
   await studio(ph, dash);
-  await ph.evaluate(() => window.__panel()._csOpenPage('live'));
+  await ph.evaluate(() => window.__panel()._csOpenPage('n-phone', 'nb-live'));
   await ph.waitForFunction(() => window.__pierce('.cs-wrap .cs-live-row').some((r) => r.offsetParent !== null), null, { timeout: 30000 }).catch(() => {});
   await ph.waitForTimeout(800);
   const row = await ph.evaluateHandle(() => window.__pierce('.cs-wrap .cs-live-row').find((r) => r.offsetParent !== null));

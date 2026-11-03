@@ -28,11 +28,11 @@ assert.ok(/const HOUSE_WIDE_TILES = new Set\(\[[^\]]*"casora_calendar"/.test(pan
 assert.ok(/if \(f\.settingsLink\) \{\s*const go = [^\n]*this\._casoraSettingsLink\(f\)/.test(panel), 'inspector draws the link');
 assert.ok(/"set-calendar": \["\w+", "var\(--casora-color-red/.test(panel), 'icon color of the Settings page');
 const settings = read('custom_components/casora/panel/casora-panel-settings.js');
-assert.ok(/\{ id: "calendar", label: "Calendar", icon: "calendar", tone: "set-calendar", personal: \["calendars"\],/.test(settings),
-  'own Settings page');
-assert.ok(/id: "home"[^}]*personal: \["waste", "contacts"/.test(settings), 'no longer under Home & Devices');
-assert.ok(settings.indexOf('id: "calendar"') > settings.indexOf('id: "home"') && settings.indexOf('id: "calendar"') < settings.indexOf('id: "alerts"'),
-  'right after Home & Devices');
+// Since 03.11.2026 a block of its own in the tile "Home & devices", right after waste (the subpages are gone).
+const house = settings.slice(settings.indexOf('{ id: "house"'), settings.indexOf('{ id: "wx"'));
+assert.ok(/k: "calendars", personal: \["calendars"\], title: "Calendars"/.test(house), 'own block in Home & devices');
+assert.ok(house.indexOf('k: "calendars"') > house.indexOf('k: "waste"') && house.indexOf('k: "calendars"') < house.indexOf('k: "scenes"'),
+  'right after waste');
 assert.ok(/\["calendar", "Calendar", "calendar"\]/.test(read('custom_components/casora/panel/casora-panel-b.js')), 'Settings menu');
 assert.ok(/\["calendar", "Calendar", "kalender [^"]*"\]/.test(read('custom_components/casora/panel/casora-panel-b-mehr.js')), 'search');
 settings.match(/lede: "[^"]+"/g).forEach((l) => assert.ok(de[l.slice(7, -1)], 'German lede: ' + l));
@@ -58,7 +58,7 @@ await studio._casoraSettingsRead;
 await new Promise((r) => setTimeout(r));
 assert.equal(b.textContent, '2 Kalender ›', 'counts calendars with an entity');
 b.onclick();
-assert.deepEqual(studio.shown, ['calendar', 'calendars'], 'opens Settings → Calendar at the calendars');
+assert.deepEqual(studio.shown, ['home', 'calendars'], 'opens Settings at the calendars (route: Home & devices › Calendars, settings_map)');
 
 stored.calendars = [{ entity: 'calendar.example_a' }];
 const one = Object.assign(Object.create(P), { _hass: studio._hass });

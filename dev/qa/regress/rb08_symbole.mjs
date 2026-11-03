@@ -95,19 +95,15 @@ async function run(o, tag, phone) {
   await look('Start', async () => {});
   await look('Räume-Menü', () => tool('rooms'), true);
   await look('Inhalt', () => tool('list'));
-  // Variant B (26.10.62b5): one "Einstellungen" by topic; this dashboard's sections open from their topic.
-  await look('Einstellungen (Themen)', () => tool('home'));
-  await look('Thema Meldungen', () => H(() => window.__panel()._csShow('t-msg')));
-  for (const k of ['General', 'Weather', 'Time', 'Notifications', 'Scenes']) {
-    await look('Abschnitt ' + k, () => H((k) => window.__panel()._csHubGo({ sec: k }), k));
-  }
+  // Since 03.11.2026: "Einstellungen" with eight tiles; every tile shows its settings (this dashboard's sections too).
+  await look('Einstellungen (Kacheln)', () => tool('home'));
   // Zeitreise steht seit UX-03 im Titelmenü (Dashboard-Name oben links).
   const title = () => H(() => { const r = window.__panel().shadowRoot;
     [...r.querySelectorAll('#roomtitle, #navtitle')].find((x) => x.getClientRects().length).click(); });
   await look('Titelmenü', () => title(), true);
   await look('Zeitreise', async () => { await title(); await page.waitForTimeout(400); await pick('doc:versions'); });
-  for (const k of ['home', 'alerts', 'dashboards', 'ai', 'outdoor', 'vent']) {
-    await look('Seite ' + k, () => H((k) => window.__panel()._csHubGo({ page: k }), k));
+  for (const k of ['look', 'use', 'phone', 'bell', 'house', 'wx', 'ai', 'system']) {
+    await look('Kachel ' + k, () => H((k) => window.__panel()._csShow('n-' + k), k));
   }
   await look('Updates', () => H(() => window.__panel()._csHubGo({ updates: true })));
   // Am Desktop gibt es im Testhaus immer Ausgeblendetes; am Handy hängt es vom gerade gezeigten Raum ab.

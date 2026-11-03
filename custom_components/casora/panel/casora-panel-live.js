@@ -215,7 +215,7 @@
       // 1 · Recipients
       let g = this._flowGroup(host, { header: t("Recipients"),
         footer: t("Live activities go to these phones. Needs the Home Assistant app; older app versions show a normal notification that keeps updating. None selected: off.") });
-      ctl(this, g, t("Show live activities on"), null, known.length
+      ctl(this, g, t("Show live activities on"), t("The phones whose lock screen shows the progress."), known.length
         ? chips(this, known.map((id) => [id, notifyLabel(id)]), L.targets || [], (id, on) => {
           const cur = (L.targets || []).filter((x) => x !== id);
           if (on) cur.push(id);

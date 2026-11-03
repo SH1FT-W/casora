@@ -50,7 +50,7 @@
     { id: "look", label: "Look & feel", icon: "desktop", tone: "set-design",
       sub: "Colors and design, font, clock – how your dashboards look.",
       blocks: [
-        { k: "design", page: "design", title: "Design", plain: "Pick the look of all Casora dashboards. It changes right away.",
+        { k: "design", page: "design", title: "Design", plain: "Pick how all Casora dashboards look.",
           kw: "design theme thema farben farbe hintergrund dunkel hell glas nebel aussehen look colors" },
         { k: "time", sec: "Time", title: "Clock", plain: "Show the clock at the top left, as 12 or 24 hours.",
           kw: "uhr uhrzeit zeit 12 stunden 24 clock time zeitsensor suffix" },
@@ -700,14 +700,14 @@
       if (page === "ai") {
         let g = this._flowGroup(host, { header: t("Which AI"),
           footer: t("Empty: the default AI from Settings → AI tasks.") });
-        ctlRow(this, g, t("AI for coaches, camera and plants"), null, [entPick(this, cs, "ai_task_entity", ["ai_task"])]);
+        ctlRow(this, g, t("AI for coaches, camera and plants"), t("Which AI writes the coaches' tips and checks camera pictures and plants."), [entPick(this, cs, "ai_task_entity", ["ai_task"])]);
         ctlRow(this, g, t("AI with web search"), t("Update analysis, recipe"),
           [entPick(this, cs, "ai_task_web_entity", ["ai_task"])]);
         aiModelGroup(this, cs, host);
         planGroup(this, host, O);
         g = this._flowGroup(host, { header: t("Recipe of the week"),
           footer: t("Empty: Cookidoo's additional purchases if set up, otherwise the first to-do list.") });
-        ctlRow(this, g, t("Shopping list for the ingredients"), null, [entPick(this, cs, "rezept_liste", ["todo"])]);
+        ctlRow(this, g, t("Shopping list for the ingredients"), t("Where the recipe of the week puts its ingredients."), [entPick(this, cs, "rezept_liste", ["todo"])]);
         g = this._flowGroup(host, { header: t("Hints for the AI"),
           footer: t("Given to every analysis, e.g. “The bedroom windows are tilted on purpose.”") });
         const area = el("textarea", "cs-area");
@@ -722,8 +722,8 @@
       } else if (page === "outdoor") {
         let g = this._flowGroup(host, { header: t("Outdoor values"),
           footer: t("Empty: Casora finds outdoor sensors by their name.") });
-        ctlRow(this, g, t("Outdoor temperature"), null, [entPick(this, cs, "outdoor_temperature", ["sensor"], ["temperature"])]);
-        ctlRow(this, g, t("Outdoor humidity"), null, [entPick(this, cs, "outdoor_humidity", ["sensor"], ["humidity"])]);
+        ctlRow(this, g, t("Outdoor temperature"), t("A sensor outside, for ventilation and heating tips."), [entPick(this, cs, "outdoor_temperature", ["sensor"], ["temperature"])]);
+        ctlRow(this, g, t("Outdoor humidity"), t("A sensor outside, for ventilation tips."), [entPick(this, cs, "outdoor_humidity", ["sensor"], ["humidity"])]);
         g = this._flowGroup(host, { header: t("Electricity price"),
           footer: t("For the energy analysis, the solar tip and costs in device popups. Between 0 and 2 €/kWh. Empty: the grid price from the Energy dashboard.") });
         const wrap = el("div", "cs-num");
@@ -769,21 +769,21 @@
         (O.update_push || []).forEach((x) => { if (!known.includes(x)) known.push(x); });
         const g = this._flowGroup(host, { header: t("New Casora versions"),
           footer: t("One push per new version. Tapping it opens Casora's updates. None selected: no push notifications.") });
-        ctlRow(this, g, t("Notify about new Casora versions"), null,
+        ctlRow(this, g, t("Notify about new Casora versions"), t("A push to your phone when a new version is out."),
           [chips(this, known.map((id) => [id, notifyLabel(id)]), O.update_push || [], toggleIn(cs, "update_push"))]);
       } else if (page === "vent") {
         const known = (cs.opt.notify_services || []).slice();
         (O.lueften_push || []).forEach((x) => { if (!known.includes(x)) known.push(x); });
         let g = this._flowGroup(host, { header: t("Push notifications"),
           footer: t("“Ventilate now” (7 am–10 pm), “Close the window” (7 am–11 pm) after 10 min., CO₂ above 2500 ppm right away. None selected: no push notifications.") });
-        ctlRow(this, g, t("Send ventilation hints to"), null,
+        ctlRow(this, g, t("Send ventilation hints to"), t("The phones that get “Air now” and “Close the windows”."),
           [chips(this, known.map((id) => [id, notifyLabel(id)]), O.lueften_push || [], toggleIn(cs, "lueften_push"))]);
         const S = (this._hass && this._hass.states) || {};
         const people = Object.keys(S).filter((id) => id.startsWith("person.")).sort();
         (O.lueften_personen || []).forEach((x) => { if (!people.includes(x)) people.push(x); });
         g = this._flowGroup(host, { header: t("Only when someone is home"),
           footer: t("“Ventilate now” only when one of these people is home. None selected: anyone.") });
-        ctlRow(this, g, t("People"), null,
+        ctlRow(this, g, t("People"), t("Only when one of them is at home."),
           [chips(this, people.map((id) => [id, self._prettyEntity(id)]), O.lueften_personen || [], toggleIn(cs, "lueften_personen"))]);
       }
     };

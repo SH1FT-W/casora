@@ -40,7 +40,7 @@ const E = win.entity;
 const st = await open({ width: 1440, height: 900 });
 usePage(st.page);
 await studio(st.page, dash.url);
-await st.page.evaluate(() => window.__panel()._csShow('alerts'));
+await st.page.evaluate(() => window.__panel()._csShow('n-bell', 'nb-notify'));
 await st.page.waitForFunction(() => !!window.__panel().shadowRoot.querySelector('[data-pkey="notify_exclude"] .gx-addrow'), null, { timeout: 20000 });
 await check('Abschnitt „Nicht melden“ unter Glocke & Meldungen', true);
 await st.page.evaluate(() => window.__panel().shadowRoot.querySelector('[data-pkey="notify_exclude"] .gx-addrow').click());

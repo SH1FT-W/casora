@@ -133,7 +133,7 @@ for (const [w, h] of [[1024, 768], [768, 1024]]) {
   const P = (fn, a) => pg.evaluate(fn, a);
   await studio(pg, dash.url);
   await P(() => window.__panel()._bClose());
-  await P(() => window.__panel()._csOpenPage('vent'));
+  await P(() => window.__panel()._csOpenPage('n-bell', 'nb-vent'));
   await pg.waitForTimeout(1500);
   const tapOn = async (sel) => { const at = await P((s) => { const e = window.__panel().shadowRoot.querySelector(s); if (!e) return null;
     const r = e.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }, sel); if (at) await pg.touchscreen.tap(at[0], at[1]); return !!at; };

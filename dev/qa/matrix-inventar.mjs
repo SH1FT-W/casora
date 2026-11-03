@@ -7,7 +7,7 @@
 //  - Vorlagen aus dashboards/casora/button_card_templates.json (Popups je Öffner-Vorlage, Kacheln,
 //    Badges, Raumkarte, Handy-/Kopf-Vorlagen; abstrakte Basis-Vorlagen werden mitgezählt, aber nicht abgebildet),
 //  - Overlays/Menüs des Dashboards aus scripts/*.js (nur, wenn ihr Code-Merkmal gefunden wird),
-//  - Studio-Flächen aus panel/*.js: Einstellungsseiten (PAGES), Stationen (Werkzeugleiste, Inspektor,
+//  - Studio-Flächen aus panel/*.js: Einstellungen (die acht Kacheln, NEU), Stationen (Werkzeugleiste, Inspektor,
 //    Menüs – wie dev/qa/ausrichtung.mjs), Dashboard-Abschnitte (SECS), Abläufe (_flowScreen), Rückfragen (_ask).
 // Schreibt flaechen.json, matrix.json, matrix.csv. Die Beschneidungsregel steht unten (REGEL) und in matrix.json.
 import fs from 'node:fs';
@@ -120,12 +120,12 @@ const lineOf = (s, i) => s.slice(0, i).split('\n').length;
 const methodAt = (s, i) => { const before = s.slice(0, i); const m = [...before.matchAll(/\n\s{2,4}(?:P\.)?(_[A-Za-z0-9]+)\s*(?:=\s*(?:async\s*)?function\s*)?\(([^)]*)\)\s*\{/g)].pop(); return m ? m[1] : '?'; };
 const lit = (s) => { const m = s && s.match(/^\s*(?:t|tr)?\(?\s*"([^"]+)"/); return m ? m[1] : null; };
 
-// 3a Einstellungsseiten (PAGES in casora-panel-settings.js)
+// 3a Einstellungen: die acht Kacheln (NEU in casora-panel-settings.js, seit 03.11.2026)
 const setSrc = psrc['casora-panel-settings.js'];
-const pagesBlock = setSrc.slice(setSrc.indexOf('const PAGES = ['), setSrc.indexOf('];', setSrc.indexOf('const PAGES = [')));
-for (const m of pagesBlock.matchAll(/\{ id: "(\w+)", label: "([^"]+)"/g)) {
-  add({ id: 'studio:einstellungen-' + m[1], familie: 'studio-seite', quelle: PANEL + '/casora-panel-settings.js (PAGES ' + m[1] + ')', gruppe: 'studio',
-    aktion: 'seite', ziel: m[1], oeffnen: `p._csOpenPage("${m[1]}") – Einstellungen › ${m[2]}`, zustaende: ['standard'] });
+const neuBlock = setSrc.slice(setSrc.indexOf('const NEU = ['), setSrc.indexOf('const NEU_START'));
+for (const m of neuBlock.matchAll(/\n    \{ id: "(\w+)", label: "([^"]+)"/g)) {
+  add({ id: 'studio:einstellungen-' + m[1], familie: 'studio-seite', quelle: PANEL + '/casora-panel-settings.js (NEU ' + m[1] + ')', gruppe: 'studio',
+    aktion: 'seite', ziel: 'n-' + m[1], oeffnen: `p._csOpenPage("n-${m[1]}") – Einstellungen › ${m[2]}`, zustaende: ['standard'] });
 }
 add({ id: 'studio:updates', familie: 'studio-seite', quelle: PANEL + '/casora-panel-updates.js', gruppe: 'studio', aktion: 'js', ziel: 'p._cuOpenPage()',
   oeffnen: 'p._cuOpenPage() – Updates', zustaende: ['standard'] });

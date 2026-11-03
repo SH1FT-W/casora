@@ -12,7 +12,7 @@ await need('Casora-Dashboard fürs Studio', dash);
 const { page } = await open({ width: 393, height: 852, mobile: true, safari: true, dark: false });
 usePage(page);
 await studio(page, dash);
-await page.evaluate(async () => { const p = window.__panel(); p._bOpen = true; await p._csOpenPage('alerts'); });
+await page.evaluate(async () => { const p = window.__panel(); p._bOpen = true; await p._csOpenPage('n-bell', 'nb-notify'); });
 await page.waitForTimeout(2000);
 const rows = await page.evaluate(() => {
   const p = window.__panel();

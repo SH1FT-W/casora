@@ -5,7 +5,8 @@
 //   sp-01 Phone, "Content": the room section "Now Playing" showed "Off" without its switch (only the desktop list
 //         showed the section switches) – there was no way to turn it on from the list.
 //   sp-02 Settings › Calendar: "Kalender" stood three times on top of each other (page title, group header, row label).
-//   sp-03 Settings › Home & Devices: "Security: covers" showed the fallback icon (question mark).
+//   sp-03 Settings › Home & Devices: "Security: covers" showed the fallback icon (question mark); since 03.11.2026 the
+//         block "Jalousien in der Nacht" under "Erweitert" in the tile Home & devices.
 //   sp-04 Settings start and topic pages: an empty band of ~40 px between the title and "‹ Settings" (the head kept the
 //         height of pages with an "Applies to" line).
 //   sp-05 Cover tile › Advanced: the icon fields showed their default as a file name ("curtain-open") instead of
@@ -40,7 +41,7 @@ await need('Casora-Dashboard fürs Studio', dash);
   const { page } = await open({ width: 1440, height: 900, dark: false });
   usePage(page);
   await studio(page, dash);
-  await page.evaluate(() => window.__panel()._csShow('calendar'));
+  await page.evaluate(() => window.__panel()._csShow('n-house', 'nb-calendars'));
   await page.waitForTimeout(2500);
   const cal = await page.evaluate(() => {
     const pane = window.__panel().shadowRoot.getElementById('pane');
@@ -49,24 +50,25 @@ await need('Casora-Dashboard fürs Studio', dash);
   });
   // In the pane (the page title sits above it): only the group header.
   await check('sp-02 Einstellungen › Kalender: „Kalender“ unter dem Titel nur einmal (Gruppe)', cal === 1, { cal });
-  await page.evaluate(() => window.__panel()._csShow('t-house'));
+  // Since 03.11.2026 the covers are a block of the tile „Haus & Geräte“ under „Erweitert“ (the topic list with its row
+  // and icon is gone): the advanced part names it, and opening it shows the block.
+  await page.evaluate(() => window.__panel()._csShow('n-house'));
   await page.waitForTimeout(1500);
-  const ic = await page.evaluate(() => {
+  const adv = await page.evaluate(async () => {
     const p = window.__panel();
-    const fallback = window.__casoraPanelInternals.iconUrl('default');
-    const row = [...p.shadowRoot.querySelectorAll('.cs-hublist .frow')].find((r) => /Jalousien|covers/.test(r.textContent));
-    const mk = row && row.querySelector('[style*="--i"], .mk, .rico');
-    const st = mk ? (mk.getAttribute('style') || '') + (mk.querySelector('[style]') ? mk.querySelector('[style]').getAttribute('style') : '') : '';
-    return { row: !!row, fallback: !!st && st.includes(fallback.slice(0, 120)), st: st.slice(0, 80) };
+    const d = p.shadowRoot.querySelector('#pane .cn-adv');
+    const sum = d ? d.querySelector('summary').textContent : '';
+    if (d) d.open = true;
+    await new Promise((r) => setTimeout(r, 900));
+    return { sum, block: !!p.shadowRoot.querySelector('#pane [data-pkey="nb-security"]') };
   });
-  await need('Zeile „Sicherheit: Jalousien“', ic.row, ic);
-  await check('sp-03 „Sicherheit: Jalousien“ mit eigenem Symbol (nicht dem Ersatzsymbol)', !ic.fallback, ic);
+  await check('sp-03 „Jalousien in der Nacht“ unter „Erweitert“ in Haus & Geräte', /Jalousien in der Nacht/.test(adv.sum) && adv.block, adv);
   const gap = await page.evaluate(() => {
     const R = window.__panel().shadowRoot;
     const h = R.querySelector('.insphead .cs-head h3'), b = R.querySelector('#pane .cs-hubback');
     return h && b ? Math.round(b.getBoundingClientRect().top - h.getBoundingClientRect().bottom) : null;
   });
-  await check('sp-04 Themenseite: „‹ Einstellungen“ höchstens 30 px unter dem Titel', gap != null && gap <= 30, { gap });
+  await check('sp-04 Kachelseite: „‹ Einstellungen“ höchstens 30 px unter dem Titel', gap != null && gap <= 30, { gap });
 }
 // sp-05: a cover tile's icon fields.
 {

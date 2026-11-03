@@ -25,10 +25,10 @@ const question = () => page.waitForFunction(() => { const p = window.__panel && 
 const press = (re) => P(`const c = p.shadowRoot.querySelector('.askcard');
   const b = c && [...c.querySelectorAll('.askacts button')].find((x) => new RegExp(arg).test(x.textContent)); if (b) b.click(); return !!b;`, re);
 
-// Opens the Studio, toggles the first switch on Settings > Waste collection; returns the waste section after it.
+// Opens the Studio, toggles the first switch on Settings > Home & devices > Waste; returns the waste section after it.
 const changeWaste = async () => {
   await studio(page, dash);
-  await P('await p._csShow("home", "waste");');
+  await P('await p._csShow("n-house", "nb-waste");');
   await wait(1500);
   const r = await P(`const sw = [...p.shadowRoot.querySelectorAll('.inspector [role=switch]')].find((x) => x.getClientRects().length);
     if (!sw) return null; sw.click(); await new Promise((r) => setTimeout(r, 300));
