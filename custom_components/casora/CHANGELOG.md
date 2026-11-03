@@ -8,7 +8,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 Tap to switch on badges, a calmer aquarium popup with dosing and a clearer Pulse history.
 
-### Added
+### New
 - **Tap on badges (#119):** in the Studio under Controls › Tiles, "Tap on badges" chooses what a tap on the Lighting badge and its lamp chips does: "Open popup" (as before, hold switches) or "Switch the light" (hold opens the popup). Other badges stay as they are.
 - **Dosing in the aquarium popup:** a tank with a dosing pump shows one "Dosing" row ("4 channels · all fine", a warning when a container is below 20 % or lasts less than 7 days). It opens a page per channel with container level, days left and "Dose now" with a chosen volume, after a question. In the Studio, "Dosing pump" fills the fields from the pump; Casora only suggests a pump, it never sets one on its own.
 
