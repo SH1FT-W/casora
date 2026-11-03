@@ -98,7 +98,11 @@ Seite gleich hoch und das Rad springt beim Wechsel Raum ↔ Lampe nicht. Den Kop
 kein Raum-Etikett der Kachel, kein Etikett der Seite davor, nichts gekürzt, keine Rückfall-Statuszeile). Die Seite
 einer Lampe hat ihren eigenen Hauptschalter (nur diese Lampe). Eine Lichtgruppe im Raum („Spots“) ist überall **eine**
 Zeile; die Seite einer Lampe listet die Zeilen ihres Raums. Zeilen: Name ohne Raum, Unterzeile kurz („Aus“,
-„An · 80 %“). Test `r516_light_popup_uniform.mjs`.
+„An · 80 %“). Ein Raum, dessen Lichtgruppe **eine** Lampe hält, öffnet von überall (Haus-Liste, Licht-Badge des Raums)
+gleich die Seite dieser Lampe (Entscheidung 03.11.2026). Wer aus einer Liste antippt, nennt den Ort: die Seite einer
+Lampe trägt den Raum der Liste, in der sie angetippt wurde (`_casoraBackNext.head`), auch wenn das Dashboard die Lampe
+keinem Raum zuordnet. Ein eigener Popup-Titel (`room_name`) gilt nur für die Seite einer Lampe; ein Raum heißt immer
+„Beleuchtung“ (nie „WOHNZIMMER / Wohnzimmer“). Tests `r516_light_popup_uniform.mjs`, `r517_house_room_one_lamp_label.mjs`.
 
 **Die Statuszeile wiederholt nie den Bühnenwert** (Entscheidung 01.11.2026): weder die Zahl der Bühne („513 W“) noch den
 Satz in der Rad-Mitte („Aktiviert · Zuhause“). Sie sagt etwas anderes in Worten – Energie: woher der Strom kommt („Bezug

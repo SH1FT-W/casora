@@ -8079,6 +8079,13 @@ window.casoraMenuGlass = {
         // Issue 118: a lamp opened straight from the house's room row (a room of one lamp) is labelled with that room
         // when its popup knows no room of its own (label empty or just its name). Kept in the config, so ‹ from a page
         // further in keeps it.
+        // A head the popup names itself: the page that opened it may name the place it was opened from (bn.head, the light
+        // popups: the room of the list tapped – a lamp of a house's room, a room group listed under another room). The
+        // tapped place wins over the lamp's own room (review 03.11.2026). Kept in the config like a row title.
+        if (this._headFixed && bn.head && typeof bn.head === 'object') {
+          if (typeof bn.head.eyebrow === 'string' && bn.head.eyebrow) { this._cfgEyebrow = bn.head.eyebrow; this._headerEyebrow.textContent = bn.head.eyebrow; }
+          if (typeof bn.head.title === 'string' && bn.head.title) { this._cfgTitle = bn.head.title; this._rowTitle = true; this._headerTitle.textContent = bn.head.title; }
+        }
         var ownBrow = String(this._cfgEyebrow || '').trim().toLowerCase();
         if (typeof bn.eyebrow === 'string' && bn.eyebrow && (!ownBrow || ownBrow === String(this._cfgTitle || '').trim().toLowerCase())) {
           this._cfgEyebrow = bn.eyebrow;
@@ -12979,7 +12986,7 @@ window.casoraMenuGlass = {
   function moonMenuClose() {
     if (!mmOpen) return;
     var m = mmOpen; mmOpen = null;
-    document.removeEventListener('keydown', m.key, true);
+    window.removeEventListener('keydown', m.key, true);
     window.removeEventListener('resize', m.close);
     try { m.moon.setAttribute('aria-expanded', 'false'); } catch (e) {}
     if (m.host.parentNode) m.host.parentNode.removeChild(m.host);
@@ -13038,7 +13045,8 @@ window.casoraMenuGlass = {
     };
     sr.querySelector('.veil').addEventListener('click', function (ev) { ev.stopPropagation(); close(); });
     items.forEach(function (row) { row.addEventListener('click', function (ev) { ev.stopPropagation(); window.casoraHaptic && window.casoraHaptic('selection'); pick(row.getAttribute('data-k')); }); });
-    document.addEventListener('keydown', key, true);
+    // Window capture runs before the popup's own Esc (document capture): Esc closes the menu, not the popup.
+    window.addEventListener('keydown', key, true);
     window.addEventListener('resize', close);
     mmOpen = { host: host, moon: moon, key: key, close: close };
     // Focus moves into the menu only when it was opened from the keyboard (no ring after a tap).

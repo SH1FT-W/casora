@@ -108,7 +108,7 @@ assert.equal(quickCalls.length, 0);
 
 // Wiring: room popup (single lamp or the room's only one) and house.
 assert.ok(/var fxId = fxLampOf\(single \? \[sc\.lights\[0\]\] : lampIds0, states\);/.test(pop), 'room/single popup picks the lamp');
-assert.ok(/v3Moons\(scenesOf\(h, states, sceneScope\(sc\)\), states, room, fxId, h, ids\)/.test(pop), 'room popup: scenes (a lamp\'s page: its room\'s) + effects');
+assert.ok(/v3Moons\(scenesOf\(h, states, sceneScope\(sc\)\), states, room, fxId, h, sc\.lamp && sc\.room \? sc\.room : ids\)/.test(pop), 'room popup: scenes (a lamp\'s page: its room\'s) + effects');
 assert.ok(/var fxId = fxLampOf\(all, states\);[\s\S]{0,200}v3Stage\(all, states, true, fxId \? function \(\) \{ return v3Moons\(\[\], states, null, fxId\); \} : null\)/.test(pop), 'house popup');
 
 // ── casora-core: the kept moon stays, the others fold into „Mehr (n)“ ───────

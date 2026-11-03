@@ -4230,18 +4230,25 @@
   };
   /* Head of every light popup (owner, 03.11.2026): label = the room („Zuhause“ for the house), title = „Beleuchtung“;
      a lamp's page: label = its room, title = the lamp without the room. cfg as for render (rooms + init, or flat with
-     label = the room's name); own: an own popup title (variables.room_name) wins as the title. */
+     label = the room's name); own: an own popup title (variables.room_name, no room's name) – only a lamp's page takes
+     it, a room's or the house's view is always „Beleuchtung“ (never the room twice). */
   S.headOf = function (cfg, states, own) {
     var T = 'Beleuchtung';
     if (cfg.rooms) {
       var r = cfg.init >= 0 ? cfg.rooms[cfg.init] : null;
-      return { eyebrow: r ? r.name : 'Zuhause', title: own || T };
+      // A room of one lamp chosen up front (its badge climbs to the house, group_rooms) is that lamp's page, as from
+      // the house's list (issue 118; owner, 03.11.2026, finding 3).
+      var one = r ? (r.lights || []).filter(function (x) { return states[x]; }) : [];
+      var m1 = one.length === 1 ? (states[one[0]].attributes || {}).entity_id : null;
+      // The room's own group without lamps of its own (its members missing) stays the room.
+      if (one.length === 1 && one[0] !== r.rid && !(Array.isArray(m1) && m1.some(function (x) { return states[x]; }))) return { eyebrow: r.name, title: short(nameOf(one[0], states), r.name) };
+      return { eyebrow: r ? r.name : 'Zuhause', title: T };
     }
     var f = cfg.flat || {};
-    if (f.house) return { eyebrow: 'Zuhause', title: own || T };
+    if (f.house) return { eyebrow: 'Zuhause', title: T };
     // A lamp in no room of the dashboard and no area belongs to the house: „Zuhause“ (the head keeps its height).
     if (f.lamp) return { eyebrow: f.label || 'Zuhause', title: own || short(nameOf(f.lights[0], states), f.label) };
-    return { eyebrow: f.label || f.name || '', title: own || T };
+    return { eyebrow: f.label || f.name || '', title: T };
   };
   var stat = function (ids, states) {
     var on = 0, sum = 0, nb = 0, tot = 0;
@@ -4779,7 +4786,9 @@
     // Effects: the lamp of its own popup, else the room's only lamp with effects.
     var single = !cfg.rooms && sc.lights.length === 1;
     var fxId = fxLampOf(single ? [sc.lights[0]] : lampIds0, states);
-    var left = v3Stage(ids, states, false, function () { return v3Moons(scenesOf(h, states, sceneScope(sc)), states, room, fxId, h, ids); });
+    // The scene holds while no lamp of the room changed after it: a lamp's page looks at its room's rows like the room's
+    // page (review 03.11.2026: the lamp's page marked „Szenen“ after another lamp of the room changed).
+    var left = v3Stage(ids, states, false, function () { return v3Moons(scenesOf(h, states, sceneScope(sc)), states, room, fxId, h, sc.lamp && sc.room ? sc.room : ids); });
     var ls = stat(lampIds0, states);
     var lampNames0 = lampNamesOf(lampIds0, states, room);
     var lampsHtml = lampIds0.map(function (id, i) {
@@ -5016,7 +5025,9 @@
         if (one && window._casoraNotifyOpenViaCard) {
           window._casoraLF = window._casoraLF || {};
           window._casoraLF[d.gid] = -1;
-          window._casoraBackNext = { fn: function () { P3.open(cur3); }, at: Date.now(), eyebrow: d.name || '' };
+          // The tapped room names the lamp's page (review 03.11.2026: a lamp in no dashboard room said „Zuhause“).
+          window._casoraBackNext = { fn: function () { P3.open(cur3); }, at: Date.now(), eyebrow: d.name || '',
+            head: d.name ? { eyebrow: d.name, title: short(nameOf(one, h.states), d.name) } : null };
           window._casoraNotifyOpenViaCard(one, function (ok) { if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(one); }, null, true);
           return;
         }
@@ -5038,8 +5049,13 @@
         window._casoraSuppressDismiss = Date.now() + 600;
         // ‹ zurück ins Raum-Popup (17.10.2026), wie Raum → Heizkörper (openRoom) und Liste → Detail (casora-core.js).
         var P = window.casoraPopup, prev = P && P.current;
-        // The lamp's page names itself (label = its room, title = the lamp without it, S.headOf, owner 03.11.2026).
-        window._casoraBackNext = prev ? { fn: function () { P.open(prev); }, at: Date.now() } : null;
+        // The lamp's page: label = the room of the list it was tapped in, title = the lamp without it (review 03.11.2026:
+        // also a room group listed under another room). The house's own list names no room: the page names itself.
+        var scL = S.cur ? scopeOf(S.cur) : null;
+        var roomL = scL && !scL.house ? (scL.label || scL.name || '') : '';
+        if (scL && scL.lamp) roomL = scL.label || '';
+        window._casoraBackNext = prev ? { fn: function () { P.open(prev); }, at: Date.now(),
+          head: roomL ? { eyebrow: roomL, title: short(nameOf(d.id, h.states), roomL) } : null } : null;
         window._casoraNotifyOpenViaCard(d.id, function (ok) { if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(d.id); }, null, true);
         return;
       }

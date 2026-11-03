@@ -37,6 +37,11 @@ assert.equal(S.placeOf('light.qa_alone', hass), null);
 const rooms = [{ name: 'Wohnzimmer', rid: 'light.qa_room', lights: ['light.qa_strip', 'light.qa_spots'] }];
 assert.deepEqual(S.headOf({ rooms, init: -1 }, states), { eyebrow: 'Zuhause', title: 'Beleuchtung' }, 'house');
 assert.deepEqual(S.headOf({ rooms, init: 0 }, states), { eyebrow: 'Wohnzimmer', title: 'Beleuchtung' }, 'house with the room chosen');
+// A room of one lamp chosen up front (a room badge climbing to its house): that lamp's page (finding 3, 03.11.2026).
+assert.deepEqual(S.headOf({ rooms: [{ name: 'Wohnzimmer', rid: 'light.qa_room', lights: ['light.qa_strip'] }], init: 0 }, states),
+  { eyebrow: 'Wohnzimmer', title: 'TV-Backlight' }, 'room of one lamp: the lamp');
+assert.deepEqual(S.headOf({ rooms: [{ name: 'Wohnzimmer', rid: 'light.qa_room', lights: ['light.qa_spots'] }], init: 0 }, states),
+  { eyebrow: 'Wohnzimmer', title: 'Beleuchtung' }, 'room of one group with lamps: the room');
 assert.deepEqual(S.headOf({ flat: { house: true, lights: ['light.qa_strip'] } }, states), { eyebrow: 'Zuhause', title: 'Beleuchtung' }, 'flat house');
 assert.deepEqual(S.headOf({ flat: { name: 'Wohnzimmer', label: 'Wohnzimmer', lights: ['light.qa_strip', 'light.qa_spot_1'] } }, states),
   { eyebrow: 'Wohnzimmer', title: 'Beleuchtung' }, 'room');
@@ -54,5 +59,8 @@ for (const [k, a] of [['casora_popup_light', 'tap_action'], ['casora_popup_light
   const cp = T[k][a].casora_popup;
   assert.ok(/_hdr\.fixed/.test(cp.head_fixed) && /_hdr\.eyebrow/.test(cp.eyebrow), k + ' ' + a + ': eyebrow and head_fixed');
 }
-assert.ok(/_LS\.headOf\(_softCfg, states, variables\.room_name \|\| null\)/.test(T.casora_popup_light.custom_fields.lpc_init), 'LPC header uses headOf');
+assert.ok(/_LS\.headOf\(_softCfg, states, _rnOwn\)/.test(T.casora_popup_light.custom_fields.lpc_init), 'LPC header uses headOf');
+// A room's or the house's view is always „Beleuchtung“: an own title (room_name) never repeats the room (review 03.11.2026).
+assert.equal(S.headOf({ flat: { name: 'Wohnzimmer', label: 'Wohnzimmer', lights: ['light.qa_strip', 'light.qa_spot_1'] } }, states, 'Wohnzimmer').title, 'Beleuchtung', 'room view ignores an own title');
+assert.equal(S.headOf({ flat: { house: true, lights: ['light.qa_strip'] } }, states, 'Home').title, 'Beleuchtung', 'house view ignores an own title');
 console.log('ok light_head_uniform');

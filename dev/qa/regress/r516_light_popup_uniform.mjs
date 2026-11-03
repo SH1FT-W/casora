@@ -63,6 +63,7 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
     return { eyebrow: t(e._headerEyebrow || {}), title: t(e._headerTitle || {}), back: !!(e._headerBack && !e._headerBack.hidden),
       status: st && !st.hidden && vis(st) ? t(st) : '', sw: !!(e._headerSwitch && !e._headerSwitch.hidden && vis(e._headerSwitch)),
       lbl: P('.lps-lbl').map(t), rows, moons: P('.hui-moon').map((m) => m.getAttribute('aria-label') || t(m)),
+      moonsOn: P('.hui-moon.on').map((m) => m.getAttribute('aria-label') || t(m)),
       dial: dl && sf ? Math.round(dl.getBoundingClientRect().top - sf.getBoundingClientRect().top) : null };
   });
   const until = async (fn, max = 28) => { let h = null; for (let i = 0; i < max; i++) { await pg.waitForTimeout(250); h = await info(); if (h && fn(h)) break; } await pg.waitForTimeout(600); return info(); };
@@ -148,19 +149,40 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
 
   // d) The room's own light badge (desktop: holding it opens the popup, a tap opens the row of lamps; phone: the room
   // page of the one phone view, its filter key as the phone sets it).
-  if (size.mobile) {
-    await go(dash.phone.url + '/' + (dash.phone.config.views[0].path || '0'));
-    // The phone's room keys as its navigation lists them (r243).
-    await pg.evaluate((name) => { const n = window.__pierce('*').find((e) => e._rooms && typeof e._items === 'function');
-      const r = n && (n._rooms.find((x) => (x.label || x.name) === name) || n._rooms.find((x) => /wohnzimmer/i.test(x.key)));
-      if (r) window._casoraFilter.set(r.key); }, WZ);
-    await pg.waitForTimeout(3000);
-  } else await go(dash.url + '/wohnzimmer');
+  const roomPage = async (name, path) => {
+    if (size.mobile) {
+      await go(dash.phone.url + '/' + (dash.phone.config.views[0].path || '0'));
+      // The phone's room keys as its navigation lists them (r243).
+      await pg.evaluate(([name, path]) => { const n = window.__pierce('*').find((e) => e._rooms && typeof e._items === 'function');
+        const r = n && (n._rooms.find((x) => (x.label || x.name) === name) || n._rooms.find((x) => x.key === 'room_' + path));
+        if (r) window._casoraFilter.set(r.key); }, [name, path]);
+      await pg.waitForTimeout(3000);
+    } else await go(dash.url + '/' + path);
+  };
+  // Finding 3 (owner, 03.11.2026): a room whose light group holds one lamp opens that lamp's page from its badge too.
+  await roomPage(FL, 'flur');
+  at = await cardAt('casora_badge_light_group', null, size.mobile);
+  if (at) { await tap(at, !size.mobile); h = await until((x) => /Deckenlampe/.test(x.title)); await judge('Raum-Badge mit einer Lampe', h, { eyebrow: FL, title: 'Deckenlampe', sw: true }); await close(); }
+  else await check(label + ': Licht-Badge im Flur', false);
+  await roomPage(WZ, 'wohnzimmer');
+  // The room's scene was set 10 min ago, a lamp of the room changed after it: no longer marked – on the room's page
+  // and on the page of another lamp alike (review 03.11.2026: the lamp's page looked at itself only).
+  const scene = await pg.evaluate((g) => { const h = document.querySelector('home-assistant').hass; const E = h.entities || {}, D = h.devices || {};
+    const area = (x) => { const e = E[x] || {}; return e.area_id || (e.device_id && D[e.device_id] && D[e.device_id].area_id) || null; };
+    return Object.keys(h.states).find((x) => x.startsWith('scene.') && area(x) && area(x) === area(g)) || null; }, wzGroup);
+  if (scene) {
+    const iso = (ms) => new Date(Date.now() - ms).toISOString();
+    Object.assign(FAKE, { [scene]: { state: iso(600000), attributes: { friendly_name: 'Szene ' + WZ } },
+      [L.steh]: Object.assign({}, FAKE[L.steh], { last_updated: iso(30000), last_changed: iso(30000) }) });
+    await fakeStates(pg, FAKE, { sticky: true });
+    await pg.waitForTimeout(1200);
+  }
   at = await cardAt('casora_badge_light_group', null, size.mobile);
   await need(label + ': Licht-Badge im Wohnzimmer', at);
   await tap(at, !size.mobile);
   h = await until((x) => x.rows.length >= 3);
   await judge('Raum-Badge', h, { eyebrow: WZ, title: 'Beleuchtung', rows: LAMPS, scenes: true });
+  if (scene) await check(`${label} Raum-Badge: Szene gilt nicht mehr (eine Lampe danach geändert) – „Szenen“ nicht markiert`, h && !h.moonsOn.some((m) => /^Szenen/.test(m)), h && h.moonsOn);
   const sm = await moonMenu('Szenen');
   await check(`${label} Raum-Badge: „Szenen“ öffnet ein Menü mit den Szenen des Raums, ohne Raumnamen`,
     Array.isArray(sm) && sm.length >= 2 && !sm.some((x) => x.includes(WZ)), sm);
@@ -170,6 +192,19 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
     await tap(r); h = await until((x) => /TV-Backlight/.test(x.title));
     await judge('Raum → Lampe', h, { eyebrow: WZ, title: 'TV-Backlight', rows: LAMPS, scenes: true, sw: true });
     await check(`${label} Raum → Lampe: „Effekte“ neben „Szenen“`, h && h.moons.some((m) => /^Effekte/.test(m)), h && h.moons);
+    if (scene) await check(`${label} Raum → Lampe: „Szenen“ wie auf der Raumseite nicht markiert`, h && !h.moonsOn.some((m) => /^Szenen/.test(m)), h && h.moonsOn);
+    // Esc with the menu open closes the menu, not the popup (review 03.11.2026).
+    if (!size.mobile) {
+      const p0 = await pg.evaluate(() => { const e = window.casoraPopup.element;
+        const m = window.__pierce('.hui-moon', e.shadowRoot).find((x) => x.getBoundingClientRect().width > 0 && /^Effekte/.test(x.getAttribute('aria-label') || ''));
+        if (!m) return null; const r = m.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+      if (p0) {
+        await tap(p0); await pg.waitForTimeout(600);
+        await pg.keyboard.press('Escape'); await pg.waitForTimeout(700);
+        const st = await pg.evaluate(() => ({ menu: !!document.querySelector('[data-casora-moonmenu-pane]'), open: !!(window.casoraPopup.element && window.casoraPopup.element.hasAttribute('open')) }));
+        await check(`${label} Raum → Lampe: Esc schließt nur das Menü, das Popup bleibt`, !st.menu && st.open, st);
+      }
+    }
     const fm = await moonMenu('Effekte');
     await check(`${label} Raum → Lampe: „Effekte“ öffnet das Menü der Effekte`, Array.isArray(fm) && fm.some((x) => /Regenbogen/.test(x)) && fm.some((x) => /Ohne Effekt/.test(x)), fm);
   } else await check(label + ': Lampen-Zeile im Raum-Popup', false);
@@ -177,6 +212,27 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
 
   // f) Desktop: a lamp chip of the room and Home's room chip.
   if (!size.mobile) {
+    // A light tile of the room saved with an own room_name (older setups: the room's name): the head says the room once
+    // (review 03.11.2026: „WOHNZIMMER / Wohnzimmer“).
+    await go(dash.url + '/wohnzimmer');
+    const tileOk = await pg.evaluate(([g, rn]) => {
+      const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_light')
+        && x._stateObj && x._stateObj.entity_id === g && x.getBoundingClientRect().width > 20);
+      if (!b) return null;
+      b.setConfig(Object.assign({}, b._config, { variables: Object.assign({}, b._config.variables || {}, { room_name: rn }) }));
+      b.hass = document.querySelector('home-assistant').hass;
+      return true;
+    }, [wzGroup, WZ]);
+    if (tileOk) {
+      await pg.waitForTimeout(1500);
+      const tp = await pg.evaluate((g) => { const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_light')
+        && x._stateObj && x._stateObj.entity_id === g && (x._config.variables || {}).room_name && x.getBoundingClientRect().width > 20);
+        if (!b) return null; b.scrollIntoView({ block: 'center' }); const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2, tpl: [].concat(b._config.template) }; }, wzGroup);
+      await pg.waitForTimeout(500);
+      await tap(tp); h = await until((x) => x.rows.length >= 3);
+      await check(`${label} Licht-Kachel mit eigenem room_name: Kopf „${WZ} / Beleuchtung“`, h && h.eyebrow.toLowerCase() === WZ.toLowerCase() && h.title === 'Beleuchtung', h);
+      await close();
+    } else await check(label + ': Licht-Kachel des Wohnzimmers', false);
     await go(dash.url + '/wohnzimmer');
     at = await cardAt('casora_badge_light_group');
     await tap(at);
@@ -201,6 +257,26 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
   // The dial stands at the same height on every page (same head everywhere).
   const ys = views.map((v) => v.h.dial).filter((y) => y != null);
   await check(`${label}: Rad überall auf gleicher Höhe`, ys.length >= 3 && Math.max(...ys) - Math.min(...ys) <= 2, views.map((v) => [v.name, v.h.dial]));
+  await pg.context().close();
+}
+// English (review 03.11.2026): the head and the heading the light module writes in German are translated.
+{
+  const { page: pg } = await open({ width: 1440, height: 900, dark: false, theme: 'Casora', locale: 'en-US' });
+  usePage(pg);
+  await pg.addInitScript(() => { try { localStorage.setItem('selectedLanguage', '"en"'); } catch (e) { /* none */ } });
+  await dashboard(pg, dash.url, 2);
+  await fakeStates(pg, FAKE, { sticky: true });
+  await pg.waitForTimeout(1200);
+  const at = await pg.evaluate(() => { const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_badge_light_group') && x.getBoundingClientRect().width > 20);
+    if (!b) return null; const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+  await need('English: light badge on Home', at);
+  await pg.mouse.move(at.x, at.y); await pg.mouse.down(); await pg.waitForTimeout(900); await pg.mouse.up();
+  await pg.waitForTimeout(3000);
+  const en = await pg.evaluate(() => { const e = window.casoraPopup.element; if (!e) return null;
+    const lbl = window.__pierce('.lps-lbl', e.shadowRoot).filter((x) => x.getBoundingClientRect().width > 0).map((x) => x.textContent.trim());
+    return { lang: (document.querySelector('home-assistant').hass.locale || {}).language, eyebrow: e._headerEyebrow.textContent.trim(), title: e._headerTitle.textContent.replace(/\u200B/g, '').trim(), lbl }; });
+  await check('English: head „Home / Lighting“, heading „Rooms · n of m lamps on“', en && en.eyebrow === 'Home' && en.title === 'Lighting'
+    && en.lbl.some((x) => /^Rooms · \d+ of \d+ lamps on$/.test(x)), en);
   await pg.context().close();
 }
 await finish();

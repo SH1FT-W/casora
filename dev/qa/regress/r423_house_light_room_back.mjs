@@ -67,7 +67,7 @@ const run = async (tag, page, mobile) => {
   const house = await openHouse(page, mobile);
   await need(tag + ': house light popup with ≥ 2 rooms', house, house);
   await check(tag + ': house popup without ‹', !house.back, house);
-  // A room with ≥ 1 lamp of its own (the lamp step needs one).
+  // A room with ≥ 2 lamps of its own (the lamp step needs one; a room of one lamp opens that lamp's page, #118 / r504).
   // Prefer a room with a lamp not named like the room, so the room label on the lamp page is checked (not only
   // the dropped label of a lamp called like its room).
   const otherName = (ids, roomName) => page.evaluate(([ids, roomName]) => {
@@ -78,14 +78,14 @@ const run = async (tag, page, mobile) => {
   for (const name of house.rooms) {
     await tapIn(page, mobile, { a: 'room', v: name });
     const r = await readPopup(page);
-    if (r && r.lamps.length && await otherName(r.lamps, name)) { room = { name, r }; break; }
-    if (r && r.lamps.length && !first) first = name;
+    if (r && r.lamps.length > 1 && await otherName(r.lamps, name)) { room = { name, r }; break; }
+    if (r && r.lamps.length > 1 && !first) first = name;
     await back(page, mobile);
   }
   if (!room && first) {
     await tapIn(page, mobile, { a: 'room', v: first });
     const r = await readPopup(page);
-    if (r && r.lamps.length) room = { name: first, r };
+    if (r && r.lamps.length > 1) room = { name: first, r };
   }
   await need(tag + ': a room with lamps', room);
   const r = room.r;
@@ -102,10 +102,15 @@ const run = async (tag, page, mobile) => {
   }, [r.lamps, room.name]).catch(() => r.lamps[0]);
   await tapIn(page, mobile, { a: 'mi', v: pickLamp });
   const lamp = await readPopup(page);
-  // The lamp's page: ‹, labelled with its room (the dashboard room holding it) and a title – the lamp, or „Beleuchtung“
-  // when the row is a room group of its own (the test house lists one under another room).
-  await check(tag + ': lamp page with ‹, labelled with its room, with a title',
-    lamp && lamp.back && lamp.label !== '' && lamp.title !== '', { lamp, room: room.name });
+  // The lamp's page (review 03.11.2026): labelled with the room of the list it was tapped in, titled with the row's
+  // light without that room – also for a room group listed under another room (the test house has one).
+  const want = await page.evaluate(([id, roomName]) => {
+    const n = String((((document.querySelector('home-assistant').hass.states[id] || {}).attributes) || {}).friendly_name || id);
+    const r = String(roomName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return n.replace(new RegExp('\\s*\\b' + r + '\\b\\s*', 'i'), ' ').trim() || n;
+  }, [pickLamp, room.name]);
+  await check(tag + ': lamp page with ‹, labelled „' + room.name + '“, titled „' + want + '“',
+    lamp && lamp.back && lamp.label.toLowerCase() === room.name.toLowerCase() && lamp.title === want, { lamp, room: room.name, want });
   await back(page, mobile);
   const r2 = await readPopup(page);
   await check(tag + ': ‹ from the lamp: the room again (title, label, lamps)', r2 && r2.title === r.title && r2.label === r.label && r2.lamps.join() === r.lamps.join(), { r2, r });

@@ -127,7 +127,7 @@ let played = 0;
   }
   // A few fixed results (runtime behaviour, not just the table).
   const EXPECT = [
-    ['Leuchten', 'Luces'],
+    ['Lampen im Raum', 'Lámparas de la habitación'],
     ['Beleuchtung', 'Iluminación'],
     ['62 %', '62 %'],
     ['Home', 'Casa'],
