@@ -17,14 +17,16 @@ import { check, need, finish } from './lib.mjs';
 const MAX_GAP = 200;
 // Layouts measured above MAX_GAP on 01.11.2026 (test house „arbeit“): the empty block may not grow beyond this cap
 // (measured + 40 px). Lower or drop an entry when its popup is evened out.
-// 02.11.2026: the column balance (casora-core colBalance, popup-richtlinien-v3 „Spaltenausgleich“) evened out the light
-// popups (rooms list partly under the dial), climate, humidifier, vacuum, e-bike, security, lock, Lüften-Coach and chart
+// 02.11.2026: the column balance (casora-core colBalance, popup-richtlinien-v3 „Spaltenausgleich“) evened out climate, humidifier, vacuum, e-bike, security, lock, Lüften-Coach and chart
 // popups – they left this list. What stays cannot be evened out by moving whole sections: a long left part with more
 // than 200 px on the right (printer camera, coffee drinks, aquarium light, plant), one long list (calendar, rezept's
 // shopping list) or layouts of their own (weather §7.1, Frigate, trash calendar). licht-badge and schloss-badge do not
 // open in the gallery's badge path (not measurable), they keep their caps.
 const KNOWN = {
-  'licht-badge': 328, 'drucker': 437, 'kaffee': 609, 'aquarium-licht': 276, 'schloss-badge': 325, 'pflanze': 296,
+  // Light popups (owner 03.11.2026): the column rule moves only whole sections and never splits a list, so the light
+  // popups (one list right of the dial) keep their layout and their caps of 03.11.2026.
+  'licht-raum': 283, 'licht-haus': 440,
+  'licht-badge': 440, 'drucker': 437, 'kaffee': 609, 'aquarium-licht': 276, 'schloss-badge': 325, 'pflanze': 296,
   'wetter': 420, 'frigate': 358, 'kalender': 844, 'abfall': 463, 'rezept': 343,
 };
 const tool = fileURLToPath(new URL('../popup-galerie.mjs', import.meta.url));

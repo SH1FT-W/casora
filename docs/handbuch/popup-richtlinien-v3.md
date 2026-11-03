@@ -62,11 +62,13 @@ Leere Flächen (01.11.2026): Unter der kürzeren Spalte soll kein großer leerer
 Obergrenze, die nicht wachsen darf. Unter dem Rad steht immer zuerst der Verlauf (§7.1), auch beim Wetter.
 
 Spaltenausgleich (02.11.2026, eine Regel für alle): Die Layout-Bausteine (`HH.layout`, `_casoraSoftKit.layout`,
-`_casoraStdLayout`, Licht-Popup) geben ihre Aufteilung an `_casoraUI.colBalance` (casora-core). Links fest: Bühne,
+`_casoraStdLayout`) geben ihre Aufteilung an `_casoraUI.colBalance` (casora-core). Links fest: Bühne,
 Schnellwahl, Verlauf, `underStage`; rechts die Abschnitte in Lesereihenfolge. Das offene Popup misst die Höhen und merkt
 sie sich je Popup und Gerät (localStorage `casora_col_bal`); ab dann gilt beim Aufbau:
-- Regel A: Ist rechts mehr als 120 px länger, rücken die ersten Abschnitte (beim Licht die ersten Zeilen der Liste mit
-  ihrer Überschrift) unter die Bühne, so viele, dass das Popup am niedrigsten wird. Die Reihenfolge bleibt die des Handys.
+- Regel A: Ist rechts mehr als 120 px länger, rücken die ersten ganzen Abschnitte (Überschrift mit allen Zeilen) unter die
+  Bühne, so viele, dass das Popup am niedrigsten wird. Eine Liste wird nie geteilt (Maintainer, 03.11.2026: geteilte
+  Lichtliste sah schlecht aus). Die Reihenfolge bleibt die des Handys. Die Licht-Popups (Haus, Raum, Lampe) haben nur
+  eine Liste und behalten darum ihren Aufbau.
 - Regel B: Ist links mehr als 120 px länger und die ganze rechte Spalte höchstens 200 px hoch, wird das Popup einspaltig
   (552) mit dem rechten Teil unter der Bühne (nur v3).
 Beim ersten Öffnen (noch nichts gemessen) baut sich das Popup nach dem Messen einmal um. Ein langer linker Teil mit mehr

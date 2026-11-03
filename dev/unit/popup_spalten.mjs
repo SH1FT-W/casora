@@ -54,8 +54,9 @@ const safe = new Function(ids + 'return balSafe;')();
 for (const bad of ['lps:a*/b', 'x</style><b>', 'k:light.a|b c']) assert.ok(/^[\w.:,|~-]+$/.test(safe(bad)), 'balSafe: ' + safe(bad));
 assert.ok(safe('x'.repeat(400)).length <= 160, 'balSafe: long ids shortened');
 // The helpers hand their split to colBalance (one rule everywhere).
-for (const [f, re] of [['02-devices.js', /CB\.split\(bal\.id/], ['05-weich-mehr.js', /CB\.split\(bal\.id/], ['05-standard-medien.js', /CB\.split\(bal\.id/],
-  ['03-popups.js', /CB\.split\(id, rows\.length/]]) {
+for (const [f, re] of [['02-devices.js', /CB\.split\(bal\.id/], ['05-weich-mehr.js', /CB\.split\(bal\.id/], ['05-standard-medien.js', /CB\.split\(bal\.id/]]) {
   assert.ok(re.test(fs.readFileSync(new URL('custom_components/casora/scripts/local/' + f, ROOT), 'utf8')), f + ': layout uses colBalance');
 }
+// Owner 03.11.2026: a list is never split – the light popups (one list right of the dial) stay out of the balance.
+assert.ok(!/colBalance/.test(fs.readFileSync(new URL('custom_components/casora/scripts/local/03-popups.js', ROOT), 'utf8')), '03-popups.js: light popups do not split their list');
 console.log('popup_spalten: ok');

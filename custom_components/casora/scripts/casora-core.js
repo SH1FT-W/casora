@@ -13780,9 +13780,10 @@ window.casoraMenuGlass = {
     return n;
   }
   // Column balance (owner 02.11.2026: no large empty block under the shorter column – one rule for every two-column
-  // popup). A layout helper (HH.layout, _casoraSoftKit.layout, the light popup) hands its split to colBalance:
+  // popup). A layout helper (HH.layout, _casoraSoftKit.layout, _casoraStdLayout) hands its split to colBalance:
   //   head  = the left column's fixed part (stage, quick choice, the Verlauf, underStage – §2, §7.1),
-  //   items = the right column's sections (or a list's rows) in reading order.
+  //   items = the right column's WHOLE sections (heading with all its rows) in reading order – a list is never split
+  //           (owner 03.11.2026: the light popups keep their layout, their one list stays whole on the right).
   // When the popup is open (desktop/tablet only) the parts are measured and remembered per popup and entity
   // (localStorage casora_col_bal); every build reads them and places the parts:
   //   rule A – the right column is the long one: its first items continue under the head, as many as give the
