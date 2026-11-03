@@ -487,6 +487,9 @@
     + '.cz-band{position:relative;height:30px;border-radius:12px;overflow:hidden;margin-top:14px;'
     + 'background:var(--casora-popup-row-fill, rgba(127,127,127,.10));}'
     + '.cz-band i{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--casora-popup-accent, var(--casora-color-teal, #4E9E95));min-width:3px;}'
+    // State ribbon (Pulse): even, 14 px, rounded segments; overflow visible for the soft glow.
+    + '.cz-band.st{height:14px;border-radius:7px;overflow:visible;margin-top:18px;}'
+    + '.cz-band.st i{border-radius:7px;}'
     + '.cz-axis{display:flex;justify-content:space-between;font-size:12px;opacity:.6;margin:6px 4px 0;}'
     + '</style>';
   // Blueprint v2: one period switch for the chart popup and this page – the shared segments (UI.segments),
@@ -557,7 +560,6 @@
   var deep = function (c, p) { return 'color-mix(in srgb, ' + c + ' ' + (p || 78) + '%, var(--primary-text-color, #3A322B))'; };
   var NEU = 'var(--casora-color-neutral, var(--secondary-text-color))';
   var WORD = { ok: 'Gut', learning: 'Lernt', watch: 'Beobachten', check: 'Prüfen', failed: 'Ausgefallen' };
-  var HGT = { ok: 34, learning: 34, watch: 58, check: 80, failed: 100 };
   // Ring tone of a Pulse state (UI.stage S7); learning, unknown and unavailable grey.
   var PULSE_TONE = { ok: 'good', watch: 'caution', check: 'warn', failed: 'bad' };
   var stateTone = function (h, id, s) {
@@ -603,26 +605,30 @@
           var sg = Z.segments(rows, now);
           var C3 = stateTone(hass, id, st.state) || (sg.segs[0] && stateTone(hass, id, sg.segs[0].s));
           var sum = {};
-          out += '<div class="cz-band"' + (C3 ? ' style="height:44px;"' : '') + '>' + sg.segs.filter(function (x) { return duo ? Z.isActive(x.s) : true; }).map(function (x, k) {
+          var drawn = sg.segs.filter(function (x) { return duo ? Z.isActive(x.s) : true; });
+          // Pulse (state ribbon, handbook §7.6, owner 03.11.2026 option A): one even height for every state, rounded
+          // segments with a small gap between neighbours, a problem state glows softly. Was a step chart whose bar height
+          // grew with the severity – hard blocks that looked cheap.
+          out += '<div class="cz-band' + (C3 ? ' st' : '') + '">' + drawn.map(function (x, k) {
             var l = (x.start - t0) / (now - t0) * 100, w = ((x.end || now) - x.start) / (now - t0) * 100;
             var tn = stateTone(hass, id, x.s);
             sum[x.s] = (sum[x.s] || 0) + ((x.end || now) - Math.max(x.start, t0));
             if (tn) {
-              return '<i style="left:' + l.toFixed(2) + '%;width:' + Math.max(0.4, w).toFixed(2) + '%;background:' + tn.fill + ';border-radius:3px;'
-                + 'outline:1.5px solid var(--casora-popup-row-fill, rgba(127,127,127,.10));'
-                + (C3 ? 'top:auto;height:' + HGT[x.s] + '%;' : '') + '"></i>';
+              var gl = k ? 1.5 : 0, gr = k < drawn.length - 1 ? 1.5 : 0;
+              return '<i data-cz-st="' + esc(x.s) + '" style="left:calc(' + l.toFixed(3) + '% + ' + gl + 'px);width:max(4px, calc(' + Math.max(0, w).toFixed(3) + '% - ' + (gl + gr) + 'px));'
+                + 'background:' + tn.fill + ';' + (x.s === 'check' || x.s === 'failed' ? 'box-shadow:0 0 10px -2px ' + tn.dot + ';' : '') + '"></i>';
             }
             // Two states: only the active spans are drawn (accent), the idle time stays the bare track (issue 104).
             return '<i' + (duo ? ' class="on"' : '') + ' style="left:' + l.toFixed(2) + '%;width:' + Math.max(0.4, w).toFixed(2) + '%;' + (duo ? '' : 'opacity:' + (0.35 + 0.65 * ((k % 2) ? 0.5 : 1)) + ';') + '"></i>';
           }).join('') + '</div>';
           var leg = '';
-          // Legende erst ab drei Zuständen im Zeitraum – bei „immer Gut“ wäre sie nur Rauschen.
-          if (C3 && Object.keys(sum).filter(function (k) { return WORD[k]; }).length > 2) {
-            leg = '<div style="display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin-top:10px;font-size:13px;font-weight:600;">'
+          // Legend from two states up (owner 03.11.2026) – one state alone („always Gut“) says it with the ribbon.
+          if (C3 && Object.keys(sum).filter(function (k) { return WORD[k]; }).length > 1) {
+            leg = '<div class="cz-leg" style="display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;margin-top:12px;font-size:13px;font-weight:600;">'
               + ['failed', 'check', 'watch', 'ok', 'learning'].filter(function (k) { return sum[k]; }).map(function (k) {
                 var tk = stateTone(hass, id, k);
-                return '<span style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">'
-                  + '<span style="width:10px;height:' + Math.round(4 + HGT[k] / 100 * 10) + 'px;border-radius:2px;background:' + tk.fill + ';align-self:flex-end;margin-bottom:3px;"></span>'
+                return '<span style="display:inline-flex;align-items:center;gap:7px;white-space:nowrap;">'
+                  + '<span class="cz-dot" style="width:8px;height:8px;border-radius:50%;background:' + tk.dot + ';"></span>'
                   + esc(T(WORD[k])) + ' <span style="opacity:.6;font-weight:500;">' + esc(dur(sum[k])) + '</span></span>';
               }).join('') + '</div>';
           }
