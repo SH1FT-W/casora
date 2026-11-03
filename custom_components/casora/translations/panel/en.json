@@ -9,7 +9,20 @@
     "Cards Casora does not manage. They sit below the tiles, exactly as": "Cards Casora does not manage. They sit below the tiles, exactly as",
     "Never yet": "Never",
     "Show blinds": "Show blinds",
-    "Adds a Blinds row to the climate popup.": "Adds a Blinds row to the climate popup."
+    "Adds a Blinds row to the climate popup.": "Adds a Blinds row to the climate popup.",
+    "Lamps": "Lamps",
+    "Household": "Household",
+    "Name or entity": "Name or entity",
+    "No device matches the filter.": "No device matches the filter."
   },
-  "patterns": []
+  "patterns": [
+    [
+      "^(\\d+) of (\\d+)$",
+      "{1} of {2}"
+    ],
+    [
+      "^Part of (.+)$",
+      "Part of {1}"
+    ]
+  ]
 }

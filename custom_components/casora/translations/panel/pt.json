@@ -2871,7 +2871,11 @@
     "Lasts for": "Dura mais",
     "No dosing pump found in Home Assistant.": "Nenhuma bomba doseadora encontrada no Home Assistant.",
     "Choose a dosing pump": "Escolher bomba doseadora",
-    "Suggestion: {x}": "Sugestão: {x}"
+    "Suggestion: {x}": "Sugestão: {x}",
+    "Lamps": "Lâmpadas",
+    "Household": "Casa",
+    "Name or entity": "Nome ou entidade",
+    "No device matches the filter.": "Nenhum dispositivo corresponde ao filtro."
   },
   "patterns": [
     [
@@ -3569,6 +3573,14 @@
     [
       "^“(.+)” is in the sidebar with Home and (\\d+) rooms\\.$",
       "“{1}” está na barra lateral com Casa e {2} divisões."
+    ],
+    [
+      "^(\\d+) of (\\d+)$",
+      "{1} de {2}"
+    ],
+    [
+      "^Part of (.+)$",
+      "Parte de {1}"
     ]
   ]
 }

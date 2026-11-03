@@ -2871,7 +2871,11 @@
     "Lasts for": "Reicht noch",
     "No dosing pump found in Home Assistant.": "Keine Dosierpumpe in Home Assistant gefunden.",
     "Choose a dosing pump": "Dosierpumpe wählen",
-    "Suggestion: {x}": "Vorschlag: {x}"
+    "Suggestion: {x}": "Vorschlag: {x}",
+    "Lamps": "Lampen",
+    "Household": "Haushalt",
+    "Name or entity": "Name oder Entität",
+    "No device matches the filter.": "Kein Gerät passt zum Filter."
   },
   "patterns": [
     [
@@ -3569,6 +3573,14 @@
     [
       "^“(.+)” is in the sidebar with Home and (\\d+) rooms\\.$",
       "„{1}“ ist mit Zuhause und {2} Räumen in der Seitenleiste."
+    ],
+    [
+      "^(\\d+) of (\\d+)$",
+      "{1} von {2}"
+    ],
+    [
+      "^Part of (.+)$",
+      "Teil von {1}"
     ]
   ]
 }

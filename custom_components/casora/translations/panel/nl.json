@@ -2871,7 +2871,11 @@
     "Lasts for": "Nog genoeg voor",
     "No dosing pump found in Home Assistant.": "Geen doseerpomp gevonden in Home Assistant.",
     "Choose a dosing pump": "Doseerpomp kiezen",
-    "Suggestion: {x}": "Voorstel: {x}"
+    "Suggestion: {x}": "Voorstel: {x}",
+    "Lamps": "Lampen",
+    "Household": "Huishouden",
+    "Name or entity": "Naam of entiteit",
+    "No device matches the filter.": "Geen apparaat past bij het filter."
   },
   "patterns": [
     [
@@ -3569,6 +3573,14 @@
     [
       "^“(.+)” is in the sidebar with Home and (\\d+) rooms\\.$",
       "“{1}” staat met Thuis en {2} kamers in de zijbalk."
+    ],
+    [
+      "^(\\d+) of (\\d+)$",
+      "{1} van {2}"
+    ],
+    [
+      "^Part of (.+)$",
+      "Onderdeel van {1}"
     ]
   ]
 }
