@@ -13,7 +13,7 @@ import logging
 import random
 from datetime import timedelta
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from ha_common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr

@@ -1,6 +1,8 @@
-"""pytest mit pytest-homeassistant-custom-component (T-04) – Integrationstests ohne Docker-HA.
+"""pytest with HA's test package (T-04) – integration tests without a Docker HA.
 
-  uv run --python 3.14 --with pytest-homeassistant-custom-component pytest dev/pytest -q
+  uv run --python 3.14 --with pytest-homeassistant-custom-component pytest dev/pytest -q          # HA 2026.10
+  uv run --python 3.14 --prerelease=allow --with 'pytest-homeassistant>=2026.11.0b0,<2026.12' \
+      pytest dev/pytest -q -p no:respx                                                          # HA 2026.11
 
 Das Repo-Wurzelverzeichnis steht auf sys.path, damit custom_components.casora gefunden wird.
 """

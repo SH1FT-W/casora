@@ -14,7 +14,8 @@ python3 tools/privacy-check.py              # läuft auch als pre-commit (dev/in
 ```
 
 Python-Tests wie im Gate über `uv` (Python 3.14, Zusatzpakete aus der Kopfzeile des Tests), `dev/pytest`
-mit `pytest-homeassistant-custom-component`.
+mit `pytest-homeassistant-custom-component` (HA 2026.10) und zusätzlich mit HAs eigenem Testpaket
+`pytest-homeassistant` (HA 2026.11, `--prerelease=allow`, `-p no:respx`; Import über `dev/pytest/ha_common.py`).
 
 Private Testdateien (gitignored) fehlen in einem frischen Worktree – aus dem Haupt-Checkout kopieren:
 `dev/casora_mock/fixture.json`, `scenarios.json`, `skip.txt`, `dev/e2e/testhaus.json`, `dev/privat-woerter.txt`,
