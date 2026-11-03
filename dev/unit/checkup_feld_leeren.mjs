@@ -13,8 +13,8 @@ assert.ok(/if \(opts && opts\.clearable\)/.test(combo), '_combo knows clearable'
 assert.ok(/x\.onclick = \(ev\) => \{[^}]*commit\(""\)/.test(combo), '× clears via commit("")');
 assert.ok(/if \(wrap\._paintX\) wrap\._paintX\(\);/.test(combo), 'commit updates the ×');
 // Six since own badges (#53): their device field is optional too (switch to template). Seven with the own
-// badge popup's "History of" (#60).
-assert.equal((src.match(/clearable: true/g) || []).length, 7, 'seven optional device pickers');
+// badge popup's "History of" (#60). Eight with the aquarium's dosing pump picker (26.11.9).
+assert.equal((src.match(/clearable: true/g) || []).length, 8, 'eight optional device pickers');
 const ent = src.indexOf('const entCombo = this._combo(tile.entity');
 assert.ok(ent > 0 && !src.slice(ent, ent + 400).includes('clearable'), 'main entity without ×');
 assert.ok(src.includes('shownSig() !== shown0'), 'dependent fields redraw');

@@ -2864,7 +2864,14 @@
     "Show search": "Pokaż wyszukiwanie",
     "Pull down at the top of the phone's Home to show a search field: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search.": "Pociągnij w dół u góry strony głównej na telefonie, aby pokazać pole wyszukiwania: pokoje, urządzenia i sceny. Na komputerze Cmd+K lub Ctrl+K otwiera to samo wyszukiwanie.",
     "Update prompt on open": "Powiadomienie o aktualizacji przy otwarciu",
-    "Shows a new Casora version once on the dashboard, a few seconds after it opens. Only for administrators; applies to your user.": "Pokazuje nową wersję Casora raz na pulpicie, kilka sekund po otwarciu. Tylko dla administratorów; dotyczy twojego użytkownika."
+    "Shows a new Casora version once on the dashboard, a few seconds after it opens. Only for administrators; applies to your user.": "Pokazuje nową wersję Casora raz na pulpicie, kilka sekund po otwarciu. Tylko dla administratorów; dotyczy twojego użytkownika.",
+    "Pick the pump: Casora fills the dose buttons and their values below. You can change each field afterwards.": "Wybierz pompę: Casora wypełni poniżej przyciski dozowania i ich wartości. Każde pole możesz potem zmienić.",
+    "Container left": "Pozostała ilość",
+    "Container size": "Pojemność zbiornika",
+    "Lasts for": "Wystarczy na",
+    "No dosing pump found in Home Assistant.": "Nie znaleziono pompy dozującej w Home Assistant.",
+    "Choose a dosing pump": "Wybierz pompę dozującą",
+    "Suggestion: {x}": "Propozycja: {x}"
   },
   "patterns": [
     [

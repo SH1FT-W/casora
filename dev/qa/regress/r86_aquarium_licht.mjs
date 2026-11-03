@@ -14,6 +14,7 @@
 // Lampe“) stay in the Studio/HA for the tank; the aquarium light popup (light_stage) shows them since 01.11.2026
 // (owner, draft C2): the profiles as moons, „Programm ›“ as a row.
 // The brightness is the dial of the aquarium light popup (light_stage).
+// 26.11.9 (r522): the channels are lines of one list (.aq-cr, name in aria-label) instead of single pills (.hui-sl).
 import { open, casoraDashboards, dashboard, check, need, finish, fakeStates } from './lib.mjs';
 
 const A = { entity: 'sensor.testbecken_a_wassertemperatur', name: 'Testbecken A', variables: { tank_name: 'Testbecken A',
@@ -68,7 +69,7 @@ const openPopup = async (pg) => {
     el._handleAction({ detail: { action: 'tap' } }, { isIcon: false });
   });
   for (let i = 0; i < 30; i++) {
-    const ok = await pg.evaluate(() => !!(window.casoraPopup && window.casoraPopup.surface) && window.__pierce('.hui-sl', window.casoraPopup.surface).length > 0);
+    const ok = await pg.evaluate(() => !!(window.casoraPopup && window.casoraPopup.surface) && window.__pierce('.hui-sl, .aq-cr', window.casoraPopup.surface).length > 0);
     if (ok) break;
     await pg.waitForTimeout(250);
   }
@@ -81,7 +82,7 @@ const popup = (pg) => pg.evaluate(() => {
   const box = (e) => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; };
   return {
     text: P('.hui-row, .hui-slbl, .aq-chip, .hui-sl-val').map((e) => e.textContent.replace(/\s+/g, ' ').trim()).join(' | '),
-    sliders: P('.hui-sl').map((e) => ({ label: e.dataset.casoraLabel || '', box: box(e) })),
+    sliders: P('.hui-sl, .aq-cr').map((e) => ({ label: e.dataset.casoraLabel || e.getAttribute('aria-label') || '', box: box(e) })),
     chips: P('.aq-chip').map((e) => ({ t: e.textContent.trim(), on: e.classList.contains('on'), h: e.getBoundingClientRect().height })),
     sel: P('.hui-row.fb-sel').map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
     jump: P('[data-aq-light]').length,
@@ -103,7 +104,7 @@ const tapText = async (pg, sel, text) => {
 };
 const drag = async (pg, label, frac) => {
   const b = await pg.evaluate((label) => {
-    const e = window.__pierce('.hui-sl', window.casoraPopup.surface).find((x) => (x.dataset.casoraLabel || '') === label);
+    const e = window.__pierce('.hui-sl, .aq-cr', window.casoraPopup.surface).find((x) => (x.dataset.casoraLabel || x.getAttribute('aria-label') || '') === label);
     if (!e) return null; e.scrollIntoView({ block: 'center' }); const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height };
   }, label);
   if (!b) return false;

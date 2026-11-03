@@ -2726,9 +2726,42 @@
   "Wird installiert …": "A instalar…",
   "HACS hat die neue Version nicht als installiert gemeldet. Sieh in HACS nach.": "O HACS não indicou a nova versão como instalada. Verifica no HACS.",
   "Vergrößern": "Ampliar",
-  "Verkleinern": "Reduzir"
+  "Verkleinern": "Reduzir",
+  "Dosierung": "Dosagem",
+  "Behälter": "Reservatório",
+  "Reicht noch": "Dura mais",
+  "Dosiermenge": "Quantidade da dose",
+  "alles in Ordnung": "tudo bem"
  },
  "patterns": [
+  [
+   "^(.+) reicht noch (\\d+) T\\.$",
+   "{1}: faltam {2} d"
+  ],
+  [
+   "^(.+) fast leer$",
+   "{1} quase vazio"
+  ],
+  [
+   "^(\\d+) Kanäle$",
+   "{1} canais"
+  ],
+  [
+   "^(\\d+) Kanal$",
+   "{1} canal"
+  ],
+  [
+   "^noch (\\d+) T\\.$",
+   "faltam {1} d"
+  ],
+  [
+   "^noch ([\\d.,]+) von ([\\d.,]+) ml$",
+   "restam {1} de {2} ml"
+  ],
+  [
+   "^([\\d.,]+ ml) dosieren$",
+   "Dosear {1}"
+  ],
   [
    "^Solar deckt (\\d+) ?%$",
    "Solar cobre {1}%"

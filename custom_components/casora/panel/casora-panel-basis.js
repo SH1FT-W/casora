@@ -864,7 +864,71 @@
       any: (room.powersAny || []).slice() };
   }
 
-  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo, addLight, houseLights, homeLightsWhy, homeClimateWhy, topUnits };
+  // Dosing pump of an aquarium tile (owner, 03.11.2026, 26.11.9): a device with dose buttons per channel (Chihiros-like
+  // pumps). Each entity of the device is sorted by its translation_key (else its object id) into a kind and a channel
+  // number: button with „dose“ → btn; number „volume/menge“ → vol; sensors „today/heute“, „total/gesamt“, „days/reicht“,
+  // „remaining/restmenge“, „capacity/container size/behälter“. dosingFill returns the tile variables the Studio fields
+  // use (dosing_buttons and the maps over them). dosingSuggest only names a pump – the Studio offers it, never sets it.
+  const DOSE_KINDS = [
+    ["btn", /^button$/, /dos/],
+    ["vol", /^number$/, /(volume|menge)/],
+    ["days", /^sensor$/, /(days|reicht|tage)/],
+    ["size", /^(sensor|number)$/, /(capacity|container_size|behaelter|behälter|tank_size)/],
+    ["left", /^sensor$/, /(remaining|restmenge|container_left|vorrat)/],
+    ["today", /^sensor$/, /(today|heute)/],
+    ["total", /^sensor$/, /(total|gesamt)/],
+  ];
+  function doseKind(id, reg) {
+    const dom = id.split(".")[0], key = String((reg && reg.translation_key) || id.split(".")[1] || "").toLowerCase();
+    const k = DOSE_KINDS.find(([, d, re]) => d.test(dom) && re.test(key));
+    const nums = key.match(/\d+/g);
+    return k && nums ? { kind: k[0], n: Number(nums[nums.length - 1]) } : null;
+  }
+  function dosingParts(hass, dev) {
+    const R = (hass && hass.entities) || {}, S = (hass && hass.states) || {};
+    const by = {};
+    Object.keys(R).forEach((id) => {
+      const r = R[id];
+      if (!r || r.device_id !== dev || r.hidden || r.disabled_by || !S[id]) return;
+      const k = doseKind(id, r);
+      if (!k) return;
+      const ch = by[k.n] || (by[k.n] = {});
+      if (!ch[k.kind]) ch[k.kind] = id;
+    });
+    return Object.keys(by).map(Number).sort((a, b) => a - b).map((n) => by[n]).filter((ch) => ch.btn);
+  }
+  function dosingPumps(hass) {
+    const D = (hass && hass.devices) || {}, R = (hass && hass.entities) || {};
+    const devs = [...new Set(Object.keys(R).filter((id) => id.startsWith("button.") && R[id] && R[id].device_id && doseKind(id, R[id]))
+      .map((id) => R[id].device_id))];
+    return devs.map((dev) => ({ id: dev, name: (D[dev] && (D[dev].name_by_user || D[dev].name)) || dev, area: (D[dev] && D[dev].area_id) || null,
+      channels: dosingParts(hass, dev).length })).filter((p) => p.channels > 0).sort((a, b) => (a.name < b.name ? -1 : 1));
+  }
+  const DOSE_MAPS = { vol: "dosing_volume", today: "dosing_today", total: "dosing_total", left: "dosing_remaining", days: "dosing_days_left", size: "dosing_capacity" };
+  function dosingFill(hass, dev) {
+    const parts = dosingParts(hass, dev);
+    if (!parts.length) return null;
+    const out = { dosing_buttons: parts.map((ch) => ch.btn) };
+    Object.keys(DOSE_MAPS).forEach((k) => {
+      const m = {};
+      parts.forEach((ch) => { if (ch[k]) m[ch.btn] = ch[k]; });
+      if (Object.keys(m).length) out[DOSE_MAPS[k]] = m;
+    });
+    return out;
+  }
+  // The pump to offer for a tile: the one in the area of the tile's sensor (its own or its device's), else the only pump.
+  function dosingSuggest(hass, entityId) {
+    const pumps = dosingPumps(hass);
+    if (!pumps.length) return null;
+    const R = (hass && hass.entities) || {}, D = (hass && hass.devices) || {};
+    const e = entityId && R[entityId];
+    const area = e ? (e.area_id || (e.device_id && D[e.device_id] && D[e.device_id].area_id) || null) : null;
+    const here = area ? pumps.filter((p) => p.area === area) : [];
+    return here.length === 1 ? here[0].id : pumps.length === 1 ? pumps[0].id : null;
+  }
+
+  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo, addLight, houseLights, homeLightsWhy, homeClimateWhy, topUnits,
+    dosingPumps, dosingFill, dosingSuggest, DOSE_MAPS };
 
   // KI kostet: Casora schätzt vor dem ersten Einsatz grob, was es über den API-Schlüssel
   // kostet (Zeichen → Token, Listenpreise je Modellfamilie in USD pro 1 Mio. Token) und fragt nach.

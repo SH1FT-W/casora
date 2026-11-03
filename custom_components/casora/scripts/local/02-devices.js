@@ -1,6 +1,7 @@
 // ── Aquarium: dosing pump and light control from the tile fields (1.0.3) ──────
 // New: freely chosen entities – dosing_buttons (dose button per channel) with the mappings
-// dosing_volume / dosing_today / dosing_total / dosing_names (je Knopf), light_profile (select)
+// dosing_volume / dosing_today / dosing_total / dosing_names (per button; 26.11.9 also dosing_remaining /
+// dosing_days_left / dosing_capacity), light_profile (select)
 // and light_schedule_switch (switch: on = HA schedule). Older tiles with the prefixes
 // dosing_prefix and helialux keep working unchanged; a chosen field wins.
 (function () {
@@ -9,6 +10,8 @@
     const V = variables || {}, S = states || {};
     const obj = (x) => (x && typeof x === 'object' && !Array.isArray(x) ? x : {});
     const vol = obj(V.dosing_volume), today = obj(V.dosing_today), total = obj(V.dosing_total), names = obj(V.dosing_names);
+    /* 26.11.9: container left, days left, container size per channel (Studio, the dosing pump picker fills them). */
+    const left = obj(V.dosing_remaining), days = obj(V.dosing_days_left), size = obj(V.dosing_capacity);
     const labels = Array.isArray(V.dosing_labels) ? V.dosing_labels : [];
     const dp = V.dosing_prefix || null;
     let dose = [];
@@ -20,8 +23,10 @@
         const old = m ? { today: 'sensor.' + m[1] + '_pump_' + m[2] + '_dosed_today',
           total: 'sensor.dosierpumpe_' + m[1] + '_pump_' + m[2] + '_total_ml', vol: 'number.' + m[1] + '_pump_' + m[2] + '_dose_volume' } : {};
         const has = (id) => (id && S[id] ? id : null);
-        return { n: i + 1, btn: btn, today: today[btn] || has(old.today), total: total[btn] || has(old.total),
+        const ch = { n: i + 1, btn: btn, today: today[btn] || has(old.today), total: total[btn] || has(old.total),
           vol: vol[btn] || has(old.vol), label: names[btn] || labels[i] || null };
+        [['left', left], ['days', days], ['size', size]].forEach(([k, m]) => { if (has(m[btn])) ch[k] = m[btn]; });
+        return ch;
       });
     } else if (dp) {
       dose = [1, 2, 3, 4].map((n) => ({
@@ -397,7 +402,11 @@
 
   /* Popup v3 (maintainer review 31.10.2026): the lamp's channels as a list – per channel its name, value and its own
      slider (number entities of Fluval/HeliaLux/Chihiros, else the light's rgb/rgbw/rgbww); the total brightness is the
-     dial. Nothing while the lamp is off or unavailable (a channel then has no meaning). */
+     dial. Nothing while the lamp is off or unavailable (a channel then has no meaning).
+     Owner, 03.11.2026 (26.11.9, design A „Liste mit Spur“, handbook §8 list sliders): one plate like the other lists;
+     per channel a line (colour dot, name, value right) and a slim 6 px track under it with a solid fill in the channel
+     colour and a knob. The whole line is the slider (data-casora-slider, axis x: drag, tap, keys as UI.slider). Only
+     here – UI.slider keeps its look for the doorbell and the other sliders. */
   window._casoraAqChanSec = function (c, states, hass) {
     const UI = window._casoraUI;
     const s = UI && c.light && states[c.light];
@@ -405,10 +414,142 @@
     const ch = window._casoraAqChannels(c.light, { light_channels: c.lightChannels }, states, hass);
     if (ch.length < 2) return '';
     return UI.label((window.casoraTr ? window.casoraTr('Kanäle') : 'Kanäle') + ' · ' + ch.length)
-      + '<div class="aq-chs" style="display:flex;flex-direction:column;gap:8px;">'
-      + ch.map((k) => '<div style="min-width:0;--casora-popup-slider-fill:' + UI.esc(k.color || 'var(--casora-popup-accent, var(--casora-popup-ui-accent, #5E9E96))') + ';">'
-        + UI.slider({ value: s.state === 'on' ? k.value : 0, softHeight: 46, bar: true, small: true, label: k.name, svc: k.svc }) + '</div>').join('')
-      + '</div>';
+      + window._casoraAqChanList(ch, s.state === 'on', UI);
+  };
+  window._casoraAqChanList = function (ch, on, UI) {
+    const esc = UI.esc;
+    const col = (k) => k.color || 'var(--casora-popup-accent, var(--casora-popup-ui-accent, #5E9E96))';
+    const pay = (k) => JSON.stringify(Object.assign({ invert: false }, k.svc || {}));
+    const cssHtml = '<style>'
+      + '.aq-cl{background:var(--casora-popup-row-fill, rgba(140,115,90,0.07));border-radius:var(--casora-popup-row-radius, 20px);padding:4px 16px;'
+      +   'box-shadow:var(--casora-popup-plate-shadow, none);}'
+      + '.aq-cr{position:relative;padding:12px 0 14px;cursor:ew-resize;touch-action:none;user-select:none;-webkit-user-select:none;outline:none;}'
+      + '.aq-cr + .aq-cr{border-top:1px solid var(--casora-popup-divider, rgba(140,115,90,0.12));}'
+      + '.aq-cr:focus-visible .aq-ck{box-shadow:0 0 0 2px var(--casora-popup-accent, #5E9E96);}'
+      + '.aq-ct{display:flex;align-items:center;gap:10px;text-align:left;font-family:var(--primary-font-family,system-ui);}'
+      + '.aq-cd{width:10px;height:10px;border-radius:50%;flex:none;}'
+      + '.aq-cn{flex:1;min-width:0;text-align:left;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
+      +   'color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));}'
+      + '.aq-cr .hui-sl-val{position:static;transform:none;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;'
+      +   'color:var(--casora-soft-sub, var(--secondary-text-color));}'
+      + '.aq-ck{position:relative;height:6px;margin:10px 8px 0;border-radius:3px;background:var(--casora-soft-control-fill, rgba(140,115,90,0.12));}'
+      + '.aq-cr .hui-sl-fill{position:absolute;left:0;top:0;bottom:0;min-width:0;border-radius:3px;transition:width .18s cubic-bezier(.36,0,.16,1);}'
+      // The knob sits at the end of the fill at every value (also 0 %), so it never has to follow a class while dragging.
+      + '.aq-cr .hui-sl-fill::after{content:"";position:absolute;right:-8px;top:50%;width:16px;height:16px;margin-top:-8px;border-radius:50%;'
+      +   'background:var(--casora-lps-knob, #fff);box-shadow:var(--casora-sw-ks, 0 1px 3px rgba(0,0,0,0.2));}'
+      + '.aq-cr.drag .hui-sl-fill{transition:none;}'
+      + '@media (prefers-reduced-motion:reduce){.aq-cr .hui-sl-fill{transition:none;}}'
+      + '</style>';
+    return cssHtml + '<div class="aq-cl">' + ch.map((k) => {
+      const v = on ? Number(k.value) || 0 : 0;
+      return '<div class="aq-cr" role="slider" tabindex="0" aria-label="' + esc(k.name) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Number(v) + '"'
+        + ' data-casora-axis="x" data-casora-slider="' + esc(pay(k)) + '">'
+        + '<div class="aq-ct"><span class="aq-cd" style="background:' + esc(col(k)) + '"></span><span class="aq-cn">' + esc(k.name) + '</span>'
+        + '<span class="hui-sl-val">' + Number(v) + '\u202F%</span></div>'
+        + '<div class="aq-ck"><div class="hui-sl-fill" style="width:' + Number(v) + '%;background:' + esc(col(k)) + '"></div></div></div>';
+    }).join('') + '</div>';
+  };
+
+  /* Dosing pump in the v3 tank popup (owner, 03.11.2026, 26.11.9, design A; handbook §8 dosing row). Only with a pump
+     (dosing_buttons, or the older dosing_prefix): one row „Dosierung“ in the right column – „4 Kanäle · alles in
+     Ordnung“, or the most urgent channel in the warning tone („Calcium reicht noch 3 T.“) when a container is below
+     20 % or lasts less than 7 days – and a sub page with one row per channel; a channel's own page sets the dose
+     volume (± and quick picks) and doses behind a confirm. Container left, days left and container size come from the
+     Studio fields dosing_remaining / dosing_days_left / dosing_capacity (the dosing pump picker fills them). */
+  const DOSE_LOW_LEVEL = 0.2, DOSE_LOW_DAYS = 7;
+  window._casoraAqDoseInfo = function (c, states) {
+    const S = states || {};
+    const num = (e) => { const n = parseFloat(e && S[e] && S[e].state); return isNaN(n) ? null : n; };
+    return (c.dose || []).map((d, i) => {
+      const left = num(d.left), size = num(d.size), days = num(d.days);
+      const lvl = left != null && size ? Math.max(0, Math.min(1, left / size)) : null;
+      const low = (lvl != null && lvl < DOSE_LOW_LEVEL) || (days != null && days < DOSE_LOW_DAYS);
+      return { d: d, name: (c.labels || [])[i] || d.label || ('Kanal ' + d.n), today: num(d.today), total: num(d.total), vol: num(d.vol),
+        left: left, size: size, lvl: lvl, days: days, low: low };
+    });
+  };
+  const doseMl = (n) => n.toLocaleString(window.casoraLocale ? window.casoraLocale() : 'de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' ml';
+  // Short line under a channel (phone width): „heute 1,5 ml · noch 61 T.“ – the level shows as the bar.
+  window._casoraAqDoseSub = function (x) {
+    return [x.today != null ? 'heute ' + doseMl(x.today) : null, x.days != null ? 'noch ' + Math.round(x.days) + ' T.' : null]
+      .filter(Boolean).join(' · ') || null;
+  };
+  // The summary row: { warn, sub, value }.
+  window._casoraAqDoseSum = function (info) {
+    const worst = info.filter((x) => x.low).sort((a, b) => (a.days == null ? 1e9 : a.days) - (b.days == null ? 1e9 : b.days)
+      || (a.lvl == null ? 1 : a.lvl) - (b.lvl == null ? 1 : b.lvl))[0];
+    const sum = info.reduce((a, x) => a + (x.today || 0), 0);
+    return { warn: !!worst,
+      sub: worst ? (worst.days != null && worst.days < DOSE_LOW_DAYS ? worst.name + ' reicht noch ' + Math.round(worst.days) + ' T.' : worst.name + ' fast leer')
+        : info.length + (info.length === 1 ? ' Kanal' : ' Kanäle') + ' · alles in Ordnung',
+      value: info.some((x) => x.today != null) ? 'heute ' + doseMl(sum) : null };
+  };
+  // Only what the pages need (the tank's whole cfg would ride along in every row).
+  const doseArg = (c) => JSON.stringify({ dose: c.dose, labels: c.labels });
+  window._casoraAqDoseSec = function (c, states) {
+    const UI = window._casoraUI;
+    if (!UI) return '';
+    const info = window._casoraAqDoseInfo(c, states);
+    if (!info.length) return '';
+    const s = window._casoraAqDoseSum(info);
+    return UI.group([{ icon: 'mdi:beaker-outline', iconTone: s.warn ? 'warn' : 'accent', label: 'Dosierung', sub: s.sub,
+      subTone: s.warn ? 'warn' : null, value: s.value, page: 'aqDose|' + doseArg(c) }], null);
+  };
+  const pages = window._casoraPages || (window._casoraPages = {});
+  pages.aqDose = function (arg) {
+    const HH = window._casoraHH;
+    let c; try { c = JSON.parse(arg); } catch (e) { return; }
+    if (!HH || !HH.page || !c || !Array.isArray(c.dose) || !c.dose.length) return;
+    const ids = [].concat(...c.dose.map((d) => [d.today, d.vol, d.left, d.days, d.size])).filter(Boolean);
+    HH.page('Dosierung', ids, 'const UI = window._casoraUI, c = ' + JSON.stringify(c) + ';\n'
+      + 'return UI.section("control", window._casoraAqDoseInfo(c, states).map((x, i) => ({ icon: "mdi:beaker-outline",\n'
+      + '  iconTone: x.low ? "warn" : "accent", label: x.name, sub: window._casoraAqDoseSub(x), subTone: x.low ? "warn" : null,\n'
+      + '  bar: x.lvl, barTone: x.low ? "warn" : "good",\n'
+      + '  page: "aqDoseCh|" + JSON.stringify({ d: x.d, name: x.name }) })), "Kanäle");', c.dose[0].btn);
+  };
+  /* One channel: its container, days left, today and total, the dose volume (±0,1/±0,5 and quick picks as the single
+     channel popup before) and „Jetzt dosieren“ behind a confirm. */
+  pages.aqDoseCh = function (arg) {
+    const HH = window._casoraHH;
+    let o; try { o = JSON.parse(arg); } catch (e) { return; }
+    if (!HH || !HH.page || !o || !o.d || !o.d.btn) return;
+    const d = o.d;
+    HH.page(o.name || 'Dosierung', [d.today, d.total, d.vol, d.left, d.days, d.size, d.btn].filter(Boolean),
+      'const UI = window._casoraUI, o = ' + JSON.stringify(o) + ';\n'
+      + 'return window._casoraAqDoseChBody(o, states);', d.btn);
+  };
+  window._casoraAqDoseChBody = function (o, states) {
+    const UI = window._casoraUI, d = o.d;
+    const x = window._casoraAqDoseInfo({ dose: [d], labels: [o.name] }, states)[0];
+    const L = window.casoraLocale ? window.casoraLocale() : 'de-DE';
+    const n1 = (n) => n.toLocaleString(L, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const info = [
+      x.left != null ? { icon: 'mdi:cup-water', iconTone: x.low ? 'warn' : 'accent', label: 'Behälter',
+        value: x.size ? 'noch ' + n1(x.left) + ' von ' + n1(x.size) + ' ml' : 'noch ' + doseMl(x.left),
+        valueTone: x.lvl != null && x.lvl < DOSE_LOW_LEVEL ? 'warn' : null, bar: x.lvl, barTone: x.low ? 'warn' : 'good', entity: d.left } : null,
+      x.days != null ? { icon: 'mdi:calendar-clock', iconTone: x.days < DOSE_LOW_DAYS ? 'warn' : 'accent', label: 'Reicht noch',
+        value: Math.round(x.days) + (Math.round(x.days) === 1 ? ' Tag' : ' Tage'), valueTone: x.days < DOSE_LOW_DAYS ? 'warn' : null, entity: d.days } : null,
+      x.today != null ? { icon: 'mdi:calendar-today', label: 'Heute dosiert', value: doseMl(x.today), entity: d.today } : null,
+      x.total != null ? { icon: 'mdi:sigma', label: 'Gesamt', value: doseMl(x.total), entity: d.total } : null,
+    ].filter(Boolean);
+    const gap = '<div style="height:var(--casora-popup-sec-gap, 24px)"></div>';
+    let out = info.length ? UI.section('state', info, 'Zustand') + gap : '';
+    const st = d.vol && states[d.vol];
+    if (st && x.vol != null) {
+      const mn = Number(st.attributes && st.attributes.min != null ? st.attributes.min : 0.1);
+      const mx = Number(st.attributes && st.attributes.max != null ? st.attributes.max : 999);
+      const set = (v) => ({ domain: 'number', service: 'set_value', data: { value: Math.round(Math.min(mx, Math.max(mn, v)) * 10) / 10 }, target: { entity_id: d.vol } });
+      // The heading carries the volume („Dosiermenge · 1,0 ml“, §6 a heading may count) – no extra row repeating it.
+      out += UI.section('control', UI.segments([{ label: '−0,5', svc: set(x.vol - 0.5) }, { label: '−0,1', svc: set(x.vol - 0.1) },
+          { label: '+0,1', svc: set(x.vol + 0.1) }, { label: '+0,5', svc: set(x.vol + 0.5) }], 'Anpassen')
+        + '<div style="height:12px"></div>'
+        + UI.segments([0.5, 1, 2, 3, 5].map((v) => ({ label: n1(v) + ' ml', active: Math.abs(x.vol - v) < 0.01, svc: set(v) })), 'Schnellwahl'),
+        'Dosiermenge · ' + doseMl(x.vol)) + gap;
+    }
+    out += UI.section('control', [{ icon: 'mdi:water-plus', iconTone: 'accent', label: 'Jetzt dosieren', sub: x.vol != null ? doseMl(x.vol) : null,
+      svc: { domain: 'button', service: 'press', target: { entity_id: d.btn } },
+      confirm: (x.vol == null ? '' : doseMl(x.vol) + ' ') + 'dosieren' }], false);
+    return out;
   };
 
   /* Control: schedule switch as two rows (active one highlighted); meaning of "on" per lamp. */
@@ -670,7 +811,8 @@
   const _c = JSON.stringify(cfg);
   const watch = [cfg.temp, cfg.status, cfg.light, cfg.reach, cfg.leak, cfg.leakBat, cfg.tempBat]
     .concat(devs.map((d) => d.entity), devs.map((d) => d.power), devs.map((d) => d.today), devs.map((d) => d.month),
-            dose.map((d) => d.today), dose.map((d) => d.total), dose.map((d) => d.vol))
+            dose.map((d) => d.today), dose.map((d) => d.total), dose.map((d) => d.vol),
+            dose.map((d) => d.left), dose.map((d) => d.days), dose.map((d) => d.size))
     .concat(cfg.hx ? [cfg.hx.sw, cfg.hx.sel] : [])
     .concat(cfg.light ? window._casoraAqChannels(cfg.light, { light_channels: cfg.lightChannels }, states, hass).map((k) => k.id) : [])
     .filter((x, i, all) => x && all.indexOf(x) === i);
@@ -714,6 +856,9 @@
     if (window._hpSmooth) window._hpSmooth(eid);
   };
   reg1(cfg.temp, 'Wassertemperatur', '24h', chartColor);
+  // At least 2 °C (3.6 °F) of scale (26.11.9): a probe stepping 0.2 °C filled the whole height.
+  if (hpOk && window._hpPlantCfg && window._hpPlantCfg[cfg.temp]) window._hpPlantCfg[cfg.temp].y = Object.assign({}, window._hpPlantCfg[cfg.temp].y,
+    { span: /F/i.test(String(states[cfg.temp]?.attributes?.unit_of_measurement || '')) ? 3.6 : 2 });
   reg1(cfg.leakBat, 'Akku Lecksensor', '30d', '#30D158');
   reg1(cfg.tempBat, 'Akku Temperaturfühler', '30d', '#30D158');
   const plate = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
@@ -901,7 +1046,13 @@
      leak sensor, energy, batteries and the aquarium doctor stay in the Studio/HA. */
   if (HH && HH.on() && HH.layout && UI.v3 && UI.v3()) {
     const tOk = !isNaN(parseFloat(states[cfg.temp]?.state)) && String(states[cfg.temp]?.attributes?.device_class || 'temperature') === 'temperature';
-    if (hpOk && tOk) window._hpChartCfg(cfg.temp, 'Wassertemperatur', '24h', 'c3', 120);
+    /* Water temperature (26.11.9): hourly means like every other temperature chart (_hpSmooth – this v3 line set the
+       chart again without it, a probe stepping 0.2 °C drew a zigzag) and at least 2 °C (3.6 °F) of scale. */
+    if (hpOk && tOk) {
+      const tc = window._hpChartCfg(cfg.temp, 'Wassertemperatur', '24h', 'c3', 120);
+      if (window._hpSmooth) window._hpSmooth(cfg.temp);
+      if (tc) tc.y = Object.assign({}, tc.y, { span: /F/i.test(String(states[cfg.temp]?.attributes?.unit_of_measurement || '')) ? 3.6 : 2 });
+    }
     const f3 = {
       hero: `[[[
         const c = ${_c};
@@ -968,12 +1119,14 @@
     // The lamp's channels (several): a list of their own beside the light row.
     const nCh = cfg.light && states[cfg.light] ? window._casoraAqChannels(cfg.light, { light_channels: cfg.lightChannels }, states, hass).length : 0;
     if (nCh >= 2) f3.chan = `[[[ return window._casoraAqChanSec ? window._casoraAqChanSec(${_c}, states, hass) : ''; ]]]`;
+    // The dosing pump (only with one): one row „Dosierung“ → sub page (owner, 03.11.2026). v3 had lost it.
+    if (dose.length) f3.dose = `[[[ return window._casoraAqDoseSec ? window._casoraAqDoseSec(${_c}, states) : ''; ]]]`;
     // The aquarium light: „Programm ›“ (Home Assistant / the lamp's program) as a row (owner, 01.11.2026).
     if (cfg.lightStage && cfg.hx && cfg.hx.sw && states[cfg.hx.sw]) f3.prog = `[[[ return window._casoraAqProgRow ? window._casoraAqProgRow(${_c}, states, hass) : ''; ]]]`;
     // Only the light (no probe, no equipment, one channel): the stage alone across the one column.
-    const solo = !f3.chart && !f3.list && !f3.chan && !f3.prog;
+    const solo = !f3.chart && !f3.list && !f3.chan && !f3.prog && !f3.dose;
     return HH.layout({ entity: cfg.temp, watch: watch, fields: f3, top: solo ? ['hero', 'stage'] : ['hero'], stage: solo ? null : 'stage',
-      left: ['chart'], right: ['prog', 'list', 'chan'] });
+      left: ['chart'], right: ['prog', 'list', 'chan', 'dose'] });
   }
   if (HH && HH.on() && HH.layout) {
     const f2 = { hero: fields.hero, chart: fields.chart, glight: fields.glight, gtech: fields.gtech, gai: fields.gai };
