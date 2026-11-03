@@ -2,9 +2,9 @@
 // @parallel: allein
 // @deckt: custom_components/casora/scripts/casora-core.js#balance custom_components/casora/scripts/local/02-devices.js dev/qa/popup-galerie.mjs
 // 03.11.2026: the column balance's rule B (one column) rebuilt the room climate popup on its first opening and left it
-// empty – only the header, no dial, no readings. The layout card was set up again on its own, but its fields are
-// templates the popup card around it evaluates (variables, entity). Expected: on the first and on a second opening the
-// popup shows its content (dial and readings), desktop 1440×900, light.
+// empty – only the header, no dial, no readings (the rebuilt card collapsed to 0 px). Rule B now applies from the next
+// opening (the heights are kept). Expected: on the first and on a second opening the popup shows its content (dial and
+// readings), desktop 1440×900, light.
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { open, usePage, check, need, finish, ready } from './lib.mjs';

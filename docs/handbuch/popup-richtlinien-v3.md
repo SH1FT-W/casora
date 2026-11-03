@@ -71,7 +71,7 @@ sie sich je Popup und Gerät (localStorage `casora_col_bal`); ab dann gilt beim 
   eine Liste und behalten darum ihren Aufbau.
 - Regel B: Ist links mehr als 120 px länger und die ganze rechte Spalte höchstens 200 px hoch, wird das Popup einspaltig
   (552) mit dem rechten Teil unter der Bühne (nur v3).
-Beim ersten Öffnen (noch nichts gemessen) baut sich das Popup nach dem Messen einmal um. Ein langer linker Teil mit mehr
+Beim ersten Öffnen (noch nichts gemessen) baut sich das Popup nach dem Messen einmal um (Regel A); einspaltig (Regel B) wird es erst ab dem nächsten Öffnen. Ein langer linker Teil mit mehr
 als 200 px rechts bleibt zweispaltig (Kamera unter dem Rad beim Drucker, Getränke beim Kaffee). Abschalten je Aufruf:
 `noBalance: true`.
 

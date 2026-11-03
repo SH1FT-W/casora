@@ -13943,6 +13943,9 @@ window.casoraMenuGlass = {
           if (!p.one && spec.k && balH(meas, p.k) > balH(meas, spec.k) - BAL_GAIN) continue;
         }
         balDone[id] = true;
+        // Rule B (one column) only from the next opening (03.11.2026, r523): switched live, the room climate popup's card
+        // collapsed to 0 px and left only the header. The heights are kept (BAL), the next build is one column at once.
+        if (p.one && !spec.one) continue;
         if (spec.apply) { try { spec.apply(p, root); } catch (e) { /* stays as built */ } continue; }
         if (!spec.rebuild || typeof root.host.setConfig !== 'function') continue;
         var next = null;
