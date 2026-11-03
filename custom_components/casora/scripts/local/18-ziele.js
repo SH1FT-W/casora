@@ -57,6 +57,14 @@
     if (dn && n.toLowerCase().indexOf(dn.toLowerCase() + ' ') === 0) n = n.slice(dn.length + 1);
     return n.charAt(0).toUpperCase() + n.slice(1);
   };
+  // A name without the room's word („Waschmaschine Waschküche“ → „Waschmaschine“), never empty.
+  var stripRoomWord = function (n, room) {
+    n = String(n || '').trim();
+    if (!n || !room) return n;
+    var r = String(room).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var out = n.replace(new RegExp('(^|\\s)' + r + '(?=\\s|$)', 'i'), ' ').replace(/\s{2,}/g, ' ').replace(/^[\s·–-]+|[\s·–-]+$/g, '');
+    return out || n;
+  };
   var areaOf = function (h, id) {
     var e = reg(h, id), d = devOf(h, id), A = h.areas || {};
     var a = e.area_id || (d && d.area_id);
@@ -298,13 +306,23 @@
       if (window.casoraCleanName) shortV = window.casoraCleanName(shortV, true);
       // „Zustand“ says nothing as a title: the device names the page (review 2, DD-09/DD-32).
       if (/^(zustand|status|state)$/i.test(String(shortV || '').trim()) && dv && devName(dv)) shortV = devName(dv);
-      // The same name as the page before (a switch's „Zuletzt eingeschaltet ›“): the page is its history.
-      var prevT = back && P._headerTitle ? String(P._headerTitle.textContent || '').replace(/\u200B/g, '').trim() : '';
-      if (prevT && prevT === String(shortV || fullV).trim()) shortV = T('Verlauf');
       // §3 (detail round #11): the label is the room („SCHLAFZIMMER“), not the device („AIRCUBE SCHLAFZIMMER“).
       var roomV = '';
       try { roomV = window._casoraRoomOf ? String(window._casoraRoomOf(id) || '').trim() : ''; } catch (e) { roomV = ''; }
       roomV = roomV || areaOf(h, id) || '';
+      // §3: the title names the device, not the kind of value (owner 03.11.2026: a Pulse popup's device row opened
+      // „WASCHKÜCHE / Pulse-Status“ – which device?). A part of a device („Waschmaschine Pulse-Status“ → „Pulse-Status“)
+      // takes the device's name without the room; the kind moves into the stage (Z._kind).
+      Z._kind = Z._kind || {};
+      delete Z._kind[id];
+      var devT = dv ? stripRoomWord(devName(dv), roomV) : '';
+      if (devT && shortV && String(shortV).trim().toLowerCase() !== devT.toLowerCase() && String(fullV).trim() !== String(shortV).trim()) {
+        Z._kind[id] = shortV;
+        shortV = devT;
+      }
+      // The same name as the page before (a switch's „Zuletzt eingeschaltet ›“): the page is its history.
+      var prevT = back && P._headerTitle ? String(P._headerTitle.textContent || '').replace(/\u200B/g, '').trim() : '';
+      if (prevT && prevT === String(shortV || fullV).trim()) shortV = Z._kind[id] || T('Verlauf');
       // issue 106: the head speaks for this entity (its „Seit …“ is the stage's), and the label is its room also when the
       // page is reached with ‹ – „FENSTER“ (the group's title) over „Fenster“ said nothing. Without a room the label
       // of the page before stays; casora-core drops a label equal to the title.
@@ -586,7 +604,7 @@
       // value it was drawn with until the unit or the state kind changes – the same HTML, no redraw.
       var val6 = cut6 ? v6.slice(0, -u6.length - 1) : v6, sk6 = [span, u6, bad(st.state) ? st.state : 'n'].join('|');
       if (el) { if (!el._casoraS6 || el._casoraS6.k !== sk6) el._casoraS6 = { k: sk6, v: val6 }; val6 = el._casoraS6.v; }
-      return UI.stage('chart', { value: val6, unit: cut6 ? u6 : '', word: bad(st.state),
+      return UI.stage('chart', { value: val6, unit: cut6 ? u6 : '', word: bad(st.state), caption: (Z._kind || {})[id] || undefined,
         read: id, live: bad(st.state) ? null : id, liveDigits: bad(st.state) ? null : Z.digits(hass, id, parseFloat(st.state)), trend: '', state: st.state === 'unavailable' ? 'na' : null,
         chart: '<div class="hp-chart-slot" style="min-height:' + (window.innerWidth <= 760 ? 140 : 160) + 'px;pointer-events:auto;"></div>',
         extra: UI.segments(l6.map(function (x) { return { label: x[1], active: x[0] === span }; }), null)
@@ -643,7 +661,7 @@
         var pulseTone = reg(hass, id).platform === 'pulse' ? (PULSE_TONE[st.state] || 'off') : null;
         return UI.stage('status', { tone: pulseTone || (bad(st.state) ? 'warn' : alarm ? 'bad' : duo && !Z.isActive(st.state) ? 'off' : 'good'),
           icon: Z.iconOf(st), text: Z.nowWord(hass, id), state: st.state === 'unavailable' ? 'na' : null,
-          facts: isFinite(since) ? [{ label: T('Seit'), value: when(since, now) }] : [],
+          facts: [(Z._kind || {})[id] ? { label: (Z._kind || {})[id], value: '' } : null].concat(isFinite(since) ? [{ label: T('Seit'), value: when(since, now) }] : []).filter(Boolean),
           extra: out.replace(UI.line(Z.nowWord(hass, id), rest, { tone: bad(st.state) ? 'warn' : null }), '').replace('<div style="margin-top:14px;">', '<div>') });
       }
       return out;
