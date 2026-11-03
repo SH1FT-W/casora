@@ -4,6 +4,22 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.9 – 03.11.2026
+
+Tap to switch on badges, a calmer aquarium popup with dosing and a clearer Pulse history.
+
+### Added
+- **Tap on badges (#119):** in the Studio under Controls › Tiles, "Tap on badges" chooses what a tap on the Lighting badge and its lamp chips does: "Open popup" (as before, hold switches) or "Switch the light" (hold opens the popup). Other badges stay as they are.
+- **Dosing in the aquarium popup:** a tank with a dosing pump shows one "Dosing" row ("4 channels · all fine", a warning when a container is below 20 % or lasts less than 7 days). It opens a page per channel with container level, days left and "Dose now" with a chosen volume, after a question. In the Studio, "Dosing pump" fills the fields from the pump; Casora only suggests a pump, it never sets one on its own.
+
+### Changed
+- **Aquarium channels:** the light channels are one calm list with a colour dot, the value on the right and a slim track, like the other Casora lists.
+- **Pulse history:** the 24 h / 7 / 30 day history is an even ribbon with rounded segments in the state colours; the legend shows from two states up.
+
+### Fixed
+- **Aquarium dosing missing:** tanks with dosing set up showed no dosing in the current popup.
+- **Water temperature chart:** a sensor that toggles between two values drew a zigzag; the chart now uses hourly means like the others, keeps a range of at least 2 °C and skips gaps.
+
 ## 26.11.8 – 03.11.2026
 
 Tidied light popups, waste on the phone and fixes from your reports.

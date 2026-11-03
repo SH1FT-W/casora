@@ -4,6 +4,22 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.9 – 03.11.2026
+
+Schalten per Tipp auf Badges, ein ruhigeres Aquarium-Popup mit Dosierung und ein klarerer Pulse-Verlauf.
+
+### Neu
+- **Tippen auf Badges (#119):** Im Studio unter Bedienung › Kacheln legt „Tippen auf Badges“ fest, was ein Tipp auf das Badge „Beleuchtung“ und seine Lampen-Chips tut: „Popup öffnen“ (wie bisher, Halten schaltet) oder „Licht schalten“ (Halten öffnet das Popup). Andere Badges bleiben, wie sie sind.
+- **Dosierung im Aquarium-Popup:** Ein Becken mit Dosierpumpe zeigt eine Zeile „Dosierung“ („4 Kanäle · alles in Ordnung“, eine Warnung, wenn ein Behälter unter 20 % ist oder weniger als 7 Tage reicht). Sie öffnet eine Seite je Kanal mit Füllstand, Restdauer und „Jetzt dosieren“ mit wählbarer Menge nach Rückfrage. Im Studio füllt „Dosierpumpe“ die Felder aus der Pumpe; Casora schlägt eine Pumpe nur vor und setzt sie nie selbst.
+
+### Geändert
+- **Aquarium-Kanäle:** Die Lichtkanäle sind eine ruhige Liste mit Farbpunkt, Wert rechts und schmaler Spur, wie die anderen Casora-Listen.
+- **Pulse-Verlauf:** Der Verlauf über 24 Std. / 7 / 30 Tage ist ein gleich hohes Band mit runden Abschnitten in den Zustandsfarben; die Legende erscheint ab zwei Zuständen.
+
+### Behoben
+- **Aquarium-Dosierung fehlte:** Becken mit eingerichteter Dosierung zeigten im aktuellen Popup keine Dosierung.
+- **Wassertemperatur-Diagramm:** Ein Sensor, der zwischen zwei Werten hin und her springt, zeichnete ein Zickzack; das Diagramm nutzt jetzt Stundenmittel wie die anderen, hält mindestens 2 °C Spanne und überspringt Lücken.
+
 ## 26.11.8 – 03.11.2026
 
 Aufgeräumte Licht-Popups, Abfall am Handy und Fixes aus euren Meldungen.
