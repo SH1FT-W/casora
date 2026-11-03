@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/15-person.js
+// @deckt: custom_components/casora/scripts/local/15-person.js#PALETTE,P.place,P.zoneHue,zoneIcon,dayStart,P.when,P.dist,slug,P.phone,trackers
 // 1.4 (Wunsch 12.10.2026): Tipp auf eine Person öffnete HAs Kartendialog. Erwartet: Casoras Personen-Popup
 // (Entwurf B): Kopf mit Ort und „seit …“, HAs Karte, „Verlauf“ als Zeitleiste (seit 1.4.2, vorher „Zuletzt“), unterwegs „Nach Hause“ mit
 // Entfernung; Karte direkt unter dem Kopf (nicht hochgeschoben). Zustände nur vorübergehend im Wegwerf-HA.

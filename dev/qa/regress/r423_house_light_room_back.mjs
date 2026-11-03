@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/03-popups.js
+// @deckt: custom_components/casora/scripts/local/03-popups.js#houseBody,_casoraLF,_casoraSuppressDismiss,_casoraBackNext
 // Owner (01.11.2026, prod): in the house light popup („Beleuchtung“, the rooms as a list) a tapped room showed its
 // lamps but had no ‹ and the head stayed „Beleuchtung“ – since the room chips went (review 2, DD-26) there was no way
 // back to the room list. Popup v3 §4.4: a room is a sub page in the same popup – ‹ left, label = the room, title =

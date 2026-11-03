@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: allein
-// @deckt: custom_components/casora/scripts/smart-row.js
+// @deckt: custom_components/casora/scripts/smart-row.js#_updateWrapperVisibility,_emptyHintShown,_init,casora-smart-row
 // Owner report (26.10.60): a new room without devices (no HA area of that name) showed the pill
 // "+ Noch keine Geräte – im Studio hinzufügen" at the bottom of the room view on the desktop, and the pill flickered.
 // Cause: casora-smart-row showed the row on every state change (_updateWrapperVisibility › show) and its sweep

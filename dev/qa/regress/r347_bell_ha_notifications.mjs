@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: allein
-// @deckt: custom_components/casora/scripts/casora-core.js custom_components/casora/panel/casora-panel.js
+// @deckt: custom_components/casora/scripts/casora-core.js#watchPn,pnText,hideRows,standing,collect,casoraDaysAgo,casoraNeedsRestart,_casoraOpenSince,CASORA_NOTIFY_READ_ENTITY,casoraUserGuard custom_components/casora/panel/casora-panel.js
 // Issue #70 (stalakerob, 26.10.2026): own notifications from scripts and automations in the bell. Expected:
 //   1. persistent_notification.create (title + markdown message) shows in the bell right away: title as the label,
 //      the message as one plain line below (link text kept, no markdown marks).

@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/casora-core.js
+// @deckt: custom_components/casora/scripts/casora-core.js#_build,casora-nav-bar
 // Gemeldet (Personas 10.10.2026, per-01): Raumleiste mit vielen Räumen läuft über, aber direkt nach
 // dem Laden fehlte der rechte Pfeil (.bar ohne more-r-on, Liste ohne fade-r); das Mausrad blätterte
 // die Leiste nicht – mit der Maus waren Räume ab „Küche“ unerreichbar (Desktop 1440 + Tablet 1024).

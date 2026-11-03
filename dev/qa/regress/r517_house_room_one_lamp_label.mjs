@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/03-popups.js custom_components/casora/scripts/casora-core.js
+// @deckt: custom_components/casora/scripts/local/03-popups.js#S.headOf,roomV3,_casoraBackNext,_casoraSuppressDismiss,_casoraLF custom_components/casora/scripts/casora-core.js
 // Review (03.11.2026) of the uniform light heads (r516): a house popup whose rooms come from an HA light group (its
 // rooms are the group's room groups, not the dashboard's light badges) → a room of one lamp (#118) opened the lamp's
 // page labelled „ZUHAUSE“ when the lamp sat in no room badge of the dashboard and in no area: the tapped room was

@@ -12,8 +12,11 @@
 //   4. automatisch aus Inhalten:
 //      - Vorlagen (button_card_templates.json): geänderte Vorlagen samt allen, die von ihnen erben →
 //        Tests, deren Quelle den Vorlagennamen nennt
-//      - Dashboard-Skripte (scripts/…): dort definierte Elemente/Globale (customElements.define,
-//        window._casora…) und die Vorlagen, die sie aufrufen → Tests, die einen davon nennen
+//      - Dashboard-Skripte (scripts/…): nach Teilen (auswahl-teile.mjs) – die Definitionen, in denen die geänderten
+//        Zeilen liegen, und die Namen, über die Tests sie erreichen (Global/Element drumherum, Alias, eindeutige
+//        Aufrufer); dazu die Vorlagen, die sie aufrufen (außer Knoten) → Tests, die einen davon nennen. Nicht
+//        einzuordnen: wie früher alle Elemente/Globale der Datei
+//      - Dashboard-Phrasen: Tests, die einen geänderten Text nennen oder in der Sprache laufen
 //      - Studio (panel/…): Tests, die das Studio öffnen (studio(…), /casora-studio, __panel)
 //   5. nichts gefunden → der Zustand (bzw. die Zustände) der Datei komplett (wie früher --gezielt)
 // Gate-Infrastruktur (lib.mjs, harness.mjs, pool.mjs, Mock …) → alle Zustände komplett.
@@ -25,6 +28,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { units as jsUnits, hunks, placed, reach } from './auswahl-teile.mjs';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const argv = process.argv.slice(2);
@@ -53,7 +57,10 @@ for (const t of (((alle.match(/for t in ([^;]*)/) || [])[1]) || '').trim().split
 }
 // „// @deckt: a b“ (auch mehrere Zeilen) in den ersten 20 Zeilen.
 const glob = (g) => new RegExp('^' + g.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*\*\//g, '(.*/)?').replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*').replace(/\?/g, '.') + '$');
-for (const t of tests) t.deckt = [...head(t.src, 20).matchAll(/^\/\/ @deckt: *(.+)$/gm)].flatMap((m) => m[1].trim().split(/\s+/)).map((g) => ({ g, re: glob(g) }));
+// "path#a,b" narrows a tag to named parts of a big file (globals, elements, marker regions, functions; see
+// auswahl-teile.mjs): the test is picked when a change reaches one of them, or the file's change cannot be placed.
+for (const t of tests) t.deckt = [...head(t.src, 20).matchAll(/^\/\/ @deckt: *(.+)$/gm)].flatMap((m) => m[1].trim().split(/\s+/))
+  .map((x) => { const [g, p] = x.split('#'); return { g, re: glob(g), parts: p ? p.split(',').filter(Boolean) : null }; });
 const word = (s) => new RegExp('(?<![\\w-])' + s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\w-])');
 const mention = (t, names) => names.find((n) => word(n).test(t.src));
 
@@ -73,6 +80,24 @@ const heirs = (set) => {
 const files = [...new Set([...git('diff', '--name-only', BASIS, HEAD).split('\n'), ...(HEAD === 'HEAD' ? git('diff', '--name-only', 'HEAD').split('\n') : [])].filter(Boolean))].sort();
 const diffOf = (f) => { try { return HEAD === 'HEAD' ? git('diff', BASIS, '--', f) : git('diff', BASIS, HEAD, '--', f); } catch (e) { return ''; } };
 const changedLines = (f) => diffOf(f).split('\n').filter((l) => /^[+-]/.test(l) && !/^(\+\+\+|---) /.test(l));
+// What really changed in each changed line: a "-" line and the "+" line after it lose their common start and end
+// (a template is one long JSON line; a word somewhere else in it is no change).
+function changedBits(f) {
+  const out = [];
+  for (const h of diffOf(f).split(/^@@.*$/m).slice(1)) {
+    const minus = [], plus = [];
+    for (const l of h.split('\n')) { if (/^-(?!--)/.test(l)) minus.push(l.slice(1)); else if (/^\+(?!\+\+)/.test(l)) plus.push(l.slice(1)); }
+    const n = Math.max(minus.length, plus.length);
+    for (let i = 0; i < n; i++) {
+      const a = minus[i] ?? '', b = plus[i] ?? '';
+      let x = 0; while (x < a.length && x < b.length && a[x] === b[x]) x++;
+      let y = 0; while (y < a.length - x && y < b.length - x && a[a.length - 1 - y] === b[b.length - 1 - y]) y++;
+      // keep a little context around the change so a keyword cut in half still matches
+      out.push(a.slice(Math.max(0, x - 12), a.length - y + 12), b.slice(Math.max(0, x - 12), b.length - y + 12));
+    }
+  }
+  return out;
+}
 const STRESS_RE = /overflow|ellipsis|nowrap|scroll|flex-wrap|line-clamp|max-width|min-width|white-space|grid-template|Überlauf|lange Namen/i;
 const UI_FILE = /^(custom_components\/casora\/(scripts|panel)\/|dashboards\/)/;
 
@@ -94,6 +119,44 @@ const DEFCOUNT = new Map();
 for (const d of ['custom_components/casora/scripts', 'custom_components/casora/scripts/local']) {
   for (const x of fs.readdirSync(path.join(REPO, d)).filter((y) => y.endsWith('.js'))) for (const g of defsOf(d + '/' + x)) DEFCOUNT.set(g, (DEFCOUNT.get(g) || 0) + 1);
 }
+// Parts of a changed script the diff touches, and the names outside the file that reach them (null: not placeable →
+// the whole file counts, as before).
+const fileAt = (f) => { try { return HEAD === 'HEAD' ? fs.readFileSync(path.join(REPO, f), 'utf8') : git('show', HEAD + ':' + f); } catch (e) { return null; } };
+const existedAt = (f) => { try { git('cat-file', '-e', BASIS + ':' + f); return true; } catch (e) { return false; } };
+function partsOf(f) {
+  const src = fileAt(f);
+  if (src == null || !existedAt(f)) return null;
+  let diff = '';
+  try { diff = HEAD === 'HEAD' ? git('diff', '-U0', BASIS, '--', f) : git('diff', '-U0', BASIS, HEAD, '--', f); } catch (e) { return null; }
+  const all = jsUnits(src);
+  const p = placed(src, hunks(diff), all);
+  if (p.unplaced.length) return null;
+  if (!p.parts.length) return { names: new Set(), parts: [], own: new Set() };
+  const names = reach(src, p.parts, all);
+  if (!names) return null;
+  return { names, weak: names.weak || new Set(), parts: p.parts, own: new Set(p.parts.map((u) => u.name)) };
+}
+// Phrase tables: changed keys/values, the languages they belong to.
+const PHRASES = /^custom_components\/casora\/translations\/dashboard\/phrases\/([a-z]{2})\.json$/;
+function phraseChanges(f) {
+  const flat = (o, pre = '', out = new Map()) => { for (const [k, v] of Object.entries(o || {})) { if (v && typeof v === 'object' && !Array.isArray(v)) flat(v, pre + k + '\u0000', out); else out.set(pre + k, JSON.stringify(v)); } return out; };
+  const a = flat(readJson(BASIS, f)), b = flat(readJson(HEAD === 'HEAD' ? null : HEAD, f));
+  const keys = new Set();
+  for (const k of new Set([...a.keys(), ...b.keys()])) if (a.get(k) !== b.get(k)) {
+    keys.add(k.split('\u0000').pop());
+    for (const v of [a.get(k), b.get(k)]) { try { const x = JSON.parse(v ?? 'null'); if (typeof x === 'string') keys.add(x); } catch (e) { /* not a string */ } }
+  }
+  return [...keys].filter((x) => x.length >= 4);
+}
+// A small set that always runs in a patch gate: one quick test per main surface.
+// A name used by more templates than this is a hub: its template heirs are not expanded in the patch selection.
+const HUB = 12;
+// … or whose templates have more heirs than this (a base template such as casora_badge_base).
+const HUB_HEIRS = 25;
+// A weakly reached name that more tests than this name is dropped (the popup frame, the device finder …).
+const HUB_TESTS = 25;
+const WEAK_MAX = 6;
+const SMOKE = ['r12_licht_popup_nie_leer', 'r44_handy_raum_wie_desktop', 'r63_handy_licht_ohne_unterreihe'];
 const rows = [];
 const sel = Object.fromEntries(STATES.map((s) => [s, { komplett: false, tests: new Set(), teile: new Set(), crawl: false, grund: [] }]));
 const add = (t) => sel[t.state] && sel[t.state].tests.add(t);
@@ -115,6 +178,15 @@ for (const f of files) {
   else if (f === 'custom_components/casora/panel/casora-panel-welcome.js' && changedLines(f).every((l) => /^[+-]\s*(\w+: *"(?:[^"\\]|\\.)*",? *)+$|^[+-]\s*\[ *("(?:[^"\\]|\\.)*",? *)+\],?$|^[+-]\s*$|^[+-]\s*\/\//.test(l))) {
     hit = tests.filter((t) => /casora-panel-welcome|WHATS_NEW|Neu-Popup/.test(t.src)); grund = 'nur Texte im Neu-Popup';
   }
+  else if (/^custom_components\/casora\/scripts\/i18n\/[a-z]{2}\.json$/.test(f) && files.some((x) => PHRASES.test(x))) grund = 'aus den Phrasen gebaut (dort zugeordnet)';
+  else if (PHRASES.test(f)) {
+    // Dashboard phrases: tests that show one of the changed texts, and tests that run in that language.
+    const lang = f.match(PHRASES)[1];
+    const keys = phraseChanges(f);
+    const inLang = lang === 'de' ? [] : tests.filter((t) => new RegExp(`locale: *['"]${lang}`).test(t.src));
+    hit = [...new Set([...tests.filter((t) => keys.some((k) => t.src.includes(k))), ...inLang])];
+    grund = `Phrasen ${lang}: ${keys.length} Texte` + (hit.length ? '' : ' → nur statisch/Unit (i18ncheck)');
+  }
   else if (tests.some((t) => t.file === f)) { hit = tests.filter((t) => t.file === f); grund = 'Test selbst'; }
   else if (!fs.existsSync(path.join(REPO, f)) && /^dev\/(qa\/regress|e2e)\//.test(f)) grund = 'Test gelöscht';
   else if (/^dev\/(qa|e2e)\//.test(f)) {
@@ -124,7 +196,8 @@ for (const f of files) {
     grund = hit.length ? `Prüfhilfe, geladen von ${hit.length} Test(s)` : 'Prüfhilfe ohne Gate-Lauf';
   }
   else {
-    const tagged = tests.filter((t) => t.deckt.some((d) => d.re.test(f)));
+    let partTagged = null, noFallback = false;
+    let wholeTagged = tests.filter((t) => t.deckt.some((d) => !d.parts && d.re.test(f)));
     let auto = [], why = [];
     if (f === TPL || f === 'custom_components/casora/panel/casora-templates.json') {
       const old = readJson(BASIS, TPL);
@@ -135,25 +208,52 @@ for (const f of files) {
       teile = ['desktop-dashboard', 'phone-dashboard'];
       if (!changed.length) why.push('keine Vorlage geändert');
     } else if (/^custom_components\/casora\/scripts\/.*\.js$/.test(f) && fs.existsSync(path.join(REPO, f))) {
-      // Globale, die mehrere Skripte setzen (z. B. _casoraSuppressDismiss), sagen nichts über diese Datei.
-      const defs = defsOf(f).filter((d) => (DEFCOUNT.get(d) || 0) <= 1);
-      // Vorlagen, die diese Globalen aufrufen, und ihre Erben.
-      const users = Object.keys(tplNow).filter((k) => defs.some((d) => JSON.stringify(tplNow[k]).includes(d)));
-      const names = defs.concat(heirs(users));
+      const fine = partsOf(f);
+      // Globale, die mehrere Skripte setzen (z. B. _casoraSuppressDismiss), sagen nichts über diese Datei – außer die
+      // Änderung sitzt genau in ihrer Definition.
+      // Weak names (only "same module"): just the specific ones – used by few templates and named by few tests.
+      const specific = (d) => tplNow && Object.keys(tplNow).filter((k) => JSON.stringify(tplNow[k]).includes(d)).length <= HUB
+        && tests.filter((t) => mention(t, [d])).length <= HUB_TESTS;
+      let weakKept = fine ? [...fine.weak].filter(specific) : [];
+      // More than a handful: the module is too wide to say – its tags and the smoke set stand in.
+      if (weakKept.length > WEAK_MAX) { why.push(`Modul zu breit (${weakKept.length} Namen) → Tags + Rauchtest`); weakKept = []; }
+      let defs = fine ? [...fine.names, ...weakKept].filter((d) => (DEFCOUNT.get(d.split('.')[0]) || 0) <= 1 || fine.own.has(d)) : defsOf(f).filter((d) => (DEFCOUNT.get(d) || 0) <= 1);
+      // "casoraDevice.waste": the key when a test or template names it, else the whole object.
+      defs = defs.map((d) => !d.includes('.') || tests.some((t) => t.src.includes(d)) || Object.values(tplNow).some((v) => JSON.stringify(v).includes(d)) ? d : d.split('.')[0]);
+      defs = [...new Set(defs)];
+      // Vorlagen, die diese Globalen aufrufen, und ihre Erben – nicht für Knoten, die viele Vorlagen nutzen (das
+      // Popup-Gerüst, Basis-Helfer): dort reichen die Tests, die den Namen selbst nennen, plus der Rauchtest-Satz.
+      const tplUsing = (d) => Object.keys(tplNow).filter((k) => JSON.stringify(tplNow[k]).includes(d));
+      const hub = fine ? defs.filter((d) => tplUsing(d).length > HUB || heirs(tplUsing(d)).length > HUB_HEIRS) : [];
+      const users = defs.filter((d) => !hub.includes(d)).flatMap(tplUsing);
+      const names = defs.concat(heirs([...new Set(users)]));
+      if (hub.length) why.push(`Knoten ${hub.slice(0, 3).join(', ')}: nur Tests, die sie nennen`);
       auto = tests.filter((t) => mention(t, names));
-      if (defs.length) why.push(`${defs.length} Elemente/Globale${users.length ? `, ${users.length} Vorlagen` : ''}`);
+      if (fine) {
+        // A whole-file tag says nothing about which part: when the test names some of the file's globals/elements, those
+        // decide (above); only a test that names none keeps the whole-file tag.
+        const exposedHere = new Set(defsOf(f));
+        wholeTagged = wholeTagged.filter((t) => !t.deckt.some((d) => !d.parts && d.re.test(f)) || ![...exposedHere].some((n) => word(n).test(t.src)));
+        partTagged = tests.filter((t) => t.deckt.some((d) => d.parts && d.re.test(f) && d.parts.some((x) => fine.names.has(x) || fine.own.has(x))));
+        why.push(fine.parts.length ? `Teile ${fine.parts.slice(0, 3).map((u) => u.name).join(', ')}${fine.parts.length > 3 ? ' …' : ''} → ${defs.length} Namen${users.length ? `, ${users.length} Vorlagen` : ''}` : 'nur Kommentare');
+        if (!fine.parts.length) noFallback = true;
+      } else if (defs.length) why.push(`ganze Datei: ${defs.length} Elemente/Globale${users.length ? `, ${users.length} Vorlagen` : ''}`);
       teile = ['desktop-dashboard', 'phone-dashboard'];
     } else if (/^custom_components\/casora\/panel\/casora-panel.*\.js$/.test(f) && !fallback(f)[0].includes('frisch')) {
       auto = studioTests;
       why.push('Studio');
       teile = ['desktop-studio', 'phone-studio'];
     }
+    const tagged = [...new Set([...wholeTagged, ...(partTagged || tests.filter((t) => t.deckt.some((d) => d.parts && d.re.test(f))))])];
     hit = [...new Set([...tagged, ...auto])];
     grund = [tagged.length ? `@deckt (${tagged.length})` : '', ...why].filter(Boolean).join(', ');
-    if (!hit.length) { const [z, g] = fallback(f); states = z; grund = (grund ? grund + ' → ' : '') + 'keine Zuordnung → Zustand komplett: ' + g; teile = []; }
+    if (!hit.length && noFallback) grund = (grund ? grund + ' → ' : '') + 'nur statisch/Unit';
+    else if (!hit.length) { const [z, g] = fallback(f); states = z; grund = (grund ? grund + ' → ' : '') + 'keine Zuordnung → Zustand komplett: ' + g; teile = []; }
   }
   // Überlauf-Hinweise im Diff → stress komplett (voller Klick-Durchlauf); nur Oberflächen-Dateien.
-  if (UI_FILE.test(f) && !states.includes('stress') && diffOf(f).split('\n').some((l) => /^[+-][^+-]/.test(l) && STRESS_RE.test(l))) {
+  // casora-templates.json is built from button_card_templates.json on one line: its source shows the change line by line.
+  const builtFromSource = f === 'custom_components/casora/panel/casora-templates.json' && files.includes(TPL);
+  if (UI_FILE.test(f) && !builtFromSource && !states.includes('stress') && changedBits(f).some((b) => STRESS_RE.test(b))) {
     states = [...states, 'stress']; grund += ', Überlauf/Listen im Diff → stress';
   }
   for (const t of hit) add(t);
@@ -161,6 +261,9 @@ for (const f of files) {
   if (teile.length && hit.some((t) => t.state === 'arbeit')) teile.forEach((x) => sel.arbeit.teile.add(x));
   rows.push({ file: f, tests: hit.map((t) => t.id), states, grund });
 }
+
+// Smoke set: whenever a surface file changed and arbeit is not complete anyway.
+if (rows.some((r) => UI_FILE.test(r.file)) && !sel.arbeit.komplett) for (const id of SMOKE) { const t = tests.find((x) => x.id === id); if (t) add(t); }
 
 // ── Ergebnis ──────────────────────────────────────────────────────────────────────────────
 const out = { basis: git('rev-parse', BASIS).trim(), head: git('rev-parse', HEAD).trim(), files: rows, states: {} };

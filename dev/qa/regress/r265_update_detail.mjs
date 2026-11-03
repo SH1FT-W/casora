@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/17-update-detail.js
+// @deckt: custom_components/casora/scripts/local/17-update-detail.js#nameOf,areaOf,kindOf,aiOf,AI_TXT,aiKey,inline,notes,D.notes,wantsBackup
 // Update-Detailseite (1.5, Entwurf A): Tipp auf ein Update im Update-Popup öffnet KEINEN nativen HA-Dialog,
 // sondern die Detailseite im selben Popup – ‹ zurück, Versionen, „Was ist neu“ aus den Versionshinweisen,
 // Installieren (mit Sicherung, abschaltbar) und Überspringen. ‹ führt zurück zur Liste. Nur im Browser

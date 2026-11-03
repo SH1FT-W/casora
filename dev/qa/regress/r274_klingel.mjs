@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/24-klingel.js dev/casora_mock/klingel.py
+// @deckt: custom_components/casora/scripts/local/24-klingel.js#hassNow,notice,COLOR,LABEL,ICON,ORDER,KL.icon,KL.liveCam,cache,KL.find dev/casora_mock/klingel.py
 // Community-Karte Reolink-Türklingel (#23) an der erfundenen Testklingel camera.testklingel_sub (dev/casora_mock/klingel.py):
 //   1. Kachel: „Bereit“ (nach dem Start steht der Klingelknopf frisch auf „aus“ – das ist kein Klingeln).
 //   2. Popup: Kopf, Bild (Testklingel ohne Stream: kein „Mithören“), Schnellantworten, Sirene, Verlauf aus HAs Recorder, Zeile „Ton ›“ (v3, #23).

@@ -41,7 +41,9 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
   im Monat; jedes Release ist die nächste Nummer (kein Patch/Minor mehr). Nächste Nummer: `tools/next-version`,
   `tools/release.sh` schlägt sie vor und prüft sie. Zwei Gate-Stufen (Maintainer, 02.11.2026): **Fix-Releases unter der
   Woche** mit Patch-Gate (`dev/qa/gate.sh --patch` + `tools/release.sh --patch`); **volles Gate** (`dev/qa/gate.sh --voll`)
-  freitags und bei großen Umbauten (viele Module, Vorlagen-Umbau, Migration, gespeicherte Daten).
+  freitags und bei großen Umbauten (viele Module, Vorlagen-Umbau, Migration, gespeicherte Daten). Das Patch-Gate wählt in großen
+  Skripten nach geänderten Teilen (`dev/qa/auswahl-teile.mjs`); neue Tests mit `// @deckt: <datei>#<global/funktion>,…` statt nur
+  der ganzen Datei markieren, sonst laufen sie nur, wenn sie einen Namen der Datei nennen oder die Datei nicht einzuordnen ist.
 - Release-Kandidat einfrieren: Sind Version/CHANGELOG committet, kommt nichts mehr dazu; Weiteres ins nächste Release.
 - Neue Regressionstests vor dem Merge einmal im Gate-Zustand prüfen: `dev/qa/probe.sh rNNN_name …` (frisches
   Wegwerf-HA „arbeit“ mit qa-arbeit, ~2–3 Min.). casora-test allein reicht nicht. `tools/release.sh --publish` syncht

@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/03-popups.js custom_components/casora/scripts/local/33-color-wheel.js
+// @deckt: custom_components/casora/scripts/local/03-popups.js#hasCol,v3Stage,ctData,COL_MODES,S.fxNone,S.fxPlain,plainOf,fxRuns,S.fxEnd,S.fxMoon custom_components/casora/scripts/local/33-color-wheel.js#CW.data,CasoraColorWheel,_casoraSuppressDismiss
 // Owner report (01.11.2026): an effect started from the v3 light popup's „Effekte“ menu could not be stopped on a lamp
 // whose effect list has no none/off entry (Govee/Tuya scene lists), and a colour lamp offered only Warm/Neutral/Kalt.
 // Now „Ohne Effekt“ is always the first row (none entry, else a plain colour that ends the scene), a white tone ends a

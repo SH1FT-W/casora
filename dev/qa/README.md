@@ -68,15 +68,19 @@ vorher als Tabelle (`--dry-run`), in dieser Reihenfolge je Datei:
 |---|---|
 | Doku, Changelog, Bilder, Unit-Tests, Release-Werkzeuge, nur `version` im manifest, nur Texte im Neu-Popup | keine (nur statisch + Unit) |
 | ein Test selbst (`dev/qa/regress/…`, `dev/e2e/tNN…`) | genau dieser Test |
-| Datei, die ein Test per Kopfzeile `// @deckt: <muster> …` nennt (Glob, z. B. `custom_components/casora/tanken.py`) | diese Tests |
+| Datei, die ein Test per Kopfzeile `// @deckt: <muster> …` nennt (Glob, z. B. `custom_components/casora/tanken.py`) | diese Tests. Mit Teilen `datei#a,b` (z. B. `…/03-popups.js#S.headOf,_casoraLightSoft`) nur, wenn die Änderung einen davon erreicht (oder die Datei nicht nach Teilen geht). Ein Ganz-Datei-Tag auf einem Skript zählt nur noch für Tests, die keinen Namen der Datei nennen |
 | Vorlagen (`button_card_templates.json`) | geänderte Vorlagen und alle, die von ihnen erben → Tests, die einen der Namen nennen; Klick-Durchlauf Dashboard-Teile |
-| Dashboard-Skripte (`scripts/…`) | dort definierte Elemente/Globale (`customElements.define`, `window._casora…`) und die Vorlagen, die sie aufrufen → Tests, die einen davon nennen; Klick-Durchlauf Dashboard-Teile |
+| Dashboard-Skripte (`scripts/…`) | **nach Teilen** (`dev/qa/auswahl-teile.mjs`, seit 03.11.2026): jede geänderte Zeile landet in ihrer innersten Definition (Global, Element, Marker-Bereich `// name:start/end`, Funktion, Methode, `X.y = function`, Schlüssel eines globalen Objekts `casoraDevice.waste`); von dort zu den Namen, die Tests sehen: das Global/Element drumherum, die Klasse → ihr Element, `var S = window._casoraX` → `_casoraX`, Aufrufer mit eindeutigem Namen. Diese Namen und die Vorlagen, die sie aufrufen (nicht bei Knoten mit vielen Vorlagen/Erben) → Tests, die einen davon nennen. Nur Kommentare → keine Tests. Lässt sich eine Zeile nicht einordnen: ganze Datei wie früher (alle Elemente/Globale). Klick-Durchlauf Dashboard-Teile |
+| Dashboard-Phrasen (`translations/dashboard/phrases/<sprache>.json`) | Tests, die einen geänderten Text nennen, und Tests mit `locale: '<sprache>'`; sonst nur statisch (i18ncheck). Die daraus gebauten `scripts/i18n/*.json` zählen nicht extra |
 | Studio (`panel/casora-panel*.js`) | Tests, die das Studio öffnen; Klick-Durchlauf Studio-Teile |
 | Gate-Infrastruktur (`lib.mjs`, `harness.mjs`, `pool.mjs`, `gate.sh`, Mock …) | alle Zustände komplett |
 | alles andere ohne Treffer | **Zustand komplett** (Theme/Texte → arbeit, Python/Umzug → frisch + arbeit, Stresshaus → stress, Unbekanntes → alles) |
 
-Überlauf-Stichworte (`overflow`, `nowrap`, `max-width` …) im Diff einer Oberflächen-Datei holen
-zusätzlich stress komplett dazu (voller Klick-Durchlauf). Teure Teile (voller Klick-Durchlauf, r56,
+Überlauf-Stichworte (`overflow`, `nowrap`, `max-width` …) im **geänderten Teil** einer Diff-Zeile einer Oberflächen-Datei
+holen zusätzlich stress komplett dazu (voller Klick-Durchlauf); eine lange Vorlagen-Zeile, in der das Wort nur woanders
+steht, zählt nicht. Bei jeder Oberflächen-Änderung läuft ein kleiner Rauchtest-Satz mit (`SMOKE` in `auswahl.mjs`).
+Wenn eine neue Regel ein Skript nicht einordnen kann, steht in der Tabelle „ganze Datei“ – dann ist die Auswahl so breit
+wie früher. Teure Teile (voller Klick-Durchlauf, r56,
 r20 …) laufen damit nur im vollen Gate oder wenn die Änderung sie berührt.
 
 Freigabe: `tools/release.sh YY.M.N` (über `tools/qa_gate.py --version`) braucht für Kalender-Versionen

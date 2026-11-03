@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/18-ziele.js
+// @deckt: custom_components/casora/scripts/local/18-ziele.js#hassNow,dayStart,when,devOf,devName,Z.nameOf,shortName,areaOf,Z.isNumeric,Z.binWords
 // Casora-Seiten statt HAs Dialog (1.5): casoraRoute öffnet für Messwerte die Messwert-Seite (Zeitraum, Diagramm,
 // Höchst/Tiefst/Ø, Verlauf), für Kontakte die Seite mit Offen-Band, für Geräte ihr Casora-Popup und sonst die
 // Geräteseite (seit Popup v3: Status-Bühne und „Gehört dazu“, kein „In Home Assistant öffnen“ mehr). Halten auf Casora-Kacheln öffnet kein

@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/tanken.py custom_components/casora/scripts/local/12-tanken.js
+// @deckt: custom_components/casora/tanken.py custom_components/casora/scripts/local/12-tanken.js#FUEL,price,K.device,K.sensorId,K.watch,info,K.advice,carInfo,adviceFor,COLORS
 // Neu (Casora 1.2): Tanken im Auto-Popup. Erwartet: Mit eingerichtetem Tankerkönig steht direkt unter
 // dem Tankbalken die Zeile „Tanken · ab X,XXX €“; Antippen zeigt im selben Popup die Ansicht „Tanken“
 // (Zurück-Knopf, Empfehlung bzw. in der Lernphase der Hinweis „Die Empfehlung kommt, sobald genug Preise

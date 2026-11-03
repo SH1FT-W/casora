@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/03-popups.js custom_components/casora/scripts/casora-core.js
+// @deckt: custom_components/casora/scripts/local/03-popups.js#S.oneLampOf,_casoraLF,_casoraBackNext,_casoraSuppressDismiss custom_components/casora/scripts/casora-core.js#casora-popup
 // Issue #118 (maintainer, 02.11.2026): house light popup (ZUHAUSE · Beleuchtung) → a room with ONE lamp opened the
 // room's page with just that lamp's row – a page almost the same as the lamp's. Expected: the tap opens the lamp's page
 // straight away (kicker = room, title = lamp, ‹ visible); ‹ goes back to the house's room list. Covers a room light

@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/23-frigate.js dev/casora_mock/frigate.py
+// @deckt: custom_components/casora/scripts/local/23-frigate.js#F.tileText,F.detail,pill dev/casora_mock/frigate.py
 // Community-Karte Frigate (#22, „Frigate 2“) an der erfundenen Frigate-Testkamera camera.testhof (dev/casora_mock/frigate.py):
 //   1. Kachel: „2 neue Alarme“ (ungesehene Alarme aus frigate/reviews/get).
 //   2. Popup: Status im Kopf (Hauptschalter „Objekterkennung“), Reviews mit EINER Chip-Reihe (Alle · Alarme ·

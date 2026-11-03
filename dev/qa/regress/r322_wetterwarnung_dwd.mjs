@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/01-basis.js dev/casora_mock/testserver.py
+// @deckt: custom_components/casora/scripts/local/01-basis.js#casoraWarnings,clamp,level,severity,attrs,count,isLevelSensor,active,region,kind dev/casora_mock/testserver.py
 // Weather warning tile with the DWD level sensor (issue #55). Reported: with HA's "Deutscher Wetterdienst (DWD)
 // Weather Warnings" installed the tile's device picker stayed empty – it only took a safety binary_sensor (NINA).
 // Expected, at the made-up region "Testland Nord" (dev/casora_mock/testserver.py, level 3 with two warnings):

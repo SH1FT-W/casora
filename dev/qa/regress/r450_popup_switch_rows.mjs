@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: allein
-// @deckt: custom_components/casora/scripts/casora-core.js custom_components/casora/scripts/local/30-fridge.js
+// @deckt: custom_components/casora/scripts/casora-core.js#flipSwitch,swap,_casoraFlipSwitch,switchHtml,_casoraSoft,_casoraSoftWatch,_casoraSepScan,_casoraSoftColor,casoraDropCommonPrefix,_casoraSuppressDismiss custom_components/casora/scripts/local/30-fridge.js#swRow
 // Issue #105: in the fridge/freezer popup the modes (SuperFrost …) showed their state as the word „An“/„Aus“.
 // Every row of an on/off entity in a popup is now a switch (UI.row.toggle in casora-core.js, as the light popup's lamp
 // rows): tapping it switches the entity, the switch flips at once and follows the real state.

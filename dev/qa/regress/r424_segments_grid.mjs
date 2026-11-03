@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/casora-core.js custom_components/casora/scripts/local/02-devices.js
+// @deckt: custom_components/casora/scripts/casora-core.js custom_components/casora/scripts/local/02-devices.js#H.dense
 // Owner (01.11.2026, prod): in the vacuum popup („Saugen und Wischen“: suction Leise … Eigene, water Aus … Eigene, 8 each)
 // the segment bars wrapped into two uneven rows on one 999 px track, the chosen pill stuck out of the track's rounded
 // edge. UI.segments: up to 5 fields one row on one track; from 6 a grid of pills – no shared track, equal widths, rows

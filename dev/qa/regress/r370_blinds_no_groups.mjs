@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/34-security-covers.js custom_components/casora/scripts/local/35-phone-hub.js dashboards/casora/button_card_templates.json
+// @deckt: custom_components/casora/scripts/local/34-security-covers.js#C.isGroup,C.singles,casoraBlindsTile,casoraOpenBlinds,_casoraBlindsOpen,C.scan custom_components/casora/scripts/local/35-phone-hub.js#casoraClimateBlinds dashboards/casora/button_card_templates.json
 // Reported (owner, 27.10.2026, prod 26.10.63 pre): the Klima sub-badge „Jalousien“ opened a blinds popup that listed
 // the HA cover GROUPS („Jalousien“, „Jalousien Wohnzimmer“) beside the single blinds, and its count could include
 // them. Expected: the sub-badge counts single blinds only, and its popup is the dashboard's blinds tile popup if there

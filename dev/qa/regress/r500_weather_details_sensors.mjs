@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: allein
-// @deckt: custom_components/casora/scripts/local/00-finder.js
+// @deckt: custom_components/casora/scripts/local/00-finder.js#WX_KEYS,WX_ATTR,attrUnit,weatherSources,weatherOptions,weatherChart,weatherRows,casoraSvc,casoraSettings,casoraContacts
 // Owner (prod, 02.11.2026): weather popup "Details". The rows Regen, Wind, Taupunkt, Windböen and Bewölkung had no ›
 // (no detail page, no history), only Regen heute, Niederschlag and Sonneneinstrahlung had one, although the weather
 // entity's device has its own sensor for every one of these values. The rows took the weather entity's attribute

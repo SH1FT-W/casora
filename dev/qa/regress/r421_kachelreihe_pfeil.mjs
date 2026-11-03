@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/smart-row.js
+// @deckt: custom_components/casora/scripts/smart-row.js#_css,casora-smart-row
 // E32 (test 2): in a room with more tiles than fit, the desktop showed only two small dots under the row (Casora
 // look: overflow "fade"). Expected: with a mouse the row shows the right arrow while tiles lie further right; on
 // touch (iPad) fade + dots stay as they were (swiping).

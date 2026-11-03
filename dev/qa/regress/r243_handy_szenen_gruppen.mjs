@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/04-navigation.js custom_components/casora/scripts/filter-overlay.js custom_components/casora/theme_weich.yaml
+// @deckt: custom_components/casora/scripts/local/04-navigation.js#_items,areaOf,names,_openMenu,_openSheet,_casoraHomeSlim,casora-mobile-nav,casoraNavScenes custom_components/casora/scripts/filter-overlay.js custom_components/casora/theme_weich.yaml
 // P-V6 (1.3): Szenen-Knopf der Handy-Leiste in einem Raum – oben „<Raum>“ mit den Szenen des Raums
 // (dieselben wie auf der Raumseite), darunter „Ganzes Haus“ mit den Haus-Szenen, je mit Überschrift.
 // Vorher hing es an der festen Startseiten-Auswahl: mit ihr fehlten die Raum-Szenen, ohne sie die

@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/casora-core.js custom_components/casora/scripts/local/18-ziele.js custom_components/casora/scripts/local/13-schloss.js custom_components/casora/scripts/local/15-person.js
+// @deckt: custom_components/casora/scripts/casora-core.js#_paintSoft,_headFallback,_headCur,_sinceText,_dedupeHead,startC,casoraSinceMs,casora-popup custom_components/casora/scripts/local/18-ziele.js#Z.history,Z.withNow,Z.sinceMs,Z.openMeasure custom_components/casora/scripts/local/13-schloss.js custom_components/casora/scripts/local/15-person.js#P.history,P.withNow
 // Issue #106: a single window's page opened from the window group said „FENSTER“ over „Fenster“, „Seit 15:25“ in the
 // head (the group's time) and „Geschlossen · Seit 18:14“ on the stage, and its history ended on „Geöffnet · seitdem“
 // with „Insgesamt geöffnet 24 Std.“ – HA's history lacked the latest change. Here HA's history is served without the

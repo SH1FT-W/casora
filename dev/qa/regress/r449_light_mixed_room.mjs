@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/03-popups.js custom_components/casora/scripts/casora-core.js
+// @deckt: custom_components/casora/scripts/local/03-popups.js#S.kColor,S.lampTones,v3Stage,rgbOf,v3Moons,v3SceneItems,roomV3,_casoraSuppressDismiss,_casoraLF,_casoraBackNext custom_components/casora/scripts/casora-core.js
 // Owner report (01.11.2026), a room light popup with lamps in different colours: „Warm“ and „Farbe“ were chosen at once
 // and the ring showed only the first lamp's colour. Now no field is chosen while the lamps differ, the ring blends their
 // colours (gradient along the fill), and „Warm“ makes every lit lamp warm (then „Warm“ alone, one colour).

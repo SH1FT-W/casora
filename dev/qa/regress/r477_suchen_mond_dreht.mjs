@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/03-popups.js
+// @deckt: custom_components/casora/scripts/local/03-popups.js#v3StatusHtml,K.v3Status
 // Maintainer report 02.11.2026 (26.11.5, iPhone): in the Software-Updates popup (v3 dial) the moon „Suchen“ stopped
 // spinning right after the tap, and „Suche …“ stood under the moon instead. Wanted: the spinning arrow is the only
 // signal – it spins while the search runs and stops when it is done; no „Suche …“ text at the moon or under the wheel.

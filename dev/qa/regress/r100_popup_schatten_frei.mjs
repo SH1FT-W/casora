@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/casora-core.js
+// @deckt: custom_components/casora/scripts/casora-core.js#__casoraShadowRoom
 // Gemeldet 09.10.2026: Der weiche Schatten hervorgehobener (aktiver, weißer) Zeilen in Popups endete
 // rechts und unten als harte, eckige graue Fläche (Fußbodenheizung „Heizkörper Bad · Heizt auf …“,
 // ebenso Schloss, Jalousien, Segmente in Thermostat/Luftreiniger). Ursache: button-card gibt jedem
