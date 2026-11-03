@@ -15,7 +15,7 @@
 
   // English ships inline; every other language is panel/i18n/<lang>.json, fetched for the language shown
   // (Ladezeit stage 1: all 8 languages were 1.4 MB / ~500 KB gzip on every Studio start).
-  const TABLES = {"en":{"exact":{"Casora":"Casora","Welcome to Casora":"Welcome to Casora","Leave Casora?":"Leave Casora?","every Casora tile is one":"every Casora tile is one","styles Casora's tiles (successor to card-mod)":"styles Casora's tiles (successor to card-mod)","Cards Casora does not manage. They sit below the tiles, exactly as":"Cards Casora does not manage. They sit below the tiles, exactly as","Never yet":"Never","Show blinds":"Show blinds","Adds a Blinds row to the climate popup.":"Adds a Blinds row to the climate popup."},"patterns":[]}};
+  const TABLES = {"en":{"exact":{"Casora":"Casora","Welcome to Casora":"Welcome to Casora","Leave Casora?":"Leave Casora?","every Casora tile is one":"every Casora tile is one","styles Casora's tiles (successor to card-mod)":"styles Casora's tiles (successor to card-mod)","Cards Casora does not manage. They sit below the tiles, exactly as":"Cards Casora does not manage. They sit below the tiles, exactly as","Never yet":"Never","Show blinds":"Show blinds","Adds a Blinds row to the climate popup.":"Adds a Blinds row to the climate popup.","Lamps":"Lamps","Household":"Household","Name or entity":"Name or entity","No device matches the filter.":"No device matches the filter."},"patterns":[["^(\\d+) of (\\d+)$","{1} of {2}"],["^Part of (.+)$","Part of {1}"]]}};
   const AVAIL = ["de", "es", "fr", "it", "nl", "pl", "pt"];
   // URL of this module (with the Studio's ?v=), filled in by the build; null when evaluated elsewhere.
   const SELF = import.meta.url;
