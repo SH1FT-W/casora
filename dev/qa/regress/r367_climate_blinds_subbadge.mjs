@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/35-phone-hub.js
+// @deckt: custom_components/casora/scripts/local/35-phone-hub.js#chipsOf,casoraClimateBlinds,P.scan
 // Owner (27.10.2026): with the Studio option „Jalousien anzeigen“ on (climate_blinds, default) the Klima badge's sub-row
 // on Home has a sub-badge „Jalousien“ like the one under Sicherheit (blinds glyph, open count) that opens the blinds
 // group popup (two columns, ≥ 880 wide on the desktop). Option off → no such sub-badge. Desktop 1440; option only in

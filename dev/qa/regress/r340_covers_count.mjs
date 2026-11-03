@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/casora-core.js
+// @deckt: custom_components/casora/scripts/casora-core.js#casoraCoverSummary,seen,posOf,casoraCoverSummaryText
 // Issue #63: the Home "Jalousien" tile read "85 % Geöffnet" - the HA cover group's own current_position (another
 // member list) - while its popup said "Position 70 %", the average of the six listed blinds (4 x 100 %, 1 %, 20 %).
 // Tile and popup now share casoraCoverSummary: the same members, the same average, the count first.

@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/16-maeher.js
+// @deckt: custom_components/casora/scripts/local/16-maeher.js#COLOR,STATE,ACTIVITY,ERRORS,M.errorText,M.find,M.status,M.active,M.color,M.tileState
 // Community-Karte Mähroboter (1.5) am erfundenen Gardena-artigen „Testmäher“ (dev/casora_mock/maeher.py):
 //   1. Kachel: Zustand „Parkt bis zum nächsten Zeitplan“, ruhig; Popup mit Akku, Tasten Zur Station (aus) ·
 //      Mähen · Parken, Status Akku/Verbindung/Betriebsstunden.

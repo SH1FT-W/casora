@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: allein
-// @deckt: custom_components/casora/scripts/local/30-fridge.js custom_components/casora/scripts/local/00-finder.js dev/casora_mock/fridge.py
+// @deckt: custom_components/casora/scripts/local/30-fridge.js#COLOR,isId,alarmOn,blank,F.find,over,zone,setZone,setSuper,setMode custom_components/casora/scripts/local/00-finder.js dev/casora_mock/fridge.py
 // New (24.10.2026): the fridge card (casora_fridge) for Liebherr, Home Connect and generically named fridges.
 // The test house has a made-up Liebherr-like fridge-freezer ("Testfrost", dev/casora_mock/fridge.py).
 // Expected:

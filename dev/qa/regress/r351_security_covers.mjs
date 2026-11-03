@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: allein
-// @deckt: custom_components/casora/scripts/local/34-security-covers.js custom_components/casora/settings.py custom_components/casora/panel/casora-panel-personal.js tools/phone_room_badges.py
+// @deckt: custom_components/casora/scripts/local/34-security-covers.js#GATE,C.isOpen,C.isNight,sees,C.scan,onHome,C.count,nameOf,roomOf,C.word custom_components/casora/settings.py custom_components/casora/panel/casora-panel-personal.js tools/phone_room_badges.py
 // Issue #76 (wish): "in the evening and at night see at a glance whether every security-relevant cover is closed,
 // with a choice of which covers count." Settings › Home & Devices › "Sicherheit: Jalousien" picks the covers and
 // "Nur abends und nachts" (on by default). Expected on Home: in the expanded security row a sub-badge "Jalousien ·

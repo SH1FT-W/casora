@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/27-chart.js custom_components/casora/scripts/casora-chart.js
+// @deckt: custom_components/casora/scripts/local/27-chart.js#segOf,M.pick,_casoraSuppressDismiss,M.popup custom_components/casora/scripts/casora-chart.js#_head,casoraChart,casora-chart,customCards
 // Issue #58 (chart card, casora_chart / casora_popup_chart) on the made-up "Testserver" (dev/casora_mock/testserver.py):
 //   1. Phone with touch (Chromium and WebKit): tapping a series button of the chart (three sensors, different units →
 //      casora-chart's own switch), a range segment (24 Std. / 7 Tage / 30 Tage / Jahr) and the Linie/Balken switch

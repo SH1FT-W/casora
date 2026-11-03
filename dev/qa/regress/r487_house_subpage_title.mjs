@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/casora-core.js custom_components/casora/scripts/local/01-basis.js dashboards/casora/button_card_templates.json
+// @deckt: custom_components/casora/scripts/casora-core.js custom_components/casora/scripts/local/01-basis.js#popRoot,_hpShown,_hpPlantShow,_hpPlantTap,_hpLiveTick,_hwReopen,_hpChartInit dashboards/casora/button_card_templates.json
 // House blinds popup (ZUHAUSE · Jalousien, a cover group over several rooms): the rows drop the shared „Jalousie“
 // („Küche“, „Bad“ …). Tapping „Küche“ opened the blind's sub page titled just „Jalousie“: the page stripped its room
 // („Jalousie Küche“ minus „Küche“) although it came from the house popup, where no room stands above it.

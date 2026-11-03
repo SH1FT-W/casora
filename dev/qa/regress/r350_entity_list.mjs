@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/34-entity-list.js custom_components/casora/scripts/casora-core.js custom_components/casora/panel/casora-panel-types.js
+// @deckt: custom_components/casora/scripts/local/34-entity-list.js#SOURCES,LAYOUTS,isId,hassNow,uniq,L.nameOf,L.resolve,L.kind,L.isOn,L.count custom_components/casora/scripts/casora-core.js#softGroup,group,_casoraAutoConsumers,_casoraUI,casoraCoverSummary,_casoraTapTile,_casoraPnDel,casoraDaysAgo,casoraNeedsRestart,_casoraOpenSince custom_components/casora/panel/casora-panel-types.js
 // Card request #59: an entity list (settings of a group as popup rows, each with its control: switch, time, − / +,
 // choice; one or two columns, section headings) and "Mehr" (lists and charts without a tile of their own, opened in
 // the same popup with ‹ back). Entries come from the test house (mock helpers: input_boolean, time, input_number,

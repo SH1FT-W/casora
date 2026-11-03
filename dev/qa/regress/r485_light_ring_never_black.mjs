@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/03-popups.js custom_components/casora/scripts/casora-core.js
+// @deckt: custom_components/casora/scripts/local/03-popups.js#sweep,sweepInline,v3On,S.lampTones,v3Stage,lampNamesOf,S.refresh,_casoraBackNext,_casoraCoach,_casoraSuppressDismiss custom_components/casora/scripts/casora-core.js
 // Owner (02.11.2026, iPhone, 26.11.5): the brightness ring of the house light popup was black („100 % Volle Helligkeit“,
 // white knob). A lit lamp reported rgb_color [0, 0, 0] (Govee ceiling light running a scene/effect) and its „colour“
 // became the ring's colour. Expected: a lamp without a usable colour gives no ring colour – the ring keeps the accent;

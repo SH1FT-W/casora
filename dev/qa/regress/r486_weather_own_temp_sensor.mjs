@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: allein
-// @deckt: custom_components/casora/scripts/local/00-finder.js custom_components/casora/scripts/casora-chart.js
+// @deckt: custom_components/casora/scripts/local/00-finder.js#WX_KEYS,WX_ATTR,attrUnit,weatherSources,weatherOptions,weatherChart,weatherRows,casoraSvc,casoraSettings,casoraContacts custom_components/casora/scripts/casora-chart.js
 // Issue #115 (stalakerob, 02.11.2026): weather popup with an own temperature sensor (Studio "Own temperature sensor",
 // weather_temp_sensor) and the chart curves Temperatur + Gefühlt. The wheel showed the own sensor (6°), the chart's
 // "Temperatur" curve, its "Jetzt" value and the legend the weather source's own temperature (5,0 °C).

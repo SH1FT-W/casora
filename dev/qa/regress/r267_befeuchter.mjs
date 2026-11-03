@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/19-befeuchter.js
+// @deckt: custom_components/casora/scripts/local/19-befeuchter.js#H.find,H.modeLabel,H.status,H.steps,H.popup,empty,watch,call
 // Luftbefeuchter-Kachel (1.5): Tippen öffnet das Casora-Popup statt HAs Dialog – Raum/Zustand, Verlauf der
 // Luftfeuchte, Modus/Zielfeuchte (Ein/Aus nur im Kopf, Muster v2), Status mit Wassertank, „Weitere Einstellungen“. Zielfeuchte und Modus werden bedient und
 // danach auf den Ausgangswert zurückgesetzt. Halten öffnet ebenfalls kein HA-Dialog. Test-Befeuchter aus dem Mock.

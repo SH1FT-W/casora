@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/27-chart.js custom_components/casora/scripts/casora-chart.js
+// @deckt: custom_components/casora/scripts/local/27-chart.js#SHAPES,SHAPE_LABEL,M.chartCfg custom_components/casora/scripts/casora-chart.js#C.heatPlan,C.heatStarts,C.heat,C.heatShare,_src,_per,_load,_points,_draw,_head
 // Issue 100 (chart card, heatmap) on the made-up "Testserver" (dev/casora_mock/testserver.py):
 //   1. Studio "Display: Heatmap": the tile shows the last 7 days as a small grid instead of the sparkline (desktop; the
 //      phone pill hides both like before).

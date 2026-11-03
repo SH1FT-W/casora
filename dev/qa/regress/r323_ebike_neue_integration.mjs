@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: allein   (creates qa-ebike as a copy of the Casora desktop dashboard, deleted at the end)
-// @deckt: custom_components/casora/scripts/local/03-popups.js dev/casora_mock/ebike.py
+// @deckt: custom_components/casora/scripts/local/03-popups.js#hassOf,fmtN,PLATFORMS,BIKE_KEYS,CODES,modeName,SPEC,scan,score,ofDev dev/casora_mock/ebike.py
 // Reported (forum, 24.10.2026): with the Bosch eBike integration 1.19 the e-bike tile and popup showed only
 // „Diebstahl: Nicht gemeldet“ and an empty „Nächster Service“ – in a German HA the entity ids read
 // sensor.<rad>_tage_seit_letzter_fahrt, the old prefix logic anchored on one English suffix and found just

@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/03-popups.js custom_components/casora/scripts/casora-core.js
+// @deckt: custom_components/casora/scripts/local/03-popups.js#sweep,sweepInline,v3On,S.lampTones,v3Stage,lampNamesOf,S.refresh,_casoraBackNext,_casoraCoach,_casoraSuppressDismiss custom_components/casora/scripts/casora-core.js
 // Reported (02.11.2026): in a room with dimmable lamps only one on/off lamp was lit (color_mode „onoff“, no brightness –
 // the status LED of a network device). The head said „1 von n an“, but the light dial of the house and of the room
 // popup said „Aus“ with an empty ring: the stage counted only the dimmable lamps. Expected: the dial is on (an on/off

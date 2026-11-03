@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/smart-row.js
+// @deckt: custom_components/casora/scripts/smart-row.js#_isActiveByTiles,tiles,walk,_isActive,casora-smart-row
 // Gemeldet (10.10.2026, iPad, Startseite): Die Aquarium-Kachel („Alles ok“, Symbol grau = inaktiv) stand
 // in der Kachelreihe vorn, vor aktiven Kacheln (Schloss entriegelt, Jalousien offen).
 // Ursache: Die Kachel steckt in einer Sammelkarte (conditional → auto-entities → Swipe) mit

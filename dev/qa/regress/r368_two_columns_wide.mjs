@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: dashboards/casora/button_card_templates.json custom_components/casora/scripts/casora-core.js
+// @deckt: dashboards/casora/button_card_templates.json custom_components/casora/scripts/casora-core.js#_holdUntilLaidOut,step,casora-popup
 // Stage 2 (26.10.62) set many popups to the one-column width (552). Some of them still lay out two columns in a group
 // mode – floor heating group (fixed 26.10.62), cover group (owner, 27.10.2026: „Jalou…“). Every popup of the test
 // dashboard on the desktop (1440, light): two plates side by side → the popup is at least 700 px wide.

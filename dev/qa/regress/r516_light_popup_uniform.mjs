@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/03-popups.js
+// @deckt: custom_components/casora/scripts/local/03-popups.js#S.placeOf,holds,S.headOf,lampRow,hero,S.fxMoon,v3Moons,v3SceneItems,roomBody,sceneScope
 // Owner (03.11.2026, review sheet of every light popup before 26.11.8): the light popups looked different depending on
 // the way they were opened. One rule now, whatever the path (house badge, house → room, room badge, Home's room chip,
 // a lamp chip, a lamp from any list, a room of one lamp):

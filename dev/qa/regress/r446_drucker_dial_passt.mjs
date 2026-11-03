@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/02-devices.js custom_components/casora/scripts/casora-core.js
+// @deckt: custom_components/casora/scripts/local/02-devices.js#P.inner custom_components/casora/scripts/casora-core.js
 // Owner report (01.11.2026, iPhone, 3D printer printing): the dial's centre was overfull. „1:21“ ran over the ring on
 // the left, „Std. übrig“ next to it wrapped onto two lines and stuck out on the right, and four more lines
 // („Schicht 78/254“, „PLA“, „53 %“, „Fertig gegen 21:02 Uhr“) reached the ring's ends. Expected (phone 393 WebKit,

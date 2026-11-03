@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/casora-core.js
+// @deckt: custom_components/casora/scripts/casora-core.js#stepSpec,_casoraSoft,_casoraSoftWatch,_casoraSepScan,_casoraSoftColor,_casoraSuppressDismiss,_casoraUIBound,_casoraUILastTap,_casoraLastScrollTs,casoraCoverKind
 // Gemeldet (Personas 10.10.2026, per-02): Thermostat-Popup – 4 schnelle Tipps auf „+“ (150 ms Abstand)
 // ergaben +1,0 °C statt +2,0. Die 400-ms-Sperre schluckte Tipps, und bis zum Neuzeichnen trug die Taste
 // noch das alte Ziel. Erwartet: jeder Tipp zählt – per Finger (Plus) und per Maus (Minus).

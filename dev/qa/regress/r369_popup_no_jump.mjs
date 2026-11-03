@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/casora-core.js
+// @deckt: custom_components/casora/scripts/casora-core.js#_holdUntilLaidOut,step,casora-popup
 // Reported (owner, 27.10.2026): in nearly every popup the headings jumped up after opening. The status line was
 // drawn inside the content first and lifted into the header a frame (on slow devices several) later, so all
 // sections moved up ~26 px. Expected: from the first frame in which the content is visible, section headings and

@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/24-klingel.js dev/casora_mock/klingel.py
+// @deckt: custom_components/casora/scripts/local/24-klingel.js#KL.opts,KL.camName,KL.view,KL.popup,disconnectedCallback,P._build,P._sync,P._mount,P._overlay,P._fit dev/casora_mock/klingel.py
 // Reolink-Türklingel (#23): großes Bild und zweite Kamera an der erfundenen Testklingel camera.testklingel_sub
 // mit der zweiten Testkamera camera.testhof (dev/casora_mock/klingel.py):
 //   1. Popup: Groß-Knopf auf dem Bild → großes Bild in der obersten Ebene (breiter als im Popup), Esc schließt nur

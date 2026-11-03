@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/03-popups.js custom_components/casora/scripts/local/12-tanken.js
+// @deckt: custom_components/casora/scripts/local/03-popups.js#ROLES,C.read,C.popup,FALLBACK,warned custom_components/casora/scripts/local/12-tanken.js
 // Gemeldet (1.2.2): Bei einem Nutzer öffnete sich das Auto-Popup nicht (bei uns schon). Andere Integrationen
 // benennen ihre Entitäten anders, E-Autos haben keinen Tank, manche Autos nur einen device_tracker, Werte sind
 // „unavailable“/„unknown“, Einheiten Meilen. Erwartet: Für jede Variante öffnet ein Tipp auf die Auto-Kachel

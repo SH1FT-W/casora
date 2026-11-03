@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/07-weich-spezial.js custom_components/casora/scripts/casora-core.js
+// @deckt: custom_components/casora/scripts/local/07-weich-spezial.js#AL.fail custom_components/casora/scripts/casora-core.js#__casoraAskFirst,_casoraCfgOnce,_casoraPartnerInfo,casoraRunService,casoraAsksFirst,casoraAsk,casoraConfirmSwitch,casoraConfirmSpec,casoraAskFirstTry,__casoraAskFirstParts
 // Issue #109 (iPhone, Alarmo without a code): „Alarm beenden“ (triggered) and „Unscharf schalten“ (armed) in the
 // alarm popup and the security popup did nothing. casoraAsk threw on a question without text or verb, so the
 // confirm never showed and alarm_disarm was never sent. Phone, touch taps, both entry points:

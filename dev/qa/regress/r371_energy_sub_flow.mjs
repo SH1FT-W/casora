@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/20-energie-fokus.js
+// @deckt: custom_components/casora/scripts/local/20-energie-fokus.js#build,base,_casoraEnergyFocus
 // Owner (27.10.2026): the energy sub-popups „Haus“, „Solar“, „Netz“ and „Akku“ showed a stacked bar („Woher kommt der Strom“ /
 // „Wohin geht der Solarstrom“). With the sources of the big popup's flow present they show that flow (E1,
 // „Energiefluss“ as the heading above the card), else the bar stays. Desktop 1440 and tablet 1180 (the phone opens the big energy popup from its badge); the Home badge

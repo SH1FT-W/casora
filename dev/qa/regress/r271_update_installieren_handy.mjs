@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/17-update-detail.js
+// @deckt: custom_components/casora/scripts/local/17-update-detail.js#onTap
 // Update-Detailseite am Handy (14.10.2026): „Installieren“ reagierte auf einen Fingertipp nicht, „Überspringen“
 // schon. Die Teilkarte (button-card) schluckt das Klick-Echo nach dem Fingertipp; der Knopf hörte nur auf click.
 // Prüft per echtem Fingertipp (und Mausklick), dass genau EIN update.install ankommt. Der Dienstaufruf wird im

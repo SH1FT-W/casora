@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/casora-core.js custom_components/casora/scripts/local/04-navigation.js custom_components/casora/scripts/local/03-popups.js custom_components/casora/scripts/local/06-kalender.js tools/html-escape-check.mjs
+// @deckt: custom_components/casora/scripts/casora-core.js custom_components/casora/scripts/local/04-navigation.js#_iconHtml,_openMenu,_hmnOwner,_hmnExt,_hmnResvObs,_casoraHomeSlim,casora-mobile-nav,casoraNavScenes custom_components/casora/scripts/local/03-popups.js#_casoraUpdAi,F.stepper,_casoraFbhPopup,R.calSoft,R.weekHtml,head,boxHtml,sweep,sweepInline,icon custom_components/casora/scripts/local/06-kalender.js#monthHtml,wasteHtml,K.wsec,casoraRingUrl tools/html-escape-check.mjs
 // HTML escaping (HACS review hacs/default#12143, point 4): entity names and config strings went into innerHTML
 // unescaped. A device or integration can name an entity "<img src=x onerror=…>". Here a light, a person, a scene,
 // a calendar, the room's area and the room's name in the dashboard get markup as their names (calendar event

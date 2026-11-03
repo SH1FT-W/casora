@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: allein
-// @deckt: custom_components/casora/scripts/casora-chart.js custom_components/casora/scripts/local/00-finder.js custom_components/casora/scripts/casora-core.js
+// @deckt: custom_components/casora/scripts/casora-chart.js#_line,casoraChart,casora-chart,customCards custom_components/casora/scripts/local/00-finder.js custom_components/casora/scripts/casora-core.js
 // Issues #67 and #68 (andreasgoetzke, 26.10.2026), weather popup with several curves in one chart (test station
 // weather.testwetter, dev/casora_mock/wetter.py: Temperatur + Gefühlt).
 //   #67: pointing at the chart showed only the first curve's value. Expected: every legend entry shows its own

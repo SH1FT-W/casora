@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/27-chart.js
+// @deckt: custom_components/casora/scripts/local/27-chart.js#dotted,M.precision
 // Chart tile popup (casora_popup_chart, v3 stage S6) on the made-up "Testserver" sensors without a display precision:
 // the decimals must not follow the raw state string. Opened at "44.38 %" the wheel read "44,38 %" and the average
 // "47,15 %", after the next value ("47.4") "47,4 %" and "47,2 %"; the maximum read "54,0 %" beside them.

@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/14-pulse.js
+// @deckt: custom_components/casora/scripts/local/14-pulse.js#BELL_OPENS,P.bellPhrase,P.bell,shown,tone,rank
 // Neu (09.10.2026, Casora 1.2.x): Pulse in der Glocke. Das Testhaus hat kein Pulse – Pulse-Entitäten werden
 // im Browser künstlich eingespielt (wie r101; Registry mit platform 'pulse' + translation_key, alles erfunden).
 // Erwartet am Desktop und Handy (hell + dunkel, Theme Casora):

@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/03-popups.js
+// @deckt: custom_components/casora/scripts/local/03-popups.js#stepNear,casoraClimateMembers,casoraClimateGroupLine,casoraRingGlyph,casoraRingUrl,_casoraFbhPopup,_casoraSuppressDismiss,_casoraBackNext
 // Reported (the owner, real iPad and iPhone, HA Companion app, 26.11.2): turning the dial worked, but − / + under
 // the dial of the floor heating (room popup v3) did nothing – no display change, no service call. Cause: the
 // FBH popup is a button-card inside a button-card; the outer one stops the touchstart and dispatches a copy

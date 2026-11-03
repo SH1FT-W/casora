@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/smart-row.js
+// @deckt: custom_components/casora/scripts/smart-row.js#sortDecision,_casoraSortDecide,casora-smart-row
 // "Sort tiles" (01.11.2026, owner decision "C und Schalter"): since E19 a tile that turned idle stayed in front between the
 // active ones until a reload. Expected after the load phase (phone WebKit 393 and desktop 1440):
 //   now (default again since 26.11.6, owner request) – re-sorts within seconds (as before E19);

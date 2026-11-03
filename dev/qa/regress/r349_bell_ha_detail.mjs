@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/casora-core.js
+// @deckt: custom_components/casora/scripts/casora-core.js#pnHtml,inlineHtml,showPn,_casoraPnDel,esc0,standing,bindOpens,_casoraNotify.refresh,casoraDaysAgo,casoraNeedsRestart
 // Issue #70 (stalakerob, 26.10.2026): HA's own list opens a notification on tap with its whole text; the bell only showed
 // the shortened line. Expected: tapping an HA notification in the bell opens a popup with its title, the whole message
 // (Markdown: bold, list, link) and "Löschen", which dismisses it in HA. Desktop and phone.
