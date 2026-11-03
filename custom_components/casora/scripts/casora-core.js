@@ -8041,6 +8041,31 @@ window.casoraMenuGlass = {
       // A page transition still running ends now (fast taps): its old page goes, sizes are released.
       if (this._navAnim) this._navAnim.finish();
       var prevBackFn = wasOpen ? this._backFn : null;
+      // Which way this page change goes, decided before anything of the old page changes (head, width, content).
+      // Scroll memory (owner 03.11.2026): a page left forward keeps where it was scrolled to, ‹ brings it back there;
+      // a new page starts at the top, a fresh opening forgets everything. A page opened again with the config it was
+      // left with (‹, or a page that returns by itself) is a way back too.
+      if (!wasOpen || !this._navStack) this._navStack = [];
+      var bn0 = window._casoraBackNext;
+      var nextBack = typeof cfg.back === 'function' ? cfg.back : bn0 && Date.now() - bn0.at < 4000 ? bn0.fn : null;
+      var stackAt = -1;
+      for (var si = this._navStack.length - 1; si >= 0; si--) { if (this._navStack[si].cfg === data) { stackAt = si; break; } }
+      var navDir = navDirection(wasOpen, stackAt >= 0 ? Date.now() : this._navBackAt, Date.now(), prevBackFn, nextBack, cfg.nav);
+      this._navBackAt = 0;
+      var scrollBack = null;
+      // The place at the tap that led here: the page may already shrink a little before the next one opens.
+      var tapAt = this._navTapScroll;
+      var leftAt = tapAt && Date.now() - tapAt.at < 4000 ? tapAt.top : (this.content ? this.content.scrollTop : 0);
+      this._navTapScroll = null;
+      if (navDir === 'forward') this._navStack.push({ top: leftAt, cfg: this._cfgCurrent || null });
+      else if (navDir === 'back' && this._navStack.length) {
+        var ent = this._navStack.splice(stackAt >= 0 ? stackAt : this._navStack.length - 1)[0];
+        scrollBack = ent ? ent.top : null;
+      }
+      // The old page leaves first; another page opened meanwhile (a fast second tap) goes on, this opening stops.
+      var gen0 = this._openGen;
+      var nav = navDir === 'forward' || navDir === 'back' ? await this._navBegin(navDir) : null;
+      if (gen0 !== this._openGen || (wasOpen && !this.hasAttribute('open'))) { if (nav) nav.finish(); return; }
       // §3/§4.4 (review 2, DD-09): a sub page's label is the title of the page before it.
       var prevTitle = wasOpen && this._headerTitle ? String(this._headerTitle.textContent || '').replace(/\u200B/g, '') : '';
       // Gerät fehlt: Inhalt gar nicht erst bauen (bleibt ohnehin verborgen) – sonst melden Karten
@@ -8112,18 +8137,6 @@ window.casoraMenuGlass = {
         }
       }
       window._casoraBackNext = null;
-      var navDir = navDirection(wasOpen, this._navBackAt, Date.now(), prevBackFn, this._backFn, cfg.nav);
-      this._navBackAt = 0;
-      // Scroll memory (owner 03.11.2026): a page left forward keeps where it was scrolled to, ‹ brings it back there;
-      // a new page starts at the top, a fresh opening forgets everything.
-      if (!wasOpen || !this._navStack) this._navStack = [];
-      var scrollBack = null;
-      // The place at the tap that led here: the page may already shrink a little before the next one opens.
-      var tapAt = this._navTapScroll;
-      var leftAt = tapAt && Date.now() - tapAt.at < 4000 ? tapAt.top : (this.content ? this.content.scrollTop : 0);
-      this._navTapScroll = null;
-      if (navDir === 'forward') this._navStack.push(leftAt);
-      else if (navDir === 'back') scrollBack = this._navStack.length ? this._navStack.pop() : null;
       this._headerBack.hidden = !this._backFn;
       this._subEyebrow = this._backFn && prevTitle && !this._headFixed ? prevTitle : null;
       this._headerBack.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Zurück') : 'Zurück');
@@ -8186,8 +8199,7 @@ window.casoraMenuGlass = {
       else this._lastWidthDecl = null;
       this._dyn.textContent = dynCss;
 
-      var nav = navDir !== 'same' && navDir !== 'none' ? this._navBegin(navDir, scrollBack || 0) : null;
-      if (!nav) this.container.textContent = '';
+      this.container.textContent = '';
       // Every opening starts at the top (the content scroller is shared: a popup reopened showed its stage cut off).
       // The content arrives after this line and the browser's scroll anchoring moved it down again: anchoring off,
       // and the top once more when the cards have drawn – unless the user scrolled meanwhile.
@@ -8925,41 +8937,29 @@ window.casoraMenuGlass = {
     }
 
     // Page transition inside the open popup (owner 03.11.2026): every sub page goes through open(), so the frame
-    // animates them all alike. forward: the new page slides in from the right, the old one drifts a little to the
-    // left and fades (iOS push); back: mirrored. Transforms only on the new page – an opacity on an ancestor would
-    // flatten the frost of its plates (see .header). The header's title and label cross-fade, the sheet's height
-    // follows the new page. Same timing as the sheet's entrance. Reduced motion: no slide, the new page just stands.
-    // Returns { play, finish } or null; finish() ends it at once (a tap during the transition, close).
-    _navBegin(dir, scrollAfter) {
+    // animates them all alike. forward: the old page drifts a little to the left and fades (about 100 ms), the new one
+    // slides in from the right; back: mirrored. The old page is gone before the new one builds – modules look up their
+    // slots in the popup (charts, forecast), two pages at once would hand them the wrong one. Only a transform on the new
+    // page: an opacity on an ancestor would flatten the frost of its plates (see .header). The head cross-fades, the
+    // sheet keeps its height while the new page builds and then follows it. Same easing as the sheet's entrance.
+    // Reduced motion: nothing moves. Resolves to { play, finish } or null; finish() ends it at once (a tap during the
+    // transition, close).
+    async _navBegin(dir) {
       var reduce = false;
       try { reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* no media */ }
       this.setAttribute('data-casora-nav', dir);
       window._casoraNavLast = { dir: dir, at: Date.now(), reduced: reduce };
       if (reduce) return null;
-      var old = this.container, surf = this.surface, self = this;
+      var box = this.container, surf = this.surface, self = this;
       var h0 = surf ? surf.getBoundingClientRect().height : 0;
-      var fresh = old.cloneNode(false);
-      old.parentNode.insertBefore(fresh, old);
-      this.container = fresh;
-      // The old page stays where it is, out of the flow, until it has left.
-      // The new page builds hidden while the old one still shows (no flash of both), the sheet keeps its height.
-      fresh.style.visibility = 'hidden';
-      if (surf && h0) surf.style.height = h0 + 'px';
-      // The old page sits in the scroller at the place it was seen (the scroller goes back to the top for the new one).
-      this.setAttribute('navigating', '');
-      var top = old.offsetTop - (this.content ? this.content.scrollTop : 0) + (scrollAfter || 0);
-      old.classList.add('nav-old');
-      old.style.cssText += ';position:absolute;left:0;right:0;top:' + top + 'px;pointer-events:none;';
-      old.setAttribute('aria-hidden', 'true');
-      old.inert = true;
       var anims = [], done = false, sign = dir === 'back' ? -1 : 1;
       var DUR = 260, EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
+      this.setAttribute('navigating', '');
       var finish = function () {
         if (done) return;
         done = true;
         anims.forEach(function (a) { try { a.cancel(); } catch (e) { /* gone */ } });
-        if (old.parentNode) old.parentNode.removeChild(old);
-        fresh.style.removeProperty('visibility');
+        box.style.removeProperty('pointer-events');
         if (surf) surf.style.removeProperty('height');
         self.removeAttribute('navigating');
         if (self._navAnim === ctl) self._navAnim = null;
@@ -8971,23 +8971,16 @@ window.casoraMenuGlass = {
           var run = function () {
             if (done) return;
             var opt = { duration: DUR, easing: EASE };
-            fresh.style.removeProperty('visibility');
             if (surf) surf.style.removeProperty('height');
             try {
-              anims.push(fresh.animate([{ transform: 'translateX(' + (sign * 44) + 'px)' }, { transform: 'translateX(0)' }], opt));
-              var leave = old.animate([{ transform: 'translateX(0)', opacity: 1 }, { transform: 'translateX(' + (-sign * 28) + 'px)', opacity: 0 }],
-                { duration: Math.round(DUR * 0.6), easing: 'ease-out', fill: 'forwards' });
-              // Gone as soon as it has faded: the new page is the only one again (lists, counts, taps).
-              leave.onfinish = function () { if (old.parentNode) old.parentNode.removeChild(old); };
-              anims.push(leave);
+              anims.push(box.animate([{ transform: 'translateX(' + (sign * 44) + 'px)' }, { transform: 'translateX(0)' }], opt));
               if (self._headerContent) {
                 anims.push(self._headerContent.animate([{ opacity: 0.25, transform: 'translateX(' + (sign * 14) + 'px)' }, { opacity: 1, transform: 'translateX(0)' }], opt));
               }
               var h1 = surf ? surf.getBoundingClientRect().height : 0;
               if (surf && h0 && h1 && Math.abs(h1 - h0) > 8) anims.push(surf.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], opt));
             } catch (e) { finish(); return; }
-            var main = anims[0];
-            if (main) main.onfinish = finish;
+            anims[0].onfinish = finish;
             setTimeout(finish, DUR + 120);
           };
           // Two frames: the new cards have drawn their first layout, so the height is measured with them.
@@ -8995,7 +8988,20 @@ window.casoraMenuGlass = {
         },
       };
       this._navAnim = ctl;
-      return ctl;
+      // The old page leaves first (no taps on it meanwhile); the sheet keeps its height until the new one stands.
+      box.style.pointerEvents = 'none';
+      if (surf && h0) surf.style.height = h0 + 'px';
+      try {
+        var out = box.animate([{ transform: 'translateX(0)', opacity: 1 }, { transform: 'translateX(' + (-sign * 28) + 'px)', opacity: 0 }],
+          { duration: 110, easing: 'ease-in', fill: 'forwards' });
+        anims.push(out);
+        await new Promise(function (res) { out.onfinish = res; out.oncancel = res; setTimeout(res, 160); });
+      } catch (e) { /* no animation: straight on */ }
+      // The leaving page's fade must not stay on the new one.
+      anims.forEach(function (a) { try { a.cancel(); } catch (e) { /* gone */ } });
+      anims.length = 0;
+      box.style.removeProperty('pointer-events');
+      return done ? null : ctl;
     }
 
     close() {
