@@ -3821,11 +3821,14 @@
 // dev/unit/updates_suchen.mjs, dev/qa/regress/r101_updates_suchen.mjs
 (function () {
   if (window._casoraUpdCheck) return;
-  var K = window._casoraUpdCheck = { busy: false, last: null, found: null, err: false, HACS_PAR: 4, SETTLE: 1500 };
+  var K = window._casoraUpdCheck = { busy: false, last: null, found: null, foundIds: null, err: false, HACS_PAR: 4, SETTLE: 1500 };
   var LS = 'casora.updCheck';
   try {
     var saved = JSON.parse(localStorage.getItem(LS) || 'null');
-    if (saved && typeof saved.t === 'number') { K.last = saved.t; K.found = typeof saved.found === 'number' ? saved.found : null; K.err = !!saved.err; }
+    if (saved && typeof saved.t === 'number') {
+      K.last = saved.t; K.found = typeof saved.found === 'number' ? saved.found : null; K.err = !!saved.err;
+      K.foundIds = Array.isArray(saved.ids) ? saved.ids.filter(function (x) { return typeof x === 'string'; }) : null;
+    }
   } catch (e) { /* ohne Speicher: erst nach der ersten Suche */ }
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var tr = function (x) { return (window.casoraTr || function (y) { return y; })(x); };
@@ -3903,11 +3906,13 @@
       return entities(hass, ids.length ? ids : P.entities).then(function (ok) { res.entities = ok; });
     }).then(function () { return wait(K.SETTLE); }).then(function () {
       var cur = (document.querySelector('home-assistant') || {}).hass || hass;
-      res.found = pendingOf(cur.states).filter(function (id) { return before.indexOf(id) < 0; }).length;
+      var newIds = pendingOf(cur.states).filter(function (id) { return before.indexOf(id) < 0; });
+      res.found = newIds.length;
       K.last = Date.now();
       K.err = res.entities === false && res.supervisor !== true && res.hacs !== true;
       K.found = K.err ? null : res.found;
-      try { localStorage.setItem(LS, JSON.stringify({ t: K.last, found: K.found, err: K.err })); } catch (e) { /* egal */ }
+      K.foundIds = K.err ? null : newIds;
+      try { localStorage.setItem(LS, JSON.stringify({ t: K.last, found: K.found, ids: K.foundIds, err: K.err })); } catch (e) { /* egal */ }
       return res;
     }, function () { K.err = true; return res; }).then(function (r) {
       K.busy = false;
@@ -3918,14 +3923,22 @@
 
   var ICON = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/></svg>');
   // Rückmeldung unter bzw. neben dem Knopf (je Stück ein eigener Text für die Übersetzung).
-  K.status = function () {
+  // states (optional, else HA's current ones): "n new updates found" counts only the found updates that are still
+  // pending – once they are installed the line no longer claims them (03.11.2026: "1 neues Update gefunden" stood
+  // under a dial that said "Neustart ausstehend").
+  K.status = function (states) {
     if (K.busy || !K.last) return [];
     var out = ['Zuletzt gesucht: ' + agoMs(K.last)];
     if (Date.now() - K.last < 30 * 60000) {
+      var found = K.found;
+      if (found > 0 && Array.isArray(K.foundIds)) {
+        var S = states || ((document.querySelector('home-assistant') || {}).hass || {}).states;
+        if (S) { var now = pendingOf(S); found = K.foundIds.filter(function (id) { return now.indexOf(id) >= 0; }).length; }
+      }
       if (K.err) out.push('Suche fehlgeschlagen');
-      else if (K.found === 0) out.push('Keine neuen Updates');
-      else if (K.found === 1) out.push('1 neues Update gefunden');
-      else if (K.found > 1) out.push(K.found + ' neue Updates gefunden');
+      else if (found === 0 && K.found === 0) out.push('Keine neuen Updates');
+      else if (found === 1) out.push('1 neues Update gefunden');
+      else if (found > 1) out.push(found + ' neue Updates gefunden');
     }
     return out;
   };

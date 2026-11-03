@@ -457,6 +457,11 @@
         out += '<div style="height:8px"></div>' + UI.more('upd-all', U.tint(UI.group(tail, null), tail),
           { keep: true, label: 'Alle ' + ids.length + ' anzeigen', less: 'Weniger anzeigen' });
       }
+      // Updates still to install AND a restart owed for installed ones (03.11.2026): the restart rows stand under the
+      // list as their own group, the same rows as when nothing is pending (an update entity is never in both: pending
+      // is "on", waiting for a restart is "off").
+      var rw = Xl && Xl.restartRows ? Xl.restartRows(states, { UI: UI, logoOf: function (id) { return logoOf(states, id); } }) : [];
+      if (rw.length) out += '<div style="height:var(--casora-popup-sec-gap, 22px)"></div>' + UI.group(rw, 'Wartet auf Neustart');
       return out;
     }
     if (part === 'chk') {
