@@ -16752,6 +16752,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 // And for "Tap on badges" (issue 119, variable badge_tap): window._casoraBadgeTap = 'popup' (default: a tap opens the
 // light popup, holding switches) | 'toggle' (a tap switches, holding opens the popup); the light badges ask
 // window.casoraBadgeTapToggle() when they are tapped or held.
+// And for "Swipe between rooms › Also on the tablet" (issue 114, variable swipe_rooms_tablet): window._casoraSwipeTablet
+// = true | false for scripts/local/40-swipe-rooms.js (the phone reads swipe_rooms from its bottom bar card).
 (function () {
   if (window._casoraHoldWatch) return;
   window._casoraHoldWatch = true;
@@ -16789,6 +16791,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var fromConfig = function (cfg) { return pick(cfg, 'hold_mode', norm); };
   var sortOf = function (cfg) { return pick(cfg, 'tile_sort', normSort); };
   var tapOf = function (cfg) { return pick(cfg, 'badge_tap', normTap); };
+  var swipeOf = function (cfg) { return pick(cfg, 'swipe_rooms_tablet', function (v) { return v === true || v === 'true'; }); };
 
   var deep = function (root, tag, depth) {
     if (!root || depth > 10 || !root.querySelector) return null;
@@ -16819,10 +16822,11 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var cfg = root && root.lovelace && root.lovelace.config;
     if (!cfg) return window._casoraHoldMode;
     var m = memo && memo.get(cfg);
-    if (!m) { m = { hold: fromConfig(cfg), sort: sortOf(cfg), tap: tapOf(cfg) }; if (memo) memo.set(cfg, m); }
+    if (!m) { m = { hold: fromConfig(cfg), sort: sortOf(cfg), tap: tapOf(cfg), swipe: swipeOf(cfg) }; if (memo) memo.set(cfg, m); }
     window._casoraHoldMode = m.hold;
     window._casoraSortMode = m.sort;
     window._casoraBadgeTap = m.tap;
+    window._casoraSwipeTablet = m.swipe;
     return m.hold;
   };
   window._casoraHoldModeOf = fromConfig;
