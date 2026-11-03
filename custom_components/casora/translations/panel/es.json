@@ -2868,7 +2868,6 @@
     "Devices Casora found that have no place of their own, e.g. an e-bike.": "Dispositivos que Casora encontró y que no tienen un sitio propio, p. ej. una bici eléctrica.",
     "Which bins are collected when, so tiles and the bell remind you.": "Qué contenedor se recoge cuándo, para que los mosaicos y la campana te lo recuerden.",
     "Which players the Now Playing bar shows and how they are named.": "Qué reproductores muestra la barra de reproducción y cómo se llaman.",
-    "Push for new versions": "Aviso de nuevas versiones",
     "What happens when you hold a tile, and when busy tiles move to the front.": "Qué pasa al mantener pulsado un mosaico, y cuándo pasan delante los mosaicos activos.",
     "The dashboard on the phone, and progress on the lock screen.": "El panel en el móvil y el progreso en la pantalla de bloqueo.",
     "Open updates": "Abrir actualizaciones",
@@ -2937,7 +2936,8 @@
     "Player, icon and volume in the Now Playing bar.": "Reproductor, icono y volumen en la barra de reproducción actual.",
     "The phones that get “Air now” and “Close the windows”.": "Los móviles que reciben «Ventila ahora» y «Cierra las ventanas».",
     "The phones whose lock screen shows the progress.": "Los móviles cuya pantalla de bloqueo muestra el progreso.",
-    "Pick how all Casora dashboards look.": "Elige cómo se ven todos los dashboards de Casora."
+    "Pick how all Casora dashboards look.": "Elige cómo se ven todos los dashboards de Casora.",
+    "New version on the phone": "Nueva versión al móvil"
   },
   "patterns": [
     [

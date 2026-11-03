@@ -83,7 +83,10 @@ L1.devices.a = { on: true };
 assert.equal(M.saveDevices(L1, ['a']).a.on, true, 'wieder an wird mitgeschickt');
 assert.ok(/type: "casora\/live\/set", targets: cs\.L\.targets, devices: saveDevices\(cs\.L, ids\), devices_replace: true/.test(live), 'set ersetzt die Geräte');
 // Finding 3: phone (no split) redraws the page – tapping a device row opens its settings.
-assert.ok(/P\._csRepaint = function \(\) \{[\s\S]{0,300}if \(this\._csOpen && this\.\$\("pane"\)\) this\._csRender\(\);/.test(settings), 'Neuzeichnen auch ohne split');
+assert.ok(/P\._csRepaint = function \(block\) \{[\s\S]{0,300}if \(this\._csOpen && this\.\$\("pane"\)\) this\._csRender\(\);/.test(settings), 'Neuzeichnen auch ohne split');
+// A live refresh redraws only its block on the tile "Phone", not the whole tile with the dashboard section (03.11.2026).
+assert.ok((live.match(/_csRepaint\("live"\)/g) || []).length >= 5 && !/_csRepaint\(\)/.test(live), 'live: nur der eigene Block');
+assert.ok(/P\._csRepaintBlock = function \(k\) \{[\s\S]{0,700}at\.replaceWith\(fresh\)/.test(settings), 'Block allein neu zeichnen');
 // Finding 8: sublines wrap
 assert.ok(/\.cs-live-row \.rtext span[^"]*\{white-space:normal/.test(live), 'Geräte-Unterzeile bricht um');
 // Finding 9: singular/plural

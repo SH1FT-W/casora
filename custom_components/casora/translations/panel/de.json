@@ -2874,7 +2874,6 @@
     "Open updates": "Updates öffnen",
     "How the bell words places, mailbox, batteries it should leave out, device care.": "Wie die Glocke Orte nennt, Briefkasten, Akkus, die sie auslassen soll, Gerätepflege.",
     "What the AI checks for you, how often, and which AI does it.": "Was die KI für dich prüft und wann.",
-    "Push for new versions": "Push bei neuen Versionen",
     "New dashboards": "Neue Dashboards",
     "Colors and design, font, clock – how your dashboards look.": "Design, Schrift und Uhr.",
     "Which bins are collected when, so tiles and the bell remind you.": "Welche Tonne wann abgeholt wird – damit Kacheln und Glocke dich erinnern.",
@@ -2937,7 +2936,8 @@
     "The bell never warns about this battery.": "Für diese Batterie warnt die Glocke nie.",
     "Calendar, name, color and whether it shows on the tile.": "Kalender, Name, Farbe und ob er auf der Kachel steht.",
     "Casora never offers this scene.": "Diese Szene bietet Casora nirgends an.",
-    "A reminder when an appliance needs care, e.g. descaling.": "Ein Hinweis, wenn ein Gerät Pflege braucht, z. B. Entkalken."
+    "A reminder when an appliance needs care, e.g. descaling.": "Ein Hinweis, wenn ein Gerät Pflege braucht, z. B. Entkalken.",
+    "New version on the phone": "Neue Version aufs Handy"
   },
   "patterns": [
     [

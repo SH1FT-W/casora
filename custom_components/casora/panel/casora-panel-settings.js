@@ -96,7 +96,7 @@
         { k: "vent", opt: "vent", title: "Ventilation push",
           plain: "Push to your phone when it is time to open or close the windows.",
           kw: "lüften lueften push fenster öffnen schließen co2 handy personen" },
-        { k: "updpush", opt: "update_push", title: "Push for new versions",
+        { k: "updpush", opt: "update_push", title: "New version on the phone",
           plain: "A push to your phone when a new Casora version is out.",
           kw: "push update version neue version handy" },
         { k: "notify", personal: ["notify"], title: "Wording and exceptions", adv: true,
@@ -1305,7 +1305,10 @@
       }
     };
 
-    P._csRepaint = function () {
+    // block: the key of a block on a tile page (e.g. "live"): only that block is drawn again. A live refresh every 5 s
+    // redrew the whole tile before, including the Studio's own drawing of this dashboard's phone section, for nothing.
+    P._csRepaint = function (block) {
+      if (block && this._csRepaintBlock(block)) return;
       // Page open (desktop with sidebar or phone in the new Studio, there without split): redraw.
       // Before, only with split – on the phone (393 px) tapping the live devices, the test etc. did nothing visible.
       if (this._csOpen && this.$("pane")) this._csRender();
@@ -1313,6 +1316,22 @@
       // Otherwise (phone in the Studio: page as a sheet, no split) nobody redraws – after saving the bar
       // stayed on "Unsaved changes" / "Saving …" (user test 4, E-T3).
       else this._csBar();
+    };
+
+    P._csRepaintBlock = function (k) {
+      const at = this.shadowRoot.querySelector('[data-pkey="nb-' + k + '"]');
+      const page = at && pageOf(this._csOpen ? this._csPage : this._csSheetPage);
+      const tile = page && page.tile;
+      const b = tile && tile.blocks.find((x) => x.k === k);
+      if (!b) return false;
+      const tmp = document.createElement("div");
+      this._csNeuBlock(tmp, tile, b, () => this._csRender());
+      const fresh = tmp.firstElementChild;
+      if (!fresh) return false;
+      // A block drawn under "Advanced" keeps its place there; the scroll position stays as it is.
+      at.replaceWith(fresh);
+      this._csBar();
+      return true;
     };
 
     // Every change on the page (also in the entity picker menu) → check the bar.

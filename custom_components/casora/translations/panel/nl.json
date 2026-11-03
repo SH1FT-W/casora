@@ -2863,7 +2863,6 @@
     "What do you want to set up? Pick a topic or search for a word.": "Wat wil je instellen? Kies een onderwerp of zoek op een woord.",
     "How the bell words places, mailbox, batteries it should leave out, device care.": "Hoe de bel plaatsen noemt, brievenbus, batterijen die hij moet overslaan, apparaatonderhoud.",
     "Home Assistant detail windows": "Detailvensters van Home Assistant",
-    "Push for new versions": "Melding bij nieuwe versies",
     "Which AI answers, when the checks run, the shopping list for recipes and notes for the AI.": "Welke AI antwoordt, wanneer de controles lopen, het boodschappenlijstje voor recepten en notities voor de AI.",
     "Save your changes?": "Wijzigingen opslaan?",
     "Where the weather comes from and what the weather window shows.": "Waar het weer vandaan komt en wat het weervenster toont.",
@@ -2937,7 +2936,8 @@
     "The bell never warns about this battery.": "De bel waarschuwt nooit voor deze batterij.",
     "The name this door or window has in the security popups.": "De naam van deze deur of dit raam in de beveiligingspop-ups.",
     "A reminder when an appliance needs care, e.g. descaling.": "Een melding als een apparaat onderhoud nodig heeft, bijv. ontkalken.",
-    "A push to your phone when a new version is out.": "Een push naar je telefoon als er een nieuwe versie is."
+    "A push to your phone when a new version is out.": "Een push naar je telefoon als er een nieuwe versie is.",
+    "New version on the phone": "Nieuwe versie naar je telefoon"
   },
   "patterns": [
     [

@@ -2860,7 +2860,6 @@
     "Shutters at night": "Estores à noite",
     "Which messages appear in the bell and who gets a push on the phone.": "Que mensagens aparecem no sino e quem recebe uma notificação no telemóvel.",
     "Some changes are not saved yet. Discard takes back everything not saved, also on this dashboard.": "Há alterações por guardar. «Descartar» desfaz tudo o que não foi guardado, também neste painel.",
-    "Push for new versions": "Notificação de novas versões",
     "Updates & setup": "Atualizações e configuração",
     "Gas stations nearby in the car window: price, distance, open or closed.": "Postos de combustível próximos na janela do carro: preço, distância, aberto ou fechado.",
     "Save your changes?": "Guardar as alterações?",
@@ -2937,7 +2936,8 @@
     "Player, icon and volume in the Now Playing bar.": "Leitor, ícone e volume na barra de reprodução atual.",
     "Calendar, name, color and whether it shows on the tile.": "Calendário, nome, cor e se aparece no mosaico.",
     "A sensor outside, for ventilation and heating tips.": "Um sensor exterior, para dicas de ventilação e aquecimento.",
-    "A group sensor of doors and windows, with its own name.": "Um sensor de grupo de portas e janelas, com nome próprio."
+    "A group sensor of doors and windows, with its own name.": "Um sensor de grupo de portas e janelas, com nome próprio.",
+    "New version on the phone": "Nova versão no telemóvel"
   },
   "patterns": [
     [

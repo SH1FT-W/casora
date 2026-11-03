@@ -2918,7 +2918,6 @@
     "Which messages appear in the bell and who gets a push on the phone.": "Jakie komunikaty są w dzwonku i kto dostaje powiadomienie na telefon.",
     "New dashboards": "Nowe pulpity",
     "Home & devices": "Dom i urządzenia",
-    "Push for new versions": "Powiadomienie o nowych wersjach",
     "A sensor outside, for ventilation and heating tips.": "Czujnik na zewnątrz, do porad o wietrzeniu i ogrzewaniu.",
     "Which AI writes the coaches' tips and checks camera pictures and plants.": "Która AI pisze porady coachów i sprawdza obrazy z kamer oraz rośliny.",
     "Only when one of them is at home.": "Tylko gdy ktoś z nich jest w domu.",
@@ -2937,7 +2936,8 @@
     "This door or window does not count for security.": "Te drzwi lub okno nie liczą się do bezpieczeństwa.",
     "A group sensor of doors and windows, with its own name.": "Czujnik grupy drzwi i okien z własną nazwą.",
     "The phones that get “Air now” and “Close the windows”.": "Telefony, które dostają „Wywietrz teraz” i „Zamknij okna”.",
-    "Where the recipe of the week puts its ingredients.": "Gdzie przepis tygodnia zapisuje składniki."
+    "Where the recipe of the week puts its ingredients.": "Gdzie przepis tygodnia zapisuje składniki.",
+    "New version on the phone": "Nowa wersja na telefon"
   },
   "patterns": [
     [

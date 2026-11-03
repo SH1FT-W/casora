@@ -2864,7 +2864,6 @@
     "Speed": "Velocità",
     "Top bar and badges": "Barra in alto e badge",
     "Which players the Now Playing bar shows and how they are named.": "Quali lettori mostra la barra di riproduzione e come si chiamano.",
-    "Push for new versions": "Notifica di nuove versioni",
     "See the installed version, install updates, try test versions (betas).": "Vedere la versione installata, installare aggiornamenti, provare versioni di prova (beta).",
     "Search: e.g. clock, waste, push…": "Cerca: ad es. orologio, rifiuti, notifica…",
     "Which scene buttons appear, in which order and color.": "Quali pulsanti scena compaiono, in quale ordine e colore.",
@@ -2937,7 +2936,8 @@
     "A group sensor of doors and windows, with its own name.": "Un sensore di gruppo di porte e finestre, con un nome proprio.",
     "Which AI writes the coaches' tips and checks camera pictures and plants.": "Quale IA scrive i consigli dei coach e controlla le immagini delle telecamere e le piante.",
     "Only when one of them is at home.": "Solo quando uno di loro è a casa.",
-    "A sensor outside, for ventilation and heating tips.": "Un sensore esterno, per i consigli su aerazione e riscaldamento."
+    "A sensor outside, for ventilation and heating tips.": "Un sensore esterno, per i consigli su aerazione e riscaldamento.",
+    "New version on the phone": "Nuova versione sul telefono"
   },
   "patterns": [
     [

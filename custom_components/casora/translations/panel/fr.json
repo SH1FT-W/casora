@@ -2914,7 +2914,6 @@
     "How the bell words places, mailbox, batteries it should leave out, device care.": "Comment la cloche nomme les lieux, la boîte aux lettres, les piles à ignorer, l’entretien des appareils.",
     "Wording and exceptions": "Formulation et exceptions",
     "Install updates, try betas, and how new dashboards are set up.": "Installer les mises à jour, essayer des bêtas, et comment les nouveaux tableaux de bord sont créés.",
-    "Push for new versions": "Notification des nouvelles versions",
     "What the windows of Home Assistant itself show: logbook, history, attributes.": "Ce qu’affichent les fenêtres de Home Assistant lui-même : journal, historique, attributs.",
     "Weather, power & fuel": "Météo, électricité et carburant",
     "Whether Casora looks for old Hemma dashboards to take over.": "Si Casora cherche d’anciens tableaux de bord Hemma à reprendre.",
@@ -2937,7 +2936,8 @@
     "A sensor outside, for ventilation tips.": "Un capteur extérieur, pour les conseils d'aération.",
     "The bell never warns about this battery.": "La cloche n'avertit jamais pour cette batterie.",
     "Casora never offers this scene.": "Casora ne propose jamais cette scène.",
-    "This door or window does not count for security.": "Cette porte ou fenêtre ne compte pas pour la sécurité."
+    "This door or window does not count for security.": "Cette porte ou fenêtre ne compte pas pour la sécurité.",
+    "New version on the phone": "Nouvelle version sur le téléphone"
   },
   "patterns": [
     [

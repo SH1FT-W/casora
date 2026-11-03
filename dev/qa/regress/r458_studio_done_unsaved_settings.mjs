@@ -44,8 +44,9 @@ await need('a waste switch that makes the settings unsaved', ch && ch.dirty, ch)
 await P('p.$("donebtn").click();');
 let q = await question();
 await check('Done with unsaved settings asks', !!q, q);
-await check('question "Save settings?" with Save, Discard, Back',
-  q && /Einstellungen speichern\?|Save settings\?/.test(q.title) && ['Speichern|Save', 'Verwerfen|Discard', 'Zurück|Back'].every((re) => q.buttons.some((t) => new RegExp('^(' + re + ')$').test(t))), q);
+// Since the one save bar (03.11.2026) the question covers settings and this dashboard: "Save your changes?".
+await check('question "Save your changes?" with Save, Discard, Back',
+  q && /Änderungen speichern\?|Save your changes\?/.test(q.title) && ['Speichern|Save', 'Verwerfen|Discard', 'Zurück|Back'].every((re) => q.buttons.some((t) => new RegExp('^(' + re + ')$').test(t))), q);
 await press('^(Zurück|Back)$');
 await wait(1500);
 await check('Back: still in the Studio, settings still unsaved', await P('return !!p.isConnected && p._csDirty();'));
