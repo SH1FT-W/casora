@@ -317,7 +317,51 @@
     return free.length ? free : ids;
   }
 
-  window.casoraAssist = { suggest, localMatch, aiMatch, usedEntities, narrowToRoom };
+  // Kind of a suggestion for the assistant's filter chips (03.11.2026, owner: filter and tick instead of all at once).
+  function kindOf(type) {
+    const t = String(type || "");
+    if (t === "light") return "lamps";
+    if (/^(thermostat|fan|air_purifier|humidifier|@air_purifier)$/.test(t)) return "climate";
+    if (t === "media") return "media";
+    if (/^(lock|lock_group|casora_camera|camera|casora_alarm)$/.test(t)) return "security";
+    if (t === "cover") return "blinds";
+    if (/^(vacuum|casora_lawn_mower|casora_washer|casora_dryer|casora_dishwasher|casora_fridge|casora_coffee|casora_3d_printer)$/.test(t)) return "household";
+    return "other";
+  }
+  // Parts of a lamp: a device with several lights (a Govee strip's segments, a ceiling light's outer ring) offers each
+  // one; the parts start unticked. A part is named like the device's main light plus a word ("Deckenleuchte
+  // Außenring" beside "Deckenleuchte"), or like a segment/zone/ring. Returns Map id → name of what it belongs to.
+  const PART_RE = /\b(segment|seg\.)\s*\d+\b|au(ß|ss)enring|innenring|lampenfl(ä|ae)che|\bzone\s*\d+\b/i;
+  function partsOf(hass, items) {
+    const out = new Map(), byDev = new Map();
+    (items || []).forEach((it) => {
+      if (it.type !== "light" || !it.device) return;
+      if (!byDev.has(it.device)) byDev.set(it.device, []);
+      byDev.get(it.device).push(it);
+    });
+    byDev.forEach((list, dev) => {
+      if (list.length < 2) return;
+      const dn = devName(((hass && hass.devices) || {})[dev]);
+      let main = list.find((it) => norm(it.name) === norm(dn)) || null;
+      if (!main) {
+        const short = list.slice().sort((a, b) => a.name.length - b.name.length)[0];
+        if (list.every((it) => it === short || norm(it.name).startsWith(norm(short.name) + " "))) main = short;
+      }
+      list.forEach((it) => {
+        if (it === main) return;
+        const sub = main && norm(it.name).startsWith(norm(main.name) + " ");
+        if (sub || PART_RE.test(it.name)) out.set(it.id, main ? main.name : dn || it.name);
+      });
+    });
+    return out;
+  }
+  // Ticked at the start: everything with a room, except parts of a lamp.
+  function defaultOn(hass, items) {
+    const parts = partsOf(hass, items);
+    return new Map((items || []).map((it) => [it.id, !!it.room && !parts.has(it.id)]));
+  }
+
+  window.casoraAssist = { suggest, localMatch, aiMatch, usedEntities, narrowToRoom, kindOf, partsOf, defaultOn };
 
   customElements.whenDefined("casora-panel").then(() => {
     const P = customElements.get("casora-panel").prototype;
@@ -335,8 +379,14 @@
       const rooms = s0.compact.rooms;
       const types = I.TILE_TYPES.filter((t) => !t.hidden && (!t.onlyIf || t.onlyIf(this._hass)));
       const all = suggest(this._hass, rooms, types);
-      const picks = new Map(all.map((it) => [it.id, { on: !!it.room, room: it.room, type: it.type }]));
+      // Ticked: what gets built. Parts of a lamp (segments, rings) start unticked, the rest with a room ticked.
+      const parts = partsOf(this._hass, all);
+      const on0 = defaultOn(this._hass, all);
+      const picks = new Map(all.map((it) => [it.id, { on: on0.get(it.id), room: it.room, type: it.type }]));
       let focus = null; // Ergebnis der Eingabe: nur diese Geräte zeigen
+      let kind = "";    // filter chip, "" = all kinds
+      let query = "";   // search in names and entity ids
+      const folded = new Set(); // collapsed room groups
 
       if (!this.shadowRoot.getElementById("casora-assist-css")) {
         const st = document.createElement("style");
@@ -346,7 +396,26 @@
           + ".casora-sels{display:flex;gap:8px;flex:1 1 100%;min-width:0}"
           + ".casora-sels>.combo{flex:1 1 0;min-width:0;width:auto;max-width:none}"
           // Am Handy sind Felder sonst weiß wie die Karte, in der sie hier liegen.
-          + ":host(.phone) .casora-sels>.combo>input{background:var(--casora-studio-field,rgba(118,118,128,0.12))}";
+          + ":host(.phone) .casora-sels>.combo>input{background:var(--casora-studio-field,rgba(118,118,128,0.12))}"
+          // Tick per device, room header with count and All/None, kind chips (03.11.2026).
+          + ".casora-acheck{flex:0 0 26px;width:26px;height:26px;border-radius:50%;border:2px solid var(--line-strong,rgba(0,0,0,.25));"
+          + "background:transparent;display:grid;place-items:center;padding:0;cursor:pointer;color:#fff;margin-right:2px}"
+          + ".casora-acheck svg{width:15px;height:15px;opacity:0}"
+          + ".casora-acheck[aria-checked=true]{background:var(--accent);border-color:var(--accent)}"
+          + ".casora-acheck[aria-checked=true] svg{opacity:1}"
+          + ".frow.casora-arow.off .rtext{opacity:.55}"
+          + ".casora-apart{font-size:12px;color:var(--ink-3,var(--secondary-text-color))}"
+          + ".casora-ahead{display:flex;align-items:center;gap:8px;margin:18px 4px 6px}"
+          + ".casora-ahead>button.casora-afold{flex:1 1 auto;display:flex;align-items:center;gap:6px;background:none;border:0;padding:0;"
+          + "font:inherit;font-weight:600;color:inherit;cursor:pointer;text-align:left;min-width:0}"
+          + ".casora-afold svg{width:14px;height:14px;transition:transform .15s ease;flex:0 0 14px}"
+          + ".casora-afold[aria-expanded=false] svg{transform:rotate(-90deg)}"
+          + ".casora-acount{font-weight:500;color:var(--ink-3,var(--secondary-text-color))}"
+          + ".casora-aall{background:none;border:0;padding:4px 6px;font:inherit;font-size:13px;color:var(--accent);cursor:pointer}"
+          + ".casora-chips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 4px}"
+          + ".casora-chip{border:0;border-radius:999px;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer;"
+          + "background:var(--casora-studio-field,rgba(118,118,128,0.12));color:inherit}"
+          + ".casora-chip[aria-pressed=true]{background:var(--accent);color:#fff}";
         this.shadowRoot.appendChild(st);
       }
       const s = this._flowScreen({
@@ -376,9 +445,47 @@
       const roomNames = rooms.map((r) => r.name);
       // Anzeige: die Übersicht mit Standardnamen als „Zuhause“/„Home“ (HA-Sprache).
       const shownRoom = (n) => { const r = rooms.find((x) => x.name === n); return r ? I.roomLabel(r, rooms, this._hass) : n; };
+      // Filter: kind chips (only kinds that occur) and a search over names and entity ids.
+      const KINDS = [["lamps", "Lamps"], ["climate", "Climate"], ["media", "Media"], ["security", "Security"],
+        ["blinds", "Blinds"], ["household", "Household"], ["other", "Other"]];
+      const filt = document.createElement("div");
+      if (all.length > 1) s.body.insertBefore(filt, listHost);
+      const chips = document.createElement("div");
+      chips.className = "casora-chips";
+      filt.appendChild(chips);
+      const findList = this._flowGroup(filt, {});
+      const findRow = this._flowRow(findList, { title: "Search", input: "", placeholder: "Name or entity" });
+      findRow.input.addEventListener("input", () => { query = norm(findRow.input.value.trim()); render(); });
+      const drawChips = () => {
+        chips.innerHTML = "";
+        const count = (k) => all.filter((it) => !k || kindOf(picks.get(it.id).type) === k).length;
+        [["", "All"]].concat(KINDS).forEach(([k, label]) => {
+          const n = count(k);
+          if (k && !n) return;
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "casora-chip";
+          b.setAttribute("aria-pressed", kind === k ? "true" : "false");
+          const lb = document.createElement("span");
+          lb.textContent = label;
+          const nb = document.createElement("span");
+          nb.textContent = " · " + n;
+          nb.setAttribute("data-no-i18n", "");
+          b.appendChild(lb);
+          b.appendChild(nb);
+          b.addEventListener("click", () => { kind = kind === k ? "" : k; drawChips(); render(); });
+          chips.appendChild(b);
+        });
+      };
+
+      const visible = (it) => (!focus || focus.includes(it.id))
+        && (!kind || kindOf(picks.get(it.id).type) === kind)
+        && (!query || norm(it.name).includes(query) || norm(it.entity).includes(query));
+      const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5.5 12.5 4 4 9-9"/></svg>';
+      const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
       const render = () => {
         listHost.innerHTML = "";
-        const shown = focus ? all.filter((it) => focus.includes(it.id)) : all;
+        const shown = all.filter(visible);
         const groups = new Map();
         shown.forEach((it) => {
           const k = picks.get(it.id).room || "";
@@ -387,27 +494,82 @@
         });
         [...groups.keys()].sort((a, b) => (a === "" ? 1 : b === "" ? -1 : roomNames.indexOf(a) - roomNames.indexOf(b)))
           .forEach((k) => {
-            const g = this._flowGroup(listHost, { header: k ? shownRoom(k) : "Not in a room yet" });
-            if (k) g.parentNode.querySelector(".fhead").setAttribute("data-no-i18n", "");
-            groups.get(k).forEach((it) => {
+            const items = groups.get(k);
+            // Header: fold, "Room · x of y", All / None (for the shown devices of this room).
+            const head = document.createElement("div");
+            head.className = "casora-ahead";
+            const fold = document.createElement("button");
+            fold.type = "button";
+            fold.className = "casora-afold";
+            fold.setAttribute("aria-expanded", folded.has(k) ? "false" : "true");
+            fold.innerHTML = CHEV;
+            const nm = document.createElement("span");
+            nm.textContent = k ? shownRoom(k) : "Not in a room yet";
+            if (k) nm.setAttribute("data-no-i18n", "");
+            const cnt = document.createElement("span");
+            cnt.className = "casora-acount";
+            const nOn = items.filter((it) => picks.get(it.id).on).length;
+            cnt.textContent = nOn + " of " + items.length;
+            fold.appendChild(nm);
+            fold.appendChild(document.createTextNode(" · "));
+            fold.appendChild(cnt);
+            fold.addEventListener("click", () => { if (folded.has(k)) folded.delete(k); else folded.add(k); render(); });
+            head.appendChild(fold);
+            if (k) {
+              const allOn = nOn === items.length;
+              const tog = document.createElement("button");
+              tog.type = "button";
+              tog.className = "casora-aall";
+              tog.textContent = allOn ? "None" : "All";
+              tog.addEventListener("click", () => { items.forEach((it) => { picks.get(it.id).on = !allOn; }); render(); });
+              head.appendChild(tog);
+            }
+            listHost.appendChild(head);
+            if (folded.has(k)) return;
+            const g = this._flowGroup(listHost, {});
+            items.forEach((it) => {
               const p = picks.get(it.id);
+              const part = parts.get(it.id);
               const r = this._flowRow(g, {
                 mask: I.iconUrl(I.roomGlyph(k || "Home")), tint: p.on ? I.FLOW_TINT.teal : I.FLOW_TINT.gray,
                 title: it.name, sub: it.entity,
               });
               r.row.classList.add("wrap2", "casora-arow");
+              if (!p.on) r.row.classList.add("off");
+              // The tick: a button of its own (the row holds the selects, it cannot be one button).
+              const chk = document.createElement("button");
+              chk.type = "button";
+              chk.className = "casora-acheck";
+              chk.setAttribute("role", "checkbox");
+              chk.setAttribute("aria-checked", p.on ? "true" : "false");
+              chk.setAttribute("aria-label", it.name);
+              chk.innerHTML = CHECK;
+              chk.addEventListener("click", () => {
+                p.on = !p.on;
+                if (p.on && !p.room) { p.on = false; }
+                render();
+              });
+              r.row.insertBefore(chk, r.row.firstChild);
               const b = r.row.querySelector(".rtext > b");
               if (b) b.setAttribute("data-no-i18n", "");
+              if (part) {
+                const hint = document.createElement("span");
+                hint.className = "casora-apart";
+                hint.textContent = "Part of " + part;
+                hint.setAttribute("data-casora-part", "");
+                const rt = r.row.querySelector(".rtext");
+                if (rt) rt.appendChild(hint);
+              }
               // Studio-Auswahlfelder (gleiche Fläche, Doppelpfeil, Studio-Menü) statt Browser-Selects.
               const roomLabels = { "": "Don't add" };
               roomNames.forEach((n) => { roomLabels[n] = shownRoom(n); });
-              const roomSel = this._combo(p.on ? (p.room || "") : "", [""].concat(roomNames), "", (v) => {
-                p.room = v || p.room; p.on = !!v; render();
+              const roomSel = this._combo(p.room || "", [""].concat(roomNames), "", (v) => {
+                p.room = v || null; p.on = !!v; render();
               }, { fixed: true, labels: roomLabels });
               roomSel.input.setAttribute("data-no-i18n", "");
               const typeLabels = {};
               types.forEach((t) => { typeLabels[t.id] = t.label; });
-              const typeSel = this._combo(p.type, types.map((t) => t.id), "", (v) => { if (v) p.type = v; },
+              const typeSel = this._combo(p.type, types.map((t) => t.id), "", (v) => { if (v) { p.type = v; drawChips(); } },
                 { fixed: true, labels: typeLabels });
               const sels = document.createElement("div");
               sels.className = "casora-sels";
@@ -416,6 +578,11 @@
               r.row.appendChild(sels);
             });
           });
+        if (!shown.length && all.length) {
+          const g = this._flowGroup(listHost, {});
+          this._flowRow(g, { title: "No device matches the filter." });
+        }
+        // Built: every ticked device with a room, whatever the filter shows (the filter only narrows the view).
         const n = [...picks.entries()].filter(([id, p]) => p.on && p.room && (!focus || focus.includes(id))).length;
         go.textContent = "Add " + n + (n === 1 ? " tile" : " tiles");
         go.disabled = !n;
@@ -493,6 +660,7 @@
       };
       askIn.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); run(); } });
       askIn.addEventListener("change", run);
+      drawChips();
       render();
       if (o.text) { askIn.value = o.text; run(); }
     };
