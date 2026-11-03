@@ -23,7 +23,7 @@ Everything the [README](../README.md) leaves out: setting up, the Studio, moving
 
 ## Install
 
-You need **Home Assistant 2026.9** or newer with dashboards in storage mode (the default), plus two frontend cards from HACS:
+You need **Home Assistant 2026.9** or newer with dashboards in storage mode (the default), plus two frontend cards from the Marketplace:
 
 | | |
 |---|---|
@@ -31,14 +31,14 @@ You need **Home Assistant 2026.9** or newer with dashboards in storage mode (the
 | [**button-card**](https://github.com/custom-cards/button-card) | Required. |
 | An **AI task** in Home Assistant | Optional, for the [AI features](#ai-features-optional). |
 
-1. In HACS open the menu, choose **Custom repositories** and add `https://github.com/SH1FT-W/casora` with the type **Integration**. The button in the [README](../README.md#install) does the same in one click.
+1. In the Marketplace open the menu, choose **Custom repositories** and add `https://github.com/SH1FT-W/casora` with the type **Integration**. The button in the [README](../README.md#install) does the same in one click.
 2. **Download Casora**, together with UIX and button-card if you don't have them yet, then **restart Home Assistant** once.
 3. **Add the integrations** under Settings → Devices & services → Add integration: **Casora**, and **UI eXtension** if it isn't added yet. UIX does nothing until it is added there.
 4. **Open Casora Studio** in the sidebar.
 
 Casora checks the requirements when you first open the Studio and links you to anything missing. Casora creates its helpers and registers its dashboard resources itself; its actions and designs come with the integration, so nothing is written into your configuration.
 
-**Without HACS:** download the [latest release](https://github.com/SH1FT-W/casora/releases), copy its `custom_components/casora` folder into `/config/custom_components/`, restart and add the integration. New versions then show up under Settings → Updates in Home Assistant, and you install them the same way.
+**Without the Marketplace:** download the [latest release](https://github.com/SH1FT-W/casora/releases), copy its `custom_components/casora` folder into `/config/custom_components/`, restart and add the integration. New versions then show up under Settings → Updates in Home Assistant, and you install them the same way.
 
 ## The setup assistant
 
@@ -106,7 +106,7 @@ A new dashboard sorts devices into their rooms (lights, then heating, air, blind
 
 Casora ships room photos for 31 room types, by day and by night, for rooms without photos of their own. It follows Home Assistant's language: English, German, Spanish, French, Italian, Dutch, Polish and Portuguese.
 
-**Known limits.** The e-bike tile is for bikes with the Bosch Smart System and reads the Bosch eBike integration (HACS: Xunil99/ha-bosch-ebike); other e-bikes show no values. The aquarium tile is not found automatically: add it in the Studio and pick the light, light profile, dosing pump buttons and sensors in its advanced fields.
+**Known limits.** The e-bike tile is for bikes with the Bosch Smart System and reads the Bosch eBike integration (Marketplace: Xunil99/ha-bosch-ebike); other e-bikes show no values. The aquarium tile is not found automatically: add it in the Studio and pick the light, light profile, dosing pump buttons and sensors in its advanced fields.
 
 ## Moving from Hemma
 
@@ -130,7 +130,7 @@ Casora replaces Hemma. Once your dashboards have moved, Hemma is no longer neede
 
 1. In the Studio open **Settings › Controls › New Dashboards**. The **Hemma** group appears as long as Hemma or its leftovers are there. (The move assistant also offers **Remove Hemma afterwards…** on its last page.)
 2. Click **Remove Hemma…**. A list shows exactly what goes and what stays:
-   - **The Hemma integration**, removed through HACS (so HACS doesn't install it again) or by deleting `custom_components/hemma`.
+   - **The Hemma integration**, removed through the Marketplace (so the Marketplace doesn't install it again) or by deleting `custom_components/hemma`.
    - **Hemma's dashboard resources.** If they are set up in YAML, Casora tells you which lines to remove from `configuration.yaml` yourself.
    - **Hemma dashboards** you tick. Dashboards set up in YAML stay.
    - **Hemma's helpers, scripts and automations**, recognised by where they came from, not by name. Their values move to the Casora helpers first, and your own entries in the same files stay.
@@ -175,15 +175,15 @@ Every save becomes a version. Casora keeps the last **30 versions** of each dash
 
 ## Updates
 
-New versions arrive through **HACS** like any other integration: install the update and restart Home Assistant. In the Studio, an **Update** button appears in the toolbar when a new version is there, and **Settings › System › Updates** shows the installed version and all versions with their release notes. Without HACS, Casora looks for new releases on GitHub and lists them under Settings → Updates.
+New versions arrive through the **Marketplace** like any other integration: install the update and restart Home Assistant. In the Studio, an **Update** button appears in the toolbar when a new version is there, and **Settings › System › Updates** shows the installed version and all versions with their release notes. Without the Marketplace, Casora looks for new releases on GitHub and lists them under Settings → Updates.
 
-**Beta versions.** With HACS, open the beta in the version list under **Settings › System › Updates** in the Studio and tap **Install**; HACS downloads it. You can also open Casora in HACS, choose ⋮ › **Redownload** and pick the beta in the version list. Without HACS, turn on **Beta versions** on the same Updates page so betas show up under Settings → Updates too. Betas can have bugs. Casora never installs anything by itself: the Studio's **Install** button asks HACS, so updates always go through HACS (or a manual download).
+**Beta versions.** With the Marketplace, open the beta in the version list under **Settings › System › Updates** in the Studio and tap **Install**; the Marketplace downloads it. You can also open Casora in the Marketplace, choose ⋮ › **Redownload** and pick the beta in the version list. Without the Marketplace, turn on **Beta versions** on the same Updates page so betas show up under Settings → Updates too. Betas can have bugs. Casora never installs anything by itself: the Studio's **Install** button asks the Marketplace, so updates always go through the Marketplace (or a manual download).
 
 After an update, Casora brings your dashboards up to its new templates when Home Assistant starts. It only touches templates you haven't changed yourself, and it saves a version first, so a notification tells you which dashboards were updated and that you can undo it with [Rewind](#rewind-going-back-to-an-earlier-version).
 
 What's new in each version is shown once in the Studio and listed in the [changelog](../CHANGELOG.md).
 
-**Version numbers.** Since October 2026 Casora counts year.month.number: 26.10.31 is the 31st release of October 2026. Every release gets the next number; there are no separate patch or minor versions. The jump from 1.6.0 to 26.10.31 was intended, HACS and the Casora update treat it as a normal update.
+**Version numbers.** Since October 2026 Casora counts year.month.number: 26.10.31 is the 31st release of October 2026. Every release gets the next number; there are no separate patch or minor versions. The jump from 1.6.0 to 26.10.31 was intended, the Marketplace and the Casora update treat it as a normal update.
 
 ## AI features (optional)
 
@@ -228,7 +228,7 @@ Casora runs entirely inside your Home Assistant. It has no cloud service, no acc
 - **Fuel prices**, if you enter your own Tankerkönig key: Casora asks Tankerkönig for the stations within your radius around the car or your home. With Home Assistant's Tankerkönig integration instead, Casora only reads its sensors. The browser loads the station logos from the brands' websites, Wikimedia or Google's favicon service.
 - **Football tile:** the popup loads the league table and form from ESPN, the same source the Team Tracker integration uses.
 
-Updates come through HACS or the GitHub release page. Ventilation push notifications and pushes about new Casora versions go only to the devices you select. Your own room photos are stored in `/config/casora_photos` and are served only to logged-in users. Dashboards, versions (`/config/casora_versionen/`), backups (`/config/casora_sicherungen/`) and your settings stay on your Home Assistant instance and are included in its regular backups.
+Updates come through the Marketplace or the GitHub release page. Ventilation push notifications and pushes about new Casora versions go only to the devices you select. Your own room photos are stored in `/config/casora_photos` and are served only to logged-in users. Dashboards, versions (`/config/casora_versionen/`), backups (`/config/casora_sicherungen/`) and your settings stay on your Home Assistant instance and are included in its regular backups.
 
 ## FAQ and troubleshooting
 

@@ -44,7 +44,7 @@ Example layout:
 │           └── casora_navigation.yaml
 ├── casora_photos/                      # Your own room photos (private, uploaded in the Studio)
 ├── custom_components/
-│   └── casora/                         # The Casora integration (from HACS)
+│   └── casora/                         # The Casora integration (from the Marketplace)
 │       └── scripts/                    # JavaScript resources, served from /casora_scripts/
 │           ├── layout-card-modified.js # Modified Layout Card build
 │           ├── layout-offsets.js       # Navbar/hero offsets track sidebar visibility
@@ -82,7 +82,7 @@ Copy these folders/files from this repo into your HA `/config`:
 Nothing to add. The Casora integration registers its scripts as dashboard resources from
 `/casora_scripts/` (when Lovelace runs in YAML mode, Home Assistant's log names the lines to add under
 `lovelace: resources:`). Don't add them a second time from `/local/`, or every script loads twice.
-button-card comes from HACS as usual (`/hacsfiles/button-card/button-card.js`).
+button-card comes from the Marketplace as usual (`/hacsfiles/button-card/button-card.js`).
 
 ### 4) Register the Casora dashboards
 Add (or verify) in your `configuration.yaml`:

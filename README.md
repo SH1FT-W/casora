@@ -10,7 +10,7 @@ Shape the rest room by room in a visual studio. No YAML.</p>
 
 [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FSH1FT-W%2Fcasora%2Fmain%2Fcustom_components%2Fcasora%2Fmanifest.json&query=%24.version&label=version&style=flat-square&color=94603B&labelColor=3A322B)](https://github.com/SH1FT-W/casora/releases/latest)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.9%2B-94603B?style=flat-square&labelColor=3A322B&logo=homeassistant&logoColor=white)](https://www.home-assistant.io)
-[![HACS](https://img.shields.io/badge/HACS-custom-94603B?style=flat-square&labelColor=3A322B)](https://hacs.xyz)
+[![Marketplace](https://img.shields.io/badge/Marketplace-custom-94603B?style=flat-square&labelColor=3A322B)](https://hacs.xyz)
 [![License](https://img.shields.io/badge/license-MIT-94603B?style=flat-square&labelColor=3A322B)](LICENSE)
 
 <p><a href="https://sh1ft-w.github.io/casora"><b>Website</b></a> &nbsp;·&nbsp; <a href="#new">New</a> &nbsp;·&nbsp; <a href="#layouts">Layouts</a> &nbsp;·&nbsp; <a href="#popups">Popups</a> &nbsp;·&nbsp; <a href="#studio">Studio</a> &nbsp;·&nbsp; <a href="#look">Designs</a> &nbsp;·&nbsp; <a href="#privacy">Privacy</a> &nbsp;·&nbsp; <a href="#install">Install</a> &nbsp;·&nbsp; <a href="#thanks">Thanks</a> &nbsp;·&nbsp; <a href="CHANGELOG.md">Changelog</a></p>
@@ -243,40 +243,42 @@ Your own JS modules, customised popups and folders your automations write to are
 <sub><b>INSTALL</b></sub>
 ## Three steps. Then it's yours.
 
-<a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=SH1FT-W&repository=casora&category=integration"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open your Home Assistant instance and open the Casora repository in HACS." /></a>
+<a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=SH1FT-W&repository=casora&category=integration"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open your Home Assistant instance and open the Casora repository in the Marketplace." /></a>
 
-1. **Add the repository.** Click the button above, or in HACS open the menu, choose **Custom repositories** and add `https://github.com/SH1FT-W/casora` with the type **Integration**.
+The Marketplace is under Settings → Marketplace. On Home Assistant before 2026.11 it is still called HACS.
+
+1. **Add the repository.** Click the button above, or in the Marketplace open the menu, choose **Custom repositories** and add `https://github.com/SH1FT-W/casora` with the type **Integration**.
 2. **Download Casora**, together with UIX and button-card if you don't have them yet, then **restart Home Assistant** once.
 3. **Add the integrations** under Settings, Devices & services, Add integration: **Casora**, and **UI eXtension** if it isn't added yet. UIX does nothing until it is added there. Then open **Casora Studio** in the sidebar. The setup assistant takes it from there.
 
-Updates arrive through HACS like any other integration. After an update, Casora brings your dashboards up to its new templates and saves a version first, so you can always go back. It never restarts Home Assistant on its own.
+Updates arrive through the Marketplace like any other integration. After an update, Casora brings your dashboards up to its new templates and saves a version first, so you can always go back. It never restarts Home Assistant on its own.
 
 ### What you need
 
 | Requirement | Notes |
 |---|---|
 | **Home Assistant 2026.9** or newer | Required, with dashboards in storage mode (the default). |
-| [**UI eXtension (UIX)**](https://github.com/Lint-Free-Technology/uix) | Required, from HACS. The successor to card-mod. After downloading, restart and add it under Settings, Devices & services, Add integration, **UI eXtension**. Use it instead of card-mod, not both. |
-| [**button-card**](https://github.com/custom-cards/button-card) | Required, from HACS. |
+| [**UI eXtension (UIX)**](https://github.com/Lint-Free-Technology/uix) | Required, from the Marketplace. The successor to card-mod. After downloading, restart and add it under Settings, Devices & services, Add integration, **UI eXtension**. Use it instead of card-mod, not both. |
+| [**button-card**](https://github.com/custom-cards/button-card) | Required, from the Marketplace. |
 | An **AI task** in Home Assistant | Optional, for the [AI features](docs/guide.md#ai-features-optional). |
 
 Casora checks all of this when you first open the Studio and links you to anything missing. Casora creates its helpers and registers its dashboard resources itself; its actions and designs come with the integration, so nothing is written into your configuration.
 
 <details>
-<summary><b>Without HACS</b></summary>
+<summary><b>Without the Marketplace</b></summary>
 <br/>
 
 1. Download the [latest release](https://github.com/SH1FT-W/casora/releases) and copy its `custom_components/casora` folder into `/config/custom_components/` on your Home Assistant.
 2. Install UIX and button-card if you don't have them yet, then **restart Home Assistant**.
 3. Add the **Casora** and **UI eXtension** integrations and open **Casora Studio** in the sidebar, as above.
 
-To update, replace the folder with the new release and restart. Without HACS, new versions show up under Settings, Updates in Home Assistant. Step by step in the [guide](docs/guide.md#install).
+To update, replace the folder with the new release and restart. Without the Marketplace, new versions show up under Settings, Updates in Home Assistant. Step by step in the [guide](docs/guide.md#install).
 
 </details>
 
 ### Versions
 
-Since October 2026 Casora uses calendar versions **`YY.M.N`**: year, month, and the number of the release within that month. `26.10.31` is the 31st release of October 2026. Every release, feature or fix, gets the next number; there are no separate patch or minor versions. The jump from 1.6.0 was intended: HACS and the Casora update see the new version as usual.
+Since October 2026 Casora uses calendar versions **`YY.M.N`**: year, month, and the number of the release within that month. `26.10.31` is the 31st release of October 2026. Every release, feature or fix, gets the next number; there are no separate patch or minor versions. The jump from 1.6.0 was intended: the Marketplace and the Casora update see the new version as usual.
 
 ### Documentation
 
@@ -297,7 +299,7 @@ Found a bug or have an idea? [Open an issue](https://github.com/SH1FT-W/casora/i
 - **Your data, your backups.** Dashboards, versions and settings live on your own instance and are part of its regular backups.
 - **AI only if you ask.** AI features stay off until you turn them on, and then use the provider you already set up in Home Assistant.
 
-Casora only reaches outside for AI features you turn on (through the provider you configured, and for the AI update check the release notes of pending updates), for integration logos from `brands.home-assistant.io`, to look for new Casora releases on GitHub and, if you use them, for fuel prices, the football table and the status of your card requests. Updates come through HACS or the release page. The full list is in the [guide](docs/guide.md#privacy-in-detail).
+Casora only reaches outside for AI features you turn on (through the provider you configured, and for the AI update check the release notes of pending updates), for integration logos from `brands.home-assistant.io`, to look for new Casora releases on GitHub and, if you use them, for fuel prices, the football table and the status of your card requests. Updates come through the Marketplace or the release page. The full list is in the [guide](docs/guide.md#privacy-in-detail).
 
 ### Optional, and quietly useful
 
