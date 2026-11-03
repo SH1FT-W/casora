@@ -226,9 +226,10 @@
     + ".comrow.comcard .comtx{flex:1 1 0}.comrow.comcard > .comchip{flex:1 0 100%;align-self:stretch;padding:9px 12px;text-align:center;font-weight:600}}"
     // Tablet/desktop (owner 03.11.2026): the cards as a grid of compact tiles – two columns, three in a wide window
     // (class c3, set by the dialog). Phone and narrow windows: the list as before.
-    + ".comgrid{display:grid;grid-template-columns:1fr;gap:10px;padding:2px}"
-    + ".comgrid > .comrow.comcard{flex-direction:column;align-items:stretch;gap:8px;padding:12px;border:0;border-radius:16px;"
-    + "background:var(--casora-studio-card, rgba(127,127,127,.08))}"
+    // Entries without a frame (r309, owner 20.10.): no tile background, rows divided by the list's thin line.
+    + ".comgrid{display:grid;grid-template-columns:1fr;column-gap:24px;padding:2px}"
+    + ".comgrid > .comrow.comcard{flex-direction:column;align-items:stretch;gap:8px;padding:12px 4px;border-top:1px solid rgba(127,127,127,.15)}"
+    + ".comgrid > .comrow.comcard:nth-child(-n+2){border-top:0}.comgrid.c3 > .comrow.comcard:nth-child(3){border-top:0}"
     + ".comgrid .comhead{display:flex;gap:12px;align-items:flex-start}"
     + ".comgrid .comshot,.comgrid button.comzoom{width:96px;height:80px}"
     + ".comgrid .comtx{display:flex;flex-direction:column;min-width:0;flex:1}"
