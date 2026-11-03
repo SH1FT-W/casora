@@ -6,7 +6,8 @@
 //   node dev/qa/popup-galerie.mjs anlegen            builds (or rebuilds) the dashboard /popup-galerie
 //   node dev/qa/popup-galerie.mjs pruefen [--handy|--ipad] [--hell] [--nur <regex>] [--md <file>] [--json <file>] [--bilder <dir>]
 //                                                    --ipad: iPad portrait 820 (desktop dashboard), --hell: light scheme,
-//                                                    --konsole: print page and console errors
+//                                                    --konsole: print page and console errors, --warten MS: wait before
+//                                                    each picture (default 1600; the column balance rebuilds once on first open)
 //                                                    --groesse WxH: other desktop/tablet window; --spalten: column balance
 //                                                    per popup (dev/qa/popup-spalten.mjs) into the --json results
 //                                                    taps every opener (Playwright) and lists: opens / does not open / device missing
@@ -426,7 +427,7 @@ async function pruefen() {
     // --wetter-spalten: the weather popup's column order (dev/qa/regress/r457_popup_spalten.mjs).
     if (flag('wetter-spalten') && res.wetterSpalten === undefined) { await sleep(2200); res.wetterSpalten = await pg.evaluate(WEATHER_ORDER).catch(() => null); }
     if (!arg('bilder')) return;
-    await pg.waitForTimeout(1600);
+    await pg.waitForTimeout(Number(arg('warten')) || 1600);
     res.bild = it.id + (HANDY ? '-handy' : IPAD ? '-ipad' : '') + (DARK ? '' : '-hell') + '.png';
     await pg.screenshot({ path: path.join(arg('bilder'), res.bild) }).catch(() => { res.bild = null; });
   };
