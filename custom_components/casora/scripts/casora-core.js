@@ -6683,6 +6683,8 @@ window.casoraMenuGlass = {
       animation: casora-popup-fade var(--casora-popup-enter, 260ms) ease-out;
     }
     .content::-webkit-scrollbar { display: none; }
+    /* Page transition (_navBegin): the leaving page lies in the scroller, out of the flow. */
+    :host([navigating]) .content { position: relative; }
     /* Scroll-Hinweis (01.10.2026): liegt unter dem Sheet-Rand noch Inhalt, blendet ein
        weicher Rand aus. Eigene Ebene ÜBER dem Inhalt statt mask-image auf .content –
        eine Maske am Vorfahren schaltet den Blur der Platten darin ab. */
@@ -7584,6 +7586,18 @@ window.casoraMenuGlass = {
     var room = String(pop._roomLabel || '').trim();
     return !room || room === 'Zuhause' ? n : null;
   };
+  // Which way a page change inside an open popup goes (owner 03.11.2026, page transition): 'none' for a fresh
+  // opening, 'back' right after ‹ (backAt, within 4 s), 'forward' when the new page brings another way back than the
+  // page before (a sub page from a row or a tile), 'same' for a page that redraws itself (same ‹) or opts out
+  // (cfg.nav === false).
+  function navDirection(wasOpen, backAt, now, prevBack, nextBack, optOut) {
+    if (!wasOpen) return 'none';
+    if (optOut === false) return 'same';
+    if (backAt && now - backAt < 4000) return 'back';
+    if (typeof nextBack === 'function' && nextBack !== prevBack) return 'forward';
+    return 'same';
+  }
+  window._casoraNavDirection = navDirection;
   // „Licht Badezimmer“ unter dem Etikett „Badezimmer“ → „Licht“ (Raum steht schon darüber).
   function stripRoom(title, room) {
     var t = String(title || '');
@@ -7928,6 +7942,8 @@ window.casoraMenuGlass = {
         e.preventDefault(); e.stopPropagation();
         var fn = this._backFn;
         window.casoraHaptic('light');
+        // Page transition (owner 03.11.2026): the page this ‹ opens slides in from the left.
+        this._navBackAt = Date.now();
         if (typeof fn === 'function') fn();
       });
       this._headerContent = root.querySelector('.header-content');
@@ -8022,6 +8038,31 @@ window.casoraMenuGlass = {
       var wasOpen = this.hasAttribute('open');
       // Jedes Öffnen eine neue Runde: späte Neuaufbauten der vorigen Runde verwerfen (_buildCard).
       this._openGen = (this._openGen || 0) + 1;
+      // A page transition still running ends now (fast taps): its old page goes, sizes are released.
+      if (this._navAnim) this._navAnim.finish();
+      var prevBackFn = wasOpen ? this._backFn : null;
+      // Which way this page change goes, decided before anything of the old page changes (head, width, content).
+      // Scroll memory (owner 03.11.2026): a page left forward keeps where it was scrolled to, ‹ brings it back there;
+      // a new page starts at the top, a fresh opening forgets everything. A page opened again with the config it was
+      // left with (‹, or a page that returns by itself) is a way back too.
+      if (!wasOpen || !this._navStack) this._navStack = [];
+      var bn0 = window._casoraBackNext;
+      var nextBack = typeof cfg.back === 'function' ? cfg.back : bn0 && Date.now() - bn0.at < 4000 ? bn0.fn : null;
+      var stackAt = -1;
+      for (var si = this._navStack.length - 1; si >= 0; si--) { if (this._navStack[si].cfg === data) { stackAt = si; break; } }
+      var navDir = navDirection(wasOpen, stackAt >= 0 ? Date.now() : this._navBackAt, Date.now(), prevBackFn, nextBack, cfg.nav);
+      this._navBackAt = 0;
+      var scrollBack = null;
+      // The place at the tap that led here: the page may already shrink a little before the next one opens.
+      var tapAt = this._navTapScroll;
+      var leftAt = tapAt && Date.now() - tapAt.at < 4000 ? tapAt.top : (this.content ? this.content.scrollTop : 0);
+      this._navTapScroll = null;
+      if (navDir === 'forward') this._navStack.push({ top: leftAt, cfg: this._cfgCurrent || null });
+      else if (navDir === 'back' && this._navStack.length) {
+        var ent = this._navStack.splice(stackAt >= 0 ? stackAt : this._navStack.length - 1)[0];
+        scrollBack = ent ? ent.top : null;
+      }
+
       // §3/§4.4 (review 2, DD-09): a sub page's label is the title of the page before it.
       var prevTitle = wasOpen && this._headerTitle ? String(this._headerTitle.textContent || '').replace(/\u200B/g, '') : '';
       // Gerät fehlt: Inhalt gar nicht erst bauen (bleibt ohnehin verborgen) – sonst melden Karten
@@ -8155,6 +8196,7 @@ window.casoraMenuGlass = {
       else this._lastWidthDecl = null;
       this._dyn.textContent = dynCss;
 
+      var nav = navDir === 'forward' || navDir === 'back' ? this._navBegin(navDir) : null;
       this.container.textContent = '';
       // Every opening starts at the top (the content scroller is shared: a popup reopened showed its stage cut off).
       // The content arrives after this line and the browser's scroll anchoring moved it down again: anchoring off,
@@ -8162,11 +8204,29 @@ window.casoraMenuGlass = {
       if (this.content) {
         var sc = this.content;
         sc.style.overflowAnchor = 'none';
-        sc.scrollTop = 0;
-        [0, 120, 400].forEach(function (ms) { setTimeout(function () { if (sc.scrollTop > 0 && !sc._casoraUserScrolled) sc.scrollTop = 0; }, ms); });
+        // ‹ back: the page's remembered place (scroll memory above), held while its cards still draw.
+        var want = scrollBack || 0;
+        sc.scrollTop = want;
+        [0, 120, 400].forEach(function (ms) {
+          setTimeout(function () { if (Math.abs(sc.scrollTop - want) > 1 && !sc._casoraUserScrolled) sc.scrollTop = want; }, ms);
+        });
+        // Cards that draw later (forecast, charts) make the page taller: follow them up to the remembered place, for
+        // three seconds or until the person scrolls.
+        if (want && typeof ResizeObserver === 'function') {
+          if (this._navScrollRO) this._navScrollRO.disconnect();
+          var cont = this.container, ro = new ResizeObserver(function () {
+            if (sc._casoraUserScrolled) { ro.disconnect(); return; }
+            if (Math.abs(sc.scrollTop - want) > 1) sc.scrollTop = want;
+          });
+          this._navScrollRO = ro;
+          ro.observe(cont);
+          setTimeout(function () { ro.disconnect(); }, 3000);
+        }
         sc._casoraUserScrolled = false;
         if (!sc._casoraScrollWatch) {
           sc._casoraScrollWatch = true;
+          var host = this;
+          sc.addEventListener('pointerdown', function () { host._navTapScroll = { top: sc.scrollTop, at: Date.now() }; }, { capture: true, passive: true });
           ['wheel', 'touchmove', 'keydown'].forEach(function (ev) { sc.addEventListener(ev, function () { sc._casoraUserScrolled = true; }, { passive: true }); });
         }
       }
@@ -8196,6 +8256,9 @@ window.casoraMenuGlass = {
       await this._buildExtra(isCard ? cfg.extra : null);
 
       if (!wasOpen) this._replayChrome();
+      // ‹ back: the cards are in, the remembered place exists now (before the page slides in: no jump).
+      if (scrollBack && this.content && !this.content._casoraUserScrolled) this.content.scrollTop = scrollBack;
+      if (nav) nav.play();
 
       setTimeout(() => this._probe(), 900);   // after card_mod has landed
       // Trennpunkte an Zeilenumbrüchen (Statuszeile, Unterzeilen): sobald die Karten stehen.
@@ -8871,8 +8934,68 @@ window.casoraMenuGlass = {
       if (this._dismissable) this.close();
     }
 
+    // Page transition inside the open popup (owner 03.11.2026): every sub page goes through open(), so the frame
+    // animates them all alike. forward: the new page slides in from the right, back: from the left; the head
+    // cross-fades with it; the sheet keeps its height while the new page builds and then follows it. The old page goes
+    // at once, as before: modules re-draw and look up their slots in the popup while a page opens (light lists, charts,
+    // forecast) – a leaving page still in the popup handed them the wrong one (r335, r540). Only a transform on the new
+    // page: an opacity on an ancestor would flatten the frost of its plates (see .header). Same easing as the sheet's
+    // entrance. Reduced motion: nothing moves. Returns { play, finish } or null; finish() ends it at once (a tap
+    // during the transition, close).
+    _navBegin(dir) {
+      var reduce = false;
+      try { reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* no media */ }
+      this.setAttribute('data-casora-nav', dir);
+      window._casoraNavLast = { dir: dir, at: Date.now(), reduced: reduce };
+      if (reduce) return null;
+      var box = this.container, surf = this.surface, self = this;
+      var h0 = surf ? surf.getBoundingClientRect().height : 0;
+      var anims = [], done = false, sign = dir === 'back' ? -1 : 1;
+      var DUR = 260, EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
+      this.setAttribute('navigating', '');
+      // The new page builds out of sight, the sheet keeps its size meanwhile (no collapse, no jump).
+      box.style.visibility = 'hidden';
+      if (surf && h0) surf.style.height = h0 + 'px';
+      var finish = function () {
+        if (done) return;
+        done = true;
+        anims.forEach(function (a) { try { a.cancel(); } catch (e) { /* gone */ } });
+        box.style.removeProperty('visibility');
+        if (surf) surf.style.removeProperty('height');
+        self.removeAttribute('navigating');
+        if (self._navAnim === ctl) self._navAnim = null;
+      };
+      var ctl = {
+        finish: finish,
+        play: function () {
+          if (done) return;
+          var run = function () {
+            if (done) return;
+            var opt = { duration: DUR, easing: EASE };
+            box.style.removeProperty('visibility');
+            if (surf) surf.style.removeProperty('height');
+            try {
+              anims.push(box.animate([{ transform: 'translateX(' + (sign * 48) + 'px)' }, { transform: 'translateX(0)' }], opt));
+              if (self._headerContent) {
+                anims.push(self._headerContent.animate([{ opacity: 0.2, transform: 'translateX(' + (sign * 16) + 'px)' }, { opacity: 1, transform: 'translateX(0)' }], opt));
+              }
+              var h1 = surf ? surf.getBoundingClientRect().height : 0;
+              if (surf && h0 && h1 && Math.abs(h1 - h0) > 8) anims.push(surf.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], opt));
+            } catch (e) { finish(); return; }
+            anims[0].onfinish = finish;
+            setTimeout(finish, DUR + 120);
+          };
+          // Two frames: the new cards have drawn their first layout, so the height is measured with them.
+          requestAnimationFrame(function () { requestAnimationFrame(run); });
+        },
+      };
+      this._navAnim = ctl;
+      return ctl;
+    }
+
     close() {
       if (!this.hasAttribute('open') || this.hasAttribute('closing')) return;
+      if (this._navAnim) this._navAnim.finish();
       window._casoraMoreOpen = {};
       document.removeEventListener('keydown', this._onKey, true);
       window.removeEventListener('location-changed', this._onNav, true);
@@ -8895,6 +9018,7 @@ window.casoraMenuGlass = {
         this.surface.style.removeProperty('transform');
         this.surface.style.removeProperty('transition');
         this.container.textContent = '';
+        this._navStack = [];
         this._headReset();
         this._headRoot = null;
         this._extraTok = (this._extraTok || 0) + 1;
