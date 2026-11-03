@@ -558,6 +558,8 @@
   var NEU = 'var(--casora-color-neutral, var(--secondary-text-color))';
   var WORD = { ok: 'Gut', learning: 'Lernt', watch: 'Beobachten', check: 'Prüfen', failed: 'Ausgefallen' };
   var HGT = { ok: 34, learning: 34, watch: 58, check: 80, failed: 100 };
+  // Ring tone of a Pulse state (UI.stage S7); learning, unknown and unavailable grey.
+  var PULSE_TONE = { ok: 'good', watch: 'caution', check: 'warn', failed: 'bad' };
   var stateTone = function (h, id, s) {
     var P = reg(h, id).platform === 'pulse' && window._casoraPulse;
     if (!P || !WORD[s]) return null;   // generisch: andere Enum-Sensoren bekämen hier ihre Zuordnung, sonst ACC
@@ -631,7 +633,9 @@
         // S7: the state as the sentence (traffic light: unknown/unavailable orange, an alarm class on red, off grey),
         // the period switch and the band under it.
         var alarm = bin && st.state === 'on' && /^(smoke|gas|moisture|problem|safety|carbon_monoxide|heat|tamper)$/.test((st.attributes || {}).device_class || '');
-        return UI.stage('status', { tone: bad(st.state) ? 'warn' : alarm ? 'bad' : duo && !Z.isActive(st.state) ? 'off' : 'good',
+        // Pulse: the ring in the state's traffic light (handbook §4.8 ring (c), r520) – it stayed green for every state.
+        var pulseTone = reg(hass, id).platform === 'pulse' ? (PULSE_TONE[st.state] || 'off') : null;
+        return UI.stage('status', { tone: pulseTone || (bad(st.state) ? 'warn' : alarm ? 'bad' : duo && !Z.isActive(st.state) ? 'off' : 'good'),
           icon: Z.iconOf(st), text: Z.nowWord(hass, id), state: st.state === 'unavailable' ? 'na' : null,
           facts: isFinite(since) ? [{ label: T('Seit'), value: when(since, now) }] : [],
           extra: out.replace(UI.line(Z.nowWord(hass, id), rest, { tone: bad(st.state) ? 'warn' : null }), '').replace('<div style="margin-top:14px;">', '<div>') });

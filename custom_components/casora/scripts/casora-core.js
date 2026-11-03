@@ -12445,6 +12445,8 @@ window.casoraMenuGlass = {
   //   common o: { state: 'off' | 'na', empty: { … UI.empty } , extra: html under the stage content }
   var STAGE_TYPES = { slider: 'S1', value: 'S2', position: 'S3', progress: 'S4', image: 'S5', chart: 'S6', status: 'S7', content: 'S8' };
   var TONE = { good: 'var(--casora-color-green, #34C759)', warn: 'var(--casora-color-orange, #FF9F0A)', bad: 'var(--casora-color-red, #FF453A)',
+    // caution: worth watching, not yet a warning (Pulse „Beobachten“) – between good and warn.
+    caution: 'var(--casora-color-yellow, #E8B04A)',
     // off: a device that is simply off (not a problem) – the off symbol of the lists, its glyph in text 2.
     off: 'var(--casora-soft-icon-off, rgba(140,115,90,0.12))' };
   // S5 big view (o.zoom): tapping the picture lifts it into the top layer (popover, nothing is moved, so a live
