@@ -386,7 +386,10 @@
       let focus = null; // Ergebnis der Eingabe: nur diese Geräte zeigen
       let kind = "";    // filter chip, "" = all kinds
       let query = "";   // search in names and entity ids
-      const folded = new Set(); // collapsed room groups
+      // Collapsed room groups: on opening only rooms with a ticked device are open (owner 03.11.2026).
+      const folded = new Set();
+      all.forEach((it) => folded.add(it.room || ""));
+      all.forEach((it) => { if (picks.get(it.id).on) folded.delete(it.room || ""); });
 
       if (!this.shadowRoot.getElementById("casora-assist-css")) {
         const st = document.createElement("style");

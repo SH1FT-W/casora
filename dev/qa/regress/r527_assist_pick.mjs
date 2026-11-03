@@ -28,6 +28,31 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
       chips: window.__pierce('.casora-chip').map((c) => c.textContent.trim()) };
   });
   const btnN = (t) => Number((String(t || '').match(/\d+/) || [])[0]);
+  // On opening: only rooms with a ticked device are expanded; a device without a room cannot be ticked.
+  const open0 = await page.evaluate(() => window.__pierce('.casora-ahead').map((h) => {
+    const f = h.querySelector('.casora-afold'); const m = h.textContent.match(/(\d+)\s*(von|of)\s*(\d+)/);
+    return { exp: f && f.getAttribute('aria-expanded') === 'true', on: m ? Number(m[1]) : -1 };
+  }));
+  await check(label + ': nur Räume mit angehakten Geräten sind aufgeklappt', open0.length > 0 && open0.every((g) => g.exp === (g.on > 0)), open0);
+  const noRoom = await page.evaluate(async () => {
+    const h = window.__pierce('.casora-ahead').find((x) => !x.querySelector('.casora-aall'));
+    if (!h) return null;
+    const f = h.querySelector('.casora-afold'); if (f.getAttribute('aria-expanded') === 'false') f.click();
+    await new Promise((r) => setTimeout(r, 300));
+    const h2 = window.__pierce('.casora-ahead').find((x) => !x.querySelector('.casora-aall'));
+    let el = h2.nextElementSibling; const c = el && el.querySelector('.casora-acheck');
+    if (!c) return null; c.click();
+    await new Promise((r) => setTimeout(r, 300));
+    const h3 = window.__pierce('.casora-ahead').find((x) => !x.querySelector('.casora-aall'));
+    const c2 = h3.nextElementSibling.querySelector('.casora-acheck');
+    return c2.getAttribute('aria-checked');
+  });
+  if (noRoom !== null) await check(label + ': Gerät ohne Raum bleibt abgehakt, bis ein Raum gewählt ist', noRoom === 'false', noRoom);
+  else console.log('  info   ' + label + ': keine Geräte ohne Raum – übersprungen');
+  // Open every group for the checks below.
+  await page.evaluate(() => window.__pierce('.casora-afold').forEach((f) => { if (f.getAttribute('aria-expanded') === 'false') f.click(); }));
+  await page.evaluate(async () => { for (let i = 0; i < 20; i++) { const f = window.__pierce('.casora-afold').find((x) => x.getAttribute('aria-expanded') === 'false'); if (!f) break; f.click(); await new Promise((r) => setTimeout(r, 120)); } });
+  await page.waitForTimeout(300);
   const s0 = await read();
   await check(label + ': jede Zeile hat ein Häkchen', s0.rows >= 3 && s0.rows === (await page.evaluate(() => window.__pierce('.frow.casora-arow .casora-acheck').length)), s0);
   await check(label + ': Raumgruppen zeigen „x von y“', s0.heads.length > 0 && s0.heads.every((h) => /\d+ (von|of) \d+/.test(h)), s0.heads);
