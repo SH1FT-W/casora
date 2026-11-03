@@ -4,18 +4,26 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
-## 26.11.8 – 02.11.2026
+## 26.11.8 – 03.11.2026
 
-Fixes aus euren Meldungen: Abfall am Handy, Licht im Haus und ruhigere Zahlen in Diagrammen.
+Aufgeräumte Licht-Popups, Abfall am Handy und Fixes aus euren Meldungen.
 
 ### Geändert
 - **Abfall am Handy (#117):** Oben steht, was heute abgeholt wird, darunter die nächsten Termine der Tonnen und Rausstellen, der Kalender ganz am Ende. Ein Tipp auf einen Tag zeigt dessen Abholung direkt unter dem Kalender, ohne Sprung nach oben.
-- **Licht im Haus (#118):** Hat ein Raum nur eine Lampe, öffnet der Tipp im Popup „Beleuchtung“ gleich diese Lampe; Zurück führt direkt zur Liste.
+- **Licht im Haus (#118):** Hat ein Raum nur eine Lampe, öffnet der Tipp im Popup „Beleuchtung“ gleich diese Lampe; Zurück führt direkt zur Liste. Ein Raum-Badge, dessen Lichtgruppe nur eine Lampe hat, öffnet sie ebenfalls direkt.
+- **Licht-Popups überall gleich:** Egal wo du sie öffnest (Zuhause, Raum, Raum-Chip, Lampe): Die kleine Zeile nennt den Raum, der Titel heißt „Beleuchtung“, die Lampenseite zeigt die Lampe ohne Raumnamen. Gezählt wird nur einmal in der Listenüberschrift („Lampen im Raum · 2 von 5 an“), das Rad springt zwischen den Seiten nicht mehr. Zeilen sind kurz („Aus“, „An · 80 %“).
+- **Szenen in einem Knopf:** Neben dem Rad sitzt ein Knopf „Szenen“ mit Menü (leuchtet, solange eine Szene gilt) und „Effekte“, wenn die Lampe Effekte kann; nie mehr ein dritter Knopf unter dem Rad.
+- **Schalter auf der Lampenseite:** Die Lampenseite hat oben rechts ihren eigenen Schalter.
+- **Lichtgruppen im Raum:** Eine Gruppe wie „Spots“ ist überall eine Zeile, auch im Popup des Raums.
+- **Lampen-Chips ohne Raumnamen:** Im Raum lassen die Lampen-Chips unter „Beleuchtung“ den Raumnamen weg („Stehlampe“ statt „Stehlampe Wohnzimmer“).
+- **Licht-Badge auf Zuhause:** Früher eingerichtete Dashboards führten die Hausgruppe und bis zu zehn ihrer Lampen. Beim Öffnen stellt das Studio das Badge auf die Gruppe allein um (oder auf die Räume, wenn die Gruppe mehr enthält als die Räume); speichern, damit es bleibt, der Stand davor bleibt unter Versionen. Die Reihenfolge der Räume im Popup „Beleuchtung“ folgt dann deiner Lichtgruppe in Home Assistant.
 
 ### Behoben
 - **Abfall-Kachel:** Am Abholtag sagt Kachel und Kopf „Heute Restmüll“, auch wenn der Countdown-Sensor schon weiterzählt; das Datum hat Vorrang.
 - **Licht im Haus nach der Einrichtung:** Mit einer Lichtgruppe für das ganze Haus und mehr als zehn Lampen fehlten Räume im Popup „Beleuchtung“; neu eingerichtete Dashboards zeigen jetzt alle.
 - **Diagramm-Popup:** Werte, Höchster/Tiefster Wert und Durchschnitt behalten ihre Nachkommastellen, statt zwischen „44,38“ und „47,4“ zu springen.
+- **Pulse-Status:** Der Ring folgt dem Zustand (grün Gut, gelb Beobachten, orange Prüfen, rot Ausgefallen, grau Lernt), statt immer grün zu bleiben.
+- **Esc im Menü:** Ist das Menü „Szenen“ oder „Effekte“ offen, schließt Esc nur das Menü.
 
 ## 26.11.7 – 02.11.2026
 
