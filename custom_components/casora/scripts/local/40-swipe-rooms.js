@@ -1,9 +1,12 @@
 // ── Swipe between rooms (issue 114, 03.11.2026) ────────────────────────────────
 // A horizontal swipe on an open room goes to the next / previous room, in the order of the room menu – in addition
 // to the room menu, never instead of it. Home is the first page (owner, 03.11.2026): on Home a swipe to the left opens
-// the first room, on the first room a swipe to the right goes back Home; Home has no previous page. Studio › Controls › Phone: "Swipe between rooms" (swipe_rooms; the phone's
-// bottom bar card gets it on save, markPhoneManaged) and "Also on the tablet" (swipe_rooms_tablet; the desktop
-// dashboard's room views, read like hold_mode in casora-core.js → window._casoraSwipeTablet). Both off by default.
+// the first room, on the first room a swipe to the right goes back Home; Home has no previous page.
+// One setting for every touch device (owner, 03.11.2026): Studio › Controls › Phone "Swipe between rooms" (swipe_rooms,
+// off by default). The desktop dashboard keeps it in its room views (read like hold_mode in casora-core.js →
+// window._casoraSwipeRooms: tablets and iPads), the phone's bottom bar card gets it on save (markPhoneManaged).
+// Only touches swipe: the listeners are touch events, so a mouse never does; no user agent checks (iPadOS Safari
+// says "Macintosh"). A saved swipe_rooms_tablet (26.11.9 test builds) is ignored.
 // Not a swipe: a mostly vertical move, a start in a row that scrolls sideways (badges, chips, media), on a slider,
 // chart, input or menu, a start at the screen's left edge (iOS back), anything while a Casora popup or a menu is open.
 // No wrap-around: at the first / last room the page gives a little and springs back. prefers-reduced-motion: the room
@@ -51,7 +54,7 @@
     return s * Math.min(28, Math.abs(dx) * 0.15);
   }
 
-  window.casoraSwipeRooms = { decide: decide, lock: lock, neighbour: neighbour, follow: follow, EDGE_PX: EDGE_PX };
+  window.casoraSwipeRooms = { decide: decide, lock: lock, neighbour: neighbour, follow: follow, EDGE_PX: EDGE_PX, blocked: null };
   if (typeof document === 'undefined' || !document.addEventListener) return;
 
   var reduced = function () {
@@ -74,13 +77,15 @@
       if (cl && (cl.contains('hmn-bar') || cl.contains('hmn-menu') || cl.contains('hmn-sheet'))) return true;
       var cs = null;
       try { cs = getComputedStyle(el); } catch (e) { cs = null; }
-      // A row that claims horizontal touches (smart-row's tile row: touch-action pan-x) or scrolls sideways.
-      if (cs && /pan-x/.test(cs.touchAction || '') && !/pan-y/.test(cs.touchAction || '')) return true;
+      // A row that scrolls sideways (badge rows, chips, smart-row's tile row when it overflows) keeps the touch; a row that
+      // fits does not (a tablet room page is mostly tile rows).
       if (cs && el.scrollWidth > el.clientWidth + 4 && el.clientWidth > 0 && (cs.overflowX === 'auto' || cs.overflowX === 'scroll')) return true;
       if (el === document.body) break;
     }
     return false;
   }
+
+  window.casoraSwipeRooms.blocked = blocked;
 
   // ── Phone: the open room overlay of the bottom bar's room list ──────────────
   function phoneTarget() {
@@ -118,8 +123,7 @@
     if (window._hmnOwner && window._hmnOwner.isConnected) return null;          // the phone dashboard
     // Read the dashboard setting now (a touch does not always come with a pointerdown that refreshes it).
     try { if (window._casoraHoldModeRefresh) window._casoraHoldModeRefresh(); } catch (e) { /* the last value stands */ }
-    if (window._casoraSwipeTablet !== true) return null;
-    try { if (!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches)) return null; } catch (e) { return null; }
+    if (window._casoraSwipeRooms !== true) return null;
     var root = deep(document, 'hui-root', 0);
     var cfg = root && root.lovelace && root.lovelace.config;
     if (!cfg || !Array.isArray(cfg.views)) return null;

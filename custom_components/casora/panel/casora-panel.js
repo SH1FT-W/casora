@@ -2406,15 +2406,12 @@ const SECTIONS = [
       { key: "show_search", sub: "phone", label: "Show search", type: "bool",
         boolDefault: true, auto: true, scope: "dashboard",
         hint: "Pull down at the top of the phone's Home to show a search field: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search." },
-      // Issue 114: swipe left/right on an open room for the next/previous room (scripts/local/40-swipe-rooms.js). The
-      // phone's bottom bar card gets swipe_rooms on save (markPhoneManaged); the tablet reads swipe_rooms_tablet from the
-      // room views (casora-core.js, window._casoraSwipeTablet). Both off by default (03.11.2026).
+      // Issue 114: swipe left/right on Home or an open room for the next/previous page (scripts/local/40-swipe-rooms.js),
+      // on every touch device (owner, 03.11.2026: one setting). The tablet reads swipe_rooms from the room views
+      // (casora-core.js, window._casoraSwipeRooms), the phone's bottom bar card gets it on save (markPhoneManaged).
       { key: "swipe_rooms", sub: "phone", label: "Swipe between rooms", type: "bool",
         boolDefault: false, auto: true, scope: "dashboard",
-        hint: "On the phone, swipe left or right on an open room to get to the next or previous room, in the order of the room menu." },
-      { key: "swipe_rooms_tablet", sub: "phone", label: "Also on the tablet", type: "bool",
-        boolDefault: false, auto: true, scope: "dashboard", when: (v) => v.swipe_rooms === true,
-        hint: "The same on a tablet with a touch screen: swipe on a room page for the next or previous room." },
+        hint: "On a phone or tablet, swipe left or right on Home or an open room to get to the next or previous room, in the order of the room menu." },
       { key: "room_groups", sub: "phone", label: "Group rooms by category on the phone", type: "bool",
         boolDefault: false, auto: true, scope: "dashboard",
         hint: "Like Apple's Home app: Light, Climate, Security … each with a small heading. Off shows all devices under one heading." },

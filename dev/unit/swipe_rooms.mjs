@@ -44,20 +44,26 @@ assert.equal(S.neighbour(withHome, 'all', 'prev'), null, 'Home has no previous p
 assert.equal(S.follow(-100, false), -50);
 assert.ok(Math.abs(S.follow(-400, true)) <= 28 && S.follow(-400, true) < 0, 'end: gives only a little');
 
-// Studio: two dashboard fields under Controls › Phone, off by default; the phone's bar card gets swipe_rooms on save.
+// Studio: ONE dashboard field under Controls › Phone for every touch device (owner, 03.11.2026), off by default; the
+// phone's bar card gets swipe_rooms on save; no separate tablet option any more.
 const panel = fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel.js', import.meta.url), 'utf8');
 assert.match(panel, /key: "swipe_rooms", sub: "phone", label: "Swipe between rooms", type: "bool",\s*boolDefault: false, auto: true, scope: "dashboard"/);
-assert.match(panel, /key: "swipe_rooms_tablet", sub: "phone", label: "Also on the tablet", type: "bool",\s*boolDefault: false, auto: true, scope: "dashboard", when: \(v\) => v\.swipe_rooms === true/);
+assert.doesNotMatch(panel, /key: "swipe_rooms_tablet"/, 'no separate tablet option');
 assert.match(panel, /home\.variables\.swipe_rooms === true\) c\.swipe_rooms = true;\s*else delete c\.swipe_rooms;/);
-// Tablet value read with the other dashboard settings; module loaded by casora-local.js
+// Tablets and iPads read the same swipe_rooms from the desktop dashboard; a saved swipe_rooms_tablet is ignored.
 const core = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-core.js', import.meta.url), 'utf8');
-assert.match(core, /pick\(cfg, 'swipe_rooms_tablet'/);
-assert.match(core, /window\._casoraSwipeTablet = m\.swipe;/);
+assert.match(core, /pick\(cfg, 'swipe_rooms', /);
+assert.match(core, /window\._casoraSwipeRooms = m\.swipe;/);
 const mod = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/40-swipe-rooms.js', import.meta.url), 'utf8');
 assert.match(mod, /var keys = \['all'\]\.concat\(rooms\.map/, 'phone: Home first in the swipe order');
 assert.match(mod, /pages\[0\]\.idx !== 0/, 'tablet: Home (first view) first in the swipe order');
 assert.match(mod, /casora-swipe-card\)\$\/i/, 'carousels keep their own swipe');
-assert.match(mod, /pan-x/, 'rows that claim horizontal touches keep them');
+assert.match(mod, /window\._casoraSwipeRooms !== true/, 'tablet follows swipe_rooms');
+// Touch only, by capability: no user agent and no pointer media query (iPadOS Safari reports a Mac and may say fine pointer).
+const code = mod.replace(/\/\/[^\n]*/g, '');
+assert.doesNotMatch(code, /userAgent|pointer: ?coarse|swipe_rooms_tablet|_casoraSwipeTablet/);
+assert.match(code, /addEventListener\('touchstart'/);
+assert.doesNotMatch(code, /addEventListener\('(pointerdown|mousedown)'/, 'a mouse never swipes');
 const loader = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-local.js', import.meta.url), 'utf8');
 assert.match(loader, /'40-swipe-rooms',/);
 console.log('ok swipe_rooms');
