@@ -29,7 +29,8 @@ const subRow = (pg, kinds) => pg.evaluate((kinds) => {
   const lps = window.__pierce('.lps-row[data-lps-tap]', e.shadowRoot).filter(vis).filter((r) => {
     let d = null; try { d = JSON.parse(r.getAttribute('data-lps-tap')); } catch (err) { d = null; } return d && kinds.includes(d.a);
   });
-  const mi = window.__pierce('[data-casora-mi]', e.shadowRoot).filter(vis);
+  // A device row with › (a page of its own), not a row that only switches or shows a value.
+  const mi = window.__pierce('[data-casora-mi]', e.shadowRoot).filter(vis).filter((r) => window.__pierce('.hui-chev', r).length || r.querySelector('.hui-chev'));
   const r = lps[0] || mi[0]; if (!r) return null;
   r.scrollIntoView({ block: 'center' });
   const tx = r.querySelector('.lps-tx') || r; const b = tx.getBoundingClientRect();
@@ -38,20 +39,26 @@ const subRow = (pg, kinds) => pg.evaluate((kinds) => {
 const until = async (pg, fn, n = 24) => { let s = null; for (let i = 0; i < n; i++) { await pg.waitForTimeout(150); s = await state(pg); if (s && fn(s)) return s; } return s; };
 const settled = (s) => s && !s.navigating && s.pages === 1;
 
-// Tiles to open: one per popup kind the test house has (group light, blinds, climate, a sensor page); the house
-// light badge as in r503.
-const tileOf = (pg, pred) => pg.evaluate((pred) => {
+// Tiles to open: one per popup kind the test house shows (a light group, blinds, climate, the weather with its sensor
+// pages, the house light badge). Picked by template, opened like a person would (tap; the light badge on the desktop
+// opens on hold).
+const tileOf = (pg, re, dom) => pg.evaluate(([re, dom]) => {
   const S = document.querySelector('home-assistant').hass.states;
-  const ok = new Function('b', 'S', 'return ' + pred);
-  const b = window.__pierce('button-card').find((x) => x.getBoundingClientRect().width > 60 && x._config && x._config.tap_action
-    && x._config.tap_action.casora_popup && ok(x, S));
+  const b = window.__pierce('button-card').find((x) => {
+    const t = [].concat((x._config || {}).template || []).join(' '), e = (x._config || {}).entity || '';
+    if (!new RegExp(re).test(t) || x.getBoundingClientRect().width < 40) return false;
+    if (!dom) return true;
+    return e.indexOf(dom + '.') === 0 && (dom === 'climate' || Array.isArray(((S[e] || {}).attributes || {}).entity_id));
+  });
   if (!b) return null; b.scrollIntoView({ block: 'center' }); const r = b.getBoundingClientRect();
-  return { x: r.x + r.width / 2, y: r.y + r.height / 2, id: b._config.entity };
-}, pred);
+  return { x: r.x + r.width / 2, y: r.y + r.height / 2, hold: /casora_badge_light_group/.test([].concat(b._config.template).join(' ')) };
+}, [re, dom]);
 const KINDS = [
-  ['Licht-Gruppe', "/^light\\./.test(b._config.entity||'') && Array.isArray(((S[b._config.entity]||{}).attributes||{}).entity_id)", ['room', 'mi']],
-  ['Jalousien', "/^cover\\./.test(b._config.entity||'') && Array.isArray(((S[b._config.entity]||{}).attributes||{}).entity_id)", ['mi']],
-  ['Klima', "/^climate\\./.test(b._config.entity||'')", ['mi']],
+  ['Haus-Licht', 'casora_badge_light_group\\b', null, ['room', 'mi']],
+  ['Licht-Gruppe', '^(?!.*(badge|chip)).*casora_light', 'light', ['room', 'mi']],
+  ['Jalousien', '^(?!.*(badge|chip)).*casora_cover', 'cover', ['mi']],
+  ['Klima', '^(?!.*(badge|chip)).*casora_(climate|thermostat)', 'climate', ['mi']],
+  ['Wetter', '^(?!.*(badge|chip)).*casora_weather', null, ['mi']],
 ];
 
 for (const [label, size, url] of [
@@ -66,13 +73,29 @@ for (const [label, size, url] of [
   await pg.waitForTimeout(1200);
 
   let walked = 0;
-  for (const [kind, pred, kinds] of KINDS) {
+  const openTile = async (t) => {
+    if (t.hold && !size.mobile) { await pg.mouse.move(t.x, t.y); await pg.mouse.down(); await pg.waitForTimeout(900); await pg.mouse.up(); }
+    else await tap(t);
+  };
+  for (const [kind, re, dom, kinds] of KINDS) {
     await pg.evaluate(async () => { if (window.casoraPopup && window.casoraPopup.close) window.casoraPopup.close(); await new Promise((r) => setTimeout(r, 600)); });
-    const t = await tileOf(pg, pred);
+    let t = await tileOf(pg, re, dom);
+    // Not on the start page: the desktop looks through the room views (the phone shows its rooms as filters).
+    if (!t && !size.mobile) {
+      for (const v of (dash.config.views || []).slice(1, 9)) {
+        if (!v.path) continue;
+        await dashboard(pg, dash.url + '/' + v.path, 2);
+        await pg.waitForTimeout(800);
+        t = await tileOf(pg, re, dom);
+        if (t) break;
+      }
+    }
     if (!t) { console.log(`  info   ${label}: keine Kachel „${kind}“ im Test-Haus – übersprungen`); continue; }
-    await tap(t);
+    await openTile(t);
     const top = await until(pg, (s) => !!s.title);
     if (!top) { console.log(`  info   ${label}: „${kind}“ öffnet kein Casora-Popup – übersprungen`); continue; }
+    // Rows that load later (weather details) settle first.
+    await pg.waitForTimeout(1800);
     const r = await subRow(pg, kinds);
     if (!r) { console.log(`  info   ${label}: „${kind}“ hat keine Zeile mit Unterseite – übersprungen`); continue; }
     await pg.waitForTimeout(400);
@@ -91,14 +114,16 @@ for (const [label, size, url] of [
     walked++;
   }
   await need(`${label}: mindestens zwei Popup-Arten mit Unterseite gefunden`, walked >= 2, walked);
+  if (!size.mobile) { await dashboard(pg, url, 2); await pg.waitForTimeout(800); }
 
   // ‹ during the transition: tap a sub page and go back at once – ends on the page before, one page, its head.
   await pg.evaluate(async () => { window.casoraPopup.close(); await new Promise((r) => setTimeout(r, 600)); });
-  const t0 = await tileOf(pg, KINDS[0][1]);
+  const t0 = await tileOf(pg, KINDS[0][1], KINDS[0][2]);
   if (t0) {
-    await tap(t0);
+    await openTile(t0);
     const top = await until(pg, (s) => !!s.title);
-    const r = await subRow(pg, KINDS[0][2]);
+    await pg.waitForTimeout(1800);
+    const r = await subRow(pg, KINDS[0][3]);
     if (top && r) {
       await tap(r);
       await until(pg, (s) => !!s.back, 30);
@@ -110,27 +135,29 @@ for (const [label, size, url] of [
 
   // Scroll memory: a long popup with a sub page row below the fold (weather details and the like).
   await pg.evaluate(async () => { window.casoraPopup.close(); await new Promise((r) => setTimeout(r, 600)); });
-  const longs = await pg.evaluate(() => window.__pierce('button-card').filter((x) => x.getBoundingClientRect().width > 60 && x._config
-    && x._config.tap_action && x._config.tap_action.casora_popup).map((x, i) => i).slice(0, 40));
+  const TILE = (x) => x.getBoundingClientRect().width >= 40 && x._config && /casora_(weather|climate|thermostat|cover|light|recipe|ebike|car|vent|3d_printer)\b/.test([].concat(x._config.template || []).join(' '))
+    && !/badge|chip/.test([].concat(x._config.template || []).join(' '));
+  const longs = await pg.evaluate((src) => { const TILE = new Function('return ' + src)(); return window.__pierce('button-card').filter(TILE).map((x, i) => i).slice(0, 20); }, TILE.toString());
   let memo = null;
   for (const i of longs) {
     await pg.evaluate(async () => { if (window.casoraPopup.element.hasAttribute('open')) { window.casoraPopup.close(); await new Promise((r) => setTimeout(r, 600)); } });
-    const p = await pg.evaluate((i) => {
-      const b = window.__pierce('button-card').filter((x) => x.getBoundingClientRect().width > 60 && x._config
-        && x._config.tap_action && x._config.tap_action.casora_popup)[i];
+    const p = await pg.evaluate(([i, src]) => {
+      const TILE = new Function('return ' + src)();
+      const b = window.__pierce('button-card').filter(TILE)[i];
       if (!b) return null; b.scrollIntoView({ block: 'center' }); const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
-    }, i);
+    }, [i, TILE.toString()]);
     if (!p) continue;
     await tap(p);
     const s0 = await until(pg, (s) => !!s.title);
     if (!s0) continue;
-    await pg.waitForTimeout(900);
+    await pg.waitForTimeout(1800);
     // A row with a sub page at least 150 px down a scroller that can scroll.
     const row = await pg.evaluate(() => {
       const e = window.casoraPopup.element, sc = e.content;
       if (!sc || sc.scrollHeight - sc.clientHeight < 150) return null;
       const top = sc.getBoundingClientRect().top;
-      const rows = window.__pierce('[data-casora-mi]', e.shadowRoot).filter((r) => r.getBoundingClientRect().width > 60);
+      const chev = (r) => window.__pierce('.hui-chev', r).length || r.querySelector('.hui-chev');
+      const rows = window.__pierce('[data-casora-mi]', e.shadowRoot).filter((r) => r.getBoundingClientRect().width > 60 && chev(r));
       const r = rows.find((x) => x.getBoundingClientRect().top - top + sc.scrollTop > 150);
       if (!r) return null;
       sc.scrollTop = Math.min(sc.scrollHeight - sc.clientHeight, r.getBoundingClientRect().top - top + sc.scrollTop - 120);
@@ -138,10 +165,12 @@ for (const [label, size, url] of [
     });
     if (!row) continue;
     await pg.waitForTimeout(400);
-    const before = await pg.evaluate(() => window.casoraPopup.element.content.scrollTop);
+    const bef = await pg.evaluate(() => { const c = window.casoraPopup.element.content; return { top: c.scrollTop, max: c.scrollHeight - c.clientHeight }; });
+    const before = bef.top;
     const at = await pg.evaluate(() => {
       const e = window.casoraPopup.element, sc = e.content, b0 = sc.getBoundingClientRect();
-      const r = window.__pierce('[data-casora-mi]', e.shadowRoot).find((x) => { const b = x.getBoundingClientRect(); return b.width > 60 && b.top > b0.top + 40 && b.bottom < b0.bottom - 10; });
+      const chev = (r) => window.__pierce('.hui-chev', r).length || r.querySelector('.hui-chev');
+      const r = window.__pierce('[data-casora-mi]', e.shadowRoot).find((x) => { const b = x.getBoundingClientRect(); return b.width > 60 && chev(x) && b.top > b0.top + 40 && b.bottom < b0.bottom - 10; });
       if (!r) return null; const b = r.getBoundingClientRect(); return { x: b.x + Math.min(40, b.width / 3), y: b.y + b.height / 2 };
     });
     if (!at || before < 100) continue;
@@ -153,8 +182,9 @@ for (const [label, size, url] of [
     await tap(sub.back);
     await until(pg, (s) => settled(s) && s.title === s0.title, 30);
     await pg.waitForTimeout(1800);
-    const after = await pg.evaluate(() => window.casoraPopup.element.content.scrollTop);
-    memo = { title: s0.title, before, after };
+    const aft = await pg.evaluate(() => { const c = window.casoraPopup.element.content; return { top: c.scrollTop, max: c.scrollHeight - c.clientHeight }; });
+    const after = aft.top;
+    memo = { title: s0.title, before, after, max: aft.max, maxBefore: bef.max, stack: await pg.evaluate(() => window.casoraPopup.element._navStack) };
     await check(`${label}: ‹ zurück an dieselbe Stelle („${s0.title}“)`, Math.abs(after - before) <= 6, memo);
     await pg.evaluate(async () => { window.casoraPopup.close(); await new Promise((r) => setTimeout(r, 700)); });
     await tap(p);
@@ -169,11 +199,12 @@ for (const [label, size, url] of [
   // Reduced motion: no slide, the page just stands.
   await pg.emulateMedia({ reducedMotion: 'reduce' });
   await pg.evaluate(async () => { window.casoraPopup.close(); await new Promise((r) => setTimeout(r, 600)); });
-  const t1 = await tileOf(pg, KINDS[0][1]);
+  const t1 = await tileOf(pg, KINDS[0][1], KINDS[0][2]);
   if (t1) {
-    await tap(t1);
+    await openTile(t1);
     await until(pg, (s) => !!s.title);
-    const r = await subRow(pg, KINDS[0][2]);
+    await pg.waitForTimeout(1800);
+    const r = await subRow(pg, KINDS[0][3]);
     if (r) {
       await tap(r);
       const s = await until(pg, (x) => x.last && x.last.reduced && Date.now() - x.last.at < 5000);

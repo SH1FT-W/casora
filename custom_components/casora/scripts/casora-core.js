@@ -8118,7 +8118,11 @@ window.casoraMenuGlass = {
       // a new page starts at the top, a fresh opening forgets everything.
       if (!wasOpen || !this._navStack) this._navStack = [];
       var scrollBack = null;
-      if (navDir === 'forward') this._navStack.push(this.content ? this.content.scrollTop : 0);
+      // The place at the tap that led here: the page may already shrink a little before the next one opens.
+      var tapAt = this._navTapScroll;
+      var leftAt = tapAt && Date.now() - tapAt.at < 4000 ? tapAt.top : (this.content ? this.content.scrollTop : 0);
+      this._navTapScroll = null;
+      if (navDir === 'forward') this._navStack.push(leftAt);
       else if (navDir === 'back') scrollBack = this._navStack.length ? this._navStack.pop() : null;
       this._headerBack.hidden = !this._backFn;
       this._subEyebrow = this._backFn && prevTitle && !this._headFixed ? prevTitle : null;
@@ -8193,12 +8197,26 @@ window.casoraMenuGlass = {
         // ‹ back: the page's remembered place (scroll memory above), held while its cards still draw.
         var want = scrollBack || 0;
         sc.scrollTop = want;
-        [0, 120, 400].concat(want ? [800, 1600] : []).forEach(function (ms) {
+        [0, 120, 400].forEach(function (ms) {
           setTimeout(function () { if (Math.abs(sc.scrollTop - want) > 1 && !sc._casoraUserScrolled) sc.scrollTop = want; }, ms);
         });
+        // Cards that draw later (forecast, charts) make the page taller: follow them up to the remembered place, for
+        // three seconds or until the person scrolls.
+        if (want && typeof ResizeObserver === 'function') {
+          if (this._navScrollRO) this._navScrollRO.disconnect();
+          var cont = this.container, ro = new ResizeObserver(function () {
+            if (sc._casoraUserScrolled) { ro.disconnect(); return; }
+            if (Math.abs(sc.scrollTop - want) > 1) sc.scrollTop = want;
+          });
+          this._navScrollRO = ro;
+          ro.observe(cont);
+          setTimeout(function () { ro.disconnect(); }, 3000);
+        }
         sc._casoraUserScrolled = false;
         if (!sc._casoraScrollWatch) {
           sc._casoraScrollWatch = true;
+          var host = this;
+          sc.addEventListener('pointerdown', function () { host._navTapScroll = { top: sc.scrollTop, at: Date.now() }; }, { capture: true, passive: true });
           ['wheel', 'touchmove', 'keydown'].forEach(function (ev) { sc.addEventListener(ev, function () { sc._casoraUserScrolled = true; }, { passive: true }); });
         }
       }
