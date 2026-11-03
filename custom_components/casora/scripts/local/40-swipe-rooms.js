@@ -126,7 +126,8 @@
       var hero = ((v || {}).cards || [])[0] || {};
       var V = hero.variables || {};
       if ([].concat(hero.template || []).indexOf('casora_room') < 0 || !v.path) return false;
-      if (V.casora_hidden === true || v.visible === false) return false;
+      // Category pages (casora_category: lights, climate …) are no rooms.
+      if (V.casora_hidden === true || v.visible === false || v.casora_category || V.casora_category) return false;
       return !window.casoraSeesRoute || window.casoraSeesRoute({ users: V.casora_users });
     }).map(function (v) { return String(v.path); });
     if (keys.indexOf(cur) < 0) return null;

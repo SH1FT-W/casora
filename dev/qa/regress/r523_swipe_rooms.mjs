@@ -86,7 +86,7 @@ async function swipe(cdp, page, x0, y0, x1, y1, steps = 10) {
   const { page, context } = await open({ width: 1180, height: 820, touch: true, dark: false, theme: 'Casora' });
   usePage(page);
   const views = dash.config.views.filter((v) => [].concat(((v.cards || [])[0] || {}).template || []).includes('casora_room')
-    && v.path && !(((v.cards || [])[0] || {}).variables || {}).casora_hidden).map((v) => v.path);
+    && v.path && !v.casora_category && !(((v.cards || [])[0] || {}).variables || {}).casora_hidden).map((v) => v.path);
   await need('Tablet: mindestens drei Raumansichten', views.length >= 3, views);
   await dashboard(page, dash.url + '/' + views[1]);
   const cdp = await context.newCDPSession(page);
