@@ -1233,6 +1233,7 @@
   "Tor": "Portail",
   "Lichtfarbe": "Couleur de la lumière",
   "Leuchten im Raum": "Lumières de la pièce",
+  "Lampen im Raum": "Lampes de la pièce",
   "Leuchten": "Lumières",
   "Gedimmt": "Tamisée",
   "Volle Helligkeit": "Pleine luminosité",
@@ -3349,6 +3350,10 @@
   [
    "^(\\d+) heizen$",
    "{1} chauffent"
+  ],
+  [
+   "^(\\d+) von (\\d+) Lampen an$",
+   "{1} sur {2} lampes allumées"
   ],
   [
    "^(\\d+) von (\\d+) an$",

@@ -2,7 +2,8 @@
 // Govee …) gets the moon „Effekte“ at the wheel; it opens the small menu at the moon (as „Alle (n)“, richtlinien §4.8)
 // with every effect – the running one hinterlegt, „Ohne Effekt“ first when the lamp knows none/off. A row calls
 // light.turn_on with the effect. Single-lamp popup always; room and house only with exactly one lamp with effects.
-// The moon is never folded into „Alle (n)“: the scenes make room (2 + „Alle (n)“ + „Effekte“).
+// Beside the dial at most two moons (owner, 03.11.2026): „Szenen“ (left, a menu with the room's scenes) and „Effekte“
+// (right, also alone).
 //   node dev/unit/light_effects.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -15,9 +16,9 @@ const cut = (src, a, b) => { const i = src.indexOf(a); assert.ok(i >= 0, a); con
 const S = {};
 const quickCalls = [];
 const win = { _casoraUI: { quick: (items, label, o) => { quickCalls.push({ items, label, o }); return 'Q'; } } };
-const fxSrc = cut(pop, "  /* The lamp's own effects", '  // Quick choice: the room\'s scenes');
+const fxSrc = cut(pop, "  /* The lamp's own effects", "  // The room's scenes as rows of the „Szenen“ menu");
 const api = new Function('window', 'S', 'tr', 'hassNow', 'v3SceneItems', fxSrc + '\nreturn { fxLampOf, v3Moons, hasFx };')(
-  win, S, (t) => t, () => null, (list) => (list.length ? { items: list.map((id) => ({ icon: 'mdi:palette', text: id, svc: {} })), page: 'lightScenes|x' } : null));
+  win, S, (t) => t, () => null, (list) => (list.length ? { items: list.map((id, i) => ({ icon: 'mdi:palette', text: id, active: i === 1, svc: {} })) } : null));
 
 const hue = { entity_id: 'light.desk', state: 'on', attributes: { effect_list: ['off', 'candle', 'fire', 'partly_cloudy', 'Sunrise'], effect: 'fire' } };
 const wled = { entity_id: 'light.strip', state: 'off', attributes: { effect_list: ['Solid', 'Rainbow', 'Fireworks'], effect: 'Solid' } };
@@ -87,18 +88,27 @@ const off = S.fxMoon('light.desk', { 'light.desk': { ...hue, attributes: { ...hu
 assert.equal(off.active, false);
 assert.equal(off.menu[0].active, true);
 
-// Moons of the stage: scenes, then „Effekte“, one quick call.
+// Moons of the stage: „Szenen“ (its menu: the scenes, marked when one holds), then „Effekte“ (right), one quick call.
 quickCalls.length = 0;
 api.v3Moons(['scene.a', 'scene.b'], states, 'Büro', 'light.desk', null);
-assert.deepEqual(quickCalls[0].items.map((x) => x.text), ['scene.a', 'scene.b', 'Effekte']);
-assert.equal(quickCalls[0].o.page, 'lightScenes|x');
+assert.deepEqual(quickCalls[0].items.map((x) => x.text), ['Szenen', 'Effekte']);
+assert.deepEqual(quickCalls[0].items[0].menu.map((x) => x.text), ['scene.a', 'scene.b']);
+assert.equal(quickCalls[0].items[0].keep, true, 'its own moon, never „Mehr (n)“');
+assert.equal(quickCalls[0].items[0].active, true, 'a scene holds: the moon is marked');
+assert.equal(quickCalls[0].items[1].right, true, '„Effekte“ is the right moon');
+quickCalls.length = 0;
+api.v3Moons(['scene.a'], states, 'Büro', null, null);
+assert.deepEqual(quickCalls[0].items.map((x) => x.text), ['Szenen'], 'one scene: still „Szenen“');
+quickCalls.length = 0;
+api.v3Moons([], states, 'Büro', 'light.desk', null);
+assert.deepEqual(quickCalls[0].items.map((x) => x.text), ['Effekte'], 'no scenes: no „Szenen“');
 quickCalls.length = 0;
 assert.equal(api.v3Moons([], states, null, null, null), '', 'nothing: no quick call');
 assert.equal(quickCalls.length, 0);
 
 // Wiring: room popup (single lamp or the room's only one) and house.
 assert.ok(/var fxId = fxLampOf\(single \? \[sc\.lights\[0\]\] : lampIds0, states\);/.test(pop), 'room/single popup picks the lamp');
-assert.ok(/v3Moons\(scenesOf\(h, states, sc\), states, room, fxId, h, ids\)/.test(pop), 'room popup: scenes + effects');
+assert.ok(/v3Moons\(scenesOf\(h, states, sceneScope\(sc\)\), states, room, fxId, h, ids\)/.test(pop), 'room popup: scenes (a lamp\'s page: its room\'s) + effects');
 assert.ok(/var fxId = fxLampOf\(all, states\);[\s\S]{0,200}v3Stage\(all, states, true, fxId \? function \(\) \{ return v3Moons\(\[\], states, null, fxId\); \} : null\)/.test(pop), 'house popup');
 
 // ── casora-core: the kept moon stays, the others fold into „Mehr (n)“ ───────
@@ -130,6 +140,9 @@ assert.ok(!mo.some((x) => /Mehr|Alle/.test(x)));
 mo = parts(moons([m], null, {}).html);
 assert.equal(mo.length, 1);
 assert.ok(/data-casora-moonmenu/.test(mo[0]));
+// A lone moon marked right („Effekte“ of the light popup, owner 03.11.2026) sits on the right (25°), others on the left.
+assert.deepEqual(moons([m], null, {}).degs, [25], '„Effekte“ alone: right');
+assert.deepEqual(moons([scene('S1')], null, {}).degs, [155], 'a lone other moon: left');
 // Without a kept moon: 5 → 3 + „Mehr (2)“.
 mo = parts(moons([1, 2, 3, 4, 5].map((i) => scene('S' + i)), null, {}).html);
 assert.equal(mo.length, 4);

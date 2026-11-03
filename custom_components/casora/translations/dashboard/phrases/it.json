@@ -1233,6 +1233,7 @@
   "Tor": "Cancello",
   "Lichtfarbe": "Colore della luce",
   "Leuchten im Raum": "Luci della stanza",
+  "Lampen im Raum": "Lampade della stanza",
   "Leuchten": "Luci",
   "Gedimmt": "Attenuata",
   "Volle Helligkeit": "Luminosità massima",
@@ -3349,6 +3350,10 @@
   [
    "^(\\d+) heizen$",
    "{1} in riscaldamento"
+  ],
+  [
+   "^(\\d+) von (\\d+) Lampen an$",
+   "{1} di {2} lampade accese"
   ],
   [
    "^(\\d+) von (\\d+) an$",

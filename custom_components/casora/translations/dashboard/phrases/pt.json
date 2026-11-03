@@ -1241,6 +1241,7 @@
   "Tor": "Portão",
   "Lichtfarbe": "Cor da luz",
   "Leuchten im Raum": "Luzes da divisão",
+  "Lampen im Raum": "Candeeiros da divisão",
   "Leuchten": "Luzes",
   "Gedimmt": "Atenuada",
   "Volle Helligkeit": "Brilho máximo",
@@ -3349,6 +3350,10 @@
   [
    "^(\\d+) heizen$",
    "{1} a aquecer"
+  ],
+  [
+   "^(\\d+) von (\\d+) Lampen an$",
+   "{1} de {2} candeeiros ligados"
   ],
   [
    "^(\\d+) von (\\d+) an$",

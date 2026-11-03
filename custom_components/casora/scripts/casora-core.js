@@ -8043,6 +8043,10 @@ window.casoraMenuGlass = {
       // A title taken from the tapped row (row_title) is shown as it is, never cut by a room (r487).
       this._rowTitle = cfg.row_title === true;
       this._cfgEyebrow = cfg.eyebrow || '';
+      // A head the popup names itself (the light popups, owner 03.11.2026: label = room, title = „Beleuchtung“ or the
+      // lamp, whatever the way in): label and title stand as given – no room label of the tile, no label from the page
+      // before, nothing cut – and no status line under the title (the page counts in its list heading).
+      this._headFixed = cfg.head_fixed === true;
       // issue 106: a page about another entity than the tile's (a single window under the window group) names it, so the
       // head's „Seit …“ is that entity's time, the same as its stage – not the group's.
       this._cfgHeadEntity = typeof cfg.head_entity === 'string' ? cfg.head_entity : null;
@@ -8068,7 +8072,7 @@ window.casoraMenuGlass = {
         this._backFn = bn.fn;
         // A device row of a popup over several rooms names its sub page (r487): the row's name, not the device's own
         // name cut by its room (no room stands above it there). Kept in the config, so ‹ from a page further in keeps it.
-        if (typeof bn.title === 'string' && bn.title) {
+        if (typeof bn.title === 'string' && bn.title && !this._headFixed) {
           this._cfgTitle = bn.title; this._rowTitle = true;
           this._headerTitle.textContent = bn.title;
         }
@@ -8083,7 +8087,7 @@ window.casoraMenuGlass = {
       }
       window._casoraBackNext = null;
       this._headerBack.hidden = !this._backFn;
-      this._subEyebrow = this._backFn && prevTitle ? prevTitle : null;
+      this._subEyebrow = this._backFn && prevTitle && !this._headFixed ? prevTitle : null;
       this._headerBack.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Zurück') : 'Zurück');
       this.toggleAttribute('has-back', !!this._backFn);
       this._cfgCurrent = data || {};
@@ -8294,14 +8298,15 @@ window.casoraMenuGlass = {
       this._roomLabel = room;
       // The label a module sets (the single lamp's room) counts too: „G9 Spot Terrasse“ under „TERRASSE“ → „G9 Spot“
       // (detail round #38, §3 title without the room).
-      var title = sf && !this._rowTitle ? stripRoom(this._cfgTitle, room || this._cfgEyebrow || '') : this._cfgTitle;
+      var title = sf && !this._rowTitle && !this._headFixed ? stripRoom(this._cfgTitle, room || this._cfgEyebrow || '') : this._cfgTitle;
       // Titel beginnt schon mit dem Raum („Wohnzimmer/Küche“): Etikett weglassen statt den Raum doppelt zu zeigen.
       if (room && title.toLowerCase().indexOf(room.toLowerCase()) === 0) room = '';
+      if (this._headFixed) room = '';
       // Lange Titel umbrechen an „/“ (Zonen wie „Wohnzimmer/Küche“), nicht mitten im Wort.
       this._headerTitle.textContent = sf ? String(title || '').replace(/\/(?=\S)/g, '/\u200B') : (title || '');
       var brow = sf ? (this._cfgEyebrow || this._subEyebrow || room) : this._cfgEyebrow;
       // issue 106: a label that only repeats the title („FENSTER“ over „Fenster“) says nothing.
-      if (sf && brow && String(brow).trim().toLowerCase() === String(title || '').trim().toLowerCase()) brow = '';
+      if (sf && !this._headFixed && brow && String(brow).trim().toLowerCase() === String(title || '').trim().toLowerCase()) brow = '';
       this._headerEyebrow.textContent = brow;
       this._header.hidden = !this._hasHeader && !ring;
       this._syncHeadSwitch();
@@ -8323,7 +8328,7 @@ window.casoraMenuGlass = {
     // the head shows the state of the tile's entity in HA's words – a popup without a line of its own keeps that, and
     // the head does not jump when the content's line arrives (same height, one line).
     _headFallback(again) {
-      if (!this._headerStatus || !this.hasAttribute('soft')) return;
+      if (!this._headerStatus || !this.hasAttribute('soft') || this._headFixed) return;
       var h = (document.querySelector('home-assistant') || {}).hass;
       var cur = this._headCur(h);
       var self0 = this;
@@ -13074,6 +13079,9 @@ window.casoraMenuGlass = {
     moonShort(list);
     var hasAct = !!(act && act.text);
     var pos = moonPos(list.length, hasAct);
+    // A lone moon that belongs on the right (the light popup's „Effekte“, owner 03.11.2026: „Szenen“ left, „Effekte“
+    // right – also without scenes) takes the right place (25°) instead of the left one.
+    if (list.length === 1 && !hasAct && list[0].right) pos = [25];
     var out = list.map(function (it, i) { return moonHtml(it, pos[i], ''); }).join('');
     var degs = pos.slice(0, list.length);
     if (hasAct) {

@@ -65,7 +65,9 @@ assert.ok(r.seg.every((s) => !s.on), 'effect running: nothing chosen');
 // 1. The room's last scene: marked until a lamp changes after it (2 min to settle).
 states['scene.aurora'] = { entity_id: 'scene.aurora', state: iso(600000), attributes: { friendly_name: 'Aurora Office' } };
 hass.entities['scene.aurora'] = { area_id: 'office' };
-const sceneOn = () => { render(['light.spots', 'light.strip']); const it = (quicks[0] || []).find((x) => /Aurora/.test(x.text)); return it && it.active; };
+// The scenes are the rows of the „Szenen“ moon's menu (owner, 03.11.2026); the moon is marked with its row.
+const sceneOn = () => { render(['light.spots', 'light.strip']); const m = (quicks[0] || []).find((x) => x.text === 'Szenen');
+  const it = m && (m.menu || []).find((x) => /Aurora/.test(x.text)); return !!(it && it.active && m.active); };
 assert.equal(sceneOn(), true, 'scene 10 min ago, lamps unchanged since: marked');
 states['light.strip'].last_updated = iso(60000);
 assert.equal(sceneOn(), false, 'a lamp changed after the scene: no longer marked');

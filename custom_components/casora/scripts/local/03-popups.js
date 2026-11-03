@@ -4156,14 +4156,6 @@
     var b = st && st.attributes && st.attributes.brightness;
     return (st && st.state === 'on' && typeof b === 'number') ? Math.max(1, Math.round(b / 2.55)) : null;
   };
-  var ago = function (ts) {
-    var t = Date.parse(ts); if (isNaN(t)) return '';
-    var m = (window.casoraAgoMin ? window.casoraAgoMin(Date.now() - t) : Math.max(0, Math.round((Date.now() - t) / 60000)));
-    if (m < 1) return tr('gerade eben');
-    if (m < 60) return tr('vor ' + m + ' Min.');
-    if (m < 1440) return tr('vor ' + Math.round(m / 60) + ' Std.');
-    return tr('vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.');
-  };
   // Raumname aus dem Leuchtennamen nehmen („Spot Terrasse“ → „Spot“), nie leer.
   var short = function (name, room) {
     var n = String(name || '');
@@ -4219,6 +4211,37 @@
     if (ids.length !== 1) return null;
     var m = (states[ids[0]].attributes || {}).entity_id;
     return Array.isArray(m) && m.some(function (x) { return states[x]; }) ? null : ids[0];
+  };
+  /* The dashboard room a light belongs to (owner, 03.11.2026: every light popup names its room, whatever the way it was
+     opened): the room whose light badge holds it – its room group (rid), one of its rows, or a lamp inside a row's group.
+     { name, rid, rows } (rows: the room's light rows, a group in the room is one row) or null. */
+  S.placeOf = function (id, hass) {
+    var rooms = window._casoraHouseLights ? (window._casoraHouseLights(hass) || {}).rooms || [] : [];
+    var S0 = (hass && hass.states) || {};
+    var mem = function (x) { var a = S0[x] && S0[x].attributes; return a && Array.isArray(a.entity_id) ? a.entity_id : []; };
+    var holds = function (x, seen) {
+      if (x === id) return true;
+      seen = seen || {}; if (seen[x]) return false; seen[x] = 1;
+      return mem(x).some(function (y) { return holds(y, seen); });
+    };
+    var hit = rooms.filter(function (r) { return r.rid === id; })[0]
+      || rooms.filter(function (r) { return (r.lights || []).some(function (x) { return holds(x); }); })[0];
+    return hit ? { name: String(hit.name || ''), rid: hit.rid || null, rows: (hit.lights || []).slice() } : null;
+  };
+  /* Head of every light popup (owner, 03.11.2026): label = the room („Zuhause“ for the house), title = „Beleuchtung“;
+     a lamp's page: label = its room, title = the lamp without the room. cfg as for render (rooms + init, or flat with
+     label = the room's name); own: an own popup title (variables.room_name) wins as the title. */
+  S.headOf = function (cfg, states, own) {
+    var T = 'Beleuchtung';
+    if (cfg.rooms) {
+      var r = cfg.init >= 0 ? cfg.rooms[cfg.init] : null;
+      return { eyebrow: r ? r.name : 'Zuhause', title: own || T };
+    }
+    var f = cfg.flat || {};
+    if (f.house) return { eyebrow: 'Zuhause', title: own || T };
+    // A lamp in no room of the dashboard and no area belongs to the house: „Zuhause“ (the head keeps its height).
+    if (f.lamp) return { eyebrow: f.label || 'Zuhause', title: own || short(nameOf(f.lights[0], states), f.label) };
+    return { eyebrow: f.label || f.name || '', title: own || T };
   };
   var stat = function (ids, states) {
     var on = 0, sum = 0, nb = 0, tot = 0;
@@ -4347,7 +4370,7 @@
       var p = pct(st), k = st.attributes.color_temp_kelvin;
       sub = tr('An') + (p != null ? ' · ' + p + ' %' : '')
         + ((!st.attributes.color_mode || st.attributes.color_mode === 'color_temp') && k ? ' · ' + Math.round(k / 50) * 50 + ' K' : '');
-    } else sub = tr('Aus') + (st.last_changed ? ' · ' + tr('zuletzt') + ' ' + ago(st.last_changed) : '');
+    } else sub = tr('Aus');   // short as every row (owner, 03.11.2026: no „zuletzt …“ beside „Aus“)
     var tg = attr({ a: 'toggle', id: id });
     // The open lamp stays in its room's list, marked as the one in the dial (owner, 01.11.2026): ring + aria-current.
     return '<div class="lps-row' + (on ? ' on' : '') + (na ? ' na' : '') + (self ? ' sel' : '') + '"'
@@ -4373,15 +4396,16 @@
       if (sc.room && sc.lights.length === 1) title = short(nameOf(sc.lights[0], states), sc.name);
       var v3h = !!(window._casoraUI && window._casoraUI.v3 && window._casoraUI.v3());
       sub = subline(s, false, v3h); on = s.on > 0; id = sc.rid;
-      // v3, one lamp: the dial says „An“/„Aus“ – no status line under its name (owner, 01.11.2026).
-      if (v3h && sc.room && sc.lights.length === 1) sub = '';
+      // v3: no status line under the title (owner, 03.11.2026) – the dial says the state, the list heading counts.
+      if (v3h) sub = '';
     } else {
       // The whole house counts lamps like its badge and tile (owner, 01.11.2026: never rooms).
       var hall = [];
       cfg.rooms.forEach(function (r) { (r.lights || []).forEach(function (x) { if (hall.indexOf(x) < 0) hall.push(x); }); });
       var hs = stat(hall, states);
       title = tr('Beleuchtung');
-      sub = subline(hs, false, !!(window._casoraUI && window._casoraUI.v3 && window._casoraUI.v3()));
+      // v3: the count stands in the list heading (owner, 03.11.2026), not under the title.
+      sub = window._casoraUI && window._casoraUI.v3 && window._casoraUI.v3() ? '' : subline(hs, false);
       on = hs.on > 0; id = cfg.gid;
     }
     /* 1.3 header A: icon, title and main switch sit in the popup header (casora-core.js); here only
@@ -4631,7 +4655,8 @@
     var noneSvc = none ? svc(none) : { domain: 'light', service: 'turn_on', data: S.fxPlain(id, st), target: { entity_id: id } };
     var rows = [{ icon: 'mdi:close-circle-outline', text: tr('Ohne Effekt'), active: on && !running, svc: noneSvc }]
       .concat(fx.map(function (e) { return { icon: fxIcon(e), text: S.fxName(st, e, h), active: on && cur === e, svc: svc(e) }; }));
-    return { icon: 'mdi:auto-fix', text: tr('Effekte'), keep: true, menu: rows, active: on && fx.indexOf(cur) > -1 };
+    // Always the right moon (owner, 03.11.2026: „Szenen“ left, „Effekte“ right).
+    return { icon: 'mdi:auto-fix', text: tr('Effekte'), keep: true, right: true, menu: rows, active: on && fx.indexOf(cur) > -1 };
   };
   // The one lamp whose effects get a moon: the lamp of a single-lamp popup, else the only lamp of the room / house with
   // effects (several: each lamp's own popup has them, one tap on its row – no lamp picker on the wheel).
@@ -4639,22 +4664,25 @@
     var w = ids.filter(function (id, i, a) { return a.indexOf(id) === i && hasFx(states[id]); });
     return w.length === 1 ? w[0] : null;
   };
-  // Moons of the light stage: the room's scenes and the lamp's „Effekte“ (fxId), as one quick call (collected by UI.stage).
+  /* Moons of the light stage (owner, 03.11.2026): at most two – „Szenen“ left, a small menu at the moon with the room's
+     scenes (also with one scene; none: no moon), marked when one of them holds, and the lamp's „Effekte“ (fxId) right.
+     One quick call, collected by UI.stage. */
   var v3Moons = function (sceneList, states, room, fxId, h, lamps) {
     var UI = window._casoraUI;
     var sc = v3SceneItems(sceneList, states, room, lamps);
     var fxm = fxId ? S.fxMoon(fxId, states, h || hassNow()) : null;
-    var items = (sc ? sc.items : []).concat(fxm ? [fxm] : []);
+    var scm = sc ? { icon: 'mdi:palette', text: tr('Szenen'), keep: true, menu: sc.items,
+      active: sc.items.some(function (x) { return x.active; }) } : null;
+    var items = (scm ? [scm] : []).concat(fxm ? [fxm] : []);
     if (!items.length) return '';
-    return UI.quick(items, tr('Szenen'), { page: sc ? sc.page : null });
+    return UI.quick(items, tr('Szenen'));
   };
-  // Quick choice: the room's scenes (≤ 4, more: 3 + „Alle (n)“ → sub page), the last one used is active.
+  // The room's scenes as rows of the „Szenen“ menu, the last one used is active.
   // lamps: the room's lamps – a lamp changed later than the scene (2 min to settle, an automation behind the scene may
   // set the lamps a moment later) means the scene no longer holds: not active (owner, 01.11.2026: „Polarlicht“ stayed
   // marked after Warm).
   var v3SceneItems = function (list, states, room, lamps) {
     if (!list.length) return null;
-    regScenes();
     var last = null, lastT = 0;
     list.forEach(function (id) { var t = Date.parse(states[id].state); if (!isNaN(t) && t > lastT) { lastT = t; last = id; } });
     if (Date.now() - lastT > 12 * 3600000) last = null;
@@ -4663,23 +4691,7 @@
       return { icon: (states[id].attributes || {}).icon || 'mdi:palette', text: short(nameOf(id, states), room), active: id === last,
         svc: { domain: 'scene', service: 'turn_on', target: { entity_id: id } } };
     });
-    // The active scene stays visible among the first three.
-    if (items.length > 4 && last) items.sort(function (a, b) { return (b.active ? 1 : 0) - (a.active ? 1 : 0); });
-    return { items: items, page: 'lightScenes|' + list.join(',') + '|' + (room || '') };
-  };
-  var regScenes = function () {
-    if (S._pg || !window._casoraUI || !window._casoraUI.page) return;
-    S._pg = true;
-    window._casoraUI.page('lightScenes', function (arg) {
-      var HH = window._casoraHH, parts = String(arg || '').split('|');
-      if (!HH || !HH.page) return;
-      var list = parts[0].split(',').filter(Boolean);
-      HH.page(tr('Szenen'), list, 'const UI = window._casoraUI, L = ' + JSON.stringify(list) + ', R = ' + JSON.stringify(parts[1] || '') + ';\n'
-        + 'return UI.section("control", L.filter(function (id) { return states[id]; }).map(function (id) {\n'
-        + '  var n = window._casoraLightSoft.short(String(states[id].attributes.friendly_name || id), R);\n'
-        + '  return UI.row.action({ icon: states[id].attributes.icon || "mdi:palette", label: n, svc: { domain: "scene", service: "turn_on", target: { entity_id: id } } });\n'
-        + '}), false);', list[0]);
-    });
+    return { items: items };
   };
 
   // The lamps' names as the list shows them: without the room, and without leading words all of them share
@@ -4690,8 +4702,9 @@
   };
   var roomBody = function (cfg, sc, states, h) {
     var ids = sc.lights.filter(function (id) { return states[id]; });
-    // The whole house (#30): no room to name, and none to strip from lamp and scene names.
-    var room = sc.house ? null : sc.name;
+    // The whole house (#30): no room to name, and none to strip from lamp and scene names. A lamp's page: its room
+    // (sc.label), not its own name (owner, 03.11.2026: the rows kept „Stehlampe Wohnzimmer“).
+    var room = sc.house ? null : (sc.label || sc.name);
     if (v3On()) return roomV3(cfg, sc, ids, room, states, h);
     var left = '';
     var dim = ids.filter(function (id) { return dimmable(states[id]); });
@@ -4723,7 +4736,7 @@
             + '<i class="lps-dot" style="background:' + esc(p.d === 'cold' ? 'var(--casora-soft-dot-cold, var(--casora-lps-dot-cold))' : 'var(--casora-lps-dot-' + p.d + ')') + '"></i>' + esc(tr(p.l)) + '</div>';
         }).join('') + '</div>';
     }
-    var sc2 = scenesOf(h, states, sc);
+    var sc2 = scenesOf(h, states, sceneScope(sc));
     if (sc2.length) {
       var last = null, lastT = 0;
       sc2.forEach(function (id) { var t = Date.parse(states[id].state); if (!isNaN(t) && t > lastT) { lastT = t; last = id; } });
@@ -4741,7 +4754,7 @@
       // Own row only in the popup of this one lamp - a room picked in the house popup is not its popup.
       return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0], lampNames[i]);
     }).join('');
-    var rightHtml = '<div class="lps-lbl">' + esc(tr(sc.house ? 'Leuchten' : 'Leuchten im Raum')) + '</div><div class="lps-rows">'
+    var rightHtml = '<div class="lps-lbl">' + esc(tr(sc.house ? 'Lampen' : 'Lampen im Raum')) + '</div><div class="lps-rows">'
       + lampsHtml + '</div>';
     /* Blueprint v2 (rule 8): „Weitere Einstellungen“ last – one lamp: its device page; several: first the choice. */
     var lampIds = (sc.room ? sc.room : ids).filter(function (id) { return states[id] && !Array.isArray((states[id].attributes || {}).entity_id); });
@@ -4753,20 +4766,27 @@
     }
     return '<div class="lps-cols' + (left ? '' : ' one') + '">' + (left ? '<div>' + left + '</div>' : '') + '<div>' + rightHtml + '</div></div>';
   };
+  // Where a page's scenes come from: a lamp's page takes its room's (owner, 03.11.2026: the same „Szenen“ as the room).
+  var sceneScope = function (sc) {
+    return sc.lamp && sc.roomRid ? { rid: sc.roomRid, lights: sc.room || sc.lights, name: sc.label || sc.name } : sc;
+  };
   var roomV3 = function (cfg, sc, ids, room, states, h) {
     var UI = window._casoraUI;
-    var lampIds0 = (sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids);
+    // The rows: a lamp's page lists its room's rows (sc.room), a room its own rows (sc.rows: a group in the room is one
+    // row, owner 01.11. and 03.11.2026), else every lamp.
+    var lampIds0 = (sc.room || sc.rows || ids).filter(function (id) { return states[id]; });
+    if (!lampIds0.length) lampIds0 = ids;
     // Effects: the lamp of its own popup, else the room's only lamp with effects.
     var single = !cfg.rooms && sc.lights.length === 1;
     var fxId = fxLampOf(single ? [sc.lights[0]] : lampIds0, states);
-    var left = v3Stage(ids, states, false, function () { return v3Moons(scenesOf(h, states, sc), states, room, fxId, h, ids); });
+    var left = v3Stage(ids, states, false, function () { return v3Moons(scenesOf(h, states, sceneScope(sc)), states, room, fxId, h, ids); });
     var ls = stat(lampIds0, states);
     var lampNames0 = lampNamesOf(lampIds0, states, room);
     var lampsHtml = lampIds0.map(function (id, i) {
       return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0], lampNames0[i]);
     }).join('');
-    // Counting heading (richtlinien §6): „Leuchten · 2 von 4 an“.
-    var head = tr(sc.house ? 'Leuchten' : 'Leuchten im Raum') + (ls.tot > 1 ? ' · ' + tr(ls.on + ' von ' + ls.tot + ' an') : '');
+    // Counting heading (richtlinien §6), the only count of the page (owner, 03.11.2026): „Lampen im Raum · 2 von 4 an“.
+    var head = tr(sc.house ? 'Lampen' : 'Lampen im Raum') + (ls.tot > 1 ? ' · ' + tr(ls.on + ' von ' + ls.tot + ' an') : '');
     var rightHtml = '<div class="lps-lbl">' + esc(head) + '</div><div class="lps-rows">' + lampsHtml + '</div>';
     var lampIds = (sc.room ? sc.room : ids).filter(function (id) { return states[id] && !Array.isArray((states[id].attributes || {}).entity_id); });
     if (!lampIds.length) lampIds = ids.slice(0, 1);
@@ -4779,7 +4799,7 @@
     var all = [];
     cfg.rooms.forEach(function (r) { (r.lights || []).forEach(function (x) { if (states[x] && all.indexOf(x) < 0) all.push(x); }); });
     // The whole house: the stage dims only lamps that are on (never switches the house on by dragging).
-    // The rooms' heading carries no count: light counts are lamps everywhere (owner, 01.11.2026).
+    // The rooms' heading counts lamps, never rooms (owner, 01.11. and 03.11.2026).
     var list = houseBody(cfg, states, true);
     // The house's only lamp with effects gets the moon „Effekte“ (several: each lamp's own popup).
     var fxId = fxLampOf(all, states);
@@ -4795,7 +4815,10 @@
 
   var houseBody = function (cfg, states, inV3) {
     if (!inV3 && v3On()) return houseV3(cfg, states);
-    return '<div class="lps-lbl">' + esc(tr('Räume')) + '</div><div class="' + (inV3 ? 'lps-rows' : 'lps-grid') + '">'
+    // v3: the house's count stands here, the only one of the page (owner, 03.11.2026) – lamps, as everywhere.
+    var hs = inV3 ? stat([].concat.apply([], cfg.rooms.map(function (r) { return r.lights || []; })).filter(function (x, i, a) { return a.indexOf(x) === i; }), states) : null;
+    var hHead = tr('Räume') + (hs && hs.tot > 1 ? ' · ' + tr(hs.on + ' von ' + hs.tot + ' Lampen an') : '');
+    return '<div class="lps-lbl">' + esc(hHead) + '</div><div class="' + (inV3 ? 'lps-rows' : 'lps-grid') + '">'
       + cfg.rooms.map(function (r, i) {
         var s = stat(r.lights, states);
         // A room without its own HA group (house list from the rooms, light_rooms_auto): its lamps switch together.
@@ -4864,13 +4887,13 @@
     };
     var onOf = function (ids) { var hh = hassNow() || hass; return ids.filter(function (x) { return hh.states[x] && hh.states[x].state === 'on'; }); };
     if (sc) {
-      // Einzelne Leuchte (keine Gruppe): kein Kopfschalter – der Ein/Aus-Knopf im Popup schaltet sie schon, und der
-      // Kopfschalter schaltete aus einem Raum heraus den ganzen Raum (17.10.2026). Gruppen und Räume behalten ihn.
       var own = lights(sc.lights);
       var grp = function (x) { var a = states[x] && states[x].attributes; return !!(a && Array.isArray(a.entity_id) && a.entity_id.length); };
-      // A group standing as one light of its room (sc.room) is such a lamp too.
-      if (own.length === 1 && (!grp(own[0]) || sc.room)) return false;
-      var ids = lights(sc.room || sc.lights);
+      /* A lamp's page (also a group standing as one light of its room) has its own main switch for exactly that lamp
+         (owner, 03.11.2026) – never the room's (17.10.2026: the head switched the whole room from a lamp's page). */
+      // The frame switches it like any device's head switch (its „Vor dem Schalten fragen“ included).
+      if (own.length === 1 && (!grp(own[0]) || sc.room || sc.lamp)) return { entities: [own[0]] };
+      var ids = lights(sc.lights);
       if (!ids.length) return null;
       return { entities: ids, toggle: function (on) {
         var hh = hassNow() || hass;
@@ -4981,9 +5004,9 @@
       h.callService('light', 'turn_on', { color_temp_kelvin: d.k }, { entity_id: d.ids });
     } else if (d.a === 'room') {
       /* Popup v3 (richtlinien §4.4): a room of the house is a sub page in the same popup – ‹ back to the rooms,
-         label = the group's title, title = the room. Without v3 the room chips stay and the room is a filter.
-         Since the room chips went (review 2, DD-26) the filter alone left no way back to the room list. */
-      var P3 = window.casoraPopup, cur3 = P3 && P3.current, pop3 = P3 && P3.element;
+         label = the room, title = „Beleuchtung“ (owner, 03.11.2026). Without v3 the room chips stay and the room is a
+         filter. Since the room chips went (review 2, DD-26) the filter alone left no way back to the room list. */
+      var P3 = window.casoraPopup, cur3 = P3 && P3.current;
       if (v3On() && cur3 && P3.sub) {
         /* Issue 118 (maintainer, 02.11.2026): a room of one lamp opens that lamp's page straight away \u2013 the room's page
            only repeated it. Kicker = the room, title = the lamp, as from the room's page; \u2039 goes back to the house's
@@ -4997,11 +5020,11 @@
           window._casoraNotifyOpenViaCard(one, function (ok) { if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(one); }, null, true);
           return;
         }
-        var groupT = String((pop3 && pop3._headerTitle && pop3._headerTitle.textContent) || '').replace(/\u200B/g, '') || tr('Beleuchtung');
         window._casoraLF = window._casoraLF || {};
         window._casoraLF[d.gid] = d.idx;
+        // Head as every light popup's (owner, 03.11.2026): label = the room, title = „Beleuchtung“.
         P3.sub(Object.assign({}, cur3, {
-          title: d.name || cur3.title, eyebrow: groupT,
+          title: tr('Beleuchtung'), eyebrow: d.name || cur3.eyebrow, head_fixed: true,
           // The room's own main switch (S.head), never the house's.
           head_switch: null,
           back: function () { if (window._casoraLF) window._casoraLF[d.gid] = -1; P3.open(cur3); },
@@ -5015,11 +5038,8 @@
         window._casoraSuppressDismiss = Date.now() + 600;
         // ‹ zurück ins Raum-Popup (17.10.2026), wie Raum → Heizkörper (openRoom) und Liste → Detail (casora-core.js).
         var P = window.casoraPopup, prev = P && P.current;
-        // r487: a lamp listed on the house's own page (no room page in between) names its page as its row does;
-        // on a room's page (‹ back to the rooms) the room stands above and the lamp keeps its name without it.
-        var shownL = !(prev && typeof prev.back === 'function') && el.querySelector && el.querySelector('.lps-tx b');
-        var titleL = shownL && window.casoraSubTitle ? window.casoraSubTitle(shownL.textContent, P.element) : null;
-        window._casoraBackNext = prev ? { fn: function () { P.open(prev); }, at: Date.now(), title: titleL } : null;
+        // The lamp's page names itself (label = its room, title = the lamp without it, S.headOf, owner 03.11.2026).
+        window._casoraBackNext = prev ? { fn: function () { P.open(prev); }, at: Date.now() } : null;
         window._casoraNotifyOpenViaCard(d.id, function (ok) { if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(d.id); }, null, true);
         return;
       }

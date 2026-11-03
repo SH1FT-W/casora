@@ -38,9 +38,12 @@ assert.equal((core.match(/\+ \(r\.entity && typeof r\.label === 'string' && r\.l
   'both row renderers (classic and soft) carry the row name');
 assert.ok(/_casoraBackNext = \{ fn: function \(\) \{ window\.casoraPopup\.open\(prevCfg\); \}, at: Date\.now\(\),\s+title: window\.casoraSubTitle\(t\.getAttribute\('data-casora-rn'\), window\.casoraPopup\.element\) \}/.test(core),
   'light/cover row tap hands the row name to the sub page');
-assert.ok(/if \(typeof bn\.title === 'string' && bn\.title\) \{\s+this\._cfgTitle = bn\.title; this\._rowTitle = true;/.test(core), 'open() takes the row title');
-assert.ok(/var title = sf && !this\._rowTitle \? stripRoom\(/.test(core), 'a row title is not cut by the room');
+// A head the popup names itself (head_fixed: the light popups, owner 03.11.2026) keeps its own title.
+assert.ok(/if \(typeof bn\.title === 'string' && bn\.title && !this\._headFixed\) \{\s+this\._cfgTitle = bn\.title; this\._rowTitle = true;/.test(core), 'open() takes the row title');
+assert.ok(/var title = sf && !this\._rowTitle && !this\._headFixed \? stripRoom\(/.test(core), 'a row title is not cut by the room');
 assert.ok(/this\._rowTitle = cfg\.row_title === true;/.test(core) && /\{ title: this\._cfgTitle, row_title: true \}/.test(core),
   'the row title stays in the config (‹ from a page further in)');
-assert.ok(/window\.casoraSubTitle\(shownL\.textContent, P\.element\)/.test(pops), 'lamp rows of the house light popup hand on their name');
+// Lamp rows of the light popups hand on no title: a lamp's page names itself (label = its room, title = the lamp
+// without it, owner 03.11.2026, 03-popups.js headOf) – the house's own list included.
+assert.ok(!/casoraSubTitle\(shownL/.test(pops) && /window\._casoraBackNext = prev \? \{ fn: function \(\) \{ P\.open\(prev\); \}, at: Date\.now\(\) \} : null;/.test(pops), 'lamp rows hand on no title');
 console.log('ok sub_page_row_title');

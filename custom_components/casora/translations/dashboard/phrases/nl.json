@@ -1233,6 +1233,7 @@
   "Tor": "Poort",
   "Lichtfarbe": "Lichtkleur",
   "Leuchten im Raum": "Lampen in deze kamer",
+  "Lampen im Raum": "Lampen in deze kamer",
   "Leuchten": "Lampen",
   "Gedimmt": "Gedimd",
   "Volle Helligkeit": "Volle helderheid",
@@ -3349,6 +3350,10 @@
   [
    "^(\\d+) heizen$",
    "{1} verwarmen"
+  ],
+  [
+   "^(\\d+) von (\\d+) Lampen an$",
+   "{1} van {2} lampen aan"
   ],
   [
    "^(\\d+) von (\\d+) an$",

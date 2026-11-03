@@ -1241,6 +1241,7 @@
   "Tor": "Portón",
   "Lichtfarbe": "Color de luz",
   "Leuchten im Raum": "Luces de la habitación",
+  "Lampen im Raum": "Lámparas de la habitación",
   "Leuchten": "Luces",
   "Gedimmt": "Atenuada",
   "Volle Helligkeit": "Brillo máximo",
@@ -3349,6 +3350,10 @@
   [
    "^(\\d+) heizen$",
    "{1} calentando"
+  ],
+  [
+   "^(\\d+) von (\\d+) Lampen an$",
+   "{1} de {2} lámparas encendidas"
   ],
   [
    "^(\\d+) von (\\d+) an$",

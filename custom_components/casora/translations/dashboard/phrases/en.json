@@ -1241,6 +1241,7 @@
   "Tor": "Gate",
   "Lichtfarbe": "Light color",
   "Leuchten im Raum": "Lights in this room",
+  "Lampen im Raum": "Lamps in this room",
   "Leuchten": "Lights",
   "Gedimmt": "Dimmed",
   "Volle Helligkeit": "Full brightness",
@@ -3331,6 +3332,10 @@
   [
    "^(\\d+) heizen$",
    "{1} heating"
+  ],
+  [
+   "^(\\d+) von (\\d+) Lampen an$",
+   "{1} of {2} lamps on"
   ],
   [
    "^(\\d+) von (\\d+) an$",

@@ -74,8 +74,9 @@ for (const hass of [null, { entities: Object.fromEntries(Object.keys(S).filter((
 }
 // The popup names the group like a lamp and looks up its room (03-popups.js roomOf with group).
 const lpc = T.casora_popup_light.custom_fields.lpc_init;
-assert.ok(lpc.includes('_LS.roomOf(lightIds[0], states, hass, !!_sc.unit)') && lpc.includes('(_sc.unit || !Array.isArray('), 'popup treats a unit like a lamp');
+assert.ok(lpc.includes('_LS.roomOf(lightIds[0], states, hass, !!_sc.unit)') && lpc.includes('(!!_sc.unit || !Array.isArray('), 'popup treats a unit like a lamp');
 const pops = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/03-popups.js', import.meta.url), 'utf8');
 assert.ok(pops.includes('S.roomOf = function (id, states, hass, group)') && pops.includes("if (!group && Array.isArray((states[id].attributes || {}).entity_id)) return null;"), 'roomOf takes a group');
-assert.ok(pops.includes('if (own.length === 1 && (!grp(own[0]) || sc.room)) return false;'), 'no head switch over the room for a unit');
+// A unit's page switches that unit with its head switch, never the room (owner, 03.11.2026: a lamp's page has its own).
+assert.ok(pops.includes('if (own.length === 1 && (!grp(own[0]) || sc.room || sc.lamp)) return { entities: [own[0]] };'), 'head switch of a unit: the unit alone');
 console.log('ok light_lamp_row_own_popup');

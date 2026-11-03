@@ -51,12 +51,15 @@ assert.deepEqual(calls, [['light', 'turn_on', 'light.testraum_decke']], JSON.str
 S.els = {};
 assert.equal(S.head({ _config: { template: ['casora_switch'] } }, hass), null);
 
-// Eine Leuchte (keine Gruppe): kein Kopfschalter – auch nicht aus einem Raum heraus (17.10.2026: er schaltete
-// den ganzen Raum; die Leuchte schaltet der Ein/Aus-Knopf im Popup).
+// A lamp's page has its own head switch for exactly that lamp (owner, 03.11.2026) – never the room's, also from a room
+// (17.10.2026: the head switched the whole room from a lamp's page).
 S.render({ gid: 'light.x', flat: { name: 'Flur', rid: 'light.decke', lights: ['light.decke'] } }, 'hero', states, hass, heroEl());
-assert.equal(S.head(tileSrc, hass), false, 'einzelne Leuchte: kein Kopfschalter');
+let one = S.head(tileSrc, hass);
+assert.deepEqual(one && one.entities, ['light.decke'], 'single lamp: head switch of the lamp');
 S.render({ gid: 'light.x', flat: { name: 'Wohnzimmer', rid: 'light.decke', lights: ['light.decke'], room: ['light.decke', 'light.stehlampe'] } }, 'hero', states, hass, heroEl());
-assert.equal(S.head(tileSrc, hass), false, 'Leuchte aus einem Raum: kein Kopfschalter');
+one = S.head(tileSrc, hass);
+assert.deepEqual(one && one.entities, ['light.decke'], 'lamp from a room: the lamp alone, not the room');
+assert.equal(one.toggle, undefined, 'the frame switches it (with its ask-first), like any device');
 // Lichtgruppe als eine Entität: Kopfschalter bleibt.
 states['light.grp'] = { entity_id: 'light.grp', state: 'on', attributes: { entity_id: ['light.decke', 'light.stehlampe'] } };
 S.render({ gid: 'light.x', flat: { name: 'Gruppe', rid: 'light.grp', lights: ['light.grp'] } }, 'hero', states, hass, heroEl());

@@ -1233,6 +1233,7 @@
   "Tor": "Brama",
   "Lichtfarbe": "Kolor światła",
   "Leuchten im Raum": "Lampy w pokoju",
+  "Lampen im Raum": "Lampy w pokoju",
   "Leuchten": "Lampy",
   "Gedimmt": "Przyciemnione",
   "Volle Helligkeit": "Pełna jasność",
@@ -3349,6 +3350,10 @@
   [
    "^(\\d+) heizen$",
    "Grzeje: {1}"
+  ],
+  [
+   "^(\\d+) von (\\d+) Lampen an$",
+   "{1} z {2} lamp wł."
   ],
   [
    "^(\\d+) von (\\d+) an$",

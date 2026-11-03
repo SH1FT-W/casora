@@ -3,7 +3,8 @@
 // @deckt: custom_components/casora/scripts/local/03-popups.js custom_components/casora/scripts/casora-core.js
 // Issue #118: house light popup (ZUHAUSE · Beleuchtung) → a room („Ankleide“, its own sub page with ‹) → tap a lamp row
 // (not its switch) → the lamp's page. ‹ from there landed on the house's room list instead of the room's page.
-// Expected: ‹ goes back one level – lamp page → room page (title = room, „Leuchten im Raum“) → ‹ → the house's list.
+// Expected: ‹ goes back one level – lamp page → room page (label = the room, title „Beleuchtung“ since 03.11.2026,
+// „Lampen im Raum“) → ‹ → the house's list.
 // Not reproduced on the test HA (26.11.7 candidate, rooms with several lamps and with one): kept as a guard for the
 // back path. Phone 393×852 and desktop 1440×900. Nothing is switched or saved.
 import { open, casoraDashboard, dashboard, check, need, finish, usePage, shot } from './lib.mjs';
@@ -85,8 +86,10 @@ for (const [label, size, url] of [
   await need(label + ': a room row with two lamps', rr, house);
   await pg.waitForTimeout(500);
   await tap(rr);
-  const room = await until((h) => h.back && h.title === rr.name);
-  await need(label + ': room page opened', room && room.back && room.title === rr.name, { rr, room });
+  // The room's page: labelled with the room (owner, 03.11.2026: one head for every light popup, r516).
+  const isRoom = (h) => h && String(h.eyebrow || '').toLowerCase() === String(rr.name).toLowerCase() && h.title === 'Beleuchtung';
+  const room = await until((h) => h.back && isRoom(h));
+  await need(label + ': room page opened', room && room.back && isRoom(room), { rr, room });
 
   const lr = await row('mi');
   await need(label + ': a lamp row on the room page', lr, room);
@@ -98,11 +101,11 @@ for (const [label, size, url] of [
 
   await pg.waitForTimeout(500);
   await tap(lamp.back);
-  const back1 = await until((h) => (h.title === rr.name && !h.sel) || h.rooms > 0);
+  const back1 = await until((h) => (isRoom(h) && !h.sel) || h.rooms > 0);
   if (shots) await pg.screenshot({ path: `${shots}/${label}-back1.png` });
   await shot(label + '_back1');
-  await check(label + ': ‹ from the lamp is the room page („' + rr.name + '“, ‹, „Leuchten im Raum“)',
-    back1 && back1.title === rr.name && !!back1.back && back1.rooms === 0 && !back1.sel, { rr, back1 });
+  await check(label + ': ‹ from the lamp is the room page („' + rr.name + '“, ‹, „Lampen im Raum“)',
+    back1 && isRoom(back1) && !!back1.back && back1.rooms === 0 && !back1.sel, { rr, back1 });
 
   if (back1 && back1.back) {
     await pg.waitForTimeout(500);

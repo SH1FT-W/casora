@@ -4,7 +4,8 @@
 // Reported (02.11.2026): in a room with dimmable lamps only one on/off lamp was lit (color_mode „onoff“, no brightness –
 // the status LED of a network device). The head said „1 von n an“, but the light dial of the house and of the room
 // popup said „Aus“ with an empty ring: the stage counted only the dimmable lamps. Expected: the dial is on (an on/off
-// lamp is fully on: 100 %, word „An“), the ring is filled; head, dial and the room row never contradict each other.
+// lamp is fully on: 100 %, word „An“), the ring is filled; the count (list heading), dial and the room row never
+// contradict each other.
 // A dimmable lamp lit next to it keeps the dial on its brightness. Phone 393×852 and desktop 1440×900, theme Casora.
 // Every state is faked in the browser only (fakeStates), nothing is switched or saved.
 import { open, casoraDashboard, dashboard, fakeStates, check, need, finish, usePage, shot } from './lib.mjs';
@@ -58,7 +59,8 @@ for (const [label, size, url] of [
     const dl = window.__pierce('.hui-dl', p.shadowRoot).find(vis);
     if (!dl) return { none: true };
     const ln = [...dl.querySelectorAll('path.fl.ln')].find((x) => getComputedStyle(x).display !== 'none') || null;
-    const head = window.__pierce('.header-status', p.shadowRoot).find(vis);
+    // The count stands in the list heading since 03.11.2026 (no status line under the title; owner, r516).
+    const head = window.__pierce('.lps-lbl', p.shadowRoot).find(vis);
     const row = window.__pierce('.lps-row', p.shadowRoot).filter(vis).find((r) => txt(r.querySelector('.lps-tx b')) === roomName);
     return { value: txt(dl.querySelector('.hui-st-val')), word: txt(dl.querySelector('.hui-st-w')), off: txt(dl.querySelector('.hui-st-val')) === 'Aus',
       ring: !!ln, head: txt(head), row: row ? txt(row.querySelector('.lps-tx small')) : null };
@@ -121,7 +123,7 @@ for (const [label, size, url] of [
   await check(label + ' house: the ring is filled', h.ring, h);
   await check(label + ' house: the dial says „An“', /\bAn\b/.test(h.word), h);
   await check(label + ' house: the room row says the lamp is on', h.row && !/^Aus$/.test(h.row) && /an\b/i.test(h.row), h);
-  await check(label + ' house: the head says a light is on', /\ban\b/i.test(h.head) && !/^Aus\b/.test(h.head), h);
+  await check(label + ' house: the count says a light is on', /\ban\b/i.test(h.head) && !/^Aus\b/.test(h.head), h);
 
   const r = await openRoom();
   await need(label + ': room popup with the light dial', r && !r.none, r);
@@ -129,7 +131,7 @@ for (const [label, size, url] of [
   await check(label + ' room: the dial is on, not „Aus“', !r.off && r.value !== 'Aus' && /100/.test(r.value), r);
   await check(label + ' room: the ring is filled', r.ring, r);
   await check(label + ' room: the dial says „An“', /\bAn\b/.test(r.word), r);
-  await check(label + ' room: the head says 1 of n is on', new RegExp('\\b1 von ' + n + ' an\\b').test(r.head) || /\ban\b/i.test(r.head), r);
+  await check(label + ' room: the count says 1 of n is on', new RegExp('\\b1 von ' + n + ' an\\b').test(r.head) || /\ban\b/i.test(r.head), r);
 
   // A dimmable lamp lit beside the on/off lamp: the dial keeps the dimmable lamp's brightness (it is what turning sets).
   await setLights({ [a]: onoff, [b]: { color_mode: 'brightness', supported_color_modes: ['brightness'], brightness: 77 }, [house.rid]: { color_mode: 'brightness', brightness: 77 } });

@@ -3,8 +3,9 @@
 // @deckt: dashboards/casora/button_card_templates.json custom_components/casora/scripts/local/03-popups.js
 // House lights popup (tile "Beleuchtung" on Home): the header says "Beleuchtung"; #73 had put the chosen room's name
 // there and it flipped back on every light change (reverted 26.10.2026). Popup v3 (§4.4): a room is a sub page with ‹,
-// label „Beleuchtung“, title the room. Expected: "Beleuchtung" first, the room's page keeps its title when a light
-// switches, ‹ brings "Beleuchtung" back. Rooms of one lamp open the lamp's page instead (issue 118, r504): not this test.
+// label the room, title „Beleuchtung“ (owner, 03.11.2026: one head for every light popup, r516; was label „Beleuchtung“,
+// title the room). Expected: "Beleuchtung" first, the room's page keeps its head when a light switches, ‹ brings the
+// house back. Rooms of one lamp open the lamp's page instead (issue 118, r504): not this test.
 import { open, casoraDashboards, dashboard, check, need, finish, usePage } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -46,12 +47,12 @@ await need('ein Raum mit eigener Unterseite (zwei Lampen oder mehr)', room, C);
 await page.waitForTimeout(700);   // taps right after opening are swallowed (ghost taps)
 await page.mouse.click(room.x, room.y);
 for (let i = 0; i < 20 && !((h = await head()) && h.back); i++) await page.waitForTimeout(200);
-await check('Raum gewählt → Unterseite „' + room.name + '“ mit ‹ und Etikett „Beleuchtung“', h && h.back && h.title === room.name && /^Beleuchtung$/i.test(h.eyebrow), { h, room: room.name });
+await check('Raum gewählt → Unterseite mit ‹, Etikett „' + room.name + '“, Titel „Beleuchtung“', h && h.back && h.title === 'Beleuchtung' && h.eyebrow.toLowerCase() === room.name.toLowerCase(), { h, room: room.name });
 // A light switched while the room's page is open re-draws the content: the header must stay (26.10.2026).
 await page.evaluate(() => { const h = document.querySelector('home-assistant').hass; const g = Object.keys(h.states).find((e) => e.startsWith('light.') && Array.isArray(h.states[e].attributes.entity_id)); const id = g ? h.states[g].attributes.entity_id[0] : Object.keys(h.states).find((e) => e.startsWith('light.')); if (id) h.callService('light', 'toggle', { entity_id: id }); });
 await page.waitForTimeout(1500);
 const h1b = await head();
-await check('nach Schalten eines Lichts weiter „' + room.name + '“', h1b && h1b.back && h1b.title === room.name, { h1b, room: room.name });
+await check('nach Schalten eines Lichts weiter „' + room.name + '“', h1b && h1b.back && h1b.title === 'Beleuchtung' && h1b.eyebrow.toLowerCase() === room.name.toLowerCase(), { h1b, room: room.name });
 await page.evaluate(() => window.casoraPopup.element._headerBack.click());
 for (let i = 0; i < 20 && (h = await head()) && h.back; i++) await page.waitForTimeout(200);
 await check('‹ → wieder „Beleuchtung“', h && h.title === 'Beleuchtung' && !h.back, h);

@@ -3,8 +3,9 @@
 // @deckt: custom_components/casora/scripts/local/03-popups.js
 // Owner (01.11.2026, prod): in the house light popup („Beleuchtung“, the rooms as a list) a tapped room showed its
 // lamps but had no ‹ and the head stayed „Beleuchtung“ – since the room chips went (review 2, DD-26) there was no way
-// back to the room list. Popup v3 §4.4: a room is a sub page in the same popup – ‹ left, label = the group's title,
-// title = the room; ‹ shows the room list again. Room → lamp → ‹ comes back to the room (title, label and its ‹).
+// back to the room list. Popup v3 §4.4: a room is a sub page in the same popup – ‹ left, label = the room, title =
+// „Beleuchtung“ (owner, 03.11.2026: one head for every light popup, r516; was label = the group's title, title = the
+// room); ‹ shows the room list again. Room → lamp (label = its room) → ‹ comes back to the room (title, label, its ‹).
 // Desktop 1440×900 light (house tile, or the light badge held, on the overview) and phone 393×852 dark (light badge on Home).
 import { open, casoraDashboard, dashboard, check, need, finish, usePage } from './lib.mjs';
 
@@ -89,8 +90,8 @@ const run = async (tag, page, mobile) => {
   await need(tag + ': a room with lamps', room);
   const r = room.r;
   await check(tag + ': room page has ‹', r.back, r);
-  await check(tag + ': room page titled with the room', r.title === room.name, { r, room: room.name });
-  await check(tag + ': room page labelled with the group title', r.label === house.title, { r, house: house.title });
+  await check(tag + ': room page titled „Beleuchtung“', r.title === 'Beleuchtung', { r, room: room.name });
+  await check(tag + ': room page labelled with the room', r.label.toLowerCase() === room.name.toLowerCase(), { r, room: room.name });
   await check(tag + ': room page lists the lamps, not the rooms', r.lamps.length > 0 && !r.rooms.length, r);
   // Room → lamp → ‹ → room.
   // Prefer a lamp whose name is not just the room's: its page must carry the room as label. Since issue 106 a label
@@ -101,8 +102,10 @@ const run = async (tag, page, mobile) => {
   }, [r.lamps, room.name]).catch(() => r.lamps[0]);
   await tapIn(page, mobile, { a: 'mi', v: pickLamp });
   const lamp = await readPopup(page);
-  await check(tag + ': lamp page with ‹, labelled with the room (none when the title is the room)',
-    lamp && lamp.back && (lamp.title === room.name ? lamp.label === '' : lamp.label === room.name), { lamp, room: room.name });
+  // The lamp's page: ‹, labelled with its room (the dashboard room holding it) and a title – the lamp, or „Beleuchtung“
+  // when the row is a room group of its own (the test house lists one under another room).
+  await check(tag + ': lamp page with ‹, labelled with its room, with a title',
+    lamp && lamp.back && lamp.label !== '' && lamp.title !== '', { lamp, room: room.name });
   await back(page, mobile);
   const r2 = await readPopup(page);
   await check(tag + ': ‹ from the lamp: the room again (title, label, lamps)', r2 && r2.title === r.title && r2.label === r.label && r2.lamps.join() === r.lamps.join(), { r2, r });

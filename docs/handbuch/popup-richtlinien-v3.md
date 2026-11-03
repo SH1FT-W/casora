@@ -88,6 +88,18 @@ Zustand · Zusatz · Zusatz
 Der Zustand steht nicht noch einmal groß auf der Bühne, **außer** als Wert (68 %, 21,2°) – die Bühne zeigt die
 Zahl, die Statuszeile das Wort.
 
+**Licht-Popups: ein Kopf für jeden Weg** (Entscheidung 03.11.2026). Egal wie das Popup geöffnet wird (Badge
+„Beleuchtung“ auf Zuhause, Haus → Raum, Licht-Badge im Raum, Raum-Chip auf Zuhause, Lampen-Chip, Lampe aus einer
+Liste, Raum mit einer Lampe): Etikett = der Raum (das Haus: „Zuhause“), Titel = „Beleuchtung“; die Seite einer Lampe:
+Etikett = ihr Raum, Titel = die Lampe ohne Raumnamen. **Keine Statuszeile** – die Zählung steht nur in der
+Listen-Überschrift („Lampen im Raum · 2 von 5 an“, Haus: „Räume · 4 von 17 Lampen an“), so ist der Kopf auf jeder
+Seite gleich hoch und das Rad springt beim Wechsel Raum ↔ Lampe nicht. Den Kopf rechnet das Licht-Modul
+(`_casoraLightSoft.headOf`, Raum aus dem Dashboard: `placeOf`); der Rahmen zeigt ihn unverändert (`head_fixed`:
+kein Raum-Etikett der Kachel, kein Etikett der Seite davor, nichts gekürzt, keine Rückfall-Statuszeile). Die Seite
+einer Lampe hat ihren eigenen Hauptschalter (nur diese Lampe). Eine Lichtgruppe im Raum („Spots“) ist überall **eine**
+Zeile; die Seite einer Lampe listet die Zeilen ihres Raums. Zeilen: Name ohne Raum, Unterzeile kurz („Aus“,
+„An · 80 %“). Test `r516_light_popup_uniform.mjs`.
+
 **Die Statuszeile wiederholt nie den Bühnenwert** (Entscheidung 01.11.2026): weder die Zahl der Bühne („513 W“) noch den
 Satz in der Rad-Mitte („Aktiviert · Zuhause“). Sie sagt etwas anderes in Worten – Energie: woher der Strom kommt („Bezug
 aus dem Netz · Akku bereit“, „Solar deckt 80 %“, „Netz offline“); Alarm und andere S7 ohne eigenes Wort: seit wann
@@ -202,6 +214,7 @@ die Typen S1–S8 und ihre Felder bleiben. `o.dial: false` behält die Platte (n
 | Gewählt | Fläche `--casora-soft-seg-on`, Ring 3 in Gerätefarbe mit weichem Schatten, Symbol in Gerätefarbe (zur Schrift hin abgedunkelt, 3 : 1) |
 | Lage (Grad, 0 = rechts) | 1: 155 · 2: 155, 25 · 3: 155, 90, 25 · 4: −150, −30, 155, 25 – Abstand 53,5 % der Radbreite vom Mittelpunkt (außerhalb des Knopfwegs, nie am Ringende), unten (90°) 44 %; die Teilstriche unter einem seitlichen Mond fallen weg. Geprüft von `popup-geo.mjs` („rad“: Mond ≥ 6 px vom Knopfweg) |
 | Hauptaktion | S4/S7-Aktion („Jetzt starten“, „Alle verriegeln“) ist der Mond unten (90°; bei 1 oder 3 Monden rechts unten 25°), gefüllt in Gerätefarbe. **Gefährliches ist nie ein Mond** (Unscharf schalten, Alarm beenden, Alle entriegeln): ungefüllte Pille mit roter Schrift unter dem Rad, mit Rückfrage |
+| Licht-Popup | höchstens **zwei** Monde (Entscheidung 03.11.2026): links „Szenen“ – ein kleines Menü am Mond mit den Szenen des Raums (auch bei einer Szene; ohne Szene kein Mond; markiert, solange eine Szene der Liste gilt), rechts „Effekte“ der Lampe (auch allein rechts, `right`). Kein dritter Mond unter dem Rad, Szenen nie als einzelne Monde. Test `light_effects.mjs`, `r516_light_popup_uniform.mjs` |
 | Mehr als 4 | die 3 häufigsten + Mond „Alle (n)“ (ohne ›); er öffnet ein **kleines Menü direkt am Mond** (Entscheidung 01.11.2026): Platte im Casora-Stil mit Schatten, Zeilen Symbol + Wort, die gewählte hinterlegt, Antippen wählt sofort und schließt, Tipp daneben oder Esc schließt; bleibt immer im Fenster (Handy: Breite höchstens Fenster − 16). Test `moon_menu.mjs` |
 | Verboten | wie §5 |
 

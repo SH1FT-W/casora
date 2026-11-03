@@ -72,6 +72,7 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 | Handy | phone | Telefon, Smartphone, Mobil | „Handy-Layout“ |
 | Desktop / Tablet | desktop / tablet | Computer, PC | „Desktop-Einstellungen“ |
 | Szene | scene | Stimmung | „Szene speichern“ |
+| Lampe (Gerät) / Beleuchtung (Bereich) | lamp / lighting | Leuchte, Licht für ein einzelnes Gerät in Popups (Entscheidung 03.11.2026) | Licht-Popup: Titel „Beleuchtung“, Liste „Lampen im Raum · 2 von 5 an“, Rad „Ø von 3 Lampen“, Haus „Räume · 4 von 17 Lampen an“ |
 | Design | design | Theme (nur „Hemma-Theme“ als Eigenname) | „Design wechseln“ |
 | Symbol | icon | Icon | „Symbol festgelegt“ |
 | Sicherung | backup (Casora) | – | „casora_sicherungen“; HAs eigenes heißt „Backup“ |
