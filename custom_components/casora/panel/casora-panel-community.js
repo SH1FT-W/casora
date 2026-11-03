@@ -238,7 +238,7 @@
     + ".comgrid .comacts{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:4px}"
     + ".comgrid .comacts .comlink{margin-top:0}.comgrid .comacts .comchip{margin-left:auto;padding:6px 14px;font-weight:600}"
     + "@media (min-width: 700px){.comgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}"
-    + "@media (min-width: 1280px){.comgrid.c3{grid-template-columns:repeat(3,minmax(0,1fr))}}"
+    + "@media (min-width: 700px){.comgrid.c3{grid-template-columns:repeat(3,minmax(0,1fr))}}"
     // T20 (test 2): always on its own line – inline it ran on after the last word when no note followed the text.
     + ".comlink{display:flex;width:fit-content;align-items:center;gap:5px;margin-top:6px;border:0;border-radius:999px;padding:4px 10px 4px 8px;font:inherit;font-size:13px;font-weight:600;"
     + "background:var(--casora-studio-chip, rgba(118,118,128,.18));color:inherit;cursor:pointer}.comlink ha-icon{--mdc-icon-size:16px;display:flex}"
@@ -470,11 +470,19 @@
           box.insertBefore(host, acts);
           // Grid variant (prototype): "A" two columns, "B" up to three, "off" the previous list.
           const gv = String(W.CASORA_COM_GRID || "A");
-          const grid = gv === "off" ? null : el("div", "comgrid" + (gv === "B" ? " c3" : ""));
+          const st = box.closest && box.closest(".askstack");
+          // The window the dialog sits in (its host can measure 0 before it is drawn: then the browser window).
+          const pw = st && st.parentElement ? st.parentElement.clientWidth : 0;
+          const room = pw > 300 ? pw : W.innerWidth;
+          // Phone and narrow windows keep the list as before.
+          const grid = gv === "off" || room < 700 ? null : el("div", "comgrid");
           if (grid) {
             host.appendChild(grid);
-            const st = box.closest && box.closest(".askstack");
-            if (st && W.innerWidth >= 700) st.style.width = gv === "B" && W.innerWidth >= 1280 ? "min(1240px, 94vw)" : "min(1000px, 94vw)";
+            // Wider than the 780 px of other wide dialogs, but inside the window. Three columns (B) only where each card
+            // still gets about 380 px (a window of 1500 px and more); otherwise two.
+            const three = gv === "B" && room >= 1500;
+            if (three) grid.classList.add("c3");
+            if (st) st.style.width = Math.min(three ? 1240 : 1000, room - 48) + "px";
           }
           const cards = grid || host;
           if (!list.length) host.appendChild(el("div", "comnote", tr("No community cards yet. Ask for one – the first ones come with the next update.")));
