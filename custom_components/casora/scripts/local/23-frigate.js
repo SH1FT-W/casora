@@ -2038,16 +2038,42 @@
           ev.target.click();
         }
       });
-      sw.addEventListener('click', function (ev) {
-        // Handled here: the popup frame takes a click without a position (keyboard, click()) for a tap outside.
-        ev.stopPropagation();
+      var pickSeg = function (ev) {
         var b = ev.target && ev.target.closest && ev.target.closest('.hui-sg');
         var v = b && b.getAttribute('data-stream');
-        if (v == null) return;
+        if (v == null) return false;
         haptic('light');
         badStream[cfg.entity + '|' + v] = false;
         F.sessionStream(cfg.entity, v);
         self._pick(v === STD ? '' : v);
+        return true;
+      };
+      // Issue 120: the popup's content sits in a button-card whose action handler cancels touchend, so on a phone no click
+      // followed a tap on a stream field (Android, iPhone). The switch takes the touch itself: touchstart and touchend
+      // stay inside (the card never starts its tap or hold), a tap that did not move picks, the click that may follow
+      // is dropped.
+      var tch = null, lastTouch = 0;
+      sw.addEventListener('touchstart', function (ev) {
+        ev.stopPropagation();
+        var t = ev.touches && ev.touches[0];
+        tch = t && ev.touches.length === 1 ? { x: t.clientX, y: t.clientY, moved: false } : null;
+      }, { passive: true });
+      sw.addEventListener('touchmove', function (ev) {
+        var t = ev.touches && ev.touches[0];
+        if (tch && t && (Math.abs(t.clientX - tch.x) > 10 || Math.abs(t.clientY - tch.y) > 10)) tch.moved = true;
+      }, { passive: true });
+      sw.addEventListener('touchcancel', function () { tch = null; }, { passive: true });
+      sw.addEventListener('touchend', function (ev) {
+        ev.stopPropagation();
+        var t = tch; tch = null;
+        if (!t || t.moved) return;
+        if (pickSeg(ev)) { ev.preventDefault(); lastTouch = Date.now(); }
+      });
+      sw.addEventListener('click', function (ev) {
+        // Handled here: the popup frame takes a click without a position (keyboard, click()) for a tap outside.
+        ev.stopPropagation();
+        if (Date.now() - lastTouch < 700) return;
+        pickSeg(ev);
       });
       this._lists();
     };
