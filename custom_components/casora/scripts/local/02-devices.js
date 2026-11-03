@@ -404,11 +404,133 @@
     if (!s || s.state === 'unavailable') return '';
     const ch = window._casoraAqChannels(c.light, { light_channels: c.lightChannels }, states, hass);
     if (ch.length < 2) return '';
+    /* PROTOTYPE 26.11.9 (aquarium-bars): window.CASORA_AQ_PROTO = { bars: 'A' | 'B' } draws the proposals; unset = today. */
+    const proto = (window.CASORA_AQ_PROTO || {}).bars;
+    if (proto === 'A' || proto === 'B') return window._casoraAqChanProto(proto, ch, s.state === 'on', UI);
     return UI.label((window.casoraTr ? window.casoraTr('Kanäle') : 'Kanäle') + ' · ' + ch.length)
       + '<div class="aq-chs" style="display:flex;flex-direction:column;gap:8px;">'
       + ch.map((k) => '<div style="min-width:0;--casora-popup-slider-fill:' + UI.esc(k.color || 'var(--casora-popup-accent, var(--casora-popup-ui-accent, #5E9E96))') + ';">'
         + UI.slider({ value: s.state === 'on' ? k.value : 0, softHeight: 46, bar: true, small: true, label: k.name, svc: k.svc }) + '</div>').join('')
       + '</div>';
+  };
+
+  /* PROTOTYPE 26.11.9 – two calmer channel designs (proposal for the owner, not wired to a setting).
+     A „Liste mit Spur“: one plate like the other lists; per channel a line (colour dot, name, value right) and under it
+       a slim 6 px track with a solid fill in the channel colour and a small knob. The whole line is the slider.
+     B „Ruhige Pille“: today's pill, but a neutral track, a soft solid tint of the channel colour (no gradient, no
+       saturated block), a 4 px colour edge where the fill ends, name left and value right in ink. */
+  window._casoraAqChanProto = function (kind, ch, on, UI) {
+    const esc = UI.esc;
+    const fmt = (v) => v + ' %';
+    const col = (k) => esc(k.color || 'var(--casora-popup-accent, #5E9E96)');
+    const head = UI.label((window.casoraTr ? window.casoraTr('Kanäle') : 'Kanäle') + ' · ' + ch.length);
+    const pay = (k) => esc(JSON.stringify(Object.assign({ invert: false }, k.svc || {})));
+    if (kind === 'A') {
+      const css = '<style>'
+        + '.aqa{background:var(--casora-popup-row-fill, rgba(140,115,90,0.07));border-radius:var(--casora-popup-row-radius, 20px);padding:6px 16px;}'
+        + '.aqa-r{position:relative;padding:12px 0 14px;cursor:ew-resize;touch-action:none;user-select:none;-webkit-user-select:none;}'
+        + '.aqa-r + .aqa-r{border-top:1px solid var(--casora-popup-divider, rgba(140,115,90,0.12));}'
+        + '.aqa-t{display:flex;text-align:left;align-items:center;gap:10px;font-family:var(--primary-font-family,system-ui);}'
+        + '.aqa-d{width:10px;height:10px;border-radius:50%;flex:none;}'
+        + '.aqa-n{flex:1;text-align:left;font-size:15px;font-weight:600;color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));}'
+        + '.aqa-r .hui-sl-val{position:static;transform:none;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--casora-soft-sub, var(--secondary-text-color));}'
+        + '.aqa-k{position:relative;height:6px;margin-top:10px;border-radius:3px;background:var(--casora-soft-control-fill, rgba(140,115,90,0.12));}'
+        + '.aqa-r .hui-sl-fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;transition:width .18s cubic-bezier(.36,0,.16,1);}'
+        + '.aqa-r .hui-sl-fill::after{content:"";position:absolute;right:-8px;top:50%;width:16px;height:16px;margin-top:-8px;border-radius:50%;'
+        +   'background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25), 0 0 0 0.5px rgba(0,0,0,.08);}'
+        + '.aqa-r.off .hui-sl-fill::after{display:none;}'
+        + '.aqa-r.drag .hui-sl-fill{transition:none;}'
+        + '</style>';
+      return head + css + '<div class="aqa">' + ch.map((k) => {
+        const v = on ? k.value : 0;
+        return '<div class="aqa-r' + (v ? '' : ' off') + '" role="slider" tabindex="0" aria-label="' + esc(k.name) + '" aria-valuenow="' + v + '"'
+          + ' data-casora-axis="x" data-casora-slider="' + pay(k) + '">'
+          + '<div class="aqa-t"><span class="aqa-d" style="background:' + col(k) + '"></span><span class="aqa-n">' + esc(k.name) + '</span>'
+          + '<span class="hui-sl-val">' + fmt(v) + '</span></div>'
+          + '<div class="aqa-k"><div class="hui-sl-fill" style="width:' + v + '%;background:' + col(k) + '"></div></div></div>';
+      }).join('') + '</div>';
+    }
+    const css = '<style>'
+      + '.aqb{display:flex;flex-direction:column;gap:8px;}'
+      + '.aqb-r{position:relative;height:48px;border-radius:var(--casora-popup-row-radius, 20px);overflow:hidden;cursor:ew-resize;touch-action:none;'
+      +   'user-select:none;-webkit-user-select:none;background:var(--casora-popup-row-fill, rgba(140,115,90,0.07));font-family:var(--primary-font-family,system-ui);}'
+      + '.aqb-r .hui-sl-fill{position:absolute;left:0;top:0;bottom:0;transition:width .18s cubic-bezier(.36,0,.16,1);}'
+      + '.aqb-r .hui-sl-fill::after{content:"";position:absolute;right:0;top:0;bottom:0;width:4px;background:var(--aqb-c);}'
+      + '.aqb-r.off .hui-sl-fill::after{display:none;}'
+      + '.aqb-r.drag .hui-sl-fill{transition:none;}'
+      + '.aqb-in{position:absolute;inset:0;display:flex;align-items:center;gap:10px;padding:0 18px;pointer-events:none;}'
+      + '.aqb-d{width:8px;height:8px;border-radius:50%;flex:none;background:var(--aqb-c);}'
+      + '.aqb-n{flex:1;text-align:left;font-size:15px;font-weight:600;color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));}'
+      + '.aqb-r .hui-sl-val{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));}'
+      + '</style>';
+    return head + css + '<div class="aqb">' + ch.map((k) => {
+      const v = on ? k.value : 0;
+      return '<div class="aqb-r' + (v ? '' : ' off') + '" style="--aqb-c:' + col(k) + '" role="slider" tabindex="0" aria-label="' + esc(k.name) + '" aria-valuenow="' + v + '"'
+        + ' data-casora-axis="x" data-casora-slider="' + pay(k) + '">'
+        + '<div class="hui-sl-fill" style="width:' + v + '%;background:color-mix(in srgb, var(--aqb-c) 26%, transparent)"></div>'
+        + '<div class="aqb-in"><span class="aqb-d"></span><span class="aqb-n">' + esc(k.name) + '</span><span class="hui-sl-val">' + fmt(v) + '</span></div></div>';
+    }).join('') + '</div>';
+  };
+
+  /* PROTOTYPE 26.11.9 – dosing pump in the v3 tank popup (proposal). Per channel, besides today/total/volume/button
+     (Studio fields dosing_*), the pump's own sensors found next to the dose button by name: container left (ml),
+     container size, days left, last calibration (Chihiros: restmenge, behaeltergroesse, reicht_noch, zuletzt_kalibriert).
+     A: one summary row „Dosierung“ → sub page with one row per channel. B: one compact row per channel (max 4). */
+  window._casoraAqDoseMore = function (d, states) {
+    const m = /^button\.(.+?)_(dosieren|dose)$/.exec(d.btn || '') || /^button\.(.+)$/.exec(d.btn || '');
+    const pre = m ? m[1] : null, S = states || {};
+    if (!pre) return {};
+    const find = (re) => Object.keys(S).find((id) => id.indexOf('.' + pre + '_') > 0 && re.test(id.slice(id.indexOf('.' + pre + '_') + pre.length + 2))) || null;
+    const out = { left: find(/^(restmenge|remaining|container_left|vorrat)$/), size: find(/^(behaeltergroesse|container_size|capacity)$/),
+      days: find(/^(reicht_noch|days_left|remaining_days)$/), cal: find(/^(zuletzt_kalibriert|last_calibrat\w*)$/) };
+    Object.keys(out).forEach((k) => { if (!out[k]) delete out[k]; });
+    return out;
+  };
+  window._casoraAqDoseInfo = function (c, states) {
+    const num = (e) => { const n = parseFloat(states[e] && states[e].state); return isNaN(n) ? null : n; };
+    return c.dose.map((d, i) => {
+      const x = window._casoraAqDoseMore(d, states);
+      const left = num(x.left), size = num(x.size), days = num(x.days);
+      const lvl = left != null && size ? Math.max(0, Math.min(1, left / size)) : null;
+      const low = (lvl != null && lvl < 0.2) || (days != null && days < 7);
+      return { d: d, name: c.labels[i] || ('Kanal ' + d.n), today: num(d.today), vol: num(d.vol), left: left, lvl: lvl, days: days,
+        cal: x.cal && states[x.cal] ? states[x.cal].state : null, low: low };
+    });
+  };
+  window._casoraAqDoseSec = function (c, states, hass) {
+    const UI = window._casoraUI, kind = (window.CASORA_AQ_PROTO || {}).dose;
+    if (!UI || (kind !== 'A' && kind !== 'B')) return '';
+    const L = window.casoraLocale ? window.casoraLocale() : 'de-DE';
+    const ml = (n) => n.toLocaleString(L, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' ml';
+    const info = window._casoraAqDoseInfo(c, states);
+    if (!info.length) return '';
+    const page = 'aqDose|' + JSON.stringify(c);
+    if (kind === 'A') {
+      const worst = info.filter((x) => x.low).sort((a, b) => (a.days == null ? 99 : a.days) - (b.days == null ? 99 : b.days))[0];
+      const sum = info.reduce((a, x) => a + (x.today || 0), 0);
+      return UI.group([{ icon: 'mdi:beaker-outline', iconTone: worst ? 'warn' : 'accent', label: 'Dosierung',
+        sub: worst ? (worst.days != null ? worst.name + ' reicht noch ' + Math.round(worst.days) + ' T.' : worst.name + ' fast leer')
+          : info.length + ' Kanäle · alles in Ordnung',
+        value: 'heute ' + ml(sum), page: page }], null);
+    }
+    return UI.group(info.slice(0, 4).map((x) => ({ icon: 'mdi:beaker-outline', iconTone: x.low ? 'warn' : 'accent', label: x.name,
+      value: x.days != null ? 'noch ' + Math.round(x.days) + ' T.' : (x.today != null ? 'heute ' + ml(x.today) : null),
+      valueTone: x.low ? 'warn' : null, page: page })), 'Dosierung');
+  };
+  (window._casoraPages || (window._casoraPages = {})).aqDose = function (arg) {
+    const HH = window._casoraHH;
+    let c; try { c = JSON.parse(arg); } catch (e) { return; }
+    if (!HH || !HH.page || !c || !c.dose) return;
+    const ids = [].concat(...c.dose.map((d) => [d.today, d.vol, d.btn])).filter(Boolean);
+    HH.page('Dosierung', ids, 'const UI = window._casoraUI, c = ' + JSON.stringify(c) + ';\n'
+      + 'const L = window.casoraLocale ? window.casoraLocale() : "de-DE";\n'
+      + 'const ml = (n) => n.toLocaleString(L, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " ml";\n'
+      + 'const rows = window._casoraAqDoseInfo(c, states).map((x) => ({ icon: "mdi:beaker-outline", iconTone: x.low ? "warn" : "accent", label: x.name,\n'
+      + '  sub: [x.today != null ? "heute " + ml(x.today) : null, x.days != null ? "reicht noch " + Math.round(x.days) + " T." : null, x.left != null ? "noch " + Math.round(x.left) + " ml" : null].filter(Boolean).join(" · ") || null,\n'
+      + '  bar: x.lvl, barTone: x.low ? "warn" : "good",\n'
+      + '  action: "Dosieren", svc: { domain: "button", service: "press", target: { entity_id: x.d.btn } },\n'
+      + '  confirm: (x.vol == null ? "" : ml(x.vol) + " ") + "dosieren" }));\n'
+      + 'return UI.section("control", rows, "Kanäle");', c.dose[0] && c.dose[0].btn);
   };
 
   /* Control: schedule switch as two rows (active one highlighted); meaning of "on" per lamp. */
@@ -670,7 +792,8 @@
   const _c = JSON.stringify(cfg);
   const watch = [cfg.temp, cfg.status, cfg.light, cfg.reach, cfg.leak, cfg.leakBat, cfg.tempBat]
     .concat(devs.map((d) => d.entity), devs.map((d) => d.power), devs.map((d) => d.today), devs.map((d) => d.month),
-            dose.map((d) => d.today), dose.map((d) => d.total), dose.map((d) => d.vol))
+            dose.map((d) => d.today), dose.map((d) => d.total), dose.map((d) => d.vol),
+            dose.map((d) => window._casoraAqDoseMore ? Object.values(window._casoraAqDoseMore(d, states)) : []).flat())
     .concat(cfg.hx ? [cfg.hx.sw, cfg.hx.sel] : [])
     .concat(cfg.light ? window._casoraAqChannels(cfg.light, { light_channels: cfg.lightChannels }, states, hass).map((k) => k.id) : [])
     .filter((x, i, all) => x && all.indexOf(x) === i);
@@ -968,12 +1091,14 @@
     // The lamp's channels (several): a list of their own beside the light row.
     const nCh = cfg.light && states[cfg.light] ? window._casoraAqChannels(cfg.light, { light_channels: cfg.lightChannels }, states, hass).length : 0;
     if (nCh >= 2) f3.chan = `[[[ return window._casoraAqChanSec ? window._casoraAqChanSec(${_c}, states, hass) : ''; ]]]`;
+    // PROTOTYPE 26.11.9 (aquarium-bars): dosing pump in v3, only with a pump (window.CASORA_AQ_PROTO.dose 'A' | 'B').
+    if (dose.length && window._casoraAqDoseSec) f3.dose = `[[[ return window._casoraAqDoseSec ? window._casoraAqDoseSec(${_c}, states, hass) : ''; ]]]`;
     // The aquarium light: „Programm ›“ (Home Assistant / the lamp's program) as a row (owner, 01.11.2026).
     if (cfg.lightStage && cfg.hx && cfg.hx.sw && states[cfg.hx.sw]) f3.prog = `[[[ return window._casoraAqProgRow ? window._casoraAqProgRow(${_c}, states, hass) : ''; ]]]`;
     // Only the light (no probe, no equipment, one channel): the stage alone across the one column.
-    const solo = !f3.chart && !f3.list && !f3.chan && !f3.prog;
+    const solo = !f3.chart && !f3.list && !f3.chan && !f3.prog && !f3.dose;
     return HH.layout({ entity: cfg.temp, watch: watch, fields: f3, top: solo ? ['hero', 'stage'] : ['hero'], stage: solo ? null : 'stage',
-      left: ['chart'], right: ['prog', 'list', 'chan'] });
+      left: ['chart'], right: ['prog', 'list', 'chan', 'dose'] });
   }
   if (HH && HH.on() && HH.layout) {
     const f2 = { hero: fields.hero, chart: fields.chart, glight: fields.glight, gtech: fields.gtech, gai: fields.gai };
