@@ -67,18 +67,18 @@ Everything after the first setup happens in the Studio: rooms and room photos, t
 - **The dashboard's name** at the top opens the dashboard menu: switch to another dashboard or create one, and for this dashboard **Rename…**, **Icon…**, **Open on phone…**, **Phone layout** and **Delete…**.
 - **The ⋯ menu** contains **Move from Hemma…**, **Device assistant…**, **Import from YAML…**, **Setup assistant…**, **Quick tour**, **Keyboard shortcuts** and **Help…**. On a phone it also holds **Community cards…**.
 
-**Settings** opens a start page with a search and six topics. Entries marked *Only this dashboard* change only the dashboard you are editing; everything else applies to all your Casora dashboards.
+**Settings** opens a start page with a search and eight tiles. Each tile shows its settings right away, each with a short sentence on what it does; rarely needed ones sit under **Advanced** at the end of the tile. Entries marked *Only this dashboard* change only the dashboard you are editing; everything else applies to all your Casora dashboards.
 
-| Topic | What you set there |
+| Tile | What you set there |
 |---|---|
-| **Look & feel** | The design of all dashboards, and the clock of this dashboard (**Time**). |
-| **Messages** | What the bell shows on this dashboard, the bell's wording and exceptions for all dashboards (zone wording, mailbox, batteries to ignore, doors and windows with two sensors), ventilation push notifications and Live Activities on the phone's lock screen. |
-| **Home & Devices** | Waste collection (your names for the bins), doors and windows (hide single ones or give them a name of their own), players and scenes to hide, the calendars the calendar tile and its popup show, and the scenes of this dashboard. |
-| **Weather & climate** | This dashboard's weather source and chart values, outdoor temperature and humidity, and your electricity price. Leave the price empty and Casora uses the grid price from Home Assistant's Energy dashboard. |
-| **Controls** | Hold on tiles, font, tile size on the phone and the other controls of this dashboard, plus how Casora fills a new dashboard and whether it looks for Hemma dashboards (**New Dashboards**). This is also where you [remove Hemma](#removing-hemma). |
-| **Extras** | Which AI Casora uses, hints for the AI and a schedule for each AI feature, and fuel prices for the car popup. |
-
-Below the topics, **System › Updates** shows the installed version and every version with its release notes (see [Updates](#updates)).
+| **Look & feel** | The design of all dashboards, and this dashboard's clock and font. Advanced: the top bar and badges. |
+| **Tapping & tablet** | What holding a tile and tapping a badge do, when busy tiles move to the front, and going back to Home on a wall tablet. Advanced: Home Assistant's own popups and plain panels for slow devices. |
+| **Phone** | The dashboard on the phone (search, room groups, room photo, tile size) and Live Activities on the phone's lock screen. |
+| **Bell & messages** | What the bell shows on this dashboard, ventilation push notifications and a push for new versions. Advanced: wording and exceptions for all dashboards (zone wording, mailbox, batteries to ignore, doors and windows with two sensors, appliance care). |
+| **Home & devices** | Waste collection (your names for the bins), the calendars the calendar tile and its popup show, the scenes of this dashboard and doors and windows (hide single ones or give them a name of their own). Advanced: covers at night, scenes to hide, players and other devices. |
+| **Weather, power & fuel** | This dashboard's weather source and chart values, outdoor temperature and humidity, your electricity price and fuel prices for the car popup. Leave the price empty and Casora uses the grid price from Home Assistant's Energy dashboard. |
+| **AI** | Which AI Casora uses, hints for the AI and a schedule for each AI feature. |
+| **Updates & setup** | The installed version and every version with its release notes (see [Updates](#updates)), and how Casora fills a new dashboard. Advanced: Hemma dashboards and [removing Hemma](#removing-hemma). |
 
 The AI, outdoor and electricity price settings and the ventilation push are also in Home Assistant under Settings → Devices & services → Casora → **Configure**.
 
@@ -92,7 +92,7 @@ The AI, outdoor and electricity price settings and the ventilation push are also
 
 All three follow Home Assistant's light and dark mode. You can change the look later in the Studio under **Settings › Look & feel › Design**; it applies to all dashboards at once. The legacy looks Hemma 2 and Hemma 1 were removed in 26.10.31; if you used one, Casora switches you to *Casora Glas* once and tells you.
 
-The font is **Inter** in every look. You can switch to Hanken Grotesk or the system font per dashboard under **Settings › Controls › Controls on this dashboard › Text**. With **Own font** you upload fonts you hold a licence for there as well (for example Gilroy, with **Upload font**). Casora doesn't ship commercial fonts itself.
+The font is **Inter** in every look. You can switch to Hanken Grotesk or the system font per dashboard under **Settings › Look & feel › Font**. With **Own font** you upload fonts you hold a licence for there as well (for example Gilroy, with **Upload font**). Casora doesn't ship commercial fonts itself.
 
 ## What Casora recognises
 
@@ -128,7 +128,7 @@ You can start the move again at any time from the ⋯ menu (**Move from Hemma…
 
 Casora replaces Hemma. Once your dashboards have moved, Hemma is no longer needed, and running both loads their scripts twice. Casora can remove it for you.
 
-1. In the Studio open **Settings › Controls › New Dashboards**. The **Hemma** group appears as long as Hemma or its leftovers are there. (The move assistant also offers **Remove Hemma afterwards…** on its last page.)
+1. In the Studio open **Settings › Updates & setup** and open **Advanced**. The **Hemma** group appears as long as Hemma or its leftovers are there. (The move assistant also offers **Remove Hemma afterwards…** on its last page.)
 2. Click **Remove Hemma…**. A list shows exactly what goes and what stays:
    - **The Hemma integration**, removed through the Marketplace (so the Marketplace doesn't install it again) or by deleting `custom_components/hemma`.
    - **Hemma's dashboard resources.** If they are set up in YAML, Casora tells you which lines to remove from `configuration.yaml` yourself.
@@ -144,11 +144,11 @@ Casora replaces Hemma. Once your dashboards have moved, Hemma is no longer neede
 ## Using the dashboard
 
 - **Tap** the icon of a tile to switch the device, tap the rest of the tile to open its popup.
-- **Press and hold** a tile and a small menu opens right at the tile (a bottom sheet on phones). At the top sits the main action (turn off, unlock, pause …), below it quick controls for the device: brightness and colour, cover position, temperature, volume and tracks, target humidity or fan speed. **History**, **Device** and **Edit tile** (jumps to the tile in the Studio) follow. On desktop a right-click opens the same menu; on the keyboard use Shift+F10 or the context-menu key. In the Studio under **Settings › Controls › Controls on this dashboard › Tiles**, "Hold on tiles" lets you choose the quick menu, the popup or Home Assistant's dialog instead for the whole dashboard; a single tile can differ under **Visibility, ask first & hold**.
+- **Press and hold** a tile and a small menu opens right at the tile (a bottom sheet on phones). At the top sits the main action (turn off, unlock, pause …), below it quick controls for the device: brightness and colour, cover position, temperature, volume and tracks, target humidity or fan speed. **History**, **Device** and **Edit tile** (jumps to the tile in the Studio) follow. On desktop a right-click opens the same menu; on the keyboard use Shift+F10 or the context-menu key. In the Studio under **Settings › Tapping & tablet › Hold and sort tiles**, "Hold on tiles" lets you choose the quick menu, the popup or Home Assistant's dialog instead for the whole dashboard; a single tile can differ under **Visibility, ask first & hold**.
 - **Timers.** In the quick menu, "Turn off in" or "Turn on for" 15 min, 30 min, 1 h or 2 h is available for lights, switches, fans, air purifiers, humidifiers, heating and media players. While a timer runs, the tile shows a ring with a clock in the top corner that empties over time. Timers survive a restart and are dropped when you switch the device by hand first. Automations can use the [actions](#actions) `casora.set_timer` and `casora.cancel_timer`.
 - **Casora pages instead of Home Assistant's dialog.** A reading (temperature, power …) opens its chart with 24 h, 7 days or 30 days, highest, lowest and average value. A door or window contact shows when it was open. A device opens its device page with everything that belongs to it and "Open in Home Assistant" for the rest. All of them have ‹ back to where you came from.
 - **Ask first.** Unlock, "Open door" and the alarm always ask before they act; codes are asked masked. Any other tile can ask too: turn it on in the Studio in the tile's settings under **Visibility, ask first & hold**.
-- **The bell** collects what needs attention, such as open doors, low batteries, finished appliances and updates. It also shows Home Assistant's notifications, so a script or automation can put a message there with `persistent_notification.create`; Home Assistant's own notices appear too. Tap one to read the whole message and delete it; swiping it away in the bell dismisses it in Home Assistant as well. With the Pulse integration, its problems show up in the bell too. What the bell shows is set per dashboard under **Settings › Messages › Bell on this dashboard** (switch off **Home Assistant notifications** there if you don't want them).
+- **The bell** collects what needs attention, such as open doors, low batteries, finished appliances and updates. It also shows Home Assistant's notifications, so a script or automation can put a message there with `persistent_notification.create`; Home Assistant's own notices appear too. Tap one to read the whole message and delete it; swiping it away in the bell dismisses it in Home Assistant as well. With the Pulse integration, its problems show up in the bell too. What the bell shows is set per dashboard under **Settings › Bell & messages › Bell on this dashboard** (switch off **Home Assistant notifications** there if you don't want them).
 
 ## Community cards
 
@@ -175,9 +175,9 @@ Every save becomes a version. Casora keeps the last **30 versions** of each dash
 
 ## Updates
 
-New versions arrive through the **Marketplace** like any other integration: install the update and restart Home Assistant. In the Studio, an **Update** button appears in the toolbar when a new version is there, and **Settings › System › Updates** shows the installed version and all versions with their release notes. Without the Marketplace, Casora looks for new releases on GitHub and lists them under Settings → Updates.
+New versions arrive through the **Marketplace** like any other integration: install the update and restart Home Assistant. In the Studio, an **Update** button appears in the toolbar when a new version is there, and **Settings › Updates & setup › Updates** shows the installed version and all versions with their release notes. Without the Marketplace, Casora looks for new releases on GitHub and lists them under Settings → Updates.
 
-**Beta versions.** With the Marketplace, open the beta in the version list under **Settings › System › Updates** in the Studio and tap **Install**; the Marketplace downloads it. You can also open Casora in the Marketplace, choose ⋮ › **Redownload** and pick the beta in the version list. Without the Marketplace, turn on **Beta versions** on the same Updates page so betas show up under Settings → Updates too. Betas can have bugs. Casora never installs anything by itself: the Studio's **Install** button asks the Marketplace, so updates always go through the Marketplace (or a manual download).
+**Beta versions.** With the Marketplace, open the beta in the version list under **Settings › Updates & setup › Updates** in the Studio and tap **Install**; the Marketplace downloads it. You can also open Casora in the Marketplace, choose ⋮ › **Redownload** and pick the beta in the version list. Without the Marketplace, turn on **Beta versions** on the same Updates page so betas show up under Settings → Updates too. Betas can have bugs. Casora never installs anything by itself: the Studio's **Install** button asks the Marketplace, so updates always go through the Marketplace (or a manual download).
 
 After an update, Casora brings your dashboards up to its new templates when Home Assistant starts. It only touches templates you haven't changed yourself, and it saves a version first, so a notification tells you which dashboards were updated and that you can undo it with [Rewind](#rewind-going-back-to-an-earlier-version).
 
@@ -223,7 +223,7 @@ Casora runs entirely inside your Home Assistant. It has no cloud service, no acc
 
 - **AI features**, if you turn them on. Requests go through Home Assistant's own AI task integration to the provider **you** configured. They include only the data that feature needs, for example a camera image when you ask for a description, or your consumption figures for the energy coach.
 - **Integration logos** in the updates popup are loaded from `brands.home-assistant.io`, the same source Home Assistant uses.
-- **New releases** are looked up on GitHub (`api.github.com`) so they can show under Settings → Updates. Nothing about your home is sent.
+- **New releases** are looked up on GitHub (`api.github.com`) so they can show under Settings › Updates & setup › Updates. Nothing about your home is sent.
 - **Community card requests:** the status under **Your requests** is looked up on GitHub by the request's number. You submit the request yourself on GitHub.
 - **Fuel prices**, if you enter your own Tankerkönig key: Casora asks Tankerkönig for the stations within your radius around the car or your home. With Home Assistant's Tankerkönig integration instead, Casora only reads its sensors. The browser loads the station logos from the brands' websites, Wikimedia or Google's favicon service.
 - **Football tile:** the popup loads the league table and form from ESPN, the same source the Team Tracker integration uses.
