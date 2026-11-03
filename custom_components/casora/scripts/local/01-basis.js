@@ -612,7 +612,8 @@ window._casoraLightScope = function (entity, states, hass, vars) {
 /* The count every light surface shows (badge, tile, popup status line, Studio preview), from _casoraLightScope:
    always lamps – for a room, a room group with sub-groups and the whole house alike (owner, 01.11.2026: rooms were
    counted for houses and groups of rooms, and a room's own badge counted its sub-groups as rooms). { kind: 'lamps', on, tot }. */
-window.casoraLightTally = function (entity, states, hass, vars) {
+/* The lamps behind that count (also what „Tap on badges: Switch“ switches, casoraLightBadgeCall). */
+window._casoraLightTallyIds = function (entity, states, hass, vars) {
   var S = states || {};
   var sc = window._casoraLightScope(entity, S, hass, vars);
   /* group_rooms climbs from a room to the house group above it (autoIdx: the popup preselects the room); the count
@@ -624,8 +625,34 @@ window.casoraLightTally = function (entity, states, hass, vars) {
   var eid = entity && entity.entity_id;
   if (!own && eid && eid !== sc.groupId && String(eid).indexOf('light.') === 0 && sc.topLevelIds.indexOf(eid) > -1
       && S[eid] && S[eid].attributes && Array.isArray(S[eid].attributes.entity_id)) own = sc.expand(eid);
-  var ids = (own && own.length ? own : sc.lightIds).filter(function (x, i, a) { return S[x] && a.indexOf(x) === i; });
+  return (own && own.length ? own : sc.lightIds).filter(function (x, i, a) { return S[x] && a.indexOf(x) === i; });
+};
+window.casoraLightTally = function (entity, states, hass, vars) {
+  var S = states || {};
+  var ids = window._casoraLightTallyIds(entity, S, hass, vars);
   return { kind: 'lamps', tot: ids.length, on: ids.filter(function (x) { return S[x].state === 'on'; }).length };
+};
+/* Issue 119, „Tap on badges: Switch“ (Studio › Controls › Tiles, badge_tap): what a tap on the light badge switches – the
+   lamps it counts (_casoraLightTallyIds, as casoraLightTally). Its HA group alone (no picked lamps, not the rooms):
+   casora.light_smart_toggle on the group, which brings back the lamps that were on; otherwise all off when one is on,
+   else all on. Returns { service, data } for the badge's call-service, or null (nothing to switch). */
+window.casoraLightBadgeCall = function (entity, states, hass, vars) {
+  var S = states || {};
+  var V = vars || {};
+  var eid = entity && entity.entity_id;
+  if (eid && String(eid).indexOf('light.') === 0 && S[eid]) return { service: 'casora.light_smart_toggle', data: { light_entity: eid } };
+  var g = V.light_group_entity;
+  var picked = false;
+  for (var i = 1; i <= 10; i++) if (V['entity_' + i] && V['entity_' + i] !== g) picked = true;
+  if (typeof g === 'string' && g.indexOf('light.') === 0 && S[g] && !picked && V.light_rooms_auto !== true) {
+    return { service: 'casora.light_smart_toggle', data: { light_entity: g } };
+  }
+  // The lamps the badge counts (a room's badge: the room's own, never the house group its popup climbs to).
+  var ids = (window._casoraLightTallyIds ? window._casoraLightTallyIds(entity, S, hass, V) : [])
+    .filter(function (x) { return typeof x === 'string' && x.indexOf('light.') === 0; });
+  if (!ids.length) return null;
+  var on = ids.some(function (x) { return S[x].state === 'on'; });
+  return { service: on ? 'light.turn_off' : 'light.turn_on', data: { entity_id: ids } };
 };
 /* The words for a tally (German, the dashboard translates): „Aus“/„An“ for one lamp, „Alle aus“/„Alle an“, else
    „2 an“ – a count in small letters (owner, 01.11.2026; wortliste §2). */

@@ -1649,7 +1649,8 @@
   },
   "extra_styles": "[[[\n  const SVG_URL  = window.casoraIconUrl('light');\n  const ICON_PCT = 90;\n\n  return `\n    #img-cell, .img-cell{ position: relative; }\n\n    #img-cell #icon, .img-cell #icon{\n      color: transparent !important;\n      opacity: 0 !important;\n    }\n\n    #img-cell::before,\n    .img-cell::before{\n      content: '';\n      position: absolute;\n      inset: 0;\n      background-color: color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), var(--casora-icon-color, var(--primary-text-color))) !important;\n  scale: var(--casora-badge-glyph-scale, none);\n      -webkit-mask: url('${SVG_URL}') no-repeat center / auto ${ICON_PCT}%;\n      mask: url('${SVG_URL}') no-repeat center / auto ${ICON_PCT}%;\n      transform: translateZ(0);\n    }\n  `;\n]]]\n",
   "hold_action": {
-   "action": "call-service",
+   "action": "[[[\n  /* Issue 119: holding opens the popup when a tap switches („Tap on badges: Switch“); otherwise it switches. */\n  if (!(window.casoraBadgeTapToggle && window.casoraBadgeTapToggle())) return 'call-service';\n  if (!window.casoraPopupAction || window.casoraPopupAction() !== 'fire-dom-event') return 'more-info';\n  const id = entity?.entity_id || '';\n  const members = id ? states[id]?.attributes?.entity_id : null;\n  return (Array.isArray(members) && members.length > 0) || (id.startsWith('light.') && !!states[id]) ? 'fire-dom-event' : 'more-info';\n]]]\n",
+   "entity": "[[[ return entity?.entity_id ]]]",
    "service": "casora.light_smart_toggle",
    "service_data": {
     "light_entity": "[[[ return entity?.entity_id ]]]"
@@ -1697,9 +1698,13 @@
    ]
   },
   "tap_action": {
-   "action": "[[[\n  /* Casora-Licht-Popup (casora_popup aus casora_popup_light) für Gruppe und einzelnes Licht –\n     der Einzel-Chip öffnete bis 07.10.2026 HAs eigenen Dialog. Andere Geräte: HA-Dialog. */\n  if (!window.casoraPopupAction || window.casoraPopupAction() !== 'fire-dom-event') return 'more-info';\n  const id = entity?.entity_id || '';\n  const members = id ? states[id]?.attributes?.entity_id : null;\n  return (Array.isArray(members) && members.length > 0) || (id.startsWith('light.') && !!states[id]) ? 'fire-dom-event' : 'more-info';\n]]]\n",
+   "action": "[[[\n  /* Casora-Licht-Popup (casora_popup aus casora_popup_light) für Gruppe und einzelnes Licht –\n     der Einzel-Chip öffnete bis 07.10.2026 HAs eigenen Dialog. Andere Geräte: HA-Dialog. */\n  /* Issue 119: „Tap on badges: Switch“ – a tap switches the lamp (as holding does by default), holding opens the popup. */\n  if (window.casoraBadgeTapToggle && window.casoraBadgeTapToggle() && String(entity?.entity_id || '').startsWith('light.')) return 'call-service';\n  if (!window.casoraPopupAction || window.casoraPopupAction() !== 'fire-dom-event') return 'more-info';\n  const id = entity?.entity_id || '';\n  const members = id ? states[id]?.attributes?.entity_id : null;\n  return (Array.isArray(members) && members.length > 0) || (id.startsWith('light.') && !!states[id]) ? 'fire-dom-event' : 'more-info';\n]]]\n",
    "entity": "[[[ return entity?.entity_id ]]]",
-   "haptic": "light"
+   "haptic": "light",
+   "service": "casora.light_smart_toggle",
+   "service_data": {
+    "light_entity": "[[[ return entity?.entity_id ]]]"
+   }
   },
   "template": [
    "casora_badge_base",
@@ -1764,11 +1769,8 @@
   "tap_action": {
    "action": "call-service",
    "haptic": "light",
-   "service": "input_select.select_option",
-   "service_data": {
-    "entity_id": "input_select.casora_expanded_row",
-    "option": "[[[\n  return states['input_select.casora_expanded_row']?.state === 'lights' ? 'none' : 'lights';\n]]]\n"
-   }
+   "service": "[[[\n  /* Issue 119: „Tap on badges: Switch“ – a tap switches the badge's lamps (01-basis.js casoraLightBadgeCall), holding\n     still opens the popup. Otherwise the tap opens the badge's sub-row of lamps (desktop). */\n  const _c = (window.casoraBadgeTapToggle && window.casoraBadgeTapToggle()) && window.casoraLightBadgeCall ? window.casoraLightBadgeCall(entity, states, hass, variables) : null;\n  return _c ? _c.service : 'input_select.select_option';\n]]]\n",
+   "service_data": "[[[\n  const _c = (window.casoraBadgeTapToggle && window.casoraBadgeTapToggle()) && window.casoraLightBadgeCall ? window.casoraLightBadgeCall(entity, states, hass, variables) : null;\n  if (_c) return _c.data;\n  return { entity_id: 'input_select.casora_expanded_row', option: states['input_select.casora_expanded_row']?.state === 'lights' ? 'none' : 'lights' };\n]]]\n"
   },
   "template": [
    "casora_badge_base",
@@ -5721,7 +5723,8 @@
    "font": null,
    "font_family": null,
    "hold_mode": null,
-   "tile_sort": null
+   "tile_sort": null,
+   "badge_tap": null
   }
  },
  "casora_mobile_chrome": {
@@ -5998,7 +6001,7 @@
       {
        "entity": "input_select.casora_mobile_filter",
        "tap_action": {
-        "action": "fire-dom-event",
+        "action": "[[[ return window.casoraBadgeTapToggle && window.casoraBadgeTapToggle() ? 'call-service' : 'fire-dom-event'; ]]]",
         "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  /* #80, 26.10.63: with Casora popups the light badge opens its light popup – its own lamps, or the house's\n     rooms (as on the desktop). No filter this time (null). Without Casora popups the page filters by rooms. */\n  if (window.casoraPopupAction && window.casoraPopupAction() === 'fire-dom-event') return null;\n  return cur === 'lights' ? 'all' : 'lights';\n]]]\n",
         "haptic": "selection"
        },
@@ -7805,7 +7808,7 @@
         "light_rooms_auto": "[[[ const _rv = variables.casora_rv || {}; \n  /* A room with lamps of its own counts those, never the whole house (detail round #2: „3 An“ in a dark bathroom). */\n  return _rv.light_rooms_auto === true && !_rv.light_entity_1 && !_rv.light_group_entity ]]]"
        },
        "tap_action": {
-        "action": "fire-dom-event",
+        "action": "[[[ return window.casoraBadgeTapToggle && window.casoraBadgeTapToggle() ? 'call-service' : 'fire-dom-event'; ]]]",
         "casora_phone_row": "lights",
         "haptic": "light"
        }
@@ -16205,7 +16208,8 @@
    "weather_feels": null,
    "weather_feels_sensor": null,
    "security_sub_order": null,
-   "climate_sub_order": null
+   "climate_sub_order": null,
+   "badge_tap": null
   }
  },
  "casora_scene_core": {

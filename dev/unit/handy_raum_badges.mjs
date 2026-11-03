@@ -162,6 +162,8 @@ for (const [tpl, kind] of Object.entries(groups)) {
   const c = phone.find((x) => x.template === tpl);
   // Media opens its popup like on the desktop (#64, casora_popup_media) – no tap override.
   if (kind === 'media') assert.equal(c.tap_action, undefined, tpl);
+  // Lights: a tap switches with „Tap on badges: Switch“ (issue 119, badge_tap_mode.mjs), else the row event as before.
+  else if (kind === 'lights') assert.deepEqual(c.tap_action, { action: "[[[ return window.casoraBadgeTapToggle && window.casoraBadgeTapToggle() ? 'call-service' : 'fire-dom-event'; ]]]", casora_phone_row: kind, haptic: 'light' }, tpl);
   else assert.deepEqual(c.tap_action, { action: 'fire-dom-event', casora_phone_row: kind, haptic: 'light' }, tpl);
   assert.ok(C.custom_fields['room_sub_' + kind], 'Unter-Reihe ' + kind);
   const dsub = R.custom_fields[{ lights: 'badges_lights', presence: 'badges_presence' }[kind] || 'badges_' + kind];

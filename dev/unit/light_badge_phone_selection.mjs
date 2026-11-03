@@ -45,5 +45,9 @@ assert.equal(run({ light_group_entity: 'light.house' }, 'lights', false), 'all',
 // The popup handler (casora-core.js) opens the popup for a null filter; the desktop's badge keeps its row.
 assert.ok(rd('custom_components/casora/scripts/casora-core.js').includes('ev.detail.casora_filter !== undefined && ev.detail.casora_filter !== null) return;'),
   'popup handler must open on a null filter');
-assert.equal(tpl.casora_badge_light_group.tap_action.service_data.entity_id, 'input_select.casora_expanded_row', 'desktop row unchanged');
+// Issue 119: service and data are templates (a tap may switch instead); in the default mode the row as before.
+window.casoraBadgeTapToggle = () => false;
+const sd = String(tpl.casora_badge_light_group.tap_action.service_data).trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');
+assert.equal(new Function('entity', 'states', 'hass', 'variables', sd)(null, {}, null, {}).entity_id, 'input_select.casora_expanded_row', 'desktop row unchanged');
+delete window.casoraBadgeTapToggle;
 console.log('light_badge_phone_selection: ok');

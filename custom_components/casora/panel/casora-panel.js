@@ -2353,6 +2353,12 @@ const SECTIONS = [
         options: ["", "popup", "ha"],
         optionLabels: { "": "Quick menu", popup: "Open popup", ha: "Home Assistant dialog" },
         hint: "What holding a tile does. A single tile can do something else – set it on the tile under Visibility, ask first & hold." },
+      // Issue 119: what a tap on the light badge and its lamps does (casora-core.js window._casoraBadgeTap, the phone
+      // gets it through casora_mobile_bg). Empty = open the popup, holding switches (as before); toggle = the other way.
+      { key: "badge_tap", sub: "hold", label: "Tap on badges", type: "select", auto: true, scope: "dashboard",
+        options: ["", "toggle"],
+        optionLabels: { "": "Open popup", toggle: "Switch the light" },
+        hint: "What tapping the Lighting badge and its lamps does. Holding does the other." },
       // Live re-sort of tile rows and rooms (smart-row.js sortMode, filter-overlay.js); casora-core.js reads it
       // into window._casoraSortMode, the phone gets it through casora_mobile_bg. Empty = right away (default since 26.11.6).
       { key: "tile_sort", sub: "hold", label: "Sort tiles", type: "select", auto: true, scope: "dashboard",
