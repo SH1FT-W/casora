@@ -40,6 +40,13 @@ assert.equal(S.neighbour(withHome, 'all', 'next'), 'room_a', 'Home: swipe left o
 assert.equal(S.neighbour(withHome, 'room_a', 'prev'), 'all', 'first room: swipe right goes back Home');
 assert.equal(S.neighbour(withHome, 'all', 'prev'), null, 'Home has no previous page');
 
+// Scroll chaining: a sideways row under the finger keeps the swipe while it can still scroll that way (iPad, 03.11.2026).
+assert.equal(S.rowTakes([], 'next'), false, 'no row: the page swipes');
+assert.equal(S.rowTakes([{ left: 0, max: 600 }], 'next'), true, 'row at its start, finger to the left: the row scrolls');
+assert.equal(S.rowTakes([{ left: 0, max: 600 }], 'prev'), false, 'row at its start, finger to the right: the page swipes');
+assert.equal(S.rowTakes([{ left: 600, max: 600 }], 'next'), false, 'row at its end: the page swipes');
+assert.equal(S.rowTakes([{ left: 300, max: 600 }], 'prev'), true, 'row in the middle: the row scrolls');
+
 // Rubber band at the ends, half the way otherwise
 assert.equal(S.follow(-100, false), -50);
 assert.ok(Math.abs(S.follow(-400, true)) <= 28 && S.follow(-400, true) < 0, 'end: gives only a little');
@@ -64,6 +71,16 @@ const code = mod.replace(/\/\/[^\n]*/g, '');
 assert.doesNotMatch(code, /userAgent|pointer: ?coarse|swipe_rooms_tablet|_casoraSwipeTablet/);
 assert.match(code, /addEventListener\('touchstart'/);
 assert.doesNotMatch(code, /addEventListener\('(pointerdown|mousedown)'/, 'a mouse never swipes');
+// Smooth change: neighbours' photos decoded ahead, the switch waits for the target photo, backgrounds crossfade under
+// html.casora-room-swap (not with reduced motion), transforms only.
+assert.match(code, /img\.decode/, 'photos are decoded ahead');
+assert.match(code, /preloadAround\(tgt\)/, 'neighbours preloaded when a touch starts');
+assert.match(code, /classList\.add\('casora-room-swap'\)/);
+assert.match(code, /if \(!reduced\(\)\) \{\s*document\.documentElement\.classList\.add\('casora-room-swap'\)/, 'reduced motion: no crossfade');
+assert.match(code, /translate3d\(/);
+assert.doesNotMatch(code, /'translateX\(/, 'GPU transforms only');
+const fo = fs.readFileSync(new URL('../../custom_components/casora/scripts/filter-overlay.js', import.meta.url), 'utf8');
+assert.match(fo, /window\._casoraRoomPhotoOf = \(cfg, hass\) =>/, 'filter-overlay hands out the room photo for preloading');
 const loader = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-local.js', import.meta.url), 'utf8');
 assert.match(loader, /'40-swipe-rooms',/);
 console.log('ok swipe_rooms');

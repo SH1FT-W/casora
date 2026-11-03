@@ -16,6 +16,10 @@
 // iPad (WebKit, landscape, iPadOS Safari's Mac user agent, touch events): the same setting on the desktop dashboard
 // swipes between the room views, Home (first view) first; a saved swipe_rooms_tablet alone does nothing.
 // Desktop with a mouse (Chromium 1440, no touch): dragging never changes the page.
+// Owner 03.11.2026 (iPad prod): a row that scrolls sideways keeps the swipe only while it can still scroll that way; at
+// its end the page swipes (scroll chaining) – a tablet room page is mostly tile rows. Smooth change ("the background
+// image jerks in"): the neighbours' room photos are decoded ahead, the backgrounds crossfade under html.casora-room-swap
+// (not with reduced motion).
 import { open, usePage, casoraDashboard, dashboard, check, need, finish } from './lib.mjs';
 
 const dash = await casoraDashboard();
@@ -82,6 +86,30 @@ const toRight = (s, w) => [s.x, s.y, Math.min(w - 8, s.x + w * 0.6), s.y - 4];
   await check('Handy an: nach links wischen → nächster Raum', (await cur()) === keys[2], { cur: await cur(), want: keys[2] });
   await swipe(cdp, page, 60, midY, 330, midY - 4);
   await check('Handy an: nach rechts wischen → voriger Raum', (await cur()) === keys[1], { cur: await cur(), want: keys[1] });
+  // The open room follows the finger (GPU transform) while it drags.
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 300, y: midY }] });
+  for (let i = 1; i <= 5; i++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 300 - i * 16, y: midY }] }); await page.waitForTimeout(16); }
+  const follows = await page.evaluate((k) => { let tf = '';
+    Array.from(window._casoraSmartRows || []).forEach((r) => r.shadowRoot && r.shadowRoot.querySelectorAll('casora-filter-overlay')
+      .forEach((fo) => { if (fo._config && fo._config.filter_category === k && fo._overlayEl) tf = fo._overlayEl.style.transform; }));
+    return tf; }, keys[1]);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await page.waitForTimeout(900);
+  await check('Handy an: der offene Raum folgt dem Finger (translate3d)', /translate3d\(-/.test(follows), { follows });
+  await go(keys[1]);
+  // Smooth change: neighbour photos decoded ahead, crossfade class while switching; none with reduced motion.
+  await page.waitForTimeout(800);
+  const pre = await page.evaluate(() => (window.casoraSwipeRooms.preloaded ? window.casoraSwipeRooms.preloaded() : []));
+  await check('Handy an: Fotos der Nachbarräume vorgeladen', pre.length >= 1, pre);
+  await page.evaluate(() => { window.__qaSwap = false; new MutationObserver(() => { if (document.documentElement.classList.contains('casora-room-swap')) window.__qaSwap = true; })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['class'] }); });
+  await swipe(cdp, page, 330, midY, 60, midY + 6);
+  await check('Handy an: Hintergründe blenden über (casora-room-swap)', await page.evaluate(() => window.__qaSwap) && (await cur()) === keys[2], { cur: await cur() });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.evaluate(() => { window.__qaSwap = false; });
+  await swipe(cdp, page, 60, midY, 330, midY - 4);
+  await check('Handy an, weniger Bewegung: Raumwechsel ohne Überblenden', !(await page.evaluate(() => window.__qaSwap)) && (await cur()) === keys[1], { cur: await cur() });
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
 
   await swipe(cdp, page, 200, 650, 160, 300);
   await check('Handy an: senkrecht wischen wechselt den Raum nicht', (await cur()) === keys[1], { cur: await cur() });
@@ -223,6 +251,22 @@ async function jsSwipe(page, x0, y0, x1, y1) {
   await check('iPad an: auf Home nach rechts wischen bleibt auf Home', (await path()) === homePath, { path: await path() });
   await sw('right');
   await check('iPad an: auf Home nach links wischen → erster Raum', (await path()) === views[1], { path: await path(), want: views[1] });
+  // Scroll chaining on a tile row that overflows (narrowed in the browser): at its start a swipe to the left scrolls the
+  // row, at its end the page goes on to the next room.
+  const row = await page.evaluate(() => {
+    const el = window.__pierce('casora-smart-row').find((x) => getComputedStyle(x).overflowX === 'auto' && x.getBoundingClientRect().width > 300);
+    if (!el) return null;
+    el.style.width = '360px'; el.scrollLeft = 0; window.__qaRow = el;
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width - 30, y: r.top + r.height / 2, over: el.scrollWidth > el.clientWidth + 4 };
+  });
+  if (row && row.over) {
+    await jsSwipe(page, row.x, row.y, row.x - 300, row.y + 2);
+    await check('iPad an: Wischen auf einer Kachelreihe, die noch scrollen kann, bleibt bei der Reihe', (await path()) === views[1], { path: await path() });
+    await page.evaluate(() => { const el = window.__qaRow; el.scrollLeft = el.scrollWidth; });
+    await jsSwipe(page, row.x, row.y, row.x - 300, row.y + 2);
+    await check('iPad an: am Ende der Kachelreihe wischt die Seite weiter', (await path()) === views[2], { path: await path(), want: views[2] });
+  } else console.log('  info   iPad: keine Kachelreihe zum Verengen gefunden – Fall Scroll-Kette übersprungen');
   await page.context().close();
 }
 {

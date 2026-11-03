@@ -54,7 +54,18 @@
     return s * Math.min(28, Math.abs(dx) * 0.15);
   }
 
-  window.casoraSwipeRooms = { decide: decide, lock: lock, neighbour: neighbour, follow: follow, EDGE_PX: EDGE_PX, blocked: null };
+  // Scroll chaining (owner, 03.11.2026, iPad): a row under the finger keeps the swipe while it can still scroll that
+  // way; at its end the page takes over, as nested scrolling does on iOS. rows: [{ left, max }]; dir 'next' (finger to
+  // the left: the row's content moves on to the right end) or 'prev'.
+  function rowTakes(rows, dir) {
+    return (rows || []).some(function (r) {
+      return dir === 'next' ? r.left < r.max - 2 : r.left > 2;
+    });
+  }
+
+  window.casoraSwipeRooms = { decide: decide, lock: lock, neighbour: neighbour, follow: follow, rowTakes: rowTakes,
+    EDGE_PX: EDGE_PX, blocked: null, scrollers: null, last: '' };
+  var S0 = window.casoraSwipeRooms;
   if (typeof document === 'undefined' || !document.addEventListener) return;
 
   var reduced = function () {
@@ -75,17 +86,30 @@
       if (el.getAttribute && (el.getAttribute('role') === 'slider' || el.hasAttribute('data-no-swipe'))) return true;
       var cl = el.classList;
       if (cl && (cl.contains('hmn-bar') || cl.contains('hmn-menu') || cl.contains('hmn-sheet'))) return true;
-      var cs = null;
-      try { cs = getComputedStyle(el); } catch (e) { cs = null; }
-      // A row that scrolls sideways (badge rows, chips, smart-row's tile row when it overflows) keeps the touch; a row that
-      // fits does not (a tablet room page is mostly tile rows).
-      if (cs && el.scrollWidth > el.clientWidth + 4 && el.clientWidth > 0 && (cs.overflowX === 'auto' || cs.overflowX === 'scroll')) return true;
       if (el === document.body) break;
     }
     return false;
   }
+  // Rows under the finger that scroll sideways (badge rows, chips, a tile row that overflows), with how far each can
+  // still go: [{ el, left, max }]. A row that fits is no row here (a tablet room page is mostly tile rows).
+  function scrollers(path) {
+    var out = [];
+    for (var i = 0; i < path.length; i++) {
+      var el = path[i];
+      if (!el || el.nodeType !== 1) continue;
+      if (el === document.body) break;
+      if (!(el.scrollWidth > el.clientWidth + 4 && el.clientWidth > 0)) continue;
+      var cs = null;
+      try { cs = getComputedStyle(el); } catch (e) { cs = null; }
+      if (cs && (cs.overflowX === 'auto' || cs.overflowX === 'scroll')) {
+        out.push({ el: el, left: el.scrollLeft, max: el.scrollWidth - el.clientWidth });
+      }
+    }
+    return out;
+  }
 
   window.casoraSwipeRooms.blocked = blocked;
+  window.casoraSwipeRooms.scrollers = scrollers;
 
   // ── Phone: the open room overlay of the bottom bar's room list ──────────────
   function phoneTarget() {
@@ -98,14 +122,14 @@
     var keys = ['all'].concat(rooms.map(function (r) { return r.key; }));
     if (keys.indexOf(cur) < 0 || keys.length < 2) return null;
     var el = null;
-    Array.prototype.forEach.call(window._casoraSmartRows || [], function (r) {
+    Array.from(window._casoraSmartRows || []).forEach(function (r) {
       if (el || !r.shadowRoot) return;
       Array.prototype.forEach.call(r.shadowRoot.querySelectorAll('casora-filter-overlay'), function (fo) {
         if (!el && fo._showing && fo._config && fo._config.filter_category === cur && fo._overlayEl) el = fo._overlayEl;
       });
     });
     return {
-      el: el, keys: keys, cur: cur,
+      phone: true, el: el, keys: keys, cur: cur,
       go: function (key) { if (typeof o._haptic === 'function') o._haptic(); o._set(key); },
     };
   }
@@ -156,12 +180,94 @@
     };
   }
 
+  // ── Smooth change (owner, 03.11.2026: "das Hintergrundbild ruckelt sich rein") ───────────────────────────────
+  // The neighbours' room photos are fetched and decoded ahead (when a page opens and when a touch starts), the switch
+  // waits for the target's photo (at most ~280 ms) and the room backgrounds crossfade while html carries
+  // .casora-room-swap (250 ms, the popups' easing). Transforms only (translate3d, opacity); reduced motion: no slide,
+  // no crossfade, the preload stays.
+  var urlOf = function (css) { var m = /url\(["']?([^"')]+)["']?\)/.exec(String(css || '')); return m ? m[1] : null; };
+  var decoded = {};
+  function preloadUrl(url) {
+    if (!url) return Promise.resolve(false);
+    if (decoded[url]) return decoded[url];
+    decoded[url] = new Promise(function (res) {
+      try {
+        var img = new Image();
+        img.decoding = 'async';
+        img.src = url;
+        (img.decode ? img.decode() : new Promise(function (r, j) { img.onload = r; img.onerror = j; }))
+          .then(function () { res(true); }, function () { res(false); });
+      } catch (e) { res(false); }
+    });
+    return decoded[url];
+  }
+  var hassNow = function () { var h = document.querySelector('home-assistant'); return h && h.hass; };
+  // Phone: the overlay config of a filter key ('all' = Home: no photo of its own here).
+  function overlayCfg(key) {
+    var hit = null;
+    Array.from(window._casoraSmartRows || []).forEach(function (r) {
+      if (hit || !r.shadowRoot) return;
+      Array.prototype.forEach.call(r.shadowRoot.querySelectorAll('casora-filter-overlay'), function (fo) {
+        if (!hit && fo._config && fo._config.filter_category === key) hit = fo._config;
+      });
+    });
+    return hit;
+  }
+  // Tablet: a room view's photo from its hero card (image / image_night, like the room card).
+  function viewPhoto(key) {
+    var root = deep(document, 'hui-root', 0), cfg = root && root.lovelace && root.lovelace.config;
+    var v = cfg && (cfg.views || []).filter(function (x, i) { return String(x.path || i) === key; })[0];
+    var V = v && ((v.cards || [])[0] || {}).variables;
+    if (!V || !window.casoraPhotoCss) return null;
+    var h = hassNow(), dark = !!(h && h.themes && h.themes.darkMode);
+    var stem = function (x) { return (window.casoraPhotoStem ? window.casoraPhotoStem(x) : x) || null; };
+    var pic = dark ? (stem(V.image_night) || (stem(V.image) && stem(V.image) + '-night')) : stem(V.image);
+    return pic ? urlOf(window.casoraPhotoCss(pic, h)) : null;
+  }
+  function photoUrl(tgt, key) {
+    if (tgt.phone) { var c = overlayCfg(key); return c && window._casoraRoomPhotoOf ? urlOf(window._casoraRoomPhotoOf(c, hassNow())) : null; }
+    return viewPhoto(key);
+  }
+  function preloadAround(tgt) {
+    ['prev', 'next'].forEach(function (d) { var k = neighbour(tgt.keys, tgt.cur, d); if (k) preloadUrl(photoUrl(tgt, k)); });
+  }
+  S0.preloadUrl = preloadUrl;
+  S0.preloaded = function () { return Object.keys(decoded); };
+  if (!document.getElementById('casora-room-swap-style')) {
+    var st = document.createElement('style');
+    st.id = 'casora-room-swap-style';
+    st.textContent = 'html.casora-room-swap [data-casora-filter-blur], html.casora-room-swap [data-casora-room-bg-twin] {'
+      + ' transition: opacity 0.25s cubic-bezier(0.32, 0.72, 0, 1), background 0.25s cubic-bezier(0.32, 0.72, 0, 1) !important; }';
+    document.head.appendChild(st);
+  }
+  var swapT = 0;
+  function swap(tgt, key, before) {
+    var url = photoUrl(tgt, key);
+    var wait = Promise.race([preloadUrl(url), new Promise(function (r) { setTimeout(r, 280); })]);
+    return wait.then(function () {
+      if (!reduced()) {
+        document.documentElement.classList.add('casora-room-swap');
+        clearTimeout(swapT);
+        swapT = setTimeout(function () { document.documentElement.classList.remove('casora-room-swap'); }, 450);
+      }
+      if (before) before();
+      tgt.go(key);
+    });
+  }
+  // Warm the neighbours when a page opens (phone filter change, tablet view change).
+  var warm = function () { setTimeout(function () { var t = phoneTarget() || tabletTarget(); if (t) preloadAround(t); }, 400); };
+  if (window._casoraFilter && window._casoraFilter.onChange) window._casoraFilter.onChange(warm);
+  window.addEventListener('location-changed', warm);
+  setTimeout(warm, 2500);
+
   var g = null;
+  var S = window.casoraSwipeRooms;
   var reset = function (el, animate) {
     if (!el) return;
     el.style.transition = animate ? 'transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.2s ease' : '';
     el.style.transform = '';
     el.style.opacity = '';
+    el.style.willChange = '';
     if (animate) setTimeout(function () { if (!g || g.el !== el) el.style.transition = ''; }, 320);
   };
 
@@ -171,22 +277,30 @@
     var t = e.touches[0];
     if (t.clientX < EDGE_PX) return;
     var tgt = phoneTarget() || tabletTarget();
-    if (!tgt) return;
-    if (blocked(e.composedPath ? e.composedPath() : [e.target])) return;
-    g = { x: t.clientX, y: t.clientY, t: e.timeStamp || Date.now(), axis: null, tgt: tgt, el: tgt.el, dx: 0, dy: 0 };
+    if (!tgt) { S.last = 'off'; return; }
+    var path = e.composedPath ? e.composedPath() : [e.target];
+    if (blocked(path)) { S.last = 'blocked'; return; }
+    g = { x: t.clientX, y: t.clientY, t: e.timeStamp || Date.now(), axis: null, tgt: tgt, el: tgt.el, dx: 0, dy: 0,
+      rows: scrollers(path) };
+    preloadAround(tgt);
   }, { passive: true, capture: true });
 
   document.addEventListener('touchmove', function (e) {
     if (!g || !e.touches || !e.touches[0]) return;
     var t = e.touches[0];
     g.dx = t.clientX - g.x; g.dy = t.clientY - g.y;
-    if (!g.axis) g.axis = lock(g.dx, g.dy);
-    if (g.axis === 'v') { g = null; return; }
+    if (!g.axis) {
+      g.axis = lock(g.dx, g.dy);
+      // Just locked sideways: a row that can still scroll this way keeps the swipe (scroll chaining).
+      if (g.axis === 'h' && rowTakes(g.rows, g.dx < 0 ? 'next' : 'prev')) { S.last = 'row'; g = null; return; }
+    }
+    if (g.axis === 'v') { S.last = 'vertical'; g = null; return; }
     if (g.axis !== 'h' || !g.el || reduced()) return;
     var dir = g.dx < 0 ? 'next' : 'prev';
     var atEnd = !neighbour(g.tgt.keys, g.tgt.cur, dir);
     g.el.style.transition = 'none';
-    g.el.style.transform = 'translateX(' + follow(g.dx, atEnd).toFixed(1) + 'px)';
+    g.el.style.willChange = 'transform, opacity';
+    g.el.style.transform = 'translate3d(' + follow(g.dx, atEnd).toFixed(1) + 'px, 0, 0)';
   }, { passive: true, capture: true });
 
   var end = function (e) {
@@ -195,12 +309,13 @@
     var dir = decide({ dx: s.dx, dy: s.dy, dt: (e.timeStamp || Date.now()) - s.t, w: window.innerWidth });
     var key = dir && neighbour(s.tgt.keys, s.tgt.cur, dir);
     if (!key || popupOpen()) { reset(s.el, true); return; }
-    if (!s.el || reduced()) { reset(s.el, false); s.tgt.go(key); return; }
-    // The page slides on out to its side and fades, then the next room opens as from the menu.
+    S.last = 'switch';
+    if (!s.el || reduced()) { reset(s.el, false); swap(s.tgt, key); return; }
+    // The page slides on out to its side and fades, then the next room opens as from the menu (its photo decoded).
     s.el.style.transition = 'transform 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.18s ease';
-    s.el.style.transform = 'translateX(' + (dir === 'next' ? -40 : 40) + '%)';
+    s.el.style.transform = 'translate3d(' + (dir === 'next' ? -40 : 40) + '%, 0, 0)';
     s.el.style.opacity = '0';
-    setTimeout(function () { reset(s.el, false); s.tgt.go(key); }, 170);
+    setTimeout(function () { swap(s.tgt, key, function () { reset(s.el, false); }); }, 170);
   };
   document.addEventListener('touchend', end, { passive: true, capture: true });
   document.addEventListener('touchcancel', function () { var s = g; g = null; if (s) reset(s.el, true); }, { passive: true, capture: true });

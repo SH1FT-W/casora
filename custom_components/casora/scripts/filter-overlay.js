@@ -38,6 +38,19 @@
     'Terrasse': 'terrasse',
   };
   const TITLE_VCENTER = 0.45;
+  // The room photo (CSS image) a room overlay of this config shows behind its page – the same choice as _buildOverlay
+  // (Studio image/image_night, else ROOM_PHOTOS; night photo in dark mode). 40-swipe-rooms.js preloads the neighbours'
+  // photos with it so a swipe never shows a photo popping in. 'none' = no photo (yet).
+  window._casoraRoomPhotoOf = (cfg, hass) => {
+    if (!cfg || !cfg.room) return 'none';
+    const stem = (r) => (window.casoraPhotoStem ? window.casoraPhotoStem(r) : r) || null;
+    const rp = stem(cfg.image) || ROOM_PHOTOS[cfg.room];
+    if (!rp) return 'none';
+    const dark = typeof hass?.themes?.darkMode === 'boolean' ? hass.themes.darkMode
+      : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const pic = dark ? (stem(cfg.image_night) || rp + '-night') : rp;
+    return window.casoraPhotoCss ? window.casoraPhotoCss(pic, hass) : `url("/casora_assets/rooms/${pic}.jpg")`;
+  };
 
   const LANDSCAPE_PHONE_VAR = '--casora-landscape-phone'; // '0' or '1', flipped by @media
   if (!document.getElementById('casora-landscape-phone-style')) {
