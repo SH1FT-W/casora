@@ -4,18 +4,26 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
-## 26.11.8 – 02.11.2026
+## 26.11.8 – 03.11.2026
 
-Fixes from your reports: waste on the phone, house lighting and steadier numbers in charts.
+Tidied light popups, waste on the phone and fixes from your reports.
 
 ### Changed
 - **Waste on the phone (#117):** today's pickup comes first, then the bins' next dates and the put-out duty, the calendar last. Tapping a day shows its pickup right under the calendar, without jumping up.
-- **House lighting (#118):** when a room has just one lamp, tapping it in the "Lighting" popup opens that lamp directly; back returns to the list.
+- **House lighting (#118):** when a room has just one lamp, tapping it in the "Lighting" popup opens that lamp directly; back returns to the list. A room badge whose light group holds one lamp opens that lamp too.
+- **Light popups, one look everywhere:** however you open them (Home, a room, a room chip, a lamp), the small line names the room and the title says "Lighting", a lamp's page shows the lamp without the room name. The count stands once, in the list heading ("Lamps in this room · 2 of 5 on"), so the dial no longer jumps between pages. Rows are short ("Off", "On · 80 %").
+- **Scenes in one button:** beside the dial there is one "Scenes" button with a menu (highlighted while a scene holds) and "Effects" when the lamp has effects; never a third button under the dial.
+- **Lamp page switch:** a lamp's page has its own switch at the top right.
+- **Light groups in a room:** a group such as "Spots" is one row everywhere, also in the room's own popup.
+- **Lamp chips without the room name:** in a room the lamp chips under "Lighting" leave out the room's name ("Floor lamp" instead of "Floor lamp Living room").
+- **Home's light badge:** dashboards set up before listed the house group and up to ten of its lights. On opening, the Studio offers to switch the badge to the group alone (or to the rooms when the group holds more than the rooms); save to keep it, the version before stays under Versions. The room order in the "Lighting" popup then follows your Home Assistant light group.
 
 ### Fixed
 - **Waste tile:** on pickup day the tile and the header say "Today general waste" even when the countdown sensor has already moved on; the date wins.
 - **House lighting after setup:** with a light group for the whole house and more than ten lights, rooms were missing from the "Lighting" popup; newly set up dashboards now show all of them.
 - **Chart popup:** values, highest/lowest and average keep their decimals instead of jumping between "44.38" and "47.4".
+- **Pulse status:** the ring follows the state (green good, yellow watch, orange check, red failed, grey learning) instead of staying green.
+- **Esc in a menu:** with the "Scenes" or "Effects" menu open, Esc closes only the menu.
 
 ## 26.11.7 – 02.11.2026
 
