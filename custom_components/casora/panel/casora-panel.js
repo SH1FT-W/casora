@@ -900,6 +900,9 @@ function markPhoneManaged(cfg, showBell, showAssist, rooms) {
       if (c.type === MOBILE_NAV && Array.isArray(rooms)) {
         if (home && home.name && !isDefaultHome(home, rooms)) { c.home_label = home.name; delete c.home_auto; }
         else { delete c.home_label; if (home && isDefaultHome(home, rooms)) c.home_auto = true; else delete c.home_auto; }
+        // Issue 114: swipe between rooms (scripts/local/40-swipe-rooms.js reads it from this card).
+        if (home && home.variables && home.variables.swipe_rooms === true) c.swipe_rooms = true;
+        else delete c.swipe_rooms;
       }
       if (c.template === "casora_mobile_weather") {
         c.variables = { ...(c.variables || {}), casora_ui_managed: true };
@@ -2403,6 +2406,12 @@ const SECTIONS = [
       { key: "show_search", sub: "phone", label: "Show search", type: "bool",
         boolDefault: true, auto: true, scope: "dashboard",
         hint: "Pull down at the top of the phone's Home to show a search field: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search." },
+      // Issue 114: swipe left/right on Home or an open room for the next/previous page (scripts/local/40-swipe-rooms.js),
+      // on every touch device (owner, 03.11.2026: one setting). The tablet reads swipe_rooms from the room views
+      // (casora-core.js, window._casoraSwipeRooms), the phone's bottom bar card gets it on save (markPhoneManaged).
+      { key: "swipe_rooms", sub: "phone", label: "Swipe between rooms", type: "bool",
+        boolDefault: false, auto: true, scope: "dashboard",
+        hint: "On a phone or tablet, swipe left or right on Home or an open room to get to the next or previous room, in the order of the room menu." },
       { key: "room_groups", sub: "phone", label: "Group rooms by category on the phone", type: "bool",
         boolDefault: false, auto: true, scope: "dashboard",
         hint: "Like Apple's Home app: Light, Climate, Security … each with a small heading. Off shows all devices under one heading." },

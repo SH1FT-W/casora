@@ -228,6 +228,7 @@ const MODULES = [
   '37-kettle',
   '38-search',
   '39-update-prompt',
+  '40-swipe-rooms',
 ];
 
 const START_MODULES = MODULES.slice(0, 5);
