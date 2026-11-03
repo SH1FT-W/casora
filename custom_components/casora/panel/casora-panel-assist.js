@@ -414,8 +414,8 @@
           + ".casora-aall{background:none;border:0;padding:4px 6px;font:inherit;font-size:13px;color:var(--accent);cursor:pointer}"
           + ".casora-chips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 4px}"
           + ".casora-chip{border:0;border-radius:999px;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer;"
-          + "background:var(--casora-studio-field,rgba(118,118,128,0.12));color:inherit}"
-          + ".casora-chip[aria-pressed=true]{background:var(--accent);color:#fff}";
+          + "background:var(--chip,var(--casora-studio-field,rgba(118,118,128,0.12)));color:inherit}"
+          + ".casora-chip.on{background:var(--fill,var(--accent));color:var(--on-fill,var(--on-accent,#fff))}";
         this.shadowRoot.appendChild(st);
       }
       const s = this._flowScreen({
@@ -466,6 +466,7 @@
           b.type = "button";
           b.className = "casora-chip";
           b.setAttribute("aria-pressed", kind === k ? "true" : "false");
+          if (kind === k) b.classList.add("on");
           const lb = document.createElement("span");
           lb.textContent = label;
           const nb = document.createElement("span");
