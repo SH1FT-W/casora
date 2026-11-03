@@ -1,6 +1,7 @@
 // Room light badges (03.11.2026): a room's lamp chips drop the room name ("Stehlampe Wohnzimmer" in the room
 // Wohnzimmer shows as "Stehlampe"), as the scene badges do. The room passes its name to each lamp chip (desktop
-// badge row and phone room row); without one (Home's room chips) names stay.
+// badge row and phone room row); without one (Home's room chips) names stay. Rooms saved without aqi_room_name fall
+// back to the room card's name (desktop) or the phone's _name (regress r507).
 //   node dev/unit/light_badge_room_name.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -21,8 +22,8 @@ assert.equal(name('Wohnzimmer', 'Wohnzimmer'), 'Wohnzimmer', 'never empty');
 assert.equal(name('Stehlampe Wohnzimmer', ''), 'Stehlampe Wohnzimmer', 'no room: unchanged');
 assert.equal(name('Badezimmer', 'Zuhause'), 'Bad', 'short names still apply');
 assert.equal(name('Spiegel Bad (oben)', 'Bad (oben)'), 'Spiegel', 'regex characters in the room name');
-for (const [k, f, expr] of [['casora_room', 'badges_lights', /variables\.room_name \|\| variables\.aqi_room_name/],
-  ['casora_mobile_sensor_chips', 'room_sub_lights', /_rv\.room_name \|\| _rv\.aqi_room_name/]]) {
+for (const [k, f, expr] of [['casora_room', 'badges_lights', /variables\.room_name \|\| variables\.aqi_room_name \|\| this\._config\?\.name/],
+  ['casora_mobile_sensor_chips', 'room_sub_lights', /_rv\.room_name \|\| _rv\.aqi_room_name \|\| _rv\._name/]]) {
   const cards = T[k].custom_fields[f].card.cards;
   assert.equal(cards.length, 10, k);
   cards.forEach((c, i) => assert.ok(expr.test((c.variables || {}).room_name || ''), `${k} chip ${i + 1} gets the room name`));
