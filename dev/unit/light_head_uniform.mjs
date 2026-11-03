@@ -42,6 +42,13 @@ assert.deepEqual(S.headOf({ rooms: [{ name: 'Wohnzimmer', rid: 'light.qa_room', 
   { eyebrow: 'Wohnzimmer', title: 'TV-Backlight' }, 'room of one lamp: the lamp');
 assert.deepEqual(S.headOf({ rooms: [{ name: 'Wohnzimmer', rid: 'light.qa_room', lights: ['light.qa_spots'] }], init: 0 }, states),
   { eyebrow: 'Wohnzimmer', title: 'Beleuchtung' }, 'room of one group with lamps: the room');
+// A room listed by its own group whose members are missing (r240): the room, never that group as a lamp.
+states['light.qa_bare'] = { state: 'off', attributes: { friendly_name: 'Büro', entity_id: ['light.qa_gone'] } };
+assert.deepEqual(S.headOf({ rooms: [{ name: 'Büro', rid: null, lights: ['light.qa_bare'] }], init: 0 }, states),
+  { eyebrow: 'Büro', title: 'Beleuchtung' }, 'room of a memberless group: the room');
+S.els.qa = [{ _lpsCfg: { gid: 'qa', rooms: [{ name: 'Büro', rid: null, lights: ['light.qa_bare'] }, { name: 'Wohnzimmer', rid: 'light.qa_room', lights: ['light.qa_strip'] }] } }];
+assert.equal(S.oneLampOf('qa', 0, states), null, 'issue 118: a group is no room\'s one lamp');
+assert.equal(S.oneLampOf('qa', 1, states), 'light.qa_strip', 'issue 118: a lamp is');
 assert.deepEqual(S.headOf({ flat: { house: true, lights: ['light.qa_strip'] } }, states), { eyebrow: 'Zuhause', title: 'Beleuchtung' }, 'flat house');
 assert.deepEqual(S.headOf({ flat: { name: 'Wohnzimmer', label: 'Wohnzimmer', lights: ['light.qa_strip', 'light.qa_spot_1'] } }, states),
   { eyebrow: 'Wohnzimmer', title: 'Beleuchtung' }, 'room');

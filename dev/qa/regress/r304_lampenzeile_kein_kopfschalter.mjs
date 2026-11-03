@@ -3,7 +3,9 @@
 // Gemeldet (17.10.2026, Nutzertest Mac, Casora 26.10.34): Aus dem Licht-Popup eines Raums die Zeile einer Lampe
 // antippen öffnet das Einzellampen-Popup (casora_light) – oben rechts stand weiter der Kopfschalter des Raums und
 // schaltete alle Leuchten des Raums. Erwartet (Casora-Look, Tablet 1024×768, hell): das Einzellampen-Popup trägt
-// den Namen der Lampe und keinen Kopfschalter (es hat seinen eigenen Ein/Aus-Knopf); das Raum-Popup davor behält ihn.
+// den Namen der Lampe und keinen Kopfschalter des Raums; das Raum-Popup davor behält seinen.
+// Owner (03.11.2026, einheitliche Licht-Popups, r516): die Seite einer Lampe hat ihren eigenen Kopfschalter – er schaltet
+// genau diese Lampe, nie den Raum.
 // Dazu (Wunsch 17.10.2026) ‹ zurück im Kopf des Lampen-Popups: führt ins Raum-Popup zurück.
 import { open, dashboard, casoraDashboards as _cd, check, need, finish } from './lib.mjs';
 
@@ -51,7 +53,7 @@ outer: for (const dash of desks) for (const [i, v] of dash.config.views.entries(
   await page.waitForTimeout(3000);
   const lamp = await readPopup();
   await check('Lampenzeile öffnet das Popup der Lampe', lamp && lamp.title && lamp.title !== room.title, { lamp, name: pick.name });
-  await check('kein Kopfschalter im Einzellampen-Popup (schaltete den ganzen Raum)', lamp && !lamp.ids.length, lamp && lamp.ids);
+  await check('Kopfschalter im Einzellampen-Popup schaltet genau die Lampe (nie den Raum)', lamp && lamp.ids.length === 1 && lamp.ids[0] === pick.lamp, lamp && lamp.ids);
   await check('‹ zurück im Einzellampen-Popup', lamp && lamp.back, lamp);
   await check('Raum-Popup hat kein ‹ zurück', room && !room.back, room);
   const bk = await page.evaluate(() => { const el = window.casoraPopup.element; const b = el.shadowRoot.querySelector('.header-back'); if (!b || b.hidden) return null; const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });

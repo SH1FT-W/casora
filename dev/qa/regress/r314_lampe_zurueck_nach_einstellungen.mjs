@@ -2,8 +2,9 @@
 // @parallel: ui
 // #43 (Casora 26.10.52): light list → a lamp (‹ back to the list) → a page further in → ‹ back to the lamp: there
 // the ‹ back to the list was gone. Popup v3 is clean (no „Weitere Einstellungen“ any more, richtlinien §8), so the
-// chain is room → lamp → ‹: the lamp popup has its ‹, its label is the page before (§3, review 2 DD-09), and ‹ leads
-// to the light list with the room's own label again (it kept the lamp's before). Should a page further in come back
+// chain is room → lamp → ‹: the lamp popup has its ‹, its label is the lamp's room (owner, 03.11.2026: one head for
+// every light popup, r516; was the page before) and its head switch switches exactly the lamp, and ‹ leads to the
+// light list with the room's own label again (it kept the lamp's before). Should a page further in come back
 // (a „… ›“ row in the lamp popup), the deeper step is checked too. Casora look, tablet 1024×768, light.
 import { open, dashboard, casoraDashboards as _cd, check, need, finish } from './lib.mjs';
 
@@ -52,14 +53,14 @@ outer: for (const dash of desks) for (const [i, v] of dash.config.views.entries(
   await page.waitForTimeout(3000);
   const lamp = await readPopup();
   await check('lamp row opens the lamp popup', lamp && lamp.title && lamp.title !== room.title, { lamp, name: pick.name });
-  await check('no head switch in the lamp popup', lamp && !lamp.ids.length, lamp && lamp.ids);
+  await check('the lamp popup\'s head switch is exactly the lamp (never the room)', lamp && lamp.ids.length === 1 && lamp.ids[0] === pick.lamp, lamp && lamp.ids);
   await check('‹ back in the lamp popup', lamp && lamp.back, lamp);
   const clickBack = async () => {
     const bk = await page.evaluate(() => { const el = window.casoraPopup.element; const b = el.shadowRoot.querySelector('.header-back'); if (!b || b.hidden) return null; const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
     if (bk) { await page.mouse.click(bk.x, bk.y); await page.waitForTimeout(2500); }
     return !!bk;
   };
-  await check('the lamp popup is labelled with the page before', lamp && lamp.label === room.title, { lamp, room });
+  await check('the lamp popup is labelled with the lamp\'s room (the room popup\'s label)', lamp && room && room.label && lamp.label === room.label, { lamp, room });
   // A page further in (a „… ›“ row of the lamp popup), when there is one: ‹ from there keeps the lamp's ‹ (#43).
   const subAt = await page.evaluate(() => { const P = window.casoraPopup;
     const r = window.__pierce('[data-casora-page], [data-casora-mi]', P.surface).find((x) => x.getBoundingClientRect().width > 0);

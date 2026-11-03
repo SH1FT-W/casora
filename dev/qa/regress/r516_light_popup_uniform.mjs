@@ -147,6 +147,41 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
   else await check(label + ': Zeile Flur im Haus-Popup', false);
   await close();
 
+  // c2) The house through a light group's tile (not a badge; r240, 03.11.2026): a room row opens the room's page with
+  // the room's lamps – also a room listed by its own group whose members are missing (it is the room, not a lamp).
+  await go(size.mobile ? dash.phone.url + '/' + (dash.phone.config.views[0].path || '0') : dash.url);
+  const gt = await pg.evaluate(() => {
+    const S = document.querySelector('home-assistant').hass.states;
+    const b = window.__pierce('button-card').find((x) => { const e = (x._stateObj || {}).entity_id || '';
+      return e.indexOf('light.') === 0 && Array.isArray(((S[e] || {}).attributes || {}).entity_id)
+        && x._config.tap_action && x._config.tap_action.casora_popup && x.getBoundingClientRect().width > 100
+        && ![].concat(x._config.template || []).some((t) => /badge|chip/.test(t)); });
+    if (!b) return null; b.scrollIntoView({ block: 'center' }); const r = b.getBoundingClientRect();
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  });
+  if (gt) {
+    await tap(gt);
+    h = await until((x) => x.rows.length > 1);
+    // A room of this house listed by a group without existing members.
+    const bare = await pg.evaluate(() => { const c = window._casoraLightSoft.cur, S = document.querySelector('home-assistant').hass.states;
+      const r = c && c.rooms && c.rooms.find((x) => (x.lights || []).length === 1 && S[x.lights[0]]
+        && Array.isArray(S[x.lights[0]].attributes.entity_id) && !S[x.lights[0]].attributes.entity_id.some((y) => S[y]));
+      return r ? r.name : null; });
+    for (const nm of [WZ, bare].filter(Boolean)) {
+      r = await rowAt(`d.a==='room' && d.name===${JSON.stringify(nm)}`);
+      if (!r) { await check(`${label} Gruppen-Kachel: Zeile „${nm}“`, false, h); continue; }
+      await tap(r);
+      h = await until((x) => x.back && x.rows.length >= 1);
+      const names = (h && h.rows || []).map((x) => x.name);
+      await check(`${label} Gruppen-Kachel → „${nm}“: Kopf „${nm} / Beleuchtung“, Zeilen der Lampen (keine Räume)`,
+        h && h.back && h.eyebrow.toLowerCase() === nm.toLowerCase() && h.title === 'Beleuchtung' && !h.lbl.some((x) => /^Räume/.test(x))
+        && (nm !== WZ || LAMPS.every((n) => names.includes(n))), h);
+      const bk = await pg.evaluate(() => { const b = window.casoraPopup.element._headerBack; if (!b || b.hidden) return null; const q = b.getBoundingClientRect(); return { x: q.x + q.width / 2, y: q.y + q.height / 2 }; });
+      if (bk) { await tap(bk); await until((x) => !x.back); }
+    }
+    await close();
+  } else await check(label + ': Kachel einer Lichtgruppe', false);
+
   // d) The room's own light badge (desktop: holding it opens the popup, a tap opens the row of lamps; phone: the room
   // page of the one phone view, its filter key as the phone sets it).
   const roomPage = async (name, path) => {

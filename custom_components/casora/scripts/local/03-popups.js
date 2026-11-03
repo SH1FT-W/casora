@@ -4209,8 +4209,11 @@
     var r = cfg && cfg.rooms && cfg.rooms[idx];
     var ids = r ? (r.lights || []).filter(function (x) { return states[x]; }) : [];
     if (ids.length !== 1) return null;
+    // A light group is never the room's one lamp: with lamps it is a room of its own, without existing members it is the
+    // room's own group (a room listed by its group) – its page is the room's (r240, 03.11.2026: the group's tile opened
+    // the house again, under the room's head).
     var m = (states[ids[0]].attributes || {}).entity_id;
-    return Array.isArray(m) && m.some(function (x) { return states[x]; }) ? null : ids[0];
+    return Array.isArray(m) ? null : ids[0];
   };
   /* The dashboard room a light belongs to (owner, 03.11.2026: every light popup names its room, whatever the way it was
      opened): the room whose light badge holds it – its room group (rid), one of its rows, or a lamp inside a row's group.
@@ -4240,8 +4243,8 @@
       // the house's list (issue 118; owner, 03.11.2026, finding 3).
       var one = r ? (r.lights || []).filter(function (x) { return states[x]; }) : [];
       var m1 = one.length === 1 ? (states[one[0]].attributes || {}).entity_id : null;
-      // The room's own group without lamps of its own (its members missing) stays the room.
-      if (one.length === 1 && one[0] !== r.rid && !(Array.isArray(m1) && m1.some(function (x) { return states[x]; }))) return { eyebrow: r.name, title: short(nameOf(one[0], states), r.name) };
+      // A group is never that one lamp (S.oneLampOf): the room stays the room.
+      if (one.length === 1 && !Array.isArray(m1)) return { eyebrow: r.name, title: short(nameOf(one[0], states), r.name) };
       return { eyebrow: r ? r.name : 'Zuhause', title: T };
     }
     var f = cfg.flat || {};
