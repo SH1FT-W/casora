@@ -257,7 +257,7 @@ Die Überschrift darf zählen: „Leuchten · 2 von 4 an“, „Räume · 2 heiz
 
 Mehrere Werte derselben Art, die man einzeln zieht (Farbkanäle einer Beckenlampe), stehen als **eine Platte** wie jede
 Liste, nicht als einzelne bunte Pillen. Muster: `_casoraAqChanList` (`scripts/local/02-devices.js`), Regeltest
-`dev/unit/aquarium_dose_v3.mjs`, Regress `r520`.
+`dev/unit/aquarium_dose_v3.mjs`, Regress `r522`.
 
 | Teil | Wert |
 |---|---|

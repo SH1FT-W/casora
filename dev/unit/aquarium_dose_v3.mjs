@@ -1,7 +1,7 @@
 // Aquarium 26.11.9 (owner, 03.11.2026): the v3 tank popup shows a dosing pump as one row „Dosierung“ (warning below 20 %
 // container or under 7 days left, the most urgent channel named), a sub page with a short line per channel, and the
 // channels of the lamp as a list with a slim track (design A). The Studio's dosing pump picker fills the dosing_* fields
-// from the pump's entities (casoraBasis.dosingFill) and only offers a pump (dosingSuggest). Regress r520.
+// from the pump's entities (casoraBasis.dosingFill) and only offers a pump (dosingSuggest). Regress r522.
 //   node dev/unit/aquarium_dose_v3.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';

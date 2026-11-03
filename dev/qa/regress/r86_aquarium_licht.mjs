@@ -14,7 +14,7 @@
 // Lampe“) stay in the Studio/HA for the tank; the aquarium light popup (light_stage) shows them since 01.11.2026
 // (owner, draft C2): the profiles as moons, „Programm ›“ as a row.
 // The brightness is the dial of the aquarium light popup (light_stage).
-// 26.11.9 (r520): the channels are lines of one list (.aq-cr, name in aria-label) instead of single pills (.hui-sl).
+// 26.11.9 (r522): the channels are lines of one list (.aq-cr, name in aria-label) instead of single pills (.hui-sl).
 import { open, casoraDashboards, dashboard, check, need, finish, fakeStates } from './lib.mjs';
 
 const A = { entity: 'sensor.testbecken_a_wassertemperatur', name: 'Testbecken A', variables: { tank_name: 'Testbecken A',
