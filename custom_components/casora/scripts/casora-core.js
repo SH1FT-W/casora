@@ -16534,15 +16534,20 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 // Same reader for "Sort tiles" (Controls › Tiles, variable tile_sort): window._casoraSortMode =
 // 'now' (default since 26.11.6) | 'calm' (re-sort after a quiet spell) | 'open' (only when the page opens); smart-row.js and
 // filter-overlay.js ask _casoraSortModeRefresh before a live re-sort.
+// And for "Tap on badges" (issue 119, variable badge_tap): window._casoraBadgeTap = 'popup' (default: a tap opens the
+// light popup, holding switches) | 'toggle' (a tap switches, holding opens the popup); the light badges ask
+// window.casoraBadgeTapToggle() when they are tapped or held.
 (function () {
   if (window._casoraHoldWatch) return;
   window._casoraHoldWatch = true;
   if (!window._casoraHoldMode) window._casoraHoldMode = 'menu';
   if (!window._casoraSortMode) window._casoraSortMode = 'now';
+  if (!window._casoraBadgeTap) window._casoraBadgeTap = 'popup';
 
   var MODES = /^(menu|popup|ha)$/;
   var norm = function (v) { return typeof v === 'string' && MODES.test(v) ? v : 'menu'; };
   var normSort = function (v) { return v === 'open' || v === 'calm' ? v : 'now'; };
+  var normTap = function (v) { return v === 'toggle' ? 'toggle' : 'popup'; };
   var isSet = function (v) { return v !== undefined && v !== null && v !== ''; };
   var isShell = function (c) { return [].concat((c && c.template) || []).indexOf('casora_mobile_bg') !== -1; };
 
@@ -16568,6 +16573,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   };
   var fromConfig = function (cfg) { return pick(cfg, 'hold_mode', norm); };
   var sortOf = function (cfg) { return pick(cfg, 'tile_sort', normSort); };
+  var tapOf = function (cfg) { return pick(cfg, 'badge_tap', normTap); };
 
   var deep = function (root, tag, depth) {
     if (!root || depth > 10 || !root.querySelector) return null;
@@ -16598,15 +16604,23 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var cfg = root && root.lovelace && root.lovelace.config;
     if (!cfg) return window._casoraHoldMode;
     var m = memo && memo.get(cfg);
-    if (!m) { m = { hold: fromConfig(cfg), sort: sortOf(cfg) }; if (memo) memo.set(cfg, m); }
+    if (!m) { m = { hold: fromConfig(cfg), sort: sortOf(cfg), tap: tapOf(cfg) }; if (memo) memo.set(cfg, m); }
     window._casoraHoldMode = m.hold;
     window._casoraSortMode = m.sort;
+    window._casoraBadgeTap = m.tap;
     return m.hold;
   };
   window._casoraHoldModeOf = fromConfig;
   window._casoraHoldModeRefresh = refresh;
   window._casoraSortModeOf = sortOf;
   window._casoraSortModeRefresh = function () { refresh(); return window._casoraSortMode; };
+  window._casoraBadgeTapOf = tapOf;
+  // Asked while a card renders (a phone badge's tap_action is fixed when its row renders): look for the dashboard
+  // again even within the 5 s pause of a lookup that found none (the first one runs before the dashboard is there).
+  window.casoraBadgeTapToggle = function () {
+    try { if (!root || !root.isConnected) lookedAt = 0; refresh(); } catch (e) { /* the last value stands */ }
+    return window._casoraBadgeTap === 'toggle';
+  };
 
   ['pointerdown', 'keydown'].forEach(function (t) {
     window.addEventListener(t, function () { try { refresh(); } catch (e) { /* bleibt beim letzten Wert */ } }, { capture: true, passive: true });
