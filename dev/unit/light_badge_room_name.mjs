@@ -10,7 +10,7 @@ const T = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_car
 const body = T.casora_badge_light.name.replace(/^\s*\[\[\[/, '').replace(/\]\]\]\s*$/, '');
 globalThis.window = {};
 const name = (fn, room, state = 'off') => {
-  const html = new Function('entity', 'variables', body)({ state, attributes: { friendly_name: fn } }, { room_name: room });
+  const html = new Function('entity', 'variables', body)({ state, attributes: { friendly_name: fn } }, { chip_room: room });
   return html.match(/<div class="badge-title">([^<]*)</)[1];
 };
 assert.equal(name('Stehlampe Wohnzimmer', 'Wohnzimmer'), 'Stehlampe');
@@ -26,6 +26,9 @@ for (const [k, f, expr] of [['casora_room', 'badges_lights', /variables\.room_na
   ['casora_mobile_sensor_chips', 'room_sub_lights', /_rv\.room_name \|\| _rv\.aqi_room_name \|\| _rv\._name/]]) {
   const cards = T[k].custom_fields[f].card.cards;
   assert.equal(cards.length, 10, k);
-  cards.forEach((c, i) => assert.ok(expr.test((c.variables || {}).room_name || ''), `${k} chip ${i + 1} gets the room name`));
+  cards.forEach((c, i) => assert.ok(expr.test((c.variables || {}).chip_room || ''), `${k} chip ${i + 1} gets the room name (chip_room)`));
+  // room_name is the light popup's own title (casora_popup_light): a chip setting it titled Home's room chip „Zuhause“
+  // and a lamp chip with its room (03.11.2026, r508).
+  cards.forEach((c, i) => assert.ok(!('room_name' in (c.variables || {})), `${k} chip ${i + 1} leaves the popup's room_name alone`));
 }
 console.log('ok light_badge_room_name');

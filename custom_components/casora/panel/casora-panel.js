@@ -3044,7 +3044,7 @@ function homeLightsEdit(V, key, value) {
   if (value) { delete V.light_rooms_auto; return; }
   if (!V.light_group_entity && !LIGHT_SLOTS.some((k) => V[k])) V.light_rooms_auto = true;
 }
-// Setups before 26.11.9 gave Home's light badge the house's HA light group AND its lights in the slots
+// Setups before 26.11.8 gave Home's light badge the house's HA light group AND its lights in the slots
 // (light_entity_1…10, the first ten when there were more). Picked lights win over the group in the popup (#80): rooms
 // past the tenth were missing from the house light popup, and lights added later never joined. On load the Studio
 // moves such a badge to what today's setup writes (casoraBasis badgesOf), when the slots are exactly what the old
@@ -16318,7 +16318,7 @@ class CasoraPanel extends HTMLElement {
         this._log(`badges: ${filledRooms.length} room(s) without badge devices filled from their area`, "ok");
         this._markDirty();
       }
-      // Setups before 26.11.9: Home's light badge listed the house group's lights beside it (after _clean: one
+      // Setups before 26.11.8: Home's light badge listed the house group's lights beside it (after _clean: one
       // save fixes the dashboard, the version before it stays in Versions). Not on a dashboard the test frame locks
       // against saving (CASORA_STUDIO_SAVE_LOCK, see _save): a fix that cannot be saved would only leave it unsaved.
       const lock = window.CASORA_STUDIO_SAVE_LOCK;
