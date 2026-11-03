@@ -224,8 +224,8 @@
     // Phone: smaller image, text beside it at full width, "Add" as a wide button below.
     + "@media (max-width: 600px){.comrow.comcard{flex-wrap:wrap}.comrow.comcard .comshot,.comrow.comcard button.comzoom{width:96px;height:80px}"
     + ".comrow.comcard .comtx{flex:1 1 0}.comrow.comcard > .comchip{flex:1 0 100%;align-self:stretch;padding:9px 12px;text-align:center;font-weight:600}}"
-    // Tablet/desktop (proposal 26.11.10, owner 03.11.2026): the cards as a grid of compact tiles – two columns
-    // (variant A), three on a wide desktop (variant B). Phone: one column as before.
+    // Tablet/desktop (owner 03.11.2026): the cards as a grid of compact tiles – two columns, three in a wide window
+    // (class c3, set by the dialog). Phone and narrow windows: the list as before.
     + ".comgrid{display:grid;grid-template-columns:1fr;gap:10px;padding:2px}"
     + ".comgrid > .comrow.comcard{flex-direction:column;align-items:stretch;gap:8px;padding:12px;border:0;border-radius:16px;"
     + "background:var(--casora-studio-card, rgba(127,127,127,.08))}"
@@ -468,19 +468,18 @@
           box.insertBefore(el("div", "comlbl", tr("Community cards")), acts);
           const host = el("div", "askbody");
           box.insertBefore(host, acts);
-          // Grid variant (prototype): "A" two columns, "B" up to three, "off" the previous list.
-          const gv = String(W.CASORA_COM_GRID || "A");
+          // Tablet/desktop (owner, 03.11.2026): the cards as a grid – two columns, three in a window of 1500 px and more.
           const st = box.closest && box.closest(".askstack");
           // The window the dialog sits in (its host can measure 0 before it is drawn: then the browser window).
           const pw = st && st.parentElement ? st.parentElement.clientWidth : 0;
           const room = pw > 300 ? pw : W.innerWidth;
           // Phone and narrow windows keep the list as before.
-          const grid = gv === "off" || room < 700 ? null : el("div", "comgrid");
+          const grid = room < 700 ? null : el("div", "comgrid");
           if (grid) {
             host.appendChild(grid);
-            // Wider than the 780 px of other wide dialogs, but inside the window. Three columns (B) only where each card
+            // Wider than the 780 px of other wide dialogs, but inside the window. Three columns only where each card
             // still gets about 380 px (a window of 1500 px and more); otherwise two.
-            const three = gv === "B" && room >= 1500;
+            const three = room >= 1500;
             if (three) grid.classList.add("c3");
             if (st) st.style.width = Math.min(three ? 1240 : 1000, room - 48) + "px";
           }
