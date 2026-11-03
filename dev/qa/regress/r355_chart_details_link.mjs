@@ -38,7 +38,8 @@ for (const [w, h, dev] of [[1440, 900, 'Desktop'], [393, 852, 'Handy']]) {
         const pop = window.casoraPopup.element;
         const t0 = pop._headerTitle ? pop._headerTitle.textContent : '';
         const mi = det.getAttribute('data-casora-mi');
-        return { fid, t0, mi, el: true };
+        const back0 = !!window.__pierce('.header-back, [data-casora-back], .hdr-back', pop.shadowRoot || pop).find((b) => b.offsetParent !== null);
+        return { fid, t0, mi, back0, el: true };
       }
       return null;
     }, [tpl, SEL]);
@@ -53,7 +54,8 @@ for (const [w, h, dev] of [[1440, 900, 'Desktop'], [393, 852, 'Handy']]) {
       return { open: !!(pop && pop.hasAttribute('open')), title: pop && pop._headerTitle ? pop._headerTitle.textContent : '', back: !!(pop && window.__pierce('.header-back, [data-casora-back], .hdr-back', pop.shadowRoot || pop).find((b) => b.offsetParent !== null)), moreInfo };
     });
     await shot(dev + ' ' + tpl + ' nach Details');
-    await check(dev + ' ' + tpl + ': „Details ›“ öffnet die Seite des Messwerts', (after.open && after.title && after.title !== r.t0) || after.moreInfo, { r, after });
+    // 26.11.9: a sensor page of a device keeps the device's name as title (r530), so the page is the ‹ back that appears.
+    await check(dev + ' ' + tpl + ': „Details ›“ öffnet die Seite des Messwerts', (after.open && after.title && (after.title !== r.t0 || (after.back && !r.back0))) || after.moreInfo, { r, after });
     // ‹ back: the popup of the device again, with its chart drawn.
     await page.evaluate(() => { const b = window.casoraPopup.element && window.casoraPopup.element._headerBack; if (b && !b.hidden) b.click(); });
     let back = null;

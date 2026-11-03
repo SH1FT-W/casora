@@ -135,8 +135,8 @@ def main() -> int:
     gaps: dict[str, set] = {}
     for where, js in js_sources():
         for s in literals(js):
-            # Bruchstück ('Fertig gegen ' + t): mit Platzhaltern so testen, wie es angezeigt wird.
-            tries = [s] + [a + s + b for a in ("", "5 ", "Alex ") for b in ("", " 5", " 14:30", " Alex")]
+            # Bruchstück ('Fertig gegen ' + t): mit Platzhaltern so testen, wie es angezeigt wird (' 5 T.': a number with its unit after the fragment).
+            tries = [s] + [a + s + b for a in ("", "5 ", "Alex ") for b in ("", " 5", " 14:30", " Alex", " 5 T.")]
             if not any(ok(x) for x in tries):
                 gaps.setdefault(s, set()).add(where)
     if "--json" in sys.argv:
