@@ -10031,7 +10031,9 @@ class CasoraPanel extends HTMLElement {
           padding:var(--pad-t) var(--pad-x) var(--pad-b);
           display:flex; flex-direction:column; gap:11px;
         }
-        .mini-fill { flex:0 0 var(--hfill); min-height:8px; }
+        /* The space above the title gives way when the page holds more (badges on a second line at tablet width):
+           the tile row stays whole inside the frame (owner, 03.11.2026: the tablet preview cut the tiles). */
+        .mini-fill { flex:0 1 var(--hfill); min-height:8px; }
         .mini-fill.lower { flex:1 1 auto; min-height:0; }
 
         .mini-nav {
