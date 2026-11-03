@@ -115,7 +115,7 @@
   };
   // Aufbau: top (volle Breite) – dann links/rechts; schmal eine Spalte in Lesereihenfolge.
   var layout = function (o) {
-    var narrow = typeof window !== 'undefined' && window.innerWidth <= 760;
+    var o0 = o, narrow = typeof window !== 'undefined' && window.innerWidth <= 760;
     /* Blueprint v2 (rule 8): o.settings = device entity → section „Einstellungen“ with „Weitere Einstellungen“ as the
        last section (right column before „Mehr“, or at the end of the only column; phone: last before „Mehr“). */
     var UIb = window._casoraUI;
@@ -150,6 +150,18 @@
        Etikett links (z. B. Updates ohne KI-Warnung: „Mehr“ über „Verfügbare Updates“, 03.10.2026). */
     var oneMore = false;
     if (L.length && R.length === 1 && R[0] === 'more') { L = L.concat(R); R = []; oneMore = true; }
+    /* Column balance (casora-core colBalance, owner 02.11.2026): from the measured heights the right column's first
+       sections continue under the stage (rule A), or a short right column joins the left one (rule B, one column). */
+    var CB = UIb && UIb.colBalance, bal = null;
+    if (!narrow && L.length && R.length && CB && !o.noBalance) {
+      var items = R.filter(function (k) { return k !== 'more'; });
+      bal = { id: CB.id('k', o.fields, L.join(',') + '|' + items.join(','), o.entity || o.settings), head: L.slice(), items: items };
+      var plan = CB.split(bal.id, items.length);
+      bal.k = plan.k; bal.one = plan.one;
+      // Rule B: like B-11, „Mehr“ is the last row and spreads over two columns when expanded.
+      if (plan.one) { oneMore = R.indexOf('more') > -1; L = L.concat(R); R = []; }
+      else if (plan.k) { var mv = items.slice(0, plan.k); L = L.concat(mv); R = R.filter(function (k) { return mv.indexOf(k) < 0; }); }
+    }
     var fs0 = function (i) { return [{ 'justify-self': 'stretch' }, { overflow: 'visible' }, { 'min-width': '0' }, { '--casora-popup-plate-delay': (i * 55) + 'ms' }]; };
     // o.fieldStyle: Zusatzstile je Feld (z. B. ein meist ausgeblendetes Diagramm ohne Rasterabstand).
     var fs = function (i, k) { return fs0(i).concat((o.fieldStyle && o.fieldStyle[k]) || []); };
@@ -204,6 +216,11 @@
     if (cf.main && cf.side && window._casoraUI && window._casoraUI.colsMark) ui.extra_styles = (ui.extra_styles || '') + window._casoraUI.colsMark('main', 'side');
     // One column on a wide screen: the frame takes 552 instead of 900 (§2, review 2 DD-12; casora-core reads it).
     if (!narrow) ui.casora_cols = cf.main && cf.side ? 2 : 1;
+    if (bal) {
+      if (bal.one) ui.casora_bal_one = true;
+      ui.extra_styles = (ui.extra_styles || '') + CB.reg(bal.id, { k: bal.k, one: bal.one, head: bal.head, items: bal.items, cols: ['main', 'side'], cfg: ui,
+        rebuild: function () { return layout(o0); } });
+    }
     return ui;
   };
   var pill = function (UI, text, svc, tone) {

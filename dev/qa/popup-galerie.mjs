@@ -6,7 +6,8 @@
 //   node dev/qa/popup-galerie.mjs anlegen            builds (or rebuilds) the dashboard /popup-galerie
 //   node dev/qa/popup-galerie.mjs pruefen [--handy|--ipad] [--hell] [--nur <regex>] [--md <file>] [--json <file>] [--bilder <dir>]
 //                                                    --ipad: iPad portrait 820 (desktop dashboard), --hell: light scheme,
-//                                                    --konsole: print page and console errors
+//                                                    --konsole: print page and console errors, --warten MS: wait before
+//                                                    each picture (default 1600; the column balance rebuilds once on first open)
 //                                                    --groesse WxH: other desktop/tablet window; --spalten: column balance
 //                                                    per popup (dev/qa/popup-spalten.mjs) into the --json results
 //                                                    taps every opener (Playwright) and lists: opens / does not open / device missing
@@ -426,7 +427,7 @@ async function pruefen() {
     // --wetter-spalten: the weather popup's column order (dev/qa/regress/r457_popup_spalten.mjs).
     if (flag('wetter-spalten') && res.wetterSpalten === undefined) { await sleep(2200); res.wetterSpalten = await pg.evaluate(WEATHER_ORDER).catch(() => null); }
     if (!arg('bilder')) return;
-    await pg.waitForTimeout(1600);
+    await pg.waitForTimeout(Number(arg('warten')) || 1600);
     res.bild = it.id + (HANDY ? '-handy' : IPAD ? '-ipad' : '') + (DARK ? '' : '-hell') + '.png';
     await pg.screenshot({ path: path.join(arg('bilder'), res.bild) }).catch(() => { res.bild = null; });
   };
@@ -460,6 +461,10 @@ async function pruefen() {
     const r = b.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height };
   }, sel).catch(() => null);
   const out = [];
+  // --spalten: the column balance's one-column rule applies from a popup's second opening (03.11.2026, r523) – a first
+  // pass opens every popup once (warm-up, results dropped), the second pass measures and takes the pictures.
+  for (let pass = flag('spalten') ? 0 : 1; pass < 2; pass++) {
+  if (pass === 1) { out.length = 0; if (flag('spalten')) console.log('— zweites Öffnen (gemessen) —'); }
   for (const it of ITEMS) {
     if (NUR && !NUR.test(it.id)) continue;
     if (it.phone && !HANDY) continue;
@@ -562,6 +567,7 @@ async function pruefen() {
     out.push(res);
     console.log(`${res.status.padEnd(12)} W${it.w} ${it.popup}${res.art ? ' – ' + res.art : ''}${res.grund ? ' (' + res.grund + ')' : ''}`);
     if (arg('json')) fs.writeFileSync(arg('json'), JSON.stringify(out, null, 1)); // partial results survive an abort
+  }
   }
   await browser.close();
   const n = (s) => out.filter((r) => r.status === s).length;

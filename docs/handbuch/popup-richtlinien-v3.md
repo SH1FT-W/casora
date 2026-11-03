@@ -61,6 +61,20 @@ Leere Flächen (01.11.2026): Unter der kürzeren Spalte soll kein großer leerer
 `dev/qa/regress/r457_popup_spalten.mjs` lässt höchstens 200 px zu, die am 01.11. gemessenen Ausreißer stehen dort als
 Obergrenze, die nicht wachsen darf. Unter dem Rad steht immer zuerst der Verlauf (§7.1), auch beim Wetter.
 
+Spaltenausgleich (02.11.2026, eine Regel für alle): Die Layout-Bausteine (`HH.layout`, `_casoraSoftKit.layout`,
+`_casoraStdLayout`) geben ihre Aufteilung an `_casoraUI.colBalance` (casora-core). Links fest: Bühne,
+Schnellwahl, Verlauf, `underStage`; rechts die Abschnitte in Lesereihenfolge. Das offene Popup misst die Höhen und merkt
+sie sich je Popup und Gerät (localStorage `casora_col_bal`); ab dann gilt beim Aufbau:
+- Regel A: Ist rechts mehr als 120 px länger, rücken die ersten ganzen Abschnitte (Überschrift mit allen Zeilen) unter die
+  Bühne, so viele, dass das Popup am niedrigsten wird. Eine Liste wird nie geteilt (Maintainer, 03.11.2026: geteilte
+  Lichtliste sah schlecht aus). Die Reihenfolge bleibt die des Handys. Die Licht-Popups (Haus, Raum, Lampe) haben nur
+  eine Liste und behalten darum ihren Aufbau.
+- Regel B: Ist links mehr als 120 px länger und die ganze rechte Spalte höchstens 200 px hoch, wird das Popup einspaltig
+  (552) mit dem rechten Teil unter der Bühne (nur v3).
+Beim ersten Öffnen (noch nichts gemessen) baut sich das Popup nach dem Messen einmal um (Regel A); einspaltig (Regel B) wird es erst ab dem nächsten Öffnen. Ein langer linker Teil mit mehr
+als 200 px rechts bleibt zweispaltig (Kamera unter dem Rad beim Drucker, Getränke beim Kaffee). Abschalten je Aufruf:
+`noBalance: true`.
+
 Breite (Prüfung 2, 01.11.2026): Die Layout-Bausteine (`HH.layout`, `_casoraSoftKit.layout`) legen jede Liste rechts ab;
 bleibt rechts nichts, wird das Popup einspaltig und 552 breit (`casora_cols: 1`, liest der Rahmen). Unterseiten ohne eigene
 Breite behalten die Breite der Seite davor; die Leer-Zeile allein ist immer 552. Schmale Fenster: `min(Breite, 100vw − 16)`

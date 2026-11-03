@@ -1380,7 +1380,7 @@
     return k && has(k) && k !== o.stage && (o.top || []).indexOf(k) < 0 ? k : null;
   };
   H.layout = function (o) {
-    var f = o.fields, has = function (k) { return f[k] !== undefined && f[k] !== null && f[k] !== ''; };
+    var o0 = o, f = o.fields, has = function (k) { return f[k] !== undefined && f[k] !== null && f[k] !== ''; };
     var top = (o.top || ['hero']).filter(has), L = (o.left || []).filter(has), R = (o.right || []).filter(has);
     /* Popup v3 (richtlinien §2, §14): o.stage / o.quick name the fields of the stage and the quick choice – both on
        top of the left column, then left, right, settings, more as before. A picture stage (S5, o.stageWide) spans
@@ -1419,6 +1419,17 @@
     var one = false;
     if (L.length && R.length === 1 && R[0] === 'more') { L = L.concat(R); R = []; one = true; }
     else if (!R.length) one = true;
+    /* Column balance (casora-core colBalance, owner 02.11.2026): from the measured heights the right column's first
+       sections continue under the stage (rule A), or a short right column joins the left one (rule B, one column). */
+    var CB = UIb && UIb.colBalance, bal = null;
+    if (!one && CB && !o.noBalance) {
+      var items = R.filter(function (k) { return k !== 'more'; });
+      bal = { id: CB.id('hh', f, L.join(',') + '|' + items.join(','), o.entity), head: L.slice(), items: items };
+      var plan = CB.split(bal.id, items.length);
+      bal.k = plan.k; bal.one = plan.one;
+      if (plan.one) { L = L.concat(R); R = []; one = true; }
+      else if (plan.k) { var mv = items.slice(0, plan.k); L = L.concat(mv); R = R.filter(function (k) { return mv.indexOf(k) < 0; }); }
+    }
     /* Even in one column (washer/dryer off) the expanded „Mehr“ spreads over two columns in the wide
        popup – otherwise statistics and consumption ran as rows across the full width. */
     if (one && f.more && f.more.card) {
@@ -1451,7 +1462,7 @@
     var narrow = keys.map(function (k) { return '"' + k + '"'; }).join(' ');
     var wide = top.map(function (k) { return '"' + k + ' ' + k + '"'; }).join(' ') + (one ? ' "left left"' : ' "left right"')
       + (wideMore ? ' "more more"' : '');
-    return {
+    var res = {
       type: 'custom:button-card', entity: o.entity || undefined, triggers_update: [],
       // One column: the frame takes 552 instead of 900 (§2, review 2 DD-12; casora-core reads it).
       casora_cols: one ? 1 : 2,
@@ -1470,6 +1481,10 @@
       },
       custom_fields: cf,
     };
+    if (bal && bal.one) res.casora_bal_one = true;
+    if (bal) res.extra_styles += CB.reg(bal.id, { k: bal.k, one: bal.one, head: bal.head, items: bal.items, cols: ['left', 'right'], cfg: res,
+      rebuild: function () { return H.layout(o0); } });
+    return res;
   };
   /* Wide „Mehr“: expanded two balanced columns (sections do not break).
      Spacing as padding instead of margin (04.10.2026): Safari carried the outer margin of the last
