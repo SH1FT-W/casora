@@ -2727,9 +2727,42 @@
   "Wird installiert …": "Bezig met installeren…",
   "HACS hat die neue Version nicht als installiert gemeldet. Sieh in HACS nach.": "HACS heeft de nieuwe versie niet als geïnstalleerd gemeld. Kijk in HACS.",
   "Vergrößern": "Vergroten",
-  "Verkleinern": "Verkleinen"
+  "Verkleinern": "Verkleinen",
+  "Dosierung": "Dosering",
+  "Behälter": "Reservoir",
+  "Reicht noch": "Nog genoeg voor",
+  "Dosiermenge": "Doseerhoeveelheid",
+  "alles in Ordnung": "alles in orde"
  },
  "patterns": [
+  [
+   "^(.+) reicht noch (\\d+) T\\.$",
+   "{1}: nog {2} d"
+  ],
+  [
+   "^(.+) fast leer$",
+   "{1} bijna leeg"
+  ],
+  [
+   "^(\\d+) Kanäle$",
+   "{1} kanalen"
+  ],
+  [
+   "^(\\d+) Kanal$",
+   "{1} kanaal"
+  ],
+  [
+   "^noch (\\d+) T\\.$",
+   "nog {1} d"
+  ],
+  [
+   "^noch ([\\d.,]+) von ([\\d.,]+) ml$",
+   "nog {1} van {2} ml"
+  ],
+  [
+   "^([\\d.,]+ ml) dosieren$",
+   "{1} doseren"
+  ],
   [
    "^Solar deckt (\\d+) ?%$",
    "Zon dekt {1}%"

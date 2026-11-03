@@ -23626,6 +23626,64 @@ class CasoraPanel extends HTMLElement {
 
   // Vehicle picture of the car tile (#89): Automatic (the car integration's image entity, greyed when there is none) /
   // Own photo (uploaded like a room photo, private, variables.vehicle_image = its name) / No picture ("none").
+  // Aquarium tile, dosing pump (26.11.9): pick a pump device and the dosing fields are filled from its entities
+  // (casoraBasis.dosingFill). Without a pick a pump in the tank's area (or the only one) is offered with „Use“ – never
+  // set on its own. Names given to the channels stay for the buttons that remain.
+  _dosingPumpField(tile, f) {
+    const B = window.casoraBasis;
+    if (!B || !B.dosingPumps) return null;
+    const hass = this._hass || {};
+    const V = tile.variables || {};
+    const pumps = B.dosingPumps(hass);
+    const box = document.createElement("div");
+    box.className = "dosepump";
+    if (!pumps.length) {
+      const none = document.createElement("div");
+      none.className = "hint";
+      none.textContent = "No dosing pump found in Home Assistant.";
+      box.appendChild(none);
+      return box;
+    }
+    const R = hass.entities || {};
+    const btn0 = Array.isArray(V.dosing_buttons) ? V.dosing_buttons[0] : null;
+    const cur = V[f.key] || (btn0 && R[btn0] && R[btn0].device_id) || "";
+    const apply = (dev) => {
+      const fill = dev ? B.dosingFill(hass, dev) : null;
+      const vars = tile.variables || (tile.variables = {});
+      if (!fill) { delete vars[f.key]; this._markDirty(); this._renderForm(); return; }
+      ["dosing_buttons"].concat(Object.values(B.DOSE_MAPS)).forEach((k) => { delete vars[k]; });
+      Object.assign(vars, fill);
+      vars[f.key] = dev;
+      if (vars.dosing_names && typeof vars.dosing_names === "object") {
+        const keep = {};
+        fill.dosing_buttons.forEach((b) => { if (vars.dosing_names[b]) keep[b] = vars.dosing_names[b]; });
+        if (Object.keys(keep).length) vars.dosing_names = keep; else delete vars.dosing_names;
+      }
+      this._markDirty();
+      this._renderForm();
+    };
+    const labels = {};
+    pumps.forEach((p) => { labels[p.id] = p.name + " · " + p.channels; });
+    const c = this._combo(cur, pumps.map((p) => p.id), "Choose a dosing pump", (v) => apply(v || null), { fixed: true, labels, clearable: true });
+    box.appendChild(c.wrap);
+    const sug = !cur && !btn0 ? B.dosingSuggest(hass, tile.entity) : null;
+    const sp = sug && pumps.find((p) => p.id === sug);
+    if (sp) {
+      const row = document.createElement("div");
+      row.className = "hint dosepump-sug";
+      const t = document.createElement("span");
+      t.textContent = (window.casoraI18n && window.casoraI18n.t ? window.casoraI18n.t("Suggestion: {x}") : "Suggestion: {x}").replace("{x}", sp.name);
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "linkbtn";
+      b.textContent = "Use";
+      b.onclick = () => apply(sp.id);
+      row.append(t, " ", b);
+      box.appendChild(row);
+    }
+    return box;
+  }
+
   _vehicleImageField(tile, f, put) {
     const V = tile.variables || {};
     const cur = V[f.key] == null || V[f.key] === "" ? "" : String(V[f.key]);
@@ -29434,6 +29492,11 @@ class CasoraPanel extends HTMLElement {
       }
       const after = () => { if (f.reveals || shownSig() !== shown0) this._renderForm(); else this._syncPreview(); };
       // A few fixed choices as segments (seg: true, entity list #59) – one tap, all choices visible.
+      if (f.type === "dosingpump") {
+        const dp = this._dosingPumpField(tile, f);
+        if (dp) { put(f.label, dp); hintUnder(); }
+        return;
+      }
       if (f.type === "vehicleimage") {
         const vh = document.createElement("div");
         vh.className = "hint";

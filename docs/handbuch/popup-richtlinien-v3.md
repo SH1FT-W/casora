@@ -253,6 +253,34 @@ Die Listen sind die gruppierten Platten aus Variante B (Commit „Popup rework v
 
 Die Überschrift darf zählen: „Leuchten · 2 von 4 an“, „Räume · 2 heizen“.
 
+### 6.1 Regler in einer Liste (Entscheidung 03.11.2026, „Liste mit Spur“)
+
+Mehrere Werte derselben Art, die man einzeln zieht (Farbkanäle einer Beckenlampe), stehen als **eine Platte** wie jede
+Liste, nicht als einzelne bunte Pillen. Muster: `_casoraAqChanList` (`scripts/local/02-devices.js`), Regeltest
+`dev/unit/aquarium_dose_v3.mjs`, Regress `r520`.
+
+| Teil | Wert |
+|---|---|
+| Zeile | oben Farbpunkt 10, Name 15/600 links, Wert 15/600 rechts in Text 2; darunter die Spur; Innenabstand 12 / 0 / 14 |
+| Spur | 6 hoch, Radius 3, `--casora-soft-control-fill`; Füllung **einfarbig** in der Farbe des Werts (kein Verlauf) |
+| Knopf | 16 rund, weiß mit leichtem Schatten, sitzt am Ende der Füllung – bei jedem Wert, auch 0 % |
+| Bedienen | die ganze Zeile ist der Regler (`data-casora-slider`, Achse x): Ziehen, Tippen, Pfeiltasten wie `UI.slider` |
+| Trennlinie | 1 px zwischen den Zeilen |
+
+`UI.slider` (breite Pille mit Verlauf) bleibt für einzelne Regler (Klingel-Lautstärke, freie Licht-Kachel).
+
+### 6.2 Zusatzgerät mit eigener Seite: Dosierpumpe (Entscheidung 03.11.2026)
+
+Ein Gerät, das zum Popup gehört, aber eigene Bedienung hat (Dosierpumpe am Becken), steht als **eine Zeile** in der
+rechten Spalte und öffnet eine Unterseite – nur wenn es eingerichtet ist, sonst ändert sich nichts.
+
+| Teil | Wert |
+|---|---|
+| Zeile | „Dosierung“, Unterzeile „4 Kanäle · alles in Ordnung“, rechts „heute 4,5 ml ›“ |
+| Warnung | Behälter unter 20 % oder weniger als 7 Tage: Symbol und Unterzeile in Warnton, genannt wird der dringendste Kanal („Calcium reicht noch 3 T.“, nur der Füllstand: „Calcium fast leer“) |
+| Unterseite | eine Zeile je Kanal: Name, Unterzeile kurz („heute 1,5 ml · noch 61 T.“), dünner Balken für den Behälter, › |
+| Kanalseite | Zustand (Behälter, Reicht noch, Heute dosiert, Gesamt), Dosiermenge mit ± 0,1 / 0,5 und Schnellwahl, „Jetzt dosieren“ mit Rückfrage |
+
 ## 7. Diagramme
 
 Grundlage ist Casoras eigene Diagrammkarte `custom:casora-chart` (`scripts/casora-chart.js`, Richtung A „ruhig“), in

@@ -2727,9 +2727,42 @@
   "Wird installiert …": "Instalowanie…",
   "HACS hat die neue Version nicht als installiert gemeldet. Sieh in HACS nach.": "HACS nie zgłosił nowej wersji jako zainstalowanej. Sprawdź HACS.",
   "Vergrößern": "Powiększ",
-  "Verkleinern": "Pomniejsz"
+  "Verkleinern": "Pomniejsz",
+  "Dosierung": "Dozowanie",
+  "Behälter": "Pojemnik",
+  "Reicht noch": "Wystarczy na",
+  "Dosiermenge": "Dawka",
+  "alles in Ordnung": "wszystko w porządku"
  },
  "patterns": [
+  [
+   "^(.+) reicht noch (\\d+) T\\.$",
+   "{1}: jeszcze {2} dni"
+  ],
+  [
+   "^(.+) fast leer$",
+   "{1} prawie pusty"
+  ],
+  [
+   "^(\\d+) Kanäle$",
+   "{1} kanały"
+  ],
+  [
+   "^(\\d+) Kanal$",
+   "{1} kanał"
+  ],
+  [
+   "^noch (\\d+) T\\.$",
+   "jeszcze {1} dni"
+  ],
+  [
+   "^noch ([\\d.,]+) von ([\\d.,]+) ml$",
+   "zostało {1} z {2} ml"
+  ],
+  [
+   "^([\\d.,]+ ml) dosieren$",
+   "Dozuj {1}"
+  ],
   [
    "^Solar deckt (\\d+) ?%$",
    "Słońce pokrywa {1}%"

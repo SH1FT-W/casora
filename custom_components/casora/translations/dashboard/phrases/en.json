@@ -2709,9 +2709,42 @@
   "Wird installiert …": "Installing…",
   "HACS hat die neue Version nicht als installiert gemeldet. Sieh in HACS nach.": "HACS did not report the new version as installed. Check HACS.",
   "Vergrößern": "Enlarge",
-  "Verkleinern": "Shrink"
+  "Verkleinern": "Shrink",
+  "Dosierung": "Dosing",
+  "Behälter": "Container",
+  "Reicht noch": "Lasts",
+  "Dosiermenge": "Dose volume",
+  "alles in Ordnung": "all good"
  },
  "patterns": [
+  [
+   "^(.+) reicht noch (\\d+) T\\.$",
+   "{1}: {2} d left"
+  ],
+  [
+   "^(.+) fast leer$",
+   "{1} almost empty"
+  ],
+  [
+   "^(\\d+) Kanäle$",
+   "{1} channels"
+  ],
+  [
+   "^(\\d+) Kanal$",
+   "{1} channel"
+  ],
+  [
+   "^noch (\\d+) T\\.$",
+   "{1} d left"
+  ],
+  [
+   "^noch ([\\d.,]+) von ([\\d.,]+) ml$",
+   "{1} of {2} ml left"
+  ],
+  [
+   "^([\\d.,]+ ml) dosieren$",
+   "Dose {1}"
+  ],
   [
    "^Solar deckt (\\d+) ?%$",
    "Solar covers {1}%"

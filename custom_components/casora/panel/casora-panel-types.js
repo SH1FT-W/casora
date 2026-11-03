@@ -256,7 +256,11 @@ window.CASORA_TILE_TYPES = [
         when: (v) => Array.isArray(v.tech_entities) && v.tech_entities.length > 0 },
       { key: "tech_confirm", label: "Ask before switching off", type: "map", over: "tech_entities", kind: "bool", advanced: true,
         when: (v) => Array.isArray(v.tech_entities) && v.tech_entities.length > 0 },
-      { key: "dosing_buttons", label: "Dose buttons", type: "list", domains: ["button"], advanced: true, group: "Dosing pump",
+      // Dosing pump picker (26.11.9): fills the fields below from the pump's entities (casoraBasis.dosingFill); a pump in
+      // the tank's area (or the only one) is offered, never set on its own.
+      { key: "dosing_device", label: "Dosing pump", type: "dosingpump", advanced: true, group: "Dosing pump",
+        hint: "Pick the pump: Casora fills the dose buttons and their values below. You can change each field afterwards." },
+      { key: "dosing_buttons", label: "Dose buttons", type: "list", domains: ["button"], advanced: true,
         placeholder: "add dose button.", hint: "One button per channel. Pressing it doses the set amount." },
       { key: "dosing_names", label: "Channel name", type: "map", over: "dosing_buttons", kind: "text", advanced: true,
         when: (v) => Array.isArray(v.dosing_buttons) && v.dosing_buttons.length > 0 },
@@ -265,6 +269,13 @@ window.CASORA_TILE_TYPES = [
       { key: "dosing_today", label: "Dosed today", type: "map", over: "dosing_buttons", domains: ["sensor"], advanced: true,
         when: (v) => Array.isArray(v.dosing_buttons) && v.dosing_buttons.length > 0 },
       { key: "dosing_total", label: "Dosed in total", type: "map", over: "dosing_buttons", domains: ["sensor"], advanced: true,
+        when: (v) => Array.isArray(v.dosing_buttons) && v.dosing_buttons.length > 0 },
+      // 26.11.9: container and days left per channel – the popup warns below 20 % or 7 days (02-devices.js).
+      { key: "dosing_remaining", label: "Container left", type: "map", over: "dosing_buttons", domains: ["sensor"], advanced: true,
+        when: (v) => Array.isArray(v.dosing_buttons) && v.dosing_buttons.length > 0 },
+      { key: "dosing_capacity", label: "Container size", type: "map", over: "dosing_buttons", domains: ["sensor", "number"], advanced: true,
+        when: (v) => Array.isArray(v.dosing_buttons) && v.dosing_buttons.length > 0 },
+      { key: "dosing_days_left", label: "Lasts for", type: "map", over: "dosing_buttons", domains: ["sensor"], advanced: true,
         when: (v) => Array.isArray(v.dosing_buttons) && v.dosing_buttons.length > 0 },
       { key: "dosing_prefix", label: "Dosing pump (older setting)", type: "text", advanced: true,
         when: (v) => !!v.dosing_prefix, placeholder: "Entity prefix",

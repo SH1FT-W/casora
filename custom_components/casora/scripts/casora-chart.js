@@ -5,7 +5,7 @@
 //   { type: 'custom:casora-chart', kind: 'line'|'bar'|'heat'|'spark', mini (heat on a tile), span: '48h' | '7d' | '1y',
 //     series: [{ entity, name, color, unit, decimals, map }], source: 'auto'|'history'|'stats'|'change',
 //     agg: 'mean'|'max', bucket: '1h', period: 'hour'|'day'|'month' (statistics period = bar bucket),
-//     height, y: { min, max, labels }, step, readout: 'own'|'hero'|'none', legend,
+//     height, y: { min, max, labels, span (smallest range shown) }, step, readout: 'own'|'hero'|'none', legend,
 //     selected: index or entity of the series shown first (switch),
 //     read_as: entity whose hero number reads along, plate, title }
 //   Bars: one bucket per hour / day / month (period), up to four series side by side; one series keeps the
@@ -553,6 +553,9 @@
       var lab = y.labels, fmt = function (v) { return lab ? C.tr(lab[Math.round(v)] || '') : C.nf(v, v % 1 ? 1 : 0); };
       if (lab && !spark) padR = 12 + 6.5 * Math.max.apply(null, lab.map(function (l) { return C.tr(l).length; }));
       var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+      // y.span: the smallest range the scale shows (water temperature 2 °C, 26.11.9) – a sensor stepping 0.2 °C
+      // filled the whole height (25.1 ↔ 25.3 drawn as a zigzag from top to bottom). Centred on the values.
+      if (!lab && y.span > 0 && vals.length && hi - lo < y.span) { var ym = (lo + hi) / 2; lo = ym - y.span / 2; hi = ym + y.span / 2; }
       var sc = lab ? { lo: y.min || 0, hi: y.max != null ? y.max : lab.length - 1, ticks: lab.map(function (l, i) { return i; }) }
         : C.nice(y.min != null ? Math.min(y.min, lo) : lo, y.max != null ? Math.max(y.max, hi) : hi, 2, y.min === 0);
       if (spark && vals.length) sc = { lo: lo - (hi - lo < 1e-9 ? 1 : 0), hi: hi + (hi - lo < 1e-9 ? 1 : 0), ticks: [] };

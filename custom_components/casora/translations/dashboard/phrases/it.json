@@ -2727,9 +2727,42 @@
   "Wird installiert …": "Installazione…",
   "HACS hat die neue Version nicht als installiert gemeldet. Sieh in HACS nach.": "HACS non ha segnalato la nuova versione come installata. Controlla HACS.",
   "Vergrößern": "Ingrandisci",
-  "Verkleinern": "Riduci"
+  "Verkleinern": "Riduci",
+  "Dosierung": "Dosaggio",
+  "Behälter": "Serbatoio",
+  "Reicht noch": "Basta ancora",
+  "Dosiermenge": "Quantità per dose",
+  "alles in Ordnung": "tutto a posto"
  },
  "patterns": [
+  [
+   "^(.+) reicht noch (\\d+) T\\.$",
+   "{1}: ancora {2} g"
+  ],
+  [
+   "^(.+) fast leer$",
+   "{1} quasi vuoto"
+  ],
+  [
+   "^(\\d+) Kanäle$",
+   "{1} canali"
+  ],
+  [
+   "^(\\d+) Kanal$",
+   "{1} canale"
+  ],
+  [
+   "^noch (\\d+) T\\.$",
+   "ancora {1} g"
+  ],
+  [
+   "^noch ([\\d.,]+) von ([\\d.,]+) ml$",
+   "ancora {1} di {2} ml"
+  ],
+  [
+   "^([\\d.,]+ ml) dosieren$",
+   "Dosare {1}"
+  ],
   [
    "^Solar deckt (\\d+) ?%$",
    "Il solare copre il {1}%"

@@ -2727,9 +2727,42 @@
   "Wird installiert …": "Installation…",
   "HACS hat die neue Version nicht als installiert gemeldet. Sieh in HACS nach.": "HACS n'a pas signalé la nouvelle version comme installée. Vérifie dans HACS.",
   "Vergrößern": "Agrandir",
-  "Verkleinern": "Réduire"
+  "Verkleinern": "Réduire",
+  "Dosierung": "Dosage",
+  "Behälter": "Réservoir",
+  "Reicht noch": "Suffit encore",
+  "Dosiermenge": "Quantité dosée",
+  "alles in Ordnung": "tout va bien"
  },
  "patterns": [
+  [
+   "^(.+) reicht noch (\\d+) T\\.$",
+   "{1} : encore {2} j"
+  ],
+  [
+   "^(.+) fast leer$",
+   "{1} presque vide"
+  ],
+  [
+   "^(\\d+) Kanäle$",
+   "{1} canaux"
+  ],
+  [
+   "^(\\d+) Kanal$",
+   "{1} canal"
+  ],
+  [
+   "^noch (\\d+) T\\.$",
+   "encore {1} j"
+  ],
+  [
+   "^noch ([\\d.,]+) von ([\\d.,]+) ml$",
+   "encore {1} sur {2} ml"
+  ],
+  [
+   "^([\\d.,]+ ml) dosieren$",
+   "Doser {1}"
+  ],
   [
    "^Solar deckt (\\d+) ?%$",
    "Le solaire couvre {1}%"
