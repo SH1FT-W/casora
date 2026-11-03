@@ -55,16 +55,23 @@ async function swipe(cdp, page, x0, y0, x1, y1, steps = 10) {
   await swipe(cdp, page, 200, 650, 160, 300);
   await check('Handy an: senkrecht wischen wechselt den Raum nicht', (await cur()) === keys[1], { cur: await cur() });
 
-  // A start in a sideways-scrolling row (the room's badge row, if it scrolls).
+  // A start in a sideways-scrolling row of the open room (hit-tested: the row must be what the finger lands on).
   const row = await page.evaluate(() => {
-    const el = window.__pierce('#rooms_row, #climate_row, #media_row').find((e) => e.getBoundingClientRect().width > 50
-      && e.getBoundingClientRect().top > 0 && e.getBoundingClientRect().bottom < innerHeight);
-    if (!el) return null; const r = el.getBoundingClientRect(); return { y: r.top + r.height / 2 };
+    const deepAt = (x, y) => { let el = document.elementFromPoint(x, y); while (el && el.shadowRoot && el.shadowRoot.elementFromPoint) {
+      const inner = el.shadowRoot.elementFromPoint(x, y); if (!inner || inner === el) break; el = inner; } return el; };
+    const up = (el) => { const out = []; while (el) { out.push(el); el = el.parentElement || (el.getRootNode && el.getRootNode().host) || null; } return out; };
+    for (const el of window.__pierce('#rooms_row, #climate_row, #media_row')) {
+      const r = el.getBoundingClientRect();
+      if (r.width < 50 || r.top < 0 || r.bottom > innerHeight || el.scrollWidth <= el.clientWidth + 4) continue;
+      const x = Math.min(r.right - 20, 330), y = r.top + r.height / 2;
+      if (up(deepAt(x, y)).includes(el)) return { x, y };
+    }
+    return null;
   });
   if (row) {
-    await swipe(cdp, page, 330, row.y, 60, row.y);
+    await swipe(cdp, page, row.x, row.y, row.x - 260, row.y);
     await check('Handy an: Wischen in einer seitwärts scrollenden Reihe wechselt den Raum nicht', (await cur()) === keys[1], { cur: await cur() });
-  } else console.log('  info   Handy: keine seitwärts scrollende Reihe im Bild – Fall 4 übersprungen');
+  } else console.log('  info   Handy: keine seitwärts scrollende Reihe im offenen Raum – Fall 4 übersprungen');
 
   // Last room: no wrap-around.
   await go(keys[keys.length - 1]);
@@ -73,10 +80,16 @@ async function swipe(cdp, page, x0, y0, x1, y1, steps = 10) {
 
   // A Casora popup is open: no room change.
   await go(keys[1]);
-  await page.evaluate(() => { window.casoraPopup = window.casoraPopup || {}; window.__qaSurf = window.casoraPopup.surface; window.casoraPopup.surface = document.body; });
-  await swipe(cdp, page, 330, midY, 60, midY + 6);
-  await page.evaluate(() => { window.casoraPopup.surface = window.__qaSurf; });
-  await check('Handy an: bei offenem Popup kein Raumwechsel', (await cur()) === keys[1], { cur: await cur() });
+  const lamp = await page.evaluate(() => Object.keys(document.querySelector('home-assistant').hass.states).find((id) => id.startsWith('light.')));
+  await page.evaluate((id) => window.casoraPopup && window.casoraPopup.moreInfo(id), lamp);
+  await page.waitForTimeout(1500);
+  const popup = await page.evaluate(() => !!(window.casoraPopup && window.casoraPopup.surface));
+  if (popup) {
+    await swipe(cdp, page, 330, midY, 60, midY + 6);
+    await check('Handy an: bei offenem Popup kein Raumwechsel', (await cur()) === keys[1], { cur: await cur() });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(800);
+  } else console.log('  info   Handy: kein Casora-Popup zu öffnen – Fall 5b übersprungen');
   await page.evaluate(() => window._casoraFilter.set('all'));
   await page.context().close();
 }
@@ -90,18 +103,23 @@ async function swipe(cdp, page, x0, y0, x1, y1, steps = 10) {
   await need('Tablet: mindestens drei Raumansichten', views.length >= 3, views);
   await dashboard(page, dash.url + '/' + views[1]);
   const cdp = await context.newCDPSession(page);
-  const path = () => page.evaluate(() => location.pathname.split('/').filter(Boolean)[1]);
-  await swipe(cdp, page, 1000, 560, 600, 566);
-  await check('Tablet aus: Wischen wechselt die Ansicht nicht', (await path()) === views[1], { path: await path() });
   // "Also on the tablet" only in the browser: the dashboard config the settings reader sees gets the variable.
-  await page.evaluate(() => {
+  const setTablet = (on) => page.evaluate((on) => {
     const deep = (r, d) => { if (!r || d > 10) return null; const h = r.querySelector && r.querySelector('hui-root'); if (h) return h;
       for (const e of r.querySelectorAll ? r.querySelectorAll('*') : []) if (e.shadowRoot) { const f = deep(e.shadowRoot, d + 1); if (f) return f; } return null; };
     const root = deep(document, 0);
     const cfg = JSON.parse(JSON.stringify(root.lovelace.config));
-    cfg.views.forEach((v) => { const h = (v.cards || [])[0]; if (h && h.variables) h.variables.swipe_rooms_tablet = true; });
+    cfg.views.forEach((v) => { const h = (v.cards || [])[0]; if (h) h.variables = Object.assign({}, h.variables, { swipe_rooms_tablet: on }); });
     root.lovelace = Object.assign({}, root.lovelace, { config: cfg });
-  });
+    if (window._casoraHoldModeRefresh) window._casoraHoldModeRefresh();
+    return window._casoraSwipeTablet;
+  }, on);
+  console.log('  info   Tablet: Einstellung im Browser', await setTablet(false));
+  await page.waitForTimeout(1500);
+  const path = () => page.evaluate(() => location.pathname.split('/').filter(Boolean)[1]);
+  await swipe(cdp, page, 1000, 560, 600, 566);
+  await check('Tablet aus: Wischen wechselt die Ansicht nicht', (await path()) === views[1], { path: await path() });
+  console.log('  info   Tablet: Einstellung im Browser', await setTablet(true));
   await page.waitForTimeout(1500);
   await swipe(cdp, page, 1000, 560, 600, 566);
   await check('Tablet an: nach links wischen → nächste Raumansicht', (await path()) === views[2], { path: await path(), want: views[2] });

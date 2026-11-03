@@ -114,6 +114,8 @@
   };
   function tabletTarget() {
     if (window._hmnOwner && window._hmnOwner.isConnected) return null;          // the phone dashboard
+    // Read the dashboard setting now (a touch does not always come with a pointerdown that refreshes it).
+    try { if (window._casoraHoldModeRefresh) window._casoraHoldModeRefresh(); } catch (e) { /* the last value stands */ }
     if (window._casoraSwipeTablet !== true) return null;
     try { if (!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches)) return null; } catch (e) { return null; }
     var root = deep(document, 'hui-root', 0);
