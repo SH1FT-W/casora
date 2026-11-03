@@ -1,6 +1,6 @@
 // Studio → Settings → „Live Activities“ (casora-panel-live.js) without a browser.  node dev/unit/studio_live.mjs
 // Pure parts (subline per device, draft with deviations only, log line), the wiring into the
-// settings page (PAGES entry, load/dirty/save, icon color, search, loader in __init__.py) and
+// settings (block in the tile "Phone", load/dirty/save, icon color, search, loader in __init__.py) and
 // the German texts in translations/panel/de.json.
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -57,13 +57,13 @@ assert.equal(M.logLine({ time: '2026-10-17T12:00:00+00:00', title: 'W · Probe',
 
 // ── Wiring ─────────────────────────────────────────────────────────────────────────
 const settings = read('panel/casora-panel-settings.js');
-assert.ok(/\{ id: "live", label: "Live Activities", icon: "iphone", tone: "set-live", live: true,/.test(settings), 'PAGES-Eintrag');
-assert.ok(settings.indexOf('id: "live"') > settings.indexOf('id: "vent"') && settings.indexOf('id: "live"') < settings.indexOf('id: "fuel"'),
-  'zwischen Lüften und Tanken');
+// Since 03.11.2026 a block of the tile "Phone" (eight tiles, the subpages are gone).
+const phoneTile = settings.slice(settings.indexOf('{ id: "phone"'), settings.indexOf('{ id: "bell"'));
+assert.ok(/k: "live", page: "live", title: "Lock screen \(Live Activities\)"/.test(phoneTile), 'Block „Sperrbildschirm“ in der Kachel Handy');
 // Loaded with the settings (since 02.11.2026 side by side with the other stores: Promise.all).
 assert.ok(/typeof this\._csLiveLoad === "function" \? this\._csLiveLoad\(cs\)/.test(settings) && /await Promise\.all\(\[[^\]]*live\]\)/.test(settings), 'wird mit den Einstellungen geladen');
 assert.ok(/liveDirty\(this\)/.test(settings) && /await this\._csLiveSave\(\);/.test(settings), 'ein Speichern für alles');
-assert.ok(/if \(page\.live\) \{\s*if \(typeof this\._csFillLive === "function"\) this\._csFillLive\(host\);\s*return;/.test(settings), 'Seite füllt sich aus casora-panel-live.js');
+assert.ok(/if \(b\.page === "live"\) \{ if \(typeof this\._csFillLive === "function"\) this\._csFillLive\(box\); return; \}/.test(settings), 'Block füllt sich aus casora-panel-live.js');
 const live = read('panel/casora-panel-live.js');
 assert.ok(/callWS\(\{ type: "casora\/live\/get" \}\)/.test(live) && /type: "casora\/live\/set"/.test(live) && /type: "casora\/live\/probe"/.test(live), 'WS-Befehle');
 assert.ok(/setAttribute\("role", "switch"\)/.test(live) && /ev\.stopPropagation\(\)/.test(live), 'Schalter je Gerät, öffnet nicht die Zeile');

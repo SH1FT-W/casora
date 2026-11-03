@@ -631,13 +631,12 @@
       }
     };
 
-    // Formerly a page of its own ("Home settings"), now part of the Settings.
-    // Old jumps (focus) land on the matching subpage.
-    const FOCUS_PAGE = { notify: "alerts", scenes: "home", media: "home", basis: "dashboards", calendars: "calendar" };
+    // Formerly a page of its own ("Home settings"), now part of the Settings: a jump with a focus lands on the tile and
+    // block that hold that group (casora-panel-settings.js route).
     P._casoraPersonal = function (o) {
       o = o || {};
       if (typeof this._csShow !== "function") return undefined;
-      return this._csShow(FOCUS_PAGE[o.focus] || "home", o.focus);
+      return this._csShow("home", o.focus);
     };
 
     // In the Studio pages Scenes, Now Playing and Notifications: hint at

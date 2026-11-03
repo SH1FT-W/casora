@@ -19176,7 +19176,7 @@ class CasoraPanel extends HTMLElement {
           b.type = "button";
           b.className = "ghost";
           b.textContent = trLabel("Choose") + " ›";
-          b.onclick = () => { if (typeof this._csHubGo === "function") this._csHubGo({ page: f.page, focus: f.focus, back: "start" }); };
+          b.onclick = () => { if (typeof this._csHubGo === "function") this._csHubGo({ page: f.page, focus: f.focus, back: "n-start" }); };
           row.appendChild(b);
           fs.appendChild(row);
           addHint();
