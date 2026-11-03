@@ -12554,6 +12554,7 @@ window.casoraMenuGlass = {
     + '.hui-st-act:active{transform:scale(var(--casora-press-scale, .97));}'
     // S6: value + trend, chart, range segment.
     + '.hui-st-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;}'
+    + '.hui-st-cap{font-size:15px;font-weight:600;line-height:1.2;color:' + S.sub + ';margin-bottom:-4px;}'
     + '.hui-st-trend{font-size:15px;font-weight:600;color:' + S.sub + ';white-space:nowrap;}'
     + '.hui-st-chart{min-height:160px;}'
     // S7: symbol 64 in the traffic-light colour, sentence 22/800, up to 3 facts.
@@ -13488,7 +13489,8 @@ window.casoraMenuGlass = {
       // the entity without redrawing the stage (data-hp-live, 01-basis.js) – the chart in the stage stays mounted.
       var na6 = (o.read ? ' data-casora-read="' + esc(o.read) + '" data-casora-read-bare=""' : '') + (o.live ? ' data-hp-live="' + esc(o.live) + '"'
         + (o.liveDigits != null ? ' data-hp-digits="' + esc(o.liveDigits) + '"' : '') : '');
-      body = '<div class="hui-st-head">' + stValue(o.value, o.unit || '', o.word ? 'wd' : '', na6)
+      // o.caption: the kind of value over the number when the title names the device („Leistung“ under „Waschmaschine“).
+      body = (o.caption ? '<div class="hui-st-cap">' + esc(o.caption) + '</div>' : '') + '<div class="hui-st-head">' + stValue(o.value, o.unit || '', o.word ? 'wd' : '', na6)
         + (o.trend != null || o.read ? '<div class="hui-st-trend"' + (o.read ? ' data-casora-read-when=""' : '') + '>' + esc(o.trend || '') + '</div>' : '') + '</div>'
         // No chart (a reading without history): no empty 160 plate under the value.
         + (o.chart ? '<div class="hui-st-chart">' + o.chart + '</div>' : '')
