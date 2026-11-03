@@ -224,6 +224,21 @@
     // Phone: smaller image, text beside it at full width, "Add" as a wide button below.
     + "@media (max-width: 600px){.comrow.comcard{flex-wrap:wrap}.comrow.comcard .comshot,.comrow.comcard button.comzoom{width:96px;height:80px}"
     + ".comrow.comcard .comtx{flex:1 1 0}.comrow.comcard > .comchip{flex:1 0 100%;align-self:stretch;padding:9px 12px;text-align:center;font-weight:600}}"
+    // Tablet/desktop (proposal 26.11.10, owner 03.11.2026): the cards as a grid of compact tiles – two columns
+    // (variant A), three on a wide desktop (variant B). Phone: one column as before.
+    + ".comgrid{display:grid;grid-template-columns:1fr;gap:10px;padding:2px}"
+    + ".comgrid > .comrow.comcard{flex-direction:column;align-items:stretch;gap:8px;padding:12px;border:0;border-radius:16px;"
+    + "background:var(--casora-studio-card, rgba(127,127,127,.08))}"
+    + ".comgrid .comhead{display:flex;gap:12px;align-items:flex-start}"
+    + ".comgrid .comshot,.comgrid button.comzoom{width:96px;height:80px}"
+    + ".comgrid .comtx{display:flex;flex-direction:column;min-width:0;flex:1}"
+    + ".comgrid .comdesc{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}"
+    + ".comgrid .comdesc.open{display:block}"
+    + ".comgrid .commore{border:0;background:none;padding:0;font:inherit;font-size:12px;font-weight:600;color:var(--casora-studio-accent, #0a84ff);cursor:pointer;width:fit-content;margin-top:2px}"
+    + ".comgrid .comacts{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:4px}"
+    + ".comgrid .comacts .comlink{margin-top:0}.comgrid .comacts .comchip{margin-left:auto;padding:6px 14px;font-weight:600}"
+    + "@media (min-width: 700px){.comgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}"
+    + "@media (min-width: 1280px){.comgrid.c3{grid-template-columns:repeat(3,minmax(0,1fr))}}"
     // T20 (test 2): always on its own line – inline it ran on after the last word when no note followed the text.
     + ".comlink{display:flex;width:fit-content;align-items:center;gap:5px;margin-top:6px;border:0;border-radius:999px;padding:4px 10px 4px 8px;font:inherit;font-size:13px;font-weight:600;"
     + "background:var(--casora-studio-chip, rgba(118,118,128,.18));color:inherit;cursor:pointer}.comlink ha-icon{--mdc-icon-size:16px;display:flex}"
@@ -453,6 +468,15 @@
           box.insertBefore(el("div", "comlbl", tr("Community cards")), acts);
           const host = el("div", "askbody");
           box.insertBefore(host, acts);
+          // Grid variant (prototype): "A" two columns, "B" up to three, "off" the previous list.
+          const gv = String(W.CASORA_COM_GRID || "A");
+          const grid = gv === "off" ? null : el("div", "comgrid" + (gv === "B" ? " c3" : ""));
+          if (grid) {
+            host.appendChild(grid);
+            const st = box.closest && box.closest(".askstack");
+            if (st && W.innerWidth >= 700) st.style.width = gv === "B" && W.innerWidth >= 1280 ? "min(1240px, 94vw)" : "min(1000px, 94vw)";
+          }
+          const cards = grid || host;
           if (!list.length) host.appendChild(el("div", "comnote", tr("No community cards yet. Ask for one – the first ones come with the next update.")));
           list.forEach((t) => {
             const r = el("div", "comrow comcard");
@@ -469,7 +493,18 @@
             shot.onerror = () => { if (S.tile !== S.light.tile && shot.src.indexOf(S.light.tile) < 0) shot.src = S.light.tile; else shot.replaceWith(el("div", "comshot")); };
             zoom.appendChild(shot);
             const tx = el("div", "comtx");
-            tx.append(el("b", "", tr(t.label)), el("span", "", tr(t.community.retired ? "This card is being retired. Your tiles keep working for now." : (t.community.desc || ""))));
+            const desc = el("span", grid ? "comdesc" : "", tr(t.community.retired ? "This card is being retired. Your tiles keep working for now." : (t.community.desc || "")));
+            tx.append(el("b", "", tr(t.label)), desc);
+            let more = null;
+            if (grid) {
+              more = el("button", "commore", tr("More"));
+              more.type = "button";
+              more.style.display = "none";
+              more.onclick = () => { const o = desc.classList.toggle("open"); more.textContent = tr(o ? "Less" : "More"); };
+              tx.appendChild(more);
+              // Only when the text is really cut.
+              requestAnimationFrame(() => { if (desc.scrollHeight > desc.clientHeight + 2) more.style.display = ""; });
+            }
             const need = t.community.needs;
             if (need) {
               const ok2 = hasIntegration(hass, need);
@@ -490,7 +525,7 @@
             probe.onload = () => { hasPopup = true; pop.style.display = ""; };
             probe.onerror = () => { if (probe.src.indexOf(S.light.popup) < 0 && S.popup !== S.light.popup) probe.src = S.light.popup; };
             probe.src = S.popup;
-            tx.appendChild(pop);
+            if (!grid) tx.appendChild(pop);
             zoom.onclick = () => lightbox(box, t, "tile", hasPopup, dark);
             const on = W.casoraCommunityOn.has(t.id);
             const b = el("button", "comchip" + (on ? "" : " on"), tr(on ? "Remove" : "Add"));
@@ -498,8 +533,14 @@
             b.setAttribute("data-com", t.id);
             b.onclick = () => { then = { toggle: t }; ok.click(); };
             if (note && note.id === t.id) tx.appendChild(flash(note));
-            r.append(zoom, tx, b);
-            host.appendChild(r);
+            if (grid) {
+              const head = el("div", "comhead");
+              head.append(zoom, tx);
+              const acts2 = el("div", "comacts");
+              acts2.append(pop, b);
+              r.append(head, acts2);
+            } else r.append(zoom, tx, b);
+            cards.appendChild(r);
           });
           // Own requests
           loadMine(hass).then((mine) => {
