@@ -318,6 +318,18 @@ Zustände, nie als Serienfarbe.
 Jedes Diagramm hat einen Namen für die Sprachausgabe mit Zusammenfassung
 („Temperatur, letzte 24 Std., 19,8 bis 22,1 °C, jetzt 21,2 °C“); der Zeitraum-Umschalter ist ein Segment mit `role="tab"`.
 
+### 7.6 Zustandsband
+
+Für einen Zustand über die Zeit (Pulse-Status: Gut, Beobachten, Prüfen, Ausgefallen, Lernt) statt Linie oder Balken
+ein **Band** (Entscheidung 03.11.2026, Variante A, r521):
+
+- **eine Höhe** für jeden Zustand (14, Radius 7) – die Schwere sagt die Farbe, nicht die Höhe; Spur darunter
+  `--casora-popup-row-fill`
+- Abschnitte gerundet, 3 px Lücke zwischen Nachbarn; Prüfen und Ausgefallen leuchten weich (Schatten in ihrer Farbe)
+- Farben wie Ring und Verlauf: Gut grün, Beobachten gelb, Prüfen orange, Ausgefallen rot, Lernt grau gestreift
+- Achse darunter wie §7.2 (Beginn links, „Jetzt“ rechts); **Legende** (Punkt, Wort, Dauer) erst ab zwei Zuständen
+  im Zeitraum – ein Zustand allein ist das ganze Band
+
 ## 8. Clean: keine Einstellungen, kein Mehr (Entscheidung 31.10.2026)
 
 Ein Popup ist **die nächste Stufe nach der Kachel, keine Schaltzentrale**: etwas mehr Infos und etwas mehr Bedienung
