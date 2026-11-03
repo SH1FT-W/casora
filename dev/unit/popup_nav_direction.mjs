@@ -21,10 +21,10 @@ assert.equal(nav(true, 0, 1000, null, a, false), 'same', 'cfg.nav === false opts
 // The frame: ‹ marks the way, open() asks navDirection, the old page leaves after the new one has drawn.
 assert.ok(/this\._navBackAt = Date\.now\(\);\s*if \(typeof fn === 'function'\) fn\(\);/.test(src), '‹ marks a back navigation');
 assert.ok(/var navDir = navDirection\(wasOpen, stackAt >= 0 \? Date\.now\(\) : this\._navBackAt, Date\.now\(\), prevBackFn, nextBack, cfg\.nav\);/.test(src), 'open() decides the way');
-assert.ok(/await this\._navBegin\(navDir\)/.test(src) && src.indexOf('await this._navBegin(navDir)') < src.indexOf("var prevTitle = wasOpen"), 'the old page leaves before anything of it changes');
+assert.ok(/var nav = navDir === 'forward' \|\| navDir === 'back' \? this\._navBegin\(navDir\) : null;\s*this\.container\.textContent = '';/.test(src), 'the old page goes at once, the new one builds out of sight');
 assert.ok(/if \(nav\) nav\.play\(\);/.test(src), 'the transition plays after the build');
 assert.ok(/if \(this\._navAnim\) this\._navAnim\.finish\(\);\s*var prevBackFn/.test(src), 'a running transition ends at the next page');
-assert.ok(/prefers-reduced-motion: reduce\)'\)\.matches/.test(src.slice(src.indexOf('async _navBegin(dir) {'))), 'reduced motion is honoured');
+assert.ok(/prefers-reduced-motion: reduce\)'\)\.matches/.test(src.slice(src.indexOf('_navBegin(dir) {'))), 'reduced motion is honoured');
 // Scroll memory: a page left forward is remembered, ‹ restores it, close forgets.
 assert.ok(/if \(navDir === 'forward'\) this\._navStack\.push\(\{ top: leftAt, cfg: this\._cfgCurrent/.test(src), 'forward remembers the scroll and config of the page left');
 assert.ok(/this\._navStack\[si\]\.cfg === data/.test(src), 'a page opened again with its config is a way back');

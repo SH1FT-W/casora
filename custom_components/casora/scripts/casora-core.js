@@ -8062,10 +8062,7 @@ window.casoraMenuGlass = {
         var ent = this._navStack.splice(stackAt >= 0 ? stackAt : this._navStack.length - 1)[0];
         scrollBack = ent ? ent.top : null;
       }
-      // The old page leaves first; another page opened meanwhile (a fast second tap) goes on, this opening stops.
-      var gen0 = this._openGen;
-      var nav = navDir === 'forward' || navDir === 'back' ? await this._navBegin(navDir) : null;
-      if (gen0 !== this._openGen || (wasOpen && !this.hasAttribute('open'))) { if (nav) nav.finish(); return; }
+
       // §3/§4.4 (review 2, DD-09): a sub page's label is the title of the page before it.
       var prevTitle = wasOpen && this._headerTitle ? String(this._headerTitle.textContent || '').replace(/\u200B/g, '') : '';
       // Gerät fehlt: Inhalt gar nicht erst bauen (bleibt ohnehin verborgen) – sonst melden Karten
@@ -8199,6 +8196,7 @@ window.casoraMenuGlass = {
       else this._lastWidthDecl = null;
       this._dyn.textContent = dynCss;
 
+      var nav = navDir === 'forward' || navDir === 'back' ? this._navBegin(navDir) : null;
       this.container.textContent = '';
       // Every opening starts at the top (the content scroller is shared: a popup reopened showed its stage cut off).
       // The content arrives after this line and the browser's scroll anchoring moved it down again: anchoring off,
@@ -8937,14 +8935,14 @@ window.casoraMenuGlass = {
     }
 
     // Page transition inside the open popup (owner 03.11.2026): every sub page goes through open(), so the frame
-    // animates them all alike. forward: the old page drifts a little to the left and fades (about 100 ms), the new one
-    // slides in from the right; back: mirrored. The old page is gone before the new one builds – modules look up their
-    // slots in the popup (charts, forecast), two pages at once would hand them the wrong one. Only a transform on the new
-    // page: an opacity on an ancestor would flatten the frost of its plates (see .header). The head cross-fades, the
-    // sheet keeps its height while the new page builds and then follows it. Same easing as the sheet's entrance.
-    // Reduced motion: nothing moves. Resolves to { play, finish } or null; finish() ends it at once (a tap during the
-    // transition, close).
-    async _navBegin(dir) {
+    // animates them all alike. forward: the new page slides in from the right, back: from the left; the head
+    // cross-fades with it; the sheet keeps its height while the new page builds and then follows it. The old page goes
+    // at once, as before: modules re-draw and look up their slots in the popup while a page opens (light lists, charts,
+    // forecast) – a leaving page still in the popup handed them the wrong one (r335, r540). Only a transform on the new
+    // page: an opacity on an ancestor would flatten the frost of its plates (see .header). Same easing as the sheet's
+    // entrance. Reduced motion: nothing moves. Returns { play, finish } or null; finish() ends it at once (a tap
+    // during the transition, close).
+    _navBegin(dir) {
       var reduce = false;
       try { reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* no media */ }
       this.setAttribute('data-casora-nav', dir);
@@ -8955,11 +8953,14 @@ window.casoraMenuGlass = {
       var anims = [], done = false, sign = dir === 'back' ? -1 : 1;
       var DUR = 260, EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
       this.setAttribute('navigating', '');
+      // The new page builds out of sight, the sheet keeps its size meanwhile (no collapse, no jump).
+      box.style.visibility = 'hidden';
+      if (surf && h0) surf.style.height = h0 + 'px';
       var finish = function () {
         if (done) return;
         done = true;
         anims.forEach(function (a) { try { a.cancel(); } catch (e) { /* gone */ } });
-        box.style.removeProperty('pointer-events');
+        box.style.removeProperty('visibility');
         if (surf) surf.style.removeProperty('height');
         self.removeAttribute('navigating');
         if (self._navAnim === ctl) self._navAnim = null;
@@ -8971,11 +8972,12 @@ window.casoraMenuGlass = {
           var run = function () {
             if (done) return;
             var opt = { duration: DUR, easing: EASE };
+            box.style.removeProperty('visibility');
             if (surf) surf.style.removeProperty('height');
             try {
-              anims.push(box.animate([{ transform: 'translateX(' + (sign * 44) + 'px)' }, { transform: 'translateX(0)' }], opt));
+              anims.push(box.animate([{ transform: 'translateX(' + (sign * 48) + 'px)' }, { transform: 'translateX(0)' }], opt));
               if (self._headerContent) {
-                anims.push(self._headerContent.animate([{ opacity: 0.25, transform: 'translateX(' + (sign * 14) + 'px)' }, { opacity: 1, transform: 'translateX(0)' }], opt));
+                anims.push(self._headerContent.animate([{ opacity: 0.2, transform: 'translateX(' + (sign * 16) + 'px)' }, { opacity: 1, transform: 'translateX(0)' }], opt));
               }
               var h1 = surf ? surf.getBoundingClientRect().height : 0;
               if (surf && h0 && h1 && Math.abs(h1 - h0) > 8) anims.push(surf.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], opt));
@@ -8988,20 +8990,7 @@ window.casoraMenuGlass = {
         },
       };
       this._navAnim = ctl;
-      // The old page leaves first (no taps on it meanwhile); the sheet keeps its height until the new one stands.
-      box.style.pointerEvents = 'none';
-      if (surf && h0) surf.style.height = h0 + 'px';
-      try {
-        var out = box.animate([{ transform: 'translateX(0)', opacity: 1 }, { transform: 'translateX(' + (-sign * 28) + 'px)', opacity: 0 }],
-          { duration: 110, easing: 'ease-in', fill: 'forwards' });
-        anims.push(out);
-        await new Promise(function (res) { out.onfinish = res; out.oncancel = res; setTimeout(res, 160); });
-      } catch (e) { /* no animation: straight on */ }
-      // The leaving page's fade must not stay on the new one.
-      anims.forEach(function (a) { try { a.cancel(); } catch (e) { /* gone */ } });
-      anims.length = 0;
-      box.style.removeProperty('pointer-events');
-      return done ? null : ctl;
+      return ctl;
     }
 
     close() {
