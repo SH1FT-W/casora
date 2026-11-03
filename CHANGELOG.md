@@ -4,6 +4,21 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.10 – 03.11.2026
+
+Swipe between rooms, a device assistant that builds only what you tick, smooth popup pages and the community in columns.
+
+### New
+- **Swipe between rooms (#114):** one setting "Swipe between rooms" for every touch device (phone, tablet, iPad). Home is the first page: swipe left on Home for the first room, swipe right on the first room to go back Home. The page follows the finger, the neighbours' room photos load ahead and the background crossfades. A row that scrolls sideways keeps the swipe until its end.
+- **Device assistant with ticks:** each suggested device has a tick; rooms are folding groups ("Room · 3 of 5", All/None), chips by kind and a search narrow the view. Only ticked devices with a room are built. Parts of a lamp (segments, zones) and devices without a room start unticked; on opening only rooms with ticked devices are expanded.
+
+### Changed
+- **Popup pages:** a sub page inside an open popup slides in from the right, ‹ back slides it out; the head crossfades and the sheet's height follows. Back returns to where you were scrolled, a new page starts at the top. With reduced motion there is no slide.
+- **Community dialog:** on tablet and desktop the entries show in two columns, three from 1500 px; the phone keeps the list.
+
+### Fixed
+- **Studio tablet preview:** the "Tablet" preview of Home cut the tile row at the bottom; the tiles stay whole inside the frame.
+
 ## 26.11.9 – 03.11.2026
 
 Tap to switch on badges, a calmer aquarium popup with dosing, a clearer Pulse history and tidier two-column popups.

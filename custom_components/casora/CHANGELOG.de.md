@@ -4,6 +4,21 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.10 – 03.11.2026
+
+Wischen zwischen Räumen, ein Geräte-Assistent, der nur Angehaktes einbaut, weiche Popup-Seiten und die Community in Spalten.
+
+### Neu
+- **Wischen zwischen Räumen (#114):** eine Einstellung „Zwischen Räumen wischen“ für alle Touch-Geräte (Handy, Tablet, iPad). Home ist die erste Seite: auf Home nach links wischen öffnet den ersten Raum, auf dem ersten Raum nach rechts geht zurück zu Home. Die Seite folgt dem Finger, die Raumfotos der Nachbarn werden vorgeladen und der Hintergrund blendet über. Eine Reihe, die seitlich scrollt, behält das Wischen bis zu ihrem Ende.
+- **Geräte-Assistent mit Häkchen:** jedes vorgeschlagene Gerät hat ein Häkchen; Räume sind aufklappbare Gruppen („Raum · 3 von 5“, Alle/Keine), Chips nach Art und eine Suche grenzen ein. Eingebaut werden nur angehakte Geräte mit Raum. Teile einer Lampe (Segmente, Zonen) und Geräte ohne Raum starten abgehakt; beim Öffnen sind nur Räume mit angehakten Geräten aufgeklappt.
+
+### Geändert
+- **Popup-Seiten:** eine Unterseite im offenen Popup gleitet von rechts herein, ‹ zurück schiebt sie hinaus; der Kopf blendet über und die Höhe folgt der neuen Seite. Zurück landest du an der Stelle, an der du warst, eine neue Seite beginnt oben. Mit reduzierter Bewegung ohne Gleiten.
+- **Community-Dialog:** auf Tablet und Desktop stehen die Einträge in zwei Spalten, ab 1500 px in drei; das Handy behält die Liste.
+
+### Behoben
+- **Tablet-Vorschau im Studio:** die Vorschau „Tablet“ von Home schnitt die Kachelreihe unten ab; die Kacheln bleiben jetzt ganz im Rahmen.
+
 ## 26.11.9 – 03.11.2026
 
 Schalten per Tipp auf Badges, ein ruhigeres Aquarium-Popup mit Dosierung, ein klarerer Pulse-Verlauf und aufgeräumte zweispaltige Popups.
