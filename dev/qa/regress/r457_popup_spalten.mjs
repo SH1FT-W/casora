@@ -3,7 +3,7 @@
 // @deckt: dashboards/casora/button_card_templates.json dev/qa/popup-galerie.mjs dev/qa/popup-spalten.mjs custom_components/casora/scripts/casora-core.js custom_components/casora/scripts/local/02-devices.js custom_components/casora/scripts/local/03-popups.js custom_components/casora/scripts/local/05-weich-mehr.js custom_components/casora/scripts/local/05-standard-medien.js
 // Owner 01.11.2026: two-column popups on desktop/tablet must not leave a large empty block under the shorter column
 // (02.11.2026: one rule for all, casora-core colBalance; the popups it evens out fail here without it).
-// Builds the popup gallery, opens every popup at 1440×900 and the tablet size 1180×820 and measures both columns'
+// Builds the popup gallery, opens every popup (twice: rule B applies from the second opening, 03.11.2026) at 1440×900 and the tablet size 1180×820 and measures both columns'
 // bottom edges (dev/qa/popup-spalten.mjs): the empty block may be at most MAX_GAP px tall; the layouts measured above
 // that on 01.11.2026 are a ratchet (KNOWN, may not grow). Also the weather popup's order (owner, §7.1): left under the
 // dial the Verlauf, right „Nächste Stunden“ under „7 Tage“ (before: 455 px left, 1211 px right).
@@ -26,6 +26,9 @@ const KNOWN = {
   // Light popups (owner 03.11.2026): the column rule moves only whole sections and never splits a list, so the light
   // popups (one list right of the dial) keep their layout and their caps of 03.11.2026.
   'licht-raum': 283, 'licht-haus': 440,
+  // Person popup: its right column is one Verlauf list that grows with the test house's tracker changes during the run
+  // (94 px alone, 202 px after the double pass of 03.11.2026) – one section, nothing the column rule can move.
+  'person-badge': 260,
   'licht-badge': 440, 'drucker': 437, 'kaffee': 609, 'aquarium-licht': 276, 'schloss-badge': 325, 'pflanze': 296,
   'wetter': 420, 'frigate': 358, 'kalender': 844, 'abfall': 463, 'rezept': 343,
 };
