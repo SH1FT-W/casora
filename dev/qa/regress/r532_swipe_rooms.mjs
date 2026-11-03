@@ -9,7 +9,11 @@
 //  3. on: a mostly vertical move scrolls and never changes the room
 //  4. on: a swipe that starts in a sideways-scrolling row (badges) does not change the room
 //  5. on: no room change while a Casora popup is open; no wrap-around past the last room
-// Tablet 1180×820 with touch: with "Also on the tablet" a swipe on a room view goes to the next room view.
+//  6. on (owner, 03.11.2026): Home is the first page – on Home a swipe to the left opens the first room, on the first
+//     room a swipe to the right goes back Home, Home has no previous page; a swipe that starts on one of Home's own
+//     horizontal rows (badges, chips, tile rows, carousels) stays with the row
+// Tablet 1180×820 with touch: with "Also on the tablet" a swipe on a room view goes to the next room view; Home (the
+// first view) is the first page there too.
 import { open, usePage, casoraDashboard, dashboard, check, need, finish } from './lib.mjs';
 
 const dash = await casoraDashboard();
@@ -25,6 +29,28 @@ async function swipe(cdp, page, x0, y0, x1, y1, steps = 10) {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await page.waitForTimeout(1300);
 }
+
+// A point on the page whose ancestors take no horizontal touches (free) or that lies on such a row (row).
+const SPOT = (kind) => (() => {
+  const deepAt = (x, y) => { let el = document.elementFromPoint(x, y); while (el && el.shadowRoot && el.shadowRoot.elementFromPoint) {
+    const inner = el.shadowRoot.elementFromPoint(x, y); if (!inner || inner === el) break; el = inner; } return el; };
+  const up = (el) => { const out = []; while (el) { out.push(el); el = el.parentElement || (el.getRootNode && el.getRootNode().host) || null; } return out; };
+  const claims = (el) => { if (el.nodeType !== 1) return false; if (/^(media_row|climate_row|rooms_row)$/.test(el.id)) return true;
+    if (/^(casora-swipe-card|input|ha-slider|ha-control-slider|casora-chart|canvas)$/i.test(el.localName || '')) return true;
+    const cs = getComputedStyle(el);
+    if (/pan-x/.test(cs.touchAction) && !/pan-y/.test(cs.touchAction)) return true;
+    return el.scrollWidth > el.clientWidth + 4 && el.clientWidth > 0 && (cs.overflowX === 'auto' || cs.overflowX === 'scroll'); };
+  const W = innerWidth;
+  for (let y = 120; y < innerHeight - 140; y += 30) {
+    for (const x of [W * 0.5, W * 0.3, W * 0.7]) {
+      const el = deepAt(x, y); if (!el) continue;
+      const on = up(el).some(claims);
+      if (KIND === 'row' ? on : !on) return { x, y };
+    }
+  }
+  return null;
+}).toString().replace('KIND', JSON.stringify(kind));
+const spot = (page, kind) => page.evaluate('(' + SPOT(kind) + ')()');
 
 // ── Phone ────────────────────────────────────────────────────────────────────
 {
@@ -90,6 +116,24 @@ async function swipe(cdp, page, x0, y0, x1, y1, steps = 10) {
     await page.keyboard.press('Escape');
     await page.waitForTimeout(800);
   } else console.log('  info   Handy: kein Casora-Popup zu öffnen – Fall 5b übersprungen');
+  // Home is the first page.
+  await go('all');
+  const free = await spot(page, 'free');
+  if (free) {
+    await swipe(cdp, page, free.x + 120, free.y, free.x - 150, free.y + 4);
+    await check('Handy an: auf Home nach links wischen → erster Raum', (await cur()) === keys[0], { cur: await cur(), want: keys[0], at: free });
+    await go(keys[0]);
+    const fr = await spot(page, 'free');
+    if (fr) await swipe(cdp, page, Math.max(40, fr.x - 140), fr.y, Math.min(370, fr.x + 150), fr.y - 4);
+    await check('Handy an: im ersten Raum nach rechts wischen → Home', (await cur()) === 'all', { cur: await cur() });
+    await swipe(cdp, page, Math.max(40, free.x - 140), free.y, Math.min(370, free.x + 150), free.y);
+    await check('Handy an: auf Home nach rechts wischen bleibt auf Home', (await cur()) === 'all', { cur: await cur() });
+  } else await check('Handy: freie Stelle auf Home zum Wischen', false);
+  const homeRow = await spot(page, 'row');
+  if (homeRow) {
+    await swipe(cdp, page, Math.min(370, homeRow.x + 120), homeRow.y, Math.max(30, homeRow.x - 160), homeRow.y);
+    await check('Handy an: Wischen auf einer Reihe von Home bleibt bei der Reihe', (await cur()) === 'all', { cur: await cur(), at: homeRow });
+  } else console.log('  info   Handy: keine seitwärts wischbare Reihe auf Home – Fall 6b übersprungen');
   await page.evaluate(() => window._casoraFilter.set('all'));
   await page.context().close();
 }
@@ -98,9 +142,10 @@ async function swipe(cdp, page, x0, y0, x1, y1, steps = 10) {
 {
   const { page, context } = await open({ width: 1180, height: 820, touch: true, dark: false, theme: 'Casora' });
   usePage(page);
-  const views = dash.config.views.filter((v) => [].concat(((v.cards || [])[0] || {}).template || []).includes('casora_room')
+  const views = dash.config.views.filter((v, i) => i > 0 && [].concat(((v.cards || [])[0] || {}).template || []).includes('casora_room')
     && v.path && !v.casora_category && !(((v.cards || [])[0] || {}).variables || {}).casora_hidden).map((v) => v.path);
   await need('Tablet: mindestens drei Raumansichten', views.length >= 3, views);
+  views.unshift(String(dash.config.views[0].path || '0'));   // Home first: views[1] is the first room
   await dashboard(page, dash.url + '/' + views[1]);
   const cdp = await context.newCDPSession(page);
   // "Also on the tablet" only in the browser: the dashboard config the settings reader sees gets the variable.
@@ -117,12 +162,26 @@ async function swipe(cdp, page, x0, y0, x1, y1, steps = 10) {
   console.log('  info   Tablet: Einstellung im Browser', await setTablet(false));
   await page.waitForTimeout(1500);
   const path = () => page.evaluate(() => location.pathname.split('/').filter(Boolean)[1]);
-  await swipe(cdp, page, 1000, 560, 600, 566);
+  const swipeLeft = async () => { const f = (await spot(page, 'free')) || { x: 600, y: 300 };
+    await swipe(cdp, page, Math.min(1120, f.x + 200), f.y, Math.max(60, f.x - 200), f.y + 4); };
+  await swipeLeft();
   await check('Tablet aus: Wischen wechselt die Ansicht nicht', (await path()) === views[1], { path: await path() });
   console.log('  info   Tablet: Einstellung im Browser', await setTablet(true));
   await page.waitForTimeout(1500);
-  await swipe(cdp, page, 1000, 560, 600, 566);
+  await swipeLeft();
   await check('Tablet an: nach links wischen → nächste Raumansicht', (await path()) === views[2], { path: await path(), want: views[2] });
+  // Home (first view) first: from the first room a swipe to the right goes Home, Home has no previous page.
+  const homePath = String(dash.config.views[0].path || '0');
+  await page.evaluate((p) => { history.pushState(null, '', p); window.dispatchEvent(new CustomEvent('location-changed')); }, '/' + dash.url + '/' + views[1]);
+  await page.waitForTimeout(1800);
+  const tfree = await spot(page, 'free');
+  if (tfree) {
+    await swipe(cdp, page, Math.max(60, tfree.x - 200), tfree.y, Math.min(1120, tfree.x + 200), tfree.y);
+    await check('Tablet an: in der ersten Raumansicht nach rechts wischen → Home', (await path()) === homePath, { path: await path(), want: homePath });
+    const hfree = await spot(page, 'free');
+    if (hfree) await swipe(cdp, page, Math.max(60, hfree.x - 200), hfree.y, Math.min(1120, hfree.x + 200), hfree.y);
+    await check('Tablet an: auf Home nach rechts wischen bleibt auf Home', (await path()) === homePath, { path: await path() });
+  } else await check('Tablet: freie Stelle zum Wischen', false);
   await page.context().close();
 }
 await finish();

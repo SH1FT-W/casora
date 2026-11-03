@@ -1,6 +1,7 @@
 // ── Swipe between rooms (issue 114, 03.11.2026) ────────────────────────────────
 // A horizontal swipe on an open room goes to the next / previous room, in the order of the room menu – in addition
-// to the room menu, never instead of it. Studio › Controls › Phone: "Swipe between rooms" (swipe_rooms; the phone's
+// to the room menu, never instead of it. Home is the first page (owner, 03.11.2026): on Home a swipe to the left opens
+// the first room, on the first room a swipe to the right goes back Home; Home has no previous page. Studio › Controls › Phone: "Swipe between rooms" (swipe_rooms; the phone's
 // bottom bar card gets it on save, markPhoneManaged) and "Also on the tablet" (swipe_rooms_tablet; the desktop
 // dashboard's room views, read like hold_mode in casora-core.js → window._casoraSwipeTablet). Both off by default.
 // Not a swipe: a mostly vertical move, a start in a row that scrolls sideways (badges, chips, media), on a slider,
@@ -60,7 +61,7 @@
 
   // A start inside something that takes horizontal touches itself.
   var H_IDS = { media_row: 1, climate_row: 1, rooms_row: 1 };
-  var NO_SWIPE = /^(input|textarea|select|ha-slider|ha-control-slider|ha-textfield|casora-chart|canvas|ha-chart-base)$/i;
+  var NO_SWIPE = /^(input|textarea|select|ha-slider|ha-control-slider|ha-textfield|casora-chart|canvas|ha-chart-base|casora-swipe-card)$/i;
   function blocked(path) {
     for (var i = 0; i < path.length; i++) {
       var el = path[i];
@@ -71,11 +72,11 @@
       if (el.getAttribute && (el.getAttribute('role') === 'slider' || el.hasAttribute('data-no-swipe'))) return true;
       var cl = el.classList;
       if (cl && (cl.contains('hmn-bar') || cl.contains('hmn-menu') || cl.contains('hmn-sheet'))) return true;
-      if (el.scrollWidth > el.clientWidth + 4 && el.clientWidth > 0) {
-        var ox = '';
-        try { ox = getComputedStyle(el).overflowX; } catch (e) { ox = ''; }
-        if (ox === 'auto' || ox === 'scroll') return true;
-      }
+      var cs = null;
+      try { cs = getComputedStyle(el); } catch (e) { cs = null; }
+      // A row that claims horizontal touches (smart-row's tile row: touch-action pan-x) or scrolls sideways.
+      if (cs && /pan-x/.test(cs.touchAction || '') && !/pan-y/.test(cs.touchAction || '')) return true;
+      if (cs && el.scrollWidth > el.clientWidth + 4 && el.clientWidth > 0 && (cs.overflowX === 'auto' || cs.overflowX === 'scroll')) return true;
       if (el === document.body) break;
     }
     return false;
@@ -86,10 +87,11 @@
     var o = window._hmnOwner;
     if (!o || !o.isConnected || !o._cfg || o._cfg.swipe_rooms !== true || o._menu || o._extKind) return null;
     var cur = typeof o._cur === 'function' ? o._cur() : null;
-    if (!cur || !/^room_/.test(cur) || cur === 'room_scenes') return null;
+    // Home ('all') first, then the rooms of the menu; categories and the scenes page are no stop.
+    if (!cur || (cur !== 'all' && (!/^room_/.test(cur) || cur === 'room_scenes'))) return null;
     var rooms = (o._rooms || []).filter(window.casoraSeesRoute || function () { return true; });
-    var keys = rooms.map(function (r) { return r.key; });
-    if (keys.indexOf(cur) < 0) return null;
+    var keys = ['all'].concat(rooms.map(function (r) { return r.key; }));
+    if (keys.indexOf(cur) < 0 || keys.length < 2) return null;
     var el = null;
     Array.prototype.forEach.call(window._casoraSmartRows || [], function (r) {
       if (el || !r.shadowRoot) return;
@@ -122,17 +124,23 @@
     var cfg = root && root.lovelace && root.lovelace.config;
     if (!cfg || !Array.isArray(cfg.views)) return null;
     var parts = location.pathname.split('/').filter(Boolean);
-    if (parts.length < 2) return null;
-    var dash = parts[0], cur = parts[1];
-    var keys = cfg.views.filter(function (v) {
+    if (!parts.length) return null;
+    // Home is the dashboard's first view (/dash, /dash/0 or its path); the room views follow in their order.
+    var dash = parts[0], at = parts.length > 1 ? decodeURIComponent(parts[1]) : '0';
+    var pages = [];
+    cfg.views.forEach(function (v, i) {
       var hero = ((v || {}).cards || [])[0] || {};
       var V = hero.variables || {};
-      if ([].concat(hero.template || []).indexOf('casora_room') < 0 || !v.path) return false;
+      if ([].concat(hero.template || []).indexOf('casora_room') < 0) return;
       // Category pages (casora_category: lights, climate …) are no rooms.
-      if (V.casora_hidden === true || v.visible === false || v.casora_category || V.casora_category) return false;
-      return !window.casoraSeesRoute || window.casoraSeesRoute({ users: V.casora_users });
-    }).map(function (v) { return String(v.path); });
-    if (keys.indexOf(cur) < 0) return null;
+      if (V.casora_hidden === true || v.visible === false || v.casora_category || V.casora_category) return;
+      if (i > 0 && (!v.path || (window.casoraSeesRoute && !window.casoraSeesRoute({ users: V.casora_users })))) return;
+      pages.push({ key: v.path ? String(v.path) : String(i), idx: i });
+    });
+    if (!pages.length || pages[0].idx !== 0) return null;      // no Casora Home first: not this feature's dashboard
+    var hit = pages.filter(function (p) { return p.key === at || String(p.idx) === at; })[0];
+    if (!hit || pages.length < 2) return null;
+    var keys = pages.map(function (p) { return p.key; }), cur = hit.key;
     var view = root.shadowRoot && root.shadowRoot.querySelector('#view');
     return {
       el: view, keys: keys, cur: cur,

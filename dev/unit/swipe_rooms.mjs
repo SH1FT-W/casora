@@ -34,6 +34,11 @@ assert.equal(S.neighbour(keys, 'room_b', 'prev'), 'room_a');
 assert.equal(S.neighbour(keys, 'room_c', 'next'), null, 'last room: no wrap-around');
 assert.equal(S.neighbour(keys, 'room_a', 'prev'), null, 'first room: no wrap-around');
 assert.equal(S.neighbour(keys, 'all', 'next'), null, 'Home is not a room');
+// Home is the first page (owner, 03.11.2026): Home → first room, first room → Home, nothing before Home.
+const withHome = ['all'].concat(keys);
+assert.equal(S.neighbour(withHome, 'all', 'next'), 'room_a', 'Home: swipe left opens the first room');
+assert.equal(S.neighbour(withHome, 'room_a', 'prev'), 'all', 'first room: swipe right goes back Home');
+assert.equal(S.neighbour(withHome, 'all', 'prev'), null, 'Home has no previous page');
 
 // Rubber band at the ends, half the way otherwise
 assert.equal(S.follow(-100, false), -50);
@@ -48,6 +53,11 @@ assert.match(panel, /home\.variables\.swipe_rooms === true\) c\.swipe_rooms = tr
 const core = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-core.js', import.meta.url), 'utf8');
 assert.match(core, /pick\(cfg, 'swipe_rooms_tablet'/);
 assert.match(core, /window\._casoraSwipeTablet = m\.swipe;/);
+const mod = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/40-swipe-rooms.js', import.meta.url), 'utf8');
+assert.match(mod, /var keys = \['all'\]\.concat\(rooms\.map/, 'phone: Home first in the swipe order');
+assert.match(mod, /pages\[0\]\.idx !== 0/, 'tablet: Home (first view) first in the swipe order');
+assert.match(mod, /casora-swipe-card\)\$\/i/, 'carousels keep their own swipe');
+assert.match(mod, /pan-x/, 'rows that claim horizontal touches keep them');
 const loader = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-local.js', import.meta.url), 'utf8');
 assert.match(loader, /'40-swipe-rooms',/);
 console.log('ok swipe_rooms');
