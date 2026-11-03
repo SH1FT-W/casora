@@ -6,7 +6,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ## 26.11.9 – 03.11.2026
 
-Schalten per Tipp auf Badges, ein ruhigeres Aquarium-Popup mit Dosierung und ein klarerer Pulse-Verlauf.
+Schalten per Tipp auf Badges, ein ruhigeres Aquarium-Popup mit Dosierung, ein klarerer Pulse-Verlauf und aufgeräumte zweispaltige Popups.
 
 ### Neu
 - **Tippen auf Badges (#119):** Im Studio unter Bedienung › Kacheln legt „Tippen auf Badges“ fest, was ein Tipp auf das Badge „Beleuchtung“ und seine Lampen-Chips tut: „Popup öffnen“ (wie bisher, Halten schaltet) oder „Licht schalten“ (Halten öffnet das Popup). Andere Badges bleiben, wie sie sind.
@@ -15,10 +15,14 @@ Schalten per Tipp auf Badges, ein ruhigeres Aquarium-Popup mit Dosierung und ein
 ### Geändert
 - **Aquarium-Kanäle:** Die Lichtkanäle sind eine ruhige Liste mit Farbpunkt, Wert rechts und schmaler Spur, wie die anderen Casora-Listen.
 - **Pulse-Verlauf:** Der Verlauf über 24 Std. / 7 / 30 Tage ist ein gleich hohes Band mit runden Abschnitten in den Zustandsfarben; die Legende erscheint ab zwei Zuständen.
+- **Zweispaltige Popups:** Auf Tablet und Desktop wandern ganze Abschnitte unter das Rad, wenn die rechte Spalte viel länger ist, damit kein großes leeres Feld bleibt; eine Liste wird nie geteilt. Popups mit langer linker und kurzer rechter Seite werden ab dem zweiten Öffnen einspaltig. Licht-Popups bleiben, wie sie sind.
+- **Sensor-Seiten:** Eine Sensor-Seite aus einer Geräteliste heißt wie das Gerät („Waschmaschine“) statt wie die Messart („Pulse-Status“); die Messart steht im Rad.
 
 ### Behoben
 - **Aquarium-Dosierung fehlte:** Becken mit eingerichteter Dosierung zeigten im aktuellen Popup keine Dosierung.
 - **Wassertemperatur-Diagramm:** Ein Sensor, der zwischen zwei Werten hin und her springt, zeichnete ein Zickzack; das Diagramm nutzt jetzt Stundenmittel wie die anderen, hält mindestens 2 °C Spanne und überspringt Lücken.
+- **Frigate-Streams am Handy (#120):** Ein Tipp auf einen Stream-Knopf im Frigate-Popup kam auf Android und iPhone nicht an; jetzt wechselt er den Stream wieder.
+- **Updates, die auf einen Neustart warten:** Bei offenen Updates zeigt das Updates-Popup jetzt auch, was auf einen Neustart wartet; „1 neues Update gefunden“ unter dem Rad zählt keine schon installierten Updates mehr.
 
 ## 26.11.8 – 03.11.2026
 

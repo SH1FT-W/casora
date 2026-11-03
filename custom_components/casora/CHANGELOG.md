@@ -6,7 +6,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ## 26.11.9 – 03.11.2026
 
-Tap to switch on badges, a calmer aquarium popup with dosing and a clearer Pulse history.
+Tap to switch on badges, a calmer aquarium popup with dosing, a clearer Pulse history and tidier two-column popups.
 
 ### New
 - **Tap on badges (#119):** in the Studio under Controls › Tiles, "Tap on badges" chooses what a tap on the Lighting badge and its lamp chips does: "Open popup" (as before, hold switches) or "Switch the light" (hold opens the popup). Other badges stay as they are.
@@ -15,10 +15,14 @@ Tap to switch on badges, a calmer aquarium popup with dosing and a clearer Pulse
 ### Changed
 - **Aquarium channels:** the light channels are one calm list with a colour dot, the value on the right and a slim track, like the other Casora lists.
 - **Pulse history:** the 24 h / 7 / 30 day history is an even ribbon with rounded segments in the state colours; the legend shows from two states up.
+- **Two-column popups:** on tablet and desktop, when the right column is much longer, whole sections move under the dial so no big empty block remains; a list is never split. Popups with a long left and a short right side show as one column from their second opening. Light popups keep their layout.
+- **Sensor pages:** a sensor page opened from a device list is titled with the device ("Washing machine") instead of the sensor kind ("Pulse status"); the kind stands on the dial.
 
 ### Fixed
 - **Aquarium dosing missing:** tanks with dosing set up showed no dosing in the current popup.
 - **Water temperature chart:** a sensor that toggles between two values drew a zigzag; the chart now uses hourly means like the others, keeps a range of at least 2 °C and skips gaps.
+- **Frigate streams on phones (#120):** a tap on a stream button in the Frigate popup was swallowed on Android and iPhone; it switches the stream again.
+- **Updates waiting for a restart:** with updates pending, the updates popup now also lists what waits for a restart; "1 new update found" under the dial no longer counts updates that are already installed.
 
 ## 26.11.8 – 03.11.2026
 
