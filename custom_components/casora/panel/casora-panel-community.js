@@ -224,6 +224,22 @@
     // Phone: smaller image, text beside it at full width, "Add" as a wide button below.
     + "@media (max-width: 600px){.comrow.comcard{flex-wrap:wrap}.comrow.comcard .comshot,.comrow.comcard button.comzoom{width:96px;height:80px}"
     + ".comrow.comcard .comtx{flex:1 1 0}.comrow.comcard > .comchip{flex:1 0 100%;align-self:stretch;padding:9px 12px;text-align:center;font-weight:600}}"
+    // Tablet/desktop (owner 03.11.2026): the cards as a grid of compact tiles – two columns, three in a wide window
+    // (class c3, set by the dialog). Phone and narrow windows: the list as before.
+    // Entries without a frame (r309, owner 20.10.): no tile background, rows divided by the list's thin line.
+    + ".comgrid{display:grid;grid-template-columns:1fr;column-gap:24px;padding:2px}"
+    + ".comgrid > .comrow.comcard{flex-direction:column;align-items:stretch;gap:8px;padding:12px 4px;border-top:1px solid rgba(127,127,127,.15)}"
+    + ".comgrid > .comrow.comcard:nth-child(-n+2){border-top:0}.comgrid.c3 > .comrow.comcard:nth-child(3){border-top:0}"
+    + ".comgrid .comhead{display:flex;gap:12px;align-items:flex-start}"
+    + ".comgrid .comshot,.comgrid button.comzoom{width:96px;height:80px}"
+    + ".comgrid .comtx{display:flex;flex-direction:column;min-width:0;flex:1}"
+    + ".comgrid .comdesc{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}"
+    + ".comgrid .comdesc.open{display:block}"
+    + ".comgrid .commore{border:0;background:none;padding:0;font:inherit;font-size:12px;font-weight:600;color:var(--casora-studio-accent, #0a84ff);cursor:pointer;width:fit-content;margin-top:2px}"
+    + ".comgrid .comacts{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:4px}"
+    + ".comgrid .comacts .comlink{margin-top:0}.comgrid .comacts .comchip{margin-left:auto;padding:6px 14px;font-weight:600}"
+    + "@media (min-width: 700px){.comgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}"
+    + "@media (min-width: 700px){.comgrid.c3{grid-template-columns:repeat(3,minmax(0,1fr))}}"
     // T20 (test 2): always on its own line – inline it ran on after the last word when no note followed the text.
     + ".comlink{display:flex;width:fit-content;align-items:center;gap:5px;margin-top:6px;border:0;border-radius:999px;padding:4px 10px 4px 8px;font:inherit;font-size:13px;font-weight:600;"
     + "background:var(--casora-studio-chip, rgba(118,118,128,.18));color:inherit;cursor:pointer}.comlink ha-icon{--mdc-icon-size:16px;display:flex}"
@@ -453,6 +469,22 @@
           box.insertBefore(el("div", "comlbl", tr("Community cards")), acts);
           const host = el("div", "askbody");
           box.insertBefore(host, acts);
+          // Tablet/desktop (owner, 03.11.2026): the cards as a grid – two columns, three in a window of 1500 px and more.
+          const st = box.closest && box.closest(".askstack");
+          // The window the dialog sits in (its host can measure 0 before it is drawn: then the browser window).
+          const pw = st && st.parentElement ? st.parentElement.clientWidth : 0;
+          const room = pw > 300 ? pw : W.innerWidth;
+          // Phone and narrow windows keep the list as before.
+          const grid = room < 700 ? null : el("div", "comgrid");
+          if (grid) {
+            host.appendChild(grid);
+            // Wider than the 780 px of other wide dialogs, but inside the window. Three columns only where each card
+            // still gets about 380 px (a window of 1500 px and more); otherwise two.
+            const three = room >= 1500;
+            if (three) grid.classList.add("c3");
+            if (st) st.style.width = Math.min(three ? 1240 : 1000, room - 48) + "px";
+          }
+          const cards = grid || host;
           if (!list.length) host.appendChild(el("div", "comnote", tr("No community cards yet. Ask for one – the first ones come with the next update.")));
           list.forEach((t) => {
             const r = el("div", "comrow comcard");
@@ -469,7 +501,18 @@
             shot.onerror = () => { if (S.tile !== S.light.tile && shot.src.indexOf(S.light.tile) < 0) shot.src = S.light.tile; else shot.replaceWith(el("div", "comshot")); };
             zoom.appendChild(shot);
             const tx = el("div", "comtx");
-            tx.append(el("b", "", tr(t.label)), el("span", "", tr(t.community.retired ? "This card is being retired. Your tiles keep working for now." : (t.community.desc || ""))));
+            const desc = el("span", grid ? "comdesc" : "", tr(t.community.retired ? "This card is being retired. Your tiles keep working for now." : (t.community.desc || "")));
+            tx.append(el("b", "", tr(t.label)), desc);
+            let more = null;
+            if (grid) {
+              more = el("button", "commore", tr("More"));
+              more.type = "button";
+              more.style.display = "none";
+              more.onclick = () => { const o = desc.classList.toggle("open"); more.textContent = tr(o ? "Less" : "More"); };
+              tx.appendChild(more);
+              // Only when the text is really cut.
+              requestAnimationFrame(() => { if (desc.scrollHeight > desc.clientHeight + 2) more.style.display = ""; });
+            }
             const need = t.community.needs;
             if (need) {
               const ok2 = hasIntegration(hass, need);
@@ -490,7 +533,7 @@
             probe.onload = () => { hasPopup = true; pop.style.display = ""; };
             probe.onerror = () => { if (probe.src.indexOf(S.light.popup) < 0 && S.popup !== S.light.popup) probe.src = S.light.popup; };
             probe.src = S.popup;
-            tx.appendChild(pop);
+            if (!grid) tx.appendChild(pop);
             zoom.onclick = () => lightbox(box, t, "tile", hasPopup, dark);
             const on = W.casoraCommunityOn.has(t.id);
             const b = el("button", "comchip" + (on ? "" : " on"), tr(on ? "Remove" : "Add"));
@@ -498,8 +541,14 @@
             b.setAttribute("data-com", t.id);
             b.onclick = () => { then = { toggle: t }; ok.click(); };
             if (note && note.id === t.id) tx.appendChild(flash(note));
-            r.append(zoom, tx, b);
-            host.appendChild(r);
+            if (grid) {
+              const head = el("div", "comhead");
+              head.append(zoom, tx);
+              const acts2 = el("div", "comacts");
+              acts2.append(pop, b);
+              r.append(head, acts2);
+            } else r.append(zoom, tx, b);
+            cards.appendChild(r);
           });
           // Own requests
           loadMine(hass).then((mine) => {
