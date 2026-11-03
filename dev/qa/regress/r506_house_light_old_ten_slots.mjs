@@ -15,7 +15,9 @@
 // Versions: casora/versions has no delete, the fixed qa-r506-* names keep it to KEEP states each (throwaway HA).
 // Copies of „Test Neu“ (E2E t03, with its phone half) with the old pattern written back, and HA light group helpers
 // holding exactly the copied rooms' lights (the test house's own house group holds more, so today's setup does not
-// use it alone), all removed at the end.
+// use it alone), all removed at the end. The test builds what it needs (gate 03.11.2026: the gate's house had only 7
+// light units in its rooms): fewer than eleven units → extra rooms in the copy, each with one lamp of the house that no
+// room lists yet; case D gets its own group holding every room lamp and one lamp more.
 import { open, casoraDashboard, dashboard, studio, check, need, finish, usePage, atFinish } from './lib.mjs';
 import { ws, tokens } from '../ws.mjs';
 
@@ -82,8 +84,22 @@ const cfg = JSON.parse(JSON.stringify(src.config));
 const homeCard = roomCard(cfg.views[0]);
 await need('Home with its room card', homeCard && homeCard.variables, cfg.views[0] && cfg.views[0].path);
 const H = homeCard.variables;
-const units = unitsOf(cfg.views.slice(1));
-await need('more than ten light units in the rooms', units.length > 10, { units: units.length });
+let units = unitsOf(cfg.views.slice(1));
+// Too few units in this house: extra rooms in the copy, each with one lamp no room lists yet (a copy of a room view).
+const lampOnly = (id) => id.startsWith('light.') && !members(id).length && !Array.isArray((states[id].attributes || {}).entity_id)
+  && !['unavailable', 'unknown'].includes(states[id].state);
+const proto = cfg.views.slice(1).find((v) => roomCard(v));
+const spare = Object.keys(states).filter((id) => lampOnly(id) && !units.includes(id) && !units.some((u) => deep(u).includes(id))).sort();
+for (let n = 1; units.length <= 10 && spare.length > 1 && proto; n++) {
+  const v = JSON.parse(JSON.stringify(proto));
+  v.title = 'QA r506 Raum ' + n; v.path = 'qa-r506-raum-' + n;
+  const rc = roomCard(v); rc.name = v.title;
+  SLOTS.forEach((k) => delete rc.variables[k]); delete rc.variables.light_group_entity;
+  rc.variables.show_lights = true; rc.variables.light_entity_1 = spare.shift();
+  cfg.views.push(v);
+  units = unitsOf(cfg.views.slice(1));
+}
+await need('more than ten light units in the rooms', units.length > 10, { units: units.length, spare: spare.length });
 const G = await lightGroup('QA r506 Haus', units);
 await need('house light group helper over exactly the rooms\' lights', G, null);
 // What a setup before 26.11.9 wrote: the group and the first ten units.
@@ -123,17 +139,16 @@ const GB = await lightGroup('QA r506 Haus B', unitsB);
 await need('case B: its light group helper', GB, null);
 HB.light_group_entity = GB; delete HB.light_rooms_auto;
 await save(URL_B, cfgB, 'QA r506 Licht B');
-// Case D: a light group in the test house holding every room lamp and more (smallest such group).
+// Case D: a light group holding every room lamp and more – its own helper over the rooms' units and one lamp no room
+// lists (any house).
 const lampsOf = (id, seen = new Set()) => { if (seen.has(id)) return []; seen.add(id); const m = members(id); return m.length ? m.flatMap((x) => lampsOf(x, seen)) : [id]; };
 const roomLampSet = new Set(units.flatMap((id) => lampsOf(id)));
-const wide = Object.keys(states).filter((id) => id.startsWith('light.') && members(id).length && !id.startsWith('light.qa_r506'))
-  .map((id) => ({ id, lamps: new Set(lampsOf(id)) }))
-  .filter((g) => [...roomLampSet].every((x) => g.lamps.has(x)) && g.lamps.size > roomLampSet.size && OLD.every((x) => deep(g.id).includes(x)))
-  .sort((a, b) => a.lamps.size - b.lamps.size)[0];
+const outside = Object.keys(states).find((id) => lampOnly(id) && !roomLampSet.has(id) && !units.includes(id));
+const GD = outside ? await lightGroup('QA r506 Haus D', units.concat(outside)) : null;
 const cfgD = JSON.parse(JSON.stringify(cfg));
 const HD = roomCard(cfgD.views[0]).variables;
-await need('case D: a light group in the test house holding every room lamp and more', wide, { roomLamps: roomLampSet.size });
-HD.light_group_entity = wide.id; await save(URL_D, cfgD, 'QA r506 Licht D');
+await need('case D: a light group holding every room lamp and more', GD, { roomLamps: roomLampSet.size, outside });
+HD.light_group_entity = GD; await save(URL_D, cfgD, 'QA r506 Licht D');
 c.close();
 const live = async (url) => { const c3 = await ws(); try { return await c3.cmd({ type: 'lovelace/config', url_path: url }); } finally { c3.close(); } };
 const liveHome = async (url = URL) => roomCard((await live(url)).views[0]).variables;

@@ -140,8 +140,11 @@
     const mine = new Set([].concat(...ids.map((x) => [x].concat(deepMembers(hass, x)))));
     const hit = Object.keys(hass.states || {}).filter((id) => id.startsWith(domain + ".") && membersOf(hass, id).length)
       .map((id) => ({ id, all: new Set(deepMembers(hass, id).concat(id)) }))
-      // Verglichen werden nur echte Geräte: eine Untergruppe ohne Bereich („Spiegel“ in „Bad“) ist nicht fremd.
-      .filter((g) => ids.every((x) => g.all.has(x)) && (!exact || [...g.all].every((x) => x === g.id || mine.has(x) || membersOf(hass, x).length)))
+      // Verglichen werden nur echte Geräte: eine Untergruppe ohne Bereich („Spiegel“ in „Bad“) ist nicht fremd, ein
+      // Mitglied, das es in HA nicht (mehr) gibt, auch nicht (gate 03.11.2026: the test house's group named a missing
+      // lamp, the exact group was missed and Home followed the rooms instead of the group).
+      .filter((g) => ids.every((x) => g.all.has(x)) && (!exact || [...g.all].every((x) => x === g.id || mine.has(x) || membersOf(hass, x).length
+        || !(hass.states || {})[x])))
       .sort((a, b) => a.all.size - b.all.size)[0];
     return hit ? hit.id : null;
   }
