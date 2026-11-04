@@ -2779,9 +2779,30 @@
     "Kopieren": "Copier",
     "Kopiert": "Copié",
     "Text markiert – jetzt kopieren": "Texte sélectionné – copie-le maintenant",
-    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Uniquement les données d'affichage de cet appareil, sans noms ni appareils. Copie-les et colle-les dans l'issue GitHub."
+    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Uniquement les données d'affichage de cet appareil, sans noms ni appareils. Copie-les et colle-les dans l'issue GitHub.",
+    "Druckraum": "Caisson",
+    "Externe Spule": "Bobine externe",
+    "Luft im AMS": "Air dans l'AMS",
+    "Trockenmittel tauschen": "Remplacer le dessiccant",
+    "Kühlt ab": "Refroidit",
+    "Wird genutzt": "Utilisée",
+    "Material": "Matériau",
+    "Messing": "Laiton",
+    "SuperTack": "SuperTack"
   },
   "patterns": [
+    [
+      "^Bauteil (\\d+) %$",
+      "Pièce {1} %"
+    ],
+    [
+      "^Zusatz (\\d+) %$",
+      "Auxiliaire {1} %"
+    ],
+    [
+      "^Druckraum (\\d+) %$",
+      "Caisson {1} %"
+    ],
     [
       "^(.+) reicht noch (\\d+) T\\.$",
       "{1} : encore {2} j"

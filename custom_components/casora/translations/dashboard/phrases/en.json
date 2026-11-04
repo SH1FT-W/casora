@@ -2761,9 +2761,30 @@
     "Kopieren": "Copy",
     "Kopiert": "Copied",
     "Text markiert – jetzt kopieren": "Text selected – copy it now",
-    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Only display data of this device, no names or devices. Copy it and paste it into the GitHub issue."
+    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Only display data of this device, no names or devices. Copy it and paste it into the GitHub issue.",
+    "Druckraum": "Chamber",
+    "Externe Spule": "External spool",
+    "Luft im AMS": "AMS air",
+    "Trockenmittel tauschen": "Replace desiccant",
+    "Kühlt ab": "Cooling down",
+    "Wird genutzt": "In use",
+    "Material": "Material",
+    "Messing": "Brass",
+    "SuperTack": "SuperTack"
   },
   "patterns": [
+    [
+      "^Bauteil (\\d+) %$",
+      "Part {1}%"
+    ],
+    [
+      "^Zusatz (\\d+) %$",
+      "Aux {1}%"
+    ],
+    [
+      "^Druckraum (\\d+) %$",
+      "Chamber {1}%"
+    ],
     [
       "^(.+) reicht noch (\\d+) T\\.$",
       "{1}: {2} d left"

@@ -13,7 +13,7 @@ Zahlencode der Alarmanlage „Testalarm Code“: 1234 (siehe entity.MAlarm).
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def _e(eid, state, device, name, attrs=None, dc=None, unit=None, key=None):
@@ -40,6 +40,68 @@ MEDIA_FEATURES = 1 | 4 | 16 | 32 | 128 | 256 | 1024 | 4096 | 16384
 VACUUM_FEATURES = 4 | 8 | 16 | 64 | 4096 | 8192
 # Alarm: Zuhause 1, Abwesend 2, Nacht 4, Auslösen 8, Urlaub 32
 ALARM_FEATURES = 1 | 2 | 4 | 8 | 32
+
+
+def _printer_details(P: str, now: datetime) -> list:
+    """The rest of a Bambu-like printer (translation_keys as ha-bambulab): what the popup's temperatures, filament,
+    print and device sections read. The AMS is a sub device; humidity_index like ha-bambulab since 2024 (1 dry, 5 wet)."""
+    A = f"{P}_ams"
+    start = (now - timedelta(minutes=45)).isoformat()
+    end = (now + timedelta(minutes=75)).isoformat()
+
+    def tray(n, name, typ, color, remain, active=False, empty=False):
+        return _e(f"sensor.{P}_ams_slot_{n}", "Leer" if empty else name, A, f"Testdrucker AMS Slot {n}",
+                  {"slot": n, "active": active, "empty": empty, "name": None if empty else name, "type": "" if empty else typ,
+                   "color": color, "remain": remain, "remain_enabled": remain >= 0}, key="tray")
+
+    fan = {"percentage_step": 1.0, "preset_mode": None, "preset_modes": None, "supported_features": 49}
+    return [
+        _e(f"sensor.{P}_zieltemperatur_duese", "220", P, "Testdrucker Zieltemperatur Düse", dc="temperature", unit="°C",
+           key="target_nozzle_temp"),
+        _e(f"sensor.{P}_zieltemperatur_bett", "60", P, "Testdrucker Zieltemperatur Bett", dc="temperature", unit="°C",
+           key="target_bed_temp"),
+        _e(f"sensor.{P}_druckraumtemperatur", "34", P, "Testdrucker Druckraumtemperatur", dc="temperature", unit="°C",
+           key="chamber_temp"),
+        _e(f"fan.{P}_kuehlluefter", "on", P, "Testdrucker Kühllüfter", {"percentage": 80, **fan}, key="cooling_fan"),
+        _e(f"fan.{P}_zusatzluefter", "on", P, "Testdrucker Zusatzlüfter", {"percentage": 40, **fan}, key="aux_fan"),
+        _e(f"fan.{P}_druckraumluefter", "on", P, "Testdrucker Druckraumlüfter", {"percentage": 30, **fan}, key="chamber_fan"),
+        _e(f"select.{P}_druckgeschwindigkeit", "standard", P, "Testdrucker Druckgeschwindigkeit",
+           {"options": ["silent", "standard", "sport", "ludicrous"]}, key="printing_speed"),
+        _e(f"sensor.{P}_geschwindigkeitsprofil", "standard", P, "Testdrucker Geschwindigkeitsprofil",
+           {"options": ["silent", "standard", "sport", "ludicrous"], "modifier": 100}, dc="enum", key="speed_profile"),
+        _e(f"sensor.{P}_startzeit", start, P, "Testdrucker Startzeit", dc="timestamp", key="start_time"),
+        _e(f"sensor.{P}_endzeit", end, P, "Testdrucker Endzeit", dc="timestamp", key="end_time"),
+        _e(f"sensor.{P}_druckgewicht", "76.6", P, "Testdrucker Druckgewicht", dc="weight", unit="g", key="print_weight"),
+        _e(f"sensor.{P}_drucklaenge", "25.6", P, "Testdrucker Drucklänge", unit="m", key="print_length"),
+        _e(f"sensor.{P}_druckbetttyp", "textured_plate", P, "Testdrucker Druckbetttyp", key="print_bed_type"),
+        _e(f"sensor.{P}_druckbare_objekte", "4", P, "Testdrucker Druckbare Objekte",
+           {"objects": {"11": "Würfel A", "12": "Würfel B", "13": "Würfel C", "14": "Würfel D"}}, key="printable_objects"),
+        _e(f"sensor.{P}_uebersprungene_objekte", "1", P, "Testdrucker Übersprungene Objekte",
+           {"objects": [13]}, key="skipped_objects"),
+        _e(f"image.{P}_titelbild", now.isoformat(), P, "Testdrucker Titelbild", key="cover_image"),
+        _e(f"sensor.{P}_duesendurchmesser", "0.4", P, "Testdrucker Düsendurchmesser", unit="mm", key="nozzle_diameter"),
+        _e(f"sensor.{P}_duesentyp", "hardened_steel", P, "Testdrucker Düsentyp", key="nozzle_type"),
+        _e(f"sensor.{P}_betriebsstunden", "512.3", P, "Testdrucker Betriebsstunden", dc="duration", unit="h",
+           key="total_usage_hours"),
+        _e(f"binary_sensor.{P}_online", "on", P, "Testdrucker Online", dc="connectivity", key="online"),
+        _e(f"binary_sensor.{P}_hms_fehler", "off", P, "Testdrucker HMS-Fehler", {"Count": 0}, dc="problem", key="hms_errors"),
+        _e(f"binary_sensor.{P}_druckfehler", "off", P, "Testdrucker Druckfehler", dc="problem", key="print_error"),
+        _e(f"update.{P}_firmware", "off", P, "Testdrucker Firmware",
+           {"installed_version": "1.2.3", "latest_version": "1.2.3", "auto_update": False, "in_progress": False,
+            "supported_features": 5}, dc="firmware", key="firmware_update"),
+        _e(f"sensor.{P}_aktiver_slot", "Testfilament PLA", P, "Testdrucker Aktiver Slot",
+           {"color": "#2A9D8F", "type": "PLA", "name": "Testfilament PLA", "remain": 62, "tray_index": 1}, key="active_tray"),
+        tray(1, "Testfilament PLA", "PLA", "#2A9D8FFF", 62, active=True),
+        tray(2, "Testfilament PETG", "PETG", "#E9C46AFF", 12),
+        tray(3, "Testfilament Weiß", "PLA", "#FFFFFFFF", -1),
+        tray(4, "", "", "#00000000", -1, empty=True),
+        _e(f"sensor.{P}_ams_luftfeuchtigkeit", "31", A, "Testdrucker AMS Luftfeuchtigkeit", dc="humidity", unit="%",
+           key="humidity"),
+        _e(f"sensor.{P}_ams_feuchteindex", "2", A, "Testdrucker AMS Feuchteindex", key="humidity_index"),
+        _e(f"sensor.{P}_ams_temperatur", "27.5", A, "Testdrucker AMS Temperatur", dc="temperature", unit="°C", key="ams_temp"),
+        _e(f"sensor.{P}_externe_spule", "Leer", P, "Testdrucker Externe Spule",
+           {"active": False, "empty": True, "name": None, "type": "", "color": "#00000000", "remain": -1}, key="external_spool"),
+    ]
 
 
 def extra(now: datetime) -> dict:
@@ -100,6 +162,9 @@ def extra(now: datetime) -> dict:
         _e(f"light.{P}_druckraumbeleuchtung", "on", P, "Testdrucker Druckraumbeleuchtung",
            {"supported_color_modes": ["onoff"], "color_mode": "onoff", "supported_features": 0}, key="chamber_light"),
         _e(f"camera.{P}_kamera", "idle", P, "Testdrucker Kamera", {"supported_features": 0}, key="camera"),
+        # Printer popup content (owner 04.11.2026): targets, chamber, fans, speed, job details, cover image, device
+        # data and an AMS (own device below the printer, like ha-bambulab) with four slots.
+        *_printer_details(P, now),
         # Kameras
         _e("camera.testkamera", "idle", "testkamera", "Testkamera", {"supported_features": 0}),
         _e("camera.testkamera_garten", "idle", "testkamera_garten", "Testkamera Garten", {"supported_features": 0}),
@@ -134,6 +199,7 @@ def extra(now: datetime) -> dict:
             _dev("testalarm", "Testalarm", "Beispiel", "Alarmanlage"),
             _dev("testalarm_code", "Testalarm Code", "Beispiel", "Alarmanlage mit Code"),
             _dev(P, "Testdrucker", "Beispiel", "3D-Drucker"),
+            _dev(f"{P}_ams", "Testdrucker AMS", "Beispiel", "AMS", via=P),
             _dev("testkamera", "Testkamera", "Beispiel", "Kamera"),
             _dev("testkamera_garten", "Testkamera Garten", "Beispiel", "Kamera"),
             _dev("teststeckdose", "Teststeckdose", "Beispiel", "Zwischenstecker"),

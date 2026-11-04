@@ -3623,7 +3623,16 @@
   };
   var SPEED = { silent: 'Leise', standard: 'Standard', sport: 'Sport', ludicrous: 'Turbo' };
   var NOZZLE = { stainless_steel: 'Edelstahl', hardened_steel: 'Gehärteter Stahl', brass: 'Messing' };
-  var PLATE = { textured_plate: 'Texturiert (PEI)', cool_plate: 'Cool Plate', engineering_plate: 'Engineering', hot_plate: 'High Temp', smooth_plate: 'Glatt (PEI)' };
+  var PLATE = { textured_plate: 'Texturiert (PEI)', cool_plate: 'Cool Plate', engineering_plate: 'Engineering', eng_plate: 'Engineering',
+    hot_plate: 'High Temp', smooth_plate: 'Glatt (PEI)', supertack_plate: 'SuperTack' };
+  /* AMS humidity index as ha-bambulab reports it since 2024 (like Bambu Handy/Studio): 1 dry … 5 wet. */
+  var humWet = function (idx) { return idx != null && Math.round(idx) >= 4; };
+  var humWord = function (idx) {
+    if (idx == null) return null;
+    idx = Math.round(idx);
+    return idx <= 2 ? 'Trocken' : idx === 3 ? 'In Ordnung' : 'Feucht';
+  };
+  var v3 = function () { return !!(window._casoraDish && window._casoraDish.v3 && window._casoraDish.v3()); };
   var stepName = function (s) {
     if (!s || s === 'idle' || s === 'unknown' || s === 'offline') return null;
     return STEP[s] || s.replace(/^paused_/, 'Pausiert: ').replace(/_/g, ' ');
@@ -3716,6 +3725,11 @@
       nozType: f('_', 'nozType'),
       plate: f('_', 'plate'), fw: f('_', 'fw'),
       online: f('_', 'online'), hms: f('_', 'hms'),
+      // v3 content (owner 04.11.2026): chamber, fans by role with their speed sensors, cover image, objects.
+      chamber: f('_', 'chamber'), chamberT: f('_', 'chamberT'),
+      fans3: [[f('_', 'coolFan') || f('_', 'partFan'), f('_', 'coolSpd'), 'Bauteil'], [f('_', 'auxFan'), f('_', 'auxSpd'), 'Zusatz'],
+        [f('_', 'chamberFan'), f('_', 'chamberSpd'), 'Druckraum']].filter(function (x) { return (x[0] && states[x[0]]) || (x[1] && states[x[1]]); }),
+      cover: f('_', 'cover'), objects: f('_', 'objects'), skipped: f('_', 'skipped'),
       err: f('entity_error', 'err'),
       cam: f('entity_camera', 'cam'), camSw: f('_', 'camSw'), light: f('entity_light', 'light'),
       pause: f('btn_pause', 'pause'), resume: f('btn_resume', 'resume'), stop: f('btn_stop', 'stop'),
@@ -3752,8 +3766,9 @@
   P.watch = function (c) {
     return [c.st, c.status, c.progress, c.remaining, c.layer, c.layers, c.task, c.start, c.end, c.weight, c.length, c.noz, c.nozT, c.bed, c.bedT,
       c.ext, c.activeSlot, c.amsHum, c.amsIdx, c.amsTemp, c.speedSel, c.speed, c.usage, c.fw, c.online, c.hms, c.err, c.camSw, c.light,
-      c.pause, c.resume, c.stop, c.plug, c.power, c.volt, c.amp, c.energy]
-      .concat(c.slots, c.fans.map(function (f) { return f[0]; })).filter(Boolean);
+      c.pause, c.resume, c.stop, c.plug, c.power, c.volt, c.amp, c.energy, c.chamber, c.chamberT, c.cover, c.objects, c.skipped]
+      .concat(c.slots, c.fans.map(function (f) { return f[0]; }), [].concat.apply([], (c.fans3 || []).map(function (f) { return [f[0], f[1]]; })))
+      .filter(function (x, i, a) { return x && a.indexOf(x) === i; });
   };
   P.state = function (c, states) {
     var s = (c.status && states[c.status] && states[c.status].state) || 'unknown';
@@ -3944,8 +3959,8 @@
           bar: r != null ? r / 100 : null, barTone: r != null && r <= 15 ? 'warn' : 'good' };
       }).filter(Boolean);
       var hum = U.num(states, c.amsHum), idx = U.num(states, c.amsIdx), at = U.num(states, c.amsTemp);
-      if (hum != null) rows2.push({ icon: 'mdi:water-percent', iconTone: idx != null && idx <= 2 ? 'warn' : 'accent', label: 'Luftfeuchtigkeit im AMS',
-        sub: idx != null ? 'Stufe ' + Math.round(idx) + ' von 5' + (idx <= 2 ? ' · Trockenmittel tauschen' : '') : null,
+      if (hum != null) rows2.push({ icon: 'mdi:water-percent', iconTone: humWet(idx) ? 'warn' : 'accent', label: 'Luftfeuchtigkeit im AMS',
+        sub: idx != null ? 'Stufe ' + Math.round(idx) + ' von 5' + (humWet(idx) ? ' · Trockenmittel tauschen' : '') : null,
         value: Math.round(hum) + ' %', entity: c.amsHum });
       if (at != null) rows2.push({ icon: 'mdi:thermometer', iconTone: DIM, label: 'Temperatur im AMS', value: U.f(at, 1) + ' ' + ((states[c.amsTemp] && states[c.amsTemp].attributes.unit_of_measurement) || '°C') });
       if (window._casoraHH && window._casoraHH.on()) return rows2.length ? UI.group(rows2, 'Filament') : '';
@@ -3960,9 +3975,130 @@
         var n = (states[c.hms].attributes || {}).Count;
         al.push({ icon: 'mdi:alert-outline', iconTone: 'bad', label: 'Gerätemeldung (HMS)', sub: 'Details in der Bambu-App', value: n ? String(n) : null, valueTone: 'bad' });
       }
-      if (c.fw && states[c.fw] && states[c.fw].state === 'on' && !(window._casoraHH && window._casoraHH.on())) al.push({ icon: 'mdi:update', iconTone: 'warn', label: 'Firmware-Update verfügbar',
+      /* v3 (owner 04.11.2026): the update hint at rest – while printing nothing to do about it. */
+      if (c.fw && states[c.fw] && states[c.fw].state === 'on' && (!(window._casoraHH && window._casoraHH.on()) || (v3() && !active)))
+        al.push({ icon: 'mdi:update', iconTone: 'warn', label: 'Firmware-Update verfügbar',
         value: (states[c.fw].attributes || {}).latest_version || null });
       return al.length ? UI.group(al, 'Hinweise') : '';
+    }
+
+    /* ── Popup v3 content (owner 04.11.2026: „ein bisschen nackig, vielleicht ein bisschen mehr Infos“). v3 has no
+       „Mehr“: what the printer reports stands in calm sections, each only with what exists. ── */
+    var unitOf = function (id) { return (states[id] && states[id].attributes && states[id].attributes.unit_of_measurement) || '°C'; };
+    if (kind === 'p_temp3') {
+      /* Now as the value, the target as the sub line; below the target „Heizt auf“ in the warm tone. At rest only
+         while still warm (cooling down), fans only while printing. */
+      var r3 = [];
+      var hot = { noz: 40, bed: 35, chamber: 35 };
+      [[c.noz, c.nozT, 'Düse', 'mdi:printer-3d-nozzle-heat-outline', hot.noz], [c.bed, c.bedT, 'Druckbett', 'mdi:radiator', hot.bed],
+        [c.chamber, c.chamberT, 'Druckraum', 'mdi:thermometer', hot.chamber]].forEach(function (x) {
+        var v = U.num(states, x[0]);
+        if (v == null) return;
+        var tg = U.num(states, x[1]), on = tg != null && tg > 0;
+        if (!active && !on && v < x[4]) return;
+        var below = on && v < tg - 2;
+        r3.push({ icon: x[3], iconTone: below ? 'warn' : on ? 'accent' : DIM, label: x[2], value: Math.round(v) + ' ' + unitOf(x[0]),
+          sub: on ? (below ? 'Heizt auf · ' : '') + 'Ziel ' + Math.round(tg) + ' ' + unitOf(x[1]) : (!active ? 'Kühlt ab' : null) });
+      });
+      if (active && r3.length) {
+        var fp = (c.fans3 || []).map(function (x) {
+          var fs = x[0] && states[x[0]], p = null;
+          if (fs && fs.state !== 'unavailable') p = fs.state === 'on' ? Number((fs.attributes || {}).percentage) || 0 : 0;
+          else p = U.num(states, x[1]);
+          return p == null ? null : x[2] + ' ' + Math.round(p) + ' %';
+        }).filter(Boolean);
+        if (fp.length) r3.push({ icon: 'mdi:fan', iconTone: DIM, label: 'Lüfter', sub: fp.join(' · ') });
+      }
+      return r3.length ? UI.group(r3, 'Temperaturen') : '';
+    }
+
+    if (kind === 'p_ams3') {
+      /* Slots as rows: the filament's name, colour as the icon plate, slot and type below, the remaining amount; the
+         slot in use says so (not only by colour). The AMS air as one row with a word; the external spool only in use. */
+      var actA = U.str(states, c.activeSlot);
+      var inUse = function (a) { return a.active === true || (actA && actA !== 'none' && a.slot != null && String(actA) === String(a.slot)); };
+      var rA = c.slots.map(function (id, i) {
+        var st = states[id];
+        if (!st) return null;
+        var a = st.attributes || {};
+        var slot = 'Slot ' + (a.slot || i + 1);
+        if (a.empty) return { icon: 'mdi:circle-outline', iconTone: DIM, label: 'Leer', sub: slot };
+        var on = inUse(a), rm = typeof a.remain === 'number' && a.remain >= 0 && a.remain_enabled !== false ? a.remain : null;
+        return { icon: on ? 'mdi:printer-3d-nozzle' : 'mdi:circle-slice-8', iconTone: swatch(a.color), label: a.name || st.state,
+          sub: [slot, a.type && a.type !== '?' ? a.type : null, on ? 'Wird genutzt' : null].filter(Boolean).join(' · '),
+          value: rm != null ? Math.round(rm) + ' %' : null, valueTone: rm != null && rm <= 15 ? 'warn' : null };
+      }).filter(Boolean);
+      var ea = c.ext && states[c.ext] && states[c.ext].attributes;
+      if (ea && !ea.empty && inUse(ea)) {
+        rA.push({ icon: 'mdi:printer-3d-nozzle', iconTone: swatch(ea.color), label: ea.name || states[c.ext].state,
+          sub: ['Externe Spule', ea.type && ea.type !== '?' ? ea.type : null, 'Wird genutzt'].filter(Boolean).join(' · ') });
+      }
+      var hA = U.num(states, c.amsHum), iA = U.num(states, c.amsIdx), tA = U.num(states, c.amsTemp);
+      if (hA != null || iA != null) {
+        var wet = humWet(iA);
+        rA.push({ icon: 'mdi:water-percent', iconTone: wet ? 'warn' : 'accent', label: 'Luft im AMS',
+          sub: wet ? 'Feucht · Trockenmittel tauschen' : [humWord(iA), tA != null ? U.f(tA, 1) + ' ' + unitOf(c.amsTemp) : null].filter(Boolean).join(' · ') || null,
+          subTone: wet ? 'warn' : null, value: hA != null ? Math.round(hA) + ' %' : null, entity: c.amsHum || null });
+      }
+      return rA.length ? UI.group(rA, 'Material') : '';
+    }
+
+    if (kind === 'p_job3') {
+      /* The job with its cover image, start, filament, plate, objects and the speed (a picker when the printer takes
+         it); at rest the last job. */
+      var rJ = [];
+      var cv = c.cover && states[c.cover], pic = cv && cv.state !== 'unavailable' && (cv.attributes || {}).entity_picture;
+      if (task) {
+        var tr = { icon: 'mdi:file-outline', iconTone: active ? 'accent' : DIM, label: active ? 'Aufgabe' : 'Letzte Aufgabe', sub: task };
+        if (pic) { tr.image = pic; tr.imageFit = 'cover'; }
+        rJ.push(tr);
+      }
+      if (active) {
+        var s0 = U.str(states, c.start), t0 = s0 && new Date(s0);
+        if (t0 && !isNaN(t0)) rJ.push({ icon: 'mdi:clock-start', iconTone: 'accent', label: 'Gestartet', value: U.clock(t0) + ' Uhr',
+          sub: 'läuft seit ' + U.dur((Date.now() - t0.getTime()) / 60000) });
+      }
+      var wJ = U.num(states, c.weight), lJ = U.num(states, c.length);
+      if (wJ != null && wJ > 0) rJ.push({ icon: 'mdi:weight-gram', iconTone: active ? 'accent' : DIM, label: 'Filament',
+        sub: lJ != null && lJ > 0 ? U.f(lJ, 1) + ' m' : null, value: U.f(wJ, 1) + ' g' });
+      if (active) {
+        var plJ = U.str(states, c.plate);
+        if (plJ && plJ !== 'none') rJ.push({ icon: 'mdi:square-outline', iconTone: DIM, label: 'Druckplatte', value: PLATE[plJ] || plJ });
+        var oJ = U.num(states, c.objects), skJ = U.num(states, c.skipped);
+        if (oJ != null && (oJ > 1 || (skJ || 0) > 0)) rJ.push({ icon: 'mdi:cube-outline', iconTone: DIM, label: 'Objekte', value: String(Math.round(oJ)),
+          sub: skJ ? Math.round(skJ) + ' übersprungen' : null });
+        var sel = c.speedSel && states[c.speedSel], cur = sel && sel.state !== 'unavailable' && sel.state !== 'unknown' ? sel.state : U.str(states, c.speed);
+        if (cur) {
+          var sr = { icon: 'mdi:speedometer', iconTone: DIM, label: 'Geschwindigkeit', value: SPEED[cur] || cur };
+          if (sel && sel.state !== 'unavailable' && ((sel.attributes || {}).options || []).length > 1) sr.page = 'print-speed|' + c.st;
+          rJ.push(sr);
+        }
+      }
+      return rJ.length ? UI.group(rJ, active ? 'Druck' : 'Zuletzt gedruckt') : '';
+    }
+    /* Sub page of „Geschwindigkeit“: every profile, the chosen one marked. */
+    if (kind === 'p_speed_all') {
+      var sp3 = c.speedSel && states[c.speedSel];
+      var o3 = (sp3 && sp3.attributes && sp3.attributes.options) || [];
+      if (!o3.length) return '';
+      return UI.group(o3.map(function (o) {
+        var on = sp3.state === o;
+        return { icon: on ? 'mdi:radiobox-marked' : 'mdi:radiobox-blank', iconTone: on ? 'accent' : DIM, label: SPEED[o] || o,
+          value: on ? 'Aktiv' : null, svc: on ? null : { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.speedSel } } };
+      }));
+    }
+
+    if (kind === 'p_dev3') {
+      /* At rest: hours printed, nozzle and plate (while printing the plate stands at the job). */
+      if (active) return '';
+      var rD = [];
+      var usD = U.num(states, c.usage);
+      if (usD != null) rD.push({ icon: 'mdi:timer-outline', iconTone: DIM, label: 'Druckzeit insgesamt', value: U.f(usD, 0) + ' Std.' });
+      var nsD = U.num(states, c.nozSize), ntD = U.str(states, c.nozType);
+      if (nsD != null) rD.push({ icon: 'mdi:printer-3d-nozzle-outline', iconTone: DIM, label: 'Düse', value: U.f(nsD, 1) + ' mm', sub: ntD ? (NOZZLE[ntD] || ntD) : null });
+      var plD = U.str(states, c.plate);
+      if (plD && plD !== 'none') rD.push({ icon: 'mdi:square-outline', iconTone: DIM, label: 'Druckplatte', value: PLATE[plD] || plD });
+      return rD.length ? UI.group(rD, 'Drucker') : '';
     }
 
     if (kind === 'p_info') {
@@ -3986,6 +4122,14 @@
 
   var prevInner = L.inner;
   L.inner = function (kind, c, states) { return kind.indexOf('p_') === 0 ? P.inner(kind, c, states) : prevInner(kind, c, states); };
+  /* Sub page of the v3 row „Geschwindigkeit“ (blueprint v2: „name|arg“ → window._casoraPages[name](arg)). */
+  P._cfg = {};
+  (window._casoraPages || (window._casoraPages = {}))['print-speed'] = function (st) {
+    var c = P._cfg[st], H = window._casoraHH;
+    if (!c || !H || !H.page || !c.speedSel) return;
+    H.page('Geschwindigkeit', [c.speedSel, c.st], 'const c = ' + JSON.stringify(c)
+      + ';\nreturn window._casoraLaundry ? window._casoraLaundry.inner("p_speed_all", c, states) : "";', c.st);
+  };
 
   // The entity the popup head speaks for (casora_popup.head_entity): the print status the stage shows (P.state), not
   // the job stage the tile is bound to – the head said „Bereit“ (stage idle) over a „Fehlgeschlagen“ stage.
@@ -4083,8 +4227,19 @@
          width, the AI button directly below it; no „Kamera“ heading and no camera section on the right. The phone
          reads dial → camera → lists. Without a camera nothing moves. */
       if (v3P) delete f2.camlbl;
+      /* Popup v3 has no „Mehr“ (richtlinien §8, owner 04.11.2026: „ein bisschen nackig“): the job, temperatures,
+         material and – at rest – the printer itself are the content, every list on the right in reading order. */
+      var rightP = ['camlbl', 'cam', 'camai', 'more'];
+      if (v3P) {
+        P._cfg[c.st] = c;
+        delete f2.more; delete f2.job;
+        f2.job3 = tpl('p_job3', false); f2.temp3 = tpl('p_temp3', false); f2.ams3 = tpl('p_ams3', false);
+        // Always in the layout (empty while printing): the popup keeps its build when the print ends while it is open.
+        f2.dev3 = tpl('p_dev3', false);
+        rightP = ['cam', 'camai', 'job3', 'temp3', 'ams3', 'dev3'];
+      }
       return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3P ? [] : ['hero', 'pbar'], stage: v3P ? 'stage' : null,
-        left: ['alerts', 'ctrl', 'job'], right: ['camlbl', 'cam', 'camai', 'more'],
+        left: ['alerts', 'ctrl', 'job'], right: rightP,
         underStage: v3P ? ['cam', 'camai'] : null,
         settings: states[c.st] ? c.st : null,
         colExtra: (v3P ? '' : ' #container > #cam { margin-top: 0 !important; }') + ' #container > #camai:not(:empty) { margin-top: 12px !important; }' });

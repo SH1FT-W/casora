@@ -2779,9 +2779,30 @@
     "Kopieren": "Kopiuj",
     "Kopiert": "Skopiowano",
     "Text markiert – jetzt kopieren": "Tekst zaznaczony – skopiuj go teraz",
-    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Tylko dane wyświetlania tego urządzenia, bez nazw i urządzeń. Skopiuj je i wklej do zgłoszenia na GitHubie."
+    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Tylko dane wyświetlania tego urządzenia, bez nazw i urządzeń. Skopiuj je i wklej do zgłoszenia na GitHubie.",
+    "Druckraum": "Komora",
+    "Externe Spule": "Szpula zewnętrzna",
+    "Luft im AMS": "Powietrze w AMS",
+    "Trockenmittel tauschen": "Wymień pochłaniacz wilgoci",
+    "Kühlt ab": "Stygnie",
+    "Wird genutzt": "W użyciu",
+    "Material": "Materiał",
+    "Messing": "Mosiądz",
+    "SuperTack": "SuperTack"
   },
   "patterns": [
+    [
+      "^Bauteil (\\d+) %$",
+      "Część {1} %"
+    ],
+    [
+      "^Zusatz (\\d+) %$",
+      "Pomocniczy {1} %"
+    ],
+    [
+      "^Druckraum (\\d+) %$",
+      "Komora {1} %"
+    ],
     [
       "^(.+) reicht noch (\\d+) T\\.$",
       "{1}: jeszcze {2} dni"

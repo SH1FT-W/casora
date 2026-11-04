@@ -2779,9 +2779,30 @@
     "Kopieren": "Copiar",
     "Kopiert": "Copiado",
     "Text markiert – jetzt kopieren": "Texto selecionado – copia-o agora",
-    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Apenas dados de visualização deste dispositivo, sem nomes nem aparelhos. Copia-os e cola-os na issue do GitHub."
+    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Apenas dados de visualização deste dispositivo, sem nomes nem aparelhos. Copia-os e cola-os na issue do GitHub.",
+    "Druckraum": "Câmara",
+    "Externe Spule": "Bobina externa",
+    "Luft im AMS": "Ar no AMS",
+    "Trockenmittel tauschen": "Trocar o dessecante",
+    "Kühlt ab": "A arrefecer",
+    "Wird genutzt": "Em uso",
+    "Material": "Material",
+    "Messing": "Latão",
+    "SuperTack": "SuperTack"
   },
   "patterns": [
+    [
+      "^Bauteil (\\d+) %$",
+      "Peça {1} %"
+    ],
+    [
+      "^Zusatz (\\d+) %$",
+      "Auxiliar {1} %"
+    ],
+    [
+      "^Druckraum (\\d+) %$",
+      "Câmara {1} %"
+    ],
     [
       "^(.+) reicht noch (\\d+) T\\.$",
       "{1}: faltam {2} d"

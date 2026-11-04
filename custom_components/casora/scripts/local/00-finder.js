@@ -2131,6 +2131,12 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     cam: { keys: ['camera'], domain: 'camera' }, camSw: { keys: ['camera'], domain: 'switch' },
     light: { keys: ['chamber_light'], domain: 'light' },
     pause: { keys: ['pause'], domain: 'button' }, resume: { keys: ['resume'], domain: 'button' }, stop: { keys: ['stop'], domain: 'button' },
+    // Popup content (owner 04.11.2026): chamber, part fan of newer models, fan speed sensors, cover image, objects.
+    chamber: { keys: ['chamber_temp'], domain: 'sensor' }, chamberT: { keys: ['target_chamber_temp'], domain: 'sensor' },
+    partFan: { keys: ['part_fan'], domain: 'fan' }, coolSpd: { keys: ['cooling_fan_speed', 'part_fan_speed'], domain: 'sensor' },
+    auxSpd: { keys: ['aux_fan_speed'], domain: 'sensor' }, chamberSpd: { keys: ['chamber_fan_speed'], domain: 'sensor' },
+    cover: { keys: ['cover_image'], domain: 'image' },
+    objects: { keys: ['printable_objects'], domain: 'sensor' }, skipped: { keys: ['skipped_objects'], domain: 'sensor' },
   };
   // A device is a 3D printer when it has the print status or the print stage sensor (the same keys as above).
   var PRINTER_KEYS = PRINTER_FIELDS.status.keys.concat(PRINTER_FIELDS.stage.keys);

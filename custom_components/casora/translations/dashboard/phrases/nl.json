@@ -2779,9 +2779,30 @@
     "Kopieren": "Kopiëren",
     "Kopiert": "Gekopieerd",
     "Text markiert – jetzt kopieren": "Tekst geselecteerd – kopieer hem nu",
-    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Alleen weergavegegevens van dit apparaat, geen namen of apparaten. Kopieer ze en plak ze in het GitHub-issue."
+    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Alleen weergavegegevens van dit apparaat, geen namen of apparaten. Kopieer ze en plak ze in het GitHub-issue.",
+    "Druckraum": "Kamer",
+    "Externe Spule": "Losse spoel",
+    "Luft im AMS": "Lucht in de AMS",
+    "Trockenmittel tauschen": "Droogmiddel vervangen",
+    "Kühlt ab": "Koelt af",
+    "Wird genutzt": "In gebruik",
+    "Material": "Materiaal",
+    "Messing": "Geelkoper",
+    "SuperTack": "SuperTack"
   },
   "patterns": [
+    [
+      "^Bauteil (\\d+) %$",
+      "Onderdeel {1} %"
+    ],
+    [
+      "^Zusatz (\\d+) %$",
+      "Extra {1} %"
+    ],
+    [
+      "^Druckraum (\\d+) %$",
+      "Kamer {1} %"
+    ],
     [
       "^(.+) reicht noch (\\d+) T\\.$",
       "{1}: nog {2} d"
