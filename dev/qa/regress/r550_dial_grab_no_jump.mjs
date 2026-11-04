@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/casora-core.js#sliderRelink,sliderWatch,tdialGrab,tdialMove,tdialEnd,tdialTarget,tdialDrop,commit,stage
+// @deckt: custom_components/casora/scripts/casora-core.js#sliderRelink,sliderWatch,tdialGrab,tdialTarget,tdialDrop,tdialMove,tdialEnd,endDrag
 // Reported (owner, iPhone, 04.11.2026, light popup v3): "Wenn man den Ring bedient (Helligkeit), springt der Ring ab
 // und zu" – press and hold on the ring, then move: the value jumped by 5–7 % first and only then followed the finger,
 // "irgendwie im 62/63 bis 65 % Bereich". Causes found:

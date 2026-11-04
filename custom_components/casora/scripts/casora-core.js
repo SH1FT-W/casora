@@ -11376,7 +11376,8 @@ window.casoraMenuGlass = {
       if (d.el.isConnected) return true;
       var key = d.el.dataset.casoraSlider, ax = d.el.dataset.casoraAxis, hit = null;
       var all = d.root && d.root.querySelectorAll ? d.root.querySelectorAll('[data-casora-slider]') : [];
-      for (var i = 0; i < all.length && !hit; i++) if (all[i].dataset.casoraSlider === key && all[i].dataset.casoraAxis === ax) hit = all[i];
+      // Only a connected successor: a root that was itself replaced still holds the removed element.
+      for (var i = 0; i < all.length && !hit; i++) if (all[i] !== d.el && all[i].isConnected && all[i].dataset.casoraSlider === key && all[i].dataset.casoraAxis === ax) hit = all[i];
       if (!hit) return false;
       d.el = hit;
       hit.classList.add('drag');
@@ -11545,9 +11546,8 @@ window.casoraMenuGlass = {
       // and sends its own – the cover's stage): not a new touch, keep the dial's (iPad: the cover never turned).
       var t0 = ev.touches && ev.touches.length === 1 && ev.touches[0];
       if (tdial && t0 && t0.identifier === tdial.id && t0.clientX === tdial.x0 && t0.clientY === tdial.y0 && !dialOf(ev)) return;
-      if (tdial && tdial.hold) clearTimeout(tdial.hold);
-      tdialTarget(false);
-      tdial = null;
+      // A second finger (or a new touch) ends a turn without sending it: back to the value it started from.
+      tdialDrop();
       if (!ev.touches || ev.touches.length !== 1) return;
       var el = dialOf(ev);
       if (!el) return;
@@ -11560,17 +11560,21 @@ window.casoraMenuGlass = {
       if (!nearKnob && dialFrom(el, el.getBoundingClientRect(), t.clientX, t.clientY, true) == null) return;
       ev._casoraDialRing = true;
       var tg = (ev.composedPath && ev.composedPath()[0]) || ev.target;
-      tdial = { el: el, root: el.getRootNode(), tgt: tg, id: t.identifier, x0: t.clientX, y0: t.clientY,
+      tdial = { el: el, root: el.getRootNode(), tgt: tg, id: t.identifier, x0: t.clientX, y0: t.clientY, g0: g,
         a: g.a, turned: 0, from: from, pct: from == null ? 0 : from, knob: nearKnob, own: nearKnob || dialFree(el), turning: false, decided: false };
       tdialTarget(true);
       tdial.hold = setTimeout(function () { if (tdial && !tdial.decided) { tdial.decided = true; tdialGrab(); } }, DIAL_HOLD);
     }, { capture: true, passive: true });
     var tdialDrop = function () {
       if (!tdial) return;
-      clearTimeout(tdial.hold);
-      if (tdial.turning) tdial.el.classList.remove('drag');
+      var d = tdial;
+      clearTimeout(d.hold);
       tdialTarget(false);
       tdial = null;
+      if (!d.turning) return;
+      sliderRelink(d);
+      d.el.classList.remove('drag');
+      if (d.from != null) paint(d.el, d.from);
     };
     var tdialMove = function (ev) {
       if (!tdial || ev._casoraDialSeen) return;
@@ -11578,6 +11582,8 @@ window.casoraMenuGlass = {
       var t = null;
       for (var i = 0; i < ev.touches.length; i++) if (ev.touches[i].identifier === tdial.id) t = ev.touches[i];
       if (!t || ev.touches.length !== 1) { tdialDrop(); return; }
+      // A redraw before the decision (a cover's live ring): go on with the new element.
+      sliderRelink(tdial);
       var dx = t.clientX - tdial.x0, dy = t.clientY - tdial.y0;
       if (!tdial.decided) {
         if (!ev.cancelable) { tdialDrop(); return; }
@@ -11593,7 +11599,8 @@ window.casoraMenuGlass = {
         } else {
           clearTimeout(tdial.hold);
           tdial.decided = true;
-          var g0 = dialGeom(tdial.el, tdial.x0, tdial.y0);
+          // Measured at touchstart: the element may have been redrawn since.
+          var g0 = tdial.g0;
           var ux = g0.x / (g0.r || 1), uy = g0.y / (g0.r || 1);
           var radial = Math.abs(dx * ux + dy * uy), tang = Math.abs(dx * uy - dy * ux);
           // Along the ring and not mainly up/down (on the ring's sides "along" is up/down: that scrolls unless
@@ -11609,7 +11616,7 @@ window.casoraMenuGlass = {
       }
       if (tdial.skip) { if (ev.cancelable) ev.preventDefault(); return; }
       if (!tdial.turning) return;
-      if (!ev.cancelable) { var lost = tdial; tdialDrop(); if (lost.from != null) paint(lost.el, lost.from); return; }
+      if (!ev.cancelable) { tdialDrop(); return; }
       ev.preventDefault();
       // Redrawn and no successor yet: wait for it rather than measure against a removed element.
       if (!sliderRelink(tdial)) return;
