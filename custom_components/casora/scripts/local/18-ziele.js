@@ -506,9 +506,9 @@
     + '.cz-band{position:relative;height:30px;border-radius:12px;overflow:hidden;margin-top:14px;'
     + 'background:var(--casora-popup-row-fill, rgba(127,127,127,.10));}'
     + '.cz-band i{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--casora-popup-accent, var(--casora-color-teal, #4E9E95));min-width:3px;}'
-    // State ribbon (Pulse): even, 14 px, rounded segments; overflow visible for the soft glow.
-    + '.cz-band.st{height:14px;border-radius:7px;overflow:visible;margin-top:18px;}'
-    + '.cz-band.st i{border-radius:7px;}'
+    // State ribbon (Pulse): one continuous 14 px bar, rounded only at its ends; the states are one gradient (ribbonHtml()).
+    + '.cz-band.st{height:14px;border-radius:7px;overflow:hidden;margin-top:18px;background:linear-gradient(to right, var(--cz-rib));}'
+    + '@supports (background:linear-gradient(in oklab to right, red, blue)){.cz-band.st{background:linear-gradient(in oklab to right, var(--cz-rib));}}'
     + '.cz-axis{display:flex;justify-content:space-between;font-size:12px;opacity:.6;margin:6px 4px 0;}'
     + '</style>';
   // Blueprint v2: one period switch for the chart popup and this page – the shared segments (UI.segments),
@@ -590,6 +590,29 @@
     var pc = s === 'watch' ? 65 : 78;   // Gelb braucht mehr Tiefe für >= 3:1 auf Creme
     return { fill: deep(C[s], pc), dot: deep(C[s], pc) };
   };
+  var TRACK = 'var(--casora-popup-row-fill, rgba(127,127,127,.10))';
+  // State ribbon as one element (owner 04.11.2026, option B). parts: [{ c: colour, a, b }] as fractions 0..1 in order.
+  // Short parts get at least RIB_MIN of the width, taken proportionally from the long ones; every border blends over up
+  // to 8 px (less on short parts, so their core stays solid). The stops go into --cz-rib; the CSS blends in oklab where
+  // supported, else in sRGB (a second inline background would not fall back: its var() fails only at computed time).
+  var RIB_MIN = 0.012;
+  var ribbonHtml = function (parts, label) {
+    var need = 0, big = 0;
+    parts.forEach(function (p) { var w = p.b - p.a; if (w < RIB_MIN) need += RIB_MIN - w; else big += w - RIB_MIN; });
+    if (need > 0 && big > need) {
+      var t = 0;
+      parts = parts.map(function (p) {
+        var w = p.b - p.a, nw = w < RIB_MIN ? RIB_MIN : w - (w - RIB_MIN) / big * need, o = { c: p.c, a: t, b: t + nw };
+        t += nw;
+        return o;
+      });
+    }
+    var stops = parts.map(function (p, i) {
+      var a = (p.a * 100).toFixed(3), b = (p.b * 100).toFixed(3), h = 'min(4px, ' + ((p.b - p.a) * 35).toFixed(3) + '%)';
+      return p.c + ' ' + (i ? 'calc(' + a + '% + ' + h + ')' : '0%') + ', ' + p.c + ' ' + (i < parts.length - 1 ? 'calc(' + b + '% - ' + h + ')' : '100%');
+    }).join(', ');
+    return '<div class="cz-band st" role="img" aria-label="' + esc(label) + '" style="--cz-rib:' + esc(stops) + ';"></div>';
+  };
   Z.sec = function (part, id, span, states, hass, el) {
     var UI = window._casoraUI;
     var st = states && states[id];
@@ -625,21 +648,31 @@
           var C3 = stateTone(hass, id, st.state) || (sg.segs[0] && stateTone(hass, id, sg.segs[0].s));
           var sum = {};
           var drawn = sg.segs.filter(function (x) { return duo ? Z.isActive(x.s) : true; });
-          // Pulse (state ribbon, handbook §7.6, owner 03.11.2026 option A): one even height for every state, rounded
-          // segments with a small gap between neighbours, a problem state glows softly. Was a step chart whose bar height
-          // grew with the severity – hard blocks that looked cheap.
-          out += '<div class="cz-band' + (C3 ? ' st' : '') + '">' + drawn.map(function (x, k) {
-            var l = (x.start - t0) / (now - t0) * 100, w = ((x.end || now) - x.start) / (now - t0) * 100;
-            var tn = stateTone(hass, id, x.s);
-            sum[x.s] = (sum[x.s] || 0) + ((x.end || now) - Math.max(x.start, t0));
-            if (tn) {
-              var gl = k ? 1.5 : 0, gr = k < drawn.length - 1 ? 1.5 : 0;
-              return '<i data-cz-st="' + esc(x.s) + '" style="left:calc(' + l.toFixed(3) + '% + ' + gl + 'px);width:max(4px, calc(' + Math.max(0, w).toFixed(3) + '% - ' + (gl + gr) + 'px));'
-                + 'background:' + tn.fill + ';' + (x.s === 'check' || x.s === 'failed' ? 'box-shadow:0 0 10px -2px ' + tn.dot + ';' : '') + '"></i>';
-            }
-            // Two states: only the active spans are drawn (accent), the idle time stays the bare track (issue 104).
-            return '<i' + (duo ? ' class="on"' : '') + ' style="left:' + l.toFixed(2) + '%;width:' + Math.max(0.4, w).toFixed(2) + '%;' + (duo ? '' : 'opacity:' + (0.35 + 0.65 * ((k % 2) ? 0.5 : 1)) + ';') + '"></i>';
-          }).join('') + '</div>';
+          if (C3) {
+            // Pulse (state ribbon, handbook §7.6, owner 04.11.2026 option B): one continuous bar, the states blend softly
+            // into each other. Was single rounded pills with gaps and a glow (option A, 03.11.2026).
+            var fr = [], c0 = 0;
+            drawn.forEach(function (x) {
+              sum[x.s] = (sum[x.s] || 0) + ((x.end || now) - Math.max(x.start, t0));
+              var a = Math.max(c0, (x.start - t0) / (now - t0)), b = Math.min(1, ((x.end || now) - t0) / (now - t0));
+              if (b <= a) return;
+              if (a > c0 + 1e-6) fr.push({ c: TRACK, a: c0, b: a });   // no history yet: the bare track
+              var tn = stateTone(hass, id, x.s);
+              fr.push({ c: tn ? tn.dot : ACC, a: a, b: b });
+              c0 = b;
+            });
+            if (fr.length && c0 < 1 - 1e-6) fr.push({ c: TRACK, a: c0, b: 1 });
+            var said = ['failed', 'check', 'watch', 'ok', 'learning'].filter(function (k) { return sum[k]; })
+              .map(function (k) { return T(WORD[k]) + ' ' + dur(sum[k]); }).join(' · ');
+            out += ribbonHtml(fr, T('Verlauf') + (said ? ': ' + said : ''));
+          } else {
+            out += '<div class="cz-band">' + drawn.map(function (x, k) {
+              var l = (x.start - t0) / (now - t0) * 100, w = ((x.end || now) - x.start) / (now - t0) * 100;
+              sum[x.s] = (sum[x.s] || 0) + ((x.end || now) - Math.max(x.start, t0));
+              // Two states: only the active spans are drawn (accent), the idle time stays the bare track (issue 104).
+              return '<i' + (duo ? ' class="on"' : '') + ' style="left:' + l.toFixed(2) + '%;width:' + Math.max(0.4, w).toFixed(2) + '%;' + (duo ? '' : 'opacity:' + (0.35 + 0.65 * ((k % 2) ? 0.5 : 1)) + ';') + '"></i>';
+            }).join('') + '</div>';
+          }
           var leg = '';
           // Legend from two states up (owner 03.11.2026) – one state alone („always Gut“) says it with the ribbon.
           if (C3 && Object.keys(sum).filter(function (k) { return WORD[k]; }).length > 1) {
