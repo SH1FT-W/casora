@@ -4,7 +4,7 @@ The file (casora-<name>-<date>.casora) is a ZIP archive:
 
   manifest.json   {"format": 1, "kind": "casora-dashboard", "casora": "<version>", "exported": "<iso>",
                    "title", "url_path", "mobile_url", "rooms", "tiles", "photos", "icons", "settings"}
-  dashboard.json  the desktop dashboard as stored by HA (templates included, so own templates travel)
+  dashboard.json  the desktop dashboard's views (no button_card_templates, no template fingerprint)
   mobile.json     the phone layout (optional)
   settings.json   Casora settings that belong to the dashboard (optional, SHARE_SECTIONS only)
   photos/<file>   own room and vehicle photos the dashboard points to (optional)
@@ -12,6 +12,13 @@ The file (casora-<name>-<date>.casora) is a ZIP archive:
 
 No access tokens, passwords or HA secrets: the dashboard and the chosen settings only, with keys that
 look like credentials removed and signed photo URLs reduced to the photo's name.
+
+No code either (strip_code): a file is data. Export and import both leave out button_card_templates, the
+template fingerprint, top-level keys other than KEEP_TOP, every value button-card or casora-nav would
+run as JavaScript (`[[[ … ]]]`), HTML tags (button-card draws text as HTML), javascript: links and custom
+cards other than CUSTOM_CARDS / casora-* (strip_code). The few expressions the Studio itself writes into a dashboard are rebuilt
+from Casora's own text (casora_code), never copied from the file. On import the dashboard gets the
+templates this Casora ships, with a fingerprint computed from what is written (ship_templates).
 
 Import is two steps: the file is uploaded (POST /api/casora/share/import, admins only), checked and
 held in memory for STAGE_TTL; the Studio shows a preview and the entities missing in this home. Then
@@ -130,6 +137,249 @@ def scrub(obj: Any) -> Any:
 
 def without_templates(cfg: dict | None) -> dict:
     return {k: v for k, v in (cfg or {}).items() if k != TEMPLATES}
+
+
+# ─── Code ─────────────────────────────────────────────────────────────────────
+
+# button-card, casora-nav and kiosk-mode run a string shaped like [[[ … ]]] as JavaScript. Any string with
+# either marker is dropped, so no two harmless-looking halves can be joined into one later.
+CODE = re.compile(r"\[\[\[|\]\]\]")
+# Top-level keys of a Casora dashboard that travel; everything else (templates of any card, the
+# fingerprint, other plugins' settings) stays behind.
+KEEP_TOP = ("title", "views", "kiosk_mode")
+# Studio-written expressions (casora-panel.js SCENE_BADGE_EXPR and the motion badge of retargetRoutes);
+# dev/unit/share_test.py checks they match the Studio's text.
+SCENE_BADGE_EXPR = ("[[[ const ids = window.casoraNavScenes ? window.casoraNavScenes(hass, variables.scene_exclude) : [];"
+                    " const o = variables.scene_order || []; const at = (x) => { const i = o.indexOf(x); return i < 0 ? 999 : i; };"
+                    " return ids.slice().sort((a, b) => at(a) - at(b)); ]]]")
+_MOTION_HEAD = "[[[ const b = states['input_boolean.casora_motion_badges']; if (b && b.state !== 'on') return false; const s = states['"
+_MOTION_TAIL = "']; return !!s && s.state === 'on'; ]]]"
+MOTION_BADGE = re.compile("^" + re.escape(_MOTION_HEAD) + r"([a-z_]+\.[a-z0-9_]+)" + re.escape(_MOTION_TAIL) + "$")
+
+
+def motion_badge(entity_id: str) -> str:
+    """The nav badge expression the Studio writes for a room with a motion sensor."""
+    return _MOTION_HEAD + entity_id + _MOTION_TAIL
+
+
+# button-card draws name, label, state, custom_fields and tooltip as HTML (lit unsafeHTML): a tag in a file's
+# text could carry an event handler. Only the content of HA's own markdown card (sanitised by HA) may hold HTML.
+HTML_TAG = re.compile(r"<[A-Za-z!/?]")
+_URL_JUNK = re.compile(r"[\x00-\x20\x7f]+")
+# Custom cards a Casora dashboard uses. Any other custom card stays behind: it may run its own kind of code
+# (config-template-card's ${…}, apexcharts' EVAL:, …) and would run in this home, where it may be installed.
+CUSTOM_CARDS = frozenset(("button-card", "grid-layout", "layout-card", "vertical-layout", "horizontal-layout",
+                          "masonry-layout", "layout-break", "auto-entities", "mushroom-title-card"))
+
+
+def casora_code(value: str, key: Any, place: str) -> str | None:
+    """Casora's own expression for a value the Studio writes as code, rebuilt from Casora's text; else None.
+
+    place: "room_vars" (variables of a casora_room card) or "badge" (a nav route's badge); elsewhere None.
+    scene_entities: the home room's scene badge (older Studios wrote other texts; all mean "the scenes of the
+    navigation"). show: a route's motion badge, only in the exact form with a plain entity ID.
+    """
+    if key == "scene_entities" and place == "room_vars":
+        return SCENE_BADGE_EXPR
+    if key == "show" and place == "badge":
+        m = MOTION_BADGE.match(value)
+        if m and ENTITY_ID.match(m.group(1)):
+            return motion_badge(m.group(1))
+    return None
+
+
+# Jinja: auto-entities builds card configs from a filter template at runtime (past every check here).
+JINJA = re.compile(r"\{\{|\{%")
+# Values the Studio and the templates put into generated code as entity IDs (retargetRoutes: motion_entity,
+# popup helpers …). A real entity ID never holds any of QUOTE_ETC.
+ENTITY_KEY = re.compile(r"(?:^|_)(?:entity|entities|entity_id|helper|sensor)(?:_[0-9]+)?$")
+QUOTE_ETC = re.compile(r"['\"`\\;(){}<>]")
+ENTITY_START = re.compile(r"^\s*([a-z_]+)\.")
+# ${…}: auto-entities with eval_js, config-template-card and others run it as a JS template literal.
+TEMPLATE_LIT = re.compile(r"\$\{")
+ACTION_KEYS = ("service", "action", "perform_action", "command")
+# Where a dict is a card (a markdown card there is HA's own, which sanitises its content). Not: a key of
+# custom_fields or variables that merely is called "type" (button-card draws those fields as HTML).
+CARD_SLOTS = ("cards", "card", "popup_extra_cards")
+MARKDOWN = "markdown card"
+
+
+def is_code(s: str, key: Any = None, card_type: Any = None) -> bool:
+    """A string that could run as code in a dashboard (CODE, HTML_TAG, JINJA, a bent entity ID) or as a link.
+
+    card_type MARKDOWN: s is a value of HA's markdown card in a card position (HTML and Jinja allowed there).
+    """
+    if CODE.search(s):
+        return True
+    markdown = card_type == MARKDOWN and key == "content"
+    if (HTML_TAG.search(s) or JINJA.search(s) or TEMPLATE_LIT.search(s)) and not markdown:
+        return True
+    if QUOTE_ETC.search(s) and not markdown and ((isinstance(key, str) and ENTITY_KEY.search(key))
+                                                 or (ENTITY_START.match(s) and ENTITY_START.match(s).group(1) in ENTITY_DOMAINS)):
+        return True
+    low = _URL_JUNK.sub("", s).lower()
+    if low.startswith("data:") and not (low.startswith("data:image/") and isinstance(key, str)
+                                        and (PHOTO_KEY.search(key) or "icon" in key)):
+        return True
+    if key == "layout_type" and foreign_card({"type": s}):
+        return True
+    if key in ACTION_KEYS and low.endswith("javascript"):
+        return True  # browser_mod.javascript, also as browser_mod's bare "javascript" service
+    return low.startswith(("javascript:", "vbscript:")) or low in ("browser_mod.javascript", "eval_js")
+
+
+def foreign_card(o: Any) -> bool:
+    """A card (or anything typed custom:…) that is not one of CUSTOM_CARDS or Casora's own elements."""
+    t = o.get("type") if isinstance(o, dict) else None
+    if not isinstance(t, str) or not _URL_JUNK.sub("", t).lower().startswith("custom:"):
+        return False
+    name = t[len("custom:"):] if t.startswith("custom:") else ""
+    return not (name in CUSTOM_CARDS or re.fullmatch(r"casora-[a-z0-9-]+", name))
+
+
+def _is_room(o: dict) -> bool:
+    tpl = o.get("template")
+    return tpl == "casora_room" or (isinstance(tpl, list) and "casora_room" in tpl)
+
+
+def strip_code(obj: Any, dropped: list | None = None) -> Any:
+    """Copy of obj without anything that could run as code (is_code, foreign_card); dropped collects what went.
+
+    Dict entries with such a value (or key) are removed, list items too; Casora's own expressions are
+    rebuilt in their place (casora_code). Iterative, so a deeply nested file cannot exhaust the stack.
+    """
+    def drop(what) -> None:
+        if dropped is not None:
+            dropped.append(what)
+
+    out_root: list = [None]
+    stack: list = [(obj, None, out_root, 0, None, "")]
+    while stack:
+        o, key, parent, slot, card_type, place = stack.pop()
+        if isinstance(o, dict):
+            new: dict = {}
+            parent[slot] = new
+            own_type = o.get("type") if isinstance(o.get("type"), str) else None
+            if own_type == "markdown" and key in CARD_SLOTS:
+                own_type = MARKDOWN
+            for k, v in o.items():
+                if isinstance(k, str) and is_code(k):
+                    drop(k)
+                    continue
+                if isinstance(v, str):
+                    if is_code(v, k, own_type):
+                        mine = casora_code(v, k, place)
+                        if mine is not None:
+                            new[k] = mine
+                        if mine != v:
+                            drop(k)
+                        continue
+                    new[k] = v
+                elif isinstance(v, (dict, list)):
+                    if foreign_card(v):
+                        drop(k)
+                        continue
+                    sub = ("room_vars" if k == "variables" and _is_room(o) else "badge" if k == "badge" else "")
+                    new[k] = None
+                    stack.append((v, k, new, k, own_type, sub))
+                else:
+                    new[k] = v
+        elif isinstance(o, list):
+            items: list = []
+            parent[slot] = items
+            for v in o:
+                if (isinstance(v, str) and is_code(v, key, card_type)) or foreign_card(v):
+                    drop(key)
+                    continue
+                items.append(None)
+                if isinstance(v, (dict, list)):
+                    stack.append((v, key, items, len(items) - 1, card_type, ""))
+                else:
+                    items[-1] = v
+        elif isinstance(o, str) and is_code(o, key, card_type):
+            drop(key)
+            parent[slot] = None
+        elif foreign_card(o):
+            drop(key)
+            parent[slot] = None
+        else:
+            parent[slot] = o
+    return out_root[0]
+
+
+def own_bases(templates: Any, shipped: set[str] | frozenset[str]) -> dict[str, str]:
+    """Own tile types (own_<name>, casora-panel-kachelart.js) → the shipped Casora template they extend."""
+    if not isinstance(templates, dict):
+        return {}
+
+    def base_of(name: str) -> str | None:
+        tpl = templates.get(name)
+        tile = tpl.get("variables", {}).get("casora_tile") if isinstance(tpl, dict) and isinstance(
+            tpl.get("variables"), dict) else None
+        base = tile.get("base") if isinstance(tile, dict) else None
+        return base if isinstance(base, str) else None
+
+    out: dict[str, str] = {}
+    for name in templates:
+        if name in shipped:
+            continue
+        cur, seen = name, set()
+        while isinstance(cur, str) and cur not in shipped and cur not in seen and len(seen) < 8:
+            seen.add(cur)  # an own type may extend another own type
+            cur = base_of(cur)
+        if isinstance(cur, str) and cur in shipped:
+            out[name] = cur
+    return out
+
+
+def _retarget_tiles(obj: Any, bases: dict[str, str]) -> Any:
+    """Cards on an own tile type point at its Casora base instead (the own template does not travel)."""
+    if not bases:
+        return obj
+    stack = [obj]
+    while stack:
+        o = stack.pop()
+        if isinstance(o, dict):
+            tpl = o.get("template")
+            if isinstance(tpl, str) and tpl in bases:
+                o["template"] = bases[tpl]
+            elif isinstance(tpl, list):
+                o["template"] = [bases.get(t, t) if isinstance(t, str) else t for t in tpl]
+            stack.extend(v for v in o.values() if isinstance(v, (dict, list)))
+        elif isinstance(o, list):
+            stack.extend(v for v in o if isinstance(v, (dict, list)))
+    return obj
+
+
+def clean_dashboard(cfg: Any, shipped: set[str] | frozenset[str] | None) -> tuple[Any, dict]:
+    """A dashboard as it may travel: KEEP_TOP keys only, no templates, no code.
+
+    shipped: names of the templates this Casora ships (None: unknown, own tile types are not retargeted).
+    → (clean config, {"templates": own templates left out, "code": values with code left out}).
+    """
+    if not isinstance(cfg, dict):
+        return cfg, {"templates": [], "code": 0}
+    templates = cfg.get(TEMPLATES) if isinstance(cfg.get(TEMPLATES), dict) else {}
+    ship = shipped or frozenset()
+    own = sorted(k for k in templates if k not in ship) if shipped is not None else sorted(templates)
+    dropped: list = []
+    out = strip_code({k: v for k, v in cfg.items() if k in KEEP_TOP}, dropped)  # a fresh copy
+    _retarget_tiles(out, own_bases(templates, ship) if shipped is not None else {})
+    return out, {"templates": own, "code": len(dropped)}
+
+
+def too_deep(obj: Any, limit: int) -> bool:
+    """More than limit levels of nesting (a dashboard has about 15); checked without recursion."""
+    stack = [(obj, 1)]
+    while stack:
+        o, n = stack.pop()
+        if n > limit:
+            return True
+        if isinstance(o, dict):
+            stack.extend((v, n + 1) for v in o.values() if isinstance(v, (dict, list)))
+        elif isinstance(o, list):
+            stack.extend((v, n + 1) for v in o if isinstance(v, (dict, list)))
+    return False
 
 
 # ─── Photos ───────────────────────────────────────────────────────────────────
@@ -337,13 +587,19 @@ def file_name(title: str, day: str) -> str:
 
 def build_export(*, title: str, url_path: str, mobile_url: str | None, config: dict, mobile: dict | None,
                  settings: dict | None, photos: dict[str, bytes] | None, version: str, exported: str,
-                 icons: dict[str, bytes] | None = None) -> bytes:
-    """The export file. photos / icons: file name → bytes (already chosen by the caller)."""
+                 icons: dict[str, bytes] | None = None, shipped: set[str] | frozenset[str] | None = None) -> bytes:
+    """The export file. photos / icons: file name → bytes (already chosen by the caller).
+
+    shipped: names of the templates this Casora ships; tiles on an own tile type then point at its base.
+    The file never carries templates or code (clean_dashboard): what the import would drop stays out.
+    """
     if not isinstance(config, dict) or not isinstance(config.get("views"), list):
         raise ShareError("broken", "dashboard has no views")
-    cfg = scrub(config)
-    mob = scrub(mobile) if isinstance(mobile, dict) else None
-    sets = {k: scrub(v) for k, v in (settings or {}).items() if k in SHARE_SECTIONS and v not in (None, "", [], {})}
+    cfg = scrub(clean_dashboard(config, shipped)[0])
+    mob = scrub(clean_dashboard(mobile, shipped)[0]) if isinstance(mobile, dict) else None
+    sets = {k: scrub(v) for k, v in strip_code({k: v for k, v in (settings or {}).items()
+                                                  if k in SHARE_SECTIONS}).items()
+            if v not in (None, "", [], {})}
     names = sorted(n for n in (photos or {}) if PHOTO_FILE.match(n))
     icon_files = sorted(n for n in (icons or {}) if ICON_FILE.match(n))
     manifest = {
@@ -372,23 +628,32 @@ def build_export(*, title: str, url_path: str, mobile_url: str | None, config: d
 
 # ─── Import ───────────────────────────────────────────────────────────────────
 
+MAX_DEPTH = 100
+
+
 def _json(z: zipfile.ZipFile, name: str, what: str) -> Any:
     try:
-        return json.loads(z.read(name).decode("utf-8"))
+        out = json.loads(z.read(name).decode("utf-8"))
     except KeyError:
         raise ShareError("broken", f"{name} missing") from None
-    except (ValueError, UnicodeDecodeError):
+    except (ValueError, UnicodeDecodeError, RecursionError):
         raise ShareError("broken", f"{what} is not readable") from None
+    if too_deep(out, MAX_DEPTH):
+        raise ShareError("broken", f"{what} is nested too deeply")
+    return out
 
 
 def _is_dashboard(cfg: Any) -> bool:
-    return isinstance(cfg, dict) and isinstance(cfg.get("views"), list) and all(isinstance(v, dict) for v in cfg["views"])
+    return isinstance(cfg, dict) and isinstance(cfg.get("views"), list) and all(
+        isinstance(v, dict) and isinstance(v.get("cards", []), list) for v in cfg["views"])
 
 
-def read_file(data: bytes) -> dict:
-    """Check an export file and unpack it.
+def read_file(data: bytes, shipped: set[str] | frozenset[str] | None = None) -> dict:
+    """Check an export file and unpack it, without any templates or code from it (clean_dashboard).
 
-    → {"manifest", "config", "mobile", "settings", "photos": {file: bytes}, "icons": {file: bytes}};
+    shipped: names of the templates this Casora ships (own templates are counted against it).
+    → {"manifest", "config", "mobile", "settings", "photos": {file: bytes}, "icons": {file: bytes},
+       "left_out": {"templates": n, "code": n}};
       ShareError otherwise:
       not_casora (no Casora export at all), newer_format (made by a newer Casora), broken (damaged).
     """
@@ -444,8 +709,19 @@ def read_file(data: bytes) -> dict:
                 icons[name] = z.read(info)
     except zipfile.BadZipFile:
         raise ShareError("broken", "the file is damaged") from None
+    config, left = clean_dashboard(config, shipped)
+    own, code = set(left["templates"]), left["code"]
+    if mobile is not None:
+        mobile, left = clean_dashboard(mobile, shipped)
+        own.update(left["templates"])  # the phone layout carries the same templates: each name once
+        code += left["code"]
+    dropped: list = []
+    # A section left empty would replace the receiver's own one with nothing: it stays out instead.
+    settings = {k: v for k, v in strip_code(settings, dropped).items() if v not in (None, "", [], {})}
+    code += len(dropped)
     return {"manifest": manifest, "config": scrub(config), "mobile": scrub(mobile) if mobile else None,
-            "settings": scrub(settings), "photos": photos, "icons": icons}
+            "settings": scrub(settings), "photos": photos, "icons": icons,
+            "left_out": {"templates": len(own), "code": code}}
 
 
 def preview(staged: dict, known: set[str] | frozenset[str]) -> dict:
@@ -468,6 +744,8 @@ def preview(staged: dict, known: set[str] | frozenset[str]) -> dict:
         "settings": sorted(sets),
         "entities": len(refs),
         "missing": missing,
+        # Never taken over: own templates and values with code (the tiles use this Casora's templates).
+        "left_out": dict(staged.get("left_out") or {"templates": 0, "code": 0}),
     }
 
 
@@ -532,25 +810,53 @@ def prepare(staged: dict, *, url_path: str, mobile_url: str | None, mapping: dic
             renames: dict[str, str] | None, with_settings: bool, icon_renames: dict[str, str] | None = None) -> dict:
     """Configs to save: links moved to the new address, entities mapped, photos and symbols renamed."""
     m = staged["manifest"]
-    moves = [(str(m.get("url_path") or ""), url_path)]
-    if m.get("mobile_url") and mobile_url:
-        moves.append((str(m["mobile_url"]), mobile_url))
+    def path(p) -> str:
+        # The file's dashboard address goes into a regex over JSON text: only a plain address counts.
+        return p if isinstance(p, str) and re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,99}", p) else ""
+
+    moves = [(path(m.get("url_path")), url_path)]
+    if path(m.get("mobile_url")) and mobile_url:
+        moves.append((path(m["mobile_url"]), mobile_url))
     # Longest first: '/casora-mobile' before '/casora'.
     moves.sort(key=lambda p: len(p[0]), reverse=True)
 
     def fix(cfg):
         if cfg is None:
             return None
-        out = move_links(copy.deepcopy(cfg), moves)
+        out = clean_dashboard(cfg, None)[0]  # again, whatever staged holds: templates and code never pass
+        out = move_links(out, moves)
         out = apply_mapping(out, mapping or {})
-        return rename_icons(rename_photos(out, renames or {}), icon_renames or {})
+        return strip_code(rename_icons(rename_photos(out, renames or {}), icon_renames or {}))
     return {
         "config": fix(staged["config"]),
         "mobile": fix(staged["mobile"]) if mobile_url else None,
-        "settings": rename_icons(rename_photos(apply_mapping(copy.deepcopy(staged["settings"]), mapping or {}),
-                                              renames or {}), icon_renames or {})
+        "settings": strip_code(rename_icons(rename_photos(apply_mapping(strip_code(staged["settings"]), mapping or {}),
+                                                          renames or {}), icon_renames or {}))
         if with_settings else None,
     }
+
+
+def ship_templates(cfg: dict, mob: dict | None, bundle: dict) -> tuple[dict, dict | None]:
+    """The imported dashboard(s) with exactly the templates this Casora ships, as a fresh Casora dashboard.
+
+    Whatever templates or fingerprint cfg/mob still hold are replaced; the fingerprint is computed from
+    what is written, so nothing from the file can mark a template as „changed by the user“.
+    Routes and scene choice come from the (clean) views, as refresh_dashboard does after an update.
+    """
+    from .template_print import FINGERPRINT_KEY, fingerprint_of, home_vars_of, refresh_dashboard
+
+    def one(c: dict, **kw) -> dict:
+        base = {k: v for k, v in c.items() if k not in (TEMPLATES, FINGERPRINT_KEY)}
+        new, _r = refresh_dashboard(base, bundle, **kw)
+        if new is None:
+            # No navigation routes in the views to point the templates at: the templates as shipped.
+            new = copy.deepcopy(base)
+            new[TEMPLATES] = copy.deepcopy(bundle)
+            new[FINGERPRINT_KEY] = fingerprint_of(new[TEMPLATES])
+        return new
+
+    out = one(cfg)
+    return out, (one(mob, mobile=True, home_vars=home_vars_of(out)) if mob is not None else None)
 
 
 # ─── Staging (between upload and apply) ───────────────────────────────────────
@@ -730,6 +1036,14 @@ def _known_entities(hass) -> set[str]:
     return known
 
 
+async def _shipped(hass) -> frozenset[str] | None:
+    """Names of the templates this Casora ships (with accepted card updates), None if unreadable."""
+    from .template_refresh import _read_bundle
+
+    got = await hass.async_add_executor_job(_read_bundle, hass.config.config_dir)
+    return frozenset(got[0]) if got is not None else None
+
+
 def _http_views():
     from aiohttp import web
     from homeassistant.components.http import HomeAssistantView
@@ -767,11 +1081,12 @@ def _http_views():
             icons = await hass.async_add_executor_job(_icon_files, hass.config.config_dir, wanted) if wanted else {}
             title = q.get("title") or url_path
             now = dt_util.now()
+            shipped = await _shipped(hass)
             try:
                 body = await hass.async_add_executor_job(lambda: build_export(
                     title=title, url_path=url_path, mobile_url=mobile_url, config=config, mobile=mobile,
                     settings=settings, photos=photos, version=VERSION, exported=now.isoformat(timespec="seconds"),
-                    icons=icons))
+                    icons=icons, shipped=shipped))
             except ShareError as err:
                 return self.json({"code": err.code, "message": str(err)}, status_code=400)
             name = file_name(title, now.strftime("%Y-%m-%d"))
@@ -803,8 +1118,9 @@ def _http_views():
                 return self.json({"code": "too_large", "message": "file too large"}, status_code=413)
             except Exception:  # noqa: BLE001 – not multipart
                 return self.json({"code": "empty", "message": "expected multipart body"}, status_code=400)
+            shipped = await _shipped(hass)
             try:
-                staged = await hass.async_add_executor_job(read_file, bytes(payload))
+                staged = await hass.async_add_executor_job(read_file, bytes(payload), shipped)
             except ShareError as err:
                 return self.json({"code": err.code, "message": str(err)}, status_code=400)
             token = stage(hass.data.setdefault(DOMAIN, {}).setdefault(_STAGE, {}), staged)
@@ -821,7 +1137,6 @@ async def _apply(hass, msg: dict) -> dict:
     from .const import DOMAIN
     from .settings import SECTIONS, _store as settings_store
     from .template_refresh import _read_bundle
-    from .template_print import home_vars_of, refresh_dashboard
     from .versions import _dashboard, _snap
 
     staged = staged_of(hass.data.setdefault(DOMAIN, {}).setdefault(_STAGE, {}), msg["token"])
@@ -861,18 +1176,11 @@ async def _apply(hass, msg: dict) -> dict:
                   renames=renames, with_settings=bool(msg.get("settings")) and bool(staged["settings"]),
                   icon_renames=icon_renames)
 
-    # Templates as this Casora ships them; own templates of the file stay (refresh_dashboard keeps them).
+    # Only the templates this Casora ships, never the file's (prepare already left them out).
     got = await hass.async_add_executor_job(_read_bundle, hass.config.config_dir)
-    cfg, mob = out["config"], out["mobile"]
-    if got is not None:
-        bundle = got[0]
-        new_cfg, _r = await hass.async_add_executor_job(lambda: refresh_dashboard(cfg, bundle))
-        cfg = new_cfg or cfg
-        if mob is not None:
-            home = home_vars_of(cfg)
-            new_mob, _r = await hass.async_add_executor_job(
-                lambda: refresh_dashboard(mob, bundle, mobile=True, home_vars=home))
-            mob = new_mob or mob
+    if got is None:
+        raise ShareError("no_templates", "Casora's templates could not be read")
+    cfg, mob = await hass.async_add_executor_job(ship_templates, out["config"], out["mobile"], got[0])
 
     if replace:
         # The state that gets replaced, kept under Rewind first.
