@@ -19,7 +19,7 @@
 # in den Repos byteidentisch als tools/ha-venv.sh (Abgleich: vorlagen/abgleich.sh).
 set -euo pipefail
 
-HA_DEFAULT="2026.10.1"
+HA_DEFAULT="2026.11.0"
 BASIS="${HA_VENV_DIR:-$HOME/.cache/ha-venv}"
 HOST="${HA_HOST:-127.0.0.1}"
 
