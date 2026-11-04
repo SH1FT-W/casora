@@ -287,7 +287,7 @@ Since October 2026 Casora uses calendar versions **`YY.M.N`**: year, month, and 
 - [**Contributing**](docs/contributing.md): pull requests and screenshots
 - [**Changelog**](CHANGELOG.md): what changed in each version, in English and [German](CHANGELOG.de.md)
 
-Found a bug or have an idea? [Open an issue](https://github.com/SH1FT-W/casora/issues). For a bug, add the diagnostics from the Studio (⋯ → **Help…** → **Copy diagnostics…**): versions and counts only, no names.
+Found a bug or have an idea? [Open an issue](https://github.com/SH1FT-W/casora/issues). For a bug, add the diagnostics from the Studio (⋯ → **Help…** → **Copy diagnostics…**): versions and counts only, no names. For a layout problem, open the dashboard on the affected device with `?casora_diag` added to the address (or tap the page title five times quickly) and paste the display diagnosis too.
 
 <br/>
 

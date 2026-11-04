@@ -2773,7 +2773,12 @@
     "Auftauen": "Décongélation",
     "Gären": "Levée de pâte",
     "Backofen": "Four",
-    "Ofen": "Four"
+    "Ofen": "Four",
+    "Anzeige-Diagnose": "Diagnostic d'affichage",
+    "Kopieren": "Copier",
+    "Kopiert": "Copié",
+    "Text markiert – jetzt kopieren": "Texte sélectionné – copie-le maintenant",
+    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Uniquement les données d'affichage de cet appareil, sans noms ni appareils. Copie-les et colle-les dans l'issue GitHub."
   },
   "patterns": [
     [

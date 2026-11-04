@@ -2773,7 +2773,12 @@
     "Auftauen": "Descongelar",
     "Gären": "Levedar",
     "Backofen": "Forno",
-    "Ofen": "Forno"
+    "Ofen": "Forno",
+    "Anzeige-Diagnose": "Diagnóstico de ecrã",
+    "Kopieren": "Copiar",
+    "Kopiert": "Copiado",
+    "Text markiert – jetzt kopieren": "Texto selecionado – copia-o agora",
+    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Apenas dados de visualização deste dispositivo, sem nomes nem aparelhos. Copia-os e cola-os na issue do GitHub."
   },
   "patterns": [
     [

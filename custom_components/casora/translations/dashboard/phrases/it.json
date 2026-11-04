@@ -2773,7 +2773,12 @@
     "Auftauen": "Scongelamento",
     "Gären": "Lievitazione",
     "Backofen": "Forno",
-    "Ofen": "Forno"
+    "Ofen": "Forno",
+    "Anzeige-Diagnose": "Diagnosi display",
+    "Kopieren": "Copia",
+    "Kopiert": "Copiato",
+    "Text markiert – jetzt kopieren": "Testo selezionato – copialo ora",
+    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Solo dati di visualizzazione di questo dispositivo, senza nomi né apparecchi. Copiali e incollali nella issue GitHub."
   },
   "patterns": [
     [

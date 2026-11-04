@@ -2773,7 +2773,12 @@
     "Auftauen": "Rozmrażanie",
     "Gären": "Wyrastanie ciasta",
     "Backofen": "Piekarnik",
-    "Ofen": "Piekarnik"
+    "Ofen": "Piekarnik",
+    "Anzeige-Diagnose": "Diagnostyka wyświetlania",
+    "Kopieren": "Kopiuj",
+    "Kopiert": "Skopiowano",
+    "Text markiert – jetzt kopieren": "Tekst zaznaczony – skopiuj go teraz",
+    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Tylko dane wyświetlania tego urządzenia, bez nazw i urządzeń. Skopiuj je i wklej do zgłoszenia na GitHubie."
   },
   "patterns": [
     [
