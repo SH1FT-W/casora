@@ -316,9 +316,12 @@ Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCE
   `water-heater` → `water_heater` mit `temperature`/`target-temperature`/`mode`; Xiaomi Miot, Tuya) erkennt Casora nur am
   Modell/Namen des Geräts (Wasserkocher in sieben Sprachen) und nimmt dort `water_heater` (`current_temperature`,
   `temperature`, `min_temp`/`max_temp`, `target_temp_step`, `operation_list`; `set_temperature`, `set_operation_mode`),
-  eine `number` in °C/°F (Ziel) und einen `switch`, der nach Warmhalten heißt. Code: `00-finder.js` `casoraKettleFind`,
-  `37-kettle.js`, `casora-panel.js` `TILE_MAIN_FIND.casora_kettle`, `casora-panel-b-ux.js`; Tests `dev/unit/kettle.mjs`,
-  `dev/unit/community_first_use.mjs`, Testhaus `dev/casora_mock/kettle.py`.
+  eine `number` in °C/°F (Ziel) und einen `switch`, der nach Warmhalten heißt. Popup v3 (04.11.2026): ein weiterer
+  `switch` am Gerät ohne `entity_category`, der nach Kochen/Start/Power heißt (sonst der einzige), ist der Hauptschalter
+  im Kopf (Tuya-artig); Namen der `operation_list`-Modi über `hass.formatEntityState(st, modus)`, sonst deutsche
+  Rückfallwörter. Code: `00-finder.js` `casoraKettleFind`,
+  `37-kettle.js` (`K.switchOf`, `K.modeLabel`), `casora-panel.js` `TILE_MAIN_FIND.casora_kettle`, `casora-panel-b-ux.js`; Tests `dev/unit/kettle.mjs`,
+  `dev/unit/community_first_use.mjs`, `dev/qa/regress/r555_kettle_popup_v3.mjs`, Testhaus `dev/casora_mock/kettle.py`.
 - `todo` (Kern, Community-Karte „Bring! Einkaufsliste“, #82): Zustand einer To-do-Entität = Zahl der offenen Einträge;
   Einträge über `todo/item/subscribe` (sonst `todo/item/list`) mit `uid`, `summary`, `description`, `status`
   `needs_action`/`completed`; Dienste `add_item` (`item`, `description`), `update_item` (`item` = uid, `status`),

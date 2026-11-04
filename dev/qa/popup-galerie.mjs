@@ -103,7 +103,7 @@ const ITEMS = [
   { w: 3, id: 'maeher', popup: 'Mähroboter', stage: 'S4', tpl: 'casora_lawn_mower', guess: (S) => first(S, /^lawn_mower\.testmaeher/) || first(S, /^lawn_mower\./) },
   { w: 3, id: 'kaffee', popup: 'Kaffeevollautomat', stage: 'S8 Getränke', tpl: 'casora_coffee', guess: (S) => first(S, /^sensor\.testbarista_operation_state$/) || first(S, /^sensor\.testbarista/) },
   { w: 3, id: 'kuehlschrank', popup: 'Kühlschrank', stage: 'S2 Kühlen', tpl: 'casora_fridge', guess: (S) => first(S, /^sensor\..*_top_zone$/) || first(S, /^sensor\..*(kuehl|fridge)/) },
-  { w: 3, id: 'wasserkocher', popup: 'Wasserkocher', stage: '–', tpl: 'casora_kettle' },
+  { w: 3, id: 'wasserkocher', popup: 'Wasserkocher', stage: 'S2 Ziel (ohne Ziel S7)', tpl: 'casora_kettle' },
   // Aquariums: the three complete tanks of dev/casora_mock/aquarium.py (tanks()), as the Studio stores them.
   { w: 3, id: 'aquarium', popup: 'Aquarium (Übersicht)', stage: 'S6 Wassertemperatur', tpl: 'casora_aquarium',
     pick: (c, S) => (S[TANK + '_temperatur_temperature'] ? (c.variables || {}).entity_saltwater === 'sensor.testriff_temperatur_temperature' : !!S[(c.variables || {}).entity_freshwater]),
