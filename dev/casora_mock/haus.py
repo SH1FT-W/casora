@@ -59,7 +59,7 @@ def vacuum_map(fixture: dict) -> None:
 def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict | None = None) -> dict:
     """Fixture plus the made-up devices, in the order async_setup_entry always used."""
     from . import (aquarium, befeuchter, coffee, dishwasher, ebike, energie, frigate, fussball, game_account, haustier,
-                   halten, hubs, klingel, fridge, kettle, live, maeher, shopping, testlimousine, testserver, testwagen, velair, waesche, wetter)
+                   halten, hubs, klingel, fridge, kettle, live, maeher, oven, shopping, testlimousine, testserver, testwagen, velair, waesche, wetter)
     if stress:
         merge(fixture, stress)
     # Demo house (dev/demo/demo_fixture.py sets "_demo"): without the German test devices (washers A/B with
@@ -100,6 +100,9 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
     # A made-up dishwasher as Home Connect (HA core) creates it with German ids, options and start time (#77), see
     # dishwasher.py.
     merge(fixture, dishwasher.extra(now), "Testspüler")
+    # A made-up oven as Home Connect (HA core) creates it with German ids, heating modes and cavity temperature, see
+    # oven.py.
+    merge(fixture, oven.extra(now), "Testofen")
     # A made-up "Wetter & Warnungen"-like weather station with felt temperature and extra values (#56), see wetter.py.
     merge(fixture, wetter.extra(now), "Testwetter")
     if not demo:

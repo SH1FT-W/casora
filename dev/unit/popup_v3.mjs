@@ -42,7 +42,8 @@ const MIGRIERT = [
   { popup: 'Medien-Player', vorlagen: ['casora_media'], file: null, stages: 2 },
   { popup: 'Now Playing (Kachel/Chip)', vorlagen: ['casora_now_playing_primary', 'casora_now_playing_chip'], file: null, stages: 2 },
   { popup: 'Medien-Badge', vorlagen: ['casora_popup_media'], file: '32-media-badge.js', from: '  B.stage = function', to: '  B.sec = function', stages: 2 },
-  // casora_appliance (older generic appliance tile, own template body) keeps variant B for now.
+  // S4: the generic appliance's stage, and the oven's (Home Connect, also on a dishwasher tile) with its unavailable branch.
+  { popup: 'Gerät mit Ablauf / Backofen', vorlagen: ['casora_appliance'], file: '02-devices.js', from: '/* Popup v3 of the generic appliance tile', to: null, stages: 3 },
   { popup: 'Waschmaschine/Trockner', vorlagen: ['casora_popup_laundry'], file: '02-devices.js', from: '  var L = window._casoraLaundry = ', to: '  var D = window._casoraDish = ', stages: 1 },
   { popup: 'Geschirrspüler', vorlagen: ['casora_popup_dishwasher'], file: '02-devices.js', from: '  var D = window._casoraDish = ', to: '  var P = window._casoraPrint = ', stages: 1 },
   { popup: '3D-Drucker', vorlagen: ['casora_popup_3d_printer'], file: '02-devices.js', from: '  var P = window._casoraPrint = ', to: '  var V = window._casoraVac = ', stages: 1 },
@@ -248,6 +249,6 @@ for (const o of OFFEN) {
   const missing = Object.keys(T).filter((n) => /^casora_popup_/.test(n) && n !== 'casora_popup_base' && !inherits(n) && !listed.has(n));
   assert.deepEqual(missing, [], `popup_v3: popup templates neither in MIGRIERT nor in popup_v3_offen.json: ${missing.join(', ')}`);
 }
-// The auftrag's tables (§5) list 54 popups, the audit added 3: none may drop out of both lists.
-assert.equal(MIGRIERT.length + OFFEN.length, 54 + 3, 'popup_v3: migrated + open must cover all 57 popups (auftrag §5 + audit 04.11.2026)');
+// The auftrag's tables (§5) list 54 popups, the audit added 3, plus the oven (04.11.2026): none may drop out of both lists.
+assert.equal(MIGRIERT.length + OFFEN.length, 54 + 3 + 1, 'popup_v3: migrated + open must cover all 58 popups (auftrag §5 + audit + oven, 04.11.2026)');
 console.log(`popup_v3: ok (${MIGRIERT.length} migrated, ${OFFEN.length} open)`);

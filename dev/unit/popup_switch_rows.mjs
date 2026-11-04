@@ -71,6 +71,8 @@ const READONLY = {
   '03-popups.js': 1,
   // „Zeitplan ›“ opens the week (a navigating row, the switch is on its page).
   '31-velair.js': 1,
+  // The oven's interior light of Home Connect Local (binary_sensor_interior_illumination): a reading, nothing to switch.
+  '02-devices.js': 1,
 };
 const files = fs.readdirSync(new URL('local/', ROOT)).filter((f) => f.endsWith('.js'));
 const found = {};

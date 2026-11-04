@@ -2761,6 +2761,7 @@
     return r.charAt(0).toUpperCase() + r.slice(1);
   };
   var progIcon = function (p) { return (progOf(p) || [0, 'mdi:dishwasher'])[1]; };
+  var progNameD = progName, progIconD = progIcon;
   // Door: binary_sensor (on = open) or the enum sensor of Home Connect in HA core (open/closed/locked).
   var isOpen = function (states, e) { var s = e && states[e] && states[e].state; return s === 'on' || s === 'open'; };
   var minutes = function (states, e) {
@@ -3086,9 +3087,11 @@
     var UI = window._casoraUI;
     return !!(UI && UI.stage && UI.soft && UI.soft()) && (function () { try { var v = localStorage.getItem('casora_popup_variant'); return !v || v === 'v3'; } catch (e) { return true; } })();
   };
-  D.progPick = function (c, states) {
+  // N (optional): another appliance's names and icons { name(p, sel), icon(p), icon0 } – the oven (_casoraOven) shares it.
+  D.progPick = function (c, states, N) {
     var UI = window._casoraUI, sel = c.sel && states[c.sel];
     if (!UI || !sel) return '';
+    var progName = (N && N.name) || progNameD, progIcon = (N && N.icon) || progIconD;
     var opts = (sel.attributes || {}).options || [];
     var cur = sel.state, has = opts.indexOf(cur) > -1;
     var rows = opts.map(function (o) {
@@ -3104,7 +3107,7 @@
     if (D._picked[id] !== undefined && D._picked[id] !== cur) reg[id] = false;
     D._picked[id] = cur;
     var open = !!reg[id];
-    var headHtml = UI.group([{ icon: has ? progIcon(cur) : 'mdi:dishwasher', iconTone: has ? 'accent' : DIM,
+    var headHtml = UI.group([{ icon: has ? progIcon(cur) : ((N && N.icon0) || 'mdi:dishwasher'), iconTone: has ? 'accent' : DIM,
       label: has ? progName(cur, sel) : 'Programm wählen', sub: has ? opts.length + ' Programme' : null, tappable: true }], 'Programm')
       .replace('<div class="hui-row', '<div data-casora-more-tg="" data-casora-nodismiss="" role="button" aria-expanded="'
         + (open ? 'true' : 'false') + '" class="hui-row');
@@ -3450,6 +3453,11 @@
   D.popup = function (entity, variables, states, hass) {
     var UI = window._casoraUI;
     if (!UI || !entity) return { type: 'vertical-stack', cards: [] };
+    // An oven on a dishwasher tile (Home Connect ovens report the same operation_state): the oven's own popup.
+    var OV = window._casoraOven;
+    if (OV && OV.is(hass, (variables && variables.appliance_state) || entity.entity_id)) {
+      return OV.popup((variables && variables.appliance_state) || entity.entity_id, states, hass);
+    }
     var c = D.resolve(entity, variables, states, hass);
     var d0 = L.data[c.st];
     L.fetch(c, hass, !d0 || !d0.ts || Date.now() - d0.ts > 10000);
@@ -5246,4 +5254,298 @@
       program: active ? [pct != null ? Math.round(pct) + ' %' : null, endAt ? 'Fertig gegen ' + clock(endAt) + ' Uhr' : null].filter(Boolean).join(' · ') || null : null,
       state: dead ? 'na' : null });
   };
+})();
+
+
+// ── Oven (popup v3, richtlinien §4 S4 + §4.8 dial) ─────────────────────────────
+// Home Connect ovens (HA core: operation_state, selected_program cooking_oven_program_heating_mode_…,
+// oven_current_cavity_temperature …; Home Connect Local / homeconnect_ws: sensor_operation_state, select_program
+// cooking_oven_program_heatingmode_…, sensor_oven_current_temperature …) on a dishwasher tile (casora_geschirrspueler)
+// or the generic appliance tile (casora_appliance). Before, an oven fell into the dishwasher's popup (programme names
+// raw, a start moon although the oven does not allow remote start, its device values gone) or the appliance's lone stage.
+//   window._casoraOven.is(hass, id)            – the device of id is an oven
+//   window._casoraOven.find(hass, id)          → fields of the device (by translation_key, see FIELDS)
+//   window._casoraOven.popup(id, states, hass) – popup: stage (cavity temperature vs target, progress, programme),
+//                                                programme row, options, the device as one plate, the cavity Verlauf
+//   window._casoraOven.sec(part, C, states, hass) – live parts (line, stage, prog, opts, dev)
+(function () {
+  if (window._casoraOven) return;
+  var O = window._casoraOven = {};
+  var T = function (x) { return typeof window.casoraTr === 'function' ? window.casoraTr(x) : x; };
+  var DIM = 'rgba(255,255,255,0.18)';
+  var bad = function (s) { return s == null || s === '' || s === 'unknown' || s === 'unavailable'; };
+  var str = function (states, id) { var s = id && states[id] && states[id].state; return bad(s) ? null : String(s); };
+  var num = function (states, id) { var s = str(states, id), n = s == null ? NaN : parseFloat(s); return isFinite(n) ? n : null; };
+  var loc = function () { return window.casoraLocale ? window.casoraLocale() : 'de-DE'; };
+  var clock = function (d) { return d.toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' }); };
+  var PROG_RE = /cooking[._]?oven[._]?program/i;
+
+  // Fields: translation_keys of Home Connect in HA core and of Home Connect Local (homeconnect_ws), domain.
+  var FIELDS = {
+    state: [['operation_state', 'sensor_operation_state'], 'sensor'],
+    sel: [['selected_program', 'select_program'], 'select'],
+    prog: [['active_program', 'sensor_active_program'], null],
+    temp: [['oven_current_cavity_temperature', 'sensor_oven_current_temperature', 'sensor_oven_current_temperature_group'], 'sensor'],
+    target: [['setpoint_temperature', 'number_oven_setpoint_temperature'], 'number'],
+    progress: [['program_progress', 'sensor_program_progress'], 'sensor'],
+    remaining: [['sensor_remaining_program_time', 'program_finish_time', 'sensor_finish_in'], 'sensor'],
+    startIn: [['sensor_start_in'], 'sensor'],
+    powerSw: [['power', 'switch_power_state'], 'switch'],
+    powerSel: [['select_power_state'], 'select'],
+    lock: [['child_lock', 'switch_child_lock'], 'switch'],
+    fastPre: [['fast_pre_heat', 'switch_oven_fast_pre_heat'], 'switch'],
+    meat: [['oven_current_meatprobe_temperature', 'sensor_oven_current_meatprobe_temperature'], 'sensor'],
+    remoteStart: [['remote_start', 'binary_remote_start_allowed'], 'binary_sensor'],
+    doorSensor: [['door', 'sensor_door_state'], 'sensor'],
+    doorBin: [['binary_sensor_door_state'], 'binary_sensor'],
+    lightIllum: [['binary_sensor_interior_illumination'], 'binary_sensor'],
+    conn: [['connection'], 'binary_sensor'],
+    start: [['button_start_program'], 'button'],
+    pause: [['pause_program', 'button_pause_program'], 'button'],
+    resume: [['resume_program', 'button_resume_program'], 'button'],
+    stop: [['stop_program', 'button_abort_program'], 'button'],
+  };
+  var list = function (hass, id) {
+    var CD = window.casoraDevice;
+    return CD && CD.entities && hass ? CD.entities(hass, id) : [];
+  };
+  O.is = function (hass, id) {
+    if (!hass || !id) return false;
+    var S = hass.states || {};
+    return list(hass, id).some(function (e) {
+      if (FIELDS.temp[0].indexOf(e.key) > -1) return true;
+      if (FIELDS.sel[0].indexOf(e.key) < 0 && FIELDS.prog[0].indexOf(e.key) < 0) return false;
+      var opts = ((S[e.entity_id] || {}).attributes || {}).options || [];
+      return opts.some(function (o) { return PROG_RE.test(String(o)); });
+    });
+  };
+  O.find = function (hass, id) {
+    var L = list(hass, id), c = {};
+    Object.keys(FIELDS).forEach(function (f) {
+      var keys = FIELDS[f][0], dom = FIELDS[f][1], hit = null;
+      keys.forEach(function (k) { if (!hit) hit = (L.filter(function (e) { return e.key === k && (!dom || e.domain === dom); })[0] || {}).entity_id || null; });
+      c[f] = hit;
+    });
+    // The cavity light: a light of the device (light_oven_cavity, light_internal), else the read-only illumination sensor.
+    c.light = (L.filter(function (e) { return e.domain === 'light'; })[0] || {}).entity_id || null;
+    // Connection: the integration's own sensor, else a connectivity sensor of the device that is no cloud link.
+    if (!c.conn) c.conn = (L.filter(function (e) { return e.domain === 'binary_sensor' && e.dc === 'connectivity' && !/backend|cloud/.test(String(e.key || '')); })[0] || {}).entity_id || null;
+    c.st = c.state || id;
+    c.power = c.powerSw || c.powerSel;
+    c.door = c.doorSensor || c.doorBin;
+    c.device = window.casoraDevice && window.casoraDevice.deviceOf ? window.casoraDevice.deviceOf(hass, id) : null;
+    c.hcStart = !!(hass && hass.services && hass.services.home_connect && hass.services.home_connect.start_selected_program);
+    // Home Connect in HA core (start through its action, not a button).
+    c.core = L.some(function (e) { return e.key === 'operation_state'; });
+    return c;
+  };
+  O.watch = function (c) {
+    return [c.st, c.sel, c.prog, c.temp, c.target, c.progress, c.remaining, c.startIn, c.power, c.lock, c.fastPre, c.meat, c.remoteStart,
+      c.door, c.light, c.lightIllum, c.conn, c.start, c.pause, c.resume, c.stop].filter(function (x, i, a) { return x && a.indexOf(x) === i; });
+  };
+
+  // Heating modes: Casora's word and symbol (compared without "_" and "."; HA core writes heating_mode_hot_air,
+  // Home Connect Local heatingmode_hotair). HA's translation of the select wins for the name when it has one.
+  var MODES = {
+    topbottomheating: ['Ober-/Unterhitze', 'mdi:format-vertical-align-center'], topbottomheatingeco: ['Ober-/Unterhitze Eco', 'mdi:leaf'],
+    hotair: ['Heißluft', 'mdi:fan'], hotaireco: ['Heißluft Eco', 'mdi:leaf'],
+    hotairgrilling: ['Heißluftgrillen', 'mdi:grill'], grilllargearea: ['Grill, große Fläche', 'mdi:grill'],
+    grillsmallarea: ['Grill, kleine Fläche', 'mdi:grill-outline'], bottomheating: ['Unterhitze', 'mdi:format-vertical-align-bottom'],
+    intensiveheat: ['Intensivhitze', 'mdi:fire'], pizzasetting: ['Pizzastufe', 'mdi:pizza'], slowcook: ['Niedertemperaturgaren', 'mdi:timer-sand'],
+    keepwarm: ['Warmhalten', 'mdi:thermometer-low'], preheating: ['Vorheizen', 'mdi:thermometer-chevron-up'],
+    preheatovenware: ['Geschirr vorwärmen', 'mdi:bowl-mix-outline'], frozenheatupspecial: ['Tiefkühlgerichte', 'mdi:snowflake'],
+    desiccation: ['Dörren', 'mdi:fruit-grapes-outline'], defrost: ['Auftauen', 'mdi:snowflake-melt'], proof: ['Gären', 'mdi:bread-slice-outline'],
+  };
+  var modeOf = function (p) {
+    var k = String(p || '').toLowerCase().replace(/^.*heating[._]?mode[._]?/, '').replace(/[_.]/g, '');
+    return MODES[k] || null;
+  };
+  O.progName = function (p, sel) {
+    if (!p) return null;
+    try {
+      var h = document.querySelector('home-assistant');
+      var t = sel && h && h.hass && typeof h.hass.formatEntityState === 'function' ? h.hass.formatEntityState(sel, p) : null;
+      if (t && t !== p) return t;
+    } catch (x) { /* raw */ }
+    var m = modeOf(p);
+    if (m) return T(m[0]);
+    var r = String(p).replace(/^cooking[._]?oven[._]?program[._]?(heating[._]?mode[._]?)?/i, '').replace(/[_.]/g, ' ').trim();
+    return r ? r.charAt(0).toUpperCase() + r.slice(1) : String(p);
+  };
+  O.progIcon = function (p) { return (modeOf(p) || [0, 'mdi:stove'])[1]; };
+  var NAMES = { name: O.progName, icon: O.progIcon, icon0: 'mdi:stove' };
+
+  // Operation state → [word, running]. Home Connect Alt writes the key (BSH.Common.EnumType.OperationState.Run).
+  var STATES = { inactive: ['Aus', false], ready: ['Bereit', false], delayedstart: ['Startet später', true], run: ['Läuft', true],
+    pause: ['Pausiert', true], actionrequired: ['Eingriff nötig', true], finished: ['Fertig', false], error: ['Fehler', false],
+    aborting: ['Wird abgebrochen', true] };
+  var powerOn = function (states, c) { var p = str(states, c.power); return p == null ? null : p === 'on'; };
+  O.state = function (states, c) {
+    var raw = String(str(states, c.st) || '').toLowerCase().replace(/^bsh\.common\.enumtype\.operationstate\./, '');
+    var m = STATES[raw] || [powerOn(states, c) === false ? 'Aus' : 'Bereit', false];
+    // Switched off (power off/standby) while the state still says „ready“: off.
+    if (!m[1] && raw !== 'finished' && raw !== 'error' && powerOn(states, c) === false) m = ['Aus', false];
+    return { raw: raw, word: m[0], active: m[1], dead: !states[c.st] || /^(unavailable|unknown)$/.test(String(states[c.st].state)) };
+  };
+  var unitOf = function (states, id) { return ((states[id] || {}).attributes || {}).unit_of_measurement || '°C'; };
+  var deg = function (states, id) { var n = num(states, id); return n == null ? null : Math.round(n) + ' ' + unitOf(states, id); };
+  // Minutes until the end: a duration (s/min/h) or a point in time.
+  var minsLeft = function (states, id) {
+    var st = id && states[id];
+    if (!st || bad(st.state)) return null;
+    var a = st.attributes || {};
+    if (a.device_class === 'timestamp' || /^\d{4}-\d\d-\d\dT/.test(String(st.state))) { var t = Date.parse(st.state); return isNaN(t) ? null : (t - Date.now()) / 60000; }
+    var n = parseFloat(st.state);
+    if (!isFinite(n)) return null;
+    var u = a.unit_of_measurement;
+    return u === 'h' ? n * 60 : u === 's' ? n / 60 : u === 'd' ? n * 1440 : n;
+  };
+  // Remote start: only when the oven allows it (Home Connect „Fernstart erlaubt“ / remote_start).
+  var startSvc = function (states, c) {
+    if (c.remoteStart && str(states, c.remoteStart) !== 'on') return null;
+    if (c.start && states[c.start] && states[c.start].state !== 'unavailable') return { domain: 'button', service: 'press', target: { entity_id: c.start } };
+    if (c.hcStart && c.device && c.core) return { domain: 'home_connect', service: 'start_selected_program', data: { device_id: c.device } };
+    return null;
+  };
+  var okBtn = function (states, e) { return !!(e && states[e] && states[e].state !== 'unavailable'); };
+
+  O.sec = function (part, C, states) {
+    var UI = window._casoraUI;
+    if (!UI || !C) return '';
+    var c = C, s = O.state(states, c);
+    var sel = c.sel && states[c.sel];
+    var actRaw = str(states, c.prog);
+    var progRaw = actRaw || (sel ? str(states, c.sel) : null);
+    var progTxt = progRaw ? O.progName(progRaw, actRaw ? states[c.prog] : sel) : null;
+    var target = deg(states, c.target), temp = num(states, c.temp);
+    if (part === 'line') {
+      // The status line never repeats the stage: off/ready it says the cavity's temperature, running the state word.
+      if (s.dead) return UI.line('Nicht verfügbar', [], { tone: 'bad' });
+      if (s.active) return UI.line(s.word, []);
+      var dc = deg(states, c.temp);
+      return UI.line(dc ? T('Garraum') + ' ' + dc : s.word, []);
+    }
+    if (part === 'stage') {
+      if (s.dead) return UI.stage('progress', { value: 'Nicht verfügbar', unit: '', state: 'na' });
+      var value = s.word, unit = '', word = null, program = null, progress = null, action = null, moons = null;
+      var left = minsLeft(states, c.remaining), pct = num(states, c.progress), tgt = num(states, c.target);
+      if (s.active && s.raw !== 'delayedstart') {
+        // Running: the cavity's temperature as the value, the target and the programme under it, the end as the foot.
+        if (temp != null) { value = String(Math.round(temp)); unit = unitOf(states, c.temp); }
+        var heating = temp != null && tgt != null && temp < tgt - 5;
+        word = [s.raw === 'run' ? null : s.word, target ? (heating ? T('Heizt auf') + ' ' + target : T('Ziel') + ' ' + target) : null, progTxt]
+          .filter(Boolean).join(' · ') || null;
+        program = [pct != null ? Math.round(pct) + ' %' : null, left != null && left > 0 ? 'Fertig gegen ' + clock(new Date(Date.now() + left * 60000)) + ' Uhr' : null]
+          .filter(Boolean).join(' · ') || null;
+        // Ring: the programme's progress, without one how far the cavity has heated up towards the target.
+        progress = pct != null ? Math.max(0, Math.min(1, pct / 100)) : (temp != null && tgt ? Math.max(0, Math.min(1, temp / tgt)) : null);
+        action = s.raw === 'pause'
+          ? (okBtn(states, c.resume) ? { text: 'Fortsetzen', icon: 'mdi:play', primary: true, svc: { domain: 'button', service: 'press', target: { entity_id: c.resume } } } : null)
+          : (okBtn(states, c.pause) ? { text: 'Pause', icon: 'mdi:pause', primary: true, svc: { domain: 'button', service: 'press', target: { entity_id: c.pause } } } : null);
+        if (okBtn(states, c.stop)) moons = [{ icon: 'mdi:stop', text: 'Abbrechen', svc: { domain: 'button', service: 'press', target: { entity_id: c.stop } }, confirm: 'Abbrechen' }];
+      } else if (s.raw === 'delayedstart') {
+        var si = minsLeft(states, c.startIn);
+        word = progTxt;
+        program = si != null && si > 0 ? 'Startet um ' + clock(new Date(Date.now() + si * 60000)) + ' Uhr' : null;
+      } else if (s.raw === 'finished') {
+        word = progTxt;
+        var lc = (states[c.st] || {}).last_changed;
+        program = lc ? 'seit ' + clock(new Date(lc)) + ' Uhr' : null;
+      } else {
+        // Off or ready: the state; the chosen programme and its temperature under it; „Start“ when the oven allows it.
+        word = [progTxt, target].filter(Boolean).join(' · ') || null;
+        var go = s.word === 'Aus' ? null : startSvc(states, c);
+        if (go) action = { text: 'Start', icon: 'mdi:play', primary: true, svc: go, confirm: 'Starten' };
+        else if (s.word !== 'Aus' && c.remoteStart && (c.start || (c.hcStart && c.core))) program = 'Fernstart am Gerät aktivieren';
+        // 2–4 programmes are the dial's moons (more: the programme row on the right).
+        var opts = sel ? ((sel.attributes || {}).options || []) : [];
+        if (opts.length >= 2 && opts.length <= 4) moons = opts.map(function (o) {
+          return { icon: O.progIcon(o), text: O.progName(o, sel), active: sel.state === o,
+            svc: { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.sel } } };
+        });
+      }
+      return UI.stage('progress', { value: value, unit: unit, word: word, program: program, progress: progress, action: action, moons: moons });
+    }
+    if (part === 'prog') {
+      if (s.active || s.dead || !sel) return '';
+      var n = ((sel.attributes || {}).options || []).length;
+      if (n >= 2 && n <= 4) return '';
+      var D = window._casoraDish;
+      return D && D.progPick ? D.progPick({ sel: c.sel }, states, NAMES) : '';
+    }
+    if (part === 'opts') {
+      var ro = [];
+      if (c.fastPre && states[c.fastPre] && states[c.fastPre].state !== 'unavailable') {
+        ro.push(UI.row.toggle({ icon: 'mdi:thermometer-chevron-up', label: 'Schnelles Vorheizen', on: states[c.fastPre].state === 'on', entity: c.fastPre }));
+      }
+      var mt = deg(states, c.meat);
+      if (mt) ro.push({ icon: 'mdi:thermometer-probe', iconTone: 'accent', label: 'Bratenthermometer', value: mt });
+      return ro.length ? UI.group(ro, 'Optionen') : '';
+    }
+    if (part === 'dev') {
+      var rd = [];
+      var dr = str(states, c.door);
+      if (dr != null) {
+        var DOOR = { on: ['Geöffnet', true], off: ['Geschlossen', false], open: ['Geöffnet', true], closed: ['Geschlossen', false],
+          locked: ['Verriegelt', false], ajar: ['Angelehnt', true] };
+        var dw = DOOR[dr.toLowerCase()] || [dr, false];
+        rd.push({ icon: dw[1] ? 'mdi:door-open' : 'mdi:door-closed', iconTone: dw[1] ? 'warn' : DIM, label: 'Tür', value: dw[0], valueTone: dw[1] ? 'warn' : null });
+      }
+      if (c.light && states[c.light] && states[c.light].state !== 'unavailable') {
+        rd.push(UI.row.toggle({ icon: 'mdi:lightbulb-outline', label: 'Garraumlicht', on: states[c.light].state === 'on', entity: c.light }));
+      } else if (str(states, c.lightIllum) != null) {
+        var li = str(states, c.lightIllum) === 'on';
+        rd.push({ icon: 'mdi:lightbulb-outline', iconTone: li ? 'accent' : DIM, label: 'Innenbeleuchtung', value: li ? 'An' : 'Aus' });
+      }
+      if (c.lock && states[c.lock] && states[c.lock].state !== 'unavailable') {
+        rd.push(UI.row.toggle({ icon: 'mdi:lock-outline', label: 'Kindersicherung', on: states[c.lock].state === 'on', entity: c.lock }));
+      }
+      var rs = str(states, c.remoteStart);
+      if (rs != null) rd.push({ icon: 'mdi:remote', iconTone: DIM, label: 'Fernstart', value: rs === 'on' ? 'Erlaubt' : 'Aus' });
+      var cn = str(states, c.conn);
+      if (cn != null) rd.push({ icon: cn === 'on' ? 'mdi:wifi' : 'mdi:wifi-off', iconTone: cn === 'on' ? DIM : 'bad', label: 'Verbindung',
+        value: cn === 'on' ? 'Verbunden' : 'Getrennt', valueTone: cn === 'on' ? null : 'bad' });
+      return rd.length ? UI.group(rd, 'Gerät') : '';
+    }
+    return '';
+  };
+
+  O.popup = function (id, states, hass) {
+    var K = window._casoraSoftKit, UI = window._casoraUI;
+    if (!K || !UI) return { type: 'vertical-stack', cards: [] };
+    var S = states || (hass && hass.states) || {};
+    var c = O.find(hass, id), watch = O.watch(c);
+    var call = function (part) {
+      return 'return window._casoraOven ? window._casoraOven.sec(' + JSON.stringify(part) + ', ' + JSON.stringify(c) + ', states, hass) : "";';
+    };
+    var f = { line: { card: K.secCard(watch, call('line'), S) }, stage: { card: K.secCard(watch, call('stage'), S) },
+      prog: { card: K.secCard([c.sel, c.prog, c.st, c.power], call('prog'), S) },
+      opts: { card: K.secCard([c.fastPre, c.meat], call('opts'), S) },
+      dev: { card: K.secCard([c.door, c.light, c.lightIllum, c.lock, c.remoteStart, c.conn], call('dev'), S) } };
+    // §7.1: the cavity's temperature as the one Verlauf under the wheel (120).
+    if (c.temp && S[c.temp]) {
+      f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history',
+        series: [{ entity: c.temp, name: T('Garraum'), unit: unitOf(S, c.temp), color: 'accent' }],
+        height: 120, readout: 'own', plate: true, title: T('Garraum') } };
+    }
+    return K.layout({ fields: f, top: ['line'], stage: 'stage', left: [], right: ['prog', 'opts', 'dev'], history: 'chart',
+      narrowOrder: ['chart', 'prog', 'opts', 'dev'], entity: c.st });
+  };
+
+  // Main switch in the head: the oven's power (a switch, or Home Connect Local's power select on/standby).
+  (window._casoraHeadSwitchHooks = window._casoraHeadSwitchHooks || []).push(function (src, hass) {
+    var tpl = [].concat((src && src._config && src._config.template) || []).join(' ');
+    if (!/\bcasora_(geschirrspueler|appliance|popup_dishwasher)\b/.test(tpl)) return null;
+    var id = src._stateObj && src._stateObj.entity_id;
+    if (!id || !O.is(hass, id)) return null;
+    var c = O.find(hass, id);
+    if (c.powerSw) return [c.powerSw];
+    if (!c.powerSel) return false;
+    var opts = ((hass.states[c.powerSel] || {}).attributes || {}).options || [];
+    var offOpt = ['off', 'standby', 'mainsoff'].filter(function (o) { return opts.indexOf(o) > -1; })[0];
+    if (!offOpt || opts.indexOf('on') < 0) return false;
+    return { entities: [c.powerSel], toggle: function (onv, ids, h) {
+      h.callService('select', 'select_option', { option: onv ? offOpt : 'on' }, { entity_id: c.powerSel });
+    } };
+  });
 })();
