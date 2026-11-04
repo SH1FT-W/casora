@@ -195,10 +195,11 @@
       var f = { hero: { card: KIT.secCard(m.watch, call('hero'), S) }, stage: { card: KIT.secCard(m.watch, call('stage'), S) },
         rows: { card: KIT.secCard(m.watch, call('rows'), S) } };
       if (m.temp && S[m.temp]) {
-        // The Verlauf under the dial (§7.1, 120; temperature orange, §7.3).
+        // The Verlauf under the dial (§7.1, 120; temperature orange, §7.3). The unit as a literal and the chart left to
+        // itself (do_not_eval, HACS review 5).
         f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history', title: 'Temperatur · 24 Std.',
-          series: [{ entity: m.temp, name: 'Temperatur', unit: unitOf(m), color: 'var(--casora-color-orange, #FF9F0A)' }],
-          height: 120, readout: 'own', plate: true } };
+          series: [{ entity: m.temp, name: 'Temperatur', unit: m.f ? '°F' : '°C', color: 'var(--casora-color-orange, #FF9F0A)' }],
+          height: 120, readout: 'own', plate: true }, do_not_eval: true };
       }
       // One column (552) from the first opening: the plate holds at most three rows, so the right column of a two-column
       // build is always short beside dial and Verlauf – rule B (§2) would make it one column, but the column balance

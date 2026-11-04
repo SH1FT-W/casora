@@ -5341,6 +5341,8 @@
   O.state = function (states, c) { return OF().state(states, c); };
   var deg = function (states, id) { return OF().deg(states, id); };
   var unitOf = function (states, id) { return OF().unit(states, id); };
+  // casoraNoEval (casora-core.js) when loaded, else the same guard: a text starting with "[[[" gets a zero-width space.
+  var noEval = function (v) { return window.casoraNoEval ? window.casoraNoEval(v) : (typeof v === 'string' && /^\s*\[\[\[/.test(v) ? '\u200b' + v : v); };
   var minsLeft = function (states, id) { return OF().minsLeft(states, id); };
   // Remote start: only when the oven allows it (Home Connect „Fernstart erlaubt“ / remote_start).
   var startSvc = function (states, c) {
@@ -5469,11 +5471,12 @@
       prog: { card: K.secCard([c.sel, c.prog, c.st, c.power], call('prog'), S) },
       opts: { card: K.secCard([c.fastPre, c.meat], call('opts'), S) },
       dev: { card: K.secCard([c.door, c.light, c.lightIllum, c.lock, c.remoteStart, c.conn], call('dev'), S) } };
-    // §7.1: the cavity's temperature as the one Verlauf under the wheel (120).
+    // §7.1: the cavity's temperature as the one Verlauf under the wheel (120). The sensor's unit guarded, the chart left
+    // to itself (do_not_eval, HACS review 5).
     if (c.temp && S[c.temp]) {
       f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history',
-        series: [{ entity: c.temp, name: T('Garraum'), unit: unitOf(S, c.temp), color: 'accent' }],
-        height: 120, readout: 'own', plate: true, title: T('Garraum') } };
+        series: [{ entity: c.temp, name: T('Garraum'), unit: noEval(unitOf(S, c.temp)), color: 'accent' }],
+        height: 120, readout: 'own', plate: true, title: T('Garraum') }, do_not_eval: true };
     }
     return K.layout({ fields: f, top: ['line'], stage: 'stage', left: [], right: ['prog', 'opts', 'dev'], history: 'chart',
       narrowOrder: ['chart', 'prog', 'opts', 'dev'], entity: c.st });
