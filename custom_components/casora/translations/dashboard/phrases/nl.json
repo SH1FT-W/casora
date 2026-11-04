@@ -2731,7 +2731,20 @@
   "Behälter": "Reservoir",
   "Reicht noch": "Nog genoeg voor",
   "Dosiermenge": "Doseerhoeveelheid",
-  "alles in Ordnung": "alles in orde"
+  "alles in Ordnung": "alles in orde",
+  "Programm nicht erkannt": "Programma niet herkend",
+  "Waschmittel nachfüllen": "Wasmiddel bijvullen",
+  "Bald nachfüllen": "Binnenkort bijvullen",
+  "1 Durchgang": "1 cyclus",
+  "Alles erledigt": "Alles gedaan",
+  "Weitere Pflege": "Meer onderhoud",
+  "Programme beibringen": "Programma's aanleren",
+  "Durchgänge in WashData zuordnen": "Cycli toewijzen in WashData",
+  "Verbrauch insgesamt": "Totaal verbruik",
+  "Voraussichtlich": "Verwacht",
+  "TwinDos 1": "TwinDos 1",
+  "TwinDos 2": "TwinDos 2",
+  "1 Einstellung empfohlen": "1 instelling aanbevolen"
  },
  "patterns": [
   [
@@ -4949,6 +4962,10 @@
   [
    "^Morgen ([A-ZÄÖÜ][^\\d·:]*)$",
    "{1} morgen"
+  ],
+  [
+   "^(\\d+) Einstellungen empfohlen$",
+   "{1} instellingen aanbevolen"
   ]
  ]
 }

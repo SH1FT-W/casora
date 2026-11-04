@@ -184,7 +184,8 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
     await check(dev + ': Prozent und „Fertig gegen … Uhr“ auf der Bühne', m.stage && /\d+\s%/.test(m.stage.text) && /Fertig gegen \d\d:\d\d Uhr/.test(m.stage.text), m.stage && m.stage.text);
     await check(dev + ': Restzeit groß auf der Bühne', m.stage && /übrig/.test(m.stage.text), m.stage && m.stage.text);
     await check(dev + ': kein Verlaufsblock (HH.bar) mehr', m.blocks === 0 && m.block66 === 0, { blocks: m.blocks, block66: m.block66 });
-    await check(dev + ': Zeilen „Phase“/„Programm“ nicht doppelt zur Kopfzeile', !m.rows.some((r) => /^(Phase|Programm) (?!abbrechen)/.test(r)), m.rows.filter((r) => /^(Phase|Programm) (?!abbrechen)/.test(r)));
+    // „Programm festlegen ›“ (WashData detection, sub page, 04.11.2026) is a control, not a doubled row.
+    await check(dev + ': Zeilen „Phase“/„Programm“ nicht doppelt zur Kopfzeile', !m.rows.some((r) => /^(Phase|Programm) (?!abbrechen|festlegen)/.test(r)), m.rows.filter((r) => /^(Phase|Programm) (?!abbrechen|festlegen)/.test(r)));
     if (dev === 'dish') {
       if (pr.estimates) {
         const lv = m.labels['VERLAUF'];

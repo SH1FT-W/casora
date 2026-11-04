@@ -2731,7 +2731,20 @@
   "Behälter": "Pojemnik",
   "Reicht noch": "Wystarczy na",
   "Dosiermenge": "Dawka",
-  "alles in Ordnung": "wszystko w porządku"
+  "alles in Ordnung": "wszystko w porządku",
+  "Programm nicht erkannt": "Program nierozpoznany",
+  "Waschmittel nachfüllen": "Uzupełnij detergent",
+  "Bald nachfüllen": "Wkrótce uzupełnij",
+  "1 Durchgang": "1 cykl",
+  "Alles erledigt": "Wszystko zrobione",
+  "Weitere Pflege": "Pozostała konserwacja",
+  "Programme beibringen": "Naucz programów",
+  "Durchgänge in WashData zuordnen": "Przypisz cykle w WashData",
+  "Verbrauch insgesamt": "Zużycie łącznie",
+  "Voraussichtlich": "Przewidywane",
+  "TwinDos 1": "TwinDos 1",
+  "TwinDos 2": "TwinDos 2",
+  "1 Einstellung empfohlen": "1 zalecane ustawienie"
  },
  "patterns": [
   [
@@ -4949,6 +4962,10 @@
   [
    "^Morgen ([A-ZÄÖÜ][^\\d·:]*)$",
    "Jutro {1}"
+  ],
+  [
+   "^(\\d+) Einstellungen empfohlen$",
+   "Zalecane ustawienia: {1}"
   ]
  ]
 }

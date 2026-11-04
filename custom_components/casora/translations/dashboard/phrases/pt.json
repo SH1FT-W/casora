@@ -2731,7 +2731,20 @@
   "Behälter": "Reservatório",
   "Reicht noch": "Dura mais",
   "Dosiermenge": "Quantidade da dose",
-  "alles in Ordnung": "tudo bem"
+  "alles in Ordnung": "tudo bem",
+  "Programm nicht erkannt": "Programa não reconhecido",
+  "Waschmittel nachfüllen": "Reabastecer detergente",
+  "Bald nachfüllen": "Reabastecer em breve",
+  "1 Durchgang": "1 ciclo",
+  "Alles erledigt": "Tudo feito",
+  "Weitere Pflege": "Mais manutenção",
+  "Programme beibringen": "Ensinar programas",
+  "Durchgänge in WashData zuordnen": "Atribuir ciclos no WashData",
+  "Verbrauch insgesamt": "Consumo total",
+  "Voraussichtlich": "Previsto",
+  "TwinDos 1": "TwinDos 1",
+  "TwinDos 2": "TwinDos 2",
+  "1 Einstellung empfohlen": "1 definição recomendada"
  },
  "patterns": [
   [
@@ -4949,6 +4962,10 @@
   [
    "^Morgen ([A-ZÄÖÜ][^\\d·:]*)$",
    "{1} amanhã"
+  ],
+  [
+   "^(\\d+) Einstellungen empfohlen$",
+   "{1} definições recomendadas"
   ]
  ]
 }

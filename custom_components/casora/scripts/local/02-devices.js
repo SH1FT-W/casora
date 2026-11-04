@@ -1759,6 +1759,10 @@
       elapsed: F.elapsed || null, total: F.total || null, count: F.count || null, running: F.running || null,
       select: F.select || null, pause: F.pause || null, resume: F.resume || null, force: F.force || null,
       stop: F.stop || null, unload: F.unload || null, door: F.door || null, suggest: F.suggest || null,
+      /* Care and programmes (owner 04.11.2026): WashData's maintenance-due sensor and per-programme counters,
+         Home Connect's i-Dos refill events, Miele's TwinDos levels. */
+      maintdue: F.maintdue || null, profiles: F.profiles || [], idos1: F.idos1 || null, idos2: F.idos2 || null,
+      twin1: F.twin1 || null, twin2: F.twin2 || null,
       plug: plug,
       power: (plug && onDev(plug, null, 'sensor', 'W')) || plugF.power || F.power || null,
       volt: plug ? (onDev(plug, null, 'sensor', 'V') || plugF.voltage || null) : null,
@@ -1769,7 +1773,8 @@
   };
   L.watch = function (c) {
     return [c.st, c.program, c.phase, c.remaining, c.progress, c.elapsed, c.total, c.count, c.running, c.select,
-      c.pause, c.resume, c.force, c.stop, c.unload, c.door, c.suggest, c.plug, c.power, c.volt, c.amp, c.energy, c.lock]
+      c.pause, c.resume, c.force, c.stop, c.unload, c.door, c.suggest, c.plug, c.power, c.volt, c.amp, c.energy, c.lock,
+      c.maintdue, c.idos1, c.idos2, c.twin1, c.twin2].concat(c.profiles || [])
       .filter(Boolean);
   };
 
@@ -1948,6 +1953,70 @@
     });
   };
 
+  /* Due tasks of WashData's „Maintenance due“ binary sensor (0.5.9: due_tasks [{ id, name, cycles_since, cycles_interval,
+     days_since, days_interval }]) – the care rows while the maintenance log (WS) is not loaded or not allowed. */
+  var dueSensorRows = function (states, e, dryer) {
+    var a = (e && states[e] && states[e].state !== 'unavailable' && states[e].attributes) || {};
+    var list = Array.isArray(a.due_tasks) ? a.due_tasks.filter(function (t) { return t && t.id; }) : [];
+    if (!list.length) return [];
+    return maintRows({ due: list.map(function (t) { return t.id; }), status: list.map(function (t) {
+      return { id: t.id, custom: isCustom(t.id) || !MAINT[t.id], name: t.name, cycles_interval: t.cycles_interval,
+        days_interval: t.days_interval, cycles_since: t.cycles_since, days_since: t.days_since };
+    }) }, dryer);
+  };
+  /* Care of the maker integrations: Home Connect's i-Dos refill events (present = nearly empty; the machine itself
+     confirms the refill), Miele's TwinDos levels in percent. */
+  var makerCare = function (c, states) {
+    var out = [];
+    [[c.idos1, 'i-Dos 1', 'idos1'], [c.idos2, 'i-Dos 2', 'idos2']].forEach(function (x) {
+      var st = x[0] && states[x[0]];
+      if (!st || st.state === 'unavailable' || st.state === 'unknown') return;
+      var low = st.state === 'present';
+      out.push({ id: x[2], label: x[1], icon: 'mdi:bottle-tonic-outline', due: low, bar: null,
+        sub: low ? 'Waschmittel nachfüllen' : null, value: low ? 'Fast leer' : 'Ausreichend' });
+    });
+    [[c.twin1, 'TwinDos 1', 'twin1'], [c.twin2, 'TwinDos 2', 'twin2']].forEach(function (x) {
+      var n = num(states, x[0]);
+      if (n == null) return;
+      var low = n <= 10;
+      out.push({ id: x[2], label: x[1], icon: 'mdi:bottle-tonic-outline', due: low, bar: Math.max(0, Math.min(1, n / 100)),
+        sub: low ? 'Bald nachfüllen' : null, value: Math.round(n) + ' %' });
+    });
+    return out;
+  };
+  /* All care rows of the device: WashData's tasks (from the log, else the due sensor; wd = can be marked done) and the
+     maker's; due ones first, then the nearest. */
+  L.careRows = function (c, states, d) {
+    d = d || {};
+    var wd = (d.maint ? maintRows(d.maint, c.dryer) : dueSensorRows(states, c.maintdue, c.dryer))
+      .map(function (r) { return Object.assign({ wd: true }, r); });
+    var all = wd.concat(makerCare(c, states));
+    var due = all.filter(function (r) { return r.due; });
+    var rest = all.filter(function (r) { return !r.due; }).sort(function (a, b) { return (b.bar || 0) - (a.bar || 0); });
+    return due.concat(rest);
+  };
+  /* Programmes from WashData's per-programme counters (profile_cycle_count: count, average_length_min,
+     average_consumption_kwh). The profile's name is no attribute: the longest programme option in the sensor's name. */
+  L.profileList = function (c, states) {
+    var names = [];
+    [c.select, c.program].forEach(function (e) {
+      (((e && states[e] && states[e].attributes) || {}).options || []).forEach(function (o) {
+        if (o && !NOPROG[String(o).toLowerCase()] && names.indexOf(o) < 0) names.push(o);
+      });
+    });
+    names.sort(function (a, b) { return String(b).length - String(a).length; });
+    return (c.profiles || []).map(function (e) {
+      var st = states[e];
+      var n = st ? parseFloat(st.state) : NaN;
+      if (!(n > 0)) return null;
+      var a = st.attributes || {}, fn = String(a.friendly_name || '').toLowerCase();
+      var name = names.filter(function (o) { return fn.indexOf(String(o).toLowerCase()) > -1; })[0];
+      return name ? { name: name, n: Math.round(n), min: Number(a.average_length_min) || 0, kwh: Number(a.average_consumption_kwh) || 0 } : null;
+    }).filter(Boolean).sort(function (a, b) { return b.n - a.n; });
+  };
+  /* WashData's panel with this device (deep link ?device=<entry_id>, WashData issue 428). */
+  var wdPanel = function (c) { return c.entry ? '/ha-washdata?device=' + encodeURIComponent(c.entry) : null; };
+
   /* ── Plate contents ── */
   L.inner = function (kind, c, states) {
     var UI = window._casoraUI;
@@ -2045,6 +2114,17 @@
       if (phn && !SF) rows.push({ icon: c.dryer ? 'mdi:weather-windy' : 'mdi:water-sync', iconTone: 'accent', label: 'Phase', value: phn });
       if (el != null) rows.push({ icon: 'mdi:timer-outline', iconTone: 'accent', label: 'Läuft seit',
         sub: tot != null && tot > 0 ? 'Üblich sind ' + dur(tot) : null, value: dur(el) });
+      /* Soft/v3 (the plug's readings are gone there): power now and this cycle's projected energy (WashData progress
+         attributes projected_energy_kwh / projected_cost). */
+      var pwR = SF ? num(states, c.power) : null;
+      if (pwR != null) rows.push({ icon: 'mdi:flash', iconTone: 'accent', label: 'Leistung', value: f(pwR, pwR < 10 ? 1 : 0) + ' W' });
+      var prA = (c.progress && states[c.progress] && states[c.progress].attributes) || {};
+      var peR = Number(prA.projected_energy_kwh);
+      if (SF && peR > 0) {
+        var pcR = prA.projected_cost != null && !isNaN(Number(prA.projected_cost)) ? Number(prA.projected_cost) : c.price != null ? peR * c.price : null;
+        rows.push({ icon: 'mdi:lightning-bolt-outline', iconTone: 'accent', label: 'Verbrauch',
+          sub: ['Voraussichtlich', pcR != null ? eur(pcR) : null].filter(Boolean).join(' · '), value: kwh(peR) });
+      }
       if (pct != null && !SF) {
         rows.unshift({ icon: 'mdi:progress-clock', iconTone: 'accent', label: 'Fortschritt', sub: endTxt,
           value: Math.round(pct) + ' %', bar: pct / 100, barTone: 'accent' });
@@ -2097,7 +2177,7 @@
       var lc = realCycles(d)[0];
       if (!lc) return '';
       var e1 = kwhOf(lc), t1 = new Date(lc.start_time);
-      var rowsL = [{ icon: mIcon, iconTone: DIM, label: lc.profile_name || 'Unbekanntes Programm',
+      var rowsL = [{ icon: mIcon, iconTone: DIM, label: lc.profile_name || 'Programm nicht erkannt',
         sub: day(t1) + ', ' + clock(t1) + ' Uhr', value: dur((lc.duration || 0) / 60) }];
       if (e1 > 0) rowsL.push({ icon: 'mdi:lightning-bolt-outline', iconTone: DIM, label: 'Verbrauch', sub: c.price != null ? eur(e1 * c.price) : null, value: kwh(e1) });
       return UI.group(rowsL, 'Letzter Durchgang');
@@ -2223,6 +2303,13 @@
 
     /* Your programs: how often, how long and how much power (from the learned cycles). */
     if (kind === 'progs') {
+      /* WashData's per-programme counters count every run (also before the stored history); the stored cycles are
+         the fallback, e.g. while no programme has a counter yet. */
+      var ps = L.profileList(c, states).slice(0, SF ? 4 : 6);
+      if (ps.length) return UI.group(ps.map(function (p) {
+        return { icon: 'mdi:tshirt-crew-outline', iconTone: DIM, label: p.name,
+          sub: p.min > 0 ? 'Ø ' + dur(p.min) + (p.kwh > 0 ? ' · ' + kwh(p.kwh) : '') : null, value: p.n + '×' };
+      }), 'Programme');
       var pl = programs(d).slice(0, SF ? 4 : 6);
       if (!pl.length) return '';
       return UI.group(pl.map(function (p) {
@@ -2242,10 +2329,113 @@
         var guess = !x.profile_name && x.match_ranking_top5 && x.match_ranking_top5[0] && x.match_ranking_top5[0].name;
         var bad = x.status === 'interrupted';
         return { icon: mIcon, iconTone: bad ? 'warn' : DIM,
-          label: x.profile_name || (guess ? guess + ' ?' : 'Unbekanntes Programm'),
+          label: x.profile_name || (guess ? guess + ' ?' : 'Programm nicht erkannt'),
           sub: day(t) + ', ' + clock(t) + ' · ' + (bad ? 'Unterbrochen' : dur((x.duration || 0) / 60)),
           value: e > 0 ? kwh(e) : null };
       }), 'Letzte Durchgänge');
+    }
+
+    /* Popup v3 „Pflege“ (owner 04.11.2026): what is due as rows („Erledigt“ for WashData's tasks, two steps, see L.tap),
+       the rest behind one row with a sub page that names the next care; care_all is that sub page. */
+    if (kind === 'care' || kind === 'care_all') {
+      var cr = L.careRows(c, states, d);
+      if (!cr.length) {
+        var md = c.maintdue && states[c.maintdue];
+        return kind === 'care' && md && md.state === 'off'
+          ? UI.group([{ icon: 'mdi:check-circle-outline', iconTone: 'good', label: 'Alles erledigt' }], 'Pflege') : '';
+      }
+      L._cfg[c.st] = c;
+      var listK = kind === 'care_all' ? cr : cr.filter(function (r) { return r.due; });
+      var doneK = function (r) { return !!(r.wd && r.due && c.entry); };
+      var rowsK = listK.map(function (r) {
+        return { icon: r.icon, iconTone: r.due ? 'warn' : DIM, label: r.label, sub: r.sub,
+          bar: r.bar != null ? r.bar : null, barTone: r.due ? 'warn' : 'good',
+          value: doneK(r) ? 'HWMAINT' + r.id + 'X' : (r.value || null), valueTone: r.due && !doneK(r) && r.value ? 'warn' : null };
+      });
+      if (kind === 'care') {
+        var restK = cr.filter(function (r) { return !r.due; });
+        if (restK.length) {
+          rowsK.push({ icon: rowsK.length ? 'mdi:wrench-outline' : 'mdi:check-circle-outline', iconTone: rowsK.length ? DIM : 'good',
+            label: rowsK.length ? 'Weitere Pflege' : 'Alles erledigt',
+            sub: [restK[0].label, restK[0].sub || restK[0].value].filter(Boolean).join(' · '), page: 'laundry-care|' + c.st });
+        }
+      }
+      var htmlK = UI.group(rowsK, 'Pflege');
+      listK.forEach(function (r) {
+        if (doneK(r)) htmlK = htmlK.replace('HWMAINT' + r.id + 'X', '<span class="hw-done" data-hw-maint="' + esc(c.entry + '|' + r.id + '|' + c.st) + '">Erledigt</span>');
+      });
+      return L.wrap(htmlK);
+    }
+
+    /* Popup v3 „Statistik“: cycles in total, this month, Ø per cycle, energy in total. */
+    if (kind === 'stats3') {
+      var cy3 = realCycles(d), rows3 = [];
+      var cnt3 = num(states, c.count);
+      if (cnt3 != null) rows3.push({ icon: 'mdi:counter', iconTone: 'accent', label: 'Durchgänge insgesamt', value: String(Math.round(cnt3)) });
+      var m0 = new Date(); m0.setDate(1); m0.setHours(0, 0, 0, 0);
+      var inM = cy3.filter(function (x) { return (Date.parse(x.start_time) || 0) >= m0.getTime(); });
+      var eM = d.month != null ? d.month : inM.length ? inM.reduce(function (t, x) { return t + kwhOf(x); }, 0) : null;
+      var eTxt = eM != null && eM > 0 ? [kwh(eM), c.price != null ? eur(eM * c.price) : null].filter(Boolean) : [];
+      if (cy3.length) rows3.push({ icon: 'mdi:calendar-month-outline', iconTone: 'accent', label: 'Dieser Monat',
+        sub: eTxt.join(' · ') || null, value: inM.length === 1 ? '1 Durchgang' : inM.length + ' Durchgänge' });
+      else if (eTxt.length) rows3.push({ icon: 'mdi:calendar-month-outline', iconTone: 'accent', label: 'Dieser Monat', sub: eTxt[1] || null, value: eTxt[0] });
+      if (cy3.length) {
+        var wE3 = cy3.filter(function (x) { return kwhOf(x) > 0; });
+        var eA3 = wE3.length ? wE3.reduce(function (t, x) { return t + kwhOf(x); }, 0) / wE3.length : 0;
+        var dA3 = cy3.reduce(function (t, x) { return t + (x.duration || 0); }, 0) / cy3.length / 60;
+        rows3.push({ icon: 'mdi:timer-sand', iconTone: 'accent', label: 'Ø pro Durchgang',
+          sub: [eA3 > 0 ? dur(dA3) : null, eA3 > 0 && c.price != null ? eur(eA3 * c.price) : null].filter(Boolean).join(' · ') || null,
+          value: eA3 > 0 ? kwh(eA3) : dur(dA3) });
+      }
+      var eT3 = num(states, c.energy);
+      if (eT3 != null && eT3 > 0) rows3.push({ icon: 'mdi:lightning-bolt-outline', iconTone: 'accent', label: 'Verbrauch insgesamt',
+        sub: c.price != null ? eur(eT3 * c.price) : null, value: kwh(eT3) });
+      return rows3.length ? UI.group(rows3, 'Statistik') : '';
+    }
+
+    /* Popup v3 „Erkennung“ (WashData): pause/end the detection while running, the programme for this or the next
+       cycle (sub page), teach programmes when the last cycles stayed unmatched, recommended settings. */
+    if (kind === 'det') {
+      if (c.official) return '';
+      var rowsT = [];
+      var pausedT = raw === 'paused' || raw === 'user_paused';
+      if (active && !pausedT && ok(states, c.pause)) rowsT.push({ icon: 'mdi:pause', iconTone: 'warn', label: 'Erkennung anhalten',
+        sub: 'Wenn die Maschine kurz unterbrochen wird', svc: btn(c.pause) });
+      if (pausedT && raw !== 'user_paused' && ok(states, c.resume)) rowsT.push({ icon: 'mdi:play', iconTone: 'good', label: 'Erkennung fortsetzen', svc: btn(c.resume) });
+      var selT = c.select && states[c.select];
+      var optsT = (selT && selT.attributes && selT.attributes.options) || [];
+      if (c.source === 'washdata' && optsT.length > 1) {
+        /* Picked while idle, WashData keeps it for the next cycle (WashData issue 411); while running it sets the running one. */
+        var unkT = active && !progOf(c, states);
+        rowsT.push({ icon: unkT ? 'mdi:help-circle-outline' : 'mdi:tshirt-crew-outline', iconTone: unkT ? 'warn' : 'accent',
+          label: active ? 'Programm festlegen' : 'Nächstes Programm', sub: unkT ? 'Programm nicht erkannt' : null,
+          value: selT.state === 'auto_detect' ? 'Automatisch' : selT.state, page: 'laundry-prog|' + c.st });
+      }
+      if (active && ok(states, c.force)) rowsT.push({ icon: 'mdi:flag-checkered', iconTone: 'bad', label: 'Als beendet markieren',
+        sub: 'Falls das Ende nicht erkannt wird', svc: btn(c.force), confirm: 'Beenden' });
+      var lastT = realCycles(d).slice(0, 5);
+      if (!active && wdPanel(c) && lastT.filter(function (x) { return !x.profile_name; }).length >= 2) {
+        rowsT.push({ icon: 'mdi:school-outline', iconTone: 'accent', label: 'Programme beibringen', sub: 'Durchgänge in WashData zuordnen', url: wdPanel(c) });
+      }
+      var nT = num(states, c.suggest);
+      var sgA = (c.suggest && states[c.suggest] && states[c.suggest].attributes) || {};
+      if (nT != null && nT >= 1 && sgA.has_actionable_suggestions !== false) {
+        rowsT.push({ icon: 'mdi:lightbulb-on-outline', iconTone: 'accent', label: 'Erkennung verbessern',
+          sub: (nT === 1 ? '1 Einstellung' : Math.round(nT) + ' Einstellungen') + ' empfohlen',
+          url: wdPanel(c), entity: wdPanel(c) ? null : c.suggest });
+      }
+      return rowsT.length ? UI.group(rowsT, 'Erkennung') : '';
+    }
+    /* Sub page of „Nächstes Programm“ / „Programm festlegen“: every option, the chosen one marked. */
+    if (kind === 'prog_all') {
+      var selP = c.select && states[c.select];
+      var optsP = (selP && selP.attributes && selP.attributes.options) || [];
+      if (!optsP.length) return '';
+      return UI.group(optsP.map(function (o) {
+        var onP = selP.state === o;
+        return { icon: onP ? 'mdi:radiobox-marked' : 'mdi:radiobox-blank', iconTone: onP ? 'accent' : DIM, label: progName(o),
+          value: onP ? 'Aktiv' : null, svc: onP ? null : { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.select } } };
+      }));
     }
 
     if (kind === 'maint' || kind === 'maint_due' || kind === 'maint_rest') {
@@ -2404,7 +2594,17 @@
         + 'return L && H ? H.more("laundry", ' + JSON.stringify(moreKeys) + '.map(function (k) {'
         + ' return (k === "ctrl" || k === "plug" || k === "tips" || k === "devset") ? L.inner(k, c, states) : L.slot(k, c, states); })) : "";', c.st);
       var left, right;
-      if (!WD) { left = ['run', 'act', 'dev', 'abort']; right = ['more']; }
+      if (v3L) {
+        /* Popup v3 has no „Mehr“ (richtlinien §8): what the devices report is the content (owner 04.11.2026). Every
+           list goes right (HH.layout); order = reading order: laundry waiting, the cycle, care, last cycles,
+           programmes, statistics, detection. */
+        ['care', 'stats3', 'det'].forEach(function (k) { add(k, tpl(k, true)); f2[k] = fields[k]; });
+        left = [];
+        if (!WD) right = ['run', 'act', 'dev', 'care', 'stats3', 'abort'];
+        else if (run0) right = ['unload', 'run', 'act', 'det', 'care', 'cycles', 'progs', 'abort'];
+        else right = ['unload', 'act', 'care', 'cycles', 'progs', 'stats3', 'det'];
+      }
+      else if (!WD) { left = ['run', 'act', 'dev', 'abort']; right = ['more']; }
       else if (run0) { left = ['unload', 'run', 'pick', 'act', 'cycles', 'abort']; right = ['progs', 'maint', 'more']; }
       else { left = ['unload', 'act', 'cycles']; right = ['progs', 'maint', 'more']; }
       return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3L ? ['hero'] : ['hero', 'pbar'], stage: v3L ? 'stage' : null,
@@ -2477,10 +2677,24 @@
       custom_fields: top,
     };
   };
+  /* Sub pages of the v3 rows (blueprint v2: „name|arg“ → window._casoraPages[name](arg)). */
+  var pages = window._casoraPages || (window._casoraPages = {});
+  pages['laundry-care'] = function (st) {
+    var c = L._cfg[st], H = window._casoraHH;
+    if (!c || !H || !H.page) return;
+    H.page('Pflege', L.watch(c), 'const c = ' + JSON.stringify(c) + ';\nreturn window._casoraLaundry ? window._casoraLaundry.slot("care_all", c, states) : "";', c.st);
+  };
+  pages['laundry-prog'] = function (st) {
+    var c = L._cfg[st], H = window._casoraHH;
+    var ha = document.querySelector('home-assistant'), states = (ha && ha.hass && ha.hass.states) || {};
+    if (!c || !H || !H.page || !c.select) return;
+    H.page(L.state(states, c.st)[2] ? 'Programm festlegen' : 'Nächstes Programm', [c.select, c.st],
+      'const c = ' + JSON.stringify(c) + ';\nreturn window._casoraLaundry ? window._casoraLaundry.inner("prog_all", c, states) : "";', c.st);
+  };
   /* Reload regularly when the columns re-render (cycle done → update list/statistics). */
   var _inner = L.inner;
   L.inner = function (kind, c, states) {
-    if (kind === 'hero') {
+    if (kind === 'hero' || kind === 'stage') {
       var hass = HASS();
       if (hass) L.fetch(c, hass, false);
     }

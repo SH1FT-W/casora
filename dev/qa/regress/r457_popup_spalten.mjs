@@ -31,6 +31,9 @@ const KNOWN = {
   'person-badge': 260,
   'licht-badge': 440, 'drucker': 437, 'kaffee': 609, 'aquarium-licht': 276, 'schloss-badge': 325, 'pflanze': 296,
   'wetter': 420, 'frigate': 358, 'kalender': 844, 'abfall': 463, 'rezept': 343,
+  // Washer/dryer with care, statistics and detection (owner 04.11.2026): five whole sections, the best split measured
+  // 201 px (left 719, right 518) – the column rule cannot split a section.
+  'waschmaschine': 241, 'trockner': 241,
 };
 const tool = fileURLToPath(new URL('../popup-galerie.mjs', import.meta.url));
 const run = (args) => spawnSync(process.execPath, [tool, ...args], { encoding: 'utf8', env: process.env, timeout: 40 * 60 * 1000 });
