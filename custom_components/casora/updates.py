@@ -21,7 +21,9 @@ WebSocket (admins only):
                summary, source: "github"|"changelog", url?, prerelease?}]}]}
   casora/updates/prompt ← {"language"?: str} → the dashboard's update prompt (scripts/local/39-update-prompt.js):
     {available, version, installed, entity_id, can_install (HACS' entry can install), hacs_url, store, release_url,
-     prerelease, pending_restart, lines: [up to 3 short lines from the release notes]}
+     prerelease, pending_restart, lines: [up to 3 short lines from the release notes; for older dashboard scripts],
+     intro (the release's tagline sentence or ""), items: [up to 4 {title, text}, New → Changed → Fixed],
+     notes_lang ("de"|"en", language of intro and items)}
     Same source as casora/updates/list (update entity, beta_updates channel); checks nothing itself.
 
 WebSocket (every user, the update entities are visible to all):
@@ -237,6 +239,93 @@ def prompt_lines(md: str, limit: int = 3, width: int = 110) -> list[str]:
     return out
 
 
+# Section headings of the release notes (CHANGELOG.md / CHANGELOG.de.md, GitHub release) → priority in the prompt.
+_SECTION_RANK = {"new": 0, "neu": 0, "changed": 1, "geändert": 1, "geaendert": 1, "fixed": 2, "behoben": 2}
+_ISSUE_REF = re.compile(r"\s*\((?:#\d+(?:\s*,\s*)?)+\)")
+# Abbreviations whose dot does not end a sentence ("z. B.", "e.g.", "ca.").
+_ABBREV = {"z", "b", "e.g", "i.e", "ca", "bzw", "usw", "etc", "vgl", "nr", "d.h", "u.a", "inkl", "ggf", "max", "min", "approx"}
+
+
+def _cut(text: str, width: int) -> str:
+    """Cut on a word boundary to at most `width` characters, with "…"."""
+    if len(text) <= width:
+        return text
+    head = text[: width - 1]
+    if " " in head:
+        head = head[: head.rindex(" ")]
+    return head.rstrip(" ,;:–-") + "…"
+
+
+def _first_sentence(text: str) -> str:
+    for m in re.finditer(r"[.!?](?=\s)", text):
+        word = re.split(r"\s", text[: m.start()])[-1].lower()
+        if word in _ABBREV or (len(word) == 1 and word.isalpha()):
+            continue
+        return text[: m.end()].strip()
+    return text.strip()
+
+
+def prompt_intro(md: str, width: int = 160) -> str:
+    """The release's one-sentence tagline: the first plain paragraph before any heading or list."""
+    para: list[str] = []
+    for raw in (md or "").splitlines():
+        line = raw.strip()
+        if not line:
+            if para:
+                break
+            continue
+        if line.startswith(("#", "<")) or _BULLET.match(line) or re.match(r"^\d+[.)]\s", line):
+            if para:
+                break
+            # The tagline comes first; a heading or list before it means there is none.
+            return ""
+        para.append(line)
+    return _cut(_plain(" ".join(para)), width) if para else ""
+
+
+def prompt_items(md: str, limit: int = 4, width: int = 90) -> list[dict[str, str]]:
+    """Up to `limit` items for the update prompt, New before Changed before Fixed: the bold start of a
+    top-level item as title (issue refs dropped) and the first sentence or clause of the rest, plain, cut."""
+    found: list[tuple[int, int, dict[str, str]]] = []
+    rank = 0
+    for raw in (md or "").splitlines():
+        h = re.match(r"^#{2,6}\s+(.*)$", raw.strip())
+        if h:
+            rank = _SECTION_RANK.get(_plain(h.group(1)).strip().lower(), 3)
+            continue
+        if raw[:1] in (" ", "\t"):
+            continue  # nested item: details of the one above
+        m = _BULLET.match(raw.strip())
+        if not m:
+            continue
+        item = m.group(1).strip()
+        head = _BOLD_HEAD.match(item)
+        if head:
+            title = _plain(head.group(1))
+            rest = item[head.end():]
+        else:
+            title, rest = _plain(item), ""
+        title = _ISSUE_REF.sub("", title).strip().rstrip(":.").strip()
+        rest = _ISSUE_REF.sub("", _plain(rest)).lstrip(" :–-").strip()
+        # Asides in brackets are details: "Oven tile (also in the device assistant) for …" → "Oven tile for …".
+        rest = re.sub(r"\s*\([^()]*\)", "", rest).strip()
+        text = _first_sentence(rest)
+        # A long sentence: its first clause up to ":" or ";" if that says enough on its own.
+        clause = re.split(r"[:;]\s", text, maxsplit=1)[0].strip()
+        if len(text) > width and len(clause) >= 12:
+            text = clause
+        text = _cut(text.rstrip(".").strip(), width)
+        if text:
+            text = text[0].upper() + text[1:]
+        if not title:
+            title, text = text, ""
+        if not title:
+            continue
+        found.append((rank, len(found), {"title": _cut(title, width), "text": text}))
+    found.sort(key=lambda x: (x[0], x[1]))
+    return [f[2] for f in found[:limit]]
+
+
 def prompt_payload(overview: dict[str, Any]) -> dict[str, Any]:
     """casora/updates/list → what the dashboard's update prompt needs (pure, tested in
     dev/unit/update_prompt_test.py). Offers nothing while a newer version waits for a restart."""
@@ -257,7 +346,11 @@ def prompt_payload(overview: dict[str, Any]) -> dict[str, Any]:
         "release_url": rel.get("url") or overview.get("repo_url"),
         "prerelease": bool(rel.get("prerelease")),
         "pending_restart": pending,
+        # Older dashboard scripts read only "lines"; newer ones show intro + items (39-update-prompt.js).
         "lines": prompt_lines(rel.get("notes_md") or ""),
+        "intro": prompt_intro(rel.get("notes_md") or ""),
+        "items": prompt_items(rel.get("notes_md") or ""),
+        "notes_lang": rel.get("notes_lang") or overview.get("notes_lang"),
     }
 
 
