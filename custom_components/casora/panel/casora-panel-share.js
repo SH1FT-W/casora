@@ -19,6 +19,7 @@
     too_large: "The file is too large. Export it without photos and try again.",
     expired: "The file is no longer loaded. Choose it again.",
     not_empty: "The new dashboard isn't empty – nothing was written.",
+    no_templates: "Casora's templates could not be read – nothing was written. Restart Home Assistant and try again.",
   };
   const reasonOf = (code, fallback) => t(REASON[code] || fallback || "The file could not be read.");
 
@@ -105,6 +106,10 @@
       note.className = "csh-note";
       note.textContent = t("The file contains no passwords or access tokens. It does contain what the dashboard shows – room names, entity IDs and, if chosen, your photos. Only share it with people you trust.");
       s.body.appendChild(note);
+      const note2 = document.createElement("p");
+      note2.className = "csh-note";
+      note2.textContent = t("Own templates and code in [[[ ]]] stay out of the file – an import uses that Casora's templates.");
+      s.body.appendChild(note2);
       this._flowCancel(s.acts);
       const btn = this._flowButton(s.acts, "Export", async () => {
         btn.disabled = true;
@@ -227,6 +232,17 @@
       if (pv.photos) this._flowRow(inside, { title: t("{n} photos").replace("{n}", pv.photos), raw: true, icon: "photo" });
       // Own room symbols always travel with the file (a name taken here gets „-2“).
       if (pv.icons) this._flowRow(inside, { title: t("{n} own symbols").replace("{n}", pv.icons), raw: true, icon: "home" });
+      // Never taken from a file (share.py clean_dashboard): own templates and code in [[[ ]]]. Said every time.
+      const lo = pv.left_out || {};
+      const lr = this._flowRow(inside, { title: t("No code from the file"), raw: true,
+        icon: "info", sub: lo.templates || lo.code
+          ? t("Own templates and code from the file are not taken over: {t} own templates, {c} entries with code. The tiles use this Casora's templates.")
+            .replace("{t}", lo.templates || 0).replace("{c}", lo.code || 0)
+          : t("Own templates and code from the file are not taken over. The tiles use this Casora's templates.") });
+      lr.row.classList.add("wrap2");
+      lr.row.dataset.k = "share-left-out";
+      const lsp = lr.row.querySelector(".rtext span");
+      if (lsp) lsp.setAttribute("data-no-i18n", "");
 
       // Where it goes.
       const where = this._flowGroup(s.body, { header: "Where To" });

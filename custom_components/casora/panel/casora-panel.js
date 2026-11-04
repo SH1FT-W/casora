@@ -4191,7 +4191,8 @@ function retargetRoutes(root, urlPath, rooms, extras) {
           else if ((r.variables || {}).name_literal || (isHomeRoom(r, rooms) && isDefaultHomeName(r.name))) route.literal = true;
           const m = (r.variables || {}).motion_entity;
           // The global helper is a mute switch: absent means nothing to mute.
-          if (m) route.badge = { show: "[[[ const b = states['input_boolean.casora_motion_badges'];"
+          // Only a plain entity ID goes into the expression (an imported file or a hand edit could hold anything).
+          if (typeof m === "string" && /^[a-z_]+\.[a-z0-9_]+$/.test(m)) route.badge = { show: "[[[ const b = states['input_boolean.casora_motion_badges'];"
             + " if (b && b.state !== 'on') return false;"
             + " const s = states['" + m + "'];"
             + " return !!s && s.state === 'on'; ]]]" };
