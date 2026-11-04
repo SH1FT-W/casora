@@ -7,15 +7,32 @@
 // an, gespeichert blendet sie die Kachel am Desktop und am Handy aus/ein; die letzte Zeile entfernt
 // nimmt sie wieder ab. Der Saugroboter zeigt seine Bedingung als bearbeitbare Zeilen.
 // Schreibt Desktop- und Handy-Dashboard (nur Test-HA) und stellt am Ende den vorherigen Stand her.
-import { open, usePage, studio, dashboard, casoraDashboard, check, need, finish, atFinish, shot } from './lib.mjs';
+import { open, usePage, studio, dashboard, casoraDashboards, check, need, finish, atFinish, shot } from './lib.mjs';
 import { ws } from '../ws.mjs';
 
-// Ein Dashboard mit Auto, E-Bike, Abfall und Saugroboter (das Prüf-Dashboard qa-arbeit hat kein Auto).
-const hasAll = (d) => ['casora_car', 'casora_ebike', 'casora_trash', 'casora_vacuum'].every((t) => JSON.stringify((d.config && d.config.views) || []).includes('"' + t + '"'));
-const dash = await casoraDashboard(hasAll);
+// A dashboard with car, e-bike, waste and vacuum tiles (the check dashboard qa-arbeit has no car).
+const TPLS = ['casora_car', 'casora_ebike', 'casora_trash', 'casora_vacuum'];
+const hasAll = (d) => TPLS.every((t) => JSON.stringify((d.config && d.config.views) || []).includes('"' + t + '"'));
+const { page, browser } = await open({ width: 1600, height: 1000, dark: false });
+usePage(page);
+// The first one whose four tiles the Studio shows in its rooms: r457/r523 build the popup gallery
+// (dev/qa/popup-galerie.mjs, one opener per popup) on the same HA, a Casora dashboard ranked before the imported
+// copies with all four templates in its views, but without Studio rooms (and locked for saving) – when they ran
+// before this test, the gate found no car tile there (04.11.2026, like r482 on 02.11.2026).
+const studioHasAll = (tpls) => page.evaluate((tpls) => { const p = window.__panel(), st = p && p._state;
+  const tiles = ((st && st.compact && st.compact.rooms) || []).flatMap((r) => r.tiles || [])
+    .map((t) => [].concat((t.type === 'conditional' ? t.card : t).template || [])[0]);
+  return tpls.every((t) => tiles.includes(t)); }, tpls);
+const all = await casoraDashboards();
+let dash = null;
+for (const d of all.filter((x) => !x.mobile && hasAll(x))) {
+  await studio(page, d.url);
+  if (await studioHasAll(TPLS)) { dash = { ...d, phone: all.find((x) => x.url === d.url + '-mobile') || null }; break; }
+  console.log('  info   ' + d.url + ': tiles not in Studio rooms, next dashboard');
+}
 if (!dash) {
-  // Das Gate-Prüfhaus (qa-arbeit) hat kein Auto/E-Bike/Abfall: dann überspringen statt rot (für 1.2.2 vorgemerkt:
-  // Kacheln im Test selbst anlegen). Auf Testhäusern mit diesen Kacheln läuft der Test vollständig.
+  // Without such a dashboard (the gate's qa-arbeit has no car/e-bike/waste) skip instead of red. On test houses
+  // with these tiles the test runs in full.
   await check('übersprungen: kein Dashboard mit Auto, E-Bike, Abfall und Saugroboter in diesem Testhaus', true);
   await finish();
 }
@@ -46,8 +63,6 @@ const phoneCars = async () => {
   return out;
 };
 
-const { page, browser } = await open({ width: 1600, height: 1000, dark: false });
-usePage(page);
 const H = (fn, a) => page.evaluate(fn, a);
 const saveStudio = async (pg0) => {
   await pg0.evaluate(() => { const p = window.__panel(); p._markDirty(); });
