@@ -654,6 +654,42 @@ window.casoraLightBadgeCall = function (entity, states, hass, vars) {
   var on = ids.some(function (x) { return S[x].state === 'on'; });
   return { service: on ? 'light.turn_off' : 'light.turn_on', data: { entity_id: ids } };
 };
+/* How many lamp chips the collective badge's sub-row shows – as the chips of casora_room's badges_lights (and the phone
+   room page's room_sub_lights, derived from it): with light_rooms_auto the rooms' groups or lamps of the house, a lone
+   group (no second slot) its members, else the picked lamps; at most 10. vars are the badge's (entity_1 …). */
+window.casoraLightBadgeRowCount = function (states, hass, vars) {
+  var V = vars || {};
+  var S = (hass && hass.states) || states || {};
+  var n;
+  var subs = V.light_rooms_auto === true && window._casoraHouseLights ? window._casoraHouseLights(hass).subs : null;
+  if (subs) n = subs.filter(Boolean).length;
+  else {
+    var g = V.entity_1 || V.light_group_entity;
+    var m = g && S[g] && S[g].attributes ? S[g].attributes.entity_id : null;
+    if (Array.isArray(m) && m.length > 0 && !V.entity_2) n = m.filter(Boolean).length;
+    else { n = 0; for (var i = 1; i <= 10; i++) if (V['entity_' + i]) n++; }
+  }
+  return Math.min(n, 10);
+};
+/* Issue 119, second round (owner, „Variante 1“, 04.11.2026): what a tap on the collective light badge switches. Only in
+   „Tap on badges: Switch“ and only without a sub-row of lamps (one lamp): with two or more the tap opens that row as by
+   default (otherwise the single lamps were out of reach; all of them switch in the popup, „Alle an/aus“). Returns
+   casoraLightBadgeCall's { service, data }, or null for the badge's default tap. */
+window.casoraLightBadgeTapCall = function (entity, states, hass, vars) {
+  if (!(window.casoraBadgeTapToggle && window.casoraBadgeTapToggle())) return null;
+  if (window.casoraLightBadgeRowCount(states, hass, vars) > 1) return null;
+  return window.casoraLightBadgeCall(entity, states, hass, vars);
+};
+/* The same question asked from the phone's badge rows (Home: casora_mobile_filter_badges, room page: rooms_row of
+   casora_mobile_sensor_chips). There the badge's tap_action is a template of the row's card, so it sees the row card's
+   variables (light_entity_1 …, light_group_entity), not the badge's own (entity_1 …); src are those, auto the badge's
+   light_rooms_auto. True: the tap switches (no sub-row of lamps), false: the badge's default tap. */
+window.casoraLightBadgeTapFrom = function (states, hass, src, auto) {
+  var s = src || {};
+  var V = { light_group_entity: s.light_group_entity || null, light_rooms_auto: auto === true };
+  for (var i = 1; i <= 10; i++) V['entity_' + i] = s['light_entity_' + i] || null;
+  return !!window.casoraLightBadgeTapCall(null, states, hass, V);
+};
 /* The words for a tally (German, the dashboard translates): „Aus“/„An“ for one lamp, „Alle aus“/„Alle an“, else
    „2 an“ – a count in small letters (owner, 01.11.2026; wortliste §2). */
 window.casoraLightTallyText = function (t) {

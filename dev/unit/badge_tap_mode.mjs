@@ -66,17 +66,63 @@ assert.equal(run(grp.tap_action.service, g), 'light.turn_off', 'switch: a tap sw
 assert.deepEqual(run(grp.tap_action.service_data, g), { entity_id: ['light.shelf'] });
 assert.ok(/casoraPopupAction\(\) === 'fire-dom-event' \? 'fire-dom-event' : 'none'/.test(grp.hold_action.action), 'holding still opens the popup');
 
+// Issue 119, second round (owner, „Variante 1“): with lamps of its own in the sub-row the collective badge opens that
+// row on a tap in the switch mode too (else the single lamps were out of reach); switching them all stays in the
+// popup („Alle an/aus“). Only a badge without a row of lamps (one lamp) switches on a tap.
+const withRow = (variables, st = g.states) => ({ ...g, states: st, hass: { states: st }, variables });
+for (const [name, vars] of [['two picked lamps', { entity_1: 'light.shelf', entity_2: 'light.porch' }],
+  ['its HA group alone', { light_group_entity: 'light.living' }], ['a group as its only slot', { entity_1: 'light.living' }]]) {
+  for (const m of [false, true]) {
+    mode = m;
+    assert.equal(run(grp.tap_action.service, withRow(vars)), 'input_select.select_option', name + (m ? ', switch' : ', default') + ': a tap opens the sub-row');
+    assert.deepEqual(run(grp.tap_action.service_data, withRow(vars)), { entity_id: 'input_select.casora_expanded_row', option: 'lights' }, name);
+  }
+}
+mode = true;
+assert.equal(run(grp.tap_action.service, withRow({ entity_1: 'light.porch' })), 'light.turn_on', 'one lamp, no row: a tap switches it');
+{
+  // Home without an HA group (light_rooms_auto): the sub-row lists the rooms' groups or lamps (_casoraHouseLights().subs).
+  const keep = window._casoraHouseLights;
+  window._casoraHouseLights = () => ({ rooms: [], ids: ['light.desk_lamp', 'light.porch'], subs: ['light.desk_lamp', 'light.porch'] });
+  assert.equal(run(grp.tap_action.service, withRow({ light_rooms_auto: true })), 'input_select.select_option', 'house rooms: a tap opens the row');
+  window._casoraHouseLights = () => ({ rooms: [], ids: ['light.porch'], subs: ['light.porch'] });
+  assert.equal(run(grp.tap_action.service, withRow({ light_rooms_auto: true })), 'light.turn_on', 'house with one lamp: a tap switches');
+  window._casoraHouseLights = keep;
+}
+
 // ── phone: Home light badge and the room page's light badge ────────────────────
 const phoneHome = T.casora_mobile_filter_badges.custom_fields.badges.card.cards[2];
 assert.equal(phoneHome.template, 'casora_badge_light_group');
 const phoneRoom = T.casora_mobile_sensor_chips.custom_fields.rooms_row.card.cards
   .find((x) => x.template === 'casora_badge_light_group');
-for (const [name, card] of [['phone Home', phoneHome], ['phone room', phoneRoom]]) {
-  mode = false; assert.equal(run(card.tap_action.action, g), 'fire-dom-event', name + ': default opens the popup');
-  mode = true; assert.equal(run(card.tap_action.action, g), 'call-service', name + ': switch mode switches');
+// Their tap_action is a template of the row card (button-card evaluates a nested card's config with the outer card's
+// variables): Home sees casora_mobile_filter_badges' light_entity_1 …, the room page the desktop room's in casora_rv.
+const homeCtx = (lights) => ({ ...g, entity: { entity_id: 'input_select.casora_mobile_filter' }, variables: { ...lights, casora_hv: null } });
+const roomCtx = (lights) => ({ ...g, entity: null, variables: { casora_rv: lights } });
+for (const [name, card, ctx] of [['phone Home', phoneHome, homeCtx], ['phone room', phoneRoom, roomCtx]]) {
+  mode = false;
+  assert.equal(run(card.tap_action.action, ctx({ light_entity_1: 'light.shelf' })), 'fire-dom-event', name + ': default opens the popup or row');
+  assert.equal(run(card.tap_action.action, ctx({ light_entity_1: 'light.shelf', light_entity_2: 'light.porch' })), 'fire-dom-event', name + ': default');
+  mode = true;
+  assert.equal(run(card.tap_action.action, ctx({ light_entity_1: 'light.shelf' })), 'call-service', name + ': switch mode, one lamp: a tap switches');
+  // With lamps of its own (two picked, or a group) the switch mode keeps the default tap (Home: the light popup with
+  // the lamps, room page: the sub-row of lamps, casora_phone_row), never a service call.
+  for (const lights of [{ light_entity_1: 'light.shelf', light_entity_2: 'light.porch' }, { light_group_entity: 'light.living' }, { light_entity_1: 'light.living' }]) {
+    assert.equal(run(card.tap_action.action, ctx(lights)), 'fire-dom-event', name + ': lamps of its own open as by default ' + JSON.stringify(lights));
+  }
+}
+// The badge's own service and data (evaluated with its own variables) agree with the row card's question.
+mode = true;
+assert.equal(run(grp.tap_action.service, withRow({ entity_1: 'light.shelf' })), 'light.turn_off');
+{
+  // The Home badge without an HA group (desktop overview room with light_rooms_auto, casora_hv): the house's rooms.
+  const keep = window._casoraHouseLights;
+  window._casoraHouseLights = () => ({ rooms: [], ids: ['light.desk_lamp', 'light.porch'], subs: ['light.desk_lamp', 'light.porch'] });
+  assert.equal(run(phoneHome.tap_action.action, { ...homeCtx({}), variables: { casora_hv: { light_rooms_auto: true } } }), 'fire-dom-event', 'phone Home, house rooms: popup');
+  window._casoraHouseLights = keep;
 }
 assert.equal(phoneRoom.tap_action.casora_phone_row, 'lights', 'the phone room badge keeps its row event');
-assert.ok(read('tools/phone_room_badges.py').includes("casoraBadgeTapToggle() ? 'call-service' : 'fire-dom-event'"), 'derivation writes it');
+assert.ok(read('tools/phone_room_badges.py').includes('casoraLightBadgeTapFrom(states, hass, _rv,'), 'derivation writes it');
 
 // ── setting: declared on the room card and the phone shell, read by casora-core ──
 assert.ok('badge_tap' in T.casora_room.variables, 'casora_room declares badge_tap (Studio writes every room)');
