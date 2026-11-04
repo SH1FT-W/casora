@@ -78,7 +78,7 @@ check("texts short, cut on a word with …", all(len(i["text"]) <= 90 for i in i
 check("texts plain: no markdown", all("**" not in i["text"] and "`" not in i["text"] for i in it), it)
 
 it = prompt_items(DE13)
-check("DE 26.11.13: Neu → Geändert → Behoben", [i["title"] for i in it] == ["Anzeige-Diagnose", "Kurze Tablet-Bildschirme", "Universal-Kachel"], it)
+check("DE 26.11.13: Neu → Geändert → Behoben", [i["title"] for i in it] == ["Anzeige-Diagnose", "Kurze Tablet-Bildschirme", "Update-Hinweis", "Universal-Kachel"], it)
 check("issue refs dropped from titles", all("#" not in i["title"] for i in it), it)
 check("abbreviation 'z. B.' does not end the sentence", "(" not in it[1]["text"] and it[1]["text"].startswith("Im Querformat bis etwa 880 px Höhe"), it[1])
 
@@ -86,7 +86,7 @@ it = prompt_items(EN12)
 check("EN 26.11.12: English titles", [i["title"] for i in it] == ["Oven", "Washer and dryer", "Coffee machine care", "Cookidoo"], it)
 check("EN 26.11.12: text capitalised", it[0]["text"].startswith("A tile type \"Oven\" in the Studio"), it[0])
 it = prompt_items(EN13)
-check("EN 26.11.13: three items in order", [i["title"] for i in it] == ["Display diagnosis", "Short tablet screens", "Universal tile"], it)
+check("EN 26.11.13: four items in order", [i["title"] for i in it] == ["Display diagnosis", "Short tablet screens", "Update prompt", "Universal tile"], it)
 check("EN 26.11.13: first sentence only", it[0]["text"] == "Add ?casora_diag to a dashboard address or tap the page title five times quickly", it[0])
 
 ORDER = "### Fixed\n- **Fix one:** works again. More detail here.\n\n### Changed\n- **Change one:** c.\n\n### New\n- **New one:** d.\n"
