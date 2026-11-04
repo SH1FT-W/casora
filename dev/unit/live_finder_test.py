@@ -12,6 +12,9 @@
 4) Robot vacuum and 3D printer: VACUUM_FIELDS/PRINTER_FIELDS have the keys of the card's tables
    (casoraDevice.vacuumFields/printerFields), PRINTER_KEYS are casoraDevice.printerKeys, and is_printer answers
    like casoraDevice.isPrinter for the devices of 1).
+5) Fridge tables as casoraFridgeFind.sources.
+6) Ovens: OVEN_FIELDS, the programme pattern and the core keys as casoraOvenFind (oven tile), and is_oven/oven_source
+   answer like casoraOvenFind.is/all for ovens (core, Local, cavity only) and non-ovens (dishwashers, coffee, fridge).
 """
 
 from __future__ import annotations
@@ -357,6 +360,54 @@ lhf = [E("sensor.kf_top", "top_zone", "liebherr"), E("number.kf_set", "setpoint_
 check("fridge source: Liebherr", lf.fridge_source(lhf) == "liebherr")
 check("fridge source: Home Connect fridge", lf.fridge_source([E("number.kg_set", "refrigerator_setpoint_temperature", "home_connect")]) == "home_connect")
 check("fridge source: Home Connect oven is none", lf.fridge_source(oven) is None)
+
+# ── 6) Ovens like the oven tile (casoraOvenFind in 00-finder.js) ────────
+# Table, programme pattern and core keys as in the JS; every device of this test (laundry, dishwashers, the ovens
+# below) is an oven in Python exactly when it is one in the JS.
+ws_oven = [E("sensor.wo_state", "sensor_operation_state"), E("select.wo_prog", "select_program"),
+           E("sensor.wo_temp", "sensor_oven_current_temperature"), E("number.wo_set", "number_oven_setpoint_temperature")]
+st("select.wo_prog", "cooking_oven_program_heatingmode_hotair", options=["cooking_oven_program_heatingmode_hotair"])
+check("oven: Home Connect core by its programme", lf.oven_source(oven, S.get) == "home_connect")
+check("oven: Home Connect Local by its keys", lf.oven_source(ws_oven, S.get) == "homeconnect_ws")
+cav = [E("sensor.cv_state", "operation_state", "home_connect"), E("sensor.cv_temp", "oven_current_cavity_temperature", "home_connect")]
+check("oven: Home Connect core by the cavity alone", lf.oven_source(cav, S.get) == "home_connect")
+check("oven: a Home Connect dishwasher is none", not lf.is_oven(hc, S.get) and not lf.is_oven(ws, S.get))
+cof = [E("sensor.cm_state", "operation_state", "home_connect"), E("select.cm_prog", "selected_program", "home_connect")]
+st("select.cm_prog", "consumer_products_coffee_maker_program_beverage_espresso",
+   options=["consumer_products_coffee_maker_program_beverage_espresso"])
+check("oven: a Home Connect coffee machine is none", not lf.is_oven(cof, S.get))
+fr = [E("number.fr_set", "setpoint_temperature", "home_connect")]
+check("oven: a setpoint alone (fridge) is none", not lf.is_oven(fr, S.get))
+OVEN_CASES = []
+for dev, ents in (("o1", oven), ("o2", ws_oven), ("o3", cav), ("o4", hc), ("o5", ws), ("o6", cof), ("o7", fr), ("o8", wd), ("o9", mdw), ("o10", moven)):
+    OVEN_CASES.append({"dev": dev, "py": lf.oven_source(ents, S.get),
+                       "entities": {e.entity_id: {"entity_id": e.entity_id, "device_id": dev, "translation_key": e.key,
+                                                  "platform": e.platform} for e in ents},
+                       "states": {e.entity_id: {"state": S[e.entity_id].state, "attributes": dict(S[e.entity_id].attributes)}
+                                  for e in ents if e.entity_id in S}})
+JS_OVEN = r"""
+const fs = require('fs');
+const src = fs.readFileSync(process.argv[1], 'utf8');
+const win = {};
+try { new Function('window', 'document', src)(win, { createElement: () => ({ style: {} }) }); } catch (e) { /* other modules */ }
+const OF = win.casoraOvenFind;
+const cases = JSON.parse(fs.readFileSync(0, 'utf8'));
+console.log(JSON.stringify({ fields: OF.fields, re: OF.progRe.source, core: OF.coreKeys, found: cases.map((c) => {
+  const hass = { entities: c.entities, states: c.states, devices: { [c.dev]: { id: c.dev, name: c.dev } } };
+  const all = OF.all(hass);
+  return { is: OF.is(hass, c.dev), source: all.length ? all[0].source : null };
+}) }));
+"""
+try:
+    out = json.loads(subprocess.run([node, "-e", JS_OVEN, os.path.join(ROOT, "custom_components/casora/scripts/local/00-finder.js")],
+                                    input=json.dumps(OVEN_CASES), capture_output=True, text=True, check=True).stdout)
+    check("oven fields as casoraOvenFind.fields", out["fields"] == lf.OVEN_FIELDS, out["fields"])
+    check("oven programme pattern as casoraOvenFind.progRe", out["re"] == lf.OVEN_PROGRAM_RE.pattern, out["re"])
+    check("oven core keys as casoraOvenFind.coreKeys", out["core"] == list(lf.OVEN_CORE_KEYS), out["core"])
+    for c, js in zip(OVEN_CASES, out["found"]):
+        check(f"{c['dev']}: oven in JS as in Python ({c['py']})", js["is"] == (c["py"] is not None) and js["source"] == c["py"], js)
+except Exception as err:  # noqa: BLE001
+    check("JS oven finder readable", False, err)
 
 print("\nALL OK" if not fails else f"\n{len(fails)} FAILED")
 sys.exit(1 if fails else 0)

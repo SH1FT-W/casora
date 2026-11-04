@@ -2771,7 +2771,9 @@
     "Tiefkühlgerichte": "Dania mrożone",
     "Dörren": "Suszenie",
     "Auftauen": "Rozmrażanie",
-    "Gären": "Wyrastanie ciasta"
+    "Gären": "Wyrastanie ciasta",
+    "Backofen": "Piekarnik",
+    "Ofen": "Piekarnik"
   },
   "patterns": [
     [

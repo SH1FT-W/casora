@@ -2771,7 +2771,9 @@
     "Tiefkühlgerichte": "Surgelati",
     "Dörren": "Essiccazione",
     "Auftauen": "Scongelamento",
-    "Gären": "Lievitazione"
+    "Gären": "Lievitazione",
+    "Backofen": "Forno",
+    "Ofen": "Forno"
   },
   "patterns": [
     [

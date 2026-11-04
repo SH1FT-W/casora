@@ -2939,7 +2939,9 @@
     "A group sensor of doors and windows, with its own name.": "Czujnik grupy drzwi i okien z własną nazwą.",
     "The phones that get “Air now” and “Close the windows”.": "Telefony, które dostają „Wywietrz teraz” i „Zamknij okna”.",
     "Where the recipe of the week puts its ingredients.": "Gdzie przepis tygodnia zapisuje składniki.",
-    "New version on the phone": "Nowa wersja na telefon"
+    "New version on the phone": "Nowa wersja na telefon",
+    "Oven": "Piekarnik",
+    "Operation state or cavity temperature of the oven": "Stan pracy lub temperatura komory piekarnika"
   },
   "patterns": [
     [

@@ -556,3 +556,58 @@ def fridge_source(ents: list[Ent]) -> str | None:
             elif any(e.key in keys for e in ents) or (src.get("climate") and any(e.domain == "climate" for e in ents)):
                 return src["id"]
     return None
+
+
+# Ovens: the table of casoraOvenFind.fields (00-finder.js), the same data on both sides (dev/unit/live_finder_test.py
+# compares them). field → [translation_keys, domain or None]. Home Connect in HA core and Home Connect Local
+# (homeconnect_ws). Not a live activity: kept here so a future oven activity or the backend reads the same keys as the
+# oven tile and popup. An oven reports the same operation_state as a dishwasher or a coffee machine; it is told apart by
+# its cavity temperature or an oven programme among the options of its programme select/sensor.
+OVEN_FIELDS: dict[str, list[Any]] = {
+    "state": [["operation_state", "sensor_operation_state"], "sensor"],
+    "sel": [["selected_program", "select_program"], "select"],
+    "prog": [["active_program", "sensor_active_program"], None],
+    "temp": [["oven_current_cavity_temperature", "sensor_oven_current_temperature",
+              "sensor_oven_current_temperature_group"], "sensor"],
+    "target": [["setpoint_temperature", "number_oven_setpoint_temperature"], "number"],
+    "progress": [["program_progress", "sensor_program_progress"], "sensor"],
+    "remaining": [["sensor_remaining_program_time", "program_finish_time", "sensor_finish_in"], "sensor"],
+    "startIn": [["sensor_start_in"], "sensor"],
+    "powerSw": [["power", "switch_power_state"], "switch"],
+    "powerSel": [["select_power_state"], "select"],
+    "lock": [["child_lock", "switch_child_lock"], "switch"],
+    "fastPre": [["fast_pre_heat", "switch_oven_fast_pre_heat"], "switch"],
+    "meat": [["oven_current_meatprobe_temperature", "sensor_oven_current_meatprobe_temperature"], "sensor"],
+    "remoteStart": [["remote_start", "binary_remote_start_allowed"], "binary_sensor"],
+    "doorSensor": [["door", "sensor_door_state"], "sensor"],
+    "doorBin": [["binary_sensor_door_state"], "binary_sensor"],
+    "lightIllum": [["binary_sensor_interior_illumination"], "binary_sensor"],
+    "conn": [["connection"], "binary_sensor"],
+    "start": [["button_start_program"], "button"],
+    "pause": [["pause_program", "button_pause_program"], "button"],
+    "resume": [["resume_program", "button_resume_program"], "button"],
+    "stop": [["stop_program", "button_abort_program"], "button"],
+}
+OVEN_PROGRAM_RE = re.compile(r"cooking[._]?oven[._]?program", re.I)
+# Keys only Home Connect in HA core writes (Home Connect Local prefixes its keys with the domain).
+OVEN_CORE_KEYS = ("operation_state", "oven_current_cavity_temperature", "selected_program")
+
+
+def is_oven(ents: list[Ent], states: Callable[[str], Any]) -> bool:
+    """The device is an oven (as casoraOvenFind.is): a cavity temperature or an oven programme among the options."""
+    for e in ents:
+        if e.key in OVEN_FIELDS["temp"][0]:
+            return True
+        if e.key in OVEN_FIELDS["sel"][0] or e.key in OVEN_FIELDS["prog"][0]:
+            st = states(e.entity_id)
+            opts = (getattr(st, "attributes", None) or {}).get("options") or []
+            if any(OVEN_PROGRAM_RE.search(str(o)) for o in opts):
+                return True
+    return False
+
+
+def oven_source(ents: list[Ent], states: Callable[[str], Any]) -> str | None:
+    """'home_connect' (HA core), 'homeconnect_ws' (Home Connect Local) or None when the device is no oven."""
+    if not is_oven(ents, states):
+        return None
+    return "home_connect" if any(e.key in OVEN_CORE_KEYS for e in ents) else "homeconnect_ws"

@@ -2771,7 +2771,9 @@
     "Tiefkühlgerichte": "Diepvriesgerechten",
     "Dörren": "Drogen",
     "Auftauen": "Ontdooien",
-    "Gären": "Rijzen"
+    "Gären": "Rijzen",
+    "Backofen": "Oven",
+    "Ofen": "Oven"
   },
   "patterns": [
     [

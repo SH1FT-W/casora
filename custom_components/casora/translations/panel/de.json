@@ -2939,7 +2939,9 @@
     "Calendar, name, color and whether it shows on the tile.": "Kalender, Name, Farbe und ob er auf der Kachel steht.",
     "Casora never offers this scene.": "Diese Szene bietet Casora nirgends an.",
     "A reminder when an appliance needs care, e.g. descaling.": "Ein Hinweis, wenn ein Gerät Pflege braucht, z. B. Entkalken.",
-    "New version on the phone": "Neue Version aufs Handy"
+    "New version on the phone": "Neue Version aufs Handy",
+    "Oven": "Backofen",
+    "Operation state or cavity temperature of the oven": "Betriebszustand oder Garraumtemperatur des Backofens"
   },
   "patterns": [
     [

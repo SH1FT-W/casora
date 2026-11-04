@@ -93,6 +93,9 @@
     // Dishwashers: the shared recognition (Home Connect, Miele …) – an oven or coffee machine with the same
     // operation_state key is no dishwasher, whatever its name (issue #48 follow-up: a Spanish "Horno").
     const dishes = new Map(LF && LF.dishwashers ? LF.dishwashers(hass).map((c) => [c.device, c]) : []);
+    // Ovens: the shared finder (casoraOvenFind in 00-finder.js) – Home Connect core / Local, by the cavity or an oven programme.
+    const OF = window.casoraOvenFind;
+    const ovens = new Map(OF ? OF.all(hass).map((c) => [c.device, c]) : []);
     const FF = window.casoraFridgeFind;
     const fridges = new Map(FF ? FF.all(hass).map((c) => [c.device, c]) : []);
     // Coffee machines: the anchors of the coffee card (casora-panel-b-ux.js coffeeAnchors, same rules as 25-coffee.js) –
@@ -127,6 +130,8 @@
       }
       const dw = !type && dishes.get(id);
       if (dw && typeIds.has("casora_dishwasher")) { type = "casora_dishwasher"; entity = dw.state; reason = "key"; }
+      const ov = !type && ovens.get(id);
+      if (ov && typeIds.has("casora_oven")) { type = "casora_oven"; entity = ov.anchor; reason = "key"; }
       // Fridges and freezers: the shared finder (casoraFridgeFind in 00-finder.js) – Liebherr, Home Connect, a device named
       // like a fridge; its main entity (zone temperature, setpoint or door) is the tile's entity.
       const fr = !type && fridges.get(id);
@@ -232,6 +237,7 @@
   // Alltagswörter je Kacheltyp – damit „Spülmaschine“ den Geschirrspüler findet.
   const SYNONYMS = {
     casora_dishwasher: ["spuelmaschine", "geschirrspueler", "spueler", "dishwasher"],
+    casora_oven: ["backofen", "ofen", "herd", "oven"],
     casora_fridge: ["kuehlschrank", "kuehl", "gefrierschrank", "gefrier", "tiefkuehl", "fridge", "freezer", "refrigerator"],
     casora_washer: ["waschmaschine", "waesche", "washer", "washing"],
     casora_dryer: ["trockner", "waeschetrockner", "dryer"],
@@ -325,7 +331,7 @@
     if (t === "media") return "media";
     if (/^(lock|lock_group|casora_camera|camera|casora_alarm)$/.test(t)) return "security";
     if (t === "cover") return "blinds";
-    if (/^(vacuum|casora_lawn_mower|casora_washer|casora_dryer|casora_dishwasher|casora_fridge|casora_coffee|casora_3d_printer)$/.test(t)) return "household";
+    if (/^(vacuum|casora_lawn_mower|casora_washer|casora_dryer|casora_dishwasher|casora_oven|casora_fridge|casora_coffee|casora_3d_printer)$/.test(t)) return "household";
     return "other";
   }
   // Parts of a lamp: a device with several lights (a Govee strip's segments, a ceiling light's outer ring) offers each

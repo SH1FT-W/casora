@@ -2753,7 +2753,9 @@
     "Tiefkühlgerichte": "Frozen food",
     "Dörren": "Dehydrate",
     "Auftauen": "Defrost",
-    "Gären": "Proof"
+    "Gären": "Proof",
+    "Backofen": "Oven",
+    "Ofen": "Oven"
   },
   "patterns": [
     [

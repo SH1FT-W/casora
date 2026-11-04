@@ -2476,7 +2476,7 @@ window.casoraMenuGlass = {
   // zuerst), 2 = immer groß (Bild braucht Breite). active: die Kachel ist gerade hinterlegt (smart-row).
   if (typeof window.casoraAutoLarge !== 'function') {
     var AUTO_WHEN_ACTIVE = {
-      casora_appliance: 2, casora_waschmaschine: 2, casora_trockner: 2, casora_geschirrspueler: 2,
+      casora_appliance: 2, casora_waschmaschine: 2, casora_trockner: 2, casora_geschirrspueler: 2, casora_oven: 2,
       casora_3d_printer: 2, casora_vacuum: 2, casora_lawn_mower: 2, casora_coffee: 2, casora_pet: 1, casora_media: 1, casora_football: 1, casora_trash: 1,
       casora_weather_warning: 3, casora_alarm: 3, casora_pulse: 3,
     };
