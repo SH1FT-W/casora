@@ -469,6 +469,30 @@ class Frontend(unittest.TestCase):
         self.assertEqual({k: found.get(k) for k in want}, want)
 
 
+    def test_integration_page_config_entry_hash(self):
+        """HA's integration page opens a config entry from the hash: /config/integrations/integration/<domain>
+        #config_entry=<entry_id> (HA links there itself, e.g. after a config flow); its subentries (AI tasks) are listed
+        under that entry with their own settings.
+
+        Casora: Studio Settings › AI › AI models, "Change model" (casora-panel-settings.js aiTaskPath, entry from
+        ki.py _config_entry). Red: the frontend reads the entry another way, adapt aiTaskPath."""
+        try:
+            import hass_frontend
+        except ImportError:
+            self.skipTest("hass_frontend not installed")
+        root = os.path.join(os.path.dirname(hass_frontend.__file__), "frontend_latest")
+        link = read = False
+        for p in sorted(glob.glob(os.path.join(root, "*.js"))):
+            with open(p, encoding="utf-8", errors="ignore") as f:
+                src = f.read()
+            link = link or "/config/integrations/integration/${" in src and "#config_entry=${" in src
+            read = read or bool(re.search(r"_hashParams\.get\(\"config_entry\"\)", src))
+            if link and read:
+                break
+        self.assertTrue(link, "no link /config/integrations/integration/<domain>#config_entry=<id> in the frontend")
+        self.assertTrue(read, "the integration page no longer reads config_entry from the hash")
+
+
 class UpdateReleaseNotes(unittest.TestCase):
     def test_release_notes_from_python(self):
         """Full release notes of an update entity: the update component in hass.data[DATA_COMPONENT] finds the

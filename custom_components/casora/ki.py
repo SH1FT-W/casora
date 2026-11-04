@@ -400,7 +400,7 @@ def _entities_in_area(hass: HomeAssistant, area_id: str, domain: str, classes: s
 # strong model. Casora learns the model through public HA APIs only: the device registry
 # entry of the AI task (the integrations put the model there: Anthropic, OpenAI, Google,
 # Ollama) and, as a hint, the device name (OpenRouter names its AI tasks after the model).
-# Where neither tells, the user types the model name in the Studio (OPT_AI_MODELS).
+# Where neither tells, the user picks the model in the Studio (OPT_AI_MODELS, list MODEL_CHOICES or free text).
 # Casora never reads another integration's config entry data, runtime_data or SDK client.
 # Minimum: Claude Sonnet 4.5 / any Opus or Fable, GPT-5, Gemini 2.5 Pro. Newer versions count too.
 
@@ -419,7 +419,7 @@ def model_rank(domain: str, model: str | None) -> tuple[int, str]:
     m = (model or "").lower()
     # OpenRouter and similar gateways name the model with its vendor in front ("anthropic/claude-sonnet-4.5").
     base_m = m.rsplit("/", 1)[-1]
-    if domain == "casora_mock":
+    if domain == "casora_mock" and not m:  # the test AI; a model picked for it in the Studio counts as that model
         return 1, "Casora Test-KI"
     if "claude" in m or domain == "anthropic":
         fam = next((f for f in ("opus", "fable", "sonnet", "haiku") if f in m), "")
@@ -447,6 +447,24 @@ def model_rank(domain: str, model: str | None) -> tuple[int, str]:
             return 100 + int(v * 10), name
         return 0, name
     return 0, model or domain
+
+
+# Models the Studio offers in its menu (Settings › AI › AI models), current generation first. Only the name
+# matters: strength and label come from model_rank like for every other model, so the menu and the rows agree.
+MODEL_CHOICES = (
+    "claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5",
+    "gpt-5", "gpt-5-mini",
+    "gemini-3-pro", "gemini-2.5-flash",
+)
+
+
+def model_choices() -> list[dict]:
+    """The Studio's menu: [{model, label, ok}] in MODEL_CHOICES order."""
+    out = []
+    for model in MODEL_CHOICES:
+        rank, label = model_rank("", model)
+        out.append({"model": model, "label": label, "ok": rank > 0})
+    return out
 
 
 def model_names(options: Any) -> dict[str, str]:
@@ -501,9 +519,27 @@ def ai_models(hass: HomeAssistant) -> list[dict]:
         st = hass.states.get(eid)
         out.append({"entity_id": eid, "name": (st.attributes.get("friendly_name") if st else None) or eid,
                     "domain": domain, "model": model, "source": source, "typed": typed.get(eid) or "",
-                    "label": label, "rank": rank, "ok": rank > 0})
+                    "label": label, "rank": rank, "ok": rank > 0, **_config_entry(hass, eid)})
     out.sort(key=lambda x: -_preference(x["model"], x["rank"]))
     return out
+
+
+def _config_entry(hass: HomeAssistant, entity_id: str) -> dict:
+    """Where the AI task is set up in HA, for the Studio's link "Change model".
+
+    Entity registry (config_entry_id, config_subentry_id) and the entry's domain via
+    hass.config_entries.async_get_entry, public APIs only. AI tasks of Anthropic, OpenAI, Google, Ollama
+    and OpenRouter are subentries of the integration's entry; HA's integration page lists them there.
+    """
+    ent = er.async_get(hass).async_get(entity_id)
+    entry_id = getattr(ent, "config_entry_id", None)
+    try:
+        entry = hass.config_entries.async_get_entry(entry_id) if entry_id else None
+    except AttributeError:  # test doubles without config entries
+        entry = None
+    return {"entry_id": entry.entry_id if entry else None,
+            "subentry_id": getattr(ent, "config_subentry_id", None) if entry else None,
+            "entry_domain": entry.domain if entry else None}
 
 
 def _preference(model: str | None, rank: int) -> int:

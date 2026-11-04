@@ -599,39 +599,80 @@
       if (cur.length) cs.O[key] = cur; else delete cs.O[key];
     };
     // ── AI models (ki.py ai_models) ─────────────────────────────────────────
-    // Every AI task with its model. Casora reads the model from the AI task's device in HA;
-    // where that names none, the user types it (option ai_task_models: {entity_id: model}).
-    // Only for judging strength – the AI task keeps answering with its own model.
+    // Every AI task with its model. The AI task always answers with the model chosen in its integration in HA;
+    // Casora only needs to know which one it is, to judge whether it is strong enough.
+    // Recognised (the AI task's device or title names it): no field, the row opens that AI task's entry on HA's
+    // integration page, where HA offers its own model menu. Otherwise a menu of common models (ki.py
+    // MODEL_CHOICES, labels from model_rank) plus "Other…" for free text; stored as ai_task_models {entity_id: model}.
+    const AI_OTHER = "\u0001other";
+    const aiTaskPath = (m) => {
+      const domain = m.entry_domain || m.domain;
+      if (!domain) return "/config/integrations/dashboard";
+      return "/config/integrations/integration/" + encodeURIComponent(domain)
+        + (m.entry_id ? "#config_entry=" + encodeURIComponent(m.entry_id) : "");
+    };
     const aiModelGroup = (self, cs, host) => {
       const g = self._flowGroup(host, { header: t("AI models"),
-        footer: t("Demanding jobs (setup with AI, moving changes, tile types) need a strong model. Casora reads the model from the AI task in Home Assistant. If it shows none, type the model name, for example anthropic/claude-sonnet-4.5.") });
+        footer: t("Which model an AI task uses is chosen in Home Assistant, in the AI task's integration. Casora reads it by itself and only needs it to judge whether the model is strong enough. If Casora cannot read it, pick the model here.") });
       const wait = self._flowRow(g, { title: t("Loading…") });
       self._hass.callWS({ type: "casora/ki/models" }).then((r) => {
         wait.row.remove();
         const all = (r && r.all) || [];
+        const choices = (r && r.choices) || [];
         if (!all.length) { self._flowRow(g, { title: t("No AI task set up in Home Assistant.") }); return; }
         const had = Object.prototype.hasOwnProperty.call(JSON.parse(cs.O0 || "{}"), "ai_task_models");
+        const strength = (ok) => (ok ? t("strong enough") : t("too weak for demanding jobs"));
         all.forEach((m) => {
-          const typed = (cs.O.ai_task_models || {})[m.entity_id] || "";
-          const known = m.model && m.source !== "typed";
-          const sub = (m.model ? m.label : t("Model unknown")) + " · " + (m.ok ? t("strong enough") : t("too weak for demanding jobs"));
+          const sub = (m.model ? m.label : t("Model unknown")) + " · " + strength(m.ok);
+          if (m.model && (m.source === "device" || m.source === "title")) {
+            const row = self._flowRow(g, { title: m.name, raw: true, sub, detail: t("Change model"), chevron: true,
+              onTap: () => self._csHaGo(aiTaskPath(m)) }).row;
+            row.classList.add("cs-aimodel");
+            row.dataset.entity = m.entity_id;
+            row.querySelector(".rtext > span").setAttribute("data-no-i18n", "");
+            return;
+          }
           const row = ctlRow(self, g, m.name, sub, []);
+          row.classList.add("cs-aimodel");
+          row.dataset.entity = m.entity_id;
           row.querySelectorAll(".rtext > b, .rtext > span").forEach((x) => x.setAttribute("data-no-i18n", ""));
-          const inp = el("input", "fin");
-          inp.type = "text";
-          inp.value = typed;
-          inp.placeholder = known ? m.model : t("Model name");
-          inp.setAttribute("aria-label", t("Model name"));
-          inp.setAttribute("data-no-i18n", "");
-          inp.oninput = () => {
+          const subEl = row.querySelector(".rtext > span");
+          const typed = (cs.O.ai_task_models || {})[m.entity_id] || "";
+          const hit = choices.find((c) => c.model.toLowerCase() === typed.trim().toLowerCase());
+          const store = (v) => {
             const map = Object.assign({}, cs.O.ai_task_models || {});
-            const v = inp.value.trim();
             if (v) map[m.entity_id] = v; else delete map[m.entity_id];
             // Emptied: send {} when one was stored (options.py then removes it), else leave the key out.
             if (Object.keys(map).length || had) cs.O.ai_task_models = map; else delete cs.O.ai_task_models;
             self._csBar();
           };
-          row.querySelector(".casora-pctl").appendChild(inp);
+          const inp = el("input", "fin");
+          inp.type = "text";
+          inp.value = hit ? "" : typed;
+          inp.placeholder = t("Model name");
+          inp.setAttribute("aria-label", t("Model name"));
+          inp.setAttribute("data-no-i18n", "");
+          inp.hidden = !(typed && !hit);
+          inp.oninput = () => store(inp.value.trim());
+          const labels = { "": t("Not specified"), [AI_OTHER]: t("Other…") };
+          choices.forEach((c) => { labels[c.model] = c.label; });
+          const combo = self._combo(hit ? hit.model : typed ? AI_OTHER : "", [""].concat(choices.map((c) => c.model), [AI_OTHER]), "", (v) => {
+            if (v === AI_OTHER) {
+              inp.hidden = false;
+              store(inp.value.trim());
+              subEl.textContent = sub;
+              setTimeout(() => inp.focus(), 0);
+              return;
+            }
+            inp.hidden = true;
+            store(v);
+            const c = choices.find((x) => x.model === v);
+            // The row says right away what the pick means; Casora's own reading follows after saving.
+            subEl.textContent = c ? c.label + " · " + strength(c.ok) : sub;
+          }, { fixed: true, labels });
+          const pctl = row.querySelector(".casora-pctl");
+          pctl.appendChild(combo.wrap || combo);
+          pctl.appendChild(inp);
         });
       }).catch(() => { wait.row.remove(); });
     };
@@ -1384,11 +1425,13 @@
       ["input", "change", "click", "keyup"].forEach((ev) => self.shadowRoot.addEventListener(ev, self._csWatch, true));
     };
 
-    P._csHaOptions = async function () {
+    P._csHaOptions = function () { return this._csHaGo(OPTIONS_PATH); };
+    // A page of Home Assistant in place of the Studio (the HA way: pushState + location-changed).
+    P._csHaGo = async function (path) {
       const dirty = this._state && this._isDirty && this._isDirty();
       if (dirty && !(await this._save())) return;
       if (this._flowMode) this._exitFlow(false);
-      history.pushState(null, "", OPTIONS_PATH);
+      history.pushState(null, "", path);
       window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
     };
 

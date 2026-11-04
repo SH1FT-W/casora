@@ -15,8 +15,9 @@ opens. Read over the logged-in WebSocket – unlike /local not readable without 
   casora/backup/umzug_phones ← {["sources"]} → {"backups": [{file, url_path, title, time, mobile}]}  (admins only, read only)
   casora/ki/merge_template ← {"name", "mine", "casora"} → {"template", "changes"}  (admins only)
   casora/ki/adapt_card ← {"card", "context"} → {"card", "changes"}  (admins only)
-  casora/ki/models     → {"best": {...}|None, "all": [...]}      (admins only; model from the device registry
-                         or typed by the user, never from another integration's client)
+  casora/ki/models     → {"best": {...}|None, "all": [...], "choices": [...]}  (admins only; model from the device
+                         registry or picked by the user, never from another integration's client; each AI task with
+                         entry_id/subentry_id/entry_domain of its config entry; choices = the Studio's model menu)
   casora/ki/basis      ← {"rooms", "loose"} → {"rooms"}          (admins only)
 """
 
@@ -608,10 +609,11 @@ async def ws_basis(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
 @callback
 def ws_ai_models(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
     """Which AI Casora would take for demanding tasks (the strongest sufficient one) and all the others."""
-    from .ki import ai_models
+    from .ki import ai_models, model_choices
 
     models = ai_models(hass)
-    connection.send_result(msg["id"], {"best": next((m for m in models if m["ok"]), None), "all": models})
+    connection.send_result(msg["id"], {"best": next((m for m in models if m["ok"]), None), "all": models,
+                                       "choices": model_choices()})
 
 
 @callback
