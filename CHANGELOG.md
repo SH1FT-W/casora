@@ -17,6 +17,7 @@ Calmer tablets, a display diagnosis on every device and no Studio hints in the l
 - **Update prompt:** the popup announcing a new Casora version shows the release's intro sentence and up to four news items, each with a short line, plus "All changes"; from the next update on.
 
 ### Fixed
+- **AI on Home Assistant 2026.11:** without a preferred AI task in Home Assistant, Casora's AI features use the first suitable AI task again (2026.11 reports the missing preference differently).
 - **Universal tile (#125):** the hint "In the Studio you can add values, history, controls and own cards" shows only in the Studio preview, no longer in the live dashboard.
 
 ## 26.11.12 – 04.11.2026

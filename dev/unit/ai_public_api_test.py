@@ -32,7 +32,7 @@ import voluptuous as vol
 
 from homeassistant import bootstrap, config_entries, loader
 from homeassistant.core import HomeAssistant, SupportsResponse, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
@@ -108,8 +108,10 @@ class HAReality(unittest.TestCase):
         self.assertIn("title=self.models[user_input[CONF_MODEL]].name", self.read("open_router", "config_flow.py"))
 
     def test_no_preferred_error_text(self):
-        """ki.ask_ai retries with the first AI task on exactly this error (no choice, no HA preference)."""
-        self.assertIn("no preferred entity set", self.read("ai_task", "task.py"))
+        """ki.ask_ai retries with the first AI task on exactly this error (no choice, no HA preference):
+        up to 2026.10 the text "no preferred entity set", from 2026.11 translation_key "no_entity"."""
+        src = self.read("ai_task", "task.py")
+        self.assertTrue("no preferred entity set" in src or 'translation_key="no_entity"' in src)
 
     def test_generate_data_feature_bit(self):
         """ki._first_ai_task picks AI tasks with supported_features bit 1 (public state attribute)."""
@@ -118,7 +120,7 @@ class HAReality(unittest.TestCase):
                          r"class AITaskEntityFeature\b[^\n]*\n(?:[^\n]*\n)*?\s+GENERATE_DATA = 1\b")
 
     def test_generate_data_entity_optional(self):
-        self.assertRegex(self.read("ai_task", "services.py"), r"Optional\(ATTR_ENTITY_ID\)")
+        self.assertRegex(self.read("ai_task", "services.py"), r"Optional\((ATTR_ENTITY_ID|AITaskServiceArgument\.ENTITY_ID)\)")
 
 
 class Real(unittest.IsolatedAsyncioTestCase):
@@ -132,11 +134,14 @@ class Real(unittest.IsolatedAsyncioTestCase):
         self.hass.config_entries._entries[self.casora.entry_id] = self.casora
         self.calls: list[dict] = []
         self.preferred: str | None = None
+        self.new_error = False  # HA 2026.11: ServiceValidationError with translation_key "no_entity"
 
         async def generate(call):
             data = dict(call.data)
             self.calls.append(data)
             if "entity_id" not in data and not self.preferred:
+                if self.new_error:
+                    raise ServiceValidationError(translation_domain="ai_task", translation_key="no_entity")
                 raise HomeAssistantError("No entity_id provided and no preferred entity set")
             return {"data": {"name": "Suppe", "minutes": 30, "reason": "kalt"}, "conversation_id": "x"}
 
@@ -293,6 +298,14 @@ class Real(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("entity_id", self.calls[0])
 
     async def test_ask_no_preference_falls_back(self):
+        a = self.ai_task("anthropic", "a")
+        self.ai_task("anthropic", "b")
+        await ki.ask_ai(self.hass, self.casora, "T", "I", {})
+        self.assertEqual([c.get("entity_id") for c in self.calls], [None, a])
+
+    async def test_ask_no_preference_falls_back_2026_11(self):
+        """HA 2026.11 raises ServiceValidationError(translation_key="no_entity") instead of the old text."""
+        self.new_error = True
         a = self.ai_task("anthropic", "a")
         self.ai_task("anthropic", "b")
         await ki.ask_ai(self.hass, self.casora, "T", "I", {})

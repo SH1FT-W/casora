@@ -17,6 +17,7 @@ Ruhigere Tablets, eine Anzeige-Diagnose auf jedem Gerät und keine Studio-Hinwei
 - **Update-Hinweis:** Das Popup zu einer neuen Casora-Version zeigt den Einleitungssatz des Releases und bis zu vier Neuerungen mit je einer kurzen Zeile, dazu „Alle Änderungen“; wirkt ab dem nächsten Update.
 
 ### Behoben
+- **KI mit Home Assistant 2026.11:** Ohne bevorzugte KI-Aufgabe in Home Assistant nutzen Casoras KI-Funktionen wieder die erste passende KI-Aufgabe (2026.11 meldet die fehlende Vorgabe anders).
 - **Universal-Kachel (#125):** Der Hinweis „Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen“ erscheint nur noch in der Studio-Vorschau, nicht mehr im Dashboard.
 
 ## 26.11.12 – 04.11.2026

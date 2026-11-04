@@ -563,7 +563,7 @@ async def generate(hass: HomeAssistant, data: dict[str, Any], ent: str | None) -
     """ai_task.generate_data (public service) with Casora's choice of AI task.
 
     ent given: that one. Without: entity_id stays out and HA's preferred AI task answers; if HA has
-    none ("no preferred entity set"), the first suitable AI task, as Casora did before.
+    none ("no preferred entity set", from HA 2026.11 translation_key "no_entity"), the first suitable AI task, as Casora did before.
     """
     if not ent and not hass.states.async_entity_ids("ai_task"):
         raise HomeAssistantError(NO_AI)
@@ -578,7 +578,10 @@ async def generate(hass: HomeAssistant, data: dict[str, Any], ent: str | None) -
         resp = await call(payload)
     except HomeAssistantError as err:
         first = _first_ai_task(hass)
-        if ent or not first or "preferred" not in str(err):
+        # No HA preference: up to 2026.10 the text "… no preferred entity set", from 2026.11 a
+        # ServiceValidationError with translation_key "no_entity" (its text depends on the language).
+        no_pref = "preferred" in str(err) or getattr(err, "translation_key", None) == "no_entity"
+        if ent or not first or not no_pref:
             raise
         resp = await call({**payload, "entity_id": first})
     return dict(resp or {})
