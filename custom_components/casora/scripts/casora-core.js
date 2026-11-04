@@ -12851,10 +12851,14 @@ window.casoraMenuGlass = {
   var dialSeq = 0;
   function dRound(x) { return Math.round(x * 10) / 10; }
   function dPt(deg, r) { var a = deg * Math.PI / 180; return [dRound(DIAL.c + r * Math.cos(a)), dRound(DIAL.c + r * Math.sin(a))]; }
+  // An arc is drawn as two halves: SVG finds an arc's centre from its two (rounded) ends, and near 180° the ends are
+  // almost opposite – a rounding error of a few hundredths moved the centre by more than a unit, the coloured ring sat
+  // beside the track around 66 % (owner, iPhone 04.11.2026). Halves span 135° at most; always two, so the path keeps
+  // one shape and its transition (.fl) still runs between any two values.
   function dArc(a, b, r) {
     r = r || DIAL.r;
-    var p0 = dPt(a, r), p1 = dPt(b, r);
-    return 'M' + p0[0] + ' ' + p0[1] + ' A' + r + ' ' + r + ' 0 ' + (b - a > 180 ? 1 : 0) + ' 1 ' + p1[0] + ' ' + p1[1];
+    var p0 = dPt(a, r), p1 = dPt(b, r), pm = dPt((a + b) / 2, r);
+    return 'M' + p0[0] + ' ' + p0[1] + ' A' + r + ' ' + r + ' 0 0 1 ' + pm[0] + ' ' + pm[1] + ' A' + r + ' ' + r + ' 0 0 1 ' + p1[0] + ' ' + p1[1];
   }
   // Text in the wheel's middle with parts („An · 62 %“, „Jetzt 21,5° · Ventil 64 %“): one line per part, so a „·“ never
   // starts or ends a line where the circle wraps it (review 2, DD-21/DH-09).
