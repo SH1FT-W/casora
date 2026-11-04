@@ -1,0 +1,6 @@
+# Reviewed spots for tools/noeval-check.mjs: "file | expression | reason [| count]" (one per line), as in
+# tools/html-escape-allow. The expression is the exact text the checker prints (whitespace collapsed) or "re:<regex>";
+# "file#casora_x" covers only that card template; the count is the number of places the entry covers.
+# Only for entity ids, keys, fixed words of the code and config the admin wrote (dashboard, Studio) – never for names,
+# states, attributes, template results or other text from Home Assistant. Text of that kind is looked up while the
+# card renders (a key in the config) or goes through casoraNoEval().

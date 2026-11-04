@@ -1136,7 +1136,7 @@
     var P = window.casoraPopup, prev = P && P.current;
     window._casoraBackNext = prev ? { fn: function () { P.open(prev); }, at: Date.now() } : null;
     open(d.id, function (okd) { if (!okd && window.casoraPopup) window.casoraPopup.moreInfo(d.id); },
-      { type: 'custom:button-card', template: Array.isArray(d.tpl) ? d.tpl : ['casora_thermostat', 'casora_popup_fbh'], entity: d.id, name: d.name, variables: {} });
+      { type: 'custom:button-card', template: Array.isArray(d.tpl) ? d.tpl : ['casora_thermostat', 'casora_popup_fbh'], entity: d.id, _title: d.name, variables: {} });
   };
   var ts = null, tDone = 0;
   window.addEventListener('touchstart', function (ev) {

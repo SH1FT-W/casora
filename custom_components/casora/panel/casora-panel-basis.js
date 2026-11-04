@@ -167,9 +167,12 @@
     });
   }
   function typeById(id) { return (I().TILE_TYPES || []).find((t) => t.id === id) || null; }
+  // casoraNoEval (casora-core.js) when loaded, else the same guard: a text starting with "[[[" gets a zero-width space.
+  const noEval = (v) => (window.casoraNoEval ? window.casoraNoEval(v) : (typeof v === 'string' && /^\s*\[\[\[/.test(v) ? '\u200b' + v : v));
   function tile(type, entity, name, variables) {
     const t = typeById(type);
-    const out = { type: "custom:button-card", template: I().clone(t ? t.template : type), entity, name };
+    // Room, device and entity names from HA go into the stored dashboard: guarded against "[[[ … ]]]" (HACS review 5).
+    const out = { type: "custom:button-card", template: I().clone(t ? t.template : type), entity, name: noEval(name) };
     if (variables) out.variables = variables;
     return out;
   }
@@ -185,8 +188,8 @@
       if (g) return tile("light", g, name, house);
       return tile("light", ids[0], name, Object.assign({ lights: ids.slice(), active_entities: ids.slice() }, house, house ? { light_rooms_auto: true } : null));
     }
-    if (kind === "cover") return tile("cover_group", groupFor(hass, ids, "cover", !wide) || ids[0], name, { room_name: room, covers: ids.slice() });
-    if (kind === "lock") return tile("lock_group", ids[0], name, { room_name: room, locks: ids.slice() });
+    if (kind === "cover") return tile("cover_group", groupFor(hass, ids, "cover", !wide) || ids[0], name, { room_name: noEval(room), covers: ids.slice() });
+    if (kind === "lock") return tile("lock_group", ids[0], name, { room_name: noEval(room), locks: ids.slice() });
     return null;
   }
   const GROUP_NAME = { light: "Lights", cover: "Blinds", lock: "Locks" };
@@ -1184,7 +1187,7 @@
           const item = had ? Object.assign({}, had, { tile: I().clone(had.tile) })
             : { key: lo.id, type: lo.type, entity: lo.entity, tile: tile(lo.type, lo.entity, lo.name), on: true };
           const name = String(t.name || "").trim().slice(0, 40);
-          if (name) item.tile.name = name;
+          if (name) item.tile.name = noEval(name);   // the AI's answer is built from names in HA (HACS review 5)
           item.label = item.tile.name;
           item.on = t.on !== false;
           room.items.push(item);

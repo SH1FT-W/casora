@@ -37,8 +37,9 @@ for (const w of [1400, 500]) {
     top: ['hero', 'chart'], left: ['vals'], right: ['tl', 'more'] });
   assert.deepEqual(bad(lay), [], 'K.layout (' + w + ' px): innere button-cards mit do_not_eval');
   assert.ok(nested(lay).length >= 4, 'K.layout hat verschachtelte Karten');
+  // Every other nested card as well (HACS review 5): evaluated by the outer card, a series name shaped "[[[ … ]]]" ran.
   const ch = nested(lay).find((x) => x.f.card.type === 'custom:casora-chart');
-  assert.ok(ch && ch.f.do_not_eval === undefined, 'andere Kartentypen bleiben unverändert');
+  assert.ok(ch && ch.f.do_not_eval === true, 'other card types are left to themselves too (do_not_eval)');
 }
 globalThis.innerWidth = 1400;
 

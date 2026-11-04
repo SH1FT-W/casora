@@ -107,11 +107,13 @@
     + ' .hui-more.open > .hui-mbd { display: block !important; column-count: 2; column-gap: var(--casora-popup-col-gap, 26px) !important; }'
     + ' .hui-more.open > .hui-mbd > * { break-inside: avoid; -webkit-column-break-inside: avoid; display: block; margin: 0; padding-bottom: 18px; }'
     + ' .hui-more.open > .hui-mbd > style { display: none; margin: 0; } }';
-  // Innere button-cards werten ihre Vorlagen selbst aus (do_not_eval). Sonst wertet die äußere Karte sie mit
-  // aus, beobachtet damit deren Entitäten und baut bei jeder Attributänderung alle Kinder neu – der Bereich
-  // blitzte kurz leer auf (Pulse → Gerät → Verlauf flackerte, 17.10.2026).
+  // Every nested card is left to itself (do_not_eval). An inner button-card evaluates its templates itself; otherwise
+  // the outer card evaluated them too, watched their entities and rebuilt all children on every attribute change –
+  // the section flashed empty (Pulse → device → history flickered, 17.10.2026). Any other card (chart, camera
+  // picture …) holds no template at all: evaluated by the outer card, a series or camera name shaped "[[[ … ]]]"
+  // ran as JavaScript (HACS review 5).
   var own = function (f) {
-    return f && f.card && f.card.type === 'custom:button-card' && f.do_not_eval === undefined ? Object.assign({}, f, { do_not_eval: true }) : f;
+    return f && f.card && typeof f.card === 'object' && f.do_not_eval === undefined ? Object.assign({}, f, { do_not_eval: true }) : f;
   };
   // Aufbau: top (volle Breite) – dann links/rechts; schmal eine Spalte in Lesereihenfolge.
   var layout = function (o) {

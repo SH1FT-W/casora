@@ -591,7 +591,9 @@
       const doms = (a.baseType && a.baseType.domains) || [];
       const ent = Object.keys((this._hass && this._hass.states) || {}).find((e) => doms.includes(e.split(".")[0]));
       const st = ent && this._hass.states[ent];
-      return { type: "custom:button-card", entity: ent || "", name: (st && st.attributes.friendly_name) || typeLabel(a.baseType || {}) };
+      // casoraNoEval (casora-core.js) when loaded, else the same guard: a text starting with "[[[" gets a zero-width space.
+      const noEval = (v) => (window.casoraNoEval ? window.casoraNoEval(v) : (typeof v === 'string' && /^\s*\[\[\[/.test(v) ? '\u200b' + v : v));
+      return { type: "custom:button-card", entity: ent || "", name: noEval((st && st.attributes.friendly_name) || typeLabel(a.baseType || {})) };
     };
 
     // Anlegen (oder beim Verwalten: speichern).

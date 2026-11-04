@@ -69,7 +69,9 @@ stubKit();
 window._casoraUI = {};
 let L = F.popup(states['switch.qa_pumpe'], states, hass, c0.variables);
 assert.deepEqual(Object.keys(L.fields), ['hero', 'chart', 'vals', 'more'], 'values and history as configured; a switch has no controls next to the header switch');
-assert.deepEqual(L.fields.chart.card.series, [{ entity: 'sensor.qa_temp', name: 'temp', unit: '°C' }]);
+// Name and unit come from the entity while the chart draws, the chart is left to itself (HACS review 5).
+assert.deepEqual(L.fields.chart.card.series, [{ entity: 'sensor.qa_temp', entity_name: true }]);
+assert.equal(L.fields.chart.do_not_eval, true);
 assert.equal(F.wide(states['switch.qa_pumpe'], states, c0.variables), false, 'switch + values: one column (552)');
 L = F.popup(null, states, hass, c1.variables);
 assert.deepEqual(Object.keys(L.fields), ['hero', 'vals'], 'template badge: status line and values, no controls');

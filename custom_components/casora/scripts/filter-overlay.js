@@ -28,6 +28,10 @@
     '--hero-room-name-size-current',
   ];
 
+  // Names of sections, rooms and the favourites header go into button-card's name: a name shaped "[[[ … ]]]" would run
+  // as a template (HACS review 5). casoraNoEval (casora-core.js) puts a zero-width space in front of it.
+  const noEval = (v) => (window.casoraNoEval ? window.casoraNoEval(v)
+    : (typeof v === 'string' && /^\s*\[\[\[/.test(v) ? '\u200b' + v : v));
   const SPRING_IN = 'cubic-bezier(0.32, 0.72, 0, 1)';
   const EASE_OUT  = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
   // casora-local-patch: room photos for the room view (file name of the photo, + "-night"; own photos are
@@ -1512,7 +1516,7 @@
             type:      'custom:button-card',
             template:  'casora_mobile_header',
             full_width: true,
-            name:      section.name,
+            name:      noEval(section.name),
             variables: { mobile_filter_categories: null },
             styles:    {
               card:          [{ padding: '24px 0px 8px 11px' }],
@@ -1743,7 +1747,7 @@
             type:      'custom:button-card',
             template:  'casora_mobile_header',
             full_width: true,
-            name:      room.name,
+            name:      noEval(room.name),
             variables: { room_key: room.roomKey || null,
                          mobile_filter_categories: null },
             styles:    {
@@ -1936,7 +1940,7 @@
         type:      'custom:button-card',
         template:  'casora_mobile_header',
         full_width: true,
-        name:      favName,
+        name:      noEval(favName),
         variables: { favorites: true, hide_caret: true, mobile_filter_categories: null },
         // Mirrors casora_mobile_header.yaml's padding formula.
         styles:    { card: [{ padding: `24px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})` }] },

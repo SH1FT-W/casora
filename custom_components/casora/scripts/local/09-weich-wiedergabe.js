@@ -171,6 +171,7 @@
 
   var entries = [];
   M._entries = function () { return entries; };
+  M._open = function (e, key) { return open(e, key); };   // for dev/unit/no_eval.mjs
   var timer = 0;
 
   M.mount = function (card, cfg, kind) {
@@ -622,12 +623,13 @@
     }
     // Phone (31.10.2026): the old carousel cards are no longer drawn in Casora designs (casora_mobile_now_playing),
     // so there is no hidden card to tap. A card of the same template, built for this tap, opens the same popup.
-    if (e.kind === 'phone' && rec && typeof window._casoraNotifyOpenViaCard === 'function') {
-      var src;
-      try { src = JSON.parse(JSON.stringify(rec)); } catch (err) { src = null; }
-      if (src) {
+    // The record (media title, artist, app – set by whoever casts) never goes into the config: button-card would
+    // evaluate a title shaped "[[[ … ]]]" (HACS review 5). The card gets a ref and looks the record up itself.
+    if (e.kind === 'phone' && rec && typeof window._casoraNotifyOpenViaCard === 'function' && typeof window._casoraNPRef === 'function') {
+      var ref = window._casoraNPRef(rec);
+      if (ref) {
         window._casoraNotifyOpenViaCard(null, function (ok) { if (!ok) more(rec); },
-          { type: 'custom:button-card', template: 'casora_now_playing_primary', variables: { src: src } }, true, true);
+          { type: 'custom:button-card', template: 'casora_now_playing_primary', variables: { src_ref: ref } }, true, true);
         return;
       }
     }

@@ -296,7 +296,8 @@
     if (UIv && UIv.v3 && UIv.v3() && UIv.stage) {
       if (num && window._hpPlantCfg) {
         window._hpPlantCfg['cz:' + id + '|' + span] = { type: 'custom:casora-chart', kind: 'line', span: span, source: span === '24h' ? 'history' : 'auto',
-          series: [{ entity: id, name: Z.nameOf(h, id), unit: (st.attributes || {}).unit_of_measurement || '', color: Z.chartColor(st) }],
+          // Name and unit from the entity while the chart draws (entity_name), not as text in the config (HACS review 5).
+          series: [{ entity: id, entity_name: true, color: Z.chartColor(st) }],
           height: window.innerWidth <= 760 ? 140 : 160, readout: 'hero', plate: false };
       }
       var fv = { stage: { card: K.secCard(num ? [] : watch, call('m_stage', id, span), h.states) },
@@ -335,7 +336,7 @@
     var f = { hero: { card: K.secCard(watch, call('m_hero', id, span), h.states) } };
     if (num) {
       f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: span, source: span === '24h' ? 'history' : 'auto',
-        series: [{ entity: id, name: Z.nameOf(h, id), unit: (st.attributes || {}).unit_of_measurement || '' }], height: 200, readout: 'own', plate: true } };
+        series: [{ entity: id, entity_name: true }], height: 200, readout: 'own', plate: true }, do_not_eval: true };
     }
     f.vals = { card: K.secCard(watch, call('m_vals', id, span), h.states) };
     f.tl = { card: K.secCard(watch, call('m_tl', id, span), h.states) };

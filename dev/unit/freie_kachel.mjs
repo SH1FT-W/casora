@@ -108,7 +108,9 @@ assert.deepEqual(L.top, ['hero', 'chart']); assert.deepEqual(L.left, ['ctl']); a
 assert.deepEqual(L.narrowOrder, ['ctl', 'vals', 'more'], 'phone: controls, then values, then more');
 const ch = L.fields.chart.card;
 assert.equal(ch.type, 'custom:casora-chart'); assert.equal(ch.span, '24h'); assert.equal(ch.source, 'history');
-assert.deepEqual(ch.series, [{ entity: 'sensor.qa_temp', name: 'temp', unit: '°C' }]);
+// Name and unit come from the entity while the chart draws, the chart is left to itself (HACS review 5).
+assert.deepEqual(ch.series, [{ entity: 'sensor.qa_temp', entity_name: true }]);
+assert.equal(L.fields.chart.do_not_eval, true);
 assert.deepEqual(L.fields.hero.card.watch, ['light.qa_stehlampe', 'sensor.qa_temp', 'binary_sensor.qa_tuer'], 'every shown entity redraws the hero');
 // A ticking value sensor must not rebuild the controls (slider drag) or the settings row.
 assert.deepEqual(L.fields.ctl.card.watch, ['light.qa_stehlampe'], 'controls follow the main entity only');

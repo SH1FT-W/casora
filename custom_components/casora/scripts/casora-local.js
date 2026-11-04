@@ -38,6 +38,26 @@
   };
 })();
 // casora-esc:end
+// casora-noeval:begin – the same block in every file that loads on its own (checked by dev/unit/no_eval.mjs).
+// button-card runs every config string that is "[[[ … ]]]" after trim() as JavaScript (name, label, variables,
+// nested cards …). Card configs carry keys and look the text up at render time (tools/noeval-check.mjs); where a
+// text still has to travel in a config, casoraNoEval(v) puts a zero-width space before a leading "[[[" so it can never
+// be such a template. Every other text comes back unchanged; objects and arrays are copied with their texts guarded.
+(function () {
+  if (window.casoraNoEval) return;
+  var guard = function (v, d) {
+    if (typeof v === 'string') return /^\s*\[\[\[/.test(v) ? '\u200b' + v : v;
+    if (!v || typeof v !== 'object') return v;
+    if (d > 12) return null;
+    if (Array.isArray(v)) return v.map(function (x) { return guard(x, d + 1); });
+    if (Object.getPrototypeOf(v) !== Object.prototype && Object.getPrototypeOf(v) !== null) return v;
+    var o = {};
+    Object.keys(v).forEach(function (k) { o[k] = guard(v[k], d + 1); });
+    return o;
+  };
+  window.casoraNoEval = function (v) { return guard(v, 0); };
+})();
+// casora-noeval:end
 
 // For a card not known yet (casora-mobile-nav only comes from the modules here,
 // grid-layout/button-card just as late depending on the load order) HA shows an error
