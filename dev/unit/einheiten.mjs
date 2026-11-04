@@ -40,10 +40,9 @@ console.log('ok B-JS-02');
   assert.equal(sumW('p'), 2500); assert.equal(sumW('w'), 800); assert.equal(sumW('m'), 3000);
   assert.ok(!/const power = powerId \? safeNum\(powerId\)/.test(c) && /const power = powerId \? _sumW\(powerId\)/.test(c), 'Hauptwert über _sumW');
   for (const k of ['solarPowerId', 'battPowerId', 'netzPowerId']) assert.ok(c.includes(`const p = _sumW(${k});`) && !c.includes(`const p = safeNum(${k});`), k);
-  const inner = c.match(/const power = \(\(\) => \{ const n = safeNum\(powerId\);[\s\S]*?\}\)\(\);/);
-  assert.ok(inner, 'Stufe (_powerScore) rechnet um');
-  const p = new Function('safeNum', 'states', 'powerId', inner[0] + ' return power;')(safeNum, states, 'p');
-  assert.equal(p, 2500, '2,5 kW → 2500 W für die Stufe');
+  // The tier (statusLabel) reads the same power; its own copy for the nested cards (_powerScore) went with the
+  // renderer without window._casoraUI (HACS review 5).
+  assert.ok(/const statusLabel = power >= tExtreme/.test(c) && !c.includes('_powerScore'), 'Stufe aus der umgerechneten Leistung');
 }
 console.log('ok B-TPL-03');
 

@@ -11,6 +11,8 @@ for (const k of ['open', 'partial', 'moving']) {
   assert.ok(s.includes(`var(--casora-badge-cover-${k}-color, var(--casora-color-teal, #00c3d0))`), k + ': Teal-Token als Standard');
   assert.ok(!s.includes(`var(--casora-badge-cover-${k}-color, #00c3d0)`), k + ': kein festes Hemma-Türkis mehr');
 }
-assert.ok(/casora-color-teal, #00c3d0\)" ?:/.test(JSON.stringify(T.casora_cover)) || JSON.stringify(T.casora_cover).includes('var(--casora-color-teal, #00c3d0)'), 'Kachel nimmt dasselbe Token');
+// The cover tiles this compared against were the popup's renderer without window._casoraUI; it went with HACS
+// review 5 (the popup is built from the shared rows since).
+assert.ok(!JSON.stringify(T.casora_cover).includes('var(--casora-badge-cover-open-color, #00c3d0)'), 'no fixed Hemma turquoise in the cover template');
 assert.ok(/casora-color-teal:\s*'#00C3D0'/.test(read('custom_components/casora/theme.yaml')), 'Grundwerte (Rückfall unter Casora): Teal = #00C3D0');
 console.log('ok badge_jalousie_farbe');

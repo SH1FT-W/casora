@@ -64,7 +64,12 @@ const found = {};
     }
   }
 })(bundle, 'templates');
-for (const svc of Object.keys(FIELDS)) assert.ok(found[svc], 'a template calls casora.' + svc);
+// casora.restart_toggle: only the network popup's renderer without window._casoraUI called it (gone with HACS review
+// 5; the rows confirm in the popup and press the button). The service stays for dashboards of their own.
+for (const svc of Object.keys(FIELDS)) {
+  if (svc === 'restart_toggle') assert.ok(!found[svc], 'no template calls casora.restart_toggle any more');
+  else assert.ok(found[svc], 'a template calls casora.' + svc);
+}
 
 // Dashboard scripts: the inline actions and the light badges call the services the same way.
 const core = read('scripts/casora-core.js');

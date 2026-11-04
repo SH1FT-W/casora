@@ -14,11 +14,13 @@ assert.ok(lists.length >= 12, 'lists found: ' + lists.length);
 lists.forEach((l) => assert.ok(/aqi_entity_co2,[^,]*aqi_entity_co\]/.test(l), 'CO in ' + l));
 console.log('ok CO in', lists.length, 'sensor lists');
 
-// 2. The popup's compact threshold function: CO gets 9/35/100 ppm, CO2 keeps its own.
-const m = all.match(/const sensorThresh=\(eid\)=>\{.*?return\{good:null,moderate:null,high:null\};\};/);
+// 2. The popup's threshold function: CO gets 9/35/100 ppm, CO2 keeps its own. (Its compact copy for the tiles of
+// the renderer without window._casoraUI went with that renderer, HACS review 5.)
+const m = T.casora_climate_popup.tap_action.casora_popup.content.match(/const sensorThresh = \(eid\) => \{[\s\S]*?\n {2}\};/);
 assert.ok(m, 'sensorThresh found');
-const src = JSON.parse('"' + m[0] + '"');
-const thresh = (states) => new Function('states', src + ' return sensorThresh;')(states);
+const src = m[0];
+const limits = (f) => (eid) => { const r = f(eid); return { good: r.good, moderate: r.moderate, high: r.high }; };
+const thresh = (states) => limits(new Function('states', src + ' return sensorThresh;')(states));
 const st = { 'sensor.demo_co': { state: '4', attributes: { device_class: 'carbon_monoxide' } },
   'sensor.demo_kohlenmonoxid': { state: '4', attributes: {} },
   'sensor.demo_co2': { state: '800', attributes: { device_class: 'carbon_dioxide' } } };
@@ -30,7 +32,7 @@ console.log('ok thresholds');
 
 // 3. CO before CO2 wherever both are checked (thresholds, badge level, icon).
 const co = (all.match(/dc === 'carbon_monoxide'\)/g) || []).length + (all.match(/dc==='carbon_monoxide'\)/g) || []).length;
-assert.ok(co >= 7, 'CO checks: ' + co);
+assert.ok(co >= 6, 'CO checks: ' + co);
 console.log('ok CO checks:', co);
 
 // 4. Studio: the field and the phone's room-to-chips list.
