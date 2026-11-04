@@ -1187,14 +1187,22 @@
     };
 
     // Selecting opens the inspector; whoever selected gets the focus back later.
+    // An open page beside the preview (Settings, Updates, Rewind) is left first, like a click in the sidebar does:
+    // its _renderForm hooks redraw the page over the editor otherwise (issue 122: Settings › "Tapping & tablet" open,
+    // "Edit tile" in the preview did nothing). Unsaved settings stay as a draft (_csClose says so).
     before("_select", function () {
       if (!this.classList.contains("bmode")) return;
+      if (this._bPage()) this._bLeavePages();
       this._bRooms = false;
       this._bOpen = true;
       const a = this.shadowRoot.activeElement;
       if (a && a.closest && a.closest(".card.map, .btools, .bbar")) this._bFrom = a;
     });
-    before("_pvPick", function () { if (this.classList.contains("bmode")) this._bOpen = true; });
+    before("_pvPick", function () {
+      if (!this.classList.contains("bmode")) return;
+      if (this._bPage()) this._bLeavePages();
+      this._bOpen = true;
+    });
     before("_openRoomSec", function () { if (this.classList.contains("bmode")) this._bOpen = true; });
     // Did this pass rebuild the preview itself? (Desktop: yes, on a room change.)
     const renderForm0 = P._renderForm;
