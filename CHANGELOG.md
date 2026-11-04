@@ -4,6 +4,18 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.14 – 04.11.2026
+
+A 3D printer popup with real content, light tiles that light up and Home Assistant 2026.11 names.
+
+### Changed
+- **3D printer popup:** while printing it shows temperatures (nozzle, bed, chamber with target, heating up), fans in one line, the job with a model preview, start time, plate, objects (incl. skipped) and the speed as a picker; the AMS with every slot (colour, type, remaining) and its humidity as dry, okay or humid. When idle: last print, total print hours, nozzle and plate, firmware hint.
+
+### Fixed
+- **Light tile set up by hand (#126):** the tile lights up as soon as one of its popup lamps is on (also without a device of its own), and a lamp opened from the popup keeps its place in the list.
+- **AMS humidity:** the humidity index of Bambu Lab printers was read the wrong way round ("replace desiccant" when dry).
+- **Names on Home Assistant 2026.11:** entities you renamed yourself keep their short name in Casora (bins, Studio pickers), although 2026.11 puts the device name in front.
+
 ## 26.11.13 – 04.11.2026
 
 Calmer tablets, a display diagnosis on every device and no Studio hints in the live dashboard.

@@ -4,6 +4,18 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.14 – 04.11.2026
+
+Ein 3D-Drucker-Popup mit echtem Inhalt, Licht-Kacheln, die leuchten, und Namen unter Home Assistant 2026.11.
+
+### Geändert
+- **3D-Drucker-Popup:** Beim Drucken zeigt es Temperaturen (Düse, Bett, Druckraum mit Ziel, Aufheizen), Lüfter in einer Zeile, den Auftrag mit Modellvorschau, Startzeit, Platte, Objekte (mit übersprungenen) und die Geschwindigkeit als Auswahl; das AMS mit jedem Slot (Farbe, Typ, Rest) und seine Luftfeuchte als trocken, in Ordnung oder feucht. Im Leerlauf: letzter Druck, Druckstunden gesamt, Düse und Platte, Firmware-Hinweis.
+
+### Behoben
+- **Licht-Kachel von Hand angelegt (#126):** Die Kachel leuchtet, sobald eine ihrer Popup-Lampen an ist (auch ohne eigenes Gerät), und eine aus dem Popup geöffnete Lampe behält ihren Platz in der Liste.
+- **AMS-Luftfeuchte:** Der Feuchte-Index von Bambu-Lab-Druckern wurde verkehrt herum gelesen („Trockenmittel tauschen“ bei trockenem AMS).
+- **Namen unter Home Assistant 2026.11:** Selbst umbenannte Entitäten behalten in Casora ihren kurzen Namen (Tonnen, Auswahl im Studio), obwohl 2026.11 den Gerätenamen davorsetzt.
+
 ## 26.11.13 – 04.11.2026
 
 Ruhigere Tablets, eine Anzeige-Diagnose auf jedem Gerät und keine Studio-Hinweise mehr im Dashboard.
