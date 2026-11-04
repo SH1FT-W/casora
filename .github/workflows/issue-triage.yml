@@ -1,6 +1,6 @@
 name: Issue Triage
 # Based on repo-vorlagen/vorlagen/issue-triage.yml; step 4 and the kartenwunsch label are Casora specific.
-# Läuft über Daniels Claude-Abo: Secret CLAUDE_CODE_OAUTH_TOKEN aus `claude setup-token`.
+# Runs on the owner's Claude subscription: secret CLAUDE_CODE_OAUTH_TOKEN from `claude setup-token`.
 on:
   issues:
     types: [opened]
