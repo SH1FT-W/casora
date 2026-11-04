@@ -3604,8 +3604,8 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     return c;
   };
   // Tile „Backofen“ (casora_oven): one short line. Off „Aus“, ready „Bereit“; running the cavity temperature („152 °C“)
-  // or, while it is still well below the target, „Heizt auf 180 °C“; then the time left (under an hour) or the finish
-  // time. id: any entity of the oven (the tile's entity).
+  // or, while it is still well below the target, „Heizt auf 180 °C“. No time left or finish time on the tile (rule of
+  // 23.09.2026 for every appliance): those are in the popup and the hold menu. id: any entity of the oven.
   var tile = function (hass, id, states) {
     var S = states || (hass && hass.states) || {};
     // No entity (a tile without one, the smart row's spare copy): nothing to say; a vanished one: unavailable.
@@ -3623,10 +3623,6 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       : temp != null ? deg(S, c.temp) : (tgt != null ? 'Heizt auf ' + deg(S, c.target) : s.word);
     // Paused or a step to do at the oven: the word first, the temperature after it.
     var parts = s.raw === 'run' ? [head] : [s.word, temp != null ? deg(S, c.temp) : null];
-    var left = minsLeft(S, c.remaining);
-    if (left != null && left > 0.5 && s.raw === 'run') {
-      parts.push(left < 60 ? 'noch ' + Math.max(1, Math.round(left)) + ' Min.' : 'Fertig um ' + clock(new Date(Date.now() + left * 60000)));
-    }
     return parts.filter(Boolean).join(' · ');
   };
   // 0 calm, 1 highlighted (heating, paused, starting later, done – the food is inside), 2 a step at the oven or an error.

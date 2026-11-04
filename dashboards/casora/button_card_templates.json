@@ -19323,7 +19323,7 @@
     "value": "[[[\n  // Oven: highlighted while it heats, pauses, waits to start or is done; red when it needs a step or reports an error.\n  const O = window.casoraOvenFind;\n  return !!(O && O.level(hass, entity?.entity_id, states) > 0);\n]]]\n"
    }
   ],
-  "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? (window.casoraEsc || String)(t);\n  // \"Aus\", \"Bereit\", \"Heizt auf 180 °C\", \"152 °C · noch 25 Min.\", \"Fertig\" (casoraOvenFind.tile in 00-finder.js, also in the Studio preview).\n  const O = window.casoraOvenFind;\n  return O ? fit(O.tile(hass, entity?.entity_id, states)) : fit(entity?.state || '');\n]]]\n",
+  "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? (window.casoraEsc || String)(t);\n  // \"Aus\", \"Bereit\", \"Heizt auf 180 °C\", \"152 °C\", \"Fertig\" (casoraOvenFind.tile in 00-finder.js, also in the Studio preview).\n  const O = window.casoraOvenFind;\n  return O ? fit(O.tile(hass, entity?.entity_id, states)) : fit(entity?.state || '');\n]]]\n",
   "styles": {
    "card": [
     {

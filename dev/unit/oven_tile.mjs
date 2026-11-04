@@ -2,8 +2,9 @@
 // „Geschirrspüler“ or „Gerät mit Ablauf“ (with the dishwasher's symbol); the Studio offered no oven.
 //  1. casoraOvenFind (00-finder.js) finds the test house's ovens – Home Connect in HA core and Home Connect Local – and
 //     nothing else (no dishwasher, coffee machine, fridge); an oven reporting only its programme counts too.
-//  2. Tile words: off „Aus“, ready „Bereit“, heating „Heizt auf 180 °C“, at temperature „178 °C“, with the time left
-//     („noch 24 Min.“) or the finish time („Fertig um …“), paused, done, unavailable; highlight level and colour.
+//  2. Tile words: off „Aus“, ready „Bereit“, heating „Heizt auf 180 °C“, at temperature „178 °C“, paused, done,
+//     unavailable; never the time left or the finish time (rule 23.09.2026 for every appliance: those are in the
+//     popup and the hold menu, owner 04.11.2026); highlight level and colour.
 //  3. The oven popup (_casoraOven in 02-devices.js) takes its fields from the same table.
 //  4. Template casora_oven: oven symbol, casora_entity + casora_popup_oven, tap opens the oven popup, hold per the
 //     global hold setting, the tile's text from casoraOvenFind (the Studio preview has it).
@@ -66,9 +67,9 @@ assert.equal(OF.color(1), 'var(--casora-color-orange, #DE8A4E)');
 set({ 'sensor.testofen_aktuelle_temperatur': 178 });
 assert.equal(tile(WS), '178 °C', 'at temperature: the cavity');
 set({ 'sensor.testofen_verbleibende_programmlaufzeit': 0.4 });
-assert.equal(tile(WS), '178 °C · noch 24 Min.', 'time left in hours (Home Connect Local)');
+assert.equal(tile(WS), '178 °C', 'no time left on the tile (Home Connect Local)');
 set({ 'sensor.testofen_verbleibende_programmlaufzeit': 2 });
-assert.ok(/^178 °C · Fertig um \d\d:\d\d$/.test(tile(WS)), 'over an hour: the finish time – ' + tile(WS));
+assert.equal(tile(WS), '178 °C', 'no finish time on the tile');
 set({ [WS]: 'pause' });
 assert.equal(tile(WS), 'Pausiert · 178 °C');
 set({ [WS]: 'finished' });
@@ -79,10 +80,10 @@ set({ [WS]: 'unavailable' });
 assert.equal(tile(WS), 'Nicht verfügbar'); assert.equal(OF.level(H, WS, S), 0);
 assert.equal(OF.tile(H, 'sensor.gibt_es_nicht', S), 'Nicht verfügbar', 'entity gone: calm, no TypeError');
 assert.equal(OF.tile(H, undefined, S), '', 'no entity: no text'); assert.equal(OF.level(H, undefined, S), 0);
-// Home Connect core: the finish time is a timestamp.
+// Home Connect core: the finish time is a timestamp – it stays off the tile too.
 set({ 'switch.testbackofen_einschalter': 'on', [HC]: 'run', 'sensor.testbackofen_aktuelle_garraumtemperatur': 200 });
 S['sensor.testbackofen_programm_endzeit'] = { ...S['sensor.testbackofen_programm_endzeit'], state: new Date(Date.now() + 10 * 60000 + 5000).toISOString() };
-assert.equal(tile(HC), '200 °C · noch 10 Min.');
+assert.equal(tile(HC), '200 °C', 'Home Connect core: no finish time on the tile');
 
 // ── 3. The popup reads the same table ───────────────────────────────────
 {

@@ -8,7 +8,7 @@
 //     of them and the preview says its state („Bereit“/„Aus“), not the raw „ready“.
 //   - dashboard (copies qa-oven / qa-oven-mobile with the Testofen tile on the home page), desktop 1440 and phone 393,
 //     light and dark: oven symbol; off „Aus“; running „Heizt auf 180 °C“ well below the target, at temperature
-//     „178 °C“; tap opens the oven popup (one S4 stage with the cavity, the device plate); phone: nothing wider than 393.
+//     „178 °C“, the time left only in the popup (rule 23.09.2026); tap opens the oven popup (one S4 stage with the cavity, the device plate); phone: nothing wider than 393.
 // Pictures: CASORA_OVEN_BILDER=<folder> stores tile pictures (off/running per view) and the Studio.
 import fs from 'node:fs';
 import { open, studio, casoraDashboards, dashboard, check, need, finish, atFinish, stable, usePage, fakeStates } from './lib.mjs';
@@ -137,7 +137,9 @@ const POPUP = () => {
   return { stages, rows, wide };
 };
 const RUN = { [WS]: { state: 'run' }, 'select.testofen_betriebszustand': { state: 'on' }, 'sensor.testofen_aktuelle_temperatur': { state: '152' },
-  'sensor.testofen_aktives_programm': { state: 'cooking_oven_program_heatingmode_hotair' } };
+  'sensor.testofen_aktives_programm': { state: 'cooking_oven_program_heatingmode_hotair' },
+  // 24 minutes left: in the popup and the hold menu, never on the tile (rule 23.09.2026 for every appliance).
+  'sensor.testofen_verbleibende_programmlaufzeit': { state: '0.4' } };
 const VIEWS = [
   ['Desktop hell', { width: 1440, height: 1000, scale: 1, dark: false }, 'qa-oven', false],
   ['Desktop dunkel', { width: 1440, height: 1000, scale: 1, dark: true }, 'qa-oven', false],
@@ -170,7 +172,7 @@ for (const [tag, o, url, mobile] of VIEWS) {
   await pic('heizt');
   await fakeStates(page, { 'sensor.testofen_aktuelle_temperatur': { state: '178' } }, { sticky: true });
   tiles = await stable(page, TILES, null, { until: (v) => v && v.length && /^178/.test(v[0].state), max: 8000 });
-  await check(tag + ': at temperature → „178 °C“', tiles && tiles[0].state === '178 °C', tiles && tiles[0].state);
+  await check(tag + ': at temperature → „178 °C“, no time left on the tile', tiles && tiles[0].state === '178 °C', tiles && tiles[0].state);
   await pic('laeuft');
 
   const at = (await page.evaluate(TILES))[0];
