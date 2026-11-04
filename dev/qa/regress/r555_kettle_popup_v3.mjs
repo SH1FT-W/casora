@@ -4,8 +4,11 @@
 // issue #87) still showed HA's entity rows and HA's history card – no stage, the rows as HA's card. Expected (popup
 // rules v3 §4 S2/S7, §6, §7): the kettle with a target temperature (Testwasserkocher: number + keep warm + start
 // switch, dev/casora_mock/kettle.py) has the S2 dial, the start switch in the head, keep warm and „Heizen“ in one plate
-// and the temperature as casora-chart; the BLE-like kettle without a target (Testkocher) the S7 dial. No HA entities or
-// history card; at 393 nothing sticks out of the popup. Desktop 1440 and phone 393, light.
+// and the temperature as casora-chart; the BLE-like kettle without a target (Testkocher) the water temperature as the
+// S6 level ring in the heat colours of the target dial (coordinator 04.11.: not the green/grey traffic light). No HA
+// entities or history card; at 393 nothing sticks out of the popup. Desktop 1440 and phone 393, light.
+// Layout (coordinator 04.11.): the first opening has the same layout as the second – before, the short plate stood in a
+// right column of a 900 popup on the first opening and only the next one was one column (rule B waits for a measurement).
 // Pictures: R555_SHOTS=<folder> stores desktop/phone, light and dark.
 import fs from 'node:fs';
 import { open, casoraDashboard, dashboard, check, need, finish, stable, usePage } from './lib.mjs';
@@ -30,7 +33,14 @@ const look = () => {
   }).filter(Boolean).slice(0, 6);
   return { open: true, stage, rows: rows.length, plates: plates.size, rowText: rows.map((r) => r.textContent.replace(/\s+/g, ' ').trim()).slice(0, 6),
     haCards: all.filter((n) => /^HUI-(ENTITIES|HISTORY-GRAPH)-CARD$/.test(n.nodeName)).length, chart: all.filter((n) => n.nodeName === 'CASORA-CHART').length,
-    headSwitch: !!(p._headerSwitch && !p._headerSwitch.hidden), out, wide: surf ? surf.scrollWidth - surf.clientWidth : 0 };
+    headSwitch: !!(p._headerSwitch && !p._headerSwitch.hidden), out, wide: surf ? surf.scrollWidth - surf.clientWidth : 0,
+    ring: all.filter((n) => n.nodeName === 'path' && n.getAttribute('stroke-width') === '26').map((n) => n.getAttribute('stroke') || n.getAttribute('style') || ''),
+    layout: (() => {
+      const st = all.find((n) => n.getAttribute && n.getAttribute('data-casora-stage')), r0 = rows[0];
+      if (!st || !r0 || !surf) return null;
+      const a = st.getBoundingClientRect(), b = r0.getBoundingClientRect();
+      return { width: Math.round(surf.getBoundingClientRect().width), beside: b.left >= a.right - 1 };
+    })() };
 };
 
 for (const [label, size] of [['Desktop', { width: 1440, height: 1000 }], ['Handy', { width: 393, height: 852, mobile: true }]]) {
@@ -40,7 +50,7 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 1000 }], ['Handy
     await dashboard(page, dash.url, 3);
     const have = await page.evaluate(([a, b]) => { const S = document.querySelector('home-assistant').hass.states; return !!(S[a] && S[b]); }, [PLUS, BLE]);
     await need(`${label}: Test-Wasserkocher im Mock`, have);
-    for (const [id, want, nm] of [[PLUS, 'S2', 'mit Ziel'], [BLE, 'S7', 'BLE']]) {
+    for (const [id, want, nm] of [[PLUS, 'S2', 'mit Ziel'], [BLE, 'S6', 'BLE']]) {
       await page.evaluate(async (id) => {
         const ha = document.querySelector('home-assistant'); const h = await window.loadCardHelpers();
         ha.shadowRoot.getElementById('qa-r555')?.remove();
@@ -63,6 +73,7 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 1000 }], ['Handy
         await check(`${tag}: keine HA-Karten (Zeilen, Verlauf)`, s.haCards === 0, s.haCards);
         await check(`${tag}: Zeilen in einer Platte`, s.rows >= 1 && s.plates === 1, { rows: s.rowText, plates: s.plates });
         await check(`${tag}: Temperatur als Casora-Verlauf`, s.chart === 1, s.chart);
+        if (id === BLE) await check(`${tag}: Füllring in den Wärmefarben (kein Ampel-Grün/Grau)`, s.ring.length && s.ring.some((x) => /^url\(/.test(x)), s.ring);
         if (id === PLUS) {
           await check(`${tag}: Warmhalten in der Platte`, s.rowText.some((t) => /Warmhalten/.test(t)), s.rowText);
           await check(`${tag}: Startschalter im Kopf`, s.headSwitch, s.headSwitch);
@@ -74,5 +85,33 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 1000 }], ['Handy
     }
     await page.context().close();
   }
+}
+// First opening = second opening (fresh browser: nothing measured yet), desktop.
+{
+  const { page } = await open({ width: 1440, height: 1000, dark: false, theme: 'Casora' });
+  usePage(page);
+  await dashboard(page, dash.url, 3);
+  for (const [id, nm] of [[PLUS, 'mit Ziel'], [BLE, 'BLE']]) {
+    const seen = [];
+    for (let n = 0; n < 2; n++) {
+      await page.evaluate(async (id) => {
+        const ha = document.querySelector('home-assistant'); const h = await window.loadCardHelpers();
+        ha.shadowRoot.getElementById('qa-r555')?.remove();
+        const el = h.createCardElement({ type: 'custom:button-card', template: 'casora_kettle', entity: id, name: 'Wasserkocher' });
+        el.id = 'qa-r555'; el.hass = ha.hass; el.style.cssText = 'position:fixed;left:20px;top:300px;width:200px;height:140px;z-index:99990;';
+        ha.shadowRoot.appendChild(el);
+      }, id);
+      await page.waitForTimeout(1500);
+      await page.mouse.click(120, 370);
+      await stable(page, look, null, { max: 9000, quiet: 1200, until: (v) => v && v.open && v.layout });
+      // Long enough for the column balance to measure twice and act (casora-core balance()).
+      await page.waitForTimeout(4000);
+      seen.push((await page.evaluate(look)).layout);
+      await page.evaluate(() => window.casoraPopup.close());
+      await page.waitForTimeout(900);
+    }
+    await check(`Desktop ${nm}: erstes Öffnen = gleiches Layout wie zweites`, seen[0] && seen[1] && seen[0].width === seen[1].width && seen[0].beside === seen[1].beside, seen);
+  }
+  await page.context().close();
 }
 await finish();

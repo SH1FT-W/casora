@@ -2,10 +2,11 @@
 // The kettle's entities come from casoraKettleFind (00-finder.js): the water temperature, whether it heats (Xiaomi BLE's
 // power binary_sensor), and where the integration has them a water_heater (target temperature, modes), a number for
 // the target or keep-warm temperature and a keep-warm switch; this module adds the switch that starts it (Tuya-like
-// kettles: one more switch on the device). Popup v3 „Bühne“ (popup-richtlinien-v3.md §4 S2/S7, §4.8, §7):
+// kettles: one more switch on the device). Popup v3 „Bühne“ (popup-richtlinien-v3.md §4 S2/S6/S7, §4.8, §7):
 //   target temperature (water_heater or number) → S2 dial with − / +, the water now as the dot on the ring and „Jetzt“;
-//   without a target → S7 with the water temperature (level ring 0–100 °C) and the word;
-//   the water_heater's modes as moons, the power switch in the head, the rest as one plate, the temperature as Verlauf.
+//   without a target → S6 with a range: the water temperature on the level ring (heat colours), the word in the head;
+//   the water_heater's modes as moons, the power switch in the head, the rest as one plate, the temperature as Verlauf –
+//   one column (552) from the first opening.
 // Other looks (Standard, Glas): HA's entity rows and history as before.
 //   window._casoraKettle.model(hass, id, vars) → the kettle's values
 //   window._casoraKettle.word(m)               – Heizt, Warmhalten, Heiß/Warm/Kalt, Aus
@@ -154,11 +155,14 @@
           step: step, min: lo, max: hi, heat: true, current: m.t, foot: m.t != null ? 'Jetzt ' + fmt(m.t) + '°' : null,
           minus: side(-1), plus: side(1), state: m.dead ? 'na' : null, moons: moons });
       }
-      // No target (Xiaomi BLE: it only shows): the water's temperature with the level ring (0–100 °C); the word stays in the head.
-      var c0 = m.t == null ? null : m.f ? (m.t - 32) * 5 / 9 : m.t;
-      return UI.stage('status', { tone: m.dead || !(m.heating || m.keepWarm) ? 'off' : 'good', icon: 'mdi:kettle-outline',
-        value: m.t != null ? fmt(m.t) : null, unit: m.t != null ? unitOf(m) : '', text: m.t != null ? 'Wasser' : (K.word(m) || 'Bereit'),
-        progress: c0 == null ? null : Math.max(0, Math.min(100, c0)), state: m.dead ? 'na' : null, moons: moons });
+      // No target (Xiaomi BLE: it only shows): the water's temperature as S6 with a range – the level ring 0–100 °C
+      // (32–212 °F) in the heat colours of the target dial, not a traffic light (coordinator 04.11.2026); the word stays
+      // in the head. Without any temperature the fallback rule S7 (§4.7).
+      if (m.t != null) {
+        return UI.stage('chart', { icon: 'mdi:kettle-outline', caption: 'Wasser', value: fmt(m.t), unit: unitOf(m),
+          ring: { min: m.f ? 32 : 0, max: m.f ? 212 : 100, heat: true }, state: m.dead ? 'na' : null, moons: moons });
+      }
+      return UI.stage('status', { tone: 'off', icon: 'mdi:kettle-outline', text: K.word(m) || 'Bereit', state: m.dead ? 'na' : null, moons: moons });
     }
     if (part === 'rows') {
       // The rest in one plate: keep warm (switch row), whether it heats, the mode when there are too many for moons.
@@ -190,15 +194,17 @@
       var call = function (p) { return 'return window._casoraKettle ? window._casoraKettle.sec(' + JSON.stringify(p) + ', ' + cj + ', states, hass) : "";'; };
       var f = { hero: { card: KIT.secCard(m.watch, call('hero'), S) }, stage: { card: KIT.secCard(m.watch, call('stage'), S) },
         rows: { card: KIT.secCard(m.watch, call('rows'), S) } };
-      var R = ['rows'];
       if (m.temp && S[m.temp]) {
         // The Verlauf under the dial (§7.1, 120; temperature orange, §7.3).
         f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history', title: 'Temperatur · 24 Std.',
           series: [{ entity: m.temp, name: 'Temperatur', unit: unitOf(m), color: 'var(--casora-color-orange, #FF9F0A)' }],
           height: 120, readout: 'own', plate: true } };
-        R.push('chart');
       }
-      return KIT.layout({ fields: f, top: ['hero'], stage: 'stage', left: [], right: R, narrowOrder: ['stage', 'chart', 'rows'], entity: id });
+      // One column (552) from the first opening: the plate holds at most three rows, so the right column of a two-column
+      // build is always short beside dial and Verlauf – rule B (§2) would make it one column, but the column balance
+      // only does that from the next opening, after measuring (casora-core balance(), r523). The kettle knows it in
+      // advance: stage → Verlauf → plate in reading order, the same on desktop and phone.
+      return KIT.layout({ fields: f, top: ['hero', 'stage', 'chart', 'rows'], left: [], right: [], entity: id });
     }
     var ents = [m.temp, m.power, m.heater, m.target, m.warm].filter(function (x, i, a) { return x && S[x] && a.indexOf(x) === i; });
     if (!ents.length) ents = [id];

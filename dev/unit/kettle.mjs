@@ -71,8 +71,8 @@ assert.deepEqual([o.value, o.min, o.max, o.step, o.current, o.unit], [80, 40, 10
 assert.deepEqual(o.plus.svc, { domain: 'number', service: 'set_value', data: { value: 85 }, target: { entity_id: 'number.plus_target' } }, '+ one step');
 K.sec('stage', { id: 'sensor.ble_temperature', vars: {} }, hass.states, hass);
 [t, o] = calls.pop();
-assert.equal(t, 'status', 'no target → S7');
-assert.deepEqual([o.value, o.text, o.progress, o.tone], ['92', 'Wasser', 92, 'good'], 'S7: water temperature with the level ring (the word is the head)');
+assert.equal(t, 'chart', 'no target → S6 with a range');
+assert.deepEqual([o.value, o.unit, o.caption, o.ring], ['92', '°C', 'Wasser', { min: 0, max: 100, heat: true }], 'S6: water temperature, level ring in heat colours');
 const rows = JSON.parse(JSON.stringify(K.sec('rows', { id: 'sensor.plus_temperature', vars: {} }, hass.states, hass)));
 assert.deepEqual(rows.rows.map((r) => r.label), ['Warmhalten', 'Heizen'], 'one plate: keep warm and heating');
 // The start switch: another switch on the device, never keep warm; the head takes it.

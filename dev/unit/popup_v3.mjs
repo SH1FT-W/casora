@@ -115,8 +115,9 @@ const MIGRIERT = [
   { popup: 'Szenen', vorlagen: ['casora_popup_scenes'], file: '08-weich-szenen.js', from: '  Z.v3sec = function', to: '  // Symbols chosen in the Studio', stages: 2 },
   // S8: the open items with „Hinzufügen“ in UI.stage('content').
   { popup: 'Einkaufsliste', vorlagen: ['casora_popup_shopping'], file: '36-shopping.js', from: '  S.innerHtml = function', to: '  S.box = function', stages: 1 },
-  // S2 with a target (water_heater or number), else S7 with the water temperature; modes as moons, the temperature as the Verlauf (120).
-  { popup: 'Wasserkocher', vorlagen: ['casora_popup_kettle'], file: '37-kettle.js', from: '  K.sec = function', to: "  // The popup's cards: v3", stages: 2 },
+  // S2 with a target (water_heater or number), else S6 with a range (the water temperature in heat colours), S7 without
+  // any temperature; modes as moons, the temperature as the Verlauf (120).
+  { popup: 'Wasserkocher', vorlagen: ['casora_popup_kettle'], file: '37-kettle.js', from: '  K.sec = function', to: "  // The popup's cards: v3", stages: 3 },
 ];
 
 // 1. Pieces.
