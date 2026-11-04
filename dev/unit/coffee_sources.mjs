@@ -242,4 +242,66 @@ assert.equal(K.is(plugHass('Siebträger'), 'switch.p'), true, 'plug of a named e
 assert.equal(K.is(plugHass('Kaffeemühle'), 'switch.p'), false, 'grinder');
 assert.equal(K.is(plugHass('Stehlampe'), 'switch.p'), false, 'lamp');
 assert.equal(K.status(K.find(plugHass('Siebträger'), 'switch.p'), plugHass('Siebträger').states).label, 'An', 'plug without power sensor: On, not Ready');
+
+// Care confirmations (owner, 04.11.2026: maintenance could not be reset in the popup): the power-curve integration's
+// "<task>_done" buttons belong to their care/warning row. Due rows get "Erledigt" → "Zurücksetzen" → button.press on
+// exactly that button (same row mechanism as the vacuum's wear parts); rows not due get no action.
+{
+  const P = 'kaffeelabor', dev = 'dev_done';
+  const ents = [
+    ['sensor.' + P + '_status', 'ready', 'status', { options: ['off', 'ready', 'running'] }],
+    ['sensor.' + P + '_learning', '4', 'learning'],
+    ['sensor.' + P + '_last_program', 'Espresso', 'last_program'],
+    ['sensor.' + P + '_descale_in', '0', 'descale', { due: true, unit_of_measurement: 'L' }],
+    ['sensor.' + P + '_filter_in', '12', 'filter', { due: false, unit_of_measurement: 'd' }],
+    ['sensor.' + P + '_brew_unit_in', '-2', 'brew_unit', { due: true, unit_of_measurement: 'd' }],
+    ['sensor.' + P + '_grounds_in', '0', 'grounds_in', { due: true }],
+    ['sensor.' + P + '_tank', '0', 'tank', { due: true }],
+    ['sensor.' + P + '_beans', '40', 'beans', { due: false }],
+    ['binary_sensor.' + P + '_milk', 'on', 'milk'],
+    ...['descale', 'filter', 'grounds', 'brew_unit', 'milk', 'tank', 'beans'].map((k) => ['button.' + P + '_' + k + '_done', 'unknown', k + '_done']),
+    ['button.' + P + '_beans_empty', 'unknown', 'beans_empty'],
+  ];
+  const entities = {}, states = {};
+  ents.forEach(([id, state, key, attrs]) => {
+    entities[id] = { entity_id: id, platform: 'delonghi', device_id: dev, translation_key: key };
+    states[id] = { entity_id: id, state, attributes: { friendly_name: 'Labor ' + id.split('.')[1], ...(attrs || {}) } };
+  });
+  const hass = { states, entities, devices: { [dev]: { id: dev, name: 'Labor' } }, areas: {} };
+  const sec = (part, c) => {
+    const prev = window._casoraUI;
+    window._casoraUI = { group: (rows, title) => ({ rows, title }) };
+    try { return K.sec(part, c, states, hass, null) || { rows: [] }; } finally { window._casoraUI = prev; }
+  };
+  const c = K.find(hass, 'sensor.' + P + '_status');
+  assert.equal(c.fam, 'strom', 'done buttons: family strom');
+  const btn = (k) => 'button.' + P + '_' + k + '_done';
+  assert.deepEqual(c.careDone, { entkalken: btn('descale'), filter: btn('filter'), satz: btn('grounds'), bruehgruppe: btn('brew_unit'),
+    milch: btn('milk'), wasser: btn('tank'), bohnen: btn('beans') }, 'done buttons per care kind (beans_empty is no confirmation)');
+  const care = sec('care', c), warn = sec('warn', c);
+  const row = (g, label) => g.rows.find((r) => r.label === label);
+  const pressed = (r) => r && r.svc && r.svc.domain === 'button' && r.svc.service === 'press' ? r.svc.target.entity_id : null;
+  [['Entkalken', 'descale'], ['Brühgruppe', 'brew_unit']].forEach(([l, k]) => {
+    const r = row(care, l);
+    assert.ok(r, 'care row ' + l);
+    assert.equal(r.action, 'Erledigt', l + ': action');
+    assert.equal(r.confirm, 'Zurücksetzen', l + ': confirm');
+    assert.equal(pressed(r), btn(k), l + ': presses its button');
+  });
+  assert.equal(row(care, 'Brühgruppe').value, 'Überfällig', 'overdue stays visible next to the action');
+  assert.ok(!row(care, 'Wasserfilter').action && !row(care, 'Wasserfilter').svc, 'filter not due: no action');
+  [['Satzbehälter leeren', 'grounds'], ['Wasser nachfüllen', 'tank']].forEach(([l, k]) => {
+    const r = row(warn, l);
+    assert.ok(r, 'warning row ' + l + ' in ' + JSON.stringify(warn.rows.map((x) => x.label)));
+    assert.equal(r.action, 'Erledigt', l + ': action');
+    assert.equal(r.confirm, 'Zurücksetzen', l + ': confirm');
+    assert.equal(pressed(r), btn(k), l + ': presses its button');
+  });
+  const milk = warn.rows.find((r) => /Milch/.test(r.label));
+  assert.ok(milk && pressed(milk) === btn('milk'), 'milk system row presses milk_done');
+  // Without done buttons nothing changes (other integrations, Home Connect …).
+  Object.keys(entities).filter((id) => id.startsWith('button.')).forEach((id) => { delete entities[id]; delete states[id]; });
+  const c2 = K.find(hass, 'sensor.' + P + '_status');
+  assert.ok(sec('care', c2).rows.concat(sec('warn', c2).rows).every((r) => !r.action && !r.svc), 'no done buttons: no action');
+}
 console.log(`coffee_sources: ok (${K.SOURCES.map((x) => x.fam).join(', ')})`);
