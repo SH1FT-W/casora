@@ -225,15 +225,13 @@ def t_py17():
 
     from custom_components.casora import templates
 
+    # The bundle is only read from the package now (no build from a template tree in the config
+    # folder); two concurrent reads still return it whole and write nothing.
     cfg = tempfile.mkdtemp()
-    for rel in (templates.SOURCE, templates.SOURCE_MOBILE):
-        os.makedirs(os.path.dirname(os.path.join(cfg, rel)), exist_ok=True)
-        open(os.path.join(cfg, rel), "w").write("x")
-    os.makedirs(os.path.join(cfg, templates.TEMPLATE_DIR), exist_ok=True)
     os.makedirs(os.path.dirname(os.path.join(cfg, templates.BUNDLE)), exist_ok=True)
     big = {"templates": {f"t{i}": {"x": "y" * 200} for i in range(3000)}, "scaffold": {"a": 1}, "mobile": {}}
-    real_build = templates._build
-    templates._build = lambda *a: big
+    with open(os.path.join(cfg, templates.BUNDLE), "w", encoding="utf-8") as fh:
+        json.dump(big, fh)
     errs, got = [], []
 
     def run():
@@ -242,18 +240,15 @@ def t_py17():
         except Exception as e:  # noqa: BLE001
             errs.append(e)
 
-    try:
-        ts = [threading.Thread(target=run) for _ in range(2)]
-        for t in ts:
-            t.start()
-        for t in ts:
-            t.join()
-    finally:
-        templates._build = real_build
+    ts = [threading.Thread(target=run) for _ in range(2)]
+    for t in ts:
+        t.start()
+    for t in ts:
+        t.join()
     ok = len(got) == 2 and all(len(json.loads(g)["templates"]) == 3000 for g in got)
     written = os.listdir(os.path.dirname(os.path.join(cfg, templates.BUNDLE)))
-    check("B-PY-17: Bundle nach zwei gleichzeitigen Abrufen heil, nur im Speicher gebaut",
-          ok and not errs and not written, repr((errs, written)))
+    check("B-PY-17: Bundle nach zwei gleichzeitigen Abrufen heil, nichts geschrieben",
+          ok and not errs and written == ["casora-templates.json"], repr((errs, written)))
 
 
 async def t_py18():

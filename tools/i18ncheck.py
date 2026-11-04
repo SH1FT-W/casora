@@ -18,7 +18,11 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "custom_components/casora/translations/dashboard")
 OUT = os.path.join(ROOT, "custom_components/casora/scripts/casora-i18n.js")
-SCAN = ("dashboards/templates", "custom_components/casora/scripts", "custom_components/casora/panel")
+SCAN = ("custom_components/casora/scripts", "custom_components/casora/panel")
+# Keys used only by the removed YAML template copies (see main()); new keys still need a call site.
+LEGACY_KEYS = {"filter.all", "filter.climate", "filter.energy", "filter.lights", "filter.media",
+               "filter.presence", "filter.security", "presence.all_away", "presence.all_home",
+               "presence.group.title", "presence.n_away", "presence.person"}
 
 CALL = re.compile(
     r"(?:_casoraT|(?<![\w$])T)\(\s*'([^']+)'\s*,\s*'((?:[^'\\]|\\.)*)'"
@@ -257,7 +261,11 @@ def main() -> int:
                 % (path, line, key, default, en[key])
             )
 
-    for key in sorted(set(en) - used):
+    # Keys without a call site in the repo stay allowed: since the YAML template copies were removed
+    # (dashboards/templates), these keys serve only templates in users' dashboards that still call
+    # window._casoraT (old YAML installs, or Casora templates of older bundles the user edited and the
+    # refresh therefore keeps); dropping them would turn those strings English.
+    for key in sorted(set(en) - used - LEGACY_KEYS):
         errors.append("en.json: %r is not used at any call site" % key)
 
     for name in sorted(os.listdir(SRC)):

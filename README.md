@@ -283,7 +283,7 @@ Since October 2026 Casora uses calendar versions **`YY.M.N`**: year, month, and 
 ### Documentation
 
 - [**Guide**](docs/guide.md): setup assistant, Studio, looks, moving from Hemma, rewind, AI features, FAQ and troubleshooting, actions
-- [**Advanced YAML**](docs/ADVANCED.md): building and tuning Casora dashboards by hand
+- [**Advanced YAML**](docs/ADVANCED.md): tuning Casora dashboards by hand (installing without the integration is not supported)
 - [**Contributing**](docs/contributing.md): pull requests and screenshots
 - [**Changelog**](CHANGELOG.md): what changed in each version, in English and [German](CHANGELOG.de.md)
 

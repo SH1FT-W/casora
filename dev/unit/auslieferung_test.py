@@ -98,7 +98,7 @@ async def main():
         with open(out, "w", encoding="utf-8") as h:
             h.write('{"templates":{"a":{}}}' * 50)
         tv = T.CasoraTemplatesView()
-        if True:  # no template tree in d: the shipped bundle is served as it is
+        if True:  # the shipped bundle is served as it is
             r = await tv.get(req("/api/casora/templates", hass, **{"Accept-Encoding": "gzip"}))
             check("Vorlagen: gepackt", r.headers.get("Content-Encoding") == "gzip" and len(r.body) < os.path.getsize(out))
             check("Vorlagen: immer nachfragen (private, no-cache)", r.headers["Cache-Control"] == "private, no-cache")
