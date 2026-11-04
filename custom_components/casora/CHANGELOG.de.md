@@ -4,6 +4,24 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.11 – 04.11.2026
+
+Neue Studio-Einstellungen in acht Kacheln mit einem ruhigen Raster, und Casora ist bereit für den Marketplace in Home Assistant 2026.11.
+
+### Geändert
+- **Studio-Einstellungen in acht Kacheln:** Aussehen, Bedienen, Handy, Glocke & Meldungen, Haus & Geräte, Wetter, Strom & Tanken, KI sowie Updates & Einrichtung ersetzen die bisherigen Themen und Unterseiten. Jede Einstellung hat einen kurzen Satz; Live-Aktivitäten stehen unter Handy, Tankpreise unter Wetter, Strom & Tanken. Frühere Links, die Glocke und die ⌘K-Suche führen zur richtigen Kachel. Die Dashboard-Einstellungen gehören zu den Kacheln und werden mit einer Leiste gespeichert.
+- **Ein Raster auf allen Einstellungsseiten:** Überschriften, Sätze, Platten und Hinweise stehen auf Desktop, Tablet und Handy bündig auf einer Kante; „Erweitert“ klappt ohne Karte in der Karte auf, und jeder Abschnitt hat eine Überschrift.
+
+### Neu
+- **Marketplace in Home Assistant 2026.11:** Casora erkennt den eingebauten Marketplace (früher HACS): Casora steht unter Updates nicht mehr doppelt, und „In HACS öffnen“ führt zur Marketplace-Seite. Mit Home Assistant 2026.10 und HACS bleibt alles wie bisher.
+- **Neustart nach Marketplace-Updates:** Über den Marketplace installierte Updates zeigen in Glocke, Updates-Kachel und -Popup wieder „Neustart erforderlich“.
+- **Marketplace beim ersten Start:** Hat man die Erststart-Warnung des Marketplace noch nicht bestätigt, öffnet die Casora-Installation den Marketplace.
+- **Hemma entfernen unter 2026.11:** „Hemma entfernen“ deinstalliert Hemma über den Marketplace.
+- **Nach Updates suchen:** frischt Marketplace-Repos auf, wenn ein GitHub-Konto verbunden ist.
+
+### Behoben
+- **Einstellungen der Live-Aktivitäten:** Während eine Aktivität lief, baute sich die Kachel Handy alle paar Sekunden neu auf; jetzt aktualisiert sich nur der Live-Block.
+
 ## 26.11.10 – 03.11.2026
 
 Wischen zwischen Räumen, ein Geräte-Assistent, der nur Angehaktes einbaut, weiche Popup-Seiten und die Community in Spalten.

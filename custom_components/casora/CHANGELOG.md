@@ -4,6 +4,24 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.11 – 04.11.2026
+
+New Studio settings in eight tiles with one calm layout, and Casora is ready for Home Assistant 2026.11's Marketplace.
+
+### Changed
+- **Studio settings in eight tiles:** Look & feel, Tapping & tablet, Phone, Bell & messages, Home & devices, Weather, power & fuel, AI and Updates & setup replace the earlier topics and sub pages. Every setting has a short plain sentence; Live Activities sit under Phone, fuel prices under Weather, power & fuel. Earlier links, the bell and the ⌘K search lead to the right tile. Dashboard settings are part of the tiles and saved with one bar.
+- **One layout on every settings page:** headings, sentences, plates and notes line up on one edge on desktop, tablet and phone; "Advanced" opens without a card inside a card, and each section has one heading.
+
+### New
+- **Home Assistant 2026.11 Marketplace:** Casora recognises the built-in Marketplace (formerly HACS), so it no longer shows up twice under Updates and "Open in HACS" opens its Marketplace page. Home Assistant 2026.10 with HACS works as before.
+- **Restart after Marketplace updates:** updates installed through the Marketplace show "Restart required" again in the bell, the Updates tile and popup.
+- **Marketplace first run:** installing a Casora update opens the Marketplace when its first-run warning hasn't been accepted yet.
+- **Remove Hemma on 2026.11:** "Remove Hemma" uninstalls Hemma through the Marketplace.
+- **Check for updates:** refreshes Marketplace repositories when a GitHub account is connected.
+
+### Fixed
+- **Live Activities settings:** while an activity was running, the Phone tile rebuilt itself every few seconds; now only the live block updates.
+
 ## 26.11.10 – 03.11.2026
 
 Swipe between rooms, a device assistant that builds only what you tick, smooth popup pages and the community in columns.
