@@ -17,7 +17,7 @@
 // Leiste, die Zeile „Fertig gegen“ unter „Druck“ entfällt.
 // v3 (31.10.2026, popup-richtlinien-v3 §4 S4/§4.8): the 6-px bar under the head is replaced by the stage – the progress
 // is the ring of the dial (level, not turnable), the remaining time large in its middle with the program, „25 %“ and
-// „Fertig gegen … Uhr“ under it. Still checked: progress visible without a fake slider block, percent and finish time,
+// „Fertig gegen … Uhr“ under it (laundry since 04.11.2026 „Fertig um HH:MM“, one short line). Still checked: progress visible without a fake slider block, percent and finish time,
 // no doubled phase/program rows, forecast as one row, care right (only what is due), lists right (§2: left only the
 // stage), the calm two-step „Programm abbrechen“ pill, the phone in one column without scrolling far. Dropped with v3:
 // bar geometry and the column balance (left holds only the stage).
@@ -181,7 +181,7 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
     const want = Number((Object.values(pr.p).find((x) => /^\d+(\.\d+)?$/.test(x.state) && +x.state > 10) || {}).state);
     await check(dev + ': Fortschritt als Ring der Bühne (S4, nicht drehbar)', m.stage && m.stage.dial === 'level' && m.stage.x < m.areas.right.x
       && (!want || Math.abs(m.stage.pct - want) <= 2), { stage: m.stage, want });
-    await check(dev + ': Prozent und „Fertig gegen … Uhr“ auf der Bühne', m.stage && /\d+\s%/.test(m.stage.text) && /Fertig gegen \d\d:\d\d Uhr/.test(m.stage.text), m.stage && m.stage.text);
+    await check(dev + ': Prozent und „Fertig gegen … Uhr“ auf der Bühne', m.stage && /\d+\s%/.test(m.stage.text) && /Fertig (gegen|um) \d\d:\d\d/.test(m.stage.text), m.stage && m.stage.text);
     await check(dev + ': Restzeit groß auf der Bühne', m.stage && /übrig/.test(m.stage.text), m.stage && m.stage.text);
     await check(dev + ': kein Verlaufsblock (HH.bar) mehr', m.blocks === 0 && m.block66 === 0, { blocks: m.blocks, block66: m.block66 });
     // „Programm festlegen ›“ (WashData detection, sub page, 04.11.2026) is a control, not a doubled row.
@@ -307,7 +307,7 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
     const m = await measure(page);
     await check(dev + ' Handy: einspaltig (rechte Spalte unter der linken)', m && m.grid && m.grid.cols === 1 && m.areas.left && (!m.areas.right || m.areas.right.y >= m.areas.left.y + m.areas.left.h - 1), m && { grid: m.grid, areas: m.areas });
     await check(dev + ' Handy: Fortschritt als Ring der Bühne, Prozent und „Fertig gegen“', m && m.stage && m.stage.dial === 'level' && /\d+\s%/.test(m.stage.text)
-      && /Fertig gegen/.test(m.stage.text), m && m.stage);
+      && /Fertig (gegen|um) \d\d:\d\d/.test(m.stage.text), m && m.stage);
     await check(dev + ' Handy: kein Verlaufsblock', m && m.blocks === 0 && m.block66 === 0, m && { blocks: m.blocks, block66: m.block66 });
     if (dev === 'dish') {
       await check('dish Handy: Pflege nur Fälliges oder „Alles aufgefüllt“ (keine volle Liste)', m && !(['Regeneriersalz', 'Klarspüler', 'Filter', 'Maschinenpflege'].every((w) => m.rows.some((r) => r.indexOf(w) === 0))), m && m.rows);

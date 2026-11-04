@@ -1881,7 +1881,7 @@
     window._casoraSuppressDismiss = Date.now() + 600;
     if (!b.classList.contains('armed')) {
       b.classList.add('armed');
-      b.textContent = 'Bestätigen';
+      b.textContent = 'Zurücksetzen';   // same words as vacuum and coffee (owner 04.11.2026)
       clearTimeout(b._hwT);
       b._hwT = setTimeout(function () { b.classList.remove('armed'); b.textContent = 'Erledigt'; }, 4000);
       return;
@@ -2072,9 +2072,15 @@
       if (kind === 'stage') {
         var pctS = active ? pctOf(c, states) : null;
         var remS = active ? remOf(c, states) : null;
-        var progS = [prog, pctS != null ? Math.round(pctS) + ' %' : null,
-          remS != null ? 'Fertig gegen ' + clock(new Date(Date.now() + remS * 60000)) + ' Uhr' : null].filter(Boolean);
-        return UI.stage('progress', { value: value, unit: unit || '', word: sub.filter(function (x) { return x !== prog; }).join(' · ') || null,
+        /* The dial's program block holds three lines: a long programme name takes two (owner 04.11.2026: „Baumwolle
+           schranktrocken 58 %…“ was cut on the phone), so the percent moves to the word under the time. The head already
+           says „Läuft“: with a phase the word is phase · percent. */
+        // „Fertig um HH:MM“ (one short line; „Fertig gegen HH:MM Uhr“ wrapped at 393 px and was clamped).
+        var progS = [prog, remS != null ? 'Fertig um ' + clock(new Date(Date.now() + remS * 60000)) : null].filter(Boolean);
+        var wordS = sub.filter(function (x) { return x !== prog; });
+        if (s[3] === 'run' && rem != null && ph && wordS.indexOf(ph) > -1) wordS = wordS.filter(function (x) { return x !== s[0]; });
+        if (pctS != null) wordS.push(Math.round(pctS) + ' %');
+        return UI.stage('progress', { value: value, unit: unit || '', word: wordS.join(' · ') || null,
           progress: pctS != null ? pctS / 100 : null, program: active ? progS.join(' · ') || null : null,
           state: raw === 'unavailable' || raw === 'unknown' || !states[c.st] ? 'na' : !active ? 'off' : null });
       }
@@ -2117,7 +2123,8 @@
       /* Soft/v3 (the plug's readings are gone there): power now and this cycle's projected energy (WashData progress
          attributes projected_energy_kwh / projected_cost). */
       var pwR = SF ? num(states, c.power) : null;
-      if (pwR != null) rows.push({ icon: 'mdi:flash', iconTone: 'accent', label: 'Leistung', value: f(pwR, pwR < 10 ? 1 : 0) + ' W' });
+      /* Below 1 W (soaking, a pause) the row says nothing (owner 04.11.2026). */
+      if (pwR != null && pwR >= 1) rows.push({ icon: 'mdi:flash', iconTone: 'accent', label: 'Leistung', value: f(pwR, pwR < 10 ? 1 : 0) + ' W' });
       var prA = (c.progress && states[c.progress] && states[c.progress].attributes) || {};
       var peR = Number(prA.projected_energy_kwh);
       if (SF && peR > 0) {

@@ -186,7 +186,7 @@ im Leerlauf merkt sich WashData für den nächsten Durchgang (WashData #411); da
 `/ha-washdata?device=<entry_id>` (WashData #428). Hersteller (HA-Kern 2026.11): Home Connect `poor_i_dos_1_fill_level`/
 `poor_i_dos_2_fill_level` (Ereignis, `present` = fast leer), Miele `twin_dos_1_level`/`twin_dos_2_level` (Prozent)
 (`00-finder.js` `casoraLaundryFind`, `02-devices.js` `L.careRows`/`L.profileList`; Tests `dev/unit/laundry_content.mjs`,
-`dev/qa/regress/r557_laundry_content.mjs`).
+`dev/qa/regress/r558_laundry_content.mjs`).
 
 Wetter-Integrationen (#56), Casora liest Sensoren am Gerät der Wetter-Entität nach `translation_key`
 (`00-finder.js` `WX_KEYS`; Test `dev/unit/weather_feels_like.mjs`, Testhaus `dev/casora_mock/wetter.py`):

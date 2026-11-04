@@ -142,6 +142,9 @@ for (const [mode, w, h] of [['desk', 1440, 1000], ['phone', 393, 852]]) {
     // „Erledigt“: two steps, then WashData's maintenance event for this task and device.
     const b = pi.done.find((d) => d.k.split('|')[1] === 'filter_clean');
     await page.mouse.click(b.x, b.y); await page.waitForTimeout(500);
+    // Same words as vacuum and coffee: „Erledigt“, then „Zurücksetzen“ to confirm.
+    const armed = await page.evaluate(() => { const e = window.__pierce('[data-hw-maint]').find((x) => x.classList.contains('armed')); return e ? e.textContent : null; });
+    await check('Erledigt fragt mit „Zurücksetzen“ nach', armed === 'Zurücksetzen', armed);
     await page.mouse.click(b.x, b.y); await page.waitForTimeout(1200);
     const calls = await page.evaluate(() => window.__qaWD.calls);
     await check('Erledigt → ha_washdata/add_maintenance_event (filter_clean, Eintrag des Geräts)',
@@ -167,6 +170,30 @@ for (const [mode, w, h] of [['desk', 1440, 1000], ['phone', 393, 852]]) {
     has(pi, /^Leistung.*160 W/) && has(pi, /^Verbrauch.*Voraussichtlich.*0,82 kWh/), pi && pi.rows);
   await check(mode + ' läuft: „Programm festlegen“, Programm nicht erkannt', has(pi, /^Programm festlegen.*Programm nicht erkannt/), pi && pi.rows);
   await check(mode + ' läuft: nichts ragt aus dem Popup', pi && pi.out === 0 && !pi.cut.length && pi.docOver <= 0, pi && { out: pi.out, cut: pi.cut });
+  await closePopup(page);
+
+  // ── Running a long programme while soaking (owner 04.11.2026): the dial shows the whole name (two lines at most), the
+  // percent and the finish time, nothing clamped; no „Leistung“ row below 1 W ──
+  const LONG = 'Baumwolle schranktrocken';
+  await reset();
+  await set({ [c.st]: { state: 'running', attributes: { current_program_guess: LONG } },
+    ...(c.program ? { [c.program]: { state: LONG } } : {}), ...(c.phase ? { [c.phase]: { state: 'Soak' } } : {}),
+    ...(c.progress ? { [c.progress]: { state: '58' } } : {}),
+    ...(c.remaining ? { [c.remaining]: { state: '41' } } : {}), ...(c.power ? { [c.power]: { state: '0.4' } } : {}) });
+  await check(mode + ' langes Programm: Popup offen', await openPopup(page, c.st));
+  const dial = await page.evaluate(() => {
+    const st = window.__pierce('[data-casora-stage]').find((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
+    if (!st) return null;
+    const blocks = [...st.querySelectorAll('.hui-dl-w2, .hui-st-w')].map((e) => ({ t: (e.textContent || '').replace(/\s+/g, ' ').trim(),
+      clipped: e.scrollHeight > e.clientHeight + 1,
+      lines: Math.round(e.querySelector('.l') ? Math.max(...[...e.querySelectorAll('.l')].map((l) => l.getClientRects().length)) : e.getClientRects().length) }));
+    return { text: (st.textContent || '').replace(/\s+/g, ' '), blocks };
+  });
+  await check(mode + ' langes Programm: Name, Prozent und Fertigzeit im Rad, nichts abgeschnitten', !!dial
+    && dial.text.includes(LONG) && /58\s%/.test(dial.text) && /Fertig um \d\d:\d\d/.test(dial.text)
+    && dial.blocks.every((b) => !b.clipped) && dial.blocks.every((b) => b.lines <= 2), dial);
+  pi = await info(page);
+  await check(mode + ' Einweichen (< 1 W): keine Zeile „Leistung“', !has(pi, /^Leistung/), pi && pi.rows);
   await closePopup(page);
 
   // ── Finished, laundry still inside ──
