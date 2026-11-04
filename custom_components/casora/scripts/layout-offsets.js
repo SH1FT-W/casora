@@ -273,6 +273,15 @@
   var FIT_TITLE_SOFT = 0.85;   // ... while it keeps this share of its size
   var FIT_TITLE_MIN = 0.62;    // only with no room left to move up, down to this
   var FIT_TITLE_MIN_PX = 30;   // ... nor below this
+  // Short landscape screens (1280×800 kiosks, 720p laptops, 1180×820 iPads) where everything fits:
+  // the theme's --hero-top leaves a tall empty band under the nav bar while the hero sits close to
+  // the tiles (issue 123). There the band shrinks by up to this share; the change fades in from
+  // EVEN_H_FROM down to EVEN_H_FULL, so taller screens (1440×900 and up) keep the theme's layout.
+  var EVEN_CUT = 0.35;
+  var EVEN_KEEP = 0.8;         // ... but the band stays at least this share of the badges-to-tiles gap
+  var EVEN_H_FROM = 880;
+  var EVEN_H_FULL = 840;
+  var EVEN_H_MIN = 601;        // phone landscape (max-height 600) has its own layout
   var fittedHosts = [];
 
   function boxOf(el) {
@@ -361,6 +370,18 @@
     return bottom;
   }
 
+  // Top edge and width of the hero: weather line, title and badge rows.
+  function heroSpan(sr, badges) {
+    var out = { top: badges.top, left: badges.left, right: badges.right };
+    ['#temperature', '#weather', '#name', '#n'].forEach(function (sel) {
+      var r = boxOf(sr.querySelector(sel));
+      if (!r) return;
+      out.top = Math.min(out.top, r.top);
+      out.left = Math.min(out.left, r.left); out.right = Math.max(out.right, r.right);
+    });
+    return out;
+  }
+
   function fitHero(headerStack, entityRow, navbarBottom) {
     var sr = headerStack.getRootNode ? headerStack.getRootNode() : null;
     var host = sr && sr.host;
@@ -377,17 +398,11 @@
     if (tiles.rect.right <= badges.left || tiles.rect.left >= badges.right) return;
 
     var need = FIT_GAP - (tiles.top - badges.bottom);
-    if (need <= 0.5) return;
+    if (need <= 0.5) { evenHero(host, sr, badges, tiles.top, navbarBottom); return; }
 
     var title = boxOf(sr.querySelector('#name')) ? sr.querySelector('#name')
       : (boxOf(sr.querySelector('#n')) ? sr.querySelector('#n') : null);
-    var stackTop = badges.top, left = badges.left, right = badges.right;
-    ['#temperature', '#weather', '#name', '#n'].forEach(function (sel) {
-      var r = boxOf(sr.querySelector(sel));
-      if (!r) return;
-      stackTop = Math.min(stackTop, r.top);
-      left = Math.min(left, r.left); right = Math.max(right, r.right);
-    });
+    var span = heroSpan(sr, badges), stackTop = span.top, left = span.left, right = span.right;
     var limit = Math.max(navbarBottom || 0, nowPlayingBottom(sr, left, right)) + FIT_TOP_GAP;
     var room = Math.max(0, stackTop - limit);
 
@@ -416,6 +431,27 @@
     if (shift >= 1 && base) host.style.setProperty('--hero-top', 'calc(' + base + ' - ' + shift + 'px)');
     if (size) host.style.setProperty('--hero-room-name-size-current', size + 'px');
     host._casoraHeroFit = { shift: shift, size: size, size0: size0, need: Math.round(need) };
+    if (fittedHosts.indexOf(host) === -1) fittedHosts.push(host);
+  }
+
+  // Where the hero fits: on short landscape screens move it up by a share of the empty band
+  // between the nav bar (or Now Playing) and its top. Only up, so the badges keep clear of the tiles;
+  // never so far that the gap under the badges ends up much taller than the band (1180×820 iPads,
+  // where the tiles sit lower, move only a little).
+  function evenHero(host, sr, badges, tilesTop, navbarBottom) {
+    var vw = window.innerWidth, vh = window.innerHeight;
+    if (vw <= vh || vh < EVEN_H_MIN || vh >= EVEN_H_FROM) return;
+    var share = EVEN_CUT * Math.min(1, (EVEN_H_FROM - vh) / (EVEN_H_FROM - EVEN_H_FULL));
+    var span = heroSpan(sr, badges), stackTop = span.top, left = span.left, right = span.right;
+    var above = Math.max(navbarBottom || 0, nowPlayingBottom(sr, left, right));
+    var band = stackTop - above;
+    var below = tilesTop - badges.bottom;
+    var shift = Math.round(Math.min(band * share, band - FIT_TOP_GAP, (band - EVEN_KEEP * below) / (1 + EVEN_KEEP)));
+    if (shift < 1) return;
+    var base = getComputedStyle(host).getPropertyValue('--hero-top').trim();
+    if (!base) return;
+    host.style.setProperty('--hero-top', 'calc(' + base + ' - ' + shift + 'px)');
+    host._casoraHeroFit = { shift: shift, size: 0, even: true };
     if (fittedHosts.indexOf(host) === -1) fittedHosts.push(host);
   }
 

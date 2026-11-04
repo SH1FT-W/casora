@@ -6,7 +6,8 @@
 // Expected: only when it gets tight (badge row closer than 28 px to the tiles) the hero moves up and the title
 // gets somewhat smaller; the badges then clear the tiles, the hero stays below the nav bar and the open Now
 // Playing list, the title keeps at least 62 % of its size. Where it fits, the layout is exactly the unfitted one
-// (same positions, same title size, nothing set on the card). Each case is measured fitted, then with the fit
+// (same positions, same title size, nothing set on the card) - except on short landscape screens, where the
+// hero only moves up into the empty band under the nav bar (issue 123, r566). Each case is measured fitted, then with the fit
 // switched off (window.CASORA_QA_NO_HERO_FIT, the base behaviour), then fitted again (same result, no loop).
 // The tablet's own geometry (hero ~110 px lower than in the test house) is rebuilt with --header-top-desktop
 // on the room card.
@@ -117,7 +118,11 @@ async function run(label, { width, height, touch = false, heroTop = null, media 
   const gap = Math.round(fitted.tilesTop - fitted.badges.b);
   await check(`${label}: fitted again gives the same layout (no loop)`,
     JSON.stringify({ ...fitted, menu: null }) === JSON.stringify({ ...again, menu: null }), { fitted: fitted.fit, again: again.fit });
-  if (baseGap >= GAP) {
+  if (baseGap >= GAP && fitted.fit && fitted.fit.even) {
+    // Short landscape screen: the hero only moves up into the empty band (r566), the title keeps its size.
+    await check(`${label}: fits (gap ${baseGap} → ${gap} px) - only moved up, title unchanged`,
+      gap >= baseGap - 1 && fitted.fs === base.fs && fitted.badges.t < base.badges.t, fitted.fit);
+  } else if (baseGap >= GAP) {
     await check(`${label}: fits as it is (gap ${baseGap} px) - nothing set on the card`, !fitted.fit && !fitted.inline.length, fitted.inline);
     await check(`${label}: weather, title and badges exactly where the base puts them`,
       same(fitted.temp, base.temp) && same(fitted.title, base.title) && same(fitted.badges, base.badges) && fitted.fs === base.fs,
@@ -144,12 +149,12 @@ const tight1 = await run('Tablet 1006×528 (touch)', { width: 1006, height: 528,
 await check('1006×528 was tight before (test would catch the old layout)', tight1 && tight1.baseGap < GAP, tight1);
 const tight2 = await run('Tablet like reported, 1340×800 + Now Playing', { width: 1340, height: 800, heroTop: '413px', media: true });
 await check('reported geometry was tight before', tight2 && tight2.baseGap < GAP, tight2);
-// Short screens that fit: unchanged, or fitted without overlap.
-for (const [w, h, touch] of [[1340, 800, false], [1006, 600, true], [1280, 720, false], [1366, 768, false]]) {
+// Short screens that fit: unchanged, only moved up (r566), or fitted without overlap.
+for (const [w, h, touch] of [[1340, 800, false], [1006, 600, true], [1280, 720, false], [1366, 768, false], [1180, 820, true]]) {
   await run(`${w}×${h}${touch ? ' (touch)' : ''}`, { width: w, height: h, touch });
 }
 // Controls: must stay exactly as they are.
-for (const [w, h, touch] of [[1440, 900, false], [1920, 1080, false], [1180, 820, true], [820, 1180, true]]) {
+for (const [w, h, touch] of [[1440, 900, false], [1920, 1080, false], [820, 1180, true]]) {
   const r = await run(`Control ${w}×${h}${touch ? ' (touch)' : ''}`, { width: w, height: h, touch });
   await check(`Control ${w}×${h}: not tight, nothing fitted`, r && r.baseGap >= GAP && !r.fit, r);
 }
