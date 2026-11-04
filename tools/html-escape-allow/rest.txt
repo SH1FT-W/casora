@@ -21,9 +21,7 @@ custom_components/casora/scripts/local/16-maeher.js | re:^keys\.map\((?:pill|b)\
 # 18-ziele.js – timeline and state band
 custom_components/casora/scripts/local/18-ziele.js | re:^(?:font|ink|sub|row|dim|dot|\(x\.color \|\| dim\))$ | CSS constants of timeline(); x.color and dot are fixed colours of the code | 8
 custom_components/casora/scripts/local/18-ziele.js | x.sub | timeline sub line, escaped where the items are built (esc(Z.fmt …), esc(T(…))) | 1
-custom_components/casora/scripts/local/18-ziele.js | re:^t[nk]\.(?:fill|dot)$ | stateTone(): Pulse colour constants | 2
-custom_components/casora/scripts/local/18-ziele.js | re:^(?:gl|\(gl \+ gr\))$ | state ribbon gap in px (numbers 0 or 1.5) | 2
-custom_components/casora/scripts/local/18-ziele.js | (x.s === 'check' || x.s === 'failed' ? 'box-shadow:0 0 10px -2px ' + tn.dot + ';' : '') | glow of a problem state: fixed colour constant (stateTone) | 1
+custom_components/casora/scripts/local/18-ziele.js | re:^t[nk]\.(?:fill|dot)$ | stateTone(): Pulse colour constants | 1
 custom_components/casora/scripts/local/18-ziele.js | leg | legend markup built from escaped parts | 1
 custom_components/casora/scripts/local/18-ziele.js | head2 | UI.label markup | 1
 
