@@ -63,16 +63,18 @@ const on = (d) => 'on ' + ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.ge
 
 // WCS-shaped hass: one device "Waste Collection Schedule" (place = renamed by the user), default
 // sensors without daysTo, pickup dates as attributes {date: type}. HA 2026.4+: friendly name
-// "<device name_by_user || name> <entity name>", a name the user gave the entity alone.
+// "<device name_by_user || name> <entity name>", a name the user gave the entity alone. ha211: HA 2026.11
+// (entity registry 1.24) puts the device in front of a name the user gave as well; hass.entities name is
+// the entity's own name on both.
 const BINS = [['Grüne Tonne', 2, 16], ['Schwarze Tonne', 9, 23], ['Blaue Tonne', 5, 19]];
 const idOf = (t) => 'sensor.waste_collection_schedule_' + t.toLowerCase().replace(/ü/g, 'u').replace(/\s+/g, '_');
-function wcs({ place = null, rename = {}, bins = BINS } = {}) {
+function wcs({ place = null, rename = {}, bins = BINS, ha211 = false } = {}) {
   const dev = { id: 'dev_wcs', name: 'Waste Collection Schedule', name_by_user: place };
   const states = {}, entities = {};
   for (const [t, a, b] of bins) {
     const id = idOf(t);
     states[id] = { entity_id: id, state: on(day(a)), attributes: {
-      [ymd(day(-3))]: t, [ymd(day(a))]: t, [ymd(day(b))]: t, friendly_name: rename[t] || (place || dev.name) + ' ' + t } };
+      [ymd(day(-3))]: t, [ymd(day(a))]: t, [ymd(day(b))]: t, friendly_name: (rename[t] && !ha211) ? rename[t] : (place || dev.name) + ' ' + (rename[t] || t) } };
     entities[id] = { entity_id: id, device_id: dev.id, platform: 'waste_collection_schedule', name: rename[t] || t };
   }
   return { states, entities, devices: { [dev.id]: dev } };
@@ -94,6 +96,16 @@ window.CASORA_SETTINGS = {};
   // A name the user gave the entity stays as it is.
   W = D.waste(wcs({ place: 'Musterdorf', rename: { 'Grüne Tonne': 'Bio' } }), {});
   assert.deepEqual(labels(W), ['Bio', 'Blaue Tonne', 'Schwarze Tonne'], 'user-renamed entity');
+  // The same on HA 2026.11, where the device stands in front of the user's name too; also when the
+  // user's name itself starts with the place (2026.10: "Musterdorf Bio", 2026.11: "Musterdorf Musterdorf Bio").
+  for (const ha211 of [false, true]) {
+    W = D.waste(wcs({ place: 'Musterdorf', rename: { 'Grüne Tonne': 'Bio' }, ha211 }), {});
+    assert.deepEqual(labels(W), ['Bio', 'Blaue Tonne', 'Schwarze Tonne'], 'user-renamed entity, ha211=' + ha211);
+    W = D.waste(wcs({ place: 'Musterdorf', rename: { 'Grüne Tonne': 'Musterdorf Bio' }, ha211 }), {});
+    assert.deepEqual(labels(W), ['Bio', 'Blaue Tonne', 'Schwarze Tonne'], 'user name with the place, ha211=' + ha211);
+    W = D.waste(wcs({ rename: { 'Grüne Tonne': 'Bio' }, ha211 }), {});
+    assert.deepEqual(labels(W), ['Bio', 'Blaue Tonne', 'Schwarze Tonne'], 'device not renamed, ha211=' + ha211);
+  }
   // No registry (hass.entities/devices empty): the WCS device name still goes.
   const h = wcs();
   W = D.waste({ states: h.states, entities: {}, devices: {} }, { trash_sensors: Object.keys(h.states) });
@@ -287,6 +299,18 @@ function panelWith(hass) {
   p.combos[0].onChange(idOf('Grüne Tonne'));
   assert.deepEqual(S.waste.sensors, { [idOf('Grüne Tonne')]: 'Grüne Tonne' }, 'name filled in, without the place');
   assert.deepEqual(prune(S).waste.sensors, { [idOf('Grüne Tonne')]: 'Grüne Tonne' }, 'kept on save');
+  // A user-renamed bin gets the same name on HA 2026.10 and 2026.11 (device in front of the user's name).
+  for (const ha211 of [false, true]) {
+    for (const nm of ['Bio', 'Musterdorf Bio']) {
+      const pr = panelWith(wcs({ place: 'Musterdorf', rename: { 'Grüne Tonne': nm }, ha211 }));
+      const Sr = normalize({});
+      Sr.waste.sensors[''] = '';
+      P._casoraPersonalGroups.call(pr, mk('div'), Sr, ['waste'], noop);
+      pr.combos[0].onChange(idOf('Grüne Tonne'));
+      assert.deepEqual(Sr.waste.sensors, { [idOf('Grüne Tonne')]: 'Bio' }, nm + ', ha211=' + ha211);
+      assert.equal(pr._entMeta(idOf('Grüne Tonne')).short, 'Bio', 'picker name ' + nm + ', ha211=' + ha211);
+    }
+  }
   // Device not renamed, no registry: "Waste Collection Schedule" goes as well.
   const h2 = wcs();
   const p2 = panelWith({ states: h2.states, entities: {}, devices: {} });

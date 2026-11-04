@@ -21349,8 +21349,11 @@ class CasoraPanel extends HTMLElement {
     const devName = (dev && (dev.name_by_user || dev.name)) || "";
     // Tractive: the pet's name, not the tracker's ("Rastreador 1A2B3C4D" → "Luna", issue #25).
     const name = petName(h, id) || String(this._prettyEntity(id));
-    let short = name;
-    if (devName && name.length > devName.length + 1 && name.startsWith(devName + " ")) short = name.slice(devName.length + 1);
+    // Up to HA 2026.10 a name the user gave the entity had no device in front, since 2026.11 it has: the
+    // entity's own name (hass.entities, the same on both) when the friendly name is just "[device ]name".
+    const own = String((reg && reg.name) || "").trim();
+    let short = own && (name === own || (devName && name === devName + " " + own)) ? own : name;
+    if (devName && short.length > devName.length + 1 && short.startsWith(devName + " ")) short = short.slice(devName.length + 1);
     const ctx = [area, devName && devName !== name ? devName : ""].filter(Boolean).join(" \u00b7 ");
     let state = "";
     if (st) {

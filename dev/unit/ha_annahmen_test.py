@@ -267,15 +267,31 @@ class FriendlyName(HATest):
         ent.async_write_ha_state()
         self.assertEqual(self.hass.states.get(st.entity_id).attributes["friendly_name"], "Collar Battery")
 
-    async def test_user_name_without_device(self):
-        """An entity name the user gave stands alone, without the device in front.
+    async def test_user_name_and_device(self):
+        """An entity name the user gave: up to HA 2026.10 the friendly_name is that name alone, since 2026.11
+        (entity registry 1.24) the device name (name_by_user first) stands in front of it as well, also when
+        the name already starts with the device. hass.entities name is the user's name alone on both.
 
-        Casora: wasteLabel() (00-finder.js) leaves such names as they are. Red: user names get the device back."""
+        Casora: wasteLabel() (00-finder.js) and the Studio picker (casora-panel.js _entMetaRaw) take the
+        hass.entities name when the friendly_name is "[device ]name", then drop the device in front, so bin and
+        picker names are the same on both versions (dev/unit/abfall_wcs.mjs, ha211). Red: the friendly_name
+        or the hass.entities name of user-named entities changed again - look at both places."""
         S = sensor_cls(_attr_name="Battery", _attr_device_info=self.on_device())
         st, entry = await self.add("sensor", S())
-        er.async_get(self.hass).async_update_entity(entry.entity_id, name="Paper bin")
+        reg = er.async_get(self.hass)
+        since_2026_11 = er.STORAGE_VERSION_MINOR >= 24   # the registry version that brought the change
+        fn = lambda: self.hass.states.get(st.entity_id).attributes["friendly_name"]  # noqa: E731
+        for name, old, new in [("Paper bin", "Paper bin", "Tracker ABC Paper bin"),
+                               ("Tracker ABC Paper bin", "Tracker ABC Paper bin", "Tracker ABC Tracker ABC Paper bin")]:
+            reg.async_update_entity(entry.entity_id, name=name)
+            await self.hass.async_block_till_done()
+            self.assertEqual(fn(), new if since_2026_11 else old, name)
+            self.assertEqual(self.display()[entry.entity_id]["en"], name, name)
+        reg.async_update_entity(entry.entity_id, name="Paper bin")
+        dr.async_get(self.hass).async_update_device(self.dev.id, name_by_user="Yard")
         await self.hass.async_block_till_done()
-        self.assertEqual(self.hass.states.get(st.entity_id).attributes["friendly_name"], "Paper bin")
+        self.assertEqual(fn(), "Yard Paper bin" if since_2026_11 else "Paper bin")
+        self.assertEqual(self.display()[entry.entity_id]["en"], "Paper bin")
 
     async def test_legacy_name_gets_device_prefix(self):
         """Entities without has_entity_name on a device: friendly_name = device + own name, unless the name

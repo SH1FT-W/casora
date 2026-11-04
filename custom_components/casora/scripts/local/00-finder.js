@@ -521,12 +521,16 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   }
   // Bin name without the place (issue #27): since HA 2026.4 the friendly name is device name plus
   // entity name; WCS names its device after the integration, users often rename it to the place.
-  // A name the user gave the entity has no device in front and stays as it is. Longest prefix first;
-  // without a registry only the integration's own device name goes.
+  // Up to HA 2026.10 a name the user gave the entity had no device in front, since 2026.11 it has; so the
+  // entity's own name (hass.entities, the same on both) is used when the friendly name is just
+  // "[device ]name", then the device in front of it goes. Longest prefix first; without a registry only
+  // the integration's own device name goes.
   function wasteLabel(hass, eid) {
     var st = hass.states[eid], e = reg(hass)[eid], d = e && e.device_id && devs(hass)[e.device_id];
     var n = String((st && st.attributes && st.attributes.friendly_name) || (e && e.name) || '').trim();
     var pre = [d && d.name_by_user, d && d.name].map(function (p) { return String(p || '').trim(); });
+    var own = String((e && e.name) || '').trim(), dn = pre[0] || pre[1];
+    if (own && (n === own || (dn && n === dn + ' ' + own))) n = own;
     pre.sort(function (a, b) { return b.length - a.length; }).forEach(function (p) {
       if (p && n.length > p.length && n.toLowerCase().indexOf(p.toLowerCase() + ' ') === 0) n = n.slice(p.length + 1).trim();
     });
