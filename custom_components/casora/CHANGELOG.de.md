@@ -4,6 +4,31 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.12 – 04.11.2026
+
+Küche und Wäsche mit echtem Inhalt, Pflege mit einem Tipp bestätigen, ein ruhiges Licht-Rad und sichereres Teilen.
+
+### Neu
+- **Backofen:** Kacheltyp „Backofen“ im Studio (auch im Geräte-Assistenten) für Home Connect und Home Connect Local, mit eigenem Popup: Garraum-Temperatur im Rad, Fortschritt und Fertigzeit, Programm als eine Zeile, Optionen (Schnelles Vorheizen, Bratenthermometer) und das Gerät in einer Platte. Start nur bei erlaubtem Fernstart und mit Rückfrage.
+- **Waschmaschine und Trockner:** Die Popups zeigen Pflege (fällige Aufgaben mit „Erledigt“, die nächste vorab), „Wäsche ist noch drin“ mit „Ausgeräumt“, Statistik (Durchgänge, dieser Monat, Ø Energie, Zeit und Kosten), Programme und bei WashData „Programm nicht erkannt“, Programme beibringen und empfohlene Einstellungen. Home Connect i-Dos und Miele TwinDos stehen ebenfalls bei der Pflege.
+- **Pflege der Kaffeemaschine:** Fällige Pflege (Entkalken, Filter, Brühgruppe, Satzbehälter, Milchsystem, Wasser, Bohnen) lässt sich im Popup als erledigt bestätigen, wie die Verschleißteile des Saugroboters.
+- **Cookidoo:** Das Rezept-Popup hat wieder „Cookidoo-App öffnen“, in Cookidoo-Grün; am iPhone und unter Android öffnet es die Einkaufsliste der App, sonst cookidoo im Browser.
+- **KI-Modelle im Studio:** Ein erkanntes Modell zeigt „Modell ändern“ und öffnet die KI-Aufgabe in Home Assistant; ein unbekanntes wählt man aus einem Menü statt es einzutippen.
+
+### Geändert
+- **Wasserkocher-Popup** im neuen Design: Rad mit Ziel- und Wassertemperatur, Warmhalten und Heizen in einer Platte, Verlauf.
+- **„Tippen auf Badges: Schalten“ (#119):** Ein Licht-Badge mit mehreren Lampen klappt sie beim Tippen auf; jede Lampe schaltet beim Tippen. Ein Badge mit einer Lampe schaltet weiter direkt.
+- **Wischen zwischen Räumen (#121):** Ein Wischen, das im Kopf beginnt (Titel, Badges, Unter-Badges, Raumleiste am iPad), wechselt nie den Raum; die Räume laufen im Kreis (Home ↔ letzter Raum).
+- **Pulse-Statusbalken:** ein durchgehender Balken mit weichen Farbübergängen statt einzelner Stücke; kurze Ereignisse bleiben sichtbar.
+- **Dashboard teilen:** Der Import einer .casora-Datei übernimmt nur Daten (Räume, Kacheln, Einstellungen); Vorlagen und Code aus der Datei fallen weg, die Vorschau sagt es. Casora nutzt nur noch seine mitgelieferten Vorlagen; eine Installation ohne Integration wird nicht mehr unterstützt.
+
+### Behoben
+- **Licht-Rad:** Beim Greifen springt der Wert nicht mehr, und eine Meldung der Lampe während des Ziehens setzt ihn nicht mehr zurück; zwischen etwa 63 und 70 % liegt der Ring genau auf der Spur. Gilt für alle Räder.
+- **Studio (#122):** „Kachel bearbeiten“ bei offener Einstellungsseite schließt die Seite und öffnet den Editor; ungespeicherte Einstellungen bleiben.
+- **Kaffeemaschine:** Ein Pflege-Knopf („Unit done“) erscheint nicht mehr als Getränk.
+- **Backofen auf anderen Kacheln:** Ein Ofen auf einer Spüler- oder Gerätekachel öffnet das Ofen-Popup statt einer Liste einzelner Karten.
+- **Sicherheit:** Namen, Titel und Texte aus Home Assistant laufen in Kacheln und Popups nie als Code und sind im HTML immer geschützt.
+
 ## 26.11.11 – 04.11.2026
 
 Neue Studio-Einstellungen in acht Kacheln mit einem ruhigen Raster, und Casora ist bereit für den Marketplace in Home Assistant 2026.11.

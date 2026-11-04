@@ -4,6 +4,31 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.12 – 04.11.2026
+
+Kitchen and laundry popups with real content, care you can confirm with one tap, a calm light dial and safer sharing.
+
+### New
+- **Oven:** a tile type "Oven" in the Studio (also suggested by the device assistant) for Home Connect and Home Connect Local ovens, with its own popup: cavity temperature on the dial, progress and finish time, programme as one row, options (fast preheat, meat probe) and the device in one plate. Start only when remote start is allowed, with a question.
+- **Washer and dryer:** the popups show care (due tasks with "Done", the next one in advance), "Laundry still inside" with "Unloaded", statistics (cycles, this month, average energy, time and cost), programmes, and for WashData "Programme not recognised", teaching programmes and recommended settings. Home Connect i-Dos and Miele TwinDos levels are care rows too.
+- **Coffee machine care:** due care (descale, filter, brew unit, grounds, milk system, water, beans) can be confirmed as done in the popup, like the vacuum's wear parts.
+- **Cookidoo:** the recipe popup has "Open Cookidoo app" again, in Cookidoo green; it opens the app's shopping list on iPhone and Android and cookidoo in the browser elsewhere.
+- **Studio AI models:** a recognised model shows "Change model", which opens the AI task in Home Assistant; an unknown one is picked from a menu instead of typed.
+
+### Changed
+- **Kettle popup** in the new design: dial with target and water temperature, keep warm and heating in one plate, history.
+- **"Tap on badges: Switch" (#119):** a light badge with several lamps opens its lamps on a tap; each lamp switches on a tap. A badge with one lamp still switches directly.
+- **Swipe between rooms (#121):** a swipe that starts on the head (title, badges, sub badges, the room bar on the iPad) never changes the room; rooms go round (Home ↔ last room).
+- **Pulse status bar:** one continuous bar with soft colour blends instead of separate pieces; short events stay visible.
+- **Sharing a dashboard:** importing a .casora file takes data only (rooms, tiles, settings); templates and code from the file are left out, and the preview says so. Casora uses only its own shipped templates; installing without the integration is no longer supported.
+
+### Fixed
+- **Light dial:** grabbing the ring no longer makes the value jump, and a lamp update while dragging no longer resets it; between about 63 and 70 % the ring sits exactly on its track. Applies to every dial.
+- **Studio (#122):** "Edit tile" while a settings page is open closes the page and opens the editor; unsaved settings stay.
+- **Coffee machine:** a care button ("Unit done") no longer shows up as a drink.
+- **Oven on other tiles:** an oven on a dishwasher or appliance tile opens the oven popup instead of a list of single cards.
+- **Security:** names, titles and texts from Home Assistant are never run as code in tiles and popups and are always escaped in HTML.
+
 ## 26.11.11 – 04.11.2026
 
 New Studio settings in eight tiles with one calm layout, and Casora is ready for Home Assistant 2026.11's Marketplace.
