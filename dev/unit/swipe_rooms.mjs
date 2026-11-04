@@ -85,9 +85,6 @@ const mod = fs.readFileSync(new URL('../../custom_components/casora/scripts/loca
 assert.match(mod, /var keys = \['all'\]\.concat\(rooms\.map/, 'phone: Home first in the swipe order');
 assert.match(mod, /pages\[0\]\.idx !== 0/, 'tablet: Home (first view) first in the swipe order');
 assert.match(mod, /casora-swipe-card\)\$\/i/, 'carousels keep their own swipe');
-assert.match(mod, /if \(inHead\(path\) \|\| hits\(tgt\.title, t\)\) \{ S\.last = 'head'; return; \}/, 'the head is checked on touchstart, before any row');
-// button-card's copy of a touchstart (untrusted, sent from further out) must not start a new gesture (issue 121).
-assert.match(mod, /if \(!e\.isTrusted && down\) return;/, 'a copy of a touch is ignored while the finger is down');
 assert.match(mod, /window\._casoraSwipeRooms !== true/, 'tablet follows swipe_rooms');
 // Touch only, by capability: no user agent and no pointer media query (iPadOS Safari reports a Mac and may say fine pointer).
 const code = mod.replace(/\/\/[^\n]*/g, '');
@@ -106,4 +103,110 @@ const fo = fs.readFileSync(new URL('../../custom_components/casora/scripts/filte
 assert.match(fo, /window\._casoraRoomPhotoOf = \(cfg, hass\) =>/, 'filter-overlay hands out the room photo for preloading');
 const loader = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-local.js', import.meta.url), 'utf8');
 assert.match(loader, /'40-swipe-rooms',/);
+// ── Gestures with a stand-in document (issue 121) ───────────────────────────
+// The module once more with listeners: a phone with Home and two rooms, no overlay element (no slide), reduced motion.
+// button-card stops a touchstart at a custom field's host and sends an untrusted copy from its parent, without the
+// touched element in the path (docs/ha-annahmen.md): the copy must not start a gesture of its own.
+{
+  const L = {};
+  const saved = { window: globalThis.window, document: globalThis.document, setTimeout: globalThis.setTimeout,
+    getComputedStyle: globalThis.getComputedStyle, Image: globalThis.Image };
+  const body = { nodeType: 1 };
+  globalThis.document = { addEventListener: (t, f) => (L[t] = L[t] || []).push(f), getElementById: () => ({}),
+    head: { appendChild() {} }, documentElement: { classList: { add() {}, remove() {} } }, querySelector: () => null, body };
+  globalThis.getComputedStyle = (el) => ({ overflowX: el._ox || 'visible', opacity: '1' });
+  globalThis.Image = class { decode() { return Promise.resolve(); } };
+  globalThis.setTimeout = () => 0;
+  let cur = 'all';
+  const sets = [];
+  globalThis.window = { addEventListener() {}, innerWidth: 393, dispatchEvent() {}, matchMedia: () => ({ matches: true }),
+    _hmnOwner: { isConnected: true, _cfg: { swipe_rooms: true }, _cur: () => cur,
+      _rooms: [{ key: 'room_a' }, { key: 'room_b' }], _set: (k) => { sets.push(k); cur = k; } },
+    _casoraSmartRows: [] };
+  new Function(src)();
+  const G = window.casoraSwipeRooms;
+  const fire = (type, e) => (L[type] || []).forEach((f) => f(e));
+  const ev = (trusted, xy, path, ts) => ({ isTrusted: trusted, timeStamp: ts, composedPath: () => path,
+    touches: xy ? [].concat(xy[0] instanceof Array ? xy : [xy]).map(([x, y]) => ({ clientX: x, clientY: y })) : [] });
+  const outer = { nodeType: 1 };
+  const row = (left) => ({ nodeType: 1, id: 'badges', scrollWidth: 900, clientWidth: 360, scrollLeft: left, _ox: 'auto' });
+  const badges = (left) => [{ nodeType: 1 }, row(left), { nodeType: 1, _config: { template: ['casora_mobile_filter_badges'] } }, outer, body];
+  const tiles = (left) => [{ nodeType: 1 }, { nodeType: 1, localName: 'casora-smart-row', scrollWidth: 900, clientWidth: 360, scrollLeft: left, _ox: 'auto' }, outer, body];
+  const free = [{ nodeType: 1 }, outer, body];
+  // A drag from x0 to x1 (moves are never copied); end: false leaves the touchend out (lost).
+  const drag = (x0, x1, y, ts, end = true) => {
+    for (let i = 1; i <= 10; i++) fire('touchmove', { touches: [{ clientX: x0 + (x1 - x0) * i / 10, clientY: y + 1 }] });
+    if (end) { fire('touchend', ev(true, null, free, ts + 160)); fire('touchend', ev(false, null, [outer, body], ts + 165)); }
+  };
+  // The switch waits for the target's photo (a promise): the result after a tick.
+  const run = async (at, f) => { cur = at; sets.length = 0; G.last = ''; f(); const last = G.last;
+    await new Promise((res) => saved.setTimeout(res, 5)); return { last, to: sets[0] || null }; };
+
+  let r = await run('all', () => {
+    fire('touchstart', ev(true, [330, 120], badges(0), 1000));
+    fire('touchstart', ev(false, [330, 120], [outer, body], 1014));     // button-card's copy, no badge row in its path
+    drag(330, 100, 120, 1000);
+  });
+  assert.deepEqual(r, { last: 'head', to: null }, 'badge row at its start + copy: the head keeps the swipe');
+  r = await run('all', () => {
+    fire('touchstart', ev(true, [330, 120], badges(540), 2000));
+    fire('touchstart', ev(false, [330, 120], [outer, body], 2014));
+    drag(330, 100, 120, 2000);
+  });
+  assert.deepEqual(r, { last: 'head', to: null }, 'badge row at its end + copy: no chaining to the page');
+  r = await run('all', () => { fire('touchstart', ev(true, [330, 120], badges(0), 3000)); drag(330, 100, 120, 3000); });
+  assert.deepEqual(r, { last: 'head', to: null }, 'badge row without a copy: head');
+  r = await run('room_a', () => {
+    fire('touchstart', ev(true, [330, 400], free, 4000));
+    fire('touchstart', ev(false, [330, 400], [outer, body], 4014));
+    drag(330, 100, 400, 4000);
+  });
+  assert.deepEqual(r, { last: 'switch', to: 'room_b' }, 'free space + copy: the page swipes once, to the next room');
+  r = await run('room_b', () => { fire('touchstart', ev(true, [330, 400], free, 5000)); drag(330, 100, 400, 5000); });
+  assert.deepEqual(r, { last: 'switch', to: 'all' }, 'last room, swipe left: Home (wrap-around)');
+  r = await run('all', () => { fire('touchstart', ev(true, [60, 400], free, 6000)); drag(60, 330, 400, 6000); });
+  assert.deepEqual(r, { last: 'switch', to: 'room_b' }, 'Home, swipe right: the last room (wrap-around)');
+  // Tile rows keep scroll chaining: at the start the row scrolls, at its end the page goes on.
+  r = await run('room_a', () => { fire('touchstart', ev(true, [330, 400], tiles(0), 7000)); drag(330, 100, 400, 7000); });
+  assert.deepEqual(r, { last: 'row', to: null }, 'tile row that can still scroll keeps the swipe');
+  r = await run('room_a', () => { fire('touchstart', ev(true, [330, 400], tiles(540), 8000)); drag(330, 100, 400, 8000); });
+  assert.deepEqual(r, { last: 'switch', to: 'room_b' }, 'tile row at its end: the page swipes on');
+  // touchend / touchcancel end the touch: an untrusted touchstart at the same point right after is a touch of its own.
+  r = await run('room_a', () => {
+    fire('touchstart', ev(true, [330, 400], free, 9000));
+    fire('touchend', ev(true, null, free, 9050));
+    fire('touchstart', ev(false, [330, 400], free, 9100));
+    drag(330, 100, 400, 9100);
+  });
+  assert.deepEqual(r, { last: 'switch', to: 'room_b' }, 'after touchend an untrusted touch is no copy');
+  r = await run('room_a', () => {
+    fire('touchstart', ev(true, [330, 400], free, 10000));
+    fire('touchcancel', ev(true, null, free, 10050));
+    fire('touchstart', ev(false, [330, 400], free, 10100));
+    drag(330, 100, 400, 10100);
+  });
+  assert.deepEqual(r, { last: 'switch', to: 'room_b' }, 'after touchcancel an untrusted touch is no copy');
+  // A touchend that never arrives (removed node, iOS without touchcancel): the stale gesture is dropped – the next
+  // touch is judged on its own (here: from x 100 to the right = previous page), never finished from the old start.
+  r = await run('room_b', () => {
+    fire('touchstart', ev(true, [330, 400], free, 11000));
+    drag(330, 300, 400, 11000, false);
+    fire('touchstart', ev(false, [100, 400], free, 12000));
+    drag(100, 300, 400, 12000);
+  });
+  assert.deepEqual(r, { last: 'switch', to: 'room_a' }, 'lost touchend: the next touch is a gesture of its own');
+  r = await run('room_b', () => {
+    fire('touchstart', ev(true, [330, 400], free, 13000));
+    fire('touchstart', ev(false, [330, 400], free, 13000 + 2000));     // same point, but long after: no copy
+    drag(330, 100, 400, 15000);
+  });
+  assert.deepEqual(r, { last: 'switch', to: 'all' }, 'an untrusted touch long after is no copy');
+  // Two fingers: no swipe; lifting one does not end the touch.
+  r = await run('room_a', () => {
+    fire('touchstart', ev(true, [[330, 400], [200, 500]], free, 16000));
+    drag(330, 100, 400, 16000);
+  });
+  assert.deepEqual(r, { last: '', to: null }, 'two fingers never swipe');
+  Object.assign(globalThis, saved);
+}
 console.log('ok swipe_rooms');

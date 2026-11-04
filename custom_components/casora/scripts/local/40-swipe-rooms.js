@@ -14,7 +14,8 @@
 // The head of a page never swipes (owner, 04.11.2026, issue 121: "if you scroll the badges it swipes the rooms"): a
 // touch that starts on the title / header or a badge row stays there – at the row's end and when the row fits alike.
 // Head = phone: the Home header card (casora_mobile_weather), the badge row (casora_mobile_filter_badges), the sub-badge
-// row (casora_mobile_sensor_chips) and the open room's title (pointer-events: none, so hit by its box); tablet: the
+// row (casora_mobile_sensor_chips), the open room's title and its collapsed title bar once the page scrolls up (both
+// pointer-events: none, so hit by their box while they show); tablet: the
 // casora_room hero's head fields (#name, #n, #temperature, #weather, #time, #navigation, #badges*). Scroll chaining at a
 // row's end is left for the tile rows. A copy of a touch that button-card sends from further out is no new touch.
 // prefers-reduced-motion: the room changes without the slide.
@@ -148,17 +149,17 @@
     var rooms = (o._rooms || []).filter(window.casoraSeesRoute || function () { return true; });
     var keys = ['all'].concat(rooms.map(function (r) { return r.key; }));
     if (keys.indexOf(cur) < 0 || keys.length < 2) return null;
-    var el = null, title = null;
+    var el = null, title = null, compact = null;
     Array.from(window._casoraSmartRows || []).forEach(function (r) {
       if (el || !r.shadowRoot) return;
       Array.prototype.forEach.call(r.shadowRoot.querySelectorAll('casora-filter-overlay'), function (fo) {
         if (!el && fo._showing && fo._config && fo._config.filter_category === cur && fo._overlayEl) {
-          el = fo._overlayEl; title = fo._titleEl || null;
+          el = fo._overlayEl; title = fo._titleEl || null; compact = fo._compactHeaderEl || null;
         }
       });
     });
     return {
-      phone: true, el: el, keys: keys, cur: cur, title: title,
+      phone: true, el: el, keys: keys, cur: cur, title: title, compact: compact,
       go: function (key) { if (typeof o._haptic === 'function') o._haptic(); o._set(key); },
     };
   }
@@ -289,9 +290,13 @@
   window.addEventListener('location-changed', warm);
   setTimeout(warm, 2500);
 
-  // The open room's title on the phone takes no touches (pointer-events: none): hit by its box.
+  // The open room's title on the phone and its collapsed title bar (fixed at the top once the page scrolls up) take
+  // no touches while hidden (pointer-events: none): hit by their box while they show.
   function hits(el, t) {
     if (!el || !el.isConnected || !el.getBoundingClientRect) return false;
+    var op = 1;
+    try { op = Number(getComputedStyle(el).opacity); } catch (e) { op = 1; }
+    if (op < 0.1) return false;
     var r = el.getBoundingClientRect();
     return r.height > 0 && t.clientX >= r.left && t.clientX <= r.right && t.clientY >= r.top && t.clientY <= r.bottom;
   }
@@ -309,11 +314,21 @@
 
   // button-card stops a touchstart / touchend at the host of a custom_fields card and sends a copy from its parent
   // (isTrusted false, a path without the touched element; docs/ha-annahmen.md). A copy is no new touch: it would forget
-  // where the finger is (head, row) and swipe the page from a badge row (issue 121). down: a finger is on the screen.
-  var down = false;
+  // where the finger is (head, row) and swipe the page from a badge row (issue 121). live: the last real touchstart of
+  // a single finger that is still down; a copy is an untrusted touchstart at its point, right after it. Anything else
+  // is a touch of its own and starts afresh – also when a touchend never arrived (a removed node, iOS without
+  // touchcancel), so a stale gesture is never finished by another one.
+  var live = null;
+  var COPY_MS = 400;
+  function isCopy(e) {
+    var t = e.touches && e.touches[0], ts = e.timeStamp || Date.now();
+    return !e.isTrusted && !!live && !!t && Math.abs(t.clientX - live.x) < 2 && Math.abs(t.clientY - live.y) < 2
+      && ts - live.ts >= 0 && ts - live.ts < COPY_MS;
+  }
   document.addEventListener('touchstart', function (e) {
-    if (!e.isTrusted && down) return;
-    down = true;
+    if (isCopy(e)) return;
+    var t0 = e.touches && e.touches.length === 1 ? e.touches[0] : null;
+    live = e.isTrusted && t0 ? { x: t0.clientX, y: t0.clientY, ts: e.timeStamp || Date.now() } : null;
     g = null;
     if (!e.touches || e.touches.length !== 1 || popupOpen()) return;
     var t = e.touches[0];
@@ -323,7 +338,7 @@
     var path = e.composedPath ? e.composedPath() : [e.target];
     if (blocked(path)) { S.last = 'blocked'; return; }
     // The head of the page: never a room change, whatever the row under the finger can still do (issue 121).
-    if (inHead(path) || hits(tgt.title, t)) { S.last = 'head'; return; }
+    if (inHead(path) || hits(tgt.title, t) || hits(tgt.compact, t)) { S.last = 'head'; return; }
     g = { x: t.clientX, y: t.clientY, t: e.timeStamp || Date.now(), axis: null, tgt: tgt, el: tgt.el, dx: 0, dy: 0,
       rows: scrollers(path) };
     preloadAround(tgt);
@@ -348,7 +363,7 @@
   }, { passive: true, capture: true });
 
   var end = function (e) {
-    if (!e.touches || !e.touches.length) down = false;
+    if (!e.touches || !e.touches.length) live = null;
     var s = g; g = null;
     if (!s || s.axis !== 'h') { if (s) reset(s.el, false); return; }
     var dir = decide({ dx: s.dx, dy: s.dy, dt: (e.timeStamp || Date.now()) - s.t, w: window.innerWidth });
@@ -364,7 +379,7 @@
   };
   document.addEventListener('touchend', end, { passive: true, capture: true });
   document.addEventListener('touchcancel', function (e) {
-    if (!e.touches || !e.touches.length) down = false;
+    if (!e.touches || !e.touches.length) live = null;
     var s = g; g = null; if (s) reset(s.el, true);
   }, { passive: true, capture: true });
 })();
