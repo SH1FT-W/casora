@@ -4787,6 +4787,18 @@
 
   // The lamps' names as the list shows them: without the room, and without leading words all of them share
   // („Spot Decke“, „Spot Wand“ → „Decke“, „Wand“; owner, 01.11.2026 – casoraDropCommonPrefix, casora-core.js).
+  /* Issue 126: the order of the lamp list a row was tapped in (act, „mi“). A lamp's page lists its room's rows (the room's
+     light badge), which a tile's own „Lichter im Popup“ may order differently – the tapped lamp jumped to another place.
+     The page keeps the tapped list's order (its other lamps after them); the open lamp stays in its place, marked. */
+  S.rowOrder = null;
+  window.addEventListener('casora-popup-closed', function () { S.rowOrder = null; });
+  S.keepOrder = function (ids, sc) {
+    var o = S.rowOrder;
+    if (!o || !sc || !sc.lamp || o.indexOf(sc.lights[0]) < 0) return ids;
+    var rank = function (id) { var i = o.indexOf(id); return i < 0 ? o.length : i; };
+    return ids.map(function (id, i) { return { id: id, i: i }; })
+      .sort(function (a, b) { return rank(a.id) - rank(b.id) || a.i - b.i; }).map(function (x) { return x.id; });
+  };
   var lampNamesOf = function (list, states, room) {
     var names = list.map(function (id) { return short(nameOf(id, states), room); });
     return window.casoraDropCommonPrefix ? window.casoraDropCommonPrefix(names, list) : names;   // list: issue 116, twins get their room
@@ -4839,7 +4851,7 @@
           + esc(short(nameOf(id, states), room)) + '</div>';
       }).join('') + '</div>';
     }
-    var lampList = sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids;
+    var lampList = sc.room ? S.keepOrder(sc.room.filter(function (id) { return states[id]; }), sc) : ids;
     var lampNames = lampNamesOf(lampList, states, room);
     var lampsHtml = lampList.map(function (id, i) {
       // Own row only in the popup of this one lamp - a room picked in the house popup is not its popup.
@@ -4867,6 +4879,7 @@
     // row, owner 01.11. and 03.11.2026), else every lamp.
     var lampIds0 = (sc.room || sc.rows || ids).filter(function (id) { return states[id]; });
     if (!lampIds0.length) lampIds0 = ids;
+    lampIds0 = S.keepOrder(lampIds0, sc);
     // Effects: the lamp of its own popup, else the room's only lamp with effects.
     var single = !cfg.rooms && sc.lights.length === 1;
     var fxId = fxLampOf(single ? [sc.lights[0]] : lampIds0, states);
@@ -5131,6 +5144,11 @@
       // Einzelne Lampe: Casoras Licht-Popup wie an der Kachel, HAs Dialog nur als Rückfall.
       if (window._casoraNotifyOpenViaCard) {
         window._casoraSuppressDismiss = Date.now() + 600;
+        // Issue 126: the lamp's page keeps this list's order (S.keepOrder).
+        var lst = el.parentNode ? el.parentNode.querySelectorAll('.lps-row > .lps-ic[data-lps-tap]') : [];
+        S.rowOrder = Array.prototype.map.call(lst, function (x) { try { return JSON.parse(x.getAttribute('data-lps-tap')).id || null; } catch (e) { return null; } })
+          .filter(Boolean);
+        if (S.rowOrder.indexOf(d.id) < 0) S.rowOrder = null;
         // ‹ zurück ins Raum-Popup (17.10.2026), wie Raum → Heizkörper (openRoom) und Liste → Detail (casora-core.js).
         var P = window.casoraPopup, prev = P && P.current;
         // The lamp's page: label = the room of the list it was tapped in, title = the lamp without it (review 03.11.2026:
