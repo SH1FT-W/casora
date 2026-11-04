@@ -99,6 +99,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     live_setup(hass, mock)
     mock.track_derived()
     mock.backfill_history()
+    # Test readiness (dev/qa/bereit.mjs --recorder): whether the demo history and statistics are written yet.
+    websocket_api.async_register_command(
+        hass, "casora_mock/history",
+        callback(lambda hass_, conn, msg: conn.send_result(msg["id"], {"state": mock.history_state})),
+        websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({vol.Required("type"): "casora_mock/history"}),
+    )
     _LOGGER.warning(
         "Casora Mock: %s Entitäten, %s Geräte geladen (nur Test!)",
         len(fixture["entities"]), len(fixture["devices"]),
@@ -118,6 +124,9 @@ class CasoraMock:
         fixture["entities"] = list(self.entities.values())
         self.store: dict[str, list] = {}
         self.objs: dict = {}
+        # Demo history and statistics (backfill_history): "none", "pending", then "done" once the recorder has
+        # written them; asked by dev/qa/bereit.mjs through casora_mock/history (r303, r320).
+        self.history_state = "none"
         self.classes: dict = {}
 
     # ── Registry ────────────────────────────────────────────────────────
@@ -354,6 +363,7 @@ class CasoraMock:
         spec.update(self.fixture.get("_history_extra") or {})
         if not spec or "recorder" not in self.hass.config.components:
             return
+        self.history_state = "pending"
         import math
         import random
 
@@ -397,6 +407,12 @@ class CasoraMock:
             return out
 
         async def run(_hass) -> None:
+            try:
+                await fill()
+            finally:
+                self.history_state = "done"
+
+        async def fill() -> None:
             from sqlalchemy import func
             from homeassistant.components.recorder import get_instance
             from homeassistant.components.recorder.db_schema import States, StatesMeta
@@ -440,6 +456,8 @@ class CasoraMock:
                 self._import_statistics(spec, curve, boot)
             except Exception as err:  # noqa: BLE001
                 _LOGGER.warning("Casora Mock: Statistik nicht importiert: %s", err)
+            # The statistics import is queued as recorder tasks: done once the recorder has run them.
+            await inst.async_block_till_done()
 
         self.entry.async_on_unload(async_at_started(self.hass, run))
 
