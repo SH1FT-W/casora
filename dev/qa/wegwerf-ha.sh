@@ -42,7 +42,9 @@ case "$cmd" in
     i=0; until curl -s -o /dev/null -w '%{http_code}' "http://localhost:$P/manifest.json" | grep -q 200; do
       i=$((i+1)); [ $i -gt 120 ] && { echo "$N antwortet nicht (Port $P)"; "$HAV" log "$D/config" 30; exit 1; }; /bin/sleep 2
     done
-    CASORA_URL="http://localhost:$P" "$NODE" "$REPO/dev/qa/bereit.mjs" --max 120
+    # --recorder: from a saved state the recorder first catches up on missed statistics and the test house's demo
+    # history, and records no new state until then (r303); wait for it, at most 5 minutes (bereit.mjs, step 5).
+    CASORA_URL="http://localhost:$P" "$NODE" "$REPO/dev/qa/bereit.mjs" --max 120 --recorder 300
     echo "$N bereit (Port $P)"
     exit 0 ;;
   start) ;;
