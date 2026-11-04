@@ -31,7 +31,10 @@ const mk = (o = {}) => {
     callWS: async (m) => {
       log.push(['ws', m]);
       if (o.wsFail && o.wsFail(m)) throw new Error('nein');
-      if (m.type === 'hacs/repositories/list') return [{ id: 11, installed: true }, { id: 12, installed: false }, { id: '13', installed: true }];
+      if (m.type === 'hacs/repositories/list' || m.type === 'marketplace/repositories/list') {
+        return [{ id: 11, installed: true }, { id: 12, installed: false }, { id: '13', installed: true }];
+      }
+      if (m.type === 'marketplace/info') return { github_connected: o.github !== false };
       return {};
     },
     callService: async (d, s, data, target, notify) => {
@@ -48,8 +51,12 @@ const mk = (o = {}) => {
 // Plan je Benutzer und Installation.
 {
   const { h } = mk();
-  assert.deepEqual(K.plan(h), { admin: true, supervisor: true, hacs: true, entities: ['update.alpha', 'update.beta'] });
-  assert.deepEqual(K.plan(mk({ admin: false }).h), { admin: false, supervisor: false, hacs: false, entities: ['update.alpha', 'update.beta'] });
+  assert.deepEqual(K.plan(h), { admin: true, supervisor: true, hacs: true, store: 'hacs', entities: ['update.alpha', 'update.beta'] });
+  assert.deepEqual(K.plan(mk({ admin: false }).h), { admin: false, supervisor: false, hacs: false, store: 'hacs', entities: ['update.alpha', 'update.beta'] });
+  // HA 2026.11+: HACS is HA's Marketplace (component marketplace).
+  const mp = K.plan(mk({ components: ['hassio', 'marketplace', 'update'] }).h);
+  assert.equal(mp.hacs, true, 'Marketplace zählt wie HACS');
+  assert.equal(mp.store, 'marketplace');
   const core = K.plan(mk({ components: ['update'] }).h);
   assert.equal(core.supervisor, false, 'ohne hassio kein Supervisor');
   assert.equal(core.hacs, false, 'ohne HACS kein HACS');
@@ -77,6 +84,29 @@ const mk = (o = {}) => {
   assert.ok(/Zuletzt gesucht: gerade eben/.test(html), 'Zuletzt gesucht');
   assert.ok(/1 neues Update gefunden/.test(html), 'Ergebnis');
   assert.ok(JSON.parse(store['casora.updCheck']).t > 0, 'Zeitpunkt gemerkt');
+}
+
+// HA 2026.11+ (Marketplace statt HACS): dieselben Schritte unter marketplace/…, aber nur mit verbundenem
+// GitHub-Konto – ohne fragt jede Auffrischung GitHub anonym (60/Stunde), dann nur update_entity.
+{
+  const { h, log } = mk({ components: ['marketplace', 'update'] });
+  haHass = h;
+  const r = await K.run(h);
+  const ws = log.filter((x) => x[0] === 'ws').map((x) => x[1]);
+  assert.deepEqual(ws.filter((m) => m.type === 'marketplace/repository/refresh').map((m) => m.repository).sort(), ['11', '13'],
+    'Marketplace: nur installierte Repos aufgefrischt');
+  assert.equal(ws.filter((m) => /^hacs\//.test(m.type)).length, 0, 'keine hacs/-Befehle neben dem Marketplace');
+  assert.equal(r.hacs, true);
+  assert.equal(log[log.length - 1][0], 'svc', 'update_entity nach dem Marketplace');
+}
+{
+  const { h, log } = mk({ components: ['marketplace', 'update'], github: false });
+  haHass = h;
+  const r = await K.run(h);
+  const ws = log.filter((x) => x[0] === 'ws').map((x) => x[1]);
+  assert.deepEqual(ws.map((m) => m.type), ['marketplace/info'], 'ohne GitHub-Konto keine Auffrischung');
+  assert.equal(r.hacs, false);
+  assert.equal(r.entities, true);
 }
 
 // Nicht-Admin: nur update_entity, kein Supervisor-/HACS-Befehl.

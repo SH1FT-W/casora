@@ -36,7 +36,7 @@
           \ domains if not ns.m and norm | length > 3 %}\n  {% set dn = d | replace('_', '') %}\n  {% if dn == norm or (dn\
           \ | length > 4 and dn in norm) or (norm in dn) %}{% set ns.m = d %}{% endif %}\n{% endfor %} {% if eid == 'update.home_assistant_core_update'\
           \ %}Art: Home Assistant Core {% elif eid == 'update.home_assistant_operating_system_update' %}Art: Home Assistant\
-          \ OS {% elif eid == 'update.home_assistant_supervisor_update' %}Art: Home Assistant Supervisor {% elif src == 'hacs'\
+          \ OS {% elif eid == 'update.home_assistant_supervisor_update' %}Art: Home Assistant Supervisor {% elif src in ['hacs', 'marketplace']\
           \ %}Art: HACS-Repository (Integration, Frontend-Karte oder Theme){% if repo %}, GitHub-Repo {{ url.split('/')[3]\
           \ }}/{{ repo }}{% endif %} {% elif src == 'hassio' %}Art: Home-Assistant-App (Add-on) {% else %}Art: Firmware/Software\
           \ eines Geräts, Integration {{ src }} {% endif %} {% if dev %}Gerät: {{ device_attr(dev, 'name_by_user') or device_attr(dev,\

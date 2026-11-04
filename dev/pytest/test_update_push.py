@@ -13,7 +13,7 @@ import re
 import json
 from unittest.mock import patch
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from ha_common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er

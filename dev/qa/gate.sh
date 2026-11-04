@@ -183,6 +183,8 @@ unit_tests() {
   # Integrationstests mit pytest-homeassistant-custom-component (T-04): Setup/Unload/Migration.
   if [ -d dev/pytest ]; then
     echo "=== dev/pytest"; $PY --with pytest-homeassistant-custom-component pytest dev/pytest -q -p no:cacheprovider || { echo "FEHLER dev/pytest"; bad=1; }
+    # HA 2026.11+ (Marketplace statt HACS): HAs eigenes Testpaket, wie in .github/workflows/tests.yml.
+    echo "=== dev/pytest (HA 2026.11)"; $PY --prerelease=allow --with 'pytest-homeassistant>=2026.11.0b0,<2026.12' pytest dev/pytest -q -p no:cacheprovider -p no:respx || { echo "FEHLER dev/pytest (HA 2026.11)"; bad=1; }
   fi
   return $bad
 }

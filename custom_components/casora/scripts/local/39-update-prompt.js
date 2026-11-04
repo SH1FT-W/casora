@@ -193,6 +193,8 @@
         }, function (e) {
           busy(false);
           window.casoraNotice && window.casoraNotice({ message: T('Installieren hat nicht geklappt.') + ' ' + ((e && e.message) || e), duration: 8000 }, { overPopup: true });
+          // HA's Marketplace (2026.11+) installs only after this user read its first-run warning: open its page.
+          if (e && e.translation_key === 'warning_not_accepted' && info.hacs_url) { close(); navigate(info.hacs_url); }
           return 'failed';
         });
       });

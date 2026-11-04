@@ -76,5 +76,12 @@ jobs:
           done
           exit $bad
 
-      - name: Integrationstests (pytest-homeassistant-custom-component)
+      # Zwei HA-Versionen: pytest-homeassistant-custom-component ist seit 03.11.2026 eingestellt und hängt an
+      # HA 2026.10.4 (Casoras Weg mit HACS als eigener Integration). Ab HA 2026.11 (HACS als Marketplace eingebaut)
+      # HAs eigenes Testpaket pytest-homeassistant (Version = HA-Version, braucht -p no:respx); auf 2026.11.x
+      # begrenzt, damit eine Beta von 2026.12 hier nichts blockiert. dev/pytest/ha_common.py nimmt das jeweils da ist.
+      - name: Integrationstests HA 2026.10 (pytest-homeassistant-custom-component)
         run: uv run --python 3.14 --with pytest-homeassistant-custom-component pytest dev/pytest -q -p no:cacheprovider
+
+      - name: Integrationstests HA 2026.11 (pytest-homeassistant)
+        run: uv run --python 3.14 --prerelease=allow --with 'pytest-homeassistant>=2026.11.0b0,<2026.12' pytest dev/pytest -q -p no:cacheprovider -p no:respx

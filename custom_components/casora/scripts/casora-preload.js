@@ -11,7 +11,7 @@
   if (window._casoraPreload) return;
   window._casoraPreload = true;
   // First path segment of HA pages that are no Lovelace dashboard.
-  var NOT_DASHBOARD = /^\/(config|hacs|developer-tools|hassio|profile|casora-studio|hemma|history|logbook|map|energy|media-browser|todo|calendar|auth|onboarding\.html|api|local)(\/|$)/;
+  var NOT_DASHBOARD = /^\/(config|hacs|marketplace|developer-tools|hassio|profile|casora-studio|hemma|history|logbook|map|energy|media-browser|todo|calendar|auth|onboarding\.html|api|local)(\/|$)/;
   try {
     if (NOT_DASHBOARD.test(location.pathname)) return;
     // Added to a page that already runs Casora (HA hands new extra modules to open pages after a reload of

@@ -5,6 +5,11 @@ under Settings → Updates with their release notes. Installing is HACS' job: th
 INSTALL feature and no code here writes into custom_components (HACS default-store review,
 hacs/default#12143). If HACS already manages Casora, HACS reports new versions too – then Casora
 creates no update entity of its own, otherwise the same version would show up twice.
+
+"HACS" here means the store that downloads Casora: the custom integration HACS (domain hacs, up to
+HA 2026.10) or its successor built into HA 2026.11, the Marketplace (domain marketplace). Both key a
+repository's device and update entity by its GitHub id; the Marketplace takes over HACS' registry
+entries under its own domain on the first start after the upgrade (STORE_DOMAINS).
 """
 from __future__ import annotations
 
@@ -47,6 +52,11 @@ DATA_LAST_ERROR = "update_last_error"
 DATA_HACS = "update_via_hacs"
 # GitHub id of the Casora repo in HACS (= unique_id of HACS' update entity) when HACS manages Casora.
 DATA_HACS_ID = "update_hacs_repo_id"
+# Stores that download repositories and key their device and update entity by the GitHub id: HA's
+# Marketplace (built in since 2026.11, takes over HACS' registry entries) first, then the custom HACS.
+STORE_MARKETPLACE = "marketplace"
+STORE_HACS = "hacs"
+STORE_DOMAINS = (STORE_MARKETPLACE, STORE_HACS)
 # Leftovers of the former self-updater (last shipped in 26.10.59), both outside custom_components:
 # the staging area and the install history store. Setup deletes them once; keep this
 # for one release, then drop it (by then every install has run it).
@@ -88,20 +98,51 @@ def _prune_version_backups(folder: str) -> list[str]:
     return removed
 
 
-def hacs_knows(hass: HomeAssistant, repo_id: str) -> bool:
-    """Is this GitHub repository downloaded through HACS?
+def store_of(hass: HomeAssistant, repo_id: str) -> str | None:
+    """Store that downloaded this GitHub repository: "marketplace", "hacs" or None.
 
-    HACS keys the device and the update entity of a downloaded repository by its GitHub id; both live in
-    HA's registries (public API), so this works before HACS has loaded and without reading HACS' storage."""
-    if er.async_get(hass).async_get_entity_id("update", "hacs", repo_id) is not None:
-        return True
-    ident = ("hacs", repo_id)
-    return any(ident in d.identifiers for d in list(dr.async_get(hass).devices.values()))
+    HACS and the Marketplace key the device and the update entity of a downloaded repository by its
+    GitHub id; both live in HA's registries (public API), so this works before the store has loaded and
+    without reading its storage. Until the Marketplace has taken over HACS' entries (first start on
+    HA 2026.11) they still carry the domain hacs."""
+    reg = er.async_get(hass)
+    found = None
+    for store in STORE_DOMAINS:
+        if reg.async_get_entity_id("update", store, repo_id) is not None:
+            found = store
+            break
+    if found is None:
+        devices = list(dr.async_get(hass).devices.values())
+        for store in STORE_DOMAINS:
+            ident = (store, repo_id)
+            if any(ident in d.identifiers for d in devices):
+                found = store
+                break
+    # HA 2026.11+ loads the Marketplace, never HACS next to it: entries it has not taken over (yet) are its now.
+    if found == STORE_HACS and STORE_MARKETPLACE in getattr(hass.config, "components", ()):
+        return STORE_MARKETPLACE
+    return found
+
+
+def hacs_knows(hass: HomeAssistant, repo_id: str) -> bool:
+    """Is this GitHub repository downloaded through HACS or the Marketplace? (store_of)"""
+    return store_of(hass, repo_id) is not None
 
 
 def hacs_repo_id(hass: HomeAssistant) -> str | None:
-    """GitHub id of UPDATE_REPO if HACS manages Casora, else None."""
+    """GitHub id of UPDATE_REPO if HACS or the Marketplace manages Casora, else None."""
     return UPDATE_REPO_ID if hacs_knows(hass, UPDATE_REPO_ID) else None
+
+
+def store_url(hass: HomeAssistant, repo_id: str | None) -> str | None:
+    """Casora's page in the store that manages it (the panel route takes the GitHub id), else None.
+
+    The Marketplace serves /hacs/… only as a server redirect; the Studio navigates inside the
+    frontend, so it needs the Marketplace's own route."""
+    if not repo_id:
+        return None
+    store = store_of(hass, repo_id)
+    return f"/{store}/repository/{repo_id}" if store else None
 
 
 def beta_enabled(entry: ConfigEntry | None) -> bool:
@@ -140,15 +181,20 @@ def _own_unique_id(entry) -> str:
 def casora_update_entity(hass: HomeAssistant, entry) -> tuple[str | None, str | None]:
     """Update entity that updates Casora → (entity_id, "hacs" | "casora").
 
-    With HACS: HACS' update entity for the Casora repo – found via platform hacs and the repo
-    id as unique_id; if that is missing (HACS list shaped differently), via the release_url
-    pointing to UPDATE_REPO. Without HACS our own (update.py). Nothing found → (None, source).
+    With HACS: the store's update entity for the Casora repo – found via platform marketplace or
+    hacs and the repo id as unique_id; if that is missing (list shaped differently), via the
+    release_url pointing to UPDATE_REPO. Without HACS our own (update.py). Nothing found → (None, source).
+    "hacs" stands for both stores (STORE_DOMAINS).
     """
     data = hass.data.get(DOMAIN, {})
     reg = er.async_get(hass)
     if data.get(DATA_HACS):
         rid = data.get(DATA_HACS_ID)
-        eid = reg.async_get_entity_id("update", "hacs", str(rid)) if rid else None
+        eid = None
+        for store in STORE_DOMAINS if rid else ():
+            eid = reg.async_get_entity_id("update", store, str(rid))
+            if eid is not None:
+                break
         if eid is None:
             repo = "/" + UPDATE_REPO.lower() + "/"
             hits = []
@@ -158,7 +204,7 @@ def casora_update_entity(hass: HomeAssistant, entry) -> tuple[str | None, str | 
                 st = hass.states.get(e.entity_id)
                 url = str((st.attributes.get("release_url") if st else "") or "").lower()
                 if repo in url + "/":
-                    hits.append((e.platform != "hacs", e.entity_id))
+                    hits.append((e.platform not in STORE_DOMAINS, e.entity_id))
             eid = min(hits)[1] if hits else None
         return eid, "hacs"
     if entry is None:
