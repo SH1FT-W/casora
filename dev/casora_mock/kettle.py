@@ -2,7 +2,8 @@
 
 Testkocher: like Xiaomi BLE's Smart Kettle (model YM-K1501): only the water temperature (sensor, device_class
 temperature) and whether it heats (binary_sensor, device_class power) – the card only shows. Testwasserkocher: a kettle
-with a target temperature (number in °C) and a keep-warm switch, as integrations that control a kettle offer them.
+with a target temperature (number in °C), a keep-warm switch and the switch that starts it (Tuya-like), as integrations
+that control a kettle offer them.
 Names made up.
 """
 from __future__ import annotations
@@ -24,6 +25,7 @@ def extra(now) -> dict:
         _ent(f"number.{PLUS}_target_temperature", "80", {"min": 40, "max": 100, "step": 5, "unit_of_measurement": "°C"},
              "Testwasserkocher Zieltemperatur", dev=PLUS),
         _ent(f"switch.{PLUS}_keep_warm", "on", {}, "Testwasserkocher Warmhalten", dev=PLUS),
+        _ent(f"switch.{PLUS}_boil", "off", {}, "Testwasserkocher Kochen", dev=PLUS),
     ]
     return {
         "devices": [{"key": BLE, "name": "Testkocher", "manufacturer": "Xiaomi", "model": "YM-K1501", "area": None},

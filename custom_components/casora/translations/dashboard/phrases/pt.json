@@ -2731,7 +2731,9 @@
   "Behälter": "Reservatório",
   "Reicht noch": "Dura mais",
   "Dosiermenge": "Quantidade da dose",
-  "alles in Ordnung": "tudo bem"
+  "alles in Ordnung": "tudo bem",
+  "Kochen": "Ferver",
+  "Elektrisch": "Elétrico"
  },
  "patterns": [
   [

@@ -2731,7 +2731,9 @@
   "Behälter": "Réservoir",
   "Reicht noch": "Suffit encore",
   "Dosiermenge": "Quantité dosée",
-  "alles in Ordnung": "tout va bien"
+  "alles in Ordnung": "tout va bien",
+  "Kochen": "Bouillir",
+  "Elektrisch": "Électrique"
  },
  "patterns": [
   [

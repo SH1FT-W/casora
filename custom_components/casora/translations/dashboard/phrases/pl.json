@@ -2731,7 +2731,9 @@
   "Behälter": "Pojemnik",
   "Reicht noch": "Wystarczy na",
   "Dosiermenge": "Dawka",
-  "alles in Ordnung": "wszystko w porządku"
+  "alles in Ordnung": "wszystko w porządku",
+  "Kochen": "Gotowanie",
+  "Elektrisch": "Elektryczny"
  },
  "patterns": [
   [

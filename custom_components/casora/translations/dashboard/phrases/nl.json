@@ -2731,7 +2731,9 @@
   "Behälter": "Reservoir",
   "Reicht noch": "Nog genoeg voor",
   "Dosiermenge": "Doseerhoeveelheid",
-  "alles in Ordnung": "alles in orde"
+  "alles in Ordnung": "alles in orde",
+  "Kochen": "Koken",
+  "Elektrisch": "Op stroom"
  },
  "patterns": [
   [

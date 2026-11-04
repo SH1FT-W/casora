@@ -11,7 +11,8 @@
 //     from the quick items (never dangerous, at most 4), no emoji as a symbol anywhere in the popup code, and no popup
 //     that turns its quick choice into moons still lays out a separate quick field.
 //  6. popup_v3_offen.json lists every popup that is not migrated yet, with a reason (a ratchet: a popup leaves
-//     the list only into MIGRIERT; empty = done). Each popup is either migrated or open, never both.
+//     the list only into MIGRIERT; empty = done). Each popup is either migrated or open, never both, and every
+//     casora_popup_* template (not the base, not one that only takes another popup template) is in one of them.
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -109,6 +110,13 @@ const MIGRIERT = [
   { popup: 'Kamera', vorlagen: ['casora_popup_camera'], file: null, stages: 2 },
   // S6: „Jetzt“ and the energy flow (else the power chart); quick Haus · Solar · Netz · Akku opens the focus pages.
   { popup: 'Energie (mit Energiefluss)', vorlagen: ['casora_popup_energy'], file: '05-weich-mehr.js', from: '  // ── Popup v3: stage and quick choice', to: '  // ── Energy flow as bars', stages: 1 },
+  // Not in the auftrag's tables (§5), found by the audit of 04.11.2026:
+  // S8: the scene grid in UI.stage('content'), else the empty stage; the template sets the variant in its JS popup.
+  { popup: 'Szenen', vorlagen: ['casora_popup_scenes'], file: '08-weich-szenen.js', from: '  Z.v3sec = function', to: '  // Symbols chosen in the Studio', stages: 2 },
+  // S8: the open items with „Hinzufügen“ in UI.stage('content').
+  { popup: 'Einkaufsliste', vorlagen: ['casora_popup_shopping'], file: '36-shopping.js', from: '  S.innerHtml = function', to: '  S.box = function', stages: 1 },
+  // S2 with a target (water_heater or number), else S7 with the water temperature; modes as moons, the temperature as the Verlauf (120).
+  { popup: 'Wasserkocher', vorlagen: ['casora_popup_kettle'], file: '37-kettle.js', from: '  K.sec = function', to: "  // The popup's cards: v3", stages: 2 },
 ];
 
 // 1. Pieces.
@@ -160,7 +168,9 @@ const popupsOf = (t, out = []) => {
   if (!t || typeof t !== 'object') return out;
   if (Array.isArray(t)) { t.forEach((x) => popupsOf(x, out)); return out; }
   for (const [k, v] of Object.entries(t)) {
-    if (k === 'casora_popup' && v && typeof v === 'object') out.push(v);
+    // A popup built in JS ([[[ … return { … variant: … } ]]], scenes) counts with the variant it returns.
+    if (k === 'casora_popup' && typeof v === 'string' && /\bvariant:/.test(v)) out.push({ variant: /\bvariant:[^\n]*'v3'/.test(v) ? 'v3' : null });
+    else if (k === 'casora_popup' && v && typeof v === 'object') out.push(v);
     else popupsOf(v, out);
   }
   return out;
@@ -228,6 +238,15 @@ for (const o of OFFEN) {
   seen.add(o.popup);
   for (const n of o.vorlagen || []) assert.ok(T[n], `${o.popup}: template ${n} missing`);
 }
-// The auftrag's tables (§5) list 54 popups: none may drop out of both lists.
-assert.equal(MIGRIERT.length + OFFEN.length, 54, 'popup_v3: migrated + open must cover all 54 popups of the auftrag (§5)');
+// Every popup template (casora_popup_*) is migrated or open – the audit of 04.11.2026 found three that were in
+// neither list (kettle, scenes, shopping). Not counted: the base, and templates that only take another popup template
+// (casora_popup_own_badge → casora_popup_free).
+{
+  const listed = new Set(MIGRIERT.concat(OFFEN).flatMap((m) => m.vorlagen || []));
+  const inherits = (n) => [].concat(T[n].template || []).some((p) => /^casora_popup_/.test(p) && p !== 'casora_popup_base');
+  const missing = Object.keys(T).filter((n) => /^casora_popup_/.test(n) && n !== 'casora_popup_base' && !inherits(n) && !listed.has(n));
+  assert.deepEqual(missing, [], `popup_v3: popup templates neither in MIGRIERT nor in popup_v3_offen.json: ${missing.join(', ')}`);
+}
+// The auftrag's tables (§5) list 54 popups, the audit added 3: none may drop out of both lists.
+assert.equal(MIGRIERT.length + OFFEN.length, 54 + 3, 'popup_v3: migrated + open must cover all 57 popups (auftrag §5 + audit 04.11.2026)');
 console.log(`popup_v3: ok (${MIGRIERT.length} migrated, ${OFFEN.length} open)`);

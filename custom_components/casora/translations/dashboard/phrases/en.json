@@ -2713,7 +2713,9 @@
   "Behälter": "Container",
   "Reicht noch": "Lasts",
   "Dosiermenge": "Dose volume",
-  "alles in Ordnung": "all good"
+  "alles in Ordnung": "all good",
+  "Kochen": "Boil",
+  "Elektrisch": "Electric"
  },
  "patterns": [
   [

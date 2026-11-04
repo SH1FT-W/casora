@@ -19398,7 +19398,7 @@
   ],
   "tap_action": {
    "casora_popup": {
-    "content": "[[[\n  /* Kettle (#87): HA's rows for its entities and the temperature history (window._casoraKettle.popup in\n     37-kettle.js) until popup v3 draws Casora's own (.qa/v3/issue-popups-fuer-v3.md). */\n  return window._casoraKettle ? window._casoraKettle.popup(entity, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "content": "[[[\n  /* Kettle (#87): popup v3 draws Casora's own (window._casoraKettle.popup in 37-kettle.js: the target temperature on the\n     S2 dial, else the water temperature as S7, modes as moons, the rows in one plate, the temperature as Verlauf);\n     other looks HA's rows and history. */\n  return window._casoraKettle ? window._casoraKettle.popup(entity, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
     "dismissable": true,
     "dismiss_on_background": true,
     "popup_styles": [
@@ -19409,7 +19409,8 @@
     ],
     "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Wasserkocher', ['Wasserkocher', 'Kettle']) : (String(variables.room_name || '').trim() || 'Wasserkocher'); ]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]",
-    "style": "[[[\n  return window.casoraPopupWidth ? window.casoraPopupWidth('one') : '--popup-min-width: min(552px, calc(100vw - 16px)); --popup-max-width: min(552px, calc(100vw - 16px));';\n]]]\n"
+    "style": "[[[\n  /* Two columns (stage and Verlauf left, the rows right); the layout falls back to one column (552) by itself. */\n  return '--popup-min-width: min(900px, calc(100vw - 16px)); --popup-max-width: min(900px, calc(100vw - 16px));';\n]]]\n",
+    "variant": "v3"
    }
   },
   "variables": {
