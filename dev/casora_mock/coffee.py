@@ -10,7 +10,8 @@
   No cancel button (the integration has none).
 * "Bohnenwerk" – like the power-curve integrations delonghi/krups: drinks recognized from the power curve (state
   off/ready/running, last program, drinks today/total, cups per drink), maintenance as sensors with attribute "due",
-  power switch. No drink select (only the machine starts drinks).
+  power switch, a confirmation button per task ("<task>_done": resets its sensor) and "beans_empty". No drink select
+  (only the machine starts drinks).
 * "Kaffeeinsel" – like Home Connect Local (homeconnect_ws): keys sensor_operation_state, switch_power_state,
   select_program (program keys lower-cased, CamelCase not split) + button_start_program/button_abort_program, process
   phase, water tank and drip tray as enum sensors, beans as binary sensor, countdown to descaling, counters sensor_count_*.
@@ -21,7 +22,8 @@ Everything runs under casora_mock; Casora recognizes the integration by the tran
 Test services:
   casora_mock.kaffee_beziehen {getraenk, geraet: testbarista|morgenbohne|bohnenwerk|kaffeeinsel|espressobar, dauer}
       – brew with progress (~30 s), counter +1 at the end
-  casora_mock.kaffee_warnung {art: wasser|bohnen|schale|satz|entkalken|aus, geraet} – set a warning or clear all
+  casora_mock.kaffee_warnung {art: wasser|bohnen|schale|satz|entkalken|bruehgruppe|milch|aus, geraet} – set a warning or
+      clear all (bruehgruppe/milch only Bohnenwerk; brew unit overdue)
 Also home_connect.set_program_and_options answers (if Home Connect is not loaded); choosing the active program or the
 drink select starts a brew like on the real machine, and so does the start button of Kaffeeinsel (selected program).
 """
@@ -62,6 +64,14 @@ WS_PHASES = ("grinding", "coffeebrewing", "milkfroth")
 # Power switch per machine (the plug's switch has its own name).
 POWER = {HC: f"switch.{HC}_power", DL: f"switch.{DL}_power", SW: f"switch.{SW}_einschalter", WS: f"switch.{WS}_power",
          PL: f"switch.{PL}_steckdose"}
+
+
+# Bohnenwerk: confirmation buttons ("<task>_done") and the sensor each one resets (start values of the test house).
+SW_DONE_NAMES = (("descale", "Entkalkt"), ("filter", "Filter gewechselt"), ("grounds", "Trester geleert"),
+                 ("brew_unit", "Brühgruppe ausgespült"), ("milk", "Milchsystem gereinigt"), ("tank", "Tank aufgefüllt"),
+                 ("beans", "Bohnen aufgefüllt"))
+SW_DONE = {"descale": ("entkalken_in", "42.5"), "filter": ("filterwechsel_in", "12"), "grounds": ("trester_leeren_in", "6"),
+           "brew_unit": ("bruhgruppe_ausspulen_in", "3"), "tank": ("wassertank", "1100"), "beans": ("bohnen", "70")}
 
 
 def _e(eid, state, key, device, name, attrs=None, dc=None, unit=None, cat=None):
@@ -145,6 +155,8 @@ def extra(now) -> dict:
         _e(f"sensor.{w}_bohnen", "70", "beans", w, "Bohnenwerk Bohnen", {"due": False}, unit="%"),
         _e(f"binary_sensor.{w}_milchsystem_reinigen", "off", "milk", w, "Bohnenwerk Milchsystem reinigen", dc="problem"),
         _e(f"binary_sensor.{w}_wartung_fallig", "off", "maintenance_due", w, "Bohnenwerk Wartung fällig", {"tasks": []}, dc="problem"),
+        *(_e(f"button.{w}_{k}_done", "unknown", f"{k}_done", w, f"Bohnenwerk {n}", cat="config") for k, n in SW_DONE_NAMES),
+        _e(f"button.{w}_beans_empty", "unknown", "beans_empty", w, "Bohnenwerk Bohnen leer", cat="config"),
     ]
     k = WS
     ents += [
@@ -351,11 +363,15 @@ def setup(hass, mock) -> None:
         art = str(call.data.get("art", "wasser"))
         if dev == SW:
             # Power-curve integration: maintenance through the attribute "due" (value 0 = due now).
-            for a, k in (("wasser", "wassertank"), ("bohnen", "bohnen"), ("satz", "trester_leeren_in"), ("entkalken", "entkalken_in")):
+            for a, k in (("wasser", "wassertank"), ("bohnen", "bohnen"), ("satz", "trester_leeren_in"), ("entkalken", "entkalken_in"),
+                         ("bruehgruppe", "bruhgruppe_ausspulen_in")):
                 if art == "aus" or a == art:
                     eid = f"sensor.{SW}_{k}"
-                    back = {"wassertank": "1100", "bohnen": "70", "trester_leeren_in": "6", "entkalken_in": "42.5"}[k]
-                    mock.set(eid, back if art == "aus" else "0", due=art != "aus")
+                    back = {"wassertank": "1100", "bohnen": "70", "trester_leeren_in": "6", "entkalken_in": "42.5",
+                            "bruhgruppe_ausspulen_in": "3"}[k]
+                    mock.set(eid, back if art == "aus" else ("-1" if a == "bruehgruppe" else "0"), due=art != "aus")
+            if art in ("aus", "milch"):
+                mock.set(f"binary_sensor.{SW}_milchsystem_reinigen", "off" if art == "aus" else "on")
         elif dev == HC:
             for a, k in WARN.items():
                 if art == "aus" or a == art:
@@ -382,7 +398,7 @@ def setup(hass, mock) -> None:
     hass.services.async_register("casora_mock", "kaffee_beziehen", beziehen, vol.Schema({
         vol.Optional("getraenk"): str, vol.Optional("geraet"): vol.In(devs), vol.Optional("dauer"): vol.Coerce(float)}))
     hass.services.async_register("casora_mock", "kaffee_warnung", warnung, vol.Schema({
-        vol.Required("art"): vol.In(["wasser", "bohnen", "schale", "satz", "entkalken", "aus"]), vol.Optional("geraet"): vol.In(devs)}))
+        vol.Required("art"): vol.In(["wasser", "bohnen", "schale", "satz", "entkalken", "bruehgruppe", "milch", "aus"]), vol.Optional("geraet"): vol.In(devs)}))
 
     # As Home Connect: start a program with its options (only when the real integration is missing).
     async def set_program(call) -> None:
@@ -448,7 +464,15 @@ def setup(hass, mock) -> None:
             if new.state == "off":
                 stop(DL, False)
             mock.set(f"sensor.{DL}_device_status", "turned_off" if new.state == "off" else "ready")
+        elif eid.startswith(f"button.{SW}_") and eid.endswith("_done"):
+            # As the power-curve integration: "<task>_done" restarts the task's counter (not due any more).
+            task = eid[len(f"button.{SW}_"):-len("_done")]
+            if task == "milk":
+                mock.set(f"binary_sensor.{SW}_milchsystem_reinigen", "off")
+            elif task in SW_DONE:
+                mock.set(f"sensor.{SW}_{SW_DONE[task][0]}", SW_DONE[task][1], due=False)
 
     async_track_state_change_event(hass, [f"button.{HC}_stop_program", f"switch.{HC}_power", f"switch.{DL}_power",
                                          f"switch.{SW}_einschalter", f"button.{WS}_start", f"button.{WS}_abort",
-                                         f"switch.{WS}_power", POWER[PL]], changed)
+                                         f"switch.{WS}_power", POWER[PL], *(f"button.{SW}_{k}_done" for k, _ in SW_DONE_NAMES)],
+                                 changed)

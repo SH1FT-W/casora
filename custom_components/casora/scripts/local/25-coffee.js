@@ -298,6 +298,10 @@
   // as a binary sensor, drinks today/total and per drink ("cups", name = program). Only the machine starts drinks.
   var STROM_MAINT = { descale: ['entkalken', 'l'], filter: ['filter', 'd'], brewunit: ['bruehgruppe', 'd'], grounds: ['satz'], groundsin: ['satz'],
     tank: ['wasser'], beans: ['bohnen'] };
+  // Care confirmation buttons (translation_key, normalized) → care kind. Power-curve integration: "<task>_done"
+  // ("beans_empty" corrects the bean estimate, it confirms nothing). Only keys read from an integration's source.
+  var CARE_DONE = { descaledone: 'entkalken', filterdone: 'filter', groundsdone: 'satz', brewunitdone: 'bruehgruppe',
+    milkdone: 'milch', tankdone: 'wasser', beansdone: 'bohnen' };
   var stromRoles = function (c, items, by, addW) {
     c.total = by('sensor', ['drinkstotal'], true);
     c.today = by('sensor', ['drinkstoday'], true);
@@ -328,7 +332,7 @@
     var c = { fam: fam, anchor: anchor || null, device: null, power: null, powerOff: null, status: null, activity: null, phase: null,
       program: null, actSel: null, sel: null, start: null, stop: null, pause: null, brew: [], progress: null, remaining: null, finish: null,
       remote: null, dispensing: null, conn: null, opts: {}, warns: [], pre: [], counters: [], total: null, plugW: null, careSel: null,
-      today: null, last: null };
+      today: null, last: null, careDone: {} };
     var by = function (dom, pats, exact) {
       for (var i = 0; i < items.length; i++) if (items[i].domain === dom && hit(items[i], pats, exact)) return items[i].entity_id;
       return null;
@@ -398,6 +402,11 @@
     // Warnings
     var seen = {};
     var addW = function (id, art, sub, how) { if (!id || seen[id]) return; seen[id] = 1; c.warns.push({ id: id, art: art, sub: sub || null, how: how }); };
+    // Care confirmations: a button per task that resets its counter ("Entkalkt", "Trester geleert" …).
+    items.forEach(function (it) {
+      var art = it.domain === 'button' ? CARE_DONE[keyOf(it)] : null;
+      if (art && !c.careDone[art]) c.careDone[art] = it.entity_id;
+    });
     if (fam === 'strom') { stromRoles(c, items, by, addW); return c; }
     items.forEach(function (it) {
       if (it.domain !== 'binary_sensor' && it.domain !== 'sensor') return;
@@ -1383,6 +1392,17 @@
   // with an invisible word joiner (U+2060).
   var ALERTS = 'Hinweise⁠';
 
+  // Due care/warning row with a confirmation button of its kind: "Erledigt", then "Zurücksetzen" presses the button (same
+  // row mechanism and words as the vacuum's wear parts). Only while due ("bald leer" and missing parts get none); the
+  // row stays due until the integration's sensors change.
+  var doneAct = function (row, c, S, w) {
+    var id = w && !w.soft && c.careDone ? c.careDone[w.art] : null;
+    if (!id || !S[id] || S[id].state === 'unavailable' || /einsetzen/.test(w.label)) return row;
+    row.action = 'Erledigt';
+    row.confirm = 'Zurücksetzen';
+    row.svc = { domain: 'button', service: 'press', target: { entity_id: id }, done: 'Erledigt' };
+    return row;
+  };
   K.sec = function (part, c, states, hass, el) {
     var UI = window._casoraUI;
     if (!UI || !c) return '';
@@ -1527,7 +1547,7 @@
       // What the care rows show is not repeated here (D8). Rows not tappable: the instruction is in them (U3).
       var arts = careArts(c, s);
       var wr = s.warns.filter(function (w) { return !(arts[w.art] && isCare(w)); }).map(function (w) {
-        return { icon: w.icon, iconTone: w.sev === 'bad' ? 'bad' : 'warn', label: w.label, sub: w.sub, subWrap: true };
+        return doneAct({ icon: w.icon, iconTone: w.sev === 'bad' ? 'bad' : 'warn', label: w.label, sub: w.sub, subWrap: true }, c, S, w);
       });
       if (s.st === 'fehler' && !s.warns.length) wr.push({ icon: 'mdi:alert-circle-outline', iconTone: 'bad', label: 'Maschine meldet einen Fehler', sub: 'Hinweis im Display der Maschine ansehen' });
       if (s.st === 'aktion_noetig' && !s.warns.length) wr.push({ icon: 'mdi:hand-back-right-outline', iconTone: 'warn', label: 'Eingriff nötig', sub: 'Hinweis im Display der Maschine ansehen' });
@@ -1545,10 +1565,10 @@
         // Icon with 3:1 on the plate: due/advance warning deep orange (orange was too light), "OK" calm in sand (light green was below).
         var soon = pre && pre.cups != null && pre.cups <= 10;
         var careTone = due ? (due.sev === 'bad' ? 'bad' : COLOR.warn) : soon ? COLOR.warn : 'rgba(0,0,0,0)';
-        cr.push({ icon: WARN_TXT[k][2], iconTone: careTone, label: CARE_NAME[k],
+        cr.push(doneAct({ icon: WARN_TXT[k][2], iconTone: careTone, label: CARE_NAME[k],
           sub: due ? due.sub : null, subWrap: !!due,
           value: due ? (due.sev === 'bad' ? 'Überfällig' : 'Fällig') : pre ? 'In ' + (pre.txt || cupsTxt(pre.cups)) : 'OK',
-          valueTone: due ? due.sev : soon ? 'warn' : null });
+          valueTone: due ? due.sev : soon ? 'warn' : null }, c, S, due));
       });
       // Home Connect (core): warnings are off by default – then say here how to get them.
       if (c.fam === 'hc' && !c.warns.length && !c.pre.length) {
