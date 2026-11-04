@@ -29,7 +29,7 @@
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
       n0t: "3D-Drucker", n0: "Temperaturen, AMS-Slots, Modellvorschau und Geschwindigkeit im Popup.",
       n1t: "Licht-Kacheln", n1: "Leuchten, sobald eine ihrer Lampen an ist.",
-      n2t: "HA 2026.11", n2: "Umbenannte Entitäten behalten ihren kurzen Namen.",
+      n2t: "Namen in HA 2026.11", n2: "Umbenannte Entitäten behalten ihren kurzen Namen.",
       n3t: "Update-Hinweis", n3: "Zeigt jetzt kurz, was neu ist.",
     },
     en: {
@@ -42,7 +42,7 @@
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
       n0t: "3D printer", n0: "Temperatures, AMS slots, model preview and speed in the popup.",
       n1t: "Light tiles", n1: "Light up as soon as one of their lamps is on.",
-      n2t: "HA 2026.11", n2: "Renamed entities keep their short name.",
+      n2t: "Names on HA 2026.11", n2: "Renamed entities keep their short name.",
       n3t: "Update prompt", n3: "Now says briefly what is new.",
     },
     // Spanish: same keys as en (dev/unit/welcome_es.mjs); a missing key falls back to English.
@@ -56,7 +56,7 @@
       w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
       n0t: "Impresora 3D", n0: "Temperaturas, ranuras AMS, vista del modelo y velocidad en el popup.",
       n1t: "Mosaicos de luz", n1: "Se iluminan en cuanto una de sus lámparas está encendida.",
-      n2t: "HA 2026.11", n2: "Las entidades renombradas conservan su nombre corto.",
+      n2t: "Nombres en HA 2026.11", n2: "Las entidades renombradas conservan su nombre corto.",
       n3t: "Aviso de actualización", n3: "Ahora dice brevemente qué hay de nuevo.",
     },
     fr: {
@@ -72,7 +72,7 @@
       w3: "Un tableau de bord qui s'adapte à chaque écran, avec sa propre mise en page téléphone.",
       n0t: "Imprimante 3D", n0: "Températures, emplacements AMS, aperçu du modèle et vitesse dans le popup.",
       n1t: "Tuiles de lumière", n1: "S'allument dès qu'une de leurs lampes est allumée.",
-      n2t: "HA 2026.11", n2: "Les entités renommées gardent leur nom court.",
+      n2t: "Noms sous HA 2026.11", n2: "Les entités renommées gardent leur nom court.",
       n3t: "Avis de mise à jour", n3: "Dit maintenant brièvement ce qui est nouveau.",
     },
     it: {
@@ -88,7 +88,7 @@
       w3: "Una dashboard che si adatta a ogni schermo, con un layout dedicato per il telefono.",
       n0t: "Stampante 3D", n0: "Temperature, slot AMS, anteprima del modello e velocità nel popup.",
       n1t: "Riquadri luce", n1: "Si illuminano appena una delle loro lampade è accesa.",
-      n2t: "HA 2026.11", n2: "Le entità rinominate mantengono il nome breve.",
+      n2t: "Nomi in HA 2026.11", n2: "Le entità rinominate mantengono il nome breve.",
       n3t: "Avviso di aggiornamento", n3: "Ora dice in breve cosa c'è di nuovo.",
     },
     nl: {
@@ -104,7 +104,7 @@
       w3: "Eén dashboard dat zich aan elk scherm aanpast, met een eigen telefoonweergave.",
       n0t: "3D-printer", n0: "Temperaturen, AMS-slots, modelvoorbeeld en snelheid in de popup.",
       n1t: "Lichttegels", n1: "Lichten op zodra een van hun lampen aan is.",
-      n2t: "HA 2026.11", n2: "Hernoemde entiteiten houden hun korte naam.",
+      n2t: "Namen in HA 2026.11", n2: "Hernoemde entiteiten houden hun korte naam.",
       n3t: "Updatemelding", n3: "Zegt nu kort wat er nieuw is.",
     },
     pl: {
@@ -120,7 +120,7 @@
       w3: "Jeden pulpit, który dopasowuje się do każdego ekranu, z własnym układem na telefon.",
       n0t: "Drukarka 3D", n0: "Temperatury, sloty AMS, podgląd modelu i prędkość w popupie.",
       n1t: "Kafelki światła", n1: "Świecą, gdy tylko jedna z ich lamp jest włączona.",
-      n2t: "HA 2026.11", n2: "Encje o zmienionych nazwach zachowują krótką nazwę.",
+      n2t: "Nazwy w HA 2026.11", n2: "Encje o zmienionych nazwach zachowują krótką nazwę.",
       n3t: "Powiadomienie o aktualizacji", n3: "Teraz krótko mówi, co nowego.",
     },
     pt: {
@@ -136,7 +136,7 @@
       w3: "Um painel que se adapta a cada ecrã, com layout próprio para o telemóvel.",
       n0t: "Impressora 3D", n0: "Temperaturas, ranhuras AMS, pré-visualização do modelo e velocidade no popup.",
       n1t: "Mosaicos de luz", n1: "Acendem assim que uma das suas lâmpadas está ligada.",
-      n2t: "HA 2026.11", n2: "As entidades renomeadas mantêm o nome curto.",
+      n2t: "Nomes no HA 2026.11", n2: "As entidades renomeadas mantêm o nome curto.",
       n3t: "Aviso de atualização", n3: "Agora diz em poucas palavras o que há de novo.",
     },
   };
