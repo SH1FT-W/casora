@@ -7768,6 +7768,8 @@ window.casoraMenuGlass = {
         try { aspec = JSON.parse(el.dataset.casoraAct || '{}'); } catch (e) { continue; }
         var arules = aspec.rules || [];
         var atest = function (c) {
+          // { restart: true }: installed, HA still has to restart (casoraNeedsRestart: HACS text or Marketplace issue).
+          if (c.restart) return !!(window.casoraNeedsRestart && window.casoraNeedsRestart(st));
           var v = c.attr === 'state' ? st.state : (st.attributes || {})[c.attr];
           if (c.has !== undefined) {
             return String(v == null ? '' : v).toLowerCase()
@@ -7833,9 +7835,23 @@ window.casoraMenuGlass = {
     }
   }
 
+  // Live-bridge hosts that have painted; repainted when data outside hass changes (restart list).
+  var _liveHosts = new Set();
+  window._casoraLiveRepaint = function () {
+    _liveHosts.forEach(function (el) {
+      if (!el.isConnected) { _liveHosts.delete(el); return; }
+      var host = el.getRootNode && el.getRootNode();
+      if (host && el._hass) refreshLive(host, el._hass, el._liveCache || (el._liveCache = {}));
+    });
+  };
+
   class CasoraPopupHass extends HTMLElement {
+    disconnectedCallback() { _liveHosts.delete(this); }
     set hass(h) {
       this._hass = h;
+      _liveHosts.add(this);
+      // Popups ask the restart rule too: start the restart list here, not only with the bell.
+      if (typeof window.casoraWatchRestarts === 'function') window.casoraWatchRestarts(h);
       var t = this._targets || [];
       for (var i = 0; i < t.length; i++) { if (t[i]) t[i].hass = h; }
       var host = this.getRootNode && this.getRootNode();
@@ -14431,6 +14447,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       if (_busy) _busy.then(function () { collect(); }); else collect();
     }, { type: 'persistent_notification/subscribe' }).catch(function () { _pnSub = false; });
   }
+  // A restart issue came or went (HA's Marketplace): rebuild like for a new notification.
+  function restartsChanged() { if (_busy) _busy.then(function () { collect(); }); else collect(); }
   // Markdown of the message as one plain line: links keep their text, no marks, at most 160 characters.
   function pnText(t) {
     var s = String(t == null ? '' : t).replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_`#>]+/g, '')
@@ -14608,14 +14626,66 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       - new Date(then.getFullYear(), then.getMonth(), then.getDate())) / 86400000));
   };
   /* Installed, but Home Assistant still has to restart - one rule for the Updates tile, popup and bell.
-     HACS says "Restart of Home Assistant required" in release_summary once the install is done, with
-     installed == latest and the state off. */
+     State off with installed == latest, and either HACS' text "Restart of Home Assistant required" in
+     release_summary (custom HACS, up to HA 2026.10) or a restart repair issue of HA's Marketplace
+     (2026.11+, no text): window._casoraRestartIds, filled by casoraWatchRestarts below. */
   window.casoraNeedsRestart = function (e) {
     if (!e || e.state !== 'off') return false;
     var a = e.attributes || {};
     if (!a.installed_version || a.installed_version !== a.latest_version) return false;
+    var ids = window._casoraRestartIds;
+    if (ids && e.entity_id && ids[e.entity_id]) return true;
     return String(a.release_summary || '').toLowerCase().indexOf('restart') !== -1;
   };
+  /* Update entities with a pending restart from HA's repair issues (casora/updates/restarts, updates.py),
+     live for every user. onChange runs after each change (the bell rebuilds its rows). Older Casora
+     backend without the command: the list stays empty, release_summary still counts. */
+  var _restartSub = false, _restartFns = [], _restartConn = null, _restartTry = 0, _restartWait = false, _restartUnsub = null;
+  var _restartTell = function (next) {
+    window._casoraRestartIds = next;
+    _restartFns.slice().forEach(function (fn) { try { fn(next); } catch (e) { /* the listener's own problem */ } });
+    // Open popups: the { restart: true } rule of the live bridge reads the list on the next paint.
+    if (typeof window._casoraLiveRepaint === 'function') window._casoraLiveRepaint();
+  };
+  window.casoraWatchRestarts = function (hass, onChange, retry) {
+    if (onChange && _restartFns.indexOf(onChange) < 0) _restartFns.push(onChange);
+    var conn = hass && hass.connection;
+    if (!conn || typeof conn.subscribeMessage !== 'function') return;
+    if (_restartConn !== conn) {
+      // A new connection object (the old one was closed on purpose, without "disconnected"): start over on it.
+      if (_restartUnsub) { try { _restartUnsub(); } catch (e) { /* old socket gone */ } }
+      _restartUnsub = null;
+      _restartConn = conn;
+      _restartSub = false;
+      _restartTry = 0;
+      _restartWait = false;
+      if (typeof conn.addEventListener === 'function') {
+        // HA restarted: the old list is stale (a restart clears the issues), and when the socket is back
+        // Casora's command may not be registered yet - subscribe anew ourselves, retrying for a while.
+        // Only forget the list here: rebuilding the bell now would ask HA over a closed socket.
+        conn.addEventListener('disconnected', function () {
+          if (_restartConn !== conn) return;
+          _restartSub = false; _restartTry = 0; _restartWait = false; _restartUnsub = null; window._casoraRestartIds = {};
+        });
+        conn.addEventListener('ready', function () { if (_restartConn === conn) window.casoraWatchRestarts({ connection: conn }, null, true); });
+      }
+    }
+    // Offline: a subscription sent now would never be answered; "ready" subscribes. After a failed try only the
+    // retry timer (or "ready") tries again, not every state change that passes hass here.
+    if (_restartSub || conn.connected === false || (_restartWait && !retry)) return;
+    _restartWait = false;
+    _restartSub = true;
+    Promise.resolve(conn.subscribeMessage(function (ev) {
+      var next = {};
+      ((ev && ev.entity_ids) || []).forEach(function (id) { if (typeof id === 'string') next[id] = true; });
+      _restartTell(next);
+    }, { type: 'casora/updates/restarts' }, { resubscribe: false })).then(function (unsub) { _restartTry = 0; _restartUnsub = unsub; }, function () {
+      _restartSub = false;
+      _restartWait = true;
+      if (_restartTry++ < 20) setTimeout(function () { if (_restartConn === conn) window.casoraWatchRestarts({ connection: conn }, null, true); }, 15000);
+    });
+  };
+
   function ago(ms) {
     var s = Math.max(0, (Date.now() - ms) / 1000);
     if (s < 60) return 'gerade eben';
@@ -15511,6 +15581,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (_busy) return _busy;
     loadHidden(hass);
     watchPn(hass);
+    window.casoraWatchRestarts(hass, restartsChanged);
 
     var live = standing(hass);
     var ids = watched(hass);

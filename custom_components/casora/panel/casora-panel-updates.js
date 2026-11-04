@@ -309,7 +309,8 @@
     // Updating is HACS' job: open Casora's page in HACS, otherwise HACS' update entry (more-info).
     P._cuOpenHacs = async function () {
       const d = this._cuData || {};
-      if (d.hacs_url && /^\/hacs\//.test(d.hacs_url)) {
+      // HACS (/hacs/…) or HA's Marketplace (2026.11+, /marketplace/…): both pages take the GitHub id.
+      if (d.hacs_url && /^\/(hacs|marketplace)\//.test(d.hacs_url)) {
         const dirty = this._state && this._isDirty && this._isDirty();
         if (dirty && !(await this._save())) return;
         if (this._flowMode && this._exitFlow) this._exitFlow(false);
@@ -355,6 +356,14 @@
         await this._hass.callService("update", "install", data);
       } catch (e) {
         this._cuErr = t("Installing didn't work.") + " " + ((e && e.message) || e);
+        // HA's Marketplace (2026.11+) installs only after this user read its first-run warning: open its page.
+        if (e && e.translation_key === "warning_not_accepted" && d.hacs_url) {
+          this._cuBusy = null;
+          this._cuInstalling = null;
+          this._cuRepaint();
+          await this._cuOpenHacs();
+          return;
+        }
       }
       await this._cuLoad(true);
       const now = this._cuData || {};

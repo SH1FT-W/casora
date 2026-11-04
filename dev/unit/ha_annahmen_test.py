@@ -489,6 +489,96 @@ class UpdateReleaseNotes(unittest.TestCase):
         self.assertEqual(str(DATA_COMPONENT), "update")
 
 
+class RepairIssues(unittest.TestCase):
+    def test_issue_registry_api(self):
+        """The issue registry lists every issue in .issues {(domain, issue_id): IssueEntry} with .active and fires
+        EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED on every change (what HA's own repairs/list_issues reads).
+
+        Casora: updates.py restart_pending_entities() / casora/updates/restarts (restart owed after an install by
+        HA's Marketplace). Red: read the issues another way."""
+        from homeassistant.helpers import issue_registry as ir
+
+        self.assertEqual(ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED, "repairs_issue_registry_updated")
+        self.assertIn("self.issues", inspect.getsource(ir.IssueRegistry))
+        self.assertIn("active", inspect.signature(ir.IssueEntry).parameters)
+
+
+class Marketplace(unittest.TestCase):
+    """HA 2026.11+: HACS built into HA as the Marketplace (domain marketplace). Skipped on older versions.
+
+    Casora: update.py store_of/casora_update_entity/store_url, updates.py restart_pending_entities,
+    hemma_cleanup.py hacs_repo/call_ws, scripts/local/03-popups.js update search. docs/ha-annahmen.md."""
+
+    def setUp(self):
+        try:
+            from homeassistant.components import marketplace  # noqa: F401
+        except ImportError:
+            self.skipTest("no Marketplace in this HA version (before 2026.11)")
+
+    def _src(self, mod):
+        import importlib
+
+        return inspect.getsource(importlib.import_module("homeassistant.components.marketplace." + mod))
+
+    def test_registry_keys(self):
+        """Device ("marketplace", <GitHub id>), update entity platform marketplace with unique_id = GitHub id; the
+        migration rewrites HACS' ("hacs", <id>) entries to that. Red: Casora no longer finds the store's entries."""
+        from homeassistant.components.marketplace import const, migration
+
+        self.assertEqual(const.DOMAIN, "marketplace")
+        self.assertEqual(migration.LEGACY_HACS_DOMAIN, "hacs")
+        ent = self._src("entity")
+        self.assertIn("self._attr_unique_id = repository.data.id", ent)
+        self.assertIn("identifiers={(DOMAIN, self.repository.data.id)}", ent)
+        mig = self._src("migration")
+        self.assertIn("(DOMAIN, identifier)", mig)
+        self.assertIn("async_update_entity_platform(", mig)
+
+    def test_restart_issue(self):
+        """A finished install that waits for a restart: repair issue restart_required_<GitHub id>_<ref> under the
+        domain marketplace; the update entity says nothing (no release notes while pending, no summary).
+        Red: casoraNeedsRestart misses the restart (bell, Updates tile/popup)."""
+        from homeassistant.components.marketplace import const
+
+        self.assertEqual(const.RESTART_ISSUE_PREFIX, "restart_required_")
+        self.assertIn('f"{RESTART_ISSUE_PREFIX}{self.data.id}_{self.ref}"', self._src("repositories.integration"))
+        upd = self._src("update")
+        self.assertNotIn("release_summary", upd)
+        self.assertIn("if self.repository.pending_restart:\n            return None", upd)
+
+    def test_websocket_commands(self):
+        """Commands Casora calls: marketplace/info (github_connected), repositories/list (id, installed),
+        repository/refresh, repository/uninstall (refuses while config entries of the domain exist). Handlers take
+        the Marketplace as a fourth argument from marketplace_command (functools.wraps). Red: update search or
+        "remove Hemma" use the wrong command or call shape."""
+        from homeassistant.components.marketplace.websocket import repositories, repository
+
+        src = self._src("websocket.repository") + self._src("websocket.repositories") + self._src("websocket")
+        for cmd in ("marketplace/info", "marketplace/repositories/list", "marketplace/repository/refresh",
+                    "marketplace/repository/uninstall"):
+            self.assertIn(f'"{cmd}"', src)
+        self.assertIn('"github_connected"', src)
+        self.assertIn('"installed": repository.data.installed', src)
+        self.assertIn('"id": repository.data.id', src)
+        self.assertIn("repository_in_use", self._src("websocket.repository"))
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        from custom_components.casora.hemma_cleanup import _takes_more_than_msg
+
+        for h in (repository.marketplace_repository_uninstall, repositories.marketplace_repositories_list):
+            raw = inspect.unwrap(h, stop=_takes_more_than_msg)
+            self.assertEqual(raw.__code__.co_varnames[:raw.__code__.co_argcount], ("hass", "connection", "msg"))
+            self.assertEqual(raw.__wrapped__.__code__.co_argcount, 4)
+
+    def test_panel_route(self):
+        """The Marketplace's panel lives at /marketplace (repository page /marketplace/repository/<GitHub id>, as its
+        device's configuration_url says); /hacs/… is only a server redirect. Red: Studio's "Open in HACS" link."""
+        init = self._src("__init__")
+        self.assertIn("async_register_built_in_panel(", init)
+        self.assertIn('hass.http.register_redirect("/hacs", "/marketplace")', init)
+        self.assertIn('configuration_url=f"homeassistant://marketplace/repository/{self.repository.data.id}"',
+                      self._src("entity"))
+
+
 class WeatherAttributes(unittest.TestCase):
     """Weather popup (#56). Casora: scripts/local/00-finder.js casoraDevice.weatherSources reads the felt temperature
     and the extra values from the weather entity's state attributes by these names, with the units in

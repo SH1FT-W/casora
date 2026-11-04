@@ -8,20 +8,27 @@ English). The answer is cached (CACHE_S).
 Casora installs nothing itself (HACS default-store rule): updates go through HACS. Checking runs
 through the update entity with HA's own service homeassistant.update_entity. If HACS manages
 Casora there is no own update entity (hacs: true); entity_id is then HACS' entry for the Casora
-repo (update.casora_update_entity) and hacs_url its HACS page.
+repo (update.casora_update_entity) and hacs_url its HACS page. "HACS" is the custom integration (up to
+HA 2026.10) or HA's built-in Marketplace (2026.11+, same role; store says which).
 
 WebSocket (admins only):
   casora/updates/list ← {"force"?: bool, "language"?: str (UI language)} →
     {installed, latest, update_available, entity_id (update entity or None), via ("hacs"|"casora"|None),
-     hacs_url (HACS page of Casora or None), entry_id, own_check (does Casora check itself?),
-     hacs, beta (pre-releases on?), last_check, last_error, pending_restart (HACS already put a
+     hacs_url (HACS/Marketplace page of Casora or None), store ("marketplace"|"hacs"|None), entry_id,
+     own_check (does Casora check itself?), hacs, beta (pre-releases on?), last_check, last_error, pending_restart (HACS already put a
      newer version in place, HA not restarted yet), scan_hours, repo_url, notes_lang ("de"|"en"),
      groups: [{kind: "casora", title, releases: [{kind, version, date, notes_md, notes_lang, notes_html,
                summary, source: "github"|"changelog", url?, prerelease?}]}]}
   casora/updates/prompt ← {"language"?: str} → the dashboard's update prompt (scripts/local/39-update-prompt.js):
-    {available, version, installed, entity_id, can_install (HACS' entry can install), hacs_url, release_url,
+    {available, version, installed, entity_id, can_install (HACS' entry can install), hacs_url, store, release_url,
      prerelease, pending_restart, lines: [up to 3 short lines from the release notes]}
     Same source as casora/updates/list (update entity, beta_updates channel); checks nothing itself.
+
+WebSocket (every user, the update entities are visible to all):
+  casora/updates/restarts (subscription) → events {entity_ids: [update entities whose install waits for a
+    restart of HA]}, now and after every change of HA's repair issues. HA's Marketplace (2026.11+) says
+    so only with a repair issue restart_required_<GitHub id>_<ref> (no text in release_summary as HACS
+    had); the dashboard's restart rule (scripts/casora-core.js casoraNeedsRestart) reads this list.
 """
 
 from __future__ import annotations
@@ -36,6 +43,8 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN, UPDATE_REPO, VERSION
 from .release_notes import (
@@ -56,8 +65,11 @@ from .update import (
     DATA_LAST_CHECK,
     DATA_LAST_ERROR,
     SCAN_INTERVAL,
+    STORE_DOMAINS,
     beta_enabled,
     casora_update_entity,
+    store_of,
+    store_url,
 )
 from .update_source import error_code, fetch_releases
 
@@ -167,8 +179,9 @@ async def async_updates_overview(hass: HomeAssistant, force: bool = False, lang:
         "update_available": newer(latest, pending or VERSION),
         "entity_id": entity_id,
         "via": via if entity_id else None,
-        # Casora's page in HACS (HACS' route takes the GitHub repo id).
-        "hacs_url": f"/hacs/repository/{rid}" if hacs and rid else None,
+        # Casora's page in HACS or the Marketplace (their route takes the GitHub repo id).
+        "hacs_url": store_url(hass, rid) if hacs else None,
+        "store": (store_of(hass, rid) if rid else None) if hacs else None,
         "entry_id": entry.entry_id if entry else None,
         # Does Casora check itself (own update entity)? With HACS, HACS does.
         "own_check": not hacs,
@@ -240,6 +253,7 @@ def prompt_payload(overview: dict[str, Any]) -> dict[str, Any]:
         # Casora installs nothing itself: only HACS' update entry for Casora can (studio: canInstall).
         "can_install": bool(overview.get("hacs") and overview.get("via") == "hacs" and entity_id),
         "hacs_url": overview.get("hacs_url"),
+        "store": overview.get("store"),
         "release_url": rel.get("url") or overview.get("repo_url"),
         "prerelease": bool(rel.get("prerelease")),
         "pending_restart": pending,
@@ -269,10 +283,77 @@ async def ws_list(hass: HomeAssistant, connection: websocket_api.ActiveConnectio
     connection.send_result(msg["id"], await async_updates_overview(hass, msg["force"], msg.get("language")))
 
 
+# HA's Marketplace (2026.11+) files one repair issue per install that waits for a restart:
+# restart_required_<GitHub id>_<ref> (ref e.g. "tags/v1.2.0"; "uninstall" after removing). HACS used the
+# same ids under its domain, next to its text in release_summary.
+RESTART_ISSUE_PREFIX = "restart_required_"
+
+
+@callback
+def restart_pending_entities(hass: HomeAssistant) -> list[str]:
+    """Update entities whose installed version waits for a restart of HA, from HA's repair issues.
+
+    The issue names the repository by its GitHub id; the store's update entity has it as unique_id
+    (update.store_of). Repositories without an update entity (removed) are left out; right after
+    uninstalling the entity may still be there for a moment, it goes away with its device."""
+    reg = er.async_get(hass)
+    out: set[str] = set()
+    for (domain, issue_id), issue in list(ir.async_get(hass).issues.items()):
+        if domain not in STORE_DOMAINS or not issue_id.startswith(RESTART_ISSUE_PREFIX):
+            continue
+        # Non-persistent issues loaded back from storage after a restart are inactive: that restart happened.
+        # An ignored (dismissed) one still counts, the old code keeps running (the Marketplace counts it too).
+        if not getattr(issue, "active", True):
+            continue
+        rid = issue_id[len(RESTART_ISSUE_PREFIX):].split("_", 1)[0]
+        if not rid:
+            continue
+        for store in STORE_DOMAINS:
+            eid = reg.async_get_entity_id("update", store, rid)
+            if eid is not None:
+                out.add(eid)
+                break
+    return sorted(out)
+
+
+@websocket_api.websocket_command({vol.Required("type"): "casora/updates/restarts"})
+@callback
+def ws_restarts(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    last: list[list[str]] = []
+
+    @callback
+    def _send(_event=None) -> None:
+        ids = restart_pending_entities(hass)
+        if last and last[0] == ids:
+            return
+        last[:] = [ids]
+        connection.send_message(websocket_api.event_message(msg["id"], {"entity_ids": ids}))
+
+    @callback
+    def _new_entity(event_data) -> bool:
+        # A first install: the Marketplace files the restart issue before it adds the repository's update entity.
+        # A renamed update entity (action update with old_entity_id) changes the id in the list too.
+        return (event_data.get("action") == "create" or "old_entity_id" in event_data) and str(
+            event_data.get("entity_id") or "").startswith("update.")
+
+    unsubs = [hass.bus.async_listen(ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED, _send),
+              hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, _send, event_filter=_new_entity)]
+
+    @callback
+    def _unsub() -> None:
+        for u in unsubs:
+            u()
+
+    connection.subscriptions[msg["id"]] = _unsub
+    connection.send_result(msg["id"])
+    _send()
+
+
 @callback
 def async_setup_updates(hass: HomeAssistant) -> None:
     if hass.data.get(DOMAIN, {}).get("updates_ws"):
         return
     websocket_api.async_register_command(hass, ws_list)
     websocket_api.async_register_command(hass, ws_prompt)
+    websocket_api.async_register_command(hass, ws_restarts)
     hass.data.setdefault(DOMAIN, {})["updates_ws"] = True

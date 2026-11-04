@@ -3677,7 +3677,8 @@
     /* Laufend (04.10.2026): war fast unsichtbar (Füllfarbe) – jetzt Zweitfarbe mit kleinem Kreis (busy, casora-core .hui-busy). */
     { attr: 'in_progress', text: 'Wird aktualisiert', busy: true, color: 'var(--casora-soft-sub, var(--casora-popup-tiles-text-secondary, rgba(255,255,255,0.56)))' },
     { attr: 'state', eq: 'off', and: [{ attr: 'skipped_version' }], text: 'Übersprungen', icon: 'mdi:skip-next', color: INK3 },
-    { attr: 'state', eq: 'off', and: [{ attr: 'release_summary', has: 'restart' }], text: 'Neustart erforderlich', icon: 'mdi:restart', color: ORG },
+    /* Restart owed: casoraNeedsRestart (HACS' text in release_summary or a Marketplace repair issue, HA 2026.11). */
+    { attr: 'state', eq: 'off', and: [{ restart: true }], text: 'Neustart erforderlich', icon: 'mdi:restart', color: ORG },
     { attr: 'state', eq: 'off', text: 'Installiert', icon: 'mdi:check', color: 'var(--casora-popup-ui-good, #30D158)' },
   ];
   // Symbol rechts startet das Update (mit Rückfrage „Starten“), ein Tipp auf die Zeile öffnet die Details.
@@ -3812,6 +3813,9 @@
 //     wie HAs „Nach Updates suchen“ unter Einstellungen › System › Updates (Core, OS, Supervisor, Apps).
 //  2. HACS (nur wenn geladen): hacs/repositories/list, dann je installiertes Repo
 //     hacs/repository/refresh (wie „Informationen aktualisieren“ in HACS), höchstens 4 gleichzeitig.
+//     HA 2026.11+: HAs Marketplace (Nachfolger von HACS, Komponente marketplace) mit denselben Befehlen
+//     unter marketplace/…, aber nur mit verbundenem GitHub-Konto (marketplace/info github_connected):
+//     ohne fragt jede Auffrischung GitHub anonym (60 Anfragen/Stunde) – dann hält der Katalog die Versionen.
 //  3. homeassistant.update_entity für alle update.*-Entitäten (Integrationen wie ESPHome, Casora;
 //     Supervisor- und HACS-Entitäten übernehmen dabei die frischen Daten aus 1. und 2.).
 // Supervisor- und HACS-Befehle verlangen Admin-Rechte: Nicht-Admins sehen den Knopf trotzdem,
@@ -3853,7 +3857,9 @@
     return {
       admin: admin,
       supervisor: admin && comps.indexOf('hassio') > -1,
-      hacs: admin && comps.indexOf('hacs') > -1,
+      hacs: admin && (comps.indexOf('marketplace') > -1 || comps.indexOf('hacs') > -1),
+      // Which store: HA's Marketplace (2026.11+) wins, HACS cannot load next to it.
+      store: comps.indexOf('marketplace') > -1 ? 'marketplace' : comps.indexOf('hacs') > -1 ? 'hacs' : null,
       entities: Object.keys((hass && hass.states) || {}).filter(function (id) { return id.indexOf('update.') === 0; }).sort(),
     };
   };
@@ -3862,15 +3868,21 @@
   var supervisor = function (hass) {
     return quiet(hass.callWS({ type: 'supervisor/api', endpoint: '/refresh_updates', method: 'post', timeout: null }));
   };
-  var hacs = function (hass) {
-    return quiet(hass.callWS({ type: 'hacs/repositories/list' }).then(function (list) {
+  var hacs = function (hass, store) {
+    var pre = store === 'marketplace' ? 'marketplace' : 'hacs';
+    var ready = pre === 'marketplace'
+      ? Promise.resolve(hass.callWS({ type: 'marketplace/info' })).then(function (i) {
+        if (!(i && i.github_connected)) throw new Error('marketplace without GitHub');
+      })
+      : Promise.resolve();
+    return quiet(ready.then(function () { return hass.callWS({ type: pre + '/repositories/list' }); }).then(function (list) {
       var ids = (Array.isArray(list) ? list : []).filter(function (r) { return r && r.installed && r.id != null; })
         .map(function (r) { return String(r.id); });
       var i = 0;
       var next = function () {
         if (i >= ids.length) return Promise.resolve();
         var id = ids[i++];
-        return quiet(hass.callWS({ type: 'hacs/repository/refresh', repository: id })).then(next);
+        return quiet(hass.callWS({ type: pre + '/repository/refresh', repository: id })).then(next);
       };
       var lanes = [];
       for (var k = 0; k < Math.min(K.HACS_PAR, ids.length); k++) lanes.push(next());
@@ -3897,7 +3909,7 @@
     var res = { supervisor: null, hacs: null, entities: null, found: 0 };
     return Promise.all([
       P.supervisor ? supervisor(hass).then(function (ok) { res.supervisor = ok; }) : null,
-      P.hacs ? hacs(hass).then(function (ok) { res.hacs = ok; }) : null,
+      P.hacs ? hacs(hass, P.store).then(function (ok) { res.hacs = ok; }) : null,
     ]).then(function () {
       // Nach 1. und 2.: Entitäten auch aufnehmen, die HACS/Supervisor eben erst angelegt haben
       // (Zustände frisch aus HA, Aufruf über das übergebene hass).

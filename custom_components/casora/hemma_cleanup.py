@@ -207,16 +207,18 @@ async def async_hemma_present(hass: HomeAssistant) -> bool:
 
 
 def hacs_repo(hass: HomeAssistant, config_dir: str | None = None) -> dict | None:
-    """Hemma als HACS-Paket: {id, full_name, source} oder None.
+    """Hemma als HACS-Paket: {id, full_name, source, store} oder None.
 
-    From HA's registries only (public API): HACS keys the device and the update entity of a downloaded
-    repository by its GitHub id, so this works without HACS' objects or storage file, also before HACS has
-    loaded. A Hemma installed from a fork (other id) is not recognised and counts as a plain folder."""
-    from .update import hacs_knows
+    From HA's registries only (public API): HACS and HA's Marketplace (2026.11+) key the device and the
+    update entity of a downloaded repository by its GitHub id, so this works without their objects or
+    storage file, also before they have loaded. store: "marketplace" or "hacs" (update.store_of).
+    A Hemma installed from a fork (other id) is not recognised and counts as a plain folder."""
+    from .update import store_of
 
-    if not hacs_knows(hass, HEMMA_REPO_ID):
+    store = store_of(hass, HEMMA_REPO_ID)
+    if store is None:
         return None
-    return {"id": HEMMA_REPO_ID, "full_name": "willsanderson/Hemma", "source": "registry"}
+    return {"id": HEMMA_REPO_ID, "full_name": "willsanderson/Hemma", "source": "registry", "store": store}
 
 
 async def async_hacs_repo(hass: HomeAssistant, config_dir: str | None = None) -> dict | None:
@@ -636,6 +638,18 @@ class _Conn:
         self.error = str(err) or type(err).__name__
 
 
+def _takes_more_than_msg(func: Any) -> bool:
+    """inspect.unwrap stop: the next layer down needs more than (hass, connection, msg)."""
+    inner = getattr(func, "__wrapped__", None)
+    # Count positional parameters from the code object: inspect.signature would evaluate the annotations,
+    # which raises NameError on Python 3.14 for handlers that import their types only for type checking.
+    # A bound method (Lovelace's StorageCollectionWebsocket.ws_delete_item) has self already filled in.
+    code = getattr(inner, "__code__", None)
+    if code is None:
+        return False
+    return code.co_argcount - (1 if inspect.ismethod(inner) else 0) > 3
+
+
 async def call_ws(hass: HomeAssistant, command: str, payload: dict) -> Any:
     """Einen registrierten WebSocket-Befehl (HACS, Lovelace) direkt ausführen.
 
@@ -649,7 +663,9 @@ async def call_ws(hass: HomeAssistant, command: str, payload: dict) -> Any:
     if command not in handlers:
         raise LookupError(f"{command} not available")
     handler = handlers[command][0]
-    raw = inspect.unwrap(handler)
+    # Down to the plain (hass, connection, msg) handler. The Marketplace wraps its handlers once more
+    # (marketplace_command hands them the loaded Marketplace as a fourth argument): stop above that one.
+    raw = inspect.unwrap(handler, stop=_takes_more_than_msg)
     conn = _Conn()
     out = raw(hass, conn, {"id": 1, "type": command, **payload})
     if inspect.isawaitable(out):
@@ -1025,9 +1041,18 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
             errs.append(f"{e.title or e.entry_id}: {err}")
     steps.append({"step": "entries", "ok": not errs, "removed": done, "error": "; ".join(errs) or None})
 
-    # d) Integration: über HACS (sonst installiert HACS sie wieder) oder Ordner löschen.
+    # d) Integration: über HACS bzw. HAs Marketplace (sonst führen sie Hemma weiter als installiert)
+    #    oder Ordner löschen. Der Marketplace deinstalliert nur ohne Config-Einträge – die sind in c) weg.
     folder = _hemma_dir(config_dir)
-    if hacs:
+    if hacs and hacs.get("store") == "marketplace":
+        try:
+            await call_ws(hass, "marketplace/repository/uninstall", {"repository": hacs["id"]})
+            steps.append({"step": "integration", "ok": True, "via": "hacs", "store": "marketplace",
+                          "repository": hacs.get("full_name")})
+        except Exception as err:  # noqa: BLE001
+            steps.append({"step": "integration", "ok": False, "via": "hacs", "store": "marketplace",
+                          "error": str(err) or type(err).__name__})
+    elif hacs:
         try:
             try:
                 await call_ws(hass, "hacs/repository/remove", {"repository": hacs["id"]})

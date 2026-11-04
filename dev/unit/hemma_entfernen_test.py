@@ -110,7 +110,7 @@ class Entries:
         self.entries = [e for e in self.entries if e.entry_id != entry_id]
 
 
-def make_hass(tmp, resources, dashboards, entries, hacs_installed=False):
+def make_hass(tmp, resources, dashboards, entries, hacs_installed=False, store="hacs"):
     async def exe(fn, *a):
         return fn(*a)
 
@@ -136,9 +136,63 @@ def make_hass(tmp, resources, dashboards, entries, hacs_installed=False):
         outer.__wrapped__ = fn
         return outer
 
-    data = {"lovelace": lov, "websocket_api": {"lovelace/dashboards/delete": (wrapped(dash_delete), None)}}
+    # HA 2026.11 Marketplace: the plain handler takes the loaded Marketplace as a fourth argument,
+    # marketplace_command wraps it (functools.wraps) into (hass, connection, msg), then async_response
+    # and require_admin wrap that one (homeassistant/components/marketplace/websocket/decorators.py).
+    holder = {}
+
+    async def mp_uninstall(hass, conn, msg, marketplace):
+        calls.append(("mp_uninstall", msg["repository"], marketplace))
+        # The Marketplace refuses while config entries of the domain exist (repository_in_use).
+        if holder["hass"].config_entries.async_entries("hemma"):
+            conn.send_message({"id": msg["id"], "type": "result", "success": False,
+                               "error": {"code": "repository_in_use", "message": "in use"}})
+            return
+        import shutil
+        shutil.rmtree(os.path.join(tmp, "custom_components/hemma"))
+        conn.send_message({"id": msg["id"], "type": "result", "success": True, "result": None})
+
+    def marketplace_command(fn):
+        import functools
+
+        @functools.wraps(fn)
+        async def with_marketplace(hass, conn, msg):
+            await fn(hass, conn, msg, "the-marketplace")
+        return with_marketplace
+
+    def mp_wrapped(fn):
+        import functools
+
+        @functools.wraps(fn)
+        def schedule_handler(hass, conn, msg):
+            raise AssertionError("async_response-Fassung darf nicht laufen")
+
+        @functools.wraps(schedule_handler)
+        def with_admin(hass, conn, msg):
+            raise AssertionError("require_admin-Fassung darf nicht laufen")
+        return with_admin
+
+    # Lovelace's command is a bound method (StorageCollectionWebsocket.ws_delete_item(self, hass, connection, msg)):
+    # its self must not count as a fourth argument when unwrapping (the Marketplace's handlers have four).
+    class DashCollectionWs:
+        async def ws_delete_item(self, hass, conn, msg):
+            await dash_delete(hass, conn, msg)
+
+    def mp_like_wrapped(fn):
+        import functools
+
+        @functools.wraps(fn)
+        def schedule_handler(hass, conn, msg):
+            raise AssertionError("async_response-Fassung darf nicht laufen")
+        return schedule_handler
+
+    data = {"lovelace": lov, "websocket_api": {"lovelace/dashboards/delete": (
+        mp_like_wrapped(DashCollectionWs().ws_delete_item), None)}}
     HACS_DEVICES.clear()
-    if hacs_installed:
+    if hacs_installed and store == "marketplace":
+        data["websocket_api"]["marketplace/repository/uninstall"] = (mp_wrapped(marketplace_command(mp_uninstall)), None)
+        HACS_DEVICES.add(("marketplace", hc.HEMMA_REPO_ID))
+    elif hacs_installed:
         data["websocket_api"]["hacs/repository/remove"] = (wrapped(hacs_remove), None)
         HACS_DEVICES.add(("hacs", hc.HEMMA_REPO_ID))
     async def svc(domain, service, data=None, blocking=False):
@@ -152,6 +206,7 @@ def make_hass(tmp, resources, dashboards, entries, hacs_installed=False):
         config_entries=Entries(entries),
         async_add_executor_job=exe,
     )
+    holder["hass"] = hass
     return hass, calls
 
 
@@ -440,13 +495,41 @@ async def main():
         check("YAML-Dashboard gemeldet, nicht gelöscht", steps["dashboards"]["manual"] == ["hemma-y"] and "hemma-y" in dashes)
         check("Gesamt nicht ok (manuelle Schritte)", out["ok"] is False and out["restart_required"])
 
+    # HA 2026.11: HACS is HA's Marketplace. It took over HACS' registry entries (device ("marketplace", <id>)) and
+    # uninstalls through marketplace/repository/uninstall – only after Hemma's config entries are gone.
+    with tempfile.TemporaryDirectory() as tmp:
+        setup_tmp(tmp)
+        hass, calls = make_hass(tmp, Resources(["/hemma_scripts/hemma-core.js"]), {}, [entry("e1")], hacs_installed=True,
+                                store="marketplace")
+        check("Marketplace: Hemma erkannt", hc.hacs_repo(hass, tmp) == {
+            "id": hc.HEMMA_REPO_ID, "full_name": "willsanderson/Hemma", "source": "registry", "store": "marketplace"})
+        st = await hc.async_status(hass)
+        check("Marketplace: Status zeigt HACS-Paket", st["hacs"] and st["hacs_repo"]["store"] == "marketplace")
+        out = await hc.async_remove(hass, [], keep_files=True)
+        i = {s["step"]: s for s in out["steps"]}["integration"]
+        check("Marketplace: über marketplace/repository/uninstall entfernt (mit dem Marketplace als 4. Argument)",
+              ("mp_uninstall", hc.HEMMA_REPO_ID, "the-marketplace") in calls and i["ok"] and i["via"] == "hacs"
+              and i.get("store") == "marketplace")
+        check("Marketplace: erst nach den Config-Einträgen", hass.config_entries.removed == ["e1"]
+              and not os.path.isdir(os.path.join(tmp, "custom_components/hemma")))
+        check("Marketplace: kein hacs/-Befehl", not any(c[0] == "hacs_remove" for c in calls))
+    # Marketplace not loaded: its command answers not_loaded – an error, the folder stays.
+    with tempfile.TemporaryDirectory() as tmp:
+        setup_tmp(tmp)
+        hass, calls = make_hass(tmp, Resources([]), {}, [])
+        HACS_DEVICES.add(("marketplace", hc.HEMMA_REPO_ID))
+        out = await hc.async_remove(hass, [], keep_files=True)
+        i = {s["step"]: s for s in out["steps"]}["integration"]
+        check("Marketplace nicht geladen: Fehler, Ordner bleibt", not i["ok"] and i.get("store") == "marketplace"
+              and os.path.isdir(os.path.join(tmp, "custom_components/hemma")))
+
     # HACS only in the registry (HACS not running): recognised, removing reports an error instead of deleting the folder.
     with tempfile.TemporaryDirectory() as tmp:
         setup_tmp(tmp)
         hass, calls = make_hass(tmp, Resources([]), {}, [])
         HACS_DEVICES.add(("hacs", hc.HEMMA_REPO_ID))
         check("HACS aus der Registry", hc.hacs_repo(hass, tmp) == {
-            "id": hc.HEMMA_REPO_ID, "full_name": "willsanderson/Hemma", "source": "registry"})
+            "id": hc.HEMMA_REPO_ID, "full_name": "willsanderson/Hemma", "source": "registry", "store": "hacs"})
         out = await hc.async_remove(hass, [], keep_files=True)
         i = {s["step"]: s for s in out["steps"]}["integration"]
         check("ohne laufendes HACS: Fehler, Ordner bleibt", not i["ok"] and os.path.isdir(os.path.join(tmp, "custom_components/hemma")))
