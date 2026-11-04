@@ -375,6 +375,8 @@
       if (!m && !it.key && fam === 'dlwifi') m = /_(brew|start)_([a-z_]+)$/.exec(String(it.entity_id));
       // Jura WiFi: key "brew" for every drink, the product only in the name ("Brew Espresso", "Espresso zubereiten").
       if (!m && fam === 'jurawifi' && k === 'brew') m = [null, 'brew', nameTail(it).replace(/^brew\s+|\s+zubereiten$/i, '')];
+      // A care confirmation is no drink: "brew_unit_done" (brew unit rinsed, power-curve integration) matched brew_<drink>.
+      if (m && CARE.test(nk(m[1] + '_' + m[2]))) m = null;
       if (m && m[2] && m[2] !== 'program') c.brew.push({ id: it.entity_id, prog: m[2] });
     });
     c.progress = by('sensor', ['programprogress', 'progress', 'espressobrewingprogress'], true) || by('sensor', ['programprogress']);

@@ -169,6 +169,9 @@ const MACHINES = {
     ['sensor.strombohne_last_program', 'Espresso', 'last_program'],
     ['sensor.strombohne_drinks_total', '86', 'drinks_total'],
     ['sensor.strombohne_tank', '0', 'tank', { due: true }],
+    // Care confirmations of the power-curve integration (owner, 04.11.2026: "Unit done" stood in the drink grid).
+    ['button.strombohne_brew_unit_done', 'unknown', 'brew_unit_done'],
+    ['button.strombohne_descale_done', 'unknown', 'descale_done'],
   ], status: 'Läuft', needs: ['Wasser nachfüllen'], drinks: [], ready: { 'sensor.strombohne_status': 'ready', 'sensor.strombohne_tank': ['900', { due: false }] }, calls: null },
   plug: { platform: 'shelly', name: 'Espressobar', entities: [
     ['switch.espressobar_steckdose', 'on', null],
