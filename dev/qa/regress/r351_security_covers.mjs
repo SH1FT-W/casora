@@ -172,7 +172,7 @@ usePage(dk.page);
 await dashboard(dk.page, dash.url + '/home', 3);
 await run('Desktop', dk.page, false, 'desktop');
 
-// ── Studio: Settings › Haus & Geräte › Erweitert › „Jalousien in der Nacht“ (group „Sicherheit: Jalousien“) ──
+// ── Studio: Settings › Haus & Geräte › Erweitert › „Jalousien in der Nacht“ (group „Sicherheit: Jalousien“, since 04.11. without its own heading) ──
 await studio(dk.page, dash.url);
 const H = (fn, a) => dk.page.evaluate(fn, a);
 await H(() => window.__panel()._bOpenSettings && window.__panel()._bOpenSettings());
@@ -189,11 +189,13 @@ const st = await H((ids) => {
   const g = r.querySelector('#pane [data-pkey="security"]');
   const rows = [...r.querySelectorAll('#pane .casora-psec-covers .frow[role="checkbox"]')];
   const box = g ? g.getBoundingClientRect() : null;
-  return { group: !!g, head: g ? g.querySelector('.fhead').textContent : '', night: g ? (g.querySelector('.sw') || {}).getAttribute?.('aria-checked') : null,
+  // Since 04.11.2026 (one heading level) the group has no heading of its own: the block title „Jalousien in der Nacht“ is it.
+  const bh = g && g.closest('.cn-block') ? g.closest('.cn-block').querySelector('.cn-bhead b') : null;
+  return { group: !!g, head: bh ? bh.textContent : '', ownHead: [...r.querySelectorAll('#pane .fhead')].some((x) => x.textContent.trim() === 'Sicherheit: Jalousien'), night: g ? (g.querySelector('.sw') || {}).getAttribute?.('aria-checked') : null,
     rows: rows.length, checked: rows.filter((x) => x.getAttribute('aria-checked') === 'true').length, inView: !!box && box.top < innerHeight && box.bottom > 0,
     areas: [...r.querySelectorAll('#pane .casora-psec-covers .fhead')].map((x) => x.textContent), ids };
 }, IDS);
-await check('Studio: group „Sicherheit: Jalousien“, opened at it', st.group && st.head === 'Sicherheit: Jalousien' && st.inView, st);
+await check('Studio: block „Jalousien in der Nacht“ (no second heading), opened at it', st.group && st.head === 'Jalousien in der Nacht' && st.ownHead === false && st.inView, st);
 await check('Studio: „Nur abends und nachts“ on by default', st.night === 'true', st);
 await check('Studio: covers listed by area with check marks, the four picked ones checked', st.rows >= 4 && st.checked === 4 && st.areas.length >= 1, st);
 await dk.page.evaluate(() => { const r = window.__panel().shadowRoot; const g = r.querySelector('#pane [data-pkey="security"]'); if (g) g.scrollIntoView({ block: 'start' }); });
