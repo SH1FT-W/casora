@@ -3,7 +3,8 @@
 // @deckt: custom_components/casora/scripts/local/39-update-prompt.js custom_components/casora/updates.py
 // Wish (01.11.2026): a calm prompt on the dashboard when a newer Casora version is out. Expected: an admin opens
 // the dashboard with a (faked) newer version; the popup is NOT there at first paint, appears a few seconds after
-// load ("Casora <version> ist da", v3, release-note lines, Installieren / Später / Diese Version überspringen),
+// load ("Casora <version> ist da", v3, the release's tagline and up to four items with a short line, "Alle Änderungen",
+// Installieren / Später / Diese Version überspringen),
 // "Später" closes it and stores the choice in HA's user data, and the next load shows nothing.
 // Only the version is faked in the browser: the answer of the real casora/updates/prompt is taken and marked
 // newer and installable (as with HACS; Installieren is not tapped). Desktop 1440 and phone 393; screenshots to CASORA_SHOTS (if set).
@@ -31,7 +32,11 @@ const fake = (version) => {
         U.info = (h) => Promise.resolve(real(h)).then((r) => {
           window.__qaUpdReal = r;
           return Object.assign({}, r, { available: true, version, can_install: true, entity_id: r.entity_id || 'update.casora_update',
-            lines: ['Farbe im Licht-Popup', 'Der Kreis zeigt das Licht', 'Lichtgruppen als eine Lampe'] });
+            lines: ['Farbe im Licht-Popup', 'Der Kreis zeigt das Licht', 'Lichtgruppen als eine Lampe'],
+            intro: 'Farbe im Licht-Popup und ein ruhigerer Kreis.', notes_lang: 'de', release_url: r.release_url || 'https://example.invalid/r',
+            items: [{ title: 'Farbe im Licht-Popup', text: 'Farblampen bekommen ein Farbrad' },
+              { title: 'Der Kreis zeigt das Licht', text: 'Im Farbmodus nimmt der Kreis die Farbe der Lampe an' },
+              { title: 'Lichtgruppen als eine Lampe', text: 'Eine Gruppe steuert alle Lampen zusammen' }] });
         });
       }, 0);
     },
@@ -75,15 +80,18 @@ for (const R of RUNS) {
   }, FAKE, { timeout: 20000 }).then((h) => h.jsonValue()).catch(() => null);
   await check(`${R.tag}: prompt appears after load`, got === `Casora ${FAKE} ist da`, got);
   const real = await page.evaluate(() => window.__qaUpdReal || null);
-  await check(`${R.tag}: real casora/updates/prompt answered`, !!real && typeof real.available === 'boolean' && Array.isArray(real.lines), real);
+  await check(`${R.tag}: real casora/updates/prompt answered`, !!real && typeof real.available === 'boolean' && Array.isArray(real.lines) && Array.isArray(real.items) && typeof real.intro === 'string', real);
   await page.waitForTimeout(900);
   const parts = await page.evaluate(() => ({
     v3: (window.casoraPopup.current || {}).variant,
     btns: window.__pierce('[data-casora-updp]').map((n) => n.getAttribute('data-casora-updp') + ':' + n.textContent.trim()),
     lines: window.__pierce('.cup-lines li').length,
+    texts: window.__pierce('.cup-lines li .cup-x').length,
+    intro: (window.__pierce('.cup-intro')[0] || {}).textContent || '',
   }));
   await check(`${R.tag}: v3 popup with three choices`, parts.v3 === 'v3' && ['install', 'later', 'skip'].every((w) => parts.btns.some((b) => b.startsWith(w + ':'))), parts);
-  await check(`${R.tag}: release-note lines`, parts.lines === 3, parts);
+  await check(`${R.tag}: what is new: tagline, three items with a short line, link to all changes`,
+    parts.lines === 3 && parts.texts === 3 && /ruhigerer Kreis/.test(parts.intro) && parts.btns.some((b) => b.startsWith('notes:Alle Änderungen')), parts);
   if (SHOTS) {
     fs.mkdirSync(SHOTS, { recursive: true });
     await page.screenshot({ path: path.join(SHOTS, `update-popup-${R.tag}.png`) });

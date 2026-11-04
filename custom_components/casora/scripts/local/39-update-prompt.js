@@ -1,9 +1,10 @@
 // ── Update prompt for Casora itself ───────────────────────────────────────────
 // When a newer Casora version is offered, an admin sees ONE calm popup on the dashboard, a few seconds after
-// the page has loaded and gone idle: "Casora <version> ist da", up to three lines from its release notes and
-// "Installieren" / "Später" / "Diese Version überspringen". Nothing here checks for updates: the version, the
+// the page has loaded and gone idle: "Casora <version> ist da", the release's tagline, up to four items from its
+// release notes (bold title + one short line, New before Changed before Fixed), "Alle Änderungen" (release page) and
+// "Installieren" / "Später" / "Diese Version überspringen". The notes are in their own language (notes_lang). Nothing here checks for updates: the version, the
 // lines and the update entity come from casora/updates/prompt (updates.py), which reads the same update entity
-// (every 6 h, beta_updates channel) as Studio → Updates. Only Casora, never other integrations' updates.
+// (every 6 h, beta_updates channel) as Studio → Updates. An older backend sends only "lines" (bold starts): then those. Only Casora, never other integrations' updates.
 //
 // Installing works like Studio → Updates: Casora installs nothing itself, HA's update.install on HACS' update
 // entity for Casora downloads it; then Casora offers the restart HA needs. Without HACS the main button opens
@@ -84,7 +85,17 @@
     + 'color:var(--casora-popup-tiles-text-primary, var(--primary-text-color))}'
     + '.cup-lines li::before{content:"";position:absolute;left:2px;top:12px;width:7px;height:7px;border-radius:50%;'
     + 'background:var(--casora-popup-ui-action, var(--casora-accent, var(--primary-color)))}'
+    + '.cup-items li{padding:7px 0 7px 18px}'
+    + '.cup-items li::before{top:15px}'
+    + '.cup-t{display:block}'
+    + '.cup-x{display:block;margin-top:2px;font-size:14px;line-height:1.4;font-weight:400;'
+    + 'color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color))}'
+    + '.cup-intro{margin:0 0 14px;font-size:15px;line-height:1.45;color:var(--casora-popup-tiles-text-primary, var(--primary-text-color))}'
     + '.cup-sub{margin:0 0 14px;font-size:14px;line-height:1.45;color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color))}'
+    + '.cup-hint{margin:0 0 16px;font-size:13px;line-height:1.4;color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color))}'
+    + '.cup-more{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;min-height:32px;margin:-8px 0 6px 4px;'
+    + 'font:inherit;font-size:14px;font-weight:600;color:var(--casora-popup-ui-action, var(--casora-accent, var(--primary-color)))}'
+    + '.cup-more:focus-visible{outline:2px solid var(--casora-popup-ui-action, var(--casora-accent, #276B64));outline-offset:2px;border-radius:6px}'
     + '.cup [data-casora-updp]{pointer-events:auto!important;cursor:pointer}'
     + '.cup-acts{display:flex;flex-direction:column;gap:10px}'
     + '.cup-b{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 20px;'
@@ -99,19 +110,42 @@
 
   var esc = function (x) { return window.casoraEsc ? window.casoraEsc(x) : String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
+  // Items (title + short text) from a current backend; else the bold starts of an older one ("lines").
+  U.items = function (info) {
+    var items = Array.isArray(info.items) ? info.items.filter(function (i) { return i && i.title; }).slice(0, 4) : [];
+    if (items.length) return items;
+    return (info.lines || []).slice(0, 3).map(function (l) { return { title: String(l), text: '' }; });
+  };
+
   U.html = function (info) {
-    var lines = (info.lines || []).slice(0, 3);
+    var items = U.items(info);
+    var rich = items.some(function (i) { return i.text; }) || !!info.intro;
     var main = info.can_install ? 'Installieren' : info.hacs_url ? 'In HACS öffnen' : 'Release-Seite öffnen';
     // Stacked pills (long labels do not fit three in a row on the phone): main action, Später, skip as a quiet link.
     var btn = function (what, cls, text) {
       return '<button type="button" class="cup-b ' + esc(cls) + '" data-casora-updp="' + esc(what) + '"><span>' + esc(T(text)) + '</span></button>';
     };
     var actsHtml = [btn('install', 'pri', main), btn('later', 'sec', 'Später'), btn('skip', 'quiet', 'Diese Version überspringen')].join('');
+    var hintHtml = esc(T(info.can_install
+      ? 'Wird über HACS installiert. Danach braucht Home Assistant einen Neustart.'
+      : 'Neue Versionen installierst du über HACS.'));
+    // Release notes in their own language: no phrase translation (data-no-i18n), lang for screen readers.
+    var langHtml = info.notes_lang === 'de' || info.notes_lang === 'en' ? ' lang="' + esc(info.notes_lang) + '"' : '';
+    var listHtml = items.length ? '<ul class="cup-lines' + (rich ? ' cup-items' : '') + '"' + langHtml + '>' + items.map(function (i) {
+      return rich ? '<li><span class="cup-t">' + esc(i.title) + '</span>' + (i.text ? '<span class="cup-x">' + esc(i.text) + '</span>' : '') + '</li>'
+        : '<li>' + esc(i.title) + '</li>';
+    }).join('') + '</ul>' : '';
+    if (!rich) {
+      // Older backend (lines only): as before, the install hint above the lines.
+      return '<div class="cup" data-no-i18n><style>' + CSS + '</style><p class="cup-sub">' + hintHtml + '</p>' + listHtml
+        + '<div class="cup-acts">' + actsHtml + '</div></div>';
+    }
+    // What is new first (tagline, items, link to all changes), then how it installs, small, above the buttons.
+    var moreHtml = info.release_url ? '<button type="button" class="cup-more" data-casora-updp="notes"><span>' + esc(T('Alle Änderungen')) + '</span></button>' : '';
     return '<div class="cup" data-no-i18n><style>' + CSS + '</style>'
-      + '<p class="cup-sub">' + esc(T(info.can_install
-        ? 'Wird über HACS installiert. Danach braucht Home Assistant einen Neustart.'
-        : 'Neue Versionen installierst du über HACS.')) + '</p>'
-      + (lines.length ? '<ul class="cup-lines">' + lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>' : '')
+      + (info.intro ? '<p class="cup-intro"' + langHtml + '>' + esc(info.intro) + '</p>' : '')
+      + listHtml + moreHtml
+      + '<p class="cup-hint">' + hintHtml + '</p>'
       + '<div class="cup-acts">' + actsHtml + '</div>'
       + '</div>';
   };
@@ -214,6 +248,8 @@
     if (!h || !info) return Promise.resolve(null);
     if (window.casoraHaptic) window.casoraHaptic('light');
     if (what === 'later') { close(); return remember(h, function (m) { return U.later(m, Date.now()); }).then(function () { return 'later'; }); }
+    // "Alle Änderungen": the release page in a new tab, the prompt stays.
+    if (what === 'notes') { if (info.release_url) window.open(info.release_url, '_blank', 'noopener'); return Promise.resolve('notes'); }
     if (what === 'skip') { close(); return remember(h, function (m) { return U.skip(m, info.version); }).then(function () { return 'skip'; }); }
     busyNode = node || null;
     return U.install(h, info);

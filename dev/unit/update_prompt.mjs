@@ -2,7 +2,7 @@
 // Expected: only admins, only with a newer version, once per version, "Später" asks again after 24 h,
 // "Diese Version überspringen" only again for a newer version, the Studio toggle off shows nothing; the
 // choice lands in HA's frontend user data (per user). Also: the popup is v3, one column, and its buttons
-// carry the three choices.
+// carry the three choices. It says what is new: tagline, up to four items with a short line, a link to all changes.
 //   node dev/unit/update_prompt.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -127,6 +127,44 @@ const B = fakeHass(true, {});
 window.casoraPopup.current = { title: 'Licht' };
 assert.equal(await U.run(B.h), 'busy');
 window.casoraPopup.current = null;
+
+// What is new (owner 04.11.2026): tagline, up to four items with a short line, "Alle Änderungen", the install hint after them.
+{
+  const rich = { ...info, release_url: 'https://example.invalid/r', notes_lang: 'de', intro: 'Küche & Wäsche mit echtem Inhalt.',
+    items: [{ title: 'Backofen', text: 'Kacheltyp „Backofen“ im Studio' }, { title: 'Waschmaschine <und> Trockner', text: 'Die Popups zeigen Pflege' },
+      { title: 'C', text: 'c' }, { title: 'D', text: '' }, { title: 'E', text: 'never shown' }],
+    lines: ['Backofen', 'Waschmaschine und Trockner', 'C'] };
+  const R = U.html(rich);
+  assert.ok(R.includes('<p class="cup-intro" lang="de">Küche &amp; Wäsche mit echtem Inhalt.</p>'), 'tagline as intro, escaped');
+  assert.ok(R.includes('<span class="cup-t">Backofen</span><span class="cup-x">Kacheltyp „Backofen“ im Studio</span>'), 'title + short line');
+  assert.ok(R.includes('Waschmaschine &lt;und&gt; Trockner') && !R.includes('<und>'), 'item text escaped');
+  assert.equal((R.match(/<li>/g) || []).length, 4, 'four items at most');
+  assert.ok(R.includes('<li><span class="cup-t">D</span></li>'), 'an item without text: title only');
+  assert.ok(R.includes('data-casora-updp="notes"') && R.includes('Alle Änderungen'), 'link to all changes');
+  assert.ok(R.indexOf('<ul class="cup-lines') < R.indexOf('Wird über HACS installiert') && R.indexOf('Wird über HACS installiert') < R.indexOf('data-casora-updp="install"'),
+    'install hint after the list, before the buttons');
+  assert.ok(R.includes('<p class="cup-hint">'), 'install hint small');
+  // An older backend sends only lines: shown as before (hint on top, one line each).
+  const O = U.html({ ...info, lines: ['A', 'B'] });
+  assert.ok(O.includes('<li>A</li>') && O.indexOf('<p class="cup-sub">') < O.indexOf('<ul class="cup-lines') && !O.includes('<p class="cup-intro"') && !O.includes('data-casora-updp="notes"'), 'lines only: old look');
+  // "Alle Änderungen" opens the release page and keeps the prompt.
+  const opened2 = [];
+  const wo = window.open;
+  window.open = (u, t) => { opened2.push([u, t]); };
+  const P0 = window.casoraPopup;
+  let closed = 0;
+  window.casoraPopup = { open() {}, close() { closed++; }, current: null };
+  const E = fakeHass(true, {});
+  E.h.__info = rich;
+  document.querySelector = () => ({ hass: E.h });
+  assert.equal(await U.run(E.h), 'show');
+  window.casoraPopup.current = null;
+  assert.equal(await U.choose('notes'), 'notes');
+  assert.deepEqual(opened2, [['https://example.invalid/r', '_blank']], 'release page in a new tab');
+  assert.equal(closed, 0, 'prompt stays open');
+  window.open = wo;
+  window.casoraPopup = P0;
+}
 
 // without HACS the main button opens the page instead of installing
 const H2 = U.html({ ...info, can_install: false, hacs_url: null, release_url: 'https://example.invalid/r' });
