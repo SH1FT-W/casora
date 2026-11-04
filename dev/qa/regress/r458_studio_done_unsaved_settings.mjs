@@ -25,10 +25,10 @@ const question = () => page.waitForFunction(() => { const p = window.__panel && 
 const press = (re) => P(`const c = p.shadowRoot.querySelector('.askcard');
   const b = c && [...c.querySelectorAll('.askacts button')].find((x) => new RegExp(arg).test(x.textContent)); if (b) b.click(); return !!b;`, re);
 
-// Opens the Studio, toggles the first switch on Settings > Waste collection; returns the waste section after it.
+// Opens the Studio, toggles the first switch on Settings > Home & devices > Waste; returns the waste section after it.
 const changeWaste = async () => {
   await studio(page, dash);
-  await P('await p._csShow("home", "waste");');
+  await P('await p._csShow("n-house", "nb-waste");');
   await wait(1500);
   const r = await P(`const sw = [...p.shadowRoot.querySelectorAll('.inspector [role=switch]')].find((x) => x.getClientRects().length);
     if (!sw) return null; sw.click(); await new Promise((r) => setTimeout(r, 300));
@@ -44,8 +44,9 @@ await need('a waste switch that makes the settings unsaved', ch && ch.dirty, ch)
 await P('p.$("donebtn").click();');
 let q = await question();
 await check('Done with unsaved settings asks', !!q, q);
-await check('question "Save settings?" with Save, Discard, Back',
-  q && /Einstellungen speichern\?|Save settings\?/.test(q.title) && ['Speichern|Save', 'Verwerfen|Discard', 'Zurück|Back'].every((re) => q.buttons.some((t) => new RegExp('^(' + re + ')$').test(t))), q);
+// Since the one save bar (03.11.2026) the question covers settings and this dashboard: "Save your changes?".
+await check('question "Save your changes?" with Save, Discard, Back',
+  q && /Änderungen speichern\?|Save your changes\?/.test(q.title) && ['Speichern|Save', 'Verwerfen|Discard', 'Zurück|Back'].every((re) => q.buttons.some((t) => new RegExp('^(' + re + ')$').test(t))), q);
 await press('^(Zurück|Back)$');
 await wait(1500);
 await check('Back: still in the Studio, settings still unsaved', await P('return !!p.isConnected && p._csDirty();'));

@@ -409,8 +409,9 @@
     // Grauer Satz unter dem Titel des Inspektors.
     P._uxScope = function () {
       const I = W.__casoraPanelInternals || {};
-      // Settings by topic (start and topic pages): their rows say what they apply to, the head says nothing.
-      if (this._csOpen && /^(start|t-)/.test(String(this._csPage || ""))) return "";
+      // Settings by topic (start and topic pages, also the new structure "n-"): their rows say what they apply to,
+      // the head says nothing.
+      if (this._csOpen && /^(start|t-|n-)/.test(String(this._csPage || ""))) return "";
       const page = this._csOpen ? "settings" : this._cuOpen ? "updates" : this._cvOpen ? "rewind" : null;
       const list = !!this._bOpen && !this._sel && !page && !this._bRooms;
       return scopeOf({ sel: this._sel, page, arrange: !!this._bRooms && !this._sel && !page, list,

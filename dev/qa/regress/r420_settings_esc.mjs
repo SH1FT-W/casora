@@ -25,7 +25,7 @@ await P('p._bClose();');
 await wait(600);
 
 for (const how of ['inside', 'outside']) {
-  await P('p._csShow("look");');
+  await P('p._csShow("n-look");');
   await wait(1200);
   await need('settings page open', await P('return !!p._csOpen;'));
   if (how === 'inside') {

@@ -172,7 +172,7 @@ usePage(dk.page);
 await dashboard(dk.page, dash.url + '/home', 3);
 await run('Desktop', dk.page, false, 'desktop');
 
-// ── Studio: Settings › Home & Devices › „Sicherheit: Jalousien“ ──
+// ── Studio: Settings › Haus & Geräte › Erweitert › „Jalousien in der Nacht“ (group „Sicherheit: Jalousien“) ──
 await studio(dk.page, dash.url);
 const H = (fn, a) => dk.page.evaluate(fn, a);
 await H(() => window.__panel()._bOpenSettings && window.__panel()._bOpenSettings());
@@ -180,8 +180,9 @@ await dk.page.waitForTimeout(1000);
 await dk.page.locator('.cs-hubsearch input').fill('Rollladen');
 await dk.page.waitForTimeout(500);
 const hits = await H(() => [...window.__panel().shadowRoot.querySelectorAll('#pane .frow b')].filter((b) => b.getClientRects().length).map((b) => b.textContent.trim()));
-await check('Studio: search „Rollladen“ finds „Sicherheit: Jalousien“', hits[0] === 'Sicherheit: Jalousien', hits);
-await dk.page.locator('.frow').filter({ has: dk.page.locator('b', { hasText: /^Sicherheit: Jalousien$/ }) }).first().click();
+// Since 03.11.2026 a block of the tile „Haus & Geräte“ (under „Erweitert“): the search finds it by its title.
+await check('Studio: search „Rollladen“ finds „Jalousien in der Nacht“', hits[0] === 'Jalousien in der Nacht', hits);
+await dk.page.locator('.frow').filter({ has: dk.page.locator('b', { hasText: /^Jalousien in der Nacht$/ }) }).first().click();
 await dk.page.waitForTimeout(2200);
 const st = await H((ids) => {
   const r = window.__panel().shadowRoot;
@@ -212,7 +213,7 @@ await dashboard(ph.page, dash.phone.url + '/home', 2);
 await run('Phone', ph.page, true, 'phone');
 // Studio on the phone: the same group as a sheet.
 await studio(ph.page, dash.url);
-await ph.page.evaluate(() => window.__panel()._csShow('home', 'security'));
+await ph.page.evaluate(() => window.__panel()._csShow('n-house', 'nb-security'));
 await ph.page.waitForTimeout(2500);
 const phs = await ph.page.evaluate(() => {
   const r = window.__panel().shadowRoot;

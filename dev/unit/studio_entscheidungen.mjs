@@ -55,12 +55,13 @@ const need = (keys) => keys.forEach((k) => assert.ok(de[k], 'de.json: ' + k));
   const add = read('panel/casora-panel-addons.js');
   const mehr = read('panel/casora-panel-b-mehr.js');
   const main = read('panel/casora-panel.js');
-  assert.ok(/\{ id: "design", label: "Design",[^}]*look: true/.test(set), 'Einstellungen-Seite „Design“');
-  assert.ok(/if \(page\.look\) \{\s*if \(!\(typeof this\._casoraLookPicker === "function" && this\._casoraLookPicker\(host\)\)\)/.test(set), 'Seite zeichnet die Design-Auswahl');
+  // Since 03.11.2026 a block of the tile "Look & feel" (the subpages are gone).
+  assert.ok(/k: "design", page: "design", title: "Design"/.test(set), 'Einstellungen-Block „Design“');
+  assert.ok(/if \(b\.page === "design"\) \{\s*if \(!\(typeof this\._casoraLookPicker === "function" && this\._casoraLookPicker\(box\)\)\)/.test(set), 'Block zeichnet die Design-Auswahl');
   assert.ok(/\["design", "Design", "desktop"\], \["home"/.test(b), 'Menü „Einstellungen“ beginnt mit Design');
   // Variant B (26.10.62b5): no dashboard menu any more – the topic "Look & feel" leads to Design, the phone bar has it too.
   assert.ok(/\{ id: "look", label: "Look & feel"/.test(set) && /mk\("look", "palette", "Look & feel", \(b\) => this\._bOpenSettings\(b, "t-look"\)\)/.test(b), 'Thema „Aussehen“ führt zum Design');
-  assert.ok(/\{ id: "ctl", label: "Controls"/.test(set) && /label: "General", title: "Controls"/.test(main), 'Thema „Bedienung“ bleibt');
+  assert.ok(/\{ id: "use", label: "Tapping & tablet"/.test(set) && /label: "General", title: "Controls"/.test(main), 'Kachel „Bedienen“');
   assert.ok(!/section\.card\[data-k="General"\][\s\S]{0,400}casora-looks/.test(add), 'Design-Auswahl nicht mehr im Abschnitt „Bedienung“');
   assert.ok(/\["design", "Design", "design theme look/.test(mehr) && /way\("Settings", "Design"\)/.test(mehr), '⌘K: Design unter Einstellungen');
   // Felder unter „Bedienung“ gelten wirklich je Dashboard
@@ -68,9 +69,9 @@ const need = (keys) => keys.forEach((k) => assert.ok(de[k], 'de.json: ' + k));
   const keys = gen.match(/key: "[^"]+"/g) || [];
   assert.ok(keys.length > 5 && (gen.match(/scope: "dashboard"/g) || []).length >= keys.length, 'alle Bedienung-Felder: dieses Dashboard');
   // 26.10.: "applies to all" only once, in the scope line; intro and the note under the pictures without it.
-  need(['Controls', 'Design (for all dashboards) ›', 'How every Casora dashboard looks.',
+  need(['Controls', 'Design (for all dashboards) ›',
     'Undo brings the previous design back.', 'Applies to: all dashboards']);
-  assert.ok(!/right away/.test(set.match(/\{ id: "design"[^}]*\}/)[0]) && /tr\("Undo brings the previous design back\."\)/.test(add),
+  assert.ok(!/right away/.test(set.match(/\{ k: "design"[^}]*\}/)[0].replace('It changes right away.', '')) && /tr\("Undo brings the previous design back\."\)/.test(add),
     'Design: kein zweites/drittes „gilt sofort für alle“');
   assert.ok(!de['Look & Controls'] && !de['Exception: the design applies to all dashboards'], 'alte Texte entfernt');
   console.log('studio_entscheidungen: 3 Design unter Einstellungen ok');
@@ -127,7 +128,7 @@ const need = (keys) => keys.forEach((k) => assert.ok(de[k], 'de.json: ' + k));
   assert.ok(/:host\(\.bmode\.phone\) \.bclose::before \{[^}]*width:44px; height:44px/.test(read('panel/casora-panel-b.js')), '18a: ✕ 44 px am Handy');
   const pers = read('panel/casora-panel-personal.js');
   assert.ok(/:host\(\.phone\) \.casora-tog::before\{[^}]*height:44px/.test(pers), '18a: Kalender-Schalter 44 px am Handy');
-  assert.ok(/\]\)\.classList\.add\("casora-calrow"\);/.test(pers) && /\.casora-calrow \.casora-pctl>\.casora-x\{margin-left:auto\}/.test(pers),
+  assert.ok(/\]\)\.classList\.add\("casora-calrow"\);|\], i \? undefined : "[^"]+"\)\.classList\.add\("casora-calrow"\);/.test(pers) && /\.casora-calrow \.casora-pctl>\.casora-x\{margin-left:auto\}/.test(pers),
     '18b: ✕ rechts in der Kalenderzeile');
   assert.ok(/\.cs-bar\.cs-clean\{[^}]*min-height:0;height:0;margin:0;/.test(read('panel/casora-panel-settings.js')), '18c: ohne Änderungen kein leerer Streifen');
   const time = main.slice(main.indexOf('label: "Time", icon: "clock"'), at);

@@ -13599,7 +13599,7 @@ class CasoraPanel extends HTMLElement {
       if (id === "addmobile") {
         if (d.url_path !== this._dashUrl) {
           this._setDash(d.url_path); this._remember(d.url_path);
-          return this._load().then(() => this._addMobileSibling());
+          return this._load().then((r) => (r === false ? null : this._addMobileSibling()));
         }
         return this._addMobileSibling();
       }
@@ -17316,8 +17316,10 @@ class CasoraPanel extends HTMLElement {
 
   _wireLeaveGuard() {
     if (this._leaveGuard) return;
+    // Unsaved settings (new structure, casora-panel-settings.js) count like unsaved dashboard edits.
+    const settingsOpen = () => typeof this._csLeaveDirty === "function" && this._csLeaveDirty();
     this._leaveGuard = (ev) => {
-      const cs = typeof this._csDirty === "function" && this._csDirty();
+      const cs = (typeof this._csDirty === "function" && this._csDirty()) || settingsOpen();
       if (this._leaving || !this.isConnected || !(this._isDirty() || cs)) return;
       // A last copy right away, then the browser's own "leave page?" question.
       this._writeDraft();
@@ -17328,7 +17330,7 @@ class CasoraPanel extends HTMLElement {
     // per-08 (10.10.2026): Verlassen über die HA-Seitenleiste lud nichts neu – kein beforeunload, die
     // Änderung war ohne Rückfrage weg. Jetzt dieselbe Rückfrage wie beim Verlassen aus dem Studio.
     this._leaveNav = (ev) => {
-      const cs = typeof this._csDirty === "function" && this._csDirty();
+      const cs = (typeof this._csDirty === "function" && this._csDirty()) || settingsOpen();
       if (this._leaving || this._leaveAsking || !this.isConnected || !((this._state && this._isDirty()) || cs)) return;
       if (ev.button || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
       const path = ev.composedPath ? ev.composedPath() : [];
@@ -18502,7 +18504,10 @@ class CasoraPanel extends HTMLElement {
     };
 
     const sheet = pane;
-    const mount = this.$("mapmount");
+    // Settings (casora-panel-settings.js, new structure) draw one section into their own page: only that one, and
+    // neither the preview nor the inspector's head changes for it.
+    const only = this._csOnly || null;
+    const mount = only ? null : this.$("mapmount");
     // Mit den Kachel-Schlüsseln: nach erneutem Laden (Zeitreise, gleiches Dashboard) sind es neue
     // Objekte mit gleichem Inhalt – ohne Neuzeichnen trug die Vorschau alte Schlüssel, Klicks wählten nichts.
     const sig = JSON.stringify([
@@ -18553,9 +18558,9 @@ class CasoraPanel extends HTMLElement {
     const nav = this._navEl;
     const seg = this._segEl;
     const insphead = this.shadowRoot.querySelector(".insphead");
-    if (insphead && nav.parentNode !== insphead) insphead.appendChild(nav);
-    [...nav.querySelectorAll(".detailbar")].forEach((b) => b.remove());
-    if (!seg.parentNode) nav.appendChild(seg);
+    if (!only && insphead && nav.parentNode !== insphead) insphead.appendChild(nav);
+    if (!only) [...nav.querySelectorAll(".detailbar")].forEach((b) => b.remove());
+    if (!only && !seg.parentNode) nav.appendChild(seg);
     // A selection can change the group without going through the switcher.
     [...seg.querySelectorAll(".segopt")].forEach((b) => {
       b.classList.toggle("on", b.dataset.group === this._group);
@@ -18663,6 +18668,7 @@ class CasoraPanel extends HTMLElement {
 
     const onHome = isHomeRoom(room, this._state.compact.rooms);
     SECTIONS.forEach((sec) => {
+      if (only && !only.has(sec.label)) return;
       if (sec.roomOnly && onHome) return;
       const fs = document.createElement("section");
       fs.className = "card";
@@ -19170,7 +19176,7 @@ class CasoraPanel extends HTMLElement {
           b.type = "button";
           b.className = "ghost";
           b.textContent = trLabel("Choose") + " ›";
-          b.onclick = () => { if (typeof this._csHubGo === "function") this._csHubGo({ page: f.page, focus: f.focus, back: "start" }); };
+          b.onclick = () => { if (typeof this._csHubGo === "function") this._csHubGo({ page: f.page, focus: f.focus, back: "n-start" }); };
           row.appendChild(b);
           fs.appendChild(row);
           addHint();
@@ -19463,12 +19469,14 @@ class CasoraPanel extends HTMLElement {
     // The phone has no sidebar, so its list has to be the sidebar: same order,
     // same two groups, and Badges and Tiles as rows rather than hidden behind
     // the switcher.
-    if (isPhone(this)) this._phoneSectionList(bandFor, room);
+    if (isPhone(this) && !only) this._phoneSectionList(bandFor, room);
 
-    this._orderBadgeCards(room, bandFor.badges && bandFor.badges.colA);
+    if (!only) this._orderBadgeCards(room, bandFor.badges && bandFor.badges.colA);
     // Inside the Scenes card, under its own fields.
     this._renderSceneColors(room,
       this.$("pane").querySelector('#band-rooms [data-k="Scenes"]'));
+    // A single section for the settings: no tiles, no selection, no inspector head.
+    if (only) return;
     this._renderTiles(room, bandFor.tiles.colA, bandFor.tiles.head);
     this._wireInspector();
 

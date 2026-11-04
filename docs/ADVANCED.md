@@ -484,7 +484,7 @@ doorbell-specific, and it now opens the camera popup rather than a bare more-inf
 ### :bell: Bell
 
 The bell reads its settings from the `casora_room` cards. The Studio writes them to every room of the
-dashboard (**Settings › Messages › Bell on this dashboard**); by hand, set them on each `casora_room` the
+dashboard (**Settings › Bell & messages › Bell on this dashboard**); by hand, set them on each `casora_room` the
 same way. Every kind of message is on until you switch it off, and the limits are optional.
 
 | Variable | Default | Description |

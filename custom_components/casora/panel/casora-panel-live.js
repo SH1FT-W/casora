@@ -138,7 +138,7 @@
         const r = await this._hass.callWS({ type: "casora/live/get" });
         cs.lv = Object.assign({}, r, { targets: cs.lv.targets, devices: cs.lv.devices });
       } catch (e) { /* old state stays */ }
-      this._csRepaint();
+      this._csRepaint("live");
     };
 
     const notifyLabel = (id) => {
@@ -215,13 +215,13 @@
       // 1 · Recipients
       let g = this._flowGroup(host, { header: t("Recipients"),
         footer: t("Live activities go to these phones. Needs the Home Assistant app; older app versions show a normal notification that keeps updating. None selected: off.") });
-      ctl(this, g, t("Show live activities on"), null, known.length
+      ctl(this, g, t("Show live activities on"), t("The phones whose lock screen shows the progress."), known.length
         ? chips(this, known.map((id) => [id, notifyLabel(id)]), L.targets || [], (id, on) => {
           const cur = (L.targets || []).filter((x) => x !== id);
           if (on) cur.push(id);
           L.targets = cur;
           // Test section says right away „Speichere zuerst die Empfänger“ instead of „Wähle zuerst …“.
-          this._csRepaint();
+          this._csRepaint("live");
         })
         : el("span", "cs-empty", t("Nothing found in Home Assistant.")));
       // 2 · Devices
@@ -234,7 +234,7 @@
         const st = settingsOf(L, f.device_id);
         const open = !!cs.lvOpen[f.device_id];
         const r = this._flowRow(g, { title: f.name || t(KIND_LABEL[f.kind] || f.kind), raw: true, sub: deviceSub(f), chevron: true,
-          onTap: () => { cs.lvOpen[f.device_id] = !open; self._csRepaint(); } });
+          onTap: () => { cs.lvOpen[f.device_id] = !open; self._csRepaint("live"); } });
         r.row.classList.add("cs-live-row");
         if (open) r.row.classList.add("open");
         r.row.dataset.device = f.device_id;
@@ -282,7 +282,7 @@
       pb.type = "button";
       pb.disabled = !!cs.lvBusy || unsaved || !(lv.targets || []).length;
       pb.onclick = async () => {
-        cs.lvBusy = true; cs.lvProbe = null; this._csRepaint();
+        cs.lvBusy = true; cs.lvProbe = null; this._csRepaint("live");
         try {
           const r = await this._hass.callWS({ type: "casora/live/probe", device_id: cs.lvProbeDev || null });
           cs.lvProbe = sentText(r.targets);
@@ -313,7 +313,7 @@
         tb.type = "button";
         tb.disabled = !!cs.lvRun || noTargets;
         tb.onclick = async () => {
-          cs.lvRun = true; this._csRepaint();
+          cs.lvRun = true; this._csRepaint("live");
           try { await this._hass.callService("casora_mock", "live_lauf", { geraet: runs[cs.lvRunDev], sekunden: 60 }); } catch (e) { /* service missing */ }
           // Keep the log updating until the run is through.
           for (let i = 0; i < 14 && cs.lvRun; i++) { await new Promise((r) => setTimeout(r, 5000)); await this._csLiveRefresh(); }

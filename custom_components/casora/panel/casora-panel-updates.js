@@ -18,7 +18,8 @@
     + 'stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"/></svg>';
 
   const CSS = ".cu-wrap{padding:4px 0 28px}"
-    + ".cu-h{margin:22px 6px 8px;font-size:var(--t-foot);font-weight:600;letter-spacing:.01em;color:var(--ink-2)}"
+    // Same edge and heading style as the settings blocks (04.11.2026): the heading flush with the plates below it.
+    + ".cu-h{margin:24px 0 8px;font-size:var(--t-body);font-weight:650;line-height:1.3;letter-spacing:-0.01em;color:var(--ink)}"
     + ".cu-box{border-radius:var(--r-l);overflow:hidden;background:var(--casora-popup-row-fill,rgba(255,255,255,.07))}"
     // Kopf: installierte Version, Status, Knöpfe
     + ".cu-hero{padding:16px 16px 14px}"

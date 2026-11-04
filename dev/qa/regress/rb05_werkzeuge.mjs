@@ -16,21 +16,23 @@ const H = (fn, a) => page.evaluate(fn, a);
 const menu = () => H(() => window.__pierce('.combo-menu .combo-opt').filter((e) => e.getClientRects().length).map((e) => e.textContent.trim()));
 const close = () => H(() => window.__panel()._bClose());
 
-// Settings by topic (variant B): no "Dashboard" button any more, one "Einstellungen".
+// Settings (since 03.11.2026 eight tiles): no "Dashboard" button any more, one "Einstellungen".
 const noDash = await H(() => !window.__panel().shadowRoot.querySelector('.btool[data-b=dash]'));
 await check('kein eigener Dashboard-Knopf mehr', noDash);
 await page.locator('.btool[data-b=home]').click();
 await page.waitForTimeout(1200);
 const topics = await H(() => [...window.__panel().shadowRoot.querySelectorAll('.cs-hubtile b')].map((b) => b.textContent.trim()));
-await check('Einstellungen: sechs Themen', ['Aussehen', 'Meldungen', 'Haus & Geräte', 'Wetter & Klima', 'Bedienung', 'Extras'].every((x) => topics.includes(x)), topics);
-await page.locator('.cs-hubtile', { hasText: 'Wetter & Klima' }).click();
-await page.waitForTimeout(1000);
-const wrow = await H(() => [...window.__panel().shadowRoot.querySelectorAll('.frow')].map((r) => r.textContent.replace(/\s+/g, ' ').trim()));
-await check('Thema Wetter & Klima: Wetter (nur dieses Dashboard) und Außenwerte', wrow.some((t) => /^Wetter.*Nur dieses Dashboard/.test(t)) && wrow.some((t) => /^Außenwerte & Strompreis/.test(t)), wrow);
-await page.locator('.frow').filter({ has: page.locator('b', { hasText: /^Wetter$/ }) }).first().click();
-await page.waitForTimeout(1200);
-const w = await H(() => { const p = window.__panel(); return { open: p.classList.contains('binsp'), sel: p._sel && p._sel.key, cs: !!p._csOpen }; });
-await check('Wetter öffnet im Inspektor', w.open && w.sel === 'Weather' && !w.cs, w);
+const EIGHT = ['Aussehen', 'Bedienen', 'Handy', 'Glocke & Meldungen', 'Haus & Geräte', 'Wetter, Strom & Tanken', 'KI', 'Updates & Einrichtung'];
+await check('Einstellungen: acht Kacheln', topics.length === 8 && EIGHT.every((x) => topics.includes(x)), topics);
+await page.locator('.cs-hubtile', { hasText: 'Wetter, Strom & Tanken' }).click();
+await page.waitForTimeout(1500);
+const wb = await H(() => [...window.__panel().shadowRoot.querySelectorAll('#pane .cn-block')].filter((b) => b.getClientRects().length)
+  .map((b) => ({ k: b.dataset.pkey, head: b.querySelector('.cn-bhead b').textContent.replace(/\s+/g, ' ').trim(), rows: b.querySelectorAll('.row[data-key], .frow').length })));
+await check('Kachel Wetter, Strom & Tanken: Wetter (nur dieses Dashboard), Außenwerte und Tanken direkt mit ihren Feldern',
+  wb.some((b) => b.k === 'nb-weather' && /Nur dieses Dashboard/.test(b.head) && b.rows > 0) && wb.some((b) => b.k === 'nb-outdoor' && b.rows > 0)
+  && wb.some((b) => b.k === 'nb-fuel'), wb);
+const w = await H(() => { const p = window.__panel(); return { open: p.classList.contains('binsp'), cs: !!p._csOpen, page: p._csPage }; });
+await check('Wetter bleibt in den Einstellungen (kein Sprung in den Inspektor)', w.open && w.cs && w.page === 'n-wx', w);
 await close();
 
 // Titelmenü: Dashboards und alles zu diesem Dashboard
@@ -57,7 +59,7 @@ await check('„…“ ohne Umbenennen/Löschen (stehen im Titelmenü)', !mm.som
 await page.keyboard.press('Escape');
 await page.waitForTimeout(400);
 
-// Settings: the search finds the page "KI" (all dashboards).
+// Settings: the search finds the block "KI" (all dashboards) and opens its tile.
 const hl = await H(() => window.__panel().shadowRoot.querySelector('.btool[data-b=home] .blabel').textContent.trim());
 await check('Knopf heißt „Einstellungen“', hl === 'Einstellungen', hl);
 await page.locator('.btool[data-b=home]').click();
@@ -69,7 +71,7 @@ await page.waitForTimeout(2500);
 const k = await H(() => { const p = window.__panel(); const i = p.shadowRoot.querySelector('.inspector');
   return { cs: !!p._csOpen, page: p._csPage, wide: i.getBoundingClientRect().width, map: !!p.shadowRoot.querySelector('.card.map'),
     back: !!p.shadowRoot.querySelector('.cs-hubback') }; });
-await check('KI öffnet als breite Seite über der Vorschau, mit „‹ Zurück“', k.cs && k.page === 'ai' && k.wide > 500 && k.map && k.back, k);
+await check('KI öffnet als breite Seite über der Vorschau, mit „‹ Einstellungen“', k.cs && k.page === 'n-ai' && k.wide > 500 && k.map && k.back, k);
 await close();
 await page.waitForTimeout(600);
 

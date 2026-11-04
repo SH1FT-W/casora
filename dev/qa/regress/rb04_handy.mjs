@@ -59,12 +59,12 @@ for (const safari of [false, true]) {
 
   await o.page.locator('.bbar [data-b=home]').tap();
   await o.page.waitForTimeout(1200);
-  await o.page.locator('.cs-hubtile', { hasText: /Haus & Geräte|Home & Devices/ }).first().tap();
-  await o.page.waitForTimeout(1000);
-  await o.page.locator('.frow').filter({ has: o.page.locator('b', { hasText: /^Abfall, Türen & Fenster, Player$/ }) }).first().tap();
+  // Since 03.11.2026 the tile itself holds the settings (waste first), no list in between.
+  await o.page.locator('.cs-hubtile', { hasText: /Haus & Geräte|Home & devices/ }).first().tap();
   await o.page.waitForTimeout(2500);
-  const s3 = await H(() => { const p = window.__panel(); return { page: !!p._csOpen, id: p._csPage, open: p.classList.contains('binsp') }; });
-  await check(tag + ': Einstellungen › Haus & Geräte › Abfall, Türen & Fenster, Player öffnet die Einstellungsseite', s3.page && s3.id === 'home' && s3.open, s3);
+  const s3 = await H(() => { const p = window.__panel(); const w = p.shadowRoot.querySelector('#pane [data-pkey="nb-waste"]');
+    return { page: !!p._csOpen, id: p._csPage, open: p.classList.contains('binsp'), waste: !!w && w.getClientRects().length > 0 }; });
+  await check(tag + ': Einstellungen › Haus & Geräte zeigt gleich den Abfall', s3.page && s3.id === 'n-house' && s3.open && s3.waste, s3);
   await o.browser.close();
 }
 await finish();

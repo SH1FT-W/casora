@@ -34,7 +34,7 @@ const { ed, st, opened } = await studioRetry(page, dash, async () => {
   await page.waitForTimeout(1500);
   const ed = await page.evaluate(measure);
 
-  await page.evaluate(() => window.__panel()._csOpenPage('home'));
+  await page.evaluate(() => window.__panel()._csOpenPage('n-house'));
   await page.waitForTimeout(2000);
   const st = await page.evaluate(measure);
   return { ed, st, opened };

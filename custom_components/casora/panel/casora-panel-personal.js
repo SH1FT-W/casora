@@ -329,7 +329,7 @@
             }),
             txt(label, "Name", (v) => { S.waste.sensors[id] = v.trim() ? v : binName(id); }, true),
             del(() => { delete S.waste.sensors[id]; }),
-          ]);
+          ], i ? undefined : "The waste sensor and the name the tile and the bell show.");
         });
         addRow(g, "Add bin", () => { S.waste.sensors[""] = ""; });
         row(g, "Waste calendar", [ent(S.waste.calendar, ["calendar"], (v) => { S.waste.calendar = v; })],
@@ -388,7 +388,7 @@
             ent(c.entity, ["calendar"], (v) => { c.entity = v; }),
             txt(c.name, "Name", (v) => { c.name = v; }, true), col, tog,
             del(() => { S.calendars.splice(i, 1); }),
-          ]).classList.add("casora-calrow");
+          ], i ? undefined : "Calendar, name, color and whether it shows on the tile.").classList.add("casora-calrow");
         });
         addRow(g, "Add calendar", () => { S.calendars.push({ entity: "", name: "", color: CAL_DEFAULT }); });
       }
@@ -398,11 +398,11 @@
         g = group("contacts", { header: "Doors and windows",
           footer: "Groups of contact sensors for the security popups. Empty: every door and window sensor. Hidden ones and own names apply to the security badges and popups." });
         S.contacts.groups.forEach((c, i) => {
-          row(g, "Group", [
+          row(g, i ? "" : "Group", [
             ent(c.id, ["binary_sensor"], (v) => { c.id = v; }),
             txt(c.label, "Label", (v) => { c.label = v; }, true),
             del(() => { S.contacts.groups.splice(i, 1); }),
-          ]);
+          ], i ? undefined : "A group sensor of doors and windows, with its own name.");
         });
         addRow(g, "Add group", () => { S.contacts.groups.push({ id: "", label: "" }); });
         // #69: single doors and windows left out of the security badge and popups, and own names for them.
@@ -411,7 +411,7 @@
           row(g, i ? "" : "Hidden", [
             ent(id, ["binary_sensor"], (v) => { S.contacts.hidden[i] = v; }, null, CONTACT),
             del(() => { S.contacts.hidden.splice(i, 1); }),
-          ]);
+          ], i ? undefined : "This door or window does not count for security.");
         });
         addRow(g, "Hide a door or window", () => { S.contacts.hidden.push(""); });
         mapRows(S.contacts.names).forEach(([id, name], i) => {
@@ -419,7 +419,7 @@
             ent(id, ["binary_sensor"], (v) => { setMap(S.contacts.names, id, v, S.contacts.names[id] || ""); render(); }, null, CONTACT),
             txt(name, "Name", (v) => { S.contacts.names[id] = v; }, true),
             del(() => { delete S.contacts.names[id]; }),
-          ]);
+          ], i ? undefined : "The name this door or window has in the security popups.");
         });
         addRow(g, "Rename a door or window", () => { if (!("" in S.contacts.names)) S.contacts.names[""] = ""; });
       }
@@ -481,10 +481,10 @@
         g = group("scenes", { header: "Hidden scenes",
           footer: "Hidden in every dashboard. To hide a scene in one dashboard only, use Scenes in the Studio." });
         S.scenes.exclude.forEach((id, i) => {
-          row(g, "Scene", [
+          row(g, i ? "" : "Scene", [
             ent(id, ["scene"], (v) => { S.scenes.exclude[i] = v; }),
             del(() => { S.scenes.exclude.splice(i, 1); }),
-          ]);
+          ], i ? undefined : "Casora never offers this scene.");
         });
         addRow(g, "Hide a scene", () => { S.scenes.exclude.push(""); });
       }
@@ -526,7 +526,7 @@
             ent(id, ["media_player"], (v) => { setMap(S.media.players, id, v, c); render(); }),
             icon(c), vol(c),
             del(() => { delete S.media.players[id]; }),
-          ]);
+          ], "Player, icon and volume in the Now Playing bar.");
         });
         addRow(g, "Add player", () => { S.media.players[""] = { listed: true }; });
       }
@@ -561,7 +561,7 @@
           row(g, i ? "" : "No battery warning", [
             ent(id, ["sensor"], (v) => { S.notify.battery_exclude[i] = v; }, null, ["battery"]),
             del(() => { S.notify.battery_exclude.splice(i, 1); }),
-          ]);
+          ], i ? undefined : "The bell never warns about this battery.");
         });
         addRow(g, "Add battery exception", () => { S.notify.battery_exclude.push(""); });
         mapRows(S.notify.contact_merged).forEach(([combo, members]) => {
@@ -581,7 +581,7 @@
             ent(a[1], ["sensor"], (v) => { a[1] = v; }, "Appliance state"),
             txt(a[2], "Name", (v) => { a[2] = v; }, true),
             del(() => { S.notify.appliance_care.splice(i, 1); }),
-          ]);
+          ], i ? undefined : "A reminder when an appliance needs care, e.g. descaling.");
         });
         addRow(g, "Add appliance care", () => { S.notify.appliance_care.push(["", "", "", ""]); });
       }
@@ -606,7 +606,7 @@
           b.onclick = () => { if (!i) return; order.splice(i - 1, 0, order.splice(i, 1)[0]); B.order = order; render(); };
           chipsO.appendChild(b);
         });
-        row(g, "Order in a room", [chipsO]);
+        row(g, "Order in a room", [chipsO], "Which tile types come first in a new room.");
         const GROUP = ["2", "3", "4", "0"];
         row(g, "Combine into one tile", [pick(B.group_min >= 99 ? "0" : String(B.group_min != null ? B.group_min : D.group_min), GROUP,
           Object.fromEntries(Object.entries({ 2: "From 2 devices", 3: "From 3 devices", 4: "From 4 devices", 0: "Never" })
@@ -631,13 +631,12 @@
       }
     };
 
-    // Formerly a page of its own ("Home settings"), now part of the Settings.
-    // Old jumps (focus) land on the matching subpage.
-    const FOCUS_PAGE = { notify: "alerts", scenes: "home", media: "home", basis: "dashboards", calendars: "calendar" };
+    // Formerly a page of its own ("Home settings"), now part of the Settings: a jump with a focus lands on the tile and
+    // block that hold that group (casora-panel-settings.js route).
     P._casoraPersonal = function (o) {
       o = o || {};
       if (typeof this._csShow !== "function") return undefined;
-      return this._csShow(FOCUS_PAGE[o.focus] || "home", o.focus);
+      return this._csShow("home", o.focus);
     };
 
     // In the Studio pages Scenes, Now Playing and Notifications: hint at
@@ -724,7 +723,7 @@
       return sw;
     };
     // Tile inspector (field with settingsLink: "<group>"): what is set there and a jump to it, instead of
-    // a tile variable – the calendar tile shows the calendars under Settings → Calendar (issue #31).
+    // a tile variable – the calendar tile shows the calendars under Settings → Home & devices › Calendars (issue #31).
     const LINK_TEXT = {
       calendars: (S) => {
         const n = (S.calendars || []).filter((c) => c && c.entity).length;

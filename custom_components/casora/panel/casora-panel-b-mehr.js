@@ -1001,17 +1001,17 @@
     };
 
     // ── Suche ───────────────────────────────────────────────────────────────
-    // Since 26.10.62b5 this dashboard's sections sit in a topic of "Settings" (casora-panel-settings.js HUB).
-    const TOPIC_OF = { General: "Controls", Weather: "Weather & climate", Time: "Look & feel", Notifications: "Messages", Scenes: "Home & Devices" };
+    // Since 03.11.2026 every setting sits in a block of one of the eight tiles of "Settings" (casora-panel-settings.js,
+    // window.casoraSettingsMap); this dashboard's sections there too.
     const SECS = [
-      // The design applies to all dashboards (Settings › Design, below at PAGES); the controls stay here.
       ["General", "Controls", "bedienung kopfzeile knöpfe assist schrift leerlauf startseite tablet leistung dialoge halten gedrückt lange drücken schnellmenü hold"],
       ["Weather", "Weather", "wetter temperatur vorhersage"], ["Time", "Time", "uhrzeit uhr datum uhrformat format 12 12h 12-stunden 12-stunden-uhr 24 24h 24-stunden stunden am pm"],
       ["Notifications", "Notifications", "glocke benachrichtigungen hinweise meldungen push"], ["Scenes", "Scenes", "szenen stimmung"],
       ["Now Playing", "Now Playing", "musik wiedergabe medien player"],
       ["Appearance", "Appearance", "raumname foto bild hintergrund hintergrundbild bewegungsmelder raum"],
     ];
-    const PAGES = [
+    // Words of the earlier settings pages: they still find the block that holds the page now (route).
+    const PAGE_WORDS = [
       ["design", "Design", "design theme look aussehen stil farbe farben hell dunkel weich glas nebel"],
       ["home", "Home & Devices", "haus geräte personen bereiche"],
       ["calendar", "Calendar", "kalender kalenderkachel termine termin google ical caldav farbe calendars events appointments"], ["alerts", "Bell & Alerts", "glocke meldungen benachrichtigung push"],
@@ -1068,13 +1068,13 @@
         () => this._mGoTileOption("hold"), true, way("Tile", "Visibility, ask first & hold"));
       A("ventpush", "Ventilation hints on the phone", "lüften lueften lüftung lüftungs-coach coach handy push benachrichtigung benachrichtigungen "
         + "mitteilung mitteilungen nachricht empfänger telefon smartphone iphone app fenster", () => { this._bOpen = true; this._csOpenPage("vent"); },
-        typeof this._csOpenPage === "function", way("Settings", "Ventilation"));
+        typeof this._csOpenPage === "function", way("Settings", "Bell & messages"));
       A("scene", "Save the current state as a scene", "szene speichern stimmung licht merken aktueller zustand",
         () => this._bSceneFromState(), typeof this._bSceneFromState === "function" && !!(this._hass && this._hass.user && this._hass.user.is_admin),
-        way("Settings", "Home & Devices", "Scenes on this dashboard"));
+        way("Settings", "Home & devices", "Scenes on this dashboard"));
       A("adjustlights", "Adjust the lights now", "licht lichter lampe lampen einstellen helligkeit dimmen jetzt stimmung szene",
         () => this._bSceneFromState(), typeof this._bSceneFromState === "function" && !!(this._hass && this._hass.user && this._hass.user.is_admin),
-        way("Settings", "Home & Devices", "Scenes on this dashboard"));
+        way("Settings", "Home & devices", "Scenes on this dashboard"));
       A("addroom", "Add Room…", "raum hinzufügen neu zimmer", () => this._addRoom(), true, way("Rooms"));
       A("arrange", "Arrange Rooms", "räume ordnen sortieren reihenfolge ausgeblendet einblenden", () => this._bRoomsOpen(), rooms.length > 1, way("Rooms"));
       A("hideroom", "Hide room", "raum ausblenden verstecken verbergen vorübergehend weg", () => this._mHideRoom(this._room, true),
@@ -1161,15 +1161,30 @@
         });
       });
       // Settings
-      SECS.forEach(([key, label, words]) => out.push({ kind: "setting", id: "s:" + key, label: tr(label), sub: tr("This dashboard"), words,
-        path: key === "Appearance" && here ? this._roomLabel(here) + " › " + tr(label) : way("Settings", TOPIC_OF[key] || "Settings", label),
-        run: () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key, label: key }); } }));
-      if (typeof this._csOpenPage === "function") {
-        PAGES.forEach(([id, label, words]) => out.push({ kind: "setting", id: "p:" + id, label: tr(label), sub: tr("For all dashboards"), words, path: way("Settings", label),
-          run: () => { this._bOpen = true; this._csOpenPage(id); } }));
+      // A block of the settings tiles opens there (a dashboard section included); sections without a block (Now Playing,
+      // Appearance) stay in the inspector.
+      const map = typeof this._csShow === "function" ? window.casoraSettingsMap : null;
+      const tileOf = (b) => map && map.tiles.find((tl) => tl.blocks.includes(b));
+      // "Controls" (General) is spread over several blocks: it leads to "Hold and sort tiles".
+      const secBlock = (key) => map && [].concat(...map.tiles.map((tl) => tl.blocks)).find((b) => (key === "General" ? b.k === "hold" : b.sec === key && !b.adv));
+      const open = (b) => () => { this._bOpen = true; this._csShow("n-" + tileOf(b).id, "nb-" + b.k); };
+      SECS.forEach(([key, label, words]) => {
+        const b = secBlock(key);
+        out.push({ kind: "setting", id: "s:" + key, label: tr(label), sub: tr("This dashboard"), words,
+          path: key === "Appearance" && here ? this._roomLabel(here) + " › " + tr(label) : way("Settings", b ? tileOf(b).label : "Settings", label),
+          run: b ? open(b) : () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key, label: key }); } });
+      });
+      if (map) {
+        const more = {};
+        PAGE_WORDS.forEach(([id, , words]) => { const r = map.route(id); more[r[1] || r[0]] = ((more[r[1] || r[0]] || "") + " " + words).trim(); });
+        map.tiles.forEach((tl) => tl.blocks.forEach((b) => {
+          if (b.sec) return;
+          out.push({ kind: "setting", id: "p:" + b.k, label: tr(b.title), sub: tr("For all dashboards"),
+            words: [b.kw, more["nb-" + b.k] || ""].join(" ").trim(), path: way("Settings", tl.label), run: open(b) });
+        }));
       }
       // Scenes
-      (this._sceneCatalog ? this._sceneCatalog() : []).forEach((s) => out.push({ kind: "scene", id: "sc:" + s.id, label: s.label, words: s.id + " szene", path: way("Settings", "Home & Devices", "Scenes on this dashboard"),
+      (this._sceneCatalog ? this._sceneCatalog() : []).forEach((s) => out.push({ kind: "scene", id: "sc:" + s.id, label: s.label, words: s.id + " szene", path: way("Settings", "Home & devices", "Scenes on this dashboard"),
         run: () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key: "Scenes", label: "Scenes" }); } }));
       return out;
     };

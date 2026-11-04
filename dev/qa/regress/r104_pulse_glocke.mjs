@@ -213,21 +213,19 @@ const SW = () => {
 };
 const openNotify = async (page, mobile) => {
   if (mobile) {
-    // Phone Studio (26.10.62b5): Einstellungen › Meldungen › Benachrichtigungen opens the section in the sheet.
-    await page.evaluate(() => window.__panel()._csHubGo({ sec: 'Notifications' }));
-    await page.waitForTimeout(1500);
+    // Phone Studio: Einstellungen › Glocke & Meldungen shows this dashboard's bell switches in the tile (03.11.2026).
+    await page.evaluate(() => window.__panel()._csShow('n-bell', 'nb-bell'));
+    await page.waitForTimeout(1800);
     return;
   }
-  // Since 26.10.62b5: Einstellungen › Meldungen › Benachrichtigungen (only this dashboard).
+  // Since 03.11.2026: Einstellungen › Glocke & Meldungen, block „Glocke auf diesem Dashboard“ (drawn in the tile).
   const btn = page.locator('.btool[data-b=home]');
   if (await btn.count() && await btn.first().isVisible()) {
     await btn.first().click();
     await page.waitForTimeout(1200);
-    await page.locator('.cs-hubtile', { hasText: 'Meldungen' }).first().click();
-    await page.waitForTimeout(900);
-    await page.locator('.frow').filter({ has: page.locator('b', { hasText: /^Glocke auf diesem Dashboard$/ }) }).first().click();
+    await page.locator('.cs-hubtile', { hasText: 'Glocke & Meldungen' }).first().click();
   }
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1800);
 };
 for (const [tag, o] of STUDIO) {
   const mobile = !!o.mobile;

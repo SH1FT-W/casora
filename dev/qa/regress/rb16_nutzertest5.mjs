@@ -147,7 +147,7 @@ await browser.close();
   await pg.waitForTimeout(500);
   const toast = await P(() => { const t = window.__panel().shadowRoot.querySelector('.btoast'); const r = t.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height) }; });
   await check('Handy: Meldung nutzt die Breite (nicht 6–8 Zeilen)', toast.w >= 330 && toast.h <= 110, toast);
-  await P(() => window.__panel()._csOpenPage('vent'));
+  await P(() => window.__panel()._csOpenPage('n-bell', 'nb-vent'));
   await pg.waitForTimeout(1500);
   await P(() => { const c = window.__panel().shadowRoot.querySelector('.casora-chip'); if (c) c.click(); });
   await pg.waitForTimeout(500);

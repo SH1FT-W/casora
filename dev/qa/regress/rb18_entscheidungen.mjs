@@ -130,16 +130,17 @@ const closePopup = async (pg) => { await pg.evaluate(() => window.casoraPopup &&
 
   // 3) Design unter Einstellungen
   await P(() => window.__panel()._bClose());
-  // Since 26.10.62b5: Einstellungen › Bedienung › Bedienung (this dashboard) keeps the link to the design for all.
+  // The Studio's section „Bedienung“ (this dashboard) keeps the link to the design for all; since 03.11.2026 it opens
+  // Einstellungen › Aussehen at the block „Design“.
   await page.locator('.btools .btool[data-b=home]').first().click(); await W(page, 1200);
   const first = await P(() => { const t = window.__panel().shadowRoot.querySelector('#pane .cs-hubtile'); return t ? t.textContent.replace(/\s+/g, ' ').trim() : ''; });
   await check('3: Einstellungen beginnen mit „Aussehen“ (Design und Uhrzeit)', /^Aussehen.*Design/.test(first), first);
-  await P(() => window.__panel()._csHubGo({ sec: 'General' })); await W(page, 1500);
+  await P(() => { const p = window.__panel(); p._csClose && p._csClose(); p._bOpen = true; p._select({ group: 'rooms', key: 'General', label: 'General' }); }); await W(page, 1500);
   const link = page.locator('#pane .casora-looklink').first();
   await check('3: Bedienung: Verweis „Design (für alle Dashboards)“', (await link.count()) > 0 && /^Design \(für alle Dashboards\)/.test(await link.textContent()));
   await link.click();
   await W(page, 1500);
-  await check('3: Verweis öffnet „Einstellungen › Design“', await P(() => { const p = window.__panel(); return p._csOpen && p._csPage === 'design' && !!p.shadowRoot.querySelector('#pane .casora-looks'); }));
+  await check('3: Verweis öffnet „Einstellungen › Aussehen“ mit der Design-Auswahl', await P(() => { const p = window.__panel(); return p._csOpen && p._csPage === 'n-look' && !!p.shadowRoot.querySelector('#pane [data-pkey="nb-design"] .casora-looks'); }));
   await P(() => { const p = window.__panel(); p._csClose && p._csClose(); p._bClose(); });
   await W(page, 600);
 

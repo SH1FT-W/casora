@@ -418,7 +418,7 @@ const STATIONS = [
     if (!(await PJS(pg, 'return !!p.shadowRoot.querySelector(".msearch")'))) await tap(pg, '#msearch, .msearchbtn, [title^="Suchen"]');
     await pg.keyboard.type('Licht'); await pg.waitForTimeout(500); return PJS(pg, 'return !!p.shadowRoot.querySelector(".msearch")'); } },
   { name: 'Einstellungen', run: async (pg) => (await tap(pg, '.btool', /Einstellungen/)) || tap(pg, '.bbar button', /Einstellungen/) },
-  { name: 'Einstellungen: Haus', run: async (pg) => { await PJS(pg, 'return p._csOpenPage("home")'); return true; } },
+  { name: 'Einstellungen: Haus', run: async (pg) => { await PJS(pg, 'return p._csOpenPage("n-house")'); return true; } },
   { name: 'Updates', run: async (pg) => { await PJS(pg, 'return p._cuOpenPage()'); await pg.waitForTimeout(1200); return true; } },
   { name: 'Zeitreise', run: async (pg) => { if (!(await tap(pg, '#brewind'))) return false; await pg.waitForTimeout(1200); return true; } },
   { name: 'Vorschau Handy', run: async (pg) => tap(pg, '.segopt', /Handy/) },
