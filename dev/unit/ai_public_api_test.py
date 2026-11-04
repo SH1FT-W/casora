@@ -48,9 +48,9 @@ COMPONENTS = os.path.dirname(homeassistant.components.__file__)
 logging.basicConfig(level=logging.CRITICAL)
 
 
-def _entry(domain: str, opts: dict | None = None) -> config_entries.ConfigEntry:
+def _entry(domain: str, opts: dict | None = None, subentries: list | None = None) -> config_entries.ConfigEntry:
     vals = {"domain": domain, "title": domain, "data": {}, "options": opts or {}, "source": "user", "version": 1,
-            "minor_version": 1, "unique_id": None, "discovery_keys": MappingProxyType({}), "subentries_data": None}
+            "minor_version": 1, "unique_id": None, "discovery_keys": MappingProxyType({}), "subentries_data": subentries}
     sig = inspect.signature(config_entries.ConfigEntry)
     return config_entries.ConfigEntry(**{n: vals.get(n) for n, p in sig.parameters.items()
                                          if p.kind == p.KEYWORD_ONLY and p.default is inspect.Parameter.empty})
@@ -187,6 +187,61 @@ class Real(unittest.IsolatedAsyncioTestCase):
         self.opts(ai_task_models={e: "openai/gpt-5"})
         m = ki.ai_models(self.hass)[0]
         self.assertEqual((m["ok"], m["source"], m["typed"], m["model"]), (True, "typed", "openai/gpt-5", "openai/gpt-5"))
+
+    async def test_model_choices(self):
+        """The Studio's menu: strength and label from model_rank, so menu, rows and "best" agree."""
+        got = {c["model"]: (c["label"], c["ok"]) for c in ki.model_choices()}
+        self.assertEqual(list(got), list(ki.MODEL_CHOICES))
+        self.assertEqual(got["claude-opus-5-5"], ("Claude Opus 5.5", True))
+        self.assertEqual(got["claude-sonnet-5-5"], ("Claude Sonnet 5.5", True))
+        self.assertEqual(got["claude-haiku-5-5"], ("Claude Haiku 5.5", False))
+        self.assertEqual(got["gpt-5"], ("GPT-5", True))
+        self.assertFalse(got["gpt-5-mini"][1])
+        self.assertEqual(got["gemini-3-pro"], ("Gemini 3 Pro", True))
+        self.assertFalse(got["gemini-2.5-flash"][1])
+        self.assertEqual(len({lab for lab, _ in got.values()}), len(got), "every entry reads differently")
+
+    async def test_picked_model_counts(self):
+        """A model picked in the menu counts like a typed one (same option ai_task_models)."""
+        e = self.ai_task("open_router", "or3", name="My AI")
+        self.opts(ai_task_models={e: "claude-haiku-5-5"})
+        m = ki.ai_models(self.hass)[0]
+        self.assertEqual((m["ok"], m["source"], m["label"]), (False, "typed", "Claude Haiku 5.5"))
+        self.opts(ai_task_models={e: "claude-sonnet-5-5"})
+        m = ki.ai_models(self.hass)[0]
+        self.assertEqual((m["ok"], m["label"]), (True, "Claude Sonnet 5.5"))
+
+    async def test_test_ai_takes_picked_model(self):
+        """The test house's AI (casora_mock) is strong as long as nothing is picked; a picked model counts as that."""
+        self.assertEqual(ki.model_rank("casora_mock", None), (1, "Casora Test-KI"))
+        self.assertEqual(ki.model_rank("casora_mock", "claude-haiku-5-5"), (0, "Claude Haiku 5.5"))
+        self.assertGreater(ki.model_rank("casora_mock", "claude-opus-5-5")[0], 0)
+
+    async def test_config_entry_of_ai_task(self):
+        """entry_id / subentry_id / entry_domain for the link "Change model" (HA's integration page of that entry).
+
+        AI tasks of Anthropic, OpenAI, Google, Ollama and OpenRouter are subentries (ai_task_data) of the
+        integration's entry; the entity registry names both."""
+        ce = _entry("anthropic", subentries=[{"data": {}, "subentry_type": "ai_task_data", "title": "Claude AI Task",
+                                              "unique_id": None, "subentry_id": "sub_ai_1"}])
+        self.hass.config_entries._entries[ce.entry_id] = ce
+        dev = dr.async_get(self.hass).async_get_or_create(
+            config_entry_id=ce.entry_id, config_subentry_id="sub_ai_1", identifiers={("anthropic", "sub_ai_1")},
+            name="Claude AI Task", model="Claude Sonnet 5.5", model_id="claude-sonnet-5-5",
+            entry_type=dr.DeviceEntryType.SERVICE)
+        ent = er.async_get(self.hass).async_get_or_create(
+            "ai_task", "anthropic", "sub_ai_1", device_id=dev.id, config_entry=ce, config_subentry_id="sub_ai_1",
+            suggested_object_id="claude_ai_task")
+        self.hass.states.async_set(ent.entity_id, "unknown", {"friendly_name": "Claude AI Task", "supported_features": 1})
+        m = next(x for x in ki.ai_models(self.hass) if x["entity_id"] == ent.entity_id)
+        self.assertEqual((m["entry_id"], m["subentry_id"], m["entry_domain"]), (ce.entry_id, "sub_ai_1", "anthropic"))
+        self.assertEqual((m["source"], m["ok"]), ("device", True))
+
+    async def test_config_entry_missing(self):
+        """No registry entry (a state only): no link target, nothing breaks."""
+        self.hass.states.async_set("ai_task.loose", "unknown", {"friendly_name": "Loose"})
+        m = next(x for x in ki.ai_models(self.hass) if x["entity_id"] == "ai_task.loose")
+        self.assertEqual((m["entry_id"], m["subentry_id"], m["entry_domain"]), (None, None, None))
 
     async def test_casora_ki_from_before_still_found(self):
         """An AI task the old "Set up Casora AI" button created stays an ordinary AI task with its device model."""
