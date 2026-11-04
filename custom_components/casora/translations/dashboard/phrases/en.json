@@ -4222,6 +4222,10 @@
       "{1}% of the total"
     ],
     [
+      "^(\\d+) % vom Haus$",
+      "{1}% of the house"
+    ],
+    [
       "^(\\d+) Geräte ohne Wert$",
       "{1} devices without a value"
     ],

@@ -4240,6 +4240,10 @@
       "{1}% van het totaal"
     ],
     [
+      "^(\\d+) % vom Haus$",
+      "{1}% van het huis"
+    ],
+    [
       "^(\\d+) Geräte ohne Wert$",
       "{1} apparaten zonder waarde"
     ],

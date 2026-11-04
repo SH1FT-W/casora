@@ -559,6 +559,9 @@
     if (fs && ctx.only !== 'top') C.flowOn = true;
     // The hero's "x % aus Solar und Akku" reads the flow's sensors when the tile has no solar and grid fields.
     if (fs) C.flowSrc = fs;
+    // A room's popup (not the house, no solar of its own): the stage's ring is the room's share of the house now
+    // (owner decision 04.11.2026, E.houseShare); the house's sensors are watched by the stage.
+    if (!house && !fs && (ctx.powerId || parts)) C.room = true;
     f.hero = { card: secCard([C.home, C.grid, C.costToday, C.today, C.error].concat(sumIds, fs ? E.flowSources.ids(fs) : []),
       call('_casoraSoftEnergy', 'hero', C), states) };
     // #44: the settings' sources, then the consumers as with a house sensor (the parts are no consumers).
@@ -623,7 +626,7 @@
     if (UI.v3 && UI.v3() && UI.stage && ctx.only !== 'top') {
       E._ctx3 = { variables: v, inner: inner, metricCard: ctx.metricCard || null };
       var C3 = Object.assign({}, C, fs ? { fs: fs } : {});
-      var w3 = [C.home, C.grid, C.costToday, C.today].concat(sumIds, fs ? E.flowSources.ids(fs) : []);
+      var w3 = [C.home, C.grid, C.costToday, C.today].concat(sumIds, fs ? E.flowSources.ids(fs) : [], C.room ? E.houseIds(ctx.hass) : []);
       var f3 = { stage: { card: secCard(w3, 'return window._casoraSoftEnergy ? window._casoraSoftEnergy.stage3(' + JSON.stringify(C3) + ', states, hass, this) : "";', states) } };
       // Status line in words (lifted into the head), never the stage's watts (richtlinien §3).
       f3.hero = { card: secCard(w3, 'return window._casoraSoftEnergy ? window._casoraSoftEnergy.status3(' + JSON.stringify(C3) + ', states, hass) : "";', states) };
@@ -690,17 +693,48 @@
     var UI = window._casoraUI, w = E.statusWords(C, states, hass);
     return UI && UI.line ? UI.line(w.main, w.rest, { tone: w.tone }) : '';
   };
+  // Room popup (owner decision 04.11.2026, variant B): the stage is a dial whose ring is the room's share of the house's
+  // consumption now. The house is HA's energy settings (casoraEnergyHouse, 00-finder.js: grid + solar + battery with
+  // HA's signs). null – the plate as before – without the settings, without a value of the house or the room, when
+  // the room feeds in, or when the room's own sensor is one of the house's. Above the house (readings a moment apart):
+  // 100 %, never more. Pure for dev/unit/energy_room_share.mjs: { room, house, pct }.
+  E.houseIds = function (hass) {
+    var EH = window.casoraEnergyHouse && hass ? window.casoraEnergyHouse(hass) : null;
+    return EH && EH.ids ? EH.ids.slice() : [];
+  };
+  E.houseShare = function (C, states, hass, roomW) {
+    if (!C || !C.room || roomW == null || !isFinite(roomW) || roomW < 0) return null;
+    var EH = window.casoraEnergyHouse && hass ? window.casoraEnergyHouse(hass) : null;
+    if (!EH || !EH.ids || !EH.ids.length || (C.home && EH.ids.indexOf(C.home) > -1)) return null;
+    // The grid has to read: without it the sum is not the house. A sleeping inverter (no value) counts as 0 W.
+    if (!(EH.grid || []).some(function (id) { return watt(states, id) != null; })) return null;
+    var house = 0;
+    EH.ids.forEach(function (id) { var w = watt(states, id); if (w != null) house += w; });
+    if (!(house > 0)) return null;
+    var room = Math.min(roomW, house);
+    return { room: room, house: house, pct: Math.round(room / house * 100) };
+  };
   E.stage3 = function (C, states, hass, self) {
     var UI = window._casoraUI;
     var b = v3Bits(C, states), w = b.p == null ? null : (Math.abs(b.p) < 20 && b.p < 0 ? 0 : Math.abs(b.p));
     var txt = w == null ? '—' : fW(w, hass), cut = txt.lastIndexOf(' ');
     var num0 = cut > 0 ? txt.slice(0, cut) : txt, unit0 = cut > 0 ? txt.slice(cut + 1) : '';
-    var memo = self ? (self._e3 || (self._e3 = { n: num0, u: unit0, l: b.line })) : { n: num0, u: unit0, l: b.line };
+    var sh = C.fs ? null : E.houseShare(C, states, hass, b.p), line0 = sh ? T(sh.pct + ' % vom Haus') : b.line || T('Jetzt');
+    // The stage's HTML stays while the popup is open; only a switch between ring and plate (the house's value comes or
+    // goes) or the sensor going offline draws it anew. The dial's SVG carries a new filter id on every build, so its
+    // HTML is kept as built (else the chart under the wheel was mounted again on every state, r569).
+    var na = C.home && states[C.home] && states[C.home].state === 'unavailable' ? 'na' : null;
+    var mode = (sh ? 'ring' : 'plate') + '|' + na;
+    if (self && self._e3 && self._e3.m !== mode) self._e3 = null;
+    var memo = self ? (self._e3 || (self._e3 = { n: num0, u: unit0, l: line0, m: mode, sh: sh })) : { n: num0, u: unit0, l: line0, m: mode, sh: sh };
     if (self) setTimeout(function () {
-      var r = self.shadowRoot, n = r && r.querySelector('.hui-st-n'), u = r && r.querySelector('.hui-st-u'), t = r && r.querySelector('.hui-st-trend');
+      var r = self.shadowRoot, n = r && r.querySelector('.hui-st-n'), u = r && r.querySelector('.hui-st-u');
+      var t = r && r.querySelector(sh ? '.hui-stage .hui-dl .hui-st-w' : '.hui-st-trend'), dl = sh && r && r.querySelector('.hui-stage .hui-dl');
       if (n && !n.hasAttribute('data-casora-reading') && n.textContent !== num0) n.textContent = num0;
       if (u && !u.hasAttribute('data-casora-reading') && u.textContent !== unit0) u.textContent = unit0;
-      if (t && !t.hasAttribute('data-casora-reading') && t.textContent !== (b.line || T('Jetzt'))) t.textContent = b.line || T('Jetzt');
+      if (t && !t.hasAttribute('data-casora-reading') && t.textContent !== line0) t.textContent = line0;
+      // The ring follows the room and the house without redrawing the stage (and the chart under it).
+      if (dl && UI && UI.dialPaint && UI.dialPct) UI.dialPaint(dl, UI.dialPct(sh.room, 0, sh.house));
     }, 0);
     var chart = '', flowHtml = C.fs ? E.flow(C, states, hass, self) : '';
     if (C.fs) chart = '<style>.hui-stage [data-casora-flow]{background:none!important;box-shadow:none!important;padding:0!important;}'
@@ -711,8 +745,10 @@
       if (window._hpStageChart) window._hpStageChart(self, C.home, true);
       chart = '<div class="hp-chart-slot" style="min-height:' + Number(cfg.height) + 'px;pointer-events:auto;"></div>';
     }
-    return UI.stage('chart', { value: memo.n, unit: memo.u, trend: memo.l || T('Jetzt'), chart: chart, read: C.fs ? null : C.home || null,
-      state: C.home && states[C.home] && states[C.home].state === 'unavailable' ? 'na' : null });
+    var html = memo.sh && memo.html ? memo.html : UI.stage('chart', { value: memo.n, unit: memo.u, trend: memo.l || T('Jetzt'), chart: chart,
+      read: C.fs ? null : C.home || null, ring: memo.sh ? { min: 0, max: memo.sh.house, value: memo.sh.room } : null, state: na });
+    if (memo.sh) memo.html = html;
+    return html;
   };
   // Quick choice: Haus · Solar · Netz · Akku – only the parts the flow has; each opens its page in this popup.
   E.quick3 = function (C, states) {
