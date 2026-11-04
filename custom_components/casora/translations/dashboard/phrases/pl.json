@@ -4240,6 +4240,10 @@
       "{1}% sumy"
     ],
     [
+      "^(\\d+) % vom Haus$",
+      "{1}% domu"
+    ],
+    [
       "^(\\d+) Geräte ohne Wert$",
       "Urządzenia bez wartości: {1}"
     ],

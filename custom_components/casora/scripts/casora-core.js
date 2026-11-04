@@ -13579,7 +13579,9 @@ window.casoraMenuGlass = {
       if (o.progress != null) ariaHtml = ' role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Math.round(p4 * 100) + '"';
     } else if (code === 'S6') {
       var r6 = o.ring || {}, mn6 = Number(r6.min) || 0, mx6 = r6.max != null ? Number(r6.max) : 100;
-      ring.kind = 'level'; ring.pct = dialPct(parseFloat(String(o.value).replace(',', '.')), mn6, mx6);
+      // r6.value: the ring's own reading in min … max when the shown value is in another unit (a room's „1,2 kW“ as its
+      // share of the house in W, 05-weich-mehr.js E.houseShare).
+      ring.kind = 'level'; ring.pct = dialPct(r6.value != null ? r6.value : parseFloat(String(o.value).replace(',', '.')), mn6, mx6);
       if (r6.marker != null) ring.marker = dialPct(r6.marker, mn6, mx6);
       // r6.marks: several marks on the ring (the edges of a comfort band, humidity 40–60 %).
       if (Array.isArray(r6.marks)) ring.marks = r6.marks.map(function (v) { return dialPct(v, mn6, mx6); });

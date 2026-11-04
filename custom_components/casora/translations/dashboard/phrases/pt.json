@@ -4240,6 +4240,10 @@
       "{1} % do total"
     ],
     [
+      "^(\\d+) % vom Haus$",
+      "{1} % da casa"
+    ],
+    [
       "^(\\d+) Geräte ohne Wert$",
       "{1} dispositivos sem valor"
     ],
