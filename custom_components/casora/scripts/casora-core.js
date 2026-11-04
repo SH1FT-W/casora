@@ -11367,6 +11367,35 @@ window.casoraMenuGlass = {
         } else wEl.textContent = wParts.join(' · ');
       }
     };
+    // A state change of the popup's device redraws the card while a slider or dial is held (a lamp reporting, another
+    // lamp in the room): the held element is replaced by a new one at the device's old value. The drag goes on on its
+    // successor (same data-casora-slider in the same root) at the dragged value – the ring no longer snapped back and
+    // the turn was no longer lost (owner, iPhone 04.11.2026). false: the element is gone and has no successor yet.
+    var sliderRelink = function (d) {
+      if (!d || !d.el) return false;
+      if (d.el.isConnected) return true;
+      var key = d.el.dataset.casoraSlider, ax = d.el.dataset.casoraAxis, hit = null;
+      var all = d.root && d.root.querySelectorAll ? d.root.querySelectorAll('[data-casora-slider]') : [];
+      // Only a connected successor: a root that was itself replaced still holds the removed element.
+      for (var i = 0; i < all.length && !hit; i++) if (all[i] !== d.el && all[i].isConnected && all[i].dataset.casoraSlider === key && all[i].dataset.casoraAxis === ax) hit = all[i];
+      if (!hit) return false;
+      d.el = hit;
+      hit.classList.add('drag');
+      if (d.pct != null) paint(hit, d.pct);
+      return true;
+    };
+    // While a slider is held, look for a redraw every frame (before it is painted): the finger may rest, no move
+    // event would repaint the new element until it moves again.
+    var watchRaf = 0;
+    var sliderWatch = function () {
+      if (watchRaf) return;
+      var f = function () {
+        var held = drag || (tdial && tdial.turning ? tdial : null);
+        if (held) sliderRelink(held);
+        watchRaf = held ? requestAnimationFrame(f) : 0;
+      };
+      watchRaf = requestAnimationFrame(f);
+    };
     document.addEventListener('pointerdown', function (ev) {
       var path = (ev.composedPath && ev.composedPath()) || [ev.target];
       for (var i = 0; i < path.length; i++) {
@@ -11379,15 +11408,17 @@ window.casoraMenuGlass = {
             if (ev.pointerType === 'touch') return;
             var dp0 = dialFrom(el, el.getBoundingClientRect(), ev.clientX, ev.clientY, true);
             if (dp0 == null) return;
-            drag = { el: el, pct: dp0, from: shown(el) };
+            drag = { el: el, pct: dp0, from: shown(el), root: el.getRootNode() };
             el.classList.add('drag');
             paint(el, dp0);
+            sliderWatch();
             ev.preventDefault();
             return;
           }
-          drag = { el: el, pct: pctFrom(el, ev.clientY, ev.clientX), from: shown(el) };
+          drag = { el: el, pct: pctFrom(el, ev.clientY, ev.clientX), from: shown(el), root: el.getRootNode() };
           el.classList.add('drag');
           paint(el, drag.pct);
+          sliderWatch();
           ev.preventDefault();
           return;
         }
@@ -11395,6 +11426,7 @@ window.casoraMenuGlass = {
     }, true);
     document.addEventListener('pointermove', function (ev) {
       if (!drag) return;
+      if (!sliderRelink(drag)) return;
       drag.pct = pctFrom(drag.el, ev.clientY, ev.clientX);
       paint(drag.el, drag.pct);
       ev.preventDefault();
@@ -11402,6 +11434,7 @@ window.casoraMenuGlass = {
     var endDrag = function () {
       if (!drag) return;
       var d = drag; drag = null;
+      sliderRelink(d);
       d.el.classList.remove('drag');
       window.casoraHaptic('selection');
       commit(d);
@@ -11452,7 +11485,9 @@ window.casoraMenuGlass = {
     // Dial by touch (DH-01, DH-02, fam-01, fam-02): the dial is touch-action pan-y, so the sheet scrolls over it.
     // Turning starts only for a touch that begins on the ring (not the middle, not outside, not the gap) and
     // then either starts at the knob, moves along the ring (tangential, not mainly up/down or across the ring)
-    // or rests for a moment first. Turning is relative to where it started – no jump to the finger. A tap
+    // or rests for a moment first. Turning is relative to where the finger is when the turn starts (the grab) – no
+    // jump to the finger, and no catch-up of what the finger did before (settling while it rests, the browser's touch
+    // slop, the moves until the decision): owner, iPhone 04.11.2026, the value jumped by 5–7 % on grabbing. A tap
     // without moving changes nothing. The sheet never takes a touch that began on the ring (_bindSheetDrag).
     // iOS/iPadOS (WebKit) decides scroll vs. page on the FIRST touchmove: if that one is not prevented, the page
     // scrolls and every later touchmove is non-cancelable (iPad 26.11.1: the dial never turned, the page
@@ -11489,16 +11524,30 @@ window.casoraMenuGlass = {
     var tdialGrab = function () {
       if (!tdial || tdial.turning) return;
       tdial.turning = true;
+      // The turn counts from the first move after this (fresh): what the finger did before is not added.
+      tdial.fresh = true;
+      tdial.turned = 0;
       tdial.el.classList.add('drag');
       window.casoraHaptic('selection');
+      sliderWatch();
+    };
+    // A redraw replaces the dial under the finger (sliderRelink): the browser then sends the touch's further events to
+    // the removed element only, they never reach the document. So the dial also listens on the touch's own target.
+    var tdialTarget = function (on) {
+      var n = tdial && tdial.tgt;
+      if (!n || !n.addEventListener) return;
+      var f = on ? 'addEventListener' : 'removeEventListener';
+      n[f]('touchmove', tdialMove, { passive: false });
+      n[f]('touchend', tdialEnd);
+      n[f]('touchcancel', tdialEnd);
     };
     document.addEventListener('touchstart', function (ev) {
       // The same touch dispatched again from further out (button-card stops a touchstart on a card with actions
       // and sends its own – the cover's stage): not a new touch, keep the dial's (iPad: the cover never turned).
       var t0 = ev.touches && ev.touches.length === 1 && ev.touches[0];
       if (tdial && t0 && t0.identifier === tdial.id && t0.clientX === tdial.x0 && t0.clientY === tdial.y0 && !dialOf(ev)) return;
-      if (tdial && tdial.hold) clearTimeout(tdial.hold);
-      tdial = null;
+      // A second finger (or a new touch) ends a turn without sending it: back to the value it started from.
+      tdialDrop();
       if (!ev.touches || ev.touches.length !== 1) return;
       var el = dialOf(ev);
       if (!el) return;
@@ -11510,18 +11559,34 @@ window.casoraMenuGlass = {
       var nearKnob = Math.hypot(g.x - 150 * Math.cos(ka), g.y - 150 * Math.sin(ka)) < Math.max(52, DIAL_KNOB_PX * g.k);
       if (!nearKnob && dialFrom(el, el.getBoundingClientRect(), t.clientX, t.clientY, true) == null) return;
       ev._casoraDialRing = true;
-      tdial = { el: el, id: t.identifier, x0: t.clientX, y0: t.clientY, a: g.a, turned: 0, from: from,
-        pct: from == null ? 0 : from, knob: nearKnob, own: nearKnob || dialFree(el), turning: false, decided: false };
+      var tg = (ev.composedPath && ev.composedPath()[0]) || ev.target;
+      tdial = { el: el, root: el.getRootNode(), tgt: tg, id: t.identifier, x0: t.clientX, y0: t.clientY, g0: g,
+        a: g.a, turned: 0, from: from, pct: from == null ? 0 : from, knob: nearKnob, own: nearKnob || dialFree(el), turning: false, decided: false };
+      tdialTarget(true);
       tdial.hold = setTimeout(function () { if (tdial && !tdial.decided) { tdial.decided = true; tdialGrab(); } }, DIAL_HOLD);
     }, { capture: true, passive: true });
-    document.addEventListener('touchmove', function (ev) {
+    var tdialDrop = function () {
       if (!tdial) return;
+      var d = tdial;
+      clearTimeout(d.hold);
+      tdialTarget(false);
+      tdial = null;
+      if (!d.turning) return;
+      sliderRelink(d);
+      d.el.classList.remove('drag');
+      if (d.from != null) paint(d.el, d.from);
+    };
+    var tdialMove = function (ev) {
+      if (!tdial || ev._casoraDialSeen) return;
+      ev._casoraDialSeen = true;
       var t = null;
       for (var i = 0; i < ev.touches.length; i++) if (ev.touches[i].identifier === tdial.id) t = ev.touches[i];
-      if (!t || ev.touches.length !== 1) { clearTimeout(tdial.hold); if (tdial.turning) tdial.el.classList.remove('drag'); tdial = null; return; }
+      if (!t || ev.touches.length !== 1) { tdialDrop(); return; }
+      // A redraw before the decision (a cover's live ring): go on with the new element.
+      sliderRelink(tdial);
       var dx = t.clientX - tdial.x0, dy = t.clientY - tdial.y0;
       if (!tdial.decided) {
-        if (!ev.cancelable) { clearTimeout(tdial.hold); tdial = null; return; }
+        if (!ev.cancelable) { tdialDrop(); return; }
         if (tdial.own) {
           clearTimeout(tdial.hold);
           tdial.decided = true;
@@ -11534,7 +11599,8 @@ window.casoraMenuGlass = {
         } else {
           clearTimeout(tdial.hold);
           tdial.decided = true;
-          var g0 = dialGeom(tdial.el, tdial.x0, tdial.y0);
+          // Measured at touchstart: the element may have been redrawn since.
+          var g0 = tdial.g0;
           var ux = g0.x / (g0.r || 1), uy = g0.y / (g0.r || 1);
           var radial = Math.abs(dx * ux + dy * uy), tang = Math.abs(dx * uy - dy * ux);
           // Along the ring and not mainly up/down (on the ring's sides "along" is up/down: that scrolls unless
@@ -11543,16 +11609,22 @@ window.casoraMenuGlass = {
           if (!along) {
             // Held for the dial already (see above): the page cannot scroll any more on iOS – swallow the rest.
             if (tdial.held) { tdial.skip = true; ev.preventDefault(); return; }
-            tdial = null; return;
+            tdialDrop(); return;
           }
           tdialGrab();
         }
       }
       if (tdial.skip) { if (ev.cancelable) ev.preventDefault(); return; }
       if (!tdial.turning) return;
-      if (!ev.cancelable) { tdial.el.classList.remove('drag'); if (tdial.from != null) paint(tdial.el, tdial.from); tdial = null; return; }
+      if (!ev.cancelable) { tdialDrop(); return; }
       ev.preventDefault();
+      // Redrawn and no successor yet: wait for it rather than measure against a removed element.
+      if (!sliderRelink(tdial)) return;
       var g = dialGeom(tdial.el, t.clientX, t.clientY);
+      // The first move after the grab only sets where the turn starts. iOS reports a resting finger's drift (the
+      // contact settling as it is pressed) only with that move, Chromium holds back moves inside its touch slop: added
+      // on top, both made the value jump on grabbing.
+      if (tdial.fresh) { tdial.fresh = false; tdial.a = g.a; return; }
       var d = g.a - tdial.a;
       if (d > 180) d -= 360; else if (d < -180) d += 360;
       tdial.a = g.a;
@@ -11560,12 +11632,17 @@ window.casoraMenuGlass = {
       var base = tdial.from == null ? 0 : tdial.from;
       tdial.pct = dialSnap(tdial.el, Math.max(0, Math.min(100, base + tdial.turned / 270 * 100)));
       paint(tdial.el, tdial.pct);
-    }, { capture: true, passive: false });
+    };
+    document.addEventListener('touchmove', tdialMove, { capture: true, passive: false });
     var tdialEnd = function (ev) {
-      if (!tdial) return;
-      var d = tdial; tdial = null;
+      if (!tdial || (ev && ev._casoraDialSeen)) return;
+      if (ev) ev._casoraDialSeen = true;
+      var d = tdial;
+      tdialTarget(false);
+      tdial = null;
       clearTimeout(d.hold);
       if (!d.turning) return;
+      sliderRelink(d);
       d.el.classList.remove('drag');
       if (ev && ev.type === 'touchcancel') { if (d.from != null) paint(d.el, d.from); return; }
       // The finger's tap after turning is not a tap on the popup's background.
