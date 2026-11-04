@@ -30,7 +30,11 @@ const KNOWN = {
   // (94 px alone, 202 px after the double pass of 03.11.2026) – one section, nothing the column rule can move.
   'person-badge': 260,
   'licht-badge': 440, 'drucker': 437, 'kaffee': 609, 'aquarium-licht': 276, 'schloss-badge': 325, 'pflanze': 296,
-  'wetter': 420, 'frigate': 358, 'kalender': 844, 'abfall': 463, 'rezept': 343,
+  'wetter': 420, 'frigate': 358, 'kalender': 844, 'abfall': 463,
+  // Recipe (owner 04.11.2026): „Cookidoo-App öffnen“ on the stage makes the left column 72 px taller; the column rule
+  // still moves the meal plan under the stage (the lower popup), so the block under the shopping list grew by as much
+  // (375 px measured 04.11.2026, cap = measured + 40).
+  'rezept': 415,
 };
 const tool = fileURLToPath(new URL('../popup-galerie.mjs', import.meta.url));
 const run = (args) => spawnSync(process.execPath, [tool, ...args], { encoding: 'utf8', env: process.env, timeout: 40 * 60 * 1000 });
