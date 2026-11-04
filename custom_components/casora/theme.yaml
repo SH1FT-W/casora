@@ -290,6 +290,8 @@ Casora Basis: &casora_theme
   casora-color-pink:        '#ff4d70'   # media playing
   casora-color-neutral:     '#CDCDCF'   # idle / inactive states
   casora-color-purple:      '#9333ea'   # movie
+  # Brand: the Cookidoo button of the recipe popup (cookidoo.de accent green g700; white text 5 : 1), every theme and mode.
+  casora-brand-cookidoo:    '#008134'
 
   # Chart
   casora-series-1:          '#64D2FF'   # download / power
