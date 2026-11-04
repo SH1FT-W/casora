@@ -244,6 +244,13 @@ WS-Befehl ist zusätzlich `require_admin`). Tests: `dev/unit/update_prompt.mjs` 
 Attrappe), `dev/unit/update_prompt_test.py` (Antwort des WS-Befehls), `dev/qa/regress/r454_update_hinweis.mjs`
 (echtes HA: Benutzerdaten, Dashboard-Erkennung, Studio-Schalter); Neustart-Code 3 und HACS selbst nicht im Test.
 
+Anzeige-Diagnose auf dem Dashboard (`scripts/local/41-display-diag.js`, Issue 123): liest nur die Seite. Annahmen:
+HAs Kopfzeile ist `home-assistant` → `home-assistant-main` → `partial-panel-resolver ha-panel-lovelace` → `hui-root`
+→ `.header` (Höhe 0/ausgeblendet = „hidden“), die Seitenleiste `ha-sidebar` im Schatten von `home-assistant-main`
+(Breite < 2 px = ausgeblendet); `casora/version` antwortet ohne Admin-Rechte; `hass.config.version`, `hass.locale.language`,
+`hass.themes.darkMode`. Fehlt etwas, steht „?“ in der Zeile, die Diagnose öffnet trotzdem. Tests:
+`dev/unit/display_diag.mjs` (Sammler ohne HA), `dev/qa/regress/r563_display_diagnosis.mjs` (echtes HA, Tablet und Handy).
+
 Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCES`, `live_finder.py`, Zustand/Programm
 `02-devices.js`, `live_activity.py`; Tests `dev/unit/dishwasher_sources.mjs`, `dev/unit/live_finder_test.py`,
 `dev/unit/live_activity_test.py`, Häuser `dev/unit/haeuser/hc_*.json`), Stand 23.10.2026:

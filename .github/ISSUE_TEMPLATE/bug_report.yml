@@ -17,6 +17,15 @@ body:
         In the Casora Studio, open ⋯ → Help… → Copy diagnostics…, press Copy and paste the result here.
         It only contains counts, versions and integration names, no device, room or person names.
       placeholder: Paste the diagnostics here.
+  - type: textarea
+    id: display_diagnosis
+    attributes:
+      label: Display diagnosis (for layout problems)
+      description: >
+        Something sits wrong, overlaps or has the wrong size? Open the dashboard on the affected device and add
+        ?casora_diag to its address (or tap the page title five times quickly), press Copy and paste the result here.
+        It only contains screen sizes, text zoom, layout and measured heights, no names.
+      placeholder: Paste the display diagnosis here.
   - type: input
     id: device
     attributes:

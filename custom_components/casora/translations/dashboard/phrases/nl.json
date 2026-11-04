@@ -2773,7 +2773,12 @@
     "Auftauen": "Ontdooien",
     "Gären": "Rijzen",
     "Backofen": "Oven",
-    "Ofen": "Oven"
+    "Ofen": "Oven",
+    "Anzeige-Diagnose": "Weergavediagnose",
+    "Kopieren": "Kopiëren",
+    "Kopiert": "Gekopieerd",
+    "Text markiert – jetzt kopieren": "Tekst geselecteerd – kopieer hem nu",
+    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Alleen weergavegegevens van dit apparaat, geen namen of apparaten. Kopieer ze en plak ze in het GitHub-issue."
   },
   "patterns": [
     [

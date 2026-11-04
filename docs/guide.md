@@ -268,6 +268,9 @@ It was removed in 1.0.1. Dashboards that used it now get Inter.
 **Reporting a problem.**
 In the Studio, open ⋯ → **Help…** → **Copy diagnostics…**. Casora shows a short summary and copies it: the Casora and Home Assistant versions, language, theme, device, and per entity domain how many entities there are, how many are diagnostic, hidden or disabled, and how many the Studio's lists and tile suggestions offer. It contains no entity names, rooms, people, addresses or URLs. Paste it into your [GitHub issue](https://github.com/SH1FT-W/casora/issues); it often answers the first questions right away.
 
+**Reporting a display problem (something sits wrong, overlaps or has the wrong size).**
+Open the display diagnosis on the device that shows the problem, not on your computer: add `?casora_diag` to the dashboard's address (for example `…/dashboard-casora/home?casora_diag`), or tap the page title (the room name or greeting at the top) five times quickly. A sheet shows what the screen looks like to Casora: screen and window size, pixel ratio, text zoom (Android font size, Fully Kiosk), which layout Casora picked, the measured heights of the title, badge rows and first tile row, and whether they overlap. It also shows the browser's user agent, nothing else: no entity names, rooms, people or addresses, and no admin rights are needed. Press **Copy** and paste it into the issue.
+
 **Can I still write YAML by hand?**
 Yes. Casora writes ordinary Lovelace dashboards, so custom templates, hand-built views and per-card overrides keep working. See [ADVANCED.md](ADVANCED.md).
 
