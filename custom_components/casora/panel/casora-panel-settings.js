@@ -194,27 +194,54 @@
     + ".cs-hubtile span:last-child{font-size:var(--t-foot);line-height:1.3;color:var(--ink-2)}"
     + ".cs-hubback{min-height:40px;padding:8px 10px 8px 2px;box-sizing:border-box}"
     // New structure (prototype): blocks with a title and one plain sentence, rare ones folded under "Advanced".
-    + ".cn-block{margin:0 0 22px}.cn-block .fgroup{margin-bottom:10px}"
-    + ".cn-bhead{display:flex;flex-direction:column;gap:2px;margin:0 10px 8px}"
-    + ".cn-bhead b{font-size:var(--t-body);font-weight:650;color:var(--ink)}"
+    // One grid for every block (04.11.2026): heading, sentence, plate and hint share the block's left and right edge,
+    // one plate fill and the Studio's group radius (as the tile editor) for flow groups and dashboard sections alike, rows 10 px inside the plate, one heading
+    // level, "Advanced" opens without a card of its own. Checked for every tile by dev/qa/regress/r545_settings_grid.mjs.
+    // The page's content starts on the edge of its title (desktop and tablet: 10 px in; phone sheet: 2 px out).
+    + ":host(:not(.phone)) .cs-wrap{padding-left:10px;padding-right:10px}:host(.phone) .cs-wrap{margin-left:-2px;margin-right:-2px}"
+    + ".cn-block{margin:0 0 28px}"
+    + ".cn-bhead{display:flex;flex-direction:column;gap:3px;margin:0 0 10px;padding:0}"
+    + ".cn-bhead b{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px;row-gap:4px;font-size:var(--t-body);font-weight:650;line-height:1.3;color:var(--ink)}"
     + ".cn-bhead span{font-size:var(--t-foot);line-height:1.4;color:var(--ink-2)}"
-    + ".cn-adv{margin:6px 0 18px;border-radius:var(--casora-popup-row-radius,20px);background:var(--casora-popup-row-fill,rgba(255,255,255,.06))}"
-    + ".cn-adv>summary{cursor:pointer;list-style:none;display:flex;flex-direction:column;gap:2px;padding:12px 14px}"
+    + ".cn-bhead b .cn-only{display:inline-flex;align-items:center;margin:0;line-height:1.25;white-space:nowrap!important;max-width:none!important}"
+    // A further part of a block (second group, part of a dashboard section) has a heading like the block title.
+    + ".cn-block .fhead,.cn-block section.cn-card .subtitle{margin:20px 0 8px;padding:0;font-size:var(--t-body);font-weight:650;line-height:1.3;letter-spacing:-0.01em;color:var(--ink)}"
+    + ".cn-block .fgroup{margin:0 0 14px}.cn-block .fgroup:last-child{margin-bottom:0}"
+    // Plates: flow lists, a plain dashboard section, the parts of a grouped one.
+    + ".cn-block section.cn-card{margin:0;border:0;box-shadow:none;width:auto}"
+    + ".cn-block .flist,.cn-block section.cn-card:not(.grouped),.cn-block section.cn-card.grouped>.subcard{margin:0!important;"
+    +   "border-radius:var(--r-group)!important;background:var(--casora-popup-row-fill,rgba(255,255,255,.10))!important}"
+    + ".cn-block section.cn-card:not(.grouped),.cn-block section.cn-card.grouped>.subcard{padding:0 10px!important}"
+    + ".cn-block section.cn-card.grouped{padding:0!important;background:none!important}"
+    + ".cn-block section.cn-card.grouped>.subcard+.subcard{margin-top:14px!important}"
+    + ".cn-block section.cn-card.grouped>.chead+.subtitle,.cn-block section.cn-card.grouped>.subtitle:first-child{margin-top:0}"
+    // Hints under a plate on the same edge; a hint that belongs to one row stays in the plate under that row.
+    + ".cn-block .ffoot,.cn-block section.cn-card.grouped>.hint{margin:8px 0 0;padding:0;font-size:var(--t-foot);line-height:1.45;color:var(--ink-3)}"
+    + ".cn-block section.cn-card:not(.grouped)>.hint,.cn-block section.cn-card .subcard>.hint{margin:-2px 0 0;padding:0 0 12px;font-size:var(--t-foot);line-height:1.45;color:var(--ink-3)}"
+    + ".cn-block .cs-note,.cn-block .cs-err{margin-left:0;margin-right:0}"
+    + ".cn-block .cs-area{margin-left:0!important;margin-right:0!important;width:100%;box-sizing:border-box}"
+    // "Advanced": a disclosure row on the same edge; opened, its blocks look like every other block.
+    + ".cn-adv{margin:0 0 24px;padding:0;background:none;border-radius:0}"
+    + ".cn-adv>summary{cursor:pointer;list-style:none;display:flex;flex-direction:column;justify-content:center;gap:3px;min-height:44px;padding:6px 0;box-sizing:border-box}"
     + ".cn-adv>summary::-webkit-details-marker{display:none}"
-    + ".cn-adv>summary b{font-size:var(--t-body);font-weight:600}.cn-adv>summary b::after{content:' ›';color:var(--ink-2)}"
+    + ".cn-adv>summary b{font-size:var(--t-body);font-weight:650;color:var(--ink)}.cn-adv>summary b::after{content:' ›';color:var(--ink-2)}"
     + ".cn-adv[open]>summary b::after{content:' ⌄'}"
-    + ".cn-adv>summary span{font-size:var(--t-foot);color:var(--ink-2);line-height:1.35}"
-    + ".cn-adv:focus-within>summary{outline:none}.cn-adv>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:inherit}"
-    + ".cn-advbody{padding:4px 4px 2px}"
+    + ".cn-adv>summary span{font-size:var(--t-foot);color:var(--ink-2);line-height:1.4}.cn-adv[open]>summary span{display:none}"
+    + ".cn-adv:focus-within>summary{outline:none}.cn-adv>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}"
+    + ".cn-advbody{padding:14px 0 0}"
+    // A row's sentence wraps instead of being cut off (phone).
+    + ".cn-block .frow .rtext b,.cn-block .frow .rtext span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}"
+    // One look for a fold inside a plate: a dashboard section's "Erweitert" like the "Erweitert" row of the waste block.
+    + ".cn-block .adv>.advsum{display:flex;flex-direction:row-reverse;justify-content:space-between;align-items:center;width:100%;min-height:44px}"
+    + ".cn-block .adv>.advsum span{color:var(--casora-studio-link,var(--accent));font-size:var(--t-callout);font-weight:500}"
+    + ":host(.is-light) .cn-block .adv>.advsum span{color:var(--casora-studio-link,#0071e3)}"
+    + ".cn-block .adv>.advsum svg{color:var(--ink-3)}"
     + ".cn-grid .cs-hubtile{min-height:96px}"
-    // Dashboard sections inside a block: no card frame of their own, scope sign beside the title.
-    + ".cn-block>section.cn-card{margin:0;padding:0;background:none;box-shadow:none;border:0}"
-    + ".cn-bhead b .cn-only{display:inline-block;margin-left:8px;vertical-align:2px;white-space:nowrap!important;max-width:none!important}"
     // Start and topic pages have no "Applies to" line under the title: the fixed head height left an empty band of
     // ~40 px above "‹ Settings" (the pages with that line sat 16 px higher).
     + ":host(.split:not(.flow):not(.phone)) .insphead:has(> .cs-head):not(.uxhas){height:auto!important;min-height:0!important;padding-bottom:14px!important}"
     + ".cs-hublist .rtext b,.cs-hublist .rtext span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}"
-    + ".cs-hubback{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin:0 6px 10px;font-size:var(--t-callout);font-weight:600;color:var(--accent)}"
+    + ".cs-hubback{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin:0 0 10px;font-size:var(--t-callout);font-weight:600;color:var(--accent)}"
     // Updates head: its children are stacked absolutely (navrow), so the way back gets a line of its own.
     + ".navrow.cu-head:has(> .cs-hubback){height:auto}"
     + ".navrow.cu-head > .cs-hubback{position:static;inset:auto;margin:0 0 6px}"
@@ -232,7 +259,8 @@
     + ".cs-wrap .frow.casora-prow .rtext span{font-size:var(--t-caption)}"
     + ".cs-wrap .casora-pctl .combo>input,.cs-wrap .casora-pctl>input.fin,.cs-wrap .cs-num input"
     + "{height:var(--k-h, 38px);box-sizing:border-box;font-size:var(--t-callout)}"
-    + ".cs-lede{margin:0 10px 14px;font-size:var(--t-foot);line-height:1.45;color:var(--ink-2)}"
+    // The page intro on the blocks' edge (04.11.2026).
+    + ".cs-lede{margin:0 0 16px;font-size:var(--t-foot);line-height:1.45;color:var(--ink-2)}"
     + ".cs-note{margin:0 0 14px;padding:10px 12px;border-radius:var(--r-m);background:var(--casora-studio-link-tint, rgba(10,132,255,.16));font-size:var(--t-foot);line-height:1.4}"
     + ".cs-err{margin:0 0 14px;padding:10px 12px;border-radius:var(--r-m);background:rgba(255,69,58,.16);color:var(--ink);font-size:var(--t-foot);line-height:1.4}"
     + ".cs-err:empty{display:none}"
@@ -769,7 +797,7 @@
         (O.update_push || []).forEach((x) => { if (!known.includes(x)) known.push(x); });
         const g = this._flowGroup(host, { header: t("New Casora versions"),
           footer: t("One push per new version. Tapping it opens Casora's updates. None selected: no push notifications.") });
-        ctlRow(this, g, t("Notify about new Casora versions"), t("A push to your phone when a new version is out."),
+        ctlRow(this, g, t("Notify about new Casora versions"), null,
           [chips(this, known.map((id) => [id, notifyLabel(id)]), O.update_push || [], toggleIn(cs, "update_push"))]);
       } else if (page === "vent") {
         const known = (cs.opt.notify_services || []).slice();
@@ -1019,16 +1047,31 @@
           if (!c.querySelector(".row")) c.remove();
         });
       }
+      // One plate per part: a hint between two plates belongs to the row above it, so it moves into the plate under
+      // that row and the two plates become one (before, the hint tore the plate apart).
+      for (let c = card.firstElementChild; c; c = c.nextElementSibling) {
+        if (!c.classList.contains("subcard") || c.classList.contains("togglecard")) continue;
+        let h = c.nextElementSibling;
+        while (h && h.classList.contains("hint") && h.nextElementSibling && h.nextElementSibling.classList.contains("subcard")
+          && !h.nextElementSibling.classList.contains("togglecard")) {
+          const next = h.nextElementSibling;
+          c.appendChild(h);
+          while (next.firstChild) c.appendChild(next.firstChild);
+          next.remove();
+          h = c.nextElementSibling;
+        }
+      }
       // The "Add a field" button comes a beat later (microtask): it belongs to the whole section, keep it only
       // where the whole section is shown.
       if (b.sub || b.keys) queueMicrotask(() => card.querySelectorAll(":scope > .fieldadd").forEach((x) => x.remove()));
     };
-    // The block title already names it: a first group heading with the same words goes.
-    // (Headings may still be English here when the page translates after drawing.)
-    const dedupe = (box, b) => {
-      const fh = box.querySelector(".fgroup > .fhead");
-      const same = (x) => !!fh && fh.textContent.trim().toLowerCase() === String(x).trim().toLowerCase();
-      if (same(b.title) || same(t(b.title))) fh.remove();
+    // One heading level: the block title is the heading of its first group, so that group's own heading goes;
+    // headings of further groups stay (drawn like the block title). Numbered steps ("2 · Radius") lose the number,
+    // since the first step has no heading of its own any more.
+    const dedupe = (box) => {
+      const heads = [...box.querySelectorAll(".fgroup > .fhead")];
+      heads.forEach((h) => { const m = h.textContent.match(/^\s*\d+\s*·\s*(.+)$/); if (m) h.textContent = m[1]; });
+      if (heads[0] && heads[0].parentElement === box.querySelector(".fgroup")) heads[0].remove();
     };
     P._csNeuBlock = function (host, tile, b, rerender) {
       const box = el("section", "cn-block");
@@ -1057,17 +1100,17 @@
         return;
       }
       if (!cs || !cs.loaded) { box.appendChild(el("p", "cs-lede", t("Loading settings…"))); return; }
-      if (b.page === "live") { if (typeof this._csFillLive === "function") this._csFillLive(box); return; }
-      if (b.fuel) { this._csFillTanken(box); return; }
-      if (b.hemma) { this._csHemmaGroup(box); if (!box.querySelector(".fgroup")) box.remove(); return; }
+      if (b.page === "live") { if (typeof this._csFillLive === "function") this._csFillLive(box); dedupe(box); return; }
+      if (b.fuel) { this._csFillTanken(box); dedupe(box); return; }
+      if (b.hemma) { this._csHemmaGroup(box); if (!box.querySelector(".fgroup")) box.remove(); else dedupe(box); return; }
       if (b.personal) {
         if (typeof this._casoraPersonalGroups === "function") this._casoraPersonalGroups(box, cs.S, b.personal, rerender);
         // A section with nothing to show (e.g. no devices found) leaves no empty heading behind.
-        if (!box.querySelector(".fgroup")) box.remove(); else dedupe(box, b);
+        if (!box.querySelector(".fgroup")) box.remove(); else dedupe(box);
         return;
       }
       if (b.opt) this._csFillOptions(box, b.opt);
-      dedupe(box, b);
+      dedupe(box);
     };
     P._csFillNeu = function (host, page) {
       if (page.tile) {

@@ -63,7 +63,7 @@ assert.ok(/k: "live", page: "live", title: "Lock screen \(Live Activities\)"/.te
 // Loaded with the settings (since 02.11.2026 side by side with the other stores: Promise.all).
 assert.ok(/typeof this\._csLiveLoad === "function" \? this\._csLiveLoad\(cs\)/.test(settings) && /await Promise\.all\(\[[^\]]*live\]\)/.test(settings), 'wird mit den Einstellungen geladen');
 assert.ok(/liveDirty\(this\)/.test(settings) && /await this\._csLiveSave\(\);/.test(settings), 'ein Speichern für alles');
-assert.ok(/if \(b\.page === "live"\) \{ if \(typeof this\._csFillLive === "function"\) this\._csFillLive\(box\); return; \}/.test(settings), 'Block füllt sich aus casora-panel-live.js');
+assert.ok(/if \(b\.page === "live"\) \{ if \(typeof this\._csFillLive === "function"\) this\._csFillLive\(box\); dedupe\(box\); return; \}/.test(settings), 'Block füllt sich aus casora-panel-live.js (eine Überschriftenebene)');
 const live = read('panel/casora-panel-live.js');
 assert.ok(/callWS\(\{ type: "casora\/live\/get" \}\)/.test(live) && /type: "casora\/live\/set"/.test(live) && /type: "casora\/live\/probe"/.test(live), 'WS-Befehle');
 assert.ok(/setAttribute\("role", "switch"\)/.test(live) && /ev\.stopPropagation\(\)/.test(live), 'Schalter je Gerät, öffnet nicht die Zeile');

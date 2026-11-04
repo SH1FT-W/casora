@@ -64,8 +64,10 @@ let s = await studioRetry(page, dash, async () => {
   return read();
 });
 await need('Kachel „Handy“ mit dem Block „Sperrbildschirm (Live-Aktivitäten)“ offen', s.page === 'n-phone', s);
-await check('Überschriften Empfänger · Geräte · Probe · Testlauf · Zuletzt gesendet (in dieser Reihenfolge)',
-  ['Empfänger', 'Geräte', 'Probe', 'Testlauf', 'Zuletzt gesendet'].every((h, i, a) => s.heads.includes(h) && (!i || s.heads.indexOf(a[i - 1]) < s.heads.indexOf(h))), s.heads);
+// Since 04.11.2026 one heading level: the block title "Sperrbildschirm (Live-Aktivitäten)" heads the recipients, their
+// own heading "Empfänger" goes.
+await check('Überschriften Geräte · Probe · Testlauf · Zuletzt gesendet (in dieser Reihenfolge), ohne doppeltes „Empfänger“',
+  !s.heads.includes('Empfänger') && ['Geräte', 'Probe', 'Testlauf', 'Zuletzt gesendet'].every((h, i, a) => s.heads.includes(h) && (!i || s.heads.indexOf(a[i - 1]) < s.heads.indexOf(h))), s.heads);
 await check('Fund 10: „Aktualisieren“ im Kopf des Protokolls, keine Zeile „Protokoll“ unter den Einträgen', s.refresh && !s.protoRow, s);
 const handy = s.chips.find((c) => c.id === 'notify.mobile_app_testhandy');
 await check('Empfänger „Testhandy“ wählbar (noch aus)', handy && handy.label === 'Testhandy' && !handy.on, s.chips);

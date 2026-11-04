@@ -53,6 +53,13 @@ mit ihren Unterseiten gibt es nicht mehr.
   Zeile). Für Laien: keine Fachwörter (Entität, Helfer, Template, YAML), Wörter nach der Wortliste.
 - **Was nur dieses Dashboard betrifft**, steht als Block in der Kachel mit dem Schild „Nur dieses Dashboard“ und
   wird vom Studio selbst gezeichnet (`_csDashCard`) – kein Sprung in den Inspektor.
+- **Ein Raster** (04.11.2026): Blocküberschrift, Satz, Platte und Hinweis darunter stehen auf derselben linken und
+  rechten Kante wie der Block; Einleitung der Seite, „‹ Einstellungen“ und „Erweitert“ ebenso. Eine Plattenfarbe und
+  ein Radius für alle Platten (`--casora-popup-row-fill`, Radius `--r-group` wie im Kachel-Editor), Zeilen 10 px innen. Keine Karte
+  in der Karte, keine zweite Überschriftenebene (die erste Gruppenüberschrift entfällt, weitere Gruppen sehen aus wie
+  die Blocküberschrift), ein Hinweis zu einer Zeile steht in der Platte unter ihr, kein Satz wird mit „…“ gekürzt.
+  Die Styles stehen zentral in `casora-panel-settings.js` (`.cn-block`), nicht je Block; Test
+  `dev/qa/regress/r545_settings_grid.mjs` (alle Kacheln, „Erweitert“ und innere Ausklapper offen, 1440/1180/820/393).
 - **Gespeichert** wird über eine Leiste für alles; Verlassen mit Ungespeichertem fragt.
 - **Alte Wege** (Seiten-IDs wie `home`, `alerts`, Themen `t-*`, Fokus wie `security`) führen über `ROUTE` /
   `FOCUS_BLOCK` zur Kachel und zum Block – Sprünge aus dem Studio, der Glocke und gespeicherte Links bleiben gültig.
