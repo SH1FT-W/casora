@@ -975,7 +975,7 @@
 
   // AI too weak: Casora no longer sets up an AI task itself (that would mean reaching into another
   // integration). It points to that integration's page in HA, where the user adds an AI task with a
-  // stronger model, and to Studio → Settings → AI for typing a model name. Back on the page Casora
+  // stronger model, and to Studio → Settings → AI for choosing a model. Back on the page Casora
   // checks again; onDone(best) as soon as a strong AI is there.
   window.casoraAiUpgrade = async (panel, host, onDone) => {
     let all = [];
@@ -988,7 +988,7 @@
     b.textContent = "✦ " + tr(all.length ? "Add a stronger AI task in Home Assistant" : "Set up an AI in Home Assistant");
     const n = document.createElement("div"); n.className = "cc-upg-note";
     n.textContent = tr(all.length
-      ? "Pick a stronger model there. If Casora doesn't recognise your model, type its name under Settings → AI."
+      ? "Pick a stronger model there. If Casora doesn't recognise your model, choose it under Settings → AI."
       : "For example Anthropic, OpenAI or Google with an AI task. Casora then finds it by itself.");
     box.append(b, n);
     host.appendChild(box);

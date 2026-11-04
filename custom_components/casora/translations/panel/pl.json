@@ -2611,7 +2611,7 @@
     "Other…": "Inny …",
     "Add a stronger AI task in Home Assistant": "Dodaj mocniejsze zadanie AI w Home Assistant",
     "Set up an AI in Home Assistant": "Skonfiguruj AI w Home Assistant",
-    "Pick a stronger model there. If Casora doesn't recognise your model, type its name under Settings → AI.": "Wybierz tam mocniejszy model. Jeśli Casora nie rozpozna twojego modelu, wpisz jego nazwę w Ustawienia → AI.",
+    "Pick a stronger model there. If Casora doesn't recognise your model, choose it under Settings → AI.": "Wybierz tam mocniejszy model. Jeśli Casora nie rozpoznaje twojego modelu, wybierz go w Ustawienia → AI.",
     "For example Anthropic, OpenAI or Google with an AI task. Casora then finds it by itself.": "Na przykład Anthropic, OpenAI lub Google z zadaniem AI. Casora znajdzie je wtedy sama.",
     "Velair": "Velair",
     "A climate Velair plans": "Klimatyzator planowany przez Velair",
