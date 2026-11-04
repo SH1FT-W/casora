@@ -1449,7 +1449,58 @@
     + 'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;overflow-wrap:break-word;hyphens:manual;}'
     + '.hrs-m{font-size:15px;font-weight:600;color:var(--casora-soft-sub, rgba(46,39,33,0.6));}'
     + '.hrs-w{margin-top:6px;font-size:15px;font-weight:500;line-height:1.45;white-space:normal;color:var(--casora-popup-tiles-text-primary, #2E2721);}'
-    + '.hrs-b{display:flex;flex-wrap:wrap;gap:10px;}.hrs-b .hui-st-act{flex:0 0 auto;}</style>';
+    + '.hrs-b{display:flex;flex-wrap:wrap;gap:10px;}.hrs-b .hui-st-act{flex:0 0 auto;}'
+    // Cookidoo button: the brand's green (theme token, cookidoo.de accent g700 – their lighter g500 is only 3 : 1 under
+    // white text, g700 5 : 1), white word and symbol, the same in light and dark; full width of the stage.
+    + '.hrs .hui-st-act.hrs-ck{margin-top:14px;background:var(--casora-brand-cookidoo, var(--casora-color-green-deep, var(--casora-color-green)));color:#fff;}'
+    + '.hrs-ck ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;color:#fff;}'
+    + '.hrs-ck span{min-width:0;overflow:hidden;text-overflow:ellipsis;}</style>';
+  /* Cookidoo app (owner 04.11.2026, again after the v3 rework had dropped it): which page and how to open it.
+     Page: the shopping list /shopping/<locale> – of the paths every cookidoo.* domain lists in its
+     apple-app-site-association (/recipes/recipe/*, /shopping/* …) the one that fits the popup; the meal plan
+     (/planning/…) is no app link. Market and locale from the idea's own Cookidoo link (same account), else from HA's
+     country and language; unknown → cookidoo.international. */
+  var CK_MARKET = { DE: ['de', 'de-DE'], AT: ['at', 'de-AT'], CH: ['ch', 'de-CH', 'fr-CH', 'it-CH'], GB: ['co.uk', 'en-GB'],
+    FR: ['fr', 'fr-FR'], ES: ['es', 'es-ES'], IT: ['it', 'it-IT'], PL: ['pl', 'pl-PL'], PT: ['pt', 'pt-PT'],
+    BE: ['be', 'nl-BE', 'fr-BE'], CZ: ['cz', 'cs-CZ'], AU: ['com.au', 'en-AU'], CA: ['ca', 'en-CA'], US: ['com', 'en-US'] };
+  var CK_LANG = { de: 'DE', fr: 'FR', es: 'ES', it: 'IT', pl: 'PL', pt: 'PT', cs: 'CZ' };
+  R.ckWeb = function (states, hass) {
+    var a = ((states || {})[IDEA] || {}).attributes || {};
+    var m = /^https:\/\/(cookidoo\.[a-z]{2,3}(?:\.[a-z]{2})?)\/recipes\/recipe\/([a-z]{2}(?:-[A-Z]{2})?)\//.exec(String(a.link || ''));
+    if (m) return 'https://' + m[1] + '/shopping/' + m[2];
+    var lang = String((hass && (hass.locale && hass.locale.language || hass.language)) || 'de').replace(/_/g, '-');
+    var cc = String((hass && hass.config && hass.config.country) || (/^[a-z]{2}-([A-Za-z]{2})$/i.exec(lang) || [])[1] || CK_LANG[lang.slice(0, 2).toLowerCase()] || '').toUpperCase();
+    var mk = CK_MARKET[cc];
+    if (!mk) return 'https://cookidoo.international/shopping/en';
+    var ll = lang.slice(0, 2).toLowerCase();
+    var loc = mk.slice(1).filter(function (l) { return l.slice(0, 2) === ll; })[0] || mk[1];
+    return 'https://cookidoo.' + mk[0] + '/shopping/' + loc;
+  };
+  /* How the button opens the app on this device (ua: user agent, haApp: the Home Assistant companion app on Android).
+     iOS/iPadOS and desktop: the https page in a new window – the HA app hands window.open to the system
+     (openURLInBrowser → UIApplication.open), which follows the Universal Link into the Cookidoo app; without the app
+     (and on a computer) cookidoo.de opens. Android: cookidoo.* has assetlinks.json for com.vorwerk.cookidoo
+     (cookidoo.com: …cookidoo.us), but which paths the app takes is not public. The HA app starts „app://<package>“
+     itself (the app, else its Play Store page); a browser gets an intent: URL with the page as fallback. */
+  R.ckTarget = function (web, ua, haApp) {
+    if (!/Android/i.test(String(ua || ''))) return { url: web, how: 'open' };
+    var pkg = /^https:\/\/cookidoo\.com\//.test(web) ? 'com.vorwerk.cookidoo.us' : 'com.vorwerk.cookidoo';
+    if (haApp) return { url: 'app://' + pkg, how: 'assign' };
+    return { url: 'intent://' + web.replace(/^https:\/\//, '') + '#Intent;scheme=https;package=' + pkg
+      + ';S.browser_fallback_url=' + encodeURIComponent(web) + ';end', how: 'assign' };
+  };
+  R.ckOpen = function (web) {
+    var nav = window.navigator || {};
+    var ua = String(nav.userAgent || '');
+    var t = R.ckTarget(web, ua, !!window.externalApp || /Home ?Assistant\//i.test(ua));
+    if (t.how === 'assign') window.location.assign(t.url);
+    else window.open(t.url, '_blank', 'noopener');
+  };
+  R.ckHtml = function (states, hass) {
+    var t = 'Cookidoo-App öffnen';
+    return '<div class="hui-st-act hrs-ck" role="button" tabindex="0" aria-label="' + esc(t) + '" data-casora-ck="1" data-casora-link="'
+      + esc(R.ckWeb(states, hass)) + '"><ha-icon icon="mdi:chef-hat"></ha-icon><span>' + esc(t) + '</span></div>';
+  };
   R.stageHtml = function (states) {
     var UI = window._casoraUI; if (!UI || !UI.stage) return '';
     if (!states) { var ha0 = document.querySelector('home-assistant'); states = (ha0 && ha0.hass && ha0.hass.states) || {}; }
@@ -1457,6 +1508,7 @@
     var pillHtml = function (text, attrHtml, primary) {
       return '<div class="hui-st-act' + (primary ? ' pri' : '') + '" role="button" tabindex="0" aria-label="' + esc(text) + '" ' + attrHtml + '><span>' + esc(text) + '</span></div>';
     };
+    var hass0 = (function () { var ha1 = document.querySelector('home-assistant'); return ha1 && ha1.hass; })();
     var html;
     var td = R.today(states);
     if (td) {
@@ -1480,6 +1532,8 @@
         + (!running && window.casoraSvc ? pillHtml(has ? 'Andere Idee' : 'Idee holen', 'data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_rezept_neu'))) + '"', !has && !link) : '');
       if (pillsHtml) html += '<div class="hrs-b" style="margin-top:10px;">' + pillsHtml + '</div>';
     }
+    // The Cookidoo app under both stages (today's dish and the idea): the whole popup is Cookidoo's meal plan and list.
+    html += R.ckHtml(states, hass0);
     return UI.stage('content', { html: STAGE_CSS + '<div class="hrs">' + html + '</div>' });
   };
   /* Status line (§3): a short word – what the stage is – never the recipe's name again (prod test 01.11.2026: the name
@@ -1924,6 +1978,8 @@
     };
     var go = function (el) {
       var u = el.getAttribute('data-casora-link');
+      // The Cookidoo button opens the app per platform (R.ckOpen).
+      if (el.hasAttribute('data-casora-ck') && /^https:\/\/cookidoo\./.test(u || '') && R.ckOpen) { R.ckOpen(u); return; }
       if (/^https?:\/\//.test(u || '')) { window.open(u, '_blank', 'noopener'); return; }
       // Seite in HA (Pulse-Panel „/pulse“): Popup schließen, dann wie HAs eigene Navigation.
       // Mit einfachem Abfrageteil (HAs Verlauf „/history?entity_id=…“, Mähroboter 1.5).
