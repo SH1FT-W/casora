@@ -1223,7 +1223,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       let n = 0;
       if (withMain && ok(data.entity, type.domains)) {
         tile.entity = data.entity;
-        if (!(tile.name || "").trim()) tile.name = nameOf(hass, data.entity);
+        if (!(tile.name || "").trim()) tile.name = window.casoraNoEval(nameOf(hass, data.entity));   // name from HA (HACS review 5)
         n++;
       }
       missing.forEach((f) => {

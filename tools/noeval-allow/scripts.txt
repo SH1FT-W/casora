@@ -1,0 +1,11 @@
+# Dashboard scripts (scripts/, scripts/local/) – reviewed for HACS review 5.
+custom_components/casora/scripts/local/02-devices.js | c.label: labels[i] || null | aquarium dosing channel, no card config; labels are dosing_labels from the dashboard config | 1
+custom_components/casora/scripts/local/05-standard-medien.js | variables: ui.variables | the variables of the template's own uiCard (checked in the templates, texts there go through casoraNoEval) | 1
+custom_components/casora/scripts/local/06-kalender.js | variables: vars | variables of the dashboard card config (written by the admin) | 1
+custom_components/casora/scripts/local/06-kalender.js | calendars: variables.calendars || null | calendar list of the dashboard card config (entity ids, names the admin typed) | 1
+custom_components/casora/scripts/local/23-frigate.js | name: c.name | Frigate's camera name (camera_name attribute, the id used in API paths), only for the clip/recording element's own requests; both sit in a custom field with do_not_eval (own()/oneCol, f.m), so no button-card evaluates it | 2
+custom_components/casora/scripts/local/29-eigene-badges.js | variables: Object.assign({ badge: shown, index: i, place: place || 'room', value_ref: valueRef(text, (place || 'room') + '|' + keyOf(b, i)) }, own ? CB.popupVars(b) : {}) | badge and popup vars are the badge's Studio config (admin); the template's text is a ref (valueRef) | 1
+custom_components/casora/scripts/local/34-security-covers.js | covers: one | list of cover entity ids | 1
+custom_components/casora/scripts/local/35-phone-hub.js | covers: item.blinds | list of cover entity ids | 1
+custom_components/casora/scripts/local/29-eigene-badges.js | out.title: (entity.attributes && entity.attributes.friendly_name) || entity.entity_id | view model returned to the badge's templates (shown escaped), no card config | 2
+custom_components/casora/scripts/filter-overlay.js | room: roomMode | the overlay card's own room key from the dashboard config (admin) | 2

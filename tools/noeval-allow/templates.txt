@@ -1,0 +1,19 @@
+# Card templates (dashboards/casora/button_card_templates.json) – reviewed for HACS review 5.
+dashboards/casora/button_card_templates.json#casora_air_purifier | sib: sib | map of sibling entity ids (display, child lock, sensors) | 1
+dashboards/casora/button_card_templates.json#casora_fan | sib: sib | map of sibling entity ids (display, child lock, sensors) | 1
+dashboards/casora/button_card_templates.json#casora_climate_popup | series: climateSeries | entity ids with fixed series names (Temperatur, Luftfeuchtigkeit) | 1
+dashboards/casora/button_card_templates.json#casora_network | series: networkSeries | entity ids with fixed series names (Download, Upload) | 1
+dashboards/casora/button_card_templates.json#casora_popup_network | series: networkSeries | entity ids with fixed series names (Download, Upload) | 2
+dashboards/casora/button_card_templates.json#casora_network | name: actionName | a code template built around entity ids, or a fixed word | 1
+dashboards/casora/button_card_templates.json#casora_popup_network | name: actionName | a code template built around entity ids, or a fixed word | 2
+dashboards/casora/button_card_templates.json#casora_network | icon: actionIcon | a code template built around an entity id, or null | 1
+dashboards/casora/button_card_templates.json#casora_popup_network | icon: actionIcon | a code template built around an entity id, or null | 2
+dashboards/casora/button_card_templates.json#casora_network | tap_action: cancelTap | service call on an entity id, or none | 1
+dashboards/casora/button_card_templates.json#casora_popup_network | tap_action: cancelTap | service call on an entity id, or none | 2
+dashboards/casora/button_card_templates.json#casora_cover | name: label | pill words of the code (makeEdgePill/makePresetPill callers) | 2
+dashboards/casora/button_card_templates.json#casora_popup_cover | name: label | pill words of the code (makeEdgePill/makePresetPill callers) | 2
+dashboards/casora/button_card_templates.json#casora_cover | icon: icon | mdi icon names of the code (makeIconBtn callers) | 1
+dashboards/casora/button_card_templates.json#casora_popup_cover | icon: icon | mdi icon names of the code (makeIconBtn callers) | 1
+dashboards/casora/button_card_templates.json#casora_popup_updates | tap_action: tap | service calls of the code on update entity ids (actionButton callers) | 1
+dashboards/casora/button_card_templates.json#casora_popup_updates | custom field card vertical-stack without do_not_eval: true | two Casora code cards (section head, list); their templates return markup, no text from HA in the config | 1
+dashboards/casora/button_card_templates.json#casora_scene_core | casora_scene_transition: trans | transition seconds from the card's variables (number) | 1

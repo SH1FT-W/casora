@@ -231,18 +231,18 @@
       var fv = { line: { card: K.secCard(watch, call('line'), S) }, stage: { card: K.secCard(watch, call('stage'), S) } };
       if (C.controls) fv.ctl = { card: K.secCard([C.id], call('ctl'), S) };
       if (C.values.length) fv.vals = { card: K.secCard(C.values, call('vals'), S) };
+      // The series' name and unit come from its entity while the chart draws (entity_name): no text from HA in the
+      // card config, where the popup's button-card would evaluate one shaped "[[[ … ]]]" (HACS review 5).
       if (C.chart) {
-        var cst3 = S[C.chart];
         fv.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history',
-          series: [{ entity: C.chart, name: nameOf(cst3, C.chart), unit: (cst3.attributes || {}).unit_of_measurement || '', color: 'accent' }],
-          height: 120, readout: 'own', plate: true, title: T('Verlauf') } };
+          series: [{ entity: C.chart, entity_name: true, color: 'accent' }],
+          height: 120, readout: 'own', plate: true, title: T('Verlauf') }, do_not_eval: true };
       }
       return K.layout({ fields: fv, top: ['line'], stage: 'stage', left: ['ctl'], right: ['vals', 'chart'], narrowOrder: ['ctl', 'vals', 'chart'] });
     }
     if (C.chart) {
-      var cst = S[C.chart], unit = (cst.attributes || {}).unit_of_measurement || '';
       f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history',
-        series: [{ entity: C.chart, name: nameOf(cst, C.chart), unit: unit }], height: 160, readout: 'own', plate: true } };
+        series: [{ entity: C.chart, entity_name: true }], height: 160, readout: 'own', plate: true }, do_not_eval: true };
       top.push('chart');
     }
     // Controls and the settings row follow the main entity only, the value rows their own entities: a power

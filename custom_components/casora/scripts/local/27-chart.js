@@ -137,16 +137,18 @@
   // unit: one chart with a legend (bars side by side); different units: casora-chart's own switch between the
   // series. The hero reads the value while scrubbing.
   M.chartCfg = function (series, span, kind, shape) {
+    // casoraNoEval (casora-core.js) when loaded, else the same guard: a text starting with "[[[" gets a zero-width space.
+    var noEval = function (v) { return window.casoraNoEval ? window.casoraNoEval(v) : (typeof v === 'string' && /^\s*\[\[\[/.test(v) ? '\u200b' + v : v); };
     series = series || [];
     shape = shape || M.autoShape(kind);
     if (shape === 'heat') {
       // One sensor at a time (several: casora-chart's switch); hourly statistics, counters as consumption per hour.
       return { type: 'custom:casora-chart', kind: 'heat', span: span, readout: 'hero', plate: true,
         source: kind === 'total' ? 'change' : 'stats',
-        series: series.map(function (s) { return { entity: s.entity, name: s.name, color: s.color }; }) };
+        series: series.map(function (s) { return { entity: s.entity, name: noEval(s.name), color: s.color }; }) };
     }
     var cfg = { type: 'custom:casora-chart', kind: shape === 'bar' ? 'bar' : 'line', span: span, height: 190, readout: 'hero', plate: true,
-      series: series.map(function (s) { return { entity: s.entity, name: s.name, color: s.color }; }) };
+      series: series.map(function (s) { return { entity: s.entity, name: noEval(s.name), color: s.color }; }) };
     if (series.length > 1 && M.sameUnit(series)) cfg.switch = false;
     if (shape === 'bar') {
       cfg.period = PERIOD[span] || 'day';

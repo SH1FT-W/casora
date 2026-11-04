@@ -96,7 +96,7 @@
         f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history',
           // A head like the floor heating's Verlauf („LUFTFEUCHTE · 24 STD.“), humidity blue (§7.3) – detail round #21.
           title: 'Luftfeuchte · 24 Std.', series: [{ entity: c.humidity, name: 'Luftfeuchte', unit: '%', color: 'var(--casora-color-blue, #5B8FC9)' }],
-          height: 120, readout: 'own', plate: true } };
+          height: 120, readout: 'own', plate: true }, do_not_eval: true };
         R3.push('chart');
       }
       return K.layout({ fields: f, top: ['hero'], stage: 'stage', left: [], right: R3,
@@ -105,7 +105,7 @@
     var top = ['hero'];
     if (c.humidity) {
       f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history',
-        series: [{ entity: c.humidity, name: 'Luftfeuchte', unit: '%' }], height: 160, readout: 'own', plate: true } };
+        series: [{ entity: c.humidity, name: 'Luftfeuchte', unit: '%' }], height: 160, readout: 'own', plate: true }, do_not_eval: true };
       top.push('chart');
     }
     /* Blueprint v2: „Einstellungen“ last – right column bottom on the desktop, the end on the phone (both orders alike). */

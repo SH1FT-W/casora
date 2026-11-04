@@ -1755,8 +1755,8 @@
     // lang wie die Wiedergabe), Rückfall der Clip des Ereignisses; sonst der Clip des Ereignisses (MP4), ohne
     // Notification-Proxy derselbe Abschnitt aus den Aufnahmen; ohne Clip der Schnappschuss.
     CP._file = function () {
-      var cfg = this._cfg || {}, c = this._c(), len = this._len();
-      var at = cfg.start || Date.now(), nm = function (ext, l) { return F.fileName(cfg.camName || c.name, at, ext, l); };
+      var cfg = this._cfg || {}, c = this._c(), len = this._len(), cn = camName(this._hass, cfg.entity) || c.name;
+      var at = cfg.start || Date.now(), nm = function (ext, l) { return F.fileName(cn, at, ext, l); };
       var noProxy = proxyOk[c.inst] && proxyOk[c.inst].v === false;
       var evClip = cfg.ev && cfg.clip && !noProxy ? { path: F.path(c, 'clip', cfg.ev), name: nm('mp4', len), type: 'video/mp4' } : null;
       if (cfg.rv && this._src !== null) { var rr = this._rec(); if (rr) return Object.assign(rr, { alt: evClip }); }
@@ -1776,7 +1776,7 @@
       // Laufende Review (ohne Ende): bis jetzt; höchstens 1 Std.
       var a = sec0(cfg.start), b = Math.max(a + 1, Math.ceil((cfg.end || (cfg.rv ? Date.now() : cfg.start + 30000)) / 1000));
       b = Math.min(b, a + 3600);
-      return { path: F.path(c, 'rec', a, b), name: F.fileName(cfg.camName || c.name, cfg.start, 'mp4', b - a), type: 'video/mp4' };
+      return { path: F.path(c, 'rec', a, b), name: F.fileName(camName(this._hass, cfg.entity) || c.name, cfg.start, 'mp4', b - a), type: 'video/mp4' };
     };
     CP._download = function (b) {
       var f = this._file(), h = this._hass;
@@ -1943,7 +1943,9 @@
     if (ob) nav.push(navRow(ob, 'Ältere Erkennung'));
     var nm = camName(hass, cam);
     var clipOk = isRv ? !!evId : !!it.clip;
-    var media = { type: 'custom:casora-frigate-clip', entity: cam, inst: c.inst, name: c.name, camName: nm, ev: evId, clip: clipOk,
+    // No camera name in the config (button-card would evaluate one shaped "[[[ … ]]]", HACS review 5): the clip looks
+    // it up from its entity for the file name.
+    var media = { type: 'custom:casora-frigate-clip', entity: cam, inst: c.inst, name: c.name, ev: evId, clip: clipOk,
       rv: isRv ? it.id : null, fav: !!it.fav, start: it.start, end: it.end, poster: evId ? F.path(c, 'snap', evId) : null,
       nav: { newer: nb ? nb.id : null, older: ob ? ob.id : null, back: !!back, rv: isRv } };
     // „Als neu markieren“ ist ein Befehl, kein Weg auf eine andere Seite: ohne Pfeil ›.
@@ -2492,7 +2494,7 @@
       if (!segs.length) return;
       var t = F.cut(segs, this._t != null ? this._t : segs[0].s, min);
       if (!t) return;
-      dlWith(btn, this._hass, F.path(c, 'rec', t.a, t.b), F.fileName(cfg.camName || c.name, t.a * 1000, 'mp4', t.b - t.a));
+      dlWith(btn, this._hass, F.path(c, 'rec', t.a, t.b), F.fileName(camName(this._hass, cfg.entity) || c.name, t.a * 1000, 'mp4', t.b - t.a));
     };
     customElements.define('casora-frigate-rec', FRec);
   }
@@ -2657,7 +2659,7 @@
         if (di > 0 && days[di - 1].hours.length) next = { day: days[di - 1].day, h: days[di - 1].hours[0].h };
       }
       var at = o.now ? 'end' : o.at != null ? o.at : null;
-      f.m = { card: { type: 'custom:casora-frigate-rec', entity: cam, inst: c.inst, name: c.name, camName: nm, start: a, len: len, at: at, next: next } };
+      f.m = { card: { type: 'custom:casora-frigate-rec', entity: cam, inst: c.inst, name: c.name, start: a, len: len, at: at, next: next }, do_not_eval: true };
       var dayChips = days.slice(0, 7).map(function (x) { return chip('frigate-rec:' + cam + '|' + x.day, dayName(x.day), x.day === d.day); });
       // Tagesstreifen: 24 Stunden, Aufnahme deckend (je nach Anteil), Punkt = Erkennungen; Antippen wählt die Stunde.
       // Am Handy (≤ 760 px) nur Anzeige: 24 Felder à ~13 px sind keine Tippflächen – dort bedienen die Stunden-Chips.

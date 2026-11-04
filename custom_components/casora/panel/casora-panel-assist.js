@@ -610,7 +610,10 @@
           const room = byName.get(p.room);
           const type = types.find((t) => t.id === p.type);
           if (!room || !type) return;
-          const tile = { type: "custom:button-card", template: I.clone(type.template), entity: it.entity, name: it.name };
+          // The name is a device/entity name from HA, stored in the dashboard: guarded against "[[[ … ]]]" (HACS review 5).
+          // casoraNoEval (casora-core.js) when loaded, else the same guard: a text starting with "[[[" gets a zero-width space.
+          const noEval = (v) => (window.casoraNoEval ? window.casoraNoEval(v) : (typeof v === 'string' && /^\s*\[\[\[/.test(v) ? '\u200b' + v : v));
+          const tile = { type: "custom:button-card", template: I.clone(type.template), entity: it.entity, name: noEval(it.name) };
           room.tiles.push(tile);
           n++;
           if (!touched.has(room)) touched.set(room, new Set());

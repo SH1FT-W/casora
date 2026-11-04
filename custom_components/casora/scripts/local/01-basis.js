@@ -756,6 +756,9 @@ window.casoraPopupTitle = function (card, variables, def, defaults) {
     if (/^(home|zuhause)$/.test(slug) || (cfg && Array.isArray(cfg.views) && cfg.views.some(function (v) { return v && String(v.path || '') === slug; }))) own = '';
   }
   if (own) return own;
+  // The hidden card of openViaCard carries the entity's name as a property, not in its config (HACS review 5); it
+  // stands where that config's name stood, before the template's own default name.
+  if (card && typeof card._casoraTitleHint === 'string' && card._casoraTitleHint) return card._casoraTitleHint;
   var n = String((card && card._config && card._config.name) || '').trim();
   if (n && n.indexOf('[[[') < 0) return n;
   /* Detail round #6: the title is the tile's name as the dashboard shows it („Abschäumer“, not „Universal-Kachel“) –
@@ -982,18 +985,27 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     var seg = (location.pathname || '').split('/').filter(Boolean);
     (window._casoraCfgOnce ? window._casoraCfgOnce(h, seg[0] || 'lovelace') : h.callWS({ type: 'lovelace/config', url_path: seg[0] || 'lovelace' })).then(function (cfg) {
       var found = explicitCfg || findCardCfg(cfg, entityId);
+      var built = false;   // config built here for an entity without a tile (it used to carry the friendly_name)
       // No own card (alarm/lock often sit only as a badge in the room card): the domain's tile
       // template - the same popup as its tile instead of the HA dialog (B-NOTI).
       var tpl = !found && { lock: 'casora_lock', alarm_control_panel: 'casora_alarm', vacuum: 'casora_vacuum',
         cover: 'casora_cover', climate: 'casora_thermostat', media_player: 'casora_media', light: 'casora_light',
         person: 'casora_presence' }[String(entityId).split('.')[0]];
+      // No name in the config: button-card would evaluate a friendly_name shaped "[[[ … ]]]" (HACS review 5); the
+      // template shows the entity's own name.
       if (tpl && cfg && cfg.button_card_templates && cfg.button_card_templates[tpl] && h.states[entityId]) {
-        found = { type: 'custom:button-card', template: tpl, entity: entityId,
-          name: (h.states[entityId].attributes && h.states[entityId].attributes.friendly_name) || entityId };
+        found = { type: 'custom:button-card', template: tpl, entity: entityId };
+        built = true;
       }
       if (!found) return done(false);
+      // A caller's title (_title) goes to the element, never into the config.
+      var hint = typeof found._title === 'string' ? found._title : '';
+      if ('_title' in found) { found = Object.assign({}, found); delete found._title; }
       var el = document.createElement('button-card');
       try { el.setConfig(JSON.parse(JSON.stringify(found))); } catch (e) { return done(false); }
+      // Popup title as before (the name used to sit in the config): a property of the element, never evaluated.
+      if (!hint && built) hint = String((h.states[entityId].attributes || {}).friendly_name || entityId);
+      if (hint) el._casoraTitleHint = hint;
       el.hass = h;
       el.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;';
       document.body.appendChild(el);
@@ -1033,8 +1045,8 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     window._casoraSuppressDismiss = Date.now() + 600;
     openViaCard(id, function (ok) {
       if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(id);
-    }, { type: 'custom:button-card', template: 'casora_light', entity: id,
-         name: (st.attributes && st.attributes.friendly_name) || id, variables: { icon: 'light' } });
+    }, { type: 'custom:button-card', template: 'casora_light', entity: id, variables: { icon: 'light' },
+         _title: String((st.attributes && st.attributes.friendly_name) || id) });
   }, true);
 
   // ── Popup-Verlaufsdiagramme (Pflanzen, Luftreiniger, Batterien …) ─────────
@@ -1055,10 +1067,12 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       return out;
     };
     /* Verlauf als casora-chart (1.2, statt apexcharts-card): Verlauf bis 48 h live, darüber Statistik. */
+    // casoraNoEval (casora-core.js) when loaded, else the same guard: a text starting with "[[[" gets a zero-width space.
+    var noEval = function (v) { return window.casoraNoEval ? window.casoraNoEval(v) : (typeof v === 'string' && /^\s*\[\[\[/.test(v) ? '\u200b' + v : v); };
     window._hpChartCfg = function (eid, label, span, color, height) {
       window._hpPlantMeta[eid] = [label, span, color];
       window._hpPlantCfg[eid] = { type: 'custom:casora-chart', kind: 'line', span: span, height: height || 150,
-        series: [{ entity: eid, name: label, color: color }] };
+        series: [{ entity: eid, name: noEval(label), color: color }] };
       return window._hpPlantCfg[eid];
     };
     /* Glättung: gröbere Mittel. Fühler messen in kleinen Stufen, feine Mittel (15/30 min) ergaben
@@ -1073,7 +1087,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     window._hpBarCfg = function (key, eid, label, span, decimals) {
       window._hpPlantMeta[key] = [label, span, 'accent'];
       window._hpPlantCfg[key] = { type: 'custom:casora-chart', kind: 'bar', span: span, source: 'change', height: 150,
-        series: [{ entity: eid, name: label, unit: 'kWh', decimals: decimals == null ? 1 : decimals }] };
+        series: [{ entity: eid, name: noEval(label), unit: 'kWh', decimals: decimals == null ? 1 : decimals }] };
       return window._hpPlantCfg[key];
     };
     window._hpChartTitle = function (eid) {

@@ -987,7 +987,7 @@
       if (c.waste) { /* nothing to fill */ } else if (this._fillTile) this._fillTile(tile, type, c.entity); else tile.entity = c.entity;
       // Der Name ohne den Raum („Stehlampe Schlafzimmer“ im Schlafzimmer → „Stehlampe“).
       const B = W.casoraBasis;
-      tile.name = B && B.shortName ? B.shortName(c.name, this._roomLabel(room)) : c.name;
+      tile.name = window.casoraNoEval(B && B.shortName ? B.shortName(c.name, this._roomLabel(room)) : c.name);   // name from HA (HACS review 5)
       if (ri !== this._room) {
         this._room = ri;
         this._renderTabs();

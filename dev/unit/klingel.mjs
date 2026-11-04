@@ -356,7 +356,8 @@ entities['camera.fremd'].device_id = 'd_bell';
 // Popup gibt die zweite Kamera samt Namen und Option ans Live-Bild.
 KL.forget(ID);
 p = KL.popup(states[ID], states, Object.assign({}, hass, { entities: Object.assign({}, entities) }), { camera2: 'camera.carport_sub', big_on_audio: false });
-assert.equal(p.fields.live.card.cam2, 'camera.carport_sub'); assert.equal(p.fields.live.card.cam2Name, 'Carport'); assert.equal(p.fields.live.card.big, false);
+// The second camera's name is looked up by the live element, not carried in its config (HACS review 5).
+assert.equal(p.fields.live.card.cam2, 'camera.carport_sub'); assert.equal(p.fields.live.card.cam2Name, undefined); assert.equal(KL.camName(hass, 'camera.carport_sub'), 'Carport'); assert.equal(p.fields.live.card.big, false);
 p = KL.popup(states[ID], states, hass, {});
 assert.equal(p.fields.live.card.cam2, null, 'ohne Feld unverändert'); assert.equal(p.fields.live.card.big, true);
 

@@ -284,7 +284,7 @@
     setConfig(c) {
       if (!c) throw new Error('casora-chart: no configuration');
       var s = Array.isArray(c.series) ? c.series : c.entity ? [{ entity: c.entity, color: c.color, attribute: c.attribute }] : [];
-      this._c = Object.assign({ kind: 'line', span: '24h', source: 'auto' }, c, { series: s.filter(function (x) { return x && x.entity; }) });
+      this._c = Object.assign({ kind: 'line', span: '24h', source: 'auto' }, c, { series: s.filter(function (x) { return x && x.entity; }).map(function (x) { return Object.assign({}, x); }) });
       var sel = c.selected, ser = this._c.series;  // selected: series shown first (index or entity)
       this._sel = typeof sel === 'string' ? Math.max(0, ser.findIndex(function (x) { return x.entity === sel; })) : sel >= 0 && sel < ser.length ? Math.floor(sel) : 0;
       this._data = null; this._key = null;
@@ -422,6 +422,9 @@
     _draw() {
       var c = this._c, root = this.shadowRoot;
       if (!c || !root) return;
+      // entity_name: named after the entity now, no name in the config (HACS review 5).
+      var hs = (this._h || {}).states || {};
+      c.series.forEach(function (x) { if (x.entity_name) x.name = ((hs[x.entity] || {}).attributes || {}).friendly_name || x.entity; });
       var box = root.getElementById('b'), W = box.clientWidth;
       if (!W) return;
       this._w = W;

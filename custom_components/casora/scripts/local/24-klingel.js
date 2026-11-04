@@ -410,7 +410,7 @@
     };
     var o = KL.opts(variables, id);
     var live = { type: 'custom:casora-klingel-live', entity: id, audio: c.sw.audio || null, privacy: c.sw.privacy || null,
-      talk: o.talk, big: o.big, cam2: o.cam2, cam2Name: o.cam2 ? KL.camName(hass, o.cam2) : null };
+      talk: o.talk, big: o.big, cam2: o.cam2 };   // the second camera's name is looked up by the element (HACS review 5)
     var f = { hero: { card: K.secCard(watch, call('hero'), states) }, live: { card: live },
       hist: { card: K.secCard(watch, call('hist'), states) } };
     var opts = c.quick && S[c.quick] ? (S[c.quick].attributes || {}).options : null;
@@ -1159,7 +1159,7 @@
       if (sg) {
         sg.hidden = !v.two;
         sg.setAttribute('aria-label', tr('Kamera'));
-        var names = [tr('Klingel'), cfg.cam2Name || ''];
+        var names = [tr('Klingel'), cfg.cam2 ? KL.camName(this._hass, cfg.cam2) : ''];
         sg.querySelectorAll('.sgb').forEach(function (b, i) {
           if (b.textContent !== names[i]) b.textContent = names[i];
           b.setAttribute('aria-pressed', i === v.idx ? 'true' : 'false');

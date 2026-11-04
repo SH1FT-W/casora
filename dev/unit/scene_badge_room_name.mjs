@@ -19,5 +19,5 @@ assert.equal(wz('Wohnzimmerlicht'), 'Wohnzimmerlicht', 'only whole words');
 assert.equal(wz('Wohnzimmer'), 'Wohnzimmer', 'never empty');
 assert.equal(mk('')('Glut Wohnzimmer'), 'Glut Wohnzimmer', 'no room: unchanged');
 assert.equal(mk('Bad (oben)')('Abend Bad (oben)'), 'Abend', 'regex characters in the room name');
-assert.ok(/template: 'casora_badge_scene', entity: id,\s*variables: \{ enabled: true, room_name: variables\.room_name \|\| variables\.aqi_room_name \|\| '' \}/.test(JSON.stringify(T).replace(/\\n/g, '\n')), 'room passes its name');
+assert.ok(/template: 'casora_badge_scene', entity: id,\s*variables: \{ enabled: true, room_name: \(window\.casoraNoEval \|\| [^\n]*?\)\(variables\.room_name \|\| variables\.aqi_room_name \|\| ''\) \}/.test(JSON.stringify(T).replace(/\\n/g, '\n')), 'room passes its name');
 console.log('ok scene_badge_room_name');

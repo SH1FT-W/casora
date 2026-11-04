@@ -1,0 +1,41 @@
+# Studio (panel/*.js) – reviewed for HACS review 5. The Studio writes dashboard configs; names it takes from HA go
+# through casoraNoEval (basis tile() and its room_name variables, assist, kachelart). What is left here is what the admin typed or picked, existing
+# dashboard config carried over, fixed words and ids.
+custom_components/casora/panel/casora-panel-b-plus.js | cfg.icon: o.icon | scene icon the admin picked in the Studio | 1
+custom_components/casora/panel/casora-panel-b-ux.js | name: tr(type.label) | translated tile type label of the code | 1
+custom_components/casora/panel/casora-panel-import.js | card.name: tn(card.name) | name of a card of the admin's own dashboard being taken over | 1
+custom_components/casora/panel/casora-panel-import.js | name: tile.name || "Doorbell" | name of a tile of the admin's own dashboard being taken over | 1
+custom_components/casora/panel/casora-panel-import.js | name: tn(t.name) | name of a tile of the admin's own dashboard being taken over | 1
+custom_components/casora/panel/casora-panel-personal.js | c.icon: v | icon the admin picked in the Studio | 1
+custom_components/casora/panel/casora-panel-personal.js | c.label: v | text the admin typed in the Studio | 1
+custom_components/casora/panel/casora-panel-personal.js | c.name: v | text the admin typed in the Studio | 1
+custom_components/casora/panel/casora-panel.js | ...: (c.variables || {}) | the card's own stored variables carried over | 2
+custom_components/casora/panel/casora-panel.js | ...: (card.variables || {}) | the card's own stored variables carried over | 1
+custom_components/casora/panel/casora-panel.js | card.variables: card.variables || {} | the card's own stored variables carried over | 1
+custom_components/casora/panel/casora-panel.js | card.variables: h.card.variables || {} | the card's own stored variables carried over | 1
+custom_components/casora/panel/casora-panel.js | c.variables: vars | the shell card's stored variables with the admin's room images | 1
+custom_components/casora/panel/casora-panel.js | variables: P | the badge's Studio settings (admin) on a stand-in tile of the editor | 1
+custom_components/casora/panel/casora-panel.js | room_chips: chips | room keys mapped to entity id lists; the room names in it (room_name, aqi_room_name) are the dashboard's room names, guarded in blankRoom() when they come from HA areas | 1
+custom_components/casora/panel/casora-panel.js | c.title: h.before | DOM element (chip), not a card config | 1
+custom_components/casora/panel/casora-panel.js | c.title: v | DOM element (chip), not a card config | 1
+custom_components/casora/panel/casora-panel.js | label: label | Studio field definition, not a card config | 1
+custom_components/casora/panel/casora-panel.js | name: camsName | fixed word (Kameras/Cameras) | 1
+custom_components/casora/panel/casora-panel.js | name: inner.name || inner.title || CUSTOM_DEFAULT_NAME | name of a card the admin pasted into the Studio | 1
+custom_components/casora/panel/casora-panel.js | name: trLabel(type.label) | translated tile type label of the code | 1
+custom_components/casora/panel/casora-panel-b-mehr.js | t.name: was(b).name | undo of a room rename: the room's earlier stored name | 1
+custom_components/casora/panel/casora-panel-basis.js | out.variables: variables | tile() callers pass entity id lists, flags and room_name through noEval (groupTile) | 1
+custom_components/casora/panel/casora-panel-kachelart.js | ...: (isObj(out.variables) ? out.variables : {}) | the tile's own stored variables carried over | 1
+custom_components/casora/panel/casora-panel-kachelart.js | ...: (isObj(ov.variables) ? ov.variables : {}) | the own tile type's stored variables carried over | 1
+custom_components/casora/panel/casora-panel-kachelart.js | ...: m | the own tile type's marker (its key and base template) | 1
+custom_components/casora/panel/casora-panel-kachelart.js | casora_tile: m | the own tile type's marker (its key and base template) | 1
+custom_components/casora/panel/casora-panel.js | ...: (out.variables || {}) | the card's own stored variables carried over | 1
+custom_components/casora/panel/casora-panel.js | ...: (tile.variables || {}) | the tile's own stored variables carried over | 2
+custom_components/casora/panel/casora-panel.js | ...: own | the tile's own variables of the custom card it hosted, carried over | 2
+custom_components/casora/panel/casora-panel.js | casora_name: v | text the admin typed in the Studio | 1
+custom_components/casora/panel/casora-panel.js | out.variables: omit(out.variables, SCENE_KEYS) | the card's own stored variables without the scene keys | 1
+custom_components/casora/panel/casora-panel.js | out.variables: vars | the card's own stored variables carried over | 2
+custom_components/casora/panel/casora-panel.js | t.name: String(friendly).trim().split(/\s+/)[0] || String(id).split(".").pop().replace(/_/g, " ") | person tile of the Studio preview only (_paintTile), never stored or given to button-card | 1
+custom_components/casora/panel/casora-panel.js | t.title: hid ? (go ? trLabel(go) + " – " : "") + trLabel("Hidden on the dashboard") : go | DOM element tooltip, not a card config | 1
+custom_components/casora/panel/casora-panel.js | t.variables: Object.assign({}, t.variables || {}, { size: "auto" }) | the tile's own stored variables plus a fixed size | 1
+custom_components/casora/panel/casora-panel.js | tile.name: nameIn.value.trim() | text the admin typed in the Studio | 1
+custom_components/casora/panel/casora-panel.js | tile.variables: tile.variables || {} | the tile's own stored variables carried over | 1

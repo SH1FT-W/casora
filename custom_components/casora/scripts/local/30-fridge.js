@@ -15,6 +15,8 @@
   if (window._casoraFridge && typeof window._casoraFridge.popup === 'function') return;
   var F = window._casoraFridge = {};
 
+  // casoraNoEval (casora-core.js) when loaded, else the same guard: a text starting with "[[[" gets a zero-width space.
+  var noEval = function (v) { return window.casoraNoEval ? window.casoraNoEval(v) : (typeof v === 'string' && /^\s*\[\[\[/.test(v) ? '\u200b' + v : v); };
   var COLOR = {
     calm: 'var(--casora-tone-general, var(--casora-color-teal, #4E9E95))',
     // Door open: deep orange keeps 3:1 with the white glyph (as the coffee card's warning).
@@ -234,8 +236,10 @@
         // Hex, because the chart writes the colour straight into the SVG: fridge zones teal, freezer zones blue.
         switch: false, series: curves.map(function (z) {
           var cold = num(((S[z.set] || S[z.temp] || {}).state)) <= -2;
-          return { entity: z.temp, name: z.label, unit: (S[z.temp].attributes || {}).unit_of_measurement || '°C', color: cold ? '#5b8fc9' : '#4e9e95' };
-        }) } };
+          // Zone words of the code or the Studio, guarded all the same; the unit is the sensor's own (read by the chart),
+          // °C only without one. The chart is left to itself (do_not_eval, HACS review 5).
+          return { entity: z.temp, name: noEval(z.label), unit: (S[z.temp].attributes || {}).unit_of_measurement ? undefined : '°C', color: cold ? '#5b8fc9' : '#4e9e95' };
+        }) }, do_not_eval: true };
       if (!v3) top.push('chart');
     }
     f.zones = { card: K.secCard(C.watch, call('zones'), S) };

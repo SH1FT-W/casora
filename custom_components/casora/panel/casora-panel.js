@@ -22,6 +22,26 @@
   };
 })();
 // casora-esc:end
+// casora-noeval:begin – the same block in every file that loads on its own (checked by dev/unit/no_eval.mjs).
+// button-card runs every config string that is "[[[ … ]]]" after trim() as JavaScript (name, label, variables,
+// nested cards …). Card configs carry keys and look the text up at render time (tools/noeval-check.mjs); where a
+// text still has to travel in a config, casoraNoEval(v) puts a zero-width space before a leading "[[[" so it can never
+// be such a template. Every other text comes back unchanged; objects and arrays are copied with their texts guarded.
+(function () {
+  if (window.casoraNoEval) return;
+  var guard = function (v, d) {
+    if (typeof v === 'string') return /^\s*\[\[\[/.test(v) ? '\u200b' + v : v;
+    if (!v || typeof v !== 'object') return v;
+    if (d > 12) return null;
+    if (Array.isArray(v)) return v.map(function (x) { return guard(x, d + 1); });
+    if (Object.getPrototypeOf(v) !== Object.prototype && Object.getPrototypeOf(v) !== null) return v;
+    var o = {};
+    Object.keys(v).forEach(function (k) { o[k] = guard(v[k], d + 1); });
+    return o;
+  };
+  window.casoraNoEval = function (v) { return guard(v, 0); };
+})();
+// casora-noeval:end
 
 // Casoras Version aus der Lader-URL (?v=<version>.<stempel>, __init__.py).
 const PANEL_VERSION = (() => {
@@ -3662,6 +3682,9 @@ function applyFirstRun(rooms) {
 }
 
 function blankRoom(name, path, image) {
+  // Room names are often HA area names; they end up as card names and variables in the stored dashboard, where
+  // button-card would run one shaped "[[[ … ]]]" (HACS review 5). The caller's lookups use its own (raw) name.
+  name = window.casoraNoEval(name);
   const variables = { image: image };
   if (firstRunPerf) variables.performance = firstRunPerf;
   if (firstRunFont) variables.font = firstRunFont;
@@ -14905,14 +14928,17 @@ class CasoraPanel extends HTMLElement {
 
       const imgs = await this._images().catch(() => []);
       const rooms = [blankRoom("Home", "home", roomPhoto("Home", "home", imgs))];
+      const rawName = new Map();   // room → its name in the plan (blankRoom stores it guarded)
       picked.forEach((name) => {
         const path = uniquePath(rooms, slug(name));
-        rooms.push(blankRoom(name, path, roomPhoto(name, slug(name), imgs)));
+        const room = blankRoom(name, path, roomPhoto(name, slug(name), imgs));
+        rawName.set(room, name);
+        rooms.push(room);
       });
       // Standardraum: Kacheln und Badge-Geräte je Raum.
       if (filled) {
         const tiles = filled.tiles || filled, vars = filled.vars || {};
-        rooms.forEach((r) => { r.tiles = tiles[r.name] || []; Object.assign(r.variables, vars[r.name] || {}); });
+        rooms.forEach((r) => { const k = rawName.has(r) ? rawName.get(r) : r.name; r.tiles = tiles[k] || []; Object.assign(r.variables, vars[k] || {}); });
       } else if (window.casoraBasis && window.casoraBasis.fillBadges) {
         // Leer begonnen: keine Kacheln, aber jeder Raum bekommt seine Badges aus seinem HA-Bereich.
         if (window.casoraBasis.energyPrefsReady) await window.casoraBasis.energyPrefsReady(this._hass);
@@ -22932,13 +22958,14 @@ class CasoraPanel extends HTMLElement {
     runTapDefault(tile, type);
     // Eine Pflanze heißt wie die Pflanze („Bogenhanf“), nicht wie der Kacheltyp.
     const fn = isPlantEntity(this._hass, entity) && this._prettyEntity(entity);
-    if (fn && fn !== entity && (!tile.name || tile.name === trLabel(type.label))) tile.name = fn;
+    // Names from HA stored as the tile's name: guarded against "[[[ … ]]]" (HACS review 5).
+    if (fn && fn !== entity && (!tile.name || tile.name === trLabel(type.label))) tile.name = window.casoraNoEval(fn);
     // A pet tracker is named like the pet ("Luna"), not like its tracker hardware (issue #25).
     const pn = type.id === "casora_pet" && petName(this._hass, entity);
-    if (pn && (!tile.name || tile.name === trLabel(type.label))) tile.name = pn;
+    if (pn && (!tile.name || tile.name === trLabel(type.label))) tile.name = window.casoraNoEval(pn);
     // A chart is named like its sensor ("Processor use"), not "Chart" (T12).
     const sn = type.pickInEditor && this._prettyEntity(entity);
-    if (sn && sn !== entity && (!tile.name || tile.name === trLabel(type.label) || tile.name === type.label)) tile.name = sn;
+    if (sn && sn !== entity && (!tile.name || tile.name === trLabel(type.label) || tile.name === type.label)) tile.name = window.casoraNoEval(sn);
     const found = window.casoraFieldEntity;
     if (!found) return;
     const S = (this._hass && this._hass.states) || {};
@@ -23153,7 +23180,7 @@ class CasoraPanel extends HTMLElement {
     const tile = newTile(type);
     this._fillTile(tile, type, c.entity);
     const B = window.casoraBasis;
-    if (c.name) tile.name = B && B.shortName ? B.shortName(c.name, this._roomLabel(room)) : c.name;
+    if (c.name) tile.name = window.casoraNoEval(B && B.shortName ? B.shortName(c.name, this._roomLabel(room)) : c.name);
     return tile;
   }
 
@@ -28851,7 +28878,7 @@ class CasoraPanel extends HTMLElement {
             || held === this._prettyEntity(prev))) {
           const next = friendlyOf(v) || "";
           if (next) {
-            tile.name = next;
+            tile.name = window.casoraNoEval(next);   // a name from HA, stored (HACS review 5)
             nameIn.value = next;
             nameEl.textContent = next + " ";
           }

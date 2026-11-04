@@ -112,9 +112,24 @@
     return W[raw] || (raw.charAt(0).toUpperCase() + raw.slice(1).replace(/_/g, ' '));
   };
 
+  // The text of a badge's template (render_template: states, attributes – any text) never goes into the card config:
+  // button-card evaluates variables deeply, a result shaped "[[[ … ]]]" ran as JavaScript (HACS review 5). The config
+  // carries a ref ("cbv:<badge>:<text>"), the template looks the text up while it renders. Kept per badge (its place,
+  // position and config): the newest text; the text part of the ref changes the config exactly when the text does.
+  var VALUES = new Map();
+  var hash = function (t) { var h = 0x811c9dc5; for (var i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(36); };
+  var valueRef = function (text, slot) {
+    if (text == null) return null;
+    var t = String(text), k = hash(String(slot || ''));
+    VALUES.set(k, t);
+    return 'cbv:' + k + ':' + hash(t) + t.length.toString(36);
+  };
+
   window._casoraCustomBadge = {
     OFF: OFF,
     esc: esc,
+    ref: valueRef,
+    value: function (ref) { var k = typeof ref === 'string' && ref.indexOf('cbv:') === 0 ? ref.split(':')[1] : null; return k && VALUES.has(k) ? VALUES.get(k) : null; },
     // "Who sees this?" of one badge (#90), as a tile's: users lists who sees it, none = everyone.
     sees: function (b, user) {
       var l = b && b.users;
@@ -205,7 +220,7 @@
     var cfg = {
       type: 'custom:button-card',
       template: own ? ['casora_badge_custom', 'casora_popup_own_badge'] : 'casora_badge_custom',
-      variables: Object.assign({ badge: shown, index: i, place: place || 'room', value: text == null ? null : text }, own ? CB.popupVars(b) : {}),
+      variables: Object.assign({ badge: shown, index: i, place: place || 'room', value_ref: valueRef(text, (place || 'room') + '|' + keyOf(b, i)) }, own ? CB.popupVars(b) : {}),
     };
     var tap = CB.tap(b, place);
     if (tap) cfg.tap_action = tap;
@@ -214,6 +229,7 @@
     if (b && typeof b.entity === 'string' && b.entity) cfg.entity = b.entity;
     return cfg;
   };
+  window._casoraCustomBadge.cardConfig = cardConfig;   // for dev/unit/no_eval.mjs
   var helpers = null;
   var cardHelpers = function () {
     if (helpers) return helpers;
@@ -317,7 +333,7 @@
   var ownView = function (src, key) {
     if (!/\bcasora_popup_own_badge\b/.test(String(key || '')) || !src || !src._config) return null;
     var V = src._config.variables || {};
-    return window._casoraCustomBadge.view(V.badge, src._stateObj || null, V.value, src._hass || hassOf());
+    return window._casoraCustomBadge.view(V.badge, src._stateObj || null, window._casoraCustomBadge.value(V.value_ref), src._hass || hassOf());
   };
   (window._casoraRingHueHooks = window._casoraRingHueHooks || []).push(function (src, key) {
     var v = ownView(src, key);

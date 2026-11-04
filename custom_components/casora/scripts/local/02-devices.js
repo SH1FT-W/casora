@@ -283,7 +283,7 @@
         /* Dosed per day (daily maximum of the day counter), bars like „Verbrauch pro Tag“. */
         type: 'custom:casora-chart', kind: 'bar', span: '7d', source: 'history', agg: 'max', height: 130,
         series: [{ entity: d.today, name: 'Dosiert', decimals: 1 }], plate: true, title: 'Dosiert · 7 Tage',
-      } }),
+      }, do_not_eval: true }),
     ].filter((x) => x[0] !== 'chart' || d.today).forEach((x) => { areas.push('"' + x[0] + '"'); fields[x[0]] = x[1]; fstyle[x[0]] = [{ 'justify-self': 'stretch' }]; });
     window.casoraPopup.open({
       title: d.label || 'Dünger',
@@ -1370,7 +1370,7 @@
   // Inner button-cards evaluate their templates themselves (do_not_eval) – like own() in 05-weich-mehr.js:
   // otherwise the outer card rebuilds its children on every attribute change and sections flash empty.
   H.own = function (f) {
-    return f && f.card && f.card.type === 'custom:button-card' && f.do_not_eval === undefined ? Object.assign({}, f, { do_not_eval: true }) : f;
+    return f && f.card && typeof f.card === 'object' && f.do_not_eval === undefined ? Object.assign({}, f, { do_not_eval: true }) : f;
   };
   /* Popup v3 §7.1: the field holding the one Verlauf – o.history, else a field named „chart“ or „metric“
      (o.history: false keeps it among the lists). */
@@ -4046,7 +4046,7 @@
       add('cam', { card: { type: 'picture-entity', entity: c.cam, camera_view: 'auto', show_name: false, show_state: false, tap_action: { action: 'none' }, hold_action: { action: 'none' },
         aspect_ratio: '16:9',
         card_mod: { style: 'ha-card { border-radius: var(--casora-popup-row-radius, 20px) !important; overflow: hidden !important; border: none !important;'
-          + ' box-shadow: var(--casora-popup-plate-shadow, none) !important; background: var(--casora-soft-placeholder, rgba(0,0,0,0.35)) !important; }' } } });
+          + ' box-shadow: var(--casora-popup-plate-shadow, none) !important; background: var(--casora-soft-placeholder, rgba(0,0,0,0.35)) !important; }' } }, do_not_eval: true });
     }
 
     /* AI look at the print (✦): same module as in the camera popup, own section. */

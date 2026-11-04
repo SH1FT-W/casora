@@ -21,6 +21,26 @@
   };
 })();
 // casora-esc:end
+// casora-noeval:begin – the same block in every file that loads on its own (checked by dev/unit/no_eval.mjs).
+// button-card runs every config string that is "[[[ … ]]]" after trim() as JavaScript (name, label, variables,
+// nested cards …). Card configs carry keys and look the text up at render time (tools/noeval-check.mjs); where a
+// text still has to travel in a config, casoraNoEval(v) puts a zero-width space before a leading "[[[" so it can never
+// be such a template. Every other text comes back unchanged; objects and arrays are copied with their texts guarded.
+(function () {
+  if (window.casoraNoEval) return;
+  var guard = function (v, d) {
+    if (typeof v === 'string') return /^\s*\[\[\[/.test(v) ? '\u200b' + v : v;
+    if (!v || typeof v !== 'object') return v;
+    if (d > 12) return null;
+    if (Array.isArray(v)) return v.map(function (x) { return guard(x, d + 1); });
+    if (Object.getPrototypeOf(v) !== Object.prototype && Object.getPrototypeOf(v) !== null) return v;
+    var o = {};
+    Object.keys(v).forEach(function (k) { o[k] = guard(v[k], d + 1); });
+    return o;
+  };
+  window.casoraNoEval = function (v) { return guard(v, 0); };
+})();
+// casora-noeval:end
 
 // Media metadata as plain text (#97): some integrations (WiiM/LinkPlay UPnP metadata, for one) send titles with
 // XML/HTML entities in them ("Livin&apos; on the edge"). Escaped once for the page, that showed as "&apos;".
@@ -3502,6 +3522,29 @@ window.casoraMenuGlass = {
       return out.join('|');
     };
   }
+
+  // A now-playing record (titles, artists, app names – anyone who can cast to a speaker sets them) never travels in a
+  // card config: button-card evaluates variables deeply, so a title shaped "[[[ … ]]]" ran as JavaScript (HACS
+  // review 5). A parent hands its nested card a ref ("np:<slot>:<content>") and the nested card looks the record up
+  // while it renders. The content part changes with the record, so a nested card's config changes exactly when the
+  // record does, as before. Kept per slot (record key + player): the newest record of each, so a card that has not
+  // been redrawn for a while still finds its record (a newer one of the same player, never another player's).
+  const npHash = (t) => { let h = 0x811c9dc5; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(36); };
+  window._casoraNPRef = function (rec) {
+    if (typeof rec === 'string' && rec.indexOf('np:') === 0) return rec;   // already a ref (np_main's slots)
+    if (!rec || typeof rec !== 'object') return null;
+    let json;
+    try { json = JSON.stringify(rec); } catch (e) { return null; }
+    const slot = npHash(String(rec.key || '') + '|' + String(rec.entity || ''));
+    const m = window._casoraNPRefs = window._casoraNPRefs || new Map();
+    m.set(slot, JSON.parse(json));   // a copy, as the nested config held before
+    return 'np:' + slot + ':' + npHash(json) + json.length.toString(36);
+  };
+  window._casoraNPRec = function (ref) {
+    const m = window._casoraNPRefs;
+    if (typeof ref !== 'string' || !m || ref.indexOf('np:') !== 0) return null;
+    return m.get(ref.split(':')[1]) || null;
+  };
 
   if (typeof window._casoraNPStore !== 'function') {
     window._casoraNPStore = function (V, name) {

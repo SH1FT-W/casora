@@ -678,7 +678,9 @@ delete window.casoraLocale;
   assert.ok(typeof det.back === 'function', 'Weg zurück zum Kamera-Popup');
   assert.equal(det.dismiss_on_background, false, 'Tippen ins Leere schließt nicht');
   assert.equal(det.eyebrow, 'Hofkamera', 'Name der Kachel über dem Titel (B13, fix3 #2)');
-  assert.equal(det.content.fields.m.card.camName, 'Hofkamera', 'Dateinamen mit dem Kachelnamen');
+  // The camera name is no config text any more (HACS review 5): the clip looks it up for the file name.
+  assert.equal(det.content.fields.m.card.camName, undefined, 'no camera name in the clip config');
+  assert.equal(F.camName(hass, det.content.fields.m.card.entity), 'Hofkamera', 'file name from the tile name, looked up by entity');
   assert.ok(calls.some((m) => m.type === 'frigate/reviews/viewed' && m.ids[0] === 'r1'), 'als gesehen markiert');
   // Geschlossen, bevor die Daten da sind: nichts öffnet sich später (A8).
   F.forget(ID); opened.length = 0;
