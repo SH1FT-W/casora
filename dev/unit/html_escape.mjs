@@ -94,6 +94,16 @@ blocks.forEach((b, i) => assert.equal(b, blocks[0], BLOCK_FILES[i] + ': casora-e
   assert.deepEqual(flagged("el.insertAdjacentHTML('beforeend', row);"), ['row']);
   assert.deepEqual(flagged("h = '<span>' + T.ink + rowHtml + '</span>';"), [], 'constants and …Html names pass');
   assert.deepEqual(flagged("h = '<a onclick=\"f(\\'' + window.casoraEscJs(id) + '\\')\">';"), []);
+  // Code built as text (HACS review 5): a nested button-card's name template, a nested custom field, a popup body
+  // kept in a string – that code runs too, so its HTML strings and name/label results are checked like any other.
+  assert.deepEqual(flagged("const c = { name: '[[[ return states[' + sid + ']?.attributes?.friendly_name || ' + sid + '; ]]]' };"),
+    ['return states[ __splice ]?.attributes?.friendly_name || __splice'], 'nested name template returning a raw name');
+  assert.deepEqual(flagged("const c = { name: '[[[ return (window.casoraEsc || String)(states[' + sid + ']?.attributes?.friendly_name); ]]]' };"), []);
+  assert.deepEqual(flagged("const c = { custom_fields: { body: `[[[ var _label = states[_best].attributes.friendly_name; return '<div>' + _label + '</div>'; ]]]` } };"),
+    ['_label'], 'nested custom field (template literal) with a raw name');
+  assert.deepEqual(flagged("const _INNER = \"const opts = states[C.limit].attributes.options;\\nreturn '<div class=\\\"s\\\">' + opts[0] + '</div>';\";"),
+    ['opts[0]'], 'popup body kept in a string');
+  assert.deepEqual(flagged("const _INNER = \"const opts = states[C.limit].attributes.options;\\nreturn '<div>' + UI.esc(opts[0]) + '</div>';\";"), []);
   assert.ok(isHtmlText('" style="color:') && isHtmlText('<div>') && !isHtmlText('Hallo Welt'));
   assert.ok(safeOperand(lex('x.toFixed(1)').toks) && !safeOperand(lex('x.name').toks));
   // A partial escaper is reported.

@@ -5,18 +5,23 @@ import assert from 'node:assert/strict';
 import { phrases } from './lib/i18n_phrases.mjs';
 const T = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/panel/casora-templates.json', import.meta.url), 'utf8')).templates;
 
-// 1) Schloss-Popup: Akku-Prozent aus unavailable/unknown ist null, nicht NaN.
+// 1) Schloss-Popup: Akku-Prozent aus unavailable/unknown ist null, nicht NaN. (The tiles that computed battPct were the
+// renderer without window._casoraUI, gone with HACS review 5; the rows show the battery only when it is a number.)
 {
   const c = T.casora_popup_lock.tap_action.casora_popup.content;
-  const m = c.match(/const battRaw = [^\n]*\n\s*const battPct = [^\n]*;/);
-  assert.ok(m, 'battPct-Zeilen im Schloss-Popup gefunden');
-  const pct = (state) => new Function('battId', 'states', m[0] + ' return battPct;')('sensor.akku', state === undefined ? {} : { 'sensor.akku': { state } });
-  assert.equal(pct('unavailable'), null);
-  assert.equal(pct('unknown'), null);
-  assert.equal(pct(''), null);
-  assert.equal(pct(undefined), null);
-  assert.equal(pct('42.6'), 43);
-  assert.equal(pct('0'), 0);
+  const m = c.match(/const b = batt\[id\] \? parseFloat\(states\[batt\[id\]\]\?\.state\) : NaN;/);
+  assert.ok(m, 'battery line of the lock rows found');
+  assert.match(c, /if \(!isNaN\(b\)[^\n]*bits\.push\('Akku ' \+ Math\.round\(b\) \+ ' %'\)/, 'battery bit only for a number');
+  const bit = (state) => { const batt = { 'lock.x': 'sensor.akku' }, id = 'lock.x';
+    const states = state === undefined ? {} : { 'sensor.akku': { state } };
+    const b = new Function('batt', 'id', 'states', m[0] + ' return b;')(batt, id, states);
+    return isNaN(b) ? null : Math.round(b); };
+  assert.equal(bit('unavailable'), null);
+  assert.equal(bit('unknown'), null);
+  assert.equal(bit(''), null);
+  assert.equal(bit(undefined), null);
+  assert.equal(bit('42.6'), 43);
+  assert.equal(bit('0'), 0);
 }
 console.log('ok Akku ohne NaN');
 

@@ -1,5 +1,5 @@
 // Static check: every value interpolated into an HTML string is escaped.
-//   node tools/html-escape-check.mjs [--all] [file …]
+//   node tools/html-escape-check.mjs [--ctx] [file …]   (--ctx: print the source line of each place)
 // Scans the dashboard scripts, the Studio panel and every [[[ … ]]] expression of the card templates. An "HTML
 // string" is a string or template literal holding markup (a tag, an attribute assignment, a closing quote before
 // ">"). Every other operand of its "+" chain and every ${…} inside such a template literal must be one of:
@@ -12,6 +12,8 @@
 //     covers only that template; an optional last field "| N" is the number of places it covers.
 // button-card renders name/label/state_display/custom_fields results as HTML, so those fields' plain
 // `return <value>` statements count as sinks too.
+// Code the scripts and templates build as text – nested [[[ ]]] templates (also a nested card's name/label/
+// custom_fields), popup bodies kept in strings – runs as well and is checked the same way (HACS review 5).
 // Exit code 1 when something is unescaped; the list says where.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -262,8 +264,26 @@ export function safeOperand(toks) {
   return false;
 }
 
+// Cooked value of a string literal / template part as the lexer keeps it (escapes raw).
+export function cook(v) {
+  return v.replace(/\\(?:\r\n|[\n\r\u2028\u2029]|u\{([0-9a-fA-F]+)\}|u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|(.))/g, (m, cp, u, x, c) => {
+    if (cp) return String.fromCodePoint(parseInt(cp, 16));
+    if (u) return String.fromCharCode(parseInt(u, 16));
+    if (x) return String.fromCharCode(parseInt(x, 16));
+    if (c === undefined) return '';
+    return { n: '\n', t: '\t', r: '\r', b: '\b', f: '\f', v: '\v', 0: '\0' }[c] ?? c;
+  });
+}
+// Code built as text: a nested button-card template ('[[[ return … ]]]', `[[[ … ]]]`, also split over a "+" chain)
+// or a JS source kept in a string and spliced into one later (const _INNER_X = "const a = …; return '<b>' + a;").
+// That code runs too, so it is checked like any other; spliced values become the placeholder identifier __splice.
+const SPLICE = '__splice';
+const textOf = (t) => (t.t === 'str' ? cook(t.v) : t.parts.map(cook).join(SPLICE));
+const looksLikeCode = (s) => /\breturn\b|(?:^|[;{}\n])\s*(?:const|let|var|if)\s/.test(s);
+
 // Collect unsafe operands in a token list (and, recursively, inside template literals).
-function scan(src, toks, report) {
+// onNested(code, startToken, key): code found in string literals (see above), key = the property it is assigned to.
+function scan(src, toks, report, onNested = null) {
   const m = matchIndex(toks);
   const seen = new Set();
   const operandStartBack = (i) => { // i = index of last token of operand; returns first index
@@ -330,13 +350,43 @@ function scan(src, toks, report) {
     const e0 = exprEnd(i + 2);
     if (containsHtml(toks.slice(i + 2, e0 + 1))) htmlVars.add(t.v);
   }
+  // Property a value starting at token a is assigned to ("name: …"), with its parent key for custom_fields.
+  const keyAt = (a) => {
+    const c = toks[a - 1], k = toks[a - 2];
+    if (!c || c.t !== 'p' || c.v !== ':' || !k || (k.t !== 'id' && k.t !== 'str')) return null;
+    const p = parent[a];
+    const pk = p > 1 && toks[p].v === '{' && toks[p - 1].v === ':' ? toks[p - 2] : null;
+    return (pk && (pk.t === 'id' || pk.t === 'str') ? pk.v + '.' : '') + k.v;
+  };
+  const nestedSeen = new Set();
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i];
+    if (onNested && (t.t === 'str' || t.t === 'tpl') && !nestedSeen.has(i)) {
+      const first = textOf(t);
+      if (first.includes('[[[')) {
+        // Join the "+" chain: literal parts as they are, any other operand as a placeholder.
+        let code = '', k = i;
+        for (;;) {
+          const e = operandEndFwd(k);
+          const op = toks.slice(k, e + 1);
+          if (op.length === 1 && (op[0].t === 'str' || op[0].t === 'tpl')) { code += textOf(op[0]); nestedSeen.add(k); }
+          else code += ' ' + SPLICE + ' ';
+          if (code.lastIndexOf(']]]') > code.indexOf('[[[')) break;
+          if (e + 2 < toks.length && toks[e + 1].t === 'p' && toks[e + 1].v === '+') { k = e + 2; continue; }
+          break;
+        }
+        const a = code.indexOf('[[['), b = code.lastIndexOf(']]]');
+        onNested(code.slice(a + 3, b > a ? b : code.length), t, keyAt(i));
+      } else if (looksLikeCode(first)) {
+        const inner = lex(first).toks;
+        if (containsHtml(inner)) onNested(first, t, null);
+      }
+    }
     if (t.t === 'tpl') {
       const html = t.parts.some(isHtmlText);
       t.exprs.forEach((x) => {
         if (html && !safeOperand(x.toks)) report(x.toks);
-        scan(src, x.toks, report);
+        scan(src, x.toks, report, onNested);
       });
     }
     // Direct sinks without a literal: el.innerHTML = x, el.insertAdjacentHTML(p, x), unsafeHTML(x), acc += x
@@ -423,13 +473,20 @@ function allowed(allow, file, text, where = '') {
   return false;
 }
 
-export function checkSource(file, src, allow, out, base = 0, where = '') {
+export function checkSource(file, src, allow, out, base = 0, where = '', depth = 0) {
   let toks;
   try { toks = lex(src).toks; } catch (e) { out.push({ file, line: 0, expr: 'LEX ERROR ' + e.message }); return; }
   scan(src, toks, (op) => {
     const text = exprText(src, op);
     if (allowed(allow, file, text, where)) return;
-    out.push({ file, line: lineOf(src, op[0].s) + base, where, expr: text });
+    const ln = lineOf(src, op[0].s);
+    out.push({ file, line: ln + base, where, expr: text, ctx: src.split('\n')[ln - 1] });
+  }, depth > 6 ? null : (code, tok, key) => {
+    // Lines inside the nested code are counted from the literal that starts it.
+    const b = lineOf(src, tok.s) + base - 1;
+    checkSource(file, code, allow, out, b, where, depth + 1);
+    // A nested card's name/label/state_display/custom_fields result is HTML as well.
+    if (key && HTML_FIELDS.test(key)) checkReturns(file, code, allow, out, b, where);
   });
 }
 
@@ -663,7 +720,8 @@ export function run(files) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
   const { out, unused, over } = run(args);
-  for (const o of out) console.log(`${o.file}:${o.line}${o.where ? ' [' + o.where + ']' : ''}: ${o.expr}`);
+  const ctx = process.argv.includes('--ctx');
+  for (const o of out) console.log(`${o.file}:${o.line}${o.where ? ' [' + o.where + ']' : ''}: ${o.expr}` + (ctx && o.ctx ? '\n    | ' + o.ctx.trim().slice(0, 240) : ''));
   for (const a of over) console.log(`more places than the allow entry covers (${a.max}, now ${a.used}): ${a.f} | ${a.expr}`);
   for (const a of unused) console.log(`allow list entry not used any more` + (a.used ? ` (covers ${a.max}, used ${a.used})` : '') + `: ${a.f} | ${a.expr}`);
   console.log(`${out.length} unescaped value(s) in HTML strings` + (unused.length ? `, ${unused.length} stale allow entr(y/ies)` : ''));
