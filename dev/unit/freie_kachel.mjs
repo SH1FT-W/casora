@@ -159,8 +159,11 @@ assert.doesNotMatch(sec('hero', states['switch.qa_pumpe'], V), /Kein Verlauf/, '
   assert.equal(sec('line', null), '<line>Kein Gerät gewählt|</line>');
   assert.match(sec('line', states['sensor.qa_prozent']), /^<line>Seit /, 'percentage: the line says since when, the value is on the wheel');
 }
+// The "add more" hint only in the Studio preview (issue #125, free_tile_studio_hint.mjs).
+window.casoraInStudio = () => true;
 assert.equal(sec('hero', states['sensor.qa_temp']), '<line>21,5 °C|seit 2 Std.</line><note>Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.</note>');
 assert.equal(sec('hero', states['sensor.qa_weg']), '<line>Nicht verfügbar|</line><note>Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.</note>');
+delete window.casoraInStudio;
 assert.equal(F.sec('hero', { id: 'sensor.qa_fehlt', values: [], labels: {} }, states, hass), '<line>Gerät fehlt|sensor.qa_fehlt</line>');
 
 // Controls per domain.

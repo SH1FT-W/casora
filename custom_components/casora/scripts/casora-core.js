@@ -9326,6 +9326,13 @@ window.casoraMenuGlass = {
     return !u || u.is_admin !== false;
   };
 
+  // The Studio panel is on the page (it registers itself, casora-panel.js connectedCallback): popups render as its
+  // preview. Hints that only invite the admin to add more (GitHub issue 125) show there, never in the live dashboard.
+  window.casoraInStudio = function () {
+    var p = window._casoraStudioPanel;
+    return !!(p && p.isConnected !== false);
+  };
+
   window.casoraPopupAction = function () {
     return window.casoraPopup ? 'fire-dom-event' : 'more-info';
   };

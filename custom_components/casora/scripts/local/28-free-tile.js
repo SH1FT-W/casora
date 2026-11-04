@@ -300,6 +300,8 @@
     return out;
   };
 
+  // GitHub issue 125: "Im Studio kannst du … ergänzen" is a setup hint for the admin – only in the Studio preview.
+  var inStudio = function () { return !!(window.casoraInStudio && window.casoraInStudio()); };
   F.sec = function (part, C, states, hass) {
     var UI = window._casoraUI;
     if (!UI || !C) return '';
@@ -310,7 +312,7 @@
       var n3 = [];
       // DD-30 (test 2): no technical note in the popup (popup-richtlinien-v3 §8 "clean") – a chart sensor without
       // numbers just shows no chart.
-      if (C.empty) n3.push(T('Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.'));
+      if (C.empty && inStudio()) n3.push(T('Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.'));
       // white-space normal: under the wheel the note ran out of the popup in one line (button-card's nowrap).
       var noteHtml = UI.note ? n3.map(function (n) { return UI.note(n); }).join('') : '';
       var notesHtml = noteHtml ? '<div style="white-space:normal;">' + noteHtml + '</div>' : '';
@@ -353,7 +355,7 @@
         var TP = window._casoraTemplates;
         var txt = TP && TP.text ? TP.text(C.tpl) : null;
         var line = UI.line(txt == null ? '…' : (String(txt).trim() || '—'), []);
-        if (C.empty) notes.push(T('Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.'));
+        if (C.empty && inStudio()) notes.push(T('Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.'));
         return line + (UI.note ? notes.map(function (n) { return UI.note(n); }).join('') : '');
       }
       if (!C.id) {
@@ -365,7 +367,7 @@
       var ago = !bad(st.state) ? since(st.last_changed) : null;
       if (ago) rest.push(ago);
       var out = UI.line(F.word(hass, st), rest);
-      if (C.empty) notes.push(T('Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.'));
+      if (C.empty && inStudio()) notes.push(T('Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.'));
       if (notes.length && UI.note) out += notes.map(function (n) { return UI.note(n); }).join('');
       return out;
     }

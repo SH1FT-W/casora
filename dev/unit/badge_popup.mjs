@@ -82,7 +82,11 @@ assert.equal(F.sec('hero', C, states, hass), '<line>…|</line>', 'template text
 window._casoraTemplates._subs[tplBadge.template] = { text: 'above_horizon', error: null, cbs: new Set() };
 assert.equal(F.sec('hero', C, states, hass), '<line>above_horizon|</line>', 'the template text as the status line');
 assert.equal(F.sec('vals', C, states, hass), '<group Werte>sensor.qa_temp:temp=21,5 °C</group>');
-assert.match(F.sec('hero', F.plan(null, states, hass, { free_template: tplBadge.template }), states, hass), /<note>Im Studio kannst du/, 'nothing configured: hint');
+// The "add more" hint only in the Studio preview (issue #125, free_tile_studio_hint.mjs).
+assert.doesNotMatch(F.sec('hero', F.plan(null, states, hass, { free_template: tplBadge.template }), states, hass), /Im Studio/, 'live dashboard: no Studio hint');
+window.casoraInStudio = () => true;
+assert.match(F.sec('hero', F.plan(null, states, hass, { free_template: tplBadge.template }), states, hass), /<note>Im Studio kannst du/, 'Studio preview, nothing configured: hint');
+delete window.casoraInStudio;
 assert.equal(F.plan(states['switch.qa_pumpe'], states, hass, { free_template: 'x' }).tpl, null, 'a device badge has its state line');
 assert.match(F.sec('hero', F.plan(null, states, hass, {}), states, hass), /Kein Gerät gewählt/, 'the tile without device is unchanged');
 assert.match(F.sec('vals', F.plan(states['switch.qa_pumpe'], states, hass, c0.variables), states, hass), /sensor\.qa_temp:Innen=21,5 °C/, 'own labels');
