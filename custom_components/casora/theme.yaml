@@ -1049,6 +1049,10 @@ Casora Basis: &casora_theme
       :host, ha-app-layout {
         --casora-header-offset: var(--app-header-height, var(--header-height, 0px));
         color-scheme: light dark;
+        /* Android Chrome / kiosk browsers enlarge text per block ("font boosting"), so badges of the
+           same row came out in different sizes (issue 123). */
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
       }
       @media (prefers-color-scheme: light) {
         :host, ha-app-layout {
