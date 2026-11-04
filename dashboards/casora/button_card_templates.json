@@ -1769,8 +1769,8 @@
   "tap_action": {
    "action": "call-service",
    "haptic": "light",
-   "service": "[[[\n  /* Issue 119: „Tap on badges: Switch“ – a tap switches the badge's lamps (01-basis.js casoraLightBadgeCall), holding\n     still opens the popup. Otherwise the tap opens the badge's sub-row of lamps (desktop). */\n  const _c = (window.casoraBadgeTapToggle && window.casoraBadgeTapToggle()) && window.casoraLightBadgeCall ? window.casoraLightBadgeCall(entity, states, hass, variables) : null;\n  return _c ? _c.service : 'input_select.select_option';\n]]]\n",
-   "service_data": "[[[\n  const _c = (window.casoraBadgeTapToggle && window.casoraBadgeTapToggle()) && window.casoraLightBadgeCall ? window.casoraLightBadgeCall(entity, states, hass, variables) : null;\n  if (_c) return _c.data;\n  return { entity_id: 'input_select.casora_expanded_row', option: states['input_select.casora_expanded_row']?.state === 'lights' ? 'none' : 'lights' };\n]]]\n"
+   "service": "[[[\n  /* Issue 119: „Tap on badges: Switch“ – a tap switches the badge's lamps when it has no sub-row of lamps (one lamp,\n     01-basis.js casoraLightBadgeTapCall); holding still opens the popup. Otherwise, and with a row of lamps in\n     that mode too, the tap opens the badge's sub-row of lamps (desktop). */\n  const _c = window.casoraLightBadgeTapCall ? window.casoraLightBadgeTapCall(entity, states, hass, variables) : null;\n  return _c ? _c.service : 'input_select.select_option';\n]]]\n",
+   "service_data": "[[[\n  const _c = window.casoraLightBadgeTapCall ? window.casoraLightBadgeTapCall(entity, states, hass, variables) : null;\n  if (_c) return _c.data;\n  return { entity_id: 'input_select.casora_expanded_row', option: states['input_select.casora_expanded_row']?.state === 'lights' ? 'none' : 'lights' };\n]]]\n"
   },
   "template": [
    "casora_badge_base",
@@ -6001,7 +6001,7 @@
       {
        "entity": "input_select.casora_mobile_filter",
        "tap_action": {
-        "action": "[[[ return window.casoraBadgeTapToggle && window.casoraBadgeTapToggle() ? 'call-service' : 'fire-dom-event'; ]]]",
+        "action": "[[[\n  /* Issue 119: „Tap on badges: Switch“ switches only a badge without a sub-row of lamps (01-basis.js\n     casoraLightBadgeTapFrom, with this row card's variables); otherwise the light popup as by default. */\n  const _hv = variables.casora_hv;\n  const auto = variables.light_rooms_auto === true || !!(_hv && _hv.light_rooms_auto === true);\n  return window.casoraLightBadgeTapFrom && window.casoraLightBadgeTapFrom(states, hass, variables, auto) ? 'call-service' : 'fire-dom-event';\n]]]\n",
         "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  /* #80, 26.10.63: with Casora popups the light badge opens its light popup – its own lamps, or the house's\n     rooms (as on the desktop). No filter this time (null). Without Casora popups the page filters by rooms. */\n  if (window.casoraPopupAction && window.casoraPopupAction() === 'fire-dom-event') return null;\n  return cur === 'lights' ? 'all' : 'lights';\n]]]\n",
         "haptic": "selection"
        },
@@ -7808,7 +7808,7 @@
         "light_rooms_auto": "[[[ const _rv = variables.casora_rv || {}; \n  /* A room with lamps of its own counts those, never the whole house (detail round #2: „3 An“ in a dark bathroom). */\n  return _rv.light_rooms_auto === true && !_rv.light_entity_1 && !_rv.light_group_entity ]]]"
        },
        "tap_action": {
-        "action": "[[[ return window.casoraBadgeTapToggle && window.casoraBadgeTapToggle() ? 'call-service' : 'fire-dom-event'; ]]]",
+        "action": "[[[ const _rv = variables.casora_rv || {}; return window.casoraLightBadgeTapFrom && window.casoraLightBadgeTapFrom(states, hass, _rv, _rv.light_rooms_auto === true && !_rv.light_entity_1 && !_rv.light_group_entity) ? 'call-service' : 'fire-dom-event'; ]]]",
         "casora_phone_row": "lights",
         "haptic": "light"
        }

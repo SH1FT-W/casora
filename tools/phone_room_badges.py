@@ -94,10 +94,13 @@ def _row_cards(room: dict) -> list:
         elif kind == "media":
             pass   # media opens its popup (casora_popup_media, #64), as on the desktop
         elif kind == "lights":
-            # Issue 119, „Tap on badges: Switch“: a tap switches the room's lamps (service and data from
-            # casora_badge_light_group), holding opens the popup.
+            # Issue 119, „Tap on badges: Switch“: a tap switches the room's lamp when the badge has no sub-row of
+            # lamps (service and data from casora_badge_light_group; 01-basis.js casoraLightBadgeTapFrom with the
+            # desktop room's variables, as the badge's own above), holding opens the popup; with a row of lamps
+            # the tap opens it as by default (owner, „Variante 1“).
             c["tap_action"] = {
-                "action": "[[[ return window.casoraBadgeTapToggle && window.casoraBadgeTapToggle() ? 'call-service' : 'fire-dom-event'; ]]]",
+                "action": "[[[ " + RV + "return window.casoraLightBadgeTapFrom && window.casoraLightBadgeTapFrom(states, hass, _rv, "
+                          "_rv.light_rooms_auto === true && !_rv.light_entity_1 && !_rv.light_group_entity) ? 'call-service' : 'fire-dom-event'; ]]]",
                 "casora_phone_row": kind, "haptic": "light"}
         elif kind:
             c["tap_action"] = {"action": "fire-dom-event", "casora_phone_row": kind, "haptic": "light"}

@@ -2361,7 +2361,7 @@ const SECTIONS = [
       { key: "badge_tap", sub: "hold", label: "Tap on badges", type: "select", auto: true, scope: "dashboard",
         options: ["", "toggle"],
         optionLabels: { "": "Open popup", toggle: "Switch the light" },
-        hint: "What tapping the Lighting badge and its lamps does. Holding does the other." },
+        hint: "What tapping the Lighting badge and its lamps does. Holding does the other. With several lamps, the badge shows them." },
       // Live re-sort of tile rows and rooms (smart-row.js sortMode, filter-overlay.js); casora-core.js reads it
       // into window._casoraSortMode, the phone gets it through casora_mobile_bg. Empty = right away (default since 26.11.6).
       { key: "tile_sort", sub: "hold", label: "Sort tiles", type: "select", auto: true, scope: "dashboard",
