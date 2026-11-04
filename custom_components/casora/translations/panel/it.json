@@ -2939,7 +2939,9 @@
     "Which AI writes the coaches' tips and checks camera pictures and plants.": "Quale IA scrive i consigli dei coach e controlla le immagini delle telecamere e le piante.",
     "Only when one of them is at home.": "Solo quando uno di loro è a casa.",
     "A sensor outside, for ventilation and heating tips.": "Un sensore esterno, per i consigli su aerazione e riscaldamento.",
-    "New version on the phone": "Nuova versione sul telefono"
+    "New version on the phone": "Nuova versione sul telefono",
+    "Oven": "Forno",
+    "Operation state or cavity temperature of the oven": "Stato di funzionamento o temperatura interna del forno"
   },
   "patterns": [
     [

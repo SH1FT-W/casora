@@ -5043,10 +5043,11 @@
 // or the generic appliance tile (casora_appliance). Before, an oven fell into the dishwasher's popup (programme names
 // raw, a start moon although the oven does not allow remote start, its device values gone) or the appliance's lone stage.
 //   window._casoraOven.is(hass, id)            – the device of id is an oven
-//   window._casoraOven.find(hass, id)          → fields of the device (by translation_key, see FIELDS)
+//   window._casoraOven.find(hass, id)          → fields of the device (casoraOvenFind.fields in 00-finder.js, plus light …)
 //   window._casoraOven.popup(id, states, hass) – popup: stage (cavity temperature vs target, progress, programme),
 //                                                programme row, options, the device as one plate, the cavity Verlauf
 //   window._casoraOven.sec(part, C, states, hass) – live parts (line, stage, prog, opts, dev)
+//   window._casoraOven.tile / level / color       – the oven's own tile casora_oven („Aus“, „Heizt auf 180 °C“, „152 °C“)
 (function () {
   if (window._casoraOven) return;
   var O = window._casoraOven = {};
@@ -5057,54 +5058,15 @@
   var num = function (states, id) { var s = str(states, id), n = s == null ? NaN : parseFloat(s); return isFinite(n) ? n : null; };
   var loc = function () { return window.casoraLocale ? window.casoraLocale() : 'de-DE'; };
   var clock = function (d) { return d.toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' }); };
-  var PROG_RE = /cooking[._]?oven[._]?program/i;
-
-  // Fields: translation_keys of Home Connect in HA core and of Home Connect Local (homeconnect_ws), domain.
-  var FIELDS = {
-    state: [['operation_state', 'sensor_operation_state'], 'sensor'],
-    sel: [['selected_program', 'select_program'], 'select'],
-    prog: [['active_program', 'sensor_active_program'], null],
-    temp: [['oven_current_cavity_temperature', 'sensor_oven_current_temperature', 'sensor_oven_current_temperature_group'], 'sensor'],
-    target: [['setpoint_temperature', 'number_oven_setpoint_temperature'], 'number'],
-    progress: [['program_progress', 'sensor_program_progress'], 'sensor'],
-    remaining: [['sensor_remaining_program_time', 'program_finish_time', 'sensor_finish_in'], 'sensor'],
-    startIn: [['sensor_start_in'], 'sensor'],
-    powerSw: [['power', 'switch_power_state'], 'switch'],
-    powerSel: [['select_power_state'], 'select'],
-    lock: [['child_lock', 'switch_child_lock'], 'switch'],
-    fastPre: [['fast_pre_heat', 'switch_oven_fast_pre_heat'], 'switch'],
-    meat: [['oven_current_meatprobe_temperature', 'sensor_oven_current_meatprobe_temperature'], 'sensor'],
-    remoteStart: [['remote_start', 'binary_remote_start_allowed'], 'binary_sensor'],
-    doorSensor: [['door', 'sensor_door_state'], 'sensor'],
-    doorBin: [['binary_sensor_door_state'], 'binary_sensor'],
-    lightIllum: [['binary_sensor_interior_illumination'], 'binary_sensor'],
-    conn: [['connection'], 'binary_sensor'],
-    start: [['button_start_program'], 'button'],
-    pause: [['pause_program', 'button_pause_program'], 'button'],
-    resume: [['resume_program', 'button_resume_program'], 'button'],
-    stop: [['stop_program', 'button_abort_program'], 'button'],
-  };
+  // Recognition and the field table: casoraOvenFind (00-finder.js, shared with the Studio and live_finder.py).
+  var OF = function () { return window.casoraOvenFind; };
   var list = function (hass, id) {
     var CD = window.casoraDevice;
     return CD && CD.entities && hass ? CD.entities(hass, id) : [];
   };
-  O.is = function (hass, id) {
-    if (!hass || !id) return false;
-    var S = hass.states || {};
-    return list(hass, id).some(function (e) {
-      if (FIELDS.temp[0].indexOf(e.key) > -1) return true;
-      if (FIELDS.sel[0].indexOf(e.key) < 0 && FIELDS.prog[0].indexOf(e.key) < 0) return false;
-      var opts = ((S[e.entity_id] || {}).attributes || {}).options || [];
-      return opts.some(function (o) { return PROG_RE.test(String(o)); });
-    });
-  };
+  O.is = function (hass, id) { return !!(OF() && OF().is(hass, id)); };
   O.find = function (hass, id) {
-    var L = list(hass, id), c = {};
-    Object.keys(FIELDS).forEach(function (f) {
-      var keys = FIELDS[f][0], dom = FIELDS[f][1], hit = null;
-      keys.forEach(function (k) { if (!hit) hit = (L.filter(function (e) { return e.key === k && (!dom || e.domain === dom); })[0] || {}).entity_id || null; });
-      c[f] = hit;
-    });
+    var L = list(hass, id), c = OF() ? OF().find(hass, id) : {};
     // The cavity light: a light of the device (light_oven_cavity, light_internal), else the read-only illumination sensor.
     c.light = (L.filter(function (e) { return e.domain === 'light'; })[0] || {}).entity_id || null;
     // Connection: the integration's own sensor, else a connectivity sensor of the device that is no cloud link.
@@ -5154,31 +5116,11 @@
   O.progIcon = function (p) { return (modeOf(p) || [0, 'mdi:stove'])[1]; };
   var NAMES = { name: O.progName, icon: O.progIcon, icon0: 'mdi:stove' };
 
-  // Operation state → [word, running]. Home Connect Alt writes the key (BSH.Common.EnumType.OperationState.Run).
-  var STATES = { inactive: ['Aus', false], ready: ['Bereit', false], delayedstart: ['Startet später', true], run: ['Läuft', true],
-    pause: ['Pausiert', true], actionrequired: ['Eingriff nötig', true], finished: ['Fertig', false], error: ['Fehler', false],
-    aborting: ['Wird abgebrochen', true] };
-  var powerOn = function (states, c) { var p = str(states, c.power); return p == null ? null : p === 'on'; };
-  O.state = function (states, c) {
-    var raw = String(str(states, c.st) || '').toLowerCase().replace(/^bsh\.common\.enumtype\.operationstate\./, '');
-    var m = STATES[raw] || [powerOn(states, c) === false ? 'Aus' : 'Bereit', false];
-    // Switched off (power off/standby) while the state still says „ready“: off.
-    if (!m[1] && raw !== 'finished' && raw !== 'error' && powerOn(states, c) === false) m = ['Aus', false];
-    return { raw: raw, word: m[0], active: m[1], dead: !states[c.st] || /^(unavailable|unknown)$/.test(String(states[c.st].state)) };
-  };
-  var unitOf = function (states, id) { return ((states[id] || {}).attributes || {}).unit_of_measurement || '°C'; };
-  var deg = function (states, id) { var n = num(states, id); return n == null ? null : Math.round(n) + ' ' + unitOf(states, id); };
-  // Minutes until the end: a duration (s/min/h) or a point in time.
-  var minsLeft = function (states, id) {
-    var st = id && states[id];
-    if (!st || bad(st.state)) return null;
-    var a = st.attributes || {};
-    if (a.device_class === 'timestamp' || /^\d{4}-\d\d-\d\dT/.test(String(st.state))) { var t = Date.parse(st.state); return isNaN(t) ? null : (t - Date.now()) / 60000; }
-    var n = parseFloat(st.state);
-    if (!isFinite(n)) return null;
-    var u = a.unit_of_measurement;
-    return u === 'h' ? n * 60 : u === 's' ? n / 60 : u === 'd' ? n * 1440 : n;
-  };
+  // State, temperatures, time left and the tile's words: casoraOvenFind (00-finder.js; the Studio preview has it too).
+  O.state = function (states, c) { return OF().state(states, c); };
+  var deg = function (states, id) { return OF().deg(states, id); };
+  var unitOf = function (states, id) { return OF().unit(states, id); };
+  var minsLeft = function (states, id) { return OF().minsLeft(states, id); };
   // Remote start: only when the oven allows it (Home Connect „Fernstart erlaubt“ / remote_start).
   var startSvc = function (states, c) {
     if (c.remoteStart && str(states, c.remoteStart) !== 'on') return null;
@@ -5187,6 +5129,11 @@
     return null;
   };
   var okBtn = function (states, e) { return !!(e && states[e] && states[e].state !== 'unavailable'); };
+
+  // Tile „Backofen“ (casora_oven): casoraOvenFind.tile / level / color (00-finder.js).
+  O.tile = function (id, states, hass) { return OF().tile(hass, id, states); };
+  O.level = function (id, states, hass) { return OF().level(hass, id, states); };
+  O.color = function (level) { return OF().color(level); };
 
   O.sec = function (part, C, states) {
     var UI = window._casoraUI;
@@ -5314,7 +5261,7 @@
   // Main switch in the head: the oven's power (a switch, or Home Connect Local's power select on/standby).
   (window._casoraHeadSwitchHooks = window._casoraHeadSwitchHooks || []).push(function (src, hass) {
     var tpl = [].concat((src && src._config && src._config.template) || []).join(' ');
-    if (!/\bcasora_(geschirrspueler|appliance|popup_dishwasher)\b/.test(tpl)) return null;
+    if (!/\bcasora_(geschirrspueler|appliance|popup_dishwasher|oven|popup_oven)\b/.test(tpl)) return null;
     var id = src._stateObj && src._stateObj.entity_id;
     if (!id || !O.is(hass, id)) return null;
     var c = O.find(hass, id);

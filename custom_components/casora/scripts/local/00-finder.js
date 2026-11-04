@@ -3473,3 +3473,172 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   };
   window.casoraKettleFind = { all: all, of: of, present: function (hass) { return all(hass).length > 0; } };
 })();
+
+// ── Oven (tile „Backofen“ casora_oven; its popup is window._casoraOven in 02-devices.js) ──────────────────────
+// Home Connect in HA core (operation_state, selected_program cooking_oven_program_heating_mode_…,
+// oven_current_cavity_temperature …) and Home Connect Local / homeconnect_ws (sensor_operation_state, select_program
+// cooking_oven_program_heatingmode_…, sensor_oven_current_temperature …). An oven reports the same operation_state as a
+// dishwasher or a coffee machine; it is told apart by its cavity temperature or an oven programme among the options.
+// One table for all: the oven popup reads its fields from it, the Studio suggests ovens by it, live_finder.py keeps a
+// copy (OVEN_FIELDS, compared in dev/unit/live_finder_test.py).
+//   casoraOvenFind.fields             { field: [[translation_keys], domain] }
+//   casoraOvenFind.is(hass, id)       – the device of id is an oven
+//   casoraOvenFind.find(hass, id)     → { field: entity_id } of that device (fields it lacks: null)
+//   casoraOvenFind.all(hass)          → [{ device, anchor, name, source, area }] (anchor = operation state, else cavity)
+//   casoraOvenFind.field(hass, id, f) – one field (Studio placeholder)
+//   casoraOvenFind.tile(hass, id, states) / level / color – the tile casora_oven (also in the Studio preview)
+//   casoraOvenFind.state(states, c) / deg / unit / minsLeft – shared with the popup (_casoraOven)
+(function () {
+  if (window.casoraOvenFind) return;
+  var PROG_RE = /cooking[._]?oven[._]?program/i;
+  var FIELDS = {
+    state: [['operation_state', 'sensor_operation_state'], 'sensor'],
+    sel: [['selected_program', 'select_program'], 'select'],
+    prog: [['active_program', 'sensor_active_program'], null],
+    temp: [['oven_current_cavity_temperature', 'sensor_oven_current_temperature', 'sensor_oven_current_temperature_group'], 'sensor'],
+    target: [['setpoint_temperature', 'number_oven_setpoint_temperature'], 'number'],
+    progress: [['program_progress', 'sensor_program_progress'], 'sensor'],
+    remaining: [['sensor_remaining_program_time', 'program_finish_time', 'sensor_finish_in'], 'sensor'],
+    startIn: [['sensor_start_in'], 'sensor'],
+    powerSw: [['power', 'switch_power_state'], 'switch'],
+    powerSel: [['select_power_state'], 'select'],
+    lock: [['child_lock', 'switch_child_lock'], 'switch'],
+    fastPre: [['fast_pre_heat', 'switch_oven_fast_pre_heat'], 'switch'],
+    meat: [['oven_current_meatprobe_temperature', 'sensor_oven_current_meatprobe_temperature'], 'sensor'],
+    remoteStart: [['remote_start', 'binary_remote_start_allowed'], 'binary_sensor'],
+    doorSensor: [['door', 'sensor_door_state'], 'sensor'],
+    doorBin: [['binary_sensor_door_state'], 'binary_sensor'],
+    lightIllum: [['binary_sensor_interior_illumination'], 'binary_sensor'],
+    conn: [['connection'], 'binary_sensor'],
+    start: [['button_start_program'], 'button'],
+    pause: [['pause_program', 'button_pause_program'], 'button'],
+    resume: [['resume_program', 'button_resume_program'], 'button'],
+    stop: [['stop_program', 'button_abort_program'], 'button'],
+  };
+  // Keys that only Home Connect in HA core writes (Home Connect Local prefixes its keys with the domain).
+  var CORE = ['operation_state', 'oven_current_cavity_temperature', 'selected_program'];
+  var list = function (hass, id) {
+    var CD = window.casoraDevice;
+    return CD && CD.entities && hass && id ? CD.entities(hass, id) : [];
+  };
+  // An oven: a cavity temperature, or an oven programme among the options of its programme select/sensor.
+  var ovenList = function (hass, L) {
+    var S = (hass && hass.states) || {};
+    return L.some(function (e) {
+      if (FIELDS.temp[0].indexOf(e.key) > -1) return true;
+      if (FIELDS.sel[0].indexOf(e.key) < 0 && FIELDS.prog[0].indexOf(e.key) < 0) return false;
+      var opts = ((S[e.entity_id] || {}).attributes || {}).options || [];
+      return opts.some(function (o) { return PROG_RE.test(String(o)); });
+    });
+  };
+  var pickAll = function (L) {
+    var c = {};
+    Object.keys(FIELDS).forEach(function (f) {
+      var keys = FIELDS[f][0], dom = FIELDS[f][1], hit = null;
+      keys.forEach(function (k) { if (!hit) hit = (L.filter(function (e) { return e.key === k && (!dom || e.domain === dom); })[0] || {}).entity_id || null; });
+      c[f] = hit;
+    });
+    return c;
+  };
+  var is = function (hass, id) { return !!(hass && id) && ovenList(hass, list(hass, id)); };
+  var find = function (hass, id) { return pickAll(list(hass, id)); };
+  // Kept per registry, devices and number of states: the Studio asks per candidate entity.
+  var memo = { R: null, D: null, n: -1, out: null };
+  var all = function (hass) {
+    var R = (hass && hass.entities) || {}, D = (hass && hass.devices) || {}, S = (hass && hass.states) || {};
+    var n = Object.keys(S).length;
+    if (memo.out && memo.R === R && memo.D === D && memo.n === n) return memo.out.slice();
+    var out = [];
+    Object.keys(D).forEach(function (did) {
+      var d = D[did];
+      if (!d || d.disabled_by || d.entry_type === 'service') return;
+      var L = list(hass, did).filter(function (e) { return !!S[e.entity_id]; });
+      if (!L.length || !ovenList(hass, L)) return;
+      var c = pickAll(L), anchor = c.state || c.temp || c.sel;
+      if (!anchor) return;
+      var core = L.some(function (e) { return CORE.indexOf(e.key) > -1; });
+      out.push({ device: did, anchor: anchor, name: d.name_by_user || d.name || '', source: core ? 'home_connect' : 'homeconnect_ws',
+        area: d.area_id || null });
+    });
+    out.sort(function (a, b) { return a.name.localeCompare(b.name) || (a.device < b.device ? -1 : 1); });
+    memo = { R: R, D: D, n: n, out: out };
+    return out.slice();
+  };
+  var field = function (hass, id, f) { return is(hass, id) ? (find(hass, id)[f] || null) : null; };
+
+  // State and the tile's words (the oven popup in 02-devices.js reads the same).
+  var bad = function (s) { return s == null || s === '' || s === 'unknown' || s === 'unavailable'; };
+  var str = function (states, id) { var s = id && states[id] && states[id].state; return bad(s) ? null : String(s); };
+  var num = function (states, id) { var s = str(states, id), n = s == null ? NaN : parseFloat(s); return isFinite(n) ? n : null; };
+  var clock = function (d) { return d.toLocaleTimeString(window.casoraLocale ? window.casoraLocale() : 'de-DE', { hour: '2-digit', minute: '2-digit' }); };
+  // Operation state → [word, running]. Home Connect Alt writes the key (BSH.Common.EnumType.OperationState.Run).
+  var STATES = { inactive: ['Aus', false], ready: ['Bereit', false], delayedstart: ['Startet später', true], run: ['Läuft', true],
+    pause: ['Pausiert', true], actionrequired: ['Eingriff nötig', true], finished: ['Fertig', false], error: ['Fehler', false],
+    aborting: ['Wird abgebrochen', true] };
+  var powerOn = function (states, c) { var p = str(states, c.power); return p == null ? null : p === 'on'; };
+  // c: fields with st (state entity) and power (switch or select).
+  var state = function (states, c) {
+    var raw = String(str(states, c.st) || '').toLowerCase().replace(/^bsh\.common\.enumtype\.operationstate\./, '');
+    var m = STATES[raw] || [powerOn(states, c) === false ? 'Aus' : 'Bereit', false];
+    // Switched off (power off/standby) while the state still says „ready“: off.
+    if (!m[1] && raw !== 'finished' && raw !== 'error' && powerOn(states, c) === false) m = ['Aus', false];
+    return { raw: raw, word: m[0], active: m[1], dead: !states[c.st] || /^(unavailable|unknown)$/.test(String(states[c.st].state)) };
+  };
+  var unit = function (states, id) { return ((states[id] || {}).attributes || {}).unit_of_measurement || '°C'; };
+  var deg = function (states, id) { var n = num(states, id); return n == null ? null : Math.round(n) + ' ' + unit(states, id); };
+  // Minutes until the end: a duration (s/min/h) or a point in time.
+  var minsLeft = function (states, id) {
+    var st = id && states[id];
+    if (!st || bad(st.state)) return null;
+    var a = st.attributes || {};
+    if (a.device_class === 'timestamp' || /^\d{4}-\d\d-\d\dT/.test(String(st.state))) { var t = Date.parse(st.state); return isNaN(t) ? null : (t - Date.now()) / 60000; }
+    var n = parseFloat(st.state);
+    if (!isFinite(n)) return null;
+    var u = a.unit_of_measurement;
+    return u === 'h' ? n * 60 : u === 's' ? n / 60 : u === 'd' ? n * 1440 : n;
+  };
+  var fieldsOf = function (hass, id) {
+    var c = find(hass, id);
+    c.st = c.state || id;
+    c.power = c.powerSw || c.powerSel;
+    return c;
+  };
+  // Tile „Backofen“ (casora_oven): one short line. Off „Aus“, ready „Bereit“; running the cavity temperature („152 °C“)
+  // or, while it is still well below the target, „Heizt auf 180 °C“; then the time left (under an hour) or the finish
+  // time. id: any entity of the oven (the tile's entity).
+  var tile = function (hass, id, states) {
+    var S = states || (hass && hass.states) || {};
+    // No entity (a tile without one, the smart row's spare copy): nothing to say; a vanished one: unavailable.
+    if (!id) return '';
+    if (!S[id]) return 'Nicht verfügbar';
+    var c = fieldsOf(hass, id), s = state(S, c);
+    if (s.dead) return 'Nicht verfügbar';
+    if (s.raw === 'delayedstart') {
+      var si = minsLeft(S, c.startIn);
+      return si != null && si > 0 ? 'Startet um ' + clock(new Date(Date.now() + si * 60000)) + ' Uhr' : s.word;
+    }
+    if (!s.active || s.raw === 'aborting') return s.word;
+    var temp = num(S, c.temp), tgt = num(S, c.target);
+    var head = temp != null && tgt != null && temp < tgt - 5 ? 'Heizt auf ' + deg(S, c.target)
+      : temp != null ? deg(S, c.temp) : (tgt != null ? 'Heizt auf ' + deg(S, c.target) : s.word);
+    // Paused or a step to do at the oven: the word first, the temperature after it.
+    var parts = s.raw === 'run' ? [head] : [s.word, temp != null ? deg(S, c.temp) : null];
+    var left = minsLeft(S, c.remaining);
+    if (left != null && left > 0.5 && s.raw === 'run') {
+      parts.push(left < 60 ? 'noch ' + Math.max(1, Math.round(left)) + ' Min.' : 'Fertig um ' + clock(new Date(Date.now() + left * 60000)));
+    }
+    return parts.filter(Boolean).join(' · ');
+  };
+  // 0 calm, 1 highlighted (heating, paused, starting later, done – the food is inside), 2 a step at the oven or an error.
+  var level = function (hass, id, states) {
+    var S = states || (hass && hass.states) || {};
+    if (!id || !S[id]) return 0;
+    var s = state(S, fieldsOf(hass, id));
+    if (s.dead) return 0;
+    if (s.raw === 'actionrequired' || s.raw === 'error') return 2;
+    return s.active || s.raw === 'finished' ? 1 : 0;
+  };
+  var color = function (lv) { return lv === 2 ? 'var(--casora-color-red, #FF453A)' : 'var(--casora-color-orange, #DE8A4E)'; };
+  window.casoraOvenFind = { fields: FIELDS, progRe: PROG_RE, coreKeys: CORE, is: is, find: find, all: all, field: field,
+    state: state, unit: unit, deg: deg, minsLeft: minsLeft, tile: tile, level: level, color: color };
+})();

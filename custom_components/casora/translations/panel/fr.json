@@ -2939,7 +2939,9 @@
     "The bell never warns about this battery.": "La cloche n'avertit jamais pour cette batterie.",
     "Casora never offers this scene.": "Casora ne propose jamais cette scène.",
     "This door or window does not count for security.": "Cette porte ou fenêtre ne compte pas pour la sécurité.",
-    "New version on the phone": "Nouvelle version sur le téléphone"
+    "New version on the phone": "Nouvelle version sur le téléphone",
+    "Oven": "Four",
+    "Operation state or cavity temperature of the oven": "État de fonctionnement ou température de l’enceinte du four"
   },
   "patterns": [
     [

@@ -5468,6 +5468,9 @@ const TILE_MAIN_FIND = {
   // device for each of thousands of entities and the Studio hung).
   casora_velair: { domain: "climate", anchors: (h) => (window.casoraVelairFind ? window.casoraVelairFind.climates(h) : []) },
   casora_fridge: { anchors: (h) => (window.casoraFridgeFind ? window.casoraFridgeFind.all(h).map((f) => f.anchor) : []) },
+  // Oven: the anchor of every oven the shared finder knows (casoraOvenFind.all in 00-finder.js – Home Connect in HA core and
+  // Home Connect Local, by the cavity temperature or an oven programme); operation_state alone is also a dishwasher's.
+  casora_oven: { anchors: (h) => (window.casoraOvenFind ? window.casoraOvenFind.all(h).map((o) => o.anchor) : []) },
   // Devices plain to see: every lawn mower (regular device card), every Frigate camera (only Frigate sets
   // device_class "camera"; Birdseye is no single camera, as 23-frigate.js), the live camera of a Reolink doorbell
   // (casora-panel-b-ux.js bellCam). Before, adding the tile found them only as an unsure match.

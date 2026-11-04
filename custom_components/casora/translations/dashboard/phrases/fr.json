@@ -2756,7 +2756,9 @@
   "Tiefkühlgerichte": "Surgelés",
   "Dörren": "Déshydratation",
   "Auftauen": "Décongélation",
-  "Gären": "Levée de pâte"
+  "Gären": "Levée de pâte",
+  "Backofen": "Four",
+  "Ofen": "Four"
  },
  "patterns": [
   [

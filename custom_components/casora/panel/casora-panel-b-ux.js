@@ -87,6 +87,7 @@
     casora_velair: "velair zeitplan klima klimaanlage heizung thermostat schedule climate",
     casora_shopping: "einkaufsliste einkauf bring liste todo shopping list grocery",
     casora_kettle: "wasserkocher kocher tee wasser xiaomi kettle",
+    casora_oven: "backofen ofen herd backen home connect oven",
     // E03 (test 2): "Abfall"/"Müll" found nothing – tile types are found by their everyday words as well.
     casora_trash: "abfall müll muell mülltonne tonne biotonne restmüll restabfall bioabfall papier altpapier gelber sack wertstoff abfuhr abholung abfallkalender waste trash garbage bin recycling collection",
     casora_calendar: "kalender termine calendar events", casora_entity_list: "liste geräteliste übersicht list entities devices overview",

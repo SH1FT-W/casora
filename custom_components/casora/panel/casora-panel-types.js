@@ -193,6 +193,13 @@ window.CASORA_TILE_TYPES = [
         hint: "Only without a smart plug." },
       CHART(),
     ] },
+  // Oven (04.11.2026): Home Connect in HA core and Home Connect Local (homeconnect_ws); pick one entity of the oven (the
+  // operation state, else the cavity temperature) – casoraOvenFind (scripts/local/00-finder.js) finds the rest on the
+  // device and writes the tile („Aus“, „Heizt auf 180 °C“, „152 °C · noch 25 Min.“); the popup is window._casoraOven.
+  // Before, an oven only reached a tile as „Dishwasher“ or „Appliance with a cycle“ (with the dishwasher's symbol).
+  { id: "casora_oven", label: "Oven", template: "casora_oven", domains: ["sensor"], icon: "stove",
+    color: "var(--casora-color-orange, #FF9F0A)", entityLabel: "Oven", entityPlaceholder: "Operation state or cavity temperature of the oven",
+    fields: [ICON, TITLE_NAME] },
   // Coffee machine (a regular device card, formerly a community card): pick one entity of the device (status,
   // power or drink selection); scripts/local/25-coffee.js finds the rest on the device – Home Connect (core,
   // homeconnect_ws, home_connect_alt), Miele, De'Longhi, Jura, Melitta/Nivona, La Marzocco, the power-curve integrations

@@ -2939,7 +2939,9 @@
     "Calendar, name, color and whether it shows on the tile.": "Calendário, nome, cor e se aparece no mosaico.",
     "A sensor outside, for ventilation and heating tips.": "Um sensor exterior, para dicas de ventilação e aquecimento.",
     "A group sensor of doors and windows, with its own name.": "Um sensor de grupo de portas e janelas, com nome próprio.",
-    "New version on the phone": "Nova versão no telemóvel"
+    "New version on the phone": "Nova versão no telemóvel",
+    "Oven": "Forno",
+    "Operation state or cavity temperature of the oven": "Estado de funcionamento ou temperatura interior do forno"
   },
   "patterns": [
     [

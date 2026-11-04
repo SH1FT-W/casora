@@ -337,7 +337,7 @@ KEYS = [
     ("home_connect", "binary_sensor", ["remote_start"], "00-finder.js SOURCES home_connect.dish remoteStart"),
     ("home_connect", "*", ["oven_current_cavity_temperature", "setpoint_temperature", "child_lock", "fast_pre_heat",
                            "pause_program", "resume_program"],
-     "02-devices.js _casoraOven FIELDS (oven popup: is, find)"),
+     "00-finder.js casoraOvenFind.fields (oven tile, Studio, _casoraOven popup), live_finder.py OVEN_FIELDS"),
     ("home_connect", "sensor", ["salt_nearly_empty", "salt_lack", "program_blocked_salt_lack", "rinse_aid_nearly_empty",
                                 "rinse_aid_lack", "smart_filter_cleaning_reminder", "machine_care_reminder",
                                 "machine_care_and_filter_cleaning_reminder",

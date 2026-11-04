@@ -650,6 +650,14 @@
         if (/^(finish(ed)?|fertig|end(ed)?|program_ended|done)$/.test(ds)) return line(null, Date.parse((S[d.st] || {}).last_changed));
         return line(H.minutesLeft(S[d.remaining]));
       }
+      // Oven (casora_oven): the time left while it runs, „Fertig seit“ once it is done (casoraOvenFind in 00-finder.js).
+      var OF = window.casoraOvenFind;
+      if (/\bcasora_oven\b/.test(tpl) && OF && id) {
+        var oc = OF.find(h, id); oc.st = oc.state || id; oc.power = oc.powerSw || oc.powerSel;
+        var os = OF.state(S, oc);
+        if (os.raw === 'finished') return line(null, Date.parse((S[oc.st] || {}).last_changed));
+        return os.raw === 'run' ? line(OF.minsLeft(S, oc.remaining)) : null;
+      }
       if (/\bcasora_3d_printer\b/.test(tpl) && PR && PR.auto && id) {
         var p = PR.auto(S[id], h) || {}, ps = String((S[p.st] || S[id] || {}).state || '').toLowerCase();
         if (/^(running|printing|print|prepare)$/.test(ps)) return line(H.minutesLeft(S[p.remaining]));

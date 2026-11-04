@@ -2939,7 +2939,9 @@
     "The phones that get “Air now” and “Close the windows”.": "Los móviles que reciben «Ventila ahora» y «Cierra las ventanas».",
     "The phones whose lock screen shows the progress.": "Los móviles cuya pantalla de bloqueo muestra el progreso.",
     "Pick how all Casora dashboards look.": "Elige cómo se ven todos los dashboards de Casora.",
-    "New version on the phone": "Nueva versión al móvil"
+    "New version on the phone": "Nueva versión al móvil",
+    "Oven": "Horno",
+    "Operation state or cavity temperature of the oven": "Estado de funcionamiento o temperatura interior del horno"
   },
   "patterns": [
     [

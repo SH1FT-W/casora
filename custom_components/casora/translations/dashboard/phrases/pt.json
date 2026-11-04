@@ -2756,7 +2756,9 @@
   "Tiefkühlgerichte": "Pratos congelados",
   "Dörren": "Desidratar",
   "Auftauen": "Descongelar",
-  "Gären": "Levedar"
+  "Gären": "Levedar",
+  "Backofen": "Forno",
+  "Ofen": "Forno"
  },
  "patterns": [
   [

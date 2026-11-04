@@ -2756,7 +2756,9 @@
   "Tiefkühlgerichte": "Platos congelados",
   "Dörren": "Deshidratar",
   "Auftauen": "Descongelar",
-  "Gären": "Fermentar"
+  "Gären": "Fermentar",
+  "Backofen": "Horno",
+  "Ofen": "Horno"
  },
  "patterns": [
   [
