@@ -9,12 +9,15 @@
 //  2. on: swipe to the left → next room, to the right → previous room
 //  3. on: a mostly vertical move scrolls and never changes the room
 //  4. on: a swipe that starts in a sideways-scrolling row (badges) does not change the room
-//  5. on: no room change while a Casora popup is open; no wrap-around past the last room
+//  5. on: no room change while a Casora popup is open
 //  6. on: Home is the first page – on Home a swipe to the left opens the first room, on the first room a swipe to the
-//     right goes back Home, Home has no previous page; a swipe that starts on one of Home's own sideways-scrolling
-//     rows stays with the row
+//     right goes back Home
+//  7. on (owner 04.11.2026, issue 121): wrap-around – on Home a swipe to the right opens the last room, on the last room a
+//     swipe to the left goes Home; the head of a page never swipes: Home's badge row at its start, at its end and when it
+//     fits, and the open room's title
 // iPad (WebKit, landscape, iPadOS Safari's Mac user agent, touch events): the same setting on the desktop dashboard
-// swipes between the room views, Home (first view) first; a saved swipe_rooms_tablet alone does nothing.
+// swipes between the room views, Home (first view) first, wrapping around; a saved swipe_rooms_tablet alone does nothing;
+// the hero's head (room title, a badge row that fits or is at its end) never swipes (issue 121).
 // Desktop with a mouse (Chromium 1440, no touch): dragging never changes the page.
 // Owner 03.11.2026 (iPad prod): a row that scrolls sideways keeps the swipe only while it can still scroll that way; at
 // its end the page swipes (scroll chaining) – a tablet room page is mostly tile rows. Smooth change ("the background
@@ -46,12 +49,19 @@ const SPOT = (kind, side) => (() => {
     const cs = getComputedStyle(el);
     if (/pan-x/.test(cs.touchAction) && !/pan-y/.test(cs.touchAction)) return true;
     return el.scrollWidth > el.clientWidth + 4 && el.clientWidth > 0 && (cs.overflowX === 'auto' || cs.overflowX === 'scroll'); };
+  // The head of the page (issue 121) is no free spot either: the module's own test, and the phone room title (no
+  // pointer events, so hit by its box).
+  const S = window.casoraSwipeRooms || {};
+  const titles = []; Array.from(window._casoraSmartRows || []).forEach((r) => r.shadowRoot && r.shadowRoot.querySelectorAll('casora-filter-overlay')
+    .forEach((fo) => { if (fo._showing && fo._titleEl) titles.push(fo._titleEl.getBoundingClientRect()); }));
+  const head = (el, x, y) => (S.inHead && S.inHead(up(el))) || titles.some((r) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
   const W = innerWidth;
   for (let y = 56; y < innerHeight - 140; y += 20) {
     for (const x of (SIDE === 'right' ? [W * 0.8, W * 0.7, W * 0.9] : [W * 0.2, W * 0.3, W * 0.12])) {
-      const el = deepAt(x, y); if (!el) continue;
-      const on = up(el).some(claims);
-      if (KIND === 'row' ? on : !on) return { x, y };
+      const on = (yy) => { const el = deepAt(x, yy); return el ? up(el).some(claims) || head(el, x, yy) : null; };
+      const here = on(y); if (here === null) continue;
+      // A free spot keeps a margin to the next row or head (a start on an edge is a coin toss).
+      if (KIND === 'row' ? here : !here && !on(y - 10) && !on(y + 10)) return { x, y };
     }
   }
   return null;
@@ -71,6 +81,8 @@ const toRight = (s, w) => [s.x, s.y, Math.min(w - 8, s.x + w * 0.6), s.y - 4];
   await need('Handy: mindestens drei Räume im Raummenü', keys.length >= 3, keys);
   const cdp = await context.newCDPSession(page);
   const cur = () => page.evaluate(() => window._casoraFilter.get());
+  // What the module decided for the last touch ('head' = started in the head of the page).
+  const last = () => page.evaluate(() => window.casoraSwipeRooms.last);
   const go = async (k) => { await page.evaluate((k) => { window._casoraFilter.set(k); }, k); await page.waitForTimeout(1800); };
   const setOn = (on) => page.evaluate((on) => { window._hmnOwner._cfg = Object.assign({}, window._hmnOwner._cfg, { swipe_rooms: on }); }, on);
   const midY = 520;
@@ -132,10 +144,45 @@ const toRight = (s, w) => [s.x, s.y, Math.min(w - 8, s.x + w * 0.6), s.y - 4];
     await check('Handy an: Wischen in einer seitwärts scrollenden Reihe wechselt den Raum nicht', (await cur()) === keys[1], { cur: await cur() });
   } else console.log('  info   Handy: keine seitwärts scrollende Reihe im offenen Raum – Fall 4 übersprungen');
 
-  // Last room: no wrap-around.
+  // Last room: wraps around to Home (issue 121).
   await go(keys[keys.length - 1]);
   await swipe(cdp, page, 330, midY, 60, midY + 6);
-  await check('Handy an: am letzten Raum kein Sprung zum ersten', (await cur()) === keys[keys.length - 1], { cur: await cur() });
+  await check('Handy an: am letzten Raum nach links wischen → Home', (await cur()) === 'all', { cur: await cur() });
+
+  // The open room's title (issue 121): a swipe that starts on it never changes the room.
+  await go(keys[1]);
+  const title = await page.evaluate((k) => { let r = null;
+    Array.from(window._casoraSmartRows || []).forEach((x) => x.shadowRoot && x.shadowRoot.querySelectorAll('casora-filter-overlay')
+      .forEach((fo) => { if (fo._config && fo._config.filter_category === k && fo._titleEl) r = fo._titleEl.getBoundingClientRect(); }));
+    return r && r.height > 0 ? { x: Math.min(r.right - 30, 330), y: r.top + r.height / 2 } : null; }, keys[1]);
+  if (title) {
+    await swipe(cdp, page, title.x, title.y, title.x - 260, title.y + 4);
+    await check('Handy an: Wischen auf dem Raumtitel nach links wechselt den Raum nicht', (await cur()) === keys[1] && (await last()) === 'head', { cur: await cur(), last: await last(), at: title });
+    await swipe(cdp, page, 40, title.y, 330, title.y - 4);
+    await check('Handy an: Wischen auf dem Raumtitel nach rechts wechselt den Raum nicht', (await cur()) === keys[1] && (await last()) === 'head', { cur: await cur(), last: await last() });
+  } else await check('Handy: Raumtitel des offenen Raums gefunden', false);
+  // The collapsed title bar (fixed at the top once a room page is scrolled up; filter-overlay _compactHeaderEl) is head
+  // as well. The test house's rooms fit the phone: a spacer at the page's end makes the room long enough to scroll.
+  await go(keys[1]);
+  const bar = await page.evaluate(async (k) => {
+    let fo = null;
+    Array.from(window._casoraSmartRows || []).forEach((x) => x.shadowRoot && x.shadowRoot.querySelectorAll('casora-filter-overlay')
+      .forEach((f) => { if (f._config && f._config.filter_category === k && f._overlayEl) fo = f; }));
+    const o = fo && fo._overlayEl, content = fo && fo._contentEl;
+    if (!o || !content) return null;
+    const sp = document.createElement('div'); sp.id = 'qa-r532-spacer'; sp.style.height = '1600px'; content.appendChild(sp);
+    o.scrollTop = o.scrollHeight;
+    await new Promise((r) => setTimeout(r, 900));
+    const c = fo._compactHeaderEl;
+    if (!c) return { k, none: true };
+    const r = c.getBoundingClientRect();
+    return { k, x: r.left + r.width / 2, y: r.top + r.height / 2, h: r.height, op: Number(getComputedStyle(c).opacity), top: o.scrollTop };
+  }, keys[1]);
+  if (bar && !bar.none && bar.op > 0.5 && bar.h > 0) {
+    await swipe(cdp, page, bar.x, bar.y, bar.x - 160, bar.y + 2);
+    await check('Handy an: Wischen auf der eingeklappten Titelleiste wechselt den Raum nicht', (await cur()) === bar.k && (await last()) === 'head', { cur: await cur(), last: await last(), at: bar });
+  } else await check('Handy: eingeklappte Titelleiste eines gescrollten Raums gefunden', false, bar);
+  await page.evaluate(() => { const sp = window.__pierce('#qa-r532-spacer')[0]; if (sp) sp.remove(); });
 
   // A Casora popup is open: no room change.
   await go(keys[1]);
@@ -163,23 +210,29 @@ const toRight = (s, w) => [s.x, s.y, Math.min(w - 8, s.x + w * 0.6), s.y - 4];
   await go('all');
   const fl = await spot(page, 'free', 'left');
   if (fl) await swipe(cdp, page, ...toRight(fl, 393));
-  await check('Handy an: auf Home nach rechts wischen bleibt auf Home', (await cur()) === 'all', { cur: await cur() });
-  // Home's own sideways-scrolling row: probed with a real touch (the element under the finger must be in the row).
-  await page.evaluate(() => { window.__qaPath = null; document.addEventListener('touchstart', (e) => { window.__qaPath = e.composedPath()
-    .filter((el) => el.nodeType === 1).some((el) => { const cs = getComputedStyle(el);
-      return el.scrollWidth > el.clientWidth + 4 && el.clientWidth > 0 && (cs.overflowX === 'auto' || cs.overflowX === 'scroll'); }); }, { capture: true, passive: true }); });
-  let homeRow = null;
-  for (let y = 56; y < 700 && !homeRow; y += 20) {
-    for (const x of [314, 270, 340]) {
-      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
-      await cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
-      if (await page.evaluate(() => window.__qaPath)) { homeRow = { x, y }; break; }
-    }
+  await check('Handy an: auf Home nach rechts wischen → letzter Raum', (await cur()) === keys[keys.length - 1], { cur: await cur(), want: keys[keys.length - 1], at: fl });
+  await go('all');
+  // Home's badge row is head (issue 121): a swipe on it never changes the page – at its start (the row scrolls), at its
+  // end (no scroll chaining to the page) and when it fits (no scroller at all; overflow hidden stands in for few badges).
+  const badgeRow = (mode) => page.evaluate((mode) => {
+    const bc = window.__pierce('button-card').find((b) => [].concat((b._config || {}).template || []).includes('casora_mobile_filter_badges'));
+    const row = bc && bc.shadowRoot && bc.shadowRoot.querySelector('#badges');
+    if (!row) return null;
+    row.style.overflowX = mode === 'fit' ? 'hidden' : '';
+    row.scrollLeft = mode === 'end' ? row.scrollWidth : 0;
+    const r = row.getBoundingClientRect();
+    return { x: Math.min(r.right - 24, 330), y: r.top + r.height / 2, left: Math.round(row.scrollLeft), max: row.scrollWidth - row.clientWidth,
+      over: row.scrollWidth > row.clientWidth + 4 && getComputedStyle(row).overflowX !== 'hidden' };
+  }, mode);
+  for (const [mode, label] of [['start', 'am Anfang'], ['end', 'am Ende'], ['fit', 'die passt']]) {
+    const b = await badgeRow(mode);
+    if (!b) { await check('Handy: Badge-Reihe auf Home gefunden', false); break; }
+    if (mode === 'end' && !b.over) { console.log('  info   Handy: Badge-Reihe auf Home scrollt nicht – Fall „am Ende“ übersprungen'); continue; }
+    await swipe(cdp, page, b.x, b.y, b.x - 230, b.y + 3);
+    await check('Handy an: Wischen auf der Badge-Reihe von Home (' + label + ') wechselt die Seite nicht', (await cur()) === 'all' && (await last()) === 'head', { cur: await cur(), last: await last(), at: b });
+    if ((await cur()) !== 'all') await go('all');
   }
-  if (homeRow) {
-    await swipe(cdp, page, homeRow.x, homeRow.y, homeRow.x - 230, homeRow.y);
-    await check('Handy an: Wischen auf einer Reihe von Home bleibt bei der Reihe', (await cur()) === 'all', { cur: await cur(), at: homeRow });
-  } else console.log('  info   Handy: keine seitwärts scrollende Reihe auf Home unter dem Finger – Fall 6b übersprungen');
+  await badgeRow('start');
   await page.evaluate(() => window._casoraFilter.set('all'));
   await page.context().close();
 }
@@ -206,6 +259,9 @@ const setRooms = (page, vars) => page.evaluate((vars) => {
   return true;
 }, vars);
 // WebKit has no CDP touch input: touch events dispatched at the element under the finger (composed, like a touch).
+// These untrusted Events get no copy from button-card (checked 04.11.2026 in WebKit and Chromium: one touchstart, one
+// touchend), so the copy of a real touch (issue 121) is covered only on the phone (CDP, real touch input) and in
+// dev/unit/swipe_rooms.mjs; here the head checks also require casoraSwipeRooms.last === 'head'.
 async function jsSwipe(page, x0, y0, x1, y1) {
   const ok = await page.evaluate(async ([x0, y0, x1, y1]) => {
     let el = document.elementFromPoint(x0, y0);
@@ -248,9 +304,43 @@ async function jsSwipe(page, x0, y0, x1, y1) {
   await sw('left');
   await check('iPad an: in der ersten Raumansicht nach rechts wischen → Home', (await path()) === homePath, { path: await path(), want: homePath });
   await sw('left');
-  await check('iPad an: auf Home nach rechts wischen bleibt auf Home', (await path()) === homePath, { path: await path() });
+  const last = views[views.length - 1];
+  await check('iPad an: auf Home nach rechts wischen → letzte Raumansicht', (await path()) === last, { path: await path(), want: last });
+  await goPath(last);
+  await sw('right');
+  await check('iPad an: in der letzten Raumansicht nach links wischen → Home', (await path()) === homePath, { path: await path(), want: homePath });
   await sw('right');
   await check('iPad an: auf Home nach links wischen → erster Raum', (await path()) === views[1], { path: await path(), want: views[1] });
+  // The hero's head (issue 121): the room title and the badge row – when it fits and at its end (narrowed in the
+  // browser) – never change the page.
+  const heroAt = (id, mode) => page.evaluate(async ([id, mode]) => {
+    const hero = window.__pierce('button-card').find((b) => [].concat((b._config || {}).template || []).includes('casora_room')
+      && b.getBoundingClientRect().width > 300);
+    const el = hero && hero.shadowRoot && hero.shadowRoot.getElementById(id);
+    if (!el) return null;
+    const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    // The hero's stylesheet keeps #badges overflow: visible (!important); narrowed, it scrolls like a long row.
+    if (mode === 'end') { el.style.setProperty('width', '160px', 'important'); el.style.setProperty('overflow-x', 'auto', 'important');
+      await frame(); el.scrollLeft = el.scrollWidth; await frame(); }
+    if (mode === 'reset') { el.style.removeProperty('width'); el.style.removeProperty('overflow-x'); el.scrollLeft = 0; return true; }
+    const r = el.getBoundingClientRect();
+    const x = id === 'name' ? r.left + Math.min(r.width * 0.5, 300) : r.right - 20;
+    return { x, y: r.top + r.height / 2, over: el.scrollWidth > el.clientWidth + 4, left: Math.round(el.scrollLeft),
+      max: el.scrollWidth - el.clientWidth };
+  }, [id, mode]);
+  if ((await path()) !== views[1]) await goPath(views[1]);
+  for (const [id, mode, label] of [['name', '', 'auf dem Raumtitel'], ['badges', '', 'auf der Badge-Reihe, die passt'],
+    ['badges', 'end', 'auf der Badge-Reihe an ihrem Ende']]) {
+    const h = await heroAt(id, mode);
+    if (!h) { await check('iPad: #' + id + ' der Raumansicht gefunden', false); continue; }
+    if (mode === 'end' && !h.over) { console.log('  info   iPad: Badge-Reihe ließ sich nicht verengen – Fall übersprungen'); continue; }
+    if (mode === 'end') await check('iPad: verengte Badge-Reihe steht an ihrem Ende', h.left >= h.max - 2, h);
+    await jsSwipe(page, h.x, h.y, h.x - 300, h.y + 2);
+    const lastI = await page.evaluate(() => window.casoraSwipeRooms.last);
+    await check('iPad an: Wischen ' + label + ' wechselt die Ansicht nicht', (await path()) === views[1] && lastI === 'head', { path: await path(), last: lastI, at: h });
+    if (mode === 'end') await heroAt(id, 'reset');
+    if ((await path()) !== views[1]) await goPath(views[1]);
+  }
   // Scroll chaining on a tile row that overflows (narrowed in the browser): at its start a swipe to the left scrolls the
   // row, at its end the page goes on to the next room.
   const row = await page.evaluate(() => {

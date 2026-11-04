@@ -1,17 +1,25 @@
 // ── Swipe between rooms (issue 114, 03.11.2026) ────────────────────────────────
 // A horizontal swipe on an open room goes to the next / previous room, in the order of the room menu – in addition
 // to the room menu, never instead of it. Home is the first page (owner, 03.11.2026): on Home a swipe to the left opens
-// the first room, on the first room a swipe to the right goes back Home; Home has no previous page.
+// the first room, on the first room a swipe to the right goes back Home.
+// Wrap-around (owner, 04.11.2026, issue 121: "a carousel would be more useful"): on Home a swipe to the right opens the
+// last room, on the last room a swipe to the left goes Home – whenever there are at least two pages.
 // One setting for every touch device (owner, 03.11.2026): Studio › Controls › Phone "Swipe between rooms" (swipe_rooms,
 // off by default). The desktop dashboard keeps it in its room views (read like hold_mode in casora-core.js →
 // window._casoraSwipeRooms: tablets and iPads), the phone's bottom bar card gets it on save (markPhoneManaged).
 // Only touches swipe: the listeners are touch events, so a mouse never does; no user agent checks (iPadOS Safari
 // says "Macintosh"). A saved swipe_rooms_tablet (26.11.9 test builds) is ignored.
-// Not a swipe: a mostly vertical move, a start in a row that scrolls sideways (badges, chips, media), on a slider,
-// chart, input or menu, a start at the screen's left edge (iOS back), anything while a Casora popup or a menu is open.
-// No wrap-around: at the first / last room the page gives a little and springs back. prefers-reduced-motion: the room
-// changes without the slide.
-// window.casoraSwipeRooms.decide / lock / neighbour are pure (dev/unit/swipe_rooms.mjs).
+// Not a swipe: a mostly vertical move, a start in a row that scrolls sideways (chips, media), on a slider, chart,
+// input or menu, a start at the screen's left edge (iOS back), anything while a Casora popup or a menu is open.
+// The head of a page never swipes (owner, 04.11.2026, issue 121: "if you scroll the badges it swipes the rooms"): a
+// touch that starts on the title / header or a badge row stays there – at the row's end and when the row fits alike.
+// Head = phone: the Home header card (casora_mobile_weather), the badge row (casora_mobile_filter_badges), the sub-badge
+// row (casora_mobile_sensor_chips), the open room's title and its collapsed title bar once the page scrolls up (both
+// pointer-events: none, so hit by their box while they show); tablet: the
+// casora_room hero's head fields (#name, #n, #temperature, #weather, #time, #navigation, #badges*). Scroll chaining at a
+// row's end is left for the tile rows. A copy of a touch that button-card sends from further out is no new touch.
+// prefers-reduced-motion: the room changes without the slide.
+// window.casoraSwipeRooms.decide / lock / neighbour / rowTakes / inHead are pure (dev/unit/swipe_rooms.mjs).
 (function () {
   if (window.casoraSwipeRooms) return;
 
@@ -40,14 +48,14 @@
     if (!far && !flick) return null;
     return dx < 0 ? 'next' : 'prev';
   }
-  // The key next to cur in keys for dir ('next' | 'prev'), null at either end or when cur is not a room.
+  // The key next to cur in keys for dir ('next' | 'prev'), wrapping around at either end (issue 121); null with fewer
+  // than two pages or when cur is not a page.
   function neighbour(keys, cur, dir) {
-    var i = (keys || []).indexOf(cur);
-    if (i < 0) return null;
-    var j = dir === 'next' ? i + 1 : dir === 'prev' ? i - 1 : -1;
-    return j >= 0 && j < keys.length ? keys[j] : null;
+    var n = (keys || []).length, i = n ? keys.indexOf(cur) : -1;
+    if (i < 0 || n < 2 || (dir !== 'next' && dir !== 'prev')) return null;
+    return keys[(i + (dir === 'next' ? 1 : -1) + n) % n];
   }
-  // How far the page follows the finger: half the way, at an end only a little (rubber band).
+  // How far the page follows the finger: half the way; only a page without a neighbour gives a little (rubber band).
   function follow(dx, atEnd) {
     if (!atEnd) return dx * 0.5;
     var s = dx < 0 ? -1 : 1;
@@ -63,8 +71,27 @@
     });
   }
 
+  // The head of a page (issue 121). path: the touch's composed path. A button-card whose template is head as a whole,
+  // or a head field of the casora_room hero (the custom field element in the hero's shadow root).
+  var HEAD_TPL = { casora_mobile_weather: 1, casora_mobile_filter_badges: 1, casora_mobile_sensor_chips: 1 };
+  var ROOM_HEAD = /^(name|n|temperature|weather|time|navigation|badges(_[a-z]+)?)$/;
+  var tplOf = function (el) { var c = el && el._config; return c ? [].concat(c.template || []) : []; };
+  function inHead(path) {
+    for (var i = 0; i < (path || []).length; i++) {
+      var el = path[i];
+      if (!el || el.nodeType !== 1) continue;
+      var tpl = tplOf(el);
+      for (var k = 0; k < tpl.length; k++) if (HEAD_TPL[tpl[k]]) return true;
+      if (el.id && ROOM_HEAD.test(el.id)) {
+        var root = el.getRootNode ? el.getRootNode() : null, host = root && root.host;
+        if (host && tplOf(host).indexOf('casora_room') >= 0) return true;
+      }
+    }
+    return false;
+  }
+
   window.casoraSwipeRooms = { decide: decide, lock: lock, neighbour: neighbour, follow: follow, rowTakes: rowTakes,
-    EDGE_PX: EDGE_PX, blocked: null, scrollers: null, last: '' };
+    inHead: inHead, EDGE_PX: EDGE_PX, blocked: null, scrollers: null, last: '' };
   var S0 = window.casoraSwipeRooms;
   if (typeof document === 'undefined' || !document.addEventListener) return;
 
@@ -90,8 +117,9 @@
     }
     return false;
   }
-  // Rows under the finger that scroll sideways (badge rows, chips, a tile row that overflows), with how far each can
-  // still go: [{ el, left, max }]. A row that fits is no row here (a tablet room page is mostly tile rows).
+  // Rows under the finger that scroll sideways (a tile row that overflows; badge rows are head and never get here), with
+  // how far each can still go: [{ el, left, max }]. A row that fits is no row here (a tablet room page is mostly tile
+  // rows).
   function scrollers(path) {
     var out = [];
     for (var i = 0; i < path.length; i++) {
@@ -121,15 +149,17 @@
     var rooms = (o._rooms || []).filter(window.casoraSeesRoute || function () { return true; });
     var keys = ['all'].concat(rooms.map(function (r) { return r.key; }));
     if (keys.indexOf(cur) < 0 || keys.length < 2) return null;
-    var el = null;
+    var el = null, title = null, compact = null;
     Array.from(window._casoraSmartRows || []).forEach(function (r) {
       if (el || !r.shadowRoot) return;
       Array.prototype.forEach.call(r.shadowRoot.querySelectorAll('casora-filter-overlay'), function (fo) {
-        if (!el && fo._showing && fo._config && fo._config.filter_category === cur && fo._overlayEl) el = fo._overlayEl;
+        if (!el && fo._showing && fo._config && fo._config.filter_category === cur && fo._overlayEl) {
+          el = fo._overlayEl; title = fo._titleEl || null; compact = fo._compactHeaderEl || null;
+        }
       });
     });
     return {
-      phone: true, el: el, keys: keys, cur: cur,
+      phone: true, el: el, keys: keys, cur: cur, title: title, compact: compact,
       go: function (key) { if (typeof o._haptic === 'function') o._haptic(); o._set(key); },
     };
   }
@@ -260,6 +290,17 @@
   window.addEventListener('location-changed', warm);
   setTimeout(warm, 2500);
 
+  // The open room's title on the phone and its collapsed title bar (fixed at the top once the page scrolls up) take
+  // no touches while hidden (pointer-events: none): hit by their box while they show.
+  function hits(el, t) {
+    if (!el || !el.isConnected || !el.getBoundingClientRect) return false;
+    var op = 1;
+    try { op = Number(getComputedStyle(el).opacity); } catch (e) { op = 1; }
+    if (op < 0.1) return false;
+    var r = el.getBoundingClientRect();
+    return r.height > 0 && t.clientX >= r.left && t.clientX <= r.right && t.clientY >= r.top && t.clientY <= r.bottom;
+  }
+
   var g = null;
   var S = window.casoraSwipeRooms;
   var reset = function (el, animate) {
@@ -271,7 +312,23 @@
     if (animate) setTimeout(function () { if (!g || g.el !== el) el.style.transition = ''; }, 320);
   };
 
+  // button-card stops a touchstart / touchend at the host of a custom_fields card and sends a copy from its parent
+  // (isTrusted false, a path without the touched element; docs/ha-annahmen.md). A copy is no new touch: it would forget
+  // where the finger is (head, row) and swipe the page from a badge row (issue 121). live: the last real touchstart of
+  // a single finger that is still down; a copy is an untrusted touchstart at its point, right after it. Anything else
+  // is a touch of its own and starts afresh – also when a touchend never arrived (a removed node, iOS without
+  // touchcancel), so a stale gesture is never finished by another one.
+  var live = null;
+  var COPY_MS = 400;
+  function isCopy(e) {
+    var t = e.touches && e.touches[0], ts = e.timeStamp || Date.now();
+    return !e.isTrusted && !!live && !!t && Math.abs(t.clientX - live.x) < 2 && Math.abs(t.clientY - live.y) < 2
+      && ts - live.ts >= 0 && ts - live.ts < COPY_MS;
+  }
   document.addEventListener('touchstart', function (e) {
+    if (isCopy(e)) return;
+    var t0 = e.touches && e.touches.length === 1 ? e.touches[0] : null;
+    live = e.isTrusted && t0 ? { x: t0.clientX, y: t0.clientY, ts: e.timeStamp || Date.now() } : null;
     g = null;
     if (!e.touches || e.touches.length !== 1 || popupOpen()) return;
     var t = e.touches[0];
@@ -280,6 +337,8 @@
     if (!tgt) { S.last = 'off'; return; }
     var path = e.composedPath ? e.composedPath() : [e.target];
     if (blocked(path)) { S.last = 'blocked'; return; }
+    // The head of the page: never a room change, whatever the row under the finger can still do (issue 121).
+    if (inHead(path) || hits(tgt.title, t) || hits(tgt.compact, t)) { S.last = 'head'; return; }
     g = { x: t.clientX, y: t.clientY, t: e.timeStamp || Date.now(), axis: null, tgt: tgt, el: tgt.el, dx: 0, dy: 0,
       rows: scrollers(path) };
     preloadAround(tgt);
@@ -304,6 +363,7 @@
   }, { passive: true, capture: true });
 
   var end = function (e) {
+    if (!e.touches || !e.touches.length) live = null;
     var s = g; g = null;
     if (!s || s.axis !== 'h') { if (s) reset(s.el, false); return; }
     var dir = decide({ dx: s.dx, dy: s.dy, dt: (e.timeStamp || Date.now()) - s.t, w: window.innerWidth });
@@ -318,5 +378,8 @@
     setTimeout(function () { swap(s.tgt, key, function () { reset(s.el, false); }); }, 170);
   };
   document.addEventListener('touchend', end, { passive: true, capture: true });
-  document.addEventListener('touchcancel', function () { var s = g; g = null; if (s) reset(s.el, true); }, { passive: true, capture: true });
+  document.addEventListener('touchcancel', function (e) {
+    if (!e.touches || !e.touches.length) live = null;
+    var s = g; g = null; if (s) reset(s.el, true);
+  }, { passive: true, capture: true });
 })();
