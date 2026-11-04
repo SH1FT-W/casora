@@ -1,10 +1,8 @@
-"""Build the panel's template bundle from the dashboard template tree.
+"""Serve the panel's template bundle.
 
-The bundle is a derived artifact. Shipping it prebuilt means it can drift from
-the templates it was built from, and a Save then writes stale templates into the
-dashboard. Where the template tree is present (development setups), the bundle is
-built from it in memory, so the two stay in step no matter who edited what. Nothing
-is ever written into the integration folder; installs use the shipped bundle.
+The bundle ships prebuilt in the package (tools/build-templates.py). Nothing is
+ever written into the integration folder, and nothing in the config folder is
+read to build it.
 """
 
 from __future__ import annotations
@@ -12,173 +10,25 @@ from __future__ import annotations
 import gzip
 import hashlib
 import json
-import logging
 import os
 
 from aiohttp import web
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
-from homeassistant.util.yaml import load_yaml
 
 from .card_package import effective_bundle, overlay_path
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
-SOURCE = "dashboards/casora/casora.yaml.example"
-SOURCE_MOBILE = "dashboards/casora/casora_mobile.yaml.example"
-TEMPLATE_DIR = "dashboards/templates/button_cards"
 BUNDLE = f"custom_components/{DOMAIN}/panel/casora-templates.json"
 
 
-EXCLUDE_DIRS = ("new popups (untested)",)
-
-
-def _excluded(path: str) -> bool:
-    return any(("/%s/" % d) in path or path.endswith("/%s" % d) for d in EXCLUDE_DIRS)
-
-
-def _newest_mtime(*paths: str) -> float:
-    newest = 0.0
-    for path in paths:
-        if os.path.isfile(path):
-            newest = max(newest, os.path.getmtime(path))
-            continue
-        for dirpath, _dirnames, filenames in os.walk(path):
-            if _excluded(dirpath):
-                continue
-            for name in filenames:
-                if name.endswith(".yaml"):
-                    newest = max(newest, os.path.getmtime(os.path.join(dirpath, name)))
-    return newest
-
-
-def _excluded_keys(config_dir: str) -> set[str]:
-    """The top-level template names defined under an excluded directory."""
-    names: set[str] = set()
-    tree = os.path.join(config_dir, "templates", "button_cards")
-    for dirname in EXCLUDE_DIRS:
-        root = os.path.join(tree, dirname)
-        if not os.path.isdir(root):
-            continue
-        for dirpath, _dirnames, filenames in os.walk(root):
-            for fname in filenames:
-                if not fname.endswith(".yaml"):
-                    continue
-                try:
-                    doc = load_yaml(os.path.join(dirpath, fname))
-                except Exception:  # a broken draft must not stop a rebuild
-                    continue
-                if isinstance(doc, dict):
-                    names.update(doc)
-    return names
-
-
-def _build(source: str, mobile_source: str) -> dict:
-    cfg = load_yaml(source)
-
-    templates = cfg.get("button_card_templates")
-    if not templates:
-        raise ValueError(f"no button_card_templates in {source}")
-
-    for name in _excluded_keys(os.path.dirname(os.path.dirname(source))):
-        templates.pop(name, None)
-
-    home = next((v for v in cfg.get("views", []) if v.get("path") == "home"), None)
-    if home is None:
-        raise ValueError(f"no view with path 'home' in {source}")
-
-    cards = home.get("cards") or []
-    if len(cards) < 3:
-        raise ValueError(f"home view has {len(cards)} cards, expected at least 3")
-
-    return {
-        "version": "1",
-        "templates": templates,
-        # The nav card is the scaffold's, not the user's dashboard.
-        "scaffold": {
-            "view_type": home["type"],
-            "layout": home["layout"],
-            "nav": cards[1],
-        },
-        "mobile": _mobile_scaffold(mobile_source),
-    }
-
-
-def _mobile_scaffold(source: str) -> dict | None:
-    """The phone layout's pieces. Only the pieces: which child is chrome and
-    which is a section is knowledge the panel holds next to its extractor, and
-    duplicating that rule here is how the two would drift."""
-    if not os.path.exists(source):
-        return None
-    cfg = load_yaml(source)
-    views = cfg.get("views") or []
-    if not views:
-        return None
-    view = views[0]
-    cards = view.get("cards") or []
-    if len(cards) < 2 or (cards[1] or {}).get("type") != "custom:casora-smart-row":
-        return None
-    return {
-        "view_type": view["type"],
-        "layout": view["layout"],
-        "shell": cards[0],
-        "row": {k: v for k, v in cards[1].items() if k != "cards"},
-        "children": cards[1].get("cards") or [],
-        "extras": {k: v for k, v in cfg.items()
-                   if k not in ("views", "button_card_templates")},
-    }
-
-
-def _bundle_is_whole(bundle: dict | None) -> bool:
-    """Whether a bundle carries everything this builder emits."""
-    if not isinstance(bundle, dict) or not bundle.get("templates") or not bundle.get("scaffold"):
-        return False
-    return bundle.get("mobile") is not None
-
-
-# Built bundle in memory: (newest source mtime, JSON text). Never written into the integration folder.
-_BUILT: dict[str, tuple[float, str]] = {}
-
-
 def bundle_text(config_dir: str) -> str | None:
-    """The template bundle as JSON text. Blocking.
+    """The template bundle as JSON text, as shipped in the package. Blocking.
 
-    Normally the bundle shipped in the package (built by tools/build-templates.py). Only where the
-    dashboard template tree exists in the config folder (development setups) and is newer than the
-    shipped bundle, the bundle is built from it - in memory, cached until a template changes."""
-    out = os.path.join(config_dir, BUNDLE)
-    source = os.path.join(config_dir, SOURCE)
-    tree = os.path.join(config_dir, TEMPLATE_DIR)
-    if os.path.exists(source) and os.path.isdir(tree):
-        newest = _newest_mtime(source, os.path.join(config_dir, SOURCE_MOBILE), tree)
-        hit = _BUILT.get(config_dir)
-        if hit and hit[0] == newest:
-            return hit[1]
-        try:
-            shipped_mtime = os.path.getmtime(out)
-        except OSError:
-            shipped_mtime = 0.0
-        shipped = None
-        if shipped_mtime >= newest:
-            shipped = _read_text(out)
-            try:
-                whole = _bundle_is_whole(json.loads(shipped)) if shipped else False
-            except ValueError:
-                whole = False
-            if whole:
-                return shipped
-        try:
-            bundle = _build(source, os.path.join(config_dir, SOURCE_MOBILE))
-        except Exception:
-            # A half-written template must not take the panel down with it.
-            _LOGGER.exception("Casora: could not build the template bundle")
-            return shipped if shipped is not None else _read_text(out)
-        text = json.dumps(bundle, ensure_ascii=False, separators=(",", ":"))
-        _BUILT[config_dir] = (newest, text)
-        _LOGGER.info("Casora: built the template bundle in memory (%d templates)", len(bundle["templates"]))
-        return text
-    return _read_text(out)
+    Built by tools/build-templates.py from dashboards/casora/button_card_templates.json. YAML
+    copies of the templates in the config folder (the old manual install) are never read: they
+    are stale and would replace the shipped templates in the Studio and the startup refresh."""
+    return _read_text(os.path.join(config_dir, BUNDLE))
 
 
 def _read_text(path: str) -> str | None:
@@ -190,13 +40,10 @@ def _read_text(path: str) -> str | None:
 
 
 class CasoraTemplatesView(HomeAssistantView):
-    """The template bundle, rebuilt on the way out.
+    """The shipped template bundle, with accepted card updates laid over it.
 
-    It used to be a static file, rebuilt only at setup. Editing
-    a template and hitting Save in the panel then wrote the PREVIOUS bundle and
-    still reported "refreshed 79 template(s)" - the edit was simply absent, with
-    nothing to say so. Rebuilding here means a Save always writes what is on
-    disk, and the reload-before-save step stops existing.
+    Read on every request (cheap: ETag/304), so a Save in the Studio always writes
+    the bundle that is on disk now, including card updates accepted since.
     """
 
     url = "/api/casora/templates"

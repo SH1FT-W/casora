@@ -13,7 +13,7 @@ file (ALLOWED_WRITES), once and only with Casora's marker line; the four scripts
 (an admin's browser deletes them through HA's script config API), and the old repair notices are gone.
 
 Also (next review round): nothing is written into the integration folder at run time - the Studio loader
-(scripts_view.studio_loader) and the template bundle (templates.bundle_text, also with a template tree present)
+(scripts_view.studio_loader) and the template bundle (templates.bundle_text)
 come from memory, and no module of the integration opens a path under its own folder for writing.
 """
 
@@ -262,26 +262,16 @@ with tempfile.TemporaryDirectory() as d:
         f.write(shipped)
     for name in scripts_view.STUDIO_MODULES:
         open(os.path.join(pkg, "panel", name), "w").close()
-    # A development setup: the template tree lives in the config folder and is newer than the bundle.
-    for rel in (templates.SOURCE, templates.SOURCE_MOBILE):
-        os.makedirs(os.path.dirname(os.path.join(d, rel)), exist_ok=True)
-        open(os.path.join(d, rel), "w").close()
-    os.makedirs(os.path.join(d, templates.TEMPLATE_DIR), exist_ok=True)
-    real_build = templates._build
-    templates._build = lambda *a: {"templates": {"x": {}}, "scaffold": {}, "mobile": {}}
     writes, real = watched(pkg)
     try:
         loader = scripts_view.studio_loader(f"1.0.{scripts_view.studio_stamp(os.path.join(pkg, 'panel'))}")
         built = templates.bundle_text(d)
     finally:
         restore(real)
-        templates._build = real_build
     check(not writes, f"integration folder: no writes ({writes})")
-    check(built and '"x"' in built, "bundle built in memory from the template tree")
+    check(built == shipped, "template bundle: the shipped one as it is")
     check(not os.path.exists(os.path.join(pkg, "panel", "casora-studio.js")) and "casora-panel.js?v=1.0." in loader,
           "Studio loader only in memory")
-    os.remove(os.path.join(d, templates.SOURCE))
-    check(templates.bundle_text(d) == shipped, "without the template tree: the shipped bundle as it is")
 
 # 7. No module writes under its own folder (open(..., "w") etc. next to __file__ / custom_components/casora)
 import re  # noqa: E402

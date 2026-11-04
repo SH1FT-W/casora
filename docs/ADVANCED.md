@@ -1,113 +1,51 @@
-# Advanced: building Casora by hand
+# Advanced: tuning Casora by hand
 
 Casora writes your dashboard for you, and most people never need this
-page. It is here for the case it does not cover: hand-written views, your
-own button-card templates, or a dashboard you want to keep in version control
-as YAML.
+page. It is here for what the Studio does not cover: hand-written views, your
+own button-card templates, or tuning a card's variables directly.
 
-Everything below still works. Casora and YAML produce the same dashboard, and
-you can move between them: Casora can import an existing YAML dashboard, and a
-dashboard Casora wrote is ordinary Lovelace storage you can export.
+**Casora needs its integration.** It installs and updates its button-card
+templates itself: they live in each Casora dashboard (`button_card_templates`)
+and are refreshed after every update. Installing Casora by hand, by copying
+YAML templates into `/config` without the integration, is no longer supported,
+and the repo no longer carries YAML copies of the templates.
+
+Hand edits still work. A Casora dashboard is ordinary Lovelace storage: open it,
+⋮ → **Edit dashboard** → ⋮ → **Raw configuration editor**. Put your changes on
+the cards (their `variables:`) or into templates with your own names; leave
+Casora's `casora_*` templates as they are. The automatic refresh after an update
+skips Casora templates you edited, so they no longer get fixes, and saving in
+the Studio brings Casora's templates up to date and can overwrite edits to them.
+Casora can also import an existing dashboard, and the Studio can export one.
 
 If you only want the dashboard, start at the [README](../README.md) instead.
 
 ---
 
-### :file_folder: Folder layout
-
-Everything in this repo is meant to live under `/config` in your Home Assistant installation.
-
-Example layout:
+### :file_folder: Your files in `/config`
 
 ```text
 /config
-├── configuration.yaml                  # Register the Casora dashboards here
-├── dashboards/
-│   ├── casora/
-│   │   ├── casora.yaml                  # Desktop/tablet dashboard (created from example)
-│   │   ├── casora.yaml.example          # Example desktop dashboard with placeholders
-│   │   ├── casora_mobile.yaml           # Mobile dashboard (created from example)
-│   │   └── casora_mobile.yaml.example   # Example mobile dashboard with placeholders
-│   └── templates/
-│       ├── button_cards/               # Button-card templates
-│       │   ├── badges/                 # Hero-card badges (climate, lights, presence, media, energy, security)
-│       │   ├── base/                   # Shared base templates (casora_entity, casora_default, casora_time, etc.)
-│       │   ├── cards/                  # Individual device cards (thermostat, media, lock, cover, energy, etc.)
-│       │   ├── mobile/                 # Mobile dashboard scaffolding (header, badge row, chips, Now Playing row)
-│       │   ├── now_playing/            # Now Playing panel (primary tile, rail chips, artwork, transport, header)
-│       │   └── popups/                 # popup content (climate, energy, network, light, lock,
-│       │                               #   cover, plant, battery, updates)
-│       └── includes/                   # Layout + navigation includes
-│           ├── casora_screen_layout.yaml
-│           ├── casora_mobile_layout.yaml
-│           ├── casora_navbar_tablet.yaml
-│           └── casora_navigation.yaml
 ├── casora_photos/                      # Your own room photos (private, uploaded in the Studio)
 ├── custom_components/
 │   └── casora/                         # The Casora integration (from the Marketplace)
-│       └── scripts/                    # JavaScript resources, served from /casora_scripts/
-│           ├── layout-card-modified.js # Modified Layout Card build
-│           ├── layout-offsets.js       # Navbar/hero offsets track sidebar visibility
-│           ├── smart-row.js            # Smart entity row with active-card sorting
-│           ├── filter-overlay.js       # Mobile filter/room popups + collapsing header
-│           ├── casora-icons.js         # Inline icon map
-│           ├── casora-core.js          # Shared card helpers + Now Playing collector + mobile wallpaper
-│           └── casora-redirect.js      # Phone ↔ mobile dashboard routing (on by default)
 └── www/
     └── casora/                         # Optional: your own files (Casora's ship with the integration)
         ├── fonts/                      # Fonts you upload in the Studio
         └── icons/                      # Your own icons
 ```
 
-## :rocket: Installation
-
-### 1) Backup first
-Make a full Home Assistant backup/snapshot before you start. YAML dashboards + themes are easy to roll back, but you'll be happier if you can restore quickly if something goes sideways.
-
-### 2) Copy Casora into your Home Assistant config
-The designs, helpers and actions the cards use come with the Casora integration
+The designs, helpers and actions the cards use come with the integration
 (`custom_components/casora/theme*.yaml`, `custom_components/casora/helfer.yaml`, the `casora.*`
-actions) and are set up automatically when it loads. There are no packages, scripts or theme folder
-to copy. The integration is required: the templates call Casora's actions (for example
-`casora.light_smart_toggle`) and read the helpers it creates.
+actions) and are set up automatically when it loads. Its scripts are registered as dashboard
+resources from `/casora_scripts/`; don't add them a second time from `/local/`, or every script
+loads twice. button-card comes from the Marketplace as usual.
 
-Copy these folders/files from this repo into your HA `/config`:
-
-- `dashboards/casora/` → `/config/dashboards/casora/`
-- `dashboards/templates/` → `/config/dashboards/templates/` (merge if you already have templates)
-- `www/casora/` → `/config/www/casora/` (optional; Casora's own icons, fonts and demo photos ship with the integration)
-
-### 3) Lovelace resources
-
-Nothing to add. The Casora integration registers its scripts as dashboard resources from
-`/casora_scripts/` (when Lovelace runs in YAML mode, Home Assistant's log names the lines to add under
-`lovelace: resources:`). Don't add them a second time from `/local/`, or every script loads twice.
-button-card comes from the Marketplace as usual (`/hacsfiles/button-card/button-card.js`).
-
-### 4) Register the Casora dashboards
-Add (or verify) in your `configuration.yaml`:
-
-```yaml
-lovelace:
-  mode: storage
-  dashboards:
-    dashboard-casora:
-      mode: yaml
-      title: "Casora"
-      icon: mdi:home
-      show_in_sidebar: true
-      filename: dashboards/casora/casora.yaml
-    dashboard-casora-mobile:
-      mode: yaml
-      title: "Casora Mobile"
-      icon: mdi:cellphone
-      show_in_sidebar: false
-      filename: dashboards/casora/casora_mobile.yaml
-```
-
-The mobile dashboard is hidden from the sidebar on purpose. With `casora-redirect.js` installed, phones are sent to it automatically and everything else goes back to the desktop dashboard, so nobody has to pick. Without the script, reach the mobile dashboard by its URL.
-
-The redirect is **on by default** (`input_boolean.casora_dashboard_redirect`). Left off, a phone opening the *desktop* Casora dashboard gets desktop content rendered with the mobile CSS, which looks like a broken mobile dashboard rather than a desktop one. The redirect is only active when using the Casora dashboard, and it can be disabled entirely by turning the helper off.
+The mobile dashboard is hidden from the sidebar on purpose. With the redirect on (the default,
+`input_boolean.casora_dashboard_redirect`), phones are sent to it automatically and everything else
+goes back to the desktop dashboard. Left off, a phone opening the *desktop* dashboard gets desktop
+content rendered with the mobile CSS, which looks like a broken mobile dashboard rather than a
+desktop one.
 
 #### Your own wallpaper
 
@@ -133,25 +71,13 @@ photos, and if that script is missing they paint instead, silently, and your
 wallpaper ends up carrying the demo house's colors. Serve the photos from
 `/local/` so the sampling stays same-origin.
 
-Restart Home Assistant.
-
-### 5) Create your dashboards from the example files
-
-In `/config/dashboards/casora/`:
-
-- Copy or rename `casora.yaml.example` → `casora.yaml`
-- Copy or rename `casora_mobile.yaml.example` → `casora_mobile.yaml`
-- Open each and replace all placeholders (search for `YOUR_`)
-
-These are the only files you edit to map Casora to your devices/entities. All behavior lives in the shared templates.
-
-### 6) Choose the design
+#### Design
 
 - In Casora Studio pick the design under **Settings › Look & feel › Design**: **Casora** (the default), **Casora Nebel** (the same design in cool grey with a petrol accent) or **Casora Glas** (frosted glass over the room photos). It applies to all dashboards; the setup assistant asks for it at the start.
 - Home Assistant's theme picker in your profile lists the Casora designs too. A theme picked there wins in that browser.
 - The legacy looks **Hemma 2** and **Hemma 1** (earlier *Casora Standard* and *Casora Glass*) were removed in 26.10.31: a saved choice moves to **Casora Glas** by itself. The old name *Casora Weich* moves to **Casora**.
 
-### 7) Add your room images + icons
+#### Room images + icons
 
 - Room images live in: `/config/casora_photos/` (private, outside `www`; upload them in the Studio)
   - Example: `home.jpg` (light) and `home-night.jpg` (dark)
@@ -163,17 +89,15 @@ These are the only files you edit to map Casora to your devices/entities. All be
 
 ## :pencil: Configuring your rooms
 
-You'll configure most of Casora by editing your dashboard file:
-
-- `/config/dashboards/casora/casora.yaml`
+The variables below go on the cards in the dashboard's raw configuration (see above).
 
 ### Key view building blocks
 
 Each view typically contains:
 
 - `casora_room` (this is the main hero card)
-- Mobile navbar include (desktop/tablet navigation menu)
-- Entity grid include
+- The navigation card (desktop/tablet navigation menu)
+- The entity grid with the room's cards
 
 ---
 
@@ -233,9 +157,7 @@ The widget appears when `weather_entity` is set.
 | `weather_temp_sensor` | *(optional)* A separate sensor for outdoor temperature |
 | `temp_unit` | `'F'` or `'C'`, controls comfort thresholds and labels |
 
-Template: `casora_weather`
-
-(See `dashboards/templates/button_cards/.../casora_weather.yaml` for full template code.)
+Template: `casora_weather` (its full code is in the dashboard's `button_card_templates`).
 
 ---
 
@@ -602,7 +524,7 @@ These are listed explicitly rather than inferred from `action_N_entity`, so a ca
 
 ### :iphone: Configuring the mobile dashboard
 
-Everything is configured in one file: `/config/dashboards/casora/casora_mobile.yaml` (created from `casora_mobile.yaml.example`, which documents every block inline). The file is entities-only: filters, popups, the collapsing header, and room chips are all driven by the shared templates.
+Everything is configured in the phone dashboard's raw configuration. It is entities-only: filters, popups, the collapsing header, and room chips are all driven by the shared templates.
 
 Top-to-bottom structure:
 
@@ -627,13 +549,13 @@ Section headers use the `casora_mobile_header` template, and the large dashboard
    - type: custom:casora-filter-overlay
      room: Guest Room
    ```
-3. Make sure the room's **slug** is an option on `input_select.casora_mobile_filter` (Casora Studio adds it for you when it saves; for hand-written YAML edit the helper's options under Settings → Helpers). The slug is the name lowercased with all non-alphanumerics stripped, `room_` prefixed: `Guest Room` → `room_guestroom`, `Kid's Room` → `room_kidsroom`.
+3. Make sure the room's **slug** is an option on `input_select.casora_mobile_filter` (Casora Studio adds it for you when it saves; for a hand-edited configuration edit the helper's options under Settings → Helpers). The slug is the name lowercased with all non-alphanumerics stripped, `room_` prefixed: `Guest Room` → `room_guestroom`, `Kid's Room` → `room_kidsroom`.
 
    Without its slug in the list the section header still renders, but tapping it won't open anything.
 
 Optionally add a `room_chips:` entry for its sensor chips, and set `mobile_filter_categories:` on the header to control which filter pills the room's cards appear under.
 
-**Step 3 is the only place you type the slug** when you write the YAML by hand: the filter needs a real `input_select` state to hold the active room. The section header and the overlay both derive the key from the room's name themselves.
+**Step 3 is the only place you type the slug** when you edit the configuration by hand: the filter needs a real `input_select` state to hold the active room. The section header and the overlay both derive the key from the room's name themselves.
 
 `room_key:` on the header remains available as an override for the rare case where a display name shouldn't drive the key: two rooms whose names slug identically, or a name containing an emoji. Setting it also overrides the overlay if you pass `filter_category:` explicitly there.
 
@@ -643,11 +565,11 @@ Optionally add a `room_chips:` entry for its sensor chips, and set `mobile_filte
 
 ### :pencil2: Additional Customization
 
-This repo is intended as a starting point:
+A few more places to tune:
 
 - Swap out room/background images in the Studio (stored in `/config/casora_photos/`).
 - Tweak theme colors, shadows, and typography: copy `custom_components/casora/theme_weich.yaml` (the Casora look; it builds on the base values in `theme.yaml`) to `/config/themes/`, rename the theme inside it (updates overwrite the integration's copy) and pick your version in the profile.
-- Adjust layouts (`casora_screen_layout.yaml`, etc.) to match your devices and preferences.
+- Adjust a view's `layout` to match your devices and preferences.
 
 ### HA Companion App iOS Settings
 
@@ -663,21 +585,19 @@ Casora also keeps an inline copy of every icon inside `casora-icons.js` (`window
 
 ### Time
 
-You can switch from 12hr to 24hr time by switching the variables in `casora_time.yaml`, example below:
+You can switch from 12hr to 24hr time with the variables of the card that uses the `casora_time` template, example below:
 
 ```yaml
-casora_time:
-  template:
-    - casora_default
+type: custom:button-card
+template: casora_time
+variables:
+  time_entity: sensor.time
 
-  variables:
-    time_entity: sensor.time
+  # Whether to convert to 12h with AM/PM
+  use_12h: false
 
-    # Whether to convert to 12h with AM/PM
-    use_12h: false
-
-    # Optional label after the time, e.g. "UHR", "HRS"
-    time_suffix: "UHR"
+  # Optional label after the time, e.g. "UHR", "HRS"
+  time_suffix: "UHR"
 ```
 ---
 
