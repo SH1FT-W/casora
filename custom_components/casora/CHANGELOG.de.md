@@ -14,6 +14,8 @@ Ruhigere Tablets, eine Anzeige-Diagnose auf jedem Gerät und keine Studio-Hinwei
 ### Geändert
 - **Kurze Tablet-Bildschirme (#123):** Im Querformat bis etwa 880 px Höhe (z. B. 1280×800, 1024×768) rückt der Kopf mit Wetter, Titel und Badges näher an die Raumleiste, der freie Platz verteilt sich gleichmäßig. Größere Bildschirme und Handys bleiben gleich. Die automatische Textvergrößerung von Android macht Badge-Texte nicht mehr unterschiedlich groß.
 
+- **Update-Hinweis:** Das Popup zu einer neuen Casora-Version zeigt den Einleitungssatz des Releases und bis zu vier Neuerungen mit je einer kurzen Zeile, dazu „Alle Änderungen“; wirkt ab dem nächsten Update.
+
 ### Behoben
 - **Universal-Kachel (#125):** Der Hinweis „Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen“ erscheint nur noch in der Studio-Vorschau, nicht mehr im Dashboard.
 

@@ -14,6 +14,8 @@ Calmer tablets, a display diagnosis on every device and no Studio hints in the l
 ### Changed
 - **Short tablet screens (#123):** in landscape up to about 880 px height (e.g. 1280×800, 1024×768) the head with weather, title and badges moves closer to the room bar, so the free space is spread evenly. Larger screens and phones are unchanged. Android's automatic text enlargement no longer makes badge texts different sizes.
 
+- **Update prompt:** the popup announcing a new Casora version shows the release's intro sentence and up to four news items, each with a short line, plus "All changes"; from the next update on.
+
 ### Fixed
 - **Universal tile (#125):** the hint "In the Studio you can add values, history, controls and own cards" shows only in the Studio preview, no longer in the live dashboard.
 
