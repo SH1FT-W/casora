@@ -2713,7 +2713,20 @@
   "Behälter": "Container",
   "Reicht noch": "Lasts",
   "Dosiermenge": "Dose volume",
-  "alles in Ordnung": "all good"
+  "alles in Ordnung": "all good",
+  "Programm nicht erkannt": "Program not recognized",
+  "Waschmittel nachfüllen": "Refill detergent",
+  "Bald nachfüllen": "Refill soon",
+  "1 Durchgang": "1 cycle",
+  "Alles erledigt": "All done",
+  "Weitere Pflege": "More care",
+  "Programme beibringen": "Teach programs",
+  "Durchgänge in WashData zuordnen": "Assign cycles in WashData",
+  "Verbrauch insgesamt": "Total consumption",
+  "Voraussichtlich": "Expected",
+  "TwinDos 1": "TwinDos 1",
+  "TwinDos 2": "TwinDos 2",
+  "1 Einstellung empfohlen": "1 setting recommended"
  },
  "patterns": [
   [
@@ -4931,6 +4944,10 @@
   [
    "^Morgen ([A-ZÄÖÜ][^\\d·:]*)$",
    "{1} tomorrow"
+  ],
+  [
+   "^(\\d+) Einstellungen empfohlen$",
+   "{1} settings recommended"
   ]
  ]
 }

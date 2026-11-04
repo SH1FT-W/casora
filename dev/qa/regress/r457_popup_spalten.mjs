@@ -35,6 +35,9 @@ const KNOWN = {
   // still moves the meal plan under the stage (the lower popup), so the block under the shopping list grew by as much
   // (375 px measured 04.11.2026, cap = measured + 40).
   'rezept': 415,
+  // Washer/dryer with care, statistics and detection (owner 04.11.2026): five whole sections, the best split measured
+  // 201 px (left 719, right 518) – the column rule cannot split a section.
+  'waschmaschine': 241, 'trockner': 241,
 };
 const tool = fileURLToPath(new URL('../popup-galerie.mjs', import.meta.url));
 const run = (args) => spawnSync(process.execPath, [tool, ...args], { encoding: 'utf8', env: process.env, timeout: 40 * 60 * 1000 });

@@ -2353,7 +2353,9 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       fields: { state: k('operation_state'), program: k(['active_program', 'selected_program'], 'select'),
         select: k('selected_program', 'select'), remaining: k('program_finish_time'), progress: k('program_progress'),
         door: k('door'), pause: k('pause_program', 'button'), resume: k('resume_program', 'button'),
-        stop: k('stop_program', 'button') },
+        stop: k('stop_program', 'button'),
+        // i-Dos refill events (present = nearly empty), washer and washer-dryer only (sensor.py, 2026.11).
+        idos1: k('poor_i_dos_1_fill_level'), idos2: k('poor_i_dos_2_fill_level') },
       // HA core has no start button (the action home_connect.start_selected_program or the active_program select
       // starts) and reports the finish time. Program options are switches/numbers of the selected program
       // (switch.py/number.py, available only while the program offers them); refills and care reminders are
@@ -2428,7 +2430,9 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       },
       fields: { state: k('status'), program: k('program_id'), phase: k(['program_phase', 'drying_step']),
         remaining: k(['remaining_time', 'finish']), elapsed: k(['elapsed_time', 'start']), energy: k('energy_consumption'),
-        pause: k('pause', 'button'), stop: k('stop', 'button') },
+        pause: k('pause', 'button'), stop: k('stop', 'button'),
+        // TwinDos container levels in percent (washer, washer-dryer; diagnostic).
+        twin1: k('twin_dos_1_level'), twin2: k('twin_dos_2_level') },
       // Salt/rinse aid (percent) and the forecasts (percent) do not fit the card's levels; the door has no key.
       dish: { program: k('program_id'), phase: k('program_phase'), remaining: k(['remaining_time', 'finish']),
         door: { keys: [], domain: 'binary_sensor', dc: 'door' }, start: k('start', 'button'), stop: k('stop', 'button') } },
@@ -2465,7 +2469,9 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         total: k('total_duration'), count: k('cycle_count'), energy: k('energy_total'), power: k('current_power'),
         running: k('running', 'binary_sensor'), select: k('program_select', 'select'),
         pause: k('pause_cycle', 'button'), resume: k('resume_cycle', 'button'), force: k('force_end_cycle', 'button'),
-        unload: k('mark_unloaded', 'button'), suggest: k('suggestions') } },
+        unload: k('mark_unloaded', 'button'), suggest: k('suggestions'),
+        // 0.5.9: on while a maintenance task is due, attributes due_task_ids / due_tasks (binary_sensor.py).
+        maintdue: bk('maintenance_due') } },
     { id: 'whirlpool', rank: 0, platforms: ['whirlpool'], need: ['end_time'], any: ['washer_state', 'dryer_state'],
       role: function (hass, list) {
         if (has(list, 'washer_state')) return 'washer';

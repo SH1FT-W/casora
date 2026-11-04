@@ -176,6 +176,18 @@ zu `other` und tragen wie `generic` das Waschmaschinen-Symbol; deshalb fragt das
 `ha_washdata/get_phase_catalog` (`entry_id` → `device_type`) und Python liest `options["device_type"]` des Config-Eintrags
 (öffentliche `ConfigEntry`-API, nur lesen). `other`/`generic` sind keine Wäsche (`00-finder.js` `wdType`,
 `live_finder.py` `_washdata_type`; Tests `dev/unit/waesche_quelle.mjs`, `dev/unit/live_finder_test.py`).
+Inhalt des Wäsche-Popups (v3, Stand Quellcode 0.5.9.1, 04.11.2026): Binärsensor `maintenance_due` mit den Attributen
+`due_task_ids`/`due_tasks` (`id`, `name`, `cycles_since`, `cycles_interval`, `days_since`, `days_interval`) als Pflege, solange
+`ha_washdata/get_maintenance_log` (Feld `status`) nicht geladen ist; „Erledigt“ schickt `ha_washdata/add_maintenance_event`
+(`entry_id`, `event_type` = Kennung der Aufgabe, es gibt dafür keinen Dienst und keine Taste); Zähler je Programm
+`profile_cycle_count` (Zustand = Anzahl, Attribute `average_length_min`, `average_consumption_kwh`; der Programmname steht nur im
+Namen, Casora nimmt die längste Programm-Option aus `program_select`/`washer_program`, die darin vorkommt); `suggestions` mit
+`has_actionable_suggestions`; `cycle_progress` mit `projected_energy_kwh`/`projected_cost` während eines Durchgangs; `program_select`
+im Leerlauf merkt sich WashData für den nächsten Durchgang (WashData #411); das WashData-Panel öffnet ein Gerät über
+`/ha-washdata?device=<entry_id>` (WashData #428). Hersteller (HA-Kern 2026.11): Home Connect `poor_i_dos_1_fill_level`/
+`poor_i_dos_2_fill_level` (Ereignis, `present` = fast leer), Miele `twin_dos_1_level`/`twin_dos_2_level` (Prozent)
+(`00-finder.js` `casoraLaundryFind`, `02-devices.js` `L.careRows`/`L.profileList`; Tests `dev/unit/laundry_content.mjs`,
+`dev/qa/regress/r558_laundry_content.mjs`).
 
 Wetter-Integrationen (#56), Casora liest Sensoren am Gerät der Wetter-Entität nach `translation_key`
 (`00-finder.js` `WX_KEYS`; Test `dev/unit/weather_feels_like.mjs`, Testhaus `dev/casora_mock/wetter.py`):

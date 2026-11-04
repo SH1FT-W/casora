@@ -556,14 +556,24 @@ class CasoraMock:
             return {"cycles": out, "total": len(out), "has_more": False}
 
         def maint(_msg):
-            # Wie ha_washdata/get_maintenance_log: fällig, Erinnerungen, Durchgänge seit dem letzten Mal.
+            # Wie ha_washdata/get_maintenance_log (0.5.8+ mit status): fällig, Erinnerungen, Durchgänge seit dem
+            # letzten Mal. Alle Testgeräte hängen an einem Config-Eintrag, die Antwort gilt also für jedes.
+            status = [
+                {"id": "filter_clean", "custom": False, "name": None, "cycles_interval": 20, "days_interval": 0,
+                 "cycles_since": 23, "days_since": 61},
+                {"id": "drum_clean", "custom": False, "name": None, "cycles_interval": 30, "days_interval": 0,
+                 "cycles_since": 12, "days_since": 30},
+                {"id": "descale", "custom": False, "name": None, "cycles_interval": 60, "days_interval": 0,
+                 "cycles_since": 41, "days_since": 95},
+            ]
             return {
                 "log": [{"type": "descale", "timestamp": (now - timedelta(days=95)).isoformat()}],
                 "due": ["filter_clean"],
                 "event_types": ["descale", "filter_clean", "drum_clean", "bearing_service", "other"],
                 "reminders": {"descale": 60, "filter_clean": 20, "drum_clean": 30},
                 "cycles_since": {"descale": 41, "filter_clean": 23, "drum_clean": 12},
-                "lifetime_cycle_count": 214,
+                "custom_tasks": [], "status": status, "programs_available": [], "programs": {},
+                "lifetime_cycle_count": 214, "limits": {},
             }
 
         cmd("ha_washdata/get_device_cycles", cycles)

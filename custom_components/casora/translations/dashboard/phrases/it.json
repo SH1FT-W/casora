@@ -2731,7 +2731,20 @@
   "Behälter": "Serbatoio",
   "Reicht noch": "Basta ancora",
   "Dosiermenge": "Quantità per dose",
-  "alles in Ordnung": "tutto a posto"
+  "alles in Ordnung": "tutto a posto",
+  "Programm nicht erkannt": "Programma non riconosciuto",
+  "Waschmittel nachfüllen": "Rabboccare il detersivo",
+  "Bald nachfüllen": "Rabboccare presto",
+  "1 Durchgang": "1 ciclo",
+  "Alles erledigt": "Tutto fatto",
+  "Weitere Pflege": "Altra manutenzione",
+  "Programme beibringen": "Insegnare i programmi",
+  "Durchgänge in WashData zuordnen": "Assegnare i cicli in WashData",
+  "Verbrauch insgesamt": "Consumo totale",
+  "Voraussichtlich": "Previsto",
+  "TwinDos 1": "TwinDos 1",
+  "TwinDos 2": "TwinDos 2",
+  "1 Einstellung empfohlen": "1 impostazione consigliata"
  },
  "patterns": [
   [
@@ -4949,6 +4962,10 @@
   [
    "^Morgen ([A-ZÄÖÜ][^\\d·:]*)$",
    "{1} domani"
+  ],
+  [
+   "^(\\d+) Einstellungen empfohlen$",
+   "{1} impostazioni consigliate"
   ]
  ]
 }
