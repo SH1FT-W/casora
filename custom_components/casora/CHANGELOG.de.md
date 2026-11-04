@@ -4,6 +4,19 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.13 – 04.11.2026
+
+Ruhigere Tablets, eine Anzeige-Diagnose auf jedem Gerät und keine Studio-Hinweise mehr im Dashboard.
+
+### Neu
+- **Anzeige-Diagnose:** `?casora_diag` an die Dashboard-Adresse hängen oder fünfmal schnell auf den Seitentitel tippen. Casora zeigt die Bildschirmwerte dieses Geräts (Größe, Pixeldichte, Textzoom, Layout, Höhen von Kopf, Badges und Kacheln, App und Browser) mit „Kopieren“, fertig zum Einfügen in ein Issue. Private Daten sind nicht dabei.
+
+### Geändert
+- **Kurze Tablet-Bildschirme (#123):** Im Querformat bis etwa 880 px Höhe (z. B. 1280×800, 1024×768) rückt der Kopf mit Wetter, Titel und Badges näher an die Raumleiste, der freie Platz verteilt sich gleichmäßig. Größere Bildschirme und Handys bleiben gleich. Die automatische Textvergrößerung von Android macht Badge-Texte nicht mehr unterschiedlich groß.
+
+### Behoben
+- **Universal-Kachel (#125):** Der Hinweis „Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen“ erscheint nur noch in der Studio-Vorschau, nicht mehr im Dashboard.
+
 ## 26.11.12 – 04.11.2026
 
 Küche und Wäsche mit echtem Inhalt, Pflege mit einem Tipp bestätigen, ein ruhiges Licht-Rad und sichereres Teilen.

@@ -4,6 +4,19 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.13 – 04.11.2026
+
+Calmer tablets, a display diagnosis on every device and no Studio hints in the live dashboard.
+
+### New
+- **Display diagnosis:** add `?casora_diag` to a dashboard address or tap the page title five times quickly. Casora shows the screen values of this device (size, pixel density, text zoom, layout, heights of head, badges and tiles, app and browser) with "Copy", ready to paste into an issue. Nothing private is included.
+
+### Changed
+- **Short tablet screens (#123):** in landscape up to about 880 px height (e.g. 1280×800, 1024×768) the head with weather, title and badges moves closer to the room bar, so the free space is spread evenly. Larger screens and phones are unchanged. Android's automatic text enlargement no longer makes badge texts different sizes.
+
+### Fixed
+- **Universal tile (#125):** the hint "In the Studio you can add values, history, controls and own cards" shows only in the Studio preview, no longer in the live dashboard.
+
 ## 26.11.12 – 04.11.2026
 
 Kitchen and laundry popups with real content, care you can confirm with one tap, a calm light dial and safer sharing.
