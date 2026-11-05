@@ -3747,6 +3747,34 @@
     return Object.assign({}, spec, { done: 'Update gestartet' });
   };
   X.installOf = installOf;
+  // Kind of an update by the integration that owns its entity (hass.entities[id].platform): Home Assistant itself
+  // (Supervisor: Core, OS, Supervisor, add-ons), the Marketplace (HACS on older HA), everything else is a device or a
+  // device's software (firmware, a router's network app, ...). Owner, 05.11.2026.
+  X.KINDS = [['ha', 'Home Assistant'], ['mp', 'Marketplace'], ['dev', 'Geräte']];
+  X.kindOf = function (id, hass) {
+    var e = hass && hass.entities && hass.entities[id], p = e && e.platform;
+    return p === 'hassio' ? 'ha' : p === 'marketplace' || p === 'hacs' ? 'mp' : 'dev';
+  };
+  // ids (already sorted) → [{ key, label, ids }] in the order of X.KINDS, empty kinds left out; the order inside a kind
+  // stays. label is null when only one kind has entries (no headings then).
+  X.groups = function (ids, hass) {
+    hass = hass || (function () { var ha = document.querySelector('home-assistant'); return (ha && ha.hass) || null; })();
+    var by = {};
+    ids.forEach(function (id) { var k = X.kindOf(id, hass); (by[k] = by[k] || []).push(id); });
+    var out = X.KINDS.filter(function (k) { return by[k[0]]; }).map(function (k) { return { key: k[0], label: k[1], ids: by[k[0]] }; });
+    if (out.length < 2) out.forEach(function (g) { g.label = null; });
+    return out;
+  };
+  // Rows grouped like X.groups: each kind its own UI.group with its heading (count g.n, else its rows), a gap between
+  // them. mk(ids) → rows, wrap(html, rows) for the soft look's tint. first: heading of the first group without a label.
+  X.groupedHtml = function (UI, groups, mk, first, wrap) {
+    wrap = wrap || function (x) { return x; };
+    return groups.map(function (g, i) {
+      var rows = mk(g.ids);
+      return (i ? '<div style="height:var(--casora-popup-sec-gap, 22px)"></div>' : '')
+        + wrap(UI.group(rows, g.label ? g.label + ' · ' + (g.n || g.ids.length) : (i ? null : first || null)), rows);
+    }).join('');
+  };
   X.list = function (states, h) {
     var UI = h.UI;
     var ids = Object.keys(states).filter(function (id) { return id.indexOf('update.') === 0 && states[id].state === 'on'; })
@@ -3762,11 +3790,12 @@
       return rr.length ? UI.group(rr, null) : UI.group([{ icon: 'mdi:check', iconTone: 'rgba(0,0,0,0)', label: 'Keine Updates offen' }], null);
     }
     /* Weich (E3): nur Name, neue Version und KI-Urteil als Punkt (08-weich-kompakt.js). */
+    var groups = X.groups(ids, h.hass);
     if (UI.soft && UI.soft() && window._casoraSoftUpd) {
-      var sr = window._casoraSoftUpd.rows(states, ids);
-      return window._casoraSoftUpd.tint(UI.group(sr, null), sr);
+      var SU = window._casoraSoftUpd;
+      return X.groupedHtml(UI, groups, function (g) { return SU.rows(states, g); }, null, SU.tint);
     }
-    return UI.group(ids.map(function (id) {
+    return X.groupedHtml(UI, groups, function (g) { return g.map(function (id) {
       var e = states[id], a = e.attributes || {};
       var ver = (a.installed_version && a.latest_version && a.installed_version !== a.latest_version)
         ? a.installed_version + ' → ' + a.latest_version : (a.installed_version || a.latest_version || null);
@@ -3790,7 +3819,7 @@
         // Symbol startet das Update (Rückfrage „Starten“), Zeile öffnet die Details.
         svc: installOf(states, id), confirm: installOf(states, id) ? 'Starten' : undefined,
       };
-    }), null);
+    }); }, null);
   };
 
   // ── Wartet auf Neustart (live, 1.0.5) ──

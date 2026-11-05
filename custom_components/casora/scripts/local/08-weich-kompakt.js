@@ -450,11 +450,26 @@
       // The first twelve and „Alle anzeigen“ share one cut of the names (UI.popupNames): an update that moves across
       // the twelfth place keeps its name.
       var nmU = UI.popupNames ? UI.popupNames(U.rows(states, ids)) : function (x) { return x; };
-      var head = U.rows(states, ids.slice(0, 12)).map(nmU);
-      var out = U.tint(UI.group(head, lbl), head);
+      // Grouped by kind (Home Assistant, Marketplace, Geräte; owner 05.11.2026, _casoraUpdX.groups): the first twelve
+      // in that order, a kind cut by the twelfth place goes on behind „Alle anzeigen“ without a second heading.
+      var grp = Xl && Xl.groups ? Xl.groups(ids, hass) : [{ label: null, ids: ids }];
+      var mk = function (g) { return U.rows(states, g).map(nmU); };
+      var part = function (from, to) {
+        var pos = 0, out0 = [];
+        grp.forEach(function (g) {
+          var a = Math.max(from - pos, 0), b = Math.min(to - pos, g.ids.length);
+          if (b > a) out0.push({ label: a === 0 ? g.label : null, n: g.ids.length, ids: g.ids.slice(a, b) });
+          pos += g.ids.length;
+        });
+        return out0;
+      };
+      var grouped = function (gs, first) {
+        return Xl && Xl.groupedHtml ? Xl.groupedHtml(UI, gs, mk, first, U.tint)
+          : U.tint(UI.group(mk(gs[0].ids), first), mk(gs[0].ids));
+      };
+      var out = grouped(part(0, 12), lbl);
       if (ids.length > 12) {
-        var tail = U.rows(states, ids.slice(12)).map(nmU);
-        out += '<div style="height:8px"></div>' + UI.more('upd-all', U.tint(UI.group(tail, null), tail),
+        out += '<div style="height:8px"></div>' + UI.more('upd-all', grouped(part(12, ids.length), null),
           { keep: true, label: 'Alle ' + ids.length + ' anzeigen', less: 'Weniger anzeigen' });
       }
       // Updates still to install AND a restart owed for installed ones (03.11.2026): the restart rows stand under the
