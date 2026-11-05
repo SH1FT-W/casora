@@ -14,7 +14,7 @@
         "v"
       ],
       [
-        "HACS"
+        "Marketplace"
       ]
     ],
     "logo": "custom_components/casora/brand/icon@2x.png",
@@ -33,7 +33,8 @@
       "bar": "Home Assistant › Casora",
       "left": 600,
       "top": 80
-    }
+    },
+    "layout": "center"
   },
   "fonts": {
     "display": "\"Inter\", system-ui, sans-serif",
