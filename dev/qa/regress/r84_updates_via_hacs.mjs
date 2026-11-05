@@ -162,6 +162,6 @@ await openUpdates();
 const h5 = await hero();
 await shot('5_no_entry');
 await check('ohne Eintrag: kein Knopf', h5 && h5.hacs === 0 && h5.install === 0, h5);
-await check('ohne Eintrag: Hinweis auf HACS', h5 && /HACS/.test(h5.text), h5);
+await check('ohne Eintrag: Hinweis auf den Marketplace', h5 && /Marketplace/.test(h5.text), h5);
 
 await finish();
