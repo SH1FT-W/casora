@@ -12,6 +12,7 @@ Steckdose und Stromverlauf im 3D-Drucker, ein ruhigeres Fußball-Popup und ein V
 - **3D-Drucker mit Steckdose (#130):** Unter dem Rad steht der Stromverlauf mit 24 Std., 7 Tagen und 30 Tagen, direkt darunter die Steckdose mit Schalter und aktueller Leistung. Ausschalten fragt vorher nach, damit kein Druck verloren geht.
 
 ### Geändert
+- **README und Projektseite:** kürzer, die Popups als eine Bilderreihe.
 - **Fußball-Popup:** Auf Tablet und Desktop steht die Tabelle jetzt rechts, Spiel und Form links, in derselben Reihenfolge wie am Handy.
 
 ### Behoben
