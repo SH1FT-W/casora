@@ -43,7 +43,7 @@
           "lueften_push": "“Nu luchten” (7–22 uur), “Raam sluiten” (7–23 uur) na 10 min, CO₂ boven 2500 ppm meteen. Leeg = geen pushmeldingen.",
           "lueften_personen": "“Nu luchten” alleen als een van deze personen thuis is. Leeg = iedereen.",
           "update_push": "Eén push per nieuwe versie naar de gekozen telefoons. Tikken opent de Casora-updates. Leeg = uit.",
-          "beta_updates": "Probeer nieuwe functies eerder. Bèta's kunnen fouten bevatten. Met HACS zet je bèta's in plaats daarvan aan in HACS."
+          "beta_updates": "Probeer nieuwe functies eerder. Bèta's kunnen fouten bevatten. Met Marketplace zet je bèta's in plaats daarvan aan in Marketplace."
         }
       }
     },

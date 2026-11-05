@@ -36,4 +36,14 @@ window._casoraLightScope = (e, S, hh, V) => V.house_like ? { rooms: [{}, {}], au
 assert.equal(lab('casora_badge_light_group', 'lock.ohne', { house_like: true }), 'Zuhause', 'house light badge');
 assert.equal(lab('casora_badge_light_group', 'lock.ohne', { house_like: true, pre: true }), '', 'room chip inside the house group');
 assert.equal(lab('casora_badge_light_group', 'lock.ohne', {}), '', 'room light badge');
+// A room's energy badge (owner 05.11.2026: „ZUHAUSE“ over a room's energy): no sensor of its own → the room it sits in.
+window._casoraLovelaceCfg = () => ({ views: [{ cards: [{ type: 'custom:button-card', template: 'casora_room', name: 'Unser Haus' }] },
+  { cards: [{ type: 'custom:button-card', template: 'casora_room', name: 'Küche' }] }] });
+const inTile = (name) => { const tile = { _config: { template: 'casora_room', name } }; const sr = { host: tile }; return { parentNode: sr }; };
+const eBadge = (parent) => roomLabelOf(Object.assign({ _config: { template: ['casora_badge_base', 'casora_badge_energy_group'], variables: {} }, _hass: h }, parent));
+assert.equal(eBadge(inTile('Küche')), 'Küche', 'room energy badge in a room tile: the room');
+assert.equal(eBadge(inTile('Unser Haus')), 'Zuhause', 'energy badge in the Home view\'s tile: Zuhause');
+assert.equal(eBadge({ parentNode: { _config: { template: 'casora_mobile_filter_badges' }, _evaluatedVariables: { casora_rv: { value: { _name: 'Bad' } } } } }), 'Bad',
+  'phone room page: the room of its badge row');
+assert.equal(eBadge({}), 'Zuhause', 'nowhere: Zuhause');
 console.log('popup_label_rooms: ok');

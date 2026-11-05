@@ -43,7 +43,7 @@
           "lueften_push": "“Ventila ahora” (7–22 h) y “Cierra la ventana” (7–23 h) tras 10 min, CO₂ por encima de 2500 ppm al instante. Vacío = sin notificaciones push.",
           "lueften_personen": "“Ventila ahora” solo cuando una de estas personas está en casa. Vacío = cualquiera.",
           "update_push": "Una notificación por cada versión nueva a los móviles seleccionados. Al tocarla se abren las actualizaciones de Casora. Vacío = desactivado.",
-          "beta_updates": "Prueba las funciones nuevas antes. Las betas pueden tener errores. Con HACS, activa las betas en HACS."
+          "beta_updates": "Prueba las funciones nuevas antes. Las betas pueden tener errores. Con Marketplace, activa las betas en Marketplace."
         }
       }
     },

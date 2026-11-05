@@ -141,7 +141,7 @@ window.casoraPopup.current = null;
   assert.equal((R.match(/<li>/g) || []).length, 4, 'four items at most');
   assert.ok(R.includes('<li><span class="cup-t">D</span></li>'), 'an item without text: title only');
   assert.ok(R.includes('data-casora-updp="notes"') && R.includes('Alle Änderungen'), 'link to all changes');
-  assert.ok(R.indexOf('<ul class="cup-lines') < R.indexOf('Wird über HACS installiert') && R.indexOf('Wird über HACS installiert') < R.indexOf('data-casora-updp="install"'),
+  assert.ok(R.indexOf('<ul class="cup-lines') < R.indexOf('Wird über den Marketplace installiert') && R.indexOf('Wird über den Marketplace installiert') < R.indexOf('data-casora-updp="install"'),
     'install hint after the list, before the buttons');
   assert.ok(R.includes('<p class="cup-hint">'), 'install hint small');
   // An older backend sends only lines: shown as before (hint on top, one line each).

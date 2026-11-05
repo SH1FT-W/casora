@@ -7550,6 +7550,31 @@ window.casoraMenuGlass = {
   var HOUSE_POPUP = /\bcasora_(badge_\w+|(popup_)?(pulse|battery|energy|network|updates|scenes|contacts|calendar|weather_warning|football|recipe|solar_tip|time)|weather|trash|now_playing_\w+)\b/;
   function roomLabelOf(src) {
     if (!src || !src._config) return '';
+    // The room a badge sits in: the desktop room tile around it (casora_room, not one on the first view, which is Home) or
+    // the phone's room page (its badge row carries the room's variables, casora_rv, with the room's name). '' elsewhere.
+    function placeRoomOf(src) {
+      var n = src, cfg = null;
+      try { cfg = typeof window._casoraLovelaceCfg === 'function' ? window._casoraLovelaceCfg() : null; } catch (e) { cfg = null; }
+      for (var i = 0; n && i < 60; i++) {
+        n = n.parentNode || n.host || null;
+        if (!n || n === src || !n._config) continue;
+        var ev = n._evaluatedVariables || {}, rv = ev.casora_rv;
+        if (rv && typeof rv === 'object' && 'value' in rv) rv = rv.value;
+        if (rv && typeof rv === 'object' && typeof rv._name === 'string' && rv._name.trim()) return rv._name.trim();
+        if ([].concat(n._config.template || []).indexOf('casora_room') < 0) continue;
+        var nm = typeof n._config.name === 'string' && n._config.name.indexOf('[[[') < 0 ? n._config.name.trim() : '';
+        if (!nm || /^(home|favoriten|favorites|zuhause)$/i.test(nm)) return '';
+        var home = cfg && Array.isArray(cfg.views) && cfg.views.length > 1 ? cfg.views[0] : null, onHome = false;
+        (function walk(x, d) {
+          if (onHome || !x || typeof x !== 'object' || d > 8) return;
+          if (Array.isArray(x)) { x.forEach(function (y) { walk(y, d + 1); }); return; }
+          if ([].concat(x.template || []).indexOf('casora_room') > -1 && String(x.name || '').trim() === nm) { onHome = true; return; }
+          walk(x.cards, d + 1); walk(x.sections, d + 1);
+        })(home && (home.cards || home.sections), 0);
+        return onHome ? '' : nm;
+      }
+      return '';
+    }
     // The members of a group tile: the group entity's own members (entity_id, member_entities) and lists of entity ids
     // in its card variables („lock_entities“ …). Rooms: the dashboard's room of each, else its HA area.
     function groupMembersOf(src, h) {
@@ -7587,7 +7612,8 @@ window.casoraMenuGlass = {
     if (/\bcasora_(popup_|badge_)?energy(_group)?\b/.test(tpl) && !/\bcasora_badge_energy\b/.test(tpl)) {
       var eid = src._stateObj && src._stateObj.entity_id, er = '';
       try { er = eid && typeof window._casoraRoomOf === 'function' ? String(window._casoraRoomOf(eid) || '').trim() : ''; } catch (e) { er = ''; }
-      return er || 'Zuhause';
+      // A room's badge (owner 05.11.2026: „ZUHAUSE“ over a room's energy): the room it sits in names the popup.
+      return er || placeRoomOf(src) || 'Zuhause';
     }
     /* The house's light badge (owner, 01.11.2026): „Zuhause“ like the other groups over several rooms; a room's light
        chip (its lamps, or the room preselected in the house group) keeps no label. */
@@ -13416,7 +13442,9 @@ window.casoraMenuGlass = {
         var col = TONE[s.tone || (s.ok ? 'good' : 'bad')] || TONE.good;
         svgHtml += '<path d="' + esc(dArc(sa, sb)) + '" fill="none" stroke-width="26" style="stroke:' + esc(col) + '"' + (n === 1 ? ' stroke-linecap="round"' : '') + '>'
           + (s.label ? '<title>' + esc(s.label) + '</title>' : '') + '</path>';
-        if (!s.ok && s.tone !== 'off') svgHtml += '<path d="' + esc(dArc(sa, sb)) + '" fill="none" stroke-width="26" opacity=".6" filter="url(#' + esc(id) + ')" pointer-events="none" style="stroke:' + esc(col) + '"/>';
+        // Every lit segment glows in its own colour like the other wheels (owner 05.11.2026: the big green arc of the
+        // Pulse ring had none, only the problems glowed); a segment that is off stays dark.
+        if (s.tone !== 'off') svgHtml += '<path d="' + esc(dArc(sa, sb)) + '" fill="none" stroke-width="26" opacity="' + (s.ok ? '.55' : '.6') + '" filter="url(#' + esc(id) + ')" pointer-events="none" style="stroke:' + esc(col) + '"/>';
       });
       return '<svg viewBox="0 0 420 420" aria-hidden="true" focusable="false">' + svgHtml + '</svg>';
     }
@@ -13504,11 +13532,14 @@ window.casoraMenuGlass = {
       if (o.seg && o.seg.length) belowHtml = '<div class="hui-st-seg">' + segments(o.seg) + '</div>';
       // With a record in the middle (media) the value stands under the wheel: „Lautstärke 35 %“.
       // A television has no record (review 2, E25): a quiet disc with the TV symbol; off, no volume line.
-      if (o.cover && !(o.cover.tv && off)) belowHtml = '<div class="hui-dl-vol">' + esc(o.word || '') + ' <span class="hui-st-n">' + esc(v) + '</span>\u202F%</div>' + belowHtml;
-      if (o.cover && o.cover.tv && !o.cover.image) coverHtml = '<div class="hui-dl-cover tv"><div class="hui-dl-lbl"><ha-icon icon="mdi:television"></ha-icon></div></div>';
+      // A game console (o.cover.console = its symbol, owner 05.11.2026) is no record either: the game's picture fills the
+      // disc, else the quiet disc with the console's symbol; off or without a volume of its own, no volume line.
+      var quiet = !!(o.cover && (o.cover.tv || o.cover.console));
+      if (o.cover && !(quiet && off) && !(o.cover.console && !o.svc)) belowHtml = '<div class="hui-dl-vol">' + esc(o.word || '') + ' <span class="hui-st-n">' + esc(v) + '</span>\u202F%</div>' + belowHtml;
+      if (quiet && !o.cover.image) coverHtml = '<div class="hui-dl-cover tv"><div class="hui-dl-lbl"><ha-icon icon="' + esc(o.cover.console || 'mdi:television') + '"></ha-icon></div></div>';
       // Music on a TV (Spotify, Apple Music) is a record and turns; everything else on it is video.
       // Video: the cover is the whole disc (same size and circle as the record), no grooves, no turning.
-      else if (o.cover && o.cover.video && o.cover.image) coverHtml = '<div class="hui-dl-cover video"><img src="'
+      else if (o.cover && (o.cover.video || o.cover.console) && o.cover.image) coverHtml = '<div class="hui-dl-cover video"><img src="'
         + (window.casoraSafeUrl ? window.casoraSafeUrl(o.cover.image) : esc(o.cover.image)) + '" alt=""/></div>';
       else if (o.cover) coverHtml = '<div class="hui-dl-cover' + (o.cover.spin && !o.cover.video ? ' spin' : '') + (o.cover.image ? '' : ' bare') + '"><div class="hui-dl-lbl">'
         + (o.cover.image ? '<img src="' + (window.casoraSafeUrl ? window.casoraSafeUrl(o.cover.image) : esc(o.cover.image)) + '" alt=""/>'
@@ -13698,6 +13729,17 @@ window.casoraMenuGlass = {
     if (app && VIDEO_APPS.test(app)) return true;
     if (a.device_class === 'tv') return true;
     return /^media_player\.[^.]*(apple_?tv|appletv|_tv$|_tv_|fernseh|fire_?tv|chromecast|shield|roku)/i.test(String(id || ''));
+  }
+  // A game console's media player (owner 05.11.2026: the PS5 showed a record): its symbol, else null. The integration
+  // (registry platform) decides first, then the player's name, id or app.
+  var CONSOLE_PLATFORMS = /^(playstation_network|ps4|ps5|ps5_mqtt|xbox|nintendo|nintendo_parental|nintendo_parental_controls)$/;
+  function mediaConsole(a, id, hass) {
+    a = a || {};
+    hass = hass || (document.querySelector('home-assistant') || {}).hass;
+    var reg = (((hass || {}).entities || {})[id]) || {}, pf = String(reg.platform || '');
+    var t = [pf, id, a.friendly_name, a.app_name, a.source].filter(function (x) { return typeof x === 'string' && x; }).join(' ').toLowerCase();
+    if (!CONSOLE_PLATFORMS.test(pf) && !/playstation|(^|[^a-z0-9])ps[345]([^a-z0-9]|$)|xbox|nintendo/.test(t.replace(/_/g, ' '))) return null;
+    return /playstation|ps[345]/.test(t) ? 'mdi:sony-playstation' : /xbox/.test(t) ? 'mdi:microsoft-xbox' : /nintendo/.test(t) ? 'mdi:nintendo-switch' : 'mdi:gamepad-variant';
   }
   function stage(type, o) {
     o = o || {};
@@ -13978,7 +14020,7 @@ window.casoraMenuGlass = {
   window._casoraUI.more = more;
   Object.assign(window._casoraUI, { section: section, row: row, settingsRow: settingsRow, settings: settings, actions: actions,
     empty: empty, width: width, switchHtml: switchHtml, page: page, SEC_ORDER: SEC_ORDER, WIDTH: WIDTH,
-    stage: stage, stageZoom: stageZoom, zoomCss: ZOOM_CSS, mediaVideo: mediaVideo, quick: quick, STAGE_TYPES: STAGE_TYPES, v3: v3, dialPaint: dialPaint, dialPct: dialPct, dialNum: dialNum });
+    stage: stage, stageZoom: stageZoom, zoomCss: ZOOM_CSS, mediaVideo: mediaVideo, mediaConsole: mediaConsole, quick: quick, STAGE_TYPES: STAGE_TYPES, v3: v3, dialPaint: dialPaint, dialPct: dialPct, dialNum: dialNum });
   window.casoraPopupWidth = width;
 
   // Symmetry (rule 12, owner 26.10.2026: „Symmetrie ist wichtig!“): in a two-column popup both columns

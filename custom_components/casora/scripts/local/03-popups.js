@@ -3282,7 +3282,7 @@
     var DIM = 'rgba(255,255,255,0.18)';
     var SF = !!(window._casoraHH && window._casoraHH.on());
     /* No bike at all: under the head say where the values come from (Settings → House & devices). */
-    var where = !r.found && UI.note ? '<div style="height:6px"></div>' + UI.note('Für Räder mit Bosch Smart System: Die Werte kommen aus der Integration Bosch eBike (HACS: Xunil99/ha-bosch-ebike).') : '';
+    var where = !r.found && UI.note ? '<div style="height:6px"></div>' + UI.note('Für Räder mit Bosch Smart System: Die Werte kommen aus der Integration Bosch eBike (Marketplace: Xunil99/ha-bosch-ebike).') : '';
     /* Head: odometer, else the total distance of the recorded rides. */
     var kmV = r.km != null ? r.km : r.dist, kmLabel = r.km != null ? 'Kilometerstand' : 'Distanz gesamt';
     var sub = r.theft ? 'Diebstahl gemeldet' : r.serviceDue ? 'Service fällig' : (r.daysSince != null ? 'Letzte Fahrt vor ' + fmtN(Math.round(r.daysSince)) + ' Tagen' : null);
@@ -3665,7 +3665,7 @@
   };
 
   // ── System ──
-  var SYS_EXTRA = [['update.hacs_update', 'HACS'], ['update.casora_update', 'Casora']];
+  var SYS_EXTRA = [['update.hacs_update', 'Marketplace'], ['update.casora_update', 'Casora']];
   var fmtNext = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return null;
     var d = new Date(t), now = new Date();

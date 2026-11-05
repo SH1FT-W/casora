@@ -16139,7 +16139,7 @@ class CasoraPanel extends HTMLElement {
     });
     if (!blockers.length) {
       const names = missing.map((r) => r.label).join(", ");
-      this._status(`Missing from HACS: ${names}. Casora works, but parts of it `
+      this._status(`Missing from the Marketplace: ${names}. Casora works, but parts of it `
         + `will not render.`, "err");
       return false;
     }
@@ -16151,7 +16151,7 @@ class CasoraPanel extends HTMLElement {
     const s = this._flowScreen({
       full: true, icon: "get",
       title: one ? "One More Thing to Install" : "A Few More Things to Install",
-      lede: `Casora needs ${one ? "this" : "these"} from HACS before your dashboard `
+      lede: `Casora needs ${one ? "this" : "these"} from the Marketplace before your dashboard `
         + "can render. " + (restart ? "After downloading, restart Home Assistant and add it under Settings > Devices & services."
           : "Come back here once installed."),
     });

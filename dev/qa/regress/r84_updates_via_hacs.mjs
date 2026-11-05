@@ -72,7 +72,7 @@ await fakeStates(page, { [E]: { state: 'on', attributes: { friendly_name: 'Casor
   latest_version: 'v9.9.9', in_progress: false, supported_features: 23, release_url: 'https://github.com/SH1FT-W/casora/releases/v9.9.9' } } },
 { sticky: true });
 
-const LABEL = /In HACS öffnen|Open in HACS/;
+const LABEL = /Im Marketplace öffnen|Open in the Marketplace/;
 const INSTALL = /^(Installieren|Install)$/;
 const openUpdates = async () => {
   await page.evaluate(() => {
@@ -104,7 +104,7 @@ await openUpdates();
 const h0 = await hero();
 await shot('1_new');
 await need('Updates-Kopf da', h0, h0);
-await check('Knöpfe „Installieren“ und „In HACS öffnen“', h0.install === 1 && h0.hacs === 1, h0);
+await check('Knöpfe „Installieren“ und „Im Marketplace öffnen“', h0.install === 1 && h0.hacs === 1, h0);
 await check('Installieren gedrückt', await clickHero(INSTALL.source));
 const q1 = await page.evaluate(() => window.__qaUpd);
 await check('update.install an HACS\' Eintrag, ohne Version', q1.calls.length === 1 && q1.calls[0][1] === 'install'
@@ -147,7 +147,7 @@ const inst = await page.evaluate(() => {
 await check('installierte Version: kein Knopf', inst === 0 || inst === null, inst);
 
 // 4) "Open in HACS" opens Casora's HACS page; without that page HACS' update entry (more-info).
-await check('In HACS öffnen gedrückt', await clickHero(LABEL.source));
+await check('Im Marketplace öffnen gedrückt', await clickHero(LABEL.source));
 const q4 = await page.evaluate(() => window.__qaUpd);
 await check('öffnet die HACS-Seite von Casora', q4.pushed.length === 1 && q4.pushed[0] === URL_HACS, q4.pushed);
 await page.evaluate(() => Object.assign(window.__qaUpd, { url: null, pushed: [], moreInfo: [] }));
@@ -162,6 +162,6 @@ await openUpdates();
 const h5 = await hero();
 await shot('5_no_entry');
 await check('ohne Eintrag: kein Knopf', h5 && h5.hacs === 0 && h5.install === 0, h5);
-await check('ohne Eintrag: Hinweis auf HACS', h5 && /HACS/.test(h5.text), h5);
+await check('ohne Eintrag: Hinweis auf den Marketplace', h5 && /Marketplace/.test(h5.text), h5);
 
 await finish();

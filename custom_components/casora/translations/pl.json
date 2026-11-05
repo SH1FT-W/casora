@@ -43,7 +43,7 @@
           "lueften_push": "„Przewietrz teraz” (7–22) i „Zamknij okno” (7–23) po 10 min, CO₂ powyżej 2500 ppm od razu. Puste = bez powiadomień push.",
           "lueften_personen": "„Przewietrz teraz” tylko wtedy, gdy jedna z tych osób jest w domu. Puste = ktokolwiek.",
           "update_push": "Jedno powiadomienie na każdą nową wersję na wybrane telefony. Dotknięcie otwiera aktualizacje Casora. Puste = wył.",
-          "beta_updates": "Testuj nowe funkcje wcześniej. Bety mogą mieć błędy. Z HACS włącz bety zamiast tego w HACS."
+          "beta_updates": "Testuj nowe funkcje wcześniej. Bety mogą mieć błędy. Z Marketplace włącz bety zamiast tego w Marketplace."
         }
       }
     },

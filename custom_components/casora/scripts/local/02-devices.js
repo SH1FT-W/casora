@@ -3765,7 +3765,7 @@
   };
   P.watch = function (c) {
     return [c.st, c.status, c.progress, c.remaining, c.layer, c.layers, c.task, c.start, c.end, c.weight, c.length, c.noz, c.nozT, c.bed, c.bedT,
-      c.ext, c.activeSlot, c.amsHum, c.amsIdx, c.amsTemp, c.speedSel, c.speed, c.usage, c.fw, c.online, c.hms, c.err, c.camSw, c.light,
+      c.ext, c.activeSlot, c.amsHum, c.amsIdx, c.amsTemp, c.speedSel, c.speed, c.usage, c.fw, c.online, c.hms, c.err, c.camSw, c.cam, c.light,
       c.pause, c.resume, c.stop, c.plug, c.power, c.volt, c.amp, c.energy, c.chamber, c.chamberT, c.cover, c.objects, c.skipped]
       .concat(c.slots, c.fans.map(function (f) { return f[0]; }), [].concat.apply([], (c.fans3 || []).map(function (f) { return [f[0], f[1]]; })))
       .filter(function (x, i, a) { return x && a.indexOf(x) === i; });
@@ -3775,9 +3775,19 @@
     return STATUS[s] || [s, null, false];
   };
 
+  // The camera now: 'off' (its switch is off), 'dead' (gone, unavailable or no picture yet) or 'on'.
+  P.camState = function (c, states) {
+    if (c.camSw && states[c.camSw] && states[c.camSw].state === 'off') return 'off';
+    var s = c.cam && states[c.cam];
+    return !s || s.state === 'unavailable' || !(s.attributes || {}).entity_picture ? 'dead' : 'on';
+  };
   P.inner = function (kind, c, states) {
     var UI = window._casoraUI;
     if (!UI) return '';
+    if (kind === 'p_camoff') {
+      var cs = P.camState(c, states);
+      return cs === 'on' || !UI.empty ? '' : UI.empty(cs === 'off' ? { icon: 'mdi:video-off-outline', text: 'Kamera aus' } : { icon: 'mdi:cctv-off', text: 'Kamera offline' });
+    }
     var s = P.state(c, states);
     var active = s[2];
     var raw = (c.status && states[c.status] && states[c.status].state) || '';
@@ -4183,18 +4193,35 @@
     }
     /* Camera image as in the previous popup (16:9, rounded); picture-entity updates itself. */
     // A camera without a picture (offline, no image yet) says so instead of an empty dark plate (review 2, DD-28).
+    // Owner 05.11.2026: switching the camera off (ha-bambulab then drops the camera entity) showed HA's warning „Entität
+    // nicht gefunden“ – the picture now follows the camera and its switch while the popup is open (a button-card around
+    // it watches both and hides it; HA's conditional card does not update inside a popup field), and a calm placeholder
+    // (p_camoff: „Kamera aus“ / „Kamera offline“) takes its place.
     var camDead = c.cam && states[c.cam] && (states[c.cam].state === 'unavailable' || !(states[c.cam].attributes || {}).entity_picture);
-    if (camDead && window._casoraUI && window._casoraUI.empty) {
-      add('cam', window._casoraUI.empty({ icon: 'mdi:cctv-off', text: 'Kamera offline' }));
-    } else if (c.cam && states[c.cam]) {
-      add('cam', { card: { type: 'picture-entity', entity: c.cam, camera_view: 'auto', show_name: false, show_state: false, tap_action: { action: 'none' }, hold_action: { action: 'none' },
-        aspect_ratio: '16:9',
-        card_mod: { style: 'ha-card { border-radius: var(--casora-popup-row-radius, 20px) !important; overflow: hidden !important; border: none !important;'
-          + ' box-shadow: var(--casora-popup-plate-shadow, none) !important; background: var(--casora-soft-placeholder, rgba(0,0,0,0.35)) !important; }' } }, do_not_eval: true });
+    var camAny = !!(c.cam && (states[c.cam] || (c.camSw && states[c.camSw])));
+    if (camAny && !camDead) {
+      var camC = JSON.stringify({ cam: c.cam, camSw: c.camSw || null });
+      var camShow = '[[[ return window._casoraPrint && window._casoraPrint.camState(' + camC + ', states) === "on" ? "block" : "none"; ]]]';
+      add('cam', { card: { type: 'custom:button-card', entity: c.st, triggers_update: [c.cam, c.camSw].filter(Boolean), tap_action: { action: 'none' },
+        show_icon: false, show_name: false, show_label: false, show_state: false,
+        card_mod: { style: 'ha-card { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; cursor: default !important; overflow: visible !important; }'
+          + ' ha-ripple { display: none !important; }' },
+        styles: { card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0' }, { display: camShow }],
+          grid: [{ 'grid-template-areas': '"pic"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }],
+          custom_fields: { pic: [{ 'justify-self': 'stretch' }] } },
+        custom_fields: { pic: { card: { type: 'picture-entity', entity: c.cam, camera_view: 'auto', show_name: false, show_state: false,
+          tap_action: { action: 'none' }, hold_action: { action: 'none' }, aspect_ratio: '16:9',
+          card_mod: { style: 'ha-card { border-radius: var(--casora-popup-row-radius, 20px) !important; overflow: hidden !important; border: none !important;'
+            + ' box-shadow: var(--casora-popup-plate-shadow, none) !important; background: var(--casora-soft-placeholder, rgba(0,0,0,0.35)) !important; }' } }, do_not_eval: true } } },
+        do_not_eval: true });
     }
+    if (camAny) add('camoff', tpl('p_camoff', false));
 
-    /* AI look at the print (✦): same module as in the camera popup, own section. */
-    if (c.cam && states[c.cam] && !camDead && window._casoraCamAi && window._casoraCamAi.inline) add('camai', window._casoraCamAi.inline(c.cam, 'KI-Blick auf den Druck', 'Druck prüfen'));
+    /* AI look at the print (✦): same module as in the camera popup, own section – only while the camera shows a picture. */
+    if (camAny && !camDead && window._casoraCamAi && window._casoraCamAi.inline) {
+      add('camai', '[[[ const c = ' + _c + '; return window._casoraPrint && window._casoraPrint.camState(c, states) === "on" ? '
+        + JSON.stringify(window._casoraCamAi.inline(c.cam, 'KI-Blick auf den Druck', 'Druck prüfen')) + ' : ""; ]]]');
+    }
     add('job', tpl('p_job', false));
     add('ctrl', tpl('p_ctrl', false));
     add('temp', tpl('p_temp', false));
@@ -4209,13 +4236,15 @@
        plug under „Mehr“. No power chart, no plug readings. */
     if (window._casoraHH && window._casoraHH.on() && window._casoraHH.layout) {
       var HH = window._casoraHH;
+      var v3P0 = !!(window._casoraDish && window._casoraDish.v3 && window._casoraDish.v3());
       var f2 = { hero: fields.hero, alerts: fields.alerts, ctrl: fields.ctrl, job: fields.job };
       /* 1.1.2 (direction A): bar under the head, only added while printing. */
       if (active) f2.pbar = tpl('p_pbar', false);
-      if (fields.cam) {
+      if (fields.cam || fields.camoff) {
         f2.camlbl = HH.label('Kamera');
-        f2.cam = fields.cam;
-        if (window._casoraCamAi && !camDead) f2.camai = HH.aiButton(c.cam, 'KI-Blick: Druck prüfen');
+        if (fields.cam) f2.cam = fields.cam;
+        if (fields.camoff) f2.camoff = fields.camoff;
+        if (window._casoraCamAi && fields.cam) f2.camai = v3P0 ? fields.camai : HH.aiButton(c.cam, 'KI-Blick: Druck prüfen');
       }
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("printer", ["p_ams", "p_temp", "p_speed", "energy", "p_info", "plug"].map(function (k) {'
@@ -4229,18 +4258,18 @@
       if (v3P) delete f2.camlbl;
       /* Popup v3 has no „Mehr“ (richtlinien §8, owner 04.11.2026: „ein bisschen nackig“): the job, temperatures,
          material and – at rest – the printer itself are the content, every list on the right in reading order. */
-      var rightP = ['camlbl', 'cam', 'camai', 'more'];
+      var rightP = ['camlbl', 'cam', 'camoff', 'camai', 'more'];
       if (v3P) {
         P._cfg[c.st] = c;
         delete f2.more; delete f2.job;
         f2.job3 = tpl('p_job3', false); f2.temp3 = tpl('p_temp3', false); f2.ams3 = tpl('p_ams3', false);
         // Always in the layout (empty while printing): the popup keeps its build when the print ends while it is open.
         f2.dev3 = tpl('p_dev3', false);
-        rightP = ['cam', 'camai', 'job3', 'temp3', 'ams3', 'dev3'];
+        rightP = ['cam', 'camoff', 'camai', 'job3', 'temp3', 'ams3', 'dev3'];
       }
       return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3P ? [] : ['hero', 'pbar'], stage: v3P ? 'stage' : null,
         left: ['alerts', 'ctrl', 'job'], right: rightP,
-        underStage: v3P ? ['cam', 'camai'] : null,
+        underStage: v3P ? ['cam', 'camoff', 'camai'] : null,
         settings: states[c.st] ? c.st : null,
         colExtra: (v3P ? '' : ' #container > #cam { margin-top: 0 !important; }') + ' #container > #camai:not(:empty) { margin-top: 12px !important; }' });
     }
@@ -4275,7 +4304,7 @@
     top.hero = { card: makeCol(['hero']) }; topStyle.hero = fstyle.hero;
     var pair = [];
     if (fields.chart) { top.chart = fields.chart; topStyle.chart = [{ 'justify-self': 'stretch' }, { 'align-self': 'stretch' }]; pair.push('chart'); }
-    var _sp = (function (l, r) { return window._casoraSplit ? window._casoraSplit('printer', l, r, { pinRight: ['camai', 'cam'] }) : { left: l, right: r }; })(['alerts', 'job', 'ctrl', 'temp', 'plug'].filter(has), ['camai', 'cam', 'ams', 'energy', 'info'].filter(has));
+    var _sp = (function (l, r) { return window._casoraSplit ? window._casoraSplit('printer', l, r, { pinRight: ['camai', 'cam', 'camoff'] }) : { left: l, right: r }; })(['alerts', 'job', 'ctrl', 'temp', 'plug'].filter(has), ['camai', 'cam', 'camoff', 'ams', 'energy', 'info'].filter(has));
     top.left = { card: makeCol(_sp.left) }; topStyle.left = [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }];
     top.right = { card: makeCol(_sp.right) };  /* AI look as a heading above the camera image (24.09.) */ topStyle.right = [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }];
     var narrow = ['hero'].concat(pair, ['left', 'right']).map(function (k) { return '"' + k + '"'; }).join(' ');

@@ -49,6 +49,6 @@ assert.ok(/f3\.hero = \{ card: secCard\(w3, 'return window\._casoraSoftEnergy \?
 assert.ok(/layout\(\{ fields: f3, top: \['hero'\]/.test(src), 'status line on top');
 // Label: energy popups get the room, else „Zuhause“ (casora-core roomLabelOf).
 const core = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-core.js', import.meta.url), 'utf8');
-assert.ok(/return er \|\| 'Zuhause';/.test(core), 'energy label falls back to Zuhause');
+assert.ok(/return er \|\| placeRoomOf\(src\) \|\| 'Zuhause';/.test(core), 'energy label: room of the sensor, else the room the badge sits in, else Zuhause');
 console.log('energy_status_words: ok');
 process.exit(0);

@@ -336,14 +336,14 @@
       const want = bare(version || d.latest);
       const ok = await this._ask({
         title: t("Install Casora {v}?").replace("{v}", want),
-        message: t("HACS downloads the new version. Home Assistant needs a restart afterwards."),
+        message: t("The Marketplace downloads the new version. Home Assistant needs a restart afterwards."),
         confirmLabel: t("Install"),
       });
       if (!ok) return;
       this._cuErr = null;
       const st = this._hass && this._hass.states[d.entity_id];
       if (!st || st.state === "unavailable" || st.state === "unknown") {
-        this._cuErr = t("HACS's update entry for Casora is not available right now. Try again in a moment or update in HACS.");
+        this._cuErr = t("The Marketplace's update entry for Casora is not available right now. Try again in a moment or update in the Marketplace.");
         this._cuRepaint();
         return;
       }
@@ -369,7 +369,7 @@
       await this._cuLoad(true);
       const now = this._cuData || {};
       if (!this._cuErr && bare(now.pending_restart) !== want) {
-        this._cuErr = t("Installing didn't work.") + " " + t("HACS did not report the new version as installed. Check HACS.");
+        this._cuErr = t("Installing didn't work.") + " " + t("The Marketplace did not report the new version as installed. Check the Marketplace.");
       }
       this._cuBusy = null;
       this._cuInstalling = null;
@@ -377,7 +377,7 @@
     };
     // Without HACS there is nothing to press: say where new versions come from.
     const manualNote = () => el("div", "cu-note",
-      t("Casora installs no updates itself. Install new versions through HACS, or download casora.zip from the release page."));
+      t("Casora installs no updates itself. Install new versions through the Marketplace, or download casora.zip from the release page."));
 
     P._cuRestart = async function () {
       const dirty = this._state && this._isDirty && this._isDirty();
@@ -467,13 +467,13 @@
         stTx.textContent = t("New: {v}").replace("{v}", d.latest) + when;
         if (latestRel && latestRel.summary) hero.appendChild(el("div", "cu-sum", latestRel.summary));
         if (canInstall(d)) acts.appendChild(btn(t("Install"), () => this._cuInstall()));
-        if (canOpenHacs(d)) acts.appendChild(btn(t(canInstall(d) ? "Open in HACS" : "Update via HACS"), () => this._cuOpenHacs(), canInstall(d)));
+        if (canOpenHacs(d)) acts.appendChild(btn(t(canInstall(d) ? "Open in the Marketplace" : "Update via the Marketplace"), () => this._cuOpenHacs(), canInstall(d)));
         else if (!d.hacs) hero.appendChild(manualNote());
-        else hero.appendChild(el("div", "cu-sum", t("HACS offers new Casora versions under Settings → Updates.")));
+        else hero.appendChild(el("div", "cu-sum", t("The Marketplace offers new Casora versions under Settings → Updates.")));
       } else if (d.hacs) {
         // Mit HACS keine eigene Update-Entität – HACS meldet neue Versionen.
-        stTx.textContent = t("Updates via HACS");
-        hero.appendChild(el("div", "cu-sum", t("HACS offers new Casora versions under Settings → Updates.")));
+        stTx.textContent = t("Updates via the Marketplace");
+        hero.appendChild(el("div", "cu-sum", t("The Marketplace offers new Casora versions under Settings → Updates.")));
       } else {
         stTx.textContent = t("Current");
       }
@@ -488,7 +488,7 @@
       }
       if (acts.children.length) hero.appendChild(acts);
       if (d.pending_restart) {
-        hero.appendChild(el("div", "cu-note", t("Installed through HACS. Home Assistant also lists the restart under Repairs.")));
+        hero.appendChild(el("div", "cu-note", t("Installed through the Marketplace. Home Assistant also lists the restart under Repairs.")));
       }
       const errTx = this._cuErr || (d.last_error && t(ERR[d.last_error] || ERR.unreachable));
       if (errTx) hero.appendChild(el("div", "cu-err", errTx));
@@ -550,7 +550,7 @@
           body.appendChild(ib);
         } else if (d.update_available && !d.pending_restart && String(r.version).replace(/^v/, "") === String(d.latest)
           && cmp(r.version, d.installed) > 0 && canOpenHacs(d)) {
-          const ib = btn(t("Update via HACS"), () => this._cuOpenHacs());
+          const ib = btn(t("Update via the Marketplace"), () => this._cuOpenHacs());
           ib.classList.add("cu-rowinst");
           ib.disabled = !!busy;
           body.appendChild(ib);
@@ -582,8 +582,8 @@
       const row = el("div", "cu-kv");
       const tx = el("span", "cu-kvtx");
       tx.append(el("b", "", t("Beta versions")), el("small", "", d.hacs
-        ? (canInstall(d) ? t("Casora is updated through HACS. To try a beta, open it in the list below and tap Install. Betas can have bugs.")
-          : t("Casora is updated through HACS. To try a beta: open Casora in HACS, ⋮ › Redownload, and pick the beta in the version list."))
+        ? (canInstall(d) ? t("Casora is updated through the Marketplace. To try a beta, open it in the list below and tap Install. Betas can have bugs.")
+          : t("Casora is updated through the Marketplace. To try a beta: open Casora in the Marketplace, ⋮ › Redownload, and pick the beta in the version list."))
         : t("Try new features earlier. Betas can have bugs.")));
       row.appendChild(tx);
       if (!d.hacs && this._boolSwitch) {

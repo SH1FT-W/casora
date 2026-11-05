@@ -50,11 +50,17 @@ const states = { 'sensor.p_stage': st('printing'), 'sensor.p_progress': st('53')
 const ent = { entity_id: 'sensor.p_stage' };
 const pop = P.popup(ent, V, states, { states });
 const left = keysOf(pop.custom_fields.left.card), right = keysOf(pop.custom_fields.right.card);
-assert.deepEqual(left, ['stage', 'cam', 'camai'], 'printer v3: left = dial, camera, AI button');
+assert.deepEqual(left, ['stage', 'cam', 'camoff', 'camai'], 'printer v3: left = dial, camera (or its placeholder), AI button');
 assert.ok(!right.some((k) => /^cam/.test(k)), 'printer v3: no camera section on the right (' + right.join(',') + ')');
 assert.ok(right.includes('ctrl') && right.includes('job3'), 'printer v3: control and print stay on the right');
 assert.ok(!/#cam \{ margin-top: 0/.test(pop.custom_fields.left.card.extra_styles), 'printer v3: camera keeps the section gap under the dial');
-assert.equal(pop.custom_fields.left.card.custom_fields.cam.card.type, 'picture-entity', 'printer v3: live picture under the dial');
+const camCard = pop.custom_fields.left.card.custom_fields.cam.card;
+assert.equal(camCard.custom_fields.pic.card.type, 'picture-entity', 'printer v3: live picture under the dial');
+// Owner 05.11.2026: the picture follows the camera and its switch (hidden when off or gone), „Kamera aus“ takes its place.
+assert.deepEqual(camCard.triggers_update, ['camera.p_cam'], 'printer v3: the picture watches the camera');
+assert.equal(P.camState({ cam: 'camera.p_cam', camSw: 'switch.p_cam' }, Object.assign({ 'switch.p_cam': st('off') }, states)), 'off', 'switch off → off');
+assert.equal(P.camState({ cam: 'camera.p_cam', camSw: 'switch.p_cam' }, { 'switch.p_cam': st('on') }), 'dead', 'camera gone → dead');
+assert.equal(P.camState({ cam: 'camera.p_cam', camSw: 'switch.p_cam' }, Object.assign({ 'switch.p_cam': st('on') }, states)), 'on', 'camera on → on');
 // Phone: one grid column, left before right → dial, camera, AI, then the lists.
 assert.deepEqual(keysOf(pop).filter((k) => k !== 'more'), ['left', 'right'], 'printer v3: phone reads left before right');
 
