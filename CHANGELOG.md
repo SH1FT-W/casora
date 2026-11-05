@@ -4,6 +4,14 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.16 – 05.11.2026
+
+A small fix release: whole percents for the volume and a calmer updates popup.
+
+### Fixed
+- **Volume shown with endless decimals (#127):** the media popup could show "14.000000000000002 %" before it settled on "14 %"; the live value is now always shown as a whole percent.
+- **Updates popup:** "Last checked" no longer sticks to the round search button.
+
 ## 26.11.15 – 05.11.2026
 
 Casora is in the Marketplace: room energy as a dial, updates grouped by kind and calmer popups for consoles and printers.

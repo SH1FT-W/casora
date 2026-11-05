@@ -4,6 +4,14 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.16 – 05.11.2026
+
+Ein kleines Fix-Release: ganze Prozent bei der Lautstärke und ein ruhigeres Update-Popup.
+
+### Behoben
+- **Lautstärke mit endlosen Nachkommastellen (#127):** Das Medien-Popup konnte „14.000000000000002 %“ zeigen, bevor es „14 %“ wurde; der Live-Wert steht jetzt immer als ganze Prozent da.
+- **Update-Popup:** „Zuletzt gesucht“ klebt nicht mehr am runden Suchen-Knopf.
+
 ## 26.11.15 – 05.11.2026
 
 Casora ist im Marketplace: Raum-Energie als Rad, Updates nach Art gruppiert und ruhigere Popups für Konsolen und Drucker.
