@@ -4108,7 +4108,7 @@
   var v3StatusHtml = function () { return esc(K.status().join(' · ')); };
   K.v3Status = function () {
     return '<style>.huc-v3{font-family:var(--primary-font-family, system-ui);font-size:13px;font-weight:600;text-align:center;'
-      + 'color:var(--casora-soft-sub, var(--secondary-text-color));min-height:18px;}</style>'
+      + 'color:var(--casora-soft-sub, var(--secondary-text-color));min-height:18px;margin-top:10px;}</style>'
       + '<div class="huc-v3" aria-live="polite">' + v3StatusHtml() + '</div>';
   };
   // HTML für die Vorlage (Statuskarte) bzw. die Weich-Kopfzeile.
