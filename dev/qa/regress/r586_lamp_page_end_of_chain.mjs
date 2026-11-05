@@ -5,7 +5,7 @@
 // listed every lamp of the room again („Lampen im Raum · 1 von 3 an“); from there one jumped lamp to lamp and ‹ went
 // back to the lamp before instead of the overview. Expected: the lamp's page is the end of the chain and looks like a
 // single-device popup (thermostat, blinds): its dial with brightness and white tone, no list of the room's lamps, one
-// column (552 on the desktop); ‹ always leads back to the room's overview, which keeps its list.
+// column (552 on the desktop), no „Szenen“ moon with the room's scenes (owner, 05.11.2026); ‹ always leads back to the room's overview, which keeps its list.
 // The test house's living room gets made-up lamps in the browser (as r516). Desktop 1440 and phone 393. Nothing is saved.
 import { open, dashboard, casoraDashboard, fakeStates, check, need, finish, usePage, shot } from './lib.mjs';
 
@@ -41,6 +41,7 @@ for (const [label, size] of [['desktop', { width: 1440, height: 900 }], ['phone'
     const b = e._headerBack && !e._headerBack.hidden ? e._headerBack.getBoundingClientRect() : null;
     return { eyebrow: t(e._headerEyebrow || {}), title: t(e._headerTitle || {}), back: b ? { x: b.x + b.width / 2, y: b.y + b.height / 2 } : null,
       lbl: P('.lps-lbl').map(t), rows: P('.lps-row').length, dial: P('.hui-dl').length > 0,
+      moons: P('.hui-moon').map((m) => m.getAttribute('aria-label') || t(m)),
       width: e.surface ? Math.round(e.surface.getBoundingClientRect().width) : 0 };
   });
   const until = async (fn, max = 30) => { let h = null; for (let i = 0; i < max; i++) { await pg.waitForTimeout(250); h = await info(); if (h && fn(h)) break; } await pg.waitForTimeout(600); return info(); };
@@ -77,6 +78,8 @@ for (const [label, size] of [['desktop', { width: 1440, height: 900 }], ['phone'
   const ov = await until(isOverview);
   await need(label + ': room lighting overview with its lamps', isOverview(ov), ov);
   if (shots) await pg.screenshot({ path: `${shots}/${label}-overview.png` });
+  // The room's scenes stay on the overview (the lamp's page leaves them out).
+  await check(`${label}: overview keeps the „Szenen“ moon`, ov.moons.some((m) => /^Szenen/.test(m)), ov.moons);
 
   // Overview → lamp A: its page is a single-device page.
   for (const [id, nm] of [[L.a, 'Stehlampe'], [L.b, 'Leselampe']]) {
@@ -90,6 +93,7 @@ for (const [label, size] of [['desktop', { width: 1440, height: 900 }], ['phone'
       && lp.eyebrow.toLowerCase() === WZ.toLowerCase(), lp);
     await check(`${label} ${nm}: no list of the room's lamps (no rows, no „Lampen im Raum“)`, lp && lp.rows === 0
       && !lp.lbl.some((x) => /^Lampen/.test(x)), lp);
+    await check(`${label} ${nm}: no „Szenen“ moon (only things of the one lamp)`, lp && !lp.moons.some((m) => /^Szenen/.test(m)), lp && lp.moons);
     if (!size.mobile) await check(`${label} ${nm}: one column, 552 wide`, lp && lp.width <= 560, lp && lp.width);
     if (!lp || !lp.back) break;
     await tap(lp.back);

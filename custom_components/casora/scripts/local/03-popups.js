@@ -4835,7 +4835,7 @@
   S.rowOrder = null;
   /* Issue 126 (owner, 05.11.2026): a lamp opened from a list (a room's or a tile's lamps, the house's room of one lamp) is
      the end of the chain – its page is a single-device page like the thermostat's: the dial with brightness and white
-     tone/colour, its own moons, no list of the room's lamps (that jumped lamp to lamp, and ‹ went back to the lamp
+     tone/colour, its own effects (no room scenes), no list of the room's lamps (that jumped lamp to lamp, and ‹ went back to the lamp
      before instead of the list). ‹ always leads back to the list it was opened from. A lamp opened straight from its
      own tile or chip keeps its room's lamps. S.alone: that lamp's id, until the popup closes. */
   S.alone = null;
@@ -4938,9 +4938,10 @@
     var fxId = fxLampOf(single ? [sc.lights[0]] : lampIds0, states);
     // The scene holds while no lamp of the room changed after it: a lamp's page looks at its room's rows like the room's
     // page (review 03.11.2026: the lamp's page marked „Szenen“ after another lamp of the room changed).
-    var left = v3Stage(ids, states, false, function () { return v3Moons(scenesOf(h, states, sceneScope(sc)), states, room, fxId, h, sc.lamp && sc.room ? sc.room : ids); });
-    // Issue 126: a lamp opened from a list is a single-device page – the stage alone, one column (552, header width).
+    // Issue 126: a lamp opened from a list is a single-device page – the stage alone, one column (552, header width),
+    // only what belongs to that lamp: its effects, not the room's scenes (owner, 05.11.2026).
     var alone = S.lampAlone(cfg);
+    var left = v3Stage(ids, states, false, function () { return v3Moons(alone ? [] : scenesOf(h, states, sceneScope(sc)), states, room, fxId, h, sc.lamp && sc.room ? sc.room : ids); });
     var ls = stat(lampIds0, states);
     var lampNames0 = lampNamesOf(lampIds0, states, room);
     var lampsHtml = lampIds0.map(function (id, i) {

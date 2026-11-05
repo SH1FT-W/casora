@@ -9,7 +9,8 @@
 //      so every page has the same head and the dial never jumps between room and lamp page.
 //   2. rows: lamp names without the room, the sub-line short („Aus“, „An · 80 %“, never „zuletzt …“).
 //   3. the word for the devices is „Lampen“: „Lampen im Raum · 1 von 3 an“.
-//   4. beside the dial at most two round buttons: „Szenen“ (left, a menu with the room's scenes) and „Effekte“.
+//   4. beside the dial at most two round buttons: „Szenen“ (left, a menu with the room's scenes) and „Effekte“; a lamp's
+//      page opened from a list shows only its own „Effekte“, no „Szenen“ (owner, 05.11.2026, issue 126).
 //   5. a lamp's page has its own main switch (top right) that switches that lamp.
 //   6. a light group in a room („Spots“) is one row everywhere, also in the room's own popup; a lamp's page opened
 //      straight from its chip lists the rows of its room, one opened from a list lists nothing (issue 126, r586).
@@ -117,6 +118,7 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
       && h.moons.every((m) => /^(Szenen|Effekte)/.test(m)), h.moons);
     if (want.scenes) await check(`${label} ${name}: Knopf „Szenen“`, h.moons.some((m) => /^Szenen/.test(m)), h.moons);
     if (want.alone) await check(`${label} ${name}: keine Liste der Lampen des Raums (Issue 126)`, !h.rows.length && !h.lbl.some((x) => /^Lampen/.test(x)), h);
+    if (want.alone) await check(`${label} ${name}: kein Knopf „Szenen“ (nur Dinge der Lampe, Issue 126)`, !h.moons.some((m) => /^Szenen/.test(m)), h.moons);
     if (want.sw) await check(`${label} ${name}: eigener Schalter oben rechts`, h.sw, h);
   };
 
@@ -222,13 +224,12 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
   const sm = await moonMenu('Szenen');
   await check(`${label} Raum-Badge: „Szenen“ öffnet ein Menü mit den Szenen des Raums, ohne Raumnamen`,
     Array.isArray(sm) && sm.length >= 2 && !sm.some((x) => x.includes(WZ)), sm);
-  // e) A lamp from the room's popup: the lamp with effects (moon „Effekte“ beside „Szenen“).
+  // e) A lamp from the room's popup: the lamp with effects (moon „Effekte“, no „Szenen“ – issue 126).
   r = await rowAt(`d.a==='mi' && d.id===${JSON.stringify(L.strip)}`);
   if (r) {
     await tap(r); h = await until((x) => /TV-Backlight/.test(x.title));
-    await judge('Raum → Lampe', h, { eyebrow: WZ, title: 'TV-Backlight', alone: true, scenes: true, sw: true });
-    await check(`${label} Raum → Lampe: „Effekte“ neben „Szenen“`, h && h.moons.some((m) => /^Effekte/.test(m)), h && h.moons);
-    if (scene) await check(`${label} Raum → Lampe: „Szenen“ wie auf der Raumseite nicht markiert`, h && !h.moonsOn.some((m) => /^Szenen/.test(m)), h && h.moonsOn);
+    await judge('Raum → Lampe', h, { eyebrow: WZ, title: 'TV-Backlight', alone: true, sw: true });
+    await check(`${label} Raum → Lampe: Knopf „Effekte“ der Lampe`, h && h.moons.some((m) => /^Effekte/.test(m)), h && h.moons);
     // Esc with the menu open closes the menu, not the popup (review 03.11.2026).
     if (!size.mobile) {
       const p0 = await pg.evaluate(() => { const e = window.casoraPopup.element;
