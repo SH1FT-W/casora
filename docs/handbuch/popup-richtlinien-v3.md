@@ -91,13 +91,19 @@ Zustand · Zusatz · Zusatz
 | Teil | Regel | Maß |
 |---|---|---|
 | Symbol-Kachel | **entfällt** (die Bühne zeigt Farbe und Zustand) | – |
-| Etikett | Raum; auf Unterseiten die Seite davor (setzt der Rahmen, wenn die Seite ‹ hat); bei Sammel-Popups leer; immer **über** dem Titel | 12/700, Großbuchstaben, Sperrung .06em, Text 2 |
+| Etikett | **In jedem Popup**, immer **über** dem Titel: der Raum (aus dem Dashboard, sonst der HA-Bereich des Geräts; ein Badge in einer Raumkarte: dieser Raum); bei Sammel-Popups und Popups ohne einen Raum „Zuhause“ (setzt der Rahmen, wenn sonst nichts dasteht); auf Unterseiten die Seite davor (setzt der Rahmen, wenn die Seite ‹ hat) | 12/700, Großbuchstaben, Sperrung .06em, Text 2 |
 | Titel | Gerätename ohne Raum, höchstens 2 Zeilen, dann „…“ | 24/800, -0.02em (Handy 22) |
 | Statuszeile | Zustand fett in Text 1, dann höchstens 2 Zusätze in Text 2, „·“ getrennt, eine Zeitform (unter 1 Std. „vor 11 Min.“, sonst „seit 14:42“). In **jedem** Popup: hat der Inhalt keine eigene, zeigt der Rahmen den Zustand der Kachel-Entität (HAs Wort; ein Zustand der Wortliste in deren Wort – „Bereit“ statt „Leerlauf“, „An“ statt „Ein“ –, ein Rohwert ohne Übersetzung nie, dann „Seit 14:42“) | 14/500, Zustand 14/700 |
 | Hauptschalter | wie v2 Regel 2: schaltet, was die Kachel schaltet; nie bei Schloss, Alarm, Tor, Sirene | 51×31, Gerätefarbe |
 | ✕ | immer, rechts außen | Kreis 40 auf Zeilenfläche, Trefferfläche 44 |
 | ‹ | nur auf Unterseiten, links vor dem Etikett | Kreis 40 |
 | Abstand Kopf → Bühne | | 20 |
+
+**Ein Kopf, eine Höhe** (Entscheidung 05.11.2026): Der Kopf ist in jedem Popup gleich hoch – Etikett-Zeile und
+Statuszeile halten ihren Platz auch leer (ein Popup ohne Statuszeile, z. B. Licht, lässt die Zeile frei) –, und die
+Bühne beginnt in jedem Popup auf derselben Höhe: der Rahmen rückt den ersten sichtbaren Inhalt auf denselben Abstand
+unter den Kopf, auch wenn der Inhalt eine leere Karte darüber hat (casora-core.js `_paintSoft`, `_fitHeadGap`).
+Nur ein zweizeiliger Titel macht den Kopf höher. Test `r578_popup_head_uniform.mjs`.
 
 Der Zustand steht nicht noch einmal groß auf der Bühne, **außer** als Wert (68 %, 21,2°) – die Bühne zeigt die
 Zahl, die Statuszeile das Wort.

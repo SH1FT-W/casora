@@ -11,7 +11,8 @@
 //  - X (und Hauptschalter, falls da) stehen auf derselben Mitte wie die Kachel.
 // Mittig = Mitte Kachel − Mitte Textbox (oberste Box oben … unterste unten) ≤ 1 px.
 // Popup v3 (Bühne, richtlinien §3): no symbol tile – X and main switch on the middle of the text block, label above
-// title above status line, in every combination.
+// title above status line, in every combination. Since 05.11.2026 the v3 head keeps the label and status line even when
+// empty (same height everywhere), so X and switch sit on the middle of the whole text column.
 import { open, casoraDashboard, dashboard, check, need, finish } from './lib.mjs';
 
 process.env.CASORA_THEME = 'Casora';
@@ -54,7 +55,9 @@ const MESS = (v) => {
   // Popup v3 (richtlinien §3): no symbol tile; X and main switch sit on the middle of the text block instead,
   // and the label stays above the title above the status line.
   if (parts.length && (ringOn || out.v3)) {
-    const top = Math.min(...parts.map((r) => r.top)), bot = Math.max(...parts.map((r) => r.bottom));
+    // v3 (§3, 05.11.2026): label and status line keep their place even when empty – the block is the whole text column.
+    const tb = out.v3 ? R(sr.querySelector('.header-text')) : null;
+    const top = tb ? tb.top : Math.min(...parts.map((r) => r.top)), bot = tb ? tb.bottom : Math.max(...parts.map((r) => r.bottom));
     const rr = ringOn ? R(ring) : { top, height: bot - top }, rc = rr.top + rr.height / 2;
     out.ring = ringOn;
     out.order = parts.every((r, i) => !i || r.top >= parts[i - 1].bottom - 1);

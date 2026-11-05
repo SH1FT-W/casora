@@ -6964,6 +6964,10 @@ window.casoraMenuGlass = {
     :host([soft][data-casora-pv="v3"]) .header-title { font-size: var(--casora-v3-head-title-fs, 24px); letter-spacing: -0.02em; line-height: 1.2; }
     :host([soft][data-casora-pv="v3"]) .header-status { font-size: 14px; margin-top: 4px; }
     :host([soft][data-casora-pv="v3"]) .header-status b { font-size: 14px; }
+    /* §3 (owner 05.11.2026): every v3 head has the same height – label line and status line are always there (an
+       empty one keeps its place), so every stage starts at the same height below the head. */
+    :host([soft][data-casora-pv="v3"]) .header-eyebrow:empty { display: block; min-height: 16px; }
+    :host([soft][data-casora-pv="v3"]) .header-status[hidden] { display: block; visibility: hidden; height: 1.4em; overflow: hidden; }
     :host([soft][data-casora-pv="v3"]) .header-close, :host([soft][data-casora-pv="v3"][has-back]) .header-back { width: 40px; height: 40px; }
     :host([soft][data-casora-pv="v3"]) .header-close::before { inset: -2px; }
     @media (max-width: 760px) { :host([soft][data-casora-pv="v3"]) { --casora-v3-head-title-fs: 22px; } }
@@ -7630,7 +7634,10 @@ window.casoraMenuGlass = {
       } catch (e) {}
       return '';
     }
-    if (HOUSE_POPUP.test(tpl)) return spansRooms(src) ? 'Zuhause' : '';
+    // A house popup (badges, weather, energy …) over several rooms says „Zuhause“; a badge in a room's tile names that
+    // room (owner 05.11.2026: the climate badge of a room stood without a label). Elsewhere none – the v3 frame then
+    // writes „Zuhause“.
+    if (HOUSE_POPUP.test(tpl)) return spansRooms(src) ? 'Zuhause' : placeRoomOf(src);
     var id = src._stateObj && src._stateObj.entity_id;
     if (!id || typeof window._casoraRoomOf !== 'function') return '';
     // Lights of the whole house (#30): the tile's entity is just the first light, its room is not the tile's.
@@ -7642,7 +7649,10 @@ window.casoraMenuGlass = {
     }
     // Lights keep their room (a room's lamps may list one of another room, light_house_title (k)).
     if (!/\bcasora_light\b/.test(tpl) && spansRooms(src)) return 'Zuhause';
-    try { return String(window._casoraRoomOf(id) || '').trim(); } catch (e) { return ''; }
+    // The dashboard's room of the entity, else its HA area (owner 05.11.2026: a plant shown only on Home stood without
+    // its room).
+    var hr = src._hass || (document.querySelector('home-assistant') || {}).hass;
+    try { return memberRoomOf(id, hr); } catch (e) { return ''; }
   }
   /* r487: the title a device's sub page takes from the row tapped for it. Only in a popup over several rooms (its label
      „Zuhause“ or none): there the row's name is what tells the devices apart („Küche“ of „Jalousie Küche“) and no room
@@ -8458,14 +8468,19 @@ window.casoraMenuGlass = {
       // The label a module sets (the single lamp's room) counts too: „G9 Spot Terrasse“ under „TERRASSE“ → „G9 Spot“
       // (detail round #38, §3 title without the room).
       var title = sf && !this._rowTitle && !this._headFixed ? stripRoom(this._cfgTitle, room || this._cfgEyebrow || '') : this._cfgTitle;
-      // Titel beginnt schon mit dem Raum („Wohnzimmer/Küche“): Etikett weglassen statt den Raum doppelt zu zeigen.
-      if (room && title.toLowerCase().indexOf(room.toLowerCase()) === 0) room = '';
+      // A title that starts with the room („Wohnzimmer/Küche“): no label, so the room does not stand twice. Not in v3:
+      // there the label is always the room (§3, owner 05.11.2026).
+      var v3 = this.getAttribute('data-casora-pv') === 'v3';
+      if (!v3 && room && title.toLowerCase().indexOf(room.toLowerCase()) === 0) room = '';
       if (this._headFixed) room = '';
       // Lange Titel umbrechen an „/“ (Zonen wie „Wohnzimmer/Küche“), nicht mitten im Wort.
       this._headerTitle.textContent = sf ? String(title || '').replace(/\/(?=\S)/g, '/\u200B') : (title || '');
       var brow = sf ? (this._cfgEyebrow || this._subEyebrow || room) : this._cfgEyebrow;
       // issue 106: a label that only repeats the title („FENSTER“ over „Fenster“) says nothing.
       if (sf && !this._headFixed && brow && String(brow).trim().toLowerCase() === String(title || '').trim().toLowerCase()) brow = '';
+      // v3 §3 (owner 05.11.2026): a label above every title – the room, „Zuhause“ for a popup without one room
+      // (collections, the house, a device in no room), the word the groups over several rooms already use.
+      if (sf && v3 && !brow) brow = 'Zuhause';
       this._headerEyebrow.textContent = brow;
       this._header.hidden = !this._hasHeader && !ring;
       this._syncHeadSwitch();
@@ -8686,7 +8701,8 @@ window.casoraMenuGlass = {
       var line = this._headLine;
       if (!line || !line.isConnected) {
         line = this._findHeadLine();
-        if (!line) return;
+        // v3 without a status line of the content: the gap to the stage is fitted all the same (cards come late).
+        if (!line) { if (this.getAttribute('data-casora-pv') === 'v3') this._fitHeadGap(); return; }
         this._headLine = line;
         var root = line.getRootNode();
         if (root !== this._headRoot) {
@@ -8811,7 +8827,10 @@ window.casoraMenuGlass = {
     // Abstand Kopf → erster sichtbarer Inhalt: 28 px (Kopfzeile A). Nach dem Ausblenden der Statuszeile
     // bleiben je Layout verschiedene Ränder stehen (Kartenpolster, Rasterabstand) – gemessen und ausgeglichen.
     _fitHeadGap() {
-      if (!this._headField || !this.hasAttribute('open') || this.content.scrollTop > 0) return;
+      // v3: also without a lifted status line – an empty card above the stage (the light popup's hero) must not push
+      // the stage down; every stage starts the same distance below the head (§3, owner 05.11.2026).
+      var v3 = this.hasAttribute('soft') && this.getAttribute('data-casora-pv') === 'v3';
+      if ((!this._headField && !v3) || !this.hasAttribute('open') || this.content.scrollTop > 0) return;
       var wait = (this._replayUntil || 0) - Date.now();
       if (wait > 0) { clearTimeout(this._fitLater); this._fitLater = setTimeout(() => this._fitHeadGap(), wait + 30); return; }
       var bar = this.shadowRoot.querySelector('.header-bar').getBoundingClientRect();
