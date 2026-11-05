@@ -322,7 +322,7 @@ assert.match(cfg.extra_styles, /"hero hero" "match match" "left right"/);
   const areas = c3.styles.grid.find((g) => g['grid-template-areas'])['grid-template-areas'];
   const rows = areas.match(/"[^"]+"/g).map((r) => r.slice(1, -1));
   assert.ok(rows.indexOf('right') > -1 && rows.indexOf('right') < rows.indexOf('left'), 'phone: match/form before the table (#107), got ' + areas);
-  assert.match(c3.extra_styles, /min-width: 761px\) \{ #container \{ grid-template-areas: "head head" "left right" !important/, 'desktop: two columns unchanged');
+  assert.match(c3.extra_styles, /min-width: 761px\) \{ #container \{ grid-template-areas: "head head" "right left" !important/, 'desktop: match/form left, table right (same order as the phone)');
 }
 assert.match(K.html('hero', S), /Platz 7\|Serie A · 14 Punkte/);
 assert.ok(!/TV/.test(K.html('match', S)), 'kein US-TV-Sender');

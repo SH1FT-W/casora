@@ -850,12 +850,12 @@
     ].join('\n');
     var fld = function (k) { return '[[[ return window._casoraFootball ? window._casoraFootball.sec(' + JSON.stringify(k) + ', entity) : ""; ]]]'; };
     if (K.v3()) {
-      /* v3: no hero („Platz 3 · 20 Punkte“ is the lifted row of the table); the table as the stage on the left, the
-         match and the form on the right; phone (one column): match, form, table – the match is what the popup is
-         opened for, the table would push it below the fold (issue 107). */
+      /* v3: no hero („Platz 3 · 20 Punkte“ is the lifted row of the table); the match and the form on the left, the
+         table on the right (tablet/desktop, read in the same order as the phone); phone (one column): match, form,
+         table – the match is what the popup is opened for, the table would push it below the fold (issue 107). */
       return {
         type: 'custom:button-card', entity: id, triggers_update: [id], card_mod: { style: wrapperStyle },
-        extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: "head head" "left right" !important;'
+        extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: "head head" "right left" !important;'
           + ' grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: var(--casora-popup-col-gap, 26px) !important; } }'
           + (window._casoraUI.colsMark ? window._casoraUI.colsMark('left', 'right') : ''),
         tap_action: { action: 'none' }, show_icon: false, show_name: false, show_label: false, show_state: false,
