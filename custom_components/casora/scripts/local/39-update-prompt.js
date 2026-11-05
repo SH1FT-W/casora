@@ -161,7 +161,7 @@
       ring: { icon: 'mdi:package-up', hue: 'var(--casora-tone-media, var(--casora-color-blue, #5B8FC9))' },
       content: { type: 'vertical-stack', casora_cols: 1, cards: [{ type: 'custom:button-card', tap_action: { action: 'none' }, hold_action: { action: 'none' },
         show_icon: false, show_name: false, show_label: false, show_state: false,
-        card_mod: { style: ':host { --ha-card-box-shadow: none !important; } ha-card { background: transparent !important; border: none !important; box-shadow: none !important; cursor: default !important; } ha-ripple { display: none !important; }' },
+        card_mod: { style: ':host { --ha-card-box-shadow: none !important; --casora-card-hover-shadow: none; --casora-card-hover-filter: none; } ha-card { background: transparent !important; border: none !important; box-shadow: none !important; cursor: default !important; } ha-ripple { display: none !important; }' },
         styles: { card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: 'var(--casora-soft-card-top, 6px) 26px 22px 26px' }],
           grid: [{ 'grid-template-areas': '"b"' }, { 'grid-template-columns': '1fr' }],
           custom_fields: { b: [{ 'justify-self': 'stretch' }] } },

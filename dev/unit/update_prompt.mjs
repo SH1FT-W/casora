@@ -85,6 +85,11 @@ assert.equal(cfg.title, 'Casora 26.11.6 ist da', 'title names the version');
 assert.equal(cfg.variant, 'v3', 'v3 popup');
 assert.equal(cfg.content.casora_cols, 1, 'one column (552)');
 const html = cfg.content.cards[0].custom_fields.b;
+// Owner 05.11.2026: hovering the buttons showed a second frame in the popup – the theme's card hover (shadow and
+// filter on every ha-card) reached the content card. The card switches both off through the theme's own variables.
+const mod = cfg.content.cards[0].card_mod.style;
+assert.match(mod, /--casora-card-hover-shadow:\s*none/, 'no hover shadow on the content card');
+assert.match(mod, /--casora-card-hover-filter:\s*none/, 'no hover filter on the content card');
 for (const w of ['install', 'later', 'skip']) assert.ok(html.includes(`data-casora-updp="${w}"`), 'button ' + w);
 assert.ok(html.includes('<li>A</li>') && html.includes('<li>B</li>'), 'release-note lines');
 assert.ok(A.sent.some((m) => m.type === 'casora/updates/prompt' && m.language === 'de'), 'asks in the user language');
