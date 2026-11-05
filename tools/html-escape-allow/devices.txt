@@ -65,3 +65,4 @@ custom_components/casora/scripts/local/13-schloss.js | dotTone(x.s) | colour of 
 custom_components/casora/scripts/local/13-schloss.js | tt | markup from L.trigText (escaped names) | 1
 custom_components/casora/scripts/local/13-schloss.js | re:^(?:vl|body|bed|gap|zus|ver|line|left|right)$ | markup built in L.html from UI builders and escaped texts | 9
 custom_components/casora/scripts/local/02-devices.js | zcss | CSS from UI.zoomCss, a constant built from theme tokens, no user data | 1
+custom_components/casora/scripts/local/02-devices.js | HH.chart(window._hpChartTitle(c.power), plate).replace(/<\/div>$/, '') | printer power Verlauf: HH.chart escapes its title, plate is a constant style | 1

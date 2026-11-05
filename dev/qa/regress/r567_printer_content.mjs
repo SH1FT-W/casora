@@ -51,7 +51,9 @@ const info = (page) => page.evaluate(() => {
   const rowsEl = window.__pierce('.hui-row', root).filter(vis);
   const out = rowsEl.map((r) => r.getBoundingClientRect()).filter((r) => r.right > Math.min(surf.right, innerWidth) + 1 || r.left < Math.max(surf.left, 0) - 1).length;
   const cut = leaves.filter((e) => { const cs = getComputedStyle(e); return e.scrollWidth > e.clientWidth + 1 && /hidden|clip/.test(cs.overflowX)
-    && cs.textOverflow !== 'ellipsis' && !(cs.webkitLineClamp > 0); }).map(txt);
+    && cs.textOverflow !== 'ellipsis' && !(cs.webkitLineClamp > 0)
+    // Text only for screen readers (the power chart's live reading, issue 130: clip rect, 1 px) is meant to be hidden.
+    && !(cs.position === 'absolute' && /rect\(0/.test(cs.clip)); }).map(txt);
   const job = rowsEl.find((r) => /^(Aufgabe|Letzte Aufgabe)/.test(txt(r)));
   const speed = rowsEl.find((r) => /^Geschwindigkeit/.test(txt(r)));
   const box = (e) => { if (!e) return null; const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; };

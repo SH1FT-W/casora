@@ -1135,7 +1135,11 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       // A chart head with „Details ›“ (blueprint v2, decision 3): only its title text changes, the link follows the reading.
       find(pop.shadowRoot, '.hp-ct').forEach(function (t) { var tt = t.querySelector('.hp-ct-t'); (tt || t).textContent = window._hpChartTitle(eid); });
       find(pop.shadowRoot, '.hp-det').forEach(function (d) { if (!/^hwd\d+:/.test(eid)) d.setAttribute('data-casora-mi', eid); });
-      find(pop.shadowRoot, '[data-hp-metric]').forEach(function (r) { r.classList.toggle('hp-sel', r.dataset.hpMetric === eid); });
+      // A segment carrying a chart key (range switch, printer power, issue 130) is chosen like a row, as its own segment („on“).
+      find(pop.shadowRoot, '[data-hp-metric]').forEach(function (r) {
+        if (r.classList.contains('hui-sg')) r.classList.toggle('on', r.dataset.hpMetric === eid);
+        else r.classList.toggle('hp-sel', r.dataset.hpMetric === eid);
+      });
       // Only the dashboard's popup notes its choice: a pick in the Studio's preview (casoraPopup.shown) must not carry
       // over into a later dashboard popup (battery list, 08-weich-kompakt.js, reads _hpShown).
       if (!window.casoraPopup || pop === window.casoraPopup.element) window._hpShown = eid;
