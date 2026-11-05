@@ -28863,6 +28863,8 @@ class CasoraPanel extends HTMLElement {
       const pets = all.filter((e) => e === tile.entity || isPetTracker(this._hass, e));
       return pets.length ? pets : all;
     };
+    // Tiles whose device is optional (ownData: Universal tile, solar tip, waste …) can drop it again with the
+    // field's × (issue 128); it is then saved as a new tile has it, entity "".
     const entCombo = this._combo(tile.entity || "", entOptions(),
       // Tiles that find their data themselves (solar tip, waste, car …): the device is optional.
       type.entityPlaceholder || (type.ownData ? "Automatic" : pickHint(type.domains)),
@@ -28916,7 +28918,7 @@ class CasoraPanel extends HTMLElement {
         if (type.glyphFromEntity && glyphNow() !== was) rebuild = true;
         if (rebuild) this._renderForm();
         else this._syncPreview();
-      }, { source: entOptions, entity: true });
+      }, { source: entOptions, entity: true, clearable: !!type.ownData });
     const entityLabel = isGroup ? grp.noun + " 1" : (type.entityLabel || "Entity");
     let entRowEl = null;
     const noEntityRow = !!type.noEntity;

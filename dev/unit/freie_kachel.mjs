@@ -130,7 +130,11 @@ assert.deepEqual(F.popup(states['switch.qa_pumpe'], { ...states }, { ...hass }, 
 stubUI();
 const sec = (part, ent, vars) => F.sec(part, F.plan(ent, states, hass, vars || {}), states, hass);
 
+// Issue 128: the device is optional – live a calm line, the Studio preview keeps its hint (free_tile_no_device.mjs).
+assert.equal(sec('hero', null), '<line>Noch nicht eingerichtet|</line>');
+window.casoraInStudio = () => true;
 assert.equal(sec('hero', null), '<line>Kein Gerät gewählt|</line><note>Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.</note>');
+delete window.casoraInStudio;
 assert.match(sec('hero', states['switch.qa_pumpe'], V), /^<line>An\|seit 2 Std\.<\/line>/);
 // DD-30 (test 2): a wanted chart of a non-number shows no technical note in the popup (§8 clean).
 assert.doesNotMatch(sec('hero', states['switch.qa_pumpe'], V), /Kein Verlauf/, 'no developer note');
@@ -156,7 +160,7 @@ assert.doesNotMatch(sec('hero', states['switch.qa_pumpe'], V), /Kein Verlauf/, '
   assert.equal(pc[0], 'chart'); assert.equal(pc[1].unit, '%'); assert.deepEqual(pc[1].ring, { min: 0, max: 100 }, 'percentage: a level ring');
   assert.equal(tp[0], 'status'); assert.equal(tp[1].dial, false, 'reading without a range: plate');
   assert.equal(sec('line', states['switch.qa_pumpe'], V), '<line>An|</line>', 'status line = the stage word');
-  assert.equal(sec('line', null), '<line>Kein Gerät gewählt|</line>');
+  assert.equal(sec('line', null), '<line>|</line>', 'no device: no „Kein Gerät gewählt“ live (issue 128)');
   assert.match(sec('line', states['sensor.qa_prozent']), /^<line>Seit /, 'percentage: the line says since when, the value is on the wheel');
 }
 // The "add more" hint only in the Studio preview (issue #125, free_tile_studio_hint.mjs).

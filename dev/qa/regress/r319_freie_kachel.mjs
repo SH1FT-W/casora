@@ -10,7 +10,7 @@
 //   - tile: subline "An"/"Aus" like the other tiles, the entity-less tile shows its name with no state
 //   - tap: popup opens with the state line, a casora-chart, no own Aus/An (the header switch, blueprint v2), "Werte" with 4 rows
 //     (v3: no "Weitere Einstellungen"); desktop two columns (stage + history left, values right), phone one column
-//   - the entity-less tile opens a popup that says "Kein Gerät gewählt" – never an empty popup
+//   - the entity-less tile opens a popup that says "Noch nicht eingerichtet" (issue 128: no Studio hint live) – never empty
 // Pictures: CASORA_FREI_BILDER=<folder> stores tile, dashboard and popup pictures per view.
 import fs from 'node:fs';
 import { open, casoraDashboards, dashboard, check, need, finish, atFinish, stable } from './lib.mjs';
@@ -192,8 +192,10 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
   // Popup of the tile without an entity: never empty.
   await tap((await at('')) || B);
   await need(tag + ': popup of the empty tile opens', await offen());
-  const q = await stable(page, POPUP, null, { until: (v) => v && /Kein Gerät gewählt/.test(v.line) });
-  await check(tag + ': empty tile says „Kein Gerät gewählt“ with a hint', /Kein Gerät gewählt/.test(q.line) && q.notes >= 1, q);
+  // Issue 128: the device is optional – live a calm „Noch nicht eingerichtet“, no Studio hint (that is the preview's).
+  const q = await stable(page, POPUP, null, { until: (v) => v && /Noch nicht eingerichtet/.test(v.stage) });
+  await check(tag + ': empty tile says „Noch nicht eingerichtet“, no Studio hint, no „Kein Gerät gewählt“',
+    /Noch nicht eingerichtet/.test(q.stage) && q.notes === 0 && !/Kein Gerät gewählt|Wähle im Studio/.test(q.line + ' ' + q.stage), q);
   if (BILDER) { await page.waitForTimeout(600); await page.screenshot({ path: file('popup-leer') }); }
   await close();
 }

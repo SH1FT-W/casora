@@ -292,7 +292,8 @@ const type = (input, text) => { input.value = text; input.oninput(); };
   assert.ok(head.includes('this._rankedEntityList(type.domains, type.classes, room, tile.entity, type.accept)'), 'ranked list');
   assert.ok(/isPetTracker\(this\._hass, e\)/.test(head), 'pet filter inside the source');
   const end = src.indexOf('const entityLabel = ', at);
-  assert.ok(src.slice(at, end).includes('{ source: entOptions, entity: true }'), 'source and entity passed (also own-data tiles)');
+  assert.ok(src.slice(at, end).includes('{ source: entOptions, entity: true, clearable: !!type.ownData }'),
+    'source and entity passed (also own-data tiles, which can clear the device: issue 128)');
   console.log('ok late devices: inspector');
 }
 
