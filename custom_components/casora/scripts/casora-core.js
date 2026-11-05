@@ -13442,7 +13442,9 @@ window.casoraMenuGlass = {
         var col = TONE[s.tone || (s.ok ? 'good' : 'bad')] || TONE.good;
         svgHtml += '<path d="' + esc(dArc(sa, sb)) + '" fill="none" stroke-width="26" style="stroke:' + esc(col) + '"' + (n === 1 ? ' stroke-linecap="round"' : '') + '>'
           + (s.label ? '<title>' + esc(s.label) + '</title>' : '') + '</path>';
-        if (!s.ok && s.tone !== 'off') svgHtml += '<path d="' + esc(dArc(sa, sb)) + '" fill="none" stroke-width="26" opacity=".6" filter="url(#' + esc(id) + ')" pointer-events="none" style="stroke:' + esc(col) + '"/>';
+        // Every lit segment glows in its own colour like the other wheels (owner 05.11.2026: the big green arc of the
+        // Pulse ring had none, only the problems glowed); a segment that is off stays dark.
+        if (s.tone !== 'off') svgHtml += '<path d="' + esc(dArc(sa, sb)) + '" fill="none" stroke-width="26" opacity="' + (s.ok ? '.55' : '.6') + '" filter="url(#' + esc(id) + ')" pointer-events="none" style="stroke:' + esc(col) + '"/>';
       });
       return '<svg viewBox="0 0 420 420" aria-hidden="true" focusable="false">' + svgHtml + '</svg>';
     }
