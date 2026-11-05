@@ -77,7 +77,7 @@ const SCENES = {
   // Desktop (Raum), Tablet und Handy nebeneinander, unten bündig.
   screens: { out: 'readme-screens', gap: 40, html: (m) => display(src('desktop-room', m), 760) + tablet(src('tablet', m), 480) + phone(src('phone', m), 206, m) },
   // Popups: ganzer Bildschirm mit dem Popup in echter Größe, daneben dasselbe Popup am Handy.
-  popups: { out: 'readme-popups', html: (m) => display(src('popup-lights', m), 1060) + phone(src('phone-popup-lights', m), 300, m) },
+  popups: { out: 'site-popups-lights', html: (m) => display(src('popup-lights', m), 1060) + phone(src('phone-popup-lights', m), 300, m) },
   // Since 26.11.1 the second popup picture is the weather dial (before: energy).
   popups2: { out: 'readme-popups2', html: (m) => display(src('popup-weather', m), 1060) + phone(src('phone-popup-weather', m), 300, m) },
   studio: { out: 'readme-studio', html: (m) => display(src('studio-tile', m), 1240) },

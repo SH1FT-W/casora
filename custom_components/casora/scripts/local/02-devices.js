@@ -2258,8 +2258,9 @@
           svc: { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: c.plug } },
           confirm: on ? (active ? 'Trotzdem aus' : 'Ausschalten') : null }));
       }
-      /* Soft (declutter): only the switches (power, button lock), no readings. */
-      var pw = SF ? null : num(states, c.power), v = SF ? null : num(states, c.volt), a = SF ? null : num(states, c.amp);
+      /* Soft (declutter): only the switches (power, button lock), no readings – except the printer's power now
+         (issue 130: the plug is the printer's only power meter). */
+      var pw = SF && !c.print ? null : num(states, c.power), v = SF ? null : num(states, c.volt), a = SF ? null : num(states, c.amp);
       if (pw != null) rowsP.push({ icon: 'mdi:flash', iconTone: pw > 5 ? 'good' : DIM, label: 'Leistung',
         value: f(pw, pw < 10 ? 1 : 0) + ' W', entity: c.power });
       if (v != null) rowsP.push({ icon: 'mdi:sine-wave', iconTone: DIM, label: 'Spannung', value: f(v, 0) + ' V', entity: c.volt });
@@ -4265,11 +4266,34 @@
         f2.job3 = tpl('p_job3', false); f2.temp3 = tpl('p_temp3', false); f2.ams3 = tpl('p_ams3', false);
         // Always in the layout (empty while printing): the popup keeps its build when the print ends while it is open.
         f2.dev3 = tpl('p_dev3', false);
-        rightP = ['cam', 'camoff', 'camai', 'job3', 'temp3', 'ams3', 'dev3'];
+        // Issue 130: the smart plug (switch + power now) is the first list on the right, after alerts and print control.
+        if (c.plug) f2.plug3 = tpl('plug', false);
+        rightP = ['cam', 'camoff', 'camai', 'plug3', 'job3', 'temp3', 'ams3', 'dev3'];
+        // Issue 130 (owner 05.11.2026): the plug's power is the one Verlauf under the dial (richtlinien §7.1, H.layout
+        // takes the field „chart“), with the range switch 24 Std. · 7 Tage · 30 Tage like the plant and reading pages.
+        // The shared chart slot (_hpChartCfg / _hpPlantShow): each segment carries its chart key (data-hp-metric).
+        if (c.power && fields.chart && typeof window._hpChartCfg === 'function' && UI.segments) {
+          var rng = [[c.power, '24h', '24 Std.'], ['pw7:' + c.power, '7d', '7 Tage'], ['pw30:' + c.power, '30d', '30 Tage']];
+          rng.forEach(function (r) {
+            var cfg = window._hpChartCfg(r[0], 'Leistung', r[1], c.color, 120);
+            if (r[0] !== c.power) { cfg.series[0].entity = c.power; if (window._hpSmooth) window._hpSmooth(r[0]); }
+          });
+          // HH.chart: the plate with its head and slot; the segments go inside the plate, under the chart.
+          // L.wrap: the taps of chart keys (_hpPlantTap), as in the plug and temperature lists.
+          var pwHtml = L.wrap(HH.chart(window._hpChartTitle(c.power), plate).replace(/<\/div>$/, '')
+            + '<div style="margin-top:16px;">' + UI.segments(rng.map(function (r, i) {
+              return { label: r[2], active: i === 0, attrs: { 'data-hp-metric': r[0] } };
+            }), null) + '</div></div>');
+          // The column is drawn anew when the popup balances its columns (Regel A) – a new, empty slot: the template
+          // mounts the chart again into it (_hpStageChart, as the S6 stages do).
+          f2.chart = '[[[ if (window._hpStageChart) window._hpStageChart(this, ' + JSON.stringify(c.power) + '); return '
+            + JSON.stringify(pwHtml) + '; ]]]';
+        }
       }
       return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3P ? [] : ['hero', 'pbar'], stage: v3P ? 'stage' : null,
         left: ['alerts', 'ctrl', 'job'], right: rightP,
-        underStage: v3P ? ['cam', 'camoff', 'camai'] : null,
+        // Issue 130: the plug right under its power Verlauf (phone: dial → Verlauf → plug → camera), the switch near the top.
+        underStage: v3P ? ['plug3', 'cam', 'camoff', 'camai'] : null,
         settings: states[c.st] ? c.st : null,
         colExtra: (v3P ? '' : ' #container > #cam { margin-top: 0 !important; }') + ' #container > #camai:not(:empty) { margin-top: 12px !important; }'
           // The AI pill has a soft shadow and sits flush with the field's top: the field's ellipsis overflow cut 5 px.
