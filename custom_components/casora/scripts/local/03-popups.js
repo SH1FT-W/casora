@@ -94,13 +94,21 @@
         a.style.color = 'var(--casora-popup-ui-warn, #FF9F0A)';
         if (row.hasAttribute('data-casora-mi')) { row.setAttribute('data-casora-mi-blocked', row.getAttribute('data-casora-mi')); row.removeAttribute('data-casora-mi'); }
         row.setAttribute('data-casora-arm', '');
-        if (!row.querySelector('.hui-cf')) {
-          var cf = document.createElement('div');
+        // The row may already carry a confirm slot that installs (update rows: tap → „Starten“). While blocked it
+        // must acknowledge instead, else a tap installed without the release (owner review 05.11.2026).
+        var ack = JSON.stringify(window.casoraSvc('casora_update_ki_bestaetigen', { entity_id: id }));
+        var cf = row.querySelector('.hui-cf');
+        if (cf) {
+          cf.setAttribute('data-casora-cf-orig', cf.getAttribute('data-casora-cf') || '');
+          cf.setAttribute('data-casora-cf-otxt', cf.textContent);
+        } else {
+          cf = document.createElement('div');
           cf.className = 'hui-cf';
-          cf.setAttribute('data-casora-cf', JSON.stringify(window.casoraSvc('casora_update_ki_bestaetigen', { entity_id: id })));
-          cf.textContent = 'Bestätigen';
+          cf.setAttribute('data-casora-cf-new', '');
           row.appendChild(cf);
         }
+        cf.setAttribute('data-casora-cf', ack);
+        cf.textContent = 'Bestätigen';
         dim.forEach(function (d) { if (d) d.style.opacity = '0.5'; });
       } else if (!block && isB) {
         a.setAttribute('data-casora-live', a.getAttribute('data-casora-live-blocked'));
@@ -110,7 +118,12 @@
         if (row.hasAttribute('data-casora-mi-blocked')) { row.setAttribute('data-casora-mi', row.getAttribute('data-casora-mi-blocked')); row.removeAttribute('data-casora-mi-blocked'); }
         row.removeAttribute('data-casora-arm');
         row.classList.remove('armed');
-        var cf2 = row.querySelector('.hui-cf'); if (cf2) cf2.remove();
+        var cf2 = row.querySelector('.hui-cf');
+        if (cf2 && cf2.hasAttribute('data-casora-cf-orig')) {
+          cf2.setAttribute('data-casora-cf', cf2.getAttribute('data-casora-cf-orig'));
+          cf2.textContent = cf2.getAttribute('data-casora-cf-otxt') || cf2.textContent;
+          cf2.removeAttribute('data-casora-cf-orig'); cf2.removeAttribute('data-casora-cf-otxt');
+        } else if (cf2) cf2.remove();
         dim.forEach(function (d) { if (d) d.style.opacity = ''; });
       }
     });
