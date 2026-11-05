@@ -11394,7 +11394,7 @@ window.casoraMenuGlass = {
       if (el.dataset.casoraAxis === 'x') {
         fill.style.width = pct + '%';
         var lb = el.dataset.casoraLabel ? el.dataset.casoraLabel + ' · ' : '';
-        el.querySelectorAll('.hui-sl-val').forEach(function (n) { n.textContent = lb + pct + '\u202F%'; });
+        el.querySelectorAll('.hui-sl-val').forEach(function (n) { n.textContent = lb + Math.round(Number(pct) || 0) + '\u202F%'; });
         var ink = el.querySelector('.hui-sl-ink');
         if (ink) ink.style.clipPath = 'inset(0 ' + (100 - pct) + '% 0 0)';
         return;
@@ -11404,6 +11404,8 @@ window.casoraMenuGlass = {
     };
     // Popup v3 (UI.stage S1/S3): the stage's big value and word follow the drag live; words = [off, mid, full].
     var stageText = function (el, pct) {
+      // The value is shown as a whole percent: 0.14 * 100 is 14.000000000000002 (issue 127, HomePod volume).
+      pct = Math.round(Number(pct) || 0);
       var sp = {};
       try { sp = JSON.parse(el.dataset.casoraSlider) || {}; } catch (e) { sp = {}; }
       // A scaled dial (S2) shows the device value (21,5°), not the percent of the ring.
