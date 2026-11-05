@@ -4292,7 +4292,8 @@
       }
       return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3P ? [] : ['hero', 'pbar'], stage: v3P ? 'stage' : null,
         left: ['alerts', 'ctrl', 'job'], right: rightP,
-        underStage: v3P ? ['cam', 'camoff', 'camai'] : null,
+        // Issue 130: the plug right under its power Verlauf (phone: dial → Verlauf → plug → camera), the switch near the top.
+        underStage: v3P ? ['plug3', 'cam', 'camoff', 'camai'] : null,
         settings: states[c.st] ? c.st : null,
         colExtra: (v3P ? '' : ' #container > #cam { margin-top: 0 !important; }') + ' #container > #camai:not(:empty) { margin-top: 12px !important; }'
           // The AI pill has a soft shadow and sits flush with the field's top: the field's ellipsis overflow cut 5 px.

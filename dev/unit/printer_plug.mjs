@@ -27,7 +27,7 @@ window._casoraUI = Object.assign(window._casoraUI || {}, {
   segments: (items) => '<div class="hui-seg">' + items.map((it) => '<div class="hui-sg' + (it.active ? ' on' : '') + '"'
     + Object.keys(it.attrs || {}).map((k) => ' ' + k + '="' + esc(it.attrs[k]) + '"').join('') + '>' + esc(it.label) + '</div>').join('') + '</div>',
   group: (rows, label) => '<div>' + esc(label || '') + rows.map((r) => typeof r === 'string' ? r : '<div>' + esc(r.label) + ' ' + esc(r.value || '') + '</div>').join('') + '</div>',
-  row: Object.assign((window._casoraUI || {}).row || {}, { toggle: (o) => '<div>' + esc(o.label) + (o.on ? ' on' : ' off') + '</div>' }),
+  row: Object.assign((window._casoraUI || {}).row || {}, { toggle: (o) => '<div>' + esc(o.label) + (o.on ? ' on' : ' off') + (o.confirm ? ' confirm=' + esc(o.confirm) : '') + '</div>' }),
 });
 window._hpPlantCfg = {}; window._hpPlantMeta = {};
 const SPAN = { '4h': '4 Std.', '24h': '24 Std.', '7d': '7 Tage', '30d': '30 Tage' };
@@ -58,10 +58,10 @@ assert.equal(c.power, 'sensor.p_power', 'resolve: power sensor');
 const pop = P.popup(ent, V, states, hass);
 const leftCard = pop.custom_fields.left.card;
 const left = keysOf(leftCard), right = keysOf(pop.custom_fields.right.card);
-// Desktop: the power Verlauf under the dial, lists on the right with the plug first after alerts and print control.
-assert.deepEqual(left, ['stage', 'chart'], 'printer v3: left = dial, then the power Verlauf (' + left.join(',') + ')');
-assert.ok(right.includes('plug3'), 'printer v3: plug section present (' + right.join(',') + ')');
-assert.ok(right.indexOf('plug3') < right.indexOf('job3'), 'printer v3: plug above the print lists (' + right.join(',') + ')');
+// The power Verlauf under the dial, the plug right below it (owner: switch near the top; phone reads dial → Verlauf →
+// plug → lists), nothing of it on the right.
+assert.deepEqual(left, ['stage', 'chart', 'plug3'], 'printer v3: left = dial, power Verlauf, plug (' + left.join(',') + ')');
+assert.ok(!right.includes('plug3'), 'printer v3: plug not on the right (' + right.join(',') + ')');
 assert.ok(!right.includes('chart'), 'printer v3: no chart on the right');
 
 // The range switch: three segments, each the key of a chart config with its own span, all on the plug's power.
@@ -81,13 +81,15 @@ assert.match(chart, />24 Std\.<.*>7 Tage<.*>30 Tage</, 'Verlauf: segment words l
 // The plug section: the switch and the power now, also in Soft (the plug is the printer's only power meter).
 const html = window._casoraLaundry.inner('plug', c, states);
 assert.match(html, /Strom on/, 'plug section: on/off switch');
+// Owner: switching the plug off asks first (a print would be ruined), while printing with „Trotzdem aus“.
+assert.match(html, /Strom on confirm=/, 'plug section: switching off asks for confirmation');
 assert.match(html, /Leistung/, 'plug section: power now, also in Soft');
 assert.match(html, /Leistung 43 W/, 'plug section: the power value (whole watts from 10 W)');
 
 // Without a plug (and no power sensor) nothing is added.
 const V2 = Object.assign({}, V); delete V2.plug_entity; delete V2.entity_power;
 const pop2 = P.popup(ent, V2, states, hass);
-assert.ok(!keysOf(pop2.custom_fields.right.card).includes('plug3'), 'printer v3 without plug: no plug section');
+assert.ok(!keysOf(pop2.custom_fields.right.card).includes('plug3') && !keysOf(pop2.custom_fields.left.card).includes('plug3'), 'printer v3 without plug: no plug section');
 assert.deepEqual(keysOf(pop2.custom_fields.left.card), ['stage'], 'printer v3 without power: no Verlauf');
 
 // 01-basis.js: choosing a chart key marks its segment „on“ (segments carry data-hp-metric like rows).
