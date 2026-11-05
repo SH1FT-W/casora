@@ -88,7 +88,7 @@ window.casoraInStudio = () => true;
 assert.match(F.sec('hero', F.plan(null, states, hass, { free_template: tplBadge.template }), states, hass), /<note>Im Studio kannst du/, 'Studio preview, nothing configured: hint');
 delete window.casoraInStudio;
 assert.equal(F.plan(states['switch.qa_pumpe'], states, hass, { free_template: 'x' }).tpl, null, 'a device badge has its state line');
-assert.match(F.sec('hero', F.plan(null, states, hass, {}), states, hass), /Kein Gerät gewählt/, 'the tile without device is unchanged');
+assert.match(F.sec('hero', F.plan(null, states, hass, {}), states, hass), /Noch nicht eingerichtet/, 'the tile without device: its calm line (issue 128)');
 assert.match(F.sec('vals', F.plan(states['switch.qa_pumpe'], states, hass, c0.variables), states, hass), /sensor\.qa_temp:Innen=21,5 °C/, 'own labels');
 delete UI.line;
 

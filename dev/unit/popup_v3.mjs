@@ -96,9 +96,10 @@ const MIGRIERT = [
   { popup: 'Fußball', vorlagen: ['casora_popup_football'], file: '11-fussball.js', from: '  K.v3 = function', to: '  /* Popup-Ring (Weich)', stages: 2 },
   // S8: the list (and Mehr's lists, charts, tiles) in UI.stage('content'), each also as an empty stage.
   { popup: 'Liste von Entitäten / „Mehr“', vorlagen: ['casora_popup_entity_list', 'casora_popup_more'], file: '34-entity-list.js', from: '  L.v3 = function', to: null, stages: 4 },
-  // Fallback rule S7 (a plate; a ring only for a percentage, S6): template badge, nothing chosen, entity missing, the state. The own badge's
+  // Fallback rule S7 (a plate; a ring only for a percentage, S6): template badge, nothing chosen (Studio hint / live calm word,
+  // issue 128), entity missing, the state. The own badge's
   // popup (casora_popup_own_badge) takes variant 'v3' from casora_popup_free.
-  { popup: 'Freie Kachel / eigenes Badge', vorlagen: ['casora_popup_free'], file: '28-free-tile.js', from: '  F.popup = function', to: null, stages: 5 },
+  { popup: 'Freie Kachel / eigenes Badge', vorlagen: ['casora_popup_free'], file: '28-free-tile.js', from: '  F.popup = function', to: null, stages: 6 },
   // S8 instead of S5 (no picture in the data): today's dish, else the idea of the week with its actions (prod test 01.11.).
   { popup: 'Rezepte', vorlagen: ['casora_popup_recipe'], file: '03-popups.js', from: '  R.stageHtml = function', to: '  /* Weich: Speiseplan mit Datums-Plakette', stages: 1 },
   // S5: the live card mounted into UI.stage('image') (KL.stage); the popup's stage field names it once more.

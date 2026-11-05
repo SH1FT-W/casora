@@ -3,8 +3,8 @@
 // lights, switches, fans, covers and locks like the other tiles. The popup is put together in the
 // Studio from sections: "Werte" (up to 8 entities as rows), "Verlauf" (24 h chart of the main or a
 // chosen numeric entity), "Schalten" (the main entity's own control) and the shared "own cards"
-// mechanism (popup_extra_cards, casoraPopupExtras). Nothing configured → state line and a hint, never
-// an empty popup. Formatting and controls reuse the core (_casoraStateText, _casoraHold.model, UI).
+// mechanism (popup_extra_cards, casoraPopupExtras). Nothing configured → a calm state line (the Studio preview
+// adds its hint), never an empty popup. Formatting and controls reuse the core (_casoraStateText, _casoraHold.model, UI).
 //   window._casoraFree.cfg(variables)                 → {values[], labels{}, chart, chartEntity, controls}
 //   window._casoraFree.word(hass, st)                 → state text ("An", "21,5 °C", "Geöffnet", "Nicht verfügbar")
 //   window._casoraFree.tileState(entity, hass, states) – tile casora_free (subline)
@@ -200,8 +200,11 @@
     var v = variables || {};
     var tpl = !id && typeof v.free_template === 'string' && v.free_template.trim() ? v.free_template : null;
     var chart = chartWant && S[chartWant] && F.isNumeric(S[chartWant]) ? chartWant : null;
+    // Own cards / entities below the popup (casoraPopupExtras): content of its own, a device stays optional (issue 128).
+    var own = (Array.isArray(v.popup_extra_cards) && v.popup_extra_cards.length > 0)
+      || (Array.isArray(v.popup_extra_entities) && v.popup_extra_entities.length > 0);
     return { id: id, tpl: tpl, values: values, labels: cfg.labels, controls: !!(cfg.controls && st && F.hasControls(st)),
-      chart: chart, chartMissing: !!(chartWant && !chart), chartWant: chartWant,
+      chart: chart, chartMissing: !!(chartWant && !chart), chartWant: chartWant, own: own,
       empty: !values.length && !chart && !(cfg.controls && st && F.hasControls(st)) };
   };
   F.wide = function (entity, states, variables) {
@@ -212,6 +215,12 @@
     if (UI && UI.v3 && UI.v3() && UI.stage) return !!(C.values.length || C.chart);
     return !!(C.controls && C.values.length);
   };
+  // GitHub issue 125: "Im Studio kannst du … ergänzen" is a setup hint for the admin – only in the Studio preview.
+  // Issue 128: the same for "Wähle im Studio ein Gerät …" – the device is optional, live nothing asks for one.
+  var inStudio = function () { return !!(window.casoraInStudio && window.casoraInStudio()); };
+  var noDevice = function (C) { return !C.id && !C.tpl; };
+  var hasContent = function (C) { return !!(C.values.length || C.chart || C.own); };
+  var NOT_SET = 'Noch nicht eingerichtet';
   F.popup = function (entity, states, hass, variables) {
     var K = window._casoraSoftKit, UI = window._casoraUI;
     var empty = { type: 'vertical-stack', cards: [] };
@@ -228,7 +237,9 @@
     // the values and the chart as the section „Verlauf“ (120); no settings.
     if (UI.v3 && UI.v3() && UI.stage) {
       // The status line is the popup's own (the frame's fallback said HA's „Ein“ beside „An“ on the stage, prod test 01.11.).
-      var fv = { line: { card: K.secCard(watch, call('line'), S) }, stage: { card: K.secCard(watch, call('stage'), S) } };
+      var fv = { line: { card: K.secCard(watch, call('line'), S) } };
+      // No device but values, history or own cards (issue 128, the device is optional): live the content stands alone.
+      if (!(noDevice(C) && hasContent(C) && !inStudio())) fv.stage = { card: K.secCard(watch, call('stage'), S) };
       if (C.controls) fv.ctl = { card: K.secCard([C.id], call('ctl'), S) };
       if (C.values.length) fv.vals = { card: K.secCard(C.values, call('vals'), S) };
       // The series' name and unit come from its entity while the chart draws (entity_name): no text from HA in the
@@ -300,8 +311,6 @@
     return out;
   };
 
-  // GitHub issue 125: "Im Studio kannst du … ergänzen" is a setup hint for the admin – only in the Studio preview.
-  var inStudio = function () { return !!(window.casoraInStudio && window.casoraInStudio()); };
   F.sec = function (part, C, states, hass) {
     var UI = window._casoraUI;
     if (!UI || !C) return '';
@@ -320,7 +329,9 @@
         var TP3 = window._casoraTemplates, tx3 = TP3 && TP3.text ? TP3.text(C.tpl) : null;
         return UI.stage('status', { dial: false, tone: 'good', icon: 'mdi:text-box-outline', text: tx3 == null ? '…' : (String(tx3).trim() || '—'), extra: notesHtml });
       }
-      if (!C.id) return UI.stage('status', { empty: { icon: 'mdi:shape-outline', studio: true, text: T('Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.') } });
+      if (!C.id && inStudio()) return UI.stage('status', { empty: { icon: 'mdi:shape-outline', studio: true, text: T('Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.') } });
+      // Live without a device: the content stands alone (F.popup leaves the stage out); nothing at all – a calm word.
+      if (!C.id) return hasContent(C) ? '' : UI.stage('status', { empty: { icon: 'mdi:shape-outline', text: T(NOT_SET) } });
       if (!st) return UI.stage('status', { dial: false, tone: 'warn', icon: 'mdi:help-circle-outline', text: 'Gerät fehlt', facts: [{ label: 'Status', value: C.id }] });
       var ago3 = !bad(st.state) ? sinceFact(st.last_changed) : null;
       // A ring only when it measures something (prod test 01.11.2026): a percentage fills it like a level (S6 with its
@@ -340,7 +351,7 @@
         var TPl = window._casoraTemplates, txl = TPl && TPl.text ? TPl.text(C.tpl) : null;
         return UI.line(txl == null ? '…' : (String(txl).trim() || '—'), []);
       }
-      if (!C.id) return UI.line('Kein Gerät gewählt', []);
+      if (!C.id) return UI.line(inStudio() ? 'Kein Gerät gewählt' : '', []);
       if (!st) return UI.line('Gerät fehlt', []);
       if (F.isNumeric(st) && (st.attributes || {}).unit_of_measurement === '%') {
         var agoL = sinceFact(st.last_changed);
@@ -358,10 +369,11 @@
         if (C.empty && inStudio()) notes.push(T('Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.'));
         return line + (UI.note ? notes.map(function (n) { return UI.note(n); }).join('') : '');
       }
-      if (!C.id) {
+      if (!C.id && inStudio()) {
         notes.push(T('Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.'));
         return UI.line('Kein Gerät gewählt', []) + (UI.note ? UI.note(notes[0]) : '');
       }
+      if (!C.id) return UI.line(hasContent(C) ? '' : NOT_SET, []);
       if (!st) return UI.line('Gerät fehlt', [C.id]);
       var rest = [];
       var ago = !bad(st.state) ? since(st.last_changed) : null;
