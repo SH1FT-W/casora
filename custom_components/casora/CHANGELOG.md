@@ -4,6 +4,20 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.18 – 05.11.2026
+
+A plug and a power history for the 3D printer, a calmer football popup and a history that loads for busy sensors.
+
+### New
+- **3D printer with its smart plug (#130):** under the dial the power history with 24 h, 7 days and 30 days, right below it the plug with its switch and the power now. Switching it off asks first, so no print is lost.
+
+### Changed
+- **Football popup:** on tablet and desktop the table now sits on the right, match and form on the left, in the same order as on the phone.
+
+### Fixed
+- **History over 7 and 30 days:** sensors that report often (particulate matter, CO2, humidity) kept showing "Loading …" and an empty chart.
+- **Updates prompt:** hovering the buttons no longer draws a second frame.
+
 ## 26.11.17 – 05.11.2026
 
 A small fix release for the universal tile.

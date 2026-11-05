@@ -4,6 +4,20 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.18 – 05.11.2026
+
+Steckdose und Stromverlauf im 3D-Drucker, ein ruhigeres Fußball-Popup und ein Verlauf, der bei schnellen Sensoren lädt.
+
+### Neu
+- **3D-Drucker mit Steckdose (#130):** Unter dem Rad steht der Stromverlauf mit 24 Std., 7 Tagen und 30 Tagen, direkt darunter die Steckdose mit Schalter und aktueller Leistung. Ausschalten fragt vorher nach, damit kein Druck verloren geht.
+
+### Geändert
+- **Fußball-Popup:** Auf Tablet und Desktop steht die Tabelle jetzt rechts, Spiel und Form links, in derselben Reihenfolge wie am Handy.
+
+### Behoben
+- **Verlauf über 7 und 30 Tage:** Bei Sensoren, die oft melden (Feinstaub, CO₂, Luftfeuchtigkeit), blieb „Wird geladen …“ stehen und das Diagramm leer.
+- **Update-Popup:** Beim Überfahren der Knöpfe erscheint kein zweiter Rahmen mehr.
+
 ## 26.11.17 – 05.11.2026
 
 Ein kleines Fix-Release für die Universal-Kachel.
