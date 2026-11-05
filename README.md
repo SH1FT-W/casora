@@ -33,7 +33,7 @@ Every popup puts the one thing you opened it for in the middle, usually a large 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-popups-dark.webp" />
-    <img src="docs/images/readme-popups-light.webp" alt="Four Casora popups on a phone, each with its dial: room climate, blinds, lighting and a plant." />
+    <img src="docs/images/readme-popups-light.webp" alt="Four complete Casora popups on a phone: room climate, blinds, lighting and a plant, each with its dial and the list below." />
   </picture>
   <br/><sub>Room climate, blinds, lighting and a plant: one dial each.</sub>
 </p>
