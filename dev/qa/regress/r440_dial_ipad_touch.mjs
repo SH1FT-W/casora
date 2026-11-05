@@ -191,15 +191,29 @@ for (const [tag, ua] of [['iPad', IPAD_UA], ['iPad desktop website', MAC_UA]]) {
     void mid;
   }
   // A linear slider (brightness bar, UI.slider) in the open popup: dragging by finger sets it.
-  const sl = await page.evaluate((L) => {
-    const pop = window.casoraPopup.element; const c = pop.shadowRoot.querySelector('.content');
+  // The bar goes where a popup's own content flows: after the cards (.container), where the extra rows (.extra) live.
+  // Not above them: nothing real stands there, and a v3 head pulls the cards up to the head (_fitHeadGap, a negative
+  // margin on .container since 26.11.19 also without a status line), so the light popup's card covered a bar put
+  // there and took the finger – a test artefact, not the slider (26.11.19 gate).
+  const sl = {};
+  await page.evaluate((L) => {
+    const pop = window.casoraPopup.element;
     const box = document.createElement('div'); box.className = 'qa-lin'; box.style.cssText = 'padding:12px 0;';
     box.innerHTML = window._casoraUI.slider({ value: 20, softHeight: 58, bar: true, icon: 'light', svc: { domain: 'light', service: 'turn_on', field: 'brightness_pct', target: { entity_id: L } } });
-    c.insertBefore(box, c.firstChild);
-    const el = box.querySelector('[data-casora-slider]'); const r = el.getBoundingClientRect();
-    return { x: r.x, y: r.y + r.height / 2, w: r.width };
+    pop.container.after(box);
+    box.scrollIntoView({ block: 'center' });
   }, ids.light);
   await page.waitForTimeout(400);
+  // Measured after the popup settled; the finger's first point must land on the bar itself.
+  Object.assign(sl, await page.evaluate(() => {
+    const pop = window.casoraPopup.element;
+    const el = pop.shadowRoot.querySelector('.qa-lin [data-casora-slider]'); const r = el.getBoundingClientRect();
+    const x = r.x + r.width * 0.2, y = r.y + r.height / 2;
+    let hit = document.elementFromPoint(x, y);
+    while (hit && hit.shadowRoot) { const i = hit.shadowRoot.elementFromPoint(x, y); if (!i || i === hit) break; hit = i; }
+    return { x: r.x, y, w: r.width, onBar: !!(hit && el.contains(hit)) };
+  }));
+  await check(`${tag}: the finger lands on the linear slider`, sl.onBar, sl);
   await page.evaluate(() => { window.__qaCalls = []; });
   {
     const cdp = await page.context().newCDPSession(page);

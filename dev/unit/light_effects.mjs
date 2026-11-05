@@ -108,7 +108,17 @@ assert.equal(quickCalls.length, 0);
 
 // Wiring: room popup (single lamp or the room's only one) and house.
 assert.ok(/var fxId = fxLampOf\(single \? \[sc\.lights\[0\]\] : lampIds0, states\);/.test(pop), 'room/single popup picks the lamp');
-assert.ok(/v3Moons\(scenesOf\(h, states, sceneScope\(sc\)\), states, room, fxId, h, sc\.lamp && sc\.room \? sc\.room : ids\)/.test(pop), 'room popup: scenes (a lamp\'s page: its room\'s) + effects');
+// Issue 126: a single lamp's page is the end of the chain – its own effects, no room scenes; the room keeps its scenes.
+assert.ok(/var alone = S\.lampAlone\(cfg, states\);/.test(pop), 'room popup knows a single lamp\'s page');
+assert.ok(/v3Moons\(alone \? \[\] : scenesOf\(h, states, sceneScope\(sc\)\), states, room, fxId, h, sc\.lamp && sc\.room \? sc\.room : ids\)/.test(pop), 'room popup: scenes + effects; a single lamp\'s page: effects only');
+// Which page is a single lamp's: a flat lamp, a room chosen up front with one lamp; not a room of several, not a group.
+const SA = {};
+new Function('S', 'selOf', cut(pop, '  S.lampAlone = function', '  S.keepOrder = function'))(SA, (cfg) => cfg.init);
+assert.equal(SA.lampAlone({ flat: { lamp: true, lights: ['light.desk'] } }, states), true, 'a lamp tile: its page');
+assert.equal(SA.lampAlone({ flat: { lights: ['light.desk', 'light.ceiling'] } }, states), false, 'a tile listing lamps: the list');
+assert.equal(SA.lampAlone({ init: 0, rooms: [{ lights: ['light.desk', 'light.gone_for_good'] }] }, states), true, 'a room of one lamp: its page');
+assert.equal(SA.lampAlone({ init: 0, rooms: [{ lights: ['light.desk', 'light.ceiling'] }] }, states), false, 'a room of lamps: the overview with scenes');
+assert.equal(SA.lampAlone({ init: 0, rooms: [{ lights: ['light.room'] }] }, states), false, 'a room of one HA group: the overview');
 assert.ok(/var fxId = fxLampOf\(all, states\);[\s\S]{0,200}v3Stage\(all, states, true, fxId \? function \(\) \{ return v3Moons\(\[\], states, null, fxId\); \} : null\)/.test(pop), 'house popup');
 
 // ── casora-core: the kept moon stays, the others fold into „Mehr (n)“ ───────
