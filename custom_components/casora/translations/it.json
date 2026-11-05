@@ -43,7 +43,7 @@
           "lueften_push": "“Arieggia ora” (7–22) e “Chiudi la finestra” (7–23) dopo 10 min, CO₂ sopra 2500 ppm subito. Vuoto = nessuna notifica push.",
           "lueften_personen": "“Arieggia ora” solo quando una di queste persone è a casa. Vuoto = chiunque.",
           "update_push": "Una notifica per ogni nuova versione ai telefoni selezionati. Toccandola si aprono gli aggiornamenti di Casora. Vuoto = disattivato.",
-          "beta_updates": "Prova prima le nuove funzioni. Le beta possono contenere errori. Con HACS, attiva le beta in HACS."
+          "beta_updates": "Prova prima le nuove funzioni. Le beta possono contenere errori. Con Marketplace, attiva le beta in Marketplace."
         }
       }
     },

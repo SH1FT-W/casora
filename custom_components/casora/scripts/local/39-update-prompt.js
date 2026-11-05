@@ -120,15 +120,15 @@
   U.html = function (info) {
     var items = U.items(info);
     var rich = items.some(function (i) { return i.text; }) || !!info.intro;
-    var main = info.can_install ? 'Installieren' : info.hacs_url ? 'In HACS öffnen' : 'Release-Seite öffnen';
+    var main = info.can_install ? 'Installieren' : info.hacs_url ? 'Im Marketplace öffnen' : 'Release-Seite öffnen';
     // Stacked pills (long labels do not fit three in a row on the phone): main action, Später, skip as a quiet link.
     var btn = function (what, cls, text) {
       return '<button type="button" class="cup-b ' + esc(cls) + '" data-casora-updp="' + esc(what) + '"><span>' + esc(T(text)) + '</span></button>';
     };
     var actsHtml = [btn('install', 'pri', main), btn('later', 'sec', 'Später'), btn('skip', 'quiet', 'Diese Version überspringen')].join('');
     var hintHtml = esc(T(info.can_install
-      ? 'Wird über HACS installiert. Danach braucht Home Assistant einen Neustart.'
-      : 'Neue Versionen installierst du über HACS.'));
+      ? 'Wird über den Marketplace installiert. Danach braucht Home Assistant einen Neustart.'
+      : 'Neue Versionen installierst du über den Marketplace.'));
     // Release notes in their own language: no phrase translation (data-no-i18n), lang for screen readers.
     var langHtml = info.notes_lang === 'de' || info.notes_lang === 'en' ? ' lang="' + esc(info.notes_lang) + '"' : '';
     var listHtml = items.length ? '<ul class="cup-lines' + (rich ? ' cup-items' : '') + '"' + langHtml + '>' + items.map(function (i) {
@@ -191,12 +191,12 @@
     }
     var ask = window.casoraAsk || function () { return Promise.resolve(true); };
     return ask({ title: T('Casora {v} installieren?').replace('{v}', info.version),
-      text: T('HACS lädt die neue Version. Danach muss Home Assistant neu starten.'), yes: T('Installieren'), withPopup: true })
+      text: T('Der Marketplace lädt die neue Version. Danach muss Home Assistant neu starten.'), yes: T('Installieren'), withPopup: true })
       .then(function (ok) {
         if (!ok) return 'cancelled';
         var st = h.states && h.states[info.entity_id];
         if (!st || st.state === 'unavailable' || st.state === 'unknown') {
-          window.casoraNotice && window.casoraNotice({ message: T('Der Update-Eintrag von HACS für Casora ist gerade nicht verfügbar. Versuche es gleich noch einmal oder aktualisiere in HACS.'), duration: 8000 }, { overPopup: true });
+          window.casoraNotice && window.casoraNotice({ message: T('Der Update-Eintrag vom Marketplace für Casora ist gerade nicht verfügbar. Versuche es gleich noch einmal oder aktualisiere im Marketplace.'), duration: 8000 }, { overPopup: true });
           return 'unavailable';
         }
         var data = { entity_id: info.entity_id };
@@ -210,7 +210,7 @@
         }).then(function (installed) {
           busy(false);
           if (!installed) {
-            window.casoraNotice && window.casoraNotice({ message: T('Installieren hat nicht geklappt.') + ' ' + T('HACS hat die neue Version nicht als installiert gemeldet. Sieh in HACS nach.'), duration: 8000 }, { overPopup: true });
+            window.casoraNotice && window.casoraNotice({ message: T('Installieren hat nicht geklappt.') + ' ' + T('Der Marketplace hat die neue Version nicht als installiert gemeldet. Sieh im Marketplace nach.'), duration: 8000 }, { overPopup: true });
             return 'not_installed';
           }
           close();

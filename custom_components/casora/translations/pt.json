@@ -43,7 +43,7 @@
           "lueften_push": "“Ventila agora” (7–22 h) e “Fecha a janela” (7–23 h) após 10 min, CO₂ acima de 2500 ppm de imediato. Vazio = sem notificações push.",
           "lueften_personen": "“Ventila agora” só quando uma destas pessoas está em casa. Vazio = qualquer pessoa.",
           "update_push": "Uma notificação por cada nova versão para os telemóveis escolhidos. Ao tocar abrem-se as atualizações do Casora. Vazio = desligado.",
-          "beta_updates": "Experimenta as novas funções mais cedo. As betas podem ter erros. Com o HACS, liga as betas no HACS."
+          "beta_updates": "Experimenta as novas funções mais cedo. As betas podem ter erros. Com o Marketplace, liga as betas no Marketplace."
         }
       }
     },

@@ -43,7 +43,7 @@
           "lueften_push": "« Aérer maintenant » (7 h–22 h) et « Fermer la fenêtre » (7 h–23 h) après 10 min, CO₂ au-dessus de 2500 ppm tout de suite. Vide = pas de notifications push.",
           "lueften_personen": "« Aérer maintenant » seulement quand l'une de ces personnes est à la maison. Vide = n'importe qui.",
           "update_push": "Une notification par nouvelle version sur les téléphones choisis. La toucher ouvre les mises à jour de Casora. Vide = désactivé.",
-          "beta_updates": "Essaie les nouvelles fonctions plus tôt. Les bêtas peuvent avoir des bugs. Avec HACS, active les bêtas dans HACS."
+          "beta_updates": "Essaie les nouvelles fonctions plus tôt. Les bêtas peuvent avoir des bugs. Avec Marketplace, active les bêtas dans Marketplace."
         }
       }
     },

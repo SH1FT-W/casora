@@ -12,7 +12,7 @@ const ide = Object.fromEntries(flat(J('de.json'))), ien = Object.fromEntries(fla
 assert.deepEqual(Object.keys(ide).sort(), Object.keys(ien).sort(), 'Integration: de/en gleiche Schlüssel');
 for (const k of Object.keys(ien)) assert.equal(slots(ide[k]), slots(ien[k]), 'Integration: Platzhalter ' + k);
 // „With HACS, turn on betas in HACS instead“ – ohne „stattdessen“ las sich der Satz doppelt.
-assert.match(ide['options.step.init.data_description.beta_updates'], /stattdessen in HACS/);
+assert.match(ide['options.step.init.data_description.beta_updates'], /stattdessen im Marketplace/);
 
 // 2. Dashboard-Phrasen: Muster kompilieren, {n} nur bis zur Zahl der Gruppen.
 const ph = J('dashboard/phrases/en.json');

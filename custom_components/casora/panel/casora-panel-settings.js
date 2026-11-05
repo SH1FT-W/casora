@@ -1518,7 +1518,7 @@
       if (!hemmaSeen(h)) return;
       const g = this._flowGroup(host, { header: "Hemma",
         footer: t("Casora replaces Hemma. Once your dashboards have moved, Hemma is no longer needed – both running side by side load their scripts twice.") });
-      const how = h.hacs ? t("Installed via HACS") : h.installed ? t("Installed in custom_components/hemma") : t("Leftovers from Hemma");
+      const how = h.hacs ? t("Installed via the Marketplace") : h.installed ? t("Installed in custom_components/hemma") : t("Leftovers from Hemma");
       const b = btn(t("Remove Hemma…"), () => this._casoraHemmaRemove());
       b.classList.add("cs-danger");
       ctlRow(this, g, h.installed ? t("Hemma is still installed") : t("Hemma leftovers are still there"), how, [b]);
@@ -1561,7 +1561,7 @@
           const list = el("div", "chr-list chr-mix");
           list.setAttribute("data-no-i18n", "");
           if (h.installed) item(list, "", t("Hemma integration"), [
-            h.hacs ? t("Removed through HACS, so HACS doesn't install it again.")
+            h.hacs ? t("Removed through the Marketplace, so the Marketplace doesn't install it again.")
               : h.folder ? t("The folder custom_components/hemma is deleted.") : null,
             (h.entries || []).length === 1 ? t("1 integration entry")
               : (h.entries || []).length ? t("{1} integration entries").replace("{1}", h.entries.length) : null,
@@ -1718,7 +1718,7 @@
     const LEFT = {
       loaded: ["Hemma integration is still loaded", "Home Assistant still runs it."],
       entries: ["Hemma integration entry still set up", null],
-      hacs: ["Hemma is still installed in HACS", null],
+      hacs: ["Hemma is still installed in the Marketplace", null],
       folder: ["Folder custom_components/hemma is still there", null],
       resources: ["Hemma dashboard resources", null],
       dashboards: ["Hemma dashboards", null],
@@ -1824,8 +1824,8 @@
         case "entries":
           return item(list, tone, s.ok ? t("Integration entry removed") : t("Integration entry not removed"), err || null);
         case "integration":
-          if (!s.ok) return item(list, "", t("Hemma not uninstalled"), err + (s.via === "hacs" ? "\n" + t("Remove it in HACS yourself.") : ""));
-          return item(list, "ok", s.via === "hacs" ? t("Removed through HACS") : s.via === "folder"
+          if (!s.ok) return item(list, "", t("Hemma not uninstalled"), err + (s.via === "hacs" ? "\n" + t("Remove it in the Marketplace yourself.") : ""));
+          return item(list, "ok", s.via === "hacs" ? t("Removed through the Marketplace") : s.via === "folder"
             ? t("Folder custom_components/hemma deleted") : t("No Hemma folder found"));
         case "dashboards":
           if (n(s.manual)) {

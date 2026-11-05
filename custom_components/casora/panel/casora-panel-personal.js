@@ -534,7 +534,7 @@
       if (want("devices")) {
         // eBike: only via the Bosch eBike integration (Bosch Smart System), nothing to set.
         g = group("devices", { header: "More devices",
-          footer: "The e-bike tile is for bikes with the Bosch Smart System. Its values come from the Bosch eBike integration (HACS: Xunil99/ha-bosch-ebike)." });
+          footer: "The e-bike tile is for bikes with the Bosch Smart System. Its values come from the Bosch eBike integration (Marketplace: Xunil99/ha-bosch-ebike)." });
         const reg = hass.entities || {};
         const bike = Object.keys(hass.states).some((id) => id.startsWith("sensor.")
           && ((reg[id] && reg[id].translation_key === "days_since_last_ride") || /_days_since_last_ride$/.test(id)));
