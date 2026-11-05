@@ -4,6 +4,14 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.17 – 05.11.2026
+
+A small fix release for the universal tile.
+
+### Fixed
+- **Universal tile without a device (#128):** the device is optional, so the popup on the dashboard no longer shows a setup hint without one; values, history and your own cards stand on their own. The hint now only appears in the Studio preview.
+- **Remove a device again:** the device field in the Studio now has an ✕ for tiles with an optional device, so a chosen device can be removed again.
+
 ## 26.11.16 – 05.11.2026
 
 A small fix release: whole percents for the volume and a calmer updates popup.

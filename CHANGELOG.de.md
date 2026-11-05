@@ -4,6 +4,14 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.17 – 05.11.2026
+
+Ein kleines Fix-Release für die Universal-Kachel.
+
+### Behoben
+- **Universal-Kachel ohne Gerät (#128):** Das Gerät ist optional, deshalb zeigt das Popup im Dashboard ohne Gerät keinen Einrichtungshinweis mehr; Werte, Verlauf und eigene Karten stehen für sich. Der Hinweis erscheint nur noch in der Vorschau im Studio.
+- **Gerät wieder entfernen:** Das Gerätefeld im Studio hat bei Kacheln mit optionalem Gerät jetzt ein ✕, mit dem ein gewähltes Gerät wieder entfernt werden kann.
+
 ## 26.11.16 – 05.11.2026
 
 Ein kleines Fix-Release: ganze Prozent bei der Lautstärke und ein ruhigeres Update-Popup.
