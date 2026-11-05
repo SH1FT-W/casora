@@ -4834,6 +4834,19 @@
      The page keeps the tapped list's order (its other lamps after them); the open lamp stays in its place, marked. */
   S.rowOrder = null;
   window.addEventListener('casora-popup-closed', function () { S.rowOrder = null; });
+  /* Issue 126 (owner, 05.11.2026): a single lamp is the end of the chain, however it is opened (from a room's or a
+     tile's list, its own tile or chip, a room of one lamp): its page is a single-device page like the thermostat's – the
+     dial with brightness and white tone/colour, its own effects, no room scenes, no list of the room's lamps (that
+     jumped lamp to lamp, and ‹ went back to the lamp before instead of the list). Only the room lighting overview and a
+     tile with its own „Lichter im Popup“ list lamps. cfg as for render; a room chosen up front that holds one lamp (no
+     group) is that lamp's page (S.headOf). */
+  S.lampAlone = function (cfg, states) {
+    if (!cfg) return false;
+    if (!cfg.rooms) return !!(cfg.flat && cfg.flat.lamp);
+    var r = cfg.init >= 0 && selOf(cfg) === cfg.init ? cfg.rooms[cfg.init] : null;
+    var one = r && states ? (r.lights || []).filter(function (x) { return states[x]; }) : [];
+    return one.length === 1 && !Array.isArray((states[one[0]].attributes || {}).entity_id);
+  };
   S.keepOrder = function (ids, sc) {
     var o = S.rowOrder;
     if (!o || !sc || !sc.lamp || o.indexOf(sc.lights[0]) < 0) return ids;
@@ -4927,7 +4940,10 @@
     var fxId = fxLampOf(single ? [sc.lights[0]] : lampIds0, states);
     // The scene holds while no lamp of the room changed after it: a lamp's page looks at its room's rows like the room's
     // page (review 03.11.2026: the lamp's page marked „Szenen“ after another lamp of the room changed).
-    var left = v3Stage(ids, states, false, function () { return v3Moons(scenesOf(h, states, sceneScope(sc)), states, room, fxId, h, sc.lamp && sc.room ? sc.room : ids); });
+    // Issue 126: a single lamp is a single-device page – the stage alone, one column (552, header width), only what
+    // belongs to that lamp: its effects, not the room's scenes (owner, 05.11.2026).
+    var alone = S.lampAlone(cfg, states);
+    var left = v3Stage(ids, states, false, function () { return v3Moons(alone ? [] : scenesOf(h, states, sceneScope(sc)), states, room, fxId, h, sc.lamp && sc.room ? sc.room : ids); });
     var ls = stat(lampIds0, states);
     var lampNames0 = lampNamesOf(lampIds0, states, room);
     var lampsHtml = lampIds0.map(function (id, i) {
@@ -4941,7 +4957,8 @@
     // Popup v3 is clean (richtlinien §8): UI.settings gives nothing – no gap for it either.
     var setHtml = !sc.house && UI.settings && lampIds.length ? UI.settings(!cfg.rooms && sc.lights.length === 1 ? sc.lights[0] : lampIds) : '';
     if (setHtml) rightHtml += '<div style="height:var(--casora-popup-sec-gap, 24px)"></div>' + setHtml;
-    return V3_CSS + '<div class="lps-cols"><div class="lps-v3l">' + left + '</div><div>' + rightHtml + '</div></div>';
+    return V3_CSS + '<div class="lps-cols' + (alone ? ' one' : '') + '"><div class="lps-v3l">' + left + '</div>'
+      + (alone ? '' : '<div>' + rightHtml + '</div>') + '</div>';
   };
   var houseV3 = function (cfg, states) {
     var all = [];

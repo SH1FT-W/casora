@@ -3,7 +3,8 @@
 // Gemeldet (07.10.2026, Nutzertest Tablet): Das Licht-Popup einer einzelnen Lampe aus der Raumseite
 // hieß „Licht <Raum>“, zeigte aber nur diese Lampe und kein „Alles aus“ – nur über die Startseite gab es
 // den Knopf. Erwartet im Casora-Look (Tablet 1024×768, hell): Popup einer Lampe, die zu einer
-// Raumgruppe gehört, zeigt rechts alle Leuchten des Raums; der Titel ist die Lampe. Der Kopfschalter schaltete
+// Raumgruppe gehört, zeigte rechts alle Leuchten des Raums (seit 05.11.2026, Issue 126: keine Liste mehr, die Seite einer
+// Lampe ist eine Einzelgerät-Seite); der Titel ist die Lampe. Der Kopfschalter schaltete
 // 17.10.2026 den ganzen Raum; seit 03.11.2026 (Owner, einheitliche Licht-Popups, r516) hat die Seite einer Lampe ihren
 // eigenen Kopfschalter für genau diese Lampe. Zustände nur im Browser (fakeStates).
 import { open, dashboard, casoraDashboards as _cd, fakeStates, check, need, finish } from './lib.mjs';
@@ -47,7 +48,8 @@ outer: for (const dash of desks) for (const [i, v] of dash.config.views.entries(
     // 1.3 Kopfzeile A: „Alles aus“ = Hauptschalter im Kopf (Einträge in _hsIds), Titel im Kopf.
     const el = window.casoraPopup.element, sw = el.shadowRoot.querySelector('.header-switch');
     return { rows: window.__pierce('.lps-row', s).length, ids: sw && !sw.hidden ? (el._hsIds || []) : [], title: el.shadowRoot.querySelector('.header-title').textContent }; });
-  await check('Lampen-Popup zeigt alle Leuchten des Raums', p && p.rows === grp.m.length, { popup: p, raum: grp.m.length });
+  // Issue 126 (owner, 05.11.2026): a single lamp's page is a single-device page – no list of the room's lamps.
+  await check('Lampen-Popup zeigt keine Liste der Leuchten des Raums', p && p.rows === 0, { popup: p, raum: grp.m.length });
   // The lamp's own head switch: exactly this lamp, never the room (03.11.2026).
   const ids = (p && p.ids) || [];
   await check('Kopfschalter der Lampe schaltet genau sie (nie den Raum)', p && ids.length === 1 && ids[0] === grp.lamp, { ids, lamp: grp.lamp });

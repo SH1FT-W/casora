@@ -1,14 +1,14 @@
 // @zustand: arbeit
 // @parallel: allein
-// @deckt: custom_components/casora/scripts/local/03-popups.js#_casoraLightSoft,S.rowOrder custom_components/casora/scripts/local/01-basis.js#casoraLightTally,_casoraLightTallyIds
+// @deckt: custom_components/casora/scripts/local/03-popups.js#_casoraLightSoft,S.rowOrder,S.lampAlone custom_components/casora/scripts/local/01-basis.js#casoraLightTally,_casoraLightTallyIds
 // Issue 126: a room with two lamps (no group) and no light tile. A light tile added by hand in the Studio
 // („+ Kachel hinzufügen“ → „Andere Kachelart …“ → „Licht“), once with one of the lamps as its device and once without
 // one, „Lichter im Popup“ = both lamps in the other order than the room's badge, saved.
 // Reported: (1) tapping the first lamp in the tile's popup opened its page, where it jumped to the second place (the
 // lamp page listed the room badge's order); (2) with one lamp on, the tile said „1 an“ but its icon stayed dark (only
-// the tile's own entity counted for „active“). Expected: the lamp page keeps the list's order, the tapped lamp stays in
-// its place and is marked; the tile is active (icon lit) whenever its count has a lamp on. Desktop 1440×900 and phone
-// 393×852. Saves both dashboards and writes them back at the end; the lamps get their states back.
+// the tile's own entity counted for „active“). Expected: the tile is active (icon lit) whenever its count has a lamp
+// on. Since 05.11.2026 (owner, issue 126) the lamp's page lists no lamps at all; ‹ leads back to the tile's list in its
+// order. Desktop 1440×900 and phone 393×852. Saves both dashboards and writes them back at the end; the lamps get their states back.
 import { open, studio, casoraDashboard, dashboard, check, need, finish, usePage, atFinish, shot } from './lib.mjs';
 import { ws } from '../ws.mjs';
 
@@ -185,13 +185,19 @@ try {
     const first = list.find((r) => r.id === B && r.mi);
     await need(label + ': first lamp row opens its page', first, list);
     await tap(first);
-    const page2 = await until((r) => r.some((x) => x.sel));
+    // Issue 126 (owner, 05.11.2026): the lamp's page is the end of the chain – no list of lamps; ‹ back to the tile's list.
+    const page2 = await until((r) => r.length === 0);
     await shot(label + '_lamp_page');
     if (process.env.R568_SHOTS) await pg.screenshot({ path: process.env.R568_SHOTS + '/r568-' + label + '-lamp.png' });
-    const ids = (page2 || []).map((r) => r.id);
-    await check(label + ': lamp page keeps the order – the tapped lamp stays first',
-      ids.indexOf(B) === 0 && ids.indexOf(A) === 1, page2);
-    await check(label + ': the tapped lamp is marked', !!(page2 || []).find((r) => r.id === B && r.sel), page2);
+    const hd = await pg.evaluate(() => { const e = window.casoraPopup.element; const b = e._headerBack && !e._headerBack.hidden ? e._headerBack.getBoundingClientRect() : null;
+      return { title: (e._headerTitle.textContent || '').replace(/\u200B/g, '').trim(), back: b ? { x: b.x + b.width / 2, y: b.y + b.height / 2 } : null }; });
+    await check(label + ': lamp page lists no lamps (single-device page) and has ‹', Array.isArray(page2) && page2.length === 0 && !!hd.back, { page2, hd });
+    if (hd.back) {
+      await tap(hd.back);
+      const list2 = await until((r) => r.length >= 2);
+      await check(label + ': ‹ leads back to the tile popup, in its order (' + nm(B) + ', ' + nm(A) + ')',
+        list2 && list2[0].id === B && list2[1].id === A, list2 && list2.map((r) => r.id));
+    }
     await pg.evaluate(() => window.casoraPopup && window.casoraPopup.close && window.casoraPopup.close());
     await pg.context().close();
   }
