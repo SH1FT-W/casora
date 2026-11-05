@@ -115,7 +115,14 @@ for (const R of RUNS) {
   await check(R.tag + ': update_entity für alle update.*-Entitäten', ue.length === 1
     && JSON.stringify([].concat(ue[0][2].entity_id).sort()) === JSON.stringify(calls.ids) && ue[0][3] === false, { ue, n: calls.ids.length });
   await check(R.tag + ': Supervisor /refresh_updates gefragt', calls.chk.ws.some((m) => m.type === 'supervisor/api' && m.endpoint === '/refresh_updates' && m.method === 'post'), calls.chk.ws);
-  await check(R.tag + ': nur installiertes HACS-Repo aufgefrischt', JSON.stringify(calls.chk.ws.filter((m) => m.type === 'hacs/repository/refresh').map((m) => m.repository)) === '["1"]', calls.chk.ws);
+  // HA 2026.10 (HACS): only the installed repository is refreshed. HA 2026.11 (built-in Marketplace): Casora asks
+  // marketplace/info and refreshes repositories only with a connected GitHub account (03-popups.js ~3915) – the test
+  // HAs have none, so nothing beyond marketplace/info; never other repositories.
+  const hacsRef = calls.chk.ws.filter((m) => m.type === 'hacs/repository/refresh').map((m) => m.repository);
+  const mpInfo = calls.chk.ws.some((m) => m.type === 'marketplace/info');
+  const mpRef = calls.chk.ws.filter((m) => m.type === 'marketplace/repository/refresh').map((m) => m.repository);
+  await check(R.tag + ': nur installiertes Repo aufgefrischt (HACS) bzw. Marketplace gefragt',
+    mpInfo ? !hacsRef.length && mpRef.every((r) => r === '1') : JSON.stringify(hacsRef) === '["1"]', calls.chk.ws);
   await check(R.tag + ': danach „Zuletzt gesucht: gerade eben“', b2 && !b2.busy && /Zuletzt gesucht: gerade eben/.test(b2.status), b2);
   await check(R.tag + ': Popup bleibt offen', calls.open);
   await shot(R.tag + '_3_fertig');

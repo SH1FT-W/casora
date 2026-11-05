@@ -4271,7 +4271,9 @@
         left: ['alerts', 'ctrl', 'job'], right: rightP,
         underStage: v3P ? ['cam', 'camoff', 'camai'] : null,
         settings: states[c.st] ? c.st : null,
-        colExtra: (v3P ? '' : ' #container > #cam { margin-top: 0 !important; }') + ' #container > #camai:not(:empty) { margin-top: 12px !important; }' });
+        colExtra: (v3P ? '' : ' #container > #cam { margin-top: 0 !important; }') + ' #container > #camai:not(:empty) { margin-top: 12px !important; }'
+          // The AI pill has a soft shadow and sits flush with the field's top: the field's ellipsis overflow cut 5 px.
+          + ' #container > #camai { overflow: visible !important; }' });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
