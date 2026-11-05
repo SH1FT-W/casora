@@ -33,9 +33,9 @@ Every popup puts the one thing you opened it for in the middle, usually a large 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-popups-dark.webp" />
-    <img src="docs/images/readme-popups-light.webp" alt="Four complete Casora popups on a phone: room climate, blinds, lighting and a plant, each with its dial and the list below." />
+    <img src="docs/images/readme-popups-light.webp" alt="Three Casora popups: floor heating on a phone, the blinds on a desktop display and lighting on a phone, each with its dial and the list beside or below it." />
   </picture>
-  <br/><sub>Room climate, blinds, lighting and a plant: one dial each.</sub>
+  <br/><sub>Heating and lighting on the phone, blinds on the desktop: one dial each.</sub>
 </p>
 
 | You have | The popup puts first |
