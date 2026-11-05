@@ -12,7 +12,7 @@ A plug and a power history for the 3D printer, a calmer football popup and a his
 - **3D printer with its smart plug (#130):** under the dial the power history with 24 h, 7 days and 30 days, right below it the plug with its switch and the power now. Switching it off asks first, so no print is lost.
 
 ### Changed
-- **README and project page:** shorter, popups shown as one picture row.
+- **README and project page:** shorter, popups shown as one picture row and a new title picture without the mock window.
 - **Football popup:** on tablet and desktop the table now sits on the right, match and form on the left, in the same order as on the phone.
 
 ### Fixed
