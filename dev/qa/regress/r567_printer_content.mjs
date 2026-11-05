@@ -5,9 +5,9 @@
 // bisschen nackig, vielleicht ein bisschen mehr Infos“. Expected for the test house's printer (keys as ha-bambulab,
 // states set here, nothing by name):
 //  - printing: „Temperaturen“ (nozzle and bed now with their target, below the target „Heizt auf“, fans in one row),
-//    „Material“ (AMS slots, the one in use says so, the AMS air as one row with a word), „Druck“ with the cover image,
+//    „Filament“ (AMS slots, the one in use says so, the AMS air as one row with a word), „Druck“ with the cover image,
 //    plate, objects and „Geschwindigkeit“ as a picker (sub page with the profiles); no „Mehr“
-//  - at rest: „Zuletzt gedruckt“, „Temperaturen“ only while cooling down, „Material“, „Drucker“ with the hours printed,
+//  - at rest: „Zuletzt gedruckt“, „Temperaturen“ only while cooling down, „Filament“, „Drucker“ with the hours printed,
 //    the firmware hint when an update is out
 //  - desktop 1440 and phone 393: nothing sticks out of the sheet.
 import { open, usePage, casoraDashboard, dashboard, fakeStates, check, need, finish, atFinish } from './lib.mjs';
@@ -124,7 +124,7 @@ for (const [mode, w, h] of [['desk', 1440, 1000], ['phone', 393, 852]]) {
   await check(mode + ' druckt: „Temperaturen“ mit Düse (heizt auf, Ziel) und Druckbett', head(pi, 'Temperaturen')
     && has(pi, /^Düse.*Heizt auf · Ziel 220/) && has(pi, /^Druckbett.*Ziel 60/), pi.rows);
   if ((c.fans3 || []).length) await check(mode + ' druckt: Lüfter in einer Zeile', has(pi, /^Lüfter.*Bauteil 80 %/), pi.rows);
-  await check(mode + ' druckt: „Material“ mit Slot in Gebrauch und Luft im AMS', head(pi, 'Material')
+  await check(mode + ' druckt: „Filament“ mit Slot in Gebrauch und Luft im AMS', head(pi, 'Filament')
     && has(pi, /^Testfilament PLA.*Slot 1.*Wird genutzt.*62 %/) && has(pi, /^Luft im AMS.*Trocken/), pi.rows);
   await check(mode + ' druckt: „Druck“ mit Titelbild, Platte, Objekten', head(pi, 'Druck') && pi.jobImg
     && has(pi, /^Druckplatte.*Texturiert/) && (!c.objects || has(pi, /^Objekte.*1 übersprungen/)), pi.rows);
@@ -147,7 +147,7 @@ for (const [mode, w, h] of [['desk', 1440, 1000], ['phone', 393, 852]]) {
   await need(mode + ' Ruhe: Popup offen', pi);
   await check(mode + ' Ruhe: „Zuletzt gedruckt“ mit Titelbild', head(pi, 'Zuletzt gedruckt') && has(pi, /^Letzte Aufgabe.*Testwürfel/) && pi.jobImg, pi.rows);
   await check(mode + ' Ruhe: Düse kühlt ab, kalte Teile und Lüfter nicht', has(pi, /^Düse.*Kühlt ab/) && !has(pi, /^Druckbett/) && !has(pi, /^Lüfter/), pi.rows);
-  await check(mode + ' Ruhe: „Material“', head(pi, 'Material') && has(pi, /^Luft im AMS/), pi.rows);
+  await check(mode + ' Ruhe: „Filament“', head(pi, 'Filament') && has(pi, /^Luft im AMS/), pi.rows);
   if (c.usage) await check(mode + ' Ruhe: „Drucker“ mit Druckzeit insgesamt', head(pi, 'Drucker') && has(pi, /^Druckzeit insgesamt.*512 Std\./), pi.rows);
   if (c.fw) await check(mode + ' Ruhe: Hinweis Firmware-Update', has(pi, /^Firmware-Update verfügbar/), pi.rows);
   await check(mode + ' Ruhe: nichts ragt aus dem Popup', fits(pi), { out: pi.out, cut: pi.cut, docOver: pi.docOver });

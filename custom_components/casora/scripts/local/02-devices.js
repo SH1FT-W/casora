@@ -4051,7 +4051,7 @@
           sub: wet ? 'Feucht · Trockenmittel tauschen' : [humWord(iA), tA != null ? U.f(tA, 1) + ' ' + unitOf(c.amsTemp) : null].filter(Boolean).join(' · ') || null,
           subTone: wet ? 'warn' : null, value: hA != null ? Math.round(hA) + ' %' : null, entity: c.amsHum || null });
       }
-      return rA.length ? UI.group(rA, 'Material') : '';
+      return rA.length ? UI.group(rA, 'Filament') : '';
     }
 
     if (kind === 'p_job3') {

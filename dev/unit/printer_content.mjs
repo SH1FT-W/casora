@@ -10,7 +10,7 @@
 //                 printing_speed (select) / speed_profile, start_time
 //   device        total_usage_hours, nozzle_diameter/nozzle_type, firmware_update
 // and the v3 sections built from them: „Temperaturen“ (heating word below the target, fans only while printing,
-// at rest only while cooling down), „Material“ (slots with colour, type, remaining, the active one named; the AMS air
+// at rest only while cooling down), „Filament“ (slots with colour, type, remaining, the active one named; the AMS air
 // as one row with a word; the external spool only when in use), „Druck“ (cover image, plate, objects, speed picker
 // only when the printer takes it), „Drucker“ at rest, the firmware hint at rest.
 //   node dev/unit/printer_content.mjs
@@ -101,8 +101,8 @@ assert.equal(sec('p_temp3', S(idle)).length, 0, 'at rest and cold: no temperatur
 const cool = rowsOf(sec('p_temp3', S(Object.assign({}, idle, { [c.noz]: { state: '84' } }))), 'Temperaturen');
 assert.ok(row(cool, /^Düse$/) && row(cool, /^Düse$/).sub === 'Kühlt ab' && !row(cool, /^Lüfter$/), 'at rest and hot: cooling down, no fans');
 
-// ── Material ──
-const m = rowsOf(sec('p_ams3', S(printing)), 'Material');
+// ── Filament (section was „Material“ until 05.11.2026) ──
+const m = rowsOf(sec('p_ams3', S(printing)), 'Filament');
 const s1 = row(m, /^Testfilament PLA$/);
 assert.ok(s1 && /Slot 1/.test(s1.sub) && /PLA/.test(s1.sub) && /Wird genutzt/.test(s1.sub), 'active slot named: ' + JSON.stringify(s1));
 assert.equal(s1.value, '62 %', 'remaining of the slot');
@@ -113,12 +113,12 @@ assert.equal(row(m, /^Testfilament Weiß$/).value, null, 'unknown remaining: no 
 assert.ok(row(m, /^Leer$/), 'empty slot');
 const air = row(m, /^Luft im AMS$/);
 assert.ok(air && air.value === '31 %' && /^Trocken · 27,5 °C$/.test(air.sub), 'AMS air, index 2 = dry: ' + JSON.stringify(air));
-const word = (idx) => row(rowsOf(sec('p_ams3', S({ [c.amsIdx]: { state: String(idx) } })), 'Material'), /^Luft im AMS$/).sub;
+const word = (idx) => row(rowsOf(sec('p_ams3', S({ [c.amsIdx]: { state: String(idx) } })), 'Filament'), /^Luft im AMS$/).sub;
 assert.match(word(3), /^In Ordnung/, 'index 3: ok');
 assert.match(word(5), /^Feucht · Trockenmittel tauschen$/, 'index 5: wet');
 assert.ok(!row(m, /^Externe Spule/), 'empty external spool not shown');
 const ext = rowsOf(sec('p_ams3', S({ [c.ext]: { state: 'Testfilament TPU', attributes: { active: true, empty: false, name: 'Testfilament TPU',
-  type: 'TPU', color: '#264653FF', remain: -1 } } })), 'Material');
+  type: 'TPU', color: '#264653FF', remain: -1 } } })), 'Filament');
 assert.ok(row(ext, /^Testfilament TPU$/) && /Externe Spule/.test(row(ext, /^Testfilament TPU$/).sub), 'external spool in use');
 // The former list (no v3) read the index the old way round: 2 (dry) asked for new desiccant.
 const old = (idx) => JSON.stringify(sec('p_ams', S({ [c.amsIdx]: { state: String(idx) } })));
