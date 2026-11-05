@@ -4,6 +4,17 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.19 – 05.11.2026
+
+A calmer popup head and a lamp that stands on its own.
+
+### Changed
+- **A lamp is a lamp (#126):** every single lamp now opens its own page like the thermostat or the blinds: the dial with the brightness, warm, neutral, cool and colour, and its effects if it has any. No list of all lamps and no room scenes any more; "Back" from a list always returns to that list.
+- **3D printer:** the "Material" section is now called "Filament".
+
+### Fixed
+- **Popup head:** every title now has the room above it, "Home" for popups across rooms; the plant and climate popups showed none. The head always has the same height, so the dial starts at the same place in every popup.
+
 ## 26.11.18 – 05.11.2026
 
 A plug and a power history for the 3D printer, a calmer football popup and a history that loads for busy sensors.

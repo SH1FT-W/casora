@@ -4,6 +4,17 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.19 – 05.11.2026
+
+Ein ruhigerer Popup-Kopf und eine Lampe, die für sich steht.
+
+### Geändert
+- **Eine Lampe ist eine Lampe (#126):** Jede einzelne Lampe öffnet jetzt ihre eigene Seite wie Thermostat oder Jalousien: das Rad mit der Helligkeit, Warm, Neutral, Kalt und Farbe, und ihre Effekte, wenn sie welche hat. Keine Liste aller Lampen und keine Raum-Szenen mehr; „Zurück“ führt aus einer Liste immer in diese Liste.
+- **3D-Drucker:** Der Abschnitt „Material“ heißt jetzt „Filament“.
+
+### Behoben
+- **Popup-Kopf:** Über jedem Titel steht jetzt der Raum, bei Popups für mehrere Räume „Zuhause“; Pflanze und Klima zeigten keins. Der Kopf ist immer gleich hoch, das Rad beginnt in jedem Popup an derselben Stelle.
+
 ## 26.11.18 – 05.11.2026
 
 Steckdose und Stromverlauf im 3D-Drucker, ein ruhigeres Fußball-Popup und ein Verlauf, der bei schnellen Sensoren lädt.
