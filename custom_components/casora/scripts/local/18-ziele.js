@@ -140,6 +140,10 @@
     var key = id + '|' + span + '|' + st.last_changed;
     var hit = hist[id + '|' + span];
     if (hit && hit.key === key) { if (el && hit.busy) hit.wait.push(el); return Z.withNow(hit.rows, st, hit.start); }
+    // Still loading for an earlier state: wait for that answer instead of dropping it. A busy sensor (PM2.5, CO2) changes
+    // faster than its 7/30-day history loads, and every new request left "Wird geladen …" standing. withNow() adds the
+    // current value; the next call after the answer loads again for the new state.
+    if (hit && hit.busy) { if (el) hit.wait.push(el); return Z.withNow(hit.rows, st, hit.start); }
     var now = Date.now(), start = now - (SPANS[span] || SPANS['24h']);
     var cell = hist[id + '|' + span] = { key: key, rows: hit ? hit.rows : null, start: hit ? hit.start : start, busy: true, wait: el ? [el] : [] };
     h.callApi('GET', 'history/period/' + new Date(start).toISOString() + '?filter_entity_id=' + id
