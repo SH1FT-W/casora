@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: allein
-// @deckt: custom_components/casora/scripts/local/03-popups.js#_casoraLightSoft,S.rowOrder,S.alone,S.lampAlone custom_components/casora/scripts/local/01-basis.js#casoraLightTally,_casoraLightTallyIds
+// @deckt: custom_components/casora/scripts/local/03-popups.js#_casoraLightSoft,S.rowOrder,S.lampAlone custom_components/casora/scripts/local/01-basis.js#casoraLightTally,_casoraLightTallyIds
 // Issue 126: a room with two lamps (no group) and no light tile. A light tile added by hand in the Studio
 // („+ Kachel hinzufügen“ → „Andere Kachelart …“ → „Licht“), once with one of the lamps as its device and once without
 // one, „Lichter im Popup“ = both lamps in the other order than the room's badge, saved.

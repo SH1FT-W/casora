@@ -1,11 +1,12 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/03-popups.js#S.alone,S.lampAlone,roomV3,act
+// @deckt: custom_components/casora/scripts/local/03-popups.js#S.lampAlone,roomV3,act
 // Issue 126 (owner decision, 05.11.2026): room lighting popup („WOHNZIMMER / Beleuchtung“) → tap a lamp → its page
 // listed every lamp of the room again („Lampen im Raum · 1 von 3 an“); from there one jumped lamp to lamp and ‹ went
 // back to the lamp before instead of the overview. Expected: the lamp's page is the end of the chain and looks like a
 // single-device popup (thermostat, blinds): its dial with brightness and white tone, no list of the room's lamps, one
-// column (552 on the desktop), no „Szenen“ moon with the room's scenes (owner, 05.11.2026); ‹ always leads back to the room's overview, which keeps its list.
+// column (552 on the desktop), no „Szenen“ moon with the room's scenes (owner, 05.11.2026); ‹ always leads back to the
+// room's overview, which keeps its list. A light tile of one lamp opens the same single-lamp page (owner, 05.11.2026).
 // The test house's living room gets made-up lamps in the browser (as r516). Desktop 1440 and phone 393. Nothing is saved.
 import { open, dashboard, casoraDashboard, fakeStates, check, need, finish, usePage, shot } from './lib.mjs';
 
@@ -101,6 +102,31 @@ for (const [label, size] of [['desktop', { width: 1440, height: 900 }], ['phone'
     await check(`${label} ${nm}: ‹ leads back to the room's overview (its list, no ‹)`, isOverview(bk) && !bk.back
       && bk.lbl.some((x) => /^Lampen im Raum/.test(x)), bk);
   }
+  await pg.evaluate(async () => { if (window.casoraPopup && window.casoraPopup.close) window.casoraPopup.close(); await new Promise((r) => setTimeout(r, 900)); });
+
+  // Point 1 (owner, 05.11.2026): a light tile whose entity is one lamp (no „Lichter im Popup“) opens the same
+  // single-lamp page – no list, no room scenes, 552 wide. The tile is made in the browser for lamp A.
+  const tile = await pg.evaluate(async (id) => {
+    const ha = document.querySelector('home-assistant');
+    const hp = await window.loadCardHelpers();
+    const el = hp.createCardElement({ type: 'custom:button-card', template: 'casora_light', entity: id });
+    el.id = 'qa-r586-tile'; el.hass = ha.hass; el.style.cssText = 'position:fixed;left:20px;top:120px;width:180px;z-index:99990;';
+    ha.shadowRoot.appendChild(el);
+    await new Promise((r) => setTimeout(r, 1500));
+    const r = el.getBoundingClientRect();
+    return r.width ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : null;
+  }, L.a);
+  await need(label + ': light tile of one lamp', tile);
+  await tap(tile);
+  const dt = await until((h) => h.title === 'Stehlampe' && h.dial);
+  if (shots) await pg.screenshot({ path: `${shots}/${label}-tile.png` });
+  await shot(label + '_lamp_tile');
+  await check(`${label} lamp tile: single-lamp page „${WZ} / Stehlampe“ with its dial`, dt && dt.title === 'Stehlampe' && dt.dial
+    && dt.eyebrow.toLowerCase() === WZ.toLowerCase(), dt);
+  await check(`${label} lamp tile: no list of the room's lamps, no „Szenen“`, dt && dt.rows === 0 && !dt.lbl.some((x) => /^Lampen/.test(x))
+    && !dt.moons.some((m) => /^Szenen/.test(m)), dt);
+  if (!size.mobile) await check(`${label} lamp tile: one column, 552 wide`, dt && dt.width <= 560, dt && dt.width);
+  await pg.evaluate(() => { const b = document.querySelector('home-assistant').shadowRoot.getElementById('qa-r586-tile'); if (b) b.remove(); });
   await pg.evaluate(() => window.casoraPopup && window.casoraPopup.close && window.casoraPopup.close());
   await pg.context().close();
 }

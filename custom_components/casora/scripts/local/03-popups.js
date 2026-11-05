@@ -4833,17 +4833,19 @@
      light badge), which a tile's own „Lichter im Popup“ may order differently – the tapped lamp jumped to another place.
      The page keeps the tapped list's order (its other lamps after them); the open lamp stays in its place, marked. */
   S.rowOrder = null;
-  /* Issue 126 (owner, 05.11.2026): a lamp opened from a list (a room's or a tile's lamps, the house's room of one lamp) is
-     the end of the chain – its page is a single-device page like the thermostat's: the dial with brightness and white
-     tone/colour, its own effects (no room scenes), no list of the room's lamps (that jumped lamp to lamp, and ‹ went back to the lamp
-     before instead of the list). ‹ always leads back to the list it was opened from. A lamp opened straight from its
-     own tile or chip keeps its room's lamps. S.alone: that lamp's id, until the popup closes. */
-  S.alone = null;
-  window.addEventListener('casora-popup-closed', function () { S.rowOrder = null; S.alone = null; });
-  // True for a lamp's page opened from a list (S.alone), cfg as for render.
-  S.lampAlone = function (cfg) {
-    var f = cfg && !cfg.rooms ? cfg.flat : null;
-    return !!(f && f.lamp && S.alone && ((f.lights || [])[0] === S.alone || cfg.gid === S.alone));
+  window.addEventListener('casora-popup-closed', function () { S.rowOrder = null; });
+  /* Issue 126 (owner, 05.11.2026): a single lamp is the end of the chain, however it is opened (from a room's or a
+     tile's list, its own tile or chip, a room of one lamp): its page is a single-device page like the thermostat's – the
+     dial with brightness and white tone/colour, its own effects, no room scenes, no list of the room's lamps (that
+     jumped lamp to lamp, and ‹ went back to the lamp before instead of the list). Only the room lighting overview and a
+     tile with its own „Lichter im Popup“ list lamps. cfg as for render; a room chosen up front that holds one lamp (no
+     group) is that lamp's page (S.headOf). */
+  S.lampAlone = function (cfg, states) {
+    if (!cfg) return false;
+    if (!cfg.rooms) return !!(cfg.flat && cfg.flat.lamp);
+    var r = cfg.init >= 0 && selOf(cfg) === cfg.init ? cfg.rooms[cfg.init] : null;
+    var one = r && states ? (r.lights || []).filter(function (x) { return states[x]; }) : [];
+    return one.length === 1 && !Array.isArray((states[one[0]].attributes || {}).entity_id);
   };
   S.keepOrder = function (ids, sc) {
     var o = S.rowOrder;
@@ -4938,9 +4940,9 @@
     var fxId = fxLampOf(single ? [sc.lights[0]] : lampIds0, states);
     // The scene holds while no lamp of the room changed after it: a lamp's page looks at its room's rows like the room's
     // page (review 03.11.2026: the lamp's page marked „Szenen“ after another lamp of the room changed).
-    // Issue 126: a lamp opened from a list is a single-device page – the stage alone, one column (552, header width),
-    // only what belongs to that lamp: its effects, not the room's scenes (owner, 05.11.2026).
-    var alone = S.lampAlone(cfg);
+    // Issue 126: a single lamp is a single-device page – the stage alone, one column (552, header width), only what
+    // belongs to that lamp: its effects, not the room's scenes (owner, 05.11.2026).
+    var alone = S.lampAlone(cfg, states);
     var left = v3Stage(ids, states, false, function () { return v3Moons(alone ? [] : scenesOf(h, states, sceneScope(sc)), states, room, fxId, h, sc.lamp && sc.room ? sc.room : ids); });
     var ls = stat(lampIds0, states);
     var lampNames0 = lampNamesOf(lampIds0, states, room);
@@ -5179,7 +5181,6 @@
         if (one && window._casoraNotifyOpenViaCard) {
           window._casoraLF = window._casoraLF || {};
           window._casoraLF[d.gid] = -1;
-          S.alone = one;
           // The tapped room names the lamp's page (review 03.11.2026: a lamp in no dashboard room said „Zuhause“).
           window._casoraBackNext = { fn: function () { P3.open(cur3); }, at: Date.now(), eyebrow: d.name || '',
             head: d.name ? { eyebrow: d.name, title: short(nameOf(one, h.states), d.name) } : null };
@@ -5207,8 +5208,6 @@
         S.rowOrder = Array.prototype.map.call(lst, function (x) { try { return JSON.parse(x.getAttribute('data-lps-tap')).id || null; } catch (e) { return null; } })
           .filter(Boolean);
         if (S.rowOrder.indexOf(d.id) < 0) S.rowOrder = null;
-        // Issue 126: the lamp's page is the end of the chain – no list of the room's lamps, ‹ back to this list.
-        S.alone = d.id;
         // ‹ zurück ins Raum-Popup (17.10.2026), wie Raum → Heizkörper (openRoom) und Liste → Detail (casora-core.js).
         var P = window.casoraPopup, prev = P && P.current;
         // The lamp's page: label = the room of the list it was tapped in, title = the lamp without it (review 03.11.2026:

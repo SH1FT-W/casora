@@ -10,10 +10,10 @@
 //   2. rows: lamp names without the room, the sub-line short („Aus“, „An · 80 %“, never „zuletzt …“).
 //   3. the word for the devices is „Lampen“: „Lampen im Raum · 1 von 3 an“.
 //   4. beside the dial at most two round buttons: „Szenen“ (left, a menu with the room's scenes) and „Effekte“; a lamp's
-//      page opened from a list shows only its own „Effekte“, no „Szenen“ (owner, 05.11.2026, issue 126).
+//      page shows only its own „Effekte“, no „Szenen“ (owner, 05.11.2026, issue 126).
 //   5. a lamp's page has its own main switch (top right) that switches that lamp.
-//   6. a light group in a room („Spots“) is one row everywhere, also in the room's own popup; a lamp's page opened
-//      straight from its chip lists the rows of its room, one opened from a list lists nothing (issue 126, r586).
+//   6. a light group in a room („Spots“) is one row everywhere, also in the room's own popup; a lamp's page lists
+//      nothing, however it is opened (issue 126, r586).
 // The test house's living room gets made-up lamps in the browser (a lamp with effects, a lamp, a group of two spots),
 // the hallway one lamp. Desktop 1440 and phone 393. Nothing is saved.
 import { open, dashboard, casoraDashboard, fakeStates, check, need, finish, usePage } from './lib.mjs';
@@ -200,7 +200,7 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
   // Finding 3 (owner, 03.11.2026): a room whose light group holds one lamp opens that lamp's page from its badge too.
   await roomPage(FL, 'flur');
   at = await cardAt('casora_badge_light_group', null, size.mobile);
-  if (at) { await tap(at, !size.mobile); h = await until((x) => /Deckenlampe/.test(x.title)); await judge('Raum-Badge mit einer Lampe', h, { eyebrow: FL, title: 'Deckenlampe', sw: true }); await close(); }
+  if (at) { await tap(at, !size.mobile); h = await until((x) => /Deckenlampe/.test(x.title)); await judge('Raum-Badge mit einer Lampe', h, { eyebrow: FL, title: 'Deckenlampe', alone: true, sw: true }); await close(); }
   else await check(label + ': Licht-Badge im Flur', false);
   await roomPage(WZ, 'wohnzimmer');
   // The room's scene was set 10 min ago, a lamp of the room changed after it: no longer marked – on the room's page
@@ -275,7 +275,7 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
     await tap(at);
     await pg.waitForTimeout(1500);
     at = await cardAt('casora_badge_light', L.steh);
-    if (at) { await tap(at); h = await until((x) => /Stehlampe/.test(x.title)); await judge('Lampen-Chip', h, { eyebrow: WZ, title: 'Stehlampe', rows: LAMPS, sw: true }); await close(); }
+    if (at) { await tap(at); h = await until((x) => /Stehlampe/.test(x.title)); await judge('Lampen-Chip', h, { eyebrow: WZ, title: 'Stehlampe', alone: true, sw: true }); await close(); }
     else await check(label + ': Lampen-Chip Stehlampe sichtbar', false);
     await go(dash.url);
     await fakeStates(pg, { ...FAKE, 'input_select.casora_expanded_row': { state: 'lights', attributes: {} } }, { sticky: true });
