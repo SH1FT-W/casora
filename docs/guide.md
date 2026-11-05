@@ -31,7 +31,7 @@ You need **Home Assistant 2026.9** or newer with dashboards in storage mode (the
 | [**button-card**](https://github.com/custom-cards/button-card) | Required. |
 | An **AI task** in Home Assistant | Optional, for the [AI features](#ai-features-optional). |
 
-1. In the Marketplace open the menu, choose **Custom repositories** and add `https://github.com/SH1FT-W/casora` with the type **Integration**. The button in the [README](../README.md#install) does the same in one click.
+1. Open the **Marketplace** (Settings → Marketplace; called HACS before Home Assistant 2026.11) and search for **Casora**. The button in the [README](../README.md#install) opens it in one click.
 2. **Download Casora**, together with UIX and button-card if you don't have them yet, then **restart Home Assistant** once.
 3. **Add the integrations** under Settings → Devices & services → Add integration: **Casora**, and **UI eXtension** if it isn't added yet. UIX does nothing until it is added there.
 4. **Open Casora Studio** in the sidebar.

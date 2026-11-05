@@ -19,10 +19,8 @@ jobs:
       - uses: actions/checkout@v4
       - run: python3 tools/sync-changelog.py --check
 
-  # HACS-Prüfung nur manuell: private Repos kann sie nicht auslesen,
-  # Beschreibung/Topics/Lizenz braucht es erst beim Veröffentlichen.
+  # HACS/Marketplace check on every run (Casora is in the default list since 05.11.2026).
   hacs:
-    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
