@@ -4,6 +4,24 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.15 – 05.11.2026
+
+Casora ist im Marketplace: Raum-Energie als Rad, Updates nach Art gruppiert und ruhigere Popups für Konsolen und Drucker.
+
+### Neu
+- **Raum-Energie als Rad:** Das Energie-Popup eines Raums zeigt seine Leistung auf einem Rad, das sich mit dem Anteil am Haus füllt („18 % vom Haus“), live. Ohne bekannten Hausverbrauch bleibt es eine Platte.
+- **Updates nach Art gruppiert:** Verfügbare Updates stehen unter Home Assistant, Marketplace und Geräte; eine Geräte-Firmware und eine gleichnamige Integration sehen nicht mehr gleich aus.
+
+### Geändert
+- **Überall Marketplace:** Casora schreibt in allen Texten Marketplace statt HACS, und die Installation beginnt mit „Casora im Marketplace suchen“.
+- **Spielkonsolen:** Das Popup einer Konsole zeigt das Spielbild oder ein Konsolensymbol statt einer Schallplatte und ausgeschaltet keine Lautstärkezeile.
+- **Leuchten bei allen Status-Ringen:** Pulse, Netzwerk und andere Status-Ringe leuchten in ihren Farben wie die übrigen Räder.
+
+### Behoben
+- **Titel der Raum-Energie:** zeigt den Raumnamen statt „Zuhause“.
+- **3D-Drucker mit ausgeschalteter Kamera:** zeigt „Kamera aus“ statt eines Fehlers zu einer fehlenden Entität.
+- **KI-Freigabe von Updates:** Ein Update, das die KI-Prüfung als Breaking einstuft, installiert sich nicht mehr per Tipp in der Liste, bevor es freigegeben ist.
+
 ## 26.11.14 – 04.11.2026
 
 Ein 3D-Drucker-Popup mit echtem Inhalt, Licht-Kacheln, die leuchten, und Namen unter Home Assistant 2026.11.

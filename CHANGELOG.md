@@ -4,6 +4,24 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.15 – 05.11.2026
+
+Casora is in the Marketplace: room energy as a dial, updates grouped by kind and calmer popups for consoles and printers.
+
+### New
+- **Room energy as a dial:** a room's energy popup shows its power on a dial that fills with the room's share of the house ("18 % of the house"), live. Without a known house consumption it stays a plate.
+- **Updates grouped by kind:** available updates are listed under Home Assistant, Marketplace and Devices, so a device firmware and an integration with the same name no longer look alike.
+
+### Changed
+- **Marketplace everywhere:** Casora says Marketplace instead of HACS in every text, and the install steps now start with "search for Casora in the Marketplace".
+- **Game consoles:** a console's popup shows the game picture or a console symbol instead of a record, and no volume line while it is off.
+- **Glow on every status ring:** Pulse, network and other status rings glow in their colours like the other dials.
+
+### Fixed
+- **Room energy title:** shows the room's name instead of "Home".
+- **3D printer with the camera off:** shows "Camera off" instead of an error about a missing entity.
+- **AI release of updates:** an update the AI review marks as breaking no longer installs from a tap in the list before it is released.
+
 ## 26.11.14 – 04.11.2026
 
 A 3D printer popup with real content, light tiles that light up and Home Assistant 2026.11 names.
