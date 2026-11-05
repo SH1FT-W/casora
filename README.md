@@ -19,6 +19,13 @@ A calm, photo-backed dashboard for Home Assistant that **sets itself up**. Casor
 
 Casora builds on two cards from the Marketplace, **UI eXtension (UIX)** and **button-card**, and needs dashboards in storage mode, the default.
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/casora-desktop-dark.webp" />
+    <img src="docs/images/casora-desktop-light.webp" alt="The Casora home view on a desktop display: the house photo, weather, the badges for security, climate, lighting and energy, and the device tiles." />
+  </picture>
+</p>
+
 ## What a tap shows you
 
 Every popup puts the one thing you opened it for in the middle, usually a large dial, with scenes and modes as round buttons around it and lists beside it.
@@ -111,8 +118,8 @@ Rooms, tiles, badges and popups, changed in place with a live preview for deskto
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-studio-dark.webp" />
-    <img src="docs/images/readme-studio-light.webp" alt="Casora Studio on a desktop display: the editor of a plant tile next to the live preview of its popup with the soil moisture dial and the readings." />
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/casora-studio-dark.webp" />
+    <img src="docs/images/casora-studio-light.webp" alt="Casora Studio: the home view in the live preview, with the switches for desktop, tablet and phone, light and dark, and a tile slot to add." />
   </picture>
 </p>
 
