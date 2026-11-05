@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/03-popups.js#S.placeOf,holds,S.headOf,lampRow,hero,S.fxMoon,v3Moons,v3SceneItems,roomBody,sceneScope
+// @deckt: custom_components/casora/scripts/local/03-popups.js#S.placeOf,holds,S.headOf,lampRow,hero,S.fxMoon,v3Moons,v3SceneItems,roomBody,sceneScope,S.lampAlone
 // Owner (03.11.2026, review sheet of every light popup before 26.11.8): the light popups looked different depending on
 // the way they were opened. One rule now, whatever the path (house badge, house → room, room badge, Home's room chip,
 // a lamp chip, a lamp from any list, a room of one lamp):
@@ -11,8 +11,8 @@
 //   3. the word for the devices is „Lampen“: „Lampen im Raum · 1 von 3 an“.
 //   4. beside the dial at most two round buttons: „Szenen“ (left, a menu with the room's scenes) and „Effekte“.
 //   5. a lamp's page has its own main switch (top right) that switches that lamp.
-//   6. a light group in a room („Spots“) is one row everywhere, also in the room's own popup; a lamp's page lists the
-//      rows of its room.
+//   6. a light group in a room („Spots“) is one row everywhere, also in the room's own popup; a lamp's page opened
+//      straight from its chip lists the rows of its room, one opened from a list lists nothing (issue 126, r586).
 // The test house's living room gets made-up lamps in the browser (a lamp with effects, a lamp, a group of two spots),
 // the hallway one lamp. Desktop 1440 and phone 393. Nothing is saved.
 import { open, dashboard, casoraDashboard, fakeStates, check, need, finish, usePage } from './lib.mjs';
@@ -116,6 +116,7 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
     await check(`${label} ${name}: höchstens zwei runde Knöpfe, nur „Szenen“ / „Effekte“`, h.moons.length <= 2
       && h.moons.every((m) => /^(Szenen|Effekte)/.test(m)), h.moons);
     if (want.scenes) await check(`${label} ${name}: Knopf „Szenen“`, h.moons.some((m) => /^Szenen/.test(m)), h.moons);
+    if (want.alone) await check(`${label} ${name}: keine Liste der Lampen des Raums (Issue 126)`, !h.rows.length && !h.lbl.some((x) => /^Lampen/.test(x)), h);
     if (want.sw) await check(`${label} ${name}: eigener Schalter oben rechts`, h.sw, h);
   };
 
@@ -134,7 +135,7 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
   h = await until((x) => x.back && x.rows.length >= 3);
   await judge('Haus → Raum', h, { eyebrow: WZ, title: 'Beleuchtung', rows: LAMPS, scenes: true });
   r = await rowAt(`d.a==='mi' && d.id===${JSON.stringify(L.steh)}`);
-  if (r) { await tap(r); h = await until((x) => x.title === 'Stehlampe' || /Stehlampe/.test(x.title)); await judge('Haus → Raum → Lampe', h, { eyebrow: WZ, title: 'Stehlampe', rows: LAMPS, sw: true }); }
+  if (r) { await tap(r); h = await until((x) => x.title === 'Stehlampe' || /Stehlampe/.test(x.title)); await judge('Haus → Raum → Lampe', h, { eyebrow: WZ, title: 'Stehlampe', alone: true, sw: true }); }
   else await check(label + ': Lampen-Zeile im Raum', false);
   await close();
 
@@ -143,7 +144,7 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
   await tap(at, !size.mobile);
   await until((x) => x.rows.length > 2);
   r = await rowAt(`d.a==='room' && d.name===${JSON.stringify(FL)}`);
-  if (r) { await tap(r); h = await until((x) => x.back && /Deckenlampe/.test(x.title)); await judge('Haus → Raum mit einer Lampe', h, { eyebrow: FL, title: 'Deckenlampe', sw: true }); }
+  if (r) { await tap(r); h = await until((x) => x.back && /Deckenlampe/.test(x.title)); await judge('Haus → Raum mit einer Lampe', h, { eyebrow: FL, title: 'Deckenlampe', alone: true, sw: true }); }
   else await check(label + ': Zeile Flur im Haus-Popup', false);
   await close();
 
@@ -225,7 +226,7 @@ for (const [label, size] of [['Desktop', { width: 1440, height: 900 }], ['Handy'
   r = await rowAt(`d.a==='mi' && d.id===${JSON.stringify(L.strip)}`);
   if (r) {
     await tap(r); h = await until((x) => /TV-Backlight/.test(x.title));
-    await judge('Raum → Lampe', h, { eyebrow: WZ, title: 'TV-Backlight', rows: LAMPS, scenes: true, sw: true });
+    await judge('Raum → Lampe', h, { eyebrow: WZ, title: 'TV-Backlight', alone: true, scenes: true, sw: true });
     await check(`${label} Raum → Lampe: „Effekte“ neben „Szenen“`, h && h.moons.some((m) => /^Effekte/.test(m)), h && h.moons);
     if (scene) await check(`${label} Raum → Lampe: „Szenen“ wie auf der Raumseite nicht markiert`, h && !h.moonsOn.some((m) => /^Szenen/.test(m)), h && h.moonsOn);
     // Esc with the menu open closes the menu, not the popup (review 03.11.2026).

@@ -117,7 +117,7 @@ Seite gleich hoch und das Rad springt beim Wechsel Raum ↔ Lampe nicht. Den Kop
 (`_casoraLightSoft.headOf`, Raum aus dem Dashboard: `placeOf`); der Rahmen zeigt ihn unverändert (`head_fixed`:
 kein Raum-Etikett der Kachel, kein Etikett der Seite davor, nichts gekürzt, keine Rückfall-Statuszeile). Die Seite
 einer Lampe hat ihren eigenen Hauptschalter (nur diese Lampe). Eine Lichtgruppe im Raum („Spots“) ist überall **eine**
-Zeile; die Seite einer Lampe listet die Zeilen ihres Raums. Zeilen: Name ohne Raum, Unterzeile kurz („Aus“,
+Zeile. **Die Lampe ist das Ende der Kette** (Issue 126, Entscheidung 05.11.2026): Wird eine Lampe aus einer Liste geöffnet (Raum-Übersicht, Lampen einer Licht-Kachel, Raum mit einer Lampe aus der Haus-Liste), ist ihre Seite eine Einzelgerät-Seite wie beim Thermostat: nur die Bühne (Rad mit Helligkeit, Lichtfarbe/Weißton, ihre Monde), **keine Liste der Lampen des Raums**, einspaltig (552); ‹ führt immer zurück in die Übersicht, kein Springen von Lampe zu Lampe (`S.alone`, Test `r586_lamp_page_end_of_chain.mjs`). Eine Lampe direkt von ihrer eigenen Kachel oder ihrem Chip listet weiter die Zeilen ihres Raums. Zeilen: Name ohne Raum, Unterzeile kurz („Aus“,
 „An · 80 %“). Ein Raum, dessen Lichtgruppe **eine** Lampe hält, öffnet von überall (Haus-Liste, Licht-Badge des Raums)
 gleich die Seite dieser Lampe (Entscheidung 03.11.2026). Wer aus einer Liste antippt, nennt den Ort: die Seite einer
 Lampe trägt den Raum der Liste, in der sie angetippt wurde (`_casoraBackNext.head`), auch wenn das Dashboard die Lampe

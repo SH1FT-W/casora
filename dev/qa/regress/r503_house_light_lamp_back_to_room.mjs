@@ -6,7 +6,7 @@
 // Expected: ‹ goes back one level – lamp page → room page (label = the room, title „Beleuchtung“ since 03.11.2026,
 // „Lampen im Raum“) → ‹ → the house's list.
 // Not reproduced on the test HA (26.11.7 candidate, rooms with several lamps and with one): kept as a guard for the
-// back path. Phone 393×852 and desktop 1440×900. Nothing is switched or saved.
+// back path. Since 05.11.2026 (issue 126) the lamp's page lists no lamps of its room. Phone 393×852 and desktop 1440×900. Nothing is switched or saved.
 import { open, casoraDashboard, dashboard, check, need, finish, usePage, shot } from './lib.mjs';
 
 // test-neu first (as r495): its house light badge covers every room; the gate's qa-arbeit keeps a fixed lamp list.
@@ -95,13 +95,15 @@ for (const [label, size, url] of [
   await need(label + ': a lamp row on the room page', lr, room);
   await pg.waitForTimeout(500);
   await tap(lr);
-  const lamp = await until((h) => h.back && h.sel > 0);
+  // Issue 126 (owner, 05.11.2026): the lamp's page is a single-device page – no list of the room's lamps.
+  const isLamp = (h) => h && h.back && h.title !== 'Beleuchtung' && h.rooms === 0 && !h.lbl.some((x) => /^Lampen/.test(x));
+  const lamp = await until(isLamp);
   if (shots) await pg.screenshot({ path: `${shots}/${label}-lamp.png` });
-  await need(label + ': lamp page with ‹ (its row marked)', lamp && lamp.back && lamp.sel > 0, { lr, lamp });
+  await need(label + ': lamp page with ‹ (no list of the room\'s lamps)', isLamp(lamp), { lr, lamp });
 
   await pg.waitForTimeout(500);
   await tap(lamp.back);
-  const back1 = await until((h) => (isRoom(h) && !h.sel) || h.rooms > 0);
+  const back1 = await until((h) => isRoom(h) || h.rooms > 0);
   if (shots) await pg.screenshot({ path: `${shots}/${label}-back1.png` });
   await shot(label + '_back1');
   await check(label + ': ‹ from the lamp is the room page („' + rr.name + '“, ‹, „Lampen im Raum“)',
