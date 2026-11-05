@@ -38,9 +38,9 @@ const cases = [
 for (const [a, id, want, msg] of cases) assert.equal(isVideo(a, id), want, msg);
 
 // 2. Render: video → the cover is the whole disc, no label, no spin; music → the record with its label.
-const branch = cut("      if (o.cover && o.cover.tv && !o.cover.image) coverHtml", "    } else if (code === 'S2')");
+const branch = cut("      var quiet = ", "    } else if (code === 'S2')");
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const render = (cover) => new Function('o', 'esc', 'window', 'var coverHtml = "";\n' + branch + '\nreturn coverHtml;')({ cover }, esc, {});
+const render = (cover, off, svc) => new Function('o', 'esc', 'window', 'off', 'var coverHtml = "", belowHtml = "", v = 0;\n' + branch + '\nreturn coverHtml + belowHtml;')({ cover, svc }, esc, {}, !!off);
 const vid = render({ image: '/api/media_player_proxy/x', spin: true, tv: false, video: true });
 assert.match(vid, /class="hui-dl-cover video"/);
 assert.ok(!/spin|hui-dl-lbl/.test(vid), 'video: no turning, no label');
@@ -49,6 +49,27 @@ const rec = render({ image: '/api/media_player_proxy/y', spin: true, video: fals
 assert.match(rec, /class="hui-dl-cover spin"><div class="hui-dl-lbl"><img/, 'music: turning record with the label');
 assert.match(render({ image: '/x', spin: true, tv: true, video: false }), /hui-dl-cover spin"/, 'music on a TV: the record turns');
 assert.match(render({ image: null, spin: true, video: true }), /hui-dl-cover bare"><div class="hui-dl-lbl"><ha-icon/, "video without a cover: a still record with a note, no spindle hole");
+
+// A game console (owner 05.11.2026): no record – its game's picture fills the disc, else its symbol on the quiet disc;
+// off or without a volume of its own, no volume line.
+const conOff = render({ image: null, console: 'mdi:sony-playstation' }, true, null);
+assert.match(conOff, /class="hui-dl-cover tv"><div class="hui-dl-lbl"><ha-icon icon="mdi:sony-playstation">/, 'console off: its symbol, no record');
+assert.ok(!/hui-dl-vol/.test(conOff), 'console off: no volume line');
+const conGame = render({ image: '/game.png', spin: true, console: 'mdi:sony-playstation' }, false, null);
+assert.match(conGame, /class="hui-dl-cover video"><img src="\/game\.png"/, 'console in a game: the picture fills the disc');
+assert.ok(!/spin|hui-dl-vol/.test(conGame), 'console in a game: no turning, no volume line without volume control');
+assert.match(render({ image: null, spin: true }, false, {}), /hui-dl-vol/, 'music player: the volume line stays');
+
+// Which players are consoles: the integration first, then name, id or app; music players and TVs are none.
+const mc = new Function('document', cut("  var CONSOLE_PLATFORMS", "  function stage(type, o)") + ' return mediaConsole;')({ querySelector: () => null });
+const reg = (id, platform) => ({ entities: { [id]: { platform } } });
+assert.equal(mc({}, 'media_player.living_room', reg('media_player.living_room', 'playstation_network')), 'mdi:sony-playstation', 'PSN platform → console');
+assert.equal(mc({ friendly_name: 'PlayStation 5' }, 'media_player.ps5', null), 'mdi:sony-playstation', 'PS5 by name');
+assert.equal(mc({ friendly_name: 'Xbox Series X' }, 'media_player.xbox', reg('media_player.xbox', 'xbox')), 'mdi:microsoft-xbox', 'Xbox');
+assert.equal(mc({ friendly_name: 'Switch' }, 'media_player.switch', reg('media_player.switch', 'nintendo_parental_controls')), 'mdi:nintendo-switch', 'Nintendo');
+assert.equal(mc({ friendly_name: 'HomePod Küche', app_name: 'Spotify' }, 'media_player.homepod', null), null, 'music player: none');
+assert.equal(mc({ friendly_name: 'Wohnzimmer TV', device_class: 'tv' }, 'media_player.tv', reg('media_player.tv', 'webostv')), null, 'TV: none');
+assert.equal(mc({ friendly_name: 'Caps4 Lautsprecher' }, 'media_player.caps4', null), null, 'no word boundary: none');
 
 // 3. CSS: the video disc hides grooves and hole, fills with object-fit cover, never animates.
 assert.match(core, /\.hui-dl-cover\.video::before,\.hui-dl-cover\.video::after\{display:none;\}/);
