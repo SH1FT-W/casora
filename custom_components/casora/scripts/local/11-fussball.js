@@ -772,9 +772,11 @@
     X.hidden = false;
     lines.forEach(function (n) { n.hidden = false; });
     var lb = L.getBoundingClientRect(), rb = R.getBoundingClientRect();
-    // Side by side: the form starts beside the table. In v3 the match box stands above the form in the right column
-    // (the table is the stage), so the form's top is lower than the table's – only „beside, overlapping“ counts.
-    if (K.full || rb.left < lb.right || rb.top < lb.top - 2 || rb.top > lb.bottom) return;
+    // Side by side: the form stands beside the table (tablet/desktop: match and form on the left, the table on the
+    // right). The match box stands above the form, so the form's top is lower than the table's – only „beside,
+    // overlapping“ counts, on either side.
+    var beside = rb.left >= lb.right - 0.5 || rb.right <= lb.left + 0.5;
+    if (K.full || !beside || rb.top < lb.top - 2 || rb.top > lb.bottom) return;
     var rows = L.querySelectorAll('.cfb-r:not(.h)'), last = rows[rows.length - 1];
     var target = (last || L).getBoundingClientRect().bottom, best = -1, bestD = Infinity;
     for (var n = lines.length; n >= 2; n--) {

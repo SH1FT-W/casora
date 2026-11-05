@@ -171,7 +171,7 @@ for (const [tag, o, d, mobile] of VIEWS) {
   if (mobile) await check(tag + ': Popup – Handy (untereinander): alle 5 Duelle', p.duels === 5, p.duels);
   // Desktop: Unterkante rechts höchstens eine halbe Zeile (29 px) von der letzten Tabellenzeile, nie unter der Legende.
   else await check(tag + ': Popup – rechte Spalte endet auf Höhe der letzten Tabellenzeile', Math.abs(p.rb - p.last) <= 29 && p.rb <= p.lb + 0.5, { tabelle: p.last, rechts: p.rb, legende: p.lb });
-  // v3 (01.11.2026): the table is the stage (left), the match box heads the right column above the form – both
+  // v3: the match box heads one column above the form, the table the other (desktop: table right since 05.11.2026) – both
   // columns start on one line (rule 12); the form's column heads no longer line up with the table's.
   if (!mobile) await check(tag + ': Popup – Tabelle und Spielkasten beginnen auf einer Linie',
     Math.abs(p.mt - p.tt) <= 1, { tabelle: p.tt, spiel: p.mt });
