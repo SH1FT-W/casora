@@ -6250,11 +6250,27 @@ window.casoraMenuGlass = {
     });
   }
 
+  // The walk's answer holds as long as the dashboard's hui-root does (ha-app-layout lived in its shadow root; HA no
+  // longer has it, so every walk ended at document.body): every casora-nav (one per view) adopted the bar with a
+  // whole-page walk on load and on each room change.
+  let hostMemo = null;
+  function huiRoot() {
+    try {
+      const ham = document.querySelector('home-assistant').shadowRoot.querySelector('home-assistant-main').shadowRoot;
+      const pl = ham.querySelector('partial-panel-resolver ha-panel-lovelace');
+      return (pl && pl.shadowRoot && pl.shadowRoot.querySelector('hui-root')) || null;
+    } catch (e) { return null; }
+  }
   function persistentHost() {
+    const hr = huiRoot();
+    if (hostMemo && hr && hostMemo.root === hr && hr.isConnected
+      && (hostMemo.host === document.body || hostMemo.host.isConnected)) return hostMemo.host;
     const found = [];
     walkFind(document, 'ha-app-layout', found, 0);
-    for (const el of found) if (el.isConnected) return el;
-    return document.body;
+    let host = document.body;
+    for (const el of found) if (el.isConnected) { host = el; break; }
+    hostMemo = hr ? { root: hr, host } : null;
+    return host;
   }
 
   class CasoraNav extends HTMLElement {
