@@ -383,10 +383,12 @@
     // Fuel prices: draft without the key; F.key is only there when a new one was typed (or "" = remove).
     const tankenDirty = (cs) => !!cs.tk && JSON.stringify(cs.F) !== cs.F0;
     const liveDirty = (self) => typeof self._csLiveDirty === "function" && self._csLiveDirty();
+    // Issue 129: the design's scope ("all" / "casora") is a draft like the rest; the switch sits on the design page.
+    const scopeDirty = (cs) => cs.scope !== undefined && cs.scope !== cs.scope0;
     // Settings for all dashboards (drafts above).
     P._csOwnDirty = function () {
       const cs = this._cs;
-      return !!cs && (settingsDirty(cs) || optionsDirty(cs) || tankenDirty(cs) || liveDirty(this));
+      return !!cs && (settingsDirty(cs) || optionsDirty(cs) || tankenDirty(cs) || scopeDirty(cs) || liveDirty(this));
     };
     // New structure: this dashboard's settings belong to the same bar – when they were changed on one of its pages
     // (_csDashTouched, set in _markDirty below). Edits elsewhere in the Studio keep "Done" as before.
@@ -421,6 +423,8 @@
       const cs = this._cs = this._cs || {};
       // Keep the draft; otherwise refetch at most once a minute. false = nothing new.
       if (cs.loaded && (this._csDirty() || Date.now() - cs.at < 60000)) return false;
+      delete cs.scope;
+      delete cs.scope0;
       const hass = this._hass;
       let stored = false, data = {};
       cs.readErr = null;
@@ -530,6 +534,13 @@
           takeTanken(cs, await this._hass.callWS(msg));
           cs.tkTest = null;
           done.push(t("Saved. Fuel prices follow within 10 minutes."));
+        }
+        if (scopeDirty(cs)) {
+          const CT = window.casoraTheme;
+          if (!CT || typeof CT.setScope !== "function") throw new Error(t("The settings could not be read. Reload the page, then try again."));
+          await CT.setScope(cs.scope);
+          cs.scope0 = cs.scope;
+          done.push(t("Saved"));
         }
         if (liveDirty(this)) {
           await this._csLiveSave();

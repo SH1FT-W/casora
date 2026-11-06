@@ -304,11 +304,12 @@ customElements.whenDefined("casora-panel").then(() => {
       row.className = "row casora-lookscope";
       const lab = document.createElement("label");
       lab.textContent = tr("Only on Casora dashboards");
-      const sw = this._boolSwitch(CT.scope() === "casora", false, (v) => {
-        Promise.resolve(CT.setScope(v ? "casora" : "all")).catch((e) => {
-          console.warn("Casora: design scope could not be set", e);
-          if (sw._set) sw._set(CT.scope() === "casora");
-        });
+      // A draft like every other setting: "Save settings" applies it, discarding takes it back.
+      const cs = this._cs || (this._cs = {});
+      const sw = this._boolSwitch((cs.scope !== undefined ? cs.scope : CT.scope()) === "casora", false, (v) => {
+        if (cs.scope0 === undefined) cs.scope0 = CT.scope();
+        cs.scope = v ? "casora" : "all";
+        if (typeof this._csBar === "function") this._csBar();
       }, tr("Only on Casora dashboards"));
       row.append(lab, sw);
       // The first answer of the server may come after this page was drawn (no cache yet). One listener for the
@@ -318,7 +319,9 @@ customElements.whenDefined("casora-panel").then(() => {
         P._casoraScopeHooked = true;
         CT.onChange(() => {
           const cur = P._casoraScopeSw && P._casoraScopeSw.deref();
-          if (cur && cur.isConnected && cur._set) cur._set(CT.scope() === "casora");
+          const d = cur && cur.isConnected && cur.getRootNode().host;
+          // An unsaved choice stays on the switch.
+          if (cur && cur.isConnected && cur._set && !(d && d._cs && d._cs.scope !== undefined)) cur._set(CT.scope() === "casora");
         });
       }
       const sh = document.createElement("div");
