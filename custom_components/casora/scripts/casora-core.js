@@ -13076,6 +13076,8 @@ window.casoraMenuGlass = {
   var DIAL_CSS = '.hui-stage.dial{background:none;padding:0;gap:12px;align-items:center;}'
     // The button-card field around the stage clips (.ellipsis): the chosen moon's ring and glow must not be cut.
     + '.ellipsis:has(.hui-stage.dial){overflow:visible !important;}'
+    // The stage card's own ha-card clipped the glow of an active moon at the dial's foot into a square (owner, 06.11.2026).
+    + 'ha-card:has(.hui-stage.dial){overflow:visible !important;}'
     + '.hui-stage.dial.mb{padding-bottom:20px;}'
     // The bottom moon hangs below the wheel: the pill under it keeps its distance (review 2: „Zuhause“ touched it).
     + '.hui-stage.dial.mb > .hui-dl + .hui-st-act{margin-top:24px;}'
