@@ -72,6 +72,18 @@ umstellen:
         boolean:
 einrichten:
 setup_overview:
+setup_plan:
+  fields:
+    dashboard:
+      required: false
+      example: "casora-home"
+      selector:
+        text:
+    rooms:
+      required: true
+      example: '[{"area_id": "kitchen", "devices": [{"device_id": "0123456789abcdef0123456789abcdef", "name": "Ceiling light"}]}]'
+      selector:
+        object:
 set_timer:
   fields:
     entity_id:

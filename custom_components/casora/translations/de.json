@@ -196,6 +196,20 @@
       "name": "Einrichtungs-Übersicht",
       "description": "Nur lesen: Räume, Geräte ohne Bereich und Geräte, die noch auf keiner Casora-Kachel liegen, je mit vorgeschlagenem Kacheltyp. Für eigene Assistenten, z. B. über einen MCP-Server."
     },
+    "setup_plan": {
+      "name": "Aufteilung vorschlagen",
+      "description": "Prüft eine vorgeschlagene Aufteilung (welches Gerät in welchem Bereich auf eine Kachel kommt, mit Kachelname und -typ) und antwortet mit einer Vorschau. Ändert kein Dashboard: Das Casora Studio zeigt den Vorschlag, du prüfst ihn, baust die Kacheln ein und speicherst. Für eigene Assistenten, z. B. über einen MCP-Server.",
+      "fields": {
+        "dashboard": {
+          "name": "Dashboard",
+          "description": "Adresse (url_path) eines Casora-Dashboards. Leer: das einzige, sonst das erste."
+        },
+        "rooms": {
+          "name": "Räume",
+          "description": "Liste aus {area_id, devices: [{device_id, name?, tile?}]}: name ist der Kachelname, tile der Kacheltyp (leer: Casoras Vorschlag)."
+        }
+      }
+    },
     "set_timer": {
       "name": "Zeitschalter setzen",
       "description": "Schaltet eine Entität nach einigen Minuten aus oder an. Ersetzt einen bestehenden Zeitschalter derselben Entität. Endet der Zeitschalter, feuert Casora das Ereignis casora_timer_finished (entity_id, action, reason: expired, manual oder cancelled). Antwortet auf Wunsch mit entity_id, at und start.",
@@ -356,6 +370,12 @@
     },
     "timer_invalid_minutes": {
       "message": "Ungültige Minuten: {minutes}. Erlaubt ist eine ganze Zahl von 1 bis {max}."
+    },
+    "setup_plan_no_dashboard": {
+      "message": "Es gibt noch kein Casora-Dashboard. Lege zuerst eins im Casora Studio an."
+    },
+    "setup_plan_not_casora": {
+      "message": "{dashboard} ist kein Casora-Dashboard. Casora-Dashboards: {dashboards}"
     }
   },
   "issues": {

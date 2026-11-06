@@ -248,8 +248,47 @@ You need an MCP server that can **call Home Assistant actions**, for example [ha
    - `dashboards`: your Casora dashboards.
 2. **Let your assistant sort devices into areas.** That is Home Assistant's own job, so the assistant uses Home Assistant's tools for it (with ha-mcp, for example, the tool that updates a device). Check its suggestions before you confirm them.
 3. **Fill the rooms.** Run the setup assistant (or **⋯ › Setup assistant…**) and choose **Set up automatically**: devices now land in the right rooms. Later, the Studio's device assistant adds new devices to an existing dashboard.
+4. **Propose a layout.** Your assistant can also say which device goes on a tile in which room, and what the tile is called. `casora.setup_plan` checks the proposal and answers with a preview. It changes no dashboard:
 
-Actions that change a dashboard (rename a tile, add devices, apply a layout) are planned for a later release.
+   ```yaml
+   action: casora.setup_plan
+   data:
+     dashboard: casora-home        # optional: the only (or first) Casora dashboard
+     rooms:
+       - area_id: living_room
+         devices:
+           - device_id: 2b71…
+             name: Heating          # optional: the tile name (default: the device name)
+           - device_id: 77d0…
+             tile: casora_switch    # optional: the tile type (default: Casora's suggestion)
+       - area_id: kitchen
+         devices:
+           - device_id: 8f3c…
+   ```
+
+   The answer (shortened):
+
+   ```json
+   {
+     "plan_id": "c0ffee…",
+     "dashboard": "casora-home",
+     "rooms": [{"area_id": "living_room", "area": "Living room", "tiles": [
+       {"device_id": "2b71…", "device": "Radiator", "main_entity": "climate.radiator", "tile": "thermostat", "name": "Heating"},
+       {"device_id": "77d0…", "device": "Plug 3", "main_entity": "switch.plug_3", "tile": "casora_switch", "name": "Plug 3"}]}],
+     "skipped": [{"device_id": "8f3c…", "area_id": "kitchen", "reason": "already_on_tile",
+                  "detail": "The device is already on a tile of this dashboard."}],
+     "tiles": 2,
+     "next": "Nothing is changed yet. Open the Casora Studio: …"
+   }
+   ```
+
+   - `skipped` lists what cannot go on a tile, with a reason: `unknown_area`, `unknown_device`, `duplicate`, `already_on_tile`, `no_main_entity` (nothing Casora can put on a tile), `unknown_tile`, `tile_does_not_fit` (the device has nothing for that tile type).
+   - Tile types you can name: `light`, `thermostat`, `fbh` (floor heating), `media`, `fan`, `air_purifier`, `cover`, `lock`, `vacuum`, `humidifier`, `casora_camera`, `casora_alarm`, `casora_lawn_mower`, `casora_switch`, and the appliances `casora_washer`, `casora_dryer`, `casora_dishwasher`, `casora_oven`, `casora_fridge`, `casora_3d_printer` (only when Casora recognises the device as one). Leave `tile` out and Casora picks, as in `suggested_tile`.
+   - One tile per device. A lamp with two channels gets one tile here; the device assistant in the Studio offers both.
+   - The valid part is kept as **the** pending suggestion (one at a time). A new call replaces it; a call with nothing valid removes it.
+5. **Open the Studio, check, apply, save.** The Studio shows *Suggestion from your assistant: 3 devices in 2 rooms* above the preview. **Review** opens the device assistant with exactly these tiles: change a room or tile type, or untick a device, then **Add**. The tiles are an ordinary unsaved change: look at them in the preview and **Save** (or undo). **Discard** drops the suggestion. A room only gets tiles when the dashboard has a room named like the area; otherwise the device shows up under *Not in a room yet*.
+
+Renaming tiles that are already on a dashboard is not part of this: the names in a proposal are for the new tiles.
 
 ## Privacy in detail
 

@@ -196,6 +196,20 @@
       "name": "Aperçu de la configuration",
       "description": "Lecture seule : pièces, appareils sans zone et appareils qui ne sont encore sur aucune tuile Casora, chacun avec un type de tuile suggéré. Pour ton propre assistant, par exemple via un serveur MCP."
     },
+    "setup_plan": {
+      "name": "Proposer une disposition",
+      "description": "Vérifie une disposition proposée (quel appareil va sur une tuile dans quelle pièce, avec nom et type de tuile) et répond par un aperçu. Ne modifie aucun tableau de bord : le Casora Studio affiche la proposition, tu la vérifies, ajoutes les tuiles et enregistres. Pour ton propre assistant, par exemple via un serveur MCP.",
+      "fields": {
+        "dashboard": {
+          "name": "Tableau de bord",
+          "description": "Chemin (url_path) d'un tableau de bord Casora. Vide : le seul, sinon le premier."
+        },
+        "rooms": {
+          "name": "Pièces",
+          "description": "Liste de {area_id, devices: [{device_id, name?, tile?}]} : name est le nom de la tuile, tile le type de tuile (vide : la suggestion de Casora)."
+        }
+      }
+    },
     "set_timer": {
       "name": "Programmer une minuterie",
       "description": "Éteint ou allume une entité après un nombre de minutes. Remplace une minuterie existante pour la même entité. À la fin de la minuterie, Casora déclenche l'événement casora_timer_finished (entity_id, action, reason : expired, manual ou cancelled). Peut répondre avec entity_id, at et start.",
@@ -356,6 +370,12 @@
     },
     "timer_invalid_minutes": {
       "message": "Minutes non valides : {minutes}. Utilise un nombre entier de 1 à {max}."
+    },
+    "setup_plan_no_dashboard": {
+      "message": "Il n'y a pas encore de tableau de bord Casora. Crées-en d'abord un dans le Casora Studio."
+    },
+    "setup_plan_not_casora": {
+      "message": "{dashboard} n'est pas un tableau de bord Casora. Tableaux de bord Casora : {dashboards}"
     }
   },
   "issues": {
