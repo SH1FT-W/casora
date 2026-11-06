@@ -1116,6 +1116,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           slot.appendChild(el);
         }
         slot.setAttribute('data-casora-nodismiss', '');
+        // A chart reads under the pointer: its card may have no tap action (button-card's ha-card „disabled“ sets
+        // pointer-events none, which the slot inherited – the heating Verlauf did not react, owner 06.11.2026).
+        slot.style.pointerEvents = 'auto';
         el.setConfig(cfg);
         el.hass = ha && ha.hass;
         clearInterval(slot._hpTick);
