@@ -161,10 +161,14 @@
   }
 
   // Read/write the stored choice (casora/settings: set replaces everything, so read fresh and merge).
-  async function load(hass) {
+  // panel: read through its _settingsOnce, shared with the scene list while the Studio opens.
+  async function load(hass, panel) {
     try {
-      const r = await hass.callWS({ type: "casora/settings/get" });
-      const ids = (((r && r.settings) || {}).community || {}).added;
+      const S = panel && typeof panel._settingsOnce === "function"
+        ? await panel._settingsOnce()
+        : ((await hass.callWS({ type: "casora/settings/get" })) || {}).settings;
+      if (!S) return W.casoraCommunityOn;
+      const ids = ((S || {}).community || {}).added;
       W.casoraCommunityOn = new Set(Array.isArray(ids) ? ids.filter((x) => typeof x === "string") : []);
     } catch (e) { /* no settings: nothing added */ }
     return W.casoraCommunityOn;
@@ -341,7 +345,7 @@
     const load0 = P._load;
     if (typeof load0 === "function") {
       P._load = function () {
-        if (this._hass && !this._comLoaded) this._comLoaded = load(this._hass);
+        if (this._hass && !this._comLoaded) this._comLoaded = load(this._hass, this);
         return load0.apply(this, arguments);
       };
     }

@@ -653,8 +653,10 @@
     // shows (_casoraSettingSwitch). Read once.
     const readSettings = (panel) => {
       if (panel._casoraSettingsRead || !panel._hass) return;
-      panel._casoraSettingsRead = panel._hass.callWS({ type: "casora/settings/get" })
-        .then((x) => (x && x.settings) || {}).catch(() => ({}));
+      // Shared with the Community tiles (_settingsOnce): one request while the Studio opens.
+      panel._casoraSettingsRead = (typeof panel._settingsOnce === "function"
+        ? panel._settingsOnce().then((x) => x || {})
+        : panel._hass.callWS({ type: "casora/settings/get" }).then((x) => (x && x.settings) || {})).catch(() => ({}));
       panel._casoraSettingsRead.then((S) => {
         panel._casoraSettingsNow = S;
         const hide = ((S.scenes || {}).exclude || []).filter(Boolean);

@@ -516,6 +516,7 @@
           cs.fromFile = false;
           // The hints in the Studio pages (scenes …) read again.
           this._casoraSettingsRead = null;
+          this._settingsP = null;
           this.shadowRoot.querySelectorAll(".casora-plink").forEach((x) => x.remove());
           done.push(t("Saved – reload open dashboards to apply"));
         }

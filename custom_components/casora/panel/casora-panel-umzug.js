@@ -846,7 +846,7 @@
     P._casoraCardsReady = async function () {
       if (!customElements.get("button-card")) {
         let res = [];
-        try { res = await this._hass.callWS({ type: "lovelace/resources" }); } catch (e) { res = []; }
+        try { res = await (this._resources ? this._resources() : this._hass.callWS({ type: "lovelace/resources" })); } catch (e) { res = []; }
         for (const r of res || []) {
           const url = String(r.url || "");
           if (!url) continue;

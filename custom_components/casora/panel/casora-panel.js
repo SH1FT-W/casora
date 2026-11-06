@@ -13701,6 +13701,31 @@ class CasoraPanel extends HTMLElement {
     this._paintDashes();
   }
 
+  // The Lovelace resource list for one load: the requirement check, _syncMods and the card loader ask within
+  // a moment of each other (one after another while the Studio opens) – one request instead of three. Asked
+  // again after 5 s, so a card installed meanwhile counts on the next load.
+  _resources() {
+    const now = Date.now();
+    if (!this._resP || !(now - this._resAt < 5000)) {
+      this._resAt = now;
+      const p = this._resP = this._ws({ type: "lovelace/resources" });
+      p.catch(() => { if (this._resP === p) this._resP = null; });
+    }
+    return this._resP;
+  }
+
+  // casora/settings/get shared by the readers that only look while the Studio opens (scene list, Community
+  // tiles), for 5 s; null when it cannot be read. Saving still reads fresh (settings/set replaces everything).
+  _settingsOnce() {
+    const now = Date.now();
+    if ((!this._settingsP || !(now - this._settingsAt < 5000)) && this._hass) {
+      this._settingsAt = now;
+      this._settingsP = this._hass.callWS({ type: "casora/settings/get" })
+        .then((r) => (r && r.settings) || {}, () => null);
+    }
+    return this._settingsP || Promise.resolve(null);
+  }
+
   async _ws(msg) {
     for (let attempt = 0; ; attempt++) {
       try {
@@ -16044,7 +16069,7 @@ class CasoraPanel extends HTMLElement {
   async _missingReqs() {
     let urls = [];
     try {
-      const res = await this._ws({ type: "lovelace/resources" });
+      const res = await this._resources();
       urls = (res || []).map((r) => String(r.url || ""));
     } catch (e) {
       urls = null;
@@ -16080,7 +16105,7 @@ class CasoraPanel extends HTMLElement {
   async _syncMods() {
     let urls;
     try {
-      urls = (await this._ws({ type: "lovelace/resources" }) || []).map((r) => String(r.url || ""));
+      urls = (await this._resources() || []).map((r) => String(r.url || ""));
     } catch (e) {
       console.warn("Casora: could not read the resource list;",
         "optional settings were left as they were", e);
