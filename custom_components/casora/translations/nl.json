@@ -196,6 +196,20 @@
       "name": "Installatieoverzicht",
       "description": "Alleen lezen: kamers, apparaten zonder ruimte en apparaten die nog op geen Casora-tegel staan, elk met een voorgestelde tegelsoort. Voor je eigen assistent, bijvoorbeeld via een MCP-server."
     },
+    "setup_plan": {
+      "name": "Indeling voorstellen",
+      "description": "Controleert een voorgestelde indeling (welk apparaat op een tegel komt in welke ruimte, met tegelnaam en -type) en antwoordt met een voorbeeld. Wijzigt geen dashboard: de Casora Studio toont het voorstel, jij controleert het, voegt de tegels toe en slaat op. Voor je eigen assistent, bijvoorbeeld via een MCP-server.",
+      "fields": {
+        "dashboard": {
+          "name": "Dashboard",
+          "description": "Adres (url_path) van een Casora-dashboard. Leeg: het enige, anders het eerste."
+        },
+        "rooms": {
+          "name": "Ruimtes",
+          "description": "Lijst van {area_id, devices: [{device_id, name?, tile?}]}: name is de tegelnaam, tile het tegeltype (leeg: het voorstel van Casora)."
+        }
+      }
+    },
     "set_timer": {
       "name": "Timer instellen",
       "description": "Schakelt een entiteit na een aantal minuten uit of in. Vervangt een bestaande timer voor dezelfde entiteit. Als de timer afloopt, verstuurt Casora het event casora_timer_finished (entity_id, action, reason: expired, manual of cancelled). Kan antwoorden met entity_id, at en start.",
@@ -356,6 +370,12 @@
     },
     "timer_invalid_minutes": {
       "message": "Ongeldige minuten: {minutes}. Gebruik een geheel getal van 1 tot {max}."
+    },
+    "setup_plan_no_dashboard": {
+      "message": "Er is nog geen Casora-dashboard. Maak er eerst een aan in de Casora Studio."
+    },
+    "setup_plan_not_casora": {
+      "message": "{dashboard} is geen Casora-dashboard. Casora-dashboards: {dashboards}"
     }
   },
   "issues": {

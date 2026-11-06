@@ -156,9 +156,52 @@ def _suggest_area(name: str, ent_areas: list[str], areas: dict[str, str]) -> str
     return max(hits)[1] if hits else None
 
 
+def entities_by_device(hass: HomeAssistant) -> dict[str, list]:
+    """device_id → its enabled registry entries, sorted by entity id."""
+    from homeassistant.helpers import entity_registry as er
+
+    by_dev: dict[str, list] = {}
+    for e in er.async_get(hass).entities.values():
+        if e.device_id and not e.disabled_by:
+            by_dev.setdefault(e.device_id, []).append(e)
+    for regs in by_dev.values():
+        regs.sort(key=lambda e: e.entity_id)
+    return by_dev
+
+
+def device_entities(hass: HomeAssistant, regs: list) -> tuple[list[lf.Ent], frozenset[str], list[lf.Ent]]:
+    """(entities with a state, hidden entity ids, visible ones without a category) of one device."""
+    ents = [lf.Ent(e.entity_id, e.translation_key, e.platform, e.entity_category, e.icon or e.original_icon)
+            for e in regs if hass.states.get(e.entity_id) is not None]
+    hidden = frozenset(e.entity_id for e in regs if e.hidden_by)
+    return ents, hidden, [e for e in ents if not e.category and e.entity_id not in hidden]
+
+
+def on_tile(device_id: str, visible: list[lf.Ent], used: set[str]) -> bool:
+    """The device or one of its entities (measurements aside) is already on a tile."""
+    return device_id in used or any(e.entity_id in used and e.domain not in ("sensor", "binary_sensor")
+                                    for e in visible)
+
+
+def device_suggestion(hass: HomeAssistant, d: Any, name: str, ents: list[lf.Ent],
+                      hidden: frozenset[str]) -> tuple[str, str] | None:
+    return suggest_tile(name, ents, hass.states.get, f"{d.model or ''} {d.model_id or ''}",
+                        lf._washdata_type(hass, d), hidden)
+
+
+async def async_casora_refs(hass: HomeAssistant) -> dict[str, set[str]]:
+    """url_path → ids referenced in its views, for every readable Casora dashboard (sorted by url_path)."""
+    out: dict[str, set[str]] = {}
+    for url_path, cfg in sorted((await async_dashboard_configs(hass)).items()):
+        if cfg is UNREADABLE or dashboard_kind(cfg) == "none":
+            continue
+        out[url_path] = collect_refs(cfg)
+    return out
+
+
 async def async_setup_overview(hass: HomeAssistant) -> dict[str, Any]:
     """The answer of casora.setup_overview (see module docstring)."""
-    from homeassistant.helpers import area_registry as ar, device_registry as dr, entity_registry as er
+    from homeassistant.helpers import area_registry as ar, device_registry as dr
     from homeassistant.helpers import floor_registry as fr
 
     areas_reg, floors = ar.async_get(hass), fr.async_get(hass)
@@ -169,29 +212,18 @@ async def async_setup_overview(hass: HomeAssistant) -> dict[str, Any]:
         rooms.append({"area_id": a.id, "name": a.name, "floor": fl.name if fl else None})
         area_names[a.id] = a.name
 
-    dashboards: list[str] = []
-    used: set[str] = set()
-    for url_path, cfg in (await async_dashboard_configs(hass)).items():
-        if cfg is UNREADABLE or dashboard_kind(cfg) == "none":
-            continue
-        dashboards.append(url_path)
-        used |= collect_refs(cfg)
-
-    by_dev: dict[str, list] = {}
-    for e in er.async_get(hass).entities.values():
-        if e.device_id and not e.disabled_by:
-            by_dev.setdefault(e.device_id, []).append(e)
+    refs = await async_casora_refs(hass)
+    dashboards = list(refs)
+    used: set[str] = set().union(*refs.values()) if refs else set()
+    by_dev = entities_by_device(hass)
 
     unassigned: list[dict] = []
     without_tile: list[dict] = []
     for d in dr.async_get(hass).devices.values():
         if d.disabled_by or d.entry_type is not None:
             continue
-        regs = sorted(by_dev.get(d.id, []), key=lambda e: e.entity_id)
-        ents = [lf.Ent(e.entity_id, e.translation_key, e.platform, e.entity_category, e.icon or e.original_icon)
-                for e in regs if hass.states.get(e.entity_id) is not None]
-        hidden = frozenset(e.entity_id for e in regs if e.hidden_by)
-        visible = [e for e in ents if not e.category and e.entity_id not in hidden]
+        regs = by_dev.get(d.id, [])
+        ents, hidden, visible = device_entities(hass, regs)
         if not visible:
             continue
         name = d.name_by_user or d.name or ""
@@ -204,10 +236,9 @@ async def async_setup_overview(hass: HomeAssistant) -> dict[str, Any]:
             unassigned.append(row)
         if d.via_device_id and not any(e.domain in VIA_DOMAINS for e in visible):
             continue
-        if d.id in used or any(e.entity_id in used and e.domain not in ("sensor", "binary_sensor") for e in visible):
+        if on_tile(d.id, visible, used):
             continue
-        hit = suggest_tile(name, ents, hass.states.get, f"{d.model or ''} {d.model_id or ''}",
-                           lf._washdata_type(hass, d), hidden)
+        hit = device_suggestion(hass, d, name, ents, hidden)
         if not hit or hit[1] in used:
             continue
         tile, main = hit

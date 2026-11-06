@@ -367,7 +367,36 @@
     return new Map((items || []).map((it) => [it.id, !!it.room && !parts.has(it.id)]));
   }
 
-  window.casoraAssist = { suggest, localMatch, aiMatch, usedEntities, narrowToRoom, kindOf, partsOf, defaultOn };
+  // A plan from casora.setup_plan (issue 131, setup_plan.py) as rows of the device assistant. A device the
+  // assistant lists already keeps its row (same device and main entity), otherwise the plan adds one; the plan sets
+  // room (the dashboard room named like the HA area, as for suggestions), type and name.
+  // Returns { extra: rows to add, set: Map id → { room, type, name }, focus: ids of the plan, in plan order }.
+  function planItems(hass, plan, all, rooms, types) {
+    const A = (hass && hass.areas) || {};
+    const typeIds = new Set((types || []).map((t) => t.id));
+    const extra = [], set = new Map(), focus = [];
+    ((plan && plan.rooms) || []).forEach((pr) => {
+      const an = norm((A[pr.area_id] || {}).name || pr.area);
+      const room = an ? (rooms || []).find((r) => norm(r.name) === an) || null : null;
+      (pr.tiles || []).forEach((t) => {
+        if (!t || !t.main_entity || !t.device_id) return;
+        const same = (x) => x.device === t.device_id && x.entity === t.main_entity;
+        let it = (all || []).find(same) || extra.find(same);
+        if (!it) {
+          it = { id: "plan:" + t.device_id + ":" + t.main_entity, device: t.device_id, name: t.name || t.device || t.main_entity,
+            room: room ? room.name : null, area: (A[pr.area_id] || {}).name || pr.area || null, type: t.tile,
+            entity: t.main_entity, reason: "plan", rank: 9 };
+          extra.push(it);
+        }
+        if (set.has(it.id)) return;
+        set.set(it.id, { room: room ? room.name : null, type: typeIds.has(t.tile) ? t.tile : it.type, name: t.name || it.name });
+        focus.push(it.id);
+      });
+    });
+    return { extra, set, focus };
+  }
+
+  window.casoraAssist = { suggest, localMatch, aiMatch, usedEntities, narrowToRoom, kindOf, partsOf, defaultOn, planItems };
 
   customElements.whenDefined("casora-panel").then(() => {
     const P = customElements.get("casora-panel").prototype;
@@ -385,17 +414,26 @@
       const rooms = s0.compact.rooms;
       const types = I.TILE_TYPES.filter((t) => !t.hidden && (!t.onlyIf || t.onlyIf(this._hass)));
       const all = suggest(this._hass, rooms, types);
+      // A plan from the user's own assistant (o.plan, casora.setup_plan): its rows, with its rooms, types and names.
+      const plan = o.plan ? planItems(this._hass, o.plan, all, rooms, types) : null;
+      if (plan) {
+        plan.extra.forEach((it) => all.push(it));
+        all.forEach((it) => { const v = plan.set.get(it.id); if (v) it.name = v.name; });
+      }
       // Ticked: what gets built. Parts of a lamp (segments, rings) start unticked, the rest with a room ticked.
       const parts = partsOf(this._hass, all);
       const on0 = defaultOn(this._hass, all);
       const picks = new Map(all.map((it) => [it.id, { on: on0.get(it.id), room: it.room, type: it.type }]));
-      let focus = null; // Ergebnis der Eingabe: nur diese Geräte zeigen
+      if (plan) plan.set.forEach((v, id) => picks.set(id, { on: !!v.room, room: v.room, type: v.type }));
+      let focus = plan ? plan.focus : null; // what the request (or the plan) is about: only these devices are shown
       let kind = "";    // filter chip, "" = all kinds
       let query = "";   // search in names and entity ids
       // Collapsed room groups: on opening only rooms with a ticked device are open (owner 03.11.2026).
       const folded = new Set();
-      all.forEach((it) => folded.add(it.room || ""));
-      all.forEach((it) => { if (picks.get(it.id).on) folded.delete(it.room || ""); });
+      all.forEach((it) => folded.add(picks.get(it.id).room || ""));
+      all.forEach((it) => { if (picks.get(it.id).on) folded.delete(picks.get(it.id).room || ""); });
+      // Every group with a plan row starts open – also "Not in a room yet" (area without a room here).
+      if (plan) plan.focus.forEach((id) => folded.delete(picks.get(id).room || ""));
 
       if (!this.shadowRoot.getElementById("casora-assist-css")) {
         const st = document.createElement("style");
@@ -430,7 +468,9 @@
       const s = this._flowScreen({
         icon: "rooms",
         title: "Device Assistant",
-        lede: all.length
+        lede: plan
+          ? "Your assistant suggests these tiles. Check where each one should go, add them, then save."
+          : all.length
           ? "These devices aren't on your dashboard yet. Check where each one should go, or describe what you want to add."
           : "Every device with a matching tile is already on your dashboard.",
         back: o.back,
@@ -447,6 +487,7 @@
       const note = document.createElement("div");
       note.className = "ffoot casora-assist-note";
       ask.parentNode.appendChild(note);
+      if (plan) note.textContent = "Suggested by your assistant";
 
       const listHost = document.createElement("div");
       s.body.appendChild(listHost);
@@ -641,6 +682,12 @@
         this._renderTabs();
         this._renderForm();
         this._syncPreview();
+        // From a plan: an ordinary unsaved change the user saves (issue 131); the plan is done.
+        if (plan) {
+          if (window.casoraSetupPlan) window.casoraSetupPlan.clear(this, o.plan.plan_id);
+          this._status(n === 1 ? "1 tile added – save to keep it" : n + " tiles added – save to keep them", "ok");
+          return;
+        }
         // Bestätigt ist bestätigt: gleich speichern, sonst gehen die Kacheln beim
         // Verlassen verloren – das übersieht man als neuer Nutzer leicht.
         (async () => {
@@ -652,13 +699,16 @@
       }) || s.acts.lastElementChild;
 
       const run = async () => {
+        // A plan keeps its focus: a request only narrows within the plan, never widens to all suggestions.
+        const planFocus = plan ? plan.focus : null;
         const text = (askIn.value || "").trim();
-        if (!text) { focus = null; note.textContent = ""; render(); return; }
+        if (!text) { focus = planFocus; note.textContent = plan ? "Suggested by your assistant" : ""; render(); return; }
         note.textContent = "Thinking…";
         let m = null;
         try { m = await aiMatch(this._hass, text, all, rooms, types); } catch (e) { m = null; }
         if (!m) m = localMatch(text, all, rooms, types);
-        if (!m) { focus = null; note.textContent = "No matching device found."; render(); return; }
+        if (m && plan) m.ids = m.ids.filter((id) => plan.focus.includes(id));
+        if (!m || !m.ids.length) { focus = planFocus; note.textContent = "No matching device found."; render(); return; }
         m.ids = narrowToRoom(m.ids, m.room, all);
         focus = m.ids;
         m.ids.forEach((id) => {
@@ -707,3 +757,122 @@ customElements.whenDefined("casora-panel").then(() => {
     this._fx.foot.insertBefore(b, this._fx.foot.firstChild);
   };
 });
+
+// Suggestion from the user's own assistant (issue 131): casora.setup_plan keeps a pending plan; the Studio shows it as
+// a banner above the preview. Review opens the device assistant with the plan (same rows and the same "Add" as by
+// hand, then an unsaved change to save), Discard drops it. Checked when a dashboard loads and when the Studio window
+// gets the focus back (the assistant usually runs in another window). Admins only, like the websocket commands.
+(() => {
+  if (window.casoraSetupPlan) return;
+  const tr = (s) => (window.casoraI18n ? window.casoraI18n.t(s) : s);
+
+  // "Suggestion from your assistant: 3 devices in 2 rooms" (English; translated through patterns).
+  function title(plan) {
+    const rooms = ((plan && plan.rooms) || []).filter((r) => (r.tiles || []).length);
+    const n = rooms.reduce((a, r) => a + r.tiles.length, 0), m = new Set(rooms.map((r) => r.area_id)).size;
+    return "Suggestion from your assistant: " + (n === 1 ? "1 device" : n + " devices") + " in " + (m === 1 ? "1 room" : m + " rooms");
+  }
+
+  async function get(panel) {
+    const h = panel && panel._hass;
+    if (!h || !h.user || !h.user.is_admin) return null;
+    try { return ((await h.callWS({ type: "casora/setup_plan/get" })) || {}).plan || null; } catch (e) { return null; }
+  }
+
+  function drop(panel) {
+    const b = panel.shadowRoot && panel.shadowRoot.querySelector(".cp-plan");
+    if (b) b.remove();
+  }
+
+  async function clear(panel, planId) {
+    drop(panel);
+    try { await panel._hass.callWS(planId ? { type: "casora/setup_plan/clear", plan_id: planId } : { type: "casora/setup_plan/clear" }); } catch (e) { /* stays pending */ }
+  }
+
+  // Review: on the plan's dashboard (switch to it first), then the device assistant with the plan.
+  async function review(panel, plan) {
+    if (plan.dashboard && plan.dashboard !== panel._dashUrl) {
+      panel._setDash(plan.dashboard);
+      if (typeof panel._remember === "function") panel._remember(plan.dashboard);
+      await panel._load();
+    }
+    if ((plan.dashboard && panel._dashUrl !== plan.dashboard) || !panel._state || panel._flowMode) return;
+    panel._casoraAssist({ plan });
+  }
+
+  function paint(panel, plan) {
+    const root = panel.shadowRoot;
+    const stage = root && root.querySelector(".body > .stage");
+    let b = root && root.querySelector(".cp-plan");
+    if (!plan || !stage) { if (b) b.remove(); return; }
+    if (b && b.dataset.plan === plan.plan_id) return;
+    if (!root.getElementById("casora-plan-css")) {
+      const st = document.createElement("style");
+      st.id = "casora-plan-css";
+      st.textContent = ".cp-plan{display:flex;align-items:center;flex-wrap:wrap;gap:10px 12px;margin:10px 16px 6px;padding:12px 14px;"
+        + "border-radius:var(--r-l);background:var(--casora-popup-row-fill,rgba(255,255,255,.08));color:var(--ink)}"
+        + ".cp-plan .cp-pt{flex:1 1 240px;min-width:0}"
+        + ".cp-plan .cp-pt b{display:block;font:600 var(--t-callout) var(--casora-font-studio, system-ui);letter-spacing:-.01em}"
+        + ".cp-plan .cp-pt span{display:block;margin-top:2px;font:400 var(--t-foot) var(--casora-font-studio, system-ui);color:var(--ink-2);line-height:1.35}"
+        + ".cp-plan .cp-pa{display:flex;gap:8px;flex:0 0 auto}"
+        + ".cp-plan button{appearance:none;border:0;border-radius:999px;min-height:36px;padding:0 14px;font:600 var(--t-foot) var(--casora-font-studio, system-ui);cursor:pointer;"
+        + "background:var(--casora-studio-chip,rgba(118,118,128,.14));color:inherit}"
+        + ".cp-plan button.cp-go{background:var(--accent);color:var(--on-accent,#fff)}";
+      root.appendChild(st);
+    }
+    if (b) b.remove();
+    b = document.createElement("div");
+    b.className = "cp-plan";
+    b.dataset.plan = plan.plan_id || "";
+    b.setAttribute("role", "region");
+    b.setAttribute("data-no-i18n", "");
+    const txt = document.createElement("div");
+    txt.className = "cp-pt";
+    const t = document.createElement("b");
+    t.textContent = tr(title(plan));
+    const sub = document.createElement("span");
+    sub.textContent = tr("Nothing is changed yet. Review it in the device assistant, add the tiles and save.");
+    txt.appendChild(t);
+    txt.appendChild(sub);
+    const acts = document.createElement("div");
+    acts.className = "cp-pa";
+    const no = document.createElement("button");
+    no.type = "button";
+    no.textContent = tr("Discard");
+    no.onclick = async () => { await clear(panel, plan.plan_id); panel._status(tr("Suggestion discarded"), "ok"); };
+    const go = document.createElement("button");
+    go.type = "button";
+    go.className = "cp-go";
+    go.textContent = tr("Review");
+    go.onclick = () => review(panel, plan);
+    acts.appendChild(no);
+    acts.appendChild(go);
+    b.appendChild(txt);
+    b.appendChild(acts);
+    stage.parentNode.insertBefore(b, stage);
+  }
+
+  async function check(panel) {
+    if (!panel || panel._casoraPlanBusy) return;
+    panel._casoraPlanBusy = true;
+    try { paint(panel, await get(panel)); } finally { panel._casoraPlanBusy = false; }
+  }
+
+  window.casoraSetupPlan = { title, get, clear, check, paint };
+
+  customElements.whenDefined("casora-panel").then(() => {
+    const P = customElements.get("casora-panel").prototype;
+    if (P.__casoraSetupPlan || typeof P._load !== "function") return;
+    P.__casoraSetupPlan = true;
+    const load = P._load;
+    P._load = async function () {
+      const r = await load.apply(this, arguments);
+      check(this);
+      if (!this._casoraPlanFocus) {
+        this._casoraPlanFocus = () => { if (this.isConnected && document.visibilityState !== "hidden") check(this); };
+        window.addEventListener("focus", this._casoraPlanFocus);
+      }
+      return r;
+    };
+  });
+})();
