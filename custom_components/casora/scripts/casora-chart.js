@@ -201,6 +201,8 @@
     var a = new Date(t), b = new Date(now), same = a.toDateString() === b.toDateString();
     return C.uhr((same ? C.tr('Heute') : C.wd(t)) + ', ' + C.hm(t, h12));
   };
+  // Smallest scale: y.span, else 1° for a temperature.
+  C.minSpan = function (y, u) { return y.span > 0 ? y.span : /°/.test(u || '') ? 1 : 0; };
   /* Device colours (iOS tones from the callers) → one of the four checked chart steps. */
   C.color = function (c) {
     c = String(c || '').trim();
@@ -569,7 +571,8 @@
       var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
       // y.span: the smallest range the scale shows (water temperature 2 °C, 26.11.9) – a sensor stepping 0.2 °C
       // filled the whole height (25.1 ↔ 25.3 drawn as a zigzag from top to bottom). Centred on the values.
-      if (!lab && y.span > 0 && vals.length && hi - lo < y.span) { var ym = (lo + hi) / 2; lo = ym - y.span / 2; hi = ym + y.span / 2; }
+      var ys = C.minSpan(y, this._unit(s0));
+      if (!lab && ys > 0 && vals.length && hi - lo < ys) { var ym = (lo + hi) / 2; lo = ym - ys / 2; hi = ym + ys / 2; }
       var sc = lab ? { lo: y.min || 0, hi: y.max != null ? y.max : lab.length - 1, ticks: lab.map(function (l, i) { return i; }) }
         : C.nice(y.min != null ? Math.min(y.min, lo) : lo, y.max != null ? Math.max(y.max, hi) : hi, 2, y.min === 0);
       if (spark && vals.length) sc = { lo: lo - (hi - lo < 1e-9 ? 1 : 0), hi: hi + (hi - lo < 1e-9 ? 1 : 0), ticks: [] };

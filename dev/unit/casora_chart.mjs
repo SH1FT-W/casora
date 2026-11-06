@@ -177,13 +177,13 @@ console.log('ok tap');
 // several attribute curves of one entity; up to 43 KB before the chart plate got its shadow, 28.10.2026; 14 KB / 44 KB until the heatmap, issue 100: grid, scale and
 // hourly rasterisation across clock changes took ~3.3 KB gzip / ~11.5 KB; 17.5 KB until 26.11.1: the energy stage's unit
 // follows the read bar, and CI's zlib packs ~75 bytes more than a local Node; 56 KB until series named after their entity,
-// entity_name – no names in card configs, HACS review 5).
+// entity_name – no names in card configs, HACS review 5); 57 KB / 18 KB gzip until a temperature scale spans at least 1 degree (06.11.2026).
 {
   const zlib = await import('node:zlib');
   // The shared casora-esc block (HTML escaping, same in every standalone file) does not count against the budget.
   const own = src.replace(/\/\/ casora-esc:begin[\s\S]*?\/\/ casora-esc:end\n?/, '');
   const raw = Buffer.byteLength(own), gz = zlib.gzipSync(own).length;
-  assert.ok(raw <= 57 * 1024, 'casora-chart.js ' + raw + ' Bytes > 57 KB');
-  assert.ok(gz <= 18 * 1024, 'casora-chart.js gzip ' + gz + ' Bytes > 18 KB');
+  assert.ok(raw <= 58 * 1024, 'casora-chart.js ' + raw + ' Bytes > 58 KB');
+  assert.ok(gz <= 18.5 * 1024, 'casora-chart.js gzip ' + gz + ' Bytes > 18.5 KB');
 }
 console.log('ok size');
