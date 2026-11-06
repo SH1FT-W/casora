@@ -68,4 +68,14 @@ assert.deepEqual(N('binary_sensor.zone_1'), { label: 'TÜR', sub: 'Diele' }, 'us
 window.CASORA_SETTINGS = { contacts: { names: { 'binary_sensor.zone_3': 'Wintergarten' } } };
 assert.deepEqual(N('binary_sensor.zone_3'), { label: 'Wintergarten', sub: 'Stube' }, 'own name from the settings wins');
 
+// A combined sensor (contact + tilt sensor, a template without device or area) takes the room of the sensors it
+// stands for (owner, Test-HA 06.11.2026: „Terrassentür“ had no room below).
+window.CASORA_SETTINGS = {};
+add('binary_sensor.terrace_contact', 'aqara', 'living', 'Terrassentür Kontakt', 'door');
+add('binary_sensor.terrace_combo', null, null, 'Terrassentür', 'door');
+const realContacts = window.casoraContacts;
+window.casoraContacts = () => ({ groups: [], excl: [], tilt: {}, sub: { 'binary_sensor.terrace_contact': 'binary_sensor.terrace_combo' } });
+assert.deepEqual(N('binary_sensor.terrace_combo'), { label: 'Terrassentür', sub: 'Stube' }, 'combined sensor: room of its contact');
+window.casoraContacts = realContacts;
+
 console.log('contacts_row_names: ok');

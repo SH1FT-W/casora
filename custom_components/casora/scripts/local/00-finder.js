@@ -1156,6 +1156,16 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     var S = (hass && hass.states) || {}, E = (hass && hass.entities) || {}, D = (hass && hass.devices) || {}, A = (hass && hass.areas) || {};
     var ent = E[id] || {}, dev = ent.device_id ? D[ent.device_id] || null : null;
     var aid = ent.area_id || (dev && dev.area_id);
+    // A combined sensor (template, no device or area) takes the room of a sensor it stands for.
+    if (!aid && typeof window.casoraContacts === 'function') {
+      var sub = (window.casoraContacts(hass) || {}).sub || {};
+      Object.keys(sub).some(function (x) {
+        if (sub[x] !== id) return false;
+        var e2 = E[x] || {}, d2 = e2.device_id ? D[e2.device_id] : null;
+        aid = e2.area_id || (d2 && d2.area_id) || null;
+        return !!aid;
+      });
+    }
     var area = aid && A[aid] ? String(A[aid].name || '').trim() || null : null;
     var withSub = function (label) {
       return { label: label, sub: area && String(label).toLowerCase() !== area.toLowerCase() ? area : null };
