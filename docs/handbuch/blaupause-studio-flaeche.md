@@ -1,12 +1,13 @@
 # Blaupause: neue Studio-Fläche
 
 Das Studio ist das Panel unter `custom_components/casora/panel/casora-panel*.js` (20 Dateien, eine Klasse,
-Teile hängen sich als `P._name = function …` an den Prototyp). Es ist bewusst ein **Werkzeug**: eigene
-Token, eigene Schriftskala.
+Teile hängen sich als `P._name = function …` an den Prototyp). Es hat eigene Token und eine eigene
+Schriftskala, die im Casora-/Nebel-Look aus den Design-Tokens des Themes gespeist werden.
 
-> **OFFEN – Entscheidung Maintainer (Studio-Sprache):** A iOS-nah (SF im Inspektor, Radien 8/12/18/26) /
-> B Casora-Sprache (Inter, Radien 12/18/24/32, Sand-Platten). Bis zur Wahl: nur die vorhandenen
-> Studio-Token unten verwenden – dann ist ein späterer Wechsel eine Token-Änderung, kein Umbau.
+> **Entschieden 06.11.2026 (Studio-Sprache): B Casora-Sprache** – Inter (`--casora-font-studio`),
+> Radien 12/18/24/32 aus den Theme-Tokens, Sand-Platten (`--casora-studio-*` in `theme_weich.yaml`).
+> Umgesetzt als Token-Änderung: die Studio-Token unten bleiben die einzige Quelle; ohne Casora-Theme
+> gelten die Rückfallwerte (iOS-Werkzeug-Look 8/12/18/26, SF/System).
 
 ## 1. Welche Fläche – welcher Weg
 
@@ -27,7 +28,7 @@ Definiert im Panel-Stil (`casora-panel.js`, „Schrift- und Eckensystem des Stud
 | Token | Wert |
 |---|---|
 | Schrift | `--t-large 34` · `--t-title 22` · `--t-body 17` · `--t-callout 15` · `--t-foot 13` · `--t-caption 12` |
-| Radien | `--r-s 8` · `--r-m 12` · `--r-l 18` · `--r-xl 26` · Gruppe `--r-group` |
+| Radien | Casora-Look `--r-s 12` · `--r-m 18` · `--r-l 24` · `--r-xl 32` (Theme-Tokens `--casora-r-small/-element/-row/-surface`; Rückfall ohne Casora-Theme 8/12/18/26) · Gruppe `--r-group` |
 | Abstände | `--gap 18` · `--card-pad-h 16` · Zeile `--head-row 26` |
 | Feldhöhe | `--k-h` (40 bzw. 46 am Handy); Einstellungszeilen min. 44 px (`r19_einstellungen_feldgroesse`) |
 | Farben | `--casora-studio-*` aus dem Theme: `ink`, `cap`, `accent`, `done`, `chip`, `field`, `pane`, `sw-on/off`, `shadow` … |

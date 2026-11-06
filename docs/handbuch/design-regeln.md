@@ -46,7 +46,7 @@ Nebel hat seit 1.3 dieselben Ecken wie Casora (Kacheln 32, Handy- und Szenen-Kac
 | Badges | Pille, Ruhe-Schatten (auch Handy), Auftritt-/Breiten-Bewegung über `--casora-badge-enter-ease` / `--casora-badge-flip-ease` (Auftritt / Schieber) |
 | Menüs (Glocke, ⋯, Raumleisten-Menü, Räume/Szenen am Handy, Welle) | Fenster 34, Zeile 52 hoch mit Radius 26, Kreis 36, Rand 8, Schrift 15/13, Schatten „schwebend“ (`--casora-window-shadow` → `--casora-shadow-float`), Auftritt-Kurve, Druck `.97`. Zeilen ohne Platte (E3c). |
 | Navigationsleisten | Raumleiste/Handy-Leiste: Fläche + Ruhe-Schatten (`--casora-pill-rim` → `--casora-shadow-rest`), Markierung als Schieber (`--casora-nav-indicator-ease/-duration`), Tasten-Druck `.97`. Maße der Leisten bleiben (Raumleiste A, Handy-Leiste B). |
-| Studio | `--t-*` = Schrift-Tokens (Titel 22 bleibt), `--r-s` 8 → 12, `--r-m` 12, `--r-l` 18, `--r-xl` 26 → 32 (Karten, Blätter, Vorschau-Rahmen), `--ease` = Auftritt, CSS-Kurven und Knopf-Druck aus den Tokens. Schrift **Inter** über `--casora-font-studio` (entschieden 11.10.): Host und alle festen `system-ui`-Stellen im Studio, Rückfall SF/System. Die Schrift kommt nur von Casora selbst (`/casora_assets/fonts/`, keine fremden Server), eigener Familienname „Casora Studio Inter“, die Vorschau zeigt die Dashboard-Schrift „Inter“. Beide nutzen dieselbe Datei `inter-4.1-latin-var.woff2` (seit 01.11.2026, vorher lud das Studio zusätzlich `inter-v20`, gleiche Umrisse), damit sie nur einmal geladen wird. Neue Schrift = neuer Dateiname (Cache 1 Tag, Adresse ohne `?v=`). |
+| Studio | `--t-*` = Schrift-Tokens (Titel 22 bleibt), `--r-s` 8 → 12, `--r-m` 12 → 18, `--r-l` 18 → 24, `--r-xl` 26 → 32 (Karten, Blätter, Vorschau-Rahmen) – volle Radien-Leiter 12/18/24/32 (Studio-Sprache B, entschieden 06.11.2026), `--ease` = Auftritt, CSS-Kurven und Knopf-Druck aus den Tokens. Schrift **Inter** über `--casora-font-studio` (entschieden 11.10.): Host und alle festen `system-ui`-Stellen im Studio, Rückfall SF/System. Die Schrift kommt nur von Casora selbst (`/casora_assets/fonts/`, keine fremden Server), eigener Familienname „Casora Studio Inter“, die Vorschau zeigt die Dashboard-Schrift „Inter“. Beide nutzen dieselbe Datei `inter-4.1-latin-var.woff2` (seit 01.11.2026, vorher lud das Studio zusätzlich `inter-v20`, gleiche Umrisse), damit sie nur einmal geladen wird. Neue Schrift = neuer Dateiname (Cache 1 Tag, Adresse ohne `?v=`). |
 
 Ausnahmen (bewusst, mit Grund): Animationen per `element.animate()` (WAAPI) können keine CSS-Variable lesen und
 behalten ihre Kurve; die Desktop-Badges wachsen mit `--casora-u-badge` (Schrift u·1,4, Unterzeile 12,32 – feste
@@ -153,7 +153,7 @@ Studio heute: eigener Satz `--t-caption 12 · --t-foot 13 · --t-callout 15 · -
 --t-large 34` (`casora-panel.js`). Neue Studio-Regeln nehmen nur diese.
 
 Gilt (Studio-Schrift, entschieden 11.10.2026): Das Studio schreibt im Casora- und Nebel-Look **Inter**
-(`--casora-font-studio`, siehe § 0), Radien aus den Tokens (12/12/18/32). Ohne Casora-Theme fehlt das Token,
+(`--casora-font-studio`, siehe § 0), Radien aus den Tokens (12/18/24/32, Studio-Sprache B). Ohne Casora-Theme fehlt das Token,
 dann bleibt es bei SF/System.
 
 Gilt (Sprachen-Frage 1, entschieden B): Abschnittsüberschriften sind **normale Überschriften** („Räume“,

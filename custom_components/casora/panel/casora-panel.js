@@ -7143,16 +7143,16 @@ class CasoraPanel extends HTMLElement {
           --scrim-top:var(--casora-studio-scrim-top, rgba(8,8,12,0.33)); --scrim-bot:var(--casora-studio-scrim-bot, rgba(8,8,12,0.57));
           --photo:var(--casora-studio-photo, .46);
 
-          /* Schrift- und Eckensystem des Studios (iOS-Vorbild): sechs Textgrößen,
-             vier Radien. Neue Regeln nehmen nur diese Werte; die Vorschau-Nachbildungen
-             (.miniphone, .miniroom, .fontshot) messen am echten Dashboard und bleiben roh. */
-          /* 1.3 Tokens (um-tokens): im Casora-/Nebel-Look aus den Design-Tokens des Themes – Schrift dieselben
-             Stufen, Radien auf die Token-Stufen (8 → klein 12, 12 = klein, 18 = Element, 26 → Fläche 32). Gruppen
-             und Felder darin behalten ihr Verhältnis (beide --r-m). Ohne Casora-Theme (Hemma 1/2) gelten die
-             Rückfallwerte = bisherige iOS-Werte. */
+          /* Type and corner system of the Studio: six text sizes, four radii.
+             New rules take only these values; the preview replicas
+             (.miniphone, .miniroom, .fontshot) measure the real dashboard and stay raw. */
+          /* Casora design language (decided 06.11.2026): in the Casora/Nebel look the Studio
+             draws the type scale and the radius ladder 12/18/24/32 from the theme's design
+             tokens (small control 12, field/card 18, sheet 24, large surface 32). Without the
+             Casora theme (foreign HA theme) the fallbacks keep the old iOS tool values 8/12/18/26. */
           --t-large:var(--casora-fs-page, 34px); --t-title:22px; --t-body:var(--casora-fs-heading, 17px);
           --t-callout:var(--casora-fs-row, 15px); --t-foot:var(--casora-fs-sub, 13px); --t-caption:var(--casora-fs-label, 12px);
-          --r-s:var(--casora-r-small, 8px); --r-m:var(--casora-r-small, 12px); --r-l:var(--casora-r-element, 18px); --r-xl:var(--casora-r-surface, 26px);
+          --r-s:var(--casora-r-small, 8px); --r-m:var(--casora-r-element, 12px); --r-l:var(--casora-r-row, 18px); --r-xl:var(--casora-r-surface, 26px);
           --r-group:var(--r-xl);
           --card-pad-h:16px;
           --head-row:26px;
