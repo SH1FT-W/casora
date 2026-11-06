@@ -98,8 +98,9 @@ class Bus:
         self.once = []
         self.fired = []
 
-    def async_listen(self, ev, cb):
-        self.cb = cb
+    def async_listen(self, ev, cb, event_filter=None):
+        # Like HA's bus: the filter sees the event data first and can skip the listener.
+        self.cb = lambda e: None if event_filter and not event_filter(e.data) else cb(e)
         return lambda: None
 
     def async_fire(self, ev, data):

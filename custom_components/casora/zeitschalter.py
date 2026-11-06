@@ -179,6 +179,11 @@ class TimerTracker:
                 self._started = self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, callback(_run_late))
 
         @callback
+        def _relevant(data) -> bool:
+            # Runs in the bus before _changed: only entities with a running timer reach it.
+            return data.get("entity_id") in self.timers
+
+        @callback
         def _changed(event) -> None:
             eid = event.data.get("entity_id", "")
             entry = self.timers.get(eid)
@@ -193,7 +198,7 @@ class TimerTracker:
                 # Von Hand geschaltet: Timer verfällt.
                 self.remove(eid, "manual")
 
-        self._unsub.append(self.hass.bus.async_listen(EVENT_STATE_CHANGED, _changed))
+        self._unsub.append(self.hass.bus.async_listen(EVENT_STATE_CHANGED, _changed, event_filter=_relevant))
         self._register_services()
 
     def _register_services(self) -> None:

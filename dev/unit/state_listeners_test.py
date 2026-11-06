@@ -14,6 +14,7 @@ import os
 import sys
 import tempfile
 import warnings
+from datetime import timedelta
 
 warnings.simplefilter("ignore")
 
@@ -158,6 +159,9 @@ class MemStore:
     def async_delay_save(self, fn, delay) -> None:
         self.data = fn()
 
+    async def async_save(self, data) -> None:
+        self.data = data
+
 
 async def t_media_pause() -> None:
     from custom_components.casora.media_pause import PauseTracker
@@ -191,10 +195,46 @@ async def t_media_pause() -> None:
     await hass.async_stop(force=True)
 
 
+# ── zeitschalter.py: timers from the hold menu ───────────────────────────────
+
+async def t_timers() -> None:
+    from homeassistant.util import dt as dt_util
+
+    from custom_components.casora.zeitschalter import TimerTracker
+
+    hass = await new_hass()
+    seen = spy_listen(hass)
+    before = len(seen)
+    timers = TimerTracker(hass, MemStore())
+    await timers.async_start()
+    mine = seen[before:]
+    check("timers: one state_changed listener with a filter", len(mine) == 1 and mine[0][1] is not None)
+    flt = (mine[0][1] if mine else None) or (lambda d: True)
+    check("timers: without a timer nothing passes the filter",
+          not flt({"entity_id": "light.kitchen"}) and not flt({"entity_id": "sensor.power"}))
+
+    hass.states.async_set("light.kitchen", "on")
+    now = dt_util.utcnow()
+    timers.set("light.kitchen", now + timedelta(minutes=30), "turn_off", now)
+    check("timers: the timed light passes the filter, others not",
+          flt({"entity_id": "light.kitchen"}) and not flt({"entity_id": "light.hall"}))
+    hass.states.async_set("light.hall", "off")
+    hass.states.async_set("light.kitchen", "on", {"brightness": 10})
+    await hass.async_block_till_done()
+    check("timers: other changes keep the timer", "light.kitchen" in timers.timers)
+    hass.states.async_set("light.kitchen", "off")
+    await hass.async_block_till_done()
+    check("timers: switched off by hand ends the timer", "light.kitchen" not in timers.timers)
+    check("timers: after that the light no longer passes the filter", not flt({"entity_id": "light.kitchen"}))
+    timers.stop()
+    await hass.async_stop(force=True)
+
+
 async def main() -> None:
     await t_bus_filter()
     await t_helfer()
     await t_media_pause()
+    await t_timers()
 
 
 asyncio.run(main())
