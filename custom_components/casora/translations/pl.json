@@ -65,6 +65,11 @@
         "daily": "Codziennie",
         "manual": "Tylko na żądanie"
       }
+    },
+    "ai_choice": {
+      "options": {
+        "mcp": "Własny asystent (MCP)"
+      }
     }
   },
   "services": {
@@ -295,6 +300,34 @@
         "done_entity": {
           "name": "Pomocnik „Gotowe”",
           "description": "Przełącznik pokazujący „Gotowe”"
+        }
+      }
+    },
+    "ai_jobs": {
+      "name": "Otwarte zadania AI",
+      "description": "Tylko odczyt: zadania AI czekające na twojego asystenta (opcja AI „Własny asystent (MCP)”), z instrukcjami, polami odpowiedzi i załącznikami."
+    },
+    "ai_answer": {
+      "name": "Odpowiedz na zadanie AI",
+      "description": "Twój asystent odpowiada na otwarte zadanie AI. Sprawdza odpowiedź z polami zadania i zwraca ok albo błędy.",
+      "fields": {
+        "job_id": {
+          "name": "Zadanie",
+          "description": "job_id z casora.ai_jobs."
+        },
+        "data": {
+          "name": "Odpowiedź",
+          "description": "Obiekt z kluczami pól zadania."
+        }
+      }
+    },
+    "ai_cancel": {
+      "name": "Anuluj zadanie AI",
+      "description": "Odrzuca otwarte zadanie AI; funkcja, która na nie czeka, zgłasza błąd.",
+      "fields": {
+        "job_id": {
+          "name": "Zadanie",
+          "description": "job_id z casora.ai_jobs."
         }
       }
     }

@@ -65,6 +65,11 @@
         "daily": "Quotidien",
         "manual": "Seulement sur pression d'un bouton"
       }
+    },
+    "ai_choice": {
+      "options": {
+        "mcp": "Ton propre assistant (MCP)"
+      }
     }
   },
   "services": {
@@ -295,6 +300,34 @@
         "done_entity": {
           "name": "Assistant « Terminé »",
           "description": "Interrupteur qui affiche « Terminé »"
+        }
+      }
+    },
+    "ai_jobs": {
+      "name": "Tâches IA en attente",
+      "description": "Lecture seule : les tâches IA qui attendent ton propre assistant (option IA « Ton propre assistant (MCP) »), avec instructions, champs de réponse et pièces jointes."
+    },
+    "ai_answer": {
+      "name": "Répondre à une tâche IA",
+      "description": "Ton propre assistant répond à une tâche IA en attente. Vérifie la réponse avec les champs de la tâche et renvoie ok ou les erreurs.",
+      "fields": {
+        "job_id": {
+          "name": "Tâche",
+          "description": "job_id de casora.ai_jobs."
+        },
+        "data": {
+          "name": "Réponse",
+          "description": "Un objet avec les clés des champs de la tâche."
+        }
+      }
+    },
+    "ai_cancel": {
+      "name": "Annuler une tâche IA",
+      "description": "Supprime une tâche IA en attente ; la fonction qui l'attend signale une erreur.",
+      "fields": {
+        "job_id": {
+          "name": "Tâche",
+          "description": "job_id de casora.ai_jobs."
         }
       }
     }

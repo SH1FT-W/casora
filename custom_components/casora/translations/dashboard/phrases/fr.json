@@ -2816,7 +2816,15 @@
     "Selbsttest gestartet": "Autotest lancé",
     "Selbsttest starten? Der Melder piept laut.": "Lancer l'autotest ? Le détecteur bipe fort.",
     "Zuletzt erhöht": "Dernière hausse",
-    "Nicht in 7 Tagen": "Pas en 7 jours"
+    "Nicht in 7 Tagen": "Pas en 7 jours",
+    "Wartet auf deinen Assistenten …": "En attente de ton assistant…",
+    "Dein Assistent hat nicht rechtzeitig geantwortet": "Ton assistant n'a pas répondu à temps",
+    "Zu viele offene Aufträge für deinen Assistenten": "Trop de tâches en attente pour ton assistant",
+    "Der Auftrag für deinen Assistenten wurde abgebrochen": "La tâche pour ton assistant a été annulée",
+    "Neustart: der Auftrag für deinen Assistenten ist verfallen": "Redémarrage : la tâche pour ton assistant est perdue",
+    "Claude prüft das Rad …": "Claude vérifie le vélo…",
+    "Claude wertet die Heizwoche aus …": "Claude analyse la semaine de chauffage…",
+    "Claude wertet die letzten 7 Tage aus …": "Claude analyse les 7 derniers jours…"
   },
   "patterns": [
     [

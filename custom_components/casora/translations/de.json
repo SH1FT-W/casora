@@ -65,6 +65,11 @@
         "daily": "Täglich",
         "manual": "Nur auf Knopfdruck"
       }
+    },
+    "ai_choice": {
+      "options": {
+        "mcp": "Eigener Assistent (MCP)"
+      }
     }
   },
   "services": {
@@ -295,6 +300,34 @@
         "done_entity": {
           "name": "Erledigt-Helfer",
           "description": "Schalter, der „Erledigt“ anzeigt"
+        }
+      }
+    },
+    "ai_jobs": {
+      "name": "Offene KI-Aufträge",
+      "description": "Nur lesen: die KI-Aufträge, die auf deinen eigenen Assistenten warten (KI-Option „Eigener Assistent (MCP)“), mit Anweisungen, Antwortfeldern und Anhängen."
+    },
+    "ai_answer": {
+      "name": "KI-Auftrag beantworten",
+      "description": "Dein eigener Assistent beantwortet einen offenen KI-Auftrag. Prüft die Antwort gegen die Felder des Auftrags und meldet ok oder die Fehler.",
+      "fields": {
+        "job_id": {
+          "name": "Auftrag",
+          "description": "job_id aus casora.ai_jobs."
+        },
+        "data": {
+          "name": "Antwort",
+          "description": "Ein Objekt mit den Schlüsseln der Felder des Auftrags."
+        }
+      }
+    },
+    "ai_cancel": {
+      "name": "KI-Auftrag abbrechen",
+      "description": "Verwirft einen offenen KI-Auftrag; die Funktion, die darauf wartet, meldet einen Fehler.",
+      "fields": {
+        "job_id": {
+          "name": "Auftrag",
+          "description": "job_id aus casora.ai_jobs."
         }
       }
     }

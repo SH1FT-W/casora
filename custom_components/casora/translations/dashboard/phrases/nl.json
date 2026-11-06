@@ -2816,7 +2816,15 @@
     "Selbsttest gestartet": "Zelftest gestart",
     "Selbsttest starten? Der Melder piept laut.": "Zelftest starten? De melder geeft een luid signaal.",
     "Zuletzt erhöht": "Laatst verhoogd",
-    "Nicht in 7 Tagen": "Niet in 7 dagen"
+    "Nicht in 7 Tagen": "Niet in 7 dagen",
+    "Wartet auf deinen Assistenten …": "Wacht op je assistent…",
+    "Dein Assistent hat nicht rechtzeitig geantwortet": "Je assistent heeft niet op tijd geantwoord",
+    "Zu viele offene Aufträge für deinen Assistenten": "Te veel openstaande opdrachten voor je assistent",
+    "Der Auftrag für deinen Assistenten wurde abgebrochen": "De opdracht voor je assistent is geannuleerd",
+    "Neustart: der Auftrag für deinen Assistenten ist verfallen": "Herstart: de opdracht voor je assistent is vervallen",
+    "Claude prüft das Rad …": "Claude controleert de fiets…",
+    "Claude wertet die Heizwoche aus …": "Claude analyseert de verwarmingsweek…",
+    "Claude wertet die letzten 7 Tage aus …": "Claude analyseert de laatste 7 dagen…"
   },
   "patterns": [
     [

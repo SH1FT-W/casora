@@ -707,9 +707,24 @@
     }
     return null;
   };
-  /* Button only when an AI task is set up (Settings → AI tasks). */
+  /* Your own assistant over MCP answers Casora's AI (ai_jobs.py): the result sensors carry assistent: mcp (sensor.py). */
+  const KI_SENSORS = ['sensor.casora_energie_coach', 'sensor.casora_heizungs_coach', 'sensor.casora_lueftungs_coach',
+    'sensor.casora_kamera_ki', 'sensor.casora_pflanzen_ki', 'sensor.casora_aquarium_ki', 'sensor.casora_ebike_ki',
+    'sensor.casora_update_ki_analyse', 'sensor.casora_rezept_der_woche'];
+  const isMcp = (s) => !!(s && s.attributes && s.attributes.assistent === 'mcp');
+  /* Button only when an AI task is set up (Settings → AI tasks) or your own assistant answers. */
   window._casoraAiReady = function (states) {
-    return Object.keys(states || {}).some((k) => k.indexOf('ai_task.') === 0);
+    return Object.keys(states || {}).some((k) => k.indexOf('ai_task.') === 0) || KI_SENSORS.some((id) => isMcp((states || {})[id]));
+  };
+  /* While a feature runs: with your own assistant the job waits until it answers (hours, not seconds), so say that.
+     src: the feature's result sensor (state object or entity id). */
+  window._casoraAiWait = function (text, src) {
+    let s = src;
+    if (typeof src === 'string') {
+      const ha = document.querySelector('home-assistant');
+      s = ha && ha.hass && ha.hass.states ? ha.hass.states[src] : null;
+    }
+    return isMcp(s) ? 'Wartet auf deinen Assistenten …' : text;
   };
   window._casoraAqAi = function (a, states) {
     const UI = window._casoraUI; if (!UI) return '';
@@ -727,7 +742,7 @@
     const z = it && Z[it.zustand];
     const svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_aquarium_doktor', a))) + '"';
     let body = '';
-    if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">Claude wertet die letzten 7 Tage aus …</div>';
+    if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">' + esc(window._casoraAiWait('Claude wertet die letzten 7 Tage aus …', states[AQ_KI[0]])) + '</div>';
     else if (it && it.status === 'error') body = '<div style="font-size:15px;color:' + T.ink + ';">Auswertung fehlgeschlagen.</div>';
     else if (it && z) {
       body = '<div style="display:flex;align-items:center;justify-content:flex-start;gap:8px;text-align:left;">'

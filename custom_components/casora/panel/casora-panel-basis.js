@@ -1083,14 +1083,17 @@
       paint();
       const lock = el("div", "bs-lock", s.body);
       let noAiTask = false;
-      try { const m = await this._hass.callWS({ type: "casora/ki/models" }); best = m && m.best; noAiTask = !(m && m.all && m.all.length); if (!best) lock.textContent = !noAiTask ? "AI setup needs a stronger AI – for example Claude Opus, Claude Sonnet 4.5 or GPT-5. Settings → AI tasks." : "AI setup needs an AI – for example Claude Opus. Settings → AI tasks."; } catch (e) { best = null; }
+      // mcp: Casora's AI option is "Your own assistant (MCP)". This step waits in the browser for its answer, which an
+      // assistant over MCP cannot give: without a sufficient AI task it points to the MCP path as well (issue 131).
+      let mcpMode = false;
+      try { const m = await this._hass.callWS({ type: "casora/ki/models" }); best = m && m.best; mcpMode = !!(m && m.mcp); noAiTask = !(m && m.all && m.all.length); if (!best) lock.textContent = !noAiTask ? "AI setup needs a stronger AI – for example Claude Opus, Claude Sonnet 4.5 or GPT-5. Settings → AI tasks." : "AI setup needs an AI – for example Claude Opus. Settings → AI tasks."; } catch (e) { best = null; }
       const aiCard = cards.find((c) => c.dataset.k === "ai");
       const showBest = () => { lock.setAttribute("data-no-i18n", ""); lock.textContent = "✦ " + tr("AI") + ": " + best.label; };
       if (!best) {
         aiCard.setAttribute("aria-disabled", "true"); if (pick === "ai") { pick = "auto"; paint(); }
         window.casoraAiUpgrade(this, s.body, (b) => { best = b; aiCard.removeAttribute("aria-disabled"); showBest(); });
         // No ai_task at all: an assistant the user already has can do the setup through an MCP server (issue 131).
-        if (noAiTask) {
+        if (noAiTask || mcpMode) {
           const mcp = el("div", "bs-foot bs-mcp", s.body);
           el("span", "", mcp, "Already have an assistant connected to Home Assistant over MCP? It can read the action casora.setup_overview and sort your devices into areas.");
           mcp.appendChild(document.createTextNode(" "));

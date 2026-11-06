@@ -191,7 +191,7 @@
     if (room) (a.raeume || []).forEach(function (x) { if (x && x.n === room) re = x; });
     var z = ZT[room ? (re && re.zustand) : a.zustand];
     var body;
-    if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">Claude wertet die letzte Woche aus …</div>';
+    if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">' + esc(window._casoraAiWait ? window._casoraAiWait('Claude wertet die letzte Woche aus …', s) : 'Claude wertet die letzte Woche aus …') + '</div>';
     else if (!has) body = '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink2 + ';white-space:normal;">Claude wertet einmal pro Woche (samstags 10 Uhr) Feuchte, CO₂ und Fensterzeiten aus und sagt, wo, wann und wie lange sich Lüften lohnt.</div>';
     else if (room && !re) body = '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink2 + ';white-space:normal;">Für ' + esc(room) + ' gibt es noch keine eigene Auswertung. „Neu auswerten“ erstellt sie für alle Räume.</div>';
     else if (room) body = (z ? '<div style="display:inline-flex;padding:5px 11px;border-radius:999px;background:' + z[2] + ';margin-bottom:10px;font-size:13px;font-weight:700;color:' + z[1] + ';">' + z[0] + '</div>' : '')

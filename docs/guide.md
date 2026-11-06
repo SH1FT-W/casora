@@ -18,6 +18,7 @@ Everything the [README](../README.md) leaves out: setting up, the Studio, moving
 - [Updates](#updates)
 - [AI features (optional)](#ai-features-optional)
 - [Set up with your own assistant over MCP](#set-up-with-your-own-assistant-over-mcp)
+- [Use your own assistant for Casora's AI features](#use-your-own-assistant-for-casoras-ai-features)
 - [Privacy in detail](#privacy-in-detail)
 - [FAQ and troubleshooting](#faq-and-troubleshooting)
 - [Actions](#actions)
@@ -211,7 +212,7 @@ Casora can use an AI **you have already set up in Home Assistant** (Settings →
 | **Update check** | Reads the release notes of pending updates and checks them against *your* setup before you install anything. |
 | **Recipe of the week** | Suggests a seasonal recipe and adds its ingredients to your shopping list if you ask. |
 
-The aquarium doctor and the bike check start from the aquarium and e-bike popups. Their button only appears when an AI task is set up.
+The aquarium doctor and the bike check start from the aquarium and e-bike popups. Their button only appears when an AI task is set up, or when your own assistant answers (see [Use your own assistant for Casora's AI features](#use-your-own-assistant-for-casoras-ai-features)).
 
 **Schedules.** In the Studio under **Settings › Extras › AI › Automatic runs**, each feature gets its own schedule: **Off** (the AI only runs when you tap a button in a popup), **Automatic** or a day and time you pick. Automatic means the energy coach on Sundays at 18:00, the heating coach on Mondays at 07:00 (heating season only), the ventilation coach on Saturdays at 10:00 and the recipe on Mondays at 06:00. The update check runs daily or only when you ask. On a new install every schedule starts **Off**; an upgrade keeps what you had. AI answers in your Home Assistant language. **Hints for the AI** are added to every review, for example *"The bedroom window is tilted on purpose."*
 
@@ -251,11 +252,62 @@ You need an MCP server that can **call Home Assistant actions**, for example [ha
 
 Actions that change a dashboard (rename a tile, add devices, apply a layout) are planned for a later release.
 
+## Use your own assistant for Casora's AI features
+
+The dashboard's AI features (coaches, camera description, plant and aquarium doctor, bike check, update check, recipe of the week) can be answered by your own assistant over MCP instead of an AI task. MCP only works one way: your assistant calls Home Assistant, Home Assistant cannot call your assistant. So Casora leaves the work as a job, and your assistant picks it up when you ask it to. You need the same kind of MCP server as above (one that can call actions, signed in as an administrator, for example [ha-mcp](https://github.com/homeassistant-ai/ha-mcp)).
+
+1. **Choose your assistant.** In the Studio under **Settings › Extras › AI › Which AI**, set **Who answers** to **Your own assistant (MCP)**. In Home Assistant's own options dialog (Devices & services → Casora → **Configure**) it is the entry **Your own assistant (MCP)** in the AI menus. The AI features then show up even without an AI task.
+2. **Use a feature as usual.** Tap, for example, the plant doctor's button in a plant's popup. Casora gathers the plant's readings, writes the instructions and leaves a job. The popup says *Waiting for your assistant…*, and Casora fires the event `casora_ai_job` (`job_id`, `task_name`, `pending`), which an automation can use to remind you.
+3. **Ask your assistant:** *"Do Casora's open AI jobs."* It reads them with `casora.ai_jobs`:
+
+   ```json
+   {
+     "jobs": [{
+       "job_id": "3f9c2a71b0de",
+       "task_name": "Casora Pflanzen-Doktor Ficus",
+       "instructions": "Du bist ein erfahrener Pflanzenpfleger. … Antworte auf Englisch, knapp. …",
+       "fields": {
+         "zustand": {"type": "one of", "required": true, "options": ["gut", "beobachten", "handeln"]},
+         "fazit": {"type": "text", "required": true},
+         "punkte": {"type": "text list", "required": false},
+         "tipps": {"type": "text list", "required": false}
+       },
+       "attachments": [],
+       "created": "2026-11-07T09:12:03+00:00",
+       "expires": "2026-11-07T15:12:03+00:00"
+     }],
+     "how": "Do each job as its instructions say, then call casora.ai_answer …"
+   }
+   ```
+
+   It does the job and answers with `casora.ai_answer`:
+
+   ```yaml
+   action: casora.ai_answer
+   data:
+     job_id: 3f9c2a71b0de
+     data:
+       zustand: beobachten
+       fazit: The soil dries out within two days.
+       tipps: ["Water a little more often, about 200 ml."]
+   ```
+
+   Casora checks the answer against the fields (required fields, the allowed choices) and returns `{"ok": true}`, or `{"ok": false, "errors": [...]}` so your assistant can correct it. The popup then shows the result as if an AI task had written it. A job your assistant cannot do goes away with `casora.ai_cancel` (`job_id`). After answering, it should read the jobs once more: the update check asks about one update at a time.
+4. **Camera images.** A camera job has an attachment with `camera_entity` (for example `camera.front_door`). Your assistant fetches the current image itself with its camera tool (ha-mcp: the camera image tool) and describes it.
+
+Good to know:
+
+- **Jobs live in memory only.** A restart of Home Assistant drops all open jobs, and the feature shows that its job was lost. Saving Casora's settings keeps them.
+- **Time limit.** A job waits up to 6 hours. Without an answer it goes, and the feature says *Your assistant did not answer in time*. Scheduled runs (for example the energy coach on Sundays) leave a job too, so ask your assistant within those hours.
+- **Up to 20 open jobs.** Tapping the same button twice while its job is open does not add a second one.
+- **The answer language** is the one the instructions name (your Home Assistant language), as with an AI task.
+- **Casora Studio's own AI steps** (*Set up with AI*, moving from Hemma, adapting cards, own tile types) wait in the browser for an answer, so they still need an AI task. Without one, the setup assistant points you to [Set up with your own assistant over MCP](#set-up-with-your-own-assistant-over-mcp).
+
 ## Privacy in detail
 
 Casora runs entirely inside your Home Assistant. It has no cloud service, no account, no analytics and no telemetry. The only times it contacts anything outside your home are:
 
-- **AI features**, if you turn them on. Requests go through Home Assistant's own AI task integration to the provider **you** configured. They include only the data that feature needs, for example a camera image when you ask for a description, or your consumption figures for the energy coach.
+- **AI features**, if you turn them on. Requests go through Home Assistant's own AI task integration to the provider **you** configured. They include only the data that feature needs, for example a camera image when you ask for a description, or your consumption figures for the energy coach. With your own assistant over MCP, Casora sends nothing: your assistant reads the job and decides where it goes.
 - **Integration logos** in the updates popup are loaded from `brands.home-assistant.io`, the same source Home Assistant uses.
 - **New releases** are looked up on GitHub (`api.github.com`) so they can show under Settings › Updates & setup › Updates. Nothing about your home is sent.
 - **Community card requests:** the status under **Your requests** is looked up on GitHub by the request's number. You submit the request yourself on GitHub.
@@ -325,6 +377,7 @@ Casora adds these actions to Home Assistant (Developer tools → Actions).
 | `casora.umstellen` | Rename existing Hemma dashboards to Casora names (with a backup) |
 | `casora.setup_overview` | Read only: rooms, devices without an area and devices without a Casora tile, with a suggested tile type. For your own assistant over MCP, see [Set up with your own assistant over MCP](#set-up-with-your-own-assistant-over-mcp) |
 | `casora.ai_generate` | Like `ai_task.generate_data`, but falls back to the first AI task when none is chosen. Used by Casora's AI steps |
+| `casora.ai_jobs`, `casora.ai_answer`, `casora.ai_cancel` | Read only / answer / drop the AI jobs that wait for your own assistant (admins, with a response). See [Use your own assistant for Casora's AI features](#use-your-own-assistant-for-casoras-ai-features) |
 | `casora.light_smart_toggle`, `casora.thermostat_overlay_toggle`, `casora.actions_overlay_toggle`, `casora.restart_toggle` | Used by Casora's tiles: turn a light group back on with the lamps that were on, open a tile's thermostat or action controls, restart a device after a confirming tap |
 | `casora.set_timer`, `casora.cancel_timer` | Turn an entity off or on after 1–1440 minutes (the hold menu's timers), or remove that timer. `set_timer` can return `entity_id`, `at` and `start` |
 

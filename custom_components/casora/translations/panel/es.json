@@ -2953,7 +2953,12 @@
     "Other dashboards and Home Assistant's own pages keep their look.": "Los demás paneles y las páginas de Home Assistant mantienen su aspecto.",
     "CO detector": "Detector de CO",
     "Your CO sensor": "Tu sensor de CO",
-    "Carbon monoxide in ppm on the tile, the symbol in the color of its level: green, from 30 ppm yellow, from 50 orange, from 100 red. The popup shows the value in a ring with the four levels, the history of 24 hours and 7 days, what to do when it rises and when it was last raised, plus battery, self-test and alarm of the detector. For every CO sensor, e.g. Matter smoke and CO alarms.": "Monóxido de carbono en ppm en la tarjeta, el símbolo en el color de su nivel: verde, desde 30 ppm amarillo, desde 50 naranja, desde 100 rojo. La ventana muestra el valor en un anillo con los cuatro niveles, el historial de 24 horas y 7 días, qué hacer si sube y cuándo subió por última vez, además de batería, autotest y alarma del detector. Para cualquier sensor de CO, p. ej. detectores Matter de humo y CO."
+    "Carbon monoxide in ppm on the tile, the symbol in the color of its level: green, from 30 ppm yellow, from 50 orange, from 100 red. The popup shows the value in a ring with the four levels, the history of 24 hours and 7 days, what to do when it rises and when it was last raised, plus battery, self-test and alarm of the detector. For every CO sensor, e.g. Matter smoke and CO alarms.": "Monóxido de carbono en ppm en la tarjeta, el símbolo en el color de su nivel: verde, desde 30 ppm amarillo, desde 50 naranja, desde 100 rojo. La ventana muestra el valor en un anillo con los cuatro niveles, el historial de 24 horas y 7 días, qué hacer si sube y cuándo subió por última vez, además de batería, autotest y alarma del detector. Para cualquier sensor de CO, p. ej. detectores Matter de humo y CO.",
+    "Who answers": "Quién responde",
+    "An AI task in Home Assistant, or your own assistant connected over MCP.": "Una tarea de IA en Home Assistant o tu propio asistente conectado por MCP.",
+    "AI task": "Tarea de IA",
+    "Your own assistant (MCP)": "Tu propio asistente (MCP)",
+    "Casora's AI features wait for your assistant: ask it to do Casora's open AI jobs. Casora Studio's own AI steps still need an AI task.": "Las funciones de IA de Casora esperan a tu asistente: pídele que haga los trabajos de IA pendientes de Casora. Los pasos de IA del propio Casora Studio siguen necesitando una tarea de IA."
   },
   "patterns": [
     [

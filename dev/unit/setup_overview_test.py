@@ -159,7 +159,9 @@ for fn in sorted(os.listdir(os.path.join(PKG, "translations"))):
 # 6) The setup assistant's hint without an AI task links to the guide section that exists.
 basis = open(os.path.join(PKG, "panel", "casora-panel-basis.js"), encoding="utf-8").read()
 guide = open(os.path.join(ROOT, "docs", "guide.md"), encoding="utf-8").read()
-check("wizard hint only without any ai_task", "if (noAiTask) {" in basis and "casora.setup_overview" in basis)
+# Also with the AI option "Your own assistant (MCP)" (casora/ki/models → mcp): that wizard step cannot wait for it.
+check("wizard hint without any ai_task or in MCP mode",
+      "if (noAiTask || mcpMode) {" in basis and "mcpMode = !!(m && m.mcp)" in basis and "casora.setup_overview" in basis)
 check("wizard link points to the guide section",
       "docs/guide.md#set-up-with-your-own-assistant-over-mcp" in basis
       and "\n## Set up with your own assistant over MCP\n" in guide)

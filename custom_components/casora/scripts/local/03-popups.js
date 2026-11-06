@@ -338,7 +338,7 @@
     var rows = items.map(function (x) {
       var it = x.it || {}, L = LV[x.key];
       var sub = x.key === 'none' ? 'Noch nicht geprüft'
-        : x.key === 'running' ? 'Claude liest die Release-Notes …'
+        : x.key === 'running' ? (window._casoraAiWait ? window._casoraAiWait('Claude liest die Release-Notes …', s) : 'Claude liest die Release-Notes …')
         : x.key === 'error' ? (it.error || 'Prüfung fehlgeschlagen')
         : (it.headline || '');
       if ((x.key === 'breaking' || x.key === 'action') && !it.ack) sub = (sub ? sub + ' · ' : '') + 'Update gesperrt';
@@ -871,7 +871,7 @@
       var ic = function (nm, px, col) { return '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 ' + esc(px) + 'px;width:' + esc(px) + 'px;height:' + esc(px) + 'px;"><ha-icon icon="' + esc(nm) + '" style="--mdc-icon-size:' + esc(px) + 'px;width:' + esc(px) + 'px;height:' + esc(px) + 'px;display:flex;align-items:center;justify-content:center;line-height:0;color:' + esc(col) + ';"></ha-icon></span>'; };
       var li = function (arr, col) { return '<ul style="margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + esc(col) + ';white-space:normal;">' + arr.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>'; };
       var body;
-      if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">Claude wertet die Heizwoche aus …</div>';
+      if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">' + esc(window._casoraAiWait ? window._casoraAiWait('Claude wertet die Heizwoche aus …', hc) : 'Claude wertet die Heizwoche aus …') + '</div>';
       else if (has) {
         var z = Zc[ha.zustand];
         body = (z ? '<div style="display:flex;align-items:center;gap:8px;">' + ic(z[2], 20, z[1]) + '<span style="font-size:var(--casora-fs16,16px);font-weight:600;color:' + esc(z[1]) + ';">' + esc(z[0]) + '</span></div>' : '')
@@ -1425,7 +1425,7 @@
     var n = R.next(states);
     if (n) return dayName(n.when) + ' · ' + R.short(n.name);
     var s = states[IDEA];
-    if (s && s.attributes.status === 'running') return 'Sucht ein Rezept …';
+    if (s && s.attributes.status === 'running') return window._casoraAiWait ? window._casoraAiWait('Sucht ein Rezept …', s) : 'Sucht ein Rezept …';
     if (!s || s.state === 'unknown' || s.state === 'unavailable') return 'Nichts geplant';
     var m = mins(s.attributes.minuten);
     return R.short(s.state) + (m ? ' · ' + m : '');
@@ -1539,7 +1539,7 @@
       var running = a.status === 'running';
       var has = !!s && s.state !== 'unknown' && s.state !== 'unavailable';
       html = capHtml('mdi:creation', 'Vorschlag von Claude');
-      if (running) html += '<div class="hrs-n">Claude sucht ein Rezept …</div>';
+      if (running) html += '<div class="hrs-n">' + esc(window._casoraAiWait ? window._casoraAiWait('Claude sucht ein Rezept …', s) : 'Claude sucht ein Rezept …') + '</div>';
       else if (has) {
         html += '<div class="hrs-n">' + esc(s.state) + '</div>'
           + '<div class="hrs-m">' + esc([mins(a.minuten), 'Thermomix'].filter(Boolean).join(' · ')) + '</div>'
@@ -1562,7 +1562,7 @@
     if (!states) { var ha0 = document.querySelector('home-assistant'); states = (ha0 && ha0.hass && ha0.hass.states) || {}; }
     if (R.today(states)) return UI.line('Heute geplant', []);
     var s = states[IDEA], a = (s && s.attributes) || {};
-    if (a.status === 'running') return UI.line('Sucht ein Rezept …', []);
+    if (a.status === 'running') return UI.line(window._casoraAiWait ? window._casoraAiWait('Sucht ein Rezept …', s) : 'Sucht ein Rezept …', []);
     return UI.line(s && s.state !== 'unknown' && s.state !== 'unavailable' ? 'Idee der Woche' : 'Nichts geplant', []);
   };
   /* Weich: Speiseplan mit Datums-Plakette (FR / 3) statt sieben gleicher Besteck-Symbole –
@@ -1838,7 +1838,7 @@
         + '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 16px;width:16px;height:16px;"><ha-icon icon="mdi:creation" style="--mdc-icon-size:16px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;line-height:0;color:var(--casora-color-teal, #00C3D0);"></ha-icon></span>'
         + '<span style="flex:1 1 auto;text-align:left;">' + (SF ? 'Vorschlag von Claude' : 'Idee der Woche von Claude') + '</span></div>';
       if (running) {
-        out += '<div style="font-size:20px;font-weight:600;color:' + T.ink + ';margin-top:6px;">Claude sucht ein Rezept …</div>';
+        out += '<div style="font-size:20px;font-weight:600;color:' + T.ink + ';margin-top:6px;">' + esc(window._casoraAiWait ? window._casoraAiWait('Claude sucht ein Rezept …', s) : 'Claude sucht ein Rezept …') + '</div>';
       } else if (has) {
         var m = mins(a.minuten);
         out += '<div style="font-size:' + (n ? '20' : '24') + 'px;font-weight:' + (softBtn ? 700 : 600) + ';letter-spacing:-0.02em;color:' + T.ink + ';margin-top:4px;">' + esc(s.state) + '</div>'
@@ -2631,7 +2631,7 @@
     }
     var running = it.status === 'running';
     var col = it.alert ? 'var(--casora-popup-ui-warn, #FF9F0A)' : 'rgba(255,255,255,0.92)';
-    var text = running ? 'Claude schaut sich das Bild an …' : it.status === 'error' ? (it.error || 'Kein Bild – die Kamera ist aus, schläft oder ist offline.') : it.text;
+    var text = running ? (window._casoraAiWait ? window._casoraAiWait('Claude schaut sich das Bild an …', 'sensor.casora_kamera_ki') : 'Claude schaut sich das Bild an …') : it.status === 'error' ? (it.error || 'Kein Bild – die Kamera ist aus, schläft oder ist offline.') : it.text;
     return '<div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:16px;'
       + 'background:var(--casora-glass-pill-fill, rgba(255,255,255,0.10));font-family:var(--primary-font-family, system-ui);text-align:left;">'
       + '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 18px;width:18px;height:18px;margin-top:1px;"><ha-icon icon="mdi:creation" style="--mdc-icon-size:18px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;line-height:0;color:var(--casora-color-teal, #00C3D0);"></ha-icon></span>'
@@ -2780,7 +2780,7 @@
     var running = it && it.status === 'running';
     var z = it && Z[it.zustand];
     var body;
-    if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">Claude wertet die letzten 7 Tage aus …</div>';
+    if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">' + esc(window._casoraAiWait ? window._casoraAiWait('Claude wertet die letzten 7 Tage aus …', hass.states[SENSOR]) : 'Claude wertet die letzten 7 Tage aus …') + '</div>';
     else if (it && it.status === 'error') body = '<div style="font-size:15px;color:' + T.ink + ';">' + esc(it.error || 'Auswertung fehlgeschlagen.') + '</div>';
     else if (it && z) {
       body = '<div style="display:flex;align-items:center;justify-content:flex-start;gap:8px;">' + icon(z[2], 20, z[1])
@@ -2876,7 +2876,7 @@
     var running = a.status === 'running';
     var has = !!a.fazit;
     var body;
-    if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">Claude wertet die letzte Woche aus …</div>';
+    if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">' + esc(window._casoraAiWait ? window._casoraAiWait('Claude wertet die letzte Woche aus …', s) : 'Claude wertet die letzte Woche aus …') + '</div>';
     else if (!has) body = '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink2 + ';white-space:normal;">Claude wertet einmal pro Woche (sonntags 18 Uhr) Netzbezug, Solar und die großen Geräte aus und sagt, wo sich Strom sparen lässt.</div>';
     else {
       var eur = Number(a.ersparnis_eur);
@@ -3445,7 +3445,7 @@
           + '</div></div>';
       }
       if (SF) a = Object.assign({}, a, { punkte: [], tipps: [] });
-      if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">Claude prüft das Rad …</div>';
+      if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">' + esc(window._casoraAiWait ? window._casoraAiWait('Claude prüft das Rad …', 'sensor.casora_ebike_ki') : 'Claude prüft das Rad …') + '</div>';
       else if (has) body = (z ? '<div style="display:flex;align-items:center;gap:8px;">' + ic(z[2], 20, z[1]) + '<span style="font-size:var(--casora-fs16,16px);font-weight:600;color:' + esc(z[1]) + ';">' + esc(z[0]) + '</span></div>' : '')
         + '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink + ';margin-top:8px;white-space:normal;">' + esc(a.fazit) + '</div>'
         + ((a.punkte || []).length ? li(a.punkte, T.ink2) : '')
