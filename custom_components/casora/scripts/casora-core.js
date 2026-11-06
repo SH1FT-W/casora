@@ -2995,10 +2995,17 @@ window.casoraMenuGlass = {
         if (el.textContent !== full) el.textContent = full;
         const over = () => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1;
         if (!el.clientWidth || !over()) return;
-        for (let k = full.length - 2; k >= 1; k--) {
+        // The longest cut that fits (k = 1 when none does). The text only grows with k, so bisection finds the
+        // same k as stepping down from the top, with log2(n) layouts instead of up to n (each read forces one).
+        let lo = 1, hi = full.length - 2, best = 1;
+        if (hi < lo) return;
+        while (lo <= hi) {
+          const k = (lo + hi) >> 1;
           el.textContent = window.casoraMidText(full, k);
-          if (!over()) return;
+          if (over()) hi = k - 1; else { best = k; lo = k + 1; }
         }
+        const fit = window.casoraMidText(full, best);
+        if (el.textContent !== fit) el.textContent = fit;
       });
     };
   }
