@@ -13066,9 +13066,10 @@ window.casoraMenuGlass = {
   window._casoraTempColor = tempColor;
   // Weather dial range (owner decision 01.11.2026): the ring runs from today's low (bottom left) to today's high (bottom
   // right), the knob sits where „now“ is between them. „Now“ outside the forecast widens the day to include it; a day
-  // narrower than 4 °C (7 °F) is widened around its middle so the knob still moves (band = the real low … high); without
-  // a forecast the old fixed scale −10 … 35 °C (14 … 95 °F). Returns { min, max, band, lo, hi } (band/lo/hi null
-  // without a forecast).
+  // narrower than 4 °C (7 °F) is widened around its middle so the knob still moves. The band always fills the whole
+  // ring (owner 07.11.2026: a narrow day left grey stubs at both ends); lo/hi stay the real low … high for the labels.
+  // Without a forecast the old fixed scale −10 … 35 °C (14 … 95 °F). Returns { min, max, band, lo, hi } (band/lo/hi
+  // null without a forecast).
   function tempRange(lo, hi, cur, fahrenheit) {
     var num = function (v) { return v == null || v === '' ? NaN : Number(v); };
     var l = num(lo), h = num(hi), c = num(cur);
@@ -13077,7 +13078,7 @@ window.casoraMenuGlass = {
     if (isFinite(c)) { l = Math.min(l, c); h = Math.max(h, c); }
     var span = fahrenheit ? 7 : 4, mn = l, mx = h;
     if (mx - mn < span) { var mid = (mn + mx) / 2; mn = mid - span / 2; mx = mid + span / 2; }
-    return { min: mn, max: mx, band: [l, h], lo: l, hi: h };
+    return { min: mn, max: mx, band: [mn, mx], lo: l, hi: h };
   }
   window._casoraTempRange = tempRange;
   var DIAL_CSS = '.hui-stage.dial{background:none;padding:0;gap:12px;align-items:center;}'
