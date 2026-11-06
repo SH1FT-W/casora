@@ -18,7 +18,7 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 | Gedankenstrich | „ – “ (Halbgeviert mit Leerzeichen) als Satztrenner; „-“ nur in Wörtern | „ – “ ebenso | – |
 | Trenner in Unterzeilen | „ · “ (Mittelpunkt mit Leerzeichen); die Übersetzung arbeitet je Stück | gleich | – |
 | Anführung | „…“ (deutsch) | “…” | – |
-| Auslassung **(V9)** | **Studio:** „Suchen …“ (mit Leerzeichen). **Dashboard:** „Läuft …“ mit Leerzeichen (entschieden 06.11.2026; heute noch 19× ohne, beim nächsten Arbeiten angleichen) | **Studio:** „Search…“ (ohne). Dashboard: „Running…“ | – |
+| Auslassung **(V9)** | **Studio:** „Suchen …“ (mit Leerzeichen). **Dashboard:** „Läuft …“ mit Leerzeichen (entschieden 06.11.2026; nachgezählt: alle deutschen Texte haben es schon) | **Studio:** „Search…“ (ohne). Dashboard: „Running…“ | – |
 | Muster-Reihenfolge | In `phrases/en.json` gewinnt das **erste** passende Muster: Spezielles („^1 Tür entriegelt$“) immer **vor** Allgemeinem („^(.+) entriegelt$“) | – | – (Prüfwerkzeug des Audits liegt nicht im Repo, Kandidat für einen Regeltest) |
 | Knopf vs. Zustand | Ein Wort, das auch ein Knopf ist („Zu“ = Close), nie als Zustand verwenden – die Übersetzung kennt keinen Zusammenhang | – | – |
 

@@ -235,8 +235,8 @@ Gilt:
 - Popup-Knöpfe haben einen sichtbaren `:active`-Zustand.
 - Platten-Stufen (Sand): .07 Ruhe · .10 Bedienfeld · .11 Hover · .16 Druck; aktiv = Creme + Ruhe-Schatten.
 
-Entschieden (06.11.2026, dk-13): Badges zeigen wie Kacheln keinen sichtbaren Druck, nur Haptik. Das
-Einzel-Sicherheits-Badge, das heute noch färbt, wird beim nächsten Arbeiten daran angeglichen.
+Entschieden (06.11.2026, dk-13): Badges zeigen wie Kacheln keinen sichtbaren Druck, nur Haptik
+(am 06.11.2026 im Test-HA nachgemessen: alle Badges, auch das Sicherheits-Badge).
 
 Gilt (Druck-Skala, entschieden): `scale(var(--casora-press-scale, .97))` auf Tasten – Popups, Menüzeilen (Räume/Szenen
 am Handy, „Alles gelesen“), Tasten der Handy-Leiste, Zurück-Knopf der Handy-Raumseite, Szenen-Kacheln, Studio-Knöpfe.
