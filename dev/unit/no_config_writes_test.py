@@ -107,7 +107,7 @@ def make_hass(d, states):
                                units=SimpleNamespace(temperature_unit="°C")),
         states=SimpleNamespace(get=lambda e: states.get(e)),
         services=SimpleNamespace(async_call=async_call, has_service=lambda *a: False),
-        bus=SimpleNamespace(async_listen=lambda *a: (lambda: None), async_listen_once=lambda *a: (lambda: None)),
+        bus=SimpleNamespace(async_listen=lambda *a, **k: (lambda: None), async_listen_once=lambda *a: (lambda: None)),
         auth=SimpleNamespace(async_get_users=users),
         async_add_executor_job=job, async_create_task=lambda c: tasks.append(asyncio.ensure_future(c)),
     )

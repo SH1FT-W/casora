@@ -155,6 +155,12 @@ def _setup_automatik(hass: HomeAssistant, runtime: dict) -> None:
                 "input_select", "select_option", {"entity_id": EXPANDED_ROW, "option": "media"}))
 
     @callback
+    def _relevant(data: dict) -> bool:
+        # Runs in the bus before _changed: every other state change in the house skips it.
+        eid = data["entity_id"]
+        return (clear_done and eid in RESTART_DONE) or (expand and eid.startswith("media_player."))
+
+    @callback
     def _changed(event: Event) -> None:
         eid = event.data["entity_id"]
         new = event.data.get("new_state")
@@ -170,12 +176,16 @@ def _setup_automatik(hass: HomeAssistant, runtime: dict) -> None:
 
             timers[eid] = async_call_later(hass, 3, _off)
         elif expand and eid.startswith("media_player."):
+            old = event.data.get("old_state")
+            if old is not None and new is not None and old.state == new.state:
+                # Attributes only (position, volume): whether anything plays is unchanged, no scan of all players.
+                return
             now = _any_playing(hass)
             if now and not state["playing"]:
                 _expand()
             state["playing"] = now
 
-    unsub.append(hass.bus.async_listen(EVENT_STATE_CHANGED, _changed))
+    unsub.append(hass.bus.async_listen(EVENT_STATE_CHANGED, _changed, event_filter=_relevant))
     if expand and state["playing"]:
         _expand()
 

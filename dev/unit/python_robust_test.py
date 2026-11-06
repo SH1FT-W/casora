@@ -148,7 +148,7 @@ async def t_py08():
     from custom_components.casora import helfer
 
     handlers, cancelled, scheduled = [], [], []
-    hass = SimpleNamespace(bus=SimpleNamespace(async_listen=lambda ev, cb: handlers.append(cb) or (lambda: None)))
+    hass = SimpleNamespace(bus=SimpleNamespace(async_listen=lambda ev, cb, event_filter=None: handlers.append(cb) or (lambda: None)))
     real = helfer._legacy_automation, helfer._any_playing, helfer.async_call_later
     helfer._legacy_automation = lambda *a: False
     helfer._any_playing = lambda h: False
