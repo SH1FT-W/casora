@@ -2236,15 +2236,16 @@ window._casoraColGap = window._casoraColGap || function (keys) {
   window._casoraTimeGuard = true;
   var fine = window.matchMedia('(hover: hover) and (pointer: fine)');
   var els = { bar: null, times: [], at: 0 };
-  function walk(root, sel, out, d) {
+  // One walk for both: the bar and the clocks (was a whole-page walk each, every 30 s).
+  function walk(root, bars, times, d) {
     if (!root || d > 14 || !root.querySelectorAll) return;
-    root.querySelectorAll(sel).forEach(function (e) { out.push(e); });
-    root.querySelectorAll('*').forEach(function (e) { if (e.shadowRoot) walk(e.shadowRoot, sel, out, d + 1); });
+    root.querySelectorAll('casora-nav-bar').forEach(function (e) { bars.push(e); });
+    root.querySelectorAll('#time').forEach(function (e) { times.push(e); });
+    root.querySelectorAll('*').forEach(function (e) { if (e.shadowRoot) walk(e.shadowRoot, bars, times, d + 1); });
   }
   function find() {
     var bars = [], times = [];
-    walk(document, 'casora-nav-bar', bars, 0);
-    walk(document, '#time', times, 0);
+    walk(document, bars, times, 0);
     var host = bars.filter(function (b) { return b.isConnected; })[0];
     els = { bar: host && host.shadowRoot && host.shadowRoot.querySelector('.bar'), times: times, at: Date.now() };
   }
