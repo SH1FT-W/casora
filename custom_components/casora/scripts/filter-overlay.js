@@ -1382,6 +1382,7 @@
       if (!this._bodyScrollStyle) {
         const s = document.createElement('style');
         s.id = 'casora-fo-body-scroll';
+        // Outside the design's scope (issue 129) casora-theme.js turns this element off (media).
         s.textContent = 'html::-webkit-scrollbar,body::-webkit-scrollbar{display:none!important}html,body{scrollbar-width:none!important;-ms-overflow-style:none!important}';
         document.head.appendChild(s);
         this._bodyScrollStyle = s;

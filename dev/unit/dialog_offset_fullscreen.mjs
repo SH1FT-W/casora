@@ -30,6 +30,7 @@ const env = {
     addEventListener() {},
     querySelector: (s) => (s === 'home-assistant' ? { hass } : null),
     createElement: () => ({ textContent: '' }),
+    documentElement: new El('html'),
   },
 };
 env.window.window = env.window;
@@ -50,6 +51,12 @@ function open(panelUrl, haAttrs = {}) {
   return { wa, css: styles.join('\n') };
 }
 
+// Issue 129: a page outside the design's scope (casora-theme.js marks <html>) keeps HA's own dialogs.
+env.document.documentElement.toggleAttribute('data-casora-scope-off', true);
+const outside = open('dashboard-casora');
+assert.ok(!outside.wa.hasAttribute('casora-offset') && !outside.css, 'outside the scope: no offset, no Casora dialog styles');
+env.document.documentElement.toggleAttribute('data-casora-scope-off', false);
+
 const dash = open('dashboard-casora');
 assert.ok(dash.wa.hasAttribute('casora-offset'), 'dashboard: offset on');
 assert.ok(open('lovelace').wa.hasAttribute('casora-offset'), 'default dashboard: offset on');
@@ -67,5 +74,5 @@ assert.ok(m > 0, 'offset rule injected');
 const guard = css.lastIndexOf('@media (min-width: 451px) and (min-height: 501px)', m);
 assert.ok(guard >= 0 && css.lastIndexOf(':host([casora-offset]) dialog', m) > guard, 'offset behind media query and attribute');
 assert.equal(css.split('margin-block-start').length, 2, 'no other top margin');
-assert.equal(opened.length, 7, 'original showModal still runs');
+assert.equal(opened.length, 8, 'original showModal still runs (also outside the scope)');
 console.log('ok dialog_offset_fullscreen');

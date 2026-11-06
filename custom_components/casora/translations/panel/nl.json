@@ -2946,7 +2946,9 @@
     "A reminder when an appliance needs care, e.g. descaling.": "Een melding als een apparaat onderhoud nodig heeft, bijv. ontkalken.",
     "New version on the phone": "Nieuwe versie naar je telefoon",
     "Oven": "Oven",
-    "Operation state or cavity temperature of the oven": "Bedrijfstoestand of binnentemperatuur van de oven"
+    "Operation state or cavity temperature of the oven": "Bedrijfstoestand of binnentemperatuur van de oven",
+    "Only on Casora dashboards": "Alleen op Casora-dashboards",
+    "Other dashboards and Home Assistant's own pages keep their look.": "Andere dashboards en de pagina's van Home Assistant houden hun eigen uiterlijk."
   },
   "patterns": [
     [

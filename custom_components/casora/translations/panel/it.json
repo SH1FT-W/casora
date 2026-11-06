@@ -2946,7 +2946,9 @@
     "A sensor outside, for ventilation and heating tips.": "Un sensore esterno, per i consigli su aerazione e riscaldamento.",
     "New version on the phone": "Nuova versione sul telefono",
     "Oven": "Forno",
-    "Operation state or cavity temperature of the oven": "Stato di funzionamento o temperatura interna del forno"
+    "Operation state or cavity temperature of the oven": "Stato di funzionamento o temperatura interna del forno",
+    "Only on Casora dashboards": "Solo nelle dashboard Casora",
+    "Other dashboards and Home Assistant's own pages keep their look.": "Le altre dashboard e le pagine di Home Assistant mantengono il loro aspetto."
   },
   "patterns": [
     [

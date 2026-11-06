@@ -298,6 +298,26 @@ customElements.whenDefined("casora-panel").then(() => {
     hint.textContent = tr("Undo brings the previous design back.");
     // Die Seite heißt schon „Design“ – keine zweite Überschrift.
     host.append(box, hint);
+    // Issue 129: the design only on Casora dashboards (and the Studio); other dashboards keep their own look.
+    if (CT && typeof CT.setScope === "function" && typeof this._boolSwitch === "function" && this._hass.user && this._hass.user.is_admin) {
+      const row = document.createElement("div");
+      row.className = "row casora-lookscope";
+      const lab = document.createElement("label");
+      lab.textContent = tr("Only on Casora dashboards");
+      const sw = this._boolSwitch(CT.scope() === "casora", false, (v) => {
+        Promise.resolve(CT.setScope(v ? "casora" : "all")).catch((e) => {
+          console.warn("Casora: design scope could not be set", e);
+          if (sw._set) sw._set(CT.scope() === "casora");
+        });
+      }, tr("Only on Casora dashboards"));
+      row.append(lab, sw);
+      // The first answer of the server may come after this page was drawn (no cache yet).
+      if (typeof CT.onChange === "function" && sw._set) CT.onChange(() => { if (sw.isConnected) sw._set(CT.scope() === "casora"); });
+      const sh = document.createElement("div");
+      sh.className = "hint";
+      sh.textContent = tr("Other dashboards and Home Assistant's own pages keep their look.");
+      host.append(row, sh);
+    }
     return true;
   };
 });

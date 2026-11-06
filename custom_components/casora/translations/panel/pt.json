@@ -2946,7 +2946,9 @@
     "A group sensor of doors and windows, with its own name.": "Um sensor de grupo de portas e janelas, com nome próprio.",
     "New version on the phone": "Nova versão no telemóvel",
     "Oven": "Forno",
-    "Operation state or cavity temperature of the oven": "Estado de funcionamento ou temperatura interior do forno"
+    "Operation state or cavity temperature of the oven": "Estado de funcionamento ou temperatura interior do forno",
+    "Only on Casora dashboards": "Apenas nos painéis Casora",
+    "Other dashboards and Home Assistant's own pages keep their look.": "Os outros painéis e as páginas do Home Assistant mantêm o seu aspeto."
   },
   "patterns": [
     [

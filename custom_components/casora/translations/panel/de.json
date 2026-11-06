@@ -2946,7 +2946,9 @@
     "A reminder when an appliance needs care, e.g. descaling.": "Ein Hinweis, wenn ein Gerät Pflege braucht, z. B. Entkalken.",
     "New version on the phone": "Neue Version aufs Handy",
     "Oven": "Backofen",
-    "Operation state or cavity temperature of the oven": "Betriebszustand oder Garraumtemperatur des Backofens"
+    "Operation state or cavity temperature of the oven": "Betriebszustand oder Garraumtemperatur des Backofens",
+    "Only on Casora dashboards": "Nur auf Casora-Dashboards",
+    "Other dashboards and Home Assistant's own pages keep their look.": "Andere Dashboards und die Seiten von Home Assistant behalten ihr eigenes Aussehen."
   },
   "patterns": [
     [

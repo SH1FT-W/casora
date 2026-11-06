@@ -29,6 +29,8 @@
 //   window.casoraTheme.theme(name)   a loaded design (object as in theme_*.yaml, merged), or null
 //   window.casoraTheme.load(name)    Promise of a design (fetched once)
 //   window.casoraTheme.set(design)   Promise: save the installation design (admins); the profile follows it
+//   window.casoraTheme.scope()       "all" (every page) or "casora" (only Casora dashboards and panels, issue 129)
+//   window.casoraTheme.setScope(s)   Promise: save where the design applies (admins)
 //   window.casoraTheme.vars(theme, dark)  {"--name": value} as applied
 //   window.casoraTheme.onChange(fn)  called after every change of what is applied
 //   window.casoraTheme.registerStats()  {updates, inPlace}: designs handed to HA's theme list (see register())
@@ -41,7 +43,7 @@
   // Former names (theme.py THEME_RENAMED, "Hemma" only while it is no HA theme of its own).
   var RENAMED = { 'Casora Weich': 'Casora', 'Casora Standard': 'Casora Glas', 'Casora Glass': 'Casora Glas',
     'Hemma 2': 'Casora Glas', 'Hemma 1': 'Casora Glas', 'Hemma': 'Casora Glas' };
-  var state = { design: undefined, names: [], themes: {}, hashes: {}, applied: null, server: false };
+  var state = { design: undefined, names: [], themes: {}, hashes: {}, applied: null, server: false, scope: 'all', dashboards: [], off: false, had: false };
   var listeners = [];
   var pending = {};
 
@@ -52,6 +54,8 @@
       state.hashes = c2.hashes || {};
       state.names = Array.isArray(c2.names) ? c2.names : Object.keys(c2.themes);
       if (c2.design !== undefined) state.design = c2.design;
+      if (c2.scope === 'casora') state.scope = 'casora';
+      if (Array.isArray(c2.dashboards)) state.dashboards = c2.dashboards;
     } else {
       var c = JSON.parse(localStorage.getItem(CACHE_V1) || 'null');
       if (c && c.name && c.theme) {
@@ -101,7 +105,17 @@
     return realTheme(h, n) ? '' : undefined;
   }
 
+  // Issue 129: with the scope "casora" the design applies only on Casora's own panels (casora-studio …) and on
+  // dashboards the server names as Casora dashboards; every other page keeps HA's look.
+  function casoraPage() {
+    var seg = '';
+    try { seg = decodeURIComponent(String(window.location.pathname || '').split('/')[1] || ''); } catch (e) { seg = ''; }
+    if (!seg) seg = 'lovelace';
+    return seg === 'casora-studio' || state.dashboards.indexOf(seg) >= 0;
+  }
+
   function active(h) {
+    if (state.scope === 'casora' && !casoraPage()) return '';
     var b = browserPick(h || hassNow());
     if (b !== undefined) return b;
     return state.design || '';
@@ -231,9 +245,22 @@
     }).catch(function () { /* user data not available: try on the next page load */ });
   }
 
+  // Scope "casora": HA itself must not apply a Casora design (it would on every page): a Casora name in this user's
+  // profile becomes "Backend-selected" (the installation design, which Casora applies on Casora pages only). The
+  // designs stay in HA's list: card-mod/UIX look their styles up there by the --card-mod-theme of Casora's rule.
+  function scopeProfile(h) {
+    if (state.scope !== 'casora' || !state.server || !h || !h.user) return;
+    var n = selection(h), ours = !!n && (known(n) || !!RENAMED[n]);
+    // Once per pick: a later Casora pick in HA's profile is taken back again.
+    if (!ours) { migrating.scope = false; return; }
+    if (!migrating.scope && setProfile('')) migrating.scope = true;
+  }
+
+  var PAGE_WIDE = ['casora-body-font', 'casora-fo-body-scroll'];
   function apply(force) {
     var h = hassNow();
     migrate(h);
+    scopeProfile(h);
     var name = active(h);
     var dark = isDark(h);
     var t = name ? state.themes[name] : null;
@@ -241,6 +268,15 @@
     var key = (t ? name + '|' + (state.hashes[name] || '') : '') + '|' + dark;
     var reg = register(h);
     var changed = force || key !== state.applied;
+    // Issue 129: mark a page outside the scope on every pass (the key stays the same without a Casora design).
+    var off = state.scope === 'casora' && !casoraPage();
+    if (off !== state.off) { state.off = off; document.documentElement.toggleAttribute('data-casora-scope-off', off); }
+    // Casora's other page-wide rules (body font, hidden scrollbars) step back there too; switched by media, so the
+    // rules themselves stay exactly as before.
+    PAGE_WIDE.forEach(function (id) {
+      var el = document.getElementById && document.getElementById(id);
+      if (el && (el.media === 'not all') !== off) el.media = off ? 'not all' : '';
+    });
     var r = changed ? rule() : null;
     if (r) {
       state.applied = key;
@@ -249,8 +285,11 @@
       for (var k in v) r.style.setProperty(k, v[k], 'important');
       document.documentElement.toggleAttribute('data-casora-design', !!t);
     }
-    // UIX looks its theme styles up again (it also listens for this after HA's own theme changes).
-    if ((reg && t) || (r && t)) document.dispatchEvent(new CustomEvent('uix-update', { detail: { reason: 'theme', variablesChanged: !!r } }));
+    // UIX looks its theme styles up again (it also listens for this after HA's own theme changes); also when the design
+    // goes away (scope "casora", another page), or card-mod keeps the sidebar/root styles of the page before.
+    var had = state.had;
+    if (r) state.had = !!t;
+    if ((reg && t) || (r && (t || (had && state.scope === 'casora')))) document.dispatchEvent(new CustomEvent('uix-update', { detail: { reason: 'theme', variablesChanged: !!r } }));
     if (r) notify();
   }
 
@@ -258,7 +297,8 @@
     try {
       var themes = {};
       state.names.forEach(function (n) { if (state.themes[n]) themes[n] = state.themes[n]; });
-      localStorage.setItem(CACHE, JSON.stringify({ themes: themes, hashes: state.hashes, names: state.names, design: state.design }));
+      localStorage.setItem(CACHE, JSON.stringify({ themes: themes, hashes: state.hashes, names: state.names, design: state.design,
+        scope: state.scope, dashboards: state.dashboards }));
       localStorage.removeItem(CACHE_V1);
     } catch (e) { /* full or blocked: next load asks the server */ }
   }
@@ -307,6 +347,9 @@
         if (!p) return;
         state.names = p.names || state.names;
         state.design = p.design === undefined ? null : p.design;
+        state.scope = p.scope === 'casora' ? 'casora' : 'all';
+        // No list yet (HA still starting): keep the cached one, or Casora dashboards would lose their look meanwhile.
+        if (Array.isArray(p.dashboards)) state.dashboards = p.dashboards;
         state.server = true;
         // A cached design of another version is fetched again.
         if (p.hashes) {
@@ -333,7 +376,7 @@
       state.design = design || '';
       // The Studio's choice is also this user's profile theme, so HA's own picker names it ("Casora Nebel")
       // instead of an empty "use default" field. Other users who picked nothing keep following the installation.
-      if (design && known(design)) setProfile(design);
+      if (design && known(design) && state.scope !== 'casora') setProfile(design);
       else {
         // "Own theme" in the Studio: a Casora name in the profile goes, a real HA theme of the user's stays.
         var n = selection(hassNow());
@@ -344,8 +387,24 @@
     });
   }
 
+  function setScope(scope) {
+    scope = scope === 'casora' ? 'casora' : 'all';
+    return whenConn().then(function (c) {
+      return c.sendMessagePromise({ type: 'casora/theme/set', scope: scope });
+    }).then(function () {
+      state.scope = scope;
+      // HA already holds the designs in its list (this page registered them): a Casora design in this user's profile
+      // would still be applied by HA on every page, so the profile follows the installation again.
+      remember();
+      apply(true);
+    });
+  }
+
   window.casoraTheme = {
     design: function () { return state.design; },
+    scope: function () { return state.scope; },
+    setScope: setScope,
+    casoraPage: casoraPage,
     active: active,
     names: function () { return state.names.slice(); },
     theme: function (name) { return (name && state.themes[name]) || null; },
@@ -367,5 +426,10 @@
     new MutationObserver(function () { apply(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] });
   } catch (e) { /* no observer: the check below */ }
   try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { setTimeout(apply, 50); }); } catch (e) { /* old browser */ }
+  // Scope "casora": another page may want another look (HA fires location-changed on its own navigation).
+  try {
+    window.addEventListener('location-changed', function () { apply(); });
+    window.addEventListener('popstate', function () { apply(); });
+  } catch (e) { /* no events: the check below */ }
   setInterval(function () { apply(); }, 1500);
 })();

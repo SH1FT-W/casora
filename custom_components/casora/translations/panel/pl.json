@@ -2946,7 +2946,9 @@
     "Where the recipe of the week puts its ingredients.": "Gdzie przepis tygodnia zapisuje składniki.",
     "New version on the phone": "Nowa wersja na telefon",
     "Oven": "Piekarnik",
-    "Operation state or cavity temperature of the oven": "Stan pracy lub temperatura komory piekarnika"
+    "Operation state or cavity temperature of the oven": "Stan pracy lub temperatura komory piekarnika",
+    "Only on Casora dashboards": "Tylko na pulpitach Casora",
+    "Other dashboards and Home Assistant's own pages keep their look.": "Inne pulpity i strony Home Assistant zachowują swój wygląd."
   },
   "patterns": [
     [

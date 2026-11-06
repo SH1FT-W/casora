@@ -114,8 +114,13 @@ def make_hass(d):
         data={}, config=SimpleNamespace(config_dir=d, path=lambda *p: os.path.join(d, *p)),
         async_add_executor_job=job, async_create_task=lambda c: tasks.append(asyncio.ensure_future(c)),
         auth=SimpleNamespace(async_get_users=users),
+        bus=SimpleNamespace(async_listen=lambda ev, fn: BUS.setdefault(ev, []).append(fn) or (lambda: BUS[ev].remove(fn)),
+                            async_listen_once=lambda ev, fn: BUS.setdefault(ev, []).append(fn)),
     )
     return hass, tasks
+
+
+BUS: dict = {}
 
 
 async def hemma_absent(_hass):
@@ -129,6 +134,14 @@ theme.Store = FakeStore
 theme.add_extra_js_url = lambda hass, url: extra.append(url)
 theme.remove_extra_js_url = lambda hass, url: extra.remove(url)
 theme.websocket_api.async_register_command = lambda hass, cmd: registered.append(cmd)
+
+
+def at_started(hass, fn):
+    fn(hass)  # HA already running: at once, like the helper
+    return lambda: None
+
+
+theme.async_at_started = at_started
 
 
 async def setup(d):
@@ -168,8 +181,58 @@ with tempfile.TemporaryDirectory() as d:
     check(asyncio.run(theme.async_set_design(hass, "Moonbeam")) is False, "unknown design refused")
     check(asyncio.run(theme.async_set_design(hass, "")) is True and rt.payload(None)["design"] == "", "\"\" = own theme")
     check("theme" not in rt.payload(None), "no design, no theme")
+
+    # 5b. Issue 129: where the design applies. "all" by default; "casora" lists the Casora dashboards
+    #     (dashboard_kinds rules, default dashboard as "lovelace") and follows saved dashboards (lovelace_updated).
+    check(rt.payload(None)["scope"] == "all" and rt.payload(None)["dashboards"] == [], "scope all by default")
+    LD = __import__("homeassistant.components.lovelace.const", fromlist=["LOVELACE_DATA"]).LOVELACE_DATA
+
+    class Dash:
+        def __init__(self, cfg, admin=False):
+            self.cfg = cfg
+            self.config = {"require_admin": admin}
+
+        async def async_load(self, force):
+            if self.cfg is None:
+                raise ValueError("never saved")
+            return self.cfg
+
+    room = {"views": [{"cards": [{"template": "casora_room"}]}]}
+    tile = {"views": [{"cards": [{"type": "grid", "cards": [{"type": "custom:button-card", "template": ["casora_light"]}]}]}]}
+    hemma = {"views": [{"cards": [{"type": "custom:button-card", "template": "hemma_room"}]}]}
+    dashes = {None: Dash(room), "home-casora": Dash(room), "mine": Dash({"views": [{"cards": [{"type": "tile"}]}]}),
+              "own-casora": Dash(tile), "admin-casora": Dash(room, admin=True), "empty": Dash(None), "old-hemma": Dash(hemma)}
+    hass.data[LD] = SimpleNamespace(dashboards=dashes)
+    sent.clear()
+    rt.paths_ready = False
+    rt.data["scope"] = "casora"
+    check("dashboards" not in rt.payload(None), "HA still starting: no list sent (browsers keep their cached one)")
+    rt.data["scope"] = "all"
+    check(asyncio.run(theme.async_set_scope(hass, "casora")) is True, "scope casora accepted")
+    p = rt.payload(None)
+    check(p["scope"] == "casora" and p["dashboards"] == ["admin-casora", "home-casora", "lovelace", "old-hemma", "own-casora"],
+          f"Casora dashboards (also one of the user's own with Casora tiles): {p['dashboards']}")
+    check(rt.payload(None, admin=False)["dashboards"] == ["home-casora", "lovelace", "old-hemma", "own-casora"],
+          "an admin-only dashboard is not named to other users")
+    check(FakeStore.saved["casora.theme"]["scope"] == "casora" and sent, "scope saved and sent")
+    dashes["mine"].cfg = room
+    dashes["home-casora"].cfg = None  # a moment unreadable: keeps its place
+    hass.async_create_task = lambda c: asyncio.get_running_loop().create_task(c)
+
+    async def saved_dash():
+        for fn in BUS.get("lovelace_updated", []):
+            fn(None)
+        for _ in range(3):
+            await asyncio.sleep(0)
+
+    asyncio.run(saved_dash())
+    check(rt.payload(None)["dashboards"] == ["admin-casora", "home-casora", "lovelace", "mine", "old-hemma", "own-casora"],
+          "a saved dashboard joins the list")
+    check(asyncio.run(theme.async_set_scope(hass, "rooms")) is False, "unknown scope refused")
+    check(asyncio.run(theme.async_set_scope(hass, "all")) is True and rt.payload(None)["dashboards"] == [], "back to all")
     theme.async_unload_theme(hass)
     check(extra == [], "unload removes the page script")
+    check(not BUS.get("lovelace_updated"), "unload stops listening")
 
     # 6. Second start: nothing taken over again (the choice stays)
     FakeStore.saved["frontend_theme"] = {L: "Casora"}

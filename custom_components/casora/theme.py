@@ -14,12 +14,16 @@ The design is one setting for the whole installation (Studio › Settings › De
       → events {"design": str|None, "names": [...], "hash": str, "hashes": {name: str}, "theme"?: {...}}
         ("theme" only when the browser does not have that version cached; "hashes" tells which cached
         designs are current - the browser loads all of them for HA's theme picker; every signed-in user)
-  casora/theme/set       ← {"design": str|None}   (admins; "", None or one of "names")
+        + "scope": "all"|"casora", "dashboards": [url_path, ...] (issue 129: with "casora" the design only
+        applies on Casora dashboards and Casora's own panels; "dashboards" lists them, default dashboard
+        as "lovelace", empty with "all")
+  casora/theme/set       ← {"design"?: str|None, "scope"?: "all"|"casora"}   (admins; "", None or one of "names")
   casora/theme/get       ← {"name": str} → {"theme": {...}}   (any design, for previews)
 """
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import hashlib
 import json
@@ -33,6 +37,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.frontend import add_extra_js_url, remove_extra_js_url
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.util.yaml import load_yaml
 
@@ -180,16 +185,39 @@ class _Runtime:
         self.data = data
         self.subs: set = set()
         self.js_url: str | None = None
+        # (url_path, admin only) of the Casora dashboards; admin-only ones go to admins only.
+        self.paths: list[tuple[str, bool]] = []
+        self.unsub_lovelace: list = []
+        # False until the list was read once: the browsers keep their cached list meanwhile (HA start).
+        self.paths_ready = False
+        self.lock = asyncio.Lock()
+
+    @property
+    def scope(self) -> str:
+        return "casora" if self.data.get("scope") == "casora" else "all"
+
+    async def async_refresh_paths(self) -> None:
+        """Casora dashboards (url paths) for the scope "casora"; tells the browsers when the list changes."""
+        async with self.lock:  # one run at a time: the last answer is the newest
+            paths = await async_casora_paths(self.hass, self.paths) if self.scope == "casora" else []
+            first = not self.paths_ready
+            self.paths_ready = True
+            if paths != self.paths or first:
+                self.paths = paths
+                self.notify()
 
     @property
     def design(self) -> str | None:
         d = self.data.get("design")
         return d if d == "" or d in self.themes else None
 
-    def payload(self, have: str | None) -> dict:
+    def payload(self, have: str | None, admin: bool = True) -> dict:
         d = self.design
         h = self.hashes.get(d or "", "")
-        out: dict[str, Any] = {"design": d, "names": list(self.themes), "hash": h, "hashes": dict(self.hashes)}
+        out: dict[str, Any] = {"design": d, "names": list(self.themes), "hash": h, "hashes": dict(self.hashes),
+                               "scope": self.scope}
+        if self.paths_ready or self.scope != "casora":
+            out["dashboards"] = [p for p, adm in self.paths if admin or not adm]
         if d and h != have:
             out["theme"] = self.themes[d]
         return out
@@ -217,6 +245,65 @@ async def async_set_design(hass: HomeAssistant, design: str | None) -> bool:
         await rt.store.async_save(rt.data)
         rt.notify()
     return True
+
+
+async def async_set_scope(hass: HomeAssistant, scope: str) -> bool:
+    """Where the design applies: "all" (every page) or "casora" (Casora dashboards and panels, issue 129)."""
+    rt = _rt(hass)
+    if rt is None or scope not in ("all", "casora"):
+        return False
+    if rt.scope != scope:
+        rt.data["scope"] = scope
+        await rt.store.async_save(rt.data)
+        await rt.async_refresh_paths()
+        rt.notify()
+    return True
+
+
+def uses_casora(cfg: Any) -> bool:
+    """A dashboard with any Casora card (template casora_*), not only Casora's own layouts (dashboard_kind)."""
+    from .dashboard_kinds import dashboard_kind
+
+    if dashboard_kind(cfg) != "none":
+        return True
+
+    def walk(o: Any) -> bool:
+        if isinstance(o, list):
+            return any(walk(x) for x in o)
+        if not isinstance(o, dict):
+            return False
+        tpl = o.get("template")
+        # hemma_* / custom:hemma-*: dashboards from before the rename, still served (casora-kompat.js).
+        if any(isinstance(t, str) and t.startswith(("casora_", "hemma_")) for t in (tpl if isinstance(tpl, list) else [tpl])):
+            return True
+        if isinstance(o.get("type"), str) and o["type"].startswith(("custom:casora-", "custom:hemma-")):
+            return True
+        return any(walk(v) for k, v in o.items() if k != "button_card_templates")
+
+    return walk(cfg.get("views") if isinstance(cfg, dict) else None)
+
+
+async def async_casora_paths(hass: HomeAssistant, before: list | None = None) -> list[tuple[str, bool]]:
+    """(url path, admin only) of the dashboards with Casora cards, default dashboard as "lovelace".
+
+    A dashboard that cannot be read right now (a yaml file being edited) keeps its place from before."""
+
+    try:
+        from homeassistant.components.lovelace.const import LOVELACE_DATA
+    except ImportError:
+        return []
+    data = hass.data.get(LOVELACE_DATA)
+    out: list[tuple[str, bool]] = []
+    for url_path, dash in list((data.dashboards if data else {}).items()):
+        try:
+            cfg = await dash.async_load(False)
+        except Exception:  # noqa: BLE001 - never saved or broken: as before (not listed when it never was)
+            out.extend(p for p in (before or []) if p[0] == (url_path or "lovelace"))
+            continue
+        if uses_casora(cfg):
+            conf = getattr(dash, "config", None)
+            out.append((url_path or "lovelace", bool(isinstance(conf, dict) and conf.get("require_admin"))))
+    return sorted(out)
 
 
 def current_design(hass: HomeAssistant) -> str | None:
@@ -284,10 +371,11 @@ def ws_subscribe(hass: HomeAssistant, connection: websocket_api.ActiveConnection
         connection.send_error(msg["id"], "not_ready", "Casora is not loaded")
         return
     have = {"hash": msg.get("hash")}
+    admin = bool(connection.user and connection.user.is_admin)
 
     @callback
     def send() -> None:
-        p = rt.payload(have["hash"])
+        p = rt.payload(have["hash"], admin)
         if "theme" in p:
             have["hash"] = p["hash"]
         connection.send_message(websocket_api.event_message(msg["id"], p))
@@ -298,14 +386,21 @@ def ws_subscribe(hass: HomeAssistant, connection: websocket_api.ActiveConnection
     send()
 
 
-@websocket_api.websocket_command({vol.Required("type"): "casora/theme/set", vol.Required("design"): vol.Any(None, str)})
+@websocket_api.websocket_command({vol.Required("type"): "casora/theme/set", vol.Optional("design"): vol.Any(None, str),
+                                  vol.Optional("scope"): vol.In(["all", "casora"])})
 @websocket_api.require_admin
 @websocket_api.async_response
 async def ws_set(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
-    if not await async_set_design(hass, msg["design"]):
+    if "design" not in msg and "scope" not in msg:
+        connection.send_error(msg["id"], "invalid_format", "design or scope required")
+        return
+    if "design" in msg and not await async_set_design(hass, msg["design"]):
         connection.send_error(msg["id"], "unknown_design", f"Unknown design: {msg['design']}")
         return
-    connection.send_result(msg["id"], {"design": msg["design"]})
+    if "scope" in msg:
+        await async_set_scope(hass, msg["scope"])
+    rt = _rt(hass)
+    connection.send_result(msg["id"], {"design": rt.design if rt else None, "scope": rt.scope if rt else "all"})
 
 
 @websocket_api.websocket_command({vol.Required("type"): "casora/theme/get", vol.Required("name"): str})
@@ -338,6 +433,15 @@ async def async_setup_theme(hass: HomeAssistant) -> None:
         websocket_api.async_register_command(hass, ws_get)
         data["theme_ws"] = True
     rt = data["theme_rt"]
+    if not rt.unsub_lovelace:
+        # A saved dashboard can become (or stop being) a Casora dashboard; Lovelace may also load after Casora.
+        @callback
+        def _changed(_event: Any = None) -> None:
+            hass.async_create_task(rt.async_refresh_paths())
+
+        rt.unsub_lovelace = [hass.bus.async_listen("lovelace_updated", _changed), async_at_started(hass, _changed)]
+        # Lovelace sets up before Casora (frontend dependency): read the list now, not only once HA has started.
+        _changed()
     if rt.js_url is None:
         path = hass.config.path(SCRIPTS_DIR, THEME_JS)
         try:
@@ -351,6 +455,10 @@ async def async_setup_theme(hass: HomeAssistant) -> None:
 @callback
 def async_unload_theme(hass: HomeAssistant) -> None:
     rt = _rt(hass)
+    if rt is not None and rt.unsub_lovelace:
+        for unsub in rt.unsub_lovelace:
+            unsub()
+        rt.unsub_lovelace = []
     if rt is not None and rt.js_url:
         try:
             remove_extra_js_url(hass, rt.js_url)

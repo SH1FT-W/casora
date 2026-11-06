@@ -22,7 +22,7 @@ const T = (bg, extra = {}) => ({
   modes: { light: { 'primary-background-color': bg + 'L' }, dark: { 'primary-background-color': bg + 'D' } }, ...extra,
 });
 
-function env({ cache, cache2, hass, updateHass = false }) {
+function env({ cache, cache2, hass, updateHass = false, path = '/' }) {
   const store = new Map(Object.entries(cache ? { 'casora.theme.v1': JSON.stringify(cache) } : {}));
   if (cache2) store.set('casora.theme.v2', JSON.stringify(cache2));
   const events = [];
@@ -39,6 +39,7 @@ function env({ cache, cache2, hass, updateHass = false }) {
   };
   const head = { appendChild(el) { el.isConnected = true; el.sheet = { cssRules: [mkRule()] }; rules.push(el.sheet.cssRules[0]); } };
   const attrs = new Set();
+  const pageWide = { 'casora-body-font': { media: '' }, 'casora-fo-body-scroll': { media: '' } };
   const settheme = [];
   const updates = [];
   const haEl = { hass, dispatchEvent: (e) => { if (e.type === 'settheme') { settheme.push(e.detail.theme);
@@ -48,11 +49,14 @@ function env({ cache, cache2, hass, updateHass = false }) {
   const doc = {
     head, documentElement: { toggleAttribute: (a, on) => (on ? attrs.add(a) : attrs.delete(a)) },
     querySelector: (s) => (s === 'home-assistant' ? haEl : null),
+    getElementById: (id) => pageWide[id] || null,
     createElement: () => ({ textContent: '', isConnected: false }),
     dispatchEvent: (e) => events.push(e),
   };
   const timers = [];
+  const winEvents = {};
   const ctx = {
+    location: { pathname: path }, addEventListener: (t, fn) => { winEvents[t] = fn; },
     document: doc, localStorage: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v) },
     CustomEvent: class { constructor(type, init) { this.type = type; this.detail = init && init.detail; } },
     MutationObserver: class { observe() {} },
@@ -63,7 +67,8 @@ function env({ cache, cache2, hass, updateHass = false }) {
   vm.createContext(ctx);
   vm.runInContext(src, ctx);
   const tick = async () => { for (let i = 0; i < 5; i++) { while (timers.length) timers.shift()(); await new Promise((r) => setImmediate(r)); } };
-  return { api: ctx.casoraTheme, rule: () => rules[rules.length - 1], events, store, haEl, attrs, tick, settheme, updates };
+  const go = (p) => { ctx.location.pathname = p; if (winEvents['location-changed']) winEvents['location-changed'](); };
+  return { api: ctx.casoraTheme, rule: () => rules[rules.length - 1], events, store, haEl, attrs, tick, settheme, updates, go, pageWide };
 }
 
 // 1. Cached design applies at once, before HA is there (no flash on reload)
@@ -299,5 +304,66 @@ function env({ cache, cache2, hass, updateHass = false }) {
   assert.equal(e.rule().style.size, 0, 'no variables before anything is known');
   assert.equal(e.api.design(), undefined);
   assert.deepEqual(e.api.vars(null, true), {});
+}
+// 6. Issue 129: scope "casora" – the design only on Casora dashboards and the Studio, HA's look everywhere else.
+//    The designs stay in HA's theme list (card-mod/UIX look their styles up there), but a Casora design in the
+//    profile becomes "Backend-selected", or HA would apply it on every page itself.
+{
+  const cache2 = { themes: { Casora: T('c') }, hashes: { Casora: 'a' }, names: ['Casora'], design: 'Casora',
+    scope: 'casora', dashboards: ['home-casora', 'lovelace'] };
+  let cb;
+  const conn = { sendMessagePromise: async () => ({ value: true }), subscribeMessage: async (fn) => { cb = fn; return () => {}; } };
+  const e = env({ cache2, path: '/my-dash/0', updateHass: true,
+    hass: { themes: { darkMode: false, themes: {} }, selectedTheme: { theme: 'Casora' }, user: { id: 'u' }, connection: conn } });
+  assert.equal(e.api.scope(), 'casora');
+  assert.equal(e.rule().style.size, 0, 'another dashboard: no Casora variables');
+  assert.ok(!e.attrs.has('data-casora-design') && e.attrs.has('data-casora-scope-off'), 'page marked as outside the scope');
+  assert.equal(e.pageWide['casora-body-font'].media, 'not all', 'body font rule off outside the scope');
+  assert.equal(e.pageWide['casora-fo-body-scroll'].media, 'not all', 'scrollbar rule off outside the scope');
+  await e.tick();
+  cb({ design: 'Casora', names: ['Casora'], hash: 'a', hashes: { Casora: 'a' }, scope: 'casora', dashboards: ['home-casora', 'lovelace'] });
+  await e.tick();
+  assert.deepEqual(e.settheme, [''], 'Casora design in the profile → Backend-selected');
+  assert.ok(e.haEl.hass.themes.themes.Casora, 'still in HA\'s theme list (card-mod/UIX styles)');
+  const uix = e.events.length;
+  e.go('/home-casora/wohnzimmer');
+  assert.equal(e.rule().style.get('--primary-background-color')[0], 'cL', 'Casora dashboard: design applied');
+  assert.ok(e.attrs.has('data-casora-design') && !e.attrs.has('data-casora-scope-off'));
+  assert.equal(e.pageWide['casora-body-font'].media, '', 'and on again on a Casora dashboard');
+  e.go('/config/integrations');
+  assert.equal(e.rule().style.size, 0, 'HA settings: HA\'s look again');
+  assert.ok(e.events.slice(uix).filter((x) => x.type === 'uix-update').length >= 2, 'card-mod told on the way in and out');
+  e.go('/casora-studio');
+  assert.equal(e.rule().style.get('--primary-background-color')[0], 'cL', 'Casora Studio: design applied');
+  e.go('/casora-mine/0');
+  assert.equal(e.rule().style.size, 0, 'a dashboard merely called casora-… is not a Casora dashboard');
+  e.go('/');
+  assert.equal(e.rule().style.get('--primary-background-color')[0], 'cL', 'default dashboard listed as lovelace');
+  // Scope "all" (default): every page, as before, no scope mark.
+  const a = env({ cache2: { ...cache2, scope: undefined }, path: '/my-dash/0' });
+  assert.equal(a.api.scope(), 'all');
+  assert.equal(a.rule().style.get('--primary-background-color')[0], 'cL', 'scope all: also on other dashboards');
+  assert.ok(!a.attrs.has('data-casora-scope-off'));
+  assert.equal(a.pageWide['casora-body-font'].media, '', 'scope all: rules untouched');
+}
+// 7. Issue 129, review: HA still starting (no list yet) keeps the cached list; the scope mark follows the page also
+//    without a Casora design; scope "all" without a design sends no uix-update.
+{
+  let cb;
+  const conn = { sendMessagePromise: async () => ({ value: true }), subscribeMessage: async (fn) => { cb = fn; return () => {}; } };
+  const e = env({ cache2: { themes: {}, hashes: {}, names: ['Casora'], design: '', scope: 'casora', dashboards: ['home-casora'] },
+    path: '/home-casora/0', hass: { themes: { darkMode: false, themes: {} }, connection: conn } });
+  await e.tick();
+  cb({ design: '', names: ['Casora'], hash: '', hashes: {}, scope: 'casora' });
+  await e.tick();
+  e.go('/home-casora/1');
+  assert.ok(!e.attrs.has('data-casora-scope-off'), 'cached list kept while the server has none yet');
+  e.go('/my-dash/0');
+  assert.ok(e.attrs.has('data-casora-scope-off'), 'mark set without a Casora design too');
+  e.go('/home-casora/0');
+  assert.ok(!e.attrs.has('data-casora-scope-off'), 'and taken off again');
+  const a = env({ cache2: { themes: {}, hashes: {}, names: ['Casora'], design: '' }, path: '/x' });
+  a.go('/y');
+  assert.equal(a.events.filter((x) => x.type === 'uix-update').length, 0, 'scope all without a design: no uix-update');
 }
 console.log('ok casora_theme_js');

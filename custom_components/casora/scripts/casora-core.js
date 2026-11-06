@@ -1562,6 +1562,7 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
   if (document.getElementById('casora-body-font')) return;
   var st = document.createElement('style');
   st.id = 'casora-body-font';
+  // Outside the design's scope (issue 129) casora-theme.js turns this element off (media).
   st.textContent = 'html body{font-family:var(--casora-body-font, Roboto, Noto, sans-serif);}';
   (document.head || document.documentElement).appendChild(st);
 })();
@@ -9601,6 +9602,12 @@ window.casoraMenuGlass = {
     'wa-drawer': NO_ENTRANCE + STACKED_SCRIM + DRAWER_SLIDE + SHEET_RADIUS + GRAIN,
   };
 
+  // Page outside the design's scope (casora-theme.js, issue 129).
+  function scopeOff() {
+    var de = document.documentElement;
+    return !!(de && de.hasAttribute && de.hasAttribute('data-casora-scope-off'));
+  }
+
   // The sidebar is a wa-drawer too; only the bottom sheet counts as a dialog.
   function isDialogHost(el) {
     if (!el || !CSS_BY_HOST[el.localName]) return false;
@@ -9610,6 +9617,7 @@ window.casoraMenuGlass = {
   // Only over a dashboard or the Studio; HA's own pages (settings, HACS ...) and its
   // fullscreen dialogs keep HA's layout.
   function wantsOffset(host) {
+    if (scopeOff()) return false;
     var outer = host.getRootNode && host.getRootNode().host;
     if (outer && (outer.hasAttribute('fullscreen') || outer.getAttribute('width') === 'full')) return false;
     var ha = document.querySelector('home-assistant');
@@ -9621,6 +9629,8 @@ window.casoraMenuGlass = {
   function injectInto(el) {
     if (!el || el[MARK] || !el.shadowRoot) return false;
     if (!isDialogHost(el)) return false;
+    // Issue 129: a page outside the design's scope keeps HA's own dialogs.
+    if (scopeOff()) return false;
     el[MARK] = true;
     var css = CSS_BY_HOST[el.localName];
     var st = document.createElement('style');

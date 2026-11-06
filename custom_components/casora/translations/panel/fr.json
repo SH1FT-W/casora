@@ -2946,7 +2946,9 @@
     "This door or window does not count for security.": "Cette porte ou fenêtre ne compte pas pour la sécurité.",
     "New version on the phone": "Nouvelle version sur le téléphone",
     "Oven": "Four",
-    "Operation state or cavity temperature of the oven": "État de fonctionnement ou température de l’enceinte du four"
+    "Operation state or cavity temperature of the oven": "État de fonctionnement ou température de l’enceinte du four",
+    "Only on Casora dashboards": "Uniquement sur les tableaux de bord Casora",
+    "Other dashboards and Home Assistant's own pages keep their look.": "Les autres tableaux de bord et les pages de Home Assistant gardent leur apparence."
   },
   "patterns": [
     [

@@ -2946,7 +2946,9 @@
     "Pick how all Casora dashboards look.": "Elige cómo se ven todos los dashboards de Casora.",
     "New version on the phone": "Nueva versión al móvil",
     "Oven": "Horno",
-    "Operation state or cavity temperature of the oven": "Estado de funcionamiento o temperatura interior del horno"
+    "Operation state or cavity temperature of the oven": "Estado de funcionamiento o temperatura interior del horno",
+    "Only on Casora dashboards": "Solo en paneles de Casora",
+    "Other dashboards and Home Assistant's own pages keep their look.": "Los demás paneles y las páginas de Home Assistant mantienen su aspecto."
   },
   "patterns": [
     [
