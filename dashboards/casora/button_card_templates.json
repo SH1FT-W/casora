@@ -3980,6 +3980,9 @@
             },
             {
               "--casora-entity-glow-opacity": "var(--casora-entity-glow-opacity-active, 0)"
+            },
+            {
+              "--casora-chart-spark": "var(--casora-chart-spark-active, color-mix(in srgb, var(--casora-entity-ink-state, var(--casora-entity-state-active-color, var(--casora-entity-state-active, var(--secondary-text-color)))) 60%, transparent))"
             }
           ],
           "entity_picture": [
