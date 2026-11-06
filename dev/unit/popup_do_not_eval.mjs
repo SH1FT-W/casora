@@ -52,3 +52,6 @@ const hl = H.layout({ fields: { top: '[[[ return "k"; ]]]', a: '[[[ return "a"; 
 assert.deepEqual(bad(hl), [], 'H.layout: innere button-cards mit do_not_eval');
 assert.ok(nested(hl).length >= 3, 'H.layout hat verschachtelte Karten');
 console.log('popup_do_not_eval: ok');
+// All checked. 02-devices.js keeps polling for window.casoraPopup (250 ms, up to 60 s), which this test never
+// defines; without an explicit exit node idles until that interval gives up.
+process.exit(0);

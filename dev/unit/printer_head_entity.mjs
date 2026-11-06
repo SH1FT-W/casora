@@ -35,3 +35,6 @@ for (const k of ['tap_action', 'icon_tap_action']) {
   assert.match(String(tpl.casora_popup_3d_printer[k].casora_popup.head_entity || ''), /_casoraPrint\.headEntity\(/, k + ': head_entity');
 }
 console.log('printer_head_entity: ok');
+// All checked. 02-devices.js keeps polling for window.casoraPopup (250 ms, up to 60 s), which this test never
+// defines; without an explicit exit node idles until that interval gives up.
+process.exit(0);
