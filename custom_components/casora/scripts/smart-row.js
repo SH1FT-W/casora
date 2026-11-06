@@ -3,6 +3,10 @@
 const EMPTY_SET = new Set();
 const activeStates     = () => window.CASORA_ACTIVE_STATES || EMPTY_SET;
 const filterCategories = () => window.CASORA_FILTER_CATEGORIES || {};
+// HA leaf elements whose own shadow root never holds an ha-card (ha-card's is a slot, the icons and
+// the ripple draw only themselves). _patchHaCardsDeep skips them: each one used to wait 40 frames
+// for an ha-card that never comes, three times per tile (~250k calls while a phone dashboard loads).
+const NO_CARD_INSIDE = new Set(['ha-card', 'ha-ripple', 'ha-svg-icon', 'ha-state-icon', 'ha-icon']);
 
 (function measureSafeArea() {
   function measure() {
@@ -1037,7 +1041,7 @@ class CasoraSmartRow extends HTMLElement {
       h.style.setProperty('--casora-card-hover-filter', 'none');
     });
     sr.querySelectorAll('*').forEach(el => {
-      if (el.shadowRoot) this._patchHaCardsDeep(el, 0);
+      if (el.shadowRoot && !NO_CARD_INSIDE.has(el.localName)) this._patchHaCardsDeep(el, 0);
     });
   }
 
