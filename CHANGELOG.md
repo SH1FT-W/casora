@@ -4,6 +4,28 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.20 – 06.11.2026
+
+A carbon monoxide detector, a design that can keep to Casora alone, and histories that show their value when tapped.
+
+### New
+- **Carbon monoxide detector (#124):** a new community tile for CO sensors. The tile shows the ppm, yellow from 30, orange from 50, red from 100. The popup has a ring with the thresholds, the history over 24 h or 7 days, "What to do" for the level and the detector's rows such as battery and self test.
+- **Design only on Casora dashboards (#129):** in the Studio under Design you can set the Casora design to apply to Casora dashboards only. Other dashboards then keep Home Assistant's spacing, corners and font.
+- **Set up with your own assistant (#131):** the new service `casora.setup_overview` gives an assistant over MCP the overview of the house: rooms, devices without a room and devices without a tile. The guide describes the way, and the setup assistant points to it when no AI task is set up.
+
+### Changed
+- **Heating:** the temperature history now sits under the dial.
+- **Consistent popups:** every history under a dial shows 24 h, all share the same heading, and the state section is called "State" everywhere.
+- **Temperature histories** span at least 1 °C, so an almost flat line no longer looks like a swing.
+- **Faster:** tile rows, scenes, the room bar and clocks do less work while loading; the Studio reads settings and histories only once.
+
+### Fixed
+- **Tapping a history:** now always shows value and time, also in popups with a dial and in tiles without a tap action, where it did not react at all.
+- **Pulse popup (#133):** showed formatting text in the row of critical devices.
+- **Highlighted tiles (#134):** the history in an active tile was barely visible; it now takes the tile's colour.
+- **Doors and windows in the security popup (#135):** rows carry the sensor's name, with room and device below. A combined sensor without its own room shows the room of its sensors.
+- **Dial:** the glow under the active mode ended in a straight edge.
+
 ## 26.11.19 – 05.11.2026
 
 A calmer popup head and a lamp that stands on its own.

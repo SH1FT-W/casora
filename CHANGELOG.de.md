@@ -4,6 +4,28 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.20 – 06.11.2026
+
+Ein Melder für Kohlenmonoxid, ein Design, das auf Wunsch nur Casora gestaltet, und Verläufe, die beim Antippen ihren Wert zeigen.
+
+### Neu
+- **Kohlenmonoxid-Melder (#124):** neue Community-Kachel für CO-Sensoren. Die Kachel zeigt die ppm, ab 30 ppm gelb, ab 50 orange, ab 100 rot. Das Popup hat einen Ring mit den Schwellen, den Verlauf über 24 Std. oder 7 Tage, „Was tun“ passend zur Stufe und die Zeilen des Melders wie Batterie und Selbsttest.
+- **Design nur auf Casora-Dashboards (#129):** im Studio unter Design lässt sich einstellen, dass das Casora-Design nur auf Casora-Dashboards gilt. Andere Dashboards behalten dann Abstände, Rundungen und Schrift von Home Assistant.
+- **Einrichten mit dem eigenen Assistenten (#131):** der neue Dienst `casora.setup_overview` gibt einem Assistenten über MCP die Übersicht des Hauses: Räume, Geräte ohne Raum und Geräte ohne Kachel. Die Anleitung beschreibt den Weg, der Einrichtungs-Assistent weist darauf hin, wenn keine KI-Aufgabe eingerichtet ist.
+
+### Geändert
+- **Heizung:** unter dem Rad steht jetzt der Temperaturverlauf.
+- **Einheitliche Popups:** jeder Verlauf unter einem Rad zeigt 24 Std., jeder hat dieselbe Überschrift, der Abschnitt mit dem Zustand heißt überall „Zustand“.
+- **Temperaturverläufe** umfassen mindestens 1 °C, eine fast gerade Linie wirkt nicht mehr wie ein Ausschlag.
+- **Schneller:** Kachelreihen, Szenen, Raumleiste und Uhren brauchen weniger Arbeit beim Laden, das Studio liest Einstellungen und Verläufe nur noch einmal.
+
+### Behoben
+- **Verlauf antippen:** zeigt jetzt immer Wert und Uhrzeit, auch in Popups mit Rad und in Kacheln ohne Tippaktion, wo er vorher gar nicht reagierte.
+- **Pulse-Popup (#133):** zeigte bei kritischen Geräten Formatierungstext in der Zeile.
+- **Hervorgehobene Kacheln (#134):** der Verlauf in einer aktiven Kachel war kaum zu sehen, er nimmt jetzt die Farbe der Kachel.
+- **Türen und Fenster im Sicherheits-Popup (#135):** die Zeilen tragen den Namen des Sensors, darunter Raum und Gerät. Ein kombinierter Sensor ohne eigenen Raum zeigt den Raum seiner Sensoren.
+- **Rad:** der Schein unter dem aktiven Modus endete in einer geraden Kante.
+
 ## 26.11.19 – 05.11.2026
 
 Ein ruhigerer Popup-Kopf und eine Lampe, die für sich steht.
