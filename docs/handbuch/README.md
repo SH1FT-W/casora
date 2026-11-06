@@ -1,33 +1,21 @@
 # Casora-Bau-Handbuch
 
-Wie in Casora gebaut wird, damit jede neue Kachel, jedes Popup und jede Studio-Fläche sofort zum Rest
-passt. Stand: Feinschliff-Runde 1.3 (10.10.2026). Grundlage sind Messungen über die ganze Prüfmatrix
-(Popups, Kacheln, Badges, Handy, Studio, Umzug), nicht Geschmack.
+Wie in Casora gebaut wird, damit neue Kacheln, Popups und Studio-Flächen zum Rest passen. Kurz halten: was hier
+steht, gilt; was nicht hier steht, ist frei (mit Blick auf die Nachbarn).
 
 | Datei | Wofür |
 |---|---|
-| [design-regeln.md](design-regeln.md) | Tokens (Radien, Abstände, Schatten, Schrift, Farben, Symbolkreise, Bewegung), Geometrie, Kontrast, Trefferflächen, Hover/Druck |
-| [blaupause-kachel.md](blaupause-kachel.md) | Neue Kachel oder neues Badge Schritt für Schritt |
-| [blaupause-popup.md](blaupause-popup.md) | Neues Popup Schritt für Schritt |
-| [popup-richtlinien-v3.md](popup-richtlinien-v3.md) | **Popup-Richtlinien v3 „Bühne“** (seit 28.10.2026): Kopf, Bühne S1–S8, Schnellwahl, gruppierte Listen – gilt vor v2 |
-| [popup-blaupause.md](popup-blaupause.md) | Popup-Muster v2: Aufbau, 11 Regeln, Entscheidungen, Ausnahmen, Bausteine `UI.section/actions/settings/empty/width` |
-| [popup-rework-v3-auftrag.md](popup-rework-v3-auftrag.md) | Arbeitsanweisung: alle Popups auf v3 umbauen (Bausteine, Pilot, Wellen, Prüfungen, Bericht) |
+| [design-regeln.md](design-regeln.md) | Tokens (Radien, Abstände, Schatten, Schrift, Farben, Symbolkreise, Bewegung), Kontrast, Trefferflächen |
+| [popup-richtlinien-v3.md](popup-richtlinien-v3.md) | **Alles zu Popups**: Kopf, Bühne, Schnellwahl, Listen, Diagramme, neues Popup bauen (§18) |
+| [blaupause-kachel.md](blaupause-kachel.md) | Neue Kachel oder neues Badge |
 | [blaupause-studio-flaeche.md](blaupause-studio-flaeche.md) | Neue Studio-Seite, Inspektor-Abschnitt, Ablauf oder Rückfrage |
 | [wortliste.md](wortliste.md) | Verbindliche Wörter Deutsch/Englisch, Zahlen, Einheiten |
-| [test-und-release.md](test-und-release.md) | Tests, Messwerkzeuge, Gate, Release, was in Prod ohne Neustart geht |
-| [regeltests.md](regeltests.md) | Welche Regel wie automatisch rot wird – vorhanden und geplant |
-
-## Lesart
-
-- **Gilt** = so ist der Code heute und so wird weiter gebaut. Abweichungen sind Fehler.
-- **OFFEN – Entscheidung Maintainer: A … / B …** = Varianten liegen vor, gewählt ist noch nicht.
-  Bis zur Wahl: bestehenden Wert der Nachbarn übernehmen, nichts Drittes erfinden.
-- **(V)** in der Wortliste = Vorschlag, gilt erst nach der Wahl.
+| [test-und-release.md](test-und-release.md) | Tests, Gate, Release, was in Prod ohne Neustart geht |
+| [regeltests.md](regeltests.md) | Welche Regel wie automatisch rot wird |
+| [archiv/](archiv/) | Erledigte Aufträge und abgelöste Muster (Popup v2, Umbau-Aufträge), nur zum Nachlesen |
 
 ## Drei Sätze vorweg
 
-1. Erst wiederverwenden (Kern-Bausteine `window._casoraUI`, `_casoraStd`, Finder `casoraDevice`,
-   Theme-Variablen), dann bauen. Neue Klassen, Farben und Radien sind die Ausnahme und brauchen einen Grund.
-2. Eine Fläche ist erst fertig, wenn sie in allen Zuständen, auf Desktop/Tablet/Handy, hell/dunkel,
-   Deutsch/Englisch im Theme „Casora“ geprüft ist.
+1. Erst wiederverwenden (Kern-Bausteine `window._casoraUI`, Finder `casoraDevice`, Theme-Variablen), dann bauen.
+2. Eine Fläche ist fertig, wenn sie in ihren Zuständen, auf Desktop und Handy, hell und dunkel funktioniert.
 3. Jeder gefundene Fehler bekommt einen Test (`dev/unit/` ohne HA, `dev/qa/regress/` mit Test-HA).

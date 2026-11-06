@@ -12661,12 +12661,9 @@ window.casoraMenuGlass = {
     return bits.join(' · ');
   }
 
-  // ── Popup blueprint v2 (26.10.2026, docs/handbuch/popup-blaupause.md) ─────────────────────────────
-  // The pieces every popup composes, top to bottom: header (frame; sub pages via casoraPopup.sub), hero
-  // (one main area, built by the module: chart, picture, slider …), action row (actions), sections in the
-  // fixed order Bedienung → Zustand → Verlauf → Einstellungen (section), the row types (row.*), the last
-  // row „Weitere Einstellungen“ (settingsRow / settings), „Mehr (n) ⌄“ (more with hint), the empty row
-  // (empty) and the two widths (width). dev/unit/popup_blaupause.mjs keeps popups on these pieces.
+  // ── Popup pieces from blueprint v2, still used by v3 (docs/handbuch/popup-richtlinien-v3.md §15) ──────
+  // Sections in the fixed order Bedienung → Zustand → Verlauf (section), the row types (row.*), the empty row
+  // (empty), sub pages (casoraPopup.sub, page) and the two widths (width). dev/unit/popup_v3.mjs checks them.
   var SEC_HEAD = { control: 'Bedienung', state: 'Zustand', history: 'Verlauf', settings: 'Einstellungen' };
   var SEC_ORDER = ['control', 'state', 'history', 'settings'];
   var WIDTH = { one: 552, two: 900, image: 900 };

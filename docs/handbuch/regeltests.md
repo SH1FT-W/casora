@@ -4,9 +4,9 @@ Ziel (Versprechen 5): jede Abweichung von den Regeln im Handbuch macht einen Tes
 sie sieht. Stufen: **statisch** (`dev/unit/`, Sekunden, läuft in jedem Gate) → **Laufzeit** (Test-HA,
 `dev/qa/regress/` oder eigener Gate-Schritt).
 
-Grundsatz für Altlasten: Wo heute schon Abweichungen bestehen, zählt der Test als **Sperrklinke** – die
-Zahl darf nicht steigen, sinkt sie, wird die Grenze nachgezogen. So wird nichts schlimmer, ohne dass
-alles auf einmal umgebaut werden muss.
+Altlasten: Ein Regeltest nennt die bekannten Stellen mit Grund; neue Stellen sind rot, weniger ist immer in Ordnung
+(keine Zahl nachziehen). Ist ein Umbau fertig, wird sein Regeltest im selben Commit vereinfacht. Neue Regeltests nur
+für Fehler, die wirklich wiederkehren.
 
 ## 1. Schon vorhanden
 
@@ -26,31 +26,4 @@ alles auf einmal umgebaut werden muss.
 | Studio-Felder 38/44 px | `dev/qa/regress/r19_einstellungen_feldgroesse.mjs` | Laufzeit |
 | Umzug unverändert | `r24_umzug_wie_vorher`, `rf02_raum_ablauf`, `r121`, `r122` | Laufzeit |
 | Leistung: Voll-Durchläufe, Leck, doppelte Abrufe | `dev/unit/leistung_13.mjs`, `dev/qa/leistung.mjs --grenzen dev/qa/leistung-grenzen.json` | statisch + Laufzeit (Zähler) |
-| Popup-Muster v2 ([popup-blaupause.md](popup-blaupause.md)): Bausteine da, Breite 552/900, „Weitere Einstellungen“ über `UI.settings` und in jedem migrierten Geräte-Popup, kein eigener Kopf/›-Pfeil, Hauptaktion in Gerätefarbe | `dev/unit/popup_blaupause.mjs` + `popup_blaupause_ausnahmen.json` | statisch, Sperrklinke |
 | Popup v3 „Bühne“ ([popup-richtlinien-v3.md](popup-richtlinien-v3.md)): `UI.stage` S1–S8 und `UI.quick` da, migrierte Popups mit variant 'v3' und Bühne aus `UI.stage`, Schnellwahl ohne gefährliche Einträge und höchstens 4, Diagramme ohne Hex und nur 120/140/160 hoch, nicht migrierte Popups mit Grund in der Liste | `dev/unit/popup_v3.mjs` + `popup_v3_offen.json` | statisch, Sperrklinke |
-
-## 2. Vorschlag – nächste Regeltests
-
-| # | Regel (Handbuch) | Wie rot | Werkzeug da? | Voraussetzung |
-|---|---|---|---|---|
-| R1 | Kontrast ≥ 1,5 bei Schaltern, Text-Kontrast AA, Trefferfläche ≥ 40, kein Haken in Listen | `popup-raender --geo --geo-streng` als Gate-Schritt (zuerst nur kontrast < 1,5, schalter, treffer, haken) | ja (`popup-geo.mjs`) | Laufzeit-HA im Gate; Liste bekannter Ausnahmen mit Grund |
-| R2 | Ringsum ±1 / konzentrisch ±2 / fluchten in Popups | dieselbe Messung, Arten ring/radius/zeilen/etikett/spalten | ja | erst nach OFFEN DP-16 (Zeilenradius) – sonst ist heute jede Zeile rot |
-| R3 | Geometrie in Menüs und Studio (Räume-Menü, Glocke, ⋯, Inspektor) | `ausrichtung.mjs` mit Overlay als Wurzel, als Gate-Schritt | ja | Ausnahmenliste; dk-10/dk-15 entschieden |
-| R4 | Kachel-Geometrie: Symbolkreis ringsum, Badge-Höhe, Ellipse statt Überlauf je Familie | Messwerkzeug aus dem Kachel-Audit (`messen.mjs`) ins Repo heben, Grenzen je Familie | Prototyp (nicht im Repo) | OFFEN dk-05 |
-| R5 | Laufzeit-Stile gegen Tokens (Kreisgrößen, Radien-Stufen, 4er-Raster, Schriftskala) | Stil-Messung des Sprachen-Audits (`stil-messen.mjs`) als Zähler | Prototyp (nicht im Repo) | Token-Satz entschieden (Studio-Sprache, Abschnittsköpfe) |
-| R6 | 0 Konsolenfehler, Warnungen gezählt | `konsole.mjs` als Gate-Schritt „Konsole 0“ mit FREMD-Liste | ja | – (sofort möglich) |
-| R7 | Randfälle ohne `undefined`/`NaN`/Fehler | `randfaelle.mjs` im Gate (arbeit + stress) | ja | – |
-| R8 | Hover nur unter `@media (hover: hover)` | statisch: `:hover`-Regeln außerhalb eines hover-Medienblocks zählen (Sperrklinke) | nein, klein | – |
-| R9 | Neue Theme-Variable hat hellen und dunklen Wert | statisch: Schlüssel in `modes.light` ohne `modes.dark` (und umgekehrt) als Sperrklinke – heute 87 Unterschiede, teils gewollt (Grundwert außerhalb `modes`) | nein, klein | Liste der gewollten Fälle |
-| R10 | Szenenfarbe nur aus dem Studio | statisch: Stellen, die Szenen färben, lesen `casoraSceneColor`/`scene_colors` (Liste der bekannten Stellen, neue Stelle ohne Aufruf = rot) | nein | OFFEN dk-17 |
-| R11 | Keine neuen Klassen-Präfixe in Popups (nur `hui-*` + bekannte Altlasten `lps/hrl/hcal/csl/ct/cfb`) | statisch, Sperrklinke über Präfixe in `class="…"` | nein, klein | – |
-| R12 | Keine weiteren Kopien kleiner Helfer (`esc`, `ago`, `num`) | statisch, Sperrklinke über Funktionskörper (Aufräum-Werkzeug `doppelt.py`) | Prototyp | gemeinsamer `_casoraUtil` (Vorschlag V2 Aufräumen) |
-| R13 | Keine toten CSS-Klassen/Funktionen | `leichen.py` als Sperrklinke | Prototyp | – |
-| R14 | Leere `catch` nicht mehr werden | statisch, Zähler (heute 136 in Dashboard-JS/Panel) | nein, klein | – |
-| R15 | Muster-Reihenfolge in `phrases/en.json` (Spezielles vor Allgemeinem) | statisch: jedes Muster gegen die Beispiele der späteren prüfen | Prototyp (Wortlaut-Audit) | – |
-| R16 | Live-Reaktion verschachtelter Popup-Karten (`triggers_update`) | Unit: Popup-Inhalt mit zwei Zuständen rendern, Karten mit Zustand müssen `triggers_update` haben | nein | – |
-| R17 | Popup-Breite 900/920 bzw. begründet schmal | statisch über `popup_styles` aller `casora_popup` | nein, klein | Liste der schmalen (460/552/620/680) mit Grund |
-| R18 | Leistung: Zähler im Gate | `leistung.mjs --grenzen` als Gate-Schritt (nur Zähler) | ja | ruhiger Rechner nur für Zeiten |
-
-Reihenfolge-Empfehlung: R6, R7 (sofort, Werkzeug fertig) → R1 (nur harte Arten) → R8, R11, R14, R17
-(kleine statische Sperrklinken) → R2–R5, R10 nach den offenen Entscheidungen.

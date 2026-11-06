@@ -286,27 +286,10 @@ Kreise/Flächen bleiben `--casora-color-red`. **Pfeil › in Zeilen (DP-30):** e
   Fläche unsichtbar mit `::before { inset: -Npx }` – Optik bleibt (Fund DP-02: Szenen-Chips 38, Kalender-Pfeile 32).
 - Nichts Antippbares näher als 8 px an einer anderen Taste ohne Abstand dazwischen.
 
-## 13. Popup-Aufbau (Kurzfassung, Details in [blaupause-popup.md](blaupause-popup.md))
+## 13. Popup-Aufbau
 
-Gilt:
-- Breite (seit Muster v2, 26.10.2026): 552 einspaltig, 900 bei zwei Spalten oder Bild (`casoraPopupWidth`), siehe
-  [popup-blaupause.md](popup-blaupause.md).
-- **Kopfzeile A** (seit 1.3, alle Popup-Arten, nur Theme „Casora“/Nebel): Kopf in einer Zeile – links die
-  Symbol-Kachel 56/r16 (Handy 48/r14) in Gerätefarbe, daneben klein der Raum (Etikett), der Titel 28/800 (Handy 24)
-  und die Statuszeile; rechts der Hauptschalter (nur wo es einen Gesamtschalter gibt, ersetzt eigene „Alles aus“-
-  Knöpfe) und das X. Kachel bündig mit den Zeilen darunter (36 px vom Rand, Handy 24). 28 px bis zum Inhalt.
-- Ab 761 px: darunter Diagramm/Kamera/Karte volle Breite →
-  zwei Spalten, **links Bedienung** (Modus mit Überschrift „Modus“ oben links, Programme, Schalter,
-  Aktionen), **rechts Infos** (Status, Messwerte, Verbrauch, Verlauf).
-- Handy (≤ 760): eine Spalte, Reihenfolge Kopf → Diagramm → Modus → übrige Bedienung → Infos.
-- Überschriften **pro Popup** einheitlich: Bedien-Popup (Sheet) alle außen über der Platte,
-  Info-Popup (Glasplatten) alle innen (`--casora-lbl-in: block; --casora-lbl-out: none`).
-
-Entschieden (10.10.2026): A „Kopfzeile“, Symbol als abgerundetes Quadrat, Schalter in Gerätefarbe
-(`--casora-popup-accent`, alle Schalter im Popup). Szenen bekommen eine eigene Abschnittsüberschrift „Szenen“.
-
-> **OFFEN – Entscheidung Maintainer (Listen in Fenstern, Sprachen-Frage 3):** A: jede Zeile Platte 24
-> (wie Popups) / B: Zeilen ohne Platte, nur Hover-Platte (wie Glocke) – Vorschlag B in Glocke/Menüs, A in Popups.
+Aufbau, Kopf, Bühne, Listen, Diagramme und Breite stehen in [popup-richtlinien-v3.md](popup-richtlinien-v3.md); dort
+gilt alles. Aus diesem Dokument gelten für Popups nur die Tokens (Farben, Radien, Schrift, Schatten, Bewegung).
 
 ## 14. Wortlaut
 

@@ -5,27 +5,24 @@ button-card-Vorlagen. Öffentliches Repo: keine persönlichen Daten (echte Entit
 Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
 
 ## Stil
-- Kommentare, Docstrings und Test-Beschreibungen im Code auf Englisch, knapp, wie der umliegende Code.
-  Bestehende deutsche Kommentare einer Datei beim nächsten Arbeiten an ihr mit umstellen (nur Kommentare,
-  keine Logik); Dateinamen dabei ebenfalls englisch (`git mv`, alle Verweise per `git grep` anpassen).
-  Kein Umbau nebenbei.
+- Neue Kommentare, Docstrings und Test-Beschreibungen auf Englisch, knapp, wie der umliegende Code. Bestehende
+  deutsche Kommentare und Dateinamen bleiben, bis die Stelle ohnehin umgeschrieben wird; nichts nebenbei umstellen.
 - Texte, die Nutzer sehen, schreibt der Code auf Deutsch; die englische Fassung steht in
   `custom_components/casora/translations/dashboard/phrases/en.json` (Dashboard) bzw.
   `custom_components/casora/translations/panel/` (Studio). Danach `python3 tools/i18ncheck.py`.
 
 ## Bau-Handbuch
-- Vor neuen Kacheln, Popups oder Studio-Flächen `docs/handbuch/` lesen (Design-Regeln, Blaupausen, Wortliste,
-  Test und Release). Was dort „OFFEN“ ist, nicht selbst entscheiden: Wert der Nachbarn übernehmen.
-- Popups nach `docs/handbuch/popup-richtlinien-v3.md` (Aufbau „Bühne“, gilt vor v2) und `docs/handbuch/popup-blaupause.md`
-  (Muster v2: Zeilen, Unterseiten, Einstellungen, Bausteine in `window._casoraUI`, Regeltest `dev/unit/popup_blaupause.mjs`).
-  Umbau aller Popups: `docs/handbuch/popup-rework-v3-auftrag.md`.
-- Regeltests `dev/unit/design_zaehler.mjs`, `dev/unit/vorlagen_regeln.mjs` müssen grün bleiben.
+- Vor neuen Kacheln, Popups oder Studio-Flächen die passende Datei aus `docs/handbuch/README.md` lesen. Was dort
+  steht, gilt; was nicht dort steht, ist frei (mit Blick auf die Nachbarn).
+- Popups: nur `docs/handbuch/popup-richtlinien-v3.md` (neues Popup: §18). Regeltest `dev/unit/popup_v3.mjs`.
+- Studio-Einstellungen sind Entwürfe: jede Einstellung, auch ein Schalter, wirkt erst mit „Einstellungen speichern“
+  und lässt sich verwerfen (`_cs`-Entwurf in `casora-panel-settings.js`), nie sofort.
 
 ## Vorlagen (button-card)
 - Quelle ist `dashboards/casora/button_card_templates.json`. Nur dort ändern, danach
   `python3 tools/build-templates.py` – das baut `custom_components/casora/panel/casora-templates.json`.
 - `casora-templates.json` nie von Hand bearbeiten. Bei Konflikten: Quelle zusammenführen, neu bauen.
-- Die JSON-Quelle ist mit Einrückung 1 formatiert (`json.dumps(..., ensure_ascii=False, indent=1)`).
+- Die JSON-Quelle ist mit Einrückung 2 formatiert (`json.dumps(..., ensure_ascii=False, indent=2)`).
 
 ## Prüfen (ohne Home Assistant)
 - `node dev/qa/check-templates.mjs` – alle `[[[ … ]]]`-Ausdrücke müssen 0 Fehler haben.
