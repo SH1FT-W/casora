@@ -1496,7 +1496,9 @@
       // T21 (test 2): the settings page (and updates) in the inspector closes with Esc as well – also when the focus
       // left the Studio (a click on the page background), so the document listens too.
       const pageOpen = () => !!(this._csOpen || this._cuOpen) && (this.classList.contains("contentpage") || this.classList.contains("binsp"));
-      document.addEventListener("keydown", (ev) => {
+      // Through _gOn: disconnectedCallback removes it (HA builds a new panel on every visit; a direct listener
+      // on document kept every old panel alive).
+      this._gOn(document, "keydown", (ev) => {
         if (ev.key !== "Escape" || ev.defaultPrevented || !this.isConnected || !pageOpen() || this._flowMode || this._openCombo) return;
         if (ev.composedPath && ev.composedPath().includes(this)) return;
         if ([...this.shadowRoot.querySelectorAll(".askpane, .psheet-panel, .menu, .popmenu, [role=menu], .msearch")].some((n) => n.getClientRects().length)) return;

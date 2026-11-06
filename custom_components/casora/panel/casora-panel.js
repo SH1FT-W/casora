@@ -107,6 +107,20 @@ const isCasoraTheme = (n) => !!n && CASORA_THEMES.some((x) => x.name === n || (x
 // Casora's designs are served by the integration (theme.py) and applied by scripts/casora-theme.js;
 // they are no HA themes. window.casoraTheme knows the design of the installation and of this browser.
 const casoraThemeApi = () => window.casoraTheme || null;
+// Casora's design changed: the open Studio follows. Wired once at module level, not per panel and not in a
+// method: casoraTheme.onChange cannot unsubscribe, and a closure made inside a method shares that method's
+// scope (and with it the panel) – HA builds a new panel on every visit, each old one stayed alive.
+let designHooked = false;
+const hookDesign = () => {
+  if (designHooked || !casoraThemeApi()) return;
+  designHooked = true;
+  casoraThemeApi().onChange(() => {
+    const p = window._casoraStudioPanel;
+    if (!p || !p.isConnected || !p._hass) return;
+    ACCENT_THEME = activeLook(p._hass);
+    p._syncSoftLook();
+  });
+};
 // HA's own theme in this browser (profile) or as default; "default" when none.
 const haThemeName = (hass) => {
   const T = (hass && hass.themes) || {};
@@ -6801,14 +6815,7 @@ class CasoraPanel extends HTMLElement {
       this._syncSoftLook();
     }
     // Casora's design changed (Studio, another device): same, without a hass change.
-    if (!this._designHooked && casoraThemeApi()) {
-      this._designHooked = true;
-      casoraThemeApi().onChange(() => {
-        if (!this.isConnected || !this._hass) return;
-        ACCENT_THEME = activeLook(this._hass);
-        this._syncSoftLook();
-      });
-    }
+    hookDesign();
     this._syncMenuBtn();
     // Docking or folding HA's sidebar moves the panel without a window resize. Measured only when the
     // sidebar or narrow changed: every state change in the house arrives here, and measuring forces a layout.
