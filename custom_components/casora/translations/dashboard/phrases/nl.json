@@ -2788,7 +2788,35 @@
     "Wird genutzt": "In gebruik",
     "Material": "Materiaal",
     "Messing": "Geelkoper",
-    "SuperTack": "SuperTack"
+    "SuperTack": "SuperTack",
+    "Leicht erhöht": "Licht verhoogd",
+    "Gefahr": "Gevaar",
+    "unter 30 ppm": "onder 30 ppm",
+    "30 bis 49 ppm": "30 tot 49 ppm",
+    "50 bis 99 ppm": "50 tot 99 ppm",
+    "ab 100 ppm": "vanaf 100 ppm",
+    "CO-Alarm": "CO-alarm",
+    "Kohlenmonoxid": "Koolmonoxide",
+    "Was tun": "Wat te doen",
+    "Stufen": "Niveaus",
+    "Melder": "Detector",
+    "CO-Melder": "CO-melder",
+    "Bei erhöhtem Wert lüften, ab 50 ppm den Raum verlassen, ab 100 ppm Notruf 112.": "Stijgt de waarde, ventileer; vanaf 50 ppm verlaat de kamer, vanaf 100 ppm bel 112.",
+    "Fenster öffnen und Gasgeräte, Kamin und Heizung prüfen.": "Open de ramen en controleer gastoestellen, open haard en verwarming.",
+    "Lüften und Raum verlassen": "Ventileer en verlaat de kamer",
+    "Gasgeräte und offenes Feuer ausschalten, Fenster öffnen, den Raum verlassen.": "Zet gastoestellen en open vuur uit, open de ramen, verlaat de kamer.",
+    "Haus verlassen, Notruf 112": "Verlaat het huis, bel 112",
+    "Alle nach draußen bringen, Türen offen lassen und erst wieder hinein, wenn die Feuerwehr es erlaubt.": "Breng iedereen naar buiten, laat de deuren open en ga pas weer naar binnen als de brandweer het toestaat.",
+    "Kein Alarm": "Geen alarm",
+    "Rauchalarm": "Rookalarm",
+    "Lebensdauer abgelaufen": "Levensduur verlopen",
+    "Gerätefehler": "Apparaatfout",
+    "Melder tauschen": "Vervang de melder",
+    "Selbsttest": "Zelftest",
+    "Selbsttest gestartet": "Zelftest gestart",
+    "Selbsttest starten? Der Melder piept laut.": "Zelftest starten? De melder geeft een luid signaal.",
+    "Zuletzt erhöht": "Laatst verhoogd",
+    "Nicht in 7 Tagen": "Niet in 7 dagen"
   },
   "patterns": [
     [
@@ -5026,6 +5054,10 @@
     [
       "^(\\d+) Einstellungen empfohlen$",
       "{1} instellingen aanbevolen"
+    ],
+    [
+      "^Letzter Test (.+)$",
+      "Laatste test {1}"
     ]
   ]
 }

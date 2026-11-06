@@ -441,6 +441,16 @@ window.CASORA_TILE_TYPES = [
       { key: "target_entity", label: "Target temperature", domains: ["number"] },
       { key: "keep_warm_entity", label: "Keep warm", domains: ["switch"] },
       TITLE_NAME] },
+  // CO detector (community card, card request 124): a sensor with device_class carbon_monoxide (Matter's CO concentration
+  // in ppm). Tile: the reading, the symbol in the color of its level (green, from 30 ppm yellow, from 50 orange, from 100
+  // red); popup: the reading on a dial with the levels, Verlauf 24 h / 7 days, what to do, battery, self-test and alarm of
+  // the same device (scripts/local/42-co.js).
+  { id: "casora_co", label: "CO detector", template: "casora_co", domains: ["sensor"], classes: ["carbon_monoxide"],
+    icon: "co", color: "var(--casora-color-green, #30D158)", entityLabel: "Carbon monoxide", entityPlaceholder: "Your CO sensor",
+    onlyIf: (hass) => !!(hass && hass.states && Object.keys(hass.states).some((id) => id.startsWith("sensor.")
+      && ((hass.states[id].attributes || {}).device_class === "carbon_monoxide"))),
+    community: { desc: "Carbon monoxide in ppm on the tile, the symbol in the color of its level: green, from 30 ppm yellow, from 50 orange, from 100 red. The popup shows the value in a ring with the four levels, the history of 24 hours and 7 days, what to do when it rises and when it was last raised, plus battery, self-test and alarm of the detector. For every CO sensor, e.g. Matter smoke and CO alarms." },
+    fields: [ICON, TITLE_NAME] },
   // Velair (community card, issue #32): a climate Velair (HACS, domain velair) plans. Tile = the thermostat tile;
   // the popup adds Velair's schedule (today, week, on/off, editing a day) from Velair's WebSocket API and services
   // (scripts/local/31-velair.js, casoraVelairFind in 00-finder.js). Only offered when an entity has the platform velair.
@@ -672,7 +682,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "shield_alarm", "shield_bypass", "shield_vacation", "calendar", "calendar-day", "window-open",
   "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower", "coffee-maker", "paw",
   "coffee-espresso", "coffee-doppio", "coffee-cup", "coffee-cappuccino", "coffee-latte", "coffee-tall", "coffee-water",
-  "coffee-milk", "coffee-tea", "chart", "velair", "list", "grid", "cart", "universal", "kettle",
+  "coffee-milk", "coffee-tea", "chart", "velair", "list", "grid", "cart", "universal", "kettle", "co",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Preview: show conditional cards (type: conditional) as the dashboard does –

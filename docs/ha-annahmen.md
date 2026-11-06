@@ -341,6 +341,16 @@ Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCE
   Rückfallwörter. Code: `00-finder.js` `casoraKettleFind`,
   `37-kettle.js` (`K.switchOf`, `K.modeLabel`), `casora-panel.js` `TILE_MAIN_FIND.casora_kettle`, `casora-panel-b-ux.js`; Tests `dev/unit/kettle.mjs`,
   `dev/unit/community_first_use.mjs`, `dev/qa/regress/r555_kettle_popup_v3.mjs`, Testhaus `dev/casora_mock/kettle.py`.
+- `matter` (Kern, HA 2026.11, Community-Karte „CO-Melder“, #124): Die CO-Konzentration ist ein `sensor` mit `device_class`
+  `carbon_monoxide` in `ppm` (`state_class` `measurement`, Cluster CarbonMonoxideConcentrationMeasurement). Ein Rauch-/CO-Melder
+  (Cluster SmokeCoAlarm) hat am selben Gerät: `binary_sensor` `device_class` `carbon_monoxide` ohne `translation_key` (eigener
+  CO-Alarm; der eines verbundenen Melders heißt `interconnected_co_alarm`), `smoke` ebenso (`interconnected_smoke_alarm`),
+  `battery_alert` (`device_class` `battery`, an = schwach), `test_in_progress`, `hardware_fault`, `end_of_service`, den
+  `button` `self_test_request` (Selbsttest, piept laut) und aus PowerSource einen `sensor` `device_class` `battery` in %.
+  Casora findet alles über Gerät, `device_class` und `translation_key`, nie über die Entity-ID; ein Selbsttest-`button`
+  anderer Integrationen auch am Namen (self-test/Selbsttest). Code: `42-co.js` (`C.model`), `casora-panel.js`
+  `TILE_MAIN_FIND.casora_co`, `casora-panel-b-ux.js`; Tests `dev/unit/co_sensor.mjs`, `dev/unit/community_first_use.mjs`,
+  Testhaus `dev/casora_mock/co.py`.
 - `todo` (Kern, Community-Karte „Bring! Einkaufsliste“, #82): Zustand einer To-do-Entität = Zahl der offenen Einträge;
   Einträge über `todo/item/subscribe` (sonst `todo/item/list`) mit `uid`, `summary`, `description`, `status`
   `needs_action`/`completed`; Dienste `add_item` (`item`, `description`), `update_item` (`item` = uid, `status`),

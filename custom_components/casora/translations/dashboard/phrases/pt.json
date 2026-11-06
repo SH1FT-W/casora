@@ -2788,7 +2788,35 @@
     "Wird genutzt": "Em uso",
     "Material": "Material",
     "Messing": "Latão",
-    "SuperTack": "SuperTack"
+    "SuperTack": "SuperTack",
+    "Leicht erhöht": "Ligeiramente elevado",
+    "Gefahr": "Perigo",
+    "unter 30 ppm": "abaixo de 30 ppm",
+    "30 bis 49 ppm": "30 a 49 ppm",
+    "50 bis 99 ppm": "50 a 99 ppm",
+    "ab 100 ppm": "a partir de 100 ppm",
+    "CO-Alarm": "Alarme de CO",
+    "Kohlenmonoxid": "Monóxido de carbono",
+    "Was tun": "O que fazer",
+    "Stufen": "Níveis",
+    "Melder": "Detetor",
+    "CO-Melder": "Detetor de CO",
+    "Bei erhöhtem Wert lüften, ab 50 ppm den Raum verlassen, ab 100 ppm Notruf 112.": "Se subir, areja; a partir de 50 ppm sai da divisão, a partir de 100 ppm liga 112.",
+    "Fenster öffnen und Gasgeräte, Kamin und Heizung prüfen.": "Abre as janelas e verifica os aparelhos a gás, a lareira e o aquecimento.",
+    "Lüften und Raum verlassen": "Areja e sai da divisão",
+    "Gasgeräte und offenes Feuer ausschalten, Fenster öffnen, den Raum verlassen.": "Desliga os aparelhos a gás e o fogo aberto, abre as janelas, sai da divisão.",
+    "Haus verlassen, Notruf 112": "Sai de casa, liga 112",
+    "Alle nach draußen bringen, Türen offen lassen und erst wieder hinein, wenn die Feuerwehr es erlaubt.": "Leva todos para fora, deixa as portas abertas e só volta a entrar quando os bombeiros o permitirem.",
+    "Kein Alarm": "Sem alarme",
+    "Rauchalarm": "Alarme de fumo",
+    "Lebensdauer abgelaufen": "Fim de vida útil",
+    "Gerätefehler": "Falha do dispositivo",
+    "Melder tauschen": "Substitui o detetor",
+    "Selbsttest": "Autoteste",
+    "Selbsttest gestartet": "Autoteste iniciado",
+    "Selbsttest starten? Der Melder piept laut.": "Iniciar o autoteste? O detetor apita alto.",
+    "Zuletzt erhöht": "Última subida",
+    "Nicht in 7 Tagen": "Não nos últimos 7 dias"
   },
   "patterns": [
     [
@@ -5026,6 +5054,10 @@
     [
       "^(\\d+) Einstellungen empfohlen$",
       "{1} definições recomendadas"
+    ],
+    [
+      "^Letzter Test (.+)$",
+      "Último teste {1}"
     ]
   ]
 }

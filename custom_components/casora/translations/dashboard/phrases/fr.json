@@ -2788,7 +2788,35 @@
     "Wird genutzt": "Utilisée",
     "Material": "Matériau",
     "Messing": "Laiton",
-    "SuperTack": "SuperTack"
+    "SuperTack": "SuperTack",
+    "Leicht erhöht": "Légèrement élevé",
+    "Gefahr": "Danger",
+    "unter 30 ppm": "moins de 30 ppm",
+    "30 bis 49 ppm": "30 à 49 ppm",
+    "50 bis 99 ppm": "50 à 99 ppm",
+    "ab 100 ppm": "dès 100 ppm",
+    "CO-Alarm": "Alarme CO",
+    "Kohlenmonoxid": "Monoxyde de carbone",
+    "Was tun": "Que faire",
+    "Stufen": "Niveaux",
+    "Melder": "Détecteur",
+    "CO-Melder": "Détecteur de CO",
+    "Bei erhöhtem Wert lüften, ab 50 ppm den Raum verlassen, ab 100 ppm Notruf 112.": "S'il monte, aère ; dès 50 ppm quitte la pièce, dès 100 ppm appelle le 112.",
+    "Fenster öffnen und Gasgeräte, Kamin und Heizung prüfen.": "Ouvre les fenêtres et vérifie les appareils à gaz, la cheminée et le chauffage.",
+    "Lüften und Raum verlassen": "Aère et quitte la pièce",
+    "Gasgeräte und offenes Feuer ausschalten, Fenster öffnen, den Raum verlassen.": "Éteins les appareils à gaz et le feu ouvert, ouvre les fenêtres, quitte la pièce.",
+    "Haus verlassen, Notruf 112": "Quitte la maison, appelle le 112",
+    "Alle nach draußen bringen, Türen offen lassen und erst wieder hinein, wenn die Feuerwehr es erlaubt.": "Fais sortir tout le monde, laisse les portes ouvertes et ne rentre qu'avec l'accord des pompiers.",
+    "Kein Alarm": "Pas d'alarme",
+    "Rauchalarm": "Alarme fumée",
+    "Lebensdauer abgelaufen": "Fin de vie",
+    "Gerätefehler": "Panne de l'appareil",
+    "Melder tauschen": "Remplace le détecteur",
+    "Selbsttest": "Autotest",
+    "Selbsttest gestartet": "Autotest lancé",
+    "Selbsttest starten? Der Melder piept laut.": "Lancer l'autotest ? Le détecteur bipe fort.",
+    "Zuletzt erhöht": "Dernière hausse",
+    "Nicht in 7 Tagen": "Pas en 7 jours"
   },
   "patterns": [
     [
@@ -5026,6 +5054,10 @@
     [
       "^(\\d+) Einstellungen empfohlen$",
       "{1} réglages recommandés"
+    ],
+    [
+      "^Letzter Test (.+)$",
+      "Dernier test {1}"
     ]
   ]
 }

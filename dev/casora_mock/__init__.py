@@ -348,6 +348,8 @@ class CasoraMock:
                 "battery": {"noise": 0.05, "digits": 0},
                 "data_rate": {"wave": v * 0.5 + 5, "noise": v * 0.3 + 2, "digits": 1, "min": 0},
                 "carbon_dioxide": {"day": 180, "peak": 22, "noise": 15, "digits": 0, "min": 400},
+                # CO detector (#124): a few ppm, raised for a while every evening (cooking) – „Zuletzt erhöht“.
+                "carbon_monoxide": {"wave": 1, "noise": 0.4, "digits": 0, "min": 0, "bumps": [[18.5, 36, 0.35]]},
             }.get(dc)
             if cfg is None:
                 continue

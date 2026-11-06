@@ -2950,7 +2950,10 @@
     "Oven": "Oven",
     "Operation state or cavity temperature of the oven": "Bedrijfstoestand of binnentemperatuur van de oven",
     "Only on Casora dashboards": "Alleen op Casora-dashboards",
-    "Other dashboards and Home Assistant's own pages keep their look.": "Andere dashboards en de pagina's van Home Assistant houden hun eigen uiterlijk."
+    "Other dashboards and Home Assistant's own pages keep their look.": "Andere dashboards en de pagina's van Home Assistant houden hun eigen uiterlijk.",
+    "CO detector": "CO-melder",
+    "Your CO sensor": "Je CO-sensor",
+    "Carbon monoxide in ppm on the tile, the symbol in the color of its level: green, from 30 ppm yellow, from 50 orange, from 100 red. The popup shows the value in a ring with the four levels, the history of 24 hours and 7 days, what to do when it rises and when it was last raised, plus battery, self-test and alarm of the detector. For every CO sensor, e.g. Matter smoke and CO alarms.": "Koolmonoxide in ppm op de tegel, het symbool in de kleur van het niveau: groen, vanaf 30 ppm geel, vanaf 50 oranje, vanaf 100 rood. De pop-up toont de waarde in een ring met de vier niveaus, het verloop over 24 uur en 7 dagen, wat te doen als de waarde stijgt en wanneer die het laatst verhoogd was, plus batterij, zelftest en alarm van de melder. Voor elke CO-sensor, bijv. Matter-rook- en CO-melders."
   },
   "patterns": [
     [

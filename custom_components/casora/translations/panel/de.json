@@ -2950,7 +2950,10 @@
     "Oven": "Backofen",
     "Operation state or cavity temperature of the oven": "Betriebszustand oder Garraumtemperatur des Backofens",
     "Only on Casora dashboards": "Nur auf Casora-Dashboards",
-    "Other dashboards and Home Assistant's own pages keep their look.": "Andere Dashboards und die Seiten von Home Assistant behalten ihr eigenes Aussehen."
+    "Other dashboards and Home Assistant's own pages keep their look.": "Andere Dashboards und die Seiten von Home Assistant behalten ihr eigenes Aussehen.",
+    "CO detector": "CO-Melder",
+    "Your CO sensor": "Dein CO-Sensor",
+    "Carbon monoxide in ppm on the tile, the symbol in the color of its level: green, from 30 ppm yellow, from 50 orange, from 100 red. The popup shows the value in a ring with the four levels, the history of 24 hours and 7 days, what to do when it rises and when it was last raised, plus battery, self-test and alarm of the detector. For every CO sensor, e.g. Matter smoke and CO alarms.": "Kohlenmonoxid in ppm auf der Kachel, das Symbol in der Farbe der Stufe: grün, ab 30 ppm gelb, ab 50 orange, ab 100 rot. Das Popup zeigt den Wert im Ring mit den vier Stufen, den Verlauf über 24 Stunden und 7 Tage, was bei erhöhtem Wert zu tun ist und wann er zuletzt erhöht war, dazu Batterie, Selbsttest und Alarm des Melders. Für jeden CO-Sensor, z. B. Matter-Rauch- und CO-Melder."
   },
   "patterns": [
     [

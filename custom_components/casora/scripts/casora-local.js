@@ -250,6 +250,7 @@ const MODULES = [
   '39-update-prompt',
   '40-swipe-rooms',
   '41-display-diag',
+  '42-co',
 ];
 
 const START_MODULES = MODULES.slice(0, 5);

@@ -2770,7 +2770,35 @@
     "Wird genutzt": "In use",
     "Material": "Material",
     "Messing": "Brass",
-    "SuperTack": "SuperTack"
+    "SuperTack": "SuperTack",
+    "Leicht erhöht": "Slightly raised",
+    "Gefahr": "Danger",
+    "unter 30 ppm": "below 30 ppm",
+    "30 bis 49 ppm": "30 to 49 ppm",
+    "50 bis 99 ppm": "50 to 99 ppm",
+    "ab 100 ppm": "from 100 ppm",
+    "CO-Alarm": "CO alarm",
+    "Kohlenmonoxid": "Carbon monoxide",
+    "Was tun": "What to do",
+    "Stufen": "Levels",
+    "Melder": "Detector",
+    "CO-Melder": "CO detector",
+    "Bei erhöhtem Wert lüften, ab 50 ppm den Raum verlassen, ab 100 ppm Notruf 112.": "If it rises, ventilate; from 50 ppm leave the room, from 100 ppm call 112.",
+    "Fenster öffnen und Gasgeräte, Kamin und Heizung prüfen.": "Open the windows and check gas appliances, fireplace and heating.",
+    "Lüften und Raum verlassen": "Ventilate and leave the room",
+    "Gasgeräte und offenes Feuer ausschalten, Fenster öffnen, den Raum verlassen.": "Turn off gas appliances and open fires, open the windows, leave the room.",
+    "Haus verlassen, Notruf 112": "Leave the house, call 112",
+    "Alle nach draußen bringen, Türen offen lassen und erst wieder hinein, wenn die Feuerwehr es erlaubt.": "Get everyone outside, leave the doors open and only go back in once the fire service allows it.",
+    "Kein Alarm": "No alarm",
+    "Rauchalarm": "Smoke alarm",
+    "Lebensdauer abgelaufen": "End of service",
+    "Gerätefehler": "Device fault",
+    "Melder tauschen": "Replace detector",
+    "Selbsttest": "Self-test",
+    "Selbsttest gestartet": "Self-test started",
+    "Selbsttest starten? Der Melder piept laut.": "Start the self-test? The detector beeps loudly.",
+    "Zuletzt erhöht": "Last raised",
+    "Nicht in 7 Tagen": "Not in 7 days"
   },
   "patterns": [
     [
@@ -5008,6 +5036,10 @@
     [
       "^(\\d+) Einstellungen empfohlen$",
       "{1} settings recommended"
+    ],
+    [
+      "^Letzter Test (.+)$",
+      "Last test {1}"
     ]
   ]
 }

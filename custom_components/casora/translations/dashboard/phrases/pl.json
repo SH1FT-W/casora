@@ -2788,7 +2788,35 @@
     "Wird genutzt": "W użyciu",
     "Material": "Materiał",
     "Messing": "Mosiądz",
-    "SuperTack": "SuperTack"
+    "SuperTack": "SuperTack",
+    "Leicht erhöht": "Lekko podwyższony",
+    "Gefahr": "Niebezpieczeństwo",
+    "unter 30 ppm": "poniżej 30 ppm",
+    "30 bis 49 ppm": "30 do 49 ppm",
+    "50 bis 99 ppm": "50 do 99 ppm",
+    "ab 100 ppm": "od 100 ppm",
+    "CO-Alarm": "Alarm CO",
+    "Kohlenmonoxid": "Tlenek węgla",
+    "Was tun": "Co robić",
+    "Stufen": "Poziomy",
+    "Melder": "Czujnik",
+    "CO-Melder": "Czujnik CO",
+    "Bei erhöhtem Wert lüften, ab 50 ppm den Raum verlassen, ab 100 ppm Notruf 112.": "Gdy wzrośnie, przewietrz; od 50 ppm wyjdź z pomieszczenia, od 100 ppm dzwoń pod 112.",
+    "Fenster öffnen und Gasgeräte, Kamin und Heizung prüfen.": "Otwórz okna i sprawdź urządzenia gazowe, kominek i ogrzewanie.",
+    "Lüften und Raum verlassen": "Przewietrz i wyjdź z pomieszczenia",
+    "Gasgeräte und offenes Feuer ausschalten, Fenster öffnen, den Raum verlassen.": "Wyłącz urządzenia gazowe i otwarty ogień, otwórz okna, wyjdź z pomieszczenia.",
+    "Haus verlassen, Notruf 112": "Wyjdź z domu, dzwoń pod 112",
+    "Alle nach draußen bringen, Türen offen lassen und erst wieder hinein, wenn die Feuerwehr es erlaubt.": "Wyprowadź wszystkich na zewnątrz, zostaw drzwi otwarte i wróć dopiero, gdy straż pożarna pozwoli.",
+    "Kein Alarm": "Brak alarmu",
+    "Rauchalarm": "Alarm dymu",
+    "Lebensdauer abgelaufen": "Koniec żywotności",
+    "Gerätefehler": "Usterka urządzenia",
+    "Melder tauschen": "Wymień czujnik",
+    "Selbsttest": "Autotest",
+    "Selbsttest gestartet": "Autotest uruchomiony",
+    "Selbsttest starten? Der Melder piept laut.": "Uruchomić autotest? Czujnik głośno piszczy.",
+    "Zuletzt erhöht": "Ostatni wzrost",
+    "Nicht in 7 Tagen": "Nie w ciągu 7 dni"
   },
   "patterns": [
     [
@@ -5026,6 +5054,10 @@
     [
       "^(\\d+) Einstellungen empfohlen$",
       "Zalecane ustawienia: {1}"
+    ],
+    [
+      "^Letzter Test (.+)$",
+      "Ostatni test {1}"
     ]
   ]
 }

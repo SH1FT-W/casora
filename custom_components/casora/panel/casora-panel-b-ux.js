@@ -87,6 +87,7 @@
     casora_velair: "velair zeitplan klima klimaanlage heizung thermostat schedule climate",
     casora_shopping: "einkaufsliste einkauf bring liste todo shopping list grocery",
     casora_kettle: "wasserkocher kocher tee wasser xiaomi kettle",
+    casora_co: "co kohlenmonoxid co-melder melder gas carbon monoxide detector alarm matter",
     casora_oven: "backofen ofen herd backen home connect oven",
     // E03 (test 2): "Abfall"/"Müll" found nothing – tile types are found by their everyday words as well.
     casora_trash: "abfall müll muell mülltonne tonne biotonne restmüll restabfall bioabfall papier altpapier gelber sack wertstoff abfuhr abholung abfallkalender waste trash garbage bin recycling collection",
@@ -742,6 +743,10 @@
       });
       // Kettle (community card #87, when added): one tile per kettle on its water temperature (casoraKettleFind).
       if (typeIds.has("casora_kettle") && W.casoraKettleFind) W.casoraKettleFind.all(h).forEach((k) => push(k.anchor, "", "casora_kettle"));
+      // CO detector (community card 124, when added): every carbon monoxide sensor (device_class) as this card.
+      if (typeIds.has("casora_co")) Object.keys(S).forEach((id) => {
+        if (id.startsWith("sensor.") && (S[id].attributes || {}).device_class === "carbon_monoxide") push(id, "", "casora_co");
+      });
       // Waste (E03/E04): one entry for the whole collection, found by its bins' names too ("Bioabfall"). Anchored on the
       // waste calendar or the first bin sensor; picking it adds the waste tile, which finds bins and calendar itself.
       if (typeIds.has("casora_trash") && !rooms.some((r) => (r.tiles || []).some((t) => isTrashTile(t)))) {

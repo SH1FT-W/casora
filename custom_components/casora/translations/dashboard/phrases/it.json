@@ -2788,7 +2788,35 @@
     "Wird genutzt": "In uso",
     "Material": "Materiale",
     "Messing": "Ottone",
-    "SuperTack": "SuperTack"
+    "SuperTack": "SuperTack",
+    "Leicht erhöht": "Leggermente elevato",
+    "Gefahr": "Pericolo",
+    "unter 30 ppm": "sotto 30 ppm",
+    "30 bis 49 ppm": "da 30 a 49 ppm",
+    "50 bis 99 ppm": "da 50 a 99 ppm",
+    "ab 100 ppm": "da 100 ppm",
+    "CO-Alarm": "Allarme CO",
+    "Kohlenmonoxid": "Monossido di carbonio",
+    "Was tun": "Cosa fare",
+    "Stufen": "Livelli",
+    "Melder": "Rilevatore",
+    "CO-Melder": "Rilevatore di CO",
+    "Bei erhöhtem Wert lüften, ab 50 ppm den Raum verlassen, ab 100 ppm Notruf 112.": "Se sale, arieggia; da 50 ppm esci dalla stanza, da 100 ppm chiama il 112.",
+    "Fenster öffnen und Gasgeräte, Kamin und Heizung prüfen.": "Apri le finestre e controlla gli apparecchi a gas, il camino e il riscaldamento.",
+    "Lüften und Raum verlassen": "Arieggia ed esci dalla stanza",
+    "Gasgeräte und offenes Feuer ausschalten, Fenster öffnen, den Raum verlassen.": "Spegni gli apparecchi a gas e le fiamme libere, apri le finestre, esci dalla stanza.",
+    "Haus verlassen, Notruf 112": "Esci di casa, chiama il 112",
+    "Alle nach draußen bringen, Türen offen lassen und erst wieder hinein, wenn die Feuerwehr es erlaubt.": "Porta tutti fuori, lascia le porte aperte e rientra solo quando i vigili del fuoco lo consentono.",
+    "Kein Alarm": "Nessun allarme",
+    "Rauchalarm": "Allarme fumo",
+    "Lebensdauer abgelaufen": "Fine vita",
+    "Gerätefehler": "Guasto del dispositivo",
+    "Melder tauschen": "Sostituisci il rilevatore",
+    "Selbsttest": "Autotest",
+    "Selbsttest gestartet": "Autotest avviato",
+    "Selbsttest starten? Der Melder piept laut.": "Avviare l'autotest? Il rilevatore suona forte.",
+    "Zuletzt erhöht": "Ultimo aumento",
+    "Nicht in 7 Tagen": "Non negli ultimi 7 giorni"
   },
   "patterns": [
     [
@@ -5026,6 +5054,10 @@
     [
       "^(\\d+) Einstellungen empfohlen$",
       "{1} impostazioni consigliate"
+    ],
+    [
+      "^Letzter Test (.+)$",
+      "Ultimo test {1}"
     ]
   ]
 }

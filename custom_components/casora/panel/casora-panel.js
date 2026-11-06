@@ -725,6 +725,7 @@ const FILTER_CATEGORIES = {
   casora_pet: "unfiltered",
   casora_shopping: "unfiltered",
   casora_kettle: "unfiltered",
+  casora_co: "security",
   casora_plant: "unfiltered",
 };
 
@@ -5527,6 +5528,9 @@ const TILE_MAIN_FIND = {
   // Kettle (community card #87): the anchor of every kettle the shared finder knows (casoraKettleFind in 00-finder.js –
   // the water temperature, else the water_heater); any temperature sensor would be guesswork.
   casora_kettle: { anchors: (h) => (window.casoraKettleFind ? window.casoraKettleFind.all(h).map((k) => k.anchor) : []) },
+  // CO detector (community card 124): every carbon monoxide sensor (device_class, never the entity id) – Matter's CO
+  // concentration in ppm; the detector's alarm binary_sensor is no reading.
+  casora_co: { domain: "sensor", match: (h, id) => ((((h.states || {})[id] || {}).attributes || {}).device_class === "carbon_monoxide") },
   casora_frigate: { domain: "camera", match: (h, id) => ((((h.states || {})[id] || {}).attributes || {}).device_class === "camera") && !/birdseye/i.test(id) },
   casora_reolink_doorbell: { domain: "camera", match: (h, id) => typeof window.__casoraBellCam === "function" && !!window.__casoraBellCam(h, id) },
   // Chart (community card #50): every numeric sensor with a state class; CPU load (System Monitor's processor_use),

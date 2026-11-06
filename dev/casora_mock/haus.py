@@ -58,7 +58,7 @@ def vacuum_map(fixture: dict) -> None:
 
 def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict | None = None) -> dict:
     """Fixture plus the made-up devices, in the order async_setup_entry always used."""
-    from . import (aquarium, befeuchter, coffee, dishwasher, ebike, energie, frigate, fussball, game_account, haustier,
+    from . import (aquarium, befeuchter, co, coffee, dishwasher, ebike, energie, frigate, fussball, game_account, haustier,
                    halten, hubs, klingel, fridge, kettle, live, maeher, oven, shopping, testlimousine, testserver, testwagen, velair, waesche, wetter)
     if stress:
         merge(fixture, stress)
@@ -117,6 +117,8 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
         merge(fixture, velair.extra(now), "Testklimaanlage + Velair")
         # Two made-up kettles, BLE-like (only shows) and one with target and keep warm (community card #87), see kettle.py.
         merge(fixture, kettle.extra(now), "Testkocher/Testwasserkocher")
+        # A made-up smoke and CO detector, Matter-like (community card #124), see co.py.
+        merge(fixture, co.extra(now), "Testmelder")
         # A made-up shopping list (community card #82), see shopping.py.
         merge(fixture, shopping.extra(now), "Testeinkauf")
         # A made-up electric car like BMW CarData, without door or lock values (#89), see testwagen.py.

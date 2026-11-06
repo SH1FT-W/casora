@@ -120,6 +120,9 @@ const MIGRIERT = [
   // S2 with a target (water_heater or number), else S6 with a range (the water temperature in heat colours), S7 without
   // any temperature; modes as moons, the temperature as the Verlauf (120).
   { popup: 'Wasserkocher', vorlagen: ['casora_popup_kettle'], file: '37-kettle.js', from: '  K.sec = function', to: "  // The popup's cards: v3", stages: 3 },
+  // Built for v3 (issue 124): S6 with a range (0–150 ppm in the colour of the level, thresholds as marks), the Verlauf
+  // 24 Std. · 7 Tage in the stage.
+  { popup: 'CO-Melder', vorlagen: ['casora_popup_co'], file: '42-co.js', from: '  C.sec = function', to: "  // The popup's cards: v3", stages: 1 },
 ];
 
 // 1. Pieces.
@@ -251,5 +254,5 @@ for (const o of OFFEN) {
   assert.deepEqual(missing, [], `popup_v3: popup templates neither in MIGRIERT nor in popup_v3_offen.json: ${missing.join(', ')}`);
 }
 // The auftrag's tables (§5) list 54 popups, the audit added 3, plus the oven (04.11.2026): none may drop out of both lists.
-assert.equal(MIGRIERT.length + OFFEN.length, 54 + 3 + 1, 'popup_v3: migrated + open must cover all 58 popups (auftrag §5 + audit + oven, 04.11.2026)');
+assert.equal(MIGRIERT.length + OFFEN.length, 54 + 3 + 1 + 1, 'popup_v3: migrated + open must cover all 59 popups (auftrag §5 + audit + oven, 04.11.2026, CO detector issue 124)');
 console.log(`popup_v3: ok (${MIGRIERT.length} migrated, ${OFFEN.length} open)`);
