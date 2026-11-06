@@ -65,7 +65,7 @@ assert.ok(!/Betrieb|turn_off/.test(ctrl), 'on/off only in the header (blueprint 
 assert.ok(ctrl.includes('*Normal>set_mode{"mode":"normal"};Schlafen>set_mode{"mode":"sleep"}'), ctrl);
 assert.ok(ctrl.includes('*50 %>set_humidity{"humidity":50}'), ctrl);
 const info = H.sec('info', c, states, hass);
-assert.equal(info, '<group Status>Luftfeuchte=41 %;Wassertank=12 %;Leistung=23 W</group>', 'target humidity only once (header and chips)');
+assert.equal(info, '<group Zustand>Luftfeuchte=41 %;Wassertank=12 %;Leistung=23 W</group>', 'target humidity only once (header and chips)');
 states[ID] = { entity_id: ID, state: 'off', attributes: base };
 assert.ok(/\*?Normal>turn_on/.test(H.sec('ctrl', c, states, hass)) && !/\*Normal/.test(H.sec('ctrl', c, states, hass)), 'off: a mode switches it on, none is marked');
 states[ID] = { entity_id: ID, state: 'on', attributes: base };

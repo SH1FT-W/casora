@@ -233,6 +233,8 @@
     var curves = C.zones.filter(function (z) { return z.temp && S[z.temp] && !bad(S[z.temp].state) && num(S[z.temp].state) != null; });
     if (curves.length) {
       f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history', height: v3 ? 120 : 160, readout: 'own', plate: true,
+        // v3: the plate's head like every Verlauf („Temperatur · 24 Std.“, richtlinien §7.2).
+        title: v3 ? 'Temperatur · 24 Std.' : undefined,
         // Hex, because the chart writes the colour straight into the SVG: fridge zones teal, freezer zones blue.
         switch: false, series: curves.map(function (z) {
           var cold = num(((S[z.set] || S[z.temp] || {}).state)) <= -2;

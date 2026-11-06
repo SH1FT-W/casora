@@ -185,7 +185,7 @@
         value: s.waterLow ? 'Leer' : 'OK', valueTone: s.waterLow ? 'bad' : null });
       var pw = c.power && states[c.power] ? num(states[c.power].state) : null;
       if (pw != null) rows.push({ entity: c.power, icon: 'mdi:flash', iconTone: 'good', label: 'Leistung', value: (pw < 10 ? pw.toFixed(1).replace('.', ',') : Math.round(pw)) + ' W' });
-      return rows.length ? UI.group(rows, 'Status') : '';
+      return rows.length ? UI.group(rows, 'Zustand') : '';
     }
     if (part === 'set') return UI.settings ? UI.settings(c.hum) : '';
     return '';

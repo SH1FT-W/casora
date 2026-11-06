@@ -101,7 +101,7 @@ assert.ok(h.includes('"service":"pause"') && h.includes('"service":"dock"'), 'm�
 const info = M.sec('info', c, states, hass);
 assert.ok(/Akku=100 %/.test(info) && /Verbindung=90 %/.test(info) && /Betriebsstunden=1.?234 h/.test(info), info);
 set('error', { state: 'ERROR', last_error_code: 'LIFTED' });
-assert.ok(/^<group Status>Angehoben=/.test(M.sec('info', c, states, hass)), 'Fehler steht oben im Status');
+assert.ok(/^<group Zustand>Angehoben=/.test(M.sec('info', c, states, hass)), 'Fehler steht oben im Status');
 
 // Verlauf: Mähfahrten aus Zustandswechseln (Pause/Rückfahrt gehören zur Fahrt, Fehler eigener Eintrag).
 const H = 3600000, t0 = Date.parse('2026-10-13T08:00:00');

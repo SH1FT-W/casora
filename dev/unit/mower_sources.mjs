@@ -171,7 +171,7 @@ for (const [platform, cs] of Object.entries(CASES)) {
   Date.now = () => NOW;
   const info = M.sec('info', c, h.states, h);
   Date.now = realNow;
-  const labels = info.replace(/^<group Status>|<\/group>$/g, '').split(';').map((x) => x.split('=')[0]);
+  const labels = info.replace(/^<group Zustand>|<\/group>$/g, '').split(';').map((x) => x.split('=')[0]);
   assert.deepEqual(labels, cs.rows, platform + ': status rows ' + info);
   const ctrl = M.sec('ctrl', c, h.states, h);
   if (cs.ctrl) assert.match(ctrl, cs.ctrl, platform + ': settings ' + ctrl);

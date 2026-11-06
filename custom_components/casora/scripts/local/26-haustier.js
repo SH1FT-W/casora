@@ -293,7 +293,7 @@
         iconTone: s.state === 'operational' ? 'accent' : 'warn', label: 'Tracker',
         sub: s.accuracy != null ? 'GPS · auf ' + Math.round(s.accuracy) + ' m genau' : null, value: s.stateText });
       if (s.saving) rows.push({ entity: c.saving, icon: 'mdi:leaf', iconTone: 'accent', label: 'Energiesparen', value: 'An' });
-      return rows.length ? UI.group(rows, 'Status') : '';
+      return rows.length ? UI.group(rows, 'Zustand') : '';
     }
     if (part === 'today') return todayHtml(UI, c, states);
     if (part === 'hist') return PE && PE.lastHtml ? PE.lastHtml(UI, PE.history(hass, c.tracker, el), c.tracker, Date.now()) : '';

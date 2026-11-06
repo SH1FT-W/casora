@@ -612,7 +612,7 @@
         value: Math.round(s.bladePct) + ' %', sub: 'Restlebensdauer', valueTone: s.bladePct < 15 ? 'warn' : null });
       else if (s.blade != null) rows.push({ entity: c.blade, icon: 'mdi:knife', iconTone: 'accent', label: 'Messer', value: fmt(s.blade) + ' h', sub: 'Einsatzzeit' });
       if (s.hours != null && !v3i) rows.push({ entity: c.hours || null, icon: 'mdi:timer-outline', iconTone: 'accent', label: 'Betriebsstunden', value: fmt(s.hours) + ' h' });
-      return rows.length ? UI.group(rows, 'Status') : '';
+      return rows.length ? UI.group(rows, 'Zustand') : '';
     }
     if (part === 'ctrl') {
       var out = '';

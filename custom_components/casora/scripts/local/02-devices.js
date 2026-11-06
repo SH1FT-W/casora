@@ -5686,7 +5686,7 @@
     if (c.temp && S[c.temp]) {
       f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history',
         series: [{ entity: c.temp, name: T('Garraum'), unit: noEval(unitOf(S, c.temp)), color: 'accent' }],
-        height: 120, readout: 'own', plate: true, title: T('Garraum') }, do_not_eval: true };
+        height: 120, readout: 'own', plate: true, title: T('Garraum') + ' · ' + T('24 Std.') }, do_not_eval: true };
     }
     return K.layout({ fields: f, top: ['line'], stage: 'stage', left: [], right: ['prog', 'opts', 'dev'], history: 'chart',
       narrowOrder: ['chart', 'prog', 'opts', 'dev'], entity: c.st });

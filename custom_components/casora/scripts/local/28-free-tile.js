@@ -247,7 +247,7 @@
       if (C.chart) {
         fv.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history',
           series: [{ entity: C.chart, entity_name: true, color: 'accent' }],
-          height: 120, readout: 'own', plate: true, title: T('Verlauf') }, do_not_eval: true };
+          height: 120, readout: 'own', plate: true, title: T('Verlauf') + ' · ' + T('24 Std.') }, do_not_eval: true };
       }
       return K.layout({ fields: fv, top: ['line'], stage: 'stage', left: ['ctl'], right: ['vals', 'chart'], narrowOrder: ['ctl', 'vals', 'chart'] });
     }
