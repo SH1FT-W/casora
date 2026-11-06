@@ -31,7 +31,10 @@
   const missing = new Set();
   let lang = "en";
   let compiled = null;
-  let root = null;
+  // The panel's shadow root, held weakly: HA builds a new panel on every visit, and a strong reference
+  // here kept the last one (with its whole preview) alive after leaving the Studio.
+  let rootRef = null;
+  const curRoot = () => (rootRef && rootRef.deref()) || null;
   let queued = false;
   const dirty = new Set();
 
@@ -60,6 +63,7 @@
         compiled = null;
         memo = null;
         // Translate what is already drawn (the panel rendered untranslated while it loaded).
+        const root = curRoot();
         if (root && pick(lang) === w) walk(root);
       })
       .catch((e) => { failed.set(w, Date.now()); console.warn("[casora-panel-i18n] " + w + " not loaded:", e && e.message || e); })
@@ -133,6 +137,7 @@
   }
 
   function skipped(node) {
+    const root = curRoot();
     for (let p = node.parentNode; p && p !== root; p = p.parentNode) {
       if (p.nodeType !== 1) break;
       if (SKIP.has(p.tagName) || p.isContentEditable || p.hasAttribute("data-no-i18n")) return true;
@@ -215,7 +220,7 @@
   function attach(sr) {
     if (!sr || sr.__casoraI18n) return;
     sr.__casoraI18n = true;
-    root = sr;
+    rootRef = new WeakRef(sr);
     new MutationObserver((muts) => {
       for (const m of muts) {
         if (m.type === "childList") m.addedNodes.forEach(queue);
