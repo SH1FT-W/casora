@@ -121,13 +121,12 @@ step() {
 
 # ── Einzelprüfungen (als Funktionen, damit step sie in einer Subshell ausführt) ──────────
 syntax_js() {
-  local f bad=0
+  # One "node --check" per file (~1000 files), several at a time; a file's errors are printed together.
+  local f
   for f in custom_components/casora/panel/*.js custom_components/casora/scripts/*.js custom_components/casora/scripts/local/*.js \
            dev/e2e/t*.mjs dev/e2e/harness.mjs dev/qa/*.mjs dev/qa/regress/*.mjs dev/unit/*.mjs; do
-    [ -f "$f" ] || continue
-    "$NODE" --check "$f" || { echo "FEHLER $f"; bad=1; }
-  done
-  return $bad
+    [ -f "$f" ] && printf '%s\0' "$f"
+  done | xargs -0 -n 1 -P "${UNIT_JOBS:-6}" sh -c 'o="$("$NODE" --check "$1" 2>&1)" || { printf "%s\nFEHLER %s\n" "$o" "$1"; exit 1; }' _
 }
 syntax_py() {
   $PY python - <<'PY'
