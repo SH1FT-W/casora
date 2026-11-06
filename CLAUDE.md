@@ -29,6 +29,8 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
 - `node --check <datei>` für jede geänderte JS-Datei.
 - Unit-Tests: `node dev/unit/<name>.mjs` bzw. `python3 dev/unit/<name>_test.py` (Node 22).
   `dev/unit/vorlagen_print_js.mjs` ist ein Hilfsskript mit Argumenten, kein Test.
+- Neues Python-Modul: `python3 dev/unit/no_config_writes_test.py` und `dev/unit/no_foreign_internals_test.py` laufen
+  lassen; greift es auf HA zu, `docs/ha-annahmen.md` im selben Commit ergänzen.
 - Für einen gemeldeten Fehler möglichst einen Test ergänzen (`dev/unit/` ohne HA,
   `dev/qa/regress/` mit Test-HA – siehe `dev/qa/README.md`).
 

@@ -8,6 +8,10 @@ Token, eigene Schriftskala.
 > B Casora-Sprache (Inter, Radien 12/18/24/32, Sand-Platten). Bis zur Wahl: nur die vorhandenen
 > Studio-Token unten verwenden – dann ist ein späterer Wechsel eine Token-Änderung, kein Umbau.
 
+**Einstellungen sind Entwürfe.** Jede Einstellung, auch ein Schalter, landet erst im Entwurf (`this._cs`, Prüfung in
+`_csOwnDirty`), zeigt die Speicherleiste und wirkt erst mit „Einstellungen speichern“ (`_csSave`); „Verwerfen“
+(`_csDiscardAll`) nimmt sie zurück. Nie direkt beim Umschalten speichern (Fund 06.11.2026, Design-Bereich #129, r559).
+
 ## 1. Welche Fläche – welcher Weg
 
 | Fläche | Wie | Vorbild |
