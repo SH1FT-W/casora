@@ -311,8 +311,16 @@ customElements.whenDefined("casora-panel").then(() => {
         });
       }, tr("Only on Casora dashboards"));
       row.append(lab, sw);
-      // The first answer of the server may come after this page was drawn (no cache yet).
-      if (typeof CT.onChange === "function" && sw._set) CT.onChange(() => { if (sw.isConnected) sw._set(CT.scope() === "casora"); });
+      // The first answer of the server may come after this page was drawn (no cache yet). One listener for the
+      // module, holding only a weak reference to the newest switch (an old panel must not stay in memory).
+      P._casoraScopeSw = typeof WeakRef === "function" ? new WeakRef(sw) : null;
+      if (!P._casoraScopeHooked && typeof CT.onChange === "function") {
+        P._casoraScopeHooked = true;
+        CT.onChange(() => {
+          const cur = P._casoraScopeSw && P._casoraScopeSw.deref();
+          if (cur && cur.isConnected && cur._set) cur._set(CT.scope() === "casora");
+        });
+      }
       const sh = document.createElement("div");
       sh.className = "hint";
       sh.textContent = tr("Other dashboards and Home Assistant's own pages keep their look.");
