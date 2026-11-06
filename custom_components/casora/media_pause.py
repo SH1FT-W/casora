@@ -114,6 +114,11 @@ class PauseTracker:
         from homeassistant.core import callback
 
         @callback
+        def _relevant(data) -> bool:
+            # Runs in the bus before _changed: lights, sensors etc. never reach it.
+            return str(data.get("entity_id", "")).startswith(("media_player.", "binary_sensor."))
+
+        @callback
         def _changed(event) -> None:
             eid = event.data.get("entity_id", "")
             if eid.startswith("binary_sensor."):
@@ -134,7 +139,7 @@ class PauseTracker:
                 self._save()
                 self._notify()
 
-        self._unsub = self.hass.bus.async_listen(EVENT_STATE_CHANGED, _changed)
+        self._unsub = self.hass.bus.async_listen(EVENT_STATE_CHANGED, _changed, event_filter=_relevant)
 
     def _apply(self, eid: str, old: str | None, new: str | None, key: str, changed_at: str) -> bool:
         before = self.players.get(eid)

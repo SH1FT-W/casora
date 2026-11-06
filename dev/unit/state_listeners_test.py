@@ -146,9 +146,55 @@ async def t_helfer() -> None:
     await hass.async_stop(force=True)
 
 
+# ── media_pause.py: "paused since" and "open since" ──────────────────────────
+
+class MemStore:
+    def __init__(self) -> None:
+        self.data = None
+
+    async def async_load(self):
+        return self.data
+
+    def async_delay_save(self, fn, delay) -> None:
+        self.data = fn()
+
+
+async def t_media_pause() -> None:
+    from custom_components.casora.media_pause import PauseTracker
+
+    hass = await new_hass()
+    seen = spy_listen(hass)
+    before = len(seen)
+    pause = PauseTracker(hass, MemStore())
+    await pause.async_start()
+    mine = seen[before:]
+    check("media_pause: one state_changed listener with a filter", len(mine) == 1 and mine[0][1] is not None)
+    flt = (mine[0][1] if mine else None) or (lambda d: True)
+    check("media_pause: filter lets media players and binary sensors through",
+          flt({"entity_id": "media_player.tv"}) and flt({"entity_id": "binary_sensor.window"}))
+    check("media_pause: filter drops everything else",
+          not flt({"entity_id": "sensor.power"}) and not flt({"entity_id": "light.kitchen"}))
+
+    hass.states.async_set("media_player.tv", "playing", {"media_title": "A"})
+    hass.states.async_set("media_player.tv", "paused", {"media_title": "A"})
+    hass.states.async_set("binary_sensor.window", "off", {"device_class": "window"})
+    hass.states.async_set("binary_sensor.window", "on", {"device_class": "window"})
+    hass.states.async_set("sensor.power", "5")
+    await hass.async_block_till_done()
+    check("media_pause: a pause is still remembered", "media_player.tv" in pause.players, repr(pause.players))
+    check("media_pause: an open window is still remembered", "binary_sensor.window" in pause.contacts,
+          repr(pause.contacts))
+    hass.states.async_remove("media_player.tv")
+    await hass.async_block_till_done()
+    check("media_pause: a removed player is forgotten", "media_player.tv" not in pause.players)
+    pause.stop()
+    await hass.async_stop(force=True)
+
+
 async def main() -> None:
     await t_bus_filter()
     await t_helfer()
+    await t_media_pause()
 
 
 asyncio.run(main())
