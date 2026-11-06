@@ -9914,7 +9914,8 @@ window.casoraMenuGlass = {
     if (o.read && bits.length) out += '</span>';
     if (o.slotId || o.slotClass) {
       out += '<span class="hui-lslot' + (o.slotClass ? ' ' + esc(o.slotClass) : '') + '"'
-        + (o.slotId ? ' id="' + esc(o.slotId) + '"' : '') + '>' + esc(o.slotText || '') + '</span>';
+        + (o.slotId ? ' id="' + esc(o.slotId) + '"' : '') + '>'
+        + esc(o.slotText || (o.slotId && window._casoraSlotText && window._casoraSlotText[o.slotId]) || '') + '</span>';
     }
     (o.after || []).forEach(function (b) {
       if (b) out += SEP + '<span>' + esc(b) + '</span>';
@@ -10072,6 +10073,8 @@ window.casoraMenuGlass = {
         + esc(o.state) + '</div>';
     }
     if (o.caption != null || o.captionSlot) {
+      var kept = !o.caption && o.captionId && window._casoraSlotText ? window._casoraSlotText[o.captionId] : '';
+      if (kept) o = Object.assign({}, o, { caption: kept });
       out += '<div' + (o.captionId ? ' id="' + esc(o.captionId) + '"' : '')
         + ' style="font-size:' + (o.measure === 'sheet' ? '15px' : '14px')
         + ';font-weight:400;letter-spacing:-0.006em;'
@@ -12580,13 +12583,16 @@ window.casoraMenuGlass = {
 
   var PLANT_CACHE_V = 1;
   function plantWater(node, entityId, dryPct) {
-    if (!node || !entityId) return;
+    // The popup can hold the slot twice (a measuring clone next to the real head): paint every copy,
+    // or the words land in the clone and the visible line stays empty.
+    var nodes = (Array.isArray(node) ? node : [node]).filter(Boolean);
+    if (!nodes.length || !entityId) return;
     var hass = (document.querySelector('home-assistant') || {}).hass;
     if (!hass || !hass.callWS) return;
     var key = 'v' + PLANT_CACHE_V + ':' + entityId;
     window._casoraPlantW = window._casoraPlantW || {};
     var hit = window._casoraPlantW[key];
-    if (hit && Date.now() - hit.at < 300000) { paintPlant(node, hit.txt); return; }
+    if (hit && Date.now() - hit.at < 300000) { nodes.forEach(function (n) { paintPlant(n, hit.txt); }); return; }
 
     var end = new Date();
     var start = new Date(end.getTime() - 14 * 86400000);
@@ -12615,12 +12621,15 @@ window.casoraMenuGlass = {
     }).then(function (pts) {
       var txt = readPlant(pts, dryPct);
       window._casoraPlantW[key] = { at: Date.now(), txt: txt };
-      paintPlant(node, txt);
+      nodes.forEach(function (n) { paintPlant(n, txt); });
     });
   }
 
   function paintPlant(node, txt) {
     if (!node) return;
+    // Kept by the slot's id: the head is drawn again on every state update, and the new slot starts with this
+    // text instead of empty (owner 06.11.2026: „Gestern gegossen“ vanished after a few seconds).
+    if (node.id) (window._casoraSlotText = window._casoraSlotText || {})[node.id] = txt || '';
     node.textContent = txt || '';
     node.style.opacity = txt ? '1' : '0';
   }
