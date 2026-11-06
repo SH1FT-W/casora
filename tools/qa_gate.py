@@ -5,16 +5,15 @@ Gebraucht von tools/release.sh und tools/build-card-update.py:
   - Arbeitsstand sauber (keine geänderten Dateien unter Versionskontrolle),
   - .qa/gate-<HEAD>.json vorhanden, alle Schritte ok,
   - vollständiger Lauf: nicht --quick, nicht --only/--no-switch, nicht auf geändertem Stand,
-  - Umfang: ein volles Gate gilt immer. Releases mit Kalender-Version YY.M.N (seit Oktober 2026,
-    gebündelt einmal pro Woche) brauchen standardmäßig das volle Gate. Ein Patch-Gate (nur die betroffenen
-    Tests, dev/qa/gate.sh --patch) zählt dort nur mit --patch (bewusst, für echte Notfall-Hotfixes:
-    tools/release.sh --patch), für ein altes Release X.Y.Z nur mit Z>0 – und immer nur, wenn sein
+  - Umfang: ein volles Gate gilt immer. Releases mit Kalender-Version YY.M.N brauchen ohne --patch
+    das volle Gate (freitags, große Umbauten). Ein Patch-Gate (nur die betroffenen Tests, dev/qa/gate.sh
+    --patch) zählt dort mit --patch (Fix-Releases unter der Woche: tools/release.sh --patch), für ein altes Release X.Y.Z nur mit Z>0 – und immer nur, wenn sein
     Bezug ein grünes volles Gate eines Vorfahren von HEAD ist. Ein nachgeholtes Gate (--nachholen) hat
     den Umfang seines Vorlaufs.
 
     python3 tools/qa_gate.py                     # Rückgabe 0 = grün, sonst 1 mit Begründung
     python3 tools/qa_gate.py --version 26.10.31  # für dieses Release (Kalender-Version: volles Gate)
-    python3 tools/qa_gate.py --version 26.10.32 --patch  # Notfall-Hotfix: Patch-Gate zugelassen
+    python3 tools/qa_gate.py --version 26.10.32 --patch  # Fix-Release unter der Woche: Patch-Gate zugelassen
 """
 from __future__ import annotations
 
@@ -126,9 +125,9 @@ def gate_status(require_clean: bool = True, version: str | None = None, patch_ok
             if is_calendar_version(version):
                 if not patch_ok:
                     return False, (f"Gate für {head[:12]} ist ein Patch-Gate – ein Release {version} (Kalender-Version) "
-                                   "braucht das volle Gate: dev/qa/gate.sh --voll (nur echter Notfall-Hotfix: "
+                                   "braucht das volle Gate: dev/qa/gate.sh --voll (Fix-Release unter der Woche: "
                                    "tools/release.sh --patch)")
-                extra += ", Notfall-Hotfix (--patch)"
+                extra += ", Fix-Release (--patch)"
             elif len(parts) != 3 or parts[2] == "0":
                 return False, (f"Gate für {head[:12]} ist ein Patch-Gate – ein Release {version} (X.Y.0) braucht das "
                                "volle Gate: dev/qa/gate.sh --voll")

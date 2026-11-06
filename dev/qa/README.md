@@ -85,9 +85,9 @@ wie früher. Teure Teile (voller Klick-Durchlauf, r56,
 r20 …) laufen damit nur im vollen Gate oder wenn die Änderung sie berührt.
 
 Freigabe: `tools/release.sh YY.M.N` (über `tools/qa_gate.py --version`) braucht für Kalender-Versionen
-(seit Oktober 2026, ein gebündeltes Release pro Woche) standardmäßig das volle Gate; `gate.sh` wählt dafür
-nie automatisch ein Patch-Gate. Nur für einen echten Notfall-Hotfix: `dev/qa/gate.sh --patch` und
-`tools/release.sh YY.M.N --patch` – und nur, wenn der Bezug ein grünes volles Gate eines Vorfahren ist.
+zwei Stufen (Maintainer, 02.11.2026): **Fix-Releases unter der Woche** mit Patch-Gate (`dev/qa/gate.sh --patch`
+und `tools/release.sh YY.M.N --patch`, Bezug = grünes volles Gate eines Vorfahren); **volles Gate** freitags und bei
+großen Umbauten (viele Module, Vorlagen-Umbau, Migration, gespeicherte Daten). `gate.sh` wählt nie von selbst patch.
 Karten-Updates (`build-card-update.py`) nehmen beide.
 
 ## Nachholen statt Neulauf
