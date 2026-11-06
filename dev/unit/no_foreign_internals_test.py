@@ -67,6 +67,10 @@ ALLOWED = {
         "Lovelace dashboards: tell the Studio which are Casora dashboards (read only) instead of sending it every whole configuration",
     ("dashboard_kinds.py", "hass.data.get(LOVELACE_DATA)"):
         "as above",
+    ("theme.py", "import homeassistant.components.lovelace.const.LOVELACE_DATA"):
+        "design only on Casora dashboards (#129): which dashboards carry Casora cards (read only, same as dashboard_kinds.py)",
+    ("theme.py", "hass.data.get(LOVELACE_DATA)"):
+        "as above",
     ("template_refresh.py", "import homeassistant.components.lovelace.const.LOVELACE_DATA"):
         "Lovelace dashboards: refresh Casora's own unchanged templates after an update, at start (no browser)",
     ("template_refresh.py", "hass.data.get(LOVELACE_DATA)"):

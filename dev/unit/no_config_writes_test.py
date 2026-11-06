@@ -69,6 +69,7 @@ ALLOWED_WRITES = {
 }
 theme.add_extra_js_url = lambda hass, url: None
 theme.websocket_api.async_register_command = lambda hass, cmd: None
+theme.async_at_started = lambda hass, fn: (lambda: None)  # HA start helper (needs a real hass); the list is read at once anyway
 helfer._legacy_automation = lambda *a: False
 helfer._any_playing = lambda h: False
 helfer.async_register_admin_service = lambda *a, **k: None
