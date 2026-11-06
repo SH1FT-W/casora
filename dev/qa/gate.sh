@@ -162,31 +162,9 @@ sys.exit(1 if bad else 0)
 PY
 }
 unit_tests() {
-  local f bad=0 withs
-  for f in dev/unit/*.mjs; do
-    # Helfer mit Pflicht-Argumenten („node dev/unit/x.mjs <eingabe>“) ruft ihr Python-Test selbst auf.
-    if head -n 6 "$f" | grep -qE "node dev/unit/[^ ]+\.mjs <"; then echo "=== $f (Helfer, übersprungen)"; continue; fi
-    echo "=== $f"; "$NODE" "$f" || { echo "FEHLER $f"; bad=1; }
-  done
-  for f in dev/unit/*_test.py; do
-    # „@ha-venv“ im Kopf: gegen das echte HA-Paket in der Standardversion der Test-HAs (tools/ha-venv.sh),
-    # z. B. die HA-Annahmen (ha_annahmen_test.py); Beta und neueste Version prüft dev/qa/ha-annahmen.sh.
-    if head -n 30 "$f" | grep -q "@ha-venv"; then
-      echo "=== $f (tools/ha-venv.sh)"
-      "$(env -u HA_VERSION tools/ha-venv.sh install)/bin/python" "$f" || { echo "FEHLER $f"; bad=1; }
-      continue
-    fi
-    # Zusatzpakete stehen in der Aufrufzeile des Tests („uv run … --with homeassistant …“).
-    withs="$(head -n 30 "$f" | grep -o -- '--with [A-Za-z0-9_.=<>-]*' | sort -u | tr '\n' ' ')"
-    echo "=== $f $withs"; $PY $withs python "$f" || { echo "FEHLER $f"; bad=1; }
-  done
-  # Integrationstests mit pytest-homeassistant-custom-component (T-04): Setup/Unload/Migration.
-  if [ -d dev/pytest ]; then
-    echo "=== dev/pytest"; $PY --with pytest-homeassistant-custom-component pytest dev/pytest -q -p no:cacheprovider || { echo "FEHLER dev/pytest"; bad=1; }
-    # HA 2026.11+ (Marketplace statt HACS): HAs eigenes Testpaket, wie in .github/workflows/tests.yml.
-    echo "=== dev/pytest (HA 2026.11)"; $PY --prerelease=allow --with 'pytest-homeassistant>=2026.11.0b0,<2026.12' pytest dev/pytest -q -p no:cacheprovider -p no:respx || { echo "FEHLER dev/pytest (HA 2026.11)"; bad=1; }
-  fi
-  return $bad
+  # dev/unit/*.mjs, *_test.py (uv, "--with …" from the test's head, "@ha-venv" via tools/ha-venv.sh) and
+  # dev/pytest (HA 2026.10 and 2026.11) – side by side, UNIT_JOBS at a time; see dev/qa/unit-tests.sh.
+  bash dev/qa/unit-tests.sh
 }
 # Anmeldung: einmal je Zustand (jeder Zustand hat seine eigene HA-Benutzerdatenbank). Nach
 # jedem Umschalten setzt set_tokens CASORA_TOKENS im Haupt-Shell neu; alle Schritte erben es.

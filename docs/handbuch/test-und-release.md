@@ -9,7 +9,7 @@ node --check <geänderte .js>
 python3 tools/build-templates.py            # nur wenn button_card_templates.json geändert
 node dev/qa/check-templates.mjs             # alle [[[ … ]]] kompilieren, 0 Fehler
 python3 tools/i18ncheck.py                  # bei Texten
-for f in dev/unit/*.mjs; do node "$f" || echo "ROT $f"; done
+dev/qa/unit-tests.sh                        # alle Unit-Tests (mjs, py, pytest) parallel wie im Gate; UNIT_JOBS=1 = nacheinander
 python3 tools/privacy-check.py              # läuft auch als pre-commit (dev/install-hooks.sh)
 ```
 

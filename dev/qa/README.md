@@ -28,7 +28,8 @@ korrigieren, committen → `dev/qa/gate.sh --nachholen` (Minuten statt neuer Vol
    - `tools/privacy-check.py` (ganzes Repo), `tools/i18ncheck.py`, `tools/sync-changelog.py --check`
 2. **Unit-Tests** `dev/unit/*` (ohne HA; `--with …` aus der Aufrufzeile des Tests wird übernommen;
    Tests mit `@ha-venv` im Kopf laufen mit der Python von `tools/ha-venv.sh` in dessen Standardversion,
-   z. B. die HA-Annahmen, siehe unten)
+   z. B. die HA-Annahmen, siehe unten); `dev/qa/unit-tests.sh` startet sie nebeneinander (`UNIT_JOBS`,
+   Standard halbe Kernzahl, 2–6) und gibt die Ausgaben in Dateireihenfolge aus
 3. **Test-HAs** (Wegwerf-Container, je Zustand mit dem aktuellen Checkout eingespielt):
    - **arbeit**: zuerst legt `stress-setup.mjs --name qa-arbeit --state arbeit` auf jedem arbeit-HA ein
      Prüf-Dashboard über den echten Studio-Ablauf an; dann E2E-Reihe (Liste aus `dev/e2e/alle.sh`),
