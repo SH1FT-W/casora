@@ -264,6 +264,7 @@
     + 'svg{display:block;width:100%;overflow:visible;touch-action:pan-y;outline:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}'
     + 'text{font-size:11px;font-weight:500;fill:var(--cink3);font-variant-numeric:tabular-nums}.no{font-size:13px;fill:var(--cink3)}'
     + '.srt{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}'
+    + '.fb{position:absolute;left:0;right:0;top:0;background:var(--cplate);pointer-events:none;z-index:1}.fb:not(.on){display:none}'
     + '@media (forced-colors:active){path,line,circle{stroke:CanvasText}}';
   var cache = new Map();
 
@@ -290,7 +291,8 @@
       this._data = null; this._key = null;
       this.toggleAttribute('plate', !!c.plate);
       if (!this.shadowRoot) {
-        this.attachShadow({ mode: 'open' }).innerHTML = '<style>' + CSS + '</style><div id="b"></div><div class="srt" aria-live="polite"></div>';
+        this.attachShadow({ mode: 'open' }).innerHTML = '<style>' + CSS + '</style><div id="b"></div>'
+          + '<div class="ro fb" aria-hidden="true"><span class="v"></span><span class="u"></span><span class="w"></span></div><div class="srt" aria-live="polite"></div>';
       }
       this._load(true);
     }
@@ -460,14 +462,15 @@
     }
     _say(ro, v, u, w, name, ser) {
       if (ro) { ro.children[0].textContent = v; ro.children[1].textContent = u; ro.children[2].textContent = w; }
-      else if (this._c.readout === 'hero' && ser) this._hero(ser, w);
+      // hero without a number to read along in the popup: the reading over the plot.
+      else if (this._c.readout === 'hero' && ser && !this._hero(ser, w)) this._fb(v, u, w);
       var live = this.shadowRoot.querySelector('.srt');
       if (live && w !== this._def) live.textContent = (name ? name + ' ' : '') + v + ' ' + u + ', ' + w;
     }
     /* The popup's hero number reads along: [data-casora-read="<entity>"] gets the value,
        [data-casora-read-when] the time. Letting go restores the text. */
     _hero(vals, w) {
-      var t = this._tg, me = this;
+      var t = this._tg, me = this, n0 = 0;
       if (!t || t.some(function (n) { return !n.isConnected; })) {
         t = [];
         var deep = function (r) {
@@ -483,7 +486,7 @@
         if (!txt) return;
         if (n._casoraOrig == null) { n._casoraOrig = n.innerHTML; me._touched.push(n); }
         n.setAttribute('data-casora-reading', '');
-        n.textContent = txt;
+        n.textContent = txt; n0++;
         // v3: the unit beside a bare number follows.
         var u = n.hasAttribute('data-casora-read-bare') && n.nextElementSibling, x = vals[0], s = x && String(x.text);
         if (e != null && u && u.classList.contains('hui-st-u') && s && !s.indexOf(x.num)) {
@@ -492,6 +495,13 @@
           u.textContent = s.slice(String(x.num).length).trim();
         }
       });
+      return n0;
+    }
+    _fb(v, u, w) {
+      var r = this.shadowRoot, f = r.querySelector('.fb'), g = r.querySelector('#b svg');
+      this._say(f, v, u, w);
+      if (g) f.style.top = Math.max(0, g.getBoundingClientRect().top - this.getBoundingClientRect().top) + 'px';
+      f.classList.add('on');
     }
     _release() {
       (this._touched || []).forEach(function (n) {
@@ -499,6 +509,7 @@
         n._casoraOrig = null; n.removeAttribute('data-casora-reading');
       });
       this._touched = []; this._tg = null;
+      if (this.shadowRoot) this.shadowRoot.querySelector('.fb').classList.remove('on');
     }
     _svg(box, W, Hh, label) {
       var spark = this._c.kind === 'spark' || !!this._c.mini;
