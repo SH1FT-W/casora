@@ -22714,19 +22714,40 @@ class CasoraPanel extends HTMLElement {
   _rankedEntityList(domains, classes, room, cur, accept) {
     const h = this._hass;
     const R = (h && h.entities) || {}, D = (h && h.devices) || {};
+    const list = this._entityList(domains, classes, accept);
     const area = room ? this._roomArea(room) : null;
     const areaOf = (e) => { const r = R[e]; return r && (r.area_id || (D[r.device_id] || {}).area_id); };
-    const name = (e) => String(this._prettyEntity(e)).toLowerCase();
     // Gruppen haben oft keinen Bereich: der Raumname in Kennung oder Name zählt wie er.
     const key = room && room.path !== "home" ? foldName(room.name || "") : "";
-    const mine = (e) => (area && areaOf(e) === area)
-      || (key.length > 2 && foldName(e + " " + this._prettyEntity(e)).includes(key));
-    return this._entityList(domains, classes, accept)
+    // Every entity field of a room asks while the inspector draws (several with the same list): ranked once per
+    // state of hass (states, entity and device registry), names folded once per entity – folding and sorting
+    // all entities per field were a quarter of a room switch.
+    const memo = this._entMemo;
+    if (memo.rankR !== R || memo.rankD !== D) { memo.rankR = R; memo.rankD = D; memo.ranked = new Map(); }
+    const rk = JSON.stringify([domains, classes || null, accept || null, area, key, cur || null]);
+    const hit = memo.ranked.get(rk);
+    if (hit) return hit.slice();
+    const names = memo.names || (memo.names = new Map());
+    const info = (e) => {
+      let x = names.get(e);
+      if (!x) { const p = String(this._prettyEntity(e)); x = { p, low: p.toLowerCase(), fold: null }; names.set(e, x); }
+      return x;
+    };
+    const mine = (e) => {
+      if (area && areaOf(e) === area) return true;
+      if (key.length <= 2) return false;
+      const x = info(e);
+      if (x.fold === null) x.fold = foldName(e + " " + x.p);
+      return x.fold.includes(key);
+    };
+    const out = list
       .filter((e) => e === cur || /^(binary_)?sensor\./.test(e)
         || !["config", "diagnostic"].includes(listCategory(e, R[e])))
-      .map((e) => [e, mine(e) ? 0 : 1, name(e)])
+      .map((e) => [e, mine(e) ? 0 : 1, info(e).low])
       .sort((a, b) => a[1] - b[1] || a[2].localeCompare(b[2]))
       .map((x) => x[0]);
+    memo.ranked.set(rk, out);
+    return out.slice();
   }
 
   // Der HA-Bereich zu einem Studio-Raum: gleicher Name oder gleiche Kennung,
