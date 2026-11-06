@@ -37,8 +37,19 @@ window._hpChartCfg = (eid, label, span, color, height) => {
 };
 window._hpChartTitle = (eid) => { const m = window._hpPlantMeta[eid]; return m ? m[0] + ' · ' + SPAN[m[1]] : ''; };
 window._hpChartInit = () => {};
-window._hpBarCfg = () => ({});
+// Like 01-basis.js: consumption per day as bars from the long-term statistics (change per day).
+window._hpBarCfg = (key, eid, label, span, decimals) => {
+  window._hpPlantMeta[key] = [label, span, 'accent'];
+  return (window._hpPlantCfg[key] = { type: 'custom:casora-chart', kind: 'bar', span, source: 'change', height: 150,
+    series: [{ entity: eid, name: label, unit: 'kWh', decimals: decimals == null ? 1 : decimals }] });
+};
 window._casoraLaundry.fetch = () => {};
+// Device finder stub: the plug's readings as CD.map finds them; p_plug has an energy meter, p_plug2 has none.
+window.casoraDevice = {
+  deviceOf: () => null, printerKeys: [], printerFields: {}, companionPlug: () => null, entities: () => [],
+  map: (hass, eid) => eid === 'switch.p_plug' ? { power: 'sensor.p_power', energy: 'sensor.p_energy' }
+    : eid === 'switch.p_plug2' ? { power: 'sensor.p_power' } : {},
+};
 
 const keysOf = (card) => {
   const g = ((card.styles || {}).grid || []).find((x) => x['grid-template-areas']);
@@ -48,12 +59,15 @@ const st = (s, a) => ({ state: s, attributes: a || {} });
 const V = { entity_state: 'sensor.p_stage', entity_progress: 'sensor.p_progress', entity_task_name: 'sensor.p_task',
   plug_entity: 'switch.p_plug', entity_power: 'sensor.p_power' };
 const states = { 'sensor.p_stage': st('idle'), 'sensor.p_progress': st('0'), 'sensor.p_task': st('Job'),
-  'switch.p_plug': st('on'), 'sensor.p_power': st('42.5', { unit_of_measurement: 'W' }) };
+  'switch.p_plug': st('on'), 'sensor.p_power': st('42.5', { unit_of_measurement: 'W' }),
+  'switch.p_plug2': st('on'),
+  'sensor.p_energy': st('12.4', { unit_of_measurement: 'kWh', state_class: 'total_increasing' }) };
 const ent = { entity_id: 'sensor.p_stage' };
 const hass = { states };
 const c = P.resolve(ent, V, states, hass);
 assert.equal(c.plug, 'switch.p_plug', 'resolve: plug from plug_entity');
 assert.equal(c.power, 'sensor.p_power', 'resolve: power sensor');
+assert.equal(c.energy, 'sensor.p_energy', 'resolve: energy meter of the plug');
 
 const pop = P.popup(ent, V, states, hass);
 const leftCard = pop.custom_fields.left.card;
@@ -74,9 +88,38 @@ assert.match(chart, /onclick="window\._hpPlantTap/, 'Verlauf: a tap on a segment
 const keys = [...chart.matchAll(/data-hp-metric="([^"]+)"/g)].map((m) => m[1].replace(/&quot;/g, '"'));
 assert.equal(keys.length, 3, 'Verlauf: three range segments (' + keys.join(',') + ')');
 assert.deepEqual(keys.map((k) => window._hpPlantCfg[k] && window._hpPlantCfg[k].span), ['24h', '7d', '30d'], 'Verlauf: 24 Std. · 7 Tage · 30 Tage');
-keys.forEach((k) => assert.equal(window._hpPlantCfg[k].series[0].entity, 'sensor.p_power', 'Verlauf: ' + k + ' draws the plug power'));
 assert.match(chart, /class="hui-sg on" data-hp-metric="sensor\.p_power"/, 'Verlauf: 24 Std. chosen at first');
 assert.match(chart, />24 Std\.<.*>7 Tage<.*>30 Tage</, 'Verlauf: segment words like the reading page');
+
+// Owner (06.11.2026): a raw W line over 7/30 days is spiky and unreadable. With an energy meter on the plug the
+// 7/30-day ranges show the consumption per day as bars (statistics change per day, richtlinien §7.2 „Balken für
+// Summen je Zeitraum“); 24 Std. stays the power line.
+const c24 = window._hpPlantCfg[keys[0]];
+assert.equal(c24.kind, 'line', 'Verlauf 24 Std.: the power line');
+assert.equal(c24.series[0].entity, 'sensor.p_power', 'Verlauf 24 Std.: the plug power');
+assert.deepEqual(keys.slice(1), ['hwd7:sensor.p_energy', 'hwd30:sensor.p_energy'],
+  'Verlauf 7/30 Tage: the energy rows’ chart keys (' + keys.slice(1).join(',') + ')');
+keys.slice(1).forEach((k) => {
+  const cfg = window._hpPlantCfg[k];
+  assert.equal(cfg.kind, 'bar', 'Verlauf ' + k + ': bars per day, not a line');
+  assert.equal(cfg.source, 'change', 'Verlauf ' + k + ': statistics change per day');
+  assert.equal(cfg.series[0].entity, 'sensor.p_energy', 'Verlauf ' + k + ': the plug’s energy meter');
+  assert.equal(cfg.series[0].unit, 'kWh', 'Verlauf ' + k + ': kWh per day');
+  assert.equal(cfg.height, 120, 'Verlauf ' + k + ': plate height stays 120 (§7.1)');
+  assert.equal(window._hpPlantMeta[k][0], 'Verbrauch pro Tag', 'Verlauf ' + k + ': title „Verbrauch pro Tag“');
+});
+
+// Without an energy meter on the plug the ranges keep the smoothed power line (fallback).
+const V1 = Object.assign({}, V, { plug_entity: 'switch.p_plug2' });
+const pop1 = P.popup(ent, V1, states, hass);
+const chart1 = JSON.parse(String(pop1.custom_fields.left.card.custom_fields.chart).replace(/^.*?; return /, '').replace(/; \]\]\]$/, ''));
+const keys1 = [...chart1.matchAll(/data-hp-metric="([^"]+)"/g)].map((m) => m[1].replace(/&quot;/g, '"'));
+assert.deepEqual(keys1, ['sensor.p_power', 'pw7:sensor.p_power', 'pw30:sensor.p_power'],
+  'Verlauf without energy meter: power keys (' + keys1.join(',') + ')');
+keys1.forEach((k) => {
+  assert.equal(window._hpPlantCfg[k].kind, 'line', 'Verlauf without energy meter: ' + k + ' stays a line');
+  assert.equal(window._hpPlantCfg[k].series[0].entity, 'sensor.p_power', 'Verlauf without energy meter: ' + k + ' draws the plug power');
+});
 
 // The plug section: the switch and the power now, also in Soft (the plug is the printer's only power meter).
 const html = window._casoraLaundry.inner('plug', c, states);
