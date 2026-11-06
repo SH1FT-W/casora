@@ -189,8 +189,8 @@ When you open an [issue](https://github.com/SH1FT-W/casora/issues), add the diag
 
 Casora gets better with every bug report and every idea. A big thank you to:
 
-- [**@stalakerob**](https://github.com/stalakerob): the most reports of all. The chart card and its heatmap, the Universal tile, own badges with their own popups, the energy flow, entity lists, Frigate streams and the room search.
 - [**@srsly88**](https://github.com/srsly88): from the very first issue on. Fuel prices, plants, waste and the phone layout, and lately a sharp eye on every corner of the new popups.
+- [**@stalakerob**](https://github.com/stalakerob): the most reports of all. The chart card and its heatmap, the Universal tile, own badges with their own popups, the energy flow, entity lists, Frigate streams and the room search.
 - [**@Westerloer**](https://github.com/Westerloer): navigation, energy, blinds, climate, network and the history, always with clear steps to reproduce.
 - [**@vitidron**](https://github.com/vitidron): tireless testing of the Reolink doorbell, plus the Tractive, dishwasher and script button wishes.
 - [**@andreasgoetzke**](https://github.com/andreasgoetzke): the feels-like temperature, the weather curves and the e-bike live battery.
