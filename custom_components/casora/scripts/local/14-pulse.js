@@ -409,6 +409,8 @@
         at = i + repHtml.length;
       });
     }
+    // The core also writes the name into attributes (data-casora-rn): there only the plain name (issue 133).
+    html = html.replace(/="[^"]*"/g, function (a) { return a.split(NAME_ON).join('').split(NAME_OFF).join(''); });
     return html.split(NAME_ON).join('<span class="pls-nm">')
       .split(NAME_OFF).join('</span><span class="pls-tag">Wichtig</span>')
       .replace(/ aria-label="([^"]*)"/g, ' aria-label="$1" title="$1"');

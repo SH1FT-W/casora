@@ -153,7 +153,8 @@ const groups = [];
 window._casoraUI = {
   line: (m, r) => '<line>' + m + '|' + r.join('|') + '</line>',
   icon: (n, t) => '<i data-ic="' + n + '|' + t + '"></i>',
-  group: (rows, label) => { groups.push({ rows, label }); return rows.map((r) => '<div class="hui-row"><div class="hui-inner">' + window._casoraUI.icon(r.icon, r.iconTone)
+  // Like the core: the shown name also goes into data-casora-rn (r487) – markers must not end up there (issue 133).
+  group: (rows, label) => { groups.push({ rows, label }); return rows.map((r) => '<div class="hui-row"' + (r.entity ? ' data-casora-rn="' + r.label + '"' : '') + ' style="cursor:pointer;"><div class="hui-inner">' + window._casoraUI.icon(r.icon, r.iconTone)
     + r.label + ' ' + (r.sub || '') + (r.action ? '<div class="hui-actx" aria-label="' + r.action + '"></div>' : '') + '</div></div>').join(''); },
   more: (id, html, o) => '<more ' + o.label + ' ' + o.count + '><span class="hui-mlb"></span>' + html + '</more>',
 };
@@ -181,9 +182,9 @@ assert.ok(win.svc.done, 'Rückmeldung nach dem Melden');
 assert.equal(win.value, undefined, 'nothing on the right but the controls');
 assert.equal(win.pct, '7 %');
 // Badge sits on the icon of its own row (rows with the same icon before it stay without).
-const winRow = secs.check.split('<div class="hui-row">').find((x) => x.includes('Fenster Atelier'));
+const winRow = secs.check.split('<div class="hui-row"').find((x) => x.includes('Fenster Atelier'));
 assert.ok(/<div class="pls-ic"><i [^>]*><\/i><span class="pls-pct">7 %<\/span><\/div>/.test(winRow), winRow);
-assert.ok(!secs.check.split('<div class="hui-row">').find((x) => x.includes('Bewegung Treppe')).includes('pls-pct'), 'no badge without battery');
+assert.ok(!secs.check.split('<div class="hui-row"').find((x) => x.includes('Bewegung Treppe')).includes('pls-pct'), 'no badge without battery');
 const smoke = all.find((r) => /Rauchmelder/.test(r.label));
 assert.equal(smoke.action, undefined, 'kein „Gewechselt“ bei Stille');
 assert.equal(smoke.iconTone, 'bad');
@@ -191,6 +192,9 @@ assert.equal(smoke.pct, null, 'silent: no (stale) battery badge');
 assert.ok(/^Antwortet seit \d+ Tagen nicht · sonst alle 4 Std\. · Speicher$/.test(smoke.sub), smoke.sub);
 assert.ok(secs.failed.includes('<span class="pls-nm">Rauchmelder Speicher</span><span class="pls-tag">Wichtig</span>'), '„Wichtig“ beside the name');
 assert.ok(!/[\u2062\u2063]/.test(secs.failed), 'no markers left');
+// Issue 133: the tag must not land inside an attribute (it broke the row: „Name WICHTIG" style=…“ shown as text).
+assert.ok(secs.failed.includes(' data-casora-rn="Rauchmelder Speicher" style='), 'plain name in data-casora-rn');
+assert.ok(!/="[^"]*</.test(secs.failed), 'no markup inside an attribute value');
 const more = P.sec('more', null, states, hass);
 assert.ok(/<more Alles ok 2>/.test(more), '„Alles ok“ eingeklappt mit Anzahl');
 assert.ok(more.includes('class="pls-okic"'), 'green check in front of „Alles ok“');
