@@ -108,6 +108,28 @@ async def main():
                 h.write(" ")
             r3 = await tv.get(req("/api/casora/templates", hass, **{"If-None-Match": r.headers["ETag"]}))
             check("Vorlagen: geändert → 200 mit neuem ETag", r3.status == 200 and r3.headers["ETag"] != r.headers["ETag"])
+        # Hashing the bundle (~2 MB) runs in the executor, never in the event loop.
+        where: list[bool] = []
+        busy = {"executor": False}
+
+        async def _exec(fn, *a):
+            busy["executor"] = True
+            try:
+                return fn(*a)
+            finally:
+                busy["executor"] = False
+
+        real_sha1 = T.hashlib.sha1
+
+        def _sha1(*a, **k):
+            where.append(busy["executor"])
+            return real_sha1(*a, **k)
+
+        with mock.patch.object(T.hashlib, "sha1", _sha1):
+            hx = hass_for(d)
+            hx.async_add_executor_job = _exec
+            r4 = await tv.get(req("/api/casora/templates", hx))
+        check("Vorlagen: ETag-Hash im Executor, nicht im Event-Loop", r4.status == 200 and where == [True], repr(where))
 
         # Assets
         shipped = os.path.join(d, "assets")

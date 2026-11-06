@@ -66,13 +66,20 @@ class CasoraTemplatesView(HomeAssistantView):
                 return body
             return json.dumps(bundle, ensure_ascii=False, separators=(",", ":")) if active else body
 
-        body = await hass.async_add_executor_job(_read)
-        if body is None:
+        def _read_tagged() -> tuple[bytes, str] | None:
+            # Encoding and hashing ~2 MB stays off the event loop too (several ms on a small host).
+            body = _read()
+            if body is None:
+                return None
+            raw = body.encode("utf-8")
+            return raw, '"' + hashlib.sha1(raw).hexdigest()[:20] + '"'
+
+        got = await hass.async_add_executor_job(_read_tagged)
+        if got is None:
             return web.Response(status=404, text="no template bundle")
         # Never behind: der Browser fragt jedes Mal nach (no-cache), bekommt aber bei
         # unverändertem Inhalt nur „304“ statt 2,4 MB – und sonst gepackt (~0,5 MB).
-        raw = body.encode("utf-8")
-        etag = '"' + hashlib.sha1(raw).hexdigest()[:20] + '"'
+        raw, etag = got
         headers = {"Cache-Control": "private, no-cache", "ETag": etag, "Vary": "Accept-Encoding"}
         if request.headers.get("If-None-Match") == etag:
             return web.Response(status=304, headers=headers)
