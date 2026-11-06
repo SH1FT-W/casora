@@ -1146,6 +1146,37 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     }
     return typeof n === 'string' ? n.trim() : '';
   };
+  // Title and subline of a door/window row ({ label, sub }): own name (#69), else the entity's own name, and the
+  // room below. The device's name only when the entity has none of its own or just a kind word („Haustür Kontakt“
+  // → „Haustür“, issue #1) – and never when the device carries several doors/windows: an alarm panel's zones
+  // („ABUS Secvest TÜR“, „ABUS Secvest TERRASSE GARAGE“) all read „ABUS Secvest“ then (issue 135).
+  var KIND_ONLY = /^(kontakt\w*|contact( sensor)?|t(ü|ue)r(kontakt|sensor)?|door( sensor)?|fenster(kontakt|sensor)?|window( sensor)?|(ö|oe)ffnung|opening|sensor|status|zustand)$/i;
+  var CONTACT_DC = { door: 1, window: 1, garage_door: 1, opening: 1 };
+  window.casoraContactRowName = function (hass, id) {
+    var S = (hass && hass.states) || {}, E = (hass && hass.entities) || {}, D = (hass && hass.devices) || {}, A = (hass && hass.areas) || {};
+    var ent = E[id] || {}, dev = ent.device_id ? D[ent.device_id] || null : null;
+    var aid = ent.area_id || (dev && dev.area_id);
+    var area = aid && A[aid] ? String(A[aid].name || '').trim() || null : null;
+    var withSub = function (label) {
+      return { label: label, sub: area && String(label).toLowerCase() !== area.toLowerCase() ? area : null };
+    };
+    var own = window.casoraContactName ? window.casoraContactName(id) : '';
+    if (own) return withSub(own);
+    var raw = String((S[id] && S[id].attributes && S[id].attributes.friendly_name) || id).trim();
+    var dn = String((dev && (dev.name_by_user || dev.name)) || '').trim();
+    // The entity's own part of HA's friendly name („<device> <name>“), '' when it is the device's main entity.
+    var part = raw;
+    if (dn && raw.toLowerCase() === dn.toLowerCase()) part = '';
+    else if (dn && raw.toLowerCase().indexOf(dn.toLowerCase() + ' ') === 0) part = raw.slice(dn.length + 1).trim();
+    var shared = !!dev && Object.keys(E).filter(function (x) {
+      return E[x] && E[x].device_id === ent.device_id && x.indexOf('binary_sensor.') === 0
+        && CONTACT_DC[String((S[x] && S[x].attributes && S[x].attributes.device_class) || '')];
+    }).length > 1;
+    if (part && (shared || !KIND_ONLY.test(part))) return withSub(part);
+    var clean = dn.replace(/^(kontaktsensor|kontakt|fenstersensor|türsensor|contact sensor|door sensor|window sensor)\s+/i, '')
+      .replace(/\s+(contact|kontakt)$/i, '').trim();
+    return withSub(clean && (!area || clean.toLowerCase() !== area.toLowerCase()) ? clean : raw);
+  };
   // Every door and window of the house, merged sensors left out: what the security badge counts
   // on the home view without entries of its own (#39).
   window.casoraHouseContacts = function (hass) {

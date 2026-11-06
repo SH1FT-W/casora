@@ -36,7 +36,11 @@ const states = {
 hass.states = states;
 
 globalThis.window = globalThis;
-window.casoraContacts = () => ({ groups: [{ label: 'Kontakte', members: Object.keys(states) }], sub: {}, excl: [] });
+// Row names come from casoraContactRowName (issue 135), loaded before the popups as in the browser.
+globalThis.document = { querySelector: () => null };
+globalThis.addEventListener = () => {};
+new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8'))();
+window.casoraContacts =() => ({ groups: [{ label: 'Kontakte', members: Object.keys(states) }], sub: {}, excl: [] });
 const rowsOf = (name, soft) => {
   let rows = null;
   window._casoraUI = {
