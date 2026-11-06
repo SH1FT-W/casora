@@ -1341,6 +1341,35 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
 // Casora-Designs über --ha-card-backdrop-filter / --ha-dialog-surface-backdrop-filter setzen.
 // Hier kommt die Zeile mit denselben Variablen wie vor 2026.10 zurück. Ohne gesetzte Variable
 // bleibt es bei „none“; unter 2026.9 steht sie doppelt (gleicher Wert, keine Wirkung).
+// A sheet pushed to an element's elementStyles reaches elements created afterwards; the ones already drawn get it
+// here, all tags in one shared walk 1.5 s after the first request (was one whole-page walk per tag: four on load).
+if (typeof window.__casoraAdoptLater !== 'function') {
+  (function () {
+    var queue = [], timer = 0;
+    function flush() {
+      timer = 0;
+      var q = queue, n = 0;
+      queue = [];
+      try {
+        (function walk(root) {
+          var all = root.querySelectorAll('*');
+          for (var i = 0; i < all.length && n < 20000; i++, n++) {
+            var el = all[i], sr = el.shadowRoot;
+            if (!sr) continue;
+            for (var j = 0; j < q.length; j++) {
+              if (el.localName === q[j].tag && sr.adoptedStyleSheets.indexOf(q[j].sh) < 0) sr.adoptedStyleSheets = sr.adoptedStyleSheets.concat([q[j].sh]);
+            }
+            walk(sr);
+          }
+        })(document);
+      } catch (e) { /* without constructable stylesheets: as before */ }
+    }
+    window.__casoraAdoptLater = function (tag, sh) {
+      queue.push({ tag: tag, sh: sh });
+      if (!timer) timer = setTimeout(flush, 1500);
+    };
+  })();
+}
 (function () {
   if (window.__casoraWebkitBlur || !window.customElements) return;
   window.__casoraWebkitBlur = true;
@@ -1364,19 +1393,8 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
         list.__casoraWebkit = true;
         window.__casoraWebkitSheets = window.__casoraWebkitSheets || {};
         window.__casoraWebkitSheets[tag] = sh;
-        // Schon gezeichnete Elemente (Modul kam später als das Dashboard): einmal nachreichen.
-        setTimeout(function () {
-          var n = 0;
-          (function walk(root) {
-            var all = root.querySelectorAll('*');
-            for (var i = 0; i < all.length && n < 20000; i++, n++) {
-              var el = all[i], sr = el.shadowRoot;
-              if (!sr) continue;
-              if (el.localName === tag && sr.adoptedStyleSheets.indexOf(sh) < 0) sr.adoptedStyleSheets = sr.adoptedStyleSheets.concat([sh]);
-              walk(sr);
-            }
-          })(document);
-        }, 1500);
+        // Elements drawn before this module: hand the sheet on once (shared walk).
+        window.__casoraAdoptLater(tag, sh);
       } catch (e) { /* ohne Constructable Stylesheets: wie bisher */ }
     });
   };
@@ -1412,7 +1430,8 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       sh.replaceSync(css);
       list.push(sh);
       list.__casoraShadow = true;
-      // Schon gezeichnete Karten (Modul kam später): einmal nachreichen.
+      // Cards drawn before this module: hand the sheet on once, in the walk shared with casora-webkit-blur.
+      if (typeof window.__casoraAdoptLater === 'function') { window.__casoraAdoptLater('button-card', sh); return; }
       setTimeout(function () {
         var n = 0;
         (function walk(root) {
