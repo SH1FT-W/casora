@@ -192,6 +192,10 @@
       "name": "Set up",
       "description": "Creates missing Casora helpers and scripts (runs automatically at startup) and reports anything it could not create."
     },
+    "setup_overview": {
+      "name": "Setup overview",
+      "description": "Read only: rooms, devices without an area and devices not on any Casora tile yet, each with a suggested tile type. For your own assistant, for example through an MCP server."
+    },
     "set_timer": {
       "name": "Set timer",
       "description": "Turns an entity off or on after a number of minutes. Replaces an existing timer for the same entity. When the timer ends, Casora fires the event casora_timer_finished (entity_id, action, reason: expired, manual or cancelled). Can respond with entity_id, at and start.",

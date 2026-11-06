@@ -33,6 +33,7 @@ from .template_refresh import async_setup_template_refresh
 from .phone_badges import async_setup_phone_badges
 from .update_source import LEGACY_OPTIONS
 from .ki import KiRunner
+from .setup_overview import async_setup_setup_overview
 from .umstellen import async_setup_umstellen
 from .hemma_cleanup import async_hemma_present, async_keep_own_modules, async_setup_hemma_cleanup, is_own_module
 from .fonts import CasoraFontsView
@@ -322,6 +323,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     runner = KiRunner(hass, entry)
     await runner.async_setup()
     await async_setup_umstellen(hass)
+    # Read-only overview for external assistants over MCP (issue #131).
+    await async_setup_setup_overview(hass)
     # Helpers and automatic behaviour - formerly a package copied by hand.
     await async_setup_helfer(hass)
     hass.data.setdefault(DOMAIN, {})["ki"] = runner
@@ -440,7 +443,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_unload_theme(hass)
     async_unload_preload(hass)
     # Otherwise they stay callable until the restart, even after removing Casora.
-    for name in ("einrichten", "umstellen", *ACTION_SERVICES):
+    for name in ("einrichten", "umstellen", "setup_overview", *ACTION_SERVICES):
         hass.services.async_remove(DOMAIN, name)
     runner = hass.data.get(DOMAIN, {}).pop("ki", None)
     if runner:

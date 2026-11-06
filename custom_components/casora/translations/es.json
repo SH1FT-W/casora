@@ -192,6 +192,10 @@
       "name": "Configurar",
       "description": "Crea los ayudantes y scripts de Casora que falten (se ejecuta automáticamente al iniciar) e informa de lo que no pudo crear."
     },
+    "setup_overview": {
+      "name": "Resumen de configuración",
+      "description": "Solo lectura: habitaciones, dispositivos sin área y dispositivos que aún no están en ningún mosaico de Casora, cada uno con un tipo de mosaico sugerido. Para tu propio asistente, por ejemplo a través de un servidor MCP."
+    },
     "set_timer": {
       "name": "Programar temporizador",
       "description": "Apaga o enciende una entidad tras un número de minutos. Reemplaza un temporizador existente para la misma entidad. Cuando termina el temporizador, Casora lanza el evento casora_timer_finished (entity_id, action, reason: expired, manual o cancelled). Puede responder con entity_id, at y start.",

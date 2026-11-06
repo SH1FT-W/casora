@@ -192,6 +192,10 @@
       "name": "Configurer",
       "description": "Crée les helpers et scripts Casora manquants (s'exécute automatiquement au démarrage) et signale ce qui n'a pas pu être créé."
     },
+    "setup_overview": {
+      "name": "Aperçu de la configuration",
+      "description": "Lecture seule : pièces, appareils sans zone et appareils qui ne sont encore sur aucune tuile Casora, chacun avec un type de tuile suggéré. Pour ton propre assistant, par exemple via un serveur MCP."
+    },
     "set_timer": {
       "name": "Programmer une minuterie",
       "description": "Éteint ou allume une entité après un nombre de minutes. Remplace une minuterie existante pour la même entité. À la fin de la minuterie, Casora déclenche l'événement casora_timer_finished (entity_id, action, reason : expired, manual ou cancelled). Peut répondre avec entity_id, at et start.",

@@ -71,6 +71,7 @@ umstellen:
       selector:
         boolean:
 einrichten:
+setup_overview:
 set_timer:
   fields:
     entity_id:

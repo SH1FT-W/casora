@@ -81,18 +81,34 @@ def dashboard_players(cfg: Any) -> list[str]:
     return out
 
 
-async def async_dashboard_kinds(hass: HomeAssistant) -> dict[str, dict]:
-    """url_path → {kind, players} for every dashboard Lovelace knows (storage and yaml)."""
+UNREADABLE = object()
+
+
+async def async_dashboard_configs(hass: HomeAssistant) -> dict[str, Any]:
+    """url_path → stored configuration of every dashboard Lovelace knows (storage and yaml), read only.
+
+    UNREADABLE when the configuration could not be read (never saved, broken). Also used by
+    casora.setup_overview (setup_overview.py).
+    """
     from homeassistant.components.lovelace.const import LOVELACE_DATA
 
     data = hass.data.get(LOVELACE_DATA)
-    out: dict[str, dict] = {}
+    out: dict[str, Any] = {}
     for url_path, dash in list((data.dashboards if data else {}).items()):
         if not url_path:
             continue
         try:
-            cfg = await dash.async_load(False)
+            out[url_path] = await dash.async_load(False)
         except Exception:  # noqa: BLE001 - never saved or broken: "not sure", like a failed lovelace/config
+            out[url_path] = UNREADABLE
+    return out
+
+
+async def async_dashboard_kinds(hass: HomeAssistant) -> dict[str, dict]:
+    """url_path → {kind, players} for every dashboard Lovelace knows (storage and yaml)."""
+    out: dict[str, dict] = {}
+    for url_path, cfg in (await async_dashboard_configs(hass)).items():
+        if cfg is UNREADABLE:
             out[url_path] = {"kind": None, "players": []}
             continue
         out[url_path] = {"kind": dashboard_kind(cfg), "players": dashboard_players(cfg)}

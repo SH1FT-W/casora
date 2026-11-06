@@ -192,6 +192,10 @@
       "name": "Instellen",
       "description": "Maakt ontbrekende Casora-helpers en -scripts aan (draait automatisch bij het starten) en meldt wat niet kon worden aangemaakt."
     },
+    "setup_overview": {
+      "name": "Installatieoverzicht",
+      "description": "Alleen lezen: kamers, apparaten zonder ruimte en apparaten die nog op geen Casora-tegel staan, elk met een voorgestelde tegelsoort. Voor je eigen assistent, bijvoorbeeld via een MCP-server."
+    },
     "set_timer": {
       "name": "Timer instellen",
       "description": "Schakelt een entiteit na een aantal minuten uit of in. Vervangt een bestaande timer voor dezelfde entiteit. Als de timer afloopt, verstuurt Casora het event casora_timer_finished (entity_id, action, reason: expired, manual of cancelled). Kan antwoorden met entity_id, at en start.",

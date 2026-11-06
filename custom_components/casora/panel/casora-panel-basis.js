@@ -1045,6 +1045,7 @@
         + ".bs-empty-room{font-size:var(--t-foot);color:var(--ink-3,rgba(255,255,255,.5));padding:4px}"
         + ".bs-foot{margin:14px 4px 0;font-size:var(--t-foot);line-height:1.45;color:var(--ink-3,rgba(255,255,255,.5));text-align:center}"
         + ".bs-foot.ai{color:#c77dff}"
+        + ".bs-mcp a{color:inherit;text-decoration:underline}"
         + ":host(.is-light) .bs-item:hover:not(:disabled){background:rgba(0,0,0,.04)}"
         + ":host(.is-light) .bs-foot.ai{color:var(--casora-studio-ai, #8944ab)}";
       root.appendChild(st);
@@ -1081,12 +1082,22 @@
       });
       paint();
       const lock = el("div", "bs-lock", s.body);
-      try { const m = await this._hass.callWS({ type: "casora/ki/models" }); best = m && m.best; if (!best) lock.textContent = m && m.all && m.all.length ? "AI setup needs a stronger AI – for example Claude Opus, Claude Sonnet 4.5 or GPT-5. Settings → AI tasks." : "AI setup needs an AI – for example Claude Opus. Settings → AI tasks."; } catch (e) { best = null; }
+      let noAiTask = false;
+      try { const m = await this._hass.callWS({ type: "casora/ki/models" }); best = m && m.best; noAiTask = !(m && m.all && m.all.length); if (!best) lock.textContent = !noAiTask ? "AI setup needs a stronger AI – for example Claude Opus, Claude Sonnet 4.5 or GPT-5. Settings → AI tasks." : "AI setup needs an AI – for example Claude Opus. Settings → AI tasks."; } catch (e) { best = null; }
       const aiCard = cards.find((c) => c.dataset.k === "ai");
       const showBest = () => { lock.setAttribute("data-no-i18n", ""); lock.textContent = "✦ " + tr("AI") + ": " + best.label; };
       if (!best) {
         aiCard.setAttribute("aria-disabled", "true"); if (pick === "ai") { pick = "auto"; paint(); }
         window.casoraAiUpgrade(this, s.body, (b) => { best = b; aiCard.removeAttribute("aria-disabled"); showBest(); });
+        // No ai_task at all: an assistant the user already has can do the setup through an MCP server (issue 131).
+        if (noAiTask) {
+          const mcp = el("div", "bs-foot bs-mcp", s.body);
+          el("span", "", mcp, "Already have an assistant connected to Home Assistant over MCP? It can read the action casora.setup_overview and sort your devices into areas.");
+          mcp.appendChild(document.createTextNode(" "));
+          const a = el("a", "", mcp, "How it works");
+          a.href = "https://github.com/SH1FT-W/casora/blob/main/docs/guide.md#set-up-with-your-own-assistant-over-mcp";
+          a.target = "_blank"; a.rel = "noopener";
+        }
       } else showBest();
       this._flowButton(s.acts, "Continue", async () => {
         if (pick === "empty") return o.go(null);

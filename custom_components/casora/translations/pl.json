@@ -192,6 +192,10 @@
       "name": "Skonfiguruj",
       "description": "Tworzy brakujące pomocniki i skrypty Casora (dzieje się automatycznie przy starcie) i zgłasza, czego nie udało się utworzyć."
     },
+    "setup_overview": {
+      "name": "Przegląd konfiguracji",
+      "description": "Tylko odczyt: pokoje, urządzenia bez obszaru i urządzenia, które nie są jeszcze na żadnym kafelku Casora, każde z proponowanym typem kafelka. Dla własnego asystenta, na przykład przez serwer MCP."
+    },
     "set_timer": {
       "name": "Ustaw wyłącznik czasowy",
       "description": "Wyłącza lub włącza encję po podanej liczbie minut. Zastępuje istniejący wyłącznik czasowy tej samej encji. Gdy wyłącznik czasowy się kończy, Casora wysyła zdarzenie casora_timer_finished (entity_id, action, reason: expired, manual lub cancelled). Na życzenie odpowiada z entity_id, at i start.",

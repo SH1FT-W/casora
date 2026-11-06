@@ -1742,6 +1742,8 @@
     "The rooms stay empty – you add tiles yourself in the Studio.": "As divisões ficam vazias – adicionas tu os cartões no Studio.",
     "AI setup needs a stronger AI – for example Claude Opus, Claude Sonnet 4.5 or GPT-5. Settings → AI tasks.": "A configuração com IA requer uma IA mais potente – por exemplo Claude Opus, Claude Sonnet 4.5 ou GPT-5. Definições → Tarefas de IA.",
     "AI setup needs an AI – for example Claude Opus. Settings → AI tasks.": "A configuração com IA requer uma IA – por exemplo Claude Opus. Definições → Tarefas de IA.",
+    "Already have an assistant connected to Home Assistant over MCP? It can read the action casora.setup_overview and sort your devices into areas.": "Já tens um assistente ligado ao Home Assistant por MCP? Pode ler a ação casora.setup_overview e atribuir os teus dispositivos a áreas.",
+    "How it works": "Como funciona",
     "This is what Casora puts in. Tap a tile to leave it out – you can change everything later.": "Isto é o que o Casora coloca. Toca num cartão para o deixar de fora – podes mudar tudo mais tarde.",
     "AI is sorting your devices…": "A IA está a ordenar os teus dispositivos…",
     "AI didn't work: ": "A IA não funcionou:",

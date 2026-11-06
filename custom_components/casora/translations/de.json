@@ -192,6 +192,10 @@
       "name": "Einrichten",
       "description": "Legt fehlende Casora-Helfer und -Skripte an (passiert beim Start automatisch) und meldet, was fehlt."
     },
+    "setup_overview": {
+      "name": "Einrichtungs-Übersicht",
+      "description": "Nur lesen: Räume, Geräte ohne Bereich und Geräte, die noch auf keiner Casora-Kachel liegen, je mit vorgeschlagenem Kacheltyp. Für eigene Assistenten, z. B. über einen MCP-Server."
+    },
     "set_timer": {
       "name": "Zeitschalter setzen",
       "description": "Schaltet eine Entität nach einigen Minuten aus oder an. Ersetzt einen bestehenden Zeitschalter derselben Entität. Endet der Zeitschalter, feuert Casora das Ereignis casora_timer_finished (entity_id, action, reason: expired, manual oder cancelled). Antwortet auf Wunsch mit entity_id, at und start.",

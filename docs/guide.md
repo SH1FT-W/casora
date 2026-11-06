@@ -17,6 +17,7 @@ Everything the [README](../README.md) leaves out: setting up, the Studio, moving
 - [Rewind: going back to an earlier version](#rewind-going-back-to-an-earlier-version)
 - [Updates](#updates)
 - [AI features (optional)](#ai-features-optional)
+- [Set up with your own assistant over MCP](#set-up-with-your-own-assistant-over-mcp)
 - [Privacy in detail](#privacy-in-detail)
 - [FAQ and troubleshooting](#faq-and-troubleshooting)
 - [Actions](#actions)
@@ -217,6 +218,39 @@ The aquarium doctor and the bike check start from the aquarium and e-bike popups
 > [!IMPORTANT]
 > **AI costs money.** AI calls run on your own provider account and API key, and your provider bills you for them. Before each AI step in the Studio, Casora shows an estimate based on list prices, and you can continue or cancel. The estimate is only a guide; your provider's bill is what counts. Casora picks a suitable model itself (a Sonnet-class model rather than an Opus-class one). If your current AI isn't strong enough, Casora can set up a separate *Casora AI* task with a stronger model, and your existing AI stays as it is. Nothing runs on a schedule unless you give that feature a schedule.
 
+## Set up with your own assistant over MCP
+
+Casora's **Set up with AI** needs an AI task in Home Assistant. If you already talk to Home Assistant through your own assistant over MCP, it can do the same groundwork without a second AI account.
+
+You need an MCP server that can **call Home Assistant actions**, for example [ha-mcp](https://github.com/homeassistant-ai/ha-mcp). Home Assistant's official *Model Context Protocol Server* integration only offers the Assist API, which cannot call `casora.setup_overview`. The action reads every dashboard, so the MCP server has to sign in as an administrator.
+
+1. **Ask Casora what is missing.** `casora.setup_overview` only reads and changes nothing:
+
+   ```yaml
+   action: casora.setup_overview
+   ```
+
+   The answer (shortened):
+
+   ```json
+   {
+     "rooms": [{"area_id": "kitchen", "name": "Kitchen", "floor": "Ground floor"}],
+     "unassigned_devices": [{"device_id": "8f3c…", "name": "Kitchen ceiling lamp", "suggested_area": "Kitchen"}],
+     "devices_without_tile": [{"device_id": "2b71…", "name": "Radiator", "area": "Living room",
+                               "main_entity": "climate.radiator", "suggested_tile": "thermostat"}],
+     "dashboards": ["casora-home"]
+   }
+   ```
+
+   - `rooms`: your Home Assistant areas with their floor.
+   - `unassigned_devices`: devices without an area. `suggested_area` appears when Casora has a hint: the area of the device's entities, or an area named in the device name.
+   - `devices_without_tile`: devices that are on no tile of a Casora dashboard yet, with the entity a tile would use and the tile type Casora suggests (`light`, `thermostat`, `cover`, `casora_washer` …). Casora Studio may suggest more than this list: coffee machines, kettles and Community cards are only found there.
+   - `dashboards`: your Casora dashboards.
+2. **Let your assistant sort devices into areas.** That is Home Assistant's own job, so the assistant uses Home Assistant's tools for it (with ha-mcp, for example, the tool that updates a device). Check its suggestions before you confirm them.
+3. **Fill the rooms.** Run the setup assistant (or **⋯ › Setup assistant…**) and choose **Set up automatically**: devices now land in the right rooms. Later, the Studio's device assistant adds new devices to an existing dashboard.
+
+Actions that change a dashboard (rename a tile, add devices, apply a layout) are planned for a later release.
+
 ## Privacy in detail
 
 Casora runs entirely inside your Home Assistant. It has no cloud service, no account, no analytics and no telemetry. The only times it contacts anything outside your home are:
@@ -289,6 +323,7 @@ Casora adds these actions to Home Assistant (Developer tools → Actions).
 | `casora.rezept_neu`, `casora.rezept_auf_liste` | Get a new recipe of the week, or add its ingredients to the shopping list |
 | `casora.einrichten` | Create missing helpers again (Casora also does this at every start) |
 | `casora.umstellen` | Rename existing Hemma dashboards to Casora names (with a backup) |
+| `casora.setup_overview` | Read only: rooms, devices without an area and devices without a Casora tile, with a suggested tile type. For your own assistant over MCP, see [Set up with your own assistant over MCP](#set-up-with-your-own-assistant-over-mcp) |
 | `casora.ai_generate` | Like `ai_task.generate_data`, but falls back to the first AI task when none is chosen. Used by Casora's AI steps |
 | `casora.light_smart_toggle`, `casora.thermostat_overlay_toggle`, `casora.actions_overlay_toggle`, `casora.restart_toggle` | Used by Casora's tiles: turn a light group back on with the lamps that were on, open a tile's thermostat or action controls, restart a device after a confirming tap |
 | `casora.set_timer`, `casora.cancel_timer` | Turn an entity off or on after 1–1440 minutes (the hold menu's timers), or remove that timer. `set_timer` can return `entity_id`, `at` and `start` |

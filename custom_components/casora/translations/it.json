@@ -192,6 +192,10 @@
       "name": "Configura",
       "description": "Crea gli helper e gli script Casora mancanti (eseguito automaticamente all'avvio) e segnala ciò che non è riuscito a creare."
     },
+    "setup_overview": {
+      "name": "Panoramica configurazione",
+      "description": "Solo lettura: stanze, dispositivi senza area e dispositivi non ancora su un riquadro Casora, ciascuno con un tipo di riquadro suggerito. Per il tuo assistente, ad esempio tramite un server MCP."
+    },
     "set_timer": {
       "name": "Imposta timer",
       "description": "Spegne o accende un'entità dopo un numero di minuti. Sostituisce un timer esistente per la stessa entità. Allo scadere del timer Casora emette l'evento casora_timer_finished (entity_id, action, reason: expired, manual o cancelled). Può rispondere con entity_id, at e start.",
