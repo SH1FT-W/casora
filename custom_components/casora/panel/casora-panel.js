@@ -5253,19 +5253,28 @@ const COND_DOMAIN_STATES = {
 const COND_NUMERIC_DOMAINS = new Set(["sensor", "number", "input_number", "counter"]);
 // Zustände aus dem Verlauf (Textsensoren ohne Liste, z. B. Vorlagen-Sensoren): id → [Zustände].
 const COND_SEEN = new Map();
+// Entities asked for in the same task go out as one history request: the inspector draws every condition
+// editor at once (a test house asked nine times in a row when the Studio opened).
+let condBatch = null;
 function condLoadSeen(hass, id) {
   if (!hass || typeof hass.callWS !== "function" || !id || COND_SEEN.has(id)) return Promise.resolve(false);
   COND_SEEN.set(id, []);
-  const start = new Date(Date.now() - 14 * 864e5).toISOString();
-  return hass.callWS({ type: "history/history_during_period", start_time: start, entity_ids: [id],
-    minimal_response: true, no_attributes: true, significant_changes_only: false })
-    .then((r) => {
-      const seen = [...new Set(((r && r[id]) || []).map((x) => x && (x.s !== undefined ? x.s : x.state))
-        .filter((x) => x != null && x !== "" && !["unavailable", "unknown"].includes(x)).map(String))];
-      COND_SEEN.set(id, seen.slice(0, 40));
-      return seen.length > 0;
-    })
-    .catch(() => false);
+  if (!condBatch || condBatch.hass !== hass) {
+    const batch = condBatch = { hass, ids: [] };
+    batch.done = Promise.resolve().then(() => {
+      if (condBatch === batch) condBatch = null;
+      const start = new Date(Date.now() - 14 * 864e5).toISOString();
+      return hass.callWS({ type: "history/history_during_period", start_time: start, entity_ids: batch.ids,
+        minimal_response: true, no_attributes: true, significant_changes_only: false });
+    }).catch(() => null);
+  }
+  condBatch.ids.push(id);
+  return condBatch.done.then((r) => {
+    const seen = [...new Set(((r && r[id]) || []).map((x) => x && (x.s !== undefined ? x.s : x.state))
+      .filter((x) => x != null && x !== "" && !["unavailable", "unknown"].includes(x)).map(String))];
+    COND_SEEN.set(id, seen.slice(0, 40));
+    return seen.length > 0;
+  });
 }
 function condStates(hass, id) {
   const states = (hass && hass.states) || {};
