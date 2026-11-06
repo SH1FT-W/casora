@@ -1021,11 +1021,15 @@
     var add = function (n, v) { fields[n] = v; fstyle[n] = [{ 'justify-self': 'stretch' }]; };
 
     add('hero', sec('hero'));
-    var chartId = c.group ? c.houseTemp : c.temp;
+    var chartId = c.group ? c.houseTemp : c.temp, v3c = F.v3();
+    /* v3 (owner, 06.11.2026): without a sensor of its own the climate entity's reading (current_temperature, a climate
+       group's mean) – as the single thermostat (_casoraThermoChart); the heating group had no chart at all. */
+    var chartAttr = !chartId && v3c && num(((states[id] || {}).attributes || {}).current_temperature) != null;
+    if (chartAttr) chartId = id;
     if (chartId && typeof window._hpChartCfg === 'function') {
-      /* v3 room: Verlauf section 120 high in the palette's orange (richtlinien §7). */
-      var v3c = !c.group && F.v3();
-      window._hpChartCfg(chartId, c.group ? 'Temperatur im Haus' : 'Temperatur', '24h', v3c ? 'c2' : '#FF9F0A', v3c ? 120 : 150);
+      /* v3: Verlauf section 120 high in the palette's orange (richtlinien §7). */
+      var cfgC = window._hpChartCfg(chartId, c.group ? 'Temperatur im Haus' : 'Temperatur', '24h', v3c ? 'c2' : '#FF9F0A', v3c ? 120 : 150);
+      if (chartAttr) { cfgC.series[0].attribute = 'current_temperature'; cfgC.series[0].unit = TU(); }
       if (window._hpSmooth) window._hpSmooth(chartId);
       add('chart', window._casoraHH && window._casoraHH.on() ? window._casoraHH.chart(window._hpChartTitle(chartId), plate)
         : '<div style="' + plate + 'padding:var(--casora-soft-plate-pad, 14px 10px 6px);">'
@@ -1053,10 +1057,12 @@
           + 'return F && H ? H.more("fbh", ' + JSON.stringify(parts) + '.map(function (n) { return F.sec(n, c, states, hass); })) : "";';
       };
       if (c.group && F.v3()) {
-        /* v3 (clean, richtlinien §8): status line, stage S7 with the average, the house modes as quick tiles, the rooms
-           as the list (a row opens its room) – no coach, main switch, Verlauf or settings. */
+        /* v3 (clean, richtlinien §8): status line, stage S2 with the shared target, the house modes as moons, the
+           temperature Verlauf under the dial (§7.1, owner 06.11.2026), the rooms as the list (a row opens its room) –
+           no coach, main switch or settings. */
         var g3 = { hero: sec('v3house'), stage: sec('stage'), allrooms: sec('allrooms') };
-        return HH.layout({ entity: id, watch: watch, fields: g3, top: ['hero'], stage: 'stage', left: [], right: ['allrooms'] });
+        if (fields.chart) g3.chart = fields.chart;
+        return HH.layout({ entity: id, watch: watch, fields: g3, top: ['hero'], stage: 'stage', left: fields.chart ? ['chart'] : [], right: ['allrooms'] });
       }
       if (c.group) {
         var g = { hero: fields.hero, house: fields.house, allrooms: sec('allrooms'),
