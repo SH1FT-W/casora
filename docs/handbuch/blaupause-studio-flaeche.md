@@ -4,9 +4,9 @@ Das Studio ist das Panel unter `custom_components/casora/panel/casora-panel*.js`
 Teile hängen sich als `P._name = function …` an den Prototyp). Es ist bewusst ein **Werkzeug**: eigene
 Token, eigene Schriftskala.
 
-> **OFFEN – Entscheidung Maintainer (Studio-Sprache):** A iOS-nah (SF im Inspektor, Radien 8/12/18/26) /
-> B Casora-Sprache (Inter, Radien 12/18/24/32, Sand-Platten). Bis zur Wahl: nur die vorhandenen
-> Studio-Token unten verwenden – dann ist ein späterer Wechsel eine Token-Änderung, kein Umbau.
+Entschieden (06.11.2026): das Studio bekommt die **Casora-Sprache** (Inter, Radien 12/18/24/32, Sand-Platten). Die
+Umstellung ist eine eigene Aufgabe; bis dahin nur die vorhandenen Studio-Token unten verwenden, damit sie eine
+Token-Änderung bleibt und kein Umbau wird.
 
 **Einstellungen sind Entwürfe.** Jede Einstellung, auch ein Schalter, landet erst im Entwurf (`this._cs`, Prüfung in
 `_csOwnDirty`), zeigt die Speicherleiste und wirkt erst mit „Einstellungen speichern“ (`_csSave`); „Verwerfen“

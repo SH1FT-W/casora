@@ -221,8 +221,7 @@ Gilt:
   (`var(--casora-ease-enter, <alter Wert>)`); Federn/Studio-Kurve gibt es nur noch als Rückfallwert (Hemma) und in
   `element.animate()`-Aufrufen (dort geht keine CSS-Variable).
 
-> **OFFEN – Entscheidung Maintainer (Popup-Einblendung, Backlog):** Optionen 1/2/3 aus dem Backlog,
-> noch nicht gewählt.
+Entschieden (06.11.2026): die Popup-Einblendung bleibt, wie sie ist.
 
 ## 8. Hover, Druck, Tipp-Feedback
 
@@ -236,8 +235,8 @@ Gilt:
 - Popup-Knöpfe haben einen sichtbaren `:active`-Zustand.
 - Platten-Stufen (Sand): .07 Ruhe · .10 Bedienfeld · .11 Hover · .16 Druck; aktiv = Creme + Ruhe-Schatten.
 
-> **OFFEN – Entscheidung Maintainer (dk-13, Druck bei Badges):** A: wie Kacheln ohne sichtbaren Druck
-> (nur Haptik) / B: alle Badges Platte .07→.11 beim Drücken. Heute färbt nur das Einzel-Sicherheits-Badge.
+Entschieden (06.11.2026, dk-13): Badges zeigen wie Kacheln keinen sichtbaren Druck, nur Haptik. Das
+Einzel-Sicherheits-Badge, das heute noch färbt, wird beim nächsten Arbeiten daran angeglichen.
 
 Gilt (Druck-Skala, entschieden): `scale(var(--casora-press-scale, .97))` auf Tasten – Popups, Menüzeilen (Räume/Szenen
 am Handy, „Alles gelesen“), Tasten der Handy-Leiste, Zurück-Knopf der Handy-Raumseite, Szenen-Kacheln, Studio-Knöpfe.
@@ -265,8 +264,7 @@ mehr). Gilt auch für Auswahllisten (`--casora-soft-row-selected` zeigt darauf).
 | Symbol/Text in aktiv und inaktiv an derselben Stelle | ±1 px | `ausrichtung` |
 | Keine harte Kante beim Scrollen: Verlauf oben/unten (Popups `--casora-popup-more-fade`) | – | Bild |
 
-> **OFFEN – Entscheidung Maintainer (dk-15):** Räume-Menü 12-px-Verlauf oben/unten wie Popups (A) oder
-> so lassen (B).
+Entschieden (06.11.2026, dk-15): das Räume-Menü bekommt keinen Verlauf, es bleibt wie es ist.
 
 ## 11. Kontrast (WCAG AA, gemessen mit `popup-geo` „kontrast“/„schalter“)
 
