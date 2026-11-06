@@ -83,7 +83,7 @@ for (const name of ['casora_popup_network', 'casora_network']) {
     if (!a || !a.casora_popup || typeof a.casora_popup.content !== 'string') continue;
     const c = a.casora_popup.content;
     if (!c.includes('const _gc = JSON.parse(JSON.stringify(graphCard));')) continue;
-    assert.match(c, /if \(UI\.v3 && UI\.v3\(\)\) _gc\.readout = 'own';/, name + '.' + k + ': v3 throughput chart reads in its own head');
+    assert.match(c, /if \(UI\.v3 && UI\.v3\(\)\) (?:_gc\.readout = 'own';|Object\.assign\(_gc, \{ readout: 'own')/, name + '.' + k + ': v3 throughput chart reads in its own head');
   }
 }
 console.log('chart_readout_target: ok');
