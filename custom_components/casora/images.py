@@ -259,13 +259,13 @@ def photo_file(config_dir: str, name: str) -> str | None:
 
 @callback
 def sign_photo_url(hass: HomeAssistant, url: Any, refresh_token_id: str | None = None,
-                   now: float | None = None) -> Any:
-    """Signed URL for a private photo (PHOTO_URL_BASE); other URLs unchanged.
+                   now: float | None = None, base: str = PHOTO_URL_BASE) -> Any:
+    """Signed URL for a private photo (PHOTO_URL_BASE, or another Casora view under ``base``); other URLs unchanged.
 
     The signature belongs to the caller's refresh token (revoking the login revokes the URL).
     A signature with more than RESIGN_AFTER left is reused, so the URL stays cacheable.
     """
-    if not isinstance(url, str) or not url.startswith(PHOTO_URL_BASE + "/"):
+    if not isinstance(url, str) or not url.startswith(base + "/"):
         return url
     now = time.time() if now is None else now
     cache: dict = hass.data.setdefault(DOMAIN, {}).setdefault(_SIGS, {})

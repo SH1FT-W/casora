@@ -2824,7 +2824,21 @@
     "Neustart: der Auftrag für deinen Assistenten ist verfallen": "Riavvio: il lavoro per il tuo assistente è andato perso",
     "Claude prüft das Rad …": "Claude sta controllando la bici…",
     "Claude wertet die Heizwoche aus …": "Claude sta analizzando la settimana di riscaldamento…",
-    "Claude wertet die letzten 7 Tage aus …": "Claude sta analizzando gli ultimi 7 giorni…"
+    "Claude wertet die letzten 7 Tage aus …": "Claude sta analizzando gli ultimi 7 giorni…",
+    "Frühstück": "Colazione",
+    "Mittagessen": "Pranzo",
+    "Abendessen": "Cena",
+    "Beilage": "Contorno",
+    "Dessert": "Dolce",
+    "Snack": "Spuntino",
+    "Notiz": "Nota",
+    "Ohne Namen": "Senza nome",
+    "Mealie nicht erreichbar": "Mealie non raggiungibile",
+    "In Mealie für die nächsten 7 Tage planen": "Pianifica i prossimi 7 giorni in Mealie",
+    "Nächstes Gericht": "Prossimo piatto",
+    "Zutaten": "Ingredienti",
+    "Zubereitung": "Preparazione",
+    "1 Portion": "1 porzione"
   },
   "patterns": [
     [
@@ -4281,11 +4295,11 @@
     ],
     [
       "^Spitze\\s24\\sStd\\.:\\s(.+)$",
-      "Picco nelle 24\u00a0h: {1}"
+      "Picco nelle 24 h: {1}"
     ],
     [
       "^Üblich\\sbis\\s(.+)$",
-      "Di solito fino a\u00a0{1}"
+      "Di solito fino a {1}"
     ],
     [
       "^(\\d+) Geräte ohne Wert$",
@@ -5074,6 +5088,10 @@
     [
       "^Letzter Test (.+)$",
       "Ultimo test {1}"
+    ],
+    [
+      "^(\\d+(?:,\\d+)?) Portionen$",
+      "{1} porzioni"
     ]
   ]
 }

@@ -1426,6 +1426,8 @@
     return (cut.length >= 8 ? cut : t.slice(0, max)).replace(/[\s,.-]+$/, '') + '…';
   };
   R.tile = function (entity, states) {
+    // Mealie (issue #140, below): its own week plan; without Mealie the Cookidoo path as before.
+    if (R.mealieOn && R.mealieOn()) { R.loadMealie(); return R.mTile().full; }
     var n = R.next(states);
     if (n) return dayName(n.when) + ' · ' + R.short(n.name);
     var s = states[IDEA];
@@ -1666,8 +1668,8 @@
         .then(function (r) { return ((r && r.items) || []).map(function (i) { i._list = id; return i; }); })
         .catch(function () { return []; });
     };
-    Promise.all([get(todo()), get(extra())])
-      .then(function (r) { T.items = r[0].concat(r[1]); T.err = false; T.key = key; })
+    Promise.all(R.todoIds(hass).map(get))
+      .then(function (r) { T.items = [].concat.apply([], r); T.err = false; T.key = key; })
       .catch(function () { T.err = true; })
       .then(function () { T.busy = false; repaint('hr-todo', R.todoHtml); });
   };
@@ -1771,6 +1773,213 @@
     return css + '<div class="hrl">' + head('Einkaufsliste' + (open.length ? ' · ' + open.length + ' offen' : '')).replace('padding:0 4px 8px;', 'padding:var(--casora-popup-row-pad-y, 8px) var(--casora-popup-row-pad-x, 16px) 10px;') + rows + '</div>';
   };
 
+  /* ── Mealie (issue #140): a second source of the same tile and popup ──────────────────────────────────────────
+     With HA's mealie integration (entities of platform „mealie“: one calendar per meal type, shopping lists as
+     todo) the tile and the popup show Mealie's week instead of Cookidoo and the idea of the week. The data comes
+     from Casora's websocket casora/mealie/plan (mealie_plan.py: mealie.get_mealplan for today … +6 days and
+     mealie.get_recipe for the featured dish), kept five minutes. Today's dish is dinner, else lunch, else breakfast
+     (the server picks it, mealie_plan.MAIN); with nothing today the next planned day. Without Mealie nothing here
+     runs and the Cookidoo path stays as it was. */
+  var MEAL_TYPES = { breakfast: 'Frühstück', lunch: 'Mittagessen', dinner: 'Abendessen', side: 'Beilage',
+    dessert: 'Dessert', snack: 'Snack', drink: 'Getränk' };
+  var ML = R.ml = { data: null, ts: 0, day: '', busy: false, err: false };
+  var hassNow = function () { var ha = document.querySelector('home-assistant'); return ha && ha.hass; };
+  var mlMemo = { reg: null, out: null };
+  /* Mealie's entities by registry platform and translation_key (never by entity id): calendars, shopping lists. */
+  R.mealieReg = function (hass) {
+    var reg = (hass && hass.entities) || null;
+    if (!reg) return { cals: [], lists: [] };
+    if (mlMemo.reg === reg && mlMemo.out) return mlMemo.out;
+    var cals = [], lists = [];
+    Object.keys(reg).forEach(function (eid) {
+      var e = reg[eid];
+      if (!e || e.platform !== 'mealie') return;
+      if (eid.indexOf('calendar.') === 0 && MEAL_TYPES[e.translation_key]) cals.push(eid);
+      else if (eid.indexOf('todo.') === 0 && e.translation_key === 'shopping_list') lists.push(eid);
+    });
+    mlMemo.reg = reg; mlMemo.out = { cals: cals.sort(), lists: lists.sort() };
+    return mlMemo.out;
+  };
+  R.mealieOn = function (hass) { return R.mealieReg(hass || hassNow()).cals.length > 0; };
+  var localDay = function (iso) {
+    var m = /^(\d{4})-(\d\d)-(\d\d)/.exec(String(iso || ''));
+    return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12) : null;
+  };
+  var todayIso = function () { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  /* Kick only the recipe tiles (their state_display calls this module), not every card of the dashboard. */
+  var kickTiles = function () {
+    if (!window.casoraKickAll) return;
+    window.casoraKickAll('mealie', function (el) { var c = el._config || el.config || {}; return String(c.state_display || '').indexOf('_casoraRecipe') > -1; });
+  };
+  R.loadMealie = function (hass, force) {
+    hass = hass || hassNow();
+    if (ML.busy || !hass || !hass.callWS) return;
+    if (!force && ML.ts && Date.now() - ML.ts < 300000 && ML.day === todayIso()) return;
+    ML.busy = true;
+    Promise.resolve(hass.callWS({ type: 'casora/mealie/plan' }))
+      .then(function (r) { ML.data = r || null; ML.err = false; })
+      .catch(function () { ML.err = true; })
+      .then(function () {
+        ML.busy = false; ML.ts = Date.now(); ML.day = todayIso();
+        ['hr-mstage', 'hr-mline', 'hr-mweek', 'hr-ming', 'hr-msteps'].forEach(function (c) { repaint(c, function () { return R.mSecHtml(c.slice(3)); }); });
+        kickTiles();
+        // The open dashboard asks again after five minutes: the tile's next drawing calls loadMealie.
+        clearTimeout(ML.timer); ML.timer = setTimeout(kickTiles, 300500);
+      });
+  };
+  /* null while loading, then 'none' / 'unavailable' / 'ok'. */
+  R.mState = function () {
+    if (!ML.data) return ML.err ? 'unavailable' : null;
+    return ML.data.state || 'unavailable';
+  };
+  R.mFeatured = function () { return R.mState() === 'ok' ? (ML.data.featured || null) : null; };
+  var servText = function (m) {
+    if (m.servings) return m.servings === 1 ? '1 Portion' : String(m.servings).replace('.', ',') + ' Portionen';
+    return m.yield_text || null;
+  };
+  /* time · servings · first tag, as far as Mealie knows them. */
+  R.mDetails = function (m, tags) {
+    if (!m || m.note) return [];
+    return [m.minutes ? mins(m.minutes) : m.time_text, servText(m)].concat((m.tags || []).slice(0, tags == null ? 1 : tags)).filter(Boolean);
+  };
+  var mName = function (m) { return (m && m.name) || (m && m.note ? 'Notiz' : 'Ohne Namen'); };
+  /* Tile: „Heute · Kürbissuppe“ and, where it fits, the details behind it (casoraStateFit takes the short form). */
+  R.mTile = function () {
+    var st = R.mState();
+    if (!st) return { full: 'Wird geladen …', short: null };
+    if (st === 'unavailable') return { full: 'Nicht verfügbar', short: null };
+    var f = R.mFeatured();
+    if (!f) return { full: 'Nichts geplant', short: null };
+    var when = localDay(f.date), head = (when ? dayName(when) : 'Heute') + ' · ' + R.short(mName(f));
+    var det = R.mDetails(f);
+    return { full: det.length ? head + ' · ' + det.join(' · ') : head, short: det.length ? head : null };
+  };
+  R.tileShort = function () {
+    if (!R.mealieOn(hassNow())) return null;
+    return R.mTile().short;
+  };
+  var M_CSS = '<style>'
+    + '.hrm-img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--casora-popup-row-radius, 20px);margin-bottom:8px;'
+    + 'background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));}'
+    + '.hrm-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}'
+    + '.hrm-tag{font-size:12px;font-weight:600;line-height:1;padding:6px 10px;border-radius:999px;white-space:nowrap;'
+    + 'background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));color:var(--casora-soft-sub, rgba(46,39,33,0.7));}'
+    + '.hrs-w.hrm-d{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;}'
+    + '.hrm-day .hrw-t{display:flex;flex-direction:column;gap:6px;}'
+    + '.hrm-day .hrw-n{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}'
+    + '.hrm-off{color:var(--casora-soft-sub, rgba(46,39,33,0.55)) !important;font-weight:500 !important;}'
+    + '.hrm-pl{background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);padding:14px 18px;text-align:left;'
+    + 'box-shadow:var(--casora-popup-plate-shadow, none);}'
+    + '.hrm-pl ul{margin:0;padding-left:18px;font-size:15px;font-weight:500;line-height:1.6;color:var(--casora-popup-tiles-text-primary, #2E2721);white-space:normal;}'
+    + '.hrm-pl li.h{list-style:none;margin:8px 0 2px -18px;font-size:13px;font-weight:700;color:var(--casora-soft-sub, rgba(46,39,33,0.7));}'
+    + '.hrm-pl li.h:first-child{margin-top:0;}'
+    + '.hrm-st{display:flex;gap:12px;align-items:flex-start;padding:10px 0;}'
+    + '.hrm-st + .hrm-st{border-top:1px solid var(--casora-pill-divider, rgba(140,115,90,0.14));}'
+    + '.hrm-no{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;'
+    + 'background:var(--casora-soft-icon-off, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, #2E2721);}'
+    + '.hrm-tx{flex:1;min-width:0;font-size:15px;font-weight:500;line-height:1.5;white-space:normal;overflow-wrap:break-word;color:var(--casora-popup-tiles-text-primary, #2E2721);}'
+    + '.hrm-tx b{display:block;font-size:13px;font-weight:700;color:var(--casora-soft-sub, rgba(46,39,33,0.7));}'
+    + '.hrm-pl .hui-more{margin-top:4px;}'
+    + '</style>';
+  var LONG = 12;     // §6: from 12 lines the first 12 and „Alle (n) anzeigen“
+  var STEPS = 4;     // steps are long text: the first four, the rest behind „Alle (n) anzeigen“
+  R.mStageHtml = function () {
+    var UI = window._casoraUI; if (!UI || !UI.stage) return '';
+    var capHtml = function (icon, text) { return '<div class="hrs-cap"><ha-icon icon="' + esc(icon) + '"></ha-icon><span>' + esc(text) + '</span></div>'; };
+    var st = R.mState(), f = R.mFeatured(), bodyHtml;
+    if (!st) bodyHtml = capHtml('mdi:silverware-fork-knife', 'Speiseplan') + '<div class="hrs-n">Wird geladen …</div>';
+    else if (st === 'unavailable') bodyHtml = capHtml('mdi:silverware-fork-knife', 'Speiseplan') + '<div class="hrs-n">Mealie nicht erreichbar</div>';
+    else if (!f) bodyHtml = capHtml('mdi:silverware-fork-knife', 'Speiseplan') + '<div class="hrs-n">Nichts geplant</div>'
+      + '<div class="hrs-w">In Mealie für die nächsten 7 Tage planen</div>';
+    else {
+      var when = localDay(f.date), dn = when ? dayName(when) : 'Heute';
+      var det = f.detail || {};
+      var meta = [f.minutes ? mins(f.minutes) : f.time_text, servText(f)].filter(Boolean);
+      var desc = f.note ? f.text : det.description;
+      bodyHtml = (f.image ? '<img class="hrm-img" src="' + window.casoraSafeUrl(f.image) + '" alt="" loading="lazy" decoding="async">' : '')
+        // The caption names the meal (and the day when it is not today) – „Heute geplant“ is the status line.
+        + capHtml(f.note ? 'mdi:note-text-outline' : 'mdi:silverware-fork-knife', (MEAL_TYPES[f.type] || 'Speiseplan') + (dn === 'Heute' ? '' : ' · ' + dn))
+        + '<div class="hrs-n">' + esc(mName(f)) + '</div>'
+        + (meta.length ? '<div class="hrs-m">' + esc(meta.join(' · ')) + '</div>' : '')
+        + ((f.tags || []).length ? '<div class="hrm-tags">' + f.tags.slice(0, 4).map(function (t) { return '<span class="hrm-tag">' + esc(t) + '</span>'; }).join('') + '</div>' : '')
+        + (desc ? '<div class="hrs-w hrm-d">' + esc(desc) + '</div>' : '');
+    }
+    return UI.stage('content', { html: STAGE_CSS + M_CSS + '<div class="hrs">' + bodyHtml + '</div>' });
+  };
+  R.mLineHtml = function () {
+    var UI = window._casoraUI; if (!UI || !UI.line) return '';
+    var st = R.mState(), f = R.mFeatured();
+    if (!st) return UI.line('Wird geladen …', []);
+    if (st === 'unavailable') return UI.line('Nicht erreichbar', []);
+    if (!f) return UI.line('Nichts geplant', []);
+    var when = localDay(f.date);
+    return UI.line(when && dayName(when) === 'Heute' ? 'Heute geplant' : 'Nächstes Gericht', []);
+  };
+  /* The week: one row per day (date plaque like the Cookidoo plan), each meal with its type and time. */
+  R.mWeekHtml = function () {
+    var HH = window._casoraHH, lblHtml = HH ? HH.label('Speiseplan') : '';
+    var rowHtml = function (now, badgeHtml, innerHtml) { return '<div class="hrw-r hrm-day' + (now ? ' now' : '') + '">' + badgeHtml + '<div class="hrw-t">' + innerHtml + '</div></div>'; };
+    var plainHtml = '<div class="hrw-b"><ha-icon icon="mdi:calendar-blank-outline" style="--mdc-icon-size:18px;width:18px;height:18px;display:flex;"></ha-icon></div>';
+    var st = R.mState();
+    if (st !== 'ok') return CAL_CSS + M_CSS + lblHtml + '<div class="hrw">' + rowHtml(false, plainHtml, '<div class="hrw-n">' + (st ? 'Speiseplan nicht verfügbar' : 'Wird geladen …') + '</div>') + '</div>';
+    var days = ML.data.days || [];
+    return CAL_CSS + M_CSS + lblHtml + '<div class="hrw">' + days.map(function (d, i) {
+      var when = localDay(d.date); if (!when) return '';
+      var badgeHtml = '<div class="hrw-b"><b>' + esc(dayUp(when)) + '</b><span>' + when.getDate() + '</span></div>';
+      var innerHtml = (d.meals || []).length ? d.meals.map(function (m) {
+        var sub = [MEAL_TYPES[m.type] || m.type].concat(m.minutes ? [mins(m.minutes)] : []).join(' · ');
+        return '<div><div class="hrw-n">' + esc(mName(m)) + '</div><div class="hrw-s">' + esc(sub) + '</div></div>';
+      }).join('') : '<div class="hrw-n hrm-off">Nichts geplant</div>';
+      return rowHtml(i === 0, badgeHtml, innerHtml);
+    }).join('') + '</div>';
+  };
+  R.mIngHtml = function () {
+    var f = R.mFeatured(), det = f && f.detail, HH = window._casoraHH, UI = window._casoraUI;
+    var ing = (det && det.ingredients) || [];
+    if (!ing.length) return '';
+    var lines = ing.filter(function (x) { return x.text; }).length;
+    var liHtml = function (x) { return x.title ? '<li class="h">' + esc(x.title) + '</li>' : '<li>' + esc(x.text) + '</li>'; };
+    var cut = ing.length, seen = 0;
+    if (lines > LONG) for (var i = 0; i < ing.length; i++) { if (ing[i].text && ++seen > LONG) { cut = i; break; } }
+    var rest = ing.slice(cut);
+    var serv = servText(f);
+    var labelHtml = HH ? HH.label('Zutaten' + (serv ? ' · ' + serv : '')) : '';
+    var shownHtml = ing.slice(0, cut).map(liHtml).join(''), restHtml = rest.map(liHtml).join('');
+    return M_CSS + labelHtml
+      + '<div class="hrm-pl"><ul>' + shownHtml + '</ul>'
+      + (rest.length && UI && UI.more ? UI.more('mealie-ing', '<ul>' + restHtml + '</ul>', { label: 'Alle ' + lines + ' anzeigen', less: 'Weniger anzeigen', keep: true }) : '')
+      + '</div>';
+  };
+  R.mStepsHtml = function () {
+    var f = R.mFeatured(), det = f && f.detail, HH = window._casoraHH, UI = window._casoraUI;
+    var steps = (det && det.steps) || [];
+    if (!steps.length) return '';
+    var oneHtml = function (s, i) {
+      return '<div class="hrm-st"><span class="hrm-no">' + esc(i + 1) + '</span><div class="hrm-tx">'
+        + (s.title ? '<b>' + esc(s.title) + '</b>' : '') + esc(s.text) + '</div></div>';
+    };
+    var rest = steps.slice(STEPS), labelHtml = HH ? HH.label('Zubereitung') : '';
+    var topHtml = steps.slice(0, STEPS).map(oneHtml).join(''), restHtml = rest.map(function (s, i) { return oneHtml(s, i + STEPS); }).join('');
+    return M_CSS + labelHtml
+      + '<div class="hrm-pl" style="padding-top:4px;padding-bottom:4px;">' + topHtml
+      + (rest.length && UI && UI.more ? UI.more('mealie-steps', restHtml, { label: 'Alle ' + steps.length + ' anzeigen', less: 'Weniger anzeigen', keep: true }) : '')
+      + '</div>';
+  };
+  R.mSecHtml = function (name) {
+    if (name === 'mstage') return R.mStageHtml();
+    if (name === 'mline') return R.mLineHtml();
+    if (name === 'mweek') return R.mWeekHtml();
+    if (name === 'ming') return R.mIngHtml();
+    if (name === 'msteps') return R.mStepsHtml();
+    return '';
+  };
+  /* Shopping lists of the popup: Mealie's lists, else Cookidoo's list and its „Zusätzliche Käufe“. */
+  R.todoIds = function (hass) {
+    hass = hass || hassNow();
+    if (R.mealieOn(hass)) return R.mealieReg(hass).lists;
+    return [todo(), extra()];
+  };
+
   R.sec = function (name, states, hass) {
     var UI = window._casoraUI; if (!UI) return '';
     var T = UI.tokens;
@@ -1781,6 +1990,8 @@
       return '<div class="hr-hero">' + R.heroHtml(states) + '</div>';
     }
     if (name === 'stage') return '<div class="hr-stage">' + R.stageHtml(states) + '</div>';
+    // Mealie (issue #140): stage, status line, week, ingredients, steps – drawn again when casora/mealie/plan answers.
+    if (/^m(stage|line|week|ing|steps)$/.test(name)) { R.loadMealie(hass); return '<div class="hr-' + esc(name) + '">' + R.mSecHtml(name) + '</div>'; }
     if (name === 'line') return '<div class="hr-line">' + R.lineHtml(states) + '</div>';
     if (name === 'app' && SF) {
       /* Weich: als beschriftete Zeile wie „Zutaten der Idee“ – steht im breiten „Mehr“ bündig daneben. */
@@ -1881,7 +2092,9 @@
     if (name === 'todo' || name === 'todoWide') {
       var opts2 = name === 'todoWide';
       var ts = states[todo()], tx = states[extra()];
-      R.loadTodo(hass, (ts ? ts.state + '|' + ts.last_updated : 'x') + '/' + (tx ? tx.state + '|' + tx.last_updated : 'x'));
+      // Reload when one of the lists changes (Mealie: its shopping lists, else Cookidoo's two).
+      R.loadTodo(hass, R.mealieOn(hass) ? R.todoIds(hass).map(function (id) { var x = states[id]; return x ? x.state + '|' + x.last_updated : 'x'; }).join('/')
+        : (ts ? ts.state + '|' + ts.last_updated : 'x') + '/' + (tx ? tx.state + '|' + tx.last_updated : 'x'));
       return '<div class="hr-todo' + (opts2 ? ' hr-todo-2' : '') + '">' + R.todoHtml() + '</div>'
         + (opts2 ? '<style>@media (min-width: 761px) { .hr-todo-2 .hrl { display:grid !important; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px 26px !important; } }</style>' : '')
         + (ts && Number(ts.state) > 0 ? '' : '');
@@ -1894,6 +2107,20 @@
     /* Ohne feste Entität: Rezept-Sensor bzw. Cookidoo-Kalender/-Liste als Anker (sonst leeres Popup). */
     if (!entity || !entity.entity_id) entity = { entity_id: [IDEA, cal(), todo()].filter(function (w) { return w && states[w]; })[0] || IDEA };
     if (!UI) return { type: 'vertical-stack', cards: [] };
+    /* Mealie (issue #140): status line, stage with today's dish, right the week, ingredients, steps and Mealie's
+       shopping list – no idea of the week, no Cookidoo app. */
+    var HHm = window._casoraHH;
+    // Every design uses this layout (the classic two-column fallback below only knows Cookidoo's sections).
+    if (R.mealieOn(hass) && HHm && HHm.layout) {
+      var mreg = R.mealieReg(hass);
+      var mwatch = [entity.entity_id].concat(mreg.cals, mreg.lists).filter(function (w, i, a) { return a.indexOf(w) === i && states[w]; });
+      var mf = {};
+      ['mline', 'mstage', 'mweek', 'ming', 'msteps', 'todo'].forEach(function (k) {
+        mf[k] = '[[[ return window._casoraRecipe ? window._casoraRecipe.sec(' + JSON.stringify(k) + ', states, hass) : ""; ]]]';
+      });
+      R.loadMealie(hass);
+      return HHm.layout({ entity: entity.entity_id, watch: mwatch, fields: mf, top: ['mline'], stage: 'mstage', left: [], right: ['mweek', 'ming', 'msteps', 'todo'] });
+    }
     R.cal.ts = 0; // beim Öffnen frisch laden
     var watch = [entity.entity_id, IDEA, cal(), todo(), extra()].filter(function (w, i, a) { return a.indexOf(w) === i && states[w]; });
     var fields = {}, fstyle = {};
