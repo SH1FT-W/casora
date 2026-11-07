@@ -252,6 +252,7 @@ const MODULES = [
   '41-display-diag',
   '42-co',
   '43-aufgaben',
+  '43-screensaver',
 ];
 
 const START_MODULES = MODULES.slice(0, 5);
