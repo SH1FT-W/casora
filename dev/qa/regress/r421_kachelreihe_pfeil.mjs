@@ -1,9 +1,8 @@
 // @zustand: arbeit
 // @parallel: ui
 // @deckt: custom_components/casora/scripts/smart-row.js#_css,casora-smart-row
-// E32 (test 2): in a room with more tiles than fit, the desktop showed only two small dots under the row (Casora
-// look: overflow "fade"). Expected: with a mouse the row shows the right arrow while tiles lie further right; on
-// touch (iPad) fade + dots stay as they were (swiping).
+// Tile row in the Casora look (overflow "fade"): no arrows, neither with a mouse nor on touch – the faded edge and
+// the dots are the hint (maintainer 07.11.2026, undoes E32 from test 2, which had added arrows for the mouse).
 import { open, usePage, ready, casoraDashboards, check, need, finish } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -18,7 +17,7 @@ const ROW = () => {
   const b = r.shadowRoot.querySelector('#arrows > .r'), c = getComputedStyle(b), a = getComputedStyle(r.shadowRoot.querySelector('#arrows'));
   return { mode: r.getAttribute('casora-row-mode'), shown: a.display !== 'none' && c.visibility === 'visible' && parseFloat(c.opacity) > 0.9 && b.getBoundingClientRect().width > 0 };
 };
-for (const [name, dev, want] of [['Desktop 1440', { width: 1440, height: 900 }, true],
+for (const [name, dev, want] of [['Desktop 1440', { width: 1440, height: 900 }, false],
   ['Tablet 1024 (touch)', { width: 1024, height: 768, mobile: true, touch: true, userAgent: IPAD_UA }, false]]) {
   const { page } = await open(dev);
   usePage(page);
@@ -30,7 +29,7 @@ for (const [name, dev, want] of [['Desktop 1440', { width: 1440, height: 900 }, 
     if (s) break;
   }
   await need(name + ': a room whose tile row runs over', s, views);
-  await check(name + (want ? ': right arrow shown' : ': no arrow on touch (fade + dots)'), s.shown === want, s);
+  await check(name + (want ? ': right arrow shown' : ': no arrow (fade + dots)'), s.shown === want, s);
   await page.close();
 }
 await finish();
