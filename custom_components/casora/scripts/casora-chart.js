@@ -463,15 +463,20 @@
       return ro;
     }
     _say(ro, v, u, w, name, ser) {
-      if (ro) { ro.children[0].textContent = v; ro.children[1].textContent = u; ro.children[2].textContent = w; }
+      if (ro) {
+        ro.children[0].textContent = v; ro.children[1].textContent = u; ro.children[2].textContent = w;
+        // Reading in the own head: a popup number bound to one series (network legend pills) still reads along (owner, 07.11.2026).
+        if (ser) this._hero(ser, w, true);
+      }
       // hero without a number to read along in the popup: the reading over the plot.
       else if (this._c.readout === 'hero' && ser && !this._hero(ser, w)) this._fb(v, u, w);
       var live = this.shadowRoot.querySelector('.srt');
       if (live && w !== this._def) live.textContent = (name ? name + ' ' : '') + v + ' ' + u + ', ' + w;
     }
     /* The popup's hero number reads along: [data-casora-read="<entity>"] gets the value,
-       [data-casora-read-when] the time. Letting go restores the text. */
-    _hero(vals, w) {
+       [data-casora-read-when] the time. Letting go restores the text. own: the chart reads in its own head – only
+       numbers bound to one of its series follow (not '*', not the time). */
+    _hero(vals, w, own) {
       var t = this._tg, me = this, n0 = 0;
       if (!t || t.some(function (n) { return !n.isConnected; })) {
         t = [];
@@ -479,18 +484,26 @@
           r.querySelectorAll('[data-casora-read],[data-casora-read-when]').forEach(function (n) { t.push(n); });
           r.querySelectorAll('*').forEach(function (n) { if (n.shadowRoot && n !== me) deep(n.shadowRoot); });
         };
-        for (var r = this.getRootNode(), i = 0; r && r.querySelectorAll && !t.length && i < 6; i++) { deep(r); r = r.host ? r.host.getRootNode() : null; }
+        if (own) {
+          // Only inside the chart's own popup: no walk through the whole dashboard on every first touch.
+          for (var p = this.getRootNode(); p && p.host && p.host.localName !== 'casora-popup';) p = p.host.getRootNode();
+          if (p && p.host) deep(p);
+        } else for (var r = this.getRootNode(), i = 0; r && r.querySelectorAll && !t.length && i < 6; i++) { deep(r); r = r.host ? r.host.getRootNode() : null; }
         this._tg = t;
       }
       t.forEach(function (n) {
-        var e = n.getAttribute('data-casora-read'), txt = w;
-        if (e != null) txt = vals.filter(function (x) { return e === '*' || x.entity === e || me._c.read_as === e; }).map(function (x) { return n.hasAttribute('data-casora-read-bare') ? x.num : x.text; }).join(' · ');
+        var e = n.getAttribute('data-casora-read'), txt = w, hit = vals;
+        if (own && (e == null || e === '*')) return;
+        if (e != null) {
+          hit = vals.filter(function (x) { return own ? x.entity === e : e === '*' || x.entity === e || me._c.read_as === e; });
+          txt = hit.map(function (x) { return n.hasAttribute('data-casora-read-bare') ? x.num : x.text; }).join(' · ');
+        }
         if (!txt) return;
         if (n._casoraOrig == null) { n._casoraOrig = n.innerHTML; me._touched.push(n); }
         n.setAttribute('data-casora-reading', '');
         n.textContent = txt; n0++;
         // v3: the unit beside a bare number follows.
-        var u = n.hasAttribute('data-casora-read-bare') && n.nextElementSibling, x = vals[0], s = x && String(x.text);
+        var u = n.hasAttribute('data-casora-read-bare') && n.nextElementSibling, x = hit[0], s = x && String(x.text);
         if (e != null && u && u.classList.contains('hui-st-u') && s && !s.indexOf(x.num)) {
           if (u._casoraOrig == null) { u._casoraOrig = u.innerHTML; me._touched.push(u); }
           u.setAttribute('data-casora-reading', '');

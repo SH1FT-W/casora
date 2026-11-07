@@ -66,6 +66,49 @@ const vals = [{ entity: 'sensor.example_temp', text: '21,3 °C', num: '21,3' }];
 }
 console.log('ok hero fallback');
 
+// Own head (v3 network Verlauf, owner 07.11.2026): two series, the legend pills bound to one each. Pointing set only the
+// head; the pills must read their series too – but not a '*' number or the time (the head shows the time itself).
+{
+  const ro = { children: [{}, {}, {}] };
+  const dl = node({ 'data-casora-read': 'sensor.example_dl', 'data-casora-read-bare': '' });
+  const ul = node({ 'data-casora-read': 'sensor.example_ul', 'data-casora-read-bare': '' });
+  const any = node({ 'data-casora-read': '*' }), when = node({ 'data-casora-read-when': '' });
+  const me = fake([dl, ul, any, when]); me._c = { readout: 'own' };
+  const two = [{ entity: 'sensor.example_dl', text: '486 Mbit/s', num: '486' }, { entity: 'sensor.example_ul', text: '41 Mbit/s', num: '41' }];
+  P._say.call(me, ro, '486', 'Mbit/s', 'Fr, 03:06 Uhr', 'Download', two);
+  assert.equal(ro.children[0].textContent, '486', 'own head reads');
+  assert.equal(dl.textContent, '486', 'download pill reads its series');
+  assert.equal(ul.textContent, '41', 'upload pill reads its series');
+  assert.equal(any.textContent, 'orig', 'a * number stays (own head)');
+  assert.equal(when.textContent, 'orig', 'no time outside the own head');
+  P._release.call(me);
+  assert.equal(dl.innerHTML, 'orig', 'letting go restores the pill');
+  assert.equal(dl.hasAttribute('data-casora-reading'), false);
+  // At rest (no series values) nothing is written.
+  P._say.call(me, ro, '263', 'Mbit/s', 'Jetzt', null, null);
+  assert.equal(ul.hasAttribute('data-casora-reading'), false, 'resting default writes no pill');
+}
+console.log('ok own head reads pills');
+
+// The network template marks both pills (the Casora look's pills write a bare <b>, which a replace of '<b style=' missed).
+{
+  const T0 = JSON.parse(rd('dashboards/casora/button_card_templates.json'));
+  const c = T0.casora_popup_network.tap_action.casora_popup.content;
+  const a = c.indexOf("addMetric('legend'"), b = c.indexOf(';', c.indexOf('data-casora-read-bare', c.indexOf('data-casora-read-bare', a) + 1));
+  const expr = c.slice(c.indexOf('UI.legend(', a), b).replace(/\)\s*$/, '');
+  const esc = (v) => String(v);
+  const dlId = 'sensor.example_dl', ulId = 'sensor.example_ul', dlCol = 'c1', ulCol = 'c2', fmt = (v) => String(v), dl = 1, ul = 2;
+  for (const legend of [
+    (ss) => ss.map((x) => '<div class="hui-lgp"><i></i><b>' + x.value + '</b><span>' + x.label + '</span></div>').join(''),
+    (ss) => ss.map((x) => '<div><b style="color:red">' + x.value + '</b>' + x.label + '</div>').join(''),
+  ]) {
+    const html = new Function('UI', 'esc', 'dlId', 'ulId', 'dlCol', 'ulCol', 'fmt', 'dl', 'ul', 'return ' + expr)({ legend }, esc, dlId, ulId, dlCol, ulCol, fmt, dl, ul);
+    assert.match(html, /<b data-hp-live="sensor\.example_dl" data-casora-read="sensor\.example_dl" data-casora-read-bare=""[ >]/, 'download pill marked: ' + html);
+    assert.match(html, /<b data-hp-live="sensor\.example_ul" data-casora-read="sensor\.example_ul" data-casora-read-bare=""[ >]/, 'upload pill marked: ' + html);
+  }
+}
+console.log('ok network pills marked');
+
 // 2. v3 Verlauf plates under a wheel read in their own head.
 const T = JSON.parse(rd('dashboards/casora/button_card_templates.json'));
 {
