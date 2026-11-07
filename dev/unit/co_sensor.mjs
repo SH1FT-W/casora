@@ -112,7 +112,7 @@ eq(o.range.map((r) => [r.label, r.active, r.attrs['data-hp-metric']]),
   [['24 Std.', true, 'co:sensor.x1|24h'], ['7 Tage', false, 'co:sensor.x1|7d']], 'range switch 24 Std. · 7 Tage');
 assert.match(html, /onclick="window\._hpPlantTap/, 'range taps go through the shared chart switch');
 
-// Frozen stage (follow-up to #124, r589): a new ppm keeps the exact HTML – no redraw, no chart remount –,
+// Frozen stage (follow-up to #124, r590): a new ppm keeps the exact HTML – no redraw, no chart remount –,
 // the ring is painted in place (UI.dialPaint) and the number follows live (data-hp-live).
 win._casoraUI.dialPct = (v, mn, mx) => (v - mn) / (mx - mn) * 100;
 const paints = [];

@@ -26,13 +26,13 @@ await page.evaluate(async (entity) => {
   const ha = document.querySelector('home-assistant');
   const h = await window.loadCardHelpers();
   const el = h.createCardElement({ type: 'custom:button-card', template: 'casora_co', entity, name: 'CO-Melder' });
-  el.classList.add('qa-r589');
+  el.classList.add('qa-r590');
   el.hass = ha.hass;
   el.style.cssText = 'position:fixed;left:400px;top:300px;width:220px;height:140px;z-index:99990;';
   ha.shadowRoot.appendChild(el);
   setInterval(() => { if (el.hass !== ha.hass) el.hass = ha.hass; }, 200);
 }, ID);
-await page.waitForFunction(() => { const el = document.querySelector('home-assistant').shadowRoot.querySelector('.qa-r589');
+await page.waitForFunction(() => { const el = document.querySelector('home-assistant').shadowRoot.querySelector('.qa-r590');
   return el && el.shadowRoot && el.shadowRoot.querySelector('ha-card'); }, null, { timeout: 10000 });
 
 const info = () => {
@@ -49,10 +49,10 @@ const info = () => {
     chart: ch[0] ? ch[0].getBoundingClientRect() : null,
     value: n ? n.textContent.trim() : '', when: when ? when.textContent.trim() : '',
     ring: fl ? (fl.getAttribute('style') || '') + '|' + fl.style.stroke : '', pct: dl ? dl.dataset.pct : null,
-    warn: txt.includes('Warnung'), segs, neu: window.__r589 ? window.__r589.neu.slice() : null };
+    warn: txt.includes('Warnung'), segs, neu: window.__r590 ? window.__r590.neu.slice() : null };
 };
 
-const at = await page.evaluate(() => { const r = document.querySelector('home-assistant').shadowRoot.querySelector('.qa-r589').getBoundingClientRect();
+const at = await page.evaluate(() => { const r = document.querySelector('home-assistant').shadowRoot.querySelector('.qa-r590').getBoundingClientRect();
   return { x: r.x + r.width * 0.7, y: r.y + r.height * 0.75 }; });
 await page.mouse.click(at.x, at.y);
 let p = await stable(page, info, null, { max: 20000, quiet: 2000, until: (v) => v && v.paths > 0 && v.value });
@@ -75,25 +75,25 @@ await page.waitForTimeout(800);
 // the number follows live, the ring moves in place (r303/r488 for this popup).
 await page.evaluate(() => {
   const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
-  window.__r589 = { neu: [] };
-  const tag = (r) => r.querySelectorAll('*').forEach((e) => { if (/^(BUTTON-CARD|CASORA-CHART)$/.test(e.nodeName)) e.__r589 = 1; if (e.shadowRoot) tag(e.shadowRoot); });
+  window.__r590 = { neu: [] };
+  const tag = (r) => r.querySelectorAll('*').forEach((e) => { if (/^(BUTTON-CARD|CASORA-CHART)$/.test(e.nodeName)) e.__r590 = 1; if (e.shadowRoot) tag(e.shadowRoot); });
   tag(pop.shadowRoot);
   const seen = new WeakSet();
   const obs = (root) => {
     if (seen.has(root)) return; seen.add(root);
     new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach((nd) => {
-      if (nd.nodeType !== 1 || nd.__r589) return;
-      if (/^(BUTTON-CARD|CASORA-CHART)$/.test(nd.nodeName)) window.__r589.neu.push(nd.nodeName);
-      else if ((nd.classList && nd.classList.contains('hui-stage')) || (nd.querySelector && nd.querySelector('.hui-stage'))) window.__r589.neu.push('STAGE');
+      if (nd.nodeType !== 1 || nd.__r590) return;
+      if (/^(BUTTON-CARD|CASORA-CHART)$/.test(nd.nodeName)) window.__r590.neu.push(nd.nodeName);
+      else if ((nd.classList && nd.classList.contains('hui-stage')) || (nd.querySelector && nd.querySelector('.hui-stage'))) window.__r590.neu.push('STAGE');
     }))).observe(root, { childList: true, subtree: true });
   };
   const walk = (n) => { if (n.shadowRoot) { obs(n.shadowRoot); walk(n.shadowRoot); } (n.childNodes || []).forEach(walk); };
   obs(pop.shadowRoot); walk(pop.shadowRoot);
-  window.__r589.t = setInterval(() => walk(pop.shadowRoot), 100);
+  window.__r590.t = setInterval(() => walk(pop.shadowRoot), 100);
 });
 for (let v = 61; v <= 72; v++) await fakeStates(page, { [ID]: { state: String(v) } }, { sticky: true });
 p = await stable(page, info, null, { max: 6000, quiet: 1200, until: (v) => v && num(v.value) === 72 });
-await page.evaluate(() => clearInterval(window.__r589.t));
+await page.evaluate(() => clearInterval(window.__r590.t));
 await check('Twelve new ppm: no chart or stage mounted anew', p && p.neu && p.neu.length === 0, p && p.neu);
 await check('Twelve new ppm: the chart keeps its lines', p && p.charts === 1 && p.paths > 0, p);
 await check('Twelve new ppm: the number follows live (72)', p && num(p.value) === 72, p && p.value);

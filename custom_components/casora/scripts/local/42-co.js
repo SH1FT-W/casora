@@ -185,7 +185,7 @@
       var slot = window._hpPlantCfg && window._hpPlantCfg[key]
         ? '<div class="hp-chart-slot" style="min-height:' + (window.innerWidth <= 760 ? 140 : 160) + 'px;pointer-events:auto;"></div>' : '';
       // button-card finds the entity id in this template and redraws the stage on every whole ppm, which mounted the
-      // chart into a fresh slot each time (r589, the fault of r303/r488). The HTML is frozen per range, unit and state
+      // chart into a fresh slot each time (r590, the fault of r303/r488). The HTML is frozen per range, unit and state
       // kind: the number follows live (data-hp-live), arc and colour of the ring are painted in place below – the
       // same HTML, no redraw. Range switch, unit and (un)availability still draw the stage anew.
       var sk = [key, m.unit, m.dead ? 'dead' : m.ppm == null ? 'u' : 'n', slot ? 1 : 0].join('|');
