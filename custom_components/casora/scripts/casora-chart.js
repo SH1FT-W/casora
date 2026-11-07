@@ -182,20 +182,28 @@
   };
   C.lang = function () { try { return (window.casoraLocale && window.casoraLocale()) || 'de'; } catch (e) { return 'de'; } };
   C.tr = function (s) { try { return window.casoraTr ? window.casoraTr(s) : s; } catch (e) { return s; } };
+  // One formatter per language and options: toLocaleString with options builds a new one on every call (~10–80 µs),
+  // and the reading formats a number and a time on every pointer move.
+  var fmts = {};
+  var F = function (k, o) {
+    var l = C.lang(), key = k + l + JSON.stringify(o);
+    return fmts[key] || (fmts[key] = k === 'n' ? new Intl.NumberFormat(l, o) : new Intl.DateTimeFormat(l, o));
+  };
+  var D = function (t, o) { t = +t; return isFinite(t) ? F('d', o).format(t) : 'Invalid Date'; };
   C.nf = function (v, d) {
     if (Math.abs(v) < 0.5 * Math.pow(10, -d)) v = 0;
-    return v.toLocaleString(C.lang(), { minimumFractionDigits: d, maximumFractionDigits: d });
+    return F('n', { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
   };
   C.hm = function (t, h12) {
     var o = { hour: '2-digit', minute: '2-digit' }; if (h12 != null) o.hour12 = h12;
-    try { if (new Intl.DateTimeFormat(C.lang(), o).resolvedOptions().hour12) o.hour = 'numeric'; } catch (e) {} // 12 h: "7:00 PM"
-    return new Date(t).toLocaleTimeString(C.lang(), o);
+    try { if (F('d', o).resolvedOptions().hour12) o.hour = 'numeric'; } catch (e) {} // 12 h: "7:00 PM"
+    return D(t, o);
   };
-  C.wd = function (t) { return new Date(t).toLocaleDateString(C.lang(), { weekday: 'short' }).replace('.', ''); };
-  C.dm = function (t) { return new Date(t).toLocaleDateString(C.lang(), { day: 'numeric', month: 'numeric' }); };
-  C.dayLong = function (t) { return new Date(t).toLocaleDateString(C.lang(), { weekday: 'long', day: 'numeric', month: 'long' }); };
-  C.mon = function (t) { return new Date(t).toLocaleDateString(C.lang(), { month: 'short' }).replace('.', ''); };
-  C.monLong = function (t) { return new Date(t).toLocaleDateString(C.lang(), { month: 'long', year: 'numeric' }); };
+  C.wd = function (t) { return D(t, { weekday: 'short' }).replace('.', ''); };
+  C.dm = function (t) { return D(t, { day: 'numeric', month: 'numeric' }); };
+  C.dayLong = function (t) { return D(t, { weekday: 'long', day: 'numeric', month: 'long' }); };
+  C.mon = function (t) { return D(t, { month: 'short' }).replace('.', ''); };
+  C.monLong = function (t) { return D(t, { month: 'long', year: 'numeric' }); };
   C.uhr = function (s) { return /^de/.test(C.lang()) ? s + ' Uhr' : s; };
   C.when = function (t, now, h12) {
     var a = new Date(t), b = new Date(now), same = a.toDateString() === b.toDateString();
