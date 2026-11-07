@@ -33,6 +33,7 @@ from .template_refresh import async_setup_template_refresh
 from .phone_badges import async_setup_phone_badges
 from .update_source import LEGACY_OPTIONS
 from .ki import KiRunner
+from .ai_jobs import async_remove_ai_jobs, async_setup_ai_jobs, async_unload_ai_jobs
 from .setup_overview import async_setup_setup_overview
 from .setup_plan import async_setup_setup_plan
 from .umstellen import async_setup_umstellen
@@ -328,6 +329,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await async_setup_setup_overview(hass)
     # Proposed layout from such an assistant; the Studio applies it (issue #131, step 2).
     await async_setup_setup_plan(hass)
+    # AI jobs that wait for your own assistant over MCP (ai_jobs.py, issue #131).
+    async_setup_ai_jobs(hass)
     # Helpers and automatic behaviour - formerly a package copied by hand.
     await async_setup_helfer(hass)
     hass.data.setdefault(DOMAIN, {})["ki"] = runner
@@ -436,6 +439,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Integration removed: drop the former theme copy in the theme folder and the script resources."""
     await hass.async_add_executor_job(remove_old_theme_file, hass.config.config_dir)
     await _remove_script_resources(hass)
+    # Open AI jobs for your own assistant end with "Casora wurde entfernt" (ai_jobs.py).
+    async_remove_ai_jobs(hass)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -448,6 +453,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Otherwise they stay callable until the restart, even after removing Casora.
     for name in ("einrichten", "umstellen", "setup_overview", "setup_plan", *ACTION_SERVICES):
         hass.services.async_remove(DOMAIN, name)
+    # Any unload may be a reload and keeps the open jobs for your own assistant (async_remove_entry fails them).
+    async_unload_ai_jobs(hass)
     runner = hass.data.get(DOMAIN, {}).pop("ki", None)
     if runner:
         await runner.async_unload()

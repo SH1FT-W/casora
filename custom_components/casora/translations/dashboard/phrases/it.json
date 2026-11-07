@@ -2816,7 +2816,15 @@
     "Selbsttest gestartet": "Autotest avviato",
     "Selbsttest starten? Der Melder piept laut.": "Avviare l'autotest? Il rilevatore suona forte.",
     "Zuletzt erhöht": "Ultimo aumento",
-    "Nicht in 7 Tagen": "Non negli ultimi 7 giorni"
+    "Nicht in 7 Tagen": "Non negli ultimi 7 giorni",
+    "Wartet auf deinen Assistenten …": "In attesa del tuo assistente…",
+    "Dein Assistent hat nicht rechtzeitig geantwortet": "Il tuo assistente non ha risposto in tempo",
+    "Zu viele offene Aufträge für deinen Assistenten": "Troppi lavori aperti per il tuo assistente",
+    "Der Auftrag für deinen Assistenten wurde abgebrochen": "Il lavoro per il tuo assistente è stato annullato",
+    "Neustart: der Auftrag für deinen Assistenten ist verfallen": "Riavvio: il lavoro per il tuo assistente è andato perso",
+    "Claude prüft das Rad …": "Claude sta controllando la bici…",
+    "Claude wertet die Heizwoche aus …": "Claude sta analizzando la settimana di riscaldamento…",
+    "Claude wertet die letzten 7 Tage aus …": "Claude sta analizzando gli ultimi 7 giorni…"
   },
   "patterns": [
     [

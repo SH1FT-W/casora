@@ -2798,7 +2798,15 @@
     "Selbsttest gestartet": "Self-test started",
     "Selbsttest starten? Der Melder piept laut.": "Start the self-test? The detector beeps loudly.",
     "Zuletzt erhöht": "Last raised",
-    "Nicht in 7 Tagen": "Not in 7 days"
+    "Nicht in 7 Tagen": "Not in 7 days",
+    "Wartet auf deinen Assistenten …": "Waiting for your assistant…",
+    "Dein Assistent hat nicht rechtzeitig geantwortet": "Your assistant did not answer in time",
+    "Zu viele offene Aufträge für deinen Assistenten": "Too many open jobs for your assistant",
+    "Der Auftrag für deinen Assistenten wurde abgebrochen": "The job for your assistant was cancelled",
+    "Neustart: der Auftrag für deinen Assistenten ist verfallen": "Restart: the job for your assistant was lost",
+    "Claude prüft das Rad …": "Claude is checking the bike…",
+    "Claude wertet die Heizwoche aus …": "Claude is analyzing the heating week…",
+    "Claude wertet die letzten 7 Tage aus …": "Claude is analyzing the last 7 days…"
   },
   "patterns": [
     [

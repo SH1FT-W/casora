@@ -27,8 +27,10 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import selector
 
+from .ai_jobs import AI_MCP
 from .const import DOMAIN
 from .ki import (OPT_AI, OPT_AI_MODELS, OPT_AI_WEB, OPT_AUTO, OPT_NOTES, OPT_OUT_RH, OPT_OUT_T, OPT_PLAN_UPDATE, OPT_PRICE,
                  OPT_RECIPE_LIST,
@@ -36,6 +38,14 @@ from .ki import (OPT_AI, OPT_AI_MODELS, OPT_AI_WEB, OPT_AUTO, OPT_NOTES, OPT_OUT
 from .lueften_push import OPT_VENT_NOTIFY, OPT_VENT_PERSONS, notify_services
 from .update_push import OPT_UPDATE_PUSH
 from .update_source import LEGACY_OPTIONS, OPT_BETA
+
+
+def _name(hass: HomeAssistant, entity_id: str) -> str:
+    try:
+        st = hass.states.get(entity_id)
+    except AttributeError:  # test doubles without states.get
+        st = None
+    return (st.attributes.get("friendly_name") if st else None) or entity_id
 
 
 def options_schema(hass: HomeAssistant, options: dict[str, Any]) -> vol.Schema:
@@ -53,11 +63,23 @@ def options_schema(hass: HomeAssistant, options: dict[str, Any]) -> vol.Schema:
             options=opts, custom_value=True, translation_key="ki_plan",
             mode=selector.SelectSelectorMode.DROPDOWN))
 
+    def ai(key):
+        # An AI task or "Your own assistant (MCP)" (AI_MCP, ai_jobs.py). An entity selector cannot offer that
+        # choice, so a menu of the AI tasks there are; the stored value stays in it even while its AI task is
+        # gone, typed values are checked by check_ai.
+        ids = sorted(hass.states.async_entity_ids("ai_task"))
+        cur = options.get(key)
+        if cur and cur != AI_MCP and cur not in ids:
+            ids.append(cur)
+        opts = [{"value": AI_MCP, "label": "Your own assistant (MCP)"}] + [
+            {"value": e, "label": _name(hass, e)} for e in ids]
+        return selector.SelectSelector(selector.SelectSelectorConfig(
+            options=opts, custom_value=True, translation_key="ai_choice",
+            mode=selector.SelectSelectorMode.DROPDOWN))
+
     return vol.Schema({
-        vol.Optional(OPT_AI, description=sug(OPT_AI)): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="ai_task")),
-        vol.Optional(OPT_AI_WEB, description=sug(OPT_AI_WEB)): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="ai_task")),
+        vol.Optional(OPT_AI, description=sug(OPT_AI)): ai(OPT_AI),
+        vol.Optional(OPT_AI_WEB, description=sug(OPT_AI_WEB)): ai(OPT_AI_WEB),
         vol.Optional(OPT_OUT_T, description=sug(OPT_OUT_T)): selector.EntitySelector(
             selector.EntitySelectorConfig(domain="sensor", device_class="temperature")),
         vol.Optional(OPT_OUT_RH, description=sug(OPT_OUT_RH)): selector.EntitySelector(
@@ -105,6 +127,21 @@ PLAN_KEYS = (*PLAN_OPTS.values(), OPT_PLAN_UPDATE)
 def check_plans(data: dict[str, Any]) -> str | None:
     """Erste Zeitplan-Option mit ungültiger eigener Zeit (sonst None)."""
     return next((k for k in PLAN_OPTS.values() if not valid_plan(data.get(k))), None)
+
+
+def check_ai(data: dict[str, Any]) -> str | None:
+    """First AI option that is neither an ai_task entity id nor AI_MCP (else None)."""
+    for k in (OPT_AI, OPT_AI_WEB):
+        v = data.get(k)
+        if v in (None, AI_MCP):
+            continue
+        try:
+            ok = cv.entity_id(v).startswith("ai_task.")
+        except vol.Invalid:
+            ok = False
+        if not ok:
+            return k
+    return None
 
 
 def _entry(hass: HomeAssistant):
@@ -174,6 +211,9 @@ def build_options(hass: HomeAssistant, current: dict[str, Any], submitted: dict[
     except vol.Invalid as err:
         path = str(err.path[0]) if getattr(err, "path", None) else None
         raise OptionsError(str(err), path) from err
+    bad = check_ai(valid)
+    if bad:
+        raise OptionsError(f"{bad} must be an AI task (ai_task.…) or \"{AI_MCP}\" (your own assistant)", bad)
     bad = check_plans(valid)
     if bad:
         raise OptionsError(f"Invalid schedule for {bad}: {valid[bad]!r} (off, auto, \"sun 18:00\" or \"18:00\")", bad)

@@ -65,6 +65,11 @@
         "daily": "Giornaliero",
         "manual": "Solo premendo un pulsante"
       }
+    },
+    "ai_choice": {
+      "options": {
+        "mcp": "Il tuo assistente (MCP)"
+      }
     }
   },
   "services": {
@@ -309,6 +314,34 @@
         "done_entity": {
           "name": "Aiutante «Fatto»",
           "description": "Interruttore che mostra «Fatto»"
+        }
+      }
+    },
+    "ai_jobs": {
+      "name": "Lavori IA aperti",
+      "description": "Solo lettura: i lavori IA che aspettano il tuo assistente (opzione IA “Il tuo assistente (MCP)”), con istruzioni, campi di risposta e allegati."
+    },
+    "ai_answer": {
+      "name": "Rispondi a un lavoro IA",
+      "description": "Il tuo assistente risponde a un lavoro IA aperto. Controlla la risposta con i campi del lavoro e restituisce ok o gli errori.",
+      "fields": {
+        "job_id": {
+          "name": "Lavoro",
+          "description": "job_id da casora.ai_jobs."
+        },
+        "data": {
+          "name": "Risposta",
+          "description": "Un oggetto con le chiavi dei campi del lavoro."
+        }
+      }
+    },
+    "ai_cancel": {
+      "name": "Annulla un lavoro IA",
+      "description": "Scarta un lavoro IA aperto; la funzione che lo aspetta segnala un errore.",
+      "fields": {
+        "job_id": {
+          "name": "Lavoro",
+          "description": "job_id da casora.ai_jobs."
         }
       }
     }

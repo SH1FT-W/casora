@@ -65,6 +65,11 @@
         "daily": "Dagelijks",
         "manual": "Alleen op een druk op de knop"
       }
+    },
+    "ai_choice": {
+      "options": {
+        "mcp": "Je eigen assistent (MCP)"
+      }
     }
   },
   "services": {
@@ -309,6 +314,34 @@
         "done_entity": {
           "name": "Klaar-helper",
           "description": "Schakelaar die „Klaar” toont"
+        }
+      }
+    },
+    "ai_jobs": {
+      "name": "Openstaande AI-opdrachten",
+      "description": "Alleen lezen: de AI-opdrachten die op je eigen assistent wachten (AI-optie “Je eigen assistent (MCP)”), met instructies, antwoordvelden en bijlagen."
+    },
+    "ai_answer": {
+      "name": "AI-opdracht beantwoorden",
+      "description": "Je eigen assistent beantwoordt een openstaande AI-opdracht. Controleert het antwoord met de velden van de opdracht en geeft ok of de fouten terug.",
+      "fields": {
+        "job_id": {
+          "name": "Opdracht",
+          "description": "job_id uit casora.ai_jobs."
+        },
+        "data": {
+          "name": "Antwoord",
+          "description": "Een object met de sleutels van de velden van de opdracht."
+        }
+      }
+    },
+    "ai_cancel": {
+      "name": "AI-opdracht annuleren",
+      "description": "Verwijdert een openstaande AI-opdracht; de functie die erop wacht meldt een fout.",
+      "fields": {
+        "job_id": {
+          "name": "Opdracht",
+          "description": "job_id uit casora.ai_jobs."
         }
       }
     }

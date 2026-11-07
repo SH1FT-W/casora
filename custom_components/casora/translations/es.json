@@ -65,6 +65,11 @@
         "daily": "Diario",
         "manual": "Solo al pulsar un botón"
       }
+    },
+    "ai_choice": {
+      "options": {
+        "mcp": "Tu propio asistente (MCP)"
+      }
     }
   },
   "services": {
@@ -309,6 +314,34 @@
         "done_entity": {
           "name": "Ayudante de hecho",
           "description": "Interruptor que muestra «Hecho»"
+        }
+      }
+    },
+    "ai_jobs": {
+      "name": "Trabajos de IA pendientes",
+      "description": "Solo lectura: los trabajos de IA que esperan a tu propio asistente (opción de IA “Tu propio asistente (MCP)”), con instrucciones, campos de respuesta y adjuntos."
+    },
+    "ai_answer": {
+      "name": "Responder un trabajo de IA",
+      "description": "Tu propio asistente responde un trabajo de IA pendiente. Comprueba la respuesta con los campos del trabajo y devuelve ok o los errores.",
+      "fields": {
+        "job_id": {
+          "name": "Trabajo",
+          "description": "job_id de casora.ai_jobs."
+        },
+        "data": {
+          "name": "Respuesta",
+          "description": "Un objeto con las claves de los campos del trabajo."
+        }
+      }
+    },
+    "ai_cancel": {
+      "name": "Cancelar un trabajo de IA",
+      "description": "Descarta un trabajo de IA pendiente; la función que lo espera informa de un error.",
+      "fields": {
+        "job_id": {
+          "name": "Trabajo",
+          "description": "job_id de casora.ai_jobs."
         }
       }
     }

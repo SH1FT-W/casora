@@ -2958,7 +2958,12 @@
     "Your assistant suggests these tiles. Check where each one should go, add them, then save.": "O teu assistente sugere estes mosaicos. Verifica onde vai cada um, adiciona-os e depois guarda.",
     "Suggested by your assistant": "Sugerido pelo teu assistente",
     "Review": "Rever",
-    "Suggestion discarded": "Sugestão descartada"
+    "Suggestion discarded": "Sugestão descartada",
+    "Who answers": "Quem responde",
+    "An AI task in Home Assistant, or your own assistant connected over MCP.": "Uma tarefa de IA no Home Assistant ou o teu próprio assistente ligado por MCP.",
+    "AI task": "Tarefa de IA",
+    "Your own assistant (MCP)": "O teu próprio assistente (MCP)",
+    "Casora's AI features wait for your assistant: ask it to do Casora's open AI jobs. Casora Studio's own AI steps still need an AI task.": "As funções de IA do Casora esperam pelo teu assistente: pede-lhe que faça os trabalhos de IA pendentes do Casora. Os passos de IA do próprio Casora Studio continuam a precisar de uma tarefa de IA."
   },
   "patterns": [
     [

@@ -2958,7 +2958,12 @@
     "Your assistant suggests these tiles. Check where each one should go, add them, then save.": "Je assistent stelt deze tegels voor. Controleer waar elke tegel hoort, voeg ze toe en sla daarna op.",
     "Suggested by your assistant": "Voorgesteld door je assistent",
     "Review": "Bekijken",
-    "Suggestion discarded": "Voorstel verworpen"
+    "Suggestion discarded": "Voorstel verworpen",
+    "Who answers": "Wie antwoordt",
+    "An AI task in Home Assistant, or your own assistant connected over MCP.": "Een AI-taak in Home Assistant of je eigen assistent, verbonden via MCP.",
+    "AI task": "AI-taak",
+    "Your own assistant (MCP)": "Je eigen assistent (MCP)",
+    "Casora's AI features wait for your assistant: ask it to do Casora's open AI jobs. Casora Studio's own AI steps still need an AI task.": "De AI-functies van Casora wachten op je assistent: vraag hem de openstaande AI-opdrachten van Casora te doen. De AI-stappen van Casora Studio zelf hebben nog steeds een AI-taak nodig."
   },
   "patterns": [
     [

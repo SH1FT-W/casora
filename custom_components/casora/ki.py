@@ -16,7 +16,8 @@ Hier findet Casora die Daten selbst:
   • Kamera, Pflanzen, Updates, Rezept – Abläufe in ki/*.yaml
 
 Die KI ist die Standard-KI aus Einstellungen → KI-Aufgaben (oder die in den
-Casora-Optionen gewählte). Ergebnisse gehen wie bisher als Events
+Casora-Optionen gewählte). With the option "Your own assistant (MCP)" the AI calls become jobs that an
+assistant fetches and answers over MCP (ai_jobs.py). Ergebnisse gehen wie bisher als Events
 (casora_*_result) an die Ergebnis-Sensoren; das Dashboard bleibt unverändert.
 
 Gibt es die alten Template-Sensoren noch (eigene Pakete), bleibt Casora für
@@ -48,6 +49,7 @@ from homeassistant.helpers.script import Script, async_validate_actions_config
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import load_yaml
 
+from .ai_jobs import AI_MCP, jobs_for
 from .const import DOMAIN
 from .update_notes import notes_for_updates
 
@@ -94,6 +96,7 @@ WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 # Optionen (Casora → Konfigurieren)
 OPT_AI = "ai_task_entity"
 OPT_AI_WEB = "ai_task_web_entity"
+# Either may hold AI_MCP ("mcp") instead of an ai_task: your own assistant answers over MCP (ai_jobs.py).
 # Model names the user typed per AI task ({entity_id: model}) where the device registry names none.
 OPT_AI_MODELS = "ai_task_models"
 OPT_OUT_T = "outdoor_temperature"
@@ -233,7 +236,7 @@ def ai_entity(hass: HomeAssistant, entry: ConfigEntry, web: bool = False) -> str
 
 
 def ai_available(hass: HomeAssistant, entry: ConfigEntry, web: bool = False) -> bool:
-    """There is an AI to ask: a chosen one, or any AI task (HA's preferred one answers)."""
+    """There is an AI to ask: a chosen one (also AI_MCP, your own assistant), or any AI task (HA's preferred one answers)."""
     return bool(ai_entity(hass, entry, web)) or bool(hass.states.async_entity_ids("ai_task"))
 
 
@@ -564,7 +567,10 @@ async def generate(hass: HomeAssistant, data: dict[str, Any], ent: str | None) -
 
     ent given: that one. Without: entity_id stays out and HA's preferred AI task answers; if HA has
     none ("no preferred entity set", from HA 2026.11 translation_key "no_entity"), the first suitable AI task, as Casora did before.
+    ent AI_MCP: no ai_task at all; the job waits for your own assistant over MCP (ai_jobs.py).
     """
+    if ent == AI_MCP:
+        return await jobs_for(hass).ask({k: v for k, v in data.items() if k != "entity_id"})
     if not ent and not hass.states.async_entity_ids("ai_task"):
         raise HomeAssistantError(NO_AI)
     payload = {k: v for k, v in data.items() if k != "entity_id" and v not in (None, "", [])}
@@ -606,7 +612,7 @@ async def ask_ai(hass: HomeAssistant, entry: ConfigEntry, task: str, instruction
 AI_GENERATE_SCHEMA = vol.Schema({
     vol.Required("task_name"): cv.string,
     vol.Required("instructions"): cv.string,
-    vol.Optional("entity_id"): vol.Any(None, "", cv.entity_id),
+    vol.Optional("entity_id"): vol.Any(None, "", AI_MCP, cv.entity_id),
     vol.Optional("structure"): vol.Any(None, dict),
     vol.Optional("attachments"): vol.Any(None, list),
 })
@@ -1246,14 +1252,15 @@ class KiRunner:
             @callback
             def fire(now, day=day, job=job):
                 if day is None or dt_util.as_local(now).weekday() == day:
-                    hass.async_create_task(job())
+                    # Background task: in MCP mode (ai_jobs.py) a run waits hours; it must not delay HA's shutdown.
+                    hass.async_create_background_task(job(), f"{DOMAIN}_ki")
 
             self.unsub.append(async_track_time_change(hass, fire, hour=hour, minute=minute, second=0))
         # Update-Check: höchstens einmal am Tag (bis 1.0.2 stündlich).
         if opts.get(OPT_PLAN_UPDATE) == "daily" and not is_external(hass, "update"):
             @callback
             def daily(now):
-                hass.async_create_task(self._run_update(""))
+                hass.async_create_background_task(self._run_update(""), f"{DOMAIN}_ki")
 
             self.unsub.append(async_track_time_change(hass, daily, hour=UPDATE_DAILY[0], minute=UPDATE_DAILY[1], second=0))
 

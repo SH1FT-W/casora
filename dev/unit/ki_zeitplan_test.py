@@ -118,7 +118,8 @@ check("eigene Zeit + Update auf Knopfdruck", plan({"ki_plan_rezept": "fri 17:30"
 # Wochentag wird beim Auslösen geprüft
 fired = []
 ki.KiRunner._run_recipe = lambda self: fired.append("rezept") or asyncio.sleep(0)
-runner = ki.KiRunner(SimpleNamespace(async_create_task=lambda c: c.close() if hasattr(c, "close") else None),
+# Background task (not async_create_task): in MCP mode a run waits hours and must not delay HA's shutdown.
+runner = ki.KiRunner(SimpleNamespace(async_create_background_task=lambda c, name: c.close() if hasattr(c, "close") else None),
                      SimpleNamespace(options={"ki_plan_rezept": "fri 17:30"}))
 tracked.clear()
 runner._schedule()

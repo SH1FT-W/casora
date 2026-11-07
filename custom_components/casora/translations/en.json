@@ -65,6 +65,11 @@
         "daily": "Daily",
         "manual": "Only on button press"
       }
+    },
+    "ai_choice": {
+      "options": {
+        "mcp": "Your own assistant (MCP)"
+      }
     }
   },
   "services": {
@@ -309,6 +314,34 @@
         "done_entity": {
           "name": "Done helper",
           "description": "Switch that shows \"Done\""
+        }
+      }
+    },
+    "ai_jobs": {
+      "name": "Open AI jobs",
+      "description": "Read only: the AI jobs that wait for your own assistant (AI option “Your own assistant (MCP)”), with instructions, answer fields and attachments."
+    },
+    "ai_answer": {
+      "name": "Answer an AI job",
+      "description": "Your own assistant answers an open AI job. Checks the answer against the job's fields and returns ok or the errors.",
+      "fields": {
+        "job_id": {
+          "name": "Job",
+          "description": "job_id from casora.ai_jobs."
+        },
+        "data": {
+          "name": "Answer",
+          "description": "An object with the keys of the job's fields."
+        }
+      }
+    },
+    "ai_cancel": {
+      "name": "Cancel an AI job",
+      "description": "Drops an open AI job; the feature that waits for it reports an error.",
+      "fields": {
+        "job_id": {
+          "name": "Job",
+          "description": "job_id from casora.ai_jobs."
         }
       }
     }

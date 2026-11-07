@@ -132,6 +132,23 @@ ai_generate:
     attachments:
       selector:
         object:
+ai_jobs:
+ai_answer:
+  fields:
+    job_id:
+      required: true
+      selector:
+        text:
+    data:
+      required: true
+      selector:
+        object:
+ai_cancel:
+  fields:
+    job_id:
+      required: true
+      selector:
+        text:
 light_smart_toggle:
   fields:
     light_entity:
