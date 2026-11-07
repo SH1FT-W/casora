@@ -4262,6 +4262,14 @@
       "{1}% of the house"
     ],
     [
+      "^Spitze\\s24\\sStd\\.:\\s(.+)$",
+      "24\u00a0h peak: {1}"
+    ],
+    [
+      "^Üblich\\sbis\\s(.+)$",
+      "Usually up to\u00a0{1}"
+    ],
+    [
       "^(\\d+) Geräte ohne Wert$",
       "{1} devices without a value"
     ],

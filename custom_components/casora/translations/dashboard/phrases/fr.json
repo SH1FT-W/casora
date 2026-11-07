@@ -4280,6 +4280,14 @@
       "{1} % de la maison"
     ],
     [
+      "^Spitze\\s24\\sStd\\.:\\s(.+)$",
+      "Pic sur 24\u00a0h\u00a0: {1}"
+    ],
+    [
+      "^Üblich\\sbis\\s(.+)$",
+      "Habituellement jusqu'à\u00a0{1}"
+    ],
+    [
       "^(\\d+) Geräte ohne Wert$",
       "{1} appareils sans valeur"
     ],

@@ -1,7 +1,7 @@
 // @deckt: custom_components/casora/scripts/local/05-weich-mehr.js#houseShare,houseIds,stage3,build
 // Room energy popup (owner decision 04.11.2026, variant B): the stage is a dial whose ring is the room's share of the
 // house's consumption now („155 W“, „18 % vom Haus“). The house is HA's energy settings (casoraEnergyHouse). Without a
-// house value the plate stays as before; the ring follows room and house live (UI.dialPaint, no redraw); never above
+// house value the ring is the room's 24 h peak (energy_room_peak.mjs), without statistics (as here) the plate; the ring follows room and house live (UI.dialPaint, no redraw); never above
 // 100 %; the house popup keeps its flow stage.
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -106,7 +106,7 @@ assert.ok(!calls.at(-1).o.ring, 'not a room: plate');
 assert.ok(/if \(!house && !fs && \(ctx\.powerId \|\| parts\)\) C\.room = true;/.test(src), 'room marked in E.build');
 assert.ok(/C\.room \? E\.houseIds\(ctx\.hass\) : \[\]/.test(src), 'stage watches the house sensors (w3)');
 assert.deepEqual(E.houseIds(hass), ['sensor.qa_grid', 'sensor.qa_pv']);
-assert.ok(/ring: memo\.sh \? \{ min: 0, max: memo\.sh\.house, value: memo\.sh\.room \} : null/.test(src), 'stage passes the ring');
+assert.ok(/ring: memo\.sh \? \{ min: 0, max: memo\.sh\.max, value: memo\.sh\.room \} : null/.test(src), 'stage passes the ring');
 // The dial reads the ring's own value (r6.value) when the shown value is in another unit („1,2 kW“).
 assert.ok(/dialPct\(r6\.value != null \? r6\.value : parseFloat/.test(core), 'casora-core S6 dial: r6.value');
 // English.
