@@ -16886,8 +16886,8 @@
           "span": "24h",
           "height": 32,
           "color": "spark",
-          "entity": "[[[\n  /* Sparkline (1.2): Raumtemperatur der letzten 24 Stunden – Fühler oder current_temperature. */\n  return variables.sparkline ? (variables.temp_sensor || entity?.entity_id || '') : '';\n]]]",
-          "attribute": "[[[ return variables.temp_sensor ? '' : 'current_temperature'; ]]]"
+          "entity": "[[[\n  /* Sparkline (1.2): the last 24 hours of the reading the tile shows (casoraThermoHistoryOf): its sensor, the room's\n     sensor, else current_temperature. */\n  if (!variables.sparkline) return '';\n  const src = window.casoraThermoHistoryOf ? window.casoraThermoHistoryOf(entity?.entity_id, variables.temp_sensor || null, states) : null;\n  return src ? src.entity : (variables.temp_sensor || entity?.entity_id || '');\n]]]",
+          "attribute": "[[[\n  const src = window.casoraThermoHistoryOf ? window.casoraThermoHistoryOf(entity?.entity_id, variables.temp_sensor || null, states) : null;\n  return src ? (src.attribute || '') : (variables.temp_sensor ? '' : 'current_temperature');\n]]]"
         }
       }
     },

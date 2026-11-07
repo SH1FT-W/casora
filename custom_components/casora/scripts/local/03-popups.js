@@ -615,7 +615,11 @@
   window._casoraThermoChart = function (id, sensor, states) {
     var st = states && states[id];
     if (!st || typeof window._hpChartCfg !== 'function' || !(window._casoraHH && window._casoraHH.on())) return '';
-    var key = sensor && states[sensor] ? sensor : id;
+    /* Without a sensor on the tile: the room's sensor whose reading dial and tile show as „Jetzt“
+       (casoraThermoHistoryOf, as F.curTemp) – the Verlauf drew the thermostat's own current_temperature under
+       „Jetzt 21,4 °C“ and read 21,0. */
+    var src = window.casoraThermoHistoryOf ? window.casoraThermoHistoryOf(id, sensor || null, states) : null;
+    var key = src ? src.entity : sensor && states[sensor] ? sensor : id;
     if (key === id && num((st.attributes || {}).current_temperature) == null) return '';
     var cfg = window._hpChartCfg(key, 'Temperatur', '24h', 'c2', 120);
     if (key === id) { cfg.series[0].attribute = 'current_temperature'; cfg.series[0].unit = TU(); }

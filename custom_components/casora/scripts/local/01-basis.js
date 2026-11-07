@@ -464,6 +464,48 @@ window._casoraHouseLights = function (hass) {
     return window._casoraHouseLightsOf(rooms, S);
   } catch (e) { return { rooms: [], ids: [], subs: [] }; }
 };
+/* The house's lights are one collection, Home's light badge (the overview header's light_group_entity /
+   light_entity_1…10 / light_rooms_auto): the lights of the dashboard's rooms as the Studio ticked them from HA's areas,
+   room groups counted once (their lamps), lamps in no room left out; an HA group stands for the house only where it
+   holds exactly those, a larger one (lamps in no room, a hub's group) only beside the listed rooms. The house tile
+   (house: true, the overview's „Beleuchtung“) counts, lists and opens the same – before it read its own entity, the
+   larger HA group, and said „3 an“ (16 lamps, 10 rooms) under a badge saying „1 an“ (10 lamps, 7 rooms).
+   _casoraHomeLightVarsOf: Home's variables → the badge's light variables (entity_N as casora_room hands them to
+   casora_badge_light_group), null without a light selection or with the badge switched off. */
+window._casoraHomeLightVarsOf = function (V) {
+  if (!V || typeof V !== 'object' || V.show_lights === false) return null;
+  var out = { light_group_entity: typeof V.light_group_entity === 'string' && V.light_group_entity ? V.light_group_entity : null,
+    light_rooms_auto: V.light_rooms_auto === true };
+  var any = false;
+  for (var i = 1; i <= 10; i++) {
+    var x = V['light_entity_' + i];
+    out['entity_' + i] = typeof x === 'string' && x ? x : null;
+    if (out['entity_' + i]) any = true;
+  }
+  return out.light_group_entity || out.light_rooms_auto || any ? out : null;
+};
+/* Home's light variables from the open dashboard: the first view's casora_room (desktop, as _casoraHouseLights leaves
+   it out of the rooms), on the phone the desktop's overview room the server delivers (casoraPhoneRoom.home). */
+window._casoraHomeLightVars = function () {
+  try {
+    var cfg = window._casoraLovelaceCfg && window._casoraLovelaceCfg();
+    var C = window._casoraHomeLightC;
+    if (C && cfg && C.cfg === cfg) return C.v;
+    var V = null;
+    if (cfg && Array.isArray(cfg.views) && cfg.views.length > 1) {
+      (function find(x, d) {
+        if (V || !x || typeof x !== 'object' || d > 6) return;
+        if (Array.isArray(x)) { x.forEach(function (y) { find(y, d + 1); }); return; }
+        if ([].concat(x.template || []).indexOf('casora_room') > -1 && x.variables) { V = x.variables; return; }
+        find(x.cards, d + 1);
+      })(cfg.views[0] && cfg.views[0].cards, 0);
+      var v = window._casoraHomeLightVarsOf(V);
+      if (V) { window._casoraHomeLightC = { cfg: cfg, v: v }; return v; }
+    }
+    if (window.casoraPhoneRoom && window.casoraPhoneRoom.home) return window._casoraHomeLightVarsOf(window.casoraPhoneRoom.home());
+  } catch (e) { /* no Home badge known: the tile keeps its own */ }
+  return null;
+};
 /* What a light tile, light badge or light popup stands for (review 2, E08/fam-09/DH-16): one derivation for the
    tile's state, the badge's count, the popup's status line and the Studio preview, so all count the same. Moved out
    of the light popup (casora_popup_light lpc_init, _casoraLPC). entity: the card's entity (a light, or the badge
@@ -476,6 +518,17 @@ window._casoraLightScope = function (entity, states, hass, vars) {
   var isArr = Array.isArray;
   var membersOf = function (x) { var a = S[x] && S[x].attributes; return a && isArr(a.entity_id) ? a.entity_id : null; };
   var eid = entity && entity.entity_id;
+  /* The house tile is Home's light badge (_casoraHomeLightVarsOf): it takes the badge's variables and goes the badge's
+     way below. Not once the badge's way resolved the rooms (house_rooms, the popup it opened), and not for a tile whose
+     own list was picked by hand (lights without light_rooms_auto). */
+  if (variables.house === true && !isArr(variables.house_rooms)
+      && !(isArr(variables.lights) && variables.lights.length > 0 && variables.light_rooms_auto !== true)) {
+    var hv = window._casoraHomeLightVars ? window._casoraHomeLightVars() : null;
+    if (hv) {
+      variables = Object.assign({}, variables, hv, { lights: [], popup_group: null, group_entity: null });
+      eid = null;
+    }
+  }
   /* Collective badge „Beleuchtung“: its entity is the helper input_select, never a light - the lights are in the
      badge's variables. */
   // No entity at all (a badge rendered without its helper) counts the same way.
@@ -705,7 +758,15 @@ window.casoraLightTallyText = function (t) {
    where the room has none. rooms: [{ vars }] (default: the open dashboard's rooms, on the phone the desktop rooms). */
 window.casoraRoomTempOf = function (climateId, states, rooms) {
   var S = states || {};
-  if (typeof climateId !== 'string' || !climateId) return null;
+  var ids = window.casoraRoomTempIds(climateId, S, rooms);
+  var vals = ids.map(function (x) { return parseFloat(S[x].state); });
+  return vals.length ? Math.round(vals.reduce(function (a, b) { return a + b; }, 0) / vals.length * 10) / 10 : null;
+};
+/* The sensors behind casoraRoomTempOf: the readable temp_sensor_N of the first room whose header lists the climate
+   entity ([] without one). */
+window.casoraRoomTempIds = function (climateId, states, rooms) {
+  var S = states || {};
+  if (typeof climateId !== 'string' || !climateId) return [];
   try {
     if (!rooms) {
       var cfg = window._casoraLovelaceCfg && window._casoraLovelaceCfg();
@@ -730,16 +791,27 @@ window.casoraRoomTempOf = function (climateId, states, rooms) {
       var mine = false;
       for (var k in V) if (/^climate_entity_\d+$/.test(k) && V[k] === climateId) { mine = true; break; }
       if (!mine) continue;
-      var vals = [];
+      var ids = [];
       for (var j = 1; j <= 10; j++) {
         var st = S[V['temp_sensor_' + j]];
         var n = st ? parseFloat(st.state) : NaN;
-        if (isFinite(n)) vals.push(n);
+        if (isFinite(n)) ids.push(V['temp_sensor_' + j]);
       }
-      if (vals.length) return Math.round(vals.reduce(function (a, b) { return a + b; }, 0) / vals.length * 10) / 10;
+      if (ids.length) return ids;
     }
   } catch (e) { /* no room reading */ }
-  return null;
+  return [];
+};
+/* What a thermostat's Verlauf (popup chart, tile sparkline) draws: the reading its „Jetzt“ shows on tile and dial
+   (F.curTemp) – the tile's sensor, else the room's one sensor (casoraRoomTempIds), else the thermostat's
+   current_temperature (also for a tile sensor HA does not know). Several room sensors are a mean no single history
+   draws: there the thermostat's own. { entity, attribute } (attribute only for the thermostat). */
+window.casoraThermoHistoryOf = function (climateId, sensor, states) {
+  var S = states || {};
+  var own = { entity: climateId, attribute: 'current_temperature' };
+  if (sensor) return S[sensor] ? { entity: sensor, attribute: null } : own;
+  var rs = window.casoraRoomTempIds ? window.casoraRoomTempIds(climateId, S) : [];
+  return rs.length === 1 ? { entity: rs[0], attribute: null } : own;
 };
 window.casoraPopupTitle = function (card, variables, def, defaults) {
   var V = variables || {};
