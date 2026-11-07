@@ -1303,7 +1303,9 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     return {
       entity_id: ids[0], state: open ? 'on' : live ? 'off' : 'unavailable',
       attributes: { device_class: v.contacts_kind === 'window' ? 'window' : 'door', friendly_name: v.label || '',
-        tilt: open > 0 && tilted === open, entity_id: ids.slice() },
+        tilt: open > 0 && tilted === open, entity_id: ids.slice(),
+        // How many are open/tilted by this same rule – the sub-badge's „2 geöffnet“ (security badge rework, 07.11.2026).
+        casora_open: open, casora_tilted: tilted },
     };
   };
   // Is this door/window tilted right now? The one answer for every place that names its state (popup head, dial,
