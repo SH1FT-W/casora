@@ -973,7 +973,11 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     Object.keys(S).forEach(function (id) {
       if (ex.indexOf(id) !== -1) return;
       var st = S[id], n = null, isLow = false;
-      if (id.indexOf('sensor.') === 0 && dcOf(st) === 'battery') { n = parseFloat(st.state); isLow = isFinite(n) && n <= lowPct; if (!isFinite(n)) n = null; }
+      if (id.indexOf('sensor.') === 0 && dcOf(st) === 'battery') {
+        // The same device's second battery sensor (Battery Notes, issue #136) is no second battery.
+        if (window.casoraPopupHide && window.casoraPopupHide.batteryTwin && window.casoraPopupHide.batteryTwin(id, S, hass)) return;
+        n = parseFloat(st.state); isLow = isFinite(n) && n <= lowPct; if (!isFinite(n)) n = null;
+      }
       else if (id.indexOf('binary_sensor.') === 0 && dcOf(st) === 'battery') {
         var bd = reg[id] && reg[id].device_id;
         if (bd && pctDev[bd]) return;

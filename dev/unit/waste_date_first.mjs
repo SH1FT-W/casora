@@ -75,7 +75,7 @@ function house({ restCount = 9, restDates = [-14, 0, 14], bioCount = 2, bioDates
   const h = house({ restCount: 1, restDates: [-9, 5, 19], bioCount: 3 });
   const W = D.waste(h, {});
   assert.equal(W.bins.find((b) => b.label === 'Restmüll').days, 5, 'date in 5 days, not countdown 1');
-  assert.equal(tileOf(h), 'Bio in 3 T.', 'next is Bio (countdown only, no future date)');
+  assert.equal(tileOf(h), 'In 3 T. · Bio', 'next is Bio (countdown only, no future date)');
   console.log('waste_date_first: date beats a short countdown ok');
 }
 
@@ -85,7 +85,7 @@ function house({ restCount = 9, restDates = [-14, 0, 14], bioCount = 2, bioDates
   const W = D.waste(h, {});
   assert.equal(W.bins.find((b) => b.label === 'Restmüll').days, 9, 'only past dates: countdown');
   assert.equal(W.bins.find((b) => b.label === 'Bio').days, 2);
-  assert.equal(tileOf(h), 'Bio in 2 T.');
+  assert.equal(tileOf(h), 'In 2 T. · Bio');
   const plain = { states: { 'sensor.tonne_x': { entity_id: 'sensor.tonne_x', state: '4', attributes: { friendly_name: 'Tonne X' } } },
     entities: {}, devices: {} };
   assert.equal(D.waste(plain, { trash_sensors: ['sensor.tonne_x'] }).days, 4, 'no dates at all: countdown');

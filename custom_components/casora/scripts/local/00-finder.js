@@ -652,6 +652,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       bins: bins, calendar: calendar, reminder: V.trash_reminder || cfg.reminder || null,
       months: months, duty: duty, days: days, calendarPopup: calPopup !== false,
       next: nextBins.length ? { label: nextBins.map(function (b) { return b.label; }).join(' + '),
+                                first: nextBins[0].label, count: nextBins.length,
                                 tint: nextBins[0].tint, color: nextBins[0].color } : null,
     };
   }
@@ -3357,8 +3358,36 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     all = all.filter(function (e) {
       return dcOf(e) === 'battery' && e.state !== 'unavailable' && e.state !== 'unknown' && num(e.state) != null;
     });
+    if (!chosen) all = all.filter(function (e) { return !H.batteryTwin(e.entity_id, S, hass); });
     if (opts && opts.all) return all;
     return all.filter(function (e) { return !H.has(v, e.entity_id); });
+  };
+  /* A second battery sensor of the same device (issue #136): Battery Notes adds a „Battery+“ sensor
+     (platform battery_notes) to the device next to the original one, so every device stood twice in the battery
+     popup and was counted twice. A battery_notes sensor beside another battery sensor of its device is the twin; so is
+     any further sensor of a device with the same name and the same reading (the first by entity id stays). Two real
+     batteries of one device (different readings) both stay. */
+  H.batteryTwin = function (id, states, hass) {
+    var S = states || (hass && hass.states) || {}, reg = (hass && hass.entities) || {};
+    var me = reg[id], e = S[id];
+    if (!me || !me.device_id || !e) return false;
+    var dcOf = function (x) { return x && x.attributes && x.attributes.device_class; };
+    var nm = function (x) { return String((x.attributes || {}).friendly_name || ''); };
+    var cache = H._batDev && H._batDev.reg === reg && H._batDev.S === S ? H._batDev : (H._batDev = { reg: reg, S: S, by: null });
+    if (!cache.by) {
+      cache.by = {};
+      Object.keys(S).forEach(function (x) {
+        var r = reg[x];
+        if (!r || !r.device_id || x.indexOf('sensor.') !== 0 || dcOf(S[x]) !== 'battery' || num(S[x].state) == null) return;
+        (cache.by[r.device_id] = cache.by[r.device_id] || []).push(x);
+      });
+    }
+    var sib = (cache.by[me.device_id] || []).filter(function (x) { return x !== id; });
+    if (!sib.length) return false;
+    if (me.platform === 'battery_notes') return sib.some(function (x) { return (reg[x] || {}).platform !== 'battery_notes'; });
+    return sib.some(function (x) {
+      return x < id && (reg[x] || {}).platform !== 'battery_notes' && S[x].state === e.state && nm(S[x]) === nm(e);
+    });
   };
   H.register('casora_battery', {
     entries: function (hass, variables) {

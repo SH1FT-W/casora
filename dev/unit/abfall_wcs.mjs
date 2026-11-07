@@ -178,7 +178,7 @@ window.CASORA_SETTINGS = {};
   const ov = overview(ho, [['Bio', 1], ['Papier', 6], ['Bio', 15]]);
   let Wo = D.waste(ho, {});
   assert.equal(Wo.bins.find((b) => b.id === ov).days, null, 'overview: no countdown from mixed dates');
-  assert.deepEqual(Wo.next, { label: 'Bio', tint: 'rgba(48,209,88,0.25)', color: '#30D158' });
+  assert.deepEqual(Wo.next, { label: 'Bio', first: 'Bio', count: 1, tint: 'rgba(48,209,88,0.25)', color: '#30D158' });
   assert.equal(tileOf(ho), 'Morgen Bio');
   // The same with WCS default sensors (no number anywhere).
   const hw = wcs();
