@@ -6,22 +6,23 @@
 // slot. Expected: the watering words stay while the popup is open.
 import { open, casoraDashboard, dashboard, check, need, finish } from './lib.mjs';
 
-const dash = await casoraDashboard((d) => !d.mobile && JSON.stringify(d.config).includes('casora_plant'));
-await need('ein Casora-Dashboard mit Pflanze', dash);
+const dash = await casoraDashboard((d) => !d.mobile && (d.config.views || []).length > 1);
+await need('ein Casora-Dashboard', dash);
 const { page } = await open({ width: 1440, height: 900 });
-let hit = null;
-for (const v of (dash.config.views || []).map((x, i) => x.path || String(i))) {
-  await dashboard(page, dash.url + '/' + v, 3);
-  hit = await page.evaluate(() => {
-    const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).some((t) => /casora_plant/.test(t))
-      && x.getBoundingClientRect().width > 40);
-    if (!b) return null;
-    b.scrollIntoView({ block: 'center' });
-    const r = b.getBoundingClientRect();
-    return { x: r.x + 30, y: r.y + r.height / 2 };
-  });
-  if (hit) break;
-}
+await dashboard(page, dash.url, 3);
+// A plant tile built in the browser (qa-arbeit has none on its pages), nothing is saved.
+const hit = await page.evaluate(async () => {
+  const ha = document.querySelector('home-assistant');
+  const plant = Object.keys(ha.hass.states).find((i) => /^plant\./.test(i));
+  if (!plant) return null;
+  const h = await window.loadCardHelpers();
+  const el = h.createCardElement({ type: 'custom:button-card', template: 'casora_plant', entity: plant });
+  el.id = 'qa-r589-plant'; el.hass = ha.hass; el.style.cssText = 'position:fixed;left:300px;top:300px;width:220px;height:140px;z-index:99990;';
+  ha.shadowRoot.appendChild(el);
+  await new Promise((r) => setTimeout(r, 1500));
+  const r = el.getBoundingClientRect();
+  return r.width > 40 ? { plant, x: r.x + 30, y: r.y + r.height / 2 } : null;
+});
 await need('eine Pflanzen-Kachel', hit);
 // The test house has no watering jump in its history: hand the popup a watering result as the history would.
 await page.evaluate(() => {

@@ -122,4 +122,15 @@ console.log('ok house tile = Home badge (group with rooms beside it)');
   assert.deepEqual(t, badge, 'Studio preview: the same count');
   assert.equal(typeof window._casoraHomeLightVars, 'function', 'restored after the preview');
 }
+// button-card hands templates its variables as a proxy that evaluates each one on read; the tile's own
+// active_override calls _casoraLightScope again, so reading every variable (Object.assign) is a loop
+// („Detected a loop while evaluating variable active_override“, gate 07.11.2026, r316): the tile showed an error card.
+{
+  window._casoraLovelaceCfg = () => cfg;
+  delete window._casoraHomeLightC;
+  const own = { ...tileVars, light_rooms_auto: true, lights: [tile.entity], active_override: null };
+  const proxied = new Proxy(own, { get: (o, k) => { if (k === 'active_override') throw new Error('loop: active_override'); return o[k]; },
+    getOwnPropertyDescriptor: (o, k) => Object.getOwnPropertyDescriptor(o, k) });
+  assert.deepEqual(window.casoraLightTally(S[tile.entity], S, h, proxied), badge, 'proxied variables: no other variable read');
+}
 console.log('house_light_tile_follows_badge: ok');

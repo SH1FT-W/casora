@@ -525,7 +525,9 @@ window._casoraLightScope = function (entity, states, hass, vars) {
       && !(isArr(variables.lights) && variables.lights.length > 0 && variables.light_rooms_auto !== true)) {
     var hv = window._casoraHomeLightVars ? window._casoraHomeLightVars() : null;
     if (hv) {
-      variables = Object.assign({}, variables, hv, { lights: [], popup_group: null, group_entity: null });
+      /* Only the keys read below: button-card's variables are a proxy that evaluates each one on read, and the
+         tile's active_override calls back in here (a loop the card shows as an error). */
+      variables = Object.assign({ house: true, group_rooms: variables.group_rooms }, hv, { lights: [], popup_group: null, group_entity: null });
       eid = null;
     }
   }
