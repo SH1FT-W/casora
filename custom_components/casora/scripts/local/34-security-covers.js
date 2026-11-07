@@ -3,10 +3,12 @@
 // (CASORA_SETTINGS.security.covers); without any, nothing changes. "Evening and night only" (on by default,
 // stored only as covers_night: false) counts them from sunset to sunrise (sun.sun below_horizon; without
 // sun.sun always). A selected cover is open when it is not fully closed: state other than closed, or
-// current_position above 0. Unavailable/unknown covers are left out of the count (as the cover badge
+// current_position above 0 – or above security.closed_up_to while at rest (issue 138, also for gates). Unavailable/unknown covers are left out of the count (as the cover badge
 // hides itself then) and listed in the popup as unavailable. Garage doors, gates and doors (device_class
 // garage/gate/door) already count as "Tor offen" in the security badge and are left out here.
 //   C.cfg()                                   → { ids, night }
+//   C.closedUpTo()                            → security.closed_up_to (0–20, else 0)
+//   C.coverOpen(st, kind)                     → window.casoraCoverOpen: kind 'gate' or a picked cover; true | false | null
 //   C.isOpen(st)                              → true | false | null (null = unavailable/unknown)
 //   C.isNight(states)                         → true from sunset to sunrise, true without sun.sun
 //   C.scan(states, hass, user)                → { on, active, ids, open, closed, dead, count }
@@ -32,14 +34,30 @@
     return { ids: ids, night: s.covers_night !== false };
   };
 
-  C.isOpen = function (st) {
+  // Issue 138: security.closed_up_to, whole percent 0–20 (Studio „Gilt als geschlossen bis“). A cover at rest whose
+  // current_position is at or below it counts as closed – a garage door left ajar for air. Anything else: 0, as before.
+  C.closedUpTo = function () {
+    var v = (((window.CASORA_SETTINGS || {}).security) || {}).closed_up_to;
+    return typeof v === 'number' && Math.floor(v) === v && v >= 0 && v <= 20 ? v : 0;
+  };
+
+  // Open for security? The one rule for gates and the picked covers (security badge, its level, arm warning, this module).
+  // kind 'gate' (garage/gate/door): open/opening count, as HA reports them. Otherwise (a picked cover): anything but
+  // fully closed. Opening/closing are in motion and never fall under closed_up_to. null: missing, unavailable, unknown.
+  C.coverOpen = function (st, kind) {
     if (!st) return null;
     var s = low(st.state);
     if (!s || s === 'unavailable' || s === 'unknown') return null;
     var p = st.attributes && st.attributes.current_position;
-    var pos = p == null || p === '' ? NaN : Number(p);
+    var pos = p == null || p === '' || typeof p === 'boolean' ? NaN : Number(p);
+    var t = C.closedUpTo();
+    if (t > 0 && (s === 'open' || s === 'closed') && isFinite(pos) && pos <= t) return false;
+    if (kind === 'gate') return s === 'open' || s === 'opening';
     return s !== 'closed' || (isFinite(pos) && pos > 0);
   };
+  window.casoraCoverOpen = C.coverOpen;
+
+  C.isOpen = function (st) { return C.coverOpen(st, 'blind'); };
 
   C.isNight = function (states) {
     var sun = states && states['sun.sun'];

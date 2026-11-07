@@ -436,6 +436,32 @@
             if (v === false) sec.covers_night = false; else delete sec.covers_night;
           }, window.casoraI18n ? window.casoraI18n.t("Evening and night only") : "Evening and night only"));
         }
+        // Issue 138: a cover at rest at or below this position counts as closed – gates and the picked covers
+        // (window.casoraCoverOpen, 34-security-covers.js). Whole percent 0–20; empty or 0 = as before, not stored.
+        // A draft like the rest: _csSave checks the range before anything is written.
+        const upRow = self._flowRow(g, { title: "Counts as closed up to", sub: "For gates or blinds left open a crack for air." });
+        const upWrap = document.createElement("div");
+        upWrap.className = "cs-num";
+        const upIn = document.createElement("input");
+        upIn.type = "text";
+        upIn.inputMode = "numeric";
+        upIn.className = "casora-psec-upto";
+        upIn.placeholder = "0";
+        upIn.value = sec.closed_up_to != null ? String(sec.closed_up_to) : "";
+        upIn.setAttribute("aria-label", window.casoraI18n ? window.casoraI18n.t("Counts as closed up to") : "Counts as closed up to");
+        upIn.setAttribute("data-no-i18n", "");
+        upIn.oninput = () => {
+          const v = upIn.value.trim();
+          if (!v) delete sec.closed_up_to;
+          else sec.closed_up_to = /^\d+$/.test(v) ? Number(v) : NaN;
+          if (sec.closed_up_to === 0) delete sec.closed_up_to;
+          if (typeof self._csBar === "function") self._csBar();
+        };
+        const upUnit = document.createElement("span");
+        upUnit.textContent = "%";
+        upUnit.setAttribute("data-no-i18n", "");
+        upWrap.append(upIn, upUnit);
+        upRow.row.appendChild(upWrap);
         // Garage doors, gates and doors already count as "gate open" in the security badge.
         const GATE = ["garage", "gate", "door"];
         const reg = hass.entities || {};
