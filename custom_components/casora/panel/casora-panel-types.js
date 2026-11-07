@@ -449,7 +449,8 @@ window.CASORA_TILE_TYPES = [
     icon: "co", color: "var(--casora-color-green, #30D158)", entityLabel: "Carbon monoxide", entityPlaceholder: "Your CO sensor",
     onlyIf: (hass) => !!(hass && hass.states && Object.keys(hass.states).some((id) => id.startsWith("sensor.")
       && ((hass.states[id].attributes || {}).device_class === "carbon_monoxide"))),
-    community: { desc: "Carbon monoxide in ppm on the tile, the symbol in the color of its level: green, from 30 ppm yellow, from 50 orange, from 100 red. The popup shows the value in a ring with the four levels, the history of 24 hours and 7 days, what to do when it rises and when it was last raised, plus battery, self-test and alarm of the detector. For every CO sensor, e.g. Matter smoke and CO alarms." },
+    community: { desc: "Carbon monoxide in ppm on the tile, the symbol in the color of its level: green, from 30 ppm yellow, from 50 orange, from 100 red. The popup shows the value in a ring with the four levels, the history of 24 hours and 7 days, what to do when it rises and when it was last raised, plus battery, self-test and alarm of the detector. For every CO sensor, e.g. Matter smoke and CO alarms.",
+      darkShots: true },
     fields: [ICON, TITLE_NAME] },
   // Velair (community card, issue #32): a climate Velair (HACS, domain velair) plans. Tile = the thermostat tile;
   // the popup adds Velair's schedule (today, week, on/off, editing a day) from Velair's WebSocket API and services

@@ -184,15 +184,38 @@
       if (el && window._hpStageChart && window._hpPlantCfg && window._hpPlantCfg[key]) window._hpStageChart(el, key);
       var slot = window._hpPlantCfg && window._hpPlantCfg[key]
         ? '<div class="hp-chart-slot" style="min-height:' + (window.innerWidth <= 760 ? 140 : 160) + 'px;pointer-events:auto;"></div>' : '';
-      var range = slot ? SPANS.map(function (s) { return { label: s[1], active: s[0] === span, attrs: { 'data-hp-metric': C.chartKey(c.id, s[0]) } }; }) : null;
-      var html = UI.stage('chart', { caption: 'Kohlenmonoxid', value: m.dead ? 'Nicht verfügbar' : m.ppm == null ? '–' : fmt(m.ppm),
-        unit: m.ppm == null ? '' : m.unit, word: m.dead || null, trend: '', read: m.ppm == null ? null : c.id,
-        state: m.dead ? 'na' : null, chart: slot || null, range: range,
-        ring: { min: 0, max: C.MAX, color: C.color(m.lv), marks: C.LIMITS.slice() } });
-      // Tapping a range segment switches the chart in the slot (_hpPlantTap → _hpPlantShow, as the printer's power).
-      return slot ? '<div data-casora-nodismiss="" ontouchstart="window._hpPlantTap&&window._hpPlantTap(event,\'s\')"'
-        + ' ontouchend="window._hpPlantTap&&window._hpPlantTap(event,\'t\')" onclick="window._hpPlantTap&&window._hpPlantTap(event,\'c\')">'
-        + html + '</div>' : html;
+      // button-card finds the entity id in this template and redraws the stage on every whole ppm, which mounted the
+      // chart into a fresh slot each time (r590, the fault of r303/r488). The HTML is frozen per range, unit and state
+      // kind: the number follows live (data-hp-live), arc and colour of the ring are painted in place below – the
+      // same HTML, no redraw. Range switch, unit and (un)availability still draw the stage anew.
+      var sk = [key, m.unit, m.dead ? 'dead' : m.ppm == null ? 'u' : 'n', slot ? 1 : 0].join('|');
+      var html;
+      if (el && el._casoraCoS6 && el._casoraCoS6.k === sk) html = el._casoraCoS6.h;
+      else {
+        var range = slot ? SPANS.map(function (s) { return { label: s[1], active: s[0] === span, attrs: { 'data-hp-metric': C.chartKey(c.id, s[0]) } }; }) : null;
+        html = UI.stage('chart', { caption: 'Kohlenmonoxid', value: m.dead ? 'Nicht verfügbar' : m.ppm == null ? '–' : fmt(m.ppm),
+          unit: m.ppm == null ? '' : m.unit, word: m.dead || null, trend: '', read: m.ppm == null ? null : c.id,
+          live: m.ppm == null ? null : c.id, liveDigits: m.ppm == null ? null : 0,
+          state: m.dead ? 'na' : null, chart: slot || null, range: range,
+          ring: { min: 0, max: C.MAX, color: C.color(m.lv), marks: C.LIMITS.slice() } });
+        // Tapping a range segment switches the chart in the slot (_hpPlantTap → _hpPlantShow, as the printer's power).
+        if (slot) html = '<div data-casora-nodismiss="" ontouchstart="window._hpPlantTap&&window._hpPlantTap(event,\'s\')"'
+          + ' ontouchend="window._hpPlantTap&&window._hpPlantTap(event,\'t\')" onclick="window._hpPlantTap&&window._hpPlantTap(event,\'c\')">'
+          + html + '</div>';
+        if (el) el._casoraCoS6 = { k: sk, h: html };
+      }
+      // The ring follows the reading without new HTML: arc and knob through the shared dial painter
+      // (UI.dialPaint, the live S1/S3 dials use the same one), the colour of the level on the fill.
+      if (el && UI.dialPaint && UI.dialPct) {
+        var pct = m.ppm == null ? 0 : UI.dialPct(m.ppm, 0, C.MAX), col = C.color(m.lv);
+        setTimeout(function () {
+          var dl = el.shadowRoot && el.shadowRoot.querySelector('.hui-dl');
+          if (!dl) return;
+          UI.dialPaint(dl, pct);
+          dl.querySelectorAll('.fl').forEach(function (p) { p.style.stroke = col; });
+        }, 0);
+      }
+      return html;
     }
     if (part === 'todo') {
       if (m.lv == null) return '';
