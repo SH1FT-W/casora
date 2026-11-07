@@ -65,6 +65,11 @@
         "daily": "Giornaliero",
         "manual": "Solo premendo un pulsante"
       }
+    },
+    "ai_choice": {
+      "options": {
+        "mcp": "Il tuo assistente (MCP)"
+      }
     }
   },
   "services": {
@@ -196,6 +201,20 @@
       "name": "Panoramica configurazione",
       "description": "Solo lettura: stanze, dispositivi senza area e dispositivi non ancora su un riquadro Casora, ciascuno con un tipo di riquadro suggerito. Per il tuo assistente, ad esempio tramite un server MCP."
     },
+    "setup_plan": {
+      "name": "Proponi una disposizione",
+      "description": "Controlla una disposizione proposta (quale dispositivo va su un riquadro in quale area, con nome e tipo di riquadro) e risponde con un'anteprima. Non modifica nessuna dashboard: il Casora Studio mostra la proposta, tu la controlli, aggiungi i riquadri e salvi. Per il tuo assistente, per esempio tramite un server MCP.",
+      "fields": {
+        "dashboard": {
+          "name": "Dashboard",
+          "description": "Indirizzo (url_path) di una dashboard Casora. Vuoto: l'unica, altrimenti la prima."
+        },
+        "rooms": {
+          "name": "Stanze",
+          "description": "Elenco di {area_id, devices: [{device_id, name?, tile?}]}: name è il nome del riquadro, tile il tipo di riquadro (vuoto: il suggerimento di Casora)."
+        }
+      }
+    },
     "set_timer": {
       "name": "Imposta timer",
       "description": "Spegne o accende un'entità dopo un numero di minuti. Sostituisce un timer esistente per la stessa entità. Allo scadere del timer Casora emette l'evento casora_timer_finished (entity_id, action, reason: expired, manual o cancelled). Può rispondere con entity_id, at e start.",
@@ -297,6 +316,34 @@
           "description": "Interruttore che mostra «Fatto»"
         }
       }
+    },
+    "ai_jobs": {
+      "name": "Lavori IA aperti",
+      "description": "Solo lettura: i lavori IA che aspettano il tuo assistente (opzione IA “Il tuo assistente (MCP)”), con istruzioni, campi di risposta e allegati."
+    },
+    "ai_answer": {
+      "name": "Rispondi a un lavoro IA",
+      "description": "Il tuo assistente risponde a un lavoro IA aperto. Controlla la risposta con i campi del lavoro e restituisce ok o gli errori.",
+      "fields": {
+        "job_id": {
+          "name": "Lavoro",
+          "description": "job_id da casora.ai_jobs."
+        },
+        "data": {
+          "name": "Risposta",
+          "description": "Un oggetto con le chiavi dei campi del lavoro."
+        }
+      }
+    },
+    "ai_cancel": {
+      "name": "Annulla un lavoro IA",
+      "description": "Scarta un lavoro IA aperto; la funzione che lo aspetta segnala un errore.",
+      "fields": {
+        "job_id": {
+          "name": "Lavoro",
+          "description": "job_id da casora.ai_jobs."
+        }
+      }
     }
   },
   "entity": {
@@ -356,6 +403,12 @@
     },
     "timer_invalid_minutes": {
       "message": "Minuti non validi: {minutes}. Usa un numero intero da 1 a {max}."
+    },
+    "setup_plan_no_dashboard": {
+      "message": "Non c'è ancora una dashboard Casora. Creane prima una nel Casora Studio."
+    },
+    "setup_plan_not_casora": {
+      "message": "{dashboard} non è una dashboard Casora. Dashboard Casora: {dashboards}"
     }
   },
   "issues": {

@@ -6,10 +6,9 @@ erst die Grundsätze, dann die Teile von oben nach unten, dann Maße, Zustände 
 
 - **Theme bleibt**: Farben, Flächen, Schrift, Schatten und Radien kommen weiter aus „Casora“ (`theme_weich.yaml`) und
   [design-regeln.md](design-regeln.md). Neu ist nur der **Aufbau**.
-- **Löst ab**: Kopf (Regel 1, Symbol-Kachel), Hauptbereich (Regel 3) und Aktionen (Regel 4) der
-  [Blaupause v2](popup-blaupause.md). Was v2 sonst sagt (Zeilenarten, Unterseiten, Leer,
-  Breite, Symmetrie, Zugang), gilt weiter – Übersicht in §15.
-- **Arbeitsanweisung** für den Umbau aller Popups: [popup-rework-v3-auftrag.md](popup-rework-v3-auftrag.md).
+- **Einzige Popup-Quelle.** Was aus der Blaupause v2 weiter gilt, steht in §15; wie man ein neues Popup baut
+  (Dateien, Muster, Checkliste), in §18. Die alten Dokumente (v2, Blaupause, beide Umbau-Aufträge) liegen nur noch
+  zum Nachlesen unter [archiv/](archiv/). Der Umbau aller Popups ist seit 06.11.2026 abgeschlossen.
 - Nichts auf dieser Seite ist „OFFEN“. Passt ein Popup in keine Regel, gilt die **Rückfallregel** in §4.7.
 
 ![Licht nach v3: schlanker Kopf, Bühne mit Regler und Lichtfarbe, Szenen als Schnellwahl, Leuchten als Liste](bilder/popup-v3-licht.webp)
@@ -196,8 +195,8 @@ der Zustand. Sie zeigt dieselbe Seite, die das Gerät auch einzeln öffnet (ein 
 
 ### 4.6 Zuordnung ohne Nachdenken
 
-Für jedes Popup steht der Typ in der Tabelle des Auftrags
-([popup-rework-v3-auftrag.md §5](popup-rework-v3-auftrag.md)). Neue Popups wählen nach dieser Reihenfolge:
+Für jedes bestehende Popup steht der Typ in der Tabelle des (abgeschlossenen) Auftrags
+([archiv/popup-rework-v3-auftrag.md §5](archiv/popup-rework-v3-auftrag.md)). Neue Popups wählen nach dieser Reihenfolge:
 1. Gibt es einen Wert, den man stufenlos stellt? → S1 (Helligkeit/Lautstärke) bzw. S3 (Position).
 2. Stellt man einen Zielwert in Schritten? → S2.
 3. Läuft ein Programm mit Ende? → S4.
@@ -493,23 +492,30 @@ Nicht zurück: #35 (Jalousie-Stufen bleiben drei Monde: Auf · Beschatten · Zu)
 | `--casora-v3-head-title-fs` | 24 (Handy 22) | Titel im Kopf |
 | `--casora-pv-*` | siehe `casora-core.js` (Variante B) | Listen, Segmente, Überschriften |
 
-## 15. Verhältnis zur Blaupause v2
+## 15. Was aus v2 weiter gilt
 
-| v2 | in v3 |
-|---|---|
-| Regel 1 Kopf mit Symbol-Kachel | **ersetzt** durch §3 (ohne Kachel) |
-| Regel 2 Hauptschalter | gilt |
-| Regel 3 Hauptbereich | **ersetzt** durch §4 Bühne; Diagramme außerhalb der Bühne nach §7 |
-| Regel 4 Aktionen-Reihe | **ersetzt**: Hauptaktion in der Bühne (S4/S7), Wahlen als Schnellwahl §5; `UI.actions` nur noch für Sammel-Popups ohne Bühnen-Aktion |
-| Regel 5 Abschnittsfolge | gilt (§6) |
-| Regel 6 Zeilenarten | gilt |
-| Regel 7 Unterseiten | gilt (‹ im Kopf) |
-| Regel 8 Weitere Einstellungen | **entfällt** (§8) |
-| Regel 9 Lange Listen, Mehr | Lange Listen gilt, Mehr **entfällt** (§8) |
-| Regel 10 Leer, aus, offline | gilt, ergänzt um §4.5 |
-| Regel 11 Breite, Zugang | gilt (552/900), ergänzt um §2 |
-| Regel 12 Symmetrie | gilt |
-| Entscheidungen 1–6 (26.10.) | gelten; „ein Knopf-Stil“ (6) jetzt als Pille in der Bühne |
+Kopf, Hauptbereich und Aktionen-Reihe von v2 sind durch §3 bis §5 ersetzt, „Weitere Einstellungen“ und „Mehr“ entfallen
+(§8). Weiter gilt:
+
+1. **Hauptschalter** schaltet, was die Kachel schaltet (Licht, Schalter, Lüfter, Fernseher, Frigate-Erkennung). Nie bei
+   Schloss, Alarm, Tor, Sirene: dort eine Hauptaktion mit Rückfrage. Ist „Aus“ ein Modus (Heizung), bleibt es Modus.
+   Mit Schalter gibt es kein zweites Aus/An; einen Modus antippen schaltet ein.
+2. **Zeilen** (`UI.row.*`): Schalter-Zeile (echter Schalter; gesperrt grau mit Grund) · Wert-Zeile · Weiter-Zeile ›
+   (öffnet eine Seite mit ‹) · Weg-Zeile ↗ (verlässt Casora) · Aktions- und Auswahl-Zeile ohne Pfeil (gewählt:
+   hinterlegt). In Sammel-Popups: Schalter schaltet, Zeile öffnet. **› heißt immer: öffnet eine Seite mit ‹.**
+3. **Unterseiten** im selben Popup (`casoraPopup.sub`, `UI.page`): ‹ links, Etikett = Seite davor, kurzer Titel, kein
+   fremder Hauptschalter, höchstens 2 Ebenen. Bearbeiten ist eine Unterseite mit „Speichern“.
+4. **Lange Listen**: ab 12 Zeilen die ersten 12 und „Alle (n) ›“. Keine Textlinks, keine einzelnen Fuß-Pillen.
+5. **Leer, aus, offline** (ergänzt §4.5): eine Leer-Zeile (`UI.empty`) genau dort, wo Inhalt fehlt, mit höchstens einer
+   Aktion. Nicht erreichbar: Statuszeile sagt es, Bedienung grau, letzte Werte mit „zuletzt …“.
+6. **Breite**: 552 einspaltig, 900 bei zwei Spalten oder Bild, über `window.casoraPopupWidth('one' | 'two' | 'image')`.
+7. **Symmetrie**: zwei Spalten beginnen auf derselben Höhe; das Layout meldet sein Paar mit `UI.colsMark(a, b)` an.
+8. **Gefährliches** (Entriegeln, Sirene) nie gefüllt, immer mit Rückfrage; mehrere Schlösser: „Alle verriegeln“ gefüllt,
+   „Alle entriegeln“ ungefüllt.
+9. **Diagramm umschalten** (Batterien, Pflanze, Luftreiniger): Zeile tippen wechselt das Diagramm im selben Popup,
+   gewählte Zeile hinterlegt, kein ›.
+10. **Eigene Bühnen** behalten: Farbrad, Kaffee-Getränke, Fußball-Tabelle, Abfall-Kalender, Rezepte, Frigate-Videos,
+    Kamera (900 breit, Player im Rahmen). Glocke und Halten-Menü bleiben Menüs mit denselben Wörtern.
 
 ## 16. Richtig und falsch
 
@@ -540,3 +546,28 @@ Unterseite eines Raums aus der Fußbodenheizung (Desktop und Handy):
 Im Gruppen-Mockup oben steht noch „Durchschnitt im Haus“ neben ±; gebaut wird nach §4.4 (Ziel aller Räume).
 
 Die Mockups zeigen Aufbau und Maße; Symbole und Farben im echten Popup kommen aus dem Rahmen.
+
+## 18. Ein neues Popup bauen
+
+**Dateien**
+
+| Teil | Datei |
+|---|---|
+| Inhalt | Modul `scripts/local/NN-name.js` (`P.popup(states, hass, variables)`, Teile über `P.sec`) |
+| Öffnen + Stil | Vorlage `casora_popup_<name>` in `dashboards/casora/button_card_templates.json`, `variant: 'v3'` in jedem `casora_popup` der Vorlage (tap und hold) |
+| Kachel verbinden | Kachel-Vorlage erbt `"template": ["casora_entity", "casora_popup_<name>"]` |
+| Texte | deutsch im Modul, englisch in `translations/dashboard/phrases/en.json`, danach `i18ncheck` |
+| Test | `dev/unit/<name>.mjs`; mit Test-HA `dev/qa/regress/rNNN_<name>.mjs` |
+
+Vorbilder: CO-Melder (`42-co.js`, ein kleines vollständiges v3-Popup), Pulse (`14-pulse.js`). Live bleibt nur, was eine
+eigene Karte mit `triggers_update` ist (`_casoraSoftKit.secCard`): `content` wird einmal beim Öffnen ausgewertet.
+
+**Checkliste**
+
+- [ ] Kopf vom Rahmen (§3), Bühne nach §4 mit `UI.stage`, nichts doppelt (Zustand als Wort im Kopf, Wert auf der Bühne).
+- [ ] Schnellwahl mit `UI.quick`, höchstens 4, nichts Gefährliches (§5).
+- [ ] Höchstens ein Diagramm außerhalb der Bühne, Abschnitt „Verlauf“ 120 hoch, Farben aus Tokens statt Hex (§7).
+- [ ] Listen über `UI.section`/`UI.row.*`, Folge Bedienung → Zustand → Verlauf (§6), keine Einstellungen, kein Mehr (§8).
+- [ ] Aus, offline, leer, lange Namen, nicht verfügbar geprüft: Text statt `undefined`/`NaN`, keine Konsolenmeldung.
+- [ ] `node dev/unit/popup_v3.mjs` grün.
+

@@ -65,6 +65,11 @@
         "daily": "Diario",
         "manual": "Solo al pulsar un botón"
       }
+    },
+    "ai_choice": {
+      "options": {
+        "mcp": "Tu propio asistente (MCP)"
+      }
     }
   },
   "services": {
@@ -196,6 +201,20 @@
       "name": "Resumen de configuración",
       "description": "Solo lectura: habitaciones, dispositivos sin área y dispositivos que aún no están en ningún mosaico de Casora, cada uno con un tipo de mosaico sugerido. Para tu propio asistente, por ejemplo a través de un servidor MCP."
     },
+    "setup_plan": {
+      "name": "Proponer una distribución",
+      "description": "Comprueba una distribución propuesta (qué dispositivo va en una tarjeta de qué área, con nombre y tipo de tarjeta) y responde con una vista previa. No cambia ningún panel: el Casora Studio muestra la propuesta, la revisas, añades las tarjetas y guardas. Para tu propio asistente, por ejemplo a través de un servidor MCP.",
+      "fields": {
+        "dashboard": {
+          "name": "Panel",
+          "description": "Dirección (url_path) de un panel de Casora. Vacío: el único o, si no, el primero."
+        },
+        "rooms": {
+          "name": "Habitaciones",
+          "description": "Lista de {area_id, devices: [{device_id, name?, tile?}]}: name es el nombre de la tarjeta, tile el tipo de tarjeta (vacío: la propuesta de Casora)."
+        }
+      }
+    },
     "set_timer": {
       "name": "Programar temporizador",
       "description": "Apaga o enciende una entidad tras un número de minutos. Reemplaza un temporizador existente para la misma entidad. Cuando termina el temporizador, Casora lanza el evento casora_timer_finished (entity_id, action, reason: expired, manual o cancelled). Puede responder con entity_id, at y start.",
@@ -297,6 +316,34 @@
           "description": "Interruptor que muestra «Hecho»"
         }
       }
+    },
+    "ai_jobs": {
+      "name": "Trabajos de IA pendientes",
+      "description": "Solo lectura: los trabajos de IA que esperan a tu propio asistente (opción de IA “Tu propio asistente (MCP)”), con instrucciones, campos de respuesta y adjuntos."
+    },
+    "ai_answer": {
+      "name": "Responder un trabajo de IA",
+      "description": "Tu propio asistente responde un trabajo de IA pendiente. Comprueba la respuesta con los campos del trabajo y devuelve ok o los errores.",
+      "fields": {
+        "job_id": {
+          "name": "Trabajo",
+          "description": "job_id de casora.ai_jobs."
+        },
+        "data": {
+          "name": "Respuesta",
+          "description": "Un objeto con las claves de los campos del trabajo."
+        }
+      }
+    },
+    "ai_cancel": {
+      "name": "Cancelar un trabajo de IA",
+      "description": "Descarta un trabajo de IA pendiente; la función que lo espera informa de un error.",
+      "fields": {
+        "job_id": {
+          "name": "Trabajo",
+          "description": "job_id de casora.ai_jobs."
+        }
+      }
     }
   },
   "entity": {
@@ -356,6 +403,12 @@
     },
     "timer_invalid_minutes": {
       "message": "Minutos no válidos: {minutes}. Usa un número entero de 1 a {max}."
+    },
+    "setup_plan_no_dashboard": {
+      "message": "Todavía no hay ningún panel de Casora. Crea uno primero en el Casora Studio."
+    },
+    "setup_plan_not_casora": {
+      "message": "{dashboard} no es un panel de Casora. Paneles de Casora: {dashboards}"
     }
   },
   "issues": {

@@ -40,6 +40,12 @@ r = tempRange(5, 15, 2, false);
 assert.deepEqual([r.min, r.max, r.lo], [2, 15, 2], 'now below the forecast widens the day');
 r = tempRange(15, 5, 10, false);
 assert.deepEqual([r.min, r.max], [5, 15], 'low and high swapped by the source');
+// A narrow day (owner 07.11.2026): the scale keeps its smallest range, the band fills the whole ring –
+// no grey stubs at the ends – and the labels keep the real low and high.
+r = tempRange(2, 5, 3, false);
+assert.ok(r.max - r.min >= 4, 'narrow day: the smallest range holds: ' + JSON.stringify(r));
+assert.deepEqual(r.band, [r.min, r.max], 'the band fills the whole ring: ' + JSON.stringify(r));
+assert.deepEqual([r.lo, r.hi], [2, 5], 'the labels keep the real low and high');
 r = tempRange(10, 10, 10, false);
 assert.ok(r.max - r.min >= 4 && pct(r, 10) === 50 && r.lo === 10 && r.hi === 10, 'low == high: a small range around now: ' + JSON.stringify(r));
 r = tempRange(50, 52, 51, true);

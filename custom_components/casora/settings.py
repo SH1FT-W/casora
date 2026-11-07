@@ -609,11 +609,16 @@ async def ws_basis(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
 @callback
 def ws_ai_models(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
     """Which AI Casora would take for demanding tasks (the strongest sufficient one) and all the others."""
-    from .ki import ai_models, model_choices
+    from .ki import AI_MCP, OPT_AI, OPT_AI_WEB, _casora_options, ai_models, model_choices
 
     models = ai_models(hass)
+    # mcp: the AI features go to your own assistant (ai_jobs.py); the Studio's own AI steps still need an
+    # ai_task (the browser waits for their answer), so the setup assistant points to the MCP path instead.
+    # Either field counts: HA's options dialog can set just one (the Studio sets ai_task_entity).
+    opts = _casora_options(hass) or {}
     connection.send_result(msg["id"], {"best": next((m for m in models if m["ok"]), None), "all": models,
-                                       "choices": model_choices()})
+                                       "choices": model_choices(),
+                                       "mcp": AI_MCP in (opts.get(OPT_AI), opts.get(OPT_AI_WEB))})
 
 
 @callback

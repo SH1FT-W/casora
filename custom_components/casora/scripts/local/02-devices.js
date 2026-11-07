@@ -707,9 +707,24 @@
     }
     return null;
   };
-  /* Button only when an AI task is set up (Settings → AI tasks). */
+  /* Your own assistant over MCP answers Casora's AI (ai_jobs.py): the result sensors carry assistent: mcp (sensor.py). */
+  const KI_SENSORS = ['sensor.casora_energie_coach', 'sensor.casora_heizungs_coach', 'sensor.casora_lueftungs_coach',
+    'sensor.casora_kamera_ki', 'sensor.casora_pflanzen_ki', 'sensor.casora_aquarium_ki', 'sensor.casora_ebike_ki',
+    'sensor.casora_update_ki_analyse', 'sensor.casora_rezept_der_woche'];
+  const isMcp = (s) => !!(s && s.attributes && s.attributes.assistent === 'mcp');
+  /* Button only when an AI task is set up (Settings → AI tasks) or your own assistant answers. */
   window._casoraAiReady = function (states) {
-    return Object.keys(states || {}).some((k) => k.indexOf('ai_task.') === 0);
+    return Object.keys(states || {}).some((k) => k.indexOf('ai_task.') === 0) || KI_SENSORS.some((id) => isMcp((states || {})[id]));
+  };
+  /* While a feature runs: with your own assistant the job waits until it answers (hours, not seconds), so say that.
+     src: the feature's result sensor (state object or entity id). */
+  window._casoraAiWait = function (text, src) {
+    let s = src;
+    if (typeof src === 'string') {
+      const ha = document.querySelector('home-assistant');
+      s = ha && ha.hass && ha.hass.states ? ha.hass.states[src] : null;
+    }
+    return isMcp(s) ? 'Wartet auf deinen Assistenten …' : text;
   };
   window._casoraAqAi = function (a, states) {
     const UI = window._casoraUI; if (!UI) return '';
@@ -727,7 +742,7 @@
     const z = it && Z[it.zustand];
     const svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_aquarium_doktor', a))) + '"';
     let body = '';
-    if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">Claude wertet die letzten 7 Tage aus …</div>';
+    if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">' + esc(window._casoraAiWait('Claude wertet die letzten 7 Tage aus …', states[AQ_KI[0]])) + '</div>';
     else if (it && it.status === 'error') body = '<div style="font-size:15px;color:' + T.ink + ';">Auswertung fehlgeschlagen.</div>';
     else if (it && z) {
       body = '<div style="display:flex;align-items:center;justify-content:flex-start;gap:8px;text-align:left;">'
@@ -4273,10 +4288,21 @@
         // takes the field „chart“), with the range switch 24 Std. · 7 Tage · 30 Tage like the plant and reading pages.
         // The shared chart slot (_hpChartCfg / _hpPlantShow): each segment carries its chart key (data-hp-metric).
         if (c.power && fields.chart && typeof window._hpChartCfg === 'function' && UI.segments) {
-          var rng = [[c.power, '24h', '24 Std.'], ['pw7:' + c.power, '7d', '7 Tage'], ['pw30:' + c.power, '30d', '30 Tage']];
+          // Owner (06.11.2026): over 7/30 days the raw W line is spiky and unreadable. With an energy meter on the
+          // plug those ranges show the consumption per day as bars instead (long-term statistics, change per day –
+          // §7.2 „Balken für Summen je Zeitraum“), the keys and title of the energy rows („Verbrauch pro Tag“).
+          // Without an energy meter the smoothed power line stays.
+          var pwBars = c.energy && typeof window._hpBarCfg === 'function';
+          var rng = [[c.power, '24h', '24 Std.'],
+            [pwBars ? 'hwd7:' + c.energy : 'pw7:' + c.power, '7d', '7 Tage'],
+            [pwBars ? 'hwd30:' + c.energy : 'pw30:' + c.power, '30d', '30 Tage']];
           rng.forEach(function (r) {
+            if (r[0] === c.power) { window._hpChartCfg(r[0], 'Leistung', r[1], c.color, 120); return; }
+            // The plate keeps one height across the ranges (§7.1 Abschnitt „Verlauf“: 120).
+            if (pwBars) { window._hpBarCfg(r[0], c.energy, 'Verbrauch pro Tag', r[1], 1).height = 120; return; }
             var cfg = window._hpChartCfg(r[0], 'Leistung', r[1], c.color, 120);
-            if (r[0] !== c.power) { cfg.series[0].entity = c.power; if (window._hpSmooth) window._hpSmooth(r[0]); }
+            cfg.series[0].entity = c.power;
+            if (window._hpSmooth) window._hpSmooth(r[0]);
           });
           // HH.chart: the plate with its head and slot; the segments go inside the plate, under the chart.
           // L.wrap: the taps of chart keys (_hpPlantTap), as in the plug and temperature lists.

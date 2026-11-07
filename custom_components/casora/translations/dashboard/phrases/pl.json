@@ -2816,7 +2816,15 @@
     "Selbsttest gestartet": "Autotest uruchomiony",
     "Selbsttest starten? Der Melder piept laut.": "Uruchomić autotest? Czujnik głośno piszczy.",
     "Zuletzt erhöht": "Ostatni wzrost",
-    "Nicht in 7 Tagen": "Nie w ciągu 7 dni"
+    "Nicht in 7 Tagen": "Nie w ciągu 7 dni",
+    "Wartet auf deinen Assistenten …": "Czeka na twojego asystenta …",
+    "Dein Assistent hat nicht rechtzeitig geantwortet": "Twój asystent nie odpowiedział na czas",
+    "Zu viele offene Aufträge für deinen Assistenten": "Za dużo otwartych zadań dla twojego asystenta",
+    "Der Auftrag für deinen Assistenten wurde abgebrochen": "Zadanie dla twojego asystenta zostało anulowane",
+    "Neustart: der Auftrag für deinen Assistenten ist verfallen": "Restart: zadanie dla twojego asystenta przepadło",
+    "Claude prüft das Rad …": "Claude sprawdza rower …",
+    "Claude wertet die Heizwoche aus …": "Claude analizuje tydzień ogrzewania …",
+    "Claude wertet die letzten 7 Tage aus …": "Claude analizuje ostatnie 7 dni …"
   },
   "patterns": [
     [

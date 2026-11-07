@@ -2953,7 +2953,17 @@
     "Other dashboards and Home Assistant's own pages keep their look.": "Inne pulpity i strony Home Assistant zachowują swój wygląd.",
     "CO detector": "Czujnik CO",
     "Your CO sensor": "Twój czujnik CO",
-    "Carbon monoxide in ppm on the tile, the symbol in the color of its level: green, from 30 ppm yellow, from 50 orange, from 100 red. The popup shows the value in a ring with the four levels, the history of 24 hours and 7 days, what to do when it rises and when it was last raised, plus battery, self-test and alarm of the detector. For every CO sensor, e.g. Matter smoke and CO alarms.": "Tlenek węgla w ppm na kafelku, symbol w kolorze poziomu: zielony, od 30 ppm żółty, od 50 pomarańczowy, od 100 czerwony. Okno pokazuje wartość w pierścieniu z czterema poziomami, historię z 24 godzin i 7 dni, co robić, gdy wzrośnie, i kiedy ostatnio był podwyższony, a także baterię, autotest i alarm czujnika. Dla każdego czujnika CO, np. czujników dymu i CO z Matter."
+    "Carbon monoxide in ppm on the tile, the symbol in the color of its level: green, from 30 ppm yellow, from 50 orange, from 100 red. The popup shows the value in a ring with the four levels, the history of 24 hours and 7 days, what to do when it rises and when it was last raised, plus battery, self-test and alarm of the detector. For every CO sensor, e.g. Matter smoke and CO alarms.": "Tlenek węgla w ppm na kafelku, symbol w kolorze poziomu: zielony, od 30 ppm żółty, od 50 pomarańczowy, od 100 czerwony. Okno pokazuje wartość w pierścieniu z czterema poziomami, historię z 24 godzin i 7 dni, co robić, gdy wzrośnie, i kiedy ostatnio był podwyższony, a także baterię, autotest i alarm czujnika. Dla każdego czujnika CO, np. czujników dymu i CO z Matter.",
+    "Nothing is changed yet. Review it in the device assistant, add the tiles and save.": "Nic jeszcze nie zostało zmienione. Sprawdź to w asystencie urządzeń, dodaj kafelki i zapisz.",
+    "Your assistant suggests these tiles. Check where each one should go, add them, then save.": "Twój asystent proponuje te kafelki. Sprawdź, gdzie ma trafić każdy z nich, dodaj je i zapisz.",
+    "Suggested by your assistant": "Zaproponowane przez twojego asystenta",
+    "Review": "Przejrzyj",
+    "Suggestion discarded": "Propozycja odrzucona",
+    "Who answers": "Kto odpowiada",
+    "An AI task in Home Assistant, or your own assistant connected over MCP.": "Zadanie AI w Home Assistant albo własny asystent połączony przez MCP.",
+    "AI task": "Zadanie AI",
+    "Your own assistant (MCP)": "Własny asystent (MCP)",
+    "Casora's AI features wait for your assistant: ask it to do Casora's open AI jobs. Casora Studio's own AI steps still need an AI task.": "Funkcje AI Casory czekają na twojego asystenta: poproś go o wykonanie otwartych zadań AI Casory. Własne kroki AI w Casora Studio nadal wymagają zadania AI."
   },
   "patterns": [
     [
@@ -3659,6 +3669,18 @@
     [
       "^Part of (.+)$",
       "Część: {1}"
+    ],
+    [
+      "^Suggestion from your assistant: 1 device in 1 room$",
+      "Propozycja twojego asystenta: 1 urządzenie w 1 pokoju"
+    ],
+    [
+      "^Suggestion from your assistant: (\\d+) devices in 1 room$",
+      "Propozycja twojego asystenta: urządzenia: {1}, pokoje: 1"
+    ],
+    [
+      "^Suggestion from your assistant: (\\d+) devices in (\\d+) rooms$",
+      "Propozycja twojego asystenta: urządzenia: {1}, pokoje: {2}"
     ]
   ]
 }

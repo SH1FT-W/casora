@@ -13,13 +13,13 @@
 #   tools/release.sh 26.10.31 --publish   führt Tag, Push und gh release create danach aus
 #   tools/release.sh 26.10.31 --same-whats-new   WHATS_NEW darf wie beim letzten Release sein
 #   tools/release.sh 26.10.32 --andere-version   Version weicht bewusst von tools/next-version ab
-#   tools/release.sh 26.10.32 --patch   echter Notfall-Hotfix: Patch-Gate (dev/qa/gate.sh --patch) zugelassen
+#   tools/release.sh 26.10.32 --patch   Fix-Release unter der Woche: Patch-Gate (dev/qa/gate.sh --patch) zugelassen
 #   tools/release.sh --beta [--publish] Beta für Tester: nächste Nummer mit bK (26.10.58b1, b2 …), Vorabversion auf
 #                                       GitHub (HACS „Beta-Versionen anzeigen“; ohne HACS meldet sie Casoras Update-Entität mit der Option „Beta-Versionen“). Patch-Gate
 #                                       reicht; Pflicht nur .qa/release-notes-<version>.md (englisch, von Hand);
 #                                       kein CHANGELOG/WHATS_NEW/Website. Gepusht wird nur der Tag, main nicht –
 #                                       die Website zeigt weiter die stabile Version. Betas zählen nicht als Nummer.
-#                                       – nie automatisch, Standard bleibt das volle Gate
+#                                       – Standard ohne --patch bleibt das volle Gate (freitags, große Umbauten)
 #
 # Prüft: Version im Schema YY.M.N und = tools/next-version, sauberer Arbeitsstand, .qa/gate-<HEAD>.json
 # grün und vollständig (Kalender-Version: volles Gate, dev/qa/gate.sh --voll; Patch-Gate nur mit --patch),
@@ -85,7 +85,7 @@ ZIP_MSG="$(python3 tools/build-release-zip.py "$ZIP" --ref "$ZIP_COMMIT")" || fa
 ok "Paket $ZIP_MSG"
 
 # 1) Gate (inkl. sauberem Arbeitsstand; Kalender-Versionen brauchen das volle Gate, Patch-Gate nur mit --patch)
-[ -n "$PATCH" ] && echo "! --patch: Notfall-Hotfix, Patch-Gate wird angenommen"
+[ -n "$PATCH" ] && echo "! --patch: Fix-Release unter der Woche, Patch-Gate wird angenommen"
 if [ $BETA = 1 ]; then
   MSG="$(python3 tools/qa_gate.py --version "$NEXT" --patch)" || fail "$MSG"
 else

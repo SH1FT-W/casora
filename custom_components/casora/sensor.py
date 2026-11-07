@@ -19,7 +19,27 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .ki import FEATURES, LEGACY, LEGACY_UPDATE_EVENTS, OPT_PLAN_UPDATE
+from .ai_jobs import AI_MCP, LOST
+from .ki import FEATURES, LEGACY, LEGACY_UPDATE_EVENTS, OPT_AI, OPT_AI_WEB, OPT_PLAN_UPDATE
+
+# Features that ask the AI with web search (ki.py: ai_entity(web=True)).
+WEB_FEATURES = ("update", "rezept")
+_KEYED = ("kameras", "pflanzen", "becken", "analysen")
+
+
+def lost_jobs(attrs: dict[str, Any]) -> dict[str, Any]:
+    """After a restart a job for your own assistant is gone (ai_jobs.py keeps them in memory only):
+    a restored "running" becomes an error instead of waiting forever."""
+    out = dict(attrs)
+    if out.get("status") == "running":
+        out["status"] = "error"
+        out["fehler"] = LOST
+    for key in _KEYED:
+        items = out.get(key)
+        if isinstance(items, list):
+            out[key] = [{**it, "status": "error", "error": LOST} if isinstance(it, dict) and it.get("status") == "running"
+                        else it for it in items]
+    return out
 
 
 def _cut(value: Any, n: int) -> str:
@@ -164,6 +184,11 @@ class KiSensor(RestoreEntity, SensorEntity):
         # Update-Check: Zeitplan als Attribut (zeitplan: off/daily/manual). Bei „off“ zeigt
         # das Update-Popup keine KI-Zeilen und sperrt keine Updates.
         self._plan = (entry.options.get(OPT_PLAN_UPDATE) if entry else None) or "off"
+        # Your own assistant over MCP answers this feature (ai_jobs.py): attribute assistent: mcp, so the
+        # dashboard offers the feature without an ai_task and says it waits for the assistant while running.
+        opts = entry.options if entry else {}
+        ai = (opts.get(OPT_AI_WEB) if key in WEB_FEATURES else None) or opts.get(OPT_AI)
+        self._mcp = ai == AI_MCP
         obj = FEATURES[key]["object"]
         name, icon = NAMES[key]
         self._attr_unique_id = f"{DOMAIN}_{key}"
@@ -183,9 +208,10 @@ class KiSensor(RestoreEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
+        attrs = {**self._attrs, "assistent": AI_MCP} if self._mcp else self._attrs
         if self.key == "update":
-            return {**self._attrs, "zeitplan": self._plan}
-        return self._attrs
+            return {**attrs, "zeitplan": self._plan}
+        return attrs
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
@@ -199,7 +225,13 @@ class KiSensor(RestoreEntity, SensorEntity):
         last = await self.async_get_last_state()
         if last:
             self._attrs = {k: v for k, v in last.attributes.items()
-                           if k not in ("friendly_name", "icon", "device_class")}
+                           if k not in ("friendly_name", "icon", "device_class", "assistent")}
+            # A reload (options saved) keeps the open jobs and the running flows; only after a real
+            # restart (no reload, empty queue) is a restored "running" truly lost.
+            data = self.hass.data.get(DOMAIN, {})
+            jobs = data.get("ai_jobs")
+            if self._mcp and not data.get("reloading") and not (jobs and jobs.jobs):
+                self._attrs = lost_jobs(self._attrs)
             if self.key == "rezept":
                 self._state = last.state if last.state not in ("unknown", "unavailable") else None
             else:

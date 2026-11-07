@@ -2,7 +2,7 @@
 
     python3 dev/unit/qa_gate_patch_test.py
 
-Geprüft: Ein Patch-Gate reicht für ein Release YY.M.N nur mit --patch (bewusster Notfall-Hotfix),
+Geprüft: Ein Patch-Gate reicht für ein Release YY.M.N nur mit --patch (Fix-Release unter der Woche),
 nie von selbst; ein volles Gate reicht immer; ein Patch-Gate ohne grünes volles Bezugs-Gate nie.
 """
 

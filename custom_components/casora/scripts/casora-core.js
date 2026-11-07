@@ -9914,7 +9914,8 @@ window.casoraMenuGlass = {
     if (o.read && bits.length) out += '</span>';
     if (o.slotId || o.slotClass) {
       out += '<span class="hui-lslot' + (o.slotClass ? ' ' + esc(o.slotClass) : '') + '"'
-        + (o.slotId ? ' id="' + esc(o.slotId) + '"' : '') + '>' + esc(o.slotText || '') + '</span>';
+        + (o.slotId ? ' id="' + esc(o.slotId) + '"' : '') + '>'
+        + esc(o.slotText || (o.slotId && window._casoraSlotText && window._casoraSlotText[o.slotId]) || '') + '</span>';
     }
     (o.after || []).forEach(function (b) {
       if (b) out += SEP + '<span>' + esc(b) + '</span>';
@@ -10072,6 +10073,8 @@ window.casoraMenuGlass = {
         + esc(o.state) + '</div>';
     }
     if (o.caption != null || o.captionSlot) {
+      var kept = !o.caption && o.captionId && window._casoraSlotText ? window._casoraSlotText[o.captionId] : '';
+      if (kept) o = Object.assign({}, o, { caption: kept });
       out += '<div' + (o.captionId ? ' id="' + esc(o.captionId) + '"' : '')
         + ' style="font-size:' + (o.measure === 'sheet' ? '15px' : '14px')
         + ';font-weight:400;letter-spacing:-0.006em;'
@@ -12580,13 +12583,16 @@ window.casoraMenuGlass = {
 
   var PLANT_CACHE_V = 1;
   function plantWater(node, entityId, dryPct) {
-    if (!node || !entityId) return;
+    // The popup can hold the slot twice (a measuring clone next to the real head): paint every copy,
+    // or the words land in the clone and the visible line stays empty.
+    var nodes = (Array.isArray(node) ? node : [node]).filter(Boolean);
+    if (!nodes.length || !entityId) return;
     var hass = (document.querySelector('home-assistant') || {}).hass;
     if (!hass || !hass.callWS) return;
     var key = 'v' + PLANT_CACHE_V + ':' + entityId;
     window._casoraPlantW = window._casoraPlantW || {};
     var hit = window._casoraPlantW[key];
-    if (hit && Date.now() - hit.at < 300000) { paintPlant(node, hit.txt); return; }
+    if (hit && Date.now() - hit.at < 300000) { nodes.forEach(function (n) { paintPlant(n, hit.txt); }); return; }
 
     var end = new Date();
     var start = new Date(end.getTime() - 14 * 86400000);
@@ -12615,12 +12621,15 @@ window.casoraMenuGlass = {
     }).then(function (pts) {
       var txt = readPlant(pts, dryPct);
       window._casoraPlantW[key] = { at: Date.now(), txt: txt };
-      paintPlant(node, txt);
+      nodes.forEach(function (n) { paintPlant(n, txt); });
     });
   }
 
   function paintPlant(node, txt) {
     if (!node) return;
+    // Kept by the slot's id: the head is drawn again on every state update, and the new slot starts with this
+    // text instead of empty (owner 06.11.2026: „Gestern gegossen“ vanished after a few seconds).
+    if (node.id) (window._casoraSlotText = window._casoraSlotText || {})[node.id] = txt || '';
     node.textContent = txt || '';
     node.style.opacity = txt ? '1' : '0';
   }
@@ -12661,12 +12670,9 @@ window.casoraMenuGlass = {
     return bits.join(' · ');
   }
 
-  // ── Popup blueprint v2 (26.10.2026, docs/handbuch/popup-blaupause.md) ─────────────────────────────
-  // The pieces every popup composes, top to bottom: header (frame; sub pages via casoraPopup.sub), hero
-  // (one main area, built by the module: chart, picture, slider …), action row (actions), sections in the
-  // fixed order Bedienung → Zustand → Verlauf → Einstellungen (section), the row types (row.*), the last
-  // row „Weitere Einstellungen“ (settingsRow / settings), „Mehr (n) ⌄“ (more with hint), the empty row
-  // (empty) and the two widths (width). dev/unit/popup_blaupause.mjs keeps popups on these pieces.
+  // ── Popup pieces from blueprint v2, still used by v3 (docs/handbuch/popup-richtlinien-v3.md §15) ──────
+  // Sections in the fixed order Bedienung → Zustand → Verlauf (section), the row types (row.*), the empty row
+  // (empty), sub pages (casoraPopup.sub, page) and the two widths (width). dev/unit/popup_v3.mjs checks them.
   var SEC_HEAD = { control: 'Bedienung', state: 'Zustand', history: 'Verlauf', settings: 'Einstellungen' };
   var SEC_ORDER = ['control', 'state', 'history', 'settings'];
   var WIDTH = { one: 552, two: 900, image: 900 };
@@ -13060,9 +13066,10 @@ window.casoraMenuGlass = {
   window._casoraTempColor = tempColor;
   // Weather dial range (owner decision 01.11.2026): the ring runs from today's low (bottom left) to today's high (bottom
   // right), the knob sits where „now“ is between them. „Now“ outside the forecast widens the day to include it; a day
-  // narrower than 4 °C (7 °F) is widened around its middle so the knob still moves (band = the real low … high); without
-  // a forecast the old fixed scale −10 … 35 °C (14 … 95 °F). Returns { min, max, band, lo, hi } (band/lo/hi null
-  // without a forecast).
+  // narrower than 4 °C (7 °F) is widened around its middle so the knob still moves. The band always fills the whole
+  // ring (owner 07.11.2026: a narrow day left grey stubs at both ends); lo/hi stay the real low … high for the labels.
+  // Without a forecast the old fixed scale −10 … 35 °C (14 … 95 °F). Returns { min, max, band, lo, hi } (band/lo/hi
+  // null without a forecast).
   function tempRange(lo, hi, cur, fahrenheit) {
     var num = function (v) { return v == null || v === '' ? NaN : Number(v); };
     var l = num(lo), h = num(hi), c = num(cur);
@@ -13071,7 +13078,7 @@ window.casoraMenuGlass = {
     if (isFinite(c)) { l = Math.min(l, c); h = Math.max(h, c); }
     var span = fahrenheit ? 7 : 4, mn = l, mx = h;
     if (mx - mn < span) { var mid = (mn + mx) / 2; mn = mid - span / 2; mx = mid + span / 2; }
-    return { min: mn, max: mx, band: [l, h], lo: l, hi: h };
+    return { min: mn, max: mx, band: [mn, mx], lo: l, hi: h };
   }
   window._casoraTempRange = tempRange;
   var DIAL_CSS = '.hui-stage.dial{background:none;padding:0;gap:12px;align-items:center;}'

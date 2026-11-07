@@ -65,6 +65,11 @@
         "daily": "Dagelijks",
         "manual": "Alleen op een druk op de knop"
       }
+    },
+    "ai_choice": {
+      "options": {
+        "mcp": "Je eigen assistent (MCP)"
+      }
     }
   },
   "services": {
@@ -196,6 +201,20 @@
       "name": "Installatieoverzicht",
       "description": "Alleen lezen: kamers, apparaten zonder ruimte en apparaten die nog op geen Casora-tegel staan, elk met een voorgestelde tegelsoort. Voor je eigen assistent, bijvoorbeeld via een MCP-server."
     },
+    "setup_plan": {
+      "name": "Indeling voorstellen",
+      "description": "Controleert een voorgestelde indeling (welk apparaat op een tegel komt in welke ruimte, met tegelnaam en -type) en antwoordt met een voorbeeld. Wijzigt geen dashboard: de Casora Studio toont het voorstel, jij controleert het, voegt de tegels toe en slaat op. Voor je eigen assistent, bijvoorbeeld via een MCP-server.",
+      "fields": {
+        "dashboard": {
+          "name": "Dashboard",
+          "description": "Adres (url_path) van een Casora-dashboard. Leeg: het enige, anders het eerste."
+        },
+        "rooms": {
+          "name": "Ruimtes",
+          "description": "Lijst van {area_id, devices: [{device_id, name?, tile?}]}: name is de tegelnaam, tile het tegeltype (leeg: het voorstel van Casora)."
+        }
+      }
+    },
     "set_timer": {
       "name": "Timer instellen",
       "description": "Schakelt een entiteit na een aantal minuten uit of in. Vervangt een bestaande timer voor dezelfde entiteit. Als de timer afloopt, verstuurt Casora het event casora_timer_finished (entity_id, action, reason: expired, manual of cancelled). Kan antwoorden met entity_id, at en start.",
@@ -297,6 +316,34 @@
           "description": "Schakelaar die „Klaar” toont"
         }
       }
+    },
+    "ai_jobs": {
+      "name": "Openstaande AI-opdrachten",
+      "description": "Alleen lezen: de AI-opdrachten die op je eigen assistent wachten (AI-optie “Je eigen assistent (MCP)”), met instructies, antwoordvelden en bijlagen."
+    },
+    "ai_answer": {
+      "name": "AI-opdracht beantwoorden",
+      "description": "Je eigen assistent beantwoordt een openstaande AI-opdracht. Controleert het antwoord met de velden van de opdracht en geeft ok of de fouten terug.",
+      "fields": {
+        "job_id": {
+          "name": "Opdracht",
+          "description": "job_id uit casora.ai_jobs."
+        },
+        "data": {
+          "name": "Antwoord",
+          "description": "Een object met de sleutels van de velden van de opdracht."
+        }
+      }
+    },
+    "ai_cancel": {
+      "name": "AI-opdracht annuleren",
+      "description": "Verwijdert een openstaande AI-opdracht; de functie die erop wacht meldt een fout.",
+      "fields": {
+        "job_id": {
+          "name": "Opdracht",
+          "description": "job_id uit casora.ai_jobs."
+        }
+      }
     }
   },
   "entity": {
@@ -356,6 +403,12 @@
     },
     "timer_invalid_minutes": {
       "message": "Ongeldige minuten: {minutes}. Gebruik een geheel getal van 1 tot {max}."
+    },
+    "setup_plan_no_dashboard": {
+      "message": "Er is nog geen Casora-dashboard. Maak er eerst een aan in de Casora Studio."
+    },
+    "setup_plan_not_casora": {
+      "message": "{dashboard} is geen Casora-dashboard. Casora-dashboards: {dashboards}"
     }
   },
   "issues": {

@@ -2953,7 +2953,17 @@
     "Other dashboards and Home Assistant's own pages keep their look.": "Os outros painéis e as páginas do Home Assistant mantêm o seu aspeto.",
     "CO detector": "Detetor de CO",
     "Your CO sensor": "O teu sensor de CO",
-    "Carbon monoxide in ppm on the tile, the symbol in the color of its level: green, from 30 ppm yellow, from 50 orange, from 100 red. The popup shows the value in a ring with the four levels, the history of 24 hours and 7 days, what to do when it rises and when it was last raised, plus battery, self-test and alarm of the detector. For every CO sensor, e.g. Matter smoke and CO alarms.": "Monóxido de carbono em ppm no cartão, o símbolo na cor do seu nível: verde, a partir de 30 ppm amarelo, a partir de 50 laranja, a partir de 100 vermelho. A janela mostra o valor num anel com os quatro níveis, o histórico de 24 horas e 7 dias, o que fazer se subir e quando subiu pela última vez, além de bateria, autoteste e alarme do detetor. Para qualquer sensor de CO, p. ex. detetores Matter de fumo e CO."
+    "Carbon monoxide in ppm on the tile, the symbol in the color of its level: green, from 30 ppm yellow, from 50 orange, from 100 red. The popup shows the value in a ring with the four levels, the history of 24 hours and 7 days, what to do when it rises and when it was last raised, plus battery, self-test and alarm of the detector. For every CO sensor, e.g. Matter smoke and CO alarms.": "Monóxido de carbono em ppm no cartão, o símbolo na cor do seu nível: verde, a partir de 30 ppm amarelo, a partir de 50 laranja, a partir de 100 vermelho. A janela mostra o valor num anel com os quatro níveis, o histórico de 24 horas e 7 dias, o que fazer se subir e quando subiu pela última vez, além de bateria, autoteste e alarme do detetor. Para qualquer sensor de CO, p. ex. detetores Matter de fumo e CO.",
+    "Nothing is changed yet. Review it in the device assistant, add the tiles and save.": "Ainda nada foi alterado. Revê-a no assistente de dispositivos, adiciona os mosaicos e guarda.",
+    "Your assistant suggests these tiles. Check where each one should go, add them, then save.": "O teu assistente sugere estes mosaicos. Verifica onde vai cada um, adiciona-os e depois guarda.",
+    "Suggested by your assistant": "Sugerido pelo teu assistente",
+    "Review": "Rever",
+    "Suggestion discarded": "Sugestão descartada",
+    "Who answers": "Quem responde",
+    "An AI task in Home Assistant, or your own assistant connected over MCP.": "Uma tarefa de IA no Home Assistant ou o teu próprio assistente ligado por MCP.",
+    "AI task": "Tarefa de IA",
+    "Your own assistant (MCP)": "O teu próprio assistente (MCP)",
+    "Casora's AI features wait for your assistant: ask it to do Casora's open AI jobs. Casora Studio's own AI steps still need an AI task.": "As funções de IA do Casora esperam pelo teu assistente: pede-lhe que faça os trabalhos de IA pendentes do Casora. Os passos de IA do próprio Casora Studio continuam a precisar de uma tarefa de IA."
   },
   "patterns": [
     [
@@ -3659,6 +3669,18 @@
     [
       "^Part of (.+)$",
       "Parte de {1}"
+    ],
+    [
+      "^Suggestion from your assistant: 1 device in 1 room$",
+      "Sugestão do teu assistente: 1 dispositivo em 1 divisão"
+    ],
+    [
+      "^Suggestion from your assistant: (\\d+) devices in 1 room$",
+      "Sugestão do teu assistente: {1} dispositivos em 1 divisão"
+    ],
+    [
+      "^Suggestion from your assistant: (\\d+) devices in (\\d+) rooms$",
+      "Sugestão do teu assistente: {1} dispositivos em {2} divisões"
     ]
   ]
 }

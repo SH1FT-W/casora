@@ -779,11 +779,31 @@
       }
       const O = cs.O;
       if (page === "ai") {
+        // "mcp" (ai_jobs.py AI_MCP) instead of an AI task: the features queue jobs that your own assistant fetches
+        // and answers over MCP (casora.ai_jobs / casora.ai_answer). Either field may hold it (HA's options dialog).
+        const MCP = "mcp";
+        const mcp = O.ai_task_entity === MCP || O.ai_task_web_entity === MCP;
         let g = this._flowGroup(host, { header: t("Which AI"),
-          footer: t("Empty: the default AI from Settings → AI tasks.") });
-        ctlRow(this, g, t("AI for coaches, camera and plants"), t("Which AI writes the coaches' tips and checks camera pictures and plants."), [entPick(this, cs, "ai_task_entity", ["ai_task"])]);
-        ctlRow(this, g, t("AI with web search"), t("Update analysis, recipe"),
-          [entPick(this, cs, "ai_task_web_entity", ["ai_task"])]);
+          footer: mcp
+            ? t("Casora's AI features wait for your assistant: ask it to do Casora's open AI jobs. Casora Studio's own AI steps still need an AI task.")
+            : t("Empty: the default AI from Settings → AI tasks.") });
+        ctlRow(this, g, t("Who answers"), t("An AI task in Home Assistant, or your own assistant connected over MCP."),
+          [this._combo(mcp ? MCP : "task", ["task", MCP], "", (v) => {
+            if (!v || v === (mcp ? MCP : "task")) return;
+            if (v === MCP) { O.ai_task_entity = MCP; delete O.ai_task_web_entity; }
+            else ["ai_task_entity", "ai_task_web_entity"].forEach((k) => { if (O[k] === MCP) delete O[k]; });
+            this._csBar();
+            this._csRepaint();
+          }, { fixed: true, labels: { task: t("AI task"), [MCP]: t("Your own assistant (MCP)") } }).wrap]);
+        if (mcp) {
+          this._flowRow(g, { title: t("How it works"), chevron: true, onTap: () => window.open(
+            "https://github.com/SH1FT-W/casora/blob/main/docs/guide.md#use-your-own-assistant-for-casoras-ai-features",
+            "_blank", "noopener") });
+        } else {
+          ctlRow(this, g, t("AI for coaches, camera and plants"), t("Which AI writes the coaches' tips and checks camera pictures and plants."), [entPick(this, cs, "ai_task_entity", ["ai_task"])]);
+          ctlRow(this, g, t("AI with web search"), t("Update analysis, recipe"),
+            [entPick(this, cs, "ai_task_web_entity", ["ai_task"])]);
+        }
         aiModelGroup(this, cs, host);
         planGroup(this, host, O);
         g = this._flowGroup(host, { header: t("Recipe of the week"),

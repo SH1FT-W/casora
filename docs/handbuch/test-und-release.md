@@ -111,10 +111,14 @@ Vor einem Release zusätzlich:
 6. Keine persönlichen Daten: `tools/privacy-check.py`; „Studio B“ nur intern (`git grep "Studio B"` in Texten).
    Website und README: Versionszeile im Hero von `docs/index.html` („Version YY.M.N“, Reserve, wenn die
    Live-Abfrage scheitert; `tools/release.sh` prüft sie), neue Karten/Funktionen in README und `docs/guide.md`.
-7. Volles Gate grün für genau diesen Commit → `tools/release.sh` (nimmt die Version von `tools/next-version`;
+7. Gate grün für genau diesen Commit → `tools/release.sh` (nimmt die Version von `tools/next-version`;
    prüft Version, Gate, CHANGELOG, manifest, WHATS_NEW) → `tools/release.sh YY.M.N --publish`.
-   Tag und Titel nur „vYY.M.N“ (z. B. v26.10.31). Nur bei einem echten Notfall-Hotfix: `dev/qa/gate.sh --patch`
-   und `tools/release.sh YY.M.N --patch` (Patch-Gate bewusst zugelassen, nie automatisch).
+   Tag und Titel nur „vYY.M.N“ (z. B. v26.10.31). Welches Gate:
+
+   | Release | Gate |
+   |---|---|
+   | Fix-Release unter der Woche | Patch: `dev/qa/gate.sh --patch` + `tools/release.sh YY.M.N --patch` |
+   | Freitag, oder großer Umbau: viele Module, Vorlagen-Umbau, Migration, gespeicherte Daten, `casora-core.js`, Theme | voll: `dev/qa/gate.sh --voll` |
 
 **Karten-Update statt Release** (`python3 tools/build-card-update.py --note casora_x="…"`, Tag
 `karten-JJJJ-MM-TT-N`, `--latest=false`): nur wenn ausschließlich bestehende `casora_*`-Vorlagen in

@@ -46,7 +46,7 @@ Nebel hat seit 1.3 dieselben Ecken wie Casora (Kacheln 32, Handy- und Szenen-Kac
 | Badges | Pille, Ruhe-Schatten (auch Handy), Auftritt-/Breiten-Bewegung über `--casora-badge-enter-ease` / `--casora-badge-flip-ease` (Auftritt / Schieber) |
 | Menüs (Glocke, ⋯, Raumleisten-Menü, Räume/Szenen am Handy, Welle) | Fenster 34, Zeile 52 hoch mit Radius 26, Kreis 36, Rand 8, Schrift 15/13, Schatten „schwebend“ (`--casora-window-shadow` → `--casora-shadow-float`), Auftritt-Kurve, Druck `.97`. Zeilen ohne Platte (E3c). |
 | Navigationsleisten | Raumleiste/Handy-Leiste: Fläche + Ruhe-Schatten (`--casora-pill-rim` → `--casora-shadow-rest`), Markierung als Schieber (`--casora-nav-indicator-ease/-duration`), Tasten-Druck `.97`. Maße der Leisten bleiben (Raumleiste A, Handy-Leiste B). |
-| Studio | `--t-*` = Schrift-Tokens (Titel 22 bleibt), `--r-s` 8 → 12, `--r-m` 12, `--r-l` 18, `--r-xl` 26 → 32 (Karten, Blätter, Vorschau-Rahmen), `--ease` = Auftritt, CSS-Kurven und Knopf-Druck aus den Tokens. Schrift **Inter** über `--casora-font-studio` (entschieden 11.10.): Host und alle festen `system-ui`-Stellen im Studio, Rückfall SF/System. Die Schrift kommt nur von Casora selbst (`/casora_assets/fonts/`, keine fremden Server), eigener Familienname „Casora Studio Inter“, die Vorschau zeigt die Dashboard-Schrift „Inter“. Beide nutzen dieselbe Datei `inter-4.1-latin-var.woff2` (seit 01.11.2026, vorher lud das Studio zusätzlich `inter-v20`, gleiche Umrisse), damit sie nur einmal geladen wird. Neue Schrift = neuer Dateiname (Cache 1 Tag, Adresse ohne `?v=`). |
+| Studio | `--t-*` = Schrift-Tokens (Titel 22 bleibt), `--r-s` 8 → 12, `--r-m` 12 → 18, `--r-l` 18 → 24, `--r-xl` 26 → 32 (Karten, Blätter, Vorschau-Rahmen) – volle Radien-Leiter 12/18/24/32 (Studio-Sprache B, entschieden 06.11.2026), `--ease` = Auftritt, CSS-Kurven und Knopf-Druck aus den Tokens. Schrift **Inter** über `--casora-font-studio` (entschieden 11.10.): Host und alle festen `system-ui`-Stellen im Studio, Rückfall SF/System. Die Schrift kommt nur von Casora selbst (`/casora_assets/fonts/`, keine fremden Server), eigener Familienname „Casora Studio Inter“, die Vorschau zeigt die Dashboard-Schrift „Inter“. Beide nutzen dieselbe Datei `inter-4.1-latin-var.woff2` (seit 01.11.2026, vorher lud das Studio zusätzlich `inter-v20`, gleiche Umrisse), damit sie nur einmal geladen wird. Neue Schrift = neuer Dateiname (Cache 1 Tag, Adresse ohne `?v=`). |
 
 Ausnahmen (bewusst, mit Grund): Animationen per `element.animate()` (WAAPI) können keine CSS-Variable lesen und
 behalten ihre Kurve; die Desktop-Badges wachsen mit `--casora-u-badge` (Schrift u·1,4, Unterzeile 12,32 – feste
@@ -153,7 +153,7 @@ Studio heute: eigener Satz `--t-caption 12 · --t-foot 13 · --t-callout 15 · -
 --t-large 34` (`casora-panel.js`). Neue Studio-Regeln nehmen nur diese.
 
 Gilt (Studio-Schrift, entschieden 11.10.2026): Das Studio schreibt im Casora- und Nebel-Look **Inter**
-(`--casora-font-studio`, siehe § 0), Radien aus den Tokens (12/12/18/32). Ohne Casora-Theme fehlt das Token,
+(`--casora-font-studio`, siehe § 0), Radien aus den Tokens (12/18/24/32, Studio-Sprache B). Ohne Casora-Theme fehlt das Token,
 dann bleibt es bei SF/System.
 
 Gilt (Sprachen-Frage 1, entschieden B): Abschnittsüberschriften sind **normale Überschriften** („Räume“,
@@ -221,8 +221,7 @@ Gilt:
   (`var(--casora-ease-enter, <alter Wert>)`); Federn/Studio-Kurve gibt es nur noch als Rückfallwert (Hemma) und in
   `element.animate()`-Aufrufen (dort geht keine CSS-Variable).
 
-> **OFFEN – Entscheidung Maintainer (Popup-Einblendung, Backlog):** Optionen 1/2/3 aus dem Backlog,
-> noch nicht gewählt.
+Entschieden (06.11.2026): die Popup-Einblendung bleibt, wie sie ist.
 
 ## 8. Hover, Druck, Tipp-Feedback
 
@@ -236,8 +235,8 @@ Gilt:
 - Popup-Knöpfe haben einen sichtbaren `:active`-Zustand.
 - Platten-Stufen (Sand): .07 Ruhe · .10 Bedienfeld · .11 Hover · .16 Druck; aktiv = Creme + Ruhe-Schatten.
 
-> **OFFEN – Entscheidung Maintainer (dk-13, Druck bei Badges):** A: wie Kacheln ohne sichtbaren Druck
-> (nur Haptik) / B: alle Badges Platte .07→.11 beim Drücken. Heute färbt nur das Einzel-Sicherheits-Badge.
+Entschieden (06.11.2026, dk-13): Badges zeigen wie Kacheln keinen sichtbaren Druck, nur Haptik
+(am 06.11.2026 im Test-HA nachgemessen: alle Badges, auch das Sicherheits-Badge).
 
 Gilt (Druck-Skala, entschieden): `scale(var(--casora-press-scale, .97))` auf Tasten – Popups, Menüzeilen (Räume/Szenen
 am Handy, „Alles gelesen“), Tasten der Handy-Leiste, Zurück-Knopf der Handy-Raumseite, Szenen-Kacheln, Studio-Knöpfe.
@@ -265,8 +264,7 @@ mehr). Gilt auch für Auswahllisten (`--casora-soft-row-selected` zeigt darauf).
 | Symbol/Text in aktiv und inaktiv an derselben Stelle | ±1 px | `ausrichtung` |
 | Keine harte Kante beim Scrollen: Verlauf oben/unten (Popups `--casora-popup-more-fade`) | – | Bild |
 
-> **OFFEN – Entscheidung Maintainer (dk-15):** Räume-Menü 12-px-Verlauf oben/unten wie Popups (A) oder
-> so lassen (B).
+Entschieden (06.11.2026, dk-15): das Räume-Menü bekommt keinen Verlauf, es bleibt wie es ist.
 
 ## 11. Kontrast (WCAG AA, gemessen mit `popup-geo` „kontrast“/„schalter“)
 
@@ -286,27 +284,10 @@ Kreise/Flächen bleiben `--casora-color-red`. **Pfeil › in Zeilen (DP-30):** e
   Fläche unsichtbar mit `::before { inset: -Npx }` – Optik bleibt (Fund DP-02: Szenen-Chips 38, Kalender-Pfeile 32).
 - Nichts Antippbares näher als 8 px an einer anderen Taste ohne Abstand dazwischen.
 
-## 13. Popup-Aufbau (Kurzfassung, Details in [blaupause-popup.md](blaupause-popup.md))
+## 13. Popup-Aufbau
 
-Gilt:
-- Breite (seit Muster v2, 26.10.2026): 552 einspaltig, 900 bei zwei Spalten oder Bild (`casoraPopupWidth`), siehe
-  [popup-blaupause.md](popup-blaupause.md).
-- **Kopfzeile A** (seit 1.3, alle Popup-Arten, nur Theme „Casora“/Nebel): Kopf in einer Zeile – links die
-  Symbol-Kachel 56/r16 (Handy 48/r14) in Gerätefarbe, daneben klein der Raum (Etikett), der Titel 28/800 (Handy 24)
-  und die Statuszeile; rechts der Hauptschalter (nur wo es einen Gesamtschalter gibt, ersetzt eigene „Alles aus“-
-  Knöpfe) und das X. Kachel bündig mit den Zeilen darunter (36 px vom Rand, Handy 24). 28 px bis zum Inhalt.
-- Ab 761 px: darunter Diagramm/Kamera/Karte volle Breite →
-  zwei Spalten, **links Bedienung** (Modus mit Überschrift „Modus“ oben links, Programme, Schalter,
-  Aktionen), **rechts Infos** (Status, Messwerte, Verbrauch, Verlauf).
-- Handy (≤ 760): eine Spalte, Reihenfolge Kopf → Diagramm → Modus → übrige Bedienung → Infos.
-- Überschriften **pro Popup** einheitlich: Bedien-Popup (Sheet) alle außen über der Platte,
-  Info-Popup (Glasplatten) alle innen (`--casora-lbl-in: block; --casora-lbl-out: none`).
-
-Entschieden (10.10.2026): A „Kopfzeile“, Symbol als abgerundetes Quadrat, Schalter in Gerätefarbe
-(`--casora-popup-accent`, alle Schalter im Popup). Szenen bekommen eine eigene Abschnittsüberschrift „Szenen“.
-
-> **OFFEN – Entscheidung Maintainer (Listen in Fenstern, Sprachen-Frage 3):** A: jede Zeile Platte 24
-> (wie Popups) / B: Zeilen ohne Platte, nur Hover-Platte (wie Glocke) – Vorschlag B in Glocke/Menüs, A in Popups.
+Aufbau, Kopf, Bühne, Listen, Diagramme und Breite stehen in [popup-richtlinien-v3.md](popup-richtlinien-v3.md); dort
+gilt alles. Aus diesem Dokument gelten für Popups nur die Tokens (Farben, Radien, Schrift, Schatten, Bewegung).
 
 ## 14. Wortlaut
 

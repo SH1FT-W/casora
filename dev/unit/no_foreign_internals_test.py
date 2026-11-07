@@ -14,7 +14,8 @@ fails on any of:
      of imported homeassistant modules (monkeypatching).
   5. Another integration's storage: Store(..., key) with a key not owned by Casora, or a ".storage" path.
 
-What remains is in ALLOWED, each with its reason; the same list is in docs/ha-annahmen.md ("Fremde Interna").
+What remains is in ANYWHERE/ALLOWED, each with its reason (the single per-line list; docs/ha-annahmen.md
+"Fremde Interna" only summarises the kinds).
 Anything new fails until it is either replaced by a public API or added there with a reason.
 """
 
@@ -26,6 +27,14 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PKG = os.path.join(ROOT, "custom_components", "casora")
+
+# Allowed in any Casora module (finding -> reason): Lovelace has no public Python API for dashboards, only websocket
+# commands that need a browser; reading dashboards through LOVELACE_DATA is what Casora does in many places.
+ANYWHERE = {
+    "import homeassistant.components.lovelace.const.LOVELACE_DATA": "Lovelace dashboards (no public Python API)",
+    "hass.data.get(LOVELACE_DATA)": "Lovelace dashboards (no public Python API)",
+    "hass.data[LOVELACE_DATA]": "Lovelace dashboards (no public Python API)",
+}
 
 # (file, finding) -> reason. A finding is the text the scan reports for that line.
 ALLOWED = {
@@ -59,30 +68,6 @@ ALLOWED = {
         "Lovelace dashboards, read only: find the phone dashboard as tap target (no public Python API)",
     ("room_icons.py", "hass.data.get('lovelace')"):
         "Lovelace dashboards, read only: which dashboards use an icon, admins only (no public Python API)",
-    ("phone_badges.py", "import homeassistant.components.lovelace.const.LOVELACE_DATA"):
-        "Lovelace dashboards, read only: phone room badges/partner data for every user (no public Python API)",
-    ("phone_badges.py", "hass.data.get(LOVELACE_DATA)"):
-        "as above",
-    ("dashboard_kinds.py", "import homeassistant.components.lovelace.const.LOVELACE_DATA"):
-        "Lovelace dashboards: tell the Studio which are Casora dashboards (read only) instead of sending it every whole configuration",
-    ("dashboard_kinds.py", "hass.data.get(LOVELACE_DATA)"):
-        "as above",
-    ("theme.py", "import homeassistant.components.lovelace.const.LOVELACE_DATA"):
-        "design only on Casora dashboards (#129): which dashboards carry Casora cards (read only, same as dashboard_kinds.py)",
-    ("theme.py", "hass.data.get(LOVELACE_DATA)"):
-        "as above",
-    ("template_refresh.py", "import homeassistant.components.lovelace.const.LOVELACE_DATA"):
-        "Lovelace dashboards: refresh Casora's own unchanged templates after an update, at start (no browser)",
-    ("template_refresh.py", "hass.data.get(LOVELACE_DATA)"):
-        "as above",
-    ("umstellen.py", "import homeassistant.components.lovelace.const.LOVELACE_DATA"):
-        "Lovelace dashboards: admin service casora.umstellen (Hemma -> Casora names), with backup",
-    ("umstellen.py", "hass.data[LOVELACE_DATA]"):
-        "as above",
-    ("versions.py", "import homeassistant.components.lovelace.const.LOVELACE_DATA"):
-        "Lovelace dashboards: Studio versions (snapshot/restore) of Casora dashboards, admins only",
-    ("versions.py", "hass.data.get(LOVELACE_DATA)"):
-        "as above",
     ("hemma_cleanup.py", "hass.data.get('lovelace')"):
         "Lovelace dashboards/resources: removing the predecessor Hemma (admin action in the Studio)",
     # UI helpers: HA offers no Python API to create storage helpers; Casora uses the collection behind
@@ -122,6 +107,8 @@ seen_allowed: set = set()
 
 def report(fname: str, line: int, finding: str) -> None:
     key = (fname, finding)
+    if finding in ANYWHERE and fname != "probe.py":
+        return
     if key in ALLOWED:
         seen_allowed.add(key)
         return

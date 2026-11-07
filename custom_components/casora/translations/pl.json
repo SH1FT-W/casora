@@ -65,6 +65,11 @@
         "daily": "Codziennie",
         "manual": "Tylko na żądanie"
       }
+    },
+    "ai_choice": {
+      "options": {
+        "mcp": "Własny asystent (MCP)"
+      }
     }
   },
   "services": {
@@ -196,6 +201,20 @@
       "name": "Przegląd konfiguracji",
       "description": "Tylko odczyt: pokoje, urządzenia bez obszaru i urządzenia, które nie są jeszcze na żadnym kafelku Casora, każde z proponowanym typem kafelka. Dla własnego asystenta, na przykład przez serwer MCP."
     },
+    "setup_plan": {
+      "name": "Zaproponuj układ",
+      "description": "Sprawdza zaproponowany układ (które urządzenie trafia na kafelek w którym obszarze, z nazwą i typem kafelka) i odpowiada podglądem. Nie zmienia żadnego pulpitu: Casora Studio pokazuje propozycję, sprawdzasz ją, dodajesz kafelki i zapisujesz. Dla własnego asystenta, na przykład przez serwer MCP.",
+      "fields": {
+        "dashboard": {
+          "name": "Pulpit",
+          "description": "Adres (url_path) pulpitu Casora. Puste: jedyny, w przeciwnym razie pierwszy."
+        },
+        "rooms": {
+          "name": "Pokoje",
+          "description": "Lista {area_id, devices: [{device_id, name?, tile?}]}: name to nazwa kafelka, tile typ kafelka (puste: propozycja Casory)."
+        }
+      }
+    },
     "set_timer": {
       "name": "Ustaw wyłącznik czasowy",
       "description": "Wyłącza lub włącza encję po podanej liczbie minut. Zastępuje istniejący wyłącznik czasowy tej samej encji. Gdy wyłącznik czasowy się kończy, Casora wysyła zdarzenie casora_timer_finished (entity_id, action, reason: expired, manual lub cancelled). Na życzenie odpowiada z entity_id, at i start.",
@@ -297,6 +316,34 @@
           "description": "Przełącznik pokazujący „Gotowe”"
         }
       }
+    },
+    "ai_jobs": {
+      "name": "Otwarte zadania AI",
+      "description": "Tylko odczyt: zadania AI czekające na twojego asystenta (opcja AI „Własny asystent (MCP)”), z instrukcjami, polami odpowiedzi i załącznikami."
+    },
+    "ai_answer": {
+      "name": "Odpowiedz na zadanie AI",
+      "description": "Twój asystent odpowiada na otwarte zadanie AI. Sprawdza odpowiedź z polami zadania i zwraca ok albo błędy.",
+      "fields": {
+        "job_id": {
+          "name": "Zadanie",
+          "description": "job_id z casora.ai_jobs."
+        },
+        "data": {
+          "name": "Odpowiedź",
+          "description": "Obiekt z kluczami pól zadania."
+        }
+      }
+    },
+    "ai_cancel": {
+      "name": "Anuluj zadanie AI",
+      "description": "Odrzuca otwarte zadanie AI; funkcja, która na nie czeka, zgłasza błąd.",
+      "fields": {
+        "job_id": {
+          "name": "Zadanie",
+          "description": "job_id z casora.ai_jobs."
+        }
+      }
     }
   },
   "entity": {
@@ -356,6 +403,12 @@
     },
     "timer_invalid_minutes": {
       "message": "Nieprawidłowe minuty: {minutes}. Dozwolona jest liczba całkowita od 1 do {max}."
+    },
+    "setup_plan_no_dashboard": {
+      "message": "Nie ma jeszcze pulpitu Casora. Najpierw utwórz go w Casora Studio."
+    },
+    "setup_plan_not_casora": {
+      "message": "{dashboard} nie jest pulpitem Casora. Pulpity Casora: {dashboards}"
     }
   },
   "issues": {

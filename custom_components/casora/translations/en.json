@@ -65,6 +65,11 @@
         "daily": "Daily",
         "manual": "Only on button press"
       }
+    },
+    "ai_choice": {
+      "options": {
+        "mcp": "Your own assistant (MCP)"
+      }
     }
   },
   "services": {
@@ -196,6 +201,20 @@
       "name": "Setup overview",
       "description": "Read only: rooms, devices without an area and devices not on any Casora tile yet, each with a suggested tile type. For your own assistant, for example through an MCP server."
     },
+    "setup_plan": {
+      "name": "Propose a layout",
+      "description": "Checks a proposed layout (which device goes on a tile in which area, with tile name and type) and answers with a preview. Changes no dashboard: the Casora Studio shows the suggestion, you check it, add the tiles and save. For your own assistant, for example through an MCP server.",
+      "fields": {
+        "dashboard": {
+          "name": "Dashboard",
+          "description": "Address (url_path) of a Casora dashboard. Empty: the only one, else the first."
+        },
+        "rooms": {
+          "name": "Rooms",
+          "description": "List of {area_id, devices: [{device_id, name?, tile?}]}: name is the tile name, tile the tile type (empty: Casora's suggestion)."
+        }
+      }
+    },
     "set_timer": {
       "name": "Set timer",
       "description": "Turns an entity off or on after a number of minutes. Replaces an existing timer for the same entity. When the timer ends, Casora fires the event casora_timer_finished (entity_id, action, reason: expired, manual or cancelled). Can respond with entity_id, at and start.",
@@ -297,6 +316,34 @@
           "description": "Switch that shows \"Done\""
         }
       }
+    },
+    "ai_jobs": {
+      "name": "Open AI jobs",
+      "description": "Read only: the AI jobs that wait for your own assistant (AI option “Your own assistant (MCP)”), with instructions, answer fields and attachments."
+    },
+    "ai_answer": {
+      "name": "Answer an AI job",
+      "description": "Your own assistant answers an open AI job. Checks the answer against the job's fields and returns ok or the errors.",
+      "fields": {
+        "job_id": {
+          "name": "Job",
+          "description": "job_id from casora.ai_jobs."
+        },
+        "data": {
+          "name": "Answer",
+          "description": "An object with the keys of the job's fields."
+        }
+      }
+    },
+    "ai_cancel": {
+      "name": "Cancel an AI job",
+      "description": "Drops an open AI job; the feature that waits for it reports an error.",
+      "fields": {
+        "job_id": {
+          "name": "Job",
+          "description": "job_id from casora.ai_jobs."
+        }
+      }
     }
   },
   "entity": {
@@ -356,6 +403,12 @@
     },
     "timer_invalid_minutes": {
       "message": "Invalid minutes: {minutes}. Use a whole number from 1 to {max}."
+    },
+    "setup_plan_no_dashboard": {
+      "message": "There is no Casora dashboard yet. Create one in the Casora Studio first."
+    },
+    "setup_plan_not_casora": {
+      "message": "{dashboard} is not a Casora dashboard. Casora dashboards: {dashboards}"
     }
   },
   "issues": {

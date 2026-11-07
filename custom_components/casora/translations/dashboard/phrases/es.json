@@ -2816,7 +2816,15 @@
     "Selbsttest gestartet": "Autotest iniciado",
     "Selbsttest starten? Der Melder piept laut.": "¿Iniciar el autotest? El detector pita fuerte.",
     "Zuletzt erhöht": "Última subida",
-    "Nicht in 7 Tagen": "No en 7 días"
+    "Nicht in 7 Tagen": "No en 7 días",
+    "Wartet auf deinen Assistenten …": "Esperando a tu asistente…",
+    "Dein Assistent hat nicht rechtzeitig geantwortet": "Tu asistente no respondió a tiempo",
+    "Zu viele offene Aufträge für deinen Assistenten": "Demasiados trabajos pendientes para tu asistente",
+    "Der Auftrag für deinen Assistenten wurde abgebrochen": "Se canceló el trabajo para tu asistente",
+    "Neustart: der Auftrag für deinen Assistenten ist verfallen": "Reinicio: se perdió el trabajo para tu asistente",
+    "Claude prüft das Rad …": "Claude está revisando la bici…",
+    "Claude wertet die Heizwoche aus …": "Claude está analizando la semana de calefacción…",
+    "Claude wertet die letzten 7 Tage aus …": "Claude está analizando los últimos 7 días…"
   },
   "patterns": [
     [
