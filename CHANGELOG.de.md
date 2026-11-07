@@ -10,6 +10,7 @@ Einstellungen dort, wo du sie brauchst, eine neue Aufgaben-Kachel und neue Termi
 
 ### Neu
 - **Kachel Aufgaben:** alle To-do-Listen in einer Kachel. Das Popup filtert nach Liste, sortiert nach Fälligkeit, hakt ab und legt neue Einträge an, mit Notiz und Fälligkeit, wo die Liste das kann. Der Filter gilt pro Browser.
+- **Bildschirmschoner:** unter Einstellungen, Tippen & Tablet, Wand-Tablet. Nach 1, 2, 5 oder 10 Minuten ohne Nutzung legt sich eine große Uhr über das Dashboard. Das Foto folgt dem Wetter. Wettervorhersage und ein Kalender stehen unten. Ein Tippen außerhalb von Kalender und Wetter holt das Dashboard zurück.
 - **Termin hinzufügen (#146):** Das Kalender-Popup legt Termine mit Ort und Beschreibung an, in jedem Kalender, der das erlaubt.
 - **Seitenleiste der Kachel in Reitern:** Ein Klick auf eine Kachel im Studio zeigt Kachel, Popup und, wo es gemeinsame Einstellungen gibt, einen Reiter wie „Alle Jalousien“. Popup-Felder sind einen Klick entfernt, gemeinsame Werte wirken mit „Einstellungen speichern“.
 - **Zahnrad in jedem Popup:** Admins springen direkt auf den Reiter „Popup“ dieser Kachel im Studio. Popups ohne Kachel öffnen ihre Stelle in den Einstellungen.
