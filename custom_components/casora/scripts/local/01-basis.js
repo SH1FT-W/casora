@@ -517,6 +517,19 @@ window._casoraLightScope = function (entity, states, hass, vars) {
   var variables = vars || {};
   var isArr = Array.isArray;
   var membersOf = function (x) { var a = S[x] && S[x].attributes; return a && isArr(a.entity_id) ? a.entity_id : null; };
+  /* base's keys as getters (read from base only when asked), extra's as plain values on top; assigning a key turns
+     it into a plain value. */
+  var lazyOver = function (base, extra) {
+    var o = {};
+    var put = function (k, v) { Object.defineProperty(o, k, { value: v, writable: true, enumerable: true, configurable: true }); };
+    Object.keys(base || {}).forEach(function (k) {
+      if (Object.prototype.hasOwnProperty.call(extra, k)) return;
+      Object.defineProperty(o, k, { enumerable: true, configurable: true,
+        get: function () { return base[k]; }, set: function (v) { put(k, v); } });
+    });
+    Object.keys(extra).forEach(function (k) { put(k, extra[k]); });
+    return o;
+  };
   var eid = entity && entity.entity_id;
   /* The house tile is Home's light badge (_casoraHomeLightVarsOf): it takes the badge's variables and goes the badge's
      way below. Not once the badge's way resolved the rooms (house_rooms, the popup it opened), and not for a tile whose
@@ -525,9 +538,10 @@ window._casoraLightScope = function (entity, states, hass, vars) {
       && !(isArr(variables.lights) && variables.lights.length > 0 && variables.light_rooms_auto !== true)) {
     var hv = window._casoraHomeLightVars ? window._casoraHomeLightVars() : null;
     if (hv) {
-      /* Only the keys read below: button-card's variables are a proxy that evaluates each one on read, and the
-         tile's active_override calls back in here (a loop the card shows as an error). */
-      variables = Object.assign({ house: true, group_rooms: variables.group_rooms }, hv, { lights: [], popup_group: null, group_entity: null });
+      /* Lazily: button-card's variables are a proxy that evaluates each one on read, and the tile's active_override
+         calls back in here (a loop the card shows as an error). The popup goes on with these variables, so the
+         opener's other keys stay, read only when asked. */
+      variables = lazyOver(variables, Object.assign({}, hv, { lights: [], popup_group: null, group_entity: null }));
       eid = null;
     }
   }
@@ -559,7 +573,7 @@ window._casoraLightScope = function (entity, states, hass, vars) {
     else if (variables.light_group_entity && String(variables.light_group_entity).indexOf('light.') === 0) vx.popup_group = variables.light_group_entity;
     else if (own.length === 1) vx.popup_group = own[0];
     else if (own.length > 1) { vx.popup_group = own[0]; vx.lights = own; }
-    variables = Object.assign({}, variables, vx);
+    variables = lazyOver(variables, vx);
   }
   var pgVar = variables.popup_group || variables.group_entity || null;
   var pgOff = pgVar === 'none';

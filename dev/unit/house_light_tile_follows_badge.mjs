@@ -132,5 +132,15 @@ console.log('ok house tile = Home badge (group with rooms beside it)');
   const proxied = new Proxy(own, { get: (o, k) => { if (k === 'active_override') throw new Error('loop: active_override'); return o[k]; },
     getOwnPropertyDescriptor: (o, k) => Object.getOwnPropertyDescriptor(o, k) });
   assert.deepEqual(window.casoraLightTally(S[tile.entity], S, h, proxied), badge, 'proxied variables: no other variable read');
+  // The popup carries on with the scope's variables (lpc_init: variables = _sc.variables): the opener's own keys
+  // must still be there, read when asked (r316: the tile's popup lost its house switch and rooms).
+  const sv = window._casoraLightScope(S[tile.entity], S, h, new Proxy({ ...own, popup_title: 'Beleuchtung', house_switch: true },
+    { get: (o, k) => { if (k === 'active_override') throw new Error('loop: active_override'); return o[k]; } })).variables;
+  assert.equal(sv.popup_title, 'Beleuchtung', 'the opener\'s other variables stay readable');
+  assert.equal(sv.house_switch, true);
+  assert.equal(sv.light_group_entity, H.light_group_entity, 'the badge\'s variables win');
+  assert.notDeepEqual(sv.lights, [tile.entity], 'the tile\'s own list is replaced by the rooms\' lamps');
+  sv.popup_title = 'X';
+  assert.equal(sv.popup_title, 'X', 'the popup can still set a variable');
 }
 console.log('house_light_tile_follows_badge: ok');

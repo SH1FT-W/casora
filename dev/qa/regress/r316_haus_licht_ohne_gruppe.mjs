@@ -112,6 +112,10 @@ await page.waitForTimeout(800);
 const tile = await page.evaluate(async (first) => {
   const ha = document.querySelector('home-assistant');
   const h = await window.loadCardHelpers();
+  // The house tile follows Home's light badge (r591). Without a house group that badge follows the rooms
+  // (light_rooms_auto), as „Neu beginnen“ sets it up; the check dashboard's own badge may still carry a list.
+  window.__qaHomeLightVars = window._casoraHomeLightVars;
+  window._casoraHomeLightVars = () => ({ light_group_entity: null, light_rooms_auto: true });
   const el = h.createCardElement({ type: 'custom:button-card', template: 'casora_light', entity: first, name: 'Beleuchtung',
     variables: { house: true, light_rooms_auto: true, lights: [first], active_entities: [first] } });
   el.id = 'qa-r316-tile'; el.hass = ha.hass; el.style.cssText = 'position:fixed;left:300px;top:420px;width:220px;height:140px;z-index:99990;';
@@ -132,7 +136,11 @@ const tp = await page.evaluate(() => {
   return { title: pop && pop.shadowRoot.querySelector('.header-title') ? pop.shadowRoot.querySelector('.header-title').textContent.trim() : '', n, house: !!(pop && pop._hsOff) };
 });
 await check('Kachel: Popup „Beleuchtung“ mit den Räumen und Haus-Schalter', tp.title === 'Beleuchtung' && tp.n === expected.rooms.length && tp.house, tp);
-await page.evaluate(() => { const P = window.casoraPopup; if (P && P.close) P.close(); const e = document.querySelector('home-assistant').shadowRoot.getElementById('qa-r316-tile'); if (e) e.remove(); });
+await page.evaluate(() => {
+  const P = window.casoraPopup; if (P && P.close) P.close();
+  const e = document.querySelector('home-assistant').shadowRoot.getElementById('qa-r316-tile'); if (e) e.remove();
+  if (window.__qaHomeLightVars) window._casoraHomeLightVars = window.__qaHomeLightVars;
+});
 
 // 5) Studio: Übersicht mit Casoras Zehnerliste und ohne Gruppe wird beim Laden auf die Räume umgestellt (im Speicher).
 await studio(page, dash.url);
