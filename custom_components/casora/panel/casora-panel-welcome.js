@@ -27,10 +27,8 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Assistent schlägt Aufbau vor", n0: "Dein MCP-Assistent schlägt Räume und Geräte vor.",
-      n1t: "Raum-Energie als Ring", n1: "Anteil am Haus oder dein üblicher Verbrauch.",
-      n2t: "Tor mit Lüftungsspalt", n2: "Gilt bis zu einer Prozentzahl als geschlossen.",
-      n3t: "3D-Drucker pro Tag", n3: "7 und 30 Tage zeigen den Verbrauch je Tag.",
+      n0t: "Mealie in der Rezept-Kachel", n0: "Gericht von heute, Speiseplan, Zutaten und Einkaufsliste.",
+      n1t: "Geschlossen pro Rollo", n1: "Jedes Rollo mit eigenem Prozentwert.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +38,8 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Assistant proposes the setup", n0: "Your MCP assistant suggests rooms and devices.",
-      n1t: "Room energy as a ring", n1: "Share of the house or your usual use.",
-      n2t: "Gate left ajar", n2: "Counts as closed up to a set percentage.",
-      n3t: "3D printer per day", n3: "7 and 30 days show the use per day.",
+      n0t: "Mealie in the recipe tile", n0: "Today's dish, meal plan, ingredients and shopping list.",
+      n1t: "Closed per blind", n1: "Every blind with its own percentage.",
     },
     // Spanish: same keys as en (dev/unit/welcome_es.mjs); a missing key falls back to English.
     es: {
@@ -54,10 +50,8 @@
       w1t: "Habitación por habitación", w1: "Diseña tu panel con los dispositivos que ya tienes en Home Assistant.",
       w2t: "Asistente de dispositivos", w2: "Casora propone las tarjetas adecuadas para cada habitación y las añade por ti.",
       w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
-      n0t: "El asistente propone la configuración", n0: "Tu asistente MCP sugiere habitaciones y dispositivos.",
-      n1t: "Energía de la habitación en anillo", n1: "Parte de la casa o tu consumo habitual.",
-      n2t: "Puerta entreabierta", n2: "Cuenta como cerrada hasta un porcentaje.",
-      n3t: "Impresora 3D por día", n3: "7 y 30 días muestran el consumo por día.",
+      n0t: "Mealie en la tarjeta de recetas", n0: "Plato de hoy, menú, ingredientes y lista de la compra.",
+      n1t: "Cerrada por persiana", n1: "Cada persiana con su propio porcentaje.",
     },
     fr: {
       welcomeTitle: "Bienvenue dans Casora",
@@ -70,10 +64,8 @@
       w2: "Casora propose les tuiles adaptées à chaque pièce et les ajoute pour toi.",
       w3t: "Ordinateur, tablette et téléphone",
       w3: "Un tableau de bord qui s'adapte à chaque écran, avec sa propre mise en page téléphone.",
-      n0t: "L'assistant propose la configuration", n0: "Ton assistant MCP suggère pièces et appareils.",
-      n1t: "Énergie de la pièce en anneau", n1: "Part de la maison ou ta consommation habituelle.",
-      n2t: "Porte entrouverte", n2: "Compte comme fermée jusqu'à un pourcentage.",
-      n3t: "Imprimante 3D par jour", n3: "7 et 30 jours montrent la consommation par jour.",
+      n0t: "Mealie dans la tuile recettes", n0: "Plat du jour, menu, ingrédients et liste de courses.",
+      n1t: "Fermé par volet", n1: "Chaque volet avec son propre pourcentage.",
     },
     it: {
       welcomeTitle: "Ti diamo il benvenuto in Casora",
@@ -86,10 +78,8 @@
       w2: "Casora propone le schede adatte per ogni stanza e le aggiunge per te.",
       w3t: "Desktop, tablet e telefono",
       w3: "Una dashboard che si adatta a ogni schermo, con un layout dedicato per il telefono.",
-      n0t: "L'assistente propone la configurazione", n0: "Il tuo assistente MCP suggerisce stanze e dispositivi.",
-      n1t: "Energia della stanza ad anello", n1: "Quota della casa o il tuo consumo abituale.",
-      n2t: "Portone socchiuso", n2: "Conta come chiuso fino a una percentuale.",
-      n3t: "Stampante 3D al giorno", n3: "7 e 30 giorni mostrano il consumo per giorno.",
+      n0t: "Mealie nel riquadro ricette", n0: "Piatto di oggi, menù, ingredienti e lista della spesa.",
+      n1t: "Chiusa per tapparella", n1: "Ogni tapparella con la sua percentuale.",
     },
     nl: {
       welcomeTitle: "Welkom bij Casora",
@@ -102,10 +92,8 @@
       w2: "Casora stelt voor elke kamer passende tegels voor en bouwt ze in.",
       w3t: "Desktop, tablet en telefoon",
       w3: "Eén dashboard dat zich aan elk scherm aanpast, met een eigen telefoonweergave.",
-      n0t: "Assistent stelt de inrichting voor", n0: "Je MCP-assistent stelt ruimtes en apparaten voor.",
-      n1t: "Kamerenergie als ring", n1: "Aandeel in het huis of je gebruikelijke verbruik.",
-      n2t: "Poort op een kier", n2: "Telt als dicht tot een ingesteld percentage.",
-      n3t: "3D-printer per dag", n3: "7 en 30 dagen tonen het verbruik per dag.",
+      n0t: "Mealie in de recepttegel", n0: "Gerecht van vandaag, menu, ingrediënten en boodschappenlijst.",
+      n1t: "Gesloten per rolluik", n1: "Elk rolluik met een eigen percentage.",
     },
     pl: {
       welcomeTitle: "Witaj w Casora",
@@ -118,10 +106,8 @@
       w2: "Casora proponuje pasujące kafelki dla każdego pokoju i dodaje je za ciebie.",
       w3t: "Komputer, tablet i telefon",
       w3: "Jeden pulpit, który dopasowuje się do każdego ekranu, z własnym układem na telefon.",
-      n0t: "Asystent proponuje konfigurację", n0: "Twój asystent MCP proponuje pokoje i urządzenia.",
-      n1t: "Energia pokoju jako pierścień", n1: "Udział w domu lub zwykłe zużycie.",
-      n2t: "Brama uchylona", n2: "Liczy się jako zamknięta do ustalonego procentu.",
-      n3t: "Drukarka 3D na dzień", n3: "7 i 30 dni pokazuje zużycie na dzień.",
+      n0t: "Mealie w kafelku przepisów", n0: "Danie dnia, jadłospis, składniki i lista zakupów.",
+      n1t: "Zamknięte dla każdej rolety", n1: "Każda roleta z własnym procentem.",
     },
     pt: {
       welcomeTitle: "Bem-vindo ao Casora",
@@ -134,10 +120,8 @@
       w2: "O Casora propõe os cartões certos para cada divisão e adiciona-os por ti.",
       w3t: "Computador, tablet e telemóvel",
       w3: "Um painel que se adapta a cada ecrã, com layout próprio para o telemóvel.",
-      n0t: "O assistente propõe a configuração", n0: "O teu assistente MCP sugere divisões e dispositivos.",
-      n1t: "Energia da divisão em anel", n1: "Parte da casa ou o teu consumo habitual.",
-      n2t: "Portão entreaberto", n2: "Conta como fechado até uma percentagem.",
-      n3t: "Impressora 3D por dia", n3: "7 e 30 dias mostram o consumo por dia.",
+      n0t: "Mealie no mosaico de receitas", n0: "Prato de hoje, plano, ingredientes e lista de compras.",
+      n1t: "Fechado por estore", n1: "Cada estore com a sua própria percentagem.",
     },
   };
   // Texts for a language: its own, English for anything it does not have (yet).
@@ -152,10 +136,8 @@
 
   /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
-    ["mdi:robot-outline", "n0t", "n0"],
-    ["mdi:lightning-bolt-circle", "n1t", "n1"],
-    ["mdi:garage-open-variant", "n2t", "n2"],
-    ["mdi:printer-3d", "n3t", "n3"],
+    ["mdi:silverware-fork-knife", "n0t", "n0"],
+    ["mdi:blinds", "n1t", "n1"],
   ];
 
   // Decide on load - before the Studio writes its own casora.* keys.

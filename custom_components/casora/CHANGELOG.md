@@ -4,6 +4,20 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.22 – 07.11.2026
+
+Mealie joins the recipe tile, blinds get their own "counts as closed" value, and a fix for HA's integration check.
+
+### New
+- **Mealie in the recipe tile (#140):** with Home Assistant's Mealie integration the recipe tile shows today's dish ("Today · Pumpkin soup") with time, servings and tags. The popup shows the dish with its picture, description and tags, the meal plan of the next 7 days with every meal, the ingredients, the preparation steps and the Mealie shopping list to tick off. Without Mealie the tile stays as it was (Cookidoo, idea of the week).
+- **Counts as closed per blind (#138):** in the Studio under Security every picked blind has its own "Counts as closed up to … %" (0–99 %). Empty uses the general value; a blind that moves still counts as open.
+
+### Changed
+- **Messages › Appliances to watch (#139):** the field explains what it does: the bell says "… finished" when an appliance goes from running to off, idle or finished; other sensors, such as a temperature, send nothing there.
+
+### Fixed
+- **Integration check:** the description of `casora.setup_plan` no longer contains curly braces, which Home Assistant's hassfest read as placeholders.
+
 ## 26.11.21 – 07.11.2026
 
 Your own assistant can now propose the setup, the room's energy becomes a ring, and a garage door left ajar for air no longer counts as open.

@@ -4,6 +4,20 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.22 – 07.11.2026
+
+Mealie kommt in die Rezept-Kachel, Rollos bekommen ihren eigenen „Gilt als geschlossen“-Wert, und ein Fix für HAs Integrationsprüfung.
+
+### Neu
+- **Mealie in der Rezept-Kachel (#140):** Mit der Mealie-Integration von Home Assistant zeigt die Rezept-Kachel das Gericht von heute („Heute · Kürbissuppe“) mit Zeit, Portionen und Tags. Das Popup zeigt das Gericht mit Bild, Beschreibung und Tags, den Speiseplan der nächsten 7 Tage mit jeder Mahlzeit, die Zutaten, die Zubereitungsschritte und die Mealie-Einkaufsliste zum Abhaken. Ohne Mealie bleibt die Kachel wie bisher (Cookidoo, Idee der Woche).
+- **Geschlossen pro Rollo (#138):** Im Studio unter Sicherheit hat jedes ausgewählte Rollo sein eigenes „Gilt als geschlossen bis … %“ (0–99 %). Leer gilt der allgemeine Wert; ein Rollo in Bewegung zählt weiter als offen.
+
+### Geändert
+- **Meldungen › Zu überwachende Geräte (#139):** Das Feld erklärt, was es tut: Die Glocke meldet „… fertig“, wenn ein Gerät von „läuft“ auf aus, idle oder fertig wechselt; andere Sensoren, etwa eine Temperatur, melden dort nichts.
+
+### Behoben
+- **Integrationsprüfung:** Die Beschreibung von `casora.setup_plan` enthält keine geschweiften Klammern mehr, die hassfest von Home Assistant als Platzhalter las.
+
 ## 26.11.21 – 07.11.2026
 
 Dein eigener Assistent kann jetzt den Aufbau vorschlagen, die Energie im Raum wird zum Ring, und ein Garagentor mit Lüftungsspalt zählt nicht mehr als offen.
