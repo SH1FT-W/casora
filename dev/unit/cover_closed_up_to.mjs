@@ -109,4 +109,28 @@ const up = (v) => { set({ closed_up_to: v }); return C.closedUpTo(); };
 assert.equal(up(undefined), 0); assert.equal(up(5), 5); assert.equal(up(20), 20);
 assert.equal(up(21), 0); assert.equal(up(-1), 0); assert.equal(up('3'), 0); assert.equal(up(2.5), 0); assert.equal(up(NaN), 0);
 
+// ── Per cover (issue 138, follow-up 07.11.2026): blinds left at different positions in the evening. ──
+// security.closed_up_to_by { entity_id: whole percent 0–99 } wins over closed_up_to for that cover; others keep it.
+const own = (id, state, pos, attrs) => Object.assign(cv(state, Object.assign({ current_position: pos }, attrs || {})), { entity_id: id });
+set({ covers: ['cover.wz', 'cover.sz'], closed_up_to: 1, closed_up_to_by: { 'cover.wz': 40 } });
+assert.equal(C.closedUpTo('cover.wz'), 40, 'own value of the cover');
+assert.equal(C.closedUpTo('cover.sz'), 1, 'others: the general value');
+assert.equal(C.closedUpTo(), 1, 'no cover: the general value');
+assert.equal(C.isOpen(own('cover.wz', 'open', 40)), false, 'at its own value: closed');
+assert.equal(C.isOpen(own('cover.wz', 'open', 41)), true, 'above its own value: open');
+assert.equal(C.isOpen(own('cover.wz', 'opening', 30)), true, 'in motion: open');
+assert.equal(C.isOpen(own('cover.sz', 'open', 40)), true, 'another cover keeps the general value');
+assert.equal(window.casoraCoverOpen(own('cover.wz', 'open', 40, { device_class: 'garage' }), 'gate'), false, 'gates too');
+set({ closed_up_to_by: { 'cover.wz': 0 } , closed_up_to: 5 });
+assert.equal(C.closedUpTo('cover.wz'), 0, 'own 0 beats the general value');
+for (const bad of [100, -1, '30', 2.5, NaN, null]) {
+  set({ closed_up_to: 3, closed_up_to_by: { 'cover.wz': bad } });
+  assert.equal(C.closedUpTo('cover.wz'), 3, 'invalid own value ' + bad + ': the general value');
+}
+set({ closed_up_to: 3, closed_up_to_by: ['cover.wz'] });
+assert.equal(C.closedUpTo('cover.wz'), 3, 'not a map: ignored');
+const st2 = { 'cover.wz': own('cover.wz', 'open', 35), 'sun.sun': { state: 'below_horizon', attributes: {} } };
+set({ covers: ['cover.wz'], closed_up_to_by: { 'cover.wz': 40 } });
+assert.equal(C.scan(st2, { states: st2 }).count, 0, 'scan: the blind at 35 % with own 40 % counts as closed');
+
 console.log('cover_closed_up_to: ok');

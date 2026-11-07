@@ -2687,6 +2687,8 @@
     "Evening and night only": "Solo di sera e di notte",
     "From sunset to sunrise": "Dal tramonto all'alba",
     "Counts as closed up to": "Considerato chiuso fino a",
+    "Empty: the value above": "Vuoto: il valore sopra",
+    "“Counts as closed up to” for a single blind must be a whole number from 0 to 99 %.": "«Conta come chiusa fino a» per una singola tapparella deve essere un numero intero da 0 a 99 %.",
     "For gates or blinds left open a crack for air.": "Per cancelli o tapparelle lasciati socchiusi per arieggiare.",
     "“Counts as closed up to” must be a whole number from 0 to 20 %.": "«Considerato chiuso fino a» deve essere un numero intero da 0 a 20 %.",
     "No covers found": "Nessuna tapparella trovata",

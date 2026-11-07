@@ -7,7 +7,7 @@
 // hides itself then) and listed in the popup as unavailable. Garage doors, gates and doors (device_class
 // garage/gate/door) already count as "Tor offen" in the security badge and are left out here.
 //   C.cfg()                                   → { ids, night }
-//   C.closedUpTo()                            → security.closed_up_to (0–20, else 0)
+//   C.closedUpTo(id)                          → security.closed_up_to_by[id] (0–99), else closed_up_to (0–20), else 0
 //   C.coverOpen(st, kind)                     → window.casoraCoverOpen: kind 'gate' or a picked cover; true | false | null
 //   C.isOpen(st)                              → true | false | null (null = unavailable/unknown)
 //   C.isNight(states)                         → true from sunset to sunrise, true without sun.sun
@@ -36,9 +36,14 @@
 
   // Issue 138: security.closed_up_to, whole percent 0–20 (Studio „Gilt als geschlossen bis“). A cover at rest whose
   // current_position is at or below it counts as closed – a garage door left ajar for air. Anything else: 0, as before.
-  C.closedUpTo = function () {
-    var v = (((window.CASORA_SETTINGS || {}).security) || {}).closed_up_to;
-    return typeof v === 'number' && Math.floor(v) === v && v >= 0 && v <= 20 ? v : 0;
+  // Per cover (follow-up 07.11.2026, blinds left at different positions in the evening): security.closed_up_to_by
+  // { entity_id: whole percent 0–99 } wins over the general value for that cover; an invalid one falls back to it.
+  C.closedUpTo = function (id) {
+    var sec = ((window.CASORA_SETTINGS || {}).security) || {};
+    var whole = function (v, max) { return typeof v === 'number' && Math.floor(v) === v && v >= 0 && v <= max; };
+    var by = sec.closed_up_to_by;
+    if (id && by && typeof by === 'object' && !Array.isArray(by) && whole(by[id], 99)) return by[id];
+    return whole(sec.closed_up_to, 20) ? sec.closed_up_to : 0;
   };
 
   // Open for security? The one rule for gates and the picked covers (security badge, its level, arm warning, this module).
@@ -50,7 +55,7 @@
     if (!s || s === 'unavailable' || s === 'unknown') return null;
     var p = st.attributes && st.attributes.current_position;
     var pos = p == null || p === '' || typeof p === 'boolean' ? NaN : Number(p);
-    var t = C.closedUpTo();
+    var t = C.closedUpTo(st.entity_id);
     if (t > 0 && (s === 'open' || s === 'closed') && isFinite(pos) && pos <= t) return false;
     if (kind === 'gate') return s === 'open' || s === 'opening';
     return s !== 'closed' || (isFinite(pos) && pos > 0);

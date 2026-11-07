@@ -2687,6 +2687,8 @@
     "Evening and night only": "Solo por la tarde y la noche",
     "From sunset to sunrise": "Del atardecer al amanecer",
     "Counts as closed up to": "Se considera cerrado hasta",
+    "Empty: the value above": "Vacío: el valor de arriba",
+    "“Counts as closed up to” for a single blind must be a whole number from 0 to 99 %.": "«Cuenta como cerrada hasta» para una persiana debe ser un número entero de 0 a 99 %.",
     "For gates or blinds left open a crack for air.": "Para portones o persianas que quedan entreabiertos para ventilar.",
     "“Counts as closed up to” must be a whole number from 0 to 20 %.": "«Se considera cerrado hasta» debe ser un número entero de 0 a 20 %.",
     "No covers found": "No se encontraron persianas",
