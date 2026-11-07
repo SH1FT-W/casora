@@ -4,6 +4,33 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.21 – 07.11.2026
+
+Your own assistant can now propose the setup, the room's energy becomes a ring, and a garage door left ajar for air no longer counts as open.
+
+### New
+- **Assistant proposes the setup (#131):** with the new service `casora.setup_plan` your assistant over MCP names devices per room and their names; Casora checks the proposal and the Studio shows it as "Proposal from your assistant". It is applied through the setup assistant and saved only with Save.
+- **Your own assistant (MCP) as AI (#131):** a new choice in the AI settings. Plant doctor, coaches, camera, update check and recipes become jobs your assistant picks up with `casora.ai_jobs` and answers with `casora.ai_answer`. Jobs expire after 6 hours and on restart.
+- **Room energy as a ring:** the energy popup of a room shows a ring instead of the big number. With power sensors in HA's energy settings it is the room's share of the house; otherwise the ring learns the room's usual range from the last 30 days ("Usually up to 500 W").
+- **Closed up to a set position (#138):** in the Studio under Security, "Counts as closed up to … %" lets a garage door or blind left open a crack for air count as closed. While it moves it still counts as open.
+- **3D printer:** 7 and 30 days show the consumption per day as bars with the average line.
+
+### Changed
+- **Studio:** fields and cards use Casora's corner radii.
+- **Charts:** reading a history follows the finger more smoothly; the network chart reads download and upload together.
+- **Phone bar:** scenes use the palette icon again.
+- **Locks popup:** the room stands below each lock, as with doors and windows.
+
+### Fixed
+- **Batteries with Battery Notes (#136):** every device appears only once in the battery popup and tile.
+- **Waste tile (#137):** on narrow tiles the days come first ("In 3 d · Bio", "Bio +1" for several bins) and are no longer cut off.
+- **Light:** the house light tile counts like Home's light badge and opens the whole house.
+- **Thermostat:** dial and history show the same sensor.
+- **Contrast:** error text on active tiles, the popup accent and the arrow of tile rows are easier to read in the dark design.
+- **Weather:** no "0 % rain" on the start page; the dial's day band fills the whole ring.
+- **Plant popup:** the watering line stays in the status line.
+- **CO detector (#124):** the popup no longer rebuilds on a new ppm value.
+
 ## 26.11.20 – 06.11.2026
 
 A carbon monoxide detector, a design that can keep to Casora alone, and histories that show their value when tapped.

@@ -4,6 +4,33 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.21 – 07.11.2026
+
+Dein eigener Assistent kann jetzt den Aufbau vorschlagen, die Energie im Raum wird zum Ring, und ein Garagentor mit Lüftungsspalt zählt nicht mehr als offen.
+
+### Neu
+- **Assistent schlägt den Aufbau vor (#131):** Mit dem neuen Dienst `casora.setup_plan` nennt dein Assistent über MCP Geräte pro Raum und ihre Namen; Casora prüft den Vorschlag, und das Studio zeigt ihn als „Vorschlag von deinem Assistenten“. Übernommen wird über den Geräte-Assistenten, gespeichert erst mit Speichern.
+- **Eigener Assistent (MCP) als KI (#131):** neue Wahl in den KI-Einstellungen. Pflanzen-Doktor, Coaches, Kamera, Update-Prüfung und Rezepte werden zu Aufträgen, die dein Assistent mit `casora.ai_jobs` abholt und mit `casora.ai_answer` beantwortet. Aufträge verfallen nach 6 Stunden und beim Neustart.
+- **Raum-Energie als Ring:** Das Energie-Popup eines Raums zeigt einen Ring statt der großen Zahl. Mit Leistungssensoren in den HA-Energieeinstellungen ist es der Anteil des Raums am Haus; sonst lernt der Ring den üblichen Bereich des Raums aus den letzten 30 Tagen („Üblich bis 500 W“).
+- **Geschlossen bis zu einer Position (#138):** Im Studio unter Sicherheit lässt „Gilt als geschlossen bis … %“ ein Garagentor oder eine Jalousie mit Lüftungsspalt als geschlossen gelten. Während es fährt, zählt es weiter als offen.
+- **3D-Drucker:** 7 und 30 Tage zeigen den Verbrauch pro Tag als Balken mit Ø-Linie.
+
+### Geändert
+- **Studio:** Felder und Karten nutzen Casoras Rundungen.
+- **Diagramme:** Das Ablesen im Verlauf folgt dem Finger flüssiger; das Netzwerk-Diagramm liest Download und Upload zusammen.
+- **Handy-Leiste:** Szenen zeigen wieder die Farbpalette.
+- **Schlösser-Popup:** Unter jedem Schloss steht der Raum, wie bei Türen und Fenstern.
+
+### Behoben
+- **Batterien mit Battery Notes (#136):** Jedes Gerät erscheint im Batterie-Popup und in der Kachel nur noch einmal.
+- **Abfall-Kachel (#137):** Auf schmalen Kacheln stehen die Tage vorn („In 3 T. · Bio“, „Bio +1“ bei mehreren Tonnen) und werden nicht mehr abgeschnitten.
+- **Licht:** Die Haus-Licht-Kachel zählt wie das Licht-Badge der Übersicht und öffnet das ganze Haus.
+- **Thermostat:** Rad und Verlauf zeigen denselben Sensor.
+- **Kontrast:** Fehlerschrift auf aktiven Kacheln, der Popup-Akzent und der Pfeil der Kachelreihe sind im dunklen Design besser lesbar.
+- **Wetter:** kein „0 % Regen“ mehr auf der Startseite; das Tagesband im Rad füllt den ganzen Ring.
+- **Pflanzen-Popup:** Die Gieß-Zeile bleibt in der Statuszeile stehen.
+- **CO-Melder (#124):** Das Popup baut sich bei einem neuen ppm-Wert nicht mehr neu auf.
+
 ## 26.11.20 – 06.11.2026
 
 Ein Melder für Kohlenmonoxid, ein Design, das auf Wunsch nur Casora gestaltet, und Verläufe, die beim Antippen ihren Wert zeigen.
