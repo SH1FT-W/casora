@@ -211,7 +211,7 @@
         },
         "rooms": {
           "name": "Räume",
-          "description": "Liste aus {area_id, devices: [{device_id, name?, tile?}]}: name ist der Kachelname, tile der Kacheltyp (leer: Casoras Vorschlag)."
+          "description": "Liste aus (area_id, devices: [(device_id, name?, tile?)]): name ist der Kachelname, tile der Kacheltyp (leer: Casoras Vorschlag)."
         }
       }
     },

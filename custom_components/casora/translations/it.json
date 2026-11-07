@@ -211,7 +211,7 @@
         },
         "rooms": {
           "name": "Stanze",
-          "description": "Elenco di {area_id, devices: [{device_id, name?, tile?}]}: name è il nome del riquadro, tile il tipo di riquadro (vuoto: il suggerimento di Casora)."
+          "description": "Elenco di (area_id, devices: [(device_id, name?, tile?)]): name è il nome del riquadro, tile il tipo di riquadro (vuoto: il suggerimento di Casora)."
         }
       }
     },

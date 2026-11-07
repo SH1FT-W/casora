@@ -211,7 +211,7 @@
         },
         "rooms": {
           "name": "Pièces",
-          "description": "Liste de {area_id, devices: [{device_id, name?, tile?}]} : name est le nom de la tuile, tile le type de tuile (vide : la suggestion de Casora)."
+          "description": "Liste de (area_id, devices: [(device_id, name?, tile?)]) : name est le nom de la tuile, tile le type de tuile (vide : la suggestion de Casora)."
         }
       }
     },

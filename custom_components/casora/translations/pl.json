@@ -211,7 +211,7 @@
         },
         "rooms": {
           "name": "Pokoje",
-          "description": "Lista {area_id, devices: [{device_id, name?, tile?}]}: name to nazwa kafelka, tile typ kafelka (puste: propozycja Casory)."
+          "description": "Lista (area_id, devices: [(device_id, name?, tile?)]): name to nazwa kafelka, tile typ kafelka (puste: propozycja Casory)."
         }
       }
     },

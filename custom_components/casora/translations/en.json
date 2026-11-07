@@ -211,7 +211,7 @@
         },
         "rooms": {
           "name": "Rooms",
-          "description": "List of {area_id, devices: [{device_id, name?, tile?}]}: name is the tile name, tile the tile type (empty: Casora's suggestion)."
+          "description": "List of (area_id, devices: [(device_id, name?, tile?)]): name is the tile name, tile the tile type (empty: Casora's suggestion)."
         }
       }
     },

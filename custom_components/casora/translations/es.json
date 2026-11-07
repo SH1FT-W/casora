@@ -211,7 +211,7 @@
         },
         "rooms": {
           "name": "Habitaciones",
-          "description": "Lista de {area_id, devices: [{device_id, name?, tile?}]}: name es el nombre de la tarjeta, tile el tipo de tarjeta (vacío: la propuesta de Casora)."
+          "description": "Lista de (area_id, devices: [(device_id, name?, tile?)]): name es el nombre de la tarjeta, tile el tipo de tarjeta (vacío: la propuesta de Casora)."
         }
       }
     },

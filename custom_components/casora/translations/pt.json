@@ -211,7 +211,7 @@
         },
         "rooms": {
           "name": "Divisões",
-          "description": "Lista de {area_id, devices: [{device_id, name?, tile?}]}: name é o nome do mosaico, tile o tipo de mosaico (vazio: a sugestão do Casora)."
+          "description": "Lista de (area_id, devices: [(device_id, name?, tile?)]): name é o nome do mosaico, tile o tipo de mosaico (vazio: a sugestão do Casora)."
         }
       }
     },

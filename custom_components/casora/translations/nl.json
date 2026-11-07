@@ -211,7 +211,7 @@
         },
         "rooms": {
           "name": "Ruimtes",
-          "description": "Lijst van {area_id, devices: [{device_id, name?, tile?}]}: name is de tegelnaam, tile het tegeltype (leeg: het voorstel van Casora)."
+          "description": "Lijst van (area_id, devices: [(device_id, name?, tile?)]): name is de tegelnaam, tile het tegeltype (leeg: het voorstel van Casora)."
         }
       }
     },
