@@ -570,6 +570,8 @@ Casora:
       casora-entity-state: var(--casora-text-2)
       casora-entity-state-active: rgba(132,88,56,0.96)
       casora-entity-state-active-color: rgba(132,88,56,0.96)
+      # Error text on the light plate of an active tile (failed print, alarm triggered, live match): 5,7 : 1.
+      casora-entity-state-active-bad: var(--casora-color-red-text)
       casora-toggle-inactive-opacity: 1
       casora-toggle-track-fill: rgba(58,50,43,0.55)
       casora-toggle-off-color: rgba(58,50,43,0.38)
@@ -1020,6 +1022,9 @@ Casora:
       casora-wallpaper-veil-light-wide: "linear-gradient(to right, rgba(36,33,30,0.65) 0%, rgba(36,33,30,0.30) 45%, rgba(36,33,30,0) 75%)"
       casora-entity-state-active: rgba(112,76,48,0.96)
       casora-entity-state-active-color: rgba(112,76,48,0.96)
+      # The active tile stays a light sand plate in dark too: red-text here is the light red for dark rows
+      # (#F08A7E, 1,7 : 1 on the plate) – error text on it takes a dark red (5,1 : 1, user test 07.11.2026).
+      casora-entity-state-active-bad: "#94382F"
       casora-toggle-inactive-opacity: 1
 
       # Navigation, Popups, Bedienelemente
@@ -1176,7 +1181,6 @@ Casora:
       casora-football-crest-bg: rgba(250,244,236,0.92)
       casora-football-crest-ring: rgba(0,0,0,0.25)
       casora-football-flag-hair: rgba(255,255,255,0.22)
-      casora-football-live: "#EC7A6E"
       casora-soft-row-hover: rgba(255,240,220,0.08)
       casora-soft-row-press: rgba(255,240,220,0.11)
       casora-soft-plate-fill: rgba(255,240,220,0.04)

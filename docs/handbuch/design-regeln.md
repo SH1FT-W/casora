@@ -31,7 +31,7 @@ Kacheln, Badges, Raumkarten, Menüs (Glocke, ⋯, Räume, Szenen, Raumleisten-Me
 | Druck | `--casora-press-scale` | `.97` auf Tasten (`transform: scale(var(--casora-press-scale, .97))`) |
 | Aktive Zeile (DP-07) | `--casora-soft-row-active` · `-active-shadow` · `-active-ink` · `-active-sub` | hell Creme + Ruhe-Schatten; dunkel Sand 14 %, helle Schrift |
 | Symbol auf Akzent | `--casora-soft-glyph` · `--casora-soft-glyph-dark` | nach Kontrast (Entscheidung 01.11.2026, Prüfung 2): Weiß, wo es auf der Gerätefarbe mindestens 3 : 1 hat (Blau, Türkis, Rot, Rosa, Violett), sonst die dunkle Glyphe (Gelb, Orange, Hellgrün, Mint, Neutral). Rechnet `inkOn()` in `casora-core.js` (Popup-Listen, Bühnen-Symbol, Kopf-Ring, Chips); für Text auf der Farbe mit 4,5 : 1 (`inkOn(fill, 4.5)`), auf durchscheinenden Flächen die Aus-Glyphe; löst „immer Weiß“ (11.10.) ab |
-| Popup-Akzent | `--casora-popup-accent` · `--casora-popup-accent-ink` | vom Rahmen je Popup gesetzt = Gerätefarbe der Kachel (Schalter, Kopf-Kachel, aktive Symbole) |
+| Popup-Akzent | `--casora-popup-accent` · `--casora-popup-accent-ink` | vom Rahmen je Popup gesetzt = Gerätefarbe der Kachel (Schalter, Kopf-Kachel, aktive Symbole); zeigt der Kopf-Ring einen Fehler in Rot, bleibt der Akzent die Gerätefarbe (Fehler nur Ring und Bühne, 07.11.2026) |
 
 Symbol-Kacheln (abgerundetes Quadrat statt Kreis, Popups seit 1.3): Radius ≈ 30 % – Kopf 56/16, Handy 48/14,
 Zeile 36/12 (`--casora-soft-icon-size`, `--casora-soft-icon-radius` im Popup-Rahmen). Startseite zieht nach.
@@ -277,7 +277,9 @@ mehr). Gilt auch für Auswahllisten (`--casora-soft-row-selected` zeigt darauf).
 - Hell **und** dunkel prüfen – die Hälfte der Kontrast-Funde gab es nur dunkel.
 
 **Entschieden 1.3 (dk-08):** Rot für Schrift auf Creme ist `--casora-color-red-text` (#A8443A, 4,9:1);
-Kreise/Flächen bleiben `--casora-color-red`. **Pfeil › in Zeilen (DP-30):** entschieden B, Deckkraft .6
+Kreise/Flächen bleiben `--casora-color-red`. Fehlerschrift auf der **aktiven Kachel** (helle Platte, auch im
+dunklen Design) ist `--casora-entity-state-active-bad` (hell = `red-text`, dunkel #94382F, ≥ 5 : 1) – `red-text` ist
+dunkel das helle Rot für dunkle Zeilen (Nutzertest 07.11.2026: 1,7 : 1). **Pfeil › in Zeilen (DP-30):** entschieden B, Deckkraft .6
 (`--casora-chev-opacity`), Strich in Text 1.
 
 ## 12. Trefferflächen

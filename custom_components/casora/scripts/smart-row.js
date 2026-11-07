@@ -557,13 +557,27 @@ class CasoraSmartRow extends HTMLElement {
     const INSET = 20, FADE = 150;
     const l = can && this.scrollLeft > 2;
     const r = can && m > 2 && this.scrollLeft < m - 2;
-    const g = (l || r)
+    let g = (l || r)
       ? 'linear-gradient(to right, '
         + (l ? `transparent ${INSET}px, #000 ${INSET + FADE}px` : '#000 0')
         + ', '
         + (r ? `#000 calc(100% - ${INSET + FADE}px), transparent calc(100% - ${INSET}px)` : '#000 100%')
         + ')'
       : '';
+    // The arrows (desktop, E32) sit inside this masked host, right in the faded edge: the mask drew them at about
+    // 12 % (user test 07.11.2026, „next arrow barely visible“). A round hole per shown arrow keeps it whole.
+    const arrows = g && this.shadowRoot && this.shadowRoot.getElementById('arrows');
+    if (arrows && getComputedStyle(arrows).display !== 'none') {
+      const hb = this.getBoundingClientRect();
+      [['l', l], ['r', r]].forEach(([side, on]) => {
+        const b = on && arrows.querySelector('.' + side);
+        const bb = b && b.getBoundingClientRect();
+        if (!bb || !bb.width) return;
+        const x = Math.round(bb.left - hb.left + bb.width / 2), y = Math.round(bb.top - hb.top + bb.height / 2);
+        const rad = Math.round(bb.width / 2);
+        g = `radial-gradient(circle at ${x}px ${y}px, #000 ${rad + 2}px, transparent ${rad + 18}px), ` + g;
+      });
+    }
     this._casoraFaded = true;
     if (this._casoraHostFade !== g) {
       this._casoraHostFade = g;
