@@ -15,7 +15,7 @@ device assistant (casora-panel-assist.js), so the tiles are an ordinary unsaved 
     "tiles", "next",
   }
 
-Reasons: unknown_area, unknown_device, duplicate (the device already got a tile earlier in the plan), already_on_tile (on a tile
+Reasons: unknown_area, unknown_device, duplicate (the device already got a tile earlier in the plan), entity_in_plan (another device of the plan brings the same main entity), already_on_tile (on a tile
 of that dashboard, rule as in setup_overview.on_tile), no_main_entity (nothing Casora can put on a tile; service
 devices, disabled devices and devices without visible entities too), unknown_tile (not in PLAN_TILES),
 tile_does_not_fit (the device has no entity for that tile type).
@@ -71,6 +71,7 @@ DETAIL = {
     "unknown_device": "No device with this device_id.",
     "duplicate": "The device already has a tile earlier in this plan.",
     "already_on_tile": "The device is already on a tile of this dashboard.",
+    "entity_in_plan": "Another device in this plan already brings the same entity. Pick another tile type or leave it out.",
     "no_main_entity": "The device has nothing Casora can put on a tile.",
     "unknown_tile": "Unknown tile type. Leave tile out for Casora's suggestion.",
     "tile_does_not_fit": "The device has no entity for this tile type. Leave tile out for Casora's suggestion.",
@@ -158,8 +159,11 @@ def make_plan(rooms_in: list[dict], areas: dict[str, str], devs: dict[str, Dev],
                 skip(dev_id, area_id, hit)
                 continue
             tile, main = hit
-            if main in used or main in taken:
+            if main in used:
                 skip(dev_id, area_id, "already_on_tile")
+                continue
+            if main in taken:  # another device of this plan already brings that entity
+                skip(dev_id, area_id, "entity_in_plan")
                 continue
             taken.add(main)
             seen.add(dev_id)
@@ -191,12 +195,16 @@ async def async_set_pending(hass: HomeAssistant, plan: dict | None) -> None:
     await _store(hass).async_save({"plan": plan})
 
 
-async def _devices(hass: HomeAssistant) -> dict[str, Dev]:
+async def _devices(hass: HomeAssistant, wanted: set[str]) -> dict[str, Dev]:
     from homeassistant.helpers import device_registry as dr
 
     by_dev = so.entities_by_device(hass)
     out: dict[str, Dev] = {}
-    for d in dr.async_get(hass).devices.values():
+    reg = dr.async_get(hass)
+    # Only the devices the plan names: the tile suggestion is not cheap, a house has hundreds of devices.
+    for d in (reg.async_get(x) for x in wanted):
+        if d is None:
+            continue
         name = d.name_by_user or d.name or ""
         ents, hidden, visible = so.device_entities(hass, by_dev.get(d.id, []))
         usable = (not d.disabled_by and d.entry_type is None and bool(visible)
@@ -218,7 +226,8 @@ async def async_setup_plan(hass: HomeAssistant, data: dict) -> dict[str, Any]:
             translation_domain=DOMAIN, translation_key="setup_plan_not_casora",
             translation_placeholders={"dashboard": dashboard, "dashboards": ", ".join(refs)})
     areas = {a.id: a.name for a in ar.async_get(hass).async_list_areas()}
-    rooms, skipped = make_plan(data["rooms"], areas, await _devices(hass), refs[dashboard])
+    wanted = {str(i.get("device_id")) for r in data["rooms"] for i in (r.get("devices") or [])}
+    rooms, skipped = make_plan(data["rooms"], areas, await _devices(hass, wanted), refs[dashboard])
     n = sum(len(r["tiles"]) for r in rooms)
     plan_id = uuid.uuid4().hex if n else None
     # The latest proposal replaces the pending one, also when nothing of it is valid.

@@ -796,7 +796,11 @@ customElements.whenDefined("casora-panel").then(() => {
       if (typeof panel._remember === "function") panel._remember(plan.dashboard);
       await panel._load();
     }
-    if ((plan.dashboard && panel._dashUrl !== plan.dashboard) || !panel._state || panel._flowMode) return;
+    // Say why nothing opens instead of a silent button.
+    const say = (m) => { if (typeof panel._status === "function") panel._status(tr(m), "err"); };
+    if (plan.dashboard && panel._dashUrl !== plan.dashboard) return say("The dashboard of this suggestion is gone. Discard it and ask your assistant again.");
+    if (!panel._state) return say("The dashboard could not be loaded. Reload the page, then try again.");
+    if (panel._flowMode) return say("Finish or close the open step first.");
     panel._casoraAssist({ plan });
   }
 
@@ -870,7 +874,8 @@ customElements.whenDefined("casora-panel").then(() => {
       check(this);
       if (!this._casoraPlanFocus) {
         this._casoraPlanFocus = () => { if (this.isConnected && document.visibilityState !== "hidden") check(this); };
-        window.addEventListener("focus", this._casoraPlanFocus);
+        // Through _gOn: disconnectedCallback removes it (HA builds a new panel on every visit).
+        if (typeof this._gOn === "function") this._gOn(window, "focus", this._casoraPlanFocus);
       }
       return r;
     };

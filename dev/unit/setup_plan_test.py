@@ -124,6 +124,12 @@ check("unknown area", why.get(("plug", "nirgends")) == "unknown_area", why)
 check("every skip has a detail text", all(s["detail"] for s in skipped))
 check("main entity on a tile already", sp.make_plan([{"area_id": "bad", "devices": [{"device_id": "lamp"}]}], areas, devs,
                                                     {"light.decke"})[1][0]["reason"] == "already_on_tile")
+# Two devices of one plan with the same main entity: the second is a conflict inside the plan, not on the dashboard
+# (code review 07.11.2026: it was reported as already_on_tile, which the assistant read as "on the dashboard").
+dup_main = sp.make_plan([{"area_id": "bad", "devices": [{"device_id": "lamp"}]},
+                         {"area_id": "kueche", "devices": [{"device_id": "lamp2"}]}], areas,
+                        {**devs, "lamp2": devs["lamp"]}, set())[1]
+check("same main entity twice in the plan", [s["reason"] for s in dup_main] == ["entity_in_plan"], dup_main)
 two_same = sp.make_plan([{"area_id": "bad", "devices": [{"device_id": "thermo", "tile": "light"}]},
                          {"area_id": "kueche", "devices": [{"device_id": "lamp"}]}], areas, devs, set())[0]
 check("rooms keep their area name", [r["area"] for r in two_same] == ["Bad", "Küche"], two_same)
@@ -156,7 +162,7 @@ async def fake_refs(hass):
     return refs
 
 
-async def fake_devs(hass):
+async def fake_devs(hass, wanted=None):
     return devs
 
 

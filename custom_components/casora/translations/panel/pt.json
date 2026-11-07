@@ -3682,5 +3682,8 @@
       "^Suggestion from your assistant: (\\d+) devices in (\\d+) rooms$",
       "Sugestão do teu assistente: {1} dispositivos em {2} divisões"
     ]
-  ]
+  ],
+  "The dashboard of this suggestion is gone. Discard it and ask your assistant again.": "O painel desta sugestão já não existe. Descarta-a e pergunta de novo ao teu assistente.",
+  "The dashboard could not be loaded. Reload the page, then try again.": "Não foi possível carregar o painel. Recarrega a página e tenta de novo.",
+  "Finish or close the open step first.": "Primeiro conclui ou fecha o passo aberto."
 }

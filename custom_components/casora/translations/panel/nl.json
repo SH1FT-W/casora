@@ -3682,5 +3682,8 @@
       "^Suggestion from your assistant: (\\d+) devices in (\\d+) rooms$",
       "Voorstel van je assistent: {1} apparaten in {2} ruimtes"
     ]
-  ]
+  ],
+  "The dashboard of this suggestion is gone. Discard it and ask your assistant again.": "Het dashboard van dit voorstel bestaat niet meer. Verwerp het en vraag je assistent opnieuw.",
+  "The dashboard could not be loaded. Reload the page, then try again.": "Het dashboard kon niet worden geladen. Laad de pagina opnieuw en probeer het dan nog eens.",
+  "Finish or close the open step first.": "Rond eerst de open stap af of sluit hem."
 }

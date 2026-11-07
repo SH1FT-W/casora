@@ -1,5 +1,5 @@
 // Owner, 06.11.2026: „Überschriften etc. – da haben wir noch Unstimmigkeiten“.
-//   1. The section of an item's state is „Zustand“ (popup-blaupause.md: Bedienung → Zustand → Verlauf); humidifier,
+//   1. The section of an item's state is „Zustand“ (popup-richtlinien-v3.md §6: Bedienung → Zustand → Verlauf); humidifier,
 //      mower, pet, air purifier and fan called it „Status“.
 //   2. A Verlauf plate is headed „<what> · <span>“ like the thermostat's („Temperatur · 24 Std.“, _hpChartTitle,
 //      richtlinien §7.2); the free tile said „Verlauf“, the oven „Garraum“, the fridge nothing, the climate popup

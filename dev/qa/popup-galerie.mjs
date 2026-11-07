@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Popup gallery for the test HA (casora-test, state "arbeit"): one dashboard "popup-galerie" with exactly one opener
 // per popup kind – tiles, badges (in room headers), menus – grouped by the waves of the v3 rework
-// (docs/handbuch/popup-rework-v3-auftrag.md §5), each with a label. For walking through all popups by hand.
+// (docs/handbuch/archiv/popup-rework-v3-auftrag.md §5), each with a label. For walking through all popups by hand.
 //
 //   node dev/qa/popup-galerie.mjs anlegen            builds (or rebuilds) the dashboard /popup-galerie
 //   node dev/qa/popup-galerie.mjs pruefen [--handy|--ipad] [--hell] [--nur <regex>] [--md <file>] [--json <file>] [--bilder <dir>]

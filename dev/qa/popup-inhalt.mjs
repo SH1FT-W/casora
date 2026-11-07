@@ -1,4 +1,4 @@
-// Popup content inventory (popup-rework-v3-auftrag.md §0.3): opens popups like popup-raender.mjs, walks all
+// Popup content inventory (archiv/popup-rework-v3-auftrag.md §0.3): opens popups like popup-raender.mjs, walks all
 // shadow DOMs and writes every control and live value as a sorted list – services (data-casora-svc), more-info
 // (data-casora-mi), sub pages (data-casora-page), routes (data-casora-go), switches, sliders, live values, the
 // light module's own taps (data-lps-tap/-bar) and the header switch. „Mehr“ is expanded, sub pages (›) are

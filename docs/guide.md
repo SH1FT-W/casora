@@ -283,7 +283,7 @@ You need an MCP server that can **call Home Assistant actions**, for example [ha
    }
    ```
 
-   - `skipped` lists what cannot go on a tile, with a reason: `unknown_area`, `unknown_device`, `duplicate`, `already_on_tile`, `no_main_entity` (nothing Casora can put on a tile), `unknown_tile`, `tile_does_not_fit` (the device has nothing for that tile type).
+   - `skipped` lists what cannot go on a tile, with a reason: `unknown_area`, `unknown_device`, `duplicate`, `entity_in_plan` (another device of the plan brings the same entity), `already_on_tile`, `no_main_entity` (nothing Casora can put on a tile), `unknown_tile`, `tile_does_not_fit` (the device has nothing for that tile type).
    - Tile types you can name: `light`, `thermostat`, `fbh` (floor heating), `media`, `fan`, `air_purifier`, `cover`, `lock`, `vacuum`, `humidifier`, `casora_camera`, `casora_alarm`, `casora_lawn_mower`, `casora_switch`, and the appliances `casora_washer`, `casora_dryer`, `casora_dishwasher`, `casora_oven`, `casora_fridge`, `casora_3d_printer` (only when Casora recognises the device as one). Leave `tile` out and Casora picks, as in `suggested_tile`.
    - One tile per device. A lamp with two channels gets one tile here; the device assistant in the Studio offers both.
    - The valid part is kept as **the** pending suggestion (one at a time). A new call replaces it; a call with nothing valid removes it.
