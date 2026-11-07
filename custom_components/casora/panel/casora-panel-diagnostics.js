@@ -14,7 +14,12 @@
 // individual devices) and per Casora dashboard the energy badges: how many rooms have one, automatic or chosen by
 // hand, and per room how many power sensors it adds up of how many Casora finds in the room's area.
 //
-// Pure part: window.casoraDiagnostics = { collect, format, KNOWN_PLATFORMS, energyOf, energyBadge }.
+// Batteries (#136, 07.11.2026): a duplicate that stayed after the fix could be a list picked by hand (kept as picked)
+// or old dashboard code in the browser. So: battery sensors, Battery Notes ones, devices with two or more, the twins
+// Casora drops, battery tiles with a list of their own (and twins in them), and whether this browser runs the dashboard
+// code the server has (casoraLoadedStamp against casora/version's stamp).
+//
+// Pure part: window.casoraDiagnostics = { collect, format, KNOWN_PLATFORMS, energyOf, energyBadge, batteryOf }.
 (() => {
   const W = typeof window !== "undefined" ? window : globalThis;
   const tr = (x) => (W.casoraI18n && W.casoraI18n.t ? W.casoraI18n.t(x) : x);
@@ -131,6 +136,31 @@
     return out;
   }
 
+  // ── Batteries: counts only ─────────────────────────────────────────────────
+  // twin(id, states, hass): casoraPopupHide.batteryTwin from the dashboard code, or null when it is not loaded.
+  // picked: the battery lists of tiles (variables.batteries / entity_filter), each an array of entity ids.
+  function batteryOf(hass, twin, picked) {
+    const H = hass || {}, S = H.states || {}, E = H.entities || {};
+    const isBat = (id) => {
+      const e = S[id];
+      return !!e && id.indexOf("sensor.") === 0 && (e.attributes || {}).device_class === "battery" && isFinite(parseFloat(e.state));
+    };
+    const ids = Object.keys(S).filter(isBat);
+    const perDev = {};
+    ids.forEach((id) => { const d = (E[id] || {}).device_id; if (d) perDev[d] = (perDev[d] || 0) + 1; });
+    const isTwin = (id) => { try { return !!twin(id, S, H); } catch (e) { return false; } };
+    const lists = (Array.isArray(picked) ? picked : []).filter((l) => Array.isArray(l) && l.some(isBat));
+    return {
+      sensors: ids.length,
+      notes: ids.filter((id) => (E[id] || {}).platform === "battery_notes").length,
+      multi: Object.keys(perDev).filter((d) => perDev[d] > 1).length,
+      dropped: typeof twin === "function" ? ids.filter(isTwin).length : null,
+      lists: lists.length,
+      listed: lists.reduce((n, l) => n + l.filter(isBat).length, 0),
+      listedTwins: typeof twin === "function" ? lists.reduce((n, l) => n + l.filter((id) => isBat(id) && isTwin(id)).length, 0) : null,
+    };
+  }
+
   // ── Collect: counts only ─────────────────────────────────────────────────
   // hass: the frontend's hass. o: what the panel knows –
   //   registry   full entity registry (config/entity_registry/list) or null (then no disabled counts)
@@ -201,6 +231,10 @@
       otherIntegrations: { count: other.length, entities: other.reduce((s, p) => s + plats[p].n, 0) },
       finders: (o.finders || []).map((x) => ({ type: cleanWord(x && x.type), n: num(x && x.n) })).filter((x) => x.type !== "?"),
       energy: o.energy ? energyOf(o.energy.prefs, o.energy.house, o.energy.dashboards) : null,
+      batteries: o.batteries ? batteryOf(H, o.batteries.twin, o.batteries.picked) : null,
+      // current | outdated (the browser runs older dashboard code than the server has) | not loaded (no dashboard opened
+      // in this tab yet) | ? (yaml mode)
+      code: oneOf(o.code, ["current", "outdated", "not loaded"]),
     };
   }
 
@@ -245,6 +279,13 @@
       + (d.current ? " · this one: " + dash(d.current.rooms) + " rooms, " + dash(d.current.tiles) + " tiles, "
         + dash(d.current.missing) + " without device" : ""));
     out.push("community cards added: " + (d.community.length ? d.community.join(", ") : "none"));
+    if (d.code) out.push("browser runs the dashboard code: " + d.code);
+    if (d.batteries) {
+      const b = d.batteries;
+      out.push("batteries: " + b.sensors + " sensors · Battery Notes " + b.notes + " · devices with 2+ " + b.multi
+        + " · twins dropped " + dash(b.dropped) + " · tiles with own list " + b.lists
+        + (b.lists ? " (" + b.listed + " sensors, twins " + dash(b.listedTwins) + ")" : ""));
+    }
     out.push("");
     out.push("entities: " + d.total + " · disabled " + dash(d.disabled) + " · hidden " + d.hidden + " · no state " + d.noState);
     out.push("(lists = Studio entity lists, tiles = usable for tile suggestions)");
@@ -266,7 +307,7 @@
     return "```text\n" + out.join("\n") + "\n```\n";
   }
 
-  W.casoraDiagnostics = { collect, format, envOf, KNOWN_PLATFORMS, cleanWord, cleanVersion, cleanTheme, energyOf, energyBadge };
+  W.casoraDiagnostics = { collect, format, envOf, KNOWN_PLATFORMS, cleanWord, cleanVersion, cleanTheme, energyOf, energyBadge, batteryOf };
 
   if (typeof customElements === "undefined" || !customElements || !customElements.whenDefined) return;
 
@@ -305,9 +346,17 @@
     P._diagData = async function () {
       const h = this._hass || {};
       const I = W.__casoraPanelInternals || {};
-      if (!W.__casoraVersion && h.callWS) {
-        try { const r = await h.callWS({ type: "casora/version" }); if (r && r.version) W.__casoraVersion = r.version; } catch (e) { /* stays "?" */ }
+      let stamp;
+      if (h.callWS) {
+        try {
+          const r = await h.callWS({ type: "casora/version" });
+          if (r && r.version && !W.__casoraVersion) W.__casoraVersion = r.version;
+          stamp = r ? r.stamp : undefined;
+        } catch (e) { /* stays "?" */ }
       }
+      // The dashboard code this browser runs (casora-local.js ?v=, casora-core.js) against the server's stamp.
+      const loaded = W.casoraLoadedStamp;
+      const code = !loaded ? "not loaded" : stamp == null ? "?" : String(stamp) === String(loaded) ? "current" : "outdated";
       let registry = null;
       try { registry = h.callWS ? await h.callWS({ type: "config/entity_registry/list" }) : null; } catch (e) { registry = null; }
       const lists = (d) => {
@@ -323,17 +372,24 @@
       const phone = list.filter((x) => /[-_]mobile$/i.test(x.url_path || "")).length;
       const rooms = (this._state && this._state.compact && this._state.compact.rooms) || null;
       let current = null;
+      const picked = [];
       if (rooms) {
         let tiles = 0, missing = 0;
         rooms.forEach((r) => (r.tiles || []).forEach((t) => {
           tiles++;
           const v = (t && t.type === "conditional" && t.card) || t;
+          const vv = (v && v.variables) || {};
+          if (Array.isArray(vv.batteries || vv.entity_filter)) picked.push(vv.batteries || vv.entity_filter);
           const type = I.tileTypeAny ? I.tileTypeAny(v) : null;
           try { if ((I.tileMissingEntity && I.tileMissingEntity(v, type)) || (I.tileEntityGone && I.tileEntityGone(v, h.states))) missing++; } catch (e) { /* not counted */ }
         }));
         current = { rooms: rooms.length, tiles, missing };
       }
       const energy = await this._diagEnergy(list, rooms);
+      // The battery twin rule lives in the dashboard's finder; opened straight into the Studio it may not be loaded yet.
+      if (!(W.casoraPopupHide && W.casoraPopupHide.batteryTwin)) {
+        try { await (W.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/00-finder.js"); } catch (e) { /* twins stay "–" */ }
+      }
       const touch = !!(W.matchMedia && W.matchMedia("(pointer: coarse)").matches);
       const device = this.classList.contains("phone") ? "phone" : touch ? "tablet" : "desktop";
       return W.casoraDiagnostics.collect(h, {
@@ -348,6 +404,8 @@
         viewport: { w: W.innerWidth, h: W.innerHeight },
         date: new Date().toISOString().slice(0, 10),
         energy,
+        code,
+        batteries: { twin: W.casoraPopupHide && W.casoraPopupHide.batteryTwin ? W.casoraPopupHide.batteryTwin : null, picked },
       });
     };
 

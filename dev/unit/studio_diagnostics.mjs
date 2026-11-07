@@ -107,6 +107,8 @@ const hass = {
   },
 };
 window.casoraCommunityOn = new Set(['casora_pet', 'Fluffyquill']);
+// Offline: the finder (battery twins) cannot be loaded here – the diagnostics go on without it.
+window.casoraImportScript = () => Promise.reject(new Error('offline'));
 window.__casoraVersion = '';
 const tile = (o) => ({ type: 'custom:button-card', ...o });
 const rooms = [
@@ -210,6 +212,29 @@ assert.ok(text.includes('energy settings (HA): set up · grid 1 (power 1) · sol
   assert.ok(DG.format(DG.collect(hass, { energy: { prefs: {}, house: null, dashboards: [] } })).includes('energy settings (HA): not set up · house from settings: –'));
 }
 console.log('ok diagnostics: energy');
+
+// Batteries (#136): a duplicate that stays after the fix – picked by hand or old code in the browser? Counts only.
+{
+  const B1 = 'sensor.plumtwist_battery', B2 = 'sensor.plumtwist_battery_plus', B3 = 'sensor.zorvanka_battery';
+  const bat = (id, v) => st(id, v, { friendly_name: 'Plumtwist', device_class: 'battery' });
+  const hb = {
+    states: { [B1]: bat(B1, '32'), [B2]: bat(B2, '32'), [B3]: bat(B3, '80'), 'sensor.gone_battery': bat('sensor.gone_battery', 'unknown') },
+    entities: { [B1]: reg(B1, { device_id: 'k', platform: 'mqtt' }), [B2]: reg(B2, { device_id: 'k', platform: 'battery_notes' }),
+      [B3]: reg(B3, { device_id: 'z', platform: 'mqtt' }) },
+  };
+  const twin = (id, S, h) => (h.entities[id] || {}).platform === 'battery_notes';
+  const b = DG.batteryOf(hb, twin, [[B1, B2, B3], [LIGHT], 'x']);
+  assert.deepEqual(b, { sensors: 3, notes: 1, multi: 1, dropped: 1, lists: 1, listed: 3, listedTwins: 1 }, 'a picked list with its twin');
+  assert.deepEqual(DG.batteryOf(hb, null, []), { sensors: 3, notes: 1, multi: 1, dropped: null, lists: 0, listed: 0, listedTwins: null },
+    'dashboard code not loaded: twins unknown');
+  const t = DG.format(DG.collect(hb, { batteries: { twin, picked: [[B1, B2]] }, code: 'outdated' }));
+  assert.ok(t.includes('batteries: 3 sensors · Battery Notes 1 · devices with 2+ 1 · twins dropped 1 · tiles with own list 1 (2 sensors, twins 1)'), t);
+  assert.ok(t.includes('browser runs the dashboard code: outdated'), t);
+  assert.ok(!/plumtwist|zorvanka/i.test(t), 'no entity ids');
+  assert.ok(DG.format(DG.collect(hb, { code: '<b>' })).includes('browser runs the dashboard code: ?'), 'odd code status');
+  assert.ok(!DG.format(DG.collect(hb, {})).includes('batteries:'), 'no battery line without the data');
+}
+console.log('ok diagnostics: batteries and dashboard code');
 
 // Without the full registry (no admin): disabled is "–", nothing breaks.
 {
