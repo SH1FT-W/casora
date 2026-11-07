@@ -111,6 +111,29 @@ assert.match(o.chart, /class="hp-chart-slot"[^>]*pointer-events:auto/, 'chart sl
 eq(o.range.map((r) => [r.label, r.active, r.attrs['data-hp-metric']]),
   [['24 Std.', true, 'co:sensor.x1|24h'], ['7 Tage', false, 'co:sensor.x1|7d']], 'range switch 24 Std. · 7 Tage');
 assert.match(html, /onclick="window\._hpPlantTap/, 'range taps go through the shared chart switch');
+
+// Frozen stage (follow-up to #124, r589): a new ppm keeps the exact HTML – no redraw, no chart remount –,
+// the ring is painted in place (UI.dialPaint) and the number follows live (data-hp-live).
+win._casoraUI.dialPct = (v, mn, mx) => (v - mn) / (mx - mn) * 100;
+const paints = [];
+win._casoraUI.dialPaint = (dl, pct) => paints.push(pct);
+const elS = { shadowRoot: { querySelector: () => ({ querySelectorAll: () => [] }) } };
+const h1 = C.sec('stage', { id: 'sensor.x1' }, hass.states, hass, elS);
+assert.equal(calls.pop()[1].live, 'sensor.x1', 'the number follows live');
+const drawn = calls.length;
+hass.states['sensor.x1'] = st('63', { device_class: 'carbon_monoxide', unit_of_measurement: 'ppm' });
+const h2 = C.sec('stage', { id: 'sensor.x1' }, hass.states, hass, elS);
+assert.equal(h2, h1, 'a new ppm keeps the same HTML (no redraw)');
+assert.equal(calls.length, drawn, 'the stage is not drawn again for a new ppm');
+await new Promise((r) => setTimeout(r, 5));
+eq(paints.map(Math.round), [41, 42], 'the ring is painted in place per value');
+hass.states['sensor.x1'] = st('unavailable', { device_class: 'carbon_monoxide', unit_of_measurement: 'ppm' });
+C.sec('stage', { id: 'sensor.x1' }, hass.states, hass, elS);
+assert.equal(calls.length, drawn + 1, 'unavailable draws the stage anew');
+assert.equal(calls.pop()[1].state, 'na', 'unavailable stage greyed');
+calls.length = 0;
+hass.states['sensor.x1'] = st('62', { device_class: 'carbon_monoxide', unit_of_measurement: 'ppm' });
+
 const todo = C.sec('todo', { id: 'sensor.x1' }, hass.states, hass);
 assert.equal(todo.l, 'Was tun');
 assert.match(todo.rows[0].sub, /Raum verlassen/, 'warning: leave the room');
