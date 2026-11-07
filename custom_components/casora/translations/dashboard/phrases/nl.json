@@ -4272,6 +4272,10 @@
       "{1}% van het huis"
     ],
     [
+      "^Spitze\\s24\\sStd\\.:\\s(.+)$",
+      "Piek in 24\u00a0uur: {1}"
+    ],
+    [
       "^(\\d+) Geräte ohne Wert$",
       "{1} apparaten zonder waarde"
     ],

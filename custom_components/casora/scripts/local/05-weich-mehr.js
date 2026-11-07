@@ -714,12 +714,73 @@
     var room = Math.min(roomW, house);
     return { room: room, house: house, pct: Math.round(room / house * 100) };
   };
+  // Room popup without a house value (owner, 07.11.2026: the ring instead of the big number): the ring is the room's
+  // power now against its peak of the last 24 hours, from HA's 5-minute statistics (max per sensor, in W). A room that
+  // adds up devices: the peak is the highest 5-minute sum of their maxima (never below the true peak). The peak is never
+  // below the value now, so the ring never runs over. Pure for dev/unit/energy_room_peak.mjs: { room, peak, pct }.
+  E.peakOf = function (rows, ids) {
+    var by = {}, any = false;
+    (ids || []).forEach(function (id) {
+      ((rows && rows[id]) || []).forEach(function (p) {
+        var t = typeof p.start === 'number' ? p.start : Date.parse(p.start), v = Number(p.max);
+        if (!isFinite(t) || p.max == null || !isFinite(v)) return;
+        by[t] = (by[t] || 0) + Math.max(0, v); any = true;
+      });
+    });
+    if (!any) return null;
+    return Object.keys(by).reduce(function (m, k) { return Math.max(m, by[k]); }, 0);
+  };
+  E.peakShare = function (roomW, peak) {
+    if (roomW == null || !isFinite(roomW) || roomW < 0 || peak == null || !isFinite(peak)) return null;
+    var top = Math.max(peak, roomW);
+    if (!(top > 0)) return null;
+    return { room: roomW, peak: top, pct: Math.round(roomW / top * 100) };
+  };
+  // The room's sensors with a power value (its own, else the summed devices; a device behind a metering plug stays
+  // out like in the sum).
+  E.peakIds = function (C, states) {
+    if (C.home) return [C.home];
+    if (!C.sum || !window._casoraPowerSum) return [];
+    return window._casoraPowerSum(C.sum, states).items
+      .filter(function (it) { return it.skip === '' || it.skip === 'off'; }).map(function (it) { return it.id; });
+  };
+  // The peak, fetched once per 5 minutes and room; the stage is drawn again when it comes (casoraKick).
+  // Returns a number (W), 'wait' while the first answer is out, or null (no statistics: the plate stays).
+  var PEAK = {};
+  E.roomPeak = function (ids, hass, el) {
+    if (!ids || !ids.length || !hass || typeof hass.callWS !== 'function') return null;
+    var ck = ids.slice().sort().join('|'), key = Math.floor(Date.now() / 300000), hit = PEAK[ck];
+    if (hit && (hit.key === key || hit.busy)) {
+      if (el && hit.busy && hit.wait.indexOf(el) < 0) hit.wait.push(el);
+      return hit.busy && !hit.done ? 'wait' : hit.peak;
+    }
+    var cell = PEAK[ck] = { key: key, busy: true, done: hit ? hit.done : false, peak: hit ? hit.peak : null, wait: el ? [el] : [] };
+    hass.callWS({ type: 'recorder/statistics_during_period', start_time: new Date(Date.now() - 864e5).toISOString(),
+      statistic_ids: ids, period: '5minute', types: ['max'], units: { power: 'W' } })
+      .then(function (r) { cell.peak = E.peakOf(r, ids); }, function () { if (!cell.done) cell.peak = null; })
+      .then(function () {
+        cell.busy = false; cell.done = true;
+        var ws = cell.wait; cell.wait = [];
+        ws.forEach(function (x) { try { if (window.casoraKick) window.casoraKick(x); } catch (e) { /* popup closed */ } });
+      });
+    return cell.done ? cell.peak : 'wait';
+  };
   E.stage3 = function (C, states, hass, self) {
     var UI = window._casoraUI;
     var b = v3Bits(C, states), w = b.p == null ? null : (Math.abs(b.p) < 20 && b.p < 0 ? 0 : Math.abs(b.p));
     var txt = w == null ? '—' : fW(w, hass), cut = txt.lastIndexOf(' ');
     var num0 = cut > 0 ? txt.slice(0, cut) : txt, unit0 = cut > 0 ? txt.slice(cut + 1) : '';
-    var sh = C.fs ? null : E.houseShare(C, states, hass, b.p), line0 = sh ? T(sh.pct + ' % vom Haus') : b.line || T('Jetzt');
+    // The ring: the room's share of the house (E.houseShare), else its power against its 24 h peak (E.roomPeak; while
+    // the peak is on its way an empty ring, so the stage does not jump from the plate to the dial).
+    var hs = C.fs ? null : E.houseShare(C, states, hass, b.p), sh = null;
+    if (hs) sh = { room: hs.room, max: hs.house, line: T(hs.pct + ' % vom Haus') };
+    else if (C.room && w != null && b.p >= 0) {
+      var pk = E.roomPeak(E.peakIds(C, states), hass, self), ps = typeof pk === 'number' ? E.peakShare(w, pk) : null;
+      // No break inside „24 Std.“ or „2,9 kW“: on the phone the line wraps only after the colon.
+      if (ps) sh = { room: ps.room, max: ps.peak, line: T('Spitze\u00a024\u00a0Std.: ' + fW(ps.peak, hass).replace(' ', '\u00a0')) };
+      else if (pk === 'wait') sh = { room: 0, max: 1, line: T('Jetzt') };
+    }
+    var line0 = sh ? sh.line : b.line || T('Jetzt');
     // The stage's HTML stays while the popup is open; only a switch between ring and plate (the house's value comes or
     // goes) or the sensor going offline draws it anew. The dial's SVG carries a new filter id on every build, so its
     // HTML is kept as built (else the chart under the wheel was mounted again on every state, r569).
@@ -734,7 +795,7 @@
       if (u && !u.hasAttribute('data-casora-reading') && u.textContent !== unit0) u.textContent = unit0;
       if (t && !t.hasAttribute('data-casora-reading') && t.textContent !== line0) t.textContent = line0;
       // The ring follows the room and the house without redrawing the stage (and the chart under it).
-      if (dl && UI && UI.dialPaint && UI.dialPct) UI.dialPaint(dl, UI.dialPct(sh.room, 0, sh.house));
+      if (dl && UI && UI.dialPaint && UI.dialPct) UI.dialPaint(dl, UI.dialPct(sh.room, 0, sh.max));
     }, 0);
     var chart = '', flowHtml = C.fs ? E.flow(C, states, hass, self) : '';
     if (C.fs) chart = '<style>.hui-stage [data-casora-flow]{background:none!important;box-shadow:none!important;padding:0!important;}'
@@ -746,7 +807,7 @@
       chart = '<div class="hp-chart-slot" style="min-height:' + Number(cfg.height) + 'px;pointer-events:auto;"></div>';
     }
     var html = memo.sh && memo.html ? memo.html : UI.stage('chart', { value: memo.n, unit: memo.u, trend: memo.l || T('Jetzt'), chart: chart,
-      read: C.fs ? null : C.home || null, ring: memo.sh ? { min: 0, max: memo.sh.house, value: memo.sh.room } : null, state: na });
+      read: C.fs ? null : C.home || null, ring: memo.sh ? { min: 0, max: memo.sh.max, value: memo.sh.room } : null, state: na });
     if (memo.sh) memo.html = html;
     return html;
   };

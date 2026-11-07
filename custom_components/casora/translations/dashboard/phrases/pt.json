@@ -4272,6 +4272,10 @@
       "{1} % da casa"
     ],
     [
+      "^Spitze\\s24\\sStd\\.:\\s(.+)$",
+      "Pico em 24\u00a0h: {1}"
+    ],
+    [
       "^(\\d+) Geräte ohne Wert$",
       "{1} dispositivos sem valor"
     ],

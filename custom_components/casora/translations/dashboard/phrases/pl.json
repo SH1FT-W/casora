@@ -4272,6 +4272,10 @@
       "{1}% domu"
     ],
     [
+      "^Spitze\\s24\\sStd\\.:\\s(.+)$",
+      "Szczyt w 24\u00a0h: {1}"
+    ],
+    [
       "^(\\d+) Geräte ohne Wert$",
       "Urządzenia bez wartości: {1}"
     ],
