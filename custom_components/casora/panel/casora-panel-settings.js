@@ -492,6 +492,13 @@
         this._csRepaint();
         return false;
       }
+      // Security › „Counts as closed up to“ (issue 138, casora-panel-personal.js): whole percent 0–20.
+      const upTo = cs.S && cs.S.security && cs.S.security.closed_up_to;
+      if (upTo !== undefined && !(typeof upTo === "number" && Number.isInteger(upTo) && upTo >= 0 && upTo <= 20)) {
+        cs.err = t("“Counts as closed up to” must be a whole number from 0 to 20 %.");
+        this._csRepaint();
+        return false;
+      }
       cs.busy = true;
       cs.err = null;
       this._csRepaint();

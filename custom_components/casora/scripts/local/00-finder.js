@@ -1576,7 +1576,9 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       if (dom === 'lock') up(s === 'jammed' ? 'alarm' : (s === 'locked' || s === 'locking') ? 'ok' : isAway() ? 'alarm' : 'warn');
       else if (dom === 'alarm_control_panel') up(s === 'triggered' ? 'alarm' : (s === 'disarmed' || s === 'pending') ? 'warn' : 'ok');
       else if (dom === 'cover') {
-        if (['garage', 'gate', 'door'].indexOf(dc) >= 0 && (s === 'open' || s === 'opening')) up(isAway() ? 'alarm' : 'warn');
+        // A gate within security.closed_up_to counts as closed (issue 138, window.casoraCoverOpen in 34-security-covers.js).
+        var gOpen = window.casoraCoverOpen ? window.casoraCoverOpen(e, 'gate') : (s === 'open' || s === 'opening');
+        if (['garage', 'gate', 'door'].indexOf(dc) >= 0 && gOpen) up(isAway() ? 'alarm' : 'warn');
       }
     });
     // Doors/windows: contact + tilt sensor (+ combined sensor) are one opening.

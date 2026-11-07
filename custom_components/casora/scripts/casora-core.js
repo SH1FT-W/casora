@@ -784,7 +784,9 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       var dom = id.split('.')[0];
       if (dom === 'lock') { if (s === 'unlocked' || s === 'unlocking' || s === 'open' || s === 'opening') locks.push(a.friendly_name || id); }
       else if (dom === 'cover') {
-        if (['garage', 'gate', 'door'].indexOf(String(a.device_class || '').toLowerCase()) >= 0 && (s === 'open' || s === 'opening')) { gates++; nm.g.push(nameOf(id)); }
+        // A gate within security.closed_up_to counts as closed (issue 138, window.casoraCoverOpen in 34-security-covers.js).
+        var gOpen = window.casoraCoverOpen ? window.casoraCoverOpen(e, 'gate') : (s === 'open' || s === 'opening');
+        if (['garage', 'gate', 'door'].indexOf(String(a.device_class || '').toLowerCase()) >= 0 && gOpen) { gates++; nm.g.push(nameOf(id)); }
       }
     });
     var bs = flat.filter(function (id) { return id.indexOf('binary_sensor.') === 0; });
