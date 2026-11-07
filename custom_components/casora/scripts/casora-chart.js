@@ -290,7 +290,7 @@
       this._c = Object.assign({ kind: 'line', span: '24h', source: 'auto' }, c, { series: s.filter(function (x) { return x && x.entity; }).map(function (x) { return Object.assign({}, x); }) });
       var sel = c.selected, ser = this._c.series;  // selected: series shown first (index or entity)
       this._sel = typeof sel === 'string' ? Math.max(0, ser.findIndex(function (x) { return x.entity === sel; })) : sel >= 0 && sel < ser.length ? Math.floor(sel) : 0;
-      this._data = null; this._key = null;
+      this._data = null; this._key = null; this._pt = null;
       this.toggleAttribute('plate', !!c.plate);
       if (!this.shadowRoot) {
         this.attachShadow({ mode: 'open' }).innerHTML = '<style>' + CSS + '</style><div id="b"></div>'
@@ -315,6 +315,7 @@
     }
     disconnectedCallback() {
       if (this._ro) this._ro.disconnect();
+      this._pt = null;
       this._unsub();
       this._release();
     }
@@ -432,6 +433,7 @@
       var box = root.getElementById('b'), W = box.clientWidth;
       if (!W) return;
       this._w = W;
+      this._pt0 = this._pt; this._pt = null;
       box.textContent = '';
       this._release();
       if (c.kind === 'bar' && c.points) return this._fixed(box, W);
@@ -546,10 +548,17 @@
       if (!n) return;
       // The heatmap reads x and y; the others only x.
       var at = function (ev) { var r = svg.getBoundingClientRect(), k = me._w / (r.width || 1); return me._near((ev.clientX - r.left) * k, (ev.clientY - r.top) * k); };
-      var go = function (i) { idx = Math.max(0, Math.min(n - 1, i)); svg.setAttribute('data-casora-esc', ''); show(idx); };
-      var off = function () { idx = -1; svg.removeAttribute('data-casora-esc'); hide(); };
-      svg.addEventListener('pointerdown', function (ev) { window._casoraSuppressDismiss = Date.now() + 600; go(at(ev)); });
-      svg.addEventListener('pointermove', function (ev) { if (ev.pointerType === 'mouse' || ev.buttons) go(at(ev)); });
+      // pt: where the reading is (pointer position, or the index from the keyboard), so a redraw can continue it.
+      // The same point again (a pointer moves a few px per event, a point every ~3 px) writes nothing.
+      var go = function (i, ev) {
+        i = Math.max(0, Math.min(n - 1, i));
+        me._pt = ev ? { clientX: ev.clientX, clientY: ev.clientY } : { i: i };
+        if (i === idx) return;
+        idx = i; svg.setAttribute('data-casora-esc', ''); show(idx);
+      };
+      var off = function () { idx = -1; me._pt = null; svg.removeAttribute('data-casora-esc'); hide(); };
+      svg.addEventListener('pointerdown', function (ev) { window._casoraSuppressDismiss = Date.now() + 600; go(at(ev), ev); });
+      svg.addEventListener('pointermove', function (ev) { if (ev.pointerType === 'mouse' || ev.buttons) go(at(ev), ev); });
       svg.addEventListener('pointerleave', function (ev) { if (ev.pointerType === 'mouse') off(); });
       svg.addEventListener('click', function (ev) { ev.stopPropagation(); });
       svg.addEventListener('blur', function () { if (idx > -1 && !svg.matches(':hover')) off(); });
@@ -561,6 +570,10 @@
         else if (k === 'Escape' && idx > -1) off(); else return;
         ev.preventDefault(); ev.stopPropagation();
       });
+      // A redraw (a new value from the history stream, a resize) builds a new plot: a reading in progress continues
+      // at the same place – it fell back to „Jetzt“ and dropped the hair line until the pointer moved again.
+      var p = this._pt0; this._pt0 = null;
+      if (p) go(p.i != null ? p.i : at(p), p.i != null ? null : p);
     }
     _empty(svg, W, Hh) {
       svg.appendChild(el('line', { x1: 2, x2: W - 2, y1: Hh - 24, y2: Hh - 24, style: 'stroke:var(--cgrid)' }));
