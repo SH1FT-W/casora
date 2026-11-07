@@ -714,27 +714,62 @@
     var room = Math.min(roomW, house);
     return { room: room, house: house, pct: Math.round(room / house * 100) };
   };
-  // Room popup without a house value (owner, 07.11.2026: the ring instead of the big number): the ring is the room's
-  // power now against its peak of the last 24 hours, from HA's 5-minute statistics (max per sensor, in W). A room that
-  // adds up devices: the peak is the highest 5-minute sum of their maxima (never below the true peak). The peak is never
-  // below the value now, so the ring never runs over. Pure for dev/unit/energy_room_peak.mjs: { room, peak, pct }.
-  E.peakOf = function (rows, ids) {
-    var by = {}, any = false;
+  // Room popup without a house value (owner, 07.11.2026: the ring instead of the big number; second round the same day:
+  // the ring learns the room's usual range, one spike must not leave it empty). The ring's full scale is the room's
+  // usual power: the 95th percentile of its hourly maxima over the last 30 days (HA's long-term statistics, in W; a room
+  // that adds up devices sums their maxima per hour), rounded up to a nice step (E.niceScale) – „Üblich bis 500 W“.
+  // Fewer than 3 days of hours: the peak of the last 24 hours from the 5-minute statistics instead („Spitze 24 Std.“).
+  // Without statistics the plate stays. Above the scale the ring is full, never more; the scale is not redrawn live.
+  // Pure for dev/unit/energy_room_peak.mjs.
+  E.bucketSums = function (rows, ids) {
+    var by = {}, keys = [];
     (ids || []).forEach(function (id) {
       ((rows && rows[id]) || []).forEach(function (p) {
         var t = typeof p.start === 'number' ? p.start : Date.parse(p.start), v = Number(p.max);
         if (!isFinite(t) || p.max == null || !isFinite(v)) return;
-        by[t] = (by[t] || 0) + Math.max(0, v); any = true;
+        if (!(t in by)) { by[t] = 0; keys.push(t); }
+        by[t] += Math.max(0, v);
       });
     });
-    if (!any) return null;
-    return Object.keys(by).reduce(function (m, k) { return Math.max(m, by[k]); }, 0);
+    return keys.map(function (k) { return by[k]; });
   };
-  E.peakShare = function (roomW, peak) {
-    if (roomW == null || !isFinite(roomW) || roomW < 0 || peak == null || !isFinite(peak)) return null;
-    var top = Math.max(peak, roomW);
+  E.peakOf = function (rows, ids) {
+    var s = E.bucketSums(rows, ids);
+    return s.length ? Math.max.apply(null, s) : null;
+  };
+  // Nearest-rank percentile (p in 0 … 100).
+  E.percentile = function (list, p) {
+    var a = (list || []).filter(function (x) { return isFinite(x); }).sort(function (x, y) { return x - y; });
+    if (!a.length) return null;
+    return a[Math.max(0, Math.min(a.length - 1, Math.ceil(p / 100 * a.length) - 1))];
+  };
+  // Round up to 1 · 1,5 · 2 · 2,5 · 3 · 4 · 5 · 7,5 × 10ⁿ (… 100, 150, 200, 250, 300, 400, 500, 750, 1000 …), at least 10 W.
+  var NICE = [1, 1.5, 2, 2.5, 3, 4, 5, 7.5, 10];
+  E.niceScale = function (w) {
+    if (w == null || !isFinite(w)) return null;
+    if (w <= 10) return 10;
+    var e = Math.pow(10, Math.floor(Math.log10(w)));
+    for (var i = 0; i < NICE.length; i++) { var s = Math.round(NICE[i] * e * 1000) / 1000; if (s >= w - 1e-9) return s; }
+    return 10 * e;
+  };
+  var HOURS_MIN = 72;
+  // { max, kind: 'usual' | 'peak' } from the answers of the hourly (30 days) and 5-minute (24 hours) statistics, or null.
+  E.scaleOf = function (hourRows, fiveRows, ids) {
+    var hours = E.bucketSums(hourRows, ids);
+    if (hours.length >= HOURS_MIN) {
+      var p95 = E.percentile(hours, 95), nice = p95 > 0 ? E.niceScale(p95) : null;
+      if (nice) return { max: nice, kind: 'usual' };
+    }
+    var pk = E.peakOf(fiveRows, ids);
+    return pk != null ? { max: pk, kind: 'peak' } : null;
+  };
+  // Value now against the scale: { room, max, pct }; the usual range stays as it is (the ring is full above it), the
+  // 24 h peak is never below the value now.
+  E.peakShare = function (roomW, sc) {
+    if (roomW == null || !isFinite(roomW) || roomW < 0 || !sc || sc.max == null || !isFinite(sc.max)) return null;
+    var top = sc.kind === 'usual' ? sc.max : Math.max(sc.max, roomW);
     if (!(top > 0)) return null;
-    return { room: roomW, peak: top, pct: Math.round(roomW / top * 100) };
+    return { room: roomW, max: top, pct: Math.min(100, Math.round(roomW / top * 100)) };
   };
   // The room's sensors with a power value (its own, else the summed devices; a device behind a metering plug stays
   // out like in the sum).
@@ -744,41 +779,50 @@
     return window._casoraPowerSum(C.sum, states).items
       .filter(function (it) { return it.skip === '' || it.skip === 'off'; }).map(function (it) { return it.id; });
   };
-  // The peak, fetched once per 5 minutes and room; the stage is drawn again when it comes (casoraKick).
-  // Returns a number (W), 'wait' while the first answer is out, or null (no statistics: the plate stays).
-  var PEAK = {};
-  E.roomPeak = function (ids, hass, el) {
+  // The scale, fetched at most once an hour per room; the stage is drawn again when it comes (casoraKick).
+  // Returns { max, kind }, 'wait' while the first answer is out, or null (no statistics: the plate stays).
+  var SCALE = {};
+  E.roomScale = function (ids, hass, el) {
     if (!ids || !ids.length || !hass || typeof hass.callWS !== 'function') return null;
-    var ck = ids.slice().sort().join('|'), key = Math.floor(Date.now() / 300000), hit = PEAK[ck];
+    var ck = ids.slice().sort().join('|'), key = Math.floor(Date.now() / 36e5), hit = SCALE[ck];
     if (hit && (hit.key === key || hit.busy)) {
       if (el && hit.busy && hit.wait.indexOf(el) < 0) hit.wait.push(el);
-      return hit.busy && !hit.done ? 'wait' : hit.peak;
+      return hit.busy && !hit.done ? 'wait' : hit.sc;
     }
-    var cell = PEAK[ck] = { key: key, busy: true, done: hit ? hit.done : false, peak: hit ? hit.peak : null, wait: el ? [el] : [] };
-    hass.callWS({ type: 'recorder/statistics_during_period', start_time: new Date(Date.now() - 864e5).toISOString(),
-      statistic_ids: ids, period: '5minute', types: ['max'], units: { power: 'W' } })
-      .then(function (r) { cell.peak = E.peakOf(r, ids); }, function () { if (!cell.done) cell.peak = null; })
+    var cell = SCALE[ck] = { key: key, busy: true, done: hit ? hit.done : false, sc: hit ? hit.sc : null, wait: el ? [el] : [] };
+    var ask = function (ms, period) {
+      return hass.callWS({ type: 'recorder/statistics_during_period', start_time: new Date(Date.now() - ms).toISOString(),
+        statistic_ids: ids, period: period, types: ['max'], units: { power: 'W' } });
+    };
+    ask(30 * 864e5, 'hour')
+      .then(function (h) {
+        // Enough hours: no second request.
+        if (E.bucketSums(h, ids).length >= HOURS_MIN) return E.scaleOf(h, null, ids);
+        return ask(864e5, '5minute').then(function (f) { return E.scaleOf(h, f, ids); });
+      })
+      .then(function (sc) { cell.sc = sc; }, function () { if (!cell.done) cell.sc = null; })
       .then(function () {
         cell.busy = false; cell.done = true;
         var ws = cell.wait; cell.wait = [];
         ws.forEach(function (x) { try { if (window.casoraKick) window.casoraKick(x); } catch (e) { /* popup closed */ } });
       });
-    return cell.done ? cell.peak : 'wait';
+    return cell.done ? cell.sc : 'wait';
   };
   E.stage3 = function (C, states, hass, self) {
     var UI = window._casoraUI;
     var b = v3Bits(C, states), w = b.p == null ? null : (Math.abs(b.p) < 20 && b.p < 0 ? 0 : Math.abs(b.p));
     var txt = w == null ? '—' : fW(w, hass), cut = txt.lastIndexOf(' ');
     var num0 = cut > 0 ? txt.slice(0, cut) : txt, unit0 = cut > 0 ? txt.slice(cut + 1) : '';
-    // The ring: the room's share of the house (E.houseShare), else its power against its 24 h peak (E.roomPeak; while
-    // the peak is on its way an empty ring, so the stage does not jump from the plate to the dial).
+    // The ring: the room's share of the house (E.houseShare), else its power against its usual range (E.roomScale; while
+    // the scale is on its way an empty ring, so the stage does not jump from the plate to the dial).
     var hs = C.fs ? null : E.houseShare(C, states, hass, b.p), sh = null;
     if (hs) sh = { room: hs.room, max: hs.house, line: T(hs.pct + ' % vom Haus') };
     else if (C.room && w != null && b.p >= 0) {
-      var pk = E.roomPeak(E.peakIds(C, states), hass, self), ps = typeof pk === 'number' ? E.peakShare(w, pk) : null;
-      // No break inside „24 Std.“ or „2,9 kW“: on the phone the line wraps only after the colon.
-      if (ps) sh = { room: ps.room, max: ps.peak, line: T('Spitze\u00a024\u00a0Std.: ' + fW(ps.peak, hass).replace(' ', '\u00a0')) };
-      else if (pk === 'wait') sh = { room: 0, max: 1, line: T('Jetzt') };
+      var sc = E.roomScale(E.peakIds(C, states), hass, self), ps = sc && sc !== 'wait' ? E.peakShare(w, sc) : null;
+      // No break inside „24 Std.“ or „500 W“: on the phone the line wraps only between words, never in the value.
+      var scW = ps ? fW(ps.max, hass).replace(' ', '\u00a0') : '';
+      if (ps) sh = { room: ps.room, max: ps.max, line: sc.kind === 'usual' ? T('Üblich bis\u00a0' + scW) : T('Spitze\u00a024\u00a0Std.: ' + scW) };
+      else if (sc === 'wait') sh = { room: 0, max: 1, line: T('Jetzt') };
     }
     var line0 = sh ? sh.line : b.line || T('Jetzt');
     // The stage's HTML stays while the popup is open; only a switch between ring and plate (the house's value comes or

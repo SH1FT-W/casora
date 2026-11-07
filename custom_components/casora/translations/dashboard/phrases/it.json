@@ -4276,6 +4276,10 @@
       "Picco nelle 24\u00a0h: {1}"
     ],
     [
+      "^Üblich\\sbis\\s(.+)$",
+      "Di solito fino a\u00a0{1}"
+    ],
+    [
       "^(\\d+) Geräte ohne Wert$",
       "{1} dispositivi senza valore"
     ],

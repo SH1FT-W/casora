@@ -4276,6 +4276,10 @@
       "Pico en 24\u00a0h: {1}"
     ],
     [
+      "^Üblich\\sbis\\s(.+)$",
+      "Normalmente hasta\u00a0{1}"
+    ],
+    [
       "^(\\d+) Geräte ohne Wert$",
       "{1} dispositivos sin valor"
     ],
