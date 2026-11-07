@@ -2824,7 +2824,21 @@
     "Neustart: der Auftrag für deinen Assistenten ist verfallen": "Redémarrage : la tâche pour ton assistant est perdue",
     "Claude prüft das Rad …": "Claude vérifie le vélo…",
     "Claude wertet die Heizwoche aus …": "Claude analyse la semaine de chauffage…",
-    "Claude wertet die letzten 7 Tage aus …": "Claude analyse les 7 derniers jours…"
+    "Claude wertet die letzten 7 Tage aus …": "Claude analyse les 7 derniers jours…",
+    "Frühstück": "Petit-déjeuner",
+    "Mittagessen": "Déjeuner",
+    "Abendessen": "Dîner",
+    "Beilage": "Accompagnement",
+    "Dessert": "Dessert",
+    "Snack": "En-cas",
+    "Notiz": "Note",
+    "Ohne Namen": "Sans nom",
+    "Mealie nicht erreichbar": "Mealie injoignable",
+    "In Mealie für die nächsten 7 Tage planen": "Planifie les 7 prochains jours dans Mealie",
+    "Nächstes Gericht": "Plat suivant",
+    "Zutaten": "Ingrédients",
+    "Zubereitung": "Préparation",
+    "1 Portion": "1 portion"
   },
   "patterns": [
     [
@@ -4281,11 +4295,11 @@
     ],
     [
       "^Spitze\\s24\\sStd\\.:\\s(.+)$",
-      "Pic sur 24\u00a0h\u00a0: {1}"
+      "Pic sur 24 h : {1}"
     ],
     [
       "^Üblich\\sbis\\s(.+)$",
-      "Habituellement jusqu'à\u00a0{1}"
+      "Habituellement jusqu'à {1}"
     ],
     [
       "^(\\d+) Geräte ohne Wert$",
@@ -5074,6 +5088,10 @@
     [
       "^Letzter Test (.+)$",
       "Dernier test {1}"
+    ],
+    [
+      "^(\\d+(?:,\\d+)?) Portionen$",
+      "{1} portions"
     ]
   ]
 }

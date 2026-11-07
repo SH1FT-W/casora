@@ -13327,7 +13327,7 @@
   "casora_recipe": {
     "entity": "sensor.casora_rezept_der_woche",
     "show_icon": false,
-    "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? (window.casoraEsc || String)(t);\n  return fit(window._casoraRecipe ? window._casoraRecipe.tile(entity, states) : (entity?.state || ''));\n]]]\n",
+    "state_display": "[[[\n  const fit = (t, a) => window.casoraStateFit?.(t, undefined, a || undefined) ?? (window.casoraEsc || String)(t);\n  const R = window._casoraRecipe;\n  /* Mealie (issue #140): the short form „Heute · Kürbissuppe“ where the details (time · servings · tag) do not fit. */\n  return R ? fit(R.tile(entity, states), R.tileShort ? R.tileShort() : null) : fit(entity?.state || '');\n]]]\n",
     "styles": {
       "card": [
         {

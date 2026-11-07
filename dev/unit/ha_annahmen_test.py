@@ -371,6 +371,9 @@ KEYS = [
      "00-finder.js casoraLaundryFind.SOURCES, live_finder.py"),
     ("whirlpool", "*", ["washer_state", "dryer_state", "end_time"], "00-finder.js casoraLaundryFind.SOURCES, live_finder.py"),
     ("cookidoo", "*", ["meal_plan", "ingredient_list", "additional_item_list"], "03-popups.js _casoraRecipe, ki.py"),
+    ("mealie", "calendar", ["breakfast", "lunch", "dinner", "side", "dessert", "snack", "drink"],
+     "03-popups.js _casoraRecipe R.mealieReg (issue #140)"),
+    ("mealie", "todo", ["shopping_list"], "03-popups.js _casoraRecipe R.mealieReg/R.todoIds (issue #140)"),
     ("backup", "sensor", ["last_successful_automatic_backup", "next_scheduled_automatic_backup",
                           "last_attempted_automatic_backup", "backup_manager_state"], "03-popups.js (backup row)"),
     ("proximity", "sensor", ["dist_to_zone", "dir_of_travel"], "15-person.js"),
@@ -434,6 +437,36 @@ class ForeignKeys(unittest.TestCase):
             self.assertIn('EVENT_OPTIONS = ["confirmed", "off", "present"]', f.read())
         with open(os.path.join(base, "number.py"), encoding="utf-8") as f:
             self.assertIn("translation_key=\"start_in_relative\"", f.read())
+
+    def test_mealie_actions(self):
+        """Mealie (HA core): the actions get_mealplan (config_entry_id, start_date, end_date) and get_recipe
+        (config_entry_id, recipe_id) answer only with a response - {"mealplan": [asdict(...)]} and
+        {"recipe": asdict(...)}; the config entry keeps Mealie's address as data[host] (+ verify_ssl).
+        Casora: mealie_plan.py async_fetch (week plan and featured recipe of the recipe tile, issue #140),
+        CasoraMealieImageView (recipe image through HA from <host>/api/media/recipes/<id>/images/…).
+        Red: an action, a field or the response key was renamed (the tile says "Nicht verfügbar"), or the
+        address moved out of the entry data (no image)."""
+        base = os.path.join(COMPONENTS, "mealie")
+        with open(os.path.join(base, "services.yaml"), encoding="utf-8") as f:
+            yml = f.read()
+        for action, fields in (("get_mealplan", ("config_entry_id:", "start_date:", "end_date:")),
+                               ("get_recipe", ("config_entry_id:", "recipe_id:"))):
+            block = re.split(r"(?m)^%s:\n" % action, yml)
+            self.assertEqual(len(block), 2, f"{action} missing in services.yaml")
+            body = re.split(r"(?m)^\S", block[1])[0]
+            for fld in fields:
+                self.assertIn(fld, body, f"{action} {fld}")
+        with open(os.path.join(base, "services.py"), encoding="utf-8") as f:
+            src = f.read()
+        self.assertIn('return {"mealplan": [asdict(x) for x in mealplans.items]}', src)
+        self.assertIn('return {"recipe": asdict(recipe)}', src)
+        self.assertEqual(len(re.findall(r"GET_MEALPLAN,.*?supports_response=SupportsResponse.ONLY", src, re.S)[:1]), 1)
+        with open(os.path.join(base, "__init__.py"), encoding="utf-8") as f:
+            init = f.read()
+        self.assertIn("entry.data[CONF_HOST]", init)
+        self.assertIn("CONF_VERIFY_SSL", init)
+        with open(os.path.join(base, "calendar.py"), encoding="utf-8") as f:
+            self.assertIn("self._attr_translation_key = entry_type.name.lower()", f.read())
 
     def test_tractive_layout(self):
         """Tractive: hardware device "Tracker <id>" (device translation "tracker"), the pet device hangs on it via

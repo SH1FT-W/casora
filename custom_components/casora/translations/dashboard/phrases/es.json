@@ -2824,7 +2824,21 @@
     "Neustart: der Auftrag für deinen Assistenten ist verfallen": "Reinicio: se perdió el trabajo para tu asistente",
     "Claude prüft das Rad …": "Claude está revisando la bici…",
     "Claude wertet die Heizwoche aus …": "Claude está analizando la semana de calefacción…",
-    "Claude wertet die letzten 7 Tage aus …": "Claude está analizando los últimos 7 días…"
+    "Claude wertet die letzten 7 Tage aus …": "Claude está analizando los últimos 7 días…",
+    "Frühstück": "Desayuno",
+    "Mittagessen": "Almuerzo",
+    "Abendessen": "Cena",
+    "Beilage": "Guarnición",
+    "Dessert": "Postre",
+    "Snack": "Tentempié",
+    "Notiz": "Nota",
+    "Ohne Namen": "Sin nombre",
+    "Mealie nicht erreichbar": "Mealie no disponible",
+    "In Mealie für die nächsten 7 Tage planen": "Planifica los próximos 7 días en Mealie",
+    "Nächstes Gericht": "Siguiente plato",
+    "Zutaten": "Ingredientes",
+    "Zubereitung": "Preparación",
+    "1 Portion": "1 ración"
   },
   "patterns": [
     [
@@ -4281,11 +4295,11 @@
     ],
     [
       "^Spitze\\s24\\sStd\\.:\\s(.+)$",
-      "Pico en 24\u00a0h: {1}"
+      "Pico en 24 h: {1}"
     ],
     [
       "^Üblich\\sbis\\s(.+)$",
-      "Normalmente hasta\u00a0{1}"
+      "Normalmente hasta {1}"
     ],
     [
       "^(\\d+) Geräte ohne Wert$",
@@ -5074,6 +5088,10 @@
     [
       "^Letzter Test (.+)$",
       "Último test {1}"
+    ],
+    [
+      "^(\\d+(?:,\\d+)?) Portionen$",
+      "{1} raciones"
     ]
   ]
 }

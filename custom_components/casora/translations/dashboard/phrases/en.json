@@ -2806,7 +2806,21 @@
     "Neustart: der Auftrag für deinen Assistenten ist verfallen": "Restart: the job for your assistant was lost",
     "Claude prüft das Rad …": "Claude is checking the bike…",
     "Claude wertet die Heizwoche aus …": "Claude is analyzing the heating week…",
-    "Claude wertet die letzten 7 Tage aus …": "Claude is analyzing the last 7 days…"
+    "Claude wertet die letzten 7 Tage aus …": "Claude is analyzing the last 7 days…",
+    "Frühstück": "Breakfast",
+    "Mittagessen": "Lunch",
+    "Abendessen": "Dinner",
+    "Beilage": "Side dish",
+    "Dessert": "Dessert",
+    "Snack": "Snack",
+    "Notiz": "Note",
+    "Ohne Namen": "Unnamed",
+    "Mealie nicht erreichbar": "Mealie unreachable",
+    "In Mealie für die nächsten 7 Tage planen": "Plan the next 7 days in Mealie",
+    "Nächstes Gericht": "Next dish",
+    "Zutaten": "Ingredients",
+    "Zubereitung": "Preparation",
+    "1 Portion": "1 serving"
   },
   "patterns": [
     [
@@ -4263,11 +4277,11 @@
     ],
     [
       "^Spitze\\s24\\sStd\\.:\\s(.+)$",
-      "24\u00a0h peak: {1}"
+      "24 h peak: {1}"
     ],
     [
       "^Üblich\\sbis\\s(.+)$",
-      "Usually up to\u00a0{1}"
+      "Usually up to {1}"
     ],
     [
       "^(\\d+) Geräte ohne Wert$",
@@ -5056,6 +5070,10 @@
     [
       "^Letzter Test (.+)$",
       "Last test {1}"
+    ],
+    [
+      "^(\\d+(?:,\\d+)?) Portionen$",
+      "{1} servings"
     ]
   ]
 }

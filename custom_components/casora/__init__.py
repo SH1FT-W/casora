@@ -31,6 +31,7 @@ from .updates import async_setup_updates
 from .options import async_setup_options
 from .template_refresh import async_setup_template_refresh
 from .phone_badges import async_setup_phone_badges
+from .mealie_plan import CasoraMealieImageView, async_setup_mealie_plan
 from .update_source import LEGACY_OPTIONS
 from .ki import KiRunner
 from .ai_jobs import async_remove_ai_jobs, async_setup_ai_jobs, async_unload_ai_jobs
@@ -298,6 +299,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.http.register_view(CasoraFontsView())
         hass.http.register_view(CasoraRoomIconsView())
         hass.http.register_view(CasoraTemplatesView())
+        # Recipe images from Mealie through HA (issue #140, mealie_plan.py).
+        hass.http.register_view(CasoraMealieImageView())
         hass.data[f"{DOMAIN}_views"] = True
 
     # Remove first so a version bump re-registers cleanly instead of being skipped.
@@ -353,6 +356,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_setup_template_refresh(hass)
     # Handy-Raumseite: Raum-Badges wie am Desktop, Variablen zur Laufzeit (phone_badges.py).
     async_setup_phone_badges(hass)
+    # Recipe tile with Mealie: week plan and today's recipe through mealie's actions (mealie_plan.py, issue #140).
+    async_setup_mealie_plan(hass)
     hass.data[DOMAIN]["raumklima"] = rk = async_start_raumklima(hass, entry)
     async_start_lueften_push(hass, entry, rk)
     # Pausiert seit: überlebt Neustarts, damit alte Pausen nicht wieder auftauchen (media_pause.py).
