@@ -7438,16 +7438,20 @@ window.casoraMenuGlass = {
     var ent = (src._stateObj && src._stateObj.entity_id) || '';
     var key = (tpl + ' ' + ent).toLowerCase();
     // Heizung immer in Wärme-Orange (Farbsystem) – die Kachel trägt teils die Klima-Domänenfarbe.
-    var hue = /thermostat|fbh|heiz|heat/.test(key) ? null : deviceHue(src);
-    if (!hue) {
-      hue = 'var(--casora-color-teal, #4E9E95)';
-      for (var i = 0; i < RING_HUES.length; i++) {
-        if (RING_HUES[i][0].test(key)) { hue = RING_HUES[i][1]; break; }
-      }
+    var keyHue = 'var(--casora-color-teal, #4E9E95)';
+    for (var i = 0; i < RING_HUES.length; i++) {
+      if (RING_HUES[i][0].test(key)) { keyHue = RING_HUES[i][1]; break; }
     }
+    var hue = (/thermostat|fbh|heiz|heat/.test(key) ? null : deviceHue(src)) || keyHue;
+    // The device colour before any state colour: the popup accent (switches) stays on it when the ring shows an error.
+    var base = hue;
     // B-16: Der Ring zeigt einen Fehler (Druck fehlgeschlagen …) in Alarmfarbe statt in Gerätefarbe.
     var stv = String((src._stateObj && src._stateObj.state) || '').toLowerCase();
-    if (/^(failed|failure|error|fault|fehler|fehlgeschlagen|problem)$/.test(stv)) hue = 'var(--casora-color-red, #D35A4E)';
+    if (/^(failed|failure|error|fault|fehler|fehlgeschlagen|problem)$/.test(stv)) {
+      hue = 'var(--casora-color-red, #D35A4E)';
+      // The tile itself turns red on an error, so its colour is no device colour then: the fixed one of its kind.
+      base = keyHue;
+    }
     // DP-15 (1.3): Module, die den Zustand ihres Popups kennen (Batterien „Alle OK“ …), geben die Farbe vor –
     // sonst zeigte der Kopf die Farbe der Kachel, die am Handy/Desktop verschieden sein kann.
     var forcedOff = null;
@@ -7528,7 +7532,7 @@ window.casoraMenuGlass = {
     if (!glyph) return null;
     // Kachel meldet selbst Ruhe (z. B. NINA „Keine Warnung“ setzt _casoraRingQuiet): Sand wie die Kachel.
     var idle = src._casoraRingQuiet === true;
-    return { hue: hue, html: glyph, off: forcedOff != null ? forcedOff : (idle || ringOff(src)) };
+    return { hue: hue, base: base, html: glyph, off: forcedOff != null ? forcedOff : (idle || ringOff(src)) };
   }
   // ── 1.3 Kopfzeile A ──────────────────────────────────────────────────────
   // Symbol colour on a device colour (decision 01.11.2026, design-regeln §0, review 2 DD-19/DH-19): white where it keeps
@@ -8497,11 +8501,14 @@ window.casoraMenuGlass = {
       this._ringStOff = !!(ring && this._ringSrc && ringOff(this._ringSrc));
       this._headerRing.toggleAttribute('off', this._ringOffNow);
       // Kopfzeile A: Gerätefarbe als Akzent des ganzen Popups (Schalter, Kachel), Symbolfarbe nach Kontrast.
+      // An error shows in the head ring and the stage only: switches that are on stay in the device colour, not in the
+      // alarm red (user test 07.11.2026: a failed print drew camera and power „on“ in red).
       if (sf && ring) {
-        this.style.setProperty('--casora-popup-accent', ring.hue);
-        var ink = inkOn(ring.hue);
-        if (ink) { this.style.setProperty('--casora-popup-accent-ink', ink); this._headerRing.style.setProperty('--ring-ink', ink); }
-        else { this.style.removeProperty('--casora-popup-accent-ink'); this._headerRing.style.removeProperty('--ring-ink'); }
+        var acc = ring.base && ring.base !== ring.hue && /--casora-color-red\b/.test(String(ring.hue)) ? ring.base : ring.hue;
+        this.style.setProperty('--casora-popup-accent', acc);
+        var ink = inkOn(acc), rink = acc === ring.hue ? ink : inkOn(ring.hue);
+        if (ink) this.style.setProperty('--casora-popup-accent-ink', ink); else this.style.removeProperty('--casora-popup-accent-ink');
+        if (rink) this._headerRing.style.setProperty('--ring-ink', rink); else this._headerRing.style.removeProperty('--ring-ink');
       } else {
         this.style.removeProperty('--casora-popup-accent');
         this.style.removeProperty('--casora-popup-accent-ink');
