@@ -1111,11 +1111,23 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     // Settings › Doors and windows › Hidden (#69): left out of every group, found automatically or not. A door with
     // two sensors shows as its combined sensor: hiding either one hides the door.
     var hidden = (cfg.contacts && cfg.contacts.hidden) || [];
+    // Issue #141: „Counts only when nobody is home“ (contacts.away_only) – a window left open for air while someone is
+    // home is no security matter (an alarm panel's home mode leaves such zones out too). Left out like a hidden one
+    // unless the house is away by the security rule (securityAway: alarm armed away/vacation, or all persons gone).
+    // Without any person or alarm panel nobody can tell – then it counts, as before.
+    var away = awayOnly(cfg);
+    var tells = away.length && Object.keys(S).some(function (id) { return id.indexOf('person.') === 0 || id.indexOf('alarm_control_panel.') === 0; });
+    if (tells && !securityAway(hass)) hidden = hidden.concat(away);
     if (hidden.length) groups.forEach(function (g) {
       g.members = (g.members || []).filter(function (x) { return hidden.indexOf(x) < 0 && hidden.indexOf(sub[x]) < 0; });
     });
     return { groups: groups, sub: sub, excl: excl, tilt: tilt };
   }
+  function awayOnly(cfg) {
+    var a = cfg && cfg.contacts && cfg.contacts.away_only;
+    return Array.isArray(a) ? a.filter(function (x) { return typeof x === 'string' && x; }) : [];
+  }
+
   // contacts() reads every binary sensor. Through button-card's state proxy each read subscribes the card to that
   // entity (it then redrew on every motion sensor of the house, and every further proxy read searched that list),
   // and it ran again for every card on every update. So: once per states object of HA's root element (HA replaces it
@@ -1126,6 +1138,9 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   };
   var ccShared = { S: null, R: null, cfg: null, v: null };
   var contactsShared = function (hass) {
+    // With „only when nobody is home“ the result depends on being away: ask through the caller's hass, which subscribes
+    // its card to the persons and alarm panels, so it redraws when someone comes or goes.
+    if (hass && hass.states && awayOnly(window.CASORA_SETTINGS).length) securityAway(hass);
     var root = rootHass(), raw = root && root.states;
     if (!raw || !hass || reg(hass) !== reg(root)) return contacts(hass);
     var cfg = window.CASORA_SETTINGS || null;

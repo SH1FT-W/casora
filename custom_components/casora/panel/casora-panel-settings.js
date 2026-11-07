@@ -117,7 +117,7 @@
           kw: "szenen szene stimmung reihenfolge farbe scenes" },
         { k: "contacts", personal: ["contacts"], title: "Doors and windows",
           plain: "Group, rename or hide doors and windows in the security overview.",
-          kw: "türen tueren fenster kontakte ausblenden umbenennen gruppen" },
+          kw: "türen tueren fenster kontakte ausblenden umbenennen gruppen abwesenheit abwesend lüften lueften zuhause" },
         { k: "security", personal: ["security"], title: "Shutters at night", adv: true,
           plain: "Which shutters count as open when the house is checked at night.",
           kw: "rollo rollos rollladen jalousie jalousien sicherheit abends nachts covers shutters" },

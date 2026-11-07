@@ -2969,7 +2969,10 @@
     "An AI task in Home Assistant, or your own assistant connected over MCP.": "Een AI-taak in Home Assistant of je eigen assistent, verbonden via MCP.",
     "AI task": "AI-taak",
     "Your own assistant (MCP)": "Je eigen assistent (MCP)",
-    "Casora's AI features wait for your assistant: ask it to do Casora's open AI jobs. Casora Studio's own AI steps still need an AI task.": "De AI-functies van Casora wachten op je assistent: vraag hem de openstaande AI-opdrachten van Casora te doen. De AI-stappen van Casora Studio zelf hebben nog steeds een AI-taak nodig."
+    "Casora's AI features wait for your assistant: ask it to do Casora's open AI jobs. Casora Studio's own AI steps still need an AI task.": "De AI-functies van Casora wachten op je assistent: vraag hem de openstaande AI-opdrachten van Casora te doen. De AI-stappen van Casora Studio zelf hebben nog steeds een AI-taak nodig.",
+    "Only when away": "Alleen bij afwezigheid",
+    "This door or window only counts for security when nobody is home or the alarm is armed away.": "Deze deur of dit raam telt alleen mee voor de beveiliging als iedereen weg is of het alarm op afwezig staat.",
+    "Count a door or window only when away": "Deur of raam alleen bij afwezigheid meetellen"
   },
   "patterns": [
     [
