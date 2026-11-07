@@ -201,8 +201,11 @@ const cfgT = popup(hass.states[tile.entity], { ...T.casora_popup_light.variables
 assert.deepEqual(cfgT.rooms.map((r) => r.name), AREAS, 'tile popup: the same room bar');
 const hassG = { ...hg, callService: () => {} };
 softCfg = null; window._casoraLF = {};
+// That house's own dashboard: the house tile follows its Home badge (window._casoraHomeLightVars).
+useDash(withGroup.cfg); delete window._casoraHomeLightC;
 window._casoraLPC(hassG.states['light.demo_alle'], hassG.states, hassG, { ...T.casora_popup_light.variables, ...withGroup.tile.variables });
 assert.equal(softCfg.rooms, null, 'with a flat house group: no room bar, as before');
+useDash(cfg); delete window._casoraHomeLightC;
 // A house tile whose entity is the first room's group (Bad first): the list reaches beyond that group – the rooms.
 const cfgR = popup(hass.states['light.demo_bad_alle'], { ...T.casora_popup_light.variables, house: true, lights: tile.variables.lights });
 assert.deepEqual(cfgR.rooms.map((r) => r.name), AREAS, 'house tile on a room group: room bar from the rooms');

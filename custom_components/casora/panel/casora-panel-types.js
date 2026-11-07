@@ -872,9 +872,15 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   const withHouseLights = (rooms, fn) => {
     const B = window.casoraBasis;
     if (!rooms || !B || !B.houseLights) return fn();
-    const was = window._casoraHouseLights;
+    const was = window._casoraHouseLights, wasHome = window._casoraHomeLightVars;
     window._casoraHouseLights = (h) => B.houseLights(h, rooms);
-    try { return fn(); } finally { if (was === undefined) delete window._casoraHouseLights; else window._casoraHouseLights = was; }
+    // The house tile follows Home's light badge (window._casoraHomeLightVars): Home's variables being edited.
+    const home = rooms.find((r) => r && r.path === "home") || rooms[0];
+    window._casoraHomeLightVars = () => (window._casoraHomeLightVarsOf && home ? window._casoraHomeLightVarsOf(home.variables) : null);
+    try { return fn(); } finally {
+      if (was === undefined) delete window._casoraHouseLights; else window._casoraHouseLights = was;
+      if (wasHome === undefined) delete window._casoraHomeLightVars; else window._casoraHomeLightVars = wasHome;
+    }
   };
   window.casoraTileState = (tile, ent, hass, templates, rooms) => withHouseLights(rooms, () => tileState(tile, ent, hass, templates));
   const tileState = (tile, ent, hass, templates) => {
