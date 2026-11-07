@@ -1112,16 +1112,25 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     // two sensors shows as its combined sensor: hiding either one hides the door.
     var hidden = (cfg.contacts && cfg.contacts.hidden) || [];
     // Issue #141: „Counts only when nobody is home“ (contacts.away_only) – a window left open for air while someone is
-    // home is no security matter (an alarm panel's home mode leaves such zones out too). Left out like a hidden one
+    // home is no security matter (an alarm panel's home mode leaves such zones out too). Not counted
     // unless the house is away by the security rule (securityAway: alarm armed away/vacation, or all persons gone).
     // Without any person or alarm panel nobody can tell – then it counts, as before.
     var away = awayOnly(cfg);
+    // They stay listed: quiet holds them (the doors/windows popups show them in a group of their own, neutral), only
+    // the groups – what the badges count – leave them out.
     var tells = away.length && Object.keys(S).some(function (id) { return id.indexOf('person.') === 0 || id.indexOf('alarm_control_panel.') === 0; });
-    if (tells && !securityAway(hass)) hidden = hidden.concat(away);
+    var quiet = [];
+    if (tells && !securityAway(hass)) groups.forEach(function (g) {
+      g.members = (g.members || []).filter(function (x) {
+        var q = away.indexOf(x) >= 0 || away.indexOf(sub[x]) >= 0;
+        if (q && hidden.indexOf(x) < 0 && hidden.indexOf(sub[x]) < 0 && quiet.indexOf(x) < 0) quiet.push(x);
+        return !q;
+      });
+    });
     if (hidden.length) groups.forEach(function (g) {
       g.members = (g.members || []).filter(function (x) { return hidden.indexOf(x) < 0 && hidden.indexOf(sub[x]) < 0; });
     });
-    return { groups: groups, sub: sub, excl: excl, tilt: tilt };
+    return { groups: groups, sub: sub, excl: excl, tilt: tilt, quiet: quiet };
   }
   function awayOnly(cfg) {
     var a = cfg && cfg.contacts && cfg.contacts.away_only;
@@ -1263,14 +1272,16 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     var want = kind === 'window' ? 'window' : 'door';
     if (ownKinds(S, v, sees)[want]) return [];
     var cc = contactsOnce(hass), out = [];
-    cc.groups.forEach(function (g) {
-      (g.members || []).forEach(function (x) {
-        if (cc.excl.indexOf(x) >= 0 || !sees(x)) return;
-        var win = String(((S[x] || {}).attributes || {}).device_class || '') === 'window';
-        var id = cc.sub[x] || x;
-        if (win === (want === 'window') && out.indexOf(id) < 0) out.push(id);
-      });
-    });
+    // #141: one that counts only when nobody is home (quiet right now) stays in its sub-badge, shown but not warning
+    // (securityLevel rates it ok).
+    var take = function (x) {
+      if (cc.excl.indexOf(x) >= 0 || !sees(x)) return;
+      var win = String(((S[x] || {}).attributes || {}).device_class || '') === 'window';
+      var id = cc.sub[x] || x;
+      if (win === (want === 'window') && out.indexOf(id) < 0) out.push(id);
+    };
+    cc.groups.forEach(function (g) { (g.members || []).forEach(take); });
+    (cc.quiet || []).forEach(take);
     return out;
   };
   // One state for such a list (variables.contacts of casora_badge_contact_group): on while one is open,
@@ -1597,6 +1608,11 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         if (['garage', 'gate', 'door'].indexOf(dc) >= 0 && gOpen) up(isAway() ? 'alarm' : 'warn');
       }
     });
+    // #141: a door/window that counts only when nobody is home is fine while someone is (casoraContacts().quiet).
+    if (contacts.length) {
+      var cq = contactsOnce(hass), quiet = cq.quiet || [];
+      if (quiet.length) contacts = contacts.filter(function (x) { return quiet.indexOf(x) < 0 && quiet.indexOf((cq.sub || {})[x]) < 0; });
+    }
     // Doors/windows: contact + tilt sensor (+ combined sensor) are one opening.
     if (contacts.length) openings(hass, contacts).forEach(function (u) {
       if (u.state === 'open') up(isAway() ? 'alarm' : 'warn');

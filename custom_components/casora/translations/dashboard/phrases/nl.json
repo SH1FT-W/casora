@@ -2838,7 +2838,8 @@
     "Nächstes Gericht": "Volgend gerecht",
     "Zutaten": "Ingrediënten",
     "Zubereitung": "Bereiding",
-    "1 Portion": "1 portie"
+    "1 Portion": "1 portie",
+    "Zählt nur bei Abwesenheit": "Telt alleen bij afwezigheid"
   },
   "patterns": [
     [

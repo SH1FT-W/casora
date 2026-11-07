@@ -2838,7 +2838,8 @@
     "Nächstes Gericht": "Siguiente plato",
     "Zutaten": "Ingredientes",
     "Zubereitung": "Preparación",
-    "1 Portion": "1 ración"
+    "1 Portion": "1 ración",
+    "Zählt nur bei Abwesenheit": "Solo cuenta en ausencia"
   },
   "patterns": [
     [

@@ -2838,7 +2838,8 @@
     "Nächstes Gericht": "Następne danie",
     "Zutaten": "Składniki",
     "Zubereitung": "Przygotowanie",
-    "1 Portion": "1 porcja"
+    "1 Portion": "1 porcja",
+    "Zählt nur bei Abwesenheit": "Liczy się tylko pod nieobecność"
   },
   "patterns": [
     [

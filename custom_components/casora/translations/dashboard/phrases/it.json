@@ -2838,7 +2838,8 @@
     "Nächstes Gericht": "Prossimo piatto",
     "Zutaten": "Ingredienti",
     "Zubereitung": "Preparazione",
-    "1 Portion": "1 porzione"
+    "1 Portion": "1 porzione",
+    "Zählt nur bei Abwesenheit": "Conta solo in assenza"
   },
   "patterns": [
     [

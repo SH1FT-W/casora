@@ -2838,7 +2838,8 @@
     "Nächstes Gericht": "Plat suivant",
     "Zutaten": "Ingrédients",
     "Zubereitung": "Préparation",
-    "1 Portion": "1 portion"
+    "1 Portion": "1 portion",
+    "Zählt nur bei Abwesenheit": "Compte seulement en absence"
   },
   "patterns": [
     [

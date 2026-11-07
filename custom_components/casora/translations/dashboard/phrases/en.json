@@ -2820,7 +2820,8 @@
     "Nächstes Gericht": "Next dish",
     "Zutaten": "Ingredients",
     "Zubereitung": "Preparation",
-    "1 Portion": "1 serving"
+    "1 Portion": "1 serving",
+    "Zählt nur bei Abwesenheit": "Counts only when away"
   },
   "patterns": [
     [
