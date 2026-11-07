@@ -124,7 +124,7 @@ const home = await stable(dk.page, look, null, { max: 12000, until: (v) => v && 
 await check('someone home: the airing window does not count', home && home.counted && !home.counted.includes(WIN), home);
 await check('someone home: the security badge counts one open less than before', home && openN(home) === beforeN - 1, { beforeN, home });
 const subWin = await dk.page.evaluate(SUB, 'Fenster');
-await check('someone home: the „Fenster“ sub-badge still shows the open window', subWin && /Ge(ö|oe)ffnet/.test(subWin.text), subWin);
+await check('someone home: the „Fenster“ sub-badge still shows the open window', subWin && /ge(ö|oe)ffnet/i.test(subWin.text), subWin);
 await shoot(dk.page, '3-nachher-badge-zuhause.png');
 await need('the doors/windows popup opens', await openPop(dk.page));
 const pp = await stable(dk.page, POP, null, { max: 10000 });

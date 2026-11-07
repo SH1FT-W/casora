@@ -215,10 +215,12 @@ const bv = (ids, kind, label) => ({ contacts: ids, contacts_kind: kind, label, e
 const winVars = bv(['binary_sensor.win_d', 'binary_sensor.win_a', 'binary_sensor.win_c_combo'], 'window', 'Fenster');
 const first = { entity_id: 'binary_sensor.win_d', ...hs.states['binary_sensor.win_d'] };
 const bname = fn(B.name)(hs.states, first, {}, hs, winVars);
-assert.ok(bname.includes('>Fenster<') && bname.includes('>Geöffnet<'), 'Fenster · Geöffnet (one open, not the first only)');
+// Several: how many (security badge rework 07.11.2026, wortliste „2 geöffnet“/„Alle geschlossen“), not „Geöffnet“.
+const bsub = (h) => (h.match(/class="badge-sub">([^<]*)</) || [])[1];
+assert.ok(bname.includes('>Fenster<') && /^\d+ (geöffnet|gekippt)$|^Alle geöffnet$/.test(bsub(bname)), 'Fenster · how many are open: ' + bsub(bname));
 const dname = fn(B.name)(hs.states, { entity_id: 'binary_sensor.door_a', ...hs.states['binary_sensor.door_a'] }, {}, hs,
   bv(['binary_sensor.door_a', 'binary_sensor.garage'], 'door', 'Türen'));
-assert.ok(dname.includes('>Türen<') && dname.includes('>Geschlossen<'), 'Türen · Geschlossen');
+assert.ok(dname.includes('>Türen<') && /^(Alle geschlossen|\d+ geöffnet|Alle geöffnet)$/.test(bsub(dname)), 'Türen · counted: ' + bsub(dname));
 assert.ok(fn(B.extra_styles)(hs.states, first, {}, hs, winVars).includes("url('window-open')"), 'window glyph, open');
 const shown = B.styles.card.find((x) => x.display).display;
 assert.equal(fn(shown)(hs.states, first, {}, hs, winVars), 'inline-grid', 'shown');
