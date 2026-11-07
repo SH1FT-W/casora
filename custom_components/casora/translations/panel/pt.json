@@ -832,6 +832,7 @@
     "Air quality": "Qualidade do ar",
     "Also show cost": "Mostrar também o custo",
     "Appliances to watch": "Eletrodomésticos a vigiar",
+    "Washing machine, dryer, printer …: the bell says “… finished” when the state goes from running (on, running, washing …) to off, idle or finished. Other sensors, such as a temperature, never send a message here.": "Máquina de lavar, secador, impressora …: o sino avisa «… terminou» quando o estado passa de a funcionar (on, running, washing …) para off, idle ou finished. Outros sensores, como uma temperatura, nunca avisam aqui.",
     "Back to Room": "Voltar à divisão",
     "Bio": "Bio",
     "Buttons": "Teclas",

@@ -832,6 +832,7 @@
     "Air quality": "Luftqualität",
     "Also show cost": "Auch Kosten anzeigen",
     "Appliances to watch": "Zu überwachende Geräte",
+    "Washing machine, dryer, printer …: the bell says “… finished” when the state goes from running (on, running, washing …) to off, idle or finished. Other sensors, such as a temperature, never send a message here.": "Waschmaschine, Trockner, Drucker …: Die Glocke meldet „… fertig“, wenn der Zustand von „läuft“ (on, running, washing …) auf off, idle oder finished wechselt. Andere Sensoren, etwa eine Temperatur, melden hier nie etwas.",
     "Back to Room": "Zurück zum Raum",
     "Bio": "Bio",
     "Buttons": "Tasten",

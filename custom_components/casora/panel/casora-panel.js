@@ -2546,7 +2546,8 @@ const SECTIONS = [
 
       { ...LIST("notification_appliances", "Appliances to watch",
         ["sensor", "binary_sensor", "switch", "vacuum"]),
-        always: true, advanced: true, ord: 12 },
+        always: true, advanced: true, ord: 12,
+        hint: "Washing machine, dryer, printer …: the bell says “… finished” when the state goes from running (on, running, washing …) to off, idle or finished. Other sensors, such as a temperature, never send a message here." },
 
       { ...MAP("notification_appliance_timers", "Time remaining",
         "notification_appliances", ["sensor"]), classes: ["duration", "timestamp"],

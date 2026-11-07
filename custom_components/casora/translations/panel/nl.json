@@ -832,6 +832,7 @@
     "Air quality": "Luchtkwaliteit",
     "Also show cost": "Ook kosten tonen",
     "Appliances to watch": "Apparaten om te volgen",
+    "Washing machine, dryer, printer …: the bell says “… finished” when the state goes from running (on, running, washing …) to off, idle or finished. Other sensors, such as a temperature, never send a message here.": "Wasmachine, droger, printer …: de bel meldt „… klaar” wanneer de status van bezig (on, running, washing …) naar off, idle of finished gaat. Andere sensoren, zoals een temperatuur, melden hier nooit iets.",
     "Back to Room": "Terug naar kamer",
     "Bio": "GFT",
     "Buttons": "Toetsen",
