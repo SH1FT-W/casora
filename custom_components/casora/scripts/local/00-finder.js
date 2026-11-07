@@ -1841,6 +1841,9 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     if (o.order && window.casoraSecSub) L = window.casoraSecSub.sort(L, o.order, function (x) { return x[4]; });
     var text = L.map(function (x) { return x[0]; }).join(' · ');
     if (o.summary === 'detailed') return { text: text, html: null };
+    // One finding only: its words say it best („Fenster offen“) – the short form read „1 offen ▢ 1“, the same number
+    // twice (security badge rework, 07.11.2026). Several: the lead word and one icon each, as below.
+    if (L.length === 1) return { text: text, html: null };
     // Short: one icon per finding; „gekippt“ has an icon of its own, offline is struck through.
     // Tooltip and screen-reader text say what is meant („2 Fenster offen“) – casora-i18n.js does
     // not translate attributes by itself, hence casoraTr here.

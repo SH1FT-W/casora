@@ -33,7 +33,8 @@ const soft = await page.evaluate(() => !!(window._casoraSoft && window._casoraSo
 await need('Theme „Casora“ aktiv', soft);
 const home = await stable(page, badge);
 await check('Startseite: Sicherheit erkennt die Startseite', home.length && home.every((b) => b.home === true), home);
-await check('Startseite: Kurzfassung mit Symbolen', home.length && home.every((b) => b.sym || /Alles sicher|Aktiv|Alarm/.test(b.text)), home);
+// One finding alone stands in words („Fenster offen“, security badge rework 07.11.2026), several as icons.
+await check('Startseite: Kurzfassung mit Symbolen', home.length && home.every((b) => b.sym || /Alles sicher|Aktiv|Alarm|offen|gekippt|offline/.test(b.text)), home);
 
 await dashboard(page, at(views[roomIdx], roomIdx));
 await openAll();
