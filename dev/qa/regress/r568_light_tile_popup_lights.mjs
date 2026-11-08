@@ -86,7 +86,7 @@ try {
       // „Popup“ → „Lichter im Popup“: B, then A.
       await H(() => { const p = window.__panel();
         const open = [...p.shadowRoot.querySelectorAll('#pane input')].some((x) => x.getClientRects().length && /^(Licht hinzufügen|add light)/i.test(x.placeholder));
-        const b = [...p.shadowRoot.querySelectorAll('#pane button.advsum')].find((x) => x.getClientRects().length && /^Popup/.test(x.textContent.trim()));
+        const b = [...p.shadowRoot.querySelectorAll('#pane .tiletabs [data-tab=popup]')].find((x) => x.getClientRects().length);
         if (b && !open) b.click(); });
       await pg.waitForTimeout(1000);
       for (const id of [B, A]) {

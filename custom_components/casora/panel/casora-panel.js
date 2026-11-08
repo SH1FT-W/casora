@@ -6982,12 +6982,15 @@ class CasoraPanel extends HTMLElement {
       tile = has(rooms[i]);
     }
     const key = this._tileKey(tile);
+    // The gear in a popup opens the tile on its Popup tab (?tab=popup).
+    try { const tab = new URLSearchParams(window.location.search).get("tab"); if (tab) this._tileTab = tab; } catch (e) { /* first tab */ }
     this._select({ group: "tiles", key });
     this._tileRouteReveal(["t:" + key, "t:" + this._tileKey(inner(tile, 0))]);
     // Einmal gewählt: ?tile aus der Adresse nehmen, damit ein späterer Aufruf dieselbe Kachel wieder wählt.
     try {
       const u = new URL(window.location.href);
       u.searchParams.delete("tile");
+      u.searchParams.delete("tab");
       window.history.replaceState(window.history.state, "", u.pathname + u.search + u.hash);
       this._tileRouteUsed = "";
     } catch (e) { /* Adresse bleibt */ }
@@ -29927,6 +29930,7 @@ class CasoraPanel extends HTMLElement {
     this._groupTileBody(box, body);
 
     box.appendChild(body);
+    if (this._tileTabs) this._tileTabs(box, body, tile, type, advLabel === "Popup" ? advDet : null);
     return box;
   }
 }

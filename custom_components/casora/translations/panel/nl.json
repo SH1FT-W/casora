@@ -2990,7 +2990,13 @@
     "Batteries the bell should not warn about.": "Batterijen waarvoor de bel niet moet waarschuwen.",
     "Which scene buttons appear here, and scenes Casora should never offer.": "Welke scèneknoppen hier verschijnen en welke scènes Casora nooit moet aanbieden.",
     "On this dashboard": "Op dit dashboard",
-    "How the bell words places, mailbox, combined contacts and device care.": "Hoe de bel plaatsen noemt, brievenbus, gecombineerde contacten en apparaatonderhoud."
+    "How the bell words places, mailbox, combined contacts and device care.": "Hoe de bel plaatsen noemt, brievenbus, gecombineerde contacten en apparaatonderhoud.",
+    "All blinds": "Alle rolluiken",
+    "All players": "Alle spelers",
+    "All batteries": "Alle batterijen",
+    "All doors and windows": "Alle deuren en ramen",
+    "Lock screen": "Vergrendelscherm",
+    "Open in Settings": "Openen in Instellingen"
   },
   "patterns": [
     [

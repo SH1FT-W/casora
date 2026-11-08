@@ -178,7 +178,19 @@
   };
   // The dashboard sections the tiles show (scope "dashboard" in casora-panel.js SECTIONS).
   const DASH_SECS = ["General", "Weather", "Time", "Notifications", "Scenes"];
-  window.casoraSettingsMap = { tiles: NEU, dashSections: DASH_SECS, route };
+  // The third tab of a tile's side panel: what is set for every device of this kind, [tile, block, tab label].
+  // Kinds without shared settings (light, thermostat, switch …) have no entry and show Tile and Popup only.
+  const LIVE_TAB = ["phone", "live", "Lock screen"];
+  const COVERS_TAB = ["house", "security", "All blinds"];
+  const TILE_SHARED = {
+    cover: COVERS_TAB, cover_group: COVERS_TAB,
+    media: ["house", "media", "All players"], battery: ["house", "battery", "All batteries"],
+    casora_alarm: ["house", "contacts", "All doors and windows"],
+    casora_trash: ["house", "waste", "Waste collection"], casora_calendar: ["house", "calendars", "All calendars"],
+    casora_ebike: ["house", "devices", "Other devices"], casora_weather_warning: ["wx", "weather", "Weather"],
+    casora_washer: LIVE_TAB, casora_dryer: LIVE_TAB, casora_dishwasher: LIVE_TAB, casora_3d_printer: LIVE_TAB, vacuum: LIVE_TAB,
+  };
+  window.casoraSettingsMap = { tiles: NEU, dashSections: DASH_SECS, route, tileShared: TILE_SHARED };
   const pageOf = (id) => neuPage(route(id)[0]) || NEU_START;
 
   const CSS = ".cs-wrap{padding:4px 0 28px}"
@@ -209,6 +221,17 @@
     + ".cn-fold>.cn-bhead::after{content:'›';position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--ink-3)}"
     + ".cn-fold.open>.cn-bhead::after{transform:translateY(-50%) rotate(90deg)}"
     + ".cn-fold>.cn-bhead:focus-visible{outline:2px solid var(--accent);outline-offset:2px}"
+    // Tabs of a tile's side panel.
+    + ".tiletabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px;padding:3px;margin:0 0 12px;border-radius:var(--r-m);background:var(--casora-studio-chip,rgba(118,118,128,.18))}"
+    + ".tiletabs button{all:unset;box-sizing:border-box;cursor:pointer;min-height:36px;padding:6px 4px;text-align:center;border-radius:calc(var(--r-m) - 3px);font-size:var(--t-foot);font-weight:500;line-height:1.2;color:var(--ink)}"
+    + ".tiletabs button[aria-selected=true]{font-weight:650;background:var(--casora-studio-field,rgba(255,255,255,.14));box-shadow:0 1px 3px rgba(0,0,0,.14)}"
+    + ":host(.is-light) .tiletabs button[aria-selected=true]{background:#fff}"
+    + ".tiletabs button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}"
+    + ":host(.phone) .tiletabs button{min-height:44px}"
+    + ".tilepane>.adv{margin-top:0}.tilepane>.adv>.advsum{display:none}"
+    + ".tilepane .cs-wrap{padding:0!important;margin:0!important}.tilepane .cn-block{margin-bottom:12px}"
+    + ".tilepane .cs-bar{margin:12px 0 0}.tilelink{all:unset;cursor:pointer;display:block;min-height:44px;line-height:44px;font-size:var(--t-callout);font-weight:600;color:var(--accent)}"
+    + ".tilelink:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}"
     + ".cn-bhead{display:flex;flex-direction:column;gap:3px;margin:0 0 10px;padding:0}"
     + ".cn-bhead b{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px;row-gap:4px;font-size:var(--t-body);font-weight:650;line-height:1.3;color:var(--ink)}"
     + ".cn-bhead span{font-size:var(--t-foot);line-height:1.4;color:var(--ink-2)}"
@@ -1233,6 +1256,80 @@
         set(!box.classList.contains("open"));
       });
     };
+    // A tile's side panel in tabs (settings rework): Tile (the form as it is), Popup (its popup fields, no longer behind
+    // a fold), and, for kinds with shared settings, one block of the settings drawn in place. That block uses the same
+    // draft as the settings pages, so it takes effect only with "Save settings".
+    P._tileTabs = function (box, body, tile, type, popupDet) {
+      const shared = TILE_SHARED[type.id];
+      const home = shared && NEU.find((x) => x.id === shared[0]);
+      const block = home && home.blocks.find((b) => b.k === shared[1]);
+      if (!popupDet && !block) return;
+      css(this);
+      if (block) watch(this);
+      const tabs = [["tile", t("Tile"), body]];
+      if (popupDet) {
+        const pane = el("div", "tilepane");
+        popupDet.classList.add("open");
+        const sum = popupDet.querySelector(":scope > .advsum");
+        if (sum) sum.setAttribute("aria-expanded", "true");
+        pane.appendChild(popupDet);
+        tabs.push(["popup", t("Popup"), pane]);
+      }
+      let drawShared = null;
+      if (block) {
+        const pane = el("div", "tilepane");
+        tabs.push(["all", t(shared[2]), pane]);
+        drawShared = async () => {
+          if (pane.dataset.drawn) return;
+          pane.dataset.drawn = "1";
+          try { await this._csLoad(); } catch (e) { /* the block says what is missing */ }
+          if (!pane.isConnected) return;
+          const inner = el("div", "cs-wrap");
+          const draw = () => {
+            inner.replaceChildren();
+            this._csNeuBlock(inner, home, block, draw);
+            // Drawing a dashboard section ran the Studio's after-render steps for the home room.
+            if (this._csHarvested) {
+              this._csHarvested = false;
+              if (typeof this._bApply === "function") this._bApply();
+              if (typeof this._bRoomsPaint === "function") this._bRoomsPaint();
+            }
+            // A row redraws only this block, so the save bar is told here.
+            this._csBar();
+          };
+          const link = el("button", "tilelink", t("Open in Settings") + " ›");
+          link.type = "button";
+          link.onclick = () => this._csNeuGo(home, block);
+          const bar = el("div", "cs-bar" + (this._csDirty() ? "" : " cs-clean"));
+          const save = btn(t("Save settings"), () => this._csSave());
+          save.className = "cs-save";
+          bar.append(el("span", "cs-state"), save);
+          pane.append(inner, link, bar);
+          draw();
+        };
+      }
+      const strip = el("div", "tiletabs");
+      strip.setAttribute("role", "tablist");
+      const show = (id) => {
+        this._tileTab = id;
+        tabs.forEach(([k, , pane], i) => {
+          pane.style.display = k === id ? "" : "none";
+          strip.children[i].setAttribute("aria-selected", k === id ? "true" : "false");
+        });
+        if (id === "all" && drawShared) drawShared();
+      };
+      tabs.forEach(([id, label]) => {
+        const b = el("button", "", label);
+        b.type = "button";
+        b.dataset.tab = id;
+        b.setAttribute("role", "tab");
+        b.onclick = () => show(id);
+        strip.appendChild(b);
+      });
+      box.insertBefore(strip, body);
+      tabs.slice(1).forEach(([, , pane]) => box.appendChild(pane));
+      show(tabs.some(([k]) => k === this._tileTab) ? this._tileTab : "tile");
+    };
     P._csFillNeu = function (host, page) {
       if (page.tile) {
         const back = el("button", "cs-hubback", "‹ " + t("Settings"));
@@ -1504,7 +1601,7 @@
     // Every change on the page (also in the entity picker menu) → check the bar.
     const watch = (self) => {
       if (self._csWatch) return;
-      self._csWatch = () => { if (self._csOpen || self._csSheetPage !== undefined) setTimeout(() => self._csBar(), 0); };
+      self._csWatch = () => { if (self._csOpen || self._csSheetPage !== undefined || self.shadowRoot.querySelector(".tilepane .cs-bar")) setTimeout(() => self._csBar(), 0); };
       ["input", "change", "click", "keyup"].forEach((ev) => self.shadowRoot.addEventListener(ev, self._csWatch, true));
     };
 

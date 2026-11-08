@@ -59,7 +59,7 @@ for (const u of urls) {
 // 3) Waschmaschine öffnen: Felder + Platzhalter
 await page.locator('.tilegrid .tile .thead', { hasText: 'Waschmaschine' }).first().click();
 await page.waitForTimeout(1500);
-await page.locator('button.advsum:visible', { hasText: 'Popup' }).first().click();
+await page.locator('.tiletabs [data-tab=popup]:visible').first().click();
 await page.waitForTimeout(800);
 const form = await H(() => window.__pierce('.row').filter((r) => r.offsetParent).map((r) => {
   const l = r.querySelector('label')?.textContent?.trim();

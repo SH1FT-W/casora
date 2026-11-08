@@ -2990,7 +2990,13 @@
     "Batteries the bell should not warn about.": "Baterías sobre las que la campana no debe avisar.",
     "Which scene buttons appear here, and scenes Casora should never offer.": "Qué botones de escena aparecen aquí y qué escenas no debe ofrecer nunca Casora.",
     "On this dashboard": "En este panel",
-    "How the bell words places, mailbox, combined contacts and device care.": "Cómo nombra la campana los lugares, buzón, contactos combinados y cuidado de aparatos."
+    "How the bell words places, mailbox, combined contacts and device care.": "Cómo nombra la campana los lugares, buzón, contactos combinados y cuidado de aparatos.",
+    "All blinds": "Todas las persianas",
+    "All players": "Todos los reproductores",
+    "All batteries": "Todas las baterías",
+    "All doors and windows": "Todas las puertas y ventanas",
+    "Lock screen": "Pantalla de bloqueo",
+    "Open in Settings": "Abrir en Ajustes"
   },
   "patterns": [
     [
