@@ -169,4 +169,10 @@ delete win.CASORA_SORT_MODE;
   assert.ok(/roomSortMode\(\) !== 'open'/.test(fo), 'rooms: live re-sort unless open');
   assert.ok(/_resortWhenQuiet\(\) \{[\s\S]*?window\._casoraSortDecide[\s\S]*?this\._sortSectionGrids\(true\)/.test(fo), 'rooms: calm waits via the shared decision');
 }
+// A pointer resting on the row must not hold "right away" back for good (08.11.2026): an inactive tile stayed between the
+// active ones until the mouse left. While it was just used the row still waits, and "calm" keeps its rule.
+assert.equal(D({ mode: 'now', settled: true, idle: 1000, popup: false, hover: true, noAnim: false }).act, 'wait', 'just used: waits');
+assert.equal(D({ mode: 'now', settled: true, idle: 6000, popup: false, hover: true, noAnim: false }).act, 'sort', 'pointer resting: sorts after a few seconds');
+assert.equal(D({ mode: 'calm', settled: true, idle: 60000, popup: false, hover: true, noAnim: false }).act, 'wait', 'calm: the pointer still holds it');
+assert.equal(D({ mode: 'now', settled: true, idle: 60000, popup: true, hover: false, noAnim: false }).act, 'wait', 'an open popup still holds it');
 console.log('ok kachelreihe_sortiermodus');

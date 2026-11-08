@@ -39,6 +39,13 @@ const stage = await E(`const f = (r, q) => { for (const e of r.querySelectorAll(
 await check('controls read closed, 60 % closed is sent as 40', stage.flip && stage.attr === 'current_position|closed' && stage.shown === 60 && stage.back === 40 && stage.word === 'geschlossen', stage);
 await check('the popup template sends the turned value', opened !== null && await E(`const h = document.querySelector('home-assistant').hass; const T = (await h.callWS({ type: 'lovelace/config', url_path: arg })).button_card_templates; const c = T ? T.casora_cover.tap_action.casora_popup.content : ''; return !T || (/flip: _cc\\.flip/.test(c) && /attr: _cc\\.attr/.test(c));`, dash.url));
 
+// The real tile's popup: a group, shown as closed, keeps its line under the dial readable.
+await E(`const ids = Object.keys(document.querySelector('home-assistant').hass.states).filter((i) => i.startsWith('cover.')); window.CASORA_SETTINGS.security.percent_closed = ids;`);
+const word = await E(`const f = (r) => { for (const e of r.querySelectorAll('button-card')) { const c = e._config || {}; if ([].concat(c.template || []).includes('casora_cover')) return e; } for (const e of r.querySelectorAll('*')) if (e.shadowRoot) { const x = f(e.shadowRoot); if (x) return x; } return null; };
+  const b = f(document); if (!b) return null; (b.shadowRoot.querySelector('ha-card') || b).click(); await new Promise((r) => setTimeout(r, 2500));
+  const g = (r) => { const out = []; for (const e of r.querySelectorAll('*')) { if (e.shadowRoot) out.push(...g(e.shadowRoot)); if (/geöffnet/.test(e.textContent || '') && e.childElementCount === 0 && e.getClientRects().length && /von \\d+ ge/.test(e.textContent)) out.push({ text: e.textContent, cut: e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 2 }); } return out; };
+  const w = g(document); window.casoraPopup.close(); return w;`);
+if (word) await check('the line under the dial is not cut off', word.length > 0 && word.every((w) => !w.cut), word);
 await E(`const s = Object.assign({}, window.CASORA_SETTINGS.security); delete s.percent_closed; window.CASORA_SETTINGS.security = s;`);
 const off = await E(`const C = window.casoraCoverControls(document.querySelector('home-assistant').hass.states, [arg], {}); return C.flip;`, cover);
 await check('off the list: as before', off === false, off);

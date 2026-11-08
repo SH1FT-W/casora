@@ -55,6 +55,7 @@ if (!window._casoraLastInput) {
 //   now  – re-sort after QUIET_MS like before E19.
 // window.CASORA_SORT_MODE overrides the setting; window.CASORA_LIVE_SORT = true means 'now'.
 const CALM_MS = 30000;
+const HOVER_HOLD_MS = 5000;
 function sortMode() {
   if (window.CASORA_LIVE_SORT === true) return 'now';
   let m = window.CASORA_SORT_MODE;
@@ -73,7 +74,8 @@ function sortDecision(s) {
   if (s.noAnim) return { act: 'sort', keep: false };
   const calm = live && s.mode !== 'now';
   const quiet = calm ? CALM_MS : QUIET_MS;
-  if (s.popup || s.hover) return { act: 'wait', ms: calm ? 2000 : 600 };
+  // A resting pointer holds "right away" back only briefly: on a desktop it would otherwise hold it for good.
+  if (s.popup || (s.hover && (calm || s.idle < HOVER_HOLD_MS))) return { act: 'wait', ms: calm ? 2000 : 600 };
   // Look again at least every 5 s: a mode switched meanwhile (Studio, CASORA_LIVE_SORT) takes effect soon.
   if (s.idle < quiet) return { act: 'wait', ms: Math.max(250, Math.min(5000, quiet - s.idle)) };
   return { act: 'sort', keep: calm };

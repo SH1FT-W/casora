@@ -521,6 +521,24 @@
           if (e && (e.hidden || e.entity_category)) return false;
           return GATE.includes(String((hass.states[id].attributes || {}).device_class || "").toLowerCase());
         }).sort((a, b) => String(meta(a).name).localeCompare(String(meta(b).name)));
+        // Issue 145: covers shown as "percent closed", one by one (security.percent_closed). Only the display turns around.
+        const coverIds = Object.keys(hass.states).filter((id) => id.startsWith("cover."))
+          .sort((a, b) => String(hass.states[a].attributes.friendly_name || a).localeCompare(String(hass.states[b].attributes.friendly_name || b)));
+        if (coverIds.length) {
+          const pc = self._flowGroup(host, { header: "Show percent as closed",
+            footer: "60 % then means 60 % closed. Open, close and everything Casora counts stay the same." });
+          pc.parentElement.dataset.pkey = "percent_closed";
+          coverIds.forEach((id) => {
+            const on = Array.isArray(sec.percent_closed) && sec.percent_closed.includes(id);
+            const name = hass.states[id].attributes.friendly_name || id;
+            const r = self._flowRow(pc, { title: name, raw: true });
+            r.row.appendChild(self._boolSwitch(on, false, (v) => {
+              const list = (Array.isArray(sec.percent_closed) ? sec.percent_closed : []).filter((x) => x !== id);
+              if (v) list.push(id);
+              if (list.length) sec.percent_closed = list; else delete sec.percent_closed;
+            }, name));
+          });
+        }
         if (gates.length) {
           const list = self._flowGroup(host, { header: "Gates: counts as closed up to" });
           list.parentElement.classList.add("casora-psec-gates");
@@ -561,24 +579,6 @@
                 own.row.appendChild(ownInput(id, (m && (m.short || m.name)) || id));
               }
             });
-          });
-        }
-        // Issue 145: covers shown as "percent closed", one by one (security.percent_closed). Only the display turns around.
-        const coverIds = Object.keys(hass.states).filter((id) => id.startsWith("cover."))
-          .sort((a, b) => String(hass.states[a].attributes.friendly_name || a).localeCompare(String(hass.states[b].attributes.friendly_name || b)));
-        if (coverIds.length) {
-          const pc = self._flowGroup(host, { header: "Show percent as closed",
-            footer: "60 % then means 60 % closed. Open, close and everything Casora counts stay the same." });
-          pc.parentElement.dataset.pkey = "percent_closed";
-          coverIds.forEach((id) => {
-            const on = Array.isArray(sec.percent_closed) && sec.percent_closed.includes(id);
-            const name = hass.states[id].attributes.friendly_name || id;
-            const r = self._flowRow(pc, { title: name, raw: true });
-            r.row.appendChild(self._boolSwitch(on, false, (v) => {
-              const list = (Array.isArray(sec.percent_closed) ? sec.percent_closed : []).filter((x) => x !== id);
-              if (v) list.push(id);
-              if (list.length) sec.percent_closed = list; else delete sec.percent_closed;
-            }, name));
           });
         }
       }
