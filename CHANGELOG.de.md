@@ -16,6 +16,7 @@ Einstellungen dort, wo du sie brauchst, eine neue Aufgaben-Kachel und neue Termi
 - **Prozent als geschlossen (#145):** Unter Einstellungen › Haus & Geräte › Jalousien und Tore lässt sich jede Jalousie als Prozent geschlossen anzeigen. Stellrad, Knöpfe, Zeilen, Kachel und Halten-Menü folgen. Bei Markisen tauschen Ausfahren und Einfahren, und die Kachel leuchtet nur, solange sie nicht ganz offen ist. Home Assistant bekommt weiter seine eigene Position. Auf, Zu und die Zählungen bleiben gleich.
 
 ### Geändert
+- **Handy-Leiste:** Zuhause, Räume und Szenen sind ein Segment mit gleitender Markierung, die Werkzeuge dahinter flache Symbole, und der Punkt an der Glocke hat die Warnfarbe.
 - **Haus & Geräte:** ein Abschnitt pro Geräteart, der sich an seiner Überschrift öffnet, nichts mehr unter „Erweitert“. Die Batterie-Ausnahmen sind aus der Glocke hierher umgezogen, gespeicherte Werte bleiben.
 - **Kachelreihe:** Bei „Sofort“ hält ein ruhender Mauszeiger das Sortieren nicht mehr endlos auf.
 
