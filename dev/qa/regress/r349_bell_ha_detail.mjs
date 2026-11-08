@@ -17,7 +17,7 @@ const SHOT = process.env.CASORA_SHOT_DIR;
 
 for (const phone of [false, true]) {
   const tag = phone ? 'Handy' : 'Desktop';
-  await svc('create', { notification_id: ID, title: 'Waschmaschine', message: 'Die **Wäsche** ist fertig.\n\n- Programm: Baumwolle 60°\n- Dauer: 2:14 h\n\n[Bedienungsanleitung](https://example.org)' });
+  await svc('create', { notification_id: ID, title: 'Waschmaschine', message: 'Die **Wäsche** ist fertig.\n\n- Programm: Baumwolle 60°\n- Dauer: 2:14 h\n\n[Bedienungsanleitung](https://example.org)\n\nIssue #147: a long paragraph of an HA notification has to wrap inside the popup instead of running out of it on the right, as it did for a startup message with several sentences.' });
   const { page } = await open(phone ? { width: 393, height: 852, mobile: true, scale: 3, dark: false } : { width: 1440, height: 900, dark: false });
   usePage(page);
   await ready(page, '/' + dash.url + '/' + (dash.config.views[0].path || '0'), () => !!window._casoraNotify && !!window._casoraLocalLoaded, 60000);
@@ -46,11 +46,13 @@ for (const phone of [false, true]) {
     // Blueprint v2: „Löschen“ is an action row (data-casora-pn-del), no loose button.
     const btn = box.querySelector('[data-casora-pn-del]'); if (!btn) return null; const q = btn.getBoundingClientRect();
     return { text: box.textContent.replace(/\s+/g, ' ').trim(), b: box.querySelectorAll('b').length, li: box.querySelectorAll('li').length,
+      long: (() => { const l = [...box.querySelectorAll('p')].find((x) => /Issue #147/.test(x.textContent)); if (!l) return null; const r = document.createRange(); r.selectNodeContents(l); const q2 = r.getBoundingClientRect(), o = window.casoraPopup.element.getBoundingClientRect(); return { h: q2.height, right: q2.right, popupRight: o.right }; })(),
       href: (box.querySelector('a') || {}).href || null, title: window.casoraPopup.element && window.casoraPopup.element._headerTitle ? window.casoraPopup.element._headerTitle.textContent.trim() : null,
       btn: { x: q.left + q.width / 2, y: q.top + q.height / 2, vis: q.width > 0 && q.bottom <= innerHeight } };
   });
   await check(tag + ': Tippen öffnet das Popup mit dem ganzen Text', !!pop && /Wäsche ist fertig/.test(pop.text) && /Baumwolle 60°/.test(pop.text), pop);
   await check(tag + ': Markdown – fett, Liste, Link', !!pop && pop.b >= 1 && pop.li === 2 && pop.href === 'https://example.org/', pop);
+  await check(tag + ': #147 long text wraps inside the popup', !!pop && !!pop.long && pop.long.h > 30 && pop.long.right <= pop.long.popupRight, pop && pop.long);
   await check(tag + ': Titel im Kopf', !!pop && pop.title === 'Waschmaschine', pop && pop.title);
   if (SHOT) await page.screenshot({ path: SHOT + '/pn-' + (phone ? 'p' : 'd') + '-2.png' });
   await need(tag + ': „Löschen“ sichtbar', pop && pop.btn.vis, pop && pop.btn);
