@@ -2855,7 +2855,15 @@
     "Bitte gib einen Titel ein.": "Inserisci un titolo.",
     "Bitte gib Beginn und Ende an.": "Indica l'inizio e la fine.",
     "Das Ende muss nach dem Beginn liegen.": "La fine deve essere dopo l'inizio.",
-    "Der Termin konnte nicht gespeichert werden.": "Impossibile salvare l'evento."
+    "Der Termin konnte nicht gespeichert werden.": "Impossibile salvare l'evento.",
+    "Neue Aufgabe": "Nuova attività",
+    "Aufgaben": "Attività",
+    "Notiz (optional)": "Nota (facoltativa)",
+    "Fällig (optional)": "Scadenza (facoltativa)",
+    "Keine Listen": "Nessun elenco",
+    "Keine To-do-Listen gefunden": "Nessun elenco trovato",
+    "Bitte gib eine Aufgabe ein.": "Inserisci un'attività.",
+    "Die Aufgabe konnte nicht gespeichert werden.": "Impossibile salvare l'attività."
   },
   "patterns": [
     [

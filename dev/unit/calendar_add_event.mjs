@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
 const src = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/06-kalender.js', import.meta.url), 'utf8');
-const a = src.indexOf('  K.writable = function'), b = src.indexOf('  K.addDialog = function', a);
+const a = src.indexOf('  K.writable = function'), b = src.indexOf('  /* A small form over', a);
 assert.ok(a > 0 && b > a, 'found');
 const addD = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
 const ymd = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');

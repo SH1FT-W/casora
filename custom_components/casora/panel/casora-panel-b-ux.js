@@ -91,7 +91,7 @@
     casora_oven: "backofen ofen herd backen home connect oven",
     // E03 (test 2): "Abfall"/"Müll" found nothing – tile types are found by their everyday words as well.
     casora_trash: "abfall müll muell mülltonne tonne biotonne restmüll restabfall bioabfall papier altpapier gelber sack wertstoff abfuhr abholung abfallkalender waste trash garbage bin recycling collection",
-    casora_calendar: "kalender termine calendar events", casora_entity_list: "liste geräteliste übersicht list entities devices overview",
+    casora_tasks: "aufgaben todo liste tasks checklist", casora_calendar: "kalender termine calendar events", casora_entity_list: "liste geräteliste übersicht list entities devices overview",
     casora_weather_warning: "unwetter warnung dwd nina wetter warning", casora_solar_tip: "solar sonne pv photovoltaik",
     casora_vent: "lüften raumklima luft co2 vent air", casora_football: "fußball fussball verein bundesliga football soccer team",
     casora_car: "auto fahrzeug wagen car", casora_ebike: "fahrrad e-bike ebike bike",

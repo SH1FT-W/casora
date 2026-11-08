@@ -2998,7 +2998,10 @@
     "Lock screen": "Vergrendelscherm",
     "Open in Settings": "Openen in Instellingen",
     "Show percent as closed": "Percentage als gesloten tonen",
-    "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same.": "60 % betekent dan 60 % gesloten en de tegel licht alleen op zolang het apparaat niet helemaal open is. Bij een zonnescherm wisselen Uitrollen en Inrollen om. Alles wat Casora telt blijft gelijk."
+    "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same.": "60 % betekent dan 60 % gesloten en de tegel licht alleen op zolang het apparaat niet helemaal open is. Bij een zonnescherm wisselen Uitrollen en Inrollen om. Alles wat Casora telt blijft gelijk.",
+    "Tasks": "Taken",
+    "Add list …": "Lijst toevoegen …",
+    "Empty: every to-do list in your home.": "Leeg: alle takenlijsten in huis."
   },
   "patterns": [
     [

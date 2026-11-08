@@ -423,6 +423,12 @@ window.CASORA_TILE_TYPES = [
   // Shopping list (community card, card request #82): a to-do list – Bring! or any other. Tile: open items; popup: tick off,
   // put back, add (Casora's question with a text field, „Milch, 1 l“ = item and Bring specification), clear the ticked ones
   // (scripts/local/36-shopping.js, HA's to-do API; the popup is HA's to-do list card until popup v3).
+  // Tasks: several to-do lists on one tile (43-aufgaben.js); no entity of its own, like the calendar.
+  { id: "casora_tasks", label: "Tasks", template: "casora_tasks", domains: ["todo"], noEntity: true, icon: "tasks",
+    color: "var(--casora-color-green, #30D158)",
+    onlyIf: (hass) => !!(hass && hass.states && Object.keys(hass.states).some((id) => id.startsWith("todo."))),
+    fields: [{ key: "lists", label: "Lists", type: "list", domains: ["todo"], placeholder: "Add list …", hint: "Empty: every to-do list in your home." },
+      ICON, { ...TITLE, placeholder: "Tasks" }] },
   { id: "casora_shopping", label: "Bring! shopping list", template: "casora_shopping", domains: ["todo"],
     icon: "cart", color: "var(--casora-color-green, #30D158)", entityLabel: "List", entityPlaceholder: "Choose your shopping list",
     community: { desc: "How many items are open on the tile. The popup lists them with Bring's specification, ticks one off with a tap, adds new ones and clears the ticked ones. For Bring! and every other to-do list in Home Assistant.",
@@ -683,7 +689,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "shield_alarm", "shield_bypass", "shield_vacation", "calendar", "calendar-day", "window-open",
   "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower", "coffee-maker", "paw",
   "coffee-espresso", "coffee-doppio", "coffee-cup", "coffee-cappuccino", "coffee-latte", "coffee-tall", "coffee-water",
-  "coffee-milk", "coffee-tea", "chart", "velair", "list", "grid", "cart", "universal", "kettle", "co",
+  "coffee-milk", "coffee-tea", "chart", "velair", "list", "tasks", "grid", "cart", "universal", "kettle", "co",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Preview: show conditional cards (type: conditional) as the dashboard does –

@@ -2998,7 +2998,10 @@
     "Lock screen": "Écran de verrouillage",
     "Open in Settings": "Ouvrir dans les réglages",
     "Show percent as closed": "Afficher le pourcentage comme fermé",
-    "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same.": "60 % signifie alors 60 % fermé et la tuile ne s'allume que tant que l'appareil n'est pas entièrement ouvert. Sur un store banne, Déployer et Replier s'inversent. Tout ce que Casora compte reste identique."
+    "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same.": "60 % signifie alors 60 % fermé et la tuile ne s'allume que tant que l'appareil n'est pas entièrement ouvert. Sur un store banne, Déployer et Replier s'inversent. Tout ce que Casora compte reste identique.",
+    "Tasks": "Tâches",
+    "Add list …": "Ajouter une liste …",
+    "Empty: every to-do list in your home.": "Vide : toutes les listes de la maison."
   },
   "patterns": [
     [

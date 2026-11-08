@@ -2855,7 +2855,15 @@
     "Bitte gib einen Titel ein.": "Voer een titel in.",
     "Bitte gib Beginn und Ende an.": "Geef een begin en einde op.",
     "Das Ende muss nach dem Beginn liegen.": "Het einde moet na het begin liggen.",
-    "Der Termin konnte nicht gespeichert werden.": "De afspraak kon niet worden opgeslagen."
+    "Der Termin konnte nicht gespeichert werden.": "De afspraak kon niet worden opgeslagen.",
+    "Neue Aufgabe": "Nieuwe taak",
+    "Aufgaben": "Taken",
+    "Notiz (optional)": "Notitie (optioneel)",
+    "Fällig (optional)": "Vervalt (optioneel)",
+    "Keine Listen": "Geen lijsten",
+    "Keine To-do-Listen gefunden": "Geen takenlijsten gevonden",
+    "Bitte gib eine Aufgabe ein.": "Voer een taak in.",
+    "Die Aufgabe konnte nicht gespeichert werden.": "De taak kon niet worden opgeslagen."
   },
   "patterns": [
     [

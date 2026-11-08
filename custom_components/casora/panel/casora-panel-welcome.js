@@ -28,8 +28,8 @@
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
       n0t: "Einstellungen an der Kachel", n0: "Reiter in der Seitenleiste, Zahnrad im Popup.",
-      n1t: "Haus & Geräte neu geordnet", n1: "Ein Abschnitt pro Geräteart, direkt erreichbar.",
-      n2t: "Prozent als geschlossen", n2: "Pro Jalousie einstellbar: 60 % heißt 60 % zu.",
+      n1t: "Neue Kachel: Aufgaben", n1: "Alle To-do-Listen in einer Kachel, mit Filter und Fälligkeit.",
+      n2t: "Termine anlegen", n2: "Direkt im Kalender-Popup, mit Ort und Beschreibung.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,8 +40,8 @@
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
       n0t: "Settings at the tile", n0: "Tabs in the side panel, a gear in the popup.",
-      n1t: "Home & devices reordered", n1: "One section per kind of device, one jump away.",
-      n2t: "Percent as closed", n2: "Set per blind: 60% means 60% closed.",
+      n1t: "New tile: Tasks", n1: "All your to-do lists on one tile, with filters and due dates.",
+      n2t: "Add events", n2: "Right in the calendar popup, with location and description.",
     },
     // Spanish: same keys as en (dev/unit/welcome_es.mjs); a missing key falls back to English.
     es: {
@@ -53,8 +53,8 @@
       w2t: "Asistente de dispositivos", w2: "Casora propone las tarjetas adecuadas para cada habitación y las añade por ti.",
       w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
       n0t: "Ajustes en la tarjeta", n0: "Pestañas en el panel lateral, engranaje en el popup.",
-      n1t: "Casa y dispositivos reordenado", n1: "Una sección por tipo de dispositivo.",
-      n2t: "Porcentaje como cerrado", n2: "Por persiana: 60 % significa 60 % cerrado.",
+      n1t: "Nuevo mosaico: Tareas", n1: "Todas tus listas en un mosaico, con filtros y fechas.",
+      n2t: "Añadir eventos", n2: "En el popup del calendario, con lugar y descripción.",
     },
     fr: {
       welcomeTitle: "Bienvenue dans Casora",
@@ -68,8 +68,8 @@
       w3t: "Ordinateur, tablette et téléphone",
       w3: "Un tableau de bord qui s'adapte à chaque écran, avec sa propre mise en page téléphone.",
       n0t: "Réglages sur la tuile", n0: "Onglets dans le panneau, roue dentée dans le popup.",
-      n1t: "Maison et appareils réorganisé", n1: "Une section par type d'appareil.",
-      n2t: "Pourcentage comme fermé", n2: "Par volet : 60 % veut dire fermé à 60 %.",
+      n1t: "Nouvelle tuile : Tâches", n1: "Toutes tes listes sur une tuile, avec filtres et échéances.",
+      n2t: "Ajouter des événements", n2: "Dans le popup du calendrier, avec lieu et description.",
     },
     it: {
       welcomeTitle: "Ti diamo il benvenuto in Casora",
@@ -83,8 +83,8 @@
       w3t: "Desktop, tablet e telefono",
       w3: "Una dashboard che si adatta a ogni schermo, con un layout dedicato per il telefono.",
       n0t: "Impostazioni sulla scheda", n0: "Schede nel pannello, ingranaggio nel popup.",
-      n1t: "Casa e dispositivi riordinato", n1: "Una sezione per tipo di dispositivo.",
-      n2t: "Percentuale come chiusa", n2: "Per tapparella: 60% significa chiusa al 60%.",
+      n1t: "Nuova tessera: Attività", n1: "Tutti gli elenchi in una tessera, con filtri e scadenze.",
+      n2t: "Aggiungi eventi", n2: "Nel popup del calendario, con luogo e descrizione.",
     },
     nl: {
       welcomeTitle: "Welkom bij Casora",
@@ -98,8 +98,8 @@
       w3t: "Desktop, tablet en telefoon",
       w3: "Eén dashboard dat zich aan elk scherm aanpast, met een eigen telefoonweergave.",
       n0t: "Instellingen bij de tegel", n0: "Tabbladen in het zijpaneel, tandwiel in de popup.",
-      n1t: "Huis en apparaten herordend", n1: "Eén onderdeel per soort apparaat.",
-      n2t: "Percentage als gesloten", n2: "Per rolluik: 60% betekent 60% dicht.",
+      n1t: "Nieuwe tegel: Taken", n1: "Al je takenlijsten op één tegel, met filters en vervaldatums.",
+      n2t: "Afspraken toevoegen", n2: "Direct in de agenda-popup, met locatie en beschrijving.",
     },
     pl: {
       welcomeTitle: "Witaj w Casora",
@@ -113,8 +113,8 @@
       w3t: "Komputer, tablet i telefon",
       w3: "Jeden pulpit, który dopasowuje się do każdego ekranu, z własnym układem na telefon.",
       n0t: "Ustawienia przy kafelku", n0: "Zakładki w panelu, koło zębate w oknie.",
-      n1t: "Dom i urządzenia uporządkowane", n1: "Jedna sekcja na rodzaj urządzenia.",
-      n2t: "Procent jako zamknięcie", n2: "Dla każdej rolety: 60% to 60% zamknięcia.",
+      n1t: "Nowy kafelek: Zadania", n1: "Wszystkie listy na jednym kafelku, z filtrami i terminami.",
+      n2t: "Dodawaj wydarzenia", n2: "W oknie kalendarza, z miejscem i opisem.",
     },
     pt: {
       welcomeTitle: "Bem-vindo ao Casora",
@@ -128,8 +128,8 @@
       w3t: "Computador, tablet e telemóvel",
       w3: "Um painel que se adapta a cada ecrã, com layout próprio para o telemóvel.",
       n0t: "Definições no mosaico", n0: "Separadores no painel, roda dentada no popup.",
-      n1t: "Casa e dispositivos reorganizado", n1: "Uma secção por tipo de dispositivo.",
-      n2t: "Percentagem como fechado", n2: "Por estore: 60% significa 60% fechado.",
+      n1t: "Novo mosaico: Tarefas", n1: "Todas as listas num mosaico, com filtros e prazos.",
+      n2t: "Adicionar eventos", n2: "No popup do calendário, com local e descrição.",
     },
   };
   // Texts for a language: its own, English for anything it does not have (yet).
@@ -145,8 +145,8 @@
   /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
     ["mdi:cog-outline", "n0t", "n0"],
-    ["mdi:home-outline", "n1t", "n1"],
-    ["mdi:blinds", "n2t", "n2"],
+    ["mdi:format-list-checks", "n1t", "n1"],
+    ["mdi:calendar-plus", "n2t", "n2"],
   ];
 
   // Decide on load - before the Studio writes its own casora.* keys.

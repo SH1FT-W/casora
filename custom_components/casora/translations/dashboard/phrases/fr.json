@@ -2855,7 +2855,15 @@
     "Bitte gib einen Titel ein.": "Saisis un titre.",
     "Bitte gib Beginn und Ende an.": "Indique le début et la fin.",
     "Das Ende muss nach dem Beginn liegen.": "La fin doit être après le début.",
-    "Der Termin konnte nicht gespeichert werden.": "L'événement n'a pas pu être enregistré."
+    "Der Termin konnte nicht gespeichert werden.": "L'événement n'a pas pu être enregistré.",
+    "Neue Aufgabe": "Nouvelle tâche",
+    "Aufgaben": "Tâches",
+    "Notiz (optional)": "Note (facultatif)",
+    "Fällig (optional)": "Échéance (facultatif)",
+    "Keine Listen": "Aucune liste",
+    "Keine To-do-Listen gefunden": "Aucune liste de tâches trouvée",
+    "Bitte gib eine Aufgabe ein.": "Saisis une tâche.",
+    "Die Aufgabe konnte nicht gespeichert werden.": "La tâche n'a pas pu être enregistrée."
   },
   "patterns": [
     [

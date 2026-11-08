@@ -2855,7 +2855,15 @@
     "Bitte gib einen Titel ein.": "Wpisz tytuł.",
     "Bitte gib Beginn und Ende an.": "Podaj początek i koniec.",
     "Das Ende muss nach dem Beginn liegen.": "Koniec musi być po początku.",
-    "Der Termin konnte nicht gespeichert werden.": "Nie udało się zapisać wydarzenia."
+    "Der Termin konnte nicht gespeichert werden.": "Nie udało się zapisać wydarzenia.",
+    "Neue Aufgabe": "Nowe zadanie",
+    "Aufgaben": "Zadania",
+    "Notiz (optional)": "Notatka (opcjonalnie)",
+    "Fällig (optional)": "Termin (opcjonalnie)",
+    "Keine Listen": "Brak list",
+    "Keine To-do-Listen gefunden": "Nie znaleziono list zadań",
+    "Bitte gib eine Aufgabe ein.": "Wpisz zadanie.",
+    "Die Aufgabe konnte nicht gespeichert werden.": "Nie udało się zapisać zadania."
   },
   "patterns": [
     [

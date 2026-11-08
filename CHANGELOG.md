@@ -6,16 +6,21 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ## 26.11.25 – 08.11.2026
 
-Settings now sit where you need them: at the tile, in the popup and sorted by kind of device.
+Settings where you need them, a new Tasks tile, and new events right from the calendar.
 
 ### New
+- **Tasks tile:** all your to-do lists on one tile. The popup filters by list, sorts by due date, ticks items off and adds new ones with a note and a due date where the list supports them. The filter is per browser.
+- **Add an event (#146):** the calendar popup can create events with location and description, in any calendar that accepts them.
 - **Tile side panel in tabs:** clicking a tile in the Studio shows Tile, Popup and, where there are shared settings, a tab such as "All blinds". Popup fields are one click away, shared values take effect with "Save settings".
 - **Gear in every popup:** admins jump straight to that tile's Popup tab in the Studio. Popups without a tile open their section of the settings.
-- **Percent as closed (#145):** under Settings › Home & Devices › Blinds and gates each blind can read as percent closed. Dial, buttons, rows, tile and the hold menu follow, Home Assistant still gets its own position. Open, close and the counts stay as they were.
+- **Percent as closed (#145):** under Settings › Home & Devices › Blinds and gates each blind can read as percent closed. Dial, buttons, rows, tile and the hold menu follow, An awning's Extend and Retract swap, and the tile lights up only while it is not fully open. Home Assistant still gets its own position. Open, close and the counts stay as they were.
 
 ### Changed
 - **Home & Devices:** one section per kind of device that opens on its heading, nothing hidden under Advanced. The battery exceptions moved here from the bell, saved values stay.
 - **Tile row:** with "Right away" a pointer resting on the row no longer holds the sorting back for good.
+
+### Fixed
+- **Long notifications (#147):** the text wraps inside its popup instead of running out on the right.
 
 ## 26.11.24 – 08.11.2026
 

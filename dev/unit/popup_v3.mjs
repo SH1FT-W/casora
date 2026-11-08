@@ -123,6 +123,7 @@ const MIGRIERT = [
   { popup: 'Wasserkocher', vorlagen: ['casora_popup_kettle'], file: '37-kettle.js', from: '  K.sec = function', to: "  // The popup's cards: v3", stages: 3 },
   // Built for v3 (issue 124): S6 with a range (0–150 ppm in the colour of the level, thresholds as marks), the Verlauf
   // 24 Std. · 7 Tage in the stage.
+  { popup: 'Aufgaben', vorlagen: ['casora_popup_tasks'], file: '43-aufgaben.js', from: '  T.innerHtml = function', to: '  T.box = function', stages: 1 },
   { popup: 'CO-Melder', vorlagen: ['casora_popup_co'], file: '42-co.js', from: '  C.sec = function', to: "  // The popup's cards: v3", stages: 1 },
 ];
 

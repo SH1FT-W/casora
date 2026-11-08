@@ -2855,7 +2855,15 @@
     "Bitte gib einen Titel ein.": "Introduz um título.",
     "Bitte gib Beginn und Ende an.": "Indica o início e o fim.",
     "Das Ende muss nach dem Beginn liegen.": "O fim tem de ser depois do início.",
-    "Der Termin konnte nicht gespeichert werden.": "Não foi possível guardar o evento."
+    "Der Termin konnte nicht gespeichert werden.": "Não foi possível guardar o evento.",
+    "Neue Aufgabe": "Nova tarefa",
+    "Aufgaben": "Tarefas",
+    "Notiz (optional)": "Nota (opcional)",
+    "Fällig (optional)": "Prazo (opcional)",
+    "Keine Listen": "Sem listas",
+    "Keine To-do-Listen gefunden": "Nenhuma lista encontrada",
+    "Bitte gib eine Aufgabe ein.": "Introduz uma tarefa.",
+    "Die Aufgabe konnte nicht gespeichert werden.": "Não foi possível guardar a tarefa."
   },
   "patterns": [
     [

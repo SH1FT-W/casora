@@ -2998,7 +2998,10 @@
     "Lock screen": "Pantalla de bloqueo",
     "Open in Settings": "Abrir en Ajustes",
     "Show percent as closed": "Mostrar porcentaje como cerrado",
-    "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same.": "El 60 % significa entonces 60 % cerrado y el mosaico solo se ilumina mientras no esté totalmente abierto. En un toldo se intercambian Extender y Recoger. Todo lo que Casora cuenta sigue igual."
+    "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same.": "El 60 % significa entonces 60 % cerrado y el mosaico solo se ilumina mientras no esté totalmente abierto. En un toldo se intercambian Extender y Recoger. Todo lo que Casora cuenta sigue igual.",
+    "Tasks": "Tareas",
+    "Add list …": "Añadir lista …",
+    "Empty: every to-do list in your home.": "Vacío: todas las listas de tu casa."
   },
   "patterns": [
     [

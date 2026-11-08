@@ -2837,7 +2837,15 @@
     "Bitte gib einen Titel ein.": "Please enter a title.",
     "Bitte gib Beginn und Ende an.": "Please enter a start and an end.",
     "Das Ende muss nach dem Beginn liegen.": "The end has to be after the start.",
-    "Der Termin konnte nicht gespeichert werden.": "The event could not be saved."
+    "Der Termin konnte nicht gespeichert werden.": "The event could not be saved.",
+    "Neue Aufgabe": "New task",
+    "Aufgaben": "Tasks",
+    "Notiz (optional)": "Note (optional)",
+    "Fällig (optional)": "Due (optional)",
+    "Keine Listen": "No lists",
+    "Keine To-do-Listen gefunden": "No to-do lists found",
+    "Bitte gib eine Aufgabe ein.": "Please enter a task.",
+    "Die Aufgabe konnte nicht gespeichert werden.": "The task could not be saved."
   },
   "patterns": [
     [

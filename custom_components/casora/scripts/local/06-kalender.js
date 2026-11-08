@@ -658,6 +658,72 @@
     d.start_date_time = a; d.end_date_time = b;
     return { data: d };
   };
+  /* A small form over the popup (add an event, add a task). o: { title, html, first (field id), enter (field ids that save on
+     Enter), cls, save(api) → a Promise while it sends, nothing when api.error said what is wrong, failText }.
+     api: { $, root, close, error }. Closes with the popup behind it; not on a stray tap beside it, typing would be lost. */
+  window._casoraFormDialog = function (o) {
+    var ha = document.querySelector('home-assistant'), hass0 = ha && ha.hass;
+    var Tr = window.casoraTr || function (x) { return x; };
+    var host = document.createElement('div');
+    host.className = o.cls || 'casora-form';
+    if (hass0 && hass0.themes && hass0.themes.darkMode) host.classList.add('dark');
+    if (window._casoraSoft && window._casoraSoft(true)) host.classList.add('soft');
+    var root = host.attachShadow({ mode: 'open' });
+    var ACT = 'var(--casora-popup-ui-action,var(--casora-accent,#276B64))';
+    root.innerHTML = '<style>'
+      + ':host{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.28);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);'
+      + 'font-family:var(--casora-font,var(--ha-font-family-body,Inter,system-ui,sans-serif));color-scheme:light}:host(.dark){color-scheme:dark}'
+      + '.box{box-sizing:border-box;width:min(440px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:24px 20px 20px;border-radius:24px;background:var(--casora-calform-bg,#fff);color:var(--casora-calform-ink,#1c1c1e);box-shadow:var(--casora-shadow-float,0 18px 48px rgba(0,0,0,.24))}'
+      + ':host(.dark){--casora-calform-bg:#2a2a2e;--casora-calform-ink:#f2f2f4}'
+      + ':host(.soft) .box{border-radius:34px;background:var(--casora-soft-surface,#FAF6F0);color:var(--casora-popup-tiles-text-primary,#3A322B)}'
+      + 'h2{margin:0 0 16px;font-size:20px;font-weight:700;line-height:1.25}.f{margin:0 0 12px}label{display:block;margin:0 0 6px;font-size:13px;font-weight:600;opacity:.75}'
+      + 'input,select,textarea{box-sizing:border-box;width:100%;min-height:46px;padding:11px 14px;border:0;border-radius:14px;font:inherit;font-size:16px;color:inherit;outline:none;background:var(--casora-soft-control-fill,rgba(127,127,127,.12));box-shadow:inset 0 0 0 1px rgba(127,127,127,.4)}'
+      + 'textarea{display:block;resize:vertical;min-height:70px}'
+      + 'input:focus-visible,select:focus-visible,textarea:focus-visible{box-shadow:0 0 0 2px ' + ACT + '}'
+      + '.two{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:8px}.allday .two{grid-template-columns:minmax(0,1fr)}.allday .t{display:none}'
+      + '.sw{display:flex;align-items:center;justify-content:space-between;min-height:46px;margin:0 0 12px;font-size:15px;cursor:pointer}.sw input{all:revert;width:22px;height:22px;accent-color:' + ACT + '}'
+      + '.err{margin:0 0 12px;font-size:14px;font-weight:600;color:var(--casora-color-red-text,#B3372E)}.err:empty{display:none}'
+      + '.row{display:flex;gap:10px;margin-top:6px}button{flex:1 1 0;min-height:46px;border:0;border-radius:999px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;background:var(--casora-soft-control-fill,rgba(127,127,127,.14));color:inherit}'
+      + '.yes{background:' + ACT + ';color:var(--casora-popup-ui-on-action,#fff)}button:disabled{opacity:.55;cursor:default}button:focus-visible{outline:2px solid ' + ACT + ';outline-offset:2px}'
+      + '</style><div class="box" role="dialog" aria-modal="true" aria-labelledby="t"><h2 id="t">' + esc(Tr(o.title)) + '</h2>' + o.html
+      + '<p class="err" id="err" role="alert"></p><div class="row"><button type="button" class="no">' + esc(Tr('Abbrechen')) + '</button><button type="button" class="yes">' + esc(Tr('Speichern')) + '</button></div></div>';
+    var $ = function (id) { return root.getElementById(id); };
+    var before = document.activeElement;
+    while (before && before.shadowRoot && before.shadowRoot.activeElement) before = before.shadowRoot.activeElement;
+    var pop = window.casoraPopup && window.casoraPopup.element, popWatch = null;
+    var api = { $: $, root: root, error: function (m) { $('err').textContent = m ? Tr(m) : ''; }, close: function () {
+      if (popWatch) clearInterval(popWatch);
+      document.removeEventListener('keydown', key, true);
+      host.remove();
+      try { if (before && before.isConnected && before.focus) before.focus({ preventScroll: true }); } catch (e) { /* focus stays */ }
+    } };
+    var save = function () {
+      var yes = root.querySelector('.yes');
+      if (yes.disabled) return;
+      api.error('');
+      var p = o.save(api);
+      if (!p) return;
+      yes.disabled = true;
+      Promise.resolve(p).then(api.close, function () { yes.disabled = false; api.error(o.failText); });
+    };
+    var key = function (e) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); api.close(); return; }
+      var at = e.composedPath()[0];
+      if (e.key === 'Enter' && at && (o.enter || []).indexOf(at.id) >= 0) { e.preventDefault(); e.stopPropagation(); save(); return; }
+      if (e.key !== 'Tab') return;
+      var f = [].slice.call(root.querySelectorAll('input,select,textarea,button')).filter(function (x) { return x.getClientRects().length && !x.disabled; });
+      var i = f.indexOf(root.activeElement);
+      e.preventDefault(); e.stopPropagation();
+      f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+    };
+    root.querySelector('.no').onclick = api.close;
+    root.querySelector('.yes').onclick = save;
+    document.addEventListener('keydown', key, true);
+    document.body.appendChild(host);
+    if (pop) popWatch = setInterval(function () { if (!pop.isConnected || !pop.hasAttribute('open') || pop.hasAttribute('closing')) api.close(); }, 250);
+    setTimeout(function () { var n = o.first && $(o.first); if (n) n.focus(); }, 30);
+    return api;
+  };
   K.addDialog = function (day) {
     var ha = document.querySelector('home-assistant'), hass0 = ha && ha.hass;
     var cals = hass0 ? K.writable(K._vars, hass0.states) : [];
@@ -670,77 +736,35 @@
     };
     var hour = Math.min(new Date().getHours() + 1, 23), startDate = day || ymd(new Date()), startTime = two(hour) + ':00', end = plusHour(startDate, startTime);
     var pick = cals.filter(function (c) { return !K.hide[c.entity]; })[0] || cals[0];
-    var host = document.createElement('div');
-    host.className = 'casora-calform';
-    if (hass0.themes && hass0.themes.darkMode) host.classList.add('dark');
-    if (window._casoraSoft && window._casoraSoft(true)) host.classList.add('soft');
-    var root = host.attachShadow({ mode: 'open' });
-    var row = function (label, html, id) { return '<div class="f"' + (id ? ' id="' + id + '"' : '') + '><label>' + esc(Tr(label)) + '</label>' + html + '</div>'; };
+    var row = function (label, html) { return '<div class="f"><label>' + esc(Tr(label)) + '</label>' + html + '</div>'; };
     var when = function (label, k, date, time) {
       return '<div class="f"><label>' + esc(Tr(label)) + '</label><div class="two"><input id="' + k + 'D" type="date" aria-label="' + esc(Tr(label)) + '" value="' + date + '">'
         + '<input id="' + k + 'T" class="t" type="time" aria-label="' + esc(Tr(label)) + '" value="' + time + '"></div></div>';
     };
-    root.innerHTML = '<style>'
-      + ':host{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.28);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);'
-      + 'font-family:var(--casora-font,var(--ha-font-family-body,Inter,system-ui,sans-serif));color-scheme:light}:host(.dark){color-scheme:dark}'
-      + '.box{box-sizing:border-box;width:min(440px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:24px 20px 20px;border-radius:24px;background:var(--casora-calform-bg,#fff);color:var(--casora-calform-ink,#1c1c1e);box-shadow:var(--casora-shadow-float,0 18px 48px rgba(0,0,0,.24))}'
-      + ':host(.dark){--casora-calform-bg:#2a2a2e;--casora-calform-ink:#f2f2f4}'
-      + ':host(.soft) .box{border-radius:34px;background:var(--casora-soft-surface,#FAF6F0);color:var(--casora-popup-tiles-text-primary,#3A322B)}'
-      + 'h2{margin:0 0 16px;font-size:20px;font-weight:700;line-height:1.25}.f{margin:0 0 12px}label{display:block;margin:0 0 6px;font-size:13px;font-weight:600;opacity:.75}'
-      + 'input,select,textarea{box-sizing:border-box;width:100%;min-height:46px;padding:11px 14px;border:0;border-radius:14px;font:inherit;font-size:16px;color:inherit;outline:none;background:var(--casora-soft-control-fill,rgba(127,127,127,.12));box-shadow:inset 0 0 0 1px rgba(127,127,127,.4)}'
-      + 'textarea{display:block;resize:vertical;min-height:70px}'
-      + 'input:focus-visible,select:focus-visible,textarea:focus-visible{box-shadow:0 0 0 2px var(--casora-popup-ui-action,var(--casora-accent,#276B64))}'
-      + '.two{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:8px}.allday .two{grid-template-columns:minmax(0,1fr)}.allday .t{display:none}'
-      + '.sw{display:flex;align-items:center;justify-content:space-between;min-height:46px;margin:0 0 12px;font-size:15px;cursor:pointer}.sw input{all:revert;width:22px;height:22px;accent-color:var(--casora-popup-ui-action,var(--casora-accent,#276B64))}'
-      + '.err{margin:0 0 12px;font-size:14px;font-weight:600;color:var(--casora-color-red-text,#B3372E)}.err:empty{display:none}'
-      + '.row{display:flex;gap:10px;margin-top:6px}button{flex:1 1 0;min-height:46px;border:0;border-radius:999px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;background:var(--casora-soft-control-fill,rgba(127,127,127,.14));color:inherit}'
-      + '.yes{background:var(--casora-popup-ui-action,var(--casora-accent,#276B64));color:var(--casora-popup-ui-on-action,#fff)}button:disabled{opacity:.55;cursor:default}button:focus-visible{outline:2px solid var(--casora-popup-ui-action,var(--casora-accent,#276B64));outline-offset:2px}'
-      + '</style><div class="box" role="dialog" aria-modal="true" aria-labelledby="t"><h2 id="t">' + esc(Tr('Neuer Termin')) + '</h2>'
-      + row('Titel', '<input id="title" type="text" autocomplete="off">')
-      + row('Ort (optional)', '<input id="loc" type="text" autocomplete="off">')
-      + row('Beschreibung (optional)', '<textarea id="desc" rows="2"></textarea>')
-      + (cals.length > 1 ? row('Kalender', '<select id="cal">' + cals.map(function (c) { return '<option value="' + esc(c.entity) + '"' + (c.entity === pick.entity ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select>') : '')
-      + '<label class="sw"><span>' + esc(Tr('Ganztägig')) + '</span><input id="all" type="checkbox"></label>'
-      + '<div id="times">' + when('Beginn', 's', startDate, startTime) + when('Ende', 'e', end.date, end.time) + '</div>'
-      + '<p class="err" id="err" role="alert"></p><div class="row"><button type="button" class="no">' + esc(Tr('Abbrechen')) + '</button><button type="button" class="yes">' + esc(Tr('Speichern')) + '</button></div></div>';
-    var $ = function (id) { return root.getElementById(id); };
-    var before = document.activeElement;
-    while (before && before.shadowRoot && before.shadowRoot.activeElement) before = before.shadowRoot.activeElement;
-    var pop = window.casoraPopup && window.casoraPopup.element, popWatch = null, endTouched = false;
-    var close = function () {
-      if (popWatch) clearInterval(popWatch);
-      document.removeEventListener('keydown', key, true);
-      host.remove();
-      try { if (before && before.isConnected && before.focus) before.focus({ preventScroll: true }); } catch (e) { /* focus stays */ }
-    };
-    var save = function () {
-      var yes = root.querySelector('.yes'), err = $('err');
-      if (yes.disabled) return;
-      var cal = $('cal') ? $('cal').value : pick.entity;
-      var r = K.eventData({ title: $('title').value, location: $('loc').value, description: $('desc').value, allDay: $('all').checked,
-        startDate: $('sD').value, startTime: $('sT').value, endDate: $('eD').value, endTime: $('eT').value });
-      if (r.error) { err.textContent = Tr(r.error); return; }
-      err.textContent = ''; yes.disabled = true;
-      var hass = (document.querySelector('home-assistant') || {}).hass || hass0;
-      Promise.resolve(hass.callService('calendar', 'create_event', r.data, { entity_id: cal })).then(function () {
-        close();
-        if (window.casoraHaptic) window.casoraHaptic('success');
-        var d = parseYmd($('sD').value);
-        K.sel = $('sD').value; K.month = new Date(d.getFullYear(), d.getMonth(), 1); K.hide[cal] = false; K.ts = 0;
-        K.load(hass, K._vars, true);
-        // Cloud calendars can answer a moment later, and a load already running ignores this one.
-        setTimeout(function () { K.load(hass, K._vars, true); }, 1500);
-      }, function () { yes.disabled = false; err.textContent = Tr('Der Termin konnte nicht gespeichert werden.'); });
-    };
-    var key = function (e) {
-      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); return; }
-      if (e.key === 'Enter' && e.composedPath()[0] && /^(title|loc)$/.test(e.composedPath()[0].id || '')) { e.preventDefault(); e.stopPropagation(); save(); return; }
-      if (e.key !== 'Tab') return;
-      var f = [].slice.call(root.querySelectorAll('input,select,textarea,button')).filter(function (x) { return x.getClientRects().length && !x.disabled; });
-      var i = f.indexOf(root.activeElement);
-      e.preventDefault(); e.stopPropagation();
-      f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
-    };
+    var endTouched = false;
+    var api = window._casoraFormDialog({ title: 'Neuer Termin', cls: 'casora-calform', first: 'title', enter: ['title', 'loc'], failText: 'Der Termin konnte nicht gespeichert werden.',
+      html: row('Titel', '<input id="title" type="text" autocomplete="off">')
+        + row('Ort (optional)', '<input id="loc" type="text" autocomplete="off">')
+        + row('Beschreibung (optional)', '<textarea id="desc" rows="2"></textarea>')
+        + (cals.length > 1 ? row('Kalender', '<select id="cal">' + cals.map(function (c) { return '<option value="' + esc(c.entity) + '"' + (c.entity === pick.entity ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select>') : '')
+        + '<label class="sw"><span>' + esc(Tr('Ganztägig')) + '</span><input id="all" type="checkbox"></label>'
+        + '<div id="times">' + when('Beginn', 's', startDate, startTime) + when('Ende', 'e', end.date, end.time) + '</div>',
+      save: function (a) {
+        var $ = a.$, cal = $('cal') ? $('cal').value : pick.entity, day0 = $('sD').value;
+        var r = K.eventData({ title: $('title').value, location: $('loc').value, description: $('desc').value, allDay: $('all').checked,
+          startDate: day0, startTime: $('sT').value, endDate: $('eD').value, endTime: $('eT').value });
+        if (r.error) { a.error(r.error); return null; }
+        var hass = (document.querySelector('home-assistant') || {}).hass || hass0;
+        return Promise.resolve(hass.callService('calendar', 'create_event', r.data, { entity_id: cal })).then(function () {
+          if (window.casoraHaptic) window.casoraHaptic('success');
+          var d = parseYmd(day0);
+          K.sel = day0; K.month = new Date(d.getFullYear(), d.getMonth(), 1); K.hide[cal] = false; K.ts = 0;
+          K.load(hass, K._vars, true);
+          // Cloud calendars can answer a moment later, and a load already running ignores this one.
+          setTimeout(function () { K.load(hass, K._vars, true); }, 1500);
+        });
+      } });
+    var $ = api.$;
     var follow = function () {
       if (endTouched) return;
       if ($('all').checked) { if ($('eD').value < $('sD').value) $('eD').value = $('sD').value; return; }
@@ -755,12 +779,6 @@
       if ($('all').checked && !endTouched) $('eD').value = $('sD').value;
       else follow();
     };
-    root.querySelector('.no').onclick = close;
-    root.querySelector('.yes').onclick = save;
-    document.addEventListener('keydown', key, true);
-    document.body.appendChild(host);
-    if (pop) popWatch = setInterval(function () { if (!pop.isConnected || !pop.hasAttribute('open') || pop.hasAttribute('closing')) close(); }, 250);
-    setTimeout(function () { $('title').focus(); }, 30);
   };
 
   /* Antippen: Tag wählen, Monat blättern, Kalender ein-/ausblenden (Capture, da Popups Klicks schlucken). */

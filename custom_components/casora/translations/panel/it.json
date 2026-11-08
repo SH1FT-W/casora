@@ -2998,7 +2998,10 @@
     "Lock screen": "Schermata di blocco",
     "Open in Settings": "Apri nelle impostazioni",
     "Show percent as closed": "Mostra la percentuale come chiusa",
-    "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same.": "60 % significa quindi 60 % chiuso e la tessera si illumina solo finché il dispositivo non è completamente aperto. Su una tenda da sole Estendi e Ritrai si scambiano. Tutto ciò che Casora conta resta uguale."
+    "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same.": "60 % significa quindi 60 % chiuso e la tessera si illumina solo finché il dispositivo non è completamente aperto. Su una tenda da sole Estendi e Ritrai si scambiano. Tutto ciò che Casora conta resta uguale.",
+    "Tasks": "Attività",
+    "Add list …": "Aggiungi elenco …",
+    "Empty: every to-do list in your home.": "Vuoto: tutti gli elenchi della casa."
   },
   "patterns": [
     [
