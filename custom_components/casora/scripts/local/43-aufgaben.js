@@ -69,29 +69,25 @@
     if (f.due && f.canDue) d.due_date = f.due;
     return { data: d };
   };
-  // As the recipe card's shopping list: the item's symbol left, then the text, X and tick on the right; done ones struck through.
-  var CSS = '<style>.trl{display:flex;flex-direction:column;gap:8px}'
-    + '.trr{display:flex;align-items:center;gap:12px;min-height:var(--casora-soft-row-h,58px);box-sizing:border-box;padding:var(--casora-soft-row-pad,10px 8px 10px 10px);border-radius:var(--casora-popup-row-radius,24px);background:var(--casora-soft-row-fill,rgba(140,115,90,.07))}'
-    + '.tri{width:var(--casora-soft-icon-size,38px);height:var(--casora-soft-icon-size,38px);flex:none;border-radius:var(--casora-soft-icon-radius,50%);display:grid;place-items:center}'
-    + '.trt{flex:1;min-width:0}.trn{font-size:var(--casora-soft-row-fs,14.5px);font-weight:700;letter-spacing:-.01em;line-height:1.3;overflow-wrap:anywhere;color:var(--casora-popup-tiles-text-primary,var(--primary-text-color))}'
-    + '.trs{font-size:var(--casora-soft-sub-fs,12.5px);font-weight:500;margin-top:1px;color:var(--casora-soft-sub,var(--secondary-text-color));overflow-wrap:anywhere}.trs.bad{color:var(--casora-color-red-text,#B3372E)}'
-    + '.trd .trn{text-decoration:line-through;opacity:.6}.trd .tri{opacity:.45}'
-    + '.trb{all:unset;box-sizing:border-box;flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;cursor:pointer;pointer-events:auto;color:var(--casora-soft-glyph-off,rgba(127,127,127,.75))}'
-    + '.trb ha-icon{--mdc-icon-size:26px;width:26px;height:26px;display:flex;pointer-events:none}.trb.x ha-icon{--mdc-icon-size:20px;width:20px;height:20px}'
-    + '.trb.on{color:var(--casora-popup-ui-good,#30D158)}@media (hover:hover){.trb:hover{background:var(--casora-soft-row-hover,rgba(140,115,90,.11))}}'
-    + '.trb:focus-visible{outline:2px solid var(--casora-popup-ui-action,var(--casora-accent,#276B64));outline-offset:-2px}'
-    + '.trm{cursor:pointer;pointer-events:auto}.trm>*{pointer-events:none}</style>';
-  var rowHtml = function (states, id, it, isDone) {
-    var due = isDone ? null : T.dueWord(it.due), s = Sh(), UI = window._casoraUI;
+  // A row of Casora's list: the item's symbol left (as on the shopping list), X and tick right as round buttons like the
+  // popup's own, done ones struck through.
+  var CSS = '<style>.trbs{display:flex;align-items:center;flex:none;margin:-6px -8px -6px 0}'
+    + '.trb{all:unset;box-sizing:border-box;flex:none;width:44px;height:44px;display:grid;place-items:center;cursor:pointer;pointer-events:auto;-webkit-tap-highlight-color:transparent}'
+    + '.trb i{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--casora-soft-control-fill,rgba(127,127,127,.14));color:var(--casora-popup-tiles-text-primary,var(--primary-text-color));transition:background-color .18s ease}'
+    + '.trb ha-icon{--mdc-icon-size:18px;width:18px;height:18px;display:flex;pointer-events:none}'
+    + '.trb.on i{background:var(--casora-popup-ui-good,#30D158);color:var(--casora-popup-ui-on-action,#fff)}'
+    + '.trb:focus-visible i{outline:2px solid var(--casora-popup-ui-action,var(--casora-accent,#276B64));outline-offset:1px}</style>';
+  var row = function (states, id, it, isDone) {
+    var due = isDone ? null : T.dueWord(it.due), s = Sh();
     var R = window._casoraRecipe, f = R && R.foodLook ? R.foodLook(it.summary, true) : [null];
-    var icon = f[0] ? f[1] : 'mdi:clipboard-text-outline', color = f[0] ? f[2] : 'var(--casora-tone-general,var(--casora-color-green,#30D158))';
-    var ink = 'var(--casora-popup-tiles-text-primary,var(--primary-text-color))';
-    var dueHtml = due ? '<div class="trs' + (due.over ? ' bad' : '') + '">' + esc(due.text) + '</div>' : '';
-    var noteHtml = it.description ? '<div class="trs">' + esc(it.description) + '</div>' : '';
-    var delHtml = has(states[id], FEAT.remove) && s ? '<button type="button" class="trb x" aria-label="' + esc('Löschen') + '" data-casora-svc="' + esc(JSON.stringify(T.removeSvc(id, it))) + '"><ha-icon icon="mdi:close"></ha-icon></button>' : '';
-    var tickHtml = has(states[id], FEAT.update) && s ? '<button type="button" class="trb' + (isDone ? ' on' : '') + '" aria-label="' + esc(isDone ? 'Wieder öffnen' : 'Abhaken') + '" data-casora-svc="' + esc(JSON.stringify(s.toggleSvc(id, it, isDone))) + '"><ha-icon icon="' + (isDone ? 'mdi:check-circle' : 'mdi:check-circle-outline') + '"></ha-icon></button>' : '';
-    return '<div class="trr' + (isDone ? ' trd' : '') + '"><div class="tri" style="background:color-mix(in srgb, ' + esc(color) + ' 22%, transparent);"><ha-icon icon="' + esc(icon) + '" style="--mdc-icon-size:19px;width:19px;height:19px;display:flex;color:color-mix(in srgb, ' + esc(color) + ' 65%, ' + esc(ink) + ');"></ha-icon></div>'
-      + '<div class="trt"><div class="trn">' + esc(it.summary) + '</div>' + dueHtml + noteHtml + '</div>' + delHtml + tickHtml + '</div>';
+    var btn = function (cls, label, svc, icon) { return '<button type="button" class="trb' + esc(cls) + '" aria-label="' + esc(label) + '" data-casora-svc="' + esc(JSON.stringify(svc)) + '"><i><ha-icon icon="' + esc(icon) + '"></ha-icon></i></button>'; };
+    var delHtml = has(states[id], FEAT.remove) && s ? btn(' x', 'Löschen', T.removeSvc(id, it), 'mdi:close') : '';
+    var tickHtml = has(states[id], FEAT.update) && s ? btn(isDone ? ' on' : '', isDone ? 'Wieder öffnen' : 'Abhaken', s.toggleSvc(id, it, isDone), 'mdi:check') : '';
+    var sub = [due && due.text, it.description].filter(Boolean).join(' · ');
+    var r = { icon: f[0] ? f[1] : 'mdi:clipboard-text-outline', iconTone: f[0] ? f[2] : 'var(--casora-tone-general,var(--casora-color-green,#30D158))', label: it.summary, labelWrap: true, strike: isDone, sub: sub || null, noChev: true,
+      endHtml: '<div class="trbs">' + delHtml + tickHtml + '</div>' };
+    if (due && due.over) r.subTone = 'bad';
+    return r;
   };
   // Deleting cannot be undone from here, so it asks; ticking off can, so it does not.
   T.removeSvc = function (id, it) { return { domain: 'todo', service: 'remove_item', target: { entity_id: id }, data: { item: it.uid || it.summary }, confirm: 'Eintrag löschen?' }; };
@@ -128,8 +124,7 @@
       var groupsHtml = shown.map(function (id) {
         var d = data[id];
         if (!d || !d.open.length) return '';
-        var itemsHtml = T.sortOpen(d.open).map(function (it) { return rowHtml(st, id, it, false); }).join('');
-        return '<div>' + UI.label(T.nameOf(st, id)) + '<div class="trl">' + itemsHtml + '</div></div>';
+        return UI.group(T.sortOpen(d.open).map(function (it) { return row(st, id, it, false); }), T.nameOf(st, id), null, { keepNames: true });
       }).filter(Boolean);
       var allHtml = groupsHtml.join('');
       if (allHtml) return CSS + '<div style="display:flex;flex-direction:column;gap:var(--casora-popup-sec-gap,18px);">' + allHtml + '</div>';
@@ -138,15 +133,16 @@
     if (part === 'done') {
       var doneN = doneOf(shown);
       if (!doneN) return '';
-      var headHtml = '<div class="trr trm" role="button" tabindex="0" aria-expanded="' + T.showDone + '" data-tasks="done"><div class="tri" style="background:rgba(127,127,127,.14);"><ha-icon icon="' + (T.showDone ? 'mdi:chevron-up' : 'mdi:chevron-down') + '" style="--mdc-icon-size:19px;width:19px;height:19px;display:flex;"></ha-icon></div>'
-        + '<div class="trt"><div class="trn" style="opacity:.7">' + esc(doneN + ' erledigt') + '</div></div><div class="trs" style="padding-right:10px;">' + esc(T.showDone ? 'Ausblenden' : 'Anzeigen') + '</div></div>';
-      if (!T.showDone) return CSS + '<div class="trl">' + headHtml + '</div>';
-      var listHtml = '', shownN = 0;
-      shown.forEach(function (id) { if (data[id]) data[id].done.forEach(function (it) { if (shownN++ < DONE_MAX) listHtml += rowHtml(st, id, it, true); }); });
-      var moreHtml = doneN > DONE_MAX ? '<div class="trs" style="padding:4px 14px;">' + esc('+' + (doneN - DONE_MAX) + ' weitere') + '</div>' : '';
-      // „Erledigte löschen“ names one list: with all lists showing it would clear more than the eye can check.
-      var clearHtml = sel !== 'all' && s.clearSvc && has(st[sel], FEAT.remove) ? UI.group([{ icon: 'mdi:delete-sweep-outline', label: 'Erledigte löschen', svc: s.clearSvc(sel), confirm: 'Löschen', noChev: true }]) : '';
-      return CSS + '<div class="trl">' + headHtml + listHtml + moreHtml + clearHtml + '</div>';
+      var rows = [{ icon: T.showDone ? 'mdi:chevron-up' : 'mdi:chevron-down', label: doneN + ' erledigt', value: T.showDone ? 'Ausblenden' : 'Anzeigen', tappable: true, noChev: true }];
+      var taken = 0;
+      if (T.showDone) {
+        shown.forEach(function (id) { if (data[id]) data[id].done.forEach(function (it) { if (taken++ < DONE_MAX) rows.push(row(st, id, it, true)); }); });
+        if (doneN > DONE_MAX) rows.push({ icon: 'mdi:dots-horizontal', label: '+' + (doneN - DONE_MAX) + ' weitere', noChev: true });
+        // „Erledigte löschen“ names one list: with all lists showing it would clear more than the eye can check.
+        if (sel !== 'all' && s.clearSvc && has(st[sel], FEAT.remove)) rows.push({ icon: 'mdi:delete-sweep-outline', label: 'Erledigte löschen', svc: s.clearSvc(sel), confirm: 'Löschen', noChev: true });
+      }
+      var doneHtml = UI.group(rows, null, null, { keepNames: true });
+      return CSS + doneHtml.replace('<div class="hui-row', '<div data-tasks="done" class="hui-row');
     }
     return '';
   };

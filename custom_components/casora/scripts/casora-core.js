@@ -10554,7 +10554,7 @@ window.casoraMenuGlass = {
         + '<div style="flex:1;min-width:0;pointer-events:none;white-space:normal;">'
         + '<div style="font-size:var(--casora-soft-row-fs, 14.5px);font-weight:700;letter-spacing:-0.01em;line-height:1.3;color:'
         + esc(tone(r.labelTone) || T.ink) + ';overflow:hidden;'
-        + 'text-overflow:ellipsis;white-space:nowrap;">' + lit(r.label, r.labelLit) + '</div>';
+        + (r.labelWrap ? 'white-space:normal;overflow-wrap:anywhere;' : 'text-overflow:ellipsis;white-space:nowrap;') + (r.strike ? 'text-decoration:line-through;opacity:.6;' : '') + '">' + lit(r.label, r.labelLit) + '</div>';
 
       if (r.sub) {
         var subs = Array.isArray(r.sub) ? r.sub : [r.sub];
@@ -10853,7 +10853,7 @@ window.casoraMenuGlass = {
         + 'font-weight:var(--casora-popup-row-label-weight, 400);'
         + 'letter-spacing:-0.022em;color:'
         + esc(tone(r.labelTone) || T.ink) + ';overflow:hidden;'
-        + 'text-overflow:ellipsis;white-space:nowrap;">' + lit(r.label, r.labelLit) + '</div>';
+        + (r.labelWrap ? 'white-space:normal;overflow-wrap:anywhere;' : 'text-overflow:ellipsis;white-space:nowrap;') + (r.strike ? 'text-decoration:line-through;opacity:.6;' : '') + '">' + lit(r.label, r.labelLit) + '</div>';
 
       if (r.sub) {
         var subs = Array.isArray(r.sub) ? r.sub : [r.sub];
