@@ -27,8 +27,9 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Mealie in der Rezept-Kachel", n0: "Gericht von heute, Speiseplan, Zutaten und Einkaufsliste.",
-      n1t: "Geschlossen pro Rollo", n1: "Jedes Rollo mit eigenem Prozentwert.",
+      n0t: "Klimaanlagen im Thermostat", n0: "Kühlen, Lüfter, Voreinstellung und Lamellen.",
+      n1t: "Nur bei Abwesenheit zählen", n1: "Fenster warnen erst, wenn niemand da ist.",
+      n2t: "Beschatten nach Wunsch", n2: "Eigene Position, passende Worte für Markisen.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -38,8 +39,9 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Mealie in the recipe tile", n0: "Today's dish, meal plan, ingredients and shopping list.",
-      n1t: "Closed per blind", n1: "Every blind with its own percentage.",
+      n0t: "Air conditioners in the thermostat", n0: "Cool, fan, preset and swing.",
+      n1t: "Count only when away", n1: "Windows warn only when nobody is home.",
+      n2t: "Shade your way", n2: "Your own position, the right words for awnings.",
     },
     // Spanish: same keys as en (dev/unit/welcome_es.mjs); a missing key falls back to English.
     es: {
@@ -50,8 +52,9 @@
       w1t: "Habitación por habitación", w1: "Diseña tu panel con los dispositivos que ya tienes en Home Assistant.",
       w2t: "Asistente de dispositivos", w2: "Casora propone las tarjetas adecuadas para cada habitación y las añade por ti.",
       w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
-      n0t: "Mealie en la tarjeta de recetas", n0: "Plato de hoy, menú, ingredientes y lista de la compra.",
-      n1t: "Cerrada por persiana", n1: "Cada persiana con su propio porcentaje.",
+      n0t: "Aires acondicionados en el termostato", n0: "Frío, ventilador, preajuste y oscilación.",
+      n1t: "Contar solo en ausencia", n1: "Las ventanas avisan solo si no hay nadie.",
+      n2t: "Sombra a tu gusto", n2: "Tu posición y palabras adecuadas para toldos.",
     },
     fr: {
       welcomeTitle: "Bienvenue dans Casora",
@@ -64,8 +67,9 @@
       w2: "Casora propose les tuiles adaptées à chaque pièce et les ajoute pour toi.",
       w3t: "Ordinateur, tablette et téléphone",
       w3: "Un tableau de bord qui s'adapte à chaque écran, avec sa propre mise en page téléphone.",
-      n0t: "Mealie dans la tuile recettes", n0: "Plat du jour, menu, ingrédients et liste de courses.",
-      n1t: "Fermé par volet", n1: "Chaque volet avec son propre pourcentage.",
+      n0t: "Climatiseurs dans le thermostat", n0: "Froid, ventilation, préréglage et oscillation.",
+      n1t: "Compter seulement en absence", n1: "Les fenêtres n'alertent que si personne n'est là.",
+      n2t: "Ombrage sur mesure", n2: "Ta position, les bons mots pour les stores.",
     },
     it: {
       welcomeTitle: "Ti diamo il benvenuto in Casora",
@@ -78,8 +82,9 @@
       w2: "Casora propone le schede adatte per ogni stanza e le aggiunge per te.",
       w3t: "Desktop, tablet e telefono",
       w3: "Una dashboard che si adatta a ogni schermo, con un layout dedicato per il telefono.",
-      n0t: "Mealie nel riquadro ricette", n0: "Piatto di oggi, menù, ingredienti e lista della spesa.",
-      n1t: "Chiusa per tapparella", n1: "Ogni tapparella con la sua percentuale.",
+      n0t: "Condizionatori nel termostato", n0: "Freddo, ventola, preset e oscillazione.",
+      n1t: "Conta solo in assenza", n1: "Le finestre avvisano solo se non c'è nessuno.",
+      n2t: "Ombra su misura", n2: "La tua posizione, parole giuste per le tende.",
     },
     nl: {
       welcomeTitle: "Welkom bij Casora",
@@ -92,8 +97,9 @@
       w2: "Casora stelt voor elke kamer passende tegels voor en bouwt ze in.",
       w3t: "Desktop, tablet en telefoon",
       w3: "Eén dashboard dat zich aan elk scherm aanpast, met een eigen telefoonweergave.",
-      n0t: "Mealie in de recepttegel", n0: "Gerecht van vandaag, menu, ingrediënten en boodschappenlijst.",
-      n1t: "Gesloten per rolluik", n1: "Elk rolluik met een eigen percentage.",
+      n0t: "Airco's in de thermostaat", n0: "Koelen, ventilator, voorkeuze en zwenken.",
+      n1t: "Alleen tellen bij afwezigheid", n1: "Ramen waarschuwen pas als er niemand thuis is.",
+      n2t: "Schaduw naar wens", n2: "Eigen positie, passende woorden voor zonneschermen.",
     },
     pl: {
       welcomeTitle: "Witaj w Casora",
@@ -106,8 +112,9 @@
       w2: "Casora proponuje pasujące kafelki dla każdego pokoju i dodaje je za ciebie.",
       w3t: "Komputer, tablet i telefon",
       w3: "Jeden pulpit, który dopasowuje się do każdego ekranu, z własnym układem na telefon.",
-      n0t: "Mealie w kafelku przepisów", n0: "Danie dnia, jadłospis, składniki i lista zakupów.",
-      n1t: "Zamknięte dla każdej rolety", n1: "Każda roleta z własnym procentem.",
+      n0t: "Klimatyzatory w termostacie", n0: "Chłodzenie, wentylator, preset i nawiew.",
+      n1t: "Licz tylko pod nieobecność", n1: "Okna ostrzegają, gdy nikogo nie ma w domu.",
+      n2t: "Zacienienie po swojemu", n2: "Własna pozycja, właściwe słowa dla markiz.",
     },
     pt: {
       welcomeTitle: "Bem-vindo ao Casora",
@@ -120,8 +127,9 @@
       w2: "O Casora propõe os cartões certos para cada divisão e adiciona-os por ti.",
       w3t: "Computador, tablet e telemóvel",
       w3: "Um painel que se adapta a cada ecrã, com layout próprio para o telemóvel.",
-      n0t: "Mealie no mosaico de receitas", n0: "Prato de hoje, plano, ingredientes e lista de compras.",
-      n1t: "Fechado por estore", n1: "Cada estore com a sua própria percentagem.",
+      n0t: "Ar condicionado no termostato", n0: "Frio, ventoinha, predefinição e oscilação.",
+      n1t: "Contar só na ausência", n1: "As janelas avisam só quando não há ninguém.",
+      n2t: "Sombra à sua medida", n2: "A sua posição, palavras certas para toldos.",
     },
   };
   // Texts for a language: its own, English for anything it does not have (yet).
@@ -136,8 +144,9 @@
 
   /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
-    ["mdi:silverware-fork-knife", "n0t", "n0"],
-    ["mdi:blinds", "n1t", "n1"],
+    ["mdi:snowflake", "n0t", "n0"],
+    ["mdi:shield-home-outline", "n1t", "n1"],
+    ["mdi:blinds", "n2t", "n2"],
   ];
 
   // Decide on load - before the Studio writes its own casora.* keys.
