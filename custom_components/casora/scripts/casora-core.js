@@ -7820,6 +7820,13 @@ window.casoraMenuGlass = {
     paintLive(cache.nodes, hass);
   }
 
+  // attr 'x|closed' reads the percentage the other way round (issue 145).
+  var casoraLiveNum = function (st, attr) {
+    var closed = /\|closed$/.test(attr), k = closed ? attr.slice(0, -7) : attr;
+    var raw = (st.attributes || {})[k];
+    if (closed && raw == null) return NaN;
+    return closed ? 100 - Number(raw) : Number(raw);
+  };
   function paintLive(nodes, hass) {
     for (var i = 0; i < nodes.length; i++) {
       var el = nodes[i];
@@ -7831,7 +7838,7 @@ window.casoraMenuGlass = {
         var gAttr = el.dataset.casoraAttr || 'current_position', gSum = 0, gN = 0;
         for (var gi = 0; gi < gIds.length; gi++) {
           var gSt = hass.states[gIds[gi]];
-          var gv = gSt ? Number((gSt.attributes || {})[gAttr]) : NaN;
+          var gv = gSt ? casoraLiveNum(gSt, gAttr) : NaN;
           if (!isNaN(gv)) { gSum += gv; gN++; }
         }
         if (!gN) continue;
@@ -7859,7 +7866,7 @@ window.casoraMenuGlass = {
         var dAttr = el.dataset.casoraAttr || 'current_position', dSum = 0, dCnt = 0;
         for (var di = 0; di < dIds.length; di++) {
           var dSt = hass.states[dIds[di]];
-          var dv = dSt ? Number((dSt.attributes || {})[dAttr]) : NaN;
+          var dv = dSt ? casoraLiveNum(dSt, dAttr) : NaN;
           if (!isNaN(dv)) { dSum += dv; dCnt++; }
         }
         if (dCnt && window._casoraDialSet) window._casoraDialSet(el, Math.max(0, Math.min(100, Math.round(dSum / dCnt))));
@@ -7873,7 +7880,7 @@ window.casoraMenuGlass = {
         for (var f = 0; f < fIds.length; f++) {
           var fSt = hass.states[fIds[f]];
           if (!fSt) continue;
-          var fv = Number((fSt.attributes || {})[fAttr]);
+          var fv = casoraLiveNum(fSt, fAttr);
           if (!isNaN(fv)) fVals.push(fv);
         }
         if (!fVals.length) continue;
@@ -7946,7 +7953,7 @@ window.casoraMenuGlass = {
         try { spec = JSON.parse(el.dataset.casoraWords || '{}'); } catch (e) { continue; }
         var sw = spec.state && spec.state[st.state];
         if (sw) { el.textContent = sw; continue; }
-        var av = Number((st.attributes || {})[spec.attr]);
+        var av = casoraLiveNum(st, spec.attr);
         if (isNaN(av)) {
           var fw = spec.fallbackState && spec.fallbackState[st.state];
           if (fw) el.textContent = fw;
@@ -11665,6 +11672,7 @@ window.casoraMenuGlass = {
             arr[spec.channel] = Math.round(d.pct * 2.55);
             val = arr;
           }
+          if (spec.flip) val = 100 - val; // issue 145: shown as closed, sent as HA's position
           data[spec.field || 'position'] = val;
           var go = function () { ha.hass.callService(spec.domain, spec.service, data, spec.target || undefined); };
           // Mit Rückfrage: erst nach „Öffnen“/„Schließen“ fahren, sonst zurück auf den alten Stand.
@@ -12592,6 +12600,18 @@ window.casoraMenuGlass = {
   // sent: the first button is always position 100, the last 0. v.shade_position 1–99 is the middle button (default 50),
   // v.shade_hide takes it away. scope: said when the buttons move more than one cover.
   var COVER_WORDS = { open: ['Auf', 'Zu'], raise: ['Heben', 'Senken'], extend: ['Ausfahren', 'Einfahren'] };
+  // Issue 145: covers shown as "percent closed" (security.percent_closed, Studio › Blinds and gates). Only display and
+  // input turn around: what goes to Home Assistant, open/close and every count stay on HA's own position.
+  window.casoraCoverClosedView = function (ids) {
+    var sec = ((window.CASORA_SETTINGS || {}).security) || {}, on = sec.percent_closed;
+    var L = Array.isArray(ids) ? ids : [ids];
+    return Array.isArray(on) && L.length > 0 && L.every(function (id) { return on.indexOf(id) >= 0; });
+  };
+  // The live words of one row: the same object, or a copy that reads the closed percentage.
+  window.casoraCoverRowWords = function (W, id) {
+    if (!W || !window.casoraCoverClosedView(id)) return W;
+    return Object.assign({}, W, { attr: 'current_position|closed', exact: { '0': W.exact['100'], '100': W.exact['0'] }, tpl: '{n} % geschlossen' });
+  };
   window.casoraCoverControls = function (states, ids, v) {
     var S = states || {}, L = Array.isArray(ids) ? ids : [], o = v || {};
     var isKind = function (id) {
@@ -12602,11 +12622,16 @@ window.casoraMenuGlass = {
     var kind = COVER_WORDS[o.cover_words] ? o.cover_words : 'open';
     if (!COVER_WORDS[o.cover_words] && L.length && L.every(function (id) { return isKind(id) === isKind(L[0]); })) kind = isKind(L[0]);
     var p = Number(o.shade_position), pos = Math.floor(p) === p && p >= 1 && p <= 99 ? p : 50;
+    var flip = window.casoraCoverClosedView(L);
     return { open: COVER_WORDS[kind][0], close: COVER_WORDS[kind][1], shade: o.shade_hide ? null : pos,
-      shadeText: 'Beschatten ' + pos + ' %', scope: L.length > 1 ? 'Gilt für alle ' + L.length : null };
+      shadeText: 'Beschatten ' + pos + ' %', scope: L.length > 1 ? 'Gilt für alle ' + L.length : null,
+      // shown() turns a position either way: HA → display and display → HA.
+      flip: flip, attr: flip ? 'current_position|closed' : 'current_position', closedWord: flip ? 'geschlossen' : '',
+      shown: function (p) { return flip && p != null ? 100 - p : p; } };
   };
-  window.casoraCoverSummaryText = function (sum) {
+  window.casoraCoverSummaryText = function (sum, ids) {
     var s = sum || { total: 0 };
+    var cv = !!(ids && window.casoraCoverClosedView(ids)), av = cv && s.avg != null ? 100 - s.avg : s.avg;
     var one = s.total === 1;
     var avgPart = s.avg != null && s.positions ? 'Ø ' + s.avg + ' %' : '';
     var full;
@@ -12617,12 +12642,13 @@ window.casoraMenuGlass = {
     else if (s.open === s.total) {
       var part = s.positions && s.avg != null && s.avg < 100;
       if (!part) full = one ? 'Geöffnet' : 'Alle geöffnet';
-      else if (one) full = s.avg + ' % geöffnet';
+      else if (one) full = cv ? av + ' % geschlossen' : s.avg + ' % geöffnet';
       // Issue 145: not at the top is not „open“ without a qualifier.
+      else if (cv) { full = 'Teilweise geschlossen · Ø ' + av + ' %'; short = 'Teilweise geschlossen'; }
       else { full = 'Teilweise geöffnet · ' + avgPart; short = 'Teilweise geöffnet'; }
     } else {
       short = s.open + ' von ' + s.total + ' geöffnet';
-      full = avgPart ? short + ' · ' + avgPart : short;
+      full = avgPart && !cv ? short + ' · ' + avgPart : short;
     }
     return { full: full, short: short || full };
   };

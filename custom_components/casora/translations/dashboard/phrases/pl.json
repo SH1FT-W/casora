@@ -2843,9 +2843,18 @@
     "Zutaten": "Składniki",
     "Zubereitung": "Przygotowanie",
     "1 Portion": "1 porcja",
-    "Zählt nur bei Abwesenheit": "Liczy się tylko pod nieobecność"
+    "Zählt nur bei Abwesenheit": "Liczy się tylko pod nieobecność",
+    "Teilweise geschlossen": "Częściowo zamknięte"
   },
   "patterns": [
+    [
+      "^Teilweise geschlossen · Ø (\\d+) %$",
+      "Częściowo zamknięte · Ø {1}%"
+    ],
+    [
+      "^(\\d+) % geschlossen$",
+      "{1}% zamknięte"
+    ],
     [
       "^Beschatten (\\d+) %$",
       "Zacienij {1} %"

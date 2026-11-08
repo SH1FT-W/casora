@@ -2843,9 +2843,18 @@
     "Zutaten": "Ingrediënten",
     "Zubereitung": "Bereiding",
     "1 Portion": "1 portie",
-    "Zählt nur bei Abwesenheit": "Telt alleen bij afwezigheid"
+    "Zählt nur bei Abwesenheit": "Telt alleen bij afwezigheid",
+    "Teilweise geschlossen": "Deels gesloten"
   },
   "patterns": [
+    [
+      "^Teilweise geschlossen · Ø (\\d+) %$",
+      "Deels gesloten · Ø {1}%"
+    ],
+    [
+      "^(\\d+) % geschlossen$",
+      "{1}% gesloten"
+    ],
     [
       "^Beschatten (\\d+) %$",
       "Schaduw {1} %"

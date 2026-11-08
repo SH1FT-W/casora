@@ -2996,7 +2996,9 @@
     "All batteries": "Alle Batterien",
     "All doors and windows": "Alle Türen und Fenster",
     "Lock screen": "Sperrbildschirm",
-    "Open in Settings": "In den Einstellungen öffnen"
+    "Open in Settings": "In den Einstellungen öffnen",
+    "Show percent as closed": "Prozent als geschlossen anzeigen",
+    "60 % then means 60 % closed. Open, close and everything Casora counts stay the same.": "60 % heißt dann 60 % geschlossen. Auf, Zu und alles, was Casora zählt, bleiben gleich."
   },
   "patterns": [
     [

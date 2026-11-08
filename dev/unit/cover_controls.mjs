@@ -37,8 +37,29 @@ for (const k of ['casora_cover', 'casora_popup_cover']) {
   const c = T[k].tap_action.casora_popup.content;
   assert.match(c, /text: _cc\.open, svc: _setTo\(100\)/, k + ': the first button is always open');
   assert.match(c, /text: _cc\.close, svc: _setTo\(0\)/, k + ': the last is always close');
-  assert.match(c, /svc: _setTo\(_cc\.shade\)/, k + ': shade goes to its position');
+  assert.match(c, /svc: _setTo\(_cc\.shown\(_cc\.shade\)\)/, k + ': shade goes to its position');
   assert.doesNotMatch(c, /text: 'Beschatten', svc: _setTo\(50\)/, k + ': the fixed 50 is gone');
 }
 for (const f of ['cover_words', 'shade_position', 'shade_hide']) assert.ok(fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel.js', import.meta.url), 'utf8').includes(`key: "${f}"`), f);
+// #145 point 1: percent shown as closed, per device. Only display and input turn around, and only if every cover of the
+// tile is on the list; what goes to HA stays HA's position (shown() works both ways).
+window.CASORA_SETTINGS = { security: { percent_closed: ['cover.left', 'cover.blind'] } };
+const flip = C(S, ['cover.left', 'cover.blind'], {});
+assert.ok(flip.flip && flip.attr === 'current_position|closed' && flip.closedWord === 'geschlossen', 'all on the list: shown as closed');
+assert.equal(flip.shown(40), 60, 'HA 40 reads 60 % closed');
+assert.equal(flip.shown(60), 40, 'choosing 60 % closed sends 40');
+assert.ok(!C(S, ['cover.left', 'cover.terrace'], {}).flip, 'a mixed tile keeps Home Assistant\'s percentage');
+assert.ok(!C(S, ['cover.terrace'], {}).flip, 'a cover not on the list is unchanged');
+const WORDS = { attr: 'current_position', exact: { 0: 'Geschlossen', 100: 'Geöffnet' }, tpl: '{n} % geöffnet' };
+assert.equal(window.casoraCoverRowWords(WORDS, 'cover.terrace'), WORDS, 'row not on the list: same words');
+const rw = window.casoraCoverRowWords(WORDS, 'cover.left');
+assert.deepEqual([rw.attr, rw.tpl, rw.exact['0'], rw.exact['100']], ['current_position|closed', '{n} % geschlossen', 'Geöffnet', 'Geschlossen'], 'row on the list reads the closed percentage');
+const c2 = core.indexOf('  window.casoraCoverSummaryText = '), d2 = core.indexOf('  // Als URL;', c2);
+new Function(core.slice(c2, d2))();
+const sumText = window.casoraCoverSummaryText;
+assert.equal(sumText({ total: 1, open: 1, avg: 40, positions: 1 }, ['cover.left']).full, '60 % geschlossen', 'one cover');
+assert.equal(sumText({ total: 2, open: 2, avg: 40, positions: 2 }, ['cover.left', 'cover.blind']).full, 'Teilweise geschlossen · Ø 60 %', 'a group');
+assert.equal(sumText({ total: 2, open: 2, avg: 40, positions: 2 }, ['cover.left', 'cover.terrace']).full, 'Teilweise geöffnet · Ø 40 %', 'mixed: as before');
+assert.equal(sumText({ total: 1, open: 0, avg: 0, positions: 1 }, ['cover.left']).full, 'Geschlossen', 'the state words do not change');
+window.CASORA_SETTINGS = {};
 console.log('cover_controls: ok');

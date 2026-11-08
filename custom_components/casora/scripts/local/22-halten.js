@@ -131,8 +131,11 @@
         if (btn.length > 1) { m.quick.push({ kind: 'buttons', labels: true, items: btn }); m.main = null; }
         if (feats & 4) {
           var pos = num(a.current_position);
-          m.quick.push({ kind: 'pills', label: 'Position', value: pct(pos), items: [25, 50, 75].map(function (p) {
-            return svc(p + ' %', null, 'cover.set_cover_position', { position: p }, { on: pos != null && Math.abs(pos - p) <= 3 });
+          // Issue 145: a cover shown as closed: the pills mean closed percent, HA still gets its position.
+          var cv = window.casoraCoverClosedView && window.casoraCoverClosedView(id);
+          var haPos = function (p) { return cv ? 100 - p : p; };
+          m.quick.push({ kind: 'pills', label: 'Position', value: pct(pos != null && cv ? 100 - pos : pos), items: [25, 50, 75].map(function (p) {
+            return svc(p + ' %', null, 'cover.set_cover_position', { position: haPos(p) }, { on: pos != null && Math.abs(pos - haPos(p)) <= 3 });
           }) });
         }
       } else if (dom === 'climate' && num(a.temperature) != null && s !== 'off') {

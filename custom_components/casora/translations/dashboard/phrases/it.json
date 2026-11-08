@@ -2843,9 +2843,18 @@
     "Zutaten": "Ingredienti",
     "Zubereitung": "Preparazione",
     "1 Portion": "1 porzione",
-    "Zählt nur bei Abwesenheit": "Conta solo in assenza"
+    "Zählt nur bei Abwesenheit": "Conta solo in assenza",
+    "Teilweise geschlossen": "Parzialmente chiuso"
   },
   "patterns": [
+    [
+      "^Teilweise geschlossen · Ø (\\d+) %$",
+      "Parzialmente chiuso · Ø {1}%"
+    ],
+    [
+      "^(\\d+) % geschlossen$",
+      "{1}% chiuso"
+    ],
     [
       "^Beschatten (\\d+) %$",
       "Ombreggia {1} %"

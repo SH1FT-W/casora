@@ -2843,9 +2843,18 @@
     "Zutaten": "Ingredientes",
     "Zubereitung": "Preparación",
     "1 Portion": "1 ración",
-    "Zählt nur bei Abwesenheit": "Solo cuenta en ausencia"
+    "Zählt nur bei Abwesenheit": "Solo cuenta en ausencia",
+    "Teilweise geschlossen": "Parcialmente cerrado"
   },
   "patterns": [
+    [
+      "^Teilweise geschlossen · Ø (\\d+) %$",
+      "Parcialmente cerrado · Ø {1} %"
+    ],
+    [
+      "^(\\d+) % geschlossen$",
+      "{1} % cerrado"
+    ],
     [
       "^Beschatten (\\d+) %$",
       "Sombra {1} %"

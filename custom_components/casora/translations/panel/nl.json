@@ -2996,7 +2996,9 @@
     "All batteries": "Alle batterijen",
     "All doors and windows": "Alle deuren en ramen",
     "Lock screen": "Vergrendelscherm",
-    "Open in Settings": "Openen in Instellingen"
+    "Open in Settings": "Openen in Instellingen",
+    "Show percent as closed": "Percentage als gesloten tonen",
+    "60 % then means 60 % closed. Open, close and everything Casora counts stay the same.": "60 % betekent dan 60 % gesloten. Open, dicht en alles wat Casora telt blijven gelijk."
   },
   "patterns": [
     [

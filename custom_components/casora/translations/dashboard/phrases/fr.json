@@ -2843,9 +2843,18 @@
     "Zutaten": "Ingrédients",
     "Zubereitung": "Préparation",
     "1 Portion": "1 portion",
-    "Zählt nur bei Abwesenheit": "Compte seulement en absence"
+    "Zählt nur bei Abwesenheit": "Compte seulement en absence",
+    "Teilweise geschlossen": "Partiellement fermé"
   },
   "patterns": [
+    [
+      "^Teilweise geschlossen · Ø (\\d+) %$",
+      "Partiellement fermé · Ø {1} %"
+    ],
+    [
+      "^(\\d+) % geschlossen$",
+      "Fermé à {1} %"
+    ],
     [
       "^Beschatten (\\d+) %$",
       "Ombrager {1} %"

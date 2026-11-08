@@ -2825,9 +2825,18 @@
     "Zutaten": "Ingredients",
     "Zubereitung": "Preparation",
     "1 Portion": "1 serving",
-    "Zählt nur bei Abwesenheit": "Counts only when away"
+    "Zählt nur bei Abwesenheit": "Counts only when away",
+    "Teilweise geschlossen": "Partly closed"
   },
   "patterns": [
+    [
+      "^Teilweise geschlossen · Ø (\\d+) %$",
+      "Partly closed · Ø {1}%"
+    ],
+    [
+      "^(\\d+) % geschlossen$",
+      "{1}% closed"
+    ],
     [
       "^Beschatten (\\d+) %$",
       "Shade {1}%"
