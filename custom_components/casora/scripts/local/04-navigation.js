@@ -171,6 +171,23 @@
       + '.hmn-bar.hmn-act.hmn-ic .hmn-btn{width:50px;}'
       + '.hmn-bar.hmn-act.hmn-ic .hmn-btn.on{width:50px;min-width:50px;padding:0;justify-content:center;}'
       + '.hmn-bar.hmn-act.hmn-ic .hmn-btn.on>span:not(.hmn-bic){display:none;}'
+      /* Phone bar A (08.11.2026): the three destinations are one segment on a sand track with a sliding marker, like the
+         popup segments; the tools behind it are flat symbols. Without the Casora look the track does not exist. */
+      + '.hmn-seg{display:contents;}.hmn-pill{display:none;}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-seg{display:flex;position:relative;flex:none;gap:2px;height:48px;border-radius:24px;background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-pill{display:block;position:absolute;left:0;top:0;width:50px;height:48px;border-radius:24px;pointer-events:none;'
+      +   'background:var(--casora-soft-row-active, var(--casora-entity-background-active, #FFFDF9));box-shadow:var(--casora-soft-row-active-shadow, none);'
+      +   'transform:translateX(calc(var(--hmn-i, 0) * 52px));transition:transform var(--casora-nav-indicator-duration, .42s) var(--casora-nav-indicator-ease, ease),opacity .18s ease;}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-seg[data-none] .hmn-pill{opacity:0;}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-btn{position:relative;z-index:1;}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-btn .hmn-bic{background:transparent;}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-btn.on{background:transparent;box-shadow:none;}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-btn.on .hmn-bic{background:var(--casora-tone-general, var(--primary-color, #B67A50));color:#fff;}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-sep{display:none;}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-dock{--casora-mchrome-btn-fill:transparent;margin-left:2px;}'
+      /* Narrow phones: three tools only fit with less room beside the bar. */
+      + '@media (max-width:362px){.hmn-bar.hmn-act.hmn-ic{max-width:calc(100vw - 12px);}}'
+      + '@media (prefers-reduced-motion:reduce){.hmn-bar.hmn-act.hmn-ic .hmn-pill{transition:none;}}'
       /* Casora/Weich (Richtung C „Leicht“, 08.10.2026): Räume und Szenen als Blatt wie ein Casora-Handy-Popup –
          volle Breite, unten bündig, nur oben rund (--casora-sheet-radius), Griff wie der Popup-Griff, Titel
          mittig mit Etikett. Zeilen 52 px ohne Platten (Pille 26 = Kreis 18 + 8 Innenabstand, konzentrisch);
@@ -428,6 +445,11 @@
       this._homeText();
       this._bRooms = mk('rooms', SFI + 'rooms.svg?v=3', T('Räume'));
       this._bScenes = mk('scenes', 'mdi:palette-outline', T('Szenen'));
+      this._seg = document.createElement('span'); this._seg.className = 'hmn-seg';
+      var pill = document.createElement('span'); pill.className = 'hmn-pill';
+      this._seg.appendChild(pill);
+      [this._bHome, this._bRooms, this._bScenes].forEach(function (b) { self._seg.appendChild(b); });
+      bar.appendChild(this._seg);
       this._sep = document.createElement('span'); this._sep.className = 'hmn-sep';
       this._dock = document.createElement('span'); this._dock.className = 'hmn-dock';
       bar.appendChild(this._sep); bar.appendChild(this._dock);
@@ -887,6 +909,9 @@
       this._bHome.classList.toggle('on', !room && cur !== 'room_scenes' && !mk);
       this._bRooms.classList.toggle('on', mk ? mk === 'rooms' : room);
       this._bScenes.classList.toggle('on', mk ? mk === 'scenes' : cur === 'room_scenes');
+      var onAt = [this._bHome, this._bRooms, this._bScenes].findIndex(function (b) { return b.classList.contains('on'); });
+      if (onAt >= 0) this._seg.style.setProperty('--hmn-i', onAt);
+      this._seg.toggleAttribute('data-none', onAt < 0);
       /* Räume-Knopf zeigt Icon + Namen des offenen Raums (wie im Dropdown), sonst Grundriss (rooms.svg) + "Räume". */
       var ar = room && this._rooms.filter(function (r) { return r.key === cur; })[0];
       var ri = ar ? this._roomIcon(ar) : '/casora_assets/icons/rooms.svg?v=3';

@@ -321,6 +321,7 @@ Desktop/Tablet – Raumleiste A „Feinschliff“ (`casora-nav-bar`, Tablet-Fass
   Prüfung: `dev/qa/regress/r230_raumleiste_frei.mjs`, `r232_raumleiste_wischen.mjs` (Touch), `r150_raumleiste_pfeil.mjs`, `r91` (Kapsel).
 
 Handy – Navigationsleiste B (`casora-mobile-nav`, nur Casora/Nebel):
+- Seit 08.11.2026 (Richtung A): Zuhause, Räume und Szenen sind **ein Segment** auf Sandspur mit gleitender Markierung (`--casora-nav-indicator-*`), aktive Taste Kreis in Ton; Glocke, Sprechblase und ⋯ flache Symbole ohne Kreis, kein Trenner mehr. Prüfung: `dev/qa/regress/r608_handy_leiste_segment.mjs`.
 - Glocke (und Sprechblase) und ⋯ sitzen **rechts unten in der Leiste** hinter einem Trenner; oben bleiben
   nur Titel und Wetter (Kopf rückt über `--casora-mhead-reserve` hoch).
 - Alle Tasten 50 × 48 mit Sand-Kreis 36; die aktive Taste ist die weiße Pille **ohne Namen** – der Name

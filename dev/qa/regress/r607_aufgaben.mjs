@@ -10,7 +10,7 @@ await need('Casora dashboard', dash);
 const SHOT = process.env.CASORA_SHOT_DIR;
 const LISTS = { 'todo.qa_shop': ['Milch', 'Nudeln', 'Käse'], 'todo.qa_house': ['Mow the lawn', 'Change the filter'], 'todo.qa_paper': ['Check the insurance'] };
 const NAMES = { 'todo.qa_shop': 'Einkaufsliste', 'todo.qa_house': 'Haus & Garten', 'todo.qa_paper': 'Organisation & Verwaltung' };
-for (const [tag, o] of [['Desktop', { width: 1280, height: 860, dark: false }], ['Phone', { width: 393, height: 852, mobile: true, scale: 3, dark: true }]]) {
+for (const [tag, o] of [['Desktop', { width: 1280, height: 860, dark: false }], ['Phone', { width: 393, height: 852, mobile: true, touch: true, scale: 3, dark: true }]]) {
   const { page } = await open(o);
   usePage(page);
   await ready(page, '/' + dash.url + '/' + (dash.config.views[0].path || '0'), () => !!window._casoraTasks && !!window.casoraPopup && !!window._casoraShopping, 60000);
@@ -43,6 +43,17 @@ for (const [tag, o] of [['Desktop', { width: 1280, height: 860, dark: false }], 
   await page.waitForTimeout(250);
   await check(tag + ': unfolded they are struck through', /Bread/.test(await doneText()) && (await E(`return ${P}('[data-tasks-box="done"] [style*="line-through"]').length;`)) === 1);
   if (SHOT) await page.screenshot({ path: SHOT + '/tasks-' + tag + '.png' });
+  // Found by a user test: the tile's other list must not take over the open popup, and a finger must reach the chips.
+  await check(tag + ': another tile with its own lists leaves the popup alone', await E(`const h = document.querySelector('home-assistant').hass; window._casoraTasks.load(h, { lists: ['todo.qa_paper'] }); return window._casoraTasks.vars.lists.length === 3;`));
+  if (tag === 'Phone') {
+    const at = await E(`const r = ${P}('.tchip')[1].getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 };`);
+    await page.touchscreen.tap(at.x, at.y);
+    await page.waitForTimeout(400);
+    await check(tag + ': a finger on a chip filters', (await E('return window._casoraTasks.sel;')) === 'todo.qa_shop', await E('return window._casoraTasks.sel;'));
+    await page.waitForTimeout(800); // the click that can follow a tap is ignored for 700 ms
+    await E(`${P}('.tchip')[0].click();`);
+    await page.waitForTimeout(250);
+  }
   await E(`${P}('.tchip')[2].click();`);
   await page.waitForTimeout(300);
   const one = await texts();
@@ -56,6 +67,10 @@ for (const [tag, o] of [['Desktop', { width: 1280, height: 860, dark: false }], 
   await check(tag + ': an item has its symbol as on the shopping list', icons.some((x) => /Milch/.test(x[0]) && x[1] === 'mdi:cup'), icons);
   await E(`${P}('.tchip')[2].click();`);
   await page.waitForTimeout(250);
+  await E(`${P}('[data-tasks-box="list"] .trb.x')[0].click(); await new Promise((x) => setTimeout(x, 350));`);
+  const yes = await E(`const h = document.querySelector('.casora-askfirst'); const t = h && h.shadowRoot.querySelector('.yes').textContent; if (h) h.shadowRoot.querySelector('.no').click(); return t;`);
+  await check(tag + ': the delete question says Delete', /Löschen|Delete/.test(yes || ''), yes);
+  await page.waitForTimeout(200);
   await E(`${P}('[data-tasks-box="list"] .trb:not(.x)')[0].click(); await new Promise((x) => setTimeout(x, 350));`);
   const ticked = await E('return window.__calls[0];');
   await check(tag + ': tapping the row really ticks it off', ticked && ticked.d === 'todo' && ticked.s === 'update_item' && ticked.data.status === 'completed', ticked);

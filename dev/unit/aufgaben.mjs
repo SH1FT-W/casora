@@ -13,7 +13,7 @@ vm.runInContext(read('custom_components/casora/scripts/local/43-aufgaben.js'), c
 const T = ctx._casoraTasks;
 const S = { 'todo.b': { state: '2', attributes: { friendly_name: 'Bravo' } }, 'todo.a': { state: '1', attributes: { friendly_name: 'Alpha' } }, 'todo.off': { state: 'unavailable', attributes: {} }, 'light.x': { state: 'on', attributes: {} } };
 const ids = (v) => Array.from(T.ids(S, v));
-assert.deepEqual(ids({}), ['todo.a', 'todo.b', 'todo.off'].sort((a, b) => T.nameOf(S, a).localeCompare(T.nameOf(S, b))), 'no list set: every to-do list, by name');
+assert.deepEqual(ids({}), ['todo.a', 'todo.b'], 'no list set: every reachable to-do list, by name');
 assert.deepEqual(ids({ lists: ['todo.b', 'todo.gone', 'todo.b'] }), ['todo.b'], 'own lists: as given, without doubles or gone ones');
 assert.equal(T.tile(S, {}), '3 offen', 'an unavailable list counts as nothing');
 assert.equal(T.tile({ 'todo.a': { state: '0', attributes: {} } }, {}), 'Alles erledigt');
@@ -35,6 +35,14 @@ assert.deepEqual(order, ['soon', 'late', 'none', 'none2'], 'due first, the rest 
 assert.equal(T.itemData({ title: '  ' }).error, 'Bitte gib eine Aufgabe ein.');
 assert.deepEqual({ ...T.itemData({ title: ' Milk ', note: 'x', due: '2026-11-20' }).data }, { item: 'Milk' }, 'a list without those features gets only the name');
 assert.deepEqual({ ...T.itemData({ title: 'Milk', note: ' 1 l ', due: '2026-11-20', canNote: true, canDue: true }).data }, { item: 'Milk', description: '1 l', due_date: '2026-11-20' });
+
+// Adding from "All" starts on the last used list, else on one that takes notes, not simply the first by name.
+const FS = { 'todo.a': { attributes: { supported_features: 7 } }, 'todo.b': { attributes: { supported_features: 87 } }, 'todo.c': { attributes: { supported_features: 87 } } };
+const L3 = ['todo.a', 'todo.b', 'todo.c'];
+assert.equal(T.addPick(FS, L3, 'todo.a', 'todo.c'), 'todo.a', 'the list being looked at');
+assert.equal(T.addPick(FS, L3, 'all', 'todo.c'), 'todo.c', 'the last used one');
+assert.equal(T.addPick(FS, L3, 'all', 'todo.gone'), 'todo.b', 'one that takes a note');
+assert.equal(T.addPick({ 'todo.a': { attributes: { supported_features: 1 } } }, ['todo.a'], 'all', null), 'todo.a');
 
 const tpl = JSON.parse(read('dashboards/casora/button_card_templates.json'));
 assert.deepEqual(tpl.casora_tasks.template, ['casora_entity', 'casora_popup_tasks']);

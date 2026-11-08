@@ -34,7 +34,7 @@ for (const dark of [false, true]) {
       onLabel: lab ? getComputedStyle(lab).display : 'fehlt', topCaps: top.length, vh: innerHeight };
   });
   await need(`${tag}: Kapsel in der Leiste`, s, s);
-  await check(`${tag}: Kapsel unten, hinter dem Trenner`, s.dock.t > s.vh / 2 && s.sep.w > 0 && s.sep.r <= s.dock.l + 0.5 && s.btns.every((b) => b.r <= s.sep.l + 0.5), s);
+  await check(`${tag}: Kapsel unten, hinter den Zielen`, s.dock.t > s.vh / 2 && s.btns.every((b) => b.r <= s.dock.l + 0.5), s);
   await check(`${tag}: oben keine Kapsel mehr`, s.topCaps === 0, s.topCaps);
   await check(`${tag}: Leisten-Tasten ≥ 48 × 48`, s.btns.every((b) => b.w >= 47.5 && b.h >= 47.5) && s.slots.every((b) => b.w >= 47.5), s.btns.concat(s.slots));
   const ys = s.circles.map((c) => Math.round((c.t + c.h / 2) * 2) / 2);

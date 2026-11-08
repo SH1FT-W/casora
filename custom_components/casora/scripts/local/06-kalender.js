@@ -233,7 +233,7 @@
       + '.hcal-e{font-size:15px;color:' + T.ink3 + ';padding:6px 0 2px;}'
       + '.hcal-add{all:unset;box-sizing:border-box;width:100%;min-height:48px;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;pointer-events:auto;'
       + 'border-radius:999px;font-size:15px;font-weight:600;background:var(--casora-popup-row-fill,rgba(127,127,127,.14));color:inherit;}'
-      + '.hcal-add ha-icon{--mdc-icon-size:20px;pointer-events:none;}.hcal-add span{pointer-events:none;}'
+      + '.hcal-add ha-icon{--mdc-icon-size:20px;width:20px;height:20px;flex:none;margin:0 !important;pointer-events:none;}.hcal-add span{flex:none;width:auto;pointer-events:none;}'
       + '.hcal-add:focus-visible{outline:2px solid var(--casora-popup-ui-action,var(--casora-accent,#276B64));outline-offset:2px;}'
       + '.hcal-dh{font-size:13px;font-weight:600;color:' + T.ink2 + ';padding:10px 0 2px;}'
       + '.hcal-dh:first-child{padding-top:0;}'
@@ -702,7 +702,7 @@
       if (yes.disabled) return;
       api.error('');
       var p = o.save(api);
-      if (!p) return;
+      if (!p) { var n0 = o.first && $(o.first); if (n0 && !n0.value.trim()) n0.focus(); return; }
       yes.disabled = true;
       Promise.resolve(p).then(api.close, function () { yes.disabled = false; api.error(o.failText); });
     };

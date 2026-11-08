@@ -44,7 +44,7 @@
   // The services a popup row calls: tick off / put back, clear the ticked ones (asks first: confirm).
   S.svc = function (service, id, d) { return { domain: 'todo', service: service, target: { entity_id: id }, data: d || {} }; };
   S.toggleSvc = function (id, item, isDone) { return S.svc('update_item', id, { item: item.uid || item.summary, status: isDone ? 'needs_action' : 'completed' }); };
-  S.clearSvc = function (id) { return Object.assign(S.svc('remove_completed_items', id), { confirm: 'Erledigte löschen?' }); };
+  S.clearSvc = function (id) { return Object.assign(S.svc('remove_completed_items', id), { confirm: 'Erledigte löschen?', confirmYes: 'Löschen' }); };
   // „Hinzufügen“: Casora's question with a text field, then todo.add_item (Bring: the text after a comma is the
   // specification – „Milch, 1 l“ – as in the Bring app).
   S.parse = function (txt) {

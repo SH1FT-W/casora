@@ -427,7 +427,7 @@ window.CASORA_TILE_TYPES = [
   { id: "casora_tasks", label: "Tasks", template: "casora_tasks", domains: ["todo"], noEntity: true, icon: "tasks",
     color: "var(--casora-color-green, #30D158)",
     onlyIf: (hass) => !!(hass && hass.states && Object.keys(hass.states).some((id) => id.startsWith("todo."))),
-    fields: [{ key: "lists", label: "Lists", type: "list", domains: ["todo"], placeholder: "Add list …", hint: "Empty: every to-do list in your home." },
+    fields: [{ key: "lists", label: "Lists", type: "list", noAnchor: true, domains: ["todo"], placeholder: "Add list …", hint: "Empty: every to-do list in your home." },
       ICON, { ...TITLE, placeholder: "Tasks" }] },
   { id: "casora_shopping", label: "Bring! shopping list", template: "casora_shopping", domains: ["todo"],
     icon: "cart", color: "var(--casora-color-green, #30D158)", entityLabel: "List", entityPlaceholder: "Choose your shopping list",

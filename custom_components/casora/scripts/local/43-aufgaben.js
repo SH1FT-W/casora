@@ -9,7 +9,7 @@
 (function () {
   if (window._casoraTasks) return;
   var T = window._casoraTasks = { vars: null, sel: 'all', showDone: false };
-  var KEY = 'casora_tasks_filter', DONE_MAX = 20;
+  var KEY = 'casora_tasks_filter', LAST = 'casora_tasks_last';
   // TodoListEntityFeature: create 1, delete 2, update 4, due date 16, description 64.
   var FEAT = { create: 1, remove: 2, update: 4, due: 16, desc: 64 };
   try { T.sel = localStorage.getItem(KEY) || 'all'; } catch (e) { /* the default */ }
@@ -20,8 +20,9 @@
   T.nameOf = function (states, id) { var s = states && states[id]; return (s && s.attributes && s.attributes.friendly_name) || id; };
   T.ids = function (states, vars) {
     var S = states || {}, own = vars && vars.lists;
-    if (Array.isArray(own) && own.length) return own.filter(function (id, i) { return S[id] && own.indexOf(id) === i; });
-    return Object.keys(S).filter(function (id) { return id.indexOf('todo.') === 0; })
+    var ok = function (id) { return !!S[id] && S[id].state !== 'unavailable' && S[id].state !== 'unknown'; };
+    if (Array.isArray(own) && own.length) return own.filter(function (id, i) { return ok(id) && own.indexOf(id) === i; });
+    return Object.keys(S).filter(function (id) { return id.indexOf('todo.') === 0 && ok(id); })
       .sort(function (a, b) { return T.nameOf(S, a).localeCompare(T.nameOf(S, b)); });
   };
   T.count = function (st) { var n = st ? parseInt(st.state, 10) : NaN; return isFinite(n) ? n : 0; };
@@ -37,7 +38,6 @@
   T.load = function (hass, vars) {
     var s = Sh();
     if (!s || !hass) return;
-    T.vars = vars || T.vars;
     T.ids(hass.states, vars).forEach(function (id) { s.items(hass, id); });
   };
   var day0 = function (d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); };
@@ -80,7 +80,7 @@
   var row = function (states, id, it, isDone) {
     var due = isDone ? null : T.dueWord(it.due), s = Sh();
     var R = window._casoraRecipe, f = R && R.foodLook ? R.foodLook(it.summary, true) : [null];
-    var btn = function (cls, label, svc, icon) { return '<button type="button" class="trb' + esc(cls) + '" aria-label="' + esc(label) + '" data-casora-svc="' + esc(JSON.stringify(svc)) + '"><i><ha-icon icon="' + esc(icon) + '"></ha-icon></i></button>'; };
+    var btn = function (cls, label, svc, icon) { return '<button type="button" class="trb' + esc(cls) + '" aria-label="' + esc((window.casoraTr || String)(label)) + '" data-casora-svc="' + esc(JSON.stringify(svc)) + '"><i><ha-icon icon="' + esc(icon) + '"></ha-icon></i></button>'; };
     var delHtml = has(states[id], FEAT.remove) && s ? btn(' x', 'Löschen', T.removeSvc(id, it), 'mdi:close') : '';
     var tickHtml = has(states[id], FEAT.update) && s ? btn(isDone ? ' on' : '', isDone ? 'Wieder öffnen' : 'Abhaken', s.toggleSvc(id, it, isDone), 'mdi:check') : '';
     var sub = [due && due.text, it.description].filter(Boolean).join(' · ');
@@ -90,7 +90,13 @@
     return r;
   };
   // Deleting cannot be undone from here, so it asks; ticking off can, so it does not.
-  T.removeSvc = function (id, it) { return { domain: 'todo', service: 'remove_item', target: { entity_id: id }, data: { item: it.uid || it.summary }, confirm: 'Eintrag löschen?' }; };
+  T.removeSvc = function (id, it) { return { domain: 'todo', service: 'remove_item', target: { entity_id: id }, data: { item: it.uid || it.summary }, confirm: 'Eintrag löschen?', confirmYes: 'Löschen' }; };
+  // Where adding starts: the list being looked at, else the last one used, else one that takes a note.
+  T.addPick = function (states, ids, sel, last) {
+    if (ids.indexOf(sel) >= 0) return sel;
+    if (ids.indexOf(last) >= 0) return last;
+    return ids.filter(function (id) { return has(states[id], FEAT.desc); })[0] || ids[0];
+  };
   var writable = function (states, ids) { return ids.filter(function (id) { return has(states[id], FEAT.create); }); };
   T.innerHtml = function (part, hass) {
     var UI = window._casoraUI, h = hass || hassNow(), s = Sh();
@@ -101,6 +107,7 @@
     var doneOf = function (list) { return list.reduce(function (n, id) { return n + (data[id] ? data[id].done.length : 0); }, 0); };
     if (part === 'line') {
       var n = T.total(st, ids), dn = doneOf(ids);
+      if (!ids.length) return UI.line('Keine Listen', []);
       return UI.line(n ? n + ' offen' : 'Alles erledigt', dn ? [dn + ' erledigt'] : []);
     }
     if (part === 'stage') {
@@ -109,7 +116,7 @@
       };
       var restHtml = ids.map(function (id) { return chipHtml(id, T.nameOf(st, id), T.count(st[id])); }).join('');
       var chipsHtml = ids.length > 1 ? '<div class="tchips">' + chipHtml('all', 'Alle', T.total(st, ids)) + restHtml + '</div>' : '';
-      var addHtml = writable(st, ids).length ? '<div class="hui-st-act pri" role="button" tabindex="0" aria-label="Hinzufügen" data-tasks="add">'
+      var addHtml = writable(st, ids).length ? '<div class="hui-st-act pri" role="button" tabindex="0" aria-label="' + esc((window.casoraTr || String)('Hinzufügen')) + '" data-tasks="add">'
         + '<ha-icon icon="mdi:plus" style="--mdc-icon-size:20px;width:20px;height:20px;display:flex;"></ha-icon><span>Hinzufügen</span></div>' : '';
       return UI.stage('content', { html: '<style>.hui-stage{--casora-pv-stack-fill:transparent;}'
         + '.tchips{display:flex;flex-wrap:wrap;gap:8px}.tchip{display:flex;align-items:center;gap:8px;min-height:44px;box-sizing:border-box;padding:0 16px;border-radius:999px;cursor:pointer;pointer-events:auto;font-size:14px;font-weight:600;background:var(--casora-popup-row-fill,rgba(127,127,127,.14));white-space:nowrap}'
@@ -134,10 +141,8 @@
       var doneN = doneOf(shown);
       if (!doneN) return '';
       var rows = [{ icon: T.showDone ? 'mdi:chevron-up' : 'mdi:chevron-down', label: doneN + ' erledigt', value: T.showDone ? 'Ausblenden' : 'Anzeigen', tappable: true, noChev: true }];
-      var taken = 0;
       if (T.showDone) {
-        shown.forEach(function (id) { if (data[id]) data[id].done.forEach(function (it) { if (taken++ < DONE_MAX) rows.push(row(st, id, it, true)); }); });
-        if (doneN > DONE_MAX) rows.push({ icon: 'mdi:dots-horizontal', label: '+' + (doneN - DONE_MAX) + ' weitere', noChev: true });
+        shown.forEach(function (id) { if (data[id]) data[id].done.forEach(function (it) { rows.push(row(st, id, it, true)); }); });
         // „Erledigte löschen“ names one list: with all lists showing it would clear more than the eye can check.
         if (sel !== 'all' && s.clearSvc && has(st[sel], FEAT.remove)) rows.push({ icon: 'mdi:delete-sweep-outline', label: 'Erledigte löschen', svc: s.clearSvc(sel), confirm: 'Löschen', noChev: true });
       }
@@ -193,10 +198,12 @@
     if (!h || !window._casoraFormDialog) return;
     var st = h.states, ids = writable(st, T.ids(st, T.vars)), sel = T.selected(T.ids(st, T.vars));
     if (!ids.length) return;
-    var pick = ids.indexOf(sel) >= 0 ? sel : ids[0];
+    var last = null;
+    try { last = localStorage.getItem(LAST); } catch (e) { /* none */ }
+    var pick = T.addPick(st, ids, sel, last);
     var f = function (id, label, html) { return '<div class="f" id="' + esc(id) + '"><label>' + esc(Tr(label)) + '</label>' + html + '</div>'; };
     var api = window._casoraFormDialog({ title: 'Neue Aufgabe', cls: 'casora-taskform', first: 'title', enter: ['title'], failText: 'Die Aufgabe konnte nicht gespeichert werden.',
-      html: f('fT', 'Aufgabe', '<input id="title" type="text" autocomplete="off">')
+      html: f('fT', 'Titel', '<input id="title" type="text" autocomplete="off">')
         + (ids.length > 1 ? f('fL', 'Liste', '<select id="list">' + ids.map(function (id) { return '<option value="' + esc(id) + '"' + (id === pick ? ' selected' : '') + '>' + esc(T.nameOf(st, id)) + '</option>'; }).join('') + '</select>') : '')
         + f('fN', 'Notiz (optional)', '<textarea id="note" rows="2"></textarea>')
         + f('fD', 'Fällig (optional)', '<input id="due" type="date">'),
@@ -205,7 +212,10 @@
         var r = T.itemData({ title: a.$('title').value, note: a.$('note').value, due: a.$('due').value, canNote: has(st[id], FEAT.desc), canDue: has(st[id], FEAT.due) });
         if (r.error) { a.error(r.error); return null; }
         var now = hassNow() || h;
-        return Promise.resolve(now.callService('todo', 'add_item', r.data, { entity_id: id })).then(function () { if (window.casoraHaptic) window.casoraHaptic('success'); });
+        return Promise.resolve(now.callService('todo', 'add_item', r.data, { entity_id: id })).then(function () {
+          try { localStorage.setItem(LAST, id); } catch (e) { /* this time only */ }
+          if (window.casoraHaptic) window.casoraHaptic('success');
+        });
       } });
     var fit = function () {
       var id = api.$('list') ? api.$('list').value : pick;
@@ -230,7 +240,18 @@
   };
   // Own capture like the other popup buttons (onclick in the popup's HTML is unreliable on phones).
   if (typeof window.addEventListener === 'function') {
-    window.addEventListener('click', function (ev) { var a = targetOf(ev); if (!a) return; ev.preventDefault(); ev.stopPropagation(); run(a); }, true);
+    // A finger is taken here too: the popup's button-card swallows the touch before a click can follow (user test).
+    var touchAt = null, touchDone = 0;
+    window.addEventListener('touchstart', function (ev) { var t = ev.touches && ev.touches[0]; touchAt = t ? { x: t.clientX, y: t.clientY } : null; }, { capture: true, passive: true });
+    window.addEventListener('touchend', function (ev) {
+      var a = targetOf(ev), t = ev.changedTouches && ev.changedTouches[0];
+      if (!a || !touchAt || (t && (Math.abs(t.clientX - touchAt.x) > 10 || Math.abs(t.clientY - touchAt.y) > 10))) return;
+      touchDone = Date.now();
+      if (ev.cancelable) ev.preventDefault();
+      ev.stopPropagation();
+      run(a);
+    }, { capture: true, passive: false });
+    window.addEventListener('click', function (ev) { var a = targetOf(ev); if (!a) return; ev.preventDefault(); ev.stopPropagation(); if (Date.now() - touchDone >= 700) run(a); }, true);
     window.addEventListener('keydown', function (ev) { if (ev.key !== 'Enter' && ev.key !== ' ') return; var a = targetOf(ev); if (!a) return; ev.preventDefault(); ev.stopPropagation(); run(a); }, true);
   }
 })();

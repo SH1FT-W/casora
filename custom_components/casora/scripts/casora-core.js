@@ -671,7 +671,7 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     if (spec && spec.confirm) {
       var cIds = [].concat((spec.target && spec.target.entity_id) || (spec.data && spec.data.entity_id) || []);
       var cw = word({ action: 'perform-action', perform_action: spec.domain + '.' + spec.service, target: { entity_id: cIds[0] }, data: spec.data || {} }, { entity: cIds[0] });
-      return ask(Object.assign(several(cIds, cw), typeof spec.confirm === 'string' ? { text: T(spec.confirm) } : {}, { withPopup: true }));
+      return ask(Object.assign(several(cIds, cw), typeof spec.confirm === 'string' ? { text: T(spec.confirm) } : {}, spec.confirmYes ? { yes: T(spec.confirmYes) } : {}, { withPopup: true }));
     }
     if (!spec || !spec.domain || !SWITCH_SVC.test(String(spec.service || ''))) return Promise.resolve(true);
     var ids = [].concat((spec.target && spec.target.entity_id) || (spec.data && spec.data.entity_id) || []);

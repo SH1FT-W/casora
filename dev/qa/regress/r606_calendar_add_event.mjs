@@ -24,6 +24,15 @@ for (const [tag, o] of [['Desktop', { width: 1280, height: 860, dark: false }], 
   const none = await E(`return window._casoraCalendar.html('day', { calendars: [{ entity: 'calendar.qa_ro', name: 'Read only', color: '#888' }] });`);
   await check(tag + ': a read-only calendar gets no button', !/data-hcal="add:/.test(none));
 
+  // In the real popup the button's symbol and word sit together (a user test saw them pushed apart).
+  await E(`const K = window._casoraCalendar, h = document.querySelector('home-assistant').hass; await window.casoraPopup.open({ title: 'Kalender', variant: 'v3', dismissable: true, content: K.popup(null, K._vars, h.states, h) });`);
+  await page.waitForTimeout(2200);
+  const gap = await E(`const b = window.__pierce('.hcal-add').find((x) => x.getClientRects().length); if (!b) return null; return b.querySelector('span').getBoundingClientRect().left - b.querySelector('ha-icon').getBoundingClientRect().right;`);
+  await check(tag + ': symbol and word stay together', gap != null && gap >= 0 && gap <= 14, gap);
+  if (SHOT) await page.screenshot({ path: SHOT + '/cal-btn-' + tag + '.png' });
+  await E(`window.casoraPopup.close();`);
+  await page.waitForTimeout(600);
+  await E(`window._casoraCalendar._vars = { calendars: [{ entity: 'calendar.qa_ro', name: 'Read only', color: '#888' }, { entity: 'calendar.qa_rw', name: 'QA', color: '#4A9D98' }, { entity: 'calendar.qa_second', name: 'QA 2', color: '#D35A4E' }] };`);
   await E(`window._casoraCalendar.addDialog('2026-11-16');`);
   await page.waitForTimeout(400);
   const R = 'document.querySelector(".casora-calform").shadowRoot';

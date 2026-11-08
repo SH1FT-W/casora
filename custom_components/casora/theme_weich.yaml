@@ -188,7 +188,7 @@ Casora:
   casora-scene-badge-color-active: var(--casora-color-yellow-dark)
   # Kopfleiste D (1.0.7): Zähler und Punkt der Glocke in Karamell statt Rot
   casora-bell-badge: var(--primary-color)
-  casora-bell-dot-fill: var(--primary-color)
+  casora-bell-dot-fill: var(--casora-tone-alert)
   casora-bell-count-ink: "#fff"
   casora-badge-energy-medium-color: var(--casora-color-green)
   casora-badge-energy-medium-row: var(--casora-color-green)

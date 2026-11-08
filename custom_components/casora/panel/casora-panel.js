@@ -6478,7 +6478,7 @@ const tileStateWord = (kind, tile, ent, states, hass) => {
     const cal = Object.keys(S).sort().find((id) => id.startsWith("calendar.") && S[id].attributes && S[id].attributes.message);
     return cal ? String(S[cal].attributes.message) : "No events";
   }
-  if (kind === "casora_tasks" && !ent) {
+  if (kind === "casora_tasks") {
     const T = typeof window !== "undefined" && window._casoraTasks;
     return T && T.tile ? T.tile(states || {}, V) : "Tasks";
   }
@@ -29550,7 +29550,7 @@ class CasoraPanel extends HTMLElement {
         put(f.label, this._chipPicker(cur, doms, (items) => {
           if (items.length) { if (!tile.variables) tile.variables = {}; tile.variables[f.key] = items; }
           else if (tile.variables) delete tile.variables[f.key];
-          if (type.noEntity && !tile.entity && items.length) {
+          if (type.noEntity && !f.noAnchor && !tile.entity && items.length) {
             tile.entity = items[0];
             return this._renderForm();
           }
