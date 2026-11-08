@@ -16458,6 +16458,7 @@ class CasoraPanel extends HTMLElement {
       this._renderForm();
       requestAnimationFrame(() => this._playEntrance());
       this._tileFromRoute();
+      if (this._settingsFromRoute) this._settingsFromRoute();
       if (!this._saveBlocked) setTimeout(() => this._offerDraft(), 400);
       if (this._sizeNote) {
         const n = this._sizeNote;

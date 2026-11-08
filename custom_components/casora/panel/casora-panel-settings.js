@@ -1330,6 +1330,20 @@
       tabs.slice(1).forEach(([, , pane]) => box.appendChild(pane));
       show(tabs.some(([k]) => k === this._tileTab) ? this._tileTab : "tile");
     };
+    // The gear of a popup without a tile (?settings=<block> or start): opens that section once.
+    P._settingsFromRoute = function () {
+      let want = "";
+      try { want = new URLSearchParams(window.location.search).get("settings") || ""; } catch (e) { want = ""; }
+      if (!want) return;
+      try {
+        const u = new URL(window.location.href);
+        u.searchParams.delete("settings");
+        window.history.replaceState(window.history.state, "", u.pathname + u.search + u.hash);
+      } catch (e) { /* the address stays */ }
+      const tile = NEU.find((x) => x.blocks.some((b) => b.k === want));
+      if (tile) return this._csNeuGo(tile, tile.blocks.find((b) => b.k === want));
+      return this._csShow("n-start");
+    };
     P._csFillNeu = function (host, page) {
       if (page.tile) {
         const back = el("button", "cs-hubback", "‹ " + t("Settings"));

@@ -98,6 +98,8 @@ Zustand · Zusatz · Zusatz
 | ‹ | nur auf Unterseiten, links vor dem Etikett | Kreis 40 |
 | Abstand Kopf → Bühne | | 20 |
 
+**Zahnrad** (Einstellungen-Rework): Der Rahmen zeigt Admins links neben ✕ ein Zahnrad (`.header-gear`), nicht auf Unterseiten und nicht in der Studio-Vorschau. Von der Kachel führt es auf ihren Reiter „Popup“ im Studio, ohne Kachel zur passenden Stelle der Einstellungen (`casoraPopupGear`). Test `r604_popup_gear.mjs`.
+
 **Ein Kopf, eine Höhe** (Entscheidung 05.11.2026): Der Kopf ist in jedem Popup gleich hoch – Etikett-Zeile und
 Statuszeile halten ihren Platz auch leer (ein Popup ohne Statuszeile, z. B. Licht, lässt die Zeile frei) –, und die
 Bühne beginnt in jedem Popup auf derselben Höhe: der Rahmen rückt den ersten sichtbaren Inhalt auf denselben Abstand

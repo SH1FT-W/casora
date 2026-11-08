@@ -6710,6 +6710,12 @@ window.casoraMenuGlass = {
       -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     }
     .header-close[hidden] { display: none; }
+    .header-gear { appearance: none; -webkit-appearance: none; border: 0; margin: 0; padding: 0; width: 38px; height: 38px; flex: none; display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; cursor: pointer; background: var(--casora-soft-control-fill, rgba(140, 115, 90, 0.10)); color: var(--casora-soft-close-ink, var(--secondary-text-color)); -webkit-tap-highlight-color: rgba(0, 0, 0, 0); }
+    .header-gear[hidden] { display: none; }
+    .header-gear svg { width: 18px; height: 18px; fill: currentColor; }
+    .header-gear:focus-visible { outline: 2px solid var(--primary-color, currentColor); outline-offset: 2px; }
+    :host([soft][data-casora-pv="v3"]) .header-gear { width: 40px; height: 40px; }
     .header-back {
       appearance: none; -webkit-appearance: none; border: 0; margin: 0 8px 0 0; padding: 0;
       width: 40px; height: 40px; flex: none; display: flex; align-items: center; justify-content: center;
@@ -8029,6 +8035,10 @@ window.casoraMenuGlass = {
             '<div class="header" hidden>' +
               '<div class="header-bar">' +
                 '<section class="header-nav">' +
+                  // Settings rework: admins jump to this tile in the Studio (hidden on sub pages, in the Studio's own preview).
+                  '<button class="header-gear" type="button" hidden>' +
+                    '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"></path></svg>' +
+                  '</button>' +
                   '<button class="header-close" type="button" aria-label="Schließen">' +
                     '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
                       '<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"></path>' +
@@ -8082,6 +8092,8 @@ window.casoraMenuGlass = {
       this._headerEyebrow = root.querySelector('.header-eyebrow');
       this._headerActions = root.querySelector('.header-actions');
       this._headerClose = root.querySelector('.header-close');
+      this._headerGear = root.querySelector('.header-gear');
+      this._headerGear.addEventListener('click', () => window.casoraPopupGear(this));
       this._headerBack = root.querySelector('.header-back');
       this._headerBack.addEventListener('click', (e) => {
         e.preventDefault(); e.stopPropagation();
@@ -8282,6 +8294,8 @@ window.casoraMenuGlass = {
       this._headerBack.hidden = !this._backFn;
       this._subEyebrow = this._backFn && prevTitle && !this._headFixed ? prevTitle : null;
       this._headerBack.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Zurück') : 'Zurück');
+      this._headerGear.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Einstellungen') : 'Einstellungen');
+      this._headerGear.hidden = !!this._backFn || cfg.close === false || /^\/casora-studio/.test(location.pathname) || !window.casoraIsAdmin();
       this.toggleAttribute('has-back', !!this._backFn);
       this._cfgCurrent = data || {};
       if (this._rowTitle && this._cfgCurrent.title !== this._cfgTitle) {
@@ -9458,6 +9472,25 @@ window.casoraMenuGlass = {
     return { title: title, cards: cards };
   };
 
+  // The popup's gear (settings rework): a popup opened from a tile goes to that tile's Popup tab in the Studio, the way
+  // the hold menu's "Edit tile" does (?tile=); one without a tile goes to its section of the settings, else their start.
+  var GEAR_BLOCK = [[/casora_popup_(cover|security_covers)/, 'security'], [/casora_popup_contacts/, 'contacts'], [/casora_popup_battery/, 'battery'],
+    [/casora_popup_scenes/, 'scenes'], [/casora_popup_media/, 'media'], [/casora_popup_calendar/, 'calendars'], [/casora_popup_trash/, 'waste']];
+  window.casoraPopupGear = function (el) {
+    var seg = (location.pathname || '').split('/').filter(Boolean);
+    var phone = /[-_]mobile$/i.test(seg[0] || '');
+    var dash = (seg[0] || '').replace(/[-_]mobile$/i, '');
+    var id = el._casoraEntity, kind = 'start', text = '';
+    if (!id) {
+      try { text = JSON.stringify((el._cfgCurrent || {}).content || {}); } catch (e) { text = ''; }
+      GEAR_BLOCK.some(function (g) { if (g[0].test(text)) { kind = g[1]; return true; } return false; });
+    }
+    var url = '/casora-studio' + (seg[1] && !phone ? '/' + encodeURIComponent(seg[1]) : '') + '?dash=' + encodeURIComponent(dash)
+      + (id ? '&tile=' + encodeURIComponent(id) + '&tab=popup' : '&settings=' + kind);
+    if (window.casoraPopup) window.casoraPopup.close();
+    window.history.pushState(null, '', url);
+    window.dispatchEvent(new CustomEvent('location-changed', { bubbles: true, composed: true }));
+  };
   window.casoraPopup = {
     // src (optional): auslösende Kachel für den Weich-Ring, auch wenn das Popup-Element erst jetzt entsteht.
     open: function (data) {
