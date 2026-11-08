@@ -4,6 +4,13 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.24 – 08.11.2026
+
+A fix for scenes showing up in the wrong room.
+
+### Fixed
+- **Scene in a room it does not belong to (#142):** a room without a Home Assistant area of the same name, such as a "Maintenance" room, took on the area of a few of its tiles and showed that area's scenes. Now an area counts only if more than half of the room's tiles are in it.
+
 ## 26.11.23 – 08.11.2026
 
 Air conditioners in the thermostat, windows that count only when you are away, clearer security badges, and a Shade button you can set.

@@ -4,6 +4,13 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.24 – 08.11.2026
+
+Ein Fix für Szenen im falschen Raum.
+
+### Behoben
+- **Szene in einem fremden Raum (#142):** Ein Raum ohne gleichnamigen Bereich in Home Assistant, etwa „Wartung“, übernahm den Bereich einzelner Kacheln und zeigte dessen Szenen. Jetzt zählt ein Bereich nur, wenn mehr als die Hälfte der Kacheln des Raums darin liegt.
+
 ## 26.11.23 – 08.11.2026
 
 Klimaanlagen im Thermostat, Fenster, die nur bei Abwesenheit zählen, klarere Sicherheits-Badges, und das Beschatten lässt sich einstellen.
