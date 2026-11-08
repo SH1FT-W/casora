@@ -2844,7 +2844,18 @@
     "Zubereitung": "Bereiding",
     "1 Portion": "1 portie",
     "Zählt nur bei Abwesenheit": "Telt alleen bij afwezigheid",
-    "Teilweise geschlossen": "Deels gesloten"
+    "Teilweise geschlossen": "Deels gesloten",
+    "Termin hinzufügen": "Afspraak toevoegen",
+    "Neuer Termin": "Nieuwe afspraak",
+    "Titel": "Titel",
+    "Ort (optional)": "Locatie (optioneel)",
+    "Beschreibung (optional)": "Beschrijving (optioneel)",
+    "Ganztägig": "Hele dag",
+    "Ende": "Einde",
+    "Bitte gib einen Titel ein.": "Voer een titel in.",
+    "Bitte gib Beginn und Ende an.": "Geef een begin en einde op.",
+    "Das Ende muss nach dem Beginn liegen.": "Het einde moet na het begin liggen.",
+    "Der Termin konnte nicht gespeichert werden.": "De afspraak kon niet worden opgeslagen."
   },
   "patterns": [
     [

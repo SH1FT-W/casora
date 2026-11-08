@@ -2844,7 +2844,18 @@
     "Zubereitung": "Przygotowanie",
     "1 Portion": "1 porcja",
     "Zählt nur bei Abwesenheit": "Liczy się tylko pod nieobecność",
-    "Teilweise geschlossen": "Częściowo zamknięte"
+    "Teilweise geschlossen": "Częściowo zamknięte",
+    "Termin hinzufügen": "Dodaj wydarzenie",
+    "Neuer Termin": "Nowe wydarzenie",
+    "Titel": "Tytuł",
+    "Ort (optional)": "Miejsce (opcjonalnie)",
+    "Beschreibung (optional)": "Opis (opcjonalnie)",
+    "Ganztägig": "Cały dzień",
+    "Ende": "Koniec",
+    "Bitte gib einen Titel ein.": "Wpisz tytuł.",
+    "Bitte gib Beginn und Ende an.": "Podaj początek i koniec.",
+    "Das Ende muss nach dem Beginn liegen.": "Koniec musi być po początku.",
+    "Der Termin konnte nicht gespeichert werden.": "Nie udało się zapisać wydarzenia."
   },
   "patterns": [
     [

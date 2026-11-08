@@ -2826,7 +2826,18 @@
     "Zubereitung": "Preparation",
     "1 Portion": "1 serving",
     "Zählt nur bei Abwesenheit": "Counts only when away",
-    "Teilweise geschlossen": "Partly closed"
+    "Teilweise geschlossen": "Partly closed",
+    "Termin hinzufügen": "Add event",
+    "Neuer Termin": "New event",
+    "Titel": "Title",
+    "Ort (optional)": "Location (optional)",
+    "Beschreibung (optional)": "Description (optional)",
+    "Ganztägig": "All day",
+    "Ende": "End",
+    "Bitte gib einen Titel ein.": "Please enter a title.",
+    "Bitte gib Beginn und Ende an.": "Please enter a start and an end.",
+    "Das Ende muss nach dem Beginn liegen.": "The end has to be after the start.",
+    "Der Termin konnte nicht gespeichert werden.": "The event could not be saved."
   },
   "patterns": [
     [

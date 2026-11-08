@@ -231,6 +231,10 @@
       + '.hcal-tt{font-size:16px;color:' + T.ink + ';line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
       + '.hcal-ts{font-size:13px;color:' + T.ink3 + ';margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
       + '.hcal-e{font-size:15px;color:' + T.ink3 + ';padding:6px 0 2px;}'
+      + '.hcal-add{all:unset;box-sizing:border-box;width:100%;min-height:48px;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;pointer-events:auto;'
+      + 'border-radius:999px;font-size:15px;font-weight:600;background:var(--casora-popup-row-fill,rgba(127,127,127,.14));color:inherit;}'
+      + '.hcal-add ha-icon{--mdc-icon-size:20px;pointer-events:none;}.hcal-add span{pointer-events:none;}'
+      + '.hcal-add:focus-visible{outline:2px solid var(--casora-popup-ui-action,var(--casora-accent,#276B64));outline-offset:2px;}'
       + '.hcal-dh{font-size:13px;font-weight:600;color:' + T.ink2 + ';padding:10px 0 2px;}'
       + '.hcal-dh:first-child{padding-top:0;}'
       + '.hcal-wd{display:flex;align-items:flex-start;gap:12px;padding:8px 0;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}'
@@ -502,7 +506,11 @@
       var list = K.ev ? onDay(sel) : [];
       var body = wait || (list.length ? list.map(function (e) { return row(e, cals); }).join('') : '<div class="hcal-e">Keine Termine</div>');
       var t = diffDays(sel) === 0 ? 'Heute' : diffDays(sel) === 1 ? 'Morgen' : DAYL[sel.getDay()] + ', ' + sel.getDate() + '. ' + MON[sel.getMonth()];
-      return CSS() + (SOFT() ? '<div class="hcal hs">' + sHead(esc(t)) : '<div class="hcal">' + head(esc(t))) + body + '</div>';
+      // Issue 146: only where a calendar takes new events.
+      var haNow = document.querySelector('home-assistant');
+      var addBtn = haNow && haNow.hass && K.writable(variables, haNow.hass.states).length
+        ? '<button type="button" class="hcal-add" data-hcal="add:' + ymd(sel) + '"><ha-icon icon="mdi:calendar-plus"></ha-icon><span>Termin hinzufügen</span></button>' : '';
+      return CSS() + (SOFT() ? '<div class="hcal hs">' + sHead(esc(t)) : '<div class="hcal">' + head(esc(t))) + body + addBtn + '</div>';
     }
     if (k === 'week') {
       var w0 = weekStart(today), wout = '', wseen = [];
@@ -624,6 +632,137 @@
     };
   };
 
+  /* Issue 146: „Termin hinzufügen“ – a small form over the popup, then calendar.create_event. Offered only with calendars
+     that can create events (supported_features bit 1). Times go without an offset, as HA's own time zone. */
+  K.writable = function (variables, states) {
+    return K.cals(variables).filter(function (c) {
+      var st = states && c && states[c.entity];
+      return !!st && !!(Number((st.attributes || {}).supported_features) & 1);
+    });
+  };
+  /* The form → the service data, or { error } with the sentence to show. An all-day end is the last day here, HA's is exclusive. */
+  K.eventData = function (f) {
+    var title = String(f.title || '').trim(), d = { summary: title };
+    if (!title) return { error: 'Bitte gib einen Titel ein.' };
+    if (!f.startDate || !f.endDate || (!f.allDay && (!f.startTime || !f.endTime))) return { error: 'Bitte gib Beginn und Ende an.' };
+    var loc = String(f.location || '').trim(), desc = String(f.description || '').trim();
+    if (loc) d.location = loc;
+    if (desc) d.description = desc;
+    if (f.allDay) {
+      if (f.endDate < f.startDate) return { error: 'Das Ende muss nach dem Beginn liegen.' };
+      d.start_date = f.startDate; d.end_date = ymd(addD(parseYmd(f.endDate), 1));
+      return { data: d };
+    }
+    var a = f.startDate + ' ' + f.startTime + ':00', b = f.endDate + ' ' + f.endTime + ':00';
+    if (b <= a) return { error: 'Das Ende muss nach dem Beginn liegen.' };
+    d.start_date_time = a; d.end_date_time = b;
+    return { data: d };
+  };
+  K.addDialog = function (day) {
+    var ha = document.querySelector('home-assistant'), hass0 = ha && ha.hass;
+    var cals = hass0 ? K.writable(K._vars, hass0.states) : [];
+    if (!cals.length) return;
+    var Tr = window.casoraTr || function (x) { return x; };
+    var two = function (n) { return String(n).padStart(2, '0'); };
+    var plusHour = function (date, time) {
+      var q = time.split(':'), x = parseYmd(date); x.setHours(+q[0] + 1, +q[1]);
+      return { date: ymd(x), time: two(x.getHours()) + ':' + two(x.getMinutes()) };
+    };
+    var hour = Math.min(new Date().getHours() + 1, 23), startDate = day || ymd(new Date()), startTime = two(hour) + ':00', end = plusHour(startDate, startTime);
+    var pick = cals.filter(function (c) { return !K.hide[c.entity]; })[0] || cals[0];
+    var host = document.createElement('div');
+    host.className = 'casora-calform';
+    if (hass0.themes && hass0.themes.darkMode) host.classList.add('dark');
+    if (window._casoraSoft && window._casoraSoft(true)) host.classList.add('soft');
+    var root = host.attachShadow({ mode: 'open' });
+    var row = function (label, html, id) { return '<div class="f"' + (id ? ' id="' + id + '"' : '') + '><label>' + esc(Tr(label)) + '</label>' + html + '</div>'; };
+    var when = function (label, k, date, time) {
+      return '<div class="f"><label>' + esc(Tr(label)) + '</label><div class="two"><input id="' + k + 'D" type="date" aria-label="' + esc(Tr(label)) + '" value="' + date + '">'
+        + '<input id="' + k + 'T" class="t" type="time" aria-label="' + esc(Tr(label)) + '" value="' + time + '"></div></div>';
+    };
+    root.innerHTML = '<style>'
+      + ':host{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.28);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);'
+      + 'font-family:var(--casora-font,var(--ha-font-family-body,Inter,system-ui,sans-serif));color-scheme:light}:host(.dark){color-scheme:dark}'
+      + '.box{box-sizing:border-box;width:min(440px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:24px 20px 20px;border-radius:24px;background:var(--casora-calform-bg,#fff);color:var(--casora-calform-ink,#1c1c1e);box-shadow:var(--casora-shadow-float,0 18px 48px rgba(0,0,0,.24))}'
+      + ':host(.dark){--casora-calform-bg:#2a2a2e;--casora-calform-ink:#f2f2f4}'
+      + ':host(.soft) .box{border-radius:34px;background:var(--casora-soft-surface,#FAF6F0);color:var(--casora-popup-tiles-text-primary,#3A322B)}'
+      + 'h2{margin:0 0 16px;font-size:20px;font-weight:700;line-height:1.25}.f{margin:0 0 12px}label{display:block;margin:0 0 6px;font-size:13px;font-weight:600;opacity:.75}'
+      + 'input,select,textarea{box-sizing:border-box;width:100%;min-height:46px;padding:11px 14px;border:0;border-radius:14px;font:inherit;font-size:16px;color:inherit;outline:none;background:var(--casora-soft-control-fill,rgba(127,127,127,.12));box-shadow:inset 0 0 0 1px rgba(127,127,127,.4)}'
+      + 'textarea{display:block;resize:vertical;min-height:70px}'
+      + 'input:focus-visible,select:focus-visible,textarea:focus-visible{box-shadow:0 0 0 2px var(--casora-popup-ui-action,var(--casora-accent,#276B64))}'
+      + '.two{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:8px}.allday .two{grid-template-columns:minmax(0,1fr)}.allday .t{display:none}'
+      + '.sw{display:flex;align-items:center;justify-content:space-between;min-height:46px;margin:0 0 12px;font-size:15px;cursor:pointer}.sw input{all:revert;width:22px;height:22px;accent-color:var(--casora-popup-ui-action,var(--casora-accent,#276B64))}'
+      + '.err{margin:0 0 12px;font-size:14px;font-weight:600;color:var(--casora-color-red-text,#B3372E)}.err:empty{display:none}'
+      + '.row{display:flex;gap:10px;margin-top:6px}button{flex:1 1 0;min-height:46px;border:0;border-radius:999px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;background:var(--casora-soft-control-fill,rgba(127,127,127,.14));color:inherit}'
+      + '.yes{background:var(--casora-popup-ui-action,var(--casora-accent,#276B64));color:var(--casora-popup-ui-on-action,#fff)}button:disabled{opacity:.55;cursor:default}button:focus-visible{outline:2px solid var(--casora-popup-ui-action,var(--casora-accent,#276B64));outline-offset:2px}'
+      + '</style><div class="box" role="dialog" aria-modal="true" aria-labelledby="t"><h2 id="t">' + esc(Tr('Neuer Termin')) + '</h2>'
+      + row('Titel', '<input id="title" type="text" autocomplete="off">')
+      + row('Ort (optional)', '<input id="loc" type="text" autocomplete="off">')
+      + row('Beschreibung (optional)', '<textarea id="desc" rows="2"></textarea>')
+      + (cals.length > 1 ? row('Kalender', '<select id="cal">' + cals.map(function (c) { return '<option value="' + esc(c.entity) + '"' + (c.entity === pick.entity ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select>') : '')
+      + '<label class="sw"><span>' + esc(Tr('Ganztägig')) + '</span><input id="all" type="checkbox"></label>'
+      + '<div id="times">' + when('Beginn', 's', startDate, startTime) + when('Ende', 'e', end.date, end.time) + '</div>'
+      + '<p class="err" id="err" role="alert"></p><div class="row"><button type="button" class="no">' + esc(Tr('Abbrechen')) + '</button><button type="button" class="yes">' + esc(Tr('Speichern')) + '</button></div></div>';
+    var $ = function (id) { return root.getElementById(id); };
+    var before = document.activeElement;
+    while (before && before.shadowRoot && before.shadowRoot.activeElement) before = before.shadowRoot.activeElement;
+    var pop = window.casoraPopup && window.casoraPopup.element, popWatch = null, endTouched = false;
+    var close = function () {
+      if (popWatch) clearInterval(popWatch);
+      document.removeEventListener('keydown', key, true);
+      host.remove();
+      try { if (before && before.isConnected && before.focus) before.focus({ preventScroll: true }); } catch (e) { /* focus stays */ }
+    };
+    var save = function () {
+      var yes = root.querySelector('.yes'), err = $('err');
+      if (yes.disabled) return;
+      var cal = $('cal') ? $('cal').value : pick.entity;
+      var r = K.eventData({ title: $('title').value, location: $('loc').value, description: $('desc').value, allDay: $('all').checked,
+        startDate: $('sD').value, startTime: $('sT').value, endDate: $('eD').value, endTime: $('eT').value });
+      if (r.error) { err.textContent = Tr(r.error); return; }
+      err.textContent = ''; yes.disabled = true;
+      var hass = (document.querySelector('home-assistant') || {}).hass || hass0;
+      Promise.resolve(hass.callService('calendar', 'create_event', r.data, { entity_id: cal })).then(function () {
+        close();
+        if (window.casoraHaptic) window.casoraHaptic('success');
+        var d = parseYmd($('sD').value);
+        K.sel = $('sD').value; K.month = new Date(d.getFullYear(), d.getMonth(), 1); K.hide[cal] = false; K.ts = 0;
+        K.load(hass, K._vars, true);
+        // Cloud calendars can answer a moment later, and a load already running ignores this one.
+        setTimeout(function () { K.load(hass, K._vars, true); }, 1500);
+      }, function () { yes.disabled = false; err.textContent = Tr('Der Termin konnte nicht gespeichert werden.'); });
+    };
+    var key = function (e) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); return; }
+      if (e.key === 'Enter' && e.composedPath()[0] && /^(title|loc)$/.test(e.composedPath()[0].id || '')) { e.preventDefault(); e.stopPropagation(); save(); return; }
+      if (e.key !== 'Tab') return;
+      var f = [].slice.call(root.querySelectorAll('input,select,textarea,button')).filter(function (x) { return x.getClientRects().length && !x.disabled; });
+      var i = f.indexOf(root.activeElement);
+      e.preventDefault(); e.stopPropagation();
+      f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+    };
+    var follow = function () {
+      if (endTouched) return;
+      if ($('all').checked) { if ($('eD').value < $('sD').value) $('eD').value = $('sD').value; return; }
+      if (!$('sD').value || !$('sT').value) return;
+      var n = plusHour($('sD').value, $('sT').value);
+      $('eD').value = n.date; $('eT').value = n.time;
+    };
+    $('sD').onchange = follow; $('sT').onchange = follow;
+    $('eD').onchange = $('eT').onchange = function () { endTouched = true; };
+    $('all').onchange = function () {
+      $('times').classList.toggle('allday', $('all').checked);
+      if ($('all').checked && !endTouched) $('eD').value = $('sD').value;
+      else follow();
+    };
+    root.querySelector('.no').onclick = close;
+    root.querySelector('.yes').onclick = save;
+    document.addEventListener('keydown', key, true);
+    document.body.appendChild(host);
+    if (pop) popWatch = setInterval(function () { if (!pop.isConnected || !pop.hasAttribute('open') || pop.hasAttribute('closing')) close(); }, 250);
+    setTimeout(function () { $('title').focus(); }, 30);
+  };
+
   /* Antippen: Tag wählen, Monat blättern, Kalender ein-/ausblenden (Capture, da Popups Klicks schlucken). */
   var target = function (ev) {
     var p = (ev.composedPath && ev.composedPath()) || [];
@@ -632,6 +771,7 @@
   };
   var act = function (a) {
     var p = a.split(':'), v = a.slice(p[0].length + 1);
+    if (p[0] === 'add') { K.addDialog(v); return; }
     if (p[0] === 'day') {
       K.sel = v; var d = parseYmd(v);
       if (!K.month || d.getMonth() !== K.month.getMonth() || d.getFullYear() !== K.month.getFullYear()) K.month = new Date(d.getFullYear(), d.getMonth(), 1);

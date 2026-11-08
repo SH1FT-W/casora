@@ -2844,7 +2844,18 @@
     "Zubereitung": "Preparación",
     "1 Portion": "1 ración",
     "Zählt nur bei Abwesenheit": "Solo cuenta en ausencia",
-    "Teilweise geschlossen": "Parcialmente cerrado"
+    "Teilweise geschlossen": "Parcialmente cerrado",
+    "Termin hinzufügen": "Añadir evento",
+    "Neuer Termin": "Nuevo evento",
+    "Titel": "Título",
+    "Ort (optional)": "Lugar (opcional)",
+    "Beschreibung (optional)": "Descripción (opcional)",
+    "Ganztägig": "Todo el día",
+    "Ende": "Fin",
+    "Bitte gib einen Titel ein.": "Introduce un título.",
+    "Bitte gib Beginn und Ende an.": "Indica el inicio y el fin.",
+    "Das Ende muss nach dem Beginn liegen.": "El fin debe ser posterior al inicio.",
+    "Der Termin konnte nicht gespeichert werden.": "No se pudo guardar el evento."
   },
   "patterns": [
     [

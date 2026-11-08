@@ -2844,7 +2844,18 @@
     "Zubereitung": "Préparation",
     "1 Portion": "1 portion",
     "Zählt nur bei Abwesenheit": "Compte seulement en absence",
-    "Teilweise geschlossen": "Partiellement fermé"
+    "Teilweise geschlossen": "Partiellement fermé",
+    "Termin hinzufügen": "Ajouter un événement",
+    "Neuer Termin": "Nouvel événement",
+    "Titel": "Titre",
+    "Ort (optional)": "Lieu (facultatif)",
+    "Beschreibung (optional)": "Description (facultatif)",
+    "Ganztägig": "Toute la journée",
+    "Ende": "Fin",
+    "Bitte gib einen Titel ein.": "Saisis un titre.",
+    "Bitte gib Beginn und Ende an.": "Indique le début et la fin.",
+    "Das Ende muss nach dem Beginn liegen.": "La fin doit être après le début.",
+    "Der Termin konnte nicht gespeichert werden.": "L'événement n'a pas pu être enregistré."
   },
   "patterns": [
     [
