@@ -563,6 +563,31 @@ Optionally add a `room_chips:` entry for its sensor chips, and set `mobile_filte
 
 ---
 
+### Cards of your own
+
+You can build your own tiles on Casora's base and keep them through updates.
+
+1. In the Studio open a room and choose **Custom card**, then paste a `button_card_templates` entry. Casora stores it on the dashboard and offers it in the tile picker for every room.
+2. Give it a name that does **not** start with `casora_`, and inherit Casora's base tile:
+
+```yaml
+my_tank_level:
+  template: casora_entity
+  variables:
+    icon: water
+```
+
+**What an update leaves alone:** templates with your own name, and the tiles that use them. Both survive the automatic refresh after an update and every save in the Studio. Casora's own templates next to them still get updated.
+
+**What an update does not keep:**
+
+- Files inside `custom_components/casora/`. That folder belongs to Casora and is replaced by an update. Put your own scripts in `/config/www/` and add them as a dashboard resource.
+- Edits to `casora_*` templates. They stop receiving fixes, and saving in the Studio can overwrite them. Inherit from them instead of changing them.
+
+Your template follows `casora_entity`, so it picks up changes to that base. The `window.casora*` helpers are Casora's internals, not a stable interface, so check your cards after an update if you use them.
+
+Built something others could use? Show it in [Discussions](https://github.com/SH1FT-W/casora/discussions) under **Show and tell**.
+
 ### :pencil2: Additional Customization
 
 A few more places to tune:
