@@ -4,6 +4,19 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.25 – 08.11.2026
+
+Einstellungen sitzen jetzt dort, wo du sie brauchst: an der Kachel, im Popup und nach Geräteart sortiert.
+
+### Neu
+- **Seitenleiste der Kachel in Reitern:** Ein Klick auf eine Kachel im Studio zeigt Kachel, Popup und, wo es gemeinsame Einstellungen gibt, einen Reiter wie „Alle Jalousien“. Popup-Felder sind einen Klick entfernt, gemeinsame Werte wirken mit „Einstellungen speichern“.
+- **Zahnrad in jedem Popup:** Admins springen direkt auf den Reiter „Popup“ dieser Kachel im Studio. Popups ohne Kachel öffnen ihre Stelle in den Einstellungen.
+- **Prozent als geschlossen (#145):** Unter Einstellungen › Haus & Geräte › Jalousien und Tore lässt sich jede Jalousie als Prozent geschlossen anzeigen. Stellrad, Knöpfe, Zeilen, Kachel und Halten-Menü folgen, Home Assistant bekommt weiter seine eigene Position. Auf, Zu und die Zählungen bleiben gleich.
+
+### Geändert
+- **Haus & Geräte:** ein Abschnitt pro Geräteart, der sich an seiner Überschrift öffnet, nichts mehr unter „Erweitert“. Die Batterie-Ausnahmen sind aus der Glocke hierher umgezogen, gespeicherte Werte bleiben.
+- **Kachelreihe:** Bei „Sofort“ hält ein ruhender Mauszeiger das Sortieren nicht mehr endlos auf.
+
 ## 26.11.24 – 08.11.2026
 
 Ein Fix für Szenen im falschen Raum.

@@ -27,9 +27,9 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Klimaanlagen im Thermostat", n0: "Kühlen, Lüfter, Voreinstellung und Lamellen.",
-      n1t: "Nur bei Abwesenheit zählen", n1: "Fenster warnen erst, wenn niemand da ist.",
-      n2t: "Beschatten nach Wunsch", n2: "Eigene Position, passende Worte für Markisen.",
+      n0t: "Einstellungen an der Kachel", n0: "Reiter in der Seitenleiste, Zahnrad im Popup.",
+      n1t: "Haus & Geräte neu geordnet", n1: "Ein Abschnitt pro Geräteart, direkt erreichbar.",
+      n2t: "Prozent als geschlossen", n2: "Pro Jalousie einstellbar: 60 % heißt 60 % zu.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -39,9 +39,9 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Air conditioners in the thermostat", n0: "Cool, fan, preset and swing.",
-      n1t: "Count only when away", n1: "Windows warn only when nobody is home.",
-      n2t: "Shade your way", n2: "Your own position, the right words for awnings.",
+      n0t: "Settings at the tile", n0: "Tabs in the side panel, a gear in the popup.",
+      n1t: "Home & devices reordered", n1: "One section per kind of device, one jump away.",
+      n2t: "Percent as closed", n2: "Set per blind: 60% means 60% closed.",
     },
     // Spanish: same keys as en (dev/unit/welcome_es.mjs); a missing key falls back to English.
     es: {
@@ -52,9 +52,9 @@
       w1t: "Habitación por habitación", w1: "Diseña tu panel con los dispositivos que ya tienes en Home Assistant.",
       w2t: "Asistente de dispositivos", w2: "Casora propone las tarjetas adecuadas para cada habitación y las añade por ti.",
       w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
-      n0t: "Aires acondicionados en el termostato", n0: "Frío, ventilador, preajuste y oscilación.",
-      n1t: "Contar solo en ausencia", n1: "Las ventanas avisan solo si no hay nadie.",
-      n2t: "Sombra a tu gusto", n2: "Tu posición y palabras adecuadas para toldos.",
+      n0t: "Ajustes en la tarjeta", n0: "Pestañas en el panel lateral, engranaje en el popup.",
+      n1t: "Casa y dispositivos reordenado", n1: "Una sección por tipo de dispositivo.",
+      n2t: "Porcentaje como cerrado", n2: "Por persiana: 60 % significa 60 % cerrado.",
     },
     fr: {
       welcomeTitle: "Bienvenue dans Casora",
@@ -67,9 +67,9 @@
       w2: "Casora propose les tuiles adaptées à chaque pièce et les ajoute pour toi.",
       w3t: "Ordinateur, tablette et téléphone",
       w3: "Un tableau de bord qui s'adapte à chaque écran, avec sa propre mise en page téléphone.",
-      n0t: "Climatiseurs dans le thermostat", n0: "Froid, ventilation, préréglage et oscillation.",
-      n1t: "Compter seulement en absence", n1: "Les fenêtres n'alertent que si personne n'est là.",
-      n2t: "Ombrage sur mesure", n2: "Ta position, les bons mots pour les stores.",
+      n0t: "Réglages sur la tuile", n0: "Onglets dans le panneau, roue dentée dans le popup.",
+      n1t: "Maison et appareils réorganisé", n1: "Une section par type d'appareil.",
+      n2t: "Pourcentage comme fermé", n2: "Par volet : 60 % veut dire fermé à 60 %.",
     },
     it: {
       welcomeTitle: "Ti diamo il benvenuto in Casora",
@@ -82,9 +82,9 @@
       w2: "Casora propone le schede adatte per ogni stanza e le aggiunge per te.",
       w3t: "Desktop, tablet e telefono",
       w3: "Una dashboard che si adatta a ogni schermo, con un layout dedicato per il telefono.",
-      n0t: "Condizionatori nel termostato", n0: "Freddo, ventola, preset e oscillazione.",
-      n1t: "Conta solo in assenza", n1: "Le finestre avvisano solo se non c'è nessuno.",
-      n2t: "Ombra su misura", n2: "La tua posizione, parole giuste per le tende.",
+      n0t: "Impostazioni sulla scheda", n0: "Schede nel pannello, ingranaggio nel popup.",
+      n1t: "Casa e dispositivi riordinato", n1: "Una sezione per tipo di dispositivo.",
+      n2t: "Percentuale come chiusa", n2: "Per tapparella: 60% significa chiusa al 60%.",
     },
     nl: {
       welcomeTitle: "Welkom bij Casora",
@@ -97,9 +97,9 @@
       w2: "Casora stelt voor elke kamer passende tegels voor en bouwt ze in.",
       w3t: "Desktop, tablet en telefoon",
       w3: "Eén dashboard dat zich aan elk scherm aanpast, met een eigen telefoonweergave.",
-      n0t: "Airco's in de thermostaat", n0: "Koelen, ventilator, voorkeuze en zwenken.",
-      n1t: "Alleen tellen bij afwezigheid", n1: "Ramen waarschuwen pas als er niemand thuis is.",
-      n2t: "Schaduw naar wens", n2: "Eigen positie, passende woorden voor zonneschermen.",
+      n0t: "Instellingen bij de tegel", n0: "Tabbladen in het zijpaneel, tandwiel in de popup.",
+      n1t: "Huis en apparaten herordend", n1: "Eén onderdeel per soort apparaat.",
+      n2t: "Percentage als gesloten", n2: "Per rolluik: 60% betekent 60% dicht.",
     },
     pl: {
       welcomeTitle: "Witaj w Casora",
@@ -112,9 +112,9 @@
       w2: "Casora proponuje pasujące kafelki dla każdego pokoju i dodaje je za ciebie.",
       w3t: "Komputer, tablet i telefon",
       w3: "Jeden pulpit, który dopasowuje się do każdego ekranu, z własnym układem na telefon.",
-      n0t: "Klimatyzatory w termostacie", n0: "Chłodzenie, wentylator, preset i nawiew.",
-      n1t: "Licz tylko pod nieobecność", n1: "Okna ostrzegają, gdy nikogo nie ma w domu.",
-      n2t: "Zacienienie po swojemu", n2: "Własna pozycja, właściwe słowa dla markiz.",
+      n0t: "Ustawienia przy kafelku", n0: "Zakładki w panelu, koło zębate w oknie.",
+      n1t: "Dom i urządzenia uporządkowane", n1: "Jedna sekcja na rodzaj urządzenia.",
+      n2t: "Procent jako zamknięcie", n2: "Dla każdej rolety: 60% to 60% zamknięcia.",
     },
     pt: {
       welcomeTitle: "Bem-vindo ao Casora",
@@ -127,9 +127,9 @@
       w2: "O Casora propõe os cartões certos para cada divisão e adiciona-os por ti.",
       w3t: "Computador, tablet e telemóvel",
       w3: "Um painel que se adapta a cada ecrã, com layout próprio para o telemóvel.",
-      n0t: "Ar condicionado no termostato", n0: "Frio, ventoinha, predefinição e oscilação.",
-      n1t: "Contar só na ausência", n1: "As janelas avisam só quando não há ninguém.",
-      n2t: "Sombra à sua medida", n2: "A sua posição, palavras certas para toldos.",
+      n0t: "Definições no mosaico", n0: "Separadores no painel, roda dentada no popup.",
+      n1t: "Casa e dispositivos reorganizado", n1: "Uma secção por tipo de dispositivo.",
+      n2t: "Percentagem como fechado", n2: "Por estore: 60% significa 60% fechado.",
     },
   };
   // Texts for a language: its own, English for anything it does not have (yet).
@@ -144,8 +144,8 @@
 
   /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
-    ["mdi:snowflake", "n0t", "n0"],
-    ["mdi:shield-home-outline", "n1t", "n1"],
+    ["mdi:cog-outline", "n0t", "n0"],
+    ["mdi:home-outline", "n1t", "n1"],
     ["mdi:blinds", "n2t", "n2"],
   ];
 

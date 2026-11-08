@@ -69,7 +69,7 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 | Studio | Studio | Studio B, Panel, Einstellungsfenster | „Im Studio öffnen“ |
 | Glocke | bell | Benachrichtigungscenter | „Glocke & Meldungen“ |
 | Erweitert | Advanced | Experte, Mehr Optionen (für seltene Einstellungen) | Einstellungen: „Erweitert“ in der Kachel |
-| Jalousie | cover / blind | Rollladen, Rollo (außer als Suchwort) | „Jalousien in der Nacht“ |
+| Jalousie | cover / blind | Rollladen, Rollo (außer als Suchwort) | „Jalousien und Tore“ |
 | Meldung / Push-Meldung | alert / push notification | Benachrichtigung (nur HA-eigene) | „Keine Meldungen“ |
 | Handy | phone | Telefon, Smartphone, Mobil | „Handy-Layout“ |
 | Desktop / Tablet | desktop / tablet | Computer, PC | „Desktop-Einstellungen“ |
