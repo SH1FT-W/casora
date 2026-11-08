@@ -172,7 +172,7 @@ usePage(dk.page);
 await dashboard(dk.page, dash.url + '/home', 3);
 await run('Desktop', dk.page, false, 'desktop');
 
-// ── Studio: Settings › Haus & Geräte › Erweitert › „Jalousien in der Nacht“ (group „Sicherheit: Jalousien“, since 04.11. without its own heading) ──
+// ── Studio: Settings › Haus & Geräte › „Jalousien und Tore“ (group „Sicherheit: Jalousien“, since 04.11. without its own heading) ──
 await studio(dk.page, dash.url);
 const H = (fn, a) => dk.page.evaluate(fn, a);
 // A garage door, faked in the browser: the block lists it with its own value (#138).
@@ -182,22 +182,22 @@ await dk.page.waitForTimeout(1000);
 await dk.page.locator('.cs-hubsearch input').fill('Rollladen');
 await dk.page.waitForTimeout(500);
 const hits = await H(() => [...window.__panel().shadowRoot.querySelectorAll('#pane .frow b')].filter((b) => b.getClientRects().length).map((b) => b.textContent.trim()));
-// Since 03.11.2026 a block of the tile „Haus & Geräte“ (under „Erweitert“): the search finds it by its title.
-await check('Studio: search „Rollladen“ finds „Jalousien in der Nacht“', hits[0] === 'Jalousien in der Nacht', hits);
-await dk.page.locator('.frow').filter({ has: dk.page.locator('b', { hasText: /^Jalousien in der Nacht$/ }) }).first().click();
+// Since 03.11.2026 a block of the tile „Haus & Geräte“ : the search finds it by its title.
+await check('Studio: search „Rollladen“ finds „Jalousien und Tore“', hits[0] === 'Jalousien und Tore', hits);
+await dk.page.locator('.frow').filter({ has: dk.page.locator('b', { hasText: /^Jalousien und Tore$/ }) }).first().click();
 await dk.page.waitForTimeout(2200);
 const st = await H((ids) => {
   const r = window.__panel().shadowRoot;
   const g = r.querySelector('#pane [data-pkey="security"]');
   const rows = [...r.querySelectorAll('#pane .casora-psec-covers .frow[role="checkbox"]')];
   const box = g ? g.getBoundingClientRect() : null;
-  // Since 04.11.2026 (one heading level) the group has no heading of its own: the block title „Jalousien in der Nacht“ is it.
+  // Since 04.11.2026 (one heading level) the group has no heading of its own: the block title „Jalousien und Tore“ is it.
   const bh = g && g.closest('.cn-block') ? g.closest('.cn-block').querySelector('.cn-bhead b') : null;
   return { group: !!g, head: bh ? bh.textContent : '', ownHead: [...r.querySelectorAll('#pane .fhead')].some((x) => x.textContent.trim() === 'Sicherheit: Jalousien'), night: g ? (g.querySelector('.sw') || {}).getAttribute?.('aria-checked') : null,
     rows: rows.length, checked: rows.filter((x) => x.getAttribute('aria-checked') === 'true').length, inView: !!box && box.top < innerHeight && box.bottom > 0,
     areas: [...r.querySelectorAll('#pane .casora-psec-covers .fhead')].map((x) => x.textContent), ids };
 }, IDS);
-await check('Studio: block „Jalousien in der Nacht“ (no second heading), opened at it', st.group && st.head === 'Jalousien in der Nacht' && st.ownHead === false && st.inView, st);
+await check('Studio: block „Jalousien und Tore“ (no second heading), opened at it', st.group && st.head === 'Jalousien und Tore' && st.ownHead === false && st.inView, st);
 await check('Studio: „Nur abends und nachts“ on by default', st.night === 'true', st);
 await check('Studio: covers listed by area with check marks, the four picked ones checked', st.rows >= 4 && st.checked === 4 && st.areas.length >= 1, st);
 await dk.page.evaluate(() => { const r = window.__panel().shadowRoot; const g = r.querySelector('#pane [data-pkey="security"]'); if (g) g.scrollIntoView({ block: 'start' }); });

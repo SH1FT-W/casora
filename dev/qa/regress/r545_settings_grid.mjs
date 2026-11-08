@@ -43,7 +43,8 @@ const GEO = `const R = p.shadowRoot;
     const plates = [...b.querySelectorAll(PLATE)].filter((e) => vis(e) && mine(e));
     const nested = plates.filter((x) => plates.some((y) => y !== x && y.contains(x))).length;
     const first = b.querySelector('.fgroup');
-    const doubleHead = !!(first && first.querySelector(':scope > .fhead') && vis(first.querySelector(':scope > .fhead')));
+    // Only a group right under the block title would repeat it; a later part of a block (Scenes) keeps its own heading.
+    const doubleHead = !!(first && first.previousElementSibling === b.querySelector(':scope > .cn-bhead') && first.querySelector(':scope > .fhead') && vis(first.querySelector(':scope > .fhead')));
     const pill = b.querySelector('.cn-bhead .cn-only'); let pillOff = null;
     if (pill) { const tb = b.querySelector('.cn-bhead b'); const range = document.createRange(); range.selectNodeContents(tb.firstChild || tb);
       const tr = range.getBoundingClientRect(); const pr = pill.getBoundingClientRect(); pillOff = Math.round((pr.top + pr.height / 2) - (tr.top + tr.height / 2));
@@ -67,7 +68,8 @@ for (const [tag, opts] of SIZES) {
   for (const t of tiles) {
     await P(`p._bOpen = true; await p._csShow('n-${t}');`);
     await page.waitForTimeout(1300);
-    await P(`const d = p.shadowRoot.querySelector('.cn-adv'); if (d && !d.open) d.open = true; await new Promise((r) => setTimeout(r, 1100));
+    await P(`p.shadowRoot.querySelectorAll('.cn-fold:not(.open) > .cn-bhead').forEach((h) => h.click());
+      const d = p.shadowRoot.querySelector('.cn-adv'); if (d && !d.open) d.open = true; await new Promise((r) => setTimeout(r, 1100));
       for (const x of [...p.shadowRoot.querySelectorAll('.cn-block .adv:not(.open) > .advsum, .cn-block .frow.casora-pmore:not(.open)')]) { x.click(); await new Promise((r) => setTimeout(r, 250)); }
       await new Promise((r) => setTimeout(r, 600));`);
     const g = await P(GEO);

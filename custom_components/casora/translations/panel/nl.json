@@ -2983,7 +2983,14 @@
     "Casora's AI features wait for your assistant: ask it to do Casora's open AI jobs. Casora Studio's own AI steps still need an AI task.": "De AI-functies van Casora wachten op je assistent: vraag hem de openstaande AI-opdrachten van Casora te doen. De AI-stappen van Casora Studio zelf hebben nog steeds een AI-taak nodig.",
     "Only when away": "Alleen bij afwezigheid",
     "This door or window only counts for security when nobody is home or the alarm is armed away.": "Deze deur of dit raam telt alleen mee voor de beveiliging als iedereen weg is of het alarm op afwezig staat.",
-    "Count a door or window only when away": "Deur of raam alleen bij afwezigheid meetellen"
+    "Count a door or window only when away": "Deur of raam alleen bij afwezigheid meetellen",
+    "Blinds, doors and windows, batteries, scenes, music, waste and calendars.": "Rolluiken, deuren en ramen, batterijen, scènes, muziek, afval en agenda's.",
+    "Blinds and gates": "Rolluiken en poorten",
+    "Which blinds and gates count as open when the house is checked at night.": "Welke rolluiken en poorten als open tellen bij de controle 's avonds.",
+    "Batteries the bell should not warn about.": "Batterijen waarvoor de bel niet moet waarschuwen.",
+    "Which scene buttons appear here, and scenes Casora should never offer.": "Welke scèneknoppen hier verschijnen en welke scènes Casora nooit moet aanbieden.",
+    "On this dashboard": "Op dit dashboard",
+    "How the bell words places, mailbox, combined contacts and device care.": "Hoe de bel plaatsen noemt, brievenbus, gecombineerde contacten en apparaatonderhoud."
   },
   "patterns": [
     [

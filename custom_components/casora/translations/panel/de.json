@@ -2983,7 +2983,14 @@
     "Casora's AI features wait for your assistant: ask it to do Casora's open AI jobs. Casora Studio's own AI steps still need an AI task.": "Casoras KI-Funktionen warten auf deinen Assistenten: Bitte ihn, Casoras offene KI-Aufträge zu erledigen. Die KI-Schritte im Casora Studio brauchen weiter eine KI-Aufgabe.",
     "Only when away": "Nur bei Abwesenheit",
     "This door or window only counts for security when nobody is home or the alarm is armed away.": "Diese Tür oder dieses Fenster zählt für die Sicherheit nur, wenn niemand zu Hause ist oder die Alarmanlage auf abwesend steht.",
-    "Count a door or window only when away": "Tür oder Fenster nur bei Abwesenheit zählen"
+    "Count a door or window only when away": "Tür oder Fenster nur bei Abwesenheit zählen",
+    "Blinds, doors and windows, batteries, scenes, music, waste and calendars.": "Jalousien, Türen und Fenster, Batterien, Szenen, Musik, Abfall und Kalender.",
+    "Blinds and gates": "Jalousien und Tore",
+    "Which blinds and gates count as open when the house is checked at night.": "Welche Jalousien und Tore als offen zählen, wenn das Haus abends geprüft wird.",
+    "Batteries the bell should not warn about.": "Batterien, vor denen die Glocke nicht warnen soll.",
+    "Which scene buttons appear here, and scenes Casora should never offer.": "Welche Szenen-Tasten hier erscheinen und welche Szenen Casora nie anbieten soll.",
+    "On this dashboard": "Auf diesem Dashboard",
+    "How the bell words places, mailbox, combined contacts and device care.": "Wie die Glocke Orte nennt, Briefkasten, kombinierte Kontakte und Gerätepflege."
   },
   "patterns": [
     [

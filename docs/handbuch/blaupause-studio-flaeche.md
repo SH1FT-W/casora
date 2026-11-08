@@ -51,6 +51,7 @@ Eine Startseite mit Suche und acht Kacheln, nach dem benannt, was man tun will: 
 Glocke & Meldungen · Haus & Geräte · Wetter, Strom & Tanken · KI · Updates & Einrichtung. Die Themen von 26.10.
 mit ihren Unterseiten gibt es nicht mehr.
 
+- **Haus & Geräte (`fold: true`):** ein Abschnitt pro Geräteart, jeder Block öffnet sich an seiner Überschrift, ohne „Erweitert“. Ein Sprung (Suche, Kachel) öffnet genau seinen Abschnitt (`_nOpen`). Das bleibt eine Ebene.
 - **Höchstens zwei Ebenen:** Start → Kachel. Seltenes steht in der Kachel unter „Erweitert“ (zugeklappt, erst beim
   Öffnen gezeichnet). Keine dritte Ebene, keine Liste, die auf eine weitere Seite führt (Ausnahme: Updates).
 - **Jede Kachel** hat eine kurze Zeile (auf dem Handy höchstens zwei Zeilen), **jeder Block** einen Titel und einen

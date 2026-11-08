@@ -6,7 +6,7 @@
 //         showed the section switches) – there was no way to turn it on from the list.
 //   sp-02 Settings › Calendar: "Kalender" stood three times on top of each other (page title, group header, row label).
 //   sp-03 Settings › Home & Devices: "Security: covers" showed the fallback icon (question mark); since 03.11.2026 the
-//         block "Jalousien in der Nacht" under "Erweitert" in the tile Home & devices.
+//         section "Jalousien und Tore" in the tile Home & devices.
 //   sp-04 Settings start and topic pages: an empty band of ~40 px between the title and "‹ Settings" (the head kept the
 //         height of pages with an "Applies to" line).
 //   sp-05 Cover tile › Advanced: the icon fields showed their default as a file name ("curtain-open") instead of
@@ -56,13 +56,13 @@ await need('Casora-Dashboard fürs Studio', dash);
   await page.waitForTimeout(1500);
   const adv = await page.evaluate(async () => {
     const p = window.__panel();
-    const d = p.shadowRoot.querySelector('#pane .cn-adv');
-    const sum = d ? d.querySelector('summary').textContent : '';
-    if (d) d.open = true;
-    await new Promise((r) => setTimeout(r, 900));
-    return { sum, block: !!p.shadowRoot.querySelector('#pane [data-pkey="nb-security"]') };
+    const box = p.shadowRoot.querySelector('#pane [data-pkey="nb-security"]');
+    const sum = box ? box.querySelector('.cn-bhead b').textContent : '';
+    if (box && !box.classList.contains('open')) box.querySelector('.cn-bhead').click();
+    await new Promise((r) => setTimeout(r, 300));
+    return { sum, block: !!(box && box.classList.contains('open')) };
   });
-  await check('sp-03 „Jalousien in der Nacht“ unter „Erweitert“ in Haus & Geräte', /Jalousien in der Nacht/.test(adv.sum) && adv.block, adv);
+  await check('sp-03 „Jalousien und Tore“ als eigener Abschnitt in Haus & Geräte', /Jalousien und Tore/.test(adv.sum) && adv.block, adv);
   const gap = await page.evaluate(() => {
     const R = window.__panel().shadowRoot;
     const h = R.querySelector('.insphead .cs-head h3'), b = R.querySelector('#pane .cs-hubback');

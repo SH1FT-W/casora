@@ -631,6 +631,18 @@
           detail: bike ? "Detected" : "Not detected" });
       }
 
+      if (want("battery")) {
+        // The bell reads this list; it sits with the devices (settings rework).
+        g = group("battery", { header: "Batteries" });
+        S.notify.battery_exclude.forEach((id, i) => {
+          row(g, i ? "" : "No battery warning", [
+            ent(id, ["sensor"], (v) => { S.notify.battery_exclude[i] = v; }, null, ["battery"]),
+            del(() => { S.notify.battery_exclude.splice(i, 1); }),
+          ], i ? undefined : "The bell never warns about this battery.");
+        });
+        addRow(g, "Add battery exception", () => { S.notify.battery_exclude.push(""); });
+      }
+
       if (want("notify")) {
         // Bell
         g = group("notify", { header: "Notifications",
@@ -646,13 +658,6 @@
         row(g, "Mailbox", [ent(S.notify.mail, ["binary_sensor", "input_boolean"], (v) => { S.notify.mail = v; }, null,
           { binary_sensor: ["door", "window", "opening", "garage_door", "motion", "occupancy", "presence", "vibration", "moving", "tamper"] })],
           "Shows a hint when new mail arrives");
-        S.notify.battery_exclude.forEach((id, i) => {
-          row(g, i ? "" : "No battery warning", [
-            ent(id, ["sensor"], (v) => { S.notify.battery_exclude[i] = v; }, null, ["battery"]),
-            del(() => { S.notify.battery_exclude.splice(i, 1); }),
-          ], i ? undefined : "The bell never warns about this battery.");
-        });
-        addRow(g, "Add battery exception", () => { S.notify.battery_exclude.push(""); });
         mapRows(S.notify.contact_merged).forEach(([combo, members]) => {
           const m = Array.isArray(members) ? members : [];
           const setM = (j, v) => { m[j] = v; S.notify.contact_merged[combo] = m.filter(Boolean); };

@@ -65,6 +65,9 @@ const reopen = async () => {
 const openTile = async (id, adv = true) => {
   await P(`p._csShow('n-${id}')`);
   await wait(1200);
+  // Sections of a fold tile (Home & devices) are closed until opened.
+  await P(`p.shadowRoot.querySelectorAll('#pane .cn-fold:not(.open) > .cn-bhead').forEach((h) => h.click());`);
+  await wait(200);
   if (adv) {
     await P(`const d = p.shadowRoot.querySelector('#pane .cn-adv'); if (d && !d.open) d.open = true;`);
     await wait(800);
@@ -109,7 +112,7 @@ await P('p._bOpenSettings(null);');
 await wait(1500);
 const start = await P(`return { page: p._csPage, tiles: [...p.shadowRoot.querySelectorAll('.cn-grid .cs-hubtile')].map((b) => b.dataset.tile) };`);
 await check('Zahnrad öffnet die neue Startseite mit acht Kacheln', start.page === 'n-start' && start.tiles.length === 8, start);
-map = await P(`return window.casoraSettingsMap.tiles.map((t) => ({ id: t.id, blocks: t.blocks.map((b) => ({ k: b.k, adv: !!b.adv, sec: b.sec || null, link: !!b.updates })) }));`);
+map = await P(`return window.casoraSettingsMap.tiles.map((t) => ({ id: t.id, blocks: t.blocks.map((b) => ({ k: b.k, adv: !!b.adv, sec: b.sec || null, link: !!b.updates, personal: !!b.personal })) }));`);
 for (const tile of map) {
   await openTile(tile.id, false);
   const seen = await P(`return [...p.shadowRoot.querySelectorAll('#pane .cn-block')].map((b) => ({ k: b.dataset.pkey.slice(3),
@@ -117,7 +120,7 @@ for (const tile of map) {
   const often = tile.blocks.filter((b) => !b.adv);
   await check(`${tile.id}: häufige Blöcke, Dashboard-Abschnitte im Block`, often.filter((b) => b.sec || b.link).every((b) => seen.some((s) => s.k === b.k))
     && seen.every((s) => often.some((b) => b.k === s.k))
-    && often.filter((b) => b.sec).every((b) => { const s = seen.find((x) => x.k === b.k); return s && s.rows > 0 && s.only; }), seen);
+    && often.filter((b) => b.sec).every((b) => { const s = seen.find((x) => x.k === b.k); return s && s.rows > 0 && (s.only || b.personal); }), seen);
   const adv = tile.blocks.filter((b) => b.adv);
   if (!adv.length) continue;
   const inAdv = await P(`const d = p.shadowRoot.querySelector('#pane .cn-adv'); const before = d.querySelectorAll('.cn-block').length;
@@ -130,10 +133,11 @@ for (const [q, k] of [['müll', 'waste'], ['uhr', 'time'], ['rollladen', 'securi
   const hits = await P('return p._csNeuFind(arg).map((h) => h.b.k);', q);
   await check(`Suche „${q}“ findet ${k}`, hits.includes(k), hits);
 }
-const hit = await P(`const t = window.casoraSettingsMap.tiles.find((x) => x.id === 'house'); p._csNeuGo(t, t.blocks.find((b) => b.k === 'security'));
-  await new Promise((r) => setTimeout(r, 1500)); const d = p.shadowRoot.querySelector('#pane .cn-adv');
-  return { page: p._csPage, open: !!(d && d.open), block: !!p.shadowRoot.querySelector('#pane [data-pkey="nb-security"]') };`);
-await check('Treffer in „Erweitert“ öffnet die Kachel dort', hit.page === 'n-house' && hit.open && hit.block, hit);
+const hit = await P(`p._nOpen = new Set(); const t = window.casoraSettingsMap.tiles.find((x) => x.id === 'house'); p._csNeuGo(t, t.blocks.find((b) => b.k === 'security'));
+  await new Promise((r) => setTimeout(r, 1500)); const box = p.shadowRoot.querySelector('#pane [data-pkey="nb-security"]');
+  const closed = [...p.shadowRoot.querySelectorAll('#pane .cn-fold:not(.open)')].map((b) => b.dataset.pkey);
+  return { page: p._csPage, open: !!(box && box.classList.contains('open')), block: !!box, closed, shows: !!(box && box.querySelector('.frow')?.getClientRects().length) };`);
+await check('Treffer öffnet genau seinen Abschnitt', hit.page === "n-house" && hit.open && hit.block && hit.shows && hit.closed.length >= 3, hit);
 });
 
 // ── Every switch of every tile: flip, save, reload, check; flip back, save, reload, check ─────────
@@ -305,7 +309,7 @@ const rows = await P(`return [...p.shadowRoot.querySelectorAll('#pane .frow')].f
 await check('„start“ zeigt die acht Kacheln, keinen Schalter zurück', start.page === 'n-start' && !rows.some((t) => /bisherig|previous/i.test(t)), { start, rows });
 for (const [id, focus, page, blk, adv] of [['t-look', null, 'n-look', null, false], ['t-ctl', null, 'n-use', null, false], ['t-msg', null, 'n-bell', null, false],
   ['live', null, 'n-phone', 'nb-live', false], ['fuel', null, 'n-wx', 'nb-fuel', false], ['calendar', null, 'n-house', 'nb-calendars', false],
-  ['home', 'security', 'n-house', 'nb-security', true], ['alerts', null, 'n-bell', 'nb-notify', true]]) {
+  ['home', 'security', 'n-house', 'nb-security', false], ['alerts', null, 'n-bell', 'nb-notify', true]]) {
   const r = await at(id, focus);
   await check(`${id}${focus ? ' › ' + focus : ''} → ${page}${blk ? ' › ' + blk : ''}`, r.page === page && r.topics === 0 && (!blk || r.blocks.includes(blk)) && (!adv || r.adv), r);
 }

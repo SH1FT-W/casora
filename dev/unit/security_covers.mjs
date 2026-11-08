@@ -204,7 +204,7 @@ assert.equal(C.sec('hero', null, day, hass), '<div class="hui-line" data-tone=""
 // "Home & devices" (under "Advanced"), found by everyday words, and the earlier jump (page "home", focus) lands there ──
 assert.match(read('custom_components/casora/settings.py'), /SECTIONS = \([^)]*"security"/);
 const st = read('custom_components/casora/panel/casora-panel-settings.js');
-assert.match(st, /\{ k: "security", personal: \["security"\], title: "Shutters at night", adv: true,[^}]*kw: "[^"]*rollo[^"]*rollladen[^"]*jalousie/);
+assert.match(st, /\{ k: "security", personal: \["security"\], title: "Blinds and gates",[^}]*kw: "[^"]*rollo[^"]*rollladen[^"]*jalousie/);
 assert.match(st, /security: "security"/);
 const pers = read('custom_components/casora/panel/casora-panel-personal.js');
 assert.match(pers, /want\("security"\)/);
