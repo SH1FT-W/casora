@@ -19759,7 +19759,7 @@
       "active_entities": [],
       "active_override": "[[[\n  /* Highlighted while something is open. */\n  return window._casoraTasks ? window._casoraTasks.active(states, variables) : false;\n]]]\n"
     },
-    "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? (window.casoraEsc || String)(t);\n  const T = window._casoraTasks;\n  /* Loads the lists with the tile: their subscription keeps this word and the popup current. */\n  if (T && typeof hass !== 'undefined') T.load(hass, variables);\n  return fit(T ? T.tile(states, variables) : '');\n]]]\n",
+    "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? (window.casoraEsc || String)(t);\n  const T = window._casoraTasks;\n  /* Loads the lists with the tile: their subscription keeps this word and the popup current. */\n  if (T && typeof hass !== 'undefined') T.load(hass, variables);\n  return T ? fit(T.tile(states, variables)) : '';\n]]]\n",
     "styles": {
       "card": [
         {

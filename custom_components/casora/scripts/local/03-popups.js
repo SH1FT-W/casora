@@ -1701,6 +1701,14 @@
   };
   // The shopping list card (36-shopping.js) gives its items the same icons.
   R.foodOf = foodOf;
+  /* Weich: Kategorienfarben aus der Weich-Palette statt greller iOS-Systemfarben; das neutrale
+     Korb-Symbol (sonst weiß auf Sand, kaum sichtbar) in der gedämpften Symbolfarbe. */
+  var SOFT_FOOD = { '#FFD60A': 'var(--casora-color-yellow)', '#64D2FF': 'var(--casora-color-blue)',
+    '#FF9F0A': 'var(--casora-color-orange)', '#FF453A': 'var(--casora-color-red)', '#0A84FF': 'var(--casora-color-blue)',
+    '#AC8E68': 'var(--casora-color-sand, #9A8672)', '#BF5AF2': 'var(--casora-color-pink)', '#30D158': 'var(--casora-color-green)',
+    'rgba(255,255,255,0.55)': 'var(--casora-soft-glyph-off, rgba(58,50,43,0.55))' };
+  // A list item's symbol and its colour in the current look (the tasks tile uses them too); f[0] is null without a match.
+  R.foodLook = function (name, soft) { var f = foodOf(name); return soft && SOFT_FOOD[f[2]] ? [f[0], f[1], SOFT_FOOD[f[2]]] : f; };
   R.todoHtml = function () {
     var UI = window._casoraUI, T = R.todo, K = UI.tokens;
     var head = function (t) { return '<div style="font-family:' + K.font + ';font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);text-align:left;color:var(--casora-h15-c, ' + K.ink + ');padding:0 4px 8px;">' + esc(t) + '</div>'; };
@@ -1740,12 +1748,6 @@
       return '<ha-icon icon="' + (isDone ? 'mdi:check-circle' : 'mdi:check-circle-outline') + '" style="--mdc-icon-size:26px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;line-height:0;color:'
         + (isDone ? 'var(--casora-popup-ui-good, #30D158)' : 'rgba(255,255,255,0.28)') + ';"></ha-icon>';
     };
-    /* Weich: Kategorienfarben aus der Weich-Palette statt greller iOS-Systemfarben; das neutrale
-       Korb-Symbol (sonst weiß auf Sand, kaum sichtbar) in der gedämpften Symbolfarbe. */
-    var SOFT_FOOD = { '#FFD60A': 'var(--casora-color-yellow)', '#64D2FF': 'var(--casora-color-blue)',
-      '#FF9F0A': 'var(--casora-color-orange)', '#FF453A': 'var(--casora-color-red)', '#0A84FF': 'var(--casora-color-blue)',
-      '#AC8E68': 'var(--casora-color-sand, #9A8672)', '#BF5AF2': 'var(--casora-color-pink)', '#30D158': 'var(--casora-color-green)',
-      'rgba(255,255,255,0.55)': 'var(--casora-soft-glyph-off, rgba(58,50,43,0.55))' };
     var row = function (i, isDone) {
       var f = foodOf(i.summary);
       if (sf && SOFT_FOOD[f[2]]) f = [f[0], f[1], SOFT_FOOD[f[2]]];

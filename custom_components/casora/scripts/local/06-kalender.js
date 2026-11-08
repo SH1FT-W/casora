@@ -508,9 +508,9 @@
       var t = diffDays(sel) === 0 ? 'Heute' : diffDays(sel) === 1 ? 'Morgen' : DAYL[sel.getDay()] + ', ' + sel.getDate() + '. ' + MON[sel.getMonth()];
       // Issue 146: only where a calendar takes new events.
       var haNow = document.querySelector('home-assistant');
-      var addBtn = haNow && haNow.hass && K.writable(variables, haNow.hass.states).length
-        ? '<button type="button" class="hcal-add" data-hcal="add:' + ymd(sel) + '"><ha-icon icon="mdi:calendar-plus"></ha-icon><span>Termin hinzufügen</span></button>' : '';
-      return CSS() + (SOFT() ? '<div class="hcal hs">' + sHead(esc(t)) : '<div class="hcal">' + head(esc(t))) + body + addBtn + '</div>';
+      var addHtml = haNow && haNow.hass && K.writable(variables, haNow.hass.states).length
+        ? '<button type="button" class="hcal-add" data-hcal="add:' + esc(ymd(sel)) + '"><ha-icon icon="mdi:calendar-plus"></ha-icon><span>Termin hinzufügen</span></button>' : '';
+      return CSS() + (SOFT() ? '<div class="hcal hs">' + sHead(esc(t)) : '<div class="hcal">' + head(esc(t))) + body + addHtml + '</div>';
     }
     if (k === 'week') {
       var w0 = weekStart(today), wout = '', wseen = [];
@@ -675,7 +675,7 @@
       + 'font-family:var(--casora-font,var(--ha-font-family-body,Inter,system-ui,sans-serif));color-scheme:light}:host(.dark){color-scheme:dark}'
       + '.box{box-sizing:border-box;width:min(440px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:24px 20px 20px;border-radius:24px;background:var(--casora-calform-bg,#fff);color:var(--casora-calform-ink,#1c1c1e);box-shadow:var(--casora-shadow-float,0 18px 48px rgba(0,0,0,.24))}'
       + ':host(.dark){--casora-calform-bg:#2a2a2e;--casora-calform-ink:#f2f2f4}'
-      + ':host(.soft) .box{border-radius:34px;background:var(--casora-soft-surface,#FAF6F0);color:var(--casora-popup-tiles-text-primary,#3A322B)}'
+      + ':host(.soft) .box{border-radius:42px;background:var(--casora-soft-surface,#FAF6F0);color:var(--casora-popup-tiles-text-primary,#3A322B)}'
       + 'h2{margin:0 0 16px;font-size:20px;font-weight:700;line-height:1.25}.f{margin:0 0 12px}label{display:block;margin:0 0 6px;font-size:13px;font-weight:600;opacity:.75}'
       + 'input,select,textarea{box-sizing:border-box;width:100%;min-height:46px;padding:11px 14px;border:0;border-radius:14px;font:inherit;font-size:16px;color:inherit;outline:none;background:var(--casora-soft-control-fill,rgba(127,127,127,.12));box-shadow:inset 0 0 0 1px rgba(127,127,127,.4)}'
       + 'textarea{display:block;resize:vertical;min-height:70px}'
@@ -711,7 +711,7 @@
       var at = e.composedPath()[0];
       if (e.key === 'Enter' && at && (o.enter || []).indexOf(at.id) >= 0) { e.preventDefault(); e.stopPropagation(); save(); return; }
       if (e.key !== 'Tab') return;
-      var f = [].slice.call(root.querySelectorAll('input,select,textarea,button')).filter(function (x) { return x.getClientRects().length && !x.disabled; });
+      var f = [].slice.call(root.querySelectorAll(['input', 'select', 'textarea', 'button'].join())).filter(function (x) { return x.getClientRects().length && !x.disabled; });
       var i = f.indexOf(root.activeElement);
       e.preventDefault(); e.stopPropagation();
       f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
@@ -737,9 +737,9 @@
     var hour = Math.min(new Date().getHours() + 1, 23), startDate = day || ymd(new Date()), startTime = two(hour) + ':00', end = plusHour(startDate, startTime);
     var pick = cals.filter(function (c) { return !K.hide[c.entity]; })[0] || cals[0];
     var row = function (label, html) { return '<div class="f"><label>' + esc(Tr(label)) + '</label>' + html + '</div>'; };
-    var when = function (label, k, date, time) {
-      return '<div class="f"><label>' + esc(Tr(label)) + '</label><div class="two"><input id="' + k + 'D" type="date" aria-label="' + esc(Tr(label)) + '" value="' + date + '">'
-        + '<input id="' + k + 'T" class="t" type="time" aria-label="' + esc(Tr(label)) + '" value="' + time + '"></div></div>';
+    var whenHtml = function (label, k, date, time) {
+      return '<div class="f"><label>' + esc(Tr(label)) + '</label><div class="two"><input id="' + esc(k) + 'D" type="date" aria-label="' + esc(Tr(label)) + '" value="' + esc(date) + '">'
+        + '<input id="' + esc(k) + 'T" class="t" type="time" aria-label="' + esc(Tr(label)) + '" value="' + esc(time) + '"></div></div>';
     };
     var endTouched = false;
     var api = window._casoraFormDialog({ title: 'Neuer Termin', cls: 'casora-calform', first: 'title', enter: ['title', 'loc'], failText: 'Der Termin konnte nicht gespeichert werden.',
@@ -748,7 +748,7 @@
         + row('Beschreibung (optional)', '<textarea id="desc" rows="2"></textarea>')
         + (cals.length > 1 ? row('Kalender', '<select id="cal">' + cals.map(function (c) { return '<option value="' + esc(c.entity) + '"' + (c.entity === pick.entity ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select>') : '')
         + '<label class="sw"><span>' + esc(Tr('Ganztägig')) + '</span><input id="all" type="checkbox"></label>'
-        + '<div id="times">' + when('Beginn', 's', startDate, startTime) + when('Ende', 'e', end.date, end.time) + '</div>',
+        + '<div id="times">' + whenHtml('Beginn', 's', startDate, startTime) + whenHtml('Ende', 'e', end.date, end.time) + '</div>',
       save: function (a) {
         var $ = a.$, cal = $('cal') ? $('cal').value : pick.entity, day0 = $('sD').value;
         var r = K.eventData({ title: $('title').value, location: $('loc').value, description: $('desc').value, allDay: $('all').checked,

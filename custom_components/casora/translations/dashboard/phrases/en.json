@@ -2845,7 +2845,10 @@
     "Keine Listen": "No lists",
     "Keine To-do-Listen gefunden": "No to-do lists found",
     "Bitte gib eine Aufgabe ein.": "Please enter a task.",
-    "Die Aufgabe konnte nicht gespeichert werden.": "The task could not be saved."
+    "Die Aufgabe konnte nicht gespeichert werden.": "The task could not be saved.",
+    "Abhaken": "Tick off",
+    "Wieder öffnen": "Reopen",
+    "Eintrag löschen?": "Delete this item?"
   },
   "patterns": [
     [

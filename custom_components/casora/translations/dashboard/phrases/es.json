@@ -2863,7 +2863,10 @@
     "Keine Listen": "Sin listas",
     "Keine To-do-Listen gefunden": "No se encontraron listas",
     "Bitte gib eine Aufgabe ein.": "Introduce una tarea.",
-    "Die Aufgabe konnte nicht gespeichert werden.": "No se pudo guardar la tarea."
+    "Die Aufgabe konnte nicht gespeichert werden.": "No se pudo guardar la tarea.",
+    "Abhaken": "Marcar",
+    "Wieder öffnen": "Reabrir",
+    "Eintrag löschen?": "¿Eliminar esta entrada?"
   },
   "patterns": [
     [

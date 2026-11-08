@@ -2863,7 +2863,10 @@
     "Keine Listen": "Geen lijsten",
     "Keine To-do-Listen gefunden": "Geen takenlijsten gevonden",
     "Bitte gib eine Aufgabe ein.": "Voer een taak in.",
-    "Die Aufgabe konnte nicht gespeichert werden.": "De taak kon niet worden opgeslagen."
+    "Die Aufgabe konnte nicht gespeichert werden.": "De taak kon niet worden opgeslagen.",
+    "Abhaken": "Afvinken",
+    "Wieder öffnen": "Heropenen",
+    "Eintrag löschen?": "Dit item verwijderen?"
   },
   "patterns": [
     [

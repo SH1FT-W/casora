@@ -13,7 +13,7 @@ Settings where you need them, a new Tasks tile, and new events right from the ca
 - **Add an event (#146):** the calendar popup can create events with location and description, in any calendar that accepts them.
 - **Tile side panel in tabs:** clicking a tile in the Studio shows Tile, Popup and, where there are shared settings, a tab such as "All blinds". Popup fields are one click away, shared values take effect with "Save settings".
 - **Gear in every popup:** admins jump straight to that tile's Popup tab in the Studio. Popups without a tile open their section of the settings.
-- **Percent as closed (#145):** under Settings › Home & Devices › Blinds and gates each blind can read as percent closed. Dial, buttons, rows, tile and the hold menu follow, An awning's Extend and Retract swap, and the tile lights up only while it is not fully open. Home Assistant still gets its own position. Open, close and the counts stay as they were.
+- **Percent as closed (#145):** under Settings › Home & Devices › Blinds and gates each blind can read as percent closed. Dial, buttons, rows, tile and the hold menu follow. An awning's Extend and Retract swap, and the tile lights up only while it is not fully open. Home Assistant still gets its own position. Open, close and the counts stay as they were.
 
 ### Changed
 - **Home & Devices:** one section per kind of device that opens on its heading, nothing hidden under Advanced. The battery exceptions moved here from the bell, saved values stay.

@@ -13,7 +13,7 @@ Einstellungen dort, wo du sie brauchst, eine neue Aufgaben-Kachel und neue Termi
 - **Termin hinzufügen (#146):** Das Kalender-Popup legt Termine mit Ort und Beschreibung an, in jedem Kalender, der das erlaubt.
 - **Seitenleiste der Kachel in Reitern:** Ein Klick auf eine Kachel im Studio zeigt Kachel, Popup und, wo es gemeinsame Einstellungen gibt, einen Reiter wie „Alle Jalousien“. Popup-Felder sind einen Klick entfernt, gemeinsame Werte wirken mit „Einstellungen speichern“.
 - **Zahnrad in jedem Popup:** Admins springen direkt auf den Reiter „Popup“ dieser Kachel im Studio. Popups ohne Kachel öffnen ihre Stelle in den Einstellungen.
-- **Prozent als geschlossen (#145):** Unter Einstellungen › Haus & Geräte › Jalousien und Tore lässt sich jede Jalousie als Prozent geschlossen anzeigen. Stellrad, Knöpfe, Zeilen, Kachel und Halten-Menü folgen, Bei Markisen tauschen Ausfahren und Einfahren, und die Kachel leuchtet nur, solange sie nicht ganz offen ist. Home Assistant bekommt weiter seine eigene Position. Auf, Zu und die Zählungen bleiben gleich.
+- **Prozent als geschlossen (#145):** Unter Einstellungen › Haus & Geräte › Jalousien und Tore lässt sich jede Jalousie als Prozent geschlossen anzeigen. Stellrad, Knöpfe, Zeilen, Kachel und Halten-Menü folgen. Bei Markisen tauschen Ausfahren und Einfahren, und die Kachel leuchtet nur, solange sie nicht ganz offen ist. Home Assistant bekommt weiter seine eigene Position. Auf, Zu und die Zählungen bleiben gleich.
 
 ### Geändert
 - **Haus & Geräte:** ein Abschnitt pro Geräteart, der sich an seiner Überschrift öffnet, nichts mehr unter „Erweitert“. Die Batterie-Ausnahmen sind aus der Glocke hierher umgezogen, gespeicherte Werte bleiben.

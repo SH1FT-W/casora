@@ -2863,7 +2863,10 @@
     "Keine Listen": "Nessun elenco",
     "Keine To-do-Listen gefunden": "Nessun elenco trovato",
     "Bitte gib eine Aufgabe ein.": "Inserisci un'attività.",
-    "Die Aufgabe konnte nicht gespeichert werden.": "Impossibile salvare l'attività."
+    "Die Aufgabe konnte nicht gespeichert werden.": "Impossibile salvare l'attività.",
+    "Abhaken": "Spunta",
+    "Wieder öffnen": "Riapri",
+    "Eintrag löschen?": "Eliminare questa voce?"
   },
   "patterns": [
     [

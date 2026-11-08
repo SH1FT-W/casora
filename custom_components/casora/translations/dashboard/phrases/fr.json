@@ -2863,7 +2863,10 @@
     "Keine Listen": "Aucune liste",
     "Keine To-do-Listen gefunden": "Aucune liste de tâches trouvée",
     "Bitte gib eine Aufgabe ein.": "Saisis une tâche.",
-    "Die Aufgabe konnte nicht gespeichert werden.": "La tâche n'a pas pu être enregistrée."
+    "Die Aufgabe konnte nicht gespeichert werden.": "La tâche n'a pas pu être enregistrée.",
+    "Abhaken": "Cocher",
+    "Wieder öffnen": "Rouvrir",
+    "Eintrag löschen?": "Supprimer cette entrée ?"
   },
   "patterns": [
     [

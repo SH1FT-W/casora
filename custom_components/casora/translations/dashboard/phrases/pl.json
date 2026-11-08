@@ -2863,7 +2863,10 @@
     "Keine Listen": "Brak list",
     "Keine To-do-Listen gefunden": "Nie znaleziono list zadań",
     "Bitte gib eine Aufgabe ein.": "Wpisz zadanie.",
-    "Die Aufgabe konnte nicht gespeichert werden.": "Nie udało się zapisać zadania."
+    "Die Aufgabe konnte nicht gespeichert werden.": "Nie udało się zapisać zadania.",
+    "Abhaken": "Odhacz",
+    "Wieder öffnen": "Otwórz ponownie",
+    "Eintrag löschen?": "Usunąć ten wpis?"
   },
   "patterns": [
     [
