@@ -65,7 +65,7 @@ const cards = [
 // No order: the usual one (KEYS = the sub-line's order), owner 01.11.2026.
 const usual = S.cards(cards, undefined, states);
 assert.deepEqual([1, 2, 3, 5, 6, 7].map((i) => S.keyOfCard(usual[i], states)),
-  ['alarm', 'doors', 'locks', 'windows', 'covers', 'cameras']);
+  ['alarm', 'doors', 'windows', 'locks', 'covers', 'cameras']);
 assert.deepEqual(S.cards(cards, [], states), usual);
 assert.equal(usual[0], cards[0]);
 const out = S.cards(cards, ['windows', 'doors', 'alarm', 'covers', 'locks', 'cameras'], states);
@@ -80,7 +80,7 @@ const sec = { triggered: false, disarmed: true, locks: 1, lockJammed: 0, lockDea
   windowsTilted: 0, gates: 0, covers: 0, camDead: 1, insecure: true, problem: true };
 const sum = window.casoraSecuritySummary;
 assert.equal(sum(sec, { summary: 'detailed' }).text,
-  'Alarm aus · 2 Türen offen · Schloss offen · Fenster offen · Schloss offline · Kamera offline');
+  'Alarm aus · 2 Türen offen · Fenster offen · Schloss offen · Schloss offline · Kamera offline');
 assert.equal(sum(sec, { summary: 'detailed', order: ['cameras', 'locks', 'windows'] }).text,
   'Kamera offline · Schloss offen · Schloss offline · Fenster offen · Alarm aus · 2 Türen offen');
 const short = sum(sec, { summary: 'short', order: ['windows', 'doors'] }).html;
@@ -97,8 +97,8 @@ const studio = new Function(one(/^const SEC_SUB_LABEL = [^;]*;/ms) + grab(/^func
 const V = { security_locks: ['lock.example'], security_cameras: ['camera.example'],
   security_entity_1: 'alarm_control_panel.example', security_entity_2: 'binary_sensor.kitchen_window' };
 const present = studio.secSubPresent(V, states, [], false);
-assert.deepEqual(present, ['alarm', 'locks', 'windows', 'cameras']);
-assert.deepEqual(studio.secSubPresent(V, states, ['binary_sensor.front_door'], true), ['alarm', 'doors', 'locks', 'windows', 'covers', 'cameras']);
+assert.deepEqual(present, ['alarm', 'windows', 'locks', 'cameras']);
+assert.deepEqual(studio.secSubPresent(V, states, ['binary_sensor.front_door'], true), ['alarm', 'doors', 'windows', 'locks', 'covers', 'cameras']);
 assert.deepEqual(studio.secSubRows(undefined, present), present);
 assert.deepEqual(studio.secSubRows(['cameras', 'gates', 'locks'], present), ['cameras', 'locks', 'alarm', 'windows']);
 S.KEYS.forEach((k) => assert.ok(studio.SEC_SUB_LABEL[k], 'label for ' + k));

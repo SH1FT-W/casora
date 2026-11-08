@@ -84,7 +84,7 @@ await fakeStates(page, patch, { sticky: true });
 await openRow(page);
 const before = await deskState(page);
 await need('desktop: security sub-line and sub-row', before.sub.length >= 2 && before.row.length >= 2, before);
-// Owner (01.11.2026): without an order the sub-badges follow the sub-line's usual order (alarm, doors, gates, locks …).
+// Owner (01.11.2026): without an order the sub-badges follow the sub-line's usual order (alarm, doors, windows, gates, locks …).
 await check('desktop: without an order the sub-row follows the usual order', JSON.stringify(before.row) === JSON.stringify(window_keys(before.row)), before.row);
 await keep(page, 'vorher_desktop_badge', await headClip(page));
 
@@ -148,7 +148,7 @@ const sel = () => H(async () => {
 });
 const rows0 = await sel();
 await need('Studio: "Order" list in the security badge', rows0 && rows0.length >= 3, rows0);
-await check('Studio: without an order the usual one (alarm, doors, gates, locks, windows, covers, cameras)',
+await check('Studio: without an order the usual one (alarm, doors, windows, gates, locks, covers, cameras)',
   JSON.stringify(rows0) === JSON.stringify(window_keys(rows0)), rows0);
 const listClip = () => H(() => {
   const box = window.__pierce('.suborder').find((x) => x.getBoundingClientRect().height > 0);
@@ -247,6 +247,6 @@ await finish();
 
 // The Studio's usual order: casoraSecSub.KEYS filtered to what is there.
 function window_keys(rows) {
-  const K = ['alarm', 'doors', 'gates', 'locks', 'windows', 'covers', 'cameras', 'other'];
+  const K = ['alarm', 'doors', 'windows', 'gates', 'locks', 'covers', 'cameras', 'other'];
   return (rows || []).slice().sort((a, b) => (K.indexOf(a) < 0 ? 99 : K.indexOf(a)) - (K.indexOf(b) < 0 ? 99 : K.indexOf(b)));
 }

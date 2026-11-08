@@ -1731,7 +1731,8 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         return undefined;
       };
 
-      // Security: alarm, doors, gates, locks, windows, blinds, cameras, other (the sub-line's order).
+      // Security: alarm, doors, windows, gates, locks, blinds, cameras, other (the sub-line's order; doors and windows
+      // side by side, owner 08.11.2026).
       var GATE = ['garage', 'gate', 'door'];
       var low = function (x) { return String(x == null ? '' : x).toLowerCase(); };
       var keyOf = function (id, states) {
@@ -1760,7 +1761,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         if (kind === 'door' || kind === 'window') return kind + 's';
         return keyOf(cfg.entity, states);
       };
-      window.casoraSecSub = make(['alarm', 'doors', 'gates', 'locks', 'windows', 'covers', 'cameras', 'other'], secCard);
+      window.casoraSecSub = make(['alarm', 'doors', 'windows', 'gates', 'locks', 'covers', 'cameras', 'other'], secCard);
       window.casoraSecSub.keyOf = keyOf;
 
       // Climate: temperature, humidity, air quality, blinds (the sub-row's order in button_card_templates.json).
@@ -1815,7 +1816,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   // o.order: security_sub_order (casoraSecSub), the Studio's own order of the kinds.
   // Returns { text, html }: text is always the list in words (also for tooltip/screen reader),
   // html only for 'short' with findings, otherwise null.
-  // Order by importance: alarm off, door, gate, lock, window open, tilted, covers, offline.
+  // Order: alarm off, door, window open, tilted, gate, lock, covers, offline.
   window.casoraSecuritySummary = function (sec, o) {
     var S = sec || {};
     o = o || {};
@@ -1829,12 +1830,12 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     var L = [];
     if (S.disarmed) L.push(['Alarm aus', null, 0, false, 'alarm']);
     if (S.doors) L.push([n(S.doors, 'Tür offen', 'Türen offen'), 'door-open', S.doors, false, 'doors']);
-    if (S.gates) L.push([n(S.gates, 'Tor offen', 'Tore offen'), 'garage', S.gates, false, 'gates']);
-    if (S.locks) L.push([n(S.locks, 'Schloss offen', 'Schlösser offen'), 'lock-open', S.locks, false, 'locks']);
-    if (S.lockJammed) L.push([S.lockJammed === 1 ? 'Schloss klemmt' : S.lockJammed + ' Schlösser klemmen', 'lock-unlocking', S.lockJammed, false, 'locks']);
     if (S.windows) L.push([n(S.windows, 'Fenster offen', 'Fenster offen'), 'window-open', S.windows, false, 'windows']);
     if (S.windowsTilted) L.push([n(S.windowsTilted, 'Fenster gekippt', 'Fenster gekippt'), 'window-tilt', S.windowsTilted, false, 'windows']);
     if (S.doorsTilted) L.push([n(S.doorsTilted, 'Tür gekippt', 'Türen gekippt'), 'window-tilt', S.doorsTilted, false, 'doors']);
+    if (S.gates) L.push([n(S.gates, 'Tor offen', 'Tore offen'), 'garage', S.gates, false, 'gates']);
+    if (S.locks) L.push([n(S.locks, 'Schloss offen', 'Schlösser offen'), 'lock-open', S.locks, false, 'locks']);
+    if (S.lockJammed) L.push([S.lockJammed === 1 ? 'Schloss klemmt' : S.lockJammed + ' Schlösser klemmen', 'lock-unlocking', S.lockJammed, false, 'locks']);
     // Selected covers open in the evening/night (#76, 34-security-covers.js), Home only.
     if (S.covers) L.push([n(S.covers, 'Jalousie offen', 'Jalousien offen'), 'cover_open', S.covers, false, 'covers']);
     if (S.lockDead) L.push([n(S.lockDead, 'Schloss offline', 'Schlösser offline'), 'lock', S.lockDead, true, 'locks']);
