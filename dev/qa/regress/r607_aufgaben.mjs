@@ -8,7 +8,7 @@ import { open, casoraDashboard, ready, check, need, finish, fakeStates, usePage 
 const dash = await casoraDashboard();
 await need('Casora dashboard', dash);
 const SHOT = process.env.CASORA_SHOT_DIR;
-const LISTS = { 'todo.qa_shop': ['Milk', 'Apples', 'Coffee'], 'todo.qa_house': ['Mow the lawn', 'Change the filter'], 'todo.qa_paper': ['Check the insurance'] };
+const LISTS = { 'todo.qa_shop': ['Milch', 'Nudeln', 'Käse'], 'todo.qa_house': ['Mow the lawn', 'Change the filter'], 'todo.qa_paper': ['Check the insurance'] };
 const NAMES = { 'todo.qa_shop': 'Einkaufsliste', 'todo.qa_house': 'Haus & Garten', 'todo.qa_paper': 'Organisation & Verwaltung' };
 for (const [tag, o] of [['Desktop', { width: 1280, height: 860, dark: false }], ['Phone', { width: 393, height: 852, mobile: true, scale: 3, dark: true }]]) {
   const { page } = await open(o);
@@ -35,7 +35,7 @@ for (const [tag, o] of [['Desktop', { width: 1280, height: 860, dark: false }], 
   await check(tag + ': a chip per list plus All, with counts', c1.length === 4 && /Alle.*6/.test(c1[0].t) && c1[0].on, c1);
   await check(tag + ': no chip is cut off', c1.every((c) => !c.cut), c1);
   const all = await texts();
-  await check(tag + ': all lists with their items', /Milk/.test(all) && /Mow the lawn/.test(all) && /Check the insurance/.test(all) && /2 Liter/.test(all), all.slice(0, 200));
+  await check(tag + ': all lists with their items', /Milch/.test(all) && /Mow the lawn/.test(all) && /Check the insurance/.test(all) && /2 Liter/.test(all), all.slice(0, 200));
   await check(tag + ': a late item says so', /Überfällig|Overdue/.test(all), all.slice(0, 200));
   const doneText = () => E(`return ${P}('[data-tasks-box="done"]').map((b) => b.textContent).join(' ');`);
   await check(tag + ': done items start folded', /1 erledigt|1 done/.test(await doneText()) && !/Bread/.test(await doneText()), await doneText());
@@ -46,11 +46,16 @@ for (const [tag, o] of [['Desktop', { width: 1280, height: 860, dark: false }], 
   await E(`${P}('.tchip')[2].click();`);
   await page.waitForTimeout(300);
   const one = await texts();
-  await check(tag + ': a chip shows that list only', /Mow the lawn/.test(one) && !/Milk/.test(one), one.slice(0, 200));
+  await check(tag + ': a chip shows that list only', /Mow the lawn/.test(one) && !/Milch/.test(one), one.slice(0, 200));
   await check(tag + ': the filter is kept in this browser', (await E(`return localStorage.getItem('casora_tasks_filter');`)) === 'todo.qa_house');
   const btns = await E(`return ${P}('[data-tasks-box="list"] .trr').slice(0, 1).map((r) => [...r.querySelectorAll('.trb')].map((b) => ({ x: b.classList.contains('x'), s: JSON.parse(b.getAttribute('data-casora-svc')), w: b.getBoundingClientRect().width })))[0];`);
   await check(tag + ': X then tick on the right, big enough', btns && btns.length === 2 && btns[0].x && btns[0].s.service === 'remove_item' && !!btns[0].s.confirm && btns[1].s.service === 'update_item' && btns.every((b) => b.w >= 44), btns);
-  await check(tag + ': each item has a symbol', (await E(`return ${P}('[data-tasks-box="list"] .tri ha-icon').length;`)) >= 2);
+  await E(`${P}('.tchip')[0].click();`);
+  await page.waitForTimeout(250);
+  const icons = await E(`return ${P}('[data-tasks-box="list"] .trr').map((r) => [r.querySelector('.trn').textContent, r.querySelector('.tri ha-icon').getAttribute('icon')]);`);
+  await check(tag + ': an item has its symbol as on the shopping list', icons.some((x) => x[0] === 'Milch' && x[1] === 'mdi:cup'), icons);
+  await E(`${P}('.tchip')[2].click();`);
+  await page.waitForTimeout(250);
   await E(`${P}('[data-tasks-box="list"] .trb:not(.x)')[0].click(); await new Promise((x) => setTimeout(x, 350));`);
   const ticked = await E('return window.__calls[0];');
   await check(tag + ': tapping the row really ticks it off', ticked && ticked.d === 'todo' && ticked.s === 'update_item' && ticked.data.status === 'completed', ticked);

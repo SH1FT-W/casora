@@ -129,10 +129,10 @@
         var d = data[id];
         if (!d || !d.open.length) return '';
         var itemsHtml = T.sortOpen(d.open).map(function (it) { return rowHtml(st, id, it, false); }).join('');
-        return UI.label(T.nameOf(st, id)) + '<div class="trl">' + itemsHtml + '</div>';
+        return '<div>' + UI.label(T.nameOf(st, id)) + '<div class="trl">' + itemsHtml + '</div></div>';
       }).filter(Boolean);
       var allHtml = groupsHtml.join('');
-      if (allHtml) return CSS + '<div style="display:flex;flex-direction:column;gap:10px;">' + allHtml + '</div>';
+      if (allHtml) return CSS + '<div style="display:flex;flex-direction:column;gap:var(--casora-popup-sec-gap,18px);">' + allHtml + '</div>';
       return UI.empty({ icon: 'mdi:check-all', text: loading ? 'Liste wird geladen …' : 'Neue Einträge erscheinen hier' });
     }
     if (part === 'done') {
