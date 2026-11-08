@@ -133,4 +133,9 @@ const st2 = { 'cover.wz': own('cover.wz', 'open', 35), 'sun.sun': { state: 'belo
 set({ covers: ['cover.wz'], closed_up_to_by: { 'cover.wz': 40 } });
 assert.equal(C.scan(st2, { states: st2 }).count, 0, 'scan: the blind at 35 % with own 40 % counts as closed');
 
+// A gate has its own value too (Studio: „Tore: gilt als geschlossen bis“); other gates keep the general one.
+set({ closed_up_to: 1, closed_up_to_by: { 'cover.garage': 15 } });
+assert.equal(C.coverOpen({ entity_id: 'cover.garage', state: 'open', attributes: { current_position: 10 } }, 'gate'), false, 'gate within its own value');
+assert.equal(C.coverOpen({ entity_id: 'cover.gate2', state: 'open', attributes: { current_position: 10 } }, 'gate'), true, 'another gate: general value');
+
 console.log('cover_closed_up_to: ok');

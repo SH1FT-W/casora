@@ -502,7 +502,7 @@
       // The same per cover (security.closed_up_to_by): whole percent 0–99.
       const upBy = cs.S && cs.S.security && cs.S.security.closed_up_to_by;
       if (upBy && Object.keys(upBy).some((k) => !(typeof upBy[k] === "number" && Number.isInteger(upBy[k]) && upBy[k] >= 0 && upBy[k] <= 99))) {
-        cs.err = t("“Counts as closed up to” for a single blind must be a whole number from 0 to 99 %.");
+        cs.err = t("“Counts as closed up to” for a single gate or blind must be a whole number from 0 to 99 %.");
         this._csRepaint();
         return false;
       }

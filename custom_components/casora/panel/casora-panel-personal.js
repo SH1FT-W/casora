@@ -485,6 +485,51 @@
         sec.covers.forEach((id) => { if (id && !listed.includes(id)) listed.push(id); });
         const meta = (id) => (typeof self._entMeta === "function" ? self._entMeta(id) : { name: self._prettyEntity(id), area: "" });
         listed.sort((a, b) => String(meta(a).name).localeCompare(String(meta(b).name)));
+        // Own „counts as closed up to“ of one cover or gate (security.closed_up_to_by, whole percent 0–99, checked in
+        // _csSave); empty = the general value above, shown as placeholder.
+        const ownInput = (id, name) => {
+          const ow = document.createElement("div");
+          ow.className = "cs-num";
+          const oi = document.createElement("input");
+          oi.type = "text";
+          oi.inputMode = "numeric";
+          oi.className = "casora-psec-own-in";
+          oi.placeholder = String(sec.closed_up_to || 0);
+          const by = sec.closed_up_to_by || {};
+          oi.value = by[id] != null ? String(by[id]) : "";
+          oi.setAttribute("aria-label", (window.casoraI18n ? window.casoraI18n.t("Counts as closed up to") : "Counts as closed up to") + " – " + name);
+          oi.setAttribute("data-no-i18n", "");
+          oi.oninput = () => {
+            const v = oi.value.trim();
+            sec.closed_up_to_by = sec.closed_up_to_by && typeof sec.closed_up_to_by === "object" ? sec.closed_up_to_by : {};
+            if (!v) delete sec.closed_up_to_by[id];
+            else sec.closed_up_to_by[id] = /^\d+$/.test(v) ? Number(v) : NaN;
+            if (!Object.keys(sec.closed_up_to_by).length) delete sec.closed_up_to_by;
+            if (typeof self._csBar === "function") self._csBar();
+          };
+          const ou = document.createElement("span");
+          ou.textContent = "%";
+          ou.setAttribute("data-no-i18n", "");
+          ow.append(oi, ou);
+          return ow;
+        };
+        // Gates count without being picked, so each has just its own value (issue 138; the reporter looked for the
+        // garage door in the list of blinds).
+        const gates = Object.keys(hass.states).filter((id) => {
+          if (!id.startsWith("cover.")) return false;
+          const e = reg[id];
+          if (e && (e.hidden || e.entity_category)) return false;
+          return GATE.includes(String((hass.states[id].attributes || {}).device_class || "").toLowerCase());
+        }).sort((a, b) => String(meta(a).name).localeCompare(String(meta(b).name)));
+        if (gates.length) {
+          const list = self._flowGroup(host, { header: "Gates: counts as closed up to" });
+          list.parentElement.classList.add("casora-psec-gates");
+          gates.forEach((id) => {
+            const m = meta(id), name = (m && (m.short || m.name)) || id;
+            const r = self._flowRow(list, { title: name, raw: true, sub: "Empty: the value above" });
+            r.row.appendChild(ownInput(id, name));
+          });
+        }
         if (!listed.length) {
           self._flowRow(g, { title: "No covers found", dim: true });
         } else {
@@ -509,35 +554,11 @@
                 } });
               const sub = r.row.querySelector(".rtext > span");
               if (sub && st) sub.setAttribute("data-no-i18n", "");
-              // Issue 138 follow-up: an own „counts as closed up to“ per picked cover (security.closed_up_to_by,
-              // whole percent 0–99, checked in _csSave); empty = the general value above, shown as placeholder.
+              // Issue 138 follow-up: an own „counts as closed up to“ per picked cover.
               if (sec.covers.includes(id)) {
                 const own = self._flowRow(list, { title: "Counts as closed up to", sub: "Empty: the value above" });
                 own.row.classList.add("casora-psec-own");
-                const ow = document.createElement("div");
-                ow.className = "cs-num";
-                const oi = document.createElement("input");
-                oi.type = "text";
-                oi.inputMode = "numeric";
-                oi.className = "casora-psec-own-in";
-                oi.placeholder = String(sec.closed_up_to || 0);
-                const by = sec.closed_up_to_by || {};
-                oi.value = by[id] != null ? String(by[id]) : "";
-                oi.setAttribute("aria-label", (window.casoraI18n ? window.casoraI18n.t("Counts as closed up to") : "Counts as closed up to") + " – " + ((m && (m.short || m.name)) || id));
-                oi.setAttribute("data-no-i18n", "");
-                oi.oninput = () => {
-                  const v = oi.value.trim();
-                  sec.closed_up_to_by = sec.closed_up_to_by && typeof sec.closed_up_to_by === "object" ? sec.closed_up_to_by : {};
-                  if (!v) delete sec.closed_up_to_by[id];
-                  else sec.closed_up_to_by[id] = /^\d+$/.test(v) ? Number(v) : NaN;
-                  if (!Object.keys(sec.closed_up_to_by).length) delete sec.closed_up_to_by;
-                  if (typeof self._csBar === "function") self._csBar();
-                };
-                const ou = document.createElement("span");
-                ou.textContent = "%";
-                ou.setAttribute("data-no-i18n", "");
-                ow.append(oi, ou);
-                own.row.appendChild(ow);
+                own.row.appendChild(ownInput(id, (m && (m.short || m.name)) || id));
               }
             });
           });
