@@ -2998,7 +2998,7 @@
     "Lock screen": "Ekran blokady",
     "Open in Settings": "Otwórz w ustawieniach",
     "Show percent as closed": "Pokaż procent jako zamknięcie",
-    "60 % then means 60 % closed. Open, close and everything Casora counts stay the same.": "60 % oznacza wtedy 60 % zamknięcia. Otwieranie, zamykanie i wszystko, co liczy Casora, pozostaje bez zmian."
+    "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same.": "60 % oznacza wtedy 60 % zamknięcia, a kafelek świeci tylko wtedy, gdy urządzenie nie jest całkowicie otwarte. W markizie zamieniają się Rozwiń i Zwiń. Wszystko, co liczy Casora, pozostaje bez zmian."
   },
   "patterns": [
     [

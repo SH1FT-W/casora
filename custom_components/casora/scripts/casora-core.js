@@ -12601,11 +12601,23 @@ window.casoraMenuGlass = {
   // v.shade_hide takes it away. scope: said when the buttons move more than one cover.
   var COVER_WORDS = { open: ['Auf', 'Zu'], raise: ['Heben', 'Senken'], extend: ['Ausfahren', 'Einfahren'] };
   // Issue 145: covers shown as "percent closed" (security.percent_closed, Studio › Blinds and gates). Only display and
-  // input turn around: what goes to Home Assistant, open/close and every count stay on HA's own position.
+  // input turn around, plus the tile's active state and an awning's words: what goes to HA and every count stay on HA's own position.
   window.casoraCoverClosedView = function (ids) {
     var sec = ((window.CASORA_SETTINGS || {}).security) || {}, on = sec.percent_closed;
     var L = Array.isArray(ids) ? ids : [ids];
     return Array.isArray(on) && L.length > 0 && L.every(function (id) { return on.indexOf(id) >= 0; });
+  };
+  // A cover shown as closed rests at HA's 100: it is active while it is out, also at 0, where HA says "closed".
+  window.casoraCoverActive = function (st, id) {
+    var open = !!st && ['open', 'opening', 'stopping'].indexOf(st.state) >= 0;
+    var p = st && st.attributes && st.attributes.current_position;
+    return typeof p === 'number' && window.casoraCoverClosedView(id) ? p < 100 : open;
+  };
+  // For a tile: true/false when all its covers are shown as closed, null to leave it to the tile's default rule.
+  window.casoraCoverActiveOverride = function (states, ids) {
+    var L = (window.casoraCoverSummary(states, ids) || {}).ids || [];
+    if (!L.length || !window.casoraCoverClosedView(L)) return null;
+    return L.some(function (id) { return window.casoraCoverActive(states[id], id); });
   };
   // The live words of one row: the same object, or a copy that reads the closed percentage.
   window.casoraCoverRowWords = function (W, id) {
@@ -12623,7 +12635,9 @@ window.casoraMenuGlass = {
     if (!COVER_WORDS[o.cover_words] && L.length && L.every(function (id) { return isKind(id) === isKind(L[0]); })) kind = isKind(L[0]);
     var p = Number(o.shade_position), pos = Math.floor(p) === p && p >= 1 && p <= 99 ? p : 50;
     var flip = window.casoraCoverClosedView(L);
-    return { open: COVER_WORDS[kind][0], close: COVER_WORDS[kind][1], shade: o.shade_hide ? null : pos,
+    // A device shown as closed reports 100 at rest: on an awning the first button (100) retracts. Raise/lower already fit.
+    var words = flip && kind === 'extend' ? [COVER_WORDS[kind][1], COVER_WORDS[kind][0]] : COVER_WORDS[kind];
+    return { open: words[0], close: words[1], shade: o.shade_hide ? null : pos,
       shadeText: 'Beschatten ' + pos + ' %', scope: L.length > 1 ? 'Gilt für alle ' + L.length : null,
       // shown() turns a position either way: HA → display and display → HA.
       flip: flip, attr: flip ? 'current_position|closed' : 'current_position', closedWord: flip ? 'geschlossen' : '',

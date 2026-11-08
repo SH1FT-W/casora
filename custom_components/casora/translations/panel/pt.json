@@ -2998,7 +2998,7 @@
     "Lock screen": "Ecrã de bloqueio",
     "Open in Settings": "Abrir nas definições",
     "Show percent as closed": "Mostrar percentagem como fechado",
-    "60 % then means 60 % closed. Open, close and everything Casora counts stay the same.": "60 % significa então 60 % fechado. Abrir, fechar e tudo o que o Casora conta mantêm-se."
+    "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same.": "60 % significa então 60 % fechado e o mosaico só se acende enquanto o dispositivo não estiver totalmente aberto. Num toldo, Estender e Recolher trocam. Tudo o que o Casora conta mantém-se."
   },
   "patterns": [
     [

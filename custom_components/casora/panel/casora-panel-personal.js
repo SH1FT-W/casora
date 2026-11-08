@@ -526,7 +526,7 @@
           .sort((a, b) => String(hass.states[a].attributes.friendly_name || a).localeCompare(String(hass.states[b].attributes.friendly_name || b)));
         if (coverIds.length) {
           const pc = self._flowGroup(host, { header: "Show percent as closed",
-            footer: "60 % then means 60 % closed. Open, close and everything Casora counts stay the same." });
+            footer: "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same." });
           pc.parentElement.dataset.pkey = "percent_closed";
           coverIds.forEach((id) => {
             const on = Array.isArray(sec.percent_closed) && sec.percent_closed.includes(id);

@@ -62,4 +62,23 @@ assert.equal(sumText({ total: 2, open: 2, avg: 40, positions: 2 }, ['cover.left'
 assert.equal(sumText({ total: 2, open: 2, avg: 40, positions: 2 }, ['cover.left', 'cover.terrace']).full, 'Teilweise geöffnet · Ø 40 %', 'mixed: as before');
 assert.equal(sumText({ total: 1, open: 0, avg: 0, positions: 1 }, ['cover.left']).full, 'Geschlossen', 'the state words do not change');
 window.CASORA_SETTINGS = {};
+// #145 follow-up: a cover shown as closed reports 100 while retracted or up. Its awning's words swap (the first button still
+// sends 100), and it lights up only while it is out, also at 0 where HA says "closed".
+window.CASORA_SETTINGS = { security: { percent_closed: ['cover.terrace', 'cover.left'] } };
+assert.deepEqual(w(['cover.terrace']), ['Einfahren', 'Ausfahren'], 'awning shown as closed: 100 retracts');
+assert.deepEqual(w(['cover.left']), ['Heben', 'Senken'], 'screen shown as closed: 100 is up, the words stay');
+const st = (state, pos) => ({ state, attributes: { current_position: pos } });
+const A = window.casoraCoverActive;
+assert.equal(A(st('open', 100), 'cover.terrace'), false, 'retracted: at rest');
+assert.equal(A(st('open', 40), 'cover.terrace'), true, 'partly out');
+assert.equal(A(st('closed', 0), 'cover.terrace'), true, 'fully out, though HA says closed');
+assert.equal(A(st('open', 100), 'cover.blind'), true, 'not listed: as before');
+assert.equal(A(st('closed', 0), 'cover.blind'), false, 'not listed: as before');
+assert.equal(A({ state: 'open', attributes: {} }, 'cover.terrace'), true, 'no position: by state');
+window.casoraCoverSummary = (states, ids) => ({ ids });
+const O = window.casoraCoverActiveOverride, T2 = { 'cover.terrace': st('open', 100), 'cover.left': st('open', 70), 'cover.blind': st('open', 100) };
+assert.equal(O(T2, ['cover.terrace']), false, 'tile: retracted is not active');
+assert.equal(O(T2, ['cover.terrace', 'cover.left']), true, 'tile: one of them is out');
+assert.equal(O(T2, ['cover.blind']), null, 'tile: not listed, the default rule decides');
+assert.equal(O(T2, ['cover.terrace', 'cover.blind']), null, 'tile: mixed list, the default rule decides');
 console.log('cover_controls: ok');

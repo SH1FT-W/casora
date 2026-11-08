@@ -2998,7 +2998,7 @@
     "Lock screen": "Sperrbildschirm",
     "Open in Settings": "In den Einstellungen öffnen",
     "Show percent as closed": "Prozent als geschlossen anzeigen",
-    "60 % then means 60 % closed. Open, close and everything Casora counts stay the same.": "60 % heißt dann 60 % geschlossen. Auf, Zu und alles, was Casora zählt, bleiben gleich."
+    "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same.": "60 % heißt dann 60 % geschlossen, und die Kachel leuchtet nur, solange das Gerät nicht ganz offen ist. Bei Markisen tauschen Ausfahren und Einfahren. Alles, was Casora zählt, bleibt gleich."
   },
   "patterns": [
     [
