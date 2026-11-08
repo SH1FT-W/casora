@@ -328,7 +328,8 @@
     if (s.indexOf('<') === -1) out = seg(s, t);
     else {
       var inStyle = false, keep = 0;
-      out = s.split(/(<[^>]*>)/).map(function (p) {
+      // A ">" inside a quoted attribute does not end the tag (#142: onpointerup="if(dx>8…" left the style as text).
+      out = s.split(/(<(?:[^>"']|"[^"]*"|'[^']*')*>)/).map(function (p) {
         if (p.charAt(0) === '<') {
           inStyle = /^<(style|script)\b/i.test(p) || (inStyle && !/^<\/(style|script)/i.test(p));
           // <span data-no-i18n>…</span>: selbst gewählte Namen (z. B. „Home“) bleiben wörtlich.
