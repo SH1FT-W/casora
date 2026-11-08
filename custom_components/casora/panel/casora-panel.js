@@ -4721,6 +4721,15 @@ const SPARK_FIELD = (hint) => ({ key: "sparkline", label: "Trend on tile", type:
 const CHART_COLOR = (placeholder) => ({ key: "chart_color", label: "Chart color", type: "text",
   advanced: true, placeholder: placeholder || "#00C3D0", hint: "A hex color, e.g. #30D158." });
 // casora_cover: the shade automation switch in the popup (#81 – users asked for it, popup-richtlinien-v3.md §8 exception).
+// casora_cover (#145): the popup's main buttons. Words only; what is sent stays the same.
+const COVER_BUTTON_FIELDS = [
+  { key: "cover_words", label: "Button words", type: "select", advanced: true, group: "Popup",
+    options: ["", "open", "raise", "extend"],
+    optionLabels: { "": "By device", open: "Open / Close", raise: "Raise / Lower", extend: "Extend / Retract" } },
+  { key: "shade_position", label: "Shade position", type: "number", advanced: true, group: "Popup", placeholder: "50",
+    hint: "1 to 99 %. The Shade button moves the cover to this position." },
+  { key: "shade_hide", label: "Hide Shade button", type: "bool", advanced: true, group: "Popup" },
+];
 const COVER_AUTOMATION_FIELDS = [
   { key: "smart_automation_entity", label: "Shade automation", domains: ["switch"],
     advanced: true, group: "Popup",
@@ -4779,7 +4788,7 @@ const TILE_TYPES = [
     domains: ["fan"], fields: [ICON_FIELD, TOGGLE_FIELD, POPUP_TITLE()] },
   { id: "cover", label: "Cover", template: "casora_cover",
     domains: ["cover"], fields: [ICON_OPEN_FIELD, ICON_CLOSED_FIELD, POPUP_TITLE_NAME,
-      ...COVER_AUTOMATION_FIELDS] },
+      ...COVER_BUTTON_FIELDS, ...COVER_AUTOMATION_FIELDS] },
   { id: "lock", 
     label: "Lock", template: "casora_lock",
     domains: ["lock"], fields: [TOGGLE_FIELD_ON, ICON_LOCKED_FIELD, ICON_UNLOCKED_FIELD, POPUP_TITLE_NAME] },
@@ -4992,7 +5001,7 @@ const TILE_TYPES = [
         boolDefault: true, advanced: true },
       ICON_OPEN_FIELD, ICON_CLOSED_FIELD,
       { key: "room_name", label: "Popup title", type: "text", advanced: true },
-      ...COVER_AUTOMATION_FIELDS,
+      ...COVER_BUTTON_FIELDS, ...COVER_AUTOMATION_FIELDS,
     ] },
   { id: "entity_actions",
     label: "Entity with buttons", template: "casora_entity_actions",

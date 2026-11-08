@@ -2574,6 +2574,10 @@
     "Sehr feucht": "Muito húmido",
     "sehr feucht": "muito húmido",
     "Beschatten": "Sombrear",
+    "Heben": "Subir",
+    "Senken": "Descer",
+    "Ausfahren": "Estender",
+    "Einfahren": "Recolher",
     "Fährt zurück": "A regressar",
     "Geparkt": "Estacionado",
     "Kein Akkustand": "Sem nível de bateria",
@@ -2842,6 +2846,14 @@
     "Zählt nur bei Abwesenheit": "Só conta na ausência"
   },
   "patterns": [
+    [
+      "^Beschatten (\\d+) %$",
+      "Sombrear {1} %"
+    ],
+    [
+      "^Gilt für alle (\\d+)$",
+      "Aplica-se a todos os {1}"
+    ],
     [
       "^Bauteil (\\d+) %$",
       "Peça {1} %"

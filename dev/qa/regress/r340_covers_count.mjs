@@ -5,8 +5,8 @@
 // Tile and popup now share casoraCoverSummary: the same members, the same average, the count first.
 // Expected (desktop 1440 light like the reporter, phone 393 WebKit), with the covers set locally (fakeStates, nothing
 // goes to HA) to 100/100/100/100/1/20 and the tile entity an HA group whose current_position says 85:
-//   1. Tile with a cover list: "Alle geöffnet · Ø 70 %" (narrow "Alle geöffnet"), never "85".
-//   2. Its popup: head "Alle geöffnet · Ø 70 %", slider "70 %", one row per listed cover.
+//   1. Tile with a cover list: "Teilweise geöffnet · Ø 70 %" (narrow "Teilweise geöffnet"), never "85".
+//   2. Its popup: head "Teilweise geöffnet · Ø 70 %", slider "70 %", one row per listed cover.
 //   3. Mixed (two closed): tile and popup head "4 von 6 geöffnet · Ø 50 %" ... same text in both.
 //   4. Tile on the HA group without a list: counts the group's members (one unavailable left out), the popup lists
 //      the same members; tile and popup head agree.
@@ -94,9 +94,10 @@ for (const [tag, opts, url] of VIEWS) {
   await fakeStates(page, Object.assign(pos([100, 100, 100, 100, 1, 20]), { [ids[6]]: { state: 'open', attributes: { current_position: 100 } } }, group), { sticky: true });
   let r = await probe(page, { covers: six }, tag === 'Desktop' ? 'desktop-hell' : 'handy-hell');
   await need(tag + ': Kachel + Popup', r && !r.missing && !r.popup.missing, r);
-  await check(tag + ': Kachel "Alle geöffnet · Ø 70 %"', r.full === 'Alle geöffnet · Ø 70 %' || r.full === 'Alle geöffnet · Ø 70 %', r);
+  await check(tag + ': Kachel "Teilweise geöffnet · Ø 70 %"', r.full === 'Teilweise geöffnet · Ø 70 %' || r.full === 'Teilweise geöffnet · Ø 70 %', r);
   await check(tag + ': Kachel zeigt nie die 85 der HA-Gruppe', !/85/.test(r.card), r.card);
-  await check(tag + ': Popup-Kopf wie die Kachel', /Alle geöffnet · Ø 70/.test(r.popup.text), r.popup.text.slice(0, 200));
+  await check(tag + ': popup says the buttons move all six and where Shade goes (#145)', /Gilt für alle 6/.test(r.popup.text) && /Beschatten\s+50/.test(r.popup.text), r.popup.text.slice(0, 300));
+  await check(tag + ': Popup-Kopf wie die Kachel', /Teilweise geöffnet · Ø 70/.test(r.popup.text), r.popup.text.slice(0, 200));
   // „85“ as a number, not inside the dial's CSS (opacity:.85).
   await check(tag + ': Popup-Position 70 %', /70\s? ?%/.test(r.popup.text) && !/(?<![\d.,])85(?!\d)/.test(r.popup.text),
     r.popup.text.match(/.{0,80}(?<![\d.,])85(?!\d).{0,40}/g) || r.popup.text.slice(0, 300));

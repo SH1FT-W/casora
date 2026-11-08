@@ -2574,6 +2574,10 @@
     "Sehr feucht": "Molto umido",
     "sehr feucht": "molto umido",
     "Beschatten": "Ombreggia",
+    "Heben": "Alza",
+    "Senken": "Abbassa",
+    "Ausfahren": "Estendi",
+    "Einfahren": "Ritrai",
     "Fährt zurück": "In rientro",
     "Geparkt": "Parcheggiato",
     "Kein Akkustand": "Nessun livello batteria",
@@ -2842,6 +2846,14 @@
     "Zählt nur bei Abwesenheit": "Conta solo in assenza"
   },
   "patterns": [
+    [
+      "^Beschatten (\\d+) %$",
+      "Ombreggia {1} %"
+    ],
+    [
+      "^Gilt für alle (\\d+)$",
+      "Vale per tutti e {1}"
+    ],
     [
       "^Bauteil (\\d+) %$",
       "Pezzo {1} %"

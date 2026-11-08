@@ -28,7 +28,7 @@ const H = {
 const six = ['cover.a', 'cover.b', 'cover.c', 'cover.d', 'cover.e', 'cover.f'];
 let s = sum(H, six);
 assert.equal(s.total, 6); assert.equal(s.open, 6); assert.equal(s.avg, 70, 'average of the listed covers, not the group attribute');
-assert.deepEqual(txt(H, six), { full: 'Alle geöffnet · Ø 70 %', short: 'Alle geöffnet' });
+assert.deepEqual(txt(H, six), { full: 'Teilweise geöffnet · Ø 70 %', short: 'Teilweise geöffnet' });
 
 // Mixed positions: some closed.
 const M = { 'cover.a': cov('open', 100), 'cover.b': cov('closed', 0), 'cover.c': cov('open', 40), 'cover.d': cov('closed', 0) };
@@ -76,9 +76,9 @@ const tile = (S, entity, variables) => {
   return [out, fits[0] && fits[0][1]];
 };
 // Reporter: tile on the HA group with the six covers listed -> the same as the popup, not "85 % Geöffnet".
-assert.deepEqual(tile(H, 'cover.group', { covers: six }), ['Alle geöffnet · Ø 70 %', 'Alle geöffnet']);
+assert.deepEqual(tile(H, 'cover.group', { covers: six }), ['Teilweise geöffnet · Ø 70 %', 'Teilweise geöffnet']);
 // Group without a list: the group's members.
-assert.deepEqual(tile(H, 'cover.group', {}), ['Alle geöffnet · Ø 74 %', 'Alle geöffnet']);
+assert.deepEqual(tile(H, 'cover.group', {}), ['Teilweise geöffnet · Ø 74 %', 'Teilweise geöffnet']);
 // List whose first cover is the tile entity (room without an HA group) -> still the whole list.
 const R = Object.assign({}, M);
 assert.deepEqual(tile(R, 'cover.a', { covers: Object.keys(M) }), ['2 von 4 geöffnet · Ø 35 %', '2 von 4 geöffnet']);

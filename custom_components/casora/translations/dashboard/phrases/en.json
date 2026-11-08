@@ -2556,6 +2556,10 @@
     "Sehr feucht": "Very humid",
     "sehr feucht": "very humid",
     "Beschatten": "Shade",
+    "Heben": "Raise",
+    "Senken": "Lower",
+    "Ausfahren": "Extend",
+    "Einfahren": "Retract",
     "Fährt zurück": "Returning",
     "Geparkt": "Parked",
     "Kein Akkustand": "No battery level",
@@ -2824,6 +2828,14 @@
     "Zählt nur bei Abwesenheit": "Counts only when away"
   },
   "patterns": [
+    [
+      "^Beschatten (\\d+) %$",
+      "Shade {1}%"
+    ],
+    [
+      "^Gilt für alle (\\d+)$",
+      "Applies to all {1}"
+    ],
     [
       "^Bauteil (\\d+) %$",
       "Part {1}%"

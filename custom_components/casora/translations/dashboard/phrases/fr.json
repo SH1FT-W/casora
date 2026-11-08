@@ -2574,6 +2574,10 @@
     "Sehr feucht": "Très humide",
     "sehr feucht": "très humide",
     "Beschatten": "Ombrager",
+    "Heben": "Monter",
+    "Senken": "Baisser",
+    "Ausfahren": "Déployer",
+    "Einfahren": "Replier",
     "Fährt zurück": "Retour en cours",
     "Geparkt": "Garé",
     "Kein Akkustand": "Pas de niveau de batterie",
@@ -2842,6 +2846,14 @@
     "Zählt nur bei Abwesenheit": "Compte seulement en absence"
   },
   "patterns": [
+    [
+      "^Beschatten (\\d+) %$",
+      "Ombrager {1} %"
+    ],
+    [
+      "^Gilt für alle (\\d+)$",
+      "S’applique aux {1}"
+    ],
     [
       "^Bauteil (\\d+) %$",
       "Pièce {1} %"

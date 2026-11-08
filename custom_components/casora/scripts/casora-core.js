@@ -12554,6 +12554,24 @@ window.casoraMenuGlass = {
   };
   // The words for a summary, the same on tile and popup head (wortliste: „3 von 5 geöffnet“, „Alle geöffnet“).
   // full: with the average („3 von 6 geöffnet · Ø 70 %“), short: for narrow tiles („3 von 6 geöffnet“).
+  // Issue 145: what the popup's main buttons say and do, for casora_cover / casora_popup_cover. v.cover_words picks the pair
+  // ('open', 'raise', 'extend'; empty: by device, only when every cover is of that kind). The words never change what is
+  // sent: the first button is always position 100, the last 0. v.shade_position 1–99 is the middle button (default 50),
+  // v.shade_hide takes it away. scope: said when the buttons move more than one cover.
+  var COVER_WORDS = { open: ['Auf', 'Zu'], raise: ['Heben', 'Senken'], extend: ['Ausfahren', 'Einfahren'] };
+  window.casoraCoverControls = function (states, ids, v) {
+    var S = states || {}, L = Array.isArray(ids) ? ids : [], o = v || {};
+    var isKind = function (id) {
+      var a = (S[id] && S[id].attributes) || {}, dc = String(a.device_class || '').toLowerCase();
+      if (dc === 'awning') return 'extend';
+      return dc === 'shade' || /screen/i.test(id + ' ' + (a.friendly_name || '')) ? 'raise' : 'open';
+    };
+    var kind = COVER_WORDS[o.cover_words] ? o.cover_words : 'open';
+    if (!COVER_WORDS[o.cover_words] && L.length && L.every(function (id) { return isKind(id) === isKind(L[0]); })) kind = isKind(L[0]);
+    var p = Number(o.shade_position), pos = Math.floor(p) === p && p >= 1 && p <= 99 ? p : 50;
+    return { open: COVER_WORDS[kind][0], close: COVER_WORDS[kind][1], shade: o.shade_hide ? null : pos,
+      shadeText: 'Beschatten ' + pos + ' %', scope: L.length > 1 ? 'Gilt für alle ' + L.length : null };
+  };
   window.casoraCoverSummaryText = function (sum) {
     var s = sum || { total: 0 };
     var one = s.total === 1;
@@ -12567,7 +12585,8 @@ window.casoraMenuGlass = {
       var part = s.positions && s.avg != null && s.avg < 100;
       if (!part) full = one ? 'Geöffnet' : 'Alle geöffnet';
       else if (one) full = s.avg + ' % geöffnet';
-      else { full = 'Alle geöffnet · ' + avgPart; short = 'Alle geöffnet'; }
+      // Issue 145: not at the top is not „open“ without a qualifier.
+      else { full = 'Teilweise geöffnet · ' + avgPart; short = 'Teilweise geöffnet'; }
     } else {
       short = s.open + ' von ' + s.total + ' geöffnet';
       full = avgPart ? short + ' · ' + avgPart : short;

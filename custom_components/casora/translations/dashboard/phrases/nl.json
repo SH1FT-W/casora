@@ -2574,6 +2574,10 @@
     "Sehr feucht": "Zeer vochtig",
     "sehr feucht": "zeer vochtig",
     "Beschatten": "Schaduw",
+    "Heben": "Omhoog",
+    "Senken": "Omlaag",
+    "Ausfahren": "Uitrollen",
+    "Einfahren": "Inrollen",
     "Fährt zurück": "Keert terug",
     "Geparkt": "Geparkeerd",
     "Kein Akkustand": "Geen accuniveau",
@@ -2842,6 +2846,14 @@
     "Zählt nur bei Abwesenheit": "Telt alleen bij afwezigheid"
   },
   "patterns": [
+    [
+      "^Beschatten (\\d+) %$",
+      "Schaduw {1} %"
+    ],
+    [
+      "^Gilt für alle (\\d+)$",
+      "Geldt voor alle {1}"
+    ],
     [
       "^Bauteil (\\d+) %$",
       "Onderdeel {1} %"
