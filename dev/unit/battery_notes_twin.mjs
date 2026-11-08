@@ -36,4 +36,26 @@ assert.deepEqual(ids(), ['sensor.cam_battery', 'sensor.kitchen_sensor_battery', 
 assert.equal(H.entries('casora_battery', hass, {}).length, 5, 'Studio list: the same rows');
 const picked = ['sensor.kitchen_sensor_battery', 'sensor.kitchen_sensor_battery_plus'];
 assert.deepEqual(ids({ batteries: picked }), picked, 'a hand-picked list stays as picked');
+// The popup itself built its own list and kept both rows (reported again after 26.11.21; the tile and the Studio list
+// were already right): the real template code, both popups (room/Home) and their width rule.
+{
+  const P = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/panel/casora-templates.json', import.meta.url), 'utf8')).templates.casora_popup_battery;
+  const hass = { entities, states };
+  const window = globalThis;
+  for (const key of ['tap_action', 'icon_tap_action']) {
+    const c = P[key].casora_popup.content;
+    const a = c.indexOf('const allBatteries = ('), b = c.indexOf('.sort((a, b) => a.battery_pct - b.battery_pct);', a);
+    assert.ok(a > 0 && b > a, key + ': list found');
+    const run = (filterList) => new Function('window', 'states', 'hass', 'variables', 'filterList', 'EXCLUDED_IDS', 'PERSONAL_DEVICE_RE',
+      c.slice(a, b) + '; return allBatteries.map((e) => e.entity_id);')(window, states, hass, {}, filterList, new Set(), /^$^/);
+    const ids = run(null);
+    assert.ok(!ids.includes('sensor.kitchen_sensor_battery_plus'), key + ': Battery Notes twin gone');
+    assert.ok(ids.includes('sensor.kitchen_sensor_battery'), key + ': the original stays');
+    assert.ok(ids.includes('sensor.lock_keypad_battery') && ids.includes('sensor.lock_battery'), key + ': two real batteries stay');
+    const picked = ['sensor.kitchen_sensor_battery', 'sensor.kitchen_sensor_battery_plus'];
+    assert.deepEqual(run(picked), picked, key + ': a picked list stays as picked');
+    assert.match(P[key].casora_popup.style, /batteryTwin/, key + ': the width counts the same rows');
+  }
+}
+
 console.log('battery_notes_twin: ok');
