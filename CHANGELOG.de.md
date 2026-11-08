@@ -11,7 +11,7 @@ Klimaanlagen im Thermostat, Fenster, die nur bei Abwesenheit zählen, klarere Si
 ### Neu
 - **Klimaanlagen im Thermostat-Popup (#144):** Das Popup bietet die Modi an, die das Gerät meldet, auch Kühlen, Heizen/Kühlen, Entfeuchten und Nur Lüfter. Geräte, die kühlen, bekommen zusätzlich Lüfter, Voreinstellung und Lamellen. Für eine Heizung, die Kühlmodi nur meldet, gibt es an der Kachel „Kühlen ausblenden“.
 - **Tür oder Fenster nur bei Abwesenheit zählen (#141):** Im Studio unter Türen und Fenster. Solange jemand zu Hause ist, bleibt so ein Fenster sichtbar, gilt aber nicht als unsicher. Sind alle weg oder steht die Alarmanlage auf abwesend, warnt es wieder.
-- **Eigener Wert pro Tor (#138):** Im Studio unter Sicherheit hat jedes Garagentor sein eigenes „Gilt als geschlossen bis … %“.
+- **Eigener Wert pro Tor (#138):** Unter Einstellungen › Haus & Geräte › Erweitert › Jalousien in der Nacht hat jedes Garagentor sein eigenes „Gilt als geschlossen bis … %“.
 - **Beschatten einstellbar (#145):** Der Knopf im Jalousie-Popup fährt auf eine Position, die du festlegst, zeigt sie an und lässt sich ausblenden.
 - **Eigene Karten (#143):** Eine neue Anleitung erklärt, wie eigene Kacheln Updates überstehen. Zeigen könnt ihr sie jetzt unter Discussions.
 

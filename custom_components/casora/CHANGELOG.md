@@ -11,7 +11,7 @@ Air conditioners in the thermostat, windows that count only when you are away, c
 ### New
 - **Air conditioners in the thermostat popup (#144):** the popup offers the modes the device reports, including Cool, Heat/Cool, Dry and Fan only. Devices that cool also get fan, preset and swing. For a heating that only claims cooling modes, the tile has "Hide cooling".
 - **Count a door or window only when away (#141):** in the Studio under Doors and windows. While someone is home such a window stays visible but does not count as unsecured. When everyone is away, or the alarm is armed away, it warns again.
-- **Own value per gate (#138):** in the Studio under Security every garage door has its own "Counts as closed up to … %".
+- **Own value per gate (#138):** under Settings › Home & Devices › Advanced › Shutters at night every garage door has its own "Counts as closed up to … %".
 - **Settable Shade (#145):** the button in the blinds popup moves to a position you choose, says which, and can be hidden.
 - **Cards of your own (#143):** a new guide explains how your own tiles survive updates. You can show them in Discussions now.
 

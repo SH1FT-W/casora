@@ -22262,7 +22262,11 @@ class CasoraPanel extends HTMLElement {
     const pretty = (v) => {
       if (iconMode) return v ? iconName(v, lang) : "";
       const nm = this._prettyEntity(v);
-      if (entityish && nm !== v) return this._entMeta(v).short;
+      if (entityish && nm !== v) {
+        // opts.withRoom: several sensors share a name („Fenster“), the room tells them apart (#141).
+        const m = this._entMeta(v);
+        return opts && opts.withRoom && m.area ? m.short + " \u00b7 " + m.area : m.short;
+      }
       return nameSeen.get(nm) > 1 && !isPhone(this) ? nm + " (" + v + ")" : nm;
     };
     const wrap = document.createElement("div");

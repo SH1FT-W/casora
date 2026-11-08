@@ -194,8 +194,8 @@
 
       // ── Building blocks ────────────────────────────────────────────────────
       // cls: device_class filter as in the panel (_entityList), list or {domain: [...]}.
-      const ent = (value, domains, onChange, ph, cls) => self._combo(value || "", self._entityList(domains, cls),
-        ph || (self._pickHint ? self._pickHint(domains) : ""), onChange).wrap;
+      const ent = (value, domains, onChange, ph, cls, opts) => self._combo(value || "", self._entityList(domains, cls),
+        ph || (self._pickHint ? self._pickHint(domains) : ""), onChange, opts).wrap;
       const txt = (value, ph, onChange, short) => {
         const i = document.createElement("input");
         i.className = "fin" + (short ? " casora-short" : "");
@@ -410,7 +410,7 @@
         const CONTACT = ["door", "window", "opening", "garage_door"];
         S.contacts.hidden.forEach((id, i) => {
           row(g, i ? "" : "Hidden", [
-            ent(id, ["binary_sensor"], (v) => { S.contacts.hidden[i] = v; }, null, CONTACT),
+            ent(id, ["binary_sensor"], (v) => { S.contacts.hidden[i] = v; }, null, CONTACT, { withRoom: true }),
             del(() => { S.contacts.hidden.splice(i, 1); }),
           ], i ? undefined : "This door or window does not count for security.");
         });
@@ -419,14 +419,14 @@
         // left open for air while someone is home is no security matter (contacts.away_only, 00-finder.js contacts()).
         S.contacts.away_only.forEach((id, i) => {
           row(g, i ? "" : "Only when away", [
-            ent(id, ["binary_sensor"], (v) => { S.contacts.away_only[i] = v; }, null, CONTACT),
+            ent(id, ["binary_sensor"], (v) => { S.contacts.away_only[i] = v; }, null, CONTACT, { withRoom: true }),
             del(() => { S.contacts.away_only.splice(i, 1); }),
           ], i ? undefined : "This door or window only counts for security when nobody is home or the alarm is armed away.");
         });
         addRow(g, "Count a door or window only when away", () => { S.contacts.away_only.push(""); });
         mapRows(S.contacts.names).forEach(([id, name], i) => {
           row(g, i ? "" : "Own name", [
-            ent(id, ["binary_sensor"], (v) => { setMap(S.contacts.names, id, v, S.contacts.names[id] || ""); render(); }, null, CONTACT),
+            ent(id, ["binary_sensor"], (v) => { setMap(S.contacts.names, id, v, S.contacts.names[id] || ""); render(); }, null, CONTACT, { withRoom: true }),
             txt(name, "Name", (v) => { S.contacts.names[id] = v; }, true),
             del(() => { delete S.contacts.names[id]; }),
           ], i ? undefined : "The name this door or window has in the security popups.");

@@ -164,10 +164,12 @@ const st = await H(() => {
   const g = r.querySelector('#pane [data-pkey="contacts"]');
   const text = g ? g.textContent.replace(/\s+/g, ' ') : '';
   return { group: !!g, label: text.includes('Nur bei Abwesenheit'), add: text.includes('Tür oder Fenster nur bei Abwesenheit zählen'),
+    picked: g ? [...g.querySelectorAll('.combo input')].map((i) => i.value).filter((v) => /·/.test(v)) : [],
     help: text.includes('nur, wenn niemand zu Hause ist'), draft: (((window.__panel()._cs || {}).S || {}).contacts || {}).away_only };
 }, null);
 await check('Studio: row „Nur bei Abwesenheit“ with the picked window and its help', st.group && st.label && st.help, st);
 await check('Studio: „Tür oder Fenster nur bei Abwesenheit zählen“ adds one', st.add, st);
+await check('Studio: the picked window names its room, several sensors share a name', st.picked.length >= 1, st.picked);
 await check('Studio: the draft holds the stored list', JSON.stringify(st.draft) === JSON.stringify([WIN]), st);
 await dk.browser.close();
 await finish();
