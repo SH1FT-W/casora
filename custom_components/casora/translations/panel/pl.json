@@ -2688,6 +2688,8 @@
     "From sunset to sunrise": "Od zachodu do wschodu słońca",
     "Counts as closed up to": "Uznawane za zamknięte do",
     "Empty: the value above": "Puste: wartość powyżej",
+    "Hide cooling": "Ukryj chłodzenie",
+    "For a heating that reports cooling modes it does not have.": "Dla ogrzewania, które zgłasza tryby chłodzenia, których nie ma.",
     "Gates: counts as closed up to": "Bramy: uznawane za zamknięte do",
     "“Counts as closed up to” for a single gate or blind must be a whole number from 0 to 99 %.": "„Uznawane za zamknięte do” dla pojedynczej bramy lub rolety musi być liczbą całkowitą od 0 do 99 %.",
     "For gates or blinds left open a crack for air.": "Dla bram lub rolet zostawionych uchylonych do wietrzenia.",

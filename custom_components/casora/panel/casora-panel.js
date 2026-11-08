@@ -4753,6 +4753,8 @@ const TILE_TYPES = [
       TOGGLE_FIELD_ON,
       POPUP_TITLE(),
       SPARK_FIELD("A small line of the room temperature over the last 24 hours."),
+      { key: "hide_cooling", label: "Hide cooling", type: "bool", advanced: true,
+        hint: "For a heating that reports cooling modes it does not have." },
     ] },
   { id: "media", label: "Media player", template: "casora_media",
     domains: ["media_player"], fields: [

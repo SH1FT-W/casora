@@ -2688,6 +2688,8 @@
     "From sunset to sunrise": "Del atardecer al amanecer",
     "Counts as closed up to": "Se considera cerrado hasta",
     "Empty: the value above": "Vacío: el valor de arriba",
+    "Hide cooling": "Ocultar refrigeración",
+    "For a heating that reports cooling modes it does not have.": "Para una calefacción que indica modos de refrigeración que no tiene.",
     "Gates: counts as closed up to": "Portones: cuenta como cerrado hasta",
     "“Counts as closed up to” for a single gate or blind must be a whole number from 0 to 99 %.": "«Cuenta como cerrada hasta» para un portón o persiana debe ser un número entero de 0 a 99 %.",
     "For gates or blinds left open a crack for air.": "Para portones o persianas que quedan entreabiertos para ventilar.",

@@ -2688,6 +2688,8 @@
     "From sunset to sunrise": "Von Sonnenuntergang bis Sonnenaufgang",
     "Counts as closed up to": "Gilt als geschlossen bis",
     "Empty: the value above": "Leer: der Wert oben",
+    "Hide cooling": "Kühlen ausblenden",
+    "For a heating that reports cooling modes it does not have.": "Für eine Heizung, die Kühlmodi meldet, die sie gar nicht hat.",
     "Gates: counts as closed up to": "Tore: gilt als geschlossen bis",
     "“Counts as closed up to” for a single gate or blind must be a whole number from 0 to 99 %.": "„Gilt als geschlossen bis“ für ein einzelnes Tor oder Rollo muss eine ganze Zahl von 0 bis 99 % sein.",
     "For gates or blinds left open a crack for air.": "Für Tore oder Jalousien, die zum Lüften einen Spalt offen bleiben.",

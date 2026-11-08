@@ -22,11 +22,11 @@
   var MODE = { off: 'Aus', heat: 'Heizen', cool: 'Kühlen', heat_cool: 'Heizen/Kühlen', auto: 'Automatik', dry: 'Entfeuchten',
     fan_only: 'Lüfter' };
   var MODE_ORDER = ['off', 'heat', 'cool', 'heat_cool', 'auto', 'dry', 'fan_only'];
-  var FAN = { auto: 'Auto', low: 'Niedrig', medium: 'Mittel', middle: 'Mittel', high: 'Hoch', quiet: 'Leise', silent: 'Leise',
+  var FAN = { auto: 'Auto', low: 'Niedrig', medium: 'Mittel', middle: 'Mittel', high: 'Hoch', quiet: 'Leise', silent: 'Leise', silence: 'Leise',
     turbo: 'Turbo', on: 'An', off: 'Aus', focus: 'Fokus', diffuse: 'Verteilt' };
   var PRESET = { none: 'Keine', eco: 'Eco', comfort: 'Komfort', sleep: 'Schlafen', boost: 'Boost', away: 'Abwesend', home: 'Zuhause',
     activity: 'Aktiv' };
-  var SWING = { off: 'Aus', on: 'An', vertical: 'Vertikal', horizontal: 'Horizontal', both: 'Beide' };
+  var SWING = { off: 'Aus', on: 'An', vertical: 'Vertikal', horizontal: 'Horizontal', both: 'Beide', '3d': '3D' };
   V.WD = WD; V.SHORT = SHORT; V.LONG = LONG; V.MODE = MODE;
   var STEP_MIN = 15;
 
@@ -423,7 +423,7 @@
   var segsHtml = function (UI, label, list, cur, words, svc) {
     if (!Array.isArray(list) || list.length < 2) return '';
     return UI.segments(list.map(function (v) {
-      return { label: words[v] || String(v), active: v === cur, svc: svc(v) };
+      return { label: words[v] || words[String(v).toLowerCase()] || String(v), active: v === cur, svc: svc(v) };
     }), label);
   };
   var stepCssHtml = function (Tk) {
@@ -443,6 +443,33 @@
       + '</style>';
   };
   var GAP = '<div style="height:18px"></div>';
+  // Thermostat popup (issue 144): the modes the device reports, cooling too. variables.hide_cooling is for a heating that
+  // claims modes it does not have (several room thermostats report „cool“). The word list is Velair's.
+  var COOLING = ['cool', 'heat_cool', 'dry', 'fan_only'];
+  window.casoraClimateModes = function (attrs, variables) {
+    var hide = !!(variables && variables.hide_cooling);
+    return ((attrs && attrs.hvac_modes) || []).map(String).filter(function (m, i, a) {
+      return MODE[m] && a.indexOf(m) === i && !(hide && COOLING.indexOf(m) >= 0);
+    }).sort(function (x, y) { return MODE_ORDER.indexOf(x) - MODE_ORDER.indexOf(y); });
+  };
+  window.casoraClimateModes.LABEL = MODE;
+  window.casoraClimateModes.ICON = { off: 'mdi:power', heat: 'mdi:fire', cool: 'mdi:snowflake', heat_cool: 'mdi:sun-snowflake-variant',
+    auto: 'mdi:calendar-clock', dry: 'mdi:water-percent', fan_only: 'mdi:fan' };
+  // Fan, preset and swing of a device that cools; a heating-only thermostat stays as it was.
+  window.casoraClimateExtras = function (UI, attrs, variables, target) {
+    var a = attrs || {};
+    if (window.casoraClimateModes(a, variables).indexOf('cool') < 0) return '';
+    var part = function (label, list, cur, words, service, field) {
+      return segsHtml(UI, label, list, cur, words, function (v) {
+        var data = {}; data[field] = v;
+        return { domain: 'climate', service: service, data: data, target: target };
+      });
+    };
+    return [part('Lüfter', a.fan_modes, a.fan_mode, FAN, 'set_fan_mode', 'fan_mode'),
+      part('Voreinstellung', a.preset_modes, a.preset_mode, PRESET, 'set_preset_mode', 'preset_mode'),
+      part('Lamellen', a.swing_modes, a.swing_mode, SWING, 'set_swing_mode', 'swing_mode')]
+      .filter(Boolean).map(function (h) { return GAP + h; }).join('');
+  };
   var MINUS = '<svg width="20" height="20" viewBox="0 0 20 20" style="display:block"><path d="M4 10H16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
   var PLUS = '<svg width="20" height="20" viewBox="0 0 20 20" style="display:block"><path d="M4 10H16M10 4V16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
   // One stepper row; attr(dir) gives the button its tap attributes (service or pseudo entity).
