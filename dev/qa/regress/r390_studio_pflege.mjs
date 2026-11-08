@@ -94,6 +94,9 @@ await need('Casora-Dashboard fürs Studio', dash);
   await check('sp-05 Symbolfelder zeigen Namen statt Dateinamen', raw.length === 0, { ph });
   const cut = await page.evaluate(async () => {
     const p = window.__panel();
+    // Since the side panel has tabs, the popup rows live on the Popup tab.
+    const tab = [...p.shadowRoot.querySelectorAll('.tiletabs [data-tab="popup"]')].find((x) => x.getClientRects().length);
+    if (tab) { tab.click(); await new Promise((r) => setTimeout(r, 600)); }
     for (let i = 0; i < 3; i++) {
       p.shadowRoot.querySelectorAll('.inspector .adv:not(.open) > .advsum').forEach((s) => s.click());
       await new Promise((r) => setTimeout(r, 400));

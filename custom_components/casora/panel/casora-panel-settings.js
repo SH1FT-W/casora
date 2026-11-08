@@ -223,8 +223,8 @@
     + ".cn-fold>.cn-bhead:focus-visible{outline:2px solid var(--accent);outline-offset:2px}"
     // Tabs of a tile's side panel.
     + ".tiletabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px;padding:3px;margin:0 0 12px;border-radius:var(--r-m);background:var(--casora-studio-chip,rgba(118,118,128,.18))}"
-    + ".tiletabs button{all:unset;box-sizing:border-box;cursor:pointer;min-height:36px;padding:6px 4px;text-align:center;border-radius:calc(var(--r-m) - 3px);font-size:var(--t-foot);font-weight:500;line-height:1.2;color:var(--ink)}"
-    + ".tiletabs button[aria-selected=true]{font-weight:650;background:var(--casora-studio-field,rgba(255,255,255,.14));box-shadow:0 1px 3px rgba(0,0,0,.14)}"
+    + ".tiletabs button{all:unset;box-sizing:border-box;cursor:pointer;min-height:36px;padding:0 4px;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:calc(var(--r-m) - 3px);font-size:var(--t-foot);font-weight:500;line-height:20px;color:var(--ink)}"
+    + ".tiletabs button[aria-selected=true]{font-weight:650;background:var(--casora-studio-field,rgba(255,255,255,.14));box-shadow:var(--casora-shadow-rest)}"
     + ":host(.is-light) .tiletabs button[aria-selected=true]{background:#fff}"
     + ".tiletabs button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}"
     + ":host(.phone) .tiletabs button{min-height:44px}"
@@ -1323,7 +1323,12 @@
         b.type = "button";
         b.dataset.tab = id;
         b.setAttribute("role", "tab");
-        b.onclick = () => show(id);
+        b.onclick = () => {
+          show(id);
+          // The popup preview follows the tab (_cpSync alone keeps one that is already open).
+          if (id === "popup" && this._cpSync) { this._cpDismissed = null; this._cpSync(); }
+          else if (id !== "popup" && this._cpLayer && this._cpClose) this._cpClose();
+        };
         strip.appendChild(b);
       });
       box.insertBefore(strip, body);

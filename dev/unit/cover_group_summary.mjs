@@ -89,7 +89,7 @@ assert.ok(!/von \$\{openCount \+ closedCount\} offen/.test(body), 'old "x von y 
 // ── Popups: head and slider use the same summary ──
 for (const t of ['casora_cover', 'casora_popup_cover']) {
   const c = T[t].tap_action.casora_popup.content;
-  assert.ok(c.includes('window.casoraCoverSummaryText(window.casoraCoverSummary(states, ids)).full'), t + ': head from the summary');
+  assert.ok(c.includes('window.casoraCoverSummaryText(window.casoraCoverSummary(states, ids), ids).full'), t + ': head from the summary');
   assert.ok(c.includes('window.casoraCoverSummary(states, coverIds)'), t + ': slider average from the summary');
   assert.ok(c.includes('_grpMembers'), t + ': a group without a list shows its members');
   assert.ok(!c.includes("'Teilweise geöffnet'"), t + ': no "Teilweise geöffnet" without the count');

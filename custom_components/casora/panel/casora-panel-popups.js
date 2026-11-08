@@ -473,10 +473,15 @@
       pill.style.top = (mount.offsetTop + mount.offsetHeight + 14) + "px";
     };
 
-    // Popup section of the tile page (its fold label names the popup).
+    // Popup section of the tile page (its fold label names the popup). On a tabbed tile it counts only while its tab
+    // shows: the preview covers the room, and a click on another tile would land in it.
     const popupFoldOpen = (self) => [...self.shadowRoot.querySelectorAll("#pane .advsum")]
-      .some((s) => /popup/i.test((s.textContent || "") + " " + (s.dataset.orig || ""))
-        && s.getAttribute("aria-expanded") === "true");
+      .some((s) => {
+        const pane = s.closest(".tilepane");
+        return !(pane && pane.style.display === "none")
+          && /popup/i.test((s.textContent || "") + " " + (s.dataset.orig || ""))
+          && s.getAttribute("aria-expanded") === "true";
+      });
 
     // Decide after every render whether the popup preview belongs on screen.
     P._cpSync = function () {

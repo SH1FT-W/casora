@@ -36,6 +36,9 @@ const { ed, st, opened } = await studioRetry(page, dash, async () => {
 
   await page.evaluate(() => window.__panel()._csOpenPage('n-house'));
   await page.waitForTimeout(2000);
+  // Since the rework the page folds its sections; open them all to reach a field.
+  await page.evaluate(() => window.__pierce('.cn-fold:not(.open) > .cn-bhead').forEach((h) => h.click()));
+  await page.waitForTimeout(1200);
   const st = await page.evaluate(measure);
   return { ed, st, opened };
 });

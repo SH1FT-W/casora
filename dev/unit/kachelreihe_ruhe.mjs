@@ -62,19 +62,28 @@ win.casoraPopup.surface = null;
 tick();
 assert.equal(sorted, 3, 'nach dem Schließen umsortiert');
 
-// 4) Maus über der Reihe (Desktop) → wartet.
+// 4) Maus über der Reihe (Desktop), gerade bedient → wartet.
 hover = true;
+now += 10; tap();
 row._scheduleSort();
-for (let i = 0; i < 5; i++) tick();
+for (let i = 0; i < 3; i++) tick();
 assert.equal(sorted, 3, 'Maus über der Reihe: kein Umsortieren');
 hover = false;
 tick();
 assert.equal(sorted, 4, 'Maus weg: umsortiert');
+
+// 4b) A pointer merely resting over the row holds a right-away sort back only briefly.
+hover = true;
+win._casoraLastInput = now - 60000;
+row._scheduleSort();
+while (timers.length && sorted === 4) tick();
+assert.equal(sorted, 5, 'Maus ruht nur: trotzdem umsortiert');
+hover = false;
 
 // 5) Filterwechsel ohne Animation (Handy) bleibt sofort.
 win._casoraNoFilterAnim = true;
 now += 10; tap();
 row._scheduleSort();
 tick();
-assert.equal(sorted, 5, 'Filterwechsel ordnet sofort');
+assert.equal(sorted, 6, 'Filterwechsel ordnet sofort');
 console.log('ok kachelreihe_ruhe');

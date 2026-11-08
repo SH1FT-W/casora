@@ -31,7 +31,7 @@ const settings = read('custom_components/casora/panel/casora-panel-settings.js')
 // Since 03.11.2026 a block of its own in the tile "Home & devices", right after waste (the subpages are gone).
 const house = settings.slice(settings.indexOf('{ id: "house"'), settings.indexOf('{ id: "wx"'));
 assert.ok(/k: "calendars", personal: \["calendars"\], title: "Calendars"/.test(house), 'own block in Home & devices');
-assert.ok(house.indexOf('k: "calendars"') > house.indexOf('k: "waste"') && house.indexOf('k: "calendars"') < house.indexOf('k: "scenes"'),
+assert.ok(house.indexOf('k: "calendars"') > house.indexOf('k: "waste"') && house.indexOf('k: "calendars"') < house.indexOf('k: "devices"'),
   'right after waste');
 assert.ok(/\["calendar", "Calendar", "calendar"\]/.test(read('custom_components/casora/panel/casora-panel-b.js')), 'Settings menu');
 assert.ok(/\["calendar", "Calendar", "kalender [^"]*"\]/.test(read('custom_components/casora/panel/casora-panel-b-mehr.js')), 'search');

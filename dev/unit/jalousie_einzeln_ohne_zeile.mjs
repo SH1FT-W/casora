@@ -14,6 +14,8 @@ const run = (key, covers, auto) => {
   const window = {
     innerWidth: 1200,
     casoraIconUrl: (n) => '/casora_assets/icons/' + n + '.svg',
+    casoraCoverRowWords: (W) => W,
+    casoraCoverControls: () => ({ attr: 'current_position', flip: false, open: 'Auf', close: 'Zu', shade: 50, shadeText: '50 %', scope: '', closedWord: '', shown: (x) => x }),
     _casoraUI: {
       group: (rows, label) => { groups.push({ rows, label }); return '<group>'; },
       slider: () => '<slider>', segments: () => '<segments>', label: (t) => t,

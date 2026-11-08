@@ -78,6 +78,8 @@ const runCard = (card, states, hass) => new Function('states', 'hass', card.cust
   const doc0 = globalThis.document;
   globalThis.document = { getElementById: () => true, createElement: () => ({}), head: { appendChild() {} }, querySelector: () => null };
   window.casoraIconUrl = (n) => n;
+  window.casoraCoverRowWords = (W) => W;
+  window.casoraCoverControls = () => ({ attr: 'current_position', flip: false, open: 'Auf', close: 'Zu', shade: 50, shadeText: '50 %', scope: '', closedWord: '', shown: (x) => x });
   const saved = window._casoraUI;
   window._casoraUI = { esc, soft: () => true, v3: () => true, settings: () => '', hero: () => 'HERO', stage: () => 'STAGE',
     label: (t) => t, slider: () => 'SLIDER', segments: () => 'SEG', row: { toggle: (o) => ({ ...o, toggle: true }) },

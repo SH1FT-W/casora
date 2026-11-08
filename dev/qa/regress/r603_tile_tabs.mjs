@@ -22,11 +22,18 @@ await need('a blinds tile', cover);
 await select(cover);
 const t1 = await tabs();
 await check('blinds: three tabs', t1.map((x) => x.id).join() === 'tile,popup,all' && /Alle Jalousien/.test(t1[2].text), t1);
+// The popup preview covers the room preview: only the Popup tab may bring it up, else a click on another tile lands in
+// it, the selection stays, and "Remove tile" removes the wrong tile.
+await wait(900);
+const layer = () => P('return !!p._cpLayer;');
+await check('Tile tab: no popup preview over the room', !(await layer()));
 await click('popup');
+await check('Popup tab: the popup preview opens', await layer());
 const pop = await P(`const V = (q) => [...p.shadowRoot.querySelectorAll(q)].filter((x) => x.getClientRects().length); const f = V('.tilepane .adv .advbody')[0];
   return { shown: !!f && /Beschatten/.test(f.textContent), foldHidden: !V('.tilepane .advsum').length };`);
 await check('Popup tab: the fields show without opening a fold', pop.shown && pop.foldHidden, pop);
 await click('all');
+await check('leaving the Popup tab closes the preview', !(await layer()));
 const before = await P(`const r = await p._hass.callWS({ type: 'casora/settings/get' }); return JSON.stringify(((r.settings || {}).security || {}).closed_up_to ?? null);`);
 const all = await P(`const V = (q) => [...p.shadowRoot.querySelectorAll(q)].filter((x) => x.getClientRects().length); const b = V('.tilepane [data-pkey="nb-security"]')[0]; const pane = b && b.closest('.tilepane'); const bar = pane && pane.querySelector('.cs-bar');
   return { block: !!b, link: !!(pane && pane.querySelector('.tilelink')), clean: !!bar && bar.classList.contains('cs-clean') };`);
